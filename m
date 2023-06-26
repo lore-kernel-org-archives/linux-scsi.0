@@ -2,119 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB3B6EB64DC
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 07:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45EC0EB64D7
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 07:58:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229871AbjFZHlQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 03:41:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35626 "EHLO
+        id S230018AbjFZH6v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 03:58:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229692AbjFZHlP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 03:41:15 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDD871B3
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 00:41:13 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id 4fb4d7f45d1cf-51d9128494cso976758a12.0
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 00:41:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1687765272; x=1690357272;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=zA7Cm37wj3yQ3D5wBwKXWhe4kq3EmRcED9N0uqF2kvQ=;
-        b=I/wb10rpkLePRZPQqPL0pgR4L5G+sfRmXWEKD7G+t2jo/R5hpYeMtBmaLkXSjbNfwh
-         m4nDPTipwLaUyzkP2QLaQFplIX4cFdrFGhv9E5VfyNyEUIiG50TM8QByb3Dtg7AYDaSZ
-         tfm5yt41F0dQ9GPbXtIEZEwWB0xMONHkDdAEas0dcaIh7wsVZsNxKmmkgWR8FmtDcMby
-         usUy4CFd4Y1tDPJcFK8aMYPJhCkz347nzYXDyshAKxj4w2YHV9/N0aoU8nwF7/7mAs6s
-         zU468STNhnXGkgDHmRdbpjfQxbkdfOohKmNpcx3VzUX3bWj0DDLHbM5vNgc3C1+9Xdtf
-         F8eQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687765272; x=1690357272;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zA7Cm37wj3yQ3D5wBwKXWhe4kq3EmRcED9N0uqF2kvQ=;
-        b=Quf7P4F/OLlUhbIQStOcBNhfjnxSIL0ftTr4qVVV0emVEUgHXJ7/gvcE+5RaktrdFX
-         Pveqfo5ZWZ81THQaWfMi/4e129nktLKC46vXHl6j7T2OLCp4tI761wwGql4g3Q0vSVVn
-         1JjI9cs+wRylDCh7uIE0w3v6dCFOWBFAtixOzozXx611TCXhSalx+tutIAUBW4JUQOoR
-         fzb73fdASmVbDwSZ6yHXnqxIaEdtM5jKYYALD9jMQsTaxxC8ErpicEy2YIsBHKElrOpv
-         CBV/gQMPCHk0sCk1Ir4esk3AAd/l8qEVshnzyQIZOvkZYaztBoSb2gQklhFpmT5VNFaN
-         vVCQ==
-X-Gm-Message-State: AC+VfDyi7EhZLil5wEkQolSaJ9ZJpFC2iScUCJ75o8qzrhuzLiPfCtpr
-        XqJZDloY6ucdsQVGeDlNDtHsOw==
-X-Google-Smtp-Source: ACHHUZ6Tv5NqF4SmF0qc5/rrLjA1ARSlgDmMBu++P0KZeJI4PYADGMrZs/OxnOVDb9cA3kIGJK1k7Q==
-X-Received: by 2002:a17:907:86aa:b0:989:5d1a:a558 with SMTP id qa42-20020a17090786aa00b009895d1aa558mr14941181ejc.61.1687765272276;
-        Mon, 26 Jun 2023 00:41:12 -0700 (PDT)
-Received: from [192.168.1.20] ([178.197.219.26])
-        by smtp.gmail.com with ESMTPSA id gu3-20020a170906f28300b0096f71ace804sm2969110ejb.99.2023.06.26.00.41.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Jun 2023 00:41:11 -0700 (PDT)
-Message-ID: <d3970163-b8e8-9665-3761-8942c28adaa8@linaro.org>
-Date:   Mon, 26 Jun 2023 09:41:09 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH 5/5] scsi: dt-bindings: ufs: qcom: Fix warning for sdm845
- by adding reg-names
-Content-Language: en-US
-To:     Luca Weiss <luca.weiss@fairphone.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     Abel Vesa <abel.vesa@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
+        with ESMTP id S230006AbjFZH6s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 03:58:48 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 257D110C0
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 00:58:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=O6+lIU+LXkTqESH/8jbXNsww/I0TCibC28mP6iZ6GPc=; b=1Xt3egl6PdtJnDnmJ7qBZbL1yT
+        94BHPxW0zvC+p66kU0syuuofi0rRnlhLZmN1OkyeIX6SnTQNk+1q9Fc4OmPb6TciUBiBZWf6SBJQg
+        fS4Vj93T4P7IxrsuU1lzZDi5BEc7ALFMKbD9eZ33QEWcxH3XOSyx0OBvazyWvUlDlgsk74/LWF3+M
+        4EbrTbpnoJfUKbeD9MxnVCu/3VLhbFmy1eHMYzZOSWnv9ALyVduNAd11Kd24yqeCvaJSxpvs4pA28
+        vo6+N7pBKn266aVa3Mlbex8oIkcYQkC7Uj4WBl8spPTS4GJ6qddMKRMKhBCvX5o4MM1uFq/QkuP0L
+        9dmdfpkw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qDh7S-009bYz-2E;
+        Mon, 26 Jun 2023 07:58:42 +0000
+Date:   Mon, 26 Jun 2023 00:58:42 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <20230623113009.2512206-1-abel.vesa@linaro.org>
- <20230623113009.2512206-6-abel.vesa@linaro.org>
- <cd84b8c6-fac7-ecef-26be-792a1b04a102@linaro.org>
- <CTK1AI4TVYRZ.F77OZB62YYC0@otso> <20230623211746.GA1128583-robh@kernel.org>
- <CTMDIQGOYMKD.1BP88GSB03U54@otso>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <CTMDIQGOYMKD.1BP88GSB03U54@otso>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: Re: [PATCH] scsi: Simplify scsi_cdl_check_cmd()
+Message-ID: <ZJlFMkijM2B6TQt3@infradead.org>
+References: <20230623002912.808251-1-dlemoal@kernel.org>
+ <ZJUwQvdRyr1v6wVX@infradead.org>
+ <27177663-6ead-7a51-1037-1412a2b64d52@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <27177663-6ead-7a51-1037-1412a2b64d52@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 26/06/2023 08:38, Luca Weiss wrote:
->>>> but I guess no resends and it can be superseded.
->>>
->>> Right, the patches got reviews but was never applied... I really need to
->>> find a strategy to keep track of sent patches until they're applied with
->>> my work mailbox, it's not the first time that a patch has gotten
->>> forgotten.
->>
->> There was an error reported on the above series. Why would it be 
->> applied?
+On Fri, Jun 23, 2023 at 04:26:09PM +0900, Damien Le Moal wrote:
+> On 6/23/23 14:40, Christoph Hellwig wrote:
+> >> +	 * See SPC-6, one command format of REPORT SUPPORTED OPERATION CODES.
+> > 
+> > /one/on/ or even on the?
 > 
-> The error report at [0] complains about reg-names but I'm quite sure
-> that patch 2/3 resolves this error. Does your bot only apply one patch
-> at a time and run the check or apply all of them and then run it? It's
-> been a while but I'm fairly sure I ran all of the checks before sending
-> since I also documented some other patches in the cover letter there.
+> The spec has that as "One_command parameter data format", as opposed to the
+> other format which is "All_command parameter data format". Will re-phrase it
+> exactly like that.
 
-You did it in cover letter, not in the patch, so there is no dependency
-for bots recorded.
-
-> 
-> [0] https://lore.kernel.org/all/167241769341.1925758.17856681634949446114.robh@kernel.org/
-
-Your patch 2/3 could not be applied to any tree. 3/3 applied but without
-previous one caused warnings.
-
-
-
-
-Best regards,
-Krzysztof
-
+Oh, ok.
