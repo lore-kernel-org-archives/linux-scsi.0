@@ -2,66 +2,171 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DCC8C001B0
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 00:53:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31BBBEB64DA
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 06:38:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230026AbjFZAxn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Jun 2023 20:53:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47584 "EHLO
+        id S230006AbjFZGia (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 02:38:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbjFZAxl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Jun 2023 20:53:41 -0400
-Received: from out203-205-221-164.mail.qq.com (out203-205-221-164.mail.qq.com [203.205.221.164])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFDBF114;
-        Sun, 25 Jun 2023 17:53:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1687740817;
-        bh=uHss9sAi+BkodLXCCxVWpP2rO/AqcIvC63aHn5xoSDE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=fsrBonckOhtrOvxQqgG0G4Ww74ue+qgzTStBvp/4GI3irM+EBTPYGApzTW4bM2YLV
-         2fkQbOTZIXGc4JV9qj3H8cLmrcvquaV0/P+RKqq174tPkACG0RnU+jou5GH+Wdr54h
-         OVb/4tPJ+2HUc/eEsEs8r41KNbaFCLJhpxv83xUo=
-Received: from localhost.localdomain ([39.156.73.12])
-        by newxmesmtplogicsvrsza7-0.qq.com (NewEsmtp) with SMTP
-        id D620A411; Mon, 26 Jun 2023 08:53:34 +0800
-X-QQ-mid: xmsmtpt1687740814t3ck9jg1n
-Message-ID: <tencent_2E65037221902CF14B5F95DCD78E514FC407@qq.com>
-X-QQ-XMAILINFO: MGSlRwRrdVfIisT3TiXB4uZPk7W6In/1TvGVgklfmnUyf6+68w+k7zjcQTVeQd
-         0W4iIR+q1O+eReyH0RzazhC9cQsg0RqCZnQBy5nAfgPGp1gUmP20NwzkUOz3FnWq9SBp0GVIn0Eo
-         B4s75AGMo3jb+AwneIHXTNP/48afTscK52RK/SNqAATK7l1s3LdBy3V6pPROdginc6CRarYtKCjj
-         QTXnEer4hrxuZsbcQ7tL9qi41xWabzI+InRe+VmeuJsfQ7RMwuMw3jb7ybZC0KYA6avfe0wxY7p1
-         Yx+mH8Zt15+1Q7zWx3K39zOvWF0FrNhA16tDW8/vqdZe1rkGin539mBus87IOYQr4mVMSnvcOKkV
-         48jk8K2H6Mr2nmaWHKnmZ40O9y4l7wvB7DXzxmR4Vy+4onN/aNp0FHKlumvle/gXA5V5nI9LqsUO
-         8766Tc7naKSD4WiUy0byWXP/I0CZgwIiNdxNfELyIXoyfd77RlhP+9hWTvzH3pqkK1QWigvwnxXD
-         q/LbM1AU3Gtu+HbZydXp1EpcuZx0kl/yae59jUym6yO4Epq+UTO+1Qd4ZhnxwfBIOhaILiwFXjBV
-         V+Iegce9hMf0XUrQUP1vTsQJwWul3TSKg2q2YE3+58NbnL0Iy286EP1K6V1k4S+ndnJXiPKpkvYD
-         mcGz80CbSBVYN7lhNobvXDUDv/S2LSDMbuFPmOFBsblLjRd/fYUyg9mBJuzHJvzI6sGsZcK2Nt1m
-         dgoe6ElS39GFmuPxr7p4TqCoQieP/6F3H5M1valmKZpWaDUjNB/SA2H1iwviWmcPWElQP7BC0NYp
-         Iuhup1a0liAGX4QhvfmxkrQ7YPY4LSs728+SQZS/OQOKQWYAczb4VM1joCEdSZ07QgqWutuVqZma
-         t25SDkXnHohkPXnYvwhSUFQqDBwQpdqXWWG84/9pNxI2eZzfRUIFMUY9tmnmjbbb88wjspk/tFt7
-         Xy1MjQOA224OvgS0/TXVQA/yXAnrZTrFIgRar3V5okzrX0RrXTGQ==
-X-QQ-XMRINFO: NjIWXnpjOUTzjNa+72IgnqZv1lPwKoxBEg==
-From:   Rong Tao <rtoax@foxmail.com>
-To:     corbet@lwn.net
-Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        rongtao@cestc.cn, rtoax@foxmail.com, target-devel@vger.kernel.org
-Subject: Re: [PATCH v2] docs: target: Remove useless tcm_mod_builder.py
-Date:   Mon, 26 Jun 2023 08:53:33 +0800
-X-OQ-MSGID: <20230626005333.40560-1-rtoax@foxmail.com>
-X-Mailer: git-send-email 2.39.3
-In-Reply-To: <87bkh3l1mr.fsf@meer.lwn.net>
-References: <87bkh3l1mr.fsf@meer.lwn.net>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229731AbjFZGi3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 02:38:29 -0400
+Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 269921A2
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Jun 2023 23:38:26 -0700 (PDT)
+Received: by mail-lj1-x22d.google.com with SMTP id 38308e7fff4ca-2b5c2433134so19849321fa.0
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Jun 2023 23:38:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fairphone.com; s=fair; t=1687761504; x=1690353504;
+        h=in-reply-to:references:subject:cc:to:from:message-id:date
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=nf4BHdk3/Hzvwb2/Bxs/dfd2REs7lRTG5cGpmWwvjSA=;
+        b=ZY6fFLGKxdjHbM+qOnkA6NjJyc8kadQsyUVJAH3bVhZdiuz5z+QZdeVktBlpeBNYY6
+         Zs5SmHY1ZFpL1yoyu6DngeYJHs8tw8MtgpRouxeHMMN4BFDHql1CpuvduHRinV4vFOQo
+         6dOvRMpNfMjDdMouvNECbEBMPYMjcN8jPTZmHoQFq6eAmXYoFJALxBCj9pJyu0JhuRvu
+         yF4wfeQ+MA3t4Ztkh8VCXQP9RVlYDjqJJQE2fYKPN8u7UrVFo4uOXmBpRjkmGy8yarQP
+         f9u3fTGujEYgyilJ/PYvNjADsVhFpRZ1j86GYZNLNuS8CZKNyhboDJFanBljS4XUsxeR
+         WAag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687761504; x=1690353504;
+        h=in-reply-to:references:subject:cc:to:from:message-id:date
+         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=nf4BHdk3/Hzvwb2/Bxs/dfd2REs7lRTG5cGpmWwvjSA=;
+        b=FXYchAlzyc0Y0bWIzOFvjq7Qb+yIH/ftDB9tR9f86kIHmoMD3yMp7X2mHOymG6bJzr
+         +AVeRQ3ZD3LdnUwSNDBVs1LJjTfWg6a8ZReca50knPJCkvDvrL/TnwCw9Jhg8sd1SOmv
+         i5ktSLy4eM0Old7i9kbxfiAXsljrduTG8vzIP0qVu+Lmg10/kas3BbIyPciDFVCXqGlE
+         BfYipWdLBJOTRpG0nzGXPoXs8+8E364SbdC7CwOR6Ey+/PvLNx5erD8gWkS6jeSSqb5c
+         YF/KGb2nU/1uxrYAscmq4FNv4vg61qVqzPIw1iv4JQx7nK1VH+IPeyAQsV//fkw+3Oqj
+         qhpw==
+X-Gm-Message-State: AC+VfDwzVCtOaBgua4tdkpGwNtqipsGz3pbZTr5DSH/C5zhr7E5/k0Ck
+        mTv/EWxlVDQfGY8nKCep8tzXFg==
+X-Google-Smtp-Source: ACHHUZ73aYv7VuW3xyb7s9+hnkLmNwBNkF0tFLW5aRKP46KN0Aa1iOGxgtPOLXON8SJV0gfN4JvlvA==
+X-Received: by 2002:a2e:a4a8:0:b0:2b6:9dcf:bcb6 with SMTP id g8-20020a2ea4a8000000b002b69dcfbcb6mr987463ljm.19.1687761504261;
+        Sun, 25 Jun 2023 23:38:24 -0700 (PDT)
+Received: from localhost (144-178-202-138.static.ef-service.nl. [144.178.202.138])
+        by smtp.gmail.com with ESMTPSA id i21-20020a2e9415000000b002b44bcdf809sm1050527ljh.87.2023.06.25.23.38.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 25 Jun 2023 23:38:24 -0700 (PDT)
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date:   Mon, 26 Jun 2023 08:38:22 +0200
+Message-Id: <CTMDIQGOYMKD.1BP88GSB03U54@otso>
+From:   "Luca Weiss" <luca.weiss@fairphone.com>
+To:     "Rob Herring" <robh@kernel.org>
+Cc:     "Krzysztof Kozlowski" <krzysztof.kozlowski@linaro.org>,
+        "Abel Vesa" <abel.vesa@linaro.org>,
+        "Manivannan Sadhasivam" <mani@kernel.org>,
+        "Andy Gross" <agross@kernel.org>,
+        "Bjorn Andersson" <andersson@kernel.org>,
+        "Konrad Dybcio" <konrad.dybcio@linaro.org>,
+        "Krzysztof Kozlowski" <krzysztof.kozlowski+dt@linaro.org>,
+        "Conor Dooley" <conor+dt@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        "Bart Van Assche" <bvanassche@acm.org>,
+        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>,
+        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 5/5] scsi: dt-bindings: ufs: qcom: Fix warning for
+ sdm845 by adding reg-names
+X-Mailer: aerc 0.15.1
+References: <20230623113009.2512206-1-abel.vesa@linaro.org>
+ <20230623113009.2512206-6-abel.vesa@linaro.org>
+ <cd84b8c6-fac7-ecef-26be-792a1b04a102@linaro.org>
+ <CTK1AI4TVYRZ.F77OZB62YYC0@otso> <20230623211746.GA1128583-robh@kernel.org>
+In-Reply-To: <20230623211746.GA1128583-robh@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thank you, jon. I just submit v3, remove the reference in
-Documentation/target/scripts.rst.
+Hi Rob,
 
-Thanks,
+On Fri Jun 23, 2023 at 11:17 PM CEST, Rob Herring wrote:
+> On Fri, Jun 23, 2023 at 02:38:04PM +0200, Luca Weiss wrote:
+> > On Fri Jun 23, 2023 at 2:31 PM CEST, Krzysztof Kozlowski wrote:
+> > > On 23/06/2023 13:30, Abel Vesa wrote:
+> > > > There is a warning on dtbs check for sdm845, amongst other platform=
+s,
+> > > > about the reg-names being unevaluated. Fix that by adding reg-names=
+ to
+> > > > the clocks and reg properties check for such platforms.
+> > > >=20
+> > > > Fixes: 462c5c0aa798 ("dt-bindings: ufs: qcom,ufs: convert to dtsche=
+ma")
+> > > > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+> > > > ---
+> > > >  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 4 ++++
+> > > >  1 file changed, 4 insertions(+)
+> > > >=20
+> > > > diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/=
+Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> > > > index 0209713d1f88..894b57117314 100644
+> > > > --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> > > > +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> > > > @@ -166,6 +166,10 @@ allOf:
+> > > >          reg:
+> > > >            minItems: 2
+> > > >            maxItems: 2
+> > > > +        reg-names:
+> > > > +          items:
+> > > > +            - const: std
+> > > > +            - const: ice
+> > >
+> > > reg-names looks like a new property, so it should be defined in
+> > > top-level and just constrained per-variant.
+> > >
+> > > Also there was similar approach:
+> > > https://lore.kernel.org/all/20221209-dt-binding-ufs-v2-2-dc7a04699579=
+@fairphone.com/
+> > >
+> > > but I guess no resends and it can be superseded.
+> >=20
+> > Right, the patches got reviews but was never applied... I really need t=
+o
+> > find a strategy to keep track of sent patches until they're applied wit=
+h
+> > my work mailbox, it's not the first time that a patch has gotten
+> > forgotten.
+>
+> There was an error reported on the above series. Why would it be=20
+> applied?
 
-Rong Tao
+The error report at [0] complains about reg-names but I'm quite sure
+that patch 2/3 resolves this error. Does your bot only apply one patch
+at a time and run the check or apply all of them and then run it? It's
+been a while but I'm fairly sure I ran all of the checks before sending
+since I also documented some other patches in the cover letter there.
+
+[0] https://lore.kernel.org/all/167241769341.1925758.17856681634949446114.r=
+obh@kernel.org/
+
+>
+> That said, I'm not sure SCSI maintainers consistently apply DT only=20
+> patch series.
+>
+> > With my private mailbox I just have a different folder for patches that
+> > have been sent which I archive once they're applied, but with work GMai=
+l
+> > I don't see how I can easily replicate this since it's also not groupin=
+g
+> > threads properly.
+>
+> Yeah, GMail sucks for that. I use 'lei' to get all my patches and=20
+> replies to them (though its caching will miss replies). Then I delete=20
+> them from the mbox when they are applied or otherwise finished. lei=20
+> updates won't re-add them to the mbox.
+
+I'll try to figure something out with GMail.. Perhaps just adding a
+label "not yet applied" which I manually remove once it's applied would
+be sufficient.
+
+Regards
+Luca
+
+>
+> Rob
 
