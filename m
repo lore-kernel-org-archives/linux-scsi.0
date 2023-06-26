@@ -2,57 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 750A4EB64D7
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 09:58:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8942EB64D7
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 10:33:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229625AbjFZJ6y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 05:58:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50696 "EHLO
+        id S229448AbjFZKdp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 06:33:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229526AbjFZJ6w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 05:58:52 -0400
+        with ESMTP id S229569AbjFZKdm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 06:33:42 -0400
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CF07CF;
-        Mon, 26 Jun 2023 02:58:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F055910CC;
+        Mon, 26 Jun 2023 03:33:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1687773531; x=1719309531;
+  t=1687775611; x=1719311611;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=WfpjASZov298ZJyFvUAekLtOzcvxvaDIIQvIiTxJWz0=;
-  b=MaVtOS3oj1u8sKUtS6PYD1HGldITFvBcPh0tLa9nlt60ZH4xuL7Rs0yq
-   z092l3bTMBwk5rbkeztnpQIN+5RTeo55fTBpZ/oIZDeimmG/nvUtthESE
-   B0FZB6GUae9HSwZfNznaTw2218IVhl8MxYYw/sYARtrgB9WMKUfkaUbd0
-   XO3k1GZ9/3ndGuclvYs+aEqHvyEQCeYwaKQeATCtiDrPT1rmyRJ76BVI3
-   79XUBLDvTM07rznGmj/1nhYETmijASSCXlTfYoiwhAivbAQMaik+y3+G5
-   nGIRB0S2xcUXZYTvy/77wzpsrRrZJVLt9Y5Qah1cLfPrubL/itnZCHOe2
-   g==;
+  bh=YwJ4i9hAzCEWJpnziae69CZqoEbyx7XLquEgZ1d/STw=;
+  b=G7a0+fOPj5adBhgFkpHf0mPNjK1x1d7+h3cNz9kXmiDwQGemK2t32wgG
+   mUwzE/uZE8api4kmBMiL7DoBHkTmigey1Q/2J1HZEw2Owvvw8r6hWHm/D
+   6kn0dO0+24DothXChRCq1tifd6E1gszE0dttY/+hnGYU1iZXG7H16SzaB
+   CvaOwgEnl3BBbTl4Y/EFQw5GeJnDtbmdhU7eZzAdorNtds6z6FGbTHiWt
+   rOT2uRX/VYNQU7mY+cHJLgnyt6UK6lfKLXkpsypxpn/IizG5uoqtxSgW8
+   rKRtgNtz+6FL9SDPLxydbCc1dddQzaX6KSUq+EvBGQrHJcuCnFp4mWhWV
+   A==;
 X-IronPort-AV: E=Sophos;i="6.01,159,1684771200"; 
-   d="scan'208";a="348403709"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Jun 2023 17:58:50 +0800
-IronPort-SDR: 7Le8l+i3O0WZT+Q5RTH+0SLOjJoKc9ENXr9sPsxDbv4JIOJ335IrbC4eeP2kSjw2OjbRwFPT3P
- bXhe5gSJaWiDRUSirGC6HXm1GE4Sqi5j8qBR/VQq64faiioT4xzfXAvEf3XzpQVhf3nHmnZzgi
- U8n75UCe5vmAFupe0hw740jQmO6iVeaUBaeN25KDpmdq1S258MZN/HuPXfm+w0Bkz3qYyttvrU
- fDBhiZ5x0Bon6lP5M+JOyqtG+y3kgxsmAivd+nopr6DUApl2USiGcJ1EK+vGBowUkmV0mbBHjf
- Z4o=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Jun 2023 02:07:30 -0700
-IronPort-SDR: QEt+1k5AizdUDvJQMgrOo/IptIh3wJAmhErrp1BtQLiXNpyIqBWQ3jdSP0Xyw4WoyPuINaSHXn
- WLYeZFMGFZC+MaZoDC6Ep6+TAOWtWai27KC46xyNx9173ZNulwMiudJgDm5nKp6PgVKy/9fsdi
- SIsbyTDowMpGtrUZesujBvv9uMUMqAl347uPw8GxJSeBo7ItAO1t5HHB6sha+YyXOJ+bpk/NJd
- KlPcLG3XXpubINLq6DUPTBopVaFUeLznwzHT37nNZ89LHyGw4XbKj3tisTugWIERsrf1sEwGX7
- wtE=
+   d="scan'208";a="348405995"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Jun 2023 18:33:31 +0800
+IronPort-SDR: SY0Q3fsj151+AgxSZoziW3a0Ot3W393u6hiNkMAfJJEnBHe8wvQJFyX+yZvSbpt7vKtKLZiBF9
+ GA6iTkbZIMwert9M1pE5Z5FNrPP4l/5v51jTIW3mQ6FVDajFTx0kdkoCwlUsG+Ei7IUIPha3ro
+ ZVskp7gXdhPIGxzJJAzGjkaBPn9zIiwx1XJyjBFNkmlI6inLMEMT0P9/JFNSM6P6WtV3cdvMxm
+ W1/fLXNx768fVZRBHe6yhQQtRyq+sjWBW708jJG9KGVeSCJH1rD9bcXjkQTzGTPiG+r3LMT8Rk
+ 5pQ=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Jun 2023 02:47:51 -0700
+IronPort-SDR: gDyp91hw6fMk9KyxM3BjsV/rrSvxxkaUdviXHO4Qsw6X1RgOTzYBsjUtQLO/59vRiwxx72R2XO
+ JtFUquF/B1O+Z12+wyjAmUCzxluhaB0w6+J59WtsrMqxaUL/bMZR86LRaEIrc6E/RRksOakEDI
+ 0MJXlV5VMlUY0hjnNxtTK0EacSRt9DYR/T8wgmjRkCLelN7aNraICgNVtAh9d/zOSHT6myyKe6
+ bEMrKpuK/3h4gqLxCX6fLFI7rhdKWjIqWsBqlhwZVb/Mjefd9UvfTLzhRe7UGg9vEuw/s8hunx
+ H1w=
 WDCIronportException: Internal
 Received: from jd50rq2.ad.shared ([10.45.30.149])
-  by uls-op-cesaip01.wdc.com with ESMTP; 26 Jun 2023 02:58:50 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 26 Jun 2023 03:33:30 -0700
 From:   Arthur Simchaev <arthur.simchaev@wdc.com>
-To:     arthur.simchaev@wdc.com
-Cc:     Arthur Simchaev <Arthur.Simchaev@wdc.com>, beanhuo@micron.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [RESEND v2] FW: [PATCH v1] ufs: core: Add support for qTimestamp attribute
-Date:   Mon, 26 Jun 2023 12:58:43 +0300
-Message-Id: <20230626095845.8615-1-arthur.simchaev@wdc.com>
+To:     martin.petersen@oracle.com
+Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org, Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [RESEND v2] ufs: core: Add support for qTimestamp attribute
+Date:   Mon, 26 Jun 2023 13:33:19 +0300
+Message-Id: <20230626103320.8737-1-arthur.simchaev@wdc.com>
 X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -61,13 +62,6 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arthur Simchaev <Arthur.Simchaev@wdc.com>
-
------Original Message-----
-From: Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Sent: Tuesday, March 7, 2023 6:06 PM
-To: martin.petersen@oracle.com; bvanassche@acm.org
-Cc: beanhuo@micron.com; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH v1] ufs: core: Add support for qTimestamp attribute
 
 The new qTimestamp attribute was added to UFS 4.0 spec, in order to
 synchronize timestamp between device logs and the host.The spec recommend
@@ -78,8 +72,9 @@ the new definition of struct utp_upiu_query_v4_0 was added.
 
 Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
 
---
-Changes to v1:
+-----------------
+Changes to v2:
+- Adressed Bart's comments
 - Add missed response variable to ufshcd_set_timestamp_attr
 ---
  drivers/ufs/core/ufshcd.c        | 38 ++++++++++++++++++++++++++++++++
