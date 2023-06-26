@@ -2,134 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A78EC001E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 06:56:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB3B6EB64DC
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 07:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229725AbjFZG4o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 02:56:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51754 "EHLO
+        id S229871AbjFZHlQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 03:41:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229647AbjFZG4m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 02:56:42 -0400
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 173B9AC;
-        Sun, 25 Jun 2023 23:56:42 -0700 (PDT)
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1b7fb1a82c4so3799195ad.1;
-        Sun, 25 Jun 2023 23:56:42 -0700 (PDT)
+        with ESMTP id S229692AbjFZHlP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 03:41:15 -0400
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDD871B3
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 00:41:13 -0700 (PDT)
+Received: by mail-ed1-x535.google.com with SMTP id 4fb4d7f45d1cf-51d9128494cso976758a12.0
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 00:41:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1687765272; x=1690357272;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=zA7Cm37wj3yQ3D5wBwKXWhe4kq3EmRcED9N0uqF2kvQ=;
+        b=I/wb10rpkLePRZPQqPL0pgR4L5G+sfRmXWEKD7G+t2jo/R5hpYeMtBmaLkXSjbNfwh
+         m4nDPTipwLaUyzkP2QLaQFplIX4cFdrFGhv9E5VfyNyEUIiG50TM8QByb3Dtg7AYDaSZ
+         tfm5yt41F0dQ9GPbXtIEZEwWB0xMONHkDdAEas0dcaIh7wsVZsNxKmmkgWR8FmtDcMby
+         usUy4CFd4Y1tDPJcFK8aMYPJhCkz347nzYXDyshAKxj4w2YHV9/N0aoU8nwF7/7mAs6s
+         zU468STNhnXGkgDHmRdbpjfQxbkdfOohKmNpcx3VzUX3bWj0DDLHbM5vNgc3C1+9Xdtf
+         F8eQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687762601; x=1690354601;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=u58j1CoFhNAAP0kPknc/GhPhE9N5OmJCD1ZWCCtRRgc=;
-        b=WDPKuhXalnGPckp2TpIKynsO8ZnokkfdhiarQXI1U9VrqORX/RqI+YQ6iOzudxuYfh
-         4q6XXJOoyqqR6QwbktPcLn3j/Hia6cNtm2Nrhm3yJiWc7JcKmjD3tVjEuADNSmK2GgDV
-         xk8ovnwV1ONicO1yc5JYu90NJCKD2g0I+aPJlJcB+YR5HHSFgftpBca8XhiVusEZTmu+
-         +qlUGGQiGJiMT1OVUk9z8yv0fpOv85eDrKiCyXaOhKgjcvScYC6P8FrVEMhdjE7n32Sn
-         iHlKwHWwvll89VW7GKPNxJvK15XueSQ8E1WR4TpisHG4FV0/OHjFbqUI8/raDxp23ahg
-         j18A==
-X-Gm-Message-State: AC+VfDzH7/LQdst87G9Hu9Qbm2z58jPxCzQv6It28ppNG805JMr6LwXE
-        0lNQtVHRiUvsINC/V/q86Hk=
-X-Google-Smtp-Source: ACHHUZ6OtbsuuY2aXoeHYGi4XSA3mdaoGOU6p/4pXML9TF8F1ADk58bPj18ptJOfaGu5YjoBFEMRig==
-X-Received: by 2002:a17:903:1250:b0:1b5:3c7f:1b3b with SMTP id u16-20020a170903125000b001b53c7f1b3bmr5150508plh.35.1687762601317;
-        Sun, 25 Jun 2023 23:56:41 -0700 (PDT)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id jg3-20020a17090326c300b001a2104d706fsm2559571plb.225.2023.06.25.23.56.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 25 Jun 2023 23:56:40 -0700 (PDT)
-Date:   Mon, 26 Jun 2023 15:56:39 +0900
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Randy Dunlap <rdunlap@infradead.org>
-Cc:     linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Russell King <linux@armlinux.org.uk>,
-        Jens Axboe <axboe@kernel.dk>,
-        Vladimir Oltean <olteanv@gmail.com>,
-        Steffen Klassert <steffen.klassert@secunet.com>,
-        Daniel Jordan <daniel.m.jordan@oracle.com>,
-        Akinobu Mita <akinobu.mita@gmail.com>,
-        Helge Deller <deller@gmx.de>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Henrik Rydberg <rydberg@bitmath.org>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Jiri Kosina <jikos@kernel.org>,
-        Miroslav Benes <mbenes@suse.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        Josh Poimboeuf <jpoimboe@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Naoya Horiguchi <naoya.horiguchi@nec.com>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        Jonas Bonn <jonas@southpole.se>,
-        Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
-        Stafford Horne <shorne@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Juri Lelli <juri.lelli@redhat.com>,
-        Vincent Guittot <vincent.guittot@linaro.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Paul Moore <paul@paul-moore.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Daniel Bristot de Oliveira <bristot@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Evgeniy Polyakov <zbr@ioremap.net>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        Reinette Chatre <reinette.chatre@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Borislav Petkov <bp@alien8.de>,
-        Chris Zankel <chris@zankel.net>,
-        Max Filippov <jcmvbkbc@gmail.com>, coresight@lists.linaro.org,
-        dri-devel@lists.freedesktop.org, keyrings@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-sgx@vger.kernel.org, linux-trace-devel@vger.kernel.org,
-        linux-trace-kernel@vger.kernel.org, live-patching@vger.kernel.org,
-        linux-security-module@vger.kernel.org, linux-usb@vger.kernel.org,
-        netdev@vger.kernel.org, linux-mm@kvack.org,
-        openrisc@lists.librecores.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-xtensa@linux-xtensa.org, linuxppc-dev@lists.ozlabs.org,
-        x86@kernel.org
-Subject: Re: [PATCH 00/24 v2] Documentation: correct lots of spelling errors
- (series 1)
-Message-ID: <20230626065639.GA3403711@rocinante>
-References: <20230209071400.31476-1-rdunlap@infradead.org>
+        d=1e100.net; s=20221208; t=1687765272; x=1690357272;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zA7Cm37wj3yQ3D5wBwKXWhe4kq3EmRcED9N0uqF2kvQ=;
+        b=Quf7P4F/OLlUhbIQStOcBNhfjnxSIL0ftTr4qVVV0emVEUgHXJ7/gvcE+5RaktrdFX
+         Pveqfo5ZWZ81THQaWfMi/4e129nktLKC46vXHl6j7T2OLCp4tI761wwGql4g3Q0vSVVn
+         1JjI9cs+wRylDCh7uIE0w3v6dCFOWBFAtixOzozXx611TCXhSalx+tutIAUBW4JUQOoR
+         fzb73fdASmVbDwSZ6yHXnqxIaEdtM5jKYYALD9jMQsTaxxC8ErpicEy2YIsBHKElrOpv
+         CBV/gQMPCHk0sCk1Ir4esk3AAd/l8qEVshnzyQIZOvkZYaztBoSb2gQklhFpmT5VNFaN
+         vVCQ==
+X-Gm-Message-State: AC+VfDyi7EhZLil5wEkQolSaJ9ZJpFC2iScUCJ75o8qzrhuzLiPfCtpr
+        XqJZDloY6ucdsQVGeDlNDtHsOw==
+X-Google-Smtp-Source: ACHHUZ6Tv5NqF4SmF0qc5/rrLjA1ARSlgDmMBu++P0KZeJI4PYADGMrZs/OxnOVDb9cA3kIGJK1k7Q==
+X-Received: by 2002:a17:907:86aa:b0:989:5d1a:a558 with SMTP id qa42-20020a17090786aa00b009895d1aa558mr14941181ejc.61.1687765272276;
+        Mon, 26 Jun 2023 00:41:12 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.219.26])
+        by smtp.gmail.com with ESMTPSA id gu3-20020a170906f28300b0096f71ace804sm2969110ejb.99.2023.06.26.00.41.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Jun 2023 00:41:11 -0700 (PDT)
+Message-ID: <d3970163-b8e8-9665-3761-8942c28adaa8@linaro.org>
+Date:   Mon, 26 Jun 2023 09:41:09 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230209071400.31476-1-rdunlap@infradead.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH 5/5] scsi: dt-bindings: ufs: qcom: Fix warning for sdm845
+ by adding reg-names
+Content-Language: en-US
+To:     Luca Weiss <luca.weiss@fairphone.com>,
+        Rob Herring <robh@kernel.org>
+Cc:     Abel Vesa <abel.vesa@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <20230623113009.2512206-1-abel.vesa@linaro.org>
+ <20230623113009.2512206-6-abel.vesa@linaro.org>
+ <cd84b8c6-fac7-ecef-26be-792a1b04a102@linaro.org>
+ <CTK1AI4TVYRZ.F77OZB62YYC0@otso> <20230623211746.GA1128583-robh@kernel.org>
+ <CTMDIQGOYMKD.1BP88GSB03U54@otso>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <CTMDIQGOYMKD.1BP88GSB03U54@otso>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
-
-> Correct many spelling errors in Documentation/ as reported by codespell.
+On 26/06/2023 08:38, Luca Weiss wrote:
+>>>> but I guess no resends and it can be superseded.
+>>>
+>>> Right, the patches got reviews but was never applied... I really need to
+>>> find a strategy to keep track of sent patches until they're applied with
+>>> my work mailbox, it's not the first time that a patch has gotten
+>>> forgotten.
+>>
+>> There was an error reported on the above series. Why would it be 
+>> applied?
 > 
-> Maintainers of specific kernel subsystems are only Cc-ed on their
-> respective patches, not the entire series.
+> The error report at [0] complains about reg-names but I'm quite sure
+> that patch 2/3 resolves this error. Does your bot only apply one patch
+> at a time and run the check or apply all of them and then run it? It's
+> been a while but I'm fairly sure I ran all of the checks before sending
+> since I also documented some other patches in the cover letter there.
+
+You did it in cover letter, not in the patch, so there is no dependency
+for bots recorded.
+
 > 
-> These patches are based on linux-next-20230209.
-> 
-[...]
->  [PATCH 13/24] Documentation: PCI: correct spelling
-[...]
+> [0] https://lore.kernel.org/all/167241769341.1925758.17856681634949446114.robh@kernel.org/
 
-Applied to misc, thank you!
+Your patch 2/3 could not be applied to any tree. 3/3 applied but without
+previous one caused warnings.
 
-[1/1] Documentation: PCI: correct spelling
-      https://git.kernel.org/pci/pci/c/b58d6d89ae02
 
-	Krzysztof
+
+
+Best regards,
+Krzysztof
+
