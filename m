@@ -2,112 +2,202 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB3BC001B0
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 09:30:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 750A4EB64D7
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 09:58:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229601AbjFZJaW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 05:30:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38252 "EHLO
+        id S229625AbjFZJ6y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 05:58:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230385AbjFZJaI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 05:30:08 -0400
-Received: from mail-il1-f172.google.com (mail-il1-f172.google.com [209.85.166.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3453B9;
-        Mon, 26 Jun 2023 02:30:05 -0700 (PDT)
-Received: by mail-il1-f172.google.com with SMTP id e9e14a558f8ab-345a0cf5b3bso8682275ab.0;
-        Mon, 26 Jun 2023 02:30:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687771805; x=1690363805;
-        h=date:subject:message-id:references:in-reply-to:cc:to:from
-         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=+OtaETWb24m97Ds/UuSIviPp/udpUqkFteTCOvggmng=;
-        b=HjEhtpSZrlJBIXPBgyEwMzVVrssHF6MJZQ8i6vFqvk5jMqR40EyvKIrqyI33FTi9NZ
-         6bonRSu7Q0ATA8TVDeTsp7UOIRn/BtmQky8wNVACxRxacQdL6DW6tbU1QPmh7ZYF8bNT
-         49AWd+WiqLtWDsRB/aKQta6hfrlfpfmQscZZj1orPhMMjL2jJCQ/tfHHKmZZRaWXoysf
-         G3CfGop70rxEYw9bGr24bXyMXYvTqKcQXLOa4HYo8XlUnPvw1B0sQNQs7dh7uiCL3/bN
-         HuoXrJ6EmbehYPtA8sBDGm8i8LXVXsrWD2q1+g6f7+JeO/lQ59Fg/oA3mVNw+53JbOBp
-         1/qw==
-X-Gm-Message-State: AC+VfDx/2L2sbfkXFpOsWnFoTriIgnJtsIdH3YMK2MT8XOyXwGP1h6q9
-        SvKPoPsD0yet8vLQviJYog==
-X-Google-Smtp-Source: ACHHUZ7ma3u80z5g13zdtQF0PPsMHvxWrDwncZTbHWyQ5p5pXLKxhjX3k1XvOGgqqkWOSND7WCI3Qg==
-X-Received: by 2002:a92:d309:0:b0:33d:3b69:2d23 with SMTP id x9-20020a92d309000000b0033d3b692d23mr22947121ila.19.1687771804923;
-        Mon, 26 Jun 2023 02:30:04 -0700 (PDT)
-Received: from robh_at_kernel.org ([64.188.179.250])
-        by smtp.gmail.com with ESMTPSA id p17-20020a056e0206d100b00341fa29aaf4sm1886925ils.39.2023.06.26.02.30.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jun 2023 02:30:04 -0700 (PDT)
-Received: (nullmailer pid 2436844 invoked by uid 1000);
-        Mon, 26 Jun 2023 09:30:02 -0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229526AbjFZJ6w (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 05:58:52 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CF07CF;
+        Mon, 26 Jun 2023 02:58:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1687773531; x=1719309531;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=WfpjASZov298ZJyFvUAekLtOzcvxvaDIIQvIiTxJWz0=;
+  b=MaVtOS3oj1u8sKUtS6PYD1HGldITFvBcPh0tLa9nlt60ZH4xuL7Rs0yq
+   z092l3bTMBwk5rbkeztnpQIN+5RTeo55fTBpZ/oIZDeimmG/nvUtthESE
+   B0FZB6GUae9HSwZfNznaTw2218IVhl8MxYYw/sYARtrgB9WMKUfkaUbd0
+   XO3k1GZ9/3ndGuclvYs+aEqHvyEQCeYwaKQeATCtiDrPT1rmyRJ76BVI3
+   79XUBLDvTM07rznGmj/1nhYETmijASSCXlTfYoiwhAivbAQMaik+y3+G5
+   nGIRB0S2xcUXZYTvy/77wzpsrRrZJVLt9Y5Qah1cLfPrubL/itnZCHOe2
+   g==;
+X-IronPort-AV: E=Sophos;i="6.01,159,1684771200"; 
+   d="scan'208";a="348403709"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Jun 2023 17:58:50 +0800
+IronPort-SDR: 7Le8l+i3O0WZT+Q5RTH+0SLOjJoKc9ENXr9sPsxDbv4JIOJ335IrbC4eeP2kSjw2OjbRwFPT3P
+ bXhe5gSJaWiDRUSirGC6HXm1GE4Sqi5j8qBR/VQq64faiioT4xzfXAvEf3XzpQVhf3nHmnZzgi
+ U8n75UCe5vmAFupe0hw740jQmO6iVeaUBaeN25KDpmdq1S258MZN/HuPXfm+w0Bkz3qYyttvrU
+ fDBhiZ5x0Bon6lP5M+JOyqtG+y3kgxsmAivd+nopr6DUApl2USiGcJ1EK+vGBowUkmV0mbBHjf
+ Z4o=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Jun 2023 02:07:30 -0700
+IronPort-SDR: QEt+1k5AizdUDvJQMgrOo/IptIh3wJAmhErrp1BtQLiXNpyIqBWQ3jdSP0Xyw4WoyPuINaSHXn
+ WLYeZFMGFZC+MaZoDC6Ep6+TAOWtWai27KC46xyNx9173ZNulwMiudJgDm5nKp6PgVKy/9fsdi
+ SIsbyTDowMpGtrUZesujBvv9uMUMqAl347uPw8GxJSeBo7ItAO1t5HHB6sha+YyXOJ+bpk/NJd
+ KlPcLG3XXpubINLq6DUPTBopVaFUeLznwzHT37nNZ89LHyGw4XbKj3tisTugWIERsrf1sEwGX7
+ wtE=
+WDCIronportException: Internal
+Received: from jd50rq2.ad.shared ([10.45.30.149])
+  by uls-op-cesaip01.wdc.com with ESMTP; 26 Jun 2023 02:58:50 -0700
+From:   Arthur Simchaev <arthur.simchaev@wdc.com>
+To:     arthur.simchaev@wdc.com
+Cc:     Arthur Simchaev <Arthur.Simchaev@wdc.com>, beanhuo@micron.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [RESEND v2] FW: [PATCH v1] ufs: core: Add support for qTimestamp attribute
+Date:   Mon, 26 Jun 2023 12:58:43 +0300
+Message-Id: <20230626095845.8615-1-arthur.simchaev@wdc.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-From:   Rob Herring <robh@kernel.org>
-To:     Luca Weiss <luca.weiss@fairphone.com>
-Cc:     phone-devel@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Iskren Chernev <me@iskren.info>,
-        Avri Altman <avri.altman@wdc.com>,
-        Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        ~postmarketos/upstreaming@lists.sr.ht,
-        Eric Biggers <ebiggers@google.com>,
-        linux-arm-msm@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        devicetree@vger.kernel.org,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        linux-scsi@vger.kernel.org
-In-Reply-To: <20221209-dt-binding-ufs-v4-3-14ced60f3d1b@fairphone.com>
-References: <20221209-dt-binding-ufs-v4-0-14ced60f3d1b@fairphone.com>
- <20221209-dt-binding-ufs-v4-3-14ced60f3d1b@fairphone.com>
-Message-Id: <168777180225.2436813.12641828486385303318.robh@kernel.org>
-Subject: Re: [PATCH v4 3/3] dt-bindings: ufs: qcom: Fix sm8450 bindings
-Date:   Mon, 26 Jun 2023 03:30:02 -0600
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Arthur Simchaev <Arthur.Simchaev@wdc.com>
 
-On Mon, 26 Jun 2023 10:15:59 +0200, Luca Weiss wrote:
-> SM8450 actually supports ICE (Inline Crypto Engine) so adjust the
-> bindings and the example to match.
-> 
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> Reviewed-by: Eric Biggers <ebiggers@google.com>
-> Reviewed-by: Iskren Chernev <me@iskren.info>
-> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
-> 
+-----Original Message-----
+From: Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Sent: Tuesday, March 7, 2023 6:06 PM
+To: martin.petersen@oracle.com; bvanassche@acm.org
+Cc: beanhuo@micron.com; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH v1] ufs: core: Add support for qTimestamp attribute
 
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
+The new qTimestamp attribute was added to UFS 4.0 spec, in order to
+synchronize timestamp between device logs and the host.The spec recommend
+to send this attribute upon device power-on Reset/HW reset or when
+switching to Active state (using SSU command). Due to this attribute,
+the attribute's max value was extended to 8 bytes. As a result,
+the new definition of struct utp_upiu_query_v4_0 was added.
 
-yamllint warnings/errors:
+Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
 
-dtschema/dtc warnings/errors:
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: Unevaluated properties are not allowed ('reg-names' was unexpected)
-	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
+--
+Changes to v1:
+- Add missed response variable to ufshcd_set_timestamp_attr
+---
+ drivers/ufs/core/ufshcd.c        | 38 ++++++++++++++++++++++++++++++++
+ include/uapi/scsi/scsi_bsg_ufs.h | 25 +++++++++++++++++++++
+ include/ufs/ufs.h                |  1 +
+ 3 files changed, 64 insertions(+)
 
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20221209-dt-binding-ufs-v4-3-14ced60f3d1b@fairphone.com
-
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 358b3240b6c5..e2812911e462 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8520,6 +8520,41 @@ static int ufshcd_device_params_init(struct ufs_hba *hba)
+ 	return ret;
+ }
+ 
++static void ufshcd_set_timestamp_attr(struct ufs_hba *hba)
++{
++	int err;
++	struct ufs_query_req *request = NULL;
++	struct ufs_query_res *response = NULL;
++	struct ufs_dev_info *dev_info = &hba->dev_info;
++	struct utp_upiu_query_v4_0 *upiu_data;
++
++	if (dev_info->wspecversion < 0x400)
++		return;
++
++	ufshcd_hold(hba);
++
++	mutex_lock(&hba->dev_cmd.lock);
++
++	ufshcd_init_query(hba, &request, &response,
++			  UPIU_QUERY_OPCODE_WRITE_ATTR,
++			  QUERY_ATTR_IDN_TIMESTAMP, 0, 0);
++
++	request->query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
++
++	upiu_data = (struct utp_upiu_query_v4_0 *)&request->upiu_req;
++
++	put_unaligned_be64(ktime_get_real_ns(), &upiu_data->osf3);
++
++	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
++
++	if (err)
++		dev_err(hba->dev, "%s: failed to set timestamp %d\n",
++			__func__, err);
++
++	mutex_unlock(&hba->dev_cmd.lock);
++	ufshcd_release(hba);
++}
++
+ /**
+  * ufshcd_add_lus - probe and add UFS logical units
+  * @hba: per-adapter instance
+@@ -8708,6 +8743,8 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+ 
++	ufshcd_set_timestamp_attr(hba);
++
+ 	/* Gear up to HS gear if supported */
+ 	if (hba->max_pwr_info.is_valid) {
+ 		/*
+@@ -9741,6 +9778,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		ret = ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE);
+ 		if (ret)
+ 			goto set_old_link_state;
++		ufshcd_set_timestamp_attr(hba);
+ 	}
+ 
+ 	if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
+diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
+index 2801b65299aa..fd3f9e5ee241 100644
+--- a/include/uapi/scsi/scsi_bsg_ufs.h
++++ b/include/uapi/scsi/scsi_bsg_ufs.h
+@@ -70,6 +70,31 @@ struct utp_upiu_query {
+ 	__be32 reserved[2];
+ };
+ 
++/**
++ * struct utp_upiu_query_v4_0 - upiu request buffer structure for
++ * query request >= UFS 4.0 spec.
++ * @opcode: command to perform B-0
++ * @idn: a value that indicates the particular type of data B-1
++ * @index: Index to further identify data B-2
++ * @selector: Index to further identify data B-3
++ * @osf4: spec field B-5
++ * @osf5: spec field B 6,7
++ * @osf6: spec field DW 8,9
++ * @osf7: spec field DW 10,11
++ */
++struct utp_upiu_query_v4_0 {
++	__u8 opcode;
++	__u8 idn;
++	__u8 index;
++	__u8 selector;
++	__u8 osf3;
++	__u8 osf4;
++	__be16 osf5;
++	__be32 osf6;
++	__be32 osf7;
++	__be32 reserved;
++};
++
+ /**
+  * struct utp_upiu_cmd - Command UPIU structure
+  * @data_transfer_len: Data Transfer Length DW-3
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index 4e8d6240e589..198cb391f9db 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -170,6 +170,7 @@ enum attr_idn {
+ 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+ 	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
+ 	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
++	QUERY_ATTR_IDN_TIMESTAMP		= 0x30
+ };
+ 
+ /* Descriptor idn for Query requests */
+-- 
+2.34.1
 
