@@ -2,95 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D67E3EB64D7
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 10:59:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51426EB64D7
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 12:37:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229631AbjFZK7N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 06:59:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43846 "EHLO
+        id S231128AbjFZMhF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 08:37:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230111AbjFZK7L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 06:59:11 -0400
-Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD10C10C8
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 03:58:53 -0700 (PDT)
-Received: by mail-wr1-x42c.google.com with SMTP id ffacd0b85a97d-313e09a5b19so1583162f8f.0
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 03:58:53 -0700 (PDT)
+        with ESMTP id S230445AbjFZMhB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 08:37:01 -0400
+Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 061C9118;
+        Mon, 26 Jun 2023 05:37:00 -0700 (PDT)
+Received: by mail-ej1-x62c.google.com with SMTP id a640c23a62f3a-98df3dea907so270122466b.3;
+        Mon, 26 Jun 2023 05:36:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1687777132; x=1690369132;
-        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=NmyUEybaSl8jewhXJwO5GjHWG9G5WP3PmoAzPe0ILkU=;
-        b=avrpOfeIQ3438935VtYjHQuaBm+6uCU1b5BwltsAYwa5QvGk4cE0tbV7j8w+VbT7cu
-         H+SsGvsDgY5AadNGqc6+K3GbYrsGh4guoZFpokrCCR95ax4iusW9hwzPYYGs+MRP8LLh
-         sazU0behMVHCQC9sBhTpjbg9H/mILQaVXUUBXfY62QjQAg82LsIOVCgKkSporXWTHgAK
-         a/P0/lOtjiPorhnOKLPSpMfDUOIGuFzVYZp4Ol6fWNUKgsjUSbzmvEDDr3j7Y9Yb+5rd
-         LwJ4aLomAqL7hxZfvCowL3F+3NYvBYgp8fPKIaWRUmFxJgzIxembueIm5e+XRm0fh8EL
-         aT+Q==
+        d=gmail.com; s=20221208; t=1687783018; x=1690375018;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Ts7z/BAypRpTsOZNvrC0wa2ErrI/X5kofekA6oN1UMo=;
+        b=GxiPBR0eAmZ205C+pO4K36/cTkUmcvtStCKKV8FBZStHaRYISCMpy4+wJ1lMRN1muG
+         ZDHTHRnXmnWxu7QEEepV3UnGx+AKYPJwr5LnLR64hsdQBvY/3YrXdKG1oIvgXmG3DlWQ
+         cfsNWzKpIhQckBsBFeB/NYweo6OnVmHXmwhr+Dsjqj6rutgc9es1ZmwATMn2AwUiwzYS
+         cCNhT6MBUuAt7OnBS2uGg7jVp9Dff0xJSKoYhyktzIC57DtcCcqmAW/VhDA8JvUGRZWY
+         Au8Qn68xF0ZzcDd1cgEqOSnaE8TXNqkLeUyQFqlT/XpRhETPYjuDx7HffEf6a7/AwA4R
+         E4Tw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687777132; x=1690369132;
-        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=NmyUEybaSl8jewhXJwO5GjHWG9G5WP3PmoAzPe0ILkU=;
-        b=Gter6ePfsR7P/SbHIvXWgg86rUfJC4G908aYM6mXAyadk1iWtUJKuov9zhwkfdhFF9
-         JwyGazdilunVHjMEqS41ZC9Xz6u7m13HMKOGbTOWOFbYkYQOluLqiTn+vmbf11D+PYoR
-         w2qgPYU85nuA2ni7PzhUiQ7QtzYqLF3vtvBdn+t3GvDjs5D2pJ+mN0mZoQw9Afp17xcq
-         mFNohin5yPSrI4kFq2yEEMjcoamj0fJScSpWOGKtt2Nhg990LSH+VvRvrnln59F9Mq3f
-         EPKJFyy4HO8ELvr1fpyzLSuTCG9b/scSZvnwt+61d2gSimYFh2lOGF80WNeZlcz2gBTY
-         Y07A==
-X-Gm-Message-State: AC+VfDxVZHLAnFIlssKB1aThXck9F0rdGDi7eMI5pToPL7yyodpTrsdy
-        0gnusu3hwdILwrm6ngGks1eCTw==
-X-Google-Smtp-Source: ACHHUZ5KMnxgiSOOYF9kimp5XVLCW8BXCZswbAvUiPD4AGxmYKKq49SRqCT0jLX3nnllF7SWgh7TDw==
-X-Received: by 2002:adf:e910:0:b0:30f:c7e5:6176 with SMTP id f16-20020adfe910000000b0030fc7e56176mr26655207wrm.14.1687777132307;
-        Mon, 26 Jun 2023 03:58:52 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id o7-20020adfeac7000000b003095bd71159sm7140636wrn.7.2023.06.26.03.58.50
+        d=1e100.net; s=20221208; t=1687783018; x=1690375018;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Ts7z/BAypRpTsOZNvrC0wa2ErrI/X5kofekA6oN1UMo=;
+        b=AUlm+KyfJ5mL0EwkGH6st9Nh5UGj5XLpqNHr051+Ar1Qp2m6gBqvpbB+S4MgNp4NhP
+         9lL/gHx2TWGSMWqqd6ywWK7PA9o+M8hnEjPrUVkqMHupQsPXfZmjtXGVtMKr0atD2zno
+         m9RpIb++Aa1ffAkn4A1QVvx8qy+3bz3GG7orWUBovYKujeCZ2e7ksP+LSylpz/r0Ac3X
+         KVymGHR6kiUN7IT3awtPJpWXuAMWjrGxvuEBSQISutBUQ4wrFP2PizfiQ8YxdoB5yiBb
+         aaF5bCeL/jMFr1S6tjJFuSGlXHK6e/jZCMgtsTykkX26WODYVZEw5d7XIGMO3Es9TIma
+         dxKw==
+X-Gm-Message-State: AC+VfDxisRsipQbdDxQg5ByUnP43yP/YpBKPu/7vmmIAdLqwLyTdGUgX
+        VpnUYtXZ8ymV60bfS2VKpBi6eCvi2GmUOw==
+X-Google-Smtp-Source: ACHHUZ6VbjANrhtBGw/tYlfdEP2b8nnR8n01SyBT0WU3lVqNxVbA7sBbSe7GcYdtwFgAKQGPdBjvlQ==
+X-Received: by 2002:a17:907:d8b:b0:98c:f488:4202 with SMTP id go11-20020a1709070d8b00b0098cf4884202mr12025832ejc.15.1687783018196;
+        Mon, 26 Jun 2023 05:36:58 -0700 (PDT)
+Received: from [10.176.234.233] ([147.161.245.113])
+        by smtp.gmail.com with ESMTPSA id ec10-20020a170906b6ca00b009893650453fsm3251148ejb.173.2023.06.26.05.36.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jun 2023 03:58:51 -0700 (PDT)
-Date:   Mon, 26 Jun 2023 13:58:47 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     Quinn Tran <quinn.tran@cavium.com>
-Cc:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 2/2] scsi: qla2xxx: Fix error code in qla2x00_start_sp()
-Message-ID: <49866d28-4cfe-47b0-842b-78f110e61aab@moroto.mountain>
+        Mon, 26 Jun 2023 05:36:57 -0700 (PDT)
+Message-ID: <2d034edbe84092fa4030fa2bf366d4b58c4b9405.camel@gmail.com>
+Subject: Re: [RESEND v2] ufs: core: Add support for qTimestamp attribute
+From:   Bean Huo <huobean@gmail.com>
+To:     Arthur Simchaev <arthur.simchaev@wdc.com>,
+        martin.petersen@oracle.com
+Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org
+Date:   Mon, 26 Jun 2023 14:36:56 +0200
+In-Reply-To: <20230626103320.8737-1-arthur.simchaev@wdc.com>
+References: <20230626103320.8737-1-arthur.simchaev@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4aa0485e-766f-4b02-8d5d-c6781ea8f511@moroto.mountain>
-X-Mailer: git-send-email haha only kidding
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This should be negative -EAGAIN instead of positive.  The callers
-treat non-zero error codes the same so it doesn't really impact
-runtime beyond some trivial differences to debug output.
+On Mon, 2023-06-26 at 13:33 +0300, Arthur Simchaev wrote:
+> =C2=A0
+> +/**
+> + * struct utp_upiu_query_v4_0 - upiu request buffer structure for
+> + * query request >=3D UFS 4.0 spec.
+> + * @opcode: command to perform B-0
+> + * @idn: a value that indicates the particular type of data B-1
+> + * @index: Index to further identify data B-2
+> + * @selector: Index to further identify data B-3
+> + * @osf4: spec field B-5
+> + * @osf5: spec field B 6,7
+> + * @osf6: spec field DW 8,9
+> + * @osf7: spec field DW 10,11
+> + */
+> +struct utp_upiu_query_v4_0 {
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 opcode;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 idn;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 index;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 selector;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 osf3;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 osf4;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__be16 osf5;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__be32 osf6;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__be32 osf7;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__be32 reserved;
+> +};
 
-Fixes: 80676d054e5a ("scsi: qla2xxx: Fix session cleanup hang")
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
----
- drivers/scsi/qla2xxx/qla_iocb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Arthur,
+In fact, this structure should be a "Transaction Specific Fields" in
+Query UPIU for all query functions. By comparing 3.1 and 4.0, you can
+use current utp_upiu_query{}, because you only want to pass 64bit TS.
+Or you can change utp_upiu_query() to make it more uniform to meet
+various query functions.
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 9c70c4e973ee..730d8609276c 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -3912,7 +3912,7 @@ qla2x00_start_sp(srb_t *sp)
- 
- 	pkt = __qla2x00_alloc_iocbs(sp->qpair, sp);
- 	if (!pkt) {
--		rval = EAGAIN;
-+		rval = -EAGAIN;
- 		ql_log(ql_log_warn, vha, 0x700c,
- 		    "qla2x00_alloc_iocbs failed.\n");
- 		goto done;
--- 
-2.39.2
-
+Kind regards,
+Bean
