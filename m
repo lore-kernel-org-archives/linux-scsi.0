@@ -2,105 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51426EB64D7
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 12:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90802EB64D7
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 20:35:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231128AbjFZMhF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 08:37:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37012 "EHLO
+        id S230113AbjFZUfa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 16:35:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230445AbjFZMhB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 08:37:01 -0400
-Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 061C9118;
-        Mon, 26 Jun 2023 05:37:00 -0700 (PDT)
-Received: by mail-ej1-x62c.google.com with SMTP id a640c23a62f3a-98df3dea907so270122466b.3;
-        Mon, 26 Jun 2023 05:36:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687783018; x=1690375018;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Ts7z/BAypRpTsOZNvrC0wa2ErrI/X5kofekA6oN1UMo=;
-        b=GxiPBR0eAmZ205C+pO4K36/cTkUmcvtStCKKV8FBZStHaRYISCMpy4+wJ1lMRN1muG
-         ZDHTHRnXmnWxu7QEEepV3UnGx+AKYPJwr5LnLR64hsdQBvY/3YrXdKG1oIvgXmG3DlWQ
-         cfsNWzKpIhQckBsBFeB/NYweo6OnVmHXmwhr+Dsjqj6rutgc9es1ZmwATMn2AwUiwzYS
-         cCNhT6MBUuAt7OnBS2uGg7jVp9Dff0xJSKoYhyktzIC57DtcCcqmAW/VhDA8JvUGRZWY
-         Au8Qn68xF0ZzcDd1cgEqOSnaE8TXNqkLeUyQFqlT/XpRhETPYjuDx7HffEf6a7/AwA4R
-         E4Tw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687783018; x=1690375018;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Ts7z/BAypRpTsOZNvrC0wa2ErrI/X5kofekA6oN1UMo=;
-        b=AUlm+KyfJ5mL0EwkGH6st9Nh5UGj5XLpqNHr051+Ar1Qp2m6gBqvpbB+S4MgNp4NhP
-         9lL/gHx2TWGSMWqqd6ywWK7PA9o+M8hnEjPrUVkqMHupQsPXfZmjtXGVtMKr0atD2zno
-         m9RpIb++Aa1ffAkn4A1QVvx8qy+3bz3GG7orWUBovYKujeCZ2e7ksP+LSylpz/r0Ac3X
-         KVymGHR6kiUN7IT3awtPJpWXuAMWjrGxvuEBSQISutBUQ4wrFP2PizfiQ8YxdoB5yiBb
-         aaF5bCeL/jMFr1S6tjJFuSGlXHK6e/jZCMgtsTykkX26WODYVZEw5d7XIGMO3Es9TIma
-         dxKw==
-X-Gm-Message-State: AC+VfDxisRsipQbdDxQg5ByUnP43yP/YpBKPu/7vmmIAdLqwLyTdGUgX
-        VpnUYtXZ8ymV60bfS2VKpBi6eCvi2GmUOw==
-X-Google-Smtp-Source: ACHHUZ6VbjANrhtBGw/tYlfdEP2b8nnR8n01SyBT0WU3lVqNxVbA7sBbSe7GcYdtwFgAKQGPdBjvlQ==
-X-Received: by 2002:a17:907:d8b:b0:98c:f488:4202 with SMTP id go11-20020a1709070d8b00b0098cf4884202mr12025832ejc.15.1687783018196;
-        Mon, 26 Jun 2023 05:36:58 -0700 (PDT)
-Received: from [10.176.234.233] ([147.161.245.113])
-        by smtp.gmail.com with ESMTPSA id ec10-20020a170906b6ca00b009893650453fsm3251148ejb.173.2023.06.26.05.36.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jun 2023 05:36:57 -0700 (PDT)
-Message-ID: <2d034edbe84092fa4030fa2bf366d4b58c4b9405.camel@gmail.com>
-Subject: Re: [RESEND v2] ufs: core: Add support for qTimestamp attribute
-From:   Bean Huo <huobean@gmail.com>
-To:     Arthur Simchaev <arthur.simchaev@wdc.com>,
-        martin.petersen@oracle.com
-Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bvanassche@acm.org
-Date:   Mon, 26 Jun 2023 14:36:56 +0200
-In-Reply-To: <20230626103320.8737-1-arthur.simchaev@wdc.com>
-References: <20230626103320.8737-1-arthur.simchaev@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu1 
+        with ESMTP id S229523AbjFZUfa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 16:35:30 -0400
+Received: from gw.rozsnyo.com (gw.rozsnyo.com [77.240.102.234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE16798
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 13:35:27 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by gw.rozsnyo.com (Postfix) with ESMTP id 183681033FA9
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 22:35:27 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at rozsnyo.com
+Received: from gw.rozsnyo.com ([127.0.0.1])
+        by localhost (hosting.rozsnyo.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 7EtXeKLvJ1Xk for <linux-scsi@vger.kernel.org>;
+        Mon, 26 Jun 2023 22:35:26 +0200 (CEST)
+Received: from [192.168.68.7] (gw.rozsnyo.com [77.240.102.234])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by gw.rozsnyo.com (Postfix) with ESMTPSA id 7FACE1033F9F
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 22:35:26 +0200 (CEST)
+Message-ID: <c6499ed7-d049-5714-f827-734cff3f6305@rozsnyo.com>
+Date:   Mon, 26 Jun 2023 22:35:23 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+From:   =?UTF-8?Q?Daniel_Rozsny=c3=b3?= <daniel@rozsnyo.com>
+Subject: [RFC] Support for Write-and-Verify only drives
+To:     linux-scsi@vger.kernel.org
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2023-06-26 at 13:33 +0300, Arthur Simchaev wrote:
-> =C2=A0
-> +/**
-> + * struct utp_upiu_query_v4_0 - upiu request buffer structure for
-> + * query request >=3D UFS 4.0 spec.
-> + * @opcode: command to perform B-0
-> + * @idn: a value that indicates the particular type of data B-1
-> + * @index: Index to further identify data B-2
-> + * @selector: Index to further identify data B-3
-> + * @osf4: spec field B-5
-> + * @osf5: spec field B 6,7
-> + * @osf6: spec field DW 8,9
-> + * @osf7: spec field DW 10,11
-> + */
-> +struct utp_upiu_query_v4_0 {
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 opcode;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 idn;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 index;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 selector;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 osf3;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__u8 osf4;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__be16 osf5;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__be32 osf6;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__be32 osf7;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__be32 reserved;
-> +};
-
-Hi Arthur,
-In fact, this structure should be a "Transaction Specific Fields" in
-Query UPIU for all query functions. By comparing 3.1 and 4.0, you can
-use current utp_upiu_query{}, because you only want to pass 64bit TS.
-Or you can change utp_upiu_query() to make it more uniform to meet
-various query functions.
-
-Kind regards,
-Bean
+SGVsbG8sDQoNCiDCoMKgIGhhZCBhbnlib2R5IGNvbnNpZGVyZWQgaW1wbGVtZW50aW5nIGEg
+dG9nZ2xlIHN3aXRjaCBmb3IgdGhlICJzZCIgZHJpdmVyIHRoYXQgd291bGQgc2VuZCBhIGRp
+ZmZlcmVudCB3cml0ZSBjb21tYW5kIGNvZGUsIHRoYW4gdGhlIHN0YW5kYXJkIFdyaXRlPw0K
+DQogwqDCoCBUaGUgb25lIEkgd291bGQgbmVlZCBpbnN0ZWFkIG9mIFdyaXRlIGlzIHRoZSBX
+cml0ZS1BbmQtVmVyaWZ5IGFuZCBpdCBjb21lcyBpbiB2YXJpb3VzIGNvbnRyb2wgYmxvY2sg
+c2l6ZSBmbGF2b3JzIG9mIGNvdXJzZS4NCg0KIMKgwqAgVGhlcmUgYXJlIHNvbWUgZHJpdmVz
+LCBvciBtb3JlIHByZWNpc2VseSAtIG5vcm1hbCBkcml2ZXMgd2l0aCBhIGN1c3RvbSBmaXJt
+d2FyZSwgdGhhdCBzaW1wbHkgcmVqZWN0IGEgcmVndWxhciBXcml0ZSAtIGxpa2VseSBhcyBu
+b3QgYmVpbmcgZ29vZCBlbm91Z2ggZm9yIHRoZSBpbnRlbmRlZCBoaWdoLXJlbCBhcHBsaWNh
+dGlvbiAtIHdoaWNoIEkgY2FuIHVuZGVyc3RhbmQsIGJ1dCBldmVuIGFmdGVyIHJlZm9ybWF0
+dGluZyB0aGUgZHJpdmUgdG8gbm8tUEkgYW5kIGdvaW5nIHRvICJwb29yIiA1MTJCIHNlY3Rv
+ciANCnNpemUsIHRoZXkgc3RpbGwgcmVmdXNlIHRvIGRvIGFuIGVhc3kgV3JpdGUgb3BlcmF0
+aW9uLiBJIGhhZCB2ZXJpZmllZCB0aGF0IGJ5IHVzaW5nIHRoZSBzZ193cml0ZV92ZXJpZnkg
+KHRoYXQgdXNlcyBhbiBpb2N0bCkgSSBjYW4gcmVhbGx5IHdyaXRlIGRhdGEgdG8gdGhlc2Ug
+ZHJpdmVzLiBUaGUgcmVhZGluZyBwYXRoIGlzIHdvcmtpbmcgb2theSBhbmQgYm90aCBkZCBh
+bmQgaGRwYXJtIHdvcmtzIGF0IGV4cGVjdGVkIHNwZWVkcy4NCg0KIMKgwqAgSSBoYWQgYSBs
+b29rIGluIHRoZSBzb3VyY2UgY29kZSwgYW5kIGl0IHNlZW1zIHRoYXQgbWFraW5nIHN1Y2gg
+Y2hhbmdlIHdvdWxkIG5lZWQganVzdCBhIG5ldyBiaW5hcnkgZmxhZyBwZXIgZHJpdmUgLSBh
+bmQgdGhlIG1vc3QgY29tcGxpY2F0ZWQgdGhpbmcgYmVpbmcgdGhlIGFjdHVhbCBhdXRvLWRl
+dGVjdGlvbiBvZiBzdWNoIGFuICJlbmhhbmNlZCB0byBiZWluZyBwaWNreSIgZmlybXdhcmUu
+IEluaXRpYWxseSBJIGNvdWxkIGxpdmUgd2l0aCB0aGUgZmxhZyBleHBvc2VkIG9uIHN5c2Zz
+LCBhbmQgc2V0IGl0IHVwIA0KYnkgYW4gdWRldiBiYXNlZCB1c2VyLXNwYWNlIHNjcmlwdCB0
+aGF0IGFjdGl2YXRlcyBvbiBkcml2ZSBkZXRlY3Rpb24vaG90LXBsdWcuDQoNCiDCoMKgIEEg
+YmV0dGVyIG9uZSBjb3VsZCBwcmVzZXQgdGhlIGZsYWcgYmFzZWQgb24gbW9kZWwgbmFtZXMg
+LSBidXQgdGhlIGxpc3Qgd2lsbCBiZSBsb25nIGFuZCBoYXJkIHRvIG1haW50YWluIGluLWtl
+cm5lbCwgd2hpbGUgYSB0cnktd3JpdGUscmV0cnktd3JpdGV2ZXJpZnkgbGlrZSBhdXRvLWRl
+dGVjdGlvbiBhdCBmaXJzdCBvY2N1cnJlbmNlIG9mIGEgd3JpdGUgbmVlZHMgdG8gaGFuZGxl
+IHZhcmlvdXMgZXhwZWN0ZWQgYW5kIHVuZXhwZWN0ZWQgZXJyb3JzIGFuZCBJIGRvIG5vdCBz
+ZWUgaXQgYXMgYSBjbGVhbiB0aGluZyANCmZvciB0aGUga2VybmVsLg0KDQogwqDCoCBBbnlv
+bmUgdXAgdG8gdGhlIHRhc2s/DQoNCiDCoMKgIE9yIGlmIEkgZG8gaXQgbXlzZWxmIGFuZCBz
+ZW5kIGhlcmUgc29tZSBwYXRjaGVzLCB3aGF0IHRvIGJlIGF3YXJlIG9mPw0KDQoNCkRhbmll
+bA0KDQo=
