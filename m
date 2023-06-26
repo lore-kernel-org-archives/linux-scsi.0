@@ -2,197 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8942EB64D7
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 10:33:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8078EB64DA
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 10:58:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229448AbjFZKdp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 06:33:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60496 "EHLO
+        id S230209AbjFZK6V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 06:58:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229569AbjFZKdm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 06:33:42 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F055910CC;
-        Mon, 26 Jun 2023 03:33:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1687775611; x=1719311611;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=YwJ4i9hAzCEWJpnziae69CZqoEbyx7XLquEgZ1d/STw=;
-  b=G7a0+fOPj5adBhgFkpHf0mPNjK1x1d7+h3cNz9kXmiDwQGemK2t32wgG
-   mUwzE/uZE8api4kmBMiL7DoBHkTmigey1Q/2J1HZEw2Owvvw8r6hWHm/D
-   6kn0dO0+24DothXChRCq1tifd6E1gszE0dttY/+hnGYU1iZXG7H16SzaB
-   CvaOwgEnl3BBbTl4Y/EFQw5GeJnDtbmdhU7eZzAdorNtds6z6FGbTHiWt
-   rOT2uRX/VYNQU7mY+cHJLgnyt6UK6lfKLXkpsypxpn/IizG5uoqtxSgW8
-   rKRtgNtz+6FL9SDPLxydbCc1dddQzaX6KSUq+EvBGQrHJcuCnFp4mWhWV
-   A==;
-X-IronPort-AV: E=Sophos;i="6.01,159,1684771200"; 
-   d="scan'208";a="348405995"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Jun 2023 18:33:31 +0800
-IronPort-SDR: SY0Q3fsj151+AgxSZoziW3a0Ot3W393u6hiNkMAfJJEnBHe8wvQJFyX+yZvSbpt7vKtKLZiBF9
- GA6iTkbZIMwert9M1pE5Z5FNrPP4l/5v51jTIW3mQ6FVDajFTx0kdkoCwlUsG+Ei7IUIPha3ro
- ZVskp7gXdhPIGxzJJAzGjkaBPn9zIiwx1XJyjBFNkmlI6inLMEMT0P9/JFNSM6P6WtV3cdvMxm
- W1/fLXNx768fVZRBHe6yhQQtRyq+sjWBW708jJG9KGVeSCJH1rD9bcXjkQTzGTPiG+r3LMT8Rk
- 5pQ=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Jun 2023 02:47:51 -0700
-IronPort-SDR: gDyp91hw6fMk9KyxM3BjsV/rrSvxxkaUdviXHO4Qsw6X1RgOTzYBsjUtQLO/59vRiwxx72R2XO
- JtFUquF/B1O+Z12+wyjAmUCzxluhaB0w6+J59WtsrMqxaUL/bMZR86LRaEIrc6E/RRksOakEDI
- 0MJXlV5VMlUY0hjnNxtTK0EacSRt9DYR/T8wgmjRkCLelN7aNraICgNVtAh9d/zOSHT6myyKe6
- bEMrKpuK/3h4gqLxCX6fLFI7rhdKWjIqWsBqlhwZVb/Mjefd9UvfTLzhRe7UGg9vEuw/s8hunx
- H1w=
-WDCIronportException: Internal
-Received: from jd50rq2.ad.shared ([10.45.30.149])
-  by uls-op-cesaip02.wdc.com with ESMTP; 26 Jun 2023 03:33:30 -0700
-From:   Arthur Simchaev <arthur.simchaev@wdc.com>
-To:     martin.petersen@oracle.com
-Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bvanassche@acm.org, Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [RESEND v2] ufs: core: Add support for qTimestamp attribute
-Date:   Mon, 26 Jun 2023 13:33:19 +0300
-Message-Id: <20230626103320.8737-1-arthur.simchaev@wdc.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S230158AbjFZK6S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 06:58:18 -0400
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB6F10EB
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 03:58:11 -0700 (PDT)
+Received: by mail-wr1-x42f.google.com with SMTP id ffacd0b85a97d-313e34ab99fso2318592f8f.1
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 03:58:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1687777090; x=1690369090;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=8wTFFYlEacnCLuLIvI9hxugao/WlAGmt8S0+ic9iMMM=;
+        b=HgHm+mJEpvZ08t2fUwrsbQn7G1TAQPnOtjTod7u2J6zZWokbC1xHXBHQfgb/K3Ngio
+         J30pnq4MAgl9hB/gMbnkwGGiIXRDEmR8PMUjeeU5wVSiAJ3akho8u62RrEIYPuxWTLkD
+         HYouB/n1GN55i/CdVd/gTK0FK+i7nFT409vJdlt3/qf33AbNHwup4+3jbF+zmCK+6Nwn
+         OdGEtJahMRpM/9VRFomCUmJ+3KRu9GrC9WTbWqr+moE+yxyz91YZXKt6UKsNKMvQWlki
+         JA7z80ciYtgH2KvY67MQNgUKxlwPlnydgCtrctLNtMXf2qJQyn78djfym5/3othlRqzm
+         ExJA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687777090; x=1690369090;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8wTFFYlEacnCLuLIvI9hxugao/WlAGmt8S0+ic9iMMM=;
+        b=SwsBfzdr4BU0qp0aszGniJZKkABa1IXEyaXAq1pVBpjG6Gd32tdyMSb4qxUkT/5V4H
+         rx2ht1HAn+WI6FTdFmjInWxTZMq8b4bkPLFw4itGeOuScqI0HMgq0i8W46iJ40a70qyK
+         4egwnlZDWYYPSHmP9rsA1FtU0HwXn+ldQKHqdBukIxuvcH8vuEIm7+PUhE6qhFKGJd9O
+         bI5//nG9ww6haw+ws/c01+0SG21Dke6X4PqCAiRVNvjND6/Da5LVsK8oo+1rCY3iAvfy
+         +fJThJcagMbJxr6RIPjKplQmBSTeikt9sSYeRhbMazOtdUdxeWccUzgT1rSg1HRD9Rw8
+         iM1A==
+X-Gm-Message-State: AC+VfDznSvPeWELi/MgO0ism0w4+kjeOE1IZes3+uumAxDk8W13KEGtJ
+        WoF0R85wnW/zCV+Mtexv6TF2QA==
+X-Google-Smtp-Source: ACHHUZ6+fJxWIb0t51vTNh6sIbcojiplFlynzACmCi59wKuqFvI+vy7PihZPoYSE4aMX2eFgChCdnw==
+X-Received: by 2002:adf:dd88:0:b0:30a:dd15:bb69 with SMTP id x8-20020adfdd88000000b0030add15bb69mr20166780wrl.18.1687777089934;
+        Mon, 26 Jun 2023 03:58:09 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id f4-20020a0560001b0400b00307a86a4bcesm7057546wrz.35.2023.06.26.03.58.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Jun 2023 03:58:08 -0700 (PDT)
+Date:   Mon, 26 Jun 2023 13:58:03 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     Nilesh Javali <njavali@marvell.com>
+Cc:     GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-scsi@vger.kernel.org,
+        llvm@lists.linux.dev, kernel-janitors@vger.kernel.org
+Subject: [PATCH 1/2] scsi: qla2xxx: silence a static checker warning
+Message-ID: <4aa0485e-766f-4b02-8d5d-c6781ea8f511@moroto.mountain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Smatch and Clang both complain that LOGIN_TEMPLATE_SIZE is more than
+sizeof(ha->plogi_els_payld.fl_csp).
 
-The new qTimestamp attribute was added to UFS 4.0 spec, in order to
-synchronize timestamp between device logs and the host.The spec recommend
-to send this attribute upon device power-on Reset/HW reset or when
-switching to Active state (using SSU command). Due to this attribute,
-the attribute's max value was extended to 8 bytes. As a result,
-the new definition of struct utp_upiu_query_v4_0 was added.
+Smatch warning:
+    drivers/scsi/qla2xxx/qla_iocb.c:3075 qla24xx_els_dcmd2_iocb()
+    warn: '&ha->plogi_els_payld.fl_csp' sometimes too small '16' size = 112
 
-Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Clang warning:
+    include/linux/fortify-string.h:592:4: error: call to
+    '__read_overflow2_field' declared with 'warning' attribute: detected
+    read beyond size of field (2nd parameter); maybe use struct_group()?
+    [-Werror,-Wattribute-warning]
+                        __read_overflow2_field(q_size_field, size);
 
------------------
-Changes to v2:
-- Adressed Bart's comments
-- Add missed response variable to ufshcd_set_timestamp_attr
+When I was reading this code I assumed the "- 4" meant that we were
+skipping the last 4 bytes but actually it turned out that we are
+skipping the first four bytes.
+
+I have re-written it remove the magic numbers, be more clear and
+silence the static checker warnings.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
 ---
- drivers/ufs/core/ufshcd.c        | 38 ++++++++++++++++++++++++++++++++
- include/uapi/scsi/scsi_bsg_ufs.h | 25 +++++++++++++++++++++
- include/ufs/ufs.h                |  1 +
- 3 files changed, 64 insertions(+)
+ drivers/scsi/qla2xxx/qla_def.h  | 1 -
+ drivers/scsi/qla2xxx/qla_iocb.c | 3 ++-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 358b3240b6c5..e2812911e462 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8520,6 +8520,41 @@ static int ufshcd_device_params_init(struct ufs_hba *hba)
- 	return ret;
- }
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index d44c4d37b50b..4ae38305c15a 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -4462,7 +4462,6 @@ struct qla_hw_data {
  
-+static void ufshcd_set_timestamp_attr(struct ufs_hba *hba)
-+{
-+	int err;
-+	struct ufs_query_req *request = NULL;
-+	struct ufs_query_res *response = NULL;
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
-+	struct utp_upiu_query_v4_0 *upiu_data;
-+
-+	if (dev_info->wspecversion < 0x400)
-+		return;
-+
-+	ufshcd_hold(hba);
-+
-+	mutex_lock(&hba->dev_cmd.lock);
-+
-+	ufshcd_init_query(hba, &request, &response,
-+			  UPIU_QUERY_OPCODE_WRITE_ATTR,
-+			  QUERY_ATTR_IDN_TIMESTAMP, 0, 0);
-+
-+	request->query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
-+
-+	upiu_data = (struct utp_upiu_query_v4_0 *)&request->upiu_req;
-+
-+	put_unaligned_be64(ktime_get_real_ns(), &upiu_data->osf3);
-+
-+	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
-+
-+	if (err)
-+		dev_err(hba->dev, "%s: failed to set timestamp %d\n",
-+			__func__, err);
-+
-+	mutex_unlock(&hba->dev_cmd.lock);
-+	ufshcd_release(hba);
-+}
-+
- /**
-  * ufshcd_add_lus - probe and add UFS logical units
-  * @hba: per-adapter instance
-@@ -8708,6 +8743,8 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
- 	ufshcd_set_ufs_dev_active(hba);
- 	ufshcd_force_reset_auto_bkops(hba);
+ 	/* n2n */
+ 	struct fc_els_flogi plogi_els_payld;
+-#define LOGIN_TEMPLATE_SIZE (sizeof(struct fc_els_flogi) - 4)
  
-+	ufshcd_set_timestamp_attr(hba);
-+
- 	/* Gear up to HS gear if supported */
- 	if (hba->max_pwr_info.is_valid) {
- 		/*
-@@ -9741,6 +9778,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		ret = ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE);
- 		if (ret)
- 			goto set_old_link_state;
-+		ufshcd_set_timestamp_attr(hba);
- 	}
+ 	void            *swl;
  
- 	if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
-diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
-index 2801b65299aa..fd3f9e5ee241 100644
---- a/include/uapi/scsi/scsi_bsg_ufs.h
-+++ b/include/uapi/scsi/scsi_bsg_ufs.h
-@@ -70,6 +70,31 @@ struct utp_upiu_query {
- 	__be32 reserved[2];
- };
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index a1675f056a5c..9c70c4e973ee 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -3073,7 +3073,8 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	memset(ptr, 0, sizeof(struct els_plogi_payload));
+ 	memset(resp_ptr, 0, sizeof(struct els_plogi_payload));
+ 	memcpy(elsio->u.els_plogi.els_plogi_pyld->data,
+-	    &ha->plogi_els_payld.fl_csp, LOGIN_TEMPLATE_SIZE);
++	       (void *)&ha->plogi_els_payld + offsetof(struct fc_els_flogi, fl_csp),
++	       sizeof(ha->plogi_els_payld) - offsetof(struct fc_els_flogi, fl_csp));
  
-+/**
-+ * struct utp_upiu_query_v4_0 - upiu request buffer structure for
-+ * query request >= UFS 4.0 spec.
-+ * @opcode: command to perform B-0
-+ * @idn: a value that indicates the particular type of data B-1
-+ * @index: Index to further identify data B-2
-+ * @selector: Index to further identify data B-3
-+ * @osf4: spec field B-5
-+ * @osf5: spec field B 6,7
-+ * @osf6: spec field DW 8,9
-+ * @osf7: spec field DW 10,11
-+ */
-+struct utp_upiu_query_v4_0 {
-+	__u8 opcode;
-+	__u8 idn;
-+	__u8 index;
-+	__u8 selector;
-+	__u8 osf3;
-+	__u8 osf4;
-+	__be16 osf5;
-+	__be32 osf6;
-+	__be32 osf7;
-+	__be32 reserved;
-+};
-+
- /**
-  * struct utp_upiu_cmd - Command UPIU structure
-  * @data_transfer_len: Data Transfer Length DW-3
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 4e8d6240e589..198cb391f9db 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -170,6 +170,7 @@ enum attr_idn {
- 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
- 	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
- 	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
-+	QUERY_ATTR_IDN_TIMESTAMP		= 0x30
- };
- 
- /* Descriptor idn for Query requests */
+ 	elsio->u.els_plogi.els_cmd = els_opcode;
+ 	elsio->u.els_plogi.els_plogi_pyld->opcode = els_opcode;
 -- 
-2.34.1
+2.39.2
 
