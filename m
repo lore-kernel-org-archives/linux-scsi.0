@@ -2,48 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDAAAEB64D7
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 07:59:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F07EEB64DD
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 08:16:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229578AbjFZH7H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 03:59:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45042 "EHLO
+        id S230169AbjFZIQR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 04:16:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbjFZH7G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 03:59:06 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E9CEE5
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 00:59:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=B1IhU6QGvWI+tEqwfoAXDc9a/Z
-        ahydJbhTSq4tgvjlBLWCYpvaiK5+N79zHRRmPo5kKofTTDviIz52sVTd8TGzVCvCFQtgH2KUn7pUY
-        GyRRV0KQWQD6BG7sjE+Nv9TSku5M+qrKHfwOAkPzJyQXnWlyWLWOehqWKEQB0uhtS1Yq+UiLv10Az
-        9A86KFC06JPghmDD/pqn5slpcmaT6DxG6JwWXrg6FvnlMtc7lHUFBx/sER6Tq8jdLGhZxXdjZRevV
-        SB9nhUXaZF3Q2FPTkOhkur8NfppxQHJ4KTojoe4jdoF1bZsaJ5VbPQ2mpxoTU4sIR5K7PftB+kT2X
-        Y5MuAscw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qDh7o-009bam-0E;
-        Mon, 26 Jun 2023 07:59:04 +0000
-Date:   Mon, 26 Jun 2023 00:59:04 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: Re: [PATCH v2] scsi: Simplify scsi_cdl_check_cmd()
-Message-ID: <ZJlFSKMGuYhTLd16@infradead.org>
-References: <20230623073057.816199-1-dlemoal@kernel.org>
+        with ESMTP id S230146AbjFZIQP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 04:16:15 -0400
+Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C550E53
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 01:16:13 -0700 (PDT)
+Received: by mail-ej1-x633.google.com with SMTP id a640c23a62f3a-98934f000a5so357460166b.2
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 01:16:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fairphone.com; s=fair; t=1687767372; x=1690359372;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=0Sg+rowk7YQU6D26avMM2mnTp+7zQM/aUn4xJJRcqRM=;
+        b=dKr01c4FoPF8wLyp9qSzRl0nQcO6m6Fzqrvg5gka0E1P6yYCeJcrdJAp586ToDLyhc
+         KaoAQWkB37G7NReFfsd0sTvjNXsWJmhfnn1nJKG0Sejc3Vunbx+Q5GyhQtzEy7LarALq
+         XYkmCB399ETp566QbnveCJocLqaHNQp2wt1HL61sC13mFMKNKHZ2V890SOvmizL8VKDJ
+         G/IKVt/DsF7Jj3PkiQzVO4Jk8N6CHGu6tPyYqIvTLjKhzxQ3+oZ3FSTf23DATTyCOyIb
+         aCnk96PrtkjWMU0TLuN+4o2jradG15rB/53RpXYtSkgWGJVD1TZKU+N5fyCLE9Vze6MX
+         UCVQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687767372; x=1690359372;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=0Sg+rowk7YQU6D26avMM2mnTp+7zQM/aUn4xJJRcqRM=;
+        b=gdvB/xlgeH+UsN/rCTI25ccbDWiM+OvYpAx8JOK+i5VDlOugsAaMKre+quji1KJEdJ
+         GZwdOXNv8ufa5N2vgvvkfDBAr2trKgXKiLhKPTXZfXqRuYdMS4p2fQGhgm8iPqIMCJLN
+         yFp3o84Xpouah2v9buEZ1ibk4M/dJB2+/u5PLvaaOMQyGqy32ipKtMTzlpPB+Lf6bD4f
+         0WQw2sdLezrqsvotO47bVQZxLTX3WA7fLneitZ1h8d70hjKuNwGEnHPqHDft3EyTCFyw
+         +KiUMx8JDXcVW3PB/2mqOdkLASkwDzdaMO3gMbXF82qNo9kPhgfZURMpFql70arE3rQb
+         8F1Q==
+X-Gm-Message-State: AC+VfDzJH4WtzGuINj7IA3MaWxBFZ0/UhkMPP6syqd0KFIdKVEaSj132
+        5BmkfHNjNvqiYIRfrCBDS9cZDQ==
+X-Google-Smtp-Source: ACHHUZ62fcn+7hGabVvX7AxeAb93qPTLNUwwA6J2CTmKTpGrsdx0ACTblLudngYrWsV9MryleNJjWg==
+X-Received: by 2002:a17:907:3187:b0:96f:c0b0:f137 with SMTP id xe7-20020a170907318700b0096fc0b0f137mr23857596ejb.16.1687767371958;
+        Mon, 26 Jun 2023 01:16:11 -0700 (PDT)
+Received: from [172.16.240.113] (144-178-202-138.static.ef-service.nl. [144.178.202.138])
+        by smtp.gmail.com with ESMTPSA id bm4-20020a170906c04400b0094f07545d40sm2935617ejb.220.2023.06.26.01.16.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Jun 2023 01:16:11 -0700 (PDT)
+From:   Luca Weiss <luca.weiss@fairphone.com>
+Subject: [PATCH v4 0/3] Fix some issues in QCOM UFS bindings
+Date:   Mon, 26 Jun 2023 10:15:56 +0200
+Message-Id: <20221209-dt-binding-ufs-v4-0-14ced60f3d1b@fairphone.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230623073057.816199-1-dlemoal@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIADxJmWQC/33PyQrCMBAG4FeRnB1Jp0uMJ99DPKRZ2kBNJGkDU
+ vruDh5Fe5oF/m+YlWWbvM3sclhZssVnHwMNzfHA9KjCYMEbmhlyxAq5BDND74PxYYDFZUAjXNc
+ IKZxDRqFeZQt9UkGPFAvLNNFy9HmO6fU5Uioqt79eqYDD2bQcHbcVNVenfHqOMdiTjg92J67gP
+ oFEGC0UbzopWyF/EfU+URPRSGnoq1rxWn8T27a9ASKRJKQ7AQAA
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Iskren Chernev <me@iskren.info>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+        Luca Weiss <luca.weiss@fairphone.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Bhupesh Sharma <bhupesh.sharma@linaro.org>,
+        Eric Biggers <ebiggers@google.com>,
+        Iskren Chernev <me@iskren.info>
+X-Mailer: b4 0.12.2
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good:
+This series has been pending for quite some time, please somebody pick
+this up. Also has plenty of reviews by now (3-4 for each patch which
+should be plenty).
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Validation will fail without patch 1/5 from [0] so this depends on that
+patch at least for the check.
+
+[0] https://lore.kernel.org/linux-arm-msm/20230623113009.2512206-2-abel.vesa@linaro.org/
+
+Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+---
+Changes in v4:
+- Pick up tags
+- Rebase on linux-next (again)
+- Link to v3: https://lore.kernel.org/r/20221209-dt-binding-ufs-v3-0-499dff23a03c@fairphone.com
+
+Changes in v3:
+- Drop applied patch
+- Pick up sm6115 patch from v5 https://lore.kernel.org/all/20221030094258.486428-2-iskren.chernev@gmail.com/
+- Rebase on linux-next
+- Link to v2: https://lore.kernel.org/r/20221209-dt-binding-ufs-v2-0-dc7a04699579@fairphone.com
+
+Changes in v2:
+- Add new patch adding reg-names to sm6115 & rebase series on top of sm6115
+  addition
+- Fix binding example after sm8450 move, split this patch from original patch
+  since it became too big
+- Move reg-names definition to top-level
+- Link to v1: https://lore.kernel.org/r/20221209-dt-binding-ufs-v1-0-8d502f0e18d5@fairphone.com
+
+---
+Iskren Chernev (1):
+      dt-bindings: ufs: qcom: Add sm6115 binding
+
+Luca Weiss (2):
+      dt-bindings: ufs: qcom: Add reg-names property for ICE
+      dt-bindings: ufs: qcom: Fix sm8450 bindings
+
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          | 61 ++++++++++++++++++++--
+ 1 file changed, 56 insertions(+), 5 deletions(-)
+---
+base-commit: 3178cc4b7c9de986d63383cb59ee6570347002db
+change-id: 20221209-dt-binding-ufs-2d7f64797ff2
+
+Best regards,
+-- 
+Luca Weiss <luca.weiss@fairphone.com>
+
