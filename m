@@ -2,113 +2,66 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE249EB64DD
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 21:55:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E429EB64DC
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jun 2023 22:07:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231438AbjFZVzb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 17:55:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40958 "EHLO
+        id S232041AbjFZWHZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 18:07:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231317AbjFZVyP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 17:54:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C0DB2965;
-        Mon, 26 Jun 2023 14:52:09 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F6B960FBC;
-        Mon, 26 Jun 2023 21:51:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 835C2C433C9;
-        Mon, 26 Jun 2023 21:51:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687816265;
-        bh=2D/vySHldUQKqJoKYFnqD5TSIZMW8dM2gXiasK+Atto=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hg6pN2Er0FXAZlPfSa/JnlajhgBE6TKVd3ZXOhoR58W2wbrYkCWuabIkbMj/CuSjQ
-         PXDADl+aZFt+Q/3yK4BMCMe8JfJkdHl2VgCs8uBING3VTA8Sf+e5+qaurjYpOoe3aJ
-         6te0Pb5mGeGiKxEVqyGHr6c0HF3gafgz/HIgJdBL/a0Z05Hdr4cqbPwvuEN93jN543
-         ETQhbpavkHJcdv9sj59iiAUbmWMnNxSgfCzbzSyN70BbbtjokJQrMe3Py+qzMwCThU
-         Z8nyuU66nN1f0OWqZi+QG/tfxQ5HeqydbyNSc4w8tR/3HXjr+1BzOgHDiZ2AIniXb0
-         LR224PUs7Nu9Q==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Justin Tee <justintee8345@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
-        kernel test robot <lkp@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 8/9] scsi: lpfc: Fix incorrect big endian type assignment in bsg loopback path
-Date:   Mon, 26 Jun 2023 17:50:56 -0400
-Message-Id: <20230626215057.179363-8-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230626215057.179363-1-sashal@kernel.org>
-References: <20230626215057.179363-1-sashal@kernel.org>
+        with ESMTP id S232051AbjFZWHE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 18:07:04 -0400
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA23D2120;
+        Mon, 26 Jun 2023 15:03:26 -0700 (PDT)
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6682909acadso1810878b3a.3;
+        Mon, 26 Jun 2023 15:03:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687816975; x=1690408975;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=PCoCOYjDLNke2rP949BWReOPXfmEB68n0cAwCJbJEkg=;
+        b=KpOAlT4H6P0NesfVSPb/pCXK3FQHBu8fe4XyiHR3qBx4Mqdl1e7XRi4Juy3C3LNxeR
+         Fi2FebYHqCU7X4BCxfXyifsrQGjP2fipd2DyPJZw6z0xkczGIZCJ/h8YXZDbqQH+z9rW
+         bR6ajyT077kQ5NLSP2heONC8XEr8mZX6naQIqnDcfVv6EAj3N+iZyuuGqiwwZ3YhWYnw
+         nAz+Wy7WiNuRbqHM7vxfORRICCN6CbZXiIwFxB+2Mlf3Xg+8QeoWsWvyQG1zErJZUdJT
+         igRNz3S3pGggNt7tUFFnGFtg89T2pHrdSp0nQ9/GuhUwIxnn5O8D/PMKcKah61rPQqh+
+         mkWw==
+X-Gm-Message-State: AC+VfDxFoYB5o5vT2zrk9yt4MFbfZnmLofaEixcQcBV1rBWbq2YSQEsF
+        QBaOjusIzHR/QTGLvULrUbE=
+X-Google-Smtp-Source: ACHHUZ6wh2CqCVGxZ1aIa20hYMpt2E7HkVeKdNjheVjuSlz5ylPO+mTQOT+GjYxkmu3HBge04PxP0Q==
+X-Received: by 2002:a05:6a00:2294:b0:66a:359f:6f6e with SMTP id f20-20020a056a00229400b0066a359f6f6emr15809560pfe.19.1687816975000;
+        Mon, 26 Jun 2023 15:02:55 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id g26-20020a62e31a000000b0065016fffc81sm4191122pfh.216.2023.06.26.15.02.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Jun 2023 15:02:54 -0700 (PDT)
+Message-ID: <3a330a82-6101-72af-197f-4ac0e5d2136f@acm.org>
+Date:   Mon, 26 Jun 2023 15:02:52 -0700
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.118
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH v3] docs: target: Remove useless tcm_mod_builder.py
+Content-Language: en-US
+To:     Rong Tao <rtoax@foxmail.com>, martin.petersen@oracle.com,
+        corbet@lwn.net
+Cc:     rongtao@cestc.cn,
+        "open list:SCSI TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+        "open list:SCSI TARGET SUBSYSTEM" <target-devel@vger.kernel.org>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <tencent_58D7935159C421036421B42CD04B0A959207@qq.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <tencent_58D7935159C421036421B42CD04B0A959207@qq.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Justin Tee <justintee8345@gmail.com>
+On 6/25/23 17:51, Rong Tao wrote:
+> This script is not used and requires additional development to sync with
+> the SCSI target code.
 
-[ Upstream commit 9cefd6e7e0a77b0fbca5c793f6fb6821b0962775 ]
-
-The kernel test robot reported sparse warnings regarding incorrect type
-assignment for __be16 variables in bsg loopback path.
-
-Change the flagged lines to use the be16_to_cpu() and cpu_to_be16() macros
-appropriately.
-
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20230614175944.3577-1-justintee8345@gmail.com
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202306110819.sDIKiGgg-lkp@intel.com/
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/lpfc/lpfc_bsg.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index fdf08cb572071..ed827f198cb68 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -911,7 +911,7 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			struct lpfc_iocbq *piocbq)
- {
- 	uint32_t evt_req_id = 0;
--	uint32_t cmd;
-+	u16 cmd;
- 	struct lpfc_dmabuf *dmabuf = NULL;
- 	struct lpfc_bsg_event *evt;
- 	struct event_data *evt_dat = NULL;
-@@ -936,7 +936,7 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 
- 	ct_req = (struct lpfc_sli_ct_request *)bdeBuf1->virt;
- 	evt_req_id = ct_req->FsType;
--	cmd = ct_req->CommandResponse.bits.CmdRsp;
-+	cmd = be16_to_cpu(ct_req->CommandResponse.bits.CmdRsp);
- 
- 	spin_lock_irqsave(&phba->ct_ev_lock, flags);
- 	list_for_each_entry(evt, &phba->ct_ev_waiters, node) {
-@@ -3243,8 +3243,8 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
- 			ctreq->RevisionId.bits.InId = 0;
- 			ctreq->FsType = SLI_CT_ELX_LOOPBACK;
- 			ctreq->FsSubType = 0;
--			ctreq->CommandResponse.bits.CmdRsp = ELX_LOOPBACK_DATA;
--			ctreq->CommandResponse.bits.Size   = size;
-+			ctreq->CommandResponse.bits.CmdRsp = cpu_to_be16(ELX_LOOPBACK_DATA);
-+			ctreq->CommandResponse.bits.Size   = cpu_to_be16(size);
- 			segment_offset = ELX_LOOPBACK_HEADER_SZ;
- 		} else
- 			segment_offset = 0;
--- 
-2.39.2
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
