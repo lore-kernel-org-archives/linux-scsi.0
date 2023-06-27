@@ -2,83 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D34ECEB64D7
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 02:39:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60BA9EB64D9
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 02:39:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229790AbjF0Cja (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 22:39:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54306 "EHLO
+        id S229828AbjF0Cjg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 22:39:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229567AbjF0Cj3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 22:39:29 -0400
-Received: from mail-oi1-x234.google.com (mail-oi1-x234.google.com [IPv6:2607:f8b0:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9EA919A1;
-        Mon, 26 Jun 2023 19:39:27 -0700 (PDT)
-Received: by mail-oi1-x234.google.com with SMTP id 5614622812f47-3a1d9b64837so1691874b6e.0;
-        Mon, 26 Jun 2023 19:39:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687833567; x=1690425567;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=v4yjUuUHEpCaP+ghkho/RPIBeQxQEP/tQ09KT6l5PAw=;
-        b=llFkqqBLOJPE30qgsOOXK6LrX5TQhvgV0cu+09iiQefhoI2aMleqIqB9tyUokr8k0b
-         ce3LknC5fDn70y3o5IgpA28ZQ2G3GDTFnoC2leg20krOOvDccvvCDnkNzoo0WaFwMivv
-         OwDyMpqf9tiZSrhTl7/0LnJ8kW128IFQx2YfKnWqJwCjv2mnem66UooScWNqM+dFYyAJ
-         2h/cGkJ/QqehUhzsYXS8UqMCIC8b4I5dlJpj8bok1sjRobq5Vn7M5h1TvZFGirKt2E2h
-         NB6w4+G8JRnrT/KFbYgTQRb1jhxTY4IUy6VVrIziUYHda/Sb0Dg+R4nawbLDnQtrJcfH
-         4Rug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687833567; x=1690425567;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=v4yjUuUHEpCaP+ghkho/RPIBeQxQEP/tQ09KT6l5PAw=;
-        b=Sb4dRo5zBaT7cLxhJ2ztiPRXzXoDqLlbauZ2m8pHumSqtIkLIC0WOJ/KCucybZWBoF
-         muRINPqJbx+gpDSl615+dS89KUhWL9EyfZUEP55TxCS/jy3Atr+C+mQUQfxvHJElMl0w
-         6NixXVYn551/sI0wkOuFumrkiG7vHEKaUrV++F/UukGfepDwKWE02vx4F6vgc87Pzbee
-         iIazKX+q+ixYA2q+vHDmrtdAw5jQS6oXPktg3RdK18tCVIZ/FVrz8xTS3quprisD9ecL
-         xqBVuaJTAIeBcTrNXWnfyHFhKznnE/e2bNSNTRHB5Anc4HGUF1l4kLppwP4/ktgD6JA/
-         b9pQ==
-X-Gm-Message-State: AC+VfDxipDriFgtWk6pyJdbVYIp+ao6xuSbYmCz+XYnyeF3+I5pWKGxL
-        YCiJQJF2vT/JPbXU/kD0K4U=
-X-Google-Smtp-Source: ACHHUZ6tDy7pQnSxhb+myr30blaGiiHnpAGwDgTqzzW8pcEPwP4ijxQpdeCtDQT/TutbeqjoUM/E3g==
-X-Received: by 2002:aca:1a1a:0:b0:39a:531b:db6c with SMTP id a26-20020aca1a1a000000b0039a531bdb6cmr32888503oia.47.1687833566749;
-        Mon, 26 Jun 2023 19:39:26 -0700 (PDT)
-Received: from debian.me ([103.131.18.64])
-        by smtp.gmail.com with ESMTPSA id b19-20020a170902d89300b001b3ce619e2esm4837086plz.179.2023.06.26.19.39.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jun 2023 19:39:26 -0700 (PDT)
-Received: by debian.me (Postfix, from userid 1000)
-        id CCB6F81BD58D; Tue, 27 Jun 2023 09:39:20 +0700 (WIB)
-Date:   Tue, 27 Jun 2023 09:39:20 +0700
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-To:     bugzilla-daemon@kernel.org,
-        Linux SCSI <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>
-Cc:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        pheidologeton@protonmail.com
-Subject: Re: [Bug 217599] New: Adaptec 71605z hangs with aacraid: Host
- adapter abort request after update to linux 6.4.0
-Message-ID: <ZJpL2GD+VntdUXZp@debian.me>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="UP4jKEPv6Asbr+1k"
-Content-Disposition: inline
+        with ESMTP id S229567AbjF0Cje (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 22:39:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77E7619A1
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 19:39:32 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 907C260F5E
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 02:39:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id EF424C433CD
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 02:39:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687833571;
+        bh=hx1kjZxG7EUUJQWUnP5wuMVm5z588fSSZdxIyeEpE60=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=A3lEyHap6pdnM5YZd4IBsjDM/sr/T7eDxIqtX+ca29H82fsFblQWnXK+j/pM3BKtB
+         1Yfk6ZAvweNGR3gl9XILBikKpz12k8TAEmEjVWl42XvHL6xfON6b9DaqXQO/JeKPZT
+         bNcSZYza3W4v0Z1sQKngE9kF0bIDtUz9qgKTal1qzCcfl5rJ0GTjWXz1e9IPPrjKUa
+         6K1uo7Gmohlhgxd1uL5zw2jTrWMVydTTwz3H4logREmJ6bUlURl9chFeoiDKSBENQR
+         waC7k4wE8UomaHWHSpru6IHkPWz89wJVf15S6Ye/NOlNsYsBhTtcS+zqFttuZCp5kA
+         rMT57cE4aXZxQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id D5AE3C53BD4; Tue, 27 Jun 2023 02:39:30 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date:   Tue, 27 Jun 2023 02:39:30 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: bagasdotme@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-TIGddT9Cal@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
---UP4jKEPv6Asbr+1k
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
+--- Comment #4 from Bagas Sanjaya (bagasdotme@gmail.com) ---
 [also Cc: aacraid and SCSI subsystem maintainers]
 
 On Mon, Jun 26, 2023 at 10:36:13PM +0000, bugzilla-daemon@kernel.org wrote:
@@ -269,21 +259,12 @@ regzbot to ensure it doesn't get fallen through cracks unnoticed:
 
 #regzbot ^introduced: v6.3..v6.4
 #regzbot title: Adaptec 71605z hangs with aacraid: Host adapter abort reque=
-st after update
+st
+after update
 #regzbot monitor: https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
 --=20
-An old man doll... just what I always wanted! - Clara
+You may reply to this email to add a comment.
 
---UP4jKEPv6Asbr+1k
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZJpL2AAKCRD2uYlJVVFO
-o3h6AP0UHUgte+hmsV1B8lgpxfg0Z8WIM6rSRvF2JulKb/mETAEA4tgz+w3A4+3s
-KUec4pRjaCQC7oUHVyQHnQ/KPRrkkgI=
-=QwX3
------END PGP SIGNATURE-----
-
---UP4jKEPv6Asbr+1k--
+You are receiving this mail because:
+You are watching the assignee of the bug.=
