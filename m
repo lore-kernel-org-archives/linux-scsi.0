@@ -2,165 +2,328 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2BB7EB64DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 08:06:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 632D0EB64DC
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 08:07:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233222AbjF1IGj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jun 2023 04:06:39 -0400
-Received: from mail-sgaapc01on2090.outbound.protection.outlook.com ([40.107.215.90]:52481
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232395AbjF1ICM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2023 04:02:12 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MQmUHr5+pIOFD9XItmaHCn7kQ0cekgGsm/wKcI126ieRLIt2i4smjEW44aF5BW8v0qfY89KAvjaZM8JE3spFDx3swpCbSlIUyTkQ52MyBm4nMXoBlNoH3ICYPNf/28CgArUWIDact0iRXLc/iyTCp5UbWgqtmTtDq+CiZKl4VMQUE9LHOLViVusjcIu6iWRsOBXcGYneu0sxVrLFXZwZWeXWoAEDwwV4DeI/uxyDc44af0MLvDSPCZUwgU08olCcMidViN62IzZ/4x/Uqk8EuFYfYgTyI5/26sWBSwvwM7hmS0jIPXjbl3F9snlQsVZv3cDGWhrSi9DpkgcLvg5TPQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bq8rD+ulC0Si0Fh4BNlbuY1k52oJkdZPdCLk3lJrugs=;
- b=UjvcFjISpWgRUxqYC+k1EUmYisi3TsaDNBd57nmNS8jED3m63h395hcKbUi4oLBGXdzHy+aivBdxOBBkeSvJDMWKLOCQB8Cc2+niJOPpd8E4vAW/4l6yKRtFRYlMgsGxYHG/aq9N/ymmSBSYe3yQ4iNpUs7JtkK8a7ffGQfdsbey+TnDTenPybtoLE9rCqFj2KcKMOUFAHGetcDENb3j9mWRmkLFFNbzivOrTNKOSUZNzQdjW+fO/Px1mHr01n1C6LVtB6pDf7A8dfBg/JYE8aB4gpMy3Qg3owu1nT8qNM/lws9+25ClEV8MW4kwyDcLn8grlhEp8bTUI4Eo15VRlA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bq8rD+ulC0Si0Fh4BNlbuY1k52oJkdZPdCLk3lJrugs=;
- b=YKy0M2j4yMbdBbXicu5Wr02sOJXgWqosiL5B8W+OsCxsgTzWSZ/Tj9uvX5Pj8Rsw2IutFVkGEXW6FhFygDBQPCaibB3v35hZWiIGSveRVHrCPv2CMiCrZUVHHhA6QdlXkUVJSEAy/o5G8uFIBy1gnIm0MoR8WpDni3xCyKWqrMNC4dTeo/G7UC7Y2ah1JdHg/WOgArCM0RL4bK5Bdf8rZNn9xGaz13BLN9zSxYT87u4F4Df+LKmoWtRIX8u6rY6ARqAazzS6R5GUEBiWJ2xUsbDY8VaV0EWUiOQcPM4Xhe41ldx/ZNmdSG9XzKq5VeNCAC4euq14yiQTWCtqEmEcTA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from TYZPR06MB6697.apcprd06.prod.outlook.com (2603:1096:400:451::6)
- by SI2PR06MB3979.apcprd06.prod.outlook.com (2603:1096:4:f4::6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6521.26; Wed, 28 Jun 2023 07:02:40 +0000
-Received: from TYZPR06MB6697.apcprd06.prod.outlook.com
- ([fe80::f652:a96b:482:409e]) by TYZPR06MB6697.apcprd06.prod.outlook.com
- ([fe80::f652:a96b:482:409e%6]) with mapi id 15.20.6521.023; Wed, 28 Jun 2023
- 07:02:39 +0000
-From:   Lu Hongfei <luhongfei@vivo.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     opensource.kernel@vivo.com, luhongfei@vivo.com,
-        Tang Huan <tanghuan@vivo.com>
-Subject: [PATCH] scsi: ufs: Optimize the WB flush process to save device power consumption
-Date:   Wed, 28 Jun 2023 15:02:27 +0800
-Message-Id: <20230628070229.61855-1-luhongfei@vivo.com>
-X-Mailer: git-send-email 2.39.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TYWPR01CA0018.jpnprd01.prod.outlook.com
- (2603:1096:400:a9::23) To TYZPR06MB6697.apcprd06.prod.outlook.com
- (2603:1096:400:451::6)
+        id S232731AbjF1IHj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jun 2023 04:07:39 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:47486 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232062AbjF1IEm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 04:04:42 -0400
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20230628064459epoutp01377245d6e37ba757ea6b83acb9bea3f1~sv6qCop4v0832308323epoutp01F
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2023 06:44:59 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20230628064459epoutp01377245d6e37ba757ea6b83acb9bea3f1~sv6qCop4v0832308323epoutp01F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1687934699;
+        bh=kSunFsCYmbL+fZnS1g1aUFPpWAVuxrnXDZ3DH0imMyQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=WYsHuHMKKI5Ul3vxnw1SDQnMI8JEJrPwoEm4Gme9vEJXHPClwt3fhYZVtaZU28Lhs
+         hd+319CR3o2p+puav3/Tcn7Wq05acJLoJnCES4mAMkRqxJDdmY2fRiNZ2EIPQBg9yZ
+         pwGrDf+Il9eZ2s89e9Eb+ViNvoRWRlbgfgSBoOV4=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20230628064458epcas5p4dfb71fabb7e845688f0d0544b68a650b~sv6pV6pjj2985329853epcas5p4d;
+        Wed, 28 Jun 2023 06:44:58 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.174]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4QrXBd0qW5z4x9QG; Wed, 28 Jun
+        2023 06:44:57 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        F5.36.44250.8E6DB946; Wed, 28 Jun 2023 15:44:56 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230627184117epcas5p3a9102988870743b20127422928f072bd~smCx4nFGU0780707807epcas5p3z;
+        Tue, 27 Jun 2023 18:41:17 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230627184117epsmtrp2812d3ec232f11f2b039cfc76bf06bdf1~smCx3iv1i2845228452epsmtrp22;
+        Tue, 27 Jun 2023 18:41:17 +0000 (GMT)
+X-AuditID: b6c32a4a-ec1fd7000000acda-1a-649bd6e8b64d
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        60.0D.64355.C4D2B946; Wed, 28 Jun 2023 03:41:16 +0900 (KST)
+Received: from green245.sa.corp.samsungelectronics.net (unknown
+        [107.99.41.245]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20230627184112epsmtip21d03faeb240fce47dbdf754dc4660d97~smCt8YCRz0383003830epsmtip2k;
+        Tue, 27 Jun 2023 18:41:12 +0000 (GMT)
+From:   Nitesh Shetty <nj.shetty@samsung.com>
+To:     Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        willy@infradead.org, hare@suse.de, djwong@kernel.org,
+        bvanassche@acm.org, ming.lei@redhat.com, dlemoal@kernel.org,
+        nitheshshetty@gmail.com, gost.dev@samsung.com,
+        Nitesh Shetty <nj.shetty@samsung.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Anuj Gupta <anuj20.g@samsung.com>,
+        Vincent Fu <vincent.fu@samsung.com>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH v13 9/9] null_blk: add support for copy offload
+Date:   Wed, 28 Jun 2023 00:06:23 +0530
+Message-Id: <20230627183629.26571-10-nj.shetty@samsung.com>
+X-Mailer: git-send-email 2.35.1.500.gb896f729e2
+In-Reply-To: <20230627183629.26571-1-nj.shetty@samsung.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TYZPR06MB6697:EE_|SI2PR06MB3979:EE_
-X-MS-Office365-Filtering-Correlation-Id: b63aee31-f676-44f3-e629-08db77a5a953
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fuIzxtD/TSEowq9SKGU40wxYTFpfl139/lnU/nmlhHIeuf0RBFNmcb41Bci2+rc2HnnvgMNa+tQD3AKLseOPIX0ZSZ4QcVXTTFP0BNPu8Gg3HxcI6NgvMOmfC4NCZgRl9CC/ee0jYIoGOta6jdw3ZSLDvevoqiWwmrf5taeMLfyR0lUfYyz3csavxjI8oHx7xEzs3lgd7nDLPnzBcfa52aE+fWWr7bqOHkZrjKZShU7wzuX9+yc+4UrU1DYuOwVWHy/ytp/DaylHtJLhx/6FZvT1P427CC15ViTWkbN/FUOYdUCZfNibc5x9xqjJyLMyBDoB9UfFCBPYzwVZ7E1mttdRCajLcQCjVaOCFbAhlfSHhDkonBr5j9fs2IvR31aAulvX8PTRt/ijBa7BCFxBzxqfPL7M+2sqv3NUnv3om7xab+8eWVHwaSbtSVqgV1dTXP4OVIeKgHomM2GbSSQ7CqnQrJAw6w7GmoevKBGQWS2PBBcy1AjJuvBdx2izeMqAA8V3kaAT9NvJlmwTku0e8V+OO282UyUPk4ePN5rIdoCyo7SQjbRmbiMC3BZscLdv/OkFtu2RECXE4vqGCa7oCE8eJfxZfNjpkTuUsw42E6wdYRwHUb2REBrV6WHTbdHeD8S0M9ddu5c61uEh0emT8Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB6697.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(136003)(346002)(396003)(39860400002)(376002)(366004)(451199021)(1076003)(107886003)(52116002)(6486002)(83380400001)(6666004)(110136005)(26005)(2906002)(2616005)(6512007)(186003)(478600001)(6506007)(5660300002)(36756003)(921005)(7416002)(38350700002)(38100700002)(316002)(4326008)(66946007)(66556008)(8676002)(8936002)(86362001)(41300700001)(66476007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?jtjBNreCzE06QofNTOUT8d4azKLhGt6ahSh7v3LEdSNfafoh+e2kQhetkIcs?=
- =?us-ascii?Q?dPHt83jnl6Fq+gaX13s9Ve1F8iY8GhuuqGkQjizo5IsbHcX5G1O8uq0XPaNz?=
- =?us-ascii?Q?OMvLPAJLKxej0mMgx4Uxt+OhZz73RfQiR63n+OsGj+a7WfmrGGmIW9VWDn7h?=
- =?us-ascii?Q?ZKE+lMvAkri93TS5CLafjBRw1T9ac2cYQLHPBIoYEUsV2nWKfQ3EU1UoNcSU?=
- =?us-ascii?Q?NRj35jUJZLDBUGcoPgfdXC6FSnjYL+0//gwZwgdyoHQ698/NHzgrbvtNKRis?=
- =?us-ascii?Q?faX5dvmMe0DGgN/b0tnxR0CP+zzDhY0GBb4yX9B2nyl5nPQUoO3ASvTIwk0D?=
- =?us-ascii?Q?2LKQfzagJFK+QTUWGBduIqDYsn3avjhR0JhR4y9gz7X1zAqa1DPtmYWgtQ2I?=
- =?us-ascii?Q?r1oYR9JYmx5LfwUeHJzovTU+pAiGyUE6v4V3NZ5alRURsZSZml+TY6buRzRr?=
- =?us-ascii?Q?rynUTc30syU3cG+GxSHz5qXy4vQQIH4d0H8OWfXeu+VyTYA2TEWBwghhnnJ/?=
- =?us-ascii?Q?W8JnAfj58JJIDRMlboW6qkZM4e1FLn8o57CFB8TXTEZn93cbImLBcpMO8wll?=
- =?us-ascii?Q?ql9xAipH1KGfaA1oeOe3Hxx3Qfr27NgvTUsZwNjOfdTZw92Khj9ugGWrhIoL?=
- =?us-ascii?Q?cEF1ZcVDQTnzOj+wct80lm0a5e1fA8Vn64nQoEbUSY8eR3f1C2D8TSJ94jmm?=
- =?us-ascii?Q?eRKKbuPPxBSfbNy+RGBXsJbaMm7bAw7iBigfltSGaJX+T4VAJHevA/dHZ8pP?=
- =?us-ascii?Q?d55u0brCl+1JNDmUj8hlJBGhRLbR0F884NyQ0UABJMPaJRAF/Aplo1sujCUc?=
- =?us-ascii?Q?G7MAOtqOoFule+dkUmvog+qUziZnoC4m/94OSfRk3zx1DmgoCOZkd6P26oK6?=
- =?us-ascii?Q?GSVOGbl1N/yMposlP+scoNFM/wuEJekZVB4oTIycVJsDBJ0Vz+6sAbBIW0AU?=
- =?us-ascii?Q?qzNaTP/oPfoyUWoob1gurAjolXfCqEdneZXGUXuVbqlh2rspb2aD4ZOC4Jum?=
- =?us-ascii?Q?mfBZ6V4oKHAAklBiaYVfz+kEi/RuV++cJSWs1fuKsn7Ny0i3RAkW9nED8LwE?=
- =?us-ascii?Q?KfAMSsba+eGwQ32+lIRPm4o8oyKNGUTpk7MaQc2U0zpX0g90n6wDCaliEHPv?=
- =?us-ascii?Q?La7NAusRI7OQNb+rWUvSkSlGlowpwmnVMgzg6tUhXdiQ1+7HPmdIXzrjpUDm?=
- =?us-ascii?Q?hUCT7dH+uvXKTIpAN9yNJI2H273CUkM8t2X5GZxjnACPV6kbE5gFYoBV5q9n?=
- =?us-ascii?Q?bSlMltA89K56poGdLRXHrLGyo5nVmVvh4u1v2ZM5gwfr0bFtbwHoLQsoQBap?=
- =?us-ascii?Q?Mj78jkacB6oNzP9tNqN8zBaN8pJFG05rwG7qtRwdG5BRBmzh1J8dsA+0ltHY?=
- =?us-ascii?Q?/Hu2DHiyVZ2CN5GsNN5zBjFFGeJyUYmJgSFetATpbYY+Vb0yI07ejDJSrPZK?=
- =?us-ascii?Q?8xk3qZjM3bjaA6wkajtZXOg2P9VoDUtbDwY1VoHuZg3W6CzduasvjdOKKf36?=
- =?us-ascii?Q?M2TDiWQPV+QCv9OsWudz3MaStfH+rlYwqxhCu0fovsu355ADAuqPJ5gFV0bM?=
- =?us-ascii?Q?elDknrwLJs8+wLTtziLWpJm90/zxSQxuNxFfn8K1?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b63aee31-f676-44f3-e629-08db77a5a953
-X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB6697.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jun 2023 07:02:39.8920
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: f+G/+XnTzZHT0G8iVKcdZnmexnTVFEj8oSHLZr9zCReccvAOvf1MYAR8hlyj7DUuhevQnUryp5kmy7fg9jZmLw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SI2PR06MB3979
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA02TeVBTVxTGe99LHsE29hGoXGhFDJUpe4IBLggFlTpvtNOhU9s67bTwSp6A
+        CSGTBETUkUUsssuibUABpVQCI5VNIGApCsjWWDaHWIta6KCU1c5IB5EmRKz//c53v3vOPefO
+        4eC8ajNbTpRMxShktJRPbGA13nBycns0WiQW5G5GNb1dOErOXcFR1b0cAk3fWATo7Py/OJpo
+        /xag5QEdjoYmNqL7PweittkiNhprb8ZQ68U8DFVWdWIor2MUoMkRNYba9C6o7FQ5C7W29bDQ
+        UEsxgUoqJs1Qxp0mAv3Y/RxDHfkpGGqaSAKocbkER1em51jolv5t9GdGGkC6lW42Wl4qJoLs
+        qKHhfVSz+p4ZpfvjKouqu+xMDQ3EUrWa0wRVV36C0o4lEtSl7Hw2lZUyS1DNqeNsamFSz6Lm
+        ro8QVHa9BlB1fUepJ7V2IRZfSPwjGVrMKOwZWXiMOEoWEcDf90no7lAvb4HQTeiLfPj2Mjqa
+        CeAHfxjitidKahgT3z6OlsYapBBaqeR7vO+viIlVMfaRMUpVAJ+Ri6VykdxdSUcrY2UR7jJG
+        5ScUCDy9DMYwSeTT0cdsuc43/uTwCEgENYJ0wOFAUgT704+mgw0cHqkFsDe9mEgH5oZgEcCp
+        U/AlZ5QfWveXd1mb/M0AXuu9gpmCVAw+UOvMjCaCdIF9qxyjbkUm4vAn7SVgDHCyjAXv/pUJ
+        jFktyUCo7ctnGZlFboOlqX1sI3PJHfB86TTLVM0D5oxbGGVzg6zV3XxhsYA930+sXcXJLTCl
+        oQg3MiQHzeGZpGMmDobDLTqWiS3h4+56MxPbwiezbYSJD8PKgsuE8W2QPAmg+o4amA4CYWpv
+        Dm58A046wZoWD5O8GRauNWysuxFmLU9gJp0Lmy6sswOsril9kd8Gjj5NIkytUPBqtp1pVtkA
+        Pk9OA7nAXv1KO+pX2lH/X7kU4Bpgw8iV0RGM0kvuKWMOv/zh8JjoWrC2Ns57m8CD+/PuHQDj
+        gA4AOTjfirtp6ZyYxxXTRxIYRUyoIlbKKDuAl2HcZ3Dbt8JjDHsnU4UKRb4Ckbe3t8h3u7eQ
+        b82tGM4S88gIWsVIGEbOKNbvYRxz20TMZmAlIdnRtvzrhyqHLJ/b8cG835TvOClCz9qZaSpn
+        +neWmPsJHN+onCo5UH087jvgVf7Dewf3q6475u6lfZqvjS5v5cWRQW86vWstGXC+23DAYiZv
+        ML6963VPdSR2flPfjkK6DR7U4mHzZb9bb/2y87NGq2LKITPz2K3BOPfJv+cOLeSmwV+Dduur
+        tj1znSm2XHXddbNClqaqF5WVfro9LOK0rHN/auuJfz7eIvXv/OWrWv/jq/23L5a6cL2O1NV4
+        FIzrNVPx+rQ9kmfTuyQlrQ/1TnYF6Vnc2EL7R83hwsUPXKdWNIvU590LvOKGnnm/1745J5Ur
+        Fy98RNdFsyOsE8Y6lir5LGUkLXTGFUr6P2P8Gfm/BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Sf0yMcRzHfZ/nuaen7OzpUn0LZXciNXFm9tW1ypr1XYyY3/l1c4+iK+eu
+        LDKlJB2Ja5R+EE66jJuO6iR0+iGxY9exrnHhkmkrv2Pt/LiazX/vz+v9fn/2+ePDkII3lD+z
+        MzWNU6ZK5ULag6p/IAycs2xOuWxeS40E6R+1kyjnpJNEV18W0WjwwWeAznz8SSLH/XyARp+Y
+        SWRxTEJ996JQ81A5D/XcNxLozkUNgXRX2wikMT0HqN9aRqBmWyi6cERLoTvNnRSy3K6g0fnq
+        fjd07EUjja50/CKQqTiXQI2OQwDVj54n0fXBYQo9tE1Bb48dBcjs7OCh0R8VdHQAtnQvxcay
+        l27Y/OoGhQ01IdjyJB3X1RbQ2KDNwk092TS+dKKYhwtzh2hszLPz8Kd+G4WH71ppfOJmLcCG
+        rkz8pS4g3nOjR4SMk+/cyynnRm7zSBp5/oGnMC/KONxtBdlAP08NGAayC6C23VcNPBgB2wBg
+        fUMloQbuf7kfrHa2kuPaC+p+DbiNh3IJWHHcSbrKNBsKu34zLj6ZVZOwwDhEuQaSbaCgVn+Z
+        52p7sVGwqauYcmmKDYJVeV1jnM9KYGXVIDV+xVxYZPd0Yfe/uMncynNhARsOhzvix9OesPOs
+        Y2wLyQbC3Fvl5EnAlv1nlf1nVQGiFnhzClVKYsp2hThMJU1Rpacmhm3fnVIHxt4gZFUjqNY7
+        w0yAYIAJQIYUTub7/CiRCfgy6b79nHL3VmW6nFOZwBSGEvryRfICmYBNlKZxyRyn4JT/XIJx
+        988m8t8XZmyIjD10esWE5OrhGkvpp3BNW6nAbmQEpX0Hgld2T024FrPrG92Z1mIKiCZFanFO
+        4bT3JT9n2D+sm1qrQoMiw5qv0QnxcRGyhIEgW9wLXar+S1aiKNYPPz1cuWAhaRhauUkyO1rT
+        Lt8YK5lvzEyy5G1evIsvTBYZ3ozEBTHeTyfF0D49JTrv9e881+/JQeEXPvoEWi3FURnLpWEj
+        2PeW40aIFuolPAnM85odyxSdaytc9SzCP5iJC8p/7Readi1A+3hz72PrxArx/tffhTbxgH3Z
+        loPS6Zn06h37NL26mTGP+j9HnlW0rGUCZ/W23vU5vY3tcxdkLQk+VaMXUqokqTiEVKqkfwCP
+        aevHdQMAAA==
+X-CMS-MailID: 20230627184117epcas5p3a9102988870743b20127422928f072bd
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230627184117epcas5p3a9102988870743b20127422928f072bd
+References: <20230627183629.26571-1-nj.shetty@samsung.com>
+        <CGME20230627184117epcas5p3a9102988870743b20127422928f072bd@epcas5p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the original logic, WB Hibern Flush was always on.
-During suspend flow, the host will determine whether the device needs
-BKOP or WB flush, and if so, it will keep VCC supply.
-WB flush is only a part of BKOP, and device that needs BKOP do not
-necessarily need WB flush if the conditions are not met. Therefore,
-if WB flush is not needed, it will be better to disable WB Hibern
-Flush, which could save device power consumption. When WB Hibern
-Flush is needed, enable it again.
+Implementaion is based on existing read and write infrastructure.
+copy_max_bytes: A new configfs and module parameter is introduced, which
+can be used to set hardware/driver supported maximum copy limit.
 
-In this way, the WB Hibern Flush always on strategy is changed to a dynamic
-on/off strategy.
-
-Signed-off-by: Lu Hongfei <luhongfei@vivo.com>
-Signed-off-by: Tang Huan <tanghuan@vivo.com>
+Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+Signed-off-by: Vincent Fu <vincent.fu@samsung.com>
 ---
- drivers/ufs/core/ufshcd.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ Documentation/block/null_blk.rst  |  5 ++
+ drivers/block/null_blk/main.c     | 85 +++++++++++++++++++++++++++++--
+ drivers/block/null_blk/null_blk.h |  1 +
+ 3 files changed, 88 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 983fae84d9e8..484d7fa96407 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9592,13 +9592,20 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		 * If device needs to do BKOP or WB buffer flush during
- 		 * Hibern8, keep device power mode as "active power mode"
- 		 * and VCC supply.
-+		 * If device does not need WB buffer flush now, it's better
-+		 * to disable WB flush during H8 to save power consumption.
- 		 */
--		hba->dev_info.b_rpm_dev_flush_capable =
--			hba->auto_bkops_enabled ||
--			(((req_link_state == UIC_LINK_HIBERN8_STATE) ||
--			((req_link_state == UIC_LINK_ACTIVE_STATE) &&
--			ufshcd_is_auto_hibern8_enabled(hba))) &&
--			ufshcd_wb_need_flush(hba));
-+		hba->dev_info.b_rpm_dev_flush_capable = hba->auto_bkops_enabled;
-+		if (((req_link_state == UIC_LINK_HIBERN8_STATE) ||
-+		    ((req_link_state == UIC_LINK_ACTIVE_STATE) &&
-+		    ufshcd_is_auto_hibern8_enabled(hba))) &&
-+		    ufshcd_wb_need_flush(hba)) {
-+			ufshcd_wb_toggle_buf_flush_during_h8(hba, true);
-+			hba->dev_info.b_rpm_dev_flush_capable = true;
-+		} else {
-+			ufshcd_wb_toggle_buf_flush_during_h8(hba, false);
-+		}
+diff --git a/Documentation/block/null_blk.rst b/Documentation/block/null_blk.rst
+index 4dd78f24d10a..6153e02fcf13 100644
+--- a/Documentation/block/null_blk.rst
++++ b/Documentation/block/null_blk.rst
+@@ -149,3 +149,8 @@ zone_size=[MB]: Default: 256
+ zone_nr_conv=[nr_conv]: Default: 0
+   The number of conventional zones to create when block device is zoned.  If
+   zone_nr_conv >= nr_zones, it will be reduced to nr_zones - 1.
 +
++copy_max_bytes=[size in bytes]: Default: COPY_MAX_BYTES
++  A module and configfs parameter which can be used to set hardware/driver
++  supported maximum copy offload limit.
++  COPY_MAX_BYTES(=128MB at present) is defined in fs.h
+diff --git a/drivers/block/null_blk/main.c b/drivers/block/null_blk/main.c
+index 864013019d6b..e9461bd4dc2c 100644
+--- a/drivers/block/null_blk/main.c
++++ b/drivers/block/null_blk/main.c
+@@ -157,6 +157,10 @@ static int g_max_sectors;
+ module_param_named(max_sectors, g_max_sectors, int, 0444);
+ MODULE_PARM_DESC(max_sectors, "Maximum size of a command (in 512B sectors)");
+ 
++static unsigned long g_copy_max_bytes = COPY_MAX_BYTES;
++module_param_named(copy_max_bytes, g_copy_max_bytes, ulong, 0444);
++MODULE_PARM_DESC(copy_max_bytes, "Maximum size of a copy command (in bytes)");
++
+ static unsigned int nr_devices = 1;
+ module_param(nr_devices, uint, 0444);
+ MODULE_PARM_DESC(nr_devices, "Number of devices to register");
+@@ -409,6 +413,7 @@ NULLB_DEVICE_ATTR(home_node, uint, NULL);
+ NULLB_DEVICE_ATTR(queue_mode, uint, NULL);
+ NULLB_DEVICE_ATTR(blocksize, uint, NULL);
+ NULLB_DEVICE_ATTR(max_sectors, uint, NULL);
++NULLB_DEVICE_ATTR(copy_max_bytes, uint, NULL);
+ NULLB_DEVICE_ATTR(irqmode, uint, NULL);
+ NULLB_DEVICE_ATTR(hw_queue_depth, uint, NULL);
+ NULLB_DEVICE_ATTR(index, uint, NULL);
+@@ -550,6 +555,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
+ 	&nullb_device_attr_queue_mode,
+ 	&nullb_device_attr_blocksize,
+ 	&nullb_device_attr_max_sectors,
++	&nullb_device_attr_copy_max_bytes,
+ 	&nullb_device_attr_irqmode,
+ 	&nullb_device_attr_hw_queue_depth,
+ 	&nullb_device_attr_index,
+@@ -656,7 +662,8 @@ static ssize_t memb_group_features_show(struct config_item *item, char *page)
+ 			"poll_queues,power,queue_mode,shared_tag_bitmap,size,"
+ 			"submit_queues,use_per_node_hctx,virt_boundary,zoned,"
+ 			"zone_capacity,zone_max_active,zone_max_open,"
+-			"zone_nr_conv,zone_offline,zone_readonly,zone_size\n");
++			"zone_nr_conv,zone_offline,zone_readonly,zone_size,"
++			"copy_max_bytes\n");
+ }
+ 
+ CONFIGFS_ATTR_RO(memb_group_, features);
+@@ -722,6 +729,7 @@ static struct nullb_device *null_alloc_dev(void)
+ 	dev->queue_mode = g_queue_mode;
+ 	dev->blocksize = g_bs;
+ 	dev->max_sectors = g_max_sectors;
++	dev->copy_max_bytes = g_copy_max_bytes;
+ 	dev->irqmode = g_irqmode;
+ 	dev->hw_queue_depth = g_hw_queue_depth;
+ 	dev->blocking = g_blocking;
+@@ -1271,6 +1279,67 @@ static int null_transfer(struct nullb *nullb, struct page *page,
+ 	return err;
+ }
+ 
++static inline int nullb_setup_copy_write(struct nullb *nullb,
++		struct request *req, bool is_fua)
++{
++	sector_t sector_in, sector_out;
++	void *in, *out;
++	size_t rem, temp;
++	struct bio *bio;
++	unsigned long offset_in, offset_out;
++	struct nullb_page *t_page_in, *t_page_out;
++	int ret = -EIO;
++
++	sector_out = blk_rq_pos(req);
++
++	__rq_for_each_bio(bio, req) {
++		sector_in = bio->bi_iter.bi_sector;
++		rem = bio->bi_iter.bi_size;
++	}
++
++	if (WARN_ON(!rem))
++		return BLK_STS_NOTSUPP;
++
++	spin_lock_irq(&nullb->lock);
++	while (rem > 0) {
++		temp = min_t(size_t, nullb->dev->blocksize, rem);
++		offset_in = (sector_in & SECTOR_MASK) << SECTOR_SHIFT;
++		offset_out = (sector_out & SECTOR_MASK) << SECTOR_SHIFT;
++
++		if (null_cache_active(nullb) && !is_fua)
++			null_make_cache_space(nullb, PAGE_SIZE);
++
++		t_page_in = null_lookup_page(nullb, sector_in, false,
++			!null_cache_active(nullb));
++		if (!t_page_in)
++			goto err;
++		t_page_out = null_insert_page(nullb, sector_out,
++			!null_cache_active(nullb) || is_fua);
++		if (!t_page_out)
++			goto err;
++
++		in = kmap_local_page(t_page_in->page);
++		out = kmap_local_page(t_page_out->page);
++
++		memcpy(out + offset_out, in + offset_in, temp);
++		kunmap_local(out);
++		kunmap_local(in);
++		__set_bit(sector_out & SECTOR_MASK, t_page_out->bitmap);
++
++		if (is_fua)
++			null_free_sector(nullb, sector_out, true);
++
++		rem -= temp;
++		sector_in += temp >> SECTOR_SHIFT;
++		sector_out += temp >> SECTOR_SHIFT;
++	}
++
++	ret = 0;
++err:
++	spin_unlock_irq(&nullb->lock);
++	return ret;
++}
++
+ static int null_handle_rq(struct nullb_cmd *cmd)
+ {
+ 	struct request *rq = cmd->rq;
+@@ -1280,13 +1349,16 @@ static int null_handle_rq(struct nullb_cmd *cmd)
+ 	sector_t sector = blk_rq_pos(rq);
+ 	struct req_iterator iter;
+ 	struct bio_vec bvec;
++	bool fua = rq->cmd_flags & REQ_FUA;
++
++	if (op_is_copy(req_op(rq)))
++		return nullb_setup_copy_write(nullb, rq, fua);
+ 
+ 	spin_lock_irq(&nullb->lock);
+ 	rq_for_each_segment(bvec, rq, iter) {
+ 		len = bvec.bv_len;
+ 		err = null_transfer(nullb, bvec.bv_page, len, bvec.bv_offset,
+-				     op_is_write(req_op(rq)), sector,
+-				     rq->cmd_flags & REQ_FUA);
++				     op_is_write(req_op(rq)), sector, fua);
+ 		if (err) {
+ 			spin_unlock_irq(&nullb->lock);
+ 			return err;
+@@ -2042,6 +2114,9 @@ static int null_validate_conf(struct nullb_device *dev)
+ 		return -EINVAL;
  	}
  
- 	flush_work(&hba->eeh_work);
++	if (dev->queue_mode == NULL_Q_BIO)
++		dev->copy_max_bytes = 0;
++
+ 	return 0;
+ }
+ 
+@@ -2161,6 +2236,10 @@ static int null_add_dev(struct nullb_device *dev)
+ 		dev->max_sectors = queue_max_hw_sectors(nullb->q);
+ 	dev->max_sectors = min(dev->max_sectors, BLK_DEF_MAX_SECTORS);
+ 	blk_queue_max_hw_sectors(nullb->q, dev->max_sectors);
++	blk_queue_max_copy_sectors_hw(nullb->q,
++			       dev->copy_max_bytes >> SECTOR_SHIFT);
++	if (dev->copy_max_bytes)
++		blk_queue_flag_set(QUEUE_FLAG_COPY, nullb->disk->queue);
+ 
+ 	if (dev->virt_boundary)
+ 		blk_queue_virt_boundary(nullb->q, PAGE_SIZE - 1);
+diff --git a/drivers/block/null_blk/null_blk.h b/drivers/block/null_blk/null_blk.h
+index 929f659dd255..e82e53a2e2df 100644
+--- a/drivers/block/null_blk/null_blk.h
++++ b/drivers/block/null_blk/null_blk.h
+@@ -107,6 +107,7 @@ struct nullb_device {
+ 	unsigned int queue_mode; /* block interface */
+ 	unsigned int blocksize; /* block size */
+ 	unsigned int max_sectors; /* Max sectors per command */
++	unsigned long copy_max_bytes; /* Max copy offload length in bytes */
+ 	unsigned int irqmode; /* IRQ completion handler */
+ 	unsigned int hw_queue_depth; /* queue depth */
+ 	unsigned int index; /* index of the disk, only valid with a disk */
 -- 
-2.39.0
+2.35.1.500.gb896f729e2
 
