@@ -2,126 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A17EB64DC
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 14:46:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 675D9EB64D9
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 15:14:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232202AbjF0Oqs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Jun 2023 10:46:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43490 "EHLO
+        id S232141AbjF0PON (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Jun 2023 11:14:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231993AbjF0Op6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 10:45:58 -0400
-Received: from mail2-relais-roc.national.inria.fr (mail2-relais-roc.national.inria.fr [192.134.164.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A02EF30E5;
-        Tue, 27 Jun 2023 07:45:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=inria.fr; s=dc;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Z82TQ5gJtsAQsS8pQEGxb7cmdrfE0splW6XwEm1/6wU=;
-  b=iHdVPjsdGYPUTWXu4Ea7YwNhgAHax/50Ctdon4mH6O9Lm0GAA6tq10Hq
-   qpugFsfftNxOqg1ePJ9wS48K0v0nTQ2yH8JsF6EyFw8CUraY+BkP6Lr0a
-   8faRDg0zoYpPt6Zw8zxx/r+fj+B0Y/oAEVT8RP7qie5okcXB+89hhiW//
-   E=;
-Authentication-Results: mail2-relais-roc.national.inria.fr; dkim=none (message not signed) header.i=none; spf=SoftFail smtp.mailfrom=Julia.Lawall@inria.fr; dmarc=fail (p=none dis=none) d=inria.fr
-X-IronPort-AV: E=Sophos;i="6.01,162,1684792800"; 
-   d="scan'208";a="114936347"
-Received: from i80.paris.inria.fr (HELO i80.paris.inria.fr.) ([128.93.90.48])
-  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2023 16:43:53 +0200
-From:   Julia Lawall <Julia.Lawall@inria.fr>
-To:     Nilesh Javali <njavali@marvell.com>
-Cc:     kernel-janitors@vger.kernel.org, keescook@chromium.org,
-        christophe.jaillet@wanadoo.fr, kuba@kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 24/24] scsi: qla2xxx: use vmalloc_array and vcalloc
-Date:   Tue, 27 Jun 2023 16:43:39 +0200
-Message-Id: <20230627144339.144478-25-Julia.Lawall@inria.fr>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20230627144339.144478-1-Julia.Lawall@inria.fr>
-References: <20230627144339.144478-1-Julia.Lawall@inria.fr>
+        with ESMTP id S232007AbjF0POM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 11:14:12 -0400
+Received: from mail-io1-f52.google.com (mail-io1-f52.google.com [209.85.166.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA45C26B3;
+        Tue, 27 Jun 2023 08:14:10 -0700 (PDT)
+Received: by mail-io1-f52.google.com with SMTP id ca18e2360f4ac-785ccf19489so10756939f.3;
+        Tue, 27 Jun 2023 08:14:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687878850; x=1690470850;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=P6Dxr1qrQ+dD7ODCxvLBG8Sk4TfJL34ijnHxpCzhHGA=;
+        b=WLkL4jcTklw8Fz3tNZnnmv3SIniP1w8//Ak4fXyOYviKUjapG+tnz8A++7uo/pIZ4N
+         TtQm/eN+aFmECRNlvZC62+vBBj+/Vq5WWZrR9rb5tX6UrRJd4fTj4oFZBpdmt4KHKKQ1
+         3LGFe3W093Yayhhll0eYnvQp0BA6KEtgMKlGHryJl2wy5HhB9DXv/B7OxQv9DwFVOH5g
+         CLnkkhHDeX/ZsqvEuRt/zuxvWHdzlJbH/RUqbKdC4hDHGJhutV5nGJ8bB6i3lELRFlz1
+         ZJ5ILOcxzQ4VH7QzHLhc+ahel68xI/kIiyaWEZdfAQiFl3sbXO9BvOwEuCWMsSKErnB2
+         NDJg==
+X-Gm-Message-State: AC+VfDzyjMq+K2Tf5C6o3LFn2Hi9TMMYvLX5KctIk44VHSUI05uYHnB4
+        xzoTAZo+TSzH2KIEhbxP8g==
+X-Google-Smtp-Source: ACHHUZ7PC3wuDrYXpV6ivJj09BHOErKMVoROQny4zV4bhGuli6zRMNhs4YwTOs7ErMfy18wdNkciOw==
+X-Received: by 2002:a92:cb07:0:b0:340:5928:e048 with SMTP id s7-20020a92cb07000000b003405928e048mr27005727ilo.11.1687878850054;
+        Tue, 27 Jun 2023 08:14:10 -0700 (PDT)
+Received: from robh_at_kernel.org ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id y15-20020a92090f000000b003422ef44e6asm2726591ilg.6.2023.06.27.08.14.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Jun 2023 08:14:09 -0700 (PDT)
+Received: (nullmailer pid 1929024 invoked by uid 1000);
+        Tue, 27 Jun 2023 15:14:07 -0000
+Date:   Tue, 27 Jun 2023 09:14:07 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     Luca Weiss <luca.weiss@fairphone.com>,
+        Abel Vesa <abel.vesa@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 5/5] scsi: dt-bindings: ufs: qcom: Fix warning for sdm845
+ by adding reg-names
+Message-ID: <20230627151407.GA1918927-robh@kernel.org>
+References: <20230623113009.2512206-1-abel.vesa@linaro.org>
+ <20230623113009.2512206-6-abel.vesa@linaro.org>
+ <cd84b8c6-fac7-ecef-26be-792a1b04a102@linaro.org>
+ <CTK1AI4TVYRZ.F77OZB62YYC0@otso>
+ <20230623211746.GA1128583-robh@kernel.org>
+ <f1ff2c32-df2a-e349-1227-e5a93fe37c92@linaro.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f1ff2c32-df2a-e349-1227-e5a93fe37c92@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use vmalloc_array and vcalloc to protect against
-multiplication overflows.
+On Sat, Jun 24, 2023 at 09:49:12AM +0200, Krzysztof Kozlowski wrote:
+> On 23/06/2023 23:17, Rob Herring wrote:
+> >> With my private mailbox I just have a different folder for patches that
+> >> have been sent which I archive once they're applied, but with work GMail
+> >> I don't see how I can easily replicate this since it's also not grouping
+> >> threads properly.
+> > 
+> > Yeah, GMail sucks for that. I use 'lei' to get all my patches and 
+> > replies to them (though its caching will miss replies). Then I delete 
+> > them from the mbox when they are applied or otherwise finished. lei 
+> > updates won't re-add them to the mbox.
+> 
+> That's interesting approach. What's your lei search query for getting
+> your patches? "f:rob" would get all your threads you participated in.
 
-The changes were done using the following Coccinelle
-semantic patch:
+This is what I have:
 
-// <smpl>
-@initialize:ocaml@
-@@
+        q = (dfn:drivers OR dfn:sound OR dfn:tools OR dfn:kernel OR \
+         dfn:arch OR dfn:Documentation OR dfn:include OR dfn:scripts) AND \
+         f:robh@kernel.org AND rt:3.month.ago..
 
-let rename alloc =
-  match alloc with
-    "vmalloc" -> "vmalloc_array"
-  | "vzalloc" -> "vcalloc"
-  | _ -> failwith "unknown"
+Really, I'd like a 'is a patch' flag or 'dfn:*' or 'dfn:/' here, but I 
+didn't convince the lei maintainer such a thing is needed. Sigh.
 
-@@
-    size_t e1,e2;
-    constant C1, C2;
-    expression E1, E2, COUNT, x1, x2, x3;
-    typedef u8;
-    typedef __u8;
-    type t = {u8,__u8,char,unsigned char};
-    identifier alloc = {vmalloc,vzalloc};
-    fresh identifier realloc = script:ocaml(alloc) { rename alloc };
-@@
+Also, you have to disable lei's caching with the --remote-fudge-time 
+option because it will miss replies to the matching query. Also reported 
+and not fixed...
 
-(
-      alloc(x1*x2*x3)
-|
-      alloc(C1 * C2)
-|
-      alloc((sizeof(t)) * (COUNT), ...)
-|
--     alloc((e1) * (e2))
-+     realloc(e1, e2)
-|
--     alloc((e1) * (COUNT))
-+     realloc(COUNT, e1)
-|
--     alloc((E1) * (E2))
-+     realloc(E1, E2)
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
-
----
-v2: Use vmalloc_array and vcalloc instead of array_size.
-This also leaves a multiplication of a constant by a sizeof
-as is.  Two patches are thus dropped from the series.
-
- drivers/scsi/qla2xxx/qla_init.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff -u -p a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -8434,7 +8434,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t
- 		ql_dbg(ql_dbg_init, vha, 0x0163,
- 		    "-> fwdt%u template allocate template %#x words...\n",
- 		    j, risc_size);
--		fwdt->template = vmalloc(risc_size * sizeof(*dcode));
-+		fwdt->template = vmalloc_array(risc_size, sizeof(*dcode));
- 		if (!fwdt->template) {
- 			ql_log(ql_log_warn, vha, 0x0164,
- 			    "-> fwdt%u failed allocate template.\n", j);
-@@ -8689,7 +8689,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *
- 		ql_dbg(ql_dbg_init, vha, 0x0173,
- 		    "-> fwdt%u template allocate template %#x words...\n",
- 		    j, risc_size);
--		fwdt->template = vmalloc(risc_size * sizeof(*dcode));
-+		fwdt->template = vmalloc_array(risc_size, sizeof(*dcode));
- 		if (!fwdt->template) {
- 			ql_log(ql_log_warn, vha, 0x0174,
- 			    "-> fwdt%u failed allocate template.\n", j);
-
+Rob
