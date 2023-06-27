@@ -2,119 +2,184 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CAB8EB64D7
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 02:45:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1305C001DE
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 05:41:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230013AbjF0CpK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 22:45:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55442 "EHLO
+        id S229838AbjF0FlO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Jun 2023 01:41:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229562AbjF0CpI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 22:45:08 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 977D6173A
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 19:45:05 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230627024502epoutp036e9e9f32ede349e2ee1316e98231fb27~sY-3n5DYs2953829538epoutp03A
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 02:45:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230627024502epoutp036e9e9f32ede349e2ee1316e98231fb27~sY-3n5DYs2953829538epoutp03A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1687833902;
-        bh=5xF9qATyEbuVpKO5ICntt2LMXKMAsCC0Hky1uFD2Srw=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=UGi+npRURQnqM4v06CPHjHQNKsH/JQGXx9cimJAOvKGay1ZbfOy1Dib7PatMURXYP
-         j9iYsXG6BzRMnRj979+b73NmnReb3scy69UVmsNErst9h2Bm+qiCxr4VBkbdVDwngz
-         rN7doNdUzGmXCZeflWhbuXnWfBj4klkaFQYhf5uU=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20230627024501epcas2p49665994285ec58f2943942c4c425d15d~sY-2-_Zoc1459014590epcas2p4X;
-        Tue, 27 Jun 2023 02:45:01 +0000 (GMT)
-Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp1.localdomain
-        (Postfix) with ESMTP id 4QqpwF5m0Hz4x9Q2; Tue, 27 Jun 2023 02:45:01 +0000
-        (GMT)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-        20230627012659epcas2p1961cc5bf75bf1a324f6f4fdebd7f897c~sX7t2-n6k1698116981epcas2p1I;
-        Tue, 27 Jun 2023 01:26:59 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230627012659epsmtrp2c181dcfc0f86b76ddab8c17ad2a90b06~sX7t1_F0Z0247602476epsmtrp2U;
-        Tue, 27 Jun 2023 01:26:59 +0000 (GMT)
-X-AuditID: b6c32a29-187ff700000086bb-b4-649a3ae2cf6f
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        3E.1D.34491.2EA3A946; Tue, 27 Jun 2023 10:26:58 +0900 (KST)
-Received: from KORCO118546 (unknown [10.229.38.108]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20230627012658epsmtip16e2575c58a61c7396fbb7a62017e3b1d~sX7tm9prw0260002600epsmtip1A;
-        Tue, 27 Jun 2023 01:26:58 +0000 (GMT)
-From:   "hoyoung seo" <hy50.seo@samsung.com>
-To:     <bvanassche@acm.org>
-Cc:     <Arthur.Simchaev@wdc.com>, <JBottomley@Parallels.com>,
-        <adrian.hunter@intel.com>, <athierry@redhat.com>,
-        <avri.altman@wdc.com>, <beanhuo@micron.com>, <jaegeuk@kernel.org>,
-        <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <quic_asutoshd@quicinc.com>,
-        <quic_ziqichen@quicinc.com>, <santoshsy@gmail.com>,
-        <stanley.chu@mediatek.com>, <cpgs@samsung.com>,
-        <sc.suh@samsung.com>, <kwmad.kim@samsung.com>,
-        <kwangwon.min@samsung.com>, <sh425.lee@samsung.com>
-Subject: Re: [PATCH v3 2/4] scsi: ufs: Fix handling of lrbp->cmd
-Date:   Tue, 27 Jun 2023 10:26:58 +0900
-Message-ID: <1891546521.01687833901791.JavaMail.epsvc@epcpadp3>
+        with ESMTP id S229689AbjF0FlM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 01:41:12 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51A5F173B;
+        Mon, 26 Jun 2023 22:41:10 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1b7f2239bfdso22579405ad.1;
+        Mon, 26 Jun 2023 22:41:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1687844470; x=1690436470;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=eUHv1b8aqLsb4R7LditAal7kNTag6lxKqXAOQ2qujCU=;
+        b=fG/WGax37UoauKBSyv6kej64LdcGJrv6k66h8NGOsMv9uaUsNclSu7DiDyHvg7N0+H
+         TpLbLvnFmTkLJuRzyFn0V5R9/xG3MBNfmS6gpoZxFQmbIvFJa8XU1iIC6Fyl95ACCFHi
+         Ys+3TEnr35uP041kETcaQnaFL3Zzmuv0Ara4RUBuuI4A1DlyY37o026XtSt1PCG00d7o
+         R82xvUrMlfJH4JujFDKNZYqLCuYZs3onB7GlXFtQZdgcqNFnR06TCpWzVOviTJnvGG64
+         v3WIIO+Pf3siD1OxDgXeCgfd8ad+rtq0TuDOYOoPNLLpd/YOKy903+fL59/xrY4ynCa9
+         WP/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687844470; x=1690436470;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=eUHv1b8aqLsb4R7LditAal7kNTag6lxKqXAOQ2qujCU=;
+        b=du9CZbEIY3iks5eVJgPE5NhzfXvDFcVsZcOB1xr4m2W1GIycHe7Iyggp1lBugeqql1
+         YEAV8L4wzKe2RLBmU7YHtBhSYMW3R7c/oJQvf/rvRNjVPf0Xx4e2qpwW/ED5eD596s/B
+         QzztS9wnezPyTT0Tu6cw6eSJMHvSmnPqKwjOGKYzdtRLzhzy7wrjD0RUtyRjNHWO/5wS
+         viGzBozIh/5VvtzM/v6k5L1TjNMXZ7pDfz2CQTBFCdBwS6OWdLmgWz8GvkA8olJRzSO4
+         WuN49jDu3lF4V8MaWFkisoTwCeaMO8kN738KUjIBKdzjCuQFTxaKUc84cmwXhdn2q/9z
+         8C5g==
+X-Gm-Message-State: AC+VfDz9mQ4v+z/lN1O+GFOSNl1V3Fg7ygkfUs+n3LjHS0YO7IurhqUC
+        HkoNqpbjyn60vSDLykeiOEs=
+X-Google-Smtp-Source: ACHHUZ4Aj+CfQoLGg0YEyBUDipJUlv6nej6ije3P7CId9SMSoIBcFwHmOjcIwHyQMLpCclEzduuKWQ==
+X-Received: by 2002:a17:902:f54b:b0:1b6:b805:5ae3 with SMTP id h11-20020a170902f54b00b001b6b8055ae3mr10571515plf.3.1687844469519;
+        Mon, 26 Jun 2023 22:41:09 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id n9-20020a1709026a8900b001b80d411e5bsm2144863plk.253.2023.06.26.22.41.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Jun 2023 22:41:09 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date:   Mon, 26 Jun 2023 22:41:07 -0700
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Coly Li <colyli@suse.de>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-btrfs@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH 06/31] cdrom: remove the unused mode argument to
+ cdrom_release
+Message-ID: <fb21bb8b-958a-4238-aab8-c2720ac519ad@roeck-us.net>
+References: <20230606073950.225178-1-hch@lst.de>
+ <20230606073950.225178-7-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AdmolIzTQZ3izrwYT5mB18BArYMXvQ==
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrOIsWRmVeSWpSXmKPExsWy7bCSnO4jq1kpBn8f2FicfLKGzaJz4jJW
-        i4dbnrJavPx5lc3i4MNOFotpH34yW7w8pGnxZP0sZotLvUtYLRbd2MZksfXGThaLm1uOslh0
-        X9/BZrH8+D8mi4Udc1ksfn+fBNQ69wy7RdfdG4wWS/+9ZbFYuvUmo4OIx+Ur3h47Z91l91i8
-        5yWTx6ZVnWweExYdYPRoObmfxeP7+g42j49Pb7F4nJz3k81j4p46j/f7rrJ59G1ZxejxeZOc
-        R/uBbqYAvigum5TUnMyy1CJ9uwSujKN/n7IWXGGt6Hkyha2B8SpLFyMnh4SAicS1m0+AbC4O
-        IYHdjBL7X31kh0hISPxf3MQEYQtL3G85wgpR9JxR4tzfB2BFbAJaEv1vt7CB2CJADQcm3AGb
-        xCzQySJx8MpHZpCEsICDxMMD7xlBbBYBVYm3q6+BTeUVsJT4tG8VC4QtKHFy5hMwm1lAW6L3
-        YSsjjL1s4WtmiCsUJH4+XcYKsUxPYtO2H6wQNSISszvbmCcwCs5CMmoWklGzkIyahaRlASPL
-        KkbJ1ILi3PTcYsMCw7zUcr3ixNzi0rx0veT83E2M4LjX0tzBuH3VB71DjEwcjIcYJTiYlUR4
-        xX5MTxHiTUmsrEotyo8vKs1JLT7EKM3BoiTOK/6iN0VIID2xJDU7NbUgtQgmy8TBKdXAxHD+
-        /U0bpfveEpq+h20EPx7NfBdt3nvlMY9z+SMNNqfSO//45R261q4RX3M6/7LfjV1X/z+e9PCH
-        66GDJQ02nSmW29ynZB0TkuS6W9h038+x5lF8Hl/KI7veWaHLF/f+3nZ3bdNiu8b0j8tUvwkd
-        Ug1c9Nn8VTLzDp6fpp3+B1TkT+2Rtb0prVXQeKj9yKEMsyO2XgdbOYJsV3bvKtPaIXrhwdNL
-        cvu2rKmK5rRiq/TpsTSbkFWgzGU4o2qu6IdCO0FO3/R5r+Y9D5FlSe2dcO3w/+ZqDp9ZoTKK
-        B/kKMm6GVUs8yl35ufCso8zq8ta/p57dvf2ut2nj6VjnW51c128+VHFwvNA0b6EUX/VCJZbi
-        jERDLeai4kQAnYTKumoDAAA=
-X-CMS-MailID: 20230627012659epcas2p1961cc5bf75bf1a324f6f4fdebd7f897c
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20230627012659epcas2p1961cc5bf75bf1a324f6f4fdebd7f897c
-References: <CGME20230627012659epcas2p1961cc5bf75bf1a324f6f4fdebd7f897c@epcas2p1.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230606073950.225178-7-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-@@ -5408,7 +5406,6 @@ static void ufshcd_release_scsi_cmd(struct ufs_hba *h=
-ba,
- =09struct scsi_cmnd *cmd =3D lrbp->cmd;
-=20
- =09scsi_dma_unmap(cmd);
--=09lrbp->cmd =3D NULL;=09/* Mark the command as completed. */
- =09ufshcd_release(hba);
- =09ufshcd_clk_scaling_update_busy(hba);
- }
+On Tue, Jun 06, 2023 at 09:39:25AM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Hi,
-Is there any reason to delete "lrbp->cmd =3D NULL"?
-As far as I know, clear to NULL to indicate that cmd is completed.
+$ git grep cdrom_release
+Documentation/cdrom/cdrom-standard.rst:         cdrom_release,          /* release */
+Documentation/cdrom/cdrom-standard.rst:the door, should be left over to the general routine *cdrom_release()*.
+Documentation/cdrom/cdrom-standard.rst: void cdrom_release(struct inode *ip, struct file *fp)
+                                                                           ^^^^^^^^^^^^^^^^^
+drivers/cdrom/cdrom.c:void cdrom_release(struct cdrom_device_info *cdi)
+drivers/cdrom/cdrom.c:  cd_dbg(CD_CLOSE, "entering cdrom_release\n");
+drivers/cdrom/cdrom.c:EXPORT_SYMBOL(cdrom_release);
+drivers/cdrom/gdrom.c:  cdrom_release(gd.cd_info, mode);
+                                                ^^^^^^
+drivers/scsi/sr.c:      cdrom_release(&cd->cdi);
+include/linux/cdrom.h:void cdrom_release(struct cdrom_device_info *cdi);
 
-When the UFS MCQ mode is activated, check that lrbp->cmd is NULL to check t=
-he completion of the command.
-https://lore.kernel.org/linux-scsi/f0d923ee1f009f171a55c258d044e814ec0917ab=
-.1685396241.git.quic_nguyenb@quicinc.com/
+$ git grep cdrom_open
+Documentation/cdrom/cdrom-standard.rst:         cdrom_open,             /* open */
+Documentation/cdrom/cdrom-standard.rst: int cdrom_open(struct inode * ip, struct file * fp)
+Documentation/cdrom/cdrom-standard.rst:This function implements the reverse-logic of *cdrom_open()*, and then
+drivers/cdrom/cdrom.c:static int cdrom_open_write(struct cdrom_device_info *cdi)
+drivers/cdrom/cdrom.c:int cdrom_open(struct cdrom_device_info *cdi, blk_mode_t mode)
+drivers/cdrom/cdrom.c:  cd_dbg(CD_OPEN, "entering cdrom_open\n");
+drivers/cdrom/cdrom.c:                  if (cdrom_open_write(cdi))
+drivers/cdrom/cdrom.c:EXPORT_SYMBOL(cdrom_open);
+drivers/cdrom/gdrom.c:  ret = cdrom_open(gd.cd_info);
+                                         ^^^^^^^^^^
+drivers/scsi/sr.c:      ret = cdrom_open(&cd->cdi, mode);
+include/linux/cdrom.h:int cdrom_open(struct cdrom_device_info *cdi, blk_mode_t mode);
 
-If there is no special reason, why don't you add "lrb->cmd =3D NULL" again?
-
-
+>  drivers/cdrom/cdrom.c | 2 +-
+>  drivers/cdrom/gdrom.c | 2 +-
+>  drivers/scsi/sr.c     | 2 +-
+>  include/linux/cdrom.h | 2 +-
+>  4 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+> index adebac1bd210d9..998b03fe976e22 100644
+> --- a/drivers/cdrom/cdrom.c
+> +++ b/drivers/cdrom/cdrom.c
+> @@ -1250,7 +1250,7 @@ static int check_for_audio_disc(struct cdrom_device_info *cdi,
+>  	return 0;
+>  }
+>  
+> -void cdrom_release(struct cdrom_device_info *cdi, fmode_t mode)
+> +void cdrom_release(struct cdrom_device_info *cdi)
+>  {
+>  	const struct cdrom_device_ops *cdo = cdi->ops;
+>  
+> diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
+> index 14922403983e9e..a401dc4218a998 100644
+> --- a/drivers/cdrom/gdrom.c
+> +++ b/drivers/cdrom/gdrom.c
+> @@ -481,7 +481,7 @@ static int gdrom_bdops_open(struct block_device *bdev, fmode_t mode)
+>  	bdev_check_media_change(bdev);
+>  
+>  	mutex_lock(&gdrom_mutex);
+> -	ret = cdrom_open(gd.cd_info, mode);
+> +	ret = cdrom_open(gd.cd_info);
+>  	mutex_unlock(&gdrom_mutex);
+>  	return ret;
+>  }
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 444c7efc14cba7..6d33120ee5ba85 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -512,7 +512,7 @@ static void sr_block_release(struct gendisk *disk, fmode_t mode)
+>  	struct scsi_cd *cd = scsi_cd(disk);
+>  
+>  	mutex_lock(&cd->lock);
+> -	cdrom_release(&cd->cdi, mode);
+> +	cdrom_release(&cd->cdi);
+>  	mutex_unlock(&cd->lock);
+>  
+>  	scsi_device_put(cd->device);
+> diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
+> index 385e94732b2cf1..3f23d5239de254 100644
+> --- a/include/linux/cdrom.h
+> +++ b/include/linux/cdrom.h
+> @@ -102,7 +102,7 @@ int cdrom_read_tocentry(struct cdrom_device_info *cdi,
+>  
+>  /* the general block_device operations structure: */
+>  int cdrom_open(struct cdrom_device_info *cdi, fmode_t mode);
+> -extern void cdrom_release(struct cdrom_device_info *cdi, fmode_t mode);
+> +void cdrom_release(struct cdrom_device_info *cdi);
+>  int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
+>  		unsigned int cmd, unsigned long arg);
+>  extern unsigned int cdrom_check_events(struct cdrom_device_info *cdi,
+> -- 
+> 2.39.2
+> 
+> 
+> ______________________________________________________
+> Linux MTD discussion mailing list
+> http://lists.infradead.org/mailman/listinfo/linux-mtd/
