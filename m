@@ -2,44 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ADF6EB64D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 14:46:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A17EB64DC
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 14:46:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232014AbjF0Op7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Jun 2023 10:45:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43486 "EHLO
+        id S232202AbjF0Oqs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Jun 2023 10:46:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232285AbjF0OpU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 10:45:20 -0400
+        with ESMTP id S231993AbjF0Op6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 10:45:58 -0400
 Received: from mail2-relais-roc.national.inria.fr (mail2-relais-roc.national.inria.fr [192.134.164.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36E2F2D4A;
-        Tue, 27 Jun 2023 07:45:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A02EF30E5;
+        Tue, 27 Jun 2023 07:45:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=inria.fr; s=dc;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=1tnGFewg2jR0iMP418C+xvB2RAhFZotb9IdUilMQXSs=;
-  b=t3l9LnZl8E31zljbSHPAQNc818zyETs8RMV762Np9tk93rnpPSWcxAce
-   TZQi4X52h0ikF+kYiol3tCeBK6JJsOV2esoYvTmI3RCoGk5b/TA/lljL0
-   SuoaPWdfYHhQXBVqBGGSUeEtEQFPzrf/VtcqN8eLC8l+glhRTE6hvHivX
-   I=;
+  bh=Z82TQ5gJtsAQsS8pQEGxb7cmdrfE0splW6XwEm1/6wU=;
+  b=iHdVPjsdGYPUTWXu4Ea7YwNhgAHax/50Ctdon4mH6O9Lm0GAA6tq10Hq
+   qpugFsfftNxOqg1ePJ9wS48K0v0nTQ2yH8JsF6EyFw8CUraY+BkP6Lr0a
+   8faRDg0zoYpPt6Zw8zxx/r+fj+B0Y/oAEVT8RP7qie5okcXB+89hhiW//
+   E=;
 Authentication-Results: mail2-relais-roc.national.inria.fr; dkim=none (message not signed) header.i=none; spf=SoftFail smtp.mailfrom=Julia.Lawall@inria.fr; dmarc=fail (p=none dis=none) d=inria.fr
 X-IronPort-AV: E=Sophos;i="6.01,162,1684792800"; 
-   d="scan'208";a="114936326"
+   d="scan'208";a="114936347"
 Received: from i80.paris.inria.fr (HELO i80.paris.inria.fr.) ([128.93.90.48])
-  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2023 16:43:52 +0200
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2023 16:43:53 +0200
 From:   Julia Lawall <Julia.Lawall@inria.fr>
-To:     Satish Kharat <satishkh@cisco.com>
+To:     Nilesh Javali <njavali@marvell.com>
 Cc:     kernel-janitors@vger.kernel.org, keescook@chromium.org,
         christophe.jaillet@wanadoo.fr, kuba@kernel.org,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 07/24] scsi: fnic: use vmalloc_array and vcalloc
-Date:   Tue, 27 Jun 2023 16:43:22 +0200
-Message-Id: <20230627144339.144478-8-Julia.Lawall@inria.fr>
+Subject: [PATCH v2 24/24] scsi: qla2xxx: use vmalloc_array and vcalloc
+Date:   Tue, 27 Jun 2023 16:43:39 +0200
+Message-Id: <20230627144339.144478-25-Julia.Lawall@inria.fr>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20230627144339.144478-1-Julia.Lawall@inria.fr>
 References: <20230627144339.144478-1-Julia.Lawall@inria.fr>
@@ -101,19 +100,28 @@ v2: Use vmalloc_array and vcalloc instead of array_size.
 This also leaves a multiplication of a constant by a sizeof
 as is.  Two patches are thus dropped from the series.
 
- drivers/scsi/fnic/fnic_trace.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_init.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -u -p a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -465,7 +465,7 @@ int fnic_trace_buf_init(void)
- 	fnic_max_trace_entries = (trace_max_pages * PAGE_SIZE)/
- 					  FNIC_ENTRY_SIZE_BYTES;
- 
--	fnic_trace_buf_p = (unsigned long)vzalloc(trace_max_pages * PAGE_SIZE);
-+	fnic_trace_buf_p = (unsigned long)vcalloc(trace_max_pages, PAGE_SIZE);
- 	if (!fnic_trace_buf_p) {
- 		printk(KERN_ERR PFX "Failed to allocate memory "
- 				  "for fnic_trace_buf_p\n");
+diff -u -p a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -8434,7 +8434,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t
+ 		ql_dbg(ql_dbg_init, vha, 0x0163,
+ 		    "-> fwdt%u template allocate template %#x words...\n",
+ 		    j, risc_size);
+-		fwdt->template = vmalloc(risc_size * sizeof(*dcode));
++		fwdt->template = vmalloc_array(risc_size, sizeof(*dcode));
+ 		if (!fwdt->template) {
+ 			ql_log(ql_log_warn, vha, 0x0164,
+ 			    "-> fwdt%u failed allocate template.\n", j);
+@@ -8689,7 +8689,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *
+ 		ql_dbg(ql_dbg_init, vha, 0x0173,
+ 		    "-> fwdt%u template allocate template %#x words...\n",
+ 		    j, risc_size);
+-		fwdt->template = vmalloc(risc_size * sizeof(*dcode));
++		fwdt->template = vmalloc_array(risc_size, sizeof(*dcode));
+ 		if (!fwdt->template) {
+ 			ql_log(ql_log_warn, vha, 0x0174,
+ 			    "-> fwdt%u failed allocate template.\n", j);
 
