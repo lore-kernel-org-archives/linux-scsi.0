@@ -2,107 +2,146 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 470D9EB64D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 08:19:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC512C001DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 08:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231367AbjF0ITL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Jun 2023 04:19:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57374 "EHLO
+        id S231790AbjF0I2O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Jun 2023 04:28:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231268AbjF0ITJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 04:19:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC74C1BC0
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 01:18:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687853896;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=nYcUtRkjKABtT5PU3mxAKBDSxEwKFf/d8voooDnS1zM=;
-        b=hxwQS5RxJr5+JaEimQ+XKvC1J//W7dbVG32kQq8Dr1l2G4HXkAM7Cia/xumVsSY0wnlcIN
-        1/K/tiBegN/9xCWrdL5GBlvC20ZgHnFTa0tsileTmVGXcAN/Y9VNgU6/kMsSYFRk2m0OZz
-        0Ug6VJTJwL8wEaGvS+kcAH9Vdyaf9y4=
-Received: from mail-vk1-f197.google.com (mail-vk1-f197.google.com
- [209.85.221.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-586-FLaHN_eTMHSm8y9PXEn_kQ-1; Tue, 27 Jun 2023 04:18:14 -0400
-X-MC-Unique: FLaHN_eTMHSm8y9PXEn_kQ-1
-Received: by mail-vk1-f197.google.com with SMTP id 71dfb90a1353d-471ae16a13eso755544e0c.0
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 01:18:14 -0700 (PDT)
+        with ESMTP id S231680AbjF0I2M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 04:28:12 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52E9D1991
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 01:28:07 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id 4fb4d7f45d1cf-51d804c7d14so3484399a12.3
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 01:28:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fairphone.com; s=fair; t=1687854485; x=1690446485;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=m+jGyPJUsAec/GfPFSuCJmeN3rQ+TNohutGT8qxCXVg=;
+        b=HcSTZvOSEcAXaOKp9YVH/yNUU70rbrHD3A1to1lFUA4f+Uu2nM3pX37euQn+Nuffho
+         C2w4BR7nwK4mDM6K88E1aotiyjCafUDwVXcbXsLWbD503MGUrc/vkRIQDak7dbIJrHXr
+         7juRSdQmc4CGKMwLqFgOrsVPFOVx8E3I2oSyM1CyG8EhieVUtFhy0GDXSBt+kbxk/PbW
+         nflIsT7F+qEmTvZuWaTuj5K01gTG3vn7zc2WoifYNw1BT4rKCLSc1+zWV+NGdeK3dnfY
+         rhb8YmwJVOUARjwdr7MO/NBQEiYHMZF7HR1g2vpCAkwwjnuaTAQemFvh1xgak+HvLTLw
+         k96g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687853893; x=1690445893;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=nYcUtRkjKABtT5PU3mxAKBDSxEwKFf/d8voooDnS1zM=;
-        b=QC5uEhg4Va1nbsSdyaUPpHJlzqRRfwyCfl2Q+OL+9TjPqSI+HDLpDxBKrYiFFHJtCN
-         Bv+r40jn/GUD37ch0xiQ7K/VT9+0muwz2rhHtfxnI8NW7uHL976qluSXAdNoLxBzBaIO
-         M3Uk3jtjS9ab978l0tB2eOHdObeqVCh05XfUaFTTffVC6f73CdKBmpEgHlmdPS9HdI8U
-         dt8YxMQ2Zec7mWgLZtMkgQyMMOLi3LUmsDuY1z1Hli7ZtVxmzPFKtqVRLyrPsOda1AWs
-         ExFBcCoXu2GiCCSJuEQD3UzAE6vZbQOc36yc3Rse7jZ8NkFqRb6LkUFr2h+nO2/Q9uxQ
-         B7OA==
-X-Gm-Message-State: AC+VfDwJG5LJZztucLBHz8VucUcC5xKYi93nvp6P5d2hWMG/z5ZzYJWc
-        42Y4/AGxFcS/qw6r/W0eHvt6KA7xQQLBT3CPta+X7jj6h7mqCBNaN4UzYS3+Kua1b9PZ3aox07l
-        x+G/2b9QQZaG/j7SLsNeg6Kyce2hfrgXKXu0r4/zjB7Q9lw==
-X-Received: by 2002:a1f:c843:0:b0:463:12f:d38e with SMTP id y64-20020a1fc843000000b00463012fd38emr14945014vkf.1.1687853892998;
-        Tue, 27 Jun 2023 01:18:12 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ5JCsXkFdXsohKWGcYGlMRJ3lWcD9SmwA2HTltke5r0xofEExL2YsUM8RfwnV6/24CiTUfaR1a/bRIRt89283s=
-X-Received: by 2002:a1f:c843:0:b0:463:12f:d38e with SMTP id
- y64-20020a1fc843000000b00463012fd38emr14945008vkf.1.1687853892742; Tue, 27
- Jun 2023 01:18:12 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1687854485; x=1690446485;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=m+jGyPJUsAec/GfPFSuCJmeN3rQ+TNohutGT8qxCXVg=;
+        b=BjJxd8IL+CNuwFJuUvPRjp5TBLkXKogJmNgbHIa5I8goMGaqqAyTgtsAb0ipJ4fmDj
+         byjIaGW3YZW1FykYuDv4kU3Icvl0D6Ylk32pHly6TgJlmo7GC3v1hWoX0sJ5YaAgpi/T
+         H5mA/pbBak4B7BnzhzBehbqHYzbCruGzDqtrFozOOEJm1vh4YkaV6m6sfg0UBE+jD+Km
+         ZXUg6RyWZCZi/eWIOUAyRcafunmuIv71EMLnnw8k5WwbU18OpPS+MJrQKagxyqoehfE7
+         Ow7nc8onmlJ0gJmosnkvc5VxN7IJxBEY1eD0L/Xx+SX12IRNQ9fNXvRoiex6gNm+Jczx
+         /DtQ==
+X-Gm-Message-State: AC+VfDxbdEo8siLVXnlk5CFMMF7FYqWqUfMAfqgo/rgRukoUrGn79/zY
+        P9wc9GpMjCMfkldVmeicVNVSxQ==
+X-Google-Smtp-Source: ACHHUZ6UlBBar2ZuwqiwxNCzLnOWv+SRfpL0ik13OsxLNgHvMSPebKx4b24hAXHarPIUB/bZCD6CUg==
+X-Received: by 2002:a17:907:6d1f:b0:991:d336:9b32 with SMTP id sa31-20020a1709076d1f00b00991d3369b32mr3944411ejc.35.1687854485574;
+        Tue, 27 Jun 2023 01:28:05 -0700 (PDT)
+Received: from [172.16.240.113] (144-178-202-138.static.ef-service.nl. [144.178.202.138])
+        by smtp.gmail.com with ESMTPSA id kt19-20020a170906aad300b009894b476310sm4253038ejb.163.2023.06.27.01.28.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Jun 2023 01:28:05 -0700 (PDT)
+From:   Luca Weiss <luca.weiss@fairphone.com>
+Subject: [PATCH v5 0/5] Fix some issues in QCOM UFS bindings
+Date:   Tue, 27 Jun 2023 10:28:00 +0200
+Message-Id: <20221209-dt-binding-ufs-v5-0-c9a58c0a53f5@fairphone.com>
 MIME-Version: 1.0
-References: <20230623161136.6270-1-michael.christie@oracle.com>
-In-Reply-To: <20230623161136.6270-1-michael.christie@oracle.com>
-From:   Maurizio Lombardi <mlombard@redhat.com>
-Date:   Tue, 27 Jun 2023 10:18:00 +0200
-Message-ID: <CAFL455mj8f_D_uv1fcwuDRMX-HwBhagwe9kpvJS1fdQhR2cM0w@mail.gmail.com>
-Subject: Re: [PATCH 1/1] scsi: target: Quiet bool conversion warning with
- pr_preempt use
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, kernel test robot <lkp@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAJCdmmQC/33PSw7CIBAG4KsY1mJgoEVceQ/jgjLQkig1UJsY0
+ 7s7cWlqV/NI/m8yb1ZDSaGy0+7NSphTTWOmodnvmB9c7gNPSDMDASBBWI4T71LGlHv+jJUDmth
+ qY02MwCjUuRp4V1z2A8Xy83aj5ZDqNJbX98gsqVz+erPkgh+xERBFkNSco0vlMYw5HPx4Z1fiZ
+ tgmgAj0xgndWtsYu0aobUIRoa1F+ko5ofwaobcJTYTUPmArokLZ/RLLsnwAKuwKR34BAAA=
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Iskren Chernev <me@iskren.info>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+        Luca Weiss <luca.weiss@fairphone.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Bhupesh Sharma <bhupesh.sharma@linaro.org>,
+        Eric Biggers <ebiggers@google.com>,
+        Iskren Chernev <me@iskren.info>
+X-Mailer: b4 0.12.2
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-p=C3=A1 23. 6. 2023 v 18:13 odes=C3=ADlatel Mike Christie
-<michael.christie@oracle.com> napsal:
->
-> We want to pass in true for pr_preempt's argument if we are doing a
-> PRO_PREEMPT_AND_ABORT, so just test sa against PRO_PREEMPT_AND_ABORT, and
-> pass the result directly to pr_preempt.
->
-> Reported-by: kernel test robot <lkp@intel.com>
-> Closes: https://lore.kernel.org/oe-kbuild-all/202306221655.Kwtqi1gI-lkp@i=
-ntel.com/
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->  drivers/target/target_core_iblock.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_=
-core_iblock.c
-> index a3c5f3558a33..3d1b511ea284 100644
-> --- a/drivers/target/target_core_iblock.c
-> +++ b/drivers/target/target_core_iblock.c
-> @@ -888,7 +888,7 @@ static sense_reason_t iblock_execute_pr_out(struct se=
-_cmd *cmd, u8 sa, u64 key,
->
->                 ret =3D ops->pr_preempt(bdev, key, sa_key,
->                                       scsi_pr_type_to_block(type),
-> -                                     sa =3D=3D PRO_PREEMPT ? false : tru=
-e);
-> +                                     sa =3D=3D PRO_PREEMPT_AND_ABORT);
->                 break;
->         case PRO_RELEASE:
->                 if (!ops->pr_clear) {
-> --
-> 2.25.1
->
+This series aims to solve the dtbs_check errors from the qcom ufs
+bindings. It has changed in scope a bit since v1, so it may be a bit all
+over the place.
 
-Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
+Please note, that I have not tested the sm8450.dtsi patch since I don't
+have any hardware there. Testing would be appreciated.
+
+Dt validation will fail without patch 1/5 from [0] so this depends on
+that patch at least for the check.
+
+[0] https://lore.kernel.org/linux-arm-msm/20230623113009.2512206-2-abel.vesa@linaro.org/
+
+Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+---
+Changes in v5:
+- Convert sm8450.dtsi to use qcom,ice property, so stop modifying schema
+  for sm8450 and only add qcom,ice property.
+- Move reg-names names to top-level with only minItems/maxItems in the
+  'if'
+- Link to v4: https://lore.kernel.org/r/20221209-dt-binding-ufs-v4-0-14ced60f3d1b@fairphone.com
+
+Changes in v4:
+- Pick up tags
+- Rebase on linux-next (again)
+- Link to v3: https://lore.kernel.org/r/20221209-dt-binding-ufs-v3-0-499dff23a03c@fairphone.com
+
+Changes in v3:
+- Drop applied patch
+- Pick up sm6115 patch from v5 https://lore.kernel.org/all/20221030094258.486428-2-iskren.chernev@gmail.com/
+- Rebase on linux-next
+- Link to v2: https://lore.kernel.org/r/20221209-dt-binding-ufs-v2-0-dc7a04699579@fairphone.com
+
+Changes in v2:
+- Add new patch adding reg-names to sm6115 & rebase series on top of sm6115
+  addition
+- Fix binding example after sm8450 move, split this patch from original patch
+  since it became too big
+- Move reg-names definition to top-level
+- Link to v1: https://lore.kernel.org/r/20221209-dt-binding-ufs-v1-0-8d502f0e18d5@fairphone.com
+
+---
+Iskren Chernev (1):
+      dt-bindings: ufs: qcom: Add sm6115 binding
+
+Luca Weiss (4):
+      dt-bindings: ufs: qcom: Add reg-names property for ICE
+      dt-bindings: ufs: qcom: Add ICE to sm8450 example
+      dt-bindings: crypto: ice: Document sm8450 inline crypto engine
+      arm64: dts: qcom: sm8450: Use standalone ICE node for UFS
+
+ .../bindings/crypto/qcom,inline-crypto-engine.yaml |  1 +
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          | 44 ++++++++++++++++++++++
+ arch/arm64/boot/dts/qcom/sm8450.dtsi               | 22 ++++++-----
+ 3 files changed, 58 insertions(+), 9 deletions(-)
+---
+base-commit: 13fb735ae68e5ac065b9867e2fd1d775c337ea15
+change-id: 20221209-dt-binding-ufs-2d7f64797ff2
+
+Best regards,
+-- 
+Luca Weiss <luca.weiss@fairphone.com>
 
