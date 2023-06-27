@@ -2,77 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A871EC001B0
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 08:32:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1604C001DD
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 09:56:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231214AbjF0Ic3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Jun 2023 04:32:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37376 "EHLO
+        id S231839AbjF0J4a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Jun 2023 05:56:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229898AbjF0Ibu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 04:31:50 -0400
-Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A8073C2A
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 01:30:26 -0700 (PDT)
-Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4QqyZG5ZYwzBJBJT
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 16:29:58 +0800 (CST)
-Authentication-Results: mail.208.org (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)" header.d=208.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
-        content-transfer-encoding:content-type:message-id:user-agent
-        :subject:to:from:date:mime-version; s=dkim; t=1687854598; x=
-        1690446599; bh=rY8FrVJSi19RgbCUiiSwhe+wareQggKiD1cqjZX3ejs=; b=U
-        cSsWTLfQeymVyJyNCqgX+lb1njxOleAUQnLkW0NMACCSF+p+eIV7ufmdVOGoVipb
-        Kro6sAcHTG/kXhn6ufOPlZ+djJOYKgnikjHcpkSrx6ytXNULb8DN/f4HTTpy6BeO
-        H5NT6KXptSzIspm+HfrSxQ7+WrMQur3hBphHYzqC+m4H//98ZIQTCFm+lvJRd4Si
-        Hl/0Spl1lYJyl+dnSzNkxWtfiLAuDIE0CcnLlEvOX/QEHAwogsmVcoMttjfEItaG
-        dAqC17xl5mBPykelnKKfIml2eRv6KUZBOsDdhyLL3/IOancGam0fgDo9th9/6zJe
-        ewme+kaJpve4MMOcD7nZA==
-X-Virus-Scanned: amavisd-new at mail.208.org
-Received: from mail.208.org ([127.0.0.1])
-        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id PLTxWSyBkwpy for <linux-scsi@vger.kernel.org>;
-        Tue, 27 Jun 2023 16:29:58 +0800 (CST)
-Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4QqyZG2L09zBJBHT;
-        Tue, 27 Jun 2023 16:29:58 +0800 (CST)
+        with ESMTP id S231806AbjF0Jz5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 05:55:57 -0400
+Received: from mail-il1-f169.google.com (mail-il1-f169.google.com [209.85.166.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A6642691;
+        Tue, 27 Jun 2023 02:55:15 -0700 (PDT)
+Received: by mail-il1-f169.google.com with SMTP id e9e14a558f8ab-34568286979so19721235ab.2;
+        Tue, 27 Jun 2023 02:55:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687859714; x=1690451714;
+        h=date:subject:message-id:references:in-reply-to:cc:to:from
+         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=0TZ3MSYKMTSwcYTzU8pfjJrA+SIj1fT6OF7x/GirJ9U=;
+        b=ahxTVOTh9VDxSJTNbK1LCwlQBozSAPMuOGYJ6IIcWaudz0p5qa9byGCksnt91Y15UJ
+         NsJW7ZkWvG4oxhWWUUCzyh+cclp+KUAiqGS09aLMkQh2xGdHKdx2iFkYh01qo9X4gJ3o
+         Cpm69b3gkeH7I88QY2fdY3DxH7Bn4o4y2Zih40RbP1SQJTcxxPibDqx3Eo7XNqUaPxvo
+         jhD/04WD9+Af1Eoj92ykcmAhj80VWrRoB0CBIIve5luK5o1PRh64V6aYqouq/9h6dCol
+         A7Y1QTbA8piXlXCqzdo4IuhahGj9S0A5ingfisOfQjaPNyNvgAC7I6kGn4QTXAv6PIr1
+         utvA==
+X-Gm-Message-State: AC+VfDwlEvjqp3tXTPmQDFS809Bj0TCBAa4iRB7/jHOJeHjtXvSYm3ts
+        e66wdFLto7/xX99fyOZlRJN8oJ42qA==
+X-Google-Smtp-Source: ACHHUZ74NSK9HlVoxn1NExoX0rzO816CzJ5JTaA/XJZrlI3UYg8id7RsR1lOBIKFYR8W3ruSs/eOPQ==
+X-Received: by 2002:a92:c808:0:b0:345:8abb:5b36 with SMTP id v8-20020a92c808000000b003458abb5b36mr5894921iln.9.1687859714144;
+        Tue, 27 Jun 2023 02:55:14 -0700 (PDT)
+Received: from robh_at_kernel.org ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id ep17-20020a0566384e1100b00420e6c58971sm2311442jab.178.2023.06.27.02.55.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Jun 2023 02:55:13 -0700 (PDT)
+Received: (nullmailer pid 1233680 invoked by uid 1000);
+        Tue, 27 Jun 2023 09:55:11 -0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
-Date:   Tue, 27 Jun 2023 16:29:58 +0800
-From:   baomingtong001@208suo.com
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ipr: Remove unneeded semicolon
-User-Agent: Roundcube Webmail
-Message-ID: <9d16962fccbd962abd25d0063f97df47@208suo.com>
-X-Sender: baomingtong001@208suo.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+From:   Rob Herring <robh@kernel.org>
+To:     Luca Weiss <luca.weiss@fairphone.com>
+Cc:     Conor Dooley <conor+dt@kernel.org>, Andy Gross <agross@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        devicetree@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Iskren Chernev <me@iskren.info>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        ~postmarketos/upstreaming@lists.sr.ht,
+        linux-arm-msm@vger.kernel.org, phone-devel@vger.kernel.org,
+        Bjorn Andersson <andersson@kernel.org>,
+        linux-kernel@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221209-dt-binding-ufs-v5-3-c9a58c0a53f5@fairphone.com>
+References: <20221209-dt-binding-ufs-v5-0-c9a58c0a53f5@fairphone.com>
+ <20221209-dt-binding-ufs-v5-3-c9a58c0a53f5@fairphone.com>
+Message-Id: <168785971145.1233664.7985274899454909326.robh@kernel.org>
+Subject: Re: [PATCH v5 3/5] dt-bindings: ufs: qcom: Add ICE to sm8450
+ example
+Date:   Tue, 27 Jun 2023 03:55:11 -0600
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-./drivers/scsi/ipr.h:1916:2-3: Unneeded semicolon
 
-Signed-off-by: Mingtong Bao <baomingtong001@208suo.com>
----
-  drivers/scsi/ipr.h | 2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, 27 Jun 2023 10:28:03 +0200, Luca Weiss wrote:
+> SM8450 actually supports ICE (Inline Crypto Engine) so adjust the
+> example to match.
+> 
+> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+> ---
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 1 +
+>  1 file changed, 1 insertion(+)
+> 
 
-diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-index c77d6ca1a210..583bbf9a7a93 100644
---- a/drivers/scsi/ipr.h
-+++ b/drivers/scsi/ipr.h
-@@ -1913,7 +1913,7 @@ static inline int ipr_sdt_is_fmt2(u32 sdt_word)
-  	case IPR_SDT_FMT2_BAR5_SEL:
-  	case IPR_SDT_FMT2_EXP_ROM_SEL:
-  		return 1;
--	};
-+	}
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
 
-  	return 0;
-  }
--- 
-2.40.1
+yamllint warnings/errors:
+
+dtschema/dtc warnings/errors:
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: Unevaluated properties are not allowed ('qcom,ice' was unexpected)
+	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
+
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20221209-dt-binding-ufs-v5-3-c9a58c0a53f5@fairphone.com
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
