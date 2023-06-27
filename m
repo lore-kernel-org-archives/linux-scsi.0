@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 675D9EB64D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 15:14:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BFD2EB64DC
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 15:18:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232141AbjF0PON (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Jun 2023 11:14:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38804 "EHLO
+        id S232311AbjF0PSt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Jun 2023 11:18:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232007AbjF0POM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 11:14:12 -0400
-Received: from mail-io1-f52.google.com (mail-io1-f52.google.com [209.85.166.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA45C26B3;
-        Tue, 27 Jun 2023 08:14:10 -0700 (PDT)
-Received: by mail-io1-f52.google.com with SMTP id ca18e2360f4ac-785ccf19489so10756939f.3;
-        Tue, 27 Jun 2023 08:14:10 -0700 (PDT)
+        with ESMTP id S232292AbjF0PSr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2023 11:18:47 -0400
+Received: from mail-il1-f179.google.com (mail-il1-f179.google.com [209.85.166.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81EFF139;
+        Tue, 27 Jun 2023 08:18:46 -0700 (PDT)
+Received: by mail-il1-f179.google.com with SMTP id e9e14a558f8ab-3427426f2ddso17563435ab.3;
+        Tue, 27 Jun 2023 08:18:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687878850; x=1690470850;
+        d=1e100.net; s=20221208; t=1687879126; x=1690471126;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=P6Dxr1qrQ+dD7ODCxvLBG8Sk4TfJL34ijnHxpCzhHGA=;
-        b=WLkL4jcTklw8Fz3tNZnnmv3SIniP1w8//Ak4fXyOYviKUjapG+tnz8A++7uo/pIZ4N
-         TtQm/eN+aFmECRNlvZC62+vBBj+/Vq5WWZrR9rb5tX6UrRJd4fTj4oFZBpdmt4KHKKQ1
-         3LGFe3W093Yayhhll0eYnvQp0BA6KEtgMKlGHryJl2wy5HhB9DXv/B7OxQv9DwFVOH5g
-         CLnkkhHDeX/ZsqvEuRt/zuxvWHdzlJbH/RUqbKdC4hDHGJhutV5nGJ8bB6i3lELRFlz1
-         ZJ5ILOcxzQ4VH7QzHLhc+ahel68xI/kIiyaWEZdfAQiFl3sbXO9BvOwEuCWMsSKErnB2
-         NDJg==
-X-Gm-Message-State: AC+VfDzyjMq+K2Tf5C6o3LFn2Hi9TMMYvLX5KctIk44VHSUI05uYHnB4
-        xzoTAZo+TSzH2KIEhbxP8g==
-X-Google-Smtp-Source: ACHHUZ7PC3wuDrYXpV6ivJj09BHOErKMVoROQny4zV4bhGuli6zRMNhs4YwTOs7ErMfy18wdNkciOw==
-X-Received: by 2002:a92:cb07:0:b0:340:5928:e048 with SMTP id s7-20020a92cb07000000b003405928e048mr27005727ilo.11.1687878850054;
-        Tue, 27 Jun 2023 08:14:10 -0700 (PDT)
+        bh=Ijvb8ydCjVx69xo9+vKY/Fihoj6jCn6HLLMClNeKu1Y=;
+        b=fopIXnDGcoxH0NVYoV55zHfYTgKIQMhD8yqY4dCLY1RfZ7azeFMGgSuz1jSeDNDUtR
+         U2yo37rp9VuEITPDDvPKzsrGYK8J8lSz1/BAmB+5EBDpD+bcn+fBINFQu0OeVvhYsewb
+         cgNwlq98Jw6LDKDDLDGvavDAMldPIWG3Xg3rFI7RVWV7ZwF64RzAyG8sT0uAqGnhjst1
+         YCtW78O2JDy6rocVCWs7oU/rUukvwtRJeLbYRMECTsicio6DDSwVbdtm9QEuzxRZW62m
+         gWqf/lWL91cTP8ILkZ5LoeCNt2oksOU433bsiYLVG6qd3OMUkqKSbXTgCuRIX2ySybna
+         ahaA==
+X-Gm-Message-State: AC+VfDz3OFd1Q1QjRZE+sQc4ACISk+gUj0khsK0l2GD1L0ygUUJ0Vx78
+        S8pK/e0iM1KnkpaeojTQVg==
+X-Google-Smtp-Source: ACHHUZ5+u6YK1dd/NS+7qcjA0Vmzepc5iGw59nl8ff+an8BSu5Z6+ijf/GnTk3jYyxo+5wioMbUn5A==
+X-Received: by 2002:a92:c841:0:b0:345:bfc7:d527 with SMTP id b1-20020a92c841000000b00345bfc7d527mr1335127ilq.7.1687879125686;
+        Tue, 27 Jun 2023 08:18:45 -0700 (PDT)
 Received: from robh_at_kernel.org ([64.188.179.250])
-        by smtp.gmail.com with ESMTPSA id y15-20020a92090f000000b003422ef44e6asm2726591ilg.6.2023.06.27.08.14.08
+        by smtp.gmail.com with ESMTPSA id h13-20020a056638062d00b004290a22e4cdsm1954955jar.108.2023.06.27.08.18.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jun 2023 08:14:09 -0700 (PDT)
-Received: (nullmailer pid 1929024 invoked by uid 1000);
-        Tue, 27 Jun 2023 15:14:07 -0000
-Date:   Tue, 27 Jun 2023 09:14:07 -0600
+        Tue, 27 Jun 2023 08:18:45 -0700 (PDT)
+Received: (nullmailer pid 1933897 invoked by uid 1000);
+        Tue, 27 Jun 2023 15:18:42 -0000
+Date:   Tue, 27 Jun 2023 09:18:42 -0600
 From:   Rob Herring <robh@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Luca Weiss <luca.weiss@fairphone.com>,
+To:     Luca Weiss <luca.weiss@fairphone.com>
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         Abel Vesa <abel.vesa@linaro.org>,
         Manivannan Sadhasivam <mani@kernel.org>,
         Andy Gross <agross@kernel.org>,
@@ -59,47 +59,54 @@ Cc:     Luca Weiss <luca.weiss@fairphone.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Subject: Re: [PATCH 5/5] scsi: dt-bindings: ufs: qcom: Fix warning for sdm845
  by adding reg-names
-Message-ID: <20230627151407.GA1918927-robh@kernel.org>
+Message-ID: <20230627151842.GB1918927-robh@kernel.org>
 References: <20230623113009.2512206-1-abel.vesa@linaro.org>
  <20230623113009.2512206-6-abel.vesa@linaro.org>
  <cd84b8c6-fac7-ecef-26be-792a1b04a102@linaro.org>
  <CTK1AI4TVYRZ.F77OZB62YYC0@otso>
  <20230623211746.GA1128583-robh@kernel.org>
- <f1ff2c32-df2a-e349-1227-e5a93fe37c92@linaro.org>
+ <CTMDIQGOYMKD.1BP88GSB03U54@otso>
+ <d3970163-b8e8-9665-3761-8942c28adaa8@linaro.org>
+ <CTMFNWKMSCJP.DBPZEW25594L@otso>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f1ff2c32-df2a-e349-1227-e5a93fe37c92@linaro.org>
+In-Reply-To: <CTMFNWKMSCJP.DBPZEW25594L@otso>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Jun 24, 2023 at 09:49:12AM +0200, Krzysztof Kozlowski wrote:
-> On 23/06/2023 23:17, Rob Herring wrote:
-> >> With my private mailbox I just have a different folder for patches that
-> >> have been sent which I archive once they're applied, but with work GMail
-> >> I don't see how I can easily replicate this since it's also not grouping
-> >> threads properly.
-> > 
-> > Yeah, GMail sucks for that. I use 'lei' to get all my patches and 
-> > replies to them (though its caching will miss replies). Then I delete 
-> > them from the mbox when they are applied or otherwise finished. lei 
-> > updates won't re-add them to the mbox.
+On Mon, Jun 26, 2023 at 10:19:09AM +0200, Luca Weiss wrote:
+> On Mon Jun 26, 2023 at 9:41 AM CEST, Krzysztof Kozlowski wrote:
+> > On 26/06/2023 08:38, Luca Weiss wrote:
+> > >>>> but I guess no resends and it can be superseded.
+> > >>>
+> > >>> Right, the patches got reviews but was never applied... I really need to
+> > >>> find a strategy to keep track of sent patches until they're applied with
+> > >>> my work mailbox, it's not the first time that a patch has gotten
+> > >>> forgotten.
+> > >>
+> > >> There was an error reported on the above series. Why would it be 
+> > >> applied?
+> > > 
+> > > The error report at [0] complains about reg-names but I'm quite sure
+> > > that patch 2/3 resolves this error. Does your bot only apply one patch
+> > > at a time and run the check or apply all of them and then run it? It's
+> > > been a while but I'm fairly sure I ran all of the checks before sending
+> > > since I also documented some other patches in the cover letter there.
+> >
+> > You did it in cover letter, not in the patch, so there is no dependency
+> > for bots recorded.
 > 
-> That's interesting approach. What's your lei search query for getting
-> your patches? "f:rob" would get all your threads you participated in.
+> I'm not aware how to put extra comments into a patch in a series with
+> b4, at least last time I checked I don't think it was possible? But I
+> also thought the cover letter was exactly there for giving some
+> background of the series and documenting any dependencies on other
+> patches.
 
-This is what I have:
-
-        q = (dfn:drivers OR dfn:sound OR dfn:tools OR dfn:kernel OR \
-         dfn:arch OR dfn:Documentation OR dfn:include OR dfn:scripts) AND \
-         f:robh@kernel.org AND rt:3.month.ago..
-
-Really, I'd like a 'is a patch' flag or 'dfn:*' or 'dfn:/' here, but I 
-didn't convince the lei maintainer such a thing is needed. Sigh.
-
-Also, you have to disable lei's caching with the --remote-fudge-time 
-option because it will miss replies to the matching query. Also reported 
-and not fixed...
+I just put a '---' line and comments after that in the commit messages. 
+That works fine unless your git branch is going upstream directly (i.e. 
+via a pull request). Even when I apply my own patches, I get them from 
+lore and apply so the comments are dropped.
 
 Rob
