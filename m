@@ -2,124 +2,248 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE1E8EB64D7
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 01:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 736C2EB64D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jun 2023 01:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230110AbjF0B3l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jun 2023 21:29:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40354 "EHLO
+        id S230106AbjF0Bbx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jun 2023 21:31:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229867AbjF0B3j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 21:29:39 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A1BC10CF
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 18:29:38 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230627012933epoutp034b2741986d3247707dfc299697070f8f~sX995bKA32093720937epoutp03_
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 01:29:33 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230627012933epoutp034b2741986d3247707dfc299697070f8f~sX995bKA32093720937epoutp03_
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1687829373;
-        bh=b3Fxvw2RdgOBtY36dPh2SiCe80DAP1YXQXrnXO0PHq8=;
-        h=Subject:Reply-To:From:To:Date:References:From;
-        b=FD3lBD1Aa7RP2eS4/hFsvBqPf/8B123yLPoC43CoDmCInVEH/qmhsIJ3XJGISmXCD
-         iVm9yi8LSh3EgsjN267PnzjNpXpwUUcTB7HlWptYcq7wzfO6KFPkk6gMWLpLv11Ebo
-         taeIc7wOu/6JhtP7mMKemKJRG57RdJX96Bl9blZ4=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20230627012933epcas2p27e02cfb103c73e2ae7afeacf9cb70f15~sX99We_X52977129771epcas2p2v;
-        Tue, 27 Jun 2023 01:29:33 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.90]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4QqnF82fYBz4x9Q0; Tue, 27 Jun
-        2023 01:29:32 +0000 (GMT)
-X-AuditID: b6c32a47-c2bfa70000007f5e-4a-649a3b7c086e
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        C7.36.32606.C7B3A946; Tue, 27 Jun 2023 10:29:32 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH] scsi: ufs: Remove unused function declaration
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "Arthur.Simchaev@wdc.com" <Arthur.Simchaev@wdc.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "krzysztof.kozlowski@linaro.org" <krzysztof.kozlowski@linaro.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20230627012931epcms2p76f458e0b2ce8a591b56bbcc6a2f1a3bb@epcms2p7>
-Date:   Tue, 27 Jun 2023 10:29:31 +0900
-X-CMS-MailID: 20230627012931epcms2p76f458e0b2ce8a591b56bbcc6a2f1a3bb
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrIJsWRmVeSWpSXmKPExsWy7bCmmW6N9awUg89NfBYP5m1js+icuIzV
-        4uXPq2wWBx92slhM+/CT2eLlIU2LR7efMVosurGNyWLv663sFpd3zWGz6L6+g83iwIdVjBbL
-        j/9jsljYMZfFYtK1DWwWU18cZ7dYuvUmo4Ogx+Ur3h6bVnWyedy5tofNY8KiA4weLSf3s3h8
-        X9/B5vHx6S0Wj4l76jz6tqxi9Pi8Sc6j/UA3UwB3VLZNRmpiSmqRQmpecn5KZl66rZJ3cLxz
-        vKmZgaGuoaWFuZJCXmJuqq2Si0+ArltmDtBPSgpliTmlQKGAxOJiJX07m6L80pJUhYz84hJb
-        pdSClJwC8wK94sTc4tK8dL281BIrQwMDI1OgwoTsjAtTHAsaOCo6d5s0MP5n62Lk5JAQMJGY
-        +uMhI4gtJLCDUeLGoeguRg4OXgFBib87hEHCwgJ2EtO2/GeBKFGS6Fq4lRkibiCxbvoeMJtN
-        QE9iyu87QGO4OEQEZrJJdN64AzWfV2JG+1MWCFtaYvvyrYwQtobEj2W9zBC2qMTN1W/ZYez3
-        x+ZD1YhItN47C1UjKPHg526ouKRE65mtUPPrJVrfn2IHWSwhMIFRovHYH6hB+hLXOjaCLeYV
-        8JV41NvABGKzCKhKrHs4jxWixkXi8suDYDazgLzE9rdzmEGeZxbQlFi/Sx/ElBBQljhyiwWi
-        gk+i4/Bfdpi3Gjb+xsreMe8JE4StJvFowRaoTTISF+ecg3rFQ+JXSx/zBEbFWYiQnoXkhlkI
-        NyxgZF7FKJZaUJybnlpsVGAMj9nk/NxNjOC0reW+g3HG2w96hxiZOBgPMUpwMCuJ8Ir9mJ4i
-        xJuSWFmVWpQfX1Sak1p8iNEU6PuJzFKiyfnAzJFXEm9oYmlgYmZmaG5kamCuJM677GFvipBA
-        emJJanZqakFqEUwfEwenVAPTiu8dju8+qbRFV8eE3nDjOhzuzFt6fY+O6Nqq6vo1tQtdrY4q
-        G/ZqGr3PXREZ7Na/o8V2hvi+ZbNWqDran6u0SptxctGmzf9k5n7ZJvCn/pfhevMpB9qTnvRM
-        MvzK/uhr7tIagXOHDvvyvb4wNfvqLb/l+0xn+le01zBsmTnJVP4vo9MP7ri30W1fnJe9Z7i2
-        2v70vM+TVm/9uvkzx7V/523rsyIK11xY7WEqeM3CZBl/gcHz6XtuXl7O7HJ7psMLQfFr9tbH
-        Fk7PXL/2+IrjXwod2nN8P5m55hlZTrv/Ub9tZvzRfZvsH11jKPXambRpmkaJnGvhOxWFXred
-        Rk+cPsnbp6p9eLPOTDXw5QR7MSWW4oxEQy3mouJEAFluny9kBAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230627012931epcms2p76f458e0b2ce8a591b56bbcc6a2f1a3bb
-References: <CGME20230627012931epcms2p76f458e0b2ce8a591b56bbcc6a2f1a3bb@epcms2p7>
+        with ESMTP id S229913AbjF0Bbe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2023 21:31:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4558110D5
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2023 18:31:32 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6D0A460FD1
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 01:31:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C632DC433CB
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2023 01:31:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687829491;
+        bh=V67rozQcBhgWaQBUgrtFvxOzjhis4BiaKZt277MEcdU=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=nd9EJfW+gB7eRZDHjZaA2+6W49syx+fYOMmdr7JcWcZA5mEeg1X3m9doWUCRbok5F
+         76WXoR2IghNHia5LBTl/b/Dq/UprSXIYtPNprXQQ9lknn6/QXJZVNWxJxkoh455C8y
+         N0QzdlBwk0S+qzrZRCg8IsIr2F9P4uU/ckWPiQ3kZVmNCqeDHifc0dnMNAHGWqKGLF
+         A8ZrwDO4t+8TyT1Rsfkyc3ewcJ2MGdron5dKUa16iiinzZUUS38n0A5KOGWeQtWjvs
+         u1fTUI+jsVJWB0TFWwtvO3MZizRkkbyUxo2xY+PWdwgDXF/0eYK/n7Sv+6YxwWaVMg
+         UpBgs7l96XcCw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id AA355C53BC6; Tue, 27 Jun 2023 01:31:31 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date:   Tue, 27 Jun 2023 01:31:31 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: bagasdotme@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-217599-11613-koUnuYDeMQ@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 2468da61ea09 ("scsi: ufs: core: mcq: Configure operation and
-runtime interface") added ufshcd_mcq_select_mcq_mode(), but
-it's not used anywhere. So remove it.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-Signed-off-by: Keoseong Park <keosung.park@samsung.com>
----
- drivers/ufs/core/ufshcd-priv.h | 1 -
- 1 file changed, 1 deletion(-)
+Bagas Sanjaya (bagasdotme@gmail.com) changed:
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 9566a95aeed9..0f3bd943b58b 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -68,7 +68,6 @@ int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
- int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
- void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
--void ufshcd_mcq_select_mcq_mode(struct ufs_hba *hba);
- u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
- void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
- struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
--- 
-2.17.1
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bagasdotme@gmail.com
 
+--- Comment #1 from Bagas Sanjaya (bagasdotme@gmail.com) ---
+(In reply to pheidologeton from comment #0)
+> The controller works fine for a few minutes. Then it hangs for a few tens=
+ of
+> seconds to a few minutes, then also works normally for a while. This bug =
+is
+> present in the 6.4.0 kernel release (6.3.9 works without hanging)
+> The messages in dmesg are as follows
+>=20
+> [  287.137901] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137909] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137912] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137914] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137916] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137919] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137921] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137924] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137926] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137928] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137930] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137933] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137934] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137937] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137939] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137941] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137943] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137945] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137947] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137949] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137951] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137952] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137954] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137956] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137958] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137960] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137962] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137964] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137966] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137967] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137969] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.137971] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  287.157697] aacraid: Host bus reset request. SCSI hang ?
+> [  287.157706] aacraid 0000:02:00.0: outstanding cmd: midlevel-0
+> [  287.157708] aacraid 0000:02:00.0: outstanding cmd: lowlevel-0
+> [  287.157709] aacraid 0000:02:00.0: outstanding cmd: error handler-0
+> [  287.157711] aacraid 0000:02:00.0: outstanding cmd: firmware-32
+> [  287.157712] aacraid 0000:02:00.0: outstanding cmd: kernel-0
+> [  287.167040] aacraid 0000:02:00.0: Controller reset type is 3
+> [  287.167042] aacraid 0000:02:00.0: Issuing IOP reset
+> [  321.029712] aacraid 0000:02:00.0: IOP reset succeeded
+> [  321.066201] numacb=3D512 ignored
+> [  321.066843] aacraid: Comm Interface type2 enabled
+> [  344.845370] aacraid 0000:02:00.0: Scheduling bus rescan
+> [  358.294342] sd 10:0:0:0: [sda] Very big device. Trying to use READ
+> CAPACITY(16).
+> [  442.109147] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109155] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109158] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109160] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109162] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109164] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109166] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109168] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109170] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109172] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109174] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109176] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109178] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109179] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109181] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109183] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109185] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109187] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109189] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109191] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109193] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109194] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109196] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109198] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109200] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109201] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109203] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109205] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109207] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109208] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.109210] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.137144] aacraid: Host adapter abort request.
+>                aacraid: Outstanding commands on (10,0,0,0):
+> [  442.154292] aacraid: Host bus reset request. SCSI hang ?
+> [  442.154302] aacraid 0000:02:00.0: outstanding cmd: midlevel-0
+> [  442.154305] aacraid 0000:02:00.0: outstanding cmd: lowlevel-0
+> [  442.154307] aacraid 0000:02:00.0: outstanding cmd: error handler-0
+> [  442.154308] aacraid 0000:02:00.0: outstanding cmd: firmware-32
+> [  442.154310] aacraid 0000:02:00.0: outstanding cmd: kernel-0
+> [  442.171131] aacraid 0000:02:00.0: Controller reset type is 3
+> [  442.171133] aacraid 0000:02:00.0: Issuing IOP reset
+> [  476.040983] aacraid 0000:02:00.0: IOP reset succeeded
+> [  476.078055] numacb=3D512 ignored
+> [  476.078606] aacraid: Comm Interface type2 enabled
+> [  494.747632] aacraid 0000:02:00.0: Scheduling bus rescan
+> [  507.896453] sd 10:0:0:0: [sda] Very big device. Trying to use READ
+> CAPACITY(16).
+
+Can you do bisection between v6.3 and v6.4 please?
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
