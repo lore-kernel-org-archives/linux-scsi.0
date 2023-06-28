@@ -2,104 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C8EEB64D7
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 23:54:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6780AEB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 23:57:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232847AbjF1XyA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jun 2023 19:54:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45550 "EHLO
+        id S233354AbjF1X4y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jun 2023 19:56:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232827AbjF1Xx4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 19:53:56 -0400
+        with ESMTP id S233319AbjF1X4o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 19:56:44 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 503CF26B7;
-        Wed, 28 Jun 2023 16:53:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46EE810D7
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2023 16:56:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3054C614A3;
-        Wed, 28 Jun 2023 23:53:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1585C433C8;
-        Wed, 28 Jun 2023 23:53:53 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 287E06146C
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2023 23:56:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F118C433C8;
+        Wed, 28 Jun 2023 23:56:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687996434;
-        bh=F6vzXPCW6Woeq9Ou3mqYh6g7Dx1xrVdicCI0ov5Kx/k=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=uKigdqY91w/tOLpSPGtAvr1bKQNqQqiEQbKjcQQVpMYu0k17Es7skS5uVjhwnGxdt
-         1RRAIqyaXyyAO8PZr53kKNYWBK498BLPy00hnI4L3+9/8PHm/tA0COPMn/T5xpHMiv
-         TYvmi7X1mwVMKdoQVZbamE/u7pskmaipcT2UOCCvSHLgOTeupN+EoicGUl5uwjvV1X
-         Ms+X2skOBYCo5P8n1oB+03fiBJEZi9eJtrtkIO4HEXMwfuhLdz87BIDiJoICMs/HmS
-         td0VPo9NehDeLO3nuDsyVxhDXjE5otU3MrkzVI9vP0PLu+Ti91n97vXqvBU9G9JaMQ
-         +MYL0/Gourb9A==
-Message-ID: <f170e2ae-a416-7a0b-ff52-f446eaf78ab9@kernel.org>
-Date:   Thu, 29 Jun 2023 08:53:52 +0900
+        s=k20201202; t=1687996603;
+        bh=9kjpY0jknGDXlU+YaQ2INd9z2/6rXggCy7RLeoOyuOg=;
+        h=Date:Subject:To:References:From:In-Reply-To:From;
+        b=KvU8R+QNm5UTF6ZHQqQiZBDaTQnLqJlUGzQpXmBvyJs0MFCQ6kTFfraA2buVl4cvW
+         04xjqveUO4kEn1EfjEZJkbHKX5QFRdmUFnvw+zDOa4dbaPMKnQReYyKT2llFJj++HY
+         tBfo0NzL/XF+GDuPGdlmiUGuNr2kthW3ibzjiz1tcio7OS6ssyqYEQWHtfxli3aOGd
+         m8PVF3flMFZhAc7awvJTDkhQ3B8rf1sDGcNcO3yOOyvI8dIfzQYMa1hHt9d6ZjJTdA
+         pU/Bl+DNWTREJcQHaaJapmtTUz4kxoHlBTuz7+Vth32gFQQ0RZI/cZ/TC5PPQ0xjvZ
+         cz11S5Hq3Q5pQ==
+Message-ID: <7f811b26-564e-6e19-7385-b61978dd4757@kernel.org>
+Date:   Thu, 29 Jun 2023 08:56:41 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.12.0
-Subject: Re: [PATCH 1/2] mpt3sas: Perform additional retries if Doorbell read
- returns 0
+Subject: Re: [RFC] Support for Write-and-Verify only drives
 Content-Language: en-US
-To:     Ranjan Kumar <ranjan.kumar@broadcom.com>,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Cc:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        stable@vger.kernel.org
-References: <20230628070511.27774-1-ranjan.kumar@broadcom.com>
- <20230628070511.27774-2-ranjan.kumar@broadcom.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        =?UTF-8?Q?Daniel_Rozsny=c3=b3?= <daniel@rozsnyo.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <c6499ed7-d049-5714-f827-734cff3f6305@rozsnyo.com>
+ <eca63b83-1cf4-40ac-114d-f23acc7cadea@acm.org>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230628070511.27774-2-ranjan.kumar@broadcom.com>
+In-Reply-To: <eca63b83-1cf4-40ac-114d-f23acc7cadea@acm.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/28/23 16:05, Ranjan Kumar wrote:
-> Doorbell and Host diagnostic registers could return 0 even
-> after 3 retries and that leads to occasional resets of the
-> controllers, hence increased the retry count to thirty.
+On 6/29/23 07:54, Bart Van Assche wrote:
+> On 6/26/23 13:35, Daniel Rozsnyó wrote:
+>>     There are some drives, or more precisely - normal drives with a 
+>> custom firmware, that simply reject a regular Write - likely as not 
+>> being good enough for the intended high-rel application - which I can 
+>> understand, but even after reformatting the drive to no-PI and going to 
+>> "poor" 512B sector size, they still refuse to do an easy Write 
+>> operation. I had verified that by using the sg_write_verify (that uses 
+>> an ioctl) I can really write data to these drives. The reading path is 
+>> working okay and both dd and hdparm works at expected speeds.
+> 
+> To me the above sounds like the drive firmware is broken. Please fix the 
+> drive firmware and make sure that WRITE commands are accepted.
 
-The magic value "3" for retry count was already that, magic. Why would things
-work better with 30 ? What is the reasoning ? Isn't a udelay needed to avoid
-that many retries ?
+All write commands are optional in SBC. So having a drive supporting write
+verify and not supporting regular write 10/16/32 is actually acceptable per
+specs. I agree that this is odd, but it is not a spec violation. So the question
+is: do we want to detect and support that ?
 
 > 
-> Fixes: b899202901a8 ("mpt3sas: Add separate function for aero doorbell reads ")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-
-[..]
-
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> index 05364aa15ecd..3b8ec4fd2d21 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -160,6 +160,8 @@
->  
->  #define IOC_OPERATIONAL_WAIT_COUNT	10
->  
-> +#define READL_RETRY_COUNT_OF_THIRTY	30
-> +#define READL_RETRY_COUNT_OF_THREE	3
-
-Less than ideal naming I think. If the values need to be changed again, a lot of
-code will need to change. What about soemthing like:
-
-#define READL_RETRY_COUNT	30
-#define READL_RETRY_SHORT_COUNT	3
-
->  /*
->   * NVMe defines
->   */
-> @@ -994,7 +996,7 @@ typedef void (*NVME_BUILD_PRP)(struct MPT3SAS_ADAPTER *ioc, u16 smid,
->  typedef void (*PUT_SMID_IO_FP_HIP) (struct MPT3SAS_ADAPTER *ioc, u16 smid,
->  	u16 funcdep);
->  typedef void (*PUT_SMID_DEFAULT) (struct MPT3SAS_ADAPTER *ioc, u16 smid);
-> -typedef u32 (*BASE_READ_REG) (const volatile void __iomem *addr);
-> +typedef u32 (*BASE_READ_REG) (const volatile void __iomem *addr, u8 retry_count);
->  /*
->   * To get high iops reply queue's msix index when high iops mode is enabled
->   * else get the msix index of general reply queues.
+> Thanks,
+> 
+> Bart.
+> 
 
 -- 
 Damien Le Moal
