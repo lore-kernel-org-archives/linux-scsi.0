@@ -2,90 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C47EB64DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 22:51:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55164EB64DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 22:52:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231286AbjF1Wvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jun 2023 18:51:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50894 "EHLO
+        id S231372AbjF1WwW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jun 2023 18:52:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231146AbjF1WvB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 18:51:01 -0400
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E001326B9;
-        Wed, 28 Jun 2023 15:50:49 -0700 (PDT)
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1b6824141b4so319265ad.1;
-        Wed, 28 Jun 2023 15:50:49 -0700 (PDT)
+        with ESMTP id S229524AbjF1WwS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 18:52:18 -0400
+Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7447710F8;
+        Wed, 28 Jun 2023 15:52:17 -0700 (PDT)
+Received: by mail-ot1-f54.google.com with SMTP id 46e09a7af769-6b71cdb47e1so42178a34.2;
+        Wed, 28 Jun 2023 15:52:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687992649; x=1690584649;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20221208; t=1687992737; x=1690584737;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RfqFDtT/eGzqQeEDf95cLreNmgKO2LGGgIvnbhaSmwc=;
-        b=YQoyXa4nNfTr3esU8SJWPohfIzpbIzYKLB4gOQ519fXdcPPR70q+N/IMdXkPOvWj0L
-         4sQ35qGCtYXkFaIWEhGZ0OwQgvJVXq5RT5NaPP7yENqiQAmFwbzJzzXw967sjgE7ONgL
-         I5j7pTLHVqrRCuoTtVJ3NqzPHmWtZkeGQRIg/lLo3V1E3SZTQGamPoJFJy9A/RBZLYC0
-         oECop44aUc28wdK0sxxQxgXGQ+e1a+L6jCQfxLjdDw2ZDeKOfTbb2ekdkfq/1oye6F75
-         fC5B11CRaulZUcTHdpA1x++4GjrenhihK2nWrxDM2q6Lvds8ibA1a4mxL+fRobdLlGck
-         vuVQ==
-X-Gm-Message-State: AC+VfDw/2tFsu+3PmARpoU+rixAcHucHiUnXea0ygFeN05xe4MKHiur9
-        jZBGhXlFK4yX3QjRM3acox5d9eZ2V/k=
-X-Google-Smtp-Source: ACHHUZ6DPO+qpk7VGOE7L1H4AovjX2mXxQC4bqfErUpLkFuXiwxShFN8MVsD0KATlIB8e9sHKBZTbA==
-X-Received: by 2002:a17:903:1cf:b0:1b6:a91d:bd1f with SMTP id e15-20020a17090301cf00b001b6a91dbd1fmr3017792plh.6.1687992649105;
-        Wed, 28 Jun 2023 15:50:49 -0700 (PDT)
+        bh=cvtCI5+3q5/G6rYWhHkCsWUUU9M4PgrZlvCGqZLiWyE=;
+        b=R7PNbVX6pxRIzD5hdPa7Gt8Fv87/+urutX227UEIdvpJZmD9sY4tle52YtTCLMtDfG
+         TqoX5TnXIfKEAaUDyItgDUOYSE2ZWrRfxn5uhdSm6oS/bvJ1tNFNYnMUb69dMF0yiMhY
+         TCHoN/Hpug83geFlNlw3JCbW799xdI741vKeQPnfOlu6ShBS5bexzPbh26/xrpjKmUnP
+         ylXoCC1QTpls8DvmGLCskHq4qr3XuCmM0gzVJl/lS1MWA4vpNqeyRvtO8R3D1n4ebiSs
+         EwZ6TFs7BiXWem5m7xaOVJKl2P+VzPZR/CC13wMNgbq+a6099rORCMZ9pB4xWQAs6ebc
+         Xhfg==
+X-Gm-Message-State: AC+VfDzDWixzySohgqAzp2jtBFCP0LJQQWsnwojlQ3o08RAl/zpkVYMB
+        CUtDUngUPZFUSNZwx5uHtf4=
+X-Google-Smtp-Source: ACHHUZ5OHNevUXjXpu164KeoHuSOe9UTv06gyX2dL9aHD+vK3+AfD3GOwxgC5XuIgbtdsa8JHp5LBw==
+X-Received: by 2002:a05:6358:edc:b0:12b:c378:b090 with SMTP id 28-20020a0563580edc00b0012bc378b090mr26702169rwh.26.1687992736525;
+        Wed, 28 Jun 2023 15:52:16 -0700 (PDT)
 Received: from [192.168.50.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id p12-20020a170902b08c00b001ab061e352bsm8090033plr.195.2023.06.28.15.50.47
+        by smtp.gmail.com with ESMTPSA id y17-20020a63e251000000b005501b24b1c9sm7798360pgj.62.2023.06.28.15.52.13
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Jun 2023 15:50:48 -0700 (PDT)
-Message-ID: <896abe03-4fcd-003f-1273-209daafc5635@acm.org>
-Date:   Wed, 28 Jun 2023 15:50:44 -0700
+        Wed, 28 Jun 2023 15:52:15 -0700 (PDT)
+Message-ID: <f15e3da4-e555-a5c3-b42c-ece860aae3cb@acm.org>
+Date:   Wed, 28 Jun 2023 15:52:13 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.11.0
-Subject: Re: [RESEND v2] ufs: core: Add support for qTimestamp attribute
+Subject: Re: [PATCH] scsi: ufs: Remove unused function declaration
 Content-Language: en-US
-To:     Arthur Simchaev <arthur.simchaev@wdc.com>,
-        martin.petersen@oracle.com
-Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230626103320.8737-1-arthur.simchaev@wdc.com>
+To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "Arthur.Simchaev@wdc.com" <Arthur.Simchaev@wdc.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "krzysztof.kozlowski@linaro.org" <krzysztof.kozlowski@linaro.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <CGME20230627012931epcms2p76f458e0b2ce8a591b56bbcc6a2f1a3bb@epcms2p7>
+ <20230627012931epcms2p76f458e0b2ce8a591b56bbcc6a2f1a3bb@epcms2p7>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230626103320.8737-1-arthur.simchaev@wdc.com>
+In-Reply-To: <20230627012931epcms2p76f458e0b2ce8a591b56bbcc6a2f1a3bb@epcms2p7>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/26/23 03:33, Arthur Simchaev wrote:
-> +/**
-> + * struct utp_upiu_query_v4_0 - upiu request buffer structure for
-> + * query request >= UFS 4.0 spec.
-> + * @opcode: command to perform B-0
-> + * @idn: a value that indicates the particular type of data B-1
-> + * @index: Index to further identify data B-2
-> + * @selector: Index to further identify data B-3
-> + * @osf4: spec field B-5
-> + * @osf5: spec field B 6,7
-> + * @osf6: spec field DW 8,9
-> + * @osf7: spec field DW 10,11
-> + */
-> +struct utp_upiu_query_v4_0 {
-> +	__u8 opcode;
-> +	__u8 idn;
-> +	__u8 index;
-> +	__u8 selector;
-> +	__u8 osf3;
-> +	__u8 osf4;
-> +	__be16 osf5;
-> +	__be32 osf6;
-> +	__be32 osf7;
-> +	__be32 reserved;
-> +};
+On 6/26/23 18:29, Keoseong Park wrote:
+> Commit 2468da61ea09 ("scsi: ufs: core: mcq: Configure operation and
+> runtime interface") added ufshcd_mcq_select_mcq_mode(), but
+> it's not used anywhere. So remove it.
 
-Is this structure useful for user space software? If not, please move it 
-into another header file.
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
