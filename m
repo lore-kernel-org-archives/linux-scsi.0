@@ -2,81 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A83C001DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 09:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C42FEB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 10:43:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231439AbjF1Juu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jun 2023 05:50:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51356 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233856AbjF1Jig (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 05:38:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CA141FFC
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2023 02:38:12 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 09E0D60F66
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2023 09:38:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 19777C433C8
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2023 09:38:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687945091;
-        bh=8b254m9yqevc/FqTKQdgDtrZ9zvjsyt2uYOAwpazk28=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Tafyp1HQvqBbiiRQX5OekDFSucjjxT21bKFhcC3+IJ6K2Hjq8AwDSxTah4YQhdugh
-         D4tgY03QBBgJwqUjtzozgma0GPjg+5b3aqQJKVQbh6zKZ6hdwBKtLDztvNfDU3aWfq
-         CIViyu/LTEde0MisP2uyFXsmoGVWLit/DlA5+2Ve7fW53Ez1Jnr5D2rWvbxbCHGRth
-         wpafcVAz2JmfHdun3TDRxgN0t8S0vobJa9GzZXlLLL3s+q0CQRwoR6ZcNIf6zIPNGI
-         HF3gM8ygbgUh0a1aq+RHszYDBuUvDoIAQKq41+xRYgTp7aov+Y6VfHugI312lh4ej6
-         hWyl3klaLrUVA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id F2E7BC53BD2; Wed, 28 Jun 2023 09:38:10 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date:   Wed, 28 Jun 2023 09:38:10 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: pheidologeton@protonmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-GayEfeaVTQ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S231781AbjF1Kmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jun 2023 06:42:52 -0400
+Received: from mga05.intel.com ([192.55.52.43]:57087 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230481AbjF1Kks (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2023 06:40:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1687948848; x=1719484848;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=2Zmhe10xKcWrQRM+knMSqhQmXAMpUf7kd2FjgsGcrkY=;
+  b=hshj4b30L4r6KWirqS/lPTh/EGPA9UtAGKed1hsR1GY4jCDK2lSumDOH
+   jBK89CLhX4/Sl3ax5RpkSr3EgJl9EikKUSXluMtxdG9EYv9FVRDqh4GSv
+   N5R/QVXpIwbjI8G81BZdbZJmVrsXej8uyGqVdQOtWbJBuEwJd17ain2Dc
+   X8+3KxRgbLz80yGbGumnC3pHOIIVVrVFMCDtAcVKfUonKvNFK07Rn8Uu3
+   LloEH5woG66vVMR3uyJJXcFpPUhcAbxphiMhhQ1QBud/i/DZ5+qA4037Y
+   Yft1E+JgAbB95TC7Ax3uZVTzz46jNJhyQA5i49hGW2rUiuWERrcYtEzbT
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="448193894"
+X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
+   d="scan'208";a="448193894"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2023 03:40:47 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="667067110"
+X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
+   d="scan'208";a="667067110"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by orsmga003.jf.intel.com with ESMTP; 28 Jun 2023 03:40:42 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1qESbI-000Yvj-2P;
+        Wed, 28 Jun 2023 13:40:40 +0300
+Date:   Wed, 28 Jun 2023 13:40:40 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Luo Jiaxing <luojiaxing@huawei.com>,
+        Wojciech Ziemba <wojciech.ziemba@intel.com>
+Cc:     akpm@linux-foundation.org, viro@zeniv.linux.org.uk,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        john.garry@huawei.com, himanshu.madhani@cavium.com,
+        gregkh@linuxfoundation.org, uma.shankar@intel.com,
+        anshuman.gupta@intel.com, animesh.manna@intel.com,
+        linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
+Subject: Re: [PATCH v4 0/5] Introduce a new helper macro
+ DEFINE_SHOW_STORE_ATTRIBUTE at seq_file.c
+Message-ID: <ZJwOKJSgLg3Zhdxt@smile.fi.intel.com>
+References: <1605164864-58944-1-git-send-email-luojiaxing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1605164864-58944-1-git-send-email-luojiaxing@huawei.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+On Thu, Nov 12, 2020 at 03:07:38PM +0800, Luo Jiaxing wrote:
+> We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+> for read-only file, but we found many of drivers also want a helper macro
+> for read-write file too.
+> 
+> So we add this macro to help decrease code duplication.
 
---- Comment #5 from pheidologeton@protonmail.com ---
-I do not have another server with an adaptec controller, and downtime of th=
-is
-server is highly undesirable. If there are any 6.4.1 fixes, I will do a kex=
-ec
-from 6.3.9 to 6.4.1 and report back
+Is it abandoned?
+Besides kbuildbot complains, can you simply reduce the scope to one subsystem
+and resend?
 
---=20
-You may reply to this email to add a comment.
+Let's say USB is nice one and it has no issues according to kbuildbot.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
