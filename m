@@ -2,85 +2,175 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94D1BEB64D7
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 15:08:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A5AEEB64DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 15:30:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231940AbjF1PIp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jun 2023 11:08:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:44447 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231208AbjF1PIo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2023 11:08:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687964873;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=2nVO6tSp+XXSaxCVRxFDWreK5qTv77fQcvdGnm+J0D4=;
-        b=LUOdECssbyvCJTuVjEREER1sZ1eCNEcgveemcQDtYdeJRgB62y86bjcFqa6ML3UcyC2K2b
-        DZd4IDJj2gE7rFaZpmUknKxnbncSum2XzK4Yx5Cy1Tk6OifJ1iwf6IudI4C/a2CrWMUOSo
-        7abbjEv9Gn4PUhb9q1aH2gLGfEvkdto=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-646-2kzSRf5kOoSt6_r6p54JQg-1; Wed, 28 Jun 2023 11:07:18 -0400
-X-MC-Unique: 2kzSRf5kOoSt6_r6p54JQg-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0768B3C1CCEB;
-        Wed, 28 Jun 2023 15:06:41 +0000 (UTC)
-Received: from kalibr.redhat.com (unknown [10.35.206.113])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C973848FB01;
-        Wed, 28 Jun 2023 15:06:39 +0000 (UTC)
-From:   Maurizio Lombardi <mlombard@redhat.com>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: scsi_debug: remove dead code
-Date:   Wed, 28 Jun 2023 17:06:38 +0200
-Message-Id: <20230628150638.53218-1-mlombard@redhat.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+        id S232165AbjF1Pab (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jun 2023 11:30:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60488 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232111AbjF1PaZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 11:30:25 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47ED6268F;
+        Wed, 28 Jun 2023 08:30:24 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-6686a05bc66so3927525b3a.1;
+        Wed, 28 Jun 2023 08:30:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1687966224; x=1690558224;
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4eipvAP8cAn3qf+QI5BYy9KRsjhBE5RJHKH6KbEsvKw=;
+        b=DLCSvvkoZyzg/8xfkZLY7hLnKpqO2AfmVDGH7CazwOeuORTBSh9pLzonCgs9+rnW3/
+         Sr9lLBKxsdz9sfw5eF2BON0DHIIxyzQF3xcBHGmtsg3CQujkcFNeAIsnUmgtDSBF8LsL
+         azvmmJdr7NC9Fu2D/kYwY3FGgBR9xzYnGG90bV4/KYtLPY4xiPIS1DC4CDyUSYajy11f
+         Ejj1pVfGKdEQ4to387hki+9rpeKnzwOk/qavvLU0T9t7KDD8jnXRv2w/hD2jbe6Mpahc
+         w8Hb3mNRMk9y1w66tPY0Ni+R8JEPRd2rhjH+Yyg3KoDTUPtZog8l68srdcZHUKlx+BBH
+         kmTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687966224; x=1690558224;
+        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4eipvAP8cAn3qf+QI5BYy9KRsjhBE5RJHKH6KbEsvKw=;
+        b=lHhXrskL3WtdqfodlTS72YlAM2i3xTf3PS5ro/m8LwlpIgWEgFrOvaGLSedxE5fVVr
+         HUFNWRKlhbP2EHoTZVbtMbPhUb5BBsJSrbLdVdYlowwEOEiQNP0EcaoWFyoyR4GcLjU+
+         RAxPFJNvjpNcQavM1vpptuHTcsxRqRlJIw/+tfIXSCiNPOUhTs9icwRwAT6NfYwjJY34
+         xrQvJxDLkPM+cwYRony2+KcKtK1Uxt6ZGQsuA4Ma6JGS0oMSZtfFQ2cY4XVV4vlfL14p
+         1vcnyYo2tWFc7tuywbKTkNFdzxNiulm3FRkN8pYDjxz4A6FHadw85Mwvcu0NiiSGJhEU
+         HfYw==
+X-Gm-Message-State: AC+VfDy2uGpSYKDio8h+Y4PRosNR2KVSXvuChVnib6F4zxoCJlhinw3a
+        TrjQDf2+REaXrGKzuVHDXeAFJRTs1aoZDA==
+X-Google-Smtp-Source: ACHHUZ6ZbMYzkEt6o8nH76d/fZa9ZfWMAZIv91i5uWcQmfW2Hn824BfpaqeSWGgqIwgLiWqNP/CVgA==
+X-Received: by 2002:a05:6a20:938b:b0:e9:5b0a:deff with SMTP id x11-20020a056a20938b00b000e95b0adeffmr33939956pzh.22.1687966223619;
+        Wed, 28 Jun 2023 08:30:23 -0700 (PDT)
+Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
+        by smtp.gmail.com with ESMTPSA id jh2-20020a170903328200b001b3fb1119fdsm1750669plb.297.2023.06.28.08.30.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Jun 2023 08:30:23 -0700 (PDT)
+From:   Chengfeng Ye <dg573847474@gmail.com>
+To:     chenxiang66@hisilicon.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Chengfeng Ye <dg573847474@gmail.com>
+Subject: [PATCH] scsi: hisi_sas: Fix potential deadlock on &hisi_hba->lock
+Date:   Wed, 28 Jun 2023 15:30:10 +0000
+Message-Id: <20230628153010.57705-1-dg573847474@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The ramdisk rwlocks are not used anymore
+As &hisi_hba->lock is acquired by hard irq int_abnormal_v1_hw(),
+other acquisition of the same lock under process context should
+disable irq, otherwise deadlock could happen if the
+irq preempt the execution while the lock is held in process context
+on the same CPU.
 
-Fixes: 87c715dcde63 ("scsi: scsi_debug: Add per_host_store option")
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+[Interrupt]: int_abnormal_v1_hw()
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c:1447
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:2050
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1079
+    -->spin_lock_irqsave(&hisi_hba->lock, flags);
+
+[Process Context]: hisi_sas_clear_nexus_ha()
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1932
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1135
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1116
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1105
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:166
+    -->spin_lock(&hisi_hba->lock);
+
+[Process Context]: hisi_sas_dev_found()
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:665
+    -->spin_lock(&hisi_hba->lock);
+
+[Process Context]: hisi_sas_queue_command()
+    -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:188
+    -->spin_lock(&hisi_hba->lock);
+
+This flaw was found by an experimental static analysis tool I am
+developing for irq-related deadlock, which reported the above
+warning when analyzing the linux kernel 6.4-rc7 release.
+
+The tentative patch fix the potential deadlock by spin_lock_irqsave().
+
+Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
 ---
- drivers/scsi/scsi_debug.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 8c58128ad32a..9c0af50501f9 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -841,11 +841,6 @@ static int sdeb_zbc_nr_conv = DEF_ZBC_NR_CONV_ZONES;
- static int submit_queues = DEF_SUBMIT_QUEUES;  /* > 1 for multi-queue (mq) */
- static int poll_queues; /* iouring iopoll interface.*/
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 412431c901a7..47c5062a732e 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -161,11 +161,12 @@ static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
  
--static DEFINE_RWLOCK(atomic_rw);
--static DEFINE_RWLOCK(atomic_rw2);
--
--static rwlock_t *ramdisk_lck_a[2];
--
- static char sdebug_proc_name[] = MY_NAME;
- static const char *my_name = MY_NAME;
+ static void hisi_sas_slot_index_free(struct hisi_hba *hisi_hba, int slot_idx)
+ {
++	unsigned long flags;
+ 	if (hisi_hba->hw->slot_index_alloc ||
+ 	    slot_idx < HISI_SAS_RESERVED_IPTT) {
+-		spin_lock(&hisi_hba->lock);
++		spin_lock_irqsave(&hisi_hba->lock, flags);
+ 		hisi_sas_slot_index_clear(hisi_hba, slot_idx);
+-		spin_unlock(&hisi_hba->lock);
++		spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 	}
+ }
  
-@@ -6818,9 +6813,6 @@ static int __init scsi_debug_init(void)
- 	int k, ret, hosts_to_add;
- 	int idx = -1;
+@@ -181,11 +182,12 @@ static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
+ {
+ 	int index;
+ 	void *bitmap = hisi_hba->slot_index_tags;
++	unsigned long flags;
  
--	ramdisk_lck_a[0] = &atomic_rw;
--	ramdisk_lck_a[1] = &atomic_rw2;
--
- 	if (sdebug_ndelay >= 1000 * 1000 * 1000) {
- 		pr_warn("ndelay must be less than 1 second, ignored\n");
- 		sdebug_ndelay = 0;
+ 	if (rq)
+ 		return rq->tag + HISI_SAS_RESERVED_IPTT;
+ 
+-	spin_lock(&hisi_hba->lock);
++	spin_lock_irqsave(&hisi_hba->lock, flags);
+ 	index = find_next_zero_bit(bitmap, HISI_SAS_RESERVED_IPTT,
+ 				   hisi_hba->last_slot_index + 1);
+ 	if (index >= HISI_SAS_RESERVED_IPTT) {
+@@ -193,13 +195,13 @@ static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
+ 				HISI_SAS_RESERVED_IPTT,
+ 				0);
+ 		if (index >= HISI_SAS_RESERVED_IPTT) {
+-			spin_unlock(&hisi_hba->lock);
++			spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 			return -SAS_QUEUE_FULL;
+ 		}
+ 	}
+ 	hisi_sas_slot_index_set(hisi_hba, index);
+ 	hisi_hba->last_slot_index = index;
+-	spin_unlock(&hisi_hba->lock);
++	spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 
+ 	return index;
+ }
+@@ -658,11 +660,12 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+ {
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+ 	struct hisi_sas_device *sas_dev = NULL;
++	unsigned long flags;
+ 	int last = hisi_hba->last_dev_id;
+ 	int first = (hisi_hba->last_dev_id + 1) % HISI_SAS_MAX_DEVICES;
+ 	int i;
+ 
+-	spin_lock(&hisi_hba->lock);
++	spin_lock_irqsave(&hisi_hba->lock, flags);
+ 	for (i = first; i != last; i %= HISI_SAS_MAX_DEVICES) {
+ 		if (hisi_hba->devices[i].dev_type == SAS_PHY_UNUSED) {
+ 			int queue = i % hisi_hba->queue_count;
+@@ -682,7 +685,7 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+ 		i++;
+ 	}
+ 	hisi_hba->last_dev_id = i;
+-	spin_unlock(&hisi_hba->lock);
++	spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 
+ 	return sas_dev;
+ }
 -- 
-2.39.3
+2.17.1
 
