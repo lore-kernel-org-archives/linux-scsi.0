@@ -2,44 +2,44 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 603ADEB64D7
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 12:12:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5BDEEB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 12:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231903AbjF1MMI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jun 2023 08:12:08 -0400
-Received: from mga12.intel.com ([192.55.52.136]:40684 "EHLO mga12.intel.com"
+        id S230445AbjF1MzP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jun 2023 08:55:15 -0400
+Received: from mga07.intel.com ([134.134.136.100]:58763 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231853AbjF1MLu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2023 08:11:50 -0400
+        id S231949AbjF1Mww (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2023 08:52:52 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687954310; x=1719490310;
+  t=1687956772; x=1719492772;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=SO2aJTQFDpvmS5VCVuSHy31Q+lMPYy3bSbWqJ1yROBw=;
-  b=IM6pjkQPiPEORHdiSh8YUIG3TVT76xcV5G90upt/TuU13THCeZ/Ii3/q
-   a9zdoXXiVLsiF8uf/GMDAc6Kevq0FaeP0/wn/IqofDQLe5IDpGzJxx0x2
-   yUr2JpgUsQzHmULKg6nv0mlOBX9xkus7Tcu4ZZtqIwxqELk8QXOrvB4KL
-   trQhUF4ROuDP4bb7wAgk418y7S1YMWIvLNBguXUGdmzDJedqfunVT13rR
-   8xP5QCwXzhewBLJ3KHw11xwU4wilIPaZvDfrpeJIH9ajJCpxWNH34LV2B
-   gljeFIiffNHrkaqFFIpaaXCPd4YQAdbbLC113xeiGtdidvqn8jqi2Q0Ey
+  bh=V7/fQJ+HZXkDt0pOeY106FEB7wN/9WZJhnYeLYgacr4=;
+  b=QTOXyIeDQJ6w003pbFufKbvW2L00OKKyS8+y8CqQw3JjyCSg/INA092f
+   zRQV8/2ZLkeCShbwT8cYUaZ9ZMQV+41gYhybYPXKQHBGck5/OHMhC5DAT
+   7qRt+PQw/h29vSJnnqNwpp2VOwQpnSc46kCThl9uBFRchkW2HlcbflFj0
+   Y0y+m4kt+ZRL3zYbg4lpnFmiIbkgQ+AZwwY39cH/3hc2DcsUI/aMgmL/S
+   9dFxjvIWF79i6xRSOPTXTkfIC/5exkAyUb/UxSxFx3aKARGnz/V9gj/h2
+   mpt6tv183WzpwGzWo1FLdmEpI5MDdieXrhabf515mORh0bWpHwoaVhoLl
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="341413253"
+X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="427840678"
 X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
-   d="scan'208";a="341413253"
+   d="scan'208";a="427840678"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2023 05:11:49 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2023 05:52:50 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="752230431"
+X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="752247641"
 X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
-   d="scan'208";a="752230431"
+   d="scan'208";a="752247641"
 Received: from lkp-server01.sh.intel.com (HELO 783282924a45) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 28 Jun 2023 05:11:40 -0700
+  by orsmga001.jf.intel.com with ESMTP; 28 Jun 2023 05:52:41 -0700
 Received: from kbuild by 783282924a45 with local (Exim 4.96)
         (envelope-from <lkp@intel.com>)
-        id 1qEU1L-000DFB-2e;
-        Wed, 28 Jun 2023 12:11:39 +0000
-Date:   Wed, 28 Jun 2023 20:11:10 +0800
+        id 1qEUf2-000DGN-2m;
+        Wed, 28 Jun 2023 12:52:40 +0000
+Date:   Wed, 28 Jun 2023 20:52:40 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Nitesh Shetty <nj.shetty@samsung.com>,
         Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
@@ -64,7 +64,7 @@ Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
         linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH v13 9/9] null_blk: add support for copy offload
-Message-ID: <202306281909.TRNCf5eG-lkp@intel.com>
+Message-ID: <202306282001.ba1qWTf0-lkp@intel.com>
 References: <20230627183629.26571-10-nj.shetty@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -84,115 +84,40 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Intro
 base:   53cdf865f90ba922a854c65ed05b519f9d728424
 patch link:    https://lore.kernel.org/r/20230627183629.26571-10-nj.shetty%40samsung.com
 patch subject: [PATCH v13 9/9] null_blk: add support for copy offload
-config: hexagon-randconfig-r045-20230628 (https://download.01.org/0day-ci/archive/20230628/202306281909.TRNCf5eG-lkp@intel.com/config)
-compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project.git 4a5ac14ee968ff0ad5d2cc1ffa0299048db4c88a)
-reproduce: (https://download.01.org/0day-ci/archive/20230628/202306281909.TRNCf5eG-lkp@intel.com/reproduce)
+config: i386-randconfig-i006-20230628 (https://download.01.org/0day-ci/archive/20230628/202306282001.ba1qWTf0-lkp@intel.com/config)
+compiler: clang version 15.0.7 (https://github.com/llvm/llvm-project.git 8dfdcc7b7bf66834a761bd8de445840ef68e4d1a)
+reproduce: (https://download.01.org/0day-ci/archive/20230628/202306282001.ba1qWTf0-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306281909.TRNCf5eG-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202306282001.ba1qWTf0-lkp@intel.com/
 
 All warnings (new ones prefixed by >>):
 
-   In file included from drivers/block/null_blk/main.c:12:
-   In file included from drivers/block/null_blk/null_blk.h:8:
-   In file included from include/linux/blkdev.h:9:
-   In file included from include/linux/blk_types.h:10:
-   In file included from include/linux/bvec.h:10:
-   In file included from include/linux/highmem.h:12:
-   In file included from include/linux/hardirq.h:11:
-   In file included from ./arch/hexagon/include/generated/asm/hardirq.h:1:
-   In file included from include/asm-generic/hardirq.h:17:
-   In file included from include/linux/irq.h:20:
-   In file included from include/linux/io.h:13:
-   In file included from arch/hexagon/include/asm/io.h:334:
-   include/asm-generic/io.h:547:31: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     547 |         val = __raw_readb(PCI_IOBASE + addr);
-         |                           ~~~~~~~~~~ ^
-   include/asm-generic/io.h:560:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     560 |         val = __le16_to_cpu((__le16 __force)__raw_readw(PCI_IOBASE + addr));
-         |                                                         ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/little_endian.h:37:51: note: expanded from macro '__le16_to_cpu'
-      37 | #define __le16_to_cpu(x) ((__force __u16)(__le16)(x))
-         |                                                   ^
-   In file included from drivers/block/null_blk/main.c:12:
-   In file included from drivers/block/null_blk/null_blk.h:8:
-   In file included from include/linux/blkdev.h:9:
-   In file included from include/linux/blk_types.h:10:
-   In file included from include/linux/bvec.h:10:
-   In file included from include/linux/highmem.h:12:
-   In file included from include/linux/hardirq.h:11:
-   In file included from ./arch/hexagon/include/generated/asm/hardirq.h:1:
-   In file included from include/asm-generic/hardirq.h:17:
-   In file included from include/linux/irq.h:20:
-   In file included from include/linux/io.h:13:
-   In file included from arch/hexagon/include/asm/io.h:334:
-   include/asm-generic/io.h:573:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     573 |         val = __le32_to_cpu((__le32 __force)__raw_readl(PCI_IOBASE + addr));
-         |                                                         ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/little_endian.h:35:51: note: expanded from macro '__le32_to_cpu'
-      35 | #define __le32_to_cpu(x) ((__force __u32)(__le32)(x))
-         |                                                   ^
-   In file included from drivers/block/null_blk/main.c:12:
-   In file included from drivers/block/null_blk/null_blk.h:8:
-   In file included from include/linux/blkdev.h:9:
-   In file included from include/linux/blk_types.h:10:
-   In file included from include/linux/bvec.h:10:
-   In file included from include/linux/highmem.h:12:
-   In file included from include/linux/hardirq.h:11:
-   In file included from ./arch/hexagon/include/generated/asm/hardirq.h:1:
-   In file included from include/asm-generic/hardirq.h:17:
-   In file included from include/linux/irq.h:20:
-   In file included from include/linux/io.h:13:
-   In file included from arch/hexagon/include/asm/io.h:334:
-   include/asm-generic/io.h:584:33: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     584 |         __raw_writeb(value, PCI_IOBASE + addr);
-         |                             ~~~~~~~~~~ ^
-   include/asm-generic/io.h:594:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     594 |         __raw_writew((u16 __force)cpu_to_le16(value), PCI_IOBASE + addr);
-         |                                                       ~~~~~~~~~~ ^
-   include/asm-generic/io.h:604:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     604 |         __raw_writel((u32 __force)cpu_to_le32(value), PCI_IOBASE + addr);
-         |                                                       ~~~~~~~~~~ ^
 >> drivers/block/null_blk/main.c:1295:2: warning: variable 'rem' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-    1295 |         __rq_for_each_bio(bio, req) {
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/blk-mq.h:1012:2: note: expanded from macro '__rq_for_each_bio'
-    1012 |         if ((rq->bio))                  \
-         |         ^~~~~~~~~~~~~~
-   include/linux/compiler.h:55:28: note: expanded from macro 'if'
-      55 | #define if(cond, ...) if ( __trace_if_var( !!(cond , ## __VA_ARGS__) ) )
-         |                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/compiler.h:57:30: note: expanded from macro '__trace_if_var'
-      57 | #define __trace_if_var(cond) (__builtin_constant_p(cond) ? (cond) : __trace_if_value(cond))
-         |                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           __rq_for_each_bio(bio, req) {
+           ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/blk-mq.h:1012:6: note: expanded from macro '__rq_for_each_bio'
+           if ((rq->bio))                  \
+               ^~~~~~~~~
    drivers/block/null_blk/main.c:1300:15: note: uninitialized use occurs here
-    1300 |         if (WARN_ON(!rem))
-         |                      ^~~
+           if (WARN_ON(!rem))
+                        ^~~
    include/asm-generic/bug.h:123:25: note: expanded from macro 'WARN_ON'
-     123 |         int __ret_warn_on = !!(condition);                              \
-         |                                ^~~~~~~~~
-   include/linux/compiler.h:55:47: note: expanded from macro 'if'
-      55 | #define if(cond, ...) if ( __trace_if_var( !!(cond , ## __VA_ARGS__) ) )
-         |                                               ^~~~
-   include/linux/compiler.h:57:52: note: expanded from macro '__trace_if_var'
-      57 | #define __trace_if_var(cond) (__builtin_constant_p(cond) ? (cond) : __trace_if_value(cond))
-         |                                                    ^~~~
+           int __ret_warn_on = !!(condition);                              \
+                                  ^~~~~~~~~
    drivers/block/null_blk/main.c:1295:2: note: remove the 'if' if its condition is always true
-    1295 |         __rq_for_each_bio(bio, req) {
-         |         ^
+           __rq_for_each_bio(bio, req) {
+           ^
    include/linux/blk-mq.h:1012:2: note: expanded from macro '__rq_for_each_bio'
-    1012 |         if ((rq->bio))                  \
-         |         ^
-   include/linux/compiler.h:55:23: note: expanded from macro 'if'
-      55 | #define if(cond, ...) if ( __trace_if_var( !!(cond , ## __VA_ARGS__) ) )
-         |                       ^
+           if ((rq->bio))                  \
+           ^
    drivers/block/null_blk/main.c:1287:12: note: initialize the variable 'rem' to silence this warning
-    1287 |         size_t rem, temp;
-         |                   ^
-         |                    = 0
-   7 warnings generated.
+           size_t rem, temp;
+                     ^
+                      = 0
+   1 warning generated.
 
 
 vim +1295 drivers/block/null_blk/main.c
