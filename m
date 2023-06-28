@@ -2,189 +2,85 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5BDEEB64D7
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 12:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94D1BEB64D7
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 15:08:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230445AbjF1MzP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jun 2023 08:55:15 -0400
-Received: from mga07.intel.com ([134.134.136.100]:58763 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231949AbjF1Mww (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2023 08:52:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687956772; x=1719492772;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=V7/fQJ+HZXkDt0pOeY106FEB7wN/9WZJhnYeLYgacr4=;
-  b=QTOXyIeDQJ6w003pbFufKbvW2L00OKKyS8+y8CqQw3JjyCSg/INA092f
-   zRQV8/2ZLkeCShbwT8cYUaZ9ZMQV+41gYhybYPXKQHBGck5/OHMhC5DAT
-   7qRt+PQw/h29vSJnnqNwpp2VOwQpnSc46kCThl9uBFRchkW2HlcbflFj0
-   Y0y+m4kt+ZRL3zYbg4lpnFmiIbkgQ+AZwwY39cH/3hc2DcsUI/aMgmL/S
-   9dFxjvIWF79i6xRSOPTXTkfIC/5exkAyUb/UxSxFx3aKARGnz/V9gj/h2
-   mpt6tv183WzpwGzWo1FLdmEpI5MDdieXrhabf515mORh0bWpHwoaVhoLl
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="427840678"
-X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
-   d="scan'208";a="427840678"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2023 05:52:50 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="752247641"
-X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
-   d="scan'208";a="752247641"
-Received: from lkp-server01.sh.intel.com (HELO 783282924a45) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 28 Jun 2023 05:52:41 -0700
-Received: from kbuild by 783282924a45 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qEUf2-000DGN-2m;
-        Wed, 28 Jun 2023 12:52:40 +0000
-Date:   Wed, 28 Jun 2023 20:52:40 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Nitesh Shetty <nj.shetty@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        willy@infradead.org, hare@suse.de, djwong@kernel.org,
-        bvanassche@acm.org, ming.lei@redhat.com, dlemoal@kernel.org,
-        nitheshshetty@gmail.com, gost.dev@samsung.com,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Anuj Gupta <anuj20.g@samsung.com>,
-        Vincent Fu <vincent.fu@samsung.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v13 9/9] null_blk: add support for copy offload
-Message-ID: <202306282001.ba1qWTf0-lkp@intel.com>
-References: <20230627183629.26571-10-nj.shetty@samsung.com>
+        id S231940AbjF1PIp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jun 2023 11:08:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:44447 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231208AbjF1PIo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2023 11:08:44 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1687964873;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=2nVO6tSp+XXSaxCVRxFDWreK5qTv77fQcvdGnm+J0D4=;
+        b=LUOdECssbyvCJTuVjEREER1sZ1eCNEcgveemcQDtYdeJRgB62y86bjcFqa6ML3UcyC2K2b
+        DZd4IDJj2gE7rFaZpmUknKxnbncSum2XzK4Yx5Cy1Tk6OifJ1iwf6IudI4C/a2CrWMUOSo
+        7abbjEv9Gn4PUhb9q1aH2gLGfEvkdto=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-646-2kzSRf5kOoSt6_r6p54JQg-1; Wed, 28 Jun 2023 11:07:18 -0400
+X-MC-Unique: 2kzSRf5kOoSt6_r6p54JQg-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0768B3C1CCEB;
+        Wed, 28 Jun 2023 15:06:41 +0000 (UTC)
+Received: from kalibr.redhat.com (unknown [10.35.206.113])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C973848FB01;
+        Wed, 28 Jun 2023 15:06:39 +0000 (UTC)
+From:   Maurizio Lombardi <mlombard@redhat.com>
+To:     jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: scsi_debug: remove dead code
+Date:   Wed, 28 Jun 2023 17:06:38 +0200
+Message-Id: <20230628150638.53218-1-mlombard@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230627183629.26571-10-nj.shetty@samsung.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Nitesh,
+The ramdisk rwlocks are not used anymore
 
-kernel test robot noticed the following build warnings:
+Fixes: 87c715dcde63 ("scsi: scsi_debug: Add per_host_store option")
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/scsi_debug.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-[auto build test WARNING on 53cdf865f90ba922a854c65ed05b519f9d728424]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Introduce-queue-limits-for-copy-offload-support/20230628-163126
-base:   53cdf865f90ba922a854c65ed05b519f9d728424
-patch link:    https://lore.kernel.org/r/20230627183629.26571-10-nj.shetty%40samsung.com
-patch subject: [PATCH v13 9/9] null_blk: add support for copy offload
-config: i386-randconfig-i006-20230628 (https://download.01.org/0day-ci/archive/20230628/202306282001.ba1qWTf0-lkp@intel.com/config)
-compiler: clang version 15.0.7 (https://github.com/llvm/llvm-project.git 8dfdcc7b7bf66834a761bd8de445840ef68e4d1a)
-reproduce: (https://download.01.org/0day-ci/archive/20230628/202306282001.ba1qWTf0-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306282001.ba1qWTf0-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/block/null_blk/main.c:1295:2: warning: variable 'rem' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-           __rq_for_each_bio(bio, req) {
-           ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/blk-mq.h:1012:6: note: expanded from macro '__rq_for_each_bio'
-           if ((rq->bio))                  \
-               ^~~~~~~~~
-   drivers/block/null_blk/main.c:1300:15: note: uninitialized use occurs here
-           if (WARN_ON(!rem))
-                        ^~~
-   include/asm-generic/bug.h:123:25: note: expanded from macro 'WARN_ON'
-           int __ret_warn_on = !!(condition);                              \
-                                  ^~~~~~~~~
-   drivers/block/null_blk/main.c:1295:2: note: remove the 'if' if its condition is always true
-           __rq_for_each_bio(bio, req) {
-           ^
-   include/linux/blk-mq.h:1012:2: note: expanded from macro '__rq_for_each_bio'
-           if ((rq->bio))                  \
-           ^
-   drivers/block/null_blk/main.c:1287:12: note: initialize the variable 'rem' to silence this warning
-           size_t rem, temp;
-                     ^
-                      = 0
-   1 warning generated.
-
-
-vim +1295 drivers/block/null_blk/main.c
-
-  1281	
-  1282	static inline int nullb_setup_copy_write(struct nullb *nullb,
-  1283			struct request *req, bool is_fua)
-  1284	{
-  1285		sector_t sector_in, sector_out;
-  1286		void *in, *out;
-  1287		size_t rem, temp;
-  1288		struct bio *bio;
-  1289		unsigned long offset_in, offset_out;
-  1290		struct nullb_page *t_page_in, *t_page_out;
-  1291		int ret = -EIO;
-  1292	
-  1293		sector_out = blk_rq_pos(req);
-  1294	
-> 1295		__rq_for_each_bio(bio, req) {
-  1296			sector_in = bio->bi_iter.bi_sector;
-  1297			rem = bio->bi_iter.bi_size;
-  1298		}
-  1299	
-  1300		if (WARN_ON(!rem))
-  1301			return BLK_STS_NOTSUPP;
-  1302	
-  1303		spin_lock_irq(&nullb->lock);
-  1304		while (rem > 0) {
-  1305			temp = min_t(size_t, nullb->dev->blocksize, rem);
-  1306			offset_in = (sector_in & SECTOR_MASK) << SECTOR_SHIFT;
-  1307			offset_out = (sector_out & SECTOR_MASK) << SECTOR_SHIFT;
-  1308	
-  1309			if (null_cache_active(nullb) && !is_fua)
-  1310				null_make_cache_space(nullb, PAGE_SIZE);
-  1311	
-  1312			t_page_in = null_lookup_page(nullb, sector_in, false,
-  1313				!null_cache_active(nullb));
-  1314			if (!t_page_in)
-  1315				goto err;
-  1316			t_page_out = null_insert_page(nullb, sector_out,
-  1317				!null_cache_active(nullb) || is_fua);
-  1318			if (!t_page_out)
-  1319				goto err;
-  1320	
-  1321			in = kmap_local_page(t_page_in->page);
-  1322			out = kmap_local_page(t_page_out->page);
-  1323	
-  1324			memcpy(out + offset_out, in + offset_in, temp);
-  1325			kunmap_local(out);
-  1326			kunmap_local(in);
-  1327			__set_bit(sector_out & SECTOR_MASK, t_page_out->bitmap);
-  1328	
-  1329			if (is_fua)
-  1330				null_free_sector(nullb, sector_out, true);
-  1331	
-  1332			rem -= temp;
-  1333			sector_in += temp >> SECTOR_SHIFT;
-  1334			sector_out += temp >> SECTOR_SHIFT;
-  1335		}
-  1336	
-  1337		ret = 0;
-  1338	err:
-  1339		spin_unlock_irq(&nullb->lock);
-  1340		return ret;
-  1341	}
-  1342	
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 8c58128ad32a..9c0af50501f9 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -841,11 +841,6 @@ static int sdeb_zbc_nr_conv = DEF_ZBC_NR_CONV_ZONES;
+ static int submit_queues = DEF_SUBMIT_QUEUES;  /* > 1 for multi-queue (mq) */
+ static int poll_queues; /* iouring iopoll interface.*/
+ 
+-static DEFINE_RWLOCK(atomic_rw);
+-static DEFINE_RWLOCK(atomic_rw2);
+-
+-static rwlock_t *ramdisk_lck_a[2];
+-
+ static char sdebug_proc_name[] = MY_NAME;
+ static const char *my_name = MY_NAME;
+ 
+@@ -6818,9 +6813,6 @@ static int __init scsi_debug_init(void)
+ 	int k, ret, hosts_to_add;
+ 	int idx = -1;
+ 
+-	ramdisk_lck_a[0] = &atomic_rw;
+-	ramdisk_lck_a[1] = &atomic_rw2;
+-
+ 	if (sdebug_ndelay >= 1000 * 1000 * 1000) {
+ 		pr_warn("ndelay must be less than 1 second, ignored\n");
+ 		sdebug_ndelay = 0;
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.3
+
