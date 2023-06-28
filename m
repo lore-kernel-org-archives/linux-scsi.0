@@ -2,378 +2,231 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A98EB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 08:22:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D40DEB64DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jun 2023 08:22:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234270AbjF1IWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jun 2023 04:22:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38988 "EHLO
+        id S234312AbjF1IWc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jun 2023 04:22:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234104AbjF1IOy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 04:14:54 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3CFE35B7
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2023 01:10:38 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b8171718a1so16362755ad.2
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2023 01:10:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1687939838; x=1690531838;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=5gbdY5u6jdN7FEDe1c0yeuMkNCytMkKjay9qzsY06q4=;
-        b=MD11Nfmln84OrQ6VVR7nmYz9v/pxve7L+ThM2ggb8HgDRr8y4amPLpviDwcQnZLh2w
-         MEFjSd9eola5bzOHpEGgHOypiRxk8JX8EWjUunM5oD8i9vTwprY4ei1zAyKDofChGEQ9
-         uAEfnV/yBz4i4jSLgoFRijy3LdN3COL+RqiRc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687939838; x=1690531838;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5gbdY5u6jdN7FEDe1c0yeuMkNCytMkKjay9qzsY06q4=;
-        b=k7VLg96P/JT0/NtoFRs0Mctc22mEw521qDVGY0KqPI7XmcO/6rFN8PcPZ4mqg2ICmB
-         I12uEHLmXTOTGrkZa+Dg9bCcP+/NZ2Pdb57b5o12IqD7U3Qyurn/YSsso++CgPkvll/i
-         OT6A02GzpEe5MSKECOzPNnuBAPt53zUFWJosUYkW1wfm60R2Cs8Z9Gk6TWgv6fwtRZJq
-         r1duRRVnvrmgX6xC4RzqKiSp2EvlBZEsHAXsU2HbK+nkhpiBkdgBsOc3fqoYFk0OzInt
-         kNiuxioGFVUE4QWjW3FPDfAsRt3D9BKyPSuQ7/8S7ZNMZexfib5rsWcNUNzQqu08fKGJ
-         ANIg==
-X-Gm-Message-State: AC+VfDwVyZFWcQ+BnxgzkmI2ix2V977Na3yCvShRIHvl/lUYNg4Lv8AN
-        qFImFaB3VketShtuzZUj6TefY+LaZaFMy4rbtXA11fMeEiZGME0LdInRFI8Rv7YJ6Twcg0yHDEA
-        UziU22w6RvLBcGpcuSlaUyOgdYkRXE0l6Ppbod7I3+e3Oe3wczAtHWpmFCBEdSdWJ5vcCZjdEVa
-        F+E4SsxMQZoQ==
-X-Google-Smtp-Source: ACHHUZ56lGmQzd+sH/aXCG8IYx1ePUiRRuXskOWQAznv3zfVKnmeqmlO4k530y6Fn9w9HKKEvagVlQ==
-X-Received: by 2002:a17:90a:7522:b0:25d:e321:c4e8 with SMTP id q31-20020a17090a752200b0025de321c4e8mr33103155pjk.41.1687935961128;
-        Wed, 28 Jun 2023 00:06:01 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id oj3-20020a17090b4d8300b0024e4f169931sm8964361pjb.2.2023.06.28.00.05.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Jun 2023 00:06:00 -0700 (PDT)
-From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
-To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Cc:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        Ranjan Kumar <ranjan.kumar@broadcom.com>,
-        stable@vger.kernel.org
-Subject: [PATCH 1/2] mpt3sas: Perform additional retries if Doorbell read returns 0
-Date:   Wed, 28 Jun 2023 12:35:10 +0530
-Message-Id: <20230628070511.27774-2-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230628070511.27774-1-ranjan.kumar@broadcom.com>
-References: <20230628070511.27774-1-ranjan.kumar@broadcom.com>
+        with ESMTP id S233700AbjF1IOR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2023 04:14:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C49535AD;
+        Wed, 28 Jun 2023 01:09:49 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9039561313;
+        Wed, 28 Jun 2023 06:51:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0FDC433C8;
+        Wed, 28 Jun 2023 06:51:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687935073;
+        bh=kFdGBo6KtB8a4oZ+cEW87+zyKqsMbfQQzmLbCpziW2A=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=kla7NE7DMvYZIgfUZ+N8bsXWQJ2Oc/m2Js4i+rQGT9fpYXdLy6GxXEjWJ+zIzAfkB
+         IHA+dC3ZfZvps7e9zAw2JenAv7FzJQqi6TTiQP+IPlyCk9pjlzjVkxKwaBs2gi95Mi
+         zhxGn8q/BBi+wc3/JQZFnI2kbIr5n3K4eA3PRb1Jv+VQoNSU58TFRzQiytkOMHJ/mn
+         TYxE7GsnKfzTSJUej8iljS/LmGmU4AH7oAyseW0nVEy4w/7QAbWGdJk8C8izw3yjMf
+         LRKpLT8rO1+Kh8X8mE1O6o3z2qIvgYp7o6n7YFu3bZ7v+4piec/JNxgOecHYdcQ+go
+         /rqZHDjb4CWIg==
+Message-ID: <365d5129-b65e-919a-3ceb-cc2ccf6b7a5a@kernel.org>
+Date:   Wed, 28 Jun 2023 15:51:09 +0900
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000078d7f105ff2c1e30"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH v13 4/9] fs, block: copy_file_range for def_blk_ops for
+ direct block device
+Content-Language: en-US
+To:     Nitesh Shetty <nj.shetty@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        willy@infradead.org, hare@suse.de, djwong@kernel.org,
+        bvanassche@acm.org, ming.lei@redhat.com, nitheshshetty@gmail.com,
+        gost.dev@samsung.com, Anuj Gupta <anuj20.g@samsung.com>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org
+References: <20230627183629.26571-1-nj.shetty@samsung.com>
+ <CGME20230627184029epcas5p49a29676fa6dff5f24ddfa5c64e525a51@epcas5p4.samsung.com>
+ <20230627183629.26571-5-nj.shetty@samsung.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230627183629.26571-5-nj.shetty@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000078d7f105ff2c1e30
-Content-Transfer-Encoding: 8bit
+On 6/28/23 03:36, Nitesh Shetty wrote:
+> For direct block device opened with O_DIRECT, use copy_file_range to
+> issue device copy offload, and fallback to generic_copy_file_range incase
+> device copy offload capability is absent.
 
-Doorbell and Host diagnostic registers could return 0 even
-after 3 retries and that leads to occasional resets of the
-controllers, hence increased the retry count to thirty.
+...if the device does not support copy offload or the device files are not open
+with O_DIRECT.
 
-Fixes: b899202901a8 ("mpt3sas: Add separate function for aero doorbell reads ")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 50 ++++++++++++++++-------------
- drivers/scsi/mpt3sas/mpt3sas_base.h |  4 ++-
- 2 files changed, 31 insertions(+), 23 deletions(-)
+No ?
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 53f5492579cb..44e7ccb6f780 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -201,20 +201,20 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
-  * while reading the system interface register.
-  */
- static inline u32
--_base_readl_aero(const volatile void __iomem *addr)
-+_base_readl_aero(const volatile void __iomem *addr, u8 retry_count)
- {
- 	u32 i = 0, ret_val;
- 
- 	do {
- 		ret_val = readl(addr);
- 		i++;
--	} while (ret_val == 0 && i < 3);
-+	} while (ret_val == 0 && i < retry_count);
- 
- 	return ret_val;
- }
- 
- static inline u32
--_base_readl(const volatile void __iomem *addr)
-+_base_readl(const volatile void __iomem *addr, u8 retry_count)
- {
- 	return readl(addr);
- }
-@@ -940,7 +940,7 @@ mpt3sas_halt_firmware(struct MPT3SAS_ADAPTER *ioc)
- 
- 	dump_stack();
- 
--	doorbell = ioc->base_readl(&ioc->chip->Doorbell);
-+	doorbell = ioc->base_readl(&ioc->chip->Doorbell, READL_RETRY_COUNT_OF_THIRTY);
- 	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
- 		mpt3sas_print_fault_code(ioc, doorbell &
- 		    MPI2_DOORBELL_DATA_MASK);
-@@ -1617,10 +1617,10 @@ mpt3sas_base_mask_interrupts(struct MPT3SAS_ADAPTER *ioc)
- 	u32 him_register;
- 
- 	ioc->mask_interrupts = 1;
--	him_register = ioc->base_readl(&ioc->chip->HostInterruptMask);
-+	him_register = ioc->base_readl(&ioc->chip->HostInterruptMask, READL_RETRY_COUNT_OF_THREE);
- 	him_register |= MPI2_HIM_DIM + MPI2_HIM_RIM + MPI2_HIM_RESET_IRQ_MASK;
- 	writel(him_register, &ioc->chip->HostInterruptMask);
--	ioc->base_readl(&ioc->chip->HostInterruptMask);
-+	ioc->base_readl(&ioc->chip->HostInterruptMask, READL_RETRY_COUNT_OF_THREE);
- }
- 
- /**
-@@ -1634,7 +1634,7 @@ mpt3sas_base_unmask_interrupts(struct MPT3SAS_ADAPTER *ioc)
- {
- 	u32 him_register;
- 
--	him_register = ioc->base_readl(&ioc->chip->HostInterruptMask);
-+	him_register = ioc->base_readl(&ioc->chip->HostInterruptMask, READL_RETRY_COUNT_OF_THREE);
- 	him_register &= ~MPI2_HIM_RIM;
- 	writel(him_register, &ioc->chip->HostInterruptMask);
- 	ioc->mask_interrupts = 0;
-@@ -6686,7 +6686,7 @@ mpt3sas_base_get_iocstate(struct MPT3SAS_ADAPTER *ioc, int cooked)
- {
- 	u32 s, sc;
- 
--	s = ioc->base_readl(&ioc->chip->Doorbell);
-+	s = ioc->base_readl(&ioc->chip->Doorbell, READL_RETRY_COUNT_OF_THIRTY);
- 	sc = s & MPI2_IOC_STATE_MASK;
- 	return cooked ? sc : s;
- }
-@@ -6760,7 +6760,8 @@ _base_wait_for_doorbell_int(struct MPT3SAS_ADAPTER *ioc, int timeout)
- 	count = 0;
- 	cntdn = 1000 * timeout;
- 	do {
--		int_status = ioc->base_readl(&ioc->chip->HostInterruptStatus);
-+		int_status = ioc->base_readl(&ioc->chip->HostInterruptStatus,
-+							READL_RETRY_COUNT_OF_THREE);
- 		if (int_status & MPI2_HIS_IOC2SYS_DB_STATUS) {
- 			dhsprintk(ioc,
- 				  ioc_info(ioc, "%s: successful count(%d), timeout(%d)\n",
-@@ -6786,7 +6787,8 @@ _base_spin_on_doorbell_int(struct MPT3SAS_ADAPTER *ioc, int timeout)
- 	count = 0;
- 	cntdn = 2000 * timeout;
- 	do {
--		int_status = ioc->base_readl(&ioc->chip->HostInterruptStatus);
-+		int_status = ioc->base_readl(&ioc->chip->HostInterruptStatus,
-+							READL_RETRY_COUNT_OF_THREE);
- 		if (int_status & MPI2_HIS_IOC2SYS_DB_STATUS) {
- 			dhsprintk(ioc,
- 				  ioc_info(ioc, "%s: successful count(%d), timeout(%d)\n",
-@@ -6824,14 +6826,16 @@ _base_wait_for_doorbell_ack(struct MPT3SAS_ADAPTER *ioc, int timeout)
- 	count = 0;
- 	cntdn = 1000 * timeout;
- 	do {
--		int_status = ioc->base_readl(&ioc->chip->HostInterruptStatus);
-+		int_status = ioc->base_readl(&ioc->chip->HostInterruptStatus,
-+							READL_RETRY_COUNT_OF_THREE);
- 		if (!(int_status & MPI2_HIS_SYS2IOC_DB_STATUS)) {
- 			dhsprintk(ioc,
- 				  ioc_info(ioc, "%s: successful count(%d), timeout(%d)\n",
- 					   __func__, count, timeout));
- 			return 0;
- 		} else if (int_status & MPI2_HIS_IOC2SYS_DB_STATUS) {
--			doorbell = ioc->base_readl(&ioc->chip->Doorbell);
-+			doorbell = ioc->base_readl(&ioc->chip->Doorbell,
-+							READL_RETRY_COUNT_OF_THIRTY);
- 			if ((doorbell & MPI2_IOC_STATE_MASK) ==
- 			    MPI2_IOC_STATE_FAULT) {
- 				mpt3sas_print_fault_code(ioc, doorbell);
-@@ -6871,7 +6875,7 @@ _base_wait_for_doorbell_not_used(struct MPT3SAS_ADAPTER *ioc, int timeout)
- 	count = 0;
- 	cntdn = 1000 * timeout;
- 	do {
--		doorbell_reg = ioc->base_readl(&ioc->chip->Doorbell);
-+		doorbell_reg = ioc->base_readl(&ioc->chip->Doorbell, READL_RETRY_COUNT_OF_THIRTY);
- 		if (!(doorbell_reg & MPI2_DOORBELL_USED)) {
- 			dhsprintk(ioc,
- 				  ioc_info(ioc, "%s: successful count(%d), timeout(%d)\n",
-@@ -7019,13 +7023,13 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
- 	__le32 *mfp;
- 
- 	/* make sure doorbell is not in use */
--	if ((ioc->base_readl(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
-+	if ((ioc->base_readl(&ioc->chip->Doorbell, READL_RETRY_COUNT_OF_THIRTY) & MPI2_DOORBELL_USED)) {
- 		ioc_err(ioc, "doorbell is in use (line=%d)\n", __LINE__);
- 		return -EFAULT;
- 	}
- 
- 	/* clear pending doorbell interrupts from previous state changes */
--	if (ioc->base_readl(&ioc->chip->HostInterruptStatus) &
-+	if (ioc->base_readl(&ioc->chip->HostInterruptStatus, READL_RETRY_COUNT_OF_THREE) &
- 	    MPI2_HIS_IOC2SYS_DB_STATUS)
- 		writel(0, &ioc->chip->HostInterruptStatus);
- 
-@@ -7068,7 +7072,7 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
- 	}
- 
- 	/* read the first two 16-bits, it gives the total length of the reply */
--	reply[0] = le16_to_cpu(ioc->base_readl(&ioc->chip->Doorbell)
-+	reply[0] = le16_to_cpu(ioc->base_readl(&ioc->chip->Doorbell, READL_RETRY_COUNT_OF_THIRTY)
- 	    & MPI2_DOORBELL_DATA_MASK);
- 	writel(0, &ioc->chip->HostInterruptStatus);
- 	if ((_base_wait_for_doorbell_int(ioc, 5))) {
-@@ -7076,7 +7080,7 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
- 			__LINE__);
- 		return -EFAULT;
- 	}
--	reply[1] = le16_to_cpu(ioc->base_readl(&ioc->chip->Doorbell)
-+	reply[1] = le16_to_cpu(ioc->base_readl(&ioc->chip->Doorbell, READL_RETRY_COUNT_OF_THIRTY)
- 	    & MPI2_DOORBELL_DATA_MASK);
- 	writel(0, &ioc->chip->HostInterruptStatus);
- 
-@@ -7087,10 +7091,10 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
- 			return -EFAULT;
- 		}
- 		if (i >=  reply_bytes/2) /* overflow case */
--			ioc->base_readl(&ioc->chip->Doorbell);
-+			ioc->base_readl(&ioc->chip->Doorbell, READL_RETRY_COUNT_OF_THIRTY);
- 		else
- 			reply[i] = le16_to_cpu(
--			    ioc->base_readl(&ioc->chip->Doorbell)
-+			    ioc->base_readl(&ioc->chip->Doorbell, READL_RETRY_COUNT_OF_THIRTY)
- 			    & MPI2_DOORBELL_DATA_MASK);
- 		writel(0, &ioc->chip->HostInterruptStatus);
- 	}
-@@ -7949,14 +7953,15 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
- 			goto out;
- 		}
- 
--		host_diagnostic = ioc->base_readl(&ioc->chip->HostDiagnostic);
-+		host_diagnostic = ioc->base_readl(&ioc->chip->HostDiagnostic,
-+								READL_RETRY_COUNT_OF_THIRTY);
- 		drsprintk(ioc,
- 			  ioc_info(ioc, "wrote magic sequence: count(%d), host_diagnostic(0x%08x)\n",
- 				   count, host_diagnostic));
- 
- 	} while ((host_diagnostic & MPI2_DIAG_DIAG_WRITE_ENABLE) == 0);
- 
--	hcb_size = ioc->base_readl(&ioc->chip->HCBSize);
-+	hcb_size = ioc->base_readl(&ioc->chip->HCBSize, READL_RETRY_COUNT_OF_THREE);
- 
- 	drsprintk(ioc, ioc_info(ioc, "diag reset: issued\n"));
- 	writel(host_diagnostic | MPI2_DIAG_RESET_ADAPTER,
-@@ -7969,7 +7974,8 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
- 	for (count = 0; count < (300000000 /
- 		MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC); count++) {
- 
--		host_diagnostic = ioc->base_readl(&ioc->chip->HostDiagnostic);
-+		host_diagnostic = ioc->base_readl(&ioc->chip->HostDiagnostic,
-+								READL_RETRY_COUNT_OF_THIRTY);
- 
- 		if (host_diagnostic == 0xFFFFFFFF) {
- 			ioc_info(ioc,
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 05364aa15ecd..3b8ec4fd2d21 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -160,6 +160,8 @@
- 
- #define IOC_OPERATIONAL_WAIT_COUNT	10
- 
-+#define READL_RETRY_COUNT_OF_THIRTY	30
-+#define READL_RETRY_COUNT_OF_THREE	3
- /*
-  * NVMe defines
-  */
-@@ -994,7 +996,7 @@ typedef void (*NVME_BUILD_PRP)(struct MPT3SAS_ADAPTER *ioc, u16 smid,
- typedef void (*PUT_SMID_IO_FP_HIP) (struct MPT3SAS_ADAPTER *ioc, u16 smid,
- 	u16 funcdep);
- typedef void (*PUT_SMID_DEFAULT) (struct MPT3SAS_ADAPTER *ioc, u16 smid);
--typedef u32 (*BASE_READ_REG) (const volatile void __iomem *addr);
-+typedef u32 (*BASE_READ_REG) (const volatile void __iomem *addr, u8 retry_count);
- /*
-  * To get high iops reply queue's msix index when high iops mode is enabled
-  * else get the msix index of general reply queues.
+> Modify checks to allow bdevs to use copy_file_range.
+> 
+> Suggested-by: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> ---
+>  block/blk-lib.c        | 26 ++++++++++++++++++++++++++
+>  block/fops.c           | 20 ++++++++++++++++++++
+>  fs/read_write.c        |  7 +++++--
+>  include/linux/blkdev.h |  4 ++++
+>  4 files changed, 55 insertions(+), 2 deletions(-)
+> 
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index 09e0d5d51d03..7d8e09a99254 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -473,6 +473,32 @@ ssize_t blkdev_copy_offload(
+>  }
+>  EXPORT_SYMBOL_GPL(blkdev_copy_offload);
+>  
+> +/* Copy source offset from source block device to destination block
+> + * device. Returns the length of bytes copied.
+> + */
+
+Multi-line comment style: start with a "/*" line please.
+
+> +ssize_t blkdev_copy_offload_failfast(
+
+What is the "failfast" in the name for ?
+
+> +		struct block_device *bdev_in, loff_t pos_in,
+> +		struct block_device *bdev_out, loff_t pos_out,
+> +		size_t len, gfp_t gfp_mask)
+> +{
+> +	struct request_queue *in_q = bdev_get_queue(bdev_in);
+> +	struct request_queue *out_q = bdev_get_queue(bdev_out);
+> +	ssize_t ret = 0;
+
+You do not need this initialization.
+
+> +
+> +	if (blkdev_copy_sanity_check(bdev_in, pos_in, bdev_out, pos_out, len))
+> +		return 0;
+> +
+> +	if (blk_queue_copy(in_q) && blk_queue_copy(out_q)) {
+
+Given that I think we do not allow copies between different devices, in_q and
+out_q should always be the same, no ?
+
+> +		ret = __blkdev_copy_offload(bdev_in, pos_in, bdev_out, pos_out,
+> +				len, NULL, NULL, gfp_mask);
+
+Same here. Why pass 2 bdevs if we only allow copies within the same device ?
+
+> +		if (ret < 0)
+> +			return 0;
+> +	}
+> +
+> +	return ret;
+
+return 0;
+
+> +}
+> +EXPORT_SYMBOL_GPL(blkdev_copy_offload_failfast);
+> +
+>  static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+>  		sector_t sector, sector_t nr_sects, gfp_t gfp_mask,
+>  		struct bio **biop, unsigned flags)
+> diff --git a/block/fops.c b/block/fops.c
+> index a286bf3325c5..a1576304f269 100644
+> --- a/block/fops.c
+> +++ b/block/fops.c
+> @@ -621,6 +621,25 @@ static ssize_t blkdev_read_iter(struct kiocb *iocb, struct iov_iter *to)
+>  	return ret;
+>  }
+>  
+> +static ssize_t blkdev_copy_file_range(struct file *file_in, loff_t pos_in,
+> +				struct file *file_out, loff_t pos_out,
+> +				size_t len, unsigned int flags)
+> +{
+> +	struct block_device *in_bdev = I_BDEV(bdev_file_inode(file_in));
+> +	struct block_device *out_bdev = I_BDEV(bdev_file_inode(file_out));
+> +	ssize_t comp_len = 0;
+> +
+> +	if ((file_in->f_iocb_flags & IOCB_DIRECT) &&
+> +		(file_out->f_iocb_flags & IOCB_DIRECT))
+> +		comp_len = blkdev_copy_offload_failfast(in_bdev, pos_in,
+> +				out_bdev, pos_out, len, GFP_KERNEL);
+> +	if (comp_len != len)
+> +		comp_len = generic_copy_file_range(file_in, pos_in + comp_len,
+> +			file_out, pos_out + comp_len, len - comp_len, flags);
+> +
+> +	return comp_len;
+> +}
+> +
+>  #define	BLKDEV_FALLOC_FL_SUPPORTED					\
+>  		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
+>  		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_NO_HIDE_STALE)
+> @@ -714,6 +733,7 @@ const struct file_operations def_blk_fops = {
+>  	.splice_read	= filemap_splice_read,
+>  	.splice_write	= iter_file_splice_write,
+>  	.fallocate	= blkdev_fallocate,
+> +	.copy_file_range = blkdev_copy_file_range,
+>  };
+>  
+>  static __init int blkdev_init(void)
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index b07de77ef126..d27148a2543f 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1447,7 +1447,8 @@ static int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+>  		return -EOVERFLOW;
+>  
+>  	/* Shorten the copy to EOF */
+> -	size_in = i_size_read(inode_in);
+> +	size_in = i_size_read(file_in->f_mapping->host);
+> +
+>  	if (pos_in >= size_in)
+>  		count = 0;
+>  	else
+> @@ -1708,7 +1709,9 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
+>  	/* Don't copy dirs, pipes, sockets... */
+>  	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+>  		return -EISDIR;
+> -	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+> +
+> +	if ((!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode)) &&
+> +		(!S_ISBLK(inode_in->i_mode) || !S_ISBLK(inode_out->i_mode)))
+>  		return -EINVAL;
+>  
+>  	if (!(file_in->f_mode & FMODE_READ) ||
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index c176bf6173c5..850168cad080 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1047,6 +1047,10 @@ ssize_t blkdev_copy_offload(
+>  		struct block_device *bdev_in, loff_t pos_in,
+>  		struct block_device *bdev_out, loff_t pos_out,
+>  		size_t len, cio_iodone_t end_io, void *private, gfp_t gfp_mask);
+> +ssize_t blkdev_copy_offload_failfast(
+> +		struct block_device *bdev_in, loff_t pos_in,
+> +		struct block_device *bdev_out, loff_t pos_out,
+> +		size_t len, gfp_t gfp_mask);
+>  struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
+>  		gfp_t gfp_mask);
+>  void bio_map_kern_endio(struct bio *bio);
+
 -- 
-2.31.1
+Damien Le Moal
+Western Digital Research
 
-
---00000000000078d7f105ff2c1e30
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIIQbQYJKoZIhvcNAQcCoIIQXjCCEFoCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg3EMIIFDTCCA/WgAwIBAgIQeEqpED+lv77edQixNJMdADANBgkqhkiG9w0BAQsFADBMMSAwHgYD
-VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
-AxMKR2xvYmFsU2lnbjAeFw0yMDA5MTYwMDAwMDBaFw0yODA5MTYwMDAwMDBaMFsxCzAJBgNVBAYT
-AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBS
-MyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
-vbCmXCcsbZ/a0fRIQMBxp4gJnnyeneFYpEtNydrZZ+GeKSMdHiDgXD1UnRSIudKo+moQ6YlCOu4t
-rVWO/EiXfYnK7zeop26ry1RpKtogB7/O115zultAz64ydQYLe+a1e/czkALg3sgTcOOcFZTXk38e
-aqsXsipoX1vsNurqPtnC27TWsA7pk4uKXscFjkeUE8JZu9BDKaswZygxBOPBQBwrA5+20Wxlk6k1
-e6EKaaNaNZUy30q3ArEf30ZDpXyfCtiXnupjSK8WU2cK4qsEtj09JS4+mhi0CTCrCnXAzum3tgcH
-cHRg0prcSzzEUDQWoFxyuqwiwhHu3sPQNmFOMwIDAQABo4IB2jCCAdYwDgYDVR0PAQH/BAQDAgGG
-MGAGA1UdJQRZMFcGCCsGAQUFBwMCBggrBgEFBQcDBAYKKwYBBAGCNxQCAgYKKwYBBAGCNwoDBAYJ
-KwYBBAGCNxUGBgorBgEEAYI3CgMMBggrBgEFBQcDBwYIKwYBBQUHAxEwEgYDVR0TAQH/BAgwBgEB
-/wIBADAdBgNVHQ4EFgQUljPR5lgXWzR1ioFWZNW+SN6hj88wHwYDVR0jBBgwFoAUj/BLf6guRSSu
-TVD6Y5qL3uLdG7wwegYIKwYBBQUHAQEEbjBsMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcC5nbG9i
-YWxzaWduLmNvbS9yb290cjMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5j
-b20vY2FjZXJ0L3Jvb3QtcjMuY3J0MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuZ2xvYmFs
-c2lnbi5jb20vcm9vdC1yMy5jcmwwWgYDVR0gBFMwUTALBgkrBgEEAaAyASgwQgYKKwYBBAGgMgEo
-CjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAN
-BgkqhkiG9w0BAQsFAAOCAQEAdAXk/XCnDeAOd9nNEUvWPxblOQ/5o/q6OIeTYvoEvUUi2qHUOtbf
-jBGdTptFsXXe4RgjVF9b6DuizgYfy+cILmvi5hfk3Iq8MAZsgtW+A/otQsJvK2wRatLE61RbzkX8
-9/OXEZ1zT7t/q2RiJqzpvV8NChxIj+P7WTtepPm9AIj0Keue+gS2qvzAZAY34ZZeRHgA7g5O4TPJ
-/oTd+4rgiU++wLDlcZYd/slFkaT3xg4qWDepEMjT4T1qFOQIL+ijUArYS4owpPg9NISTKa1qqKWJ
-jFoyms0d0GwOniIIbBvhI2MJ7BSY9MYtWVT5jJO3tsVHwj4cp92CSFuGwunFMzCCA18wggJHoAMC
-AQICCwQAAAAAASFYUwiiMA0GCSqGSIb3DQEBCwUAMEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9v
-dCBDQSAtIFIzMRMwEQYDVQQKEwpHbG9iYWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTA5
-MDMxODEwMDAwMFoXDTI5MDMxODEwMDAwMFowTDEgMB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENB
-IC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkdsb2JhbFNpZ24wggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJXaQeQZ4Ihb1wIO2hMoonv0FdhHFrYhy/EYCQ8eyip0E
-XyTLLkvhYIJG4VKrDIFHcGzdZNHr9SyjD4I9DCuul9e2FIYQebs7E4B3jAjhSdJqYi8fXvqWaN+J
-J5U4nwbXPsnLJlkNc96wyOkmDoMVxu9bi9IEYMpJpij2aTv2y8gokeWdimFXN6x0FNx04Druci8u
-nPvQu7/1PQDhBjPogiuuU6Y6FnOM3UEOIDrAtKeh6bJPkC4yYOlXy7kEkmho5TgmYHWyn3f/kRTv
-riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
-QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
-UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
-M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
-Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
-14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
-a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
-XzCCBUwwggQ0oAMCAQICDExX4+q15YXlYbDuOzANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
-RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
-UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMjExMTQxMjAzMThaFw0yNTExMTQxMjAzMThaMIGO
-MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
-BgNVBAoTDUJyb2FkY29tIEluYy4xFTATBgNVBAMTDFJhbmphbiBLdW1hcjEoMCYGCSqGSIb3DQEJ
-ARYZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBAOgccBnKTcRY5ViAG6iAGKWZ8pjYBaC0yPSOnu903VijdPFPnRdvshVcVxr6QvmlBCzKJaet
-zZlOdDzH9Sh5FfHxwia1H790mce+cjggA6koNdslP25m4SfoAUcvLxNk1koVjbyxvNPG40Mlg8f8
-Dp9JubCHz3kEFHjItKFkpS8CHMR1Hx4Cnws434zD/pz1TMUmYyq1kma0Vi8YPVlwkaHgq4J/9Lw/
-GK2Ee6ez7fr/FL1RWbOPVHJR+deNIorOjW7U5HVwnRYhM1OR4mAkrkqcN+3kwae0KmVO3SDKFd7h
-Ok4L2e1ixyaRTo379Ur3iVTnagglDOliayMGRITBPe0CAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
-AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
-c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
-AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
-TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
-bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
-L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
-BB0wG4EZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
-HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU8WuEiYXvpeCaubgLCCFoyRBc
-8QwwDQYJKoZIhvcNAQELBQADggEBAA5th3yz1fvJCBmK21x68IdDNFC0gmynT76I3fOgslLHc7ey
-lC9VXLb+vJ863blS/WxEOwf0fvc0ks7qYWl8xisInHu5AX9glaooGhLImlzE0l9rDf0tcq2kkgc4
-CXL9UGDEoqdxfRj3j9xn9fm9gpTBWSck6ufc/8RV1TLVjcZvrYkMqQwoVulGkr+HCnzaEFxBRmO/
-nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
-0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
-aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
-EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOv/cC3Cld4qn0magTdTUVjFGARTTIgk
-VRgCh11eB3xCMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDYy
-ODA4MTAzOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
-SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQDj3+HmZ1f3O4lFHBEio91nKI+JtH8PZMOm/dY8sU7y9ogwV2Yv
-J3dsVSRv5LxJoECg8OasFhaTcQ4GnLXvBfqADvXlxJiBwd8Tq4dmCPjD6i+X+wQ+wKBclVjmIL4w
-1bVCuktGdXQb5lTpJ00By1l0mveRnVvnh1c6DzXwFnhNulBoDabcfbXUI9ClAsW3uc5oVpl3Oktr
-pEbrpmkcQWgOiVhVR2bilc9osVdNuqY88DZ4d/AmjU5Ma05q92w1jOkF7Wm2BOEW6F4zf1aPuCAt
-xl6/rRJn6bL+BdkzAGjIR7JpnGgse9VfHWa2W2PtufuAn2ghxs2mARXxYOUZGWwg
---00000000000078d7f105ff2c1e30--
