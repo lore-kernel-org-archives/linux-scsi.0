@@ -2,97 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B8D5EB64D9
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Jun 2023 08:41:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 608BDEB64D9
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Jun 2023 11:06:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232012AbjF2Iln (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Jun 2023 04:41:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52148 "EHLO
+        id S232037AbjF2LGL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Jun 2023 07:06:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232086AbjF2Ikx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2023 04:40:53 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7C215596
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Jun 2023 01:34:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1688027651;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=lcFzJ0h/r4o640kKx9oD5oKaAf0iz+R8cp1bGbk+mhI=;
-        b=ZKm6mGzR3qLZKM5SAtXZOCl4UTsKeUO/g//j7/SNUn1AgxOWi6vquoRqCh+D2OX2tenMTX
-        OHCLd5BFxrlqkIaAXExAKwHwQstgAwZ9A1ZGD3qM4LX+DbDNTriAnH0VUrlgjw/7W+jXxk
-        fyKSidMWa+LnYO++BlLkH8G21IZgE/4=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-483-P89DQgOTMauKEphGgInR0w-1; Thu, 29 Jun 2023 04:34:04 -0400
-X-MC-Unique: P89DQgOTMauKEphGgInR0w-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S230181AbjF2LGK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2023 07:06:10 -0400
+Received: from gw.rozsnyo.com (gw.rozsnyo.com [77.240.102.234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AF331719
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jun 2023 04:06:07 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by gw.rozsnyo.com (Postfix) with ESMTP id AD13710372C9;
+        Thu, 29 Jun 2023 13:06:05 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at rozsnyo.com
+Received: from gw.rozsnyo.com ([127.0.0.1])
+        by localhost (hosting.rozsnyo.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id PpvC9clL_hRg; Thu, 29 Jun 2023 13:06:05 +0200 (CEST)
+Received: from [192.168.68.7] (gw.rozsnyo.com [77.240.102.234])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id BF498104458F;
-        Thu, 29 Jun 2023 08:34:02 +0000 (UTC)
-Received: from ovpn-8-26.pek2.redhat.com (ovpn-8-26.pek2.redhat.com [10.72.8.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2F8C5492C13;
-        Thu, 29 Jun 2023 08:33:32 +0000 (UTC)
-Date:   Thu, 29 Jun 2023 16:33:26 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Nitesh Shetty <nj.shetty@samsung.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        willy@infradead.org, hare@suse.de, djwong@kernel.org,
-        bvanassche@acm.org, dlemoal@kernel.org, nitheshshetty@gmail.com,
-        gost.dev@samsung.com, Vincent Fu <vincent.fu@samsung.com>,
-        Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        ming.lei@redhat.com
-Subject: Re: [PATCH v13 3/9] block: add emulation for copy
-Message-ID: <ZJ1B1k0KifZrGRIp@ovpn-8-26.pek2.redhat.com>
-References: <20230627183629.26571-1-nj.shetty@samsung.com>
- <CGME20230627184020epcas5p13fdcea52edead5ffa3fae444f923439e@epcas5p1.samsung.com>
- <20230627183629.26571-4-nj.shetty@samsung.com>
+        by gw.rozsnyo.com (Postfix) with ESMTPSA id BC84D10372B9;
+        Thu, 29 Jun 2023 13:06:04 +0200 (CEST)
+Message-ID: <2a953b57-52b5-d75a-3b6e-9ef5a10b2093@rozsnyo.com>
+Date:   Thu, 29 Jun 2023 13:06:03 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230627183629.26571-4-nj.shetty@samsung.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [RFC] Support for Write-and-Verify only drives
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <c6499ed7-d049-5714-f827-734cff3f6305@rozsnyo.com>
+ <eca63b83-1cf4-40ac-114d-f23acc7cadea@acm.org>
+ <97f19b02-045a-825c-6a30-18fc3dcb35cd@rozsnyo.com>
+ <f6e5e9d2-3446-ef52-a090-4eef1bd2daa3@kernel.org>
+From:   =?UTF-8?Q?Daniel_Rozsny=c3=b3?= <daniel@rozsnyo.com>
+In-Reply-To: <f6e5e9d2-3446-ef52-a090-4eef1bd2daa3@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Nitesh,
 
-On Wed, Jun 28, 2023 at 12:06:17AM +0530, Nitesh Shetty wrote:
-> For the devices which does not support copy, copy emulation is added.
-> It is required for in-kernel users like fabrics, where file descriptor is
-
-I can understand copy command does help for FS GC and fabrics storages,
-but still not very clear why copy emulation is needed for kernel users,
-is it just for covering both copy command and emulation in single
-interface? Or other purposes?
-
-I'd suggest to add more words about in-kernel users of copy emulation.
-
-> not available and hence they can't use copy_file_range.
-> Copy-emulation is implemented by reading from source into memory and
-> writing to the corresponding destination asynchronously.
-> Also emulation is used, if copy offload fails or partially completes.
-
-Per my understanding, this kind of emulation may not be as efficient
-as doing it in userspace(two linked io_uring SQEs, read & write with
-shared buffer). But it is fine if there are real in-kernel such users.
+>> Lets get back to the original request/question then. What is the proper
+>> approach to handle such command variation?
+> When scanning the drive, you need to poke it using scsi_report_opcode() to
+> determine which write operation is supported. Then sd.c need to be modified to
+> generate the proper write command if the regular WRITE 10/16/32 are not
+> supported. You will also need to make sure that this does not break ATA drives
+> managed with libata, so check libata-scsi translation.
+>
+> Not saying this can all be accepted though. But that is what is needed.
 
 
-Thanks,
-Ming
+Thanks Damien.
+
+I went to check the opcode support and it says that Write is supported.
+
+The actual Write execution then fails with "Aborted Command".
+
+It is not making my life easier and the correct way is not going to work.
+
+Then I had a very long and unhelpful discussion on Seagate support chat where
+they failed to recognize this combination as a potential bug and a broken
+firmware.
+
+I just can not understand they wont accept a bug-report on a custom firmware,
+having done all the discoveries for them. Looks like they did not put much of
+effort into this and the firmware is a quick hack to get the job done for OEM.
+
+Given the current state of things and thanks to Martin's opinion to not bring
+this mess and edge case code into mainline as of now, I will consider getting
+these drives to work as a private challenge. If somebody else runs into this,
+they will find at least this thread, where the code may appear after I find it
+stable enough.
+
+Daniel
 
