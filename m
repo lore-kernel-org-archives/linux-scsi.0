@@ -2,104 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EDB6EB64DD
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jun 2023 02:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB59EB64DD
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jun 2023 08:39:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231903AbjF3CsI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Jun 2023 22:48:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33678 "EHLO
+        id S232594AbjF3Ijk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Jun 2023 04:39:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230407AbjF3CsH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2023 22:48:07 -0400
-Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA4C535A7;
-        Thu, 29 Jun 2023 19:48:05 -0700 (PDT)
-Received: by mail-qk1-x72c.google.com with SMTP id af79cd13be357-76714caf466so126204685a.1;
-        Thu, 29 Jun 2023 19:48:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1688093285; x=1690685285;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=a4ALnKxby19PRdzxTmTKNTGCytmjoLEZ1P5o67YM3y8=;
-        b=XESjJS/WYUlwketPbHggw2mNZxEWqPMfUwldLsyUQzFIV4/AwstgqxiKth5pyXNlUw
-         qAi33o9dYXWUI4MXFd3itlIi8TUrwd9S0AQzdyZrOpNXZPKP9l5eNcj4i3hi/o78KrBX
-         KkK0G2ERgpK9MJaSg1FOlc/CTDGfteUVvFbR8oSjT0vJ3A7zdXttnNIHkM1vFmmR+oPW
-         vEyzkWWVYpca86QuOLGHv6txTw4q38dsRAm/obAqnGMtELIjCSRn4BJ6j2p5v89CO9+1
-         lBtCpi49x/ULmTtyNxdTs+Ogi6mAu4OzMwkz4F0/g4tMM6j8FFK0xGVhsaonDcbl+OJW
-         TA7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688093285; x=1690685285;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=a4ALnKxby19PRdzxTmTKNTGCytmjoLEZ1P5o67YM3y8=;
-        b=YTexsgWxkkBm7HzuuZq0J65kzHYLnNLF+mtnQ604amxn8s+twhg5N04MEV4LuwFBJY
-         yWChPIS8dJbKUTPEMp8xDtAJs5RRPn3hsKzfM5WwGWDVLW/Cms+vtCy4y5eNRDHhJ7gu
-         KVqc04bUny3UEn6eRhLpOdxWio4HAFVVMPcEyZPLlx4NNOj5ghM8EWW28NXzsUYDq/DU
-         Wd3feLbxyvAMIY3k7S9N+DSIwyOv0yEgRPvPwHVkxuh5VUxg2ob0w3TgFgxmYYfGyYWj
-         vbuhDByUm6SvTJLSS3IrElBSli0aqNcBOOdVCHBOmb5/AN/DpWHlMx8g7YqFLzcCzDR0
-         Yv9A==
-X-Gm-Message-State: AC+VfDylsbKClfpjJYI5IGJvh1V1zwDuu6sP7PgW/zpHdbpI8pPk+YGz
-        REECMWGTGYmMCkPBidRyf4k=
-X-Google-Smtp-Source: ACHHUZ7s7kalGiaALcvNXMQ8bFkk+F3F/a0hjtQhSfESqAy5yobugXLHDaNSPLiYa/X6zpKF/Sdw1Q==
-X-Received: by 2002:a05:620a:424d:b0:765:8204:dd64 with SMTP id w13-20020a05620a424d00b007658204dd64mr1522149qko.7.1688093284787;
-        Thu, 29 Jun 2023 19:48:04 -0700 (PDT)
-Received: from oslab-pc.tsinghua.edu.cn ([166.111.139.122])
-        by smtp.gmail.com with ESMTPSA id p5-20020a63c145000000b00519c3475f21sm9600224pgi.46.2023.06.29.19.48.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Jun 2023 19:48:04 -0700 (PDT)
-From:   Tuo Li <islituo@gmail.com>
-To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        baijiaju1990@outlook.com, Tuo Li <islituo@gmail.com>,
-        BassCheck <bass@buaa.edu.cn>
-Subject: [PATCH] scsi: lpfc: Fix a possible data race in lpfc_unregister_fcf_rescan()
-Date:   Fri, 30 Jun 2023 10:47:48 +0800
-Message-Id: <20230630024748.1035993-1-islituo@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S229459AbjF3Ijj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jun 2023 04:39:39 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F7F11BDB;
+        Fri, 30 Jun 2023 01:39:38 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A5349616F7;
+        Fri, 30 Jun 2023 08:39:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35A78C433C8;
+        Fri, 30 Jun 2023 08:39:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1688114377;
+        bh=Rc6sCD5uTdJFBlUMasF2QuJU2L8t22jN/jo1b9z3E+A=;
+        h=From:To:Subject:Date:From;
+        b=CQbEzPnfqFQwdVFvIKB82JazqyQtAa6LHu/kcp3zZGiaF33rp46ld0AkrIs4JJHm3
+         zfZ6PXPT0NPs3DzU45D99PBqL6diPzLsEX4N9wUkm+VNGMIuBZiwtAZPgEzhUZqIKJ
+         JqlH3onQ47ZqrOJurNM9fEfy5xpKg3ItYhmKUVOai8vPqqU5caczw3FmP5T0OCNoq4
+         5c7lKIdok6KRwHKE9b3QsxoCjA/RVimpQSbn2+4XUhVRRmMj1X/Sb/tJbEwiGrUVDH
+         9viD4rkLjBte8jLz9ar4G9ndhkf2gxS6IEuzPl4dWPIwdhbxFPf1nacdWWfWL6SZ2U
+         Sl/3Pu5Xu5DmA==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-nvme@lists.infradead.org, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <kbusch@kernel.org>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH v2 0/5] Improve checks in blk_revalidate_disk_zones()
+Date:   Fri, 30 Jun 2023 17:39:30 +0900
+Message-ID: <20230630083935.433334-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The variable phba->fcf.fcf_flag is often protected by the lock 
-phba->hbalock() when is accessed. Here is an example in 
-lpfc_unregister_fcf_rescan():
+blk_revalidate_disk_zones() implements checks of the zones of a zoned
+block device, verifying that the zone size is a power of 2 number of
+sectors, that all zones (except possibly the last one) have the same
+size and that zones cover the entire addressing space of the device.
 
-  spin_lock_irq(&phba->hbalock);
-  phba->fcf.fcf_flag |= FCF_INIT_DISC;
-  spin_unlock_irq(&phba->hbalock);
+While these checks are appropriate to verify that well tested hardware
+devices have an adequate zone configurations, they lack in certain areas
+which may result in issues with potentially buggy emulated devices
+implemented with user drivers such as ublk or tcmu. Specifically, this
+function does not check if the device driver indicated support for the
+mandatory zone append writes, that is, if the device
+max_zone_append_sectors queue limit is set to a non-zero value.
+Additionally, invalid zones such as a zero length zone with a start
+sector equal to the device capacity will not be detected and result in
+out of bounds use of the zone bitmaps prepared with the callback
+function blk_revalidate_zone_cb().
 
-However, in the same function, phba->fcf.fcf_flag is assigned with 0 
-without holding the lock, and thus can cause a data race:
+This series address these issues by modifying the 4 block device drivers
+that currently support zoned block devices to ensure that they all set a
+zoned device zone size and max zone append sectors limit before
+executing blk_revalidate_disk_zones(). With these changes in place, 
+patch 5 improves blk_revalidate_disk_zones() to address the missing
+checks, relying on the fact that the zone size and zone append limit are
+normally set when this function is called.
 
-  phba->fcf.fcf_flag = 0;
+Changes from v1:
+ - Updated this cover letter and commit messages to include better
+   explain for these patches
+ - Reworked patch 5 to simplify the checks
+  
+Damien Le Moal (5):
+  scsi: sd_zbc: Set zone limits before revalidating zones
+  nvme: zns: Set zone limits before revalidating zones
+  block: nullblk: Set zone limits before revalidating zones
+  block: virtio_blk: Set zone limits before revalidating zones
+  block: improve checks in blk_revalidate_disk_zones()
 
-To fix this possible data race, a lock and unlock pair is added when 
-accessing the variable phba->fcf.fcf_flag.
+ block/blk-zoned.c              | 86 ++++++++++++++++++++--------------
+ drivers/block/null_blk/zoned.c | 16 ++-----
+ drivers/block/virtio_blk.c     | 34 ++++++--------
+ drivers/nvme/host/zns.c        |  9 ++--
+ drivers/scsi/sd_zbc.c          | 12 ++---
+ 5 files changed, 79 insertions(+), 78 deletions(-)
 
-Reported-by: BassCheck <bass@buaa.edu.cn>
-Signed-off-by: Tuo Li <islituo@gmail.com>
----
- drivers/scsi/lpfc/lpfc_hbadisc.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 5ba3a9ad9501..9d2feb69cae7 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -6961,7 +6961,9 @@ lpfc_unregister_fcf_rescan(struct lpfc_hba *phba)
- 	if (rc)
- 		return;
- 	/* Reset HBA FCF states after successful unregister FCF */
-+	spin_lock_irq(&phba->hbalock);
- 	phba->fcf.fcf_flag = 0;
-+	spin_unlock_irq(&phba->hbalock);
- 	phba->fcf.current_rec.flag = 0;
- 
- 	/*
 -- 
-2.34.1
+2.41.0
 
