@@ -2,70 +2,68 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE287EB64DA
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jun 2023 19:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F932C001B0
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jun 2023 23:23:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231537AbjF3T2f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Jun 2023 15:28:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60776 "EHLO
+        id S231743AbjF3XX1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Jun 2023 19:23:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232569AbjF3T2d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jun 2023 15:28:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACA343C3A;
-        Fri, 30 Jun 2023 12:28:32 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3EDF2617F4;
-        Fri, 30 Jun 2023 19:28:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8C827C43391;
-        Fri, 30 Jun 2023 19:28:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688153311;
-        bh=3F6SdnrkxCmk8vjNW/8p6klWG/9eWUTHnB2hLknsUgY=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=emZkF4ZZQB6sfTvgNdrhFhNqaN1lEng7jsolgvjTYQOE9wpxI92+mxM6XCfxt+U1c
-         7Gi3ZZBe5wJ1z3ZpS7LAnhWY4ivk6m4O2Dpl+frr0g+01IjE/X7KK5RF2NUkDqyvom
-         S36mFv8OwcLwzCHGKg1WgrGoF0niV4H1gmjU0Cg5X+O3xxhrJGD4EdkW4XSEv09elc
-         TKViU/kTGhkhbu/O+CPke4J0hqCUpPRko9P5gOvt6CzDJCfIXu3cJiBTNyaQghT1gw
-         OYZ7vVMMyb321CL+88yIYVkzk74pnJaXWbV7Xh/t2ZVbSCEhqnQu1sK9AxBCYwlTO6
-         H4E8P/WZj9fCQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 6A457C43158;
-        Fri, 30 Jun 2023 19:28:31 +0000 (UTC)
-Subject: Re: [GIT PULL] first round of SCSI updates for the 6.4+ merge window
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <23bd2eafa9b9a23e4a8a96fc0180bba9e77e42ca.camel@HansenPartnership.com>
-References: <23bd2eafa9b9a23e4a8a96fc0180bba9e77e42ca.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <23bd2eafa9b9a23e4a8a96fc0180bba9e77e42ca.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: af92c02fb2090692f4920ea4b74870940260cf49
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: ca7ce08d6a063e0ccb91dc57f9bc213120d0d1a7
-Message-Id: <168815331143.22437.18267744756992839649.pr-tracker-bot@kernel.org>
-Date:   Fri, 30 Jun 2023 19:28:31 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S231765AbjF3XXY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jun 2023 19:23:24 -0400
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 931903C00;
+        Fri, 30 Jun 2023 16:22:51 -0700 (PDT)
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-5577900c06bso1788958a12.2;
+        Fri, 30 Jun 2023 16:22:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688167317; x=1690759317;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=PDyuzcBk6PQbCTpKgz9Tbx7bmTFz75mFlhEzafNtxb4=;
+        b=BL7Y7lPfBj7s9rDK5Gq1VBkydLl9dROK1/SbEPnL7ZmHvfDxVq1IZdVmwvwSzn43lk
+         2xbGeBOUxxR4BudA+KQLy0+kJv8nGww82ANitAmTEhxJvr3o82oNI883LVFdlBOM9lza
+         OQHcGthitzxwCCtV7OlHPEIqAsJ0+zlpJjGlJlscPBW0TeTANdD4vWpAhSnII2CFDhxk
+         dqT/CTn0XAYeKlhbJVC71lTjZwwXG6ESYq3UFfw299+ormSGalLWLzSmc9sJeW1K9Ap/
+         HolJHmzHhSnMVc9YhDHtYGNc0K5As5GvsSZehA9Q23RoF9n/tAkO2Uk7BIDElhUrJXku
+         ITBg==
+X-Gm-Message-State: AC+VfDxHC/BuXVhxowCYjSYBiOhEYGu39hshUhG1uNKWGrFjVQPK7PL6
+        q8oGGqvLfr5PSA0VE8l9RvE=
+X-Google-Smtp-Source: ACHHUZ5xAibv08f6GtgtdZBzffTZAsAoRMZX2G85RMGPvdqLDrk61XLvj2DwXhl/JJeHFw/WNPG70Q==
+X-Received: by 2002:a05:6a20:9493:b0:11f:6d3c:5418 with SMTP id hs19-20020a056a20949300b0011f6d3c5418mr3761518pzb.22.1688167317408;
+        Fri, 30 Jun 2023 16:21:57 -0700 (PDT)
+Received: from [192.168.50.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id k25-20020aa792d9000000b006636c4f57a6sm10465072pfa.27.2023.06.30.16.21.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Jun 2023 16:21:56 -0700 (PDT)
+Message-ID: <90cbd07f-eeac-5da0-4786-6e212ecd22cc@acm.org>
+Date:   Fri, 30 Jun 2023 16:21:55 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH v2 0/5] Improve checks in blk_revalidate_disk_zones()
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, linux-nvme@lists.infradead.org,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <kbusch@kernel.org>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20230630083935.433334-1-dlemoal@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230630083935.433334-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Thu, 29 Jun 2023 08:48:28 -0400:
+On 6/30/23 01:39, Damien Le Moal wrote:
+> blk_revalidate_disk_zones() implements checks of the zones of a zoned
+> block device, verifying that the zone size is a power of 2 number of
+> sectors, that all zones (except possibly the last one) have the same
+> size and that zones cover the entire addressing space of the device.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+For the entire series:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/ca7ce08d6a063e0ccb91dc57f9bc213120d0d1a7
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
