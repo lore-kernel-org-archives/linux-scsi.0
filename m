@@ -2,207 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D534EB64D7
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jun 2023 15:28:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6621AEB64D7
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jun 2023 19:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232709AbjF3P2j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Jun 2023 11:28:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43212 "EHLO
+        id S231657AbjF3TOX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Jun 2023 15:14:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233035AbjF3P1O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jun 2023 11:27:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 124AB421E
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Jun 2023 08:26:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1688138767;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dTUg/mVQyhhJfywizixeKkySOuaXp8UTsLqq+KCOGUE=;
-        b=atmb6SIuYUSvBo+G6C6nrT2ln1MQB8vvMXrdE5f5BHzb1Vj9dSVl8KLCbivwX++4xDfr5v
-        YGWpW+zfRD8uYLILdshyZWJ324rgRglywpv68QewDRYrkP2VbWrWPn8Atf+DgAW164CUyN
-        3fi0J8DQtk/m5xRU95Y4iIx/FUfsU1s=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-342-ykgDuP25MHy7G1d5_4sdcQ-1; Fri, 30 Jun 2023 11:26:03 -0400
-X-MC-Unique: ykgDuP25MHy7G1d5_4sdcQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 21B6D1C0512E;
-        Fri, 30 Jun 2023 15:26:02 +0000 (UTC)
-Received: from warthog.procyon.org.uk.com (unknown [10.42.28.195])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DF05540C6CCD;
-        Fri, 30 Jun 2023 15:25:59 +0000 (UTC)
-From:   David Howells <dhowells@redhat.com>
-To:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     David Howells <dhowells@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Jeff Layton <jlayton@kernel.org>,
-        David Hildenbrand <david@redhat.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Hillf Danton <hdanton@sina.com>,
-        Christian Brauner <brauner@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Subject: [RFC PATCH 11/11] scsi: Use extract_iter_to_sg()
-Date:   Fri, 30 Jun 2023 16:25:24 +0100
-Message-ID: <20230630152524.661208-12-dhowells@redhat.com>
-In-Reply-To: <20230630152524.661208-1-dhowells@redhat.com>
-References: <20230630152524.661208-1-dhowells@redhat.com>
+        with ESMTP id S229511AbjF3TOV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jun 2023 15:14:21 -0400
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B838F3C35
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Jun 2023 12:14:20 -0700 (PDT)
+Received: by mail-ej1-x62a.google.com with SMTP id a640c23a62f3a-9928abc11deso258968066b.1
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Jun 2023 12:14:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1688152459; x=1690744459;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=AFSZt7xSvjgnwowljwfaSL0KYBrFwIuNSlq3FmFfoLk=;
+        b=L1lUeXrgKTQWTiHX++f/o0dPzCF+QreuDM+I/RZo99sUZ95IJTAYUk5gUC7Krs37f7
+         RH50oaRldEJ8bd5UW7KySkT1XeRwF0mPSLP6QX1n/L0YRt3WYK//4gEBncxMZG5sfec+
+         g1gXtnMzJQ+vAE1oUGrZNPhcM4snJ8wX1T6jc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688152459; x=1690744459;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=AFSZt7xSvjgnwowljwfaSL0KYBrFwIuNSlq3FmFfoLk=;
+        b=EwHvLAJwqVM2Q5L3zXzRKMofy41AHfsQNafym17YCgeSm4ggvfJ/W98FZ64fBcKAMj
+         Mehe7VbeZhyEUzCZZzzE4PpAyvAf7BmaLrQqWAaPSOrTQSLcm/u5Ubb9ALte3Mh3rlmM
+         1sIhWKEi55ML+10WeFnPHgRyMqPC2fikvBDhA0pF2l2dgwzU7dx6hgE+dQl5rz0Wu81Y
+         3HIpzHVtHUK/QFcVxbPomLbewDxBoK/G0qbwXSTqZ/y5NNm/RZ6bWWNx/e+UFjZFZrCH
+         dNcNzCNjZPXcfibnED/XthztPCfDdJHmj1VYQzfh09tEMKy7E61L5N/cO2Y7DIv3y5Xj
+         /hRw==
+X-Gm-Message-State: ABy/qLZEi/BV7TbPoqd11FPoPcNgJNMbBBtK1Cm/Pfnvf4dNOEgdlR1+
+        njJ/MD2LvRXV9fW1J4Yw2b0NdF5qPuueOQhAIDN/W4Y+
+X-Google-Smtp-Source: APBJJlGzzaLGLbdFjs0hxDh+fP9Dd/WsMzlQfDO1sjEmHpcs0TfQUTkdeSNcLouW3B1ElzCmJsoOhQ==
+X-Received: by 2002:a17:906:1c42:b0:992:825d:71f1 with SMTP id l2-20020a1709061c4200b00992825d71f1mr2524989ejg.39.1688152458981;
+        Fri, 30 Jun 2023 12:14:18 -0700 (PDT)
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com. [209.85.208.50])
+        by smtp.gmail.com with ESMTPSA id e7-20020a170906248700b00992a8a54f32sm2445322ejb.139.2023.06.30.12.14.18
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Jun 2023 12:14:18 -0700 (PDT)
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-51d9a925e9aso2461707a12.0
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Jun 2023 12:14:18 -0700 (PDT)
+X-Received: by 2002:a05:6402:b16:b0:51d:8100:863c with SMTP id
+ bm22-20020a0564020b1600b0051d8100863cmr2317798edb.25.1688152457976; Fri, 30
+ Jun 2023 12:14:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.2
+References: <23bd2eafa9b9a23e4a8a96fc0180bba9e77e42ca.camel@HansenPartnership.com>
+In-Reply-To: <23bd2eafa9b9a23e4a8a96fc0180bba9e77e42ca.camel@HansenPartnership.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 30 Jun 2023 12:14:01 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wjgnB11KzroXS+Gi1TQO19uf0FvkMBn=V7mcQ8q78ucnQ@mail.gmail.com>
+Message-ID: <CAHk-=wjgnB11KzroXS+Gi1TQO19uf0FvkMBn=V7mcQ8q78ucnQ@mail.gmail.com>
+Subject: Re: [GIT PULL] first round of SCSI updates for the 6.4+ merge window
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use extract_iter_to_sg() to build a scatterlist from an iterator.
+On Thu, 29 Jun 2023 at 05:48, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+>    We have a couple of major core changes impacting other
+> systems: Command Duration Limits, which spills into block and ATA and
+> block level Persistent Reservation Operations, which touches block,
+> nvme, target and dm (both of which are added with merge commits
+> containing a cover letter explaining what's going on).
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: James E.J. Bottomley <jejb@linux.ibm.com>
-cc: Martin K. Petersen <martin.petersen@oracle.com>
-cc: Christoph Hellwig <hch@lst.de>
-cc: linux-scsi@vger.kernel.org
----
- drivers/vhost/scsi.c | 79 +++++++++++++-------------------------------
- 1 file changed, 23 insertions(+), 56 deletions(-)
+Random side note - as an outsider that then sees a trivial conflict
+due to the split of the nmve side into a file called 'pr.c', I can
+only say that my reaction to that was "what a horrible filename".
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index bb10fa4bb4f6..7bb41e2a0d64 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -75,6 +75,9 @@ struct vhost_scsi_cmd {
- 	u32 tvc_prot_sgl_count;
- 	/* Saved unpacked SCSI LUN for vhost_scsi_target_queue_cmd() */
- 	u32 tvc_lun;
-+	/* Cleanup modes for scatterlists */
-+	unsigned int tvc_need_unpin;
-+	unsigned int tvc_prot_need_unpin;
- 	/* Pointer to the SGL formatted memory from virtio-scsi */
- 	struct scatterlist *tvc_sgl;
- 	struct scatterlist *tvc_prot_sgl;
-@@ -327,14 +330,13 @@ static void vhost_scsi_release_cmd_res(struct se_cmd *se_cmd)
- 	struct vhost_scsi_inflight *inflight = tv_cmd->inflight;
- 	int i;
- 
--	if (tv_cmd->tvc_sgl_count) {
-+	if (tv_cmd->tvc_need_unpin && tv_cmd->tvc_sgl_count)
- 		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
--			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
--	}
--	if (tv_cmd->tvc_prot_sgl_count) {
-+			unpin_user_page(sg_page(&tv_cmd->tvc_sgl[i]));
-+
-+	if (tv_cmd->tvc_prot_need_unpin && tv_cmd->tvc_prot_sgl_count)
- 		for (i = 0; i < tv_cmd->tvc_prot_sgl_count; i++)
--			put_page(sg_page(&tv_cmd->tvc_prot_sgl[i]));
--	}
-+			unpin_user_page(sg_page(&tv_cmd->tvc_prot_sgl[i]));
- 
- 	sbitmap_clear_bit(&svq->scsi_tags, se_cmd->map_tag);
- 	vhost_scsi_put_inflight(inflight);
-@@ -606,38 +608,6 @@ vhost_scsi_get_cmd(struct vhost_virtqueue *vq, struct vhost_scsi_tpg *tpg,
- 	return cmd;
- }
- 
--/*
-- * Map a user memory range into a scatterlist
-- *
-- * Returns the number of scatterlist entries used or -errno on error.
-- */
--static int
--vhost_scsi_map_to_sgl(struct vhost_scsi_cmd *cmd,
--		      struct iov_iter *iter,
--		      struct scatterlist *sgl,
--		      bool write)
--{
--	struct page **pages = cmd->tvc_upages;
--	struct scatterlist *sg = sgl;
--	ssize_t bytes;
--	size_t offset;
--	unsigned int npages = 0;
--
--	bytes = iov_iter_get_pages2(iter, pages, LONG_MAX,
--				VHOST_SCSI_PREALLOC_UPAGES, &offset);
--	/* No pages were pinned */
--	if (bytes <= 0)
--		return bytes < 0 ? bytes : -EFAULT;
--
--	while (bytes) {
--		unsigned n = min_t(unsigned, PAGE_SIZE - offset, bytes);
--		sg_set_page(sg++, pages[npages++], n, offset);
--		bytes -= n;
--		offset = 0;
--	}
--	return npages;
--}
--
- static int
- vhost_scsi_calc_sgls(struct iov_iter *iter, size_t bytes, int max_sgls)
- {
-@@ -661,24 +631,19 @@ vhost_scsi_calc_sgls(struct iov_iter *iter, size_t bytes, int max_sgls)
- static int
- vhost_scsi_iov_to_sgl(struct vhost_scsi_cmd *cmd, bool write,
- 		      struct iov_iter *iter,
--		      struct scatterlist *sg, int sg_count)
-+		      struct scatterlist *sg, int sg_count,
-+		      unsigned int *need_unpin)
- {
--	struct scatterlist *p = sg;
--	int ret;
-+	struct sg_table sgt = { .sgl = sg };
-+	ssize_t ret;
- 
--	while (iov_iter_count(iter)) {
--		ret = vhost_scsi_map_to_sgl(cmd, iter, sg, write);
--		if (ret < 0) {
--			while (p < sg) {
--				struct page *page = sg_page(p++);
--				if (page)
--					put_page(page);
--			}
--			return ret;
--		}
--		sg += ret;
--	}
--	return 0;
-+	ret = extract_iter_to_sg(iter, LONG_MAX, &sgt, sg_count,
-+				 write ? WRITE_FROM_ITER : READ_INTO_ITER);
-+	if (ret > 0)
-+		sg_mark_end(sg + sgt.nents - 1);
-+
-+	*need_unpin = iov_iter_extract_will_pin(iter);
-+	return ret;
- }
- 
- static int
-@@ -702,7 +667,8 @@ vhost_scsi_mapal(struct vhost_scsi_cmd *cmd,
- 
- 		ret = vhost_scsi_iov_to_sgl(cmd, write, prot_iter,
- 					    cmd->tvc_prot_sgl,
--					    cmd->tvc_prot_sgl_count);
-+					    cmd->tvc_prot_sgl_count,
-+					    &cmd->tvc_prot_need_unpin);
- 		if (ret < 0) {
- 			cmd->tvc_prot_sgl_count = 0;
- 			return ret;
-@@ -719,7 +685,8 @@ vhost_scsi_mapal(struct vhost_scsi_cmd *cmd,
- 		  cmd->tvc_sgl, cmd->tvc_sgl_count);
- 
- 	ret = vhost_scsi_iov_to_sgl(cmd, write, data_iter,
--				    cmd->tvc_sgl, cmd->tvc_sgl_count);
-+				    cmd->tvc_sgl, cmd->tvc_sgl_count,
-+				    &cmd->tvc_need_unpin);
- 	if (ret < 0) {
- 		cmd->tvc_sgl_count = 0;
- 		return ret;
+Maybe it makes sense to people that are very into nvme, but honestly,
+considering it's a new special thing, I kind of doubt it.
 
+We really don't lack the disk-space to use more descriptive names for
+files. "pr.c" really is pretty horrid.
+
+It's not like that file even had a comment at the top about what it was.
+
+And yes, while I was looking around, I realized that we've had that
+<linux/pr.h> header file forever. So this inscrutable naming isn't
+new.
+
+We have a few other horrors here. Quickly, without looking at them,
+what is 'rv.h' of 'nd.h'?
+
+But three old wrongs don't make a right.
+
+              Linus
