@@ -2,105 +2,67 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C303C001E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 14:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CD1DEB64D9
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 15:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231379AbjGDOGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Jul 2023 10:06:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37116 "EHLO
+        id S231160AbjGDP1Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jul 2023 11:27:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230197AbjGDOGb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 10:06:31 -0400
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CB9BF7;
-        Tue,  4 Jul 2023 07:06:30 -0700 (PDT)
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1b8303cd32aso44543055ad.2;
-        Tue, 04 Jul 2023 07:06:30 -0700 (PDT)
+        with ESMTP id S231694AbjGDP1W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 11:27:22 -0400
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 730411AA;
+        Tue,  4 Jul 2023 08:27:21 -0700 (PDT)
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-55b5a3915f5so2763290a12.0;
+        Tue, 04 Jul 2023 08:27:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688479590; x=1691071590;
+        d=1e100.net; s=20221208; t=1688484441; x=1691076441;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JV2SCOEdB9t0w6tigDexjJMYhGF54ZwsLlYmJ1gE7wU=;
-        b=bMICWCFC1W076H+YN1lR/nCQau0HbgCI0H4vl8vZYXgociPXrYyV5p2vJwJSn4IvXw
-         X0VdLEzWRujDjUle97qp5ejyEiOTvK9cEwtJF9fXchWUeZ3V4uQSdYUun19YJ76vkPzg
-         EZ1VW7i4f34rBtELVeYa/NvSt/WWf8EGkE3xgRc0FNndIJufTeQZZj1KiqF78g6Qv4BO
-         0X8PwY5ee/rPn2rjRArQ76JDuSpgQ/4XYckAc/yuSHkTasvw/OegnkRz43f6yLq3W0e3
-         rRA6atJmAtXopQDEq1HSeWbL6ASsixUt+la82hfgmJxFH2y2NJEwaZhVIkeu3mm+1ick
-         EadQ==
-X-Gm-Message-State: ABy/qLaMBNDn1rNBaXGQB2u/UKIklMPTeUzdebm00ZhMy9QxeJpBvQHH
-        tDxcOHS51TLWDp/ELdGfDOY=
-X-Google-Smtp-Source: APBJJlEESj5502hCCjnCrW5aNdhMviGxH5NXIz8SFwBF+614aVB6e0+1hJtWMTw8TJzZNuQy8olTNg==
-X-Received: by 2002:a17:903:447:b0:1b8:a31b:ac85 with SMTP id iw7-20020a170903044700b001b8a31bac85mr2719760plb.41.1688479589749;
-        Tue, 04 Jul 2023 07:06:29 -0700 (PDT)
-Received: from [192.168.50.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id jk4-20020a170903330400b001b672af624esm13083569plb.164.2023.07.04.07.06.26
+        bh=dBHybsETmQhR4EOdGU54nBMdz7E2WSrdp2Kj9VKU2vA=;
+        b=Mn4ahNLuXWAyKdQL40r6Dyvy+zrQdSgv1RJbFjyShK/rpkvkmVvfT+5wMLZGIC+Qoc
+         9DMG1Hu/vfR//U4Bl7WEeNSEc9gwa2w7J3oVOBoVIxl/9UGfCJsZ1e7+i69FMVcCB7HN
+         DPn9CtxPfZKYLPGrPDHTO9kmK0yk6rXMxlFkGqUJHX3uxLq02qQyx48JoXZPq5mXyxqv
+         9PoSrekVb4W4EMG5o9ONdJT6OEJNyOJbNnThTWvzXZ/epq/qHWX9xCKvse9l/abQb4/H
+         qdYk8UccUiOOaMAGMQ8aqhYVkMNsJJYVDOHMVFY9hDV8kitDLRjIZ1eP9Sg6P5jhZoFp
+         3nAw==
+X-Gm-Message-State: ABy/qLb6U5VB8a2ruQoKyskpGkHXCQ0RQiINHDEdFNmY0kxswM7lke3G
+        O6wIjjxsGIov66zMzi0okjI=
+X-Google-Smtp-Source: APBJJlH540wVvniNrmM3OfeMzR4O20DskguGHzSe2eDGyMcTNqmXYKVUUoBwmt+Ihp+QZbSThUMrKg==
+X-Received: by 2002:a05:6a20:9190:b0:12e:61a1:a298 with SMTP id v16-20020a056a20919000b0012e61a1a298mr5844347pzd.20.1688484440749;
+        Tue, 04 Jul 2023 08:27:20 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id v7-20020a1709029a0700b001b7fd27144dsm15578679plp.40.2023.07.04.08.27.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Jul 2023 07:06:29 -0700 (PDT)
-Message-ID: <bb91e76b-0bd8-a949-f8b9-868f919ebcb9@acm.org>
-Date:   Tue, 4 Jul 2023 07:06:26 -0700
+        Tue, 04 Jul 2023 08:27:20 -0700 (PDT)
+Message-ID: <8fd68b78-3d77-2534-01c7-7c8c7cde2e86@acm.org>
+Date:   Tue, 4 Jul 2023 08:27:18 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
+ Thunderbird/102.12.0
+Subject: Re: [PATCH v1] drivers: scsi: remove duplicate logical judgments
 Content-Language: en-US
-To:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-References: <20230629165206.383-1-jack@suse.cz>
- <20230704122224.16257-1-jack@suse.cz>
+To:     Minjie Du <duminjie@vivo.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     opensource.kernel@vivo.com
+References: <20230704073752.5498-1-duminjie@vivo.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230704122224.16257-1-jack@suse.cz>
+In-Reply-To: <20230704073752.5498-1-duminjie@vivo.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/4/23 05:21, Jan Kara wrote:
-> +struct bdev_handle {
-> +	struct block_device *bdev;
-> +	void *holder;
-> +};
+On 7/4/23 00:37, Minjie Du wrote:
+> Please check this.
 
-Please explain in the patch description why a holder pointer is 
-introduced in struct bdev_handle and how it relates to the bd_holder 
-pointer in struct block_device. Is one of the purposes of this patch 
-series perhaps to add support for multiple holders per block device?
+Without feedback from someone who has access to the datasheet this patch 
+probably should not be applied. The repeated inb() calls may be on purpose.
 
 Thanks,
 
 Bart.
-
