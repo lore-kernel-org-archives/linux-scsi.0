@@ -2,91 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B08BC001DD
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 16:14:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD05AEB64DA
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 16:14:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231522AbjGDQOQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Jul 2023 12:14:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60026 "EHLO
+        id S231418AbjGDQOs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jul 2023 12:14:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231218AbjGDQOO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 12:14:14 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6BC0DA;
-        Tue,  4 Jul 2023 09:14:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=R1W87rnlNGGe3O62ySITe0WV/TkO13M6jrCnVpdBC/M=; b=ma0abi+l8BKnWZyE2Bm6SMUpzA
-        GY/Sg9bKM4QGi5Fi3SxYqWXxJ46oHMzkk2XTYG6szPrdjaFZvCOeUvh2qeA+qFPnGTya2tgZ0Czoo
-        anlh0yET7VOr2nReXBjhvXLbethMJyMQRtOEtJdxTJlnJDQLzVkEFxU1z6LlHa+R1Svpz+R+Zi/2e
-        EbHE+jMBvtLJPxFFKggvC8J4kNKoPgnxYJ08D38bFVgefZT0kn05//LL45wE920g1ut/XHRnJF4Ur
-        2JcraLDAhTPQ+qGFyYF+arcI4MuDDkahpy1OJ1ZV5vzT8Q6c9E3mK76aIjApGP0H0G7MQh7QY3lZI
-        j0pVBAMA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qGifB-009I83-IW; Tue, 04 Jul 2023 16:14:01 +0000
-Date:   Tue, 4 Jul 2023 17:14:01 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-Message-ID: <ZKRFSZQglwCba9/i@casper.infradead.org>
-References: <20230629165206.383-1-jack@suse.cz>
- <20230704122224.16257-1-jack@suse.cz>
- <bb91e76b-0bd8-a949-f8b9-868f919ebcb9@acm.org>
+        with ESMTP id S230385AbjGDQOp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 12:14:45 -0400
+Received: from mail-qk1-x72b.google.com (mail-qk1-x72b.google.com [IPv6:2607:f8b0:4864:20::72b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99006DC;
+        Tue,  4 Jul 2023 09:14:44 -0700 (PDT)
+Received: by mail-qk1-x72b.google.com with SMTP id af79cd13be357-766fb2213f3so64728585a.1;
+        Tue, 04 Jul 2023 09:14:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1688487283; x=1691079283;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=T63vv7+1NxTr4s2sWM7fL8hh1V9Gn3Leuqcn+6bgKsY=;
+        b=BMb718vHwyMN6MBuFNP60YzyrP+fTctzIyNIBsd2q3ChJALvpkTxJ574Z6oCH7yekB
+         pltHKmOYxHMTNHkQ3FknVwVWhOvDF5zO5ZPPvliC9p57tekWY6VHiD5JGyLnn2SLd7DJ
+         w6q19uvLs/qgC7iidE4/46kwGo/rq0NabXX1/rq6wdQMP7jZN/ygdgBvfwW8agQnurk6
+         ZLbh5D6MBMWd1pDaksdoNj23GhTKao4aNj0A6kddyjWVqajpKYNnP6d4kbWeYzry+cna
+         LbfWSXPc4jzX726H7AfYG1GYHcEMu5s8e5UPaqgFonfMp7eeRlA60kkCwtC+U6RezevN
+         mGCw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688487283; x=1691079283;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=T63vv7+1NxTr4s2sWM7fL8hh1V9Gn3Leuqcn+6bgKsY=;
+        b=FtUp9cGFqtipW38j0AiGHNlIjuc+vXe4lRDr7pW1IbQxQEezHvBGkydTpWU+7n59N1
+         TDaqkZ1tUUJ6ARaLsYyU/hjOdY+ed/YGcXgJiir8c3QjJlqbZ93W/JZwDM+FBOsvjfWw
+         SC8YDzjAjhcbzMkshfTJZYhN+0/dXlt82O27OyFTYe9J/JkO8x+apKOzloe+4izD9svt
+         VyFbnoNtjwzESVrQQMueCuFs1WE9gu/G8s9z3DdPIxcDk+iMgR4CpxJg4RB3/5nnCRQt
+         DW8E3q5lPjF+341M9OjL5PxZvOHIT6/RHP1nDvjV74jzcTWonUavR5tnz+TfDYb7FJk7
+         Pc3w==
+X-Gm-Message-State: AC+VfDyScj3LEj3+9To07x/LkJOFdv8p0ulh+v1T6+rGHfJB2V9aqDJc
+        C2gNu6lhE6Xey5Mkp5qvRIxhYf9wchqUmWW1ayw=
+X-Google-Smtp-Source: ACHHUZ73/hB4Vz36V4ohxX2Dsb7RQkVIJ3k/+v5O6FzFzOGc5QwhUR9nFuE895wFMxku5EF51/o0q6TVRWrVCBqkpIs=
+X-Received: by 2002:a05:620a:2687:b0:765:97b7:cfb5 with SMTP id
+ c7-20020a05620a268700b0076597b7cfb5mr16726860qkp.6.1688487282999; Tue, 04 Jul
+ 2023 09:14:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bb91e76b-0bd8-a949-f8b9-868f919ebcb9@acm.org>
+References: <20230630024748.1035993-1-islituo@gmail.com>
+In-Reply-To: <20230630024748.1035993-1-islituo@gmail.com>
+From:   Justin Tee <justintee8345@gmail.com>
+Date:   Tue, 4 Jul 2023 09:14:32 -0700
+Message-ID: <CABPRKS8_bGqfE3x8abj0p1CTVcLk8EtVn8gjbWd15CaC42_Oew@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: Fix a possible data race in lpfc_unregister_fcf_rescan()
+To:     Tuo Li <islituo@gmail.com>
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        baijiaju1990@outlook.com, BassCheck <bass@buaa.edu.cn>,
+        Justin Tee <justin.tee@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 04, 2023 at 07:06:26AM -0700, Bart Van Assche wrote:
-> On 7/4/23 05:21, Jan Kara wrote:
-> > +struct bdev_handle {
-> > +	struct block_device *bdev;
-> > +	void *holder;
-> > +};
-> 
-> Please explain in the patch description why a holder pointer is introduced
-> in struct bdev_handle and how it relates to the bd_holder pointer in struct
-> block_device. Is one of the purposes of this patch series perhaps to add
-> support for multiple holders per block device?
+Hi Tuo,
 
-That is all in patch 0/32.  Why repeat it?
+Looks good.
+
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+
+Thanks,
+Justin
+
+On Thu, Jun 29, 2023 at 8:03=E2=80=AFPM Tuo Li <islituo@gmail.com> wrote:
+>
+> The variable phba->fcf.fcf_flag is often protected by the lock
+> phba->hbalock() when is accessed. Here is an example in
+> lpfc_unregister_fcf_rescan():
+>
+>   spin_lock_irq(&phba->hbalock);
+>   phba->fcf.fcf_flag |=3D FCF_INIT_DISC;
+>   spin_unlock_irq(&phba->hbalock);
+>
+> However, in the same function, phba->fcf.fcf_flag is assigned with 0
+> without holding the lock, and thus can cause a data race:
+>
+>   phba->fcf.fcf_flag =3D 0;
+>
+> To fix this possible data race, a lock and unlock pair is added when
+> accessing the variable phba->fcf.fcf_flag.
+>
+> Reported-by: BassCheck <bass@buaa.edu.cn>
+> Signed-off-by: Tuo Li <islituo@gmail.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_hbadisc.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hb=
+adisc.c
+> index 5ba3a9ad9501..9d2feb69cae7 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -6961,7 +6961,9 @@ lpfc_unregister_fcf_rescan(struct lpfc_hba *phba)
+>         if (rc)
+>                 return;
+>         /* Reset HBA FCF states after successful unregister FCF */
+> +       spin_lock_irq(&phba->hbalock);
+>         phba->fcf.fcf_flag =3D 0;
+> +       spin_unlock_irq(&phba->hbalock);
+>         phba->fcf.current_rec.flag =3D 0;
+>
+>         /*
+> --
+> 2.34.1
+>
