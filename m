@@ -2,262 +2,227 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29FE8C25B5B
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 12:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAA1CC00528
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 12:23:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231479AbjGDMWt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Jul 2023 08:22:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39110 "EHLO
+        id S231822AbjGDMXe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jul 2023 08:23:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231575AbjGDMWh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 08:22:37 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ACD110EC;
-        Tue,  4 Jul 2023 05:22:27 -0700 (PDT)
+        with ESMTP id S231160AbjGDMWu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 08:22:50 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AD7E10E0;
+        Tue,  4 Jul 2023 05:22:36 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 5D9E422868;
-        Tue,  4 Jul 2023 12:22:25 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 59FE522871;
+        Tue,  4 Jul 2023 12:22:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1688473345; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1688473346; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Y5Z0PpLwK7LWiMwHAJV3g58wt4Pu7/r/oCMflfsspxI=;
-        b=Yfx9ztWkVatt0fVfNPxdamFDjV837Nu56ImHpS3yWvwdcdXXyeJ1ONnOd+6RA+xJckyxi2
-        Fr1h4BOlDMHKk2yJxxmlop9vtybjvkzPRI8sOxjaR75gWlVSNQjeXkVo/sHlsqPbUV+LJG
-        uG3Fi84JhxR4KPvRm9XoLJxwd0lLAD0=
+        bh=v1q0Ly+TYRzz+Lbzs+DrPFFtN8sDBK0YXsnFAlKqtUI=;
+        b=cPdR/YWBMZtUS1MC+nSSm+Wv9pwVAeD0wQSTHOF/nWt8ti7TofknDxU1cSiuA5lS+QDNh2
+        MQ8pTgWSPL0vVTSSlQ8ZYL0qeyS3J3FOc+rP5LZ/zGOrM49w/KBwmgdxZHtxuNMShEJ0M5
+        DyXeOo+AHb/oEgwLODnEXo33Ty3UEso=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1688473345;
+        s=susede2_ed25519; t=1688473346;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Y5Z0PpLwK7LWiMwHAJV3g58wt4Pu7/r/oCMflfsspxI=;
-        b=vF6CF3OlMOzmEcsCihpnKLEsv6y6u4duYbSxFgbJ4TrA9OaJnML/9G2T1z6YHtiVQ3zwq6
-        zVCIM6qtTQOYAOBg==
+        bh=v1q0Ly+TYRzz+Lbzs+DrPFFtN8sDBK0YXsnFAlKqtUI=;
+        b=+PjF+mi5ltlR0aaOdtaNLHJ8hzb/Vvm7MU3GCPqy6aB9BSL9haAv6StxNk47POovWVIJip
+        jsT5biRekBh9J9Dg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 433C713A97;
-        Tue,  4 Jul 2023 12:22:25 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 48A16139ED;
+        Tue,  4 Jul 2023 12:22:26 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id fiTSDwEPpGQQMAAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 04 Jul 2023 12:22:25 +0000
+        id 6oO4EQIPpGRCMAAAMHmgww
+        (envelope-from <jack@suse.cz>); Tue, 04 Jul 2023 12:22:26 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 97B9EA0763; Tue,  4 Jul 2023 14:22:24 +0200 (CEST)
+        id EE9BEA0775; Tue,  4 Jul 2023 14:22:24 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-block@vger.kernel.org>
 Cc:     <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>,
         Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-Date:   Tue,  4 Jul 2023 14:21:28 +0200
-Message-Id: <20230704122224.16257-1-jack@suse.cz>
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 16/32] scsi: target: Convert to blkdev_get_handle_by_path()
+Date:   Tue,  4 Jul 2023 14:21:43 +0200
+Message-Id: <20230704122224.16257-16-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20230629165206.383-1-jack@suse.cz>
 References: <20230629165206.383-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5599; i=jack@suse.cz; h=from:subject; bh=repJSb0/C5PfG8Cx5q/n/kNJZOabhc2tYWxiICNNTtg=; b=owGbwMvMwME4Z+4qdvsUh5uMp9WSGFKW8J3uuK2gorZt+knOzhX81snTGX/57phWXzfXM3w+50Xl rfb7OxmNWRgYORhkxRRZVkde1L42z6hra6iGDMwgViaQKQxcnAIwERsLDobphetsJoi99quKYIut26 wgv/K+lUS+secym02t85epsOp8rtu3acJMN1WFRiX1irKCnSu+LXh+rVyp65RAEGttl+XcP32mOR0n ZJYFm7orF8YFnhVftYzZjm2Rva3I0oqXdap/bUJr8qNjVVfHnBRiFEv0Ocgpck1jlTHfEWUu71NrKu 8EXrbnsfD7wm1qKHDqnnnD21y1n9OFHn8/7qJz4O19panPLvMxrOrNn970IcH6rnhQsq0ZS1v6JUfN RS5ah5XMXNI/c14+vVlVkPVI9n2HQNZlEfdsO13VFx17Z7f0vKnN9UZZ3Zii6WbsWS81/qefFs1Ljl +dK1sZIpSRdXfx+jksz9T4il4AAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5428; i=jack@suse.cz; h=from:subject; bh=vF8qjFI4A/3rD5h/Et69Ec9Qeo6QiVYCndYccNSvPHk=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkpA7YX+6hWorwQoJjZkyQ3dg5LYwJKQg7ih6pPHV5 Jq3sVjeJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZKQO2AAKCRCcnaoHP2RA2Wo7B/ 4hD/I8EkJLrLY5uM7AFP9Y/pVXKnrLUk8VHGTW6V3K1ZA6MczawCPX8XapgnrOl4mFfwL5o9iYLnNJ YwsW85NRpZ8zjXGpUg6BgeD3y+G7wFU+yl8jE3WJQMwDLfba/pLXSw0pvFrT9+3tmNN+aKayT5BFC1 IiCkhOYVSCX3ie3p2Q9v8Ar0r4LT+3Wq/Bi4aVi9StU5+uKNHfIlDkgiLafqBcPiWCyxBl5cuJ0Hxq 4c/5P5mvDBOZTX3gT6qPOGubdhVcpwPygZBR/6EJjPVGKv4Ki2A+2+hlnBG4HJMvbfqeB4QLGRv4xp d/ik3OB1Hd1J1+/lbkiJj4AeI3B54P
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Create struct bdev_handle that contains all parameters that need to be
-passed to blkdev_put() and provide blkdev_get_handle_* functions that
-return this structure instead of plain bdev pointer. This will
-eventually allow us to pass one more argument to blkdev_put() without
-too much hassle.
+Convert iblock and pscsi drivers to use blkdev_get_handle_by_path() and
+pass the handle around.
 
-CC: Alasdair Kergon <agk@redhat.com>
-CC: Andrew Morton <akpm@linux-foundation.org>
-CC: Anna Schumaker <anna@kernel.org>
-CC: Chao Yu <chao@kernel.org>
-CC: Christian Borntraeger <borntraeger@linux.ibm.com>
-CC: Coly Li <colyli@suse.de
-CC: "Darrick J. Wong" <djwong@kernel.org>
-CC: Dave Kleikamp <shaggy@kernel.org>
-CC: David Sterba <dsterba@suse.com>
-CC: dm-devel@redhat.com
-CC: drbd-dev@lists.linbit.com
-CC: Gao Xiang <xiang@kernel.org>
-CC: Jack Wang <jinpu.wang@ionos.com>
-CC: Jaegeuk Kim <jaegeuk@kernel.org>
-CC: jfs-discussion@lists.sourceforge.net
-CC: Joern Engel <joern@lazybastard.org>
-CC: Joseph Qi <joseph.qi@linux.alibaba.com>
-CC: Kent Overstreet <kent.overstreet@gmail.com>
-CC: linux-bcache@vger.kernel.org
-CC: linux-btrfs@vger.kernel.org
-CC: linux-erofs@lists.ozlabs.org
-CC: <linux-ext4@vger.kernel.org>
-CC: linux-f2fs-devel@lists.sourceforge.net
-CC: linux-mm@kvack.org
-CC: linux-mtd@lists.infradead.org
-CC: linux-nfs@vger.kernel.org
-CC: linux-nilfs@vger.kernel.org
-CC: linux-nvme@lists.infradead.org
-CC: linux-pm@vger.kernel.org
-CC: linux-raid@vger.kernel.org
-CC: linux-s390@vger.kernel.org
-CC: linux-scsi@vger.kernel.org
-CC: linux-xfs@vger.kernel.org
-CC: "Md. Haris Iqbal" <haris.iqbal@ionos.com>
-CC: Mike Snitzer <snitzer@kernel.org>
-CC: Minchan Kim <minchan@kernel.org>
-CC: ocfs2-devel@oss.oracle.com
-CC: reiserfs-devel@vger.kernel.org
-CC: Sergey Senozhatsky <senozhatsky@chromium.org>
-CC: Song Liu <song@kernel.org>
-CC: Sven Schnelle <svens@linux.ibm.com>
 CC: target-devel@vger.kernel.org
-CC: Ted Tso <tytso@mit.edu>
-CC: Trond Myklebust <trond.myklebust@hammerspace.com>
-CC: xen-devel@lists.xenproject.org
+CC: linux-scsi@vger.kernel.org
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- block/bdev.c           | 47 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h | 10 +++++++++
- 2 files changed, 57 insertions(+)
+ drivers/target/target_core_iblock.c | 19 +++++++++++--------
+ drivers/target/target_core_iblock.h |  1 +
+ drivers/target/target_core_pscsi.c  | 26 +++++++++++++-------------
+ drivers/target/target_core_pscsi.h  |  2 +-
+ 4 files changed, 26 insertions(+), 22 deletions(-)
 
-diff --git a/block/bdev.c b/block/bdev.c
-index 979e28a46b98..c75de5cac2bc 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -846,6 +846,24 @@ struct block_device *blkdev_get_by_dev(dev_t dev, blk_mode_t mode, void *holder,
- }
- EXPORT_SYMBOL(blkdev_get_by_dev);
- 
-+struct bdev_handle *blkdev_get_handle_by_dev(dev_t dev, blk_mode_t mode,
-+		void *holder, const struct blk_holder_ops *hops)
-+{
-+	struct bdev_handle *handle = kmalloc(sizeof(struct bdev_handle),
-+					     GFP_KERNEL);
-+	struct block_device *bdev;
-+
-+	if (!handle)
-+		return ERR_PTR(-ENOMEM);
-+	bdev = blkdev_get_by_dev(dev, mode, holder, hops);
-+	if (IS_ERR(bdev))
-+		return ERR_CAST(bdev);
-+	handle->bdev = bdev;
-+	handle->holder = holder;
-+	return handle;
-+}
-+EXPORT_SYMBOL(blkdev_get_handle_by_dev);
-+
- /**
-  * blkdev_get_by_path - open a block device by name
-  * @path: path to the block device to open
-@@ -884,6 +902,28 @@ struct block_device *blkdev_get_by_path(const char *path, blk_mode_t mode,
- }
- EXPORT_SYMBOL(blkdev_get_by_path);
- 
-+struct bdev_handle *blkdev_get_handle_by_path(const char *path, blk_mode_t mode,
-+		void *holder, const struct blk_holder_ops *hops)
-+{
-+	struct bdev_handle *handle;
-+	dev_t dev;
-+	int error;
-+
-+	error = lookup_bdev(path, &dev);
-+	if (error)
-+		return ERR_PTR(error);
-+
-+	handle = blkdev_get_handle_by_dev(dev, mode, holder, hops);
-+	if (!IS_ERR(handle) && (mode & BLK_OPEN_WRITE) &&
-+	    bdev_read_only(handle->bdev)) {
-+		blkdev_handle_put(handle);
-+		return ERR_PTR(-EACCES);
-+	}
-+
-+	return handle;
-+}
-+EXPORT_SYMBOL(blkdev_get_handle_by_path);
-+
- void blkdev_put(struct block_device *bdev, void *holder)
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index a3c5f3558a33..979b0cfbea4a 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -91,7 +91,8 @@ static int iblock_configure_device(struct se_device *dev)
  {
- 	struct gendisk *disk = bdev->bd_disk;
-@@ -920,6 +960,13 @@ void blkdev_put(struct block_device *bdev, void *holder)
+ 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
+ 	struct request_queue *q;
+-	struct block_device *bd = NULL;
++	struct bdev_handle *bdev_handle;
++	struct block_device *bd;
+ 	struct blk_integrity *bi;
+ 	blk_mode_t mode = BLK_OPEN_READ;
+ 	unsigned int max_write_zeroes_sectors;
+@@ -116,12 +117,14 @@ static int iblock_configure_device(struct se_device *dev)
+ 	else
+ 		dev->dev_flags |= DF_READ_ONLY;
+ 
+-	bd = blkdev_get_by_path(ib_dev->ibd_udev_path, mode, ib_dev, NULL);
+-	if (IS_ERR(bd)) {
+-		ret = PTR_ERR(bd);
++	bdev_handle = blkdev_get_handle_by_path(ib_dev->ibd_udev_path, mode,
++				ib_dev, NULL);
++	if (IS_ERR(bdev_handle)) {
++		ret = PTR_ERR(bdev_handle);
+ 		goto out_free_bioset;
+ 	}
+-	ib_dev->ibd_bd = bd;
++	ib_dev->ibd_bdev_handle = bdev_handle;
++	ib_dev->ibd_bd = bd = bdev_handle->bdev;
+ 
+ 	q = bdev_get_queue(bd);
+ 
+@@ -177,7 +180,7 @@ static int iblock_configure_device(struct se_device *dev)
+ 	return 0;
+ 
+ out_blkdev_put:
+-	blkdev_put(ib_dev->ibd_bd, ib_dev);
++	blkdev_handle_put(ib_dev->ibd_bdev_handle);
+ out_free_bioset:
+ 	bioset_exit(&ib_dev->ibd_bio_set);
+ out:
+@@ -202,8 +205,8 @@ static void iblock_destroy_device(struct se_device *dev)
+ {
+ 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
+ 
+-	if (ib_dev->ibd_bd != NULL)
+-		blkdev_put(ib_dev->ibd_bd, ib_dev);
++	if (ib_dev->ibd_bdev_handle)
++		blkdev_handle_put(ib_dev->ibd_bdev_handle);
+ 	bioset_exit(&ib_dev->ibd_bio_set);
  }
- EXPORT_SYMBOL(blkdev_put);
  
-+void blkdev_handle_put(struct bdev_handle *handle)
-+{
-+	blkdev_put(handle->bdev, handle->holder);
-+	kfree(handle);
-+}
-+EXPORT_SYMBOL(blkdev_handle_put);
-+
- /**
-  * lookup_bdev() - Look up a struct block_device by name.
-  * @pathname: Name of the block device in the filesystem.
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index ed44a997f629..a910e9997ddd 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1471,14 +1471,24 @@ struct blk_holder_ops {
- #define sb_open_mode(flags) \
- 	(BLK_OPEN_READ | (((flags) & SB_RDONLY) ? 0 : BLK_OPEN_WRITE))
+diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
+index 8c55375d2f75..683f9a55945b 100644
+--- a/drivers/target/target_core_iblock.h
++++ b/drivers/target/target_core_iblock.h
+@@ -32,6 +32,7 @@ struct iblock_dev {
+ 	u32	ibd_flags;
+ 	struct bio_set	ibd_bio_set;
+ 	struct block_device *ibd_bd;
++	struct bdev_handle *ibd_bdev_handle;
+ 	bool ibd_readonly;
+ 	struct iblock_dev_plug *ibd_plug;
+ } ____cacheline_aligned;
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 0d4f09693ef4..9ea2b29e95bf 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -352,7 +352,7 @@ static int pscsi_create_type_disk(struct se_device *dev, struct scsi_device *sd)
+ 	struct pscsi_hba_virt *phv = dev->se_hba->hba_ptr;
+ 	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
+ 	struct Scsi_Host *sh = sd->host;
+-	struct block_device *bd;
++	struct bdev_handle *bdev_handle;
+ 	int ret;
  
-+struct bdev_handle {
-+	struct block_device *bdev;
-+	void *holder;
-+};
-+
- struct block_device *blkdev_get_by_dev(dev_t dev, blk_mode_t mode, void *holder,
- 		const struct blk_holder_ops *hops);
- struct block_device *blkdev_get_by_path(const char *path, blk_mode_t mode,
- 		void *holder, const struct blk_holder_ops *hops);
-+struct bdev_handle *blkdev_get_handle_by_dev(dev_t dev, blk_mode_t mode,
-+		void *holder, const struct blk_holder_ops *hops);
-+struct bdev_handle *blkdev_get_handle_by_path(const char *path, blk_mode_t mode,
-+		void *holder, const struct blk_holder_ops *hops);
- int bd_prepare_to_claim(struct block_device *bdev, void *holder,
- 		const struct blk_holder_ops *hops);
- void bd_abort_claiming(struct block_device *bdev, void *holder);
- void blkdev_put(struct block_device *bdev, void *holder);
-+void blkdev_handle_put(struct bdev_handle *handle);
+ 	if (scsi_device_get(sd)) {
+@@ -366,18 +366,18 @@ static int pscsi_create_type_disk(struct se_device *dev, struct scsi_device *sd)
+ 	 * Claim exclusive struct block_device access to struct scsi_device
+ 	 * for TYPE_DISK and TYPE_ZBC using supplied udev_path
+ 	 */
+-	bd = blkdev_get_by_path(dev->udev_path, BLK_OPEN_WRITE | BLK_OPEN_READ,
+-				pdv, NULL);
+-	if (IS_ERR(bd)) {
+-		pr_err("pSCSI: blkdev_get_by_path() failed\n");
++	bdev_handle = blkdev_get_handle_by_path(dev->udev_path,
++				BLK_OPEN_WRITE | BLK_OPEN_READ, pdv, NULL);
++	if (IS_ERR(bdev_handle)) {
++		pr_err("pSCSI: blkdev_get_handle_by_path() failed\n");
+ 		scsi_device_put(sd);
+-		return PTR_ERR(bd);
++		return PTR_ERR(bdev_handle);
+ 	}
+-	pdv->pdv_bd = bd;
++	pdv->pdv_bdev_handle = bdev_handle;
  
- /* just for blk-cgroup, don't use elsewhere */
- struct block_device *blkdev_get_no_open(dev_t dev);
+ 	ret = pscsi_add_device_to_list(dev, sd);
+ 	if (ret) {
+-		blkdev_put(pdv->pdv_bd, pdv);
++		blkdev_handle_put(bdev_handle);
+ 		scsi_device_put(sd);
+ 		return ret;
+ 	}
+@@ -564,9 +564,9 @@ static void pscsi_destroy_device(struct se_device *dev)
+ 		 * from pscsi_create_type_disk()
+ 		 */
+ 		if ((sd->type == TYPE_DISK || sd->type == TYPE_ZBC) &&
+-		    pdv->pdv_bd) {
+-			blkdev_put(pdv->pdv_bd, pdv);
+-			pdv->pdv_bd = NULL;
++		    pdv->pdv_bdev_handle) {
++			blkdev_handle_put(pdv->pdv_bdev_handle);
++			pdv->pdv_bdev_handle = NULL;
+ 		}
+ 		/*
+ 		 * For HBA mode PHV_LLD_SCSI_HOST_NO, release the reference
+@@ -994,8 +994,8 @@ static sector_t pscsi_get_blocks(struct se_device *dev)
+ {
+ 	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
+ 
+-	if (pdv->pdv_bd)
+-		return bdev_nr_sectors(pdv->pdv_bd);
++	if (pdv->pdv_bdev_handle)
++		return bdev_nr_sectors(pdv->pdv_bdev_handle->bdev);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
+index 23d9a6e340d4..b0a3ef136592 100644
+--- a/drivers/target/target_core_pscsi.h
++++ b/drivers/target/target_core_pscsi.h
+@@ -37,7 +37,7 @@ struct pscsi_dev_virt {
+ 	int	pdv_channel_id;
+ 	int	pdv_target_id;
+ 	int	pdv_lun_id;
+-	struct block_device *pdv_bd;
++	struct bdev_handle *pdv_bdev_handle;
+ 	struct scsi_device *pdv_sd;
+ 	struct Scsi_Host *pdv_lld_host;
+ } ____cacheline_aligned;
 -- 
 2.35.3
 
