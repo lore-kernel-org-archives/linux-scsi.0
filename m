@@ -2,112 +2,171 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15E5BC001B0
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jul 2023 17:25:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14763EB64D9
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 05:55:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231174AbjGCRZg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Jul 2023 13:25:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45886 "EHLO
+        id S229722AbjGDFzK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jul 2023 01:55:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229804AbjGCRZf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jul 2023 13:25:35 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7A0EE59
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Jul 2023 10:25:34 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-4fb960b7c9dso7289064e87.0
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Jul 2023 10:25:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1688405133; x=1690997133;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=n4kUBRQrdx2CGWwKrDgL92ebtE5Gyg+bfTU+CSzkAt8=;
-        b=fPvby7RWNhhWJ3wBolEnbdAotZ3JLJT78FZIvayG8/GVnG0STYphwavS30ktr3Nq5b
-         UYgTdsN4ho/jKZRazJDccpfXyWDR1o+lN9Qr5VEXT2Sol4VnDFHo6UtoXzKIlSF3ulIx
-         O5dl7aEo2+1fyBcIhvjngW+iZ2J6shc1hiBv0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688405133; x=1690997133;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=n4kUBRQrdx2CGWwKrDgL92ebtE5Gyg+bfTU+CSzkAt8=;
-        b=D9z9uOgoDTqiV9LE0b7RdnO/J9PXN+u4aRd/g5RvizCKxddX8B6dbseZt7t6K9nkKI
-         LU6Jqp14uFCUbh0hbQlFbXRLVKbFTYHxN+E7jla2wnpCN5pKGd4E7mjDnLlhbo7LMPTu
-         XwUXdF5eY+aq16WTspL1Acl7ZDOrkUxr93x2I58+WxeQZwMV4aj2Aa6Xr9TYPYrvUUfN
-         kLAwQt5XAzc57yD3R6sZoe4BnhXv6ab7oC5J0GKY1e5/sBpne8sHpGMef4ByzMX7rnAa
-         IY1ekLszxHqrkSrp4Z7fou4yc2Mv0cB3dGHSq+WGNdnFqv3wuqJPb0H2CFFA3lYVYRik
-         pUUg==
-X-Gm-Message-State: ABy/qLYp3ZK2fNG/obv8+3HGvdEj+rzAlBZwgjk2QuEPvE727hWjQ3sK
-        SGN3Hyssodo0gB5e8JKxAyt6sDwDeG76tzWjavc55jUp
-X-Google-Smtp-Source: APBJJlHWQ3XbrkSCIQ4UZppg//0pKrGxlEroGFQfDvER2Nj+v5o8Kr+BPwol5+13c9pjbT9yvnyQNQ==
-X-Received: by 2002:a19:4f10:0:b0:4f8:5dd2:21f5 with SMTP id d16-20020a194f10000000b004f85dd221f5mr6831886lfb.67.1688405132635;
-        Mon, 03 Jul 2023 10:25:32 -0700 (PDT)
-Received: from mail-lj1-f177.google.com (mail-lj1-f177.google.com. [209.85.208.177])
-        by smtp.gmail.com with ESMTPSA id x13-20020ac2488d000000b004edc72be17csm2811378lfc.2.2023.07.03.10.25.32
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Jul 2023 10:25:32 -0700 (PDT)
-Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2b69f958ef3so75552081fa.1
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Jul 2023 10:25:32 -0700 (PDT)
-X-Received: by 2002:a2e:8955:0:b0:2b6:9b2e:e352 with SMTP id
- b21-20020a2e8955000000b002b69b2ee352mr7461069ljk.9.1688405131758; Mon, 03 Jul
- 2023 10:25:31 -0700 (PDT)
+        with ESMTP id S229595AbjGDFzJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 01:55:09 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 793F6130;
+        Mon,  3 Jul 2023 22:55:07 -0700 (PDT)
+Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4QwBlj2CLHzLnWh;
+        Tue,  4 Jul 2023 13:52:49 +0800 (CST)
+Received: from [10.40.193.166] (10.40.193.166) by
+ kwepemi500016.china.huawei.com (7.221.188.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Tue, 4 Jul 2023 13:55:00 +0800
+Subject: Re: [PATCH] scsi: hisi_sas: Fix potential deadlock on &hisi_hba->lock
+To:     Chengfeng Ye <dg573847474@gmail.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+References: <20230628153010.57705-1-dg573847474@gmail.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
+Message-ID: <eb9476ed-8dc3-a7b6-7478-b7fba3d8e33b@hisilicon.com>
+Date:   Tue, 4 Jul 2023 13:54:59 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
-References: <23bd2eafa9b9a23e4a8a96fc0180bba9e77e42ca.camel@HansenPartnership.com>
- <CAHk-=wjgnB11KzroXS+Gi1TQO19uf0FvkMBn=V7mcQ8q78ucnQ@mail.gmail.com> <69eeacda-d59c-bec8-d115-4bf7c97d7690@oracle.com>
-In-Reply-To: <69eeacda-d59c-bec8-d115-4bf7c97d7690@oracle.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 3 Jul 2023 10:25:14 -0700
-X-Gmail-Original-Message-ID: <CAHk-=whkqWU+OVkU5YM=X0rdF4wvcMynReCo+0fyD8ErMb51Sg@mail.gmail.com>
-Message-ID: <CAHk-=whkqWU+OVkU5YM=X0rdF4wvcMynReCo+0fyD8ErMb51Sg@mail.gmail.com>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 6.4+ merge window
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20230628153010.57705-1-dg573847474@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.40.193.166]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemi500016.china.huawei.com (7.221.188.220)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 3 Jul 2023 at 10:09, Mike Christie <michael.christie@oracle.com> wrote:
+Hi,
+
+
+在 2023/6/28 星期三 23:30, Chengfeng Ye 写道:
+> As &hisi_hba->lock is acquired by hard irq int_abnormal_v1_hw(),
+> other acquisition of the same lock under process context should
+> disable irq, otherwise deadlock could happen if the
+> irq preempt the execution while the lock is held in process context
+> on the same CPU.
 >
-> Maybe name it persistent_reservation.c, or if people think that's too
-> long does persistent_resv.c make sense since we use the "resv"
-> abbreviation for reservation in nvme and the block layer.
+> [Interrupt]: int_abnormal_v1_hw()
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c:1447
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:2050
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1079
+>      -->spin_lock_irqsave(&hisi_hba->lock, flags);
+>
+> [Process Context]: hisi_sas_clear_nexus_ha()
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1932
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1135
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1116
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1105
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:166
+>      -->spin_lock(&hisi_hba->lock);
+>
+> [Process Context]: hisi_sas_dev_found()
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:665
+>      -->spin_lock(&hisi_hba->lock);
+>
+> [Process Context]: hisi_sas_queue_command()
+>      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:188
+>      -->spin_lock(&hisi_hba->lock);
+>
+> This flaw was found by an experimental static analysis tool I am
+> developing for irq-related deadlock, which reported the above
+> warning when analyzing the linux kernel 6.4-rc7 release.
+>
+> The tentative patch fix the potential deadlock by spin_lock_irqsave().
 
-Yeah, as a non-storage person, I really would prefer more informative names.
+Thank you for reporting it.
+But we consider about removing  hisi_hba->lock in function 
+hisi_sas_port_notify_formed()
+which is called by int_abnormal_v1_hw(), as we think it is not necessary 
+to add hisi_hba->lock in this function.
+So please ignore it and still thank you for pointing out the issue.
 
-Maybe I'll never end up looking at that file again, and my one-time
-conflict resolution reaction is really just that, but I do think that
-we can afford the extra disk space.
+Thanks,
+Shawn
 
-Do people really end up typing that file name so much that the extra
-keystrokes would matter (and if so - do you really not use
-tab-completion? Is it just me that tab-completes pretty much every
-filename I type?)
+>
+> Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
+> ---
+>   drivers/scsi/hisi_sas/hisi_sas_main.c | 17 ++++++++++-------
+>   1 file changed, 10 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> index 412431c901a7..47c5062a732e 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -161,11 +161,12 @@ static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
+>   
+>   static void hisi_sas_slot_index_free(struct hisi_hba *hisi_hba, int slot_idx)
+>   {
+> +	unsigned long flags;
+>   	if (hisi_hba->hw->slot_index_alloc ||
+>   	    slot_idx < HISI_SAS_RESERVED_IPTT) {
+> -		spin_lock(&hisi_hba->lock);
+> +		spin_lock_irqsave(&hisi_hba->lock, flags);
+>   		hisi_sas_slot_index_clear(hisi_hba, slot_idx);
+> -		spin_unlock(&hisi_hba->lock);
+> +		spin_unlock_irqrestore(&hisi_hba->lock, flags);
+>   	}
+>   }
+>   
+> @@ -181,11 +182,12 @@ static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
+>   {
+>   	int index;
+>   	void *bitmap = hisi_hba->slot_index_tags;
+> +	unsigned long flags;
+>   
+>   	if (rq)
+>   		return rq->tag + HISI_SAS_RESERVED_IPTT;
+>   
+> -	spin_lock(&hisi_hba->lock);
+> +	spin_lock_irqsave(&hisi_hba->lock, flags);
+>   	index = find_next_zero_bit(bitmap, HISI_SAS_RESERVED_IPTT,
+>   				   hisi_hba->last_slot_index + 1);
+>   	if (index >= HISI_SAS_RESERVED_IPTT) {
+> @@ -193,13 +195,13 @@ static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
+>   				HISI_SAS_RESERVED_IPTT,
+>   				0);
+>   		if (index >= HISI_SAS_RESERVED_IPTT) {
+> -			spin_unlock(&hisi_hba->lock);
+> +			spin_unlock_irqrestore(&hisi_hba->lock, flags);
+>   			return -SAS_QUEUE_FULL;
+>   		}
+>   	}
+>   	hisi_sas_slot_index_set(hisi_hba, index);
+>   	hisi_hba->last_slot_index = index;
+> -	spin_unlock(&hisi_hba->lock);
+> +	spin_unlock_irqrestore(&hisi_hba->lock, flags);
+>   
+>   	return index;
+>   }
+> @@ -658,11 +660,12 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+>   {
+>   	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+>   	struct hisi_sas_device *sas_dev = NULL;
+> +	unsigned long flags;
+>   	int last = hisi_hba->last_dev_id;
+>   	int first = (hisi_hba->last_dev_id + 1) % HISI_SAS_MAX_DEVICES;
+>   	int i;
+>   
+> -	spin_lock(&hisi_hba->lock);
+> +	spin_lock_irqsave(&hisi_hba->lock, flags);
+>   	for (i = first; i != last; i %= HISI_SAS_MAX_DEVICES) {
+>   		if (hisi_hba->devices[i].dev_type == SAS_PHY_UNUSED) {
+>   			int queue = i % hisi_hba->queue_count;
+> @@ -682,7 +685,7 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
+>   		i++;
+>   	}
+>   	hisi_hba->last_dev_id = i;
+> -	spin_unlock(&hisi_hba->lock);
+> +	spin_unlock_irqrestore(&hisi_hba->lock, flags);
+>   
+>   	return sas_dev;
+>   }
 
-I did do a simple
-
-    git ls-files | grep '/[a-z][a-z]\.[ch]$'
-
-to see how common this kind of two-letter thing is, and  we do have a
-ton of them (the test directory has single-letter "a.c" kind of files
-too, but for testing that's fine).
-
-Some of those two-letter things look fine: things like "mm", "fs",
-"rw", "rx", "tx", and "io" are I think common enough in kernel
-contexts that there is practically no real long-form version of them
-
-And others seem to perhaps make sense within the context of individual
-device drivers (ie there seem to be two-letter board revisions).
-
-And then we have the ones that make me just go "Whaa". Like that
-"pr.c". If I hadn't looked at it, I would have expected "pr" to be
-shorthand for some kind of printing function (eg our "pr_warn()" etc
-helpers).
-
-Clearly it's not the only one.
-
-           Linus
