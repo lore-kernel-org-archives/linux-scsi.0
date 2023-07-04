@@ -2,129 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 292C4EB64D9
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 07:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 803BAEB64D9
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jul 2023 11:22:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231322AbjGDHiM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Jul 2023 03:38:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51312 "EHLO
+        id S231207AbjGDLWl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jul 2023 07:22:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231411AbjGDHiL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 03:38:11 -0400
-Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sgaapc01on2113.outbound.protection.outlook.com [40.107.215.113])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF2D7E6D;
-        Tue,  4 Jul 2023 00:38:09 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DqjinU0ZElAVtMDURMjEHA9fsR6wsEua8szcjjcX1uS7OYNyU0AUI/jE9nTkgEMeeutSb+Gn0WcTIMtNuP1UL9dKhIS0Tk0UadtJIF4mc6lvlwu5AdP6F4+pJzkXomKa6eEhET3KQDVfTvrOvSUzd5QVS8eM2q/pN+YAjQmiW+tjFX7zZng35xGQM+ugAVQqL8U7IhedzS2th8slNWvKJpJckt+gqHdsXDopGFTQzZqy4c5nJ2Zp2Ks/WtNSljwy/pDjKtvvbkT62B0u9Vdi14yyPH0Zgxb+WOiym+WCsL/cYdYtgFBokpVDgUeWWU3d/g/IXRUCJgBbEL6QSXJRIQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=E9HQhMaqLSxXxWmEJbmsr47DN1QfOytmGvpGS6uwDjA=;
- b=bwzVljOCkdK2aZfYXjui8TgiCOles/+4QemaBQVk/+LZdWushqBk3F8NjKwI/QSYUyuJRtPP5Id8pthQ6P9lzoQE3rIArJZBYzycWKgFw1CvlmLKFbzk616YRC0/QewO482HLgm9MEZ5KblBOlZDC0RhwOVhh6w6lpyv+I0p+++8X+GUS2doYnGle2HSJyoJDhqO2dDejmyruPac7oVyh6Q8iR/Z6a6ukhUiMcjJBK00Fup56gW+H5bhfoYPT4F0StoaDkDsaOtGkn6K0HDN4TBskhFLaxX64lnETNW7Cx/8VxFlH0ztZNpud1OHcMklkeCVx9ptjx3J8zWhs7Gg3w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=E9HQhMaqLSxXxWmEJbmsr47DN1QfOytmGvpGS6uwDjA=;
- b=SLZHjfiwbYvVBdTdKkf92VcpRFx8mmWrgrJzmX1f/k1DGmckJLhMwR0oMNWcANeZ8jlL7+He1We3SZ9wSg8k5VBhUBaXNM7Mj0o+/TUnC17Q9TVTodvcG0M54C11l/lR/GQaFoQc/3/JJ/GKysQKs+DLe8a++84HYfuJ5XT/TPXmmZMjYMpzBao1zg6mzaL8lTx80v766kYDU7+NpE1Tm3F4YhzNNAaxk1kqsPkQEX7319dkPUEa99OmsIqQ8Y5banzlmZybJZ2Ll2jUX08Pe50bzftUPAQ+pdpIzV7z434NSLRmnvsLna9/ZCuXeQC/l9vgtITWGc84bmRJoh6dGA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SG2PR06MB5288.apcprd06.prod.outlook.com (2603:1096:4:1dc::9) by
- PUZPR06MB4574.apcprd06.prod.outlook.com (2603:1096:301:a5::13) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6544.24; Tue, 4 Jul 2023 07:38:01 +0000
-Received: from SG2PR06MB5288.apcprd06.prod.outlook.com
- ([fe80::c2b:41ab:3b14:f920]) by SG2PR06MB5288.apcprd06.prod.outlook.com
- ([fe80::c2b:41ab:3b14:f920%6]) with mapi id 15.20.6544.024; Tue, 4 Jul 2023
- 07:38:01 +0000
-From:   Minjie Du <duminjie@vivo.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     opensource.kernel@vivo.com, Minjie Du <duminjie@vivo.com>
-Subject: [PATCH v1] drivers: scsi: remove duplicate logical judgments
-Date:   Tue,  4 Jul 2023 15:37:52 +0800
-Message-Id: <20230704073752.5498-1-duminjie@vivo.com>
-X-Mailer: git-send-email 2.39.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR06CA0230.apcprd06.prod.outlook.com
- (2603:1096:4:ac::14) To SG2PR06MB5288.apcprd06.prod.outlook.com
- (2603:1096:4:1dc::9)
+        with ESMTP id S230490AbjGDLWi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2023 07:22:38 -0400
+X-Greylist: delayed 95 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 04 Jul 2023 04:22:35 PDT
+Received: from ssh249.corpemail.net (ssh249.corpemail.net [210.51.61.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3728E52;
+        Tue,  4 Jul 2023 04:22:35 -0700 (PDT)
+Received: from ssh248.corpemail.net
+        by ssh248.corpemail.net ((D)) with ASMTP (SSL) id AKU00022;
+        Tue, 04 Jul 2023 19:15:22 +0800
+Received: from lihongweizz00.home.langchao.com (10.180.207.169) by
+ jtjnmail201601.home.langchao.com (10.100.2.1) with Microsoft SMTP Server id
+ 15.1.2507.27; Tue, 4 Jul 2023 19:15:23 +0800
+From:   lihongweizz <lihongweizz@inspur.com>
+To:     <lduncan@suse.com>, <cleech@redhat.com>,
+        <michael.christie@oracle.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Rock Li <lihongweizz@inspur.com>
+Subject: [PATCH] scsi: iscsi: fix stop connection cocurrency issue
+Date:   Tue, 4 Jul 2023 19:15:21 +0800
+Message-ID: <20230704111521.580-1-lihongweizz@inspur.com>
+X-Mailer: git-send-email 2.40.1.windows.1
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SG2PR06MB5288:EE_|PUZPR06MB4574:EE_
-X-MS-Office365-Filtering-Correlation-Id: cdf12ad9-9c7f-4839-01f3-08db7c619829
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: +8xO80o4G66dloHp3bSRS61zkKPEimkVzxOgTKpWaYG3OhTaL5dzvH2iLGAUp3Z3AnLPa9tANHA663v9s5MFNjc97mtlLe0nMs4VgKVUK9IJ7BiCPW8nl/0DiODkYvSENjQHOdLvUURfTMfi8qZCQHJdGS23gyP3guEhbW6bZdpPSUInDYn/QljmaJuMb1a0FRSM443MEPq2vkNUo7aUaqa1C4IXvoWnaGfF+NWTu54fDNOv7kNfrAUif7xKZSd6EDgAmREcmGRDpgR76yCiV8ee7+tlLBszH7nuJJHDOgpA1y6Y1nVb6q6UEfdLdp3bdSPaBif+o1rJ/WNNCwq+ilC3wCvwbSq2hbP7CZQXQcElk/iyAfISGDumICe6Lbscap1ISibvZPshiZ+geS+0OXCchKrJrs6CulXUJIpBBx+3ci9A/5gH3Bo4bvMjkDtg1RRo81dNPZ1zrH81riWNd3khpB5J9VEC9Hi9Ut/vtfos8hj5K0QvhFGw7/GdsEqXMdnQovYqp00evWacPNhtzNjph9pGX5xpBMIm/AGaX3aGZywEdO+BJssSsFvJo7a5zTXlzYCj5+br5PdLuyCkA4lhobHOOcVSarUr781f/oEpSvvG5aGxmKQkGfA2O0CE
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SG2PR06MB5288.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(136003)(376002)(346002)(366004)(396003)(39860400002)(451199021)(26005)(478600001)(1076003)(6666004)(6506007)(6512007)(86362001)(2616005)(186003)(38350700002)(107886003)(38100700002)(66946007)(66556008)(4326008)(66476007)(83380400001)(52116002)(6486002)(316002)(5660300002)(8676002)(8936002)(4744005)(41300700001)(2906002)(36756003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/NAv8d6om2L1tzKV89VN9+lLYLOUFPQ6dqcV1zJoMBD1/Udry7+El9RWQczV?=
- =?us-ascii?Q?yFQjDKNd9DcLf9FkK+GMPe6K1Emuuf8sF26Ina/mogronUZr9k5jaZBWnDbJ?=
- =?us-ascii?Q?f89Ajdmu/nFFU7gX+DWQ4xRd0q8NeX7Z7aaYG/ywC/2qntFXmaIpuvn00BUH?=
- =?us-ascii?Q?UPVRyV3SgrxfaI2iAad2S3LP2kNdr+a3gVCjHhbLezVluCnfKIldfvGpNJkl?=
- =?us-ascii?Q?0dWJ3JiTVgKAj9ITQSPISOzuGsckqlBshPFNn4SQTv3g9+c7uSVdvU1MHvMR?=
- =?us-ascii?Q?iAttRBY3zRmarxWMU0NSmOwrEzgsBVLQAzEjJJO3fMeoRd20DvYHQGmJLD+5?=
- =?us-ascii?Q?7vNfs94u1MPfEKSFjoux+nTjdEETnd/h1eTdUqB2uA6wL1KQHHzQ3ASpx0ap?=
- =?us-ascii?Q?vc9gdE88fRqGel22sBGAHfXIlxT9UoBGCdZ5ExlO/xjmL0nk5ZwjTjarLc/X?=
- =?us-ascii?Q?E9mwrINsl5auSaEAGX9R1WLKYqXawKIpCaxyKHE26Sr1pTKJRC42qcXcEZ/H?=
- =?us-ascii?Q?TV+0Uc5DHOZdVr6dYvzc/werRnBavA+q/UX7u9Y8LAj3uN9F2gDLZuJthEAF?=
- =?us-ascii?Q?+WrwYQgDHkgXQv7JZl0OfzQwI/UVWaCJgkg8f1Ln8KnPg6WclWna4iUM1bKs?=
- =?us-ascii?Q?ra2OD7LSwh4Jl3wtvHMRrMTDFni7CCii/QD9eax+ImtNRl8pbv1n6bFaCtFg?=
- =?us-ascii?Q?8yBX7JL/aKlys/Sw5zfgFiXD92l1BiYs3PI0OctlhSwipiyQ7vmVKHxEQDr/?=
- =?us-ascii?Q?Zb8VrbtU9qk1TFkuB3ROBpg7knO35yhG6bGSE31rcOSuHiutoBcT/DbCorTQ?=
- =?us-ascii?Q?DHF83MSZ27QTLHgnbg9e2fG64OhOzkfHjTEIrlz+qVG2ahnOoNhN2aqP4XeU?=
- =?us-ascii?Q?skGeHZ2lE58Ox6WCUXAXyeznFXv7wVkri1jG4fbEJSGCYbUd1guf36HugIJ2?=
- =?us-ascii?Q?crLzBy0MozGW5XsCcIBFqA6UAfS9NvfARQRNZCnIf8b+asNJMjZUE4a4BSrV?=
- =?us-ascii?Q?f1GkovUC6gEkJduaxvAyMXXGCzFroc0gbhfMw5dtgy5Pgb0EYI6hBmOzilH9?=
- =?us-ascii?Q?cGogm9fAbRoFuXEMTHJagx3RoWPJWMlMDCcE55mgnJEJh/Z4MzV+c86G/K+a?=
- =?us-ascii?Q?R/QWQQBcM64/H0CUd+y++0yXKNFbrAWKGPUkUPmqMz4/WaUP/DZ8eH+yAw0h?=
- =?us-ascii?Q?VDO/p5WV9jsNQMFtNWKv6Hc5vL3Ybdi6VltgGkwPAg4uHT5LemeiKBVl5Sp2?=
- =?us-ascii?Q?LMeVbnIpSrQvjs9GkenwOZpnmgITcCRreqGE8c3Kh4P04+BVfBS7LSuWM4+V?=
- =?us-ascii?Q?epsCHITIR9j3Z5FpatNMrOce+K9INxn1K9V379C+9+FwHmdbn7IdYqilT/US?=
- =?us-ascii?Q?skzKyru5sI/SAoiJLUBxKvWIcZqA5qIF4fmqKX0BMYATEY799wcdV5nygbSs?=
- =?us-ascii?Q?uRkB9ByGhF5a3730GXsxee+outdw97/KTZCMDJd61roXKvZFjN5cyAIjZ5YF?=
- =?us-ascii?Q?hk/0Ryg2Jwd32T1rHmOtu1T0cAKv9s4Rf38USRuCcgUBB6hwQS7zGJ6slLq5?=
- =?us-ascii?Q?RJp/FRG3q64il23lkeNKa1Z5RH/RIQpS2Uv20Ngx?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cdf12ad9-9c7f-4839-01f3-08db7c619829
-X-MS-Exchange-CrossTenant-AuthSource: SG2PR06MB5288.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jul 2023 07:38:01.1873
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: UFzuYdI+pULvU8b17kSpFhSTBePPrft+OQEBcZTpoof+v+k5qO6svxoT2LkhtawJwgPiMyv/u6gEM6qBetcX2Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PUZPR06MB4574
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.180.207.169]
+tUid:   202370419152203b1c0b4d45a67b0f0900ca94abe91e9
+X-Abuse-Reports-To: service@corp-email.com
+Abuse-Reports-To: service@corp-email.com
+X-Complaints-To: service@corp-email.com
+X-Report-Abuse-To: service@corp-email.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix: delate duplicate logical judgments.
-Please check this. Thank you!
+From: Rock Li <lihongweizz@inspur.com>
 
-Signed-off-by: Minjie Du <duminjie@vivo.com>
+We met a crash issue when iscsi connection was not stable:
+[ 5581.778976]  connection929:0: detected conn error (1020)
+[ 5592.539182] scsi host17: iSCSI Initiator over TCP/IP
+[ 5592.548847]  connection930:0: detected conn error (1020)
+[ 5592.548890] BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+[ 5592.548935] PGD 0
+[ 5592.548947] Oops: 0000 [#1] SNP NOPTI
+[ 5592.548966] CPU: 51 PID: 912890 Comm: kworker/u161:2 Kdump: loaded Tainted: G OE - xxxxxx #1
+[ 5592.549022] Hardware name: xxxxxx
+[ 5592.549053] Workqueue: iscsi_conn_cleanup scsi_cleanup_conn_work_fn[scsi_transport_iscsi]
+[ 5592.549098] RIP: 0010:iscsi_sw_tcp_release_conn+0x54/0x110[iscsi_tcp]
+[ 5592.549130] Code: fb be 02 00 00 00 48 89 0f e8 88 65 8b c9 48 8b 45 20 f0 ff 80 80 00 00 00 0f 88 e3 06 00 00 48 8b 43 08 4c 8b 70 08 49 8b 06 <48> 8b 58 20 4c 8d bb 30 02 00 00 4c 89 ff e8 49 75 as c9 4c 89 ff
+[ 5592.549209] RSP: 0018:ff6937f4283e7e00 EFLAGS: 00010202
+[ 5592.549233] RAX: 0000000000000000 RBX: ff347b03a4a4b478 RCX: 0000000000000000
+[ 5592.549265] RDX: 0000000000000000 RSI: 00000000fffffe0l RDI: ffffffff8a2bc977
+[ 5592.549296] RBP: ff347b063d49d600 R08: ff347b20bffeb878 R09: 00000000000003e8
+[ 5592.549327] R10: 0000000000000000 R11: ff347b20bffe9b44 R12: ff347b03a4a4b7a8
+[ 5592.549358] R13: ff347b03a4a4e610 R14: ff347b03a4a4b7a8 R15: ff347b03a4a4b068
+[ 5592.549389] FS: 0000000000000000(0000) Gs:ff347b20bffc0000(0000) knlGs:0000000000000000
+[ 5592.549424] CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 5592.549446] CR2: 0000000000000020 CR3: 0000003a22610005 CR4: 0000000000773ee0
+[ 5592.549469] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 5592.549491] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[ 5592.549510] PKRU: 55555554
+[ 5592.549518] Call Trace:
+[ 5592.549528]  iscsi_sw_tcp_conn_stop+0x5d/0x80 [iscsi_tcp]
+[ 5592.549546]  iscsi_stop_conn+0x66/0xc0 [scsi_transport_iscsi]
+[ 5592.549568]  iscsi_cleanup_conn_workin+0x6e/0xbe [scsi_transport_iscsi]
+
+After digging the vmcore file, a concurrency scenario was found:
+<netlink recv msg>          <sk_state_change triggered>    <kworker>
+iscsi_if_rx                 iscsi_sw_tcp_state_change
+  iscsi_if_recv_msg           iscsi_sw_sk_state_check
+    iscsi_if_stop_conn          iscsi_conn_failure
+      cancel_work_sync(            iscsi_conn_error_event
+        &conn->cleanup_work)
+                                     queue_work(
+                                       &conn->cleanup_work)
+      iscsi_stop_conn        <- Excute cocurrenty -->      iscsi_stop_conn
+
+iscsi_stop_conn will be excuted cocurrently in different paths.
+Fix this issue by leveraging ep_mutex to protect iscsi_stop_conn.
+
+Signed-off-by: Rock Li <lihongweizz@inspur.com>
 ---
- drivers/scsi/qlogicfas408.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
-index 3e065d5fc..d2f92672b 100644
---- a/drivers/scsi/qlogicfas408.c
-+++ b/drivers/scsi/qlogicfas408.c
-@@ -594,8 +594,7 @@ void qlogicfas408_setup(int qbase, int id, int int_type)
- int qlogicfas408_detect(int qbase, int int_type)
- {
- 	REG1;
--	return (((inb(qbase + 0xe) ^ inb(qbase + 0xe)) == 7) &&
--		((inb(qbase + 0xe) ^ inb(qbase + 0xe)) == 7));
-+	return ((inb(qbase + 0xe) ^ inb(qbase + 0xe)) == 7);
- }
- 
- /*
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index b9b97300e3b3..1da1083509b6 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2307,7 +2307,16 @@ static int iscsi_if_stop_conn(struct iscsi_cls_conn *conn, int flag)
+ 	 */
+ 	if (flag == STOP_CONN_TERM) {
+ 		cancel_work_sync(&conn->cleanup_work);
++
++		/* There is a race window between cancel clean_work and
++		 * connection stopped. Socket down event may queue clean up
++		 * work again before connection stopped which will result
++		 * stop connection cocurrency issue. Avoid this issue
++		 * by leveraging ep_mutex
++		 */
++		mutex_lock(&conn->ep_mutex);
+ 		iscsi_stop_conn(conn, flag);
++		mutex_unlock(&conn->ep_mutex);
+ 	} else {
+ 		/*
+ 		 * Figure out if it was the kernel or userspace initiating this.
 -- 
-2.39.0
+2.27.0
 
