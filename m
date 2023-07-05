@@ -2,164 +2,210 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FC57EB64DD
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jul 2023 10:02:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21B69EB64DA
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jul 2023 10:06:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231669AbjGEKCX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Jul 2023 06:02:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37338 "EHLO
+        id S231661AbjGEKGe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Jul 2023 06:06:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231213AbjGEKCW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2023 06:02:22 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85CA11B2;
-        Wed,  5 Jul 2023 03:02:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1688551340; x=1720087340;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=ABre9itWkr7HR5boON2ywHdJ+eEVfHulSifCMmrnWFk=;
-  b=B3Gj8glmOM47FvmQ+YYQDRvs979D9/mZAnAmKoXklB+9TvkcNA3G1F/g
-   IcSF4o9A6q0+CxS06BPcLJG9INocLA/oZXRT6x9eddgicOJ/nUxtOkVp7
-   Dm+rMFyR26eJx+nfgaTPjIcLcKgg1QaWjP62frEiJj1lEc82s5DaNwwgQ
-   CxkkVsg1a6XmEAmBoeGw4hwRTKgFwelpZtk2uE6Ph5IrdEQmwbKLgAOIC
-   5aklEOWaGdb8fUxEDrI7Qwlwv89jQ4nQPFhF/kVu7hz9vr/9QlTWsx70Q
-   GVfnxQGIYo0Kbv69OheHdnFD7bLwQOX/mUjcpHq28MRcbvO5+G8Wvpi8K
-   A==;
-X-IronPort-AV: E=Sophos;i="6.01,182,1684771200"; 
-   d="scan'208";a="235626732"
-Received: from mail-mw2nam10lp2105.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.105])
-  by ob1.hgst.iphmx.com with ESMTP; 05 Jul 2023 18:02:19 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ksze8p+BCPZjhuKiNvqkkuJfpyLlHfB6JxnpYVl0fJ3CUK0/hrFUfIp6uBQT3ZKtEr2HbFdQYXSXCkR0hCVDgO2Ig6BzauLAGjrWPaIzzC0VKokqPPfku5cf87nwXkphvbaIU6lo24tuqylKyJffCN6lgMZHtcyX4uhwvhz39yFCcNTY8a1bB1NgCNV5W1p1ugrgjPJmrJuKJRrdf/b3+txrUquLvNjOc2Eup0c1DwyQaA68AEcMC5AoZTh6JvDjpPb0Jbi3uarAMBa91JyBTujuJt64on33oO81FXWQLZmsEzJb3+G6ocuyoPUBWKBgM0+tBrtTU9wtG1PsrvhEoA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ABre9itWkr7HR5boON2ywHdJ+eEVfHulSifCMmrnWFk=;
- b=IjlbrtSAmHGIBbh8guIRWtcXtnQDP4LiFocL0QUnFdnvT9lUY/arRDnuTP7gxpZonatAYQS1ShG12GrcbfQ67OrblcfryYJ4BkvjLd9acP9chzV6N7qbtg/krCaixUtZxgWtIOZBmQ0f/76P0PI1QwuGUw3zHZHAu380yMFjDcihN5wA9Pnxwnd6ji124dzKbbUPLLOOBcO0JBo0JBL3+6QXZNOWruWmLaJvBzahZlwp+lGkxGklCcQLzU/FZChEdZCUVqZdr1NUJEWhV1WFms72XPrvcEdaV6YbMGw9DDXcNz4HfJfOTWLpucdGpNodoX7UM463MU9btFWMJKGg5g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        with ESMTP id S231466AbjGEKGd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2023 06:06:33 -0400
+Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5F551721;
+        Wed,  5 Jul 2023 03:06:31 -0700 (PDT)
+Received: by mail-wr1-x435.google.com with SMTP id ffacd0b85a97d-3094910b150so7348921f8f.0;
+        Wed, 05 Jul 2023 03:06:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ABre9itWkr7HR5boON2ywHdJ+eEVfHulSifCMmrnWFk=;
- b=d7PrVrkq/DiH38mus4doxpx+fTue6D1Z9ORoB2clj3eFJcVGyUG2eb0IwHhxj9hww9RV1KsbnZ/LJXXup5oPMYzwIOn5+KlRKee2IokUlVRqBspsZKnbLDYSVSqulL/FBIK1JDW69GUBfzzlLiOxGc7uQbJFIDII84cxKrFzyiE=
-Received: from BY5PR04MB6327.namprd04.prod.outlook.com (2603:10b6:a03:1e8::20)
- by CO6PR04MB7620.namprd04.prod.outlook.com (2603:10b6:303:ad::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.17; Wed, 5 Jul
- 2023 10:02:15 +0000
-Received: from BY5PR04MB6327.namprd04.prod.outlook.com
- ([fe80::23d8:739:4578:cbc7]) by BY5PR04MB6327.namprd04.prod.outlook.com
- ([fe80::23d8:739:4578:cbc7%6]) with mapi id 15.20.6565.016; Wed, 5 Jul 2023
- 10:02:15 +0000
-From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
-To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     Avri Altman <Avri.Altman@wdc.com>,
-        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [RESEND v2] ufs: core: Add support for qTimestamp attribute
-Thread-Topic: [RESEND v2] ufs: core: Add support for qTimestamp attribute
-Thread-Index: AQHZqBmraa5SJIbjX0SShq6Lycf7Lq+g1b0AgAD7knCACS3VEA==
-Date:   Wed, 5 Jul 2023 10:02:14 +0000
-Message-ID: <BY5PR04MB632757ADF169C46BF22435BBED2FA@BY5PR04MB6327.namprd04.prod.outlook.com>
-References: <20230626103320.8737-1-arthur.simchaev@wdc.com>
- <896abe03-4fcd-003f-1273-209daafc5635@acm.org>
- <BY5PR04MB6327520D05FDC13A6BA3894CED25A@BY5PR04MB6327.namprd04.prod.outlook.com>
-In-Reply-To: <BY5PR04MB6327520D05FDC13A6BA3894CED25A@BY5PR04MB6327.namprd04.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BY5PR04MB6327:EE_|CO6PR04MB7620:EE_
-x-ms-office365-filtering-correlation-id: 636c3c9d-31a6-4366-804f-08db7d3ee8b1
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: zt48YarROnx3CGJ/3pK2rA/VyNyPyQOCgzH+SEoh3OIDo+6oMFyJ1gyHPOP8bl7k/SKx4ZO4zUfkQiWIFnbUAZseBpSCLjXP56obl6cE2w6uxXDfFkdm+j8+U04iKjgsN0SCpJ/CatSWFux2R3I9/Zi2mMPGW/HdgHViBeAj55HYFn8zNX1z4EC4UYRSxV+KOEo9wAsY+624nJKtoiukVMvmsgwIXtUq0zqwtOLu1OcRpKcQoFbP90ZivKyc0lm6s4fMZSV+HGK2vGf3sDFh+UMKNRj2hpiaSoHoUcbFxr3X7/nVzQBdlSHoPSte5iwD69Iue9+cyKcFh3qk8quYXCFF0slxsQIH7DhigSB/QkS7QZQ2IT5Yd5dkhBIb9fLE60ivHun6Dt7D9UTKS1k0dqzdp0CxdtwxCviVHVPotcHzTzmAmF7v81KJlavQML7tWsiPRERkHoGocw4pJGQECVdmWgvmFFOmZelcfsqxtYd5xYSfGIJsRBZGvuf+SZ6Ht6r83O4om607S7YagMZtpYyQeWYaL9uEcUsU9FVJuK7ThkxPI78KxQfH7eWXTYaoA9p/cGzx0VY8scyQc/1tOHO6qQXPlxbbMU2hgPL147dBkEpOXMJwX9XoXLm4dC2G
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6327.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(396003)(39860400002)(346002)(136003)(376002)(366004)(451199021)(76116006)(38100700002)(66476007)(66446008)(66556008)(4326008)(64756008)(66946007)(82960400001)(122000001)(55016003)(186003)(86362001)(33656002)(71200400001)(38070700005)(7696005)(6506007)(9686003)(26005)(53546011)(110136005)(54906003)(478600001)(8936002)(8676002)(4744005)(5660300002)(52536014)(2906002)(41300700001)(316002)(83380400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?VTNlRkFEbGd6WDlRQmNTKzJSekVGcXRPQWMzYXJiS1N0RkxwYmZWcFNRV2ha?=
- =?utf-8?B?V3pVcEg1U3FJK1hiU29GNEhtcXZQQ2xtWEkzVVhGUVFQay9Ea1IrcHY3RUNC?=
- =?utf-8?B?UU5wYVdZYURqNmcwcDZHa1J1TDJtblRkOWtvOW4vcmxxdWpoSUV1azdoWGRR?=
- =?utf-8?B?YVRRTFI2WHdHb1Q1RVNsNHErb2t0YU9qb0tRTGpCeXh0K3FsSzh1aW5KbHpY?=
- =?utf-8?B?RHoyZ1MyUXZOZmh0ZFFQcG1ESzV6SHVTR0t5UTdiUGdXa3lqdWxuRFYvVXZW?=
- =?utf-8?B?Y3c5aDBlcmtvNVB2Q2NJdnBnMzh6OTQ4ZmVQdC9jUG1TK2FCek9GaWZmZytF?=
- =?utf-8?B?SU43QWVzbUF5QThZOTVPaTVFbDYzR29vQUZJWjlxZE13SkR3elpYTjU5Mldp?=
- =?utf-8?B?VWVZc21MY3lJeWJtYlR0S2JEZWxVc2tqQTlxY1FGdGxHQ2tHVjlPMXJaVS9t?=
- =?utf-8?B?S0dvbkRDZWxibkprS3NJUVgrVHpJNXMvTW5oc2VGY28rVktCTWNmYjRUNzdI?=
- =?utf-8?B?ekhLSmNFd09pc3M2V0ZFYjNReUFHVXVsekVWREkyNDJJbk9KQzhiT3RtYXMy?=
- =?utf-8?B?czN3K1REQ0xJT1Z5TUg0ZFZnQit5Q2JpWXFVK0RrZG91UU5IS3ZTeFpRS2hP?=
- =?utf-8?B?RWd5bkZyYSttcU0va1M0YjE2dUhkZnNyb3hDU1ZxOVpFM2dHMnprSmJmTUJF?=
- =?utf-8?B?dmNVc1RVb0ZTNVExVlQ3ZkVheWErSWpKQW9KN0FwL00wS3N1NVl0QnlRU3pq?=
- =?utf-8?B?bmhNeHZHL3l0OEpQQlpRYU52aktWM0hNS012Tnl0TjU4bldYVEMvYVZRZTVF?=
- =?utf-8?B?OTdZaWtpckd3RUNOQkRlZ3dYYmZrQmwvVjFWZmsxM3VYTGNWamhGMWlLZU5p?=
- =?utf-8?B?bmJrelZTYXJJdUY5TEhLV25hNm1FTWhMaVc4NGFTUWdNdXNUMGZBQWpqS3E4?=
- =?utf-8?B?RXlDVXRPckt2cUMxeDJOQkliTFJsTDE0ajlHT0gzaEJHUW9XUTBzSlIwSWJG?=
- =?utf-8?B?cHE2VXkrc29OWUNxQ3hWdEVtMmNtSHdNSkVqQWlMaUcyRUcxM1Z0Rm0waDlm?=
- =?utf-8?B?UGJNUitYOUdaSklYTXlJRDBFb1FEMmhzeHpkNjRPaFQwN2tJSDJpcSthVU8z?=
- =?utf-8?B?dy9tdmNsSDlvR3dRcHo2d0pBZmRPT0dLUEQyMEUvODlmWE53ektPOWxkYTl3?=
- =?utf-8?B?V29YQlRnNmpvcFJ1MEJDdFhzaXJQSXB2MzBMVk02a0phZjBySittb1ZYMk96?=
- =?utf-8?B?MFp4azlaYUU4SmU5THc5MGZiNG1LRGFwYnpJQWt0NTFyNEx6L01lbGtNZG1W?=
- =?utf-8?B?S1FBdWUvMlRKYjFRemgxM3RoL2hpUzBkeXJlYlNqOEttMVdZQWM3NEZISVVp?=
- =?utf-8?B?UUluK0dkb3JaaHRDbnNxdHVPYThGUWsxL1ZuTHVycXQ2VXRMc0Q4eXMyUjJa?=
- =?utf-8?B?d2RyNlFnNTlTTmlCaXZUeHhURjZlaVQxZmQ5enY3cUx2TXdMWGVhcEdtNTlp?=
- =?utf-8?B?WWd2ekc0MHZJMTNnWFZUdHZJVEtiSVBsVVVJajV4TW42QjZ3aWJtTU5YTkQx?=
- =?utf-8?B?RmtHaC8xamg3Y3JkVWpma05LMkZPMFN1MTduZE16ZU5RQkFPZW95dklDb1Jt?=
- =?utf-8?B?eStjVk16N28zRHdIdXhSTFIzbnM4dzZQV1dNTk8xQjB0SlBPTVpXcDBhSE5o?=
- =?utf-8?B?WDFPd09LNWE4UnlHSnhQT3VMWlJrZDlQTDFHbTNBMkZvWDlKYzJ4TnR1bmZB?=
- =?utf-8?B?M1RNOWdNSnFBZ0MvdWpXbkxYUzNxQlJybjJpWjFkaTZEUThVMktUVks1QjFU?=
- =?utf-8?B?M2E4ZWQ3VWdPMExGbzA0RzM4MkVmYnlsQkdjWmpRMjViYzVieUx3TU1DWWhZ?=
- =?utf-8?B?by9oVzF2b1pzMUQ5NmU0ays5dGlReWZaT05Nc011NjFpRzFkdStydHlzbjBW?=
- =?utf-8?B?WXgzVlN6OFl6S3dnYXM1eTJpbzhBZUhTNFo4eUd1cjhsRFlLMzFST282Z0ht?=
- =?utf-8?B?U29NOWFvR1hKQ2FlY2hFMGYrMmNTOER5YkFKby9QNFFPU1UwcGFIUDl5ajBH?=
- =?utf-8?B?cVpNOUtJWm5vQWhod2p5S29GTkZzK0lCaTdsVC9mV3c1TXRCUUJ4YjJLY0M0?=
- =?utf-8?Q?C78Pp0adwFIaJE1ULg60rjdwu?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        d=gmail.com; s=20221208; t=1688551590; x=1691143590;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=V3JC4cty1h4LTg6PGf3ujnUkUmH9YwB9xkDx2TdcaDU=;
+        b=oFDxPINMeMo768O4RoGp0X3SXwj+nclnUke7CK99XwYmR7cWNt8Iuv/JtFeYo9d2XY
+         HUUFP6Snx1bvQq6nzREYQjOCgD2DZ4r3fJ9UJRx4OGYaCZpAN/cOQV3zDiZ5OLiPWPIH
+         hReFljsfhcR9KvhrYDBivqJTWK91lCA70jwkUDSPtTXNBQfLeHpfgClUe0OKcbmaYyGO
+         WXHH6Iwxik1nLJPCXHJbzUUebM/2B8vttbspeGhCORmBXTZb0uCavztZvMychMT+vNLm
+         sUA4Zu++AGjw4cWsnetGe/8RhnCTgAu98dSxvA4zG0fk9lYIKUz1UX8g5GC/kd/gvWHw
+         xprw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688551590; x=1691143590;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=V3JC4cty1h4LTg6PGf3ujnUkUmH9YwB9xkDx2TdcaDU=;
+        b=b+RXvKDXuIhNRFGEPkpu+NPe8H6y5UZwr8UCEqyle03/UN0JdUX12WBejshgfR2JNv
+         X7XolTg2IFnW4ZqI3yvQqlnflb9lItEfj9C4AlbjGurqEYnUbZOnvD3rh5if2CFDi+4w
+         fEhT0LafTO/cCHxTHW5fphC2nHeYXzxmEz5bytfK9azxLdmKZPI21ZnkjXH+Guuyn+em
+         pV1XDsxpTxVWLCkmcjJRL+Z2hE4x/opP1SEeQ44MK52RcpowjOZ5+lrJ+c/UYoBV5fgk
+         bHJcl8wXA/a0jU/G8buLtBCY9Anb3ls56BO2ZSV72KgzWydLQQ65+RAG3eeMbePy5y1Z
+         pZmA==
+X-Gm-Message-State: ABy/qLbqaMoK78wgRAqwgmN0VHOo5YHdrHXNYVJMBP+XweF1mOnS+sxt
+        fr7OTu3kApKpVZ7ZRZ26RPb4zrm4xnYvu2C0MXI=
+X-Google-Smtp-Source: APBJJlGMYxG3hjfqW2AhZsyzM1MkdUFDHgqsho7h5KIzH48v4tR8+/SOB+Z58ws2MxVTeRGU0eksFxPZ1QksX0pro/4=
+X-Received: by 2002:adf:fac8:0:b0:313:dfb8:b4d0 with SMTP id
+ a8-20020adffac8000000b00313dfb8b4d0mr13036538wrs.66.1688551590048; Wed, 05
+ Jul 2023 03:06:30 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: ZNJIbhI2VoOFHPquxG3KIIUzSZJQzlT4DhEh62JkXRsvJuJaRN5wFwGIWUtovIT7pCQlm5HhLLBUe3Fj4hVVX29IqmhfOnFYpmnzlisrXeUMmZCZPKf6a9C4163CxIqvlKqRuzS2916ZwBdtsvbEzeEGfl/SiD+dC914Or8F3rDmnHATH9g1D47fOUw13Hro2aKcsqSGc6mIfTmATgS0r4j5Sq8GSyqiyG1ZbGb+3whEboixvS2Qm1fKHg/jMmOVaXEwegcIRklJCPI7FAzhfbjQ3x7brE0GuikEiORPZYC/+7macmctV4vGUI0hLrRJGKjWmjYZUpa3XAirhYc7vUpLlqiPOUtnicyCUYtg6Ly+2/OoVur1e9DE4mUKziAdcYDi2ZN83rVvH0ZWJzAD6jtbcBkTvr4I61sy3+CgtvRUPm1XUc3Z86oHx46LPzxtWqu/FIUfiNZcMa87QIPkArroQD/Z+/sU0cETY0jxtICGKRN94k2lNXIFwXg2UUy4U31UIrLL6pnau88JKfEu6ekaw83TBudYMJPLf1tQzdxwL88k+xejnD9gTTShsGpA1ND9gLGGgzznV4jMb6C8CwN7drcfXA5R1tYahybBA9VHcY3UbV45ZUoecYlhC0lyvAyZYuRXGm7hJr7yemM9UxH9HUdpJOX+/JxshhD3R207O1GZKDap3ecStOl1jOeGWD7zXMFHOW+RgWBmWy5bUEIiPdX/M58X78IpzO0kPLlAXkFapFCaoRqb/FKamosMHVmfhUOGqc+bk+ri7nNjruER6LbmZGPo6EX8Rt4jt8GcE9qrEo2tJ1flhrNlHPBBvD9FO0gsmLVBLUpqrkdRMsKcqsozJTdT6nnR0qY6bLs=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6327.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 636c3c9d-31a6-4366-804f-08db7d3ee8b1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Jul 2023 10:02:14.8337
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: qIX8IVE2kCZpZiLfJf0mZ+vtzavdbewHtL94BJaSIyNMvf4SClrhrHh2wV5NPFXrJpYSCV6PoKIVIbQrUHnZ/g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR04MB7620
+References: <20230628153010.57705-1-dg573847474@gmail.com> <eb9476ed-8dc3-a7b6-7478-b7fba3d8e33b@hisilicon.com>
+In-Reply-To: <eb9476ed-8dc3-a7b6-7478-b7fba3d8e33b@hisilicon.com>
+From:   Chengfeng Ye <dg573847474@gmail.com>
+Date:   Wed, 5 Jul 2023 18:06:18 +0800
+Message-ID: <CAAo+4rXdvk5NKCi84-7M=vBRSq21iV=6KQn2Te8EdEsr8GOTOw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: hisi_sas: Fix potential deadlock on &hisi_hba->lock
+To:     "chenxiang (M)" <chenxiang66@hisilicon.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQmFydA0KDQpJcyB0aGUgcGF0Y2gsIE9LPw0KT3IgZG8geW91IGhhdmUgYWRkaXRpb25hbCBj
-b21tZW50cz8NCg0KUmVnYXJkcw0KQXJ0aHVyDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
-LS0NCj4gRnJvbTogQXJ0aHVyIFNpbWNoYWV2IDxBcnRodXIuU2ltY2hhZXZAd2RjLmNvbT4NCj4g
-U2VudDogVGh1cnNkYXksIEp1bmUgMjksIDIwMjMgNDo1OSBQTQ0KPiBUbzogQmFydCBWYW4gQXNz
-Y2hlIDxidmFuYXNzY2hlQGFjbS5vcmc+OyBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbQ0KPiBD
-YzogQXZyaSBBbHRtYW4gPEF2cmkuQWx0bWFuQHdkYy5jb20+OyBBdmkgU2hjaGlzbG93c2tpDQo+
-IDxBdmkuU2hjaGlzbG93c2tpQHdkYy5jb20+OyBiZWFuaHVvQG1pY3Jvbi5jb207IGxpbnV4LQ0K
-PiBzY3NpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBT
-dWJqZWN0OiBSRTogW1JFU0VORCB2Ml0gdWZzOiBjb3JlOiBBZGQgc3VwcG9ydCBmb3IgcVRpbWVz
-dGFtcCBhdHRyaWJ1dGUNCj4gDQo+IENBVVRJT046IFRoaXMgZW1haWwgb3JpZ2luYXRlZCBmcm9t
-IG91dHNpZGUgb2YgV2VzdGVybiBEaWdpdGFsLiBEbyBub3QgY2xpY2sNCj4gb24gbGlua3Mgb3Ig
-b3BlbiBhdHRhY2htZW50cyB1bmxlc3MgeW91IHJlY29nbml6ZSB0aGUgc2VuZGVyIGFuZCBrbm93
-IHRoYXQNCj4gdGhlIGNvbnRlbnQgaXMgc2FmZS4NCj4gDQo+IA0KPiA+IElzIHRoaXMgc3RydWN0
-dXJlIHVzZWZ1bCBmb3IgdXNlciBzcGFjZSBzb2Z0d2FyZT8gSWYgbm90LCBwbGVhc2UgbW92ZSBp
-dA0KPiA+IGludG8gYW5vdGhlciBoZWFkZXIgZmlsZS4NCj4gSGkgQmFydA0KPiANCj4gVGhlIHN0
-cnVjdCBpcyB1c2VmdWwgZm9yIHVzZXIgc3BhY2Ugc29mdHdhcmUuDQo+IEZvciBleGFtcGxlLCB0
-aGUgc3BlY2lmaWMgdGltZXN0YW1wIGNhbiBiZSBzZW50IGJ5IHVmcy11dGlscyB1dGlsaXR5IHRv
-IHRoZQ0KPiBkZXZpY2UuDQo+IA0KPiBSZWdhcmRzDQo+IEFydGh1cg0KDQo=
+Thanks for the notice!
+
+Yes, removing the lock acquisition inside hisi_sas_port_notify_formed()
+can avoid the deadlock problem by the way.
+
+Best Regards,
+Chengfeng
+
+chenxiang (M) <chenxiang66@hisilicon.com> =E4=BA=8E2023=E5=B9=B47=E6=9C=884=
+=E6=97=A5=E5=91=A8=E4=BA=8C 13:55=E5=86=99=E9=81=93=EF=BC=9A
+>
+> Hi,
+>
+>
+> =E5=9C=A8 2023/6/28 =E6=98=9F=E6=9C=9F=E4=B8=89 23:30, Chengfeng Ye =E5=
+=86=99=E9=81=93:
+> > As &hisi_hba->lock is acquired by hard irq int_abnormal_v1_hw(),
+> > other acquisition of the same lock under process context should
+> > disable irq, otherwise deadlock could happen if the
+> > irq preempt the execution while the lock is held in process context
+> > on the same CPU.
+> >
+> > [Interrupt]: int_abnormal_v1_hw()
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c:1447
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:2050
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1079
+> >      -->spin_lock_irqsave(&hisi_hba->lock, flags);
+> >
+> > [Process Context]: hisi_sas_clear_nexus_ha()
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1932
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1135
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1116
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:1105
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:166
+> >      -->spin_lock(&hisi_hba->lock);
+> >
+> > [Process Context]: hisi_sas_dev_found()
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:665
+> >      -->spin_lock(&hisi_hba->lock);
+> >
+> > [Process Context]: hisi_sas_queue_command()
+> >      -->/root/linux/drivers/scsi/hisi_sas/hisi_sas_main.c:188
+> >      -->spin_lock(&hisi_hba->lock);
+> >
+> > This flaw was found by an experimental static analysis tool I am
+> > developing for irq-related deadlock, which reported the above
+> > warning when analyzing the linux kernel 6.4-rc7 release.
+> >
+> > The tentative patch fix the potential deadlock by spin_lock_irqsave().
+>
+> Thank you for reporting it.
+> But we consider about removing  hisi_hba->lock in function
+> hisi_sas_port_notify_formed()
+> which is called by int_abnormal_v1_hw(), as we think it is not necessary
+> to add hisi_hba->lock in this function.
+> So please ignore it and still thank you for pointing out the issue.
+>
+> Thanks,
+> Shawn
+>
+> >
+> > Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
+> > ---
+> >   drivers/scsi/hisi_sas/hisi_sas_main.c | 17 ++++++++++-------
+> >   1 file changed, 10 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_=
+sas/hisi_sas_main.c
+> > index 412431c901a7..47c5062a732e 100644
+> > --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> > +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> > @@ -161,11 +161,12 @@ static void hisi_sas_slot_index_clear(struct hisi=
+_hba *hisi_hba, int slot_idx)
+> >
+> >   static void hisi_sas_slot_index_free(struct hisi_hba *hisi_hba, int s=
+lot_idx)
+> >   {
+> > +     unsigned long flags;
+> >       if (hisi_hba->hw->slot_index_alloc ||
+> >           slot_idx < HISI_SAS_RESERVED_IPTT) {
+> > -             spin_lock(&hisi_hba->lock);
+> > +             spin_lock_irqsave(&hisi_hba->lock, flags);
+> >               hisi_sas_slot_index_clear(hisi_hba, slot_idx);
+> > -             spin_unlock(&hisi_hba->lock);
+> > +             spin_unlock_irqrestore(&hisi_hba->lock, flags);
+> >       }
+> >   }
+> >
+> > @@ -181,11 +182,12 @@ static int hisi_sas_slot_index_alloc(struct hisi_=
+hba *hisi_hba,
+> >   {
+> >       int index;
+> >       void *bitmap =3D hisi_hba->slot_index_tags;
+> > +     unsigned long flags;
+> >
+> >       if (rq)
+> >               return rq->tag + HISI_SAS_RESERVED_IPTT;
+> >
+> > -     spin_lock(&hisi_hba->lock);
+> > +     spin_lock_irqsave(&hisi_hba->lock, flags);
+> >       index =3D find_next_zero_bit(bitmap, HISI_SAS_RESERVED_IPTT,
+> >                                  hisi_hba->last_slot_index + 1);
+> >       if (index >=3D HISI_SAS_RESERVED_IPTT) {
+> > @@ -193,13 +195,13 @@ static int hisi_sas_slot_index_alloc(struct hisi_=
+hba *hisi_hba,
+> >                               HISI_SAS_RESERVED_IPTT,
+> >                               0);
+> >               if (index >=3D HISI_SAS_RESERVED_IPTT) {
+> > -                     spin_unlock(&hisi_hba->lock);
+> > +                     spin_unlock_irqrestore(&hisi_hba->lock, flags);
+> >                       return -SAS_QUEUE_FULL;
+> >               }
+> >       }
+> >       hisi_sas_slot_index_set(hisi_hba, index);
+> >       hisi_hba->last_slot_index =3D index;
+> > -     spin_unlock(&hisi_hba->lock);
+> > +     spin_unlock_irqrestore(&hisi_hba->lock, flags);
+> >
+> >       return index;
+> >   }
+> > @@ -658,11 +660,12 @@ static struct hisi_sas_device *hisi_sas_alloc_dev=
+(struct domain_device *device)
+> >   {
+> >       struct hisi_hba *hisi_hba =3D dev_to_hisi_hba(device);
+> >       struct hisi_sas_device *sas_dev =3D NULL;
+> > +     unsigned long flags;
+> >       int last =3D hisi_hba->last_dev_id;
+> >       int first =3D (hisi_hba->last_dev_id + 1) % HISI_SAS_MAX_DEVICES;
+> >       int i;
+> >
+> > -     spin_lock(&hisi_hba->lock);
+> > +     spin_lock_irqsave(&hisi_hba->lock, flags);
+> >       for (i =3D first; i !=3D last; i %=3D HISI_SAS_MAX_DEVICES) {
+> >               if (hisi_hba->devices[i].dev_type =3D=3D SAS_PHY_UNUSED) =
+{
+> >                       int queue =3D i % hisi_hba->queue_count;
+> > @@ -682,7 +685,7 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(s=
+truct domain_device *device)
+> >               i++;
+> >       }
+> >       hisi_hba->last_dev_id =3D i;
+> > -     spin_unlock(&hisi_hba->lock);
+> > +     spin_unlock_irqrestore(&hisi_hba->lock, flags);
+> >
+> >       return sas_dev;
+> >   }
+>
