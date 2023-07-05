@@ -2,132 +2,139 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96F4FC04FE0
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jul 2023 10:21:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E757BEB64DA
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jul 2023 11:52:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231990AbjGEKVe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Jul 2023 06:21:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45760 "EHLO
+        id S231147AbjGELw4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Jul 2023 07:52:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231213AbjGEKVb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2023 06:21:31 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A246B122;
-        Wed,  5 Jul 2023 03:21:30 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 58F0C1F6E6;
-        Wed,  5 Jul 2023 10:21:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1688552489; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=qqER76PXnxWxMVZH46uY+IP0A7ISNxa4dFOpqm8Npig=;
-        b=rK+eFTza2+XXgbRvOv5tQtV93F/4zZpu7norREAepZy5yow7baD/dvvqWhpeeItBt0IPcu
-        Y5rwLWutv/on4mwv5EJraqTeqhb05mRkTW0yYXikGz/UA9AQcATVDIgxrBuvXRHMAszN6R
-        RSIAN/j2D8s9RJrt3/Umhb+lT3pvazU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1688552489;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=qqER76PXnxWxMVZH46uY+IP0A7ISNxa4dFOpqm8Npig=;
-        b=0Ik5A3faiNr6MKUo0ZlFf0SVDy0zGGeX4x6PTOEnPlUJVjHk96v3tsbq/TGqKcufwhGJGx
-        3sf2EXg0rHzUTICQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 44C0D13460;
-        Wed,  5 Jul 2023 10:21:29 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Xem5EClEpWRSCwAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 05 Jul 2023 10:21:29 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id C5467A0707; Wed,  5 Jul 2023 12:21:28 +0200 (CEST)
-Date:   Wed, 5 Jul 2023 12:21:28 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-Message-ID: <20230705102128.vquve4qencbbn2br@quack3>
-References: <20230629165206.383-1-jack@suse.cz>
- <20230704122224.16257-1-jack@suse.cz>
- <ZKRItBRhm8f5Vba/@kbusch-mbp>
+        with ESMTP id S230255AbjGELwt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2023 07:52:49 -0400
+Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2096.outbound.protection.outlook.com [40.107.117.96])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2765AA1;
+        Wed,  5 Jul 2023 04:52:48 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=FdGc9T/oCAzL2cc9ipzQMs3aZYN/ZHOK0rgzxelBqixgiAizIrT3qHNRtOgiedPbLbbDoGcwKNWgrMKsOhqGkdaa4P0NPaC4IAQXnxTl21aCUr8dp6eg7rVF9xkNHN1+4zMEcZwdD/x34D+G7OGI/xtr0f9kWk77gxBMYcubS7TegGR1iBaffW8/C7wHzFhpGTQ6Ly/xqOjTKDIhpI0eNEaVk8uCiqbNNoxuR0V1RbxSh7FCsRSVxv7TvONgr/Vc1p083hGMk62Y7jvMaaOHSo8gM3ijy4Qz4+uCkbaXYipAdWxJ6lqez7ojY2T1pCYEcWOgZEnQimfFRPgejZhIIg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=yhKoEcFO/nFboTl5hfagpPiR4RL6dnBfwevl8uFJU7Y=;
+ b=kRtSZ84j0gZr+FQwc3hAnGZYsDsacMk7AVFgRt+xaTO5p7rHkI8miL6cPNhHyk8aGPJsxYlW2qwm+H1Za3eif2zXbPqwHLVp971wGmh04JZ1XsrHZXJJ3piDhLnxB/apQEa8fbJYt9AZurvs2zpbv6T2HizqSQ8oqrvZXoYyw+MrvVDSL+VWdGj/lA383/8JIeTltmKTazyS10EenznADSOZ7NXYfmsecHjgnIYlj2lK4RUQp9WbmNWBHXxwFOxspR8+bEV9ZFbGeI+eN3kXjUUaczm16vb37BYhYR8lOYrbZK173seWLPNAus3RMCoqiPtmWjpIEZvCyPur/2NAwA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yhKoEcFO/nFboTl5hfagpPiR4RL6dnBfwevl8uFJU7Y=;
+ b=TGlloowt6asAICBB7HCg1g0mhDn8MQcD1YVYGHLFqy0Ju51XNke79LtjoIvt7ofIR89ZfiBLkqkOXXHvKfGT47tpW/UJBQONjJ+WWmSCWxTKEj+wQDKEt24olWxuiMw8qTKZiL52qfF/WM3eE/fOG2rQzl42raHACEArLgpwNHU1mJYI6BlQ65sMv8LgS49mpameg5DoX7li74wYN9R7u1sjFmO3r+x7FdzhGrzhBHebG0IfvQtgPynz1a83Y5LJ2Eyz+HnuUHIM3aWZ4UCeVH+hHZVovOkU16954LyQefzYW3o4jmW3ZDb0rZTqAoRNhe6ESCeAsra8CUXYpkElxA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from SG2PR06MB5288.apcprd06.prod.outlook.com (2603:1096:4:1dc::9) by
+ SI2PR06MB4139.apcprd06.prod.outlook.com (2603:1096:4:fb::10) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6544.19; Wed, 5 Jul 2023 11:52:44 +0000
+Received: from SG2PR06MB5288.apcprd06.prod.outlook.com
+ ([fe80::c2b:41ab:3b14:f920]) by SG2PR06MB5288.apcprd06.prod.outlook.com
+ ([fe80::c2b:41ab:3b14:f920%7]) with mapi id 15.20.6565.016; Wed, 5 Jul 2023
+ 11:52:44 +0000
+From:   Minjie Du <duminjie@vivo.com>
+To:     Markus.Elfring@web.de, Saurav Kashyap <skashyap@marvell.com>,
+        Javed Hasan <jhasan@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com (supporter:BROADCOM BNX2FC 10
+        GIGABIT FCOE DRIVER), "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org (open list:BROADCOM BNX2FC 10 GIGABIT FCOE
+        DRIVER), linux-kernel@vger.kernel.org (open list)
+Cc:     opensource.kernel@vivo.com, Minjie Du <duminjie@vivo.com>
+Subject: [PATCH v2] scsi: bnx2fc: Remove a duplicate assignment in two functions
+Date:   Wed,  5 Jul 2023 19:52:36 +0800
+Message-Id: <20230705115236.16571-1-duminjie@vivo.com>
+X-Mailer: git-send-email 2.39.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SGAP274CA0009.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b6::21)
+ To SG2PR06MB5288.apcprd06.prod.outlook.com (2603:1096:4:1dc::9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZKRItBRhm8f5Vba/@kbusch-mbp>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SG2PR06MB5288:EE_|SI2PR06MB4139:EE_
+X-MS-Office365-Filtering-Correlation-Id: 82da0398-a577-49ca-32fb-08db7d4e5843
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Zz/r6UuCq77Xo8yxr/CSQ7CnWqBIU5758NrbxKmedHLJhepi9efdU0qf1zyxGbkYvrBzKK83wihWZ+D6PPOqvcjgNoY2uO/44s7VVEgGBCFC8o3ZmUJmFSWf+iGHGUw3ZZ67TtJQ5wdftecxE3+02xniq+7KN1xXTxqRPc2kH4xCs1zMEEeOP2EkLGQxI1lijixBDCSQyeMCCFURRCsU8giCXymyr/yrdzCFnLDWx3RT1YYc5C8G0E1kzeY1yHXd20Y1ikiP5nd9BrsFTh7LvXjO17cBvU7viiRGFWjl3hkS7qWCnr8TbH5mxazvCJGCvyFNbo1U+pRjP6hkl+HInCA736F8YGewfqhS67x0DcE0TqTuTJn0fOpyn+KoecJRAyEizF/YjvMWWWLJDH8TKL8F7cs3CL6wVez21x95ED7wwGQ7hf+964lVxXPHzehArW0QIZRrFny0APQUCG/IteMnwdB/6ttpBDt+AhQdbmxWbjXkqgImahKy/z3Hf6TDq40IalnBVuRTFS4ZHXoxHc0CJXzEI5DyPS0Aqg7eW7GzNyuaIvWdGshVXwh30j2wnOpx3Xq8Db/xxIIEDegYeKsc8tuNAjY8z89Sm8Ikb7FE6sR/CL+M/hxK0wzht6oY
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SG2PR06MB5288.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(376002)(136003)(39860400002)(346002)(366004)(396003)(451199021)(107886003)(86362001)(8676002)(5660300002)(110136005)(8936002)(26005)(6506007)(1076003)(52116002)(478600001)(186003)(6486002)(6512007)(66476007)(6666004)(66946007)(316002)(4326008)(66556008)(41300700001)(2616005)(2906002)(83380400001)(36756003)(38350700002)(38100700002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?A9Q7gI7RMZDHC8ldN05hqfpYPhTUDf2ikRaUrqZdSdrI5U7rhWcK/cLpCU2C?=
+ =?us-ascii?Q?AOeY/cuBn+B646SenqjQjsItCxj7j3sZdvH5jScwxJa2rZiK9fCyI00KKzQu?=
+ =?us-ascii?Q?bnIq3rSgTnXqfGNmnq8DnDnZ4POhlLBTbDhqwDiaZ8ThTnwOgcb7Sm4Va8PN?=
+ =?us-ascii?Q?UAc9gZhPl4EPJ2R2CcZeq6QBIrvW63j9MjHtppMV6lH06hIkuq1XpQUhU71R?=
+ =?us-ascii?Q?hE9/G5c0OrZFeahDGZUQCaNM+dOpWsyHWxEZ7A94AYGx8QJwWN36fN+TBi81?=
+ =?us-ascii?Q?YqR2fsQxF5ygrI1uKTi/2zSyJBjNDGmc/0fwNc07zPtwEQsqpITKRDUseKxi?=
+ =?us-ascii?Q?7J7JZ2h/UwRypAdIZfj5BeCcPuMF36M/lW30tFSsLcgaWrWxRbbslqQwr09n?=
+ =?us-ascii?Q?D2F/pj1XEuRVg3/ow/0gOyTPvsHFCGu9hUL1yw4IBJZBwwh6YHXawwpxxK79?=
+ =?us-ascii?Q?yUakSX410Vg8G9Ej/BZSLxSahgCr0uLogGumlcNK+AmO+ygYXY8uRpURy8FF?=
+ =?us-ascii?Q?SAorzJeU3IHWo0dalVvqx6Bqq8/kLSkjXNBczWEIyKi/0RZY8QrqLNgES1Zv?=
+ =?us-ascii?Q?yawhpW3eYKy0MgnDTcMhjdAgqxe+J6EE9qaI7fVWxQ/Mq5B/V/TwkkKkittx?=
+ =?us-ascii?Q?+ng524BAdhiQNDF1pSogOqdDpM6J24sOT/Df+65h/yuPI1MAeVJFu4tYIt8k?=
+ =?us-ascii?Q?qetv6vRpoJfiONm/6Ag9yiMlmlsb5HvC/lLWzypYXqI9ahJ4wp0henrNSwaL?=
+ =?us-ascii?Q?c8YzbYoOfXnZ5TzCqvnpDBmw006kGXJ/hXAkNM1SVx4XNdGIphDwMVZAR19G?=
+ =?us-ascii?Q?nNknK6TuSuMYl7d6Qh8dVRQ7W0T1CwEASqcPVgIGnnPTDllxAto4WeojIfa4?=
+ =?us-ascii?Q?9SGpl7Yro1SIYQ5kVriipsrSXqzyJzronNpOlb7rgOqmkUtim20VSuzm8qvY?=
+ =?us-ascii?Q?a3EzMfH+icXNhEMkm+00J8Nlf1Xnpet6p/HJZfenmNcO2md4+/HgK2UJ13j+?=
+ =?us-ascii?Q?pYrDGEOeL9Om3Bs14LCbpC7SN1DPsvmzpAF93/u3bL6vSaM9Qa5+F+4fZTBO?=
+ =?us-ascii?Q?Ks3NQkMHG2qGLp0MR/BvxIDwL2od8uX5v4LPXJCGkJYvzRonLdiK0nTAi/Yw?=
+ =?us-ascii?Q?jv22K9jyv+KLEwN6fXR8RjFCqEi+qzauvrNoj2A3ZnR3w1d40eTV2qLsT24p?=
+ =?us-ascii?Q?L0nNA2b+irSaOyAHoi4dnYZ5iWE2yrpxahP7ensNtUH0i+8/ktnIGS1Yqp0A?=
+ =?us-ascii?Q?nFOjahyzH17l2gDAm+b8L9HMsJtIHH1PgwzJcbI0Lps+VuahR30NYKghTL3u?=
+ =?us-ascii?Q?VIbKHYHbBTs2DCd64PoStKudA8RQ8wpwn9W/6EIujvSYy8hyg7nQkeDrU1L+?=
+ =?us-ascii?Q?wh1pGzCgmUr20VBAdCSsW/m7XRrQXrwDKQiHTavy2ILQQ83nLibH3AQGeloE?=
+ =?us-ascii?Q?1GhlR3RiV4eH1zrp+DwfgV0ocHENjDKUSnSPumIf2mmOlKCLT7Krfqo6jqOD?=
+ =?us-ascii?Q?NmQsL5AAfE1y9HznnaoUuoys6GqXDpr8mB79wzEzqj5l0QUrYzGZCezwJ0lT?=
+ =?us-ascii?Q?02HFV/v5u0OvNyJ2ZOV88bnCbuynsSXDG74P2Zrm?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 82da0398-a577-49ca-32fb-08db7d4e5843
+X-MS-Exchange-CrossTenant-AuthSource: SG2PR06MB5288.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jul 2023 11:52:44.6423
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: gLCBIPbMIRXcP6jGWWl40GyBPR3P5+sjvtM4EjXzuI5uPJ3YklkVfDCU0xq8P2at+NNl/UL5hU8/DHd9sJJpzA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SI2PR06MB4139
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue 04-07-23 10:28:36, Keith Busch wrote:
-> On Tue, Jul 04, 2023 at 02:21:28PM +0200, Jan Kara wrote:
-> > +struct bdev_handle *blkdev_get_handle_by_dev(dev_t dev, blk_mode_t mode,
-> > +		void *holder, const struct blk_holder_ops *hops)
-> > +{
-> > +	struct bdev_handle *handle = kmalloc(sizeof(struct bdev_handle),
-> > +					     GFP_KERNEL);
-> 
-> I believe 'sizeof(*handle)' is the preferred style.
+Delete a duplicate statement from these function implementations.
 
-OK.
+Signed-off-by: Minjie Du <duminjie@vivo.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-> > +	struct block_device *bdev;
-> > +
-> > +	if (!handle)
-> > +		return ERR_PTR(-ENOMEM);
-> > +	bdev = blkdev_get_by_dev(dev, mode, holder, hops);
-> > +	if (IS_ERR(bdev))
-> > +		return ERR_CAST(bdev);
-> 
-> Need a 'kfree(handle)' before the error return. Or would it be simpler
-> to get the bdev first so you can check the mode settings against a
-> read-only bdev prior to the kmalloc?
-
-Yeah. Good point with kfree(). I'm not sure calling blkdev_get_by_dev()
-first will be "simpler" - then we need blkdev_put() in case of kmalloc()
-failure. Thanks for review!
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 776544385..0474fe88a 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -1521,8 +1521,6 @@ void bnx2fc_init_seq_cleanup_task(struct bnx2fc_cmd *seq_clnp_req,
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_CLASS_TYPE_SHIFT;
+ 	task->rxwr_txrd.const_ctx.init_flags = context_id <<
+ 				FCOE_TCE_RX_WR_TX_RD_CONST_CID_SHIFT;
+-	task->rxwr_txrd.const_ctx.init_flags = context_id <<
+-				FCOE_TCE_RX_WR_TX_RD_CONST_CID_SHIFT;
  
-								Honza
+ 	task->txwr_rxrd.union_ctx.cleanup.ctx.cleaned_task_id = orig_xid;
+ 
+@@ -1763,7 +1761,6 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
+ 				FCOE_TASK_DEV_TYPE_TAPE <<
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
+ 		io_req->rec_retry = 0;
+-		io_req->rec_retry = 0;
+ 	} else
+ 		task->txwr_rxrd.const_ctx.init_flags |=
+ 				FCOE_TASK_DEV_TYPE_DISK <<
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.39.0
+
