@@ -2,123 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1658C001B0
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jul 2023 14:35:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0231C00528
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jul 2023 15:19:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232082AbjGEOfx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Jul 2023 10:35:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45060 "EHLO
+        id S233201AbjGEPT3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Jul 2023 11:19:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231445AbjGEOfw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2023 10:35:52 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEE0210D5
-        for <linux-scsi@vger.kernel.org>; Wed,  5 Jul 2023 07:35:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1688567711;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EPFecaivr54rVjCWMqN8jp7NqN4gyR5hEtTh6S4C2F0=;
-        b=Eo1TQ0thZJVsjl5o+HDYCI8sSLJoltubT4Vn7CtGF9MhI35qD98NNptn3CqIdtCXBWWnzY
-        /trxraMMKQn/3URd3XVcfL8faIxuonFacfChAoczhVjvWSMn9lQe03LblbKUIH+3l9zV8v
-        QocU+DQjs5Ja3bnxR+zXlx5mFWgeyuc=
-Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
- [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-479-LryW92PzOe6phc2Vz26Vpg-1; Wed, 05 Jul 2023 10:35:11 -0400
-X-MC-Unique: LryW92PzOe6phc2Vz26Vpg-1
-Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-635e6c83d77so47969386d6.0
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2023 07:35:09 -0700 (PDT)
+        with ESMTP id S232994AbjGEPT0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2023 11:19:26 -0400
+Received: from mail-il1-f176.google.com (mail-il1-f176.google.com [209.85.166.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EED451735;
+        Wed,  5 Jul 2023 08:19:24 -0700 (PDT)
+Received: by mail-il1-f176.google.com with SMTP id e9e14a558f8ab-345db6c12b4so25136435ab.0;
+        Wed, 05 Jul 2023 08:19:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688567709; x=1691159709;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EPFecaivr54rVjCWMqN8jp7NqN4gyR5hEtTh6S4C2F0=;
-        b=bsvrqhguU3doILBT/gA+VYaiiZmFRswOMoV8mNbl87pGpXmSM3jcSc5RyB7NcEYiuY
-         Pu8y6XjJZ8BUWBEuSKXc8JQ3vXOfiSZ9fPqvewiBVD58J9+RY4/JAqSEdgBVSIsL1naE
-         84kXbyVVzwVY5HgwV8N3d+JGsK+BB02rvHpXe1wpYLnKvnXXIzwLPDORETdm4XUar5b+
-         nBg51LwOttrBNJ6uzCBJFJjc7TLST7HdztOoU2qp7/nYgASRiocliCvp7Oov7TKy5ZTy
-         2q9ZmYxUDR0xEIMUyHtO8HfnJXbpBDY5QmAfbkz4O/V/k2pl2g2yqnricVc0i42oqb3Q
-         MjBQ==
-X-Gm-Message-State: ABy/qLZzluNpoJuiASJLkJcX40gCE2wrPHff8vXebOZHbDsLNkW/iofs
-        wYRn3cU89lr3iTI57Gue2OyXUWG0l2KfT5gh41Gwx/jZdN7Ez14soWWiyXbYjV3KlWtGHpPloaM
-        TWiJ156xHc6BwFgYz7PxP2g==
-X-Received: by 2002:ad4:5765:0:b0:630:44b:180d with SMTP id r5-20020ad45765000000b00630044b180dmr18862426qvx.25.1688567709466;
-        Wed, 05 Jul 2023 07:35:09 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlHFyXlkEh+mHD4R3+SJyx2btDLMuQniRGZbkM0WraI/J70rRiNQccu387F7tHzH+jcR7nwgGA==
-X-Received: by 2002:ad4:5765:0:b0:630:44b:180d with SMTP id r5-20020ad45765000000b00630044b180dmr18862413qvx.25.1688567709187;
-        Wed, 05 Jul 2023 07:35:09 -0700 (PDT)
-Received: from ?IPv6:2600:6c64:4e7f:603b:7f10:16a0:5672:9abf? ([2600:6c64:4e7f:603b:7f10:16a0:5672:9abf])
-        by smtp.gmail.com with ESMTPSA id mz14-20020a0562142d0e00b006300e1db3ecsm13454637qvb.141.2023.07.05.07.35.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Jul 2023 07:35:08 -0700 (PDT)
-Message-ID: <6105b8bf9d35ca2906094a0f9a58b5351bc741da.camel@redhat.com>
-Subject: Re: [PATCH] scsi: lpfc: Fix a possible data race in
- lpfc_unregister_fcf_rescan()
-From:   Laurence Oberman <loberman@redhat.com>
-To:     Tuo Li <islituo@gmail.com>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        baijiaju1990@outlook.com, BassCheck <bass@buaa.edu.cn>
-Date:   Wed, 05 Jul 2023 10:35:08 -0400
-In-Reply-To: <20230630024748.1035993-1-islituo@gmail.com>
-References: <20230630024748.1035993-1-islituo@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+        d=1e100.net; s=20221208; t=1688570364; x=1691162364;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=vhOVd+fM39By6Neo4SNlvIwXWgDBhgramNmEhS79nFc=;
+        b=DESWvkdXfKRFM7YbT070ZmknAy3m3u3OBm8n2LEXxQK6fuEG5UkpUrgMQue9xGiagw
+         dwoleP2J5Qw6bPF7EzsJ0i0QFB+EbVcpSzjvgR7pGn/vXQWXCEbmy31T+HjFF5qXdYR1
+         z+3q7Pg8tj3Qe+E6RXqzuubza3bnSf4csuiZLXOat/vCU4R8im7e73uAOEIGMs6ICtX/
+         rsXwpPAokvej42pZH9/taX2sbR5sXl9V+vVdisjJV9U3MFGSHTMEQ5sGqEeX46WzyMlV
+         UClv8XYFy0yLUXAyQYseavn58dOSNX9/2O29h38956C8kGkaN+qKW3fnBS9yJCyf0iCd
+         XNWA==
+X-Gm-Message-State: AC+VfDzsJDUwAEjjmxd2e0EBu6YLsL2TilrOZR+pmtA3er4k02CRZNJB
+        RmIjIUDf1wBVSCyRJf0loyE=
+X-Google-Smtp-Source: ACHHUZ70uoI88DRVhGiNe4v8NMOn4CckRug5A25bO6UrnrhXn4O+oQb9CB+u9z1UucgpvIObIHjohw==
+X-Received: by 2002:a05:6602:2113:b0:784:314f:8d68 with SMTP id x19-20020a056602211300b00784314f8d68mr18093430iox.1.1688570364015;
+        Wed, 05 Jul 2023 08:19:24 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:c1f1:7d21:6172:cbd2? ([2620:15c:211:201:c1f1:7d21:6172:cbd2])
+        by smtp.gmail.com with ESMTPSA id l6-20020a656806000000b005579c73d209sm15456631pgt.1.2023.07.05.08.19.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Jul 2023 08:19:23 -0700 (PDT)
+Message-ID: <1ea08f84-f900-92f2-e32b-2db242a74559@acm.org>
+Date:   Wed, 5 Jul 2023 08:19:16 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
+Content-Language: en-US
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+References: <20230629165206.383-1-jack@suse.cz>
+ <20230704122224.16257-1-jack@suse.cz>
+ <bb91e76b-0bd8-a949-f8b9-868f919ebcb9@acm.org>
+ <ZKRFSZQglwCba9/i@casper.infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ZKRFSZQglwCba9/i@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2023-06-30 at 10:47 +0800, Tuo Li wrote:
-> The variable phba->fcf.fcf_flag is often protected by the lock=20
-> phba->hbalock() when is accessed. Here is an example in=20
-> lpfc_unregister_fcf_rescan():
->=20
-> =C2=A0 spin_lock_irq(&phba->hbalock);
-> =C2=A0 phba->fcf.fcf_flag |=3D FCF_INIT_DISC;
-> =C2=A0 spin_unlock_irq(&phba->hbalock);
->=20
-> However, in the same function, phba->fcf.fcf_flag is assigned with 0=20
-> without holding the lock, and thus can cause a data race:
->=20
-> =C2=A0 phba->fcf.fcf_flag =3D 0;
->=20
-> To fix this possible data race, a lock and unlock pair is added when=20
-> accessing the variable phba->fcf.fcf_flag.
->=20
-> Reported-by: BassCheck <bass@buaa.edu.cn>
-> Signed-off-by: Tuo Li <islituo@gmail.com>
-> ---
-> =C2=A0drivers/scsi/lpfc/lpfc_hbadisc.c | 2 ++
-> =C2=A01 file changed, 2 insertions(+)
->=20
-> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c
-> b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> index 5ba3a9ad9501..9d2feb69cae7 100644
-> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> @@ -6961,7 +6961,9 @@ lpfc_unregister_fcf_rescan(struct lpfc_hba
-> *phba)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (rc)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0return;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/* Reset HBA FCF states a=
-fter successful unregister FCF */
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0spin_lock_irq(&phba->hbalock);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0phba->fcf.fcf_flag =3D 0;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0spin_unlock_irq(&phba->hbalock=
-);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0phba->fcf.current_rec.fla=
-g =3D 0;
-> =C2=A0
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/*
+On 7/4/23 09:14, Matthew Wilcox wrote:
+> On Tue, Jul 04, 2023 at 07:06:26AM -0700, Bart Van Assche wrote:
+>> On 7/4/23 05:21, Jan Kara wrote:
+>>> +struct bdev_handle {
+>>> +	struct block_device *bdev;
+>>> +	void *holder;
+>>> +};
+>>
+>> Please explain in the patch description why a holder pointer is introduced
+>> in struct bdev_handle and how it relates to the bd_holder pointer in struct
+>> block_device. Is one of the purposes of this patch series perhaps to add
+>> support for multiple holders per block device?
+> 
+> That is all in patch 0/32.  Why repeat it?
 
-This makes sense and looks good to me
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+This cover letter: https://lore.kernel.org/linux-block/20230629165206.383-1-jack@suse.cz/T/#t?
+
+The word "holder" doesn't even occur in that cover letter so how could the
+answer to my question be present in the cover letter?
+
+Bart.
 
