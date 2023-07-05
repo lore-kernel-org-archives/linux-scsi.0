@@ -2,139 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E757BEB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jul 2023 11:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87BC3EB64DA
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jul 2023 14:33:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231147AbjGELw4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Jul 2023 07:52:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
+        id S232350AbjGEOdY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Jul 2023 10:33:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230255AbjGELwt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2023 07:52:49 -0400
-Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2096.outbound.protection.outlook.com [40.107.117.96])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2765AA1;
-        Wed,  5 Jul 2023 04:52:48 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FdGc9T/oCAzL2cc9ipzQMs3aZYN/ZHOK0rgzxelBqixgiAizIrT3qHNRtOgiedPbLbbDoGcwKNWgrMKsOhqGkdaa4P0NPaC4IAQXnxTl21aCUr8dp6eg7rVF9xkNHN1+4zMEcZwdD/x34D+G7OGI/xtr0f9kWk77gxBMYcubS7TegGR1iBaffW8/C7wHzFhpGTQ6Ly/xqOjTKDIhpI0eNEaVk8uCiqbNNoxuR0V1RbxSh7FCsRSVxv7TvONgr/Vc1p083hGMk62Y7jvMaaOHSo8gM3ijy4Qz4+uCkbaXYipAdWxJ6lqez7ojY2T1pCYEcWOgZEnQimfFRPgejZhIIg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yhKoEcFO/nFboTl5hfagpPiR4RL6dnBfwevl8uFJU7Y=;
- b=kRtSZ84j0gZr+FQwc3hAnGZYsDsacMk7AVFgRt+xaTO5p7rHkI8miL6cPNhHyk8aGPJsxYlW2qwm+H1Za3eif2zXbPqwHLVp971wGmh04JZ1XsrHZXJJ3piDhLnxB/apQEa8fbJYt9AZurvs2zpbv6T2HizqSQ8oqrvZXoYyw+MrvVDSL+VWdGj/lA383/8JIeTltmKTazyS10EenznADSOZ7NXYfmsecHjgnIYlj2lK4RUQp9WbmNWBHXxwFOxspR8+bEV9ZFbGeI+eN3kXjUUaczm16vb37BYhYR8lOYrbZK173seWLPNAus3RMCoqiPtmWjpIEZvCyPur/2NAwA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yhKoEcFO/nFboTl5hfagpPiR4RL6dnBfwevl8uFJU7Y=;
- b=TGlloowt6asAICBB7HCg1g0mhDn8MQcD1YVYGHLFqy0Ju51XNke79LtjoIvt7ofIR89ZfiBLkqkOXXHvKfGT47tpW/UJBQONjJ+WWmSCWxTKEj+wQDKEt24olWxuiMw8qTKZiL52qfF/WM3eE/fOG2rQzl42raHACEArLgpwNHU1mJYI6BlQ65sMv8LgS49mpameg5DoX7li74wYN9R7u1sjFmO3r+x7FdzhGrzhBHebG0IfvQtgPynz1a83Y5LJ2Eyz+HnuUHIM3aWZ4UCeVH+hHZVovOkU16954LyQefzYW3o4jmW3ZDb0rZTqAoRNhe6ESCeAsra8CUXYpkElxA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SG2PR06MB5288.apcprd06.prod.outlook.com (2603:1096:4:1dc::9) by
- SI2PR06MB4139.apcprd06.prod.outlook.com (2603:1096:4:fb::10) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6544.19; Wed, 5 Jul 2023 11:52:44 +0000
-Received: from SG2PR06MB5288.apcprd06.prod.outlook.com
- ([fe80::c2b:41ab:3b14:f920]) by SG2PR06MB5288.apcprd06.prod.outlook.com
- ([fe80::c2b:41ab:3b14:f920%7]) with mapi id 15.20.6565.016; Wed, 5 Jul 2023
- 11:52:44 +0000
-From:   Minjie Du <duminjie@vivo.com>
-To:     Markus.Elfring@web.de, Saurav Kashyap <skashyap@marvell.com>,
+        with ESMTP id S232332AbjGEOdT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2023 10:33:19 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E29AD10D5
+        for <linux-scsi@vger.kernel.org>; Wed,  5 Jul 2023 07:32:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1688567550;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=FrDW3FvXxO43Yo+LpdBvy45NnDg2y1LTlrt8vexkZfI=;
+        b=LoaXbM3+Ick6L1lWse7KOz0CuoM+GblyRoB0qI+HVExh+ILPeUYIsxFF/c0xwlO6Xw4Vyi
+        HLDfKqgo6SGwipzqfspfSQDIJXif5/QMZwv+BxRWaFyMhlOqAV1b4eQIN3SLkxpplMVeHo
+        zj1NBh+XYXAZI1ZeM+j4QFpGtV7cwDc=
+Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
+ [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-550-Mb6iGY8VOqy36dSTdcKRGQ-1; Wed, 05 Jul 2023 10:32:29 -0400
+X-MC-Unique: Mb6iGY8VOqy36dSTdcKRGQ-1
+Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-39edcb52625so5975151b6e.3
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2023 07:32:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688567547; x=1691159547;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=FrDW3FvXxO43Yo+LpdBvy45NnDg2y1LTlrt8vexkZfI=;
+        b=ldqwS8cavX16jhTwGtfXWU2QQVL6N8vtoylw4/EaBK+oMkhCl/4vI5G4uzjouNtmDS
+         xaOciFxNAGAtJxpIHFRmOgj+cN05SFq2XQIEKxJJLnA/mhQbXMNl2bDCR0LGjpC3p7Pr
+         rJ99lS1o42s7be2+fKzQn8ghETWrcX1FtlYlRxqFV3fNaSd2K7dVLwe/z6xVI1K9EES7
+         ky72PkQiy/AQTeZ2p7wR2wIDOZxSU7wYJyiAMt5vUYGoBhADKZD4+5+/HFx9K9g3kWca
+         1s5MMaj87aTeWctoAAL7ZpUSQf589fM7NoR6w0MGj/CMKIVfjVGoacE/e9M2x0CjyrpA
+         6fxQ==
+X-Gm-Message-State: ABy/qLaDE9PC6E//JQ0MCHOdquJf2ztdfGrf7w11qkrVDEsnYIZR8Fmm
+        yODob6HarsGLJ2BUipWh1sRtQiHD9/t6Sllbk+bDJYy9M4OBfxy7VsZsryxj/mKQkKceZE3jAPS
+        CQ8GhZVSpSYrsOfMnj0HKfg==
+X-Received: by 2002:a05:6358:614d:b0:134:fdfc:4319 with SMTP id 13-20020a056358614d00b00134fdfc4319mr9810406rwt.20.1688567547478;
+        Wed, 05 Jul 2023 07:32:27 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlGzUGAKG/6tRM2MKYnWVk5HWYKe2HUGrmjZ2lr16rPJhV3/ZTaeZ6D9NovuGdoSgAdfat24bA==
+X-Received: by 2002:a05:6358:614d:b0:134:fdfc:4319 with SMTP id 13-20020a056358614d00b00134fdfc4319mr9810379rwt.20.1688567547153;
+        Wed, 05 Jul 2023 07:32:27 -0700 (PDT)
+Received: from ?IPv6:2600:6c64:4e7f:603b:7f10:16a0:5672:9abf? ([2600:6c64:4e7f:603b:7f10:16a0:5672:9abf])
+        by smtp.gmail.com with ESMTPSA id h4-20020a0cf8c4000000b0062ff0dd0332sm8036650qvo.38.2023.07.05.07.32.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Jul 2023 07:32:26 -0700 (PDT)
+Message-ID: <92beb7aa971b2fb600e4d47158b66bfe660d3c89.camel@redhat.com>
+Subject: Re: [PATCH v2] scsi: bnx2fc: Remove a duplicate assignment in two
+ functions
+From:   Laurence Oberman <loberman@redhat.com>
+To:     Minjie Du <duminjie@vivo.com>, Markus.Elfring@web.de,
+        Saurav Kashyap <skashyap@marvell.com>,
         Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com (supporter:BROADCOM BNX2FC 10
-        GIGABIT FCOE DRIVER), "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "supporter:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER" 
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org (open list:BROADCOM BNX2FC 10 GIGABIT FCOE
-        DRIVER), linux-kernel@vger.kernel.org (open list)
-Cc:     opensource.kernel@vivo.com, Minjie Du <duminjie@vivo.com>
-Subject: [PATCH v2] scsi: bnx2fc: Remove a duplicate assignment in two functions
-Date:   Wed,  5 Jul 2023 19:52:36 +0800
-Message-Id: <20230705115236.16571-1-duminjie@vivo.com>
-X-Mailer: git-send-email 2.39.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SGAP274CA0009.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b6::21)
- To SG2PR06MB5288.apcprd06.prod.outlook.com (2603:1096:4:1dc::9)
+        "open list:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER" 
+        <linux-scsi@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Cc:     opensource.kernel@vivo.com
+Date:   Wed, 05 Jul 2023 10:32:25 -0400
+In-Reply-To: <20230705115236.16571-1-duminjie@vivo.com>
+References: <20230705115236.16571-1-duminjie@vivo.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SG2PR06MB5288:EE_|SI2PR06MB4139:EE_
-X-MS-Office365-Filtering-Correlation-Id: 82da0398-a577-49ca-32fb-08db7d4e5843
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Zz/r6UuCq77Xo8yxr/CSQ7CnWqBIU5758NrbxKmedHLJhepi9efdU0qf1zyxGbkYvrBzKK83wihWZ+D6PPOqvcjgNoY2uO/44s7VVEgGBCFC8o3ZmUJmFSWf+iGHGUw3ZZ67TtJQ5wdftecxE3+02xniq+7KN1xXTxqRPc2kH4xCs1zMEEeOP2EkLGQxI1lijixBDCSQyeMCCFURRCsU8giCXymyr/yrdzCFnLDWx3RT1YYc5C8G0E1kzeY1yHXd20Y1ikiP5nd9BrsFTh7LvXjO17cBvU7viiRGFWjl3hkS7qWCnr8TbH5mxazvCJGCvyFNbo1U+pRjP6hkl+HInCA736F8YGewfqhS67x0DcE0TqTuTJn0fOpyn+KoecJRAyEizF/YjvMWWWLJDH8TKL8F7cs3CL6wVez21x95ED7wwGQ7hf+964lVxXPHzehArW0QIZRrFny0APQUCG/IteMnwdB/6ttpBDt+AhQdbmxWbjXkqgImahKy/z3Hf6TDq40IalnBVuRTFS4ZHXoxHc0CJXzEI5DyPS0Aqg7eW7GzNyuaIvWdGshVXwh30j2wnOpx3Xq8Db/xxIIEDegYeKsc8tuNAjY8z89Sm8Ikb7FE6sR/CL+M/hxK0wzht6oY
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SG2PR06MB5288.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(376002)(136003)(39860400002)(346002)(366004)(396003)(451199021)(107886003)(86362001)(8676002)(5660300002)(110136005)(8936002)(26005)(6506007)(1076003)(52116002)(478600001)(186003)(6486002)(6512007)(66476007)(6666004)(66946007)(316002)(4326008)(66556008)(41300700001)(2616005)(2906002)(83380400001)(36756003)(38350700002)(38100700002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?A9Q7gI7RMZDHC8ldN05hqfpYPhTUDf2ikRaUrqZdSdrI5U7rhWcK/cLpCU2C?=
- =?us-ascii?Q?AOeY/cuBn+B646SenqjQjsItCxj7j3sZdvH5jScwxJa2rZiK9fCyI00KKzQu?=
- =?us-ascii?Q?bnIq3rSgTnXqfGNmnq8DnDnZ4POhlLBTbDhqwDiaZ8ThTnwOgcb7Sm4Va8PN?=
- =?us-ascii?Q?UAc9gZhPl4EPJ2R2CcZeq6QBIrvW63j9MjHtppMV6lH06hIkuq1XpQUhU71R?=
- =?us-ascii?Q?hE9/G5c0OrZFeahDGZUQCaNM+dOpWsyHWxEZ7A94AYGx8QJwWN36fN+TBi81?=
- =?us-ascii?Q?YqR2fsQxF5ygrI1uKTi/2zSyJBjNDGmc/0fwNc07zPtwEQsqpITKRDUseKxi?=
- =?us-ascii?Q?7J7JZ2h/UwRypAdIZfj5BeCcPuMF36M/lW30tFSsLcgaWrWxRbbslqQwr09n?=
- =?us-ascii?Q?D2F/pj1XEuRVg3/ow/0gOyTPvsHFCGu9hUL1yw4IBJZBwwh6YHXawwpxxK79?=
- =?us-ascii?Q?yUakSX410Vg8G9Ej/BZSLxSahgCr0uLogGumlcNK+AmO+ygYXY8uRpURy8FF?=
- =?us-ascii?Q?SAorzJeU3IHWo0dalVvqx6Bqq8/kLSkjXNBczWEIyKi/0RZY8QrqLNgES1Zv?=
- =?us-ascii?Q?yawhpW3eYKy0MgnDTcMhjdAgqxe+J6EE9qaI7fVWxQ/Mq5B/V/TwkkKkittx?=
- =?us-ascii?Q?+ng524BAdhiQNDF1pSogOqdDpM6J24sOT/Df+65h/yuPI1MAeVJFu4tYIt8k?=
- =?us-ascii?Q?qetv6vRpoJfiONm/6Ag9yiMlmlsb5HvC/lLWzypYXqI9ahJ4wp0henrNSwaL?=
- =?us-ascii?Q?c8YzbYoOfXnZ5TzCqvnpDBmw006kGXJ/hXAkNM1SVx4XNdGIphDwMVZAR19G?=
- =?us-ascii?Q?nNknK6TuSuMYl7d6Qh8dVRQ7W0T1CwEASqcPVgIGnnPTDllxAto4WeojIfa4?=
- =?us-ascii?Q?9SGpl7Yro1SIYQ5kVriipsrSXqzyJzronNpOlb7rgOqmkUtim20VSuzm8qvY?=
- =?us-ascii?Q?a3EzMfH+icXNhEMkm+00J8Nlf1Xnpet6p/HJZfenmNcO2md4+/HgK2UJ13j+?=
- =?us-ascii?Q?pYrDGEOeL9Om3Bs14LCbpC7SN1DPsvmzpAF93/u3bL6vSaM9Qa5+F+4fZTBO?=
- =?us-ascii?Q?Ks3NQkMHG2qGLp0MR/BvxIDwL2od8uX5v4LPXJCGkJYvzRonLdiK0nTAi/Yw?=
- =?us-ascii?Q?jv22K9jyv+KLEwN6fXR8RjFCqEi+qzauvrNoj2A3ZnR3w1d40eTV2qLsT24p?=
- =?us-ascii?Q?L0nNA2b+irSaOyAHoi4dnYZ5iWE2yrpxahP7ensNtUH0i+8/ktnIGS1Yqp0A?=
- =?us-ascii?Q?nFOjahyzH17l2gDAm+b8L9HMsJtIHH1PgwzJcbI0Lps+VuahR30NYKghTL3u?=
- =?us-ascii?Q?VIbKHYHbBTs2DCd64PoStKudA8RQ8wpwn9W/6EIujvSYy8hyg7nQkeDrU1L+?=
- =?us-ascii?Q?wh1pGzCgmUr20VBAdCSsW/m7XRrQXrwDKQiHTavy2ILQQ83nLibH3AQGeloE?=
- =?us-ascii?Q?1GhlR3RiV4eH1zrp+DwfgV0ocHENjDKUSnSPumIf2mmOlKCLT7Krfqo6jqOD?=
- =?us-ascii?Q?NmQsL5AAfE1y9HznnaoUuoys6GqXDpr8mB79wzEzqj5l0QUrYzGZCezwJ0lT?=
- =?us-ascii?Q?02HFV/v5u0OvNyJ2ZOV88bnCbuynsSXDG74P2Zrm?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 82da0398-a577-49ca-32fb-08db7d4e5843
-X-MS-Exchange-CrossTenant-AuthSource: SG2PR06MB5288.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jul 2023 11:52:44.6423
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gLCBIPbMIRXcP6jGWWl40GyBPR3P5+sjvtM4EjXzuI5uPJ3YklkVfDCU0xq8P2at+NNl/UL5hU8/DHd9sJJpzA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SI2PR06MB4139
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Delete a duplicate statement from these function implementations.
-
-Signed-off-by: Minjie Du <duminjie@vivo.com>
----
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 776544385..0474fe88a 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1521,8 +1521,6 @@ void bnx2fc_init_seq_cleanup_task(struct bnx2fc_cmd *seq_clnp_req,
- 				FCOE_TCE_TX_WR_RX_RD_CONST_CLASS_TYPE_SHIFT;
- 	task->rxwr_txrd.const_ctx.init_flags = context_id <<
- 				FCOE_TCE_RX_WR_TX_RD_CONST_CID_SHIFT;
--	task->rxwr_txrd.const_ctx.init_flags = context_id <<
--				FCOE_TCE_RX_WR_TX_RD_CONST_CID_SHIFT;
- 
- 	task->txwr_rxrd.union_ctx.cleanup.ctx.cleaned_task_id = orig_xid;
- 
-@@ -1763,7 +1761,6 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- 				FCOE_TASK_DEV_TYPE_TAPE <<
- 				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
- 		io_req->rec_retry = 0;
--		io_req->rec_retry = 0;
- 	} else
- 		task->txwr_rxrd.const_ctx.init_flags |=
- 				FCOE_TASK_DEV_TYPE_DISK <<
--- 
-2.39.0
+T24gV2VkLCAyMDIzLTA3LTA1IGF0IDE5OjUyICswODAwLCBNaW5qaWUgRHUgd3JvdGU6Cj4gRGVs
+ZXRlIGEgZHVwbGljYXRlIHN0YXRlbWVudCBmcm9tIHRoZXNlIGZ1bmN0aW9uIGltcGxlbWVudGF0
+aW9ucy4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBNaW5qaWUgRHUgPGR1bWluamllQHZpdm8uY29tPgo+
+IC0tLQo+IMKgZHJpdmVycy9zY3NpL2JueDJmYy9ibngyZmNfaHdpLmMgfCAzIC0tLQo+IMKgMSBm
+aWxlIGNoYW5nZWQsIDMgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2Nz
+aS9ibngyZmMvYm54MmZjX2h3aS5jCj4gYi9kcml2ZXJzL3Njc2kvYm54MmZjL2JueDJmY19od2ku
+Ywo+IGluZGV4IDc3NjU0NDM4NS4uMDQ3NGZlODhhIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvc2Nz
+aS9ibngyZmMvYm54MmZjX2h3aS5jCj4gKysrIGIvZHJpdmVycy9zY3NpL2JueDJmYy9ibngyZmNf
+aHdpLmMKPiBAQCAtMTUyMSw4ICsxNTIxLDYgQEAgdm9pZCBibngyZmNfaW5pdF9zZXFfY2xlYW51
+cF90YXNrKHN0cnVjdAo+IGJueDJmY19jbWQgKnNlcV9jbG5wX3JlcSwKPiDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgRkNPRV9U
+Q0VfVFhfV1JfUlhfUkRfQ09OU1RfQ0xBU1NfVFlQRQo+IF9TSElGVDsKPiDCoMKgwqDCoMKgwqDC
+oMKgdGFzay0+cnh3cl90eHJkLmNvbnN0X2N0eC5pbml0X2ZsYWdzID0gY29udGV4dF9pZCA8PAo+
+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqBGQ09FX1RDRV9SWF9XUl9UWF9SRF9DT05TVF9DSURfU0hJRlQ7Cj4gLcKgwqDCoMKg
+wqDCoMKgdGFzay0+cnh3cl90eHJkLmNvbnN0X2N0eC5pbml0X2ZsYWdzID0gY29udGV4dF9pZCA8
+PAo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoEZDT0VfVENFX1JYX1dSX1RYX1JEX0NPTlNUX0NJRF9TSElGVDsKPiDCoAo+IMKg
+wqDCoMKgwqDCoMKgwqB0YXNrLT50eHdyX3J4cmQudW5pb25fY3R4LmNsZWFudXAuY3R4LmNsZWFu
+ZWRfdGFza19pZCA9Cj4gb3JpZ194aWQ7Cj4gwqAKPiBAQCAtMTc2Myw3ICsxNzYxLDYgQEAgdm9p
+ZCBibngyZmNfaW5pdF90YXNrKHN0cnVjdCBibngyZmNfY21kCj4gKmlvX3JlcSwKPiDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+RkNPRV9UQVNLX0RFVl9UWVBFX1RBUEUgPDwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgRkNPRV9UQ0VfVFhfV1JfUlhfUkRf
+Q09OU1RfREVWX1RZUEVfUwo+IEhJRlQ7Cj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqBpb19yZXEtPnJlY19yZXRyeSA9IDA7Cj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oGlvX3JlcS0+cmVjX3JldHJ5ID0gMDsKPiDCoMKgwqDCoMKgwqDCoMKgfSBlbHNlCj4gwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB0YXNrLT50eHdyX3J4cmQuY29uc3RfY3R4LmluaXRf
+ZmxhZ3MgfD0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgRkNPRV9UQVNLX0RFVl9UWVBFX0RJU0sgPDwKCkxvb2tzIGdvb2Qg
+dG8gbWU6CgpSZXZpZXdlZC1ieTogTGF1cmVuY2UgT2Jlcm1hbiA8bG9iZXJtYW5AcmVkaGF0LmNv
+bT4KCgo=
 
