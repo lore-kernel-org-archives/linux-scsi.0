@@ -2,128 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A29E2EB64DD
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jul 2023 13:42:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0E79EB64D9
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jul 2023 14:55:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231417AbjGFNmn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Jul 2023 09:42:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54968 "EHLO
+        id S233584AbjGFOzT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Jul 2023 10:55:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232531AbjGFNmj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2023 09:42:39 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 452641996
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Jul 2023 06:41:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1688650916;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=vO4btfhX4ZAItdeFz/fEresdSCPHu5MFb2Eoh6y7xXo=;
-        b=YNWUIjwGay78Ngejva20v4DLGoF/cyOuXfmw/mOKsg1NI5nF/SFlZNDYY0s8y8ab9SDasH
-        mnt8QP/AGhcXYGm0Qp7j/en/SHJVeDqyeqefbbIcdw0EmGLscSzh6DGyzlT8xyywjB1mh4
-        nzESJfaQQOgPEhB5Lnfl+KEjI2Bu5z4=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-281-wyCDjmkDNjWDY3110kRUHA-1; Thu, 06 Jul 2023 09:41:55 -0400
-X-MC-Unique: wyCDjmkDNjWDY3110kRUHA-1
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-7679e5ebad2so106116985a.3
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Jul 2023 06:41:55 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688650914; x=1691242914;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=vO4btfhX4ZAItdeFz/fEresdSCPHu5MFb2Eoh6y7xXo=;
-        b=eGTp4OvrbwDwxN6HOZJreFy0QUKKGaAq2Jh2PRbCT65Id7kj9W7SdbL/XhsJfdhrh+
-         5ywoZxZVPDR7tFZDc/svYn+r0xBFsWpGHE4+2mn6kDYE+Xdk0VmZMYJjdQbKkPos7WGf
-         WQvNHIYpq91NkmtM+UM3oYJfaWQb9W43UNxfSsNp4Zt3qJPkMCi3b2ajMVEBioVl2gQl
-         ha3nSjwWm9MZInSNQM/RGD3LpdcGLZGUexItkljAlqGE9F91sAMzlvX008Q0rGw0mGPN
-         Tr5q4SC6elCleHszgK3HKtzALkklMIDytq7H16+qSo1MCg18S/22xtwVxdgsD/mgJoQC
-         zngg==
-X-Gm-Message-State: ABy/qLbLR2RsLRWXquYLGRDeWm/JJzDjGax0a0y1F6uYfymKyKmndAJN
-        c58HyTBLY09Ek4S9YpuI2muX+8+EENrJscbqI7VrMp2YnaZP0BqM2JBCl3riN22ItJoIj4S2bF7
-        ceQ35z9ioB1uv5jifNpxBtmjVe1hf4A==
-X-Received: by 2002:a05:620a:414b:b0:766:fd9f:17af with SMTP id k11-20020a05620a414b00b00766fd9f17afmr2324526qko.31.1688650914545;
-        Thu, 06 Jul 2023 06:41:54 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlEd4ZrYaC5I8uVZq+IPA8eC5TIKP4nrCJoJ/gvEUdUQT1lfebR2OsUQkVVkr/HYlI8Ad1XEIQ==
-X-Received: by 2002:a05:620a:414b:b0:766:fd9f:17af with SMTP id k11-20020a05620a414b00b00766fd9f17afmr2324507qko.31.1688650914305;
-        Thu, 06 Jul 2023 06:41:54 -0700 (PDT)
-Received: from ?IPv6:2600:6c64:4e7f:603b:7f10:16a0:5672:9abf? ([2600:6c64:4e7f:603b:7f10:16a0:5672:9abf])
-        by smtp.gmail.com with ESMTPSA id m11-20020ae9e00b000000b00762255dced0sm784771qkk.0.2023.07.06.06.41.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Jul 2023 06:41:53 -0700 (PDT)
-Message-ID: <e27a1fe9be4778a9114dd7e5349ecac107d45e7b.camel@redhat.com>
-Subject: Re: [PATCH] scsi: qla2xxx avoid a panic due to BUG() if a
- WRITE_SAME command  is sent to a device that has no protection
-From:   Laurence Oberman <loberman@redhat.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, njavali@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, djeffery@redhat.com,
-        emilne@redhat.com, jpittman@redhat.com
-Date:   Thu, 06 Jul 2023 09:41:53 -0400
-In-Reply-To: <yq1r0plkc4x.fsf@ca-mkp.ca.oracle.com>
-References: <77f405a048b07e4451b7d7adaeba7ce4a00b7efb.camel@redhat.com>
-         <yq1r0plkc4x.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+        with ESMTP id S233622AbjGFOzO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2023 10:55:14 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88DBCB9;
+        Thu,  6 Jul 2023 07:54:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=fhykVYOZkzlXT4yh75rGeCVJ3cPkDr5sjhaxZXHjD+c=; b=zbagyQChudyQPE2bMPZfTnWPir
+        xEx+mIn+jmhXiSkClrK6vyYVxVucLdM5bush+XAhi1L8+RYYMWbrfI/PXNLKjNrWkvX1JuFMBGnvz
+        hobfOtgzfc30tNgXDTW5f735BiGierSS2sw4A5BsLsjO+NIDmCJaoqnJvjB6GpO63lTBhPw1Ktdzv
+        09/JTSE1nHQ4VXLt2IEwE6yDDWWPLCfOggEtJrOTiDfYzQXVq9m9NhYrAKw8aQvc7GPBw2+8hQS8A
+        80c0RawRFeosEEQrvmZs9gRIzWZlEHNQkGLdtR04aftBqsNeChaMLjpw0CwixmzDs5mdRTNLsZohR
+        2STEGtcw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qHQNf-001vuf-2T;
+        Thu, 06 Jul 2023 14:54:51 +0000
+Date:   Thu, 6 Jul 2023 07:54:51 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH RFC 0/32] block: Make blkdev_get_by_*() return handle
+Message-ID: <ZKbVuyn0jELh8UDM@infradead.org>
+References: <20230629165206.383-1-jack@suse.cz>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230629165206.383-1-jack@suse.cz>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2023-07-05 at 22:35 -0400, Martin K. Petersen wrote:
->=20
-> Laurence,
->=20
-> > In the current code, If a device does not have protection, qla2xx
-> > will
-> > land up defaulting to a BUG() and will panic the system when
-> > sg_write_same is sent.This is because SCSI_PROT_NORMAL is matched
-> > and
-> > falls through to the BUG() call. The write_same command to a device
-> > without protection is not handled safely.
->=20
-> I would like to understand why the driver PI code path was chosen for
-> a
-> SCSI_PROT_NORMAL cmnd. That doesn't seem right.
->=20
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case SCSI_PROT_NORMAL:
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0total_bytes =3D data_bytes;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0break;
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case SCSI_PROT_READ_INS=
-ERT:
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case SCSI_PROT_WRITE_ST=
-RIP:
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0total_bytes =3D data_bytes;
->=20
-> All this transfer size wrangling in the driver should be removed and
-> replaced with a call to scsi_transfer_length() which takes the PI
-> size
-> into account.
+On Tue, Jul 04, 2023 at 02:21:27PM +0200, Jan Kara wrote:
+> Hello,
+> 
+> this patch series implements the idea of blkdev_get_by_*() calls returning
+> bdev_handle which is then passed to blkdev_put() [1]. This makes the get
+> and put calls for bdevs more obviously matching and allows us to propagate
+> context from get to put without having to modify all the users (again!).
+> In particular I need to propagate used open flags to blkdev_put() to be able
+> count writeable opens and add support for blocking writes to mounted block
+> devices. I'll send that series separately.
+> 
+> The series is based on Linus' tree as of yesterday + two bcache fixes which are
+> in the block tree. Patches have passed some basic testing, I plan to test more
+> users once we agree this is the right way to go.
 
-
-Martin, good questions
-
-I am waiting on Marvell to decide what to do about all this.
-
-The patch was focused only on avoiding the nasty effect of what you
-mention happens in that code path, causing customers to have system
-panics.
-
-The patch is to avoid the panic at this point with minimal impact to
-prior code functionality.
-
-Regards
-Laurence
-
-
-
->=20
-
+Can you post a link to a git branch for this and the follow up series?
+Especially with a fairly unstable base it's kinda hard to look at the
+result otherwise.
