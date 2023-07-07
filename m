@@ -2,81 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FBC2C0015E
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Jul 2023 07:36:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63A5BEB64DA
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Jul 2023 11:29:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232442AbjGGHgq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Jul 2023 03:36:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34588 "EHLO
+        id S232700AbjGGL3R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Jul 2023 07:29:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231565AbjGGHgq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2023 03:36:46 -0400
-Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72E231FCE
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Jul 2023 00:36:40 -0700 (PDT)
-Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4Qy4w46HqkzBJJjL
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Jul 2023 15:36:36 +0800 (CST)
-Authentication-Results: mail.208.org (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)" header.d=208.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
-        content-transfer-encoding:content-type:message-id:user-agent
-        :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1688715394; x=1691307395; bh=+GJqPJbp3LFwLc7m2bzftPN2OQL
-        OJD/1/I/T+zJyo00=; b=FQionAeSBgHS8nuowajNZMDBoCSJe00qILTYfpNmB9T
-        W5dzvC1OK4K7fI655po99bObdTEwnYM7tHCgK+idCYNwOpFckX9QYXtCO6lEgKGx
-        SOs5GqW6tGsKkTR4lrE3qpqHTW8gH3jbPbtOeQEpWzVKyAUhGQGMaNhbb/BhxtTl
-        LKSHfXhM/XvRDnn/t4SzIIy+FmbFHbyNXxi0K/BkHlBBwcmrRxYY9VdlWBrBO9eA
-        9Ii6Hth9VRXH7XbFUbSIWLZ1IjzU6aJvwX2OPkQWuaJg7vzdKlyunDuvawsVH/u3
-        Nis0hyI8XwBJGNFNw62nz6AlyO7XyY2V4CCwap5wRUw==
-X-Virus-Scanned: amavisd-new at mail.208.org
-Received: from mail.208.org ([127.0.0.1])
-        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id HlO1aG55IotE for <linux-scsi@vger.kernel.org>;
-        Fri,  7 Jul 2023 15:36:34 +0800 (CST)
-Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4Qy4w2351bzBJ8lL;
-        Fri,  7 Jul 2023 15:36:34 +0800 (CST)
+        with ESMTP id S229695AbjGGL2r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2023 07:28:47 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 317AC9E;
+        Fri,  7 Jul 2023 04:28:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=RUfYUy8/J6JDn9FoGNDP036sYhvQ7qr7NPrif4Grdk0=; b=W8BupQP6fTnw1maVtPw7n0FTsE
+        YYE/luqofOMT0IhbP2TwnItjey780Gaej+IMiW55ud+2XaULxiO0l44TVjXxHDze0xRAuH+mluyhr
+        7ui49FHiGFXBu/ov7yuPVdyKZ6eJKL+3QsdTV3Gb1KlNN/rv7nlB69UacHrPvm/XuXzbJNEgBM50m
+        lj+5xIDBkcqtRkKNokX0ONlo/QTCRQkdYA2xSwzuGzgo4ax7OTAfgkKR0gXaMSjd0fblhIFZkcy3O
+        uLWO9DupcrKt+pDlGpSx+Miz6qpzw/HtoMbVHr58WOYYIaYLstJnc/oPaBlHCJkaDsT5H35KaxEXD
+        vOIi6ADg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qHjdh-004Vpz-0w;
+        Fri, 07 Jul 2023 11:28:41 +0000
+Date:   Fri, 7 Jul 2023 04:28:41 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
+Message-ID: <ZKf26fYMDHnTCb29@infradead.org>
+References: <20230629165206.383-1-jack@suse.cz>
+ <20230704122224.16257-1-jack@suse.cz>
+ <ZKbgAG5OoHVyUKOG@infradead.org>
+ <20230706161433.lj4apushiwguzvdd@quack3>
 MIME-Version: 1.0
-Date:   Fri, 07 Jul 2023 15:36:34 +0800
-From:   sunran001@208suo.com
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     hare@kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] csi: myrs: Convert snprintf to scnprintf
-In-Reply-To: <20230707073016.11786-1-xujianghui@cdjrlc.com>
-References: <20230707073016.11786-1-xujianghui@cdjrlc.com>
-User-Agent: Roundcube Webmail
-Message-ID: <20fbbc099e132bb4d3c367da18051c7c@208suo.com>
-X-Sender: sunran001@208suo.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230706161433.lj4apushiwguzvdd@quack3>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Coccinelle reports: WARNING: use scnprintf or sprintf
+On Thu, Jul 06, 2023 at 06:14:33PM +0200, Jan Kara wrote:
+> > struct bdev_handle *bdev_open_by_path(dev_t dev, blk_mode_t mode,
+> > 		void *holder, const struct blk_holder_ops *hops);
+> > void bdev_release(struct bdev_handle *handle);
+> 
+> I'd maybe use bdev_close() instead of bdev_release() but otherwise I like
+> the new naming.
 
-Adding to that, there has also been some slow migration from snprintf to
-scnprintf. This article explains the rationale for this change:
-https: //lwn.net/Articles/69419/
-
-Signed-off-by: RAN SUN <sunran001@208suo.com>
----
-  drivers/scsi/myrs.c | 3 ++-
-  1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index a1eec65a9713..852aceb81f28 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -1408,7 +1408,8 @@ static ssize_t cache_size_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrs_hba *cs = shost_priv(shost);
-
--    return snprintf(buf, 8, "%d MB\n", cs->ctlr_info->cache_size_mb);
-+    return scnprintf(buf, 8, "%d MB\n", cs->ctlr_info->cache_size_mb);
-+
-  }
-  static DEVICE_ATTR_RO(cache_size);
+We're using release everywhese else, but if Jens is fine with that I
+can live with close.
