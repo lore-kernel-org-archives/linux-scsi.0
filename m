@@ -2,132 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D9AEEB64D9
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jul 2023 21:51:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56E79EB64D9
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Jul 2023 07:08:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230126AbjGFVvb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Jul 2023 17:51:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35316 "EHLO
+        id S231367AbjGGHIx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Jul 2023 03:08:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229531AbjGFVv3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2023 17:51:29 -0400
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2790E1BEE
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Jul 2023 14:51:29 -0700 (PDT)
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-668704a5b5bso963129b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Jul 2023 14:51:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688680288; x=1691272288;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tSX4AJCd7bzCOxjrdyDG76/rEH/Uo0IAJpML52tqR0w=;
-        b=T8WGVAfUmlGW94l47rmqByKJNu7YceWiPmLk3BRSCis6bV78aZJD9EhvuRh1jmEDkA
-         jlN1G1tzqs1EkcZQICg9pTjlkAVGt5eUFFQYojAs1vFVj+VXy46nq3jO0aPP1+ew3vY6
-         cZJN5BI8rpnurHlJFotWJzkwRQySYtXzMV1CB8Xrqhsp1NQa3kO9vmusOd7zfCZXxiHd
-         UpASxWwzLTlAXiODDfSxJn39AK+7XgZwKg1Hal8S8p/NgqrxziZyinwKMx+YSNSZ1Vrk
-         0/7K2ckylAM5XjnRYZwiSSxc+Wn6yOzQCmT8guhe8RAyBi1m0cMmepABsT5+kCEXBC9n
-         VcWQ==
-X-Gm-Message-State: ABy/qLbdknrzvIxgIKchc1DnxSh5t5Hlv872zpNtot7Mx0jUJe+9otlx
-        2q3p4Hv8lysHJKWJ1I1UGB8=
-X-Google-Smtp-Source: APBJJlEYL1CD2ya18ExuHTEYhS3fu1gRYzLM/nHdOFnwKhFzAW22PZkVi3by58mQp+8CrynsraPO6A==
-X-Received: by 2002:a05:6a20:1584:b0:12c:763b:f099 with SMTP id h4-20020a056a20158400b0012c763bf099mr3676932pzj.58.1688680288465;
-        Thu, 06 Jul 2023 14:51:28 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:a75c:9545:5328:a233])
-        by smtp.gmail.com with ESMTPSA id v12-20020a62a50c000000b00640f51801e6sm1680551pfm.159.2023.07.06.14.51.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Jul 2023 14:51:28 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>
-Subject: [PATCH] scsi: ufs: Include major and minor number in UFS command tracing output
-Date:   Thu,  6 Jul 2023 14:51:04 -0700
-Message-ID: <20230706215124.4113546-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.41.0.255.g8b1d071c50-goog
+        with ESMTP id S229997AbjGGHIu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2023 03:08:50 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0461C1BF4;
+        Fri,  7 Jul 2023 00:08:48 -0700 (PDT)
+Received: from pps.filterd (m0353724.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3676qZGP028823;
+        Fri, 7 Jul 2023 07:08:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : in-reply-to : references : date : message-id : content-type :
+ mime-version; s=pp1; bh=NdxHY10mcR0RSzJ4MQePT91c+8nd5nmFRgcP7dwJ18M=;
+ b=kCfOUNEjGY19BAZiwvE6K6FIhs+n5q2R4nmgrtV99ulO/hPQb7LJtJCWvct3ED69C7qM
+ 6yp+xXcO+JFpNqyiGaw5Y6c0EyLzuNpCTOW28YCX8CwGy0FClPZzcGKraDr1PFVjot+x
+ S8cqZCHNs5n5i9erdVd1j60Mjx1Nwk6O2IQqFRMhb9cao5O8EjryOub07sUR4TWG9M9+
+ YPPV8LrtXIp5E9SM4Z1HnMpMamK0W/IsCWBXr6bt1YyV3OvYEP1vS1KAsLjtB9CzN75y
+ UwcIK+ClQ+6wz7KvWQyoqI42xEs2/oq2gbL86IV0ML/XDBYbJnodJV+Hd9wrivo3pnVK zg== 
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3rpdtpr8wp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 07 Jul 2023 07:08:27 +0000
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3676glPs002157;
+        Fri, 7 Jul 2023 07:08:03 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+        by ppma06ams.nl.ibm.com (PPS) with ESMTPS id 3rjbde3v60-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 07 Jul 2023 07:08:03 +0000
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 367781j711535094
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 7 Jul 2023 07:08:01 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5135A20043;
+        Fri,  7 Jul 2023 07:08:01 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9C4DE20040;
+        Fri,  7 Jul 2023 07:08:00 +0000 (GMT)
+Received: from li-1de7cd4c-3205-11b2-a85c-d27f97db1fe1.ibm.com (unknown [9.171.36.241])
+        by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Fri,  7 Jul 2023 07:08:00 +0000 (GMT)
+From:   "Marc Hartmayer" <mhartmay@linux.ibm.com>
+To:     Yu Kuai <yukuai1@huaweicloud.com>, bblock@linux.ibm.com,
+        bvanassche@acm.org, hch@lst.de, axboe@kernel.dk, yukuai3@huawei.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai1@huaweicloud.com
+Subject: Re: [PATCH] scsi/sg: fix checking return value of blk_get_queue()
+In-Reply-To: <20230705024001.177585-1-yukuai1@huaweicloud.com>
+References: <20230705024001.177585-1-yukuai1@huaweicloud.com>
+Date:   Fri, 07 Jul 2023 09:07:58 +0200
+Message-ID: <87fs609p2p.fsf@linux.ibm.com>
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: hgJhIsuIuzjwVkobLKi7_ldeC1nWyT4O
+X-Proofpoint-GUID: hgJhIsuIuzjwVkobLKi7_ldeC1nWyT4O
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-07_04,2023-07-06_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
+ impostorscore=0 mlxlogscore=999 clxscore=1015 mlxscore=0 suspectscore=0
+ priorityscore=1501 lowpriorityscore=0 spamscore=0 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2305260000
+ definitions=main-2307070064
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The logical unit information is missing from the UFS command tracing
-output. Although the device name is logged, e.g. 13200000.ufs, this
-name does not include logical unit information. Hence this patch that
-replaces the device name with the disk major and minor number in the
-tracing output, e.g. 8,0, just like the block layer tracing information.
+On Wed, Jul 05, 2023 at 10:40 AM +0800, Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+> Commit fcaa174a9c99 ("scsi/sg: don't grab scsi host module reference")
+> make a mess how blk_get_queue() is called, blk_get_queue() returns true
+> on success while the caller expects it returns 0 on success.
+>
+> Fix this problem and also add a corresponding error message on failure.
+>
+> Fixes: fcaa174a9c99 ("scsi/sg: don't grab scsi host module reference")
+> Reported-by: Marc Hartmayer <mhartmay@linux.ibm.com>
+> Closes: https://lore.kernel.org/all/87lefv622n.fsf@linux.ibm.com/
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  drivers/scsi/sg.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 89fa046c7158..0d8afffd1683 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -1497,9 +1497,10 @@ sg_add_device(struct device *cl_dev)
+>  	int error;
+>  	unsigned long iflags;
+>  
+> -	error = blk_get_queue(scsidp->request_queue);
+> -	if (error)
+> -		return error;
+> +	if (!blk_get_queue(scsidp->request_queue)) {
+> +		pr_warn("%s: get scsi_device queue failed\n", __func__);
+> +		return -ENODEV;
+> +	}
+>  
+>  	error = -ENOMEM;
+>  	cdev = cdev_alloc();
+> -- 
+> 2.39.2
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c  |  2 +-
- include/trace/events/ufs.h | 13 +++++++------
- 2 files changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 384537511c7e..4169f840ac66 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -448,7 +448,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	} else {
- 		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 	}
--	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
-+	trace_ufshcd_command(cmd->device, str_t, tag,
- 			doorbell, hwq_id, transfer_len, intr, lba, opcode, group_id);
- }
- 
-diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index 992517ac3292..ac835313fb11 100644
---- a/include/trace/events/ufs.h
-+++ b/include/trace/events/ufs.h
-@@ -267,15 +267,15 @@ DEFINE_EVENT(ufshcd_template, ufshcd_wl_runtime_resume,
- 	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
- 
- TRACE_EVENT(ufshcd_command,
--	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
-+	TP_PROTO(struct scsi_device *sdev, enum ufs_trace_str_t str_t,
- 		 unsigned int tag, u32 doorbell, u32 hwq_id, int transfer_len,
- 		 u32 intr, u64 lba, u8 opcode, u8 group_id),
- 
--	TP_ARGS(dev_name, str_t, tag, doorbell, hwq_id, transfer_len,
-+	TP_ARGS(sdev, str_t, tag, doorbell, hwq_id, transfer_len,
- 			intr, lba, opcode, group_id),
- 
- 	TP_STRUCT__entry(
--		__string(dev_name, dev_name)
-+		__field(dev_t, dev)
- 		__field(enum ufs_trace_str_t, str_t)
- 		__field(unsigned int, tag)
- 		__field(u32, doorbell)
-@@ -288,7 +288,7 @@ TRACE_EVENT(ufshcd_command,
- 	),
- 
- 	TP_fast_assign(
--		__assign_str(dev_name, dev_name);
-+		__entry->dev = disk_devt(sdev->request_queue->disk);
- 		__entry->str_t = str_t;
- 		__entry->tag = tag;
- 		__entry->doorbell = doorbell;
-@@ -301,8 +301,9 @@ TRACE_EVENT(ufshcd_command,
- 	),
- 
- 	TP_printk(
--		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, hwq_id: %d",
--		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-+		"%s: %d,%d: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, hwq_id: %d",
-+		show_ufs_cmd_trace_str(__entry->str_t),
-+		MAJOR(__entry->dev), MINOR(__entry->dev),
- 		__entry->tag, __entry->doorbell, __entry->transfer_len, __entry->intr,
- 		__entry->lba, (u32)__entry->opcode, str_opcode(__entry->opcode),
- 		(u32)__entry->group_id, __entry->hwq_id
+Reviewed-by: Marc Hartmayer <mhartmay@linux.ibm.com>
