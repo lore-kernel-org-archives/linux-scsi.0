@@ -2,82 +2,114 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 582CBEB64DA
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Jul 2023 15:58:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CC0EB64DC
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Jul 2023 18:51:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229809AbjGHP6q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 8 Jul 2023 11:58:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36658 "EHLO
+        id S229990AbjGHSvD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 8 Jul 2023 14:51:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbjGHP6p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Jul 2023 11:58:45 -0400
-Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66515125
-        for <linux-scsi@vger.kernel.org>; Sat,  8 Jul 2023 08:58:44 -0700 (PDT)
-Received: by mail-lj1-x234.google.com with SMTP id 38308e7fff4ca-2b6ff1ada5dso45695931fa.2
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Jul 2023 08:58:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1688831922; x=1691423922;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=dxyBPB0IrjHraas1d4HecaS/ckFBc74Nnz1tqIkqWik=;
-        b=FPWgNs8oWePqZMGwbSrY9fznNcZvt2CxQb6h1o48eHIRrVFFNn9wKvJDyD7tjrQnxV
-         JaSgvXmvkKknQvgRFtHX5GSAWVo6aiuORIhAn2Irr5j8aL/3LRsgxaj8DV/PjHuPgQsb
-         WlAqJVFqoN8lXKih58kpGTyvhTqtQmAPhBQ5kDfhgrO0nhiyh9lUpVc6pAyko2NxWpsO
-         fna08xAgzpm9aB9l8P7xtuiv902SEwgM5WhZjIvKX+TVLLnyEZtLvlX1a+Q1rNZst4EG
-         N20+U0YQ+vlMAY4+r4zsHwZ4O0gPeAzvLHwAQ3rcROY68cOBDM0Oun4luPV0GSF5C7MW
-         sdlQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688831922; x=1691423922;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dxyBPB0IrjHraas1d4HecaS/ckFBc74Nnz1tqIkqWik=;
-        b=cgVJ6XANL/O85SsDN53+dp/O171oLhSNgzCBxLrBr+OEbg2fhl4/KpcKc4yRLUfEwj
-         am09KLyht5B6TM/rc+9vo4N40smtOBPEInJ4PMKH7hR83IQi0ZoILm1UdD9KLutjReU9
-         aEULh+E6+pKtfhkFnZyK2CLc5ERrbQ0dlPE1ilIwcv5b6SKd72IEYKBWGr4IKGARPhiQ
-         4H7/ymkDn4kOyp4f7t0WfBgiuQWFFg7Rwil8IWkGkJaZfoSkdF5+5hOneqk03ierMfrY
-         2buap/Mcaq3Zp5FpXzXGTkWgs9HBs7jDQPRb1N8KxOLPc0wtI0WmeKAbKMXCHCeFfB6m
-         SjOw==
-X-Gm-Message-State: ABy/qLbOX8oAVvV6YtLwx16bRrZHLTPNl84iIOPNJZg1Mb2MouJ3sPy6
-        TyLPsIRNORm8kuwuBaKmOkc=
-X-Google-Smtp-Source: APBJJlEsOEBo57yZ87HOgBlqb/QI69srYM0dFNl0v7EPdSHUP1WGbo6v+My9VBWkEDxum3XEFmk1Ag==
-X-Received: by 2002:a2e:9cc2:0:b0:2b6:b2bf:ab4d with SMTP id g2-20020a2e9cc2000000b002b6b2bfab4dmr5404247ljj.14.1688831922178;
-        Sat, 08 Jul 2023 08:58:42 -0700 (PDT)
-Received: from ?IPV6:2003:c5:873b:7c7c:c7cc:5c6f:7d8c:cbe1? (p200300c5873b7c7cc7cc5c6f7d8ccbe1.dip0.t-ipconnect.de. [2003:c5:873b:7c7c:c7cc:5c6f:7d8c:cbe1])
-        by smtp.gmail.com with ESMTPSA id ov24-20020a170906fc1800b0099364d9f0e6sm3656574ejb.117.2023.07.08.08.58.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 08 Jul 2023 08:58:41 -0700 (PDT)
-Message-ID: <96497efa-0ae6-2b42-d29a-acaf4d2efff4@gmail.com>
-Date:   Sat, 8 Jul 2023 17:58:40 +0200
+        with ESMTP id S229468AbjGHSvC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Jul 2023 14:51:02 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46DC9E46
+        for <linux-scsi@vger.kernel.org>; Sat,  8 Jul 2023 11:50:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1688842252;
+        bh=uNaVJKuJfvJ+VV4OUJkfGKz46h22SgI0vLkd93kL/1s=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=FPHg32JLTgCaSiVGptZZkhyCnpkU7V05vcWHxQrT7zQGaxMn6MBQjtRjn+YguVzXz
+         6Mxe7QB4j+jPFO9hoti9jtvqaxARYcCg1+uRd2fDJyzAo6v9k76yTU5IyxDhn5Ff/n
+         HSZgb9bZ8k0I/Bx2SzBBiu+WjVSD2QVAwOoim2Jc=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 57CF01281321;
+        Sat,  8 Jul 2023 14:50:52 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id pRVodgcfHSJB; Sat,  8 Jul 2023 14:50:52 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1688842252;
+        bh=uNaVJKuJfvJ+VV4OUJkfGKz46h22SgI0vLkd93kL/1s=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=FPHg32JLTgCaSiVGptZZkhyCnpkU7V05vcWHxQrT7zQGaxMn6MBQjtRjn+YguVzXz
+         6Mxe7QB4j+jPFO9hoti9jtvqaxARYcCg1+uRd2fDJyzAo6v9k76yTU5IyxDhn5Ff/n
+         HSZgb9bZ8k0I/Bx2SzBBiu+WjVSD2QVAwOoim2Jc=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id B1BD51280A7D;
+        Sat,  8 Jul 2023 14:50:51 -0400 (EDT)
+Message-ID: <c5d8a017f39f95d4214ba638ecb8e41d2994cda0.camel@HansenPartnership.com>
+Subject: [GIT PULL] final round of SCSI updates for the 6.4+ merge window
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 08 Jul 2023 14:50:50 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] scsi: ufs: Include major and minor number in UFS command
- tracing output
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>
-References: <20230706215124.4113546-1-bvanassche@acm.org>
-From:   Bean Huo <huobean@gmail.com>
-In-Reply-To: <20230706215124.4113546-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Acked-by: Bean Huo <beanhuo@micron.com>
+A few late arriving patches that missed the initial pull request.  It's
+mostly bug fixes (the dt-bindings is a fix for the initial pull).
+
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The short changelog is:
+
+Abel Vesa (1):
+      scsi: dt-bindings: ufs: qcom: Fix ICE phandle
+
+Arnd Bergmann (1):
+      scsi: lpfc: Fix lpfc_name struct packing
+
+Azeem Shaikh (2):
+      scsi: target: tcmu: Replace strlcpy() with strscpy()
+      scsi: ncr53c8xx: Replace strlcpy() with strscpy()
+
+Damien Le Moal (1):
+      scsi: core: Simplify scsi_cdl_check_cmd()
+
+Gustavo A. R. Silva (1):
+      scsi: smartpqi: Replace one-element arrays with flexible-array members
+
+Keoseong Park (1):
+      scsi: ufs: core: Remove unused function declaration
+
+Mike Christie (1):
+      scsi: target: iblock: Quiet bool conversion warning with pr_preempt use
+
+Rong Tao (1):
+      scsi: target: docs: Remove tcm_mod_builder.py
+
+Yueh-Shun Li (1):
+      scsi: isci: Fix comment typo
+
+With diffstat:
+
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          |   9 +-
+ Documentation/target/scripts.rst                   |   6 -
+ Documentation/target/tcm_mod_builder.py            | 656 ---------------------
+ drivers/scsi/isci/scu_task_context.h               |   2 +-
+ drivers/scsi/lpfc/lpfc_hw.h                        |  10 +-
+ drivers/scsi/ncr53c8xx.c                           |   2 +-
+ drivers/scsi/scsi.c                                |  37 +-
+ drivers/scsi/smartpqi/smartpqi.h                   |   4 +-
+ drivers/scsi/smartpqi/smartpqi_init.c              |   5 +-
+ drivers/target/target_core_iblock.c                |   2 +-
+ drivers/target/target_core_user.c                  |   4 +-
+ drivers/ufs/core/ufshcd-priv.h                     |   1 -
+ 12 files changed, 32 insertions(+), 706 deletions(-)
+ delete mode 100755 Documentation/target/tcm_mod_builder.py
+
+James
+
+
