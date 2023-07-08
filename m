@@ -2,114 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CC0EB64DC
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Jul 2023 18:51:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D84EEEB64DA
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Jul 2023 20:08:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229990AbjGHSvD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 8 Jul 2023 14:51:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52158 "EHLO
+        id S230283AbjGHUI1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 8 Jul 2023 16:08:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbjGHSvC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Jul 2023 14:51:02 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46DC9E46
-        for <linux-scsi@vger.kernel.org>; Sat,  8 Jul 2023 11:50:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1688842252;
-        bh=uNaVJKuJfvJ+VV4OUJkfGKz46h22SgI0vLkd93kL/1s=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=FPHg32JLTgCaSiVGptZZkhyCnpkU7V05vcWHxQrT7zQGaxMn6MBQjtRjn+YguVzXz
-         6Mxe7QB4j+jPFO9hoti9jtvqaxARYcCg1+uRd2fDJyzAo6v9k76yTU5IyxDhn5Ff/n
-         HSZgb9bZ8k0I/Bx2SzBBiu+WjVSD2QVAwOoim2Jc=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 57CF01281321;
-        Sat,  8 Jul 2023 14:50:52 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id pRVodgcfHSJB; Sat,  8 Jul 2023 14:50:52 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1688842252;
-        bh=uNaVJKuJfvJ+VV4OUJkfGKz46h22SgI0vLkd93kL/1s=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=FPHg32JLTgCaSiVGptZZkhyCnpkU7V05vcWHxQrT7zQGaxMn6MBQjtRjn+YguVzXz
-         6Mxe7QB4j+jPFO9hoti9jtvqaxARYcCg1+uRd2fDJyzAo6v9k76yTU5IyxDhn5Ff/n
-         HSZgb9bZ8k0I/Bx2SzBBiu+WjVSD2QVAwOoim2Jc=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+        with ESMTP id S229827AbjGHUIZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Jul 2023 16:08:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30A801BF;
+        Sat,  8 Jul 2023 13:08:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id B1BD51280A7D;
-        Sat,  8 Jul 2023 14:50:51 -0400 (EDT)
-Message-ID: <c5d8a017f39f95d4214ba638ecb8e41d2994cda0.camel@HansenPartnership.com>
-Subject: [GIT PULL] final round of SCSI updates for the 6.4+ merge window
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C36B060B08;
+        Sat,  8 Jul 2023 20:08:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 32BB6C433C8;
+        Sat,  8 Jul 2023 20:08:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1688846904;
+        bh=ergHiaMJ2IwXgJksW+WhJIPSCC8ngoi1+dYut0nYAlQ=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=jXB4SMFJrv/DS7ZexHSAHp8ranoNPvGh/x90UZqcUnS17ZUpcD7VgmusG/tSOQOhd
+         xRPwlbhBIARuG6u0CLKjrskDvRmJnGUGdbLHucJKsly0I9mWN+g8fZGysoRyWfqXzS
+         fyO1pli3VSZ3ccVlBv/9ldH5JDQLIjOETdGV1yWiIwPt0mMATXLIiaDyU0U2jefYvk
+         e4RiBcxdpC6F1ULopRs+SUlNaukGEOUtBSPcNzMLRHD2FNFSBBlwYGm5hQBBGw1B3T
+         6J0OA9OqDvNdnZjrf3M+vX/zYgmwftFi+JY021gghS2NR83Ps0TGlkRvM82pbG4Sl2
+         BY5huTJZjhoAg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 1FCB3E53808;
+        Sat,  8 Jul 2023 20:08:24 +0000 (UTC)
+Subject: Re: [GIT PULL] final round of SCSI updates for the 6.4+ merge window
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <c5d8a017f39f95d4214ba638ecb8e41d2994cda0.camel@HansenPartnership.com>
+References: <c5d8a017f39f95d4214ba638ecb8e41d2994cda0.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <c5d8a017f39f95d4214ba638ecb8e41d2994cda0.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+X-PR-Tracked-Commit-Id: 24033d71cc36ae8af02b56ec22c7490779a9e39f
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 7fcd473a6455450428795d20db7afd2691c92336
+Message-Id: <168884690412.10103.6327003456697541408.pr-tracker-bot@kernel.org>
+Date:   Sat, 08 Jul 2023 20:08:24 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 08 Jul 2023 14:50:50 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A few late arriving patches that missed the initial pull request.  It's
-mostly bug fixes (the dt-bindings is a fix for the initial pull).
+The pull request you sent on Sat, 08 Jul 2023 14:50:50 -0400:
 
-The patch is available here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/7fcd473a6455450428795d20db7afd2691c92336
 
-The short changelog is:
+Thank you!
 
-Abel Vesa (1):
-      scsi: dt-bindings: ufs: qcom: Fix ICE phandle
-
-Arnd Bergmann (1):
-      scsi: lpfc: Fix lpfc_name struct packing
-
-Azeem Shaikh (2):
-      scsi: target: tcmu: Replace strlcpy() with strscpy()
-      scsi: ncr53c8xx: Replace strlcpy() with strscpy()
-
-Damien Le Moal (1):
-      scsi: core: Simplify scsi_cdl_check_cmd()
-
-Gustavo A. R. Silva (1):
-      scsi: smartpqi: Replace one-element arrays with flexible-array members
-
-Keoseong Park (1):
-      scsi: ufs: core: Remove unused function declaration
-
-Mike Christie (1):
-      scsi: target: iblock: Quiet bool conversion warning with pr_preempt use
-
-Rong Tao (1):
-      scsi: target: docs: Remove tcm_mod_builder.py
-
-Yueh-Shun Li (1):
-      scsi: isci: Fix comment typo
-
-With diffstat:
-
- .../devicetree/bindings/ufs/qcom,ufs.yaml          |   9 +-
- Documentation/target/scripts.rst                   |   6 -
- Documentation/target/tcm_mod_builder.py            | 656 ---------------------
- drivers/scsi/isci/scu_task_context.h               |   2 +-
- drivers/scsi/lpfc/lpfc_hw.h                        |  10 +-
- drivers/scsi/ncr53c8xx.c                           |   2 +-
- drivers/scsi/scsi.c                                |  37 +-
- drivers/scsi/smartpqi/smartpqi.h                   |   4 +-
- drivers/scsi/smartpqi/smartpqi_init.c              |   5 +-
- drivers/target/target_core_iblock.c                |   2 +-
- drivers/target/target_core_user.c                  |   4 +-
- drivers/ufs/core/ufshcd-priv.h                     |   1 -
- 12 files changed, 32 insertions(+), 706 deletions(-)
- delete mode 100755 Documentation/target/tcm_mod_builder.py
-
-James
-
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
