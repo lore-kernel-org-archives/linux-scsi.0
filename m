@@ -2,99 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F261EB64DC
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Jul 2023 07:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2414EB64DC
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Jul 2023 14:32:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229935AbjGIHJE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Jul 2023 03:09:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36236 "EHLO
+        id S232810AbjGIOcs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Jul 2023 10:32:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjGIHJD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jul 2023 03:09:03 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B500B1B1
-        for <linux-scsi@vger.kernel.org>; Sun,  9 Jul 2023 00:09:02 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 336C560BA4
-        for <linux-scsi@vger.kernel.org>; Sun,  9 Jul 2023 07:09:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 89488C433B9
-        for <linux-scsi@vger.kernel.org>; Sun,  9 Jul 2023 07:09:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688886541;
-        bh=bKhEKQ4yFWAWPDm5XhChx/IghtXpd2EJfoHER9QewVI=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=oS5SiFDWPAtubCVEc8P9mu8cSpDE0TmirTmnLc4fNwYeTOtHhsXXLUDAGITvGzeet
-         wqbDPwLXJYbARMlvkP8zMQPag2wrT+uPxv0iM9qohy4jA2r4HU6nlU9TW5ztSyatcp
-         8tRtcxBqfEv5OUZdBK2i2hudLVgC/NS5/3ktk7TsID2JOt5j+uwYx+CGex81j3cgbQ
-         TN4d5dVA+djm8gMNv1o814kj2V6JPLZ91JVmiZaRUWyH65rQ3d1/WLBNZXTuXoDmsG
-         sGf5YfK5Z2xoLKWowbwZozWT21wPwek1enFf2D+ifx6thkZYGz1/x4Yh94PZZIaULL
-         EMp9o+kejUZ/w==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 7C6E4C53BD2; Sun,  9 Jul 2023 07:09:01 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215880] Resume process hangs for 5-6 seconds starting sometime
- in 5.16
-Date:   Sun, 09 Jul 2023 07:09:00 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: regressions@leemhuis.info
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215880-11613-BtcguYzNhs@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215880-11613@https.bugzilla.kernel.org/>
-References: <bug-215880-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229943AbjGIOcr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jul 2023 10:32:47 -0400
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 330DCFF;
+        Sun,  9 Jul 2023 07:32:42 -0700 (PDT)
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-3facc7a4e8aso7776065e9.0;
+        Sun, 09 Jul 2023 07:32:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688913160; x=1691505160;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Fi8HZWe00as6NY8cKM/Z1+nvL1s7YeXy199NqP9ShII=;
+        b=K89d+UCCzmd42gjQKhzLlm8myEIh70D9xjtth7bSvMqFwV76+wWXN2dP324XJjxchV
+         pzVBPulXjjGospJHccHvbKHIqMCjnXgSn0wxsvnr6VTkUttkhDHvr+RHqZ+80axTkOTc
+         JhCvnYF8JMdNly2e7sHw1wEnSRS6gYxRXJ0arXJmaxKioZn6sr/HQ0kZcMqW/t8xE+0Y
+         HAXXLXGnsIQHzURUWC9zCYaERgj4UuxS+6xngyeMWYVD2QcNukDMHFFYiEkavn1GnmpV
+         sYGzuHeVK+bqMZCi3mTaMnu6CK/hskzrOZpkL+XxEtdljPBZ3SnJL3/f/MWz6Cnkwu2R
+         rrBw==
+X-Gm-Message-State: ABy/qLYnRE1kCsNnPD2svDP4PG5zqm+cPZUk+qrW9O/8tdTurWNQzisk
+        MmEKrzPXDhqbZaoJ9GxpdHOZ3oqwFY8=
+X-Google-Smtp-Source: APBJJlFEIuFofQ1/SqOhdmpRu5JJopAnJyej4izHcf2ZEhE0zRT1k4+hi5QBs39TGI+uQYQcVh3POA==
+X-Received: by 2002:a05:600c:4f56:b0:3fb:f025:9372 with SMTP id m22-20020a05600c4f5600b003fbf0259372mr9988489wmq.4.1688913160303;
+        Sun, 09 Jul 2023 07:32:40 -0700 (PDT)
+Received: from [10.100.102.14] (46-116-229-137.bb.netvision.net.il. [46.116.229.137])
+        by smtp.gmail.com with ESMTPSA id m4-20020a05600c280400b003fc07e17d4esm3947099wmb.2.2023.07.09.07.32.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 09 Jul 2023 07:32:39 -0700 (PDT)
+Message-ID: <165eceaa-55d4-f9c7-7e02-18115e6df6fe@grimberg.me>
+Date:   Sun, 9 Jul 2023 17:32:38 +0300
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: blktests failures with v6.4
+Content-Language: en-US
+To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <lkmloyrqpebispffur5udxdiubmevvodtsvnap3jz7tv5ihstr@jg7ejye3bein>
+From:   Sagi Grimberg <sagi@grimberg.me>
+In-Reply-To: <lkmloyrqpebispffur5udxdiubmevvodtsvnap3jz7tv5ihstr@jg7ejye3bein>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215880
 
---- Comment #45 from The Linux kernel's regression tracker (Thorsten Leemhu=
-is) (regressions@leemhuis.info) ---
-(In reply to Paul Ausbeck from comment #44)
-> I'd like to add that I've also noticed this regression after upgrading fr=
-om
-> Debian 11/5.10 to Debian 12/6.1
+> #3: nvme/003 (fabrics transport)
+> 
+>     When nvme test group is run with trtype=rdma or tcp, the test case fails
+>     due to lockdep WARNING "possible circular locking dependency detected".
+>     Reported in May/2023. Bart suggested a fix for trytpe=rdma [4] but it
+>     needs more discussion.
+> 
+>     [4] https://lore.kernel.org/linux-nvme/20230511150321.103172-1-bvanassche@acm.org/
 
-Can't remember for sure (Bart and Damien might), but I think this issue sho=
-uld
-have been fixed by this revert that went into 6.0:
+This patch is unfortunately incorrect and buggy.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?=
-id=3D785538bfdd6
+This will likely make the issue go away, but adds another
+old issue where a client can DDOS a target by bombarding it
+with connect/disconnect. When releases are async and we don't
+have any back-pressure, it is likely to happen.
+--
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index 4597bca43a6d..8b4f4aa48206 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -1582,11 +1582,6 @@ static int nvmet_rdma_queue_connect(struct 
+rdma_cm_id *cm_id,
+                 goto put_device;
+         }
 
-So if you see similar symptoms it's likely a different issue. You thus might
-want to open a new report, as things otherwise get messy; it's also in your=
- own
-interest, see:
-https://linux-regtracking.leemhuis.info/post/frequent-reasons-why-linux-ker=
-nel-bug-reports-are-ignored/
-especially
-https://linux-regtracking.leemhuis.info/post/frequent-reasons-why-linux-ker=
-nel-bug-reports-are-ignored/#you-reported-your-issue-in-a-reply-to-an-earli=
-er-report
+-       if (queue->host_qid == 0) {
+-               /* Let inflight controller teardown complete */
+-               flush_workqueue(nvmet_wq);
+-       }
+-
+         ret = nvmet_rdma_cm_accept(cm_id, queue, &event->param.conn);
+         if (ret) {
+                 /*
+diff --git a/drivers/nvme/target/tcp.c b/drivers/nvme/target/tcp.c
+index 868aa4de2e4c..c8cfa19e11c7 100644
+--- a/drivers/nvme/target/tcp.c
++++ b/drivers/nvme/target/tcp.c
+@@ -1844,11 +1844,6 @@ static u16 nvmet_tcp_install_queue(struct 
+nvmet_sq *sq)
+         struct nvmet_tcp_queue *queue =
+                 container_of(sq, struct nvmet_tcp_queue, nvme_sq);
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+-       if (sq->qid == 0) {
+-               /* Let inflight controller teardown complete */
+-               flush_workqueue(nvmet_wq);
+-       }
+-
+         queue->nr_cmds = sq->size * 2;
+         if (nvmet_tcp_alloc_cmds(queue))
+                 return NVME_SC_INTERNAL;
+--
