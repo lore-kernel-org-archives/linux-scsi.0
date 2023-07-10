@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B573CEB64DC
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jul 2023 02:51:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3191AEB64D9
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jul 2023 03:48:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230310AbjGJCvU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Jul 2023 22:51:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47454 "EHLO
+        id S229931AbjGJDsi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Jul 2023 23:48:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230163AbjGJCvT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jul 2023 22:51:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6EB0123
-        for <linux-scsi@vger.kernel.org>; Sun,  9 Jul 2023 19:51:14 -0700 (PDT)
+        with ESMTP id S229575AbjGJDsf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jul 2023 23:48:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3103DC4
+        for <linux-scsi@vger.kernel.org>; Sun,  9 Jul 2023 20:48:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 217F460DCE
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2023 02:51:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 85894C433B8
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2023 02:51:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BFEEF60DD8
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2023 03:48:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 265C9C433B7
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2023 03:48:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688957473;
-        bh=zASB2u9yWLF87mI/DGjncY37mV9Vs/HwCxgdg4UUmak=;
+        s=k20201202; t=1688960914;
+        bh=9lt+DHRuBsT4Bbtt4BTpW/pNxWKIH/LrkYajCFDlhRM=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=O1t8lAFv/jP182KOGEpGsikyU4ACa27NzGnZzC/nxjvI0hXKRWBF+LfX+40ylOQ/9
-         xi/vGB8K4TBCn6bxqN509/ReoTEin5gnqkzIfxS9vFudCuT0Z4MnSIAOAvawzZUBS8
-         p6QqITVfePKAebOdncLbiJzgGP5780J/5WFSwTvTW2KQef4sgTIHdD6uZIUk6Q41dh
-         dhD70RJcYCcQd4AHtM6JyXE/Fu75LFzr27xbDvO70W9o1tkqeHrRnMPtT6IssaEwZb
-         96mSnKazjZrJq3GDgJx4zrXcXVcMpqzWC2EVE1Xt3UwQ6j9EWuYsZfh85gFKamTa/v
-         xR4MqdlLyzPVQ==
+        b=i5cD6X9zWSbu3lYa1CzxGwOJoABY7VclhoXpHXIxL1LEwsyfjQZPnNw5a9LocbPlA
+         MnkovW44IAWFk70AQcxSwiAyuqY5Y53dQZUZWi9D+PnP10VKZXvVkQxikW4cbj6x0c
+         kjTNDOWY0JEz4oa4qBoU8gtDcuqc5DqTAvMRCKmx8c4o6Rc5+tqiK5DCKfJcLvYTBu
+         uN3HOWK68Zd3TMRuWQDMgiYMwDX8iinmTs6Ggt9rtCkIHx7anir0IMFKkMeBpLBOw2
+         oypux8p+WyHBAlMFEQubU200nLwOnXKla8d9+3PfB15Ct8OoCTbcUOo4FH8dJWGKzH
+         YPdXUdZ1D+Vsg==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 6E41AC4332E; Mon, 10 Jul 2023 02:51:13 +0000 (UTC)
+        id 15714C4332E; Mon, 10 Jul 2023 03:48:34 +0000 (UTC)
 From:   bugzilla-daemon@kernel.org
 To:     linux-scsi@vger.kernel.org
 Subject: [Bug 215880] Resume process hangs for 5-6 seconds starting sometime
  in 5.16
-Date:   Mon, 10 Jul 2023 02:51:12 +0000
+Date:   Mon, 10 Jul 2023 03:48:33 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
@@ -47,14 +47,14 @@ X-Bugzilla-Component: Other
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: normal
-X-Bugzilla-Who: paula@alumni.cse.ucsc.edu
+X-Bugzilla-Who: damien.lemoal@wdc.com
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215880-11613-dKhXRPp2Q6@https.bugzilla.kernel.org/>
+Message-ID: <bug-215880-11613-ZtHzjeCvQs@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-215880-11613@https.bugzilla.kernel.org/>
 References: <bug-215880-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -68,19 +68,40 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D215880
 
---- Comment #51 from Paul Ausbeck (paula@alumni.cse.ucsc.edu) ---
-The PCIe BAR (Base address register) is usually GPU related as lspci verifi=
-es.
-BAR mapping failures are pretty routine on my older machines. My assessment=
- is
-that they aren't relevant except to show that at least some GPU activity is
-deferred until after ATA bring up.
+--- Comment #52 from Damien Le Moal (damien.lemoal@wdc.com) ---
+(In reply to Paul Ausbeck from comment #51)
+> The PCIe BAR (Base address register) is usually GPU related as lspci
+> verifies. BAR mapping failures are pretty routine on my older machines. My
+> assessment is that they aren't relevant except to show that at least some
+> GPU activity is deferred until after ATA bring up.
+>=20
+> I think more important is that Restarting tasks ...  and even PM: suspend
+> exit are happening before ATA bring up on 5.10 but after ATA bring up on =
+6.1.
+>=20
+> This seems like a pretty serious change to me.
 
-I think more important is that Restarting tasks ...  and even PM: suspend e=
-xit
-are happening before ATA bring up on 5.10 but after ATA bring up on 6.1.
+The "serious change" is a bug fix. "PM: suspend exit" sets the system out of
+suspend mode but before commit 6aa0365a3c85, libata was "lying" about the s=
+tate
+of its devices. They were not really resumed and that was causing issues: s=
+ome
+users reported inability to use storage because of a deadlock between ata
+resume and scsi resume. So we are not going back on that. This commit fixes=
+ a
+serious issue and makes libata compliant with PM semantic.
 
-This seems like a pretty serious change to me.
+I can try to revisit that fix to see if I can shorten the time to signaling=
+ a
+"resumed" state for ata devices, but I doubt much is possible.
+
+In any case, for now, having resume wait for the hdd spinup is safer than t=
+he
+alternative. Your other issue about the GPU and mouse is I think different =
+and
+not related to libata resume. Not sure exactly what is happening. As I said=
+, I
+think it is worth signaling this to the pci, drm and or pm dev lists.
 
 --=20
 You may reply to this email to add a comment.
