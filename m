@@ -2,109 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3191AEB64D9
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jul 2023 03:48:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F4CDEB64DA
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jul 2023 05:08:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229931AbjGJDsi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Jul 2023 23:48:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37212 "EHLO
+        id S232326AbjGJFIn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jul 2023 01:08:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229575AbjGJDsf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jul 2023 23:48:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3103DC4
-        for <linux-scsi@vger.kernel.org>; Sun,  9 Jul 2023 20:48:35 -0700 (PDT)
+        with ESMTP id S232465AbjGJFIH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jul 2023 01:08:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A2A2723;
+        Sun,  9 Jul 2023 22:06:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BFEEF60DD8
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2023 03:48:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 265C9C433B7
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2023 03:48:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 460F660DED;
+        Mon, 10 Jul 2023 05:04:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36C10C433C7;
+        Mon, 10 Jul 2023 05:04:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688960914;
-        bh=9lt+DHRuBsT4Bbtt4BTpW/pNxWKIH/LrkYajCFDlhRM=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=i5cD6X9zWSbu3lYa1CzxGwOJoABY7VclhoXpHXIxL1LEwsyfjQZPnNw5a9LocbPlA
-         MnkovW44IAWFk70AQcxSwiAyuqY5Y53dQZUZWi9D+PnP10VKZXvVkQxikW4cbj6x0c
-         kjTNDOWY0JEz4oa4qBoU8gtDcuqc5DqTAvMRCKmx8c4o6Rc5+tqiK5DCKfJcLvYTBu
-         uN3HOWK68Zd3TMRuWQDMgiYMwDX8iinmTs6Ggt9rtCkIHx7anir0IMFKkMeBpLBOw2
-         oypux8p+WyHBAlMFEQubU200nLwOnXKla8d9+3PfB15Ct8OoCTbcUOo4FH8dJWGKzH
-         YPdXUdZ1D+Vsg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 15714C4332E; Mon, 10 Jul 2023 03:48:34 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215880] Resume process hangs for 5-6 seconds starting sometime
- in 5.16
-Date:   Mon, 10 Jul 2023 03:48:33 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: damien.lemoal@wdc.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215880-11613-ZtHzjeCvQs@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215880-11613@https.bugzilla.kernel.org/>
-References: <bug-215880-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        s=k20201202; t=1688965495;
+        bh=phIY5znAcGKL80ExVNQ3VL4dsnbeApEXQjzAcBy/Heo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=KB49TV6oNCWuupaGeHBI3nsULIkXkIg0rBQZr0iNROmFevzopdFISYMbG0E8ezVt1
+         qILV60r+MwChIAqVXgmNDnvDYqe4+Fr8RuVrD1z5fM6TniGQUJy8iMIHrSW9tVeMJi
+         tA2CT1iwQROjuB8gJ3YSyAGgNROrfBazpYAGWEjpsJXNlNkyVKnQ0tDG/9QmhBiN28
+         2GtGE6TqcGcK6cHgZ4pwMNnDIpdcChmormHBBvGyKBSv4cQJH2D+n86opwuTtfmbx9
+         cB5b54j0j+hsFSFkMjhJ/PEXBAiOR7TjPeX2ck7A4U9pntQD6PHOcBnk3Ri2Fjf/GP
+         vzA5n5DvMRiFg==
+From:   Bjorn Andersson <andersson@kernel.org>
+To:     Andy Gross <agross@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Iskren Chernev <me@iskren.info>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Luca Weiss <luca.weiss@fairphone.com>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Bhupesh Sharma <bhupesh.sharma@linaro.org>,
+        Eric Biggers <ebiggers@google.com>
+Subject: Re: (subset) [PATCH v5 0/5] Fix some issues in QCOM UFS bindings
+Date:   Sun,  9 Jul 2023 22:07:34 -0700
+Message-ID: <168896565974.1376307.14861663929943818215.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20221209-dt-binding-ufs-v5-0-c9a58c0a53f5@fairphone.com>
+References: <20221209-dt-binding-ufs-v5-0-c9a58c0a53f5@fairphone.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215880
 
---- Comment #52 from Damien Le Moal (damien.lemoal@wdc.com) ---
-(In reply to Paul Ausbeck from comment #51)
-> The PCIe BAR (Base address register) is usually GPU related as lspci
-> verifies. BAR mapping failures are pretty routine on my older machines. My
-> assessment is that they aren't relevant except to show that at least some
-> GPU activity is deferred until after ATA bring up.
->=20
-> I think more important is that Restarting tasks ...  and even PM: suspend
-> exit are happening before ATA bring up on 5.10 but after ATA bring up on =
-6.1.
->=20
-> This seems like a pretty serious change to me.
+On Tue, 27 Jun 2023 10:28:00 +0200, Luca Weiss wrote:
+> This series aims to solve the dtbs_check errors from the qcom ufs
+> bindings. It has changed in scope a bit since v1, so it may be a bit all
+> over the place.
+> 
+> Please note, that I have not tested the sm8450.dtsi patch since I don't
+> have any hardware there. Testing would be appreciated.
+> 
+> [...]
 
-The "serious change" is a bug fix. "PM: suspend exit" sets the system out of
-suspend mode but before commit 6aa0365a3c85, libata was "lying" about the s=
-tate
-of its devices. They were not really resumed and that was causing issues: s=
-ome
-users reported inability to use storage because of a deadlock between ata
-resume and scsi resume. So we are not going back on that. This commit fixes=
- a
-serious issue and makes libata compliant with PM semantic.
+Applied, thanks!
 
-I can try to revisit that fix to see if I can shorten the time to signaling=
- a
-"resumed" state for ata devices, but I doubt much is possible.
+[5/5] arm64: dts: qcom: sm8450: Use standalone ICE node for UFS
+      commit: 86b0aef435851dec9e5202d22dfbfff56da4440c
 
-In any case, for now, having resume wait for the hdd spinup is safer than t=
-he
-alternative. Your other issue about the GPU and mouse is I think different =
-and
-not related to libata resume. Not sure exactly what is happening. As I said=
-, I
-think it is worth signaling this to the pci, drm and or pm dev lists.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
