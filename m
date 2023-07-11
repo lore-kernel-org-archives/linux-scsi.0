@@ -2,96 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8978EB64DD
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jul 2023 16:32:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56221EB64DC
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jul 2023 16:32:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232375AbjGKQcX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Jul 2023 12:32:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32898 "EHLO
+        id S232597AbjGKQcd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Jul 2023 12:32:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232186AbjGKQcT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2023 12:32:19 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3729010D5;
-        Tue, 11 Jul 2023 09:32:16 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36BF3e7J014126;
-        Tue, 11 Jul 2023 16:31:59 GMT
+        with ESMTP id S232452AbjGKQcZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2023 12:32:25 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C47FE7E;
+        Tue, 11 Jul 2023 09:32:20 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36BFVO6I027999;
+        Tue, 11 Jul 2023 16:32:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=7sz3y6Tzr61h75qwIT38tdE+/wEacLrZHIbaOe4JUno=;
- b=omBNfBx3K214Pp7AYMkxBJIhuL3WX/ciBQhhFxsHStvaG9wWjA428LjLlZHO0rgKqSiK
- DxLFj7WrvP27NUvEIJplSvnWYWUKE0qrJ2FLqYOQXjC0oNVdvk28FvdTcWkW/2tVWyv4
- Ysh+mP8giSomtTkBzhzdYNQX+VbzeUHPCAe0vFSpbnQAE5aRbtqgBLRimexg2rM+15sq
- LDODN74w3uICp/QujPJs5tIauFJ4VnqLLwIECn1t23OmLuFCxcwk61qVxoFil507IrkE
- rdB8IVLnZntQN8PXVyWmo7jL+k3IOMbAEM7LjE72fGu2bRl64M2SwcvDf+KDz+71yoET 4Q== 
+ bh=uBr7zMLDJXBH2GPBouC+mshXnukFubY8SffHMPcenPU=;
+ b=gsjHIXgVtEgS5PwhaX2Cj68YZgWTA6ydasfcZ6X1AbSv7HAS/CHHEGhjmJIGpE9m6wms
+ 3V8xHI+uh6BTBEHaeGABsYfx6Lw/hB9HzL7yYVAcNKRS3UfqBckc6+zBb+6jjvdrSLwn
+ og4UXLQBYvuf4tb08C91sDSedZaH9ltqsUt4+lLEOe0KZ9NVndSgG7IaT74QE1YOoAVR
+ IqfeSGb0JofANq0NC7CrVtcX0rxFWMOqzu2Kv1H47/AzIq3jthcTj9ymFITCbynz4Qk7
+ Ua+R46/EG41MOqMO45Gaai4ZqFQbgwrPb0gm3GQcDtWOz5lkdaLBHTvjXLKTMi9mnDDq ng== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3rrea2uaxx-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3rrfj6378x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 11 Jul 2023 16:31:59 +0000
+        Tue, 11 Jul 2023 16:32:06 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36BF7dvj007067;
-        Tue, 11 Jul 2023 16:31:58 GMT
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36BGQGx8007109;
+        Tue, 11 Jul 2023 16:32:06 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3rpx854c8c-1
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3rpx854cg1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 11 Jul 2023 16:31:57 +0000
+        Tue, 11 Jul 2023 16:32:06 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36BGQBXL019529;
-        Tue, 11 Jul 2023 16:31:57 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36BGQBXT019529;
+        Tue, 11 Jul 2023 16:32:05 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3rpx854c4h-2;
-        Tue, 11 Jul 2023 16:31:56 +0000
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3rpx854c4h-6;
+        Tue, 11 Jul 2023 16:32:05 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        Dan Carpenter <dan.carpenter@linaro.org>
+To:     quic_asutoshd@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        Can Guo <quic_cang@quicinc.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tom Rix <trix@redhat.com>, linux-scsi@vger.kernel.org,
-        llvm@lists.linux.dev, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 1/2] scsi: qla2xxx: silence a static checker warning
-Date:   Tue, 11 Jul 2023 12:31:43 -0400
-Message-Id: <168909306191.1197987.9474778545088785387.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, Lu Hongfei <luhongfei@vivo.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Daniil Lunev <dlunev@chromium.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: ufs: core: Update contact email for monitor sysfs nodes
+Date:   Tue, 11 Jul 2023 12:31:47 -0400
+Message-Id: <168909306212.1197987.7624893253606524856.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <4aa0485e-766f-4b02-8d5d-c6781ea8f511@moroto.mountain>
-References: <4aa0485e-766f-4b02-8d5d-c6781ea8f511@moroto.mountain>
+In-Reply-To: <20230630003913.3713155-1-quic_cang@quicinc.com>
+References: <20230630003913.3713155-1-quic_cang@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-07-11_08,2023-07-11_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=854
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=824
  adultscore=0 mlxscore=0 spamscore=0 phishscore=0 malwarescore=0
  bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2305260000 definitions=main-2307110148
-X-Proofpoint-GUID: Fs-aFYn6RkuLwnQ7jVtfPTGEXPmlZ9z5
-X-Proofpoint-ORIG-GUID: Fs-aFYn6RkuLwnQ7jVtfPTGEXPmlZ9z5
+X-Proofpoint-GUID: o-9FDE1H0cnDk5YZ8uUqD46aRWZcPhvm
+X-Proofpoint-ORIG-GUID: o-9FDE1H0cnDk5YZ8uUqD46aRWZcPhvm
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 26 Jun 2023 13:58:03 +0300, Dan Carpenter wrote:
+On Thu, 29 Jun 2023 17:39:09 -0700, Can Guo wrote:
 
-> Smatch and Clang both complain that LOGIN_TEMPLATE_SIZE is more than
-> sizeof(ha->plogi_els_payld.fl_csp).
+> Update contact email addresses for Can Guo and Asutosh Das, replace
+> Subhash Jadavani's contact.
 > 
-> Smatch warning:
->     drivers/scsi/qla2xxx/qla_iocb.c:3075 qla24xx_els_dcmd2_iocb()
->     warn: '&ha->plogi_els_payld.fl_csp' sometimes too small '16' size = 112
 > 
-> [...]
 
 Applied to 6.5/scsi-fixes, thanks!
 
-[1/2] scsi: qla2xxx: silence a static checker warning
-      https://git.kernel.org/mkp/scsi/c/134f66959cd0
-[2/2] scsi: qla2xxx: Fix error code in qla2x00_start_sp()
-      https://git.kernel.org/mkp/scsi/c/e579b007eff3
+[1/1] scsi: ufs: core: Update contact email for monitor sysfs nodes
+      https://git.kernel.org/mkp/scsi/c/ef470b862dc7
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
