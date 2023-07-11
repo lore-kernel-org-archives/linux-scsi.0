@@ -2,122 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DCC2EB64DA
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jul 2023 02:44:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2865FEB64DC
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jul 2023 05:09:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229627AbjGKCol (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jul 2023 22:44:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41976 "EHLO
+        id S229736AbjGKFJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Jul 2023 01:09:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229906AbjGKCoi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jul 2023 22:44:38 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6472C188
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2023 19:44:37 -0700 (PDT)
-Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4R0Q9W0KYKzMqW1;
-        Tue, 11 Jul 2023 10:41:19 +0800 (CST)
-Received: from localhost.localdomain (10.69.192.58) by
- kwepemi500016.china.huawei.com (7.221.188.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Tue, 11 Jul 2023 10:44:34 +0800
-From:   chenxiang <chenxiang66@hisilicon.com>
-To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>,
-        Xingui Yang <yangxingui@huawei.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>
-Subject: [PATCH 1/3] scsi: hisi_sas: Fix normally completed I/O analysed as failed
-Date:   Tue, 11 Jul 2023 11:14:58 +0800
-Message-ID: <1689045300-44318-2-git-send-email-chenxiang66@hisilicon.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1689045300-44318-1-git-send-email-chenxiang66@hisilicon.com>
-References: <1689045300-44318-1-git-send-email-chenxiang66@hisilicon.com>
+        with ESMTP id S229503AbjGKFJl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2023 01:09:41 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2180FFE
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2023 22:09:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=7WTLsmvVN0w90UyytXcDu+G0r4YWlA6ad0Cb2mFsFDQ=; b=TGqzEq8AWuQ61ZwbQMJ6JLtzG0
+        HfjBqI4wisylnDYBkEtRf/4aH3HmNxFc3Id2yR8WIqjNGmB2PEsYBUUXrsSmefNd9US5Dm3cT0dfF
+        oIuoglfeQ2ZjOAFiWKUcgIe4CEUouD0V0Wk0kHacsBdOTRiesAxXkz0Spbr975MqLi/bfftkAUgN9
+        k+symAbloOoU8WWNtFMQ+dWHUkuUKVOdBIGrfcjdP8xSYSZZAY8Etcf/IOaVg060e5BOZPoGWHtNv
+        8wXyCsj8GyIsheThKypVYEzpN4H2QVMBwIzVQT3nVMcgXfGg79lxodBJwZGevHIaryF/I8XMnX0zV
+        BpwFJrIA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qJ5d2-00DifZ-2K;
+        Tue, 11 Jul 2023 05:09:36 +0000
+Date:   Mon, 10 Jul 2023 22:09:36 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Ziqi Chen <quic_ziqichen@quicinc.com>
+Subject: Re: [PATCH] scsi: ufs: Include major and minor number in UFS command
+ tracing output
+Message-ID: <ZKzkEMIvrICQ3dWK@infradead.org>
+References: <20230706215124.4113546-1-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500016.china.huawei.com (7.221.188.220)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230706215124.4113546-1-bvanassche@acm.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xingui Yang <yangxingui@huawei.com>
+On Thu, Jul 06, 2023 at 02:51:04PM -0700, Bart Van Assche wrote:
+>  	TP_fast_assign(
+> -		__assign_str(dev_name, dev_name);
+> +		__entry->dev = disk_devt(sdev->request_queue->disk);
 
-Pio read command has no response frame and the struct iu[1024] won't be
-filled, and it's found that I/Os which are normally completed will be
-analysed as failed in sas_ata_task_done() when iu contain abnormal dirty
-data. So ending_fis should not be filled by iu when the response frame
-hasn't been written to the memory.
-
-Fixes: d380f55503ed ("scsi: hisi_sas: Don't bother clearing status buffer IU in task prep")
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 11 +++++++++--
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  6 ++++--
- 2 files changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 87d8e40..404aa7e 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2026,6 +2026,11 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	u16 dma_tx_err_type = le16_to_cpu(err_record->dma_tx_err_type);
- 	u16 sipc_rx_err_type = le16_to_cpu(err_record->sipc_rx_err_type);
- 	u32 dma_rx_err_type = le32_to_cpu(err_record->dma_rx_err_type);
-+	struct hisi_sas_complete_v2_hdr *complete_queue =
-+			hisi_hba->complete_hdr[slot->cmplt_queue];
-+	struct hisi_sas_complete_v2_hdr *complete_hdr =
-+			&complete_queue[slot->cmplt_queue_slot];
-+	u32 dw0 = le32_to_cpu(complete_hdr->dw0);
- 	int error = -1;
- 
- 	if (err_phase == 1) {
-@@ -2310,7 +2315,8 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 			break;
- 		}
- 		}
--		hisi_sas_sata_done(task, slot);
-+		if (dw0 & CMPLT_HDR_RSPNS_XFRD_MSK)
-+			hisi_sas_sata_done(task, slot);
- 	}
- 		break;
- 	default:
-@@ -2443,7 +2449,8 @@ static void slot_complete_v2_hw(struct hisi_hba *hisi_hba,
- 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
- 	{
- 		ts->stat = SAS_SAM_STAT_GOOD;
--		hisi_sas_sata_done(task, slot);
-+		if (dw0 & CMPLT_HDR_RSPNS_XFRD_MSK)
-+			hisi_sas_sata_done(task, slot);
- 		break;
- 	}
- 	default:
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 20e1607..2f33e6b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2257,7 +2257,8 @@ slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
- 			ts->stat = SAS_OPEN_REJECT;
- 			ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
- 		}
--		hisi_sas_sata_done(task, slot);
-+		if (dw0 & CMPLT_HDR_RSPNS_XFRD_MSK)
-+			hisi_sas_sata_done(task, slot);
- 		break;
- 	case SAS_PROTOCOL_SMP:
- 		ts->stat = SAS_SAM_STAT_CHECK_CONDITION;
-@@ -2384,7 +2385,8 @@ static void slot_complete_v3_hw(struct hisi_hba *hisi_hba,
- 	case SAS_PROTOCOL_STP:
- 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
- 		ts->stat = SAS_SAM_STAT_GOOD;
--		hisi_sas_sata_done(task, slot);
-+		if (dw0 & CMPLT_HDR_RSPNS_XFRD_MSK)
-+			hisi_sas_sata_done(task, slot);
- 		break;
- 	default:
- 		ts->stat = SAS_SAM_STAT_CHECK_CONDITION;
--- 
-2.8.1
+sdev->request_queue->disk can be NULL and no LLDD has any business
+looking at it, as it is owned by the ULD (if one is actually bound).
 
