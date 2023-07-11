@@ -2,106 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D0B2C001B0
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jul 2023 10:40:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2294DEB64DC
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jul 2023 13:51:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231208AbjGKKk3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Jul 2023 06:40:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58658 "EHLO
+        id S231252AbjGKNvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Jul 2023 09:51:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229837AbjGKKk2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2023 06:40:28 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 753651A2;
-        Tue, 11 Jul 2023 03:40:27 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36BAQvTB007755;
-        Tue, 11 Jul 2023 10:40:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=wz/c7LCVr71XpNiEk8lSRfuaqQwPsMz6br/H0UTYKSk=;
- b=hYzeoJuTsLXZbZUO7ncwKpCXfl7q5ZA8vwHNuz3bNUX2rs41kFJt+dUlw0Or/ZiEyXn6
- JB7EvjF2b1c7KI3haJlzeTJGmGZ0eaRFEc012N4JRYfgcPyhRPxVKhZm3D68PtnrUAqY
- E2JxM1s2hAOQvuLEDXu+QoC4wAq5Km00bBybVo6WUFag2M9PiyhOTv+wWsaBJWCuMFhN
- /F/pIMr14/EpIdXgTjKmE4UcbKJ0oviOtR1aoPmmube+zRjAudXYcCXaT10yqj9WADwD
- mMRv6795bBjUl2FziXjoyfW1gs9G1hquSzfwmGCRTBwVnkWyHub/ePnIGULURs4QCJj+ 1g== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rs3vh866v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 11 Jul 2023 10:40:17 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36BAeCwb021490;
-        Tue, 11 Jul 2023 10:40:12 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3rq0vkm64b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Tue, 11 Jul 2023 10:40:12 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36BAeCxO021485;
-        Tue, 11 Jul 2023 10:40:12 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 36BAeCNq021482;
-        Tue, 11 Jul 2023 10:40:12 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-        id 7D7CD5000AA; Tue, 11 Jul 2023 16:10:11 +0530 (+0530)
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-To:     mani@kernel.org, quic_cang@quicinc.com, stanley.chu@mediatek.com,
-        bvanassche@acm.org, quic_asutoshd@quicinc.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, beanhuo@micron.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        jejb@linux.ibm.com, linux-arm-msm@vger.kernel.org,
-        quic_ziqichen@quicinc.com, Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V1] scsi: ufs: ufs-qcom: Update UFS devfreq Parameters
-Date:   Tue, 11 Jul 2023 16:10:06 +0530
-Message-Id: <20230711104006.15872-1-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: UJ7Y_BAWWPbSWNj90E_0Y0dohvJHr415
-X-Proofpoint-ORIG-GUID: UJ7Y_BAWWPbSWNj90E_0Y0dohvJHr415
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-11_05,2023-07-11_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxlogscore=931
- clxscore=1011 mlxscore=0 malwarescore=0 phishscore=0 suspectscore=0
- bulkscore=0 spamscore=0 lowpriorityscore=0 priorityscore=1501
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2305260000 definitions=main-2307110094
+        with ESMTP id S231127AbjGKNvG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2023 09:51:06 -0400
+Received: from JPN01-OS0-obe.outbound.protection.outlook.com (mail-os0jpn01olkn2043.outbound.protection.outlook.com [40.92.98.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06D7994
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2023 06:51:05 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Thz2A/we0KNf9GUpHKhPTzHL4Aj3WXt8oRCRON6FaNS1h/U6pQTe3359rJqCwOrh36YbDMKQ2xSw9nifVtjwxGK4WbLxhgYYgkM2a6zAbwJKEu64i7z86pY0y3BaZdzhfkZyMjy6eaNxD16s1nwUUoIXSsU0Vt3VhPfT5KJr6DNI6GbtJK/T9CxCdyhQGrUMYD12MmAkAxC6R+aYRmY1zS0zJ2xCkFVSH8zBANbrXTcGZcam+Ejn0/hebwo5oP5Jysklzp56ZiuQSO4PPA8o6T6i6vsm/kJThwC4mUlVknBjA6fCx6hzOzcG/eFrqARstUpzGNlQ2HhYBK+x63XTnQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bq8EsMOV8NOSBnnB02Y00fE0cohLu19nNam1Zf+8ppc=;
+ b=Z02qiCJnoixW2I/r8JyzssvPRFS40Wfg2ChTKgO9NM1GLnDcRm3wrzMfBqvi7QlHzV8QMbWPWuQ8aaHIB8yue/FDZ3c/RBN+M5t2M64IfbPxQE7HWGaeUEpifbWlUmC34tMTpxOSFoJNGz5F3cnKH/3VFnBQerY25VCca5Za5BdLsRrtxv98HqLsbqKgkIQr3PCQhpt5j2HZwpczTpA2i2nBrBAYu+PYVfNgP6Ttm7lU2fqUqqabk7royB+uoQrfa09UxMkwLGYwXazLUQKtRCgXVMh+8ArjE8/djXDxpRcAp+ybd8SHJzzAQL4CjYXuiq+Dx5ls0n6jvqBikJeKfQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bq8EsMOV8NOSBnnB02Y00fE0cohLu19nNam1Zf+8ppc=;
+ b=DLEb5fwaDflqIVFz6MyF1BCGZAFQGU8XHs557T5Yx5ttHxt/xpQpWMcc/ILxEWgSHyF4Xw3XknAhdv7WuiL69dqB7Bot6UzbuxcmABk2LrP3OreecHdkebFRV1tvPlVMCMZFFWJQqKuOvHS6jxsLUtYrUjUZ9iYz3BIVTwcMrpIZqWPUgQEszizM8yX8vbtFu3P389i1U1jfrNk8rlqc2oPFim8AYbrC00af01RYnYRhEbr8U+NPaEWYO60Ca3GKz/XenDx6F8r5lUObidg9f3cbcQi+5/eAKFE4Ds4cZqirLwiJ4otPSz0MbbPtx2QvAUzHOl68MKHmD1nv39WcsQ==
+Received: from TYCP286MB3045.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:304::5)
+ by TYCP286MB3220.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:2c1::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.32; Tue, 11 Jul
+ 2023 13:51:02 +0000
+Received: from TYCP286MB3045.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::bc17:f597:b741:e5a7]) by TYCP286MB3045.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::bc17:f597:b741:e5a7%2]) with mapi id 15.20.6565.028; Tue, 11 Jul 2023
+ 13:51:02 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+From:   linda.zhao01@outlook.com
+To:     linux-scsi@vger.kernel.org
+Subject: RE:Mosquito Nets with 5% discount
+Date:   Tue, 11 Jul 2023 13:51:01 +0000
+X-TMN:  [BWAmD9vhoa+ukPlGzN2GsW2ulRhDgnFD]
+X-ClientProxiedBy: TYXPR01CA0064.jpnprd01.prod.outlook.com
+ (2603:1096:403:a::34) To TYCP286MB3045.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:304::5)
+Message-ID: <TYCP286MB304542904F1D9EFD06F8F7D98131A@TYCP286MB3045.JPNP286.PROD.OUTLOOK.COM>
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYCP286MB3045:EE_|TYCP286MB3220:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5d42be55-54dd-4721-de69-08db8215dd5b
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 5F34JU2KaojU3GQuoya9Io9Plvgf6psN7S2D+b5x3DzA8Yvl1iZGFH1vOGdQIMZ9fB4ctfrQK/Zy05Ax/1xiOTooz1VkZ1fvUV6cqMCmCslfuuOvvhuDTrbKeaJ3eNf/jfdPS2wqUozhA0PSbhi9YcemxucZD/NBoSr6fReeBAg1f01urmhKX8J0afJ2Pe70/3VTV18BvpDLohBPJKaxCL6hGKTZJVL4ofUPXCKN36YtGYBZqaWxaYH6Xx6f4Dvk1t5I1WBbEBn6KNr+D3RTAlOXHk1XqGzog9t5IdeX6uzBHMCZA8r0CxPGc4yyTta0gGUgLx2WLxcOfw8EI3OD26nubEZVfnhIUAI28ff0r4vfDJRKEFS3BWLPIvfmZaV02NpnnpHz4zaV8boMEpyfxXhdjADfvNSLGaukeED2WG0h0GPyf3xc7QKoJPYvAJSVKaqOMmYQCQWZ5qC17+JcvuQdYDsMXPSutTxq6vDO8qOA0ZNqU65VCnMT9pOOXBnFxYpgqa47M+CtsjdBPl/c+1d1ze/aJPL+dxm1SQeije4=
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?ZXp6eWFsSDZ2Q3A1aEZ2dmw1NnQ5TThQRnVoVzF1ZTN6dUEyYmFPSHdTT3lo?=
+ =?utf-8?B?RjZQTjdVejM0MEJvai84YXhVTzlIN1J3MEhaS2RKOEpNcy85c0FVZW1adldv?=
+ =?utf-8?B?WHlPV2luUmlML3JYRTBuMmRKWFAvMDNWTnJnVHZMaHNrMDJMeXVqMmQ1YTdL?=
+ =?utf-8?B?a2F2V2pvWmNXUk9ZN1NDb1B2N0VuRy8vRmNXdDZwdGdaVzFrcjVKZU4rRmN3?=
+ =?utf-8?B?bUQ4ZHorSVZ2c3laQmhoMkJSNXZoNGtnVHQyY2dSUnFnRWpzWjNlS09nanpu?=
+ =?utf-8?B?N2t6UERtRmgyNmdQRFlpT2JOM3doN01mdUgvQ2Qrb21jYkZKYXIzTUJBejBZ?=
+ =?utf-8?B?TzVkcFd5K0VKZVJsY2o3d1cxVFY5VnBqZjA2cUtNc3N6bW9pczZtdm5DL3JE?=
+ =?utf-8?B?S3F0bU81MzlEeHoxbjNqQ0d5bDdlYVdHWCtaTjc0ZzVTM2xaSHFnTVJGTUlH?=
+ =?utf-8?B?MCtoQmZRTW9sZFhZUkFDaDg0aUU1Zy9mQmx5OGZEbE0vY1hqNEpPbUszbDVX?=
+ =?utf-8?B?WjZZNVdINmZ2RGVGYjFqdUtqQ280aEU3eXJiS3JTc0xHWnNKVHFrdHZDNjVj?=
+ =?utf-8?B?QXM3Z0hpYWhmUG5TTmQvak85ZlJTUFhxdmN4VmN0V3RWRTl2VG1SK2pzVHBo?=
+ =?utf-8?B?N1FwSExmTWxiSzQzN1dKTUcyMGlXdnRBbU5RMTJ1NWYwa3U1ampNTmNIeCtU?=
+ =?utf-8?B?bnhjWDhRS21LTG9wNGp2NnBOVlczdXF2Yjg3K2tlYnJnY3oxbkk1SnoxSjNU?=
+ =?utf-8?B?VUNmaCtES2J6TSs4TU91RSsrNFhCU0FiTlZFSkcrdHdQZFl4Y2V5VTd0NTNM?=
+ =?utf-8?B?a29POUovT05ld084T1VYbTYwbzVGZmdWbUtyZk1EcG9GNkcyQnVEOVIwNVN0?=
+ =?utf-8?B?SWNXY1YvVHpRMDVsRjgyQzFtb3dUNG1nWXBuM1FuTWc3a0FLOXRlcE9vR0ZY?=
+ =?utf-8?B?TFphbjFSV2tyTkRtYjR1Y243NHhEdmUwNjRZSGpQSWF3ajhwWmJUMVpJaG1J?=
+ =?utf-8?B?ZjRrSGkzYnVja3BaVDFtc1YrZUUyWnBldkNmdmlsU2JiWEpSTkxoc3ZQZWp0?=
+ =?utf-8?B?dmVWL1JPcnFGQ3hkcVUxUThFdC9RQk1zSzJmK08wRko1YjNWK3VMT05ZSUQ4?=
+ =?utf-8?B?dVd6aVZNdTFlOUE3Uk0vYTgzVWZGTTlHWHNKQ0xycXN0ek5ybzduVW1MaWJ6?=
+ =?utf-8?B?UDE2MDRYbWt2UlRDc1Yzckh1cWxkK09hQzAvSFdQei9GM1EzWGdhbjB1a242?=
+ =?utf-8?B?cVNsbnI0cTdSdDlnanhmam5QcFlNL2hWUit3QUZMd3lTbWQ0bDc2Vi9PVzVX?=
+ =?utf-8?B?a1FQUDJjVTVWRThwalNZbHFzV1NJYlVQY2lob2Y1NDZwNWh3S3puc2pzdjEz?=
+ =?utf-8?B?V0NyV0s2NnVZNXFQYkJIdjJNd1BMUEwxWjVMY1lITkFvdDl3ZjBsVmsrbE43?=
+ =?utf-8?B?OFo1WnJ5Z1ZEeWU5Z1JwUGFaUGtRcm9VVVVkaExJVkRSL2xZckVEQ2NMN0tR?=
+ =?utf-8?B?aGQ0SlJCQmRtZG9JMUtGSUNRd05WZWkrY2NmQndWK2VxU1MzMzFma0NEc1cz?=
+ =?utf-8?B?SEUzYkYydkFTY1RFWEJiczkzclY1OWVjSDhWL1NjdW0wOVRBM3lMQXZhWE9T?=
+ =?utf-8?Q?d2a+iP7IWZcKNBWwCsfJac540DG6vpeR+FfIuj/4ufF8=3D?=
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5d42be55-54dd-4721-de69-08db8215dd5b
+X-MS-Exchange-CrossTenant-AuthSource: TYCP286MB3045.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jul 2023 13:51:02.6300
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB3220
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-To support the periodic polling mode without stop
-caused by CPU idle state, enable delayed timer
-as default instead of deferrable timer for
-qualcomm platforms.
-And change UFS devfreq downdifferential threshold to 65
-for less aggresive downscaling.
-
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
----
- drivers/ufs/host/ufs-qcom.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 82d02e7f3b4f..a15815c951ca 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1388,8 +1388,9 @@ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
- 					struct devfreq_simple_ondemand_data *d)
- {
- 	p->polling_ms = 60;
-+	p->timer = DEVFREQ_TIMER_DELAYED;
- 	d->upthreshold = 70;
--	d->downdifferential = 5;
-+	d->downdifferential = 65;
- }
- #else
- static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
---
-2.17.1
-
+SGkgbWFuYWdlciwKCkdyZWV0aW5ncyBmcm9tIExpbmRhLHdlIGFyZSBhIGRpcmVjdCBtYW51ZmFj
+dHVyZXIgb2YgTW9zcXVpdG8gbmV0cywgUGxlYXRlZCBtZXNoLCBQZXQgc2NyZWVuIG1lc2gsIGFu
+ZCBQb2xsZW4gbWVzaCwgd2hpY2ggY2FuIG9mZmVyIG1vcmUgdGhhbiA1JSBkaXNjb3VudCB0aGFu
+IG90aGVyIHN1cHBsaWVycy4KCkhlcmUgYXJlIG91ciByZWd1bGFyIHNwZWNpZmljYXRpb25zOgoK
+MSkgTW9zcXVpdG8gbmV0czogRGVuc2l0eToxOCoxNiwgMTcqMTUsIDE3KjE0LCAxNCoxNCwgZXRj
+OyBXaWR0aDoxLjAtMy4wbTsgTGVuZ3RoOjMwbS0zMDBtL3JvbGw7CjIpIFBsZWF0ZWQgbWVzaDog
+RGVuc2l0eToyMCoyMCwgMTYqMTQsIGV0YzsgRm9sZGluZyBoZWlnaHQ6MTAtMjBtbTsgV2lkdGg6
+MS4wLTMuMG07IExlbmd0aDozMG0vcGM7IAozKSBQb2xsZW4gbWVzaDogRGVuc2l0eToxOCo1NDsg
+UHJvdGVjdGl2ZSBlZmZlY3QgdG90YWwgNjklCjQpIFBldCBzY3JlZW4gbWVzaDogRGVuc2l0eTog
+MTQqMTEsIDE1KjEwOyBXZWlnaHQ6IDM2MGdzbSwgMzIwZ3NtOwoKV2UgYXJlIHN1cHBsaWVyIG9m
+IG1hbnkgYmlnIGN1c3RvbWVycyBmb3IgeWVhcnMsIHdpdGggc3RhYmxlIHF1YWxpdHkgYW5kIGNv
+bXBldGl0aXZlIHByaWNlcy5UaGUgc2FtcGxlIGlzIG5vIHByb2JsZW0gZm9yIHlvdXIgdGVzdGlu
+Zy4KCkFueSBpbnF1aXJ5IHdlIGNhbiBxdW90ZSBmb3IgeW91PwoKLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0KTGluZGEgWmhhbwpQcm9qZWN0IE1hbmFnZXIKRXhwb3J0aW5nIERlcGFy
+dG1lbnQKCkFkZHJlc3M6IEJ1aWxkaW5nIDE4LCBOby4gNywgS2FpVHVvIFJvYWQsIEh1YW5nZGFv
+IERpc3RyaWN0LCBRaW5nZGFvLCBTaGFuZG9uZywgQ2hpbmEKTW9iaWxlL1doYXRzYXBwOiArODYg
+MTU3NjIyODEwOTUKV2Vic2l0ZTogd3d3Lmhpa2luZ3NjcmVlbi5jb20KCgoK
