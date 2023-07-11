@@ -2,296 +2,160 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86898C0015E
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jul 2023 17:41:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4AE0EB64DC
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jul 2023 19:00:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231277AbjGKRlr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Jul 2023 13:41:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45280 "EHLO
+        id S230178AbjGKTAt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Jul 2023 15:00:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230148AbjGKRlq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2023 13:41:46 -0400
-Received: from mail-oo1-xc2d.google.com (mail-oo1-xc2d.google.com [IPv6:2607:f8b0:4864:20::c2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD920E75
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2023 10:41:44 -0700 (PDT)
-Received: by mail-oo1-xc2d.google.com with SMTP id 006d021491bc7-5636425bf98so3223472eaf.1
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2023 10:41:44 -0700 (PDT)
+        with ESMTP id S229655AbjGKTAs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2023 15:00:48 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A984E4D;
+        Tue, 11 Jul 2023 12:00:46 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36BIDGfC025098;
+        Tue, 11 Jul 2023 19:00:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=go7Z0vesYAjBnKsXrx0qbcHBLDgQJQJCXDKColpYGEk=;
+ b=izHieUTzeWGhScd5tMBlergQd7TUluNal/XKtvyQy8Eo/oDBLaAiixk4EbAwSX0YU5Di
+ 4vNlffj0PlDBAl09F4Tdc1DJh71zN8QKHgx1qXGT+RoMpk4hEyUk3bzOrnulCgYQ1yiV
+ Ws9FLdplG4TfrXjaHtIznPPSwFigPislW9SWLojJVtJdoM3f3RH38FM9yLUFqio/FdPe
+ G0OF82Rho1udV9O7M1y7wBhg/vbQI6a7Fs4dzPonwfunHQNG4gS/HsxeLQTEQWGBC6o1
+ rB9H9RiUiC7Ag/eaoqtBaWRjx570NZAg4JmX3wO7RaqQY7PdyrbAPncqtfuk5wiaLLOk 4A== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3rrjmhb5m5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 11 Jul 2023 19:00:36 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36BI3dTM008366;
+        Tue, 11 Jul 2023 19:00:34 GMT
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam04lp2041.outbound.protection.outlook.com [104.47.73.41])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3rpx8bk5tr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 11 Jul 2023 19:00:34 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=GVaTqufcJuXfZRV3l6I+pmAC5dz7rvhOkgKY9L4An19qg87ai/KqCA4yi/W8yYPv1brzKrCzLtYnCFsbzpLIMOC4ZDIgTIeFXLBscvd2X/zkCoZtrtCBUwjjh7y1939jAuj4r1cBZfe+VhZNFm062LliDMGkorCdyKlXVDwB1AG+56QszcSeT17HIHiEFH9zNOj8z6uPg4tOI0R7FSOPmrxTRLo8NT4aXjKCjq/dhSJ9G4O+aOiL+TmqnRKofzknd5XqWRewoHOXdEHi+olLfNsWCNi2LYzCeVsgv9lf8QKjI2xl9c58wObRsMhQi8GWXpwHPUjk3OZnYaMcOBWCRw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=go7Z0vesYAjBnKsXrx0qbcHBLDgQJQJCXDKColpYGEk=;
+ b=Wl/DlwN9tyMhUNHwFR8e+t3/3WpAaeKAetvxGIU5J0aT2VmuBpwlSNbnfSlgYOuRGcCGzInjiGmL5+tWs6goazgIpkXX8LZLPqeY/0rSsOkMPRSrK/i2iDwB4aKN3VRW5XkdBlq5NXTkdR455+9CDJHAe1p4Z4AagG6LYANmLtfXrk5C8oeZt0Ln39vKwkjZOja44dJ87HhHZIsZ7Rbp4hczu1FEFsQaeFRJrowbvPnzgjZSa6i7UQypw5Cc44EKOVQMY/MNAgwJQbNntXQrPXTTIYU6E8dVdBI4I535q2B3Q2szNZZFxb5wWjbMVy/m7ucctc2grlKR/WIwZ//j4g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689097304; x=1691689304;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=XqwavEubtW11DfezKBW1NY+jd+4AjXNT0PZqqB15Nt8=;
-        b=i/6zzX3Bg2TMosmLksrm/UxDzKbRAodFwSPXaH/Vytf0QgUb+80Wu1V8JmVGImV5LN
-         UqW3cS/HPgGTnSqq+5ESnms5mlWlOrpNMQBOjQecBdmdh1Qxovd20JgRqOKawY3t9zmR
-         8z2rYMuYUOntge5lNy8IseBJ2ChSCyLgER3ClHPXPDG0oOE6oa4GK4VnHU7S42X1Hi4B
-         TMzz+5oUZozjyXwv07IZJK2jOZ/I/uSgxO4tTLFJt7TyseewviL/zKqve2XtMJA9ws0o
-         ujgREJqUFkaajB6bpb2hMmTVenIDlizLkqJ24PmCXPlK8wxGJF3cqEpoPXWpSksjt4A0
-         IReg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689097304; x=1691689304;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=XqwavEubtW11DfezKBW1NY+jd+4AjXNT0PZqqB15Nt8=;
-        b=h+ihzMHEF3z3W0lRLQMKp+o6tYnyAKMVJUZhg0e1/hkNwsx+rLlPp2rTcKfyKwfw4J
-         In25NorqJ6bH/t0gq0CtjBG76JieEAMrrIwnqPFqa2KthQ0J9M0YxKwNc9Ty5EttUPsa
-         +EX+64i6rtkhqE0pl17GiY4wQH0NpKOSNWCZ8MvfOkiM6Daqf0dbH7g4y6Z97Lpnu7su
-         YKbHVQ6MqaveRFGmxNSIOZfIQ8S0TvS+qWqh9iHyNhh9zEhruoBfco2D3HHR67xL5skq
-         22wq2v1EBygpqUfza0BG81y+BZivxsikghi/liQBR4Liw7lCVHpkpBYgoixco4hY18d9
-         WrsA==
-X-Gm-Message-State: ABy/qLZVh5EN8DnLbnxoYLgqHEgx7LMCsasmT5XOet3yFg5tV/THClZk
-        arOpXbCblGFz3APf3i3ql3pcqi5vZ9zYXZEBtR0=
-X-Google-Smtp-Source: APBJJlGe64gVAtS1acHTyQl/DOyhaAkZ2zneyvrZc9Qw2Ny+KlNytYjI1BYI0HN9iOBHx77y7dEUQCWTmZDVTl7/DpU=
-X-Received: by 2002:a4a:3744:0:b0:563:516e:ae3d with SMTP id
- r65-20020a4a3744000000b00563516eae3dmr9781979oor.6.1689097303762; Tue, 11 Jul
- 2023 10:41:43 -0700 (PDT)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=go7Z0vesYAjBnKsXrx0qbcHBLDgQJQJCXDKColpYGEk=;
+ b=uMNTEYXIZrY9Wf/A0GnHa0MCva0yCbaGrJgVuenPciHHfr0oGMdpqzon5K0U5Id3ON4UWO2EWxDpnfp3xN7pK+aiGOAPHE9rucwzhXx0VdarmlJP1cdgSl4Bs1l6SqmlOuX5PwdnM3niyB9jht5fQCePKO6BLp73KjYgZuOD6BI=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by MW5PR10MB5715.namprd10.prod.outlook.com (2603:10b6:303:19c::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.30; Tue, 11 Jul
+ 2023 19:00:31 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::101f:466f:718:4375]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::101f:466f:718:4375%6]) with mapi id 15.20.6565.028; Tue, 11 Jul 2023
+ 19:00:31 +0000
+To:     Po-Wen Kao <powen.kao@mediatek.com>
+Cc:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
+        <stanley.chu@mediatek.com>, <alice.chao@mediatek.com>,
+        <naomi.chu@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <cc.chou@mediatek.com>, <eddie.huang@mediatek.com>
+Subject: Re: [PATCH v5 0/2] Add MCQ support for MTK platform
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1fs5uff40.fsf@ca-mkp.ca.oracle.com>
+References: <20230701124442.10489-1-powen.kao@mediatek.com>
+Date:   Tue, 11 Jul 2023 15:00:28 -0400
+In-Reply-To: <20230701124442.10489-1-powen.kao@mediatek.com> (Po-Wen Kao's
+        message of "Sat, 1 Jul 2023 20:44:39 +0800")
+Content-Type: text/plain
+X-ClientProxiedBy: DS7PR03CA0121.namprd03.prod.outlook.com
+ (2603:10b6:5:3b4::6) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-References: <20230705071523.15496-1-sgarzare@redhat.com> <i3od362o6unuimlqna3aaedliaabauj6g545esg7txidd4s44e@bkx5des6zytx>
-In-Reply-To: <i3od362o6unuimlqna3aaedliaabauj6g545esg7txidd4s44e@bkx5des6zytx>
-From:   Stefan Hajnoczi <stefanha@gmail.com>
-Date:   Tue, 11 Jul 2023 13:41:31 -0400
-Message-ID: <CAJSP0QX5bf1Gp6mnQ0620FS61n=cY6n_ca7O-cAcH7pYCV2frw@mail.gmail.com>
-Subject: Re: [PATCH] Revert "virtio-scsi: Send "REPORTED LUNS CHANGED" sense
- data upon disk hotplug events"
-To:     Stefano Garzarella <sgarzare@redhat.com>
-Cc:     Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Fam Zheng <fam@euphon.net>, Thomas Huth <thuth@redhat.com>,
-        Mark Kanda <mark.kanda@oracle.com>, linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>, qemu-stable@nongnu.org,
-        qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|MW5PR10MB5715:EE_
+X-MS-Office365-Filtering-Correlation-Id: bf3e4ae4-ea60-4f6b-44c7-08db82411953
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: v/8Cke5BNyoSuoHUfEDtA8Rf53G0vGMWS63sc4/vuzJiNmEl//N2MQ69oC+alTq14PkfCaVn3DUxE/LhAPt5i6i2azyVwHIE2Bsr1ibtx6gzh3I1S8GLEFbc5uAUeRh4bSv0Ww+VHgq3+7vfxl8nJNk5ioBlHr3iOvYjpsiiUisxYrBYmQe4uFATIyHTUoIekSeaMVEEeXyVtSz+gbk+4454lfFuESpIUNM6easJhV0+TKVPjMuB9or7KVXzfsj615GGs1t+WkFwJ7wPw222VauVgxPbdYabD05EOQeLNses6MDDkcA+5s9NFRoWiRUt5E+HCeA72mrp+25wAUpN5XfgT9qQqeL/KBbtXkjdlSalkPNo/Z3xc3q1LQaOmAXaDj3X0fiYNhppJnaUO4iO/RO6sobqfqZg2cnRxg/0LlPpQOvsYMa+jhNVOjLeYirqRQBm4vaEq9GV9+eDnwGyswKSu2vZwmQZVsMMPTuy5ZPoJA76056czZQWO3CxaDH0Vot+tV+MToxQ/RMuW8bYZRL6ZCVyyxnXPzQWNDfutdxjbydWYm8VdmPPQnNKRgq5
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(366004)(346002)(396003)(376002)(39860400002)(136003)(451199021)(38100700002)(86362001)(6666004)(36916002)(6486002)(54906003)(558084003)(26005)(6506007)(186003)(6512007)(478600001)(2906002)(7416002)(316002)(5660300002)(66556008)(66946007)(6916009)(66476007)(8936002)(8676002)(4326008)(41300700001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1a5ARIJAoM1MfL4878dYXSloxY1gbahQbiipDSqJ+U/ZGCrMU8bil/sV2h2J?=
+ =?us-ascii?Q?/bmtsDtEKhHloOrKf5ZHQqD4J+JrW+mfVxyatw/dUyNJVKBJgCkZpyqBwjlU?=
+ =?us-ascii?Q?rpU6kMdZPv0E/Gh5tsHqpEk2mScm2wkp1uka14aM/TWnmUnsCip3Ucd1oLgh?=
+ =?us-ascii?Q?gq2zDekcJjAmhY4bf+29u+WrqKPRcra/RWFzF11sWJToSjweFwFgucsbqhVS?=
+ =?us-ascii?Q?FeROR92D1wppN7XI4jVNQQ/czrF8Z9Y4J2Dtsc/pnkBGsFmL8B1a/M7Q07UB?=
+ =?us-ascii?Q?WfzVpcR1tj2JMIdfNmHdmyMahs2L/3mub+lsTMvri/waGSUKXUoRlBKIPZGG?=
+ =?us-ascii?Q?ZrLWjTcBdnuRIomq51yKKvMREm+cToK03S8sEBL1rqpMgvGJR+CGg1J2AfTH?=
+ =?us-ascii?Q?oA3hjjuu8Hjpswiucm6wmbCOIVk38xXS0xLavFDBdp84Jatzc08BmxOM0Des?=
+ =?us-ascii?Q?+1j2THYly55W6aNeKvo+kTLt78TziKs0k80o4nR8H7SnpdISJj/HIEgxBMcN?=
+ =?us-ascii?Q?CPkrTX4ZZWd2i8K9u50QGQMgimPyZlmCqGGpX+YUIPn2mHjORXdAw8T5tCci?=
+ =?us-ascii?Q?Sl4W7mHwLsevJ4QtA7CYjb4yK0obscbu+9bopFERDbxIs270qZRa1mGQbP13?=
+ =?us-ascii?Q?BaJ7Y7Y8MD05o9EO2OYYXDpv3GW2EC73rOQhfQv88Xmhy3g/rcdeJamPFAW3?=
+ =?us-ascii?Q?dM8ngqDiXwaNwVSujFiJPYtNiTGJ3RZhrDxmzVH7jWyuemeH7WtY0573JunV?=
+ =?us-ascii?Q?A5jz2xQOqFwWwNE8uUY8DXLvCAuPO9xvuYhCoCYIPPUhozOSFPU4M9r/YeBP?=
+ =?us-ascii?Q?EHjl9Q0O5tfhrc/IwXMiBjqPBPi6o14l/4cMrusEXvApWuluLakdg+++sM1j?=
+ =?us-ascii?Q?+lSZHWLzZ00K59gMdP/DPqx6pegOZQ2Ah0HTWS2O26EGm5mdmsnwc7J7FUlT?=
+ =?us-ascii?Q?61oeQQ3N7DbLSkuub7qQzlyQ7sTBhEAU2YxuAnivBE9XGFm/GJvxG2aabxtJ?=
+ =?us-ascii?Q?kAEknP3j6dILwLfjqH2qvc7Op1BJTgei/qphubS31DKqrxYSNYYuhmnEYioG?=
+ =?us-ascii?Q?S6IAQZ7pgkJC9GLHrcywoFOjj/qwAsvm8tV+/CCPhO6YjqXIhgZPTCOB0HJz?=
+ =?us-ascii?Q?mQvxBaWcAlFTlH4etReEl/rRzBEOOLPCK8tUtCta1xEgrOCFaqPva7lHyZLx?=
+ =?us-ascii?Q?ikEd4KZY3M2lU4bbx+p3W2rovgDoqZ1Aqr+xtGLI2nWGA9yIKm/i8Ch1D6bj?=
+ =?us-ascii?Q?xiLNIaEfU/jqh+W4VY8MgYiWV2dGj9d0yk5wPjwnbOrymuOC0x56etRzoy3o?=
+ =?us-ascii?Q?gzS1a8gKC6eFM8eTjcnpNRq2OZgWI/e+NnhLneJwFmmoozudjkPBZGK5op/x?=
+ =?us-ascii?Q?UhG0k1EQiSTcVgPzSvuNEgK2I+0THh4Z/RXhmLBAvg/dh9ho7BDrjhAK9tbq?=
+ =?us-ascii?Q?d+a3edbG7A25y8pb/ZBRoiErcUwKUGmaqNtpxMYj/YseRSZo0Kg5tLZFrVAg?=
+ =?us-ascii?Q?CBqXqtG0umooC7C13+gG7VrHaNwtNgg0377uLv3EfaZTijlTmq7/frVvz6sd?=
+ =?us-ascii?Q?kOnNyKcLMkAZOp9jr2R8Eca7w7zcIqrJI3zqMdKmk4s+fxcxSvVbf9EP/YVT?=
+ =?us-ascii?Q?+w=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: gabCd0XEJb6qtZBdVEG+0tdBwDS0PoTbNfL+TH/8u8F5kO5/Xhaf6fx537k7AlIsJV4Kq+Q4ONXaIvapMHZbi/F6A94+xhMFL0hsWBd9Hd3sHL98qjtv/lCYbwB/SoLtlkcRha57wI+NSx+9tfHITSaUlThe3GaV79nx3rzAZZYdQa+Uq9vrC1p6j7xjWkpu13z0kAPVaXHxTMirZzVYix0nJh7fbckezM9NXmhYcLEMdyE6+3ResIv9ibHT3k8iezOSFO5uZNVgPYb6bW3fZFH2fQs+i/KyS22lD2CVA9KS+GkkiaTjo1JdUzBrB+wGwJW+24FLebWDIUZDzbkfCwU64icSVSbInxY/VDsIjdcuv3jZCtOoG4tUjBmvtkpDyGAIoLaE4o4L70A5X+J+q3YU85IKNDCKjzWWlZk7ClJsG/022bDBwm6U/wzziAQpP9W8nKE/q6nhU67wN2enc+K0kBjT2Y+AaAiedT403DZ7qBqOLdylYo94LbC0quNHBW3A3J3/Sm2qQx1cFUzzevhcZErtDPENQKuP8SMXXoShdu8kH9UvlXwr5fCbm44+Ow4pyvoFyWlLm7ID1gcmk6jyln5t+0yNstHA+CSr5yoC/aCOwIMWil6y1yBcV5P0MDk91XkQCbZVnp/XR79HONoeVIU+4zimgnQix5Xbtat6ekY3qvfW4AGUzkFh32lLSvHoYZvgY7DzQ07qKFKd9KYrsI1d+cHJRQPlMf8LH9qTtITUgTnCHiS+u5aT2y6lkWaVPiJ+9LI0z7aZT5PvmCBaGywRCD/30JJBzUSJbws4Pfjq9hzJLt173/M6K7c6xe8pLu6Q8M1T21HQb++U6Fk3Kb+JO05aIeUTvVt1zOxBYuH+7k7aiiIKNyvggFwRw1iChgrXbVFiCoA6WhIxQDB7gW1GzIvHvC8GnofK8IA=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bf3e4ae4-ea60-4f6b-44c7-08db82411953
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jul 2023 19:00:31.3645
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: FyFXP7uvQgssQ9DnBp0719z3142nMoPTb+odWrE6OkrIzmA+dtoE/zVR8YHiGWgsgNAOQUYx8/MAmiZGMcGw90XpOU157G0beODb7C5tKbY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW5PR10MB5715
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-11_11,2023-07-11_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=875
+ adultscore=0 suspectscore=0 mlxscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2305260000
+ definitions=main-2307110171
+X-Proofpoint-ORIG-GUID: glLi1-WV_Cgr1gU8PIVR9NVPkz-a79If
+X-Proofpoint-GUID: glLi1-WV_Cgr1gU8PIVR9NVPkz-a79If
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 11 Jul 2023 at 13:06, Stefano Garzarella <sgarzare@redhat.com> wrote:
->
-> CCing `./scripts/get_maintainer.pl -f drivers/scsi/virtio_scsi.c`,
-> since I found a few things in the virtio-scsi driver...
->
-> FYI we have seen that Linux has problems with a QEMU patch for the
-> virtio-scsi device (details at the bottom of this email in the revert
-> commit message and BZ).
->
->
-> This is what I found when I looked at the Linux code:
->
-> In scsi_report_sense() in linux/drivers/scsi/scsi_error.c linux calls
-> scsi_report_lun_change() that set `sdev_target->expecting_lun_change =
-> 1` when we receive a UNIT ATTENTION with REPORT LUNS CHANGED
-> (sshdr->asc == 0x3f && sshdr->ascq == 0x0e).
->
-> When `sdev_target->expecting_lun_change = 1` is set and we call
-> scsi_check_sense(), for example to check the next UNIT ATTENTION, it
-> will return NEEDS_RETRY, that I think will cause the issues we are
-> seeing.
->
-> `sdev_target->expecting_lun_change` is reset only in
-> scsi_decide_disposition() when `REPORT_LUNS` command returns with
-> SAM_STAT_GOOD.
-> That command is issued in scsi_report_lun_scan() called by
-> __scsi_scan_target(), called for example by scsi_scan_target(),
-> scsi_scan_host(), etc.
->
-> So, checking QEMU, we send VIRTIO_SCSI_EVT_RESET_RESCAN during hotplug
-> and VIRTIO_SCSI_EVT_RESET_REMOVED during hotunplug. In both cases now we
-> send also the UNIT ATTENTION.
->
-> In the virtio-scsi driver, when we receive VIRTIO_SCSI_EVT_RESET_RESCAN
-> (hotplug) we call scsi_scan_target() or scsi_add_device(). Both of them
-> will call __scsi_scan_target() at some points, sending `REPORT_LUNS`
-> command to the device. This does not happen for
-> VIRTIO_SCSI_EVT_RESET_REMOVED (hotunplug). Indeed if I remove the
-> UNIT ATTENTION from the hotunplug in QEMU, everything works well.
->
-> So, I tried to add a scan also for VIRTIO_SCSI_EVT_RESET_REMOVED:
->
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index bd5633667d01..c57658a63097 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -291,6 +291,7 @@ static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
->                  }
->                  break;
->          case VIRTIO_SCSI_EVT_RESET_REMOVED:
-> +               scsi_scan_host(shost);
->                  sdev = scsi_device_lookup(shost, 0, target, lun);
->                  if (sdev) {
->                          scsi_remove_device(sdev);
->
-> This somehow helps, now linux only breaks if the plug/unplug frequency
-> is really high. If I put a 5 second sleep between plug/unplug events, it
-> doesn't break (at least for the duration of my test which has been
-> running for about 30 minutes, before it used to break after about a
-> minute).
->
-> Another thing I noticed is that in QEMU maybe we should set the UNIT
-> ATTENTION first and then send the event on the virtqueue, because the
-> scan should happen after the unit attention, but I don't know if in any
-> case the unit attention is processed before the virtqueue.
->
-> I mean something like this:
->
-> diff --git a/hw/scsi/virtio-scsi.c b/hw/scsi/virtio-scsi.c
-> index 45b95ea070..13db40f4f3 100644
-> --- a/hw/scsi/virtio-scsi.c
-> +++ b/hw/scsi/virtio-scsi.c
-> @@ -1079,8 +1079,8 @@ static void virtio_scsi_hotplug(HotplugHandler *hotplug_dev, DeviceState *dev,
->           };
->
->           virtio_scsi_acquire(s);
-> -        virtio_scsi_push_event(s, &info);
->           scsi_bus_set_ua(&s->bus, SENSE_CODE(REPORTED_LUNS_CHANGED));
-> +        virtio_scsi_push_event(s, &info);
->           virtio_scsi_release(s);
->       }
->   }
-> @@ -1111,8 +1111,8 @@ static void virtio_scsi_hotunplug(HotplugHandler *hotplug_dev, DeviceState *dev,
->
->       if (virtio_vdev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
->           virtio_scsi_acquire(s);
-> -        virtio_scsi_push_event(s, &info);
->           scsi_bus_set_ua(&s->bus, SENSE_CODE(REPORTED_LUNS_CHANGED));
-> +        virtio_scsi_push_event(s, &info);
->           virtio_scsi_release(s);
->       }
->   }
 
-That is racy. It's up to the guest whether the event virtqueue or the
-UNIT ATTENTION will be processed first.
+Po-Wen,
 
-If the device wants to ensure ordering then it must withhold the event
-until the driver has responded to the UNIT ATTENTION. That may not be
-a good idea though.
+> Po-Wen Kao (2):
+>   scsi: ufs: core: Export symbols for MTK driver module
+>   scsi: ufs: ufs-mediatek: Add MCQ support for MTK platform
 
-I'd like to understand the root cause before choosing a solution.
+Applied to 6.6/scsi-staging, thanks!
 
-> At this point I think the problem is on the handling of the
-> VIRTIO_SCSI_EVT_RESET_REMOVED event in the virtio-scsi driver, where
-> somehow we have to redo the bus scan, but scsi_scan_host() doesn't seem
-> to be enough when the event rate is very high.
-
-Why is it necessary to rescan the whole bus instead of removing just
-the device that has been unplugged?
-
-> I don't know if along with this fix, we also need to limit the rate in
-> QEMU somehow.
-
-Why is a high rate problematic?
-
-> Sorry for the length of this email, but I'm not familiar with SCSI and
-> wanted some suggestions on how to proceed.
->
-> Paolo, Stefan, Linux SCSI maintainers, any suggestion?
-
-I don't know the Linux SCSI code well enough to say, sorry. I think we
-need input from someone familiar with the code.
-
-However, QEMU is not at liberty to make changes that break existing
-guests. So even if it turns out the specs allow something or there is
-an existing bug in virtio_scsi.ko, we still can't break existing
-guests.
-
-Stefan
-
->
->
-> Thanks,
-> Stefano
->
-> On Wed, Jul 05, 2023 at 09:15:23AM +0200, Stefano Garzarella wrote:
-> >This reverts commit 8cc5583abe6419e7faaebc9fbd109f34f4c850f2.
-> >
-> >That commit causes several problems in Linux as described in the BZ.
-> >In particular, after a while, other devices on the bus are no longer
-> >usable even if those devices are not affected by the hotunplug.
-> >This may be a problem in Linux, but we have not been able to identify
-> >it so far. So better to revert this patch until we find a solution.
-> >
-> >Also, Oracle, which initially proposed this patch for a problem with
-> >Solaris, seems to have already reversed it downstream:
-> >    https://linux.oracle.com/errata/ELSA-2023-12065.html
-> >
-> >Suggested-by: Thomas Huth <thuth@redhat.com>
-> >Buglink: https://bugzilla.redhat.com/show_bug.cgi?id=2176702
-> >Cc: qemu-stable@nongnu.org
-> >Cc: Mark Kanda <mark.kanda@oracle.com>
-> >Signed-off-by: Stefano Garzarella <sgarzare@redhat.com>
-> >---
-> > include/hw/scsi/scsi.h |  1 -
-> > hw/scsi/scsi-bus.c     | 18 ------------------
-> > hw/scsi/virtio-scsi.c  |  2 --
-> > 3 files changed, 21 deletions(-)
-> >
-> >diff --git a/include/hw/scsi/scsi.h b/include/hw/scsi/scsi.h
-> >index e2bb1a2fbf..7c8adf10b1 100644
-> >--- a/include/hw/scsi/scsi.h
-> >+++ b/include/hw/scsi/scsi.h
-> >@@ -198,7 +198,6 @@ SCSIDevice *scsi_bus_legacy_add_drive(SCSIBus *bus, BlockBackend *blk,
-> >                                       BlockdevOnError rerror,
-> >                                       BlockdevOnError werror,
-> >                                       const char *serial, Error **errp);
-> >-void scsi_bus_set_ua(SCSIBus *bus, SCSISense sense);
-> > void scsi_bus_legacy_handle_cmdline(SCSIBus *bus);
-> >
-> > SCSIRequest *scsi_req_alloc(const SCSIReqOps *reqops, SCSIDevice *d,
-> >diff --git a/hw/scsi/scsi-bus.c b/hw/scsi/scsi-bus.c
-> >index f80f4cb4fc..42a915f8b7 100644
-> >--- a/hw/scsi/scsi-bus.c
-> >+++ b/hw/scsi/scsi-bus.c
-> >@@ -1617,24 +1617,6 @@ static int scsi_ua_precedence(SCSISense sense)
-> >     return (sense.asc << 8) | sense.ascq;
-> > }
-> >
-> >-void scsi_bus_set_ua(SCSIBus *bus, SCSISense sense)
-> >-{
-> >-    int prec1, prec2;
-> >-    if (sense.key != UNIT_ATTENTION) {
-> >-        return;
-> >-    }
-> >-
-> >-    /*
-> >-     * Override a pre-existing unit attention condition, except for a more
-> >-     * important reset condition.
-> >-     */
-> >-    prec1 = scsi_ua_precedence(bus->unit_attention);
-> >-    prec2 = scsi_ua_precedence(sense);
-> >-    if (prec2 < prec1) {
-> >-        bus->unit_attention = sense;
-> >-    }
-> >-}
-> >-
-> > void scsi_device_set_ua(SCSIDevice *sdev, SCSISense sense)
-> > {
-> >     int prec1, prec2;
-> >diff --git a/hw/scsi/virtio-scsi.c b/hw/scsi/virtio-scsi.c
-> >index 45b95ea070..1f56607100 100644
-> >--- a/hw/scsi/virtio-scsi.c
-> >+++ b/hw/scsi/virtio-scsi.c
-> >@@ -1080,7 +1080,6 @@ static void virtio_scsi_hotplug(HotplugHandler *hotplug_dev, DeviceState *dev,
-> >
-> >         virtio_scsi_acquire(s);
-> >         virtio_scsi_push_event(s, &info);
-> >-        scsi_bus_set_ua(&s->bus, SENSE_CODE(REPORTED_LUNS_CHANGED));
-> >         virtio_scsi_release(s);
-> >     }
-> > }
-> >@@ -1112,7 +1111,6 @@ static void virtio_scsi_hotunplug(HotplugHandler *hotplug_dev, DeviceState *dev,
-> >     if (virtio_vdev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-> >         virtio_scsi_acquire(s);
-> >         virtio_scsi_push_event(s, &info);
-> >-        scsi_bus_set_ua(&s->bus, SENSE_CODE(REPORTED_LUNS_CHANGED));
-> >         virtio_scsi_release(s);
-> >     }
-> > }
-> >--
-> >2.41.0
-> >
->
-> _______________________________________________
-> Virtualization mailing list
-> Virtualization@lists.linux-foundation.org
-> https://lists.linuxfoundation.org/mailman/listinfo/virtualization
+-- 
+Martin K. Petersen	Oracle Linux Engineering
