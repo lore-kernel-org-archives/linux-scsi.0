@@ -2,120 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8475CEB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 12:01:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E061EB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 12:01:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233342AbjGLMBM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 08:01:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51764 "EHLO
+        id S232429AbjGLMBS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 08:01:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232022AbjGLMBE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 08:01:04 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B1F51992
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:00:55 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-666e5f0d60bso4050301b3a.3
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:00:55 -0700 (PDT)
+        with ESMTP id S233113AbjGLMBF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 08:01:05 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E130C1BE9
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:00:58 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1b89bc52cd1so31317645ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:00:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1689163255; x=1691755255;
+        d=broadcom.com; s=google; t=1689163258; x=1691755258;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=xP9ESRUMWyDjTm6E5nETSqLajJJmMse6kUN7/ofQSpA=;
-        b=eT+5bbndxWpSHm5/ZsBVMUpa7TgjLfVq1JaOhSQB+NM2paQzAzXJI1NFwn7jaciYG4
-         K649JAQHP5vUrpLs2brdpluQPOPJvNG3T2NqBsAnFYi+mnaJbrD4rn5N6fsUWdk4M5yK
-         hmGM1IgFQ8aA0r2HsOAp1TYLFEMRouESGRRD4=
+        bh=f2qntN2wxmzyFE0sczXen6bqzr3HScVnkz3S52A0Lo0=;
+        b=OmufkHD1GTbfLRZYWkXqw1mp1t1YPjjDNNX4TBzeWbFI+vPCFkAyc93QVLj7RKQYau
+         3x7Z/ry4IiTav2iQkITBO86o6c+v7A9/2WCeNaF2kkkh0ODFSvgLC4ZCQfQAxgYIArl6
+         GibKx9Nfawf6iSrdDJHgBu2gpFpXteriIsq1M=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689163255; x=1691755255;
+        d=1e100.net; s=20221208; t=1689163258; x=1691755258;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xP9ESRUMWyDjTm6E5nETSqLajJJmMse6kUN7/ofQSpA=;
-        b=W/KNjgLVQESjWIqs+//GPfTWIcfvKyKE5QD6MEc/WTfQG8aOObZvp1SbMNVTmeKH+S
-         inOibMFguoErhOpJwRZveueLNZXNg7cHPsDBGpRzbHiXdBolhiRoK8somomjhJU1B/Ls
-         spfjh/G9UGaAHt3tvqtE80D0SZEKIUZ4eCHmlzT6CYAh83cl1d7imOCrTJpphPIv/Q2n
-         dyX/Qfuh+D8Sd7STKoE8pKOI5URULM5h+fvWaT+DA/34bkfORZCujIbkTEk7D9H/YFoO
-         EIuKiB5EZ83NOz1KincaWxcPAj7v842L8irqmYCifTtIx1BRcno67dKs1UQf+uyUSGi3
-         C9kQ==
-X-Gm-Message-State: ABy/qLYQzaeYm1dcebpkLzPdLHSXhWQrz8+Jk3TrKg9NtOUEikPZgn8U
-        Wo4QoKdOjTchNcN319/hldQS1cmOWmm2i3MkOJwbUH/7KMDioFN+qam3f+A88Gs+er5F3Emewq8
-        I8XXtB2+bYE0uE9sfNM6uS4IJW0FJpajmUl64W3u5PmDgnOKfLrmep2grPqcd9eqUAWQY5p51sj
-        kOYd7EIpLfqw==
-X-Google-Smtp-Source: APBJJlERLOC80eNgVjybSlLA0DsrintFLilVjuufh8FQPhSjGC/a8BDXJ+i+GwJTnugQENaw+E/ZEg==
-X-Received: by 2002:a05:6a21:3d82:b0:132:c8da:851d with SMTP id bj2-20020a056a213d8200b00132c8da851dmr1076715pzc.18.1689163254528;
-        Wed, 12 Jul 2023 05:00:54 -0700 (PDT)
+        bh=f2qntN2wxmzyFE0sczXen6bqzr3HScVnkz3S52A0Lo0=;
+        b=gsQzYCHRX12jK0t5CMmnJi3kSrYvufaGlB//0hiLEAscFZauZXdHHK2+rswCH4IAuB
+         Dd2wEN4wu4AOe2t2B5XQG3ot7L9uQpmwq7iVapcy5v1EefYz70pvR8F+OEoPmuTd1Pqt
+         bTkLrXBmasY3UscKj/d5fBnBCOo+peAmM1K68ZSPKFpyNtO2mPUep+AsVL3AJSlEtMKf
+         IILxffVHghQiALP+i0Ww5BxqZpZ8gJC/H3bK6wc/obKLRKy5uC1efCUtZDccbzyMbOGO
+         D88MRE19Wbe9ghPy5sWvijvVOjY3KPZpB4FxCB+jbD/UQIL4c66d2Ubf5UXc80jnQAfT
+         +bOw==
+X-Gm-Message-State: ABy/qLbt8c20VdGKgzDeTsPbvwNl/ziFpbhngL6dQWOpgDIUZprSdwtE
+        YIOjDd69X5KzUZCjpjGbAekYpLV/WevSpLbpCBmjZs5Xy8eCB6G7xRvXWNr+Gpj6pfugvixSUka
+        p6A3CvwebXxwUbCk2F8t3rUEepriVmdt8DXhpIdUfkRMTENSEpLOA07CbvmgUSs89ENrogRj8eJ
+        40E5+b0w+69g==
+X-Google-Smtp-Source: APBJJlFcctBRtSZSMHuu274/Ii2/aGL7cvwkRUEncoXS0xExJXgWNwliwDEuA3gF97JOE5Oo/nW6Zw==
+X-Received: by 2002:a17:902:e743:b0:1b8:b4d5:4c3d with SMTP id p3-20020a170902e74300b001b8b4d54c3dmr14515369plf.51.1689163257906;
+        Wed, 12 Jul 2023 05:00:57 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id x7-20020a1709029a4700b001b531e8a000sm3799627plv.157.2023.07.12.05.00.51
+        by smtp.gmail.com with ESMTPSA id x7-20020a1709029a4700b001b531e8a000sm3799627plv.157.2023.07.12.05.00.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Jul 2023 05:00:54 -0700 (PDT)
+        Wed, 12 Jul 2023 05:00:57 -0700 (PDT)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com,
         chandrakanth.patil@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH 1/6] mpi3mr: Invokes soft reset upon TSU or event ack time out
-Date:   Wed, 12 Jul 2023 17:29:50 +0530
-Message-Id: <20230712115955.6312-2-ranjan.kumar@broadcom.com>
+Subject: [PATCH 2/6] mpi3mr: Update MPI Headers to version 3.00.28
+Date:   Wed, 12 Jul 2023 17:29:51 +0530
+Message-Id: <20230712115955.6312-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230712115955.6312-1-ranjan.kumar@broadcom.com>
 References: <20230712115955.6312-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000c820b0060048f7a1"
+        boundary="000000000000fdd8fa060048f742"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000c820b0060048f7a1
+--000000000000fdd8fa060048f742
 Content-Transfer-Encoding: 8bit
 
-When a timestamp update or an event acknowledgment command times out,
-the driver invokes soft reset handler to recover the controller while
-holding a mutex lock.The soft reset handler also tries to acquire the
-same mutex to send initialization commands to the controller which
-leads to a deadlock scenario .
-
-To resolve the issue the driver will check the controller status and
-if it is operational,the driver will issue a diagnostic fault reset
-and exit out of the command processing function.If the controller
-is already faulted or asynchronously reset, then the driver will
-just exit the command processing function.
+Updated MPI Headers to version 3.00.28
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 2 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 1 +
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h | 2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 5fa07d6ee5b8..11b78d4a87a0 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2343,8 +2343,8 @@ static int mpi3mr_sync_timestamp(struct mpi3mr_ioc *mrioc)
- 		ioc_err(mrioc, "Issue IOUCTL time_stamp: command timed out\n");
- 		mrioc->init_cmds.is_waiting = 0;
- 		if (!(mrioc->init_cmds.state & MPI3MR_CMD_RESET))
--			mpi3mr_soft_reset_handler(mrioc,
--			    MPI3MR_RESET_FROM_TSU_TIMEOUT, 1);
-+			mpi3mr_check_rh_fault_ioc(mrioc,
-+			    MPI3MR_RESET_FROM_TSU_TIMEOUT);
- 		retval = -1;
- 		goto out_unlock;
- 	}
-@@ -3359,8 +3359,8 @@ int mpi3mr_process_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
- 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
- 		ioc_err(mrioc, "Issue EvtNotify: command timed out\n");
- 		if (!(mrioc->init_cmds.state & MPI3MR_CMD_RESET))
--			mpi3mr_soft_reset_handler(mrioc,
--			    MPI3MR_RESET_FROM_EVTACK_TIMEOUT, 1);
-+			mpi3mr_check_rh_fault_ioc(mrioc,
-+			    MPI3MR_RESET_FROM_EVTACK_TIMEOUT);
- 		retval = -1;
- 		goto out_unlock;
- 	}
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+index 2fc196499c89..35f81af40f51 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+@@ -1482,7 +1482,7 @@ struct mpi3_security_page0 {
+ #define MPI3_SECURITY1_KEY_RECORD_MAX      1
+ #endif
+ #ifndef MPI3_SECURITY1_PAD_MAX
+-#define MPI3_SECURITY1_PAD_MAX      1
++#define MPI3_SECURITY1_PAD_MAX      4
+ #endif
+ union mpi3_security1_key_data {
+ 	__le32                             dword[128];
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
+index f5e9c2309ce6..1e4a60fc655f 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
+@@ -600,6 +600,7 @@ struct mpi3_event_data_pcie_error_threshold {
+ 	__le16                                 threshold_count;
+ 	__le16                                 attached_dev_handle;
+ 	__le16                                 reserved12;
++	__le32                                 reserved14;
+ };
+ 
+ #define MPI3_EVENT_PCI_ERROR_RC_THRESHOLD_EXCEEDED          (0x00)
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
+index 441cfc2c7f09..1e0a3dcaf723 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
+@@ -18,7 +18,7 @@ union mpi3_version_union {
+ 
+ #define MPI3_VERSION_MAJOR                                              (3)
+ #define MPI3_VERSION_MINOR                                              (0)
+-#define MPI3_VERSION_UNIT                                               (27)
++#define MPI3_VERSION_UNIT                                               (28)
+ #define MPI3_VERSION_DEV                                                (0)
+ #define MPI3_DEVHANDLE_INVALID                                          (0xffff)
+ struct mpi3_sysif_oper_queue_indexes {
 -- 
 2.31.1
 
 
---000000000000c820b0060048f7a1
+--000000000000fdd8fa060048f742
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -186,13 +190,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEW37w6K7BI31oPzigjakz0fD4rA9O5x
-TCAMM5MTKLwbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDcx
-MjEyMDA1NFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKTwYzUcwc++yQ2LgI74FyHS/OiacJeN
+sNsvfbf/JhstMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDcx
+MjEyMDA1OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBM8DZ2rI60f7MnVvgXKLuiNCqhMOcm2t/dlKMe8pF8vQ7LDWM6
-6gDueqaN5fSz2Fc08OD8fJf7xiLzfsNNXBtwxLpjIWBZuc5XrTOJGqQJ7IShmtSJ9aT9qqDPQbB6
-57so68YtW9vD7K9hsomXX7O9GEsePhwvChSx4H2u/QnsQsnq3DBpkRJ98IAFF8+2vkQQS+noSN+O
-DZjj5SCVdHrREoiXTINqWj94+0JBc4CkNVCHb0/5KRbpZNVe0CZLDTv62QZOHwXHcTkvc2Mpthqt
-3eEWjyTJvArQiQ4sT1eDw6bK2JmIb4JyAcD052B20oDAnS6QXaeB/SGXsVCZlUuQ
---000000000000c820b0060048f7a1--
+ATANBgkqhkiG9w0BAQEFAASCAQBFOTwNavlua/PIug2YstjhOoAyaJm35ouC+4bs5athX1gz26ms
++HvPabOr3eLhNO6COYkkW8WbPwnMsHu2sRzj371udxO5bbXbP/V5RkVcnmFuwmxjPxoVtWvfEvGB
+q0EwbIX61Q5SN8KJ9bDlIRjYGtMtIopppFdrsMlaU3mjffo7u86IyXn/yMy1MA/b9unucuirY1dO
+WnhmE34OKp2LfZdmzJ3SM52o3MVeE5A6yoZjj36OdTOGlh1N6r2UbPNFCUQyoDgSYmUZyo68V4i9
+Rx7NPAZxGX4ipN1iuOJH/B93aT2dKobQMW/hHrwFb8dh8oNFQj2PJLs/MIJ/49gC
+--000000000000fdd8fa060048f742--
