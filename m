@@ -2,279 +2,332 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EAE2EB64D9
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 12:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B60B9EB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 12:01:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231932AbjGLMB2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 08:01:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52352 "EHLO
+        id S231497AbjGLMBg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 08:01:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233317AbjGLMBI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 08:01:08 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBE481FEC
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:01:02 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6686a05bc66so4082244b3a.1
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:01:02 -0700 (PDT)
+        with ESMTP id S232979AbjGLMBP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 08:01:15 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FAF41993
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:01:05 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-6686ef86110so3834032b3a.2
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:01:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1689163261; x=1691755261;
+        d=broadcom.com; s=google; t=1689163265; x=1691755265;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=vvpM38+QvYjMBuq/IukFPvZoGADStcCeYzevXxdeN80=;
-        b=eB6Vw679pF9DnECwc5qur+L6/Rs080e0IRKPFYHP0qPSgCmQEqLA6rdGH28FVD9FI6
-         sgrlDyHuqCssoasqrDd5GQglhu3NvYghHDxYDFQD3NYyS19fVRJclcQdEKSAvWSYfOEy
-         yBGdBGYP0CVB9fChVfrtSMylN6rCAQHRBbTls=
+        bh=ZZEf/uXReTAH58/OI8WmlUGk9v8llEEC6WwbsAzJOyw=;
+        b=dLBOUCv0VPWCRDtZM+tcpfuFdTtOUf5+7DriZcg0rMf4NItB7Sy2qTBJSaxuQsvL7u
+         E6lcdAk7oBUW4Oi2wOT6MLsIpH7o9aZbi4wKs8ZqYGRirh6FIMr9NjUkn0QZUgFMcwPr
+         Vg75YK24ZJkXIl+ugvD7gBeHSL12vDf8LG7YU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689163261; x=1691755261;
+        d=1e100.net; s=20221208; t=1689163265; x=1691755265;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vvpM38+QvYjMBuq/IukFPvZoGADStcCeYzevXxdeN80=;
-        b=jkD4eoZUHBmATna8jpKlTTo/I3J9L5f4f8DQijCpwx/5RQXOeaq/2A9OTbV2E0vWok
-         9PP3bwgSwqbYxVUICkuunnCMF+kH08vD+Opb61DV5fwOIqrODvZTxOUGxmW8TxN0j9ju
-         Y9Jw2BpoRtZ+JO4aVSEwqFKa9rD3LCcgGo/xGEq1Kbf429Q5/nW1UyCFR5AykVDM9XuS
-         3076FCgyWBmQZvqn0lRg5vt8bglcyDBonfIBZv7gRRxjW1p39B6ccU6Ld5QA0Mt6xSJt
-         UVjHwHAlvIMNanXlzIlk6N9r95V9PZ65rF7WFYbIcaozXhek+7aBAJMf+oqX0yRtvbU/
-         k/hQ==
-X-Gm-Message-State: ABy/qLYul5Lo5XNGVsqis6OGoVJlcAaV5sWs8/lIQxzpnQTEU4gOes3F
-        cAm/lIaVCwSvFd7/mK98SgH76aiKcVjtpNAra6xAPWnwG9S/odY5HzwXpImV8l3l0wVXvkCdJk3
-        vym42nt6r+vlJIOi/nzJixJ/U5yrbL2pTzayNmbcS8LxMVRVBhsTjtmyGCJQoGfx7KIYB1yQFLE
-        5ixQpOC/KZaQ==
-X-Google-Smtp-Source: APBJJlHEdEk/kqFzXDzbDewR5+8GLo9f1wEH6BMZ0EUGX7bR5NfdrvUbRrPOFaxBdFPoQDuWqJaEbQ==
-X-Received: by 2002:a05:6a21:6d87:b0:121:bda6:2f85 with SMTP id wl7-20020a056a216d8700b00121bda62f85mr18746684pzb.30.1689163261182;
-        Wed, 12 Jul 2023 05:01:01 -0700 (PDT)
+        bh=ZZEf/uXReTAH58/OI8WmlUGk9v8llEEC6WwbsAzJOyw=;
+        b=VN4ZrxXOKqQ2FDVDoYycZUslMk9lJgWSOaneYiF7Z0KSzRehMTGC/oReGFE2n2k7A4
+         TdQhA9Y7awAh4KVFuLPrmtDvstkhnMbUERG6BMC8IL+jS3mbf0ZgXt7p5lwF9Bb/9K2z
+         pRRWVEWA8ogbXUsK7ts+lKuWyYkmK094svYyWa9sv7NcCXLlkyza3Q8e43FpJrUxnHhJ
+         6mDZApvPGXFEZKJW/CpCZ8cg3yV97cxw0tRoMQv91Ai+8Bz263AjfJICIZoES79gTt12
+         RGP75Bk+mK0Krq9+8claG50OCEwQUexCECsWf8SVzynij1/pBt2+xQzw4fcDeG2GAbk6
+         olMg==
+X-Gm-Message-State: ABy/qLYUjHVHCIhlskziUuuJNSbwlWfcTEhEu4kPuyUHEM8DIIsTTQir
+        sooHhoYgu7Nj6dwzT4xf6x2IvoYH0L19NbcPK0tnv8PSXOhJY4V9aO7vBI6ZYxLn3+/q44BnC8+
+        HoWeF+eMnBF+Mb3sYTY+p3AvZRlHJ3hs2IP614qm3xZKJ1c28nOX0/XbSA3jStem8U/6GZIMufe
+        1EvOd/2FPSNw==
+X-Google-Smtp-Source: APBJJlHXHBxfGoRG5GQL+s4Ah/PROpNr4aCSrfSSOwKTsK2+A/1xvU3syxIWBjzSyMlHzkGLRQZwBQ==
+X-Received: by 2002:a05:6a20:382:b0:12f:fccd:1a3b with SMTP id 2-20020a056a20038200b0012ffccd1a3bmr12996296pzt.23.1689163264280;
+        Wed, 12 Jul 2023 05:01:04 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id x7-20020a1709029a4700b001b531e8a000sm3799627plv.157.2023.07.12.05.00.58
+        by smtp.gmail.com with ESMTPSA id x7-20020a1709029a4700b001b531e8a000sm3799627plv.157.2023.07.12.05.01.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Jul 2023 05:01:00 -0700 (PDT)
+        Wed, 12 Jul 2023 05:01:03 -0700 (PDT)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com,
         chandrakanth.patil@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH 3/6] mpi3mr: Add support for more than 1MB I/O
-Date:   Wed, 12 Jul 2023 17:29:52 +0530
-Message-Id: <20230712115955.6312-4-ranjan.kumar@broadcom.com>
+Subject: [PATCH 4/6] mpi3mr: WriteSame implementation
+Date:   Wed, 12 Jul 2023 17:29:53 +0530
+Message-Id: <20230712115955.6312-5-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230712115955.6312-1-ranjan.kumar@broadcom.com>
 References: <20230712115955.6312-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000002d96fc060048f81c"
+        boundary="000000000000630200060048f805"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000002d96fc060048f81c
+--000000000000630200060048f805
 Content-Transfer-Encoding: 8bit
 
-The driver is enhanced to get the maximum data length per I/O
-request from  IOC Facts data and report that to the upper layers.
-If the IOC facts data is not reported then the default I/O size
-of 1MB is reported to the OS.
+The driver is enhanced to divert the writesame commands that
+are issued with unmap=1 and NDOB=1 and with the transfer length
+greater than the max writesame length specified by the firmware
+for the particular drive to the firmware.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  8 ++++++--
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 29 ++++++++++++++++++++++++-----
- drivers/scsi/mpi3mr/mpi3mr_os.c | 24 ++++++++++++++++++++----
- 3 files changed, 50 insertions(+), 11 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  11 +++
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 118 +++++++++++++++++++++++++-------
+ 2 files changed, 105 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 0afb687402e1..fd3619775739 100644
+index fd3619775739..8b009ba26d88 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -66,11 +66,12 @@ extern atomic64_t event_counter;
- #define MPI3MR_NAME_LENGTH	32
- #define IOCNAME			"%s: "
+@@ -207,6 +207,9 @@ extern atomic64_t event_counter;
+  */
+ #define MPI3MR_MAX_APP_XFER_SECTORS	(2048 + 512)
  
--#define MPI3MR_MAX_SECTORS	2048
-+#define MPI3MR_DEFAULT_MAX_IO_SIZE	(1 * 1024 * 1024)
- 
- /* Definitions for internal SGL and Chain SGL buffers */
- #define MPI3MR_PAGE_SIZE_4K		4096
--#define MPI3MR_SG_DEPTH		(MPI3MR_PAGE_SIZE_4K / sizeof(struct mpi3_sge_common))
-+#define MPI3MR_DEFAULT_SGL_ENTRIES	256
-+#define MPI3MR_MAX_SGL_ENTRIES		2048
- 
- /* Definitions for MAX values for shost */
- #define MPI3MR_MAX_CMDS_LUN	128
-@@ -323,6 +324,7 @@ struct mpi3mr_ioc_facts {
- 	u16 max_perids;
- 	u16 max_pds;
- 	u16 max_sasexpanders;
-+	u32 max_data_length;
- 	u16 max_sasinitiators;
- 	u16 max_enclosures;
- 	u16 max_pcie_switches;
-@@ -959,6 +961,7 @@ struct scmd_priv {
-  * @stop_drv_processing: Stop all command processing
-  * @device_refresh_on: Don't process the events until devices are refreshed
-  * @max_host_ios: Maximum host I/O count
-+ * @max_sgl_entries: Max SGL entries per I/O
-  * @chain_buf_count: Chain buffer count
-  * @chain_buf_pool: Chain buffer pool
-  * @chain_sgl_list: Chain SGL list
-@@ -1129,6 +1132,7 @@ struct mpi3mr_ioc {
- 	u16 max_host_ios;
- 	spinlock_t tgtdev_lock;
- 	struct list_head tgtdev_list;
-+	u16 max_sgl_entries;
- 
- 	u32 chain_buf_count;
- 	struct dma_pool *chain_buf_pool;
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 11b78d4a87a0..f039f1d98647 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -1163,6 +1163,12 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
- 		return -EPERM;
- 	}
- 
-+	if (mrioc->shost->max_sectors != (mrioc->facts.max_data_length / 512))
-+		ioc_err(mrioc, "Warning: The maximum data transfer length\n"
-+			    "\tchanged after reset: previous(%d), new(%d),\n"
-+			    "the driver cannot change this at run time\n",
-+			    mrioc->shost->max_sectors * 512, mrioc->facts.max_data_length);
++#define MPI3MR_WRITE_SAME_MAX_LEN_256_BLKS 256
++#define MPI3MR_WRITE_SAME_MAX_LEN_2048_BLKS 2048
 +
- 	if ((mrioc->sas_transport_enabled) && (mrioc->facts.ioc_capabilities &
- 	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED))
- 		ioc_err(mrioc,
-@@ -2856,6 +2862,7 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
- 	    le16_to_cpu(facts_data->max_pcie_switches);
- 	mrioc->facts.max_sasexpanders =
- 	    le16_to_cpu(facts_data->max_sas_expanders);
-+	mrioc->facts.max_data_length = le16_to_cpu(facts_data->max_data_length);
- 	mrioc->facts.max_sasinitiators =
- 	    le16_to_cpu(facts_data->max_sas_initiators);
- 	mrioc->facts.max_enclosures = le16_to_cpu(facts_data->max_enclosures);
-@@ -2893,13 +2900,18 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
- 	mrioc->facts.io_throttle_high =
- 	    le16_to_cpu(facts_data->io_throttle_high);
+ /**
+  * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
+  * Encapsulated commands.
+@@ -678,6 +681,7 @@ enum mpi3mr_dev_state {
+  * @io_unit_port: IO Unit port ID
+  * @non_stl: Is this device not to be attached with SAS TL
+  * @io_throttle_enabled: I/O throttling needed or not
++ * @wslen: Write same max length
+  * @q_depth: Device specific Queue Depth
+  * @wwid: World wide ID
+  * @enclosure_logical_id: Enclosure logical identifier
+@@ -700,6 +704,7 @@ struct mpi3mr_tgt_dev {
+ 	u8 io_unit_port;
+ 	u8 non_stl;
+ 	u8 io_throttle_enabled;
++	u16 wslen;
+ 	u16 q_depth;
+ 	u64 wwid;
+ 	u64 enclosure_logical_id;
+@@ -753,6 +758,8 @@ static inline void mpi3mr_tgtdev_put(struct mpi3mr_tgt_dev *s)
+  * @dev_removed: Device removed in the Firmware
+  * @dev_removedelay: Device is waiting to be removed in FW
+  * @dev_type: Device type
++ * @dev_nvme_dif: Device is NVMe DIF enabled
++ * @wslen: Write same max length
+  * @io_throttle_enabled: I/O throttling needed or not
+  * @io_divert: Flag indicates io divert is on or off for the dev
+  * @throttle_group: Pointer to throttle group info
+@@ -769,6 +776,8 @@ struct mpi3mr_stgt_priv_data {
+ 	u8 dev_removed;
+ 	u8 dev_removedelay;
+ 	u8 dev_type;
++	u8 dev_nvme_dif;
++	u16 wslen;
+ 	u8 io_throttle_enabled;
+ 	u8 io_divert;
+ 	struct mpi3mr_throttle_group_info *throttle_group;
+@@ -784,12 +793,14 @@ struct mpi3mr_stgt_priv_data {
+  * @ncq_prio_enable: NCQ priority enable for SATA device
+  * @pend_count: Counter to track pending I/Os during error
+  *		handling
++ * @wslen: Write same max length
+  */
+ struct mpi3mr_sdev_priv_data {
+ 	struct mpi3mr_stgt_priv_data *tgt_priv_data;
+ 	u32 lun_id;
+ 	u8 ncq_prio_enable;
+ 	u32 pend_count;
++	u16 wslen;
+ };
  
-+	if (mrioc->facts.max_data_length ==
-+	    MPI3_IOCFACTS_MAX_DATA_LENGTH_NOT_REPORTED)
-+		mrioc->facts.max_data_length = MPI3MR_DEFAULT_MAX_IO_SIZE;
-+	else
-+		mrioc->facts.max_data_length *= MPI3MR_PAGE_SIZE_4K;
- 	/* Store in 512b block count */
- 	if (mrioc->facts.io_throttle_data_length)
- 		mrioc->io_throttle_data_length =
- 		    (mrioc->facts.io_throttle_data_length * 2 * 4);
- 	else
- 		/* set the length to 1MB + 1K to disable throttle */
--		mrioc->io_throttle_data_length = MPI3MR_MAX_SECTORS + 2;
-+		mrioc->io_throttle_data_length = (mrioc->facts.max_data_length / 512) + 2;
- 
- 	mrioc->io_throttle_high = (mrioc->facts.io_throttle_high * 2 * 1024);
- 	mrioc->io_throttle_low = (mrioc->facts.io_throttle_low * 2 * 1024);
-@@ -2914,9 +2926,9 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
- 	ioc_info(mrioc, "SGEModMask 0x%x SGEModVal 0x%x SGEModShift 0x%x ",
- 	    mrioc->facts.sge_mod_mask, mrioc->facts.sge_mod_value,
- 	    mrioc->facts.sge_mod_shift);
--	ioc_info(mrioc, "DMA mask %d InitialPE status 0x%x\n",
-+	ioc_info(mrioc, "DMA mask %d InitialPE status 0x%x max_data_len (%d)\n",
- 	    mrioc->facts.dma_mask, (facts_flags &
--	    MPI3_IOCFACTS_FLAGS_INITIAL_PORT_ENABLE_MASK));
-+	    MPI3_IOCFACTS_FLAGS_INITIAL_PORT_ENABLE_MASK), mrioc->facts.max_data_length);
- 	ioc_info(mrioc,
- 	    "max_dev_per_throttle_group(%d), max_throttle_groups(%d)\n",
- 	    mrioc->facts.max_dev_per_tg, mrioc->facts.max_io_throttle_group);
-@@ -3414,7 +3426,14 @@ static int mpi3mr_alloc_chain_bufs(struct mpi3mr_ioc *mrioc)
- 	if (!mrioc->chain_sgl_list)
- 		goto out_failed;
- 
--	sz = MPI3MR_PAGE_SIZE_4K;
-+	if (mrioc->max_sgl_entries > (mrioc->facts.max_data_length /
-+		MPI3MR_PAGE_SIZE_4K))
-+		mrioc->max_sgl_entries = mrioc->facts.max_data_length /
-+			MPI3MR_PAGE_SIZE_4K;
-+	sz = mrioc->max_sgl_entries * sizeof(struct mpi3_sge_common);
-+	ioc_info(mrioc, "number of sgl entries=%d chain buffer size=%dKB\n",
-+			mrioc->max_sgl_entries, sz/1024);
-+
- 	mrioc->chain_buf_pool = dma_pool_create("chain_buf pool",
- 	    &mrioc->pdev->dev, sz, 16, 0);
- 	if (!mrioc->chain_buf_pool) {
-@@ -3813,7 +3832,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 	}
- 
- 	mrioc->max_host_ios = mrioc->facts.max_reqs - MPI3MR_INTERNAL_CMDS_RESVD;
--
-+	mrioc->shost->max_sectors = mrioc->facts.max_data_length / 512;
- 	mrioc->num_io_throttle_group = mrioc->facts.max_io_throttle_group;
- 	atomic_set(&mrioc->pend_large_data_sz, 0);
- 
+ /**
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index d627355303d7..b19b624d0e97 100644
+index b19b624d0e97..62acda8d1d3c 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -33,6 +33,12 @@ static int logging_level;
- module_param(logging_level, int, 0);
- MODULE_PARM_DESC(logging_level,
- 	" bits for enabling additional logging info (default=0)");
-+static int max_sgl_entries = MPI3MR_DEFAULT_SGL_ENTRIES;
-+module_param(max_sgl_entries, int, 0444);
-+MODULE_PARM_DESC(max_sgl_entries,
-+	"Preferred max number of SG entries to be used for a single I/O\n"
-+	"The actual value will be determined by the driver\n"
-+	"(Minimum=256, Maximum=2048, default=256)");
+@@ -430,6 +430,7 @@ void mpi3mr_invalidate_devhandles(struct mpi3mr_ioc *mrioc)
+ 			tgt_priv->io_throttle_enabled = 0;
+ 			tgt_priv->io_divert = 0;
+ 			tgt_priv->throttle_group = NULL;
++			tgt_priv->wslen = 0;
+ 			if (tgtdev->host_exposed)
+ 				atomic_set(&tgt_priv->block_io, 1);
+ 		}
+@@ -1108,6 +1109,18 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 		tgtdev->io_throttle_enabled =
+ 		    (flags & MPI3_DEVICE0_FLAGS_IO_THROTTLING_REQUIRED) ? 1 : 0;
  
- /* Forward declarations*/
- static void mpi3mr_send_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
-@@ -3413,7 +3419,7 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
- 		    scsi_bufflen(scmd));
- 		return -ENOMEM;
- 	}
--	if (sges_left > MPI3MR_SG_DEPTH) {
-+	if (sges_left > mrioc->max_sgl_entries) {
- 		sdev_printk(KERN_ERR, scmd->device,
- 		    "scsi_dma_map returned unsupported sge count %d!\n",
- 		    sges_left);
-@@ -4818,10 +4824,10 @@ static const struct scsi_host_template mpi3mr_driver_template = {
- 	.no_write_same			= 1,
- 	.can_queue			= 1,
- 	.this_id			= -1,
--	.sg_tablesize			= MPI3MR_SG_DEPTH,
-+	.sg_tablesize			= MPI3MR_DEFAULT_SGL_ENTRIES,
- 	/* max xfer supported is 1M (2K in 512 byte sized sectors)
- 	 */
--	.max_sectors			= 2048,
-+	.max_sectors			= (MPI3MR_DEFAULT_MAX_IO_SIZE / 512),
- 	.cmd_per_lun			= MPI3MR_MAX_CMDS_LUN,
- 	.max_segment_size		= 0xffffffff,
- 	.track_queue_depth		= 1,
-@@ -5004,6 +5010,16 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	mrioc->pdev = pdev;
- 	mrioc->stop_bsgs = 1;
- 
-+	mrioc->max_sgl_entries = max_sgl_entries;
-+	if (max_sgl_entries > MPI3MR_MAX_SGL_ENTRIES)
-+		mrioc->max_sgl_entries = MPI3MR_MAX_SGL_ENTRIES;
-+	else if (max_sgl_entries < MPI3MR_DEFAULT_SGL_ENTRIES)
-+		mrioc->max_sgl_entries = MPI3MR_DEFAULT_SGL_ENTRIES;
-+	else {
-+		mrioc->max_sgl_entries /= MPI3MR_DEFAULT_SGL_ENTRIES;
-+		mrioc->max_sgl_entries *= MPI3MR_DEFAULT_SGL_ENTRIES;
++	switch (flags & MPI3_DEVICE0_FLAGS_MAX_WRITE_SAME_MASK) {
++	case MPI3_DEVICE0_FLAGS_MAX_WRITE_SAME_256_LB:
++		tgtdev->wslen = MPI3MR_WRITE_SAME_MAX_LEN_256_BLKS;
++		break;
++	case MPI3_DEVICE0_FLAGS_MAX_WRITE_SAME_2048_LB:
++		tgtdev->wslen = MPI3MR_WRITE_SAME_MAX_LEN_2048_BLKS;
++		break;
++	case MPI3_DEVICE0_FLAGS_MAX_WRITE_SAME_NO_LIMIT:
++	default:
++		tgtdev->wslen = 0;
++		break;
 +	}
+ 
+ 	if (tgtdev->starget && tgtdev->starget->hostdata) {
+ 		scsi_tgt_priv_data = (struct mpi3mr_stgt_priv_data *)
+@@ -1119,6 +1132,7 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 		    tgtdev->io_throttle_enabled;
+ 		if (is_added == true)
+ 			atomic_set(&scsi_tgt_priv_data->block_io, 0);
++		scsi_tgt_priv_data->wslen = tgtdev->wslen;
+ 	}
+ 
+ 	switch (dev_pg0->access_status) {
+@@ -3939,6 +3953,48 @@ void mpi3mr_wait_for_host_io(struct mpi3mr_ioc *mrioc, u32 timeout)
+ 	    mpi3mr_get_fw_pending_ios(mrioc));
+ }
+ 
++/**
++ * mpi3mr_setup_divert_ws - Setup Divert IO flag for write same
++ * @mrioc: Adapter instance reference
++ * @scmd: SCSI command reference
++ * @scsiio_req: MPI3 SCSI IO request
++ * @scsiio_flags: Pointer to MPI3 SCSI IO Flags
++ * @wslen: write same max length
++ *
++ * Gets values of unmap, ndob and number of blocks from write
++ * same scsi io and based on these values it sets divert IO flag
++ * and reason for diverting IO to firmware.
++ *
++ * Return: Nothing
++ */
++static inline void mpi3mr_setup_divert_ws(struct mpi3mr_ioc *mrioc,
++	struct scsi_cmnd *scmd, struct mpi3_scsi_io_request *scsiio_req,
++	u32 *scsiio_flags, u16 wslen)
++{
++	u8 unmap = 0, ndob = 0;
++	u8 opcode = scmd->cmnd[0];
++	u32 num_blocks = 0;
++	u16 sa = (scmd->cmnd[8] << 8) | (scmd->cmnd[9]);
 +
- 	/* init shost parameters */
- 	shost->max_cmd_len = MPI3MR_MAX_CDB_LENGTH;
- 	shost->max_lun = -1;
-@@ -5068,7 +5084,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		shost->nr_maps = 3;
++	if (opcode == WRITE_SAME_16) {
++		unmap = scmd->cmnd[1] & 0x08;
++		ndob = scmd->cmnd[1] & 0x01;
++		num_blocks = get_unaligned_be32(scmd->cmnd + 10);
++	} else if ((opcode == VARIABLE_LENGTH_CMD) && (sa == WRITE_SAME_32)) {
++		unmap = scmd->cmnd[10] & 0x08;
++		ndob = scmd->cmnd[10] & 0x01;
++		num_blocks = get_unaligned_be32(scmd->cmnd + 28);
++	} else
++		return;
++
++	if ((unmap) && (ndob) && (num_blocks > wslen)) {
++		scsiio_req->msg_flags |=
++		    MPI3_SCSIIO_MSGFLAGS_DIVERT_TO_FIRMWARE;
++		*scsiio_flags |=
++			MPI3_SCSIIO_FLAGS_DIVERT_REASON_WRITE_SAME_TOO_LARGE;
++	}
++}
++
+ /**
+  * mpi3mr_eh_host_reset - Host reset error handling callback
+  * @scmd: SCSI command reference
+@@ -4436,7 +4492,6 @@ static int mpi3mr_target_alloc(struct scsi_target *starget)
+ 	unsigned long flags;
+ 	int retval = 0;
+ 	struct sas_rphy *rphy = NULL;
+-	bool update_stgt_priv_data = false;
  
- 	shost->can_queue = mrioc->max_host_ios;
--	shost->sg_tablesize = MPI3MR_SG_DEPTH;
-+	shost->sg_tablesize = mrioc->max_sgl_entries;
- 	shost->max_id = mrioc->facts.max_perids + 1;
+ 	scsi_tgt_priv_data = kzalloc(sizeof(*scsi_tgt_priv_data), GFP_KERNEL);
+ 	if (!scsi_tgt_priv_data)
+@@ -4445,39 +4500,50 @@ static int mpi3mr_target_alloc(struct scsi_target *starget)
+ 	starget->hostdata = scsi_tgt_priv_data;
  
- 	retval = scsi_add_host(shost, &pdev->dev);
+ 	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
+-
+ 	if (starget->channel == mrioc->scsi_device_channel) {
+ 		tgt_dev = __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
+-		if (tgt_dev && !tgt_dev->is_hidden)
+-			update_stgt_priv_data = true;
+-		else
++		if (tgt_dev && !tgt_dev->is_hidden) {
++			scsi_tgt_priv_data->starget = starget;
++			scsi_tgt_priv_data->dev_handle = tgt_dev->dev_handle;
++			scsi_tgt_priv_data->perst_id = tgt_dev->perst_id;
++			scsi_tgt_priv_data->dev_type = tgt_dev->dev_type;
++			scsi_tgt_priv_data->tgt_dev = tgt_dev;
++			tgt_dev->starget = starget;
++			atomic_set(&scsi_tgt_priv_data->block_io, 0);
++			retval = 0;
++		if ((tgt_dev->dev_type == MPI3_DEVICE_DEVFORM_PCIE) &&
++			((tgt_dev->dev_spec.pcie_inf.dev_info &
++			MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_MASK) ==
++			MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_NVME_DEVICE) &&
++			((tgt_dev->dev_spec.pcie_inf.dev_info &
++			MPI3_DEVICE0_PCIE_DEVICE_INFO_PITYPE_MASK) !=
++			MPI3_DEVICE0_PCIE_DEVICE_INFO_PITYPE_0))
++			scsi_tgt_priv_data->dev_nvme_dif = 1;
++			scsi_tgt_priv_data->io_throttle_enabled = tgt_dev->io_throttle_enabled;
++			scsi_tgt_priv_data->wslen = tgt_dev->wslen;
++		if (tgt_dev->dev_type == MPI3_DEVICE_DEVFORM_VD)
++			scsi_tgt_priv_data->throttle_group = tgt_dev->dev_spec.vd_inf.tg;
++		} else
+ 			retval = -ENXIO;
+ 	} else if (mrioc->sas_transport_enabled && !starget->channel) {
+ 		rphy = dev_to_rphy(starget->dev.parent);
+ 		tgt_dev = __mpi3mr_get_tgtdev_by_addr_and_rphy(mrioc,
+ 		    rphy->identify.sas_address, rphy);
+ 		if (tgt_dev && !tgt_dev->is_hidden && !tgt_dev->non_stl &&
+-		    (tgt_dev->dev_type == MPI3_DEVICE_DEVFORM_SAS_SATA))
+-			update_stgt_priv_data = true;
+-		else
++		    (tgt_dev->dev_type == MPI3_DEVICE_DEVFORM_SAS_SATA)) {
++			scsi_tgt_priv_data->starget = starget;
++			scsi_tgt_priv_data->dev_handle = tgt_dev->dev_handle;
++			scsi_tgt_priv_data->perst_id = tgt_dev->perst_id;
++			scsi_tgt_priv_data->dev_type = tgt_dev->dev_type;
++			scsi_tgt_priv_data->tgt_dev = tgt_dev;
++			scsi_tgt_priv_data->io_throttle_enabled = tgt_dev->io_throttle_enabled;
++			scsi_tgt_priv_data->wslen = tgt_dev->wslen;
++			tgt_dev->starget = starget;
++			atomic_set(&scsi_tgt_priv_data->block_io, 0);
++			retval = 0;
++		} else
+ 			retval = -ENXIO;
+ 	}
+-
+-	if (update_stgt_priv_data) {
+-		scsi_tgt_priv_data->starget = starget;
+-		scsi_tgt_priv_data->dev_handle = tgt_dev->dev_handle;
+-		scsi_tgt_priv_data->perst_id = tgt_dev->perst_id;
+-		scsi_tgt_priv_data->dev_type = tgt_dev->dev_type;
+-		scsi_tgt_priv_data->tgt_dev = tgt_dev;
+-		tgt_dev->starget = starget;
+-		atomic_set(&scsi_tgt_priv_data->block_io, 0);
+-		retval = 0;
+-		scsi_tgt_priv_data->io_throttle_enabled =
+-		    tgt_dev->io_throttle_enabled;
+-		if (tgt_dev->dev_type == MPI3_DEVICE_DEVFORM_VD)
+-			scsi_tgt_priv_data->throttle_group =
+-			    tgt_dev->dev_spec.vd_inf.tg;
+-	}
+ 	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
+ 
+ 	return retval;
+@@ -4738,6 +4804,10 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 
+ 	mpi3mr_setup_eedp(mrioc, scmd, scsiio_req);
+ 
++	if (stgt_priv_data->wslen)
++		mpi3mr_setup_divert_ws(mrioc, scmd, scsiio_req, &scsiio_flags,
++		    stgt_priv_data->wslen);
++
+ 	memcpy(scsiio_req->cdb.cdb32, scmd->cmnd, scmd->cmd_len);
+ 	scsiio_req->data_length = cpu_to_le32(scsi_bufflen(scmd));
+ 	scsiio_req->dev_handle = cpu_to_le16(dev_handle);
 -- 
 2.31.1
 
 
---0000000000002d96fc060048f81c
+--000000000000630200060048f805
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -345,13 +398,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIxQn1b4WX3o6Mg66W0pPYJ110EqaA0m
-fGaH56/SyjS2MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDcx
-MjEyMDEwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPWcZrMG/IxOI550XyOmqLqC9G0ySypj
+GrceUr38Czr0MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDcx
+MjEyMDEwNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQA0XIbfdouJpDcuwm1LkYCNXU3X4CTL40q7C8cJ8iPeq3gypm64
-A1T/fTJjwWck7EmdiFrOZ/PBbguwZmIicy88KE+LGfNe5LrZK2lhFhvBX3XNyKfrH4ondFQbB45V
-RAmag2AhKOvUe9efTzzYnBfEiWo0W62IWADxApOkslLTzQsqO8Pxbo3vsQPlr5En+3ySBAGSYdYD
-HdrsZgG0e7SvEDZUHyLUl8ZjBjvsf4jXQ/TjFr0y5bzY5Xy8EkzwnwK2JITixnOFtyTIuJ1ELxGf
-gsKmgV2r4/VM0kdsewY4TjWWC7IMjoXliwL4H4whlcFNwhG8WpBs0Mq/BZZs7qHq
---0000000000002d96fc060048f81c--
+ATANBgkqhkiG9w0BAQEFAASCAQCwdfXluAkBcsGKOZGJ0B5M8EHU7BC1gc4RMZX5x01Xoa8otjh8
+qP9Xa/jYahJw+8nn2xo3YT5hzbqfZ4YK89l4oEc6mu9/sqt8sMMuAPrQIRO86/mG5r9QgHiXQhIe
+gvs5wPOrqqu7GlTA84KDP2aV/9xfLY0YBbubZh3DLUhFI08Z6ubpg3+z12bHZJtNVTunOXADVlIO
+P1bqpX/imCqh5yG7Bw2TtUl0rjArQcjXmybdHxKFGcCsy2ujxQMYnV0fki1uQcuTJC07+FVdcNkv
+YCDDB7JdrVY1ZvWX3Z68jx/e6cKBIilUd0ollvi6WHdfdO0245+vG8FOxgWNA5sI
+--000000000000630200060048f805--
