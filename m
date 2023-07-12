@@ -2,143 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C9DBEB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 12:07:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83CF6EB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 12:55:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232979AbjGLMHZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 08:07:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57092 "EHLO
+        id S232315AbjGLMzz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 08:55:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232727AbjGLMHP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 08:07:15 -0400
-Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2105.outbound.protection.outlook.com [40.107.117.105])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11161173C;
-        Wed, 12 Jul 2023 05:07:14 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=m1mefHQf2ze1DYiZQBOsxcYR1z/nBePr2HgVePpiMQbjIGjemk9WEa0HiPBRK2C++3tVR+RJ76mQc3grE3rfBdIM4ORyiluRZqNk5Mu3l4G8P41GNds2k4XjhQWW5cFtDFPyeFqLtyYMOK+BZPoB4rCvGBw0+rpq91xnfDQI8C24AE0SmsVrEzl0JdOinynknluQx1YUY8YC4YBfrX9Y+b3VfxCFH4mGeu3wRpLvFJvhq/oEo777Ss3JLZHhqZ9Va7yKUbHRTthzpfK+1RAFnhXHqIc66lO1eNvJO/oy6xHFGJlPWY0VQJPo+dumW2bdbSiSclNOb7N1jjK/faqw6w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EQ12MmXPB3KdD8MCgOW11tcx022XEmxLtG9ABgJaaAc=;
- b=N9lxx0O3jABtaT5EwlICEbZZ2BO2iseVWCJFmqjOLNb36HiegNdir9puY1NErloknvHhVM58jvKn0xAByHS5XxcKJlFj8gSL/5c9di/LfuuH+li9qK2U9r4dXyYqa3gdsX5F0RhV3wRL1eMBuLxxNwLE7w9qBGg49q0HKlvWg2rEIV5Dtv3KiOXoKsltGg46X+q3xbALeDCn9ppLFJhedYu3JFIhfVIGsnKBatTigiOXYur8pmGJezWBVkn3aqkakQhVrRjDfTf7BbuOIfZCky1b3DQYMx/HhfxknHYOU9Iizje1Uoey0WIPsy9Q0MzV4kkQSSZeBVY4zpZxedIKjw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EQ12MmXPB3KdD8MCgOW11tcx022XEmxLtG9ABgJaaAc=;
- b=o423FxQobLmHOJ+YkTa4TJBNZWCB0YBGpEZGcusPETfLcLn7RKbjU0Kg9pB9OhCijpkd8PUhZXHpFgc9Pl3HcZN02lSaDgkuGmrBp43SaAsMF6TUM0hhOWjOwUfqBGraachIsCuChQwMij8HstnNCU2XmGBhznbEA7NjFOdtLIlM1aUvV3xJw4dLWNxpERHmKAqo7SLkPkQog+/tC8Mk3zaZfSe7Jx2E9X8K3MP8jrk2I5dopdsgFrQxH7WVLOYhkLHOziO5SvIWNuZptpPyBfHYttWviaUt5fScGzehVvIHgrjXogDYBX8HpOUJfk2QqoLiqqnGUSgI/s2rB8e79A==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SG2PR06MB5288.apcprd06.prod.outlook.com (2603:1096:4:1dc::9) by
- TYZPR06MB6499.apcprd06.prod.outlook.com (2603:1096:400:462::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6565.32; Wed, 12 Jul 2023 12:07:11 +0000
-Received: from SG2PR06MB5288.apcprd06.prod.outlook.com
- ([fe80::f9b8:80b5:844e:f49a]) by SG2PR06MB5288.apcprd06.prod.outlook.com
- ([fe80::f9b8:80b5:844e:f49a%6]) with mapi id 15.20.6565.028; Wed, 12 Jul 2023
- 12:07:10 +0000
-From:   Minjie Du <duminjie@vivo.com>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com (open list:MEGARAID SCSI/SAS DRIVERS),
-        linux-scsi@vger.kernel.org (open list:MEGARAID SCSI/SAS DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Cc:     opensource.kernel@vivo.com, Minjie Du <duminjie@vivo.com>
-Subject: [PATCH v1] drivers: scsi : fix parameter check in two func
-Date:   Wed, 12 Jul 2023 20:07:02 +0800
-Message-Id: <20230712120702.14054-1-duminjie@vivo.com>
-X-Mailer: git-send-email 2.39.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR03CA0120.apcprd03.prod.outlook.com
- (2603:1096:4:91::24) To SG2PR06MB5288.apcprd06.prod.outlook.com
- (2603:1096:4:1dc::9)
+        with ESMTP id S231219AbjGLMzy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 08:55:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 781911739
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 05:55:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689166511;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=W8fid7Se3iKV/DWozR9uU+XgmFzc7Pg3ogm0vbx3SeA=;
+        b=Ua4VBCnqT68azi8RtJVyx94Artadhw6Bk9HtgFein9L1Fcg7tvLx3h6K04Qu+GIbbIpFry
+        hdJx5Fa4tdjNydDK25ZH3S6BLL53K8prdexKOECvmABF7MepooH892ir5pdqJB3mrbK0CF
+        ZVTZYTwCmXQS3LpxY3IC1fnXuRJVD0c=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-14-xxHbe_10P9uVjg_Q3woLZA-1; Wed, 12 Jul 2023 08:55:07 -0400
+X-MC-Unique: xxHbe_10P9uVjg_Q3woLZA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 24A3F8FBA26;
+        Wed, 12 Jul 2023 12:55:07 +0000 (UTC)
+Received: from localhost (ovpn-8-25.pek2.redhat.com [10.72.8.25])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E80FEF66C6;
+        Wed, 12 Jul 2023 12:55:05 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     linux-block@vger.kernel.org, Wen Xiong <wenxiong@linux.ibm.com>,
+        Keith Busch <kbusch@kernel.org>, Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH 1/8] blk-mq: add blk_mq_max_nr_hw_queues()
+Date:   Wed, 12 Jul 2023 20:54:48 +0800
+Message-Id: <20230712125455.1986455-2-ming.lei@redhat.com>
+In-Reply-To: <20230712125455.1986455-1-ming.lei@redhat.com>
+References: <20230712125455.1986455-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SG2PR06MB5288:EE_|TYZPR06MB6499:EE_
-X-MS-Office365-Filtering-Correlation-Id: eae128bf-0042-49cb-a7d3-08db82d0857d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: s+tgjhjE59LUNO72wTJXprohVTXL2FTlrq+mSkyB5WdTFETM++MEK8z1P/357UTczvylEwSC+m38I5lPGJ3U/4exr1IjbCIsuwQMmbEC/X4DJ+MHgdsFYDPYSl0F8l/z5T8nRBEX7OC30di0reuOIqGeMbbPn3TjrAASjBSnFA/ldxn4zsDkNfj4mSIbwvxe7DPeqvD8DH5HFea7bDuZ0SFbkI68tRinGCTyeWx+D5hZUdlRseEHzF8J9BZrsb2BwUW7S1rJaEemMHiYmuUTJ81YIViWA9ecw1DVSR90kGnOxHAxgnhBvM2UkjPFMHGCu9jZhr2R/YeOn9uQkHHYVmFsMHHmV5X6FtyShpmF4CU6Fd39S5u/gWQtpwqajGnDA2DwZEFxtrxkKaF4en4I+pNo488m907C1in7wUwOaO9phC5lgfVafZHvno48AV0TNFra50vygumCpqriN6gCzRN16VrCN1JyahOEG3buQQppSDLrbmlPLlKUX/BcPLIiKzuzwir3o7hRqST2JLIJseTcxdJ6QJFnk//uFt9ocZmpiN9OV4h0bcv2FCMg8MojAkf/LODC4ZjXWIrHI+ABkCd7TJXLXg605D78Xk3CU0V5I5EHWOVNZKet7cSyaneO
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SG2PR06MB5288.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(39850400004)(396003)(376002)(346002)(366004)(136003)(451199021)(52116002)(6486002)(478600001)(6666004)(110136005)(2616005)(83380400001)(36756003)(86362001)(2906002)(186003)(26005)(6506007)(1076003)(107886003)(6512007)(38350700002)(38100700002)(66946007)(4326008)(66476007)(66556008)(316002)(41300700001)(8936002)(8676002)(5660300002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?aeZ/YOnoJpaW0iVmFqsVZjtmUcbU9o03PAtmCtFvKIrp+6h3nO/8CIHdpfKm?=
- =?us-ascii?Q?HmdWbeSPMzFgnIL/AeUwnrEKtTIhGRQZhPrXzS4iLOXBKTG94A5HbLRtctMj?=
- =?us-ascii?Q?si9V7GtHouywtej8RXNfI4ZRx8YJhUJZJYJLB93zWSazREjHuwe4T0kqUG9Y?=
- =?us-ascii?Q?4gCoo9Ze0pahSJnROflA2WwN8+72o9g27JaZ7lKtP3qjRYIrK0UxCyg+XX2F?=
- =?us-ascii?Q?eLA/n5r6DepvyMTDcuQ7FW3FHorSeqsCkbxLy4B4YUcUlGuVFgTrW3MO3N36?=
- =?us-ascii?Q?ujt7+oAU9X3XUzbdKtaToFSXKAX6AtymlesOT+DbF6c7mq1dYYH3eN9373qg?=
- =?us-ascii?Q?892lkzJSaqVQOaz38+u7mirPRzLuB8vVNrCDnprF0ye1NULwY14MonEgm8dp?=
- =?us-ascii?Q?U95e1tRbgKejkiLwi7cF2j2ngjPz/LRKA4f4Wm6YEPnZ3/r7ie0vWy7JmjHV?=
- =?us-ascii?Q?XlDNcWNU8y/NXA4ZBeBfcXvURQaCoO0NVZmiDUY6VCZUwSjhSHpx4DM7oC6r?=
- =?us-ascii?Q?OR9Of6MKFJ0savl1YL0OjKzv0X22za3HVD27D8PuoMTU+B0fnqz4wBRShCGU?=
- =?us-ascii?Q?VYdjooyA4xBi5GK2rg9zvtrF8TS5iP2SDL215L82mjEJ5mWGLQEAiay5Iip1?=
- =?us-ascii?Q?E67qjoBYnGOObuptZVylfE8RqsS+qMKGKpKtl3TZ+0Jz79zpKHLY4906f7dr?=
- =?us-ascii?Q?mmVSniJ8xX5bLmsVpGwTQVdD66HgswagdQh6KPQmTMWuEaqdwNbcBQBQm9ZU?=
- =?us-ascii?Q?p+HRnhRNENYU2ouaVZr06v8CYsT7Y10UsxYGsdzo8F0dm8Hw3IjToFEFDzvn?=
- =?us-ascii?Q?IypVCHQz3L2EMROHuWPkaFWMZvL1r7NoS7A9wum+/x+xsGKgO/jQ2TfyU05e?=
- =?us-ascii?Q?gMrT5a77yhdvsaufFdG1f/URb/8GdDuWz+5+r2B2d2lf8pRG/7etBDriOzqK?=
- =?us-ascii?Q?x/PJ5KR3mghyhB6uSW5fbc81jKSDRpPwOBNljlQyVnyClxH8DEd4GuiM59N3?=
- =?us-ascii?Q?PWLldQVIc+2PI/YRED6zzEhJ95t6QNtD6xk1I6KfQKQq8LPNShIAW7cElKUQ?=
- =?us-ascii?Q?ls99t16V1SOfwOpetJyeiV9uILw4ZOJ8iX2EauY5it9a2p/ZACGjUmadjlMy?=
- =?us-ascii?Q?kelspUapLPNRjVpMLSD8YmFCjZGuCOeiO39hYo5jDn33VMJ/agellCRkdJ/2?=
- =?us-ascii?Q?c5ajVRR8dNt7WrgyEqoNyBTrMyU1y68uibxrWPrGVlOxAflvc4hEV2p/xpWo?=
- =?us-ascii?Q?qETh1vjAQM4Vda4pspD79aan5UntVDAUE7eiIu6zHvOY4FD1K1iUgxfbghUa?=
- =?us-ascii?Q?2Rega9U6UI/JUgJnAcZYxhPq5Ds2vzuCbIovNBvDoB3wQVqJz0lfQFckKaeA?=
- =?us-ascii?Q?ZUaADAjO6TcDliR1ZUAvBkLh1x8NhUHgTXqTfJ5QFUz1ogQwYHBFyDxs1pD/?=
- =?us-ascii?Q?OzM6eqVyOWaKCclTxjDI1jN7GOPZUvgFsGj1orbqoESNn2tdqWoa+3rlYT3k?=
- =?us-ascii?Q?ZZrJ+8dO97rVoIzaFNEv8HZ9eHFpoS9/LXb3Q8LDsrb/1Gq5n7EO4itPsX6V?=
- =?us-ascii?Q?U8um5pL2ECP/R8klcQWFn0XQA8BBjl08KRFRsbUE?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: eae128bf-0042-49cb-a7d3-08db82d0857d
-X-MS-Exchange-CrossTenant-AuthSource: SG2PR06MB5288.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jul 2023 12:07:10.8882
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hmHLcf+6bZwWriy17PoE8TcFtgmDqq9FLXyVRHML7MsWwfBiBCZZ6srs5CUaar9weQzQZZXEZePvzZH2CKBwig==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR06MB6499
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make IS_ERR() judge the debugfs_create_dir() function return
-in megasas_init_debugfs() and megasas_setup_debugfs.
+blk_mq_alloc_tag_set() may override set->nr_hw_queues as 1 in case of kdump
+kernel. This way causes trouble for driver, because blk-mq and driver see
+different queue mapping. Especially the only online CPU may not be 1 for
+kdump kernel, in which 'maxcpus=1' is passed from kernel command line,
+then driver may map hctx0 into one inactive real hw queue which cpu
+affinity is 0(offline).
 
-Signed-off-by: Minjie Du <duminjie@vivo.com>
+The issue exists on all drivers which use managed irq and support
+multiple hw queue.
+
+Prepare for fixing this kind of issue by applying the added helper, so
+driver can take blk-mq max nr_hw_queues knowledge into account when
+calculating io queues.
+
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_debugfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ block/blk-mq.c         | 9 +++++++++
+ include/linux/blk-mq.h | 1 +
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_debugfs.c b/drivers/scsi/megaraid/megaraid_sas_debugfs.c
-index c69760775..b8b66d590 100644
---- a/drivers/scsi/megaraid/megaraid_sas_debugfs.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_debugfs.c
-@@ -102,7 +102,7 @@ static const struct file_operations megasas_debugfs_raidmap_fops = {
- void megasas_init_debugfs(void)
- {
- 	megasas_debugfs_root = debugfs_create_dir("megaraid_sas", NULL);
--	if (!megasas_debugfs_root)
-+	if (IS_ERR(megasas_debugfs_root))
- 		pr_info("Cannot create debugfs root\n");
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 5504719b970d..b764da69a416 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -140,6 +140,15 @@ void blk_mq_freeze_queue_wait(struct request_queue *q)
  }
+ EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_wait);
  
-@@ -132,7 +132,7 @@ megasas_setup_debugfs(struct megasas_instance *instance)
- 		if (!instance->debugfs_root) {
- 			instance->debugfs_root =
- 				debugfs_create_dir(name, megasas_debugfs_root);
--			if (!instance->debugfs_root) {
-+			if (IS_ERR(instance->debugfs_root)) {
- 				dev_err(&instance->pdev->dev,
- 					"Cannot create per adapter debugfs directory\n");
- 				return;
++/* Max nr_hw_queues for each hw queue type */
++unsigned int blk_mq_max_nr_hw_queues(void)
++{
++	if (is_kdump_kernel())
++		return 1;
++	return nr_cpu_ids;
++}
++EXPORT_SYMBOL_GPL(blk_mq_max_nr_hw_queues);
++
+ int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
+ 				     unsigned long timeout)
+ {
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 2b7fb8e87793..2407978fbc30 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -713,6 +713,7 @@ int blk_mq_alloc_sq_tag_set(struct blk_mq_tag_set *set,
+ 		const struct blk_mq_ops *ops, unsigned int queue_depth,
+ 		unsigned int set_flags);
+ void blk_mq_free_tag_set(struct blk_mq_tag_set *set);
++unsigned int blk_mq_max_nr_hw_queues(void);
+ 
+ void blk_mq_free_request(struct request *rq);
+ int blk_rq_poll(struct request *rq, struct io_comp_batch *iob,
 -- 
-2.39.0
+2.40.1
 
