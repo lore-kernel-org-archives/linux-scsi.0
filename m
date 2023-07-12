@@ -2,102 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ABE5EB64D9
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 13:32:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71F5EEB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 13:40:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231853AbjGLNcd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 09:32:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52922 "EHLO
+        id S232609AbjGLNkv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 09:40:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229610AbjGLNcc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 09:32:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76856199D
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 06:31:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689168708;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=WNk+/jdHxPnVKST0gawS4+1QHywyN8OFBji/tGU56o0=;
-        b=ha6n/gJzfmCRCLFQb4nnfROtcDLIk4eDMFQ/lhYWAtjC+A2k5c60Rp0w5vQeEEr6Ci4miP
-        czJPT/tE3QPf/3tPjK3GR2P65R+b6cb/PHnyF5AJze+DiM9fdKUk7dqzed2XFZ7cLQPJX5
-        MoUEmmpfPo2ib2TkTJNG26OF5y7jWuE=
-Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-508-N7kRTt_vM7Oce_ckz9bmmA-1; Wed, 12 Jul 2023 09:31:38 -0400
-X-MC-Unique: N7kRTt_vM7Oce_ckz9bmmA-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 5D8CE2834771;
-        Wed, 12 Jul 2023 13:31:37 +0000 (UTC)
-Received: from ovpn-8-25.pek2.redhat.com (ovpn-8-25.pek2.redhat.com [10.72.8.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4204D492B02;
-        Wed, 12 Jul 2023 13:31:29 +0000 (UTC)
-Date:   Wed, 12 Jul 2023 21:31:24 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-nvme@lists.infradead.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Wen Xiong <wenxiong@linux.ibm.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel@vger.kernel.org, ming.lei@redhat.com
-Subject: Re: [PATCH 1/8] blk-mq: add blk_mq_max_nr_hw_queues()
-Message-ID: <ZK6rLJbRvcXuznho@ovpn-8-25.pek2.redhat.com>
-References: <20230712125455.1986455-1-ming.lei@redhat.com>
- <20230712125455.1986455-2-ming.lei@redhat.com>
- <20230712130017.GA12417@lst.de>
- <ZK6nm2koR+TfeMcs@ovpn-8-25.pek2.redhat.com>
- <20230712131925.GA14596@lst.de>
+        with ESMTP id S232605AbjGLNkt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 09:40:49 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C65D319B4
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 06:40:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=jBtAqtTkPe7xSA8gIcOGPofAG5Ec6Godi3McG+Bj7TI=; b=ne4U33O6PpFN0GLvSBzWvdpMwS
+        fqEB0JUvUajrnCGj0wimrRumDWvNjBni3q3H/klPnnmG4JXWtZNh2Y/Kr8ARlu6T6RA0Yo9YtWZmW
+        VN5KR+qLiAlYcoVi3lgrmu+MPFVYCx1sUWGRxy9IytLpG/Q9I0LQkmPi6tAvlA5H9U2CkWaHcwM8f
+        9xwHpByfBwJrELoXbx8GycAAGgOUrENgCNm4c5QZcx25O/liCF+a+4efNKt/9ndN5qMe8sUd9Pzr8
+        9wCz4R6K1OrD+MGsu5s+hBG08OoMrhLMZrhPUZ2QGHJiE6d75hsds9crd8et3iAvcoi5+iwwNPmoT
+        fWOo5qDA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qJa4q-0005Yd-38;
+        Wed, 12 Jul 2023 13:40:20 +0000
+Date:   Wed, 12 Jul 2023 06:40:20 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Stefano Garzarella <sgarzare@redhat.com>
+Cc:     Stefan Hajnoczi <stefanha@gmail.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Fam Zheng <fam@euphon.net>, Thomas Huth <thuth@redhat.com>,
+        Mark Kanda <mark.kanda@oracle.com>, linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>, qemu-stable@nongnu.org,
+        qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH] Revert "virtio-scsi: Send "REPORTED LUNS CHANGED" sense
+ data upon disk hotplug events"
+Message-ID: <ZK6tRDwxgbyYfv2v@infradead.org>
+References: <20230705071523.15496-1-sgarzare@redhat.com>
+ <i3od362o6unuimlqna3aaedliaabauj6g545esg7txidd4s44e@bkx5des6zytx>
+ <CAJSP0QX5bf1Gp6mnQ0620FS61n=cY6n_ca7O-cAcH7pYCV2frw@mail.gmail.com>
+ <v6xzholcgdem3c2jkkuhqtmhzo4wflvkh53nohcgtjpgkh5y2e@bb7vliper2f3>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230712131925.GA14596@lst.de>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+In-Reply-To: <v6xzholcgdem3c2jkkuhqtmhzo4wflvkh53nohcgtjpgkh5y2e@bb7vliper2f3>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 12, 2023 at 03:19:25PM +0200, Christoph Hellwig wrote:
-> On Wed, Jul 12, 2023 at 09:16:11PM +0800, Ming Lei wrote:
-> > The problem is that blk_mq_alloc_tag_set() forces to set nr_hw_queues
-> > as 1 for kdump kernel, that is why blk_mq_max_nr_hw_queues() has to
-> > return 1 for kdump kernel.
-> 
-> Well, let's fix that first and work from there.  Same argument against
-> that deep magic applies there as well.
+On Wed, Jul 12, 2023 at 10:28:00AM +0200, Stefano Garzarella wrote:
+> The problem is that the SCSI stack does not send this command, so we
+> should do it in the driver. In fact we do it for
+> VIRTIO_SCSI_EVT_RESET_RESCAN (hotplug), but not for
+> VIRTIO_SCSI_EVT_RESET_REMOVED (hotunplug).
 
-In short, driver needs to figure out nr_hw_queues first by hardware info,
-then pass it to blk_mq_alloc_tag_set(), but blk_mq_alloc_tag_set() changes it,
-so inconsistency is caused.
-
-The only solution in this way is to tell driver the max supported
-number from the beginning, that is what this patchset is doing.
-
-> 
-> > Thomas, can we disable managed irq for kdump kernel and switch to
-> > non-managed irq? Then we can avoid driver's change. I'd suggest
-> > this way if it is possible.
-> 
-> Why the heck would we?
-
-IMO irq kernel doesn't make sense in kdump kernel, which is very
-resource limited and has to be reliable.
-
-PCI_IRQ_AFFINITY can be just one hint, pci_alloc_irq_vectors_affinity()
-still allocates affinity in managed way, then queue mapping can work
-just fine, and the only difference is that genirq handles this irqs
-as non-manged wrt. migration.
-
-This way should solve queue mapping issue, but driver still allocates
-lots of queues, which take resource useless. So looks we still have to
-fix drivers.
-
-
-Thanks, 
-Ming
-
+No, you should absolutely no do it in the driver.  The fact that
+virtio-scsi even tries to do some of its own LUN scanning is
+problematic and should have never happened.
