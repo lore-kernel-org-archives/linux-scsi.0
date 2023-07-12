@@ -2,127 +2,97 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F629EB64D9
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 13:12:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E7EEB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 13:17:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229536AbjGLNMX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 09:12:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44876 "EHLO
+        id S233441AbjGLNRT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 09:17:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231602AbjGLNMW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 09:12:22 -0400
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F0E1982
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 06:12:21 -0700 (PDT)
-Received: by mail-lf1-x12a.google.com with SMTP id 2adb3069b0e04-4fbb281eec6so10934581e87.1
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 06:12:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1689167539; x=1691759539;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Ke1RoJkWHrGMbLYzmAUCdXFetzVb9Iew9ttJlTbSIZw=;
-        b=Os6xvLS8Gk/Mp/m8MHivo/UCzBAVjtPOvDtXql9zLZoLY1ym8+E7fhdqYVmM5y/8C3
-         DTiYnp5WLQgLSnRWO+k60DVBIFPmMjB2bp/Mh+UgkZ03bWwQlDTikNGrQr1e4oenY9Vs
-         +K2SGHrZm16dW3VXLxvtJog4yJ0WhPlwYxnzpsK1kN+RxfiqFmPLvRHEJet1LyRu3GXl
-         10yBI/rK8n9Qbm+mTunQS62K2IhtSVovM1gwq5Flm9wOf2hJjqp9WAdoRMzecflfkFKW
-         RjXVQeoVS7Q4BUT0XuysnIzAY7P1hpJ1RGlv+62T3LhY1/3AziEWFx1I/S7ZfYEd5bSe
-         g+XQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689167539; x=1691759539;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ke1RoJkWHrGMbLYzmAUCdXFetzVb9Iew9ttJlTbSIZw=;
-        b=FEeG3AQgS7Y0TwCRA0Lrq6edoXHEASHXNOJdkkaNqEK/HIu7CHCRXMcob7UCDEd276
-         q8OITFh3+2cFahxpOD6oshzKuRtXnfY4HU9JmMrLLIDT2mXrNg1fHRv4AiOlKPIzDK1L
-         GzJ0plJOnPTmVyjt5de3sd3EGUYuV0ewkQ/HovSEk2gSKjW8Qx2tko7NfABuUanmGqwF
-         M9ZD6wtLXJ8D9oQ5EGKViCzpPNsOnO/KtPBqOeUP/Fgi0GsciXpdrt0g1iJiyVK+/Jzr
-         wooNNhB34OqH7uHGrUu6F7T/0/8iZTnAw2fvWHZSWQAWaVO7t8LPc5I2r+jo42SQ+eCg
-         I8zg==
-X-Gm-Message-State: ABy/qLY8BQwe7OXrJfet4Xufbg4y6CF74zW7EqEbVqsZTXmENsYO8OlZ
-        z4wp4GA4EvCWllsfZhi8jqS9mwGc9wCtMGUhl4xldg==
-X-Google-Smtp-Source: APBJJlH/yrSGeZhx17n+01HoYW2tT4q99wyogdL6NM70ZV25ta/wXIG0VoK3rkFu1pl8TskJhm79jGLE2XEGDY8IUhs=
-X-Received: by 2002:a05:6512:32ce:b0:4fb:9f93:365e with SMTP id
- f14-20020a05651232ce00b004fb9f93365emr18369739lfg.41.1689167539433; Wed, 12
- Jul 2023 06:12:19 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230712125455.1986455-1-ming.lei@redhat.com> <20230712125455.1986455-9-ming.lei@redhat.com>
-In-Reply-To: <20230712125455.1986455-9-ming.lei@redhat.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Wed, 12 Jul 2023 15:12:08 +0200
-Message-ID: <CAMGffEkY9SGCXrdOYYLU8BYacvw+sOdZFr770=idZZ1hVLtygQ@mail.gmail.com>
-Subject: Re: [PATCH 8/8] scsi: pm8001: take blk_mq_max_nr_hw_queues() into
- account for calculating io vectors
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        linux-nvme@lists.infradead.org,
+        with ESMTP id S233297AbjGLNRR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 09:17:17 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FEB019A6
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 06:16:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689167789;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YdW3jXa75uZifOOTp5ZtJFJJaNTXIh3AfAYdiE+BpGY=;
+        b=WnSMxcrcFSYGuzxrFkhQ0b7L0aqtjSCauyDxZUZUD7xR+5mZwdhVCCY3z+r7wShKtPHZrs
+        UlWDN5+yeSrPhL1v+ZpzMixsrB1IGls+eLGWZWjTfWoIb9IcA35qTtVbrJuqsYiOu+ZIRb
+        YQp28KLXeR+1dnV/d3+KUL8KdpmEJyo=
+Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-288-6xGLn3mlMKuJeIXdR53l4w-1; Wed, 12 Jul 2023 09:16:25 -0400
+X-MC-Unique: 6xGLn3mlMKuJeIXdR53l4w-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6E9C23C0C491;
+        Wed, 12 Jul 2023 13:16:24 +0000 (UTC)
+Received: from ovpn-8-25.pek2.redhat.com (ovpn-8-25.pek2.redhat.com [10.72.8.25])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F33FC4087C73;
+        Wed, 12 Jul 2023 12:38:00 +0000 (UTC)
+Date:   Wed, 12 Jul 2023 21:16:11 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-nvme@lists.infradead.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         Wen Xiong <wenxiong@linux.ibm.com>,
         Keith Busch <kbusch@kernel.org>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/8] blk-mq: add blk_mq_max_nr_hw_queues()
+Message-ID: <ZK6nm2koR+TfeMcs@ovpn-8-25.pek2.redhat.com>
+References: <20230712125455.1986455-1-ming.lei@redhat.com>
+ <20230712125455.1986455-2-ming.lei@redhat.com>
+ <20230712130017.GA12417@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230712130017.GA12417@lst.de>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.2
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 12, 2023 at 2:55=E2=80=AFPM Ming Lei <ming.lei@redhat.com> wrot=
-e:
->
-> Take blk-mq's knowledge into account for calculating io queues.
->
-> Fix wrong queue mapping in case of kdump kernel.
->
-> On arm and ppc64, 'maxcpus=3D1' is passed to kdump kernel command line,
-> see `Documentation/admin-guide/kdump/kdump.rst`, so num_possible_cpus()
-> still returns all CPUs because 'maxcpus=3D1' just bring up one single
-> cpu core during booting.
->
-> blk-mq sees single queue in kdump kernel, and in driver's viewpoint
-> there are still multiple queues, this inconsistency causes driver to appl=
-y
-> wrong queue mapping for handling IO, and IO timeout is triggered.
->
-> Meantime, single queue makes much less resource utilization, and reduce
-> risk of kernel failure.
->
-> Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
-thx!
-> ---
->  drivers/scsi/pm8001/pm8001_init.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm80=
-01_init.c
-> index 2e886c1d867d..e2416f556560 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -965,6 +965,8 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *=
-pm8001_ha)
->                 rc =3D pci_alloc_irq_vectors(pm8001_ha->pdev, 1, 1,
->                                            PCI_IRQ_MSIX);
->         } else {
-> +               unsigned int max_vecs =3D min_t(unsigned int, PM8001_MAX_=
-MSIX_VEC,
-> +                               blk_mq_max_nr_hw_queues() + 1);
->                 /*
->                  * Queue index #0 is used always for housekeeping, so don=
-'t
->                  * include in the affinity spreading.
-> @@ -973,7 +975,7 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *=
-pm8001_ha)
->                         .pre_vectors =3D 1,
->                 };
->                 rc =3D pci_alloc_irq_vectors_affinity(
-> -                               pm8001_ha->pdev, 2, PM8001_MAX_MSIX_VEC,
-> +                               pm8001_ha->pdev, 2, max_vecs,
->                                 PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &desc);
->         }
->
-> --
-> 2.40.1
->
+On Wed, Jul 12, 2023 at 03:00:17PM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 12, 2023 at 08:54:48PM +0800, Ming Lei wrote:
+> > +/* Max nr_hw_queues for each hw queue type */
+> > +unsigned int blk_mq_max_nr_hw_queues(void)
+> > +{
+> > +	if (is_kdump_kernel())
+> > +		return 1;
+> > +	return nr_cpu_ids;
+> 
+> Again, these is_kdump_kernel hacks don't make any sense.   The amount
+> of maximum available CPU needs to come through a proper API, and we
+> need to use it, not add hacks like this.
+> 
+> The only thing that makes sense here is to find the last CPU
+> in cpu_possible_mask, and for kdump kernels to ensure that number
+> is 1 or whatever low value they want.
+
+It doesn't matter how many cpus are available, given at least one
+cpu is online.
+
+The problem is that blk_mq_alloc_tag_set() forces to set nr_hw_queues
+as 1 for kdump kernel, that is why blk_mq_max_nr_hw_queues() has to
+return 1 for kdump kernel.
+
+We have to tell driver that blk-mq only supports 1 queue for kdump
+kernel.
+
+Or:
+
+Thomas, can we disable managed irq for kdump kernel and switch to
+non-managed irq? Then we can avoid driver's change. I'd suggest
+this way if it is possible.
+
+Thanks,
+Ming
+
