@@ -2,70 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A03EB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 06:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84B5CEB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 07:58:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231901AbjGLGv2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 02:51:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45940 "EHLO
+        id S231540AbjGLH6K convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 03:58:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231488AbjGLGv0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 02:51:26 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6C5D1703;
-        Tue, 11 Jul 2023 23:51:23 -0700 (PDT)
-Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
-        (No client certificate requested)
-        (Authenticated sender: kholk11)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id C05B06607014;
-        Wed, 12 Jul 2023 07:51:21 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1689144682;
-        bh=ZNA3nvg6eJG/Hc6v4LETHxYo8klNpKbEqdasNgN40TM=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Hz6WfZq/B8W0c8j7bRzhi/YwO458dsPEPQcPLnPptua6XcAvGvof5HL2dCZpCNb/z
-         TyFW3UHMcrrXyHj973nADh3nAilMZB0L2GeBWKu9bH8W/PqozAmSgNRgI3xIrgbo0K
-         JyzPTzteAlphuBJ4ev+XPXjYmC7E77A8gDNHgUbf/5voO3xx/d/2CWsmkc9lZQDR8T
-         kBoyC6Dq7XvkIxA/vBjh/bzThdghSKZOVBqTzBHbPGB/VfyIjRhEFKYamFVAknFjO4
-         VMlog89isIKrVpZ/4r40ceTosKKsvFqJ1FRcY5DXS6roseM0+yzBARj8aY2UQSLolG
-         A1h8L/Pn0jinw==
-Message-ID: <212a4999-eacf-12d9-004c-e47f52022176@collabora.com>
-Date:   Wed, 12 Jul 2023 08:51:19 +0200
+        with ESMTP id S230360AbjGLH6J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 03:58:09 -0400
+Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.85.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73D8A10E5
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 00:58:07 -0700 (PDT)
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-136-LBapHPsiOIqyNB-rdI5Dgg-1; Wed, 12 Jul 2023 08:58:04 +0100
+X-MC-Unique: LBapHPsiOIqyNB-rdI5Dgg-1
+Received: from AcuMS.Aculab.com (10.202.163.4) by AcuMS.aculab.com
+ (10.202.163.4) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Wed, 12 Jul
+ 2023 08:58:03 +0100
+Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
+ id 15.00.1497.048; Wed, 12 Jul 2023 08:58:03 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     "'sunran001@208suo.com'" <sunran001@208suo.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "hare@kernel.org" <hare@kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] csi: myrs: Convert snprintf to scnprintf
+Thread-Topic: [PATCH] csi: myrs: Convert snprintf to scnprintf
+Thread-Index: AQHZsKXLD4JVpB9Y5EKt/m8ncbihma+1ypnQ
+Date:   Wed, 12 Jul 2023 07:58:03 +0000
+Message-ID: <6dbbfdf90a1c42d4927ee8fda439ee11@AcuMS.aculab.com>
+References: <20230707073016.11786-1-xujianghui@cdjrlc.com>
+ <20fbbc099e132bb4d3c367da18051c7c@208suo.com>
+In-Reply-To: <20fbbc099e132bb4d3c367da18051c7c@208suo.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Remove surplus dev_err()
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
 Content-Language: en-US
-To:     Yang Li <yang.lee@linux.alibaba.com>, stanley.chu@mediatek.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        matthias.bgg@gmail.com, linux-scsi@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Abaci Robot <abaci@linux.alibaba.com>
-References: <20230712064832.44188-1-yang.lee@linux.alibaba.com>
-From:   AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-In-Reply-To: <20230712064832.44188-1-yang.lee@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il 12/07/23 08:48, Yang Li ha scritto:
-> There is no need to call the dev_err() function directly to print a
-> custom message when handling an error from either the platform_get_irq()
-> or platform_get_irq_byname() functions as both are going to display an
-> appropriate error message in case of a failure.
+From: sunran001@208suo.com
+> Sent: 07 July 2023 08:37
 > 
-> ./drivers/ufs/host/ufs-mediatek.c:864:3-10: line 864 is redundant because platform_get_irq() already prints an error
+> Coccinelle reports: WARNING: use scnprintf or sprintf
 > 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=5846
-> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+> Adding to that, there has also been some slow migration from snprintf to
+> scnprintf. This article explains the rationale for this change:
+> https: //lwn.net/Articles/69419/
+> 
+> Signed-off-by: RAN SUN <sunran001@208suo.com>
+> ---
+>   drivers/scsi/myrs.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+> index a1eec65a9713..852aceb81f28 100644
+> --- a/drivers/scsi/myrs.c
+> +++ b/drivers/scsi/myrs.c
+> @@ -1408,7 +1408,8 @@ static ssize_t cache_size_show(struct device *dev,
+>       struct Scsi_Host *shost = class_to_shost(dev);
+>       struct myrs_hba *cs = shost_priv(shost);
+> 
+> -    return snprintf(buf, 8, "%d MB\n", cs->ctlr_info->cache_size_mb);
+> +    return scnprintf(buf, 8, "%d MB\n", cs->ctlr_info->cache_size_mb);
+> +
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+You've added a 'random' blank line.
 
+The '8' ought to be ringing alarm bells as well.
+
+If you actually look at the code I think this should be sysfs_emit().
+In any case it looks like someone changed a load of sprintf()
+to snprintf() with the expected max size of the output
+rather than using a bound for the output buffer.
+
+IIRC at least one of the length is just plain wrong and
+leads to valid output being truncated.
+
+Using (say) 256 for all the snprint() would have been
+more sensible.
+
+	David
+
+>   }
+>   static DEVICE_ATTR_RO(cache_size);
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
