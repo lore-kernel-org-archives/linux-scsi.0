@@ -2,126 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B637EC04A6A
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 16:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82C46C0015E
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 17:53:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232448AbjGLQGx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 12:06:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43578 "EHLO
+        id S232483AbjGLRxa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 13:53:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233026AbjGLQGu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 12:06:50 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D49F1BF1
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 09:06:48 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-4fa48b5dc2eso11496388e87.1
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 09:06:48 -0700 (PDT)
+        with ESMTP id S232608AbjGLRx0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 13:53:26 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69E6C1FEC
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 10:53:25 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-6831a5caf75so352706b3a.0
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 10:53:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1689178006; x=1691770006;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8X6ArMXh62A5UxRR3ZN+q1CvObhoeb8ltfmXU1xj+zw=;
-        b=V0Mwyzpfv5NHo344FebMkemb4OkDhqesSJzk3oLJrC1sXingJzi/DqoHJPX3cM7/kU
-         /daZbGumusx7p3ETz9bL+dV7+a249DzrdJ5ucaxUqFs1cH4q4UNK1aBbCP0kRMVezgvK
-         Gb0u18D1omT5qk875/bvJSIuyWWXlLKu5WnA0OT929rTcOY7rHqZVsWOvIcdQTq+Q4TI
-         Xty8IQiQ2uEFjkBqRHhjaYUeIIjdk3TlKuW6ZBNL29/kZI8LKdOXvAAi+FiRNxSMUXsG
-         92h/diWQ5jGfG/Pc/9JTOLcLZ2bS8Hyd3sIfxIs/rFITeR6YjIQmonhcUevYE5m/zN7s
-         SmPw==
+        d=gmail.com; s=20221208; t=1689184405; x=1689789205;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=4R5kntMNRgQH2/cacym4g8T87QV8GMcUpokhxZmznwM=;
+        b=pWHiLX5aUgWA8+6x4cMbjElqgM4XFUqL7Rlbwhctnh+kJPudRE/oIT3HQIAMzMbojN
+         I9REPltVI77p9fI6wb4Eie7sOWWL2HY+o7ikThPtGsjl0wY4S8DjwAivghr4LLLlgIJz
+         5jpxQ2D8tuV7BKQKrKRRiUvu6DkMF+/bdR1QfSOsrw6/FxxIx22RESonuzz5l/y7QDXL
+         5liVFQCpZ3l7KudVLJg3y8+OMzbiI1ycLSt8l/vRhlUjn0N5E+7AX8MEAbXUWwHbPpKx
+         ISNkQPxpeUPt8qalzC5pD7SgP0Y/zZrmbteft3OEd4les2X25+lmhBxW/FE0rBLhL7Ja
+         cc5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689178006; x=1691770006;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=8X6ArMXh62A5UxRR3ZN+q1CvObhoeb8ltfmXU1xj+zw=;
-        b=Uk/1tTvT1Pcknwjdsrr063jp66wTE8V4yLrCg73Kr0uL60IEvU8uxpwmRX2TJjD7c2
-         UkcIG/TpmEQuvON20yVfPdYQRJMOPP40fxA35kWnQumjqiKgnMTA7kUNUIR2TpZSl//E
-         nU/oCgcOZXUi0kVSpFLgR4EPBB4MXu6wLSJANCkEPdiw2tCjCEJfVXC0G0w1mjz/JXVY
-         M0CK/EK5wut7bbUo1WIAkBRHy9Vnl5IrItxOX6270TfF+rYJWEmqG01mBdNph7bckNPl
-         6RjxzAe859SxmjmqHPT9RVCm+nkYSNdosoZG1U0B8zYz4CIVaZ1mBoo4xCeWDTugNCjj
-         pppQ==
-X-Gm-Message-State: ABy/qLbT7cUZ4BGUwXaxjApIpvByCP0vFlT5BBzFITesGkrcMhUWf4we
-        foY3t32bk4kpewVAa2PsiXf8gxr4MManKRH1IOo5Vg==
-X-Google-Smtp-Source: APBJJlHjPtNIqZNhhKZT3JSG1orBAozCwd3+TwwvFjulJuToD7D5iIrA7grwKZQU8Z67qc0UJ0oDxWof6WbkdfMRi3A=
-X-Received: by 2002:ac2:5b1d:0:b0:4fb:7a90:1abe with SMTP id
- v29-20020ac25b1d000000b004fb7a901abemr15797051lfn.49.1689178006211; Wed, 12
- Jul 2023 09:06:46 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1689184405; x=1689789205;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=4R5kntMNRgQH2/cacym4g8T87QV8GMcUpokhxZmznwM=;
+        b=iSFtmQxvvO9w8hLoiH88bdAwXopLtC5Hp3a2LBTHpRAJH5drZoA5u6kPoBlCLomkN6
+         CrnX3y4yetc3fUiqjkzaAAyg5eDK26OGEem10/45csH/61qCPtneG1OqTCEtQ8iNZWKH
+         6zSwV9qrcFAPEzzdfppcE9keDL0DvoLYWgUz8qaVdweTbbMCTfhlw9AaeN8D01YKOK1V
+         AMlY+gtVhImIeNWjGHhOT8tXVgMgOXLLHMPkppuy0hGxidmkX4F3kv5akYqp4Ji1EpQc
+         uznF4zbaMwVvlkB4pkkwOCxShQiW1pAJDit6s9kxv7a4AhSYnGtHOcaRdj8aKRuCA7fc
+         V8Gg==
+X-Gm-Message-State: ABy/qLb3XOpsZxJzhaIUNrOGdjs88n18AP/SlenXCPLCapMi9W0ZFtZt
+        pmN4Vgs7ALzTa43m+L+mmZkfLMcFNCM=
+X-Google-Smtp-Source: APBJJlE2f0yhHLAwLb/K4fLrXYckKzfKnB5ZppbhcV/qj9p+IyFE6U8d6BtTs4Mrz0+sZXeT0m9wNw==
+X-Received: by 2002:a17:903:22ca:b0:1b8:b0c4:2e3d with SMTP id y10-20020a17090322ca00b001b8b0c42e3dmr80233plg.4.1689184404684;
+        Wed, 12 Jul 2023 10:53:24 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id d11-20020a170902b70b00b001b898595be7sm4218459pls.291.2023.07.12.10.53.23
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 12 Jul 2023 10:53:24 -0700 (PDT)
+From:   Justin Tee <justintee8345@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
+        Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 00/12] lpfc: Update lpfc to revision 14.2.0.14
+Date:   Wed, 12 Jul 2023 11:05:10 -0700
+Message-Id: <20230712180522.112722-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 MIME-Version: 1.0
-References: <20230629165206.383-1-jack@suse.cz> <20230704122224.16257-1-jack@suse.cz>
- <ZKbgAG5OoHVyUKOG@infradead.org>
-In-Reply-To: <ZKbgAG5OoHVyUKOG@infradead.org>
-From:   Haris Iqbal <haris.iqbal@ionos.com>
-Date:   Wed, 12 Jul 2023 18:06:35 +0200
-Message-ID: <CAJpMwyiUcw+mH0sZa8f8UJsaSZ7NSE65s2gZDEia+pASyP_gJQ@mail.gmail.com>
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 6, 2023 at 5:38=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
-> wrote:
->
-> On Tue, Jul 04, 2023 at 02:21:28PM +0200, Jan Kara wrote:
-> > Create struct bdev_handle that contains all parameters that need to be
-> > passed to blkdev_put() and provide blkdev_get_handle_* functions that
-> > return this structure instead of plain bdev pointer. This will
-> > eventually allow us to pass one more argument to blkdev_put() without
-> > too much hassle.
->
-> Can we use the opportunity to come up with better names?  blkdev_get_*
-> was always a rather horrible naming convention for something that
-> ends up calling into ->open.
->
-> What about:
->
-> struct bdev_handle *bdev_open_by_dev(dev_t dev, blk_mode_t mode, void *ho=
-lder,
->                 const struct blk_holder_ops *hops);
-> struct bdev_handle *bdev_open_by_path(dev_t dev, blk_mode_t mode,
->                 void *holder, const struct blk_holder_ops *hops);
-> void bdev_release(struct bdev_handle *handle);
+Update lpfc to revision 14.2.0.14
 
-+1 to this.
-Also, if we are removing "handle" from the function, should the name
-of the structure it returns also change? Would something like bdev_ctx
-be better?
+This patch set contains logging improvements, kref handling fixes,
+discovery bug fixes, and refactoring of repeated code.
 
-(Apologies for the previous non-plaintext email)
+The patches were cut against Martin's 6.6/scsi-queue tree.
 
->
-> ?
+Justin Tee (12):
+  lpfc: Pull out fw diagnostic dump log message from driver's trace
+    buffer
+  lpfc: Simplify fcp_abort transport callback log message
+  lpfc: Remove extra ndlp kref decrement in FLOGI cmpl for loop topology
+  lpfc: Qualify ndlp discovery state when processing RSCN
+  lpfc: Revise ndlp kref handling for dev_loss_tmo_callbk and
+    lpfc_drop_node
+  lpfc: Set Establish Image Pair service parameter only for Target
+    Functions
+  lpfc: Make fabric zone discovery more robust when handling unsolicited
+    LOGO
+  lpfc: Abort outstanding ELS cmds when mailbox timeout error is
+    detected
+  lpfc: Refactor cpu affinity assignment paths
+  lpfc: Clean up SLI-4 sysfs resource reporting
+  lpfc: Update lpfc version to 14.2.0.14
+  lpfc: Copyright updates for 14.2.0.14 patches
+
+ drivers/scsi/lpfc/lpfc.h           |  20 +++++
+ drivers/scsi/lpfc/lpfc_attr.c      | 136 +++++++++++++++++++++--------
+ drivers/scsi/lpfc/lpfc_ct.c        |  20 +++--
+ drivers/scsi/lpfc/lpfc_els.c       |  58 ++++++++----
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  77 ++++++++++------
+ drivers/scsi/lpfc/lpfc_hw.h        |   2 +
+ drivers/scsi/lpfc/lpfc_init.c      |  53 ++++++-----
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  94 +++++++++++---------
+ drivers/scsi/lpfc/lpfc_nvme.c      |  16 ++--
+ drivers/scsi/lpfc/lpfc_nvmet.c     |   5 +-
+ drivers/scsi/lpfc/lpfc_sli.c       |   8 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 12 files changed, 324 insertions(+), 167 deletions(-)
+
+-- 
+2.38.0
+
