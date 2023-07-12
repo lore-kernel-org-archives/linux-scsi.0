@@ -2,59 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17281EB64DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 09:06:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DCFEEB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 09:06:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233159AbjGLJGZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 05:06:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51824 "EHLO
+        id S233244AbjGLJGh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 05:06:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233018AbjGLJFz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 05:05:55 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8B781984
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 02:05:45 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36C7dgUK018088
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 02:05:44 -0700
+        with ESMTP id S230393AbjGLJF6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 05:05:58 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2999B1995
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 02:05:47 -0700 (PDT)
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36C7L0H8028091
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 02:05:46 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=pfpt0220;
- bh=ITKcO+duY0+oZkjfA1zE5MSviaDmZlUOeP3xXtzuS20=;
- b=aeDmOKEPOZTgus6g+8TNwqmiL7hgohO3V/WHSkPBKwnRvYPocxvf1fOBdgQ0KZ6TRUcE
- /DzAK/pfho8LPVhZ0Tts88QObT4K5CUjE42NmAoBS9Me0+MmurjP1FRF4a5jt0qBhYis
- ZDzVGVK+LY05FqbY41wvqgo3JBQtKPKWzaOpMVoHtgj2RuIy7baSZRPk5GaN7FZJ6qT7
- B+PemEXZ1FJtv21eMI7MMZ8HuXhYw2Sxwhz5n45SieNTbQcfKHG7uawzOqF/kCFKmSjt
- VV/2cCebbhMfy1xpYrVzPQZECvgJ1qLGQAFmv0fy29nB8aEyVt+/x+G0XDHHrAFJhwTq Uw== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3rsb9ajf0b-1
+ bh=sFAYbvocvLNU4qNhwTSdMabPJy/9FnxRrxJlASmK2Lg=;
+ b=VTt3lJs2AGz/ibCOpHPVDkAyaV4cKQqebrk6i8sGqLleTdoR+tJUQbn4kpO6vtVt6zjc
+ PxaHf4Gu6fPA1CjKz7TgQfw2muzGCNmYCqLRKvCq2ORKInbmcHpVkCbQvID7nxqC7NCr
+ c3nWFK4NSFSe3rawldSXpVlwrZ5aELRh67CXk7CeLwPvaHNF2eyYZ/UFx9h0pXT3mnHJ
+ 3tZ8SFK2Y5QfduHArWMEkx70EZzMcNM+QFe81w1w2i70mja8+8FHh4NCgWngwo+YEcy+
+ s12zkzBXPOnfdghVlJl9d7OWpN7/5Rk3cvHsLsGzroFi0MutohDJV6oRTW9yB3fZpKnT RQ== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3rsb7rb0g7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 02:05:44 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Wed, 12 Jul
- 2023 02:05:42 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
- Transport; Wed, 12 Jul 2023 02:05:42 -0700
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 02:05:46 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Wed, 12 Jul
+ 2023 02:05:44 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
+ Transport; Wed, 12 Jul 2023 02:05:44 -0700
 Received: from localhost.marvell.com (unknown [10.30.46.195])
-        by maili.marvell.com (Postfix) with ESMTP id ADD843F7069;
-        Wed, 12 Jul 2023 02:05:40 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id EA7DD3F7076;
+        Wed, 12 Jul 2023 02:05:42 -0700 (PDT)
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <sdeodhar@marvell.com>
-Subject: [PATCH 02/10] qla2xxx: Adjust iocb resource on qpair create
-Date:   Wed, 12 Jul 2023 14:35:27 +0530
-Message-ID: <20230712090535.34894-3-njavali@marvell.com>
+Subject: [PATCH 03/10] qla2xxx: Limit TMF to 8 per function
+Date:   Wed, 12 Jul 2023 14:35:28 +0530
+Message-ID: <20230712090535.34894-4-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20230712090535.34894-1-njavali@marvell.com>
 References: <20230712090535.34894-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-GUID: vbUroPBvxmDUoPrYMuDxk3CvqH71XxnK
-X-Proofpoint-ORIG-GUID: vbUroPBvxmDUoPrYMuDxk3CvqH71XxnK
+X-Proofpoint-GUID: FY0R5vygBV1z6_QUlHSc_VnuqXQhOP4D
+X-Proofpoint-ORIG-GUID: FY0R5vygBV1z6_QUlHSc_VnuqXQhOP4D
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-07-12_06,2023-07-11_01,2023-05-22_02
@@ -64,145 +64,205 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-During NVME queue creation, a new qpair is created, FW resource limit
-need to be re-adjusted to take into account of the new qpair. Otherwise,
-NVME command can not go through.
-This issue was discovered while testing/forcing FW execution to fail at
-load time.
+Per FW recommendation, 8 TMF's can be outstanding for each
+function. Previously, it allowed 8 per target.
 
-Add call to readjust iocb and exchange limit.
-
-In addition, get fw state command require FW to be running. Otherwise,
-error is generated.
+Limit TMF to 8 per function.
 
 Cc: stable@vger.kernel.org
+Fixes: 6a87679626b5 ("scsi: qla2xxx: Fix task management cmd fail due to unavailable resource")
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h  |  2 ++
- drivers/scsi/qla2xxx/qla_init.c | 52 +++++++++++++++++++++------------
- drivers/scsi/qla2xxx/qla_mbx.c  |  3 ++
- drivers/scsi/qla2xxx/qla_nvme.c |  1 +
- 4 files changed, 39 insertions(+), 19 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |  9 +++---
+ drivers/scsi/qla2xxx/qla_init.c | 55 ++++++++++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_os.c   |  2 ++
+ 3 files changed, 41 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index ba7831f24734..ec69b0e8f4c5 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -143,6 +143,8 @@ void qla_edif_sess_down(struct scsi_qla_host *vha, struct fc_port *sess);
- void qla_edif_clear_appdata(struct scsi_qla_host *vha,
- 			    struct fc_port *fcport);
- const char *sc_to_str(uint16_t cmd);
-+void qla_adjust_iocb_limit(scsi_qla_host_t *vha);
-+
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 95a12b4e0484..03d94e024bdd 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -466,6 +466,7 @@ static inline be_id_t port_id_to_be_id(port_id_t port_id)
+ }
  
- /*
-  * Global Data in qla_os.c source file.
+ struct tmf_arg {
++	struct list_head tmf_elem;
+ 	struct qla_qpair *qpair;
+ 	struct fc_port *fcport;
+ 	struct scsi_qla_host *vha;
+@@ -2541,7 +2542,6 @@ enum rscn_addr_format {
+ typedef struct fc_port {
+ 	struct list_head list;
+ 	struct scsi_qla_host *vha;
+-	struct list_head tmf_pending;
+ 
+ 	unsigned int conf_compl_supported:1;
+ 	unsigned int deleted:2;
+@@ -2562,9 +2562,6 @@ typedef struct fc_port {
+ 	unsigned int do_prli_nvme:1;
+ 
+ 	uint8_t nvme_flag;
+-	uint8_t active_tmf;
+-#define MAX_ACTIVE_TMF 8
+-
+ 	uint8_t node_name[WWN_SIZE];
+ 	uint8_t port_name[WWN_SIZE];
+ 	port_id_t d_id;
+@@ -4656,6 +4653,8 @@ struct qla_hw_data {
+ 		uint32_t	flt_region_aux_img_status_sec;
+ 	};
+ 	uint8_t         active_image;
++	uint8_t active_tmf;
++#define MAX_ACTIVE_TMF 8
+ 
+ 	/* Needed for BEACON */
+ 	uint16_t        beacon_blink_led;
+@@ -4670,6 +4669,8 @@ struct qla_hw_data {
+ 
+ 	struct qla_msix_entry *msix_entries;
+ 
++	struct list_head tmf_pending;
++	struct list_head tmf_active;
+ 	struct list_head        vp_list;        /* list of VP */
+ 	unsigned long   vp_idx_map[(MAX_MULTI_ID_FABRIC / 8) /
+ 			sizeof(unsigned long)];
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index f8f64ed4de07..60dd0e415351 100644
+index 60dd0e415351..5ec6f01ca635 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -4153,41 +4153,55 @@ qla24xx_detect_sfp(scsi_qla_host_t *vha)
- 	return ha->flags.lr_detected;
+@@ -2192,30 +2192,42 @@ __qla2x00_async_tm_cmd(struct tmf_arg *arg)
+ 	return rval;
  }
  
--void qla_init_iocb_limit(scsi_qla_host_t *vha)
-+static void __qla_adjust_iocb_limit(struct qla_qpair *qpair)
+-static void qla_put_tmf(fc_port_t *fcport)
++static void qla_put_tmf(struct tmf_arg *arg)
  {
--	u16 i, num_qps;
--	u32 limit;
--	struct qla_hw_data *ha = vha->hw;
-+	u8 num_qps;
-+	u16 limit;
-+	struct qla_hw_data *ha = qpair->vha->hw;
+-	struct scsi_qla_host *vha = fcport->vha;
++	struct scsi_qla_host *vha = arg->vha;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	unsigned long flags;
  
- 	num_qps = ha->num_qpairs + 1;
- 	limit = (ha->orig_fw_iocb_count * QLA_IOCB_PCT_LIMIT) / 100;
- 
--	ha->base_qpair->fwres.iocbs_total = ha->orig_fw_iocb_count;
--	ha->base_qpair->fwres.iocbs_limit = limit;
--	ha->base_qpair->fwres.iocbs_qp_limit = limit / num_qps;
--	ha->base_qpair->fwres.iocbs_used = 0;
-+	qpair->fwres.iocbs_total = ha->orig_fw_iocb_count;
-+	qpair->fwres.iocbs_limit = limit;
-+	qpair->fwres.iocbs_qp_limit = limit / num_qps;
-+
-+	qpair->fwres.exch_total = ha->orig_fw_xcb_count;
-+	qpair->fwres.exch_limit = (ha->orig_fw_xcb_count *
-+				   QLA_IOCB_PCT_LIMIT) / 100;
-+}
-+
-+void qla_init_iocb_limit(scsi_qla_host_t *vha)
-+{
-+	u8 i;
-+	struct qla_hw_data *ha = vha->hw;
- 
--	ha->base_qpair->fwres.exch_total = ha->orig_fw_xcb_count;
--	ha->base_qpair->fwres.exch_limit = (ha->orig_fw_xcb_count *
--					    QLA_IOCB_PCT_LIMIT) / 100;
-+	 __qla_adjust_iocb_limit(ha->base_qpair);
-+	ha->base_qpair->fwres.iocbs_used = 0;
- 	ha->base_qpair->fwres.exch_used  = 0;
- 
- 	for (i = 0; i < ha->max_qpairs; i++) {
- 		if (ha->queue_pair_map[i])  {
--			ha->queue_pair_map[i]->fwres.iocbs_total =
--				ha->orig_fw_iocb_count;
--			ha->queue_pair_map[i]->fwres.iocbs_limit = limit;
--			ha->queue_pair_map[i]->fwres.iocbs_qp_limit =
--				limit / num_qps;
-+			__qla_adjust_iocb_limit(ha->queue_pair_map[i]);
- 			ha->queue_pair_map[i]->fwres.iocbs_used = 0;
--			ha->queue_pair_map[i]->fwres.exch_total = ha->orig_fw_xcb_count;
--			ha->queue_pair_map[i]->fwres.exch_limit =
--				(ha->orig_fw_xcb_count * QLA_IOCB_PCT_LIMIT) / 100;
- 			ha->queue_pair_map[i]->fwres.exch_used = 0;
- 		}
- 	}
+ 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+-	fcport->active_tmf--;
++	ha->active_tmf--;
++	list_del(&arg->tmf_elem);
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
  }
  
-+void qla_adjust_iocb_limit(scsi_qla_host_t *vha)
-+{
-+	u8 i;
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	__qla_adjust_iocb_limit(ha->base_qpair);
-+
-+	for (i = 0; i < ha->max_qpairs; i++) {
-+		if (ha->queue_pair_map[i])
-+			__qla_adjust_iocb_limit(ha->queue_pair_map[i]);
-+	}
-+}
-+
- /**
-  * qla2x00_setup_chip() - Load and start RISC firmware.
-  * @vha: HA context
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 254fd4c64262..b05f93037875 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -2213,6 +2213,9 @@ qla2x00_get_firmware_state(scsi_qla_host_t *vha, uint16_t *states)
- 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1054,
- 	    "Entered %s.\n", __func__);
+ static
+-int qla_get_tmf(fc_port_t *fcport)
++int qla_get_tmf(struct tmf_arg *arg)
+ {
+-	struct scsi_qla_host *vha = fcport->vha;
++	struct scsi_qla_host *vha = arg->vha;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	unsigned long flags;
++	fc_port_t *fcport = arg->fcport;
+ 	int rc = 0;
+-	LIST_HEAD(tmf_elem);
++	struct tmf_arg *t;
  
-+	if (!ha->flags.fw_started)
+ 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+-	list_add_tail(&tmf_elem, &fcport->tmf_pending);
++	list_for_each_entry(t, &ha->tmf_active, tmf_elem) {
++		if (t->fcport == arg->fcport && t->lun == arg->lun) {
++			/* reject duplicate TMF */
++			ql_log(ql_log_warn, vha, 0x802c,
++			       "found duplicate TMF.  Nexus=%ld:%06x:%llu.\n",
++			       vha->host_no, fcport->d_id.b24, arg->lun);
++			spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
++			return -EINVAL;
++		}
++	}
+ 
+-	while (fcport->active_tmf >= MAX_ACTIVE_TMF) {
++	list_add_tail(&arg->tmf_elem, &ha->tmf_pending);
++	while (ha->active_tmf >= MAX_ACTIVE_TMF) {
+ 		spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ 
+ 		msleep(1);
+@@ -2227,15 +2239,17 @@ int qla_get_tmf(fc_port_t *fcport)
+ 			rc = EIO;
+ 			break;
+ 		}
+-		if (fcport->active_tmf < MAX_ACTIVE_TMF &&
+-		    list_is_first(&tmf_elem, &fcport->tmf_pending))
++		if (ha->active_tmf < MAX_ACTIVE_TMF &&
++		    list_is_first(&arg->tmf_elem, &ha->tmf_pending))
+ 			break;
+ 	}
+ 
+-	list_del(&tmf_elem);
++	list_del(&arg->tmf_elem);
+ 
+-	if (!rc)
+-		fcport->active_tmf++;
++	if (!rc) {
++		ha->active_tmf++;
++		list_add_tail(&arg->tmf_elem, &ha->tmf_active);
++	}
+ 
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ 
+@@ -2257,15 +2271,18 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint64_t lun,
+ 	a.vha = fcport->vha;
+ 	a.fcport = fcport;
+ 	a.lun = lun;
++	a.flags = flags;
++	INIT_LIST_HEAD(&a.tmf_elem);
++
+ 	if (flags & (TCF_LUN_RESET|TCF_ABORT_TASK_SET|TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA)) {
+ 		a.modifier = MK_SYNC_ID_LUN;
+-
+-		if (qla_get_tmf(fcport))
+-			return QLA_FUNCTION_FAILED;
+ 	} else {
+ 		a.modifier = MK_SYNC_ID;
+ 	}
+ 
++	if (qla_get_tmf(&a))
 +		return QLA_FUNCTION_FAILED;
 +
- 	mcp->mb[0] = MBC_GET_FIRMWARE_STATE;
- 	mcp->out_mb = MBX_0;
- 	if (IS_FWI2_CAPABLE(vha->hw))
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 86e85f2f4782..6769c40287b9 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -132,6 +132,7 @@ static int qla_nvme_alloc_queue(struct nvme_fc_local_port *lport,
- 			       "Failed to allocate qpair\n");
- 			return -EINVAL;
- 		}
-+		qla_adjust_iocb_limit(vha);
- 	}
- 	*handle = qpair;
+ 	if (vha->hw->mqenable) {
+ 		for (i = 0; i < vha->hw->num_qpairs; i++) {
+ 			qpair = vha->hw->queue_pair_map[i];
+@@ -2291,13 +2308,10 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint64_t lun,
+ 		goto bailout;
  
+ 	a.qpair = vha->hw->base_qpair;
+-	a.flags = flags;
+ 	rval = __qla2x00_async_tm_cmd(&a);
+ 
+ bailout:
+-	if (a.modifier == MK_SYNC_ID_LUN)
+-		qla_put_tmf(fcport);
+-
++	qla_put_tmf(&a);
+ 	return rval;
+ }
+ 
+@@ -5526,7 +5540,6 @@ qla2x00_alloc_fcport(scsi_qla_host_t *vha, gfp_t flags)
+ 	INIT_WORK(&fcport->reg_work, qla_register_fcport_fn);
+ 	INIT_LIST_HEAD(&fcport->gnl_entry);
+ 	INIT_LIST_HEAD(&fcport->list);
+-	INIT_LIST_HEAD(&fcport->tmf_pending);
+ 
+ 	INIT_LIST_HEAD(&fcport->sess_cmd_list);
+ 	spin_lock_init(&fcport->sess_cmd_lock);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 877e4f446709..47bbc8b321f8 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3009,6 +3009,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	atomic_set(&ha->num_pend_mbx_stage3, 0);
+ 	atomic_set(&ha->zio_threshold, DEFAULT_ZIO_THRESHOLD);
+ 	ha->last_zio_threshold = DEFAULT_ZIO_THRESHOLD;
++	INIT_LIST_HEAD(&ha->tmf_pending);
++	INIT_LIST_HEAD(&ha->tmf_active);
+ 
+ 	/* Assign ISP specific operations. */
+ 	if (IS_QLA2100(ha)) {
 -- 
 2.23.1
 
