@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CA7FEB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 17:54:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49786C0015E
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 17:54:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232665AbjGLRyP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 13:54:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52332 "EHLO
+        id S233128AbjGLRyW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 13:54:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232887AbjGLRxu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 13:53:50 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88C84211C
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 10:53:45 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b89c09521dso8778645ad.0
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 10:53:45 -0700 (PDT)
+        with ESMTP id S232972AbjGLRxx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 13:53:53 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE873212D
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 10:53:48 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-676cc97ca74so1647762b3a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 10:53:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689184425; x=1689789225;
+        d=gmail.com; s=20221208; t=1689184428; x=1689789228;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=yx/Jf4e2+y9G2p/tuS6GsfFoY/gArJ7gLbH1sPvcGkc=;
-        b=K6HGYA5tKlOemTax0gE9F7vWorE07509sLrYyEnyXBTctWj7aEJcCApywGZIoVHcKf
-         kI4YIxRLhdbjfNaG2kiNZtcfOxsR1T2wzWwR1EiwREelRKzC4UuNlr7Z27vqoKx/FngN
-         tKMOvG1Jkfpf3z7yelDzNoTlhKdJRGePZKbXvxM9ByywuLI9itw7lFJDchCKX1QmLf5k
-         OB+a7f+ueUr4XzK7VvwLiI+Ay7iA0wCvHgKWnKiTPzI0lhOO+4shaTBoQG6IB277GlDv
-         5Jkl4GCqvhmjVZJMXGvaseiRxGk+B92IOIs6iMCQ0QOQMEhtEAGmhPIkEGbRXdMtu+oW
-         L+RQ==
+        bh=Lkcn6jjamEII+0zvdwv69Z5HuW6ijaZMDO9tv3a3e48=;
+        b=aRxF8cDA1xBwUHyoOfeBT2S2Hdhk0jiwG6M7zR6WqPaCecviDeB+EngoP1jxP4bbiO
+         OXLBwlUyZnzXwH+YzKYmyFuSgjgRjjwEQYJ1RVKM3zdCbjoIT3WBcbrhielXQdjc0BaY
+         LZdnbW9tTWtroqW0oipyzanz/CquJefqLhKRW6qRpCcFsC6T7Vd/Sge3oSozmucb+aPi
+         XR3TniLaCF0O3sj2x8ThttXyjKHlM/man0mLs3iK8EJH/af6h8hkJ4RMYYMXaVDyO+o4
+         DpFiZEBnesHic4Ywi06vyB4ngUdXACDtM9CZSTG5sf+4NBoXCoC2W3X/1I3RV99HVWRL
+         fwAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689184425; x=1689789225;
+        d=1e100.net; s=20221208; t=1689184428; x=1689789228;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=yx/Jf4e2+y9G2p/tuS6GsfFoY/gArJ7gLbH1sPvcGkc=;
-        b=bghwUwif+vLnx+6r+vxg+goqZaOJtenULTRKmJyAHnj263KJ5RxiC8am7r9/eeZkVW
-         YibBOJZ+cFwU+dU1Zv+fg9gZK+FONDK3dAnp5ULebtoircpi6P8jFK9DFNckhE+8gX/a
-         BiDPzRUkamZoCGZksF2YGlD8f6K0ePCDjV5FmehJRVej+ZCL2rGjUWm1408Mg3lgTQm2
-         56EYHv6p+I71L/CazKvG5WgSzC0rW7rf+HOlrzNAvRnwWzfeXHHk9VQ4fl1Ta7c4byC3
-         JG4iP6FvS1gb0jpZX1tQl50a/+YA7CoQPThCZsdZxsq5LIXuppqwIOux5kL8m0K0MfqF
-         RaIA==
-X-Gm-Message-State: ABy/qLZl4Yrl/FLtLHrrf6J1U+blGAquDzrgGLJX2nbScQOV3GEy6TQf
-        8PmUZk1ErAwvjiVvs/WIZKm03BYYXeU=
-X-Google-Smtp-Source: APBJJlGjFoubBRWMYOJ21w+05FvO2Dl6ZPIbbCr8gX8mCyC5UNtmJAjfQu015mWDxa1JKGfweUP0pA==
-X-Received: by 2002:a17:903:32c4:b0:1b8:a469:53d8 with SMTP id i4-20020a17090332c400b001b8a46953d8mr162913plr.0.1689184424844;
-        Wed, 12 Jul 2023 10:53:44 -0700 (PDT)
+        bh=Lkcn6jjamEII+0zvdwv69Z5HuW6ijaZMDO9tv3a3e48=;
+        b=ek4z5nspiVHnu9Xhn/XexN51mKWx6gcpjYaMchrj/+TliVq5SPP4al7DU1LvzQFSTS
+         kSQS33OwR2z1jISksyiXb+YteNiP15hOEBWGVGy+b9z6pFA3n/VD0MfmQSAC5Is5Bb8U
+         9RtFu4XGQSdACSmh90u0NQ2n9C1tOeJpn5kpBqrPSOdZVpVn9rgrBjd3K0CIHzbs0Cbz
+         /VnRdVYcOGXXfbEqlKW1EnsguooZepPpbGRpFn0YxzeDsK2Fz/eCLJdi64u/CK1mcOlx
+         CcG987/FUGdsrnStB9igR9mO7wMxyLd6ONn5UrHEWEo4UlfsuhVdcKUIVaBYyaKHdiRa
+         ZFtA==
+X-Gm-Message-State: ABy/qLYOePZFx+FcxHTPVvVU2hF3ZBYmhCG3x0c+n+6/1qxucLztFRIa
+        dJLgJ6NX7fXp045aK2KPEJt5JFCd0XA=
+X-Google-Smtp-Source: APBJJlHHgP5fq+6VWt503CXNLrliWFSpNH/LJCphw40G1bGWB5iupqvbik2xZxX7nTm1skGqno8Vcw==
+X-Received: by 2002:a17:902:d483:b0:1b8:95fc:cfe with SMTP id c3-20020a170902d48300b001b895fc0cfemr54316plg.3.1689184428069;
+        Wed, 12 Jul 2023 10:53:48 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d11-20020a170902b70b00b001b898595be7sm4218459pls.291.2023.07.12.10.53.44
+        by smtp.gmail.com with ESMTPSA id d11-20020a170902b70b00b001b898595be7sm4218459pls.291.2023.07.12.10.53.47
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 12 Jul 2023 10:53:44 -0700 (PDT)
+        Wed, 12 Jul 2023 10:53:47 -0700 (PDT)
 From:   Justin Tee <justintee8345@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
         Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 08/12] lpfc: Abort outstanding ELS cmds when mailbox timeout error is detected
-Date:   Wed, 12 Jul 2023 11:05:18 -0700
-Message-Id: <20230712180522.112722-9-justintee8345@gmail.com>
+Subject: [PATCH 10/12] lpfc: Clean up SLI-4 sysfs resource reporting
+Date:   Wed, 12 Jul 2023 11:05:20 -0700
+Message-Id: <20230712180522.112722-11-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20230712180522.112722-1-justintee8345@gmail.com>
 References: <20230712180522.112722-1-justintee8345@gmail.com>
@@ -65,186 +65,211 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A mailbox timeout error usually indicates something has gone wrong, and
-a follow up reset of the HBA is a typical recovery mechanism.  Introduce a
-MBX_TMO_ERR flag to detect such cases and have lpfc_els_flush_cmd abort
-ELS commands if the MBX_TMO_ERR flag condition was set.  This ensures
-all of the registered SGL resources meant for ELS traffic are not leaked
-after an HBA reset.
+Currently, we have dated logic to work around the differences between
+SLI-4 and SLI-3 resource reporting through sysfs.
+
+Leave the SLI-3 path untouched, but for SLI4 path, retrieve resource values
+from the phba->sli4_hba->max_cfg_param structure.  Max values are populated
+during ACQE events right after READ_CONFIG mbox cmd is sent.  Instead of
+the dated subtraction logic, used resource calculation is directly fed into
+sysfs for display.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc.h      |  1 +
- drivers/scsi/lpfc/lpfc_els.c  | 25 ++++++++++++++++++-------
- drivers/scsi/lpfc/lpfc_init.c | 20 +++++++++++++++++---
- drivers/scsi/lpfc/lpfc_sli.c  |  8 +++++++-
- 4 files changed, 43 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 136 +++++++++++++++++++++++++---------
+ 1 file changed, 101 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 9a8963684369..e8d7eeeb2185 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -872,6 +872,7 @@ enum lpfc_irq_chann_mode {
- enum lpfc_hba_bit_flags {
- 	FABRIC_COMANDS_BLOCKED,
- 	HBA_PCI_ERR,
-+	MBX_TMO_ERR,
- };
- 
- struct lpfc_hba {
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index f37757449f3c..b5cd6d1c0a5a 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -9603,11 +9603,13 @@ void
- lpfc_els_flush_cmd(struct lpfc_vport *vport)
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 21c7ecd3ede5..b1c9107d3408 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -2127,11 +2127,12 @@ lpfc_get_hba_info(struct lpfc_hba *phba,
+ 		  uint32_t *mrpi, uint32_t *arpi,
+ 		  uint32_t *mvpi, uint32_t *avpi)
  {
- 	LIST_HEAD(abort_list);
-+	LIST_HEAD(cancel_list);
- 	struct lpfc_hba  *phba = vport->phba;
- 	struct lpfc_sli_ring *pring;
- 	struct lpfc_iocbq *tmp_iocb, *piocb;
- 	u32 ulp_command;
- 	unsigned long iflags = 0;
-+	bool mbx_tmo_err;
+-	struct lpfc_mbx_read_config *rd_config;
+ 	LPFC_MBOXQ_t *pmboxq;
+ 	MAILBOX_t *pmb;
+ 	int rc = 0;
+-	uint32_t max_vpi;
++	struct lpfc_sli4_hba *sli4_hba;
++	struct lpfc_max_cfg_param *max_cfg_param;
++	u16 rsrc_ext_cnt, rsrc_ext_size, max_vpi;
  
- 	lpfc_fabric_abort_vport(vport);
- 
-@@ -9629,15 +9631,16 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		spin_lock(&pring->ring_lock);
- 
-+	mbx_tmo_err = test_bit(MBX_TMO_ERR, &phba->bit_flags);
- 	/* First we need to issue aborts to outstanding cmds on txcmpl */
- 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
--		if (piocb->cmd_flag & LPFC_IO_LIBDFC)
-+		if (piocb->cmd_flag & LPFC_IO_LIBDFC && !mbx_tmo_err)
- 			continue;
- 
- 		if (piocb->vport != vport)
- 			continue;
- 
--		if (piocb->cmd_flag & LPFC_DRIVER_ABORTED)
-+		if (piocb->cmd_flag & LPFC_DRIVER_ABORTED && !mbx_tmo_err)
- 			continue;
- 
- 		/* On the ELS ring we can have ELS_REQUESTs or
-@@ -9656,8 +9659,8 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 			 */
- 			if (phba->link_state == LPFC_LINK_DOWN)
- 				piocb->cmd_cmpl = lpfc_cmpl_els_link_down;
--		}
--		if (ulp_command == CMD_GEN_REQUEST64_CR)
-+		} else if (ulp_command == CMD_GEN_REQUEST64_CR ||
-+			   mbx_tmo_err)
- 			list_add_tail(&piocb->dlist, &abort_list);
+ 	/*
+ 	 * prevent udev from issuing mailbox commands until the port is
+@@ -2167,31 +2168,65 @@ lpfc_get_hba_info(struct lpfc_hba *phba,
  	}
  
-@@ -9669,11 +9672,19 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	list_for_each_entry_safe(piocb, tmp_iocb, &abort_list, dlist) {
- 		spin_lock_irqsave(&phba->hbalock, iflags);
- 		list_del_init(&piocb->dlist);
--		lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
-+		if (mbx_tmo_err)
-+			list_move_tail(&piocb->list, &cancel_list);
-+		else
-+			lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+-		rd_config = &pmboxq->u.mqe.un.rd_config;
+-		if (mrpi)
+-			*mrpi = bf_get(lpfc_mbx_rd_conf_rpi_count, rd_config);
+-		if (arpi)
+-			*arpi = bf_get(lpfc_mbx_rd_conf_rpi_count, rd_config) -
+-					phba->sli4_hba.max_cfg_param.rpi_used;
+-		if (mxri)
+-			*mxri = bf_get(lpfc_mbx_rd_conf_xri_count, rd_config);
+-		if (axri)
+-			*axri = bf_get(lpfc_mbx_rd_conf_xri_count, rd_config) -
+-					phba->sli4_hba.max_cfg_param.xri_used;
++		sli4_hba = &phba->sli4_hba;
++		max_cfg_param = &sli4_hba->max_cfg_param;
 +
- 		spin_unlock_irqrestore(&phba->hbalock, iflags);
- 	}
--	/* Make sure HBA is alive */
--	lpfc_issue_hb_tmo(phba);
-+	if (!list_empty(&cancel_list))
-+		lpfc_sli_cancel_iocbs(phba, &cancel_list, IOSTAT_LOCAL_REJECT,
-+				      IOERR_SLI_ABORTED);
-+	else
-+		/* Make sure HBA is alive */
-+		lpfc_issue_hb_tmo(phba);
++		/* Normally, extents are not used */
++		if (!phba->sli4_hba.extents_in_use) {
++			if (mrpi)
++				*mrpi = max_cfg_param->max_rpi;
++			if (mxri)
++				*mxri = max_cfg_param->max_xri;
++			if (mvpi) {
++				max_vpi = max_cfg_param->max_vpi;
++
++				/* Limit the max we support */
++				if (max_vpi > LPFC_MAX_VPI)
++					max_vpi = LPFC_MAX_VPI;
++				*mvpi = max_vpi;
++			}
++		} else { /* Extents in use */
++			if (mrpi) {
++				if (lpfc_sli4_get_avail_extnt_rsrc(phba,
++								   LPFC_RSC_TYPE_FCOE_RPI,
++								   &rsrc_ext_cnt,
++								   &rsrc_ext_size)) {
++					rc = 0;
++					goto free_pmboxq;
++				}
++
++				*mrpi = rsrc_ext_cnt * rsrc_ext_size;
++			}
  
- 	if (!list_empty(&abort_list))
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 041d6f0f2097..c878fb99dc4c 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7550,6 +7550,8 @@ lpfc_disable_pci_dev(struct lpfc_hba *phba)
- void
- lpfc_reset_hba(struct lpfc_hba *phba)
- {
-+	int rc = 0;
+-		/* Account for differences with SLI-3.  Get vpi count from
+-		 * mailbox data and subtract one for max vpi value.
+-		 */
+-		max_vpi = (bf_get(lpfc_mbx_rd_conf_vpi_count, rd_config) > 0) ?
+-			(bf_get(lpfc_mbx_rd_conf_vpi_count, rd_config) - 1) : 0;
++			if (mxri) {
++				if (lpfc_sli4_get_avail_extnt_rsrc(phba,
++								   LPFC_RSC_TYPE_FCOE_XRI,
++								   &rsrc_ext_cnt,
++								   &rsrc_ext_size)) {
++					rc = 0;
++					goto free_pmboxq;
++				}
+ 
+-		/* Limit the max we support */
+-		if (max_vpi > LPFC_MAX_VPI)
+-			max_vpi = LPFC_MAX_VPI;
+-		if (mvpi)
+-			*mvpi = max_vpi;
+-		if (avpi)
+-			*avpi = max_vpi - phba->sli4_hba.max_cfg_param.vpi_used;
++				*mxri = rsrc_ext_cnt * rsrc_ext_size;
++			}
 +
- 	/* If resets are disabled then set error state and return. */
- 	if (!phba->cfg_enable_hba_reset) {
- 		phba->link_state = LPFC_HBA_ERROR;
-@@ -7560,13 +7562,25 @@ lpfc_reset_hba(struct lpfc_hba *phba)
- 	if (phba->sli.sli_flag & LPFC_SLI_ACTIVE) {
- 		lpfc_offline_prep(phba, LPFC_MBX_WAIT);
- 	} else {
-+		if (test_bit(MBX_TMO_ERR, &phba->bit_flags)) {
-+			/* Perform a PCI function reset to start from clean */
-+			rc = lpfc_pci_function_reset(phba);
-+			lpfc_els_flush_all_cmd(phba);
++			if (mvpi) {
++				if (lpfc_sli4_get_avail_extnt_rsrc(phba,
++								   LPFC_RSC_TYPE_FCOE_VPI,
++								   &rsrc_ext_cnt,
++								   &rsrc_ext_size)) {
++					rc = 0;
++					goto free_pmboxq;
++				}
++
++				max_vpi = rsrc_ext_cnt * rsrc_ext_size;
++
++				/* Limit the max we support */
++				if (max_vpi > LPFC_MAX_VPI)
++					max_vpi = LPFC_MAX_VPI;
++				*mvpi = max_vpi;
++			}
 +		}
- 		lpfc_offline_prep(phba, LPFC_MBX_NO_WAIT);
- 		lpfc_sli_flush_io_rings(phba);
+ 	} else {
+ 		if (mrpi)
+ 			*mrpi = pmb->un.varRdConfig.max_rpi;
+@@ -2212,8 +2247,12 @@ lpfc_get_hba_info(struct lpfc_hba *phba,
+ 		}
  	}
- 	lpfc_offline(phba);
--	lpfc_sli_brdrestart(phba);
--	lpfc_online(phba);
--	lpfc_unblock_mgmt_io(phba);
-+	clear_bit(MBX_TMO_ERR, &phba->bit_flags);
-+	if (unlikely(rc)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+				"8888 PCI function reset failed rc %x\n",
-+				rc);
-+	} else {
-+		lpfc_sli_brdrestart(phba);
-+		lpfc_online(phba);
-+		lpfc_unblock_mgmt_io(phba);
-+	}
+ 
++	/* Success */
++	rc = 1;
++
++free_pmboxq:
+ 	mempool_free(pmboxq, phba->mbox_mem_pool);
+-	return 1;
++	return rc;
  }
  
  /**
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 58d10f8f75a7..4dfadf254a72 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -3935,6 +3935,8 @@ void lpfc_poll_eratt(struct timer_list *t)
- 	uint64_t sli_intr, cnt;
+@@ -2265,10 +2304,19 @@ lpfc_used_rpi_show(struct device *dev, struct device_attribute *attr,
+ 	struct Scsi_Host  *shost = class_to_shost(dev);
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+-	uint32_t cnt, acnt;
++	struct lpfc_sli4_hba *sli4_hba;
++	struct lpfc_max_cfg_param *max_cfg_param;
++	u32 cnt = 0, acnt = 0;
  
- 	phba = from_timer(phba, t, eratt_poll);
-+	if (!(phba->hba_flag & HBA_SETUP))
-+		return;
+-	if (lpfc_get_hba_info(phba, NULL, NULL, &cnt, &acnt, NULL, NULL))
+-		return scnprintf(buf, PAGE_SIZE, "%d\n", (cnt - acnt));
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		sli4_hba = &phba->sli4_hba;
++		max_cfg_param = &sli4_hba->max_cfg_param;
++		return scnprintf(buf, PAGE_SIZE, "%d\n",
++				 max_cfg_param->rpi_used);
++	} else {
++		if (lpfc_get_hba_info(phba, NULL, NULL, &cnt, &acnt, NULL, NULL))
++			return scnprintf(buf, PAGE_SIZE, "%d\n", (cnt - acnt));
++	}
+ 	return scnprintf(buf, PAGE_SIZE, "Unknown\n");
+ }
  
- 	/* Here we will also keep track of interrupts per sec of the hba */
- 	sli_intr = phba->sli.slistat.sli_intr;
-@@ -7693,7 +7695,9 @@ lpfc_sli4_repost_sgl_list(struct lpfc_hba *phba,
- 		spin_unlock_irq(&phba->hbalock);
- 	} else {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"3161 Failure to post sgl to port.\n");
-+				"3161 Failure to post sgl to port,status %x "
-+				"blkcnt %d totalcnt %d postcnt %d\n",
-+				status, block_cnt, total_cnt, post_cnt);
- 		return -EIO;
- 	}
+@@ -2321,10 +2369,19 @@ lpfc_used_xri_show(struct device *dev, struct device_attribute *attr,
+ 	struct Scsi_Host  *shost = class_to_shost(dev);
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+-	uint32_t cnt, acnt;
++	struct lpfc_sli4_hba *sli4_hba;
++	struct lpfc_max_cfg_param *max_cfg_param;
++	u32 cnt = 0, acnt = 0;
  
-@@ -8478,6 +8482,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 			spin_unlock_irq(&phba->hbalock);
- 		}
- 	}
-+	phba->hba_flag &= ~HBA_SETUP;
+-	if (lpfc_get_hba_info(phba, &cnt, &acnt, NULL, NULL, NULL, NULL))
+-		return scnprintf(buf, PAGE_SIZE, "%d\n", (cnt - acnt));
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		sli4_hba = &phba->sli4_hba;
++		max_cfg_param = &sli4_hba->max_cfg_param;
++		return scnprintf(buf, PAGE_SIZE, "%d\n",
++				 max_cfg_param->xri_used);
++	} else {
++		if (lpfc_get_hba_info(phba, &cnt, &acnt, NULL, NULL, NULL, NULL))
++			return scnprintf(buf, PAGE_SIZE, "%d\n", (cnt - acnt));
++	}
+ 	return scnprintf(buf, PAGE_SIZE, "Unknown\n");
+ }
  
- 	lpfc_sli4_dip(phba);
+@@ -2377,10 +2434,19 @@ lpfc_used_vpi_show(struct device *dev, struct device_attribute *attr,
+ 	struct Scsi_Host  *shost = class_to_shost(dev);
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+-	uint32_t cnt, acnt;
++	struct lpfc_sli4_hba *sli4_hba;
++	struct lpfc_max_cfg_param *max_cfg_param;
++	u32 cnt = 0, acnt = 0;
  
-@@ -9282,6 +9287,7 @@ lpfc_mbox_timeout_handler(struct lpfc_hba *phba)
- 	 * would get IOCB_ERROR from lpfc_sli_issue_iocb, allowing
- 	 * it to fail all outstanding SCSI IO.
- 	 */
-+	set_bit(MBX_TMO_ERR, &phba->bit_flags);
- 	spin_lock_irq(&phba->pport->work_port_lock);
- 	phba->pport->work_port_events &= ~WORKER_MBOX_TMO;
- 	spin_unlock_irq(&phba->pport->work_port_lock);
+-	if (lpfc_get_hba_info(phba, NULL, NULL, NULL, NULL, &cnt, &acnt))
+-		return scnprintf(buf, PAGE_SIZE, "%d\n", (cnt - acnt));
++	if (phba->sli_rev == LPFC_SLI_REV4) {
++		sli4_hba = &phba->sli4_hba;
++		max_cfg_param = &sli4_hba->max_cfg_param;
++		return scnprintf(buf, PAGE_SIZE, "%d\n",
++				 max_cfg_param->vpi_used);
++	} else {
++		if (lpfc_get_hba_info(phba, NULL, NULL, NULL, NULL, &cnt, &acnt))
++			return scnprintf(buf, PAGE_SIZE, "%d\n", (cnt - acnt));
++	}
+ 	return scnprintf(buf, PAGE_SIZE, "Unknown\n");
+ }
+ 
 -- 
 2.38.0
 
