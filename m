@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AF1AEB64DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 10:53:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57DEDEB64DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 10:53:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232848AbjGLKxc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 06:53:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35524 "EHLO
+        id S232146AbjGLKx4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 06:53:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232822AbjGLKxV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 06:53:21 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECC56173C
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 03:53:17 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-666e916b880so3365363b3a.2
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 03:53:17 -0700 (PDT)
+        with ESMTP id S229640AbjGLKxy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 06:53:54 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C77BE1986
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 03:53:53 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-666e5f0d60bso4005523b3a.3
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 03:53:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1689159197; x=1691751197;
+        d=linaro.org; s=google; t=1689159233; x=1691751233;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:resent-to:resent-message-id
          :resent-date:resent-from:from:to:cc:subject:date:message-id:reply-to;
-        bh=w6D9impE6kDqR+MOUS2gWXvCWxf9bLcZG7WLF2GZCOw=;
-        b=CW0mC38lmavwAGAyc/ESd3ZAvGb9MyUHXehFBz4rU5U1hxDszMgWWWLPctcnZoxpxx
-         VuynJXhT/OZg3rrvu3oZ5FCqApp3u0gWasJ93kS8jrrZtvCY5slbjErJTUfGhJ4QMvgO
-         wb3zSS/dwTaYi878QR3VidsJBRrbIVvXUQ8Mu9SpMQ9uodDaqVRo3B4DVpINntY0Ob0L
-         1pi7X/eKeyzZD0ywgXCIIsufF0UlBQ8Z2rQtVsrkbQVwaz4FOVeQd/lShGnm7lQMJLl5
-         pog1iaymA/89GoSjfKQhiC47DWXbOvlUHOb42x+BdAq/BmActAC1aRLSMC82/JV1z/OW
-         kPaQ==
+        bh=7R3B8EY4EOyQ9QJJeQXVuUhZWY60knY6YNAPx/POrbU=;
+        b=A50DSGwVduIhnXISXxoyvEeL/0oWjmLGhYouWKuYcS3AsO9Ht7CUyLqc6BvGB+zsqf
+         u9fGePsD++NWgfQCbZozQt0QZeTEqlnNxH3jrD3SuqnparDy+aMxtew0ehKqX14aP3lJ
+         6/4af2w4ThO/nQX3ZrzFl6MQ1mOQEziDBdgChoXWO7lPrcdz7EPwa4SdFsaa7gNpIcfy
+         HFvzRrOA4R0ZQeq8bnr5O+uQDsvWE3vQjx7vYiLvh5cEpZMSwOliXwsrrRfwqVmtvqHE
+         ezrXFKyTS0ySXMjBa/4FbNVZoHxraBKhxTDiCSJuCLIcrwYjf3DOxW/MbaldJghgqmPL
+         SzXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689159197; x=1691751197;
+        d=1e100.net; s=20221208; t=1689159233; x=1691751233;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:resent-to:resent-message-id
          :resent-date:resent-from:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=w6D9impE6kDqR+MOUS2gWXvCWxf9bLcZG7WLF2GZCOw=;
-        b=Up+UvWqYwVMMwe064W1LF+lvDLTd/fwuu3Va5plpFEB79E04a+KzMlIaM0xhe73peZ
-         6txUCWXVEhYrAR1n1VPyulFmLd+JItbzpALy2PdrW5RrKaQ7wFIQYHRGaG6NHR3Knc76
-         D6NJbKZybkK7MsXPUiRL+p3MTn/Vu5DGn2FFWAhypN9a3TejbnxOAg70TXBC1VqUU1zU
-         WsxxY1fluk9ameTK/ulAkfDprN14S/yTvLUXSIotpyvZnlR4Q0s+YkDwYwjv1LUHUD+a
-         5qm9FUV3ajeBLLjw4+UPw2tPQv+25j2gsFsb7Ih/lZKGp+pqspAaEvqrtxcaKAEw3OdF
-         eToA==
-X-Gm-Message-State: ABy/qLaCrxga1yoHz80RABbrA+oVSYXxNVv82L13UHn0Py2g3ZePKy7X
-        ddIGP/KV7gRy/c+Y5XM28pIX
-X-Google-Smtp-Source: APBJJlEPoQIOUE4bc/u5pCZgFN41MTqgIC1ISonXCqIZR4RPEjaq3+Maop0Xgx9r0AoraFAfBJyT/g==
-X-Received: by 2002:a05:6a20:3d10:b0:130:bdc8:2294 with SMTP id y16-20020a056a203d1000b00130bdc82294mr13611035pzi.17.1689159197417;
-        Wed, 12 Jul 2023 03:53:17 -0700 (PDT)
+        bh=7R3B8EY4EOyQ9QJJeQXVuUhZWY60knY6YNAPx/POrbU=;
+        b=krjH1dHio2BO9t+9/BElMP0ZBktKoLlwZfkh8m6VDk2wi7jr23Zpw8Eg9V1xTfFZeR
+         XeDi1F7m3Ekc9bT20i4n9m5j0cGYYESU+t2D3x9HD0MGa0rxiNwnQL0yuEdvTSaNVapt
+         LmkqU2OcL2dmQa03yBkE6DAthmq1tUfC5xCVUqf2+CBK/bM9T+UTH+NTCwhde98Cy1FP
+         D4GxMld+T4ihLT7iBE8y8tpkuKkX0nOAlbScD/Mwr2QbVFZtG76wm6P/+HiJf2KP/w5j
+         fOwkBDqyi4Eedxy7f1jqNUFRwp7C8qCEMWG1Ws9S73twWx2YPvSSKWeERZCpWVKIpJeJ
+         Fs8w==
+X-Gm-Message-State: ABy/qLYhifQ1kd0aHjqzuxFM5vXEhDtAfvt48WNosTQN5VG8KoCi8aPB
+        s8A8hhqirsenoI7FZImCnkZ+
+X-Google-Smtp-Source: APBJJlGraezrqQb9gJw1KuNnhKyK7zRrpK5rrr86wdm1KtvhtZLzpuCA6cxV2w492Xo4FyqMqdRYig==
+X-Received: by 2002:a05:6a00:1593:b0:65e:ec60:b019 with SMTP id u19-20020a056a00159300b0065eec60b019mr17309298pfk.25.1689159233275;
+        Wed, 12 Jul 2023 03:53:53 -0700 (PDT)
 Received: from thinkpad ([117.207.27.131])
-        by smtp.gmail.com with ESMTPSA id bc1-20020a170902930100b001b3fb2f0296sm3651859plb.120.2023.07.12.03.53.13
+        by smtp.gmail.com with ESMTPSA id g5-20020aa78745000000b00682af93093dsm3343969pfo.45.2023.07.12.03.53.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Jul 2023 03:53:17 -0700 (PDT)
+        Wed, 12 Jul 2023 03:53:53 -0700 (PDT)
 Received: from localhost.localdomain ([117.207.27.131])
-        by smtp.gmail.com with ESMTPSA id k15-20020aa790cf000000b00666b3706be6sm3247860pfk.107.2023.07.12.03.33.01
+        by smtp.gmail.com with ESMTPSA id k15-20020aa790cf000000b00666b3706be6sm3247860pfk.107.2023.07.12.03.33.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Jul 2023 03:33:13 -0700 (PDT)
+        Wed, 12 Jul 2023 03:33:25 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
         myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
@@ -68,42 +68,43 @@ Cc:     linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
         quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
         bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 03/14] arm64: dts: qcom: sdm845: Add missing RPMh power domain to GCC
-Date:   Wed, 12 Jul 2023 16:01:58 +0530
-Message-Id: <20230712103213.101770-4-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 04/14] arm64: dts: qcom: sdm845: Fix the min frequency of "ice_core_clk"
+Date:   Wed, 12 Jul 2023 16:01:59 +0530
+Message-Id: <20230712103213.101770-5-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230712103213.101770-1-manivannan.sadhasivam@linaro.org>
 References: <20230712103213.101770-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-TUID: 1AsetsiCBkgR
+X-TUID: z76KvsIeYMmA
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-GCC and it's GDSCs are under the RPMh CX power domain. So let's add the
-missing RPMh power domain to the GCC node.
+Minimum frequency of the "ice_core_clk" should be 75MHz as specified in the
+downstream vendor devicetree. So fix it!
 
-Fixes: 6d4cf750d03a ("arm64: dts: sdm845: Add minimal dts/dtsi files for sdm845 SoC and MTP")
-Co-developed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+https://git.codelinaro.org/clo/la/kernel/msm-4.9/-/blob/LA.UM.7.3.r1-09300-sdm845.0/arch/arm64/boot/dts/qcom/sdm845.dtsi
+
+Fixes: cc16687fbd74 ("arm64: dts: qcom: sdm845: add UFS controller")
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- arch/arm64/boot/dts/qcom/sdm845.dtsi | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arm64/boot/dts/qcom/sdm845.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-index 02a6ea0b8b2c..9ed74bf72d05 100644
+index 9ed74bf72d05..89520a9fe1e3 100644
 --- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
 +++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-@@ -1207,6 +1207,7 @@ gcc: clock-controller@100000 {
- 			#clock-cells = <1>;
- 			#reset-cells = <1>;
- 			#power-domain-cells = <1>;
-+			power-domains = <&rpmhpd SDM845_CX>;
- 		};
+@@ -2614,7 +2614,7 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				<0 0>,
+ 				<0 0>,
+ 				<0 0>,
+-				<0 300000000>;
++				<75000000 300000000>;
  
- 		qfprom@784000 {
+ 			status = "disabled";
+ 		};
 -- 
 2.25.1
 
