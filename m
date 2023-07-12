@@ -2,132 +2,126 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05CADEB64D9
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 14:28:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A6FEB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 14:44:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231522AbjGLO2g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 10:28:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58852 "EHLO
+        id S232529AbjGLOoM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 10:44:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232035AbjGLO2Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 10:28:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8ED2273D
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 07:27:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689172022;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=YuLYRtG9rlYrlnldQSFLl0oU1VkecWxThhvBzU3738M=;
-        b=R3jkEYe9oKd9kZz0VXmV+Ojc/GhMz8aut91v37fplmSdrueTbtq0FPhhelDLjk4ZSuF1Zh
-        CpcKKdyuVcasLMTAOcCbfPlLcJvnWiobObyXBp2DK2R0GGfZegd0La/GseZZwtd83EbaTX
-        6njvXltPSvtDafXVEvanGH4BlDmKkg4=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-518-zBZ4RJz0Pty4nzvIoj45OQ-1; Wed, 12 Jul 2023 10:26:58 -0400
-X-MC-Unique: zBZ4RJz0Pty4nzvIoj45OQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 388648EBBA1;
-        Wed, 12 Jul 2023 14:26:58 +0000 (UTC)
-Received: from localhost (unknown [10.39.192.162])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B588FC1ED96;
-        Wed, 12 Jul 2023 14:26:57 +0000 (UTC)
-Date:   Wed, 12 Jul 2023 10:26:56 -0400
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     vrozenfe@redhat.com, yvugenfi@redhat.com, mdean@redhat.com
-Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
-        sgarzare@redhat.com, virtualization@lists.linux-foundation.org,
-        Mike Christie <michael.christie@oracle.com>
-Subject: Re: [PATCH v2 0/2] vhost-scsi: Fix IO hangs when using windows
-Message-ID: <20230712142656.GB215287@fedora>
-References: <20230709202859.138387-1-michael.christie@oracle.com>
- <20230711183438.GA154686@fedora>
- <6b53b833-3c71-2bd9-8fd8-757ecda75c53@oracle.com>
+        with ESMTP id S231792AbjGLOoL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 10:44:11 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A1EAE6F;
+        Wed, 12 Jul 2023 07:44:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+        bh=Cl8ZlZiRFcpCnQDdALLt0daQ8db1oTNHsErrm3r9t1Y=; b=FymAXj62zEYXrd8MbUppdm1Ys7
+        3YIzUyGiQIHWY0eIhzA2dcGwxuHLYBKah0/Nh5b0IYD1oIw/3pemTCJ0WKhaLC04wa9ulyBIY4wmY
+        AsE+6Yj1PUb6XLwcKBnz3xJOaTZ356HEa6P/YP4F2AUv3tQHFthwVZkX97r364iMjv0eW4Ke7bpgn
+        RaGAIf+EgHlxcadKyCqBS/gvZSRarktUnw3C/AwmSZeySh81oHveVyjmOqTF9D2ZzdAL5VMp5T1A2
+        zT6WXNmTnTjFm6hmMkrmaueaIJoMRZqN/unWlinxejCNxVbjH/qr8qHDcWVgthzhn7JlDXw26YhXu
+        Gi4R9Mxw==;
+Received: from [2601:1c2:980:9ec0::2764]
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qJb4S-000EMI-3C;
+        Wed, 12 Jul 2023 14:44:01 +0000
+Message-ID: <46ed999e-f6b5-3087-20a2-5505c7c9845b@infradead.org>
+Date:   Wed, 12 Jul 2023 07:43:59 -0700
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="NRdAloLYDxU+lGu1"
-Content-Disposition: inline
-In-Reply-To: <6b53b833-3c71-2bd9-8fd8-757ecda75c53@oracle.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH -next] scsi: ufs: core: Fix some kernel-doc comments
+Content-Language: en-US
+To:     Yang Li <yang.lee@linux.alibaba.com>, jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Abaci Robot <abaci@linux.alibaba.com>
+References: <20230712075836.15375-1-yang.lee@linux.alibaba.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20230712075836.15375-1-yang.lee@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---NRdAloLYDxU+lGu1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 11, 2023 at 04:01:22PM -0500, Mike Christie wrote:
-> On 7/11/23 1:34 PM, Stefan Hajnoczi wrote:
-> > On Sun, Jul 09, 2023 at 03:28:57PM -0500, Mike Christie wrote:
-> >> The following patches were made over Linus's tree and fix an issue
-> >> where windows guests will send iovecs with offset/lengths that result
-> >> in IOs that are not aligned to 512. The LIO layer will then send them
-> >> to Linux's FS/block layer but it requires 512 byte alignment, so
-> >> depending on the FS/block driver being used we will get IO errors or
-> >> hung IO.
-> >>
-> >> The following patches have vhost-scsi detect when windows sends these
-> >> IOs and copy them to a bounce buffer. It then does some cleanup in
-> >> the related code.
-> >=20
-> > Hang on, virtio-scsi is a SCSI HBA and READs/WRITEs submitted must
-> > follow the usual constraints on SCSI block limits. Would Windows send
-> > mis-aligned I/O to a non-virtio-scsi SCSI HBA?
->=20
-> It's like linux where you can config settings like that.
->=20
-> > > Are you sure this is not a bug in the Windows guest driver where block
-> > limits are being misconfigured?
->=20
-> From what our windows dev told us the guest drivers like here:
->=20
-> https://github.com/virtio-win
->=20
-> don't set the windows AlignmentMask to 512. They tried that and it
-> resulted in windows crash dump crashing because it doesn't like the
-> hard alignment requirement.
->=20
-> We thought other apps would have trouble as well, so we tried to add
-> bounce buffer support to the windows driver, but I think people thought
-> it was going to be uglier than this patch and in the normal alignment
-> case might also affect performance. There was some windows driver/layering
-> and buffer/cmd details that I don't fully understand and took their word
-> for because I don't know a lot about windows.
->=20
-> In the end we still have to add checks to vhost-scsi to protect against
-> bad drivers, so we thought we might as well just add bounce buffer support
-> to vhost-scsi.
+On 7/12/23 00:58, Yang Li wrote:
+> Use colons to separate parameter names from their specific meanings.
+> silencethe warnings:
+> 
+> drivers/ufs/core/ufs-mcq.c:499: warning: Function parameter or member 'hba' not described in 'ufshcd_mcq_sq_cleanup'
+> drivers/ufs/core/ufs-mcq.c:499: warning: Function parameter or member 'task_tag' not described in 'ufshcd_mcq_sq_cleanup'
+> drivers/ufs/core/ufs-mcq.c:560: warning: Function parameter or member 'utrd' not described in 'ufshcd_mcq_nullify_sqe'
+> drivers/ufs/core/ufs-mcq.c:583: warning: Function parameter or member 'hba' not described in 'ufshcd_mcq_sqe_search'
+> drivers/ufs/core/ufs-mcq.c:583: warning: Function parameter or member 'hwq' not described in 'ufshcd_mcq_sqe_search'
+> drivers/ufs/core/ufs-mcq.c:583: warning: Function parameter or member 'task_tag' not described in 'ufshcd_mcq_sqe_search'
+> drivers/ufs/core/ufs-mcq.c:630: warning: Function parameter or member 'cmd' not described in 'ufshcd_mcq_abort'
+> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=5850
+> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
 
-CCing virtio-win developers so they can confirm how the vioscsi driver
-is supposed to handle request alignment.
 
-My expectation is that the virtio-scsi device will fail mis-aligned I/O
-requests.
+Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
 
-Stefan
+Thanks.
 
---NRdAloLYDxU+lGu1
-Content-Type: application/pgp-signature; name="signature.asc"
+> ---
+>  drivers/ufs/core/ufs-mcq.c | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index e8bad5e9518e..1e23ba3e2bdf 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -490,8 +490,8 @@ static int ufshcd_mcq_sq_start(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
+>  /**
+>   * ufshcd_mcq_sq_cleanup - Clean up submission queue resources
+>   * associated with the pending command.
+> - * @hba - per adapter instance.
+> - * @task_tag - The command's task tag.
+> + * @hba: per adapter instance.
+> + * @task_tag: The command's task tag.
+>   *
+>   * Returns 0 for success; error code otherwise.
+>   */
+> @@ -554,7 +554,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
+>   * Write the sqe's Command Type to 0xF. The host controller will not
+>   * fetch any sqe with Command Type = 0xF.
+>   *
+> - * @utrd - UTP Transfer Request Descriptor to be nullified.
+> + * @utrd: UTP Transfer Request Descriptor to be nullified.
+>   */
+>  static void ufshcd_mcq_nullify_sqe(struct utp_transfer_req_desc *utrd)
+>  {
+> @@ -571,9 +571,9 @@ static void ufshcd_mcq_nullify_sqe(struct utp_transfer_req_desc *utrd)
+>   * If the command is in the submission queue and not issued to the device yet,
+>   * nullify the sqe so the host controller will skip fetching the sqe.
+>   *
+> - * @hba - per adapter instance.
+> - * @hwq - Hardware Queue to be searched.
+> - * @task_tag - The command's task tag.
+> + * @hba: per adapter instance.
+> + * @hwq: Hardware Queue to be searched.
+> + * @task_tag: The command's task tag.
+>   *
+>   * Returns true if the SQE containing the command is present in the SQ
+>   * (not fetched by the controller); returns false if the SQE is not in the SQ.
+> @@ -622,7 +622,7 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
+>  
+>  /**
+>   * ufshcd_mcq_abort - Abort the command in MCQ.
+> - * @cmd - The command to be aborted.
+> + * @cmd: The command to be aborted.
+>   *
+>   * Returns SUCCESS or FAILED error codes
+>   */
 
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmSuuDAACgkQnKSrs4Gr
-c8hvFAf+JDI1Oz+7UVYpSQJpLXVE72G+4FSrqroo20DnuvXiTgty7VncVfOy5nd1
-/iSBI7rffMwc1LdIzR7hOWb/Iz0po/eVfUyUBo3noy+ShjV1jWIJNGnYYt3P8j0u
-tE/ywD63hJp/s82fWBS+nOI2b3QJqkg+4bfTmihd+PngLZbikJqRv4TdR1x+1ka9
-o6XJ8Iu75YiKqVKCehxUsEWkPc8304dXoMANZR4YO6+68zZhKS7RVSFi2hR0squi
-T9Aq89ap8LRNvjTtcHic2u+fwLoL4TEvutjYsAEcSNl0p1BNSu8nuriciocg0ZyG
-Qsbwf0+HjCtR9RUF14BlKLt9zkU6dA==
-=O6MD
------END PGP SIGNATURE-----
-
---NRdAloLYDxU+lGu1--
-
+-- 
+~Randy
