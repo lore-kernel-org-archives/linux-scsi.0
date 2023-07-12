@@ -2,107 +2,160 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9106EB64D9
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 10:16:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67172EB64D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jul 2023 10:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231690AbjGLKQe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 06:16:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42362 "EHLO
+        id S232959AbjGLKY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jul 2023 06:24:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230474AbjGLKQd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 06:16:33 -0400
-Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 196871993
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 03:16:32 -0700 (PDT)
-Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4R1DDD5R4kzBR5lc
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 18:16:28 +0800 (CST)
-Authentication-Results: mail.208.org (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)" header.d=208.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
-        content-transfer-encoding:content-type:message-id:user-agent
-        :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1689156988; x=1691748989; bh=NjUUY+3+UT6hCyVfFCcB4tKetyX
-        PuWZgUfS/KNX/ki8=; b=PJ7YOnWtfWVqFe/KWBWia5RMFiLBWLLv/xgct7EB7Q/
-        akhYL22hf93gFIbahTCGaQt5d56sqp4GZl0bIavzsdE6VzLfk4M2DpM/ddFjp/Xp
-        QHk0pGd/eH8K/hg0/zgaTeiqm+N9h40+uhHX5jcm5YtjWf/RFaVpxqZPnC6cZEJH
-        iKnNKGpgZ9ENWCwKrLrhot7bBFWDFjIA7/QazKELhUMxmfVOG2/GNS7foxJtFB3L
-        VJF6LEZjEfSw6nySmh09fQMhy/nccL4EHCuy0dA9qLeTs3WHG7nbixM8xi6J+HMa
-        DJRW8po+pa8KcaPItVrMTAQQLaRMuz+QN+3nEGf67vA==
-X-Virus-Scanned: amavisd-new at mail.208.org
-Received: from mail.208.org ([127.0.0.1])
-        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id aQLK9179A6ku for <linux-scsi@vger.kernel.org>;
-        Wed, 12 Jul 2023 18:16:28 +0800 (CST)
-Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4R1DDD3P90zBHXgf;
-        Wed, 12 Jul 2023 18:16:28 +0800 (CST)
+        with ESMTP id S229506AbjGLKYy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 06:24:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED066AD
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 03:24:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689157451;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=16LsduwYFZpz+6uAILPKz1Rz7ytcW9Aohn733XoPS64=;
+        b=hil4hFL5X8hOj0uw/kKBhNKMmSHPeofpRcBJQpsAs98EasDrdhoaLRRNoimkitY33Ma6mO
+        Ldm5zGsCrxWvMIW8FjIaANBV2OBtFq2HICfTI9JyQraFCic8FtY8Y6glJCTMvZFSObpWA6
+        wmWFwYAGzx1MP4CxOb0yNBVqfDoQhfw=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-438-1ZyfEseVPYCG9uaRju4aKQ-1; Wed, 12 Jul 2023 06:24:10 -0400
+X-MC-Unique: 1ZyfEseVPYCG9uaRju4aKQ-1
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-7659924cf20so661481185a.2
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2023 03:24:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689157449; x=1691749449;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=16LsduwYFZpz+6uAILPKz1Rz7ytcW9Aohn733XoPS64=;
+        b=BXhes1MkgGFdhO5OqKzMp7N/LFd8Xq4IRi2vjWRX0BJZRUJ/wn/7KIIFno2tRJyNGf
+         3wQr3EXubCSryfMy1u4Elh3EZMmIcob1koP0m+OyJ0rDFYec8kNVyswNBD0jKwmrmi8s
+         NGgz5xeep/+pF4JfcsvHqPqlEC6kz2jD8w1vqci08LUbymC66cM3aZS3CmeffaiXrm0V
+         n8O5Kf61xLgozLpBYJ0x6CEvIPEQTofdPpviSAtryymflZv2yV++qhVzI06joWUc6my6
+         mA5IC7wvJhaXC3/LseXiSiMGStjqh3+0BtPHM8TtwYgWFNpw+KCESGf7rPLiT5XYxTU7
+         jp8Q==
+X-Gm-Message-State: ABy/qLa4KQajBFyMP/gJtdW42Yr/YfpHtQrd1wGami0owIj0zKG3xT95
+        5u+tEOvFXj+5CIj+3K8IJb2uT+NKZvxOQkqiO/4EWDF5SpikD084P4E/Rr9HAItdwuW/2LZc6lG
+        9ZJRpWMbNyNalU5vkZDUL+A==
+X-Received: by 2002:a05:620a:4548:b0:75b:23a1:8e3a with SMTP id u8-20020a05620a454800b0075b23a18e3amr22098179qkp.11.1689157449680;
+        Wed, 12 Jul 2023 03:24:09 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlEfqOsduTbhdiSYs6Y5PlmTPSCDqhCfSDijs7C3XZvcuWANMc6PF+7tyGF9W8eaGON9HkUJ7A==
+X-Received: by 2002:a05:620a:4548:b0:75b:23a1:8e3a with SMTP id u8-20020a05620a454800b0075b23a18e3amr22098161qkp.11.1689157449453;
+        Wed, 12 Jul 2023 03:24:09 -0700 (PDT)
+Received: from sgarzare-redhat (host-82-53-134-6.retail.telecomitalia.it. [82.53.134.6])
+        by smtp.gmail.com with ESMTPSA id p13-20020ae9f30d000000b007675bef6b0dsm2012163qkg.118.2023.07.12.03.24.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Jul 2023 03:24:08 -0700 (PDT)
+Date:   Wed, 12 Jul 2023 12:24:04 +0200
+From:   Stefano Garzarella <sgarzare@redhat.com>
+To:     Paolo Bonzini <pbonzini@redhat.com>
+Cc:     Stefan Hajnoczi <stefanha@redhat.com>, qemu-devel@nongnu.org,
+        "Michael S. Tsirkin" <mst@redhat.com>, Fam Zheng <fam@euphon.net>,
+        Thomas Huth <thuth@redhat.com>, qemu-stable@nongnu.org,
+        Mark Kanda <mark.kanda@oracle.com>,
+        Jason Wang <jasowang@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        virtualization@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] Revert "virtio-scsi: Send "REPORTED LUNS CHANGED" sense
+ data upon disk hotplug events"
+Message-ID: <jkzogg62ewin2oa7px6gakhjwny3zyeftivoiaiavbbmwcgraz@5nnhucfswyn7>
+References: <20230705071523.15496-1-sgarzare@redhat.com>
+ <i3od362o6unuimlqna3aaedliaabauj6g545esg7txidd4s44e@bkx5des6zytx>
+ <1406de7f-106f-9b88-1ce9-f0aa1c034561@redhat.com>
 MIME-Version: 1.0
-Date:   Wed, 12 Jul 2023 18:16:28 +0800
-From:   hanyu001@208suo.com
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Fwd: [PATCH] scsi: snic: Convert snprintf to scnprintf
-In-Reply-To: <tencent_D20A645667548A8D5B1261D32ED4369FD70A@qq.com>
-References: <tencent_D20A645667548A8D5B1261D32ED4369FD70A@qq.com>
-User-Agent: Roundcube Webmail
-Message-ID: <fe09ebd8774d05dc4038e640d7ddb2e4@208suo.com>
-X-Sender: hanyu001@208suo.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <1406de7f-106f-9b88-1ce9-f0aa1c034561@redhat.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Coccinelle reports a warning:
+On Wed, Jul 12, 2023 at 10:35:48AM +0200, Paolo Bonzini wrote:
+>On 7/11/23 19:06, Stefano Garzarella wrote:
+>>CCing `./scripts/get_maintainer.pl -f drivers/scsi/virtio_scsi.c`,
+>>since I found a few things in the virtio-scsi driver...
+>>
+>>FYI we have seen that Linux has problems with a QEMU patch for the
+>>virtio-scsi device (details at the bottom of this email in the revert
+>>commit message and BZ).
+>>
+>>
+>>This is what I found when I looked at the Linux code:
+>>
+>>In scsi_report_sense() in linux/drivers/scsi/scsi_error.c linux calls
+>>scsi_report_lun_change() that set `sdev_target->expecting_lun_change =
+>>1` when we receive a UNIT ATTENTION with REPORT LUNS CHANGED
+>>(sshdr->asc == 0x3f && sshdr->ascq == 0x0e).
+>>
+>>When `sdev_target->expecting_lun_change = 1` is set and we call
+>>scsi_check_sense(), for example to check the next UNIT ATTENTION, it
+>>will return NEEDS_RETRY, that I think will cause the issues we are
+>>seeing.
+>>
+>>`sdev_target->expecting_lun_change` is reset only in
+>>scsi_decide_disposition() when `REPORT_LUNS` command returns with
+>>SAM_STAT_GOOD.
+>>That command is issued in scsi_report_lun_scan() called by
+>>__scsi_scan_target(), called for example by scsi_scan_target(),
+>>scsi_scan_host(), etc.
+>>
+>>So, checking QEMU, we send VIRTIO_SCSI_EVT_RESET_RESCAN during hotplug
+>>and VIRTIO_SCSI_EVT_RESET_REMOVED during hotunplug. In both cases now we
+>>send also the UNIT ATTENTION.
+>>
+>>In the virtio-scsi driver, when we receive VIRTIO_SCSI_EVT_RESET_RESCAN
+>>(hotplug) we call scsi_scan_target() or scsi_add_device(). Both of them
+>>will call __scsi_scan_target() at some points, sending `REPORT_LUNS`
+>>command to the device. This does not happen for
+>>VIRTIO_SCSI_EVT_RESET_REMOVED (hotunplug). Indeed if I remove the
+>>UNIT ATTENTION from the hotunplug in QEMU, everything works well.
+>>
+>>So, I tried to add a scan also for VIRTIO_SCSI_EVT_RESET_REMOVED:
+>
+>The point of having the event queue is to avoid expensive scans of the 
+>entire host, so I don't think this is the right thing to do.
 
-drivers/scsi/snic/snic_attrs.c:35: WARNING: use scnprintf or sprintf
-drivers/scsi/snic/snic_attrs.c:48: WARNING: use scnprintf or sprintf
-drivers/scsi/snic/snic_attrs.c:26: WARNING: use scnprintf or sprintf:
+I see. I'll follow your advice for QEMU changes ;-)
 
-Signed-off-by: ztt <1549089851@qq.com>
----
-  drivers/scsi/snic/snic_attrs.c | 8 ++++----
-  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+>On the Linux side, one change we might do is to remove the printk for 
 
-diff --git a/drivers/scsi/snic/snic_attrs.c 
-b/drivers/scsi/snic/snic_attrs.c
-index 3ddbdbc3ded1..255cff16c2bd 100644
---- a/drivers/scsi/snic/snic_attrs.c
-+++ b/drivers/scsi/snic/snic_attrs.c
-@@ -13,7 +13,7 @@ snic_show_sym_name(struct device *dev,
-  {
-      struct snic *snic = shost_priv(class_to_shost(dev));
+Do you mean the "LUN assignments on this target have changed.
+The Linux SCSI layer does not automatically remap LUN assignments."?
 
--    return snprintf(buf, PAGE_SIZE, "%s\n", snic->name);
-+    return scnprintf(buf, PAGE_SIZE, "%s\n", snic->name);
-  }
+>adapters that do process hotplug/hotunplug, using a new flag in 
+>scsi_host_template.  There are several callers of scsi_add_device() and 
+>scsi_remove_device() in adapter code, so at least these should not 
+>issue the printk:
 
-  static ssize_t
-@@ -23,7 +23,7 @@ snic_show_state(struct device *dev,
-  {
-      struct snic *snic = shost_priv(class_to_shost(dev));
+I guess it makes sense since that message could be confusing in this
+case. I'll try to send a patch for that.
 
--    return snprintf(buf, PAGE_SIZE, "%s\n",
-+    return scnprintf(buf, PAGE_SIZE, "%s\n",
-              snic_state_str[snic_get_state(snic)]);
-  }
+>
+>drivers/scsi/aacraid/commsup.c
+>drivers/scsi/arcmsr/arcmsr_hba.c
+>drivers/scsi/esas2r/esas2r_main.c
+>drivers/scsi/hpsa.c
+>drivers/scsi/ipr.c
+>drivers/scsi/megaraid/megaraid_sas_base.c
+>drivers/scsi/mvumi.c
+>drivers/scsi/pmcraid.c
+>drivers/scsi/smartpqi/smartpqi_init.c
+>drivers/scsi/virtio_scsi.c
+>drivers/scsi/vmw_pvscsi.c
+>drivers/scsi/xen-scsifront.c
+>
 
-@@ -32,7 +32,7 @@ snic_show_drv_version(struct device *dev,
-                struct device_attribute *attr,
-                char *buf)
-  {
--    return snprintf(buf, PAGE_SIZE, "%s\n", SNIC_DRV_VERSION);
-+    return scnprintf(buf, PAGE_SIZE, "%s\n", SNIC_DRV_VERSION);
-  }
+Thanks,
+Stefano
 
-  static ssize_t
-@@ -45,7 +45,7 @@ snic_show_link_state(struct device *dev,
-      if (snic->config.xpt_type == SNIC_DAS)
-          snic->link_status = svnic_dev_link_status(snic->vdev);
-
--    return snprintf(buf, PAGE_SIZE, "%s\n",
-+    return scnprintf(buf, PAGE_SIZE, "%s\n",
-              (snic->link_status) ? "Link Up" : "Link Down");
-  }
