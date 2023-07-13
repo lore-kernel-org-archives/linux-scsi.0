@@ -2,159 +2,140 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE0CEB64DD
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jul 2023 07:27:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 567C3C0015E
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jul 2023 07:48:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234108AbjGMH13 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Jul 2023 03:27:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47038 "EHLO
+        id S232630AbjGMHsX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Jul 2023 03:48:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234232AbjGMH1S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2023 03:27:18 -0400
-Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sgaapc01on2133.outbound.protection.outlook.com [40.107.215.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57BC1269F;
-        Thu, 13 Jul 2023 00:27:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=P8PkLW5GMEJ7RCABPDGrlmG1lndjDJ5pBTj6l+NNf86JoHlrrDJjfo4pkmAaz1si123CFQj8fsA1eAoF3Bud3yWuMkmuNeJMq0P2tbzwuVm3PtUc8YxC2w01vB87Jzmnm8wmSJ+h+IC+vOKH8OEz/ltC9OC1b5VFPg/KzQr9HJn+3O75/x0OJvZ+XLUfPVb4Kym8NAMlL6wo7W1i560fuCo+IdmtBwhoxWSyy/Of3GvArkLIbTPFyX/wasv+wqLifJwgez7+012oQ2qsUM2wPZ3RngnZPpauwTmNcQ6DK0Q2U50sJ4zZnAZsMTGXGy8P2ulz3Oo3Cq982gj4MjfXMQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=RxYzMH8N+1wKBiO/yJc9X/mhXJnA92XlG4e/hqDIl3c=;
- b=YsHU/MUSj2jbncOsCy3XOEvyjkvy5KjIMetvxeFL2/FMLyTWMeR7V0NUkDN0jCbwbk8b85jRR9sLUMpUctO61OctqwIiPwvq5PxNo7mktgs0iXi6eSgbapzIC31WsQ5MIaOCGFxYW9vqCnFqvm81fnDefmiWazc0XS83tORB3J8zgag9riwDQLmkFyA4IoEColYdUqolck5ZyZzmuo+fj/m0r6oWHBp8qGcShCU45AIm1vSmPN/ys4kmpdcSHTN8CpZv6zdO25s9l5tOyYTAlWVo8aN2MghDFFgeAxqzjA9twQF9jNgEaq1ljknd/KDrbtba80ONOHQ4gSPzd7KTRA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RxYzMH8N+1wKBiO/yJc9X/mhXJnA92XlG4e/hqDIl3c=;
- b=j64kGn5Nz/h4iuP5lc5yCgFUaDanM/sExN0Tmcqx9dGsRtVdAw9qXQXsG4PgQbdLqaLg15ObFpbawWKXvE8R3rp/ytA69LQA1oR4VcLOWtDrqkFBwV6xmb6brsdhZ4wK3hqup+xiC9Dr0n4nT+5NVZSYR9YRHUtC8UnFMehqkmO4KRJrwbBZIP6WlH/XP7VZqBCYFa9ozn4xvLyaAmmFMiU+JLvUEcDVkmTh3nsCs1d1vftwO716uDoGrBSxSI42oOnQydIwX3/5HvKlaaxKbLrXydF9tcj7encpAr9x93zyHihJClQA+lJBmFdosEyZeTdoZ15saTYO1M2lgQu+3w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SG2PR06MB3743.apcprd06.prod.outlook.com (2603:1096:4:d0::18) by
- TYSPR06MB6503.apcprd06.prod.outlook.com (2603:1096:400:474::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.31; Thu, 13 Jul
- 2023 07:27:02 +0000
-Received: from SG2PR06MB3743.apcprd06.prod.outlook.com
- ([fe80::2a86:a42:b60a:470c]) by SG2PR06MB3743.apcprd06.prod.outlook.com
- ([fe80::2a86:a42:b60a:470c%4]) with mapi id 15.20.6588.024; Thu, 13 Jul 2023
- 07:27:02 +0000
-From:   Wang Ming <machel@vivo.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     opensource.kernel@vivo.com, gregkh@linuxfoundation.org,
-        error27@gmail.com, Wang Ming <machel@vivo.com>
-Subject: [PATCH v1] scsi: qla2xxx: Remove error checking for debugfs_create_dir()
-Date:   Thu, 13 Jul 2023 15:26:25 +0800
-Message-Id: <20230713072640.1587-1-machel@vivo.com>
-X-Mailer: git-send-email 2.25.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2P153CA0049.APCP153.PROD.OUTLOOK.COM (2603:1096:4:c6::18)
- To SG2PR06MB3743.apcprd06.prod.outlook.com (2603:1096:4:d0::18)
+        with ESMTP id S232620AbjGMHsS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2023 03:48:18 -0400
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1544410FA;
+        Thu, 13 Jul 2023 00:48:16 -0700 (PDT)
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-4fb87828386so124423e87.1;
+        Thu, 13 Jul 2023 00:48:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689234494; x=1689839294;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=T/j6txsL1LAa6TqQUQIjj+sTK0ZG/oC531uOufNfwD4=;
+        b=ANdAhHaG+4JeezYe/0YkVsQXCGiKHIDo6shWAaKniXSizYQlegHRpwONn8pdUa35pr
+         Unua2qXiNnh5Iduf0fhVfe4u8V+gPxmb8I9+4yiSKKwewnm4C4VzQFXPSmsIpzLhGxCH
+         D7s9Oj4Ly8HJYCpqNFAr8xkszwEqfmnBaiFGYFKdD5IlE+JvhN7deoBKw9vXessMsgDm
+         W8dSNjv2c5bbl2AwkfkwC8VuhMRfolSOBQrysr9ie9Hj/ZrVGG+ReH0lphXO41pm+/eZ
+         r26q/4LPIIfZht52fwscP/G/IK6o1x7mLyrsSQZkxLY45tMaD4IRx0fNkxTofFwIP8eA
+         DozQ==
+X-Gm-Message-State: ABy/qLY0joH5Xzb8UvevIi3GjiK7Zuf0M1fai9P9VtzjLWHF2Ow3nrPG
+        SwaOS+cDKryMg5sWYyLWZDYspucWcLs=
+X-Google-Smtp-Source: APBJJlGH1XfNfN6Hk9YPZpTfnIc4LqK5nsPIdkMxQMMseZTRHRkODL5rjNptHgOb5BBKC0kZLzxyZQ==
+X-Received: by 2002:a05:651c:1ce:b0:2b6:a662:b879 with SMTP id d14-20020a05651c01ce00b002b6a662b879mr649292ljn.3.1689234494025;
+        Thu, 13 Jul 2023 00:48:14 -0700 (PDT)
+Received: from [192.168.64.192] (bzq-219-42-90.isdn.bezeqint.net. [62.219.42.90])
+        by smtp.gmail.com with ESMTPSA id m17-20020a05600c281100b003fbca05faa9sm7019740wmb.24.2023.07.13.00.48.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 13 Jul 2023 00:48:13 -0700 (PDT)
+Message-ID: <152f0684-4bcd-699f-e0e3-40189be4b80a@grimberg.me>
+Date:   Thu, 13 Jul 2023 10:48:12 +0300
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SG2PR06MB3743:EE_|TYSPR06MB6503:EE_
-X-MS-Office365-Filtering-Correlation-Id: d36009a0-8c7a-4423-3f76-08db83728d2d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: FPVnDrPKeq8AOdCZ+NtcOc/goRZ2CXW8VH1Rnq/xG8G2xcsyx02NxFCGlwvuDWGHQQ3SU540w4mfOzz14dN9s3fFCo0/dbLM9w1U292QWcvCaxC7jyD2rnOrQxeJoej0lfHsvBt20C9NvuVt2lpK3LIngEzVxgKV98ZAGH+2xzfzRfz9oskzk1gyB8vWL89m/aGTUszdIqcqag0HLLfo8OjeSk6YEhJaxA/0zXOtWynSEYimAjhNdAt5VDgU9humW0UI3CFXJSCZHpOFBsNk2z6Fqd3V9rOcl8t7KVqlvIQXtsC95TWG18HPY4IgI5FLgi9mApbaI7K1OfElbExf2finzuTCXioVhDp3KRv1WIAtcH5rzPGppGsatOqChkBeh1iVwuosbSksDoAP2N5o29iP3/aX2zgoM2V20b9H56HGtq5pe+DS+VfYh7Q8O/vHSN2elopv1VHs/aZMsejIah4L2xpZ7hqKRaxpDITZbIv3WljwyBL1cyyuqD2p0hMDh8Tdt6sh6BQvp/jPADBAwGThXer80o7Nff5VAJugulB2Uxq6R8OszxgqoRe+Ob6QLlcEx0ze6VCH4Kx65R8z62PfoAODc3Nz85NqkP5S6O9cRuhZl7s9nKDUw39ohh6A
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SG2PR06MB3743.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(376002)(136003)(396003)(346002)(39860400002)(366004)(451199021)(41300700001)(38350700002)(1076003)(83380400001)(38100700002)(26005)(6512007)(186003)(107886003)(2906002)(8676002)(2616005)(5660300002)(8936002)(478600001)(36756003)(66556008)(6666004)(66476007)(52116002)(6486002)(4326008)(66946007)(86362001)(110136005)(316002)(6506007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Ito6ZeeYs8mFPaYwf7C9KBUr88P7Dth029hk+24MjbB3O/6FLABOVnO4f11I?=
- =?us-ascii?Q?tDwdaRIY8QZZ6KXv3aMycvt5a5how1NxgckveYnuiSEjuClg1W+rRk3mGUc6?=
- =?us-ascii?Q?stDcGE6wqjEhHo6gOgMQcgQH7J1S0sNM1OTU9ujkluC1cDb6Fy4sdq+qMc0v?=
- =?us-ascii?Q?sJEs4+TnlKRCmIcsski4fB3Fd6a1/EboWtoYuQjYWHmAy3lXZn6/ZiwrM9lK?=
- =?us-ascii?Q?GO4tTH8uxf2G4eDUiOngpHF/d0ljzzjdlTY8BEB+akGXu5cjLN3rGkO8npNR?=
- =?us-ascii?Q?3PCn1Gls5hmLRhYcxIs1acV2w1mK2A4hmEBdVsHUIXgYqk0tWv5m4SVpiVT/?=
- =?us-ascii?Q?Zw0im4OjK8QYsRR/xJRLuL9e5OxKNX1CCKq3DgXo1HXXb8dRH9G/UVuMk+Cp?=
- =?us-ascii?Q?396Q0YgajUjvJqPTwpBphZRVVhGhB7Y4/+2S3zd8aU4L6hD7JnGMOrmEPcBS?=
- =?us-ascii?Q?PIdiWqlke0rWurWqDmNt4n4cnkuGsER+Dko/kdUNSbmD5Ckz7Dd0LXGHJnPr?=
- =?us-ascii?Q?OVZsK6WdkGlEXfkvrnAfRhaZuILEh1H694TZKruox8gwGwjg9DUrBhpapiyL?=
- =?us-ascii?Q?cXwByPmsVdJY280s2jNLfkz7D5TDDt9Ij+B6EPFGh+3Enw2CuJbGPxMOUYWD?=
- =?us-ascii?Q?/vQeHqQXPsZnrICUNN1UFCFIrjm0IAa8wtKi5aMnXO2SGI6JzfQHgmbRjJ1L?=
- =?us-ascii?Q?MfttwZVxbD9+qcdozYnmwXTdzPrF9eYkXRTq+MX/JhvrluD5kcQ34oiL2Ro/?=
- =?us-ascii?Q?XWPR2ApR4oW5WJT+1eHox9Ho77dqhAtuuYl3/dUhqDHy/v4XjlXtvH20stSj?=
- =?us-ascii?Q?iuUzpfRa1vi3ciX1foFQSdRcRjp9Ma6aMRqtxveda6+0rO+p+yrnhcje5tNL?=
- =?us-ascii?Q?CZWxboyi/J0LWUFYQHEXIeu1wOWAUrkbfO2Wl3ZwMkTQzszIOiRFtLcBOlf6?=
- =?us-ascii?Q?ZyzqO+K2y3RPTdFvAD8deXLkkI+mIcMEQfWMTMzMt4ziBugrh3CMxSTOXKxb?=
- =?us-ascii?Q?Gk/TJIowHq2ONG39CNADdKYi16TMFGNHZzIgIWskJpDeny9s/8xkZkLwWkey?=
- =?us-ascii?Q?rdRMTZjCwIp6tM6hWCEDVVpGAMK0oKrkSGC9mgVRIRUc7PYixhv7RFadGn3T?=
- =?us-ascii?Q?8HGws0y0q1kgdTMe4FzyREKYqi2MVX/ZypV2SJkrUuhPI92SS5DlNSnLH9Qy?=
- =?us-ascii?Q?8kmQtC3uIig+9OC8i2np/EQOQaoJYpQLyF6SqG0wemQRJQFOANWXBPg0CrfD?=
- =?us-ascii?Q?FoAQNzU4NshQmq/golpgMn8u3wSPIHYb0kVRpPQn7Xx1uzhcp6Uv4lOqI7Ek?=
- =?us-ascii?Q?pw3Z5hOOMKqaZnPh1fqWT3gPOlfcxOdnvIvZDTvyxRQCGjR4vyXTlD3tOrny?=
- =?us-ascii?Q?QIXbZ6fP5DiQY3PJmDnetnsJCT5YG8/fgMi1Og3uxFgk6BcryxN1fx72zaFf?=
- =?us-ascii?Q?DKCd/zIU2/mYEKJguxgHneNRU4QCitnN0RrdumJ5Oh0R+vsxRTSUYByaJNqd?=
- =?us-ascii?Q?IYJKC84EVQQJeq5ILPkmSXI0jNf/H4IviCKiX8TLiVuwDLQyx5J4r0OsvqSH?=
- =?us-ascii?Q?FTlJiYxMMQSLRxRJ3iKV9Cz7urvzQdsR3UC6ISux?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d36009a0-8c7a-4423-3f76-08db83728d2d
-X-MS-Exchange-CrossTenant-AuthSource: SG2PR06MB3743.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2023 07:27:02.2610
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Cr+GiwVHPwcISUDLSIM8rNmX64RgMmCF5GXVTGzM/GbGOv+IQh63AC7aqVR9p+qt/OoSwAV6OoQkexIVQfQTow==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYSPR06MB6503
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: blktests failures with v6.4
+Content-Language: en-US
+To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <lkmloyrqpebispffur5udxdiubmevvodtsvnap3jz7tv5ihstr@jg7ejye3bein>
+ <165eceaa-55d4-f9c7-7e02-18115e6df6fe@grimberg.me>
+ <v3n4k4gk5uhbuh6ijl2pwaysvxzidzhrmjejourfnmobebwbzi@hejuqcryp4nc>
+From:   Sagi Grimberg <sagi@grimberg.me>
+In-Reply-To: <v3n4k4gk5uhbuh6ijl2pwaysvxzidzhrmjejourfnmobebwbzi@hejuqcryp4nc>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It is expected that most callers should _ignore_ the errors
-return by debugfs_create_dir() in qla2x00_dfs_create_rport()
-and qla2x00_dfs_setup().
 
-Signed-off-by: Wang Ming <machel@vivo.com>
----
- drivers/scsi/qla2xxx/qla_dfs.c | 12 ------------
- 1 file changed, 12 deletions(-)
+>>> #3: nvme/003 (fabrics transport)
+>>>
+>>>      When nvme test group is run with trtype=rdma or tcp, the test case fails
+>>>      due to lockdep WARNING "possible circular locking dependency detected".
+>>>      Reported in May/2023. Bart suggested a fix for trytpe=rdma [4] but it
+>>>      needs more discussion.
+>>>
+>>>      [4] https://lore.kernel.org/linux-nvme/20230511150321.103172-1-bvanassche@acm.org/
+>>
+>> This patch is unfortunately incorrect and buggy.
+>>
+>> This will likely make the issue go away, but adds another
+>> old issue where a client can DDOS a target by bombarding it
+>> with connect/disconnect. When releases are async and we don't
+>> have any back-pressure, it is likely to happen.
+>> --
+>> diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+>> index 4597bca43a6d..8b4f4aa48206 100644
+>> --- a/drivers/nvme/target/rdma.c
+>> +++ b/drivers/nvme/target/rdma.c
+>> @@ -1582,11 +1582,6 @@ static int nvmet_rdma_queue_connect(struct rdma_cm_id
+>> *cm_id,
+>>                  goto put_device;
+>>          }
+>>
+>> -       if (queue->host_qid == 0) {
+>> -               /* Let inflight controller teardown complete */
+>> -               flush_workqueue(nvmet_wq);
+>> -       }
+>> -
+>>          ret = nvmet_rdma_cm_accept(cm_id, queue, &event->param.conn);
+>>          if (ret) {
+>>                  /*
+>> diff --git a/drivers/nvme/target/tcp.c b/drivers/nvme/target/tcp.c
+>> index 868aa4de2e4c..c8cfa19e11c7 100644
+>> --- a/drivers/nvme/target/tcp.c
+>> +++ b/drivers/nvme/target/tcp.c
+>> @@ -1844,11 +1844,6 @@ static u16 nvmet_tcp_install_queue(struct nvmet_sq
+>> *sq)
+>>          struct nvmet_tcp_queue *queue =
+>>                  container_of(sq, struct nvmet_tcp_queue, nvme_sq);
+>>
+>> -       if (sq->qid == 0) {
+>> -               /* Let inflight controller teardown complete */
+>> -               flush_workqueue(nvmet_wq);
+>> -       }
+>> -
+>>          queue->nr_cmds = sq->size * 2;
+>>          if (nvmet_tcp_alloc_cmds(queue))
+>>                  return NVME_SC_INTERNAL;
+>> --
+> 
+> Thanks Sagi, I tried the patch above and confirmed the lockdep WARN disappears
+> for both rdma and tcp. It indicates that the flush_workqueue(nvmet_wq)
+> introduced the circular lock dependency.
 
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 1925cc6897b6..8cd67092aff4 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -111,13 +111,8 @@ qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp)
- 	debugfs_create_file(#_attr, 0400, fp->dfs_rport_dir,	\
- 		fp, &qla_dfs_rport_field_##_attr##_fops)
- 
--	if (!vha->dfs_rport_root || fp->dfs_rport_dir)
--		return;
--
- 	sprintf(wwn, "pn-%016llx", wwn_to_u64(fp->port_name));
- 	fp->dfs_rport_dir = debugfs_create_dir(wwn, vha->dfs_rport_root);
--	if (!fp->dfs_rport_dir)
--		return;
- 	if (NVME_TARGET(vha->hw, fp))
- 		debugfs_create_file("dev_loss_tmo", 0600, fp->dfs_rport_dir,
- 				    fp, &qla_dfs_rport_dev_loss_tmo_fops);
-@@ -139,8 +134,6 @@ qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp)
- void
- qla2x00_dfs_remove_rport(scsi_qla_host_t *vha, struct fc_port *fp)
- {
--	if (!vha->dfs_rport_root || !fp->dfs_rport_dir)
--		return;
- 	debugfs_remove_recursive(fp->dfs_rport_dir);
- 	fp->dfs_rport_dir = NULL;
- }
-@@ -705,11 +698,6 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
- 		}
- 	}
- 	vha->dfs_rport_root = debugfs_create_dir("rports", ha->dfs_dir);
--	if (!vha->dfs_rport_root) {
--		ql_log(ql_log_warn, vha, 0xd012,
--		       "Unable to create debugFS rports node.\n");
--		goto out;
--	}
- out:
- 	return 0;
- }
--- 
-2.25.1
+Thanks for confirming. This was expected.
+
+> I also found the two commits below
+> record why the flush_workqueue(nvmet_wq) was introduced.
+> 
+>   777dc82395de ("nvmet-rdma: occasionally flush ongoing controller teardown")
+>   8832cf922151 ("nvmet: use a private workqueue instead of the system workqueue")
+
+The second patch is unrelated, before we used a global workqueue and
+fundamentally had the same issue.
+
+> The left question is how to avoid both the connect/disconnect bombarding DDOS
+> and the circular lock possibility related to the nvmet_wq completion.
+
+I don't see any way to synchronize connects with releases without moving 
+connect sequences to a dedicated thread. Which in my mind is undesirable.
+
+The only solution I can think of is to fail a host connect expecting the
+host to reconnect and throttle this way, but that would lead to spurious
+connect failures (at least from the host PoV).
+
+Maybe we can add a NOT_READY connect error code in nvme for that...
 
