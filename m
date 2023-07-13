@@ -2,76 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E231C001DD
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jul 2023 13:08:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D6DDC001DD
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jul 2023 13:11:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234101AbjGMNIb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Jul 2023 09:08:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44354 "EHLO
+        id S235070AbjGMNLk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Jul 2023 09:11:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234133AbjGMNIa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2023 09:08:30 -0400
-Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97649272A;
-        Thu, 13 Jul 2023 06:08:08 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 0D2C2C0002
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-        t=1689253607; bh=UuftEBn/Rh4qaYKGVD8HlBWfUCp6eVO6XdUiiClGjn0=;
-        h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
-        b=bnf6afroALiuenpVfZqHDqnzUxw25emenIGEjBsZdN7s1NNi8yhvnzRPlC87T4WlO
-         bMbAVsquliPxpLjCyuqDwo/tR6PyzY5R3ilEQf05OqpcRzj+SGIS/HgEKa8S9Pt0ZH
-         QJ+TenzfrRdDjXwIYD4EOikTvGl1okxUGpRyLXOKdRgAC6pm3adFHDPYDwuDb+n2PF
-         1JNNot6tUghK9toaC4CREyEM+x2bVJC0uqySo4TRTTgOI6epQpI45FrGmWPPUw8iLx
-         GpYlUb/+fPvEEqV+NaZZ84lYZ669Kw1HZMlu23put06j5K+Zg0wF0AHdg5dez6LjTp
-         sX6uBfkjF6Whg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-        t=1689253607; bh=UuftEBn/Rh4qaYKGVD8HlBWfUCp6eVO6XdUiiClGjn0=;
-        h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
-        b=rxzYKUVDteQGbka73O8+TR0g/otnUWaSznNHOVsuaL8scZ2ibDoyzoQL/uQFVTbvs
-         HtyUuC/VQY8Qt9RTjjVvpbKBFKxdwljuzs7xWZySguGVN+2I0D2PKLDX5opw1ys8ai
-         Ht6V7anTIfijmg3uDuSITKUASho9tgDNgEhLhqqRPR18XcQoDKbrqoELVhbuwAqhpJ
-         KCueAbtC/S0HA4zQyHVIrRpj6L2gnfIxAm3Apu7vf2d7DQoi/sPfhSxoBEE5CfCDdv
-         Ju7H6EnFA6OuKuwi60FB3UOPai6QbwX3aIrC6iDdpD3frZiPtsgXj2zjlvVBJiPlM+
-         ReZMQocQjikQA==
-Date:   Thu, 13 Jul 2023 16:06:44 +0300
-From:   Konstantin Shelekhin <k.shelekhin@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>
-CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <target-devel@vger.kernel.org>
-Subject: Re: [PATCH 5/5] scsi: target: Export fabric driver direct submit
- settings
-Message-ID: <ZK_25KIJw-CudIXw@yadro.com>
-References: <20230710214442.6718-1-michael.christie@oracle.com>
- <20230710214442.6718-6-michael.christie@oracle.com>
+        with ESMTP id S235085AbjGMNL3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2023 09:11:29 -0400
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EE60B2706;
+        Thu, 13 Jul 2023 06:11:27 -0700 (PDT)
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 39A1E1576;
+        Thu, 13 Jul 2023 06:12:10 -0700 (PDT)
+Received: from bogus (e103737-lin.cambridge.arm.com [10.1.197.49])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 48A7A3F73F;
+        Thu, 13 Jul 2023 06:11:26 -0700 (PDT)
+Date:   Thu, 13 Jul 2023 14:11:23 +0100
+From:   Sudeep Holla <sudeep.holla@arm.com>
+To:     Yang Li <yang.lee@linux.alibaba.com>
+Cc:     stanley.chu@mediatek.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, matthias.bgg@gmail.com,
+        angelogioacchino.delregno@collabora.com,
+        linux-scsi@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Remove surplus dev_err()
+Message-ID: <20230713131123.uo5ofltbhvktkevd@bogus>
+References: <20230712064832.44188-1-yang.lee@linux.alibaba.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230710214442.6718-6-michael.christie@oracle.com>
-X-ClientProxiedBy: T-Exch-05.corp.yadro.com (172.17.10.109) To
- T-EXCH-09.corp.yadro.com (172.17.11.59)
+In-Reply-To: <20230712064832.44188-1-yang.lee@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 10, 2023 at 04:44:42PM -0500, Mike Christie wrote:
-> +static ssize_t
-> +target_fabric_wwn_default_to_direct_submit_show(struct config_item *item,
-> +                                               char *page)
-> +{
-> +       struct se_wwn *wwn = container_of(to_config_group(item), struct se_wwn,
-> +                                         param_group);
-> +       return sprintf(page, "%u\n", wwn->wwn_tf->tf_ops->default_direct_submit);
+On Wed, Jul 12, 2023 at 02:48:32PM +0800, Yang Li wrote:
+> There is no need to call the dev_err() function directly to print a
+> custom message when handling an error from either the platform_get_irq()
+> or platform_get_irq_byname() functions as both are going to display an
+> appropriate error message in case of a failure.
+> 
+> ./drivers/ufs/host/ufs-mediatek.c:864:3-10: line 864 is redundant because platform_get_irq() already prints an error
+> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=5846
 
-I belive we should do the right thing and use sysfs_emit() here. We
-already have a bunch of issues with bad sprintf() usage and I think it
-would be wise to promote safer interfaces.
+Acked-by: Sudeep Holla <sudeep.holla@arm.com>
 
-> +static ssize_t
-> +target_fabric_wwn_direct_submit_supported_show(struct config_item *item,
-> +                                              char *page)
-> +{
-> +       struct se_wwn *wwn = container_of(to_config_group(item), struct se_wwn,
-> +                                         param_group);
-> +       return sprintf(page, "%u\n", wwn->wwn_tf->tf_ops->direct_submit_supp);
-
-Same.
+-- 
+Regards,
+Sudeep
