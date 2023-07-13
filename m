@@ -2,208 +2,154 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAFC4C001B0
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jul 2023 01:22:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC32BEB64DD
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jul 2023 05:04:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233244AbjGMBWj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Jul 2023 21:22:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57232 "EHLO
+        id S233486AbjGMFEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Jul 2023 01:04:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229755AbjGMBWi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2023 21:22:38 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F17D1FE1;
-        Wed, 12 Jul 2023 18:22:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1689211356; x=1720747356;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=qW/0WuVyyz36ONAK/igwH+JRiHjbsT+BzO6AP7VYII4=;
-  b=mLYRXhMIdOoWA4EiMWWKyDTk6Ncaxzo9/VBvEZTa87LtSOiJBh+cHrfn
-   DGryRFWCLkgIc3xO+kBtlvCGtCoRTBba2CSjZ9GHgjhgdsfpF5WvpBl2p
-   aPgjdGU1yWuyYf8JFzmZk1hiS1lckAeutTIo9aFet8WnCyFYJ01AZ2R2A
-   MC23fzeQpFVpGTfjK+4r+CBd+ZOrNdMZucFX2/9Trbrv7kk2YjGuAAviz
-   EDc6lnOoJr0ULIJj6yECNFAlsfJdYIOulB0tb0RjilDu3pbGOgHnpBl7z
-   F7XT3u/12quBT6B/OoJ5fsoe+mOwtRnhgsfTmeWOeYcpwC1hf5LG8fnN/
-   g==;
-X-IronPort-AV: E=Sophos;i="6.01,201,1684771200"; 
-   d="scan'208";a="238236252"
-Received: from mail-bn7nam10lp2104.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.104])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Jul 2023 09:22:35 +0800
+        with ESMTP id S229768AbjGMFED (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2023 01:04:03 -0400
+Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sgaapc01on2095.outbound.protection.outlook.com [40.107.215.95])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 888EE198A;
+        Wed, 12 Jul 2023 22:04:00 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Jo+SxnnoFuB3F6Ja5AsbHs1nYhNrLNmdQL669Gcb6TaATln/GxxcOU+bB1YWYlQ2IHRzYysr9jlIucpY9X8rG3ADb+7tXSYRl27k0C4/UEVEY6YZdV3I0wTZvOfyWwI1nee/mrFYiktg4WlGcS2UWy6ys3y9DFvRTMXDdn1c6jqq6rucP7395GS0JanGbAN7q85mocMxLC/2a4flvDYDAs1XAQagTFLmlyVhX9+hjj9aaZRP2TaNOKfvQ4WMUBt61iv5+Do1eU/l8bV+3gEObnJPrlEZLHBcdg1cPKmebb4pYMq5q5PcqoB4YPP/blNpfxLl6lorTlwFD+pOz+eBfQ==
+ b=KN3kqW25gQd+93SBO1ZX76kQHx1XoiUQ5Xprj7dHZ/7kt9Kw7ssknYAG0HqJ/A4eNWF+aZXMdJmb3SsLbWcLBiItD1qXMYn140AbeCfwSP1tj/AbIQoLyiPShvdP66ttNijeQRORihVjEC9+NJgA1KXmdjQqkqsXIvpcqipK9Bnr+MPDQvC4c3EV+BLeMEx8IYsPAH+nMrNzJy2873Z4fJSh+H1wKVBwNuYfiWbaZfw1sNTsFGktyNM2+G+qiQaQ+J3hSLTjEOv3HITlfL/q5fnF4W36+DIu6y7J19hOTvnV++FrDJLvtDJ19Ap17KQ2NpzX5CmKhnPh6jxE6+i6xw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cC8IDc1w6N5Ljw00E4DLYjPXfNeitxZzfM1TSAKIuus=;
- b=XG9C/0YkU5igttnE0GX/zjYjkZhoPljaH8pLLgzbUPfGOLNGDAxhFDf1Vb/ElgcQklVHTiG3jHu6zLj2jqqrdkylOWtOaR3DMJXUlM/hh08sEA7GD/meaqUeVPkdL6f7zkxWdJTzZl2d3kjkeJbSRb+L9F0rm3EwQtqptrmqxyWnSeSt45bWRO/OlnjIB3adnHofFSVblCsDfvK0KB8UFr99wpaeS8Ye6b7eztqDmiiTIrZvw/heElnBzOkizoR/ZaEunfP61+clUIe+8/7hTvyUUFV5OZZOo9dlzW+6QduwEt1Psll197oteixaj6Pvy4CMPi3TV2QSsVeRvXBziw==
+ bh=hhMH3LanOS0z/3Y+4cwZ71pR4RNRJj01gVr1mzHZ22w=;
+ b=HIkfGHQz6v/LpwJt/lU9TUEzrKxOPYKAXZcTHPSdaDAriJ2yaY8sCRBzq4TYK/OMph5Qdu/rIrQlf3fuy12YeV1OXel1U80nYRz4W4j97HWBJU3VdX4layF6yCVS6G2xblCWroRmrcexUYXG8AIAOBKQLIVVq2HPTZDQLUc+HuDAr6tMz2MbYrynb0iGVK3a5srOs29qewRuy9/2fOFnSr6jwGpFyr3hGfuFqJ57h/LDb92L4ICfgS2E/+82G/DDgR0MpuIsScYa2eA4c8Qe5orU4DD70IIA9cJes+CvdijrDQWuJVKUGsOJXIkc35wpBZgB4qnw/8M1LXxrW0GgYQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cC8IDc1w6N5Ljw00E4DLYjPXfNeitxZzfM1TSAKIuus=;
- b=nAkmXmP1E8HFUVt6gMq9nKR9hLR+1hptdOwMQxBcdHMYscYEwfsxyGYWkvm388bkpikOtA6qMxh+z96sKgcbgqNhWlxjeux0/SKe1PlBSaQPv+QCi9bvdIwtXaZP9ASqMUxF7WnltNCgWWehBUtWvPNyajgdnnE17qFwlA6uTpc=
-Received: from DM8PR04MB8037.namprd04.prod.outlook.com (2603:10b6:8:f::6) by
- SA1PR04MB8519.namprd04.prod.outlook.com (2603:10b6:806:330::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6588.24; Thu, 13 Jul
- 2023 01:22:33 +0000
-Received: from DM8PR04MB8037.namprd04.prod.outlook.com
- ([fe80::bfa:d453:e7e9:8f98]) by DM8PR04MB8037.namprd04.prod.outlook.com
- ([fe80::bfa:d453:e7e9:8f98%7]) with mapi id 15.20.6588.017; Thu, 13 Jul 2023
- 01:22:32 +0000
-From:   Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To:     Sagi Grimberg <sagi@grimberg.me>
-CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: blktests failures with v6.4
-Thread-Topic: blktests failures with v6.4
-Thread-Index: AQHZsKSBQcb4sCyybku6gR7M5LNTu6+xgyIAgAVskoA=
-Date:   Thu, 13 Jul 2023 01:22:32 +0000
-Message-ID: <v3n4k4gk5uhbuh6ijl2pwaysvxzidzhrmjejourfnmobebwbzi@hejuqcryp4nc>
-References: <lkmloyrqpebispffur5udxdiubmevvodtsvnap3jz7tv5ihstr@jg7ejye3bein>
- <165eceaa-55d4-f9c7-7e02-18115e6df6fe@grimberg.me>
-In-Reply-To: <165eceaa-55d4-f9c7-7e02-18115e6df6fe@grimberg.me>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM8PR04MB8037:EE_|SA1PR04MB8519:EE_
-x-ms-office365-filtering-correlation-id: d96a5489-96f6-48c8-416a-08db833fa1fd
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: LhpkxIqbBK5WXOtw+4MAyEtfQHDYSsRif8o0PF792dabVzanFVUQZPMt5GvbjBgRwOz6Z5kyhDW1DW9sl+Valv2n04H1zwY5HyfY5WcuCsamEbBL4XNc10YAkd9g5oxi1RmdFayBgCzdd8TCYj7ubVJI8noPn78aDMT036c4caVaYkLmaeBe6t2HdeG9mn5fZBeGU/70Fljttq2B9vgKDQXzSnTzhH8ECa29cBAdr/IicE7ZS4/7M3zuPXSpzjhpP2YP9T/4WT7IxTlkbUu9IrOQvl3l2LAIu+pIw6CQcUzrY8sRDc8giQtQrTGb/Yba1o4O1gmFnmymceZgtmZQiO4RFPbd7AWtjo1xp0Kk1iRP/NAQrB/DhnS204fRzw4lJpEP17heaCLdjLRYzvDt8xnGDPYmdumrg7bnyX2Z3wBM5L9BIxUU2iQHBjDxAWwqVTn+KWTpSZRdVSBEZ3Uphsf02cLCzm4giXSewIR1Zh5mtCxIThwWEbeaGKPhOunToYSP/MjlPQ5h+FRL8TZ4n3PmlKbKSSyz8gi61kttVoNOKzcQ2poLjGpCK6cqqM6eC5s4f6c/jwDbPykpMPFMdixArA/sHh/TcBZf8+Qsixg=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM8PR04MB8037.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(7916004)(136003)(39860400002)(376002)(346002)(396003)(366004)(451199021)(54906003)(316002)(91956017)(71200400001)(186003)(4326008)(66946007)(6916009)(6486002)(76116006)(66556008)(66476007)(66446008)(64756008)(41300700001)(966005)(478600001)(9686003)(6512007)(8676002)(8936002)(86362001)(6506007)(44832011)(5660300002)(26005)(83380400001)(122000001)(38070700005)(2906002)(33716001)(82960400001)(38100700002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?hdM4mVivxRtmohlInbFOiDNgUVm74P4t/1L3hV97F4szM2HNayHVUManv/8I?=
- =?us-ascii?Q?hlXvqfFfsdF7v+NRKH272OCHHQkjDUoABfWaZ1WPCTYg2Wb8CMMuPThwGxJ0?=
- =?us-ascii?Q?eRbyb1z3bh00+b76b6mKfpif4bmTXvy60iVqezWAvxBsyjfUiPWv18WgP+Ry?=
- =?us-ascii?Q?vOM7A+cAIosrbHwmTmaEqCk2guCx+A1l4QEYZ1D39twpQE6ZbllJVUIoQpLQ?=
- =?us-ascii?Q?ZYp23+VsoWN7QUIkDfwtD/N4ztjuZItC7Zu58B8Ep3i4vrG/pCxli6YHcUKH?=
- =?us-ascii?Q?5LZlbJObQ9lg3BajfJKNriSP6qii0JnOaxOZ5mOVbWN87Ad2+zeV/CBRfbPt?=
- =?us-ascii?Q?eUd+uSBiy4BI9C1Y0iDx66uJXs0PxwCmLCRl6/4LT8RKXlfoCm8fLhUAHC64?=
- =?us-ascii?Q?14JdY1pEUFzW/SVJzMG7bgWpz2uu0CRX3dAMwsJ1VjpEkz/l7I6hl61YG4oS?=
- =?us-ascii?Q?Zbk+RWqklN3v+mVN6qkS2wZ2SAWKwT4nmGM3IDhrmIgrczHffKThzKaFOb7y?=
- =?us-ascii?Q?ADdwZPfBj5ZHL5zLCVgtgKT35OuWJolv4TqTYkJhUhMrBI4SL6xlBhjA7pJ9?=
- =?us-ascii?Q?X6AjZRAY/8ICSTjjKDUk/S2UdD74TYB/lXoqN0yovCrYJuqdFwvS/GsI5QsJ?=
- =?us-ascii?Q?lyV9JW+47E308IEt8XleAPvFpA/cn97REGHGct0dZnMH+IptMXhTvfxMOX4z?=
- =?us-ascii?Q?mjOxPoMvNhtYyN2+TewrIrqHgW1+wJdDd9/epqAeWVPgLjCl4Xl1G262TilP?=
- =?us-ascii?Q?AipvJyzusvU/uIXyCALRLOlH4ejeU6q9xdaLyiZNxsMkvzUEL7ULw1JsrIEX?=
- =?us-ascii?Q?akl99oI9rHs0b3AtRgJlp2iPMQMXG/kyijAbJJexhSgomoTEkQq6fDX4xGSv?=
- =?us-ascii?Q?rxs8304a3ONeVdyIDOem/guaep/vjpI3JSTBzgCkiRjXEDzoK03urWaLAuI9?=
- =?us-ascii?Q?TsRlyDcqRC50m1Hp8PCEonRAWPdDo2ujac4DE+eFbOfT4sE0cICPqpWRXgBG?=
- =?us-ascii?Q?7ks5pON1tZ6TNqyJtTQyQL0/Q8i9NJ4BFONPZF3tOVIbix7nRpixwee+ALC4?=
- =?us-ascii?Q?QsNg7UD2TuWlWP3gYhO4x1zOoQDj0uf5eSvCgZgbmScCOE/22neXJv0Jjg8s?=
- =?us-ascii?Q?jC3Dsf0tEwByNSW1LbXniK2YbwUaz6515zaL3o9KwmOs1QPqvl5Ca67HGHD8?=
- =?us-ascii?Q?ohW88D2YOkb4jm5A3EmhfZw9WeyS9lp4s3tTjT66olT/N0xsoNlR4gN708i8?=
- =?us-ascii?Q?2j862sGv4az86T9Dq1+0b0lU//Jq6R25ftTcgSCc0mJSWDH7Iagf9YPVAHbc?=
- =?us-ascii?Q?RtaBzTDYJIbsugfvEQ5IKojEr+dUrb0M6AeTvakVEHkyPIY860xzwn9HYc+c?=
- =?us-ascii?Q?qXRSKk3yOY9rx4mjRp1g660SmqB7/RUbdEqGDITMiY8KQ+X/yuTXDVdejhl0?=
- =?us-ascii?Q?s3ELcRu+D6F+uKElUe6x40w7qG7qAap1hQKRzp9INNov3KcceRSYcyxoqMlC?=
- =?us-ascii?Q?izulVs7PVayUOQae+KL/FKeXDNI/VaR9KxKgC30PE87LXADHzC38qnjkfzNv?=
- =?us-ascii?Q?bBfxj8O+yAojeQHcUGrpmOLBdNQSm3WkSQz7VMyWAnjI6KcjQsvscCX/W6cR?=
- =?us-ascii?Q?BWa1bN8IVUwnOYp2f2p5dic=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <26C7274D4F2AF24E862C6633883231CA@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+ bh=hhMH3LanOS0z/3Y+4cwZ71pR4RNRJj01gVr1mzHZ22w=;
+ b=c9oFWrvKvplS/GIhCqjG4ebYdNPyMCTCASaUAdc7E4nvdmw57n1jvm2Wyqs8d6GQIlbAlKYZ82oVWHy+8MqTHbLMpouVAVPvCceipEMMdPZqu+QDIppQOber2v7mqidxmY7v8mQ+SMZUk8gwndn0KXi2ucl/EYXnW2Pd46oHjtJtT2g39MLCSSyV9ZEJVwErxW9DXIOZ5Ajlmkz4Nt67vwKOjBEKbP6CiKpbY6pWHvjcmaRYMxrGcdKctEEtWyP46HDkSY5ksnOiJzvHU98uikqgRTIQZkIQI8254YaJUjaKzBTmqPd0iL5tKxZ2aJbZ+E+kz3sgZnyx5cxTsaENsQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from SG2PR06MB5288.apcprd06.prod.outlook.com (2603:1096:4:1dc::9) by
+ SEYPR06MB5791.apcprd06.prod.outlook.com (2603:1096:101:b3::11) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6588.20; Thu, 13 Jul 2023 05:03:51 +0000
+Received: from SG2PR06MB5288.apcprd06.prod.outlook.com
+ ([fe80::f9b8:80b5:844e:f49a]) by SG2PR06MB5288.apcprd06.prod.outlook.com
+ ([fe80::f9b8:80b5:844e:f49a%6]) with mapi id 15.20.6565.028; Thu, 13 Jul 2023
+ 05:03:51 +0000
+From:   Minjie Du <duminjie@vivo.com>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        MPT-FusionLinux.pdl@broadcom.com (open list:LSILOGIC MPT FUSION DRIVERS
+        (FC/SAS/SPI)),
+        linux-scsi@vger.kernel.org (open list:LSILOGIC MPT FUSION DRIVERS
+        (FC/SAS/SPI)), linux-kernel@vger.kernel.org (open list)
+Cc:     opensource.kernel@vivo.com, Minjie Du <duminjie@vivo.com>
+Subject: [PATCH v1] drivers/scsi: mpt3sas: fix parameter check in two functions
+Date:   Thu, 13 Jul 2023 13:03:41 +0800
+Message-Id: <20230713050341.3736-1-duminjie@vivo.com>
+X-Mailer: git-send-email 2.39.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI2PR06CA0018.apcprd06.prod.outlook.com
+ (2603:1096:4:186::8) To SG2PR06MB5288.apcprd06.prod.outlook.com
+ (2603:1096:4:1dc::9)
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 3AATwSrogwiMO94GGW74gmzjX2JbvYtvOJ2gWqoxR4TXxSDQSBFyZgkUyP+eCjOve3w7iBfVrXF2pYm0ETiIUij//pmNKbkNYU8poef5yv1Gz43x9CDt9+Ce7s/jsxgLln/xpVR1KT4ZAXZ4Bip2iDjKk0Ytj2NgE5nanBwJkvTmbfXKJc18K2BXk4scvwz04yYvOrnKCjze25Puk85IWBF9CT88/uIMwwCJ0o9kiV7+hgG7/w6VKnnMDaPH5t5tNG49lE62DKRsQ4Qq6sU/DvZ57nMr9aLW+TuuskHG55mSMS9mRr6Fl31rtri3ka0O2wcfAUgMrWmSvS6yWp87UVzIpC0hoLNmIXD1rybY5BqT6YT5ZSHdFl/l6zKxkGfbZ19H4872rvgvpscN0uLF2Z3godVpngs4bUTBJkXuJDWoutEm+OOruber2SwcUmbexWO0AF1dPQGTwmUz83szCLICpoRnT4j7gVhRWvK9qjdJQno0yfCACE+igxB4rComeAxbiPSpQTVrTyxSDPZFCy3EXnU5rat67rdXxRSWTmCfG0R47h7ioCVAAsTWNKH4l7pH+wzJ/CWlbl+rf1C3ctOomEPijzDEF+mgoEQQ7uKdS2uhVfytcJPRAcPKNTxlN6tA1M/VN1qCIvxSj9BTLeUunoiKpY+aPQ5nDFOX7+4U44/lXXj1RuzeT/ECSGJJy+y/zBAhKwhCB67UxJUGXGJgfChJSq6+8CxgK2tVBHu7tPhua+OVThebZjWmzBdZKq0BP1wI5DAZ5UyBgCD2OYdmA6tA0jIq364rLALz6wCUQrbEDYoBtKykq2LdnUzSg0pBQr6nucP5WdIWAcG26WD8HQYGm+GTwvRvMxfZsOc=
-X-OriginatorOrg: wdc.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SG2PR06MB5288:EE_|SEYPR06MB5791:EE_
+X-MS-Office365-Filtering-Correlation-Id: 69589471-90cc-4398-0649-08db835e8c5d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: esfIJfemsYeKgpJA4SIY+zQCEts0OSBjbrbDrCs1OhxUNDBRVlyfBsmvviQk2nw9sSRL90cfQP7Tc5OYR098Z/mYU/Yi96pIVKZifVAHvmRo2ta+vFGmdRIIZKVHPGipieb33tazXL9T8sIrJzRQuLxncnQyqOXyeC29x/HULuxG6U++m44hjjWPg6FVMKl3V16pUFZd/jbXt2vPLkYj4wTIgZ8kF1It1frHwccU9tDH1KOoXpzzmOFqFjoF2QE/o0Upb5OkdBT3QMVHJZFlzJMorb9LlTULaLC8wWAAFe/qAuJ+5lgaxIIYL3um/j88S+oXvDGAo4coSseg00rY+imWhM1SfNuxDirSRTHJT7TdPs7xPEBPZJ0iWjDRjs9p3W+FgtFO8fb2+NDcerCScLZ+QKP4JhEu/cWdAdO4mtzDqrCZEQWCCRXLyY3JETtXJ/+wriAE5212eDpaBJF7YWIHksSb8vngPQziAxJ0yBaTINfoqf+dU2tg3VmB+2sFfMM/XyRYDp3DkMi12PGc6/VgazKrRYvR+9dYNMeDn25TPAvtC8/5CMzQ0EXp5VyAmkeXoZb1lQ58f8fBb1TcveHgpxOuBJY1DouGtFOZ2ZL9XdXU+i2n0cEi/7KexRAeLEXY6+s3QUw92dhVFTmXfA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SG2PR06MB5288.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(396003)(376002)(39860400002)(136003)(366004)(346002)(451199021)(2906002)(110136005)(8676002)(52116002)(6486002)(6666004)(478600001)(8936002)(36756003)(66556008)(41300700001)(66946007)(4326008)(66476007)(316002)(83380400001)(38350700002)(107886003)(6512007)(38100700002)(86362001)(5660300002)(6506007)(2616005)(1076003)(186003)(26005)(32563001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?16uoqtFKNByV4hFEpCqupTFkWUoPCi0xLa9BpQPv/H4IT7BQxd6Hqk2xZeLW?=
+ =?us-ascii?Q?FjkTILtuy+eiTM38NpnR7Q23EfEC4evnP2AyoeODwIj4SuXJGEkcOzZW9q0U?=
+ =?us-ascii?Q?ZB65pO2Lz0GMgYVCiCAQDdMxTEgQ1NOlv9XZo8X+kdB4346c2Ei5sDg3GKc+?=
+ =?us-ascii?Q?ytm/Jy90ANKi2yOFdqXqKk9QdEx//DvMDSoJzS9gN34liKhxUp6p4L4B96Zv?=
+ =?us-ascii?Q?zmoB+XNOiIyV615y8X32GBDChmNO2OBTeo8T9YrgaMk6AwsyUFbLOTucIfKf?=
+ =?us-ascii?Q?yvl7cjza1mCxuMACZYR1Vgmz5EqZsB6MasDepUB5PJdJiwOQMg4Wfpp+olqj?=
+ =?us-ascii?Q?QYdKscDl5KVEJ6R7ZfExlQ4H9M9iD94pyc59T5l0xgFryJ5P3wgibnFva+m9?=
+ =?us-ascii?Q?XWSA7j/dwZYgphqvz1pCs1c199/Gh7lgAAwzw+ft/tdc/RQYTW1PDGB57HNQ?=
+ =?us-ascii?Q?LfoJhZC80cIszfacQbFLZry9DAi7731shmZixbFzglXxapVfVjgKm0zp9xcy?=
+ =?us-ascii?Q?sqA7rQS8fO1RNDwc+ymO+F+n1bVKyT3KjswhtgFx4KI153ttLOr6HvaTJBMf?=
+ =?us-ascii?Q?vCST/DJgyOVe6T9XmKPb70dE9hodqVfSZ6Nd/8xzaPZZ2gs4BH1I/v/cQCp6?=
+ =?us-ascii?Q?GudrnH7XmGFG3a4m4aAhWnuGLnQmU1ThqzjBCiDVmj4vc+czi1Zzgq6qKgrd?=
+ =?us-ascii?Q?OIL52JKsGx9nIzhsdrnolO6qBNJgGOy2RQTTi5+nTchN2PyW6gnv39v8Hwh/?=
+ =?us-ascii?Q?b/5gFI+b9ncbTeEBZY4T/3xbDoqDhBDgxOBYBnPwUx1JPSqsONTyngN1J0ui?=
+ =?us-ascii?Q?vXHGXijdYJa1nySLxW4DNRPh8GQ7YZ8BdTGhzSreK6orYISZuO+zKtr08qJP?=
+ =?us-ascii?Q?FLZkY2OxpmxYKxEmcaonaJTtUnQjVZYSIkUUQzFlcVGApT2BJxgUzqyE4U4k?=
+ =?us-ascii?Q?P1aOK2goMCarDiYJZrbgBn1fAvbijDjw0gRozpfFb3n9n7jOuEXPWBPPtnuK?=
+ =?us-ascii?Q?jRJmEkVnKrFHnfXLgztrT3CufESv7Gnha67Aw8lkgiTMwlwEDfn0R/pwaCbY?=
+ =?us-ascii?Q?qtWBZ4aq6jSt9i7P5IBNIjmO252WA6GxS/snALtZ56tD2lkoJ911jq5mNWWA?=
+ =?us-ascii?Q?5uzglUuPGdB7YFQONH/2mFyiF/jWSz6hi0Qjap+tMv5ZtEOn1uXUTowIyGCL?=
+ =?us-ascii?Q?wa07TzytWKh5AqfqXJRaTy1yQIWSUfdl/C9tLCOyImJWTPez8amYGPgKJzRM?=
+ =?us-ascii?Q?va8Y6tbN3/mCpkJBjWZmkl+WPvQR2OxehJXjeuQwsLL9mWopDfbVdlsZYqqE?=
+ =?us-ascii?Q?mnnC26XMo1bMhpmdJyBo+s3Gq/H4So7R9CneTH37Ef+YHTn3qyC1MFQx2Rpl?=
+ =?us-ascii?Q?Ckf5gVZCfGfr45fiEEJsNHttz0wlsd9k38qFJOkyO1FSVv/588I8gHzV2pD0?=
+ =?us-ascii?Q?IDjndBgm1DedV8mWwj6d9KL9j/6VeSh1ftfcwLC0xD20cLOBbQXrNVodwqYn?=
+ =?us-ascii?Q?q1n/KO3wG5j5guHQAk4UVWjWf3yvSngH+SAcCNv6u3OF7Cu2n0EKUwYNWwQl?=
+ =?us-ascii?Q?tzT6UZLIWv813TXyDOXbNlcuG5af6r3vlwFNT8C6?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 69589471-90cc-4398-0649-08db835e8c5d
+X-MS-Exchange-CrossTenant-AuthSource: SG2PR06MB5288.apcprd06.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM8PR04MB8037.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d96a5489-96f6-48c8-416a-08db833fa1fd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Jul 2023 01:22:32.6459
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2023 05:03:51.1207
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: y6CtHImPcFAgBM9/Xh/4ve2OH2uN853jT/kce+zAe9ljmeM6u3rJNc2AuLntMugFhhZy2tAd6Vx7C9cK7VzOsU4gsfMWlg3LyzWYyQoD/Gg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR04MB8519
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0H8ATM9TTqiZl+0mLK5ok1s+oitFIbVb0mVRi6XXihniP45VuBwtrHYXUKyCGNg0P169RC07UhIl/CpG2ydqyA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEYPR06MB5791
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Jul 09, 2023 / 17:32, Sagi Grimberg wrote:
->=20
-> > #3: nvme/003 (fabrics transport)
-> >=20
-> >     When nvme test group is run with trtype=3Drdma or tcp, the test cas=
-e fails
-> >     due to lockdep WARNING "possible circular locking dependency detect=
-ed".
-> >     Reported in May/2023. Bart suggested a fix for trytpe=3Drdma [4] bu=
-t it
-> >     needs more discussion.
-> >=20
-> >     [4] https://lore.kernel.org/linux-nvme/20230511150321.103172-1-bvan=
-assche@acm.org/
->=20
-> This patch is unfortunately incorrect and buggy.
->=20
-> This will likely make the issue go away, but adds another
-> old issue where a client can DDOS a target by bombarding it
-> with connect/disconnect. When releases are async and we don't
-> have any back-pressure, it is likely to happen.
-> --
-> diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-> index 4597bca43a6d..8b4f4aa48206 100644
-> --- a/drivers/nvme/target/rdma.c
-> +++ b/drivers/nvme/target/rdma.c
-> @@ -1582,11 +1582,6 @@ static int nvmet_rdma_queue_connect(struct rdma_cm=
-_id
-> *cm_id,
->                 goto put_device;
->         }
->=20
-> -       if (queue->host_qid =3D=3D 0) {
-> -               /* Let inflight controller teardown complete */
-> -               flush_workqueue(nvmet_wq);
-> -       }
-> -
->         ret =3D nvmet_rdma_cm_accept(cm_id, queue, &event->param.conn);
->         if (ret) {
->                 /*
-> diff --git a/drivers/nvme/target/tcp.c b/drivers/nvme/target/tcp.c
-> index 868aa4de2e4c..c8cfa19e11c7 100644
-> --- a/drivers/nvme/target/tcp.c
-> +++ b/drivers/nvme/target/tcp.c
-> @@ -1844,11 +1844,6 @@ static u16 nvmet_tcp_install_queue(struct nvmet_sq
-> *sq)
->         struct nvmet_tcp_queue *queue =3D
->                 container_of(sq, struct nvmet_tcp_queue, nvme_sq);
->=20
-> -       if (sq->qid =3D=3D 0) {
-> -               /* Let inflight controller teardown complete */
-> -               flush_workqueue(nvmet_wq);
-> -       }
-> -
->         queue->nr_cmds =3D sq->size * 2;
->         if (nvmet_tcp_alloc_cmds(queue))
->                 return NVME_SC_INTERNAL;
-> --
+Make IS_ERR() judge the debugfs_create_dir() and debugfs_create_file()
+ function return in mpt3sas_init_debugfs() and mpt3sas_setup_debugfs().
 
-Thanks Sagi, I tried the patch above and confirmed the lockdep WARN disappe=
-ars
-for both rdma and tcp. It indicates that the flush_workqueue(nvmet_wq)
-introduced the circular lock dependency. I also found the two commits below
-record why the flush_workqueue(nvmet_wq) was introduced.
+Signed-off-by: Minjie Du <duminjie@vivo.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_debugfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- 777dc82395de ("nvmet-rdma: occasionally flush ongoing controller teardown"=
-)
- 8832cf922151 ("nvmet: use a private workqueue instead of the system workqu=
-eue")
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+index a6ab1db81..88fc10ad0 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+@@ -99,7 +99,7 @@ static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
+ void mpt3sas_init_debugfs(void)
+ {
+ 	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
+-	if (!mpt3sas_debugfs_root)
++	if (IS_ERR(mpt3sas_debugfs_root))
+ 		pr_info("mpt3sas: Cannot create debugfs root\n");
+ }
+ 
+@@ -124,7 +124,7 @@ mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc)
+ 	if (!ioc->debugfs_root) {
+ 		ioc->debugfs_root =
+ 		    debugfs_create_dir(name, mpt3sas_debugfs_root);
+-		if (!ioc->debugfs_root) {
++		if (IS_ERR(ioc->debugfs_root)) {
+ 			dev_err(&ioc->pdev->dev,
+ 			    "Cannot create per adapter debugfs directory\n");
+ 			return;
+@@ -134,7 +134,7 @@ mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc)
+ 	snprintf(name, sizeof(name), "ioc_dump");
+ 	ioc->ioc_dump =	debugfs_create_file(name, 0444,
+ 	    ioc->debugfs_root, ioc, &mpt3sas_debugfs_iocdump_fops);
+-	if (!ioc->ioc_dump) {
++	if (IS_ERR(ioc->ioc_dump)) {
+ 		dev_err(&ioc->pdev->dev,
+ 		    "Cannot create ioc_dump debugfs file\n");
+ 		debugfs_remove(ioc->debugfs_root);
+-- 
+2.39.0
 
-The left question is how to avoid both the connect/disconnect bombarding DD=
-OS
-and the circular lock possibility related to the nvmet_wq completion.=
