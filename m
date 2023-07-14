@@ -2,98 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B290CEB64DC
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Jul 2023 15:34:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 173E5C04FE1
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Jul 2023 17:53:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235519AbjGNPeJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Jul 2023 11:34:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55030 "EHLO
+        id S236634AbjGNRxQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Jul 2023 13:53:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235215AbjGNPeF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2023 11:34:05 -0400
-Received: from mail-yw1-x112f.google.com (mail-yw1-x112f.google.com [IPv6:2607:f8b0:4864:20::112f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01D1030FC
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Jul 2023 08:34:04 -0700 (PDT)
-Received: by mail-yw1-x112f.google.com with SMTP id 00721157ae682-57722942374so19752587b3.1
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Jul 2023 08:34:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mobile-mirkwood-net.20221208.gappssmtp.com; s=20221208; t=1689348843; x=1691940843;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2LAKb+st0am7KzOlE54nOwHEx22j8pSDF48Z20T+9p8=;
-        b=nFZkRS8vMZLCEmK0QVk+u4CgaCkOqDCxQnj74z/EPcbZjc+BJUmntlBrZgqVd9YPd/
-         ZQjk2dT3tEBlmYMENxiSdS4pAt6R0A/YsJXdhgvFIcKsJTuBKSjaLM518gp+ghYnFTXx
-         GsNcZ/0uCJt71g0+6REhrdmuvtAvCuexKgf0WdUmiaSivgQHhdiMEfmksspm+GDgy7ci
-         sLTybpRHVUU+q+B8cLYcfvEV0NbffCoQGI3bG3ECeUiGxZjAOXTSK56Prdy+eKMmiQtS
-         p1JeORQUAiB8jBxbz5w6WjNTnqjlLoj64ICJd83RoXSgD9XAVXQPfI1xDSLMeVC5T8hr
-         BhRg==
+        with ESMTP id S236709AbjGNRxH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2023 13:53:07 -0400
+Received: from mail-il1-f172.google.com (mail-il1-f172.google.com [209.85.166.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61BBF3A95;
+        Fri, 14 Jul 2023 10:52:44 -0700 (PDT)
+Received: by mail-il1-f172.google.com with SMTP id e9e14a558f8ab-3461053677eso4994085ab.0;
+        Fri, 14 Jul 2023 10:52:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689348843; x=1691940843;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=2LAKb+st0am7KzOlE54nOwHEx22j8pSDF48Z20T+9p8=;
-        b=DOHt7Dj1Z5rId0Ssox0IO67VAlciW/o9kH456BbsmT7gGVMHmMKVahLOI46XVta9qD
-         Ym4Iq4D5xRRlRGwLyWArIzYgsGZPmsoof+7H/VWSJszpJB/DRwgRaNcoY+gLTC1cOVyh
-         NNb2mRgV+arKuQNNsX6In2IkmtttpDmnC+yVK3zQNvl1kYrEkoRTRGG0TGthwuKbZpnW
-         0F9hZXqEJ4TWa1BJ8Jw9QZzc2DHNplkcvieMz8krXY1upjdzWGVMFjBceHdL73QL11Uq
-         rf3LlATa3Ai51VIO6tnGIy5aPKca6ovUsHgUxNZoaSAM+IHIqgDx8hIZmvxPUFY1QCq3
-         eqIQ==
-X-Gm-Message-State: ABy/qLYuIP2qxIMSR8tkk9icg9EH7LZ+m/hbxqEfLHILM0NXEaSEAtOR
-        EWaPuwYLA6AvtnVXFqV96nm0D4FLKSeXW1tBu/qPINcDQmsT+eQs
-X-Google-Smtp-Source: APBJJlEVnM96PdRp0EGe+Mddm/IBnp2jB0YNYvaG1E+xTUHZ7GmPf2zg2kCfRJIrhTH4INnonnk2OpVQNT3RAgEHqQ0=
-X-Received: by 2002:a81:6c55:0:b0:57a:8ecb:11ad with SMTP id
- h82-20020a816c55000000b0057a8ecb11admr4695103ywc.43.1689348843228; Fri, 14
- Jul 2023 08:34:03 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1689357088; x=1691949088;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=5wIArphUUcrQTlGd9RIfHKu8moYjSLk6R16YZHfHviw=;
+        b=NTCRsad49bLrXdyuikSeGykEXMxrLMIPpqWu3VNTBblocDWb/SHipvdbvlpjzM12oa
+         MkYvfrP7M5qdOQdUibJCzl+pawec2x5j2EwWBYETa3ldccqu7s/miH2n6brq4uF97EJy
+         S8NR4TKi1EseLi5p/kmR/bWqq4O7tuGxLDFCryrgFYbBr4EOhM0UamQjGh/tcDPyAflz
+         6yoR6agL3B+e/jQVv32BLdhmMinXQ+h7EtR7ZthUTVt3/1P/bMsCjGARKv4FCKc36Um0
+         7v63xL23XnXyRsLupNjkGSYRMrhiwXjJl8MzyhrvdUKExOFTow6QQ73ElMQRMqtpZ2cR
+         5NLA==
+X-Gm-Message-State: ABy/qLY6Gbc8g+0hsK49SG+0dIIUcQVNwxoA8rR4zpoThiIvp8fJN+QW
+        xhB135bfbekVXZ9fDSNqYMH9pM3DSO3F
+X-Google-Smtp-Source: APBJJlEHfIxZJ0bPAvnN517DQfltLqPlRzXi9YGaDUls0sT+OG8W9oV02M0oDWythG0eSZqH+72VBw==
+X-Received: by 2002:a05:6e02:782:b0:346:3b4:8b77 with SMTP id q2-20020a056e02078200b0034603b48b77mr2452111ils.12.1689357088535;
+        Fri, 14 Jul 2023 10:51:28 -0700 (PDT)
+Received: from robh_at_kernel.org ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id 18-20020a92c652000000b00345ffd35a29sm2913154ill.68.2023.07.14.10.51.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Jul 2023 10:51:27 -0700 (PDT)
+Received: (nullmailer pid 4066254 invoked by uid 1000);
+        Fri, 14 Jul 2023 17:50:56 -0000
+From:   Rob Herring <robh@kernel.org>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: Explicitly include correct DT includes
+Date:   Fri, 14 Jul 2023 11:50:52 -0600
+Message-Id: <20230714175052.4066150-1-robh@kernel.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-References: <CALM2zXUDAqAzCQR+sJDwoxxEEnG7cLJ4QazCVscJX-rR49=V2A@mail.gmail.com>
- <fc9f01f1-deb2-cd05-c7ef-1e08ea1d8d60@suse.de> <CALM2zXX9LfshDUaFpKL5KURQy7p8J=5KpSi_foVaC1BfAB9sJg@mail.gmail.com>
- <4a0b76f5-9980-7976-bed1-801a98ecb7d8@suse.de>
-In-Reply-To: <4a0b76f5-9980-7976-bed1-801a98ecb7d8@suse.de>
-From:   Mike Edwards <medwards@mobile.mirkwood.net>
-Date:   Fri, 14 Jul 2023 11:33:52 -0400
-Message-ID: <CALM2zXUtZi8Q8NnZ4X0=93Haq7=2VOygb9ayj9iuD76KQEryeQ@mail.gmail.com>
-Subject: Re: Mylex AcceleRAID 170 + myrb/myrs causing crash
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-I'll do some digging on dynamic debug, too, to see if I can figure that out=
-.
+The DT of_device.h and of_platform.h date back to the separate
+of_platform_bus_type before it as merged into the regular platform bus.
+As part of that merge prepping Arm DT support 13 years ago, they
+"temporarily" include each other. They also include platform_device.h
+and of.h. As a result, there's a pretty much random mix of those include
+files used throughout the tree. In order to detangle these headers and
+replace the implicit includes with struct declarations, users need to
+explicitly include the correct includes.
 
-Thanks again, Hannes - I'll try Leap in the next day or so and let you
-know what I have from there.
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/scsi/qlogicpti.c | 2 +-
+ drivers/scsi/sun_esp.c   | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-On Fri, Jul 14, 2023 at 11:18=E2=80=AFAM Hannes Reinecke <hare@suse.de> wro=
-te:
->
-> On 7/14/23 17:03, Mike Edwards wrote:
-> > I can try openSUSE Leap, certainly.
-> >
-> > However, those debugging statements are going to be hard - the process
-> > lockup occurs at initial module load, before init really starts doing
-> > much of anything.  I've even tried passing init=3D/bin/bash on the
-> > commandline, with no luck - I never made it to a shell before things
-> > went south.  For the same reason, there are no logs to speak of, alas
-> > - but I can try seeing if I can get a serial console going, as that
-> > will let me dump output.
-> >
-> > I'll verify that the driver in OpenSUSE Leap has the same issue, and
-> > will open a bug report when it (almost certainly!) dies the same way.
-> >
-> You can try with the live system from the ISO image; that will load the
-> modules only afterwards, so you should be able to see some messages there=
-.
->
-> And I think there is even a magic commandline sequence to enable dynamic
-> debug...
->
-> Cheers,
->
-> Hannes
->
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 1e8fbd457248..f88a5421c483 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -28,7 +28,7 @@
+ #include <linux/jiffies.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/of.h>
+-#include <linux/of_device.h>
++#include <linux/platform_device.h>
+ #include <linux/firmware.h>
+ #include <linux/pgtable.h>
+ 
+diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
+index d06e933191a2..afa9d02a33ec 100644
+--- a/drivers/scsi/sun_esp.c
++++ b/drivers/scsi/sun_esp.c
+@@ -12,7 +12,8 @@
+ #include <linux/init.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/of.h>
+-#include <linux/of_device.h>
++#include <linux/of_platform.h>
++#include <linux/platform_device.h>
+ #include <linux/gfp.h>
+ 
+ #include <asm/irq.h>
+-- 
+2.40.1
+
