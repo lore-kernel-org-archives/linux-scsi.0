@@ -2,115 +2,103 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DD7EB64DC
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Jul 2023 06:04:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36BD8EB64DA
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Jul 2023 07:01:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235063AbjGNGEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Jul 2023 02:04:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46294 "EHLO
+        id S234745AbjGNHBL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Jul 2023 03:01:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234964AbjGNGEb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2023 02:04:31 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02EAC1BF6
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Jul 2023 23:04:29 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 8F91B1F8D7;
-        Fri, 14 Jul 2023 06:04:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1689314668; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OtAHehLTFzE7c761bGG8cmQYvnXh4o+2pep+A8vjbsI=;
-        b=KNhyu33pgtk8Z0hXV4ggTtKqJOcexIwwc3hc6vmktCcNB59XJq9HVJxVQIvHG4JIm62O+G
-        KW98V+/x1VqLYa0xafYBlMD0x416DTYN4rXhIHCzHdzAKHVmvOOqBRXoCiv/TPpM6iS2qd
-        cS8MQnqvsJPR3yPs581Zqc6uRmUSAnk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1689314668;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OtAHehLTFzE7c761bGG8cmQYvnXh4o+2pep+A8vjbsI=;
-        b=27mEdmWXNetd00Ao9AnmBelA8Up/niy5lhDz/OVQmXMe4p3fWBnc9zgl3rd0H3kElVUngF
-        ANBn/dL+sShpiXDw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 701F513A15;
-        Fri, 14 Jul 2023 06:04:28 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id vJUuGmzlsGTfEAAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 14 Jul 2023 06:04:28 +0000
-Message-ID: <fc9f01f1-deb2-cd05-c7ef-1e08ea1d8d60@suse.de>
-Date:   Fri, 14 Jul 2023 08:04:27 +0200
+        with ESMTP id S234301AbjGNHBK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2023 03:01:10 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBF31171D
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Jul 2023 00:01:09 -0700 (PDT)
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36DL45df017666
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Jul 2023 00:01:09 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=pfpt0220; bh=n+KIdnBi4A8Ct21T7wjmTHU/ZS2tqGHl5a2ssiAYoGA=;
+ b=hOyYXfGOVXyqO+b9rCQfJvpmY5QGjMmlB+tMK6+tylD+uxpD9RSD6xq5rwTwTJV7Garj
+ cYnU5VRG0EF2Pd7fW/QlJkTZMYGtAM7P3au/kZ67pWIp4KTHYBV1CLs5WsNSkU5SxMIv
+ SeNLK02vIt1/IPngUn7GlAeh9g2iuBhg6mDJ33WGz4uf2cENLfeDlanM7D97t2sLp5sl
+ swsDlAEf4XnuuUKKr+/UOZ1tC8En1ZG9OAZlab0UNbR7ScT809r1VA2N8bHyNLsL2Zi7
+ 87p3pj7zK9Fq8LvbK7zsqL12GfhxuHjMCLvDrUXMWYuY6GKWU2FkG2DiF3DeI363Xlau Aw== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3rtrux9mg4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Jul 2023 00:01:09 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Fri, 14 Jul
+ 2023 00:01:07 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
+ Transport; Fri, 14 Jul 2023 00:01:07 -0700
+Received: from localhost.marvell.com (unknown [10.30.46.195])
+        by maili.marvell.com (Postfix) with ESMTP id E40BB3F7064;
+        Fri, 14 Jul 2023 00:01:05 -0700 (PDT)
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>
+Subject: [PATCH v2 00/10] qla2xxx driver bug fixes
+Date:   Fri, 14 Jul 2023 12:30:54 +0530
+Message-ID: <20230714070104.40052-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.23.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: Mylex AcceleRAID 170 + myrb/myrs causing crash
-Content-Language: en-US
-To:     Mike Edwards <medwards@mobile.mirkwood.net>,
-        linux-scsi@vger.kernel.org
-References: <CALM2zXUDAqAzCQR+sJDwoxxEEnG7cLJ4QazCVscJX-rR49=V2A@mail.gmail.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <CALM2zXUDAqAzCQR+sJDwoxxEEnG7cLJ4QazCVscJX-rR49=V2A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: 36QUrhvqFwB2z7peg-YcbBxApHt-ayZa
+X-Proofpoint-ORIG-GUID: 36QUrhvqFwB2z7peg-YcbBxApHt-ayZa
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-14_04,2023-07-13_01,2023-05-22_02
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/13/23 21:21, Mike Edwards wrote:
-> I spun up an old machine (with an even older Mylex AcceleRAID card, the 
-> 170 w/ a bios dated Jan 21, 2000 - yikes!) recently.  While this machine 
-> was running an old 4.7 kernel and booted fine, attempting to update it 
-> to a modern release of Debian with a 6.1 kernel caused the kernel to 
-> hang while booting, with a number of stuck tasks warnings, starting with 
-> udev-worker and including kworker kernel processes.
-> 
-> During troubleshooting, I was able to identify the myrb/myrs drivers 
-> which replaced the old DAC960 driver (removed in commit 
-> 6956b956934f10c19eca2a1d44f50a3bee860531) as the culprit.  The last 
-> kernel to successfully boot on here is 4.19.x, while anything newer 
-> exhibits the same stuck processes - and indeed, blacklisting the myrb 
-> and myrs drivers allows 6.1 to boot on this machine.
-> 
-> I know this card is functional, as I do have two drives attached to it, 
-> and both it and the drives work fine in 4.19 and older kernels, so the 
-> issue seems to be with the newer myrb/myrs drivers.  Is there a chance 
-> of fixing the current drivers, or, at worst, reintroducing the old 
-> deprecated DAC960 driver back into the kernel?  I'm not absolutely tied 
-> to using that driver, other than 'it just works' for this card.
+Martin,
 
-Whee, someone is using it!
-I'm not alone!
+Please apply the qla2xxx driver bug fixes to
+the scsi tree at your earliest convenience.
 
-But sure, of course I'll help.
-Can you try install openSUSE Leap on it? Then you can open a bugzilla on 
-our side, and we can track and discuss things there. Debugging via 
-e-mail tends to be very distracting to others not directly involved.
+v2:
+- Remove extra line from qla_gbl.h in 02/10
+- Add Reviewed-by tag
 
-For starters, a message log might help. And please enable dynamic debug
-via
+Thanks,
+Nilesh
 
-echo 'file drivers/scsi/myrs.c +p' > \
-   /sys/kernel/debug/dynamic_debug/control
-echo 'file drivers/scsi/myrb.c +p' > \
-   /sys/kernel/debug/dynamic_debug/control
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.08.500-k
 
-Cheers,
+Quinn Tran (9):
+  qla2xxx: Fix deletion race condition
+  qla2xxx: Adjust iocb resource on qpair create
+  qla2xxx: Limit TMF to 8 per function
+  qla2xxx: Fix command flush during TMF
+  qla2xxx: Fix erroneous link up failure
+  qla2xxx: Fix session hang in gnl
+  qla2xxx: Turn off noisy message log
+  qla2xxx: Fix TMF leak through
+  qla2xxx: fix inconsistent TMF timeout
 
-Hannes
+ drivers/scsi/qla2xxx/qla_def.h     |   9 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   1 +
+ drivers/scsi/qla2xxx/qla_init.c    | 217 ++++++++++++++++++-----------
+ drivers/scsi/qla2xxx/qla_iocb.c    |   1 +
+ drivers/scsi/qla2xxx/qla_isr.c     |   7 +-
+ drivers/scsi/qla2xxx/qla_mbx.c     |   3 +
+ drivers/scsi/qla2xxx/qla_nvme.c    |   3 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  11 +-
+ drivers/scsi/qla2xxx/qla_target.c  |  14 +-
+ drivers/scsi/qla2xxx/qla_version.h |   4 +-
+ 10 files changed, 168 insertions(+), 102 deletions(-)
+
+
+base-commit: 6f0a92fd7db1507b203111ee53632eeeba2daca5
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+2.23.1
 
