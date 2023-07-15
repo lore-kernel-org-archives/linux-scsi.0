@@ -2,115 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 078DBEB64DA
-	for <linux-scsi@archiver.kernel.org>; Sat, 15 Jul 2023 02:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E58F7EB64DA
+	for <linux-scsi@archiver.kernel.org>; Sat, 15 Jul 2023 03:08:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229593AbjGOCxk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Jul 2023 22:53:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55092 "EHLO
+        id S229949AbjGODIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Jul 2023 23:08:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbjGOCxj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2023 22:53:39 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E63535A9;
-        Fri, 14 Jul 2023 19:53:38 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1b8ad9eede0so20117525ad.1;
-        Fri, 14 Jul 2023 19:53:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689389618; x=1691981618;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8f6mcKlZ5Qexg+/68svYOAiKI8e1V4o+avgSXnoMJmA=;
-        b=dxzOAxnr3Baip3gVbAvxCPfOQcWt73JtIsLXS2/XDqc7ZnG9wRmeaouBaKFt40w58T
-         dN2MDLP7VH/sUS4ZWvptE/inP1LM2s9f5Gi1g56uuyZ1UHQOz3C5fAtTjJUyH//EXQvz
-         xg8bra2F1sknrgmnUiHNgcW1vT7+VQNzR+LYTCNsl7F09CLTdbSopuH2Rh9hDeCQcXSS
-         UifhkHl78By91Zh2gCGwob9o/oUWeiA7iT3H+5RF9Gjwb3xvkCzR+GNl8giW4r7rXdpk
-         LHjQolhRLGJw7eEmYur1GOxnRUEvNVTSt7qP3Y/sbl8DgpKQHVMyk8MtpplQaAMmqXUe
-         HhVw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689389618; x=1691981618;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8f6mcKlZ5Qexg+/68svYOAiKI8e1V4o+avgSXnoMJmA=;
-        b=VerFdvmZw9sEzPjqnl2rc8VcT/FCXunivHUmnukdlZc1kF91BBdPrJuBkoJX6xjytK
-         UyLR+biTtO4U/l2nHQkVpUt1HNNKpL2ZjjPDFgGHpDBoPTxbi2br1EmmsBlAUv6+G4Pr
-         Vw0AVrytms6jNPDjzsw3+v9Xv0cjwOZJRj5P6ksc3SklCIQiChYpCYmEGOREiXoHvmY8
-         LI8aJZ0hpCNWw1FKbDKODxQ5TbtV7JOel/oC7l0nJv6QZKMeBWU6eJnP/Vi1HRGi8rur
-         37F/SXkYzLcEn55zf00R/J9iOQ/x4rVEp5C4aappJe2XyXtYJoGEYpJNTU+i25xixQqi
-         ySQQ==
-X-Gm-Message-State: ABy/qLZhmf0rDSPyRhjXllx4lEjn4kOqmmapBt1Cwh3CBgQznz5P0Pk+
-        dcdr84B6zQpYIZcq8/88gso=
-X-Google-Smtp-Source: APBJJlF+jHY7cxFK5dPvwkH7aqnSJm5u1O5aYyDbJocqVmlX0/saY5poxUzi6hTxc+IKfwQkw40BxA==
-X-Received: by 2002:a17:903:110c:b0:1b5:64a4:be8b with SMTP id n12-20020a170903110c00b001b564a4be8bmr6926305plh.35.1689389618021;
-        Fri, 14 Jul 2023 19:53:38 -0700 (PDT)
-Received: from oslab-pc.tsinghua.edu.cn ([166.111.139.122])
-        by smtp.gmail.com with ESMTPSA id j13-20020a170902da8d00b001b3df3ae3f8sm8416649plx.281.2023.07.14.19.53.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Jul 2023 19:53:37 -0700 (PDT)
-From:   Tuo Li <islituo@gmail.com>
-To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, baijiaju1990@outlook.com,
-        Tuo Li <islituo@gmail.com>, BassCheck <bass@buaa.edu.cn>
-Subject: [PATCH] scsi: message: fusion: Fix a possible data race in mpt_ioc_reset()
-Date:   Sat, 15 Jul 2023 10:53:06 +0800
-Message-Id: <20230715025306.164847-1-islituo@gmail.com>
-X-Mailer: git-send-email 2.34.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229800AbjGODIT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2023 23:08:19 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CCEE35BD;
+        Fri, 14 Jul 2023 20:08:18 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0B48C61DEF;
+        Sat, 15 Jul 2023 03:08:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6FC51C433C7;
+        Sat, 15 Jul 2023 03:08:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689390497;
+        bh=66oHfPnq8yInzPZAL0kUCTKqrxQ0Kuzph8s4Mcxulis=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=JogOq51PhYUD867NQO7KArb86pEf9zn7lqDfMcJbT8eAemZiFEo8wnBVDKEC+c7YA
+         fP2QUmcxkFMYvtivC7vtPLYhkCPaIgb2WjbBJ2k6dgY2sYDadD5svF+HtUbkEK2KuP
+         HtqtBIfSMcP5FmtAL1SwYerzAhVmCrxsDwWYq3s1XdinisioXrpa5X6MfjlHM8Jy5j
+         L4uqv2xbmIaJmCexMiwicLICE0kVC4T6Jhuo4mSVawe6xtyHoTAo2+Nw1JB2hw+A0c
+         BHwdkpekJMyw0hZbWstp7NSibSncFGuq1pRNaYHczajWRfeweGf0osjf7QD2aCXt4d
+         Fxpsu52QlExnQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 5C0D3E4508D;
+        Sat, 15 Jul 2023 03:08:17 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.5-rc1
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <256ab3441824d3c22930c3341492119ccfc1b701.camel@HansenPartnership.com>
+References: <256ab3441824d3c22930c3341492119ccfc1b701.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <256ab3441824d3c22930c3341492119ccfc1b701.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: f4d1a8e011909fee24643f84bd1196e1366c26f2
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: be522ac7cdcc1b7dd19fa348205363041ab65a98
+Message-Id: <168939049736.3346.1353349838971150134.pr-tracker-bot@kernel.org>
+Date:   Sat, 15 Jul 2023 03:08:17 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The variable ioc->taskmgmt_quiesce_io is often protected by the lock
-ioc->taskmgmt_lock when is accessed. Here is an example in 
-mpt_SoftResetHandler():
+The pull request you sent on Fri, 14 Jul 2023 14:24:20 -0400:
 
-  spin_lock_irqsave(&ioc->taskmgmt_lock, flags);
-  ...
-  ioc->taskmgmt_quiesce_io = 0;
-  ...
-  spin_unlock_irqrestore(&ioc->taskmgmt_lock, flags);
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-However, ioc->taskmgmt_quiesce_io is set to 1 without holding the lock
-ioc->taskmgmt_lock in mpt_ioc_reset():
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/be522ac7cdcc1b7dd19fa348205363041ab65a98
 
-  case MPT_IOC_SETUP_RESET:
-    ioc->taskmgmt_quiesce_io = 1;
+Thank you!
 
-In my opinion, this may be a harmful race, because the value of 
-ioc->taskmgmt_quiesce_io can be rewritten by mpt_ioc_reset() when another
-thread is accessing it.
-
-To fix this possible data race, a lock and unlock pair is added when
-accessing the variable ioc->taskmgmt_quiesce_io.
-
-Reported-by: BassCheck <bass@buaa.edu.cn>
-Signed-off-by: Tuo Li <islituo@gmail.com>
----
- drivers/message/fusion/mptbase.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 4bf669c55649..560057daf4ee 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -6561,9 +6561,13 @@ mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS *pCfg)
- static int
- mpt_ioc_reset(MPT_ADAPTER *ioc, int reset_phase)
- {
-+	unsigned long	 flags;
-+
- 	switch (reset_phase) {
- 	case MPT_IOC_SETUP_RESET:
-+		spin_lock_irqsave(&ioc->taskmgmt_lock, flags);
- 		ioc->taskmgmt_quiesce_io = 1;
-+		spin_unlock_irqrestore(&ioc->taskmgmt_lock, flags);
- 		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
- 		    "%s: MPT_IOC_SETUP_RESET\n", ioc->name, __func__));
- 		break;
 -- 
-2.34.1
-
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
