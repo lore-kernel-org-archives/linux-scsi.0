@@ -2,109 +2,91 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACDACEB64DC
-	for <linux-scsi@archiver.kernel.org>; Sat, 15 Jul 2023 14:09:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D59ACEB64DA
+	for <linux-scsi@archiver.kernel.org>; Sun, 16 Jul 2023 04:32:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230090AbjGOOJ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 15 Jul 2023 10:09:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39976 "EHLO
+        id S229541AbjGPEce (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 16 Jul 2023 00:32:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229789AbjGOOJ2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Jul 2023 10:09:28 -0400
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88493101
-        for <linux-scsi@vger.kernel.org>; Sat, 15 Jul 2023 07:09:27 -0700 (PDT)
-Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-4fbc0314a7bso4788203e87.2
-        for <linux-scsi@vger.kernel.org>; Sat, 15 Jul 2023 07:09:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1689430166; x=1692022166;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=8c3FhnuVAoIEh1m/v2PXe+Qopk1wo7RCnRNOxCosjiA=;
-        b=SRyWifLQM8lGnNcJibPnls0Br53MotLEf9T+ors4EYaCedUkvFowDxfLjrqGoq7rNP
-         UR/mqktHZ6YqO7DOTp6M2QQ6ZB3FGGAnJEeQj07kKPDXtvzhjLfvuBbeZjf+/dfINfEr
-         skRcMhj+DFAaBV0gmEkUCGmkAh/qoPAZ30tHHiWrE+kAvqWRCnaKwp0hW4SH5P5zLiCH
-         +RgnHAHY/yW3SGNbJTBUYU4vxZAuZUzGkpA6Yhn9nDJhnjwKt/sS1DhsZ/BIb0pns8CT
-         DeTYmoIJvVjSP3+x0aSHFMlhYYMuZuQ4W4TMm3P0CgbiqeJ8pTcC0FJt0BCDZbozgytg
-         oS4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689430166; x=1692022166;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=8c3FhnuVAoIEh1m/v2PXe+Qopk1wo7RCnRNOxCosjiA=;
-        b=CIUk0fmZolZ3u1mHCq1lQCsriE4947N7t33y2w5+22f5N7mrQ9p7db7OezfD6BGkcX
-         6/CnwK+Z8NpNKHcvWGNtbDnM6fewTtDEbiH/aUlHrC2FsiIDevqTjNHmEJcg2ZkHOPEI
-         SwzA3nN+bBFAXmDjucZvNGKKTHMtk03v3Zt0MD/fUqXCXiVtYdF32g/z9/AeNthijdrP
-         VngKIpYIoww+UpSAYBJCqqpGBH60ZXqbKxkGLPL/WjYwWXSDcoNXh+QO6clkkGGkDPHd
-         BvxM+/ZW5OSO8auuGYAED94PnI0cUbV2gjxA9SeareacHL1qaoXc1Hy8cl8cON5E7bpr
-         tidA==
-X-Gm-Message-State: ABy/qLb8QuwmF/0bYcBs2pyKVltHCwSvre24eCiuVReWhv08/8IEkqDd
-        +57GZvxYv5+OPLqx2z2q5wfTxA==
-X-Google-Smtp-Source: APBJJlGcsAZyewJWfNEYRjgpNsHGvO4EKx1LiJHueR7XkU5QBkJwd4Im2k/Wbqo7Co0s03P6JQzVOQ==
-X-Received: by 2002:ac2:58ed:0:b0:4f8:7568:e94b with SMTP id v13-20020ac258ed000000b004f87568e94bmr4872550lfo.56.1689430165843;
-        Sat, 15 Jul 2023 07:09:25 -0700 (PDT)
-Received: from [192.168.1.101] (abxi167.neoplus.adsl.tpnet.pl. [83.9.2.167])
-        by smtp.gmail.com with ESMTPSA id g24-20020a19ee18000000b004fba0a9abf1sm1885495lfb.190.2023.07.15.07.09.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 15 Jul 2023 07:09:25 -0700 (PDT)
-Message-ID: <0cf2a0f4-7f5d-78d5-0004-57c446adc883@linaro.org>
-Date:   Sat, 15 Jul 2023 16:09:24 +0200
+        with ESMTP id S229451AbjGPEcd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Jul 2023 00:32:33 -0400
+Received: from mail.208.org (unknown [183.242.55.162])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED64519B4
+        for <linux-scsi@vger.kernel.org>; Sat, 15 Jul 2023 21:32:31 -0700 (PDT)
+Received: from mail.208.org (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTP id 4R3XPT1W6PzBHXgp
+        for <linux-scsi@vger.kernel.org>; Sun, 16 Jul 2023 12:32:29 +0800 (CST)
+Authentication-Results: mail.208.org (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)" header.d=208.org
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
+        content-transfer-encoding:content-type:message-id:user-agent
+        :references:in-reply-to:subject:to:from:date:mime-version; s=
+        dkim; t=1689481949; x=1692073950; bh=xBqQ8RrtpjxGaqUbrdAplKRwJil
+        9/d/wO5QQxP+8MIo=; b=TW8X2kb0wGv9r+NwjdQ7C/cP0ShIKK2y7yiPmTOufxa
+        pPwOCoCMLIQ3VZhsXO468Z2LBqzL4XskBabIU/b3H88+t30vYIP0NN+yb0530Bs6
+        fcrQjyHw28wiOcUr1EXVRTCmPQuXPRs4a7iooEnH8eWSF+VSTX3mPkpvZ14V6PkI
+        Cm2iI8zP8pfhiZHhHMbVe5sb7Xxi08iw3/x/WTVb6f8A5U6RZo1cw6fRYe51JIEH
+        ytjA3HNQ1RdB+WCDihovglczQ/u8CA7CX9EusjPQATTQ9jFBVmbV3wPCbjozEeXG
+        w7n4k1vcmP7MZ6fWTHfLAl7iXks8QSHeCwqoU2ngULw==
+X-Virus-Scanned: amavisd-new at mail.208.org
+Received: from mail.208.org ([127.0.0.1])
+        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 5gfLfNkYIylz for <linux-scsi@vger.kernel.org>;
+        Sun, 16 Jul 2023 12:32:29 +0800 (CST)
+Received: from localhost (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTPSA id 4R3XPS5vtmzBHXgf;
+        Sun, 16 Jul 2023 12:32:28 +0800 (CST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH V1] scsi: ufs: ufs-qcom: Update UFS devfreq Parameters
-Content-Language: en-US
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>, mani@kernel.org,
-        quic_cang@quicinc.com, stanley.chu@mediatek.com,
-        bvanassche@acm.org, quic_asutoshd@quicinc.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, beanhuo@micron.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        agross@kernel.org, andersson@kernel.org, jejb@linux.ibm.com,
-        linux-arm-msm@vger.kernel.org, quic_ziqichen@quicinc.com
-References: <20230711104006.15872-1-quic_nitirawa@quicinc.com>
-From:   Konrad Dybcio <konrad.dybcio@linaro.org>
-In-Reply-To: <20230711104006.15872-1-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
+Date:   Sun, 16 Jul 2023 12:32:28 +0800
+From:   wuyonggang001@208suo.com
+To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com
+Cc:     linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: message: fusion: Modify Format
+In-Reply-To: <20230716042651.12582-1-zhanglibing@cdjrlc.com>
+References: <20230716042651.12582-1-zhanglibing@cdjrlc.com>
+User-Agent: Roundcube Webmail
+Message-ID: <f4c6415590fdeb514fbcb3f3beb82375@208suo.com>
+X-Sender: wuyonggang001@208suo.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11.07.2023 12:40, Nitin Rawat wrote:
-> To support the periodic polling mode without stop
-> caused by CPU idle state, enable delayed timer
-> as default instead of deferrable timer for
-> qualcomm platforms.
-> And change UFS devfreq downdifferential threshold to 65
-> for less aggresive downscaling.
-Please wrap your commit messages at around 70 characters, 50
-makes it very hard to read.
+Fix the following checkpatch error(s):
 
-Konrad
-> 
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 82d02e7f3b4f..a15815c951ca 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1388,8 +1388,9 @@ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
->  					struct devfreq_simple_ondemand_data *d)
->  {
->  	p->polling_ms = 60;
-> +	p->timer = DEVFREQ_TIMER_DELAYED;
->  	d->upthreshold = 70;
-> -	d->downdifferential = 5;
-> +	d->downdifferential = 65;
->  }
->  #else
->  static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
-> --
-> 2.17.1
-> 
+ERROR: "scsi_cmnd * SCpnt" should be "scsi_cmnd *SCpnt"
+ERROR: "MPT_SCSI_HOST   * hd" should be "MPT_SCSI_HOST   *hd"
+
+Signed-off-by: Yonggang Wu <wuyonggang001@208suo.com>
+---
+  drivers/message/fusion/mptscsih.c | 4 ++--
+  1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptscsih.c 
+b/drivers/message/fusion/mptscsih.c
+index 2bc17087d17d..60323f73337e 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1861,7 +1861,7 @@ mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
+   *    Returns SUCCESS or FAILED.
+   **/
+  int
+-mptscsih_bus_reset(struct scsi_cmnd * SCpnt)
++mptscsih_bus_reset(struct scsi_cmnd *SCpnt)
+  {
+      MPT_SCSI_HOST    *hd;
+      int         retval;
+@@ -1913,7 +1913,7 @@ mptscsih_bus_reset(struct scsi_cmnd * SCpnt)
+  int
+  mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+  {
+-    MPT_SCSI_HOST *  hd;
++    MPT_SCSI_HOST   *hd;
+      int              status = SUCCESS;
+      MPT_ADAPTER    *ioc;
+      int        retval;
