@@ -2,51 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91649EB64DD
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jul 2023 03:19:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6013AEB64DA
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jul 2023 03:43:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230381AbjGQDTr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 16 Jul 2023 23:19:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41970 "EHLO
+        id S230371AbjGQDno (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 16 Jul 2023 23:43:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230197AbjGQDTq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Jul 2023 23:19:46 -0400
+        with ESMTP id S230367AbjGQDnn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Jul 2023 23:43:43 -0400
 Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3FE5113
-        for <linux-scsi@vger.kernel.org>; Sun, 16 Jul 2023 20:19:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A21F1A4
+        for <linux-scsi@vger.kernel.org>; Sun, 16 Jul 2023 20:43:42 -0700 (PDT)
 Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4R46l22nrXzBHYML
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Jul 2023 11:19:42 +0800 (CST)
+        by mail.208.org (Postfix) with ESMTP id 4R47Gg1NKJzBHXlG
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Jul 2023 11:43:39 +0800 (CST)
 Authentication-Results: mail.208.org (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)" header.d=208.org
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
         content-transfer-encoding:content-type:message-id:user-agent
         :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1689563982; x=1692155983; bh=d4ObllqL7W+vYI3+pZosV4oHgj9
-        n3i99scVDxsj7EKw=; b=lo4FLgloMO/hOgBiiP0ZcjbGEAbecfJYbdzDV6nY0Pu
-        iQA2AWpQzUKrxo4Vj0zLvAgH80H1ina5FnUUw0NJOZ+tz1AbiZL3ES7aUdvqa5nn
-        7NF+hz7wd60ZHNqv0agBzmPy23X6VRyTfA3ZHFAgtENvISL4RTclxzKjSF7FpYmZ
-        cP+3AKdmRKYdsqNdDX79BcYqbsgG5W9nRQcu5ZcijEGAVGxWtS2WoVkbJaEapheb
-        YnngarTpFMhIF2WF/4CmBgVhU/Le+vQn4Ff9E2FdTvcGk8Y6rwrROue3R9+rrwS8
-        h2FEEdx3KhbFjP1VzPBo57N0aD4on8EalGcuQJ+9sRw==
+        dkim; t=1689565419; x=1692157420; bh=z3XCtoPPqqOMV3gnIpeNg/Kkivw
+        KIMODoeIuwOAKww0=; b=HNag/vJB0+tnSjfFT7xMr9tL2ecrxgRW8CyEn+t83f0
+        ghQ9OV3oNe9Iw5HBZSvQiHZv/ij9bcCZfrIG/RObA9Y7F6pzd1pTsizUBGE487el
+        Fu1k2+j2F+uV5PflDxIZz33nGfDbmTRIOCg3qxso7cWB5MUT1SeP6khqqy/fpGXq
+        OKyIQnafhYYX1qe8pfqvy7ZG9jZyL6TYgj5dyyJN+w/QEboo4K9WVPYn/Iu/4zXJ
+        6kknoW5Ax394/H8gYidh/iDHHB176hqNDwZAPndrsACumZeVjWEUWitY2ZnoFEf+
+        34jR6mdfkHTSUsoDWojn2yTPYXXkM9OlRsyHwSvf9yw==
 X-Virus-Scanned: amavisd-new at mail.208.org
 Received: from mail.208.org ([127.0.0.1])
         by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ylc0vr1nrmfm for <linux-scsi@vger.kernel.org>;
-        Mon, 17 Jul 2023 11:19:42 +0800 (CST)
+        with ESMTP id ytk3cdsu7-12 for <linux-scsi@vger.kernel.org>;
+        Mon, 17 Jul 2023 11:43:39 +0800 (CST)
 Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4R46l20f1DzBHYMC;
-        Mon, 17 Jul 2023 11:19:42 +0800 (CST)
+        by mail.208.org (Postfix) with ESMTPSA id 4R47Gf5qlwzBHXR9;
+        Mon, 17 Jul 2023 11:43:38 +0800 (CST)
 MIME-Version: 1.0
-Date:   Mon, 17 Jul 2023 11:19:41 +0800
+Date:   Mon, 17 Jul 2023 11:43:38 +0800
 From:   hanyu001@208suo.com
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: Convert snprintf to scnprintf
-In-Reply-To: <tencent_BEB5DAE7D9027BD58E958AE34A443CB4CB08@qq.com>
-References: <tencent_BEB5DAE7D9027BD58E958AE34A443CB4CB08@qq.com>
+To:     kashyap.desai@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: megaraid: Convert snprintf to scnprintf
+In-Reply-To: <tencent_5A4487B426B52AE79302EAD5319595E3B308@qq.com>
+References: <tencent_5A4487B426B52AE79302EAD5319595E3B308@qq.com>
 User-Agent: Roundcube Webmail
-Message-ID: <f713637fea0c666f0940be6066cba2ea@208suo.com>
+Message-ID: <dec39ad58f9c6592a2c505a17930a5ec@208suo.com>
 X-Sender: hanyu001@208suo.com
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
@@ -57,73 +59,102 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fix the following coccicheck warnings:
 
-./drivers/scsi/myrb.c:2143:8-16: WARNING: use scnprintf or sprintf
-./drivers/scsi/myrb.c:2153:8-16: WARNING: use scnprintf or sprintf
-./drivers/scsi/myrb.c:2163:8-16: WARNING: use scnprintf or sprintf
-./drivers/scsi/myrb.c:1889:10-18: WARNING: use scnprintf or sprintf
-./drivers/scsi/myrb.c:1770:9-17: WARNING: use scnprintf or sprintf
-./drivers/scsi/myrb.c:1906:9-17: WARNING: use scnprintf or sprintf
+drivers/scsi/megaraid/megaraid_sas_base.c:3422:WARNING: use scnprintf or 
+sprintf
+drivers/scsi/megaraid/megaraid_sas_base.c:3412:WARNING: use scnprintf or 
+sprintf
+drivers/scsi/megaraid/megaraid_sas_base.c:3338:WARNING: use scnprintf or 
+sprintf
+drivers/scsi/megaraid/megaraid_sas_base.c:3385:WARNING: use scnprintf or 
+sprintf
+drivers/scsi/megaraid/megaraid_sas_base.c:3402:WARNING: use scnprintf or 
+sprintf
+drivers/scsi/megaraid/megaraid_sas_base.c:3392:WARNING: use scnprintf or 
+sprintf
+drivers/scsi/megaraid/megaraid_sas_base.c:3476:WARNING: use scnprintf or 
+sprintf
 
 Signed-off-by: ztt <1549089851@qq.com>
 ---
-  drivers/scsi/myrb.c | 12 ++++++------
-  1 file changed, 6 insertions(+), 6 deletions(-)
+  drivers/scsi/megaraid/megaraid_sas_base.c | 14 +++++++-------
+  1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index ca2e932dd9b7..7e3712c6e08f 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -1767,7 +1767,7 @@ static ssize_t raid_state_show(struct device *dev,
-      int ret;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c 
+b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 050eed8e2684..da7931ba4261 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3335,7 +3335,7 @@ fw_crash_buffer_size_show(struct device *cdev,
+      struct megasas_instance *instance =
+          (struct megasas_instance *) shost->hostdata;
 
-      if (!sdev->hostdata)
--        return snprintf(buf, 16, "Unknown\n");
-+        return scnprintf(buf, 16, "Unknown\n");
-
-      if (sdev->channel == myrb_logical_channel(sdev->host)) {
-          struct myrb_ldev_info *ldev_info = sdev->hostdata;
-@@ -1886,7 +1886,7 @@ static ssize_t raid_level_show(struct device *dev,
-
-          name = myrb_raidlevel_name(ldev_info->raid_level);
-          if (!name)
--            return snprintf(buf, 32, "Invalid (%02X)\n",
-+            return scnprintf(buf, 32, "Invalid (%02X)\n",
-                      ldev_info->state);
-          return snprintf(buf, 32, "%s\n", name);
-      }
-@@ -1903,7 +1903,7 @@ static ssize_t rebuild_show(struct device *dev,
-      unsigned char status;
-
-      if (sdev->channel < myrb_logical_channel(sdev->host))
--        return snprintf(buf, 32, "physical device - not rebuilding\n");
-+        return scnprintf(buf, 32, "physical device - not 
-rebuilding\n");
-
-      status = myrb_get_rbld_progress(cb, &rbld_buf);
-
-@@ -2140,7 +2140,7 @@ static ssize_t ctlr_num_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrb_hba *cb = shost_priv(shost);
-
--    return snprintf(buf, 20, "%u\n", cb->ctlr_num);
-+    return scnprintf(buf, 20, "%u\n", cb->ctlr_num);
+-    return snprintf(buf, PAGE_SIZE, "%ld\n", (unsigned long)
++    return scnprintf(buf, PAGE_SIZE, "%ld\n", (unsigned long)
+          ((instance->fw_crash_buffer_size) * 1024 * 1024)/PAGE_SIZE);
   }
-  static DEVICE_ATTR_RO(ctlr_num);
 
-@@ -2150,7 +2150,7 @@ static ssize_t firmware_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrb_hba *cb = shost_priv(shost);
+@@ -3382,14 +3382,14 @@ fw_crash_state_show(struct device *cdev,
+      struct megasas_instance *instance =
+          (struct megasas_instance *) shost->hostdata;
 
--    return snprintf(buf, 16, "%s\n", cb->fw_version);
-+    return scnprintf(buf, 16, "%s\n", cb->fw_version);
+-    return snprintf(buf, PAGE_SIZE, "%d\n", instance->fw_crash_state);
++    return scnprintf(buf, PAGE_SIZE, "%d\n", instance->fw_crash_state);
   }
-  static DEVICE_ATTR_RO(firmware);
 
-@@ -2160,7 +2160,7 @@ static ssize_t model_show(struct device *dev,
-      struct Scsi_Host *shost = class_to_shost(dev);
-      struct myrb_hba *cb = shost_priv(shost);
-
--    return snprintf(buf, 16, "%s\n", cb->model_name);
-+    return scnprintf(buf, 16, "%s\n", cb->model_name);
+  static ssize_t
+  page_size_show(struct device *cdev,
+      struct device_attribute *attr, char *buf)
+  {
+-    return snprintf(buf, PAGE_SIZE, "%ld\n", (unsigned long)PAGE_SIZE - 
+1);
++    return scnprintf(buf, PAGE_SIZE, "%ld\n", (unsigned long)PAGE_SIZE 
+- 1);
   }
-  static DEVICE_ATTR_RO(model);
+
+  static ssize_t
+@@ -3399,7 +3399,7 @@ ldio_outstanding_show(struct device *cdev, struct 
+device_attribute *attr,
+      struct Scsi_Host *shost = class_to_shost(cdev);
+      struct megasas_instance *instance = (struct megasas_instance 
+*)shost->hostdata;
+
+-    return snprintf(buf, PAGE_SIZE, "%d\n", 
+atomic_read(&instance->ldio_outstanding));
++    return scnprintf(buf, PAGE_SIZE, "%d\n", 
+atomic_read(&instance->ldio_outstanding));
+  }
+
+  static ssize_t
+@@ -3409,7 +3409,7 @@ fw_cmds_outstanding_show(struct device *cdev,
+      struct Scsi_Host *shost = class_to_shost(cdev);
+      struct megasas_instance *instance = (struct megasas_instance 
+*)shost->hostdata;
+
+-    return snprintf(buf, PAGE_SIZE, "%d\n", 
+atomic_read(&instance->fw_outstanding));
++    return scnprintf(buf, PAGE_SIZE, "%d\n", 
+atomic_read(&instance->fw_outstanding));
+  }
+
+  static ssize_t
+@@ -3419,7 +3419,7 @@ enable_sdev_max_qd_show(struct device *cdev,
+      struct Scsi_Host *shost = class_to_shost(cdev);
+      struct megasas_instance *instance = (struct megasas_instance 
+*)shost->hostdata;
+
+-    return snprintf(buf, PAGE_SIZE, "%d\n", 
+instance->enable_sdev_max_qd);
++    return scnprintf(buf, PAGE_SIZE, "%d\n", 
+instance->enable_sdev_max_qd);
+  }
+
+  static ssize_t
+@@ -3473,7 +3473,7 @@ raid_map_id_show(struct device *cdev, struct 
+device_attribute *attr,
+      struct megasas_instance *instance =
+              (struct megasas_instance *)shost->hostdata;
+
+-    return snprintf(buf, PAGE_SIZE, "%ld\n",
++    return scnprintf(buf, PAGE_SIZE, "%ld\n",
+              (unsigned long)instance->map_id);
+  }
