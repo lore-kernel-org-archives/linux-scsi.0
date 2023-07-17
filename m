@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4175EB64DD
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jul 2023 03:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91649EB64DD
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jul 2023 03:19:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230523AbjGQDDf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 16 Jul 2023 23:03:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35566 "EHLO
+        id S230381AbjGQDTr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 16 Jul 2023 23:19:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230313AbjGQDDd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Jul 2023 23:03:33 -0400
+        with ESMTP id S230197AbjGQDTq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Jul 2023 23:19:46 -0400
 Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80557E43
-        for <linux-scsi@vger.kernel.org>; Sun, 16 Jul 2023 20:03:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3FE5113
+        for <linux-scsi@vger.kernel.org>; Sun, 16 Jul 2023 20:19:44 -0700 (PDT)
 Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4R46NG2ZQnzBHYMG
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Jul 2023 11:03:26 +0800 (CST)
+        by mail.208.org (Postfix) with ESMTP id 4R46l22nrXzBHYML
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Jul 2023 11:19:42 +0800 (CST)
 Authentication-Results: mail.208.org (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)" header.d=208.org
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
         content-transfer-encoding:content-type:message-id:user-agent
         :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1689563006; x=1692155007; bh=rj1LT5bHpmuBtzv1OK7rGF7ySrl
-        /kE8PVdYCYiJZi9M=; b=DurlklZiQTjvPgxW2hoYfpA6FM+v/b6Om5w5nQh4aQ2
-        pii99d7e+zhqyhFpi4s8oGM7NF1YZU2vwmW5RPWNv98nhdSPRSP7k2K5/50C1Ppi
-        QqXDHBJCPsYGRmMwVtv9JoO8v3FfUCwuOvQ2PJWyd3EzVSPK7ch6zUy8qyeCP4Oi
-        2XWRWoLxSm5dxWV5FKotjwMyo/7pxSJDXt9j8lc1PYEA4KJT3FtCyz4yzt4rWnV+
-        aHL38KaSs5HWb5g/hmRNsQL4t/rylwiBS3FosFf629geaG9B+y3m4vQNzAliplDU
-        zmbpd93zTdSaCdyvAwsGWZehj+yqc+g4kcXnh2/AKbA==
+        dkim; t=1689563982; x=1692155983; bh=d4ObllqL7W+vYI3+pZosV4oHgj9
+        n3i99scVDxsj7EKw=; b=lo4FLgloMO/hOgBiiP0ZcjbGEAbecfJYbdzDV6nY0Pu
+        iQA2AWpQzUKrxo4Vj0zLvAgH80H1ina5FnUUw0NJOZ+tz1AbiZL3ES7aUdvqa5nn
+        7NF+hz7wd60ZHNqv0agBzmPy23X6VRyTfA3ZHFAgtENvISL4RTclxzKjSF7FpYmZ
+        cP+3AKdmRKYdsqNdDX79BcYqbsgG5W9nRQcu5ZcijEGAVGxWtS2WoVkbJaEapheb
+        YnngarTpFMhIF2WF/4CmBgVhU/Le+vQn4Ff9E2FdTvcGk8Y6rwrROue3R9+rrwS8
+        h2FEEdx3KhbFjP1VzPBo57N0aD4on8EalGcuQJ+9sRw==
 X-Virus-Scanned: amavisd-new at mail.208.org
 Received: from mail.208.org ([127.0.0.1])
         by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id dzp9knV3ZXwQ for <linux-scsi@vger.kernel.org>;
-        Mon, 17 Jul 2023 11:03:26 +0800 (CST)
+        with ESMTP id ylc0vr1nrmfm for <linux-scsi@vger.kernel.org>;
+        Mon, 17 Jul 2023 11:19:42 +0800 (CST)
 Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4R46NG0dnCzBHYMC;
-        Mon, 17 Jul 2023 11:03:26 +0800 (CST)
+        by mail.208.org (Postfix) with ESMTPSA id 4R46l20f1DzBHYMC;
+        Mon, 17 Jul 2023 11:19:42 +0800 (CST)
 MIME-Version: 1.0
-Date:   Mon, 17 Jul 2023 11:03:26 +0800
+Date:   Mon, 17 Jul 2023 11:19:41 +0800
 From:   hanyu001@208suo.com
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Fwd: [PATCH]  scsi: Convert snprintf to scnprintf
-In-Reply-To: <tencent_3FC1F30F01ADEAF1CAC67170222ADA97DA07@qq.com>
-References: <tencent_3FC1F30F01ADEAF1CAC67170222ADA97DA07@qq.com>
+Subject: [PATCH] scsi: Convert snprintf to scnprintf
+In-Reply-To: <tencent_BEB5DAE7D9027BD58E958AE34A443CB4CB08@qq.com>
+References: <tencent_BEB5DAE7D9027BD58E958AE34A443CB4CB08@qq.com>
 User-Agent: Roundcube Webmail
-Message-ID: <7309ee79c3aa243c0b448746c76f1d9e@208suo.com>
+Message-ID: <f713637fea0c666f0940be6066cba2ea@208suo.com>
 X-Sender: hanyu001@208suo.com
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
@@ -55,47 +55,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the coccicheck warnings:
+Fix the following coccicheck warnings:
 
-./drivers/scsi/pmcraid.c:3591:8-16: WARNING: use scnprintf or sprintf
-./drivers/scsi/pmcraid.c:3557:8-16: WARNING: use scnprintf or sprintf
-./drivers/scsi/pmcraid.c:3496:8-16: WARNING: use scnprintf or sprintf
+./drivers/scsi/myrb.c:2143:8-16: WARNING: use scnprintf or sprintf
+./drivers/scsi/myrb.c:2153:8-16: WARNING: use scnprintf or sprintf
+./drivers/scsi/myrb.c:2163:8-16: WARNING: use scnprintf or sprintf
+./drivers/scsi/myrb.c:1889:10-18: WARNING: use scnprintf or sprintf
+./drivers/scsi/myrb.c:1770:9-17: WARNING: use scnprintf or sprintf
+./drivers/scsi/myrb.c:1906:9-17: WARNING: use scnprintf or sprintf
 
 Signed-off-by: ztt <1549089851@qq.com>
 ---
-  drivers/scsi/pmcraid.c | 6 +++---
-  1 file changed, 3 insertions(+), 3 deletions(-)
+  drivers/scsi/myrb.c | 12 ++++++------
+  1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 9415a4819470..a65198a48b16 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -3493,7 +3493,7 @@ static ssize_t pmcraid_show_log_level(
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index ca2e932dd9b7..7e3712c6e08f 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1767,7 +1767,7 @@ static ssize_t raid_state_show(struct device *dev,
+      int ret;
+
+      if (!sdev->hostdata)
+-        return snprintf(buf, 16, "Unknown\n");
++        return scnprintf(buf, 16, "Unknown\n");
+
+      if (sdev->channel == myrb_logical_channel(sdev->host)) {
+          struct myrb_ldev_info *ldev_info = sdev->hostdata;
+@@ -1886,7 +1886,7 @@ static ssize_t raid_level_show(struct device *dev,
+
+          name = myrb_raidlevel_name(ldev_info->raid_level);
+          if (!name)
+-            return snprintf(buf, 32, "Invalid (%02X)\n",
++            return scnprintf(buf, 32, "Invalid (%02X)\n",
+                      ldev_info->state);
+          return snprintf(buf, 32, "%s\n", name);
+      }
+@@ -1903,7 +1903,7 @@ static ssize_t rebuild_show(struct device *dev,
+      unsigned char status;
+
+      if (sdev->channel < myrb_logical_channel(sdev->host))
+-        return snprintf(buf, 32, "physical device - not rebuilding\n");
++        return scnprintf(buf, 32, "physical device - not 
+rebuilding\n");
+
+      status = myrb_get_rbld_progress(cb, &rbld_buf);
+
+@@ -2140,7 +2140,7 @@ static ssize_t ctlr_num_show(struct device *dev,
       struct Scsi_Host *shost = class_to_shost(dev);
-      struct pmcraid_instance *pinstance =
-          (struct pmcraid_instance *)shost->hostdata;
--    return snprintf(buf, PAGE_SIZE, "%d\n", 
-pinstance->current_log_level);
-+    return scnprintf(buf, PAGE_SIZE, "%d\n", 
-pinstance->current_log_level);
-  }
+      struct myrb_hba *cb = shost_priv(shost);
 
-  /**
-@@ -3554,7 +3554,7 @@ static ssize_t pmcraid_show_drv_version(
-      char *buf
-  )
-  {
--    return snprintf(buf, PAGE_SIZE, "version: %s\n",
-+    return scnprintf(buf, PAGE_SIZE, "version: %s\n",
-              PMCRAID_DRIVER_VERSION);
+-    return snprintf(buf, 20, "%u\n", cb->ctlr_num);
++    return scnprintf(buf, 20, "%u\n", cb->ctlr_num);
   }
+  static DEVICE_ATTR_RO(ctlr_num);
 
-@@ -3588,7 +3588,7 @@ static ssize_t pmcraid_show_adapter_id(
-          pinstance->pdev->devfn;
-      u32 aen_group = pmcraid_event_family.id;
+@@ -2150,7 +2150,7 @@ static ssize_t firmware_show(struct device *dev,
+      struct Scsi_Host *shost = class_to_shost(dev);
+      struct myrb_hba *cb = shost_priv(shost);
 
--    return snprintf(buf, PAGE_SIZE,
-+    return scnprintf(buf, PAGE_SIZE,
-              "adapter id: %d\nminor: %d\naen group: %d\n",
-              adapter_id, MINOR(pinstance->cdev.dev), aen_group);
+-    return snprintf(buf, 16, "%s\n", cb->fw_version);
++    return scnprintf(buf, 16, "%s\n", cb->fw_version);
   }
+  static DEVICE_ATTR_RO(firmware);
+
+@@ -2160,7 +2160,7 @@ static ssize_t model_show(struct device *dev,
+      struct Scsi_Host *shost = class_to_shost(dev);
+      struct myrb_hba *cb = shost_priv(shost);
+
+-    return snprintf(buf, 16, "%s\n", cb->model_name);
++    return scnprintf(buf, 16, "%s\n", cb->model_name);
+  }
+  static DEVICE_ATTR_RO(model);
