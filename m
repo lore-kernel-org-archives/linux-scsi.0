@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB6D6C10F19
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Jul 2023 17:07:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B792C18E72
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Jul 2023 17:08:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231148AbjGSRH6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Jul 2023 13:07:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45246 "EHLO
+        id S231159AbjGSRH7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Jul 2023 13:07:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230509AbjGSRH4 (ORCPT
+        with ESMTP id S230491AbjGSRH4 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2023 13:07:56 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8CE61701;
-        Wed, 19 Jul 2023 10:07:55 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36JEP68V012583;
-        Wed, 19 Jul 2023 17:07:53 GMT
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A3AE10FC;
+        Wed, 19 Jul 2023 10:07:52 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36JCtD28032608;
+        Wed, 19 Jul 2023 17:07:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=qcppdkim1;
- bh=BrLjrFmizLa/0Q3NcdxHntN7kMjILjBJOwyl0A6gifk=;
- b=eP2JUQEIVkzZP7g6qGN7fYv8s6au1kNWSOZIvo73YTibtejsNRCslLo+a74kwJKZQUXq
- 3PO9JMPyLEb/ASjydezqMV28bnUUlAInPWopCH8wX5lYmQG6VqEqs/8x5wNEJCJA98Xa
- yg4IWFmbGR9xXOcrZ0uQAm3GntBw3+PglP/OjWHOwI/ENbwQ1lm6lecC4DHXTChCRSzY
- fkuXD9Z4jR/E98fyEa1NtU7D86FlMqXYqQETzRIaRUCfwtisYI/MdsOhqhGimaSYZzbq
- j96yk1iZHGJyl4UQKUS5i80bi/5wyKVSY15GRrlUpounylrowmaYkv50jAIOSrwuaH2w aQ== 
+ bh=hWWT4kyiLRL/tYHDWl6sszEdFZfgWab+T51so8u/mFg=;
+ b=Y3dxA7AH3UyHO2YrbjeIkzyokOxFJi2vrY8yBUheK29jEb+Xmn8G+w643k8Snptv6o6s
+ iJmK4JdWyK+j2vpaMkIhdMIZiba2JIMoHrCCFWoVRH5nVAljQOMvhMKlZRfocJMcwY7q
+ d9BZqv71jfkdTPFvxw+RtzBnbbUq/C82/4ZDRbDSB7kEOymTy2vNFQLNRm3eVTSg/Kw9
+ OwfKOlHvUPtqRvIFjalxY+Q1RsqbNWhKCGkvMffvNC85zblfxipWPh1D7gr7zUq/rBDm
+ Iey5JtK61pZvjD7/k+3ZS/2jzPGTXme9lhfH+y2OBlT+LQXTLRspHqFkKnxowQDDB8Ye xw== 
 Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rxg3v8m4h-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rx7411sws-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 19 Jul 2023 17:07:52 +0000
+        Wed, 19 Jul 2023 17:07:49 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 36JH7qVl022248
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 36JH7mrf022217
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 19 Jul 2023 17:07:52 GMT
+        Wed, 19 Jul 2023 17:07:48 GMT
 Received: from hu-gaurkash-lv.qualcomm.com (10.49.16.6) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.30; Wed, 19 Jul 2023 10:07:51 -0700
+ 15.2.1118.30; Wed, 19 Jul 2023 10:07:48 -0700
 From:   Gaurav Kashyap <quic_gaurkash@quicinc.com>
 To:     <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
         <ebiggers@google.com>
@@ -46,9 +46,9 @@ CC:     <linux-mmc@vger.kernel.org>, <linux-block@vger.kernel.org>,
         <quic_psodagud@quicinc.com>, <avmenon@quicinc.com>,
         <abel.vesa@linaro.org>, <quic_spuppala@quicinc.com>,
         Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Subject: [PATCH v2 06/10] ufs: host: wrapped keys support in ufs qcom
-Date:   Wed, 19 Jul 2023 10:04:20 -0700
-Message-ID: <20230719170423.220033-7-quic_gaurkash@quicinc.com>
+Subject: [PATCH v2 03/10] soc: qcom: ice: add hwkm support in ice
+Date:   Wed, 19 Jul 2023 10:04:17 -0700
+Message-ID: <20230719170423.220033-4-quic_gaurkash@quicinc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
 References: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
@@ -60,89 +60,223 @@ X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: hhsGE9d6-2m7vXkGgHl4_1kmlTNIAIsP
-X-Proofpoint-ORIG-GUID: hhsGE9d6-2m7vXkGgHl4_1kmlTNIAIsP
+X-Proofpoint-GUID: lixfaRZWu-MtmxEkwahTM2HxG2tOCRYu
+X-Proofpoint-ORIG-GUID: lixfaRZWu-MtmxEkwahTM2HxG2tOCRYu
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-07-19_11,2023-07-19_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- malwarescore=0 spamscore=0 bulkscore=0 adultscore=0 mlxscore=0
- suspectscore=0 clxscore=1015 lowpriorityscore=0 priorityscore=1501
- mlxlogscore=999 phishscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2306200000 definitions=main-2307190154
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ lowpriorityscore=0 phishscore=0 adultscore=0 impostorscore=0 bulkscore=0
+ suspectscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2307190154
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-1. Implement derive software secret defined in ufs core.
-2. Use the wrapped keys quirk when hwkm is supported. The assumption
-   here is that if Qualcomm ICE supports HWKM, then all ICE keys
-   will be treated as hardware wrapped keys.
+Qualcomm's ICE (Inline Crypto Engine) contains a proprietary
+key management hardware called Hardware Key Manager (HWKM).
+This patch integrates HWKM support in ICE when it is
+available. HWKM primarily provides hardware wrapped key support
+where the ICE (storage) keys are not available in software and
+protected in hardware.
 
 Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+ drivers/soc/qcom/ice.c | 112 ++++++++++++++++++++++++++++++++++++++++-
+ include/soc/qcom/ice.h |   1 +
+ 2 files changed, 112 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index a04aafad4f48..9a7c5d46dbf4 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -82,6 +82,8 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
+diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+index d19f674bb1b6..242306d13049 100644
+--- a/drivers/soc/qcom/ice.c
++++ b/drivers/soc/qcom/ice.c
+@@ -24,6 +24,18 @@
+ #define QCOM_ICE_REG_FUSE_SETTING		0x0010
+ #define QCOM_ICE_REG_BIST_STATUS		0x0070
+ #define QCOM_ICE_REG_ADVANCED_CONTROL		0x1000
++#define QCOM_ICE_REG_CONTROL			0x0
++/* QCOM ICE HWKM registers */
++#define QCOM_ICE_REG_HWKM_TZ_KM_CTL		0x1000
++#define QCOM_ICE_REG_HWKM_TZ_KM_STATUS		0x1004
++#define QCOM_ICE_REG_HWKM_BANK0_BBAC_0		0x5000
++#define QCOM_ICE_REG_HWKM_BANK0_BBAC_1		0x5004
++#define QCOM_ICE_REG_HWKM_BANK0_BBAC_2		0x5008
++#define QCOM_ICE_REG_HWKM_BANK0_BBAC_3		0x500C
++#define QCOM_ICE_REG_HWKM_BANK0_BBAC_4		0x5010
++
++#define QCOM_ICE_HWKM_BIST_DONE_V1_VAL		0x11
++#define QCOM_ICE_HWKM_BIST_DONE_V2_VAL		0x287
  
- 	host->ice = ice;
- 	hba->caps |= UFSHCD_CAP_CRYPTO;
-+	if (qcom_ice_hwkm_supported(host->ice))
-+		hba->quirks |= UFSHCD_QUIRK_USES_WRAPPED_CRYPTO_KEYS;
+ /* BIST ("built-in self-test") status flags */
+ #define QCOM_ICE_BIST_STATUS_MASK		GENMASK(31, 28)
+@@ -32,6 +44,9 @@
+ #define QCOM_ICE_FORCE_HW_KEY0_SETTING_MASK	0x2
+ #define QCOM_ICE_FORCE_HW_KEY1_SETTING_MASK	0x4
  
- 	return 0;
- }
-@@ -119,7 +121,11 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
- 	    cap.key_size != UFS_CRYPTO_KEY_SIZE_256)
- 		return -EINVAL;
++#define QCOM_ICE_HWKM_REG_OFFSET	0x8000
++#define HWKM_OFFSET(reg)		(reg + QCOM_ICE_HWKM_REG_OFFSET)
++
+ #define qcom_ice_writel(engine, val, reg)	\
+ 	writel((val), (engine)->base + (reg))
  
--	ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
-+	if (bkey->crypto_cfg.key_type == BLK_CRYPTO_KEY_TYPE_HW_WRAPPED)
-+		ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_WRAPPED;
+@@ -44,6 +59,7 @@ struct qcom_ice {
+ 	struct device_link *link;
+ 
+ 	struct clk *core_clk;
++	u8 hwkm_version;
+ };
+ 
+ static bool qcom_ice_check_supported(struct qcom_ice *ice)
+@@ -61,8 +77,20 @@ static bool qcom_ice_check_supported(struct qcom_ice *ice)
+ 		return false;
+ 	}
+ 
++	if ((major >= 4) || ((major == 3) && (minor == 2) && (step >= 1)))
++		ice->hwkm_version = 2;
++	else if ((major == 3) && (minor == 2))
++		ice->hwkm_version = 1;
 +	else
-+		ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
++		ice->hwkm_version = 0;
 +
- 	if (config_enable)
- 		return qcom_ice_program_key(host->ice,
- 					    QCOM_ICE_CRYPTO_ALG_AES_XTS,
-@@ -129,9 +135,24 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
- 		return qcom_ice_evict_key(host->ice, slot);
+ 	dev_info(dev, "Found QC Inline Crypto Engine (ICE) v%d.%d.%d\n",
+ 		 major, minor, step);
++	if (!ice->hwkm_version)
++		dev_info(dev, "QC ICE HWKM (Hardware Key Manager) not supported");
++	else
++		dev_info(dev, "QC ICE HWKM (Hardware Key Manager) version = %d",
++			 ice->hwkm_version);
+ 
+ 	/* If fuses are blown, ICE might not work in the standard way. */
+ 	regval = qcom_ice_readl(ice, QCOM_ICE_REG_FUSE_SETTING);
+@@ -111,10 +139,14 @@ static void qcom_ice_optimization_enable(struct qcom_ice *ice)
+  * fails, so we needn't do it in software too, and (c) properly testing
+  * storage encryption requires testing the full storage stack anyway,
+  * and not relying on hardware-level self-tests.
++ *
++ * However, we still care about if HWKM BIST failed (when supported) as
++ * important functionality would fail later, so disable hwkm on failure.
+  */
+ static int qcom_ice_wait_bist_status(struct qcom_ice *ice)
+ {
+ 	u32 regval;
++	u32 bist_done_val;
+ 	int err;
+ 
+ 	err = readl_poll_timeout(ice->base + QCOM_ICE_REG_BIST_STATUS,
+@@ -123,15 +155,87 @@ static int qcom_ice_wait_bist_status(struct qcom_ice *ice)
+ 	if (err)
+ 		dev_err(ice->dev, "Timed out waiting for ICE self-test to complete\n");
+ 
++	if (ice->hwkm_version) {
++		bist_done_val = (ice->hwkm_version == 1) ?
++				 QCOM_ICE_HWKM_BIST_DONE_V1_VAL :
++				 QCOM_ICE_HWKM_BIST_DONE_V2_VAL;
++		if (qcom_ice_readl(ice,
++				   HWKM_OFFSET(QCOM_ICE_REG_HWKM_TZ_KM_STATUS)) !=
++				   bist_done_val) {
++			dev_warn(ice->dev, "HWKM BIST error\n");
++			ice->hwkm_version = 0;
++		}
++	}
+ 	return err;
  }
  
-+/*
-+ * Derive a SW secret from the wrapped key. The key is unwrapped in Trustzone
-+ * and a SW key is then derived from it.
-+ */
-+int ufs_qcom_ice_derive_sw_secret(struct ufs_hba *hba, const u8 wrapped_key[],
-+				  unsigned int wrapped_key_size,
-+				  u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE])
++static void qcom_ice_enable_standard_mode(struct qcom_ice *ice)
 +{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++	u32 val = 0;
 +
-+	return qcom_ice_derive_sw_secret(host->ice, wrapped_key,
-+					wrapped_key_size, sw_secret);
++	if (!ice->hwkm_version)
++		return;
++
++	/*
++         * When ICE is in standard (hwkm) mode, it supports HW wrapped
++         * keys, and when it is in legacy mode, it only supports standard
++         * (non HW wrapped) keys.
++         *
++	 * Put ICE in standard mode, ICE defaults to legacy mode.
++	 * Legacy mode - ICE HWKM slave not supported.
++	 * Standard mode - ICE HWKM slave supported.
++	 *
++	 * Depending on the version of HWKM, it is controlled by different
++	 * registers in ICE.
++	 */
++	if (ice->hwkm_version >= 2) {
++		val = qcom_ice_readl(ice, QCOM_ICE_REG_CONTROL);
++		val = val & 0xFFFFFFFE;
++		qcom_ice_writel(ice, val, QCOM_ICE_REG_CONTROL);
++	} else {
++		qcom_ice_writel(ice, 0x7,
++				HWKM_OFFSET(QCOM_ICE_REG_HWKM_TZ_KM_CTL));
++	}
 +}
 +
- #else
- 
- #define ufs_qcom_ice_program_key NULL
-+#define ufs_qcom_ice_derive_sw_secret NULL
- 
- static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
++static void qcom_ice_hwkm_init(struct qcom_ice *ice)
++{
++	if (!ice->hwkm_version)
++		return;
++
++	/*
++	 * Give register bank of the HWKM slave access to read and modify
++	 * the keyslots in ICE HWKM slave. Without this, trustzone will not
++	 * be able to program keys into ICE.
++	 */
++	qcom_ice_writel(ice, 0xFFFFFFFF,
++			HWKM_OFFSET(QCOM_ICE_REG_HWKM_BANK0_BBAC_0));
++	qcom_ice_writel(ice, 0xFFFFFFFF,
++			HWKM_OFFSET(QCOM_ICE_REG_HWKM_BANK0_BBAC_1));
++	qcom_ice_writel(ice, 0xFFFFFFFF,
++			HWKM_OFFSET(QCOM_ICE_REG_HWKM_BANK0_BBAC_2));
++	qcom_ice_writel(ice, 0xFFFFFFFF,
++			HWKM_OFFSET(QCOM_ICE_REG_HWKM_BANK0_BBAC_3));
++	qcom_ice_writel(ice, 0xFFFFFFFF,
++			HWKM_OFFSET(QCOM_ICE_REG_HWKM_BANK0_BBAC_4));
++}
++
+ int qcom_ice_enable(struct qcom_ice *ice)
  {
-@@ -1747,6 +1768,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
- 	.device_reset		= ufs_qcom_device_reset,
- 	.config_scaling_param = ufs_qcom_config_scaling_param,
- 	.program_key		= ufs_qcom_ice_program_key,
-+	.derive_sw_secret	= ufs_qcom_ice_derive_sw_secret,
- 	.reinit_notify		= ufs_qcom_reinit_notify,
- 	.mcq_config_resource	= ufs_qcom_mcq_config_resource,
- 	.get_hba_mac		= ufs_qcom_get_hba_mac,
++	int err;
++
+ 	qcom_ice_low_power_mode_enable(ice);
+ 	qcom_ice_optimization_enable(ice);
+ 
+-	return qcom_ice_wait_bist_status(ice);
++	qcom_ice_enable_standard_mode(ice);
++
++	err = qcom_ice_wait_bist_status(ice);
++	if (err)
++		return err;
++
++	qcom_ice_hwkm_init(ice);
++
++	return err;
+ }
+ EXPORT_SYMBOL_GPL(qcom_ice_enable);
+ 
+@@ -203,6 +307,12 @@ int qcom_ice_evict_key(struct qcom_ice *ice, int slot)
+ }
+ EXPORT_SYMBOL_GPL(qcom_ice_evict_key);
+ 
++bool qcom_ice_hwkm_supported(struct qcom_ice *ice)
++{
++	return (ice->hwkm_version > 0);
++}
++EXPORT_SYMBOL_GPL(qcom_ice_hwkm_supported);
++
+ static struct qcom_ice *qcom_ice_create(struct device *dev,
+ 					void __iomem *base)
+ {
+diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
+index 9dd835dba2a7..1f52e82e3e1c 100644
+--- a/include/soc/qcom/ice.h
++++ b/include/soc/qcom/ice.h
+@@ -34,5 +34,6 @@ int qcom_ice_program_key(struct qcom_ice *ice,
+ 			 const struct blk_crypto_key *bkey,
+ 			 u8 data_unit_size, int slot);
+ int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
++bool qcom_ice_hwkm_supported(struct qcom_ice *ice);
+ struct qcom_ice *of_qcom_ice_get(struct device *dev);
+ #endif /* __QCOM_ICE_H__ */
 -- 
 2.25.1
 
