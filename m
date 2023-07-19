@@ -2,95 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99899C0015E
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Jul 2023 18:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6605AC001DE
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Jul 2023 18:33:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229812AbjGSSPT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Jul 2023 14:15:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48420 "EHLO
+        id S229651AbjGSSd4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Jul 2023 14:33:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229765AbjGSSPT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2023 14:15:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B87DB6
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 11:14:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689790470;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FPyLATJyncOfWwr+BjaorlQZp4BWYUBQYZoHTu3qX70=;
-        b=RxDhlehQVjh1FXymiEhNLXLPvCEleUMEkcy13N+IrT/FHYGX62YcC76DORfv1OiOtlLDzs
-        42Y26Va1vcwCtohgTJD7zBCmHip6kBrMlixqh+7l6allfoeIklFOm8sR/UfBCNPH1QsHLJ
-        NL2l18nyHxVBnJevaB65GPnCMZc5ggs=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-246-1rnTBtsPPzy298j9_exNcg-1; Wed, 19 Jul 2023 14:14:28 -0400
-X-MC-Unique: 1rnTBtsPPzy298j9_exNcg-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3DEA5185A793;
-        Wed, 19 Jul 2023 18:14:28 +0000 (UTC)
-Received: from rhel-developer-toolbox-latest (unknown [10.2.16.238])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D170C40C206F;
-        Wed, 19 Jul 2023 18:14:27 +0000 (UTC)
-Date:   Wed, 19 Jul 2023 11:14:25 -0700
-From:   Chris Leech <cleech@redhat.com>
-To:     hanyu001@208suo.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: qla4xxx: Convert snprintf to scnprintf
-Message-ID: <ZLgoARU6tZP8sMfT@rhel-developer-toolbox-latest>
-References: <tencent_F14720A15AAC92683C94E88876A876E7FC05@qq.com>
- <4a69897245577acfb2f095501b21cd78@208suo.com>
+        with ESMTP id S229567AbjGSSd4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2023 14:33:56 -0400
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8127910CB
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 11:33:55 -0700 (PDT)
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1b8bbcfd89aso43429495ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 11:33:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689791635; x=1692383635;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=oXioRTyJ4xwJBXnRRnwkRMoM7jBSHJ82oBIcR/YDHRY=;
+        b=HzBgd0h0u3VSzi1fObVcOqfS8rjYPhBbiGLnfpa/KL9JIVNc4g3r8XX/Y8oNrWhIsb
+         Ia/hrD6hmdrQUumV/703Fng7rPJDYzX7qthRhbaXG4WGTNr/Toc8KYnaa3LW5ELErYxz
+         JSPgBmYS8qz4OE0jb1Nn0HGPvPnDdUsmFPfaKeIvZ7zYbG9mhDdgGT8l6thkglU/96yK
+         Vq2DI0t1eoREe1K7104cMCFMXSPzlrvTm0Wb8E0qLEwnL52IUcko7xR4U9Q7hPPflzbN
+         PQVej918zeJPO6C+fD0QptE/eAZiCRZGUX0gqj7TGdOjk89uq1QDYW09ZRqEjROyyQVp
+         FSdw==
+X-Gm-Message-State: ABy/qLY6ugVMqmoIUvpDNeYEbZWIDPmv/zTzMqo2tJJjKD4Nda6GvjKZ
+        NHDmizpvrVUCvdH83d4rNR4=
+X-Google-Smtp-Source: APBJJlEzxHCWj+pwQYV1zGg4uIxc8NYkljDSA6e8GRPoBX5bUMwVwvb4dauIsGttC9sfSFVxO4aMug==
+X-Received: by 2002:a17:902:da92:b0:1b8:525a:f685 with SMTP id j18-20020a170902da9200b001b8525af685mr18061919plx.37.1689791634650;
+        Wed, 19 Jul 2023 11:33:54 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:a2ab:183f:c76c:d30d? ([2620:15c:211:201:a2ab:183f:c76c:d30d])
+        by smtp.gmail.com with ESMTPSA id e21-20020a170902d39500b001b9dfa8d884sm4299434pld.226.2023.07.19.11.33.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 19 Jul 2023 11:33:54 -0700 (PDT)
+Message-ID: <b67e7390-6829-e403-2a58-64fbbc0f821e@acm.org>
+Date:   Wed, 19 Jul 2023 11:33:52 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4a69897245577acfb2f095501b21cd78@208suo.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH v10 04/33] scsi: Have scsi-ml retry scsi_probe_lun errors
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        john.g.garry@oracle.com, mwilck@suse.com, hch@lst.de,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+References: <20230714213419.95492-1-michael.christie@oracle.com>
+ <20230714213419.95492-5-michael.christie@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230714213419.95492-5-michael.christie@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 17, 2023 at 02:18:31PM +0800, hanyu001@208suo.com wrote:
-> Fix the following coccicheck warnings:
+On 7/14/23 14:33, Mike Christie wrote:
+> This has scsi_probe_lun ask scsi-ml to retry UAs instead of driving them
+> itself.
 > 
-> ./drivers/scsi/qla4xxx/ql4_attr.c:200:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:273:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:281:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:303:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:210:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:264:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:312:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:159:9-17: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:256:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:247:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:181:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:190:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:223:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:235:8-16: WARNING: use scnprintf or
-> sprintf
-> ./drivers/scsi/qla4xxx/ql4_attr.c:173:8-16: WARNING: use scnprintf or
-> sprintf
-> 
-> Signed-off-by: ztt <1549089851@qq.com>
+> There is one behavior change with this patch. We used to get a total of
+> 3 retries for both UAs we were checking for. We now get 3 retries for
+> each.
 
-These should all be converted to sysfs_emit, and not scnprintf.
-
-Thanks,
-- Chris Leech
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
