@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A43C0015E
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Jul 2023 18:06:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BE77C001DE
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Jul 2023 18:09:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230006AbjGSSGj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Jul 2023 14:06:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45990 "EHLO
+        id S230345AbjGSSJI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Jul 2023 14:09:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbjGSSGi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2023 14:06:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F3FC1FC8
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 11:05:51 -0700 (PDT)
+        with ESMTP id S229692AbjGSSJH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2023 14:09:07 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F04E51FC8
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 11:08:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689789950;
+        s=mimecast20190719; t=1689790098;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=ppFKlrag3QdrUFu+M1q/0HEmbG6vDN7AmOHc2jJWtYo=;
-        b=A7xbM4XOvN85QKa6qAT1CgUIe3mDgEdyDJwhnNmIxI/ci5XIEsNWQrd66HG+Sz8yh6LKdq
-        LqjIIJ3zVxLcjl3Nx5ZWBcC+aIyxOMiw5lCnhaJiPOnva+WgTzyVkJeJUGqOVG/51dBSky
-        0wdGxiJpTbW2eC1f7WiEc8eL2Qcpt3U=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-43-ft0FIJeTMqKx_VmVOe2H2Q-1; Wed, 19 Jul 2023 14:05:46 -0400
-X-MC-Unique: ft0FIJeTMqKx_VmVOe2H2Q-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        bh=7Y/GUFxEIaTqE74eL24zjniGM/m0YHfzJ+3Frv5JlMY=;
+        b=WjuNxjndvDyb50Zlx3yPyB89R6geTB1PykDMg7K9DNKEeEORWP7rJxDe3H7sEWJKK6KoT0
+        /B0+AzvqBBL3bq1DM27rDtAamdRXmjYRDLcdO7CmkzfM11n0Q8ZXPABMlKud4sak8CxE8L
+        DFUSkQLHsFBoxRmcjPVnQOwZZ+Pnc+M=
+Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-578-HYUpaIqROryscYW4dmy5og-1; Wed, 19 Jul 2023 14:08:14 -0400
+X-MC-Unique: HYUpaIqROryscYW4dmy5og-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 44F47101A54E;
-        Wed, 19 Jul 2023 18:05:31 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 29CB43C108DD;
+        Wed, 19 Jul 2023 18:08:14 +0000 (UTC)
 Received: from rhel-developer-toolbox-latest (unknown [10.2.16.238])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9A67D492B01;
-        Wed, 19 Jul 2023 18:05:30 +0000 (UTC)
-Date:   Wed, 19 Jul 2023 11:05:28 -0700
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 960E61121314;
+        Wed, 19 Jul 2023 18:08:13 +0000 (UTC)
+Date:   Wed, 19 Jul 2023 11:08:11 -0700
 From:   Chris Leech <cleech@redhat.com>
 To:     hanyu001@208suo.com
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: Fwd: [PATCH] scsi: be2iscsi: wacom: convert sysfs
  sprintf/snprintf family to sysfs_emit
-Message-ID: <ZLgl6EsMeFKCGQ62@rhel-developer-toolbox-latest>
+Message-ID: <ZLgmi1I8MVlZnfcm@rhel-developer-toolbox-latest>
 References: <tencent_A27502E2D5B495E4E319441AB4B3B5F7E708@qq.com>
  <a70b030b0e0bdf224d35dec9aecc7371@208suo.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <a70b030b0e0bdf224d35dec9aecc7371@208suo.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -70,15 +70,15 @@ On Fri, Jul 14, 2023 at 04:10:43PM +0800, hanyu001@208suo.com wrote:
 > sprintf
 > 
 > Signed-off-by: ztt <1549089851@qq.com>
-> ---
->  drivers/scsi/be2iscsi/be_mgmt.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
 
-The changes here to scnprintf don't match the subject, which mentions
-sysfs_emit.  It would be better to convert to sysfs_emit.
+These should all be converted to sysfs_emit instead of scnprintf.
+Thanks,
 
 - Chris Leech
 
+> ---
+>  drivers/scsi/be2iscsi/be_mgmt.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
 > diff --git a/drivers/scsi/be2iscsi/be_mgmt.c
 > b/drivers/scsi/be2iscsi/be_mgmt.c
