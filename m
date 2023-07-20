@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B076DEB64DD
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:43:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA90CEB64DA
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:43:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229940AbjGTFn3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 01:43:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45198 "EHLO
+        id S229973AbjGTFng (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 01:43:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229846AbjGTFnL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:43:11 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CD712737
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:42:38 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-666eef03ebdso223451b3a.1
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:42:38 -0700 (PDT)
+        with ESMTP id S229880AbjGTFnN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:43:13 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5FA42D52
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:42:42 -0700 (PDT)
+Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-666e3b15370so245570b3a.0
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:42:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1689831735; x=1690436535;
+        d=linaro.org; s=google; t=1689831744; x=1690436544;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=gIJwX+rRxRyxzpkMToX1TQb/1UCAf5+FnTJGGYz4XKg=;
-        b=spBKL23pQZiuHNlsGsgeh45EbVEuI+G9cqILcMhP48E3UQSGPwHkaOElarS+a/KR7c
-         z5sN/8944MFGOBTytUKLOscCDukd2rGHE1nIWdVpWqqrwuy0iaIQeEtZU5DDk57L/guH
-         6EnwnicNtOkjlQ3fPY28NXvtfw7tBOj6I6Gg+XKn9ClG8vzr96b6HATzKDWIIHG39Jcd
-         CxjuFcrCMjo9JNTM9oJfZ3CDPnJ6fVNhQ7oCv6qatPa+DrChRg/decM2ZB09WHqBl1Ez
-         eehK7bk1/XAdBxNpAiFLIFl54IMeRZoMDzW2KsXKxzoNJj5ia6kdqlc6IGzaeRyS0oZY
-         212A==
+        bh=9Da5r3Jfw26dVyORzvrEm8qPAG9eUA105lcs0ZwlGe4=;
+        b=OLXiRlHJkgIxd6h4nL1TG2KyNnXeFfkoIfTpn0CRa8X37aS02UlHpPRkJhdkr9IN35
+         erU2FU6jqK4k/wAvHhZqqODxcw3WsxABVWS6ocm7vjBXFp7lg2gFfB89GUX38dBp4Uba
+         kVXedomdrYOUMenpqUQye7EQWfZITNsN3tc059hob/Bp15DOEwjn0c+cs7cupU6Oi48E
+         gmb9C9xl7Rjnk2OjV3z4gzb010tLzipXyhaEkJdSKEux6cacYUB+96l4WrIFCe9wEJ4q
+         dnxis8d2zAamlt54BNqsSDoimj6iZoj0kngQq+CFCQpiWwjMebe2w+oa0RZ3kpLbHG54
+         sm5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689831735; x=1690436535;
+        d=1e100.net; s=20221208; t=1689831744; x=1690436544;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=gIJwX+rRxRyxzpkMToX1TQb/1UCAf5+FnTJGGYz4XKg=;
-        b=f4fMhWpsvokfNCrW3fG+xMep8XiJwxQytwLrt9gq6ylf8V/6SRRT+O4nD8eSWw+TpQ
-         Z3s9QJsMC0lfw4yOOuefmhziIAuKGJ8zNx8Pp+U2V+vRT7Oxd5w+qGdjuKe4h+Ufr9B8
-         sY6jaqiD/HRZ3UG7dxFkvwuOnOCGA891RTDoBB7NOYi4VqdvuMd9yttDncgVbiXKNryT
-         xUEam3cH3D2DYj5xq4jTlDkVMAXKtIPMYO1CraarTFZw9mIKcS9/EtPCCM/MV4HoVNAE
-         7o/qqT4Xib2D5ymzFGQXaR/jjNrjeqPFMnKfVxoQgP+oZCm2I8KkbRah1naiEQH1+qm8
-         2OsQ==
-X-Gm-Message-State: ABy/qLYJS22oI1HAv96bT1NQJlHk7MEtU9b3c6pj3FM2of0WNAlJjD0I
-        nYARUWKhVmLf26H2a7RK95lO
-X-Google-Smtp-Source: APBJJlGKMzAXTbAybybYaz7y672i43FBRXbwuel9Scs3E8/WFNyGZYn0Qkn9lCp7a/GXrii39IHMyQ==
-X-Received: by 2002:a05:6a20:12ca:b0:135:8a04:9045 with SMTP id v10-20020a056a2012ca00b001358a049045mr7358575pzg.1.1689831735342;
-        Wed, 19 Jul 2023 22:42:15 -0700 (PDT)
+        bh=9Da5r3Jfw26dVyORzvrEm8qPAG9eUA105lcs0ZwlGe4=;
+        b=Cqps6IajyihofpuDD5FuRqz/AjBdOVovbHRwfNC0NkUAUXq55pDoeSgOPD+K6wlKEa
+         EWnsbGdqmMeCmanhKwaXupCMA7WuR6i0UqGrljJ2vFB5nUmaY3pPa1fgNuYbJRQin+DN
+         q+jTxVgpv2vHLQ6ITnBQo1yCD7ZJiw9wJ2sWxPk85QM0/xRj0o3Zg0B7cKeEk2/7+CDM
+         AlAimRc/ggKcDg8hCviQE//h0sAs39Px5HtKeIrqBekoWJP8+VBzrnQYPw05p0cKZGwW
+         hXYUr56It70/zqf29n9PjvIvsojhBSCShAbj7AsN1gsER6YhTVI49piGzj4+QOvt2RLv
+         mb7w==
+X-Gm-Message-State: ABy/qLaDDyIxVU7fUexi1SD35uKfmFcccyeV0KiFYb7d/fgCVDIMlsom
+        qYoc+ODmaw9rLJLeNctgl1nA
+X-Google-Smtp-Source: APBJJlEZySYTpTpy06AWSI5G52m0csQbrxdZQEOu0Vw2bY7rfM/v52YdYHj6by+q3WXwlYgLzdMn4g==
+X-Received: by 2002:a05:6a20:a10f:b0:126:a771:b792 with SMTP id q15-20020a056a20a10f00b00126a771b792mr7718694pzk.14.1689831743710;
+        Wed, 19 Jul 2023 22:42:23 -0700 (PDT)
 Received: from localhost.localdomain ([117.206.119.70])
-        by smtp.gmail.com with ESMTPSA id r2-20020a170902be0200b001b85bb5fd77sm263367pls.119.2023.07.19.22.42.07
+        by smtp.gmail.com with ESMTPSA id r2-20020a170902be0200b001b85bb5fd77sm263367pls.119.2023.07.19.22.42.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Jul 2023 22:42:14 -0700 (PDT)
+        Wed, 19 Jul 2023 22:42:23 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
         myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
@@ -66,9 +66,9 @@ Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
         bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
         linux-kernel@vger.kernel.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 06/15] arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
-Date:   Thu, 20 Jul 2023 11:10:51 +0530
-Message-Id: <20230720054100.9940-7-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 07/15] OPP: Introduce dev_pm_opp_find_freq_{ceil/floor}_indexed() APIs
+Date:   Thu, 20 Jul 2023 11:10:52 +0530
+Message-Id: <20230720054100.9940-8-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
 References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
@@ -78,69 +78,141 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS host controller, when scaling gears, should choose appropriate
-performance state of RPMh power domain controller along with clock
-frequency. So let's add the OPP table support to specify both clock
-frequency and RPMh performance states replacing the old "freq-table-hz"
-property.
+In the case of devices with multiple clocks, drivers need to specify the
+clock index for the OPP framework to find the OPP corresponding to the
+floor/ceil of the supplied frequency. So let's introduce the two new APIs
+accepting the clock index as an argument.
+
+These APIs use the exising _find_key_ceil() helper by supplying the clock
+index to it.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- arch/arm64/boot/dts/qcom/sm8250.dtsi | 39 +++++++++++++++++++++-------
- 1 file changed, 30 insertions(+), 9 deletions(-)
+ drivers/opp/core.c     | 54 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pm_opp.h | 18 ++++++++++++++
+ 2 files changed, 72 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-index 83ab6de459bc..72fd66db9c51 100644
---- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-@@ -2194,17 +2194,38 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
--			freq-table-hz =
--				<37500000 300000000>,
--				<0 0>,
--				<0 0>,
--				<37500000 300000000>,
--				<0 0>,
--				<0 0>,
--				<0 0>,
--				<0 0>;
-+
-+			operating-points-v2 = <&ufs_opp_table>;
+diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+index 3f46e499d615..a6d0b6b18e0e 100644
+--- a/drivers/opp/core.c
++++ b/drivers/opp/core.c
+@@ -658,6 +658,33 @@ struct dev_pm_opp *dev_pm_opp_find_freq_ceil(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(dev_pm_opp_find_freq_ceil);
  
- 			status = "disabled";
++/**
++ * dev_pm_opp_find_freq_ceil_indexed() - Search for a rounded ceil freq for the
++ *					 clock corresponding to the index
++ * @dev:	Device for which we do this operation
++ * @freq:	Start frequency
++ * @index:	Clock index
++ *
++ * Search for the matching ceil *available* OPP for the clock corresponding to
++ * the specified index from a starting freq for a device.
++ *
++ * Return: matching *opp and refreshes *freq accordingly, else returns
++ * ERR_PTR in case of error and should be handled using IS_ERR. Error return
++ * values can be:
++ * EINVAL:	for bad pointer
++ * ERANGE:	no match found for search
++ * ENODEV:	if device not found in list of registered devices
++ *
++ * The callers are required to call dev_pm_opp_put() for the returned OPP after
++ * use.
++ */
++struct dev_pm_opp *dev_pm_opp_find_freq_ceil_indexed(struct device *dev,
++					     unsigned long *freq, u32 index)
++{
++	return _find_key_ceil(dev, freq, index, true, _read_freq, NULL);
++}
++EXPORT_SYMBOL_GPL(dev_pm_opp_find_freq_ceil_indexed);
 +
-+			ufs_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-37500000 {
-+					opp-hz = /bits/ 64 <37500000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <37500000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-300000000 {
-+					opp-hz = /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+				};
-+			};
- 		};
+ /**
+  * dev_pm_opp_find_freq_floor() - Search for a rounded floor freq
+  * @dev:	device for which we do this operation
+@@ -683,6 +710,33 @@ struct dev_pm_opp *dev_pm_opp_find_freq_floor(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(dev_pm_opp_find_freq_floor);
  
- 		ufs_mem_phy: phy@1d87000 {
++/**
++ * dev_pm_opp_find_freq_floor_indexed() - Search for a rounded floor freq for the
++ *					  clock corresponding to the index
++ * @dev:	Device for which we do this operation
++ * @freq:	Start frequency
++ * @index:	Clock index
++ *
++ * Search for the matching floor *available* OPP for the clock corresponding to
++ * the specified index from a starting freq for a device.
++ *
++ * Return: matching *opp and refreshes *freq accordingly, else returns
++ * ERR_PTR in case of error and should be handled using IS_ERR. Error return
++ * values can be:
++ * EINVAL:	for bad pointer
++ * ERANGE:	no match found for search
++ * ENODEV:	if device not found in list of registered devices
++ *
++ * The callers are required to call dev_pm_opp_put() for the returned OPP after
++ * use.
++ */
++struct dev_pm_opp *dev_pm_opp_find_freq_floor_indexed(struct device *dev,
++					      unsigned long *freq, u32 index)
++{
++	return _find_key_floor(dev, freq, index, true, _read_freq, NULL);
++}
++EXPORT_SYMBOL_GPL(dev_pm_opp_find_freq_floor_indexed);
++
+ /**
+  * dev_pm_opp_find_level_exact() - search for an exact level
+  * @dev:		device for which we do this operation
+diff --git a/include/linux/pm_opp.h b/include/linux/pm_opp.h
+index dc1fb5890792..991f54da79b5 100644
+--- a/include/linux/pm_opp.h
++++ b/include/linux/pm_opp.h
+@@ -124,6 +124,9 @@ struct dev_pm_opp *dev_pm_opp_find_freq_exact(struct device *dev,
+ struct dev_pm_opp *dev_pm_opp_find_freq_floor(struct device *dev,
+ 					      unsigned long *freq);
+ 
++struct dev_pm_opp *dev_pm_opp_find_freq_floor_indexed(struct device *dev,
++					      unsigned long *freq, u32 index);
++
+ struct dev_pm_opp *dev_pm_opp_find_level_exact(struct device *dev,
+ 					       unsigned int level);
+ struct dev_pm_opp *dev_pm_opp_find_level_ceil(struct device *dev,
+@@ -132,6 +135,9 @@ struct dev_pm_opp *dev_pm_opp_find_level_ceil(struct device *dev,
+ struct dev_pm_opp *dev_pm_opp_find_freq_ceil(struct device *dev,
+ 					     unsigned long *freq);
+ 
++struct dev_pm_opp *dev_pm_opp_find_freq_ceil_indexed(struct device *dev,
++					     unsigned long *freq, u32 index);
++
+ struct dev_pm_opp *dev_pm_opp_find_bw_ceil(struct device *dev,
+ 					   unsigned int *bw, int index);
+ 
+@@ -271,12 +277,24 @@ static inline struct dev_pm_opp *dev_pm_opp_find_freq_floor(struct device *dev,
+ 	return ERR_PTR(-EOPNOTSUPP);
+ }
+ 
++static inline struct dev_pm_opp *dev_pm_opp_find_freq_floor_indexed(struct device *dev,
++					unsigned long *freq, u32 index)
++{
++	return ERR_PTR(-EOPNOTSUPP);
++}
++
+ static inline struct dev_pm_opp *dev_pm_opp_find_freq_ceil(struct device *dev,
+ 					unsigned long *freq)
+ {
+ 	return ERR_PTR(-EOPNOTSUPP);
+ }
+ 
++static inline struct dev_pm_opp *dev_pm_opp_find_freq_ceil_indexed(struct device *dev,
++					unsigned long *freq, u32 index)
++{
++	return ERR_PTR(-EOPNOTSUPP);
++}
++
+ static inline struct dev_pm_opp *dev_pm_opp_find_bw_ceil(struct device *dev,
+ 					unsigned int *bw, int index)
+ {
 -- 
 2.25.1
 
