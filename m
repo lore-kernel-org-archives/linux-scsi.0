@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7573BEB64DD
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:41:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C213AC0015E
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:41:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229687AbjGTFlo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 01:41:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43840 "EHLO
+        id S229703AbjGTFly (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 01:41:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229517AbjGTFlm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:41:42 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AF1119A4
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:41:37 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id 41be03b00d2f7-53fbf2c42bfso241648a12.3
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:41:37 -0700 (PDT)
+        with ESMTP id S229743AbjGTFls (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:41:48 -0400
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 080F52127
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:41:45 -0700 (PDT)
+Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1b8b318c5cfso2864965ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:41:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1689831696; x=1690436496;
+        d=linaro.org; s=google; t=1689831704; x=1690436504;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=CX3sPcIP3SsQXddpGgAhiwMO6lb232ip/HjkD9sXmB4=;
-        b=yCVL+jhEN1Oh2sYC6UYeNoQ7XLMkp6OH71WlTC+48hRJ4bropeSJoK9O+cpU1jRuvi
-         M1giWWbGJEKuJUX155tKQTH703KGX/tJj+C1NXQPBUZ/VcyhpRb06ORQzmpUBboXQo2D
-         PZ0GKgg/h/XIYywl1zOO1h/Xgn/qAGGp+clYslNCogqmueF/gzosWwgk8G3D5bLD9vUV
-         u3Y9hYoKlgi2cjpQ8FqWXmx9TiWZbyXq1zMd4CPNQVxq5CQWyuV6PY7XEccwXWXUFcFx
-         cMFSrqNd5dANNVCPABPiaXqZFMGNjsuZfWL82nJfSWdhJP/U4xy/l+UJ5avZj9aEbeZa
-         Eu8w==
+        bh=3XqdszzNXl0iGLUqn70eMf6bYl+0XxF6aThipavUI1U=;
+        b=CCpuZSLAv4mIw9enQakiM7AssvWm2KvtnySDXhurdzO2yRaaciCQ9Fvyg+f8c6iB2b
+         l6pV4U7qiwHYGlO7vQLop7oWoZHnFLMA0HmPyOEsdcu09qdcYRsMgbAoz8egb84mGA/n
+         CGopBFTVmnixaUK9NAm0C/ygM/dkjB+dc5P3Z91CMcP5oTu/SZYB8Nd5VpDwChUKX9gn
+         KUnyxkG8kLMkKq2/zkz/pD2YTJhvopag/Ebptwz5aE/ihHdgHM0MaQ01HVnE6xJQdld+
+         2BpVhylFSAecPrswhy1Kiu3vcvcWEDcmrYhiqTaAIhfqK9XM5+1tw0ACl8Eb7d3/2sbY
+         bSOA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689831697; x=1690436497;
+        d=1e100.net; s=20221208; t=1689831704; x=1690436504;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=CX3sPcIP3SsQXddpGgAhiwMO6lb232ip/HjkD9sXmB4=;
-        b=V583pLAgCNmcC4KM4xJAi+csu7wKYaSfTqMjM8RlM4lq3+vT/MD78pl4hn2DUDvE1K
-         /et8G3R0gWDMTIvXQi7DIN4/jp79Sq+YXkFvJscnrj3JLoI402kBZ667l02rf2uOYddb
-         BI7ooLnM292lYVUfCPxiXqdiBzQxNawDs6kfYDYQ4Nvus0y2WXR5IB6m7E2vF5NSAjEl
-         qBMoXwP4F6nsIDcxCIzmljwa+y2jiBPrqdPLV3ag5xwDvazINRpYLys0IbIYoOUMv28S
-         XTpEaxGdVHh2lMyzWYwPtalXlCRM5B4nEJU+o2GCRHrhCEI6avT1e6+2ZasYVTbvLIYb
-         +k7w==
-X-Gm-Message-State: ABy/qLZGbDP/Y5kvs7Fn0j4kjV/vRYKbEp+seJgfNTgvuehZUiI/cgD7
-        Lg7w/KKZvwB9JkFY3AuvoeYl
-X-Google-Smtp-Source: APBJJlGuoiG5jhK0GEKCqWzFf4wpTeZuuwQHb5mHbfI80zig7BA8VTBgaV0Go4XUbyclN4iSOD+dhA==
-X-Received: by 2002:a17:903:124b:b0:1b8:9225:4367 with SMTP id u11-20020a170903124b00b001b892254367mr6102527plh.65.1689831696656;
-        Wed, 19 Jul 2023 22:41:36 -0700 (PDT)
+        bh=3XqdszzNXl0iGLUqn70eMf6bYl+0XxF6aThipavUI1U=;
+        b=Da/RF+ivC3+MLeF7E+Uzf27S4qcdBTis3HY2xTqRoukfjhkBJLAkRk6FbvhtA+tCjH
+         U15gtORKZar7OYWw3+P2esWa9zjNruspBQb32Icdg309UVGTCZN/oKM1GioUTKz8RIMH
+         CMyAd2ahYgxPdD33OLS1w1uPdZN7Pb/P5jlMmfTKbEY5J9+3Zy1dm7+hmbIBSDJEg3Df
+         WM6sOdT542drMS5Ji/vaNh1OZS/d9Gz2bYuwx2EDeWhahSng1C4WU/LGzHULrASZqZG/
+         +ZI3xoj9cDdYN0zFcDgk9KkbiWcZy2myjk+N0B5ZhYnSxSTsd5Imm5J9MiFoY27rp33I
+         WDWQ==
+X-Gm-Message-State: ABy/qLZm8GXd7gN3ZIapJ2sQdc3OyBqeGQYirJbCkESAaagwRug+iH38
+        2n2QWa65Z36OWULpyjPU8STV
+X-Google-Smtp-Source: APBJJlFtA4mXtOl8jmGLyYaSajSP/ArONwQmk0FfD51LF8n93HyBqmCspIiV8+ubnvEC4ZETfoTZxA==
+X-Received: by 2002:a17:902:8a8a:b0:1b9:e913:b5b7 with SMTP id p10-20020a1709028a8a00b001b9e913b5b7mr1035999plo.44.1689831704434;
+        Wed, 19 Jul 2023 22:41:44 -0700 (PDT)
 Received: from localhost.localdomain ([117.206.119.70])
-        by smtp.gmail.com with ESMTPSA id r2-20020a170902be0200b001b85bb5fd77sm263367pls.119.2023.07.19.22.41.29
+        by smtp.gmail.com with ESMTPSA id r2-20020a170902be0200b001b85bb5fd77sm263367pls.119.2023.07.19.22.41.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Jul 2023 22:41:36 -0700 (PDT)
+        Wed, 19 Jul 2023 22:41:44 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
         myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
@@ -64,11 +64,11 @@ Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
         quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
         quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
         bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        linux-kernel@vger.kernel.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 01/15] dt-bindings: ufs: common: add OPP table
-Date:   Thu, 20 Jul 2023 11:10:46 +0530
-Message-Id: <20230720054100.9940-2-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 02/15] dt-bindings: opp: Increase maxItems for opp-hz property
+Date:   Thu, 20 Jul 2023 11:10:47 +0530
+Message-Id: <20230720054100.9940-3-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
 References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
@@ -78,79 +78,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Current limit of 16 will be exhausted by platforms specifying the frequency
+for 9 clocks using opp-hz, like Qcom SDM845 SoC. For instance, specifying
+the frequency for 9 clocks with 64bit specifier as below would consume
+(9 * 2 = 18) items.
 
-Except scaling UFS and bus clocks, it's necessary to scale also the
-voltages of regulators or power domain performance state levels.  Adding
-Operating Performance Points table allows to adjust power domain
-performance state, depending on the UFS clock speed.
+	opp-50000000 {
+		opp-hz = /bits/ 64 <50000000>,
+			 /bits/ 64 <0>,
+			 /bits/ 64 <0>,
+			 /bits/ 64 <37500000>,
+			 /bits/ 64 <0>,
+			 /bits/ 64 <0>,
+			 /bits/ 64 <0>,
+			 /bits/ 64 <0>,
+			 /bits/ 64 <75000000>;
+	};
 
-OPPv2 deprecates previous property limited to clock scaling:
-freq-table-hz.
+So let's increase the limit to 32 which should be enough for most platforms
+(hopefully).
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Reviewed-by: Rob Herring <robh@kernel.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- .../devicetree/bindings/ufs/ufs-common.yaml   | 34 +++++++++++++++++--
- 1 file changed, 31 insertions(+), 3 deletions(-)
+ Documentation/devicetree/bindings/opp/opp-v2-base.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-index 47a4e9e1a775..d7d2c8a136bb 100644
---- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-+++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-@@ -20,11 +20,24 @@ properties:
-       items:
-         - description: Minimum frequency for given clock in Hz
-         - description: Maximum frequency for given clock in Hz
-+    deprecated: true
-     description: |
-+      Preferred is operating-points-v2.
-+
-       Array of <min max> operating frequencies in Hz stored in the same order
--      as the clocks property. If this property is not defined or a value in the
--      array is "0" then it is assumed that the frequency is set by the parent
--      clock or a fixed rate clock source.
-+      as the clocks property. If either this property or operating-points-v2 is
-+      not defined or a value in the array is "0" then it is assumed that the
-+      frequency is set by the parent clock or a fixed rate clock source.
-+
-+  operating-points-v2:
-+    description:
-+      Preferred over freq-table-hz.
-+      If present, each OPP must contain array of frequencies stored in the same
-+      order for each clock.  If clock frequency in the array is "0" then it is
-+      assumed that the frequency is set by the parent clock or a fixed rate
-+      clock source.
-+
-+  opp-table: true
+diff --git a/Documentation/devicetree/bindings/opp/opp-v2-base.yaml b/Documentation/devicetree/bindings/opp/opp-v2-base.yaml
+index 47e6f36b7637..e2f8f7af3cf4 100644
+--- a/Documentation/devicetree/bindings/opp/opp-v2-base.yaml
++++ b/Documentation/devicetree/bindings/opp/opp-v2-base.yaml
+@@ -56,7 +56,7 @@ patternProperties:
+           need to be configured and that is left for the implementation
+           specific binding.
+         minItems: 1
+-        maxItems: 16
++        maxItems: 32
+         items:
+           maxItems: 1
  
-   interrupts:
-     maxItems: 1
-@@ -75,8 +88,23 @@ properties:
- 
- dependencies:
-   freq-table-hz: [ 'clocks' ]
-+  operating-points-v2: [ 'clocks', 'clock-names' ]
- 
- required:
-   - interrupts
- 
-+allOf:
-+  - if:
-+      required:
-+        - freq-table-hz
-+    then:
-+      properties:
-+        operating-points-v2: false
-+  - if:
-+      required:
-+        - operating-points-v2
-+    then:
-+      properties:
-+        freq-table-hz: false
-+
- additionalProperties: true
 -- 
 2.25.1
 
