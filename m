@@ -2,68 +2,129 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A6CC001DC
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Jul 2023 19:53:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 408CDC001DC
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 00:44:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231301AbjGSTxI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Jul 2023 15:53:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41170 "EHLO
+        id S229774AbjGTAod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Jul 2023 20:44:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229853AbjGSTxH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2023 15:53:07 -0400
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C68359D
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 12:53:06 -0700 (PDT)
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-55b22f82ac8so840966a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 12:53:06 -0700 (PDT)
+        with ESMTP id S229450AbjGTAoc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2023 20:44:32 -0400
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9870E1BF7;
+        Wed, 19 Jul 2023 17:44:30 -0700 (PDT)
+Received: by mail-lf1-x136.google.com with SMTP id 2adb3069b0e04-4f4b2bc1565so314367e87.2;
+        Wed, 19 Jul 2023 17:44:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689796386; x=1692388386;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=pi80sYm3gBYK8pErGZKSZVS3/aw34cq8gwdXfkTlg9Q=;
-        b=NvexWaluVC8zes/aPMZs21IxmKNDocRHdy/fsoznLg/Q/FRSO0yMK/umfJILYivBFj
-         b9izqeu2lhDK257jQJ4uV4UB/o/VfTEh8Ve6GvR/CIP7Y1HKd5EoeCDJOHuRwA0O90AD
-         w2wxKgnBUtle4SXd1rWHJ5gKhUSHCj+6vC38Q63kJRt38CpO+DLk5Y2fXEWLbM+/yxq5
-         7FyJbee30eovYhaBk9iPudAkbyzlntPx84Yq+Zw6m8eoZgUlbivCxwjZ/1ktObq030Z7
-         rLVnTN/CGEfxas5bnF2q/QoMSAEyBP5iCoBEqr66ErF3HIFOAJFpbfPHY1TEJYIFAFu4
-         0fuw==
-X-Gm-Message-State: ABy/qLayw45HFFGWi56+6Xoc7b1IUCVwRa9GCEfX+ajPTXMMayUFfVQj
-        CrrbFjqzTsidOec49H5H4u8=
-X-Google-Smtp-Source: APBJJlE8aBqml+Wt57ZnuVWfNYGVUsKbbGMiISca41kjRgFkeRL9mgH0M1ZnQ+U4jX0/MqXyYIZLcA==
-X-Received: by 2002:a17:90a:6fc4:b0:262:ea3e:e248 with SMTP id e62-20020a17090a6fc400b00262ea3ee248mr4372671pjk.7.1689796386035;
-        Wed, 19 Jul 2023 12:53:06 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:a2ab:183f:c76c:d30d? ([2620:15c:211:201:a2ab:183f:c76c:d30d])
-        by smtp.gmail.com with ESMTPSA id w5-20020a17090a380500b0025e7f7b46c3sm1630292pjb.25.2023.07.19.12.53.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Jul 2023 12:53:05 -0700 (PDT)
-Message-ID: <425ad337-365a-fab3-cfc6-a102400ff7aa@acm.org>
-Date:   Wed, 19 Jul 2023 12:53:03 -0700
+        d=1e100.net; s=20221208; t=1689813869; x=1690418669;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:dkim-signature:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wUeRFAaIbh6Rf2J31fu1QB7kQOTkCJrp2QTeKpBkSTQ=;
+        b=cDA73Iz6Ap1RECD/QzuqZmW/CjatPKqgvnErsudczx5mllE9ygigVrPJkEZG5dD5VT
+         bqoLntMHyB/eLQ1PUWu1ibbyCM0QRfGN1phix16eIDweUs1QTZH4lz7CnFXsVa01Aykj
+         MYHS63f71cIh6Nx3f9CXqok2yI13E3YqseHeUr14bnbD2hQjJWzZCAdufRri+736Df0F
+         NYMlU3TNPw/NpDEb5Dwx93EEdHUd3f/oiXc2AkPwT/QdRgkfBgpRkQZsDPFOZGdM4cl9
+         OcJbQxGZTpjbD+7OMw0I40D9FkVbIxo8USMBt8awgS785AUv/OSmlHUWHzMCZ4JlTX4/
+         5XRQ==
+X-Gm-Message-State: ABy/qLbeifBwtMe8gd1msCDtCRiBM2a7AYbIcrWM19s3aGriOvxzCBCm
+        b3Q3JPdq6jOr55RGWpj9ej5yefXVYlNxm8zM
+X-Google-Smtp-Source: APBJJlFAwhgqv3NU15ukCtuEJhb71nC/HFTFLmrY3KMrWnlNylAYkVywnJoNHmjEZxfkkEQwjaopoQ==
+X-Received: by 2002:a05:6512:b29:b0:4f7:604f:f4c8 with SMTP id w41-20020a0565120b2900b004f7604ff4c8mr1136532lfu.18.1689813868863;
+        Wed, 19 Jul 2023 17:44:28 -0700 (PDT)
+Received: from flawful.org (c-f5f0e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.240.245])
+        by smtp.gmail.com with ESMTPSA id ep25-20020a056512485900b004efae490c51sm1175891lfb.240.2023.07.19.17.44.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Jul 2023 17:44:28 -0700 (PDT)
+Received: by flawful.org (Postfix, from userid 112)
+        id 772033F12; Thu, 20 Jul 2023 02:44:27 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1689813867; bh=HB/obDH8IIPUi2im/fMggUWNUbBNLm3iHNuHkuuMxg8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Tahbn56MafbS5tYHohY1jeu1MNcnCOzqYFLUqAIj0uO2HxpWm1nztSATFOjWTCqrJ
+         8KyWJzo+FHga4/jNDPLt8QcU2Nm7J5cqacqhbhGRX36QEJNBjMlolvgsf/ZfTpxYW7
+         N04nqDee6QkTBTym76IL6hv3g4GpHk/65gk0fcfk=
+Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by flawful.org (Postfix) with ESMTPSA id 485B635D8;
+        Thu, 20 Jul 2023 02:43:32 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1689813840; bh=HB/obDH8IIPUi2im/fMggUWNUbBNLm3iHNuHkuuMxg8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=fCUrbxqrPgHHqfYuLtlmWy9VZGJ3q6BrUqP1/yYqbn1FbhAiwhV59phb/gGQUJq76
+         nxtH41C52jT33guq3UVjRnxRV9IyLPV8vkAjjPHNfafOF1FiizZ37ZGPVZoiSOItec
+         QzckfY6Nx2bhhjJiHojFfvgAWA/v57GubAqfhWZ4=
+From:   Niklas Cassel <nks@flawful.org>
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        John Garry <john.g.garry@oracle.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Hannes Reinecke <hare@suse.com>, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH v2 0/8] libata: remove references to 'old' error handler
+Date:   Thu, 20 Jul 2023 02:42:41 +0200
+Message-ID: <20230720004257.307031-1-nks@flawful.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH v10 10/33] scsi: Have scsi-ml retry sd_spinup_disk errors
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        john.g.garry@oracle.com, mwilck@suse.com, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20230714213419.95492-1-michael.christie@oracle.com>
- <20230714213419.95492-11-michael.christie@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230714213419.95492-11-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/14/23 14:33, Mike Christie wrote:
-> This simplifies sd_spinup_disk so scsi-ml retries errors for it. Note that
-> we retried specifically on a UA and also if scsi_status_is_good returned
-> failed which would happen for all check conditions. In this patch we use
-> SCMD_FAILURE_STAT_ANY which will trigger for the same conditions as
-> when scsi_status_is_good returns false. This will cover all CCs including
-> UAs so there is no explicit failures arrary entry for UAs.
+From: Niklas Cassel <niklas.cassel@wdc.com>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Hi all,
+
+now that the ipr driver has been modified to not hook into libata
+all drivers now use the 'new' error handler, so we can remove any
+references to it. And do a general cleanup to remove callbacks
+which are no longer needed.
+
+
+Changes since v1:
+-Rebased against Damien's libata for-next branch. (Fixed conflicts in
+ ata_qc_complete().)
+-Fixed comments from Damien.
+-Fixed comments from myself.
+-Do not dump all QCs unconditionally (which should make the performance
+ regression reported by the test robot go away.)
+-Since ata_dump_status() was only called for drivers without .error_handler
+ callback, this function is now unused and unreachable, so it was removed.
+-Since atapi_qc_complete() can no longer reach the "old EH" failure paths
+ (code will now always take the top branch on error), they are removed.
+-Since atapi_eh_request_sense() can no longer be called, it is now removed.
+ (The atapi_eh_request_sense() version called by EH is still there.)
+-Patch 7/8 and 8/8 are new in V2.
+
+
+Hannes Reinecke (6):
+  ata: remove reference to non-existing error_handler()
+  ata,scsi: remove ata_sas_port_{start,stop} callbacks
+  ata,scsi: remove ata_sas_port_destroy()
+  ata: remove ata_sas_sync_probe()
+  ata: inline ata_port_probe()
+  ata,scsi: cleanup ata_port_probe()
+
+Niklas Cassel (2):
+  ata: sata_sx4: drop already completed TODO
+  ata: remove ata_bus_probe()
+
+ drivers/ata/libata-core.c          | 355 +++++++----------------------
+ drivers/ata/libata-eh.c            | 150 +++++-------
+ drivers/ata/libata-sata.c          |  77 -------
+ drivers/ata/libata-scsi.c          | 142 +-----------
+ drivers/ata/libata-sff.c           |  30 +--
+ drivers/ata/libata.h               |   3 -
+ drivers/ata/sata_sx4.c             |   1 -
+ drivers/scsi/libsas/sas_ata.c      |   6 +-
+ drivers/scsi/libsas/sas_discover.c |   2 +-
+ include/linux/libata.h             |   6 +-
+ 10 files changed, 170 insertions(+), 602 deletions(-)
+
+-- 
+2.41.0
+
