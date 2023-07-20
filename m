@@ -2,166 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF15AEB64DC
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 09:37:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 939E3EB64DD
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 09:40:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229635AbjGTJh2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 05:37:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40018 "EHLO
+        id S230163AbjGTJkA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 05:40:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230430AbjGTJhI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 05:37:08 -0400
-Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4903D3C0C
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 02:32:21 -0700 (PDT)
-Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4R66rG14PkzBRDsS
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 17:31:10 +0800 (CST)
-Authentication-Results: mail.208.org (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)" header.d=208.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
-        content-transfer-encoding:content-type:message-id:user-agent
-        :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1689845470; x=1692437471; bh=Rn7Xlh1oIvUwUEDMLuoY1G5XCcn
-        PCbkmV3qgyrjXcqk=; b=A0rk/YPmDtPgyn4R1R3XyW5eStfBWLRMiRqe6ygATPQ
-        eNrgV8VZFd4tYzgvN0tWIAS8jXSvU0RmCzuFsk7SxGFmqbACv8JqxdpZbcubB3uI
-        OI+y3U968qacY/FAc34sT0oV+8txSKeNPw0M5L8s/vtqscI+qyzgsPowYp8dXerr
-        VM457S5c160R/h5QVZuTeJXoBd8QI20VrVsZYHPCDl2ZKOz6QdBntjxM1JEwoYwn
-        FJUsSkI/GpGMbk1PaahyGSeEZhtso/Sm3v5NMdBGM8C0JW4lsqs41A35wEmrfKai
-        xjApZePWgZxlSWoJMKomaBQSSwRyXCoSqMSf4siTrxA==
-X-Virus-Scanned: amavisd-new at mail.208.org
-Received: from mail.208.org ([127.0.0.1])
-        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 4A_1I2Clij1E for <linux-scsi@vger.kernel.org>;
-        Thu, 20 Jul 2023 17:31:10 +0800 (CST)
-Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4R66rF6NykzBHXhQ;
-        Thu, 20 Jul 2023 17:31:09 +0800 (CST)
-MIME-Version: 1.0
-Date:   Thu, 20 Jul 2023 17:31:09 +0800
-From:   sunran001@208suo.com
-To:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aic7xxx: fix the following errors
-In-Reply-To: <20230720092958.3730-1-xujianghui@cdjrlc.com>
-References: <20230720092958.3730-1-xujianghui@cdjrlc.com>
-User-Agent: Roundcube Webmail
-Message-ID: <047fe06a541e4cc69e5f22b8b2cb33b5@208suo.com>
-X-Sender: sunran001@208suo.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S230142AbjGTJjo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 05:39:44 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAED82D53;
+        Thu, 20 Jul 2023 02:35:17 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36K4Eate005080;
+        Thu, 20 Jul 2023 09:34:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=rgB87VYg+qSX8naWX8H1W8jl5doCwBmeRMl7/YA3vig=;
+ b=Gp6XBcf3XfzsAWPehRBsAZbjnvbjaZY+D7a9b0F48t3hh1i42G6JsdiDV6+E4n5itZ7Q
+ MOA8DNp7kaPaN/8HKz17CxsmaW04aI4xy30MZkFVMQEILsjcmLMLkPrXK+KUD5Lm/wII
+ /6Q/5FNQ4iE3PkcWpAKm1siX/Lgjdas6eBlnjnseJ1S7SzOkLxTetlUF9LR19FxYgp2I
+ O91JMbNjuXS0q2bAAexwL8DX/KQ/FjXVrrJ78ehYJNSKqPjCNCpj4Mcul0H6J/LBQLJW
+ RsnPZmmlw8GmJV8FszWW3T0ks2mWdb7g3eAc1+n93q7VQvCFCsAcV74RHDBZsNlIvzPH fQ== 
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rxup4gru0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 20 Jul 2023 09:34:54 +0000
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36K9YpEx029166;
+        Thu, 20 Jul 2023 09:34:51 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3rumhm8sj6-1;
+        Thu, 20 Jul 2023 09:34:51 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36K9YpiT029104;
+        Thu, 20 Jul 2023 09:34:51 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 36K9YpJh028935;
+        Thu, 20 Jul 2023 09:34:51 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+        id 6A47863F16C; Thu, 20 Jul 2023 15:04:50 +0530 (+0530)
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+To:     mani@kernel.org, quic_cang@quicinc.com, stanley.chu@mediatek.com,
+        bvanassche@acm.org, quic_asutoshd@quicinc.com, avri.altman@wdc.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        konrad.dybcio@linaro.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        agross@kernel.org, andersson@kernel.org, jejb@linux.ibm.com,
+        linux-arm-msm@vger.kernel.org, quic_ziqichen@quicinc.com,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V3] scsi: ufs: ufs-qcom: Change UFS devfreq timer to delayed
+Date:   Thu, 20 Jul 2023 15:04:46 +0530
+Message-Id: <20230720093446.30697-1-quic_nitirawa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 6Yh8Leu9ip2O3oF0fERLemcjLrw0oAbt
+X-Proofpoint-ORIG-GUID: 6Yh8Leu9ip2O3oF0fERLemcjLrw0oAbt
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-20_03,2023-07-19_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 spamscore=0
+ adultscore=0 mlxlogscore=999 lowpriorityscore=0 suspectscore=0
+ priorityscore=1501 clxscore=1015 bulkscore=0 mlxscore=0 phishscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2307200079
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ERROR: space required before the open parenthesis '('
-ERROR: return is not a function, parentheses are not required
-ERROR: that open brace { should be on the previous line
+Devfreq uses the default DEVFREQ_TIMER_DEFERRABLE mode which uses
+the deferred timer for scheduling the devfreq load monitor function.
+This causes the load monitoring to be done only with non-idle CPUs
+and not making use of the idle CPUs.
 
-Signed-off-by: Ran Sun <sunran001@208suo.com>
+Hence, use the DEVFREQ_TIMER_DELAYED mode which uses the delayed
+timer thereby making use of idle CPUs as well for load monitoring.
+
+Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 ---
-  drivers/scsi/aic7xxx/aic7770.c | 23 +++++++++++------------
-  1 file changed, 11 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7770.c 
-b/drivers/scsi/aic7xxx/aic7770.c
-index 176704b24e6a..21f3ef4ac230 100644
---- a/drivers/scsi/aic7xxx/aic7770.c
-+++ b/drivers/scsi/aic7xxx/aic7770.c
-@@ -59,8 +59,7 @@ static ahc_device_setup_t ahc_aic7770_VL_setup;
-  static ahc_device_setup_t ahc_aic7770_EISA_setup;
-  static ahc_device_setup_t ahc_aic7770_setup;
+changes from v2:
+- Modified commit message as per mani's suggestion
+- removed threshold change
 
--struct aic7770_identity aic7770_ident_table[] =
--{
-+struct aic7770_identity aic7770_ident_table[] = {
-  	{
-  		ID_AHA_274x,
-  		0xFFFFFFFF,
-@@ -237,11 +236,11 @@ aic7770_config(struct ahc_softc *ahc, struct 
-aic7770_identity *entry, u_int io)
-  	 */
-  	error = ahc_init(ahc);
-  	if (error != 0)
--		return (error);
-+		return error;
+Changes from v1:
+- Realigned the commit text
 
-  	error = aic7770_map_int(ahc, irq);
-  	if (error != 0)
--		return (error);
-+		return error;
+ drivers/ufs/host/ufs-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-  	ahc->init_level++;
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index df9161cb9825..07e5050dae77 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1619,6 +1619,7 @@ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
+ 					struct devfreq_simple_ondemand_data *d)
+ {
+ 	p->polling_ms = 60;
++	p->timer = DEVFREQ_TIMER_DELAYED;
+ 	d->upthreshold = 70;
+ 	d->downdifferential = 5;
+ }
+--
+2.17.1
 
-@@ -249,7 +248,7 @@ aic7770_config(struct ahc_softc *ahc, struct 
-aic7770_identity *entry, u_int io)
-  	 * Enable the board's BUS drivers
-  	 */
-  	ahc_outb(ahc, BCTL, ENABLE);
--	return (0);
-+	return 0;
-  }
-
-  static int
-@@ -259,7 +258,7 @@ aic7770_chip_init(struct ahc_softc *ahc)
-  	ahc_outb(ahc, BUSTIME, ahc->bus_softc.aic7770_softc.bustime);
-  	ahc_outb(ahc, SBLKCTL, ahc_inb(ahc, SBLKCTL) & ~AUTOFLUSHDIS);
-  	ahc_outb(ahc, BCTL, ENABLE);
--	return (ahc_chip_init(ahc));
-+	return ahc_chip_init(ahc);
-  }
-
-  /*
-@@ -294,7 +293,7 @@ aha2840_load_seeprom(struct ahc_softc *ahc)
-  	if (have_seeprom) {
-
-  		if (ahc_verify_cksum(sc) == 0) {
--			if(bootverbose)
-+			if (bootverbose)
-  				printk ("checksum error\n");
-  			have_seeprom = 0;
-  		} else if (bootverbose) {
-@@ -317,7 +316,7 @@ aha2840_load_seeprom(struct ahc_softc *ahc)
-
-  		max_targ = (ahc->features & AHC_WIDE) != 0 ? 16 : 8;
-  		discenable = 0;
--		for (i = 0; i < max_targ; i++){
-+		for (i = 0; i < max_targ; i++) {
-  			uint8_t target_settings;
-
-  			target_settings = (sc->device_flags[i] & CFXFER) << 4;
-@@ -348,7 +347,7 @@ aha2840_load_seeprom(struct ahc_softc *ahc)
-  		if (sc->adapter_control & CF284XSTERM)
-  			ahc->flags |= AHC_TERM_ENB_A;
-  	}
--	return (have_seeprom);
-+	return have_seeprom;
-  }
-
-  static int
-@@ -358,7 +357,7 @@ ahc_aic7770_VL_setup(struct ahc_softc *ahc)
-
-  	error = ahc_aic7770_setup(ahc);
-  	ahc->chip |= AHC_VL;
--	return (error);
-+	return error;
-  }
-
-  static int
-@@ -368,7 +367,7 @@ ahc_aic7770_EISA_setup(struct ahc_softc *ahc)
-
-  	error = ahc_aic7770_setup(ahc);
-  	ahc->chip |= AHC_EISA;
--	return (error);
-+	return error;
-  }
-
-  static int
-@@ -381,5 +380,5 @@ ahc_aic7770_setup(struct ahc_softc *ahc)
-  	ahc->bugs |= AHC_TMODE_WIDEODD_BUG;
-  	ahc->flags |= AHC_PAGESCBS;
-  	ahc->instruction_ram_size = 448;
--	return (0);
-+	return 0;
-  }
