@@ -2,123 +2,152 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00995C001DC
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 16:57:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85501C001DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 21:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230336AbjGTQ5v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 12:57:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46134 "EHLO
+        id S229919AbjGTVFi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 17:05:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229563AbjGTQ5u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 12:57:50 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF7B2173A
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 09:57:48 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-6686708c986so887565b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 09:57:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1689872268; x=1690477068;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=/RurPK5XlwVd1iZs5pxMs+mAdNFFXdwkpgha3mP0teo=;
-        b=ZK+11CFXcgQp0bhAJ4DPBSy3hNI+ni2d97fD+tiLZlfK+8kC7YXUzs7DJRJOXkhSZp
-         4UyRPv5+kfz7Ac/vKdba21CC+S8GweNz+UfrXKDpWFB26x7cgt1UHD+IgHSL4eB47q8R
-         yHOAP3wEWpavDQuY/GqSg/FZsR5TDutY6iJrcQPjYxXTYM3gNHUkuN9Tdow1wBQRfye2
-         OZrQFJVfs+F4PtqbzduVlnA2ar7SH700LWgivpVjbsMnnJmNtIMd/jhEcUtqWLsvu7Z4
-         QpK8OLXjHHeheASlUnvBKaOmGWWACJ3Dil7F3DmuNTENKsuLDkZDC7FMENAGHF2Tui3M
-         jeHg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689872268; x=1690477068;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/RurPK5XlwVd1iZs5pxMs+mAdNFFXdwkpgha3mP0teo=;
-        b=S59fgVe7q7yBLF/Drh6hAcVbDVcHP7HoIRsYfZXhIv+hSM6A27JNV9SwIt8C6mTycq
-         ZvhDvQ6Qshm4EcDxLCNqFYcfu4QLCS3OIYJhbuf++11eXYZyv4fDKWlgVgsafQpcW+Hb
-         XCXk+wZWvToYbVcvHSiULgErOeYerds8DuGeSUhWDBLslB30q2tMwTvL7nm9QTD5oQm5
-         zF9aVG9DoHf8DhoQE380RLVeP1wLmPgt+UWydqLyxzEenWZjCt9mrHHq9a9xD1LhZ2SV
-         v+zcQ5c+GG7N/+LzYg8MjlJwYrYM9/m8WwIUO9Lp/AjhN7tBngVWySCjNxHKuRnNI3yg
-         s+bw==
-X-Gm-Message-State: ABy/qLbVzjVr58ZqUvtX2w7VbZ0g5vT1h1CP0jKvLpFIljiNLe3aus6e
-        kMTr88NeSPJYlDo+J9YFFQA2
-X-Google-Smtp-Source: APBJJlHZSFRdLSBkfKlGc/lyxUmjcdtNRmstzn6Q7EmPMSzVNBtbZu5/OMJD7BMmL7VVTx2A8GmGuw==
-X-Received: by 2002:a05:6a00:21d5:b0:686:2fde:4da with SMTP id t21-20020a056a0021d500b006862fde04damr3245948pfj.15.1689872268250;
-        Thu, 20 Jul 2023 09:57:48 -0700 (PDT)
-Received: from thinkpad ([117.206.118.181])
-        by smtp.gmail.com with ESMTPSA id y8-20020a62b508000000b00663b712bfbdsm1431362pfe.57.2023.07.20.09.57.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Jul 2023 09:57:47 -0700 (PDT)
-Date:   Thu, 20 Jul 2023 22:27:37 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 00/15] UFS: Add OPP and interconnect support
-Message-ID: <20230720165737.GG48270@thinkpad>
-References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
- <e46f077f-4602-1882-bc14-e8df2a216773@acm.org>
+        with ESMTP id S229737AbjGTVFg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 17:05:36 -0400
+Received: from DM6FTOPR00CU001.outbound.protection.outlook.com (mail-centralusazon11020014.outbound.protection.outlook.com [52.101.61.14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1C52196;
+        Thu, 20 Jul 2023 14:05:35 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MBJQdU6CUPNCBfMaFzG8hysogsv94RbY3cbbblSVW8qSSGeYyIWHW+2YRfRKw5C4xIw3nCqe1jWM/i7vkp4LqmIif7w0IUQF2DDCHnBzxlFtrwO2pyFtgYS2XFCOPgd4kddy5Dn7jh1VZd6gS6dfaSsjpQHrMELokXDnmYWv42rc8n/9kym4QkwBxAlw2nHhzGGECjqewy/wH9/Lh7K4/f+RiD2RF9vwIdtfejcGZSKQP0NheCMQOTibIqZ12Dg1iNQSn75sda7lE/Pa+hhqozLJPi7OV4vy/ksaAPsglsHRrEnET2GH+baXyMuNyhoKE1bzWqR6ZRlbm3wgivgXPw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2samRq9B+dMbI9687fQBJ9zkwc+sIZeOXsA7UR5tbRg=;
+ b=cusvvPtxLO0JD/6o2T7bl7659z+/y+VQO2mXTIFwYkbFI7I8bXn1UP4FQg/nvk41bPuDn7U/A+rsqKVDNfKReY2uNtUPNF5AQfgILIjgOED16a4PSU7g9Qikpx+5xlfQtMWBmGcXWycEyT1LLGMG70DUtg0aQiWphj1pkkcXz1EMx2Ba0d8Vuqsf8rfwHD9mNITLtWPVrnMpR8IAeKMJ6W9SYbyC9hMnvLSG6hH4H2fqXGbfYb+FTwLXa3RSroKkQTVSkbczGODHOgY2S07fUCzt3h5BEGDQWgkLu7DDCd5NwXJI8BoZSIcCb01nMnGi1lgCy3+6h3N/szxhmWfpsA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2samRq9B+dMbI9687fQBJ9zkwc+sIZeOXsA7UR5tbRg=;
+ b=aXCJqJur/7tkRhnyTl8rQzByFgRLzaFnEG6GXBFZ40DB9Hcya4lRA4PWFtGGWJUBgt5qNf/PrgniBMDZVAl9RRbBGSBrRkfPCLoD2K5hw40Pt3Yr8HRjiRGrhJl/5QrxC3jAWLNGtcopoeLEYADqi4IUI35NmdmBKq0QDUX2OGQ=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+Received: from DM6PR21MB1370.namprd21.prod.outlook.com (2603:10b6:5:16b::28)
+ by IA1PR21MB3451.namprd21.prod.outlook.com (2603:10b6:208:3e0::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.7; Thu, 20 Jul
+ 2023 21:05:32 +0000
+Received: from DM6PR21MB1370.namprd21.prod.outlook.com
+ ([fe80::58ed:9fb:47a9:13df]) by DM6PR21MB1370.namprd21.prod.outlook.com
+ ([fe80::58ed:9fb:47a9:13df%7]) with mapi id 15.20.6631.011; Thu, 20 Jul 2023
+ 21:05:32 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     kys@microsoft.com, martin.petersen@oracle.com,
+        longli@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+        jejb@linux.ibm.com, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     mikelley@microsoft.com, stable@vger.kernel.org
+Subject: [PATCH 1/1] scsi: storvsc: Limit max_sectors for virtual Fibre Channel devices
+Date:   Thu, 20 Jul 2023 14:05:02 -0700
+Message-Id: <1689887102-32806-1-git-send-email-mikelley@microsoft.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: text/plain
+X-ClientProxiedBy: MW2PR2101CA0003.namprd21.prod.outlook.com
+ (2603:10b6:302:1::16) To DM6PR21MB1370.namprd21.prod.outlook.com
+ (2603:10b6:5:16b::28)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <e46f077f-4602-1882-bc14-e8df2a216773@acm.org>
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR21MB1370:EE_|IA1PR21MB3451:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5085a2dd-466d-4208-999e-08db89650e1f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 7jYckPg+y+/uRBDoh05muZKdSDRIAZVkW7xGUyCewle8zcLygpWdQEHsm/EIVptZcISEI357J4S2/zk2gRj7zQp1yRbAQrqVA08fUwpn/9jbG2nc/j0WmFKjZpzjFP7N1eZSIse6JbuUEYiJ2CxpuEtFDZ5PV6iWH/WxcMarQ/o2Z/KKPe6J6AKWPHxu6a0Jtkuja6Z00+N0a0YRG1/YOprLikG6SO3el6nicduWTNpQAQuo2Zeiu+mAEigOm115OegChsIAaZLj5bMvE6YmTMy5p/bHyTiNL9IzdSXnEFtuQLTvI0/Z4mW+LFFGgQ+dl0xfS5gR9K2R6im2uS5wHpynj/RoKlrJ0mjHJBFEp/fecl/brqSaGw8zOPgWVX7UyS7pLkPPBrrXLcfnf1WzEo3ZSEXFD/UJVzCOKOuZc9kW7Ey3UnkrAexhzUBCYnOZLqhRvHcXJcuiENSL8K1EmA6iujjcxJOXWasJIBejCBiYw3SVnBaCW+IXborZ2W2hsMnU3EX6qRPGFO5IkaB2/TJxQrRhepyRqTnglXSK8q9KoMEX7TN05Lu1sBv4T+zuA/YxEcJXEabAXwiqcvDx6C5ioKoa0r2cX/jFLHJhte2qi571IjWO0fBIj1qOdP2by7iT4mHfSdgz4l5tlNd+4r+iFc8c/m65ZbDl3x7EuTA=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(136003)(39860400002)(376002)(366004)(396003)(346002)(451199021)(82960400001)(82950400001)(38350700002)(38100700002)(36756003)(86362001)(186003)(6506007)(8936002)(8676002)(6512007)(83380400001)(41300700001)(2616005)(5660300002)(2906002)(478600001)(52116002)(10290500003)(316002)(6666004)(6486002)(66556008)(66476007)(66946007)(26005)(4326008);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?wrBOTVNhFMYHjPtunNwotHARMdWg9vu5tV3Am0U1pn1jnVFc7ecxUP2KSkdj?=
+ =?us-ascii?Q?15W57b8QW9vq9deHO+Lr97AG8WLmApULNUu5dQjD8Ft18fVaEtBw+LJIumtB?=
+ =?us-ascii?Q?IloFSJjIlaEzO0UzkN3FhtIEChN7S+F/9UX5mme0EebU8Tv6t33PCFpPCooF?=
+ =?us-ascii?Q?Zn/vz/D5PjQLjtN/pKGq0WAsNavdf2eaOwFPR50Xbv8MhwCcKMOTsFgahz1/?=
+ =?us-ascii?Q?qyALOCAL/5YZbvi3RSRDA4KnwHmVuH4rWWn5us3a/pY3xDLdezh4UCo+EVDR?=
+ =?us-ascii?Q?6YbXr4Af05znvaJKnpLVBL9jo6D0ACm6IB38538mPoAaKl1/eDN5iV6t0gfU?=
+ =?us-ascii?Q?XCpmCWF2D3rDvRIvmm9g8qbwgLCIAIeF9Rv8Zzxi6ELCcOkesSuZ1rFrEFd8?=
+ =?us-ascii?Q?sMD/ear4y3O5A4sXpfhnGXFaxE91ye0p2kp+FNkP2G9/XsV1BlBwIVu28JQO?=
+ =?us-ascii?Q?kthu2mApt8NQhbdZSmCOdgYNTHASZkIXyvBAjDfhSL2I90Nc5TQVctHcoiMD?=
+ =?us-ascii?Q?vBT7X9qUS05a13+izLZdwkShz53pSIppRuYZdiRYIWyxKgU4GFP9MB0oOwmi?=
+ =?us-ascii?Q?r1NdkCl5tlPJiMOcPj+dZbU/zBvb762wElbCpZMG5ymusGZwea8P2oebCVGt?=
+ =?us-ascii?Q?ncOEPWDR+Njp5g1KMJQuoIzctmOHpBpFg/tvz45SVciKdEDuT/XAYmZpTK8m?=
+ =?us-ascii?Q?34GbX9EDQTicoM8c7UfQJyWsnlj4hNPIYZuNSGSXDYYXzAdH/M7LwQVBS4Ae?=
+ =?us-ascii?Q?1+WOuDXQygUiDnIH5m1YhmneO1vgC+/whackZ9ytgBpGcrki1b0mtgq/P93i?=
+ =?us-ascii?Q?jUNaKu6LLlbVR5Dw6mXh+JpkZJ1IVU+bRN7ve0whSg8RVW9JHpj5G4iPM89w?=
+ =?us-ascii?Q?u4n2Fq4xqi2NTc7eBeZISWm//wiPQ0aMzBaFeEQBRjr0jp4giaVsV0PUIqZ2?=
+ =?us-ascii?Q?ARIbdGpmt7FwlVXTtXjBG5YxfMTwx8CxhAcgSdIyap264pJ9AYSZQfRXfznE?=
+ =?us-ascii?Q?5PHkpsUtYdYZ/ee85LCk7y42WoIYipFFL1weXG1okTj9CvK1N+vLc3dk9pw5?=
+ =?us-ascii?Q?h9hrkPfLJiQki33Dokbruq4nE4mAHfdt22bmK3SAiqfzvnRZbhyMYT5it2TM?=
+ =?us-ascii?Q?eh9oZuxY7gCk/eoE04f1CGb8ltIauTh4kfODFLH2T+tDzP9nd+zoz/FIQaGU?=
+ =?us-ascii?Q?bBFtFIGEjn2GZmfK4YcRqNr2ixLvBQWsHwg6Peebg4XdzJh8jJRBjN4VnPgR?=
+ =?us-ascii?Q?ofBn3onRdvq9OvpSF9rsNQe3NaAUENdIoEDL0RZk5HiO/yNlSrQKkOgYekar?=
+ =?us-ascii?Q?olaFh7n0mS1Kf2kC8DegCV16Rb7NLPL2jyQK2ctUu9N3vMWLWedNtlywMwGf?=
+ =?us-ascii?Q?xF7xGiUCEHUgsrmhwHBpXL2GEU1SfUSACnJPykdymDGc+PlLLBwMFGfrnV7q?=
+ =?us-ascii?Q?nnpfFi/pXaBq+BbJvjvjWir3MvVB4RAjPJpiqEgsCIhcFAe6586n4D99o4il?=
+ =?us-ascii?Q?IpM9BYpOB4uoIyJKgc7umUUErNrc2x30MQhFhld3I2KbYzZrd5P1no3Ip6sV?=
+ =?us-ascii?Q?ZJCu62cquUSBF8jVXzitz6qC2MjmpANWkkSTCUYX?=
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5085a2dd-466d-4208-999e-08db89650e1f
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1370.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jul 2023 21:05:32.6029
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: wjRc3hcG6nXEwwBJ2EOXee+Dp0zpACum7GFtmQ+zGJOdAEd5VRv88tMoEijCcwPyFy3nmAMa55+4LY+n7/LhLg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR21MB3451
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 20, 2023 at 09:44:38AM -0700, Bart Van Assche wrote:
-> On 7/19/23 22:40, Manivannan Sadhasivam wrote:
-> > This series adds OPP (Operating Points) support to UFSHCD driver and
-> > interconnect support to Qcom UFS driver.
-> > 
-> > Motivation behind adding OPP support is to scale both clocks as well as
-> > regulators/performance state dynamically. Currently, UFSHCD just scales
-> > clock frequency during runtime with the help of "freq-table-hz" property
-> > defined in devicetree. With the addition of OPP tables in devicetree (as
-> > done for Qcom SDM845 and SM8250 SoCs in this series) UFSHCD can now scale
-> > both clocks and performance state of power domain which helps in power
-> > saving.
-> > 
-> > For the addition of OPP support to UFSHCD, there are changes required to
-> > the OPP framework and devfreq drivers which are also added in this series.
-> > 
-> > Finally, interconnect support is added to Qcom UFS driver for scaling the
-> > interconnect path dynamically. This is required to avoid boot crash in
-> > recent SoCs and also to save power during runtime. More information is
-> > available in patch 13/13.
-> 
-> How much power can OPP save? I'm asking this since I'm wondering whether
-> the power saved by OPP outweighs the complexity added by this patch series.
-> 
+The Hyper-V host is queried to get the max transfer size that it
+supports, and this value is used to set max_sectors for the synthetic
+SCSI controller.  However, this max transfer size may be too large
+for virtual Fibre Channel devices, which are limited to 512 Kbytes.
+If a larger transfer size is used with a vFC device, Hyper-V always
+returns an error, and storvsc logs a message like this where the SRB
+status and SCSI status are both zero:
 
-I haven't had a chance to do proper power measurements with this series due to
-lack of access to tools. But it won't be optimal to run the clocks at high/low
-frequencies without changing the associated regulator/power domain state.
+hv_storvsc <GUID>: tag#197 cmd 0x8a status: scsi 0x0 srb 0x0 hv 0xc0000001
 
-Atleast on Qcom platforms, the clock frequencies are tied to RPMh (power
-management entity) performance states for the peripherals. So both have to go
-hand in hand. Till now, only UFS among the other peripherals is not doing it
-right and hence this series.
+Add logic to limit the max transfer size to 512 Kbytes for vFC devices.
 
-- Mani
+Fixes: 1d3e0980782f ("scsi: storvsc: Correct reporting of Hyper-V I/O size limits")
+Cc: stable@vger.kernel.org
+Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> Thanks,
-> 
-> Bart.
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 7f12d93..f282321 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -366,6 +366,7 @@ enum storvsc_request_type {
+ #define STORVSC_FC_MAX_LUNS_PER_TARGET			255
+ #define STORVSC_FC_MAX_TARGETS				128
+ #define STORVSC_FC_MAX_CHANNELS				8
++#define STORVSC_FC_MAX_XFER_SIZE			((u32)(512 * 1024))
+ 
+ #define STORVSC_IDE_MAX_LUNS_PER_TARGET			64
+ #define STORVSC_IDE_MAX_TARGETS				1
+@@ -2006,6 +2007,9 @@ static int storvsc_probe(struct hv_device *device,
+ 	 * protecting it from any weird value.
+ 	 */
+ 	max_xfer_bytes = round_down(stor_device->max_transfer_bytes, HV_HYP_PAGE_SIZE);
++	if (is_fc)
++		max_xfer_bytes = min(max_xfer_bytes, STORVSC_FC_MAX_XFER_SIZE);
++
+ 	/* max_hw_sectors_kb */
+ 	host->max_sectors = max_xfer_bytes >> 9;
+ 	/*
 -- 
-மணிவண்ணன் சதாசிவம்
+1.8.3.1
+
