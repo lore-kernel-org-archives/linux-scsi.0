@@ -2,174 +2,173 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75692C001E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 03:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C3AAEB64DD
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:41:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229835AbjGTDOa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Jul 2023 23:14:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40198 "EHLO
+        id S229685AbjGTFle (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 01:41:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229743AbjGTDO0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2023 23:14:26 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 482141FD8;
-        Wed, 19 Jul 2023 20:14:22 -0700 (PDT)
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36K13ZwW029562;
-        Thu, 20 Jul 2023 03:13:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2023-03-30;
- bh=ma/apaptZaPIS1gO7xzt3VunE4jzQerH4My17l9O1io=;
- b=adOngVyKa212A3VRPkAzYIkI0jv2xZItJ7tQWuXVk6gPzHs4LkXY0VZnygCrS9v76ayh
- gFdCkvskQZgr5BNSJ7OMUVFuhLrDqKhJqSXuqykK02OsPjQSgFrP3bTU5nNUjVq67k4u
- q8IdcP42BjYz4JSeePhssZtp4YHCi6r3TZhtJXxy8ew3WJ3irsTE3aAKU3NNNCjMbUUS
- WiItCfb1kJHwRdigzgyAPXUFN+lrh8Ak9q90RXK0zVcEu0i6jGzCbLK2nVQUMrd+rLW5
- yrtfU7KVm5b1GGhus2xZNME1AwLaZpEH2JUgPrPXo64748p4MiiX9RfCLXhG7meII4aY tA== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3run88rw34-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 20 Jul 2023 03:13:52 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36K3C3M4007769;
-        Thu, 20 Jul 2023 03:13:52 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2170.outbound.protection.outlook.com [104.47.55.170])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3ruhw7nweg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 20 Jul 2023 03:13:51 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=E+VjdjNS83fSVxFCQr8Gl9esyeHPLJ666iYNnDxUxOSrcl52ADEzI3RaKaFYELPxQfLl5TXXXehznjG9X9Ax+eb/eoxQcoV8twmeYIsh+v0FwAuHZR5eJKQ/DYdMGUvw/YJTPur8eE+Cs+1KBRvTvuBl0mPS0YYqjRruEHJwejSoIPv2imhbOjE6hbByOY/ZAQwJIfVi0NIdq8fgywkFUz6dmj9SfIUU8Jnm3TM1tF1YqmyWfdUI72Vnx0CApR1MfuxvNECNXDDxTCZKGPnwrWk8eADfnmEzj8bJTK1/XeDITZLb+/UT4hdBO4HJyA4QxbIld39h21cBFcGEE0feKw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ma/apaptZaPIS1gO7xzt3VunE4jzQerH4My17l9O1io=;
- b=ISt9bpin5DZkHlcIqB03o2Xm2NLx8tzFMUAHeV2iAvcESCLOg0PAWMT/ExxuLOx0c6EWzUBdE+g6Ph/moBW2103PqwnWuIiBvWbvxm7ZSUeNclLtmRrI/dT8naeFGRq4PqCJzrYla72mYrBMUIhvW9hZZMjHS3ea+nkmBLJiyX90UVsGbwvIkZ7MOakdUKhFtTCbKb4XJUVF3e6pQQrxaIdqt474DxdMNp8JZAPZtVrP/+n2yiRqjZ4fAI2/n3XK5jqHHfkqzqqquLUC9ggUE2yArSYkhCWGdhI731J6jcdzK/AIXsZ7iIWvMFM6WO5BHLjT6ZhloLPO7FYwrma1Sg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S229570AbjGTFld (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:41:33 -0400
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54E6B1726
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:41:29 -0700 (PDT)
+Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1b8bbce9980so2171915ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:41:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ma/apaptZaPIS1gO7xzt3VunE4jzQerH4My17l9O1io=;
- b=GfPTJ/LYNdbv7vFT/p/B9YXa3w2ysUa1hsjYXN54BcE9vfpO9H3D8enazHWKCiEHztYW7CWBCixny5JpORt4nQBvyz83e2byPthNi/BkBYJD2i+hcYDcEILCuNz75+7Gwa6yuZ21Gd2p/NHQwJeekf3Dir7Ee2pxOperkEnjctI=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by SA1PR10MB6615.namprd10.prod.outlook.com (2603:10b6:806:2b8::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.24; Thu, 20 Jul
- 2023 03:13:50 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::2399:36c:d38:af63]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::2399:36c:d38:af63%4]) with mapi id 15.20.6609.024; Thu, 20 Jul 2023
- 03:13:50 +0000
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Yu Kuai <yukuai1@huaweicloud.com>, mhartmay@linux.ibm.com,
-        bblock@linux.ibm.com, bvanassche@acm.org, hch@lst.de,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "yukuai (C)" <yukuai3@huawei.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi/sg: fix checking return value of blk_get_queue()
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1sf9j6ztm.fsf@ca-mkp.ca.oracle.com>
-References: <20230705024001.177585-1-yukuai1@huaweicloud.com>
-        <d112d30e-d144-4c76-db98-5de4767f5945@huaweicloud.com>
-        <ac099071-a16d-46a4-a1b1-2cc786a0a337@kernel.dk>
-Date:   Wed, 19 Jul 2023 23:13:44 -0400
-In-Reply-To: <ac099071-a16d-46a4-a1b1-2cc786a0a337@kernel.dk> (Jens Axboe's
-        message of "Wed, 19 Jul 2023 10:34:11 -0600")
-Content-Type: text/plain
-X-ClientProxiedBy: LO4P123CA0018.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:150::23) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=linaro.org; s=google; t=1689831689; x=1690436489;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=WN6RnkgIzdaal19YY8XLdqCtBwmPCaI6lFevgwA6NkQ=;
+        b=QcYN2iEFkUyQ9vHTSJINfTdF7Du3vqHm7+OJIxMyIcPuF8wdIC66YH1vt5jWCRjYlh
+         JmwoX5r4Ob1wCA6nTd5XkFYt85qKAzVnQj7l9EuEgtjPUAtwq+glNlKsOdi0NcrE8EMc
+         bWw1W7Chzo8CtMEmzQTqJzOctMJj7KnlCXZK3l4/zZlJfaj5v2XQa0OOdjZA5QD4OhaN
+         NtOmAPtb9Evw/eRaNG1HSbHPnl2xxUJj5l657HC355NXs7jc5i8/9W/edxqDiY97snMv
+         udRbCcszreDVjxnanciO2otrhctaRybcyMfqRSHbc4TAg0mFufQ/FYJL5qvGOVh4TPS8
+         jVyg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689831689; x=1690436489;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=WN6RnkgIzdaal19YY8XLdqCtBwmPCaI6lFevgwA6NkQ=;
+        b=d7rHw2OVrFx7K7MdQMw45x54O6E2YqPxS5M2g7AsCk+T4ghaXEcKYET9het739/qXX
+         vxG7QdG+LsBKnrO+YbDRzMRdwY8ZBLRgIdMyK/SDAi3EJiKRn3NIcKWM02an0jMC21hO
+         dmnku0sDaXHeRnjvlAgCQCpAPqvoWup0eXisdTinfYMh5s5YGr6aLF83qqbipF7IE6Vj
+         jDQQS/2FG71hZDDis89YkrI4N9Q4OOHFIlu5VDSSP3edwdp2gQnaDLCG6CbTDI3gufBh
+         6a0i7m6rKzV0nSgb9gmfWTX3KVbuFxji1wVOlXEjBIzkCgqeX8/Khag9hQwSURDNe33u
+         enQA==
+X-Gm-Message-State: ABy/qLZcdu5Ua4IHtYO4HLuc1AJwbAYiIzPTzaxFBNG+10rHXD7c3Wgq
+        QWZZf0MOhoVMS+Hl/Zdwk1y4
+X-Google-Smtp-Source: APBJJlF1woeafM7N5JSQiQHje6/huLkPMe/UguooncmqloYSF3r+Ni7Qp6cwpNBSwGU8Fj3qkHdVZw==
+X-Received: by 2002:a17:903:26c5:b0:1b8:5735:2850 with SMTP id jg5-20020a17090326c500b001b857352850mr3799158plb.32.1689831688756;
+        Wed, 19 Jul 2023 22:41:28 -0700 (PDT)
+Received: from localhost.localdomain ([117.206.119.70])
+        by smtp.gmail.com with ESMTPSA id r2-20020a170902be0200b001b85bb5fd77sm263367pls.119.2023.07.19.22.41.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Jul 2023 22:41:28 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
+        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
+        cw00.choi@samsung.com, andersson@kernel.org,
+        konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 00/15] UFS: Add OPP and interconnect support
+Date:   Thu, 20 Jul 2023 11:10:45 +0530
+Message-Id: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|SA1PR10MB6615:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3ddcec67-95c6-4ec5-e232-08db88cf56d9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: yq3Gx5Qlr+vceiNMHl1TutgUlOYEtkW85YgDMVoLvl7+O1/cUvMpo9RXO6N2NuDFcZGiMHwRKZVyYAw8SqnoW0D/WKOJbaYAq8zXoy8sToF3Yg2i4PgvSUD67adjj2mZvQTptwWZHYSBo37zdJ0EcdK4V8JehzmWgGd1vqqdrDdbA0uegmJp7oKHRZrJSnPzIAhPGnjw5WjTEf3/WH8Wskzaxc47mXzJdmXfrBvJfRX3FZU9sVWVu/gMwfTCLdEZx+mjYEbl3Qjx4LwpR+C90Zcqj8+GjMBJdNRYHg7UEn0dOcYvhXUseWWuNUY6lSdrWuF0vzM7X1j8yM1VuO1rlsPacN/KtWdnBHQtgjN58GrDGYI1+Rr9xxwi0AvaQnBOXtyAbF2EV+5Po5ObSkSWwGiWGuV+YmUOmXs/hV5kmN9+e94TQMGwT5/cweLMMfAG/BSa4EFGaKgv4JiJEq9MBEUDhj0SW1GEc91RzbB2KMCLO99ySkzkS7XfSR2HRuZUgvdKoa2vVjjumiadR5FrI+pfi0Q5Jqxc+DWLZY7UEuEhSwRgUHJnuikOX4qIbU8R
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(396003)(39860400002)(136003)(366004)(376002)(346002)(451199021)(6916009)(4326008)(8936002)(8676002)(54906003)(66556008)(41300700001)(66476007)(316002)(66946007)(5660300002)(36916002)(2906002)(4744005)(38100700002)(26005)(478600001)(6512007)(6486002)(6666004)(107886003)(6506007)(186003)(86362001)(83380400001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?z/+/xcPaKVDtXYgTMnXndJcyJj8MG84WDJ/Ll0xvNQAwm9z4efTZ+IYxQZMP?=
- =?us-ascii?Q?Lhxhdshvm7HCqymAYn3lGPGhFzhYEh3Cyi5GRF5m7Ooala/6SPvaAQ6zm0bV?=
- =?us-ascii?Q?q1eWCiaDIiv0VPbucCBtP8cGZ7KBziyx5LWeBDjKPLY0OtBqwtGPzKQTbXA1?=
- =?us-ascii?Q?265tN+ATbq3I3W5+R1PlE0VjtIDgbsEcu7UhAIbP7xom0Jodgnu1uVbNmC1H?=
- =?us-ascii?Q?nIe6KwC1r4FyE5iFgxe2GPqdnM2kSkgk5qkWYF3z7ITr6ujPt5cUlH84cOAF?=
- =?us-ascii?Q?+HSdiFMBCLCwkYZ0tqHGoXkh+pGf6cOoWvhdDJzQtUuQRV8SQ72XnG0igPr6?=
- =?us-ascii?Q?wYpk/1N4/6AKz3MUJ2NWCpTIbg3YWM8XuX2gQDFJXfIsScOyapeFrl1v290L?=
- =?us-ascii?Q?uFGtp68jlec+VuGSarUVeQrbA/fjGQp5bXeHIxymMhBMeOYkmmLm0nXnO/RA?=
- =?us-ascii?Q?nVPvtFGxCEiOkOOSXRQaEndLj4agRMqxZuMbTkFG9wB9wSaahtLYCDngQIkQ?=
- =?us-ascii?Q?Cdyb9oBwbZGbKyYxVCTud+V7y1Utc6w8G60Bp5zYPHFpR6aeqjYWOaNYFEzr?=
- =?us-ascii?Q?O8KdlqRSYx/37/X3ThdZIPRGVuc7q4rwYbdfNjwhA6/2EltEH66T2pEE19hY?=
- =?us-ascii?Q?1qFViMrvKMg3vot4gz1vHA/WdgTs+fdObdkgDLga0OIikOE3ki/XIcylqvS9?=
- =?us-ascii?Q?iltLBN8E4gZXDWpWeqwWkuU6QF3dw27gPO7qirztaY7dy4avgfbyDC2wHiBo?=
- =?us-ascii?Q?BppohXZ5MM7zxvEZgGLK2y3BkjodtJWFneqB8rQzMfUVRp8HydGKpzpmxkMr?=
- =?us-ascii?Q?wVbuj4so2RNE09XnrJqOO1D0X325V7sp62SOberlS1UhBPiRGXjTtnWZmpdq?=
- =?us-ascii?Q?r/P7p11j0+PYyozJmUh03HFfqdgnSgGlkGB5W+WgeFJH6OE6+R0M3f42t3K7?=
- =?us-ascii?Q?WyvMNg1qSUtFlNMLzJuqKEO/t0sixILwbZC1x47lz6u3q95ycdgJJOU1+zHf?=
- =?us-ascii?Q?kqgY+qZFI9tZ1/vI/PtCrIwy3cqyLz3bdzIZKSn24RriEmDXLmWT2MJYXjOV?=
- =?us-ascii?Q?LQxzaGjiDxXIgeERokGvw0op4b4tX38Ir6Zt9rBfHUaQwufXURH6bSbNLG1w?=
- =?us-ascii?Q?Sxy8OoATNApOup1orEspe8MbYMZAg1YbKsl2oBwcnnXZOjL/E1PON/0O8Fgq?=
- =?us-ascii?Q?zY098DQOMiUVj3wq73ZbQggerS+WfeVBuaXc+ZShhlNlP1wVY7Yrdo3hl6db?=
- =?us-ascii?Q?+Gxr5VLF7UzPStYZGQTNXdyzMjphDY1se7NqdVV0B2/PiPtkWsEOgeKWbH7h?=
- =?us-ascii?Q?mw4ClxwAR4UinYM+Qgk/2N8AQK+oCNv6quRVwF+kqQUGh6WcJ3V9jmA2Xgxn?=
- =?us-ascii?Q?P2lLrBveL7HIMDtRWjMM3bM5DpmeoITFcIcfx2El/8aVGHyeaghQ3B0LRT4p?=
- =?us-ascii?Q?lH8UAepyjwj9MvY2gNOm5TvRw3txYjOOxvsyQExErZm3m594iBfar4LkpgKf?=
- =?us-ascii?Q?LpD1cDrr9o3xqKrHzkxpXnWOBgJQdpMByAvsbccipRoKIX2i5/oA7xaw8UFm?=
- =?us-ascii?Q?NyTVaUNcoamd+fSQ8NjNdjGCRxt5MneZkkVvKRIMCf/YhfW3uGi45omdlI2u?=
- =?us-ascii?Q?Rw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?SUhg2yhuTDLrabB7m03+Gyiovazw4s5K+J87CtdBCIMQxeinPWm/yeaJvG1L?=
- =?us-ascii?Q?2jmQ8m6V6mcQV+dkGmIqc6uo1Hrk+gN8FC1bjQnQkcElLcxIAUwf/IafRncX?=
- =?us-ascii?Q?0XtkMET5LZOydVWV4vX889tmJAU7CvgfgZcBsOiiM6iTmcWzDL+szTv+woqm?=
- =?us-ascii?Q?3YfHwYYxZ+Y7jnZFvz3CbYOaQx5djkuuKOpgvvN3uOtXZ8zI0sYgj3KpIOHG?=
- =?us-ascii?Q?nWr9PIhjlcf1iiLy11LrgFLeO8HgtPVYgPQK6USQFjKONv2rbwc1kJA4DVZc?=
- =?us-ascii?Q?5Bpg/UuT+lZzjZUncmke+SXqP+ejoi8CfgcYhgqxAYV/q9zBAP8hydgQ/+Lg?=
- =?us-ascii?Q?r0cjsbmfjyrUXbznwLxSmKtZeNSen7r/hmjnbBR1DLOlRUoHfF4ZKnEkUk2/?=
- =?us-ascii?Q?RHrXtlE7U5y8cd7JEB5kHOXcvL04FcViaBv0+LGGe8OF2pHsGkVGefc6IV/n?=
- =?us-ascii?Q?j1TyhgajAhAN71gHBsm0KIAknuSehHXBSm+8AByGmS0H66MoE7l0BidY+Mlu?=
- =?us-ascii?Q?tkLrbAApCbXo1efQiOJPNDAbMuduZX9MRnm61lVQE5UBvNcP4Pjt+85Z7BvE?=
- =?us-ascii?Q?zCoAuUNmHNPnfNdxnIf+WAytF2YZU11ub9n6ezJtphSGl1cQEKPPXT5/y2G2?=
- =?us-ascii?Q?ax1aKg/hn5764jAJza0XXPC9PZhrb90hp5BTFzkVJhVjpr5Pt4uwMy9yWGH9?=
- =?us-ascii?Q?XLfLq8OudURgRoDISzXQLf6crMkt68wsDMVKTqObUJV+rUiXJQNBzSs27Gxg?=
- =?us-ascii?Q?z349sy6fss+N90dky26CZxF82s9KsqPf1Ovdq91ZH4FM0sJlotoZtkzoVdjt?=
- =?us-ascii?Q?SqDfHSTHYWQn15ucopr8TBrk0E8AfMcsmshLdWzrLajBjhbJOclswqHwHVDN?=
- =?us-ascii?Q?83gG6SgaNxA/fYeUohM6u4bjti0l0xDmzitoZ0fPaywk8BwcwV6gGQiIQ6WO?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3ddcec67-95c6-4ec5-e232-08db88cf56d9
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jul 2023 03:13:50.0633
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: k27ZVOtVf3Cve50TJgLxJMZVd8RBLk8ltzUKYqqGyNCMh+Nuzpu27rPYz3mhGWhwVsAY+BjCWzUtuUZcfNWEK84RIEJ0/M19FHD89+EIxt4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB6615
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-19_16,2023-07-19_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 malwarescore=0
- spamscore=0 phishscore=0 suspectscore=0 mlxscore=0 mlxlogscore=764
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
- definitions=main-2307200024
-X-Proofpoint-GUID: pS8t8X797ekAYYVZhIfMhFFWAxL5-Xh0
-X-Proofpoint-ORIG-GUID: pS8t8X797ekAYYVZhIfMhFFWAxL5-Xh0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi,
 
-Jens,
+This series adds OPP (Operating Points) support to UFSHCD driver and
+interconnect support to Qcom UFS driver.
 
->> Sorry about the trouble... Can you apply this patch? I notice that the
->> original patch is applied to stable.
->
-> I can, I had assumed that Martin would pick it up on the SCSI side?
+Motivation behind adding OPP support is to scale both clocks as well as
+regulators/performance state dynamically. Currently, UFSHCD just scales
+clock frequency during runtime with the help of "freq-table-hz" property
+defined in devicetree. With the addition of OPP tables in devicetree (as
+done for Qcom SDM845 and SM8250 SoCs in this series) UFSHCD can now scale
+both clocks and performance state of power domain which helps in power
+saving.
 
-Ah, but since the offending commit went through block I didn't have it
-in SCSI until I set up the new trees. Now applied to 6.5/scsi-fixes.
+For the addition of OPP support to UFSHCD, there are changes required to
+the OPP framework and devfreq drivers which are also added in this series.
+
+Finally, interconnect support is added to Qcom UFS driver for scaling the
+interconnect path dynamically. This is required to avoid boot crash in
+recent SoCs and also to save power during runtime. More information is
+available in patch 13/13.
+
+Credits
+=======
+
+This series is a continuation of previous work by Krzysztof Kozlowski [1]
+and Brian Masney [2]. Ideally, this could've split into two series (OPP
+and interconnect) but since there will be a dependency in the devicetree,
+I decided to keep them in a single series.
+
+Testing
+=======
+
+This series is tested on 96Boards RB3 (SDM845 SoC) and RB5 (SM8250 SoC)
+development boards.
+
+Merging Strategy
+================
+
+An immutable branch might be required between OPP and SCSI trees because of
+the API dependency (devfreq too). And I leave it up to the maintainers to
+decide.
+
+Thanks,
+Mani
+
+[1] https://lore.kernel.org/all/20220513061347.46480-1-krzysztof.kozlowski@linaro.org/
+[2] https://lore.kernel.org/all/20221117104957.254648-1-bmasney@redhat.com/
+
+Changes in v2:
+
+* Added more description to the bindings patch 2/15
+* Fixed dev_pm_opp_put() usage in patch 10/15
+* Added a new patch for adding enums for UFS lanes 14/15
+* Changed the icc variables to mem_bw and cfg_bw and used
+  the enums for gears and lanes in bw_table
+* Collected review tags
+* Added SCSI list and folks
+* Removed duplicate patches
+
+Krzysztof Kozlowski (2):
+  dt-bindings: ufs: common: add OPP table
+  arm64: dts: qcom: sdm845: Add OPP table support to UFSHC
+
+Manivannan Sadhasivam (13):
+  dt-bindings: opp: Increase maxItems for opp-hz property
+  arm64: dts: qcom: sdm845: Add missing RPMh power domain to GCC
+  arm64: dts: qcom: sdm845: Fix the min frequency of "ice_core_clk"
+  arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
+  OPP: Introduce dev_pm_opp_find_freq_{ceil/floor}_indexed() APIs
+  OPP: Introduce dev_pm_opp_get_freq_indexed() API
+  PM / devfreq: Switch to dev_pm_opp_find_freq_{ceil/floor}_indexed()
+    APIs
+  scsi: ufs: core: Add OPP support for scaling clocks and regulators
+  scsi: ufs: host: Add support for parsing OPP
+  arm64: dts: qcom: sdm845: Add interconnect paths to UFSHC
+  arm64: dts: qcom: sm8250: Add interconnect paths to UFSHC
+  scsi: ufs: core: Add enums for UFS lanes
+  scsi: ufs: qcom: Add support for scaling interconnects
+
+ .../devicetree/bindings/opp/opp-v2-base.yaml  |   2 +-
+ .../devicetree/bindings/ufs/ufs-common.yaml   |  34 +++-
+ arch/arm64/boot/dts/qcom/sdm845.dtsi          |  47 ++++--
+ arch/arm64/boot/dts/qcom/sm8250.dtsi          |  43 +++--
+ drivers/devfreq/devfreq.c                     |  14 +-
+ drivers/opp/core.c                            |  76 +++++++++
+ drivers/ufs/core/ufshcd.c                     | 148 +++++++++++++-----
+ drivers/ufs/host/ufs-qcom.c                   | 131 +++++++++++++++-
+ drivers/ufs/host/ufs-qcom.h                   |   3 +
+ drivers/ufs/host/ufshcd-pltfrm.c              | 120 +++++++++++++-
+ include/linux/pm_opp.h                        |  26 +++
+ include/ufs/ufshcd.h                          |   4 +
+ include/ufs/unipro.h                          |   6 +
+ 13 files changed, 586 insertions(+), 68 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.25.1
+
