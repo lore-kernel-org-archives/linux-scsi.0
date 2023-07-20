@@ -2,95 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DC57EB64DC
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:49:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17A41EB64DA
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:55:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229711AbjGTFtx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 01:49:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50268 "EHLO
+        id S229719AbjGTFzn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 01:55:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229604AbjGTFtw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:49:52 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC8D31726;
-        Wed, 19 Jul 2023 22:49:51 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 602A520495;
-        Thu, 20 Jul 2023 05:49:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1689832190; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mZI17rFDHUz3ZUExLcBQzoUfU4Oo3vr4jXJZZwk9lQo=;
-        b=Pf1CLQw91wUzSZG3Lxh/OH4jI/oD3/nAKvPDYVviPtswEPovV9KIfM0Iy6b3ZsEQeqCUCU
-        FvRsugaK6nLmr1i3rreQfW9+V8UHmbvmHB2pXOKXtifpnpuA7YpjBSaoTN4DgJKYWQYV/h
-        7jWgeGWlF1xnMxaF+9L2zx3EjmRQ1v8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1689832190;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mZI17rFDHUz3ZUExLcBQzoUfU4Oo3vr4jXJZZwk9lQo=;
-        b=FYV4xnnfmDe9KhJkNh6jtni4b0Y1INUuDOqbrs1Xal8aG5ivYAfZg2rac2K+LwUT8ImYY5
-        +c9lstDvdjRau8Ag==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 17CBD1361C;
-        Thu, 20 Jul 2023 05:49:50 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id oE+nBP7KuGQbWAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 20 Jul 2023 05:49:50 +0000
-Message-ID: <5022d864-4dda-2283-1386-1fbee7f3290f@suse.de>
-Date:   Thu, 20 Jul 2023 07:49:49 +0200
+        with ESMTP id S229604AbjGTFzm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:55:42 -0400
+Received: from mail.208.org (unknown [183.242.55.162])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A27AF171B
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:55:38 -0700 (PDT)
+Received: from mail.208.org (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTP id 4R623N2YWBzBRDsF
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 13:55:28 +0800 (CST)
+Authentication-Results: mail.208.org (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)" header.d=208.org
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
+        content-transfer-encoding:content-type:message-id:user-agent
+        :references:in-reply-to:subject:to:from:date:mime-version; s=
+        dkim; t=1689832526; x=1692424527; bh=s7dX9DPq+huLER3GBSvz83Ncmxd
+        j4J4K+dRUh1SvFEg=; b=XyesGWKiMom3V9F7jAHXceJdLtUojI2hljPlb7LdDd7
+        +PWXjrZpmcbLWnzHBCs3mM/KFVoStEmY4Ag/OPjGhlLcAxOWoL/QhrJmTB3lBCIF
+        y0VHhajzBKZP3xPbBRx/jyzXzSuBA3K9EHO8Can3p/Y2TsCDdi0OlqJYkGLChVNh
+        I9RuAbe0+RUpHQ2Yh1Jh02f1tOCNPeAeKuwvByc1ZB8DdJ479NcuvhzcZ4ECDi8B
+        sHToOVVY5ngc5ToeLr1BPnJd05XrDoT8ym1pDgaUydJ2zHQc8QQ8U4ea+O+G/C2X
+        Bvti1ttz6orDdG/7ToT+7/eDBmCu+SOr+VIPpG4dy1g==
+X-Virus-Scanned: amavisd-new at mail.208.org
+Received: from mail.208.org ([127.0.0.1])
+        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id f9Wt0wVvTrMF for <linux-scsi@vger.kernel.org>;
+        Thu, 20 Jul 2023 13:55:26 +0800 (CST)
+Received: from localhost (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTPSA id 4R623L4b1czBR1P6;
+        Thu, 20 Jul 2023 13:55:26 +0800 (CST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH v2 8/8] ata: remove ata_bus_probe()
-Content-Language: en-US
-To:     Niklas Cassel <nks@flawful.org>,
-        Damien Le Moal <dlemoal@kernel.org>
-Cc:     Hannes Reinecke <hare@suse.com>,
-        John Garry <john.g.garry@oracle.com>,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230720004257.307031-1-nks@flawful.org>
- <20230720004257.307031-9-nks@flawful.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230720004257.307031-9-nks@flawful.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Date:   Thu, 20 Jul 2023 13:55:26 +0800
+From:   sunran001@208suo.com
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: aic7xxx: Remove unnecessary parentheses in hyperv.h
+In-Reply-To: <20230720055410.2271-1-xujianghui@cdjrlc.com>
+References: <20230720055410.2271-1-xujianghui@cdjrlc.com>
+User-Agent: Roundcube Webmail
+Message-ID: <25cd9e8299995ff3c35379221b7f0270@208suo.com>
+X-Sender: sunran001@208suo.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/20/23 02:42, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
-> 
-> Remove ata_bus_probe() as it is unused.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-> ---
->   drivers/ata/libata-core.c | 138 --------------------------------------
->   drivers/ata/libata.h      |   1 -
->   2 files changed, 139 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Fix "return is not a function, parentheses are not required" checkpatch
+error.
 
-Cheers,
+Signed-off-by: Ran Sun <sunran001@208suo.com>
+---
+  drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c 
+b/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c
+index 975fcfcc0d8f..c8170bbd67da 100644
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c
+@@ -74,7 +74,7 @@ symbol_create(char *name)
+  		 stop("Unable to strdup symbol name", EX_SOFTWARE);
+  	new_symbol->type = UNINITIALIZED;
+  	new_symbol->count = 1;
+-	return (new_symbol);
++	return new_symbol;
+  }
 
+  void
