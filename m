@@ -2,91 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C9CCEB64DD
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 11:25:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE23C0015E
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 13:15:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231239AbjGTLZx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 07:25:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35530 "EHLO
+        id S231779AbjGTNPn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 09:15:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229550AbjGTLZw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 07:25:52 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C069BB;
-        Thu, 20 Jul 2023 04:25:51 -0700 (PDT)
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36KB99bc021727;
-        Thu, 20 Jul 2023 11:23:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=Cx4MzwNtsC+bsfR0nq5uuxwIMnP1+eOH1wUrpU+w1fU=;
- b=mdjxXkIVh8KtF4gVJUvwDf2ppAAku8lfK/SLQCYPabGjnV99WbGtAGZMPaLfnjOh0R57
- ZE46vXy5g6HXux0ILLal5HWCJD2mAqUC28iTzelfz1RpHf1B3r32GJB5RIVwh6Ar6qLP
- FzXh3YlhbpHs6u8qRiG5LMjcr1NxH348dPjuhiMdbXvAz/RKGRbDT3MlHPMB23OrokjE
- Z8EtA/052mgnio1kbOJu005/quyrzzs1cPR6Dbr2XIQO8bvBOrlqO+KlVHf0PevYf36B
- Pb9BIqKSoOLN6Ses+1yI6nvMth6kQS+AGDC3jzMZnKX+PUO7lEM1QXtZtXR4J1XwwpAQ TQ== 
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ry26wjeaw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 20 Jul 2023 11:23:31 +0000
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-        by ppma23.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 36K8hV1H030570;
-        Thu, 20 Jul 2023 11:23:31 GMT
-Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
-        by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3rv79juyqs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 20 Jul 2023 11:23:31 +0000
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-        by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 36KBNUo431982272
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 20 Jul 2023 11:23:30 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 909AB58057;
-        Thu, 20 Jul 2023 11:23:30 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B927258058;
-        Thu, 20 Jul 2023 11:23:29 +0000 (GMT)
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [9.61.93.39])
-        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-        Thu, 20 Jul 2023 11:23:29 +0000 (GMT)
-Message-ID: <564d19fcd79afb957f301ef50ab5601280488798.camel@linux.ibm.com>
-Subject: Re: [PATCH] scsi: aic7xxx: avoid checkpatch error
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     sunran001@208suo.com, hare@suse.com, martin.petersen@oracle.co
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Thu, 20 Jul 2023 07:23:27 -0400
-In-Reply-To: <4d48377ca4e62a71f89e4de6f80e6725@208suo.com>
-References: <20230720095619.3954-1-xujianghui@cdjrlc.com>
-         <4d48377ca4e62a71f89e4de6f80e6725@208suo.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S231750AbjGTNPm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 09:15:42 -0400
+Received: from wxsgout04.xfusion.com (wxsgout03.xfusion.com [36.139.52.80])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFFC710CB;
+        Thu, 20 Jul 2023 06:15:39 -0700 (PDT)
+Received: from wuxshcsitd00600.xfusion.com (unknown [10.32.133.213])
+        by wxsgout04.xfusion.com (SkyGuard) with ESMTPS id 4R6Cp31Jwzz9xgYX;
+        Thu, 20 Jul 2023 21:14:35 +0800 (CST)
+Received: from fedora (10.82.147.3) by wuxshcsitd00600.xfusion.com
+ (10.32.133.213) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Thu, 20 Jul
+ 2023 21:15:26 +0800
+Date:   Thu, 20 Jul 2023 21:15:24 +0800
+From:   Wang Jinchao <wangjinchao@xfusion.com>
+To:     Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <stone.xulei@xfusion.com>
+Subject: [PATCH] x86/head64: Harmonize the style of array-type parameter for
+ fixup_pointer
+Message-ID: <ZLkzbA3fErEsFtaF@fedora>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: bTRPbajjtwuaDo-xa664eKh5aH27MiMe
-X-Proofpoint-ORIG-GUID: bTRPbajjtwuaDo-xa664eKh5aH27MiMe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-20_04,2023-07-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
- clxscore=1011 priorityscore=1501 bulkscore=0 spamscore=0 phishscore=0
- mlxscore=0 mlxlogscore=354 suspectscore=0 impostorscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2307200093
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+X-Originating-IP: [10.82.147.3]
+X-ClientProxiedBy: wuxshcsitd00602.xfusion.com (10.32.132.250) To
+ wuxshcsitd00600.xfusion.com (10.32.133.213)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2023-07-20 at 17:57 +0800, sunran001@208suo.com wrote:
-> ERROR: do not initialise statics to NULL
+The usage of '&' before the array parameter is redundant because '&array'
+is equivalent to 'array'. Therefore, there is no need to include '&'
+before the array parameter. In fact, using '&' can cause more confusion,
+especially for individuals who are not familiar with the address-of
+operation for arrays. They might mistakenly believe that one is different
+from the other and spend additional time realizing that they are actually
+the same.
 
-We don't accept checkpatch fixes on drivers, particularly not old ones.
-The reason is very simple: checkpatch keeps updating, so they would
-cause endless churn and a vastly increased risk of introducing bugs
-into older drivers.  Checkpatch.pl as the name implies is for checking
-patches only.
+Harmonizing the style by removing the unnecessary '&' would save time for
+those individuals.
 
-James
+Signed-off-by: Wang Jinchao <wangjinchao@xfusion.com>
+---
+ arch/x86/kernel/head64.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/kernel/head64.c b/arch/x86/kernel/head64.c
+index 49f7629b17f7..25a67a13a1fa 100644
+--- a/arch/x86/kernel/head64.c
++++ b/arch/x86/kernel/head64.c
+@@ -211,7 +211,7 @@ unsigned long __head __startup_64(unsigned long physaddr,
+ 
+ 	/* Fixup the physical addresses in the page table */
+ 
+-	pgd = fixup_pointer(&early_top_pgt, physaddr);
++	pgd = fixup_pointer(early_top_pgt, physaddr);
+ 	p = pgd + pgd_index(__START_KERNEL_map);
+ 	if (la57)
+ 		*p = (unsigned long)level4_kernel_pgt;
+@@ -220,11 +220,11 @@ unsigned long __head __startup_64(unsigned long physaddr,
+ 	*p += _PAGE_TABLE_NOENC - __START_KERNEL_map + load_delta;
+ 
+ 	if (la57) {
+-		p4d = fixup_pointer(&level4_kernel_pgt, physaddr);
++		p4d = fixup_pointer(level4_kernel_pgt, physaddr);
+ 		p4d[511] += load_delta;
+ 	}
+ 
+-	pud = fixup_pointer(&level3_kernel_pgt, physaddr);
++	pud = fixup_pointer(level3_kernel_pgt, physaddr);
+ 	pud[510] += load_delta;
+ 	pud[511] += load_delta;
+ 
+-- 
+2.40.0
 
