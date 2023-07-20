@@ -2,112 +2,236 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 939E3EB64DD
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 09:40:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9A8C05051
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 09:48:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230163AbjGTJkA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 05:40:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39070 "EHLO
+        id S230140AbjGTJsc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 05:48:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230142AbjGTJjo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 05:39:44 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAED82D53;
-        Thu, 20 Jul 2023 02:35:17 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36K4Eate005080;
-        Thu, 20 Jul 2023 09:34:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=rgB87VYg+qSX8naWX8H1W8jl5doCwBmeRMl7/YA3vig=;
- b=Gp6XBcf3XfzsAWPehRBsAZbjnvbjaZY+D7a9b0F48t3hh1i42G6JsdiDV6+E4n5itZ7Q
- MOA8DNp7kaPaN/8HKz17CxsmaW04aI4xy30MZkFVMQEILsjcmLMLkPrXK+KUD5Lm/wII
- /6Q/5FNQ4iE3PkcWpAKm1siX/Lgjdas6eBlnjnseJ1S7SzOkLxTetlUF9LR19FxYgp2I
- O91JMbNjuXS0q2bAAexwL8DX/KQ/FjXVrrJ78ehYJNSKqPjCNCpj4Mcul0H6J/LBQLJW
- RsnPZmmlw8GmJV8FszWW3T0ks2mWdb7g3eAc1+n93q7VQvCFCsAcV74RHDBZsNlIvzPH fQ== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rxup4gru0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 20 Jul 2023 09:34:54 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36K9YpEx029166;
-        Thu, 20 Jul 2023 09:34:51 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3rumhm8sj6-1;
-        Thu, 20 Jul 2023 09:34:51 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36K9YpiT029104;
-        Thu, 20 Jul 2023 09:34:51 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 36K9YpJh028935;
-        Thu, 20 Jul 2023 09:34:51 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-        id 6A47863F16C; Thu, 20 Jul 2023 15:04:50 +0530 (+0530)
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-To:     mani@kernel.org, quic_cang@quicinc.com, stanley.chu@mediatek.com,
-        bvanassche@acm.org, quic_asutoshd@quicinc.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        konrad.dybcio@linaro.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        agross@kernel.org, andersson@kernel.org, jejb@linux.ibm.com,
-        linux-arm-msm@vger.kernel.org, quic_ziqichen@quicinc.com,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V3] scsi: ufs: ufs-qcom: Change UFS devfreq timer to delayed
-Date:   Thu, 20 Jul 2023 15:04:46 +0530
-Message-Id: <20230720093446.30697-1-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 6Yh8Leu9ip2O3oF0fERLemcjLrw0oAbt
-X-Proofpoint-ORIG-GUID: 6Yh8Leu9ip2O3oF0fERLemcjLrw0oAbt
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-20_03,2023-07-19_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 spamscore=0
- adultscore=0 mlxlogscore=999 lowpriorityscore=0 suspectscore=0
- priorityscore=1501 clxscore=1015 bulkscore=0 mlxscore=0 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2307200079
+        with ESMTP id S231301AbjGTJsD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 05:48:03 -0400
+Received: from mail.208.org (unknown [183.242.55.162])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4C0B35A1
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 02:46:17 -0700 (PDT)
+Received: from mail.208.org (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTP id 4R679d3lWPzBRDsV
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 17:46:13 +0800 (CST)
+Authentication-Results: mail.208.org (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)" header.d=208.org
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
+        content-transfer-encoding:content-type:message-id:user-agent
+        :references:in-reply-to:subject:to:from:date:mime-version; s=
+        dkim; t=1689846373; x=1692438374; bh=o9JOFlbGVJvu3Fw63HuzTzQdpgV
+        xk3SPDUv4pVrDud4=; b=JlvLy+pWgQ5Gr9vKbQDlNZRn/hB5VaS+RHv37e1AXLJ
+        xNkgC+E/D0I10GVWRCOGIH5vt5vxZYU3j9aZqlrDwcNNtYfBJ2ZMGt0aBuP0tyba
+        5WhQcj6ALdjV1gZjFuBuctkG8TQCb12jmyceBuPOlMTEcs47X5FtDpWsGqf5Fg4D
+        T+H7cVxOqafI9lV6rnkXx2pzz83amYnaFwSFehzLA8sAQpylV3tU1sxZksKZyhS7
+        SLv76x9Ncbce1m7VEL2hTs++xZWMcfWboMYhOgpk4dmRuuwPYmsoiYVDDA+fiaeY
+        SQB9VS9CaHYfue5TBNB9mV9OapXMI4m5NH+fsft82ng==
+X-Virus-Scanned: amavisd-new at mail.208.org
+Received: from mail.208.org ([127.0.0.1])
+        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id j-pmiFrUvIvc for <linux-scsi@vger.kernel.org>;
+        Thu, 20 Jul 2023 17:46:13 +0800 (CST)
+Received: from localhost (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTPSA id 4R679d1YldzBRDrZ;
+        Thu, 20 Jul 2023 17:46:13 +0800 (CST)
+MIME-Version: 1.0
+Date:   Thu, 20 Jul 2023 17:46:13 +0800
+From:   sunran001@208suo.com
+To:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: aic7xxx: fix the following errors
+In-Reply-To: <20230720094503.3863-1-xujianghui@cdjrlc.com>
+References: <20230720094503.3863-1-xujianghui@cdjrlc.com>
+User-Agent: Roundcube Webmail
+Message-ID: <24ac6e965ee9dc4be3fd2f1932ba33f7@208suo.com>
+X-Sender: sunran001@208suo.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Devfreq uses the default DEVFREQ_TIMER_DEFERRABLE mode which uses
-the deferred timer for scheduling the devfreq load monitor function.
-This causes the load monitoring to be done only with non-idle CPUs
-and not making use of the idle CPUs.
+ERROR: "foo * bar" should be "foo *bar"
+ERROR: return is not a function, parentheses are not required
+ERROR: open brace '{' following function definitions go on the next line
 
-Hence, use the DEVFREQ_TIMER_DELAYED mode which uses the delayed
-timer thereby making use of idle CPUs as well for load monitoring.
-
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Signed-off-by: Ran Sun <sunran001@208suo.com>
 ---
+  drivers/scsi/aic7xxx/aic7xxx_osm.h | 47 +++++++++++++++---------------
+  1 file changed, 23 insertions(+), 24 deletions(-)
 
-changes from v2:
-- Modified commit message as per mani's suggestion
-- removed threshold change
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h 
+b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+index 51d9f4de0734..ad63b6cda3b7 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+@@ -140,19 +140,17 @@ typedef union {
+  	volatile uint8_t __iomem *maddr;
+  } bus_space_handle_t;
 
-Changes from v1:
-- Realigned the commit text
+-typedef struct bus_dma_segment
+-{
++typedef struct bus_dma_segment {
+  	dma_addr_t	ds_addr;
+  	bus_size_t	ds_len;
+  } bus_dma_segment_t;
 
- drivers/ufs/host/ufs-qcom.c | 1 +
- 1 file changed, 1 insertion(+)
+-struct ahc_linux_dma_tag
+-{
++struct ahc_linux_dma_tag {
+  	bus_size_t	alignment;
+  	bus_size_t	boundary;
+  	bus_size_t	maxsize;
+  };
+-typedef struct ahc_linux_dma_tag* bus_dma_tag_t;
++typedef struct ahc_linux_dma_tag *bus_dma_tag_t;
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index df9161cb9825..07e5050dae77 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1619,6 +1619,7 @@ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
- 					struct devfreq_simple_ondemand_data *d)
- {
- 	p->polling_ms = 60;
-+	p->timer = DEVFREQ_TIMER_DELAYED;
- 	d->upthreshold = 70;
- 	d->downdifferential = 5;
- }
---
-2.17.1
+  typedef dma_addr_t bus_dmamap_t;
 
+@@ -367,11 +365,11 @@ void ahc_delay(long);
+
+
+  /***************************** Low Level I/O 
+**********************************/
+-uint8_t ahc_inb(struct ahc_softc * ahc, long port);
+-void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
+-void ahc_outsb(struct ahc_softc * ahc, long port,
++uint8_t ahc_inb(struct ahc_softc *ahc, long port);
++void ahc_outb(struct ahc_softc *ahc, long port, uint8_t val);
++void ahc_outsb(struct ahc_softc *ahc, long port,
+  	       uint8_t *, int count);
+-void ahc_insb(struct ahc_softc * ahc, long port,
++void ahc_insb(struct ahc_softc *ahc, long port,
+  	       uint8_t *, int count);
+
+  /**************************** Initialization 
+**********************************/
+@@ -434,8 +432,7 @@ ahc_unlock(struct ahc_softc *ahc, unsigned long 
+*flags)
+  /* config registers for header type 0 devices */
+  #define PCIR_MAPS	0x10
+
+-typedef enum
+-{
++typedef enum {
+  	AHC_POWER_STATE_D0,
+  	AHC_POWER_STATE_D1,
+  	AHC_POWER_STATE_D2,
+@@ -450,10 +447,12 @@ int			 aic7770_map_registers(struct ahc_softc 
+*ahc,
+  					       u_int port);
+  int			 aic7770_map_int(struct ahc_softc *ahc, u_int irq);
+  #else
+-static inline int	ahc_linux_eisa_init(void) {
++static inline int	ahc_linux_eisa_init(void)
++{
+  	return -ENODEV;
+  }
+-static inline void	ahc_linux_eisa_exit(void) {
++static inline void	ahc_linux_eisa_exit(void)
++{
+  }
+  #endif
+
+@@ -475,21 +474,21 @@ static inline int 
+ahc_get_pci_function(ahc_dev_softc_t);
+  static inline int
+  ahc_get_pci_function(ahc_dev_softc_t pci)
+  {
+-	return (PCI_FUNC(pci->devfn));
++	return PCI_FUNC(pci->devfn);
+  }
+
+  static inline int ahc_get_pci_slot(ahc_dev_softc_t);
+  static inline int
+  ahc_get_pci_slot(ahc_dev_softc_t pci)
+  {
+-	return (PCI_SLOT(pci->devfn));
++	return PCI_SLOT(pci->devfn);
+  }
+
+  static inline int ahc_get_pci_bus(ahc_dev_softc_t);
+  static inline int
+  ahc_get_pci_bus(ahc_dev_softc_t pci)
+  {
+-	return (pci->bus->number);
++	return pci->bus->number;
+  }
+  #else
+  static inline int ahc_linux_pci_init(void) {
+@@ -524,7 +523,7 @@ void ahc_cmd_set_transaction_status(struct scsi_cmnd 
+*cmd, uint32_t status)
+  static inline
+  void ahc_set_transaction_status(struct scb *scb, uint32_t status)
+  {
+-	ahc_cmd_set_transaction_status(scb->io_ctx,status);
++	ahc_cmd_set_transaction_status(scb->io_ctx, status);
+  }
+
+  static inline
+@@ -549,7 +548,7 @@ uint32_t ahc_cmd_get_transaction_status(struct 
+scsi_cmnd *cmd)
+  static inline
+  uint32_t ahc_get_transaction_status(struct scb *scb)
+  {
+-	return (ahc_cmd_get_transaction_status(scb->io_ctx));
++	return ahc_cmd_get_transaction_status(scb->io_ctx);
+  }
+
+  static inline
+@@ -561,7 +560,7 @@ uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd 
+*cmd)
+  static inline
+  uint32_t ahc_get_scsi_status(struct scb *scb)
+  {
+-	return (ahc_cmd_get_scsi_status(scb->io_ctx));
++	return ahc_cmd_get_scsi_status(scb->io_ctx);
+  }
+
+  static inline
+@@ -576,13 +575,13 @@ void ahc_set_transaction_tag(struct scb *scb, int 
+enabled, u_int type)
+  static inline
+  u_long ahc_get_transfer_length(struct scb *scb)
+  {
+-	return (scb->platform_data->xfer_len);
++	return scb->platform_data->xfer_len;
+  }
+
+  static inline
+  int ahc_get_transfer_dir(struct scb *scb)
+  {
+-	return (scb->io_ctx->sc_data_direction);
++	return scb->io_ctx->sc_data_direction;
+  }
+
+  static inline
+@@ -606,7 +605,7 @@ u_long ahc_get_residual(struct scb *scb)
+  static inline
+  u_long ahc_get_sense_residual(struct scb *scb)
+  {
+-	return (scb->platform_data->sense_resid);
++	return scb->platform_data->sense_resid;
+  }
+
+  static inline
+@@ -617,13 +616,13 @@ int ahc_perform_autosense(struct scb *scb)
+  	 * On other platforms this is set on a
+  	 * per-transaction basis.
+  	 */
+-	return (1);
++	return 1;
+  }
+
+  static inline uint32_t
+  ahc_get_sense_bufsize(struct ahc_softc *ahc, struct scb *scb)
+  {
+-	return (sizeof(struct scsi_sense_data));
++	return sizeof(struct scsi_sense_data);
+  }
+
+  static inline void
