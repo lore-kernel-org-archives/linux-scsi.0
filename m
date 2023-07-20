@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A86EEB64DD
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 09:26:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 700F3EB64DA
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 09:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230282AbjGTJ0b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 05:26:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58860 "EHLO
+        id S230348AbjGTJbf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 05:31:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230261AbjGTJ0U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 05:26:20 -0400
+        with ESMTP id S230393AbjGTJbX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 05:31:23 -0400
 Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42882BCB3
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 02:09:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 894073598
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 02:22:11 -0700 (PDT)
 Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4R66Mg6JNWzBRDsR
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 17:09:51 +0800 (CST)
+        by mail.208.org (Postfix) with ESMTP id 4R66dr2kP6zBRDsR
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 17:22:08 +0800 (CST)
 Authentication-Results: mail.208.org (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)" header.d=208.org
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
         content-transfer-encoding:content-type:message-id:user-agent
         :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1689844191; x=1692436192; bh=ZXcpy+AEoHMva1uuc2MXgOHxjIp
-        1WDQ9VhZyfCsAByU=; b=LRWBOa7zssXRIuySv1T8BGMZIPFvmhNs5RMcaY1xNhr
-        ktOWDhFjz82mfdMy3q2GStURre1II3T3PBXY82xxtbaPIgRtOSuLSr3Jj2Ilf/au
-        zyo70ZV8dhXh6pZZTY6i/hTbhWJnjq1GSFpyptVGy3ihR5VVU/vfDIYkvmixOHJX
-        6K4CFZ4roaWInsFdLMta1nDQVmVkRyn/wHZkpTNa+c+lolb9cENZr94tjFl60VxU
-        +00InB08cmJ2Ek1c3LvcGVGY189nGTK7L33Yta8XMMqgL/FjsHPtUuXC4f5kAyU4
-        TbcNztR2F52NyMqSavtdiDVzcMDA5gpSJ+9VK5m/IQg==
+        dkim; t=1689844928; x=1692436929; bh=OFKE5E9c4rF6D5IgSGAwbuC0/Ms
+        M5ASBbtPBPoN95a8=; b=vHzayJ+Wm8ij9fhl7eRhD2fmd9As1ben7A/JIdyjzEO
+        AbEtC8hO54KGu9QG/yjknyhxS+lQvPamFUIvi7apXVKsJXeNZ8hn1ZJDea0WnNxD
+        qbjVfoRVDexaQMYXkE7IjJdMsasWYPuGIYByH0F0zZWki03UQCY1xH4H6JTp5A6J
+        pswVtL6lMWOyG+JsOLdV57A5t63I9Jp2gB0fZQUR+Kg/eAFUHyeCAodwQhQlKgww
+        1paEZ5enRRfxb2CglJlDlQpcaRNjrxNClfjymUs16g6Zq3i8+4FWPad8qJPucbpO
+        oigLSehWmY5BKqa0iF2DuKuMzABK0wD0gIOlsKTtliw==
 X-Virus-Scanned: amavisd-new at mail.208.org
 Received: from mail.208.org ([127.0.0.1])
         by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id NSJxTCutNsRv for <linux-scsi@vger.kernel.org>;
-        Thu, 20 Jul 2023 17:09:51 +0800 (CST)
+        with ESMTP id E-zEorJVQ5al for <linux-scsi@vger.kernel.org>;
+        Thu, 20 Jul 2023 17:22:08 +0800 (CST)
 Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4R66Mg3XpVzBHXhQ;
-        Thu, 20 Jul 2023 17:09:51 +0800 (CST)
+        by mail.208.org (Postfix) with ESMTPSA id 4R66dr0DYnzBHXhQ;
+        Thu, 20 Jul 2023 17:22:08 +0800 (CST)
 MIME-Version: 1.0
-Date:   Thu, 20 Jul 2023 17:09:51 +0800
+Date:   Thu, 20 Jul 2023 17:22:07 +0800
 From:   sunran001@208suo.com
 To:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aic7xxx: aic79xx: Remove unnecessary parentheses
-In-Reply-To: <20230720090839.3506-1-xujianghui@cdjrlc.com>
-References: <20230720090839.3506-1-xujianghui@cdjrlc.com>
+Subject: [PATCH] scsi: aic79xx: fix some errors related to spaces
+In-Reply-To: <20230720092058.3618-1-xujianghui@cdjrlc.com>
+References: <20230720092058.3618-1-xujianghui@cdjrlc.com>
 User-Agent: Roundcube Webmail
-Message-ID: <5663619f5f713c1ad99efbb8fa53bbb1@208suo.com>
+Message-ID: <3029a40608f9337530b3cb767d936f36@208suo.com>
 X-Sender: sunran001@208suo.com
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
@@ -55,47 +55,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix "return is not a function, parentheses are not required" checkpatch
-error.
+ERROR: space prohibited before that close parenthesis ')'
+ERROR: open brace '{' following struct go on the same line
+ERROR: space prohibited before open square bracket '['
 
 Signed-off-by: Ran Sun <sunran001@208suo.com>
 ---
-  drivers/scsi/aic7xxx/aic7xxx_93cx6.c | 8 ++++----
-  1 file changed, 4 insertions(+), 4 deletions(-)
+  drivers/scsi/aic7xxx/aic79xx.h | 7 +++----
+  1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_93cx6.c 
-b/drivers/scsi/aic7xxx/aic7xxx_93cx6.c
-index 11ddffbcc2f3..0d3c33322eb5 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_93cx6.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_93cx6.c
-@@ -236,7 +236,7 @@ ahc_write_seeprom(struct seeprom_descriptor *sd, 
-uint16_t *buf,
-  	} else {
-  		printk("ahc_write_seeprom: unsupported seeprom type %d\n",
-  		       sd->sd_chip);
--		return (0);
-+		return 0;
-  	}
+diff --git a/drivers/scsi/aic7xxx/aic79xx.h 
+b/drivers/scsi/aic7xxx/aic79xx.h
+index 59e9321815c8..a1fdefdfddd8 100644
+--- a/drivers/scsi/aic7xxx/aic79xx.h
++++ b/drivers/scsi/aic7xxx/aic79xx.h
+@@ -66,7 +66,7 @@ struct scb_platform_data;
+  #define	SCB_LIST_NULL		0xFF00
+  #define	SCB_LIST_NULL_LE	(ahd_htole16(SCB_LIST_NULL))
+  #define QOUTFIFO_ENTRY_VALID 0x80
+-#define SCBID_IS_NULL(scbid) (((scbid) & 0xFF00 ) == SCB_LIST_NULL)
++#define SCBID_IS_NULL(scbid) (((scbid) & 0xFF00) == SCB_LIST_NULL)
 
-  	send_seeprom_cmd(sd, ewen);
-@@ -292,7 +292,7 @@ ahc_write_seeprom(struct seeprom_descriptor *sd, 
-uint16_t *buf,
-  	send_seeprom_cmd(sd, ewds);
-  	reset_seeprom(sd);
+  #define SCSIID_TARGET(ahd, scsiid)	\
+  	(((scsiid) & TID) >> TID_SHIFT)
+@@ -1043,8 +1043,7 @@ typedef enum {
 
--	return (1);
-+	return 1;
-  }
+  typedef uint8_t ahd_mode_state;
 
-  int
-@@ -311,8 +311,8 @@ ahc_verify_cksum(struct seeprom_config *sc)
-  		checksum = checksum + scarray[i];
-  	if (checksum == 0
-  	 || (checksum & 0xFFFF) != sc->checksum) {
--		return (0);
-+		return 0;
-  	} else {
--		return(1);
-+		return 1;
-  	}
-  }
+-struct ahd_completion
+-{
++struct ahd_completion {
+  	uint16_t	tag;
+  	uint8_t		sg_status;
+  	uint8_t		valid_tag;
+@@ -1316,7 +1315,7 @@ struct aic7770_identity {
+  	const char		*name;
+  	ahd_device_setup_t	*setup;
+  };
+-extern struct aic7770_identity aic7770_ident_table [];
++extern struct aic7770_identity aic7770_ident_table[];
+  extern const int ahd_num_aic7770_devs;
+
+  #define AHD_EISA_SLOT_OFFSET	0xc00
