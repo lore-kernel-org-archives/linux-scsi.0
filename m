@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9A8C05051
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 09:48:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77330EB64DA
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 09:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230140AbjGTJsc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 05:48:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46600 "EHLO
+        id S230343AbjGTJ5e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 05:57:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231301AbjGTJsD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 05:48:03 -0400
+        with ESMTP id S229823AbjGTJ5c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 05:57:32 -0400
 Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4C0B35A1
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 02:46:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40BE0A2
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 02:57:31 -0700 (PDT)
 Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4R679d3lWPzBRDsV
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 17:46:13 +0800 (CST)
+        by mail.208.org (Postfix) with ESMTP id 4R67Qc53DNzBRDsV
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 17:57:28 +0800 (CST)
 Authentication-Results: mail.208.org (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)" header.d=208.org
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
         content-transfer-encoding:content-type:message-id:user-agent
         :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1689846373; x=1692438374; bh=o9JOFlbGVJvu3Fw63HuzTzQdpgV
-        xk3SPDUv4pVrDud4=; b=JlvLy+pWgQ5Gr9vKbQDlNZRn/hB5VaS+RHv37e1AXLJ
-        xNkgC+E/D0I10GVWRCOGIH5vt5vxZYU3j9aZqlrDwcNNtYfBJ2ZMGt0aBuP0tyba
-        5WhQcj6ALdjV1gZjFuBuctkG8TQCb12jmyceBuPOlMTEcs47X5FtDpWsGqf5Fg4D
-        T+H7cVxOqafI9lV6rnkXx2pzz83amYnaFwSFehzLA8sAQpylV3tU1sxZksKZyhS7
-        SLv76x9Ncbce1m7VEL2hTs++xZWMcfWboMYhOgpk4dmRuuwPYmsoiYVDDA+fiaeY
-        SQB9VS9CaHYfue5TBNB9mV9OapXMI4m5NH+fsft82ng==
+        dkim; t=1689847048; x=1692439049; bh=Byn4fG+l3+wgeKB6vOCQHYXNjBM
+        M0bYlNp8Mj7rgedE=; b=gNGnKqORVcaZ1xhOD3iSAnNzJjbMIXOlcKoh7PINSa+
+        kbtTz9uIRK3pYRg1GE59N6qeZsC+ccyxrmCSHzuNWQkRmStGKyD30l8iGcTcGFeV
+        4VCUd18xxKgj2Yktt3j5ZjzbPAVto3ERX64k/iAGe9Wz7NYsyvVHdJf1qnkvuneX
+        VMMRLx6vHMoBXY4zDMhR/S1Fy1TxsURhGogCYmhEQLSYWrd92DthIcxum0Hhx1v8
+        CwVx+EQuO2R1mGCVAlz0G236YVGPTDanFMptXOE2E3ZW8kKCe9x6AF4qrBTqdW+c
+        IrC8ZN2Bo6ytbMaal7AFcI5FYbeNuaBnVH/fZOywaaA==
 X-Virus-Scanned: amavisd-new at mail.208.org
 Received: from mail.208.org ([127.0.0.1])
         by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id j-pmiFrUvIvc for <linux-scsi@vger.kernel.org>;
-        Thu, 20 Jul 2023 17:46:13 +0800 (CST)
+        with ESMTP id NZoR2Ka106bg for <linux-scsi@vger.kernel.org>;
+        Thu, 20 Jul 2023 17:57:28 +0800 (CST)
 Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4R679d1YldzBRDrZ;
-        Thu, 20 Jul 2023 17:46:13 +0800 (CST)
+        by mail.208.org (Postfix) with ESMTPSA id 4R67Qc2pNPzBRDsS;
+        Thu, 20 Jul 2023 17:57:28 +0800 (CST)
 MIME-Version: 1.0
-Date:   Thu, 20 Jul 2023 17:46:13 +0800
+Date:   Thu, 20 Jul 2023 17:57:28 +0800
 From:   sunran001@208suo.com
-To:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+To:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.co
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aic7xxx: fix the following errors
-In-Reply-To: <20230720094503.3863-1-xujianghui@cdjrlc.com>
-References: <20230720094503.3863-1-xujianghui@cdjrlc.com>
+Subject: [PATCH] scsi: aic7xxx: avoid checkpatch error
+In-Reply-To: <20230720095619.3954-1-xujianghui@cdjrlc.com>
+References: <20230720095619.3954-1-xujianghui@cdjrlc.com>
 User-Agent: Roundcube Webmail
-Message-ID: <24ac6e965ee9dc4be3fd2f1932ba33f7@208suo.com>
+Message-ID: <4d48377ca4e62a71f89e4de6f80e6725@208suo.com>
 X-Sender: sunran001@208suo.com
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
@@ -55,183 +55,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ERROR: "foo * bar" should be "foo *bar"
-ERROR: return is not a function, parentheses are not required
-ERROR: open brace '{' following function definitions go on the next line
+ERROR: do not initialise statics to NULL
 
 Signed-off-by: Ran Sun <sunran001@208suo.com>
 ---
-  drivers/scsi/aic7xxx/aic7xxx_osm.h | 47 +++++++++++++++---------------
-  1 file changed, 23 insertions(+), 24 deletions(-)
+  drivers/scsi/aic7xxx/aic7xxx_osm.c | 4 ++--
+  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h 
-b/drivers/scsi/aic7xxx/aic7xxx_osm.h
-index 51d9f4de0734..ad63b6cda3b7 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
-@@ -140,19 +140,17 @@ typedef union {
-  	volatile uint8_t __iomem *maddr;
-  } bus_space_handle_t;
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c 
+b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index d3b1082654d5..c062bf27b55a 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -124,7 +124,7 @@
+  #include "aic7xxx_inline.h"
+  #include <scsi/scsicam.h>
 
--typedef struct bus_dma_segment
--{
-+typedef struct bus_dma_segment {
-  	dma_addr_t	ds_addr;
-  	bus_size_t	ds_len;
-  } bus_dma_segment_t;
+-static struct scsi_transport_template *ahc_linux_transport_template = 
+NULL;
++static struct scsi_transport_template *ahc_linux_transport_template;
 
--struct ahc_linux_dma_tag
--{
-+struct ahc_linux_dma_tag {
-  	bus_size_t	alignment;
-  	bus_size_t	boundary;
-  	bus_size_t	maxsize;
-  };
--typedef struct ahc_linux_dma_tag* bus_dma_tag_t;
-+typedef struct ahc_linux_dma_tag *bus_dma_tag_t;
+  #include <linux/init.h>		/* __setup */
+  #include <linux/mm.h>		/* For fetching system memory size */
+@@ -325,7 +325,7 @@ static uint32_t aic7xxx_periodic_otag;
+  /*
+   * Module information and settable options.
+   */
+-static char *aic7xxx = NULL;
++static char *aic7xxx;
 
-  typedef dma_addr_t bus_dmamap_t;
-
-@@ -367,11 +365,11 @@ void ahc_delay(long);
-
-
-  /***************************** Low Level I/O 
-**********************************/
--uint8_t ahc_inb(struct ahc_softc * ahc, long port);
--void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
--void ahc_outsb(struct ahc_softc * ahc, long port,
-+uint8_t ahc_inb(struct ahc_softc *ahc, long port);
-+void ahc_outb(struct ahc_softc *ahc, long port, uint8_t val);
-+void ahc_outsb(struct ahc_softc *ahc, long port,
-  	       uint8_t *, int count);
--void ahc_insb(struct ahc_softc * ahc, long port,
-+void ahc_insb(struct ahc_softc *ahc, long port,
-  	       uint8_t *, int count);
-
-  /**************************** Initialization 
-**********************************/
-@@ -434,8 +432,7 @@ ahc_unlock(struct ahc_softc *ahc, unsigned long 
-*flags)
-  /* config registers for header type 0 devices */
-  #define PCIR_MAPS	0x10
-
--typedef enum
--{
-+typedef enum {
-  	AHC_POWER_STATE_D0,
-  	AHC_POWER_STATE_D1,
-  	AHC_POWER_STATE_D2,
-@@ -450,10 +447,12 @@ int			 aic7770_map_registers(struct ahc_softc 
-*ahc,
-  					       u_int port);
-  int			 aic7770_map_int(struct ahc_softc *ahc, u_int irq);
-  #else
--static inline int	ahc_linux_eisa_init(void) {
-+static inline int	ahc_linux_eisa_init(void)
-+{
-  	return -ENODEV;
-  }
--static inline void	ahc_linux_eisa_exit(void) {
-+static inline void	ahc_linux_eisa_exit(void)
-+{
-  }
-  #endif
-
-@@ -475,21 +474,21 @@ static inline int 
-ahc_get_pci_function(ahc_dev_softc_t);
-  static inline int
-  ahc_get_pci_function(ahc_dev_softc_t pci)
-  {
--	return (PCI_FUNC(pci->devfn));
-+	return PCI_FUNC(pci->devfn);
-  }
-
-  static inline int ahc_get_pci_slot(ahc_dev_softc_t);
-  static inline int
-  ahc_get_pci_slot(ahc_dev_softc_t pci)
-  {
--	return (PCI_SLOT(pci->devfn));
-+	return PCI_SLOT(pci->devfn);
-  }
-
-  static inline int ahc_get_pci_bus(ahc_dev_softc_t);
-  static inline int
-  ahc_get_pci_bus(ahc_dev_softc_t pci)
-  {
--	return (pci->bus->number);
-+	return pci->bus->number;
-  }
-  #else
-  static inline int ahc_linux_pci_init(void) {
-@@ -524,7 +523,7 @@ void ahc_cmd_set_transaction_status(struct scsi_cmnd 
-*cmd, uint32_t status)
-  static inline
-  void ahc_set_transaction_status(struct scb *scb, uint32_t status)
-  {
--	ahc_cmd_set_transaction_status(scb->io_ctx,status);
-+	ahc_cmd_set_transaction_status(scb->io_ctx, status);
-  }
-
-  static inline
-@@ -549,7 +548,7 @@ uint32_t ahc_cmd_get_transaction_status(struct 
-scsi_cmnd *cmd)
-  static inline
-  uint32_t ahc_get_transaction_status(struct scb *scb)
-  {
--	return (ahc_cmd_get_transaction_status(scb->io_ctx));
-+	return ahc_cmd_get_transaction_status(scb->io_ctx);
-  }
-
-  static inline
-@@ -561,7 +560,7 @@ uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd 
-*cmd)
-  static inline
-  uint32_t ahc_get_scsi_status(struct scb *scb)
-  {
--	return (ahc_cmd_get_scsi_status(scb->io_ctx));
-+	return ahc_cmd_get_scsi_status(scb->io_ctx);
-  }
-
-  static inline
-@@ -576,13 +575,13 @@ void ahc_set_transaction_tag(struct scb *scb, int 
-enabled, u_int type)
-  static inline
-  u_long ahc_get_transfer_length(struct scb *scb)
-  {
--	return (scb->platform_data->xfer_len);
-+	return scb->platform_data->xfer_len;
-  }
-
-  static inline
-  int ahc_get_transfer_dir(struct scb *scb)
-  {
--	return (scb->io_ctx->sc_data_direction);
-+	return scb->io_ctx->sc_data_direction;
-  }
-
-  static inline
-@@ -606,7 +605,7 @@ u_long ahc_get_residual(struct scb *scb)
-  static inline
-  u_long ahc_get_sense_residual(struct scb *scb)
-  {
--	return (scb->platform_data->sense_resid);
-+	return scb->platform_data->sense_resid;
-  }
-
-  static inline
-@@ -617,13 +616,13 @@ int ahc_perform_autosense(struct scb *scb)
-  	 * On other platforms this is set on a
-  	 * per-transaction basis.
-  	 */
--	return (1);
-+	return 1;
-  }
-
-  static inline uint32_t
-  ahc_get_sense_bufsize(struct ahc_softc *ahc, struct scb *scb)
-  {
--	return (sizeof(struct scsi_sense_data));
-+	return sizeof(struct scsi_sense_data);
-  }
-
-  static inline void
+  MODULE_AUTHOR("Maintainer: Hannes Reinecke <hare@suse.de>");
+  MODULE_DESCRIPTION("Adaptec AIC77XX/78XX SCSI Host Bus Adapter 
+driver");
