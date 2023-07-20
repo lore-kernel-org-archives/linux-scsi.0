@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD89EB64DA
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BD3EB64DA
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 05:44:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230029AbjGTFoo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 01:44:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45020 "EHLO
+        id S230041AbjGTFor (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 01:44:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229844AbjGTFoV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:44:21 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96A26271C
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:43:23 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id d2e1a72fcca58-666e3b15370so245927b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:43:23 -0700 (PDT)
+        with ESMTP id S229983AbjGTFo2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 01:44:28 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C12532733
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:43:27 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1b8c81e36c0so2504445ad.0
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2023 22:43:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1689831790; x=1690436590;
+        d=linaro.org; s=google; t=1689831797; x=1690436597;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2mPypMCRuXClcgpL2lzvILT3JZpVsxzUSfa1w4HvazI=;
-        b=Y2E2qjmmVC8V3Tvj3PyJGakAdVUhyqLTUYoxkCJUOBFoFjv8Rk0yKQOnO9ycQov5VA
-         3zRFcFuCKy3AsKX3iiFQhWKOwuZwqwdPAyBME1CLVOalm3zwQb7J/UeHyLNkXjlV12/r
-         bdAMjlJyT3N1qMRlmLBFTbAQhRkyFPHHSVX/VPL3bRtlaWMA0UWep7IpLqjHwppLAw31
-         q/suRvfXPBpqkKB8e2qcdMMLXSqZ/J4JeM5wW9qFEUCY9QeEe8ryV33X+0oO6/q3tDGl
-         M0lS+4KwRC6WicaQix15RWqi7/PPfFtqFBufKybZHbXg+Z/hJi9Nwu9HYoGvVw3JHXdZ
-         FTIA==
+        bh=93rZVq+nQZbieDirfxMQeUUlun6XgrX6rWeshnX356E=;
+        b=MzIhYsChG4GLU0KYjhZWwm/1noH7leAPerLHt9hDa7n632irnyZY6W8R11Kf8ZS0XW
+         jD0T+VChMw4QKx6WxJM/A/NLLfw3CBzMbBTOYIPcMX61hyB8TvLoRbd5l4l3euD+H+lZ
+         Xs9DmiDWTKkfkEDi0qZ2bkYFLKhyKihhF+FI2yucuGgntFZrWyO+wRcHHy9zGxJkBJIl
+         HvJ8HH/HxXgAPBG8e7QQsUWPrD/XCYFlxVCTNCroKkLPCbgqgvh29U6ff0mIR7x3dyDw
+         ChN4dktnQyv5yXOoufAPXdRwrS419DzlI9bxT1Bd5zR/XcHCCdJEsIGsTBzctSgtk1SL
+         Ecdw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689831790; x=1690436590;
+        d=1e100.net; s=20221208; t=1689831797; x=1690436597;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2mPypMCRuXClcgpL2lzvILT3JZpVsxzUSfa1w4HvazI=;
-        b=lxeumPJxX0flyUiHx9qV1N81ErtqmJUu6f/yuYXTTQJO8lBGIj7f7A/JQXuNwnvPXg
-         dFugDjG0cJ6nwzUGPt+R7mvm3hgp6aIozcUIvPQca1VvzsPVWpII6/qszgjZsMpJx02q
-         HUAGpJmV7j2CWwokBBB/t2+7eCihAIhq889F3tTY0R1hVHAPv+xMcghO5UU9/oIgHzLg
-         z04K+nH6A9Of1jR5IQizPB7vtREEdvMpHOlXjw9DImxDxg5dAmKCxMJGozy4QVOo7Kde
-         XxJoLYtUA/QuZntNF59UJt/nP82xY+pTp7mN8CZngxQl0rRi84MrQUJEMPXpeSLeowuQ
-         3yCw==
-X-Gm-Message-State: ABy/qLbOj9L8wdTn8OvOqWOAQ52tjSj20z+JxuAFUoCrO3ZIfQsA5OIF
-        M7qRsjcFdPZWKedgCPOFZ2t0
-X-Google-Smtp-Source: APBJJlEuMdN6Sloz1qGrBXi36RlA7nfygvYAdS5/5iswYB2/voMdFFiFqDM6kssl/IT25ku9K7KLDg==
-X-Received: by 2002:a05:6a21:3387:b0:137:8d4c:6b0f with SMTP id yy7-20020a056a21338700b001378d4c6b0fmr2095112pzb.42.1689831789996;
-        Wed, 19 Jul 2023 22:43:09 -0700 (PDT)
+        bh=93rZVq+nQZbieDirfxMQeUUlun6XgrX6rWeshnX356E=;
+        b=k7ZOOmYrUxTHSO9Y0gNbbPoi5zTD/KeBLE1iV19ucX5btBZ15QH3WHGl15d1bXIfX7
+         AVZNwe4WmkTfv6vG0vyX5Mxl2oIUewNJS8jNZsEodzejXl9ZLzvAY/I/E7pzZsLZAj8D
+         exPrMqVD0aColSXK6fgS73rMr10vFA6xDS8Az+foaGQOUIZCeYZYs3J3xiw4fI09blce
+         zSOzSzbTkG8ZmlWVz4o3IE4URZUdSuoFFadaI6yfv3JD5VMsvTiqvive093vmf+vlCwP
+         D8OARBf/nBjyd5t5Gt5G9eqOMcOmrmFCLqkqhaO7qZcf4tZEWBN9wd8rIwvU80xa8sq5
+         VwbA==
+X-Gm-Message-State: ABy/qLaxZpVcTmJfNTRUx+mXSayExtlb2E6NlAcu/I0HHFUq8T5DxQwU
+        ITz0cQ3Z7P2FpF6WmPJuI1tV
+X-Google-Smtp-Source: APBJJlG5iFdToW2qee+uHlZ3VICGz9vPK9xr5coHt1oYeKeXg86mG1bX6iFZw+OED8mrXCa8y2NHKA==
+X-Received: by 2002:a17:903:41c7:b0:1b8:a720:f513 with SMTP id u7-20020a17090341c700b001b8a720f513mr1025062ple.30.1689831797590;
+        Wed, 19 Jul 2023 22:43:17 -0700 (PDT)
 Received: from localhost.localdomain ([117.206.119.70])
-        by smtp.gmail.com with ESMTPSA id r2-20020a170902be0200b001b85bb5fd77sm263367pls.119.2023.07.19.22.43.02
+        by smtp.gmail.com with ESMTPSA id r2-20020a170902be0200b001b85bb5fd77sm263367pls.119.2023.07.19.22.43.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Jul 2023 22:43:09 -0700 (PDT)
+        Wed, 19 Jul 2023 22:43:17 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
         myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
@@ -66,9 +66,9 @@ Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
         bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
         linux-kernel@vger.kernel.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 13/15] arm64: dts: qcom: sm8250: Add interconnect paths to UFSHC
-Date:   Thu, 20 Jul 2023 11:10:58 +0530
-Message-Id: <20230720054100.9940-14-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 14/15] scsi: ufs: core: Add enums for UFS lanes
+Date:   Thu, 20 Jul 2023 11:10:59 +0530
+Message-Id: <20230720054100.9940-15-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
 References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
@@ -78,30 +78,63 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS host controller requires interconnect path configuration for proper
-working. So let's specify them for SM8250 SoC.
+Since there are enums available for UFS gears, let's add enums for lanes
+as well to maintain uniformity.
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- arch/arm64/boot/dts/qcom/sm8250.dtsi | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/ufs/core/ufshcd.c        | 4 ++--
+ drivers/ufs/host/ufshcd-pltfrm.c | 4 ++--
+ include/ufs/unipro.h             | 6 ++++++
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-index 72fd66db9c51..7a495ff7512f 100644
---- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-@@ -2197,6 +2197,10 @@ ufs_mem_hc: ufshc@1d84000 {
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 6207afac729d..4496a23eaa83 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4447,8 +4447,8 @@ static void ufshcd_init_pwr_info(struct ufs_hba *hba)
+ {
+ 	hba->pwr_info.gear_rx = UFS_PWM_G1;
+ 	hba->pwr_info.gear_tx = UFS_PWM_G1;
+-	hba->pwr_info.lane_rx = 1;
+-	hba->pwr_info.lane_tx = 1;
++	hba->pwr_info.lane_rx = UFS_LANE_1;
++	hba->pwr_info.lane_tx = UFS_LANE_1;
+ 	hba->pwr_info.pwr_rx = SLOWAUTO_MODE;
+ 	hba->pwr_info.pwr_tx = SLOWAUTO_MODE;
+ 	hba->pwr_info.hs_rate = 0;
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index 068c22378c88..8d20cbb552aa 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -415,8 +415,8 @@ EXPORT_SYMBOL_GPL(ufshcd_get_pwr_dev_param);
+ void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param)
+ {
+ 	*dev_param = (struct ufs_dev_params){
+-		.tx_lanes = 2,
+-		.rx_lanes = 2,
++		.tx_lanes = UFS_LANE_2,
++		.rx_lanes = UFS_LANE_2,
+ 		.hs_rx_gear = UFS_HS_G3,
+ 		.hs_tx_gear = UFS_HS_G3,
+ 		.pwm_rx_gear = UFS_PWM_G4,
+diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
+index dc9dd1d23f0f..256eb3a43f54 100644
+--- a/include/ufs/unipro.h
++++ b/include/ufs/unipro.h
+@@ -230,6 +230,12 @@ enum ufs_hs_gear_tag {
+ 	UFS_HS_G5		/* HS Gear 5 */
+ };
  
- 			operating-points-v2 = <&ufs_opp_table>;
- 
-+			interconnects = <&aggre1_noc MASTER_UFS_MEM 0 &mc_virt SLAVE_EBI_CH0 0>,
-+					<&gem_noc MASTER_AMPSS_M0 0 &config_noc SLAVE_UFS_MEM_CFG 0>;
-+			interconnect-names = "ufs-ddr", "cpu-ufs";
++enum ufs_lanes {
++	UFS_LANE_DONT_CHANGE,	/* Don't change Lane */
++	UFS_LANE_1,		/* Lane 1 (default for reset) */
++	UFS_LANE_2,		/* Lane 2 */
++};
 +
- 			status = "disabled";
- 
- 			ufs_opp_table: opp-table {
+ enum ufs_unipro_ver {
+ 	UFS_UNIPRO_VER_RESERVED = 0,
+ 	UFS_UNIPRO_VER_1_40 = 1, /* UniPro version 1.40 */
 -- 
 2.25.1
 
