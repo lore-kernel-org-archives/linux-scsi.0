@@ -2,21 +2,21 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02679C00528
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 07:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 836BAC001DC
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 07:57:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231761AbjGTHu6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 03:50:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36934 "EHLO
+        id S231840AbjGTH5S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 03:57:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231336AbjGTHu5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 03:50:57 -0400
+        with ESMTP id S229656AbjGTH5R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 03:57:17 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1BB12128;
-        Thu, 20 Jul 2023 00:50:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ED2A2127;
+        Thu, 20 Jul 2023 00:57:15 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 7C7756732D; Thu, 20 Jul 2023 09:50:50 +0200 (CEST)
-Date:   Thu, 20 Jul 2023 09:50:50 +0200
+        id 156026732D; Thu, 20 Jul 2023 09:57:11 +0200 (CEST)
+Date:   Thu, 20 Jul 2023 09:57:10 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Nitesh Shetty <nj.shetty@samsung.com>
 Cc:     Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
@@ -32,78 +32,68 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
         willy@infradead.org, hare@suse.de, djwong@kernel.org,
         bvanassche@acm.org, ming.lei@redhat.com, dlemoal@kernel.org,
         nitheshshetty@gmail.com, gost.dev@samsung.com,
-        Vincent Fu <vincent.fu@samsung.com>,
         Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v13 3/9] block: add emulation for copy
-Message-ID: <20230720075050.GB5042@lst.de>
-References: <20230627183629.26571-1-nj.shetty@samsung.com> <CGME20230627184020epcas5p13fdcea52edead5ffa3fae444f923439e@epcas5p1.samsung.com> <20230627183629.26571-4-nj.shetty@samsung.com>
+Subject: Re: [PATCH v13 4/9] fs, block: copy_file_range for def_blk_ops for
+ direct block device
+Message-ID: <20230720075710.GC5042@lst.de>
+References: <20230627183629.26571-1-nj.shetty@samsung.com> <CGME20230627184029epcas5p49a29676fa6dff5f24ddfa5c64e525a51@epcas5p4.samsung.com> <20230627183629.26571-5-nj.shetty@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230627183629.26571-4-nj.shetty@samsung.com>
+In-Reply-To: <20230627183629.26571-5-nj.shetty@samsung.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +static void *blkdev_copy_alloc_buf(sector_t req_size, sector_t *alloc_size,
-> +		gfp_t gfp_mask)
-> +{
-> +	int min_size = PAGE_SIZE;
-> +	void *buf;
-> +
-> +	while (req_size >= min_size) {
-> +		buf = kvmalloc(req_size, gfp_mask);
-> +		if (buf) {
-> +			*alloc_size = req_size;
-> +			return buf;
-> +		}
-> +		/* retry half the requested size */
-> +		req_size >>= 1;
-> +	}
-> +
-> +	return NULL;
+> +/* Copy source offset from source block device to destination block
+> + * device. Returns the length of bytes copied.
+> + */
+> +ssize_t blkdev_copy_offload_failfast(
+> +		struct block_device *bdev_in, loff_t pos_in,
+> +		struct block_device *bdev_out, loff_t pos_out,
+> +		size_t len, gfp_t gfp_mask)
 
-Is there any good reason for using vmalloc instead of a bunch
-of distcontiguous pages?
+This is an odd and very misnamed interface.
 
-> +		ctx = kzalloc(sizeof(struct copy_ctx), gfp_mask);
-> +		if (!ctx)
-> +			goto err_ctx;
+Either we have a klkdev_copy() interface that automatically falls back
+to a fallback (maybe with an opt-out), or we have separate
+blkdev_copy_offload/blkdev_copy_emulated interface and let the caller
+decide.  But none of that really is "failfast".
 
-I'd suspect it would be better to just allocte a single buffer and
-only have a single outstanding copy.  That will reduce the bandwith
-you can theoretically get, but copies tend to be background operations
-anyway.  It will reduce the required memory, and thus the chance for
-this operation to fail on a loaded system.  It will also dramatically
-reduce the effect on memory managment.
+Also this needs to go into the helpers patch and not a patch that is
+supposed to just wire copying up for block device node.
 
-> +		read_bio = bio_map_kern(in, buf, buf_len, gfp_mask);
-> +		if (IS_ERR(read_bio))
-> +			goto err_read_bio;
-> +
-> +		write_bio = bio_map_kern(out, buf, buf_len, gfp_mask);
-> +		if (IS_ERR(write_bio))
-> +			goto err_write_bio;
-
-bio_map_kern is only for passthrough I/Os.  You need to use
-a bio_add_page loop here.
-
-> index 336146798e56..f8c80940c7ad 100644
-> --- a/include/linux/blk_types.h
-> +++ b/include/linux/blk_types.h
-> @@ -562,4 +562,9 @@ struct cio {
->  	atomic_t refcount;
->  };
+> index b07de77ef126..d27148a2543f 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1447,7 +1447,8 @@ static int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+>  		return -EOVERFLOW;
 >  
-> +struct copy_ctx {
-> +	struct cio *cio;
-> +	struct work_struct dispatch_work;
-> +	struct bio *write_bio;
-> +};
+>  	/* Shorten the copy to EOF */
+> -	size_in = i_size_read(inode_in);
+> +	size_in = i_size_read(file_in->f_mapping->host);
 
-This is misnamed as it's only used by the fallback code, and also
-should be private to blk-lib.c.
+generic_copy_file_checks needs to be fixed to use ->mapping->host both
+or inode_in and inode_out at the top of the file instead of this
+band aid.  And that needs to be a separate patch with a Fixes tag.
+
+> @@ -1708,7 +1709,9 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
+>  	/* Don't copy dirs, pipes, sockets... */
+>  	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+>  		return -EISDIR;
+> -	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+> +
+> +	if ((!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode)) &&
+> +		(!S_ISBLK(inode_in->i_mode) || !S_ISBLK(inode_out->i_mode)))
+
+This is using weird indentation, and might also not be doing
+exactly what we want.  I think the better thing to do here is to:
+
+ 1) check for the accetable types only on the in inode
+ 2) have a check that the mode matches for the in and out inodes
+
+And please do this as a separate prep patch instead of hiding it here.
 
