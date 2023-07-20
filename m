@@ -2,88 +2,81 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE23C0015E
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 13:15:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD492EB64DA
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jul 2023 16:06:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231779AbjGTNPn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 09:15:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39338 "EHLO
+        id S229843AbjGTQGR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jul 2023 12:06:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231750AbjGTNPm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 09:15:42 -0400
-Received: from wxsgout04.xfusion.com (wxsgout03.xfusion.com [36.139.52.80])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFFC710CB;
-        Thu, 20 Jul 2023 06:15:39 -0700 (PDT)
-Received: from wuxshcsitd00600.xfusion.com (unknown [10.32.133.213])
-        by wxsgout04.xfusion.com (SkyGuard) with ESMTPS id 4R6Cp31Jwzz9xgYX;
-        Thu, 20 Jul 2023 21:14:35 +0800 (CST)
-Received: from fedora (10.82.147.3) by wuxshcsitd00600.xfusion.com
- (10.32.133.213) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Thu, 20 Jul
- 2023 21:15:26 +0800
-Date:   Thu, 20 Jul 2023 21:15:24 +0800
-From:   Wang Jinchao <wangjinchao@xfusion.com>
-To:     Hannes Reinecke <hare@suse.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <stone.xulei@xfusion.com>
-Subject: [PATCH] x86/head64: Harmonize the style of array-type parameter for
- fixup_pointer
-Message-ID: <ZLkzbA3fErEsFtaF@fedora>
+        with ESMTP id S229533AbjGTQGQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 12:06:16 -0400
+Received: from mail.208.org (unknown [183.242.55.162])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B01FD
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 09:06:15 -0700 (PDT)
+Received: from mail.208.org (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTP id 4R6Hc42FxnzBRDsy
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 00:06:12 +0800 (CST)
+Authentication-Results: mail.208.org (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)" header.d=208.org
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
+        content-transfer-encoding:content-type:message-id:user-agent
+        :references:in-reply-to:subject:to:from:date:mime-version; s=
+        dkim; t=1689869171; x=1692461172; bh=JDPE0gY2EAQkPsdOqBvmm0/vLJD
+        5CubpDsaJaKXZx1A=; b=1WSa2No1l0KZmow4Fdyqpya+iRUGjHYtjeHzTKSmqB4
+        PZeggS0ybvA4/tZyCySf/CgzD6fpoIoF/iDCi7GuCgA6gld1+FvAIKTCCvDf46Mz
+        x5x1F7RAxeaiVZbkj1tNPR9Kr965eqECvxBZCgTBc7Fm37lowIfqyLhgnXDvevJ5
+        J3XgnHQ28ghRvLrZLV0JzC44uZhAxLqd9s+xz9RVW+2QX6bXXLJvkaCLA5E6WGpM
+        Yip41T3p15HwPuwBsBpsK3o37bOauA7+YIYpRf6tc1/26vNyIz7kKpIuCuHJilij
+        sJ/nYmePfZJHApfqA5yOmcKTgkjH4vBlmaoA/88wPGA==
+X-Virus-Scanned: amavisd-new at mail.208.org
+Received: from mail.208.org ([127.0.0.1])
+        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id ZIYwJmSAAJtq for <linux-scsi@vger.kernel.org>;
+        Fri, 21 Jul 2023 00:06:11 +0800 (CST)
+Received: from localhost (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTPSA id 4R6Hc32BnPzBHXgs;
+        Fri, 21 Jul 2023 00:06:11 +0800 (CST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-X-Originating-IP: [10.82.147.3]
-X-ClientProxiedBy: wuxshcsitd00602.xfusion.com (10.32.132.250) To
- wuxshcsitd00600.xfusion.com (10.32.133.213)
+Date:   Fri, 21 Jul 2023 00:06:11 +0800
+From:   pangzizhen001@208suo.com
+To:     oliver@neukum.org, aliakc@web.de, lenehan@twibble.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers/scsi: Fix typos in comments
+In-Reply-To: <20230720160417.4434-1-wangjianli@cdjrlc.com>
+References: <20230720160417.4434-1-wangjianli@cdjrlc.com>
+User-Agent: Roundcube Webmail
+Message-ID: <0dbfe7a07c205bde3fc60408ce7aa55a@208suo.com>
+X-Sender: pangzizhen001@208suo.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The usage of '&' before the array parameter is redundant because '&array'
-is equivalent to 'array'. Therefore, there is no need to include '&'
-before the array parameter. In fact, using '&' can cause more confusion,
-especially for individuals who are not familiar with the address-of
-operation for arrays. They might mistakenly believe that one is different
-from the other and spend additional time realizing that they are actually
-the same.
+Delete duplicate word "the"
 
-Harmonizing the style by removing the unnecessary '&' would save time for
-those individuals.
-
-Signed-off-by: Wang Jinchao <wangjinchao@xfusion.com>
+Signed-off-by: Zizhen Pang <pangzizhen001@208suo.com>
 ---
- arch/x86/kernel/head64.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+  drivers/scsi/dc395x.c | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/head64.c b/arch/x86/kernel/head64.c
-index 49f7629b17f7..25a67a13a1fa 100644
---- a/arch/x86/kernel/head64.c
-+++ b/arch/x86/kernel/head64.c
-@@ -211,7 +211,7 @@ unsigned long __head __startup_64(unsigned long physaddr,
- 
- 	/* Fixup the physical addresses in the page table */
- 
--	pgd = fixup_pointer(&early_top_pgt, physaddr);
-+	pgd = fixup_pointer(early_top_pgt, physaddr);
- 	p = pgd + pgd_index(__START_KERNEL_map);
- 	if (la57)
- 		*p = (unsigned long)level4_kernel_pgt;
-@@ -220,11 +220,11 @@ unsigned long __head __startup_64(unsigned long physaddr,
- 	*p += _PAGE_TABLE_NOENC - __START_KERNEL_map + load_delta;
- 
- 	if (la57) {
--		p4d = fixup_pointer(&level4_kernel_pgt, physaddr);
-+		p4d = fixup_pointer(level4_kernel_pgt, physaddr);
- 		p4d[511] += load_delta;
- 	}
- 
--	pud = fixup_pointer(&level3_kernel_pgt, physaddr);
-+	pud = fixup_pointer(level3_kernel_pgt, physaddr);
- 	pud[510] += load_delta;
- 	pud[511] += load_delta;
- 
--- 
-2.40.0
-
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index c8e86f8a631e..077e76407c58 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -2052,7 +2052,7 @@ static void data_in_phase0(struct AdapterCtlBlk 
+*acb, struct ScsiReqBlk *srb,
+          /*
+           * KG: We should wait for the DMA FIFO to be empty ...
+           * but: it would be better to wait first for the SCSI FIFO and 
+then the
+-         * the DMA FIFO to become empty? How do we know, that the 
+device not already
++         * DMA FIFO to become empty? How do we know, that the device 
+not already
+           * sent data to the FIFO in a MsgIn phase, eg.?
+           */
+          if (!(DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT) & 0x80)) {
