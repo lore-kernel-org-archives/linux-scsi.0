@@ -2,125 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC21C001DC
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 16:03:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0014EB64DC
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 16:10:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231815AbjGUQDK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Jul 2023 12:03:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33814 "EHLO
+        id S231286AbjGUQKh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Jul 2023 12:10:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232431AbjGUQCg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 12:02:36 -0400
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 844C22D7F
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 09:02:31 -0700 (PDT)
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1b8bd586086so15808095ad.2
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 09:02:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689955351; x=1690560151;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zCam48Zy12ubzkeKJVe9IPNcRK9PBBPRsiE2hWsbUYw=;
-        b=fBVn4OTF2lOqqo4K+NBO8Ehy+y/5+qptPGOwkYYTYdSu6u4z8dMxuNB0Zulasz2E3V
-         2tBzW4Ty/UB03kpe2z9BKJxBOALpVQEPC5SJjKU3xUV/6pOo2RcRWtNx54/iz/KIzwY6
-         0hPKUffqyrCW1YrKNP3WovmXXyDKo0BcbPjazGUBUtMb/OAc7wFrMVB0JLQ8M1nrRnNq
-         Td9cISRztstEe4GxzhkN2kbEjxe9t9Mk5e+No1D2Mt5wa7cgtrrMmwY9BOY1hOd1hzcK
-         MrwvT3nYl31aEuWb7ID+G000GzU/Wd5zoXaQfbkU3yBQBsZjqWEFj2i35BJZsZa1eaLR
-         AYLg==
-X-Gm-Message-State: ABy/qLYWdhz6Vx48yRamFi5jxVsfMhWjIeBzSH95DDjV1k+W9czR1nKJ
-        ZzOnBQBBYmjSVXxnVM65Ou0Ady9Mo8w=
-X-Google-Smtp-Source: APBJJlF0CMxEXcZSeJHQCu95Ry5GWpTLa6nvq9z2efezK7p83bOklNCacTYT6WgTyf4CscSdwGnbSA==
-X-Received: by 2002:a17:902:a986:b0:1b8:954c:1f6 with SMTP id bh6-20020a170902a98600b001b8954c01f6mr1950632plb.36.1689955350768;
-        Fri, 21 Jul 2023 09:02:30 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5043:9124:70cb:43f9])
-        by smtp.gmail.com with ESMTPSA id s24-20020a170902a51800b001b890b3bbb1sm3652298plq.211.2023.07.21.09.02.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jul 2023 09:02:30 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S230422AbjGUQKf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 12:10:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BA7E2D50;
+        Fri, 21 Jul 2023 09:10:19 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 290F361D3B;
+        Fri, 21 Jul 2023 16:10:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B4F6C433C7;
+        Fri, 21 Jul 2023 16:10:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1689955818;
+        bh=vD2UdR3jMEEOkodAiRKY3xxWGdTLV7U/m5MX9FM43T8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=RUdqQo9XCO5IbpkCXY6k9LT9n0Tqx1QvTi17Vzyu7+1rL0Yft5Y2peUWRlRLy4pez
+         xo2Py2Mla/t/sfevCUTaCyjwF0QGIc5CdGzrk7QGD5bMA9JerRi9J5PWzbggTzXiPt
+         ntf64P08PcVJu0x+svlVLQX+qfpEMsf8PKIWwibM=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     stable@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        patches@lists.linux.dev, Randy Dunlap <rdunlap@infradead.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Subject: [PATCH 2/3] scsi: ufs: Fix residual handling
-Date:   Fri, 21 Jul 2023 09:01:33 -0700
-Message-ID: <20230721160154.874010-3-bvanassche@acm.org>
-X-Mailer: git-send-email 2.41.0.487.g6d72f3e995-goog
-In-Reply-To: <20230721160154.874010-1-bvanassche@acm.org>
-References: <20230721160154.874010-1-bvanassche@acm.org>
+        Peter Wang <peter.wang@mediatek.com>,
+        Paul Gazzillo <paul@pgazz.com>,
+        Necip Fazil Yildiran <fazilyildiran@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        kernel test robot <lkp@intel.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 6.4 040/292] scsi: ufs: ufs-mediatek: Add dependency for RESET_CONTROLLER
+Date:   Fri, 21 Jul 2023 18:02:29 +0200
+Message-ID: <20230721160530.526290612@linuxfoundation.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230721160528.800311148@linuxfoundation.org>
+References: <20230721160528.800311148@linuxfoundation.org>
+User-Agent: quilt/0.67
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Only call scsi_set_resid() in case of an underflow. Do not call
-scsi_set_resid() in case of an overflow.
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Cc: Avri Altman <avri.altman@wdc.com>
-Cc: Adrian Hunter <adrian.hunter@intel.com>
-Fixes: cb38845d90fc ("scsi: ufs: core: Set the residual byte count")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+[ Upstream commit 89f7ef7f2b23b2a7b8ce346c23161916eae5b15c ]
+
+When RESET_CONTROLLER is not set, kconfig complains about missing
+dependencies for RESET_TI_SYSCON, so add the missing dependency just as is
+done above for SCSI_UFS_QCOM.
+
+Silences this kconfig warning:
+
+WARNING: unmet direct dependencies detected for RESET_TI_SYSCON
+  Depends on [n]: RESET_CONTROLLER [=n] && HAS_IOMEM [=y]
+  Selected by [m]:
+  - SCSI_UFS_MEDIATEK [=m] && SCSI_UFSHCD [=y] && SCSI_UFSHCD_PLATFORM [=y] && ARCH_MEDIATEK [=y]
+
+Fixes: de48898d0cb6 ("scsi: ufs-mediatek: Create reset control device_link")
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Link: lore.kernel.org/r/202306020859.1wHg9AaT-lkp@intel.com
+Link: https://lore.kernel.org/r/20230701052348.28046-1-rdunlap@infradead.org
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Peter Wang <peter.wang@mediatek.com>
+Cc: Paul Gazzillo <paul@pgazz.com>
+Cc: Necip Fazil Yildiran <fazilyildiran@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-mediatek@lists.infradead.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 19 ++++++++++++++++---
- include/ufs/ufs.h         |  6 ++++++
- 2 files changed, 22 insertions(+), 3 deletions(-)
+ drivers/ufs/host/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e31242fe0518..b27372f9b488 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5241,12 +5241,25 @@ static inline int
- ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 			   struct cq_entry *cqe)
- {
-+	bool overflow, underflow;
-+	u8 upiu_flags;
- 	int result = 0;
- 	int scsi_status;
- 	enum utp_ocs ocs;
--
--	scsi_set_resid(lrbp->cmd,
--		be32_to_cpu(lrbp->ucd_rsp_ptr->sr.residual_transfer_count));
-+	u32 resid;
-+
-+	upiu_flags = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_0) >> 16;
-+	overflow = upiu_flags & UPIU_RSP_FLAG_OVERFLOW;
-+	underflow = upiu_flags & UPIU_RSP_FLAG_UNDERFLOW;
-+	resid = be32_to_cpu(lrbp->ucd_rsp_ptr->sr.residual_transfer_count);
-+	WARN_ON_ONCE(overflow && underflow);
-+	WARN_ON_ONCE(!overflow && !underflow && resid);
-+	/*
-+	 * Test !overflow instead of underflow to support UFS devices that do
-+	 * not set either flag.
-+	 */
-+	if (!overflow)
-+		scsi_set_resid(lrbp->cmd, resid);
- 
- 	/* overall command status of utrd */
- 	ocs = ufshcd_get_tr_ocs(lrbp, cqe);
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 8316e2408ac3..bee5ccc6e7ce 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -104,6 +104,12 @@ enum {
- 	UPIU_CMD_FLAGS_READ	= 0x40,
- };
- 
-+/* UPIU response flags */
-+enum {
-+	UPIU_RSP_FLAG_UNDERFLOW	= 0x20,
-+	UPIU_RSP_FLAG_OVERFLOW	= 0x40,
-+};
-+
- /* UPIU Task Attributes */
- enum {
- 	UPIU_TASK_ATTR_SIMPLE	= 0x00,
+diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
+index 8793e34335806..f11e98c9e6652 100644
+--- a/drivers/ufs/host/Kconfig
++++ b/drivers/ufs/host/Kconfig
+@@ -72,6 +72,7 @@ config SCSI_UFS_QCOM
+ config SCSI_UFS_MEDIATEK
+ 	tristate "Mediatek specific hooks to UFS controller platform driver"
+ 	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
++	depends on RESET_CONTROLLER
+ 	select PHY_MTK_UFS
+ 	select RESET_TI_SYSCON
+ 	help
+-- 
+2.39.2
+
+
+
