@@ -2,76 +2,79 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08812C001DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 16:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46963C0015E
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 16:20:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232908AbjGZQSY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jul 2023 12:18:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42638 "EHLO
+        id S233429AbjGZQUv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jul 2023 12:20:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229963AbjGZQSX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 12:18:23 -0400
-Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C9421BE8;
-        Wed, 26 Jul 2023 09:18:21 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 87495C0004
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-        t=1690388299; bh=P1tYjsYpvaWM0Kp4oS8LddO1u5/c7/5r3F2xBGS+4bQ=;
-        h=MIME-Version:Content-Type:Date:Message-ID:Subject:To:From:From;
-        b=cX4v3iWXxygpb2w5QhgdSNX7OavK1/RsS6AtQIleAgIDfmBBgxk6WbDNH4jThSStC
-         RKSzG3eQS4XZ8ZsI3OPOORDANQYbBBZEOjGZq4mRGw8S3DZap0XOB54o5qmeuzy43M
-         GPkRkFLLNbyM3J7qxz1KBuOP/MZuEeJ2B36+ugKuH6IJvQ5fRlfpcj1zxf2tundvK+
-         AgN3TQErZ58Cup9BAGy4EIdXGRHWqv9gacXTYZTsExA7tTHBPdvOpZj8RL9GYtNw2F
-         jifHpa2G595PFzLdTW767VrkbzOwRnIu7Rr+M2ZwvWPxDw+hHmmWBnaOsbYgfUkgr2
-         bKmmWuTocKMEg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-        t=1690388299; bh=P1tYjsYpvaWM0Kp4oS8LddO1u5/c7/5r3F2xBGS+4bQ=;
-        h=MIME-Version:Content-Type:Date:Message-ID:Subject:To:From:From;
-        b=LHSDrnzLj91Dv+fy2E8WZ1lF7YtJce1uMWqIpvhsNThC3cqq4FtpLNWGMz6aYckop
-         6k920BlBGQHQ0tefM/XLmMPknqmw2lrcdAHgKwJfQ9hYCwx5i1UVSBxml0EiGu20AJ
-         fG/DMhIKgrf2cEiFHGcD2rpngk6nswFglmo2qHtIXWlFx1L+IVHivreXf0yCEF7jjd
-         Sq04AZccHVoQZaA6yxx9NiizLmh0pGVYP47FoRrp1hDB9fuldmlqSswwjy6nplyVZF
-         Yvhbvdasj0RBQBTFMcFFDFBlrSmpSLfihsvQfk5hvGf+kG5PyEXnU/U6puBS7MNY8M
-         JDqWHFzHPVifA==
+        with ESMTP id S233070AbjGZQUt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 12:20:49 -0400
+Received: from mailsenadoer.gob.ar (mailsenadoer.gob.ar [190.183.215.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D15671BDA
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2023 09:20:45 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mailsenadoer.gob.ar (Postfix) with ESMTP id E85A7184786D
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 14:20:18 -0300 (-03)
+Received: from mailsenadoer.gob.ar ([127.0.0.1])
+        by localhost (mailsenadoer.gob.ar [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id O0dvwawl6E8l for <linux-scsi@vger.kernel.org>;
+        Mon, 24 Jul 2023 14:20:18 -0300 (-03)
+Received: from localhost (localhost [127.0.0.1])
+        by mailsenadoer.gob.ar (Postfix) with ESMTP id 814771A43490
+        for <linux-scsi@vger.kernel.org>; Sat, 22 Jul 2023 12:03:31 -0300 (-03)
+DKIM-Filter: OpenDKIM Filter v2.10.3 mailsenadoer.gob.ar 814771A43490
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailsenadoer.gob.ar;
+        s=dkimmailsenadoer; t=1690038211;
+        bh=Aor/WLwl4h5zbhGzya8ajVmHiT+79UPpoXAPFDddDh4=;
+        h=MIME-Version:To:From:Date:Message-Id;
+        b=izc7509Si/vIGj67XjaJEcGOx+BxCrTseIBX4q79gvYKRDwX6tIcr7zE0bpyXzV8O
+         iDzQmaXVMerCzL091qkYw20E4uyLUY1L96bP4B0X5mHQimteEddMYAbSsHlhCWX7Ko
+         kF+oVcJh2ZJ9UDi3IMERpVxhQnSuDOFr83RMUteIZEWFFy+uYa6hzg3M4KG2l/tQ5g
+         OhXRTaRx0oQJQcL5V0zb+ju+AtAoQ5FzPeCoivJBEWBgeFWSLh51Bqs2rg60qxyoXu
+         T45eOGn8CWOmeV6KUB6aHTlHBtz25ogef9a8xIbMK1mW/QZiZUy6plpbTsjbG96lTA
+         JGBwLvdkUyWaA==
+X-Virus-Scanned: amavisd-new at mailsenadoer.gob.ar
+Received: from mailsenadoer.gob.ar ([127.0.0.1])
+        by localhost (mailsenadoer.gob.ar [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id ZE_g4qwVYV_e for <linux-scsi@vger.kernel.org>;
+        Sat, 22 Jul 2023 12:03:31 -0300 (-03)
+Received: from [192.168.0.166] (unknown [105.8.7.246])
+        by mailsenadoer.gob.ar (Postfix) with ESMTPSA id 61AD017050D9
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 13:57:07 -0300 (-03)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="UTF-8"
-Date:   Wed, 26 Jul 2023 19:18:14 +0300
-Message-ID: <CUC8N20VEZVD.2FX0OUJJLSI68@pogg>
-Subject: Re: [DMARC Error]Re: [RFC PATCH 2/3] target: core: apply the new
- wrapper to spc
-CC:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
-        <linux@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Anastasia Kovaleva <a.kovaleva@yadro.com>,
-        <martin.petersen@oracle.com>, <michael.christie@oracle.com>
-From:   Konstantin Shelekhin <k.shelekhin@yadro.com>
-X-Mailer: aerc 0.15.2.r104.g81f5237
-References: <20230726115509.357-1-a.kovaleva@yadro.com>
- <20230726115509.357-3-a.kovaleva@yadro.com>
- <f3a58522-3957-bd70-df87-9df7e4547195@acm.org>
-In-Reply-To: <f3a58522-3957-bd70-df87-9df7e4547195@acm.org>
-X-ClientProxiedBy: T-Exch-05.corp.yadro.com (172.17.10.109) To
- T-EXCH-09.corp.yadro.com (172.17.11.59)
+Content-Description: Mail message body
+Subject: =?utf-8?b?RHVsZcW+aXTDoSB6cHLDoXZhOyDigqwgMiwwMDAsMDAwJzAwIEVVUg==?=
+To:     linux-scsi@vger.kernel.org
+From:   "Pan Richard Wahl" <santacruz@mailsenadoer.gob.ar>
+Date:   Fri, 21 Jul 2023 09:57:03 -0700
+Reply-To: info@wahlfoundation.org
+Message-Id: <20230721165709.61AD017050D9@mailsenadoer.gob.ar>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed Jul 26, 2023 at 6:15 PM MSK, Bart Van Assche wrote:
-> =C2=AB=D0=92=D0=BD=D0=B8=D0=BC=D0=B0=D0=BD=D0=B8=D0=B5! =D0=94=D0=B0=D0=
-=BD=D0=BD=D0=BE=D0=B5 =D0=BF=D0=B8=D1=81=D1=8C=D0=BC=D0=BE =D0=BE=D1=82 =D0=
-=B2=D0=BD=D0=B5=D1=88=D0=BD=D0=B5=D0=B3=D0=BE =D0=B0=D0=B4=D1=80=D0=B5=D1=
-=81=D0=B0=D1=82=D0=B0!=C2=BB
->
-> On 7/26/23 04:55, Anastasia Kovaleva wrote:
-> > +#define TARGET_PREFIX "core"
->
-> I'm not sure this is a good choice for a logging prefix since this name
-> does not make it clear that log lines come from the SCSI target core.
-> How about "scsi_tgt" as prefix? "stgt" is probably not a good choice
-> since this is the former name of a user-space SCSI target project
-> (https://github.com/fujita/tgt).
->
-> Bart.
+Drah=C3=BD pr=C3=ADteli,
 
-I think scsit is a good choice, like nvmet we already have.
+Jsem pan Richard Wahl, mega v=C3=ADtez 533 milionu $ v jackpotu Mega Millio=
+ns. Daruji 5 n=C3=A1hodne vybran=C3=BDm lidem. Pokud obdr=C5=BE=C3=ADte ten=
+to e-mail, byl v=C3=A1=C5=A1 e-mail vybr=C3=A1n po roztocen=C3=AD koule. Ve=
+t=C5=A1inu sv=C3=A9ho majetku jsem rozdal rade charitativn=C3=ADch organiza=
+c=C3=AD a organizac=C3=AD. Dobrovolne jsem se rozhodl venovat v=C3=A1m c=C3=
+=A1stku =E2=82=AC 2,000,000'00 EUR jako jednomu z 5 vybran=C3=BDch, abych s=
+i overil sv=C3=A9 v=C3=BDhry prostrednictv=C3=ADm n=C3=AD=C5=BEe uveden=C3=
+=A9 str=C3=A1nky YouTube.
+
+VID=C3=8DTE ME ZDE https://www.youtube.com/watch?v=3Dtne02ExNDrw
+
+TOTO JE V=C3=81=C5=A0 DAROVAC=C3=8D K=C3=93D: [DFDW43034RW2023]
+
+Odpovezte na tento e-mail a uvedte k=C3=B3d daru: info@wahlfoundation.org
+
+Douf=C3=A1m, =C5=BEe v=C3=A1m a va=C5=A1=C3=AD rodine udel=C3=A1m radost.
+
+Pozdravy,
+Pan Richard Wahl
