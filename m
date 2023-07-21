@@ -2,119 +2,130 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76EBEEB64DA
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 00:19:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D246EEB64DD
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 04:00:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229488AbjGUATd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jul 2023 20:19:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57268 "EHLO
+        id S229836AbjGUEAS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Jul 2023 00:00:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbjGUATd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2023 20:19:33 -0400
-Received: from mail-yw1-x112b.google.com (mail-yw1-x112b.google.com [IPv6:2607:f8b0:4864:20::112b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3EB5269A
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 17:19:31 -0700 (PDT)
-Received: by mail-yw1-x112b.google.com with SMTP id 00721157ae682-57a6df91b1eso14440507b3.1
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2023 17:19:31 -0700 (PDT)
+        with ESMTP id S229579AbjGUEAR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 00:00:17 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC26C1982;
+        Thu, 20 Jul 2023 21:00:16 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-68336d06620so1324868b3a.1;
+        Thu, 20 Jul 2023 21:00:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mobile-mirkwood-net.20221208.gappssmtp.com; s=20221208; t=1689898770; x=1690503570;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=k34IaOMjddk9vEMq2KmhQlgm5OvqR7O1AJD/+fcejls=;
-        b=wT6IFDvagCqbT1eQ2x6hHLVIGWHbpELYYkTvdYCr59DlFuMrPsEP6qJapy2Mhq0zUS
-         7FYlbMaQTpv0zSQNoBqp7Mz1KQtX5kwbGu9KpPvaQt67ySrnLlXKdrJBJ1366EHykcXK
-         E2atgCUZpVbX+PDEqQRrHL8eI/Ww9zVLbl+UA7veEjGokQV5DgVem4/YfW8SSLjpNabw
-         ooWnnB9ssnvao/Xunp1w6HsPhCrJv415DHvzfPkO6QVqO06298DE9v7YmrRK5F7JzD9M
-         OffxZhlQun91xo6VZVrNRwSTrwRtZR3yY1P0sgNiUvpHFAQq5XDwyyf06cRPQAV/Hyhi
-         HYmw==
+        d=gmail.com; s=20221208; t=1689912016; x=1690516816;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=JPVX6otDrnHwN/de+EakZtScmrj1L1CckqpN5UTGJdw=;
+        b=p6Ury7ltL42dLWYtJeUfhOLbCnLoT+sTFaiWDH8cIUN8KlrBKvPGGWLj8dH1fKwCmz
+         Jk7ULSGLT9hX+t/2FR/2qJrdfn3MJg2fQlJa2A3YlVK2xlg9qod6xhhzjAP+cRQM8Mls
+         /pmKP5XLQAxxrt93P/wKDrm7gF7vWyZbnEztTSngdQfQZFNug1FuTg1TMrsCTz2g7AZZ
+         Zc2HhviFmME+drwiMbf6OZ7HGnX0fk2heaJ3e9nLi264oIigTph+8eeLFcJ28DUWb+E0
+         rqrzjf4UzK4Ma31SY3padf3VeilKjdyGIJ07yXUTGXxGnStldH+XyMjTxW0O7a6gt37i
+         j3sQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689898770; x=1690503570;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=k34IaOMjddk9vEMq2KmhQlgm5OvqR7O1AJD/+fcejls=;
-        b=TKokQgdfTdGuRzShxnsLk296aZUqD7AuyPSfZyjNBM+ZQnrlQB67ev6uUeuS2svBdc
-         k97skN27mi2jv2AsJ/FVAWVTUjCqQHO+1enuqcZGy13GJ3HXSFeNnU1+p+4gDw/u+XQr
-         jFSUQReoeeJu/qSxeES9UJgiffuF3mqncK6Nkjunnn4y1ja6e3Qp5GQla9R7loI3Efh0
-         F0x68N2/sFNS3qSco4kS1F7j83aH/D8wni1rtYJwAPVamaRd8Nbt9OY+c8Gx8UkmBl6P
-         Ih7ylmMzUV9T93Cwg5kfnshoVCfNRp4uJUbifW6qE2ToTK/5WZtIJJdmphcu31GHhKm9
-         O8aw==
-X-Gm-Message-State: ABy/qLZgYDN+oULTexgfNGALHgthG5ybZEoY6jyp8fHYvnQajDNs75Lh
-        8zV7aNGBjDMeQ9KKG83ruNR4ZBkTkwqlYv1SHgE0baFUDij5CuV3
-X-Google-Smtp-Source: APBJJlGsCXtopaXnHOy0u6hXk8KUmU1/qwnhpyYR4tz3V2VfsEMrbKutaLtUpZwzrqDus+XkumGKvGHAoq4x5Tt9KIU=
-X-Received: by 2002:a0d:d48f:0:b0:57a:6df7:5ccd with SMTP id
- w137-20020a0dd48f000000b0057a6df75ccdmr637482ywd.13.1689898770723; Thu, 20
- Jul 2023 17:19:30 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1689912016; x=1690516816;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JPVX6otDrnHwN/de+EakZtScmrj1L1CckqpN5UTGJdw=;
+        b=Xwaas2sn+0u24Jzvkn6Y+DCx1ZuYRWrtxG/kDL217ynclYcGbobNiWGkWypeG/JCfE
+         umEc0IUYm+I5GP+S4GoXwcV5MHhcwvxulh6dWvb5lb4K/H3k8W5ELTUUJ9uPgR1eAH1V
+         n69XSv4uhjDlkq2W25CkjSYWJ7iWSgGuEU1TOxQfVNMS1r6qXmknrz4OT9iwMc/EB3kV
+         zLFyMEylHrQZ0uQeAyaG1BF/IHH2R5PrUyuAoUVuaC8xpu4vT6RUsVic0hYenROoqkXV
+         qLJM4VLkmXVENz5NgIOvaY7QltTw+zyjW/WRraOPhTg5ImGN6qiGCMhxvbV8T4+Xl6yi
+         QPTw==
+X-Gm-Message-State: ABy/qLZ7ii1bIHbFWRu+KrRCzDyuEsujRBdnCJRhWLaNaCXOqrCGpRba
+        fTSlXgsmL4khCc7MHrb0lYUV4WF3rfygEQ==
+X-Google-Smtp-Source: APBJJlH8iJo8OJT92BKXoXKw9c3eZ9P0JbxqHTRNxOL25+iw6u4wU2x/fcDn69sbe8x0kzLyeslJsQ==
+X-Received: by 2002:aa7:888b:0:b0:673:aca1:a0b0 with SMTP id z11-20020aa7888b000000b00673aca1a0b0mr980101pfe.3.1689912016079;
+        Thu, 20 Jul 2023 21:00:16 -0700 (PDT)
+Received: from debian.me ([103.131.18.64])
+        by smtp.gmail.com with ESMTPSA id m22-20020aa79016000000b00682562b1549sm1969182pfo.24.2023.07.20.21.00.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Jul 2023 21:00:15 -0700 (PDT)
+Received: by debian.me (Postfix, from userid 1000)
+        id EF7008196A07; Fri, 21 Jul 2023 11:00:10 +0700 (WIB)
+Date:   Fri, 21 Jul 2023 11:00:10 +0700
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+To:     pangzizhen001@208suo.com, oliver@neukum.org, aliakc@web.de,
+        lenehan@twibble.org, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers/scsi: Fix typos in comments
+Message-ID: <ZLoCynrRoXHPn/Dx@debian.me>
+References: <20230720160417.4434-1-wangjianli@cdjrlc.com>
+ <0dbfe7a07c205bde3fc60408ce7aa55a@208suo.com>
 MIME-Version: 1.0
-References: <CALM2zXUDAqAzCQR+sJDwoxxEEnG7cLJ4QazCVscJX-rR49=V2A@mail.gmail.com>
- <fc9f01f1-deb2-cd05-c7ef-1e08ea1d8d60@suse.de>
-In-Reply-To: <fc9f01f1-deb2-cd05-c7ef-1e08ea1d8d60@suse.de>
-From:   Mike Edwards <medwards@mobile.mirkwood.net>
-Date:   Thu, 20 Jul 2023 20:19:19 -0400
-Message-ID: <CALM2zXU1xNn9X8NwYYsmPbpuA+8pnVL8N0zGhWYmJVTvryyG+Q@mail.gmail.com>
-Subject: Re: Mylex AcceleRAID 170 + myrb/myrs causing crash
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="tUojydz+PJ84pRbC"
+Content-Disposition: inline
+In-Reply-To: <0dbfe7a07c205bde3fc60408ce7aa55a@208suo.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This issue is now being tracked in the SUSE bugzilla as bug 1213537.
 
-On Fri, Jul 14, 2023 at 2:04=E2=80=AFAM Hannes Reinecke <hare@suse.de> wrot=
-e:
->
-> On 7/13/23 21:21, Mike Edwards wrote:
-> > I spun up an old machine (with an even older Mylex AcceleRAID card, the
-> > 170 w/ a bios dated Jan 21, 2000 - yikes!) recently.  While this machin=
-e
-> > was running an old 4.7 kernel and booted fine, attempting to update it
-> > to a modern release of Debian with a 6.1 kernel caused the kernel to
-> > hang while booting, with a number of stuck tasks warnings, starting wit=
-h
-> > udev-worker and including kworker kernel processes.
-> >
-> > During troubleshooting, I was able to identify the myrb/myrs drivers
-> > which replaced the old DAC960 driver (removed in commit
-> > 6956b956934f10c19eca2a1d44f50a3bee860531) as the culprit.  The last
-> > kernel to successfully boot on here is 4.19.x, while anything newer
-> > exhibits the same stuck processes - and indeed, blacklisting the myrb
-> > and myrs drivers allows 6.1 to boot on this machine.
-> >
-> > I know this card is functional, as I do have two drives attached to it,
-> > and both it and the drives work fine in 4.19 and older kernels, so the
-> > issue seems to be with the newer myrb/myrs drivers.  Is there a chance
-> > of fixing the current drivers, or, at worst, reintroducing the old
-> > deprecated DAC960 driver back into the kernel?  I'm not absolutely tied
-> > to using that driver, other than 'it just works' for this card.
->
-> Whee, someone is using it!
-> I'm not alone!
->
-> But sure, of course I'll help.
-> Can you try install openSUSE Leap on it? Then you can open a bugzilla on
-> our side, and we can track and discuss things there. Debugging via
-> e-mail tends to be very distracting to others not directly involved.
->
-> For starters, a message log might help. And please enable dynamic debug
-> via
->
-> echo 'file drivers/scsi/myrs.c +p' > \
->    /sys/kernel/debug/dynamic_debug/control
-> echo 'file drivers/scsi/myrb.c +p' > \
->    /sys/kernel/debug/dynamic_debug/control
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                Kernel Storage Architect
-> hare@suse.de                              +49 911 74053 688
-> SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> HRB 36809 (AG N=C3=BCrnberg), Gesch=C3=A4ftsf=C3=BChrer: Ivo Totev, Andre=
-w
-> Myers, Andrew McDonald, Martje Boudien Moerman
->
+--tUojydz+PJ84pRbC
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Jul 21, 2023 at 12:06:11AM +0800, pangzizhen001@208suo.com wrote:
+> Delete duplicate word "the"
+>=20
+> Signed-off-by: Zizhen Pang <pangzizhen001@208suo.com>
+> ---
+>  drivers/scsi/dc395x.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+> index c8e86f8a631e..077e76407c58 100644
+> --- a/drivers/scsi/dc395x.c
+> +++ b/drivers/scsi/dc395x.c
+> @@ -2052,7 +2052,7 @@ static void data_in_phase0(struct AdapterCtlBlk *ac=
+b,
+> struct ScsiReqBlk *srb,
+>          /*
+>           * KG: We should wait for the DMA FIFO to be empty ...
+>           * but: it would be better to wait first for the SCSI FIFO and t=
+hen
+> the
+> -         * the DMA FIFO to become empty? How do we know, that the device
+> not already
+> +         * DMA FIFO to become empty? How do we know, that the device not
+> already
+>           * sent data to the FIFO in a MsgIn phase, eg.?
+>           */
+>          if (!(DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT) & 0x80)) {
+
+I'd like to write the comment above instead as "We should wait for the DMA
+FIFO to be empty, but it would be better to wait first for the SCSI one and
+then the DMA one to be emptied..."
+
+But hey, you did not read review comments to all your submissions, many
+of them (including mine) asking you to not corrupt your patches like this
+one did.
+
+Hence NAK from me.
+
+Bye!
+
+--=20
+An old man doll... just what I always wanted! - Clara
+
+--tUojydz+PJ84pRbC
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZLoCwwAKCRD2uYlJVVFO
+o/yqAP97ZqXlHc3rrSddM5kQKqSMc3wRtFn80O0PfzXELvHAYQD+OyCOc61XP+VK
+Tomz4+5hzNY6Z+K5JMDnGhtFNH/qFQo=
+=TekW
+-----END PGP SIGNATURE-----
+
+--tUojydz+PJ84pRbC--
