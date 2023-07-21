@@ -2,176 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06491C0015E
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 16:39:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5F4BEB64DD
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 17:49:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230404AbjGUQjV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Jul 2023 12:39:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37924 "EHLO
+        id S229622AbjGURtf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Jul 2023 13:49:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231207AbjGUQjC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 12:39:02 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E5C349ED;
-        Fri, 21 Jul 2023 09:37:25 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-4fb7373dd35so4080250e87.1;
-        Fri, 21 Jul 2023 09:37:25 -0700 (PDT)
+        with ESMTP id S229453AbjGURte (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 13:49:34 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB45630FF
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 10:48:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689961725;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4gRIrwj0GsRbDsoQLu/wdlhqB+Zp6TWGF0yyPNQWXHs=;
+        b=cMfxQ5uAKYaZzMBY1YAK0Biwhc2chXkETBrGaSkxUlxLlfxqPXCIfhryFhOJzJwuFzxEZA
+        eRY10gpSW867b4lMTaN5whB6Th8XIUZJ/HP2VFWf5o9EmNHf1LQ5KddAtY/6pXkHCkdMMl
+        W3t/sIdSiaAFw0jzdGX02SpLXp1JcEI=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-526-0XmS99QvMQGpVHbk7gpKVg-1; Fri, 21 Jul 2023 13:48:43 -0400
+X-MC-Unique: 0XmS99QvMQGpVHbk7gpKVg-1
+Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-635e664d2f8so25851266d6.3
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 10:48:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689957437; x=1690562237;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sy1CMbA9h8MyISsmlxFD3H9uleaHAMciF3iNXrbKPXI=;
-        b=cURjEIW0JoTFMtd0MFjRif1LCfBqNJDW0qmPcMMmNo0NZnRo7r54K/6Vo+BwqoOakZ
-         3UmY/SbZRq5gJf+7GDXSOg6Liy08ExJvAtzVcRGwGN53EiqxdK3EQz2T0zyMAadk0juc
-         DMHt2bYhOFUFWCmFonLkRFsrUYXXESn1b/ztKlc9PTh7IDGVnKwvyJS+CxRqfiMd/Cix
-         fBL/lQ89oz9207xgZDxtajvEpoYvux+GK+WXlgMnLq5KjxA3yxryXe8sjTJCy580ZH43
-         nq3TdGpaqBiGLJOTtfaQJqDeAXMu7YhnQ11fTJTo++80DkTPcQpNBRu30hcLX3VOF0+b
-         R6kw==
-X-Gm-Message-State: ABy/qLYT0IlVtC61Pkq0M5tvcavb4CQSkwvTXXOqKWtCCtYH+d1YfO3l
-        wtOntOIqE5sHehWNOZunLidkZB6SA1DsGw==
-X-Google-Smtp-Source: APBJJlF4hbC5pYpHY6nPBPZrXFJkuIuJv1qkFKM3M6i20QhLLrBNRSkWvUIe3ye8OUYhtPZ8bfOu4g==
-X-Received: by 2002:a05:6512:220a:b0:4f8:6e1a:f3ac with SMTP id h10-20020a056512220a00b004f86e1af3acmr1093438lfu.28.1689957437348;
-        Fri, 21 Jul 2023 09:37:17 -0700 (PDT)
-Received: from flawful.org (c-f5f0e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.240.245])
-        by smtp.gmail.com with ESMTPSA id s3-20020a19ad43000000b004fbad09317csm810924lfd.189.2023.07.21.09.37.16
+        d=1e100.net; s=20221208; t=1689961723; x=1690566523;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4gRIrwj0GsRbDsoQLu/wdlhqB+Zp6TWGF0yyPNQWXHs=;
+        b=lTxTgLE92+u8Z64dvX4AJEWYRhVx25f+5QmZMVlbn1FYhMWwAiL+Hpt8QKNBTMuBQP
+         USH6392Olm4K4gNRX5lkWor5wYRNLyKpW4sTZET7Qio+pdcri6tdWt4RKKF5rbxUwvmT
+         zIpzID2/kJx1IdXlCP5IcUo0zqxLGJxabatE8TyVr/35MVr3oU5c/JFOuG0zNAlWMSiw
+         /aEMCuSKBHnsVsJ81Y0IRMRM4F0wNCLHxCD+n3TfjUmXueUNeeL/SGpxbPGyDZJd5FLj
+         WjZLeRZ5qyb+gAtGj7ODAtkOIF1A08t6ECICt1NmYwj8e6GXWbfswYFc2nowxaudqo6E
+         /TCQ==
+X-Gm-Message-State: ABy/qLb+67kVcuITiBT0fEPb7aJF3SSwDDqF/cyCycgaP2zkN6zFqRGK
+        pc4ZrjAH5Sy71YoYIdmvZXh2tUfPlGxcy9ZXTYWEW0qhSOrnyWLRlI6gJIgxTatYon0qiT3/iRo
+        /gHsQJvZjVRPe/YHpqY+++Q==
+X-Received: by 2002:ac8:5747:0:b0:403:3af1:367a with SMTP id 7-20020ac85747000000b004033af1367amr852059qtx.2.1689961722954;
+        Fri, 21 Jul 2023 10:48:42 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlHUAlmaZ0ilwuUmzRxDJ2XQlbKBL5/FDKlvMYBSPDJnNCvpuHetg+NbALbM4fNPG4WAxqB5cw==
+X-Received: by 2002:ac8:5747:0:b0:403:3af1:367a with SMTP id 7-20020ac85747000000b004033af1367amr852047qtx.2.1689961722734;
+        Fri, 21 Jul 2023 10:48:42 -0700 (PDT)
+Received: from localhost (ip98-179-76-75.ph.ph.cox.net. [98.179.76.75])
+        by smtp.gmail.com with ESMTPSA id d3-20020ac81183000000b00402364e77dcsm1388077qtj.7.2023.07.21.10.48.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jul 2023 09:37:17 -0700 (PDT)
-Received: by flawful.org (Postfix, from userid 112)
-        id 5C7AA3F2E; Fri, 21 Jul 2023 18:37:16 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1689957436; bh=1KEtoqG8iFBcyK+j2liNzeIKfEtGmRDVia0Bj1gjXcw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lGKjXK5Fhd6/ziwR7HIjdBp/Yk54v5Jqqd0PKxgelW2mkCTuScyCWdiRnx58Az5Sa
-         E2zW7m4X5BQL8G6/2yrDQSjxt0A+Itff20Bsywy7ZAq/icaUNWyb5YJlo81UUyGgzf
-         Qv0xgZVyLLzeEYhfOqZR9fUtAH25tMMW91P/rrZY=
-Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id B367D3F58;
-        Fri, 21 Jul 2023 18:33:01 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1689957181; bh=1KEtoqG8iFBcyK+j2liNzeIKfEtGmRDVia0Bj1gjXcw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E/W4XGuYz509MTJV4untTRm8x80yIPmvD946+ulx5gAXpkl8NlfJoR8UlkX1l79K8
-         arw2gh8C2+c7cFRuZP7OYFzOt212KP6nyCb5zdoJkp+xQS991B9n1AacddfjkL+ZAZ
-         fYhgrsaBUvoqX8w9Nmhz9ShVWfDCmAsUwi4lO5zk=
-From:   Niklas Cassel <nks@flawful.org>
-To:     Damien Le Moal <dlemoal@kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>
-Cc:     Hannes Reinecke <hare@suse.com>,
-        John Garry <john.g.garry@oracle.com>,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        linux-doc@vger.kernel.org
-Subject: [PATCH v3 9/9] ata: remove deprecated EH callbacks
-Date:   Fri, 21 Jul 2023 18:32:20 +0200
-Message-ID: <20230721163229.399676-10-nks@flawful.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230721163229.399676-1-nks@flawful.org>
-References: <20230721163229.399676-1-nks@flawful.org>
+        Fri, 21 Jul 2023 10:48:42 -0700 (PDT)
+Date:   Fri, 21 Jul 2023 10:48:40 -0700
+From:   Jerry Snitselaar <jsnitsel@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Saurav Kashyap <skashyap@marvell.com>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>
+Subject: Re: [PATCH] bnx2fc: Remove dma_alloc_coherent to suppress the BUG_ON.
+Message-ID: <benqe3zwp3go3w2s2fmhsyjft3d7vqiewffjqhb22y4hlpw5p4@46pxi3bd2zsn>
+References: <20230721102320.9559-1-skashyap@marvell.com>
+ <642a49ed-4920-9c74-40aa-81d5c859ce79@acm.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <642a49ed-4920-9c74-40aa-81d5c859ce79@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Niklas Cassel <niklas.cassel@wdc.com>
+On Fri, Jul 21, 2023 at 07:58:26AM -0700, Bart Van Assche wrote:
+> On 7/21/23 03:23, Saurav Kashyap wrote:
+> > From: Jerry Snitselar <jsnitsel@redhat.com>
+> > [ ... ]
+> > Signed-off-by: Jerry Snitselar <jsnitsel@redhat.com>
+> 
+> Has Jerry's name changed or has his name been misspelled? I think
+> a letter 'a' is missing from his name.
 
-Now when all libata drivers have migrated to use the error_handler
-callback, remove the deprecated phy_reset and eng_timeout callbacks.
+No, and yes. :)
 
-Also remove references to non-existent functions sata_phy_reset and
-ata_qc_timeout from Documentation/driver-api/libata.rst.
+This was originally passed along in a bugzilla bug as an example of a
+possible solution, but I didn't figure it would be the final patch.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
----
- Documentation/driver-api/libata.rst | 22 ++++++----------------
- drivers/ata/pata_sl82c105.c         |  3 +--
- include/linux/libata.h              |  6 ------
- 3 files changed, 7 insertions(+), 24 deletions(-)
+The original patch had the following summary and description above
+the stack trace:
 
-diff --git a/Documentation/driver-api/libata.rst b/Documentation/driver-api/libata.rst
-index eecb8b81e185..5da27a749246 100644
---- a/Documentation/driver-api/libata.rst
-+++ b/Documentation/driver-api/libata.rst
-@@ -256,14 +256,6 @@ advanced drivers implement their own ``->qc_issue``.
- Exception and probe handling (EH)
- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
--::
--
--    void (*eng_timeout) (struct ata_port *ap);
--    void (*phy_reset) (struct ata_port *ap);
--
--
--Deprecated. Use ``->error_handler()`` instead.
--
- ::
- 
-     void (*freeze) (struct ata_port *ap);
-@@ -348,8 +340,7 @@ SATA phy read/write
-                        u32 val);
- 
- 
--Read and write standard SATA phy registers. Currently only used if
--``->phy_reset`` hook called the :c:func:`sata_phy_reset` helper function.
-+Read and write standard SATA phy registers.
- sc_reg is one of SCR_STATUS, SCR_CONTROL, SCR_ERROR, or SCR_ACTIVE.
- 
- Init and shutdown
-@@ -520,13 +511,12 @@ to return without deallocating the qc. This leads us to
- 
- :c:func:`ata_scsi_error` is the current ``transportt->eh_strategy_handler()``
- for libata. As discussed above, this will be entered in two cases -
--timeout and ATAPI error completion. This function calls low level libata
--driver's :c:func:`eng_timeout` callback, the standard callback for which is
--:c:func:`ata_eng_timeout`. It checks if a qc is active and calls
--:c:func:`ata_qc_timeout` on the qc if so. Actual error handling occurs in
--:c:func:`ata_qc_timeout`.
-+timeout and ATAPI error completion. This function will check if a qc is active
-+and has not failed yet. Such a qc will be marked with AC_ERR_TIMEOUT such that
-+EH will know to handle it later. Then it calls low level libata driver's
-+:c:func:`error_handler` callback.
- 
--If EH is invoked for timeout, :c:func:`ata_qc_timeout` stops BMDMA and
-+When the :c:func:`error_handler` callback is invoked it stops BMDMA and
- completes the qc. Note that as we're currently in EH, we cannot call
- scsi_done. As described in SCSI EH doc, a recovered scmd should be
- either retried with :c:func:`scsi_queue_insert` or finished with
-diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
-index 3b62ea482f1a..93882e976ede 100644
---- a/drivers/ata/pata_sl82c105.c
-+++ b/drivers/ata/pata_sl82c105.c
-@@ -180,8 +180,7 @@ static void sl82c105_bmdma_start(struct ata_queued_cmd *qc)
-  *	document.
-  *
-  *	This function is also called to turn off DMA when a timeout occurs
-- *	during DMA operation. In both cases we need to reset the engine,
-- *	so no actual eng_timeout handler is required.
-+ *	during DMA operation. In both cases we need to reset the engine.
-  *
-  *	We assume bmdma_stop is always called if bmdma_start as called. If
-  *	not then we may need to wrap qc_issue.
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2d5e4b516a69..3718169834d5 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -975,12 +975,6 @@ struct ata_port_operations {
- 	ssize_t (*transmit_led_message)(struct ata_port *ap, u32 state,
- 					ssize_t size);
- 
--	/*
--	 * Obsolete
--	 */
--	void (*phy_reset)(struct ata_port *ap);
--	void (*eng_timeout)(struct ata_port *ap);
--
- 	/*
- 	 * ->inherits must be the last field and all the preceding
- 	 * fields must be pointers.
--- 
-2.41.0
+    scsi: bnx2fc: Don't use dma_*_coherent for session resources
+    
+    With commit f5ff79fddf0e ("dma-mapping: remove CONFIG_DMA_REMAP") a
+    crash can be seen with bnx2fc, because dma_free_coherent can not be
+    called in an interrupt context. Replace the dma_*_coherent code in
+    bnx2fc_alloc_session_resc and bnx2fc_free_session_resc, with kzalloc +
+    dma_map_single, and kfree + dma_unmap_single calls. Also properly
+    unwind in the error path for bnx2fc_alloc_session_resc, cleaning up
+    what it did succeed in allocating and mapping. This deals with seeing
+    the following panic:
+
+
+Regards,
+Jerry
+
+> 
+> Bart.
+> 
 
