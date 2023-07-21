@@ -2,115 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F12FBEB64DC
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 07:18:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D4CDEB64DD
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 08:49:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229736AbjGUHSK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Jul 2023 03:18:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50714 "EHLO
+        id S230054AbjGUIt6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Jul 2023 04:49:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229756AbjGUHSH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 03:18:07 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 478C6E75
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 00:18:05 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1b89600a37fso10580525ad.2
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 00:18:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1689923885; x=1690528685;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xgra1BbjJ2TX4LJXSTiv0VpjCyIk0jpZ//hvoXBk3V0=;
-        b=b4MYGFDLTZkoT24IR8U5mw8aCuPkq5W9pn72K+9QLHAx4bD9fuTYh7Zd6jJqTDulFi
-         Q5+UClv+pgLMRp5nq8gyjLmgoTf0RO4/Taky/8lu1VVPc4XzV47YX5/XXrBw2GblMIeZ
-         BJj7rjghVciP1AbWBdCiOfSfsDZuJW9AOAHjyiLml4BW4LjwlB2LFC32pVz0rxHQtot/
-         2bZG31h0NQcdRWgDP6skU6BVrnuoWcTv0ildGVJtsTO9nPNdIuc+0c74pcJXMk0NWdHJ
-         8J5lkgokPLJJqhLzuTHIVkH1Ti8SAF9TmzUbKJfA07iHtqgc+TmkaJEzZL8PGKmmuxDD
-         FQTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689923885; x=1690528685;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xgra1BbjJ2TX4LJXSTiv0VpjCyIk0jpZ//hvoXBk3V0=;
-        b=BekhKKNW2+nAnOsKpJSQB7qeT3gIdbf9XC4eawNGFzqfc+ZOUervc3IBD6nrdU44Iv
-         vkk2DEKXtVoyYSTq3opswNW+c6NJv5y/wH9mJNMr+/AHT1Yr0hSy/t8ozMaoq/BS/2+J
-         uHMTFBIf1j0L9p668OFgoDNpbSi4snH9eKnpjf8nhwGfgZmNlxI3H20Ea+DqJkDz+Qe5
-         0uMaeV7NE29aqW+3IwMIQLj3k6Z3sxgjX/i7hLAqsrGVAlTwhLB+JqyWO43NgjumKpWC
-         ZNoNVbefa2rREo3iIvYRtJwYN+TU8A7qQDK3aaKQFl71rET17jqFOQG6w3AgTvYKY48D
-         9C6A==
-X-Gm-Message-State: ABy/qLadIh0T0WB7PVqRt8QXit30ory4MnATsDYozhbIV1D37FkmuixO
-        71xl+hz7ZSTD3jVp36Ece4mmlg==
-X-Google-Smtp-Source: APBJJlGOEY7gHS/A9+kCu38TOUt7LFXF5kKuzGNRk2oieuEA63WC3YwDiKytWENvZdB/oVsM0A7/Lg==
-X-Received: by 2002:a17:902:934a:b0:1b8:af85:e959 with SMTP id g10-20020a170902934a00b001b8af85e959mr894543plp.53.1689923884709;
-        Fri, 21 Jul 2023 00:18:04 -0700 (PDT)
-Received: from localhost ([122.172.87.195])
-        by smtp.gmail.com with ESMTPSA id a17-20020a170902ecd100b001ba066c589dsm2671961plh.137.2023.07.21.00.18.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jul 2023 00:18:04 -0700 (PDT)
-Date:   Fri, 21 Jul 2023 12:48:01 +0530
-From:   Viresh Kumar <viresh.kumar@linaro.org>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 04/15] arm64: dts: qcom: sdm845: Fix the min frequency
- of "ice_core_clk"
-Message-ID: <20230721071801.e6ngfnkwg2ujsklg@vireshk-i7>
-References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
- <20230720054100.9940-5-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S229960AbjGUIt5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 04:49:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FBC4135
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2023 01:49:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689929349;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rIuqhH6IY8ONncAtN7QDgruUel+r3gNk5xnCvWyYpDA=;
+        b=g+SjWqt1Ppe1PQHt6jDqtgaZfpZVu/EOACeTEaQqgNv9YsIH7A0yOFlfXtXi/kGdBx+TNB
+        H67wdz/NkOkht2P6YIi7CECyUC4MYyw+o78SMxx6JdjM08xiuWhK0dsKwB40CI84e362Ua
+        1rUtXP6sdwqxuabEPso/de9q6k34wbg=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-376-7BJI8WwOOCGkGhdT2d1gVA-1; Fri, 21 Jul 2023 04:49:03 -0400
+X-MC-Unique: 7BJI8WwOOCGkGhdT2d1gVA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 531D3936D27;
+        Fri, 21 Jul 2023 08:49:02 +0000 (UTC)
+Received: from ovpn-8-26.pek2.redhat.com (ovpn-8-26.pek2.redhat.com [10.72.8.26])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5F57F40C206F;
+        Fri, 21 Jul 2023 08:48:55 +0000 (UTC)
+Date:   Fri, 21 Jul 2023 16:48:48 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Justin Tee <justintee8345@gmail.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Wen Xiong <wenxiong@linux.ibm.com>,
+        Keith Busch <kbusch@kernel.org>,
+        James Smart <james.smart@broadcom.com>,
+        Justin Tee <justin.tee@broadcom.com>
+Subject: Re: [PATCH 3/8] scsi: lpfc: use blk_mq_max_nr_hw_queues() to
+ calculate io vectors
+Message-ID: <ZLpGcJbCFyK0vB4+@ovpn-8-26.pek2.redhat.com>
+References: <20230712125455.1986455-1-ming.lei@redhat.com>
+ <20230712125455.1986455-4-ming.lei@redhat.com>
+ <CABPRKS9WPBq1R9EH39=8vCAcW0+0YDAuYKRtEU9ck=BRfZKo1w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230720054100.9940-5-manivannan.sadhasivam@linaro.org>
+In-Reply-To: <CABPRKS9WPBq1R9EH39=8vCAcW0+0YDAuYKRtEU9ck=BRfZKo1w@mail.gmail.com>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20-07-23, 11:10, Manivannan Sadhasivam wrote:
-> Minimum frequency of the "ice_core_clk" should be 75MHz as specified in the
-> downstream vendor devicetree. So fix it!
+On Wed, Jul 12, 2023 at 05:03:19PM -0700, Justin Tee wrote:
+> Hi Ming,
 > 
-> https://git.codelinaro.org/clo/la/kernel/msm-4.9/-/blob/LA.UM.7.3.r1-09300-sdm845.0/arch/arm64/boot/dts/qcom/sdm845.dtsi
+> A few lines below in if (aff_mask), vectors can be overwritten again
+> with min(phba->cfg_irq_chann, cpu_cnt).
 > 
-> Fixes: 433f9a57298f ("arm64: dts: sdm845: add Inline Crypto Engine registers and clock")
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  arch/arm64/boot/dts/qcom/sdm845.dtsi | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Perhaps we should move blk_mq_max_nr_hw_queues min comparison a little later:
 > 
-> diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> index 9ed74bf72d05..89520a9fe1e3 100644
-> --- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> @@ -2614,7 +2614,7 @@ ufs_mem_hc: ufshc@1d84000 {
->  				<0 0>,
->  				<0 0>,
->  				<0 0>,
-> -				<0 300000000>;
-> +				<75000000 300000000>;
->  
->  			status = "disabled";
->  		};
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 3221a934066b..20410789e8b8 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -13025,6 +13025,8 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
+>                 flags |= PCI_IRQ_AFFINITY;
+>         }
+> 
+> +       vectors = min_t(unsigned int, vectors, blk_mq_max_nr_hw_queues());
+> +
+>         rc = pci_alloc_irq_vectors(phba->pcidev, 1, vectors, flags);
+>         if (rc < 0) {
+>                 lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
 
-Please keep new feature and fixes like this in separate series. This
-could be merged directly in the currently ongoing kernel rc and
-doesn't need to wait for this series.
+Hi Justin, 
 
-Or at least keep the commit at the top, so another maintainer can
-simply pick it.
+Indeed, will take it in next version.
 
--- 
-viresh
+Thanks,
+Ming
+
