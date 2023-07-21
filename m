@@ -2,72 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 315AEC00528
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 16:39:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06491C0015E
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 16:39:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232861AbjGUQjE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Jul 2023 12:39:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37920 "EHLO
+        id S230404AbjGUQjV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Jul 2023 12:39:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230444AbjGUQii (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 12:38:38 -0400
-Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E76DA49C4;
-        Fri, 21 Jul 2023 09:37:05 -0700 (PDT)
-Received: by mail-lj1-x22e.google.com with SMTP id 38308e7fff4ca-2b974031aeaso11889551fa.0;
-        Fri, 21 Jul 2023 09:37:05 -0700 (PDT)
+        with ESMTP id S231207AbjGUQjC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 12:39:02 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E5C349ED;
+        Fri, 21 Jul 2023 09:37:25 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-4fb7373dd35so4080250e87.1;
+        Fri, 21 Jul 2023 09:37:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689957419; x=1690562219;
+        d=1e100.net; s=20221208; t=1689957437; x=1690562237;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BmFUzhYg9DwgbTYGQceKA9/Qd3kuhRwfwxJJzP99IGo=;
-        b=iPeCpOAmD150gXzedpvoU9enhvQxMneCtAHf0nLa9CSZXJfRQFYAHqKTq4zm7RegjO
-         IItCO4EwIcGYD3AQ5cZJ5OwOMlJWqv6gxfu+upLVI9oGfTp4VcTcokiHHnVhEWyMYw8K
-         0k6nC43fvWxUNeOwuIfYsA7NK/+jue5IyC1sncHEwGLIFm5ds7hUFwKN2ihoG+b7PI00
-         H3e9gQ+VpBC3GBcr6tD+/cGJuoD2C86iMWP0sWbsy00g1U78nJI9/3FhT4w9rSehaajM
-         dC1RqG2uGKV3vZGA92YRIHdAIVixmkkSH8gdxBoZnG5bJ3/UD0gy/vJ5dnOXIkA9wStG
-         ploQ==
-X-Gm-Message-State: ABy/qLYYebN+RXhrkUAI8iSYKLSKFy8IHynEChVNRB9vC6ENvSW8lCF5
-        I6mzg8V7EtNGPcSBSXxueAFgCq25w9yn4A==
-X-Google-Smtp-Source: APBJJlF8T0BRjnRq+W8kLDSrQQx/CpwdNClekfsQWixhjezUqhm8SvFhH1tfntXgoioCl2lXRUOncA==
-X-Received: by 2002:a2e:7d0f:0:b0:2b7:1dd:b416 with SMTP id y15-20020a2e7d0f000000b002b701ddb416mr1981288ljc.15.1689957418610;
-        Fri, 21 Jul 2023 09:36:58 -0700 (PDT)
+        bh=sy1CMbA9h8MyISsmlxFD3H9uleaHAMciF3iNXrbKPXI=;
+        b=cURjEIW0JoTFMtd0MFjRif1LCfBqNJDW0qmPcMMmNo0NZnRo7r54K/6Vo+BwqoOakZ
+         3UmY/SbZRq5gJf+7GDXSOg6Liy08ExJvAtzVcRGwGN53EiqxdK3EQz2T0zyMAadk0juc
+         DMHt2bYhOFUFWCmFonLkRFsrUYXXESn1b/ztKlc9PTh7IDGVnKwvyJS+CxRqfiMd/Cix
+         fBL/lQ89oz9207xgZDxtajvEpoYvux+GK+WXlgMnLq5KjxA3yxryXe8sjTJCy580ZH43
+         nq3TdGpaqBiGLJOTtfaQJqDeAXMu7YhnQ11fTJTo++80DkTPcQpNBRu30hcLX3VOF0+b
+         R6kw==
+X-Gm-Message-State: ABy/qLYT0IlVtC61Pkq0M5tvcavb4CQSkwvTXXOqKWtCCtYH+d1YfO3l
+        wtOntOIqE5sHehWNOZunLidkZB6SA1DsGw==
+X-Google-Smtp-Source: APBJJlF4hbC5pYpHY6nPBPZrXFJkuIuJv1qkFKM3M6i20QhLLrBNRSkWvUIe3ye8OUYhtPZ8bfOu4g==
+X-Received: by 2002:a05:6512:220a:b0:4f8:6e1a:f3ac with SMTP id h10-20020a056512220a00b004f86e1af3acmr1093438lfu.28.1689957437348;
+        Fri, 21 Jul 2023 09:37:17 -0700 (PDT)
 Received: from flawful.org (c-f5f0e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.240.245])
-        by smtp.gmail.com with ESMTPSA id e25-20020a2e8199000000b002b6995f38a2sm986534ljg.100.2023.07.21.09.36.58
+        by smtp.gmail.com with ESMTPSA id s3-20020a19ad43000000b004fbad09317csm810924lfd.189.2023.07.21.09.37.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jul 2023 09:36:58 -0700 (PDT)
+        Fri, 21 Jul 2023 09:37:17 -0700 (PDT)
 Received: by flawful.org (Postfix, from userid 112)
-        id DD47E3F2E; Fri, 21 Jul 2023 18:36:56 +0200 (CEST)
+        id 5C7AA3F2E; Fri, 21 Jul 2023 18:37:16 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1689957417; bh=ntXlQ3ufz/Tiiva14J32AE3vi9BT2WyK6txchX6V+Gg=;
+        t=1689957436; bh=1KEtoqG8iFBcyK+j2liNzeIKfEtGmRDVia0Bj1gjXcw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kByGa4L5EikPKqaG9l3RS4ZxyuliuIY4SIsUbx6XAS355L+Mm/cfZm3DV8OdS9wz2
-         HVKm98Ds0gMo+03FJym+rMC2utMfumC73/bDat2vIUpD7lVBnfFCeYla16BwLvPMKY
-         nAqOWu/GFaLxxcVJBHAmSB4ohO2BfzLorPdnHGM0=
+        b=lGKjXK5Fhd6/ziwR7HIjdBp/Yk54v5Jqqd0PKxgelW2mkCTuScyCWdiRnx58Az5Sa
+         E2zW7m4X5BQL8G6/2yrDQSjxt0A+Itff20Bsywy7ZAq/icaUNWyb5YJlo81UUyGgzf
+         Qv0xgZVyLLzeEYhfOqZR9fUtAH25tMMW91P/rrZY=
 Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id DAD0D3F53;
-        Fri, 21 Jul 2023 18:32:56 +0200 (CEST)
+        by flawful.org (Postfix) with ESMTPSA id B367D3F58;
+        Fri, 21 Jul 2023 18:33:01 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1689957177; bh=ntXlQ3ufz/Tiiva14J32AE3vi9BT2WyK6txchX6V+Gg=;
+        t=1689957181; bh=1KEtoqG8iFBcyK+j2liNzeIKfEtGmRDVia0Bj1gjXcw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bCO0m9Hz9TyOfDD1Zrgmy3AlqMNvDy2nEaSeh9+FSwnhPer2omXWEQSFmgf+Lovpj
-         R/YRlaUfgV69N6NCj/UTPqsAjWAtu7fs/8a8p6lciZlgxJJvMXF11lkUDRiUdviJ7v
-         4fhZ+ko8RDGRz55vG5+jv3p8ZdGUUHnCWqsaMNg8=
+        b=E/W4XGuYz509MTJV4untTRm8x80yIPmvD946+ulx5gAXpkl8NlfJoR8UlkX1l79K8
+         arw2gh8C2+c7cFRuZP7OYFzOt212KP6nyCb5zdoJkp+xQS991B9n1AacddfjkL+ZAZ
+         fYhgrsaBUvoqX8w9Nmhz9ShVWfDCmAsUwi4lO5zk=
 From:   Niklas Cassel <nks@flawful.org>
 To:     Damien Le Moal <dlemoal@kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>
+        Jonathan Corbet <corbet@lwn.net>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>
 Cc:     Hannes Reinecke <hare@suse.com>,
         John Garry <john.g.garry@oracle.com>,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         Niklas Cassel <niklas.cassel@wdc.com>,
         linux-doc@vger.kernel.org
-Subject: [PATCH v3 8/9] ata: remove ata_bus_probe()
-Date:   Fri, 21 Jul 2023 18:32:19 +0200
-Message-ID: <20230721163229.399676-9-nks@flawful.org>
+Subject: [PATCH v3 9/9] ata: remove deprecated EH callbacks
+Date:   Fri, 21 Jul 2023 18:32:20 +0200
+Message-ID: <20230721163229.399676-10-nks@flawful.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230721163229.399676-1-nks@flawful.org>
 References: <20230721163229.399676-1-nks@flawful.org>
@@ -79,219 +80,98 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Niklas Cassel <niklas.cassel@wdc.com>
 
-Remove ata_bus_probe() as it is unused.
+Now when all libata drivers have migrated to use the error_handler
+callback, remove the deprecated phy_reset and eng_timeout callbacks.
 
-Also, remove references to ata_bus_probe and port_disable in
-Documentation/driver-api/libata.rst, as neither exist anymore.
+Also remove references to non-existent functions sata_phy_reset and
+ata_qc_timeout from Documentation/driver-api/libata.rst.
 
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- Documentation/driver-api/libata.rst |  16 ----
- drivers/ata/libata-core.c           | 138 ----------------------------
- drivers/ata/libata.h                |   1 -
- include/linux/libata.h              |   1 -
- 4 files changed, 156 deletions(-)
+ Documentation/driver-api/libata.rst | 22 ++++++----------------
+ drivers/ata/pata_sl82c105.c         |  3 +--
+ include/linux/libata.h              |  6 ------
+ 3 files changed, 7 insertions(+), 24 deletions(-)
 
 diff --git a/Documentation/driver-api/libata.rst b/Documentation/driver-api/libata.rst
-index 311af516a3fd..eecb8b81e185 100644
+index eecb8b81e185..5da27a749246 100644
 --- a/Documentation/driver-api/libata.rst
 +++ b/Documentation/driver-api/libata.rst
-@@ -32,22 +32,6 @@ register blocks.
- :c:type:`struct ata_port_operations <ata_port_operations>`
- ----------------------------------------------------------
+@@ -256,14 +256,6 @@ advanced drivers implement their own ``->qc_issue``.
+ Exception and probe handling (EH)
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
--Disable ATA port
--~~~~~~~~~~~~~~~~
--
 -::
 -
--    void (*port_disable) (struct ata_port *);
+-    void (*eng_timeout) (struct ata_port *ap);
+-    void (*phy_reset) (struct ata_port *ap);
 -
 -
--Called from :c:func:`ata_bus_probe` error path, as well as when unregistering
--from the SCSI module (rmmod, hot unplug). This function should do
--whatever needs to be done to take the port out of use. In most cases,
--:c:func:`ata_port_disable` can be used as this hook.
+-Deprecated. Use ``->error_handler()`` instead.
 -
--Called from :c:func:`ata_bus_probe` on a failed probe. Called from
--:c:func:`ata_scsi_release`.
--
- Post-IDENTIFY device configuration
- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ ::
  
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index dedae669c9da..0af88ef231d1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3057,144 +3057,6 @@ int ata_cable_sata(struct ata_port *ap)
- }
- EXPORT_SYMBOL_GPL(ata_cable_sata);
+     void (*freeze) (struct ata_port *ap);
+@@ -348,8 +340,7 @@ SATA phy read/write
+                        u32 val);
  
--/**
-- *	ata_bus_probe - Reset and probe ATA bus
-- *	@ap: Bus to probe
-- *
-- *	Master ATA bus probing function.  Initiates a hardware-dependent
-- *	bus reset, then attempts to identify any devices found on
-- *	the bus.
-- *
-- *	LOCKING:
-- *	PCI/etc. bus probe sem.
-- *
-- *	RETURNS:
-- *	Zero on success, negative errno otherwise.
-- */
--
--int ata_bus_probe(struct ata_port *ap)
--{
--	unsigned int classes[ATA_MAX_DEVICES];
--	int tries[ATA_MAX_DEVICES];
--	int rc;
--	struct ata_device *dev;
--
--	ata_for_each_dev(dev, &ap->link, ALL)
--		tries[dev->devno] = ATA_PROBE_MAX_TRIES;
--
-- retry:
--	ata_for_each_dev(dev, &ap->link, ALL) {
--		/* If we issue an SRST then an ATA drive (not ATAPI)
--		 * may change configuration and be in PIO0 timing. If
--		 * we do a hard reset (or are coming from power on)
--		 * this is true for ATA or ATAPI. Until we've set a
--		 * suitable controller mode we should not touch the
--		 * bus as we may be talking too fast.
--		 */
--		dev->pio_mode = XFER_PIO_0;
--		dev->dma_mode = 0xff;
--
--		/* If the controller has a pio mode setup function
--		 * then use it to set the chipset to rights. Don't
--		 * touch the DMA setup as that will be dealt with when
--		 * configuring devices.
--		 */
--		if (ap->ops->set_piomode)
--			ap->ops->set_piomode(ap, dev);
--	}
--
--	/* reset and determine device classes */
--	ap->ops->phy_reset(ap);
--
--	ata_for_each_dev(dev, &ap->link, ALL) {
--		if (dev->class != ATA_DEV_UNKNOWN)
--			classes[dev->devno] = dev->class;
--		else
--			classes[dev->devno] = ATA_DEV_NONE;
--
--		dev->class = ATA_DEV_UNKNOWN;
--	}
--
--	/* read IDENTIFY page and configure devices. We have to do the identify
--	   specific sequence bass-ackwards so that PDIAG- is released by
--	   the slave device */
--
--	ata_for_each_dev(dev, &ap->link, ALL_REVERSE) {
--		if (tries[dev->devno])
--			dev->class = classes[dev->devno];
--
--		if (!ata_dev_enabled(dev))
--			continue;
--
--		rc = ata_dev_read_id(dev, &dev->class, ATA_READID_POSTRESET,
--				     dev->id);
--		if (rc)
--			goto fail;
--	}
--
--	/* Now ask for the cable type as PDIAG- should have been released */
--	if (ap->ops->cable_detect)
--		ap->cbl = ap->ops->cable_detect(ap);
--
--	/* We may have SATA bridge glue hiding here irrespective of
--	 * the reported cable types and sensed types.  When SATA
--	 * drives indicate we have a bridge, we don't know which end
--	 * of the link the bridge is which is a problem.
--	 */
--	ata_for_each_dev(dev, &ap->link, ENABLED)
--		if (ata_id_is_sata(dev->id))
--			ap->cbl = ATA_CBL_SATA;
--
--	/* After the identify sequence we can now set up the devices. We do
--	   this in the normal order so that the user doesn't get confused */
--
--	ata_for_each_dev(dev, &ap->link, ENABLED) {
--		ap->link.eh_context.i.flags |= ATA_EHI_PRINTINFO;
--		rc = ata_dev_configure(dev);
--		ap->link.eh_context.i.flags &= ~ATA_EHI_PRINTINFO;
--		if (rc)
--			goto fail;
--	}
--
--	/* configure transfer mode */
--	rc = ata_set_mode(&ap->link, &dev);
--	if (rc)
--		goto fail;
--
--	ata_for_each_dev(dev, &ap->link, ENABLED)
--		return 0;
--
--	return -ENODEV;
--
-- fail:
--	tries[dev->devno]--;
--
--	switch (rc) {
--	case -EINVAL:
--		/* eeek, something went very wrong, give up */
--		tries[dev->devno] = 0;
--		break;
--
--	case -ENODEV:
--		/* give it just one more chance */
--		tries[dev->devno] = min(tries[dev->devno], 1);
--		fallthrough;
--	case -EIO:
--		if (tries[dev->devno] == 1) {
--			/* This is the last chance, better to slow
--			 * down than lose it.
--			 */
--			sata_down_spd_limit(&ap->link, 0);
--			ata_down_xfermask_limit(dev, ATA_DNXFER_PIO);
--		}
--	}
--
--	if (!tries[dev->devno])
--		ata_dev_disable(dev);
--
--	goto retry;
--}
--
- /**
-  *	sata_print_link_status - Print SATA link status
-  *	@link: SATA link to printk link status about
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 1ec9b4427b84..6e7d352803bd 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -122,7 +122,6 @@ extern void ata_scsi_media_change_notify(struct ata_device *dev);
- extern void ata_scsi_hotplug(struct work_struct *work);
- extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
- extern void ata_scsi_dev_rescan(struct work_struct *work);
--extern int ata_bus_probe(struct ata_port *ap);
- extern int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
- 			      unsigned int id, u64 lun);
- void ata_scsi_sdev_config(struct scsi_device *sdev);
+ 
+-Read and write standard SATA phy registers. Currently only used if
+-``->phy_reset`` hook called the :c:func:`sata_phy_reset` helper function.
++Read and write standard SATA phy registers.
+ sc_reg is one of SCR_STATUS, SCR_CONTROL, SCR_ERROR, or SCR_ACTIVE.
+ 
+ Init and shutdown
+@@ -520,13 +511,12 @@ to return without deallocating the qc. This leads us to
+ 
+ :c:func:`ata_scsi_error` is the current ``transportt->eh_strategy_handler()``
+ for libata. As discussed above, this will be entered in two cases -
+-timeout and ATAPI error completion. This function calls low level libata
+-driver's :c:func:`eng_timeout` callback, the standard callback for which is
+-:c:func:`ata_eng_timeout`. It checks if a qc is active and calls
+-:c:func:`ata_qc_timeout` on the qc if so. Actual error handling occurs in
+-:c:func:`ata_qc_timeout`.
++timeout and ATAPI error completion. This function will check if a qc is active
++and has not failed yet. Such a qc will be marked with AC_ERR_TIMEOUT such that
++EH will know to handle it later. Then it calls low level libata driver's
++:c:func:`error_handler` callback.
+ 
+-If EH is invoked for timeout, :c:func:`ata_qc_timeout` stops BMDMA and
++When the :c:func:`error_handler` callback is invoked it stops BMDMA and
+ completes the qc. Note that as we're currently in EH, we cannot call
+ scsi_done. As described in SCSI EH doc, a recovered scmd should be
+ either retried with :c:func:`scsi_queue_insert` or finished with
+diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
+index 3b62ea482f1a..93882e976ede 100644
+--- a/drivers/ata/pata_sl82c105.c
++++ b/drivers/ata/pata_sl82c105.c
+@@ -180,8 +180,7 @@ static void sl82c105_bmdma_start(struct ata_queued_cmd *qc)
+  *	document.
+  *
+  *	This function is also called to turn off DMA when a timeout occurs
+- *	during DMA operation. In both cases we need to reset the engine,
+- *	so no actual eng_timeout handler is required.
++ *	during DMA operation. In both cases we need to reset the engine.
+  *
+  *	We assume bmdma_stop is always called if bmdma_start as called. If
+  *	not then we may need to wrap qc_issue.
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 67e34948eac8..2d5e4b516a69 100644
+index 2d5e4b516a69..3718169834d5 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -344,7 +344,6 @@ enum {
- 	ATA_LINK_RESUME_TRIES	= 5,
+@@ -975,12 +975,6 @@ struct ata_port_operations {
+ 	ssize_t (*transmit_led_message)(struct ata_port *ap, u32 state,
+ 					ssize_t size);
  
- 	/* how hard are we gonna try to probe/recover devices */
--	ATA_PROBE_MAX_TRIES	= 3,
- 	ATA_EH_DEV_TRIES	= 3,
- 	ATA_EH_PMP_TRIES	= 5,
- 	ATA_EH_PMP_LINK_TRIES	= 3,
+-	/*
+-	 * Obsolete
+-	 */
+-	void (*phy_reset)(struct ata_port *ap);
+-	void (*eng_timeout)(struct ata_port *ap);
+-
+ 	/*
+ 	 * ->inherits must be the last field and all the preceding
+ 	 * fields must be pointers.
 -- 
 2.41.0
 
