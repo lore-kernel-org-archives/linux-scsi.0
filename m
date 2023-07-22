@@ -2,54 +2,37 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5962BC0015E
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Jul 2023 19:19:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C4BC001DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Jul 2023 01:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232034AbjGUTS6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Jul 2023 15:18:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40710 "EHLO
+        id S229731AbjGVBlM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Jul 2023 21:41:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232066AbjGUTSo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 15:18:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 700A93A85;
-        Fri, 21 Jul 2023 12:18:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0EC1061D76;
-        Fri, 21 Jul 2023 19:18:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECE95C433C8;
-        Fri, 21 Jul 2023 19:18:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1689967121;
-        bh=4oolcSgpC5itJ5tUhjvjyvMGkMXzH6EhKOTc2yhRQ7U=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TVCNGcYEcS2YTxWCIqgMVz9M6oR/6Eq/7vqfmhjPHc1vXEI0vGU1zSL5SewDf5v+T
-         tfGKjux777BR0kYfdZNWldPbdf7kq6TG2u4etBz0D8UWxGVZr8RHF7SOjFYgho55/0
-         BYuqFYHRFsEj1IibEiuULKR90zGpQiFj7pu6DWiM=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     stable@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        patches@lists.linux.dev, Randy Dunlap <rdunlap@infradead.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Paul Gazzillo <paul@pgazz.com>,
-        Necip Fazil Yildiran <fazilyildiran@gmail.com>,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        kernel test robot <lkp@intel.com>,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 6.1 024/223] scsi: ufs: ufs-mediatek: Add dependency for RESET_CONTROLLER
-Date:   Fri, 21 Jul 2023 18:04:37 +0200
-Message-ID: <20230721160521.903534222@linuxfoundation.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230721160520.865493356@linuxfoundation.org>
-References: <20230721160520.865493356@linuxfoundation.org>
-User-Agent: quilt/0.67
+        with ESMTP id S229529AbjGVBlL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2023 21:41:11 -0400
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5C7871721;
+        Fri, 21 Jul 2023 18:41:10 -0700 (PDT)
+Received: from thinkpad-p16sg1.corp.microsoft.com (unknown [167.220.83.99])
+        by linux.microsoft.com (Postfix) with ESMTPSA id 4D005236FE14;
+        Fri, 21 Jul 2023 18:41:09 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4D005236FE14
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+        s=default; t=1689990069;
+        bh=hlalfOAh675uEo4Jafv9Q9FFSSyZ0FvKFtA0M9RnTVE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=BmFumFmioLwIMPm7/6TdNR7bdL8o57B1Q+GCIXv+i87v/Hdrv9yYeIi8eoeAGmENi
+         MKzHhkcbKfTNXq1QUEqQ91sNjGlXd05lB7x2qxPeHDIlwUVbJvN3eB3Y7lCI/UwTia
+         wNPN+999xORorUK/UI9M0egaCnJ8JOB3TxLj/EKw=
+From:   Shyam Saini <shyamsaini@linux.microsoft.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     linux-mmc@vger.kernel.org, op-tee@lists.trustedfirmware.org,
+        linux-scsi@vger.kernel.org, shyamsaini@linux.microsoft.com
+Subject: [RFC, PATCH 0/1] Replay Protected Memory Block (RPMB) driver
+Date:   Fri, 21 Jul 2023 18:40:36 -0700
+Message-Id: <20230722014037.42647-1-shyamsaini@linux.microsoft.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -57,55 +40,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+Hi everyone,
 
-[ Upstream commit 89f7ef7f2b23b2a7b8ce346c23161916eae5b15c ]
+This is yet another attempt to come up with an RPMB API for the kernel.
+This patch is based on patch 1 of last submission except few minor changes.
+The last discussion of this was in the thread:
 
-When RESET_CONTROLLER is not set, kconfig complains about missing
-dependencies for RESET_TI_SYSCON, so add the missing dependency just as is
-done above for SCSI_UFS_QCOM.
+  Subject: [PATCH  v2 1/4] rpmb: add Replay Protected Memory Block (RPMB) subsystem
+  Date: Tue,  5 Apr 2022 10:37:56 +0100 [thread overview]
+  Message-ID: <20220405093759.1126835-2-alex.bennee@linaro.org>
 
-Silences this kconfig warning:
+The patch provides a simple RPMB driver. This is a RFC version and this
+single driver can't be used by its own. It would require further work to
+make use of API's provided by this driver.
 
-WARNING: unmet direct dependencies detected for RESET_TI_SYSCON
-  Depends on [n]: RESET_CONTROLLER [=n] && HAS_IOMEM [=y]
-  Selected by [m]:
-  - SCSI_UFS_MEDIATEK [=m] && SCSI_UFSHCD [=y] && SCSI_UFSHCD_PLATFORM [=y] && ARCH_MEDIATEK [=y]
+Changes since the last posting:
+  drop RPMB char driver
+  drop virtio rpmb frontend driver
+  drop rpmb: add RPBM access tool
+  Rename get_write_count to get_write_counter
+  Make return type for rpmb_set_key() function explicit
 
-Fixes: de48898d0cb6 ("scsi: ufs-mediatek: Create reset control device_link")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Link: lore.kernel.org/r/202306020859.1wHg9AaT-lkp@intel.com
-Link: https://lore.kernel.org/r/20230701052348.28046-1-rdunlap@infradead.org
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Peter Wang <peter.wang@mediatek.com>
-Cc: Paul Gazzillo <paul@pgazz.com>
-Cc: Necip Fazil Yildiran <fazilyildiran@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-mediatek@lists.infradead.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ufs/host/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+Alex Bennée (1):
+  rpmb: add Replay Protected Memory Block (RPMB) driver
 
-diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
-index 4cc2dbd79ed0e..9b39fd76031be 100644
---- a/drivers/ufs/host/Kconfig
-+++ b/drivers/ufs/host/Kconfig
-@@ -71,6 +71,7 @@ config SCSI_UFS_QCOM
- config SCSI_UFS_MEDIATEK
- 	tristate "Mediatek specific hooks to UFS controller platform driver"
- 	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
-+	depends on RESET_CONTROLLER
- 	select PHY_MTK_UFS
- 	select RESET_TI_SYSCON
- 	help
+ MAINTAINERS           |   7 +
+ drivers/Kconfig       |   1 +
+ drivers/Makefile      |   2 +
+ drivers/rpmb/Kconfig  |  11 ++
+ drivers/rpmb/Makefile |   7 +
+ drivers/rpmb/core.c   | 439 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/rpmb.h  | 182 +++++++++++++++++
+ 7 files changed, 649 insertions(+)
+ create mode 100644 drivers/rpmb/Kconfig
+ create mode 100644 drivers/rpmb/Makefile
+ create mode 100644 drivers/rpmb/core.c
+ create mode 100644 include/linux/rpmb.h
+
 -- 
-2.39.2
-
-
+2.34.1
 
