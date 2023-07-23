@@ -2,158 +2,151 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5C72C41513
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 19:50:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EE62C41513
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 20:06:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229977AbjGWTuI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Jul 2023 15:50:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56986 "EHLO
+        id S229647AbjGWUGL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Jul 2023 16:06:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbjGWTuH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 15:50:07 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B8E6ED;
-        Sun, 23 Jul 2023 12:50:06 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36NINpxD011483;
-        Sun, 23 Jul 2023 19:50:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2023-03-30;
- bh=WLTrlboy+zGjSwlUWkGAWvIKVwA/nlrrCOoQ9pgFL50=;
- b=leNId/gRXgDrczMEy8mT8U7leRJTTDYw/+fzxRgt+82ayegYxjRAyQGV9PXnhPjdjXBc
- tkRbc35ealxKwlnQ5gU6zlS2pY2kTknzDsYPJe5QyhAqmUiSrhg5U1be93QJNOT+VHDb
- zK2czXxx9+mgRqrukS89HBmMQxxpBnV7HHRHDoEolmW+y6MLblkyHdBL1LNK8FXWpiaJ
- zZFpZcVecndfwW3OwwgHAM7FM5+b+EDlKFD2LAZxf92xSl2TokBjfmD2p1eDpgV2nNld
- xT7CbULV5ZrB4vg6CKdBrqrBmBu9nI21EtJdWS/xsyJkmRm8H1MQDnCTUfe9CkP4Htnb PA== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s070asfj2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 Jul 2023 19:50:02 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36NEj5Mg027537;
-        Sun, 23 Jul 2023 19:50:01 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2170.outbound.protection.outlook.com [104.47.57.170])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3s05j8xf3c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 Jul 2023 19:50:01 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=A112sD7sPvlALyjScdfHrc5mlAS0NP8PCjLXy72j/VttbbfxNqR5rovjHzgiKkCVi9DllO0s1Nr9uDjpq/dlfubmmYMbtPvb1sBBJw5Le+c6JE4GF+AwBgsjAF23vfBnjJ/0HCEqd9Q6iK3VbhzxUNAeGrbDQuhx15Kj8lSYXvwwS8QOUr6EfFcmvwGtZ4RC6Cgh3GqJNrfWLJxdwCpKvLs0anAPcY419PKIIK49tEonum5lK6UGA3QMNZ79WX7FbencnpWw1Z+gR3JRQfQxnhWFhiwd5i2g1FQMgD7axaKnoQ6IjH/KJI+TtU+nxDcBpc8TXWi5zaVFkQxEZC4uEQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WLTrlboy+zGjSwlUWkGAWvIKVwA/nlrrCOoQ9pgFL50=;
- b=Oz8uaRKhVh42+cnzSijrVRG5icuqfK1IGgggId6JDngqL5uav+QzTksda6B+PmPFqkkop/ruCmCv9wr5zG2btPLsZ7KxMGnffUoK3GSLVU8/jMTCaKiFQXVHdfTMW+u4I0g0E/gnfVzwaUvFqavYO6zrOvUNOs4xojL9UgqODLtMXQxvrA+GMf6uXbU3PJKla8XBFUYdGlAWvZEnXEeqgffyRyI+lXka2I22W0UQQycHyUZhrp9c+k9ZYvgsrasuOobtcXMHSqq4rVFWLrxXmR9fRqPcqPKtQjF9lSdvtqwMUhwLcRl8s21LNKgGY/RAeN+HUzmJR02FQn/dot2Y/w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WLTrlboy+zGjSwlUWkGAWvIKVwA/nlrrCOoQ9pgFL50=;
- b=TOAu8uWW3vLtlic8HnJrjS7f4LIhWgW7ivyW8QtjBGk70WVHzM6Oz/mdU8QVIai+F2rxHtnUKh/4O3E65lqi+Ba7ugo/qONPCufMw+5dfRo7rOEOvKRmsX5dji/ppJo/5uY6ZnpzUlbcUi5qmnZTnA4qi9F2OriqiOFYIm/EMic=
-Received: from CO1PR10MB4754.namprd10.prod.outlook.com (2603:10b6:303:91::24)
- by MW4PR10MB6324.namprd10.prod.outlook.com (2603:10b6:303:1ee::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.31; Sun, 23 Jul
- 2023 19:49:59 +0000
-Received: from CO1PR10MB4754.namprd10.prod.outlook.com
- ([fe80::f82a:5d0:624d:9536]) by CO1PR10MB4754.namprd10.prod.outlook.com
- ([fe80::f82a:5d0:624d:9536%7]) with mapi id 15.20.6609.030; Sun, 23 Jul 2023
- 19:49:59 +0000
-To:     Rob Herring <robh@kernel.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: Explicitly include correct DT includes
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq18rb65rxf.fsf@ca-mkp.ca.oracle.com>
-References: <20230714175052.4066150-1-robh@kernel.org>
-Date:   Sun, 23 Jul 2023 15:49:56 -0400
-In-Reply-To: <20230714175052.4066150-1-robh@kernel.org> (Rob Herring's message
-        of "Fri, 14 Jul 2023 11:50:52 -0600")
-Content-Type: text/plain
-X-ClientProxiedBy: SN6PR01CA0012.prod.exchangelabs.com (2603:10b6:805:b6::25)
- To CO1PR10MB4754.namprd10.prod.outlook.com (2603:10b6:303:91::24)
+        with ESMTP id S229491AbjGWUGK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 16:06:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7741B1BE;
+        Sun, 23 Jul 2023 13:06:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 04FBA60E9A;
+        Sun, 23 Jul 2023 20:06:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE29FC433C8;
+        Sun, 23 Jul 2023 20:06:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690142768;
+        bh=MYDNII/nRbpdhoxLfX/zeWMDQLkBfuAoQG5un5EegG8=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=i04gOhYl/e9pCTC+Qjr0+IHT70ErCt815FZsNDMNWXOyWLAtfFsG5RRDgy/ifMEYi
+         ocuIRDmhrayU0SnG3tshMAydV1PAx5CqH6z636iru4IYvtGpvzPlkrKyAXwVcporwo
+         xN7gQ8SSCjeGdg5g3sHi+/+PXffTeKrzQbsJ7Ba1tyxmDeXLPCWXSP7nMhB7Zt21Kb
+         xzTthLBnKMf4WlOuXZE2aW4YkWJgrKhkOPlIBw48KjZHkV3U+OUUh7Jgh645JuBoRg
+         5pXX9f85FgT316SIJ0WqprfJYTbt/k3S85n2UugXt5ZXSgq3h6aOvObqny3LV/lRzA
+         VeVGP5CPUOpmw==
+Message-ID: <1703ab6e-8567-8574-f011-af19813f97e8@kernel.org>
+Date:   Mon, 24 Jul 2023 05:06:04 +0900
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PR10MB4754:EE_|MW4PR10MB6324:EE_
-X-MS-Office365-Filtering-Correlation-Id: 52f04fe3-6c10-45da-8c16-08db8bb5ff3d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: g/obH0n4y4rg1dhuUo64kMViQTcF0vus9X3Uxz9IzPKxGd1zsj4Br4Z5LR/enSpAc/k602v9S50q+4QFJWve0k7O/olQ+ZTJpHG0hb1C1gQDlGRkEAfQd7ltWDe0qvcgBSJT9JsTbVOBnJrFgWOg6zpLkhraL++S/flOw+8+h1AXMjf7uPcCjPGKmixtqZOamjdlFs8t+2UUInXVs0e0WVaKJ2IQwILePfSiEjoRAfWwMQP6SOMegDo6GKJ93o/lzjIkfzkixlLyATdfuDlCYh0u8fl3wpor7q3Rm9QdW0undRwuwokddT/Fss3LqyPdHyIRf2R9eWvsEg9VWy2Qcc3erpkB/PpdS330W2bz2govky6+d8p4oTVK7El+5AUs3GfcVQMBbuxATIbjc/qma1aHZWT7E1zZH5zzEFD0+zkpyS5eEDbJKfKvq1BXhraupdonBbVFnaueg/GWkqql0lhW/4Xdf3SanXOc/iUWLhrycM3wdu661jJbmheFE/ARs9QJ/BgfURPdiYUZy8Zlxo4o8n/OYgGkppkw0BpnlqqcMI4xbAzwBb0jvzglzhrw
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO1PR10MB4754.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(376002)(366004)(136003)(396003)(346002)(39860400002)(451199021)(8936002)(5660300002)(8676002)(4744005)(41300700001)(316002)(2906002)(66476007)(66556008)(66946007)(26005)(6506007)(38100700002)(6512007)(54906003)(83380400001)(86362001)(6486002)(4326008)(6916009)(36916002)(478600001)(6666004)(186003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?HO3ZOP3tOA0hTwN28wQVzgYg1cEyV7eL/20WYl/60tXK0qsPoD34nEpVvdTI?=
- =?us-ascii?Q?WR2Vj5+JRy8LZ4uh1hIUcJ4HcFWUB+u++gMzTdBlZ9WyLa+pSRJA0PPkNWWq?=
- =?us-ascii?Q?K9qSIFROQXSJS493/mDzebHIKx6chwxsUkwbnqRvyAvga3mX67edUApLsGHR?=
- =?us-ascii?Q?ZUCOvVWyHdj93dXXTlHz3wjS6gawmJKzPR3Tlas4R15IS0JxN7onicBIcZWa?=
- =?us-ascii?Q?Sb6Z9HRdweT90u0r2rZPiMldBl9buNtGiPwxWym2rOolWuFhRp1BsXR27E1I?=
- =?us-ascii?Q?QKber89WiaaaGimdsPhH0W2rmREP5tQbR8nXj4Jd3npTI21u4v9bT8xCZ7YD?=
- =?us-ascii?Q?eNdPwDgEB+UQixkvIKi1C9ti9Tae0doPgwgdbOu3Ij8UJYq6Sgdw0grIDfVb?=
- =?us-ascii?Q?i6ToPk+ZmMpDnry3L9f5Y7uw81hRzfb6Qo9XLrk0wwCKFEmBnS64/QyvLnz1?=
- =?us-ascii?Q?4Apri21lvRc8CzASCwroy2g56aXo5COJyZSp+xwaTF9SbyUpJZJ3Ui/wSJeh?=
- =?us-ascii?Q?C8yDYXvtw3lBLp+yGEcv0AXK+bdE0YS7SOi4spH5kefxX1f+8HF4h+ySLnmf?=
- =?us-ascii?Q?iKLKN48lXgIyud5YhO2F68o1wn/grCifLkPrlMp9yvhf0QP2le2wsfR8a2Y6?=
- =?us-ascii?Q?Cx8RAS5ysG9IPbmhYIkfxEskiedZKEVQbL35xgBC5mWOr4FcJRkEhWFsoJm4?=
- =?us-ascii?Q?lUT3f+mSHxE7AMbi00RogaKelvaw4UYB7B5CmOrN8gag+jzORRLDYv4KbZ+i?=
- =?us-ascii?Q?hsGkItKK7BRKbIdet/B8uSKbYqfD2atdzI9esKtnHdj8uDZQHA0Yr5RXsDVK?=
- =?us-ascii?Q?Vllidc/qKLspt5QBZiySZspa3lxBdpESnPnh1MWVb/PjTyw+x1SNboK5VKiU?=
- =?us-ascii?Q?D/7lPW7PJrk807Xd/xsglJQlf8Vml6aym+P3azWP4Ec25ehdynJmaO8d7yYe?=
- =?us-ascii?Q?uimEL0kj1yQvJvj44PU91LglqAxgrCM4pfHYhL/RhInPMa3q7CT3QkLbHMFV?=
- =?us-ascii?Q?457EXPywY9+Mk3dyOnj00lFg16EGaE8lFR+PCZq10RsrWTSz5o+GYNWBCRs9?=
- =?us-ascii?Q?930mhtuhAoE8pDLDE1cKz6EOKBKeX49f1/7dGiLuo4xRUjGrZtc6+ZmhtKvF?=
- =?us-ascii?Q?ENIbjPw9LSx43c08ZUM4xR/n5XJb11eW9pNnh+F0XbrpDe436L7k6pbaMTP6?=
- =?us-ascii?Q?m92fzzplZviWiki5voheLux3X4oP+dHYONVctOeeCt6B4++IErwIacSySBdV?=
- =?us-ascii?Q?4Krupk/qZCxMqZaRcSElcT4MkYcojPr9UZHG/aTVoYPxShVtjmPTbhIdcBff?=
- =?us-ascii?Q?+1+eW8JDKQoAmX0bUfOCejoMzTPFd9pF+5nBxTNDuaOIjfzuTz0Mr2kqVYzc?=
- =?us-ascii?Q?E3jpZ8XJVJGFYisNg+s/sj71X+GrVqN4GIzASQgD/qVUam/xEwyWDTv2dc19?=
- =?us-ascii?Q?nToHWAbnJbtRFgOJ7T37oMhlTQbjvwWmf16WQo7tut56ysGWTGxDvSNGBx/e?=
- =?us-ascii?Q?q9pUvAjaf20PKeerDiK7wEfcrczond0Zb1HX0pc373n5Q1iFAiTJZbL8kwrr?=
- =?us-ascii?Q?C457m+yndnxiLjRXsDTpNUshJcWK1aKCFpaEwbLhDIffAS/IGJnl8VOKDCyE?=
- =?us-ascii?Q?4w=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: wn5Wt7D2MAYYjBnE9iulrN2iHhcfOf8YvXYc5Fe6lawYR/66T4q6PDk9ny2cIWbS6RgQjh/Hqfe6FVqghEbBhJJYtQchVPydthWnXw66q3HLdXZy4Gc/DSwT83pzcmcWAN5pfUlNyhGUDEuBpAX88zQ6L8mraAzpB6yUWOWKKg9ssBRhFyCVJ9U+pg1RINOsAK3bAE/7oKHipba0YiCyvwSM8/g+xGifZy7lUB618WSeKPLJH0XkpBnbwmpfNciSWiplXMAiT1ztdvaM+NdNBKAtTYMskQ8NJnsuPT/GAWRCgukH8TCkFAZA3Kp9IITJ8rHcew5cTpHWSfIYaxqtdRYlXR9a0k+P0B7id6GSlIgCB9khIKTSgoRgTZnRuoCCP577fQf6BpQ8cLQo0PnyVt8ynRNE9nX7jwxBqCaalh6LP6bKwg+fi7/hVIc35fNC4ASk9BE9hZSdgRTK11uLTnwc80fQjzIeK/V9tGH2bO6hjj9cNb7EKBaah7qA/FcfI8OCW6j9myl8gHE6ndgmmvsqAUXo51y6AVWKDzyLlIGKBTLp041xlcTX75GuHJvCZfsO1Z0O22fjYsskOw+YngC/QPx/SsNB14vSLdJCAWi2N/2NaoGFmFl+1ygerlqIgEhxpTSYWIofK6nx1nMkoBndKzddkEFDw9Wa/pgUsgnlpYz84Flp2swNdfKFWJkww2Y9HcR/mgh32Ymc/iTnHiU824aVFJHhqOIYJKLh+fEPdW5C3RkeZ3t2G6VUtwbRi/hl8Rz2qgobwZQ8b61+WlJK/s5mnTTkB3ITqZ37CEYGDEAyLWrzd5Kc6MMMUR8MDPRjWeeO83b/1oDrJpytBQ==
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 52f04fe3-6c10-45da-8c16-08db8bb5ff3d
-X-MS-Exchange-CrossTenant-AuthSource: CO1PR10MB4754.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2023 19:49:59.1420
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QGhSEbf28O5qa8V7pskvYyLrWnYcWPCNML7x5Qhc0VUoYLsULiER+dY9dOcvMfIxmKejE/dkHQA7F7XBgVD2VpEtPxoy0e1ysfV8ogo1gw4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR10MB6324
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-23_08,2023-07-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 bulkscore=0
- mlxlogscore=655 suspectscore=0 phishscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
- definitions=main-2307230186
-X-Proofpoint-GUID: scWuhvYwbBoBk09kYqc2TBnGE0AgnRFj
-X-Proofpoint-ORIG-GUID: scWuhvYwbBoBk09kYqc2TBnGE0AgnRFj
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v2 09/15] PM / devfreq: Switch to
+ dev_pm_opp_find_freq_{ceil/floor}_indexed() APIs
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
+        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
+        cw00.choi@samsung.com, andersson@kernel.org,
+        konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org
+References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
+ <20230720054100.9940-10-manivannan.sadhasivam@linaro.org>
+From:   Chanwoo Choi <chanwoo@kernel.org>
+Content-Language: en-US
+In-Reply-To: <20230720054100.9940-10-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi,
 
-Rob,
+On 23. 7. 20. 14:40, Manivannan Sadhasivam wrote:
+> Some devfreq consumers like UFS driver need to work with multiple clocks
+> through the OPP framework. For this reason, OPP framework exposes the
+> _indexed() APIs for finding the floor/ceil of the supplied frequency of
+> the indexed clock. So let's use them in the devfreq driver.
+> 
+> Currently, the clock index of 0 is used which works fine for multiple as
+> well as single clock.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  drivers/devfreq/devfreq.c | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
+> index e36cbb920ec8..7686993d639f 100644
+> --- a/drivers/devfreq/devfreq.c
+> +++ b/drivers/devfreq/devfreq.c
+> @@ -88,7 +88,7 @@ static unsigned long find_available_min_freq(struct devfreq *devfreq)
+>  	struct dev_pm_opp *opp;
+>  	unsigned long min_freq = 0;
+>  
+> -	opp = dev_pm_opp_find_freq_ceil(devfreq->dev.parent, &min_freq);
+> +	opp = dev_pm_opp_find_freq_ceil_indexed(devfreq->dev.parent, &min_freq, 0);
 
-> The DT of_device.h and of_platform.h date back to the separate
-> of_platform_bus_type before it as merged into the regular platform
-> bus. As part of that merge prepping Arm DT support 13 years ago, they
-> "temporarily" include each other. They also include platform_device.h
-> and of.h. As a result, there's a pretty much random mix of those
-> include files used throughout the tree. In order to detangle these
-> headers and replace the implicit includes with struct declarations,
-> users need to explicitly include the correct includes.
+This patch changed the used function from dev_pm_opp_find_freq_ceil
+to dev_pm_opp_find_freq_ceil_indexed even if there are no supporting of the multiple clocks
+and then dev_pm_opp_find_freq_ceil is not removed from OPP.
 
-Applied to 6.6/scsi-staging, thanks!
+I think that it is better to use dev_pm_opp_find_freq_ceil_indexed
+when need to support multiple clocks with real case.
+
+>  	if (IS_ERR(opp))
+>  		min_freq = 0;
+>  	else
+> @@ -102,7 +102,7 @@ static unsigned long find_available_max_freq(struct devfreq *devfreq)
+>  	struct dev_pm_opp *opp;
+>  	unsigned long max_freq = ULONG_MAX;
+>  
+> -	opp = dev_pm_opp_find_freq_floor(devfreq->dev.parent, &max_freq);
+> +	opp = dev_pm_opp_find_freq_floor_indexed(devfreq->dev.parent, &max_freq, 0);
+>  	if (IS_ERR(opp))
+>  		max_freq = 0;
+>  	else
+> @@ -196,7 +196,7 @@ static int set_freq_table(struct devfreq *devfreq)
+>  		return -ENOMEM;
+>  
+>  	for (i = 0, freq = 0; i < devfreq->max_state; i++, freq++) {
+> -		opp = dev_pm_opp_find_freq_ceil(devfreq->dev.parent, &freq);
+> +		opp = dev_pm_opp_find_freq_ceil_indexed(devfreq->dev.parent, &freq, 0);
+>  		if (IS_ERR(opp)) {
+>  			devm_kfree(devfreq->dev.parent, devfreq->freq_table);
+>  			return PTR_ERR(opp);
+> @@ -2034,18 +2034,18 @@ struct dev_pm_opp *devfreq_recommended_opp(struct device *dev,
+>  
+>  	if (flags & DEVFREQ_FLAG_LEAST_UPPER_BOUND) {
+>  		/* The freq is an upper bound. opp should be lower */
+> -		opp = dev_pm_opp_find_freq_floor(dev, freq);
+> +		opp = dev_pm_opp_find_freq_floor_indexed(dev, freq, 0);
+>  
+>  		/* If not available, use the closest opp */
+>  		if (opp == ERR_PTR(-ERANGE))
+> -			opp = dev_pm_opp_find_freq_ceil(dev, freq);
+> +			opp = dev_pm_opp_find_freq_ceil_indexed(dev, freq, 0);
+>  	} else {
+>  		/* The freq is an lower bound. opp should be higher */
+> -		opp = dev_pm_opp_find_freq_ceil(dev, freq);
+> +		opp = dev_pm_opp_find_freq_ceil_indexed(dev, freq, 0);
+>  
+>  		/* If not available, use the closest opp */
+>  		if (opp == ERR_PTR(-ERANGE))
+> -			opp = dev_pm_opp_find_freq_floor(dev, freq);
+> +			opp = dev_pm_opp_find_freq_floor_indexed(dev, freq, 0);
+>  	}
+>  
+>  	return opp;
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Best Regards,
+Samsung Electronics
+Chanwoo Choi
+
