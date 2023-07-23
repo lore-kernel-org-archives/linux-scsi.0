@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62D08C04A6A
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 10:20:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7894AC001DC
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 10:20:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230006AbjGWKUC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Jul 2023 06:20:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49462 "EHLO
+        id S230013AbjGWKUE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Jul 2023 06:20:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229865AbjGWKT5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 06:19:57 -0400
+        with ESMTP id S229881AbjGWKT6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 06:19:58 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7689E6;
-        Sun, 23 Jul 2023 03:19:55 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4R7zjQ1TprztRFL;
-        Sun, 23 Jul 2023 18:16:42 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E8A100;
+        Sun, 23 Jul 2023 03:19:56 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4R7zjR3nSbztQr4;
+        Sun, 23 Jul 2023 18:16:43 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Sun, 23 Jul 2023 18:19:52 +0800
+ 15.1.2507.27; Sun, 23 Jul 2023 18:19:53 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -28,9 +28,9 @@ To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 CC:     Dan Carpenter <error27@gmail.com>, <louhongxiang@huawei.com>,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v3 3/9] scsi:scsi_debug: Define grammar to remove added error injection
-Date:   Mon, 24 Jul 2023 07:40:59 +0800
-Message-ID: <20230723234105.1628982-4-haowenchao2@huawei.com>
+Subject: [PATCH v3 5/9] scsi:scsi_debug: Return failed value if the error is injected
+Date:   Mon, 24 Jul 2023 07:41:01 +0800
+Message-ID: <20230723234105.1628982-6-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20230723234105.1628982-1-haowenchao2@huawei.com>
 References: <20230723234105.1628982-1-haowenchao2@huawei.com>
@@ -45,70 +45,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The grammar to remove error injection is a line with fixed 3 columns
-separated by spaces.
+If a fail queuecommand error is injected, return the failed value defined
+in the rule from queuecommand.
 
-First column is fixed to "-". It tells this is a removal operation.
-Second column is the error code to match.
-Third column is the scsi command to match.
+Make queuecommand return format:
+  +--------+------+-------------------------------------------------------+
+  | Column | Type | Description                                           |
+  +--------+------+-------------------------------------------------------+
+  |   1    |  u8  | Error type, fixed to 0x1                              |
+  +--------+------+-------------------------------------------------------+
+  |   2    |  s32 | Error count                                           |
+  |        |      |  0: this rule will be ignored                         |
+  |        |      |  positive: the rule will always take effect           |
+  |        |      |  negative: the rule takes effect n times where -n is  |
+  |        |      |            the value given. Ignored after n times     |
+  +--------+------+-------------------------------------------------------+
+  |   3    |  x8  | SCSI command opcode, 0xff for all commands            |
+  +--------+------+-------------------------------------------------------+
+  |   4    |  x32 | The queuecommand() return value we want               |
+  +--------+------+-------------------------------------------------------+
 
-For example the following command would remove timeout injection of
-inquiry command.
-    echo "- 0 0x12" > /sys/kernel/debug/scsi_debug/0:0:0:1/error
+Examples:
+    error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
+    echo "1 1 0x12 0x1055" > ${error}
+will make each INQUIRY command sent to that device return
+0x1055 (SCSI_MLQUEUE_HOST_BUSY).
 
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi_debug.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ drivers/scsi/scsi_debug.c | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index d7d0c8af8bff..c83bd1e52622 100644
+index 107577bac65d..1d28e7209f64 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -920,6 +920,33 @@ static void sdebug_err_add(struct scsi_device *sdev, struct sdebug_err_inject *n
- 	list_add_tail(&new->list, &devip->inject_err_list);
+@@ -7739,6 +7739,30 @@ static int sdebug_timeout_cmd(struct scsi_cmnd *cmnd)
+ 	return 0;
  }
  
-+static int sdebug_err_remove(struct scsi_device *sdev, const char *buf, size_t count)
++static int sdebug_fail_queue_cmd(struct scsi_cmnd *cmnd)
 +{
-+	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdev->hostdata;
-+	struct sdebug_err_inject *tmp, *err;
-+	int type;
-+	unsigned char cmd;
++	struct scsi_device *sdp = cmnd->device;
++	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
++	struct sdebug_err_inject *err;
++	unsigned char *cmd = cmnd->cmnd;
++	int ret = 0;
 +
-+	if (sscanf(buf, "- %d %hhx", &type, &cmd) != 2) {
-+		kfree(buf);
-+		return -EINVAL;
-+	}
++	if (devip == NULL)
++		return 0;
 +
-+	list_for_each_entry_safe(err, tmp, &devip->inject_err_list, list) {
-+		if (err->type == type && err->cmd == cmd) {
-+			sdev_printk(KERN_INFO, sdev, "Remove %d 0x%x\n",
-+				err->type, err->cmd);
-+			list_del(&err->list);
-+			kfree(err);
-+			kfree(buf);
-+			return count;
++	list_for_each_entry(err, &devip->inject_err_list, list) {
++		if (err->type == ERR_FAIL_QUEUE_CMD &&
++		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
++			ret = err->cnt ? err->queuecmd_ret : 0;
++			if (err->cnt < 0)
++				err->cnt++;
++			return ret;
 +		}
 +	}
 +
-+	kfree(buf);
-+	return -EINVAL;
++	return 0;
 +}
 +
- static int sdebug_error_show(struct seq_file *m, void *p)
+ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 				   struct scsi_cmnd *scp)
  {
- 	struct scsi_device *sdev = (struct scsi_device *)m->private;
-@@ -975,6 +1002,9 @@ static ssize_t sdebug_error_write(struct file *file, const char __user *ubuf,
- 		return -EFAULT;
+@@ -7758,6 +7782,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 	u8 opcode = cmd[0];
+ 	bool has_wlun_rl;
+ 	bool inject_now;
++	int ret = 0;
+ 
+ 	scsi_set_resid(scp, 0);
+ 	if (sdebug_statistics) {
+@@ -7803,6 +7828,13 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		return 0;
  	}
  
-+	if (buf[0] == '-')
-+		return sdebug_err_remove(sdev, buf, count);
++	ret = sdebug_fail_queue_cmd(scp);
++	if (ret) {
++		scmd_printk(KERN_INFO, scp, "fail queue command 0x%x with 0x%x\n",
++				opcode, ret);
++		return ret;
++	}
 +
- 	if (sscanf(buf, "%d", &inject_type) != 1) {
- 		kfree(buf);
- 		return -EINVAL;
+ 	if (unlikely(inject_now && !atomic_read(&sdeb_inject_pending)))
+ 		atomic_set(&sdeb_inject_pending, 1);
+ 
 -- 
 2.35.3
 
