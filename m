@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 974BAC001DF
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 10:23:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1705CC41513
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 10:23:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230048AbjGWKXk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Jul 2023 06:23:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50650 "EHLO
+        id S230060AbjGWKXl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Jul 2023 06:23:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230144AbjGWKXZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 06:23:25 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2809E6;
-        Sun, 23 Jul 2023 03:22:57 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4R7zqd2DXkzrRfn;
-        Sun, 23 Jul 2023 18:22:05 +0800 (CST)
+        with ESMTP id S230151AbjGWKX0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 06:23:26 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 370B41708;
+        Sun, 23 Jul 2023 03:23:00 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.57])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4R7znj4tQZzHqZd;
+        Sun, 23 Jul 2023 18:20:25 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Sun, 23 Jul 2023 18:22:54 +0800
+ 15.1.2507.27; Sun, 23 Jul 2023 18:22:56 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -28,10 +28,12 @@ To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <linux-kernel@vger.kernel.org>
 CC:     Dan Carpenter <error27@gmail.com>, <louhongxiang@huawei.com>,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH 00/13] scsi: Support LUN/target based error handle
-Date:   Mon, 24 Jul 2023 07:44:09 +0800
-Message-ID: <20230723234422.1629194-1-haowenchao2@huawei.com>
+Subject: [PATCH 04/13] scsi:scsi_error: Add helper scsi_eh_sdev_stu to do START_UNIT
+Date:   Mon, 24 Jul 2023 07:44:13 +0800
+Message-ID: <20230723234422.1629194-5-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20230723234422.1629194-1-haowenchao2@huawei.com>
+References: <20230723234422.1629194-1-haowenchao2@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -43,60 +45,92 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The origin error handle would set host to recovery state and perform
-error recovery operations, and makes all LUNs which share a same host
-can not handle IOs. This phenomenon is unbearable for systems which
-deploy many LUNs in one HBA.
+Add helper function scsi_eh_sdev_stu() to perform START_UNIT and check
+if to finish some error commands.
 
-This patchset introduce support for LUN/target based error handle,
-drivers can chose if to implement it. They can implement LUN, target or
-both of LUN and target based error handle by their own error handle
-strategy. The first patch defined this framework, it abstract three
-key operations which are: add error command, wake up error handle, block
-ios when error command is added and recoverying. Drivers should
-implement these three function callbacks and setup to SCSI middle level.
+This is preparation for a genernal LUN/target based error handle
+strategy and did not change original logic.
 
-Besides the basic framework, this patchset also add a basic LUN/target
-based error handle strategy.
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+---
+ drivers/scsi/scsi_error.c | 50 +++++++++++++++++++++++----------------
+ 1 file changed, 29 insertions(+), 21 deletions(-)
 
-For LUN based eh, it would try check sense, start unit and reset LUN,
-if all above steps can not recovery all error commands, fallback to
-further recovery like tartget based (if implemented) or host based error
-handle.
-
-It's same for tartget based eh, it would try check sense, start unit,
-reset LUN and reset target. If all above steps can not recovery all error
-commands, fallback to further recovery which is host based error handle.
-
-This patchset is tested by scsi_debug which support single LUN error
-injection, the scsi_debug patches is here:
-
-https://lore.kernel.org/linux-scsi/20230723234105.1628982-1-haowenchao2@huawei.com/T/#t
-
-Wenchao Hao (13):
-  scsi: Define basic framework for driver LUN/target based error handle
-  scsi:scsi_error: Move complete variable eh_action from shost to sdevice
-  scsi:scsi_error: Check if to do reset in scsi_try_xxx_reset
-  scsi:scsi_error: Add helper scsi_eh_sdev_stu to do START_UNIT
-  scsi:scsi_error: Add helper scsi_eh_sdev_reset to do lun reset
-  scsi:scsi_error: Add flags to mark error handle steps has done
-  scsi:scsi_error: Define helper to perform LUN based error handle
-  scsi:scsi_error: Add LUN based error handler based previous helper
-  scsi:core: increase/decrease target_busy without check can_queue
-  scsi:scsi_error: Define helper to perform target based error handle
-  scsi:scsi_error: Add target based error handler based previous helper
-  scsi:scsi_debug: Add param to control if setup LUN based error handle
-  scsi:scsi_debug: Add param to control if setup target based error handle
-
- drivers/scsi/scsi_debug.c  |  19 +
- drivers/scsi/scsi_error.c  | 705 ++++++++++++++++++++++++++++++++++---
- drivers/scsi/scsi_lib.c    |  23 +-
- drivers/scsi/scsi_priv.h   |  20 ++
- include/scsi/scsi_device.h |  97 +++++
- include/scsi/scsi_eh.h     |   4 +
- include/scsi/scsi_host.h   |   2 -
- 7 files changed, 813 insertions(+), 57 deletions(-)
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d80492366527..b7842d927af3 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1549,6 +1549,31 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
+ 	return 1;
+ }
+ 
++static int scsi_eh_sdev_stu(struct scsi_cmnd *scmd,
++			      struct list_head *work_q,
++			      struct list_head *done_q)
++{
++	struct scsi_device *sdev = scmd->device;
++	struct scsi_cmnd *next;
++
++	SCSI_LOG_ERROR_RECOVERY(3, sdev_printk(KERN_INFO, sdev,
++				"%s: Sending START_UNIT\n", current->comm));
++
++	if (scsi_eh_try_stu(scmd)) {
++		SCSI_LOG_ERROR_RECOVERY(3, sdev_printk(KERN_INFO, sdev,
++				    "%s: START_UNIT failed\n", current->comm));
++		return 0;
++	}
++
++	if (!scsi_device_online(sdev) || !scsi_eh_tur(scmd))
++		list_for_each_entry_safe(scmd, next, work_q, eh_entry)
++			if (scmd->device == sdev &&
++			    scsi_eh_action(scmd, SUCCESS) == SUCCESS)
++				scsi_eh_finish_cmd(scmd, done_q);
++
++	return list_empty(work_q);
++}
++
+  /**
+  * scsi_eh_stu - send START_UNIT if needed
+  * @shost:	&scsi host being recovered.
+@@ -1563,7 +1588,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			      struct list_head *work_q,
+ 			      struct list_head *done_q)
+ {
+-	struct scsi_cmnd *scmd, *stu_scmd, *next;
++	struct scsi_cmnd *scmd, *stu_scmd;
+ 	struct scsi_device *sdev;
+ 
+ 	shost_for_each_device(sdev, shost) {
+@@ -1586,26 +1611,9 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 		if (!stu_scmd)
+ 			continue;
+ 
+-		SCSI_LOG_ERROR_RECOVERY(3,
+-			sdev_printk(KERN_INFO, sdev,
+-				     "%s: Sending START_UNIT\n",
+-				    current->comm));
+-
+-		if (!scsi_eh_try_stu(stu_scmd)) {
+-			if (!scsi_device_online(sdev) ||
+-			    !scsi_eh_tur(stu_scmd)) {
+-				list_for_each_entry_safe(scmd, next,
+-							  work_q, eh_entry) {
+-					if (scmd->device == sdev &&
+-					    scsi_eh_action(scmd, SUCCESS) == SUCCESS)
+-						scsi_eh_finish_cmd(scmd, done_q);
+-				}
+-			}
+-		} else {
+-			SCSI_LOG_ERROR_RECOVERY(3,
+-				sdev_printk(KERN_INFO, sdev,
+-					    "%s: START_UNIT failed\n",
+-					    current->comm));
++		if (scsi_eh_sdev_stu(stu_scmd, work_q, done_q)) {
++			scsi_device_put(sdev);
++			break;
+ 		}
+ 	}
+ 
 -- 
 2.35.3
 
