@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0E94C001DF
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 10:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71970C001DC
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 10:20:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230015AbjGWKUT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Jul 2023 06:20:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49500 "EHLO
+        id S229881AbjGWKUV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Jul 2023 06:20:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229976AbjGWKT7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 06:19:59 -0400
+        with ESMTP id S229983AbjGWKUA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 06:20:00 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 207C4E52;
-        Sun, 23 Jul 2023 03:19:58 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4R7zjS6C43ztR4c;
-        Sun, 23 Jul 2023 18:16:44 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21F24E76;
+        Sun, 23 Jul 2023 03:19:59 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4R7zjV1KrFztR79;
+        Sun, 23 Jul 2023 18:16:46 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Sun, 23 Jul 2023 18:19:55 +0800
+ 15.1.2507.27; Sun, 23 Jul 2023 18:19:56 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -28,9 +28,9 @@ To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 CC:     Dan Carpenter <error27@gmail.com>, <louhongxiang@huawei.com>,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v3 7/9] scsi:scsi_debug: Add new error injection abort failed
-Date:   Mon, 24 Jul 2023 07:41:03 +0800
-Message-ID: <20230723234105.1628982-8-haowenchao2@huawei.com>
+Subject: [PATCH v3 9/9] scsi:scsi_debug: Add debugfs interface to fail target reset
+Date:   Mon, 24 Jul 2023 07:41:05 +0800
+Message-ID: <20230723234105.1628982-10-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20230723234105.1628982-1-haowenchao2@huawei.com>
 References: <20230723234105.1628982-1-haowenchao2@huawei.com>
@@ -45,104 +45,140 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add error injection type 3 to make scsi_debug_abort() return FAILED.
-Fail abort command foramt:
-
-  +--------+------+-------------------------------------------------------+
-  | Column | Type | Description                                           |
-  +--------+------+-------------------------------------------------------+
-  |   1    |  u8  | Error type, fixed to 0x3                              |
-  +--------+------+-------------------------------------------------------+
-  |   2    |  s32 | Error count                                           |
-  |        |      |  0: this rule will be ignored                         |
-  |        |      |  positive: the rule will always take effect           |
-  |        |      |  negative: the rule takes effect n times where -n is  |
-  |        |      |            the value given. Ignored after n times     |
-  +--------+------+-------------------------------------------------------+
-  |   3    |  x8  | SCSI command opcode, 0xff for all commands            |
-  +--------+------+-------------------------------------------------------+
-
-Examples:
-    error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
-    echo "0 -10 0x12" > ${error}
-will make the device return FAILED when abort inquiry command 10 times.
+The interface is found at
+/sys/kernel/debug/scsi_debug/target<h:c:t>/fail_reset where <h:c:t>
+identifies the target to inject errors on. It's a simple bool type
+interface which would make this target's reset fail if set to 'Y'.
 
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 ---
- drivers/scsi/scsi_debug.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ drivers/scsi/scsi_debug.c | 97 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 96 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 94c43b800694..9e4ea3b38cd0 100644
+index 2c16e5f4ab28..2c5ed618f228 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -293,6 +293,8 @@ enum sdebug_err_type {
- 	ERR_FAIL_CMD		= 2,	/* make specific scsi command's */
- 					/* queuecmd return succeed but */
- 					/* with errors set in scsi_cmnd */
-+	ERR_ABORT_CMD_FAILED	= 3,	/* control return FAILED from */
-+					/* scsi_debug_abort() */
+@@ -355,6 +355,11 @@ struct sdebug_dev_info {
+ 	struct list_head inject_err_list;
  };
  
- struct sdebug_err_inject {
-@@ -958,6 +960,7 @@ static int sdebug_error_show(struct seq_file *m, void *p)
- 	list_for_each_entry(err, &devip->inject_err_list, list) {
- 		switch (err->type) {
- 		case ERR_TMOUT_CMD:
-+		case ERR_ABORT_CMD_FAILED:
- 			seq_printf(m, "%d\t%d\t0x%x\n", err->type, err->cnt,
- 				err->cmd);
- 		break;
-@@ -1018,6 +1021,7 @@ static ssize_t sdebug_error_write(struct file *file, const char __user *ubuf,
++struct sdebug_target_info {
++	bool reset_fail;
++	struct dentry *debugfs_entry;
++};
++
+ struct sdebug_host_info {
+ 	struct list_head host_list;
+ 	int si_idx;	/* sdeb_store_info (per host) xarray index */
+@@ -1069,6 +1074,75 @@ static const struct file_operations sdebug_error_fops = {
+ 	.release = single_release,
+ };
  
- 	switch (inject_type) {
- 	case ERR_TMOUT_CMD:
-+	case ERR_ABORT_CMD_FAILED:
- 		if (sscanf(buf, "%d %d %hhx", &inject->type, &inject->cnt,
- 			   &inject->cmd) != 3)
- 			goto out_error;
-@@ -5488,9 +5492,35 @@ static void stop_all_queued(void)
- 	mutex_unlock(&sdebug_host_list_mutex);
- }
- 
-+static int sdebug_fail_abort(struct scsi_cmnd *cmnd)
++static int sdebug_target_reset_fail_show(struct seq_file *m, void *p)
 +{
-+	struct scsi_device *sdp = cmnd->device;
-+	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
-+	struct sdebug_err_inject *err;
-+	unsigned char *cmd = cmnd->cmnd;
-+	int ret = 0;
++	struct scsi_target *starget = (struct scsi_target *)m->private;
++	struct sdebug_target_info *targetip =
++		(struct sdebug_target_info *)starget->hostdata;
 +
-+	if (devip == NULL)
-+		return 0;
-+
-+	list_for_each_entry(err, &devip->inject_err_list, list) {
-+		if (err->type == ERR_ABORT_CMD_FAILED &&
-+		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
-+			ret = !!err->cnt;
-+			if (err->cnt < 0)
-+				err->cnt++;
-+			return ret;
-+		}
-+	}
++	if (targetip)
++		seq_printf(m, "%c\n", targetip->reset_fail ? 'Y' : 'N');
 +
 +	return 0;
 +}
 +
- static int scsi_debug_abort(struct scsi_cmnd *SCpnt)
++static int sdebug_target_reset_fail_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, sdebug_target_reset_fail_show, inode->i_private);
++}
++
++static ssize_t sdebug_target_reset_fail_write(struct file *file,
++		const char __user *ubuf, size_t count, loff_t *ppos)
++{
++	int ret;
++	struct scsi_target *starget =
++		(struct scsi_target *)file->f_inode->i_private;
++	struct sdebug_target_info *targetip =
++		(struct sdebug_target_info *)starget->hostdata;
++
++	if (targetip) {
++		ret = kstrtobool_from_user(ubuf, count, &targetip->reset_fail);
++		return ret < 0 ? ret : count;
++	}
++	return -ENODEV;
++}
++
++static const struct file_operations sdebug_target_reset_fail_fops = {
++	.open	= sdebug_target_reset_fail_open,
++	.read	= seq_read,
++	.write	= sdebug_target_reset_fail_write,
++	.release = single_release,
++};
++
++static int sdebug_target_alloc(struct scsi_target *starget)
++{
++	struct sdebug_target_info *targetip;
++
++	targetip = kzalloc(sizeof(struct sdebug_target_info), GFP_KERNEL);
++	if (!targetip)
++		return -ENOMEM;
++
++	targetip->debugfs_entry = debugfs_create_dir(dev_name(&starget->dev),
++				sdebug_debugfs_root);
++	debugfs_create_file("fail_reset", 0600, targetip->debugfs_entry, starget,
++				&sdebug_target_reset_fail_fops);
++
++	starget->hostdata = targetip;
++
++	return 0;
++}
++
++static void sdebug_target_destroy(struct scsi_target *starget)
++{
++	struct sdebug_target_info *targetip;
++
++	targetip = (struct sdebug_target_info *)starget->hostdata;
++	if (targetip) {
++		debugfs_remove(targetip->debugfs_entry);
++		kfree(targetip);
++	}
++}
++
+ /* Only do the extra work involved in logical block provisioning if one or
+  * more of the lbpu, lbpws or lbpws10 parameters are given and we are doing
+  * real reads and writes (i.e. not skipping them for speed).
+@@ -5610,11 +5684,25 @@ static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
+ 	return SUCCESS;
+ }
+ 
++static int sdebug_fail_target_reset(struct scsi_cmnd *cmnd)
++{
++	struct scsi_target *starget = scsi_target(cmnd->device);
++	struct sdebug_target_info *targetip =
++		(struct sdebug_target_info *)starget->hostdata;
++
++	if (targetip)
++		return targetip->reset_fail;
++
++	return 0;
++}
++
+ static int scsi_debug_target_reset(struct scsi_cmnd *SCpnt)
  {
- 	bool ok = scsi_debug_abort_cmnd(SCpnt);
+ 	struct scsi_device *sdp = SCpnt->device;
+ 	struct sdebug_host_info *sdbg_host = shost_to_sdebug_host(sdp->host);
+ 	struct sdebug_dev_info *devip;
 +	u8 *cmd = SCpnt->cmnd;
 +	u8 opcode = cmd[0];
+ 	int k = 0;
  
- 	++num_aborts;
+ 	++num_target_resets;
+@@ -5632,6 +5720,12 @@ static int scsi_debug_target_reset(struct scsi_cmnd *SCpnt)
+ 		sdev_printk(KERN_INFO, sdp,
+ 			    "%s: %d device(s) found in target\n", __func__, k);
  
-@@ -5499,6 +5529,12 @@ static int scsi_debug_abort(struct scsi_cmnd *SCpnt)
- 			    "%s: command%s found\n", __func__,
- 			    ok ? "" : " not");
- 
-+	if (sdebug_fail_abort(SCpnt)) {
-+		scmd_printk(KERN_INFO, SCpnt, "fail abort command 0x%x\n",
++	if (sdebug_fail_target_reset(SCpnt)) {
++		scmd_printk(KERN_INFO, SCpnt, "fail target reset 0x%x\n",
 +			    opcode);
 +		return FAILED;
 +	}
@@ -150,6 +186,23 @@ index 94c43b800694..9e4ea3b38cd0 100644
  	return SUCCESS;
  }
  
+@@ -8070,7 +8164,6 @@ static int sdebug_init_cmd_priv(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ 	return 0;
+ }
+ 
+-
+ static struct scsi_host_template sdebug_driver_template = {
+ 	.show_info =		scsi_debug_show_info,
+ 	.write_info =		scsi_debug_write_info,
+@@ -8100,6 +8193,8 @@ static struct scsi_host_template sdebug_driver_template = {
+ 	.track_queue_depth =	1,
+ 	.cmd_size = sizeof(struct sdebug_scsi_cmd),
+ 	.init_cmd_priv = sdebug_init_cmd_priv,
++	.target_alloc =		sdebug_target_alloc,
++	.target_destroy =	sdebug_target_destroy,
+ };
+ 
+ static int sdebug_driver_probe(struct device *dev)
 -- 
 2.35.3
 
