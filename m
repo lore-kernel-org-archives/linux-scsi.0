@@ -2,112 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75721C001DC
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 08:01:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBEE7C001DE
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jul 2023 10:19:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229644AbjGWIBK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Jul 2023 04:01:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50574 "EHLO
+        id S229768AbjGWKT4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Jul 2023 06:19:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbjGWIBJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 04:01:09 -0400
-Received: from zg8tndyumtaxlji0oc4xnzya.icoremail.net (zg8tndyumtaxlji0oc4xnzya.icoremail.net [46.101.248.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9FCFEB1;
-        Sun, 23 Jul 2023 01:01:07 -0700 (PDT)
-Received: from localhost.localdomain (unknown [39.174.92.167])
-        by mail-app3 (Coremail) with SMTP id cC_KCgD3qJ043rxkZHd_Cw--.45492S4;
-        Sun, 23 Jul 2023 16:00:57 +0800 (CST)
-From:   Lin Ma <linma@zju.edu.cn>
-To:     njavali@marvell.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Lin Ma <linma@zju.edu.cn>
-Subject: [PATCH v1] scsi: qla4xxx: Add length check when paring nlattrs
-Date:   Sun, 23 Jul 2023 16:00:53 +0800
-Message-Id: <20230723080053.3714534-1-linma@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cC_KCgD3qJ043rxkZHd_Cw--.45492S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZF1rAF1UCw4DAr48uFW3Jrb_yoW8tr1Dpa
-        yvga4Ykw4qkw1fAr17Ar48ZwsYkw1xtFWDG3Waq348A3ZxXFWfuFy7GFySvryDAws5Ar1a
-        qrs5tFyFgr9rXFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkm14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_JF0_Jw1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK6r43
-        MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
-        0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0E
-        wIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJV
-        W8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF
-        0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfU50PfDUUUU
-X-CM-SenderInfo: qtrwiiyqvtljo62m3hxhgxhubq/
+        with ESMTP id S229677AbjGWKTz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jul 2023 06:19:55 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 386C9E6;
+        Sun, 23 Jul 2023 03:19:54 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.55])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4R7zm704KZz18Lbg;
+        Sun, 23 Jul 2023 18:19:02 +0800 (CST)
+Received: from build.huawei.com (10.175.101.6) by
+ kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Sun, 23 Jul 2023 18:19:51 +0800
+From:   Wenchao Hao <haowenchao2@huawei.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Dan Carpenter <error27@gmail.com>, <louhongxiang@huawei.com>,
+        Wenchao Hao <haowenchao2@huawei.com>
+Subject: [PATCH v3 1/9] scsi:scsi_debug: create scsi_debug directory in the debugfs filesystem
+Date:   Mon, 24 Jul 2023 07:40:57 +0800
+Message-ID: <20230723234105.1628982-2-haowenchao2@huawei.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20230723234105.1628982-1-haowenchao2@huawei.com>
+References: <20230723234105.1628982-1-haowenchao2@huawei.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemm600012.china.huawei.com (7.193.23.74)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are three places that qla4xxx looply parses nlattrs
-* qla4xxx_set_chap_entry(...)
-* qla4xxx_iface_set_param(...)
-* qla4xxx_sysfs_ddb_set_param(...)
-and each of them directly converts the nlattr to specific pointer of
-structure without length checking. This could be dangerous as those
-attributes are not validated before and a malformed nlattr (e.g., length
-0) could result in an OOB read that leaks heap dirty data.
+Create directory scsi_debug in the root of the debugfs filesystem.
+Prepare to add interface for manage error injection.
 
-This patch adds the nla_len check before accessing the nlattr data and
-error return EINVAL if the length check fails.
-
-Fixes: 26ffd7b45fe9 ("[SCSI] qla4xxx: Add support to set CHAP entries")
-Fixes: 1e9e2be3ee03 ("[SCSI] qla4xxx: Add flash node mgmt support")
-Fixes: 00c31889f751 ("[SCSI] qla4xxx: fix data alignment and use nl helpers")
-Signed-off-by: Lin Ma <linma@zju.edu.cn>
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/scsi/scsi_debug.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index b2a3988e1e15..675332e49a7b 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -968,6 +968,11 @@ static int qla4xxx_set_chap_entry(struct Scsi_Host *shost, void *data, int len)
- 	memset(&chap_rec, 0, sizeof(chap_rec));
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 9c0af50501f9..35c336271b13 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -41,6 +41,7 @@
+ #include <linux/random.h>
+ #include <linux/xarray.h>
+ #include <linux/prefetch.h>
++#include <linux/debugfs.h>
  
- 	nla_for_each_attr(attr, data, len, rem) {
-+		if (nla_len(attr) < sizeof(*param_info)) {
-+			rc = -EINVAL;
-+			goto exit_set_chap;
-+		}
+ #include <net/checksum.h>
+ 
+@@ -862,6 +863,8 @@ static const int device_qfull_result =
+ 
+ static const int condition_met_result = SAM_STAT_CONDITION_MET;
+ 
++static struct dentry *sdebug_debugfs_root;
 +
- 		param_info = nla_data(attr);
  
- 		switch (param_info->param) {
-@@ -2750,6 +2755,11 @@ qla4xxx_iface_set_param(struct Scsi_Host *shost, void *data, uint32_t len)
+ /* Only do the extra work involved in logical block provisioning if one or
+  * more of the lbpu, lbpws or lbpws10 parameters are given and we are doing
+@@ -7011,6 +7014,8 @@ static int __init scsi_debug_init(void)
+ 		goto driver_unreg;
  	}
  
- 	nla_for_each_attr(attr, data, len, rem) {
-+		if (nla_len(attr) < sizeof(*iface_param)) {
-+			rval = -EINVAL;
-+			goto exit_init_fw_cb;
-+		}
++	sdebug_debugfs_root = debugfs_create_dir("scsi_debug", NULL);
 +
- 		iface_param = nla_data(attr);
+ 	for (k = 0; k < hosts_to_add; k++) {
+ 		if (want_store && k == 0) {
+ 			ret = sdebug_add_host_helper(idx);
+@@ -7057,6 +7062,7 @@ static void __exit scsi_debug_exit(void)
  
- 		if (iface_param->param_type == ISCSI_NET_PARAM) {
-@@ -8104,6 +8114,11 @@ qla4xxx_sysfs_ddb_set_param(struct iscsi_bus_flash_session *fnode_sess,
+ 	sdebug_erase_all_stores(false);
+ 	xa_destroy(per_store_ap);
++	debugfs_remove(sdebug_debugfs_root);
+ }
  
- 	memset((void *)&chap_tbl, 0, sizeof(chap_tbl));
- 	nla_for_each_attr(attr, data, len, rem) {
-+		if (nla_len(attr) < sizeof(*fnode_param)) {
-+			rc = -EINVAL;
-+			goto exit_set_param;
-+		}
-+
- 		fnode_param = nla_data(attr);
- 
- 		switch (fnode_param->param) {
+ device_initcall(scsi_debug_init);
 -- 
-2.17.1
+2.35.3
 
