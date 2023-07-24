@@ -2,44 +2,97 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FEB9C0015E
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 09:44:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C833C0015E
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 12:03:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231484AbjGXJoF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 05:44:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45346 "EHLO
+        id S229840AbjGXMDa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 08:03:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229538AbjGXJoD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 05:44:03 -0400
-X-Greylist: delayed 862 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 24 Jul 2023 02:44:02 PDT
-Received: from fluorez-com.cfd (fluorez-com.cfd [107.174.244.118])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B73D41A1
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 02:44:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=re1; d=fluorez-com.cfd;
- h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:
- Content-Transfer-Encoding; i=info@fluorez-com.cfd;
- bh=LqAKS0rQcqRhfS2AomqosmxOtHjI8TSd2DPxtKmN8Fo=;
- b=TL1Y6EwxotfS7Jq0B4fjo5xDZNOkxCl459j/1SToEyX4qma+FRWWXP7wQIXIFQGz2yr2kjTxnKLL
-   8VnEyf82V0yuzF7E7hLi4pRHkxgST3A9J8WehM9sQCYTPqStwFmlUgp+rwOxnHJoykpkyUVrKArl
-   L2bC7deAOU80YTDZtGib1z/wvkDtAiTlzMsDt12xpKYvExsB1CwBRpWOT1cXWzzfGg2BYc3gNLQb
-   xGcLfMjXjtTHVPfYFi5aW5NXo7ziI+mekaiQZu9njPi1K09Mf/ViMwKJn2SItDnOIPnFcEK9aTkA
-   1QYVljirEA7Fk0EKAS1/ytGpoETLk0ifq/3VFw==
-Reply-To: info@coinloansupport.online
-From:   Coinloan Support Center <info@fluorez-com.cfd>
-To:     linux-scsi@vger.kernel.org
-Subject: Low Interest loan opportunity
-Date:   24 Jul 2023 10:47:13 +0200
-Message-ID: <20230724104713.50A463B70D7C6781@fluorez-com.cfd>
+        with ESMTP id S229486AbjGXMDa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 08:03:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF63512D
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 05:02:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1690200166;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=0cvYxFz9mjJySSTDejKAHRAi+MgA/colULiqidjHAEA=;
+        b=H16el6YC2XqGawI14ZK3EAIlivs/N38JQX3VotUJ1xS3hE2cFtiBVFkQQS3CrX+VB0BBnO
+        KRvtYmtkiBF7/iAar0oTveTduS5VCGqFs4yEPm6BUQesmojOOKKL7yiEccjMcjuFm+TVyQ
+        +Giv3o0VA6XrfuBEflx5Q7AuiujLm9w=
+Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-417-H6QFWb5UMv-cTsPAhWVuzg-1; Mon, 24 Jul 2023 08:02:42 -0400
+X-MC-Unique: H6QFWb5UMv-cTsPAhWVuzg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 20BED1C172A5;
+        Mon, 24 Jul 2023 12:02:42 +0000 (UTC)
+Received: from localhost (dhcp-10-40-5-80.brq.redhat.com [10.40.5.80])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C5325201EE6E;
+        Mon, 24 Jul 2023 12:02:41 +0000 (UTC)
+From:   Oleksandr Natalenko <oleksandr@redhat.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
+        Javed Hasan <jhasan@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jozef Bacik <jobacik@redhat.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        Rob Evers <revers@redhat.com>
+Subject: [RFC PATCH 0/3] scsi: qedf: sanitise uaccess
+Date:   Mon, 24 Jul 2023 14:02:38 +0200
+Message-ID: <20230724120241.40495-1-oleksandr@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Are you looking for a loan to either increase your activity or to=20
-carry out a project.=20
-We offer Crypto Loans at 2-7% interest rate with or without a=20
-credit check.
-Please get back to us if you are interested in more details.
+qedf driver, debugfs part of it specifically, touches __user pointers
+directly for printing out info to userspace via sprintf(), which may
+cause crash like this:
+
+BUG: unable to handle kernel paging request at 00007ffd1d6b43a0
+IP: [<ffffffffaa7a882a>] string.isra.7+0x6a/0xf0
+Oops: 0003 [#1] SMP
+Call Trace:
+ [<ffffffffaa7a9f31>] vsnprintf+0x201/0x6a0
+ [<ffffffffaa7aa556>] sprintf+0x56/0x80
+ [<ffffffffc04227ed>] qedf_dbg_stop_io_on_error_cmd_read+0x6d/0x90 [qedf]
+ [<ffffffffaa65bb2f>] vfs_read+0x9f/0x170
+ [<ffffffffaa65cb82>] SyS_pread64+0x92/0xc0
+
+Avoid this by preparing the info in a kernel buffer first, either
+allocated on stack for small printouts, or via vmalloc() for big ones,
+and then copying it to the userspace properly.
+
+I'm not sure how big the vmalloc()'ed buffer should be, and also whether
+vmalloc()'ing it directly in the _read() function is a good idea, hence
+RFC prefix.
+
+The qedf_dbg_stop_io_on_error_cmd_read()-related patch is actually tested,
+the rest is compile-tested only.
+
+Oleksandr Natalenko (3):
+  scsi: qedf: do not touch __user pointer in
+    qedf_dbg_stop_io_on_error_cmd_read() directly
+  scsi: qedf: do not touch __user pointer in qedf_dbg_debug_cmd_read()
+    directly
+  scsi: qedf: do not touch __user pointer in qedf_dbg_fp_int_cmd_read()
+    directly
+
+ drivers/scsi/qedf/qedf_dbg.h     |  2 ++
+ drivers/scsi/qedf/qedf_debugfs.c | 35 +++++++++++++++++++-------------
+ 2 files changed, 23 insertions(+), 14 deletions(-)
+
+--
+2.41.0
+
