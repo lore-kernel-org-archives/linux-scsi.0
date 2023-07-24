@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F158C41513
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5602CC04A94
 	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 17:47:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231866AbjGXRrH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 13:47:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45074 "EHLO
+        id S231855AbjGXRrG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 13:47:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229759AbjGXRqB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 13:46:01 -0400
+        with ESMTP id S231387AbjGXRqA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 13:46:00 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC4B626B8;
-        Mon, 24 Jul 2023 10:44:31 -0700 (PDT)
-Message-ID: <20230724172845.093176653@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A521D26AF;
+        Mon, 24 Jul 2023 10:44:29 -0700 (PDT)
+Message-ID: <20230724172844.980468082@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1690220669;
+        s=2020; t=1690220665;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=v1jagm3qezJbhLi1KwbMq1PXX83lXTZZ+4TGqrP0z90=;
-        b=OkHXybNQQevV6glW3A2Mf6eoeYhUxke0k0HD+rpOPjuVGZ6TnXuObV/WYGTB64PHH2z3ea
-        HKFaPqZYT853uTM64gPVidE0jWdQ4rQuVCJKKalORZrp9hHAYwlhHTj+iBbaqiBEhh6SXd
-        ArO94NdNMJ0a51RGjo1LXON+xvjiOrqRuLw2sgYS+c3btuMJ3EYIg1YK+Z9BecLZPgCv+3
-        FF+blwmBHA96byoG9OJ4DhB0YaHiA4xKnwwjFJOYNT9oQJ8PWlXdNCzshp6MzEIr9uWSiD
-        Hit5O2GsziwCczYaPPleJ7HzSPxFiais1FI+8wBBR+8cmp0oAI7OPuJuQmgtnQ==
+         references:references; bh=yNNNqA4YmsDMwHMpycsoN40Z1ogmgffhWH84zvaD3i8=;
+        b=BIh6o9Fo6LPLudgTbDtkgDOQ5WM/3PNW7Ie30ANyoH0vtO5lVrGWYtdIOLy30btLSUfJVK
+        meJqrxiopuldVWPuDS8BzRe9y1tnjv7gVlm1mk7hR8bV5DhRFyCk1T8VO+fPeWpMitKBYb
+        /03yhcP6RiPzqcrHTu4ByxAF1nbJcBBYhU30xi27mhejDGXmvUSWPp06mLtuHgMlGpS/i4
+        h533Chfpwi6ET7i9tccRHVApWXQy270J6Mzd+i85KixuaoiDtU0XWkmExeChGDEPhow2El
+        93dcZceFMdO++iQgWu20ofrUeo7aHmAYf/UHz8YgGDOCraEJ792CC3FNJyWZ4Q==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1690220669;
+        s=2020e; t=1690220665;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=v1jagm3qezJbhLi1KwbMq1PXX83lXTZZ+4TGqrP0z90=;
-        b=fZcd3cXW+uJASR5ZGQiUcmQm8+REqm2w/l2vqi5pQrVP+FlvnSet/BUrcyOfC1rL0YC633
-        fCiPh7LmDSwkmECg==
+         references:references; bh=yNNNqA4YmsDMwHMpycsoN40Z1ogmgffhWH84zvaD3i8=;
+        b=BZe1zyHdJu+3YrRiEsU0D34HTra+VD5ubsPCEqSAeCCDk2tK3cbUDLMX+/H4D4e1zjDRk/
+        8rbe+kBUdcZgN8BQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
@@ -49,83 +49,291 @@ Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
         Mike Travis <mike.travis@hpe.com>,
         Dimitri Sivanich <dimitri.sivanich@hpe.com>,
         Russ Anderson <russ.anderson@hpe.com>
-Subject: [patch 24/29] x86/mm/numa: Use core domain size on AMD
+Subject: [patch 22/29] x86/cpu: Use common topology code for AMD
 References: <20230724155329.474037902@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 24 Jul 2023 19:44:28 +0200 (CEST)
+Date:   Mon, 24 Jul 2023 19:44:25 +0200 (CEST)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-cpuinfo::topo::x86_coreid_bits is about to be phased out. Use the core
-domain size from the topology information.
+Switch it over to the new topology evaluation mechanism and remove the
+random bits and pieces which are sprinkled all over the place.
 
-Add a comment why the early MPTABLE parsing is required and decrapify the
-loop which sets the APIC ID to node map.
+No functional change intended.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/x86/mm/amdtopology.c |   35 ++++++++++++++++-------------------
- 1 file changed, 16 insertions(+), 19 deletions(-)
+ arch/x86/include/asm/processor.h      |    2 
+ arch/x86/include/asm/topology.h       |    5 +
+ arch/x86/kernel/cpu/amd.c             |  146 ----------------------------------
+ arch/x86/kernel/cpu/mce/inject.c      |    3 
+ arch/x86/kernel/cpu/topology_common.c |    5 -
+ 5 files changed, 10 insertions(+), 151 deletions(-)
 
---- a/arch/x86/mm/amdtopology.c
-+++ b/arch/x86/mm/amdtopology.c
-@@ -54,13 +54,11 @@ static __init int find_northbridge(void)
+--- a/arch/x86/include/asm/processor.h
++++ b/arch/x86/include/asm/processor.h
+@@ -703,10 +703,8 @@ static inline u16 per_cpu_l2c_id(unsigne
+ }
  
- int __init amd_numa_init(void)
- {
--	u64 start = PFN_PHYS(0);
-+	unsigned int numnodes, cores, apicid;
-+	u64 prevbase, start = PFN_PHYS(0);
- 	u64 end = PFN_PHYS(max_pfn);
--	unsigned numnodes;
--	u64 prevbase;
--	int i, j, nb;
- 	u32 nodeid, reg;
--	unsigned int bits, cores, apicid_base;
-+	int i, j, nb;
+ #ifdef CONFIG_CPU_SUP_AMD
+-extern u32 amd_get_nodes_per_socket(void);
+ extern u32 amd_get_highest_perf(void);
+ #else
+-static inline u32 amd_get_nodes_per_socket(void)	{ return 0; }
+ static inline u32 amd_get_highest_perf(void)		{ return 0; }
+ #endif
  
- 	if (!early_pci_allowed())
- 		return -EINVAL;
-@@ -158,26 +156,25 @@ int __init amd_numa_init(void)
- 		return -ENOENT;
+--- a/arch/x86/include/asm/topology.h
++++ b/arch/x86/include/asm/topology.h
+@@ -121,6 +121,11 @@ struct x86_topology_system {
  
- 	/*
--	 * We seem to have valid NUMA configuration.  Map apicids to nodes
--	 * using the coreid bits from early_identify_cpu.
-+	 * We seem to have valid NUMA configuration. Map apicids to nodes
-+	 * using the size of the core domain in the APIC space.
- 	 */
--	bits = boot_cpu_data.x86_coreid_bits;
--	cores = 1 << bits;
--	apicid_base = 0;
-+	cores = topology_get_domain_size(TOPO_CORE_DOMAIN);
+ extern struct x86_topology_system x86_topo_system;
  
- 	/*
--	 * get boot-time SMP configuration:
-+	 * Scan MPTABLE to map the local APIC and ensure that the boot CPU
-+	 * APIC ID is valid. This is required because on pre ACPI/SRAT
-+	 * systems IO-APICs are mapped before the boot CPU.
- 	 */
- 	early_get_smp_config();
- 
--	if (boot_cpu_physical_apicid > 0) {
--		pr_info("BSP APIC ID: %02x\n", boot_cpu_physical_apicid);
--		apicid_base = boot_cpu_physical_apicid;
-+	apicid = boot_cpu_physical_apicid;
-+	if (apicid > 0)
-+		pr_info("BSP APIC ID: %02x\n", apicid);
++static inline unsigned int topology_get_domain_size(enum x86_topology_domains dom)
++{
++	return x86_topo_system.dom_size[dom];
++}
 +
-+	for_each_node_mask(i, numa_nodes_parsed) {
-+		for (j = 0; j < cores; j++, apicid++)
-+			set_apicid_to_node(apicid, i);
+ extern const struct cpumask *cpu_coregroup_mask(int cpu);
+ extern const struct cpumask *cpu_clustergroup_mask(int cpu);
+ 
+--- a/arch/x86/kernel/cpu/amd.c
++++ b/arch/x86/kernel/cpu/amd.c
+@@ -32,13 +32,6 @@ static const int amd_erratum_400[];
+ static const int amd_erratum_1054[];
+ static bool cpu_has_amd_erratum(struct cpuinfo_x86 *cpu, const int *erratum);
+ 
+-/*
+- * nodes_per_socket: Stores the number of nodes per socket.
+- * Refer to Fam15h Models 00-0fh BKDG - CPUID Fn8000_001E_ECX
+- * Node Identifiers[10:8]
+- */
+-static u32 nodes_per_socket = 1;
+-
+ static inline int rdmsrl_amd_safe(unsigned msr, unsigned long long *p)
+ {
+ 	u32 gprs[8] = { 0 };
+@@ -305,97 +298,6 @@ static int nearby_node(int apicid)
+ }
+ #endif
+ 
+-/*
+- * Fix up topo::core_id for pre-F17h systems to be in the
+- * [0 .. cores_per_node - 1] range. Not really needed but
+- * kept so as not to break existing setups.
+- */
+-static void legacy_fixup_core_id(struct cpuinfo_x86 *c)
+-{
+-	u32 cus_per_node;
+-
+-	if (c->x86 >= 0x17)
+-		return;
+-
+-	cus_per_node = c->x86_max_cores / nodes_per_socket;
+-	c->topo.core_id %= cus_per_node;
+-}
+-
+-/*
+- * Fixup core topology information for
+- * (1) AMD multi-node processors
+- *     Assumption: Number of cores in each internal node is the same.
+- * (2) AMD processors supporting compute units
+- */
+-static void amd_get_topology(struct cpuinfo_x86 *c)
+-{
+-	/* get information required for multi-node processors */
+-	if (boot_cpu_has(X86_FEATURE_TOPOEXT)) {
+-		int err;
+-		u32 eax, ebx, ecx, edx;
+-
+-		cpuid(0x8000001e, &eax, &ebx, &ecx, &edx);
+-
+-		c->topo.die_id  = ecx & 0xff;
+-
+-		if (c->x86 == 0x15)
+-			c->topo.cu_id = ebx & 0xff;
+-
+-		if (c->x86 >= 0x17) {
+-			c->topo.core_id = ebx & 0xff;
+-
+-			if (smp_num_siblings > 1)
+-				c->x86_max_cores /= smp_num_siblings;
+-		}
+-
+-		/*
+-		 * In case leaf B is available, use it to derive
+-		 * topology information.
+-		 */
+-		err = detect_extended_topology(c);
+-		if (!err)
+-			c->x86_coreid_bits = get_count_order(c->x86_max_cores);
+-
+-		cacheinfo_amd_init_llc_id(c, c->topo.die_id);
+-
+-	} else if (cpu_has(c, X86_FEATURE_NODEID_MSR)) {
+-		u64 value;
+-
+-		rdmsrl(MSR_FAM10H_NODE_ID, value);
+-		c->topo.die_id = value & 7;
+-		c->topo.llc_id = c->topo.die_id;
+-	} else
+-		return;
+-
+-	if (nodes_per_socket > 1) {
+-		set_cpu_cap(c, X86_FEATURE_AMD_DCM);
+-		legacy_fixup_core_id(c);
+-	}
+-}
+-
+-/*
+- * On a AMD dual core setup the lower bits of the APIC id distinguish the cores.
+- * Assumes number of cores is a power of two.
+- */
+-static void amd_detect_cmp(struct cpuinfo_x86 *c)
+-{
+-	unsigned bits;
+-
+-	bits = c->x86_coreid_bits;
+-	/* Low order bits define the core id (index of core in socket) */
+-	c->topo.core_id = c->topo.initial_apicid & ((1 << bits)-1);
+-	/* Convert the initial APIC ID into the socket ID */
+-	c->topo.pkg_id = c->topo.initial_apicid >> bits;
+-	/* use socket ID also for last level cache */
+-	c->topo.llc_id = c->topo.die_id = c->topo.pkg_id;
+-}
+-
+-u32 amd_get_nodes_per_socket(void)
+-{
+-	return nodes_per_socket;
+-}
+-EXPORT_SYMBOL_GPL(amd_get_nodes_per_socket);
+-
+ static void srat_detect_node(struct cpuinfo_x86 *c)
+ {
+ #ifdef CONFIG_NUMA
+@@ -447,32 +349,6 @@ static void srat_detect_node(struct cpui
+ #endif
+ }
+ 
+-static void early_init_amd_mc(struct cpuinfo_x86 *c)
+-{
+-#ifdef CONFIG_SMP
+-	unsigned bits, ecx;
+-
+-	/* Multi core CPU? */
+-	if (c->extended_cpuid_level < 0x80000008)
+-		return;
+-
+-	ecx = cpuid_ecx(0x80000008);
+-
+-	c->x86_max_cores = (ecx & 0xff) + 1;
+-
+-	/* CPU telling us the core id bits shift? */
+-	bits = (ecx >> 12) & 0xF;
+-
+-	/* Otherwise recompute */
+-	if (bits == 0) {
+-		while ((1 << bits) < c->x86_max_cores)
+-			bits++;
+-	}
+-
+-	c->x86_coreid_bits = bits;
+-#endif
+-}
+-
+ static void bsp_init_amd(struct cpuinfo_x86 *c)
+ {
+ 	if (cpu_has(c, X86_FEATURE_CONSTANT_TSC)) {
+@@ -505,18 +381,6 @@ static void bsp_init_amd(struct cpuinfo_
+ 	if (cpu_has(c, X86_FEATURE_MWAITX))
+ 		use_mwaitx_delay();
+ 
+-	if (boot_cpu_has(X86_FEATURE_TOPOEXT)) {
+-		u32 ecx;
+-
+-		ecx = cpuid_ecx(0x8000001e);
+-		__max_die_per_package = nodes_per_socket = ((ecx >> 8) & 7) + 1;
+-	} else if (boot_cpu_has(X86_FEATURE_NODEID_MSR)) {
+-		u64 value;
+-
+-		rdmsrl(MSR_FAM10H_NODE_ID, value);
+-		__max_die_per_package = nodes_per_socket = ((value >> 3) & 7) + 1;
+-	}
+-
+ 	if (!boot_cpu_has(X86_FEATURE_AMD_SSBD) &&
+ 	    !boot_cpu_has(X86_FEATURE_VIRT_SSBD) &&
+ 	    c->x86 >= 0x15 && c->x86 <= 0x17) {
+@@ -598,8 +462,6 @@ static void early_init_amd(struct cpuinf
+ 	u64 value;
+ 	u32 dummy;
+ 
+-	early_init_amd_mc(c);
+-
+ 	if (c->x86 >= 0xf)
+ 		set_cpu_cap(c, X86_FEATURE_K8);
+ 
+@@ -687,9 +549,6 @@ static void early_init_amd(struct cpuinf
+ 			}
+ 		}
  	}
 -
--	for_each_node_mask(i, numa_nodes_parsed)
--		for (j = apicid_base; j < cores + apicid_base; j++)
--			set_apicid_to_node((i << bits) + j, i);
--
- 	return 0;
+-	if (cpu_has(c, X86_FEATURE_TOPOEXT))
+-		smp_num_siblings = ((cpuid_ebx(0x8000001e) >> 8) & 0xff) + 1;
  }
+ 
+ static void init_amd_k8(struct cpuinfo_x86 *c)
+@@ -929,9 +788,6 @@ static void init_amd(struct cpuinfo_x86
+ 	if (cpu_has(c, X86_FEATURE_FSRM))
+ 		set_cpu_cap(c, X86_FEATURE_FSRS);
+ 
+-	/* get apicid instead of initial apic id from cpuid */
+-	c->topo.apicid = read_apic_id();
+-
+ 	/* K6s reports MCEs but don't actually have all the MSRs */
+ 	if (c->x86 < 6)
+ 		clear_cpu_cap(c, X86_FEATURE_MCE);
+@@ -959,8 +815,6 @@ static void init_amd(struct cpuinfo_x86
+ 
+ 	cpu_detect_cache_sizes(c);
+ 
+-	amd_detect_cmp(c);
+-	amd_get_topology(c);
+ 	srat_detect_node(c);
+ 
+ 	init_amd_cacheinfo(c);
+--- a/arch/x86/kernel/cpu/mce/inject.c
++++ b/arch/x86/kernel/cpu/mce/inject.c
+@@ -433,8 +433,7 @@ static u32 get_nbc_for_node(int node_id)
+ 	struct cpuinfo_x86 *c = &boot_cpu_data;
+ 	u32 cores_per_node;
+ 
+-	cores_per_node = (c->x86_max_cores * smp_num_siblings) / amd_get_nodes_per_socket();
+-
++	cores_per_node = (c->x86_max_cores * smp_num_siblings) / topology_amd_nodes_per_pkg();
+ 	return cores_per_node * node_id;
+ }
+ 
+--- a/arch/x86/kernel/cpu/topology_common.c
++++ b/arch/x86/kernel/cpu/topology_common.c
+@@ -65,7 +65,6 @@ bool topo_is_converted(struct cpuinfo_x8
+ {
+ 	/* Temporary until everything is converted over. */
+ 	switch (boot_cpu_data.x86_vendor) {
+-	case X86_VENDOR_AMD:
+ 	case X86_VENDOR_HYGON:
+ 		return false;
+ 	default:
+@@ -126,6 +125,10 @@ static void parse_topology(struct topo_s
+ 	tscan->ebx1_nproc_shift = get_count_order(ebx.nproc);
+ 
+ 	switch (c->x86_vendor) {
++	case X86_VENDOR_AMD:
++		if (IS_ENABLED(CONFIG_CPU_SUP_AMD))
++			cpu_parse_topology_amd(tscan);
++		break;
+ 	case X86_VENDOR_CENTAUR:
+ 	case X86_VENDOR_ZHAOXIN:
+ 		parse_legacy(tscan);
 
