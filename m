@@ -2,87 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD33C001DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 12:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D531C0015E
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 12:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230338AbjGXMVA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 08:21:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51376 "EHLO
+        id S229948AbjGXMb0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 08:31:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229866AbjGXMU6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 08:20:58 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EEBB13D;
-        Mon, 24 Jul 2023 05:20:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A755561149;
-        Mon, 24 Jul 2023 12:20:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA628C433CC;
-        Mon, 24 Jul 2023 12:20:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690201236;
-        bh=TZvmwAFuS4u+vLp3XBVWaUA/bTmykDSIMnh6Tz5bu+0=;
-        h=From:To:Cc:Subject:Date:From;
-        b=r6er/ayWEK7YxoMzdWjRyaig5T7E1A4u6f3j/u5DAVXNGwACIEqB0A6NIGTsE91xt
-         oSSIKI/KWVhXMfkFwa7zn61kNTxz5qLAeC44plpJ9/fwvcTthqvyWfVsul8Rf4RM3v
-         pT3isXuR7vmhKtehn3GOCKvob0ET5OyNEP0/ky7oCWAALPN6oX4AaaD00siWvllTGG
-         IdZgZYBcmFjxfHuyxw4X0ingZiT7l8A7xHYnIv8ejNVHnEuuXp7wyd6gAMK8132NEq
-         V/CB9P9KaaJLs2l6PS3YEEvbL6R5fc6I/+j2CMHIAakw+xrO6Aibw3hq3uGMPvygcG
-         JeqeniSZu1dRw==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     Andy Gross <agross@kernel.org>,
+        with ESMTP id S229847AbjGXMbU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 08:31:20 -0400
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF0FEE73
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 05:31:18 -0700 (PDT)
+Received: by mail-ed1-x52b.google.com with SMTP id 4fb4d7f45d1cf-51e344efd75so9027678a12.1
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 05:31:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1690201877; x=1690806677;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/UW5QG5EK8EFq9Kf9r3pRK64G0FJddSL3ap9VTpE+yM=;
+        b=NjyBNzn2JvnSbPJ4WJpFzGjKjs0qCPoaEzSaS7SB3P++lH4FGNylZcfl1YhnJIfNnz
+         +3yFjDcovv38bjI7MDj8g+a4bxnWQTv5KQuIc0MEP8FNPf5yChr5p/E3JSl+EVn02BfV
+         CH02cmkaLcWzPGILhn6zYpIuQ3yzVcQwvgX8UTSzgOVhjoEMqf1xrmT5SZG0oNzCcTLW
+         jWmD1R6STVN2reTymIbKGAvMSZf10Na+4kS+yrjSnAYECFTT6+NKct15E8ryT9H/wNnc
+         Gpn8aO6F/yBQWDpKuBusKwkPhWsED2k0cWj137ehpemOWeTs7I+fUwcwQzNDXXYpoIfe
+         0xWQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690201877; x=1690806677;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/UW5QG5EK8EFq9Kf9r3pRK64G0FJddSL3ap9VTpE+yM=;
+        b=SGOaG6ISI2r35Dbth5ULnUJmEJELbAMTVT6xNPB9unrouW1y1z6HSF50wSUSRXP6dM
+         CChlGX1iikrLsfv8H9fQWbfhcniEYC/bvbR5GPtmdqnw/APSOB/iffl6TdTfD41prPw4
+         1wIObMEX/7fEYaXUhc+ak8HhpiCrA2YZFM9Tzzroxrl2nVGq/ftrIHUhHr5oAc7l5jYW
+         bMmUyZMAY/cqIAMYhwhwjsbrXanxJXWIOYphkEA3pTqqz5Ms/RQevifk90oDym64gg1I
+         HHABmvzuZR1ks3B/DITBprhP95ITWo2k/EwIXRB3aKSK/rYnOUkiKM900mCaqtjzA6Xs
+         A9ag==
+X-Gm-Message-State: ABy/qLYCYEkXCLmgnu1HGUI9uzbGS3R6gml0lBQEdlbf2Ss4PED3RQzc
+        IGBXQPpuUSaIhPtDX+xrrw669w==
+X-Google-Smtp-Source: APBJJlG5b9k5cgyD+0ffu2Qj73f/dLmguMMYab/SdI8PD/EX62Idamj2Ews2ZFPj3mY1PyoEmm2Q7w==
+X-Received: by 2002:a05:6402:3492:b0:521:ab08:46dc with SMTP id v18-20020a056402349200b00521ab0846dcmr17628048edc.0.1690201877137;
+        Mon, 24 Jul 2023 05:31:17 -0700 (PDT)
+Received: from linaro.org ([82.78.74.213])
+        by smtp.gmail.com with ESMTPSA id y19-20020aa7ccd3000000b0051df54c6a27sm6119079edt.56.2023.07.24.05.31.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Jul 2023 05:31:16 -0700 (PDT)
+Date:   Mon, 24 Jul 2023 15:31:15 +0300
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Manivannan Sadhasivam <mani@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Can Guo <quic_cang@quicinc.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Can Guo <quic_cang@quicinc.com>, Arnd Bergmann <arnd@arndb.de>,
         Asutosh Das <quic_asutoshd@quicinc.com>,
         Andrew Halaney <ahalaney@redhat.com>,
-        Abel Vesa <abel.vesa@linaro.org>,
         linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: qcom: remove unused variable
-Date:   Mon, 24 Jul 2023 14:19:58 +0200
-Message-Id: <20230724122029.1430482-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.2
+Subject: Re: [PATCH] scsi: ufs: qcom: remove unused variable
+Message-ID: <ZL5vExzF6vOP2G6E@linaro.org>
+References: <20230724122029.1430482-1-arnd@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230724122029.1430482-1-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+On 23-07-24 14:19:58, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> A recent change removed the only user of a local variable that needs
+> to now also be removed:
+> 
+> drivers/ufs/host/ufs-qcom.c: In function 'ufs_qcom_mcq_esi_handler':
+> drivers/ufs/host/ufs-qcom.c:1652:31: error: unused variable 'host' [-Werror=unused-variable]
+> 
+> Fixes: 8f2b78652d055 ("scsi: ufs: qcom: Get queue ID from MSI index in ESI handler")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-A recent change removed the only user of a local variable that needs
-to now also be removed:
+Reviewed-by: Abel Vesa <abel.vesa@linaro.org>
 
-drivers/ufs/host/ufs-qcom.c: In function 'ufs_qcom_mcq_esi_handler':
-drivers/ufs/host/ufs-qcom.c:1652:31: error: unused variable 'host' [-Werror=unused-variable]
-
-Fixes: 8f2b78652d055 ("scsi: ufs: qcom: Get queue ID from MSI index in ESI handler")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/ufs/host/ufs-qcom.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 3ee5ff905f9a6..5728e94b6527b 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1649,7 +1649,6 @@ static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *data)
- 	struct msi_desc *desc = data;
- 	struct device *dev = msi_desc_to_dev(desc);
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
--	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	u32 id = desc->msi_index;
- 	struct ufs_hw_queue *hwq = &hba->uhq[id];
- 
--- 
-2.39.2
-
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 3ee5ff905f9a6..5728e94b6527b 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1649,7 +1649,6 @@ static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *data)
+>  	struct msi_desc *desc = data;
+>  	struct device *dev = msi_desc_to_dev(desc);
+>  	struct ufs_hba *hba = dev_get_drvdata(dev);
+> -	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	u32 id = desc->msi_index;
+>  	struct ufs_hw_queue *hwq = &hba->uhq[id];
+>  
+> -- 
+> 2.39.2
+> 
