@@ -2,100 +2,76 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46174EB64DD
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 19:16:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B489C001B0
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 20:09:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230050AbjGXTQ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 15:16:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36020 "EHLO
+        id S230349AbjGXUJI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 16:09:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229532AbjGXTQz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 15:16:55 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA21E10F7;
-        Mon, 24 Jul 2023 12:16:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1690226211;
-        bh=64pZcItTjZxIjDEl8EzEjacmRIVQb6Kl/2RNtm+3W3o=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=qKdPPK5SWzbg6WweegJVPDc+Y14TqL+xjdi2NAAyaPnKlINuO2LVdAJtG3j1y+8qb
-         flzU/ZpZSHJeosLdho0eb8gGduWqm1q1MOJR4QdQgWxzbmVyM1BjmGALwIhPXOvu7j
-         7qr5WH1ClnTJPI3SWLD1sdEDB3nLABEvUrGh4bAk=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D439A128605E;
-        Mon, 24 Jul 2023 15:16:51 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id C0372O34OdMU; Mon, 24 Jul 2023 15:16:51 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1690226209;
-        bh=64pZcItTjZxIjDEl8EzEjacmRIVQb6Kl/2RNtm+3W3o=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=JAwdcEEyF8qhlBRdqM4TQyqzai8kydFBA5oKexXMNAy2J8yww4cZt4nKQyboPAgLt
-         mWM8SXpt/m8sPX+3+XqAUFuxrvhkTZBqHBgmUnRh25yVamP9iR4nxno58zLFWSLVKb
-         5k77VmlanMLliPfinv2+0r8DC9s8d4yMDtBeAVBs=
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 60AA11281F5F;
-        Mon, 24 Jul 2023 15:16:49 -0400 (EDT)
-Message-ID: <d75dc295e6ddaebc988f5af3ad6d12fa96948f5e.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.5-rc3
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Mon, 24 Jul 2023 15:16:47 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S229441AbjGXUJH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 16:09:07 -0400
+Received: from mail-oi1-f179.google.com (mail-oi1-f179.google.com [209.85.167.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF3F710D9
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:09:06 -0700 (PDT)
+Received: by mail-oi1-f179.google.com with SMTP id 5614622812f47-3a3df1ee4a3so2519722b6e.3
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:09:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690229346; x=1690834146;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=hPH75LFSXng5YSXSx91RHQhZHF6NFSllti+W61i1Hl8=;
+        b=XQiSbPAJX+apHYJKZstcR1W4zc28Q0irGvX4T6q0wlmJ2xkKY3ldRNLCt9FxY3ECwj
+         9CRMO+tYws352v4/pK4RN2d8r4auzv9Bo4sQ80HqjsnwzBDpknoiwDrYcbG+rsv31zZx
+         qJ4jFqIcZy4ljAdLNMr9I7oAElBVSQ8PRQ30hq3DyGaU25hvlwhITrwGa4hBDXtSWaqK
+         1GB/YnQp1FP1JHOt4pZdz5KiNe8hMZFvXsARvo6c6c0VVzv8zlLlloB/Qu+7Sr1xTB6u
+         aUpt1o8jv9vhj4vcodqeeI2O0J4R0rYcvYqiHtDoKQjoSGG+PR5dgGLM5Ud0Jz5OXsWW
+         WM4Q==
+X-Gm-Message-State: ABy/qLaJKrZ7pLlp93tduM3sMHFIDZMti4MXxCCQeGkK4vTcwfp8mtqp
+        yngNLCkjX6tnn0OOey8L8T0=
+X-Google-Smtp-Source: APBJJlGEeUpFtSNJT/rSzu7byXMUcuGc9+pdUqHXTZb6VqcvNiaDhl6JwgvamC6jygQftx7pu+fCMA==
+X-Received: by 2002:a05:6808:15a1:b0:3a4:6691:9340 with SMTP id t33-20020a05680815a100b003a466919340mr10415117oiw.41.1690229345727;
+        Mon, 24 Jul 2023 13:09:05 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:bda6:6519:2a73:345e])
+        by smtp.gmail.com with ESMTPSA id e23-20020a17090ab39700b002609cadc56esm6726861pjr.11.2023.07.24.13.09.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Jul 2023 13:09:05 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/2] Fix residual handling in two SCSI LLDs
+Date:   Mon, 24 Jul 2023 13:08:28 -0700
+Message-ID: <20230724200843.3376570-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.41.0.487.g6d72f3e995-goog
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Single fix for a potential regression over a misunderstanding of the
-blk_get_queue() api.
+Hi Martin,
 
-The patch is available here:
+This patch series fixes the documentation of scsi_set_resid() and also fixes
+residual handling in two SCSI LLDs. Please consider this patch series for the
+next merge window.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Thanks,
 
-The short changelog is:
+Bart.
 
-Yu Kuai (1):
-      scsi: sg: Fix checking return value of blk_get_queue()
+Changes compared to v1:
+- Left out a patch that has already been queued.
+- Left out the device conformance checks.
 
-And the diffstat:
+Bart Van Assche (2):
+  scsi: ufs: Fix residual handling
+  RDMA/srp: Fix residual handling
 
- drivers/scsi/sg.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 89fa046c7158..0d8afffd1683 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1497,9 +1497,10 @@ sg_add_device(struct device *cl_dev)
- 	int error;
- 	unsigned long iflags;
- 
--	error = blk_get_queue(scsidp->request_queue);
--	if (error)
--		return error;
-+	if (!blk_get_queue(scsidp->request_queue)) {
-+		pr_warn("%s: get scsi_device queue failed\n",
-__func__);
-+		return -ENODEV;
-+	}
- 
- 	error = -ENOMEM;
- 	cdev = cdev_alloc();
+ drivers/infiniband/ulp/srp/ib_srp.c |  4 ----
+ drivers/ufs/core/ufshcd.c           | 12 ++++++++++--
+ include/ufs/ufs.h                   |  6 ++++++
+ 3 files changed, 16 insertions(+), 6 deletions(-)
 
