@@ -2,70 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E22CC001B0
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 21:55:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6009EC0015E
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 21:57:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230210AbjGXVz3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 17:55:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40918 "EHLO
+        id S231364AbjGXV5V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 17:57:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231364AbjGXVz2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 17:55:28 -0400
+        with ESMTP id S229437AbjGXV5U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 17:57:20 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA6CE1992;
-        Mon, 24 Jul 2023 14:55:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68D2D194;
+        Mon, 24 Jul 2023 14:57:19 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3E2F16141D;
-        Mon, 24 Jul 2023 21:55:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 885B9C433C7;
-        Mon, 24 Jul 2023 21:55:25 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0247961451;
+        Mon, 24 Jul 2023 21:57:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5430AC433C9;
+        Mon, 24 Jul 2023 21:57:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690235725;
-        bh=2Wtz/htT5MpLf/NTfCLVY5V/Yr8t4RIdWJm7V5BS6MU=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=oDgkcvg8cAcOu9XeylnNbu4B39kB3pp6WIkHaAvrS3gsgQ9H+DpAgJGX33WmoH5SB
-         XCSF+EPT4jan0EFGALPCTESYTvxw9/bT3wpSDOqizhTAbkT+1mTcBL0Y4UpU9afZEn
-         O7+WT4/lLQ1HzEgDsV0BaID4r+gmyYwiy/49DOQUEqtCTk4zKrfSs1VP4mfXFD05WB
-         3SdhJ+YGy2BnyCRE1vkBCzg0JcO7b17o6CpAn4NTKnlhyLYa9dpOehJoknjtd3PGrC
-         8fhBS/eBsoIwetKAiWQGUdw6Uiw/IM217kCGhXCHY5M611G0n5ZfXGBH0w317aF5F8
-         fsHqqdOaCxUWw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 718FDE1F658;
-        Mon, 24 Jul 2023 21:55:25 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.5-rc3
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <d75dc295e6ddaebc988f5af3ad6d12fa96948f5e.camel@HansenPartnership.com>
-References: <d75dc295e6ddaebc988f5af3ad6d12fa96948f5e.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <d75dc295e6ddaebc988f5af3ad6d12fa96948f5e.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 80b6051085c5fedcb1dfd7b2562a63a83655c4d8
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 0b5547c51827e053cc754db47d3ec3e6c2c451d2
-Message-Id: <169023572545.10617.11533993855843312589.pr-tracker-bot@kernel.org>
-Date:   Mon, 24 Jul 2023 21:55:25 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        s=k20201202; t=1690235838;
+        bh=0h+dePu6rfFOElRcgVsU297/GZNJnUly0bCMrw5Ff18=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=NAC8ciK8rb0/RL1BJPLjTRLBt6CasWW+075WiQWKFXy6eZ2E5q3ZUapb8BwtSOo3q
+         N/goKsGuxq4Rm09bmtYeV3g2v9OqYskyaX1al35QnIvYWziPH5CX/EmB3b3sSsARL2
+         jZC8hJ4G0LXNIGGO90UMBMvCMdpeE/2DKURXwdY6Sn7q3Wa+haJSMPfr1Vbzt1N46b
+         CqTrFR/79fT8N6Uxa4GG4QglPOWvZwaB2b3E5ndOQTgh+Yr8cjAOShvBHIsfk6fy32
+         3KGk0WCIXSNq8Z/S7HHUgn9KAogSruWSkCCFtxkYCclEaeewf540LgBDG2VWe7RgYu
+         JoO9robSErv9A==
+Message-ID: <f95c78d8-2baa-edde-39bb-8341cde2d63f@kernel.org>
+Date:   Tue, 25 Jul 2023 06:57:09 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v2 09/15] PM / devfreq: Switch to
+ dev_pm_opp_find_freq_{ceil/floor}_indexed() APIs
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
+        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
+        cw00.choi@samsung.com, andersson@kernel.org,
+        konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org
+References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
+ <20230720054100.9940-10-manivannan.sadhasivam@linaro.org>
+ <1703ab6e-8567-8574-f011-af19813f97e8@kernel.org>
+ <20230724054611.GA2370@thinkpad>
+From:   Chanwoo Choi <chanwoo@kernel.org>
+Content-Language: en-US
+In-Reply-To: <20230724054611.GA2370@thinkpad>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Mon, 24 Jul 2023 15:16:47 -0400:
+On 23. 7. 24. 14:46, Manivannan Sadhasivam wrote:
+> On Mon, Jul 24, 2023 at 05:06:04AM +0900, Chanwoo Choi wrote:
+>> Hi,
+>>
+>> On 23. 7. 20. 14:40, Manivannan Sadhasivam wrote:
+>>> Some devfreq consumers like UFS driver need to work with multiple clocks
+>>> through the OPP framework. For this reason, OPP framework exposes the
+>>> _indexed() APIs for finding the floor/ceil of the supplied frequency of
+>>> the indexed clock. So let's use them in the devfreq driver.
+>>>
+>>> Currently, the clock index of 0 is used which works fine for multiple as
+>>> well as single clock.
+>>>
+>>> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+>>> ---
+>>>  drivers/devfreq/devfreq.c | 14 +++++++-------
+>>>  1 file changed, 7 insertions(+), 7 deletions(-)
+>>>
+>>> diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
+>>> index e36cbb920ec8..7686993d639f 100644
+>>> --- a/drivers/devfreq/devfreq.c
+>>> +++ b/drivers/devfreq/devfreq.c
+>>> @@ -88,7 +88,7 @@ static unsigned long find_available_min_freq(struct devfreq *devfreq)
+>>>  	struct dev_pm_opp *opp;
+>>>  	unsigned long min_freq = 0;
+>>>  
+>>> -	opp = dev_pm_opp_find_freq_ceil(devfreq->dev.parent, &min_freq);
+>>> +	opp = dev_pm_opp_find_freq_ceil_indexed(devfreq->dev.parent, &min_freq, 0);
+>>
+>> This patch changed the used function from dev_pm_opp_find_freq_ceil
+>> to dev_pm_opp_find_freq_ceil_indexed even if there are no supporting of the multiple clocks
+>> and then dev_pm_opp_find_freq_ceil is not removed from OPP.
+>>
+>> I think that it is better to use dev_pm_opp_find_freq_ceil_indexed
+>> when need to support multiple clocks with real case.
+>>
+> 
+> There is the user for dev_pm_opp_find_freq_ceil_indexed() which is the UFS
+> driver and since UFS is using devfreq, we need this change. I've added this info
+> in the commit message as well. What am I missing?
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/0b5547c51827e053cc754db47d3ec3e6c2c451d2
+I found out the difference of them. 
+- dev_pm_opp_find_freq_ceil() used the 'assert_single_clk' which check the count of clock.
+                                                               
 
-Thank you!
+(snip)
+
+Acked-by: Chanwoo Choi <cw00.choi@samsung.com>
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Best Regards,
+Samsung Electronics
+Chanwoo Choi
+
