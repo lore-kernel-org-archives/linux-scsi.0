@@ -2,41 +2,45 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46961C00528
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 17:47:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B9D7C001DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 17:48:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231938AbjGXRrn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 13:47:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45288 "EHLO
+        id S229845AbjGXRsL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 13:48:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230095AbjGXRq2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 13:46:28 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE128270B;
-        Mon, 24 Jul 2023 10:44:39 -0700 (PDT)
-Message-ID: <20230724172845.149433362@linutronix.de>
+        with ESMTP id S231303AbjGXRqa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 13:46:30 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4536219BF;
+        Mon, 24 Jul 2023 10:44:40 -0700 (PDT)
+Message-ID: <20230724172845.375121380@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1690220670;
+        s=2020; t=1690220677;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=u2nALLK7m8WtmbLIhAtObAjpwOgRje3zo0FH2XahcbM=;
-        b=In6sm8CdyFRFh0QmujmmeLPeD6D7AF4e7Ga+CG/HwjqAtRQbsG7Mc2fOBEr230c7HkUsNL
-        EBbJ1LwC3epaoRGPBaSNabiC+zllxbZ0A2pRMk9IxueDcRiG2GRzOJpwk0POEo8IF13/ol
-        1HH4LGKYoNZ3jbFoCTbE9hemK6CBPIBcpahLyKZRYWJSYXl2bCnogvZWrphMYOV8Kfrrdg
-        w5BJq8y80EU2zeDZ96udK4I1eCxHM4AS3Lay52ErtJA1UFutscKxtNshCbYwwvGxOWh6tJ
-        XV9B14ySDuug6j0opzfunrXAqdu/m1c+9PjIsxbIn8ColmaAYD/5baNxNF+7GA==
+         references:references; bh=y/zw4jIEoXHpKelNkwXOESHKGmmFcaqzgwgGslsADMM=;
+        b=oAZN3uUCR0PSr5PJdkrlNpzMccFxzFblCHzCCrxxH6UYiP4BqWDNHrmlUtJ+V2zl/kTSKO
+        IfGKYDgZjAZIm0QNIuydsQz/GKlj5W5nzva5FjbYJndAIJQrTP7ED3lGVU7DlxGYKSqOzP
+        8DdH9V6YAhQX3UdYYsJ7o9xihsdWjk/lE/ReVKe331qF+fSA6z0qwu97c4kwKBkz/fDqWo
+        BO6+4FZx0HOVuTK0Kio1gALRb04/b6ArwIiG1dg967RKEmpqQv3aT4z3SMcgK4ObPM7z3H
+        F6HZVCLSdvdtQ3fuv01KoxuoU1e6UcaGEPVAUXfHCmG36mcWnQ+h36K9Y+oEBw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1690220670;
+        s=2020e; t=1690220677;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=u2nALLK7m8WtmbLIhAtObAjpwOgRje3zo0FH2XahcbM=;
-        b=FpOfgG5zN2iI0+T4ZbRwZborOR0tdWultLaO/4fwwSblOCnyaM2wCRQfE9GbT6/dlOHzPH
-        aaBxvwQ31bsohoBA==
+         references:references; bh=y/zw4jIEoXHpKelNkwXOESHKGmmFcaqzgwgGslsADMM=;
+        b=EPz5lOl9GlUQTZX3HOCC0E5JSvUep+0rIrlU5Xpi8RRsrw+HgmfYYllhgvvLn4igKQ1gH1
+        sKfUxAitOmRV+lBA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
         Andrew Cooper <andrew.cooper3@citrix.com>,
         Arjan van de Ven <arjan@linux.intel.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Mike Travis <mike.travis@hpe.com>,
+        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+        Russ Anderson <russ.anderson@hpe.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         James Smart <james.smart@broadcom.com>,
@@ -44,69 +48,108 @@ Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
         linux-scsi@vger.kernel.org, linux-hwmon@vger.kernel.org,
         Jean Delvare <jdelvare@suse.com>,
         Huang Rui <ray.huang@amd.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Mike Travis <mike.travis@hpe.com>,
-        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
-        Russ Anderson <russ.anderson@hpe.com>
-Subject: [patch 25/29] x86/cpu: Make topology_amd_node_id() use the actual
- node info
+        Guenter Roeck <linux@roeck-us.net>
+Subject: [patch 29/29] x86/apic/uv: Remove the private leaf 0xb parser
 References: <20230724155329.474037902@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 24 Jul 2023 19:44:30 +0200 (CEST)
+Date:   Mon, 24 Jul 2023 19:44:36 +0200 (CEST)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that everything is converted switch it over and remove the intermediate
-operation.
+The package shift has been already evaluated by the early CPU init.
+
+Put the mindless copy right next to the original leaf 0xb parser.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Steve Wahl <steve.wahl@hpe.com>
+Cc: Mike Travis <mike.travis@hpe.com>
+Cc: Dimitri Sivanich <dimitri.sivanich@hpe.com>
+Cc: Russ Anderson <russ.anderson@hpe.com>
 ---
- arch/x86/include/asm/topology.h       |    4 ++--
- arch/x86/kernel/cpu/topology_common.c |    7 ++-----
- 2 files changed, 4 insertions(+), 7 deletions(-)
+ arch/x86/include/asm/topology.h    |    5 +++
+ arch/x86/kernel/apic/x2apic_uv_x.c |   52 ++++++-------------------------------
+ 2 files changed, 14 insertions(+), 43 deletions(-)
 
 --- a/arch/x86/include/asm/topology.h
 +++ b/arch/x86/include/asm/topology.h
-@@ -136,7 +136,7 @@ extern const struct cpumask *cpu_cluster
- #define topology_core_id(cpu)			(cpu_data(cpu).topo.core_id)
- #define topology_ppin(cpu)			(cpu_data(cpu).ppin)
+@@ -126,6 +126,11 @@ static inline unsigned int topology_get_
+ 	return x86_topo_system.dom_size[dom];
+ }
  
--#define topology_amd_node_id(cpu)		(cpu_data(cpu).topo.die_id)
-+#define topology_amd_node_id(cpu)		(cpu_data(cpu).topo.amd_node_id)
++static inline unsigned int topology_get_domain_shift(enum x86_topology_domains dom)
++{
++	return dom == TOPO_SMT_DOMAIN ? 0 : x86_topo_system.dom_shifts[dom - 1];
++}
++
+ extern const struct cpumask *cpu_coregroup_mask(int cpu);
+ extern const struct cpumask *cpu_clustergroup_mask(int cpu);
  
- extern unsigned int __max_die_per_package;
+--- a/arch/x86/kernel/apic/x2apic_uv_x.c
++++ b/arch/x86/kernel/apic/x2apic_uv_x.c
+@@ -241,54 +241,20 @@ static void __init uv_tsc_check_sync(voi
+ 	is_uv(UV3) ? sname.s3.field :		\
+ 	undef)
  
-@@ -171,7 +171,7 @@ extern unsigned int __amd_nodes_per_pkg;
- 
- static inline unsigned int topology_amd_nodes_per_pkg(void)
+-/* [Copied from arch/x86/kernel/cpu/topology.c:detect_extended_topology()] */
+-
+-#define SMT_LEVEL			0	/* Leaf 0xb SMT level */
+-#define INVALID_TYPE			0	/* Leaf 0xb sub-leaf types */
+-#define SMT_TYPE			1
+-#define CORE_TYPE			2
+-#define LEAFB_SUBTYPE(ecx)		(((ecx) >> 8) & 0xff)
+-#define BITS_SHIFT_NEXT_LEVEL(eax)	((eax) & 0x1f)
+-
+-static void set_x2apic_bits(void)
+-{
+-	unsigned int eax, ebx, ecx, edx, sub_index;
+-	unsigned int sid_shift;
+-
+-	cpuid(0, &eax, &ebx, &ecx, &edx);
+-	if (eax < 0xb) {
+-		pr_info("UV: CPU does not have CPUID.11\n");
+-		return;
+-	}
+-
+-	cpuid_count(0xb, SMT_LEVEL, &eax, &ebx, &ecx, &edx);
+-	if (ebx == 0 || (LEAFB_SUBTYPE(ecx) != SMT_TYPE)) {
+-		pr_info("UV: CPUID.11 not implemented\n");
+-		return;
+-	}
+-
+-	sid_shift = BITS_SHIFT_NEXT_LEVEL(eax);
+-	sub_index = 1;
+-	do {
+-		cpuid_count(0xb, sub_index, &eax, &ebx, &ecx, &edx);
+-		if (LEAFB_SUBTYPE(ecx) == CORE_TYPE) {
+-			sid_shift = BITS_SHIFT_NEXT_LEVEL(eax);
+-			break;
+-		}
+-		sub_index++;
+-	} while (LEAFB_SUBTYPE(ecx) != INVALID_TYPE);
+-
+-	uv_cpuid.apicid_shift	= 0;
+-	uv_cpuid.apicid_mask	= (~(-1 << sid_shift));
+-	uv_cpuid.socketid_shift = sid_shift;
+-}
+-
+ static void __init early_get_apic_socketid_shift(void)
  {
--	return __max_die_per_package;
-+	return __amd_nodes_per_pkg;
- }
++	unsigned int sid_shift = topology_get_domain_shift(TOPO_ROOT_DOMAIN);
++
+ 	if (is_uv2_hub() || is_uv3_hub())
+ 		uvh_apicid.v = uv_early_read_mmr(UVH_APICID);
  
- extern struct cpumask __cpu_primary_thread_mask;
---- a/arch/x86/kernel/cpu/topology_common.c
-+++ b/arch/x86/kernel/cpu/topology_common.c
-@@ -143,9 +143,7 @@ static void topo_set_ids(struct topo_sca
- 	/* Relative core ID */
- 	c->topo.core_id = topo_relative_domain_id(apicid, TOPO_CORE_DOMAIN);
+-	set_x2apic_bits();
++	if (sid_shift) {
++		uv_cpuid.apicid_shift	= 0;
++		uv_cpuid.apicid_mask	= (~(-1 << sid_shift));
++		uv_cpuid.socketid_shift = sid_shift;
++	} else {
++		pr_info("UV: CPU does not have valid CPUID.11\n");
++	}
  
--	/* Temporary workaround */
--	if (tscan->amd_nodes_per_pkg)
--		c->topo.amd_node_id = c->topo.die_id = tscan->amd_node_id;
-+	c->topo.amd_node_id = tscan->amd_node_id;
- 
- 	if (c->x86_vendor == X86_VENDOR_AMD)
- 		cpu_topology_fixup_amd(tscan);
-@@ -231,6 +229,5 @@ void __init cpu_init_topology(struct cpu
- 	 * AMD systems have Nodes per package which cannot be mapped to
- 	 * APIC ID (yet).
- 	 */
--	if (c->x86_vendor == X86_VENDOR_AMD || c->x86_vendor == X86_VENDOR_HYGON)
--		__amd_nodes_per_pkg = __max_die_per_package = tscan.amd_nodes_per_pkg;
-+	__amd_nodes_per_pkg = tscan.amd_nodes_per_pkg;
- }
+ 	pr_info("UV: apicid_shift:%d apicid_mask:0x%x\n", uv_cpuid.apicid_shift, uv_cpuid.apicid_mask);
+ 	pr_info("UV: socketid_shift:%d pnode_mask:0x%x\n", uv_cpuid.socketid_shift, uv_cpuid.pnode_mask);
 
