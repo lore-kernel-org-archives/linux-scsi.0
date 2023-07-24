@@ -2,95 +2,103 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13A1EC41513
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 20:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C10EB64DD
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 20:25:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230147AbjGXUJX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 16:09:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54468 "EHLO
+        id S229654AbjGXUZl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 16:25:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229929AbjGXUJW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 16:09:22 -0400
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF26F10D9
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:09:21 -0700 (PDT)
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-517ab9a4a13so3353425a12.1
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:09:21 -0700 (PDT)
+        with ESMTP id S229583AbjGXUZk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 16:25:40 -0400
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B56FDA4
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:25:35 -0700 (PDT)
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6687096c6ddso2679905b3a.0
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:25:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690229361; x=1690834161;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=khmFSi//VDGaMV5tP25J15l0jgygMFTCGaN0qRY+97s=;
-        b=GaSBuXfa8iOvbznLWeDO4hyCAySkF/RsfgdYNIkga5LWqSuNdHbo3fmFseNriZpTR7
-         d+lDYmvytqPWSPSiJmAmRquCIzNdojNN7OawswoZyIJ3YKOsqzDd8EK6LOKWZ9QDH82r
-         f/DrCmlEpPhlNa4i6Bg35hBhGKrj03AI50umltYfGaf05UVg82X3R8/FPI2hONfDnREy
-         3y3DxAue9I+I5c+3Qf5eXxsNyzukzlFlO+eiUH38jfRoauHzSy5B3LD5Ugiy2Cdpry+M
-         2e6L+PBb0Tyowuo1UiISIox8zTZ/cWK8tzgEdZsepBUJ5ETUZ3g8IXAIPMobFxKzlWPA
-         UZpg==
-X-Gm-Message-State: ABy/qLYYA3B/8ym+L599ct8HrmfLEeVX+cuY1tzBdOMZ9CpiyNnhF3Nb
-        RbnFK2/PVVrIqZJeyGpDZKg=
-X-Google-Smtp-Source: APBJJlFYrxqkyhRmDy68/6v4h0WFmhkoHylw144XOXBKHM2A2O/8xsl3nSCaFcSv2mA+CrA+Yvbc5Q==
-X-Received: by 2002:a17:90a:9c09:b0:263:f583:a6a1 with SMTP id h9-20020a17090a9c0900b00263f583a6a1mr10696721pjp.34.1690229361076;
-        Mon, 24 Jul 2023 13:09:21 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1690230335; x=1690835135;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=/XwtC2aFCzNPJsEFWrPPRbmZfOwCzTVTafAed+Bbr3Y=;
+        b=bR8BULTOU0yDZAsN+U9kdnMF2naFGQ8fHOb155E3lAPDmQ0u8SBItJDiTZNZJjz3xn
+         vDFjF6eJ5fABooCBBuYg0Re2kWhSnNC63RkwIyV1q83ZrlrjusLfe6buTXwVtR6ExKG4
+         WkydH01PNhE0+HxVAvZ62hfF388OURKrOhnpX21Xzm1olN3fg4R1I7LZbvhUxrzzSF8m
+         DuJoNNyhorrmAoEIfZY1A1HBZYP/7/9s9UJKhLGHDyLD/sCxrWx6P7WNwx5rKq8V485b
+         F19Rjk0ZIE6+8JR1kWYZGWJ8Tl83kY9YBts/aEGntxnYKCyft3lRNz5pYZuVBfnSc7gZ
+         Ag6g==
+X-Gm-Message-State: ABy/qLbdckWLl2ACJ/8bsxwB2CYa+tO2mIyK/4veYmzzyi32pqY/6rRz
+        VHXmhL2lyLnhhrLFf5JMmyk=
+X-Google-Smtp-Source: APBJJlEMljxnmdTZdIuxVR0V4fQRvRmUdJMzgeG7l5WU7aeKjE8UpU8mTsyht+NUc5ai0vdAjkrsPA==
+X-Received: by 2002:a05:6a20:9493:b0:130:9638:36d4 with SMTP id hs19-20020a056a20949300b00130963836d4mr7027862pzb.33.1690230335035;
+        Mon, 24 Jul 2023 13:25:35 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:bda6:6519:2a73:345e])
-        by smtp.gmail.com with ESMTPSA id e23-20020a17090ab39700b002609cadc56esm6726861pjr.11.2023.07.24.13.09.20
+        by smtp.gmail.com with ESMTPSA id v13-20020aa7850d000000b00653fe2d527esm8185540pfn.32.2023.07.24.13.25.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Jul 2023 13:09:20 -0700 (PDT)
+        Mon, 24 Jul 2023 13:25:34 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Sagi Grimberg <sagig@mellanox.com>,
-        David Dillow <dave@thedillows.org>,
-        Roland Dreier <roland@purestorage.com>
-Subject: [PATCH v2 2/2] RDMA/srp: Fix residual handling
-Date:   Mon, 24 Jul 2023 13:08:30 -0700
-Message-ID: <20230724200843.3376570-3-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 00/12] Multiple cleanup patches for the UFS driver
+Date:   Mon, 24 Jul 2023 13:16:35 -0700
+Message-ID: <20230724202024.3379114-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.41.0.487.g6d72f3e995-goog
-In-Reply-To: <20230724200843.3376570-1-bvanassche@acm.org>
-References: <20230724200843.3376570-1-bvanassche@acm.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Although the code for residual handling in the SRP initiator follows the
-SCSI documentation, that documentation has never been correct. Because
-scsi_finish_command() starts from the data buffer length and subtracts
-the residual, scsi_set_resid() must not be called if a residual overflow
-occurs. Hence remove the scsi_set_resid() calls from the SRP initiator
-if a residual overflow occurrs.
+Hi Martin,
 
-Cc: Leon Romanovsky <leon@kernel.org>
-Cc: Jason Gunthorpe <jgg@nvidia.com>
-Fixes: 9237f04e12cc ("scsi: core: Fix scsi_get/set_resid() interface")
-Fixes: e714531a349f ("IB/srp: Fix residual handling")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/infiniband/ulp/srp/ib_srp.c | 4 ----
- 1 file changed, 4 deletions(-)
+This patch includes the following changes, none of which should change the
+functionality of the UFS host controller driver:
+- Improve the kernel-doc headers further.
+- Fix multiple W=2 compiler warnings.
+- Simplify ufshcd_abort_all().
+- Simplify the code for creating and parsing UFS Transport Protocol (UTP)
+  headers.
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 0e513a7e5ac8..1574218764e0 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -1979,12 +1979,8 @@ static void srp_process_rsp(struct srp_rdma_ch *ch, struct srp_rsp *rsp)
- 
- 		if (unlikely(rsp->flags & SRP_RSP_FLAG_DIUNDER))
- 			scsi_set_resid(scmnd, be32_to_cpu(rsp->data_in_res_cnt));
--		else if (unlikely(rsp->flags & SRP_RSP_FLAG_DIOVER))
--			scsi_set_resid(scmnd, -be32_to_cpu(rsp->data_in_res_cnt));
- 		else if (unlikely(rsp->flags & SRP_RSP_FLAG_DOUNDER))
- 			scsi_set_resid(scmnd, be32_to_cpu(rsp->data_out_res_cnt));
--		else if (unlikely(rsp->flags & SRP_RSP_FLAG_DOOVER))
--			scsi_set_resid(scmnd, -be32_to_cpu(rsp->data_out_res_cnt));
- 
- 		srp_free_req(ch, req, scmnd,
- 			     be32_to_cpu(rsp->req_lim_delta));
+Please consider this patch series for the next merge window.
+
+Thanks,
+
+Bart.
+
+Bart Van Assche (12):
+  scsi: ufs: Follow the kernel-doc syntax for documenting return values
+  scsi: ufs: Document all return values
+  scsi: ufs: Fix kernel-doc headers
+  scsi: ufs: Rename a function argument
+  scsi: ufs: Minimize #include directives
+  scsi: ufs: Simplify zero-initialization
+  scsi: ufs: Improve type safety
+  scsi: ufs: Remove a local variable from ufshcd_abort_all()
+  scsi: ufs: Simplify ufshcd_abort_all()
+  scsi: ufs: Remove a member variable
+  scsi: ufs: Simplify transfer request header initialization
+  scsi: ufs: Simplify response header parsing
+
+ drivers/ufs/core/ufs-hwmon.c       |   3 +-
+ drivers/ufs/core/ufs-mcq.c         |  17 +-
+ drivers/ufs/core/ufs_bsg.c         |   2 +
+ drivers/ufs/core/ufshcd-crypto.h   |  20 +-
+ drivers/ufs/core/ufshcd-priv.h     |   4 +-
+ drivers/ufs/core/ufshcd.c          | 463 +++++++++++++++--------------
+ drivers/ufs/host/cdns-pltfrm.c     |  27 +-
+ drivers/ufs/host/tc-dwc-g210-pci.c |   2 +-
+ drivers/ufs/host/tc-dwc-g210.c     |  32 +-
+ drivers/ufs/host/ufs-mediatek.c    |   6 +-
+ drivers/ufs/host/ufs-qcom.c        |   8 +-
+ drivers/ufs/host/ufshcd-dwc.c      |  22 +-
+ drivers/ufs/host/ufshcd-pci.c      |   2 +-
+ drivers/ufs/host/ufshcd-pltfrm.c   |   6 +-
+ include/ufs/ufs.h                  |  79 +++--
+ include/ufs/ufshcd.h               |  27 +-
+ include/ufs/ufshci.h               |  55 ++--
+ 17 files changed, 414 insertions(+), 361 deletions(-)
+
