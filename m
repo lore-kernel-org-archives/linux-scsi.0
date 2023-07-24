@@ -2,61 +2,62 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B503FEB64DD
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 20:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF53EB64DD
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 20:29:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230245AbjGXU3H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 16:29:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60494 "EHLO
+        id S230296AbjGXU3r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 16:29:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229666AbjGXU3H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 16:29:07 -0400
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9518712C
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:29:05 -0700 (PDT)
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6689430d803so2831154b3a.0
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:29:05 -0700 (PDT)
+        with ESMTP id S229666AbjGXU3q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 16:29:46 -0400
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ADE812C
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:29:45 -0700 (PDT)
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6687466137bso2707777b3a.0
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 13:29:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690230545; x=1690835345;
+        d=1e100.net; s=20221208; t=1690230585; x=1690835385;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=BOAK7b+D21hI7x2VaqGsDnhtGGAKEfoxb0S5c0H7b+4=;
-        b=fMLM2RwUYt6osMUuy+KkZMqG+MHLU9vb8oTyCWEa+piTTgS3sw3jlLR5cXRQZwkdjO
-         LwfBuJncIZVBlohFxzkWC4xlJS1cXU2Xi+N/4DJr4IKjcie5AUorLh42SQics5hmaf+y
-         nA7YRr+yvy6wk//NQ+u2ntBcEkgF0QzJDShPUZOQIAZJ+vytl/jDnaPJ8fEZIDpOeJ1x
-         WTRl1hOYqvAlPhnw+SIpZgFjZTJEht13h8hvNE/7JHBJFteb3aJGgPC1PhP6OQzTFb2n
-         A4KnwmbUWJE7hRcNe9RvDPJrYr4boqDs5FApLr4GEW2+aTMx8pFeMR0W/9ffcl9YL21u
-         AjFQ==
-X-Gm-Message-State: ABy/qLbpkMKtp7oFj8KZX7wJT7AvwzpLPk4/asWmoWE5Y/ArrX2JCLRe
-        plDwJp2+Tup2aXuiRVf2H64=
-X-Google-Smtp-Source: APBJJlHzv6X18JrsIwzmOqWkEVTPC4BGFhzYri7ZRw6CVQd0qG1DWgg4KjTOn86iTohIxpM10VUAwg==
-X-Received: by 2002:a05:6a20:7486:b0:132:d029:e2d7 with SMTP id p6-20020a056a20748600b00132d029e2d7mr11827373pzd.55.1690230544885;
-        Mon, 24 Jul 2023 13:29:04 -0700 (PDT)
+        bh=O2kFUH5XnNnogeYX7NxCBvzFUm1UTmh7uv6JtjAPYLI=;
+        b=cIHQCSa88MxQ5hECp4fRG9xMeLFo9vAqS4JVTahggH5eaOSWHrhjA6HvO3E1FRqgLt
+         aZYu/EzzeyACoitLRzhpLTvCQXAtVPk+6Z5kBDEUdlvAKIPAq7o5/jHUNR+08NshCUsU
+         gIlZiV//tYl8Jmq8J95d9bxwqBifFNvaHW4Seaeq1t/shdgRP2tvpcd0QRTN/am2NVAg
+         BVjAojOu6wO/cugQqUf/KMgjN0+jfeC0k8otEO7HcQJKgQ9Z0f1gKtI0cgP8app97Fln
+         hy+8Fx/BFc6sUrz/0puC+ktqGZprXlmyKHe1T7+aphoc2O4bKO7skV2GhwvQM8+IXCoG
+         9XLw==
+X-Gm-Message-State: ABy/qLb+WTJftJXVAh0xoN0zuDcIoyYmrIPHFU6UDJj8RxyMLNvtB5nu
+        2l2+OzNCi93uYnE7P2rOFbQ=
+X-Google-Smtp-Source: APBJJlFQl3uDeAjGQhiYr+8G90f+1UwS0qzTASueQYW9i6jKlel2oYb9JphE7ejh79mpZk/0Jyj20w==
+X-Received: by 2002:a05:6a20:841a:b0:135:4858:681 with SMTP id c26-20020a056a20841a00b0013548580681mr10425725pzd.9.1690230584618;
+        Mon, 24 Jul 2023 13:29:44 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:bda6:6519:2a73:345e])
-        by smtp.gmail.com with ESMTPSA id v13-20020aa7850d000000b00653fe2d527esm8185540pfn.32.2023.07.24.13.29.03
+        by smtp.gmail.com with ESMTPSA id v13-20020aa7850d000000b00653fe2d527esm8185540pfn.32.2023.07.24.13.29.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Jul 2023 13:29:04 -0700 (PDT)
+        Mon, 24 Jul 2023 13:29:44 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Bean Huo <beanhuo@micron.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Can Guo <quic_cang@quicinc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
         Asutosh Das <quic_asutoshd@quicinc.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Alice Chao <alice.chao@mediatek.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Bean Huo <beanhuo@micron.com>,
         Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Po-Wen Kao <powen.kao@mediatek.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Daniil Lunev <dlunev@chromium.org>,
         Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH 11/12] scsi: ufs: Simplify transfer request header initialization
-Date:   Mon, 24 Jul 2023 13:16:46 -0700
-Message-ID: <20230724202024.3379114-12-bvanassche@acm.org>
+Subject: [PATCH 12/12] scsi: ufs: Simplify response header parsing
+Date:   Mon, 24 Jul 2023 13:16:47 -0700
+Message-ID: <20230724202024.3379114-13-bvanassche@acm.org>
 X-Mailer: git-send-email 2.41.0.487.g6d72f3e995-goog
 In-Reply-To: <20230724202024.3379114-1-bvanassche@acm.org>
 References: <20230724202024.3379114-1-bvanassche@acm.org>
@@ -66,329 +67,335 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make the code that initializes UTP transfer request headers easier to
-read by using bitfields instead of __le32 where appropriate.
+Make the code that parses UTP transfer request headers easier to read by
+using u8 instead of __be32 where appropriate.
 
-Cc: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Cc: Eric Biggers <ebiggers@google.com>
-Cc: Avri Altman <avri.altman@wdc.com>
-Cc: Bean Huo <beanhuo@micron.com>
-Cc: Adrian Hunter <adrian.hunter@intel.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufs-mcq.c       |  7 +--
- drivers/ufs/core/ufshcd-crypto.h | 20 ++++-----
- drivers/ufs/core/ufshcd.c        | 75 ++++++++++++++++++++++----------
- include/ufs/ufs.h                |  3 --
- include/ufs/ufshci.h             | 48 +++++++++++++-------
- 5 files changed, 97 insertions(+), 56 deletions(-)
+ drivers/ufs/core/ufshcd.c | 89 +++++++++++----------------------------
+ include/ufs/ufs.h         | 51 +++++++++++++++++++---
+ include/ufs/ufshcd.h      |  1 +
+ include/ufs/ufshci.h      |  5 ++-
+ 4 files changed, 73 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index a3d4ef8aa3b9..66a4e24484a3 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -558,12 +558,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
-  */
- static void ufshcd_mcq_nullify_sqe(struct utp_transfer_req_desc *utrd)
- {
--	u32 dword_0;
--
--	dword_0 = le32_to_cpu(utrd->header.dword_0);
--	dword_0 &= ~UPIU_COMMAND_TYPE_MASK;
--	dword_0 |= FIELD_PREP(UPIU_COMMAND_TYPE_MASK, 0xF);
--	utrd->header.dword_0 = cpu_to_le32(dword_0);
-+	utrd->header.command_type = 0xf;
- }
- 
- /**
-diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-crypto.h
-index 504cc841540b..be8596f20ba2 100644
---- a/drivers/ufs/core/ufshcd-crypto.h
-+++ b/drivers/ufs/core/ufshcd-crypto.h
-@@ -26,15 +26,15 @@ static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
- }
- 
- static inline void
--ufshcd_prepare_req_desc_hdr_crypto(struct ufshcd_lrb *lrbp, u32 *dword_0,
--				   u32 *dword_1, u32 *dword_3)
-+ufshcd_prepare_req_desc_hdr_crypto(struct ufshcd_lrb *lrbp,
-+				   struct request_desc_header *h)
- {
--	if (lrbp->crypto_key_slot >= 0) {
--		*dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
--		*dword_0 |= lrbp->crypto_key_slot;
--		*dword_1 = lower_32_bits(lrbp->data_unit_num);
--		*dword_3 = upper_32_bits(lrbp->data_unit_num);
--	}
-+	if (lrbp->crypto_key_slot < 0)
-+		return;
-+	h->enable_crypto = 1;
-+	h->cci = lrbp->crypto_key_slot;
-+	h->dunl = cpu_to_le32(lower_32_bits(lrbp->data_unit_num));
-+	h->dunu = cpu_to_le32(upper_32_bits(lrbp->data_unit_num));
- }
- 
- bool ufshcd_crypto_enable(struct ufs_hba *hba);
-@@ -51,8 +51,8 @@ static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
- 					      struct ufshcd_lrb *lrbp) { }
- 
- static inline void
--ufshcd_prepare_req_desc_hdr_crypto(struct ufshcd_lrb *lrbp, u32 *dword_0,
--				   u32 *dword_1, u32 *dword_3) { }
-+ufshcd_prepare_req_desc_hdr_crypto(struct ufshcd_lrb *lrbp,
-+				   struct request_desc_header *h) { }
- 
- static inline bool ufshcd_crypto_enable(struct ufs_hba *hba)
- {
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 4348b0dfde29..84a6ad4c5550 100644
+index 84a6ad4c5550..f9fab40af83a 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -794,7 +794,7 @@ static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp,
- 	if (cqe)
- 		return le32_to_cpu(cqe->status) & MASK_OCS;
+@@ -332,13 +332,13 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ 				      enum ufs_trace_str_t str_t)
+ {
+ 	struct utp_upiu_req *rq = hba->lrb[tag].ucd_req_ptr;
+-	struct utp_upiu_header *header;
++	struct utp_upiu_hdr *header;
  
--	return le32_to_cpu(lrbp->utr_descriptor_ptr->header.dword_2) & MASK_OCS;
-+	return lrbp->utr_descriptor_ptr->header.ocs & MASK_OCS;
+ 	if (!trace_ufshcd_upiu_enabled())
+ 		return;
+ 
+ 	if (str_t == UFS_CMD_SEND)
+-		header = &rq->header;
++		header = (struct utp_upiu_hdr *)&rq->header;
+ 	else
+ 		header = &hba->lrb[tag].ucd_rsp_ptr->header;
+ 
+@@ -882,35 +882,7 @@ static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
+ static inline enum upiu_response_transaction
+ ufshcd_get_req_rsp(struct utp_upiu_rsp *ucd_rsp_ptr)
+ {
+-	return be32_to_cpu(ucd_rsp_ptr->header.dword_0) >> 24;
+-}
+-
+-/**
+- * ufshcd_get_rsp_upiu_result - Get the result from response UPIU
+- * @ucd_rsp_ptr: pointer to response UPIU
+- *
+- * This function gets the response status and scsi_status from response UPIU
+- *
+- * Return: the response result code.
+- */
+-static inline int
+-ufshcd_get_rsp_upiu_result(struct utp_upiu_rsp *ucd_rsp_ptr)
+-{
+-	return be32_to_cpu(ucd_rsp_ptr->header.dword_1) & MASK_RSP_UPIU_RESULT;
+-}
+-
+-/*
+- * ufshcd_get_rsp_upiu_data_seg_len - Get the data segment length
+- *				from response UPIU
+- * @ucd_rsp_ptr: pointer to response UPIU
+- *
+- * Return: the data segment length.
+- */
+-static inline unsigned int
+-ufshcd_get_rsp_upiu_data_seg_len(struct utp_upiu_rsp *ucd_rsp_ptr)
+-{
+-	return be32_to_cpu(ucd_rsp_ptr->header.dword_2) &
+-		MASK_RSP_UPIU_DATA_SEG_LEN;
++	return ucd_rsp_ptr->header.transaction_code;
  }
  
  /**
-@@ -2587,10 +2587,10 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp, u8 *upiu_flags,
- 					enum dma_data_direction cmd_dir, int ehs_length)
+@@ -924,8 +896,7 @@ ufshcd_get_rsp_upiu_data_seg_len(struct utp_upiu_rsp *ucd_rsp_ptr)
+  */
+ static inline bool ufshcd_is_exception_event(struct utp_upiu_rsp *ucd_rsp_ptr)
  {
- 	struct utp_transfer_req_desc *req_desc = lrbp->utr_descriptor_ptr;
-+	struct request_desc_header *h = &req_desc->header;
- 	u32 data_direction;
--	u32 dword_0;
--	u32 dword_1 = 0;
--	u32 dword_3 = 0;
-+
-+	*h = (typeof(*h)){ };
+-	return be32_to_cpu(ucd_rsp_ptr->header.dword_2) &
+-			MASK_RSP_EXCEPTION_EVENT;
++	return ucd_rsp_ptr->header.device_information & 1;
+ }
  
- 	if (cmd_dir == DMA_FROM_DEVICE) {
- 		data_direction = UTP_DEVICE_TO_HOST;
-@@ -2603,25 +2603,22 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp, u8 *upiu_flags,
- 		*upiu_flags = UPIU_CMD_FLAGS_NONE;
+ /**
+@@ -2227,7 +2198,7 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
+ 	int len;
+ 
+ 	if (sense_buffer &&
+-	    ufshcd_get_rsp_upiu_data_seg_len(lrbp->ucd_rsp_ptr)) {
++	    be16_to_cpu(lrbp->ucd_rsp_ptr->header.data_segment_length)) {
+ 		int len_to_copy;
+ 
+ 		len = be16_to_cpu(lrbp->ucd_rsp_ptr->sr.sense_data_len);
+@@ -2262,8 +2233,8 @@ int ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 		u16 buf_len;
+ 
+ 		/* data segment length */
+-		resp_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) &
+-						MASK_QUERY_DATA_SEG_LEN;
++		resp_len = be16_to_cpu(lrbp->ucd_rsp_ptr->header
++				       .data_segment_length);
+ 		buf_len = be16_to_cpu(
+ 				hba->dev_cmd.query.request.upiu_req.length);
+ 		if (likely(buf_len >= resp_len)) {
+@@ -3008,13 +2979,6 @@ static int ufshcd_clear_cmd(struct ufs_hba *hba, u32 task_tag)
+ 					mask, ~mask, 1000, 1000);
+ }
+ 
+-static int
+-ufshcd_check_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+-{
+-	return ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr) >>
+-				UPIU_RSP_CODE_OFFSET;
+-}
+-
+ /**
+  * ufshcd_dev_cmd_completion() - handles device management command responses
+  * @hba: per adapter instance
+@@ -3039,11 +3003,13 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 					__func__, resp);
+ 		}
+ 		break;
+-	case UPIU_TRANSACTION_QUERY_RSP:
+-		err = ufshcd_check_query_response(hba, lrbp);
+-		if (!err)
++	case UPIU_TRANSACTION_QUERY_RSP: {
++		u8 response = lrbp->ucd_rsp_ptr->header.response;
++
++		if (response == 0)
+ 			err = ufshcd_copy_query_response(hba, lrbp);
+ 		break;
++	}
+ 	case UPIU_TRANSACTION_REJECT_UPIU:
+ 		/* TODO: handle Reject UPIU Response */
+ 		err = -EPERM;
+@@ -5244,7 +5210,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 	u8 upiu_flags;
+ 	u32 resid;
+ 
+-	upiu_flags = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_0) >> 16;
++	upiu_flags = lrbp->ucd_rsp_ptr->header.flags;
+ 	resid = be32_to_cpu(lrbp->ucd_rsp_ptr->sr.residual_transfer_count);
+ 	/*
+ 	 * Test !overflow instead of underflow to support UFS devices that do
+@@ -5257,8 +5223,8 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 	ocs = ufshcd_get_tr_ocs(lrbp, cqe);
+ 
+ 	if (hba->quirks & UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR) {
+-		if (be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_1) &
+-					MASK_RSP_UPIU_RESULT)
++		if (lrbp->ucd_rsp_ptr->header.response ||
++		    lrbp->ucd_rsp_ptr->header.status)
+ 			ocs = OCS_SUCCESS;
  	}
  
--	dword_0 = data_direction | (lrbp->command_type << UPIU_COMMAND_TYPE_OFFSET) |
--		ehs_length << 8;
-+	h->command_type = lrbp->command_type;
-+	h->data_direction = data_direction;
-+	h->ehs_length = ehs_length;
-+
- 	if (lrbp->intr_cmd)
--		dword_0 |= UTP_REQ_DESC_INT_CMD;
-+		h->interrupt = 1;
+@@ -5267,17 +5233,11 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 		hba->ufs_stats.last_hibern8_exit_tstamp = ktime_set(0, 0);
+ 		switch (ufshcd_get_req_rsp(lrbp->ucd_rsp_ptr)) {
+ 		case UPIU_TRANSACTION_RESPONSE:
+-			/*
+-			 * get the response UPIU result to extract
+-			 * the SCSI command status
+-			 */
+-			result = ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr);
+-
+ 			/*
+ 			 * get the result based on SCSI status response
+ 			 * to notify the SCSI midlayer of the command status
+ 			 */
+-			scsi_status = result & MASK_SCSI_STATUS;
++			scsi_status = lrbp->ucd_rsp_ptr->header.status;
+ 			result = ufshcd_scsi_cmd_status(lrbp, scsi_status);
  
- 	/* Prepare crypto related dwords */
--	ufshcd_prepare_req_desc_hdr_crypto(lrbp, &dword_0, &dword_1, &dword_3);
-+	ufshcd_prepare_req_desc_hdr_crypto(lrbp, h);
+ 			/*
+@@ -6967,7 +6927,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	WARN_ONCE(task_tag < 0 || task_tag >= hba->nutmrs, "Invalid tag %d\n",
+ 		  task_tag);
+ 	hba->tmf_rqs[req->tag] = req;
+-	treq->upiu_req.req_header.dword_0 |= cpu_to_be32(task_tag);
++	treq->upiu_req.req_header.task_tag = task_tag;
  
--	/* Transfer request descriptor header fields */
--	req_desc->header.dword_0 = cpu_to_le32(dword_0);
--	req_desc->header.dword_1 = cpu_to_le32(dword_1);
- 	/*
- 	 * assigning invalid value for command status. Controller
- 	 * updates OCS on command completion, with the command
- 	 * status
- 	 */
--	req_desc->header.dword_2 =
--		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
--	req_desc->header.dword_3 = cpu_to_le32(dword_3);
-+	h->ocs = OCS_INVALID_COMMAND_STATUS;
- 
- 	req_desc->prd_table_length = 0;
- }
-@@ -5445,8 +5442,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 		if (hba->dev_cmd.complete) {
- 			if (cqe) {
- 				ocs = le32_to_cpu(cqe->status) & MASK_OCS;
--				lrbp->utr_descriptor_ptr->header.dword_2 =
--					cpu_to_le32(ocs);
-+				lrbp->utr_descriptor_ptr->header.ocs = ocs;
- 			}
- 			complete(hba->dev_cmd.complete);
- 			ufshcd_clk_scaling_update_busy(hba);
-@@ -7034,8 +7030,8 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
- 	int err;
- 
- 	/* Configure task request descriptor */
--	treq.header.dword_0 = cpu_to_le32(UTP_REQ_DESC_INT_CMD);
--	treq.header.dword_2 = cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
-+	treq.header.interrupt = 1;
-+	treq.header.ocs = OCS_INVALID_COMMAND_STATUS;
+ 	memcpy(hba->utmrdl_base_addr + task_tag, treq, sizeof(*treq));
+ 	ufshcd_vops_setup_task_mgmt(hba, task_tag, tm_function);
+@@ -7034,9 +6994,9 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 	treq.header.ocs = OCS_INVALID_COMMAND_STATUS;
  
  	/* Configure task request UPIU */
- 	treq.upiu_req.req_header.dword_0 = cpu_to_be32(lun_id << 8) |
-@@ -7053,7 +7049,7 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
- 	if (err == -ETIMEDOUT)
- 		return err;
+-	treq.upiu_req.req_header.dword_0 = cpu_to_be32(lun_id << 8) |
+-				  cpu_to_be32(UPIU_TRANSACTION_TASK_REQ << 24);
+-	treq.upiu_req.req_header.dword_1 = cpu_to_be32(tm_function << 16);
++	treq.upiu_req.req_header.transaction_code = UPIU_TRANSACTION_TASK_REQ;
++	treq.upiu_req.req_header.lun = lun_id;
++	treq.upiu_req.req_header.tm_function = tm_function;
  
--	ocs_value = le32_to_cpu(treq.header.dword_2) & MASK_OCS;
-+	ocs_value = treq.header.ocs & MASK_OCS;
- 	if (ocs_value != OCS_SUCCESS)
- 		dev_err(hba->dev, "%s: failed, ocs = 0x%x\n",
- 				__func__, ocs_value);
-@@ -7213,8 +7209,8 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 	/*
+ 	 * The host shall provide the same value for LUN field in the basic
+@@ -7143,8 +7103,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 	memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
+ 	if (desc_buff && desc_op == UPIU_QUERY_OPCODE_READ_DESC) {
+ 		u8 *descp = (u8 *)lrbp->ucd_rsp_ptr + sizeof(*rsp_upiu);
+-		u16 resp_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) &
+-			       MASK_QUERY_DATA_SEG_LEN;
++		u16 resp_len = be16_to_cpu(lrbp->ucd_rsp_ptr->header
++					   .data_segment_length);
  
- 		break;
- 	case UPIU_TRANSACTION_TASK_REQ:
--		treq.header.dword_0 = cpu_to_le32(UTP_REQ_DESC_INT_CMD);
--		treq.header.dword_2 = cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
-+		treq.header.interrupt = 1;
-+		treq.header.ocs = OCS_INVALID_COMMAND_STATUS;
+ 		if (*buff_len >= resp_len) {
+ 			memcpy(desc_buff, descp, resp_len);
+@@ -7306,9 +7266,10 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
+ 		/* Just copy the upiu response as it is */
+ 		memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
+ 		/* Get the response UPIU result */
+-		result = ufshcd_get_rsp_upiu_result(lrbp->ucd_rsp_ptr);
++		result = (lrbp->ucd_rsp_ptr->header.response << 8) |
++			lrbp->ucd_rsp_ptr->header.status;
  
- 		memcpy(&treq.upiu_req, req_upiu, sizeof(*req_upiu));
- 
-@@ -7222,7 +7218,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 		if (err == -ETIMEDOUT)
- 			break;
- 
--		ocs_value = le32_to_cpu(treq.header.dword_2) & MASK_OCS;
-+		ocs_value = treq.header.ocs & MASK_OCS;
- 		if (ocs_value != OCS_SUCCESS) {
- 			dev_err(hba->dev, "%s: failed, ocs = 0x%x\n", __func__,
- 				ocs_value);
-@@ -10567,6 +10563,39 @@ static const struct dev_pm_ops ufshcd_wl_pm_ops = {
- 	SET_RUNTIME_PM_OPS(ufshcd_wl_runtime_suspend, ufshcd_wl_runtime_resume, NULL)
- };
- 
-+static void ufshcd_check_header_layout(void)
-+{
-+	BUILD_BUG_ON(((u8 *)&(struct request_desc_header){
-+				.cci = 3})[0] != 3);
-+
-+	BUILD_BUG_ON(((u8 *)&(struct request_desc_header){
-+				.ehs_length = 2})[1] != 2);
-+
-+	BUILD_BUG_ON(((u8 *)&(struct request_desc_header){
-+				.enable_crypto = 1})[2]
-+		     != 0x80);
-+
-+	BUILD_BUG_ON((((u8 *)&(struct request_desc_header){
-+					.command_type = 5,
-+					.data_direction = 3,
-+					.interrupt = 1,
-+				})[3]) != ((5 << 4) | (3 << 1) | 1));
-+
-+	BUILD_BUG_ON(((__le32 *)&(struct request_desc_header){
-+				.dunl = cpu_to_le32(0xdeadbeef)})[1] !=
-+		cpu_to_le32(0xdeadbeef));
-+
-+	BUILD_BUG_ON(((u8 *)&(struct request_desc_header){
-+				.ocs = 4})[8] != 4);
-+
-+	BUILD_BUG_ON(((u8 *)&(struct request_desc_header){
-+				.cds = 5})[9] != 5);
-+
-+	BUILD_BUG_ON(((__le32 *)&(struct request_desc_header){
-+				.dunu = cpu_to_le32(0xbadcafe)})[3] !=
-+		cpu_to_le32(0xbadcafe));
-+}
-+
- /*
-  * ufs_dev_wlun_template - describes ufs device wlun
-  * ufs-device wlun - used to send pm commands
-@@ -10592,6 +10621,8 @@ static int __init ufshcd_core_init(void)
- {
- 	int ret;
- 
-+	ufshcd_check_header_layout();
-+
- 	ufs_debugfs_init();
- 
- 	ret = scsi_register_driver(&ufs_dev_wlun_template.gendrv);
+-		ehs_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2) >> 24;
++		ehs_len = lrbp->ucd_rsp_ptr->header.ehs_length;
+ 		/*
+ 		 * Since the bLength in EHS indicates the total size of the EHS Header and EHS Data
+ 		 * in 32 Byte units, the value of the bLength Request/Response for Advanced RPMB
 diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 20063a2f01a4..41a2b3d1e0d8 100644
+index 41a2b3d1e0d8..fb7f91603e58 100644
 --- a/include/ufs/ufs.h
 +++ b/include/ufs/ufs.h
-@@ -472,9 +472,6 @@ enum {
- 	UPIU_COMMAND_SET_TYPE_QUERY	= 0x2,
- };
- 
--/* UTP Transfer Request Command Offset */
--#define UPIU_COMMAND_TYPE_OFFSET	28
--
- /* Offset of the response code in the UPIU header */
+@@ -476,12 +476,6 @@ enum {
  #define UPIU_RSP_CODE_OFFSET		8
  
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 4941ffb068ef..583155c7ef56 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -126,7 +126,6 @@ enum {
- };
- 
- #define SQ_ICU_ERR_CODE_MASK		GENMASK(7, 4)
--#define UPIU_COMMAND_TYPE_MASK		GENMASK(31, 28)
- #define UFS_MASK(mask, offset)		((mask) << (offset))
- 
- /* UFS Version 08h */
-@@ -438,15 +437,13 @@ enum {
- 	UTP_SCSI_COMMAND		= 0x00000000,
- 	UTP_NATIVE_UFS_COMMAND		= 0x10000000,
- 	UTP_DEVICE_MANAGEMENT_FUNCTION	= 0x20000000,
--	UTP_REQ_DESC_INT_CMD		= 0x01000000,
--	UTP_REQ_DESC_CRYPTO_ENABLE_CMD	= 0x00800000,
- };
- 
- /* UTP Transfer Request Data Direction (DD) */
  enum {
--	UTP_NO_DATA_TRANSFER	= 0x00000000,
--	UTP_HOST_TO_DEVICE	= 0x02000000,
--	UTP_DEVICE_TO_HOST	= 0x04000000,
-+	UTP_NO_DATA_TRANSFER	= 0,
-+	UTP_HOST_TO_DEVICE	= 1,
-+	UTP_DEVICE_TO_HOST	= 2,
+-	MASK_SCSI_STATUS		= 0xFF,
+-	MASK_TASK_RESPONSE              = 0xFF00,
+-	MASK_RSP_UPIU_RESULT            = 0xFFFF,
+-	MASK_QUERY_DATA_SEG_LEN         = 0xFFFF,
+-	MASK_RSP_UPIU_DATA_SEG_LEN	= 0xFFFF,
+-	MASK_RSP_EXCEPTION_EVENT        = 0x10000,
+ 	MASK_TM_SERVICE_RESP		= 0xFF,
+ 	MASK_TM_FUNC			= 0xFF,
  };
+@@ -505,6 +499,49 @@ enum ufs_dev_pwr_mode {
  
- /* Overall command status values */
-@@ -505,17 +502,38 @@ struct utp_transfer_cmd_desc {
+ #define UFS_WB_BUF_REMAIN_PERCENT(val) ((val) / 10)
  
- /**
-  * struct request_desc_header - Descriptor Header common to both UTRD and UTMRD
-- * @dword0: Descriptor Header DW0
-- * @dword1: Descriptor Header DW1
-- * @dword2: Descriptor Header DW2
-- * @dword3: Descriptor Header DW3
-  */
- struct request_desc_header {
--	__le32 dword_0;
--	__le32 dword_1;
--	__le32 dword_2;
--	__le32 dword_3;
--};
-+	u8 cci;
-+	u8 ehs_length;
++/**
++ * struct utp_upiu_hdr - UFS UPIU header
++ * @transaction_code: Type of request or response. See also enum
++ *	upiu_request_transaction and enum upiu_response_transaction.
++ * @flags: UPIU flags. The meaning of individual flags depends on the
++ *	transaction code.
++ * @lun: Logical unit number.
++ * @task_tag: Task tag.
++ * @iid: Initiator ID.
++ * @command_set_type: 0 for SCSI command set; 1 for UFS specific.
++ * @tm_function: Task management function.
++ * @response: 0 for success; 1 for failure.
++ * @status: SCSI status if this is the header of a response to a SCSI command.
++ * @ehs_length: EHS length in units of 32 bytes.
++ * @device_information:
++ * @data_segment_length: data segment length.
++ *
++ * This data structure has the same role as struct utp_upiu_header.
++ */
++struct utp_upiu_hdr {
++	u8 transaction_code;
++	u8 flags;
++	u8 lun;
++	u8 task_tag;
 +#if defined(__BIG_ENDIAN)
-+	u8 enable_crypto:1;
-+	u8 reserved2:7;
-+
-+	u8 command_type:4;
-+	u8 reserved1:1;
-+	u8 data_direction:2;
-+	u8 interrupt:1;
++	u8 iid:4
++	u8 command_set_type:4;
 +#elif defined(__LITTLE_ENDIAN)
-+	u8 reserved2:7;
-+	u8 enable_crypto:1;
-+
-+	u8 interrupt:1;
-+	u8 data_direction:2;
-+	u8 reserved1:1;
-+	u8 command_type:4;
++	u8 command_set_type:4;
++	u8 iid:4;
 +#else
 +#error
 +#endif
-+
-+	__le32 dunl;
-+	u8 ocs;
-+	u8 cds;
-+	__le16 ldbc;
-+	__le32 dunu;
++	u8 tm_function;
++	u8 response;
++	u8 status;
++	u8 ehs_length;
++	u8 device_information;
++	__be16 data_segment_length;
 +};
 +
-+static_assert(sizeof(struct request_desc_header) == 16);
- 
++static_assert(sizeof(struct utp_upiu_hdr) == 12);
++
  /**
-  * struct utp_transfer_req_desc - UTP Transfer Request Descriptor (UTRD)
+  * struct utp_cmd_rsp - Response UPIU structure
+  * @residual_transfer_count: Residual transfer count DW-3
+@@ -526,7 +563,7 @@ struct utp_cmd_rsp {
+  * @qr: fields structure for query request DW-3 to DW-7
+  */
+ struct utp_upiu_rsp {
+-	struct utp_upiu_header header;
++	struct utp_upiu_hdr header;
+ 	union {
+ 		struct utp_cmd_rsp sr;
+ 		struct utp_upiu_query qr;
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index bf4070a4b95f..002f075ed0a0 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -19,6 +19,7 @@
+ #include <linux/msi.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/dma-direction.h>
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <ufs/unipro.h>
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 583155c7ef56..5b760d538f15 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -12,6 +12,7 @@
+ #define _UFSHCI_H
+ 
+ #include <linux/types.h>
++#include <ufs/ufs.h>
+ 
+ enum {
+ 	TASK_REQ_UPIU_SIZE_DWORDS	= 8,
+@@ -592,7 +593,7 @@ struct utp_task_req_desc {
+ 
+ 	/* DW 4-11 - Task request UPIU structure */
+ 	struct {
+-		struct utp_upiu_header	req_header;
++		struct utp_upiu_hdr	req_header;
+ 		__be32			input_param1;
+ 		__be32			input_param2;
+ 		__be32			input_param3;
+@@ -601,7 +602,7 @@ struct utp_task_req_desc {
+ 
+ 	/* DW 12-19 - Task Management Response UPIU structure */
+ 	struct {
+-		struct utp_upiu_header	rsp_header;
++		struct utp_upiu_hdr	rsp_header;
+ 		__be32			output_param1;
+ 		__be32			output_param2;
+ 		__be32			__reserved2[3];
