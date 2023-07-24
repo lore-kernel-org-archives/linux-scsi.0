@@ -2,154 +2,137 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B9D7C001DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 17:48:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C685FC00528
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 17:55:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229845AbjGXRsL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 13:48:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45902 "EHLO
+        id S230298AbjGXRzU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 13:55:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231303AbjGXRqa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 13:46:30 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4536219BF;
-        Mon, 24 Jul 2023 10:44:40 -0700 (PDT)
-Message-ID: <20230724172845.375121380@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1690220677;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=y/zw4jIEoXHpKelNkwXOESHKGmmFcaqzgwgGslsADMM=;
-        b=oAZN3uUCR0PSr5PJdkrlNpzMccFxzFblCHzCCrxxH6UYiP4BqWDNHrmlUtJ+V2zl/kTSKO
-        IfGKYDgZjAZIm0QNIuydsQz/GKlj5W5nzva5FjbYJndAIJQrTP7ED3lGVU7DlxGYKSqOzP
-        8DdH9V6YAhQX3UdYYsJ7o9xihsdWjk/lE/ReVKe331qF+fSA6z0qwu97c4kwKBkz/fDqWo
-        BO6+4FZx0HOVuTK0Kio1gALRb04/b6ArwIiG1dg967RKEmpqQv3aT4z3SMcgK4ObPM7z3H
-        F6HZVCLSdvdtQ3fuv01KoxuoU1e6UcaGEPVAUXfHCmG36mcWnQ+h36K9Y+oEBw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1690220677;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=y/zw4jIEoXHpKelNkwXOESHKGmmFcaqzgwgGslsADMM=;
-        b=EPz5lOl9GlUQTZX3HOCC0E5JSvUep+0rIrlU5Xpi8RRsrw+HgmfYYllhgvvLn4igKQ1gH1
-        sKfUxAitOmRV+lBA==
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     LKML <linux-kernel@vger.kernel.org>
+        with ESMTP id S231778AbjGXRzC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 13:55:02 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1819444AA;
+        Mon, 24 Jul 2023 10:53:10 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-666e916b880so2665084b3a.2;
+        Mon, 24 Jul 2023 10:53:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1690221188; x=1690825988;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=09VDaxK56psBIcQ3p+KkL/r9s9OSq7jrm2adGBWzyKI=;
+        b=oQQYUHIMHaQ+iTqyIPO8O53dHQy5kAboZJO6kf662+eW7q/ObrDDScRT3Dd931VQGR
+         x56cS7RAk/j+JMz0+ZsaygddRfntaVW3BPKSLnHjVMOyo0+tC181yV34OVhxadWZWAnV
+         7vnG4hn5iKCsA79hRFkDd1lvlbuBh1Yw0mXXdqJptgfiSAZ4N5PxGs/AURR5Hrd5Y8iq
+         799s2DY0Zhbg/JAyPrqljfKqXSW98jXEmG6UbWNXh2RMdjWjcPlxjeB7sY2cIrdsleSm
+         E2OlQtpQaysZUAv0KdwjuxUtebN6DCDu7lXjVvo0KyLIb5BiLEvDaFMzVqTcosX5ApEH
+         3aLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690221188; x=1690825988;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=09VDaxK56psBIcQ3p+KkL/r9s9OSq7jrm2adGBWzyKI=;
+        b=Jk49ae42q3Hh5tCUqIjAp8rCz5nLER/5I0PFbGbyN4fbp50X4DczQFklavljr5Ja+V
+         ToGOoGvuvSVx5s3XScYlT5V52bWFUw5ogkulNkC2kRwhhwrQ/ed/qgvQbx0H0UV4GmU4
+         xah/LGHuJDQ0Q/BoqBXX0I9wTYA7wti2w64/mNkb6n7JxXh79+lurbjlxAlP+JGDrjiP
+         Vmdp4yQOav/4kK80P6FkSQOL92x+N8RcG+4jvduIs+zs7397FvFqgS6/1VHiNp6Xwt1S
+         jHuR0tWiWSTjvB6/hS8G+mrYTGOb6JJL2FP/qHuzuly7bxTy1BOsXERjFnNemVuu+dc5
+         txAQ==
+X-Gm-Message-State: ABy/qLbpUAs+FsJm5MXBVkcem5H+4lu8Ul3kULDbOq9dPVXF4zwGEI6Z
+        X+kmUpsBicWiVL3/jF980QY=
+X-Google-Smtp-Source: APBJJlFICbKfcU0+RJ6+we74AuAVQY/03hWGryjEpMNQSGW4qgnbOtdQPbGT7+R0JhLEm/3e4WSqyA==
+X-Received: by 2002:a05:6a20:7d9f:b0:123:828f:68c with SMTP id v31-20020a056a207d9f00b00123828f068cmr9862379pzj.50.1690221187819;
+        Mon, 24 Jul 2023 10:53:07 -0700 (PDT)
+Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id j2-20020aa78002000000b0068659489a33sm7953771pfi.163.2023.07.24.10.53.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 24 Jul 2023 10:53:07 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Message-ID: <34652b37-9e71-8f23-bd0b-12b6a8faa81b@roeck-us.net>
+Date:   Mon, 24 Jul 2023 10:53:05 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [patch 05/29] hwmon: (fam15h_power) Use topology_core_id()
+Content-Language: en-US
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
         Andrew Cooper <andrew.cooper3@citrix.com>,
         Arjan van de Ven <arjan@linux.intel.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Mike Travis <mike.travis@hpe.com>,
-        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
-        Russ Anderson <russ.anderson@hpe.com>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Huang Rui <ray.huang@amd.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         James Smart <james.smart@broadcom.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-hwmon@vger.kernel.org,
-        Jean Delvare <jdelvare@suse.com>,
-        Huang Rui <ray.huang@amd.com>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: [patch 29/29] x86/apic/uv: Remove the private leaf 0xb parser
+        linux-scsi@vger.kernel.org, Steve Wahl <steve.wahl@hpe.com>,
+        Mike Travis <mike.travis@hpe.com>,
+        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+        Russ Anderson <russ.anderson@hpe.com>
 References: <20230724155329.474037902@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 24 Jul 2023 19:44:36 +0200 (CEST)
+ <20230724172843.988600888@linutronix.de>
+From:   Guenter Roeck <linux@roeck-us.net>
+In-Reply-To: <20230724172843.988600888@linutronix.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The package shift has been already evaluated by the early CPU init.
+On 7/24/23 10:43, Thomas Gleixner wrote:
+> Use the provided topology helper function instead of fiddling in cpu_data.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Cc: linux-hwmon@vger.kernel.org
+> Cc: Jean Delvare <jdelvare@suse.com>
+> Cc: Huang Rui <ray.huang@amd.com>
+> Cc: Guenter Roeck <linux@roeck-us.net>
 
-Put the mindless copy right next to the original leaf 0xb parser.
+Assuming this will be applied as part of the series:
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Steve Wahl <steve.wahl@hpe.com>
-Cc: Mike Travis <mike.travis@hpe.com>
-Cc: Dimitri Sivanich <dimitri.sivanich@hpe.com>
-Cc: Russ Anderson <russ.anderson@hpe.com>
----
- arch/x86/include/asm/topology.h    |    5 +++
- arch/x86/kernel/apic/x2apic_uv_x.c |   52 ++++++-------------------------------
- 2 files changed, 14 insertions(+), 43 deletions(-)
+Acked-by: Guenter Roeck <linux@roeck-us.net>
 
---- a/arch/x86/include/asm/topology.h
-+++ b/arch/x86/include/asm/topology.h
-@@ -126,6 +126,11 @@ static inline unsigned int topology_get_
- 	return x86_topo_system.dom_size[dom];
- }
- 
-+static inline unsigned int topology_get_domain_shift(enum x86_topology_domains dom)
-+{
-+	return dom == TOPO_SMT_DOMAIN ? 0 : x86_topo_system.dom_shifts[dom - 1];
-+}
-+
- extern const struct cpumask *cpu_coregroup_mask(int cpu);
- extern const struct cpumask *cpu_clustergroup_mask(int cpu);
- 
---- a/arch/x86/kernel/apic/x2apic_uv_x.c
-+++ b/arch/x86/kernel/apic/x2apic_uv_x.c
-@@ -241,54 +241,20 @@ static void __init uv_tsc_check_sync(voi
- 	is_uv(UV3) ? sname.s3.field :		\
- 	undef)
- 
--/* [Copied from arch/x86/kernel/cpu/topology.c:detect_extended_topology()] */
--
--#define SMT_LEVEL			0	/* Leaf 0xb SMT level */
--#define INVALID_TYPE			0	/* Leaf 0xb sub-leaf types */
--#define SMT_TYPE			1
--#define CORE_TYPE			2
--#define LEAFB_SUBTYPE(ecx)		(((ecx) >> 8) & 0xff)
--#define BITS_SHIFT_NEXT_LEVEL(eax)	((eax) & 0x1f)
--
--static void set_x2apic_bits(void)
--{
--	unsigned int eax, ebx, ecx, edx, sub_index;
--	unsigned int sid_shift;
--
--	cpuid(0, &eax, &ebx, &ecx, &edx);
--	if (eax < 0xb) {
--		pr_info("UV: CPU does not have CPUID.11\n");
--		return;
--	}
--
--	cpuid_count(0xb, SMT_LEVEL, &eax, &ebx, &ecx, &edx);
--	if (ebx == 0 || (LEAFB_SUBTYPE(ecx) != SMT_TYPE)) {
--		pr_info("UV: CPUID.11 not implemented\n");
--		return;
--	}
--
--	sid_shift = BITS_SHIFT_NEXT_LEVEL(eax);
--	sub_index = 1;
--	do {
--		cpuid_count(0xb, sub_index, &eax, &ebx, &ecx, &edx);
--		if (LEAFB_SUBTYPE(ecx) == CORE_TYPE) {
--			sid_shift = BITS_SHIFT_NEXT_LEVEL(eax);
--			break;
--		}
--		sub_index++;
--	} while (LEAFB_SUBTYPE(ecx) != INVALID_TYPE);
--
--	uv_cpuid.apicid_shift	= 0;
--	uv_cpuid.apicid_mask	= (~(-1 << sid_shift));
--	uv_cpuid.socketid_shift = sid_shift;
--}
--
- static void __init early_get_apic_socketid_shift(void)
- {
-+	unsigned int sid_shift = topology_get_domain_shift(TOPO_ROOT_DOMAIN);
-+
- 	if (is_uv2_hub() || is_uv3_hub())
- 		uvh_apicid.v = uv_early_read_mmr(UVH_APICID);
- 
--	set_x2apic_bits();
-+	if (sid_shift) {
-+		uv_cpuid.apicid_shift	= 0;
-+		uv_cpuid.apicid_mask	= (~(-1 << sid_shift));
-+		uv_cpuid.socketid_shift = sid_shift;
-+	} else {
-+		pr_info("UV: CPU does not have valid CPUID.11\n");
-+	}
- 
- 	pr_info("UV: apicid_shift:%d apicid_mask:0x%x\n", uv_cpuid.apicid_shift, uv_cpuid.apicid_mask);
- 	pr_info("UV: socketid_shift:%d pnode_mask:0x%x\n", uv_cpuid.socketid_shift, uv_cpuid.pnode_mask);
+Please let me know if you want me to apply the patch through
+the hardware monitoring branch.
+
+Thanks,
+Guenter
+
+> ---
+>   drivers/hwmon/fam15h_power.c |    7 +++----
+>   1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> --- a/drivers/hwmon/fam15h_power.c
+> +++ b/drivers/hwmon/fam15h_power.c
+> @@ -17,6 +17,7 @@
+>   #include <linux/cpumask.h>
+>   #include <linux/time.h>
+>   #include <linux/sched.h>
+> +#include <linux/topology.h>
+>   #include <asm/processor.h>
+>   #include <asm/msr.h>
+>   
+> @@ -134,15 +135,13 @@ static DEVICE_ATTR_RO(power1_crit);
+>   static void do_read_registers_on_cu(void *_data)
+>   {
+>   	struct fam15h_power_data *data = _data;
+> -	int cpu, cu;
+> -
+> -	cpu = smp_processor_id();
+> +	int cu;
+>   
+>   	/*
+>   	 * With the new x86 topology modelling, cpu core id actually
+>   	 * is compute unit id.
+>   	 */
+> -	cu = cpu_data(cpu).cpu_core_id;
+> +	cu = topology_core_id(smp_processor_id());
+>   
+>   	rdmsrl_safe(MSR_F15H_CU_PWR_ACCUMULATOR, &data->cu_acc_power[cu]);
+>   	rdmsrl_safe(MSR_F15H_PTSC, &data->cpu_sw_pwr_ptsc[cu]);
+> 
 
