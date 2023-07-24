@@ -2,168 +2,135 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDAACC001DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 14:39:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC6CC001DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 14:52:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231190AbjGXOjp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 10:39:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57748 "EHLO
+        id S231503AbjGXOwI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 10:52:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230302AbjGXOjo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 10:39:44 -0400
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53888127
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 07:39:42 -0700 (PDT)
-Received: by mail-ej1-x62a.google.com with SMTP id a640c23a62f3a-986d8332f50so705792266b.0
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 07:39:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1690209580; x=1690814380;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FDCS4BThuikrxfZ3pVdXGKzBm4hBT5BkVcG2+9VDxdM=;
-        b=HeqltN6YysoNpPmF8jOq4BMenkVF/UoLLGTs2f73eDVL6RZGg995n4rlajiD4OwBuD
-         x0vh4COeuwAnTWyjIuPulyOqktMXVNRXkQvWwZ2l7X/x2xyzf/5z6rmKcfg7LEQUKape
-         g2rrI9p67ze5EjPEeChlbuzjserRkK4xiP6HA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690209580; x=1690814380;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FDCS4BThuikrxfZ3pVdXGKzBm4hBT5BkVcG2+9VDxdM=;
-        b=RJZFIUjsiTLldUxHdHE4uNGwagFCifrh81yQLafpjfIJSnfBrLSPrclFZBK9kfbGt7
-         eu7/wprJbcXbvWc4ppb+G/xoT/WeJGmNmjP30Hl6FzTMzu3P6BWXjYS8yfGC9pnvcwYy
-         ZGuBnkNf9ulTJipgnu7IpezukaspZ6EJxAiP8Pomm8e2SVHuWMxck14cMnsnywK6yGXH
-         Ggv6fEV2GomMrPOkxeVDoXqD9PA2xaHe1yTPt/3vk/ubdxlxuhyajNF22F6qsVTIH4Dc
-         gh0g7djVJo9KYqC90IE8tdjES9n6e2ED2MYJml/8FhDoSq8qNcVbBHlgHJNin71HiEU2
-         yu1g==
-X-Gm-Message-State: ABy/qLbRJKYiHQRE/BDLEs2v2SkDKqtrhk3qWOrPJdB4ATorUkCOpOlB
-        3Uvk5laOR6bGBcbDLQmjfQnLUIofpqAwH74AoI+BoA==
-X-Google-Smtp-Source: APBJJlEhJzIgS7J1r8rnaBHuP0IxMr4ecEVckNHkZk5mGp6vCrhxxkhKL9/0H7DuNGpREuFpu0kPPA==
-X-Received: by 2002:a17:906:21c:b0:98e:419b:4cc6 with SMTP id 28-20020a170906021c00b0098e419b4cc6mr9777310ejd.70.1690209579728;
-        Mon, 24 Jul 2023 07:39:39 -0700 (PDT)
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com. [209.85.208.42])
-        by smtp.gmail.com with ESMTPSA id h8-20020a17090634c800b0099297c99314sm6769864ejb.113.2023.07.24.07.39.39
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Jul 2023 07:39:39 -0700 (PDT)
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-521e046f6c7so13000a12.1
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 07:39:39 -0700 (PDT)
-X-Received: by 2002:a50:ab56:0:b0:51e:5773:891d with SMTP id
- t22-20020a50ab56000000b0051e5773891dmr168221edc.4.1690209578716; Mon, 24 Jul
- 2023 07:39:38 -0700 (PDT)
+        with ESMTP id S229650AbjGXOwH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 10:52:07 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D2BA10C3;
+        Mon, 24 Jul 2023 07:52:06 -0700 (PDT)
+Received: from pps.filterd (m0353722.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36OEenmM028654;
+        Mon, 24 Jul 2023 14:52:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=d937RMY7ZZlW43sn+9FAkbTBiABzA3bEQgbYLyhmSlI=;
+ b=Th5LJRXFsqdwMK1iupR6x+nwxHVNFDU0gqEoFi5olNoSr6ra+KNohvt+p974Vf90snMl
+ Q1Kgecdon3LXHuc+nMVescB8/vCNZRy78CypXMeECvD//AU8OX8FZvGtL1jqfod8/QwE
+ OKjvGRHQjGjQHdu3xXJ1dLLyXC9XNMRaiwRTpHlXTwAEZvLyTfpTngVdbj98koWlqVyJ
+ VdVdTpQEd4qjFM2a+oOKEitcwnJsNubL6vKobaM95osO6LRontmL3Wjl97/Ip/IVqeMW
+ +DkteY1WFaWABklTtIeL1wtlsXzDUki2LjIw7x4v1ZbAyOTjVV9LN4QsghbYon+RXGtt GA== 
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3s1thfhhbk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 24 Jul 2023 14:52:03 +0000
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+        by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 36OEcVWe002379;
+        Mon, 24 Jul 2023 14:52:03 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+        by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3s0unj3g9g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 24 Jul 2023 14:52:02 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 36OEq0et44695942
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Jul 2023 14:52:00 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E24D820043;
+        Mon, 24 Jul 2023 14:51:59 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8319B20040;
+        Mon, 24 Jul 2023 14:51:59 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Mon, 24 Jul 2023 14:51:59 +0000 (GMT)
+From:   Steffen Maier <maier@linux.ibm.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>
+Subject: [PATCH] zfcp: defer fc_rport blocking until after ADISC response
+Date:   Mon, 24 Jul 2023 16:51:56 +0200
+Message-Id: <20230724145156.3920244-1-maier@linux.ibm.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-References: <D98ED975-F617-4885-8D3F-DCFDC524E933@oracle.com>
-In-Reply-To: <D98ED975-F617-4885-8D3F-DCFDC524E933@oracle.com>
-From:   Doug Anderson <dianders@chromium.org>
-Date:   Mon, 24 Jul 2023 07:39:26 -0700
-X-Gmail-Original-Message-ID: <CAD=FV=VuJZNirf1DtcE_d8-aBRb9O_fYk_r252WCzC-YHwYnbg@mail.gmail.com>
-Message-ID: <CAD=FV=VuJZNirf1DtcE_d8-aBRb9O_fYk_r252WCzC-YHwYnbg@mail.gmail.com>
-Subject: Re: VM Boot Hangs with Commit "Revert "scsi: core: run queue if SCSI
- device queue isn't ready and queue is idle"" on linux-5.4.y
-To:     Sherry Yang <sherry.yang@oracle.com>
-Cc:     Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>,
-        George Kennedy <george.kennedy@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: LuuUUcX18NkGH1jq2s6ALlc8oDAm3Vs3
+X-Proofpoint-GUID: LuuUUcX18NkGH1jq2s6ALlc8oDAm3Vs3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-24_11,2023-07-24_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0
+ priorityscore=1501 suspectscore=0 mlxscore=0 malwarescore=0 adultscore=0
+ clxscore=1011 phishscore=0 spamscore=0 mlxlogscore=999 impostorscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2307240129
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Storages are free to send RSCNs, e.g. for internal state changes. If this
+happens on all connected paths, zfcp risks temporarily losing all paths at
+the same time. This has strong requirements on multipath configuration such
+as "no_path_retry queue".
 
-On Sun, Jul 23, 2023 at 10:28=E2=80=AFPM Sherry Yang <sherry.yang@oracle.co=
-m> wrote:
->
-> Hi Douglas,
->
-> We observed linux-stable v5.4 VM boot hangs, but probably only 1 in thous=
-ands of boots (less than 10,000 boots).  We started 16 VMs on a Bare Metal =
-with loop reboots, I chose 10,000 boots as a threshold, and bisected it. Af=
-ter a painful bisection, I found the culprit commit 578c8f09c04b (=E2=80=9C=
-Revert scsi: core: run queue if SCSI device queue isnt ready and queue is i=
-dle=E2=80=9D). This commit actually was merged to v5.8 the 1st time. It's a=
- series of patch set (https://www.spinics.net/lists/linux-block/msg51866.ht=
-ml). Actually, in the 4-patch series, 2 of them have already been backporte=
-d to linux-stable v5.4, but not at the same time:
->
-> 1) ab3cee3762e5 (=E2=80=9Cblk-mq: In blk_mq_dispatch_rq_list() no budget =
-is a reason to kick=E2=80=9D) in tag v5.4.86
-> 2) 578c8f09c04b (=E2=80=9CRevert scsi: core: run queue if SCSI device que=
-ue isnt ready and queue is idle=E2=80=9D) in tag v5.4.235, it=E2=80=99s bac=
-kported as stable dependency for another commit
->
->         Signed-off-by: Douglas Anderson <dianders@chromium.org>
->         Reviewed-by: Ming Lei <ming.lei@redhat.com>
->         Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
->         Signed-off-by: Jens Axboe <axboe@kernel.dk>
->         Stable-dep-of: c31e76bcc379 ("blk-mq: remove stale comment for bl=
-k_mq_sched_mark_restart_hctx=E2=80=9D)
->         Signed-off-by: Sasha Levin <sashal@kernel.org>
->
-> And I tried backporting the other 2 patches to v5.4, the issue is still r=
-eproducible.
->
-> I tested multiple kernels, the issue is not reproducible within 10,000 bo=
-ots in the following kernels:
-> 1) Linux v5.9
-> 2) Linux v5.4.249 + revert of 578c8f09c04b (=E2=80=9CRevert scsi: core: r=
-un queue if SCSI device queue isnt ready and queue is idle=E2=80=9D)
->
-> Not exactly sure how this commit is affecting linux-stable v5.4, but I su=
-spect some prerequisite commits are missing which lead to boot hangs on lin=
-ux-stable v5.4 but not on higher releases. Could you take a look at this is=
-sue and share your insight?
+Avoid such situations by deferring fc_rport blocking until after the ADISC
+response, when any actual state change of the remote port became clear.
+The already existing port recovery triggers explicitly block the fc_rport.
+The triggers are: on ADISC reject or timeout (typical cable pull case), and
+on ADISC indicating that the remote port has changed its WWPN or
+the port is meanwhile no longer open.
 
-Ugh, I spent many days pouring over the code and digging through debug
-traces in order to write those patches. I don't think I'd be able to
-give any concrete advice without spending many days and being able to
-reproduce multiple times with traces since pretty much any knowledge I
-learned during the course of developing those patches has decayed over
-the last several years. :( I don't happen to know any dependencies
-offhand...
+As a side effect, this also removes a confusing direct function call to
+another work item function zfcp_scsi_rport_work() instead of scheduling
+that other work item. It was probably done that way to have the rport block
+side effect immediate and synchronous to the caller.
 
-That being said, it seems like:
+Fixes: a2fa0aede07c ("[SCSI] zfcp: Block FC transport rports early on errors")
+Cc: <stable@vger.kernel.org> #v2.6.30+
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Reviewed-by: Fedor Loshakov <loshakov@linux.ibm.com>
+Signed-off-by: Steffen Maier <maier@linux.ibm.com>
+---
+ drivers/s390/scsi/zfcp_fc.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-1. Backporting the revert (the 4th patch in the series) without all
-the other patches in the series feels wrong. In the text of the revert
-I explicitly refer to the other patches in the series as
-prerequisites. I guess you said you tried backporting the other two
-patches and they didn't help, though? That's no good. :(
+diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
+index f21307537829..4f0d0e55f0d4 100644
+--- a/drivers/s390/scsi/zfcp_fc.c
++++ b/drivers/s390/scsi/zfcp_fc.c
+@@ -534,8 +534,7 @@ static void zfcp_fc_adisc_handler(void *data)
+ 
+ 	/* re-init to undo drop from zfcp_fc_adisc() */
+ 	port->d_id = ntoh24(adisc_resp->adisc_port_id);
+-	/* port is good, unblock rport without going through erp */
+-	zfcp_scsi_schedule_rport_register(port);
++	/* port is still good, nothing to do */
+  out:
+ 	atomic_andnot(ZFCP_STATUS_PORT_LINK_TEST, &port->status);
+ 	put_device(&port->dev);
+@@ -595,9 +594,6 @@ void zfcp_fc_link_test_work(struct work_struct *work)
+ 	int retval;
+ 
+ 	set_worker_desc("zadisc%16llx", port->wwpn); /* < WORKER_DESC_LEN=24 */
+-	get_device(&port->dev);
+-	port->rport_task = RPORT_DEL;
+-	zfcp_scsi_rport_work(&port->rport_work);
+ 
+ 	/* only issue one test command at one time per port */
+ 	if (atomic_read(&port->status) & ZFCP_STATUS_PORT_LINK_TEST)
 
-2. I don't think the revert is actually important to backport to
-stable. While the first 3 patches were important to fix the problems I
-was seeing, the revert was just a cleanup. If the revert is causing
-problems in 5.4.x then I'd suggest removing it from 5.4.x
+base-commit: 010c1e1c5741365dbbf44a5a5bb9f30192875c4c
+-- 
+2.39.2
 
-Does that make sense? So ideally you'd submit 3 patches to the stable kerne=
-l:
-
-a) Revert the revert
-
-b) Pick ("blk-mq: Add blk_mq_delay_run_hw_queues() API call")
-
-c) Pick ("blk-mq: Rerun dispatching in the case of budget contention")
-
-
-FWIW, we seem to have all 4 patches in the ChromeOS 5.4 kernel tree.
-They all landed together plus 1 prerequisite.
-
-* https://crrev.com/c/2155423 - FROMGIT: Revert "scsi: core: run queue
-if SCSI device queue isn't ready and queue is idle"
-* https://crrev.com/c/2133069 - FROMGIT: blk-mq: Rerun dispatching in
-the case of budget contention
-* https://crrev.com/c/2155422 - FROMGIT: blk-mq: Add
-blk_mq_delay_run_hw_queues() API call
-* https://crrev.com/c/2125232 - FROMGIT: blk-mq: In
-blk_mq_dispatch_rq_list() "no budget" is a reason to kick
-* https://crrev.com/c/2155421 - UPSTREAM: blk-mq: Put driver tag in
-blk_mq_dispatch_rq_list() when no budget
-
-When I saw the prerequisite in there I was hopeful that it was the one
-you needed, but it looks like that's already in 5.4 stable so (I
-presume) you've already been testing with it...
-
--Doug
