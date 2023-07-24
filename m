@@ -2,93 +2,120 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C15CC001B0
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 13:24:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41AABC001B0
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 13:24:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231259AbjGXNYP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 09:24:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33082 "EHLO
+        id S231300AbjGXNY1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 09:24:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231378AbjGXNYL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 09:24:11 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43A3119A1
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 06:24:03 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1b895a06484so25248835ad.1
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 06:24:03 -0700 (PDT)
+        with ESMTP id S231361AbjGXNYT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 09:24:19 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 151401BC7
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 06:24:05 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1bba04b9df3so8480575ad.0
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 06:24:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1690205042; x=1690809842;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=7A7zZyO61mhpnvlRt1WfqCD24Uo9vpRbFgfxrSH6Hlk=;
-        b=VIAfaOq0AxtJOyf4m++Q1wP7EO+4ZXcc1BKEjyHT6w2QvOF20ytE8Q7OrfXGbWwklv
-         14M/Dmljs13Cihu3MvyvxHdi78PQewzr1+oh4/aYtPTGI2Dr4F8Lh0gTBotAjhIrr3Mo
-         1Gzv/Z2KsqvhJPS9tGtMPlOY7PQv7xLJRwmyI=
+        d=broadcom.com; s=google; t=1690205045; x=1690809845;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=GpbTjD0yxv686Ebx8A/vi/einFmGUAwE1VLNI0PofI8=;
+        b=DMBePHZ9Rd97OarOmsU5s59KrY0QuDE1E1BDGQmT01mUwPJhpDXl2dBhZhwzVWz09B
+         VaaMV1V9ttRfPVHZAlUrlG4O41T/Cd99JBTM5hJWMwpbLraAxOjQabhTb4073nkxTH6S
+         lZ7g7v/uMJui3VI9ZsqqlEIA5rzzU6SYryc7s=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690205042; x=1690809842;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=7A7zZyO61mhpnvlRt1WfqCD24Uo9vpRbFgfxrSH6Hlk=;
-        b=InDaQE7kKLaG5MQHS6Dap7o9S5PtVjrZsmV8+7YVe7Y/ddGlEDJRkKxGaMAuAC1/kY
-         nhYaEdQ7Ouo/TMiRK8jjUJ0i6M78x8rkNgTDp3YufVBb7+gzoBlRq8J5LdVACuohVYY7
-         AN/vuT3OlM0mnaBopd9NNhoF/C3P5Guw9RtZN5vNANK6xJh5XbG5uJSST3eVurYg8Bga
-         TOa9H3ah/Vtl6hy34zOrSS91hixSz6vqdt+5lcfiYynDpEg6h50f/n4dXjKYmuwmN+co
-         ZwzVDmLbvdO+jQ6PdrQs3kw1lNNzryGvobvdQp/TtVIKsS1bbl3J1t3KH7eEOz3o/uDa
-         ZbBw==
-X-Gm-Message-State: ABy/qLYqg07ih6AilLtRM2kpX5oShRfPztKZiWhKIfl4CzK0mpEWMpuD
-        tbyuEBR0uYwO2gkji+DhPPuWYgLTgrJTEthj7FxOcPjVTDHFhsN/i9p9cTgPlEbMaWMiOfk2i0L
-        OzlvGZiVghsUpYr8zuoVr85iEEGGOg1mGw1mXz5TqkYVqVDanBUcplvqBZJGdsaZYvPIVuCDDzo
-        aSum30Z0JRNw==
-X-Google-Smtp-Source: APBJJlHagqodwGK4J6hyAzNBTuJyvAH+k7Ahus9DTYnQQdMMEZ01rd/eDUa+c+93y03mCCboeGX4gg==
-X-Received: by 2002:a17:902:c946:b0:1b8:78e:7c1 with SMTP id i6-20020a170902c94600b001b8078e07c1mr11310134pla.51.1690205041827;
-        Mon, 24 Jul 2023 06:24:01 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1690205045; x=1690809845;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=GpbTjD0yxv686Ebx8A/vi/einFmGUAwE1VLNI0PofI8=;
+        b=E+1xNx3hRyj/W2N6h0Z5SH8KpKI069eTC+z90/1lM7+8pacoc7tAFyg9kQ4CUJpwuB
+         59DEXZ8i4BriW9yWBkLXWWHTznRbBHSa/2l5qQPMC4LR5JZ5njHlxushBv37C56meMDv
+         4ij+B90EStD/wkryHY3BjSsnQMiTkhbOFO67QqXoI5+up2a3h09YcmsiaPIE26N4LsUp
+         NRDoLaqGsayuSXFCjNkms5deXziyzsOBfzz7BFyf0fdpI1bbegzBndhp+5++tzUDi6GJ
+         gjau8zRok+zz/QoGoRkEE+8Y+FPKCKz4u60WeBW7h2VP4U/HNfHgUGUW/lVA8cvq8uDj
+         p7ow==
+X-Gm-Message-State: ABy/qLZJS3HEzegl3/5Ehqpr/spb3uMrzyu2gMnpMI63X3GzmqHXXkGa
+        pnmA2ZWwmHYuVmZ9wsakGkDd1wTnLbdY0G8byuvEBIDhyK4j3sgCqMO7aZjaMseQFzZwvWNRM1A
+        XAHgW8lhuaPYiSA3PU2xmYe5t+azoeDuBNcrYp80u60BUU+dB9D4jh+YCTPc45VRPp4AEOq8orV
+        Lu2LNlTh/nJA==
+X-Google-Smtp-Source: APBJJlEjYK8BVe7zPCo0zELmlC2JBUPAwqod4K+OGctPTY8xAdPn68M4rvZf1nwuW5W97eMMG4b1gw==
+X-Received: by 2002:a17:902:b7ca:b0:1b6:6bf0:eb8f with SMTP id v10-20020a170902b7ca00b001b66bf0eb8fmr11948774plz.38.1690205044788;
+        Mon, 24 Jul 2023 06:24:04 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id s8-20020a170902ea0800b001b9e0918b0asm8917887plg.169.2023.07.24.06.23.58
+        by smtp.gmail.com with ESMTPSA id s8-20020a170902ea0800b001b9e0918b0asm8917887plg.169.2023.07.24.06.24.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Jul 2023 06:24:00 -0700 (PDT)
+        Mon, 24 Jul 2023 06:24:04 -0700 (PDT)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
         sreekanth.reddy@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 0/6]  mpi3mr: Few Enhancements and minor fixes
-Date:   Mon, 24 Jul 2023 18:52:57 +0530
-Message-Id: <20230724132303.19470-1-ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 1/6] mpi3mr: Invokes soft reset upon TSU or event ack time out
+Date:   Mon, 24 Jul 2023 18:52:58 +0530
+Message-Id: <20230724132303.19470-2-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230724132303.19470-1-ranjan.kumar@broadcom.com>
+References: <20230724132303.19470-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000023afdf06013b87ca"
+        boundary="00000000000050f49206013b87cc"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000023afdf06013b87ca
+--00000000000050f49206013b87cc
 Content-Transfer-Encoding: 8bit
 
-Few Enhancements and minor fixes of mpi3mr driver.
+When a timestamp update or an event acknowledgment command times out,
+the driver invokes soft reset handler to recover the controller while
+holding a mutex lock.The soft reset handler also tries to acquire the
+same mutex to send initialization commands to the controller which
+leads to a deadlock scenario .
 
-Ranjan Kumar (6):
-  mpi3mr: Invokes soft reset upon TSU or event ack time out
-  mpi3mr: Update MPI Headers to version 3.00.28
-  mpi3mr: Add support for more than 1MB I/O
-  mpi3mr: WriteSame implementation
-  mpi3mr: Enhance handling of devices removed after controller reset
-  mpi3mr: Update driver version to 8.5.0.0.0
+To resolve the issue the driver will check the controller status and
+if it is operational,the driver will issue a diagnostic fault reset
+and exit out of the command processing function.If the controller
+is already faulted or asynchronously reset, then the driver will
+just exit the command processing function.
 
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      |   2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |   1 +
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   2 +-
- drivers/scsi/mpi3mr/mpi3mr.h              |  23 +++-
- drivers/scsi/mpi3mr/mpi3mr_fw.c           |  37 ++++--
- drivers/scsi/mpi3mr/mpi3mr_os.c           | 155 ++++++++++++++++++----
- 6 files changed, 177 insertions(+), 43 deletions(-)
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 5fa07d6ee5b8..11b78d4a87a0 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2343,8 +2343,8 @@ static int mpi3mr_sync_timestamp(struct mpi3mr_ioc *mrioc)
+ 		ioc_err(mrioc, "Issue IOUCTL time_stamp: command timed out\n");
+ 		mrioc->init_cmds.is_waiting = 0;
+ 		if (!(mrioc->init_cmds.state & MPI3MR_CMD_RESET))
+-			mpi3mr_soft_reset_handler(mrioc,
+-			    MPI3MR_RESET_FROM_TSU_TIMEOUT, 1);
++			mpi3mr_check_rh_fault_ioc(mrioc,
++			    MPI3MR_RESET_FROM_TSU_TIMEOUT);
+ 		retval = -1;
+ 		goto out_unlock;
+ 	}
+@@ -3359,8 +3359,8 @@ int mpi3mr_process_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+ 		ioc_err(mrioc, "Issue EvtNotify: command timed out\n");
+ 		if (!(mrioc->init_cmds.state & MPI3MR_CMD_RESET))
+-			mpi3mr_soft_reset_handler(mrioc,
+-			    MPI3MR_RESET_FROM_EVTACK_TIMEOUT, 1);
++			mpi3mr_check_rh_fault_ioc(mrioc,
++			    MPI3MR_RESET_FROM_EVTACK_TIMEOUT);
+ 		retval = -1;
+ 		goto out_unlock;
+ 	}
 -- 
 2.31.1
 
 
---00000000000023afdf06013b87ca
+--00000000000050f49206013b87cc
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -159,13 +186,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFmPkvKfDZWFcvm3O4gNlVfrZ8Q4n6a5
-tAGBoDlf4jN/MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDcy
-NDEzMjQwMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEW37w6K7BI31oPzigjakz0fD4rA9O5x
+TCAMM5MTKLwbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDcy
+NDEzMjQwNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBbnWskxkujVyfOPJbSWR6K/7k+GcMh+lbl7JSbq9ZlNauhCHhk
-sPevsi/us06yI0NaL59C8RW9eL3ToNBeF5Sd+nZRWTuD1ldo8GygFHbCvLMH0zDOszTVo2KISDgc
-41nYdqOTaYLC4jQ0Yau8R+18yb6zyOARSH2+3GfK/XWT29dKRDxjtDp6z2GdX7xhkkDNv6jb8v7D
-IGWpzKfclT2/XMREdl1g7npQe4vRRuGZIMx8ppcmD8GspBOH9oN6ICoBvDsD+gOFFq8TfnMAhZMI
-qhHPaHnNhOve26s6sPlR+b6QzRa+ze/13pYjia2Qz128lW+tMtF4bH/TpbT9E5FO
---00000000000023afdf06013b87ca--
+ATANBgkqhkiG9w0BAQEFAASCAQC3To9vxX6pr9Mq4Y1HRbszREYlXsqx+aV3uJKSs3c1XpP45ZUX
+Qf0rXAp04Mbrc3aVBphvfswyKMWQ4t5q8yWQd6h2nnOfE4o6rWynSogxEXCYsVcPA+v3n1f1doJm
+SMmYqy9hXz4NKPL+05FXfjyc0rz0WsqqthPPx4xjNUUuAU5Uiof8o1u0e9zct1UDqUzpfa/3q6P3
+gEkA4dsWssq32sMJ1IFTRJmfDhtirNgI3DSb5KPtixfpKLVgrq5mZ4q4j6tlk8eKRgSPknaWCI4O
+WLUAPImSBRASqbvrwMTpY3I49XxCxGxkVmXyRdqxjikcTQW2vgd1pMTkToQKL4i7
+--00000000000050f49206013b87cc--
