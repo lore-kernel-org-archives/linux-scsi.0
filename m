@@ -2,150 +2,200 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECBFAC001E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 05:48:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D700DC001E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 06:11:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230063AbjGXFsy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 01:48:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42624 "EHLO
+        id S230207AbjGXGLT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 02:11:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230022AbjGXFsu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 01:48:50 -0400
-Received: from mail-oi1-x231.google.com (mail-oi1-x231.google.com [IPv6:2607:f8b0:4864:20::231])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D495C186
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Jul 2023 22:48:48 -0700 (PDT)
-Received: by mail-oi1-x231.google.com with SMTP id 5614622812f47-3a5a7ebdd9fso1169222b6e.0
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Jul 2023 22:48:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1690177728; x=1690782528;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=lNMSJE9p1d1PLJNEmsQ7eFS8jEnCuwKDv4PumrYQpcU=;
-        b=U2hCDJhqsVhkHUOQsTHa749IWNwB0SnHVLRpLCH+muXbPeT9dFRmgcZAt180d0ZGwQ
-         GoFJw8/oJ/6kKRqNckSYZe+MtIYZJJucZdWCR+j5PJEGUjNSUVIeRfwAqJ+ECgoo4XTi
-         DOGAaudgfcJW9Sz0dPv2uWhvq/XushbdnZyhIkY5z5Qzg89DdSyrJ+lvXIgqEO1iuvoY
-         Zt3cumjiC1wQxl/1XDgRTL+zWaClNYqe8PFqwQeleeLpXsdICfpKICzpeNpC0SWzTOKV
-         EVlOqbQ5D9Dj5BaJvtgsfX88GVXXvr35iAvrLxsyjvIyXtQ45O1vcTfg/0asjpsztYWE
-         M6tw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690177728; x=1690782528;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lNMSJE9p1d1PLJNEmsQ7eFS8jEnCuwKDv4PumrYQpcU=;
-        b=FVMAB3eOppY9AW/u5HNaTUk7zd9KIs89MGO949/bTvWfuMthRrIfuYXwdJQxpdljHC
-         2dzGvQbshzGnIL3vw7xjeE5a0tdxlz81ZLTVjTzZwM8mvT7+2WHHiUIwODg76REccmpn
-         18hn42FJtp3pGL4Lr+V+BWIhQnE4YOX0IU5du2Hi8V+B4vdiZk4aJepk1+Umc3lioe4S
-         LR3T+vgOpEkP60vzXF5Z7C1urp1Za79kkGTExjN1MSXb7Jzb9aXObB8Qj/FWHmjAnFGw
-         hQM/uB8KoZfeAmzvh+WOJLIuYgMef2PQ5ed5mU7IpFvtSMHUZ8nOuLmjdSmvyv07VQYy
-         6LCA==
-X-Gm-Message-State: ABy/qLbi9rtd0n+89aEkRzBAX2XX3ZCxMrH3XnEifI3QV8m+tecKN2CC
-        fEy79BpxPC2YOLAb+N3FruLW
-X-Google-Smtp-Source: APBJJlFz6ludZ7Mio0r4WkFjCla6W2awgNfZfIDwDmUrHT+7qIWS2Z4g1QjBEXxpcBblte51sXGp0g==
-X-Received: by 2002:a05:6808:1a2a:b0:3a1:eb0e:ddc6 with SMTP id bk42-20020a0568081a2a00b003a1eb0eddc6mr11524567oib.29.1690177727975;
-        Sun, 23 Jul 2023 22:48:47 -0700 (PDT)
-Received: from thinkpad ([117.206.118.29])
-        by smtp.gmail.com with ESMTPSA id g11-20020a17090a714b00b002676e961261sm7285578pjs.1.2023.07.23.22.48.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Jul 2023 22:48:47 -0700 (PDT)
-Date:   Mon, 24 Jul 2023 11:18:31 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Bjorn Andersson <andersson@kernel.org>
-Cc:     Viresh Kumar <viresh.kumar@linaro.org>, vireshk@kernel.org,
-        nm@ti.com, sboyd@kernel.org, myungjoo.ham@samsung.com,
-        kyungmin.park@samsung.com, cw00.choi@samsung.com,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 04/15] arm64: dts: qcom: sdm845: Fix the min frequency
- of "ice_core_clk"
-Message-ID: <20230724054831.GB2370@thinkpad>
-References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
- <20230720054100.9940-5-manivannan.sadhasivam@linaro.org>
- <20230721071801.e6ngfnkwg2ujsklg@vireshk-i7>
- <20230721115731.GB2536@thinkpad>
- <q36uuwhjmolgf3kjn3rrtw5fgfobatav334fez4cofzmrvge2h@cgwfhhhy6b6s>
+        with ESMTP id S229557AbjGXGLR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 02:11:17 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B7801AD
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Jul 2023 23:11:14 -0700 (PDT)
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230724061111epoutp02ec345e29caa481d8efe9150270cdc7c9~0uOkJYNuJ0414004140epoutp02o
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 06:11:11 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230724061111epoutp02ec345e29caa481d8efe9150270cdc7c9~0uOkJYNuJ0414004140epoutp02o
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1690179071;
+        bh=wTF0Ru9o1qX1XpvkpWa3mKHhkbLaktTkpAUnB1hI0DQ=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=pGzoCpXs1UOQ+l3asEdG8DArz1Syln55BBDbmu2SPssX7NAmvlsjNwHBxzcuhQQWj
+         CxG6DVMTl+TTlscFhStH+wFX3j38d+bpojDrzobtlpjsDLbIb/Vgr44md4/fUoSJSS
+         ySiQqvXB5ZQdS6B1yohx1LRduHCNBtouAz//wb9Q=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20230724061110epcas5p2503ac4c4ac74bf7d8c202484a6932147~0uOjZHrS53020830208epcas5p2e;
+        Mon, 24 Jul 2023 06:11:10 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.174]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4R8VCc0BLhz4x9QK; Mon, 24 Jul
+        2023 06:11:08 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        8A.B5.06099.BF51EB46; Mon, 24 Jul 2023 15:11:07 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20230724054922epcas5p4cdcf4bdb7ddc57eac4d687b40d9633b9~0t7hBWhw70396703967epcas5p4_;
+        Mon, 24 Jul 2023 05:49:22 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230724054922epsmtrp1589ea7b455f628dab9e4898d7d32032a~0t7g8VLIR2266822668epsmtrp1C;
+        Mon, 24 Jul 2023 05:49:22 +0000 (GMT)
+X-AuditID: b6c32a4b-d308d700000017d3-66-64be15fb2893
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        1A.24.34491.1E01EB46; Mon, 24 Jul 2023 14:49:21 +0900 (KST)
+Received: from green245 (unknown [107.99.41.245]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230724054918epsmtip2e23bc6255b974fdc88465d963a53ae7e~0t7da5FbA1810118101epsmtip2U;
+        Mon, 24 Jul 2023 05:49:18 +0000 (GMT)
+Date:   Mon, 24 Jul 2023 11:16:06 +0530
+From:   Nitesh Shetty <nj.shetty@samsung.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        willy@infradead.org, hare@suse.de, djwong@kernel.org,
+        bvanassche@acm.org, ming.lei@redhat.com, dlemoal@kernel.org,
+        nitheshshetty@gmail.com, gost.dev@samsung.com,
+        Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v13 4/9] fs, block: copy_file_range for def_blk_ops for
+ direct block device
+Message-ID: <20230724054606.y6ibtn4mwupmziii@green245>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <q36uuwhjmolgf3kjn3rrtw5fgfobatav334fez4cofzmrvge2h@cgwfhhhy6b6s>
+In-Reply-To: <20230720075710.GC5042@lst.de>
+User-Agent: NeoMutt/20171215
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0zTVxTHvb9f+2vBFX8gZBdwSso2Awzk7UVAmRr9GRaHcZGMZWGV/tIy
+        oO36QDfH5DFwgjwrwhCEqeO9Eh6RZxmUTAbqWIJUJYOVWdx4isgEBcpaCov/fe73nO+5956T
+        w8ZtVCwHdrRITktFvFguYcm41ePi4r5s18n37C4IQHX9t3GUnLOKo5qRbAJN9cwDdGXuJY70
+        XRcAGtRbId3PB5B69ioTPepqxVDH9TwMVdX8gqE8jRag8aEiDKmH3dAPaTcZqEPdx0CDbcUE
+        Ki0fZ6GMBy0Equg1YEijTMFQiz4JINXUUwb6ddgRDaz2MtHyUjER4kgN3g+lWotGWNTAaD2D
+        aqx0pQbvKaiG6osE1XjzPNX+KJGgbmQpmVRmyixBPRsfZlBPO4cIKqupGlCNd85Rzxt2Ug36
+        GSyMjIgJEtI8Pi11okVRYn60SBDMDT0ZeSjSz9/Ty90rAO3lOol4cXQw9/AHYe5HomONjeE6
+        xfNiFUYpjCeTcffsD5KKFXLaSSiWyYO5tIQfK/GVeMh4cTKFSOAhouX7vDw9vf2MiZ/FCAv/
+        XCIkw7Znr313n5kI8q3TgQUbkr5wvqqGSAeWbBuyHcDBxb+ZpoANOQ9getMGvwBQP/r+pqEs
+        UwvMBjWA/9TlM8yHJwDmXl7ATVkM8h2YVZxsLMtmE6QbvLPGNsm2JBeOT95bN+PkChN26VQs
+        U2A7yYPNhqx15pD+cCzpD4aZrWHf9/p1tjDWaSg2ABPbkTtg4Y//4qZCkNRawIKk2yzz8w7D
+        W30GzMzb4WRv04buACey0zb4DKy6XEmYzd8CWPSgCJgDB2Bqf/b6D3BSCMvWcplm/S2Y36/C
+        zLoVzFzWb1zAgS3XNtkZ1taVEWa2h9rFpA2m4ETGw41+6QBcUfeycsCuotd+V/TafWbeBy/O
+        JRuZbWRHWGFgm9EF1rXtKQPMamBPS2RxAlrmJ/ER0Wf+n3iUOK4BrC+Oa2gL+Es356EBGBto
+        AGTjXFuOQNDGt+HweV9+RUvFkVJFLC3TAD/jtHJxB7sosXHzRPJIL98AT19/f3/fAB9/L+6b
+        nKnUEr4NKeDJ6RialtDSTR/GtnBIxHCWOm1hx/GVj1+uvfc4jyNICFl0vZB6vEDn9vm2uBsl
+        22q5swYifMtC3vmjzhrlifmMsZHcoyFqZFknvxTfXsZrVZ4mXhW7PMyoYTXz8U9P5lSJG3da
+        frgQ99yn4OLXuu6+SmX44Ee7I0ruHns79QV/fzbLetoqRNVcypgejZ4OrV7kDBysfKVl2v/+
+        jEXqV9sSjukC1bXyptSfRr0jQpQ559asl4IStgi8w8McXGaY7m/s0paf6p2cqAqcU36Rdvrx
+        oY69nb9lpxxMKZ/55En41qsK58Ka4Qj+qbOl7wYG7earvHsyhfr4KItL3elHZk4kfTNUX3H9
+        rtX82NjWegssSq3iMmRCnpcrLpXx/gMaI2auwQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrAIsWRmVeSWpSXmKPExsWy7bCSvO5DgX0pBl1frSzWnzrGbNE04S+z
+        xeq7/WwWrw9/YrSY9uEns8WTA+2MFpef8Fk82G9vsffdbFaLmwd2MlnsWTSJyWLl6qNMFpMO
+        XWO0eHp1FpPF3lvaFgvblrBY7Nl7ksXi8q45bBbzlz1lt+i+voPNYvnxf0wWhyY3M1nseNLI
+        aLHu9XsWixO3pC3O/z3OavH7xxw2B2mPy1e8PXbOusvucf7eRhaPzSu0PC6fLfXYtKqTzWPz
+        knqP3Tcb2DwW901m9ehtfsfm8fHpLRaP9/uusnn0bVnF6LH5dLXH501yHpuevGUKEIjisklJ
+        zcksSy3St0vgypi6Yyt7QY9QxZ5nW1kaGB/ydTFyckgImEgs6L3G2MXIxSEksJtR4tG2g2wQ
+        CUmJZX+PMEPYwhIr/z1nhyh6wihxe+E2VpAEi4CqRN+cJqAGDg42AW2J0/85QMIiAkoST1+d
+        BRvKLNDAJtFz7zVYvbBAosT2f33sIDavgJnEw8Y7LBBDHzBKTJ+3nREiIShxcuYTFhCbGaho
+        3uaHzCALmAWkJZb/A1vACbRr05x/YOWiAjISM5Z+ZZ7AKDgLSfcsJN2zELoXMDKvYpRMLSjO
+        Tc8tNiwwzEst1ytOzC0uzUvXS87P3cQIThRamjsYt6/6oHeIkYmD8RCjBAezkghvevquFCHe
+        lMTKqtSi/Pii0pzU4kOM0hwsSuK84i96U4QE0hNLUrNTUwtSi2CyTBycUg1M83ICDkiefP1R
+        w3f+1xd/hGd6HXtQsEm0IlftwdFXJTXxMbynCjoevkpv/Z+yL/fX+Xy3zNBcBsG0c9rfTgTn
+        tu9bPWtlULFBbthBSx5H/wPP57FE/GbcvHZ18AOpW1xznmXzXas74aSqV6tVd9Hw7+2bFVKS
+        x52Nb87efqBxB+PD6wd9ZJ4uvH7JYEFD/P/UmfP+rHSVi9/za064KZ+SZTqra0rvtpPN7csD
+        bv5R2mD9Z9qswDDm3mmJh9XrW9pEufOmPZ2xu5Ct5ayEgUXN8/SOZOb0eXx692fz6so0Xb87
+        d1np/yNawmaGBxY1PVBt+le0OjWMbVex1n0R3Q8zvR/fusHw8tZT8yx7ic1CSizFGYmGWsxF
+        xYkASAGQ3YMDAAA=
+X-CMS-MailID: 20230724054922epcas5p4cdcf4bdb7ddc57eac4d687b40d9633b9
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+        boundary="----PcSJ1RlEyPKfjXIiTsweH-7MCPtMf9v3nlMrb72LWO-fIHxy=_dd00a_"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230627184029epcas5p49a29676fa6dff5f24ddfa5c64e525a51
+References: <20230627183629.26571-1-nj.shetty@samsung.com>
+        <CGME20230627184029epcas5p49a29676fa6dff5f24ddfa5c64e525a51@epcas5p4.samsung.com>
+        <20230627183629.26571-5-nj.shetty@samsung.com>
+        <20230720075710.GC5042@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jul 21, 2023 at 08:15:36PM -0700, Bjorn Andersson wrote:
-> On Fri, Jul 21, 2023 at 05:27:31PM +0530, Manivannan Sadhasivam wrote:
-> > On Fri, Jul 21, 2023 at 12:48:01PM +0530, Viresh Kumar wrote:
-> > > On 20-07-23, 11:10, Manivannan Sadhasivam wrote:
-> > > > Minimum frequency of the "ice_core_clk" should be 75MHz as specified in the
-> > > > downstream vendor devicetree. So fix it!
-> > > > 
-> > > > https://git.codelinaro.org/clo/la/kernel/msm-4.9/-/blob/LA.UM.7.3.r1-09300-sdm845.0/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> > > > 
-> > > > Fixes: 433f9a57298f ("arm64: dts: sdm845: add Inline Crypto Engine registers and clock")
-> > > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > > > ---
-> > > >  arch/arm64/boot/dts/qcom/sdm845.dtsi | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> > > > index 9ed74bf72d05..89520a9fe1e3 100644
-> > > > --- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> > > > +++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> > > > @@ -2614,7 +2614,7 @@ ufs_mem_hc: ufshc@1d84000 {
-> > > >  				<0 0>,
-> > > >  				<0 0>,
-> > > >  				<0 0>,
-> > > > -				<0 300000000>;
-> > > > +				<75000000 300000000>;
-> > > >  
-> > > >  			status = "disabled";
-> > > >  		};
-> > > 
-> > > Please keep new feature and fixes like this in separate series. This
-> > > could be merged directly in the currently ongoing kernel rc and
-> > > doesn't need to wait for this series.
-> > > 
-> > > Or at least keep the commit at the top, so another maintainer can
-> > > simply pick it.
-> > > 
-> > 
-> > That's what I did. This patch and previous patch are the fixes patches, so they
-> > are posted on top of other dts patches to be merged separately if required.
-> > 
-> 
-> I agree with Viresh, this is patch 4 in a series where 1-2, 7- are new
-> things.
-> 
-> I can pick this from here, but I think it would have been better to send
-> this as 3-4 different series; 1 with DeviceTree fixes, 1 with driver
-> fixes, one that adds interconnect support and one that adds opp support
-> - the latter two with dts changes last...
-> 
-> 
-> And, the freq-table-hz -> opp transition in dts files must be merged
-> after the driver changes, so this will likely have to wait until 1
-> release after the driver changes.
-> 
+------PcSJ1RlEyPKfjXIiTsweH-7MCPtMf9v3nlMrb72LWO-fIHxy=_dd00a_
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Disposition: inline
 
-Hmm, Ok. Let me resend the series as you suggested (excluding the patches
-already merged).
+On 23/07/20 09:57AM, Christoph Hellwig wrote:
+>> +/* Copy source offset from source block device to destination block
+>> + * device. Returns the length of bytes copied.
+>> + */
+>> +ssize_t blkdev_copy_offload_failfast(
+>> +		struct block_device *bdev_in, loff_t pos_in,
+>> +		struct block_device *bdev_out, loff_t pos_out,
+>> +		size_t len, gfp_t gfp_mask)
+>
+>This is an odd and very misnamed interface.
+>
+>Either we have a klkdev_copy() interface that automatically falls back
+>to a fallback (maybe with an opt-out), or we have separate
+>blkdev_copy_offload/blkdev_copy_emulated interface and let the caller
+>decide.  But none of that really is "failfast".
+>
+>Also this needs to go into the helpers patch and not a patch that is
+>supposed to just wire copying up for block device node.
+>
+Acked.
 
-- Mani
+>> index b07de77ef126..d27148a2543f 100644
+>> --- a/fs/read_write.c
+>> +++ b/fs/read_write.c
+>> @@ -1447,7 +1447,8 @@ static int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+>>  		return -EOVERFLOW;
+>>
+>>  	/* Shorten the copy to EOF */
+>> -	size_in = i_size_read(inode_in);
+>> +	size_in = i_size_read(file_in->f_mapping->host);
+>
+>generic_copy_file_checks needs to be fixed to use ->mapping->host both
+>or inode_in and inode_out at the top of the file instead of this
+>band aid.  And that needs to be a separate patch with a Fixes tag.
+>
+Addressed below.
 
-> Regards,
-> Bjorn
+>> @@ -1708,7 +1709,9 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
+>>  	/* Don't copy dirs, pipes, sockets... */
+>>  	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+>>  		return -EISDIR;
+>> -	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+>> +
+>> +	if ((!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode)) &&
+>> +		(!S_ISBLK(inode_in->i_mode) || !S_ISBLK(inode_out->i_mode)))
+>
+>This is using weird indentation, and might also not be doing
+>exactly what we want.  I think the better thing to do here is to:
+>
+> 1) check for the accetable types only on the in inode
+> 2) have a check that the mode matches for the in and out inodes
+>
+>And please do this as a separate prep patch instead of hiding it here.
+>
+Agreed. We will send a separate patch, that enables copy_file_range on
+block devices.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Thank you,
+Nitesh Shetty
+
+------PcSJ1RlEyPKfjXIiTsweH-7MCPtMf9v3nlMrb72LWO-fIHxy=_dd00a_
+Content-Type: text/plain; charset="utf-8"
+
+
+------PcSJ1RlEyPKfjXIiTsweH-7MCPtMf9v3nlMrb72LWO-fIHxy=_dd00a_--
