@@ -2,137 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C685FC00528
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 17:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46174EB64DD
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jul 2023 19:16:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230298AbjGXRzU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 13:55:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56272 "EHLO
+        id S230050AbjGXTQ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jul 2023 15:16:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231778AbjGXRzC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 13:55:02 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1819444AA;
-        Mon, 24 Jul 2023 10:53:10 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-666e916b880so2665084b3a.2;
-        Mon, 24 Jul 2023 10:53:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690221188; x=1690825988;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=09VDaxK56psBIcQ3p+KkL/r9s9OSq7jrm2adGBWzyKI=;
-        b=oQQYUHIMHaQ+iTqyIPO8O53dHQy5kAboZJO6kf662+eW7q/ObrDDScRT3Dd931VQGR
-         x56cS7RAk/j+JMz0+ZsaygddRfntaVW3BPKSLnHjVMOyo0+tC181yV34OVhxadWZWAnV
-         7vnG4hn5iKCsA79hRFkDd1lvlbuBh1Yw0mXXdqJptgfiSAZ4N5PxGs/AURR5Hrd5Y8iq
-         799s2DY0Zhbg/JAyPrqljfKqXSW98jXEmG6UbWNXh2RMdjWjcPlxjeB7sY2cIrdsleSm
-         E2OlQtpQaysZUAv0KdwjuxUtebN6DCDu7lXjVvo0KyLIb5BiLEvDaFMzVqTcosX5ApEH
-         3aLw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690221188; x=1690825988;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=09VDaxK56psBIcQ3p+KkL/r9s9OSq7jrm2adGBWzyKI=;
-        b=Jk49ae42q3Hh5tCUqIjAp8rCz5nLER/5I0PFbGbyN4fbp50X4DczQFklavljr5Ja+V
-         ToGOoGvuvSVx5s3XScYlT5V52bWFUw5ogkulNkC2kRwhhwrQ/ed/qgvQbx0H0UV4GmU4
-         xah/LGHuJDQ0Q/BoqBXX0I9wTYA7wti2w64/mNkb6n7JxXh79+lurbjlxAlP+JGDrjiP
-         Vmdp4yQOav/4kK80P6FkSQOL92x+N8RcG+4jvduIs+zs7397FvFqgS6/1VHiNp6Xwt1S
-         jHuR0tWiWSTjvB6/hS8G+mrYTGOb6JJL2FP/qHuzuly7bxTy1BOsXERjFnNemVuu+dc5
-         txAQ==
-X-Gm-Message-State: ABy/qLbpUAs+FsJm5MXBVkcem5H+4lu8Ul3kULDbOq9dPVXF4zwGEI6Z
-        X+kmUpsBicWiVL3/jF980QY=
-X-Google-Smtp-Source: APBJJlFICbKfcU0+RJ6+we74AuAVQY/03hWGryjEpMNQSGW4qgnbOtdQPbGT7+R0JhLEm/3e4WSqyA==
-X-Received: by 2002:a05:6a20:7d9f:b0:123:828f:68c with SMTP id v31-20020a056a207d9f00b00123828f068cmr9862379pzj.50.1690221187819;
-        Mon, 24 Jul 2023 10:53:07 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id j2-20020aa78002000000b0068659489a33sm7953771pfi.163.2023.07.24.10.53.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Jul 2023 10:53:07 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <34652b37-9e71-8f23-bd0b-12b6a8faa81b@roeck-us.net>
-Date:   Mon, 24 Jul 2023 10:53:05 -0700
+        with ESMTP id S229532AbjGXTQz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 15:16:55 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA21E10F7;
+        Mon, 24 Jul 2023 12:16:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1690226211;
+        bh=64pZcItTjZxIjDEl8EzEjacmRIVQb6Kl/2RNtm+3W3o=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=qKdPPK5SWzbg6WweegJVPDc+Y14TqL+xjdi2NAAyaPnKlINuO2LVdAJtG3j1y+8qb
+         flzU/ZpZSHJeosLdho0eb8gGduWqm1q1MOJR4QdQgWxzbmVyM1BjmGALwIhPXOvu7j
+         7qr5WH1ClnTJPI3SWLD1sdEDB3nLABEvUrGh4bAk=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D439A128605E;
+        Mon, 24 Jul 2023 15:16:51 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id C0372O34OdMU; Mon, 24 Jul 2023 15:16:51 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1690226209;
+        bh=64pZcItTjZxIjDEl8EzEjacmRIVQb6Kl/2RNtm+3W3o=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=JAwdcEEyF8qhlBRdqM4TQyqzai8kydFBA5oKexXMNAy2J8yww4cZt4nKQyboPAgLt
+         mWM8SXpt/m8sPX+3+XqAUFuxrvhkTZBqHBgmUnRh25yVamP9iR4nxno58zLFWSLVKb
+         5k77VmlanMLliPfinv2+0r8DC9s8d4yMDtBeAVBs=
+Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 60AA11281F5F;
+        Mon, 24 Jul 2023 15:16:49 -0400 (EDT)
+Message-ID: <d75dc295e6ddaebc988f5af3ad6d12fa96948f5e.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.5-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Mon, 24 Jul 2023 15:16:47 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [patch 05/29] hwmon: (fam15h_power) Use topology_core_id()
-Content-Language: en-US
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
-        Andrew Cooper <andrew.cooper3@citrix.com>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Huang Rui <ray.huang@amd.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <james.smart@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Steve Wahl <steve.wahl@hpe.com>,
-        Mike Travis <mike.travis@hpe.com>,
-        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
-        Russ Anderson <russ.anderson@hpe.com>
-References: <20230724155329.474037902@linutronix.de>
- <20230724172843.988600888@linutronix.de>
-From:   Guenter Roeck <linux@roeck-us.net>
-In-Reply-To: <20230724172843.988600888@linutronix.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/24/23 10:43, Thomas Gleixner wrote:
-> Use the provided topology helper function instead of fiddling in cpu_data.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: linux-hwmon@vger.kernel.org
-> Cc: Jean Delvare <jdelvare@suse.com>
-> Cc: Huang Rui <ray.huang@amd.com>
-> Cc: Guenter Roeck <linux@roeck-us.net>
+Single fix for a potential regression over a misunderstanding of the
+blk_get_queue() api.
 
-Assuming this will be applied as part of the series:
+The patch is available here:
 
-Acked-by: Guenter Roeck <linux@roeck-us.net>
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Please let me know if you want me to apply the patch through
-the hardware monitoring branch.
+The short changelog is:
 
-Thanks,
-Guenter
+Yu Kuai (1):
+      scsi: sg: Fix checking return value of blk_get_queue()
 
-> ---
->   drivers/hwmon/fam15h_power.c |    7 +++----
->   1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> --- a/drivers/hwmon/fam15h_power.c
-> +++ b/drivers/hwmon/fam15h_power.c
-> @@ -17,6 +17,7 @@
->   #include <linux/cpumask.h>
->   #include <linux/time.h>
->   #include <linux/sched.h>
-> +#include <linux/topology.h>
->   #include <asm/processor.h>
->   #include <asm/msr.h>
->   
-> @@ -134,15 +135,13 @@ static DEVICE_ATTR_RO(power1_crit);
->   static void do_read_registers_on_cu(void *_data)
->   {
->   	struct fam15h_power_data *data = _data;
-> -	int cpu, cu;
-> -
-> -	cpu = smp_processor_id();
-> +	int cu;
->   
->   	/*
->   	 * With the new x86 topology modelling, cpu core id actually
->   	 * is compute unit id.
->   	 */
-> -	cu = cpu_data(cpu).cpu_core_id;
-> +	cu = topology_core_id(smp_processor_id());
->   
->   	rdmsrl_safe(MSR_F15H_CU_PWR_ACCUMULATOR, &data->cu_acc_power[cu]);
->   	rdmsrl_safe(MSR_F15H_PTSC, &data->cpu_sw_pwr_ptsc[cu]);
-> 
+And the diffstat:
+
+ drivers/scsi/sg.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 89fa046c7158..0d8afffd1683 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1497,9 +1497,10 @@ sg_add_device(struct device *cl_dev)
+ 	int error;
+ 	unsigned long iflags;
+ 
+-	error = blk_get_queue(scsidp->request_queue);
+-	if (error)
+-		return error;
++	if (!blk_get_queue(scsidp->request_queue)) {
++		pr_warn("%s: get scsi_device queue failed\n",
+__func__);
++		return -ENODEV;
++	}
+ 
+ 	error = -ENOMEM;
+ 	cdev = cdev_alloc();
 
