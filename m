@@ -2,122 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57076EB64DD
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 02:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CE43EB64DD
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 04:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231335AbjGYCvQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jul 2023 22:51:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49886 "EHLO
+        id S230422AbjGYELb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jul 2023 00:11:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230193AbjGYCvO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2023 22:51:14 -0400
-X-Greylist: delayed 154257 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 24 Jul 2023 19:50:43 PDT
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [207.46.229.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0FAF11BF5;
-        Mon, 24 Jul 2023 19:50:42 -0700 (PDT)
-Received: from localhost.localdomain (unknown [125.119.240.231])
-        by mail-app2 (Coremail) with SMTP id by_KCgC3v4tZN79kPYeCCg--.10631S4;
-        Tue, 25 Jul 2023 10:45:45 +0800 (CST)
-From:   Lin Ma <linma@zju.edu.cn>
-To:     lduncan@suse.com, cleech@redhat.com, michael.christie@oracle.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        vikas.chaudhary@qlogic.com, JBottomley@Parallels.com,
-        mchan@broadcom.com, benli@broadcom.com, ogerlitz@voltaire.com,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Lin Ma <linma@zju.edu.cn>
-Subject: [PATCH v1 2/2] scsi: iscsi: Add strlen check in iscsi_if_set_{host}_param
-Date:   Tue, 25 Jul 2023 10:45:45 +0800
-Message-Id: <20230725024545.428519-1-linma@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: by_KCgC3v4tZN79kPYeCCg--.10631S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxCFWUGFy5Cw45WFyDtry7Wrg_yoW5GFyrpF
-        WrW345A3yUJrZ2kwnrXr4rKrWSkFs3XrWDtFW8t3s8ArZ8KFy5Ka9rKw4Y9FyUArs8Xw1Y
-        gayUt3W5Wr12krJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvE14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-        Y2ka0xkIwI1lc2xSY4AK67AK6r4UMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-        b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-        vE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-        0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWI
-        evJa73UjIFyTuYvjfUomiiDUUUU
-X-CM-SenderInfo: qtrwiiyqvtljo62m3hxhgxhubq/
+        with ESMTP id S231497AbjGYEL1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 00:11:27 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A018A19A2
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 21:11:25 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-666e5f0d60bso2841500b3a.3
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2023 21:11:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1690258285; x=1690863085;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=6yFVEsi6DemosywA0d4g+4gyo9sgA/NzmDnSSDwQNKs=;
+        b=lk4/cIBY23JoJcZYtO6BPJz+U6dOgzDrtI/AddYuE+I/IFHF+0VNmMiCxbdim0DI6t
+         IPJ1x4awpw4/uLI7cGwYUNC41jT+tdeCpZkWozX8Wxr0k/AFBbqb+Dnd4TsYPtKFMZ16
+         NCQCu5kfQNLXOUURvQbjffpqG1adcYt/5wo8yidETbOZphn8bOacxvQvGcVg29LSKBu7
+         D+VJ6tLOx+Vu6VoXj58jF1Qk9LDOc4BGQhbdqxdD6oW2MgqX3LcXBEMeupXYulnBkPw6
+         Fo8V35yCiev52gcpQu+MdeH+9L97/JqStRCZ9KHlmO9EYSxFLU4Je/40yoG8Su3n+wom
+         yZlw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690258285; x=1690863085;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6yFVEsi6DemosywA0d4g+4gyo9sgA/NzmDnSSDwQNKs=;
+        b=BsgGWmkotvvvz9L6I01KC5caqygEh7OM/diRDPZTczB9z58tja45o4PieiRoH5jGGR
+         xdAQCE2v2u2E8qVormhaWkxb71oeR5HDGOA+xeD4ZQS45Wux/u4UdBlYVUCzBvtyq7Kt
+         hRNDGbIgN0d3Pk5WlxlQpJ5Ec685volw8DsHvxbX1HfH40EYLGizoiUd39T2k81YrrGy
+         /DJxM+r5hthY38TmRvh/tOIf2mCi46lCrXFT8A1oahVJ44/rfTDIGDczmpTAnTFtoi6r
+         X2+aO2tBfinSGHPmFz0WTxZb+R0bex25jqIN6FQaoldjWQTYk+uU31uR8BeNYSuj4DSW
+         mlkg==
+X-Gm-Message-State: ABy/qLYQQsWWjVeRTrjrAdLJiLzdp9XrhWDm5rj+SBWNjMjc/HmGjeon
+        FHT/5X1AdfaXShkYl9fStDfsdw==
+X-Google-Smtp-Source: APBJJlGEfGQ7zai4fBJw5iC4TD450VqmzaOjEBbpI7dsjUc7F9ZBMXlE4WEWbv4UhPyjm6nAy6pOwQ==
+X-Received: by 2002:a05:6a20:734e:b0:127:796d:b70d with SMTP id v14-20020a056a20734e00b00127796db70dmr9905031pzc.61.1690258285037;
+        Mon, 24 Jul 2023 21:11:25 -0700 (PDT)
+Received: from localhost ([122.172.87.195])
+        by smtp.gmail.com with ESMTPSA id p7-20020a170902b08700b001b3d0aff88fsm9729885plr.109.2023.07.24.21.11.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Jul 2023 21:11:24 -0700 (PDT)
+Date:   Tue, 25 Jul 2023 09:41:22 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        conor+dt@kernel.org, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+        linux-kernel@vger.kernel.org, quic_ziqichen@quicinc.com,
+        linux-pm@vger.kernel.org, nm@ti.com, quic_bhaskarv@quicinc.com,
+        martin.petersen@oracle.com, devicetree@vger.kernel.org,
+        robh+dt@kernel.org, quic_asutoshd@quicinc.com,
+        alim.akhtar@samsung.com, vireshk@kernel.org,
+        kyungmin.park@samsung.com, jejb@linux.ibm.com, bvanassche@acm.org,
+        konrad.dybcio@linaro.org, krzysztof.kozlowski+dt@linaro.org,
+        quic_cang@quicinc.com, linux-arm-msm@vger.kernel.org,
+        myungjoo.ham@samsung.com, andersson@kernel.org, sboyd@kernel.org,
+        linux-scsi@vger.kernel.org, cw00.choi@samsung.com,
+        krzysztof.kozlowski@linaro.org, avri.altman@wdc.com,
+        bmasney@redhat.com, quic_narepall@quicinc.com
+Subject: Re: [PATCH v2 02/15] dt-bindings: opp: Increase maxItems for opp-hz
+ property
+Message-ID: <20230725041122.7yu4drwekoy6w24d@vireshk-i7>
+References: <20230720054100.9940-1-manivannan.sadhasivam@linaro.org>
+ <20230720054100.9940-3-manivannan.sadhasivam@linaro.org>
+ <169021390783.3607138.9583713600185509839.robh@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169021390783.3607138.9583713600185509839.robh@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function iscsi_if_set_param and iscsi_if_set_host_param converts
-nlattr payload to type char* and then call C string handling functions
-like sscanf and kstrdup.
+On 24-07-23, 09:51, Rob Herring wrote:
+> 
+> On Thu, 20 Jul 2023 11:10:47 +0530, Manivannan Sadhasivam wrote:
+> > Current limit of 16 will be exhausted by platforms specifying the frequency
+> > for 9 clocks using opp-hz, like Qcom SDM845 SoC. For instance, specifying
+> > the frequency for 9 clocks with 64bit specifier as below would consume
+> > (9 * 2 = 18) items.
+> > 
+> > 	opp-50000000 {
+> > 		opp-hz = /bits/ 64 <50000000>,
+> > 			 /bits/ 64 <0>,
+> > 			 /bits/ 64 <0>,
+> > 			 /bits/ 64 <37500000>,
+> > 			 /bits/ 64 <0>,
+> > 			 /bits/ 64 <0>,
+> > 			 /bits/ 64 <0>,
+> > 			 /bits/ 64 <0>,
+> > 			 /bits/ 64 <75000000>;
+> > 	};
+> > 
+> > So let's increase the limit to 32 which should be enough for most platforms
+> > (hopefully).
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> >  Documentation/devicetree/bindings/opp/opp-v2-base.yaml | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> 
+> Acked-by: Rob Herring <robh@kernel.org>
 
-  char *data = (char*)ev + sizeof(*ev);
-  ...
-  sscanf(data, "%d", &value);
+Applied. Thanks.
 
-However, since the nlattr is provided by the user-space program and
-the nlmsg skb is allocated with GFP_KERNEL instead of GFP_ZERO flag
-(see netlink_alloc_large_skb in netlink_sendmsg), the dirty data
-remained in the heap can cause OOB read for those string handling
-functions.
-
-By investigating how the bug is introduced, we find it is really
-interesting as the old version parsing code starting from commit
-fd7255f51a13 ("[SCSI] iscsi: add sysfs attrs for uspace sync up")
-treated the nlattr as integer bytes instead of string and had length
-check in iscsi_copy_param.
-
-  if (ev->u.set_param.len != sizeof(uint32_t))
-    BUG();
-
-But, since the commit a54a52caad4b ("[SCSI] iscsi: fixup set/get param
-functions"), code treated the nlattr as C string while forggeting to add
-any strlen checks, hence leave the possibility of OOB.
-
-This patch fixes the potential OOB by adding the strlen check before
-accessing the buf. If the data passes this check, all low-level
-set_param handlers can safely treat this buf as legal C string.
-
-Fixes: fd7255f51a13 ("[SCSI] iscsi: add sysfs attrs for uspace sync up")
-Fixes: 1d9bf13a9cf9 ("[SCSI] iscsi class: add iscsi host set param event")
-Signed-off-by: Lin Ma <linma@zju.edu.cn>
----
-V1 -> V2: resend with correct CC list
-
- drivers/scsi/scsi_transport_iscsi.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 62b24f1c0232..8ade01da3045 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -3030,6 +3030,10 @@ iscsi_if_set_param(struct iscsi_transport *transport, struct iscsi_uevent *ev, u
- 	if (!conn || !session)
- 		return -EINVAL;
- 
-+	/* data will be regarded as NULL-ended string, do length check */
-+	if (strlen(data) > ev->u.set_param.len)
-+		return -EINVAL;
-+
- 	switch (ev->u.set_param.param) {
- 	case ISCSI_PARAM_SESS_RECOVERY_TMO:
- 		sscanf(data, "%d", &value);
-@@ -3203,6 +3207,10 @@ iscsi_set_host_param(struct iscsi_transport *transport,
- 		return -ENODEV;
- 	}
- 
-+	/* see similar check in iscsi_if_set_param() */
-+	if (strlen(data) > ev->u.set_host_param.len)
-+		return -EINVAL;
-+
- 	err = transport->set_host_param(shost, ev->u.set_host_param.param,
- 					data, ev->u.set_host_param.len);
- 	scsi_host_put(shost);
 -- 
-2.17.1
-
+viresh
