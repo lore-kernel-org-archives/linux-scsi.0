@@ -2,65 +2,77 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 537A4C001DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 14:20:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B1FFC04A6A
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 14:47:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232513AbjGYOUh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jul 2023 10:20:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33030 "EHLO
+        id S231473AbjGYOrZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jul 2023 10:47:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229999AbjGYOUd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 10:20:33 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E734E211C;
-        Tue, 25 Jul 2023 07:16:05 -0700 (PDT)
-Received: from canpemm500007.china.huawei.com (unknown [172.30.72.55])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4R9JvB2F3fz1GDJD;
-        Tue, 25 Jul 2023 22:14:46 +0800 (CST)
-Received: from localhost (10.174.179.215) by canpemm500007.china.huawei.com
- (7.192.104.62) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Tue, 25 Jul
- 2023 22:15:37 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     <lduncan@suse.com>, <cleech@redhat.com>,
-        <michael.christie@oracle.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <haowenchao@huawei.com>,
-        <yuehaibing@huawei.com>
-CC:     <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH -next] scsi: iscsi: Remove unused extern declaration iscsi_lookup_iface()
-Date:   Tue, 25 Jul 2023 22:15:31 +0800
-Message-ID: <20230725141531.10424-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.10.2.windows.1
+        with ESMTP id S231256AbjGYOrY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 10:47:24 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B318E63;
+        Tue, 25 Jul 2023 07:47:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0D41561777;
+        Tue, 25 Jul 2023 14:47:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA407C433C7;
+        Tue, 25 Jul 2023 14:47:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690296439;
+        bh=Bo0L8NVAyrHOgGQCPLhEipmIw8MhpD2MSjL5nHcNdsA=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=aTwLe2S/soCzZmmI2FjM24eQj/SpC2A5oY2AfGtxo+LczogipNM3KYOe7h0nzUYeM
+         NIt6FPH2RkGimz1HDPBKdPgQkDOpCXPe5VN3kQ3+K7qEUIwIG7yQoe7NRPBOdEJwFm
+         df9A9JRMsNSOZL0kqy17+5K7UXuXE3nJw0fJgBX+1Sz6DsnBHJur54LkX482WxRepE
+         avfYJ9V0FqigXslCrZr5ruo35nt0QMfyuAFaS/e/R2BwcKVLfoBZ+X4eCdilR2aqHy
+         0b7nt/cbddP5/Rbdv4lPFddDYWsIeNPAjVfLqAox5XCTzPDvnpePEHVRHlBmjCOVgZ
+         1c7g/pXq5OdlQ==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.174.179.215]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500007.china.huawei.com (7.192.104.62)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
+Subject: Re: [3/8] wifi: zd1211rw: fix typo "tranmits"
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230622012627.15050-4-shamrocklee@posteo.net>
+References: <20230622012627.15050-4-shamrocklee@posteo.net>
+To:     Yueh-Shun Li <shamrocklee@posteo.net>
+Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Andy Whitcroft <apw@canonical.com>,
+        Joe Perches <joe@perches.com>, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-scsi@vger.kernel.org, mptcp@lists.linux.dev,
+        linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yueh-Shun Li <shamrocklee@posteo.net>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169029643392.3309254.342001893123754863.kvalo@kernel.org>
+Date:   Tue, 25 Jul 2023 14:47:15 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is not used anymore, so can be removed.
+Yueh-Shun Li <shamrocklee@posteo.net> wrote:
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- include/scsi/scsi_transport_iscsi.h | 1 -
- 1 file changed, 1 deletion(-)
+> Spell "transmits" properly.
+> 
+> Found by searching for keyword "tranm".
+> 
+> Signed-off-by: Yueh-Shun Li <shamrocklee@posteo.net>
 
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 34c03707fb6e..fb3399e4cd29 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -472,7 +472,6 @@ extern struct iscsi_iface *iscsi_create_iface(struct Scsi_Host *shost,
- 					      uint32_t iface_type,
- 					      uint32_t iface_num, int dd_size);
- extern void iscsi_destroy_iface(struct iscsi_iface *iface);
--extern struct iscsi_iface *iscsi_lookup_iface(int handle);
- extern char *iscsi_get_port_speed_name(struct Scsi_Host *shost);
- extern char *iscsi_get_port_state_name(struct Scsi_Host *shost);
- extern int iscsi_is_session_dev(const struct device *dev);
+Patch applied to wireless-next.git, thanks.
+
+2d5947830868 wifi: zd1211rw: fix typo "tranmits"
+
 -- 
-2.34.1
+https://patchwork.kernel.org/project/linux-wireless/patch/20230622012627.15050-4-shamrocklee@posteo.net/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
