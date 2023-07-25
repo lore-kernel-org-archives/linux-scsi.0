@@ -2,126 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A4B0EB64DD
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 18:41:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A529EB64DD
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 19:28:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232207AbjGYSll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jul 2023 14:41:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45894 "EHLO
+        id S230231AbjGYT2K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jul 2023 15:28:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232159AbjGYSli (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 14:41:38 -0400
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 945A92139
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 11:41:36 -0700 (PDT)
-Received: by mail-ej1-x62f.google.com with SMTP id a640c23a62f3a-9928abc11deso975634566b.1
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 11:41:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1690310495; x=1690915295;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=0I788wohjQE8SsbGgdpMx1YFIP2lgTgr+yd7Aw2Cjck=;
-        b=b0pM0eFQWipjwvBA5rAEgQYT74RBhMdHIMtBF/Ievwknq0XgMDXN5xsJePKnz7vJNI
-         rWPjk7fCOjEK52+9n3BtpCD0y9zCtP5LcUMruKr7o5/i77pHqJckQ8rbiUmKU/aOB4ir
-         KhSAd3LCiSuGUyEDMSNTGxU3ky7ZrdH/yX9Sc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690310495; x=1690915295;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=0I788wohjQE8SsbGgdpMx1YFIP2lgTgr+yd7Aw2Cjck=;
-        b=ao6X5gVwcOGmgF2BvNE2bo9dRJMkLVSNdwAGDVgHLcb+9buYv9itTEpMyFYmEgsjmI
-         QMN6PDhSggWqpc9lIhiJ1DiG+a86pi5QimR/sVnzOjYy83a6js4cIFpnm9nmjJSTCJpZ
-         ui7/hYcjM3Pxemrq/849fYP30Ng8bVLjzoNy7alvVerElskXsLu4SEdi2bU20LJZnEWU
-         qpKGwLg2v4FvalEY2jV/kzIqziQ9HLtBOmxKoJHW1npLfXfe6g52Dz1PKjt+3wh2uThL
-         h1IGEV6G9Sz2SPXG9ip5TxqHbTUiG9UnGnOVTx2jjqslVRh97o50D8ZBIToIpkBTmv3b
-         D8Lw==
-X-Gm-Message-State: ABy/qLZXltXPwQnkxuaz/CuyFC7Pa0MCESvEHhq9zDOv6V9pD+zV37ma
-        x1LiaDDHJTRfV3ZUZPByB/gcrmhTqweCEG5tjzVQ9C0q
-X-Google-Smtp-Source: APBJJlFdW2FpO6JFq69q1R8C/hIuCOsAsecQgFxyP17bP3ftkVZ/25GIDwZrUSw7BeUvpNCYXpLgag==
-X-Received: by 2002:a17:906:1046:b0:991:cd1f:e67a with SMTP id j6-20020a170906104600b00991cd1fe67amr14585381ejj.29.1690310494941;
-        Tue, 25 Jul 2023 11:41:34 -0700 (PDT)
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com. [209.85.208.42])
-        by smtp.gmail.com with ESMTPSA id k20-20020a1709065fd400b009934b1eb577sm8651755ejv.77.2023.07.25.11.41.34
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Jul 2023 11:41:34 -0700 (PDT)
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-52222562f1eso4750562a12.3
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 11:41:34 -0700 (PDT)
-X-Received: by 2002:aa7:d282:0:b0:522:29b2:e048 with SMTP id
- w2-20020aa7d282000000b0052229b2e048mr7180205edq.13.1690310493829; Tue, 25 Jul
- 2023 11:41:33 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAHk-=wiu-dX+CGUnhsk3KfPbP1h-1kCmVoTV6FEETQmafGWdLQ@mail.gmail.com>
- <9adfd67b-4327-9233-8e87-3fd5f3f7280b@cybernetics.com>
-In-Reply-To: <9adfd67b-4327-9233-8e87-3fd5f3f7280b@cybernetics.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Tue, 25 Jul 2023 11:41:15 -0700
-X-Gmail-Original-Message-ID: <CAHk-=whXgrO8dEYAQX6E8ffZXhzJ_+VPZyx1TcYpdRhQHD=L0A@mail.gmail.com>
-Message-ID: <CAHk-=whXgrO8dEYAQX6E8ffZXhzJ_+VPZyx1TcYpdRhQHD=L0A@mail.gmail.com>
-Subject: Re: SCSI: fix parsing of /proc/scsci/scsi file
-To:     Tony Battersby <tonyb@cybernetics.com>
-Cc:     Martin K Petersen <martin.petersen@oracle.com>,
-        James Bottomley <jejb@linux.ibm.com>, Willy Tarreau <w@1wt.eu>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary="0000000000008ba2fe0601541426"
+        with ESMTP id S229780AbjGYT2J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 15:28:09 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4318312D;
+        Tue, 25 Jul 2023 12:28:09 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36PCFbb3027925;
+        Tue, 25 Jul 2023 19:27:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=o60ZebcAToibFLytZmxZ6JV7DEy5Az+aLM2CqZAEvPA=;
+ b=oVW8dqU4Qr11awqjUlfIJA/MehlVlvjw+QfbSJAFnJOk2f2eZ6YjWqOgCQBvF6fIlWYA
+ Xp2dOlUHBQu29GaVmZUTfTtUAoiNhKp/UXodOTrPkpyYUGObRzDT3bi0nREYQVtCHRDU
+ Ps7H0OWXkm+8ld4oOCYWuF2YkGHi8qQDhDXoNyVJ+ir4BfcoGFgH8+qSXzGqbct3GawN
+ dBZjyB7UyZgeeG+fI4sQTYSCnCfAijO1q8OYzJhXlRxZQfkM5b3M4uNzmEQW6FAe1Ydr
+ NCwz9KjgjYiBYFzh4sDFXqDMEf1irVA8Vp5M/fBe5Q1/UC4ZXDANo++ENHHDoKEKMUIk CA== 
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3s2cf8sb3u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 25 Jul 2023 19:27:18 +0000
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36PJRE1F032629;
+        Tue, 25 Jul 2023 19:27:14 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3s086kx1xm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Tue, 25 Jul 2023 19:27:14 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36PJRDED032617;
+        Tue, 25 Jul 2023 19:27:13 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 36PJRDSe032616;
+        Tue, 25 Jul 2023 19:27:13 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+        id C4A125001B7; Wed, 26 Jul 2023 00:57:12 +0530 (+0530)
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+To:     powen.kao@mediatek.com, bvanassche@acm.org,
+        alim.akhtar@samsung.com, adrian.hunter@intel.com,
+        jejb@linux.ibm.com, stanley.chu@mediatek.com,
+        asutoshd@codeaurora.org, quic_cang@quicinc.com, mani@kernel.org,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        ebiggers@google.com, agross@kernel.org, Arthur.Simchaev@wdc.com,
+        konrad.dybcio@linaro.org
+Cc:     quic_ziqichen@quicinc.com, quic_nguyenb@quicinc.com,
+        quic_narepall@quicinc.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V1 0/2] Fix hibern8 enter failure during host reset
+Date:   Wed, 26 Jul 2023 00:57:08 +0530
+Message-Id: <20230725192710.26698-1-quic_nitirawa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: IDjxQFjw1n2NoutTSBwgCoJkwcNtEprL
+X-Proofpoint-GUID: IDjxQFjw1n2NoutTSBwgCoJkwcNtEprL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-25_10,2023-07-25_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 impostorscore=0
+ suspectscore=0 spamscore=0 adultscore=0 bulkscore=0 mlxlogscore=907
+ lowpriorityscore=0 malwarescore=0 phishscore=0 clxscore=1011
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2307250167
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008ba2fe0601541426
-Content-Type: text/plain; charset="UTF-8"
+Commit <52a518019c> ("Fix missing clk change notification on host reset")
+added clock scaling notification to ufshcd_host_reset_and_restore.
+This invokes hibern8 enter and exit on qualcomm platform which fails
+because controller is in reset state.
 
-On Tue, 25 Jul 2023 at 11:27, Tony Battersby <tonyb@cybernetics.com> wrote:
->
-> Something that I just thought of: the old parser could also skip over
-> NUL characters used as separators within the buffer that aren't at the
-> end of the buffer, as in: "host\0id\0channel\0lun".  If you want to
-> continue to allow that unlikely usage, then my patch comparing p to the
-> end pointer would work better.
+Fix this by checking the Host controller state before sending
+hibern8 command.
 
-Yeah, that would probably be better still. Ack on that.
+__ufshcd_wl_resume()
+ufshcd_reset_and_restore()
+ufshcd_host_reset_and_restore()
+ufshcd_scale_clks()
+ufshcd_vops_clk_scale_notify()
+ufs_qcom_clk_scale_notify()
+ufshcd_uic_hibern8_enter()
 
-That said, I just realized that *all* of this is completely
-unnecessarily complicated. We allow up to a PAGE_SIZE, but you cannot
-actually fill even *remotely* that much without using insane
-zero-padding, and at that point you're not doing something useful,
-you're trying to actively break something.
+Fixes: 52a518019ca1 ("scsi: ufs: core: Fix missing clk change notification on host reset")
 
-So the simple fix is to just limit the size of the buffer to slightly
-less than PAGE_SIZE, and just pad more than one NUL character at the
-end. Technically we're skipping four characters, and then we have the
-last "real" NUL terminator, so 5 would be sufficient, but let's make
-it easy for the compiler to just generate one single 64-bit store (or
-two 32-bit ones) and clear 8 bytes.
+Nitin Rawat (2):
+  scsi: ufs: core: Export ufshcd_is_hba_active
+  scsi: ufs: ufs-qcom: check host controller state
 
-IOW, we could do something *this* simple instead.
+ drivers/ufs/core/ufshcd.c   | 3 ++-
+ drivers/ufs/host/ufs-qcom.c | 4 ++++
+ include/ufs/ufshcd.h        | 1 +
+ 3 files changed, 7 insertions(+), 1 deletion(-)
 
-But I'm ok with your "track the end" version too.
+--
+2.17.1
 
-             Linus
-
---0000000000008ba2fe0601541426
-Content-Type: text/x-patch; charset="US-ASCII"; name="patch.diff"
-Content-Disposition: attachment; filename="patch.diff"
-Content-Transfer-Encoding: base64
-Content-ID: <f_lkin7m3i0>
-X-Attachment-Id: f_lkin7m3i0
-
-IGRyaXZlcnMvc2NzaS9zY3NpX3Byb2MuYyB8IDcgKystLS0tLQogMSBmaWxlIGNoYW5nZWQsIDIg
-aW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
-c2NzaV9wcm9jLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9wcm9jLmMKaW5kZXggNGE2ZWIxNzQxYmUw
-Li5kYTY2ZDkyNjAyMzIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX3Byb2MuYworKysg
-Yi9kcml2ZXJzL3Njc2kvc2NzaV9wcm9jLmMKQEAgLTQwOSw3ICs0MDksNyBAQCBzdGF0aWMgc3Np
-emVfdCBwcm9jX3Njc2lfd3JpdGUoc3RydWN0IGZpbGUgKmZpbGUsIGNvbnN0IGNoYXIgX191c2Vy
-ICpidWYsCiAJY2hhciAqYnVmZmVyLCAqcDsKIAlpbnQgZXJyOwogCi0JaWYgKCFidWYgfHwgbGVu
-Z3RoID4gUEFHRV9TSVpFKQorCWlmICghYnVmIHx8IGxlbmd0aCA+IFBBR0VfU0laRS04KQogCQly
-ZXR1cm4gLUVJTlZBTDsKIAogCWJ1ZmZlciA9IChjaGFyICopX19nZXRfZnJlZV9wYWdlKEdGUF9L
-RVJORUwpOwpAQCAtNDIxLDEwICs0MjEsNyBAQCBzdGF0aWMgc3NpemVfdCBwcm9jX3Njc2lfd3Jp
-dGUoc3RydWN0IGZpbGUgKmZpbGUsIGNvbnN0IGNoYXIgX191c2VyICpidWYsCiAJCWdvdG8gb3V0
-OwogCiAJZXJyID0gLUVJTlZBTDsKLQlpZiAobGVuZ3RoIDwgUEFHRV9TSVpFKQotCQlidWZmZXJb
-bGVuZ3RoXSA9ICdcMCc7Ci0JZWxzZSBpZiAoYnVmZmVyW1BBR0VfU0laRS0xXSkKLQkJZ290byBv
-dXQ7CisJbWVtc2V0KGJ1ZmZlciArIGxlbmd0aCwgMCwgOCk7CiAKIAkvKgogCSAqIFVzYWdlOiBl
-Y2hvICJzY3NpIGFkZC1zaW5nbGUtZGV2aWNlIDAgMSAyIDMiID4vcHJvYy9zY3NpL3Njc2kK
---0000000000008ba2fe0601541426--
