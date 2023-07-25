@@ -2,156 +2,174 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CC92C001DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 17:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F6FDC001DE
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 18:37:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232359AbjGYRbE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jul 2023 13:31:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36886 "EHLO
+        id S231210AbjGYShg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jul 2023 14:37:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232266AbjGYRa4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 13:30:56 -0400
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBD75E3
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 10:30:53 -0700 (PDT)
-Received: by mail-ej1-x62f.google.com with SMTP id a640c23a62f3a-99454855de1so849156566b.2
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 10:30:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1690306252; x=1690911052;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=8YN90U0y2k0M2aE2B56swcEJYHG48HYNScT8gjLzv1g=;
-        b=OtCDhHkjbr+7s6r6dvvZ8tjowEwo7soFehYRLisESZnOmuab77UqJshxSb8CnBCGgy
-         xD4Qxsj7DOCQo1BN30pQa7pQkNpKQm74CgtGcbf2L9FfHj7ni1LrGYiBGqUSBvr7w4AN
-         1jAhJequNF4wD2fRWBp6qKdZrrh5j8aJE8OWY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690306252; x=1690911052;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=8YN90U0y2k0M2aE2B56swcEJYHG48HYNScT8gjLzv1g=;
-        b=HDaWzDlcNoDaD0qFTsZf/wZJBpm+REG9UcA3xw7KQ3yrwO/WxgRGi2hJJVGJ6kcVsp
-         5J/HzTmi9DwPvlizfDvK7wFeQK1JjvROy8BDA2oHTeFVq88Z1iAs/LVcYBFMunMayytA
-         dBBokdPZBqe+8QTGrPcdsHHazil8QAkdmEEryEzK+bxwwuWvc1LwgyshX3sFdRKjf3py
-         Df/To79SmikMd7ukazeNTOulGHuIU5e0Da0WfI3TqET/njNYaC2wtWXUYtp0ujmMU/zO
-         dWHpuMWEkqgyXMgDBn2zhfL1yWpGGh+SJBlG4qDhQ07BV4LJBHJMaqldMtgd6a7+n117
-         BwUw==
-X-Gm-Message-State: ABy/qLYI9AJb1uH7Zakel39lJCJIpI2zhAZ4ckHiZ4gG0zbvLW524FQb
-        XDd1C/kDba5ELmz8SYK+D0d5J09f6/wyaaZJWchpha/B
-X-Google-Smtp-Source: APBJJlFQDKUlQATPXYJZ5tIZUR8xLJ2JdnYT2rE4yACx82Foy95o65RmtZ38W5h52qlMQdir6FNH6A==
-X-Received: by 2002:a17:906:25e:b0:991:d8b2:ea31 with SMTP id 30-20020a170906025e00b00991d8b2ea31mr13543790ejl.52.1690306252204;
-        Tue, 25 Jul 2023 10:30:52 -0700 (PDT)
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com. [209.85.208.45])
-        by smtp.gmail.com with ESMTPSA id jx21-20020a170906ca5500b00988a0765e29sm8428329ejb.104.2023.07.25.10.30.51
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Jul 2023 10:30:51 -0700 (PDT)
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-51d95aed33aso8286327a12.3
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 10:30:51 -0700 (PDT)
-X-Received: by 2002:a05:6402:2052:b0:522:3cf4:9d86 with SMTP id
- bc18-20020a056402205200b005223cf49d86mr3657239edb.33.1690306251162; Tue, 25
- Jul 2023 10:30:51 -0700 (PDT)
+        with ESMTP id S229485AbjGYShf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 14:37:35 -0400
+X-Greylist: delayed 613 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 25 Jul 2023 11:37:34 PDT
+Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE83A3
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 11:37:33 -0700 (PDT)
+X-ASG-Debug-ID: 1690309638-1cf4391f27191450001-ziuLRu
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id AgqoKPh6mtqctUOz; Tue, 25 Jul 2023 14:27:18 -0400 (EDT)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+        bh=sqgCX8jCizbiss5Ej3xSHSZPy6tYWsQXvnSrbIT7X1Y=;
+        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:
+        Content-Language:Subject:MIME-Version:Date:Message-ID; b=bO01tCHXQGGiGrxrvNAh
+        3EO4zOLDWGYl8YBummCO+KlHJVSp4Vl0pyZIyWp3FeTPFCzSN2k8eJCc1iY8ftsuljBCGXAAeDx1d
+        qbr0EQvGHgzngU7fYwAAAG46jEEgN4ZsfXya+jXrx467mLwfmhhwLQtTZaZehtSQ7eNqNaz8Co=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate Pro SMTP 7.1.1)
+  with ESMTPS id 12732468; Tue, 25 Jul 2023 14:27:18 -0400
+Message-ID: <9adfd67b-4327-9233-8e87-3fd5f3f7280b@cybernetics.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
+Date:   Tue, 25 Jul 2023 14:27:18 -0400
 MIME-Version: 1.0
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Tue, 25 Jul 2023 10:30:34 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wiu-dX+CGUnhsk3KfPbP1h-1kCmVoTV6FEETQmafGWdLQ@mail.gmail.com>
-Message-ID: <CAHk-=wiu-dX+CGUnhsk3KfPbP1h-1kCmVoTV6FEETQmafGWdLQ@mail.gmail.com>
-Subject: SCSI: fix parsing of /proc/scsci/scsi file
-To:     Martin K Petersen <martin.petersen@oracle.com>,
-        James Bottomley <jejb@linux.ibm.com>,
-        Tony Battersby <tonyb@cybernetics.com>,
-        Willy Tarreau <w@1wt.eu>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: SCSI: fix parsing of /proc/scsci/scsi file
+Content-Language: en-US
+X-ASG-Orig-Subj: Re: SCSI: fix parsing of /proc/scsci/scsi file
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Martin K Petersen <martin.petersen@oracle.com>,
+        James Bottomley <jejb@linux.ibm.com>, Willy Tarreau <w@1wt.eu>
 Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary="000000000000a9c3f706015317bc"
+References: <CAHk-=wiu-dX+CGUnhsk3KfPbP1h-1kCmVoTV6FEETQmafGWdLQ@mail.gmail.com>
+From:   Tony Battersby <tonyb@cybernetics.com>
+In-Reply-To: <CAHk-=wiu-dX+CGUnhsk3KfPbP1h-1kCmVoTV6FEETQmafGWdLQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1690309638
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 4589
+X-Barracuda-BRTS-Status: 0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000a9c3f706015317bc
-Content-Type: text/plain; charset="UTF-8"
+On 7/25/23 13:30, Linus Torvalds wrote:
+> This is the simplified version of the fix proposed by Tony Battersby
+> for the horrid scsi /proc parsing code.
+>
+Something that I just thought of: the old parser could also skip over
+NUL characters used as separators within the buffer that aren't at the
+end of the buffer, as in: "host\0id\0channel\0lun".  If you want to
+continue to allow that unlikely usage, then my patch comparing p to the
+end pointer would work better.
 
-This is the simplified version of the fix proposed by Tony Battersby
-for the horrid scsi /proc parsing code.
+From 61dc8daf4b6aa149882e425d58f68d50182222be Mon Sep 17 00:00:00 2001
+From: Tony Battersby <tonyb@cybernetics.com>
+Date: Mon, 24 Jul 2023 14:25:40 -0400
+Subject: [PATCH] scsi: fix legacy /proc parsing buffer overflow
 
-It doesn't make it prettier, it just makes it less buggy. That parsing
-code hasn't been changed in git or BK times, so it's at least two
-decades since anybody touched it, and judging by how nasty it is, it's
-probably more than that.
+(lightly modified commit message mostly by Linus Torvalds)
 
-This is v2 with the additional bug noted by Tony hopefully fixed.
+The parsing code for /proc/scsi/scsi is disgusting and broken.  We
+should have just used 'sscanf()' or something simple like that, but the
+logic may actually predate our kernel sscanf library routine for all I
+know.  It certainly predates both git and BK histories.
 
-             Linus
+And we can't change it to be something sane like that now, because the
+string matching at the start is done case-insensitively, and the
+separator parsing between numbers isn't done at all, so *any* separator
+will work, including a possible terminating NUL character.
 
---000000000000a9c3f706015317bc
-Content-Type: text/x-patch; charset="US-ASCII"; 
-	name="0001-scsi-fix-legacy-proc-parsing-buffer-overflow.patch"
-Content-Disposition: attachment; 
-	filename="0001-scsi-fix-legacy-proc-parsing-buffer-overflow.patch"
-Content-Transfer-Encoding: base64
-Content-ID: <f_lkikoaqw0>
-X-Attachment-Id: f_lkikoaqw0
+This interface is root-only, and entirely for legacy use, so there is
+absolutely no point in trying to tighten up the parsing.  Because any
+separator has traditionally worked, it's entirely possible that people
+have used random characters rather than the suggested space.
 
-RnJvbSA1NzRmZTI2OWY1YWFmNjJhM2VjODYyYmY0MzBhZGY5MWEyMDgyM2JkIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBMaW51cyBUb3J2YWxkcyA8dG9ydmFsZHNAbGludXgtZm91bmRh
-dGlvbi5vcmc+CkRhdGU6IFR1ZSwgMjUgSnVsIDIwMjMgMTA6MDk6MzEgLTA3MDAKU3ViamVjdDog
-W1BBVENIXSBzY3NpOiBmaXggbGVnYWN5IC9wcm9jIHBhcnNpbmcgYnVmZmVyIG92ZXJmbG93CgpU
-aGUgcGFyc2luZyBjb2RlIGZvciAvcHJvYy9zY3NpL3Njc2kgaXMgZGlzZ3VzdGluZyBhbmQgYnJv
-a2VuLiAgV2UKc2hvdWxkIGhhdmUganVzdCB1c2VkICdzc2NhbmYoKScgb3Igc29tZXRoaW5nIHNp
-bXBsZSBsaWtlIHRoYXQsIGJ1dCB0aGUKbG9naWMgbWF5IGFjdHVhbGx5IHByZWRhdGUgb3VyIGtl
-cm5lbCBzc2NhbmYgbGlicmFyeSByb3V0aW5lIGZvciBhbGwgSQprbm93LiAgSXQgY2VydGFpbmx5
-IHByZWRhdGVzIGJvdGggZ2l0IGFuZCBCSyBoaXN0b3JpZXMuCgpBbmQgd2UgY2FuJ3QgY2hhbmdl
-IGl0IHRvIGJlIHNvbWV0aGluZyBzYW5lIGxpa2UgdGhhdCBub3csIGJlY2F1c2UgdGhlCnN0cmlu
-ZyBtYXRjaGluZyBhdCB0aGUgc3RhcnQgaXMgZG9uZSBjYXNlLWluc2Vuc2l0aXZlbHksIGFuZCB0
-aGUKc2VwYXJhdG9yIHBhcnNpbmcgYmV0d2VlbiBudW1iZXJzIGlzbid0IGRvbmUgYXQgYWxsLCBz
-byAqYW55KiBzZXBhcmF0b3IKd2lsbCB3b3JrLCBpbmNsdWRpbmcgYSBwb3NzaWJsZSB0ZXJtaW5h
-dGluZyBOVUwgY2hhcmFjdGVyLgoKVGhpcyBpbnRlcmZhY2UgaXMgcm9vdC1vbmx5LCBhbmQgZW50
-aXJlbHkgZm9yIGxlZ2FjeSB1c2UsIHNvIHRoZXJlIGlzCmFic29sdXRlbHkgbm8gcG9pbnQgaW4g
-dHJ5aW5nIHRvIHRpZ2h0ZW4gdXAgdGhlIHBhcnNpbmcuICBCZWNhdXNlIGFueQpzZXBhcmF0b3Ig
-aGFzIHRyYWRpdGlvbmFsbHkgd29ya2VkLCBpdCdzIGVudGlyZWx5IHBvc3Npb2JsZSB0aGF0IHBl
-b3BsZQpoYXZlIHVzZWQgcmFuZG9tIGNoYXJhY3RlcnMgcmF0aGVyIHRoYW4gdGhlIHN1Z2dlc3Rl
-ZCBzcGFjZS4KClNvIGRvbid0IGJvdGhlciB0byB0cnkgdG8gcHJldHR5IGl0IHVwLCBhbmQgbGV0
-J3MganVzdCBtYWtlIGEgbWluaW1hbApwYXRjaCB0aGF0IGNhbiBiZSBiYWNrLXBvcnRlZCBhbmQg
-d2UgY2FuIGZvcmdldCBhYm91dCB0aGlzIHdob2xlIHNvcnJ5CnRoaW5nIGZvciBhbm90aGVyIHR3
-byBkZWNhZGVzLgoKSnVzdCBtYWtlIGl0IGF0IGxlYXN0IG5vdCB0cmF2ZXJzZSB0aGUgdGVybWlu
-YXRpbmcgTlVMLgoKUmVwb3J0ZWQtYnk6IFRvbnkgQmF0dGVyc2J5IDx0b255YkBjeWJlcm5ldGlj
-cy5jb20+Ckxpbms6IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LXNjc2kvYjU3MGY1ZmUt
-Y2I3Yy04NjNhLTZlZDktZjY3NzRjMjE5Yjg4QGN5YmVybmV0aWNzLmNvbS8KQ2M6IE1hcnRpbiBL
-IFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4KQ2M6IEphbWVzIEJvdHRvbWxl
-eSA8amVqYkBsaW51eC5pYm0uY29tPgpDYzogV2lsbHkgVGFycmVhdSA8d0Axd3QuZXU+CkNjOiBz
-dGFibGVAa2VybmVsLm9yZwpTaWduZWQtb2ZmLWJ5OiBMaW51cyBUb3J2YWxkcyA8dG9ydmFsZHNA
-bGludXgtZm91bmRhdGlvbi5vcmc+Ci0tLQogZHJpdmVycy9zY3NpL3Njc2lfcHJvYy5jIHwgMjMg
-KysrKysrKysrKysrKy0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCsp
-LCAxMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9wcm9jLmMg
-Yi9kcml2ZXJzL3Njc2kvc2NzaV9wcm9jLmMKaW5kZXggNGE2ZWIxNzQxYmUwLi44YWE4MjA4Y2Vi
-N2YgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX3Byb2MuYworKysgYi9kcml2ZXJzL3Nj
-c2kvc2NzaV9wcm9jLmMKQEAgLTM4Myw2ICszODMsOSBAQCBzdGF0aWMgaW50IHNjc2lfcmVtb3Zl
-X3NpbmdsZV9kZXZpY2UodWludCBob3N0LCB1aW50IGNoYW5uZWwsIHVpbnQgaWQsIHVpbnQgbHVu
-KQogCXJldHVybiBlcnJvcjsKIH0KIAorLyogaW5jcmVtZW50ICdwJywgYnV0IG5vdCBwYXN0IHRo
-ZSBlbmQgKi8KK3N0YXRpYyBpbmxpbmUgY2hhciAqbmV4dF9wKGNoYXIgKnApIHsgcmV0dXJuIHAg
-KyAhISpwOyB9CisKIC8qKgogICogcHJvY19zY3NpX3dyaXRlIC0gaGFuZGxlIHdyaXRlcyB0byAv
-cHJvYy9zY3NpL3Njc2kKICAqIEBmaWxlOiBub3QgdXNlZApAQCAtNDMxLDEyICs0MzQsMTIgQEAg
-c3RhdGljIHNzaXplX3QgcHJvY19zY3NpX3dyaXRlKHN0cnVjdCBmaWxlICpmaWxlLCBjb25zdCBj
-aGFyIF9fdXNlciAqYnVmLAogCSAqIHdpdGggICIwIDEgMiAzIiByZXBsYWNlZCBieSB5b3VyICJI
-b3N0IENoYW5uZWwgSWQgTHVuIi4KIAkgKi8KIAlpZiAoIXN0cm5jbXAoInNjc2kgYWRkLXNpbmds
-ZS1kZXZpY2UiLCBidWZmZXIsIDIyKSkgewotCQlwID0gYnVmZmVyICsgMjM7CisJCXAgPSBidWZm
-ZXIgKyAyMjsKIAotCQlob3N0ID0gc2ltcGxlX3N0cnRvdWwocCwgJnAsIDApOwotCQljaGFubmVs
-ID0gc2ltcGxlX3N0cnRvdWwocCArIDEsICZwLCAwKTsKLQkJaWQgPSBzaW1wbGVfc3RydG91bChw
-ICsgMSwgJnAsIDApOwotCQlsdW4gPSBzaW1wbGVfc3RydG91bChwICsgMSwgJnAsIDApOworCQlo
-b3N0ID0gc2ltcGxlX3N0cnRvdWwobmV4dF9wKHApLCAmcCwgMCk7CisJCWNoYW5uZWwgPSBzaW1w
-bGVfc3RydG91bChuZXh0X3AocCksICZwLCAwKTsKKwkJaWQgPSBzaW1wbGVfc3RydG91bChuZXh0
-X3AocCksICZwLCAwKTsKKwkJbHVuID0gc2ltcGxlX3N0cnRvdWwobmV4dF9wKHApLCAmcCwgMCk7
-CiAKIAkJZXJyID0gc2NzaV9hZGRfc2luZ2xlX2RldmljZShob3N0LCBjaGFubmVsLCBpZCwgbHVu
-KTsKIApAQCAtNDQ1LDEyICs0NDgsMTIgQEAgc3RhdGljIHNzaXplX3QgcHJvY19zY3NpX3dyaXRl
-KHN0cnVjdCBmaWxlICpmaWxlLCBjb25zdCBjaGFyIF9fdXNlciAqYnVmLAogCSAqIHdpdGggICIw
-IDEgMiAzIiByZXBsYWNlZCBieSB5b3VyICJIb3N0IENoYW5uZWwgSWQgTHVuIi4KIAkgKi8KIAl9
-IGVsc2UgaWYgKCFzdHJuY21wKCJzY3NpIHJlbW92ZS1zaW5nbGUtZGV2aWNlIiwgYnVmZmVyLCAy
-NSkpIHsKLQkJcCA9IGJ1ZmZlciArIDI2OworCQlwID0gYnVmZmVyICsgMjU7CiAKLQkJaG9zdCA9
-IHNpbXBsZV9zdHJ0b3VsKHAsICZwLCAwKTsKLQkJY2hhbm5lbCA9IHNpbXBsZV9zdHJ0b3VsKHAg
-KyAxLCAmcCwgMCk7Ci0JCWlkID0gc2ltcGxlX3N0cnRvdWwocCArIDEsICZwLCAwKTsKLQkJbHVu
-ID0gc2ltcGxlX3N0cnRvdWwocCArIDEsICZwLCAwKTsKKwkJaG9zdCA9IHNpbXBsZV9zdHJ0b3Vs
-KG5leHRfcChwKSwgJnAsIDApOworCQljaGFubmVsID0gc2ltcGxlX3N0cnRvdWwobmV4dF9wKHAp
-LCAmcCwgMCk7CisJCWlkID0gc2ltcGxlX3N0cnRvdWwobmV4dF9wKHApLCAmcCwgMCk7CisJCWx1
-biA9IHNpbXBsZV9zdHJ0b3VsKG5leHRfcChwKSwgJnAsIDApOwogCiAJCWVyciA9IHNjc2lfcmVt
-b3ZlX3NpbmdsZV9kZXZpY2UoaG9zdCwgY2hhbm5lbCwgaWQsIGx1bik7CiAJfQotLSAKMi40MS4w
-LjMyNy5nYWE5MTY2YmNjMAoK
---000000000000a9c3f706015317bc--
+So don't bother to try to pretty it up, and let's just make a minimal
+patch that can be back-ported and we can forget about this whole sorry
+thing for another two decades.
+
+Just make it at least not read past the end of the supplied data.
+
+Link: https://lore.kernel.org/linux-scsi/b570f5fe-cb7c-863a-6ed9-f6774c219b88@cybernetics.com/
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Martin K Petersen <martin.petersen@oracle.com>
+Cc: James Bottomley <jejb@linux.ibm.com>
+Cc: Willy Tarreau <w@1wt.eu>
+Cc: stable@kernel.org
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+---
+ drivers/scsi/scsi_proc.c | 30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index 4a6eb1741be0..41f23cd0bfb4 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -406,7 +406,7 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
+ 			       size_t length, loff_t *ppos)
+ {
+ 	int host, channel, id, lun;
+-	char *buffer, *p;
++	char *buffer, *end, *p;
+ 	int err;
+ 
+ 	if (!buf || length > PAGE_SIZE)
+@@ -421,10 +421,14 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
+ 		goto out;
+ 
+ 	err = -EINVAL;
+-	if (length < PAGE_SIZE)
+-		buffer[length] = '\0';
+-	else if (buffer[PAGE_SIZE-1])
+-		goto out;
++	if (length < PAGE_SIZE) {
++		end = buffer + length;
++		*end = '\0';
++	} else {
++		end = buffer + PAGE_SIZE - 1;
++		if (*end)
++			goto out;
++	}
+ 
+ 	/*
+ 	 * Usage: echo "scsi add-single-device 0 1 2 3" >/proc/scsi/scsi
+@@ -433,10 +437,10 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
+ 	if (!strncmp("scsi add-single-device", buffer, 22)) {
+ 		p = buffer + 23;
+ 
+-		host = simple_strtoul(p, &p, 0);
+-		channel = simple_strtoul(p + 1, &p, 0);
+-		id = simple_strtoul(p + 1, &p, 0);
+-		lun = simple_strtoul(p + 1, &p, 0);
++		host    = (p     < end) ? simple_strtoul(p, &p, 0) : 0;
++		channel = (p + 1 < end) ? simple_strtoul(p + 1, &p, 0) : 0;
++		id      = (p + 1 < end) ? simple_strtoul(p + 1, &p, 0) : 0;
++		lun     = (p + 1 < end) ? simple_strtoul(p + 1, &p, 0) : 0;
+ 
+ 		err = scsi_add_single_device(host, channel, id, lun);
+ 
+@@ -447,10 +451,10 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
+ 	} else if (!strncmp("scsi remove-single-device", buffer, 25)) {
+ 		p = buffer + 26;
+ 
+-		host = simple_strtoul(p, &p, 0);
+-		channel = simple_strtoul(p + 1, &p, 0);
+-		id = simple_strtoul(p + 1, &p, 0);
+-		lun = simple_strtoul(p + 1, &p, 0);
++		host    = (p     < end) ? simple_strtoul(p, &p, 0) : 0;
++		channel = (p + 1 < end) ? simple_strtoul(p + 1, &p, 0) : 0;
++		id      = (p + 1 < end) ? simple_strtoul(p + 1, &p, 0) : 0;
++		lun     = (p + 1 < end) ? simple_strtoul(p + 1, &p, 0) : 0;
+ 
+ 		err = scsi_remove_single_device(host, channel, id, lun);
+ 	}
+-- 
+2.25.1
+
