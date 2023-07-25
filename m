@@ -2,122 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8718C001DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 19:28:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8A3CC001DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 19:31:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231325AbjGYT2R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jul 2023 15:28:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59490 "EHLO
+        id S231358AbjGYTbR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jul 2023 15:31:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230379AbjGYT2N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 15:28:13 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B947112D;
-        Tue, 25 Jul 2023 12:28:12 -0700 (PDT)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36PIAAZN028495;
-        Tue, 25 Jul 2023 19:27:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=6Rtbzl8f2b/zKk6//BhNizcH1rZYFH3VxZICLLh6Dx8=;
- b=kIITGu9SXIXka4bE+HQIN20XYqjKaKGkdWi7gZxOcZdS06DJpWVX7Q3DExn3mdV47xbl
- Hv9Or+gc9ELW9iauKZreoV9U4fL60PZUDTASbBMMrKHxP423H3L1j2yTwOWnqFjDSv3w
- ulibDcRrfy3q9vO+tIPRngEL1u7ym4W7gg7grmgFXpp7RkT38vVgRNsd2ck/F3mJJv3S
- 0sjumpdEhjSY2qrMo+/reJ+TUlfBvn6r2zsE3aXfvGLauYGoYhGPYxhR6+Yom3nuyMVM
- 7KIHbJ0xiDVKVXeeJ5OXeascrBpE1BfJBfxTqYD5jdPbMp6taMW+4dgp974Ob0iAhAw0 Jw== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3s2gxd0hbd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 25 Jul 2023 19:27:19 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36PJRFEf032656;
-        Tue, 25 Jul 2023 19:27:15 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3s086kx1y2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Tue, 25 Jul 2023 19:27:15 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36PJRFCk032647;
-        Tue, 25 Jul 2023 19:27:15 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 36PJRFqx032642;
-        Tue, 25 Jul 2023 19:27:15 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-        id 7F0A35001B7; Wed, 26 Jul 2023 00:57:14 +0530 (+0530)
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-To:     powen.kao@mediatek.com, bvanassche@acm.org,
-        alim.akhtar@samsung.com, adrian.hunter@intel.com,
-        jejb@linux.ibm.com, stanley.chu@mediatek.com,
-        asutoshd@codeaurora.org, quic_cang@quicinc.com, mani@kernel.org,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        ebiggers@google.com, agross@kernel.org, Arthur.Simchaev@wdc.com,
-        konrad.dybcio@linaro.org
-Cc:     quic_ziqichen@quicinc.com, quic_nguyenb@quicinc.com,
-        quic_narepall@quicinc.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V1 1/2] scsi: ufs: core: Export ufshcd_is_hba_active
-Date:   Wed, 26 Jul 2023 00:57:09 +0530
-Message-Id: <20230725192710.26698-2-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230725192710.26698-1-quic_nitirawa@quicinc.com>
-References: <20230725192710.26698-1-quic_nitirawa@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: aDjMbbHqmMB8RMc89k96EdvACsq_-mka
-X-Proofpoint-ORIG-GUID: aDjMbbHqmMB8RMc89k96EdvACsq_-mka
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-25_10,2023-07-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
- spamscore=0 malwarescore=0 phishscore=0 adultscore=0 bulkscore=0
- mlxlogscore=954 lowpriorityscore=0 clxscore=1015 suspectscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2307250167
+        with ESMTP id S230259AbjGYTbQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 15:31:16 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F12F2139
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 12:31:14 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6686ef86110so3371338b3a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 12:31:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1690313473; x=1690918273;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=pJ/uG1DkstZEC0YXswlfcg4mzuHx2dCPosAJ8nyYiKU=;
+        b=N4dmGGUd5s7Hnf7BUnXknOffvw5RpCLujs6YXVokTy7O+HKMwVP0BU5FsErUDPuXSv
+         B5m4B4qn5zWpnhbLVDHf3/MxJ/0h8i821OvgUw9V4JOnkF/iIGO9pttdJzeIEulyl2hd
+         ZakAh0DuQxZbuJ7ezALUYb+8r5+qN3/hXxPpj97JD/80NI6y7OfP/ahBFasL2wO7qiYk
+         XNvNPhPpsSztOXvmtvhgQGHGlxzDVxDBBMIjia69p3q46fkANcLfFXi9Dh8pD/oBpLN9
+         JqsFFcoub+fBOF0rYBe0ciF8Z7LUvvg8HPYqlC1nHCwagkw0o4eRh1Lb5L3c2k0Sq/6l
+         wJ0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690313473; x=1690918273;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pJ/uG1DkstZEC0YXswlfcg4mzuHx2dCPosAJ8nyYiKU=;
+        b=cx3CDRFMl1sngGZ6SdGv90Crq01ku3ZCE61b4J9hkw8naWoekMiLBooWhl2OI/y/K4
+         yvTueLTCuJYeJiNXTjNpi3KS3GSpkWsEA4BbbIJxyCrh+qCi8l/yKHzd65GtB7yISrNB
+         +AIIPDOh4dIiyROuHJS21orWPyReKQzg/1J+PzmeVjn8VUrBkjD8+ELOsOuYDu9MZWxK
+         xDD/G5H0sAMT705agrTxl21VSuLi8EaWFO1ZGPR8YvW6fain2XWojwkFuu/SvwdKiIdD
+         cjdZy2ituGRi/nN3fnt8Cwdg2vOzwqBTqoi+bimTGljgFYVRnIPl4W465vSfANp0J8Qo
+         fmgg==
+X-Gm-Message-State: ABy/qLbxWOZR9X/f7eLONFZ3cR1Ri1XwXdOSlOBwSVnWzG3d8c8E9KyX
+        Ac4KPHpVfR+PxmKbpfOD9OB4PA==
+X-Google-Smtp-Source: APBJJlEfiph3z9DO+KiJlO/NzedTyFz4ru8f0+GFAU4bYhlVeMPYwsoE9ZGEbBxIQqIQuL9kxelcfQ==
+X-Received: by 2002:a05:6a00:2292:b0:64c:b45f:fc86 with SMTP id f18-20020a056a00229200b0064cb45ffc86mr162622pfe.17.1690313473383;
+        Tue, 25 Jul 2023 12:31:13 -0700 (PDT)
+Received: from google.com ([2620:15c:2c5:12:97dd:f6a2:bd1a:5c1a])
+        by smtp.gmail.com with ESMTPSA id e15-20020aa78c4f000000b00686bef984e2sm93693pfd.80.2023.07.25.12.31.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Jul 2023 12:31:12 -0700 (PDT)
+Date:   Tue, 25 Jul 2023 12:31:08 -0700
+From:   Igor Pylypiv <ipylypiv@google.com>
+To:     Yang Yingliang <yangyingliang@huawei.com>
+Cc:     linux-scsi@vger.kernel.org, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        changyuanl@google.com, pranavpp@google.com
+Subject: Re: [PATCH] scsi: pm80xx: fix error return code in pm8001_pci_probe()
+Message-ID: <ZMAi/F7ycX+NUzY5@google.com>
+References: <20230725125706.566990-1-yangyingliang@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230725125706.566990-1-yangyingliang@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Export ufshcd_is_hba_active() to allow vendor driver modules
-to check the state of host controller.
+On Tue, Jul 25, 2023 at 08:57:06PM +0800, Yang Yingliang wrote:
+> If pm8001_init_sas_add() fails, return error code in pm8001_pci_probe().
+> 
+> Fixes: 14a8f116cdc0 ("scsi: pm80xx: Add GET_NVMD timeout during probe")
+> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
----
- drivers/ufs/core/ufshcd.c | 3 ++-
- include/ufs/ufshcd.h      | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 983fae84d9e8..962aa5c1fe69 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -995,10 +995,11 @@ static inline void ufshcd_hba_start(struct ufs_hba *hba)
-  *
-  * Returns true if and only if the controller is active.
-  */
--static inline bool ufshcd_is_hba_active(struct ufs_hba *hba)
-+bool ufshcd_is_hba_active(struct ufs_hba *hba)
- {
- 	return ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & CONTROLLER_ENABLE;
- }
-+EXPORT_SYMBOL_GPL(ufshcd_is_hba_active);
-
- u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
- {
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 6dc11fa0ebb1..ef04c3363be8 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1398,6 +1398,7 @@ int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable);
- int ufshcd_suspend_prepare(struct device *dev);
- int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
- void ufshcd_resume_complete(struct device *dev);
-+bool ufshcd_is_hba_active(struct ufs_hba *hba);
-
- /* Wrapper functions for safely calling variant operations */
- static inline int ufshcd_vops_init(struct ufs_hba *hba)
---
-2.17.1
-
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 2e886c1d867d..4995e1ef4e0e 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -1181,7 +1181,8 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+>  		pm80xx_set_thermal_config(pm8001_ha);
+>  	}
+>  
+> -	if (pm8001_init_sas_add(pm8001_ha))
+> +	rc = pm8001_init_sas_add(pm8001_ha);
+> +	if (rc)
+>  		goto err_out_shost;
+>  	/* phy setting support for motherboard controller */
+>  	rc = pm8001_configure_phy_settings(pm8001_ha);
+> -- 
+> 2.25.1
+> 
