@@ -2,95 +2,76 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8A3CC001DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 19:31:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40310C00528
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jul 2023 19:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231358AbjGYTbR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jul 2023 15:31:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33610 "EHLO
+        id S231140AbjGYT4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jul 2023 15:56:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230259AbjGYTbQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 15:31:16 -0400
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F12F2139
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 12:31:14 -0700 (PDT)
-Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6686ef86110so3371338b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 12:31:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1690313473; x=1690918273;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=pJ/uG1DkstZEC0YXswlfcg4mzuHx2dCPosAJ8nyYiKU=;
-        b=N4dmGGUd5s7Hnf7BUnXknOffvw5RpCLujs6YXVokTy7O+HKMwVP0BU5FsErUDPuXSv
-         B5m4B4qn5zWpnhbLVDHf3/MxJ/0h8i821OvgUw9V4JOnkF/iIGO9pttdJzeIEulyl2hd
-         ZakAh0DuQxZbuJ7ezALUYb+8r5+qN3/hXxPpj97JD/80NI6y7OfP/ahBFasL2wO7qiYk
-         XNvNPhPpsSztOXvmtvhgQGHGlxzDVxDBBMIjia69p3q46fkANcLfFXi9Dh8pD/oBpLN9
-         JqsFFcoub+fBOF0rYBe0ciF8Z7LUvvg8HPYqlC1nHCwagkw0o4eRh1Lb5L3c2k0Sq/6l
-         wJ0Q==
+        with ESMTP id S230361AbjGYT4c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 15:56:32 -0400
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 649EB19A1;
+        Tue, 25 Jul 2023 12:56:31 -0700 (PDT)
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-666ecb21f86so5525406b3a.3;
+        Tue, 25 Jul 2023 12:56:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690313473; x=1690918273;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pJ/uG1DkstZEC0YXswlfcg4mzuHx2dCPosAJ8nyYiKU=;
-        b=cx3CDRFMl1sngGZ6SdGv90Crq01ku3ZCE61b4J9hkw8naWoekMiLBooWhl2OI/y/K4
-         yvTueLTCuJYeJiNXTjNpi3KS3GSpkWsEA4BbbIJxyCrh+qCi8l/yKHzd65GtB7yISrNB
-         +AIIPDOh4dIiyROuHJS21orWPyReKQzg/1J+PzmeVjn8VUrBkjD8+ELOsOuYDu9MZWxK
-         xDD/G5H0sAMT705agrTxl21VSuLi8EaWFO1ZGPR8YvW6fain2XWojwkFuu/SvwdKiIdD
-         cjdZy2ituGRi/nN3fnt8Cwdg2vOzwqBTqoi+bimTGljgFYVRnIPl4W465vSfANp0J8Qo
-         fmgg==
-X-Gm-Message-State: ABy/qLbxWOZR9X/f7eLONFZ3cR1Ri1XwXdOSlOBwSVnWzG3d8c8E9KyX
-        Ac4KPHpVfR+PxmKbpfOD9OB4PA==
-X-Google-Smtp-Source: APBJJlEfiph3z9DO+KiJlO/NzedTyFz4ru8f0+GFAU4bYhlVeMPYwsoE9ZGEbBxIQqIQuL9kxelcfQ==
-X-Received: by 2002:a05:6a00:2292:b0:64c:b45f:fc86 with SMTP id f18-20020a056a00229200b0064cb45ffc86mr162622pfe.17.1690313473383;
-        Tue, 25 Jul 2023 12:31:13 -0700 (PDT)
-Received: from google.com ([2620:15c:2c5:12:97dd:f6a2:bd1a:5c1a])
-        by smtp.gmail.com with ESMTPSA id e15-20020aa78c4f000000b00686bef984e2sm93693pfd.80.2023.07.25.12.31.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Jul 2023 12:31:12 -0700 (PDT)
-Date:   Tue, 25 Jul 2023 12:31:08 -0700
-From:   Igor Pylypiv <ipylypiv@google.com>
-To:     Yang Yingliang <yangyingliang@huawei.com>
-Cc:     linux-scsi@vger.kernel.org, jinpu.wang@cloud.ionos.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        changyuanl@google.com, pranavpp@google.com
-Subject: Re: [PATCH] scsi: pm80xx: fix error return code in pm8001_pci_probe()
-Message-ID: <ZMAi/F7ycX+NUzY5@google.com>
-References: <20230725125706.566990-1-yangyingliang@huawei.com>
+        d=1e100.net; s=20221208; t=1690314991; x=1690919791;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=KbNljxec5F5wit49MbLDhDRO2j7rsVA1tKXeLuxoXXQ=;
+        b=Cq6NHmGrUENssKvjlWXu8ptOpBRX1sn6tVeV/MQGlpoKCxA6J1bWfKvfbzHEg6BQ6w
+         hkbEmC0sWZFDEpQDirsu2Q8rIEY40DWZvhI41FhSr2dRv/9wA512wfwXXaZE/VQxTRoJ
+         ls6hn12rZBGV68Lav3PRSltFFjLyBSC9pf02/Vo06K4Cx1HReR/WDl+L1bv/VR48EZ11
+         aqjVUMSzP2+SuQulgObCDvTImUv5HMuGxrlgv2D+bGuIajE7qIifix0OM6MnpEK9CDON
+         OORnx9uhKRH3JGGQDAxD3WpgwJpA6eHLiWYelzlx/+qXYYeVOJ3EGSsNGfFQ0ZeE8JnR
+         J3WA==
+X-Gm-Message-State: ABy/qLbw+JGfOSsfEHKzXBMBiBWNfwsNMmPpfDk8DDCONpJfX000XsGq
+        ma3hqcxiYJ24Z0dWI1+Vevk=
+X-Google-Smtp-Source: APBJJlHdtLpAwm1PS1imCDJhzvKIuz4NzhOkzB+nWr8orFagSQD7Y+dNBDIluUHoDDDSba4wAb/GBg==
+X-Received: by 2002:a05:6a21:66c9:b0:126:a5e3:3938 with SMTP id ze9-20020a056a2166c900b00126a5e33938mr46079pzb.19.1690314990528;
+        Tue, 25 Jul 2023 12:56:30 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:7ecb:b0e6:dc38:b05f? ([2620:15c:211:201:7ecb:b0e6:dc38:b05f])
+        by smtp.gmail.com with ESMTPSA id bu9-20020a632949000000b004ff6b744248sm10947134pgb.48.2023.07.25.12.56.28
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 25 Jul 2023 12:56:30 -0700 (PDT)
+Message-ID: <08fcf48b-75bb-f9f3-ca2d-f20d5317a991@acm.org>
+Date:   Tue, 25 Jul 2023 12:56:27 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230725125706.566990-1-yangyingliang@huawei.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH V1 2/2] scsi: ufs: ufs-qcom: check host controller state
+Content-Language: en-US
+To:     Nitin Rawat <quic_nitirawa@quicinc.com>, powen.kao@mediatek.com,
+        alim.akhtar@samsung.com, adrian.hunter@intel.com,
+        jejb@linux.ibm.com, stanley.chu@mediatek.com,
+        asutoshd@codeaurora.org, quic_cang@quicinc.com, mani@kernel.org,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        ebiggers@google.com, agross@kernel.org, Arthur.Simchaev@wdc.com,
+        konrad.dybcio@linaro.org
+Cc:     quic_ziqichen@quicinc.com, quic_nguyenb@quicinc.com,
+        quic_narepall@quicinc.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Manish Pandey <quic_mapa@quicinc.com>
+References: <20230725192710.26698-1-quic_nitirawa@quicinc.com>
+ <20230725192710.26698-3-quic_nitirawa@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230725192710.26698-3-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 25, 2023 at 08:57:06PM +0800, Yang Yingliang wrote:
-> If pm8001_init_sas_add() fails, return error code in pm8001_pci_probe().
-> 
-> Fixes: 14a8f116cdc0 ("scsi: pm80xx: Add GET_NVMD timeout during probe")
-> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+On 7/25/23 12:27, Nitin Rawat wrote:
+> Check host controller state before sending hibern8 command.
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+A patch description should mention what has been changed and also why. 
+The above explains what has been changed but not why. Please explain in 
+the commit message why this change is necessary.
 
-> ---
->  drivers/scsi/pm8001/pm8001_init.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index 2e886c1d867d..4995e1ef4e0e 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -1181,7 +1181,8 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
->  		pm80xx_set_thermal_config(pm8001_ha);
->  	}
->  
-> -	if (pm8001_init_sas_add(pm8001_ha))
-> +	rc = pm8001_init_sas_add(pm8001_ha);
-> +	if (rc)
->  		goto err_out_shost;
->  	/* phy setting support for motherboard controller */
->  	rc = pm8001_configure_phy_settings(pm8001_ha);
-> -- 
-> 2.25.1
-> 
+Thanks,
+
+Bart.
