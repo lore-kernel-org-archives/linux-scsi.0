@@ -2,129 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D33FC0015E
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 12:41:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A6D3C001DC
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 12:57:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233423AbjGZMl1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jul 2023 08:41:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45800 "EHLO
+        id S232778AbjGZM5I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jul 2023 08:57:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230296AbjGZMl0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 08:41:26 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B32921FC4
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2023 05:40:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690375240;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5fpy3uf16L5jWl3A9n09ZhtqPu40Emy0OctKG7C31qA=;
-        b=b8s2yNX194mwX2kACZ/LBMgCPAf11FVeou7z0679GZ4CIcCYF6dr6ZnJeQmxRyYlEPAxm1
-        gLnLagVpPBxx2jG/qWdRGyOkWGMyhw5j0TaFJJao05AeiONIbU4E/K3gcs3p6GIdc4TmTA
-        7yCFc/y9V0vOqkTmlKQGPM7/zr1eiOs=
-Received: from mail-oa1-f70.google.com (mail-oa1-f70.google.com
- [209.85.160.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-633-B-BZbtwdODeTDedSz4SsPg-1; Wed, 26 Jul 2023 08:40:39 -0400
-X-MC-Unique: B-BZbtwdODeTDedSz4SsPg-1
-Received: by mail-oa1-f70.google.com with SMTP id 586e51a60fabf-1b439698cd8so12160611fac.2
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2023 05:40:39 -0700 (PDT)
+        with ESMTP id S230229AbjGZM5H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 08:57:07 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 953D597;
+        Wed, 26 Jul 2023 05:57:03 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1bb893e6365so23464565ad.2;
+        Wed, 26 Jul 2023 05:57:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1690376223; x=1690981023;
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5ySvdAORBId7F6tM0o+hWAYYE6qPXhCxs/coJ5dfIDU=;
+        b=plSKqzIj3VTiPf1pRRh7Dx/AN128Sdh2M3LyWi8KBEXvvoPl0Nx8r0bJ6Z+at1W7qS
+         M6UuLVG3Mf+HBdSQEgTLVrr9g4pSQzRKq66GA51BtwLRKAbJn0F6T9QX9hpMeEEWrRNB
+         8eROU9GxSUvEe/BqlqaJi5OJa84+qnxL/bkVgvnQA5GzoaFBcaK7XW0v6ECcOoN3GUKT
+         IAu8qr3WPUoKXCuyiZ2wMYxoJ1Y2GpbtZlI+YOosKc7hdMs6WK549m/UqzpROLNPP+Lk
+         f98XRZirBpLr4eMSNvRFYArhahMD2XpFGEEtwEPtpLMkC/BIcRognyq9y9tDguFMFj6Y
+         rPkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690375239; x=1690980039;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=5fpy3uf16L5jWl3A9n09ZhtqPu40Emy0OctKG7C31qA=;
-        b=BD+larJya/Kp94A2SbMa+omHo+HHzNVZ0MTaYyyyAw4sW4idd6rE0JmwKfn/y8ed6A
-         SOYMZKmziFsZgtrESb4yKAN54B7d2+0pZNq2V6k4xJfTPb+VyUX0OpvmQk1OGQyz9kqA
-         aqf0hWYhmR22hbilH+6RgbfyNsI31jd0x/JAxuK/hbbxq0Pyh+TOY7qSRdUYKUyoaLOF
-         zazDIe593bBNXgB7qfFLRGz5oy458Rv3KMJdX0XMLCWugi0tXY4bIkz2LTkd1pyALPZq
-         leAXegXvXAfmD7C3shVCLbLy5+cegkBWVpQby0g4AqxSXIfxTnnIceegbNb4HPP7f9tW
-         8Z2A==
-X-Gm-Message-State: ABy/qLaFnXtvDgi7UJ8/8PTJnpEOMee/BY3tARG66YM03yOILASvrIed
-        3MssTOhOVI1sd3Tc72AzmImnp/G/nxUqr/iRXNbIAZcfeDIjVx0pzwhIQ5w9r/oEa794YM/fIW/
-        /4QWTqoNPPTcSbGjLiWdSXA==
-X-Received: by 2002:a05:6870:6488:b0:1b7:2edd:df6d with SMTP id cz8-20020a056870648800b001b72edddf6dmr2395893oab.10.1690375238752;
-        Wed, 26 Jul 2023 05:40:38 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlFDDOMPbwL1wRk2nLrKhuC7u3e/wnaFaI5HPljpUAYP/ts9jgJgI7RZxXQYccnHEX5NrXsruQ==
-X-Received: by 2002:a05:6870:6488:b0:1b7:2edd:df6d with SMTP id cz8-20020a056870648800b001b72edddf6dmr2395884oab.10.1690375238489;
-        Wed, 26 Jul 2023 05:40:38 -0700 (PDT)
-Received: from ?IPv6:2600:6c64:4e7f:603b:2613:173:a68a:fce8? ([2600:6c64:4e7f:603b:2613:173:a68a:fce8])
-        by smtp.gmail.com with ESMTPSA id z7-20020a056870e14700b001b3d67934e9sm6418254oaa.26.2023.07.26.05.40.37
+        d=1e100.net; s=20221208; t=1690376223; x=1690981023;
+        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5ySvdAORBId7F6tM0o+hWAYYE6qPXhCxs/coJ5dfIDU=;
+        b=bXtqfZ+7AZ4/f6kfEUA498NargIzYnenGgrDm+2ERju0BwcF1+b+WQambBUA+bXexm
+         xI0UKkkqTwcXLhJC5vv8Fdz5CHhM1rW8X31PlQRbIp6nOcDPYTYLWebaTxRDlUWH6koi
+         amCTnwavrVFTlUE+uclFwucNL1ZPyj0SyoCC3dwDcP17q05i56zL2KhzI6tYKTkAZilX
+         IWtWbjtKKnOk7GpDfIMeO72yIteOhfmzZlmc/G+/9VLZgLx/NRadujHjlYALZEFhy3pq
+         VPf4JDynCQKJ89qEiy8nRyQqX3S7FyMrV6s/Dw5yxR2JfJYcrQJIX4IPc5Kp2IezepcU
+         U6ig==
+X-Gm-Message-State: ABy/qLbhAIeHAccKu76JmFuT4xQw+74hsSoZklm43b+zkVCtSzPZFmnV
+        w0dpViMefdMrydnvHWPctLs=
+X-Google-Smtp-Source: APBJJlH6mHo3jfZaGLh7lyBpVf7ybSIoJL1f5lSops/1NB++3TvGV0N+22403rCO+5r2/bvMK04zhg==
+X-Received: by 2002:a17:902:c212:b0:1bb:a056:2c5f with SMTP id 18-20020a170902c21200b001bba0562c5fmr1365382pll.7.1690376222926;
+        Wed, 26 Jul 2023 05:57:02 -0700 (PDT)
+Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
+        by smtp.gmail.com with ESMTPSA id jc11-20020a17090325cb00b001b9bebbc621sm13040647plb.136.2023.07.26.05.57.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jul 2023 05:40:38 -0700 (PDT)
-Message-ID: <072c496c98e84a9dcafc21a8de72c53e109f54ff.camel@redhat.com>
-Subject: Re: [PATCH] scsi: qla2xxx avoid a panic due to BUG() if a
- WRITE_SAME command  is sent to a device that has no protection
-From:   Laurence Oberman <loberman@redhat.com>
-To:     Quinn Tran <qutran@marvell.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "djeffery@redhat.com" <djeffery@redhat.com>,
-        "emilne@redhat.com" <emilne@redhat.com>,
-        "jpittman@redhat.com" <jpittman@redhat.com>
-Date:   Wed, 26 Jul 2023 08:40:36 -0400
-In-Reply-To: <2b32f4404ab90a8842d27f0d8c0c0474c2dd984a.camel@redhat.com>
-References: <77f405a048b07e4451b7d7adaeba7ce4a00b7efb.camel@redhat.com>
-         <yq1r0plkc4x.fsf@ca-mkp.ca.oracle.com>
-         <e27a1fe9be4778a9114dd7e5349ecac107d45e7b.camel@redhat.com>
-         <6f7c0c5a86ca6e36babea3847288820b08354c3b.camel@redhat.com>
-         <BY5PR18MB3345E19940FBB7F603AE0B8AD536A@BY5PR18MB3345.namprd18.prod.outlook.com>
-         <2b32f4404ab90a8842d27f0d8c0c0474c2dd984a.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
-MIME-Version: 1.0
+        Wed, 26 Jul 2023 05:57:02 -0700 (PDT)
+From:   Chengfeng Ye <dg573847474@gmail.com>
+To:     njavali@marvell.com, mrangankar@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Chengfeng Ye <dg573847474@gmail.com>
+Subject: [PATCH] scsi: qedi: Fix potential deadlock on &qedi_percpu->p_work_lock
+Date:   Wed, 26 Jul 2023 12:56:55 +0000
+Message-Id: <20230726125655.4197-1-dg573847474@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2023-07-12 at 09:25 -0400, Laurence Oberman wrote:
-> On Wed, 2023-07-12 at 00:34 +0000, Quinn Tran wrote:
-> > Hello Nilesh and Marvell
-> >=20
-> > Any chance to get comments/eyes on this please.
-> > Given its causing system crashes we need to decide how best to deal
-> > with it.
-> >=20
-> > QT:=C2=A0 Laurence,
-> > In understanding the severity,=C2=A0 Does end customer uses
-> > sg_write_same
-> > as the mechanism to move data?
-> > Other than the sg_write_same utility, how common is end customer
-> > uses
-> > 32Byte CDB?=C2=A0=C2=A0 It seems like upper layer doesn't=C2=A0 have su=
-pport for
-> > 32Bytes CDB at this time.
-> >=20
-> > The code path you're modifying is for the T10-PI disk.=C2=A0 This disk
-> > is
-> > "non-T10-PI" where it may create some confusion for next reader n
-> > Martin on why we've wander down this code path.
-> >=20
-> > Will queue up a patch that plug this hole.
-> >=20
-> >=20
-> >=20
->=20
-> OK, Thank you
-> In this case the customer was specifically using sg_write_same. I am
-> not sure if it was part of a script or some other use case.
-> They were of the opinion it was severe enough of an issue to warrant
-> fixing so they logged a case with us.
-> Thanks for looking into this.
->=20
-> Regards
-> Laurence
-Hello QT
+As &qedi_percpu->p_work_lock is acquired by hard irq qedi_msix_handler(),
+other acquisition of the same lock under process context should disable
+irq, otherwise deadlock could happen if the irq preempt the execution
+while the lock is held in process context on the same CPU.
 
-Did I miss an update to this. Was another fix sent.
-We need to deal with this at Red Hat as soon as possible please.
+qedi_cpu_offline() is one such function acquires the lock on process
+context.
 
-Regards
-Laurence
+[Deadlock Scenario]
+qedi_cpu_offline()
+    ->spin_lock(&p->p_work_lock)
+        <irq>
+        ->qedi_msix_handler()
+        ->edi_process_completions()
+        ->spin_lock_irqsave(&p->p_work_lock, flags); (deadlock here)
+
+This flaw was found by an experimental static analysis tool I am
+developing for irq-related deadlock.
+
+The tentative patch fix the potential deadlock by spin_lock_irqsave()
+under process context.
+
+Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
+---
+ drivers/scsi/qedi/qedi_main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 450522b204d6..77a56a136678 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -1976,8 +1976,9 @@ static int qedi_cpu_offline(unsigned int cpu)
+ 	struct qedi_percpu_s *p = this_cpu_ptr(&qedi_percpu);
+ 	struct qedi_work *work, *tmp;
+ 	struct task_struct *thread;
++	unsigned long flags;
+ 
+-	spin_lock_bh(&p->p_work_lock);
++	spin_lock_irqsave(&p->p_work_lock, flags);
+ 	thread = p->iothread;
+ 	p->iothread = NULL;
+ 
+@@ -1988,7 +1989,7 @@ static int qedi_cpu_offline(unsigned int cpu)
+ 			kfree(work);
+ 	}
+ 
+-	spin_unlock_bh(&p->p_work_lock);
++	spin_unlock_irqrestore(&p->p_work_lock, flags);
+ 	if (thread)
+ 		kthread_stop(thread);
+ 	return 0;
+-- 
+2.17.1
 
