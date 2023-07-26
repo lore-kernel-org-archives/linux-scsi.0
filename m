@@ -2,136 +2,193 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01CCFC0015E
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 22:12:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F856C001E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 22:15:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230043AbjGZWMb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jul 2023 18:12:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56174 "EHLO
+        id S230202AbjGZWPT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jul 2023 18:15:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229862AbjGZWM3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 18:12:29 -0400
-Received: from mail-yw1-x1131.google.com (mail-yw1-x1131.google.com [IPv6:2607:f8b0:4864:20::1131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3F20271B;
-        Wed, 26 Jul 2023 15:12:27 -0700 (PDT)
-Received: by mail-yw1-x1131.google.com with SMTP id 00721157ae682-57a4c0324b5so570847b3.0;
-        Wed, 26 Jul 2023 15:12:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690409547; x=1691014347;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=u8mBYQ48hqxLsJ20eS/0jkkgIvd41omZCyTUT7Irfl8=;
-        b=FGMXJIm+YcdnO2qdl9FARUysPWEgy4ZPjJMWoyY5JQFrLYy/xhbsOd/fGYe1HgkGql
-         pwgC+CQD+7sPsRUocSzXMxgtDZMqOlRK8JOk8aFBW/RwtRTD8Ox/vfB53GHO6EOOygld
-         YgpptCv1YGYr+QjGiznuxc0N10q8/czjpTLTJUUILRBrN0sKXYI6Wiy5lZQ/tyUenAXA
-         THq4EpnBOvuM7e1m+P/ccaGwlZQEZCiO1eQQxB18EzMY4+iYdcLfIrmMFoxINsS1EkP8
-         CQq9H0/aL9FBMZQK3S9ktE0nJv0/z26zCITlVUKYKkqHI0q+846gLlY+ehtBe9nreUrK
-         tY4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690409547; x=1691014347;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=u8mBYQ48hqxLsJ20eS/0jkkgIvd41omZCyTUT7Irfl8=;
-        b=j+9x7CCM+wmfOu7U3UnNQ74IqfyZckYgh+QuuU1FUsLZeKjmpaLuU9nRcUM1LXBtt4
-         2v8ssyGEMFPDsm6hbVOaRKAf3bf/yoRCus0Jq4zsUALuhsw72HpkgsIXAeJt5GsUoYQG
-         KhYNNaET5oihuyu0Es84WRqyFNRXfzeUWND3cPhBxD5pclU6Iq1ba6y+2s0mtFjwD0b9
-         0OZdUb91yZgMqOf8Ha2/n0p+604Wl0mSvwNwdj53cGIf90vPUADrGGqZE23UXS8pOaaQ
-         3eNebu6wvgZYtQGVlk0WkaYQNQgLG9zfDP0l/Tnrj9xWqHlujJcbvEIzanjX4R40LRWC
-         uJXQ==
-X-Gm-Message-State: ABy/qLauOpN8o93wQO6EM5cXDfoRN3sca1r+kDCsVMi2cdXe1aftFV3X
-        NSja3BN+e500rSocMv/Mau5FKc9WMXl/kSZ3pwg=
-X-Google-Smtp-Source: APBJJlFve1PkP06DY6fpBvu+Zd5E0ezqHhw29sIUPOsCCsvNLLVEHnoLaKmgHoIiHbPqze9ucSiCbjkXkmHOEVV5l+c=
-X-Received: by 2002:a81:6d51:0:b0:580:e3bf:698f with SMTP id
- i78-20020a816d51000000b00580e3bf698fmr1781329ywc.3.1690409546737; Wed, 26 Jul
- 2023 15:12:26 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230726094027.535126-1-ming.lei@redhat.com> <20230726094027.535126-5-ming.lei@redhat.com>
-In-Reply-To: <20230726094027.535126-5-ming.lei@redhat.com>
-From:   Justin Tee <justintee8345@gmail.com>
-Date:   Wed, 26 Jul 2023 15:12:16 -0700
-Message-ID: <CABPRKS-0GQqMRiGh6akOgk3BKpx5kqTd0QVhH4nPe=fUdi7DbQ@mail.gmail.com>
-Subject: Re: [PATCH V2 4/9] scsi: lpfc: use blk_mq_max_nr_hw_queues() to
- calculate io vectors
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        linux-nvme@lists.infradead.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Wen Xiong <wenxiong@linux.ibm.com>,
-        Keith Busch <kbusch@kernel.org>,
+        with ESMTP id S230148AbjGZWPR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 18:15:17 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7284270D;
+        Wed, 26 Jul 2023 15:15:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1690409716; x=1721945716;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=M6n71VtOsOA6ewIDV2LArdb0YD/gC8Sm/I2jSBl4aOM=;
+  b=LBk7DebV9M9/BmuaqauO0RkvrYUSFSANbBYJ7iXXbLK/1vUQwIYG2uKv
+   ONluG9Rd6D6fQu76jvVWTt/LDsNT5eLVydA+cCiW9OmKeSjgRDbsID6B4
+   g7F8tfn8Z1JvRvuyjUv/fHSTAPzHQQJ2mS0P09mMohBGIx4sytIvWDH1Y
+   qSbKbPdBkJGzuKp3FSpO2djW5GdXVnkLDidwgfuMz0MvOoQzS3Ve7411V
+   7Hqj39a0eFiQnAhTp1qrMX5lG31RtB+iF46ymAmVoEFmUhkO6j3ClgeDm
+   GlvtuJX/0ctOeeEyp+H4EzPF7RPrT5xNAyHZljBw3K7Tsn+Cmc7Yi1eWY
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10783"; a="358141623"
+X-IronPort-AV: E=Sophos;i="6.01,233,1684825200"; 
+   d="scan'208";a="358141623"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jul 2023 15:15:16 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10783"; a="850618033"
+X-IronPort-AV: E=Sophos;i="6.01,233,1684825200"; 
+   d="scan'208";a="850618033"
+Received: from orsmsx601.amr.corp.intel.com ([10.22.229.14])
+  by orsmga004.jf.intel.com with ESMTP; 26 Jul 2023 15:15:15 -0700
+Received: from orsmsx601.amr.corp.intel.com (10.22.229.14) by
+ ORSMSX601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Wed, 26 Jul 2023 15:15:15 -0700
+Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
+ orsmsx601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27 via Frontend Transport; Wed, 26 Jul 2023 15:15:15 -0700
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (104.47.58.107)
+ by edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.27; Wed, 26 Jul 2023 15:15:15 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=c8eghq/ozJ7Ruf4lx9vNYowNLKokrpp5iwD+jq9TSnKFH/3e7+9niFGHhSZ/i4FSITZnixa+kk94znxCdBTTKtvhBo2jwlvBNGSEmNOPa6roOAHHAK2Hi0DWHawh+dkASiCDSmMaTnpCu3EfiTeaQGAGlF7BshdDtMo7xk8Ona7W7YQGfNomB0JUxtG0IDuUm3BKnzl2d06IZfqUWYsPCr6i2MFS9ho5+z/YQwOhVx1n8vVLavcqZpeVlK2Yd5x4YO1hNjU3OpmdpD1KQU5ZJt68hOk7KDokccrxLWQTlbtxIJg9/h4re3yUm7Mdwr8zJb/iGrkJxtHhMTMOlA0SGQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=w/mYUzoBUF96FE1elI51YqEEbWknK6TC5TKbW1zLGXU=;
+ b=WU8ueDHvPdD3m7eWmGhcHMpKgXwK3iXjPJEWdcMtKwJWfNtdUAnR5UsIobbYWjqnUVXMZvOvo0Q78MWMAZjDoPS4li7VXWgtneYBbVF+ifSfEHXFbM6x4c6dZyTWoNSqNoLisj5RZDV9J65UXoxi6w/1IkJWPO24tCJjcXPhwj8mWM4cgh5v4C2Zu/xGL0nOf765u/lqyHw5AhRw7lm6Ghlwj8YX+2dvw9T1bkxoRfPEjieDgwBpLQIm9BGeeoG8UBkNhLcClCg0fSI0vfWxT7PbHjKPnHx02zlicWjOChgoYl/nHb3L2OhUIY7lESQDgHcv0UsTWOLec7htTi+JbA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from BYAPR11MB3320.namprd11.prod.outlook.com (2603:10b6:a03:18::25)
+ by MW3PR11MB4665.namprd11.prod.outlook.com (2603:10b6:303:5d::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.29; Wed, 26 Jul
+ 2023 22:15:13 +0000
+Received: from BYAPR11MB3320.namprd11.prod.outlook.com
+ ([fe80::d790:194b:937b:68e2]) by BYAPR11MB3320.namprd11.prod.outlook.com
+ ([fe80::d790:194b:937b:68e2%2]) with mapi id 15.20.6631.026; Wed, 26 Jul 2023
+ 22:15:12 +0000
+Message-ID: <545cff6e-09ad-afc3-5d5f-bf5a435885b9@intel.com>
+Date:   Wed, 26 Jul 2023 15:15:10 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [patch 00/29] x86/cpu: Rework the topology evaluation
+Content-Language: en-US
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+CC:     <x86@kernel.org>, Tom Lendacky <thomas.lendacky@amd.com>,
+        Andrew Cooper <andrew.cooper3@citrix.com>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         James Smart <james.smart@broadcom.com>,
-        Justin Tee <justin.tee@broadcom.com>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-hwmon@vger.kernel.org>,
+        Jean Delvare <jdelvare@suse.com>,
+        Huang Rui <ray.huang@amd.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Mike Travis <mike.travis@hpe.com>,
+        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+        Russ Anderson <russ.anderson@hpe.com>
+References: <20230724155329.474037902@linutronix.de>
+From:   Sohil Mehta <sohil.mehta@intel.com>
+In-Reply-To: <20230724155329.474037902@linutronix.de>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR05CA0136.namprd05.prod.outlook.com
+ (2603:10b6:a03:33d::21) To BYAPR11MB3320.namprd11.prod.outlook.com
+ (2603:10b6:a03:18::25)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BYAPR11MB3320:EE_|MW3PR11MB4665:EE_
+X-MS-Office365-Filtering-Correlation-Id: 879cbdbc-1951-4727-2614-08db8e25c83e
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Y6rOKL0WFanDzwDTyCxvenpBZR0OAJX+j8CML82SXLhQ0zmXDOmtAWY7iV3MKYLWjG5m8FYzLxM0Rs2QKkSc+zsP0Kk4zbcHxTXGisSnLbqNUGR/BFcMEToTo7Oey+gDjD2eYEu76oQX/caerGH9RF44podONbAOSaW1B3piYA4vQBNun+qvdqFPl0KUFtskPRtxkrX9czOfRhtlSiRgWTnxDZR7F9PioVxoUCKKzFf395g1ht/WngEiKbdYvoO55M640yKDd46uermeP+Wfa9t8EcBu+qlR8bd559wdhR5Qg5yzZVJYDxVOIlZJb+WNEeWdWg13++jdeXlvFScDr+rbJ1ooKsPcff/PtU/pkc7SQxz5DCUqHNZpy7DIHg6NJ+V/4p9ghN2BpJlVoDvXY/V0NOHCO2UViiRsodsWzTm9i0G+h/dawn6AnvjkgBM3sJbO3vT1H3Ajs2BX5IjiABGPAcmvwAjMDwmT2IyAVfi+vUF1zsKRRDYMNJ8PZRWzZydgpuL9RRaK9l/PqO8eaiecPz3Dguu29N0Gb864ii8FLoZHzbGPUn4/ZZ3SdjZXg1/lHyIL5o6+kkNjMltY5907wfjjgKMmphoV8GQDzTNHLSbRjkU08fOERH4Pf62SWuo3Ea6kLWogIZ1ZI9P5UQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR11MB3320.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(376002)(366004)(346002)(396003)(136003)(39860400002)(451199021)(316002)(53546011)(6506007)(26005)(8936002)(41300700001)(8676002)(54906003)(110136005)(82960400001)(478600001)(966005)(6512007)(66556008)(66946007)(66476007)(4326008)(6486002)(38100700002)(36756003)(2616005)(2906002)(83380400001)(86362001)(31696002)(31686004)(44832011)(7416002)(186003)(5660300002)(43740500002)(45980500001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?cktXdENhSUVzbDdJWm9BZEdvejRFZUNLQ2tBYXBvbUdTY0NCMUE0NkRwYjFq?=
+ =?utf-8?B?RHZjRUMwL0JNcmZXVEVQMHpBM0syTE4xL3VsZHowaU5PTzVFMW5qcUVBQi9B?=
+ =?utf-8?B?NDFBUU1Mc1VOWWU3RnluNWlYMEgzRXd6NW13ZWcwU21jUFBvTWtIZHNGbWVP?=
+ =?utf-8?B?dW9FbGY2RUhLUmIySWxha013VUF5MEpHSGtoOUN1L3QyeVFSZ1orcHU1Nkt4?=
+ =?utf-8?B?NnlUOEttd2NwakhBdGRqWlVHOTNYTENlVTlJYmRKRTQ2NlZNNzloa3ZzRUlI?=
+ =?utf-8?B?MUVScVoveEVPeWF6Tzc2dXlPZG1VUm41OWxyMjNsUmJSMDQ1enZ0elEwWXRy?=
+ =?utf-8?B?UTk1Qm05eXJCY0NSbzhMdEtuT0htNlNxWG8yYnNKWVRWWW11UStGWDVXRHNE?=
+ =?utf-8?B?TWpiWGdRM242ZytxSUlNRHErRnF1dTRWU2xFRExSQXpDNnB6RFRzbUhVNmVu?=
+ =?utf-8?B?d3BQMGNSVzdwU205RFVQZk96NHdwbjFCZitXLy82aFhTM0tvRmRoZGFmc0U3?=
+ =?utf-8?B?cUlsZGZ6b0JCd0d6bk5VaGxSMVZ3Mzg2c3ZMYjk0c0FONFlFS2xXVE9OR3R1?=
+ =?utf-8?B?cUtvZFl4WWZ2VTV0STNnbmhvQVJBUXVIOFRHQjdDYWpBSFduWEx1b2FtSS9C?=
+ =?utf-8?B?R05HOXQ1dk9QVWlkek4zRDFkSHRFN3Y3Nm1TaFltb3ZsZXA5MXFnM1kwODNT?=
+ =?utf-8?B?ZHEyOXlzMmdvRWpZSWwreG83WmVxTjE5K25ucXlRK2ZvWHZ6dFdlazM5MUd1?=
+ =?utf-8?B?b3FVM1hKczljYW5KVE92UXh0TjZNNXY1SDd4YVBpUXRxYVVHUUlWRGpPdmtv?=
+ =?utf-8?B?MnR1N0pwTkE2NnZKSlRCRHBXaVFWbTZnaVR0NVVTQzhqTEhHaFE4N2pyazlk?=
+ =?utf-8?B?MkI0dTd4czBicTNWK0IwalI2WE1WejFuV0ZnenJVclJtN3hnUVNqSDlWb203?=
+ =?utf-8?B?OHJ6WW5PY1NnNUl2U3o1RCttSEhSdTM5K2ZDczQ1TVhLM3lYNXFabFliM3d3?=
+ =?utf-8?B?NXFJMVVhVGs3SWlXU085cHNQU3oyV2p5MVgrQmFXTkVOb2k3NCtQamlXM01x?=
+ =?utf-8?B?UXo2RDZsb01mOXNsYnNQVVFlK1NhbXVGeFppbHhpTENFUW1oSmE0N0xtM3hI?=
+ =?utf-8?B?NWhTbi9PZkdqaVQ2N0NyV3FETXdmc1dqVU5yTG1vRnN5NVlSUSt0M0VTMUdJ?=
+ =?utf-8?B?M2dYNllYOFBTR2V6WXBMMWxvRjJLRkwrZ3JQUVpJbHdjVzY2dVh4RkJnbThq?=
+ =?utf-8?B?ZW5jdSt1S1ZQNFN5VlBnNFU5anZ0Z2RxK3l0VlVoL0dnU1NueXVyc2hCOHdS?=
+ =?utf-8?B?YjNmWERweThhclVTMjdKT0MzRWliaXUvb3pxNTFYOXZMcDRlVmZFVmF1K0NP?=
+ =?utf-8?B?Z1ZwTHZIQzZ5eXFSd2ZLNW04Q0Iyck16SXc2Y254Mk5SSEY0SzhXYzd2bUVN?=
+ =?utf-8?B?eFVkU21yQk1qTzdXa05JMHF3ZVNobC85bGZVVnNYVjA4MDh3V2NHV1lMR0RM?=
+ =?utf-8?B?WURyQVd1Nm9CNlZLUW95QktPVDRVQ3c0bnM4a3RVVDA0K2o3U1BuSXpWWlNo?=
+ =?utf-8?B?dUd5cDcxTi84RDFFRFl0aVY4ZDVxaXdjUTdqcTl6UzhiRTNkWUkwYjFXTXVs?=
+ =?utf-8?B?UlZLZDcwdTZKMzErMzhoMkFlVWpzU3k3WHlPL0VCQXdSeERlbTduMWNObW5O?=
+ =?utf-8?B?T01lRVhkQXhzdlYwYUE0Lzh4ZjhmS0NQd3dieEZQdW1EZTRrTmdtMlphdHd3?=
+ =?utf-8?B?d2EvU2xXRHBKQ3RYbGh3eFRERkw2Y1pNNzhObS9GSGFFeWx5TGV0UXo1azdi?=
+ =?utf-8?B?dVcwZUR6WXJxUW9vd3pISGVrVHVING52aHhhc0l3bHA4aTY2eXl1ZkZxR1Ri?=
+ =?utf-8?B?SzV5YS8xL003Ymg0dmtUNjFYZGRtUTNzbkI3bVFZdjVMTzdXNmpBUTM5MTdQ?=
+ =?utf-8?B?dnJGMTROVGo4RGt5RTdJM2ExZ0l4L1dYTFVFK1JXS0EwQmoxWFdSYmU1dlFm?=
+ =?utf-8?B?T0VwVnpMTHJnYittdElQRC8xZ2lXbmVmd05DVWdFZVdSTE5QQ1F2L05lUU5q?=
+ =?utf-8?B?MWNod1p5MDVHcmk0ZTl6WE9jNDk0clZZM01UVmF0aExDY0dMT1BQZEttSWp6?=
+ =?utf-8?Q?LT90mv1SUn1OMoCaKr4pWozZj?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 879cbdbc-1951-4727-2614-08db8e25c83e
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR11MB3320.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jul 2023 22:15:12.9050
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: hTG500hWAyReW7AvySsOl5RvsRD6nb6yeN2WG+CGW/uy3LsMXsstQrCSm9QXca40aGqGNlRdL1hKopHaZwDcpw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR11MB4665
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Ming,
+On 7/24/2023 10:43 AM, Thomas Gleixner wrote:
+> The series is based on the APIC cleanup series:
+> 
+>   https://lore.kernel.org/lkml/20230724131206.500814398@linutronix.de
+> 
+> and also available on top of that from git:
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git topo-cpuid-v1
+> 
 
-From version 1 of the patchset, I thought we had planned to put the
-min comparison right above pci_alloc_irq_vectors instead?
+The series boots fine on an old Sandy Bridge 2S system. There is a print
+from topology_update_die_map() which is missing from dmesg but it seems
+mostly harmless.
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 3221a934066b..20410789e8b8 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -13025,6 +13025,8 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
-                flags |=3D PCI_IRQ_AFFINITY;
-        }
+> [    0.085686] smpboot: x86: Booting SMP configuration:> [    0.085690] .... node  #0, CPUs:          #1   #2   #3   #4   #5
+#6   #7   #8   #9
+> [    0.089253] .... node  #1, CPUs:    #10  #11  #12  #13  #14  #15  #16  #17  #18  #19
+> [    0.000000] smpboot: CPU 10 Converting physical 0 to logical die 1
 
-+       vectors =3D min_t(unsigned int, vectors, scsi_max_nr_hw_queues());
-+
-        rc =3D pci_alloc_irq_vectors(phba->pcidev, 1, vectors, flags);
-        if (rc < 0) {
-                lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ ^^ The "Converting physical..." line doesn't show up with the patches
+applied.
 
-Thanks,
-Justin
+> [    0.134035] .... node  #0, CPUs:    #20  #21  #22  #23  #24  #25  #26  #27  #28  #29
+> [    0.140239] .... node  #1, CPUs:    #30  #31  #32  #33  #34  #35  #36  #37  #38  #39
 
-On Wed, Jul 26, 2023 at 2:40=E2=80=AFAM Ming Lei <ming.lei@redhat.com> wrot=
-e:
->
-> Take blk-mq's knowledge into account for calculating io queues.
->
-> Fix wrong queue mapping in case of kdump kernel.
->
-> On arm and ppc64, 'maxcpus=3D1' is passed to kdump kernel command line,
-> see `Documentation/admin-guide/kdump/kdump.rst`, so num_possible_cpus()
-> still returns all CPUs because 'maxcpus=3D1' just bring up one single
-> cpu core during booting.
->
-> blk-mq sees single queue in kdump kernel, and in driver's viewpoint
-> there are still multiple queues, this inconsistency causes driver to appl=
-y
-> wrong queue mapping for handling IO, and IO timeout is triggered.
->
-> Meantime, single queue makes much less resource utilization, and reduce
-> risk of kernel failure.
->
-> Cc: Justin Tee <justintee8345@gmail.com>
-> Cc: James Smart <james.smart@broadcom.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/scsi/lpfc/lpfc_init.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.=
-c
-> index 3221a934066b..c546e5275108 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -13022,6 +13022,8 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
->                 cpu =3D cpumask_first(aff_mask);
->                 cpu_select =3D lpfc_next_online_cpu(aff_mask, cpu);
->         } else {
-> +               vectors =3D min_t(unsigned int, vectors,
-> +                               scsi_max_nr_hw_queues());
->                 flags |=3D PCI_IRQ_AFFINITY;
->         }
->
-> --
-> 2.40.1
->
+Please let me know if you need more information.
+
+Tested-by: Sohil Mehta <sohil.mehta@intel.com>
