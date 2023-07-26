@@ -2,57 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE65EB64DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 02:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17D48C41513
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 02:06:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230116AbjGZCF6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jul 2023 22:05:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49864 "EHLO
+        id S230285AbjGZCGD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jul 2023 22:06:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjGZCFx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 22:05:53 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DDD9121
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2023 19:05:53 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36PJIpoq029464;
-        Wed, 26 Jul 2023 02:05:10 GMT
+        with ESMTP id S229603AbjGZCGC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2023 22:06:02 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BFE2121;
+        Tue, 25 Jul 2023 19:06:01 -0700 (PDT)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36PJISc9025724;
+        Wed, 26 Jul 2023 02:05:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=QA5Okt0i1DhcfIQsJMeVSCZWYqTNcpsn1HiwShKK+YY=;
- b=ntJibuKMcYbUlaMwcUSweqD7waxP/DLu4Szb+xBHoBjgIWJa0dVzwhw+W73d7AztdPXx
- J7GtKvHCCIEGg9jwb/se9MLGuYwqcWtGrSFNNKV52eoBf87cH/gMKH+Zaypj+JBTMYZB
- s2lP7hXAyu4V7jSpGpjoFpQiEomD4mEF1XcqyQtCWV8cM/UJ3S6E5EZpzaPl4O4SU2Cc
- TN20/dg8aDAUz0mPkmZ05khgJC1U7z+JLcQ5tDuxdLRA02sC1r/3AeC2Kerv/ps4U3+b
- 9dTJ3EpB2z8oKXf5JCseubcCwoaK9Ab6IvpGEIDkXQUFUGaNWVGkRIIEHTFA0HGd/lXS QQ== 
+ bh=GczAHi1nw468rSxodTKpEIcFvWhoCEa0bsGuATtQoO8=;
+ b=fAohI5291MSEt6rNTbvAdhjb4xxuFZa+xlraVDK/MeF7mCsK47fNjrt2xyTqNLv/XExG
+ CZjS8n9/GgQrIwWMf4IgMoyMlqzsACjT8oSTZIMgEQ2K6y5iQq3+6oIxtogP04jwiJ1i
+ y7Jq3EG3l0HjM2QcEC7OE37uWy16+Aj7PZO/RaDPQ2mF6xj8MliIdBeSyOnESaZMUYQd
+ oHMR8NK2HbqsubgirauQDJWV2la+NzHkuq1/lH76BEEwQa4D/iA4FZTqelmY3mHgPWR4
+ Jd0jn4qYhPYzIIXffZesWP1rx5g0CiibeQhx9HMVe2+fHTgePOhf9L9xyAepbfEyMQhy tg== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s05q1xf5k-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s075d6fvw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 Jul 2023 02:05:10 +0000
+        Wed, 26 Jul 2023 02:05:18 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36Q0RR7U023050;
-        Wed, 26 Jul 2023 02:05:10 GMT
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36Q0G7po023017;
+        Wed, 26 Jul 2023 02:05:17 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3s05j5jd0u-1
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3s05j5jd4s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 Jul 2023 02:05:10 +0000
+        Wed, 26 Jul 2023 02:05:17 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36Q253NX038905;
-        Wed, 26 Jul 2023 02:05:09 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36Q253Nh038905;
+        Wed, 26 Jul 2023 02:05:16 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3s05j5jcwf-4;
-        Wed, 26 Jul 2023 02:05:09 +0000
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3s05j5jcwf-9;
+        Wed, 26 Jul 2023 02:05:16 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.vnet.ibm.com, chenxiang <chenxiang66@hisilicon.com>
+To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        junwoo80.lee@samsung.com, quic_nitirawa@quicinc.com,
+        Ziqi Chen <quic_ziqichen@quicinc.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linuxarm@huawei.com, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 0/3] Some misc changes
-Date:   Tue, 25 Jul 2023 22:04:49 -0400
-Message-Id: <169033702302.2256288.11487691638323579348.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] scsi: ufs: qcom: Get queue ID from MSI index in ESI handler
+Date:   Tue, 25 Jul 2023 22:04:54 -0400
+Message-Id: <169033702306.2256288.1829460658983198898.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <1689045300-44318-1-git-send-email-chenxiang66@hisilicon.com>
-References: <1689045300-44318-1-git-send-email-chenxiang66@hisilicon.com>
+In-Reply-To: <1689062349-77385-1-git-send-email-quic_ziqichen@quicinc.com>
+References: <1689062349-77385-1-git-send-email-quic_ziqichen@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -60,35 +68,30 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-07-25_14,2023-07-25_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 adultscore=0
- phishscore=0 bulkscore=0 malwarescore=0 mlxscore=0 mlxlogscore=959
+ phishscore=0 bulkscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
  definitions=main-2307260016
-X-Proofpoint-GUID: QtGnou0nygAyQllh7RFr6nDHAFd1Vbnq
-X-Proofpoint-ORIG-GUID: QtGnou0nygAyQllh7RFr6nDHAFd1Vbnq
+X-Proofpoint-ORIG-GUID: 9X7kyfQvS3VUWg5GfJE9Z7HOjoUNTQpM
+X-Proofpoint-GUID: 9X7kyfQvS3VUWg5GfJE9Z7HOjoUNTQpM
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 11 Jul 2023 11:14:57 +0800, chenxiang wrote:
+On Tue, 11 Jul 2023 15:59:08 +0800, Ziqi Chen wrote:
 
-> This series contain some fixes including:
-> - Fix completed I/O analysed as failed
-> - Block requests before a debugfs snapshot
-> - Delete unused lock in function hisi_sas_port_notify_formed()
+> platform_msi_domain_alloc_irqs() does not always get consecutive
+> IRQ numbers, hence queue IDs calculated out from IRQ numbers may
+> be incorrect if we assume IRQ numbers are consecutive. Fix it by
+> passing msi_desc to ESI handler to use msi_desc->msi_index as
+> queue ID.
 > 
-> Xingui Yang (1):
->   scsi: hisi_sas: Fix normally completed I/O analysed as failed
 > 
 > [...]
 
 Applied to 6.6/scsi-queue, thanks!
 
-[1/3] scsi: hisi_sas: Fix normally completed I/O analysed as failed
-      https://git.kernel.org/mkp/scsi/c/f5393a5602ca
-[2/3] scsi: hisi_sas: Block requests before a debugfs snapshot
-      https://git.kernel.org/mkp/scsi/c/32be33747d5d
-[3/3] scsi: hisi_sas: Delete unused lock in hisi_sas_port_notify_formed()
-      https://git.kernel.org/mkp/scsi/c/29f45ed18aa9
+[1/1] scsi: ufs: qcom: Get queue ID from MSI index in ESI handler
+      https://git.kernel.org/mkp/scsi/c/8f2b78652d05
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
