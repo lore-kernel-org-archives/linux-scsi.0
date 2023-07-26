@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA0DC001DC
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 17:14:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 717D2C001DC
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 18:13:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230282AbjGZROi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jul 2023 13:14:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53072 "EHLO
+        id S230004AbjGZSNf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jul 2023 14:13:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229507AbjGZROh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 13:14:37 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73C061739;
-        Wed, 26 Jul 2023 10:14:36 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id d2e1a72fcca58-668704a5b5bso94109b3a.0;
-        Wed, 26 Jul 2023 10:14:36 -0700 (PDT)
+        with ESMTP id S229437AbjGZSNe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 14:13:34 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14656E4D;
+        Wed, 26 Jul 2023 11:13:34 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1b8ad356fe4so373505ad.2;
+        Wed, 26 Jul 2023 11:13:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690391676; x=1690996476;
+        d=gmail.com; s=20221208; t=1690395213; x=1691000013;
         h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=y8QZa7qTEmGwCyA0yfHV1JjhyFQSM3L1Bj9irGZtMbI=;
-        b=V5ourLyDBFitbj6i3NSu7Ce7nyCxoe4wZz6T48QqcrhwAyGppGZo6/+WkRI9pTCQhc
-         ZKv2sR5SfQnbXhe8eslmUHoLwz/Dk2cyZSCWcaACOGBdVZueFvu5ixTwrS09deJZEeCl
-         ggNyP8W+/4g2znmswMkpzWrVAtkKCAh36eSKLciRAPRvDQhheqyFytgwdBoZG4Ecxs/y
-         JTAnoH6VABAO9MSHILqEdWZ1xznhrFaW/CWQxP6nx0FD9x8BsFJjFQ27EzuMopLeSN/E
-         vIUvuUTPiuI3TdlPaDwPH2zPABN0ZDf+Y6vAALJ46Eq9cz21qVSeIhwttVhqxNA3p49O
-         evtA==
+        bh=vwiSFj0tl/R+2ypAV/GDIAiCwQG00lhPHhABGlY+Hic=;
+        b=pvxRPcRPGAfCe4SrvnDaqzurhrKOcVas4Tnt6r7ITP3DnKTAdadQeNOZIYtvxZlyDn
+         DozhwK9IGtgCBWi3ffcMC796lhCxm+gzK2j9eyKV95IPGS8xj+8f2FDv/JB5ovIsi5UD
+         qt/8yTjnGNgleKv7v8WrBjBeJogMfejzAlE3SL+rMfERO6ucZIKXksiZVZQxIOZq65B5
+         Te2OlQwqeJbvNcZwIOAr0gAkZbUPY1eCfToHo7n8vHhiGE46COkFmR7//Wu2tE2h1BSV
+         BfhYiR8hECg45x0FqEJYUSKeCgH472DOcTHMgd2T7pCv+vwrYCYh6ITmAN924aXho4lc
+         mJbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690391676; x=1690996476;
+        d=1e100.net; s=20221208; t=1690395213; x=1691000013;
         h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=y8QZa7qTEmGwCyA0yfHV1JjhyFQSM3L1Bj9irGZtMbI=;
-        b=NyO5sWF/JPJqjxvsdtAGbJjzauSLTQmSI2r9QMtNtmYeXv6BTW8XeaWhqhofRZfy9P
-         79Max51NegOagbu5MbVniqZyEundi9+SG7BhFZYyirk7kKOIB6YguD1bSiw/QliCVIDR
-         O/yyTnvx37K45WjFmbk8C4f6brz2rhEOks3aNP/lTOgUmpslgRcUD6d/hntym3VNwWBJ
-         ZV1EuHHjDQXEY4syUNftBxDFReCcXoKm+6dQdHlhit5eqetWOAvTTaSuhBnWMCyu3rWU
-         JCggWf5l9+TGuKemJwwBmLVT9xeeb2exIJwfKNETFiActgfqEVLeqw7CS+hEKCgHuNtE
-         ypoA==
-X-Gm-Message-State: ABy/qLYQz+IZW/h1VzBkasLRD6nL7QuOwRnKiGI4dfxOrFNMcTdjG1NF
-        5OC6BxacCmQ1fisIXvIPu8I=
-X-Google-Smtp-Source: APBJJlF9uZ/TB0GtcuHXezMc7d0QCA7hQiP905LgZ3w0DZ1XDY4QZ9iUrKmEg++RMxvAb8QwPjMcLA==
-X-Received: by 2002:a05:6a00:2d01:b0:686:b662:f303 with SMTP id fa1-20020a056a002d0100b00686b662f303mr3540492pfb.0.1690391675815;
-        Wed, 26 Jul 2023 10:14:35 -0700 (PDT)
+        bh=vwiSFj0tl/R+2ypAV/GDIAiCwQG00lhPHhABGlY+Hic=;
+        b=djFQyhEwBQOVcFLMqOZcpIAlHy9IU9cptrzQRUVzV/GDtVvyDyT+khD2uq2PE6U9DT
+         eGsqfl7VEaL5Ifb2PZCM9He4stSTpVjYWlsZIP7jvSSpBkHZqOyTYT9WUw35LKfL//eR
+         MU8YlMYGzL6+yqMv5H85F07lxKuSYIn34D5Eo4rMrZSu4c2FOyan2qJ/vQBvv9XCvGVG
+         D6uomz92sTzTDlzycf2fUb/T3JNKP40Mhzz1V/0GrXlZV9XEntaa7ndydyYGGHlrbv00
+         uScE8u8iyuwmei5P3jlAf8NQI3CpOPTWrOLtLhfPbi902YRg9TZwnxdeE7Q/1zwTMt8v
+         yIWA==
+X-Gm-Message-State: ABy/qLZNmHs5AU/AShaKfUpKqmgmic/NVhyw4nyVzDSb89YnAmjFEWG3
+        hYFJDFGzUMunjecSrG+4ovU=
+X-Google-Smtp-Source: APBJJlENsKtAIdpEBIKfw+s/pPsgNv0zC1TAnGLqNZq+eoO8cyf+D7Fq22VDKCbbaFYZ8L+dGs9mQA==
+X-Received: by 2002:a17:903:181:b0:1b1:ae33:30de with SMTP id z1-20020a170903018100b001b1ae3330demr2839399plg.13.1690395213483;
+        Wed, 26 Jul 2023 11:13:33 -0700 (PDT)
 Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
-        by smtp.gmail.com with ESMTPSA id k196-20020a633dcd000000b005501b24b1c9sm12688361pga.62.2023.07.26.10.14.32
+        by smtp.gmail.com with ESMTPSA id c9-20020a170902c1c900b001bb8be10a84sm9100254plc.304.2023.07.26.11.13.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jul 2023 10:14:35 -0700 (PDT)
+        Wed, 26 Jul 2023 11:13:32 -0700 (PDT)
 From:   Chengfeng Ye <dg573847474@gmail.com>
 To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
         jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -56,16 +56,16 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linaro-mm-sig@lists.linaro.org,
         Chengfeng Ye <dg573847474@gmail.com>
-Subject: [PATCH] scsi: lpfc: Fix potential deadlock on &ndlp->lock
-Date:   Wed, 26 Jul 2023 17:14:23 +0000
-Message-Id: <20230726171423.18692-1-dg573847474@gmail.com>
+Subject: [PATCH v2] scsi: lpfc: Fix potential deadlock on &ndlp->lock
+Date:   Wed, 26 Jul 2023 18:13:22 +0000
+Message-Id: <20230726181322.26754-1-dg573847474@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 As &ndlp->lock is acquired by timer lpfc_els_retry_delay() under softirq
-context, process context code acquiring the lock &phba->hbalock should
+context, process context code acquiring the lock &ndlp->lock should
 disable irq or bh, otherwise deadlock could happen if the timer preempt
 the execution while the lock is held in process context on the same CPU.
 
