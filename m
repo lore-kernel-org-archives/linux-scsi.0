@@ -2,238 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EB0FC0015E
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 22:16:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE528C41513
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 22:38:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229710AbjGZWQz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jul 2023 18:16:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57706 "EHLO
+        id S230333AbjGZWi2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jul 2023 18:38:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbjGZWQy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 18:16:54 -0400
-Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32942270E
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2023 15:16:53 -0700 (PDT)
-Received: by mail-wm1-x32b.google.com with SMTP id 5b1f17b1804b1-3fbc77e76abso2688035e9.1
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2023 15:16:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1690409811; x=1691014611;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=orv+AYyxIKIyGL9LYRa9smJNNWDFVOUxiUDWNR8krK0=;
-        b=MwjhSQngjb1thRbMPBicXvcbkv7TdTycxW4Y2I/MusQaVqn6T1UNldcZAjEFMvGlOG
-         TC/hz8LAPrOeqeVGTsA/qgGwBRP0gFXaNcb6eS+WLDdobqZOyPryLoEMpHplv7NQfPTI
-         5MDVVj62L6OvHOHUlWMXT12zYRgVE9WlY3oYE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690409811; x=1691014611;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=orv+AYyxIKIyGL9LYRa9smJNNWDFVOUxiUDWNR8krK0=;
-        b=G4AcHMuM8ownHRHUmOCPq6Jx8DAI6QlBD23AS6HXooUA/OJC66v4Q7lz32cLW3uC5X
-         kdC0UE6RPPBF7PyHFJ4Svm7o/yd4NFzAW79vlG70S4xpcsFeoOyZtUBTvIG+Svi2pHHE
-         cOm+EeB8nM+DPd7shC5yRrvRo+oAzNK+6PxLOlmUqn7PToaY7xmqFct+9rDYzf9MxZ2V
-         H9K2yyWqVOJIlBT6vAFvUfws5yo+3VMXfOnA3JflebF+9NAEFywu2hrOf9ZAlVwA4evn
-         GN1OWbHofe90VajMrrWrpZQwTSWPN7yNUrWiMYKgjUhMTQcXkmFwaOmw3HB9ORCKjLuY
-         u6xA==
-X-Gm-Message-State: ABy/qLapvuWiO7nhONrXF+sqaNbESKL5iROZCaAuxRObNKePvcqY7Vhf
-        lweyyAjHmfjSZkIfDs4rbOUVVO4zwaOK4P1tpoT6SIH+ULWyoO9t/X4jGP76ikZDigisfVr09sT
-        rjrH1FAcy7AGqQXCvplvpjNtP+xNl
-X-Google-Smtp-Source: APBJJlFxeeLyu2j025hh1G52m1NBSgrowI+mgfBm+SpKWb6NIBBwyMaidvJFBN6z0zOjWbb5fHl/WtXXFAc6/o8YSFo=
-X-Received: by 2002:a5d:4c4a:0:b0:317:5d83:b43b with SMTP id
- n10-20020a5d4c4a000000b003175d83b43bmr287960wrt.38.1690409811528; Wed, 26 Jul
- 2023 15:16:51 -0700 (PDT)
+        with ESMTP id S229866AbjGZWi1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 18:38:27 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85F02213E;
+        Wed, 26 Jul 2023 15:38:26 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1690411103;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NmfT6/fQLhcDtQ7kZHIOof5oxpIbpLR7hSdf3CpmgP4=;
+        b=e8BEyuBar6zz7yQ5GrDWPWH9QQL36kt5SgJnXHoFjm05ocwe4uLPoLorCM52MObUwJuQQh
+        f59ylRkBqn/iLMiRS3Y5/gQ6pSnytW2ZmWvzyWEGNgvAlHvqwh1A8pPv/JoCobxfUuyP+0
+        kOAGzL3GZFiN+tdmQEcTPPmYHnMXBcT24xv/QT2ApyZTOYIu6yd51pdesI6J3nMGrUh2gA
+        578JNEJHv/flqafXv58ZL0dqxmD6Wp6B7s7vPrVDKf5DPq8RnTkNlIVJ5gmxaLAULpYD66
+        fR2PEgF5oWqZovK80jLzCzlF3PsBN3wcAIpEjcyEJCYkgaaSUlkf3djV+ZUaDw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1690411103;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NmfT6/fQLhcDtQ7kZHIOof5oxpIbpLR7hSdf3CpmgP4=;
+        b=9Ax00ioiaN2yNs3Of+psAiJatpo4UgoTQlTgjjq5x/6l3Ik0W/XC4vcbhRb6lltRX1cVtp
+        yWhjC9O/pNhUugAg==
+To:     Sohil Mehta <sohil.mehta@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
+        Andrew Cooper <andrew.cooper3@citrix.com>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <james.smart@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-hwmon@vger.kernel.org,
+        Jean Delvare <jdelvare@suse.com>,
+        Huang Rui <ray.huang@amd.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Mike Travis <mike.travis@hpe.com>,
+        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+        Russ Anderson <russ.anderson@hpe.com>
+Subject: Re: [patch 00/29] x86/cpu: Rework the topology evaluation
+In-Reply-To: <545cff6e-09ad-afc3-5d5f-bf5a435885b9@intel.com>
+References: <20230724155329.474037902@linutronix.de>
+ <545cff6e-09ad-afc3-5d5f-bf5a435885b9@intel.com>
+Date:   Thu, 27 Jul 2023 00:38:22 +0200
+Message-ID: <87mszis3hd.ffs@tglx>
 MIME-Version: 1.0
-References: <20230726155342.51623-1-dg573847474@gmail.com>
-In-Reply-To: <20230726155342.51623-1-dg573847474@gmail.com>
-From:   Justin Tee <justin.tee@broadcom.com>
-Date:   Wed, 26 Jul 2023 15:16:39 -0700
-Message-ID: <CAAmqgVOZwYS_TintuQNrE0go_Mxwk3YFJZA41Yt2S2isD7JW_Q@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: Fix potential deadlock on &phba->hbalock
-To:     Chengfeng Ye <dg573847474@gmail.com>
-Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000005e06c706016b3406"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000005e06c706016b3406
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jul 26 2023 at 15:15, Sohil Mehta wrote:
+> On 7/24/2023 10:43 AM, Thomas Gleixner wrote:
+>> The series is based on the APIC cleanup series:
+>> 
+>>   https://lore.kernel.org/lkml/20230724131206.500814398@linutronix.de
+>> 
+>> and also available on top of that from git:
+>> 
+>>  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git topo-cpuid-v1
+>> 
+>
+> The series boots fine on an old Sandy Bridge 2S system. There is a print
+> from topology_update_die_map() which is missing from dmesg but it seems
+> mostly harmless.
+>
+>> [    0.085686] smpboot: x86: Booting SMP configuration:> [    0.085690] .... node  #0, CPUs:          #1   #2   #3   #4   #5
+> #6   #7   #8   #9
+>> [    0.089253] .... node  #1, CPUs:    #10  #11  #12  #13  #14  #15  #16  #17  #18  #19
+>> [    0.000000] smpboot: CPU 10 Converting physical 0 to logical die 1
+>
+>  ^^ The "Converting physical..." line doesn't show up with the patches
+> applied.
 
-Hi Chengfeng,
+That message comes from the complete nonsense in the current upstream
+code that cpuinfo::die_id is made relative to the package. That's just
+wrong. My rework uses the physical die id which is unique by definition
+and therefore does not need this conversion. The logical ID is the same
+as the physical id in that case.
 
-lpfc_cmpl_els_uvem is for the VMID feature that could only ever be
-called on an SLI4 type HBA.
-lpfc_sli_intr_handler can only ever be called on an SLI3 type HBA.
+>> [    0.134035] .... node  #0, CPUs:    #20  #21  #22  #23  #24  #25  #26  #27  #28  #29
+>> [    0.140239] .... node  #1, CPUs:    #30  #31  #32  #33  #34  #35  #36  #37  #38  #39
+>
+> Please let me know if you need more information.
+>
+> Tested-by: Sohil Mehta <sohil.mehta@intel.com>
 
-So, the deadlock being referred to can never happen.
+There is a real and unrelated snafu vs. that logical package and logical
+die management which I discovered today. I missed the fact that this
+cruft abuses cpuinfo as permanent storage, which breaks CPU
+offline/online as the online operation reinitializes the topology
+information.
+
+I pushed out a fixed version to
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git x86/topology
+
+earlier. It doesn't have a tag yet.
 
 Thanks,
-Justin
 
-On Wed, Jul 26, 2023 at 8:55=E2=80=AFAM Chengfeng Ye <dg573847474@gmail.com=
-> wrote:
->
-> As &phba->hbalock is acquired by hardirq such as lpfc_sli_intr_handler(),
-> process context code acquiring the lock &phba->hbalock should disable
-> irq, otherwise deadlock could happen if the irq preempt the execution
-> while the lock is held in process context on the same CPU.
->
-> Most lock acquicision site disables irq but inside the callback
-> lpfc_cmpl_els_uvem() the lock is acquired without explicitly disable irq.
-> The outside caller of this callback also seems not disable irq.
->
-> [Deadlock Scenario]
-> lpfc_cmpl_els_uvem()
->     -> spin_lock(&phba->hbalock)
->         <irq>
->         -> lpfc_sli_intr_handle()
->         -> spin_lock(&phba->hbalock); (deadlock here)
->
-> This flaw was found by an experimental static analysis tool I am
-> developing for irq-related deadlock.
->
-> The patch fix the potential deadlock by spin_lock_irqsave() just like
-> other callsite.
->
-> Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
-> ---
->  drivers/scsi/lpfc/lpfc_els.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 2bad9954c355..9667b4937b3a 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -12398,6 +12398,7 @@ lpfc_cmpl_els_uvem(struct lpfc_hba *phba, struct =
-lpfc_iocbq *icmdiocb,
->         u32 ulp_word4 =3D get_job_word4(phba, rspiocb);
->         struct lpfc_dmabuf *dmabuf =3D icmdiocb->cmd_dmabuf;
->         struct lpfc_vmid *vmid;
-> +       unsigned long flags;
->
->         vmid =3D vmid_context->vmp;
->         if (!ndlp || ndlp->nlp_state !=3D NLP_STE_UNMAPPED_NODE)
-> @@ -12419,11 +12420,11 @@ lpfc_cmpl_els_uvem(struct lpfc_hba *phba, struc=
-t lpfc_iocbq *icmdiocb,
->                                  ulp_status, ulp_word4);
->                 goto out;
->         }
-> -       spin_lock(&phba->hbalock);
-> +       spin_lock_irqsave(&phba->hbalock, flags);
->         /* Set IN USE flag */
->         vport->vmid_flag |=3D LPFC_VMID_IN_USE;
->         phba->pport->vmid_flag |=3D LPFC_VMID_IN_USE;
-> -       spin_unlock(&phba->hbalock);
-> +       spin_unlock_irqrestore(&phba->hbalock, flags);
->
->         if (vmid_context->instantiated) {
->                 write_lock(&vport->vmid_lock);
-> --
-> 2.17.1
->
+        tglx
 
---=20
-This electronic communication and the information and any files transmitted=
-=20
-with it, or attached to it, are confidential and are intended solely for=20
-the use of the individual or entity to whom it is addressed and may contain=
-=20
-information that is confidential, legally privileged, protected by privacy=
-=20
-laws, or otherwise restricted from disclosure to anyone else. If you are=20
-not the intended recipient or the person responsible for delivering the=20
-e-mail to the intended recipient, you are hereby notified that any use,=20
-copying, distributing, dissemination, forwarding, printing, or copying of=
-=20
-this e-mail is strictly prohibited. If you received this e-mail in error,=
-=20
-please return the e-mail to the sender, delete it from your computer, and=
-=20
-destroy any printed copy of it.
-
---0000000000005e06c706016b3406
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIIQZwYJKoZIhvcNAQcCoIIQWDCCEFQCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg2+MIIFDTCCA/WgAwIBAgIQeEqpED+lv77edQixNJMdADANBgkqhkiG9w0BAQsFADBMMSAwHgYD
-VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
-AxMKR2xvYmFsU2lnbjAeFw0yMDA5MTYwMDAwMDBaFw0yODA5MTYwMDAwMDBaMFsxCzAJBgNVBAYT
-AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBS
-MyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
-vbCmXCcsbZ/a0fRIQMBxp4gJnnyeneFYpEtNydrZZ+GeKSMdHiDgXD1UnRSIudKo+moQ6YlCOu4t
-rVWO/EiXfYnK7zeop26ry1RpKtogB7/O115zultAz64ydQYLe+a1e/czkALg3sgTcOOcFZTXk38e
-aqsXsipoX1vsNurqPtnC27TWsA7pk4uKXscFjkeUE8JZu9BDKaswZygxBOPBQBwrA5+20Wxlk6k1
-e6EKaaNaNZUy30q3ArEf30ZDpXyfCtiXnupjSK8WU2cK4qsEtj09JS4+mhi0CTCrCnXAzum3tgcH
-cHRg0prcSzzEUDQWoFxyuqwiwhHu3sPQNmFOMwIDAQABo4IB2jCCAdYwDgYDVR0PAQH/BAQDAgGG
-MGAGA1UdJQRZMFcGCCsGAQUFBwMCBggrBgEFBQcDBAYKKwYBBAGCNxQCAgYKKwYBBAGCNwoDBAYJ
-KwYBBAGCNxUGBgorBgEEAYI3CgMMBggrBgEFBQcDBwYIKwYBBQUHAxEwEgYDVR0TAQH/BAgwBgEB
-/wIBADAdBgNVHQ4EFgQUljPR5lgXWzR1ioFWZNW+SN6hj88wHwYDVR0jBBgwFoAUj/BLf6guRSSu
-TVD6Y5qL3uLdG7wwegYIKwYBBQUHAQEEbjBsMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcC5nbG9i
-YWxzaWduLmNvbS9yb290cjMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5j
-b20vY2FjZXJ0L3Jvb3QtcjMuY3J0MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuZ2xvYmFs
-c2lnbi5jb20vcm9vdC1yMy5jcmwwWgYDVR0gBFMwUTALBgkrBgEEAaAyASgwQgYKKwYBBAGgMgEo
-CjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAN
-BgkqhkiG9w0BAQsFAAOCAQEAdAXk/XCnDeAOd9nNEUvWPxblOQ/5o/q6OIeTYvoEvUUi2qHUOtbf
-jBGdTptFsXXe4RgjVF9b6DuizgYfy+cILmvi5hfk3Iq8MAZsgtW+A/otQsJvK2wRatLE61RbzkX8
-9/OXEZ1zT7t/q2RiJqzpvV8NChxIj+P7WTtepPm9AIj0Keue+gS2qvzAZAY34ZZeRHgA7g5O4TPJ
-/oTd+4rgiU++wLDlcZYd/slFkaT3xg4qWDepEMjT4T1qFOQIL+ijUArYS4owpPg9NISTKa1qqKWJ
-jFoyms0d0GwOniIIbBvhI2MJ7BSY9MYtWVT5jJO3tsVHwj4cp92CSFuGwunFMzCCA18wggJHoAMC
-AQICCwQAAAAAASFYUwiiMA0GCSqGSIb3DQEBCwUAMEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9v
-dCBDQSAtIFIzMRMwEQYDVQQKEwpHbG9iYWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTA5
-MDMxODEwMDAwMFoXDTI5MDMxODEwMDAwMFowTDEgMB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENB
-IC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkdsb2JhbFNpZ24wggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJXaQeQZ4Ihb1wIO2hMoonv0FdhHFrYhy/EYCQ8eyip0E
-XyTLLkvhYIJG4VKrDIFHcGzdZNHr9SyjD4I9DCuul9e2FIYQebs7E4B3jAjhSdJqYi8fXvqWaN+J
-J5U4nwbXPsnLJlkNc96wyOkmDoMVxu9bi9IEYMpJpij2aTv2y8gokeWdimFXN6x0FNx04Druci8u
-nPvQu7/1PQDhBjPogiuuU6Y6FnOM3UEOIDrAtKeh6bJPkC4yYOlXy7kEkmho5TgmYHWyn3f/kRTv
-riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
-QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
-UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
-M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
-Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
-14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
-a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
-XzCCBUYwggQuoAMCAQICDAx3oGwxIEOxqBUW1jANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
-RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
-UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMjA5MTAwOTAwNDVaFw0yNTA5MTAwOTAwNDVaMIGK
-MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
-BgNVBAoTDUJyb2FkY29tIEluYy4xEzARBgNVBAMTCkp1c3RpbiBUZWUxJjAkBgkqhkiG9w0BCQEW
-F2p1c3Rpbi50ZWVAYnJvYWRjb20uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
-1FcD8UCLr1YJvSijoRgBcjkrFpoHEJ5E6Cs2+JbaWnNDm2jAQzRe31aRiIj+dS2Txzq22qODcTHv
-a67nFYHohW7NbgVOxh5G3h55d4aCwK7NvAGjHFcvNdZ9ECpMOpvGg0Pz/nQVVmU/K6mAGkdtF674
-niejyV/sWPwqdts/jpWYEN5/h0shrmgChGnWlAarY2gO018avJp8oVJLbMZ7A4gvs76YPXJYhCha
-QsyUohclvlxgt5d/MsBG6WZxZ+uppzNvjEk/wUu+6JQNUVEMviA6eBCCi+4ShjZUbGPES11h5lw/
-wuyQZDIjy+1hGPtLHBXI/QQEbU3OVdTRn+aEMwIDAQABo4IB2DCCAdQwDgYDVR0PAQH/BAQDAgWg
-MIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9iYWxzaWdu
-LmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUFBzABhjVo
-dHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMDBNBgNV
-HSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2ln
-bi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRwOi8vY3Js
-Lmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAiBgNVHREEGzAZ
-gRdqdXN0aW4udGVlQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAW
-gBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUlHfvnuNaLp52RO2Y2En9J+7MKI4wDQYJ
-KoZIhvcNAQELBQADggEBAGaBsEmLZwejb3YsmigadLZGto3hJ7Erq2YZLhL7Pgtxft1/j4JNLsRN
-t3ZJIW2Xzfbj0p328xRekSP1gjZ9Szre0fxEFXH1sS1a7WP9E0fHxVW07xVsxGxo5opAh5Gf/bQH
-S4x9pCO48FJI310L1RGQiqFKY/OECnXO821y8MAyObbGo9HNHP4Sk6F5J1v2qJzbLtMfj8ybbTGe
-SidstRgjOIqMldZs2Koio14QFE7hJY+8KRiKfq+eb1EwQTMzBxZsMOL5vUSZjYg2+Fqwyr6YYp0w
-Lsq/wH9o18xSvL/FikpG4JRxiT20RdM6DQrk9lv8ijASZCuN3JR61WUNz2AxggJtMIICaQIBATBr
-MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9i
-YWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwMd6BsMSBDsagVFtYwDQYJYIZI
-AWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFPbQmGFwppLa9tyevXzIGtX5zXdOmgnu7jURtfU
-g3r7MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDcyNjIyMTY1
-MVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQB
-AjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkq
-hkiG9w0BAQEFAASCAQAvhaS8EHDgdWsSIiao6inkoNN/DGRaG1bxX4vyo5oTsdgQE1wr4mvZqC7B
-mM/RqF8MyQ1WbpY77hyPGSCybQIPAzscRn4e3tRpsYE3C6HfPZ1LsAuNULnuFXzG/Da096vU67z9
-A0IkKrQVU8sN1ZMoICnaLrGHB5e7raJKnnRVqzxBepV1eE13/rqKMluJ1cryJc+D4NAy4XcWvHJe
-qQGdjXcJkugHromFp/yuCJRE6Q9Qcl5COVKhyDhGgdH+nG61SR6+/yvlwce4cbx7+cvEytwtTgXl
-GWV+BAA3mV+O4rvu/BAUc9RwlvwmS5NcVghKBarWtTOb/WMuHBnnEz0A
---0000000000005e06c706016b3406--
