@@ -2,204 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC201C001DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 18:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C06C4C001E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 19:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231391AbjGZS7j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jul 2023 14:59:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51004 "EHLO
+        id S231993AbjGZT3y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jul 2023 15:29:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229798AbjGZS7i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 14:59:38 -0400
-Received: from mail-ot1-x330.google.com (mail-ot1-x330.google.com [IPv6:2607:f8b0:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE9352717;
-        Wed, 26 Jul 2023 11:59:36 -0700 (PDT)
-Received: by mail-ot1-x330.google.com with SMTP id 46e09a7af769-6bb0cadd3ccso86664a34.3;
-        Wed, 26 Jul 2023 11:59:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690397976; x=1691002776;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ziQ3nx83KMp7PLHSdD/veNs27euCmJl/gfBQ/qPL2Nk=;
-        b=qE02BCWpeTlsoPyI3FxI630VuZkGfQG/sOeKMg/z6jZW5Odec8lFmx6LUqM9jfWWV1
-         tRdPC9DgrqNMET/rhovyQ3PkISDUsgy2bLLXpafpHeBBTW9zwcyYfgzZYl7eWu/cCYWo
-         6n6cOs7uGN6zmRuSUUMg/t+TDMzUBYKM/ipxIgRH/meDVzu2DHL+CDoWtIElGggPC74S
-         qKQ3URsCItkeZ4hLhPAbZnTD11w+HprMHyZE3Tl1uUJTXPFSEVSk38XV5aWOhki2/7ol
-         iygYeAST+VMjzl2+dGTqLD+avf6PSKCr0skgCedBvtaZbQC+I8wOzdDdEnD2xhm6OfDJ
-         aQZA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690397976; x=1691002776;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ziQ3nx83KMp7PLHSdD/veNs27euCmJl/gfBQ/qPL2Nk=;
-        b=hZF44qj8IW0qqYN6sKzBp/hAlglzezDRDXCa0Gn9v26DbWRHPSdlgVnviM0FR6g7Jy
-         FV5g5XCd74omWpYURdr+CjGq5Nmv3tnwZxT/f34QtFrBOfPPh/KGWInFQtGwHeMgs+8M
-         moRP/RXHYqFfBx/OPj7EbuLD8YZ6YvmrhDdGBYWO1mDu2Xsm+UDs2fZiFXyKA0RZA/th
-         9NmlakNttPWFZJ9k/wiFR8QKUjY3QyEkmYlalx2drM1TyAKr6GL+eZcwCHHZWs3EN1Mo
-         Z0N6Fg/+xohvNenmfhp4qGrp3Zz8gQGNEJ6dXcLJUj2xmJ5ZLCdfKGFDCrj+G8tDYHgE
-         kDGA==
-X-Gm-Message-State: ABy/qLZjxoGk47XrcQ0RKnxEFe8ef77JW1KHzS2OchWRpSdQ+sE2nvjh
-        EEq2k+xCoViQk00lFOXLcpY=
-X-Google-Smtp-Source: APBJJlHJIZiF9YuNvMi1j2Cs9Uo7oT70Xc6aVZIYz7PrTljParXdiy5YhgjmIjHYafLBqAF0Au0PoQ==
-X-Received: by 2002:a05:6358:9214:b0:132:ce1f:6793 with SMTP id d20-20020a056358921400b00132ce1f6793mr2731817rwb.21.1690397975915;
-        Wed, 26 Jul 2023 11:59:35 -0700 (PDT)
-Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
-        by smtp.gmail.com with ESMTPSA id c1-20020a63a401000000b0055c3e8c922dsm12704151pgf.90.2023.07.26.11.59.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jul 2023 11:59:35 -0700 (PDT)
-From:   Chengfeng Ye <dg573847474@gmail.com>
-To:     hare@suse.de, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        bigeasy@linutronix.de, dave@stgolabs.net, satishkh@cisco.com,
-        sebaddel@cisco.com, kartilak@cisco.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Chengfeng Ye <dg573847474@gmail.com>
-Subject: [PATCH] scsi: fcoe: Fix potential deadlock on &fip->ctlr_lock
-Date:   Wed, 26 Jul 2023 18:59:23 +0000
-Message-Id: <20230726185923.53353-1-dg573847474@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S229907AbjGZT3w (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 15:29:52 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBC6630F4;
+        Wed, 26 Jul 2023 12:29:34 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.74.8) by msexch01.omp.ru (10.188.4.12)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 26 Jul
+ 2023 22:29:30 +0300
+Subject: Re: [PATCH v3 9/9] ata: remove deprecated EH callbacks
+To:     Niklas Cassel <nks@flawful.org>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>
+CC:     Hannes Reinecke <hare@suse.com>,
+        John Garry <john.g.garry@oracle.com>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        <linux-doc@vger.kernel.org>
+References: <20230721163229.399676-1-nks@flawful.org>
+ <20230721163229.399676-10-nks@flawful.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <05906461-0805-54dd-bb60-722616eb8848@omp.ru>
+Date:   Wed, 26 Jul 2023 22:29:29 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+In-Reply-To: <20230721163229.399676-10-nks@flawful.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.74.8]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 07/26/2023 19:13:04
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 178891 [Jul 26 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 526 526 7a6a9b19f6b9b3921b5701490f189af0e0cd5310
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.74.8 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.74.8:7.7.3,7.1.2;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: {rdns complete}
+X-KSE-AntiSpam-Info: {fromrtbl complete}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.74.8
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 07/26/2023 19:16:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 7/26/2023 5:23:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is a long call chain that &fip->ctlr_lock is acquired by isr
-fnic_isr_msix_wq_copy() under hard irq context. Thus other process
-context code acquiring the lock should disable irq, otherwise
-deadlock could happen if the irq preempt the execution while the
-lock is held in process context on the same CPU.
+On 7/21/23 7:32 PM, Niklas Cassel wrote:
 
-[ISR]
-fnic_isr_msix_wq_copy()
- -> fnic_wq_copy_cmpl_handler()
- -> fnic_fcpio_cmpl_handler()
- -> fnic_fcpio_flogi_reg_cmpl_handler()
- -> fnic_flush_tx()
- -> fnic_send_frame()
- -> fcoe_ctlr_els_send()
- -> spin_lock_bh(&fip->ctlr_lock)
+> From: Niklas Cassel <niklas.cassel@wdc.com>
+> 
+> Now when all libata drivers have migrated to use the error_handler
+> callback, remove the deprecated phy_reset and eng_timeout callbacks.
+> 
+> Also remove references to non-existent functions sata_phy_reset and
+> ata_qc_timeout from Documentation/driver-api/libata.rst.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+[...]
+> diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
+> index 3b62ea482f1a..93882e976ede 100644
+> --- a/drivers/ata/pata_sl82c105.c
+> +++ b/drivers/ata/pata_sl82c105.c
+> @@ -180,8 +180,7 @@ static void sl82c105_bmdma_start(struct ata_queued_cmd *qc)
+>   *	document.
+>   *
+>   *	This function is also called to turn off DMA when a timeout occurs
+> - *	during DMA operation. In both cases we need to reset the engine,
+> - *	so no actual eng_timeout handler is required.
+> + *	during DMA operation. In both cases we need to reset the engine.
+>   *
+>   *	We assume bmdma_stop is always called if bmdma_start as called. If
+>   *	not then we may need to wrap qc_issue.
 
-[Process Context]
-1. fcoe_ctlr_timer_work()
- -> fcoe_ctlr_flogi_send()
- -> spin_lock_bh(&fip->ctlr_lock)
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-2. fcoe_ctlr_recv_work()
- -> fcoe_ctlr_recv_handler()
- -> fcoe_ctlr_recv_els()
- -> fcoe_ctlr_announce()
- -> spin_lock_bh(&fip->ctlr_lock)
+[...]
 
-3. fcoe_ctlr_recv_work()
- -> fcoe_ctlr_recv_handler()
- -> fcoe_ctlr_recv_els()
- -> fcoe_ctlr_flogi_retry()
- -> spin_lock_bh(&fip->ctlr_lock)
-
-4. -> fcoe_xmit()
- -> fcoe_ctlr_els_send()
- -> spin_lock_bh(&fip->ctlr_lock)
-
-spin_lock_bh() is not enough since fnic_isr_msix_wq_copy() is a
-hardirq.
-
-These flaws were found by an experimental static analysis tool I am
-developing for irq-related deadlock.
-
-The patch fix the potential deadlocks by spin_lock_irqsave() to
-disable hard irq.
-
-Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
----
- drivers/scsi/fcoe/fcoe_ctlr.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 5c8d1ba3f8f3..19eee108db02 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -319,16 +319,17 @@ static void fcoe_ctlr_announce(struct fcoe_ctlr *fip)
- {
- 	struct fcoe_fcf *sel;
- 	struct fcoe_fcf *fcf;
-+	unsigned long flags;
- 
- 	mutex_lock(&fip->ctlr_mutex);
--	spin_lock_bh(&fip->ctlr_lock);
-+	spin_lock_irqsave(&fip->ctlr_lock, flags);
- 
- 	kfree_skb(fip->flogi_req);
- 	fip->flogi_req = NULL;
- 	list_for_each_entry(fcf, &fip->fcfs, list)
- 		fcf->flogi_sent = 0;
- 
--	spin_unlock_bh(&fip->ctlr_lock);
-+	spin_unlock_irqrestore(&fip->ctlr_lock, flags);
- 	sel = fip->sel_fcf;
- 
- 	if (sel && ether_addr_equal(sel->fcf_mac, fip->dest_addr))
-@@ -699,6 +700,7 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
- {
- 	struct fc_frame *fp;
- 	struct fc_frame_header *fh;
-+	unsigned long flags;
- 	u16 old_xid;
- 	u8 op;
- 	u8 mac[ETH_ALEN];
-@@ -732,11 +734,11 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
- 		op = FIP_DT_FLOGI;
- 		if (fip->mode == FIP_MODE_VN2VN)
- 			break;
--		spin_lock_bh(&fip->ctlr_lock);
-+		spin_lock_irqsave(&fip->ctlr_lock, flags);
- 		kfree_skb(fip->flogi_req);
- 		fip->flogi_req = skb;
- 		fip->flogi_req_send = 1;
--		spin_unlock_bh(&fip->ctlr_lock);
-+		spin_unlock_irqrestore(&fip->ctlr_lock, flags);
- 		schedule_work(&fip->timer_work);
- 		return -EINPROGRESS;
- 	case ELS_FDISC:
-@@ -1705,10 +1707,11 @@ static int fcoe_ctlr_flogi_send_locked(struct fcoe_ctlr *fip)
- static int fcoe_ctlr_flogi_retry(struct fcoe_ctlr *fip)
- {
- 	struct fcoe_fcf *fcf;
-+	unsigned long flags;
- 	int error;
- 
- 	mutex_lock(&fip->ctlr_mutex);
--	spin_lock_bh(&fip->ctlr_lock);
-+	spin_lock_irqsave(&fip->ctlr_lock, flags);
- 	LIBFCOE_FIP_DBG(fip, "re-sending FLOGI - reselect\n");
- 	fcf = fcoe_ctlr_select(fip);
- 	if (!fcf || fcf->flogi_sent) {
-@@ -1719,7 +1722,7 @@ static int fcoe_ctlr_flogi_retry(struct fcoe_ctlr *fip)
- 		fcoe_ctlr_solicit(fip, NULL);
- 		error = fcoe_ctlr_flogi_send_locked(fip);
- 	}
--	spin_unlock_bh(&fip->ctlr_lock);
-+	spin_unlock_irqrestore(&fip->ctlr_lock, flags);
- 	mutex_unlock(&fip->ctlr_mutex);
- 	return error;
- }
-@@ -1736,8 +1739,9 @@ static int fcoe_ctlr_flogi_retry(struct fcoe_ctlr *fip)
- static void fcoe_ctlr_flogi_send(struct fcoe_ctlr *fip)
- {
- 	struct fcoe_fcf *fcf;
-+	unsigned long flags;
- 
--	spin_lock_bh(&fip->ctlr_lock);
-+	spin_lock_irqsave(&fip->ctlr_lock, flags);
- 	fcf = fip->sel_fcf;
- 	if (!fcf || !fip->flogi_req_send)
- 		goto unlock;
-@@ -1764,7 +1768,7 @@ static void fcoe_ctlr_flogi_send(struct fcoe_ctlr *fip)
- 	} else /* XXX */
- 		LIBFCOE_FIP_DBG(fip, "No FCF selected - defer send\n");
- unlock:
--	spin_unlock_bh(&fip->ctlr_lock);
-+	spin_unlock_irqrestore(&fip->ctlr_lock, flags);
- }
- 
- /**
--- 
-2.17.1
-
+MBR, Sergey
