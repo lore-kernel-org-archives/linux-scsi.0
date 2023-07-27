@@ -2,80 +2,87 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0836C001DC
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 15:40:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20685C0015E
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 16:57:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233144AbjG0PkG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jul 2023 11:40:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46626 "EHLO
+        id S231481AbjG0Q5A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jul 2023 12:57:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232813AbjG0PkE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2023 11:40:04 -0400
-Received: from mail.astralinux.ru (mail.astralinux.ru [217.74.38.119])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 133052122;
-        Thu, 27 Jul 2023 08:40:03 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by mail.astralinux.ru (Postfix) with ESMTP id 17BB7186AAC1;
-        Thu, 27 Jul 2023 18:39:30 +0300 (MSK)
-Received: from mail.astralinux.ru ([127.0.0.1])
-        by localhost (rbta-msk-vsrv-mail01.astralinux.ru [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id Z4YePX_NlhbN; Thu, 27 Jul 2023 18:39:29 +0300 (MSK)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by mail.astralinux.ru (Postfix) with ESMTP id B7655186AAA0;
-        Thu, 27 Jul 2023 18:39:29 +0300 (MSK)
-X-Virus-Scanned: amavisd-new at astralinux.ru
-Received: from mail.astralinux.ru ([127.0.0.1])
-        by localhost (rbta-msk-vsrv-mail01.astralinux.ru [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id lEd70ON9ivQv; Thu, 27 Jul 2023 18:39:29 +0300 (MSK)
-Received: from rbta-msk-lt-302690.astralinux.ru (unknown [10.177.233.132])
-        by mail.astralinux.ru (Postfix) with ESMTPSA id DFA7E186AA6C;
-        Thu, 27 Jul 2023 18:39:28 +0300 (MSK)
-From:   Alexandra Diupina <adiupina@astralinux.ru>
-To:     "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc:     Alexandra Diupina <adiupina@astralinux.ru>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org,
-        Vladimir Telezhnikov <vtelezhnikov@astralinux.ru>
-Subject: [PATCH] 53c700: add 'slot' check to NULL
-Date:   Thu, 27 Jul 2023 18:39:25 +0300
-Message-Id: <20230727153925.15297-1-adiupina@astralinux.ru>
-X-Mailer: git-send-email 2.30.2
+        with ESMTP id S230289AbjG0Q47 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2023 12:56:59 -0400
+Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E22942696;
+        Thu, 27 Jul 2023 09:56:54 -0700 (PDT)
+Received: by mail-io1-xd2d.google.com with SMTP id ca18e2360f4ac-785ccd731a7so15003539f.0;
+        Thu, 27 Jul 2023 09:56:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1690477014; x=1691081814;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2TbDyUZsWzsObspTjv/7qDRWOVn/FC/GQiLADatzNto=;
+        b=QVWXff1MHGFzKeu2yMSop5DgLF/mnGt7ujiUK+cK7qgU25t4z0pQLC3LLk1cBb9Fao
+         ICDs5FS4uyyYYYSXZIj6AVAXLV8cXjT9xYUA0iwxzklJqzxG+4G8s8p2Y308gHg1u8vV
+         nUMY3P3tHoHGmKuw7jAe4mVs5hOfFokPoIOjqkAucjNiC/q8j4P0R+26bksNpAN10G31
+         aSH5whNcEwF+qzt9ECVIPo6MvqRhQExufVKQhNWHJr/y+xhMCdDUBYIU8KnOq9hyF9jV
+         yPQk9EJS0SiO8Ja616+hmibeUeLXOfQfPl9hevhwxbjVGYM96ztaU59Xnz9m7zkEMEte
+         GSOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690477014; x=1691081814;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=2TbDyUZsWzsObspTjv/7qDRWOVn/FC/GQiLADatzNto=;
+        b=ME5ywya4Ul4bcl95nLmbJhm970b6Y1CAeLtqmkmpl8pafkbDgobi6IlOsW5g+RUD91
+         anWwoqiLO1bsbXFV0MyDFUyVw2MIPo5X9arRvuNYr/r78giN2R2CNwn1En25Xi8vtrN4
+         bgc+1EWP9cqiA+aYioG4XOmtcNezIrq5gygi2vZGXHvX1z0WSrsb7dwPlKo8t23+pU3d
+         n2lKvzRxl3z4XLpfhppJjVNufWXlPqQueaodHT6AahGE9+TY8vjY/KQJoze9meVPFvCN
+         i885covzazORRYq9nITngDF+S2PlB8f6pzOOc0P3NrX8+DK4HeRTuAOTX5n4f2kjLOql
+         OoAA==
+X-Gm-Message-State: ABy/qLZIc3B0z5LX1S224SsrdrmHh782YA6T35u+zxZsglSPGIjZI9gQ
+        xoiRaSufMn0KGAkzTVm+BREW2xTZHtL/OMRrbuY=
+X-Google-Smtp-Source: APBJJlEoSCoL8q7efvULtSRO2w2U+hoIsFGnoOvtgrvlFGhkvFEEEYatzDufiBpbn8t4TXFCvNwzhUkmsGojgXJVZOw=
+X-Received: by 2002:a05:6602:2d89:b0:780:d65c:d78f with SMTP id
+ k9-20020a0566022d8900b00780d65cd78fmr90887iow.2.1690477014246; Thu, 27 Jul
+ 2023 09:56:54 -0700 (PDT)
 MIME-Version: 1.0
+References: <20230726094027.535126-1-ming.lei@redhat.com> <20230726094027.535126-5-ming.lei@redhat.com>
+ <CABPRKS-0GQqMRiGh6akOgk3BKpx5kqTd0QVhH4nPe=fUdi7DbQ@mail.gmail.com> <ZMHGLyg2bRY6S35i@ovpn-8-16.pek2.redhat.com>
+In-Reply-To: <ZMHGLyg2bRY6S35i@ovpn-8-16.pek2.redhat.com>
+From:   Justin Tee <justintee8345@gmail.com>
+Date:   Thu, 27 Jul 2023 09:56:43 -0700
+Message-ID: <CABPRKS-vnvOUOhZzc6yghKV4RjTTsZMQphR=TEs-S-OD5Ap29Q@mail.gmail.com>
+Subject: Re: [PATCH V2 4/9] scsi: lpfc: use blk_mq_max_nr_hw_queues() to
+ calculate io vectors
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Wen Xiong <wenxiong@linux.ibm.com>,
+        Keith Busch <kbusch@kernel.org>,
+        James Smart <james.smart@broadcom.com>,
+        Justin Tee <justin.tee@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The 'slot' variable allows a NULL value.
-It is necessary to add a check for a null
-value to avoid dereferencing the null pointer.
+On Wed, Jul 26, 2023 at 6:20=E2=80=AFPM Ming Lei <ming.lei@redhat.com> wrot=
+e:
+> Strictly speaking, the above change is better, but non-managed irq
+> doesn't have such issue, that is why I just apply the change on managed
+> irq branch.
+>
+>
+> Thanks,
+> Ming
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+Sure, thanks Ming.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Co-developed-by: Vladimir Telezhnikov <vtelezhnikov@astralinux.ru>
-Signed-off-by: Vladimir Telezhnikov <vtelezhnikov@astralinux.ru>
-Signed-off-by: Alexandra Diupina <adiupina@astralinux.ru>
----
- drivers/scsi/53c700.c | 2 ++
- 1 file changed, 2 insertions(+)
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index e1e4f9d10887..8e5468d1733d 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -1598,6 +1598,8 @@ NCR_700_intr(int irq, void *dev_id)
- 				printk("scsi%d (%d:%d) PHASE MISMATCH IN SEND MESSAGE %d remain, ret=
-urn %p[%04x], phase %s\n", host->host_no, pun, lun, count, (void *)temp, =
-temp - hostdata->pScript, sbcl_to_string(NCR_700_readb(host, SBCL_REG)));
- #endif
- 				resume_offset =3D hostdata->pScript + Ent_SendMessagePhaseMismatch;
-+			} else if (!slot) {
-+				printk(KERN_ERR "53c700: SCSI DONE HAS NULL SCp\n");
- 			} else if(dsp >=3D to32bit(&slot->pSG[0].ins) &&
- 				  dsp <=3D to32bit(&slot->pSG[NCR_700_SG_SEGMENTS].ins)) {
- 				int data_transfer =3D NCR_700_readl(host, DBC_REG) & 0xffffff;
---=20
-2.30.2
-
+Regards,
+Justin
