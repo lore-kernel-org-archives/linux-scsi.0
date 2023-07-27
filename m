@@ -2,87 +2,72 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7454CC001DE
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 01:20:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99314C0015E
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 05:22:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230057AbjG0BUu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jul 2023 21:20:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53416 "EHLO
+        id S231599AbjG0FWM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jul 2023 01:22:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229587AbjG0BUs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 21:20:48 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64178188
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2023 18:20:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690420801;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Y8X6PgTR+pLYqKne9/e14XqsgiEG/L8rI/Zh18GGpEw=;
-        b=XnDB5i49kZ5YW2Of5NXX3NgehZ0bAjQa69u0sgWNhDUhxirsB0h3GV585TEe6iZ3y3DVyf
-        VMgh3SIyyKMJeRRP5Xw1SNpYQo2SL/TBk+vNrZQitWxUrDn28sUvcgHSYqtI44mp7GrwIv
-        9MrPBNax8nDsDeuX5I4bQF09ZCVobQo=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-118-BRU-t8dMNBqbQkWMIXLk4w-1; Wed, 26 Jul 2023 21:19:55 -0400
-X-MC-Unique: BRU-t8dMNBqbQkWMIXLk4w-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 11396104458E;
-        Thu, 27 Jul 2023 01:19:55 +0000 (UTC)
-Received: from ovpn-8-16.pek2.redhat.com (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 27A2C40C206F;
-        Thu, 27 Jul 2023 01:19:48 +0000 (UTC)
-Date:   Thu, 27 Jul 2023 09:19:43 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Justin Tee <justintee8345@gmail.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        linux-nvme@lists.infradead.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Wen Xiong <wenxiong@linux.ibm.com>,
-        Keith Busch <kbusch@kernel.org>,
-        James Smart <james.smart@broadcom.com>,
-        Justin Tee <justin.tee@broadcom.com>
-Subject: Re: [PATCH V2 4/9] scsi: lpfc: use blk_mq_max_nr_hw_queues() to
- calculate io vectors
-Message-ID: <ZMHGLyg2bRY6S35i@ovpn-8-16.pek2.redhat.com>
-References: <20230726094027.535126-1-ming.lei@redhat.com>
- <20230726094027.535126-5-ming.lei@redhat.com>
- <CABPRKS-0GQqMRiGh6akOgk3BKpx5kqTd0QVhH4nPe=fUdi7DbQ@mail.gmail.com>
+        with ESMTP id S229946AbjG0FWL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2023 01:22:11 -0400
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2424826A1;
+        Wed, 26 Jul 2023 22:22:10 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id ffacd0b85a97d-317716a4622so554215f8f.1;
+        Wed, 26 Jul 2023 22:22:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1690435328; x=1691040128;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=zu+TPu8vc5z407cLLTcD0tM3SAh82DPnoPRhY7CjDH8=;
+        b=BTJaFlWMXhbYZaQanG+xg4emhc+hhhvUk47ZrMZ0EiTYhk9s7YgWF3qPS07zTSRkne
+         wI54D260XhItT6aZ+NgVdCFLFrj/v4mZwR237D27dclMwsLp/mRBsKsHVtHHMq6QWNHo
+         xvJiMlY2tfsmswEeyr8Xm78xl5Ti5xcRpPV3YYf8pCYvs0gb0cdp20btX2xU+ZiY5aAn
+         Gbk+gryvRkILcxZPiZxVXvuxUoV03e0caxrTw1jgrTYAI6HCjPOfW0X+SFE/gf3USUAZ
+         5oExijmaJEIcrhcgl3PUATRtathZGlZMayplGCslIHRHEioTMID1bsxe6/8izyNIIz91
+         5Srw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690435328; x=1691040128;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=zu+TPu8vc5z407cLLTcD0tM3SAh82DPnoPRhY7CjDH8=;
+        b=HlThIu/hyyug3GQxlWYFdAsodF89z8X6F5UXdOJ7WCovol+l4Wvnk5dB4MWWoity/X
+         A7kGeEhSzgk0USiSFFL3InxQsrYDr8y906lieI1CuPThN7DGt8Becv7V2BRBEHRGCWF8
+         h/r9eNPm5/1jCx1DSs2sj24RdMrLmItfjg+Cu7mKzh/OHJiniPLEbypPJiOYk8P9/XZh
+         2N50tvFU4KOnLr2I+64PHzVTgR0p6X/0TauXajAa1vYTboxEi5fiSteRruiYo0ctfl7s
+         RqAaaEjn5KncUrhRQyDDH6h6mBobzYu4TGd1VRdi9LJdU/J634bA4UkxpN7v9qb4QB/L
+         dISA==
+X-Gm-Message-State: ABy/qLbv2zT5t/wwG/3KSqwokrSIdlC/s2slTmAhwYGELnRTWkgCp15x
+        CkPkp8LDmOstudTrNQSqOmEbD0BpGERTEbCD1cc=
+X-Google-Smtp-Source: APBJJlHKb/e5eTfcqSQ09CINh7JgQDQGk6myc+uS3OwL7JKK7UjH9Y66gbVO3meh6qK4rCcDgrU39buz7Ga9b73gWWE=
+X-Received: by 2002:a5d:6e42:0:b0:314:21b:1ea2 with SMTP id
+ j2-20020a5d6e42000000b00314021b1ea2mr819278wrz.39.1690435328409; Wed, 26 Jul
+ 2023 22:22:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABPRKS-0GQqMRiGh6akOgk3BKpx5kqTd0QVhH4nPe=fUdi7DbQ@mail.gmail.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
+References: <20230726181322.26754-1-dg573847474@gmail.com>
+In-Reply-To: <20230726181322.26754-1-dg573847474@gmail.com>
+From:   Chengfeng Ye <dg573847474@gmail.com>
+Date:   Thu, 27 Jul 2023 13:21:57 +0800
+Message-ID: <CAAo+4rV1GKrzo77Sum89n6ysDyhVhzrM2OX-ADk9AOrFkZfQow@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: lpfc: Fix potential deadlock on &ndlp->lock
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        sumit.semwal@linaro.org, christian.koenig@amd.com,
+        justin.tee@broadcom.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 26, 2023 at 03:12:16PM -0700, Justin Tee wrote:
-> Hi Ming,
-> 
-> From version 1 of the patchset, I thought we had planned to put the
-> min comparison right above pci_alloc_irq_vectors instead?
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 3221a934066b..20410789e8b8 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -13025,6 +13025,8 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
->                 flags |= PCI_IRQ_AFFINITY;
->         }
-> 
-> +       vectors = min_t(unsigned int, vectors, scsi_max_nr_hw_queues());
+Sorry for the interruption, I just notice that the ndlp node
+inside timer does not share with that of lpfc_cleanup_pending_mbox().
 
-Strictly speaking, the above change is better, but non-managed irq
-doesn't have such issue, that is why I just apply the change on managed
-irq branch.
+This is a false alarm and sorry again for this.
 
-
-Thanks, 
-Ming
-
+Best regards,
+Chengfeng
