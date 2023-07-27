@@ -2,111 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27969C00528
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 19:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF76CEB64DD
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 19:45:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231604AbjG0TnH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jul 2023 15:43:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58146 "EHLO
+        id S229809AbjG0TpO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jul 2023 15:45:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231253AbjG0TnG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2023 15:43:06 -0400
-X-Greylist: delayed 122 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 27 Jul 2023 12:43:05 PDT
-Received: from rcdn-iport-3.cisco.com (rcdn-iport-3.cisco.com [173.37.86.74])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DB712D73
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Jul 2023 12:43:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=1648; q=dns/txt; s=iport;
-  t=1690486985; x=1691696585;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=oTyLA368YHVV2V2TEnTOavcBXNzBkBdMAX0O2LhAFlQ=;
-  b=RZ81QMiMFD4mBwEAlm0tT/xQ8+em3HZgTgqZZoRswKvStFCmonwt2LQ7
-   veTp63meOveZ+sXnnTpXSK73h60p3eqejA1Gf4b+sWwkM9sO+h5+Hx2Rx
-   Cn/eK4urSMg83975C1w50wZfM50I90b9c+aDl4/13MJVW4AG2saEyYP4n
-   s=;
-X-IronPort-AV: E=Sophos;i="6.01,235,1684800000"; 
-   d="scan'208";a="94211750"
-Received: from rcdn-core-4.cisco.com ([173.37.93.155])
-  by rcdn-iport-3.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2023 19:40:00 +0000
-Received: from localhost.cisco.com ([10.193.101.253])
-        (authenticated bits=0)
-        by rcdn-core-4.cisco.com (8.15.2/8.15.2) with ESMTPSA id 36RJdofl018909
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Thu, 27 Jul 2023 19:39:59 GMT
-From:   Karan Tilak Kumar <kartilak@cisco.com>
-To:     sebaddel@cisco.com
-Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
-        satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH] scsi: fnic: Replace return codes in fnic_clean_pending_aborts()
-Date:   Thu, 27 Jul 2023 12:39:19 -0700
-Message-Id: <20230727193919.2519-1-kartilak@cisco.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229630AbjG0TpN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2023 15:45:13 -0400
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E90B273C
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Jul 2023 12:45:13 -0700 (PDT)
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-686f19b6dd2so840781b3a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Jul 2023 12:45:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690487112; x=1691091912;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=BiH6SlBtoEhlvJZjomUKZ5l8P6twIo8R31C1dJ+Y5Io=;
+        b=dWuncyPU1+JoAhX7uEDgHYmIWA8i/uBsyPGMvYRX6gvzVtOymik12xWKcwQ7SztiXX
+         xkuMNnC/4jMEva2YLNXdSbD8m2rpgb0uDeG6xv7gqBAgwyi1Q3HpH2gB2yt4s9HgANtI
+         6StjnyuAxrJm1hK6w/q5OBIMBdZd4qlnvQY4IvPiXDwJNFu9YdR/fB3RImvCY8fnPL6z
+         nDWkrKZku1rXVhzhI8rywzPLwgcY6Fd32UDgT2gEsxucKFeRd0ryP+uPvoPwOPrvPT45
+         h6bKVERO3O4SBjlSbTh0FJsmRPjL8vHseErusF41R77EUrFejmBVgYwyS1g5yCtljAoG
+         kUkw==
+X-Gm-Message-State: ABy/qLZJhXIuE9n2ZT9zPCgVsEW1OjUPcma0yh4pn9n0EqF/GyKxgWpD
+        wWEE9zT9SjR1rRwlvcegRszrZUNUHzc=
+X-Google-Smtp-Source: APBJJlFJ2dB/+eqhFfI//+J09FfqgYuPAgCoDuLU8gPmVo+bfIwKYTY2hS37od/0zHoJg7UqycSZng==
+X-Received: by 2002:a05:6a00:198d:b0:67a:9208:87a with SMTP id d13-20020a056a00198d00b0067a9208087amr95456pfl.23.1690487112342;
+        Thu, 27 Jul 2023 12:45:12 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:607:27ba:91cb:68ee])
+        by smtp.gmail.com with ESMTPSA id 35-20020a630b23000000b00551df489590sm1879203pgl.12.2023.07.27.12.45.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Jul 2023 12:45:11 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 00/12] Multiple cleanup patches for the UFS driver
+Date:   Thu, 27 Jul 2023 12:41:12 -0700
+Message-ID: <20230727194457.3152309-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.41.0.487.g6d72f3e995-goog
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
-X-Outbound-Node: rcdn-core-4.cisco.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-fnic_clean_pending_aborts() was returning a non-zero value
-irrespective of failure or success.
-This caused the caller of this function to assume that the
-device reset had failed, even though it would succeed in
-most cases. As a consequence, a successful device reset
-would escalate to host reset.
+Hi Martin,
 
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
----
- fnic.h      | 2 +-
- fnic_scsi.c | 6 ++++--
- 2 files changed, 5 insertions(+), 3 deletions(-)
+This patch includes the following changes, none of which should change the
+functionality of the UFS host controller driver:
+- Improve the kernel-doc headers further.
+- Fix multiple W=2 compiler warnings.
+- Simplify ufshcd_abort_all().
+- Simplify the code for creating and parsing UFS Transport Protocol (UTP)
+  headers.
 
-diff --git a/fnic.h b/fnic.h
-index 85ec616..87c12d5 100644
---- a/fnic.h
-+++ b/fnic.h
-@@ -39,7 +39,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.54"
-+#define DRV_VERSION		"1.6.0.55"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
-diff --git a/fnic_scsi.c b/fnic_scsi.c
-index 3d64877..02e2fea 100644
---- a/fnic_scsi.c
-+++ b/fnic_scsi.c
-@@ -2156,7 +2156,7 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 				     bool new_sc)
- 
- {
--	int ret = SUCCESS;
-+	int ret = 0;
- 	struct fnic_pending_aborts_iter_data iter_data = {
- 		.fnic = fnic,
- 		.lun_dev = lr_sc->device,
-@@ -2176,9 +2176,11 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
- 
- 	/* walk again to check, if IOs are still pending in fw */
- 	if (fnic_is_abts_pending(fnic, lr_sc))
--		ret = FAILED;
-+		ret = 1;
- 
- clean_pending_aborts_end:
-+	FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
-+			"%s: exit status: %d\n", __func__, ret);
- 	return ret;
- }
- 
--- 
-2.26.2.Cisco
+Please consider this patch series for the next merge window.
+
+Thanks,
+
+Bart.
+
+Changes compared to v1:
+ - Introduced a name for the data direction enumeration type.
+ - Instead of introducing struct utp_upiu_hdr as an alias for struct
+   utp_upiu_header, introduce a union in the latter data structure.
+
+Bart Van Assche (12):
+  scsi: ufs: Follow the kernel-doc syntax for documenting return values
+  scsi: ufs: Document all return values
+  scsi: ufs: Fix kernel-doc headers
+  scsi: ufs: Rename a function argument
+  scsi: ufs: Minimize #include directives
+  scsi: ufs: Simplify zero-initialization
+  scsi: ufs: Improve type safety
+  scsi: ufs: Remove a local variable from ufshcd_abort_all()
+  scsi: ufs: Simplify ufshcd_abort_all()
+  scsi: ufs: Remove a member variable
+  scsi: ufs: Simplify transfer request header initialization
+  scsi: ufs: Simplify response header parsing
+
+ drivers/ufs/core/ufs-hwmon.c       |   3 +-
+ drivers/ufs/core/ufs-mcq.c         |  17 +-
+ drivers/ufs/core/ufs_bsg.c         |   2 +
+ drivers/ufs/core/ufshcd-crypto.h   |  20 +-
+ drivers/ufs/core/ufshcd-priv.h     |   4 +-
+ drivers/ufs/core/ufshcd.c          | 529 +++++++++++++++--------------
+ drivers/ufs/host/cdns-pltfrm.c     |  27 +-
+ drivers/ufs/host/tc-dwc-g210-pci.c |   2 +-
+ drivers/ufs/host/tc-dwc-g210.c     |  32 +-
+ drivers/ufs/host/ufs-mediatek.c    |   6 +-
+ drivers/ufs/host/ufs-qcom.c        |   8 +-
+ drivers/ufs/host/ufshcd-dwc.c      |  22 +-
+ drivers/ufs/host/ufshcd-pci.c      |   2 +-
+ drivers/ufs/host/ufshcd-pltfrm.c   |   6 +-
+ include/uapi/scsi/scsi_bsg_ufs.h   |  52 ++-
+ include/ufs/ufs.h                  |  47 +--
+ include/ufs/ufshcd.h               |  26 +-
+ include/ufs/ufshci.h               |  53 ++-
+ 18 files changed, 460 insertions(+), 398 deletions(-)
 
