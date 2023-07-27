@@ -2,184 +2,152 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2CF2C00528
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jul 2023 23:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07212C0015E
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 01:07:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230462AbjGZX2G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jul 2023 19:28:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48962 "EHLO
+        id S230032AbjG0BHt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jul 2023 21:07:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbjGZX2F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 19:28:05 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E1B219BA;
-        Wed, 26 Jul 2023 16:28:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1690414084; x=1721950084;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=ewi26uRljnF2po7aYXdfLfi2NAOPfdx7Uj2NXLHCIpA=;
-  b=aEOysniDoVln45Dj4yDr2bXrA1YEs7wn7oI64wVyWuIdcYXcJjS3gZXw
-   wNvMLnlLr3SYkONJt+MdV4dNi+221LhjSWDO7MoaO1ihX3/urTBpLBvnA
-   uMT278lW0T3F6ICaEMTrmamTfYlp2rJRmFYJL58aSK2xq/IzGbH7KzvHI
-   Wbeue4jKGaDFKu5Hx16adLv9W68A+ne+AYUhkgY54W3i3bxlCQlUv7kvT
-   O9Pll54JFrtNFS4aSgOhe6wAMe2w3X8DttlKwXHMCIRGmCjuL1LlMEI0c
-   X+tW/G5XkO623g95CwSmjw21QGl+668vL1jhNj6El7P2uVO3Y+oNd6Gus
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10783"; a="353057350"
-X-IronPort-AV: E=Sophos;i="6.01,233,1684825200"; 
-   d="scan'208";a="353057350"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jul 2023 16:28:03 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10783"; a="720674072"
-X-IronPort-AV: E=Sophos;i="6.01,233,1684825200"; 
-   d="scan'208";a="720674072"
-Received: from fmsmsx602.amr.corp.intel.com ([10.18.126.82])
-  by orsmga007.jf.intel.com with ESMTP; 26 Jul 2023 16:28:03 -0700
-Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
- fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Wed, 26 Jul 2023 16:28:03 -0700
-Received: from fmsedg602.ED.cps.intel.com (10.1.192.136) by
- fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27 via Frontend Transport; Wed, 26 Jul 2023 16:28:03 -0700
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.42) by
- edgegateway.intel.com (192.55.55.71) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.27; Wed, 26 Jul 2023 16:28:02 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=F8TkSZES/kE5SzwI/6B1dhs0vBEZuPZt1mGMiLixMgnCkVHEJGKlot0zVME8JebUtH/B3yNxjKYOcxvkJdaQMvhiXvTmdUfU9CPRiRKT3WPKV0cyC4qe+yXs8vlPKdLhFf8ushhEN62uKq8Wy3ow58/UahahigHH/uN8SLOaxT3N1jh1s1O479zKtSN7dYLXiZmprxPfMMnBzDqAHa3HjXA8ef3YhZYWp8vqqOtgFdeaoguc/n3yCD0cfdPMyPKKgYu7jNFaOXkR/j8HbNxrnf2UgjEEO5l+yEYZ5BANyOCG/gvdkiIORWawuAv+rEX8bOhnOrAmzEDGQHeW4Ayx4g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1t1jxLq0tSvv9GTHa4zXUXFUlYsibFua3lU/cnt7wLM=;
- b=lmH2iW7RSoD1vhGTWTH3SfcwhS6AsHtDI3gdBAw0hI14Kh/PEoLAoMBqu9iJ8X7c3qBcvqhQ9nwG4tYFBYF6o1xBFSkLOzLbjn7/e/uuytnlJyB6AMJmPSfUlLGj3eIEfMm9sgfwA9vbRLLshUtmZ8dt3Eyr1rp5UwuTiaYRUKsa1a4cfOzR+nkSiP8jL8zlpButtT71d1+oZMbulT+Y+Tc8bgDeD5OUJnEjwvStcwA7NfcRtt11jzCpnsZNTyqwmSyo5eLCB7qSu2mqfk5Uiko5EsSbDUn0BOeGpQsVb+4j7LGUXhmYofyrcKBHoQ2xTfigQT8k5KRmztn7woPN9A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from BYAPR11MB3320.namprd11.prod.outlook.com (2603:10b6:a03:18::25)
- by PH0PR11MB5062.namprd11.prod.outlook.com (2603:10b6:510:3e::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.29; Wed, 26 Jul
- 2023 23:27:49 +0000
-Received: from BYAPR11MB3320.namprd11.prod.outlook.com
- ([fe80::d790:194b:937b:68e2]) by BYAPR11MB3320.namprd11.prod.outlook.com
- ([fe80::d790:194b:937b:68e2%2]) with mapi id 15.20.6631.026; Wed, 26 Jul 2023
- 23:27:49 +0000
-Message-ID: <08f1bbda-7d41-9b1b-c345-54f4c62ff976@intel.com>
-Date:   Wed, 26 Jul 2023 16:27:47 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [patch 00/29] x86/cpu: Rework the topology evaluation
-Content-Language: en-US
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-CC:     <x86@kernel.org>, Tom Lendacky <thomas.lendacky@amd.com>,
-        Andrew Cooper <andrew.cooper3@citrix.com>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <james.smart@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-hwmon@vger.kernel.org>,
-        Jean Delvare <jdelvare@suse.com>,
-        Huang Rui <ray.huang@amd.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Mike Travis <mike.travis@hpe.com>,
-        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
-        Russ Anderson <russ.anderson@hpe.com>
-References: <20230724155329.474037902@linutronix.de>
- <545cff6e-09ad-afc3-5d5f-bf5a435885b9@intel.com> <87mszis3hd.ffs@tglx>
-From:   Sohil Mehta <sohil.mehta@intel.com>
-In-Reply-To: <87mszis3hd.ffs@tglx>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR03CA0098.namprd03.prod.outlook.com
- (2603:10b6:a03:333::13) To BYAPR11MB3320.namprd11.prod.outlook.com
- (2603:10b6:a03:18::25)
+        with ESMTP id S229642AbjG0BHs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2023 21:07:48 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 675561BC1
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2023 18:07:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1690420025;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ep/tgo1JF7kq+mSuQqf46nxDpvZxtSkMn2UHXJJVSFE=;
+        b=SFYWEsTyk8Syaqg4IeV0C/YhFAYAdtBE+Wx3ESviKJol7BUY9W34WE0bUtEZn1Pxr2KXMg
+        dstOOWLEU6cK7YB/OIzSwodVbTiL+Re4VlPMYDrFRw/jDxAN8nLDMnHgKySycjQ2E0dUhO
+        8R+B17a+TjLbxAvpjBQspSxPG/0KA3M=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-577-HTE6F5RpM4i9E-KzSY3P5w-1; Wed, 26 Jul 2023 21:07:02 -0400
+X-MC-Unique: HTE6F5RpM4i9E-KzSY3P5w-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 874D7185A78F;
+        Thu, 27 Jul 2023 01:07:01 +0000 (UTC)
+Received: from ovpn-8-16.pek2.redhat.com (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 008CFC2C7D3;
+        Thu, 27 Jul 2023 01:06:55 +0000 (UTC)
+Date:   Thu, 27 Jul 2023 09:06:50 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.g.garry@oracle.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Wen Xiong <wenxiong@linux.ibm.com>,
+        Keith Busch <kbusch@kernel.org>, ming.lei@redhat.com
+Subject: Re: [PATCH V2 1/9] blk-mq: add blk_mq_max_nr_hw_queues()
+Message-ID: <ZMHDKkFDISWAJrdC@ovpn-8-16.pek2.redhat.com>
+References: <20230726094027.535126-1-ming.lei@redhat.com>
+ <20230726094027.535126-2-ming.lei@redhat.com>
+ <b7818133-6d1e-457d-a62f-360523e936c8@oracle.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BYAPR11MB3320:EE_|PH0PR11MB5062:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4eb9667f-4a72-47c3-969b-08db8e2fed01
-X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: g6EGEUwqgou0CMfbmxB9CjWOKBcWAEaB/2qT1XwLPHC4JDgA81Qk8nz1j9ONZkd5qLaD9YG9cirugWPAlCfCuw20Q3ae2ROcofR1QfpWzVZZmeKao2MY35EOPPQXsAJTSGDVxItOpIZwF0FEnLMpcvYmtk03lw0z+jxJT/nLHUEPCgda66sOlfnxAEmQNYhcrVwLY6ctS3WEj4Tjgiod8noHR9ogEiUQWeC75SH6+Cv93sh73g9aL/LrZpNOoQma8+EVm8BfsWJLmOOKWesCjnbrNvDV3/AwrJ4hYnLos2/e1GIlbHXBSuoRih3uA/O68gjiDhpzIpU1RQnbbJ5MGL0xZrZ6YotbWNEefQY9zLjZXlVf7kbmgn2Visv1K1xAeAFOSUUG8LQjvbm2C5YkNBlBRRu4teHwBjGWHFkM/czIIHNMeXlExyYPUoqQnDmeUY30/8Dm2JMpL8mVI1Cs+R3cvJJrF3Tb/BrecTdUV42LD+fwZkCyU1AvJPMaZsME4+425LRiCXfNge91uFDdKo8/PfRekSePBH5AhuBRYQ3s9bH6rziKmXsw9/F6LiWqg4x+vXFVpllAcBjl51cf9XJ1rulnZCTtUjNbdCB3GOgCpqjucjcoJeODXzB+zHu0uhF96ddbcUt4xH+S+xH6PQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR11MB3320.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(366004)(39860400002)(136003)(376002)(396003)(346002)(451199021)(2906002)(4744005)(6506007)(186003)(26005)(4326008)(38100700002)(2616005)(316002)(53546011)(41300700001)(83380400001)(66556008)(5660300002)(44832011)(66946007)(66476007)(86362001)(8676002)(8936002)(36756003)(7416002)(31696002)(82960400001)(110136005)(54906003)(478600001)(6512007)(6486002)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?YTRYU0xaWnh1ZytVYkMzeDh6OG9xV2pnRnJ1K0d5SGcxdERrcG41b2Y4a1Mv?=
- =?utf-8?B?WWRTMC9Gc3ZzOUNsVy94VTZTeDVQOW82OUcrTFA2eEdiWEI3RUNMdnYzS0NX?=
- =?utf-8?B?NW0xR2t6QjRiQTh5RGpzWVFUU3ZHOFZPOHVvT3FBR1UxRmViZVVxRnB2WndB?=
- =?utf-8?B?UVhPUFNaRFd3WE5XS2swcnNabXMwNTA5bnNVSmh5YjJGc2QvS1UrNGlrU2VU?=
- =?utf-8?B?eGtDN0QrRk9qZE1yVzNMOG02VTZnaTVVMmhSekNHQzhIanE4Ri9PMjRRWjZz?=
- =?utf-8?B?VjVNOEtZa0NaaXJWWlZaMWd3YzlaMCtxbVlrZVZFM1dOejdaY0J4NlFKRlh2?=
- =?utf-8?B?N3EwWUZWWVI4WkZRb05rNGRVcmdhVjd0K1ZiV1ExVzFlOUEvYnY5ZlB6eDZj?=
- =?utf-8?B?K3MxeDh4UDh0ZGpDKzAwU0pTaWF4Ukx2V2Nra3RVMjM1bU1LcFVXVFd2b3lN?=
- =?utf-8?B?TjNqaldTdkFLdEduQ0k3Z2VUNWs3b3BBcUF4d0RUaS9ZTThZanJVZVVzWk92?=
- =?utf-8?B?VXNTY3VwVE1RMEVndXBydWNEQ2xuVVl2UmJJZG53YkZHbFhBZjJDalhQVk50?=
- =?utf-8?B?QUtqazdpVHFjSEp5aWRhdGQxUzZpZjBpK1V2c0YrdnhHdFRPblVtV3VsZ1Iz?=
- =?utf-8?B?dFN3Mzc5ZDhpdEtJUGNLZCtHNVlEeE05SGxDcEpHN3lTVVJnTitrdTJMOXRt?=
- =?utf-8?B?TFJXTzI5R2pIY1RiK1F5S2k3MUpMVGZpMEVRV3hob1JyUGxkK1lFSEJjU3pD?=
- =?utf-8?B?UGx6NGRWOEZpcDhtSEpZZWhjSVJZdWVzd01QcHRVTXo4UnFOMHFqWGV0T1Y4?=
- =?utf-8?B?VXFyd2FxdGJvL25vK1I2OVlTY3hIbzBCZlB1R2tVT2hnZk1ML2xwYnQ2Q0pQ?=
- =?utf-8?B?RFEzWTk5b1BpeDFPZ1E2WXFmREtFb0N5U2JNaUl6MGQ5alZ2WGdkQVVSd0lv?=
- =?utf-8?B?dG9zemhYMFlpV0FnZldobWpocldQT1FOQW5iVG11YVZWOFZ1aVNsMzE3TXdX?=
- =?utf-8?B?Y2s0Q0F1OUxRNzJlVTRVeWpSODN4c2dac285bys4VVBvR242emdLWVVXcEJj?=
- =?utf-8?B?bWJMNHczMzVpK2Q5bVlNR3haTmhLb2lkNTZuNVl2bzhEL3JwRzZyR29OTEp6?=
- =?utf-8?B?b2o1Zk1mVURZSlJqSHpneTRYOXp2dENKYVd1VmRkYlZmTGJPa0FjRmtBZlhl?=
- =?utf-8?B?cDhXbCtRSkdiNzNORFVQR0VpQTQwNWVyTmFTdUFPejRweEd2aDBTWHZzKzNS?=
- =?utf-8?B?ZnQydkNkL3laSFB4NDJQb3JqSllhRmlpeHB2bjVhTUQwUkE5akFoSW5JcTN5?=
- =?utf-8?B?OStjRGNYNHRPYS9OeEVRRW5MdVJTa3R5ME1qQ3hJbGp2OWVQd2NnTnFqYS83?=
- =?utf-8?B?QXgyM2FYSU5MU0JScW8yN3diU1dyMTFsSW1kL3RvL0lBQ0d4Z2d5NERleUF1?=
- =?utf-8?B?ZnU2ZHZOSTNGaHpLU2s2MmF2STNGeW4rRnppNHpiZ2dwK1VXQkJUSmRxUXVo?=
- =?utf-8?B?MnVHQnhCSnlSZGprOGtSeVBRelZFME8zY05NQUxyWGNGcmRwL3cwSWw2bkpH?=
- =?utf-8?B?WERCUFZJZ2pkVThBMnAwelJBOGFNckVSWmFaazBZQXNmM1IzMVRRUGxUL3Rn?=
- =?utf-8?B?ekF3eDNsUnFOTW8rVkxuVnFYK21uaStTbnRPRzRnM1JJWjlWVGtxQmFVL01Y?=
- =?utf-8?B?cTdpc3lLUjI3cmtFQkkxYm9GcHVWY2wxcGd6dWpacm5ReUY5SWJiN1cyRzBs?=
- =?utf-8?B?WDlUVHQrelU1Z2ZOTFVFYk5RNFZBcnhtcUIrMUlDSC9UQTE1ZDRia1RYQzJG?=
- =?utf-8?B?VGp4NkpVT0dkYXc0eURHT0hxZE5LdlVvbkhQRWQwNWtEck4xR29XZWFQUFBT?=
- =?utf-8?B?alBFTHM0K0hVVVIycFZ3cWVWQWpqcEd4M3B4dVpPLzVQalcydms1TVBSVWtJ?=
- =?utf-8?B?YVppald3ZklLVE1jenhSVG1HYjFzL1JKdFJQclNZZjZWMTV6RWdFSGVML1Zh?=
- =?utf-8?B?NmUyeVVVUHZuUnRCd2dMYks2MUxFUGJqc0ZMY3BpOTE4VVNmZVNLTDJOeE5N?=
- =?utf-8?B?TjlOVm5ycmxhbXJncHRkaTNqN2p1SHhBTGlJNDlRVFNZYWdZRkUwcC9vekU4?=
- =?utf-8?Q?Zzs8QKZL2BPoMtm6fSlxcG+f2?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4eb9667f-4a72-47c3-969b-08db8e2fed01
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR11MB3320.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jul 2023 23:27:49.5243
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: M0pADvGoX3kvTpuTKgCjL8T3khPTYctE5PM8CTnVWbAueXTaiuHrJYVVUINFwfqiQPKUXZysvZxGx2MMiq5BDg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR11MB5062
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b7818133-6d1e-457d-a62f-360523e936c8@oracle.com>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/26/2023 3:38 PM, Thomas Gleixner wrote:
-> There is a real and unrelated snafu vs. that logical package and logical
-> die management which I discovered today. I missed the fact that this
-> cruft abuses cpuinfo as permanent storage, which breaks CPU
-> offline/online as the online operation reinitializes the topology
-> information.
+On Wed, Jul 26, 2023 at 05:36:34PM +0100, John Garry wrote:
+> On 26/07/2023 10:40, Ming Lei wrote:
 > 
-> I pushed out a fixed version to
+> Hi Ming,
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git x86/topology
+> > blk_mq_alloc_tag_set() may override set->nr_hw_queues as 1 in case of kdump
+> > kernel. This way causes trouble for driver, because blk-mq and driver see
+> > different queue mapping. Especially the only online CPU may not be 1 for
+> > kdump kernel, in which 'maxcpus=1' is passed from kernel command line,
 > 
-> earlier. It doesn't have a tag yet.
-> 
+> "the only online CPU may not be 1 for kdump kernel, in which 'maxcpus=1'
+> ..." - this seems inconsistent with the cover letter, where we have
+> "'maxcpus=1' just bring up one single cpu core during booting."
 
-Thanks, I'll try this out and experiment with CPU hotplug as well.
+OK, looks I should have mentioned "the only online CPU may not be 1 for
+maxcpus=1" in cover letter.
 
--Sohil
+> > then driver may map hctx0 into one inactive real hw queue which cpu
+> > affinity is 0(offline).
+> > 
+> > The issue exists on all drivers which use managed irq and support
+> > multiple hw queue.
+> > 
+> > Prepare for fixing this kind of issue by applying the added helper, so
+> > driver can take blk-mq max nr_hw_queues knowledge into account when
+> > calculating io queues.
+> 
+> Could you alternatively solve in blk_mq_pci_map_queues() by fixing the
+> mappings in case of kdump to have all per-CPU mappings point at the HW queue
+> associated with cpu0 (which I assume would be active)? It ain't pretty ...
+
+cpu0 mapping isn't correct, as I mentioned that 'maxcpus=1' doesn't
+mean the only online cpu is cpu0, such as, on ppc64, the only online
+cpu could be selected at random during booting.
+
+> 
+> > 
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> >   block/blk-mq.c         | 16 ++++++++++++++++
+> >   include/linux/blk-mq.h |  1 +
+> >   2 files changed, 17 insertions(+)
+> > 
+> > diff --git a/block/blk-mq.c b/block/blk-mq.c
+> > index b04ff6f56926..617d6f849a7b 100644
+> > --- a/block/blk-mq.c
+> > +++ b/block/blk-mq.c
+> > @@ -140,6 +140,22 @@ void blk_mq_freeze_queue_wait(struct request_queue *q)
+> >   }
+> >   EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_wait);
+> > +/*
+> > + * Return the max supported nr_hw_queues for each hw queue type
+> > + *
+> > + * blk_mq_alloc_tag_set() may change nr_hw_queues for kdump kernel, so
+> > + * driver has to take blk-mq max supported nr_hw_queues into account
+> > + * when figuring out nr_hw_queues from hardware info, for avoiding
+> > + * inconsistency between driver and blk-mq.
+> > + */
+> > +unsigned int blk_mq_max_nr_hw_queues(void)
+> > +{
+> > +	if (is_kdump_kernel())
+> > +		return 1;
+> > +	return nr_cpu_ids;
+> > +}
+> 
+> We rely on the driver having set->nr_hw_queues == 1 for kdump, right?
+> 
+> If so, how about enforcing it then, like:
+> 
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -4426,7 +4426,8 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
+>         * 64 tags to prevent using too much memory.
+>         */
+>        if (is_kdump_kernel()) {
+> -               set->nr_hw_queues = 1;
+> +               if (set->nr_hw_queues != 1)
+> +                       return -EINVAL;
+>                set->nr_maps = 1;
+>                set->queue_depth = min(64U, set->queue_depth);
+>        }
+
+In theory, this way should be ideal approach, but it needs all MQ drivers
+to get converted with blk_mq_max_nr_hw_queues().
+
+However, it shouldn't be one issue for non-managed irq given non-managed
+irq can be migrated to the only online cpu.
+
+
+Thanks,
+Ming
 
