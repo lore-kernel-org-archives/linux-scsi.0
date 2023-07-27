@@ -2,112 +2,147 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12538C001E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 10:30:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A4A9C41513
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jul 2023 10:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233898AbjG0Kan (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jul 2023 06:30:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59296 "EHLO
+        id S232455AbjG0K5d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jul 2023 06:57:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233998AbjG0KaQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2023 06:30:16 -0400
-Received: from mail-yb1-xb31.google.com (mail-yb1-xb31.google.com [IPv6:2607:f8b0:4864:20::b31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09D501984;
-        Thu, 27 Jul 2023 03:30:01 -0700 (PDT)
-Received: by mail-yb1-xb31.google.com with SMTP id 3f1490d57ef6-d167393b95aso2880069276.0;
-        Thu, 27 Jul 2023 03:30:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690453800; x=1691058600;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=omUaDYixzWjtTMpLHRqhT6EXYqbxVHZ/m0JLSVt+zRU=;
-        b=kR/E8OXTGyuAcMVnK2KQrLklJTZJIbjeBJSeT2sIhGPM65Oruur9kofklO6ietHDy9
-         iN+Yk3uFFi0DCH5b+KIEtuBcPluVBtavpypaR5WD07CSqNhopnv+R23ky6tSh9IjXGJk
-         GzdeqRWRPgntqPs3w/iwM7pGLzDbKoIc/aZkfpT2kgbAlhsGaHHBFI9ifZTJ75RImlBN
-         m18KEttAN2mbFemlm21ARI+oQPZWhQ5ZKjtL1LwA/zUs5OtenG40a77AVnpCBMgIji09
-         cexZ5ek/pfpL8k5LTc7yy93lENk2O4UsiIb8Ws8buCdDhR4wb5xCwrRekry+fPBuluvl
-         CgJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690453800; x=1691058600;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=omUaDYixzWjtTMpLHRqhT6EXYqbxVHZ/m0JLSVt+zRU=;
-        b=Nu8Cnj1AU3YMdobcxa6j38XTBGUDdHZm7Ky9rG3bDO6Bpsc5YvUwy4Ls4JKoI0vE6p
-         fDRcYuQBDmF1ol3FOqfI90Sogn5jarlnblz6QRZXQpjzDD5W+OmymYPd8yXvWZko/99u
-         VrwsIC/nMpSmNo8Xab1qUjBS+oIaGidWw90Vj1kfg+DGTRLindzQd33933aP8lyqXJG0
-         DpXdeYo0nCkTUSEE2HuiuyW6dltaAnJ/VnE27ZuIhN6K3byMWznT2jBaN3wmlZOjYJsA
-         Z00EgGMUVC75B0bGE45zLiKc9SWm4nE7tnnh7h1Gl6at2Uw1xhkFlYYIXIQEkNLmTdKD
-         8p0g==
-X-Gm-Message-State: ABy/qLbE5I+ILduGkww569LqrERsogemz2UFR91B88us+mQ8g+lkSqf3
-        g7cn8Tog7LvzodQZUyykbJGa4M+vux4fv1nTERE=
-X-Google-Smtp-Source: APBJJlHBlYlPNCAOaUQmX7sCh/RdKgzYXiRFfLFaMRkHkke9meK1yv0x0Ok78z4gqgOSPSppdBIT7tY7YrKsz3aQ6Jo=
-X-Received: by 2002:a25:3617:0:b0:d1f:8809:ffa1 with SMTP id
- d23-20020a253617000000b00d1f8809ffa1mr2701868yba.27.1690453800151; Thu, 27
- Jul 2023 03:30:00 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230627183629.26571-1-nj.shetty@samsung.com> <CGME20230627184010epcas5p4bb6581408d9b67bbbcad633fb26689c9@epcas5p4.samsung.com>
- <20230627183629.26571-3-nj.shetty@samsung.com> <20230720074256.GA5042@lst.de>
-In-Reply-To: <20230720074256.GA5042@lst.de>
-From:   Nitesh Shetty <nitheshshetty@gmail.com>
-Date:   Thu, 27 Jul 2023 15:59:49 +0530
-Message-ID: <CAOSviJ3oDSHk2HXyRZa=A43vCxh-n2YkyuW-qXNq-q=i6bNacQ@mail.gmail.com>
-Subject: Re: [PATCH v13 2/9] block: Add copy offload support infrastructure
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Nitesh Shetty <nj.shetty@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        with ESMTP id S232281AbjG0K5b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2023 06:57:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F1FB1FEC
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Jul 2023 03:56:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1690455406;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Mz3kdTZiV4Fh8BC16ASC64XxRXM+HggzPF30N2v+2/w=;
+        b=SK1Ut7G7dhSULs91vMX5rfEY2+S1OeSpd/8X4REbSzTSOnOLK1UXluXGnYIl4/9D3b28lS
+        jxP0JEtylHVq8m44z9lysfzq5v+jXnD/281zyF/yPrjAJH8mwkKfKNi1IX2iVz3Nrup4C9
+        8sSFjVUK+f7BKH+QE2LmHjC1F1isUhk=
+Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-203-T0DDSoeuP_ms-_Xasvy4eA-1; Thu, 27 Jul 2023 06:56:42 -0400
+X-MC-Unique: T0DDSoeuP_ms-_Xasvy4eA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6CF163803511;
+        Thu, 27 Jul 2023 10:56:41 +0000 (UTC)
+Received: from ovpn-8-16.pek2.redhat.com (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 37E22F641C;
+        Thu, 27 Jul 2023 10:56:34 +0000 (UTC)
+Date:   Thu, 27 Jul 2023 18:56:30 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.g.garry@oracle.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Wen Xiong <wenxiong@linux.ibm.com>,
         Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        willy@infradead.org, hare@suse.de, djwong@kernel.org,
-        bvanassche@acm.org, ming.lei@redhat.com, dlemoal@kernel.org,
-        gost.dev@samsung.com, Anuj Gupta <anuj20.g@samsung.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Xiang Chen <chenxiang66@hisilicon.com>, ming.lei@redhat.com
+Subject: Re: [PATCH V2 5/9] scsi: hisi: take blk_mq_max_nr_hw_queues() into
+ account for calculating io vectors
+Message-ID: <ZMJNXk5MiViklCBX@ovpn-8-16.pek2.redhat.com>
+References: <20230726094027.535126-1-ming.lei@redhat.com>
+ <20230726094027.535126-6-ming.lei@redhat.com>
+ <07f84570-5307-df3c-99ab-a996bfcbf83a@oracle.com>
+ <ZMHFQm2BpuGjjlTm@ovpn-8-16.pek2.redhat.com>
+ <44b1bd30-426d-db85-4b52-4f079948e52a@oracle.com>
+ <ZMI78klyiVUPFRZA@ovpn-8-16.pek2.redhat.com>
+ <123dc4ca-88da-b2b1-44b2-791ea841572f@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <123dc4ca-88da-b2b1-44b2-791ea841572f@oracle.com>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 20, 2023 at 1:12=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrot=
-e:
-> > Suggested-by: Christoph Hellwig <hch@lst.de>
->
-> Hmm, I'm not sure I suggested adding copy offload..
->
-We meant for request based design, we will remove it.
+On Thu, Jul 27, 2023 at 11:28:31AM +0100, John Garry wrote:
+> On 27/07/2023 10:42, Ming Lei wrote:
+> > > > > > hisi_sas_v3_hw.c
+> > > > > > +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> > > > > > @@ -2550,6 +2550,9 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+> > > > > >     	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW - hisi_hba->iopoll_q_cnt;
+> > > > > > +	if (hisi_hba->cq_nvecs > scsi_max_nr_hw_queues())
+> > > > > > +		hisi_hba->cq_nvecs = scsi_max_nr_hw_queues();
+> > > > > > +
+> > > > > >     	shost->nr_hw_queues = hisi_hba->cq_nvecs + hisi_hba->iopoll_q_cnt;
+> > > > > For other drivers you limit the max MSI vectors which we try to allocate
+> > > > > according to scsi_max_nr_hw_queues(), but here you continue to alloc the
+> > > > > same max vectors but then limit the driver's completion queue count. Why not
+> > > > > limit the max MSI vectors also here?
+> > > Ah, checking again, I think that this driver always allocates maximum
+> > > possible MSI due to arm interrupt controller driver bug - see comment at top
+> > > of function interrupt_preinit_v3_hw(). IIRC, there was a problem if we
+> > > remove and re-insert the device driver that the GIC ITS fails to allocate
+> > > MSI unless all MSI were previously allocated.
+> > My question is actually why hisi_hba->iopoll_q_cnt is subtracted from
+> > allocated vectors since io poll queues does_not_  use msi vector.
+> > 
+> 
+> It is subtracted as superfluous vectors were allocated.
+> 
+> As I mentioned, I think that the driver is forced to allocate all 32 MSI
+> vectors, even though it really needs max of 32 - iopoll_q_cnt, i.e. we don't
+> need an MSI vector for a HW queue assigned to polling. Then, since it gets
+> 16x MSI for cq vectors, it subtracts iopoll_q_cnt to give the desired count
+> in cq_nvecs.
 
-> >  static inline unsigned int blk_rq_get_max_segments(struct request *rq)
-> >  {
-> >       if (req_op(rq) =3D=3D REQ_OP_DISCARD)
-> > @@ -303,6 +310,8 @@ static inline bool bio_may_exceed_limits(struct bio=
- *bio,
-> >               break;
-> >       }
-> >
-> > +     if (unlikely(op_is_copy(bio->bi_opf)))
-> > +             return false;
->
-> This looks wrong to me.  I think the copy ops need to be added to the
-> switch statement above as they have non-trivial splitting decisions.
-> Or at least should have those as we're missing the code to split
-> copy commands right now.
->
+Looks the current driver wires nr_irq_queues with nr_poll_queues, which is
+wrong logically.
 
-Agreed, copy will have non-trivial splitting decisions. But, I
-couldn't think of scenarios where this could happen, as we check for
-queue limits before issuing a copy. Do you see scenarios where split
-could happen for copy here.
+Here:
 
-Acked for all other review comments.
+1) hisi_hba->queue_count means the max supported queue count(irq queues
++ poll queues)
 
-Thank you,
-Nitesh Shetty
+2) max vectors(32) means the max supported irq queues, but actual
+nr_irq_queues can be less than allocated vectors because of the irq
+allocation bug
+
+3) so the max supported poll queues should be (hisi_hba->queue_count -
+nr_irq_queues).
+
+What I meant is that nr_poll_queues shouldn't be related with allocated
+msi vectors.
+
+
+> > So it isn't related with driver's msi vector allocation bug, is it?
+> 
+> My deduction is this is how this currently "works" for non-zero iopoll
+> queues:
+> - allocate max MSI of 32, which gives 32 vectors including 16 cq vectors.
+> That then gives:
+>    - cq_nvecs = 16 - iopoll_q_cnt
+>    - shost->nr_hw_queues = 16
+>    - 16x MSI cq vectors were spread over all CPUs
+
+It should be that cq_nvecs vectors spread over all CPUs, and
+iopoll_q_cnt are spread over all CPUs too.
+
+For each queue type, nr_queues of this type are spread over all
+CPUs.
+
+> 
+> - in hisi_sas_map_queues()
+>    - HCTX_TYPE_DEFAULT qmap->nr_queues = 16 - iopoll_q_cnt, and for
+> blk_mq_pci_map_queues() we setup affinity for 16 - iopoll_q_cnt hw queues.
+> This looks broken, as we originally spread 16x vectors over all CPUs, but
+> now only setup mappings for (16 - iopoll_q_cnt) vectors, whose affinity
+> would spread a subset of CPUs. And then qmap->mq_map[] for other CPUs is not
+> set at all.
+
+That isn't true, please see my above comment.
+
+
+Thanks,
+Ming
+
