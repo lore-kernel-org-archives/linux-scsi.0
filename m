@@ -2,41 +2,40 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73652C0015E
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 06:59:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47A11EB64DD
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 07:06:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233713AbjG1G7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jul 2023 02:59:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35678 "EHLO
+        id S233788AbjG1HGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jul 2023 03:06:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233699AbjG1G7S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 02:59:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E193C10D2
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Jul 2023 23:58:29 -0700 (PDT)
+        with ESMTP id S231776AbjG1HGG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 03:06:06 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E2943A99
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2023 00:05:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690527509;
+        s=mimecast20190719; t=1690527916;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=8g3K5u6ld8VQPfnAPv8OVfldh/6YKqeR6ZjyYLoq2jo=;
-        b=TGewyUYkt0bpNWkacVxO/rxCV3YgfsNRffN/+U+z6crA+E9rHuZMYjyOlMIapbl0i/BJyH
-        +h5tDPE1kKVBQ6jOcHYUx+1YnX0c915GfoQEVu1VoCsNHjaJn34ZweAQfdYsycSHbeyjf4
-        2aH0YCKbDq2rLrQAQ4QBB2+w4zlb9zA=
+        bh=eStZcsMFW/4qo0fJ7oZgkDyLSnql7+GMuEiHM+0Fe8o=;
+        b=ZHdm4LtwqtHfMZqyfp9Y0RFUWqBdLzXztnNel84TLKGyYcT6mlkQHdmByl2XnGOlzawBQM
+        xoLVK1hJ8sKWzGlPx7pgpZ2r5i5zH/xQKRAekIWQ58R2jMUv8U4BXDuuv8LverKWZq30m1
+        KJVe59BC2atqKoPVWfDQRgW5tlQL6fM=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-544-2GSlm20uPKax2edw8LuRWQ-1; Fri, 28 Jul 2023 02:58:23 -0400
-X-MC-Unique: 2GSlm20uPKax2edw8LuRWQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+ us-mta-21-R48UXjVAMeawoOaDgTXOHg-1; Fri, 28 Jul 2023 03:05:11 -0400
+X-MC-Unique: R48UXjVAMeawoOaDgTXOHg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 133C185A58A;
-        Fri, 28 Jul 2023 06:58:23 +0000 (UTC)
-Received: from localhost (unknown [10.45.224.187])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C540EC57964;
-        Fri, 28 Jul 2023 06:58:22 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 384E685A58A;
+        Fri, 28 Jul 2023 07:05:11 +0000 (UTC)
+Received: from butterfly.localnet (unknown [10.45.224.187])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 922EB1121330;
+        Fri, 28 Jul 2023 07:05:09 +0000 (UTC)
 From:   Oleksandr Natalenko <oleksandr@redhat.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
@@ -47,111 +46,116 @@ Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
         Jozef Bacik <jobacik@redhat.com>,
         Laurence Oberman <loberman@redhat.com>,
         Rob Evers <revers@redhat.com>
-Subject: [PATCH 3/3] scsi: qedf: do not touch __user pointer in qedf_dbg_fp_int_cmd_read() directly
-Date:   Fri, 28 Jul 2023 08:58:19 +0200
-Message-ID: <20230728065819.139694-4-oleksandr@redhat.com>
+Subject: Re: [PATCH 0/3] scsi: qedf: sanitise uaccess
+Date:   Fri, 28 Jul 2023 09:05:07 +0200
+Message-ID: <3240893.aeNJFYEL58@redhat.com>
+Organization: Red Hat
 In-Reply-To: <20230728065819.139694-1-oleksandr@redhat.com>
 References: <20230728065819.139694-1-oleksandr@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
+Content-Type: multipart/signed; boundary="nextPart3247109.44csPzL39Z";
+ micalg="pgp-sha256"; protocol="application/pgp-signature"
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The qedf_dbg_fp_int_cmd_read() function invokes sprintf()
-directly on a __user pointer, which may crash the kernel.
+--nextPart3247109.44csPzL39Z
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"; protected-headers="v1"
+From: Oleksandr Natalenko <oleksandr@redhat.com>
+To: linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] scsi: qedf: sanitise uaccess
+Date: Fri, 28 Jul 2023 09:05:07 +0200
+Message-ID: <3240893.aeNJFYEL58@redhat.com>
+Organization: Red Hat
+In-Reply-To: <20230728065819.139694-1-oleksandr@redhat.com>
+References: <20230728065819.139694-1-oleksandr@redhat.com>
+MIME-Version: 1.0
 
-Avoid doing that by vmalloc()'ating a buffer for scnprintf()
-and then calling simple_read_from_buffer() which does a proper
-copy_to_user() call.
+On p=C3=A1tek 28. =C4=8Dervence 2023 8:58:16 CEST Oleksandr Natalenko wrote:
+> qedf driver, debugfs part of it specifically, touches __user pointers
+> directly for printing out info to userspace via sprintf(), which may
+> cause crash like this:
+>=20
+> BUG: unable to handle kernel paging request at 00007ffd1d6b43a0
+> IP: [<ffffffffaa7a882a>] string.isra.7+0x6a/0xf0
+> Oops: 0003 [#1] SMP
+> Call Trace:
+>  [<ffffffffaa7a9f31>] vsnprintf+0x201/0x6a0
+>  [<ffffffffaa7aa556>] sprintf+0x56/0x80
+>  [<ffffffffc04227ed>] qedf_dbg_stop_io_on_error_cmd_read+0x6d/0x90 [qedf]
+>  [<ffffffffaa65bb2f>] vfs_read+0x9f/0x170
+>  [<ffffffffaa65cb82>] SyS_pread64+0x92/0xc0
+>=20
+> Avoid this by preparing the info in a kernel buffer first, either
+> allocated on stack for small printouts, or via vmalloc() for big ones,
+> and then copying it to the userspace properly.
+>=20
+> Previous submission is an RFC: [1]. There are no code changes since
+> then. The RFC prefix is dropped. The Tested-by tag from Laurence is
+> added.
+>=20
+> There's similar submission from Saurav [2], but we agreed I could nack
+> it and proceed with my one.
+>=20
+> [1] https://lore.kernel.org/linux-scsi/20230724120241.40495-1-oleksandr@r=
+edhat.com/
+> [2] https://lore.kernel.org/linux-scsi/20230726101236.11922-1-skashyap@ma=
+rvell.com/
+>=20
+> Oleksandr Natalenko (3):
+>   scsi: qedf: do not touch __user pointer in
+>     qedf_dbg_stop_io_on_error_cmd_read() directly
+>   scsi: qedf: do not touch __user pointer in qedf_dbg_debug_cmd_read()
+>     directly
+>   scsi: qedf: do not touch __user pointer in qedf_dbg_fp_int_cmd_read()
+>     directly
+>=20
+>  drivers/scsi/qedf/qedf_dbg.h     |  2 ++
+>  drivers/scsi/qedf/qedf_debugfs.c | 35 +++++++++++++++++++-------------
+>  2 files changed, 23 insertions(+), 14 deletions(-)
+>=20
+>=20
 
-Fixes: 61d8658b4a ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
-Link: https://lore.kernel.org/lkml/20230724120241.40495-1-oleksandr@redhat.com/
-Link: https://lore.kernel.org/linux-scsi/20230726101236.11922-1-skashyap@marvell.com/
-Cc: Saurav Kashyap <skashyap@marvell.com>
-Cc: Rob Evers <revers@redhat.com>
-Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: Jozef Bacik <jobacik@redhat.com>
-Cc: Laurence Oberman <loberman@redhat.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com
-Cc: linux-scsi@vger.kernel.org
-Tested-by: Laurence Oberman <loberman@redhat.com>
-Signed-off-by: Oleksandr Natalenko <oleksandr@redhat.com>
----
- drivers/scsi/qedf/qedf_dbg.h     |  2 ++
- drivers/scsi/qedf/qedf_debugfs.c | 21 +++++++++++++++------
- 2 files changed, 17 insertions(+), 6 deletions(-)
+Oops, I forgot to add:
 
-diff --git a/drivers/scsi/qedf/qedf_dbg.h b/drivers/scsi/qedf/qedf_dbg.h
-index f4d81127239eb..5ec2b817c694a 100644
---- a/drivers/scsi/qedf/qedf_dbg.h
-+++ b/drivers/scsi/qedf/qedf_dbg.h
-@@ -59,6 +59,8 @@ extern uint qedf_debug;
- #define QEDF_LOG_NOTICE	0x40000000	/* Notice logs */
- #define QEDF_LOG_WARN		0x80000000	/* Warning logs */
- 
-+#define QEDF_DEBUGFS_LOG_LEN (2 * PAGE_SIZE)
-+
- /* Debug context structure */
- struct qedf_dbg_ctx {
- 	unsigned int host_no;
-diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
-index f910af0029a2c..6db996b73fe39 100644
---- a/drivers/scsi/qedf/qedf_debugfs.c
-+++ b/drivers/scsi/qedf/qedf_debugfs.c
-@@ -8,6 +8,7 @@
- #include <linux/uaccess.h>
- #include <linux/debugfs.h>
- #include <linux/module.h>
-+#include <linux/vmalloc.h>
- 
- #include "qedf.h"
- #include "qedf_dbg.h"
-@@ -98,7 +99,9 @@ static ssize_t
- qedf_dbg_fp_int_cmd_read(struct file *filp, char __user *buffer, size_t count,
- 			 loff_t *ppos)
- {
-+	ssize_t ret;
- 	size_t cnt = 0;
-+	char *cbuf;
- 	int id;
- 	struct qedf_fastpath *fp = NULL;
- 	struct qedf_dbg_ctx *qedf_dbg =
-@@ -108,19 +111,25 @@ qedf_dbg_fp_int_cmd_read(struct file *filp, char __user *buffer, size_t count,
- 
- 	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "entered\n");
- 
--	cnt = sprintf(buffer, "\nFastpath I/O completions\n\n");
-+	cbuf = vmalloc(QEDF_DEBUGFS_LOG_LEN);
-+	if (!cbuf)
-+		return 0;
-+
-+	cnt += scnprintf(cbuf + cnt, QEDF_DEBUGFS_LOG_LEN - cnt, "\nFastpath I/O completions\n\n");
- 
- 	for (id = 0; id < qedf->num_queues; id++) {
- 		fp = &(qedf->fp_array[id]);
- 		if (fp->sb_id == QEDF_SB_ID_NULL)
- 			continue;
--		cnt += sprintf((buffer + cnt), "#%d: %lu\n", id,
--			       fp->completions);
-+		cnt += scnprintf(cbuf + cnt, QEDF_DEBUGFS_LOG_LEN - cnt,
-+				 "#%d: %lu\n", id, fp->completions);
- 	}
- 
--	cnt = min_t(int, count, cnt - *ppos);
--	*ppos += cnt;
--	return cnt;
-+	ret = simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
-+
-+	vfree(cbuf);
-+
-+	return ret;
- }
- 
- static ssize_t
--- 
-2.41.0
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+
+as per [1].
+
+My ask to the maintainer to add it if the submission is accepted, or let me=
+ know if I should do a v2 instead.
+
+[1] https://lore.kernel.org/linux-scsi/4f35b02968a18e636e1689c9d52729ef63a4=
+38f9.camel@redhat.com/
+
+=2D-=20
+Oleksandr Natalenko (post-factum)
+Principal Software Maintenance Engineer
+--nextPart3247109.44csPzL39Z
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEENQb0bxzeq+SMr0+vn464/xkP+AUFAmTDaKMACgkQn464/xkP
++AVqDxAAmwO7k1gqDBcgpEupflAyGWPImXduaqsyM574mMzLHI017uhOy+iCAl0W
+CiCfoIs5EGu1YdQc0RFB3qvCczLdBlb9d8K8KHD3Fx8v2Bl7acl38wJwfCqiV7V7
+akS02IPqsD4liT4/U9KYogXqejYp3PXI7u3uGorSG0FGLrZhTRNKO4H1/myAm8PX
+6+p7leJIJLdNRrqdif2p8zImQtRjbGFLJQhmLyy1L257w6To7tTESawChWkUmNpL
+hppdTgVzzddSx2XSZvHm/sdyoj1y5xhBqAcGIaANDEDiJWS3dwhGMBV4sX5zI/PU
+9E4hTq/Yq3fdSIphjlh8dV75HhFoGCpLr4sjvI/7lxVzQqksjkN1etSsU+e5ZXB3
+v9/6Quf3bu1UwAFpJ4HvYC6rCwrLgC+reMWUKSlBsaYQzIY/Q2N0+geTpqCS99Mx
+4+sM7/ks2ncU8AQkALL/cYq+NSLJS49Hni8kVnGDBx5KPJrzdBGIS353+IR6qa5q
+4VBbDLDsMVQp/WUqJafvrymmnzqV7nCIyMWDxyrjCqeTBMM081je/uFrnRhrfK/E
+0+NGsiGcSay03Ier6s7yZ/lwce7uzXQVVfyXowCgYmtguLdrCTZiqITEISt33JN3
+rb8iLswNA6Kfb4gAcIKGFN3IJhKG0PdUz8j1HAk0w1XWsTm15ME=
+=7C6A
+-----END PGP SIGNATURE-----
+
+--nextPart3247109.44csPzL39Z--
+
+
 
