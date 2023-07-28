@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B24DC001DE
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 12:13:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47CD9C001DE
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 12:13:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236072AbjG1MNh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jul 2023 08:13:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60672 "EHLO
+        id S235989AbjG1MNk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jul 2023 08:13:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236053AbjG1MNX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 08:13:23 -0400
+        with ESMTP id S236275AbjG1MNa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 08:13:30 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A83F63C29;
-        Fri, 28 Jul 2023 05:13:05 -0700 (PDT)
-Message-ID: <20230728120930.617454900@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8B173C38;
+        Fri, 28 Jul 2023 05:13:07 -0700 (PDT)
+Message-ID: <20230728120930.727298737@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1690546384;
+        s=2020; t=1690546386;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=5gVNK3rCq4noBF0xg9HsQLWamUWdjKHKucBFvU6ybvE=;
-        b=G2xt2VMQ0POlA92nedDC+wu1TLMwvF68Xl6/B0JqQ001JqNPuPvQe7iJuLNQ/l5TNyo6bs
-        KZhHwDYIdT1vr9BD4voWtUWuqEbZnjtKSh9JMC1MazsiwrXZlawWVaT+JWffgsnlOcJ/Lr
-        bBY6sETe22ClCa0KXAFufp1hE3KM+BAISyalVByMB368H16IfhBzVoAq/t4nr1W01C0nSC
-        z0F8AwGuN/i1F1LjD6YZ0yuWxlJ9rjxXyjtyxLaOz2VGZRYvh/K0/5fij1CAsclvF4oo7W
-        8xMFamlpue6kPqSjXw/8WmBJ6X9HBM/IgZmyEyFIeUgjoORRYFnVEsXVx2yvvg==
+         references:references; bh=FytBYElyGEIkDLoNOYBMDUbfYGktH+yBC5OWWqC5tQQ=;
+        b=hZ41luBM+cti3euUpMK4zrf7WtFnCgKHLtyziGAZkLcWHfkkOK1fLCTSc8+omhqrlivgwL
+        3xQ44xGTq6miYIs6Xd5UTTbDgV+NK/IT8fgk84D8Dl8fbIwlG8EGuOH48Kl8IQagMdDQlg
+        kF+F7o482+zX2yF0GFjALI+UAwm55CcdfgSYjb1+rr9n0ZZfViaAZLB3XPGSYgtOs9saz+
+        kSsA+/X2BeExBUcJDxro5VX/BlQmukaMrVIIzcRp8MmPshfm8Znxmxg/Mcx7Ahz6m+x1vo
+        R0wEwVHpVMRqRZgxLfraY2whEviOuMJjdnnAWi9LmBVordDd+T5s6agMaGSLWg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1690546384;
+        s=2020e; t=1690546386;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=5gVNK3rCq4noBF0xg9HsQLWamUWdjKHKucBFvU6ybvE=;
-        b=QG238KyZZUyzVmtipu84Nj0/Jegu+8qNBqa2QpsmaNZEQIx29D0ntPxP0CO0Gzd42F6QYP
-        4G4SB4vTFr5F1kCw==
+         references:references; bh=FytBYElyGEIkDLoNOYBMDUbfYGktH+yBC5OWWqC5tQQ=;
+        b=dzTdqmDzRwOd4rwCfjlNdB7I/QXFPa+mOtg/PmnlywJ665y6b6j0aC+/R8q1fb1PfVO/rE
+        Fjt9pzUzUtdK6vBQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
@@ -48,121 +48,97 @@ Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
         Mike Travis <mike.travis@hpe.com>,
         Dimitri Sivanich <dimitri.sivanich@hpe.com>,
         Russ Anderson <russ.anderson@hpe.com>
-Subject: [patch v2 17/38] x86/apic: Use u32 for wakeup_secondary_cpu[_64]()
+Subject: [patch v2 19/38] x86/cpu: Provide debug interface
 References: <20230728105650.565799744@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 28 Jul 2023 14:13:03 +0200 (CEST)
+Date:   Fri, 28 Jul 2023 14:13:06 +0200 (CEST)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-APIC IDs are used with random data types u16, u32, int, unsigned int,
-unsigned long.
-
-Make it all consistently use u32 because that reflects the hardware
-register width.
+Provide debug files which dump the topology related information of
+cpuinfo_x86. This is useful to validate the upcoming conversion of the
+topology evaluation for correctness or bug compatibility.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/x86/hyperv/hv_vtl.c             |    2 +-
- arch/x86/include/asm/apic.h          |    8 ++++----
- arch/x86/kernel/acpi/boot.c          |    2 +-
- arch/x86/kernel/apic/apic_noop.c     |    2 +-
- arch/x86/kernel/apic/apic_numachip.c |    2 +-
- arch/x86/kernel/apic/x2apic_uv_x.c   |    2 +-
- arch/x86/kernel/sev.c                |    2 +-
- 7 files changed, 10 insertions(+), 10 deletions(-)
+V2: Don't return ENODEV when offline and make online a field.
+---
+ arch/x86/kernel/cpu/Makefile  |    2 +
+ arch/x86/kernel/cpu/debugfs.c |   58 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 60 insertions(+)
 
---- a/arch/x86/hyperv/hv_vtl.c
-+++ b/arch/x86/hyperv/hv_vtl.c
-@@ -192,7 +192,7 @@ static int hv_vtl_apicid_to_vp_id(u32 ap
- 	return ret;
- }
+--- a/arch/x86/kernel/cpu/Makefile
++++ b/arch/x86/kernel/cpu/Makefile
+@@ -54,6 +54,8 @@ obj-$(CONFIG_X86_LOCAL_APIC)		+= perfctr
+ obj-$(CONFIG_HYPERVISOR_GUEST)		+= vmware.o hypervisor.o mshyperv.o
+ obj-$(CONFIG_ACRN_GUEST)		+= acrn.o
  
--static int hv_vtl_wakeup_secondary_cpu(int apicid, unsigned long start_eip)
-+static int hv_vtl_wakeup_secondary_cpu(u32 apicid, unsigned long start_eip)
- {
- 	int vp_id;
++obj-$(CONFIG_DEBUG_FS)			+= debugfs.o
++
+ quiet_cmd_mkcapflags = MKCAP   $@
+       cmd_mkcapflags = $(CONFIG_SHELL) $(srctree)/$(src)/mkcapflags.sh $@ $^
  
---- a/arch/x86/include/asm/apic.h
-+++ b/arch/x86/include/asm/apic.h
-@@ -302,9 +302,9 @@ struct apic {
- 	u32	(*set_apic_id)(u32 apicid);
- 
- 	/* wakeup_secondary_cpu */
--	int	(*wakeup_secondary_cpu)(int apicid, unsigned long start_eip);
-+	int	(*wakeup_secondary_cpu)(u32 apicid, unsigned long start_eip);
- 	/* wakeup secondary CPU using 64-bit wakeup point */
--	int	(*wakeup_secondary_cpu_64)(int apicid, unsigned long start_eip);
-+	int	(*wakeup_secondary_cpu_64)(u32 apicid, unsigned long start_eip);
- 
- 	char	*name;
- };
-@@ -322,8 +322,8 @@ struct apic_override {
- 	void	(*send_IPI_self)(int vector);
- 	u64	(*icr_read)(void);
- 	void	(*icr_write)(u32 low, u32 high);
--	int	(*wakeup_secondary_cpu)(int apicid, unsigned long start_eip);
--	int	(*wakeup_secondary_cpu_64)(int apicid, unsigned long start_eip);
-+	int	(*wakeup_secondary_cpu)(u32 apicid, unsigned long start_eip);
-+	int	(*wakeup_secondary_cpu_64)(u32 apicid, unsigned long start_eip);
- };
- 
- /*
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -358,7 +358,7 @@ acpi_parse_lapic_nmi(union acpi_subtable
- }
- 
- #ifdef CONFIG_X86_64
--static int acpi_wakeup_cpu(int apicid, unsigned long start_ip)
-+static int acpi_wakeup_cpu(u32 apicid, unsigned long start_ip)
- {
- 	/*
- 	 * Remap mailbox memory only for the first call to acpi_wakeup_cpu().
---- a/arch/x86/kernel/apic/apic_noop.c
-+++ b/arch/x86/kernel/apic/apic_noop.c
-@@ -27,7 +27,7 @@ static void noop_send_IPI_allbutself(int
- static void noop_send_IPI_all(int vector) { }
- static void noop_send_IPI_self(int vector) { }
- static void noop_apic_icr_write(u32 low, u32 id) { }
--static int noop_wakeup_secondary_cpu(int apicid, unsigned long start_eip) { return -1; }
-+static int noop_wakeup_secondary_cpu(u32 apicid, unsigned long start_eip) { return -1; }
- static u64 noop_apic_icr_read(void) { return 0; }
- static u32 noop_phys_pkg_id(u32 cpuid_apic, int index_msb) { return 0; }
- static u32 noop_get_apic_id(u32 apicid) { return 0; }
---- a/arch/x86/kernel/apic/apic_numachip.c
-+++ b/arch/x86/kernel/apic/apic_numachip.c
-@@ -71,7 +71,7 @@ static void numachip2_apic_icr_write(int
- 	numachip2_write32_lcsr(NUMACHIP2_APIC_ICR, (apicid << 12) | val);
- }
- 
--static int numachip_wakeup_secondary(int phys_apicid, unsigned long start_rip)
-+static int numachip_wakeup_secondary(u32 phys_apicid, unsigned long start_rip)
- {
- 	numachip_apic_icr_write(phys_apicid, APIC_DM_INIT);
- 	numachip_apic_icr_write(phys_apicid, APIC_DM_STARTUP |
---- a/arch/x86/kernel/apic/x2apic_uv_x.c
-+++ b/arch/x86/kernel/apic/x2apic_uv_x.c
-@@ -702,7 +702,7 @@ static __init void build_uv_gr_table(voi
- 	}
- }
- 
--static int uv_wakeup_secondary(int phys_apicid, unsigned long start_rip)
-+static int uv_wakeup_secondary(u32 phys_apicid, unsigned long start_rip)
- {
- 	unsigned long val;
- 	int pnode;
---- a/arch/x86/kernel/sev.c
-+++ b/arch/x86/kernel/sev.c
-@@ -940,7 +940,7 @@ static void snp_cleanup_vmsa(struct sev_
- 		free_page((unsigned long)vmsa);
- }
- 
--static int wakeup_cpu_via_vmgexit(int apic_id, unsigned long start_ip)
-+static int wakeup_cpu_via_vmgexit(u32 apic_id, unsigned long start_ip)
- {
- 	struct sev_es_save_area *cur_vmsa, *vmsa;
- 	struct ghcb_state state;
+--- /dev/null
++++ b/arch/x86/kernel/cpu/debugfs.c
+@@ -0,0 +1,58 @@
++// SPDX-License-Identifier: GPL-2.0
++
++#include <linux/debugfs.h>
++
++#include <asm/apic.h>
++#include <asm/processor.h>
++
++static int cpu_debug_show(struct seq_file *m, void *p)
++{
++	unsigned long cpu = (unsigned long)m->private;
++	struct cpuinfo_x86 *c = per_cpu_ptr(&cpu_info, cpu);
++
++	seq_printf(m, "online:              %d\n", cpu_online(cpu));
++	if (!c->initialized)
++		return 0;
++
++	seq_printf(m, "initial_apicid:      %x\n", c->topo.initial_apicid);
++	seq_printf(m, "apicid:              %x\n", c->topo.apicid);
++	seq_printf(m, "pkg_id:              %u\n", c->topo.pkg_id);
++	seq_printf(m, "die_id:              %u\n", c->topo.die_id);
++	seq_printf(m, "cu_id:               %u\n", c->topo.cu_id);
++	seq_printf(m, "core_id:             %u\n", c->topo.core_id);
++	seq_printf(m, "logical_pkg_id:      %u\n", c->topo.logical_pkg_id);
++	seq_printf(m, "logical_die_id:      %u\n", c->topo.logical_die_id);
++	seq_printf(m, "llc_id:              %u\n", c->topo.llc_id);
++	seq_printf(m, "l2c_id:              %u\n", c->topo.l2c_id);
++	seq_printf(m, "max_cores:           %u\n", c->x86_max_cores);
++	seq_printf(m, "max_die_per_pkg:     %u\n", __max_die_per_package);
++	seq_printf(m, "smp_num_siblings:    %u\n", smp_num_siblings);
++	return 0;
++}
++
++static int cpu_debug_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, cpu_debug_show, inode->i_private);
++}
++
++static const struct file_operations dfs_cpu_ops = {
++	.open		= cpu_debug_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
++static __init int cpu_init_debugfs(void)
++{
++	struct dentry *dir, *base = debugfs_create_dir("topo", arch_debugfs_dir);
++	unsigned long id;
++	char name [10];
++
++	dir = debugfs_create_dir("cpus", base);
++	for_each_possible_cpu(id) {
++		sprintf(name, "%lu", id);
++		debugfs_create_file(name, 0444, dir, (void *)id, &dfs_cpu_ops);
++	}
++	return 0;
++}
++late_initcall(cpu_init_debugfs);
 
