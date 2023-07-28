@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFFAFC001DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 15:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC5EDC001DE
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 15:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236597AbjG1PXc convert rfc822-to-8bit (ORCPT
+        id S236769AbjG1P0S convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jul 2023 11:23:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50912 "EHLO
+        Fri, 28 Jul 2023 11:26:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237344AbjG1PXa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 11:23:30 -0400
+        with ESMTP id S235258AbjG1P0R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 11:26:17 -0400
 Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B99D3A8C
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2023 08:23:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49B09E73
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2023 08:26:15 -0700 (PDT)
 Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
  relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-405-eJcN3k0sP7Kvuwhq7UFxfw-1; Fri, 28 Jul 2023 16:23:26 +0100
-X-MC-Unique: eJcN3k0sP7Kvuwhq7UFxfw-1
+ uk-mta-217-YVmH9eBiMmG5VIsPrBuaNQ-1; Fri, 28 Jul 2023 16:26:12 +0100
+X-MC-Unique: YVmH9eBiMmG5VIsPrBuaNQ-1
 Received: from AcuMS.Aculab.com (10.202.163.6) by AcuMS.aculab.com
  (10.202.163.6) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Fri, 28 Jul
- 2023 16:23:25 +0100
+ 2023 16:26:11 +0100
 Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
- id 15.00.1497.048; Fri, 28 Jul 2023 16:23:25 +0100
+ id 15.00.1497.048; Fri, 28 Jul 2023 16:26:11 +0100
 From:   David Laight <David.Laight@ACULAB.COM>
 To:     'Oleksandr Natalenko' <oleksandr@redhat.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
@@ -38,16 +38,16 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jozef Bacik <jobacik@redhat.com>,
         Laurence Oberman <loberman@redhat.com>,
         "Rob Evers" <revers@redhat.com>
-Subject: RE: [PATCH 1/3] scsi: qedf: do not touch __user pointer in
- qedf_dbg_stop_io_on_error_cmd_read() directly
-Thread-Topic: [PATCH 1/3] scsi: qedf: do not touch __user pointer in
- qedf_dbg_stop_io_on_error_cmd_read() directly
-Thread-Index: AQHZwSEI7kbXXpGPc0ikqDMKVqIzOK/PS6TQ
-Date:   Fri, 28 Jul 2023 15:23:25 +0000
-Message-ID: <314512939ebd44508b767d799e7c30af@AcuMS.aculab.com>
+Subject: RE: [PATCH 2/3] scsi: qedf: do not touch __user pointer in
+ qedf_dbg_debug_cmd_read() directly
+Thread-Topic: [PATCH 2/3] scsi: qedf: do not touch __user pointer in
+ qedf_dbg_debug_cmd_read() directly
+Thread-Index: AQHZwSEN9Ls1iMTEjEyz1kbENNwADa/PTLUA
+Date:   Fri, 28 Jul 2023 15:26:11 +0000
+Message-ID: <2938f701ba56419e861f1bb410831862@AcuMS.aculab.com>
 References: <20230728065819.139694-1-oleksandr@redhat.com>
- <20230728065819.139694-2-oleksandr@redhat.com>
-In-Reply-To: <20230728065819.139694-2-oleksandr@redhat.com>
+ <20230728065819.139694-3-oleksandr@redhat.com>
+In-Reply-To: <20230728065819.139694-3-oleksandr@redhat.com>
 Accept-Language: en-GB, en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
@@ -66,52 +66,45 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 From: Oleksandr Natalenko
 > Sent: 28 July 2023 07:58
 > 
-> The qedf_dbg_stop_io_on_error_cmd_read() function invokes sprintf()
+> The qedf_dbg_debug_cmd_read() function invokes sprintf()
 > directly on a __user pointer, which may crash the kernel.
+                                      ^^^ will
+
 > 
 > Avoid doing that by using a small on-stack buffer for sprintf()
 > and then calling simple_read_from_buffer() which does a proper
 > copy_to_user() call.
-> 
-> Fixes: 61d8658b4a ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
 ...
 > diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
-> index a3ed681c8ce3f..4d1b99569d490 100644
+> index 4d1b99569d490..f910af0029a2c 100644
 > --- a/drivers/scsi/qedf/qedf_debugfs.c
 > +++ b/drivers/scsi/qedf/qedf_debugfs.c
-> @@ -185,18 +185,17 @@ qedf_dbg_stop_io_on_error_cmd_read(struct file *filp, char __user *buffer,
->  				   size_t count, loff_t *ppos)
+> @@ -138,15 +138,14 @@ qedf_dbg_debug_cmd_read(struct file *filp, char __user *buffer, size_t count,
+>  			loff_t *ppos)
 >  {
 >  	int cnt;
-> +	char cbuf[7];
+> +	char cbuf[35];
+
+Why 35?
+I pick a multiple of 8 that if 'enough.
+
 >  	struct qedf_dbg_ctx *qedf_dbg =
 >  				(struct qedf_dbg_ctx *)filp->private_data;
->  	struct qedf_ctx *qedf = container_of(qedf_dbg,
->  	    struct qedf_ctx, dbg_ctx);
 > 
->  	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "entered\n");
-> -	cnt = sprintf(buffer, "%s\n",
-> +	cnt = sprintf(cbuf, "%s\n",
->  	    qedf->stop_io_on_error ? "true" : "false");
+>  	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "debug mask=0x%x\n", qedf_debug);
+> -	cnt = sprintf(buffer, "debug mask = 0x%x\n", qedf_debug);
+> +	cnt = sprintf(cbuf, "debug mask = 0x%x\n", qedf_debug);
 
-You've made cbuf[] exactly just big enough.
-If anyone breathes on this code it could overflow.
-You really should use scnprintf() for safety.
+Use scnprintf() to be sure it doesn't overflow.
+Much safer if someone does a quick update or copies the code.
+
+	David
 
 > 
 > -	cnt = min_t(int, count, cnt - *ppos);
 > -	*ppos += cnt;
 > -	return cnt;
 > +	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
-
-Or just:
-	if (gedf->stop_on_error)
-		return simple_read_from_buffer(buffer, count, ppos, "true\n", 5);
-	return simple_read_from_buffer(buffer, count, ppos, "false\n", 6);
-
-	David
-
-	
 >  }
 > 
 >  static ssize_t
