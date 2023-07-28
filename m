@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DAA9C00528
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 12:13:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1D4EC04E69
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 12:13:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236413AbjG1MNb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jul 2023 08:13:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60484 "EHLO
+        id S236023AbjG1MNf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jul 2023 08:13:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235700AbjG1MNP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 08:13:15 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 142053A8C;
-        Fri, 28 Jul 2023 05:13:04 -0700 (PDT)
-Message-ID: <20230728120930.562193563@linutronix.de>
+        with ESMTP id S236025AbjG1MNX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 08:13:23 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4F523C31;
+        Fri, 28 Jul 2023 05:13:06 -0700 (PDT)
+Message-ID: <20230728120930.672330175@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1690546382;
+        s=2020; t=1690546385;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=N1azWL9rFTheZgbP+psN/3Z4a3oFTh1DV0QsrK11aoI=;
-        b=jvnEp0RUySTYsQMDRy0hadFx25NRrqyNFc3TdF9Srco0GwFKdbOnkto+P1xmQj95ii21SW
-        Sv3pHOBAtBHK5ZbplBmc5Arg3lzCws+wyBNzrP3aRYLPzFKB2zF8CZLbo4h4HLiN4hn45Y
-        BMVnp9xqNWJZM/Q+XjuAcRVqH+t1AfkboiSnasuKVEElDOMnyZzh5HrPnsQXGLv6ShiJBi
-        ZIJ8bcbdBDlWgPUvXQUDKTP4TAxbWQrUf4OhPXDwYOGN3rkizDZcisVEEVEh0TSTyJm07y
-        aq6deJSoN+M20y3YXXOGi+KtuQkLHT/YsLzbWVTnISkpoAWahGiKsJapxKyEsw==
+         references:references; bh=LotaVQs4RlrtT3Fsb/omzWTh9eCCKi/NbM3QS9xGwX0=;
+        b=yNqXWhzplelPEC6EqufzV+PoVxUllAeo/Wi+p1hFo5vurLPMbYblXp4jGlR+9otM3JuTtM
+        +viqKycR0ud2Z6znI05wUqOWt04KOT7tsUi4dJOl2lSxrZAMpL3uPBkBr0TGce0RXYhxqE
+        dKWkAES7ZFTztoI33OonKhlt3QUZdgdBl3g1OyipOdBa5TrCCX0Vd7mDwFYvQEzck8N8Y1
+        68KZSE5vB3RAPQwCjf+G3FkMB0lRTdyDAwMrMyla4RBp6/xMzDaOxEFA3OjogF6NApMA7O
+        3nG+FCaeEg+iLV2GGB6qLt/548OkVmdrTJFrcXEk0oA1Q1sUoQ+KuH+Ri3/bQg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1690546382;
+        s=2020e; t=1690546385;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=N1azWL9rFTheZgbP+psN/3Z4a3oFTh1DV0QsrK11aoI=;
-        b=mYKn/dGxle2YzslkUTlllFvelg4ik+cXxsknBAkfJcsXGgF5rHVWziOxts7DYO2mbCI+hK
-        TF5tHiKxRFqDnTDw==
+         references:references; bh=LotaVQs4RlrtT3Fsb/omzWTh9eCCKi/NbM3QS9xGwX0=;
+        b=wQFyFMOjMztzLvHuRRL8abQLdZo6Iawb1LV3/u9l0jn7S5GkkfyF2TuM8sNXVifAIuRJhj
+        7k0sg+o64YADRaCQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
@@ -48,215 +48,102 @@ Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
         Mike Travis <mike.travis@hpe.com>,
         Dimitri Sivanich <dimitri.sivanich@hpe.com>,
         Russ Anderson <russ.anderson@hpe.com>
-Subject: [patch v2 16/38] x86/apic: Use u32 for [gs]et_apic_id()
+Subject: [patch v2 18/38] x86/cpu/topology: Cure the abuse of cpuinfo for
+ persisting logical ids
 References: <20230728105650.565799744@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 28 Jul 2023 14:13:02 +0200 (CEST)
+Date:   Fri, 28 Jul 2023 14:13:05 +0200 (CEST)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-APIC IDs are used with random data types u16, u32, int, unsigned int,
-unsigned long.
+Per CPU cpuinfo is used to persist the logical package and die IDs. That's
+really not the right place simply because cpuinfo is subject to be
+reinitialized when a CPU goes through an offline/online cycle.
 
-Make it all consistently use u32 because that reflects the hardware
-register width.
+This works by chance today, but that's far from correct and neither obvious
+nor documented.
+
+Add a per cpu datastructure which persists those logical IDs, which allows
+to cleanup the CPUID evaluation code.
+
+This is a temporary workaround until the larger topology management is in
+place, which makes all of this logical management mechanics obsolete.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/x86/include/asm/apic.h          |   14 ++------------
- arch/x86/kernel/apic/apic_flat_64.c  |    4 ++--
- arch/x86/kernel/apic/apic_noop.c     |    2 +-
- arch/x86/kernel/apic/apic_numachip.c |    8 ++++----
- arch/x86/kernel/apic/bigsmp_32.c     |    2 +-
- arch/x86/kernel/apic/local.h         |    4 ++--
- arch/x86/kernel/apic/probe_32.c      |   10 ++++++++++
- arch/x86/kernel/apic/x2apic_phys.c   |    4 ++--
- arch/x86/kernel/apic/x2apic_uv_x.c   |    2 +-
- arch/x86/xen/apic.c                  |    4 ++--
- 10 files changed, 27 insertions(+), 27 deletions(-)
+ arch/x86/kernel/smpboot.c |   33 +++++++++++++++++++++++----------
+ 1 file changed, 23 insertions(+), 10 deletions(-)
 
---- a/arch/x86/include/asm/apic.h
-+++ b/arch/x86/include/asm/apic.h
-@@ -298,8 +298,8 @@ struct apic {
- 	u32	(*cpu_present_to_apicid)(int mps_cpu);
- 	u32	(*phys_pkg_id)(u32 cpuid_apic, int index_msb);
- 
--	u32	(*get_apic_id)(unsigned long x);
--	u32	(*set_apic_id)(unsigned int id);
-+	u32	(*get_apic_id)(u32 id);
-+	u32	(*set_apic_id)(u32 apicid);
- 
- 	/* wakeup_secondary_cpu */
- 	int	(*wakeup_secondary_cpu)(int apicid, unsigned long start_eip);
-@@ -493,16 +493,6 @@ static inline bool lapic_vector_set_in_i
- 	return !!(irr & (1U << (vector % 32)));
- }
- 
--static inline unsigned default_get_apic_id(unsigned long x)
--{
--	unsigned int ver = GET_APIC_VERSION(apic_read(APIC_LVR));
--
--	if (APIC_XAPIC(ver) || boot_cpu_has(X86_FEATURE_EXTD_APICID))
--		return (x >> 24) & 0xFF;
--	else
--		return (x >> 24) & 0x0F;
--}
--
- /*
-  * Warm reset vector position:
+--- a/arch/x86/kernel/smpboot.c
++++ b/arch/x86/kernel/smpboot.c
+@@ -124,7 +124,20 @@ struct mwait_cpu_dead {
   */
---- a/arch/x86/kernel/apic/apic_flat_64.c
-+++ b/arch/x86/kernel/apic/apic_flat_64.c
-@@ -56,12 +56,12 @@ flat_send_IPI_mask_allbutself(const stru
- 	_flat_send_IPI_mask(mask, vector);
- }
+ static DEFINE_PER_CPU_ALIGNED(struct mwait_cpu_dead, mwait_cpu_dead);
  
--static unsigned int flat_get_apic_id(unsigned long x)
-+static u32 flat_get_apic_id(u32 x)
- {
- 	return (x >> 24) & 0xFF;
- }
- 
--static u32 set_apic_id(unsigned int id)
-+static u32 set_apic_id(u32 id)
- {
- 	return (id & 0xFF) << 24;
- }
---- a/arch/x86/kernel/apic/apic_noop.c
-+++ b/arch/x86/kernel/apic/apic_noop.c
-@@ -30,7 +30,7 @@ static void noop_apic_icr_write(u32 low,
- static int noop_wakeup_secondary_cpu(int apicid, unsigned long start_eip) { return -1; }
- static u64 noop_apic_icr_read(void) { return 0; }
- static u32 noop_phys_pkg_id(u32 cpuid_apic, int index_msb) { return 0; }
--static unsigned int noop_get_apic_id(unsigned long x) { return 0; }
-+static u32 noop_get_apic_id(u32 apicid) { return 0; }
- static void noop_apic_eoi(void) { }
- 
- static u32 noop_apic_read(u32 reg)
---- a/arch/x86/kernel/apic/apic_numachip.c
-+++ b/arch/x86/kernel/apic/apic_numachip.c
-@@ -25,7 +25,7 @@ static const struct apic apic_numachip1;
- static const struct apic apic_numachip2;
- static void (*numachip_apic_icr_write)(int apicid, unsigned int val) __read_mostly;
- 
--static unsigned int numachip1_get_apic_id(unsigned long x)
-+static u32 numachip1_get_apic_id(u32 x)
- {
- 	unsigned long value;
- 	unsigned int id = (x >> 24) & 0xff;
-@@ -38,12 +38,12 @@ static unsigned int numachip1_get_apic_i
- 	return id;
- }
- 
--static u32 numachip1_set_apic_id(unsigned int id)
-+static u32 numachip1_set_apic_id(u32 id)
- {
- 	return (id & 0xff) << 24;
- }
- 
--static unsigned int numachip2_get_apic_id(unsigned long x)
-+static u32 numachip2_get_apic_id(u32 x)
- {
- 	u64 mcfg;
- 
-@@ -51,7 +51,7 @@ static unsigned int numachip2_get_apic_i
- 	return ((mcfg >> (28 - 8)) & 0xfff00) | (x >> 24);
- }
- 
--static u32 numachip2_set_apic_id(unsigned int id)
-+static u32 numachip2_set_apic_id(u32 id)
- {
- 	return id << 24;
- }
---- a/arch/x86/kernel/apic/bigsmp_32.c
-+++ b/arch/x86/kernel/apic/bigsmp_32.c
-@@ -13,7 +13,7 @@
- 
- #include "local.h"
- 
--static unsigned bigsmp_get_apic_id(unsigned long x)
-+static u32 bigsmp_get_apic_id(u32 x)
- {
- 	return (x >> 24) & 0xFF;
- }
---- a/arch/x86/kernel/apic/local.h
-+++ b/arch/x86/kernel/apic/local.h
-@@ -15,8 +15,8 @@
- 
- /* X2APIC */
- void __x2apic_send_IPI_dest(unsigned int apicid, int vector, unsigned int dest);
--unsigned int x2apic_get_apic_id(unsigned long id);
--u32 x2apic_set_apic_id(unsigned int id);
-+u32 x2apic_get_apic_id(u32 id);
-+u32 x2apic_set_apic_id(u32 id);
- u32 x2apic_phys_pkg_id(u32 initial_apicid, int index_msb);
- 
- void x2apic_send_IPI_all(int vector);
---- a/arch/x86/kernel/apic/probe_32.c
-+++ b/arch/x86/kernel/apic/probe_32.c
-@@ -23,6 +23,16 @@ static u32 default_phys_pkg_id(u32 cpuid
- 	return cpuid_apic >> index_msb;
- }
- 
-+static u32 default_get_apic_id(u32 x)
-+{
-+	unsigned int ver = GET_APIC_VERSION(apic_read(APIC_LVR));
+-/* Logical package management. We might want to allocate that dynamically */
++/* Logical package management. */
++struct logical_maps {
++	u32	phys_pkg_id;
++	u32	phys_die_id;
++	u32	logical_pkg_id;
++	u32	logical_die_id;
++};
 +
-+	if (APIC_XAPIC(ver) || boot_cpu_has(X86_FEATURE_EXTD_APICID))
-+		return (x >> 24) & 0xFF;
-+	else
-+		return (x >> 24) & 0x0F;
-+}
++/* Temporary workaround until the full topology mechanics is in place */
++static DEFINE_PER_CPU_READ_MOSTLY(struct logical_maps, logical_maps) = {
++	.phys_pkg_id	= U32_MAX,
++	.phys_die_id	= U32_MAX,
++};
 +
- /* should be called last. */
- static int probe_default(void)
- {
---- a/arch/x86/kernel/apic/x2apic_phys.c
-+++ b/arch/x86/kernel/apic/x2apic_phys.c
-@@ -124,12 +124,12 @@ static int x2apic_phys_probe(void)
- 	return apic == &apic_x2apic_phys;
- }
+ unsigned int __max_logical_packages __read_mostly;
+ EXPORT_SYMBOL(__max_logical_packages);
+ static unsigned int logical_packages __read_mostly;
+@@ -345,10 +358,8 @@ int topology_phys_to_logical_pkg(unsigne
+ 	int cpu;
  
--unsigned int x2apic_get_apic_id(unsigned long id)
-+u32 x2apic_get_apic_id(u32 id)
- {
- 	return id;
+ 	for_each_possible_cpu(cpu) {
+-		struct cpuinfo_x86 *c = &cpu_data(cpu);
+-
+-		if (c->initialized && c->topo.pkg_id == phys_pkg)
+-			return c->topo.logical_pkg_id;
++		if (per_cpu(logical_maps.phys_pkg_id, cpu) == phys_pkg)
++			return per_cpu(logical_maps.logical_pkg_id, cpu);
+ 	}
+ 	return -1;
  }
+@@ -366,11 +377,9 @@ static int topology_phys_to_logical_die(
+ 	int cpu, proc_id = cpu_data(cur_cpu).topo.pkg_id;
  
--u32 x2apic_set_apic_id(unsigned int id)
-+u32 x2apic_set_apic_id(u32 id)
- {
- 	return id;
+ 	for_each_possible_cpu(cpu) {
+-		struct cpuinfo_x86 *c = &cpu_data(cpu);
+-
+-		if (c->initialized && c->topo.die_id == die_id &&
+-		    c->topo.pkg_id == proc_id)
+-			return c->topo.logical_die_id;
++		if (per_cpu(logical_maps.phys_pkg_id, cpu) == proc_id &&
++		    per_cpu(logical_maps.phys_die_id, cpu) == die_id)
++			return per_cpu(logical_maps.logical_die_id, cpu);
+ 	}
+ 	return -1;
  }
---- a/arch/x86/kernel/apic/x2apic_uv_x.c
-+++ b/arch/x86/kernel/apic/x2apic_uv_x.c
-@@ -780,7 +780,7 @@ static void uv_send_IPI_all(int vector)
- 	uv_send_IPI_mask(cpu_online_mask, vector);
+@@ -395,6 +404,8 @@ int topology_update_package_map(unsigned
+ 			cpu, pkg, new);
+ 	}
+ found:
++	per_cpu(logical_maps.phys_pkg_id, cpu) = pkg;
++	per_cpu(logical_maps.logical_pkg_id, cpu) = new;
+ 	cpu_data(cpu).topo.logical_pkg_id = new;
+ 	return 0;
  }
- 
--static u32 set_apic_id(unsigned int id)
-+static u32 set_apic_id(u32 id)
- {
- 	return id;
- }
---- a/arch/x86/xen/apic.c
-+++ b/arch/x86/xen/apic.c
-@@ -33,13 +33,13 @@ static unsigned int xen_io_apic_read(uns
- 	return 0xfd;
- }
- 
--static u32 xen_set_apic_id(unsigned int x)
-+static u32 xen_set_apic_id(u32 x)
- {
- 	WARN_ON(1);
- 	return x;
- }
- 
--static unsigned int xen_get_apic_id(unsigned long x)
-+static u32 xen_get_apic_id(u32 x)
- {
- 	return ((x)>>24) & 0xFFu;
+@@ -418,6 +429,8 @@ int topology_update_die_map(unsigned int
+ 			cpu, die, new);
+ 	}
+ found:
++	per_cpu(logical_maps.phys_die_id, cpu) = die;
++	per_cpu(logical_maps.logical_die_id, cpu) = new;
+ 	cpu_data(cpu).topo.logical_die_id = new;
+ 	return 0;
  }
 
