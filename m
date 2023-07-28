@@ -2,116 +2,211 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC5EDC001DE
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 15:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8DAFC001E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 15:42:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236769AbjG1P0S convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jul 2023 11:26:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53046 "EHLO
+        id S237422AbjG1Pmh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jul 2023 11:42:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235258AbjG1P0R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 11:26:17 -0400
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49B09E73
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2023 08:26:15 -0700 (PDT)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-217-YVmH9eBiMmG5VIsPrBuaNQ-1; Fri, 28 Jul 2023 16:26:12 +0100
-X-MC-Unique: YVmH9eBiMmG5VIsPrBuaNQ-1
-Received: from AcuMS.Aculab.com (10.202.163.6) by AcuMS.aculab.com
- (10.202.163.6) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Fri, 28 Jul
- 2023 16:26:11 +0100
-Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
- id 15.00.1497.048; Fri, 28 Jul 2023 16:26:11 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Oleksandr Natalenko' <oleksandr@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        "GR-QLogic-Storage-Upstream@marvell.com" 
-        <GR-QLogic-Storage-Upstream@marvell.com>,
+        with ESMTP id S237405AbjG1Pmg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 11:42:36 -0400
+Received: from mx0b-002e3701.pphosted.com (mx0b-002e3701.pphosted.com [148.163.143.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5679810FA;
+        Fri, 28 Jul 2023 08:42:35 -0700 (PDT)
+Received: from pps.filterd (m0134424.ppops.net [127.0.0.1])
+        by mx0b-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36SEW6hf023510;
+        Fri, 28 Jul 2023 15:41:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=pps0720; bh=D4UU4pH4kUAWMPAHS8HIBDWEphUtaRF7nkbbuvO28Ek=;
+ b=Q43reYUrBosJ+Iy6LQ6JBbZGpgsQSc7Lhx6WkCXaCgnOuN/8ELuytsRmYDnhUIkHkHu7
+ ZRD2uA8Wk2vaEjtnZ+Mxz+QVj/i3Io5zU2lL8k0GkaF5xr5eO7hkkj9ebQ5+wYneIro8
+ QJV2XN3v4aulaSXMD7nTXuUpB2xwzEvU2l6AuJeVCXGEbjSALYWJqxG1+YfwfeYqEBF9
+ X6CYjlxWolqUNGvA8FlCiyPqx0fOJyzWBA7xe9ZJESP7Gjj/A8hFviWUAdev6WrDrN9B
+ 9kNugsD2ECpez3k5V55/nIpcwmyWn7OcfrdfnAFLyNa7vDt0R0xJ1Wcq3PVMsZk6CGNc zg== 
+Received: from p1lg14881.it.hpe.com (p1lg14881.it.hpe.com [16.230.97.202])
+        by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 3s48wkbyh6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 28 Jul 2023 15:41:54 +0000
+Received: from p1lg14885.dc01.its.hpecorp.net (unknown [10.119.18.236])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by p1lg14881.it.hpe.com (Postfix) with ESMTPS id 6DD9A803718;
+        Fri, 28 Jul 2023 15:41:31 +0000 (UTC)
+Received: from hpe.com (unknown [16.231.227.39])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by p1lg14885.dc01.its.hpecorp.net (Postfix) with ESMTPS id A42BA80A27F;
+        Fri, 28 Jul 2023 15:41:28 +0000 (UTC)
+Date:   Fri, 28 Jul 2023 10:41:26 -0500
+From:   Dimitri Sivanich <sivanich@hpe.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Andrew Cooper <andrew.cooper3@citrix.com>,
+        Arjan van de Ven <arjan@linux.intel.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <james.smart@broadcom.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jozef Bacik <jobacik@redhat.com>,
-        Laurence Oberman <loberman@redhat.com>,
-        "Rob Evers" <revers@redhat.com>
-Subject: RE: [PATCH 2/3] scsi: qedf: do not touch __user pointer in
- qedf_dbg_debug_cmd_read() directly
-Thread-Topic: [PATCH 2/3] scsi: qedf: do not touch __user pointer in
- qedf_dbg_debug_cmd_read() directly
-Thread-Index: AQHZwSEN9Ls1iMTEjEyz1kbENNwADa/PTLUA
-Date:   Fri, 28 Jul 2023 15:26:11 +0000
-Message-ID: <2938f701ba56419e861f1bb410831862@AcuMS.aculab.com>
-References: <20230728065819.139694-1-oleksandr@redhat.com>
- <20230728065819.139694-3-oleksandr@redhat.com>
-In-Reply-To: <20230728065819.139694-3-oleksandr@redhat.com>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        linux-scsi@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Huang Rui <ray.huang@amd.com>, Juergen Gross <jgross@suse.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+        Russ Anderson <russ.anderson@hpe.com>
+Subject: Re: [patch v2 00/38] x86/cpu: Rework the topology evaluation
+Message-ID: <20230728154047.GA21214@hpe.com>
+References: <20230728105650.565799744@linutronix.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230728105650.565799744@linutronix.de>
+X-Proofpoint-GUID: M3diYXEsN13Z6X2mEEsSKlMLV6D1v-80
+X-Proofpoint-ORIG-GUID: M3diYXEsN13Z6X2mEEsSKlMLV6D1v-80
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+X-HPE-SCL: -1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-27_10,2023-07-26_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
+ adultscore=0 impostorscore=0 bulkscore=0 spamscore=0 priorityscore=1501
+ clxscore=1011 suspectscore=0 mlxscore=0 lowpriorityscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
+ definitions=main-2307280143
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Oleksandr Natalenko
-> Sent: 28 July 2023 07:58
+I successfully booted the same 32-socket, 3840 cpu HPE Sapphire Rapids system
+with the V2 update found here:
+  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git topo-cpuid-v2
+
+# cat /sys/kernel/debug/x86/topo/cpus/3839
+initial_apicid:      ff7
+apicid:              ff7
+pkg_id:              31
+die_id:              31
+cu_id:               255
+core_id:             59
+logical_pkg_id:      31
+logical_die_id:      31
+llc_id:              3968
+l2c_id:              4086
+amd_node_id:         0
+amd_nodes_per_pkg:   0
+max_cores:           60
+max_die_per_pkg:     1
+smp_num_siblings:    2
+
+On Fri, Jul 28, 2023 at 02:12:42PM +0200, Thomas Gleixner wrote:
+> Hi!
 > 
-> The qedf_dbg_debug_cmd_read() function invokes sprintf()
-> directly on a __user pointer, which may crash the kernel.
-                                      ^^^ will
-
+> This is the follow up to V1:
 > 
-> Avoid doing that by using a small on-stack buffer for sprintf()
-> and then calling simple_read_from_buffer() which does a proper
-> copy_to_user() call.
-...
-> diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
-> index 4d1b99569d490..f910af0029a2c 100644
-> --- a/drivers/scsi/qedf/qedf_debugfs.c
-> +++ b/drivers/scsi/qedf/qedf_debugfs.c
-> @@ -138,15 +138,14 @@ qedf_dbg_debug_cmd_read(struct file *filp, char __user *buffer, size_t count,
->  			loff_t *ppos)
->  {
->  	int cnt;
-> +	char cbuf[35];
-
-Why 35?
-I pick a multiple of 8 that if 'enough.
-
->  	struct qedf_dbg_ctx *qedf_dbg =
->  				(struct qedf_dbg_ctx *)filp->private_data;
+>   https://lore.kernel.org/lkml/20230724155329.474037902@linutronix.de
 > 
->  	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "debug mask=0x%x\n", qedf_debug);
-> -	cnt = sprintf(buffer, "debug mask = 0x%x\n", qedf_debug);
-> +	cnt = sprintf(cbuf, "debug mask = 0x%x\n", qedf_debug);
-
-Use scnprintf() to be sure it doesn't overflow.
-Much safer if someone does a quick update or copies the code.
-
-	David
-
+> which addresses the review feedback and some minor fallout I observed in my
+> testing of the work based on top.
 > 
-> -	cnt = min_t(int, count, cnt - *ppos);
-> -	*ppos += cnt;
-> -	return cnt;
-> +	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
->  }
+> TLDR:
 > 
->  static ssize_t
-> --
-> 2.41.0
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+> This reworks the way how topology information is evaluated via CPUID
+> in preparation for a larger topology management overhaul to address
+> shortcomings of the current code vs. hybrid systems and systems which make
+> use of the extended topology domains in leaf 0x1f. Aside of that it's an
+> overdue spring cleaning to get rid of accumulated layers of duct tape and
+> haywire.
+> 
+> What changed vs. V1:
+> 
+>   - Fixed an issue vs. the logical die/pkg management as the current
+>     code (ab)uses cpuinfo for persistant storage.
+> 
+>   - Consolidated APIC ID usage on u32 and ditched the u16 limitation
+> 
+>   - Addressed the review feedback from Peter and Arjan
+> 
+>   - Added a new patch which gets rid of XENPV fiddling in the cpuinfo
+>     state. That needs some testing on XENPV obviously. The relevant
+>     patches are #22 and #37
+> 
+> I did not pick up any of the tested by tags yet. I hope people can run it
+> once more. Neither did I add the Ack from Peter.
+> 
+> The series is based on the APIC cleanup series:
+> 
+>   https://lore.kernel.org/lkml/20230724131206.500814398@linutronix.de
+> 
+> and also available on top of that from git:
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git topo-cpuid-v2
+> 
+> Thanks,
+> 
+> 	tglx
+> ---
+>  Documentation/arch/x86/topology.rst       |   12 -
+>  a/arch/x86/kernel/cpu/topology.c          |  168 ---------------------
+>  arch/x86/events/amd/core.c                |    2 
+>  arch/x86/events/amd/uncore.c              |    2 
+>  arch/x86/events/intel/uncore.c            |    2 
+>  arch/x86/hyperv/hv_vtl.c                  |    2 
+>  arch/x86/include/asm/apic.h               |   32 +---
+>  arch/x86/include/asm/cacheinfo.h          |    3 
+>  arch/x86/include/asm/cpuid.h              |   32 ++++
+>  arch/x86/include/asm/mpspec.h             |    2 
+>  arch/x86/include/asm/processor.h          |   60 +++++--
+>  arch/x86/include/asm/smp.h                |    4 
+>  arch/x86/include/asm/topology.h           |   51 +++++-
+>  arch/x86/include/asm/x86_init.h           |    2 
+>  arch/x86/kernel/acpi/boot.c               |    4 
+>  arch/x86/kernel/amd_nb.c                  |    8 -
+>  arch/x86/kernel/apic/apic.c               |   14 -
+>  arch/x86/kernel/apic/apic_common.c        |    4 
+>  arch/x86/kernel/apic/apic_flat_64.c       |   13 -
+>  arch/x86/kernel/apic/apic_noop.c          |    9 -
+>  arch/x86/kernel/apic/apic_numachip.c      |   21 --
+>  arch/x86/kernel/apic/bigsmp_32.c          |   10 -
+>  arch/x86/kernel/apic/local.h              |    6 
+>  arch/x86/kernel/apic/probe_32.c           |   10 -
+>  arch/x86/kernel/apic/x2apic_cluster.c     |    1 
+>  arch/x86/kernel/apic/x2apic_phys.c        |   10 -
+>  arch/x86/kernel/apic/x2apic_uv_x.c        |   67 +-------
+>  arch/x86/kernel/cpu/Makefile              |    5 
+>  arch/x86/kernel/cpu/amd.c                 |  156 --------------------
+>  arch/x86/kernel/cpu/cacheinfo.c           |   51 ++----
+>  arch/x86/kernel/cpu/centaur.c             |    4 
+>  arch/x86/kernel/cpu/common.c              |  111 +-------------
+>  arch/x86/kernel/cpu/cpu.h                 |   14 +
+>  arch/x86/kernel/cpu/hygon.c               |  133 -----------------
+>  arch/x86/kernel/cpu/intel.c               |   38 ----
+>  arch/x86/kernel/cpu/mce/amd.c             |    4 
+>  arch/x86/kernel/cpu/mce/apei.c            |    4 
+>  arch/x86/kernel/cpu/mce/core.c            |    4 
+>  arch/x86/kernel/cpu/mce/inject.c          |    7 
+>  arch/x86/kernel/cpu/proc.c                |    8 -
+>  arch/x86/kernel/cpu/zhaoxin.c             |   18 --
+>  arch/x86/kernel/kvm.c                     |    6 
+>  arch/x86/kernel/sev.c                     |    2 
+>  arch/x86/kernel/smpboot.c                 |   97 +++++++-----
+>  arch/x86/kernel/vsmp_64.c                 |   13 -
+>  arch/x86/mm/amdtopology.c                 |   35 ++--
+>  arch/x86/mm/numa.c                        |    4 
+>  arch/x86/xen/apic.c                       |   14 -
+>  arch/x86/xen/smp_pv.c                     |    3 
+>  b/arch/x86/kernel/cpu/debugfs.c           |   97 ++++++++++++
+>  b/arch/x86/kernel/cpu/topology.h          |   51 ++++++
+>  b/arch/x86/kernel/cpu/topology_amd.c      |  179 +++++++++++++++++++++++
+>  b/arch/x86/kernel/cpu/topology_common.c   |  233 ++++++++++++++++++++++++++++++
+>  b/arch/x86/kernel/cpu/topology_ext.c      |  136 +++++++++++++++++
+>  drivers/edac/amd64_edac.c                 |    4 
+>  drivers/edac/mce_amd.c                    |    4 
+>  drivers/gpu/drm/amd/amdkfd/kfd_topology.c |    2 
+>  drivers/hwmon/fam15h_power.c              |    7 
+>  drivers/scsi/lpfc/lpfc_init.c             |    8 -
+>  drivers/virt/acrn/hsm.c                   |    2 
+>  60 files changed, 1049 insertions(+), 956 deletions(-)
