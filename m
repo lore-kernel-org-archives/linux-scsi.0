@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A01FC04FDF
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 12:13:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADC35C04A94
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 12:13:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234850AbjG1MNP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jul 2023 08:13:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60148 "EHLO
+        id S235733AbjG1MNQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jul 2023 08:13:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235412AbjG1MM4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 08:12:56 -0400
+        with ESMTP id S235989AbjG1MNB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 08:13:01 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DE3E268B;
-        Fri, 28 Jul 2023 05:12:55 -0700 (PDT)
-Message-ID: <20230728120930.166316762@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47505268B;
+        Fri, 28 Jul 2023 05:13:00 -0700 (PDT)
+Message-ID: <20230728120930.393454382@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1690546373;
+        s=2020; t=1690546378;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=2RANHxmSCQq3gd8prDSNXS5TE/ZWoRk9LvjezfySwEw=;
-        b=MRuvYwRNVH0Jwe4ANKER/YiSCUMPBsPoRxXflROQHvfrqvJJN6kqkw08bj/UNDmPo4b2VD
-        rZwhwLC5l7eH6cP4gQwL+zgWXtV471/ofGsgyN5LQtbdUz+7jILBHKYq/l3/JlJrvjkPX+
-        +56JhPv+mWHU5tXjKJ4XQBOsfmaYhyOMCcRq/al07HLFts9GB5+Pcd0NCpz2IZ0P/Esci7
-        +e7IhbGIeSu0F+7ZvQNF6WMyk6zRDsRC/5LbrRLNStZDbML34OBWcA/0SvNEZJloaKQ/xF
-        Bs/gtfmsh/8W2wt20cNYoMmN148YYc4AoRjjianWyntsPT2TARhF9jGqELU2Hw==
+         references:references; bh=ZpujbDnKtKDSL5RBSdIZ4PFgwYRWpF+NGFguVXH8Iqo=;
+        b=Dt4c3GI/uH1CtRHMqAx7aMPQt/hsPsr7oslzBVtQb7/eJfTlHvgsZfZiJMhpPq2nDWv11A
+        m5ZWvdthqFFYZXJQHY4+Q/nw8MHNOn446oc1/gl+O8wdI+FdiW0RptTzoORfyCweWm4c5b
+        gR23ufjz+akCv09zIlwTCNsofDxJTU1nmulM62txMTqnPnqAXJPk8SOqQgN8XPSuWPaOcg
+        LB21WpfL5SfMv7nkVWwFTc92V/nThUhncHFFcol+Rvo+IX0mRcLBG7sH+IO+ij9HvSTPKK
+        xAogulpBnq4G2EXIOQueKFkBZMBlHag03OCObWbXFiipBoIdzO3FO4LrrJthrw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1690546373;
+        s=2020e; t=1690546378;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=2RANHxmSCQq3gd8prDSNXS5TE/ZWoRk9LvjezfySwEw=;
-        b=YFrZa4hDEnAG3AhL5jDj33Prp95jSZkr1qE+gat+Uvzl76/Lu7fADLRFcMqQp75ZC/i40o
-        MXYiUAWajIGKofCg==
+         references:references; bh=ZpujbDnKtKDSL5RBSdIZ4PFgwYRWpF+NGFguVXH8Iqo=;
+        b=sa9a1TbpxDEC8tqSsyc8C8ruLGPDkoFGT/OsNRO2pqdgQKae16rFSAk3Ew3DYwcp6BghN6
+        SsqcUTf4I0GEAeCA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
@@ -48,138 +48,103 @@ Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
         Mike Travis <mike.travis@hpe.com>,
         Dimitri Sivanich <dimitri.sivanich@hpe.com>,
         Russ Anderson <russ.anderson@hpe.com>
-Subject: [patch v2 09/38] x86/cpu: Move logical package and die IDs into
- topology info
+Subject: [patch v2 13/38] x86/apic: Use u32 for check_apicid_used()
 References: <20230728105650.565799744@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 28 Jul 2023 14:12:53 +0200 (CEST)
+Date:   Fri, 28 Jul 2023 14:12:58 +0200 (CEST)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Yet another topology related data pair. Rename logical_proc_id to
-logical_pkg_id so it fits the common naming conventions.
+APIC IDs are used with random data types u16, u32, int, unsigned int,
+unsigned long.
 
-No functional change.
+Make it all consistently use u32 because that reflects the hardware
+register width and move the default implementation to local.h as there are
+no users outside the apic directory.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- Documentation/arch/x86/topology.rst |    2 +-
- arch/x86/events/intel/uncore.c      |    2 +-
- arch/x86/include/asm/processor.h    |    8 ++++----
- arch/x86/include/asm/topology.h     |    4 ++--
- arch/x86/kernel/cpu/common.c        |    2 +-
- arch/x86/kernel/smpboot.c           |    8 ++++----
- 6 files changed, 13 insertions(+), 13 deletions(-)
+ arch/x86/include/asm/apic.h         |    3 +--
+ arch/x86/kernel/apic/apic_common.c  |    2 +-
+ arch/x86/kernel/apic/apic_flat_64.c |    2 --
+ arch/x86/kernel/apic/apic_noop.c    |    2 ++
+ arch/x86/kernel/apic/bigsmp_32.c    |    2 +-
+ arch/x86/kernel/apic/local.h        |    1 +
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
---- a/Documentation/arch/x86/topology.rst
-+++ b/Documentation/arch/x86/topology.rst
-@@ -67,7 +67,7 @@ AMD nomenclature for package is 'Node'.
-     Modern systems use this value for the socket. There may be multiple
-     packages within a socket. This value may differ from topo.die_id.
+--- a/arch/x86/include/asm/apic.h
++++ b/arch/x86/include/asm/apic.h
+@@ -292,7 +292,7 @@ struct apic {
+ 	int	(*acpi_madt_oem_check)(char *oem_id, char *oem_table_id);
+ 	bool	(*apic_id_registered)(void);
  
--  - cpuinfo_x86.logical_proc_id:
-+  - cpuinfo_x86.topo.logical_pkg_id:
+-	bool	(*check_apicid_used)(physid_mask_t *map, int apicid);
++	bool	(*check_apicid_used)(physid_mask_t *map, u32 apicid);
+ 	void	(*init_apic_ldr)(void);
+ 	void	(*ioapic_phys_id_map)(physid_mask_t *phys_map, physid_mask_t *retmap);
+ 	int	(*cpu_present_to_apicid)(int mps_cpu);
+@@ -538,7 +538,6 @@ extern int default_apic_id_valid(u32 api
+ extern u32 apic_default_calc_apicid(unsigned int cpu);
+ extern u32 apic_flat_calc_apicid(unsigned int cpu);
  
-     The logical ID of the package. As we do not trust BIOSes to enumerate the
-     packages in a consistent way, we introduced the concept of logical package
---- a/arch/x86/events/intel/uncore.c
-+++ b/arch/x86/events/intel/uncore.c
-@@ -74,7 +74,7 @@ int uncore_device_to_die(struct pci_dev
- 		struct cpuinfo_x86 *c = &cpu_data(cpu);
+-extern bool default_check_apicid_used(physid_mask_t *map, int apicid);
+ extern void default_ioapic_phys_id_map(physid_mask_t *phys_map, physid_mask_t *retmap);
+ extern int default_cpu_present_to_apicid(int mps_cpu);
  
- 		if (c->initialized && cpu_to_node(cpu) == node)
--			return c->logical_die_id;
-+			return c->topo.logical_die_id;
- 	}
+--- a/arch/x86/kernel/apic/apic_common.c
++++ b/arch/x86/kernel/apic/apic_common.c
+@@ -18,7 +18,7 @@ u32 apic_flat_calc_apicid(unsigned int c
+ 	return 1U << cpu;
+ }
  
- 	return -1;
---- a/arch/x86/include/asm/processor.h
-+++ b/arch/x86/include/asm/processor.h
-@@ -94,6 +94,10 @@ struct cpuinfo_topology {
+-bool default_check_apicid_used(physid_mask_t *map, int apicid)
++bool default_check_apicid_used(physid_mask_t *map, u32 apicid)
+ {
+ 	return physid_isset(apicid, *map);
+ }
+--- a/arch/x86/kernel/apic/apic_flat_64.c
++++ b/arch/x86/kernel/apic/apic_flat_64.c
+@@ -158,8 +158,6 @@ static struct apic apic_physflat __ro_af
  
- 	// Core ID relative to the package
- 	u32			core_id;
+ 	.disable_esr			= 0,
+ 
+-	.check_apicid_used		= NULL,
+-	.ioapic_phys_id_map		= NULL,
+ 	.cpu_present_to_apicid		= default_cpu_present_to_apicid,
+ 	.phys_pkg_id			= flat_phys_pkg_id,
+ 
+--- a/arch/x86/kernel/apic/apic_noop.c
++++ b/arch/x86/kernel/apic/apic_noop.c
+@@ -18,6 +18,8 @@
+ 
+ #include <asm/apic.h>
+ 
++#include "local.h"
 +
-+	// Logical ID mappings
-+	u32			logical_pkg_id;
-+	u32			logical_die_id;
- };
- 
- struct cpuinfo_x86 {
-@@ -144,10 +148,6 @@ struct cpuinfo_x86 {
- 	u16			x86_clflush_size;
- 	/* number of cores as seen by the OS: */
- 	u16			booted_cores;
--	/* Logical processor id: */
--	u16			logical_proc_id;
--	/* Core id: */
--	u16			logical_die_id;
- 	/* Index into per_cpu list: */
- 	u16			cpu_index;
- 	/*  Is SMT active on this core? */
---- a/arch/x86/include/asm/topology.h
-+++ b/arch/x86/include/asm/topology.h
-@@ -105,9 +105,9 @@ static inline void setup_node_to_cpumask
- extern const struct cpumask *cpu_coregroup_mask(int cpu);
- extern const struct cpumask *cpu_clustergroup_mask(int cpu);
- 
--#define topology_logical_package_id(cpu)	(cpu_data(cpu).logical_proc_id)
-+#define topology_logical_package_id(cpu)	(cpu_data(cpu).topo.logical_pkg_id)
- #define topology_physical_package_id(cpu)	(cpu_data(cpu).topo.pkg_id)
--#define topology_logical_die_id(cpu)		(cpu_data(cpu).logical_die_id)
-+#define topology_logical_die_id(cpu)		(cpu_data(cpu).topo.logical_die_id)
- #define topology_die_id(cpu)			(cpu_data(cpu).topo.die_id)
- #define topology_core_id(cpu)			(cpu_data(cpu).topo.core_id)
- #define topology_ppin(cpu)			(cpu_data(cpu).ppin)
---- a/arch/x86/kernel/cpu/common.c
-+++ b/arch/x86/kernel/cpu/common.c
-@@ -1770,7 +1770,7 @@ static void validate_apic_and_package_id
- 	BUG_ON(topology_update_package_map(c->topo.pkg_id, cpu));
- 	BUG_ON(topology_update_die_map(c->topo.die_id, cpu));
- #else
--	c->logical_proc_id = 0;
-+	c->topo.logical_pkg_id = 0;
- #endif
+ static void noop_send_IPI(int cpu, int vector) { }
+ static void noop_send_IPI_mask(const struct cpumask *cpumask, int vector) { }
+ static void noop_send_IPI_mask_allbutself(const struct cpumask *cpumask, int vector) { }
+--- a/arch/x86/kernel/apic/bigsmp_32.c
++++ b/arch/x86/kernel/apic/bigsmp_32.c
+@@ -18,7 +18,7 @@ static unsigned bigsmp_get_apic_id(unsig
+ 	return (x >> 24) & 0xFF;
  }
  
---- a/arch/x86/kernel/smpboot.c
-+++ b/arch/x86/kernel/smpboot.c
-@@ -348,7 +348,7 @@ int topology_phys_to_logical_pkg(unsigne
- 		struct cpuinfo_x86 *c = &cpu_data(cpu);
+-static bool bigsmp_check_apicid_used(physid_mask_t *map, int apicid)
++static bool bigsmp_check_apicid_used(physid_mask_t *map, u32 apicid)
+ {
+ 	return false;
+ }
+--- a/arch/x86/kernel/apic/local.h
++++ b/arch/x86/kernel/apic/local.h
+@@ -64,6 +64,7 @@ void default_send_IPI_all(int vector);
+ void default_send_IPI_self(int vector);
  
- 		if (c->initialized && c->topo.pkg_id == phys_pkg)
--			return c->logical_proc_id;
-+			return c->topo.logical_pkg_id;
- 	}
- 	return -1;
- }
-@@ -370,7 +370,7 @@ static int topology_phys_to_logical_die(
+ bool default_apic_id_registered(void);
++bool default_check_apicid_used(physid_mask_t *map, u32 apicid);
  
- 		if (c->initialized && c->topo.die_id == die_id &&
- 		    c->topo.pkg_id == proc_id)
--			return c->logical_die_id;
-+			return c->topo.logical_die_id;
- 	}
- 	return -1;
- }
-@@ -395,7 +395,7 @@ int topology_update_package_map(unsigned
- 			cpu, pkg, new);
- 	}
- found:
--	cpu_data(cpu).logical_proc_id = new;
-+	cpu_data(cpu).topo.logical_pkg_id = new;
- 	return 0;
- }
- /**
-@@ -418,7 +418,7 @@ int topology_update_die_map(unsigned int
- 			cpu, die, new);
- 	}
- found:
--	cpu_data(cpu).logical_die_id = new;
-+	cpu_data(cpu).topo.logical_die_id = new;
- 	return 0;
- }
- 
+ #ifdef CONFIG_X86_32
+ void default_send_IPI_mask_sequence_logical(const struct cpumask *mask, int vector);
 
