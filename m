@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D3AEB64DD
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 06:59:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73652C0015E
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jul 2023 06:59:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232339AbjG1G7T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jul 2023 02:59:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35628 "EHLO
+        id S233713AbjG1G7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jul 2023 02:59:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233560AbjG1G7N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 02:59:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CD2F19A7
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Jul 2023 23:58:26 -0700 (PDT)
+        with ESMTP id S233699AbjG1G7S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jul 2023 02:59:18 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E193C10D2
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Jul 2023 23:58:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690527505;
+        s=mimecast20190719; t=1690527509;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=mmcFpYRdWBxfuVgjThhmNKGNVqeFsdrzbtdmI8Kv2Ng=;
-        b=IZebKkHZp3ZwnNxhEbyZ0ovY5HyE2HjZWyH7LXH2L1Hrdyp7V5Sc7WC86ZxULjk2jZWiJ/
-        rlGJEtIDOlEUVGJJuJ7fKOXtWFbLPlxRPTEpLYie3jVVvVa2GfCj3H8lhHACw0g9auADqE
-        1Tbsjj1y0E77dQCajZDCFxFJxB3pmaU=
+        bh=8g3K5u6ld8VQPfnAPv8OVfldh/6YKqeR6ZjyYLoq2jo=;
+        b=TGewyUYkt0bpNWkacVxO/rxCV3YgfsNRffN/+U+z6crA+E9rHuZMYjyOlMIapbl0i/BJyH
+        +h5tDPE1kKVBQ6jOcHYUx+1YnX0c915GfoQEVu1VoCsNHjaJn34ZweAQfdYsycSHbeyjf4
+        2aH0YCKbDq2rLrQAQ4QBB2+w4zlb9zA=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-383-L_OHHr74OO2PcBNgd8HHvg-1; Fri, 28 Jul 2023 02:58:21 -0400
-X-MC-Unique: L_OHHr74OO2PcBNgd8HHvg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+ us-mta-544-2GSlm20uPKax2edw8LuRWQ-1; Fri, 28 Jul 2023 02:58:23 -0400
+X-MC-Unique: 2GSlm20uPKax2edw8LuRWQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 24C5F80027F;
-        Fri, 28 Jul 2023 06:58:21 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 133C185A58A;
+        Fri, 28 Jul 2023 06:58:23 +0000 (UTC)
 Received: from localhost (unknown [10.45.224.187])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D31142166B25;
-        Fri, 28 Jul 2023 06:58:20 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C540EC57964;
+        Fri, 28 Jul 2023 06:58:22 +0000 (UTC)
 From:   Oleksandr Natalenko <oleksandr@redhat.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
@@ -47,22 +47,22 @@ Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
         Jozef Bacik <jobacik@redhat.com>,
         Laurence Oberman <loberman@redhat.com>,
         Rob Evers <revers@redhat.com>
-Subject: [PATCH 1/3] scsi: qedf: do not touch __user pointer in qedf_dbg_stop_io_on_error_cmd_read() directly
-Date:   Fri, 28 Jul 2023 08:58:17 +0200
-Message-ID: <20230728065819.139694-2-oleksandr@redhat.com>
+Subject: [PATCH 3/3] scsi: qedf: do not touch __user pointer in qedf_dbg_fp_int_cmd_read() directly
+Date:   Fri, 28 Jul 2023 08:58:19 +0200
+Message-ID: <20230728065819.139694-4-oleksandr@redhat.com>
 In-Reply-To: <20230728065819.139694-1-oleksandr@redhat.com>
 References: <20230728065819.139694-1-oleksandr@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The qedf_dbg_stop_io_on_error_cmd_read() function invokes sprintf()
+The qedf_dbg_fp_int_cmd_read() function invokes sprintf()
 directly on a __user pointer, which may crash the kernel.
 
-Avoid doing that by using a small on-stack buffer for sprintf()
+Avoid doing that by vmalloc()'ating a buffer for scnprintf()
 and then calling simple_read_from_buffer() which does a proper
 copy_to_user() call.
 
@@ -81,32 +81,74 @@ Cc: linux-scsi@vger.kernel.org
 Tested-by: Laurence Oberman <loberman@redhat.com>
 Signed-off-by: Oleksandr Natalenko <oleksandr@redhat.com>
 ---
- drivers/scsi/qedf/qedf_debugfs.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/qedf/qedf_dbg.h     |  2 ++
+ drivers/scsi/qedf/qedf_debugfs.c | 21 +++++++++++++++------
+ 2 files changed, 17 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/qedf/qedf_dbg.h b/drivers/scsi/qedf/qedf_dbg.h
+index f4d81127239eb..5ec2b817c694a 100644
+--- a/drivers/scsi/qedf/qedf_dbg.h
++++ b/drivers/scsi/qedf/qedf_dbg.h
+@@ -59,6 +59,8 @@ extern uint qedf_debug;
+ #define QEDF_LOG_NOTICE	0x40000000	/* Notice logs */
+ #define QEDF_LOG_WARN		0x80000000	/* Warning logs */
+ 
++#define QEDF_DEBUGFS_LOG_LEN (2 * PAGE_SIZE)
++
+ /* Debug context structure */
+ struct qedf_dbg_ctx {
+ 	unsigned int host_no;
 diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
-index a3ed681c8ce3f..4d1b99569d490 100644
+index f910af0029a2c..6db996b73fe39 100644
 --- a/drivers/scsi/qedf/qedf_debugfs.c
 +++ b/drivers/scsi/qedf/qedf_debugfs.c
-@@ -185,18 +185,17 @@ qedf_dbg_stop_io_on_error_cmd_read(struct file *filp, char __user *buffer,
- 				   size_t count, loff_t *ppos)
+@@ -8,6 +8,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/debugfs.h>
+ #include <linux/module.h>
++#include <linux/vmalloc.h>
+ 
+ #include "qedf.h"
+ #include "qedf_dbg.h"
+@@ -98,7 +99,9 @@ static ssize_t
+ qedf_dbg_fp_int_cmd_read(struct file *filp, char __user *buffer, size_t count,
+ 			 loff_t *ppos)
  {
- 	int cnt;
-+	char cbuf[7];
++	ssize_t ret;
+ 	size_t cnt = 0;
++	char *cbuf;
+ 	int id;
+ 	struct qedf_fastpath *fp = NULL;
  	struct qedf_dbg_ctx *qedf_dbg =
- 				(struct qedf_dbg_ctx *)filp->private_data;
- 	struct qedf_ctx *qedf = container_of(qedf_dbg,
- 	    struct qedf_ctx, dbg_ctx);
+@@ -108,19 +111,25 @@ qedf_dbg_fp_int_cmd_read(struct file *filp, char __user *buffer, size_t count,
  
  	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "entered\n");
--	cnt = sprintf(buffer, "%s\n",
-+	cnt = sprintf(cbuf, "%s\n",
- 	    qedf->stop_io_on_error ? "true" : "false");
+ 
+-	cnt = sprintf(buffer, "\nFastpath I/O completions\n\n");
++	cbuf = vmalloc(QEDF_DEBUGFS_LOG_LEN);
++	if (!cbuf)
++		return 0;
++
++	cnt += scnprintf(cbuf + cnt, QEDF_DEBUGFS_LOG_LEN - cnt, "\nFastpath I/O completions\n\n");
+ 
+ 	for (id = 0; id < qedf->num_queues; id++) {
+ 		fp = &(qedf->fp_array[id]);
+ 		if (fp->sb_id == QEDF_SB_ID_NULL)
+ 			continue;
+-		cnt += sprintf((buffer + cnt), "#%d: %lu\n", id,
+-			       fp->completions);
++		cnt += scnprintf(cbuf + cnt, QEDF_DEBUGFS_LOG_LEN - cnt,
++				 "#%d: %lu\n", id, fp->completions);
+ 	}
  
 -	cnt = min_t(int, count, cnt - *ppos);
 -	*ppos += cnt;
 -	return cnt;
-+	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
++	ret = simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
++
++	vfree(cbuf);
++
++	return ret;
  }
  
  static ssize_t
