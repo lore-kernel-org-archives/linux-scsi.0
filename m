@@ -2,95 +2,137 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA7DDC001DC
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Jul 2023 08:35:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C958C0015E
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Jul 2023 10:24:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231185AbjG2IfU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 29 Jul 2023 04:35:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32906 "EHLO
+        id S229949AbjG2KYg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 29 Jul 2023 06:24:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229571AbjG2IfT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Jul 2023 04:35:19 -0400
-Received: from rs227.mailgun.us (rs227.mailgun.us [209.61.151.227])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36EB8448C
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Jul 2023 01:35:17 -0700 (PDT)
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=equiv.tech; q=dns/txt;
- s=mx; t=1690619716; x=1690626916; h=In-Reply-To: Content-Type: MIME-Version:
- References: Message-ID: Subject: Subject: Cc: To: To: From: From: Date:
- Sender: Sender; bh=y3sLkviRUL6QYQRMqhy3slBrjN+BHnnZlmEhHkBFmXo=;
- b=oJtnqnkh3JOWbEOqRjTejNFcAn7RsxKV/hKUTiZSoOzXIwabuIc88XUTCmw2MR4HFlwBwGv0fM0w9wxYhmf33JFLU5sk/RsM0QyES2+YKIdsJ4jci9NpsSm+Ei+hhS845PozGiBaU5Kg2f7X4cUGxlexyKcW9+y9fPZ+fbKuA/dUBvVD3sM7C/sRp5NG+KyxJB8diOdc9Jp9e3h5oH4oyxGqAdRQNlr1YlFj9n/aG38hHYsLvO3PUxMzQZEZpmD7PYfKJaz05haPji/W11JhusgXsgHVi+RO9kP8cjV2BR5GIwIAKd8260bgSCXtYNgeueBnjM8F/ymo1KpU5LfWAQ==
-X-Mailgun-Sending-Ip: 209.61.151.227
-X-Mailgun-Sid: WyI0OWM5MyIsImxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnIiwiOTNkNWFiIl0=
-Received: from mail.equiv.tech (equiv.tech [142.93.28.83]) by 0d28b296750d with SMTP id
- 64c4cf44ba84a2456296a7cc (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 29 Jul 2023 08:35:16 GMT
-Sender: james@equiv.tech
-Date:   Sat, 29 Jul 2023 01:35:15 -0700
-From:   James Seo <james@equiv.tech>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 6/6] scsi: mpt3sas: Replace a dynamic allocation with a
- local variable
-Message-ID: <ZMTPQ9c0hmVBapxe@equiv.tech>
-References: <20230725161331.27481-1-james@equiv.tech>
- <20230725161331.27481-7-james@equiv.tech>
- <202307281528.086CF1D063@keescook>
+        with ESMTP id S229472AbjG2KYf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Jul 2023 06:24:35 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27E9E4229;
+        Sat, 29 Jul 2023 03:24:34 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RCgYn2hGFzVjDr;
+        Sat, 29 Jul 2023 18:22:53 +0800 (CST)
+Received: from build.huawei.com (10.175.101.6) by
+ kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Sat, 29 Jul 2023 18:24:31 +0800
+From:   Wenchao Hao <haowenchao2@huawei.com>
+To:     John Garry <john.g.garry@oracle.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <louhongxiang@huawei.com>, Wenchao Hao <haowenchao2@huawei.com>
+Subject: [PATCH] scsi:libsas: Simplify sas_queue_reset and remove unused code
+Date:   Sat, 29 Jul 2023 18:24:51 +0800
+Message-ID: <20230729102451.2452826-1-haowenchao2@huawei.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <202307281528.086CF1D063@keescook>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600012.china.huawei.com (7.193.23.74)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jul 28, 2023 at 03:29:17PM -0700, Kees Cook wrote:
-> On Tue, Jul 25, 2023 at 09:13:31AM -0700, James Seo wrote:
->> This dynamic allocation can be replaced with a local variable.
->> 
->> Signed-off-by: James Seo <james@equiv.tech>
->> ---
->>  drivers/scsi/mpt3sas/mpt3sas_base.c | 19 +++++--------------
->>  1 file changed, 5 insertions(+), 14 deletions(-)
->> 
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> index cd6f36094159..a32a6fa728a7 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> @@ -5361,10 +5361,9 @@ _base_update_diag_trigger_pages(struct MPT3SAS_ADAPTER *ioc)
->>  static int _base_assign_fw_reported_qd(struct MPT3SAS_ADAPTER *ioc)
->>  {
->>  	Mpi2ConfigReply_t mpi_reply;
->> -	Mpi2SasIOUnitPage1_t *sas_iounit_pg1 = NULL;
->> +	Mpi2SasIOUnitPage1_t sas_iounit_pg1;
->>  	Mpi26PCIeIOUnitPage1_t pcie_iounit_pg1;
->>  	u16 depth;
->> -	int sz;
->>  	int rc = 0;
->>  
->>  	ioc->max_wideport_qd = MPT3SAS_SAS_QUEUE_DEPTH;
->> @@ -5374,28 +5373,21 @@ static int _base_assign_fw_reported_qd(struct MPT3SAS_ADAPTER *ioc)
->>  	if (!ioc->is_gen35_ioc)
->>  		goto out;
->>  	/* sas iounit page 1 */
->> -	sz = offsetof(Mpi2SasIOUnitPage1_t, PhyData);
->> -	sas_iounit_pg1 = kzalloc(sizeof(Mpi2SasIOUnitPage1_t), GFP_KERNEL);
-> 
-> Hunh. So Mpi2SasIOUnitPage1_t is used without the flexarray at all?
-> 
-> -Kees
+sas_queue_reset is always called with param "wait" set to 0, so
+remove it from this function's param list. And remove unused
+function sas_wait_eh.
 
-You call it "dead code" and "unused struct members".
-mpt3sas evidently calls it "documentation" ;)
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+---
+ drivers/scsi/libsas/sas_scsi_host.c | 41 +++--------------------------
+ 1 file changed, 3 insertions(+), 38 deletions(-)
 
-Anyway, does this commit get your "Reviewed-by:"?
-
-James
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 94c5f14f3c16..3f01e77eaee3 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -387,37 +387,7 @@ struct sas_phy *sas_get_local_phy(struct domain_device *dev)
+ }
+ EXPORT_SYMBOL_GPL(sas_get_local_phy);
+ 
+-static void sas_wait_eh(struct domain_device *dev)
+-{
+-	struct sas_ha_struct *ha = dev->port->ha;
+-	DEFINE_WAIT(wait);
+-
+-	if (dev_is_sata(dev)) {
+-		ata_port_wait_eh(dev->sata_dev.ap);
+-		return;
+-	}
+- retry:
+-	spin_lock_irq(&ha->lock);
+-
+-	while (test_bit(SAS_DEV_EH_PENDING, &dev->state)) {
+-		prepare_to_wait(&ha->eh_wait_q, &wait, TASK_UNINTERRUPTIBLE);
+-		spin_unlock_irq(&ha->lock);
+-		schedule();
+-		spin_lock_irq(&ha->lock);
+-	}
+-	finish_wait(&ha->eh_wait_q, &wait);
+-
+-	spin_unlock_irq(&ha->lock);
+-
+-	/* make sure SCSI EH is complete */
+-	if (scsi_host_in_recovery(ha->core.shost)) {
+-		msleep(10);
+-		goto retry;
+-	}
+-}
+-
+-static int sas_queue_reset(struct domain_device *dev, int reset_type,
+-			   u64 lun, int wait)
++static int sas_queue_reset(struct domain_device *dev, int reset_type, u64 lun)
+ {
+ 	struct sas_ha_struct *ha = dev->port->ha;
+ 	int scheduled = 0, tries = 100;
+@@ -425,8 +395,6 @@ static int sas_queue_reset(struct domain_device *dev, int reset_type,
+ 	/* ata: promote lun reset to bus reset */
+ 	if (dev_is_sata(dev)) {
+ 		sas_ata_schedule_reset(dev);
+-		if (wait)
+-			sas_ata_wait_eh(dev);
+ 		return SUCCESS;
+ 	}
+ 
+@@ -444,9 +412,6 @@ static int sas_queue_reset(struct domain_device *dev, int reset_type,
+ 		}
+ 		spin_unlock_irq(&ha->lock);
+ 
+-		if (wait)
+-			sas_wait_eh(dev);
+-
+ 		if (scheduled)
+ 			return SUCCESS;
+ 	}
+@@ -499,7 +464,7 @@ int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
+ 
+ 	if (current != host->ehandler)
+-		return sas_queue_reset(dev, SAS_DEV_LU_RESET, cmd->device->lun, 0);
++		return sas_queue_reset(dev, SAS_DEV_LU_RESET, cmd->device->lun);
+ 
+ 	int_to_scsilun(cmd->device->lun, &lun);
+ 
+@@ -522,7 +487,7 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
+ 
+ 	if (current != host->ehandler)
+-		return sas_queue_reset(dev, SAS_DEV_RESET, 0, 0);
++		return sas_queue_reset(dev, SAS_DEV_RESET, 0);
+ 
+ 	if (!i->dft->lldd_I_T_nexus_reset)
+ 		return FAILED;
+-- 
+2.32.0
 
