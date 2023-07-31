@@ -2,49 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E266AC41513
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jul 2023 13:28:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EDD2C001E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jul 2023 13:47:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232221AbjGaN2X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Jul 2023 09:28:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34250 "EHLO
+        id S230132AbjGaNrK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Jul 2023 09:47:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233000AbjGaN2D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2023 09:28:03 -0400
-Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5FD4171F;
-        Mon, 31 Jul 2023 06:27:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=z3FGDGVTFrElSVM7fG1oVI/2ZdLRjgqGQNhHfwty3ro=; b=gT1/elGv8pRKZcUAdG87anzivd
-        bQYyicftn/s4ecFExe79VFyXXKm4PsJXltInnPUVRyGqMwTQ5IqeaWlri5k9m69YCNyncH6jcww5b
-        0pavFKpPHmrYlleE9z4EDEBH1CsBhFD2t1pneT8PYLnICc5sGq3LnOjG3uuDRBK159PCKsg/vkBMo
-        68hYTVV+3ZXkOGHemrthHSfQXmpNG93pwA+tsAQi7uJFAZYtmhkOvyJXYxZy7BRyewjSXTSmcUf4N
-        F4yFzoc4Ag4BpxLQW3b4n+w+OMxW0RbfqdbNTXOoWnagtjDMHfTiPS9aoJz8QFwzVk/tA8rR+s4Xo
-        3f+UcpXg==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-        by desiato.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qQSvb-00CjRi-2p;
-        Mon, 31 Jul 2023 13:27:16 +0000
-Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id CD30C3001DD;
-        Mon, 31 Jul 2023 15:27:14 +0200 (CEST)
-Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id BB3622058B54B; Mon, 31 Jul 2023 15:27:14 +0200 (CEST)
-Date:   Mon, 31 Jul 2023 15:27:14 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "x86@kernel.org" <x86@kernel.org>,
+        with ESMTP id S229877AbjGaNrJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2023 09:47:09 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CB161708;
+        Mon, 31 Jul 2023 06:47:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1690811228; x=1722347228;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=nHF5W/WdqQq71KtethdkPzIq2ti8gzSk3md7KHrp0EI=;
+  b=AZS3RVNUF987Fp/el6o6nuIeFVXyOmTx5Spgh761j5Y0GOzQddmDVnCG
+   YYn1eM+KGyY7Cu9vTDAPX47mpa7nmXHwmkbj8dGBAnVfXs1z/QJLycTXE
+   97GlBK6fpA3iYOtA/4/8qof22vGiyuvgB/Cx57SpQESF21ilIqNgPFzNC
+   FNSPJ6g47nWCRvurdTHcsdDAwj3fgDCwDUtMQeGgagS9caWX6OUM78WwB
+   o6+69Flsh7ltuEFT3rpDOHxmRLnWHuC7IINs5Hoi/eFLbju6Jv4vFzDUB
+   n9mMRSZU1H7HUvj//fRpfm7Jr8R9KxYul182Miiv6cYFpN61aOE6wzL0T
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10788"; a="435331032"
+X-IronPort-AV: E=Sophos;i="6.01,244,1684825200"; 
+   d="scan'208";a="435331032"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Jul 2023 06:47:07 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10788"; a="1058936280"
+X-IronPort-AV: E=Sophos;i="6.01,244,1684825200"; 
+   d="scan'208";a="1058936280"
+Received: from nikithas-mobl.amr.corp.intel.com (HELO [10.212.216.144]) ([10.212.216.144])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Jul 2023 06:47:06 -0700
+Message-ID: <af4c8d30-7072-6196-a467-bc8c8dbb5a2f@linux.intel.com>
+Date:   Mon, 31 Jul 2023 06:47:05 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [patch v2 21/38] x86/cpu: Provide cpu_init/parse_topology()
+Content-Language: en-US
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     "x86@kernel.org" <x86@kernel.org>,
         Tom Lendacky <thomas.lendacky@amd.com>,
         Andrew Cooper <andrew.cooper3@citrix.com>,
-        Arjan van de Ven <arjan@linux.intel.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         James Smart <james.smart@broadcom.com>,
@@ -58,41 +64,20 @@ Cc:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
         Mike Travis <mike.travis@hpe.com>,
         Dimitri Sivanich <dimitri.sivanich@hpe.com>,
         Russ Anderson <russ.anderson@hpe.com>
-Subject: Re: [patch v2 21/38] x86/cpu: Provide cpu_init/parse_topology()
-Message-ID: <20230731132714.GH29590@hirez.programming.kicks-ass.net>
 References: <20230728105650.565799744@linutronix.de>
  <20230728120930.839913695@linutronix.de>
  <BYAPR21MB16889FD224344B1B28BE22A1D705A@BYAPR21MB1688.namprd21.prod.outlook.com>
- <871qgop8dc.ffs@tglx>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <871qgop8dc.ffs@tglx>
+From:   Arjan van de Ven <arjan@linux.intel.com>
+In-Reply-To: <BYAPR21MB16889FD224344B1B28BE22A1D705A@BYAPR21MB1688.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 31, 2023 at 02:34:39PM +0200, Thomas Gleixner wrote:
+On 7/30/2023 9:05 PM, Michael Kelley (LINUX) wrote:
+> Does anyone have suggestions on a different way to handle
+> this that's better than the above diff?  Other thoughts?
 
-> This collides massively with the other work I'm doing, which uses the
-> MADT provided information to actually evaluate various topology related
-> things upfront and later during bringup. Thats badly needed because lots
-> of todays infrastructure is based on heuristics and guesswork.
-> 
-> But it seems I wasted a month on reworking all of this just to be
-> stopped cold in the tracks by completely undocumented and unnecessary
-> hyper-v abuse.
-> 
-> So if Hyper-V insists on abusing the initial APIC ID as read from CPUID
-> for topology information related to L3, then hyper-v should override the
-> cache topology mechanism and not impose this insanity on the basic
-> topology evaluation infrastructure.
+how badly do you need xapic ? Meaning, can x2apic just be used instead always
 
-So I'm very tempted to suggest you continue with the topology rewrite
-and let Hyper-V keep the pieces. They're very clearly violating the SDM.
-
-Thing as they stand are untenable, the whole topology thing as it exists
-today is an untenable shitshow.
-
-Michael, is there anything you can do early (as in MADT parse early) to
-fix up the APIC-IDs?
