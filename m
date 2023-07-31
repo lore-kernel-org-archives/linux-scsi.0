@@ -2,177 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B11C001DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jul 2023 08:14:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50DA5C001DE
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jul 2023 08:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230110AbjGaIOh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Jul 2023 04:14:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35946 "EHLO
+        id S231185AbjGaIow (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Jul 2023 04:44:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230020AbjGaIOJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2023 04:14:09 -0400
+        with ESMTP id S231193AbjGaIoV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2023 04:44:21 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A917E75
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Jul 2023 01:11:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F46044B5
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Jul 2023 01:40:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690791101;
+        s=mimecast20190719; t=1690792840;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fuCYmnkImjZJwJ5RKqoRGV3s3QJX4IXBsMMwCatHIDg=;
-        b=Xa+GhMsIv1KAJLOg9Hh7VE1HcG4vZEOSRI7MeNJmnQ6xtP/aMBCOE2hx2Uc5+PKaE7rSUG
-        XF2041IiD07yZ4LGzXOdkb33a+j2JtChUozIjK+Ik/LohC5xqXA6SjhjlL2lRbrt9ESFHp
-        53A/Hj+NvK6fD8f5C+0mqjKsPGQNPMs=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-664-5uF_wT9KOJ-HBpkLT3XPsw-1; Mon, 31 Jul 2023 04:11:37 -0400
-X-MC-Unique: 5uF_wT9KOJ-HBpkLT3XPsw-1
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=tptzp+ajAKS5fHUGnepcgiEVA2vq/obigXOKUmVfnkc=;
+        b=HobiapIgyV0IVRd5+A27IGBN6wbiZVPnlVxlrvlRgBiAvnIdw29StdfOFT987IAnCR6Tai
+        skWS2tSjw7NPQ39FMxOmDzxtwK3/CoL2L2k5apcWhL1dZW69UgidTGLvLn6aSmd6UtliyQ
+        NhvDfFE2anydr1/GiMdbq7ZxTCQi6BU=
+Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-160-Mxl4Fo_aN3aEdc8V_46zjg-1; Mon, 31 Jul 2023 04:40:36 -0400
+X-MC-Unique: Mxl4Fo_aN3aEdc8V_46zjg-1
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id E33BB803FEF;
-        Mon, 31 Jul 2023 08:11:36 +0000 (UTC)
-Received: from butterfly.localnet (unknown [10.45.224.115])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4CFDA2166B25;
-        Mon, 31 Jul 2023 08:11:35 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 1C2A51C2C5A6;
+        Mon, 31 Jul 2023 08:40:36 +0000 (UTC)
+Received: from localhost (unknown [10.45.224.115])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BB01A2166B25;
+        Mon, 31 Jul 2023 08:40:35 +0000 (UTC)
 From:   Oleksandr Natalenko <oleksandr@redhat.com>
-To:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc:     David Laight <David.Laight@aculab.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Saurav Kashyap <skashyap@marvell.com>,
+To:     linux-kernel@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
         Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        "GR-QLogic-Storage-Upstream@marvell.com" 
-        <GR-QLogic-Storage-Upstream@marvell.com>,
+        David Laight <David.Laight@ACULAB.COM>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Jozef Bacik <jobacik@redhat.com>,
         Laurence Oberman <loberman@redhat.com>,
         Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH 2/3] scsi: qedf: do not touch __user pointer in
- qedf_dbg_debug_cmd_read() directly
-Date:   Mon, 31 Jul 2023 10:11:33 +0200
-Message-ID: <5955796.lOV4Wx5bFT@redhat.com>
-Organization: Red Hat
-In-Reply-To: <2938f701ba56419e861f1bb410831862@AcuMS.aculab.com>
-References: <20230728065819.139694-1-oleksandr@redhat.com>
- <20230728065819.139694-3-oleksandr@redhat.com>
- <2938f701ba56419e861f1bb410831862@AcuMS.aculab.com>
+Subject: [PATCH v2 0/3] scsi: qedf: sanitise uaccess
+Date:   Mon, 31 Jul 2023 10:40:31 +0200
+Message-ID: <20230731084034.37021-1-oleksandr@redhat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart4846980.31r3eYUQgx";
- micalg="pgp-sha256"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---nextPart4846980.31r3eYUQgx
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="UTF-8"; protected-headers="v1"
-From: Oleksandr Natalenko <oleksandr@redhat.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 31 Jul 2023 10:11:33 +0200
-Message-ID: <5955796.lOV4Wx5bFT@redhat.com>
-Organization: Red Hat
-In-Reply-To: <2938f701ba56419e861f1bb410831862@AcuMS.aculab.com>
-MIME-Version: 1.0
+qedf driver, debugfs part of it specifically, touches __user pointers
+directly for printing out info to userspace via sprintf(), which may
+cause crash like this:
 
-Hello/
+BUG: unable to handle kernel paging request at 00007ffd1d6b43a0
+IP: [<ffffffffaa7a882a>] string.isra.7+0x6a/0xf0
+Oops: 0003 [#1] SMP
+Call Trace:
+ [<ffffffffaa7a9f31>] vsnprintf+0x201/0x6a0
+ [<ffffffffaa7aa556>] sprintf+0x56/0x80
+ [<ffffffffc04227ed>] qedf_dbg_stop_io_on_error_cmd_read+0x6d/0x90 [qedf]
+ [<ffffffffaa65bb2f>] vfs_read+0x9f/0x170
+ [<ffffffffaa65cb82>] SyS_pread64+0x92/0xc0
 
-On p=C3=A1tek 28. =C4=8Dervence 2023 17:26:11 CEST David Laight wrote:
-> From: Oleksandr Natalenko
-> > Sent: 28 July 2023 07:58
-> >=20
-> > The qedf_dbg_debug_cmd_read() function invokes sprintf()
-> > directly on a __user pointer, which may crash the kernel.
->                                       ^^^ will
+Avoid this by preparing the info in a kernel buffer first, either
+allocated on stack for small printouts, or via vmalloc() for big ones,
+and then copying it to the userspace properly.
 
-I don't think it is 100% guaranteed, but for sure this is not a correct beh=
-aviour.
+Changes since v1 [1]:
 
-> >=20
-> > Avoid doing that by using a small on-stack buffer for sprintf()
-> > and then calling simple_read_from_buffer() which does a proper
-> > copy_to_user() call.
-> ...
-> > diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_=
-debugfs.c
-> > index 4d1b99569d490..f910af0029a2c 100644
-> > --- a/drivers/scsi/qedf/qedf_debugfs.c
-> > +++ b/drivers/scsi/qedf/qedf_debugfs.c
-> > @@ -138,15 +138,14 @@ qedf_dbg_debug_cmd_read(struct file *filp, char _=
-_user *buffer, size_t count,
-> >  			loff_t *ppos)
-> >  {
-> >  	int cnt;
-> > +	char cbuf[35];
->=20
-> Why 35?
-> I pick a multiple of 8 that if 'enough.
+  * use scnprintf() for on-stack buffers too
+  * adjust an on-stack buffer size in qedf_dbg_debug_cmd_read() to be a
+    multiple of 8, and also size it properly
+  * accumulate acks and reviews
 
-OK, I overestimated this, it should have been 27, but I'll make it 32 to be=
- a multiple of 8.
+[1] https://lore.kernel.org/lkml/20230728065819.139694-1-oleksandr@redhat.com/
 
-Thanks.
+Oleksandr Natalenko (3):
+  scsi: qedf: do not touch __user pointer in
+    qedf_dbg_stop_io_on_error_cmd_read() directly
+  scsi: qedf: do not touch __user pointer in qedf_dbg_debug_cmd_read()
+    directly
+  scsi: qedf: do not touch __user pointer in qedf_dbg_fp_int_cmd_read()
+    directly
 
-> >  	struct qedf_dbg_ctx *qedf_dbg =3D
-> >  				(struct qedf_dbg_ctx *)filp->private_data;
-> >=20
-> >  	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "debug mask=3D0x%x\n", qedf_deb=
-ug);
-> > -	cnt =3D sprintf(buffer, "debug mask =3D 0x%x\n", qedf_debug);
-> > +	cnt =3D sprintf(cbuf, "debug mask =3D 0x%x\n", qedf_debug);
->=20
-> Use scnprintf() to be sure it doesn't overflow.
-> Much safer if someone does a quick update or copies the code.
->=20
-> 	David
->=20
-> >=20
-> > -	cnt =3D min_t(int, count, cnt - *ppos);
-> > -	*ppos +=3D cnt;
-> > -	return cnt;
-> > +	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
-> >  }
-> >=20
-> >  static ssize_t
-> > --
-> > 2.41.0
->=20
-> -
-> Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1=
- 1PT, UK
-> Registration No: 1397386 (Wales)
->=20
->=20
+ drivers/scsi/qedf/qedf_dbg.h     |  2 ++
+ drivers/scsi/qedf/qedf_debugfs.c | 35 +++++++++++++++++++-------------
+ 2 files changed, 23 insertions(+), 14 deletions(-)
 
-
-=2D-=20
-Oleksandr Natalenko (post-factum)
-Principal Software Maintenance Engineer
---nextPart4846980.31r3eYUQgx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEENQb0bxzeq+SMr0+vn464/xkP+AUFAmTHbLUACgkQn464/xkP
-+AUbUg//Y5nvNFmiZz3xpfG0OcvALZ1+SByBMm4YAcq9G73iffGFVhiztDU/fauw
-3NuWUvndV88ywS9zTTIL2Bv+yFJo3yx7RJOovaYxaUA8Iw2lu530XSfy7Th3BRVE
-qpeQ/b6yzsJpq6eY8pWTM0qJkj78D6zeclFh4iGy8k0+DukUQjsjayvYeQFJdRex
-4cDUos7e9N4LkIAgMnaE6z8VYI2TJX7qSbK93VNao/XcASBpH9eEXo9pXAsFNIjV
-6aEYJOeMeCo1mfeqjQt6WMtADTqjyY1kTN8idUoRYvErWXDJDzmdIEkxElfw7vPD
-QTZE10ggiWFcV+HXUXJf516TFfsOdHxvIQr176lfUqehb0HMQwarVvLq55tBYAph
-ZM/4GQG0lifgptZIetQxV6ySTSYk8AuTwOkMCSwEe9rQqz4JN1MJDKogApUDMdEy
-2IBy9MxmX9K/FBnktEs5i9TG6jeLjOj50zx8i2SQ/P/hPuA90gtsUdQ1xIN6UJ7X
-1vycNlKK2CmfbvNLhDxwXrunjChjXZiRE/4FifpjgFO1ynr+n2nhtDF369jkC+Y3
-KZNPns4pVQOEj6HUDMEuMcfIk0YtMeZCUyhbXepUlmo0qLkDPiPtGBrpBmt9WPZu
-kvFo1Mj+JzsGCh41ra1SFNMjL8n0ii0NVV6ofriV7KKkBgxn5II=
-=loJJ
------END PGP SIGNATURE-----
-
---nextPart4846980.31r3eYUQgx--
-
-
+-- 
+2.41.0
 
