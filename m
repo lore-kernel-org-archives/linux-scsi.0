@@ -2,99 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FD65C001E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jul 2023 20:09:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A375AC41513
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jul 2023 20:41:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230291AbjGaUJ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Jul 2023 16:09:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44188 "EHLO
+        id S229727AbjGaUlb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Jul 2023 16:41:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230252AbjGaUJ5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2023 16:09:57 -0400
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1965210E;
-        Mon, 31 Jul 2023 13:09:56 -0700 (PDT)
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-686f1240a22so4521280b3a.0;
-        Mon, 31 Jul 2023 13:09:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690834195; x=1691438995;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AI4CujaNtYeF5hv5C0iQj+O+gsyjq+RPXX+49iej8jk=;
-        b=iMWUvm30WPJ+InO4LiU4R7O15kJxkJpsC/Cmkcw8MN7ISjrOdqSmPYJ0QdpnRUGKe/
-         xnf9wsUs82ts4yyCA3yHLfwOxWZIMrfcHxyo4ItZgO7oEmySPQm+BdtS4h74x2yDqbkl
-         4V5Mbu6FBV3yssLReeQK/Gs8+MbMy2liD76BCPIapO//3dI/UnKgggoV3u/o3H+hSdMP
-         s0+UuUpH2rH25vujeKbKeJcj+0OsseyCBAJyT4sNZiC3L7kbV5yfGhhA2vmP3fyAFI8y
-         PreZRMy1EyATeK3JUlTseTUG+4eR5LmrjqglJSZApUtYt4e5xnP/AKHT/Lh7Bvw8ug9n
-         JR/A==
-X-Gm-Message-State: ABy/qLZZfNPS1MgbHdR0sqnkf0G+CwZDNB/wRej/a4/V+3GfXdFCw4eM
-        oK3i4KvGHWMH8vwnYiA2Yws8M1ugWWI=
-X-Google-Smtp-Source: APBJJlGD9BFqBsPyVCD8WhVzNiRQAykAg4ZdwzwOH58GdD4DOzhhvI8dNh9zFOkd6Ef/MQ4lviHg0g==
-X-Received: by 2002:a05:6a20:549b:b0:121:e573:3680 with SMTP id i27-20020a056a20549b00b00121e5733680mr12741513pzk.62.1690834195090;
-        Mon, 31 Jul 2023 13:09:55 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:ee35:83be:6601:9c01? ([2620:15c:211:201:ee35:83be:6601:9c01])
-        by smtp.gmail.com with ESMTPSA id e3-20020aa78243000000b006866a293e58sm8148401pfn.176.2023.07.31.13.09.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 31 Jul 2023 13:09:54 -0700 (PDT)
-Message-ID: <43cd0057-c6d8-bc92-08f4-d767336d2cfe@acm.org>
-Date:   Mon, 31 Jul 2023 13:09:52 -0700
+        with ESMTP id S229535AbjGaUla (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2023 16:41:30 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FC55E75;
+        Mon, 31 Jul 2023 13:41:29 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1690836088;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=BTxPMB3V133cgzwz17m6DmWwRtesGt+jhqpdIH5ALoQ=;
+        b=0G8BQSRxV7478DeJ/esCuK54evV9NQCPC4ID96ymAA03ofm8kvZ4nsCn+DSgeW8XJsJY8W
+        zq+UbN2szW1PdZUdeqsbf36Zf7VLeoc4xsqb8PJ+iBS2a0D0IbQO+j1XWWCQrDosRG3Ryi
+        IQW4zSl88x4G+daZbw5QVfdTPYrwM9RWEOqrIvQh0cWhcVTsMVZ0lUlJGeNE/chKw4FY9p
+        g65UGbWCbjfotggxaInr71hJBvC1Ny43kpiio468+BQwCCC4rTesKnIlouhjuqAFlcP693
+        QrvjJtK35uy1mUdxLSDHT3KtzKBMe8hU8Iys9QYd+yqqXpbtMgNCHmo2/8DKCQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1690836088;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=BTxPMB3V133cgzwz17m6DmWwRtesGt+jhqpdIH5ALoQ=;
+        b=/FhSHnIwquFqCkm7XmxX3HCzSElSAB8dpvKfGEw71LcWF5A9ynlFHoO5mKwt/pnm9jEBod
+        QbfR97sGl4l9hnAg==
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     "x86@kernel.org" <x86@kernel.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Andrew Cooper <andrew.cooper3@citrix.com>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <james.smart@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
+        Jean Delvare <jdelvare@suse.com>,
+        Huang Rui <ray.huang@amd.com>, Juergen Gross <jgross@suse.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Mike Travis <mike.travis@hpe.com>,
+        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+        Russ Anderson <russ.anderson@hpe.com>
+Subject: RE: [patch v2 21/38] x86/cpu: Provide cpu_init/parse_topology()
+In-Reply-To: <BYAPR21MB168857E160C70BC76665FE6FD705A@BYAPR21MB1688.namprd21.prod.outlook.com>
+References: <20230728105650.565799744@linutronix.de>
+ <20230728120930.839913695@linutronix.de>
+ <BYAPR21MB16889FD224344B1B28BE22A1D705A@BYAPR21MB1688.namprd21.prod.outlook.com>
+ <871qgop8dc.ffs@tglx>
+ <BYAPR21MB168857E160C70BC76665FE6FD705A@BYAPR21MB1688.namprd21.prod.outlook.com>
+Date:   Mon, 31 Jul 2023 22:41:27 +0200
+Message-ID: <87jzufn79k.ffs@tglx>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH 2/2] scsi: ufs: qcom: Add support for scaling
- interconnects
-Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        andersson@kernel.org, konrad.dybcio@linaro.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Brian Masney <bmasney@redhat.com>
-References: <20230731145020.41262-1-manivannan.sadhasivam@linaro.org>
- <20230731145020.41262-3-manivannan.sadhasivam@linaro.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230731145020.41262-3-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/31/23 07:50, Manivannan Sadhasivam wrote:
-> +struct __ufs_qcom_bw_table {
-> +	u32 mem_bw;
-> +	u32 cfg_bw;
-> +} ufs_qcom_bw_table[MODE_MAX + 1][QCOM_UFS_MAX_GEAR + 1][QCOM_UFS_MAX_LANE + 1] = {
-> +	[MODE_MIN][0][0]		   = { 0,		0 }, /* Bandwidth values in KB/s */
-> +	[MODE_PWM][UFS_PWM_G1][UFS_LANE_1] = { 922,		1000 },
-> +	[MODE_PWM][UFS_PWM_G2][UFS_LANE_1] = { 1844,		1000 },
-> +	[MODE_PWM][UFS_PWM_G3][UFS_LANE_1] = { 3688,		1000 },
-> +	[MODE_PWM][UFS_PWM_G4][UFS_LANE_1] = { 7376,		1000 },
-> +	[MODE_PWM][UFS_PWM_G1][UFS_LANE_2] = { 1844,		1000 },
-> +	[MODE_PWM][UFS_PWM_G2][UFS_LANE_2] = { 3688,		1000 },
-> +	[MODE_PWM][UFS_PWM_G3][UFS_LANE_2] = { 7376,		1000 },
-> +	[MODE_PWM][UFS_PWM_G4][UFS_LANE_2] = { 14752,		1000 },
-> +	[MODE_HS_RA][UFS_HS_G1][UFS_LANE_1] = { 127796,		1000 },
-> +	[MODE_HS_RA][UFS_HS_G2][UFS_LANE_1] = { 255591,		1000 },
-> +	[MODE_HS_RA][UFS_HS_G3][UFS_LANE_1] = { 1492582,	102400 },
-> +	[MODE_HS_RA][UFS_HS_G4][UFS_LANE_1] = { 2915200,	204800 },
-> +	[MODE_HS_RA][UFS_HS_G1][UFS_LANE_2] = { 255591,		1000 },
-> +	[MODE_HS_RA][UFS_HS_G2][UFS_LANE_2] = { 511181,		1000 },
-> +	[MODE_HS_RA][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
-> +	[MODE_HS_RA][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
-> +	[MODE_HS_RB][UFS_HS_G1][UFS_LANE_1] = { 149422,		1000 },
-> +	[MODE_HS_RB][UFS_HS_G2][UFS_LANE_1] = { 298189,		1000 },
-> +	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_1] = { 1492582,	102400 },
-> +	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_1] = { 2915200,	204800 },
-> +	[MODE_HS_RB][UFS_HS_G1][UFS_LANE_2] = { 298189,		1000 },
-> +	[MODE_HS_RB][UFS_HS_G2][UFS_LANE_2] = { 596378,		1000 },
-> +	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
-> +	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
-> +	[MODE_MAX][0][0]		    = { 7643136,	307200 },
-> +};
+On Mon, Jul 31 2023 at 16:25, Michael Kelley wrote:
+> From: Thomas Gleixner <tglx@linutronix.de> Sent: Monday, July 31, 2023 5:35 AM
+>> Define bogus. MADT is the primary source of information because that's
+>> how we know how many CPUs (APICs) are there and what their APIC ID is
+>> which we can use to wake them up. So there is a reasonable expectation
+>> that this information is consistent with the rest of the system.
+>
+> Commit d49597fd3bc7 "x86/cpu: Deal with broken firmware (VMWare/Xen)"
+> mentions VMware and XEN implementations that violate the spec.  The
+> commit is from late 2016.  Have these bad systems aged out and no longer
+> need accommodation?
 
-Why has the above data structure not been declared as 'static const'?
+They do, but this commit explicitely uses the MADT/real APIC ID value:
+
+     c->initial_apicid = apicid;
+
+So the new mechanics are accomodating for those, right?
 
 Thanks,
 
-Bart.
+        tglx
