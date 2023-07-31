@@ -2,190 +2,141 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B9FC001E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jul 2023 12:34:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECCFDC001DC
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jul 2023 13:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232562AbjGaMeo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Jul 2023 08:34:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55834 "EHLO
+        id S230103AbjGaNDn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Jul 2023 09:03:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229922AbjGaMen (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2023 08:34:43 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1123139;
-        Mon, 31 Jul 2023 05:34:41 -0700 (PDT)
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1690806879;
+        with ESMTP id S229868AbjGaNDm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2023 09:03:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F58DB0
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Jul 2023 06:02:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1690808576;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=26bNPteWLKWX+IXb6CXn0F6iXGIdt9GmgAnDVbyNoUc=;
-        b=uDXkw2Ay5rxDMiOgBXNnZOMctMLa1CZfO0YQ8FiSGypGhqCA3YfCB8QO2bcWKTBHwXPon1
-        4SG2jZnu7h2E7IgvCIIkNvArtILo3wCcp3CKPy5vKXHlEu9kl9xoiEgt2/OZrSk5zQt9qK
-        hhyYL1L7z2rvJwtBDzahacKFKUkKRQhzoI1+IG3DQTmICoVIKPsVfm8lRHhcYiLm/X/Yck
-        xPrqyPUakMrE+ZKueCEgPUEM1omfO9aN/m3xm7S88c+ATcmuN5rTFRnaSriVrj6PapaEe7
-        2T704/PZ4VFKJNeIGkqSvC/L8Han350umiQssr78hOhSnZRAm3MGYcH6f02J6g==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1690806879;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=26bNPteWLKWX+IXb6CXn0F6iXGIdt9GmgAnDVbyNoUc=;
-        b=1w9HP+LRa/uXwBirEj5ZNjtThhek9E5qaTN8T6DYClnfLEm8+4TGDNsMvPGktEuJjF8s8B
-        56/kKbxH3Nbb1oCQ==
-To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     "x86@kernel.org" <x86@kernel.org>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Andrew Cooper <andrew.cooper3@citrix.com>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <james.smart@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
-        Jean Delvare <jdelvare@suse.com>,
-        Huang Rui <ray.huang@amd.com>, Juergen Gross <jgross@suse.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Mike Travis <mike.travis@hpe.com>,
-        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
-        Russ Anderson <russ.anderson@hpe.com>
-Subject: RE: [patch v2 21/38] x86/cpu: Provide cpu_init/parse_topology()
-In-Reply-To: <BYAPR21MB16889FD224344B1B28BE22A1D705A@BYAPR21MB1688.namprd21.prod.outlook.com>
-References: <20230728105650.565799744@linutronix.de>
- <20230728120930.839913695@linutronix.de>
- <BYAPR21MB16889FD224344B1B28BE22A1D705A@BYAPR21MB1688.namprd21.prod.outlook.com>
-Date:   Mon, 31 Jul 2023 14:34:39 +0200
-Message-ID: <871qgop8dc.ffs@tglx>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        bh=oB/6Dw9oBXzBWfOZqL5p67VYB6V8gUZZfJBgQJdcdPw=;
+        b=hnJkpy3Q3Or/AOYjfPVVyFUUVjoALjybcFyJB2bWq83/OTG4Iv8WboqLS+KochkSgR0hgn
+        6k3zrMqu89qBo9LHRjL1UaPCovJBQJ2zk6BgSWhUSgpcAn/tZnCC5UxiyQ2e4Z+UYc/DTJ
+        QsEegpzhpC624WPH0IzsgfozTfi8CcM=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-313-qbdclVDwN5ejyPMynuC-IA-1; Mon, 31 Jul 2023 09:02:54 -0400
+X-MC-Unique: qbdclVDwN5ejyPMynuC-IA-1
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-63d09e8bc06so34142746d6.0
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Jul 2023 06:02:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690808574; x=1691413374;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=oB/6Dw9oBXzBWfOZqL5p67VYB6V8gUZZfJBgQJdcdPw=;
+        b=AT01xSHxnpkWYd/isNBpsWowH6R+3N6vZgezN0aASCrBFtlykSU599DxoJuwI8HUGT
+         chDOEkXLxi+cEutq6XNR3jxnNVVP+kPhEhDWidPVHdrkRkzl6fTJqEh0xpHfWFY7j1hU
+         IZgKprqy2IFZ+4m0tOBj45mIO2hGVsu86KrXolrRN94vzQoEbG50VHkOVy56n4jp6Vtw
+         6cVP1NFunJe2vcwqFm1HDndPCQsuzG1emRKSKoScwOi3sxEqI7uPqjuw7OpzcMCsCw3M
+         6ypGcH+66eBy3j/uHNS6stBwu36pdehgAe8InvBubGA9t6PHFc3B29skDEau2pH+0Csd
+         KWtw==
+X-Gm-Message-State: ABy/qLZy87Hw2LcqKD9WcJfX7S1EslIQ7oIQmJTgjPIYJSRGkwb6ghvb
+        v5zJv35Zvepx9JyN8E241dXZO3o7QlqZkNii49qL6aM3VJurCclBYlT7O3VV5HpyQn42VM5uCdk
+        5kXRRCoef0jj/t602xHMOqw==
+X-Received: by 2002:a0c:b39a:0:b0:631:f6f1:87e7 with SMTP id t26-20020a0cb39a000000b00631f6f187e7mr7192823qve.58.1690808574149;
+        Mon, 31 Jul 2023 06:02:54 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlFG7i7zXx55Ghhvh9pE7o3oxIcnFeD8Xg5y9v23E6xZBuyoPDt+Q0Bel0JKnZXaWqC1K0Ls9Q==
+X-Received: by 2002:a0c:b39a:0:b0:631:f6f1:87e7 with SMTP id t26-20020a0cb39a000000b00631f6f187e7mr7192776qve.58.1690808573670;
+        Mon, 31 Jul 2023 06:02:53 -0700 (PDT)
+Received: from ?IPv6:2600:6c64:4e7f:603b:2613:173:a68a:fce8? ([2600:6c64:4e7f:603b:2613:173:a68a:fce8])
+        by smtp.gmail.com with ESMTPSA id f12-20020a0cf3cc000000b006362c5760f8sm3746898qvm.139.2023.07.31.06.02.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 Jul 2023 06:02:53 -0700 (PDT)
+Message-ID: <2471a07d0599962e8a341e06f86e1e92d55928cf.camel@redhat.com>
+Subject: Re: [PATCH] scsi: qla2xxx avoid a panic due to BUG() if a
+ WRITE_SAME command  is sent to a device that has no protection
+From:   Laurence Oberman <loberman@redhat.com>
+To:     Quinn Tran <qutran@marvell.com>, njavalai@marvell.com,
+        Emilne@redhat.com
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "djeffery@redhat.com" <djeffery@redhat.com>,
+        "emilne@redhat.com" <emilne@redhat.com>,
+        "jpittman@redhat.com" <jpittman@redhat.com>
+Date:   Mon, 31 Jul 2023 09:02:51 -0400
+In-Reply-To: <072c496c98e84a9dcafc21a8de72c53e109f54ff.camel@redhat.com>
+References: <77f405a048b07e4451b7d7adaeba7ce4a00b7efb.camel@redhat.com>
+         <yq1r0plkc4x.fsf@ca-mkp.ca.oracle.com>
+         <e27a1fe9be4778a9114dd7e5349ecac107d45e7b.camel@redhat.com>
+         <6f7c0c5a86ca6e36babea3847288820b08354c3b.camel@redhat.com>
+         <BY5PR18MB3345E19940FBB7F603AE0B8AD536A@BY5PR18MB3345.namprd18.prod.outlook.com>
+         <2b32f4404ab90a8842d27f0d8c0c0474c2dd984a.camel@redhat.com>
+         <072c496c98e84a9dcafc21a8de72c53e109f54ff.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 31 2023 at 04:05, Michael Kelley wrote:
->> +	/*
->> +	 * The initial invocation from early_identify_cpu() happens before
->> +	 * the APIC is mapped or X2APIC enabled. For establishing the
->> +	 * topology, that's not required. Use the initial APIC ID.
->> +	 */
->> +	if (early)
->> +		c->topo.apicid =3D c->topo.initial_apicid;
->> +	else
->> +		c->topo.apicid =3D read_apic_id();
->
-> Using the value from the local APIC ID reg turns out to cause a problem in
-> some Hyper-V VM configurations.  If a VM has multiple L3 caches (probably
-> due to multiple NUMA nodes) and the # of CPUs in the span of the L3 cache
-> is not a power of 2, the APIC IDs for the CPUs in the span of the 1st L3 =
-cache
-> are sequential starting with 0.  But then there is a gap before starting =
-the
-> APIC IDs for the CPUs in the span of the 2nd L3 cache.  The gap is
-> repeated if there are additional L3 caches.
->
-> The CPUID instruction executed on a guest vCPU correctly reports the APIC
-> IDs.  However, the ACPI MADT assigns the APIC IDs sequentially with no
-> gaps, and the guest firmware sets the APIC_ID register for each local APIC
-> to match the MADT.  When parse_topology() sets the apicid field based on
-> reading the local APIC ID register, the value it sets is different from t=
-he
-> initial_apicid value for CPUs in the span of the 2nd and subsequent L3
-> caches, because there's no gap in the APIC IDs read from the local APIC.
-> Linux boots and runs, but the topology is set up with the wrong span for
-> the L3 cache and for the associated scheduling domains.
+On Wed, 2023-07-26 at 08:40 -0400, Laurence Oberman wrote:
+> On Wed, 2023-07-12 at 09:25 -0400, Laurence Oberman wrote:
+> > On Wed, 2023-07-12 at 00:34 +0000, Quinn Tran wrote:
+> > > Hello Nilesh and Marvell
+> > >=20
+> > > Any chance to get comments/eyes on this please.
+> > > Given its causing system crashes we need to decide how best to
+> > > deal
+> > > with it.
+> > >=20
+> > > QT:=C2=A0 Laurence,
+> > > In understanding the severity,=C2=A0 Does end customer uses
+> > > sg_write_same
+> > > as the mechanism to move data?
+> > > Other than the sg_write_same utility, how common is end customer
+> > > uses
+> > > 32Byte CDB?=C2=A0=C2=A0 It seems like upper layer doesn't=C2=A0 have =
+support for
+> > > 32Bytes CDB at this time.
+> > >=20
+> > > The code path you're modifying is for the T10-PI disk.=C2=A0 This dis=
+k
+> > > is
+> > > "non-T10-PI" where it may create some confusion for next reader n
+> > > Martin on why we've wander down this code path.
+> > >=20
+> > > Will queue up a patch that plug this hole.
+> > >=20
+> > >=20
+> > >=20
+> >=20
+> > OK, Thank you
+> > In this case the customer was specifically using sg_write_same. I
+> > am
+> > not sure if it was part of a script or some other use case.
+> > They were of the opinion it was severe enough of an issue to
+> > warrant
+> > fixing so they logged a case with us.
+> > Thanks for looking into this.
+> >=20
+> > Regards
+> > Laurence
+> Hello QT
+>=20
+> Did I miss an update to this. Was another fix sent.
+> We need to deal with this at Red Hat as soon as possible please.
+>=20
+> Regards
+> Laurence
 
-TBH. That's an insanity. MADT and the actual APIC ID determine the
-topology. So the gaps should be reflected in MADT and the actual APIC
-IDs should be set correctly if the intent is to provide topology
-information.
+QT=20
+WStillw aiting on you guys and we need to get thjis fixed,
+Please send the fix upstream that you were thinking of today.
+Regards
+Laurence
 
-Just for the record. This hack works only on Intel today, because AMD
-init sets topo.apicid =3D read_apic_id() unconditionally. So this is
-inconsistent already, no?
-
-> The old code derives the apicid from the initial_apicid via the
-> phys_pkg_id() callback, so these bad Hyper-V VM configs skate by.  The
-> wrong value in the local APIC ID register and MADT does not affect
-> anything, except that the check in validate_apic_and_package_id() fails
-> during boot, and a set of "Firmware bug:" messages is correctly
-> output.
-
-So instead of fixing the firmware bugs, hyper-v just moves on and
-pretends that everything works fine, right?
-
-> Three thoughts:
->
-> 1)  Are Hyper-V VMs the only place where the local APIC ID register might
-> have a bogus value?  Probably so, but you never know what might crawl
-> out.
-
-Define bogus. MADT is the primary source of information because that's
-how we know how many CPUs (APICs) are there and what their APIC ID is
-which we can use to wake them up. So there is a reasonable expectation
-that this information is consistent with the rest of the system.
-
-The Intel SDM clearly says in Vol 3A section 9.4.5 Identifying Logical
-Processors in an MP System:
-
-  "After the BIOS has completed the MP initialization protocol, each
-   logical processor can be uniquely identified by its local APIC
-   ID. Software can access these APIC IDs in either of the following
-   ways:"
-
-These ways include read from APIC, read MADT, read CPUID and implies
-that this must be consistent. For X2APIC it's actually written out:
-
-  "If the local APIC unit supports x2APIC and is operating in x2APIC
-   mode, 32-bit APIC ID can be read by executing a RDMSR instruction to
-   read the processor=E2=80=99s x2APIC ID register. This method is equivale=
-nt to
-   executing CPUID leaf 0BH described below."
-
-AMD has not been following that in the early 64bit systems as they moved
-the APIC ID space to start at 32 for the first CPU in the first socket
-for whatever reasons. But since then the kernel reads back the APIC ID
-on AMD systems into topo.apicid. But that was long ago and can easily be
-dealt with because at least the real APIC ID and the MADT/MPTABLE
-entries are consistent.
-
-Hypervisors have their own CPUID space to override functionality with
-their own magic stuff, but imposing their nutbolt ideas on the
-architectural part of the system is not only wrong, it's disrespectful
-against the OS developers who try to keep their system sane.
-
-> 2) The natural response is "Well, fix Hyper-V!"  I first had this convers=
-ation
-> with the Hyper-V team about 5 years ago.  Some cases of the problem were
-> fixed, but some cases remain unfixed.  It's a long story.
->
-> 3)  Since Hyper-V code in Linux already has an override for the apic->rea=
-d()
-> function, it's possible to do a hack in that override so that apicid gets=
- set to
-> the same value as initial_apicid, which matches the old code.  Here's the=
- diff:
-
-This collides massively with the other work I'm doing, which uses the
-MADT provided information to actually evaluate various topology related
-things upfront and later during bringup. Thats badly needed because lots
-of todays infrastructure is based on heuristics and guesswork.
-
-But it seems I wasted a month on reworking all of this just to be
-stopped cold in the tracks by completely undocumented and unnecessary
-hyper-v abuse.
-
-So if Hyper-V insists on abusing the initial APIC ID as read from CPUID
-for topology information related to L3, then hyper-v should override the
-cache topology mechanism and not impose this insanity on the basic
-topology evaluation infrastructure.
-
-Yours seriously grumpy
-
-      tglx
