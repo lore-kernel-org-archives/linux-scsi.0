@@ -2,94 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86DFBC00528
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 20:14:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21282C00528
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 20:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229480AbjHAUOO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 16:14:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44530 "EHLO
+        id S229814AbjHAUPi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 16:15:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232046AbjHAUN6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 16:13:58 -0400
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37DF12D79
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 13:13:44 -0700 (PDT)
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1bbd03cb7c1so38571425ad.3
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Aug 2023 13:13:44 -0700 (PDT)
+        with ESMTP id S229543AbjHAUPh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 16:15:37 -0400
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D54A2683;
+        Tue,  1 Aug 2023 13:15:35 -0700 (PDT)
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1b8b4749013so48229415ad.2;
+        Tue, 01 Aug 2023 13:15:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690920823; x=1691525623;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=HELS0oepZc4nTniai12aTa4zKy75i2iH+bhamqE+z+I=;
-        b=Pk22NmIPFOB2KdMeaBJb4V3AQy1fEMn5ruCtFQJToCgEjZVXiprFlprcmC50gmw7fs
-         fqLe0wWtUQv11F2sYUTtYQbQ88qYRzmxm+2EYv7gIjTYgVVTM5Ii9MSELrR7CD6gciN2
-         O84GXeMDr4K8iGjkwySuc4OuQMGpWo82ww89omWWK/gu1+65NqCEII6JnR7PZP1CiWMs
-         eZrpVJCar2F29bJK9o8M+koEzLQ0y496am7Dh8hxOEN1FXi6fmsCO3NTn2d4y69cf5ri
-         dRej7E7lv/b2gIKGH6t7jmW4Z9fjWSfEe6cQTqmdruS7g0hhCD9xd/AtuCglz0fBv7ld
-         UjHg==
-X-Gm-Message-State: ABy/qLZdjHiaNl3OY3Al5rUEfn5/3GMPZMK5D/1+gT6ekRzVG4z3AQJK
-        uxTYshjbzCoBnLhl7yIH8/I=
-X-Google-Smtp-Source: APBJJlGbn8296TYqXrIYF9YMZy17NE1KoP/0F1UqM+NQJATytwEbyXrCJeSOAULupkBbE5fAMn6cBQ==
-X-Received: by 2002:a17:902:cec6:b0:1bb:df69:5e44 with SMTP id d6-20020a170902cec600b001bbdf695e44mr14510159plg.56.1690920822759;
-        Tue, 01 Aug 2023 13:13:42 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:9346:70e3:158a:281c])
-        by smtp.gmail.com with ESMTPSA id g6-20020a170902740600b001b9ff5aa2e7sm10838077pll.239.2023.08.01.13.13.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Aug 2023 13:13:42 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Naresh Kamboju <naresh.kamboju@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Can Guo <quic_cang@quicinc.com>
-Subject: [PATCH] scsi: ufs: Fix the build for gcc 9 and before
-Date:   Tue,  1 Aug 2023 13:13:23 -0700
-Message-ID: <20230801201337.1007617-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.41.0.585.gd2178a4bd4-goog
+        d=1e100.net; s=20221208; t=1690920935; x=1691525735;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=xB85EUEyYNgKQVCE1WlItPU56xIvZB5N93QNEp6sDIo=;
+        b=geDpVVZFDdfqZbkAtbfy2X67vKV3caS6dvGDKIti3r3qOYtI+8nC+ldfK2k12CNWcH
+         9xorTSy1bzCwfhyTDwbuuAwEneqXlxncMcHSEs1BI1qOu9huJH84O4V9LYrQUS0GMwJZ
+         Zdt4b3lyAL9MnUPOwVJ+4r4txRAu+djO5AuWyexBrZej514PYU0b/pQ9d6UcWR3Aatu1
+         mIyakXsJ5Meey5euBZ4NfdYhLRxtzvSzrPXQgxVrq/lqksjlR6pTrdXihasN3aoyaaI/
+         cX9LE6K7Y6TX3HNMk1YBPmJSIe1i1JIOidOpZxWSoBTjiOiBpDykTk1blasFy+RvXHvH
+         60/Q==
+X-Gm-Message-State: ABy/qLaajollY2YH/5nufITH8Gg6Yrc+2sCqcMEpYUyxUDqaxReAIj5A
+        780Ub4QfYCFL2e2SBUeFN5E=
+X-Google-Smtp-Source: APBJJlGiDSeX7q/7wphP0CDKyITTGsFfFei8daLm8zJFXJMqWHNLbENCK9/WG9cSi6fxOLNzhIjciw==
+X-Received: by 2002:a17:902:7009:b0:1bc:2bd:852a with SMTP id y9-20020a170902700900b001bc02bd852amr9131808plk.42.1690920934786;
+        Tue, 01 Aug 2023 13:15:34 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id c13-20020a170902d48d00b001b558c37f91sm10825541plg.288.2023.08.01.13.15.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Aug 2023 13:15:34 -0700 (PDT)
+Message-ID: <5f6c1dd7-982b-2214-f229-80a8ae40780d@acm.org>
+Date:   Tue, 1 Aug 2023 13:15:32 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: next: arm64: gcc-8-defconfig: ufshcd.c:10629:2:
+ /builds/linux/include/linux/compiler_types.h:397:38: error: call to
+ '__compiletime_assert_553' declared with attribute error: BUILD_BUG_ON
+ failed:
+Content-Language: en-US
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Naresh Kamboju <naresh.kamboju@linaro.org>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org,
+        linux-next <linux-next@vger.kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Anders Roxell <anders.roxell@linaro.org>
+References: <CA+G9fYur8UJoUyTLJFVEJPh-15TJ7kbdD2q8xVz8a3fLjkxxVw@mail.gmail.com>
+ <a660adba-b73b-1c02-f642-c287bb4c72fc@acm.org>
+ <CA+G9fYsYifn9ywPc8KqYHwDDSTRQGOgf_T58Gpt9CYDBs8u+SQ@mail.gmail.com>
+ <227327a3-399a-4a9f-a775-e9627656b5a1@app.fastmail.com>
+ <67f2a68f-8462-e1de-c016-b84d7c6e3222@acm.org>
+ <1f7e045a-5dc1-4667-b09d-bc74953e48b0@app.fastmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1f7e045a-5dc1-4667-b09d-bc74953e48b0@app.fastmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-gcc compilers before version 10 cannot do constant-folding for sub-byte
-bitfields. This makes the compiler layout tests fail. Hence skip the
-layout checks for gcc 9 and before.
+On 8/1/23 12:54, Arnd Bergmann wrote:
+> On Tue, Aug 1, 2023, at 19:51, Bart Van Assche wrote:
+>> On 8/1/23 07:56, Arnd Bergmann wrote:
+>>> On Tue, Aug 1, 2023, at 16:23, Naresh Kamboju wrote:
+>>
+>> If I change the return type of ufshcd_check_header_layout() from void
+>> into unsigned int and insert the following at the start of that function:
+>>
+>> return ((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80;
+>>
+>> then the compiler shows the following in the output window:
+>>
+>> xorl    %eax, %eax
+>>
+>> In other words, the expression next to the return statement evaluates to zero
+>> but the same expression does not evaluate to zero in the BUILD_BUG_ON()
+>> statement. Does this perhaps indicate a compiler bug? And if so, what is the
+>> appropriate way to fix the build error? Insert an #ifdef/#endif pair inside
+>> ufshcd_check_header_layout() such that the compile-time checks do not happen
+>> for gcc version 9 or older?
+> 
+> I played around it some more, and this apparently comes
+> down to constant-folding in sub-byte bitfields, so in the
+> older compilers neither the ==0x80 nor the !=0x80 case
+> can be ruled out because of a missing optimization.
+> Instead the generated code would try to initialize the
+> variable at runtime and then do a conditional branch to
+> the assert, but that of course fails the build.
+> 
+> I'd suggest something like
+> 
+>      if (defined(GCC_VERSION) && GCC_VERSION < 100000)
+>              return;
+> 
+> before the assertion, in that case it doesn't evaluate it.
 
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Naresh Kamboju <naresh.kamboju@linaro.org>
-Reported-by: Naresh Kamboju <naresh.kamboju@linaro.org>
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+An untested patch has been posted on the linux-scsi mailing list. It would
+be really appreciated if someone could help with testing that patch since
+none of the Linux distro's that I use regularly provides binaries for gcc-9
+nor for gcc-8.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 23335aaa6a66..875c860bcc05 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10564,6 +10564,15 @@ static const struct dev_pm_ops ufshcd_wl_pm_ops = {
- 
- static void ufshcd_check_header_layout(void)
- {
-+#if defined(__GNUC__) && __GNUC__ -0 < 10
-+	/*
-+	 * gcc compilers before version 10 cannot do constant-folding for
-+	 * sub-byte bitfields. Hence skip the layout checks for gcc 9 and
-+	 * before.
-+	 */
-+	return;
-+#endif
-+
- 	BUILD_BUG_ON(((u8 *)&(struct request_desc_header){
- 				.cci = 3})[0] != 3);
- 
+Thanks,
+
+Bart.
+
