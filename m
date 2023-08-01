@@ -2,93 +2,176 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82197C001DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 08:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BA0EB64DD
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 08:58:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232241AbjHAIZe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 04:25:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41054 "EHLO
+        id S231481AbjHAI6q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 04:58:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232231AbjHAIZd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 04:25:33 -0400
-Received: from mgamail.intel.com (unknown [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8664212B;
-        Tue,  1 Aug 2023 01:25:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1690878316; x=1722414316;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=y2+ZeiOBJGw1xzpxMubXvwDfFcZrn5IRphqvWbOunvw=;
-  b=XCT5j0j9OX294N0D8ubLCrhKyD2xRLKQBbvnNXOECt0PoECUe19rL8GF
-   9pgrLBVWK4Rr4zmC4u/mzduHNF0tFDMKI9CRS2DrohpC26S0B49CovBwI
-   QhIsvUAvuHjSnZygPKhECRcMF03cb0FFSuWJ11gU2eu0lP1YHykmuwVsU
-   anoPS1meSA2xHO3/bsKx8v1XbT9u8ysip/aG9dda1FNbUMrAo8JFjyno3
-   UuVSg355MFE9lY6voeaZPIeEhoc9mF5Mw5piMlmHeZiE/8eNlsQ7j2jSd
-   c2OCdGqxDWwT5Laaz3ih2yP0wANiDvW3pmsWHZz7vyLeCFXM9aFx4NVaH
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10788"; a="435557799"
-X-IronPort-AV: E=Sophos;i="6.01,246,1684825200"; 
-   d="scan'208";a="435557799"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Aug 2023 01:25:14 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10788"; a="678612519"
-X-IronPort-AV: E=Sophos;i="6.01,246,1684825200"; 
-   d="scan'208";a="678612519"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.249.38.126])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Aug 2023 01:25:12 -0700
-Message-ID: <48f05875-5255-70d2-0737-36fa95470037@intel.com>
-Date:   Tue, 1 Aug 2023 11:25:09 +0300
+        with ESMTP id S231326AbjHAI6n (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 04:58:43 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 185941BD9
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 01:58:35 -0700 (PDT)
+Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RFTTy6mlKzLp1Y;
+        Tue,  1 Aug 2023 16:55:50 +0800 (CST)
+Received: from ubuntu1804.huawei.com (10.67.174.202) by
+ dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Tue, 1 Aug 2023 16:58:32 +0800
+From:   Zhu Wang <wangzhu9@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <James.Bottomley@HansenPartnership.com>, <kay.sievers@vrfy.org>,
+        <gregkh@suse.de>, <linux-scsi@vger.kernel.org>
+CC:     <wangzhu9@huawei.com>
+Subject: [PATCH -next] scsi: scsi_transport_sas: fix error handling for dev_set_name
+Date:   Tue, 1 Aug 2023 16:58:02 +0800
+Message-ID: <20230801085802.227530-1-wangzhu9@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.13.1
-Subject: Re: [PATCH] scsi: ufs: ufs-pci: Add support for QEMU
-Content-Language: en-US
-To:     jeuk20.kim@samsung.com, "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "dlunev@chromium.org" <dlunev@chromium.org>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p1>
- <20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p1>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p1>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.67.174.202]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpeml500025.china.huawei.com (7.185.36.35)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/08/23 10:37, Jeuk Kim wrote:
-> Add PCI ID to support QEMU ufs.
-> 
-> The new qemu ufs device can be found at
-> https://lore.kernel.org/qemu-devel/20230727155239.GA979354@fedora
+The driver do not handle the possible returning error of dev_set_name,
+if it returned fail, some operations should be rollback or there may be
+possible memory leak. For example, we use put_device to free the device
+and use kfree to free the memory in the error handle path.
 
-Please say something about why a UFS device is being virtualized
-and what features it is expected to support.
+Fixes: 71610f55fa4d ("[SCSI] struct device - replace bus_id with dev_name(), dev_set_name()")
+Signed-off-by: Zhu Wang <wangzhu9@huawei.com>
+---
+ drivers/scsi/scsi_transport_sas.c | 58 +++++++++++++++++++++++--------
+ 1 file changed, 44 insertions(+), 14 deletions(-)
 
-> 
-> Signed-off-by: Jeuk Kim <jeuk20.kim@samsung.com>
-> ---
->  drivers/ufs/host/ufshcd-pci.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-> index cf3987773051..29d322931427 100644
-> --- a/drivers/ufs/host/ufshcd-pci.c
-> +++ b/drivers/ufs/host/ufshcd-pci.c
-> @@ -590,6 +590,7 @@ static const struct dev_pm_ops ufshcd_pci_pm_ops = {
->  };
->  
->  static const struct pci_device_id ufshcd_pci_tbl[] = {
-> +	{ PCI_VENDOR_ID_REDHAT, 0x0013, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
->  	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
->  	{ PCI_VDEVICE(INTEL, 0x9DFA), (kernel_ulong_t)&ufs_intel_cnl_hba_vops },
->  	{ PCI_VDEVICE(INTEL, 0x4B41), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index d704c484a251..1eb5d679a334 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -686,6 +686,7 @@ struct sas_phy *sas_phy_alloc(struct device *parent, int number)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(parent);
+ 	struct sas_phy *phy;
++	int rc;
+ 
+ 	phy = kzalloc(sizeof(*phy), GFP_KERNEL);
+ 	if (!phy)
+@@ -700,10 +701,16 @@ struct sas_phy *sas_phy_alloc(struct device *parent, int number)
+ 	INIT_LIST_HEAD(&phy->port_siblings);
+ 	if (scsi_is_sas_expander_device(parent)) {
+ 		struct sas_rphy *rphy = dev_to_rphy(parent);
+-		dev_set_name(&phy->dev, "phy-%d:%d:%d", shost->host_no,
+-			rphy->scsi_target_id, number);
++		rc = dev_set_name(&phy->dev, "phy-%d:%d:%d", shost->host_no,
++				  rphy->scsi_target_id, number);
+ 	} else
+-		dev_set_name(&phy->dev, "phy-%d:%d", shost->host_no, number);
++		rc = dev_set_name(&phy->dev, "phy-%d:%d", shost->host_no, number);
++
++	if (rc) {
++		put_device(&phy->dev);
++		kfree(phy);
++		return NULL;
++	}
+ 
+ 	transport_setup_device(&phy->dev);
+ 
+@@ -880,6 +887,7 @@ struct sas_port *sas_port_alloc(struct device *parent, int port_id)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(parent);
+ 	struct sas_port *port;
++	int rc;
+ 
+ 	port = kzalloc(sizeof(*port), GFP_KERNEL);
+ 	if (!port)
+@@ -897,11 +905,17 @@ struct sas_port *sas_port_alloc(struct device *parent, int port_id)
+ 
+ 	if (scsi_is_sas_expander_device(parent)) {
+ 		struct sas_rphy *rphy = dev_to_rphy(parent);
+-		dev_set_name(&port->dev, "port-%d:%d:%d", shost->host_no,
+-			     rphy->scsi_target_id, port->port_identifier);
++		rc = dev_set_name(&port->dev, "port-%d:%d:%d", shost->host_no,
++				  rphy->scsi_target_id, port->port_identifier);
+ 	} else
+-		dev_set_name(&port->dev, "port-%d:%d", shost->host_no,
+-			     port->port_identifier);
++		rc = dev_set_name(&port->dev, "port-%d:%d", shost->host_no,
++				  port->port_identifier);
++
++	if (rc) {
++		put_device(&port->dev);
++		kfree(port);
++		return NULL;
++	}
+ 
+ 	transport_setup_device(&port->dev);
+ 
+@@ -1439,6 +1453,7 @@ struct sas_rphy *sas_end_device_alloc(struct sas_port *parent)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(&parent->dev);
+ 	struct sas_end_device *rdev;
++	int rc;
+ 
+ 	rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
+ 	if (!rdev) {
+@@ -1450,12 +1465,18 @@ struct sas_rphy *sas_end_device_alloc(struct sas_port *parent)
+ 	rdev->rphy.dev.release = sas_end_device_release;
+ 	if (scsi_is_sas_expander_device(parent->dev.parent)) {
+ 		struct sas_rphy *rphy = dev_to_rphy(parent->dev.parent);
+-		dev_set_name(&rdev->rphy.dev, "end_device-%d:%d:%d",
+-			     shost->host_no, rphy->scsi_target_id,
+-			     parent->port_identifier);
++		rc = dev_set_name(&rdev->rphy.dev, "end_device-%d:%d:%d",
++				  shost->host_no, rphy->scsi_target_id,
++				  parent->port_identifier);
++
+ 	} else
+-		dev_set_name(&rdev->rphy.dev, "end_device-%d:%d",
+-			     shost->host_no, parent->port_identifier);
++		rc = dev_set_name(&rdev->rphy.dev, "end_device-%d:%d",
++				  shost->host_no, parent->port_identifier);
++	if (rc) {
++		put_device(&rdev->rphy.dev);
++		kfree(rdev);
++		return NULL;
++	}
+ 	rdev->rphy.identify.device_type = SAS_END_DEVICE;
+ 	sas_rphy_initialize(&rdev->rphy);
+ 	transport_setup_device(&rdev->rphy.dev);
+@@ -1480,6 +1501,7 @@ struct sas_rphy *sas_expander_alloc(struct sas_port *parent,
+ 	struct Scsi_Host *shost = dev_to_shost(&parent->dev);
+ 	struct sas_expander_device *rdev;
+ 	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
++	int rc;
+ 
+ 	BUG_ON(type != SAS_EDGE_EXPANDER_DEVICE &&
+ 	       type != SAS_FANOUT_EXPANDER_DEVICE);
+@@ -1495,8 +1517,16 @@ struct sas_rphy *sas_expander_alloc(struct sas_port *parent,
+ 	mutex_lock(&sas_host->lock);
+ 	rdev->rphy.scsi_target_id = sas_host->next_expander_id++;
+ 	mutex_unlock(&sas_host->lock);
+-	dev_set_name(&rdev->rphy.dev, "expander-%d:%d",
+-		     shost->host_no, rdev->rphy.scsi_target_id);
++	rc = dev_set_name(&rdev->rphy.dev, "expander-%d:%d",
++			  shost->host_no, rdev->rphy.scsi_target_id);
++	if (rc) {
++		put_device(&rdev->rphy.dev);
++		kfree(rdev);
++		mutex_lock(&sas_host->lock);
++		sas_host->next_expander_id--;
++		mutex_unlock(&sas_host->lock);
++		return NULL;
++	}
+ 	rdev->rphy.identify.device_type = type;
+ 	sas_rphy_initialize(&rdev->rphy);
+ 	transport_setup_device(&rdev->rphy.dev);
+-- 
+2.17.1
 
