@@ -2,116 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43628C04A94
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 17:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BFB7C0015E
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 18:20:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231593AbjHARv1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 13:51:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49746 "EHLO
+        id S231339AbjHASUx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 14:20:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229738AbjHARvV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 13:51:21 -0400
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3046B213C;
-        Tue,  1 Aug 2023 10:51:06 -0700 (PDT)
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1bbc64f9a91so50159445ad.0;
-        Tue, 01 Aug 2023 10:51:06 -0700 (PDT)
+        with ESMTP id S229849AbjHASUw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 14:20:52 -0400
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4822A2130;
+        Tue,  1 Aug 2023 11:20:51 -0700 (PDT)
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1b8b4748fe4so38793105ad.1;
+        Tue, 01 Aug 2023 11:20:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690912265; x=1691517065;
+        d=1e100.net; s=20221208; t=1690914051; x=1691518851;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JFahkUVAa3Z9C9oggz17jW5h7WEHfUtkbLkvSnyosWQ=;
-        b=UDTa+CU5l9qb0vcEXh/qdM+cbVNE3N58W8aiv19cNfx/hM1rhGn1OxPPvb6LH/Xga+
-         Re0MJDemytNiE5JhI2KfRLo6i4dsy89lrZ9Cu06o71GQD7Bf7zN/4SAAKxRqAXV1+a5c
-         mCKglWMGTjX+YN1HLcwkF85Dpiri6p8v4Q/gdLPDdfRlKxh3fez2pDUULom/GpdLmrI1
-         3QX0Ym2t8a/iRz1DZiLfaEU6s11pxFEi340Rw8U2ie1RHkzzBbG8sJvr7TSWTIae0qD5
-         RoIbhDUFIikvGjuuKxJPEmV5+m+e3iKp7GRmxz04uVDGT4R8dICOJvfrOMP14iYGSllo
-         GWSw==
-X-Gm-Message-State: ABy/qLaw/bxT0/P5OwCqTfz7sRAEgLVZ0Qvqvc5WnjxRjIFQB3Rm/QUU
-        h4VrmdwtkvlQuzjg1wj1hwo=
-X-Google-Smtp-Source: APBJJlGJkiyy679SdLZ+dD5N7/QBXdz+gfTnyyV4bZgjA4yJq4IMUBrHZ6Hb9lSru31wGbdS1kYuLQ==
-X-Received: by 2002:a17:902:c103:b0:1bb:809d:ae6a with SMTP id 3-20020a170902c10300b001bb809dae6amr11968955pli.7.1690912265455;
-        Tue, 01 Aug 2023 10:51:05 -0700 (PDT)
+        bh=Mx0QeeCngHy8pmd0MxcJwctX6+06VaNgSrv/KxKgvSA=;
+        b=SPX/acws7sboGF7OvLtTJOnXdqBQ4ZGUeEH4RVY3/UadWaGUZ4e0ZTgy/7hNYhHex0
+         NYgE2mrKkJdOR1NQty9y64aTCcPVnpI0NeaEfSSX8Td0sF+HLRXK2oEHHQvolD8+wiI9
+         Uqdc8lfShcq/Gx3UUXAE8kScDULyWn8KTc14cgmhwoUeLgkQ10685gu88uKUmldDu/tp
+         QGSfDsTXI5lkFnMCFNQV9EDP1wEW795GibzO2HHzRuL73tGi4In3rL7SPIn0BMawniSs
+         LuuSZS+6+ba94JedHyERi5iZezeFTD8+TSPa1JVN8ZSH+ZtzPww6js7GjEYu4VWa2dBa
+         ZMzg==
+X-Gm-Message-State: ABy/qLbFjdz8qVxjpoaODixuVhcDgbRdAThVI6BeGnyIGW6lapsuA52d
+        DT3egmmAzrrNCRjBwng3qPcoc+zR2ss=
+X-Google-Smtp-Source: APBJJlFiBhJU4L+649hXEC4AYZgqCKPybeuiI9xgjhWK9Py+zKHilDIeS26Nudl9vWLNqk9XjbwLuw==
+X-Received: by 2002:a17:902:eccf:b0:1b8:6b17:9093 with SMTP id a15-20020a170902eccf00b001b86b179093mr15114539plh.1.1690914050632;
+        Tue, 01 Aug 2023 11:20:50 -0700 (PDT)
 Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id f16-20020a170902ce9000b001ac6b926621sm10761570plg.292.2023.08.01.10.51.04
+        by smtp.gmail.com with ESMTPSA id 12-20020a170902c14c00b001b86dd825e7sm10785031plj.108.2023.08.01.11.20.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Aug 2023 10:51:04 -0700 (PDT)
-Message-ID: <67f2a68f-8462-e1de-c016-b84d7c6e3222@acm.org>
-Date:   Tue, 1 Aug 2023 10:51:03 -0700
+        Tue, 01 Aug 2023 11:20:49 -0700 (PDT)
+Message-ID: <9bb7ac58-db99-238f-0d2c-450470f05c74@acm.org>
+Date:   Tue, 1 Aug 2023 11:20:48 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: next: arm64: gcc-8-defconfig: ufshcd.c:10629:2:
- /builds/linux/include/linux/compiler_types.h:397:38: error: call to
- '__compiletime_assert_553' declared with attribute error: BUILD_BUG_ON
- failed:
+Subject: Re: [PATCH] scsi: ufs: ufs-pci: Add support for QEMU
 Content-Language: en-US
-To:     Arnd Bergmann <arnd@arndb.de>,
-        Naresh Kamboju <naresh.kamboju@linaro.org>
-Cc:     open list <linux-kernel@vger.kernel.org>,
-        linux-scsi@vger.kernel.org,
-        linux-next <linux-next@vger.kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Anders Roxell <anders.roxell@linaro.org>
-References: <CA+G9fYur8UJoUyTLJFVEJPh-15TJ7kbdD2q8xVz8a3fLjkxxVw@mail.gmail.com>
- <a660adba-b73b-1c02-f642-c287bb4c72fc@acm.org>
- <CA+G9fYsYifn9ywPc8KqYHwDDSTRQGOgf_T58Gpt9CYDBs8u+SQ@mail.gmail.com>
- <227327a3-399a-4a9f-a775-e9627656b5a1@app.fastmail.com>
+To:     Adrian Hunter <adrian.hunter@intel.com>, jeuk20.kim@samsung.com
+Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "dlunev@chromium.org" <dlunev@chromium.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <48f05875-5255-70d2-0737-36fa95470037@intel.com>
+ <20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p1>
+ <CGME20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p4>
+ <20230801092000epcms2p44c99d2c15bc6169e38693cb64cf946db@epcms2p4>
+ <3551d65c-2295-b6cd-b5b1-9264026cff61@intel.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <227327a3-399a-4a9f-a775-e9627656b5a1@app.fastmail.com>
+In-Reply-To: <3551d65c-2295-b6cd-b5b1-9264026cff61@intel.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/1/23 07:56, Arnd Bergmann wrote:
-> On Tue, Aug 1, 2023, at 16:23, Naresh Kamboju wrote:
->> On Tue, 1 Aug 2023 at 18:53, Bart Van Assche <bvanassche@acm.org> wrote:
-> 
->>>>    - https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20230801/testrun/18754886/suite/build/test/gcc-8-defconfig/log
->>>>    - https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20230801/testrun/18754886/suite/build/test/gcc-8-defconfig/details/
->>>>    - https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20230801/testrun/18754886/suite/build/test/gcc-8-defconfig/history/
->>>
->>> I can't reproduce this build error with a gcc-12 arm64 cross-compiler. How
->>> important is gcc-8 for the ARM community?
->>
->> You are right,
->> gcc-12 build pass.
->> gcc-8 build failed.
-> 
-> I can also reproduce this with gcc-9.5.0 from
-> https://mirrors.edge.kernel.org/pub/tools/crosstool/ but
-> not with 10.5.0 or clang.
-> 
-> I get the same results for x86 with gcc-9.5.0.
-> 
-> See https://godbolt.org/z/GjGrW9znc for a partially reduced testcase.
-Thanks Arnd, this is very helpful. The first error message reported for that
-test case is as follows:
+On 8/1/23 04:12, Adrian Hunter wrote:
+> I was really hoping for an explanation of "Why?" i.e.
+> why does anyone want a virtual UFS device?  Why not use
+> any existing virtual block device?
 
-<source>:34:286: error: call to '__compiletime_assert_655' declared with attribute error: BUILD_BUG_ON failed: ((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80
-    34 |  do { __attribute__((__noreturn__)) extern void __compiletime_assert_655(void) __attribute__((__error__("BUILD_BUG_ON failed: " "((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80")));
-  if (!(!(((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80))) __compiletime_assert_655(); } while (0);
-       |
-
-If I change the return type of ufshcd_check_header_layout() from void
-into unsigned int and insert the following at the start of that function:
-
-return ((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80;
-
-then the compiler shows the following in the output window:
-
-xorl    %eax, %eax
-
-In other words, the expression next to the return statement evaluates to zero
-but the same expression does not evaluate to zero in the BUILD_BUG_ON()
-statement. Does this perhaps indicate a compiler bug? And if so, what is the
-appropriate way to fix the build error? Insert an #ifdef/#endif pair inside
-ufshcd_check_header_layout() such that the compile-time checks do not happen
-for gcc version 9 or older?
+I hope this will enable testing of the UFS driver inside a virtual machine
+on systems without UFS host controller. Jeuk, is that correct?
 
 Thanks,
 
