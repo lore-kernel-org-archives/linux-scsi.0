@@ -2,144 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0F6C04FDF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 09:27:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 158B6C0015E
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 09:38:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231268AbjHAJ1D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 05:27:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52288 "EHLO
+        id S233156AbjHAJiO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 05:38:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232691AbjHAJ0q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 05:26:46 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4D002D66
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 02:25:44 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230801092001epoutp03ba74532c0a8e6b7f3667f97a05a92b41~3N9u4Ctw11925019250epoutp03N
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 09:20:01 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230801092001epoutp03ba74532c0a8e6b7f3667f97a05a92b41~3N9u4Ctw11925019250epoutp03N
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1690881601;
-        bh=vs4C8cJGS67065RVYT27eNMIlYfToH9rfLGTxjMdpXU=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=uQ0R/potL5sMLVmZQLe7ZKNyauhmxZmv69ln/ZbBbNwi4rwo7b6psSW6LndQLmJUq
-         jUKtpzN4NQ5L9F7EaHtmvZB95J98Eju/ewGLG7ZRsJlI4ujcCAUdFaz2qi+Px5Mkh3
-         Jzd2QG8fnOs0L1qaz+ubrvTCiO9b6TMfgDoga2Zk=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20230801092001epcas2p3c25661e733c443f20800cb24b60d97bc~3N9ufw0Bj2559825598epcas2p3X;
-        Tue,  1 Aug 2023 09:20:01 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.68]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4RFV1r59Tbz4x9Pp; Tue,  1 Aug
-        2023 09:20:00 +0000 (GMT)
-X-AuditID: b6c32a48-adffa70000007e89-4b-64c8ce404008
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        C1.6D.32393.04EC8C46; Tue,  1 Aug 2023 18:20:00 +0900 (KST)
-Mime-Version: 1.0
-Subject: Re: [PATCH] scsi: ufs: ufs-pci: Add support for QEMU
-Reply-To: jeuk20.kim@samsung.com
-Sender: Jeuk Kim <jeuk20.kim@samsung.com>
-From:   Jeuk Kim <jeuk20.kim@samsung.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "dlunev@chromium.org" <dlunev@chromium.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <48f05875-5255-70d2-0737-36fa95470037@intel.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20230801092000epcms2p44c99d2c15bc6169e38693cb64cf946db@epcms2p4>
-Date:   Tue, 01 Aug 2023 18:20:00 +0900
-X-CMS-MailID: 20230801092000epcms2p44c99d2c15bc6169e38693cb64cf946db
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNJsWRmVeSWpSXmKPExsWy7bCmua7DuRMpBrdb1CxOPlnDZvHy51U2
-        i2kffjJbvDykaXH80FcWi0U3tjFZXN41h82i+/oONovlx/8xOXB6XL7i7TG74SKLx+I9L5k8
-        Jiw6wOjx8ektFo++LasYPT5vkvNoP9DNFMARlW2TkZqYklqkkJqXnJ+SmZduq+QdHO8cb2pm
-        YKhraGlhrqSQl5ibaqvk4hOg65aZA3SdkkJZYk4pUCggsbhYSd/Opii/tCRVISO/uMRWKbUg
-        JafAvECvODG3uDQvXS8vtcTK0MDAyBSoMCE7Y/OKD8wFs4QqDs4/yN7AOEegi5GTQ0LARGJP
-        +0cWEFtIYAejxMWzwl2MHBy8AoISf3cIg4SFBWwl7l7eCFWiIDFnWwc7RFxTYvr6iUwg5WwC
-        6hKnF5qDhEUEtCUm/1nF3MXIxcEs8JFJonfNbxaIVbwSM9qfQtnSEtuXb2UEsTmB5u+cvYwd
-        Iq4h8WNZLzOELSpxc/Vbdhj7/bH5jBC2iETrvbNQNYISD37uhopLSpz69pgVwp7OKLHgvynI
-        ERICCxglfjVPh2rQl7jWAfIMyI++Elee+YCEWQRUJV5/nQe1y0Xi9al3TCA2M9Azyxa+ZgYp
-        Zwb6d/0ufRBTQkBZ4sgtFogKPomOw3/ZYT5s2PgbK3vHvCdMELaKxOLmw6wTGJVnIcJ5FpJd
-        sxB2LWBkXsUollpQnJueWmxUYAKP2eT83E2M4FSq5bGDcfbbD3qHGJk4GA8xSnAwK4nwSv8+
-        niLEm5JYWZValB9fVJqTWnyI0RToy4nMUqLJ+cBknlcSb2hiaWBiZmZobmRqYK4kznuvdW6K
-        kEB6YklqdmpqQWoRTB8TB6dUA1P4mvXVR0V7zkZaCUp7269WrmS3vLvvulx7hxV7xZR6b4/T
-        opzL/s9Zsy0nKX1ze9S7f9XmjZ1xi6qn7RbdZmj9v2u+b8mmBVH7W7/6Rer/kjGakHDBeuXK
-        E9xZB9kDThY/uxPjZcAi2iW/qINpS0DCjSsVT292XNi98/j8U3onVgi6J6qfZLz8yXOT3vyt
-        AS6LeAPmz3Z1Ci6eGpe3fvOtOdKrXp0sOhR27qurzEyXb0t2aAbV/g4IZvrdapLKm6OzzOq6
-        8Z1Wfu19x227N7y4FitQo/f499yJW583MlaKah7jrUgPt19ff/T5ssRapR7DE7ZrMriVfLwm
-        7ve+9V1eSOy9j55CYyTbBa13d5VYijMSDbWYi4oTARpEefguBAAA
-DLP-Filter: Pass
+        with ESMTP id S233134AbjHAJhp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 05:37:45 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 227742134
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 02:36:06 -0700 (PDT)
+Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4RFV0k4QMLz1GDNX;
+        Tue,  1 Aug 2023 17:19:02 +0800 (CST)
+Received: from ubuntu1804.huawei.com (10.67.174.202) by
+ dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Tue, 1 Aug 2023 17:20:03 +0800
+From:   Zhu Wang <wangzhu9@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <gregkh@suse.de>, <kay.sievers@vrfy.org>,
+        <James.Bottomley@HansenPartnership.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <wangzhu9@huawei.com>
+Subject: [PATCH -next] scsi: core: fix error handling for dev_set_name
+Date:   Tue, 1 Aug 2023 17:19:33 +0800
+Message-ID: <20230801091933.31794-1-wangzhu9@huawei.com>
+X-Mailer: git-send-email 2.17.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.67.174.202]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpeml500025.china.huawei.com (7.185.36.35)
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b
-References: <48f05875-5255-70d2-0737-36fa95470037@intel.com>
-        <20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p1>
-        <CGME20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p4>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/08/23, Adrian Hunter wrote:
-> On 1/08/23 10:37, Jeuk Kim wrote:
-> > Add PCI ID to support QEMU ufs.
-> >=20
-> > The new qemu ufs device can be found at
-> > https://lore.kernel.org/qemu-devel/20230727155239.GA979354=40fedora
->=20
-> Please say something about why a UFS device is being virtualized
-> and what features it is expected to support.
+The driver do not handle the possible returning error of dev_set_name,
+if it returned fail, some operations should be rollback or there may be
+possible memory leak. We use put_device to free the device and use kfree
+to free the memory in the error handle path.
 
-Hi Adrian=21
+Fixes: 71610f55fa4d ("[SCSI] struct device - replace bus_id with dev_name(), dev_set_name()")
+Signed-off-by: Zhu Wang <wangzhu9@huawei.com>
+---
+ drivers/scsi/scsi_scan.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-UFS device emulation feature has been newly added to QEMU recently.
-Currently, QEMU UFS supports basic io and query request features,
-and plans to add more features in the future.
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index aa13feb17c62..36808a52ab09 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -509,7 +509,13 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	device_initialize(dev);
+ 	kref_init(&starget->reap_ref);
+ 	dev->parent = get_device(parent);
+-	dev_set_name(dev, "target%d:%d:%d", shost->host_no, channel, id);
++	error = dev_set_name(dev, "target%d:%d:%d", shost->host_no, channel, id);
++	if (error) {
++		dev_err(dev, "%s: dev_set_name failed, error %d\n", __func__, error);
++		put_device(dev);
++		kfree(starget);
++		return NULL;
++	}
+ 	dev->bus = &scsi_bus_type;
+ 	dev->type = &scsi_target_type;
+ 	scsi_enable_async_suspend(dev);
+-- 
+2.17.1
 
-With the addition of the QEMU ufs device emulation feature,=20
-QEMU UFS decided to use the pci device id of 0x0013 in the REDHAT vendor id=
- (0x1b36).
-
-However, this information is not registered in the linux ufs driver,=20
-so the current linux kernel does not recognize the QEMU UFS device.=20
-Therefore, I want to register the QEMU ufs pci id through this patch.
-
-Do I need to add the above content to the commit message?
-
-Thanks,
-Jeuk
-
-> >=20
-> > Signed-off-by: Jeuk Kim <jeuk20.kim=40samsung.com>
-> > ---
-> >=C2=A0=20drivers/ufs/host/ufshcd-pci.c=20=7C=201=20+=0D=0A>=20>=C2=A0=20=
-1=20file=20changed,=201=20insertion(+)=0D=0A>=20>=20=0D=0A>=20>=20diff=20--=
-git=20a/drivers/ufs/host/ufshcd-pci.c=20b/drivers/ufs/host/ufshcd-pci.c=0D=
-=0A>=20>=20index=20cf3987773051..29d322931427=20100644=0D=0A>=20>=20---=20a=
-/drivers/ufs/host/ufshcd-pci.c=0D=0A>=20>=20+++=20b/drivers/ufs/host/ufshcd=
--pci.c=0D=0A>=20>=20=40=40=20-590,6=20+590,7=20=40=40=20static=20const=20st=
-ruct=20dev_pm_ops=20ufshcd_pci_pm_ops=20=3D=20=7B=0D=0A>=20>=C2=A0=20=7D;=
-=0D=0A>=20>=C2=A0=20=0D=0A>=20>=C2=A0=20static=20const=20struct=20pci_devic=
-e_id=20ufshcd_pci_tbl=5B=5D=20=3D=20=7B=0D=0A>=20>=20+=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=7B=20PCI_VENDOR_ID_REDHAT,=200x0013,=20PCI_ANY_ID,=20PCI_AN=
-Y_ID,=200,=200,=200=20=7D,=0D=0A>=20>=C2=A0=20=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=7B=20PCI_VENDOR_ID_SAMSUNG,=200xC00C,=20PCI_ANY_ID,=20PCI_ANY_ID,=
-=200,=200,=200=20=7D,=0D=0A>=20>=C2=A0=20=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=7B=20PCI_VDEVICE(INTEL,=200x9DFA),=20(kernel_ulong_t)&ufs_intel_cnl_hba=
-_vops=20=7D,=0D=0A>=20>=C2=A0=20=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=7B=20P=
-CI_VDEVICE(INTEL,=200x4B41),=20(kernel_ulong_t)&ufs_intel_ehl_hba_vops=20=
-=7D,
