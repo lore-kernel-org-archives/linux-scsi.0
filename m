@@ -2,203 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E8BC04A94
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 17:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43628C04A94
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 17:51:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233940AbjHARcH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 13:32:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39246 "EHLO
+        id S231593AbjHARv1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 13:51:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232136AbjHARcG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 13:32:06 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A4A9F5;
-        Tue,  1 Aug 2023 10:32:04 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 371GA2kK001406;
-        Tue, 1 Aug 2023 17:32:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=qcppdkim1;
- bh=Q0zQgRy1fF8lD/XmdYNJfM4tnpsCfZTsWpnSrfRcajY=;
- b=gjhpkX+1dEGa2VffzW/khy6jFURA4E5PUtk8XMrv/PHRLzL9aSh+8DJ9tji9kcEf9257
- v8DNWGfo/9E/zzh3EURer/SMsTP2HZiqaVfidTf0Qwbvr8XKzpzRcPrgZSHJdzEM9na2
- 0r1vVKLJOUddzlxf47rNzgpWvEfAKYnslWSq0xBljUDF0RNUjcw00955BwFHUQAxjrCH
- EdEXx8gCPi+6YbhVxpQyUVIky/kNLS4yxqPufCxzQorLPDnUexnzFGTy2lB7swOwJIaB
- dQFWDwq9G+UHVToFYn3QflxjTjN5w967AhikA8bxTD5l/+oYMcejfVtBZhrEGbSiuthd 2g== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3s75b305wr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 01 Aug 2023 17:32:00 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 371HVxeK028158
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 1 Aug 2023 17:31:59 GMT
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.30; Tue, 1 Aug 2023 10:31:59 -0700
-Received: from nalasex01a.na.qualcomm.com ([fe80::25d0:9235:354f:5fa9]) by
- nalasex01a.na.qualcomm.com ([fe80::25d0:9235:354f:5fa9%4]) with mapi id
- 15.02.1118.030; Tue, 1 Aug 2023 10:31:59 -0700
-From:   "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-        "Om Prakash Singh" <omprsing@qti.qualcomm.com>,
-        "Prasad Sodagudi (QUIC)" <quic_psodagud@quicinc.com>,
-        "Arun Menon (SSG)" <avmenon@quicinc.com>,
-        "abel.vesa@linaro.org" <abel.vesa@linaro.org>,
-        "Seshu Madhavi Puppala (QUIC)" <quic_spuppala@quicinc.com>
-Subject: RE: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
- ufs
-Thread-Topic: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
- ufs
-Thread-Index: AQHZumN+a5RI3WgcJ0CO2LlDH5s476/Ca+iAgBIbBxA=
-Date:   Tue, 1 Aug 2023 17:31:59 +0000
-Message-ID: <ca11701e403f48b6839b26c47a1b537f@quicinc.com>
-References: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
- <20230720025541.GA2607@sol.localdomain>
-In-Reply-To: <20230720025541.GA2607@sol.localdomain>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.110.47.159]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S229738AbjHARvV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 13:51:21 -0400
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3046B213C;
+        Tue,  1 Aug 2023 10:51:06 -0700 (PDT)
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1bbc64f9a91so50159445ad.0;
+        Tue, 01 Aug 2023 10:51:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690912265; x=1691517065;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=JFahkUVAa3Z9C9oggz17jW5h7WEHfUtkbLkvSnyosWQ=;
+        b=UDTa+CU5l9qb0vcEXh/qdM+cbVNE3N58W8aiv19cNfx/hM1rhGn1OxPPvb6LH/Xga+
+         Re0MJDemytNiE5JhI2KfRLo6i4dsy89lrZ9Cu06o71GQD7Bf7zN/4SAAKxRqAXV1+a5c
+         mCKglWMGTjX+YN1HLcwkF85Dpiri6p8v4Q/gdLPDdfRlKxh3fez2pDUULom/GpdLmrI1
+         3QX0Ym2t8a/iRz1DZiLfaEU6s11pxFEi340Rw8U2ie1RHkzzBbG8sJvr7TSWTIae0qD5
+         RoIbhDUFIikvGjuuKxJPEmV5+m+e3iKp7GRmxz04uVDGT4R8dICOJvfrOMP14iYGSllo
+         GWSw==
+X-Gm-Message-State: ABy/qLaw/bxT0/P5OwCqTfz7sRAEgLVZ0Qvqvc5WnjxRjIFQB3Rm/QUU
+        h4VrmdwtkvlQuzjg1wj1hwo=
+X-Google-Smtp-Source: APBJJlGJkiyy679SdLZ+dD5N7/QBXdz+gfTnyyV4bZgjA4yJq4IMUBrHZ6Hb9lSru31wGbdS1kYuLQ==
+X-Received: by 2002:a17:902:c103:b0:1bb:809d:ae6a with SMTP id 3-20020a170902c10300b001bb809dae6amr11968955pli.7.1690912265455;
+        Tue, 01 Aug 2023 10:51:05 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id f16-20020a170902ce9000b001ac6b926621sm10761570plg.292.2023.08.01.10.51.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Aug 2023 10:51:04 -0700 (PDT)
+Message-ID: <67f2a68f-8462-e1de-c016-b84d7c6e3222@acm.org>
+Date:   Tue, 1 Aug 2023 10:51:03 -0700
 MIME-Version: 1.0
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: rEOTZeAVO7KVUd7mTmyYXt70nJ9OESWH
-X-Proofpoint-ORIG-GUID: rEOTZeAVO7KVUd7mTmyYXt70nJ9OESWH
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-01_14,2023-08-01_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- suspectscore=0 phishscore=0 lowpriorityscore=0 priorityscore=1501
- mlxscore=0 spamscore=0 mlxlogscore=999 bulkscore=0 clxscore=1011
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308010157
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: next: arm64: gcc-8-defconfig: ufshcd.c:10629:2:
+ /builds/linux/include/linux/compiler_types.h:397:38: error: call to
+ '__compiletime_assert_553' declared with attribute error: BUILD_BUG_ON
+ failed:
+Content-Language: en-US
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Naresh Kamboju <naresh.kamboju@linaro.org>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org,
+        linux-next <linux-next@vger.kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Anders Roxell <anders.roxell@linaro.org>
+References: <CA+G9fYur8UJoUyTLJFVEJPh-15TJ7kbdD2q8xVz8a3fLjkxxVw@mail.gmail.com>
+ <a660adba-b73b-1c02-f642-c287bb4c72fc@acm.org>
+ <CA+G9fYsYifn9ywPc8KqYHwDDSTRQGOgf_T58Gpt9CYDBs8u+SQ@mail.gmail.com>
+ <227327a3-399a-4a9f-a775-e9627656b5a1@app.fastmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <227327a3-399a-4a9f-a775-e9627656b5a1@app.fastmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hey Eric, thanks for your reply. Pleasure working with you again.
+On 8/1/23 07:56, Arnd Bergmann wrote:
+> On Tue, Aug 1, 2023, at 16:23, Naresh Kamboju wrote:
+>> On Tue, 1 Aug 2023 at 18:53, Bart Van Assche <bvanassche@acm.org> wrote:
+> 
+>>>>    - https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20230801/testrun/18754886/suite/build/test/gcc-8-defconfig/log
+>>>>    - https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20230801/testrun/18754886/suite/build/test/gcc-8-defconfig/details/
+>>>>    - https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20230801/testrun/18754886/suite/build/test/gcc-8-defconfig/history/
+>>>
+>>> I can't reproduce this build error with a gcc-12 arm64 cross-compiler. How
+>>> important is gcc-8 for the ARM community?
+>>
+>> You are right,
+>> gcc-12 build pass.
+>> gcc-8 build failed.
+> 
+> I can also reproduce this with gcc-9.5.0 from
+> https://mirrors.edge.kernel.org/pub/tools/crosstool/ but
+> not with 10.5.0 or clang.
+> 
+> I get the same results for x86 with gcc-9.5.0.
+> 
+> See https://godbolt.org/z/GjGrW9znc for a partially reduced testcase.
+Thanks Arnd, this is very helpful. The first error message reported for that
+test case is as follows:
 
-Please find answers inline
+<source>:34:286: error: call to '__compiletime_assert_655' declared with attribute error: BUILD_BUG_ON failed: ((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80
+    34 |  do { __attribute__((__noreturn__)) extern void __compiletime_assert_655(void) __attribute__((__error__("BUILD_BUG_ON failed: " "((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80")));
+  if (!(!(((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80))) __compiletime_assert_655(); } while (0);
+       |
 
------Original Message-----
-From: Eric Biggers <ebiggers@kernel.org>=20
-Sent: Wednesday, July 19, 2023 7:56 PM
-To: Gaurav Kashyap (QUIC) <quic_gaurkash@quicinc.com>
-Cc: linux-scsi@vger.kernel.org; linux-arm-msm@vger.kernel.org; linux-mmc@vg=
-er.kernel.org; linux-block@vger.kernel.org; linux-fscrypt@vger.kernel.org; =
-Om Prakash Singh <omprsing@qti.qualcomm.com>; Prasad Sodagudi (QUIC) <quic_=
-psodagud@quicinc.com>; Arun Menon (SSG) <avmenon@quicinc.com>; abel.vesa@li=
-naro.org; Seshu Madhavi Puppala (QUIC) <quic_spuppala@quicinc.com>
-Subject: Re: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and=
- ufs
+If I change the return type of ufshcd_check_header_layout() from void
+into unsigned int and insert the following at the start of that function:
 
-Hi Gaurav,
+return ((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80;
 
-On Wed, Jul 19, 2023 at 10:04:14AM -0700, Gaurav Kashyap wrote:
-> These patches add support to Qualcomm ICE (Inline Crypto Enginr) for=20
-> hardware wrapped keys using Qualcomm Hardware Key Manager (HWKM) and=20
-> are made on top of a rebased version  Eric Bigger's set of changes to=20
-> support wrapped keys in fscrypt and block below:
-> https://git.kernel.org/pub/scm/fs/fscrypt/linux.git/log/?h=3Dwrapped-key
-> s-v7 (The rebased patches are not uploaded here)
->=20
-> Ref v1 here:
-> https://lore.kernel.org/linux-scsi/20211206225725.77512-1-quic_gaurkas
-> h@quicinc.com/
->=20
-> Explanation and use of hardware-wrapped-keys can be found here:
-> Documentation/block/inline-encryption.rst
->=20
-> This patch is organized as follows:
->=20
-> Patch 1 - Prepares ICE and storage layers (UFS and EMMC) to pass around w=
-rapped keys.
-> Patch 2 - Adds a new SCM api to support deriving software secret when=20
-> wrapped keys are used Patch 3-4 - Adds support for wrapped keys in the=20
-> ICE driver. This includes adding HWKM support Patch 5-6 - Adds support=20
-> for wrapped keys in UFS Patch 7-10 - Supports generate, prepare and=20
-> import functionality in ICE and UFS
->=20
-> NOTE: MMC will have similar changes to UFS and will be uploaded in a diff=
-erent patchset
->       Patch 3, 4, 8, 10 will have MMC equivalents.
->=20
-> Testing:
-> Test platform: SM8550 MTP
-> Engineering trustzone image is required to test this feature only for=20
-> SM8550. For SM8650 onwards, all trustzone changes to support this will=20
-> be part of the released images.
-> The engineering changes primarily contain hooks to generate, import=20
-> and prepare keys for HW wrapped disk encryption.
->=20
-> The changes were tested by mounting initramfs and running the=20
-> fscryptctl tool (Ref:=20
-> https://github.com/ebiggers/fscryptctl/tree/wip-wrapped-keys) to=20
-> generate and prepare keys, as well as to set policies on folders, which c=
-onsequently invokes disk encryption flows through UFS.
->=20
-> Gaurav Kashyap (10):
->   ice, ufs, mmc: use blk_crypto_key for program_key
->   qcom_scm: scm call for deriving a software secret
->   soc: qcom: ice: add hwkm support in ice
->   soc: qcom: ice: support for hardware wrapped keys
->   ufs: core: support wrapped keys in ufs core
->   ufs: host: wrapped keys support in ufs qcom
->   qcom_scm: scm call for create, prepare and import keys
->   ufs: core: add support for generate, import and prepare keys
->   soc: qcom: support for generate, import and prepare key
->   ufs: host: support for generate, import and prepare key
->=20
->  drivers/firmware/qcom_scm.c            | 292 +++++++++++++++++++++++
->  drivers/firmware/qcom_scm.h            |   4 +
->  drivers/mmc/host/cqhci-crypto.c        |   7 +-
->  drivers/mmc/host/cqhci.h               |   2 +
->  drivers/mmc/host/sdhci-msm.c           |   6 +-
->  drivers/soc/qcom/ice.c                 | 309 +++++++++++++++++++++++--
->  drivers/ufs/core/ufshcd-crypto.c       |  92 +++++++-
->  drivers/ufs/host/ufs-qcom.c            |  63 ++++-
->  include/linux/firmware/qcom/qcom_scm.h |  13 ++
->  include/soc/qcom/ice.h                 |  18 +-
->  include/ufs/ufshcd.h                   |  25 ++
->  11 files changed, 797 insertions(+), 34 deletions(-)
+then the compiler shows the following in the output window:
 
+xorl    %eax, %eax
 
-Thank you for continuing to work on this!
+In other words, the expression next to the return statement evaluates to zero
+but the same expression does not evaluate to zero in the BUILD_BUG_ON()
+statement. Does this perhaps indicate a compiler bug? And if so, what is the
+appropriate way to fix the build error? Insert an #ifdef/#endif pair inside
+ufshcd_check_header_layout() such that the compile-time checks do not happen
+for gcc version 9 or older?
 
-According to your cover letter, this feature requires a custom TrustZone im=
-age to work on SM8550.  Will that image be made available outside Qualcomm?
---> Unfortunately, I don't think there is a way to do that. You can still r=
-equest for one through our customer engineering team like before.
+Thanks,
 
-Also according to your cover letter, this feature will work on SM8650 out o=
-f the box.  That's great to hear.  However, SM8650 does not appear to be pu=
-blicly available yet or have any upstream kernel support.  Do you know appr=
-oximately when a SM8650 development board will become available to the gene=
-ral public?
---> I meant it will be available in the future releases. As of today, I don=
-'t have any information on the timelines
-
-Also, can you please make available a git branch somewhere that contains yo=
-ur patchset?  It sounds like this depends on https://git.kernel.org/pub/scm=
-/fs/fscrypt/linux.git/log/?h=3Dwrapped-keys-v7, but actually a version of i=
-t that you've rebased, which I don't have access to.
-Without being able to apply your patchset, I can't properly review it.
---> As for the fscrypt patches,
-      I have not changed much functionally from the v7 patch, just merge co=
-nflicts.
-      I will update this thread once I figure out a git location.
-
-Thanks!
-
-- Eric
+Bart.
