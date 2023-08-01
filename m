@@ -2,176 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BA0EB64DD
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 08:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 050C5C001DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 09:05:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231481AbjHAI6q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 04:58:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58226 "EHLO
+        id S232573AbjHAJFo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 05:05:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231326AbjHAI6n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 04:58:43 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 185941BD9
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 01:58:35 -0700 (PDT)
-Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RFTTy6mlKzLp1Y;
-        Tue,  1 Aug 2023 16:55:50 +0800 (CST)
-Received: from ubuntu1804.huawei.com (10.67.174.202) by
- dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Tue, 1 Aug 2023 16:58:32 +0800
-From:   Zhu Wang <wangzhu9@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <James.Bottomley@HansenPartnership.com>, <kay.sievers@vrfy.org>,
-        <gregkh@suse.de>, <linux-scsi@vger.kernel.org>
-CC:     <wangzhu9@huawei.com>
-Subject: [PATCH -next] scsi: scsi_transport_sas: fix error handling for dev_set_name
-Date:   Tue, 1 Aug 2023 16:58:02 +0800
-Message-ID: <20230801085802.227530-1-wangzhu9@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S232356AbjHAJFN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 05:05:13 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A92230F7
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 02:03:38 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-686efb9ee3cso5113532b3a.3
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Aug 2023 02:03:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1690880616; x=1691485416;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Dl31qmpoVvkSjyLSpZPfwkWIRx8GhdUOBKx/4n/3L7U=;
+        b=aV+1dhYFoQbThS/XG6H4CkBcRwxAYBFxA8B3Q+sVquHfgQ5/TDAjK6as3P7Y/6eedr
+         dHTCVOlHqZL44kpDUtW2Hq0lmQVvKSe7GTxFwxalpwFrRu+gTUM7mArtdckgfAu6s3L4
+         Cgr4edYOU1UYHd3bVI8eNB4vAzAS9/eE3pFEGbDJrCnamnLFC807pss2LyoN9DQLuDaf
+         P2ceYyYr89Vy6nwgELd2tGgt7O8VYmSBPUriTwWp5XEeKMWOtfh989r87GMEJY9FDZnD
+         +OtnozrChpUhdiWa44+0CuEo9+j/SsfEmER4y3u/II6LpjFikdLNj8qI54P63YmcykCi
+         W6YA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690880616; x=1691485416;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Dl31qmpoVvkSjyLSpZPfwkWIRx8GhdUOBKx/4n/3L7U=;
+        b=iF8Y50zZ+AqDllfh4TYRqGS8hX44kTv+NAFrzHNuZpgdhSX2p8B5gTZ6i0XhgPKLnM
+         LQ1va6fZZ7G3vuL8bbdwWrqodbH1Mwsuo1tQlxiTYvi2CTHMWzjmujOHuCp5LV6UdY2e
+         mbe4jddxII7qpkHn02xDFWhV0eFMjNyNJy0OKjdcZy85Swi2oacsfiF5yl6E+EQzpItG
+         zHfGvLdrPPDDPtEhc324jUIFCuA7IZa4QuO4PmjE2FGedSeOEw1bw3/Q+I2EL4YIDrVo
+         Ed5FTcXnTh7tnOYPLHhbxgCfiqDKIeOMFGYFs4qcUEdIFAkPm4W3f8u8tvi9eE+nF9ES
+         xmkA==
+X-Gm-Message-State: ABy/qLZBha94it13S0/SD4sGCmUZIVNl8ae31hhylmvHUNsH1CVU31d0
+        4ALQ7+KL4MAi0U+rAcc1jfcQMw==
+X-Google-Smtp-Source: APBJJlH6oCr2tZeWpewSHACfnDCdQHNervXhutIyQgatxkDxrpBPXL7suSS9iuOmjWItMEsVtIbYsg==
+X-Received: by 2002:a05:6a20:a11d:b0:13d:3b4d:e4b4 with SMTP id q29-20020a056a20a11d00b0013d3b4de4b4mr11186875pzk.9.1690880616089;
+        Tue, 01 Aug 2023 02:03:36 -0700 (PDT)
+Received: from localhost ([122.172.87.195])
+        by smtp.gmail.com with ESMTPSA id m8-20020aa78a08000000b00686bbf5c573sm5719659pfa.119.2023.08.01.02.03.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Aug 2023 02:03:35 -0700 (PDT)
+Date:   Tue, 1 Aug 2023 14:33:33 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
+        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
+        cw00.choi@samsung.com, andersson@kernel.org,
+        konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 4/6] scsi: ufs: host: Add support for parsing OPP
+Message-ID: <20230801090333.pqqugj4tcarwdl2o@vireshk-i7>
+References: <20230731163357.49045-1-manivannan.sadhasivam@linaro.org>
+ <20230731163357.49045-5-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.174.202]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpeml500025.china.huawei.com (7.185.36.35)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230731163357.49045-5-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver do not handle the possible returning error of dev_set_name,
-if it returned fail, some operations should be rollback or there may be
-possible memory leak. For example, we use put_device to free the device
-and use kfree to free the memory in the error handle path.
+On 31-07-23, 22:03, Manivannan Sadhasivam wrote:
+> +int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
+> +			   struct dev_pm_opp *opp, void *data,
+> +			   bool scaling_down)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	struct list_head *head = &hba->clk_list_head;
+> +	struct ufs_clk_info *clki;
+> +	unsigned long freq;
+> +	u8 idx = 0;
+> +	int ret;
+> +
+> +	list_for_each_entry(clki, head, list) {
+> +		if (!IS_ERR_OR_NULL(clki->clk)) {
 
-Fixes: 71610f55fa4d ("[SCSI] struct device - replace bus_id with dev_name(), dev_set_name()")
-Signed-off-by: Zhu Wang <wangzhu9@huawei.com>
----
- drivers/scsi/scsi_transport_sas.c | 58 +++++++++++++++++++++++--------
- 1 file changed, 44 insertions(+), 14 deletions(-)
+NULL is considered as a valid clock AFAIR, so you must only be doing
+IS_ERR() here I guess.
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index d704c484a251..1eb5d679a334 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -686,6 +686,7 @@ struct sas_phy *sas_phy_alloc(struct device *parent, int number)
- {
- 	struct Scsi_Host *shost = dev_to_shost(parent);
- 	struct sas_phy *phy;
-+	int rc;
- 
- 	phy = kzalloc(sizeof(*phy), GFP_KERNEL);
- 	if (!phy)
-@@ -700,10 +701,16 @@ struct sas_phy *sas_phy_alloc(struct device *parent, int number)
- 	INIT_LIST_HEAD(&phy->port_siblings);
- 	if (scsi_is_sas_expander_device(parent)) {
- 		struct sas_rphy *rphy = dev_to_rphy(parent);
--		dev_set_name(&phy->dev, "phy-%d:%d:%d", shost->host_no,
--			rphy->scsi_target_id, number);
-+		rc = dev_set_name(&phy->dev, "phy-%d:%d:%d", shost->host_no,
-+				  rphy->scsi_target_id, number);
- 	} else
--		dev_set_name(&phy->dev, "phy-%d:%d", shost->host_no, number);
-+		rc = dev_set_name(&phy->dev, "phy-%d:%d", shost->host_no, number);
-+
-+	if (rc) {
-+		put_device(&phy->dev);
-+		kfree(phy);
-+		return NULL;
-+	}
- 
- 	transport_setup_device(&phy->dev);
- 
-@@ -880,6 +887,7 @@ struct sas_port *sas_port_alloc(struct device *parent, int port_id)
- {
- 	struct Scsi_Host *shost = dev_to_shost(parent);
- 	struct sas_port *port;
-+	int rc;
- 
- 	port = kzalloc(sizeof(*port), GFP_KERNEL);
- 	if (!port)
-@@ -897,11 +905,17 @@ struct sas_port *sas_port_alloc(struct device *parent, int port_id)
- 
- 	if (scsi_is_sas_expander_device(parent)) {
- 		struct sas_rphy *rphy = dev_to_rphy(parent);
--		dev_set_name(&port->dev, "port-%d:%d:%d", shost->host_no,
--			     rphy->scsi_target_id, port->port_identifier);
-+		rc = dev_set_name(&port->dev, "port-%d:%d:%d", shost->host_no,
-+				  rphy->scsi_target_id, port->port_identifier);
- 	} else
--		dev_set_name(&port->dev, "port-%d:%d", shost->host_no,
--			     port->port_identifier);
-+		rc = dev_set_name(&port->dev, "port-%d:%d", shost->host_no,
-+				  port->port_identifier);
-+
-+	if (rc) {
-+		put_device(&port->dev);
-+		kfree(port);
-+		return NULL;
-+	}
- 
- 	transport_setup_device(&port->dev);
- 
-@@ -1439,6 +1453,7 @@ struct sas_rphy *sas_end_device_alloc(struct sas_port *parent)
- {
- 	struct Scsi_Host *shost = dev_to_shost(&parent->dev);
- 	struct sas_end_device *rdev;
-+	int rc;
- 
- 	rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
- 	if (!rdev) {
-@@ -1450,12 +1465,18 @@ struct sas_rphy *sas_end_device_alloc(struct sas_port *parent)
- 	rdev->rphy.dev.release = sas_end_device_release;
- 	if (scsi_is_sas_expander_device(parent->dev.parent)) {
- 		struct sas_rphy *rphy = dev_to_rphy(parent->dev.parent);
--		dev_set_name(&rdev->rphy.dev, "end_device-%d:%d:%d",
--			     shost->host_no, rphy->scsi_target_id,
--			     parent->port_identifier);
-+		rc = dev_set_name(&rdev->rphy.dev, "end_device-%d:%d:%d",
-+				  shost->host_no, rphy->scsi_target_id,
-+				  parent->port_identifier);
-+
- 	} else
--		dev_set_name(&rdev->rphy.dev, "end_device-%d:%d",
--			     shost->host_no, parent->port_identifier);
-+		rc = dev_set_name(&rdev->rphy.dev, "end_device-%d:%d",
-+				  shost->host_no, parent->port_identifier);
-+	if (rc) {
-+		put_device(&rdev->rphy.dev);
-+		kfree(rdev);
-+		return NULL;
-+	}
- 	rdev->rphy.identify.device_type = SAS_END_DEVICE;
- 	sas_rphy_initialize(&rdev->rphy);
- 	transport_setup_device(&rdev->rphy.dev);
-@@ -1480,6 +1501,7 @@ struct sas_rphy *sas_expander_alloc(struct sas_port *parent,
- 	struct Scsi_Host *shost = dev_to_shost(&parent->dev);
- 	struct sas_expander_device *rdev;
- 	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+	int rc;
- 
- 	BUG_ON(type != SAS_EDGE_EXPANDER_DEVICE &&
- 	       type != SAS_FANOUT_EXPANDER_DEVICE);
-@@ -1495,8 +1517,16 @@ struct sas_rphy *sas_expander_alloc(struct sas_port *parent,
- 	mutex_lock(&sas_host->lock);
- 	rdev->rphy.scsi_target_id = sas_host->next_expander_id++;
- 	mutex_unlock(&sas_host->lock);
--	dev_set_name(&rdev->rphy.dev, "expander-%d:%d",
--		     shost->host_no, rdev->rphy.scsi_target_id);
-+	rc = dev_set_name(&rdev->rphy.dev, "expander-%d:%d",
-+			  shost->host_no, rdev->rphy.scsi_target_id);
-+	if (rc) {
-+		put_device(&rdev->rphy.dev);
-+		kfree(rdev);
-+		mutex_lock(&sas_host->lock);
-+		sas_host->next_expander_id--;
-+		mutex_unlock(&sas_host->lock);
-+		return NULL;
-+	}
- 	rdev->rphy.identify.device_type = type;
- 	sas_rphy_initialize(&rdev->rphy);
- 	transport_setup_device(&rdev->rphy.dev);
 -- 
-2.17.1
-
+viresh
