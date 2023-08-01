@@ -2,78 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57E67C001E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 07:34:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C660EB64DD
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 07:38:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231822AbjHAHec (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 03:34:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46068 "EHLO
+        id S230509AbjHAHh7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 03:37:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229874AbjHAHeb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 03:34:31 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87F621726;
-        Tue,  1 Aug 2023 00:34:30 -0700 (PDT)
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1690875269;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=barXOaLcqK7APgvHwy35ku+WMnw5Wwq/VfYIfSWf/UY=;
-        b=hEXIhvWX+SuOx+KXfj/eqYjjEpgeZC4/n4Fpc/+IPsWHJo3nZ6MKdzXczrybyV8tQBtooe
-        VVaNN67MBFQCF0aiH6KQzuyQnp/lhhw9ZkSdf06j8tJZj2R7yLT+tPeb3Fwb9QbL/NzBgj
-        YnD85mc3xW6FWzlUgi7eP9rMu6/TFbWK9VuFTfYpryPyysxPyWP7yG62gbAiBVJTgAhZdr
-        CuKTEHkwhx+rx2ARNXZBpcL3ST26HbKV3DrALaFngofEqhvTY1FpRtE9P+F+2ed64fWwu1
-        H14cm5T8BEl7nYJpOtRbmz1j7qXTT6XST7kB3zcIsI4VqKoKnD0t8pOs8qqdHA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1690875269;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=barXOaLcqK7APgvHwy35ku+WMnw5Wwq/VfYIfSWf/UY=;
-        b=bBpIEnmh2rLafh4mQOd9MkQxRwNZaxEQ5WNI+LrjQHqzYeh3P+07vsAYLsfNrnGS0ptJVY
-        Kafs3z+qoUp5LfDA==
-To:     "Gautham R. Shenoy" <gautham.shenoy@amd.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Andrew Cooper <andrew.cooper3@citrix.com>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <james.smart@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>,
-        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Huang Rui <ray.huang@amd.com>, Juergen Gross <jgross@suse.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Mike Travis <mike.travis@hpe.com>,
-        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
-        Russ Anderson <russ.anderson@hpe.com>
-Subject: Re: [patch v2 21/38] x86/cpu: Provide cpu_init/parse_topology()
-In-Reply-To: <ZMiu1t8blYAdm2Br@BLR-5CG11610CF.amd.com>
-References: <20230728105650.565799744@linutronix.de>
- <20230728120930.839913695@linutronix.de>
- <ZMiu1t8blYAdm2Br@BLR-5CG11610CF.amd.com>
-Date:   Tue, 01 Aug 2023 09:34:28 +0200
-Message-ID: <87leevkygr.ffs@tglx>
-MIME-Version: 1.0
-Content-Type: text/plain
+        with ESMTP id S231986AbjHAHh6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 03:37:58 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27A1C10FD
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 00:37:56 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230801073751epoutp047e400a9e7e0926a14a8c46b940b50b7c~3MkhwPF7b2801028010epoutp04F
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 07:37:51 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230801073751epoutp047e400a9e7e0926a14a8c46b940b50b7c~3MkhwPF7b2801028010epoutp04F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1690875471;
+        bh=ZPfXhvfp9J8paEfU6+R+EFm3zHy9LPevaVQbPRRNkjw=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=aIOJq5QjnixGGLWZ7zdUlB9dRDzeUuUZxHYnAYqiJ5kTFGmbFZul/+TZ7FXaG6EP3
+         NjjaDJZ+A2B8TNT0uKMcpjwAQLUV7aQv/I0WrgPhf7d63XHabtwYUdDzukTTGykeFC
+         49xGzCegkGu6xcUDgVcWmbFQmYyD+pM7KadiUP9w=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20230801073751epcas2p1f1292831fe8ee94c373ea9f8c003d9f6~3MkhXGqar0651006510epcas2p1M;
+        Tue,  1 Aug 2023 07:37:51 +0000 (GMT)
+Received: from epsmgec2p1.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4RFRly4JTpz4x9Q2; Tue,  1 Aug
+        2023 07:37:50 +0000 (GMT)
+X-AuditID: b6c32a43-557fb7000001d7ef-5b-64c8b64ecaf7
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmgec2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        12.7D.55279.E46B8C46; Tue,  1 Aug 2023 16:37:50 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH] scsi: ufs: ufs-pci: Add support for QEMU
+Reply-To: jeuk20.kim@samsung.com
+Sender: Jeuk Kim <jeuk20.kim@samsung.com>
+From:   Jeuk Kim <jeuk20.kim@samsung.com>
+To:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "dlunev@chromium.org" <dlunev@chromium.org>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p1>
+Date:   Tue, 01 Aug 2023 16:37:50 +0900
+X-CMS-MailID: 20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNJsWRmVeSWpSXmKPExsWy7bCmha7fthMpBvPPyFucfLKGzeLlz6ts
+        FtM+/GS2eHlI0+L4oa8sFotubGOyuLxrDptF9/UdbBbLj/9jcuD0uHzF22N2w0UWj8V7XjJ5
+        TFh0gNHj49NbLB59W1YxenzeJOfRfqCbKYAjKtsmIzUxJbVIITUvOT8lMy/dVsk7ON453tTM
+        wFDX0NLCXEkhLzE31VbJxSdA1y0zB+g6JYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpB
+        Sk6BeYFecWJucWleul5eaomVoYGBkSlQYUJ2xsyVcgX97BVbOl8wNTB2snUxcnJICJhIXFj4
+        mKWLkYtDSGAHo0TXvBVACQ4OXgFBib87hEFqhAUsJZ6fmwhWLySgIDFnWwc7RFxTYvr6iUwg
+        5WwC6hKnF5qDjBERWMUk8Wb/FbB6ZoE6id1z/kDt4pWY0f6UBcKWlti+fCsjhK0h8WNZLzOE
+        LSpxc/Vbdhj7/bH5UDUiEq33zkLVCEo8+LkbKi4pcerbY1YIezqjxIL/piBHSAgsYJT41Twd
+        qkFf4lrHRrDFvAK+EndPfwKLswioSsz5dAjqOBeJuY/mMEIcLS+x/e0cZpDHmIGeXL9LH8SU
+        EFCWOHKLBaKCT6Lj8F92mLcaNv7Gyt4x7wkThK0isbj5MCvEGCmJDbtDJzAqzUKE8ywka2ch
+        rF3AyLyKUSy1oDg3PTXZqMAQHrPJ+bmbGMGpVMt5B+OV+f/0DjEycTAeYpTgYFYS4ZX+fTxF
+        iDclsbIqtSg/vqg0J7X4EKMp0MMTmaVEk/OByTyvJN7QxNLAxMzM0NzI1MBcSZz3XuvcFCGB
+        9MSS1OzU1ILUIpg+Jg5OqQYmw4uaS3qPH8tdXaGY6/A4WHSX30/t5jv3nzAqit1++ChqQ3nn
+        bbnl17kCFty+JyP1ccZcrp+rv5UtKrwxyW7i6i9t60Ptz9V+PPDGZwqLf1JMOcM+JrfLFx+d
+        /nokN3WuYIj/O589i9z/zK5+vvyFlrrE43Lb1+se36l2m6H2nyur841Jp0d6/rR5QQ6FM7gi
+        4t4LTnhsnho6fYaHv0nfpRcs0ctO3fPwlzkfLffL+pbPCV798wHbdi0+qfDrz/oz9uv+CL49
+        stOh1nrx6nmvD8y4O79n3nK5x5b1bBm5jVb8vTNUyoTdktunX7q8cvJqiQO2/fy+sXkKe8Iv
+        CR0WSWU68mur2B12j5/GGms3nFRiKc5INNRiLipOBAAr9nWVLgQAAA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b
+References: <CGME20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 01 2023 at 12:35, Gautham R. Shenoy wrote:
-> On Fri, Jul 28, 2023 at 02:13:08PM +0200, Thomas Gleixner wrote:
->> +static void topo_set_ids(struct topo_scan *tscan)
->> +{
->> +	struct cpuinfo_x86 *c = tscan->c;
->> +	u32 apicid = c->topo.apicid;
->> +
->> +	c->topo.pkg_id = topo_shift_apicid(apicid, TOPO_ROOT_DOMAIN);
->
-> Shouldn't this use TOPO_PKG_DOMAIN instead of TOPO_ROOT_DOMAIN ?
+Add PCI ID to support QEMU ufs.
 
-Yup. It does not make a difference in that case. That's why I didn't
-notice, but let me fix this for conistency sake.
+The new qemu ufs device can be found at
+https://lore.kernel.org/qemu-devel/20230727155239.GA979354@fedora
+
+Signed-off-by: Jeuk Kim <jeuk20.kim@samsung.com>
+---
+ drivers/ufs/host/ufshcd-pci.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index cf3987773051..29d322931427 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -590,6 +590,7 @@ static const struct dev_pm_ops ufshcd_pci_pm_ops = {
+ };
+ 
+ static const struct pci_device_id ufshcd_pci_tbl[] = {
++	{ PCI_VENDOR_ID_REDHAT, 0x0013, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	{ PCI_VDEVICE(INTEL, 0x9DFA), (kernel_ulong_t)&ufs_intel_cnl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x4B41), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
+-- 
+2.34.1
 
