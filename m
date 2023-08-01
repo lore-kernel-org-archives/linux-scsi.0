@@ -2,99 +2,144 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 050C5C001DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 09:05:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0F6C04FDF
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 09:27:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232573AbjHAJFo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 05:05:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60314 "EHLO
+        id S231268AbjHAJ1D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 05:27:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232356AbjHAJFN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 05:05:13 -0400
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A92230F7
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 02:03:38 -0700 (PDT)
-Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-686efb9ee3cso5113532b3a.3
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Aug 2023 02:03:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1690880616; x=1691485416;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Dl31qmpoVvkSjyLSpZPfwkWIRx8GhdUOBKx/4n/3L7U=;
-        b=aV+1dhYFoQbThS/XG6H4CkBcRwxAYBFxA8B3Q+sVquHfgQ5/TDAjK6as3P7Y/6eedr
-         dHTCVOlHqZL44kpDUtW2Hq0lmQVvKSe7GTxFwxalpwFrRu+gTUM7mArtdckgfAu6s3L4
-         Cgr4edYOU1UYHd3bVI8eNB4vAzAS9/eE3pFEGbDJrCnamnLFC807pss2LyoN9DQLuDaf
-         P2ceYyYr89Vy6nwgELd2tGgt7O8VYmSBPUriTwWp5XEeKMWOtfh989r87GMEJY9FDZnD
-         +OtnozrChpUhdiWa44+0CuEo9+j/SsfEmER4y3u/II6LpjFikdLNj8qI54P63YmcykCi
-         W6YA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690880616; x=1691485416;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Dl31qmpoVvkSjyLSpZPfwkWIRx8GhdUOBKx/4n/3L7U=;
-        b=iF8Y50zZ+AqDllfh4TYRqGS8hX44kTv+NAFrzHNuZpgdhSX2p8B5gTZ6i0XhgPKLnM
-         LQ1va6fZZ7G3vuL8bbdwWrqodbH1Mwsuo1tQlxiTYvi2CTHMWzjmujOHuCp5LV6UdY2e
-         mbe4jddxII7qpkHn02xDFWhV0eFMjNyNJy0OKjdcZy85Swi2oacsfiF5yl6E+EQzpItG
-         zHfGvLdrPPDDPtEhc324jUIFCuA7IZa4QuO4PmjE2FGedSeOEw1bw3/Q+I2EL4YIDrVo
-         Ed5FTcXnTh7tnOYPLHhbxgCfiqDKIeOMFGYFs4qcUEdIFAkPm4W3f8u8tvi9eE+nF9ES
-         xmkA==
-X-Gm-Message-State: ABy/qLZBha94it13S0/SD4sGCmUZIVNl8ae31hhylmvHUNsH1CVU31d0
-        4ALQ7+KL4MAi0U+rAcc1jfcQMw==
-X-Google-Smtp-Source: APBJJlH6oCr2tZeWpewSHACfnDCdQHNervXhutIyQgatxkDxrpBPXL7suSS9iuOmjWItMEsVtIbYsg==
-X-Received: by 2002:a05:6a20:a11d:b0:13d:3b4d:e4b4 with SMTP id q29-20020a056a20a11d00b0013d3b4de4b4mr11186875pzk.9.1690880616089;
-        Tue, 01 Aug 2023 02:03:36 -0700 (PDT)
-Received: from localhost ([122.172.87.195])
-        by smtp.gmail.com with ESMTPSA id m8-20020aa78a08000000b00686bbf5c573sm5719659pfa.119.2023.08.01.02.03.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Aug 2023 02:03:35 -0700 (PDT)
-Date:   Tue, 1 Aug 2023 14:33:33 +0530
-From:   Viresh Kumar <viresh.kumar@linaro.org>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 4/6] scsi: ufs: host: Add support for parsing OPP
-Message-ID: <20230801090333.pqqugj4tcarwdl2o@vireshk-i7>
-References: <20230731163357.49045-1-manivannan.sadhasivam@linaro.org>
- <20230731163357.49045-5-manivannan.sadhasivam@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230731163357.49045-5-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S232691AbjHAJ0q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 05:26:46 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4D002D66
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 02:25:44 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230801092001epoutp03ba74532c0a8e6b7f3667f97a05a92b41~3N9u4Ctw11925019250epoutp03N
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Aug 2023 09:20:01 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230801092001epoutp03ba74532c0a8e6b7f3667f97a05a92b41~3N9u4Ctw11925019250epoutp03N
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1690881601;
+        bh=vs4C8cJGS67065RVYT27eNMIlYfToH9rfLGTxjMdpXU=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=uQ0R/potL5sMLVmZQLe7ZKNyauhmxZmv69ln/ZbBbNwi4rwo7b6psSW6LndQLmJUq
+         jUKtpzN4NQ5L9F7EaHtmvZB95J98Eju/ewGLG7ZRsJlI4ujcCAUdFaz2qi+Px5Mkh3
+         Jzd2QG8fnOs0L1qaz+ubrvTCiO9b6TMfgDoga2Zk=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20230801092001epcas2p3c25661e733c443f20800cb24b60d97bc~3N9ufw0Bj2559825598epcas2p3X;
+        Tue,  1 Aug 2023 09:20:01 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.68]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4RFV1r59Tbz4x9Pp; Tue,  1 Aug
+        2023 09:20:00 +0000 (GMT)
+X-AuditID: b6c32a48-adffa70000007e89-4b-64c8ce404008
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C1.6D.32393.04EC8C46; Tue,  1 Aug 2023 18:20:00 +0900 (KST)
+Mime-Version: 1.0
+Subject: Re: [PATCH] scsi: ufs: ufs-pci: Add support for QEMU
+Reply-To: jeuk20.kim@samsung.com
+Sender: Jeuk Kim <jeuk20.kim@samsung.com>
+From:   Jeuk Kim <jeuk20.kim@samsung.com>
+To:     Adrian Hunter <adrian.hunter@intel.com>
+CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "dlunev@chromium.org" <dlunev@chromium.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <48f05875-5255-70d2-0737-36fa95470037@intel.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20230801092000epcms2p44c99d2c15bc6169e38693cb64cf946db@epcms2p4>
+Date:   Tue, 01 Aug 2023 18:20:00 +0900
+X-CMS-MailID: 20230801092000epcms2p44c99d2c15bc6169e38693cb64cf946db
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNJsWRmVeSWpSXmKPExsWy7bCmua7DuRMpBrdb1CxOPlnDZvHy51U2
+        i2kffjJbvDykaXH80FcWi0U3tjFZXN41h82i+/oONovlx/8xOXB6XL7i7TG74SKLx+I9L5k8
+        Jiw6wOjx8ektFo++LasYPT5vkvNoP9DNFMARlW2TkZqYklqkkJqXnJ+SmZduq+QdHO8cb2pm
+        YKhraGlhrqSQl5ibaqvk4hOg65aZA3SdkkJZYk4pUCggsbhYSd/Opii/tCRVISO/uMRWKbUg
+        JafAvECvODG3uDQvXS8vtcTK0MDAyBSoMCE7Y/OKD8wFs4QqDs4/yN7AOEegi5GTQ0LARGJP
+        +0cWEFtIYAejxMWzwl2MHBy8AoISf3cIg4SFBWwl7l7eCFWiIDFnWwc7RFxTYvr6iUwg5WwC
+        6hKnF5qDhEUEtCUm/1nF3MXIxcEs8JFJonfNbxaIVbwSM9qfQtnSEtuXb2UEsTmB5u+cvYwd
+        Iq4h8WNZLzOELSpxc/Vbdhj7/bH5jBC2iETrvbNQNYISD37uhopLSpz69pgVwp7OKLHgvynI
+        ERICCxglfjVPh2rQl7jWAfIMyI++Elee+YCEWQRUJV5/nQe1y0Xi9al3TCA2M9Azyxa+ZgYp
+        Zwb6d/0ufRBTQkBZ4sgtFogKPomOw3/ZYT5s2PgbK3vHvCdMELaKxOLmw6wTGJVnIcJ5FpJd
+        sxB2LWBkXsUollpQnJueWmxUYAKP2eT83E2M4FSq5bGDcfbbD3qHGJk4GA8xSnAwK4nwSv8+
+        niLEm5JYWZValB9fVJqTWnyI0RToy4nMUqLJ+cBknlcSb2hiaWBiZmZobmRqYK4kznuvdW6K
+        kEB6YklqdmpqQWoRTB8TB6dUA1P4mvXVR0V7zkZaCUp7269WrmS3vLvvulx7hxV7xZR6b4/T
+        opzL/s9Zsy0nKX1ze9S7f9XmjZ1xi6qn7RbdZmj9v2u+b8mmBVH7W7/6Rer/kjGakHDBeuXK
+        E9xZB9kDThY/uxPjZcAi2iW/qINpS0DCjSsVT292XNi98/j8U3onVgi6J6qfZLz8yXOT3vyt
+        AS6LeAPmz3Z1Ci6eGpe3fvOtOdKrXp0sOhR27qurzEyXb0t2aAbV/g4IZvrdapLKm6OzzOq6
+        8Z1Wfu19x227N7y4FitQo/f499yJW583MlaKah7jrUgPt19ff/T5ssRapR7DE7ZrMriVfLwm
+        7ve+9V1eSOy9j55CYyTbBa13d5VYijMSDbWYi4oTARpEefguBAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b
+References: <48f05875-5255-70d2-0737-36fa95470037@intel.com>
+        <20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p1>
+        <CGME20230801073750epcms2p121c08e452aaafdda301c5562f4ccff5b@epcms2p4>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 31-07-23, 22:03, Manivannan Sadhasivam wrote:
-> +int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
-> +			   struct dev_pm_opp *opp, void *data,
-> +			   bool scaling_down)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +	struct list_head *head = &hba->clk_list_head;
-> +	struct ufs_clk_info *clki;
-> +	unsigned long freq;
-> +	u8 idx = 0;
-> +	int ret;
-> +
-> +	list_for_each_entry(clki, head, list) {
-> +		if (!IS_ERR_OR_NULL(clki->clk)) {
+On 1/08/23, Adrian Hunter wrote:
+> On 1/08/23 10:37, Jeuk Kim wrote:
+> > Add PCI ID to support QEMU ufs.
+> >=20
+> > The new qemu ufs device can be found at
+> > https://lore.kernel.org/qemu-devel/20230727155239.GA979354=40fedora
+>=20
+> Please say something about why a UFS device is being virtualized
+> and what features it is expected to support.
 
-NULL is considered as a valid clock AFAIR, so you must only be doing
-IS_ERR() here I guess.
+Hi Adrian=21
 
--- 
-viresh
+UFS device emulation feature has been newly added to QEMU recently.
+Currently, QEMU UFS supports basic io and query request features,
+and plans to add more features in the future.
+
+With the addition of the QEMU ufs device emulation feature,=20
+QEMU UFS decided to use the pci device id of 0x0013 in the REDHAT vendor id=
+ (0x1b36).
+
+However, this information is not registered in the linux ufs driver,=20
+so the current linux kernel does not recognize the QEMU UFS device.=20
+Therefore, I want to register the QEMU ufs pci id through this patch.
+
+Do I need to add the above content to the commit message?
+
+Thanks,
+Jeuk
+
+> >=20
+> > Signed-off-by: Jeuk Kim <jeuk20.kim=40samsung.com>
+> > ---
+> >=C2=A0=20drivers/ufs/host/ufshcd-pci.c=20=7C=201=20+=0D=0A>=20>=C2=A0=20=
+1=20file=20changed,=201=20insertion(+)=0D=0A>=20>=20=0D=0A>=20>=20diff=20--=
+git=20a/drivers/ufs/host/ufshcd-pci.c=20b/drivers/ufs/host/ufshcd-pci.c=0D=
+=0A>=20>=20index=20cf3987773051..29d322931427=20100644=0D=0A>=20>=20---=20a=
+/drivers/ufs/host/ufshcd-pci.c=0D=0A>=20>=20+++=20b/drivers/ufs/host/ufshcd=
+-pci.c=0D=0A>=20>=20=40=40=20-590,6=20+590,7=20=40=40=20static=20const=20st=
+ruct=20dev_pm_ops=20ufshcd_pci_pm_ops=20=3D=20=7B=0D=0A>=20>=C2=A0=20=7D;=
+=0D=0A>=20>=C2=A0=20=0D=0A>=20>=C2=A0=20static=20const=20struct=20pci_devic=
+e_id=20ufshcd_pci_tbl=5B=5D=20=3D=20=7B=0D=0A>=20>=20+=20=C2=A0=20=C2=A0=20=
+=C2=A0=20=C2=A0=7B=20PCI_VENDOR_ID_REDHAT,=200x0013,=20PCI_ANY_ID,=20PCI_AN=
+Y_ID,=200,=200,=200=20=7D,=0D=0A>=20>=C2=A0=20=20=C2=A0=20=C2=A0=20=C2=A0=
+=20=C2=A0=7B=20PCI_VENDOR_ID_SAMSUNG,=200xC00C,=20PCI_ANY_ID,=20PCI_ANY_ID,=
+=200,=200,=200=20=7D,=0D=0A>=20>=C2=A0=20=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
+=A0=7B=20PCI_VDEVICE(INTEL,=200x9DFA),=20(kernel_ulong_t)&ufs_intel_cnl_hba=
+_vops=20=7D,=0D=0A>=20>=C2=A0=20=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=7B=20P=
+CI_VDEVICE(INTEL,=200x4B41),=20(kernel_ulong_t)&ufs_intel_ehl_hba_vops=20=
+=7D,
