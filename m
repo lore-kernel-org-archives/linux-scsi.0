@@ -2,69 +2,126 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0651C04A6A
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 18:36:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 812E4C04A94
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Aug 2023 19:54:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229756AbjHASgY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Aug 2023 14:36:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48880 "EHLO
+        id S231407AbjHATya (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Aug 2023 15:54:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229718AbjHASgX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 14:36:23 -0400
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E154B1FC6;
-        Tue,  1 Aug 2023 11:36:22 -0700 (PDT)
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1bbc64f9a91so50562415ad.0;
-        Tue, 01 Aug 2023 11:36:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690914982; x=1691519782;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fcfz0R863zI3puuV2hq31o7wiMDL/GrNDWB4uRz0UMA=;
-        b=CtNuTotdx1+JSm3a0FyrdbPSCfx/gadOgo18i9XZUaSc2kQxc8500Np1EmyyLcoKbO
-         7RLx/7yp6/yDVsbUq7y7DS9TTGwy+ZJvjJ5Zb3MhvjKdpJo7twsk/MgK1n3N8mTj+1WY
-         CbYljhyLLFjGIxfQTj4bwvayyqUPJmyKGCspW8v89WJQnHcG8MAPRelEXSgFOfyBPnKf
-         rx9kODyD7khFb2nIGGH0puUkQKesPIh0Txw2HwlFYsFkXRv7XK+jtyGw5q0GIyppc4aw
-         WG3hKHNgVcIeZlKtcKxxFWjD9fGuR0K9SPKI1Jr5bDfE6j3A81iGHIMifAo31RZIAyml
-         Uawg==
-X-Gm-Message-State: ABy/qLa6SENrvDgMZZxQEzVauxogOXRgfoJQJwNahKkyR9QE9EBZg4WS
-        ws2mcoxGVTqHCZjc5uPikY9+S9aRGlg=
-X-Google-Smtp-Source: APBJJlFEZHbhrk80IMySZCiA2wwL94qZptM+hPS4ANLpvhWT/1MzxDDnzuzluExdej7RBTRIydy0fA==
-X-Received: by 2002:a17:902:d4c3:b0:1b7:e355:d1ea with SMTP id o3-20020a170902d4c300b001b7e355d1eamr15212995plg.24.1690914982313;
-        Tue, 01 Aug 2023 11:36:22 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id a2-20020a170902ee8200b001b04c2023e3sm10785049pld.218.2023.08.01.11.36.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Aug 2023 11:36:21 -0700 (PDT)
-Message-ID: <8c8f38de-f418-6ffb-8949-f6eb85602d98@acm.org>
-Date:   Tue, 1 Aug 2023 11:36:20 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
-Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+        with ESMTP id S229628AbjHATy3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2023 15:54:29 -0400
+Received: from out3-smtp.messagingengine.com (out3-smtp.messagingengine.com [66.111.4.27])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EDBEE67;
+        Tue,  1 Aug 2023 12:54:28 -0700 (PDT)
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+        by mailout.nyi.internal (Postfix) with ESMTP id C520B5C0182;
+        Tue,  1 Aug 2023 15:54:27 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute6.internal (MEProxy); Tue, 01 Aug 2023 15:54:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:content-type:date:date:from:from:in-reply-to
+        :in-reply-to:message-id:mime-version:references:reply-to:sender
+        :subject:subject:to:to; s=fm2; t=1690919667; x=1691006067; bh=2M
+        n6OlH+kFijO/OSJ+b/5cNGvEQaHJDvRBONu3It1/A=; b=X7jfWhTFQxa5lSdG95
+        SsWWLexeFFtQc95pZEWp6EAdfSTXI/gQXdthLOJUWvH+vZ8bf7EX+IcYCviT7+79
+        pSNHWiMKQSaSdF7xUioTGQ2thWV4URCokLk5Linfp3fQooybJsFfB+g36IURnvPl
+        iZPCphWffMNNqFKN/hd10P4Sjdfcu6QlMnIm0mvWKYOdqsy0oemNAdGAkhdD7Cvp
+        BKXrZtdUWt7eGOPYJhDMeGJv0kYGl4t5DvprPlfaox0mYaP6f9z9EV5SmkHP20sE
+        d7ZtUG2XMY7p2cbqN8sTVceDUDOsag+JboAN7FVQszRotWfkVoRFdAO3ZZqBINIc
+        kabA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:content-type:date:date
+        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm3; t=1690919667; x=1691006067; bh=2Mn6OlH+kFijO
+        /OSJ+b/5cNGvEQaHJDvRBONu3It1/A=; b=3OwLcOUZllw6Sbjm9UT2+gmZhibYm
+        pprBGPfmlk/2cEPQNOjT5Q6ufnY3zsf7zBj+aCJvjbbEyL8pwHJUSX/581DphrYe
+        e0bGfTvhKTJPyPuqtQm/Pk63BP9WjarjECFE4nw9D98ZMJyF3p3Kb3JvVOzhOQ9P
+        +mqOWiL2gHZkdUcSaeiFvCa15yDfwmtTDYV5SjGilQ4+RI2SJOk7uYikV11WJ/Pi
+        ASMNlbGCtFZzDj2yocLspiT/vHb+9rKZaF+WlMmQf+l99mf2+l6UZ7qYZ8Q3nafO
+        URs/eYx7jxm2uOT3UO/sg4ILi5XxPBE3TAVfBwRcPj46g9JFDYxA7zPnw==
+X-ME-Sender: <xms:82LJZLsgBRxlwfpe5Lm17zt_oCvzDJfPg2wJ5Q8enm-lEvX_hQV5cg>
+    <xme:82LJZMcN8Sfw4jiY_V4VICjgZzpBED6Lv_SB4Su0YaLQ4VOrVqVfoMkd04MKA52iJ
+    41YtC-iPutXthkGKwM>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedviedrjeeigddufeelucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:82LJZOz_19DDArDRPTUNXgYzbdh66qCb8FJcHZsim7fs-oNgq8x67A>
+    <xmx:82LJZKNrWdZVimqPaEDCmk2-UmrVzT8vVun2AXXL1nlIEtBZ5gNr0Q>
+    <xmx:82LJZL8KT2uS7LIM9azLPLTlxZF52kBPrdPwc_dHrcOAiX8gYIzWPA>
+    <xmx:82LJZGl70duxBsuVAE_fN9UzKs_lRKGh-pbaTHVQ9pc0Bpk73K-vng>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 607BCB60089; Tue,  1 Aug 2023 15:54:27 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.9.0-alpha0-592-ga9d4a09b4b-fm-defalarms-20230725.001-ga9d4a09b
+Mime-Version: 1.0
+Message-Id: <1f7e045a-5dc1-4667-b09d-bc74953e48b0@app.fastmail.com>
+In-Reply-To: <67f2a68f-8462-e1de-c016-b84d7c6e3222@acm.org>
+References: <CA+G9fYur8UJoUyTLJFVEJPh-15TJ7kbdD2q8xVz8a3fLjkxxVw@mail.gmail.com>
+ <a660adba-b73b-1c02-f642-c287bb4c72fc@acm.org>
+ <CA+G9fYsYifn9ywPc8KqYHwDDSTRQGOgf_T58Gpt9CYDBs8u+SQ@mail.gmail.com>
+ <227327a3-399a-4a9f-a775-e9627656b5a1@app.fastmail.com>
+ <67f2a68f-8462-e1de-c016-b84d7c6e3222@acm.org>
+Date:   Tue, 01 Aug 2023 21:54:06 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Bart Van Assche" <bvanassche@acm.org>,
+        "Naresh Kamboju" <naresh.kamboju@linaro.org>
+Cc:     "open list" <linux-kernel@vger.kernel.org>,
         linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Paul Ausbeck <paula@soe.ucsc.edu>,
-        Thorsten Leemhuis <regressions@leemhuis.info>,
-        TW <dalzot@gmail.com>, regressions@lists.linux.dev
-References: <20230731003956.572414-1-dlemoal@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230731003956.572414-1-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        linux-next <linux-next@vger.kernel.org>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Anders Roxell" <anders.roxell@linaro.org>
+Subject: Re: next: arm64: gcc-8-defconfig: ufshcd.c:10629:2:
+ /builds/linux/include/linux/compiler_types.h:397:38: error: call to
+ '__compiletime_assert_553' declared with attribute error: BUILD_BUG_ON
+ failed:
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/30/23 17:39, Damien Le Moal wrote:
-> Given that ATA devices will be woken up by libata activity on resume,
-> sd_resume() has no need to issue a START STOP UNIT command, which solves
-> the above mentioned problems. Do not issue this command by introducing
-> the new scsi_device flag no_start_on_resume and setting this flag to 1
-> in ata_scsi_dev_config(). sd_resume() is modified to issue a START STOP
-> UNIT command only if this flag is not set.
+On Tue, Aug 1, 2023, at 19:51, Bart Van Assche wrote:
+> On 8/1/23 07:56, Arnd Bergmann wrote:
+>> On Tue, Aug 1, 2023, at 16:23, Naresh Kamboju wrote:
+>
+> If I change the return type of ufshcd_check_header_layout() from void
+> into unsigned int and insert the following at the start of that function:
+>
+> return ((u8 *)&(struct request_desc_header){ .enable_crypto = 1})[2] != 0x80;
+>
+> then the compiler shows the following in the output window:
+>
+> xorl    %eax, %eax
+>
+> In other words, the expression next to the return statement evaluates to zero
+> but the same expression does not evaluate to zero in the BUILD_BUG_ON()
+> statement. Does this perhaps indicate a compiler bug? And if so, what is the
+> appropriate way to fix the build error? Insert an #ifdef/#endif pair inside
+> ufshcd_check_header_layout() such that the compile-time checks do not happen
+> for gcc version 9 or older?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+I played around it some more, and this apparently comes
+down to constant-folding in sub-byte bitfields, so in the
+older compilers neither the ==0x80 nor the !=0x80 case
+can be ruled out because of a missing optimization.
+Instead the generated code would try to initialize the
+variable at runtime and then do a conditional branch to
+the assert, but that of course fails the build.
+
+I'd suggest something like
+
+    if (defined(GCC_VERSION) && GCC_VERSION < 100000)
+            return;
+
+before the assertion, in that case it doesn't evaluate it.
+
+     Arnd
