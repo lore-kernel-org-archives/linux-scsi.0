@@ -2,93 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7EDBC04E69
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Aug 2023 16:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 447BDC04FE1
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Aug 2023 16:51:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230223AbjHBQql (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Aug 2023 12:46:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46472 "EHLO
+        id S233222AbjHBQvw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Aug 2023 12:51:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229626AbjHBQqj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2023 12:46:39 -0400
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C520F7;
-        Wed,  2 Aug 2023 09:46:39 -0700 (PDT)
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1bbbbb77b38so419955ad.3;
-        Wed, 02 Aug 2023 09:46:39 -0700 (PDT)
+        with ESMTP id S232603AbjHBQvZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2023 12:51:25 -0400
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5DF30FA
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Aug 2023 09:50:57 -0700 (PDT)
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2680a031283so4300071a91.3
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2023 09:50:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690994798; x=1691599598;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20221208; t=1690995046; x=1691599846;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=cHem7RtrQAA+5pYA+UJjyY2cZzfgGE7snom/inc3cU8=;
-        b=hjywk9+zpuebWO3YvQ/UU7uwl4IhqaRS7U2xMGDL/jDAoMrYLMeOOFiN+43BE7JBYT
-         LjIV0NzQPCtdymKLhxmz+tFa+VCIavBEkDrzGSSdMHm9rulctACy31PkZTGiZBRWHW5W
-         /OB7cDaQK4dZQNt+rDw0HJaLXMOe/5S8T1FNkkQbRHEMYHGIsiVihwKqC9dqOfkeYPDd
-         aEaWTzofZVrzYgnFkhF7NMs6dgtGUWVVTVYR7VEHnkHwBVJapjflTwvojeSBTC6yFKgn
-         78YC96RuUmsmdHsvXznQIcuE6STURbQzJTvjbVgbHcTRQeWiGhkB6FkeiLRIEePiWCRR
-         IdJA==
-X-Gm-Message-State: ABy/qLZIg0roGgdyv3gqrMsoFqZUPxlq4iXDo0DDuC6rX4JyK9wi2ukl
-        OHoJC1ISihTCEWfp4l1vg80=
-X-Google-Smtp-Source: APBJJlGaC0RxUFDrC5wlfW2hkNAD/sXHxT0XK2GR52jbWQ3dsr3Kk45SsIC85rUmfr/pTTyMCO376A==
-X-Received: by 2002:a17:902:d4c8:b0:1b9:e1d6:7c7d with SMTP id o8-20020a170902d4c800b001b9e1d67c7dmr15410843plg.47.1690994798449;
-        Wed, 02 Aug 2023 09:46:38 -0700 (PDT)
+        bh=4FVzVJaYZ6GCrB12rl7s+PsKQySdxZj2TWGUmnlXmB0=;
+        b=V5bUp1uQnFyBxSUuj+QFKYklWXrY6eERKua+Kz+k36H1SYNcZ1q6XfLcYqLSrvEoKS
+         wzB/JuF7DEjiAalrbuIkHvUglf2ATd87GP6oMPCX3+FsFdLKoVIlGdPppAHQoHny5eED
+         nB4kXp3kBnOXdn54yfphm+PifadFCVzYGwaH7S1avx4moEOc3xKEBVPd3w0iSfo4UtUF
+         wsJi6MsgCK47+lzH1tHCLXrmJI/E+h9kv3luGOoMLELU9lqCcoWBQ7f7f0oCcAiR+9/K
+         ES1hgUvIf/WlKjv3IGHwxHfAcyASkWxpyoO+ZafYdJjkzDcRBR2pWRNaYCFw6gLJBLMy
+         hieg==
+X-Gm-Message-State: ABy/qLbeqUXCk99OUDbLfE6v6lqk31BZ8MaelL8pVZ3NfBNXwg4s1Kek
+        u//ySI70jN9Tq3fnPW4EjMc=
+X-Google-Smtp-Source: APBJJlGSfElJnPiK5PHd4lrChSVFlK7ZGy3kka0hccbgJKG7syNLBHyS4Gjkrmrb34TAQj1v0Yqjkw==
+X-Received: by 2002:a17:90a:fd98:b0:263:4e41:bdb4 with SMTP id cx24-20020a17090afd9800b002634e41bdb4mr14305700pjb.33.1690995045749;
+        Wed, 02 Aug 2023 09:50:45 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:3b5d:5926:23cf:5139? ([2620:15c:211:201:3b5d:5926:23cf:5139])
-        by smtp.gmail.com with ESMTPSA id e12-20020a170902ed8c00b001bb04755212sm12705679plj.228.2023.08.02.09.46.36
+        by smtp.gmail.com with ESMTPSA id k7-20020a17090aaa0700b002684b837d88sm1321971pjq.14.2023.08.02.09.50.44
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Aug 2023 09:46:37 -0700 (PDT)
-Message-ID: <d1552f4a-fb9e-cd62-de16-7b0b5951aefb@acm.org>
-Date:   Wed, 2 Aug 2023 09:46:35 -0700
+        Wed, 02 Aug 2023 09:50:44 -0700 (PDT)
+Message-ID: <82ab3a04-e0ee-0911-ab11-e0b8f9e554ec@acm.org>
+Date:   Wed, 2 Aug 2023 09:50:43 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.12.0
-Subject: Re: [PATCH v2 11/12] scsi: ufs: Simplify transfer request header
- initialization
+Subject: Re: [PATCH -next v2] SCSI: fix possible memory leak while
+ device_add() fails
 Content-Language: en-US
-To:     "Kumar, Udit" <u-kumar1@ti.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Yang Li <yang.lee@linux.alibaba.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        "Menon, Nishanth" <nm@ti.com>, "Gole, Dhruva" <d-gole@ti.com>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
-References: <20230727194457.3152309-1-bvanassche@acm.org>
- <20230727194457.3152309-12-bvanassche@acm.org>
- <97281aba-a78c-7f75-fc15-af43e4df4907@ti.com>
- <70b8adef-02ac-4557-97d3-cbf8537edfb2@acm.org>
- <96e0abb37d364da3b9d04c0c2f3378f6@ti.com>
+To:     Zhu Wang <wangzhu9@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, kay.sievers@vrfy.org, tonyj@suse.de,
+        gregkh@suse.de, linux-scsi@vger.kernel.org
+References: <20230802023521.208194-1-wangzhu9@huawei.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <96e0abb37d364da3b9d04c0c2f3378f6@ti.com>
+In-Reply-To: <20230802023521.208194-1-wangzhu9@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/2/23 09:44, Kumar, Udit wrote:
->> Does this patch help:
->> https://lore.kernel.org/linux-scsi/20230801232204.1481902-1-
->> bvanassche@acm.org/?
+On 8/1/23 19:35, Zhu Wang wrote:
+> If device_add() returns error, the name allocated by dev_set_name() need
+> be freed. As comment of device_add() says, it should use put_device() to
+> decrease the reference count in the error path. So fix this by calling
+> put_device, then the name can be freed in kobject_cleanp().
 > 
-> Yes , build works for me with this patch.
-> You just skipped based upon compiler version  but
-> what about checks you want to do in this function.
+> Fixes: ee959b00c335 ("SCSI: convert struct class_device to struct device")
+> Signed-off-by: Zhu Wang <wangzhu9@huawei.com>
+> 
+> ---
+> Changes in v2:
+> - Move the new put_device() call from under if to under err_out label.
+> ---
+>   drivers/scsi/raid_class.c | 1 +
+>   1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
+> index 898a0bdf8df6..d9dd86a185f7 100644
+> --- a/drivers/scsi/raid_class.c
+> +++ b/drivers/scsi/raid_class.c
+> @@ -249,6 +249,7 @@ int raid_component_add(struct raid_template *r,struct device *raid_dev,
+>   
+>   err_out:
+>   	list_del(&rc->node);
+> +	put_device(&rc->dev);
+>   	rd->component_count--;
+>   	put_device(component_dev);
+>   	kfree(rc);
 
-These checks verify that the layout of the structures matches the layout 
-from the UFS standard. I want these checks to performed at compile time. 
-I'm not sure how to let gcc 9 or older perform these checks at compile time.
+Please perform the error recovery actions in the opposite order of the 
+corresponding actions - this means swapping the list_del() and 
+put_device() calls.
 
 Thanks,
 
