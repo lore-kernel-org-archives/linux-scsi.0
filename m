@@ -2,83 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C19ADC3DA40
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Aug 2023 08:48:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE602C001DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Aug 2023 10:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231845AbjHBIs0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Aug 2023 04:48:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51752 "EHLO
+        id S233701AbjHBKVW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Aug 2023 06:21:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230429AbjHBIsX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2023 04:48:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29339D9;
-        Wed,  2 Aug 2023 01:48:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B26286189A;
-        Wed,  2 Aug 2023 08:48:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7F6CC433C7;
-        Wed,  2 Aug 2023 08:48:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690966102;
-        bh=NDDryVv8WBs0MrakH/XEpeVn2udcnM0LHCwQ2rX07B8=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=uMyku//1pacFt9LpwUB0r8zxXKdB5I6hOagla3nvty672sZx4D781sIGkzvsCfjkb
-         omvqNn1i95aRWrwiBPMAeFNNarI0WUfzuvIVaIBquVLMkPKgQKZXspjXefn+pNcRkW
-         I9b9KJhU5+0nbviC/ufnETVn0O5Ss98YJ9wtDYtiMoryVpK/I1S0y2p0oF8Ck6Famd
-         D9Tamj1OUMhLwkfi42vPQyG9Z7WC7nNo4YFqQ5HDBf0UDiysl9LALiwqQMLFnQOp1K
-         Atp1Re/aVOzywGkviOYqw6wElCjzEFbvvaDjbem6hAClX05VNOPU3hqggoQSFRj9Fa
-         pRjveql2JIzCw==
-Message-ID: <789fb6b3-e871-3c4e-d3d5-b8c3ece1624a@kernel.org>
-Date:   Wed, 2 Aug 2023 17:48:04 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v4 00/10] libata: remove references to 'old' error handler
-Content-Language: en-US
-To:     Niklas Cassel <nks@flawful.org>, Jonathan Corbet <corbet@lwn.net>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
+        with ESMTP id S233191AbjHBKVO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2023 06:21:14 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B3F22685;
+        Wed,  2 Aug 2023 03:21:09 -0700 (PDT)
+Message-ID: <20230802101933.047746332@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1690971667;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         references:references; bh=+1QBA7VHZ0Y4GyIw3wTYa2EiSrzVOoXvVDOvnVaT6BY=;
+        b=o23LTXt/iKfOjDUBvrmBvtxEGJNJfGmJ1cM/lvH782Pf+unWosS99etWR4OmllD2ztKJZJ
+        xcKbXrXBGvgrdFCwG2vHRLVapoFFUJPj8doWNbsjJOS5nSg09BuJW0CGViUtef/l1FcdOX
+        BgX1xmmJGw3TR1o0xFtJM8hsddhUgyOgaK9f8uKseyBtIzJWiyaerUfHVTCYVS0ooXpNa9
+        nHnfXJiUH2vPCKDDMwJMym6VCiXjhE+H2XHUppZivAEKIlIsJyyQAOsRxw2EZ3nVzxSElC
+        +AlBtzrIF6yINo8RiNi3DBTyq7naN+DFZFoP/RLdCOKxoYR4DRXsuTl+22D94g==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1690971667;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         references:references; bh=+1QBA7VHZ0Y4GyIw3wTYa2EiSrzVOoXvVDOvnVaT6BY=;
+        b=6gTSlQoS5p3R70A6Lc7MlXSOgjUe3LsTGCKzSwZpGGmvqqk1CGzDDvhGBbnH/CAcDWSLln
+        HNlWjHVXXN2/S+AQ==
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     x86@kernel.org, Tom Lendacky <thomas.lendacky@amd.com>,
+        Andrew Cooper <andrew.cooper3@citrix.com>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Huang Rui <ray.huang@amd.com>, Juergen Gross <jgross@suse.com>,
+        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <james.smart@broadcom.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>
-Cc:     Hannes Reinecke <hare@suse.com>, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
-        linux-doc@vger.kernel.org
-References: <20230731143432.58886-1-nks@flawful.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230731143432.58886-1-nks@flawful.org>
+        linux-scsi@vger.kernel.org
+Subject: [patch V3 06/40] scsi: lpfc: Use topology_core_id()
+References: <20230802101635.459108805@linutronix.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Date:   Wed,  2 Aug 2023 12:21:07 +0200 (CEST)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/31/23 23:34, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
-> 
-> Hi all,
-> 
-> now that the ipr driver has been modified to not hook into libata
-> all drivers now use the 'new' error handler, so we can remove any
-> references to it. And do a general cleanup to remove callbacks
-> which are no longer needed.
-> 
-> Damien:
-> This patch series is based on v6.5-rc4, however it also applies to your
-> libata/for-next branch, if you cherry-pick commit 3ac873c76d79 ("ata:
-> libata-core: fix when to fetch sense data for successful commands"),
-> before applying the series (this patch is already in Torvald's tree).
+Use the provided topology helper.
 
-Applied to for-6.6 with some tweaks to the commit titles.
-Thanks !
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/lpfc/lpfc_init.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--- 
-Damien Le Moal
-Western Digital Research
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12442,7 +12442,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba
+ 		cpup = &phba->sli4_hba.cpu_map[cpu];
+ #ifdef CONFIG_X86
+ 		cpup->phys_id = topology_physical_package_id(cpu);
+-		cpup->core_id = cpuinfo->cpu_core_id;
++		cpup->core_id = topology_core_id(cpu);
+ 		if (lpfc_find_hyper(phba, cpu, cpup->phys_id, cpup->core_id))
+ 			cpup->flag |= LPFC_CPU_MAP_HYPER;
+ #else
 
