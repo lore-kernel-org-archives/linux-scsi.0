@@ -2,96 +2,103 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68937C001DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Aug 2023 07:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76240C41513
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Aug 2023 08:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232908AbjHBHX3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Aug 2023 03:23:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33794 "EHLO
+        id S232508AbjHBIFL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Aug 2023 04:05:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232873AbjHBHXN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2023 03:23:13 -0400
-Received: from mail-vs1-xe30.google.com (mail-vs1-xe30.google.com [IPv6:2607:f8b0:4864:20::e30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FCC91FEE
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Aug 2023 00:23:11 -0700 (PDT)
-Received: by mail-vs1-xe30.google.com with SMTP id ada2fe7eead31-444c42f608aso2088399137.1
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2023 00:23:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1690960990; x=1691565790;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=LjQGGHRrLYlqJ6zgvLtJ9vmKtsKBQZ8R4xmR9XBEN8s=;
-        b=UzSi6ZcrhwGtwEb1zHGf3GBVtoN39+XEvgLmIoTJVvZhe3zdoWTtdmYqq1bqhDFejA
-         rAvUoV83Y6I8LTOvVuEOoNwr2dJnRtSXoHYdNQu4KPK8Mbpr9MjpXuQsFFi488TJj3tW
-         qEPiU1y3KbXOO+k2AubsIPdtSDbomZ8SpaHzKzCS3iIj100vKp8T+tmBTfsbNiJmSUOj
-         TApJfuMvu/KfwwTnHytbcSB7QQozPYk3go9YKIgQvpRx/RcMJLyNa0lRacKChmFWcIWp
-         mkkHQFVSyWR+Yzr94SPR3KHVGysOus+CtxnXrhLtiX1AiLKVeKAG+TBw3J5qrNbBBJjw
-         LBEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690960990; x=1691565790;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=LjQGGHRrLYlqJ6zgvLtJ9vmKtsKBQZ8R4xmR9XBEN8s=;
-        b=KEAheFOHtmHQpg59SzlIbP7i9674iwf4JsqRioLAt8WYWDzKx18+LyTPDqla2PmR8W
-         btl3TiDM1mGwki32Z5WlqyOW7l77wc+cwg+WPI7+muFg+a1Zu9G1ov8+FmPSPRgMlqJK
-         dIVRX23vGZmUMPkInCYrDqpNFgof3djb0h3JMs+Y1wJPoQNgoKXxJgK5dDxG34jrMbzm
-         ks5dl51/MWfWHSViiOFnrWRAncHGA0nM93W97v5B3gPKlQ/pJn22CQEaZPjbYnkWqkcd
-         Ks35Wo22bPPT1K+69QmiYgkNG+KrWVofmWuo5wNP3P4NmgwbsJgRM7FLCL/uQuNnGlkh
-         pG/w==
-X-Gm-Message-State: ABy/qLa/AVg82AxCxeWGmOSF1HfJYmIE9KdxddwobciJK9/UYYoJ+BPe
-        oMxAyFqrBmQonMO1xSCQykQjrPPWdKaucltdKTuFFQ==
-X-Google-Smtp-Source: APBJJlFXUtjV/6SiiXt6EcNU0Vo+MmFO/Kw7ZAF0LsrV9nngYLTGV2hq39x2hHsRc0n0zWPbfeAmJKr8crPIQPpEWL8=
-X-Received: by 2002:a05:6102:316a:b0:444:57aa:571 with SMTP id
- l10-20020a056102316a00b0044457aa0571mr4127175vsm.15.1690960990257; Wed, 02
- Aug 2023 00:23:10 -0700 (PDT)
+        with ESMTP id S232022AbjHBIFJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2023 04:05:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82DCBAC;
+        Wed,  2 Aug 2023 01:05:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1257161853;
+        Wed,  2 Aug 2023 08:05:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B159C433CC;
+        Wed,  2 Aug 2023 08:05:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690963507;
+        bh=td07XKWidoomSVZRaOJmmQqKf2QT5CJ94O/GYzC2Udw=;
+        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+        b=JZXNMDmtJL5nILNMkGKoj/PsxNOxvf7djJBiI/6nLij4T6udUZfgZJj7jhaS8C3mZ
+         hJtZYJdnsmwA896yXzLpVvK/FMJ1p+15G+qbxmGLpQjbmXcfRSD+V+mwxAW55Bzk45
+         CLWHkaSU7rt1yJyjSfxMg3Q8JzJ+YySmHLXEqcDb8dykGVH9exs0X37nDAwMj5CBtr
+         YWTHIyi2/Y9emvWytorzySeQuYMrOYvKQL9OJsLkRkIHvSzDKb9e0WouiBAyNwpZm0
+         SFm2iKtwVelxkcw9mY3WacvYjUOrypNdQReLkgV0jIUJFVAVioNr8lBqFR6MDhbphV
+         hdi4O3XiZWkWw==
+Message-ID: <b7431ae0-e6a1-a9b3-9941-bfe84801b324@kernel.org>
+Date:   Wed, 2 Aug 2023 17:05:05 +0900
 MIME-Version: 1.0
-References: <20230801232204.1481902-1-bvanassche@acm.org> <1982f003-1c70-4f0b-8d66-d9e7420dbafd@app.fastmail.com>
-In-Reply-To: <1982f003-1c70-4f0b-8d66-d9e7420dbafd@app.fastmail.com>
-From:   Naresh Kamboju <naresh.kamboju@linaro.org>
-Date:   Wed, 2 Aug 2023 12:52:59 +0530
-Message-ID: <CA+G9fYsFqSCG=ZoT9Eo_b_PVPsj6dYxcv7Bi5aeSKReATGGNWw@mail.gmail.com>
-Subject: Re: [PATCH v2] scsi: ufs: Fix the build for gcc 9 and before
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Nathan Chancellor <nathan@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Can Guo <quic_cang@quicinc.com>, Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Paul Ausbeck <paula@soe.ucsc.edu>,
+        Thorsten Leemhuis <regressions@leemhuis.info>,
+        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
+        Bart Van Assche <bvanassche@acm.org>
+References: <20230731003956.572414-1-dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20230731003956.572414-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2 Aug 2023 at 12:18, Arnd Bergmann <arnd@arndb.de> wrote:
->
-> On Wed, Aug 2, 2023, at 01:21, Bart Van Assche wrote:
-> > gcc compilers before version 10 cannot do constant-folding for sub-byte
-> > bitfields. This makes the compiler layout tests fail. Hence skip the
-> > layout checks for gcc 9 and before.
-> >
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Naresh Kamboju <naresh.kamboju@linaro.org>
-> > Cc: Nathan Chancellor <nathan@kernel.org>
-> > Reported-by: Naresh Kamboju <naresh.kamboju@linaro.org>
-> > Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On 7/31/23 09:39, Damien Le Moal wrote:
+> During system resume, ata_port_pm_resume() triggers ata EH to
+> 1) Resume the controller
+> 2) Reset and rescan the ports
+> 3) Revalidate devices
+> This EH execution is started asynchronously from ata_port_pm_resume(),
+> which means that when sd_resume() is executed, none or only part of the
+> above processing may have been executed. However, sd_resume() issues a
+> START STOP UNIT to wake up the drive from sleep mode. This command is
+> translated to ATA with ata_scsi_start_stop_xlat() and issued to the
+> device. However, depending on the state of execution of the EH process
+> and revalidation triggerred by ata_port_pm_resume(), two things may
+> happen:
+> 1) The START STOP UNIT fails if it is received before the controller has
+>    been reenabled at the beginning of the EH execution. This is visible
+>    with error messages like:
+> 
+> ata10.00: device reported invalid CHS sector 0
+> sd 9:0:0:0: [sdc] Start/Stop Unit failed: Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+> sd 9:0:0:0: [sdc] Sense Key : Illegal Request [current]
+> sd 9:0:0:0: [sdc] Add. Sense: Unaligned write command
+> sd 9:0:0:0: PM: dpm_run_callback(): scsi_bus_resume+0x0/0x90 returns -5
+> sd 9:0:0:0: PM: failed to resume async: error -5
+> 
+> 2) The START STOP UNIT command is received while the EH process is
+>    on-going, which mean that it is stopped and must wait for its
+>    completion, at which point the command is rather useless as the drive
+>    is already fully spun up already. This case results also in a
+>    significant delay in sd_resume() which is observable by users as
+>    the entire system resume completion is delayed.
+> 
+> Given that ATA devices will be woken up by libata activity on resume,
+> sd_resume() has no need to issue a START STOP UNIT command, which solves
+> the above mentioned problems. Do not issue this command by introducing
+> the new scsi_device flag no_start_on_resume and setting this flag to 1
+> in ata_scsi_dev_config(). sd_resume() is modified to issue a START STOP
+> UNIT command only if this flag is not set.
 
-Would it be a good idea to provide a link to the original report ?
-Link: https://lore.kernel.org/linux-scsi/CA+G9fYur8UJoUyTLJFVEJPh-15TJ7kbdD2q8xVz8a3fLjkxxVw@mail.gmail.com/
+Martin,
 
->
-> Looks good to me, I gave it a quick spin with
-> all versions from gcc-6 through gcc-10 to make sure this
-> works for all of them.
->
-> Tested-by: Arnd Bergmann <arnd@arndb.de>
+Are you OK with this patch ? Can I get your Acked-by please ?
 
---
-Linaro LKFT
-https://lkft.linaro.org
+
+-- 
+Damien Le Moal
+Western Digital Research
+
