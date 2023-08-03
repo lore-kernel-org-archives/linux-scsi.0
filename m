@@ -2,103 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 294F2C001DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Aug 2023 13:05:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B134EB64DD
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Aug 2023 14:50:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236028AbjHCNFK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:05:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53922 "EHLO
+        id S235614AbjHCOuE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Aug 2023 10:50:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236021AbjHCNE2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2023 09:04:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0ED7423A;
-        Thu,  3 Aug 2023 06:04:06 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3AA1F61D8E;
-        Thu,  3 Aug 2023 13:04:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69961C433C7;
-        Thu,  3 Aug 2023 13:04:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691067845;
-        bh=I490fSd2+TavDVwDW1x+c3cDdrHaMFzqgaAU/N78IJQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Ds+Wi/Au4fBA7WA7rXAlutoefTS4YHjDhcxfam+f+z84Ljc/eoxLcy9l9O9tBvK+L
-         ABkegchRZhwC6wU/96ZZhI08PLJ7PTj+cxBKQEcA56CODUAmp5AV30raE+VZl4lpeR
-         q+Q+TbwTgEk2J5sQUhyvw2vjw4uOmiFGQyfHtnXvYDyV1tzMWI/GkUsTjkHa1fj90j
-         D6r3Nv9BXwooAcZ2qtWl2z0m38VF5LS7pBzpFkd0ExY4CXhDPe4MFeRM+ZdhcKbpFS
-         YoIwSuhZETTnhDShrK3WBg442S2bqtpE3RBv8NU7eSCFd7itE/HSiYYL10lVW6Oss5
-         92nA7lNPsm4Ow==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tuo Li <islituo@gmail.com>, BassCheck <bass@buaa.edu.cn>,
-        Justin Tee <justin.tee@broadcom.com>,
-        Laurence Oberman <loberman@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14] scsi: lpfc: Fix a possible data race in lpfc_unregister_fcf_rescan()
-Date:   Thu,  3 Aug 2023 09:04:02 -0400
-Message-Id: <20230803130402.641836-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.40.1
+        with ESMTP id S234240AbjHCOuB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2023 10:50:01 -0400
+Received: from mail-oa1-f48.google.com (mail-oa1-f48.google.com [209.85.160.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC981A3;
+        Thu,  3 Aug 2023 07:49:59 -0700 (PDT)
+Received: by mail-oa1-f48.google.com with SMTP id 586e51a60fabf-1bb954414e8so761108fac.0;
+        Thu, 03 Aug 2023 07:49:59 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691074199; x=1691678999;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=c8o2tX5+ObWdJ6nPH9CNePm4qsxAob53K7RELoVeQcA=;
+        b=ECYRm8PItHnv4tMeHbjSUF7zGYgwsQc8uxJzBOFxHuokYWCE9bNkGEBvXVIVT7XB6/
+         Fyh8hNG75nEi0mBV2JbgpJ+UJMDPl95nEP+cWJYrAM94RiQujmOs4rtjCGuTYVbl2bXe
+         0rZP2DAG/k4PPlqKjC6FmdrrquuPxiwYdQ8HzGuqyYEXcWDXsVSZW9DAEA9VIVFJ0Q2A
+         PamqGd5vsM2XQru5UpREx3k89c7PjGtxlgPEeMpLXDtxNO1tbZpTfSTwFa8MVVCVg1Eu
+         54hAx26eJtVGLhsGCRsduVWREEKyc7ZvUDeU4UFcDe5a5ynht/aWAWNaBaWBeibk7g6Q
+         95cg==
+X-Gm-Message-State: ABy/qLY9XDvHjLS3ej1lOmCyKmnCCKPlruE13k33rWj77IJ2eX2PAvu3
+        UTxi6IRH3Y7JU7nNjFeuGDI=
+X-Google-Smtp-Source: APBJJlEzux8FpJhYBch1rhVqgW9xKb1hxN0xOLq9Sn0MTKxJutwYgUtXOpMpJkzD3dRTe74oc7/XSA==
+X-Received: by 2002:a05:6870:a54a:b0:1be:f311:4a2b with SMTP id p10-20020a056870a54a00b001bef3114a2bmr13225444oal.24.1691074198866;
+        Thu, 03 Aug 2023 07:49:58 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:b168:5a8:480e:1a0b? ([2620:15c:211:201:b168:5a8:480e:1a0b])
+        by smtp.gmail.com with ESMTPSA id w20-20020a17090a461400b00263dee538b1sm57268pjg.25.2023.08.03.07.49.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 03 Aug 2023 07:49:58 -0700 (PDT)
+Message-ID: <e2dcaed0-961f-9daf-aed9-d5e6cf1b2f61@acm.org>
+Date:   Thu, 3 Aug 2023 07:49:56 -0700
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.14.320
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH] ufs: host: renesas: Fix private allocation
+Content-Language: en-US
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+References: <20230803081812.1446282-1-yoshihiro.shimoda.uh@renesas.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230803081812.1446282-1-yoshihiro.shimoda.uh@renesas.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tuo Li <islituo@gmail.com>
+On 8/3/23 01:18, Yoshihiro Shimoda wrote:
+> Should use devm_kzalloc() for struct ufs_renesas_priv because
+> the .initialized should be false as default.
+> 
+> Fixes: d69520288efd ("scsi: ufs: ufs-renesas: Add support for Renesas R-Car UFS controller")
+> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> ---
+>   drivers/ufs/host/ufs-renesas.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesas.c
+> index f8a5e79ed3b4..ab0652d8705a 100644
+> --- a/drivers/ufs/host/ufs-renesas.c
+> +++ b/drivers/ufs/host/ufs-renesas.c
+> @@ -359,7 +359,7 @@ static int ufs_renesas_init(struct ufs_hba *hba)
+>   {
+>   	struct ufs_renesas_priv *priv;
+>   
+> -	priv = devm_kmalloc(hba->dev, sizeof(*priv), GFP_KERNEL);
+> +	priv = devm_kzalloc(hba->dev, sizeof(*priv), GFP_KERNEL);
+>   	if (!priv)
+>   		return -ENOMEM;
+>   	ufshcd_set_variant(hba, priv);
 
-[ Upstream commit 0e881c0a4b6146b7e856735226208f48251facd8 ]
-
-The variable phba->fcf.fcf_flag is often protected by the lock
-phba->hbalock() when is accessed. Here is an example in
-lpfc_unregister_fcf_rescan():
-
-  spin_lock_irq(&phba->hbalock);
-  phba->fcf.fcf_flag |= FCF_INIT_DISC;
-  spin_unlock_irq(&phba->hbalock);
-
-However, in the same function, phba->fcf.fcf_flag is assigned with 0
-without holding the lock, and thus can cause a data race:
-
-  phba->fcf.fcf_flag = 0;
-
-To fix this possible data race, a lock and unlock pair is added when
-accessing the variable phba->fcf.fcf_flag.
-
-Reported-by: BassCheck <bass@buaa.edu.cn>
-Signed-off-by: Tuo Li <islituo@gmail.com>
-Link: https://lore.kernel.org/r/20230630024748.1035993-1-islituo@gmail.com
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/lpfc/lpfc_hbadisc.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 4a0889dd4c1d0..709b24a812b5d 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -6429,7 +6429,9 @@ lpfc_unregister_fcf_rescan(struct lpfc_hba *phba)
- 	if (rc)
- 		return;
- 	/* Reset HBA FCF states after successful unregister FCF */
-+	spin_lock_irq(&phba->hbalock);
- 	phba->fcf.fcf_flag = 0;
-+	spin_unlock_irq(&phba->hbalock);
- 	phba->fcf.current_rec.flag = 0;
- 
- 	/*
--- 
-2.40.1
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
