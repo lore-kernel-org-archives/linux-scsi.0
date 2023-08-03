@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33396C001DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Aug 2023 13:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D29BC001DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Aug 2023 13:04:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235903AbjHCNEY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Aug 2023 09:04:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54006 "EHLO
+        id S235943AbjHCNEr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Aug 2023 09:04:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235926AbjHCNDz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2023 09:03:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B8793C1E;
-        Thu,  3 Aug 2023 06:03:48 -0700 (PDT)
+        with ESMTP id S235889AbjHCND5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2023 09:03:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 475D0E6F;
+        Thu,  3 Aug 2023 06:03:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B6C6061D69;
-        Thu,  3 Aug 2023 13:03:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AE71C433C8;
-        Thu,  3 Aug 2023 13:03:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BC46161D9A;
+        Thu,  3 Aug 2023 13:03:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D326FC433C7;
+        Thu,  3 Aug 2023 13:03:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691067827;
-        bh=prx1VY9vo6H7cAA/kdEiLWjnfB5K9pT0g3M+olguyNk=;
+        s=k20201202; t=1691067832;
+        bh=AXYOKNxITGomWgcx6d+tCIb6stNbMJblEeusTDMqoNI=;
         h=From:To:Cc:Subject:Date:From;
-        b=tnM7jREXSLfF4P1lkvkKDJu0Z1RpEmKHDXzsk1gQbAY59Oxx5hdmUZrYVAu6SckYR
-         QbR9LOSo2uwVn0pit+bhOzAM3TCrTGWgVB9cjMbziph84W9WQLb/AHjGqykU8uvMRr
-         w1vPynsxhcGbh6wXBH0d0v/xm2B/M9Bw7/rlyjOSJqW8AeqjEIXpumXtICkC3VRze9
-         zSbecPw/5bBrbkNuiX7CJ3m4iPwDu5iUEic5Og9epe3qco7bmWiaWAAe9OMLtLy9DX
-         iWSkHMWi5VElHFGGkYsalPTpAvM/alRZiy/lYFA1i8Lad0bbxS4Y1HpTCK+ibIdRPg
-         Lab739Eq1EJ7g==
+        b=BvWBDnmId2mj5tSRhvdJqz5JdGa+ApmZzOu4xtMZnDsKcVkoTH+p4lRplQZvMlt0o
+         LIt/6wudSWB/8Uj5qFi0b/YVzlkjJNsA253xDuFMMxuvVhc5dVmWDJF7r7yipIx0WX
+         7fdOo9vldMHZjlwjBhN6as9VkVGrPTKu331Jz8VfF3PIi4PbqgzNFRQpzNAn0vR6Cf
+         /1XeyfZjsk88ZD987atXC7AV6z98Frl5GicuXUIzPQ9D8NfCoUJfejgqX4btIAS5Tz
+         YQ+fCG1lce+y/+gwh691Skk9RbCTRHfzLMgN5Vvi5Q0d7eq/WC/OSk3x4lMcG6QG25
+         v4KubVAX+8RRA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tuo Li <islituo@gmail.com>, BassCheck <bass@buaa.edu.cn>,
@@ -41,14 +41,14 @@ Cc:     Tuo Li <islituo@gmail.com>, BassCheck <bass@buaa.edu.cn>,
         Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
         dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 1/2] scsi: lpfc: Fix a possible data race in lpfc_unregister_fcf_rescan()
-Date:   Thu,  3 Aug 2023 09:03:42 -0400
-Message-Id: <20230803130343.641695-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 1/2] scsi: lpfc: Fix a possible data race in lpfc_unregister_fcf_rescan()
+Date:   Thu,  3 Aug 2023 09:03:47 -0400
+Message-Id: <20230803130349.641732-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.123
+X-stable-base: Linux 5.10.188
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -86,10 +86,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 4bb0a15cfcc01..54aff304cdcf4 100644
+index 68ff233f936e5..3ff76ca147a5a 100644
 --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
 +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -6954,7 +6954,9 @@ lpfc_unregister_fcf_rescan(struct lpfc_hba *phba)
+@@ -6790,7 +6790,9 @@ lpfc_unregister_fcf_rescan(struct lpfc_hba *phba)
  	if (rc)
  		return;
  	/* Reset HBA FCF states after successful unregister FCF */
