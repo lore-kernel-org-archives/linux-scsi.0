@@ -2,123 +2,278 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E3BAC001DF
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Aug 2023 10:44:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 662DDC001DF
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Aug 2023 10:44:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231511AbjHDKn7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Aug 2023 06:43:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46414 "EHLO
+        id S231504AbjHDKoD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Aug 2023 06:44:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231341AbjHDKnz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Aug 2023 06:43:55 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08AD446B3
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Aug 2023 03:43:55 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-686b9920362so1400130b3a.1
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Aug 2023 03:43:55 -0700 (PDT)
+        with ESMTP id S230166AbjHDKn7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Aug 2023 06:43:59 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2604A49C6
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Aug 2023 03:43:58 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1bc411e9d17so11205925ad.0
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Aug 2023 03:43:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1691145834; x=1691750634;
+        d=broadcom.com; s=google; t=1691145837; x=1691750637;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ROBA6AZ8vVg3GtqSjeeBcbJ9hpZYbHGqDYAZLYcFruo=;
-        b=gGsmGHcHIfTEvYF5tfESlfsGyY3ovH/k2IG+iPA8JnWdm8uRJmrwDO9KJ0caui8iE6
-         Ssf5hPXzUP3b5baBjWeBoN/aVe05Q/Eqbq9tKsrBZBBIAvZ5IH7cQINHQqEP6gKrqn1Q
-         DvYqDL0anXrGwgCg8Y1O0bCzKc2WGEguECgrM=
+        bh=DdZ/8NDXE2QNPpCDlSUHpDy4KOUOU90D1ZhSGkylsqc=;
+        b=MNZImPK2E9NmziCqz4V4cQMhpncmD8FMVBKE32KFbh4pUzNd7tspHi3F8nPDbuHhE0
+         lNiQ+Is9pE890HstoKOb/yn8sPbPZPUC1/Ts5L4ND1qNYhgjKCy9EfMkTLkEJtVn6gZu
+         42Up1xpSXX8R5WZCVj2RZIDknRbbKhp42A1XU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691145834; x=1691750634;
+        d=1e100.net; s=20221208; t=1691145837; x=1691750637;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ROBA6AZ8vVg3GtqSjeeBcbJ9hpZYbHGqDYAZLYcFruo=;
-        b=ltMdxe625MCgIrsX6mErrWK2Y8cuf8k1vykj/hmrXurg8AVtSSPSgLXX0pSiLY+09Q
-         hB7xbaL43jQgOeP4s7LdD8sZOBdfskjLSdZI2RyCrMwZWxf7JFFH0xCIs18QefW0bnZ8
-         SH1+ywyJ4uesLEY5TpvHOKUXdb92O0yvFzi28hfl+Iq1p4XRoLvG/wQ+SijUI6wWKNk1
-         FZnM90pDRBlPJqCDOjWGqbZ2Y+USUBZGZSFZkuebIN2s5z61qxHnx95e5V9RPJUfJrXc
-         o5Br1e/7X1PkFLyz5ssdaubzIiURyAQFDsIvkX93UW3H3nmvYIosYAfCgBkNRVV3hdd+
-         EXVQ==
-X-Gm-Message-State: AOJu0Yxolu8uHrTxhMjodlHMKvJn0JKRiLAoROiWSGt32Zi4WZHZ0egD
-        fOa3sUactnQknnJ8ar2hnrQ1rNvA75gQ1I38OZagirbXCF9+yw4sgPPyGmEzF9VKE+oy1HxYXfy
-        0Y6DhORAcxVpFP0a9EMWLVUf2LcIzslxd945tMoYz0KgowdELddl2Ws02htCN/Du6A0TvXSt3N7
-        qOojctyKarWQ==
-X-Google-Smtp-Source: AGHT+IHFJwkMlvQAIQsegbUk3pAT/o18qfFzC2EHo0oQVeVxeRCysGlWdNglG2Kdt+bojZXNBh95YA==
-X-Received: by 2002:a05:6a20:320a:b0:134:409f:41f4 with SMTP id hl10-20020a056a20320a00b00134409f41f4mr1130948pzc.24.1691145834016;
-        Fri, 04 Aug 2023 03:43:54 -0700 (PDT)
+        bh=DdZ/8NDXE2QNPpCDlSUHpDy4KOUOU90D1ZhSGkylsqc=;
+        b=GjvTodzrZdKFL7CXd9lXEP9vLn7x3vRGmrvsoWIQBge2tG7dhH36SEr7ofKiUAbtUC
+         VKcGGo906rICCkyVCpwc6AmEsrZGnD2mNDQH8s05SKuGXWwU0DlTaJeaYeW2fLvZSdxp
+         J3nkWrJK/qpoznhwceKt8inOVxSQCFT0y5GyFd1UhNJH0Pf8wUYmTFHERC5NjGYGbEqS
+         1cy9eG2IzAUePJvP8kXiLqK6bxy7hi5Z9uKdWUAnL5TiY8l/2YDwCzXHcqQ4wXzZ+HCJ
+         kBZe3qc1ytlahHvDYiYsqPqIQhb6tDR/z8Kx9+CYlIKhVchzZ6EnGMBtLDVs1JJRkuq2
+         2tSQ==
+X-Gm-Message-State: AOJu0YxmoX2242TG0EZkVKdqK5fP2zTyqcdjVkK5GbbBcVAbO8P1Kp7E
+        5EaVP5GlD+78iqhsjcmZSsrHA6vlPEqQbQjXfX2IA3YrSsJz1Jgkx0XabZFd0y5snie3eRZ9Q+w
+        LDMhkIcRADrkSxmlhUlXqt0SywOmou/aAt5fhpGAvwpY0USRf6HKXPLPKNPTAD2FkIRJLH5KHnM
+        0Cm9/fn2uXHQ==
+X-Google-Smtp-Source: AGHT+IHS9UkQWlnWvaz8kRzKylU7nRpcAFfF0pI+29ID4KXyMWU2kdp60z0riO9JG0V5Wtsr4E0YqA==
+X-Received: by 2002:a17:902:ab5c:b0:1bc:2bd:8520 with SMTP id ij28-20020a170902ab5c00b001bc02bd8520mr1319960plb.6.1691145837079;
+        Fri, 04 Aug 2023 03:43:57 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id jb15-20020a170903258f00b001bb988ac243sm1424463plb.297.2023.08.04.03.43.51
+        by smtp.gmail.com with ESMTPSA id jb15-20020a170903258f00b001bb988ac243sm1424463plb.297.2023.08.04.03.43.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Aug 2023 03:43:53 -0700 (PDT)
+        Fri, 04 Aug 2023 03:43:56 -0700 (PDT)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
         sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
         Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v3 2/6] mpi3mr: Update MPI Headers to version 3.00.28
-Date:   Fri,  4 Aug 2023 16:12:44 +0530
-Message-Id: <20230804104248.118924-3-ranjan.kumar@broadcom.com>
+Subject: [PATCH v3 3/6] mpi3mr: Add support for more than 1MB I/O
+Date:   Fri,  4 Aug 2023 16:12:45 +0530
+Message-Id: <20230804104248.118924-4-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230804104248.118924-1-ranjan.kumar@broadcom.com>
 References: <20230804104248.118924-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ba5a050602169210"
+        boundary="000000000000e7c7d70602169247"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ba5a050602169210
+--000000000000e7c7d70602169247
 Content-Transfer-Encoding: 8bit
 
-Updated MPI Headers to version 3.00.28
+The driver is enhanced to get the maximum data length per I/O
+request from  IOC Facts data and report that to the upper layers.
+If the IOC facts data is not reported then the default I/O size
+of 1MB is reported to the OS.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 1 +
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h | 2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  8 ++++++--
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 29 ++++++++++++++++++++++++-----
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 24 ++++++++++++++++++++----
+ 3 files changed, 50 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-index 2fc196499c89..35f81af40f51 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-@@ -1482,7 +1482,7 @@ struct mpi3_security_page0 {
- #define MPI3_SECURITY1_KEY_RECORD_MAX      1
- #endif
- #ifndef MPI3_SECURITY1_PAD_MAX
--#define MPI3_SECURITY1_PAD_MAX      1
-+#define MPI3_SECURITY1_PAD_MAX      4
- #endif
- union mpi3_security1_key_data {
- 	__le32                             dword[128];
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-index f5e9c2309ce6..1e4a60fc655f 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-@@ -600,6 +600,7 @@ struct mpi3_event_data_pcie_error_threshold {
- 	__le16                                 threshold_count;
- 	__le16                                 attached_dev_handle;
- 	__le16                                 reserved12;
-+	__le32                                 reserved14;
- };
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 0afb687402e1..fd3619775739 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -66,11 +66,12 @@ extern atomic64_t event_counter;
+ #define MPI3MR_NAME_LENGTH	32
+ #define IOCNAME			"%s: "
  
- #define MPI3_EVENT_PCI_ERROR_RC_THRESHOLD_EXCEEDED          (0x00)
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-index 441cfc2c7f09..1e0a3dcaf723 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-@@ -18,7 +18,7 @@ union mpi3_version_union {
+-#define MPI3MR_MAX_SECTORS	2048
++#define MPI3MR_DEFAULT_MAX_IO_SIZE	(1 * 1024 * 1024)
  
- #define MPI3_VERSION_MAJOR                                              (3)
- #define MPI3_VERSION_MINOR                                              (0)
--#define MPI3_VERSION_UNIT                                               (27)
-+#define MPI3_VERSION_UNIT                                               (28)
- #define MPI3_VERSION_DEV                                                (0)
- #define MPI3_DEVHANDLE_INVALID                                          (0xffff)
- struct mpi3_sysif_oper_queue_indexes {
+ /* Definitions for internal SGL and Chain SGL buffers */
+ #define MPI3MR_PAGE_SIZE_4K		4096
+-#define MPI3MR_SG_DEPTH		(MPI3MR_PAGE_SIZE_4K / sizeof(struct mpi3_sge_common))
++#define MPI3MR_DEFAULT_SGL_ENTRIES	256
++#define MPI3MR_MAX_SGL_ENTRIES		2048
+ 
+ /* Definitions for MAX values for shost */
+ #define MPI3MR_MAX_CMDS_LUN	128
+@@ -323,6 +324,7 @@ struct mpi3mr_ioc_facts {
+ 	u16 max_perids;
+ 	u16 max_pds;
+ 	u16 max_sasexpanders;
++	u32 max_data_length;
+ 	u16 max_sasinitiators;
+ 	u16 max_enclosures;
+ 	u16 max_pcie_switches;
+@@ -959,6 +961,7 @@ struct scmd_priv {
+  * @stop_drv_processing: Stop all command processing
+  * @device_refresh_on: Don't process the events until devices are refreshed
+  * @max_host_ios: Maximum host I/O count
++ * @max_sgl_entries: Max SGL entries per I/O
+  * @chain_buf_count: Chain buffer count
+  * @chain_buf_pool: Chain buffer pool
+  * @chain_sgl_list: Chain SGL list
+@@ -1129,6 +1132,7 @@ struct mpi3mr_ioc {
+ 	u16 max_host_ios;
+ 	spinlock_t tgtdev_lock;
+ 	struct list_head tgtdev_list;
++	u16 max_sgl_entries;
+ 
+ 	u32 chain_buf_count;
+ 	struct dma_pool *chain_buf_pool;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 11b78d4a87a0..f039f1d98647 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1163,6 +1163,12 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
+ 		return -EPERM;
+ 	}
+ 
++	if (mrioc->shost->max_sectors != (mrioc->facts.max_data_length / 512))
++		ioc_err(mrioc, "Warning: The maximum data transfer length\n"
++			    "\tchanged after reset: previous(%d), new(%d),\n"
++			    "the driver cannot change this at run time\n",
++			    mrioc->shost->max_sectors * 512, mrioc->facts.max_data_length);
++
+ 	if ((mrioc->sas_transport_enabled) && (mrioc->facts.ioc_capabilities &
+ 	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED))
+ 		ioc_err(mrioc,
+@@ -2856,6 +2862,7 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
+ 	    le16_to_cpu(facts_data->max_pcie_switches);
+ 	mrioc->facts.max_sasexpanders =
+ 	    le16_to_cpu(facts_data->max_sas_expanders);
++	mrioc->facts.max_data_length = le16_to_cpu(facts_data->max_data_length);
+ 	mrioc->facts.max_sasinitiators =
+ 	    le16_to_cpu(facts_data->max_sas_initiators);
+ 	mrioc->facts.max_enclosures = le16_to_cpu(facts_data->max_enclosures);
+@@ -2893,13 +2900,18 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
+ 	mrioc->facts.io_throttle_high =
+ 	    le16_to_cpu(facts_data->io_throttle_high);
+ 
++	if (mrioc->facts.max_data_length ==
++	    MPI3_IOCFACTS_MAX_DATA_LENGTH_NOT_REPORTED)
++		mrioc->facts.max_data_length = MPI3MR_DEFAULT_MAX_IO_SIZE;
++	else
++		mrioc->facts.max_data_length *= MPI3MR_PAGE_SIZE_4K;
+ 	/* Store in 512b block count */
+ 	if (mrioc->facts.io_throttle_data_length)
+ 		mrioc->io_throttle_data_length =
+ 		    (mrioc->facts.io_throttle_data_length * 2 * 4);
+ 	else
+ 		/* set the length to 1MB + 1K to disable throttle */
+-		mrioc->io_throttle_data_length = MPI3MR_MAX_SECTORS + 2;
++		mrioc->io_throttle_data_length = (mrioc->facts.max_data_length / 512) + 2;
+ 
+ 	mrioc->io_throttle_high = (mrioc->facts.io_throttle_high * 2 * 1024);
+ 	mrioc->io_throttle_low = (mrioc->facts.io_throttle_low * 2 * 1024);
+@@ -2914,9 +2926,9 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
+ 	ioc_info(mrioc, "SGEModMask 0x%x SGEModVal 0x%x SGEModShift 0x%x ",
+ 	    mrioc->facts.sge_mod_mask, mrioc->facts.sge_mod_value,
+ 	    mrioc->facts.sge_mod_shift);
+-	ioc_info(mrioc, "DMA mask %d InitialPE status 0x%x\n",
++	ioc_info(mrioc, "DMA mask %d InitialPE status 0x%x max_data_len (%d)\n",
+ 	    mrioc->facts.dma_mask, (facts_flags &
+-	    MPI3_IOCFACTS_FLAGS_INITIAL_PORT_ENABLE_MASK));
++	    MPI3_IOCFACTS_FLAGS_INITIAL_PORT_ENABLE_MASK), mrioc->facts.max_data_length);
+ 	ioc_info(mrioc,
+ 	    "max_dev_per_throttle_group(%d), max_throttle_groups(%d)\n",
+ 	    mrioc->facts.max_dev_per_tg, mrioc->facts.max_io_throttle_group);
+@@ -3414,7 +3426,14 @@ static int mpi3mr_alloc_chain_bufs(struct mpi3mr_ioc *mrioc)
+ 	if (!mrioc->chain_sgl_list)
+ 		goto out_failed;
+ 
+-	sz = MPI3MR_PAGE_SIZE_4K;
++	if (mrioc->max_sgl_entries > (mrioc->facts.max_data_length /
++		MPI3MR_PAGE_SIZE_4K))
++		mrioc->max_sgl_entries = mrioc->facts.max_data_length /
++			MPI3MR_PAGE_SIZE_4K;
++	sz = mrioc->max_sgl_entries * sizeof(struct mpi3_sge_common);
++	ioc_info(mrioc, "number of sgl entries=%d chain buffer size=%dKB\n",
++			mrioc->max_sgl_entries, sz/1024);
++
+ 	mrioc->chain_buf_pool = dma_pool_create("chain_buf pool",
+ 	    &mrioc->pdev->dev, sz, 16, 0);
+ 	if (!mrioc->chain_buf_pool) {
+@@ -3813,7 +3832,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 	}
+ 
+ 	mrioc->max_host_ios = mrioc->facts.max_reqs - MPI3MR_INTERNAL_CMDS_RESVD;
+-
++	mrioc->shost->max_sectors = mrioc->facts.max_data_length / 512;
+ 	mrioc->num_io_throttle_group = mrioc->facts.max_io_throttle_group;
+ 	atomic_set(&mrioc->pend_large_data_sz, 0);
+ 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index d627355303d7..b19b624d0e97 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -33,6 +33,12 @@ static int logging_level;
+ module_param(logging_level, int, 0);
+ MODULE_PARM_DESC(logging_level,
+ 	" bits for enabling additional logging info (default=0)");
++static int max_sgl_entries = MPI3MR_DEFAULT_SGL_ENTRIES;
++module_param(max_sgl_entries, int, 0444);
++MODULE_PARM_DESC(max_sgl_entries,
++	"Preferred max number of SG entries to be used for a single I/O\n"
++	"The actual value will be determined by the driver\n"
++	"(Minimum=256, Maximum=2048, default=256)");
+ 
+ /* Forward declarations*/
+ static void mpi3mr_send_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
+@@ -3413,7 +3419,7 @@ static int mpi3mr_prepare_sg_scmd(struct mpi3mr_ioc *mrioc,
+ 		    scsi_bufflen(scmd));
+ 		return -ENOMEM;
+ 	}
+-	if (sges_left > MPI3MR_SG_DEPTH) {
++	if (sges_left > mrioc->max_sgl_entries) {
+ 		sdev_printk(KERN_ERR, scmd->device,
+ 		    "scsi_dma_map returned unsupported sge count %d!\n",
+ 		    sges_left);
+@@ -4818,10 +4824,10 @@ static const struct scsi_host_template mpi3mr_driver_template = {
+ 	.no_write_same			= 1,
+ 	.can_queue			= 1,
+ 	.this_id			= -1,
+-	.sg_tablesize			= MPI3MR_SG_DEPTH,
++	.sg_tablesize			= MPI3MR_DEFAULT_SGL_ENTRIES,
+ 	/* max xfer supported is 1M (2K in 512 byte sized sectors)
+ 	 */
+-	.max_sectors			= 2048,
++	.max_sectors			= (MPI3MR_DEFAULT_MAX_IO_SIZE / 512),
+ 	.cmd_per_lun			= MPI3MR_MAX_CMDS_LUN,
+ 	.max_segment_size		= 0xffffffff,
+ 	.track_queue_depth		= 1,
+@@ -5004,6 +5010,16 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	mrioc->pdev = pdev;
+ 	mrioc->stop_bsgs = 1;
+ 
++	mrioc->max_sgl_entries = max_sgl_entries;
++	if (max_sgl_entries > MPI3MR_MAX_SGL_ENTRIES)
++		mrioc->max_sgl_entries = MPI3MR_MAX_SGL_ENTRIES;
++	else if (max_sgl_entries < MPI3MR_DEFAULT_SGL_ENTRIES)
++		mrioc->max_sgl_entries = MPI3MR_DEFAULT_SGL_ENTRIES;
++	else {
++		mrioc->max_sgl_entries /= MPI3MR_DEFAULT_SGL_ENTRIES;
++		mrioc->max_sgl_entries *= MPI3MR_DEFAULT_SGL_ENTRIES;
++	}
++
+ 	/* init shost parameters */
+ 	shost->max_cmd_len = MPI3MR_MAX_CDB_LENGTH;
+ 	shost->max_lun = -1;
+@@ -5068,7 +5084,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		shost->nr_maps = 3;
+ 
+ 	shost->can_queue = mrioc->max_host_ios;
+-	shost->sg_tablesize = MPI3MR_SG_DEPTH;
++	shost->sg_tablesize = mrioc->max_sgl_entries;
+ 	shost->max_id = mrioc->facts.max_perids + 1;
+ 
+ 	retval = scsi_add_host(shost, &pdev->dev);
 -- 
 2.31.1
 
 
---000000000000ba5a050602169210
+--000000000000e7c7d70602169247
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -189,13 +344,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKTwYzUcwc++yQ2LgI74FyHS/OiacJeN
-sNsvfbf/JhstMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDgw
-NDEwNDM1NFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIxQn1b4WX3o6Mg66W0pPYJ110EqaA0m
+fGaH56/SyjS2MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDgw
+NDEwNDM1N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAIVE30Q/jGwvM57nMRsyj5uZZvweQu4k/L99ENY/071su5PaSB
-JvdxHZuTJD04DMcV9HY6exbyu/hfeFirQP+6cuqNO/OQoH3ANoJBuFA82YW89ghA0J6BrCBCyFMT
-m4Ip2ijCqN1Jii3F5XB31Rkgwu7U2McTQLPji2xJq9tGqHOUNbP90cQSvEihnzG02g8aoVqNJCrt
-RNZZmERzC1q2TkFAHl+v89Oh31SMrsl3szbSWD06W4yttgLe8obaERYUNbT4epSfQvk0UjnaZxnD
-/6Sl3f3ypY1m6aAJKp+4loCpNKi36x3xR77xSF5EMa4sTdvSnUxXaBBCNbqtnbew
---000000000000ba5a050602169210--
+ATANBgkqhkiG9w0BAQEFAASCAQCxALt3oRxL2e8eIAZ1Z8kVg22lyXGCkQvrJSsEu9iDuS618y80
+rZkSGr/04bHeI5CO3/sxPCD8pQ1rq7G/b0v6fjRR5uT2/o2zhUwKcvvAoyIcAhiOL9SBB05aoJSC
+xDx+YGBBX1/Erf4MIomJYwBfDP2Sy0Pi2JNGx30dWFjgUWNuN9jbkbUJVJkUjtIPZ1L90Zr6HQ6n
+fbN6Z6petAWnroyff6CBAixjdxKp2axo42H2PsRfzDDlOasJOhvOgNpDinVSVG8GvehthuBE7Xay
+/QWujRinsZ+JlPXa9o/e5ixpIqxZUJU5fx5YLzwA8MCHgJ1tIWUYibP+Crk7u3JJ
+--000000000000e7c7d70602169247--
