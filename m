@@ -2,110 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39F14C001DF
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Aug 2023 17:18:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D96B1C001DE
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Aug 2023 01:37:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229803AbjHFRSB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Aug 2023 13:18:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47382 "EHLO
+        id S229548AbjHGBhg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Aug 2023 21:37:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230290AbjHFRR5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Aug 2023 13:17:57 -0400
-Received: from rs227.mailgun.us (rs227.mailgun.us [209.61.151.227])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38720CF
-        for <linux-scsi@vger.kernel.org>; Sun,  6 Aug 2023 10:17:55 -0700 (PDT)
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=equiv.tech; q=dns/txt;
- s=mx; t=1691342274; x=1691349474; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Subject: Cc: To: To:
- From: From: Sender: Sender; bh=1Ux0AJYfL7GZoZq3tCyFoXrVwyN+ZroothmdbliMyww=;
- b=V2tDjMR1qCHtXGPrenYVp8x5WgYWjhqHY2o9FXyr05F+xoQei8ePEx1sPo+YMemIjQ2KLyOFjBtSK+cyh875X6k+DZSIYazx2CA//NpfAP8UW371zftKHJ+PYPuF0AKq5TDmN0CdWgCKZHzcuONOMZGAvgaxTS+SzbtZLhLbtK/s0NDTapuguNGcY0IYnREwheQrG0fPj4T4ZkjwDjoJiFIMq25fWZDxpj0v1AGaiNsUwUJ3pF+bRbQ6LCTUMovQnZnoBHjhanLkGsYvJBxhMPSX/cK8Uv52rxVIGf/YEMX5k5jMmCq66gIJW0hbuB0ZVjppmdzZa9dZgIaVqmE/Fw==
-X-Mailgun-Sending-Ip: 209.61.151.227
-X-Mailgun-Sid: WyI0OWM5MyIsImxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnIiwiOTNkNWFiIl0=
-Received: from mail.equiv.tech (equiv.tech [142.93.28.83]) by 612ac3bab8bf with SMTP id
- 64cfd36ac57a92cb4d247c89 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 06 Aug 2023 17:07:54 GMT
-Sender: james@equiv.tech
-From:   James Seo <james@equiv.tech>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>
-Cc:     James Seo <james@equiv.tech>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 04/12] scsi: mpt3sas: Make MPI2_CONFIG_PAGE_SASIOUNIT_0::PhyData[] a flexible array
-Date:   Sun,  6 Aug 2023 10:05:56 -0700
-Message-Id: <20230806170604.16143-5-james@equiv.tech>
-In-Reply-To: <20230806170604.16143-1-james@equiv.tech>
-References: <20230806170604.16143-1-james@equiv.tech>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229498AbjHGBhf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Aug 2023 21:37:35 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E0A6171A
+        for <linux-scsi@vger.kernel.org>; Sun,  6 Aug 2023 18:37:32 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230807013728epoutp03006d30ff7a395832f5b2ac4c8d9c707f~49hlZBTUO2179721797epoutp03f
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Aug 2023 01:37:28 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230807013728epoutp03006d30ff7a395832f5b2ac4c8d9c707f~49hlZBTUO2179721797epoutp03f
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1691372248;
+        bh=eRp0hDxbLoDkI+EKmlyx1gM8DLMIflAnTWMEe1OnN5Q=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=l033EONLee9a1ouTeBHQTTXg5u09htwLi+RDYh613BRNziBxMNGBqznhpsr44p22b
+         7Q2qeRPddsLCTDifpXwhyc3psSk4k448JxFuRWFpgEK0MJ9rt9sxmtuN07JHFA3CUa
+         n0LeYM1/5zcq6EWMPmfqd+f5vvtLsFJUaFW/3g+w=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20230807013728epcas2p2169ae6ebe391ebec62d5113e5f651204~49hkySrnI2090220902epcas2p2I;
+        Mon,  7 Aug 2023 01:37:28 +0000 (GMT)
+Received: from epsmgec2p1-new.samsung.com (unknown [182.195.36.70]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4RJzTM1mjLz4x9Py; Mon,  7 Aug
+        2023 01:37:27 +0000 (GMT)
+X-AuditID: b6c32a4d-853ff70000047356-d9-64d04ad72a4e
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmgec2p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        0C.0E.29526.7DA40D46; Mon,  7 Aug 2023 10:37:27 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH v2] scsi: ufs: ufs-pci: Add support for QEMU
+Reply-To: jeuk20.kim@samsung.com
+Sender: Jeuk Kim <jeuk20.kim@samsung.com>
+From:   Jeuk Kim <jeuk20.kim@samsung.com>
+To:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        Jeuk Kim <jeuk20.kim@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5@epcms2p1>
+Date:   Mon, 07 Aug 2023 10:37:26 +0900
+X-CMS-MailID: 20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprFJsWRmVeSWpSXmKPExsWy7bCmme51rwspBrcfsFmcfLKGzeLlz6ts
+        FtM+/GS2eHlI02LRjW1MFve3XmO0uLxrDptF9/UdbBbLj/9jcuD0uHzF22PxnpdMHhMWHWD0
+        +Pj0FotH35ZVjB6fN8l5tB/oZgpgj8q2yUhNTEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0
+        MFdSyEvMTbVVcvEJ0HXLzAE6TEmhLDGnFCgUkFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYF6g
+        V5yYW1yal66Xl1piZWhgYGQKVJiQnTGh/RBrwVGuivnv+9kaGF9wdDFyckgImEis2H2csYuR
+        i0NIYA+jxMlNf5m6GDk4eAUEJf7uEAapERawkbhw5g4ziC0koCAxZ1sHO0RcU2L6+olg5WwC
+        6hKnF5qDjBERmMckMenOR7AaZoE6id1z/rBB7OKVmNH+lAXClpbYvnwrI4StIfFjWS8zhC0q
+        cXP1W3YY+/2x+VA1IhKt985C1QhKPPi5GyouKXHq22NWCHs6o8SC/6YgR0gILGCU+NU8HapB
+        X+Jax0awxbwCvhKHpi1iBzmaRUBV4sX/aIgSF4k9h/ZB3Swvsf3tHGaQEmagH9fv0gcxJQSU
+        JY7cYoGo4JPoOPyXHearho2/sbJ3zHvCBGGrSCxuPswKMUZKYsPu0AmMSrMQwTwLydpZCGsX
+        MDKvYpRKLSjOTU9NNiow1M1LLYfHbnJ+7iZGcCLV8t3B+Hr9X71DjEwcjIcYJTiYlUR45z05
+        nyLEm5JYWZValB9fVJqTWnyI0RTo54nMUqLJ+cBUnlcSb2hiaWBiZmZobmRqYK4kznuvdW6K
+        kEB6YklqdmpqQWoRTB8TB6dUA5Ol43U26cJ9cTa8vf9rDvTNj+1nnHfo6jYDo09Rs6R2vns4
+        8cST1dzWLb9+ZbxKMxVe+uLupJMs+cfcKhNdTLacuRd7z/GnqprUtZqw2O3SugErvnc5e3Y2
+        /xJrufbewvPhEp+vD6br9Ey/4Osz63aU0FWJY9NZtb61vg7quBMidKBv98I5hkVXnL7UrlW4
+        6PYtgZvv0b0/ugZcVqKvN25pebDBqczg/33T86EP7/+dLu9aGTv1w4oPG5h5JljoPzi/58YZ
+        9gtsCtumveiyzbtW8+BqX8Fxh3hn9g2PNmuoLLLKWK3569yrF08e3DvezK4nzT2tQj39ll9s
+        2NR5uy6cbJe+7fPQRzGFvy6tYJWUEktxRqKhFnNRcSIAowBJcS0EAAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5
+References: <CGME20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This terminal 1-length variable array can be directly converted into
-a C99 flexible array member.
+To ensure that the pci based QEMU ufs device properly works with linux,
+register the device id (0x0013) and vendor id (0x1b36) of QEMU ufs device.
 
-As all users of MPI2_CONFIG_PAGE_SASIOUNIT_0 (Mpi2SasIOUnitPage0_t)
-either calculate its size without depending on its sizeof() or do not
-use PhyData[], no further source changes are required:
+QEMU UFS will enable testing of the UFS driver inside a virtual machine
+on systems without UFS host controller. It can also be used to preemptively
+implement and test new features before the real device is created.
 
-- mpt3sas_config.c:mpt3sas_config_get_number_hba_phys() fetches a
-  Mpi2SasIOUnitPage0_t for itself, but does not use PhyData[].
+The new qemu ufs device can be found at
+https://lore.kernel.org/qemu-devel/20230727155239.GA979354@fedora
 
-- mpt3sas_config.c:mpt3sas_config_get_sas_iounit_pg0() fetches a
-  Mpi2SasIOUnitPage0_t into a caller-provided buffer, and may fetch
-  and write PhyData[] into that buffer depending on its sz argument.
-  Its callers:
-
-  - mpt3sas_scsih.c:_scsih_update_vphys_after_reset(),
-    mpt3sas_scsih.c:_scsih_get_port_table_after_reset(),
-    mpt3sas_scsih.c:_scsih_sas_host_refresh(),
-    mpt3sas_scsih.c:_scsih_sas_host_add(), and
-    mpt3sas_transport.c:_transport_phy_enable() all calculate sz
-    independently of sizeof(Mpi2SasIOUnitPage0_t) and allocate a
-    suitable buffer before calling mpt3sas_config_get_sas_iounit_pg0()
-    and using PhyData[].
-
-Signed-off-by: James Seo <james@equiv.tech>
+Signed-off-by: Jeuk Kim <jeuk20.kim@samsung.com>
 ---
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-index 55abfc00301e..07a8d7646b6d 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -2178,12 +2178,9 @@ typedef struct _MPI2_SAS_IO_UNIT0_PHY_DATA {
- 	*pMpi2SasIOUnit0PhyData_t;
+Since v1:
+- Based on Adrian's comment, I modified the commit message to be
+  more detailed.
+
+---
+ drivers/ufs/host/ufshcd-pci.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index cf3987773051..29d322931427 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -590,6 +590,7 @@ static const struct dev_pm_ops ufshcd_pci_pm_ops = {
+ };
  
- /*
-- *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- *one and check the value returned for NumPhys at runtime.
-+ *Host code (drivers, BIOS, utilities, etc.) should check the value returned
-+ *for NumPhys at runtime before using PhyData[].
-  */
--#ifndef MPI2_SAS_IOUNIT0_PHY_MAX
--#define MPI2_SAS_IOUNIT0_PHY_MAX        (1)
--#endif
- 
- typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_0 {
- 	MPI2_CONFIG_EXTENDED_PAGE_HEADER    Header;   /*0x00 */
-@@ -2191,8 +2188,7 @@ typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_0 {
- 	U8                                  NumPhys;  /*0x0C */
- 	U8                                  Reserved2;/*0x0D */
- 	U16                                 Reserved3;/*0x0E */
--	MPI2_SAS_IO_UNIT0_PHY_DATA
--		PhyData[MPI2_SAS_IOUNIT0_PHY_MAX];    /*0x10 */
-+	MPI2_SAS_IO_UNIT0_PHY_DATA          PhyData[];/*0x10 */
- } MPI2_CONFIG_PAGE_SASIOUNIT_0,
- 	*PTR_MPI2_CONFIG_PAGE_SASIOUNIT_0,
- 	Mpi2SasIOUnitPage0_t, *pMpi2SasIOUnitPage0_t;
+ static const struct pci_device_id ufshcd_pci_tbl[] = {
++	{ PCI_VENDOR_ID_REDHAT, 0x0013, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	{ PCI_VDEVICE(INTEL, 0x9DFA), (kernel_ulong_t)&ufs_intel_cnl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x4B41), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
 -- 
-2.39.2
-
+2.34.1
