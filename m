@@ -2,44 +2,44 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1A4DEB64DD
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Aug 2023 09:56:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E838EB64DD
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Aug 2023 10:00:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231747AbjHGJ4U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Aug 2023 05:56:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42142 "EHLO
+        id S229868AbjHGKAO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Aug 2023 06:00:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231733AbjHGJ4T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2023 05:56:19 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE447134;
-        Mon,  7 Aug 2023 02:56:18 -0700 (PDT)
+        with ESMTP id S229866AbjHGKAJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2023 06:00:09 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB9D1DD;
+        Mon,  7 Aug 2023 03:00:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1691402178; x=1722938178;
+  t=1691402408; x=1722938408;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=4/2va4N+yxECKU3nkj0ADpdSkYaka5HTaKbB+Q+fNQ8=;
-  b=SxhTCX7qid47FE18BpQvk+apUGFUkV03altoT1Wb+MVzdWSlTsoOpsvX
-   U388ylE3XXKTFptcHk1D5KTuuWYrkK9vKFdLhSmgEEYKwJYRNR/EpRlC3
-   P1vkqprXOJYvfyd5E8aLCrWoxJXAKNvn+wTiL2Ebe5ibQxbh0uBjTb1Hr
-   +ZKwiYWigxLfGJm7rmicrztTfpP5cZDcPZ5iujAch/3lAg4taUchMBoMC
-   onfiZ2bLbHfUxHP62/MPxX/R9FfUUl2/81gfAGNyTTbs3ofHkeHetyCxx
-   RxDwUooXHCHmJdZVvnXIbT9QQcWq0Kj6fDy35wO/OtVREK4F38xuMVDb1
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10794"; a="367963811"
+  bh=Cnv86AvV5oXeXJaWvkZrIjdDJcntU03jA75p6wKRBLg=;
+  b=h3O5dousvy/5Qc9ljW32WaQmhn9d+Dk/lu8/jKohuEmrXdqy7si9QLg7
+   G+dlr1IIiTbDaCEgwUqvYW9D+AN07UtzvIbRvH3LuVL3qFnAM/yZ68/Pj
+   aGsTRltTpd0FgdCTVdORl8KE9NeZUqvfMpYMGRGgdowJBPg+VwZ9I1bcE
+   Aq24SH/N9j7mhxjV10/gpUV7SEoazQOcDUp9unlu0LQZbjFfGEz06sLtW
+   qgGJO2k8CtafL5+gWOE6GlIOyYPZJz3iRxHe1HSWPczO4cb+Nvv7bH5o2
+   LOIgqom6zMM5YtrPe88ZSEj2Oou9ChgZ36om3DSXgsQwyw6zM0ZIlFYym
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10794"; a="369406962"
 X-IronPort-AV: E=Sophos;i="6.01,261,1684825200"; 
-   d="scan'208";a="367963811"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2023 02:56:18 -0700
+   d="scan'208";a="369406962"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2023 03:00:08 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10794"; a="977379708"
+X-IronPort-AV: E=McAfee;i="6600,9927,10794"; a="1061536245"
 X-IronPort-AV: E=Sophos;i="6.01,261,1684825200"; 
-   d="scan'208";a="977379708"
+   d="scan'208";a="1061536245"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga006.fm.intel.com with ESMTP; 07 Aug 2023 02:56:16 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 07 Aug 2023 03:00:05 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 0C9AD17C; Mon,  7 Aug 2023 12:58:28 +0300 (EEST)
+        id 58C1917C; Mon,  7 Aug 2023 13:02:19 +0300 (EEST)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Justin Tee <justin.tee@broadcom.com>,
@@ -48,9 +48,9 @@ Cc:     James Smart <james.smart@broadcom.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 1/1] scsi: lpfc: Do not abuse UUID APIs
-Date:   Mon,  7 Aug 2023 12:58:23 +0300
-Message-Id: <20230807095823.33902-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 1/1] scsi: lpfc: Do not abuse UUID APIs
+Date:   Mon,  7 Aug 2023 13:02:17 +0300
+Message-Id: <20230807100217.34646-1-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.40.0.1.gaa8946217a0b
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -65,11 +65,12 @@ abusing casting.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
+v2: fixed the logic: memchr_inv() returns "true" when uuid_is_null() returns false.
  drivers/scsi/lpfc/lpfc_els.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 2bad9954c355..14aece44cf43 100644
+index 2bad9954c355..1e74ae65768d 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
 @@ -1332,7 +1332,7 @@ lpfc_issue_els_flogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
@@ -77,7 +78,7 @@ index 2bad9954c355..14aece44cf43 100644
  		sp->cmn.priority_tagging = 1;
  		/* lpfc_vmid_host_uuid is combination of wwpn and wwnn */
 -		if (uuid_is_null((uuid_t *)vport->lpfc_vmid_host_uuid)) {
-+		if (memchr_inv(vport->lpfc_vmid_host_uuid, 0, LPFC_COMPRESS_VMID_SIZE)) {
++		if (!memchr_inv(vport->lpfc_vmid_host_uuid, 0, LPFC_COMPRESS_VMID_SIZE)) {
  			memcpy(vport->lpfc_vmid_host_uuid, phba->wwpn,
  			       sizeof(phba->wwpn));
  			memcpy(&vport->lpfc_vmid_host_uuid[8], phba->wwnn,
@@ -86,7 +87,7 @@ index 2bad9954c355..14aece44cf43 100644
  	pcmd = (u8 *)elsiocb->cmd_dmabuf->virt;
  
 -	if (uuid_is_null((uuid_t *)vport->lpfc_vmid_host_uuid))
-+	if (memchr_inv(vport->lpfc_vmid_host_uuid, 0, LPFC_COMPRESS_VMID_SIZE))
++	if (!memchr_inv(vport->lpfc_vmid_host_uuid, 0, LPFC_COMPRESS_VMID_SIZE))
  		memcpy(vport->lpfc_vmid_host_uuid, vmid->host_vmid,
  		       LPFC_COMPRESS_VMID_SIZE);
  
