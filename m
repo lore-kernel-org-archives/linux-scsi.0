@@ -2,104 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB4BEB64DD
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Aug 2023 06:01:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 557C2EB64DD
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Aug 2023 09:11:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230486AbjHGGBN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Aug 2023 02:01:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57906 "EHLO
+        id S231295AbjHGJLD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Aug 2023 05:11:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbjHGGBL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2023 02:01:11 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A849710F6;
-        Sun,  6 Aug 2023 23:01:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1691388070; x=1722924070;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=jwXGk7MRC64IN226GiP0tz9lx55iiVvTRXLYQddOkbk=;
-  b=eVO/eF3LjRuB3dareuqbuuo7jYmy7a2zhcQrcdxmbmApEioV+4pTA63r
-   C+OgpVBqebhIa2lL3hUBVLCna1ixyI60klvy7U53hDva8kUSCaVBUAeyx
-   ETVmSfjXozPExEF/wROmZtnocEu5p7KzTyVhanFpjoYQI2r/25rRjuzh6
-   7Jl2fmAIUCYejyaTm6BAO6P8f3PijUnAnuKgFR5xVhkDwDBKU7CzCR2j/
-   3dHxuEF2tA99tZwi+yg70CXxeFyoCWtFXVmBU/lM+bjmEaXGIJ0PNVP9U
-   X4N4zHn9ghLtBfmd4PPbOvC1JFrwFVgQUFXZVMSrckKwx6fjiLgArvWt1
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10794"; a="374132691"
-X-IronPort-AV: E=Sophos;i="6.01,261,1684825200"; 
-   d="scan'208";a="374132691"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2023 23:01:10 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10794"; a="977300981"
-X-IronPort-AV: E=Sophos;i="6.01,261,1684825200"; 
-   d="scan'208";a="977300981"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.251.209.212])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2023 23:01:07 -0700
-Message-ID: <2da6c39d-cfc0-3a93-7968-ec4c1eaef52d@intel.com>
-Date:   Mon, 7 Aug 2023 09:01:05 +0300
+        with ESMTP id S230369AbjHGJLC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2023 05:11:02 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84121E6C;
+        Mon,  7 Aug 2023 02:11:01 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3778ZLgI012753;
+        Mon, 7 Aug 2023 09:10:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=yThY566GT6ogsFbeuR/k0d8GogwCb501Mia32jVcASw=;
+ b=XdMgNAjYew21I//lCnB57JZN7spa9djFaBAWLNw6JiyPprM8iJopo2nlmlcrn6j5s1FQ
+ g/U0RKOgsjyIdcVzRWQ4t3jq0PN6ry8GoqIJZmcZsYr1/k5gGIEW6irDFXKQB0Hw4FvI
+ b/PCQkc30l6M0/FplvRVN5WRiWdQDatn/6Nmc0TWIP5j76cqReCnAe0SVBy786Gh1vhj
+ 7sRTTl1ammBQx34EWV1SoylmRA2KsUClnhQywFQoiH9c2CyfgTI4PcSgHOdx/r2GqG4k
+ dWwTBmtKQDakMM+ucbL1ueht4HiTzIXxgjvrhUnmCXXdROZwHecsZZ89rFOxEhG8rQth Ng== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3s9fqfax6h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 07 Aug 2023 09:10:32 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3779AVIL005991
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 7 Aug 2023 09:10:31 GMT
+Received: from [10.253.14.51] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Mon, 7 Aug
+ 2023 02:10:27 -0700
+Message-ID: <dae8266c-ea52-f421-ec44-077cf4b033f8@quicinc.com>
+Date:   Mon, 7 Aug 2023 17:10:13 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.14.0
-Subject: Re: [PATCH v2] scsi: ufs: ufs-pci: Add support for QEMU
-To:     jeuk20.kim@samsung.com, "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5@epcms2p1>
- <20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5@epcms2p1>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH v6 6/7] scsi: ufs: Split an if-condition
 Content-Language: en-US
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5@epcms2p1>
-Content-Type: text/plain; charset=UTF-8
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Stanley Chu" <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+References: <20230804154821.3232094-1-bvanassche@acm.org>
+ <20230804154821.3232094-7-bvanassche@acm.org>
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <20230804154821.3232094-7-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 4PKjqTppo55k8w1Z8ScapNEynNN0IH60
+X-Proofpoint-ORIG-GUID: 4PKjqTppo55k8w1Z8ScapNEynNN0IH60
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-08-07_06,2023-08-03_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ lowpriorityscore=0 bulkscore=0 mlxscore=0 malwarescore=0 impostorscore=0
+ mlxlogscore=999 clxscore=1011 suspectscore=0 adultscore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308070085
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/08/23 04:37, Jeuk Kim wrote:
-> To ensure that the pci based QEMU ufs device properly works with linux,
-> register the device id (0x0013) and vendor id (0x1b36) of QEMU ufs device.
-> 
-> QEMU UFS will enable testing of the UFS driver inside a virtual machine
-> on systems without UFS host controller. It can also be used to preemptively
-> implement and test new features before the real device is created.
-> 
-> The new qemu ufs device can be found at
-> https://lore.kernel.org/qemu-devel/20230727155239.GA979354@fedora
-> 
-> Signed-off-by: Jeuk Kim <jeuk20.kim@samsung.com>
+Hi Bart,
 
-Acked-by: Adrian Hunter <adrian.hunter@intel.com>
-
-Thank you!
-
+On 8/4/2023 11:48 PM, Bart Van Assche wrote:
+> Make the next patch in this series easier to read. No functionality is
+> changed.
+>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-> 
-> Since v1:
-> - Based on Adrian's comment, I modified the commit message to be
->   more detailed.
-> 
-> ---
->  drivers/ufs/host/ufshcd-pci.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-> index cf3987773051..29d322931427 100644
-> --- a/drivers/ufs/host/ufshcd-pci.c
-> +++ b/drivers/ufs/host/ufshcd-pci.c
-> @@ -590,6 +590,7 @@ static const struct dev_pm_ops ufshcd_pci_pm_ops = {
->  };
->  
->  static const struct pci_device_id ufshcd_pci_tbl[] = {
-> +	{ PCI_VENDOR_ID_REDHAT, 0x0013, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
->  	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
->  	{ PCI_VDEVICE(INTEL, 0x9DFA), (kernel_ulong_t)&ufs_intel_cnl_hba_vops },
->  	{ PCI_VDEVICE(INTEL, 0x4B41), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
-
+>   drivers/ufs/core/ufshcd.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 129446775796..ae7b868f9c26 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -4352,8 +4352,9 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+>   	}
+>   	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>   
+> -	if (update &&
+> -	    !pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
+> +	if (!update)
+> +		return;
+> +	if (!pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
+>   		ufshcd_rpm_get_sync(hba);
+>   		ufshcd_hold(hba);
+>   		ufshcd_auto_hibern8_enable(hba);
+Reviewed-by: Can Guo <quic_cang@quicinc.com>
