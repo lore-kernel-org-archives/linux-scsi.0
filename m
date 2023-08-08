@@ -2,320 +2,184 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B2CBC001DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 16:54:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14BBCC001B0
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 17:16:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233696AbjHHQyP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:54:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35116 "EHLO
+        id S234286AbjHHRQV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Aug 2023 13:16:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233628AbjHHQxi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:53:38 -0400
-Received: from mx0b-002e3701.pphosted.com (mx0b-002e3701.pphosted.com [148.163.143.35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BCB018C2E
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 08:58:42 -0700 (PDT)
-Received: from pps.filterd (m0134424.ppops.net [127.0.0.1])
-        by mx0b-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 378024Lp011989;
-        Tue, 8 Aug 2023 04:48:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=from : to : subject :
- date : message-id : content-type : content-transfer-encoding :
- mime-version; s=pps0720; bh=Z3jBIoxNUmjeC/MhQJbboXq2Vuqn7bov93DivPBrzEI=;
- b=XpMQS1kxvxmebBPfJ5EuNs+ZqVgZbVNMdQPUo2gbDStJzL3eUGy91Z9Sdv4kzXyqlk0g
- SHwTs6kvfj5KKfbltJCMCowJjX28wE4qE8cRN5FYQ9iGONcKdxcQSPAIGL6bQHebBOx/
- dy++5zDkWbr28xRIWcPZkd9FCZo7q0NwtHS/ZLQ8kAfZy/xzP9/jtH1EvLE/PRz64Qr9
- 2DcOk+t9taZUFCv+uaB3snGtI49fNgCq/d5fKkysgKvJfnNPMgwmBWW7aTbFS54Hdcjd
- KUMDnbPNduJuaCeCZsR5EsE7ggK5eNqYeTatJ2B7FK6fO+uJh8p8vPtKEYQnagrDAV2p uw== 
-Received: from p1lg14880.it.hpe.com ([16.230.97.201])
-        by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 3sb9rka81b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 08 Aug 2023 04:48:33 +0000
-Received: from p1wg14925.americas.hpqcorp.net (unknown [10.119.18.114])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by p1lg14880.it.hpe.com (Postfix) with ESMTPS id 148C880018A;
-        Tue,  8 Aug 2023 04:48:33 +0000 (UTC)
-Received: from p1wg14924.americas.hpqcorp.net (10.119.18.113) by
- p1wg14925.americas.hpqcorp.net (10.119.18.114) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Mon, 7 Aug 2023 16:48:32 -1200
-Received: from P1WG14918.americas.hpqcorp.net (16.230.19.121) by
- p1wg14924.americas.hpqcorp.net (10.119.18.113) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42
- via Frontend Transport; Mon, 7 Aug 2023 16:48:32 -1200
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (192.58.206.35)
- by edge.it.hpe.com (16.230.19.121) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Tue, 8 Aug 2023 04:48:32 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CTtkrMN9Dab5hj3m1WQvXj9kvyjiMJBCznY909myOF40DmURcNTKVRhUMJKkMQhSHIy7B0R4VRGfmpxK0hCQgFnRd+2xW5cegWUOnEerMa/SfG0fl2oel9cQMfqIPCNmJvMlD+KqocBRHVxalPtt6qf/xX8oQSF9mEplKmm7tzK9MEW/HtEHjYntj9a/UPFTICxPSzGo5VguUSUsNtoBDNt9nd2oJ0FEhsDtfz2lrFdtxEx11lQdz7Fd5DniPZzh4uLb6+ZKUQ1QgvuZ0X8lyDxafsyriaY2iKI6IVlgKqiQnRrM2cw0n/OvILsIbMwKnP6rM3zC8yTfrfuEmkyzaw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Z3jBIoxNUmjeC/MhQJbboXq2Vuqn7bov93DivPBrzEI=;
- b=gcWGlys5dGbrG+KY/wvGwaRKOfGV8is5+KEv57gFdfG3WVPfI4L7Zx3p5qAXg0UeixwaiOMrZqvgee21eCxnZCunaJUL1r2OPdcCm+UgZ5b1KvcEOBYKflUVARidXou850I2vxximw4ppIVIiPNp7N0CnUQlVREzE53rwyVjc9DNQh6wcq1zvvnfa81+YEH5SyLiUYaZbdfdK19zWzBxXpj7SX09lAiEoHkIUeTQMRE2Mk6eqyJyERsv3YOho/LEHVi2Jq6IDlSIL74tXwxQO6h1RfHHJj/1DeUQJU71lhoQJvaDpVVoHmbrbyxafJgxgLPB+6t08uFiawcbfnakLA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=hpe.com; dmarc=pass action=none header.from=hpe.com; dkim=pass
- header.d=hpe.com; arc=none
-Received: from DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM (2603:10b6:8:48::7) by
- DM4PR84MB1495.NAMPRD84.PROD.OUTLOOK.COM (2603:10b6:8:4a::12) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6652.21; Tue, 8 Aug 2023 04:48:25 +0000
-Received: from DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM
- ([fe80::4f2:1b58:220f:ee6b]) by DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM
- ([fe80::4f2:1b58:220f:ee6b%5]) with mapi id 15.20.6652.026; Tue, 8 Aug 2023
- 04:48:25 +0000
-From:   "Seymour, Shane M" <shane.seymour@hpe.com>
-To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Nilesh Javali <njavali@marvell.com>,
-        "GR-QLogic-Storage-Upstream@marvell.com" 
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [RFC] questions about some issues in the qla2xxx module
-Thread-Topic: [RFC] questions about some issues in the qla2xxx module
-Thread-Index: AdnJs2/iBy9LHkcXTEqprEaFk1PYTQ==
-Date:   Tue, 8 Aug 2023 04:48:25 +0000
-Message-ID: <DM4PR84MB1373A4864DA533B83C017E71FD0DA@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM4PR84MB1373:EE_|DM4PR84MB1495:EE_
-x-ms-office365-filtering-correlation-id: 835cd54f-a5f3-4561-c829-08db97cab3bb
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: RoIaOFxvng3L7kbKgJMFTIs8tNjIsnI54+A8J2DwRrY/LhRjUzxInZAEDlwAZQ93kUTmEYDHMJFzTlFAad4f7IjG06ywegdmcIqFI4FLPX2XiEvY92zuK/J60KFibAb7t5XBAXzEH38qtPs8RTGpTQFawVWu7FZ8Gd0OuujD/mLwfJxf9O2Y8rtxbtOoQpKNZFliCefBaN9w4mztqlqxr4uiX8rvdS6hYBC5UYQQ/Pn457B/GQv3pQjlDIFNH9mCZ4oAeS5UjeWlM9bYYq41PH6O6tHaOap+nH4Z8AhaNMFOS+KrVa1hNhSpInXFF4GbsEv+9PArOvMQ3YUBfJ8zXhH4D8aeVAJSc43PLt5EPdxKzdJz8FQwibdUGOmVj32qgjuf3LCLoc8IE1W7YtCRwcs40BFj36IyxLMItfnZwCyiQh7eJ1E/3b7y/XQ/KX5ZnG7urLor0YzNdUx2PU8NzK/o7Kz+aYUpneZlf9GQP93AyjkVDpZLGmb5RFiwk9Bidv80aydajREbB+gaG2GCG27Rp8InV5BLwZDJHiLD9FP/YdsAqWbn/dICP+xPuFEX2U05JVGLwFME/oQBw2PZEbiDa9/N5Q0ovaDj3iceX+CT5m6ADAlkdsNR+k0WWMMAuoecU8pjkj/15Tf+OSitZhNmuytNVANefONMfGYAU3TW1y/QtLDcRhnIDktPfd7PBRhgu8mEDxhxEFw3ePdk5w==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230028)(396003)(39860400002)(136003)(346002)(376002)(366004)(1800799003)(90011799007)(451199021)(90021799007)(186006)(7696005)(38070700005)(9686003)(71200400001)(55016003)(26005)(6506007)(43170500006)(83380400001)(55236004)(38100700002)(122000001)(33656002)(86362001)(5660300002)(41300700001)(8676002)(8936002)(66446008)(64756008)(66556008)(76116006)(2906002)(316002)(110136005)(82960400001)(478600001)(52536014)(66946007)(66476007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?9VFe+i99M0+kHsarj52FoXxrOsMBdKeQMq3liXvnMZ7ftD86g33yFjYFwJ6H?=
- =?us-ascii?Q?IyrzNDFfBsHPVecTly9Z+n4p47Q/A2ktpp1PSVPnzaAtq7ikx1FQlWWXgpJt?=
- =?us-ascii?Q?Ci0IW5G+0BMoNowAXyvJ7uW3DrNZfsgxqEP7fxlYK5bdJAb/kPC4z/NlIMzo?=
- =?us-ascii?Q?vmG6u5CILqI6koyuQiGuwADmYsZ+dOegL7Agd9bki6z4WhBY0HMP5xCfwqdZ?=
- =?us-ascii?Q?JTOBWTJkLpGDFUqXgQ7D1Y9SuTuzwevzc4pcFvfI0n8s4Gd2yugFW23Gm07r?=
- =?us-ascii?Q?ASYvEXa5hzm6LNyGjCbjvlRxgPtEjRZSQ0UD7BZW6+Uecp0f4FYH37SjZlDg?=
- =?us-ascii?Q?N1yRM3Zvc2iV2K8zYDL9MsMPGBr7qqV45dsQmcmqYs2mlrmU+3Hk8bvc1nEE?=
- =?us-ascii?Q?xLfF3ulwjogR2U1q3E3yxezfvFwz0Xe8RLEJM/wcEMTutYzIwebw6Lt15/m/?=
- =?us-ascii?Q?zAgUDEx6o0GL5w5LjQ6KtdrzlmB3fsEw3Zqsn0X9s5TjdL0ezAl+/k2bSx1m?=
- =?us-ascii?Q?kzA9kKsNBXjc5ynW+mKLQD4HmAtVecUDQxa2wTLBJBo1ad8LsLyIWirRklMH?=
- =?us-ascii?Q?pqDYnP40GUvUdtchlylXJHq+gI1Reh8uMKw4+FxXsSpZCL9qH3k5feSvSzrC?=
- =?us-ascii?Q?55GpthcB8XyiNwWhrx48wTBXmCE21xWlzwmz3aiJk9/Ame1zz3A1/s434E1R?=
- =?us-ascii?Q?K3a2wh20kA0VW/XLFaCo1Zx0XZ7+9oLwtKqjyL72K+1pgjvIAYIwYw334M9t?=
- =?us-ascii?Q?uRUTIyNooMgBu26KEbHM1jfzehHmyV9x2vKdzRztKpASOYb5w0u33VmkmJQg?=
- =?us-ascii?Q?BzcMZKm4Rwr2pAyEFcxiITAr/QyROg03+K4iPARvMf5D9K1Vdfeu2g6/wrTW?=
- =?us-ascii?Q?Utu3oJIzVHB0p81xBq7Xy52uNh1xZNhaFkWItkmKxTMRWKLmEa8G84kk/7zq?=
- =?us-ascii?Q?C6yhNThJHo2jBiMvPELBYx6AYfTFaw7rb5X6Waq47eN/w0GYr+KSzRH/euTW?=
- =?us-ascii?Q?zMNe0kDPdwNj1T+9rQm+PGRoYb8fXnwCmAXO4D4an3WH2c7Lmm6fAhpvyF84?=
- =?us-ascii?Q?kaEq5Ty1AsjsLS3K8RdEbWMzY06O5G1hq/ECOfzz3aH9P+3UiSCpQ781qD1K?=
- =?us-ascii?Q?5ZNupU47tHuB4ix9c+ylNRb8YZgkwjSgDSpjg4lbOOfOvLTTc5RFHhBBW/S5?=
- =?us-ascii?Q?H5/5KI0z2sxO9huWLj/ss4t3EipW4JN8pI62x1y/o3szQnZj8zOQB9m8gWlG?=
- =?us-ascii?Q?vVEyPAiarrXiFKkzek6OkeIoNOVXQK2LJvc34+AorJgND6SJfi7HB2d4mOCc?=
- =?us-ascii?Q?Hj6vkSSZZ8XSlYjfjAx9ual5eMaY2HDXNdzNgnwk+Aq+97cqSERKrXUk5/8g?=
- =?us-ascii?Q?2irWfwDQYhK4CREKmxML54nivqRNxgFCQJjj2WByXmuBMoJq1UpM5nW4sXzH?=
- =?us-ascii?Q?5/MkqpptafuxXXKClh2OnAH9vOqKCANMyFQ6N1gOgGb4xOotjVRkskXD5QKm?=
- =?us-ascii?Q?Xi/prFigvPP14SM7/EbAbDMlvIXIdcx/7jMN4EMNdh1vv+8tR+9yWMH+/6S9?=
- =?us-ascii?Q?gl3fKevqjkJcVlHqH+bF082lSmwxUN6p2+OGq7ep?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S234030AbjHHRPm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 13:15:42 -0400
+Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E949C6F4B0
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 09:06:26 -0700 (PDT)
+Received: by mail-lj1-x22d.google.com with SMTP id 38308e7fff4ca-2b9d3dacb33so94605351fa.1
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Aug 2023 09:06:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1691510784; x=1692115584;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=94fOqR62m+NHw+TZCfLaS+LUBJUPq52OUGkxSs7s3fQ=;
+        b=KAg8PwOXzLCPqYoS29c9wYj+B6XN0YgLeMgaUedMATTCVh9dVFnBLzM7yO0rJd1HzW
+         kyurq1J7wARMyHaUc9mWyFQNQennNuGyjmEyMNEwdXhQCtlDz5MMKR4LerU297mXNymn
+         TIvxGQyMZ7Kh5ImQ9cw0TAzlxBKSbiyN/sVaQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691510784; x=1692115584;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=94fOqR62m+NHw+TZCfLaS+LUBJUPq52OUGkxSs7s3fQ=;
+        b=QMpkNCIO+1cEb/goOk8Xng0QMPu0WjL9hN6kWj+MzKbKynamgw/jhPBaE+ABt0aOpP
+         ddRPpU2w98sdexz6MB5TOvCKb/W5TRNnosMB40m3A+hBrakq5/tx1BMgsfbtLW3Z+qXl
+         LU19UFECwy/tI4ScAKkxzHvHH9luspM00oI1h1dRi6qfURLwkRhtEi9xi0D+sfpdNcxP
+         ey0JuFsULLmdfeqRHdNVHy1KyWLU6m1J0Oo8coeZeka4kzXiO0bP6kAS46wctIUGZqgJ
+         tFm3uCwc4JkuAx9rkuk1M5y5/t1oy16ecBtS0Ag634cKMFaFZKeElcOoRRoOsQi5dgdK
+         AzSA==
+X-Gm-Message-State: AOJu0YzQ3s/zwS48KlzJZrMU01AmU4qgdLTp5S2ocvgK1U9+ElpEj/aq
+        f44El5c3mS0WOXdnqBa/JyWp6ldl1DfAbiOrRiv7QRqXGTQNCKqwpac=
+X-Google-Smtp-Source: AGHT+IGL0/k6pSxYhu1Tr5fP0wxSb7MHzZ7kwZyq3FWJ5ytCtAdSxgq6jlbSvgLcT5SwyAeVaw8cZ/JN7DieNp1w1v4=
+X-Received: by 2002:a05:6402:1b05:b0:523:f4c:afe7 with SMTP id
+ by5-20020a0564021b0500b005230f4cafe7mr9974718edb.38.1691478770567; Tue, 08
+ Aug 2023 00:12:50 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 835cd54f-a5f3-4561-c829-08db97cab3bb
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Aug 2023 04:48:25.7357
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 105b2061-b669-4b31-92ac-24d304d195dc
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: QHokRNrpBrx1Y7dTy+b75sP3xYk55PRxdKMMbRnfsFj4yi45ENl+BSandtpUxwUJ3Yry45+Ve4yJrcTuA6l70g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR84MB1495
-X-OriginatorOrg: hpe.com
-X-Proofpoint-GUID: pckcIfs5aIuLdkPyzY4QnfnDvi9TZfv8
-X-Proofpoint-ORIG-GUID: pckcIfs5aIuLdkPyzY4QnfnDvi9TZfv8
-X-HPE-SCL: -1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-08_01,2023-08-03_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
- mlxscore=0 impostorscore=0 suspectscore=0 mlxlogscore=999 clxscore=1011
- priorityscore=1501 adultscore=0 lowpriorityscore=0 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308080042
+References: <20230726112527.14987-1-ranjan.kumar@broadcom.com>
+ <20230726112527.14987-2-ranjan.kumar@broadcom.com> <yq1o7jsq9lq.fsf@ca-mkp.ca.oracle.com>
+ <CAMFBP8MS0hwd9-bfVrPi8yTB3Es-w7ugHwEMyxtb8R-mj8PPCg@mail.gmail.com> <yq1sf8ujmf2.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1sf8ujmf2.fsf@ca-mkp.ca.oracle.com>
+From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
+Date:   Tue, 8 Aug 2023 12:42:38 +0530
+Message-ID: <CAMFBP8Nf6ifVxJnNBv=zq+WyJRZR-2Hiuo4AejLAguE-GWuzJg@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] Perform additional retries if Doorbell read
+ returns 0
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
+        sreekanth.reddy@broadcom.com, stable@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000006d83c806026b8bf3"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello qla2xxx maintainers,
+--0000000000006d83c806026b8bf3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I have some questions about the qla2xxx module after investigating somethin=
-g downstream
-and finding the same issues upstream (there are 3 issues below).
+Hi Martin,
 
-The first issue is in qla2x00_get_data_rate() there are two code segments t=
-hat are
-identical:
 
-int
-qla2x00_get_data_rate(scsi_qla_host_t *vha) {
-	int rval;
-	mbx_cmd_t mc;
-	mbx_cmd_t *mcp =3D &mc;
-	struct qla_hw_data *ha =3D vha->hw;
+On Tue, Aug 8, 2023 at 8:07=E2=80=AFAM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Hi Ranjan!
+>
+> >> This HW bug impacts only a few registers. However, for code
+> >> simplicity, we added retry logic(of 3 retries count) for all
+> >> registers exposed to the driver.
+>
+> > Now the recommendation is:
+> > - Increase retry count from 3 to 30 for only impacted registers.
+> > - We also do not want to reduce the retries from 3 to 1 for
+> >   non-impacted registers to avoid any regression.
+> >
+> > Hence, this patch retries upto 30 times for impacted registers and 3
+> > times for non-impacted registers.
+>
+> What is the adverse affect is of having a loop iterator of 30 if the
+> non-impacted registers always return a non-zero value after 1 to 3
+> attempts?
+>For non-impacted registers where zero is invalid, the driver will always g=
+et non-zero value in 1/3 attempts. So no concerns with 30 retries with thos=
+e registers.
+   But for few registers zero may be a valid value and we don=E2=80=99t wan=
+t
+those registers to get penalized with 30 read retries where 1/3 reads
+would have sufficed.
 
-	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1106,
-	    "Entered %s.\n", __func__);
+Thanks & Regards,
+Ranjan
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-	if (!IS_FWI2_CAPABLE(ha))
-		return QLA_FUNCTION_FAILED;
+--0000000000006d83c806026b8bf3
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-	mcp->mb[0] =3D MBC_DATA_RATE;
-	mcp->mb[1] =3D QLA_GET_DATA_RATE;
-	mcp->out_mb =3D MBX_1|MBX_0;
-	mcp->in_mb =3D MBX_2|MBX_1|MBX_0;
-	if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))
-		mcp->in_mb |=3D MBX_4|MBX_3;
-	mcp->tov =3D MBX_TOV_SECONDS;
-	mcp->flags =3D 0;
-	rval =3D qla2x00_mailbox_command(vha, mcp);
-	if (rval !=3D QLA_SUCCESS) {
-		ql_dbg(ql_dbg_mbx, vha, 0x1107,
-		    "Failed=3D%x mb[0]=3D%x.\n", rval, mcp->mb[0]);
-	} else {
-		if (mcp->mb[1] !=3D 0x7)                   <<<<<<<<<<<<<
-			ha->link_data_rate =3D mcp->mb[1]; <<<<<<<<<<<<<
-
-		if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
-			if (mcp->mb[4] & BIT_0)
-				ql_log(ql_log_info, vha, 0x11a2,
-				    "FEC=3Denabled (data rate).\n");
-		}
-
-		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1108,
-		    "Done %s.\n", __func__);
-		if (mcp->mb[1] !=3D 0x7)                    <<<<<<<<<<<<<
-			ha->link_data_rate =3D mcp->mb[1];  <<<<<<<<<<<<<
-	}
-
-	return rval;
-}
-
-As far as I can determine nothing in between them should change link_data_r=
-ate.
-
-This was introduced in the change 75666f4a8c41 ("scsi: qla2xxx: Display mes=
-sage
-for FCE enabled") and you can see the start of the duplicated code. Was the=
- second
-instance of the if meant to be removed? It's also FEC not FCE.
-
-In the message why use "(data rate)" when you could get the speed itself fr=
-om
-qla2x00_get_link_speed_str()?=20
-
-The second issue is this function prints a message to the kernel message bu=
-ffer but it
-causes an issue in that qla2x00_get_data_rate() can be called from
-qla2x00_configure_loop() and from here (that is fine for the former but not=
- the later):
-
-static ssize_t
-qla2x00_port_speed_show(struct device *dev, struct device_attribute *attr,
-    char *buf)
-{
-	struct scsi_qla_host *vha =3D shost_priv(dev_to_shost(dev));
-	struct qla_hw_data *ha =3D vha->hw;
-	ssize_t rval;
-	u16 i;
-	char *speed =3D "Unknown";
-
-	rval =3D qla2x00_get_data_rate(vha);
-	if (rval !=3D QLA_SUCCESS) {
-		ql_log(ql_log_warn, vha, 0x70db,
-		    "Unable to get port speed rval:%zd\n", rval);
-		return -EINVAL;
-	}
-
-	for (i =3D 0; i < ARRAY_SIZE(port_speed_str); i++) {
-		if (port_speed_str[i].rate !=3D ha->link_data_rate)
-			continue;
-		speed =3D port_speed_str[i].str;
-		break;
-	}
-
-	return scnprintf(buf, PAGE_SIZE, "%s\n", speed);
-}
-
-So every time some reads the port_speed file it can log a kernel message so=
- if you=20
-read the sysfs port_speed file a lot you can generate a lot of messages in =
-the kernel
-message buffer (messages have been changed manually):
-
-2023-06-01T11:59:11.180034+02:00 example kernel: [2399544.415344][ XXXX] ql=
-a2xxx
- [  0000:61:00.1]-11a2:1: FEC=3Denabled (data rate).
-2023-06-01T11:59:11.810042+02:00 example kernel: [2399544.415764][ XXXX] ql=
-a2xxx
- [  0000:61:00.1]-11a2:1: FEC=3Denabled (data rate).
-
-Is that a defect? I wouldn't have expected reading a sysfs file to always g=
-enerate
-a kernel message into the kernel message buffer. The change that introduced=
- the
-message doesn't seem to have taken into account that function can be called=
- from
-two places.
-
-Also, why isn't qla2x00_get_link_speed_str() used instead of adding
-another structure containing almost identical speed data?
-
-That leads onto the 3rd issue the really confusing ql_log function:
-
-2572 ql_log(uint level, scsi_qla_host_t *vha, uint id, const char *fmt, ...=
-)
-2573 {
-2574         va_list va;
-2575         struct va_format vaf;
-2576         char pbuf[128];
-2577=20
-2578         if (level > ql_errlev)
-2579                 return;
-2580=20
-2581         ql_ktrace(0, level, pbuf, NULL, vha, id, fmt);
-2582=20
-2583         if (!pbuf[0]) /* set by ql_ktrace */
-2584                 ql_dbg_prefix(pbuf, ARRAY_SIZE(pbuf), NULL, vha, id);
-2585=20
-2586         va_start(va, fmt);
-2587=20
-2588         vaf.fmt =3D fmt;
-2589         vaf.va =3D &va;
-2590=20
-2591         switch (level) {
-2592         case ql_log_fatal: /* FATAL LOG */
-2593                 pr_crit("%s%pV", pbuf, &vaf);
-2594                 break;
-2595         case ql_log_warn: <<<<<<<<<<<<<<<<<<<<<<<<
-2596                 pr_err("%s%pV", pbuf, &vaf); <<<<<<<<<<<<<<<<<<<<<<<<
-2597                 break;
-2598         case ql_log_info: <<<<<<<<<<<<<<<<<<<<<<<<
-2599                 pr_warn("%s%pV", pbuf, &vaf); <<<<<<<<<<<<<<<<<<<<<<<<
-2600                 break;
-2601         default:
-2602                 pr_info("%s%pV", pbuf, &vaf);
-2603                 break;
-2604         }
-2605=20
-2606         va_end(va);
-2607 }
-
-When I was looking at the driver I hadn't looked at ql_log() and was having=
- issues suppressing
-the kernel messages from issue #2 above. When I did look I noticed that ql_=
-log_info messages
-are printed with pr_warn() (so it's really a warning not info). Should the =
-log levels used in the
-qla2xxx driver more generally reflect the kernel usage of message levels (i=
-.e. ql_log_info
-should use pr_info, etc)?
-
-Thanks
-Shane
+MIIQbQYJKoZIhvcNAQcCoIIQXjCCEFoCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+gg3EMIIFDTCCA/WgAwIBAgIQeEqpED+lv77edQixNJMdADANBgkqhkiG9w0BAQsFADBMMSAwHgYD
+VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
+AxMKR2xvYmFsU2lnbjAeFw0yMDA5MTYwMDAwMDBaFw0yODA5MTYwMDAwMDBaMFsxCzAJBgNVBAYT
+AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBS
+MyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+vbCmXCcsbZ/a0fRIQMBxp4gJnnyeneFYpEtNydrZZ+GeKSMdHiDgXD1UnRSIudKo+moQ6YlCOu4t
+rVWO/EiXfYnK7zeop26ry1RpKtogB7/O115zultAz64ydQYLe+a1e/czkALg3sgTcOOcFZTXk38e
+aqsXsipoX1vsNurqPtnC27TWsA7pk4uKXscFjkeUE8JZu9BDKaswZygxBOPBQBwrA5+20Wxlk6k1
+e6EKaaNaNZUy30q3ArEf30ZDpXyfCtiXnupjSK8WU2cK4qsEtj09JS4+mhi0CTCrCnXAzum3tgcH
+cHRg0prcSzzEUDQWoFxyuqwiwhHu3sPQNmFOMwIDAQABo4IB2jCCAdYwDgYDVR0PAQH/BAQDAgGG
+MGAGA1UdJQRZMFcGCCsGAQUFBwMCBggrBgEFBQcDBAYKKwYBBAGCNxQCAgYKKwYBBAGCNwoDBAYJ
+KwYBBAGCNxUGBgorBgEEAYI3CgMMBggrBgEFBQcDBwYIKwYBBQUHAxEwEgYDVR0TAQH/BAgwBgEB
+/wIBADAdBgNVHQ4EFgQUljPR5lgXWzR1ioFWZNW+SN6hj88wHwYDVR0jBBgwFoAUj/BLf6guRSSu
+TVD6Y5qL3uLdG7wwegYIKwYBBQUHAQEEbjBsMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcC5nbG9i
+YWxzaWduLmNvbS9yb290cjMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5j
+b20vY2FjZXJ0L3Jvb3QtcjMuY3J0MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuZ2xvYmFs
+c2lnbi5jb20vcm9vdC1yMy5jcmwwWgYDVR0gBFMwUTALBgkrBgEEAaAyASgwQgYKKwYBBAGgMgEo
+CjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAN
+BgkqhkiG9w0BAQsFAAOCAQEAdAXk/XCnDeAOd9nNEUvWPxblOQ/5o/q6OIeTYvoEvUUi2qHUOtbf
+jBGdTptFsXXe4RgjVF9b6DuizgYfy+cILmvi5hfk3Iq8MAZsgtW+A/otQsJvK2wRatLE61RbzkX8
+9/OXEZ1zT7t/q2RiJqzpvV8NChxIj+P7WTtepPm9AIj0Keue+gS2qvzAZAY34ZZeRHgA7g5O4TPJ
+/oTd+4rgiU++wLDlcZYd/slFkaT3xg4qWDepEMjT4T1qFOQIL+ijUArYS4owpPg9NISTKa1qqKWJ
+jFoyms0d0GwOniIIbBvhI2MJ7BSY9MYtWVT5jJO3tsVHwj4cp92CSFuGwunFMzCCA18wggJHoAMC
+AQICCwQAAAAAASFYUwiiMA0GCSqGSIb3DQEBCwUAMEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9v
+dCBDQSAtIFIzMRMwEQYDVQQKEwpHbG9iYWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTA5
+MDMxODEwMDAwMFoXDTI5MDMxODEwMDAwMFowTDEgMB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENB
+IC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkdsb2JhbFNpZ24wggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJXaQeQZ4Ihb1wIO2hMoonv0FdhHFrYhy/EYCQ8eyip0E
+XyTLLkvhYIJG4VKrDIFHcGzdZNHr9SyjD4I9DCuul9e2FIYQebs7E4B3jAjhSdJqYi8fXvqWaN+J
+J5U4nwbXPsnLJlkNc96wyOkmDoMVxu9bi9IEYMpJpij2aTv2y8gokeWdimFXN6x0FNx04Druci8u
+nPvQu7/1PQDhBjPogiuuU6Y6FnOM3UEOIDrAtKeh6bJPkC4yYOlXy7kEkmho5TgmYHWyn3f/kRTv
+riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
+QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
+UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
+M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
+Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
+14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
+a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
+XzCCBUwwggQ0oAMCAQICDExX4+q15YXlYbDuOzANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
+RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
+UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMjExMTQxMjAzMThaFw0yNTExMTQxMjAzMThaMIGO
+MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
+BgNVBAoTDUJyb2FkY29tIEluYy4xFTATBgNVBAMTDFJhbmphbiBLdW1hcjEoMCYGCSqGSIb3DQEJ
+ARYZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAOgccBnKTcRY5ViAG6iAGKWZ8pjYBaC0yPSOnu903VijdPFPnRdvshVcVxr6QvmlBCzKJaet
+zZlOdDzH9Sh5FfHxwia1H790mce+cjggA6koNdslP25m4SfoAUcvLxNk1koVjbyxvNPG40Mlg8f8
+Dp9JubCHz3kEFHjItKFkpS8CHMR1Hx4Cnws434zD/pz1TMUmYyq1kma0Vi8YPVlwkaHgq4J/9Lw/
+GK2Ee6ez7fr/FL1RWbOPVHJR+deNIorOjW7U5HVwnRYhM1OR4mAkrkqcN+3kwae0KmVO3SDKFd7h
+Ok4L2e1ixyaRTo379Ur3iVTnagglDOliayMGRITBPe0CAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU8WuEiYXvpeCaubgLCCFoyRBc
+8QwwDQYJKoZIhvcNAQELBQADggEBAA5th3yz1fvJCBmK21x68IdDNFC0gmynT76I3fOgslLHc7ey
+lC9VXLb+vJ863blS/WxEOwf0fvc0ks7qYWl8xisInHu5AX9glaooGhLImlzE0l9rDf0tcq2kkgc4
+CXL9UGDEoqdxfRj3j9xn9fm9gpTBWSck6ufc/8RV1TLVjcZvrYkMqQwoVulGkr+HCnzaEFxBRmO/
+nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
+0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMc0RMCEgRG+rYdGt1KHC4pArkS/bpB8
+p0NtOHTDCerOMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDgw
+ODE2MDYyNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQCvT649/6micy7xxmL19Z2eU66LmxMC0A+1ugATDjtINDE3oNj3
+b6soSe9cXpjzAq7dTDrGdAQBOh75Irhmj1C+s6SwYqJWkhLqIlSrxzwVjlD+NReHiLBVCAoeY4dI
+CbweCmKztJGaRwI0MsOibBrNIJEuVKViS8SU9X1byMmAnnrT90n3BB4Ten7EClRNoO5IAcUtY0GP
+tdgf2owM3Caf9fmnoqHI37kPJTVtUys1ah/q7LxMQhgiY72pF3bXeIYdBh95Rl6jAxWpLI03XvOu
+tGcAkz+4dsp4t8GAHEd4MdTL+Jc//3oGL8/d63znYGDfkka2wdFC+JpuVRc7urGZ
+--0000000000006d83c806026b8bf3--
