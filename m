@@ -2,60 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 025F9C07E8D
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 16:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE86BC001DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 16:33:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232392AbjHHQZQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:25:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42640 "EHLO
+        id S232824AbjHHQcv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:32:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232461AbjHHQXl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:23:41 -0400
+        with ESMTP id S232882AbjHHQbr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:31:47 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3100A273
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 08:49:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3E564C1E
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 08:51:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691509767;
+        s=mimecast20190719; t=1691509863;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=9r/GcSpKKC2dt0ISzH0rvZ1VrInscXGexGqDsV7Zgfk=;
-        b=ZSagAr1lLT3T8NApOJzFqZIX6rZBDJszozcSMmikdXjj2YW198+tICm0fi2fY/ME4Ba8FS
-        uSh1mtdo+bMhJH+nuPcJzCs7UYmVRAwuDjpYZNxx52s/V3JoGP9FTiEojLQSYiXGX3zd09
-        GwQu9flIj7vI7VUUkt93K05UInkqa5o=
+        bh=2TEtH5yVIZkcHhXlx7zXOq0kKCJ4wWHrHIE0jkzlzuw=;
+        b=SG38S9sH9NxrPtGfu1M2GpEk9LKC2SwJZR6LY5Wqw9y1aigjNCgmfs/F2S+Ya+9Z7S8KyO
+        E/aWP3Gi6+DdDTELP0bOW24CXJblox5I/RnV13rJS8ze5aXdmehBCeG3/faqbtOqker2/I
+        41O+2obluAlhGX2q8dNSwRXakfpFoCk=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-610-MBMMJmWsMYifeEoAwq7xkg-1; Tue, 08 Aug 2023 06:48:09 -0400
-X-MC-Unique: MBMMJmWsMYifeEoAwq7xkg-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+ us-mta-90-leUcPBTANJW2QpPc0r0CxA-1; Tue, 08 Aug 2023 06:43:33 -0400
+X-MC-Unique: leUcPBTANJW2QpPc0r0CxA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 354F4185A7A5;
-        Tue,  8 Aug 2023 10:43:02 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 604A785CCE1;
+        Tue,  8 Aug 2023 10:43:33 +0000 (UTC)
 Received: from localhost (unknown [10.72.120.3])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 62944401061;
-        Tue,  8 Aug 2023 10:43:01 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9C31B140E962;
+        Tue,  8 Aug 2023 10:43:32 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         linux-nvme@lists.infradead.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
 Cc:     linux-block@vger.kernel.org, Wen Xiong <wenxiong@linux.ibm.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        "Michael S . Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        virtualization@lists.linux-foundation.org
-Subject: [PATCH V3 04/14] virtio-blk: limit max allowed submit queues
-Date:   Tue,  8 Aug 2023 18:42:29 +0800
-Message-Id: <20230808104239.146085-5-ming.lei@redhat.com>
+        Keith Busch <kbusch@kernel.org>, Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V3 13/14] scsi: storvsc: limit max allowed nr_hw_queues
+Date:   Tue,  8 Aug 2023 18:42:38 +0800
+Message-Id: <20230808104239.146085-14-ming.lei@redhat.com>
 In-Reply-To: <20230808104239.146085-1-ming.lei@redhat.com>
 References: <20230808104239.146085-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -76,28 +72,25 @@ wrong queue mapping for handling IO, and IO timeout is triggered.
 Meantime, single queue makes much less resource utilization, and reduce
 risk of kernel failure.
 
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Jason Wang <jasowang@redhat.com>
-Cc: virtualization@lists.linux-foundation.org
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/block/virtio_blk.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/storvsc_drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 1fe011676d07..4ba79fe2a1b4 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -1047,7 +1047,8 @@ static int init_vq(struct virtio_blk *vblk)
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index f2823218670a..50df040b100d 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -2040,6 +2040,9 @@ static int storvsc_probe(struct hv_device *device,
+ 			host->nr_hw_queues = storvsc_max_hw_queues;
+ 		else
+ 			host->nr_hw_queues = num_present_cpus;
++		if (host->nr_hw_queues > scsi_max_nr_hw_queues())
++			host->nr_hw_queues = scsi_max_nr_hw_queues();
++
+ 	}
  
- 	num_poll_vqs = min_t(unsigned int, poll_queues, num_vqs - 1);
- 
--	vblk->io_queues[HCTX_TYPE_DEFAULT] = num_vqs - num_poll_vqs;
-+	vblk->io_queues[HCTX_TYPE_DEFAULT] = min_t(unsigned,
-+			num_vqs - num_poll_vqs, blk_mq_max_nr_hw_queues());
- 	vblk->io_queues[HCTX_TYPE_READ] = 0;
- 	vblk->io_queues[HCTX_TYPE_POLL] = num_poll_vqs;
- 
+ 	/*
 -- 
 2.40.1
 
