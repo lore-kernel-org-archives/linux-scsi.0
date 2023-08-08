@@ -2,117 +2,178 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD2AEB64DD
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 01:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D86EB64DD
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 01:08:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230309AbjHHBCG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Aug 2023 21:02:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51490 "EHLO
+        id S229901AbjHHBIZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Aug 2023 21:08:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230154AbjHHBCE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2023 21:02:04 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B802171E
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Aug 2023 18:02:01 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230808010159epoutp0353c0b5b65b289fa0329127c9fab3fc43~5Qr4I40Db0616906169epoutp03n
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 01:01:59 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230808010159epoutp0353c0b5b65b289fa0329127c9fab3fc43~5Qr4I40Db0616906169epoutp03n
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1691456519;
-        bh=rsgkoe4CDh8nYsFbG21130WO4uC6DFFY39IzKyqVDTw=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=A2S2f1Xu3R/gPksW5BYnXvtHczeqhyJ4yfBWZyv0w97ZioEZWl2Hy8w9v3kq84q6d
-         11+mY8GogmHv9h0Ufwij98KRY1n6ojsxu4Al/HjDzeczjwaXHreWFkOhTVKLVtcMJb
-         wYRch48jvQWdMNSKttxqP68I1XPmCgw7vUIwO3RA=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20230808010158epcas2p1fd664f9169364a1edeb0d3aa5f1be964~5Qr3xdqzc1897218972epcas2p1S;
-        Tue,  8 Aug 2023 01:01:58 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.68]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4RKZdx5YKHz4x9Q8; Tue,  8 Aug
-        2023 01:01:57 +0000 (GMT)
-X-AuditID: b6c32a45-83dfd7000000c2f9-e8-64d19405db0b
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        17.52.49913.50491D46; Tue,  8 Aug 2023 10:01:57 +0900 (KST)
-Mime-Version: 1.0
-Subject: Re: [PATCH v2] scsi: ufs: ufs-pci: Add support for QEMU
-Reply-To: jeuk20.kim@samsung.com
-Sender: Jeuk Kim <jeuk20.kim@samsung.com>
-From:   Jeuk Kim <jeuk20.kim@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <e37e0d80-9ddc-5a36-44a6-22dd0e36bf8d@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20230808010157epcms2p378d787756af41ec0715f056f3bdb6d5d@epcms2p3>
-Date:   Tue, 08 Aug 2023 10:01:57 +0900
-X-CMS-MailID: 20230808010157epcms2p378d787756af41ec0715f056f3bdb6d5d
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMJsWRmVeSWpSXmKPExsWy7bCmqS7rlIspBhPO6licfLKGzeLlz6ts
-        FtM+/GS2eHlI02LRjW1MFpd3zWGz6L6+g81i+fF/TA4cHpeveHss3vOSyWPCogOMHh+f3mLx
-        6NuyitHj8yY5j/YD3UwB7FHZNhmpiSmpRQqpecn5KZl56bZK3sHxzvGmZgaGuoaWFuZKCnmJ
-        uam2Si4+AbpumTlANykplCXmlAKFAhKLi5X07WyK8ktLUhUy8otLbJVSC1JyCswL9IoTc4tL
-        89L18lJLrAwNDIxMgQoTsjO+b2hnLfjKVrH4Vz9TA+N+1i5GTg4JAROJjmOr2boYuTiEBHYw
-        SnzatYWxi5GDg1dAUOLvDmGQGmEBB4l50+8ygdhCAgoSc7Z1sEPENSWmr5/IBFLOJqAucXqh
-        OcgYEYFvjBJHH7SD1TAL1EnsnvOHDWIXr8SM9qcsELa0xPblWxlBbE4Ba4md3SuZIOIaEj+W
-        9TJD2KISN1e/ZYex3x+bzwhhi0i03jsLVSMo8eDnbqi4pMSpb4+h/prOKLHgvynIQRICCxgl
-        fjVPh2rQl7jWsRHsCF4BX4n788+DNbMIqErc/7gDqsZF4v/cPkaIB+Qltr+dwwzyJDPQw+t3
-        6YOYEgLKEkdusUBU8El0HP7LDvNiw8bfWNk75j2BelFFYnHzYdYJjMqzEAE9C8muWQi7FjAy
-        r2IUSy0ozk1PLTYqMITHbXJ+7iZGcOrUct3BOPntB71DjEwcjIcYJTiYlUR45z05nyLEm5JY
-        WZValB9fVJqTWnyI0RToy4nMUqLJ+cDknVcSb2hiaWBiZmZobmRqYK4kznuvdW6KkEB6Yklq
-        dmpqQWoRTB8TB6dUA1NQcNnCzZZz/nxi/nDimmBFzUmp5nNy/TuUJls+8y7U/sHx4IAv35Hc
-        l35Tj+8wWfXmgbVU18yLq1yPd1yecidBsXnO3Oks+w30C30OS2yb/SFyYZnehsT0XPFHWXP9
-        lvJqfP4prPzs5BOjX+VSL6y6oksMWvubHGI++yxOrlNYt6+3M9126x3vnd91sotObOoK5d7+
-        dDmfiZRghEhsThTTieP+XO96XkydbrS1+2OfPVNt3EMprulZE+MKKvUVvs5987X8XMZZzfuJ
-        8rcX97z8mfHHs2XCyzmx7O/9hQ5fC77vFZHv+9Zus9DuSIvaSQk+MiLS1w5wnbp5Njr4pMrn
-        1n1u536sl7ObM+/h01glluKMREMt5qLiRABlJCTWJgQAAA==
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5
-References: <e37e0d80-9ddc-5a36-44a6-22dd0e36bf8d@acm.org>
-        <20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5@epcms2p1>
-        <CGME20230807013726epcms2p1c604cb8e98680aebebb7cc5ab2d580f5@epcms2p3>
+        with ESMTP id S229645AbjHHBIY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2023 21:08:24 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67BCB99;
+        Mon,  7 Aug 2023 18:08:23 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 377KxQ58010919;
+        Tue, 8 Aug 2023 01:07:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=5q0eYNras5yXEN4hODuNtebDcLemCdEjUsQSExQnfwI=;
+ b=aEd2bO4BKzd5ZlPj5OuEmyEONDoBHxoKy99ci4x1A1bcxinC+N0B9So6kSe8ySqufJ7U
+ osz+n+vahSxFobL9M3lJbhs3Sl7qWa7eC98hLVImCP2Y6HDrG5aiIUw1mLDQKJEyrs/U
+ sR6YUVDl+zihQg9+MV4PlBMqSIkZRTBxFJPRzWMIsjEKiK/7X1uZaaHOfWXjY1duTOL+
+ wFUtjdzjhSYLYce8UuY6rITLbrOsMQvQrZGlEYsf/kb2oaQ6Ry2qi2siBrEnghJV+xww
+ bMIdDqrhpuJwzqn6SVAngfoRZfWSjtUy2+Rc3toU1Jn2uMnGzy/B8r+0JHWhmKF/7Cc+ PA== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s9eaam0tn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Aug 2023 01:07:09 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3780G1Hx033452;
+        Tue, 8 Aug 2023 01:07:07 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2174.outbound.protection.outlook.com [104.47.57.174])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3s9cvbbwuf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Aug 2023 01:07:07 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MHcFkQa6WeRWxhJkhq1H9oFZh2p9DrKYZFvEEZv1ACceyShVQlDJKCikTR12Jse2Ko5bd7D8lRTaX9JOItqrcu5n+FwRKOQzBH/BXV8Jlxo/xTpk6s4xu8gM9AbHS03f+UWsA1tYRqaFhMjJsEB0y+Nuk6zUDPoWlyaL2fJ9/izQpnG+1i1bonT+QiWEirjRl8ZBqTVoPQWDGwrxvIbj8dW7Pn2MHyPF6gYfskJmgaP6oHwZQx8NLBdESSuxPwFTXLAyRQpPvES/ehX5f9BmZG27sq1qQhtYWxSetX+vZZifnr8FkUngCP5vmSchgxywSwOzXiOyehUALHFsY/q4Lw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5q0eYNras5yXEN4hODuNtebDcLemCdEjUsQSExQnfwI=;
+ b=apR2J5/bb7IF4QFe8k2shKgOQppZA0Vg9va1K73haX2npVkMyywruOe/2zWjVFrW5QRN4lEsEEsIJhnVROe/s7tbzkkZIdTF1O0nXrdfgITqR+hsYRxn1t3qF0JA9naOR/e7DT/lsV194gD9AITpuZ1SBJfSJULfJ9aNO2un/P52EM0chW0InDZyO81W40rJD6yw7yIFqULWGLpt+DYO17LD99LKDa56K2oW6u2a6CvzgRepbgGKPU/TlIShI6XMbwNGz2iUTHhps1gIIe3BXko35+mJbcFsQNcJXxmqZV0UiKPgVZCk4EVW+UOhayEZWNFR4Me9iI4IX4osKu36RQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5q0eYNras5yXEN4hODuNtebDcLemCdEjUsQSExQnfwI=;
+ b=qf79Tf4vLpyDd6Fc1mIsUWQOnsZBKc7cP/8xvWv2LWb37Mhiv9lcNCRS0OK4RxSJAYAllWNa90OcA+IwHEDQGsFG/8aINvOp0OTSftcEkcRBNJwvCpmdGOjXqAeCrxpt0bsyQapoFBjxJOtznY9YCRKzOnc6KOprpiGQGAgmBSw=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by BN0PR10MB5271.namprd10.prod.outlook.com (2603:10b6:408:12d::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.27; Tue, 8 Aug
+ 2023 01:07:05 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::59f3:b30d:a592:36be]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::59f3:b30d:a592:36be%6]) with mapi id 15.20.6652.026; Tue, 8 Aug 2023
+ 01:07:05 +0000
+To:     Nitin Rawat <quic_nitirawa@quicinc.com>
+Cc:     powen.kao@mediatek.com, bvanassche@acm.org,
+        alim.akhtar@samsung.com, adrian.hunter@intel.com,
+        jejb@linux.ibm.com, stanley.chu@mediatek.com,
+        asutoshd@codeaurora.org, quic_cang@quicinc.com, mani@kernel.org,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        ebiggers@google.com, agross@kernel.org, Arthur.Simchaev@wdc.com,
+        konrad.dybcio@linaro.org, quic_ziqichen@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_narepall@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH V2 0/2] Fix hibern8 enter failure during host reset
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1r0oel4uw.fsf@ca-mkp.ca.oracle.com>
+References: <20230726134140.7180-1-quic_nitirawa@quicinc.com>
+Date:   Mon, 07 Aug 2023 21:06:58 -0400
+In-Reply-To: <20230726134140.7180-1-quic_nitirawa@quicinc.com> (Nitin Rawat's
+        message of "Wed, 26 Jul 2023 19:11:38 +0530")
+Content-Type: text/plain
+X-ClientProxiedBy: LO2P123CA0047.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600::35)
+ To PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|BN0PR10MB5271:EE_
+X-MS-Office365-Filtering-Correlation-Id: 877c00bb-3530-41d3-4511-08db97abc775
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: hBm0hiDV4mKs51oeHRdmxbKq5T0RrI1aZdigUw6ezCqMvPdcvp29FeXSX8GAtHQOO6pbkEcmQEciHgwyRAJ/tUG6oqoHl2EbEEk7CKdFGbJgEEgbteeTaKmui7TlofUrMoafymlLjJbL2939UjXpkMMebKPXh7qpQ2ySvy2SMo8nORJwWr+amoJcUQZpCrUl7e8Z6roCTwRsJejqiyMlyVCS2oCboYt6oY3Vfwz6kMHb6JgJnzO4ZnFr9VdnlvMVL6DjqrHcajkKLbNbQA7pjD595PwLx6N26SFFnqbUrQwIkjqXDmrQDe8aRY38hx40WnPeKgQRyqctTWBouHJDBqrK20nuyaAwryQf2H1YulxvmX/GNzgE6g5x9UfkYuRE8CXRjbT7U/D5xib3YJ1P+wCgI9q5pFuSCf2Hin4XhiwyCB1v/IMZ1B37gXlxBJ4cofGFFAP/6Cv6k2Rl2z1eP7OeaV/j60Qp3nfcCEyA22SHuAHEx9/0qwZg+r+pDRrbABHKiVMGfoZWB18UmvaV3EgU0KCT2NViMiYDq4p93Q7YMu62Rb0w7jlR54Dupj4xgMjP8lzPdiSHYIbgiHfoPoe1MDm19jb4YYNv06psqlhf3083rj/iWCNB113dG2OpALG8JnAZlfgNRvVYsk+a1w==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(136003)(39860400002)(346002)(396003)(366004)(376002)(90011799007)(90021799007)(451199021)(1800799003)(186006)(6486002)(36916002)(6666004)(558084003)(6512007)(478600001)(86362001)(26005)(6506007)(41300700001)(316002)(5660300002)(7416002)(8676002)(8936002)(4326008)(38100700002)(6916009)(2906002)(66556008)(66476007)(66946007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EUSshnApK3hRWqmFHSOTs+NMHtfHg/SG8zKEVFxya+fEzyUHTDOA+mztRnUk?=
+ =?us-ascii?Q?SZTEdzTNI13B8iRBk7fsbvHTX520C/GPbEtlsHV0sXA2TozIfYdiv3qxfobb?=
+ =?us-ascii?Q?YuKCxZV1sap9gKGO2wDsuhqiVVtSdK487sBGkWvKcgqowX9USDW+r4JNE2hc?=
+ =?us-ascii?Q?HpV7+kt+ossnUwChR2Z6NqhFiEmDmnEHnk8mgn7DN1y1ih4nr9SLw+vMITdV?=
+ =?us-ascii?Q?0RcI0SCxSKcVo1EN3q9lMHIulJIxsRgXLuIUoH7DG6z2HomStDToTgJjiJbY?=
+ =?us-ascii?Q?vMH+Q7cLmaW/mR+ePLXZ3RfTLYlM6vLKZ3oWtU/OpSSyZ8kV9M3MXawWZAEs?=
+ =?us-ascii?Q?ZXzxGiPJhUqe0zVDqLvTlC1fIZ8Hl7tSHaZGpNcOLfdVd4nbOZRQsZx+2IJZ?=
+ =?us-ascii?Q?iv2dfDyGzHn6tlaVUO65fyY2lwd+1eAAVtjMCueoYW0L9+T5qqVaFEHUSxC8?=
+ =?us-ascii?Q?qjuKwqa9q2sO30Pj1NKpPOcO1f6plPI7a+GOa5EnMAb0AfROpX2eVIhJ6RIs?=
+ =?us-ascii?Q?BkKJzlH7H8JMnIaMs5WRKGgHZucWEvQmM91zusTMLnL3G6JCfmZzDQz8NMCq?=
+ =?us-ascii?Q?7pc+6ilgE4xWA9o3XN9WnQ6Z1fac4LbmIZ7r96YX0mYvEK+jbzN9bM4+zJKI?=
+ =?us-ascii?Q?AzHSRTB6NUYWzD46CphKin2JZUNx45wkuyu/YkAdCIsLJO701Jvh/gJ6DaQk?=
+ =?us-ascii?Q?2x9demDjHn7KPt0DPafSz/EKnWHc3nMeclo+RigTLgNWrikuxZ0eMPgPtynX?=
+ =?us-ascii?Q?T+afkK7dTzWiQqg07sM7Tj3gKoKWaGlO+29ZxLYMAqrubWtblLjz+rESaCuJ?=
+ =?us-ascii?Q?Ql65DVCbYE7g0X7tMP34PZAzfqdo3CpIbqBfN8B//mpDGjj/2ZvdhQ7muDbt?=
+ =?us-ascii?Q?Gihjrr9az9cCOxu5RKj/LH0f3df+8vHtFdBy99qNE97gf25w6XmdcGGeFV5y?=
+ =?us-ascii?Q?TKAJYT5m9ujR78BerebfI3X4EQU6jVpQLqzKo+etFy2+RyOuRFCION0p0aBT?=
+ =?us-ascii?Q?OsIg3cZtZuSnBQP95JO5J/VhFBuChNxQiy6BTRWuVDLf8XfLXuCseDiE1Civ?=
+ =?us-ascii?Q?6w6dNhXO/+Jf8TmpoV0VZFDYoN/QFYNerDNUzAzMiAfPyaKWV4tq4UN/OJ3r?=
+ =?us-ascii?Q?DhfLWLZPfeWtOOWbNDCao7fDwIN5+hWqKuogom9O9wMqZUwHr6C5JLItxOom?=
+ =?us-ascii?Q?5cg3pcIusHAqatNx2uvs8DIncCV/n49Y3g7USoTNojq1Ryx1VS1chz4eQMCI?=
+ =?us-ascii?Q?V4EDA0FkVmLbzaf/paYZdQdZcC04ngMV7aybMFjcJdcOzyc94TBE787OHcUq?=
+ =?us-ascii?Q?VpSiOX9oivf/oCwN6yp1Cvxa+W+yihXvuyd4np9MJ0UVbSfkGV046vDu2NGV?=
+ =?us-ascii?Q?fMmSY6xhCj1viIk3IvlKsylw9bZRKU+xjxesj3yRASgqLaI1H8+cDx23gWpk?=
+ =?us-ascii?Q?wbU3R5g+NxcPW5CxUvsWGVkfv+AsZ2nZ0nyLUZZQU3HZjdLlnj9wksdkRt4t?=
+ =?us-ascii?Q?vaDEhnozhFujRfzC2YKfN2fmxFS7oIQEbODZI4OwNpsTASASpJOq4RfNPJa3?=
+ =?us-ascii?Q?3U+x+DalKzQDDk1qgzcXQrOwBU9PG2J9oWYQrq5Dav22afyZWLD5zrZja7yG?=
+ =?us-ascii?Q?pg=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?jjV3PfIiBqh1F+8U7k0RXoL0HeWAaN9/8yp2ZwsYgjzy6EddVosmVLix/lly?=
+ =?us-ascii?Q?D6E1mqedOEr78wYZDcCPmzZsXH3Ja7ypPDNaH1WpDiMW/8gMZzYLy9nyfWxH?=
+ =?us-ascii?Q?/YtmcyjfJYjtZfAIlydw53zNB+/TQCAQ9oHNWzjuM7NPuizM8RikrYwFoWBo?=
+ =?us-ascii?Q?lmyUP6QaHkTZ+BPiGW0iRzBn3qJL9bwWH7VQgwoA17eEs/UWteGX0bzVqNIF?=
+ =?us-ascii?Q?KDwP9BfEdombN6RAOIoTYLFEtpQ+PiFtcgf4tQMqXc9CopsGdV3i0jbjR3od?=
+ =?us-ascii?Q?NPONhOm7Qf6WBgydL8Hw2yq0+SqwqycV/6v6cyJgzDkOxZp6jJobSP5k2q0O?=
+ =?us-ascii?Q?YET+Z41vrdHU6TVsNIPzL10jpgut87/aYWfsusc86U6fjANuMomvE6B7Hfpo?=
+ =?us-ascii?Q?y2BpxowT/4oDJgh74T+MkuRRwoPH9P7MEY/tvkDlb7yR8o9vfpe/+/yZUQKY?=
+ =?us-ascii?Q?E7biZbogDMj6CAFPMbu00+H/53R7pkhCs4TWwXxQkX7KLbeTotpBwNxSq/4Z?=
+ =?us-ascii?Q?A6sabD3zbZM6s4kOpkTHygn3hhyk2pce7qiUjQejzcMAULYvDc7s4jy2JNYt?=
+ =?us-ascii?Q?x07sUdXiqpeRc6x/dWAF1XfUMJApII14Uqdy6L+y94cCYabUP9/VKX9OyWin?=
+ =?us-ascii?Q?1aDZ5+pAU7I0byE5ogK3T97r2PJKn8Q2kdA0KCcyYOcq8RJrDQMx9050v6Wz?=
+ =?us-ascii?Q?wkYkvUqveWUzXzunePIEpM3brzNo9zmVotoCPcSXOX5ZV/ihyulvw1IQSv+t?=
+ =?us-ascii?Q?yzbSg6M19OeGocfoZEcqU/GCVImeas20lnf492z2FiqSZXE/AMM5L9M2vDda?=
+ =?us-ascii?Q?VnBJXFvTNi0IHRo+MwE4UH16bxKZzhvKjGwt4VQ7vY79sWytw3bXGAciK7OO?=
+ =?us-ascii?Q?rwd/oyUrjTuZeWdz7vliaBPv5OXStpFxZXlIr9kKqNRv1w8da5XVH+GpSPGR?=
+ =?us-ascii?Q?8lbLSUgm+VNg+AN7Kv+hnE7/2zSS1xRUHBqCEvDnteBptVyfYssITdt84Rvi?=
+ =?us-ascii?Q?I13VpKhFVfwcpJ09u9smDW1f1ymx/wao8nkKHdMJeJiQDqlKyGIBqoRwQrPM?=
+ =?us-ascii?Q?d12Z0G6rKCGgZPFqx7c1YRMR/2Ek1ymDyyx2l1fmFEcOEvnFeay42QNCRmen?=
+ =?us-ascii?Q?L+h6N8QcOM7Q?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 877c00bb-3530-41d3-4511-08db97abc775
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2023 01:07:04.7042
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 50HpwJc+CQBH29F8bMbAkbPQP2Rmq9SbIq4v2SOBPKttI5uDy7TJXEyCdrAX8m6k3S/Vw/yc5Hpi0obQsFZj/DHTfn/eKS/BPXQHxUR1lX4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5271
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-08-07_28,2023-08-03_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0 adultscore=0
+ phishscore=0 mlxscore=0 mlxlogscore=815 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
+ definitions=main-2308080008
+X-Proofpoint-ORIG-GUID: CY5vxVi9K4Dk4ekLkk4Rho0uvH-c6A1R
+X-Proofpoint-GUID: CY5vxVi9K4Dk4ekLkk4Rho0uvH-c6A1R
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/8/23, Bart Van Assche wrote:
-> On 8/6/23 18:37, Jeuk Kim wrote:
->>   static const struct pci_device_id ufshcd_pci_tbl[] = {
->> +	{ PCI_VENDOR_ID_REDHAT, 0x0013, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
->>   	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-> 
-> Does Red Hat agree with using device ID 0x0013 for this purpose? Is it 
-> guaranteed that this device ID won't be used for any other purpose?
-> 
-> Thanks,
-> 
-> Bart.
 
-Yes. 
-Red Hat donated part of its device ID range to QEMU, which is 1b36:0001 to 1b36:00ff,
-and the QEMU community has accepted UFS to use device ID 1b36:0x0013.
+Nitin,
 
-The document can be found at https://www.qemu.org/docs/master/specs/pci-ids.html.
-As qemu.git/master is frozen for the next release, you cannot see the QEMU UFS device ID on the page now.
-You will be able to see it after about 22 August.
+> Nitin Rawat (2):
+>   scsi: ufs: core: Export ufshcd_is_hba_active
+>   scsi: ufs: ufs-qcom: check host controller state
 
-Thanks,
-Jeuk
+Applied to 6.6/scsi-staging, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
