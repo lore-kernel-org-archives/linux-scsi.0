@@ -2,509 +2,320 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93601C04A6A
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 16:52:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B2CBC001DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 16:54:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231784AbjHHQw1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:52:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59308 "EHLO
+        id S233696AbjHHQyP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:54:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233559AbjHHQvr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:51:47 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D742C17AAD;
-        Tue,  8 Aug 2023 08:58:02 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 378BL8Kj028508;
-        Tue, 8 Aug 2023 15:04:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=v8oHrHcurT4kEP95vPaJpss1nkxY0TBjtt1FMEpeVc0=;
- b=ED3xVQ/s373sId8ANxinkdMqa9H99gGyMZcNtVwAsK2nBQ5wdk5QWR0JwVZDtFxtMNIf
- ueA5hcESAGiJSn/EYvKz5lC6zyk8V8PycWjj67Fc9W6sLIoXCgISBKe9p6kaqZfF9QlC
- 08GM8SH8OGkOoXGHOksys4Xkx0ItB2xv1h5Wx2xuTSLLx8TcUDNMdM2FeXdWsAf0Gcoc
- 0QuN9sOczH1XJfVC6/ZBPqtwPCPSUmQG1AV66vmocbK76nmH0/IiIgBKmLRWjBxPHVu3
- CdAaDVz7+4lrsL/h9ykwhF5DA59Ul3CG1NvlFcl8LlYsi8r0p8EfOgtHYWzp1x2FuRXY Yw== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sbmrqgfn0-1
+        with ESMTP id S233628AbjHHQxi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:53:38 -0400
+Received: from mx0b-002e3701.pphosted.com (mx0b-002e3701.pphosted.com [148.163.143.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BCB018C2E
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 08:58:42 -0700 (PDT)
+Received: from pps.filterd (m0134424.ppops.net [127.0.0.1])
+        by mx0b-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 378024Lp011989;
+        Tue, 8 Aug 2023 04:48:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=from : to : subject :
+ date : message-id : content-type : content-transfer-encoding :
+ mime-version; s=pps0720; bh=Z3jBIoxNUmjeC/MhQJbboXq2Vuqn7bov93DivPBrzEI=;
+ b=XpMQS1kxvxmebBPfJ5EuNs+ZqVgZbVNMdQPUo2gbDStJzL3eUGy91Z9Sdv4kzXyqlk0g
+ SHwTs6kvfj5KKfbltJCMCowJjX28wE4qE8cRN5FYQ9iGONcKdxcQSPAIGL6bQHebBOx/
+ dy++5zDkWbr28xRIWcPZkd9FCZo7q0NwtHS/ZLQ8kAfZy/xzP9/jtH1EvLE/PRz64Qr9
+ 2DcOk+t9taZUFCv+uaB3snGtI49fNgCq/d5fKkysgKvJfnNPMgwmBWW7aTbFS54Hdcjd
+ KUMDnbPNduJuaCeCZsR5EsE7ggK5eNqYeTatJ2B7FK6fO+uJh8p8vPtKEYQnagrDAV2p uw== 
+Received: from p1lg14880.it.hpe.com ([16.230.97.201])
+        by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 3sb9rka81b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 08 Aug 2023 15:04:45 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 378F4gXB003235;
-        Tue, 8 Aug 2023 15:04:42 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3s9fgkvmtv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Tue, 08 Aug 2023 15:04:42 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 378F4fwe003222;
-        Tue, 8 Aug 2023 15:04:41 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 378F4f40003220;
-        Tue, 08 Aug 2023 15:04:41 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-        id C1331572B95; Tue,  8 Aug 2023 20:34:40 +0530 (+0530)
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-To:     mani@kernel.org, quic_nguyenb@quicinc.com, quic_cang@quicinc.com,
-        quic_asutoshd@quicinc.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, beanhuo@micron.com
-Cc:     bvanassche@acm.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, agross@kernel.org,
-        andersson@kernel.org, konrad.dybcio@linaro.org, jejb@linux.ibm.com,
-        linux-arm-msm@vger.kernel.org, quic_ziqichen@quicinc.com,
-        Nitin Rawat <quic_nitirawa@quicinc.com>,
-        Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Subject: [PATCH V2] scsi: ufs: qcom: Align programming sequence as per HW spec
-Date:   Tue,  8 Aug 2023 20:34:38 +0530
-Message-Id: <20230808150438.13523-1-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 0sO7D7wd08CmDxS0kdUaZCrfOzF5t6xk
-X-Proofpoint-ORIG-GUID: 0sO7D7wd08CmDxS0kdUaZCrfOzF5t6xk
+        Tue, 08 Aug 2023 04:48:33 +0000
+Received: from p1wg14925.americas.hpqcorp.net (unknown [10.119.18.114])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by p1lg14880.it.hpe.com (Postfix) with ESMTPS id 148C880018A;
+        Tue,  8 Aug 2023 04:48:33 +0000 (UTC)
+Received: from p1wg14924.americas.hpqcorp.net (10.119.18.113) by
+ p1wg14925.americas.hpqcorp.net (10.119.18.114) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Mon, 7 Aug 2023 16:48:32 -1200
+Received: from P1WG14918.americas.hpqcorp.net (16.230.19.121) by
+ p1wg14924.americas.hpqcorp.net (10.119.18.113) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42
+ via Frontend Transport; Mon, 7 Aug 2023 16:48:32 -1200
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (192.58.206.35)
+ by edge.it.hpe.com (16.230.19.121) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Tue, 8 Aug 2023 04:48:32 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CTtkrMN9Dab5hj3m1WQvXj9kvyjiMJBCznY909myOF40DmURcNTKVRhUMJKkMQhSHIy7B0R4VRGfmpxK0hCQgFnRd+2xW5cegWUOnEerMa/SfG0fl2oel9cQMfqIPCNmJvMlD+KqocBRHVxalPtt6qf/xX8oQSF9mEplKmm7tzK9MEW/HtEHjYntj9a/UPFTICxPSzGo5VguUSUsNtoBDNt9nd2oJ0FEhsDtfz2lrFdtxEx11lQdz7Fd5DniPZzh4uLb6+ZKUQ1QgvuZ0X8lyDxafsyriaY2iKI6IVlgKqiQnRrM2cw0n/OvILsIbMwKnP6rM3zC8yTfrfuEmkyzaw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Z3jBIoxNUmjeC/MhQJbboXq2Vuqn7bov93DivPBrzEI=;
+ b=gcWGlys5dGbrG+KY/wvGwaRKOfGV8is5+KEv57gFdfG3WVPfI4L7Zx3p5qAXg0UeixwaiOMrZqvgee21eCxnZCunaJUL1r2OPdcCm+UgZ5b1KvcEOBYKflUVARidXou850I2vxximw4ppIVIiPNp7N0CnUQlVREzE53rwyVjc9DNQh6wcq1zvvnfa81+YEH5SyLiUYaZbdfdK19zWzBxXpj7SX09lAiEoHkIUeTQMRE2Mk6eqyJyERsv3YOho/LEHVi2Jq6IDlSIL74tXwxQO6h1RfHHJj/1DeUQJU71lhoQJvaDpVVoHmbrbyxafJgxgLPB+6t08uFiawcbfnakLA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=hpe.com; dmarc=pass action=none header.from=hpe.com; dkim=pass
+ header.d=hpe.com; arc=none
+Received: from DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM (2603:10b6:8:48::7) by
+ DM4PR84MB1495.NAMPRD84.PROD.OUTLOOK.COM (2603:10b6:8:4a::12) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6652.21; Tue, 8 Aug 2023 04:48:25 +0000
+Received: from DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM
+ ([fe80::4f2:1b58:220f:ee6b]) by DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM
+ ([fe80::4f2:1b58:220f:ee6b%5]) with mapi id 15.20.6652.026; Tue, 8 Aug 2023
+ 04:48:25 +0000
+From:   "Seymour, Shane M" <shane.seymour@hpe.com>
+To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Nilesh Javali <njavali@marvell.com>,
+        "GR-QLogic-Storage-Upstream@marvell.com" 
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [RFC] questions about some issues in the qla2xxx module
+Thread-Topic: [RFC] questions about some issues in the qla2xxx module
+Thread-Index: AdnJs2/iBy9LHkcXTEqprEaFk1PYTQ==
+Date:   Tue, 8 Aug 2023 04:48:25 +0000
+Message-ID: <DM4PR84MB1373A4864DA533B83C017E71FD0DA@DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM4PR84MB1373:EE_|DM4PR84MB1495:EE_
+x-ms-office365-filtering-correlation-id: 835cd54f-a5f3-4561-c829-08db97cab3bb
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: RoIaOFxvng3L7kbKgJMFTIs8tNjIsnI54+A8J2DwRrY/LhRjUzxInZAEDlwAZQ93kUTmEYDHMJFzTlFAad4f7IjG06ywegdmcIqFI4FLPX2XiEvY92zuK/J60KFibAb7t5XBAXzEH38qtPs8RTGpTQFawVWu7FZ8Gd0OuujD/mLwfJxf9O2Y8rtxbtOoQpKNZFliCefBaN9w4mztqlqxr4uiX8rvdS6hYBC5UYQQ/Pn457B/GQv3pQjlDIFNH9mCZ4oAeS5UjeWlM9bYYq41PH6O6tHaOap+nH4Z8AhaNMFOS+KrVa1hNhSpInXFF4GbsEv+9PArOvMQ3YUBfJ8zXhH4D8aeVAJSc43PLt5EPdxKzdJz8FQwibdUGOmVj32qgjuf3LCLoc8IE1W7YtCRwcs40BFj36IyxLMItfnZwCyiQh7eJ1E/3b7y/XQ/KX5ZnG7urLor0YzNdUx2PU8NzK/o7Kz+aYUpneZlf9GQP93AyjkVDpZLGmb5RFiwk9Bidv80aydajREbB+gaG2GCG27Rp8InV5BLwZDJHiLD9FP/YdsAqWbn/dICP+xPuFEX2U05JVGLwFME/oQBw2PZEbiDa9/N5Q0ovaDj3iceX+CT5m6ADAlkdsNR+k0WWMMAuoecU8pjkj/15Tf+OSitZhNmuytNVANefONMfGYAU3TW1y/QtLDcRhnIDktPfd7PBRhgu8mEDxhxEFw3ePdk5w==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230028)(396003)(39860400002)(136003)(346002)(376002)(366004)(1800799003)(90011799007)(451199021)(90021799007)(186006)(7696005)(38070700005)(9686003)(71200400001)(55016003)(26005)(6506007)(43170500006)(83380400001)(55236004)(38100700002)(122000001)(33656002)(86362001)(5660300002)(41300700001)(8676002)(8936002)(66446008)(64756008)(66556008)(76116006)(2906002)(316002)(110136005)(82960400001)(478600001)(52536014)(66946007)(66476007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?9VFe+i99M0+kHsarj52FoXxrOsMBdKeQMq3liXvnMZ7ftD86g33yFjYFwJ6H?=
+ =?us-ascii?Q?IyrzNDFfBsHPVecTly9Z+n4p47Q/A2ktpp1PSVPnzaAtq7ikx1FQlWWXgpJt?=
+ =?us-ascii?Q?Ci0IW5G+0BMoNowAXyvJ7uW3DrNZfsgxqEP7fxlYK5bdJAb/kPC4z/NlIMzo?=
+ =?us-ascii?Q?vmG6u5CILqI6koyuQiGuwADmYsZ+dOegL7Agd9bki6z4WhBY0HMP5xCfwqdZ?=
+ =?us-ascii?Q?JTOBWTJkLpGDFUqXgQ7D1Y9SuTuzwevzc4pcFvfI0n8s4Gd2yugFW23Gm07r?=
+ =?us-ascii?Q?ASYvEXa5hzm6LNyGjCbjvlRxgPtEjRZSQ0UD7BZW6+Uecp0f4FYH37SjZlDg?=
+ =?us-ascii?Q?N1yRM3Zvc2iV2K8zYDL9MsMPGBr7qqV45dsQmcmqYs2mlrmU+3Hk8bvc1nEE?=
+ =?us-ascii?Q?xLfF3ulwjogR2U1q3E3yxezfvFwz0Xe8RLEJM/wcEMTutYzIwebw6Lt15/m/?=
+ =?us-ascii?Q?zAgUDEx6o0GL5w5LjQ6KtdrzlmB3fsEw3Zqsn0X9s5TjdL0ezAl+/k2bSx1m?=
+ =?us-ascii?Q?kzA9kKsNBXjc5ynW+mKLQD4HmAtVecUDQxa2wTLBJBo1ad8LsLyIWirRklMH?=
+ =?us-ascii?Q?pqDYnP40GUvUdtchlylXJHq+gI1Reh8uMKw4+FxXsSpZCL9qH3k5feSvSzrC?=
+ =?us-ascii?Q?55GpthcB8XyiNwWhrx48wTBXmCE21xWlzwmz3aiJk9/Ame1zz3A1/s434E1R?=
+ =?us-ascii?Q?K3a2wh20kA0VW/XLFaCo1Zx0XZ7+9oLwtKqjyL72K+1pgjvIAYIwYw334M9t?=
+ =?us-ascii?Q?uRUTIyNooMgBu26KEbHM1jfzehHmyV9x2vKdzRztKpASOYb5w0u33VmkmJQg?=
+ =?us-ascii?Q?BzcMZKm4Rwr2pAyEFcxiITAr/QyROg03+K4iPARvMf5D9K1Vdfeu2g6/wrTW?=
+ =?us-ascii?Q?Utu3oJIzVHB0p81xBq7Xy52uNh1xZNhaFkWItkmKxTMRWKLmEa8G84kk/7zq?=
+ =?us-ascii?Q?C6yhNThJHo2jBiMvPELBYx6AYfTFaw7rb5X6Waq47eN/w0GYr+KSzRH/euTW?=
+ =?us-ascii?Q?zMNe0kDPdwNj1T+9rQm+PGRoYb8fXnwCmAXO4D4an3WH2c7Lmm6fAhpvyF84?=
+ =?us-ascii?Q?kaEq5Ty1AsjsLS3K8RdEbWMzY06O5G1hq/ECOfzz3aH9P+3UiSCpQ781qD1K?=
+ =?us-ascii?Q?5ZNupU47tHuB4ix9c+ylNRb8YZgkwjSgDSpjg4lbOOfOvLTTc5RFHhBBW/S5?=
+ =?us-ascii?Q?H5/5KI0z2sxO9huWLj/ss4t3EipW4JN8pI62x1y/o3szQnZj8zOQB9m8gWlG?=
+ =?us-ascii?Q?vVEyPAiarrXiFKkzek6OkeIoNOVXQK2LJvc34+AorJgND6SJfi7HB2d4mOCc?=
+ =?us-ascii?Q?Hj6vkSSZZ8XSlYjfjAx9ual5eMaY2HDXNdzNgnwk+Aq+97cqSERKrXUk5/8g?=
+ =?us-ascii?Q?2irWfwDQYhK4CREKmxML54nivqRNxgFCQJjj2WByXmuBMoJq1UpM5nW4sXzH?=
+ =?us-ascii?Q?5/MkqpptafuxXXKClh2OnAH9vOqKCANMyFQ6N1gOgGb4xOotjVRkskXD5QKm?=
+ =?us-ascii?Q?Xi/prFigvPP14SM7/EbAbDMlvIXIdcx/7jMN4EMNdh1vv+8tR+9yWMH+/6S9?=
+ =?us-ascii?Q?gl3fKevqjkJcVlHqH+bF082lSmwxUN6p2+OGq7ep?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR84MB1373.NAMPRD84.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: 835cd54f-a5f3-4561-c829-08db97cab3bb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Aug 2023 04:48:25.7357
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 105b2061-b669-4b31-92ac-24d304d195dc
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: QHokRNrpBrx1Y7dTy+b75sP3xYk55PRxdKMMbRnfsFj4yi45ENl+BSandtpUxwUJ3Yry45+Ve4yJrcTuA6l70g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR84MB1495
+X-OriginatorOrg: hpe.com
+X-Proofpoint-GUID: pckcIfs5aIuLdkPyzY4QnfnDvi9TZfv8
+X-Proofpoint-ORIG-GUID: pckcIfs5aIuLdkPyzY4QnfnDvi9TZfv8
+X-HPE-SCL: -1
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-08_13,2023-08-08_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 malwarescore=0
- adultscore=0 mlxscore=0 suspectscore=0 phishscore=0 mlxlogscore=999
- impostorscore=0 priorityscore=1501 clxscore=1011 bulkscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308080135
+ definitions=2023-08-08_01,2023-08-03_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
+ mlxscore=0 impostorscore=0 suspectscore=0 mlxlogscore=999 clxscore=1011
+ priorityscore=1501 adultscore=0 lowpriorityscore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308080042
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Align clock configuration as per Qualcomm UFS controller
-hardware specification.
+Hello qla2xxx maintainers,
 
-This change updates UFS_SYS1CLK_1US, CORE_CLK_1US_CYCLES,
-PA_VS_CORE_CLK_40NS_CYCLES timer configuration for Qunipro
-and UTP to align with Qualcomm UFS HW specification.
+I have some questions about the qla2xxx module after investigating somethin=
+g downstream
+and finding the same issues upstream (there are 3 issues below).
 
-Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
----
+The first issue is in qla2x00_get_data_rate() there are two code segments t=
+hat are
+identical:
 
-Changes from v1:
-- Addressed bao comment, removed wrapper function
-- Tab alignment
----
- drivers/ufs/host/ufs-qcom.c | 259 +++++++++++++++++++++++++++---------
- drivers/ufs/host/ufs-qcom.h |  20 ++-
- 2 files changed, 210 insertions(+), 69 deletions(-)
+int
+qla2x00_get_data_rate(scsi_qla_host_t *vha) {
+	int rval;
+	mbx_cmd_t mc;
+	mbx_cmd_t *mcp =3D &mc;
+	struct qla_hw_data *ha =3D vha->hw;
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index e7164ce7336b..1b6904f28163 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -91,10 +91,7 @@ struct __ufs_qcom_bw_table {
- };
+	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1106,
+	    "Entered %s.\n", __func__);
 
- static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
--
- static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
--static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
--						       u32 clk_cycles);
+	if (!IS_FWI2_CAPABLE(ha))
+		return QLA_FUNCTION_FAILED;
 
- static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
- {
-@@ -532,7 +529,8 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
-  * Return: zero for success and non-zero in case of a failure.
-  */
- static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
--			       u32 hs, u32 rate, bool update_link_startup_timer)
-+				 u32 hs, u32 rate, bool link_startup,
-+				 bool is_pre_scale_up)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	struct ufs_clk_info *clki;
-@@ -563,11 +561,16 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
- 	/*
- 	 * The Qunipro controller does not use following registers:
- 	 * SYS1CLK_1US_REG, TX_SYMBOL_CLK_1US_REG, CLK_NS_REG &
--	 * UFS_REG_PA_LINK_STARTUP_TIMER
--	 * But UTP controller uses SYS1CLK_1US_REG register for Interrupt
--	 * Aggregation logic.
--	*/
--	if (ufs_qcom_cap_qunipro(host) && !ufshcd_is_intr_aggr_allowed(hba))
-+	 * UFS_REG_PA_LINK_STARTUP_TIMER.
-+	 * However UTP controller uses SYS1CLK_1US_REG register for Interrupt
-+	 * Aggregation logic and Auto hibern8 logic.
-+	 * It is mandatory to write SYS1CLK_1US_REG register on UFS host
-+	 * controller V4.0.0 onwards.
-+	 */
-+	if (ufs_qcom_cap_qunipro(host) &&
-+	    !(ufshcd_is_intr_aggr_allowed(hba) ||
-+	    ufshcd_is_auto_hibern8_supported(hba) ||
-+	    host->hw_ver.major >= 4))
- 		return 0;
+	mcp->mb[0] =3D MBC_DATA_RATE;
+	mcp->mb[1] =3D QLA_GET_DATA_RATE;
+	mcp->out_mb =3D MBX_1|MBX_0;
+	mcp->in_mb =3D MBX_2|MBX_1|MBX_0;
+	if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))
+		mcp->in_mb |=3D MBX_4|MBX_3;
+	mcp->tov =3D MBX_TOV_SECONDS;
+	mcp->flags =3D 0;
+	rval =3D qla2x00_mailbox_command(vha, mcp);
+	if (rval !=3D QLA_SUCCESS) {
+		ql_dbg(ql_dbg_mbx, vha, 0x1107,
+		    "Failed=3D%x mb[0]=3D%x.\n", rval, mcp->mb[0]);
+	} else {
+		if (mcp->mb[1] !=3D 0x7)                   <<<<<<<<<<<<<
+			ha->link_data_rate =3D mcp->mb[1]; <<<<<<<<<<<<<
 
- 	if (gear == 0) {
-@@ -576,8 +579,14 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
- 	}
+		if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
+			if (mcp->mb[4] & BIT_0)
+				ql_log(ql_log_info, vha, 0x11a2,
+				    "FEC=3Denabled (data rate).\n");
+		}
 
- 	list_for_each_entry(clki, &hba->clk_list_head, list) {
--		if (!strcmp(clki->name, "core_clk"))
--			core_clk_rate = clk_get_rate(clki->clk);
-+		if (!strcmp(clki->name, "core_clk")) {
-+			if (is_pre_scale_up)
-+				core_clk_rate = clki->max_freq;
-+			else
-+				core_clk_rate = clk_get_rate(clki->clk);
-+			break;
-+		}
-+
- 	}
+		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1108,
+		    "Done %s.\n", __func__);
+		if (mcp->mb[1] !=3D 0x7)                    <<<<<<<<<<<<<
+			ha->link_data_rate =3D mcp->mb[1];  <<<<<<<<<<<<<
+	}
 
- 	/* If frequency is smaller than 1MHz, set to 1MHz */
-@@ -657,7 +666,7 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
- 		mb();
- 	}
+	return rval;
+}
 
--	if (update_link_startup_timer && host->hw_ver.major != 0x5) {
-+	if (link_startup && host->hw_ver.major != 0x5) {
- 		ufshcd_writel(hba, ((core_clk_rate / MSEC_PER_SEC) * 100),
- 			      REG_UFS_CFG0);
- 		/*
-@@ -670,6 +679,107 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
- 	return 0;
- }
+As far as I can determine nothing in between them should change link_data_r=
+ate.
 
-+static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba,
-+				      u32 clk_1us_cycles,
-+				      u32 clk_40ns_cycles,
-+				      bool scale_up)
-+{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	u32 mask = MAX_CORE_CLK_1US_CYCLES_MASK;
-+	u32 offset = 0;
-+	u32 reg;
-+	int err;
-+
-+	/* Bit mask and offset changed on UFS host controller V4.0.0 onwards */
-+	if (host->hw_ver.major >= 4) {
-+		mask = MAX_CORE_CLK_1US_CYCLES_MASK_V4;
-+		offset = MAX_CORE_CLK_1US_CYCLES_OFFSET_V4;
-+	}
-+
-+	if (clk_1us_cycles > mask)
-+		return -EINVAL;
-+
-+	err = ufshcd_dme_get(hba, UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL), &reg);
-+	if (err)
-+		return err;
-+
-+	reg &= ~(mask << offset);
-+	reg |= clk_1us_cycles << offset;
-+
-+	if (scale_up)
-+		reg |= CORE_CLK_DIV_EN_BIT;
-+	else
-+		reg &= ~CORE_CLK_DIV_EN_BIT;
-+
-+	err = ufshcd_dme_set(hba, UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL), reg);
-+	if (err)
-+		return err;
-+
-+	/*
-+	 * UFS host controller V4.0.0 onwards needs to program
-+	 * PA_VS_CORE_CLK_40NS_CYCLES attribute per programmed
-+	 * frequency of unipro core clk of UFS host controller.
-+	 */
-+	if (host->hw_ver.major >= 4) {
-+		if (clk_40ns_cycles > PA_VS_CORE_CLK_40NS_CYCLES_MASK)
-+			return -EINVAL;
-+
-+		err = ufshcd_dme_get(hba,
-+				     UIC_ARG_MIB(PA_VS_CORE_CLK_40NS_CYCLES),
-+				     &reg);
-+		if (err)
-+			return err;
-+
-+		reg &= ~PA_VS_CORE_CLK_40NS_CYCLES_MASK;
-+		reg |= clk_40ns_cycles;
-+
-+		err = ufshcd_dme_set(hba,
-+				     UIC_ARG_MIB(PA_VS_CORE_CLK_40NS_CYCLES),
-+				     reg);
-+	}
-+
-+	return err;
-+}
-+
-+static int ufs_qcom_cfg_core_clk_ctrl(struct ufs_hba *hba)
-+{
-+	struct list_head *head = &hba->clk_list_head;
-+	struct ufs_clk_info *clki;
-+	u32 max_freq = 0;
-+	int err;
-+
-+	list_for_each_entry(clki, head, list) {
-+		if (!IS_ERR_OR_NULL(clki->clk) &&
-+		    (!strcmp(clki->name, "core_clk_unipro"))) {
-+			max_freq = clki->max_freq;
-+			break;
-+		}
-+	}
-+
-+	switch (max_freq) {
-+	case MHZ_403:
-+		err = ufs_qcom_set_core_clk_ctrl(hba, 403, 16, true);
-+		break;
-+	case MHZ_300:
-+		err = ufs_qcom_set_core_clk_ctrl(hba, 300, 12, true);
-+		break;
-+	case MHZ_201_5:
-+		err = ufs_qcom_set_core_clk_ctrl(hba, 202, 8, true);
-+		break;
-+	case MHZ_150:
-+		err = ufs_qcom_set_core_clk_ctrl(hba, 150, 6, true);
-+		break;
-+	case MHZ_100:
-+		err = ufs_qcom_set_core_clk_ctrl(hba, 100, 4, true);
-+		break;
-+	default:
-+		dev_err(hba->dev, "unipro max_freq=%u entry missing\n", max_freq);
-+		err = -EINVAL;
-+		break;
-+	}
-+
-+	return err;
-+}
- static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 					enum ufs_notify_change_status status)
- {
-@@ -679,19 +789,21 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 	switch (status) {
- 	case PRE_CHANGE:
- 		if (ufs_qcom_cfg_timers(hba, UFS_PWM_G1, SLOWAUTO_MODE,
--					0, true)) {
-+					0, true, false)) {
- 			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
- 				__func__);
- 			return -EINVAL;
- 		}
+This was introduced in the change 75666f4a8c41 ("scsi: qla2xxx: Display mes=
+sage
+for FCE enabled") and you can see the start of the duplicated code. Was the=
+ second
+instance of the if meant to be removed? It's also FEC not FCE.
 
--		if (ufs_qcom_cap_qunipro(host))
--			/*
--			 * set unipro core clock cycles to 150 & clear clock
--			 * divider
--			 */
--			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
--									  150);
-+		if (ufs_qcom_cap_qunipro(host)) {
-+			err = ufs_qcom_cfg_core_clk_ctrl(hba);
-+			if (err) {
-+				dev_err(hba->dev,
-+					"%s cfg core clk ctrl failed\n",
-+					__func__);
-+				return err;
-+			}
-+		}
+In the message why use "(data rate)" when you could get the speed itself fr=
+om
+qla2x00_get_link_speed_str()?=20
 
- 		/*
- 		 * Some UFS devices (and may be host) have issues if LCC is
-@@ -926,7 +1038,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 	case POST_CHANGE:
- 		if (ufs_qcom_cfg_timers(hba, dev_req_params->gear_rx,
- 					dev_req_params->pwr_rx,
--					dev_req_params->hs_rate, false)) {
-+					dev_req_params->hs_rate, false, false)) {
- 			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
- 				__func__);
- 			/*
-@@ -1296,69 +1408,52 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
- 	phy_exit(host->generic_phy);
- }
+The second issue is this function prints a message to the kernel message bu=
+ffer but it
+causes an issue in that qla2x00_get_data_rate() can be called from
+qla2x00_configure_loop() and from here (that is fine for the former but not=
+ the later):
 
--static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
--						       u32 clk_cycles)
-+static int ufs_qcom_clk_scale_up_pre_change(struct ufs_hba *hba)
- {
--	int err;
--	u32 core_clk_ctrl_reg;
--
--	if (clk_cycles > DME_VS_CORE_CLK_CTRL_MAX_CORE_CLK_1US_CYCLES_MASK)
--		return -EINVAL;
--
--	err = ufshcd_dme_get(hba,
--			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
--			    &core_clk_ctrl_reg);
--	if (err)
--		return err;
--
--	core_clk_ctrl_reg &= ~DME_VS_CORE_CLK_CTRL_MAX_CORE_CLK_1US_CYCLES_MASK;
--	core_clk_ctrl_reg |= clk_cycles;
--
--	/* Clear CORE_CLK_DIV_EN */
--	core_clk_ctrl_reg &= ~DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT;
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	struct ufs_pa_layer_attr *attr = &host->dev_req_params;
-+	int err = 0;
+static ssize_t
+qla2x00_port_speed_show(struct device *dev, struct device_attribute *attr,
+    char *buf)
+{
+	struct scsi_qla_host *vha =3D shost_priv(dev_to_shost(dev));
+	struct qla_hw_data *ha =3D vha->hw;
+	ssize_t rval;
+	u16 i;
+	char *speed =3D "Unknown";
 
--	return ufshcd_dme_set(hba,
--			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
--			    core_clk_ctrl_reg);
--}
-+	if (!ufs_qcom_cap_qunipro(host))
-+		goto out;
+	rval =3D qla2x00_get_data_rate(vha);
+	if (rval !=3D QLA_SUCCESS) {
+		ql_log(ql_log_warn, vha, 0x70db,
+		    "Unable to get port speed rval:%zd\n", rval);
+		return -EINVAL;
+	}
 
--static int ufs_qcom_clk_scale_up_pre_change(struct ufs_hba *hba)
--{
--	/* nothing to do as of now */
--	return 0;
-+	if (attr) {
-+		err = ufs_qcom_cfg_timers(hba, attr->gear_rx,
-+					    attr->pwr_rx, attr->hs_rate,
-+					    false, true);
-+		if (err)
-+			dev_err(hba->dev, "%s ufs cfg timer failed\n",
-+					  __func__);
-+	}
-+	err = ufs_qcom_cfg_core_clk_ctrl(hba);
-+out:
-+	return err;
- }
+	for (i =3D 0; i < ARRAY_SIZE(port_speed_str); i++) {
+		if (port_speed_str[i].rate !=3D ha->link_data_rate)
+			continue;
+		speed =3D port_speed_str[i].str;
+		break;
+	}
 
- static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
- {
--	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
--
--	if (!ufs_qcom_cap_qunipro(host))
--		return 0;
--
--	/* set unipro core clock cycles to 150 and clear clock divider */
--	return ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba, 150);
-+	return 0;
- }
+	return scnprintf(buf, PAGE_SIZE, "%s\n", speed);
+}
 
- static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	int err;
--	u32 core_clk_ctrl_reg;
-+	u32 reg;
+So every time some reads the port_speed file it can log a kernel message so=
+ if you=20
+read the sysfs port_speed file a lot you can generate a lot of messages in =
+the kernel
+message buffer (messages have been changed manually):
 
- 	if (!ufs_qcom_cap_qunipro(host))
- 		return 0;
+2023-06-01T11:59:11.180034+02:00 example kernel: [2399544.415344][ XXXX] ql=
+a2xxx
+ [  0000:61:00.1]-11a2:1: FEC=3Denabled (data rate).
+2023-06-01T11:59:11.810042+02:00 example kernel: [2399544.415764][ XXXX] ql=
+a2xxx
+ [  0000:61:00.1]-11a2:1: FEC=3Denabled (data rate).
 
--	err = ufshcd_dme_get(hba,
--			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
--			    &core_clk_ctrl_reg);
-+	err = ufshcd_dme_get(hba, UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL), &reg);
-+	if (err)
-+		return err;
+Is that a defect? I wouldn't have expected reading a sysfs file to always g=
+enerate
+a kernel message into the kernel message buffer. The change that introduced=
+ the
+message doesn't seem to have taken into account that function can be called=
+ from
+two places.
 
- 	/* make sure CORE_CLK_DIV_EN is cleared */
--	if (!err &&
--	    (core_clk_ctrl_reg & DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT)) {
--		core_clk_ctrl_reg &= ~DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT;
-+	if (reg & CORE_CLK_DIV_EN_BIT) {
-+		reg &= ~CORE_CLK_DIV_EN_BIT;
- 		err = ufshcd_dme_set(hba,
- 				    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
--				    core_clk_ctrl_reg);
-+				    reg);
- 	}
+Also, why isn't qla2x00_get_link_speed_str() used instead of adding
+another structure containing almost identical speed data?
 
- 	return err;
-@@ -1367,12 +1462,44 @@ static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
- static int ufs_qcom_clk_scale_down_post_change(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	struct ufs_pa_layer_attr *attr = &host->dev_req_params;
-+	struct list_head *head = &hba->clk_list_head;
-+	struct ufs_clk_info *clki;
-+	u32 curr_freq = 0;
-+	int err;
+That leads onto the 3rd issue the really confusing ql_log function:
 
- 	if (!ufs_qcom_cap_qunipro(host))
- 		return 0;
+2572 ql_log(uint level, scsi_qla_host_t *vha, uint id, const char *fmt, ...=
+)
+2573 {
+2574         va_list va;
+2575         struct va_format vaf;
+2576         char pbuf[128];
+2577=20
+2578         if (level > ql_errlev)
+2579                 return;
+2580=20
+2581         ql_ktrace(0, level, pbuf, NULL, vha, id, fmt);
+2582=20
+2583         if (!pbuf[0]) /* set by ql_ktrace */
+2584                 ql_dbg_prefix(pbuf, ARRAY_SIZE(pbuf), NULL, vha, id);
+2585=20
+2586         va_start(va, fmt);
+2587=20
+2588         vaf.fmt =3D fmt;
+2589         vaf.va =3D &va;
+2590=20
+2591         switch (level) {
+2592         case ql_log_fatal: /* FATAL LOG */
+2593                 pr_crit("%s%pV", pbuf, &vaf);
+2594                 break;
+2595         case ql_log_warn: <<<<<<<<<<<<<<<<<<<<<<<<
+2596                 pr_err("%s%pV", pbuf, &vaf); <<<<<<<<<<<<<<<<<<<<<<<<
+2597                 break;
+2598         case ql_log_info: <<<<<<<<<<<<<<<<<<<<<<<<
+2599                 pr_warn("%s%pV", pbuf, &vaf); <<<<<<<<<<<<<<<<<<<<<<<<
+2600                 break;
+2601         default:
+2602                 pr_info("%s%pV", pbuf, &vaf);
+2603                 break;
+2604         }
+2605=20
+2606         va_end(va);
+2607 }
 
--	/* set unipro core clock cycles to 75 and clear clock divider */
--	return ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba, 75);
-+	if (attr)
-+		ufs_qcom_cfg_timers(hba, attr->gear_rx, attr->pwr_rx,
-+				    attr->hs_rate, false, false);
-+
-+	list_for_each_entry(clki, head, list) {
-+		if (!IS_ERR_OR_NULL(clki->clk) &&
-+		    (!strcmp(clki->name, "core_clk_unipro"))) {
-+			curr_freq = clk_get_rate(clki->clk);
-+			break;
-+		}
-+	}
-+
-+	switch (curr_freq) {
-+	case MHZ_37_5:
-+		err = ufs_qcom_set_core_clk_ctrl(hba, 38, 2, false);
-+		break;
-+	case MHZ_75:
-+		err = ufs_qcom_set_core_clk_ctrl(hba, 75, 3, false);
-+		break;
-+	case MHZ_100:
-+		err = ufs_qcom_set_core_clk_ctrl(hba, 100, 4, false);
-+		break;
-+	default:
-+		err = -EINVAL;
-+		dev_err(hba->dev, "unipro curr_freq=%u entry missing\n", curr_freq);
-+		break;
-+	}
-+
-+	return err;
- }
+When I was looking at the driver I hadn't looked at ql_log() and was having=
+ issues suppressing
+the kernel messages from issue #2 above. When I did look I noticed that ql_=
+log_info messages
+are printed with pr_warn() (so it's really a warning not info). Should the =
+log levels used in the
+qla2xxx driver more generally reflect the kernel usage of message levels (i=
+.e. ql_log_info
+should use pr_info, etc)?
 
- static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
-@@ -1409,7 +1536,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
- 				    dev_req_params->gear_rx,
- 				    dev_req_params->pwr_rx,
- 				    dev_req_params->hs_rate,
--				    false);
-+				    false, false);
- 		ufs_qcom_icc_update_bw(host);
- 		ufshcd_uic_hibern8_exit(hba);
- 	}
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index d6f8e74bd538..d10234f6280b 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -79,6 +79,17 @@ enum {
- 	UFS_MEM_CQIS_VS		= 0x8,
- };
-
-+
-+/* QCOM UFS host controller core clk frequencies */
-+#define MHZ_37_5	37500000
-+#define MHZ_50		50000000
-+#define MHZ_75		75000000
-+#define MHZ_100		100000000
-+#define MHZ_150		150000000
-+#define MHZ_300		300000000
-+#define MHZ_201_5	201500000
-+#define MHZ_403		403000000
-+
- #define UFS_CNTLR_2_x_x_VEN_REGS_OFFSET(x)	(0x000 + x)
- #define UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(x)	(0x400 + x)
-
-@@ -129,9 +140,12 @@ enum {
- #define PA_VS_CONFIG_REG1	0x9000
- #define DME_VS_CORE_CLK_CTRL	0xD002
- /* bit and mask definitions for DME_VS_CORE_CLK_CTRL attribute */
--#define DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT		BIT(8)
--#define DME_VS_CORE_CLK_CTRL_MAX_CORE_CLK_1US_CYCLES_MASK	0xFF
--
-+#define MAX_CORE_CLK_1US_CYCLES_MASK_V4		0xFFF
-+#define MAX_CORE_CLK_1US_CYCLES_OFFSET_V4	0x10
-+#define MAX_CORE_CLK_1US_CYCLES_MASK		0xFF
-+#define CORE_CLK_DIV_EN_BIT			BIT(8)
-+#define PA_VS_CORE_CLK_40NS_CYCLES		0x9007
-+#define PA_VS_CORE_CLK_40NS_CYCLES_MASK		0x3F
- static inline void
- ufs_qcom_get_controller_revision(struct ufs_hba *hba,
- 				 u8 *major, u16 *minor, u16 *step)
---
-2.17.1
-
+Thanks
+Shane
