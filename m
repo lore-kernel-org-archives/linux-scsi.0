@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BB80C04FDF
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 16:11:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B84C04FE1
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 16:11:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229607AbjHHQLo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:11:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46242 "EHLO
+        id S232080AbjHHQLp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:11:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231983AbjHHQJl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:09:41 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CD6F7A82
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 08:46:22 -0700 (PDT)
+        with ESMTP id S229774AbjHHQJo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:09:44 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1291576BE
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 08:46:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691509567;
+        s=mimecast20190719; t=1691509566;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=cH8+J+v5eCSEAo5zzPYOsTrKPWy+zXGNhCQOIixYmz0=;
-        b=hEWW1uGTe+46JA2K7EtdqN8NNzv49+gZ8PjIEjr3Ukg8FDmNUNn+NLWUK/ucVmvwWNVVPD
-        pzSedgcNk/jOHF+lP2UqsezxvEz2s1gOXDE+J1uf+7XlxHAf4YzbAZwvXCJfmyCGzK8JDY
-        l2IRjU6HBtldgGIvlVlfBwuDX2Ps8UI=
+        bh=k/XiItvuETzuFaV0q2/0Ml9SkHL0l2Lbxykjfon98Ww=;
+        b=gzWBponId6Rk3ISzI2vUdqURoGvJDI7RBQf/FK+rvwyj9HojA96sH8kSFesaWxyPoz7sFs
+        zUj9NytMkBJhEHqbi3/nIUPGZJq9646WDcXtaPMumsN9WLzakryZG4IaSd+C0hbpFwK++r
+        nIG3PXEj1yznjMkudL9DVCrYkaI3JVY=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-694-ORIgDiMuM2yLXyVmCPXrgg-1; Tue, 08 Aug 2023 06:43:30 -0400
-X-MC-Unique: ORIgDiMuM2yLXyVmCPXrgg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
+ us-mta-484-dHf5P5j1NCCY04pi7Cukww-1; Tue, 08 Aug 2023 06:42:55 -0400
+X-MC-Unique: dHf5P5j1NCCY04pi7Cukww-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 363D685CCE1;
-        Tue,  8 Aug 2023 10:43:30 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3A89B85CCE0;
+        Tue,  8 Aug 2023 10:42:55 +0000 (UTC)
 Received: from localhost (unknown [10.72.120.3])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5FD0C140E962;
-        Tue,  8 Aug 2023 10:43:29 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 65E124E3D1;
+        Tue,  8 Aug 2023 10:42:53 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         linux-nvme@lists.infradead.org,
@@ -44,14 +44,14 @@ To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         linux-scsi@vger.kernel.org
 Cc:     linux-block@vger.kernel.org, Wen Xiong <wenxiong@linux.ibm.com>,
         Keith Busch <kbusch@kernel.org>, Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 12/14] scsi: ufs: limit max allowed nr_hw_queues
-Date:   Tue,  8 Aug 2023 18:42:37 +0800
-Message-Id: <20230808104239.146085-13-ming.lei@redhat.com>
+Subject: [PATCH V3 02/14] nvme-pci: use blk_mq_max_nr_hw_queues() to calculate io queues
+Date:   Tue,  8 Aug 2023 18:42:27 +0800
+Message-Id: <20230808104239.146085-3-ming.lei@redhat.com>
 In-Reply-To: <20230808104239.146085-1-ming.lei@redhat.com>
 References: <20230808104239.146085-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.7
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -72,24 +72,25 @@ wrong queue mapping for handling IO, and IO timeout is triggered.
 Meantime, single queue makes much less resource utilization, and reduce
 risk of kernel failure.
 
+Reported-by: Wen Xiong <wenxiong@linux.ibm.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/ufs/core/ufs-mcq.c | 2 +-
+ drivers/nvme/host/pci.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 6fb0e007af63..7d808836b018 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -186,7 +186,7 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index baf69af7ea78..a1227ae7eb39 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2251,7 +2251,7 @@ static unsigned int nvme_max_io_queues(struct nvme_dev *dev)
+ 	 */
+ 	if (dev->ctrl.quirks & NVME_QUIRK_SHARED_TAGS)
+ 		return 1;
+-	return num_possible_cpus() + dev->nr_write_queues + dev->nr_poll_queues;
++	return blk_mq_max_nr_hw_queues() + dev->nr_write_queues + dev->nr_poll_queues;
+ }
  
- 	if (!hba->nr_queues[HCTX_TYPE_DEFAULT])
- 		hba->nr_queues[HCTX_TYPE_DEFAULT] = min3(rem, rw_queues,
--							 num_possible_cpus());
-+							 scsi_max_nr_hw_queues());
- 
- 	for (i = 0; i < HCTX_MAX_TYPES; i++)
- 		host->nr_hw_queues += hba->nr_queues[i];
+ static int nvme_setup_io_queues(struct nvme_dev *dev)
 -- 
 2.40.1
 
