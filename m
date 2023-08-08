@@ -2,213 +2,189 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 833E7C04FE1
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 20:05:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA927C001DB
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 20:45:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234298AbjHHUFw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Aug 2023 16:05:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47282 "EHLO
+        id S229834AbjHHUpB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Aug 2023 16:45:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232416AbjHHUFl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 16:05:41 -0400
-Received: from mail-il1-x133.google.com (mail-il1-x133.google.com [IPv6:2607:f8b0:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AB27995F2
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 11:26:00 -0700 (PDT)
-Received: by mail-il1-x133.google.com with SMTP id e9e14a558f8ab-3492905f546so22883195ab.0
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Aug 2023 11:26:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1691519160; x=1692123960;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=sL6dGzlrX0FycpSy6GA7fAcrUlb9k8qMB+97PDbhRDI=;
-        b=A+uuqGRMFQC+NSXikt61ZE0snidXeAMneuYA7AALWoUhYJ9FIf2UCJ8qSotIFR3ikX
-         W+4uWWlU0Ssyf46NVWirFBSTlzr8MLk+jcRjkp0yTDSFw2/pK7HF8Sa3Ymekyz7PSwZr
-         +nleBtSVBCyHNh4f3qYT9N+VuLKAegog+oTCY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691519160; x=1692123960;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=sL6dGzlrX0FycpSy6GA7fAcrUlb9k8qMB+97PDbhRDI=;
-        b=TM73Ezy+fczO53OYMmIRh0N4Fx7RfEX+tdsyUquihUYF7U413aGQ6apu+SNnmggAYi
-         d6VSmxHYxpgD+hk1Teh7IIBTcKfwUY4K1cv+dRGS6jWa/rpVUYkEWpEMPTmliWERLceo
-         JEFoeXwobOOfNQiOfwJ6paOo6cgPlnnfb+XSoda/j4pBXDOKLzrusexyuSavAFpedqvs
-         MZoYcqvExm8mlrZ3uIYTJEEmQvZxpmF+JDZ/oJYqrpg/itjb4/+3cfv/W67u7rKHh6KU
-         V4I8F0Emdb+rksAUmuz862RJ5cG5xI6enbqdSqnTJ344ytyVNCWmO2JXTFOd38rYGX/v
-         xxvA==
-X-Gm-Message-State: AOJu0YyWIj5vGnuOIG7k/Fsgn0GIRHJLeWDaj+VaW7x+Y0srMSsluhmh
-        BSOGTjy6nLJ4C1t3GUojFQj2MhqfV/K605D3cA+AzS4vJoCnYYQyBhp+lbdL04Z/cl13UEECIMk
-        d3qahtIvk6hjQMU95gmB3bUiENsR+
-X-Google-Smtp-Source: AGHT+IGUoP6RGoarxDOQIJJWXyU+mRJcXOUsX7iDE9rA4MUuyo0yCMFAHPpttqBVFoHLeq0gf8reiC4AopC6eCqzANo=
-X-Received: by 2002:a05:6e02:10d3:b0:348:987a:fd8c with SMTP id
- s19-20020a056e0210d300b00348987afd8cmr425976ilj.31.1691519159645; Tue, 08 Aug
- 2023 11:25:59 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230807095823.33902-1-andriy.shevchenko@linux.intel.com>
- <ZNERiABjPliMWu8f@smile.fi.intel.com> <CAAmqgVNCHhU2o-6CRT62X+as_AVs=FH3iCvQC9Eyp_vx5L9Mkw@mail.gmail.com>
- <ZNI+C2iMG8AbSpQF@smile.fi.intel.com>
-In-Reply-To: <ZNI+C2iMG8AbSpQF@smile.fi.intel.com>
-From:   Justin Tee <justin.tee@broadcom.com>
-Date:   Tue, 8 Aug 2023 11:25:48 -0700
-Message-ID: <CAAmqgVPGRt1bdQ0TrverzWNfM2MEcw4DhmNsWL+xMPOBeZ7tKw@mail.gmail.com>
-Subject: Re: [PATCH v1 1/1] scsi: lpfc: Do not abuse UUID APIs
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        James Smart <james.smart@broadcom.com>,
+        with ESMTP id S234838AbjHHUoq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 16:44:46 -0400
+Received: from mx0a-002e3701.pphosted.com (mx0a-002e3701.pphosted.com [148.163.147.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 418D1A7BD;
+        Tue,  8 Aug 2023 13:21:52 -0700 (PDT)
+Received: from pps.filterd (m0134421.ppops.net [127.0.0.1])
+        by mx0b-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 378HWEod002804;
+        Tue, 8 Aug 2023 20:16:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pps0720; bh=gRDVjkdFRBWObe7mCxcmxP85LQndQ/efs746pBwFFmg=;
+ b=J+Vx8WexH75x7ZtnOOwjrKCHiB4y5mHPNDofTjvzYC0nsC67+kSroI88qLizCm+o8QC4
+ CoRJLrTIEJiH2Y57NNLW14+AAZIG9f4bpcvBcBuqncgj2l8i7dy+X9ULxPtXy7zpCcBF
+ n9gF/5NTbjG/K1o74kHUFvpaRkHuGs9FK3vezCI47RPkvMPmyxH6GeaY+KMcEvWd8z27
+ hY7XbY+qgzMsBR8m/Y+mxyEvUUyG2CtGsZsEjCcaGaOsUn+SB0kHzb7FlMAhAunXugRa
+ jZPIUaM2WGpZNoNDZ2jW3ymve+nNb46U8FLQdajeNLKliM4h3LkgTArKt/y2bC4kk/f0 xw== 
+Received: from p1lg14881.it.hpe.com ([16.230.97.202])
+        by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 3sbrx91tsj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 08 Aug 2023 20:16:25 +0000
+Received: from p1lg14885.dc01.its.hpecorp.net (unknown [10.119.18.236])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by p1lg14881.it.hpe.com (Postfix) with ESMTPS id BC3C180371C;
+        Tue,  8 Aug 2023 20:16:24 +0000 (UTC)
+Received: from swahl-home.5wahls.com (unknown [16.231.227.36])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by p1lg14885.dc01.its.hpecorp.net (Postfix) with ESMTPS id 42D7D80AE91;
+        Tue,  8 Aug 2023 20:16:22 +0000 (UTC)
+Date:   Tue, 8 Aug 2023 15:16:20 -0500
+From:   Steve Wahl <steve.wahl@hpe.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Andrew Cooper <andrew.cooper3@citrix.com>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
+        Russ Anderson <russ.anderson@hpe.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ab23d406026d7e85"
+        James Smart <james.smart@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Huang Rui <ray.huang@amd.com>, Juergen Gross <jgross@suse.com>
+Subject: Re: [patch v2 38/38] x86/apic/uv: Remove the private leaf 0xb parser
+Message-ID: <ZNKilDJMibNwH1ra@swahl-home.5wahls.com>
+References: <20230728105650.565799744@linutronix.de>
+ <20230728120931.779678736@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230728120931.779678736@linutronix.de>
+X-Proofpoint-GUID: XscqrLCsoL6SmwSAPEhQm4Dvj60dExIo
+X-Proofpoint-ORIG-GUID: XscqrLCsoL6SmwSAPEhQm4Dvj60dExIo
+X-HPE-SCL: -1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-08-08_18,2023-08-08_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ priorityscore=1501 suspectscore=0 lowpriorityscore=0 clxscore=1015
+ mlxscore=0 phishscore=0 bulkscore=0 impostorscore=0 mlxlogscore=999
+ adultscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2306200000 definitions=main-2308080179
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ab23d406026d7e85
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Looked closely at this one, was wondering about using TOPO_ROOT_DOMAIN
+when the original looked at the leaf of TYPE_CORE.  But I think you
+probably have it right, and I checked both a newer and an older
+system, and the UV info line that prints "apic_pns" gets the same
+value as before.
 
-On Tue, Aug 8, 2023 at 6:07=E2=80=AFAM Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
->
-> On Mon, Aug 07, 2023 at 10:45:03AM -0700, Justin Tee wrote:
->
-> > --
-> > This electronic communication and the information and any files transmi=
-tted
-> > with it, or attached to it, are confidential and are intended solely fo=
-r
-> > the use of the individual or entity to whom it is addressed and may con=
-tain
-> > information that is confidential, legally privileged, protected by priv=
-acy
-> > laws, or otherwise restricted from disclosure to anyone else. If you ar=
-e
-> > not the intended recipient or the person responsible for delivering the
-> > e-mail to the intended recipient, you are hereby notified that any use,
-> > copying, distributing, dissemination, forwarding, printing, or copying =
-of
-> > this e-mail is strictly prohibited. If you received this e-mail in erro=
-r,
-> > please return the e-mail to the sender, delete it from your computer, a=
-nd
-> > destroy any printed copy of it.
->
-> Removed from mailbox.
->
-> --
-> With Best Regards,
-> Andy Shevchenko
+Reviewed-by: Steve Wahl <steve.wahl@hpe.com>
 
-Hi Andy,
+On Fri, Jul 28, 2023 at 02:13:30PM +0200, Thomas Gleixner wrote:
+> The package shift has been already evaluated by the early CPU init.
+> 
+> Put the mindless copy right next to the original leaf 0xb parser.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Steve Wahl <steve.wahl@hpe.com>
+> Cc: Mike Travis <mike.travis@hpe.com>
+> Cc: Dimitri Sivanich <dimitri.sivanich@hpe.com>
+> Cc: Russ Anderson <russ.anderson@hpe.com>
+> ---
+>  arch/x86/include/asm/topology.h    |    5 +++
+>  arch/x86/kernel/apic/x2apic_uv_x.c |   52 ++++++-------------------------------
+>  2 files changed, 14 insertions(+), 43 deletions(-)
+> 
+> --- a/arch/x86/include/asm/topology.h
+> +++ b/arch/x86/include/asm/topology.h
+> @@ -126,6 +126,11 @@ static inline unsigned int topology_get_
+>  	return x86_topo_system.dom_size[dom];
+>  }
+>  
+> +static inline unsigned int topology_get_domain_shift(enum x86_topology_domains dom)
+> +{
+> +	return dom == TOPO_SMT_DOMAIN ? 0 : x86_topo_system.dom_shifts[dom - 1];
+> +}
+> +
+>  extern const struct cpumask *cpu_coregroup_mask(int cpu);
+>  extern const struct cpumask *cpu_clustergroup_mask(int cpu);
+>  
+> --- a/arch/x86/kernel/apic/x2apic_uv_x.c
+> +++ b/arch/x86/kernel/apic/x2apic_uv_x.c
+> @@ -241,54 +241,20 @@ static void __init uv_tsc_check_sync(voi
+>  	is_uv(UV3) ? sname.s3.field :		\
+>  	undef)
+>  
+> -/* [Copied from arch/x86/kernel/cpu/topology.c:detect_extended_topology()] */
+> -
+> -#define SMT_LEVEL			0	/* Leaf 0xb SMT level */
+> -#define INVALID_TYPE			0	/* Leaf 0xb sub-leaf types */
+> -#define SMT_TYPE			1
+> -#define CORE_TYPE			2
+> -#define LEAFB_SUBTYPE(ecx)		(((ecx) >> 8) & 0xff)
+> -#define BITS_SHIFT_NEXT_LEVEL(eax)	((eax) & 0x1f)
+> -
+> -static void set_x2apic_bits(void)
+> -{
+> -	unsigned int eax, ebx, ecx, edx, sub_index;
+> -	unsigned int sid_shift;
+> -
+> -	cpuid(0, &eax, &ebx, &ecx, &edx);
+> -	if (eax < 0xb) {
+> -		pr_info("UV: CPU does not have CPUID.11\n");
+> -		return;
+> -	}
+> -
+> -	cpuid_count(0xb, SMT_LEVEL, &eax, &ebx, &ecx, &edx);
+> -	if (ebx == 0 || (LEAFB_SUBTYPE(ecx) != SMT_TYPE)) {
+> -		pr_info("UV: CPUID.11 not implemented\n");
+> -		return;
+> -	}
+> -
+> -	sid_shift = BITS_SHIFT_NEXT_LEVEL(eax);
+> -	sub_index = 1;
+> -	do {
+> -		cpuid_count(0xb, sub_index, &eax, &ebx, &ecx, &edx);
+> -		if (LEAFB_SUBTYPE(ecx) == CORE_TYPE) {
+> -			sid_shift = BITS_SHIFT_NEXT_LEVEL(eax);
+> -			break;
+> -		}
+> -		sub_index++;
+> -	} while (LEAFB_SUBTYPE(ecx) != INVALID_TYPE);
+> -
+> -	uv_cpuid.apicid_shift	= 0;
+> -	uv_cpuid.apicid_mask	= (~(-1 << sid_shift));
+> -	uv_cpuid.socketid_shift = sid_shift;
+> -}
+> -
+>  static void __init early_get_apic_socketid_shift(void)
+>  {
+> +	unsigned int sid_shift = topology_get_domain_shift(TOPO_ROOT_DOMAIN);
+> +
+>  	if (is_uv2_hub() || is_uv3_hub())
+>  		uvh_apicid.v = uv_early_read_mmr(UVH_APICID);
+>  
+> -	set_x2apic_bits();
+> +	if (sid_shift) {
+> +		uv_cpuid.apicid_shift	= 0;
+> +		uv_cpuid.apicid_mask	= (~(-1 << sid_shift));
+> +		uv_cpuid.socketid_shift = sid_shift;
+> +	} else {
+> +		pr_info("UV: CPU does not have valid CPUID.11\n");
+> +	}
+>  
+>  	pr_info("UV: apicid_shift:%d apicid_mask:0x%x\n", uv_cpuid.apicid_shift, uv_cpuid.apicid_mask);
+>  	pr_info("UV: socketid_shift:%d pnode_mask:0x%x\n", uv_cpuid.socketid_shift, uv_cpuid.pnode_mask);
+> 
 
-There is no need to remove from mailbox because you were the intended
-recipient of my previous email as well as everyone subscribed to the
-linux-scsi and linux-kernel mailing list  (:
-
-I still prefer sizeof(vport->lpfc_vmid_host_uuid) instead of
-LPFC_COMPRESS_VMID_SIZE.
-
-Thanks,
-Justin
-
---=20
-This electronic communication and the information and any files transmitted=
-=20
-with it, or attached to it, are confidential and are intended solely for=20
-the use of the individual or entity to whom it is addressed and may contain=
-=20
-information that is confidential, legally privileged, protected by privacy=
-=20
-laws, or otherwise restricted from disclosure to anyone else. If you are=20
-not the intended recipient or the person responsible for delivering the=20
-e-mail to the intended recipient, you are hereby notified that any use,=20
-copying, distributing, dissemination, forwarding, printing, or copying of=
-=20
-this e-mail is strictly prohibited. If you received this e-mail in error,=
-=20
-please return the e-mail to the sender, delete it from your computer, and=
-=20
-destroy any printed copy of it.
-
---000000000000ab23d406026d7e85
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-QsyUohclvlxgt5d/MsBG6WZxZ+uppzNvjEk/wUu+6JQNUVEMviA6eBCCi+4ShjZUbGPES11h5lw/
-wuyQZDIjy+1hGPtLHBXI/QQEbU3OVdTRn+aEMwIDAQABo4IB2DCCAdQwDgYDVR0PAQH/BAQDAgWg
-MIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9iYWxzaWdu
-LmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUFBzABhjVo
-dHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMDBNBgNV
-HSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2ln
-bi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRwOi8vY3Js
-Lmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAiBgNVHREEGzAZ
-gRdqdXN0aW4udGVlQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAW
-gBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUlHfvnuNaLp52RO2Y2En9J+7MKI4wDQYJ
-KoZIhvcNAQELBQADggEBAGaBsEmLZwejb3YsmigadLZGto3hJ7Erq2YZLhL7Pgtxft1/j4JNLsRN
-t3ZJIW2Xzfbj0p328xRekSP1gjZ9Szre0fxEFXH1sS1a7WP9E0fHxVW07xVsxGxo5opAh5Gf/bQH
-S4x9pCO48FJI310L1RGQiqFKY/OECnXO821y8MAyObbGo9HNHP4Sk6F5J1v2qJzbLtMfj8ybbTGe
-SidstRgjOIqMldZs2Koio14QFE7hJY+8KRiKfq+eb1EwQTMzBxZsMOL5vUSZjYg2+Fqwyr6YYp0w
-Lsq/wH9o18xSvL/FikpG4JRxiT20RdM6DQrk9lv8ijASZCuN3JR61WUNz2AxggJtMIICaQIBATBr
-MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9i
-YWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwMd6BsMSBDsagVFtYwDQYJYIZI
-AWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIG4qg67B+FMpOQPmx3l0+PK9SXsZuYQJddARvi/Q
-o5n8MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDgwODE4MjYw
-MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQB
-AjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkq
-hkiG9w0BAQEFAASCAQA/jnGaDg0sZyb6wGD3YaWyAQfWJ1UrR3ep10xCBEJH7QI1D5QFUDw6m8jq
-I9bocgswQgb6ItLWMyz745muoygj95EuC7pDmyNIDohLlwxjLL1FLKH07at4rzEOuKH4sDLmyUAR
-dCPv6yPlSUe57UAFYWR8O5CJpQ6CEZXekiYshywiFxoBA9Pb7KsLP4PiMpeFF27PytH5zVMxTjmD
-EPtr9yD7Kfj3Ucg21niREz1Y7hieNG0m2QTOr1Qlfz4bnK0OgAH7iAjF8rBZVIw7j7VldJCMxoo8
-K7Ykda2Ifp3k9cdTnQvtf1UKJy38sq8zGxZqPlo2iTfoeW6uHOU5SxbW
---000000000000ab23d406026d7e85--
+-- 
+Steve Wahl, Hewlett Packard Enterprise
