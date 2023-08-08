@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AC00C001B0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9034C001DE
 	for <linux-scsi@archiver.kernel.org>; Tue,  8 Aug 2023 16:09:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232016AbjHHQJz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:09:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59682 "EHLO
+        id S231757AbjHHQJ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:09:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231753AbjHHQIB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:08:01 -0400
+        with ESMTP id S231829AbjHHQIL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2023 12:08:11 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DB7F768C
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 08:46:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E72662D74
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 08:46:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1691509537;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=9SdkdgSqxhMyRTJ5vgJIEJL/WyHf61DHGM5o0eLsF7g=;
-        b=YvBnxhU36CDOYSBOQdHgbNyuImwUNI/+w1WgH6QxdoBLgmmamS2iKcVn/YWOkhWckxJ4ow
-        TMBoEEg9Ka2qVqB8sI9avPYEUxfP9v5xsUfdNLyvPZMBz5ExD3YtsNsw0tMJhTc/SNAbD9
-        ydkT73ihHjhxuDCgn7KNZCreeYbpzjQ=
+        bh=3+EnSRWzHYRgAwaPfCvnjx1xuC05RKXl9LNASqVbR8A=;
+        b=GUk9nE2rk0+gzS9M01TAarR+gCYwrich9dRn+rGMDfI+OBqt6ou5n8oETVWB03Tl/or+uD
+        UbU+hk9hnZnc3e3JPxdiZM1VLujQes2zCwLwQCehtryR8hhaKVY6tmBt33fSqrlxYH6xll
+        UdfvZaM9Xl0qpyfE5zEVJ9oQmWNF1U4=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-36-HN97ZHsCP7utxVyyzgqj-Q-1; Tue, 08 Aug 2023 06:42:59 -0400
-X-MC-Unique: HN97ZHsCP7utxVyyzgqj-Q-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+ us-mta-219-u2FxbA53OHqCOhATeSOWcQ-1; Tue, 08 Aug 2023 06:43:37 -0400
+X-MC-Unique: u2FxbA53OHqCOhATeSOWcQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 7EAA6185A78B;
-        Tue,  8 Aug 2023 10:42:58 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DB4BC8007CE;
+        Tue,  8 Aug 2023 10:43:36 +0000 (UTC)
 Received: from localhost (unknown [10.72.120.3])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A81182166B27;
-        Tue,  8 Aug 2023 10:42:57 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1547A140E962;
+        Tue,  8 Aug 2023 10:43:35 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         linux-nvme@lists.infradead.org,
@@ -44,52 +44,105 @@ To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         linux-scsi@vger.kernel.org
 Cc:     linux-block@vger.kernel.org, Wen Xiong <wenxiong@linux.ibm.com>,
         Keith Busch <kbusch@kernel.org>, Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 03/14] ublk: limit max allowed nr_hw_queues
-Date:   Tue,  8 Aug 2023 18:42:28 +0800
-Message-Id: <20230808104239.146085-4-ming.lei@redhat.com>
+Subject: [PATCH V3 14/14] blk-mq: add helpers for treating kdump kernel
+Date:   Tue,  8 Aug 2023 18:42:39 +0800
+Message-Id: <20230808104239.146085-15-ming.lei@redhat.com>
 In-Reply-To: <20230808104239.146085-1-ming.lei@redhat.com>
 References: <20230808104239.146085-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Take blk-mq's knowledge into account for calculating io queues.
+Clean up code a bit by adding helpers for treating kdump kernel
+specially.
 
-Fix wrong queue mapping in case of kdump kernel.
-
-On arm and ppc64, 'maxcpus=1' is passed to kdump command line, see
-`Documentation/admin-guide/kdump/kdump.rst`, so num_possible_cpus()
-still returns all CPUs because 'maxcpus=1' just bring up one single
-cpu core during booting.
-
-blk-mq sees single queue in kdump kernel, and in driver's viewpoint
-there are still multiple queues, this inconsistency causes driver to apply
-wrong queue mapping for handling IO, and IO timeout is triggered.
-
-Meantime, single queue makes much less resource utilization, and reduce
-risk of kernel failure.
-
+Suggested-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/block/ublk_drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-mq.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/block/ublk_drv.c b/drivers/block/ublk_drv.c
-index 21d2e71c5514..6cf4981951e2 100644
---- a/drivers/block/ublk_drv.c
-+++ b/drivers/block/ublk_drv.c
-@@ -2045,7 +2045,7 @@ static int ublk_ctrl_add_dev(struct io_uring_cmd *cmd)
- 	ub->dev_info.flags &= ~UBLK_F_SUPPORT_ZERO_COPY;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 617d6f849a7b..afa51df2f0d3 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -147,6 +147,8 @@ EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_wait);
+  * driver has to take blk-mq max supported nr_hw_queues into account
+  * when figuring out nr_hw_queues from hardware info, for avoiding
+  * inconsistency between driver and blk-mq.
++ *
++ * Limit to single queue in case of kdump kernel
+  */
+ unsigned int blk_mq_max_nr_hw_queues(void)
+ {
+@@ -4370,7 +4372,7 @@ static void blk_mq_update_queue_map(struct blk_mq_tag_set *set)
+ 	if (set->nr_maps == 1)
+ 		set->map[HCTX_TYPE_DEFAULT].nr_queues = set->nr_hw_queues;
  
- 	ub->dev_info.nr_hw_queues = min_t(unsigned int,
--			ub->dev_info.nr_hw_queues, nr_cpu_ids);
-+			ub->dev_info.nr_hw_queues, blk_mq_max_nr_hw_queues());
- 	ublk_align_max_io_size(ub);
+-	if (set->ops->map_queues && !is_kdump_kernel()) {
++	if (set->ops->map_queues) {
+ 		int i;
  
- 	ret = ublk_init_queues(ub);
+ 		/*
+@@ -4420,6 +4422,22 @@ static int blk_mq_realloc_tag_set_tags(struct blk_mq_tag_set *set,
+ 	return 0;
+ }
+ 
++/* Limit to single map in case of kdump kernel */
++static unsigned int blk_mq_max_nr_maps(void)
++{
++	if (is_kdump_kernel())
++		return 1;
++	return HCTX_MAX_TYPES;
++}
++
++/* Limit to 64 in case of kdump kernel */
++static unsigned int blk_mq_max_depth(void)
++{
++	if (is_kdump_kernel())
++		return 64;
++	return BLK_MQ_MAX_DEPTH;
++}
++
+ /*
+  * Alloc a tag set to be associated with one or more request queues.
+  * May fail with EINVAL for various error conditions. May adjust the
+@@ -4456,16 +4474,13 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
+ 	else if (set->nr_maps > HCTX_MAX_TYPES)
+ 		return -EINVAL;
+ 
+-	/*
+-	 * If a crashdump is active, then we are potentially in a very
+-	 * memory constrained environment. Limit us to 1 queue and
+-	 * 64 tags to prevent using too much memory.
+-	 */
+-	if (is_kdump_kernel()) {
+-		set->nr_hw_queues = 1;
+-		set->nr_maps = 1;
+-		set->queue_depth = min(64U, set->queue_depth);
+-	}
++	if (set->nr_hw_queues > blk_mq_max_nr_hw_queues())
++		set->nr_hw_queues = blk_mq_max_nr_hw_queues();
++	if (set->nr_maps > blk_mq_max_nr_maps())
++		set->nr_maps = blk_mq_max_nr_maps();
++	if (set->queue_depth > blk_mq_max_depth())
++		set->queue_depth = blk_mq_max_depth();
++
+ 	/*
+ 	 * There is no use for more h/w queues than cpus if we just have
+ 	 * a single map
+@@ -4495,7 +4510,7 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
+ 						  GFP_KERNEL, set->numa_node);
+ 		if (!set->map[i].mq_map)
+ 			goto out_free_mq_map;
+-		set->map[i].nr_queues = is_kdump_kernel() ? 1 : set->nr_hw_queues;
++		set->map[i].nr_queues = set->nr_hw_queues;
+ 	}
+ 
+ 	blk_mq_update_queue_map(set);
 -- 
 2.40.1
 
