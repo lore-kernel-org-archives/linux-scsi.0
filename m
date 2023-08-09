@@ -2,131 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C189C001B0
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Aug 2023 06:11:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4DABEB64DD
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Aug 2023 07:14:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229914AbjHIGLb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Aug 2023 02:11:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53390 "EHLO
+        id S231633AbjHIHOB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Aug 2023 03:14:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230447AbjHIGLa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 02:11:30 -0400
-Received: from mail-qt1-x831.google.com (mail-qt1-x831.google.com [IPv6:2607:f8b0:4864:20::831])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95E2E12D
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2023 23:11:29 -0700 (PDT)
-Received: by mail-qt1-x831.google.com with SMTP id d75a77b69052e-40fd2f6bd7cso46498141cf.1
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Aug 2023 23:11:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1691561488; x=1692166288;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=7Ms7iYNp80/BrQPVd1Wu0NtDMidguJs1Vm+Kts8MPK0=;
-        b=RN576sBAEe/LovR6mCDVhX2xoekgFTYj/fgTIaDKWa+LJB9YVfaWfR58VPB3BXSfdn
-         v/IasQm7bVjAStbpq0fvSbuMSimHH0Sh0+aJRO4WPMG2xbo74qaecU9vEghc1H8e7e/E
-         L7+FImW8W+0VI7PK6KDLQAXJFJ1PqBKHm627rByV8J+lXBQBNg3Ug276XTU1mRxv2hE0
-         tZzp3a03Nge8nevSnfrH1qIm4I9dT2enkPmsen70nPaZvtrF9Kq+Y5LLA7fPTIzqWzDI
-         ghDypxrPkJ6gW4zjyn86bKmWCuFeq6qw31tMwrfonZXKe0dgpPwGqrycTIng8mHtqEPr
-         /lfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691561488; x=1692166288;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7Ms7iYNp80/BrQPVd1Wu0NtDMidguJs1Vm+Kts8MPK0=;
-        b=kglNyCx0Hhept+R78rzJa8GLQNCZfrAWyzN7jyxuxgNpK+/6wWilnJxGoCqmD/txTS
-         6rSXCkKKvTzMCZ18xn0ZlNe/RD6dGHu3kCI83Wwlk4xzZyVPfzmW7hyp0xinj8AxSYdi
-         p9Ae6hCPdlOWRZvhhE//QPn5t1DDkScrVvgZPu8JHbh6/1qD4Ts8VI4NA7fc9NT+02Gm
-         HlrF912WpsCVTfW51MvJ4P7tsAu4fkY7pfYpeghnYMhLU8rOOwLs4zd88w4OtcfjRfi2
-         7K0FASCDWlDEV/LEryKb2hi5QexYkTWH/1cahORO9tEMKWOyNLlRil2NDQJqAhJNncPL
-         CAjw==
-X-Gm-Message-State: AOJu0YyT6NLGd+/QayO21ZO6rHe+XUwGYqj5nvpU2b/Tnbx9gIpr4hP9
-        b8nWwnX6TbrGfMK+StvbU7k55P8PYS+aCI1pIg==
-X-Google-Smtp-Source: AGHT+IHf87EZm3LQgNx9Ep7FX3BJm1QmcuWANPNoYzfIPWVmf7wCxsLgxKWucwlxNZlNYTQFLSRGFg==
-X-Received: by 2002:a05:622a:170e:b0:403:9e72:5e93 with SMTP id h14-20020a05622a170e00b004039e725e93mr2579278qtk.9.1691561488321;
-        Tue, 08 Aug 2023 23:11:28 -0700 (PDT)
-Received: from thinkpad ([117.207.25.122])
-        by smtp.gmail.com with ESMTPSA id o16-20020a0cf4d0000000b0063d385c28edsm4259014qvm.41.2023.08.08.23.11.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Aug 2023 23:11:27 -0700 (PDT)
-Date:   Wed, 9 Aug 2023 11:41:21 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     kernel test robot <lkp@intel.com>
-Cc:     oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [jejb-scsi:misc 36/37] drivers/ufs/host/ufs-qcom.c:64:3: sparse:
- sparse: symbol 'ufs_qcom_bw_table' was not declared. Should it be static?
-Message-ID: <20230809061121.GB5348@thinkpad>
-References: <202308091030.L5JrOBJB-lkp@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <202308091030.L5JrOBJB-lkp@intel.com>
+        with ESMTP id S231638AbjHIHNy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 03:13:54 -0400
+Received: from wout5-smtp.messagingengine.com (wout5-smtp.messagingengine.com [64.147.123.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB02A2136;
+        Wed,  9 Aug 2023 00:13:43 -0700 (PDT)
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+        by mailout.west.internal (Postfix) with ESMTP id 47CE43200065;
+        Wed,  9 Aug 2023 03:13:43 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute6.internal (MEProxy); Wed, 09 Aug 2023 03:13:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wizy.org; h=cc
+        :content-transfer-encoding:content-type:content-type:date:date
+        :from:from:in-reply-to:message-id:mime-version:reply-to:sender
+        :subject:subject:to:to; s=fm3; t=1691565222; x=1691651622; bh=1n
+        4s7ge6Jy90+tWaqd2JFCyJxn/WoD7tBFdrYlyDtOM=; b=PgkqsvSz81e3M09I0f
+        cl5U8/CIaB+5af7m2wY/ZXz1NQlCII9xWdNwmoaLdCD4oVuL4reE5+MTcLZ1+T8I
+        n/RYhPKly8YapvrAYEkFX+k4sr6DYM/WzP3YKjivm0TbvvfIX5ng2O9/DVgRIpDm
+        +wcoA7DMQWFLwNbr8RgI5MklPIIyzs4EhjJoNuiLHJk5636ht8yMPmvBeu3+Pw1D
+        VREoECci316guZgKCPOGbo0/LlO/S2PqMeVmX8a6A7+fAH08oQbBeQWC4yq5ON1c
+        9QzMuzkUtCUTQ9cU0CP8QOHgtEUGRVX2rH+cVF4xxRJbs+W/A/8zqpB+rKk8sweH
+        +nIg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :content-type:date:date:feedback-id:feedback-id:from:from
+        :in-reply-to:message-id:mime-version:reply-to:sender:subject
+        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm3; t=1691565222; x=1691651622; bh=1n4s7ge6Jy90+
+        tWaqd2JFCyJxn/WoD7tBFdrYlyDtOM=; b=knji+iY9Td7qEB30G/sbWOK4IIAy7
+        BuJlrB6aiHJViOeDuNngVZBbNvCNwbNLRB8eA5zL9oDkuKFj6Gu0iESdrQ2IfyKo
+        sE6bs2muGRD7BiL65WmXPDwlxnYr2pka/bZzXYQIX0Mw+PAolakztGEGIRkvZFiV
+        pYg4mwpfIwe8vx9F48gEbDEzxTxEoRlsyoBkBqPXCXLII83WsGh2HOOuTiemvTlO
+        EbgPW3c4wrhMGNibcM1eVfDeJLXDV/n8ndglzkAXRtbgo+WznFNju8qt2aacipY/
+        hXxzcbeXVylhmpGxZitfoWHSvahL/b0Y7/3MgfrMxeAZG3OzW/nFj4hSg==
+X-ME-Sender: <xms:pjzTZKuqh5VuzFpJeVKsV7dMymQluuwsWv8Rgpzr9IYp8EJ1zQSwJQ>
+    <xme:pjzTZPdos3Vh7zvcgQsFHK9ElxrMvW7zuUhVDFwqi4WuU6xeg0dt6JDxOETQtGjA_
+    DoRGdCFQrqY_X-HKPQ>
+X-ME-Received: <xmr:pjzTZFzzxTqxajY0orUZL_IF4v_WZjy7wE_yQY4JkEudlGZ6ZDwnvuP3hQnuc9yWMXUxHg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedviedrleefgdduudehucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucenucfjughrpegggfgtfffkvffuhffosehtqhertd
+    ertdejnecuhfhrohhmpedftfhitggrrhguohcuvehorhhrvghirgdfuceolhhinhhugidq
+    uhhssgdqshgtshhiseifihiihidrohhrgheqnecuggftrfgrthhtvghrnhepffejjeduie
+    fgjefffeelteegffffhfffhfehleffvdekveekheeiiedugfdtffeknecuvehluhhsthgv
+    rhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheplhhinhhugidquhhssgdqsh
+    gtshhiseifihiihidrohhrgh
+X-ME-Proxy: <xmx:pjzTZFOyoEQUGvX2Uqz80G-hskvsEefAgH9k7qfWttRe3XTM96a9dA>
+    <xmx:pjzTZK9DajP-fwHoKG3iTmDMJoJNhserBskP13CeDzuQsSG8tr2l7A>
+    <xmx:pjzTZNWnSAVoo7jh65k9GV3NbJ3eMpJGY1ZzkazRh5cecPg-igQJOg>
+    <xmx:pjzTZPGfQ_4rQ7nlEfuorey7ZhSgLGrk-e_F_cEiZ0QTR1SunVFedg>
+Feedback-ID: i46b94775:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 9 Aug 2023 03:13:41 -0400 (EDT)
+Received: by mx3.wizy.org (OpenSMTPD) with ESMTP id f1c6593b;
+        Wed, 9 Aug 2023 07:13:39 +0000 (UTC)
+Received: by wizylap.wizy.org (OpenSMTPD) with ESMTP id bb0d2808;
+        Wed, 9 Aug 2023 07:13:38 +0000 (UTC)
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date:   Wed, 09 Aug 2023 07:13:38 +0000
+Message-Id: <CUNTTPCNZJDR.3T7MC38PK0INK@wizylap>
+To:     <linux-usb@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+Subject: TRIM support not always initialized correctly
+From:   "Ricardo Correia" <linux-usb-scsi@wizy.org>
+X-Mailer: aerc 0.14.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Aug 09, 2023 at 10:44:28AM +0800, kernel test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
-> head:   6cae9a3910ac1b5daf5ac3db9576b78cc4eff5aa
-> commit: 03ce80a1bb869f735de793f04c9c085b61884599 [36/37] scsi: ufs: qcom: Add support for scaling interconnects
-> config: arm64-randconfig-r071-20230808 (https://download.01.org/0day-ci/archive/20230809/202308091030.L5JrOBJB-lkp@intel.com/config)
-> compiler: aarch64-linux-gcc (GCC) 12.3.0
-> reproduce: (https://download.01.org/0day-ci/archive/20230809/202308091030.L5JrOBJB-lkp@intel.com/reproduce)
-> 
-> If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Closes: https://lore.kernel.org/oe-kbuild-all/202308091030.L5JrOBJB-lkp@intel.com/
-> 
-> sparse warnings: (new ones prefixed by >>)
-> >> drivers/ufs/host/ufs-qcom.c:64:3: sparse: sparse: symbol 'ufs_qcom_bw_table' was not declared. Should it be static?
-> 
+Hi,
 
-This is already taken care by https://lore.kernel.org/all/20230802040154.10652-1-manivannan.sadhasivam@linaro.org/
+I'm running kernel 6.1.43 and I'm running into an issue with a JMS578/JMS57=
+9 USB-SATA adapter connected to an SSD.
 
-- Mani
+When I first connect the adapter to the USB port of my laptop, TRIM support=
+ seems to be disabled:
 
-> vim +/ufs_qcom_bw_table +64 drivers/ufs/host/ufs-qcom.c
-> 
->     60	
->     61	struct __ufs_qcom_bw_table {
->     62		u32 mem_bw;
->     63		u32 cfg_bw;
->   > 64	} ufs_qcom_bw_table[MODE_MAX + 1][QCOM_UFS_MAX_GEAR + 1][QCOM_UFS_MAX_LANE + 1] = {
->     65		[MODE_MIN][0][0]		   = { 0,		0 }, /* Bandwidth values in KB/s */
->     66		[MODE_PWM][UFS_PWM_G1][UFS_LANE_1] = { 922,		1000 },
->     67		[MODE_PWM][UFS_PWM_G2][UFS_LANE_1] = { 1844,		1000 },
->     68		[MODE_PWM][UFS_PWM_G3][UFS_LANE_1] = { 3688,		1000 },
->     69		[MODE_PWM][UFS_PWM_G4][UFS_LANE_1] = { 7376,		1000 },
->     70		[MODE_PWM][UFS_PWM_G1][UFS_LANE_2] = { 1844,		1000 },
->     71		[MODE_PWM][UFS_PWM_G2][UFS_LANE_2] = { 3688,		1000 },
->     72		[MODE_PWM][UFS_PWM_G3][UFS_LANE_2] = { 7376,		1000 },
->     73		[MODE_PWM][UFS_PWM_G4][UFS_LANE_2] = { 14752,		1000 },
->     74		[MODE_HS_RA][UFS_HS_G1][UFS_LANE_1] = { 127796,		1000 },
->     75		[MODE_HS_RA][UFS_HS_G2][UFS_LANE_1] = { 255591,		1000 },
->     76		[MODE_HS_RA][UFS_HS_G3][UFS_LANE_1] = { 1492582,	102400 },
->     77		[MODE_HS_RA][UFS_HS_G4][UFS_LANE_1] = { 2915200,	204800 },
->     78		[MODE_HS_RA][UFS_HS_G1][UFS_LANE_2] = { 255591,		1000 },
->     79		[MODE_HS_RA][UFS_HS_G2][UFS_LANE_2] = { 511181,		1000 },
->     80		[MODE_HS_RA][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
->     81		[MODE_HS_RA][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
->     82		[MODE_HS_RB][UFS_HS_G1][UFS_LANE_1] = { 149422,		1000 },
->     83		[MODE_HS_RB][UFS_HS_G2][UFS_LANE_1] = { 298189,		1000 },
->     84		[MODE_HS_RB][UFS_HS_G3][UFS_LANE_1] = { 1492582,	102400 },
->     85		[MODE_HS_RB][UFS_HS_G4][UFS_LANE_1] = { 2915200,	204800 },
->     86		[MODE_HS_RB][UFS_HS_G1][UFS_LANE_2] = { 298189,		1000 },
->     87		[MODE_HS_RB][UFS_HS_G2][UFS_LANE_2] = { 596378,		1000 },
->     88		[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
->     89		[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
->     90		[MODE_MAX][0][0]		    = { 7643136,	307200 },
->     91	};
->     92	
-> 
-> -- 
-> 0-DAY CI Kernel Test Service
-> https://github.com/intel/lkp-tests/wiki
+$ lsblk -D | head -n 2
+NAME        DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
+sda                0        4K       0B         0
 
--- 
-மணிவண்ணன் சதாசிவம்
+(Notice the DISC-MAX value).
+
+However, if immediately after that, I remove and insert the uas module, the=
+n TRIM support seems to work fine:
+
+$ modprobe -r uas
+$ modprobe uas
+
+$ lsblk -D | head -n 2
+NAME        DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
+sda                0        4K       4G         0
+
+This seems to happen very consistently (both the disabled TRIM when first c=
+onnecting the device and the enabled TRIM
+when reloading the module).
+
+As far as I know I don't have any udev rules for this device, but I don't k=
+now how to verify this for sure.
+
+Any ideas of what could be wrong?
+
+Thank you.
