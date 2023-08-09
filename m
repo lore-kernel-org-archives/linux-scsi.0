@@ -2,96 +2,123 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC103C001E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Aug 2023 17:06:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E45C001B0
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Aug 2023 17:28:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230239AbjHIRGT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Aug 2023 13:06:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47120 "EHLO
+        id S231928AbjHIR2r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Aug 2023 13:28:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229759AbjHIRGS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 13:06:18 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1BA11718;
-        Wed,  9 Aug 2023 10:06:17 -0700 (PDT)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 379GPOJ0022857;
-        Wed, 9 Aug 2023 17:06:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=25KMdSV6JRQELSQISvTMDLzpIj4o4cC2d5iH5BsjijQ=;
- b=pKE6WQNnosATXWccNgNmXBM8a1r/zromxyfkdftXTQZzOLrzK49hvCiNjRlKFR9Y+v8v
- XAyxX2X7M11ExK/dUnpwWRza6HhP3fc6mEIBmzQhrtxHbRiEaJphZ/ErmR1HCsD6Pi6a
- chk+uBEi2baApEgVRTzd/1f8jV8VgUMC0gUR2dAoWj5m3Cz3xhhRqzr/onpTFxYXCiXW
- EAWcfXUutU9HBiHNZDKU/NzJdMfrJ212D3WpTNT8mJilq+jCV69Gq5Q4Nn9akJvT5OLg
- hHux1esn25BO5si/4m8HAio7sMpnpDFPhihW3j6A9pVNssEoWWhpiT6cBvL03XNBRN5/ /Q== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3scbd4gjqe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 09 Aug 2023 17:06:02 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 379H611k026543
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 9 Aug 2023 17:06:02 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Wed, 9 Aug
- 2023 10:06:01 -0700
-Message-ID: <32d1a742-a984-bead-ef60-d5edac6b5fd9@quicinc.com>
-Date:   Wed, 9 Aug 2023 10:06:01 -0700
+        with ESMTP id S231536AbjHIR2p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 13:28:45 -0400
+Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97781EE
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Aug 2023 10:28:42 -0700 (PDT)
+Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-58451f0fefeso1573127b3.3
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Aug 2023 10:28:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ieee.org; s=google; t=1691602122; x=1692206922;
+        h=content-transfer-encoding:message-id:references:in-reply-to:subject
+         :cc:to:from:date:mime-version:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=w5GHkqllOrwa7dKjTHTMacksa/BCngUM75YVKngzb84=;
+        b=e5LzrZn59/0i0VBuG6353Wmc/jFvdaVaQytmwbjSxYDCk34yEp8PDkhT2vGcnrcFnJ
+         /b6ENtHApcz7MsGLKPoya22WAvN1w13LWZolIBeE2F7GqawZkdj00o8qBK2EDpu06hca
+         N3EoRMrltIHmMZsx+Kvs+Us8njn5MwOXvvyBE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691602122; x=1692206922;
+        h=content-transfer-encoding:message-id:references:in-reply-to:subject
+         :cc:to:from:date:mime-version:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=w5GHkqllOrwa7dKjTHTMacksa/BCngUM75YVKngzb84=;
+        b=CeJJlBD0k/nR6XUa1sXW6C/yv2YIjXCajr8bAvmnYGBlNr6MJYOtaf8gVzgGKQfTNU
+         oGtf8GVaVX4QNz1uu7zNkQfKO5rRIOd8zXaDEMoE56RuTfJGHW1vnRWXp/z0UC6BkuN3
+         0zQIz6FrX3h78kgPH4H3ReDdazMeEzDxTQpL2fFfa0ohaQ7RZ0nrLajBTON05p7UgisQ
+         vN5v6CB72WC+cvJcZicAND/dfS4+zcDCrUGJMysbwrfdxe3FhOAm4La8ZHRa5ybxLzb2
+         JQRchgAwwEAGqNrYiAuNDTJtT6V5z6Tx3MwQs4NAwkbVnOIMFg3sLiHHbX+DFm844mP2
+         M0JQ==
+X-Gm-Message-State: AOJu0YxOHp6XKWRa7tP3UFrAl8EWMjvu2NHDTVPsLlbXnlYa9qZg/bQZ
+        vU/Xd+3hR0K0IerfjijFNwXIJQ==
+X-Google-Smtp-Source: AGHT+IHnuIrs3PweL9xunsuqoCKY17H82lE7cx9iaHFpRDYegJH258vHKi0V/9LAgF/GQyHIiowhsw==
+X-Received: by 2002:a81:9282:0:b0:585:5fbf:1bf1 with SMTP id j124-20020a819282000000b005855fbf1bf1mr3438208ywg.48.1691602121836;
+        Wed, 09 Aug 2023 10:28:41 -0700 (PDT)
+Received: from sunraycer.home ([2601:246:5d81:5e3b::100])
+        by smtp.gmail.com with ESMTPSA id u123-20020a818481000000b00559f1cb8444sm4066142ywf.70.2023.08.09.10.28.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Aug 2023 10:28:41 -0700 (PDT)
+Received: from 10.10.2.100 (sunraycer [10.10.2.100])
+        by sunraycer.home (Postfix) with ESMTPSA id E94F55C406E;
+        Wed,  9 Aug 2023 12:28:40 -0500 (CDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH V3] scsi: ufs: qcom: Align programming sequence as per HW
- spec
-Content-Language: en-US
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>, <mani@kernel.org>,
-        <quic_cang@quicinc.com>, <quic_asutoshd@quicinc.com>,
-        <avri.altman@wdc.com>, <martin.petersen@oracle.com>,
-        <beanhuo@micron.com>
-CC:     <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <agross@kernel.org>,
-        <andersson@kernel.org>, <konrad.dybcio@linaro.org>,
-        <jejb@linux.ibm.com>, <linux-arm-msm@vger.kernel.org>,
-        <quic_ziqichen@quicinc.com>,
-        "Naveen Kumar Goud Arepalli" <quic_narepall@quicinc.com>
-References: <20230809151243.17531-1-quic_nitirawa@quicinc.com>
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <20230809151243.17531-1-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Date:   Wed, 09 Aug 2023 12:28:40 -0500
+From:   steve <magnani@ieee.org>
+To:     Steve Magnani <magnani@ieee.org>
+Cc:     Quinn Tran <qutran@marvell.com>, linux-kernel@vger.kernel.org,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Prevent firmware rejection of
+ MBC_GET_RNID_PARAMS
+In-Reply-To: <20230809141059.10790-1-magnani@ieee.org>
+References: <20230809141059.10790-1-magnani@ieee.org>
+Message-ID: <2f4214c089c0269786abe1695fe7adec@sunraycer.home>
+X-Sender: steve@sunraycer.home
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Y2MeWIgInB7BxS2rrDf-V1OONSNqLJKN
-X-Proofpoint-ORIG-GUID: Y2MeWIgInB7BxS2rrDf-V1OONSNqLJKN
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-09_13,2023-08-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 malwarescore=0
- phishscore=0 bulkscore=0 suspectscore=0 spamscore=0 lowpriorityscore=0
- adultscore=0 mlxlogscore=862 impostorscore=0 priorityscore=1501 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
- definitions=main-2308090149
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/9/2023 8:12 AM, Nitin Rawat wrote:
-> Align clock configuration as per Qualcomm UFS controller
-> hardware specification.
-> 
-> This change updates UFS_SYS1CLK_1US, CORE_CLK_1US_CYCLES,
-> PA_VS_CORE_CLK_40NS_CYCLES timer configuration for Qunipro
-> and UTP to align with Qualcomm UFS HW specification.
-> 
-> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
-> 
+Please disregard. It looks like the original patch b68710a8094f reduced 
+the amount of data copied off so much that port logins are broken even 
+though with my patch the firmware now processes GET_RNID_PARAMS. The 
+breakage has been introduced during 6.5 (and propagated into 5.x stable 
+branches) so there is some urgency to getting a proper fix.
 
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+I will send a short series to revert b68710a8094f and replace it with 
+what I think is the correct overrun fix. AFAICT the overrun is only a 
+single dword.
+
+
+--Steve
+
+
+On 2023-08-09 09:10, Steve Magnani wrote:
+> At least some firmware (for example, QLE2692 FW 8.08.231 (d0d5)) 
+> returns
+> MBS_COMMAND_PARAMETER_ERROR when 
+> MBC_GET_RNID_PARAMS(RNID_TYPE_PORT_LOGIN)
+> is issued with a transfer length of 4 (DWords). Correct the overrun fix 
+> to
+> issue a "normal" transfer length and instead limit copy-out of desired
+> PLOGI data to the space available for it.
+> 
+> Fixes: b68710a8094f ("scsi: qla2xxx: Fix buffer overrun")
+> Signed-off-by: "Steven J. Magnani" <magnani@ieee.org>
+> ---
+> --- a/drivers/scsi/qla2xxx/qla_init.c	2023-08-01 03:46:21.727114453 
+> -0500
+> +++ b/drivers/scsi/qla2xxx/qla_init.c	2023-08-08 23:18:46.475286995 
+> -0500
+> @@ -5549,7 +5549,8 @@ static void qla_get_login_template(scsi_
+>  	__be32 *q;
+> 
+>  	memset(ha->init_cb, 0, ha->init_cb_size);
+> -	sz = min_t(int, sizeof(struct fc_els_csp), ha->init_cb_size);
+> +	/* At least some firmware requires sz > sizeof(fc_els_csp) */
+> +	sz = min_t(int, sizeof(struct fc_els_flogi), ha->init_cb_size);
+>  	rval = qla24xx_get_port_login_templ(vha, ha->init_cb_dma,
+>  					    ha->init_cb, sz);
+>  	if (rval != QLA_SUCCESS) {
+> @@ -5560,6 +5561,7 @@ static void qla_get_login_template(scsi_
+>  	q = (__be32 *)&ha->plogi_els_payld.fl_csp;
+> 
+>  	bp = (uint32_t *)ha->init_cb;
+> +	sz = min_t(u32, sizeof(struct fc_els_csp), sz);
+>  	cpu_to_be32_array(q, bp, sz / 4);
+>  	ha->flags.plogi_template_valid = 1;
+>  }
