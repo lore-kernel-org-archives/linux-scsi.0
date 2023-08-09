@@ -2,94 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1C22C04A6A
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Aug 2023 13:47:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A967C001B0
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Aug 2023 14:11:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232123AbjHINrH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Aug 2023 09:47:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34146 "EHLO
+        id S233163AbjHIOLm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Aug 2023 10:11:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231540AbjHINrG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 09:47:06 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C541EDA
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Aug 2023 06:47:04 -0700 (PDT)
-Received: from canpemm500007.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RLWVB6bFDz9tXC;
-        Wed,  9 Aug 2023 21:43:30 +0800 (CST)
-Received: from localhost (10.174.179.215) by canpemm500007.china.huawei.com
- (7.192.104.62) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 9 Aug
- 2023 21:46:59 +0800
-From:   Yue Haibing <yuehaibing@huawei.com>
-To:     <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <yuehaibing@huawei.com>
-CC:     <linux-scsi@vger.kernel.org>
-Subject: [PATCH -next] scsi: libsas: Remove unused declarations
-Date:   Wed, 9 Aug 2023 21:22:49 +0800
-Message-ID: <20230809132249.37948-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.10.2.windows.1
+        with ESMTP id S229978AbjHIOLl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 10:11:41 -0400
+Received: from mail-yw1-x112f.google.com (mail-yw1-x112f.google.com [IPv6:2607:f8b0:4864:20::112f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC9671FD7
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Aug 2023 07:11:40 -0700 (PDT)
+Received: by mail-yw1-x112f.google.com with SMTP id 00721157ae682-5839f38342fso75107637b3.0
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Aug 2023 07:11:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ieee.org; s=google; t=1691590300; x=1692195100;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=34i6iKDP0xEhvs3ST3hBs6nBUaQZGtmJ6ZJ/h8b6qxc=;
+        b=WFRd6SnAL0CN+fvlIQRJMgHjg7eOAgFUJbQkf1aFOyyB8PqaGS8cSqy6iQvPUGu/AC
+         VubrA30/pDB/fwFxfd8VpgVLajTenIa5kyb6SyNxxvdwFhTPlzkNCp/7E0BSzqTJGwgJ
+         AqRYr7E2atC98ld7b7/dPHHLLA3geGFiOjNaY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691590300; x=1692195100;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=34i6iKDP0xEhvs3ST3hBs6nBUaQZGtmJ6ZJ/h8b6qxc=;
+        b=QMB197NN/K6DVZAaGJlahESHtTL0dpzlLUuzx1Jq7/S7518FRrQtqkGElXlOeL033H
+         nh9uJJrPJYfcgT6NrbAT9brhFuo0mhPZ8tOjFYbqZLjsNmqsggibgjKX3VkgspdLVEkp
+         k+KzdliMDcgV1H3udy5Hn8QcNPgYl/DbY4zUdeFoGcC4L/Tkk+0kiP0PoqFzCNn0JaGx
+         4G4/Jh8RIW203nQ5yKKDcked6N5mrpP5vYkIeYUdoFPAj4EDpaTr/tUdrMlAIz1aHIkp
+         FH0L2XRIJnvn/gAfPtBMT2GdF9+AGSeI/wrt7dDcpcSnLho+nIa6mW1QRBR0Dw47K1L/
+         P5MA==
+X-Gm-Message-State: AOJu0YxTzLgS933qSN4S5AjbTuHR55NMzmiEt24vkT/4vhnhRrnzT5t4
+        6WttuDw6VpsUde73ValDsj4PUw==
+X-Google-Smtp-Source: AGHT+IHWl09PlCcDhzDmnd3MIv5OYyumiMk8BMzkfwDq8nV+RETz/pPMMQ8qOpnvCs3BuL5EA/bpJQ==
+X-Received: by 2002:a0d:e587:0:b0:583:4304:75a4 with SMTP id o129-20020a0de587000000b00583430475a4mr2832236ywe.29.1691590299861;
+        Wed, 09 Aug 2023 07:11:39 -0700 (PDT)
+Received: from sunraycer.home ([2601:246:5d81:5e3b::100])
+        by smtp.gmail.com with ESMTPSA id j12-20020a81920c000000b00573898fb12bsm4017726ywg.82.2023.08.09.07.11.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Aug 2023 07:11:39 -0700 (PDT)
+Received: from puyallup.home (localhost [127.0.0.1])
+        by sunraycer.home (Postfix) with ESMTPA id F289A5C3722;
+        Wed,  9 Aug 2023 09:11:38 -0500 (CDT)
+From:   Steve Magnani <magnani@ieee.org>
+To:     Quinn Tran <qutran@marvell.com>
+Cc:     linux-kernel@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        linux-scsi@vger.kernel.org, "Steven J. Magnani" <magnani@ieee.org>
+Subject: [PATCH] scsi: qla2xxx: Prevent firmware rejection of MBC_GET_RNID_PARAMS
+Date:   Wed,  9 Aug 2023 09:10:59 -0500
+Message-Id: <20230809141059.10790-1-magnani@ieee.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.174.179.215]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- canpemm500007.china.huawei.com (7.192.104.62)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 042ebd293b86 ("scsi: libsas: kill useless ha_event and do some cleanup")
-removed sas_hae_reset() but not its declaration.
-Commit 2908d778ab3e ("[SCSI] aic94xx: new driver") declared but never implemented
-other functions.
+At least some firmware (for example, QLE2692 FW 8.08.231 (d0d5)) returns
+MBS_COMMAND_PARAMETER_ERROR when MBC_GET_RNID_PARAMS(RNID_TYPE_PORT_LOGIN)
+is issued with a transfer length of 4 (DWords). Correct the overrun fix to
+issue a "normal" transfer length and instead limit copy-out of desired
+PLOGI data to the space available for it.
 
-Signed-off-by: Yue Haibing <yuehaibing@huawei.com>
+Fixes: b68710a8094f ("scsi: qla2xxx: Fix buffer overrun")
+Signed-off-by: "Steven J. Magnani" <magnani@ieee.org>
 ---
- drivers/scsi/libsas/sas_internal.h | 7 -------
- include/scsi/libsas.h              | 2 --
- 2 files changed, 9 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 6f593fa69b58..a6dc7dc07fce 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -41,13 +41,7 @@ struct sas_phy_data {
+--- a/drivers/scsi/qla2xxx/qla_init.c	2023-08-01 03:46:21.727114453 -0500
++++ b/drivers/scsi/qla2xxx/qla_init.c	2023-08-08 23:18:46.475286995 -0500
+@@ -5549,7 +5549,8 @@ static void qla_get_login_template(scsi_
+ 	__be32 *q;
  
- void sas_scsi_recover_host(struct Scsi_Host *shost);
+ 	memset(ha->init_cb, 0, ha->init_cb_size);
+-	sz = min_t(int, sizeof(struct fc_els_csp), ha->init_cb_size);
++	/* At least some firmware requires sz > sizeof(fc_els_csp) */
++	sz = min_t(int, sizeof(struct fc_els_flogi), ha->init_cb_size);
+ 	rval = qla24xx_get_port_login_templ(vha, ha->init_cb_dma,
+ 					    ha->init_cb, sz);
+ 	if (rval != QLA_SUCCESS) {
+@@ -5560,6 +5561,7 @@ static void qla_get_login_template(scsi_
+ 	q = (__be32 *)&ha->plogi_els_payld.fl_csp;
  
--int sas_show_class(enum sas_class class, char *buf);
--int sas_show_proto(enum sas_protocol proto, char *buf);
--int sas_show_linkrate(enum sas_linkrate linkrate, char *buf);
--int sas_show_oob_mode(enum sas_oob_mode oob_mode, char *buf);
--
- int  sas_register_phys(struct sas_ha_struct *sas_ha);
--void sas_unregister_phys(struct sas_ha_struct *sas_ha);
- 
- struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy, gfp_t gfp_flags);
- void sas_free_event(struct asd_sas_event *event);
-@@ -91,7 +85,6 @@ int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
- int sas_get_phy_attached_dev(struct domain_device *dev, int phy_id,
- 			     u8 *sas_addr, enum sas_device_type *type);
- int sas_try_ata_reset(struct asd_sas_phy *phy);
--void sas_hae_reset(struct work_struct *work);
- 
- void sas_free_device(struct kref *kref);
- void sas_destruct_devices(struct asd_sas_port *port);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 159823e0afbf..8557a0caf5fe 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -727,8 +727,6 @@ extern struct device_attribute dev_attr_phy_event_threshold;
- 
- int  sas_discover_root_expander(struct domain_device *);
- 
--void sas_init_ex_attr(void);
--
- int  sas_ex_revalidate_domain(struct domain_device *);
- 
- void sas_unregister_domain_devices(struct asd_sas_port *port, int gone);
--- 
-2.34.1
-
+ 	bp = (uint32_t *)ha->init_cb;
++	sz = min_t(u32, sizeof(struct fc_els_csp), sz);
+ 	cpu_to_be32_array(q, bp, sz / 4);
+ 	ha->flags.plogi_template_valid = 1;
+ }
+------------------------------------------------------------------------
+ Steven J. Magnani               "I claim this network for MARS!
+                                  Earthling, return my space modulator!"
+ #include <standard.disclaimer>
