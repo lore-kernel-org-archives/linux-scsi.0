@@ -2,149 +2,261 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EC3C001B0
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 14:02:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89A3EC07E8E
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 14:20:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234208AbjHJOCE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Aug 2023 10:02:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60776 "EHLO
+        id S235592AbjHJOUZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Aug 2023 10:20:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231600AbjHJOCD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 10:02:03 -0400
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE373EA;
-        Thu, 10 Aug 2023 07:02:02 -0700 (PDT)
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-56530cfee38so639116a12.2;
-        Thu, 10 Aug 2023 07:02:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691676122; x=1692280922;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=79gmeazvHAKk7515ds+nfk838n03+4+IxCe3JAS7JNM=;
-        b=Qjr0XDtMDX9XkNL26tN1Q2m4PyW5HfZGmx6hQ94bG3+MjlQRPLWW/3zS9VtCePTH9z
-         hWFiH8FBY8HLsSlYfaudjHS9mkIvw9YSi+7B2kWXmfPu/l78K0+sRLJqRFCmOVK1zSJ8
-         3EFH7afBtO0YgahPbvTcqJqJXOW7IQnJ7oGvYpdjla6PPlP++6RwLtI23dO6+yWr0FPP
-         jOmlTTHO0F2eK6TqCtH6whFIHvDJtvB9qBKyHZM6SdwS3HN1mJIi7RGBVpFC5vtg6qX9
-         CqhvKU6VSrkQBDWMLNrYYfU5ymkO2q6uOj/ik6u3jgsqlyS91ozOQeajRao0tYyQY8qJ
-         5iAg==
-X-Gm-Message-State: AOJu0YzvwGetaLKO05oYfHmljUP59Z0UeiU/7SA/ZD08kgLp6msdM2BI
-        5FZXhocSfhl+tBrLPwYiGGg=
-X-Google-Smtp-Source: AGHT+IElLA0DuXeX2kI/4A01w+Zr2jYc3j3TJjS6w18oNjp3zAIKpjTqgkE5AMLM4oWFsnH2I7WFWQ==
-X-Received: by 2002:a17:90b:2310:b0:262:df91:cdce with SMTP id mt16-20020a17090b231000b00262df91cdcemr1902786pjb.23.1691676121968;
-        Thu, 10 Aug 2023 07:02:01 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id f10-20020a170902ce8a00b001b7fd27144dsm1787088plg.40.2023.08.10.07.02.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Aug 2023 07:02:01 -0700 (PDT)
-Message-ID: <3ebefe64-bb74-732e-68d1-faf9e3c5877b@acm.org>
-Date:   Thu, 10 Aug 2023 07:02:00 -0700
+        with ESMTP id S230434AbjHJOUW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 10:20:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B87B2698;
+        Thu, 10 Aug 2023 07:20:21 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DB6F065D22;
+        Thu, 10 Aug 2023 14:20:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E700C433C7;
+        Thu, 10 Aug 2023 14:20:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691677220;
+        bh=M6pCzl56hQfYBur6YmsekmzG2MMWL9hk5rFjJ0OsUU0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=sEToNoLWqGtj4+RI0IeL2/r+G3nimZRvSUqztupu9NJ+WYoZP0DMJQzTc7AhlsCRR
+         jK+SIxlfrcfMXKvWeumyeQOK5nFc2dY4tBk6a84vRp7cTftkekwCVyX2rgv9+6AmrC
+         Dh91SfRjBjwYI9+cQxGNywuPyE4jUPyAUbzRq1qlPCpdc5pfBe17qe4QSw1GWxutDV
+         LEqx6GOFuLUoidCbQEbTBmg9pIzjp2gcCgmaYfyZA/oR7dMrTfDlL6wCOIJiRAEh5z
+         7bD2ltW5YMGSzYVVjE66ksMmUMrACNMp5UJJUI+KM+0mH1fxsUmNyF/NEvXI4YbDxf
+         rS2tPNYilE83g==
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org
+Cc:     Arnd Bergmann <arnd@arndb.de>, Matt Turner <mattst88@gmail.com>,
+        Vineet Gupta <vgupta@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>, Guo Ren <guoren@kernel.org>,
+        Brian Cain <bcain@quicinc.com>,
+        Huacai Chen <chenhuacai@kernel.org>,
+        WANG Xuerui <kernel@xen0n.name>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Michal Simek <monstr@monstr.eu>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Dinh Nguyen <dinguyen@kernel.org>,
+        Jonas Bonn <jonas@southpole.se>,
+        Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+        Stafford Horne <shorne@gmail.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        x86@kernel.org, Borislav Petkov <bp@alien8.de>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Richard Weinberger <richard@nod.at>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-next@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-snps-arc@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-csky@vger.kernel.org,
+        linux-hexagon@vger.kernel.org, linux-ia64@vger.kernel.org,
+        loongarch@lists.linux.dev, linux-m68k@lists.linux-m68k.org,
+        linux-mips@vger.kernel.org, linux-openrisc@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kbuild@vger.kernel.org
+Subject: [PATCH 00/17] -Wmissing-prototype warning fixes
+Date:   Thu, 10 Aug 2023 16:19:18 +0200
+Message-Id: <20230810141947.1236730-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v7 1/7] block: Introduce the use_zone_write_lock member
- variable
-Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
-References: <20230809202355.1171455-1-bvanassche@acm.org>
- <20230809202355.1171455-2-bvanassche@acm.org>
- <8312a7c4-b3ef-873d-c4fa-825b7fce8be1@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <8312a7c4-b3ef-873d-c4fa-825b7fce8be1@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/9/23 18:33, Damien Le Moal wrote:
-> On 8/10/23 05:23, Bart Van Assche wrote:
->> Writes in sequential write required zones must happen at the write
->> pointer. Even if the submitter of the write commands (e.g. a filesystem)
->> submits writes for sequential write required zones in order, the block
->> layer or the storage controller may reorder these write commands.
->>
->> The zone locking mechanism in the mq-deadline I/O scheduler serializes
->> write commands for sequential zones. Some but not all storage controllers
->> require this serialization. Introduce a new request queue limit member
->> variable to allow block drivers to indicate that they preserve the order
->> of write commands and thus do not require serialization of writes per
->> zone.
->>
->> Cc: Damien Le Moal <dlemoal@kernel.org>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: Ming Lei <ming.lei@redhat.com>
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> ---
->>   block/blk-settings.c   | 6 ++++++
->>   include/linux/blkdev.h | 1 +
->>   2 files changed, 7 insertions(+)
->>
->> diff --git a/block/blk-settings.c b/block/blk-settings.c
->> index 0046b447268f..b75c97971860 100644
->> --- a/block/blk-settings.c
->> +++ b/block/blk-settings.c
->> @@ -56,6 +56,7 @@ void blk_set_default_limits(struct queue_limits *lim)
->>   	lim->alignment_offset = 0;
->>   	lim->io_opt = 0;
->>   	lim->misaligned = 0;
->> +	lim->use_zone_write_lock = true;
->>   	lim->zoned = BLK_ZONED_NONE;
-> 
-> Given that the default for zoned is BLK_ZONED_NONE, having use_zone_write_lock
-> default to true is strange. It would be better to set the default to false and
-> have disk_set_zoned() set it to true if needed, with an additional argument to
-> specify if it should be the case or not. E.g., for SMR drives, sd.c would call
-> something like:
-> 
-> disk_set_zoned(sdkp->disk, BLK_ZONED_HM, sdp->use_zone_write_lock);
-> 
-> sd.c would default to sdp->use_zone_write_lock == true and UFS driver can set
-> it to false. That would be cleaner I think.
+From: Arnd Bergmann <arnd@arndb.de>
 
-Hi Damien,
+Most of the patches I sent so far for the -Wmissing-prototype warnings
+have made it into linux-next now. There are a few that I'm resending
+now as nobody has picked them up, and then a number of fixes that I
+found while test-building across all architectures rather than just the
+ones I usually test.
 
-Thanks for the detailed feedback.
+The first 15 patches in this series should be uncontroversial, so
+I expect that either a subsystem maintainer or Andrew Morton can
+apply these directly.
 
-My concerns about the above proposal are as follows:
-* The information about whether or not the zone write lock should be used comes
-   from the block driver, e.g. a SCSI LLD.
-* sdp, the SCSI disk pointer, is owned by the ULD.
-* An ULD may be attached and detached multiple times during the lifetime of a
-   logical unit without the LLD being informed about this. So how to set
-   sdp->use_zone_write_lock without introducing a new callback or member variable
-   in a data structure owned by the LLD?
+For the last two patches, these might still need some debate about how
+to handle them. I added a Kconfig option to turn off most of the missing
+prototype warnings in the architectures that nobody has fixed yet,
+see patch 16 for those. The last patch does cause some known warnings
+and likely unknown ones for architectures other than x86 and arm,
+so applying it now will bring new problems, but not applying it also
+means that new warnings creep in, so I think this is mainly a question
+of what the best timing is for having this in linux-next.
 
-Hence my preference to store use_zone_write_lock in a data structure that has the
-same lifetime as the logical unit and not in any data structure controlled by the
-ULD.
+Arnd Bergmann (17):
+  [RESEND] jffs2: mark __jffs2_dbg_superblock_counts() static
+  [RESEND] irq_work: consolidate arch_irq_work_raise prototypes
+  [RESEND] ida: make 'ida_dump' static
+  pci: sysfs: move declarations to linux/pci.h
+  swim3: mark swim3_init() static
+  macintosh/ams: mark ams_init() static
+  scsi: qlogicpti: mark qlogicpti_info() static
+  microblaze: mark flush_dcache_folio() inline
+  parport: gsc: mark init function static
+  zorro: include zorro.h in names.c
+  scsi: gvp11: remove unused gvp11_setup() function
+  time: make sysfs_get_uname() function visible in header
+  stackleak: add declarations for global functions
+  kprobes: unify kprobes_exceptions_nofify() prototypes
+  arch: fix asm-offsets.c building with -Wmissing-prototypes
+  [RFC] arch: turn -Wmissing-prototypes off conditionally
+  [RFC] Makefile.extrawarn: turn on missing-prototypes again
 
->>   	lim->zone_write_granularity = 0;
->>   	lim->dma_alignment = 511;
->> @@ -685,6 +686,11 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
->>   						   b->max_secure_erase_sectors);
->>   	t->zone_write_granularity = max(t->zone_write_granularity,
->>   					b->zone_write_granularity);
->> +	/*
->> +	 * Whether or not the zone write lock should be used depends on the
->> +	 * bottom driver only.
->> +	 */
->> +	t->use_zone_write_lock = b->use_zone_write_lock;
-> 
-> Given that DM bio targets do not have a scheduler and do not have a zone lock
-> bitmap allocated, I do not think this is necessary at all. This can remain to
-> false, thus in sync with the fact that there is no IO scheduler.
+ arch/alpha/Kbuild                        |  2 ++
+ arch/alpha/include/asm/pci.h             |  3 ---
+ arch/alpha/kernel/asm-offsets.c          |  2 +-
+ arch/alpha/lib/Makefile                  |  1 +
+ arch/arc/Kbuild                          |  2 ++
+ arch/arc/include/asm/kprobes.h           |  3 ---
+ arch/arm/include/asm/irq_work.h          |  2 --
+ arch/arm/include/asm/kprobes.h           |  2 --
+ arch/arm64/include/asm/irq_work.h        |  2 --
+ arch/arm64/include/asm/kprobes.h         |  2 --
+ arch/csky/Kbuild                         |  2 ++
+ arch/csky/include/asm/irq_work.h         |  2 +-
+ arch/hexagon/Kbuild                      |  2 ++
+ arch/ia64/Kbuild                         |  2 ++
+ arch/ia64/include/asm/kprobes.h          |  2 --
+ arch/ia64/kernel/asm-offsets.c           |  2 +-
+ arch/ia64/lib/Makefile                   |  1 +
+ arch/loongarch/Kbuild                    |  2 ++
+ arch/loongarch/kernel/asm-offsets.c      | 12 ++++++++++++
+ arch/m68k/Kbuild                         |  2 ++
+ arch/m68k/lib/Makefile                   |  1 +
+ arch/microblaze/Kbuild                   |  2 ++
+ arch/microblaze/include/asm/cacheflush.h |  2 +-
+ arch/mips/Kbuild                         |  2 ++
+ arch/mips/boot/compressed/Makefile       |  3 ++-
+ arch/mips/include/asm/kprobes.h          |  2 --
+ arch/nios2/Kbuild                        |  2 ++
+ arch/nios2/lib/Makefile                  |  1 +
+ arch/openrisc/Kbuild                     |  2 ++
+ arch/parisc/Kbuild                       |  2 ++
+ arch/parisc/lib/Makefile                 |  1 +
+ arch/powerpc/include/asm/irq_work.h      |  1 -
+ arch/powerpc/include/asm/kprobes.h       |  2 --
+ arch/riscv/include/asm/irq_work.h        |  2 +-
+ arch/s390/include/asm/irq_work.h         |  2 --
+ arch/s390/include/asm/kprobes.h          |  2 --
+ arch/sh/Kbuild                           |  2 ++
+ arch/sh/boot/compressed/Makefile         |  1 +
+ arch/sh/include/asm/kprobes.h            |  2 --
+ arch/sparc/Kbuild                        |  2 ++
+ arch/sparc/include/asm/kprobes.h         |  2 --
+ arch/sparc/kernel/asm-offsets.c          | 13 ++-----------
+ arch/sparc/lib/Makefile                  |  1 +
+ arch/sparc/prom/Makefile                 |  1 +
+ arch/x86/include/asm/irq_work.h          |  1 -
+ arch/x86/include/asm/kprobes.h           |  2 --
+ arch/xtensa/Kbuild                       |  2 ++
+ arch/xtensa/boot/lib/Makefile            |  2 ++
+ drivers/block/swim3.c                    |  2 +-
+ drivers/macintosh/ams/ams-core.c         |  2 +-
+ drivers/parport/parport_gsc.c            |  2 +-
+ drivers/scsi/gvp11.c                     |  5 -----
+ drivers/scsi/qlogicpti.c                 |  2 +-
+ drivers/zorro/names.c                    |  1 +
+ fs/jffs2/debug.c                         |  2 +-
+ include/linux/irq_work.h                 |  3 +++
+ include/linux/kprobes.h                  |  4 ++++
+ include/linux/pci.h                      |  5 +++++
+ include/linux/stackleak.h                |  6 ++++++
+ init/Kconfig                             | 10 ++++++++++
+ kernel/time/tick-internal.h              |  3 ++-
+ lib/test_ida.c                           |  2 +-
+ scripts/Makefile.extrawarn               |  5 +++--
+ 63 files changed, 101 insertions(+), 63 deletions(-)
 
-How about the request-based dm drivers (dm-mpath and dm-target)? Isn't the dm-mpath
-driver request based because that allows the I/O scheduler to be configured on top
-of the dm-mpath driver? From https://lwn.net/Articles/274292/: "The basic idea to
-resolve the issue is to move multipathing layer down below the I/O scheduler, and it
-was proposed from Mike Christie as the block layer (request-based) multipath".
-
-Thanks,
-
-Bart.
-
+-- 
+2.39.2
+Cc: Matt Turner <mattst88@gmail.com>
+Cc: Vineet Gupta <vgupta@kernel.org>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Will Deacon <will@kernel.org>
+Cc: Guo Ren <guoren@kernel.org>
+Cc: Brian Cain <bcain@quicinc.com>
+Cc: Huacai Chen <chenhuacai@kernel.org>
+Cc: WANG Xuerui <kernel@xen0n.name>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Michal Simek <monstr@monstr.eu>
+Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Cc: Dinh Nguyen <dinguyen@kernel.org>
+Cc: Jonas Bonn <jonas@southpole.se>
+Cc: Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+Cc: Stafford Horne <shorne@gmail.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Helge Deller <deller@gmx.de>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
+Cc: Palmer Dabbelt <palmer@dabbelt.com>
+Cc: Heiko Carstens <hca@linux.ibm.com>
+Cc: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Cc: x86@kernel.org
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Max Filippov <jcmvbkbc@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Richard Weinberger <richard@nod.at>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Masahiro Yamada <masahiroy@kernel.org>
+Cc: Nathan Chancellor <nathan@kernel.org>
+Cc: Nick Desaulniers <ndesaulniers@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-alpha@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-snps-arc@lists.infradead.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-csky@vger.kernel.org
+Cc: linux-hexagon@vger.kernel.org
+Cc: linux-ia64@vger.kernel.org
+Cc: loongarch@lists.linux.dev
+Cc: linux-m68k@lists.linux-m68k.org
+Cc: linux-mips@vger.kernel.org
+Cc: linux-openrisc@vger.kernel.org
+Cc: linux-parisc@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-riscv@lists.infradead.org
+Cc: linux-s390@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+Cc: sparclinux@vger.kernel.org
+Cc: linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-mtd@lists.infradead.org
+Cc: linux-trace-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kbuild@vger.kernel.org
