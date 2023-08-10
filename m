@@ -2,117 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 170C4C001B0
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 03:02:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 531E7C04A6A
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 05:36:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231794AbjHJDCn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Aug 2023 23:02:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40992 "EHLO
+        id S233092AbjHJFgq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Aug 2023 01:36:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230123AbjHJDCm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 23:02:42 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A5561FCC
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Aug 2023 20:01:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691636514;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=594nXTsTgZOwSIbiFys/fNQ4V66vIHVyVd6OCcJP7n4=;
-        b=cbUrIOIjDb65IkYx0TCPhrc+fZL1vtHoxv6S5EjNOJafzWKKLstYlcM0p/5NEnInyaxMzx
-        yQ1qUCDnGmBYkZau22ODa/y2tmz/qOg36ry2udzCFKunGfxoEo6LmWKmNHVTRQeWqYWywi
-        IzGgk43aY8q0hOYJlZRiwt4Y7+QKUpM=
-Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-158-462o-o7QOKu_hKQjukBwpw-1; Wed, 09 Aug 2023 23:01:51 -0400
-X-MC-Unique: 462o-o7QOKu_hKQjukBwpw-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S233083AbjHJFgp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 01:36:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88D2F10C3;
+        Wed,  9 Aug 2023 22:36:45 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 5C5D83C01BA8;
-        Thu, 10 Aug 2023 03:01:50 +0000 (UTC)
-Received: from localhost (unknown [10.72.112.99])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6AEB7492C13;
-        Thu, 10 Aug 2023 03:01:49 +0000 (UTC)
-Date:   Thu, 10 Aug 2023 11:01:46 +0800
-From:   Baoquan He <bhe@redhat.com>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     mpe@ellerman.id.au, npiggin@gmail.com, christophe.leroy@csgroup.eu,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-nvme@lists.infradead.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Wen Xiong <wenxiong@linux.ibm.com>,
-        Keith Busch <kbusch@kernel.org>, linuxppc-dev@lists.ozlabs.org,
-        Dave Young <dyoung@redhat.com>, kexec@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Pingfan Liu <piliu@redhat.com>
-Subject: Re: [PATCH V3 01/14] blk-mq: add blk_mq_max_nr_hw_queues()
-Message-ID: <ZNRTGrRuwf69EgnE@MiWiFi-R3L-srv>
-References: <20230808104239.146085-1-ming.lei@redhat.com>
- <20230808104239.146085-2-ming.lei@redhat.com>
- <20230809134401.GA31852@lst.de>
- <ZNQqt1C0pXspGl3d@fedora>
- <ZNQ64xhCIBU6XM/5@MiWiFi-R3L-srv>
- <ZNRGNsRzEJfzUEzH@fedora>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 209A763A11;
+        Thu, 10 Aug 2023 05:36:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EA7DC433C8;
+        Thu, 10 Aug 2023 05:36:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691645804;
+        bh=tcSjhntVhHGs4LILxZjnhlkjuBObmtnak8S0wqOrdng=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=n+H6NfEg855xY5gp8DtQ7B5dL3rY7g+XYwU0/nEtnsIUlfwPpKioE3NIAq1blAI9F
+         YTXFxZ3MbxJ157LL0FcQpT/PpV9mghO5vMZRcu76xRzgcapu6hc1nApVNHysdivVpa
+         rJRtKebueZEUxXZXlbpuEy+4DQaYCrHs8KL27l8Pnpc2kpQwwEMeF/IvLtBwGdbKB7
+         V0giFR0eFAiCffz4u1LptdHNLFuNO8H22Y0L8jFuZkiv+HAL+zcKAHFgkeBZkklN6y
+         TdU3uYYefWJVYEe1jo912z1K+BnN8pVtNjupDDiHKX5djgd39y6A/VxW1zOM9AL/6B
+         RT6jWJT9AUwmA==
+Date:   Wed, 9 Aug 2023 22:36:42 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
+        Om Prakash Singh <omprsing@qti.qualcomm.com>,
+        "Prasad Sodagudi (QUIC)" <quic_psodagud@quicinc.com>,
+        "Arun Menon (SSG)" <avmenon@quicinc.com>,
+        "abel.vesa@linaro.org" <abel.vesa@linaro.org>,
+        "Seshu Madhavi Puppala (QUIC)" <quic_spuppala@quicinc.com>
+Subject: Re: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
+ ufs
+Message-ID: <20230810053642.GD923@sol.localdomain>
+References: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
+ <20230720025541.GA2607@sol.localdomain>
+ <ca11701e403f48b6839b26c47a1b537f@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZNRGNsRzEJfzUEzH@fedora>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+In-Reply-To: <ca11701e403f48b6839b26c47a1b537f@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08/10/23 at 10:06am, Ming Lei wrote:
-> On Thu, Aug 10, 2023 at 09:18:27AM +0800, Baoquan He wrote:
-> > On 08/10/23 at 08:09am, Ming Lei wrote:
-> > > On Wed, Aug 09, 2023 at 03:44:01PM +0200, Christoph Hellwig wrote:
-> > > > I'm starting to sound like a broken record, but we can't just do random
-> > > > is_kdump checks, and it's not going to get better by resending it again and
-> > > > again.  If kdump kernels limit the number of possible CPUs, it needs to
-> > > > reflected in cpu_possible_map and we need to use that information.
-> > > > 
-> > > 
-> > > Can you look at previous kdump/arch guys' comment about kdump usage &
-> > > num_possible_cpus?
-> > > 
-> > >     https://lore.kernel.org/linux-block/CAF+s44RuqswbosY9kMDx35crviQnxOeuvgNsuE75Bb0Y2Jg2uw@mail.gmail.com/
-> > >     https://lore.kernel.org/linux-block/ZKz912KyFQ7q9qwL@MiWiFi-R3L-srv/
-> > > 
-> > > The point is that kdump kernels does not limit the number of possible CPUs.
-> > > 
-> > > 1) some archs support 'nr_cpus=1' for kdump kernel, which is fine, since
-> > > num_possible_cpus becomes 1.
-> > 
-> > Yes, "nr_cpus=" is strongly suggested in kdump kernel because "nr_cpus="
-> > limits the possible cpu numbers, while "maxcpuss=" only limits the cpu
-> > number which can be brought up during bootup. We noticed this diference
-> > because a large number of possible cpus will cost more memory in kdump
-> > kernel. e.g percpu initialization, even though kdump kernel have set
-> > "maxcpus=1". 
-> > 
-> > Currently x86 and arm64 all support "nr_cpus=". Pingfan ever spent much
-> > effort to make patches to add "nr_cpus=" support to ppc64, seems ppc64
-> > dev and maintainers do not care about it. Finally the patches are not
-> > accepted, and the work is not continued.
-> > 
-> > Now, I am wondering what is the barrier to add "nr_cpus=" to power ach.
-> > Can we reconsider adding 'nr_cpus=' to power arch since real issue
-> > occurred in kdump kernel?
+On Tue, Aug 01, 2023 at 05:31:59PM +0000, Gaurav Kashyap (QUIC) wrote:
 > 
-> If 'nr_cpus=' can be supported on ppc64, this patchset isn't needed.
-> 
-> > 
-> > As for this patchset, it can be accpeted so that no failure in kdump
-> > kernel is seen on ARCHes w/o "nr_cpus=" support? My personal opinion.
-> 
-> IMO 'nr_cpus=' support should be preferred, given it is annoying to
-> maintain two kinds of implementation for kdump kernel from driver
-> viewpoint. I guess kdump things can be simplified too with supporting
-> 'nr_cpus=' only.
+> According to your cover letter, this feature requires a custom TrustZone image to work on SM8550.  Will that image be made available outside Qualcomm?
+> --> Unfortunately, I don't think there is a way to do that. You can still request for one through our customer engineering team like before.
 
-Yes, 'nr_cpus=' is ideal. Not sure if there's some underlying concerns so
-that power people decided to not support it.
+I think it's already been shown that that is not a workable approach.
 
+> Also, can you please make available a git branch somewhere that contains your patchset?  It sounds like this depends on https://git.kernel.org/pub/scm/fs/fscrypt/linux.git/log/?h=wrapped-keys-v7, but actually a version of it that you've rebased, which I don't have access to.
+> Without being able to apply your patchset, I can't properly review it.
+> --> As for the fscrypt patches,
+>       I have not changed much functionally from the v7 patch, just merge conflicts.
+>       I will update this thread once I figure out a git location.
+> 
+
+Any update on this?  Most kernel developers just create a GitHub repo if they
+don't have kernel.org access.
+
+- Eric
