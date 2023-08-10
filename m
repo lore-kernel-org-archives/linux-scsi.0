@@ -2,39 +2,38 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B46E3C001B0
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 16:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E3C3C41513
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 16:08:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236349AbjHJQBR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Aug 2023 12:01:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40012 "EHLO
+        id S236457AbjHJQIQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Aug 2023 12:08:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236347AbjHJQBG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 12:01:06 -0400
-Received: from lithops.sigma-star.at (lithops.sigma-star.at [195.201.40.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D7D2271E;
-        Thu, 10 Aug 2023 09:00:51 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by lithops.sigma-star.at (Postfix) with ESMTP id D890A635D2A8;
-        Thu, 10 Aug 2023 18:00:49 +0200 (CEST)
-Received: from lithops.sigma-star.at ([127.0.0.1])
-        by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id id0-MKyNRELX; Thu, 10 Aug 2023 18:00:49 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by lithops.sigma-star.at (Postfix) with ESMTP id 7B8F6635D2A2;
-        Thu, 10 Aug 2023 18:00:49 +0200 (CEST)
-Received: from lithops.sigma-star.at ([127.0.0.1])
-        by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id NtQ5uhq1a5o1; Thu, 10 Aug 2023 18:00:49 +0200 (CEST)
-Received: from foxxylove.corp.sigma-star.at (unknown [82.150.214.1])
-        by lithops.sigma-star.at (Postfix) with ESMTPSA id 10ECD635D29F;
-        Thu, 10 Aug 2023 18:00:49 +0200 (CEST)
-From:   Richard Weinberger <richard@nod.at>
-To:     linux-mtd@lists.infradead.org
-Cc:     Christoph Hellwig <hch@infradead.org>,
+        with ESMTP id S236462AbjHJQIA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 12:08:00 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BECE5257;
+        Thu, 10 Aug 2023 09:06:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=hiIZJWDMNiv2gzLUMIYbryzWNVPKrIU6vS93dh6YUgA=; b=obK7Vufll0p3NiLUKIGLh71Mvz
+        LoMOvVdhtCXloJ/bs2EGYTiqFibQe8Vq+XkQMIneZxhny/LNv1oyRb/2eHDmTbF8z0ZLp8ri1hZop
+        7fgysE/f97NB92qJOA3kx1YpP897VNmLTvWviH0qaIc0bW5mBAnAtgt8g1Q2jKuQcbbKRt7Lqsrzb
+        W7le995cvpS+NktKwNyz2LXgD4IZ1cvC2TtP6yg63uobduAJ73McZ16yzetJPKTv+Kcny2iDVuyjX
+        JL/qYgw/aLo4jB5jfWvmQ4rUnUqcB47o1aCTPHoCdD3DGbWTcKgZtugHlXhg8D5is9ltl5hINdaLE
+        y2iZo9pw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qU8As-0088cE-0p;
+        Thu, 10 Aug 2023 16:06:10 +0000
+Date:   Thu, 10 Aug 2023 09:06:10 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Richard Weinberger <richard@nod.at>
+Cc:     linux-mtd@lists.infradead.org,
+        Christoph Hellwig <hch@infradead.org>,
         Stephan Wurm <stephan.wurm@a-eberle.de>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
+        stable@vger.kernel.org, Miquel Raynal <miquel.raynal@bootlin.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         Oliver Neukum <oliver@neukum.org>,
         Ali Akcaagac <aliakc@web.de>,
@@ -43,116 +42,31 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 7/7] scsi: core: Remove scsi_kmap_atomic_sg()
-Date:   Thu, 10 Aug 2023 18:00:18 +0200
-Message-Id: <20230810160019.16977-8-richard@nod.at>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20230810160019.16977-1-richard@nod.at>
+Subject: Re: [PATCH 1/7] ubi: block: Refactor sg list processing for highmem
+Message-ID: <ZNUK8nWnUYB6B4Kg@infradead.org>
 References: <20230810160019.16977-1-richard@nod.at>
+ <20230810160019.16977-2-richard@nod.at>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230810160019.16977-2-richard@nod.at>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-All users have been migrated to use kmap_sg(), let's kill
-this helper.
+On Thu, Aug 10, 2023 at 06:00:12PM +0200, Richard Weinberger wrote:
+> Currently sg_virt() is used while filling the sg list from LEB data.
+> This approach cannot work with highmem.
+> 
+> Refactor ubi_eba_read_leb_sg() to use kmap_atomic() for sg list
+> access.
+> Since kmap_atomic() disables preempt a bounce buffer is needed.
+> kmap_local_page() is not used to allow easy backporting of this patch
+> to older kernels.
+> 
+> The followup patches in this series will switch to kmap_sg()
+> and we can remove our own helper and the bounce buffer.
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- drivers/scsi/scsi_lib.c  | 60 ----------------------------------------
- include/scsi/scsi_cmnd.h |  4 ---
- 2 files changed, 64 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ad9afae49544a..70469502aeb76 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3001,66 +3001,6 @@ scsi_host_unblock(struct Scsi_Host *shost, int new=
-_state)
- }
- EXPORT_SYMBOL_GPL(scsi_host_unblock);
-=20
--/**
-- * scsi_kmap_atomic_sg - find and atomically map an sg-elemnt
-- * @sgl:	scatter-gather list
-- * @sg_count:	number of segments in sg
-- * @offset:	offset in bytes into sg, on return offset into the mapped ar=
-ea
-- * @len:	bytes to map, on return number of bytes mapped
-- *
-- * Returns virtual address of the start of the mapped page
-- */
--void *scsi_kmap_atomic_sg(struct scatterlist *sgl, int sg_count,
--			  size_t *offset, size_t *len)
--{
--	int i;
--	size_t sg_len =3D 0, len_complete =3D 0;
--	struct scatterlist *sg;
--	struct page *page;
--
--	WARN_ON(!irqs_disabled());
--
--	for_each_sg(sgl, sg, sg_count, i) {
--		len_complete =3D sg_len; /* Complete sg-entries */
--		sg_len +=3D sg->length;
--		if (sg_len > *offset)
--			break;
--	}
--
--	if (unlikely(i =3D=3D sg_count)) {
--		printk(KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, "
--			"elements %d\n",
--		       __func__, sg_len, *offset, sg_count);
--		WARN_ON(1);
--		return NULL;
--	}
--
--	/* Offset starting from the beginning of first page in this sg-entry */
--	*offset =3D *offset - len_complete + sg->offset;
--
--	/* Assumption: contiguous pages can be accessed as "page + i" */
--	page =3D nth_page(sg_page(sg), (*offset >> PAGE_SHIFT));
--	*offset &=3D ~PAGE_MASK;
--
--	/* Bytes in this sg-entry from *offset to the end of the page */
--	sg_len =3D PAGE_SIZE - *offset;
--	if (*len > sg_len)
--		*len =3D sg_len;
--
--	return kmap_atomic(page);
--}
--EXPORT_SYMBOL(scsi_kmap_atomic_sg);
--
--/**
-- * scsi_kunmap_atomic_sg - atomically unmap a virtual address, previousl=
-y mapped with scsi_kmap_atomic_sg
-- * @virt:	virtual address to be unmapped
-- */
--void scsi_kunmap_atomic_sg(void *virt)
--{
--	kunmap_atomic(virt);
--}
--EXPORT_SYMBOL(scsi_kunmap_atomic_sg);
--
- void sdev_disable_disk_events(struct scsi_device *sdev)
- {
- 	atomic_inc(&sdev->disk_events_disable_depth);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 526def14e7fb7..919ac97229481 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -163,10 +163,6 @@ void scsi_done_direct(struct scsi_cmnd *cmd);
-=20
- extern void scsi_finish_command(struct scsi_cmnd *cmd);
-=20
--extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
--				 size_t *offset, size_t *len);
--extern void scsi_kunmap_atomic_sg(void *virt);
--
- blk_status_t scsi_alloc_sgtables(struct scsi_cmnd *cmd);
- void scsi_free_sgtables(struct scsi_cmnd *cmd);
-=20
---=20
-2.35.3
+Please just use kmap_local and avoid the bounce buffering.
 
