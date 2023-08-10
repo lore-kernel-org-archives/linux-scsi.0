@@ -2,156 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A794FC0015E
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 01:36:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE480C41513
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 02:07:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230344AbjHJBgO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Aug 2023 21:36:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38112 "EHLO
+        id S229503AbjHJCH5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Aug 2023 22:07:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229940AbjHJBgN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 21:36:13 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E53F1982;
-        Wed,  9 Aug 2023 18:36:13 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        with ESMTP id S229999AbjHJCH4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 22:07:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 720D71BFB
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Aug 2023 19:07:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691633223;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=CujbJvk8xR2wivezZL312pI5YeFGQCWJwDhrju025js=;
+        b=FNu8aQbjfleXY52kOe3p62/xWSJ9qs4ILHg6ob3apVde1gJO6HeL2Ey/nkmSRCDjC+T5z3
+        Jm8V+sOABUHioBHcTbZXE2/gGoAFleT/GF1ybYJko+bSzGSCz9ZjqDunrzY1VTmpSGeeeR
+        VPvfbF47y7Ld8jdRyqB833JDgkKrlms=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-376-02XBssC6PbqWp0BJ03OIxQ-1; Wed, 09 Aug 2023 22:07:00 -0400
+X-MC-Unique: 02XBssC6PbqWp0BJ03OIxQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A7BDB617F0;
-        Thu, 10 Aug 2023 01:36:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4734FC433C8;
-        Thu, 10 Aug 2023 01:36:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691631372;
-        bh=ztq7cTQm3DVhlVUte/zLPzkS3OzDfmQ5LdM3sbz0DDE=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=d9/AEUHE7NPmHFm8kaem4sHRrsTyAfcaxg9SllkjhPH7Ztze7sTzJ1LneExgxyhfg
-         gxvM4j9EVBXIKlGFBj1KYKtCn5MwnODGsPXu3MMnF1vEa2extwXNZIzAqCWC5PORm3
-         6c8COz/YX5/AuA9Ucf5Occ8sSFp0ze54C4/FHDKSp2OweVOLJXgBR4wvIUAAjVROIk
-         1onDwksjd3r9pVHntm3khZZMs5qhlOcqGJUdp02e4ouTrNJme59JgpV3WB64a7ZjMh
-         oJ0aK34bTj9RxKPsWUaWaVCVWbFKCwmFTRNa3Vjo0jlV4h5AMCexrXT3JPkfzeqA/7
-         qPV+wnAHAPqGQ==
-Message-ID: <06527195-8f6d-0395-a7d5-d19634a00ad2@kernel.org>
-Date:   Thu, 10 Aug 2023 10:36:10 +0900
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 822FB185A78F;
+        Thu, 10 Aug 2023 02:06:59 +0000 (UTC)
+Received: from fedora (unknown [10.72.120.5])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 16AB540C2076;
+        Thu, 10 Aug 2023 02:06:50 +0000 (UTC)
+Date:   Thu, 10 Aug 2023 10:06:46 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Baoquan He <bhe@redhat.com>
+Cc:     mpe@ellerman.id.au, npiggin@gmail.com, christophe.leroy@csgroup.eu,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Wen Xiong <wenxiong@linux.ibm.com>,
+        Keith Busch <kbusch@kernel.org>, linuxppc-dev@lists.ozlabs.org,
+        Dave Young <dyoung@redhat.com>, kexec@lists.infradead.org,
+        linux-kernel@vger.kernel.org, Pingfan Liu <piliu@redhat.com>
+Subject: Re: [PATCH V3 01/14] blk-mq: add blk_mq_max_nr_hw_queues()
+Message-ID: <ZNRGNsRzEJfzUEzH@fedora>
+References: <20230808104239.146085-1-ming.lei@redhat.com>
+ <20230808104239.146085-2-ming.lei@redhat.com>
+ <20230809134401.GA31852@lst.de>
+ <ZNQqt1C0pXspGl3d@fedora>
+ <ZNQ64xhCIBU6XM/5@MiWiFi-R3L-srv>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v7 2/7] block/mq-deadline: Only use zone locking if
- necessary
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
-References: <20230809202355.1171455-1-bvanassche@acm.org>
- <20230809202355.1171455-3-bvanassche@acm.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230809202355.1171455-3-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZNQ64xhCIBU6XM/5@MiWiFi-R3L-srv>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/10/23 05:23, Bart Van Assche wrote:
-> Measurements have shown that limiting the queue depth to one per zone for
-> zoned writes has a significant negative performance impact on zoned UFS
-> devices. Hence this patch that disables zone locking by the mq-deadline
-> scheduler if the storage controller preserves the command order. This
-> patch is based on the following assumptions:
-> - It happens infrequently that zoned write requests are reordered by the
->   block layer.
-> - The I/O priority of all write requests is the same per zone.
-> - Either no I/O scheduler is used or an I/O scheduler is used that
->   serializes write requests per zone.
+On Thu, Aug 10, 2023 at 09:18:27AM +0800, Baoquan He wrote:
+> On 08/10/23 at 08:09am, Ming Lei wrote:
+> > On Wed, Aug 09, 2023 at 03:44:01PM +0200, Christoph Hellwig wrote:
+> > > I'm starting to sound like a broken record, but we can't just do random
+> > > is_kdump checks, and it's not going to get better by resending it again and
+> > > again.  If kdump kernels limit the number of possible CPUs, it needs to
+> > > reflected in cpu_possible_map and we need to use that information.
+> > > 
+> > 
+> > Can you look at previous kdump/arch guys' comment about kdump usage &
+> > num_possible_cpus?
+> > 
+> >     https://lore.kernel.org/linux-block/CAF+s44RuqswbosY9kMDx35crviQnxOeuvgNsuE75Bb0Y2Jg2uw@mail.gmail.com/
+> >     https://lore.kernel.org/linux-block/ZKz912KyFQ7q9qwL@MiWiFi-R3L-srv/
+> > 
+> > The point is that kdump kernels does not limit the number of possible CPUs.
+> > 
+> > 1) some archs support 'nr_cpus=1' for kdump kernel, which is fine, since
+> > num_possible_cpus becomes 1.
 > 
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  block/mq-deadline.c | 24 ++++++++++++++++++------
->  1 file changed, 18 insertions(+), 6 deletions(-)
+> Yes, "nr_cpus=" is strongly suggested in kdump kernel because "nr_cpus="
+> limits the possible cpu numbers, while "maxcpuss=" only limits the cpu
+> number which can be brought up during bootup. We noticed this diference
+> because a large number of possible cpus will cost more memory in kdump
+> kernel. e.g percpu initialization, even though kdump kernel have set
+> "maxcpus=1". 
 > 
-> diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-> index f958e79277b8..cd2504205ff8 100644
-> --- a/block/mq-deadline.c
-> +++ b/block/mq-deadline.c
-> @@ -338,6 +338,16 @@ static struct request *deadline_skip_seq_writes(struct deadline_data *dd,
->  	return rq;
->  }
->  
-> +/*
-> + * Whether or not to use zone write locking. Not using zone write locking for
-> + * sequential write required zones is only safe if the block driver preserves
-> + * the request order.
-> + */
-> +static bool dd_use_zone_write_locking(struct request_queue *q)
-> +{
-> +	return q->limits.use_zone_write_lock && blk_queue_is_zoned(q);
+> Currently x86 and arm64 all support "nr_cpus=". Pingfan ever spent much
+> effort to make patches to add "nr_cpus=" support to ppc64, seems ppc64
+> dev and maintainers do not care about it. Finally the patches are not
+> accepted, and the work is not continued.
+> 
+> Now, I am wondering what is the barrier to add "nr_cpus=" to power ach.
+> Can we reconsider adding 'nr_cpus=' to power arch since real issue
+> occurred in kdump kernel?
 
-use_zone_write_lock should be true ONLY if the queue is zoned.
-So the "&& blk_queue_is_zoned(q)" seems unnecessary to me.
-This little helper could be moved to be generic in blkdev.h too.
+If 'nr_cpus=' can be supported on ppc64, this patchset isn't needed.
 
-> +}
-> +
->  /*
->   * For the specified data direction, return the next request to
->   * dispatch using arrival ordered lists.
-> @@ -353,7 +363,7 @@ deadline_fifo_request(struct deadline_data *dd, struct dd_per_prio *per_prio,
->  		return NULL;
->  
->  	rq = rq_entry_fifo(per_prio->fifo_list[data_dir].next);
-> -	if (data_dir == DD_READ || !blk_queue_is_zoned(rq->q))
-> +	if (data_dir == DD_READ || !dd_use_zone_write_locking(rq->q))
->  		return rq;
->  
->  	/*
-> @@ -398,7 +408,7 @@ deadline_next_request(struct deadline_data *dd, struct dd_per_prio *per_prio,
->  	if (!rq)
->  		return NULL;
->  
-> -	if (data_dir == DD_READ || !blk_queue_is_zoned(rq->q))
-> +	if (data_dir == DD_READ || !dd_use_zone_write_locking(rq->q))
->  		return rq;
->  
->  	/*
-> @@ -526,8 +536,9 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
->  	}
->  
->  	/*
-> -	 * For a zoned block device, if we only have writes queued and none of
-> -	 * them can be dispatched, rq will be NULL.
-> +	 * For a zoned block device that requires write serialization, if we
-> +	 * only have writes queued and none of them can be dispatched, rq will
-> +	 * be NULL.
->  	 */
->  	if (!rq)
->  		return NULL;
-> @@ -552,7 +563,8 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
->  	/*
->  	 * If the request needs its target zone locked, do it.
->  	 */
-> -	blk_req_zone_write_lock(rq);
-> +	if (dd_use_zone_write_locking(rq->q))
-> +		blk_req_zone_write_lock(rq);
->  	rq->rq_flags |= RQF_STARTED;
->  	return rq;
->  }
-> @@ -934,7 +946,7 @@ static void dd_finish_request(struct request *rq)
->  
->  	atomic_inc(&per_prio->stats.completed);
->  
-> -	if (blk_queue_is_zoned(q)) {
-> +	if (dd_use_zone_write_locking(rq->q)) {
->  		unsigned long flags;
->  
->  		spin_lock_irqsave(&dd->zone_lock, flags);
+> 
+> As for this patchset, it can be accpeted so that no failure in kdump
+> kernel is seen on ARCHes w/o "nr_cpus=" support? My personal opinion.
 
--- 
-Damien Le Moal
-Western Digital Research
+IMO 'nr_cpus=' support should be preferred, given it is annoying to
+maintain two kinds of implementation for kdump kernel from driver
+viewpoint. I guess kdump things can be simplified too with supporting
+'nr_cpus=' only.
+
+thanks,
+Ming
 
