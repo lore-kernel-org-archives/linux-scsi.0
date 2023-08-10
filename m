@@ -2,108 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B9AC001DE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Aug 2023 22:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F964C001E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 00:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230503AbjHIWML (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Aug 2023 18:12:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35520 "EHLO
+        id S231229AbjHJAKc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Aug 2023 20:10:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231518AbjHIWL5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 18:11:57 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B043FE;
-        Wed,  9 Aug 2023 15:11:56 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 379LGPEQ007338;
-        Wed, 9 Aug 2023 22:11:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=jQlTOVhoAlsUv+sIX6BAvnsZfsGmAq6GCgb5EX7v4F4=;
- b=mwIMturxGsxRj4yzorpj9fU3Rzl5jDdCE3BZ9ThzpsyRZO2iW9uLLip9favkbqLUF63N
- ecRVgk2g86p19wHRvEIpZGSuejeVTdtKkwp5dkpDBvh5DHas9/REMMf5NS9aXhqxA998
- rYtERRMB3SYNfRFSoDoN9j479uxRX5414Cp7+zzaSGoVvl41kwpJyPoYVwqAn24QSo3+
- fEoGV3xexXa7K8PYklGU9Vama2cTUhKLbxCVPLIugoWo2nJhWUwXrqMPY3YtnL5KQF8e
- FbmN48RmTcUAdy0SsjpueBYJn5OsReWX/tjqy4EQQPPH2F5gskPDNY6fqvLLFJ3/+xOn DQ== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3scbcgh1nk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 09 Aug 2023 22:11:43 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 379MBghS027580
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 9 Aug 2023 22:11:42 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Wed, 9 Aug
- 2023 15:11:40 -0700
-Message-ID: <bdeedd8a-c417-4265-374d-09747e60d1d0@quicinc.com>
-Date:   Wed, 9 Aug 2023 15:11:40 -0700
+        with ESMTP id S230263AbjHJAKa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2023 20:10:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DC5410C7
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Aug 2023 17:09:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691626183;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RhYjGeDQjHaify9fYveKNlg3W8+1+0vVy9IFYKIMw0M=;
+        b=TmcJYfCnmq5zm2wFuGcK6rUmvlVg3sl4aFa4zHaQ07CgaJElz1jsrwAHeWA1/uDfmIMaHH
+        fGArd4a4vA6Efd7mstjHs7u0Br+8rdqXQOgoElYrgCudRx+zM5HZ/JvFZ1ckxkxLYI4mh1
+        ODS/lnFKoMPRb7ik0mlhQQ/hYsuCOAc=
+Received: from mimecast-mx02.redhat.com (66.187.233.73 [66.187.233.73]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-583-dBjPouXWOO-yZ4G5_5ahoA-1; Wed, 09 Aug 2023 20:09:40 -0400
+X-MC-Unique: dBjPouXWOO-yZ4G5_5ahoA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0557D3802BBC;
+        Thu, 10 Aug 2023 00:09:40 +0000 (UTC)
+Received: from fedora (unknown [10.72.120.3])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id EA7C02026D4B;
+        Thu, 10 Aug 2023 00:09:32 +0000 (UTC)
+Date:   Thu, 10 Aug 2023 08:09:27 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Wen Xiong <wenxiong@linux.ibm.com>,
+        Keith Busch <kbusch@kernel.org>, linuxppc-dev@lists.ozlabs.org,
+        Dave Young <dyoung@redhat.com>, kexec@lists.infradead.org,
+        linux-kernel@vger.kernel.org, Baoquan He <bhe@redhat.com>,
+        Pingfan Liu <piliu@redhat.com>
+Subject: Re: [PATCH V3 01/14] blk-mq: add blk_mq_max_nr_hw_queues()
+Message-ID: <ZNQqt1C0pXspGl3d@fedora>
+References: <20230808104239.146085-1-ming.lei@redhat.com>
+ <20230808104239.146085-2-ming.lei@redhat.com>
+ <20230809134401.GA31852@lst.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v2 2/2] scsi: ufs: host: convert to dev_err_probe() in
- pltfrm_init
-Content-Language: en-US
-To:     Brian Masney <bmasney@redhat.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <hugo@hugovil.com>
-References: <20230809191054.2197963-1-bmasney@redhat.com>
- <20230809191054.2197963-3-bmasney@redhat.com>
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <20230809191054.2197963-3-bmasney@redhat.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: HDN95-r0SIug4zXLL5k4nx_ukD_1YRXv
-X-Proofpoint-ORIG-GUID: HDN95-r0SIug4zXLL5k4nx_ukD_1YRXv
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-09_19,2023-08-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
- adultscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 spamscore=0
- priorityscore=1501 suspectscore=0 impostorscore=0 clxscore=1011
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308090191
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230809134401.GA31852@lst.de>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/9/2023 12:10 PM, Brian Masney wrote:
-> Convert ufshcd_pltfrm_init() over to use dev_err_probe() to avoid
-> the following log message on bootup due to an -EPROBE_DEFER return
-> code:
+On Wed, Aug 09, 2023 at 03:44:01PM +0200, Christoph Hellwig wrote:
+> I'm starting to sound like a broken record, but we can't just do random
+> is_kdump checks, and it's not going to get better by resending it again and
+> again.  If kdump kernels limit the number of possible CPUs, it needs to
+> reflected in cpu_possible_map and we need to use that information.
 > 
->      ufshcd-qcom 1d84000.ufs: Initialization failed
-> 
-> Signed-off-by: Brian Masney <bmasney@redhat.com>
-> ---
-> No changes since v1
-> 
->   drivers/ufs/host/ufshcd-pltfrm.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-> index 0b7430033047..f2c50b78efbf 100644
-> --- a/drivers/ufs/host/ufshcd-pltfrm.c
-> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
-> @@ -373,7 +373,7 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->   
->   	err = ufshcd_init(hba, mmio_base, irq);
->   	if (err) {
-> -		dev_err(dev, "Initialization failed\n");
-> +		dev_err_probe(dev, err, "Initialization failed\n");
-Hi Brian,
-Can you pls add the error code to the print?
 
->   		goto dealloc_host;
->   	}
->   
+Can you look at previous kdump/arch guys' comment about kdump usage &
+num_possible_cpus?
+
+    https://lore.kernel.org/linux-block/CAF+s44RuqswbosY9kMDx35crviQnxOeuvgNsuE75Bb0Y2Jg2uw@mail.gmail.com/
+    https://lore.kernel.org/linux-block/ZKz912KyFQ7q9qwL@MiWiFi-R3L-srv/
+
+The point is that kdump kernels does not limit the number of possible CPUs.
+
+1) some archs support 'nr_cpus=1' for kdump kernel, which is fine, since
+num_possible_cpus becomes 1.
+
+2) some archs do not support 'nr_cpus=1', and have to rely on
+'max_cpus=1', so num_possible_cpus isn't changed, and kernel just boots
+with single online cpu. That causes trouble because blk-mq limits single
+queue.
+
+Documentation/admin-guide/kdump/kdump.rst
+
+Thanks, 
+Ming
 
