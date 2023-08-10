@@ -2,33 +2,33 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DC09C001B0
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 16:00:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FEEEC04E69
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Aug 2023 16:00:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235349AbjHJQAo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Aug 2023 12:00:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58150 "EHLO
+        id S236245AbjHJQAp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Aug 2023 12:00:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235056AbjHJQAl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 12:00:41 -0400
+        with ESMTP id S235255AbjHJQAn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 12:00:43 -0400
 Received: from lithops.sigma-star.at (lithops.sigma-star.at [195.201.40.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 313E826B7;
-        Thu, 10 Aug 2023 09:00:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C82602702;
+        Thu, 10 Aug 2023 09:00:41 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by lithops.sigma-star.at (Postfix) with ESMTP id A9ED160ED81F;
-        Thu, 10 Aug 2023 18:00:36 +0200 (CEST)
+        by lithops.sigma-star.at (Postfix) with ESMTP id 88BAB622F562;
+        Thu, 10 Aug 2023 18:00:40 +0200 (CEST)
 Received: from lithops.sigma-star.at ([127.0.0.1])
         by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id NOlwUiZruBJ3; Thu, 10 Aug 2023 18:00:36 +0200 (CEST)
+        with ESMTP id EDfStOmQ8fP8; Thu, 10 Aug 2023 18:00:40 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-        by lithops.sigma-star.at (Postfix) with ESMTP id 4A1E8635D295;
-        Thu, 10 Aug 2023 18:00:36 +0200 (CEST)
+        by lithops.sigma-star.at (Postfix) with ESMTP id 1C754635D2A1;
+        Thu, 10 Aug 2023 18:00:40 +0200 (CEST)
 Received: from lithops.sigma-star.at ([127.0.0.1])
         by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id YnW_UZS0Pu1b; Thu, 10 Aug 2023 18:00:36 +0200 (CEST)
+        with ESMTP id yaVTxL2OMKCP; Thu, 10 Aug 2023 18:00:40 +0200 (CEST)
 Received: from foxxylove.corp.sigma-star.at (unknown [82.150.214.1])
-        by lithops.sigma-star.at (Postfix) with ESMTPSA id C7225635D290;
-        Thu, 10 Aug 2023 18:00:35 +0200 (CEST)
+        by lithops.sigma-star.at (Postfix) with ESMTPSA id AF6E1635D295;
+        Thu, 10 Aug 2023 18:00:39 +0200 (CEST)
 From:   Richard Weinberger <richard@nod.at>
 To:     linux-mtd@lists.infradead.org
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -43,46 +43,108 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 0/7] Fix UBI Block wrt. highmem
-Date:   Thu, 10 Aug 2023 18:00:11 +0200
-Message-Id: <20230810160019.16977-1-richard@nod.at>
+Subject: [PATCH 2/7] scatterlist: Add kmap helpers
+Date:   Thu, 10 Aug 2023 18:00:13 +0200
+Message-Id: <20230810160019.16977-3-richard@nod.at>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20230810160019.16977-1-richard@nod.at>
+References: <20230810160019.16977-1-richard@nod.at>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Patch 1 changes UBIblock to use a copy of scsi_kmap_atomic_sg()
-for sg list processing. This patch is meant for backporting to stable.
-It makes use of kmap_atomic() and a bounce buffer because MTD/UBI IO
-can sleep.
+kmap_sg() is basically scsi_kmap_atomic_sg() but uses kmap_local()
+and does not enforce disabled interrupts.
 
-Patches 2 to 7 move scsi_kmap_atomic_sg() into lib/scatterlist.c,
-convert it to kmap_local(), convert all users to it and remove the
-bounce buffer from UBIblock again.
-
-Richard Weinberger (7):
-  ubi: block: Refactor sg list processing for highmem
-  scatterlist: Add kmap helpers
-  scsi: dc395x: Switch to kmap_sg
-  scsi: esp_scsi: Switch to kmap_sg
-  scsi: fdomain: Switch to kmap_sg
-  ubi: block: Switch to kmap_sg
-  scsi: core: Remove scsi_kmap_atomic_sg()
-
- drivers/mtd/ubi/block.c     | 11 +++----
- drivers/mtd/ubi/eba.c       | 50 +++++++++++++------------------
- drivers/scsi/dc395x.c       | 12 ++++----
- drivers/scsi/esp_scsi.c     |  4 +--
- drivers/scsi/fdomain.c      | 10 +++----
- drivers/scsi/scsi_lib.c     | 60 -------------------------------------
- include/linux/mtd/ubi.h     | 12 ++++----
+Signed-off-by: Richard Weinberger <richard@nod.at>
+---
  include/linux/scatterlist.h |  3 ++
- include/scsi/scsi_cmnd.h    |  4 ---
- lib/scatterlist.c           | 55 ++++++++++++++++++++++++++++++++++
- 10 files changed, 100 insertions(+), 121 deletions(-)
+ lib/scatterlist.c           | 55 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 58 insertions(+)
 
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index 77df3d7b18a61..dd25a87609491 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -692,4 +692,7 @@ bool sg_miter_skip(struct sg_mapping_iter *miter, off=
+_t offset);
+ bool sg_miter_next(struct sg_mapping_iter *miter);
+ void sg_miter_stop(struct sg_mapping_iter *miter);
+=20
++void *kmap_sg(struct scatterlist *sgl, int sg_count, size_t *offset, siz=
+e_t *len);
++void kunmap_sg(void *virt);
++
+ #endif /* _LINUX_SCATTERLIST_H */
+diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+index e86231a44c3de..7428d9461711d 100644
+--- a/lib/scatterlist.c
++++ b/lib/scatterlist.c
+@@ -1364,3 +1364,58 @@ ssize_t extract_iter_to_sg(struct iov_iter *iter, =
+size_t maxsize,
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(extract_iter_to_sg);
++
++/**
++ * kmap_sg - find and kmap an sg-elemnt
++ * @sgl:	scatter-gather list
++ * @sg_count:	number of segments in sg
++ * @offset:	offset in bytes into sg, on return offset into the mapped ar=
+ea
++ * @len:	bytes to map, on return number of bytes mapped
++ *
++ * Returns virtual address of the start of the mapped page
++ */
++void *kmap_sg(struct scatterlist *sgl, int sg_count, size_t *offset, siz=
+e_t *len)
++{
++	int i;
++	size_t sg_len =3D 0, len_complete =3D 0;
++	struct scatterlist *sg;
++	struct page *page;
++
++	for_each_sg(sgl, sg, sg_count, i) {
++		len_complete =3D sg_len; /* Complete sg-entries */
++		sg_len +=3D sg->length;
++		if (sg_len > *offset)
++			break;
++	}
++
++	if (WARN_ON_ONCE(i =3D=3D sg_count)) {
++		pr_err("%s: Bytes in sg: %zu, requested offset %zu, elements %d\n",
++		       __func__, sg_len, *offset, sg_count);
++		return NULL;
++	}
++
++	/* Offset starting from the beginning of first page in this sg-entry */
++	*offset =3D *offset - len_complete + sg->offset;
++
++	/* Assumption: contiguous pages can be accessed as "page + i" */
++	page =3D nth_page(sg_page(sg), (*offset >> PAGE_SHIFT));
++	*offset &=3D ~PAGE_MASK;
++
++	/* Bytes in this sg-entry from *offset to the end of the page */
++	sg_len =3D PAGE_SIZE - *offset;
++	if (*len > sg_len)
++		*len =3D sg_len;
++
++	return kmap_local_page(page);
++}
++EXPORT_SYMBOL(kmap_sg);
++
++/**
++ * kunmap_sg - atomically unmap a virtual address, previously mapped wit=
+h kmap_sg
++ * @virt:	virtual address to be unmapped
++ */
++void kunmap_sg(void *virt)
++{
++	kunmap_local(virt);
++}
++EXPORT_SYMBOL(kunmap_sg);
 --=20
 2.35.3
 
