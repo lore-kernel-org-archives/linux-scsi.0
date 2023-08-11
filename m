@@ -2,110 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41E4DC04A94
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 02:20:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDEBCC0015E
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 05:40:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231406AbjHKCT7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Aug 2023 22:19:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36256 "EHLO
+        id S232713AbjHKFkT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Aug 2023 01:40:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbjHKCT6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 22:19:58 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9753E2724;
-        Thu, 10 Aug 2023 19:19:57 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37B1xvgf020538;
-        Fri, 11 Aug 2023 02:19:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
- cc : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=qcppdkim1; bh=vBR7HgckOBL8Gr8JQ1V2+7FWLv7X9l13BJtRZ89G2iM=;
- b=gfGk2nSwCstE7/LBQ7qa1SDN9ZDYNfSGiM2mQJbFX7tKxJg4Tj5vVtFCIFzIMY2ze/+6
- QdsUry9lBY1VMxrxZgIsmyhbF0V7xDDUyah5AsU9ORPqKfhr+Jg6i15QEjQLo9NqlBeB
- OTnbW/zX79dbwipUXJP4PxoSIYS7qXk9+S9Or0yCjwqx2MKk0HvouWvtshoBUKcTy68d
- B9Di+2ASUxP+KMFgwMmNO25GKOxMMEWSnZrtucbtCLraEy+kjPhIFYsxxC/Gmw9vUEGi
- WghOeBVXR7wlYSiZLv2hC9n44WxUQHsJbu/M5/xLxcn/HU0U+P/oM0JD6TvNPa8gt/K2 1Q== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sd90608ba-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 11 Aug 2023 02:19:53 +0000
-Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37B2Jq45011080
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 11 Aug 2023 02:19:52 GMT
-Received: from hu-bjorande-lv.qualcomm.com (10.49.16.6) by
- nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.30; Thu, 10 Aug 2023 19:19:52 -0700
-Date:   Thu, 10 Aug 2023 19:19:50 -0700
-From:   Bjorn Andersson <quic_bjorande@quicinc.com>
-To:     "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>
-CC:     Eric Biggers <ebiggers@kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-        Om Prakash Singh <omprsing@qti.qualcomm.com>,
-        "Prasad Sodagudi (QUIC)" <quic_psodagud@quicinc.com>,
-        "Arun Menon (SSG)" <avmenon@quicinc.com>,
-        "abel.vesa@linaro.org" <abel.vesa@linaro.org>,
-        "Seshu Madhavi Puppala (QUIC)" <quic_spuppala@quicinc.com>
-Subject: Re: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
- ufs
-Message-ID: <20230811021950.GQ1428172@hu-bjorande-lv.qualcomm.com>
-References: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
- <20230720025541.GA2607@sol.localdomain>
- <ca11701e403f48b6839b26c47a1b537f@quicinc.com>
- <20230810053642.GD923@sol.localdomain>
- <371088f78c6d4febbbfaf3c1a12cf19f@quicinc.com>
+        with ESMTP id S231890AbjHKFkR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 01:40:17 -0400
+Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4686F2D43
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2023 22:40:16 -0700 (PDT)
+Received: by mail-wm1-x331.google.com with SMTP id 5b1f17b1804b1-3fbea147034so14251065e9.0
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2023 22:40:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1691732415; x=1692337215;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=hMLQo3bp2h3I51QElRS65GYn9jN1tJi7u7499fhe2Tg=;
+        b=VxHfXqs/wz0YCnDzAhUPRCAI24WBV61ohHbvBe+M9d3TVFTr/42rijAHIPEMOqO9CH
+         XYFZL4+QP8B2Gmy1KlGuqIw/F2FVkKM0kjcnQsLEeYeoP1TBPmpo3XhbRIhO8n+nGYWR
+         oruqyujBsCR4MfeNcNgRHhIDsWANrdmEU8tEewkgKIGAb1dTk/Z/goSQ2GQOfCdLVMFw
+         8+FN/CI2IkEb42dYVt/ZpEGSWRjmftGRi1DIUxiwrO3T5pB0uKdlM58p4XyDBrnm7659
+         H4oct/e+rHjHja0mAThAYv7m7guW3O+16KMI6UdEdVZyd+dZfvhX/ZjQjxU+dOrI8uWk
+         A3tw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691732415; x=1692337215;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hMLQo3bp2h3I51QElRS65GYn9jN1tJi7u7499fhe2Tg=;
+        b=ehhaDjw8FViMhaBsqJaHxViYCD2VE093OPuNmGXwjXMlwODMpjpX09JcI1Q3+Tf3/P
+         5vEaHsbj0Cd7gSFo8cAWPB7YtHy140pUb5UhXPzi3UYREjmkh0p96PmSjOWxVFFS+ucZ
+         QuaXKYDDnBtVqGrRw8wUyIRmWleleacwv6rzFf12fJZrY6lRjMNXg2rwsBARXSxV08fw
+         hUMEBto76eVpdNlJdnye0ZewvPjlqVHG41b0Kvstc3yaknyp3ImgQtZHiGmr8Q9Fr6Yg
+         qWmT0nlI1hqgxXaKq6QgKkDPskb2fENu7POTP8mCQcnY9QasWw5rC76hvyVCcuNd2Hzy
+         GN7Q==
+X-Gm-Message-State: AOJu0YyQAb4UnpVlGaeodUGVenZ0bYZC1ycoZNDb1sEfuj9gLzTsdVN6
+        JKH3NSSmG2V/iBPHAovn/bkc3Q==
+X-Google-Smtp-Source: AGHT+IFcrH/RRXHexJw7RrqV03fXgWcytHOtySGe+eUrHkaTY3C3VoWLCxoE8wYVyb/S241daSLVjQ==
+X-Received: by 2002:a05:600c:215a:b0:3fe:b78:f4b1 with SMTP id v26-20020a05600c215a00b003fe0b78f4b1mr761050wml.2.1691732414708;
+        Thu, 10 Aug 2023 22:40:14 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id m9-20020a7bcb89000000b003fe407ca05bsm6935252wmi.37.2023.08.10.22.40.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Aug 2023 22:40:14 -0700 (PDT)
+Date:   Fri, 11 Aug 2023 08:40:11 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     wangzhu <wangzhu9@huawei.com>
+Cc:     linux-scsi@vger.kernel.org
+Subject: Re: [bug report] scsi: core: Fix possible memory leak if
+ device_add() fails
+Message-ID: <9d94e39b-24a1-4a74-9f5e-6c0327449b11@kadam.mountain>
+References: <5121c883-ef71-41d9-8153-472cf319a7b8@moroto.mountain>
+ <470fb552-7356-4a62-a4bd-545b4f94e040@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <371088f78c6d4febbbfaf3c1a12cf19f@quicinc.com>
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
- nalasex01c.na.qualcomm.com (10.47.97.35)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: s5UTdnchEBXw_-T3x-mxWF8YOCgmGGFj
-X-Proofpoint-ORIG-GUID: s5UTdnchEBXw_-T3x-mxWF8YOCgmGGFj
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-10_20,2023-08-10_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
- impostorscore=0 lowpriorityscore=0 priorityscore=1501 adultscore=0
- suspectscore=0 malwarescore=0 mlxscore=0 clxscore=1011 spamscore=0
- mlxlogscore=694 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308110020
+In-Reply-To: <470fb552-7356-4a62-a4bd-545b4f94e040@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 11, 2023 at 12:27:18AM +0000, Gaurav Kashyap (QUIC) wrote:
+On Thu, Aug 10, 2023 at 08:05:21PM +0800, wangzhu wrote:
+> Hello Dan Carpenter:
+> 
+> 
+> Sorry for the patch 04b5b5cb0136 I submitted, I thought put_dev(&rc->dev) is
+> not the same as kfree(rc).
+> 
+> Then should I submit a revert patch again, or you can fix it yourself?
+> please let me know what I can do.
+> 
+> Sorry for the inconvenience again.
 > 
 
-Gaurav, it is impossible to decode what part of this message is from
-Eric and what is from you. You must use a proper email client, and
-follow proper etiquette on these mailing lists.
+It's easy enough for fix this...  Although instead of calling
+list_add_tail() and then list_del() I probably would have prefered to
+move the list_add_tail() right before the "return 0;"
 
-> 
-> -----Original Message-----
-> From: Eric Biggers <ebiggers@kernel.org> 
-> Sent: Wednesday, August 9, 2023 10:37 PM
-> To: Gaurav Kashyap (QUIC) <quic_gaurkash@quicinc.com>
-> Cc: linux-scsi@vger.kernel.org; linux-arm-msm@vger.kernel.org; linux-mmc@vger.kernel.org; linux-block@vger.kernel.org; linux-fscrypt@vger.kernel.org; Om Prakash Singh <omprsing@qti.qualcomm.com>; Prasad Sodagudi (QUIC) <quic_psodagud@quicinc.com>; Arun Menon (SSG) <avmenon@quicinc.com>; abel.vesa@linaro.org; Seshu Madhavi Puppala (QUIC) <quic_spuppala@quicinc.com>
-> Subject: Re: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and ufs
-> 
-> On Tue, Aug 01, 2023 at 05:31:59PM +0000, Gaurav Kashyap (QUIC) wrote:
-> > 
-> > According to your cover letter, this feature requires a custom TrustZone image to work on SM8550.  Will that image be made available outside Qualcomm?
-> > --> Unfortunately, I don't think there is a way to do that. You can still request for one through our customer engineering team like before.
-> 
-> I think it's already been shown that that is not a workable approach.
-> 
+-	list_add_tail(&rc->node, &rd->component_list);
+	rc->dev.class = &raid_class.class;
+	if (err)
+		goto err_out;
 
-I agree.
++	list_add_tail(&rc->node, &rd->component_list);
+	return 0;
 
-Regards,
-Bjorn
+But the diff I sent you is the more conservative option.
+
+regards,
+dan carpenter
+
+diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
+index 711252e52d8e..86ed1f66d749 100644
+--- a/drivers/scsi/raid_class.c
++++ b/drivers/scsi/raid_class.c
+@@ -248,11 +248,9 @@ int raid_component_add(struct raid_template *r,struct device *raid_dev,
+ 	return 0;
+ 
+ err_out:
+-	put_device(&rc->dev);
+ 	list_del(&rc->node);
+ 	rd->component_count--;
+-	put_device(component_dev);
+-	kfree(rc);
++	put_device(&rc->dev);
+ 	return err;
+ }
+ EXPORT_SYMBOL(raid_component_add);
