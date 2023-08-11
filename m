@@ -2,53 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1252C001DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 13:10:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA79FC001B0
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 13:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232087AbjHKNK4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Aug 2023 09:10:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40370 "EHLO
+        id S235794AbjHKN33 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Aug 2023 09:29:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229994AbjHKNKy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 09:10:54 -0400
+        with ESMTP id S235734AbjHKN32 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 09:29:28 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07FF730CB;
-        Fri, 11 Aug 2023 06:10:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BDBF26A0;
+        Fri, 11 Aug 2023 06:29:28 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 4DD1867373; Fri, 11 Aug 2023 15:10:49 +0200 (CEST)
-Date:   Fri, 11 Aug 2023 15:10:49 +0200
+        id 9C07767373; Fri, 11 Aug 2023 15:29:23 +0200 (CEST)
+Date:   Fri, 11 Aug 2023 15:29:23 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-nvme@lists.infradead.org,
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <dlemoal@kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Wen Xiong <wenxiong@linux.ibm.com>,
-        Keith Busch <kbusch@kernel.org>, linuxppc-dev@lists.ozlabs.org,
-        Dave Young <dyoung@redhat.com>, kexec@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Baoquan He <bhe@redhat.com>,
-        Pingfan Liu <piliu@redhat.com>
-Subject: Re: [PATCH V3 01/14] blk-mq: add blk_mq_max_nr_hw_queues()
-Message-ID: <20230811131049.GA20991@lst.de>
-References: <20230808104239.146085-1-ming.lei@redhat.com> <20230808104239.146085-2-ming.lei@redhat.com> <20230809134401.GA31852@lst.de> <ZNQqt1C0pXspGl3d@fedora>
+        Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH v7 3/7] scsi: core: Retry unaligned zoned writes
+Message-ID: <20230811132923.GA21553@lst.de>
+References: <20230809202355.1171455-1-bvanassche@acm.org> <20230809202355.1171455-4-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZNQqt1C0pXspGl3d@fedora>
+In-Reply-To: <20230809202355.1171455-4-bvanassche@acm.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 10, 2023 at 08:09:27AM +0800, Ming Lei wrote:
-> 1) some archs support 'nr_cpus=1' for kdump kernel, which is fine, since
-> num_possible_cpus becomes 1.
-> 
-> 2) some archs do not support 'nr_cpus=1', and have to rely on
-> 'max_cpus=1', so num_possible_cpus isn't changed, and kernel just boots
-> with single online cpu. That causes trouble because blk-mq limits single
-> queue.
-
-And we need to fix case 2.  We need to drop the is_kdump support, and
-if they want to force less cpus they need to make nr_cpus=1 work.
+Just as last time:  comparing the lbas really has no business in the
+SCSI core.
 
