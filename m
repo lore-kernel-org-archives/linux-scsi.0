@@ -2,83 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD549C04FE2
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 12:27:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1252C001DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 13:10:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236520AbjHKM1e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Aug 2023 08:27:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40372 "EHLO
+        id S232087AbjHKNK4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Aug 2023 09:10:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235414AbjHKM1c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 08:27:32 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E55FE60;
-        Fri, 11 Aug 2023 05:27:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=96Jyxa0hgrG24aZgu2ilDmsPaDJbIFT8CvAcqFGq7ak=; b=Lt8QMt/qiwPklQXJKNxAAayl50
-        ejm5z3TauQQgWXDYeiy6ev7CoxuktCUjLml+tQTXB0FrmwYo9bGjhm2G8bwiVtr2qWkYfM3c8FNl1
-        cPDaz7ayPa6vktH3ev1ZeHUse0hr9sV3dSKzn62142iTuA8TTM4tDaiYAHOFhJAm7nP3aQxRbODoe
-        cl8s2GHmVFeXScu6jrXcZHGDTmN2udO8XZ0pPwfpsd5QoOiRLOiFHXD6KYR9f2MEyvA/KeT9RzHmF
-        DIvDgADu/AxqynsuMYC3hcwdLyXOsBeZQBLnrFNVOoRqDCMnS+8kcWICKZ1ml8I/4TT3bYAOcmKWy
-        N15IsxAA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qUREm-00Abyw-17;
-        Fri, 11 Aug 2023 12:27:28 +0000
-Date:   Fri, 11 Aug 2023 05:27:28 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <ZNYpMPM5o4q1xcIt@infradead.org>
-References: <20230810171429.31759-1-jack@suse.cz>
+        with ESMTP id S229994AbjHKNKy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 09:10:54 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07FF730CB;
+        Fri, 11 Aug 2023 06:10:53 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 4DD1867373; Fri, 11 Aug 2023 15:10:49 +0200 (CEST)
+Date:   Fri, 11 Aug 2023 15:10:49 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Wen Xiong <wenxiong@linux.ibm.com>,
+        Keith Busch <kbusch@kernel.org>, linuxppc-dev@lists.ozlabs.org,
+        Dave Young <dyoung@redhat.com>, kexec@lists.infradead.org,
+        linux-kernel@vger.kernel.org, Baoquan He <bhe@redhat.com>,
+        Pingfan Liu <piliu@redhat.com>
+Subject: Re: [PATCH V3 01/14] blk-mq: add blk_mq_max_nr_hw_queues()
+Message-ID: <20230811131049.GA20991@lst.de>
+References: <20230808104239.146085-1-ming.lei@redhat.com> <20230808104239.146085-2-ming.lei@redhat.com> <20230809134401.GA31852@lst.de> <ZNQqt1C0pXspGl3d@fedora>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230810171429.31759-1-jack@suse.cz>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZNQqt1C0pXspGl3d@fedora>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Except for a mostly cosmetic nitpick this looks good to me:
+On Thu, Aug 10, 2023 at 08:09:27AM +0800, Ming Lei wrote:
+> 1) some archs support 'nr_cpus=1' for kdump kernel, which is fine, since
+> num_possible_cpus becomes 1.
+> 
+> 2) some archs do not support 'nr_cpus=1', and have to rely on
+> 'max_cpus=1', so num_possible_cpus isn't changed, and kernel just boots
+> with single online cpu. That causes trouble because blk-mq limits single
+> queue.
 
-Acked-by: Christoph Hellwig <hch@lst.de>
+And we need to fix case 2.  We need to drop the is_kdump support, and
+if they want to force less cpus they need to make nr_cpus=1 work.
 
-That's not eactly the deep review I'd like to do, but as I'm about to
-head out for vacation that's probably as good as it gets.
