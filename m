@@ -2,86 +2,67 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E77E1C001B0
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 08:36:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A86E4C0015E
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 11:01:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231939AbjHKIg3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Aug 2023 04:36:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53840 "EHLO
+        id S234782AbjHKLBP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Aug 2023 07:01:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjHKIg1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 04:36:27 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 626142737;
-        Fri, 11 Aug 2023 01:36:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=cJocosMaFpZJVLW25SbAxt5T2sdLdDBAbE/g/2G0uCE=; b=e3PI9VlwzTl5znPWffVTncxIuc
-        zxr/n6yEjgQC9DwP0iff+gDBqpHgpDYwRIVbmjQT4a+rTUD2hSdrBo+q60rGhqEhU5hAMnynrtb6X
-        c27nSbBss1GPcfuWS0hA0ez2Ots+WbnKpfi2Sl6PFPJDBF1DscqMQJf8oiWbD9q7pbnDeykbMzXpJ
-        6Hx7KHz0lpC+QIN2NCyiZAsYVU42h4OX8I7O5W4Yn/XincK95Crs9eQV6FS9REIzBoc0uERxbv7C4
-        MZVyTw7AOq/OTMzZqDpgJOEjsVdV8XZqY9juKbz5sYP1xJZtlvqIQdA+7QLyLN2BcIqNhSlif5Tok
-        vQT3j9ug==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qUNd8-009rjw-26;
-        Fri, 11 Aug 2023 08:36:22 +0000
-Date:   Fri, 11 Aug 2023 01:36:22 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Richard Weinberger <richard@nod.at>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        Stephan Wurm <stephan.wurm@a-eberle.de>,
-        stable <stable@vger.kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Oliver Neukum <oliver@neukum.org>,
-        Ali Akcaagac <aliakc@web.de>,
-        Jamie Lenehan <lenehan@twibble.org>,
-        James Bottomley <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 1/7] ubi: block: Refactor sg list processing for highmem
-Message-ID: <ZNXzBnDLQzT7FT5s@infradead.org>
-References: <20230810160019.16977-1-richard@nod.at>
- <20230810160019.16977-2-richard@nod.at>
- <ZNUK8nWnUYB6B4Kg@infradead.org>
- <298860961.5257332.1691684136772.JavaMail.zimbra@nod.at>
- <ZNUOjQVivR/5pFKE@infradead.org>
- <164102534.5258032.1691697286622.JavaMail.zimbra@nod.at>
- <ZNXtdpUbhj7mVu11@infradead.org>
- <156807159.5281174.1691742892935.JavaMail.zimbra@nod.at>
+        with ESMTP id S231956AbjHKLBN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 07:01:13 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79CDAE7E
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Aug 2023 04:01:12 -0700 (PDT)
+Received: from kwepemi500015.china.huawei.com (unknown [172.30.72.54])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RMgkf1zyNzqSfc;
+        Fri, 11 Aug 2023 18:58:18 +0800 (CST)
+Received: from huawei.com (10.175.113.25) by kwepemi500015.china.huawei.com
+ (7.221.188.92) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 11 Aug
+ 2023 19:01:09 +0800
+From:   Zheng Zengkai <zhengzengkai@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <wangxiongfeng2@huawei.com>,
+        <zhengzengkai@huawei.com>
+Subject: [PATCH -next] scsi: pmcraid: Use pci_dev_id() to simplify the code
+Date:   Fri, 11 Aug 2023 19:13:10 +0800
+Message-ID: <20230811111310.32364-1-zhengzengkai@huawei.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <156807159.5281174.1691742892935.JavaMail.zimbra@nod.at>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500015.china.huawei.com (7.221.188.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 11, 2023 at 10:34:52AM +0200, Richard Weinberger wrote:
-> ----- Ursprüngliche Mail -----
-> > Von: "Christoph Hellwig" <hch@infradead.org>
-> > On Thu, Aug 10, 2023 at 09:54:46PM +0200, Richard Weinberger wrote:
-> >> > But why add the bounce buffering first if you can avoid it from the
-> >> > very beginning by just using kmap_local instead of adding a new
-> >> > caller for the deprecate kmap_atomic?
-> >> 
-> >> Because I want this fix also in all stable trees. kmap_local() is rather
-> >> new. When back porting patch 1/7, bounce buffers and kmap_atomic()
-> >> are needed anyway.
-> >> By doing this in patch 1/7 I avoid backport troubles and keep the
-> >> delta between upstream and stable trees minimal.
-> > 
-> > Just use plain kmap for the historic backports.
-> 
-> Hm, yes. For UBIblock kmap should be too expensive.
+PCI core API pci_dev_id() can be used to get the BDF number for a pci
+device. We don't need to compose it manually. Use pci_dev_id() to
+simplify the code a little bit.
 
-?  kmap is a no-op for !highmem.  And it will always be way cheaper
-than bounce buffering for the case where you are actually fed highmem
-pages.
+Signed-off-by: Zheng Zengkai <zhengzengkai@huawei.com>
+---
+ drivers/scsi/pmcraid.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 9415a4819470..50dc30051f22 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3584,8 +3584,7 @@ static ssize_t pmcraid_show_adapter_id(
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct pmcraid_instance *pinstance =
+ 		(struct pmcraid_instance *)shost->hostdata;
+-	u32 adapter_id = (pinstance->pdev->bus->number << 8) |
+-		pinstance->pdev->devfn;
++	u32 adapter_id = pci_dev_id(pinstance->pdev);
+ 	u32 aen_group = pmcraid_event_family.id;
+ 
+ 	return snprintf(buf, PAGE_SIZE,
+-- 
+2.20.1
+
