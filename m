@@ -2,107 +2,150 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF5ECC001B0
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 18:43:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F046C0015E
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 21:36:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229987AbjHKSnq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Aug 2023 14:43:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44758 "EHLO
+        id S236941AbjHKVgK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Aug 2023 17:36:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233938AbjHKSnn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 14:43:43 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0062E30E6
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Aug 2023 11:42:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691779376;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=cv6Mzmbr2OMxhgIgH25m8RNp8mlOWiCTlPRPpjLxL5o=;
-        b=QgGrytYJOuREChTOQPm/xMpw6cITMt729dO7BfPwbmjM2KCQfjMXzNNij8JK1OF23RFK2B
-        Uz4g9SGHpd5Mrd1Og3ZFGi1iLYYTXDMO3ImnJGgAN1eNlQRpmjqQmM5/RC9k01dd88v9xz
-        YyASlDwqy8rxkv1F0c57cE5dMzoPFQI=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-142-xKIHEZ8aOGGW1rFTbYb-RA-1; Fri, 11 Aug 2023 14:42:53 -0400
-X-MC-Unique: xKIHEZ8aOGGW1rFTbYb-RA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8D0C48DC660;
-        Fri, 11 Aug 2023 18:42:52 +0000 (UTC)
-Received: from [10.22.10.6] (unknown [10.22.10.6])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 38619C15BAE;
-        Fri, 11 Aug 2023 18:42:52 +0000 (UTC)
-Message-ID: <731b5514-9c72-7948-2376-fadfbed828b3@redhat.com>
-Date:   Fri, 11 Aug 2023 14:42:52 -0400
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] bnx2fc: Remove dma_alloc_coherent to suppress the BUG_ON.
-Content-Language: en-US
-To:     Jerry Snitselaar <jsnitsel@redhat.com>,
+        with ESMTP id S231659AbjHKVgJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 17:36:09 -0400
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47A41213F;
+        Fri, 11 Aug 2023 14:36:09 -0700 (PDT)
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1bbf8cb694aso21064425ad.3;
+        Fri, 11 Aug 2023 14:36:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691789769; x=1692394569;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZP2zWZCEMkImhnIX+u/m9IfTzgWoVmIHljvmPKpsZus=;
+        b=lwam60Qa5A4dDnqA6qXjRP/yEr0ki1zVtLV+6SUzlrQcxJvWpkHztffYM3ITsSlPlR
+         bWPAFwDHPrFytulsgejNSHyPzuc0J7RRQ2ZxeTa/ikGoPaqjBsuFXaehCisUsyhB0qHL
+         p9iiDK9Ez/vi+4HNCdobDKxa+xM5CJu6blx4slpdu5DdnNUh1jzHKkKE0C3XwRn9xTNm
+         zNpXIrvemHLTXEbbSC6G6tBwEWSsAr71Cx9oKzmqzUw5lMcg+4amo+lTqcXJzYA54d79
+         JqlH9yImT0CJjZ6liFeIKL+zLCx9DIeLUWscZsz6cM5Gf6DfyWa8vrFWRRckFO1k3/HP
+         nupw==
+X-Gm-Message-State: AOJu0YxPC194jiTsES/D+FTqAYZqqoZMnVaZYFc9HOVeC4XufOFzZIjg
+        W7ipFg6sqI0ZAfyiaGPj1QI=
+X-Google-Smtp-Source: AGHT+IH8OgZ8pKXOo5AFotp14Xd8C4Zb10B4P6QkS78jJPyGh88JhdSvnymlNG40m6wf+eH3gOyKoA==
+X-Received: by 2002:a17:902:ecc5:b0:1bc:7001:6e5e with SMTP id a5-20020a170902ecc500b001bc70016e5emr3511910plh.32.1691789768566;
+        Fri, 11 Aug 2023 14:36:08 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:cdd8:4c3:2f3c:adea])
+        by smtp.gmail.com with ESMTPSA id c10-20020a170903234a00b001b89c313185sm4394865plh.205.2023.08.11.14.36.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Aug 2023 14:36:08 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>
-Cc:     Saurav Kashyap <skashyap@marvell.com>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>
-References: <20230721102320.9559-1-skashyap@marvell.com>
- <642a49ed-4920-9c74-40aa-81d5c859ce79@acm.org>
- <benqe3zwp3go3w2s2fmhsyjft3d7vqiewffjqhb22y4hlpw5p4@46pxi3bd2zsn>
-From:   John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <benqe3zwp3go3w2s2fmhsyjft3d7vqiewffjqhb22y4hlpw5p4@46pxi3bd2zsn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
+Subject: [PATCH v8 0/9] Improve performance for zoned UFS devices
+Date:   Fri, 11 Aug 2023 14:35:34 -0700
+Message-ID: <20230811213604.548235-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.41.0.640.ga95def55d0-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Saurav, please rework this patch and add the missing description. It would also be good to consolidate some of the repeated 
-tasks into one or two sub-routines.
+Hi Jens,
 
-Please publish a v2 patch series.
+This patch series improves small write IOPS by a factor of four (+300%) for
+zoned UFS devices on my test setup with an UFSHCI 3.0 controller. Please
+consider this patch series for the next merge window.
 
-/John
+Thank you,
 
-On 7/21/23 13:48, Jerry Snitselaar wrote:
-> On Fri, Jul 21, 2023 at 07:58:26AM -0700, Bart Van Assche wrote:
->> On 7/21/23 03:23, Saurav Kashyap wrote:
->>> From: Jerry Snitselar <jsnitsel@redhat.com>
->>> [ ... ]
->>> Signed-off-by: Jerry Snitselar <jsnitsel@redhat.com>
->>
->> Has Jerry's name changed or has his name been misspelled? I think
->> a letter 'a' is missing from his name.
-> 
-> No, and yes. :)
-> 
-> This was originally passed along in a bugzilla bug as an example of a
-> possible solution, but I didn't figure it would be the final patch.
-> 
-> The original patch had the following summary and description above
-> the stack trace:
-> 
->      scsi: bnx2fc: Don't use dma_*_coherent for session resources
->      
->      With commit f5ff79fddf0e ("dma-mapping: remove CONFIG_DMA_REMAP") a
->      crash can be seen with bnx2fc, because dma_free_coherent can not be
->      called in an interrupt context. Replace the dma_*_coherent code in
->      bnx2fc_alloc_session_resc and bnx2fc_free_session_resc, with kzalloc +
->      dma_map_single, and kfree + dma_unmap_single calls. Also properly
->      unwind in the error path for bnx2fc_alloc_session_resc, cleaning up
->      what it did succeed in allocating and mapping. This deals with seeing
->      the following panic:
-> 
-> 
-> Regards,
-> Jerry
-> 
->>
->> Bart.
->>
-> 
+Bart.
+
+Changes compared to v7:
+ - Split the queue_limits member variable `use_zone_write_lock' into two member
+   variables: `use_zone_write_lock' (set by disk_set_zoned()) and
+   `driver_preserves_write_order' (set by the block driver or SCSI LLD). This
+   should clear up the confusion about the purpose of this variable.
+ - Moved the code for sorting SCSI commands by LBA from the SCSI error handler
+   into the SCSI disk (sd) driver as requested by Christoph.
+   
+Changes compared to v6:
+ - Removed QUEUE_FLAG_NO_ZONE_WRITE_LOCK and instead introduced a flag in
+   the request queue limits data structure.
+
+Changes compared to v5:
+ - Renamed scsi_cmp_lba() into scsi_cmp_sector().
+ - Improved several source code comments.
+
+Changes compared to v4:
+ - Dropped the patch that introduces the REQ_NO_ZONE_WRITE_LOCK flag.
+ - Dropped the null_blk patch and added two scsi_debug patches instead.
+ - Dropped the f2fs patch.
+ - Split the patch for the UFS driver into two patches.
+ - Modified several patch descriptions and source code comments.
+ - Renamed dd_use_write_locking() into dd_use_zone_write_locking().
+ - Moved the list_sort() call from scsi_unjam_host() into scsi_eh_flush_done_q()
+   such that sorting happens just before reinserting.
+ - Removed the scsi_cmd_retry_allowed() call from scsi_check_sense() to make
+   sure that the retry counter is adjusted once per retry instead of twice.
+
+Changes compared to v3:
+ - Restored the patch that introduces QUEUE_FLAG_NO_ZONE_WRITE_LOCK. That patch
+   had accidentally been left out from v2.
+ - In patch "block: Introduce the flag REQ_NO_ZONE_WRITE_LOCK", improved the
+   patch description and added the function blk_no_zone_write_lock().
+ - In patch "block/mq-deadline: Only use zone locking if necessary", moved the
+   blk_queue_is_zoned() call into dd_use_write_locking().
+ - In patch "fs/f2fs: Disable zone write locking", set REQ_NO_ZONE_WRITE_LOCK
+   from inside __bio_alloc() instead of in f2fs_submit_write_bio().
+
+Changes compared to v2:
+ - Renamed the request queue flag for disabling zone write locking.
+ - Introduced a new request flag for disabling zone write locking.
+ - Modified the mq-deadline scheduler such that zone write locking is only
+   disabled if both flags are set.
+ - Added an F2FS patch that sets the request flag for disabling zone write
+   locking.
+ - Only disable zone write locking in the UFS driver if auto-hibernation is
+   disabled.
+
+Changes compared to v1:
+ - Left out the patches that are already upstream.
+ - Switched the approach in patch "scsi: Retry unaligned zoned writes" from
+   retrying immediately to sending unaligned write commands to the SCSI error
+   handler.
+
+Bart Van Assche (9):
+  block: Introduce more member variables related to zone write locking
+  block/mq-deadline: Only use zone locking if necessary
+  scsi: core: Call .eh_prepare_resubmit() before resubmitting
+  scsi: sd: Sort commands by LBA before resubmitting
+  scsi: core: Retry unaligned zoned writes
+  scsi: scsi_debug: Support disabling zone write locking
+  scsi: scsi_debug: Support injecting unaligned write errors
+  scsi: ufs: Split an if-condition
+  scsi: ufs: Inform the block layer about write ordering
+
+ block/blk-settings.c           |  7 +++
+ block/mq-deadline.c            | 14 +++---
+ drivers/scsi/Kconfig           |  2 +
+ drivers/scsi/Kconfig.kunit     |  4 ++
+ drivers/scsi/Makefile          |  2 +
+ drivers/scsi/Makefile.kunit    |  1 +
+ drivers/scsi/scsi_debug.c      | 20 +++++++-
+ drivers/scsi/scsi_error.c      | 59 ++++++++++++++++++++++
+ drivers/scsi/scsi_error_test.c | 92 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_lib.c        |  1 +
+ drivers/scsi/scsi_priv.h       |  1 +
+ drivers/scsi/sd.c              | 25 +++++++++
+ drivers/ufs/core/ufshcd.c      | 40 +++++++++++++--
+ include/linux/blkdev.h         | 10 ++++
+ include/scsi/scsi.h            |  1 +
+ include/scsi/scsi_driver.h     |  1 +
+ 16 files changed, 270 insertions(+), 10 deletions(-)
+ create mode 100644 drivers/scsi/Kconfig.kunit
+ create mode 100644 drivers/scsi/Makefile.kunit
+ create mode 100644 drivers/scsi/scsi_error_test.c
 
