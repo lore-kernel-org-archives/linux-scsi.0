@@ -2,133 +2,186 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B08C04E69
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 00:27:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4F87C001DE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 00:40:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231555AbjHKA1Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Aug 2023 20:27:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60018 "EHLO
+        id S230447AbjHKAkA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Aug 2023 20:40:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbjHKA1Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 20:27:24 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ED792718;
-        Thu, 10 Aug 2023 17:27:24 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37B03Iiq025172;
-        Fri, 11 Aug 2023 00:27:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=qcppdkim1;
- bh=MRXzDHmf0jpToFYvEYjb8jcM+QLXtNMavgjF9THlYLE=;
- b=BOTSZ0fDNVkSQ2MXuhqZkVBJtcu1xuqjVkD3kqNgj0R6g+84iJIVm4Ls62c6pBKoI7W7
- p/dcoq7qe40pDjetHpPopEW2LbWcuryw8NcuK8KJanGLYKXpK53W4fB4rvW/JIeHwCDD
- GyXBg4t6oYOX+fJ4wrn2E33Bj+xaYFNsN2LU+0yb2Dx7rMpulEtUUEC+eeYuExbOq+mk
- 0YsFkN+xXVl7/9F6w71K45gensKmlVcH2G2WClIUm7FwTWHsv3nyCeC/o1ddy4sIbHgd
- SZj0Y1A3vjtNFT6gGklKFuo/dRJBjtGus+6fVv3LAcB9N0mVB2oAuqQjhoXUgGoyf1OA +A== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sd90603vk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 11 Aug 2023 00:27:20 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37B0RJsh004329
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 11 Aug 2023 00:27:19 GMT
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.30; Thu, 10 Aug 2023 17:27:18 -0700
-Received: from nalasex01a.na.qualcomm.com ([fe80::25d0:9235:354f:5fa9]) by
- nalasex01a.na.qualcomm.com ([fe80::25d0:9235:354f:5fa9%4]) with mapi id
- 15.02.1118.030; Thu, 10 Aug 2023 17:27:18 -0700
-From:   "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-        "Om Prakash Singh" <omprsing@qti.qualcomm.com>,
-        "Prasad Sodagudi (QUIC)" <quic_psodagud@quicinc.com>,
-        "Arun Menon (SSG)" <avmenon@quicinc.com>,
-        "abel.vesa@linaro.org" <abel.vesa@linaro.org>,
-        "Seshu Madhavi Puppala (QUIC)" <quic_spuppala@quicinc.com>
-Subject: RE: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
- ufs
-Thread-Topic: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
- ufs
-Thread-Index: AQHZumN+a5RI3WgcJ0CO2LlDH5s476/Ca+iAgBIbBxCADxLrAIAAxjXQ
-Date:   Fri, 11 Aug 2023 00:27:18 +0000
-Message-ID: <371088f78c6d4febbbfaf3c1a12cf19f@quicinc.com>
-References: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
- <20230720025541.GA2607@sol.localdomain>
- <ca11701e403f48b6839b26c47a1b537f@quicinc.com>
- <20230810053642.GD923@sol.localdomain>
-In-Reply-To: <20230810053642.GD923@sol.localdomain>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.52.103.164]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S229706AbjHKAj7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2023 20:39:59 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88A632D4F;
+        Thu, 10 Aug 2023 17:39:58 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 286CC65562;
+        Fri, 11 Aug 2023 00:39:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4F4FC433C7;
+        Fri, 11 Aug 2023 00:39:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691714397;
+        bh=Uxg5A8RaCsTkq4FHfVHE3qK+2g4hsNfeftZ97Jf7uSk=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=Xs510ngZKU+JeALd2O9RnO+99l80wOp6c1gNDxIb5GruNi5gcZCM5LTueiTyQUY2I
+         SQXcaMhmzSIMBRtuzWv9CBBe/IhY/UehpON0Cko5Gt/GqywtxiTFALH13D6p+yAHNX
+         7o2WqWQFb5qephB5N9A0qK1DLL54QGyQYcRQOn1/FfX6T/qCWTH/vu1eettQE8Pfkt
+         haub/Han2+HGVQXLmTsX7cZ2/ANJj6wSYOkvi8E0EzarT9fJnzaiDkS/kFvjdXPxw2
+         bJDoFpLcmkJKXR3oa/MhnEGRRZyWTzEFtG+vT8e8t4CBu5kjqROKP9EfXwVh7jiu/P
+         HdU7XW/xJIW8g==
+Message-ID: <554dd42f-ab73-9120-1a9c-0a12b5d7981b@kernel.org>
+Date:   Fri, 11 Aug 2023 09:39:55 +0900
 MIME-Version: 1.0
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: tNmSuQfPNm_Uwa1dtOWpKf-UlFsAkBQ8
-X-Proofpoint-ORIG-GUID: tNmSuQfPNm_Uwa1dtOWpKf-UlFsAkBQ8
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-10_19,2023-08-10_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
- impostorscore=0 lowpriorityscore=0 priorityscore=1501 adultscore=0
- suspectscore=0 malwarescore=0 mlxscore=0 clxscore=1015 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308110002
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v7 1/7] block: Introduce the use_zone_write_lock member
+ variable
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+References: <20230809202355.1171455-1-bvanassche@acm.org>
+ <20230809202355.1171455-2-bvanassche@acm.org>
+ <8312a7c4-b3ef-873d-c4fa-825b7fce8be1@kernel.org>
+ <3ebefe64-bb74-732e-68d1-faf9e3c5877b@acm.org>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <3ebefe64-bb74-732e-68d1-faf9e3c5877b@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 8/10/23 23:02, Bart Van Assche wrote:
+> On 8/9/23 18:33, Damien Le Moal wrote:
+>> On 8/10/23 05:23, Bart Van Assche wrote:
+>>> Writes in sequential write required zones must happen at the write
+>>> pointer. Even if the submitter of the write commands (e.g. a filesystem)
+>>> submits writes for sequential write required zones in order, the block
+>>> layer or the storage controller may reorder these write commands.
+>>>
+>>> The zone locking mechanism in the mq-deadline I/O scheduler serializes
+>>> write commands for sequential zones. Some but not all storage controllers
+>>> require this serialization. Introduce a new request queue limit member
+>>> variable to allow block drivers to indicate that they preserve the order
+>>> of write commands and thus do not require serialization of writes per
+>>> zone.
+>>>
+>>> Cc: Damien Le Moal <dlemoal@kernel.org>
+>>> Cc: Christoph Hellwig <hch@lst.de>
+>>> Cc: Ming Lei <ming.lei@redhat.com>
+>>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>>> ---
+>>>   block/blk-settings.c   | 6 ++++++
+>>>   include/linux/blkdev.h | 1 +
+>>>   2 files changed, 7 insertions(+)
+>>>
+>>> diff --git a/block/blk-settings.c b/block/blk-settings.c
+>>> index 0046b447268f..b75c97971860 100644
+>>> --- a/block/blk-settings.c
+>>> +++ b/block/blk-settings.c
+>>> @@ -56,6 +56,7 @@ void blk_set_default_limits(struct queue_limits *lim)
+>>>   	lim->alignment_offset = 0;
+>>>   	lim->io_opt = 0;
+>>>   	lim->misaligned = 0;
+>>> +	lim->use_zone_write_lock = true;
+>>>   	lim->zoned = BLK_ZONED_NONE;
+>>
+>> Given that the default for zoned is BLK_ZONED_NONE, having use_zone_write_lock
+>> default to true is strange. It would be better to set the default to false and
+>> have disk_set_zoned() set it to true if needed, with an additional argument to
+>> specify if it should be the case or not. E.g., for SMR drives, sd.c would call
+>> something like:
+>>
+>> disk_set_zoned(sdkp->disk, BLK_ZONED_HM, sdp->use_zone_write_lock);
+>>
+>> sd.c would default to sdp->use_zone_write_lock == true and UFS driver can set
+>> it to false. That would be cleaner I think.
+> 
+> Hi Damien,
+> 
+> Thanks for the detailed feedback.
+> 
+> My concerns about the above proposal are as follows:
+> * The information about whether or not the zone write lock should be used comes
+>    from the block driver, e.g. a SCSI LLD.
 
+Yes.
 
------Original Message-----
-From: Eric Biggers <ebiggers@kernel.org>=20
-Sent: Wednesday, August 9, 2023 10:37 PM
-To: Gaurav Kashyap (QUIC) <quic_gaurkash@quicinc.com>
-Cc: linux-scsi@vger.kernel.org; linux-arm-msm@vger.kernel.org; linux-mmc@vg=
-er.kernel.org; linux-block@vger.kernel.org; linux-fscrypt@vger.kernel.org; =
-Om Prakash Singh <omprsing@qti.qualcomm.com>; Prasad Sodagudi (QUIC) <quic_=
-psodagud@quicinc.com>; Arun Menon (SSG) <avmenon@quicinc.com>; abel.vesa@li=
-naro.org; Seshu Madhavi Puppala (QUIC) <quic_spuppala@quicinc.com>
-Subject: Re: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and=
- ufs
+> * sdp, the SCSI disk pointer, is owned by the ULD.
+> * An ULD may be attached and detached multiple times during the lifetime of a
+>    logical unit without the LLD being informed about this. So how to set
+>    sdp->use_zone_write_lock without introducing a new callback or member variable
+>    in a data structure owned by the LLD?
 
-On Tue, Aug 01, 2023 at 05:31:59PM +0000, Gaurav Kashyap (QUIC) wrote:
->=20
-> According to your cover letter, this feature requires a custom TrustZone =
-image to work on SM8550.  Will that image be made available outside Qualcom=
-m?
-> --> Unfortunately, I don't think there is a way to do that. You can still=
- request for one through our customer engineering team like before.
+That would be set during device scan and device revalidate. And if the value
+changes, then disk_set_zoned() should be called again to update the queue limit.
+That is already what is done for the zoned limit indicating the type of the
+drive. My point is that the zoned limit should dictate if use_zone_write_lock
+can be true. The default should be be:
 
-I think it's already been shown that that is not a workable approach.
+	q->limits.use_zone_write_lock = q->limits.zoned != BLK_ZONED_NONE.
 
-> Also, can you please make available a git branch somewhere that contains =
-your patchset?  It sounds like this depends on https://git.kernel.org/pub/s=
-cm/fs/fscrypt/linux.git/log/?h=3Dwrapped-keys-v7, but actually a version of=
- it that you've rebased, which I don't have access to.
-> Without being able to apply your patchset, I can't properly review it.
-> --> As for the fscrypt patches,
->       I have not changed much functionally from the v7 patch, just merge =
-conflicts.
->       I will update this thread once I figure out a git location.
->=20
+And as proposed, if the UFS driver wants to disable zone write locking, all it
+needs to do is call "disk_set_zoned(disk, BLK_ZONED_HM, false)". I did not try
+to actually code that, and the scsi disk driver may be in the way and that may
+need to be done there, hence the suggestion of having a use_zone_write_lock flag
+in the scsi device structure so that the UFS driver can set it as needed as well
+(and detect changes when revalidating). That should work, but I may be missing
+something.
 
-Any update on this?  Most kernel developers just create a GitHub repo if th=
-ey don't have kernel.org access.
+> Hence my preference to store use_zone_write_lock in a data structure that has the
+> same lifetime as the logical unit and not in any data structure controlled by the
+> ULD.
 
->> Here are the git links
->> https://github.com/quic-gaurkash/linux/tree/fscrypt
->> https://github.com/quic-gaurkash/linux/tree/wrapped_keys_ice_ufs
+See above. The actual storage would still be in q->limits so that the block
+layer can see it.
 
-- Eric
+> 
+>>>   	lim->zone_write_granularity = 0;
+>>>   	lim->dma_alignment = 511;
+>>> @@ -685,6 +686,11 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>>>   						   b->max_secure_erase_sectors);
+>>>   	t->zone_write_granularity = max(t->zone_write_granularity,
+>>>   					b->zone_write_granularity);
+>>> +	/*
+>>> +	 * Whether or not the zone write lock should be used depends on the
+>>> +	 * bottom driver only.
+>>> +	 */
+>>> +	t->use_zone_write_lock = b->use_zone_write_lock;
+>>
+>> Given that DM bio targets do not have a scheduler and do not have a zone lock
+>> bitmap allocated, I do not think this is necessary at all. This can remain to
+>> false, thus in sync with the fact that there is no IO scheduler.
+> 
+> How about the request-based dm drivers (dm-mpath and dm-target)? Isn't the dm-mpath
+> driver request based because that allows the I/O scheduler to be configured on top
+> of the dm-mpath driver? From https://lwn.net/Articles/274292/: "The basic idea to
+> resolve the issue is to move multipathing layer down below the I/O scheduler, and it
+> was proposed from Mike Christie as the block layer (request-based) multipath".
+
+These DM targets do not support zoned devices, so I do not think it is an issue.
+
+That said, you can still keep the parameter stacking, but at the very least, I
+think it should be:
+
+t->use_zone_write_lock = t->use_zone_write_lock || b->use_zone_write_lock;
+
+so that for a target composed of multiple devices, if one needs zone write
+locking, the DM device request that as well. Otherwise, problems may occur I think.
+
+> 
+> Thanks,
+> 
+> Bart.
+> 
+
+-- 
+Damien Le Moal
+Western Digital Research
+
