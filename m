@@ -2,150 +2,130 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F046C0015E
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 21:36:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C1DC001B0
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 21:36:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236941AbjHKVgK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Aug 2023 17:36:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49340 "EHLO
+        id S236942AbjHKVgL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Aug 2023 17:36:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231659AbjHKVgJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 17:36:09 -0400
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47A41213F;
-        Fri, 11 Aug 2023 14:36:09 -0700 (PDT)
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1bbf8cb694aso21064425ad.3;
-        Fri, 11 Aug 2023 14:36:09 -0700 (PDT)
+        with ESMTP id S236570AbjHKVgK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 17:36:10 -0400
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C36A268C;
+        Fri, 11 Aug 2023 14:36:10 -0700 (PDT)
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1bc6535027aso21041525ad.2;
+        Fri, 11 Aug 2023 14:36:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691789769; x=1692394569;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ZP2zWZCEMkImhnIX+u/m9IfTzgWoVmIHljvmPKpsZus=;
-        b=lwam60Qa5A4dDnqA6qXjRP/yEr0ki1zVtLV+6SUzlrQcxJvWpkHztffYM3ITsSlPlR
-         bWPAFwDHPrFytulsgejNSHyPzuc0J7RRQ2ZxeTa/ikGoPaqjBsuFXaehCisUsyhB0qHL
-         p9iiDK9Ez/vi+4HNCdobDKxa+xM5CJu6blx4slpdu5DdnNUh1jzHKkKE0C3XwRn9xTNm
-         zNpXIrvemHLTXEbbSC6G6tBwEWSsAr71Cx9oKzmqzUw5lMcg+4amo+lTqcXJzYA54d79
-         JqlH9yImT0CJjZ6liFeIKL+zLCx9DIeLUWscZsz6cM5Gf6DfyWa8vrFWRRckFO1k3/HP
-         nupw==
-X-Gm-Message-State: AOJu0YxPC194jiTsES/D+FTqAYZqqoZMnVaZYFc9HOVeC4XufOFzZIjg
-        W7ipFg6sqI0ZAfyiaGPj1QI=
-X-Google-Smtp-Source: AGHT+IH8OgZ8pKXOo5AFotp14Xd8C4Zb10B4P6QkS78jJPyGh88JhdSvnymlNG40m6wf+eH3gOyKoA==
-X-Received: by 2002:a17:902:ecc5:b0:1bc:7001:6e5e with SMTP id a5-20020a170902ecc500b001bc70016e5emr3511910plh.32.1691789768566;
-        Fri, 11 Aug 2023 14:36:08 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1691789770; x=1692394570;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5q+IWn4ek8qUOXLGwDyPCO3ru0XE1sUcjJbkQBMhNLw=;
+        b=ZaIIDwXeIsbv+IUo5n0beD0WJXpr8yxnJwVv3HAIotlZmVRzDnIL1zkczFBk+itORj
+         7dYzDhDXuQriNrAlRYnvcfDR8MTnQ5JDwKOBg4GHPwEGo8irdMv6flD3u9fdWTjKVkVF
+         TEJ5p1guy6UDAG3k6AZhxQScdXH0TnXF8QRboKT2c/tcRLXPlf1jEa7SkaKy7gCPvOXm
+         WcZ0tjv/ao1m+SHtDsAd9+yQKiRv0HvEXW6NmWqG55iZkr4xEDQuUo0ezGFUKqbzw76b
+         E6YdQ6quwvcI5PpFh4XACKnWtoh8T+yvDE0If1SfSNIVFPb/S05nPXi9c1E3bwOma+A1
+         5vfg==
+X-Gm-Message-State: AOJu0YzV9aJ74nNFiMzu1vhNZlcter5cDumTNFhonUiFbVgEJNmiBJUy
+        Tg7z/lhx6f5vdNXJCrpz6sA=
+X-Google-Smtp-Source: AGHT+IGnGNkoTePbWqEwM7nJ7yC2s8Nxe0/3+t1aL4MSTt59xW0qm39OplLw8wQpXtVYWfxUnTm20A==
+X-Received: by 2002:a17:902:f68d:b0:1bc:14f0:b76c with SMTP id l13-20020a170902f68d00b001bc14f0b76cmr3398899plg.65.1691789769789;
+        Fri, 11 Aug 2023 14:36:09 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:cdd8:4c3:2f3c:adea])
-        by smtp.gmail.com with ESMTPSA id c10-20020a170903234a00b001b89c313185sm4394865plh.205.2023.08.11.14.36.07
+        by smtp.gmail.com with ESMTPSA id c10-20020a170903234a00b001b89c313185sm4394865plh.205.2023.08.11.14.36.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Aug 2023 14:36:08 -0700 (PDT)
+        Fri, 11 Aug 2023 14:36:09 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v8 0/9] Improve performance for zoned UFS devices
-Date:   Fri, 11 Aug 2023 14:35:34 -0700
-Message-ID: <20230811213604.548235-1-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH v8 1/9] block: Introduce more member variables related to zone write locking
+Date:   Fri, 11 Aug 2023 14:35:35 -0700
+Message-ID: <20230811213604.548235-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.41.0.640.ga95def55d0-goog
+In-Reply-To: <20230811213604.548235-1-bvanassche@acm.org>
+References: <20230811213604.548235-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Jens,
+Many but not all storage controllers require serialization of zoned writes.
+Introduce a new request queue limit member variable
+(driver_preserves_write_order) that allows block drivers to indicate that
+the order of write commands is preserved and hence that serialization of
+writes per zone is not required.
 
-This patch series improves small write IOPS by a factor of four (+300%) for
-zoned UFS devices on my test setup with an UFSHCI 3.0 controller. Please
-consider this patch series for the next merge window.
+Make disk_set_zoned() set 'use_zone_write_lock' only if the block device
+has zones and if the block driver does not preserve the order of write
+requests.
 
-Thank you,
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ block/blk-settings.c   |  7 +++++++
+ include/linux/blkdev.h | 10 ++++++++++
+ 2 files changed, 17 insertions(+)
 
-Bart.
-
-Changes compared to v7:
- - Split the queue_limits member variable `use_zone_write_lock' into two member
-   variables: `use_zone_write_lock' (set by disk_set_zoned()) and
-   `driver_preserves_write_order' (set by the block driver or SCSI LLD). This
-   should clear up the confusion about the purpose of this variable.
- - Moved the code for sorting SCSI commands by LBA from the SCSI error handler
-   into the SCSI disk (sd) driver as requested by Christoph.
-   
-Changes compared to v6:
- - Removed QUEUE_FLAG_NO_ZONE_WRITE_LOCK and instead introduced a flag in
-   the request queue limits data structure.
-
-Changes compared to v5:
- - Renamed scsi_cmp_lba() into scsi_cmp_sector().
- - Improved several source code comments.
-
-Changes compared to v4:
- - Dropped the patch that introduces the REQ_NO_ZONE_WRITE_LOCK flag.
- - Dropped the null_blk patch and added two scsi_debug patches instead.
- - Dropped the f2fs patch.
- - Split the patch for the UFS driver into two patches.
- - Modified several patch descriptions and source code comments.
- - Renamed dd_use_write_locking() into dd_use_zone_write_locking().
- - Moved the list_sort() call from scsi_unjam_host() into scsi_eh_flush_done_q()
-   such that sorting happens just before reinserting.
- - Removed the scsi_cmd_retry_allowed() call from scsi_check_sense() to make
-   sure that the retry counter is adjusted once per retry instead of twice.
-
-Changes compared to v3:
- - Restored the patch that introduces QUEUE_FLAG_NO_ZONE_WRITE_LOCK. That patch
-   had accidentally been left out from v2.
- - In patch "block: Introduce the flag REQ_NO_ZONE_WRITE_LOCK", improved the
-   patch description and added the function blk_no_zone_write_lock().
- - In patch "block/mq-deadline: Only use zone locking if necessary", moved the
-   blk_queue_is_zoned() call into dd_use_write_locking().
- - In patch "fs/f2fs: Disable zone write locking", set REQ_NO_ZONE_WRITE_LOCK
-   from inside __bio_alloc() instead of in f2fs_submit_write_bio().
-
-Changes compared to v2:
- - Renamed the request queue flag for disabling zone write locking.
- - Introduced a new request flag for disabling zone write locking.
- - Modified the mq-deadline scheduler such that zone write locking is only
-   disabled if both flags are set.
- - Added an F2FS patch that sets the request flag for disabling zone write
-   locking.
- - Only disable zone write locking in the UFS driver if auto-hibernation is
-   disabled.
-
-Changes compared to v1:
- - Left out the patches that are already upstream.
- - Switched the approach in patch "scsi: Retry unaligned zoned writes" from
-   retrying immediately to sending unaligned write commands to the SCSI error
-   handler.
-
-Bart Van Assche (9):
-  block: Introduce more member variables related to zone write locking
-  block/mq-deadline: Only use zone locking if necessary
-  scsi: core: Call .eh_prepare_resubmit() before resubmitting
-  scsi: sd: Sort commands by LBA before resubmitting
-  scsi: core: Retry unaligned zoned writes
-  scsi: scsi_debug: Support disabling zone write locking
-  scsi: scsi_debug: Support injecting unaligned write errors
-  scsi: ufs: Split an if-condition
-  scsi: ufs: Inform the block layer about write ordering
-
- block/blk-settings.c           |  7 +++
- block/mq-deadline.c            | 14 +++---
- drivers/scsi/Kconfig           |  2 +
- drivers/scsi/Kconfig.kunit     |  4 ++
- drivers/scsi/Makefile          |  2 +
- drivers/scsi/Makefile.kunit    |  1 +
- drivers/scsi/scsi_debug.c      | 20 +++++++-
- drivers/scsi/scsi_error.c      | 59 ++++++++++++++++++++++
- drivers/scsi/scsi_error_test.c | 92 ++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_lib.c        |  1 +
- drivers/scsi/scsi_priv.h       |  1 +
- drivers/scsi/sd.c              | 25 +++++++++
- drivers/ufs/core/ufshcd.c      | 40 +++++++++++++--
- include/linux/blkdev.h         | 10 ++++
- include/scsi/scsi.h            |  1 +
- include/scsi/scsi_driver.h     |  1 +
- 16 files changed, 270 insertions(+), 10 deletions(-)
- create mode 100644 drivers/scsi/Kconfig.kunit
- create mode 100644 drivers/scsi/Makefile.kunit
- create mode 100644 drivers/scsi/scsi_error_test.c
-
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 0046b447268f..3a7748af1bef 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -56,6 +56,8 @@ void blk_set_default_limits(struct queue_limits *lim)
+ 	lim->alignment_offset = 0;
+ 	lim->io_opt = 0;
+ 	lim->misaligned = 0;
++	lim->driver_preserves_write_order = false;
++	lim->use_zone_write_lock = false;
+ 	lim->zoned = BLK_ZONED_NONE;
+ 	lim->zone_write_granularity = 0;
+ 	lim->dma_alignment = 511;
+@@ -685,6 +687,9 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 						   b->max_secure_erase_sectors);
+ 	t->zone_write_granularity = max(t->zone_write_granularity,
+ 					b->zone_write_granularity);
++	/* Request-based stacking drivers do not reorder requests. */
++	t->driver_preserves_write_order = b->driver_preserves_write_order;
++	t->use_zone_write_lock = b->use_zone_write_lock;
+ 	t->zoned = max(t->zoned, b->zoned);
+ 	return ret;
+ }
+@@ -949,6 +954,8 @@ void disk_set_zoned(struct gendisk *disk, enum blk_zoned_model model)
+ 	}
+ 
+ 	q->limits.zoned = model;
++	q->limits.use_zone_write_lock = model != BLK_ZONED_NONE &&
++		!q->limits.driver_preserves_write_order;
+ 	if (model != BLK_ZONED_NONE) {
+ 		/*
+ 		 * Set the zone write granularity to the device logical block
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2f5371b8482c..2c090a28ec78 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -316,6 +316,16 @@ struct queue_limits {
+ 	unsigned char		misaligned;
+ 	unsigned char		discard_misaligned;
+ 	unsigned char		raid_partial_stripes_expensive;
++	/*
++	 * Whether or not the block driver preserves the order of write
++	 * requests. Set by the block driver.
++	 */
++	bool			driver_preserves_write_order;
++	/*
++	 * Whether or not zone write locking should be used. Set by
++	 * disk_set_zoned().
++	 */
++	bool			use_zone_write_lock;
+ 	enum blk_zoned_model	zoned;
+ 
+ 	/*
