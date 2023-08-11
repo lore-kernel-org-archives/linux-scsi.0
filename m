@@ -2,87 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C12B8C001B0
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 15:50:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF5ECC001B0
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Aug 2023 18:43:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235816AbjHKPuE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Aug 2023 11:50:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48762 "EHLO
+        id S229987AbjHKSnq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Aug 2023 14:43:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232094AbjHKPuD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 11:50:03 -0400
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EDE82123;
-        Fri, 11 Aug 2023 08:50:02 -0700 (PDT)
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-686f090310dso1945199b3a.0;
-        Fri, 11 Aug 2023 08:50:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691769002; x=1692373802;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7BGmmVu/pwR0eeIJc8KqR8StUrvY/sFCiKoCd8mLBP4=;
-        b=XephIM7Mi9Dvtt+rhRmKrIWjbKvUV+JRAmGw6RRLbpF7eR0jSpGyt8X8cc5nqHkkJI
-         eKWHUwR1C1xnW2TxvD9d0VMXwRStEDy4y+AJGPGx7K2mzL6W9Hj1Rq+p7xE4KiasEuFF
-         epjpigc42l5C1W31nRTp+OGJ7vz7RVvN3oYS2pD3b14myalRVAPCnEYqmLeb5bEdsvxc
-         qZwWNqvCX5h6UPwoRlIHEJcgPAg5Pn0rpwt84UXJa+J6Zb0KgmgY6h+SvWeBScFpx6e2
-         K6gutGCdEzPX/mZcXqmqnN3/YjBb+NYEgsTR5FG2Ei/n7jC5aZh0BmyFKirM8DgOJTRI
-         p5iQ==
-X-Gm-Message-State: AOJu0Yws1kPyDjpDNt1vz5I12GtcuZAQ0WvgQYAsHw6BYYci57/uTE3S
-        tfWosGDlfN3SJtdlyvspHNA=
-X-Google-Smtp-Source: AGHT+IHo6hekdjQwRm3gH90+uHzaTBLtvZ2IW4bJmXqPitJaguiXiQfV3grffUFMmo8u5ZiJSeGe/w==
-X-Received: by 2002:a05:6a00:198b:b0:676:399f:346b with SMTP id d11-20020a056a00198b00b00676399f346bmr2781776pfl.1.1691769001878;
-        Fri, 11 Aug 2023 08:50:01 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:a40a:5c20:3595:c0ec? ([2620:15c:211:201:a40a:5c20:3595:c0ec])
-        by smtp.gmail.com with ESMTPSA id x5-20020aa784c5000000b006875493da1fsm3608575pfn.10.2023.08.11.08.50.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 11 Aug 2023 08:50:01 -0700 (PDT)
-Message-ID: <92e109dc-c5ee-ce0c-002c-3323f3918503@acm.org>
-Date:   Fri, 11 Aug 2023 08:49:59 -0700
+        with ESMTP id S233938AbjHKSnn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2023 14:43:43 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0062E30E6
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Aug 2023 11:42:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691779376;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cv6Mzmbr2OMxhgIgH25m8RNp8mlOWiCTlPRPpjLxL5o=;
+        b=QgGrytYJOuREChTOQPm/xMpw6cITMt729dO7BfPwbmjM2KCQfjMXzNNij8JK1OF23RFK2B
+        Uz4g9SGHpd5Mrd1Og3ZFGi1iLYYTXDMO3ImnJGgAN1eNlQRpmjqQmM5/RC9k01dd88v9xz
+        YyASlDwqy8rxkv1F0c57cE5dMzoPFQI=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-142-xKIHEZ8aOGGW1rFTbYb-RA-1; Fri, 11 Aug 2023 14:42:53 -0400
+X-MC-Unique: xKIHEZ8aOGGW1rFTbYb-RA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8D0C48DC660;
+        Fri, 11 Aug 2023 18:42:52 +0000 (UTC)
+Received: from [10.22.10.6] (unknown [10.22.10.6])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 38619C15BAE;
+        Fri, 11 Aug 2023 18:42:52 +0000 (UTC)
+Message-ID: <731b5514-9c72-7948-2376-fadfbed828b3@redhat.com>
+Date:   Fri, 11 Aug 2023 14:42:52 -0400
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH v7 2/7] block/mq-deadline: Only use zone locking if
- necessary
+Subject: Re: [PATCH] bnx2fc: Remove dma_alloc_coherent to suppress the BUG_ON.
 Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
-References: <20230809202355.1171455-1-bvanassche@acm.org>
- <20230809202355.1171455-3-bvanassche@acm.org>
- <06527195-8f6d-0395-a7d5-d19634a00ad2@kernel.org>
- <d83cb0aa-ae35-bb58-5cd0-72b8c03d934f@acm.org>
- <8aa716eb-e440-8a28-0c89-07729fcf1715@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <8aa716eb-e440-8a28-0c89-07729fcf1715@kernel.org>
+To:     Jerry Snitselaar <jsnitsel@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     Saurav Kashyap <skashyap@marvell.com>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>
+References: <20230721102320.9559-1-skashyap@marvell.com>
+ <642a49ed-4920-9c74-40aa-81d5c859ce79@acm.org>
+ <benqe3zwp3go3w2s2fmhsyjft3d7vqiewffjqhb22y4hlpw5p4@46pxi3bd2zsn>
+From:   John Meneghini <jmeneghi@redhat.com>
+Organization: RHEL Core Storge Team
+In-Reply-To: <benqe3zwp3go3w2s2fmhsyjft3d7vqiewffjqhb22y4hlpw5p4@46pxi3bd2zsn>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/10/23 17:45, Damien Le Moal wrote:
-> With that, mq-deadline can even be simplified to not even look at the
-> q zoned model and simply us q->limits.use_zone_write_lock to
-> determine if locking a zone is needed or not.
+Saurav, please rework this patch and add the missing description. It would also be good to consolidate some of the repeated 
+tasks into one or two sub-routines.
 
-Hi Damien,
+Please publish a v2 patch series.
 
-I think implementing the above proposal requires splitting 
-'use_zone_write_lock' into two variables:
-(a) One member variable that indicates whether the zone write lock
-     should be used.
-(b) Another member variable that indicates whether or not the LLD
-     preserves the order of SCSI commands.
+/John
 
-Member variable (b) should be set by the LLD and member variable (a) can 
-be set by disk_set_zoned().
-
-Do you want me to implement this approach?
-
-Thanks,
-
-Bart.
-
+On 7/21/23 13:48, Jerry Snitselaar wrote:
+> On Fri, Jul 21, 2023 at 07:58:26AM -0700, Bart Van Assche wrote:
+>> On 7/21/23 03:23, Saurav Kashyap wrote:
+>>> From: Jerry Snitselar <jsnitsel@redhat.com>
+>>> [ ... ]
+>>> Signed-off-by: Jerry Snitselar <jsnitsel@redhat.com>
+>>
+>> Has Jerry's name changed or has his name been misspelled? I think
+>> a letter 'a' is missing from his name.
+> 
+> No, and yes. :)
+> 
+> This was originally passed along in a bugzilla bug as an example of a
+> possible solution, but I didn't figure it would be the final patch.
+> 
+> The original patch had the following summary and description above
+> the stack trace:
+> 
+>      scsi: bnx2fc: Don't use dma_*_coherent for session resources
+>      
+>      With commit f5ff79fddf0e ("dma-mapping: remove CONFIG_DMA_REMAP") a
+>      crash can be seen with bnx2fc, because dma_free_coherent can not be
+>      called in an interrupt context. Replace the dma_*_coherent code in
+>      bnx2fc_alloc_session_resc and bnx2fc_free_session_resc, with kzalloc +
+>      dma_map_single, and kfree + dma_unmap_single calls. Also properly
+>      unwind in the error path for bnx2fc_alloc_session_resc, cleaning up
+>      what it did succeed in allocating and mapping. This deals with seeing
+>      the following panic:
+> 
+> 
+> Regards,
+> Jerry
+> 
+>>
+>> Bart.
+>>
+> 
 
