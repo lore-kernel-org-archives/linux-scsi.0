@@ -2,70 +2,79 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDA26C001DB
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Aug 2023 17:08:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 556A3EB64DD
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Aug 2023 20:30:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231582AbjHMRIT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Aug 2023 13:08:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52418 "EHLO
+        id S231219AbjHMUaA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 13 Aug 2023 16:30:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231501AbjHMRIQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Aug 2023 13:08:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C02EE6A;
-        Sun, 13 Aug 2023 10:08:19 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D640E60BEF;
-        Sun, 13 Aug 2023 17:08:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 49732C433C7;
-        Sun, 13 Aug 2023 17:08:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691946498;
-        bh=vqzRzGsD+4lAuXPcijag3Op+Qq4bwE8BJXX+RMXxy/I=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=qErN6LItMhUD3aoJJdII/0dIBujdofMtFHCblin5xUc8+uu10GTawIWurRmZ/OqYk
-         8vPJmlZukCYPO8Vey800eZdD7spo4cIjvFxZWxgGWQEzYP1WWZKVH+pRFpw4ftjM9Z
-         reQdjYxpMPeMC6LMRlzXUnDmeGG0WlZ63X9ZOQ4tEznyJ1EIyJHvbqBLs+1uQhBjqx
-         JY3KBP1NCo9tmVnIkGDzrRAyMnns9pH3rP+aFlB9QGHT/z0RtfsaY6XuOnhHUNSBuG
-         WjoiD6xyDL4XkYzVOC73Ma34ZhYe12TaGVwtEzaGMnoBqXMcvuzQdimcuycrcWVMqE
-         LD2m3gEM/eLbg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 36A80C39562;
-        Sun, 13 Aug 2023 17:08:18 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.5-rc5
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <4987ff9fa2467bc036759afac47b95c77a415963.camel@HansenPartnership.com>
-References: <4987ff9fa2467bc036759afac47b95c77a415963.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <4987ff9fa2467bc036759afac47b95c77a415963.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: ef222f551e7c4e2008fc442ffc9edcd1a7fd8f63
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 7308e92756d5891d58e7bcae01a516514583921d
-Message-Id: <169194649821.27578.9594304586335451768.pr-tracker-bot@kernel.org>
-Date:   Sun, 13 Aug 2023 17:08:18 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S229522AbjHMU37 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Aug 2023 16:29:59 -0400
+X-Greylist: delayed 373 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 13 Aug 2023 13:30:01 PDT
+Received: from gw.red-soft.ru (red-soft.ru [188.246.186.2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8B956113
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Aug 2023 13:30:01 -0700 (PDT)
+Received: from localhost.biz (unknown [10.81.81.211])
+        by gw.red-soft.ru (Postfix) with ESMTPA id 034E13E1A3B;
+        Sun, 13 Aug 2023 23:23:44 +0300 (MSK)
+From:   Artem Chernyshev <artem.chernyshev@red-soft.ru>
+To:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc:     Artem Chernyshev <artem.chernyshev@red-soft.ru>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lvc-project@linuxtesting.org
+Subject: [PATCH] scsi: isci: init Return result of sas_register_ha()
+Date:   Sun, 13 Aug 2023 23:23:36 +0300
+Message-Id: <20230813202336.240874-1-artem.chernyshev@red-soft.ru>
+X-Mailer: git-send-email 2.37.3
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-KLMS-Rule-ID: 1
+X-KLMS-Message-Action: clean
+X-KLMS-AntiSpam-Lua-Profiles: 179213 [Aug 12 2023]
+X-KLMS-AntiSpam-Version: 5.9.59.0
+X-KLMS-AntiSpam-Envelope-From: artem.chernyshev@red-soft.ru
+X-KLMS-AntiSpam-Rate: 0
+X-KLMS-AntiSpam-Status: not_detected
+X-KLMS-AntiSpam-Method: none
+X-KLMS-AntiSpam-Auth: dkim=none
+X-KLMS-AntiSpam-Info: LuaCore: 526 526 7a6a9b19f6b9b3921b5701490f189af0e0cd5310, {Tracking_from_domain_doesnt_match_to}, d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;localhost.biz:7.1.1;red-soft.ru:7.1.1;127.0.0.199:7.1.2, FromAlignment: s
+X-MS-Exchange-Organization-SCL: -1
+X-KLMS-AntiSpam-Interceptor-Info: scan successful
+X-KLMS-AntiPhishing: Clean, bases: 2023/08/13 18:44:00
+X-KLMS-AntiVirus: Kaspersky Security for Linux Mail Server, version 8.0.3.30, bases: 2023/08/13 17:49:00 #21598114
+X-KLMS-AntiVirus-Status: Clean, skipped
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 12 Aug 2023 07:45:11 +0100:
+To properly manage possible failure of sas_register_ha() in
+isci_register_sas_ha() return it's result instead of zero
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/7308e92756d5891d58e7bcae01a516514583921d
+Signed-off-by: Artem Chernyshev <artem.chernyshev@red-soft.ru>
+---
+ drivers/scsi/isci/init.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Thank you!
-
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index ac1e04b86d8f..4f4800edf4f0 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -264,9 +264,7 @@ static int isci_register_sas_ha(struct isci_host *isci_host)
+ 
+ 	sas_ha->strict_wide_ports = 1;
+ 
+-	sas_register_ha(sas_ha);
+-
+-	return 0;
++	return sas_register_ha(sas_ha);
+ }
+ 
+ static void isci_unregister(struct isci_host *isci_host)
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.37.3
+
