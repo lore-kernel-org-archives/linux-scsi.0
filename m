@@ -2,174 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5486BC001E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Aug 2023 16:21:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11A35C001B0
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Aug 2023 16:24:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230302AbjHNQVE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Aug 2023 12:21:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55306 "EHLO
+        id S230212AbjHNQXp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Aug 2023 12:23:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbjHNQUc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 12:20:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63F94127;
-        Mon, 14 Aug 2023 09:20:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 018F161538;
-        Mon, 14 Aug 2023 16:20:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39144C433C7;
-        Mon, 14 Aug 2023 16:20:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692030030;
-        bh=Lp5NQoRVJVYBTk1cBJi4eKGlFprUMKj5hMwOdNNo6ow=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=eeAsAIkFPMH+kEjmqNPcPblqMWg2Ts9xgNK61GUnTB3tgJTInuIqg5T5tcS9Box2Z
-         f7JRtsnAVlwrbEwnkwlmaRuw2vOGtnfbjD4YdUqjZW+hvRjng/jxeURysEe2ciW9Rb
-         t4r94xuf/hGLhMm8vJLcywT5LuxXYxWCuhZjnpPV+jlujkp2MK494V/jei5XujytG1
-         yYLbuM5YBkLreu8EeHEaR6H2g0D8+o7EJ4oM1nQpcAG/xGZcS4SIXpCGQhOANgd2NW
-         9iUknpfBwcCjiBMYFbV6RR62NuYOcM/+R8+uw3Vbj67XELNj7E8Ndh1vL1Cmi8puvW
-         USD+TWdnIT8vQ==
-Date:   Mon, 14 Aug 2023 11:20:28 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     deloptes <emanoil.kotsev@deloptes.org>
-Cc:     linux-pci@vger.kernel.org,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: SSD SATA 3.3 and Broadcom / LSI SAS1068E PCI-Express Fusion-MPT
- SAS
-Message-ID: <20230814162028.GA176555@bhelgaas>
+        with ESMTP id S230348AbjHNQXW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 12:23:22 -0400
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 880A4A8;
+        Mon, 14 Aug 2023 09:23:21 -0700 (PDT)
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-686b879f605so3158986b3a.1;
+        Mon, 14 Aug 2023 09:23:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692030201; x=1692635001;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=p6rTH3VEN4aQVjZOQqXaUyTzfaUzeywii2A7vIXKnAI=;
+        b=ChL/XXS8kX+Vyrokk+nXknRH//rgzMKbhJusq6xSWjsvxqst53avmDAxSRzyt9s0n/
+         6UnZFpXTeWgorThNQzUQyfeQgmWuVbS3n6SKKN/u7L85wC3f5ASWv4f8el65SB9Qfy0O
+         Qe1BIk5ikr9ozljHRy9w7KLPXcsX+4GaAZuEG+7zkGpKGBjJKGJBXoRyw6K7HJL+CW9n
+         VRM5vegZF87NHEv05OAaqDx7UXYcfavwNdkytOiDYqbTWKW7wnrklOXT9GIOBbUqZxKg
+         cJr1jbKVlYj1QXCfGn2TAkLeepP3yS9+EeE8BTXgQqKJ1+mmwydwmYPeXx4UIl+Lud6O
+         5cPg==
+X-Gm-Message-State: AOJu0YyNeZXzB1HKQJ5LGpJEP8KQKEOoz7ot6TT5kdpT3z0n7v6+u2Wt
+        LimCyLwbrHBkOO0xB3/S0/IhRa4MZfk=
+X-Google-Smtp-Source: AGHT+IF/ybsIo53K2MssxVJ8kRPVw+qwWyqA3LJ2G1/NUhiiDyPi/ApPlxioqflr0bdhHcs9WhdEZA==
+X-Received: by 2002:a05:6a00:804:b0:675:ef91:7922 with SMTP id m4-20020a056a00080400b00675ef917922mr12459254pfk.4.1692030200836;
+        Mon, 14 Aug 2023 09:23:20 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:e105:59a6:229c:65de? ([2620:15c:211:201:e105:59a6:229c:65de])
+        by smtp.gmail.com with ESMTPSA id 5-20020aa79145000000b00679b7d2bd57sm8130993pfi.192.2023.08.14.09.23.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 14 Aug 2023 09:23:20 -0700 (PDT)
+Message-ID: <4b3d0fa7-cccb-b206-e48a-c5ee48560ea4@acm.org>
+Date:   Mon, 14 Aug 2023 09:23:18 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <uba6vj$10n6$1@ciao.gmane.io>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.1
+Subject: Re: [PATCH v8 9/9] scsi: ufs: Inform the block layer about write
+ ordering
+Content-Language: en-US
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Can Guo <quic_cang@quicinc.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+References: <20230811213604.548235-1-bvanassche@acm.org>
+ <20230811213604.548235-10-bvanassche@acm.org>
+ <668f296c-48f3-02ef-5ac1-30131579ea8d@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <668f296c-48f3-02ef-5ac1-30131579ea8d@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[+cc mptsas folks]
+On 8/12/23 10:09, Bao D. Nguyen wrote:
+> I am not reviewing other patches in this series, so I don't know the 
+> whole context. Here is my comment on this patch alone.
+> 
+> Looks like you rely on ufshcd_auto_hibern8_update() being invoked so 
+> that you can update the driver_preserves_write_order. However, the 
+> hba->ahit value can be updated by the vendor's driver, and 
+> ufshcd_auto_hibern8_enable() can be invoked without 
+> ufshcd_auto_hibern8_update(). Therefore, you may have a situation where 
+> the driver_preserves_write_order is true by default, but 
+> Auto-hibernation is enabled by default.
 
-On Sun, Aug 13, 2023 at 11:15:31AM +0200, deloptes wrote:
-> I hope I am in the right news group. If not please point me to a place where
-> someone can give me an advice in which direction I could look for an
-> answer.
+Hi Bao,
 
-Thanks for your question.  I added the mptsas maintainers and related
-mailing lists.
+Other than setting a default value for auto-hibernation, vendor drivers
+must not modify the auto-hibernation settings.
 
-> I've been using the below mentioned board (see dmidecode) with the below
-> mentioned SAS controllers (see lspci) for many years with normal
-> (rotating/spinning) disk drives.
-> I now bought 2 SSD disks to replace 2 of the spinning once and I was
-> surprised to find out that the older disks are using 3Gb/s transfer rate
-> while the SSDs are using 1.5Gb/s. The SSDs are reporting SATA 3.3 (see
-> below)
-> 
-> In the mptsas driver I see 3 and 6 but no 3.3 or similar. 
-> 
-> https://github.com/torvalds/linux/blob/ae545c3283dc673f7e748065efa46ba95f678ef2/drivers/message/fusion/mptsas.c#L3087C1-L3111C3
-> 
-> If I understand correctly the rate is negotiated by the controller and the
-> mobo. I am wondering where could be the problem. Is it really matter of
-> negotiation i.e. the driver does not understand 3.3 or a technical
-> constrains/incompatibility at 3Gb/s?
+ufshcd_auto_hibern8_enable() calls from outside 
+ufshcd_auto_hibern8_update() are used to reapply auto-hibernation
+settings and not to modify auto-hibernation settings.
 
-It looks like your SSDs support SATA r3.3 and are capable of 6.0 Gb/s,
-and the SAS1068E SAS controller is limited to 3.0 Gb/s [1].  I would
-expect them to negotiate 3.0 Gb/s (as your older drives did) and
-you're only seeing 1.5 Gb/s.  Sorry, I guess I just restated your
-whole question ;)
+So I think that integrating the following change on top of this patch is
+sufficient:
 
-I don't know why that would be.  Are there any hints in the dmesg log?
-Can you collect the complete dmesg log with the old drives and again
-with the new SSDs so we can compare them?  I assume you have good
-cables?  I assume the same cables worked at 3.0 Gb/s with the old
-drives.
+@@ -5172,7 +5172,9 @@ static int ufshcd_slave_configure(struct 
+scsi_device *sdev)
 
-I would *expect* that SATA r3.3 would be completely backwards
-compatible, so since mptsas worked just fine at 3.0 Gb/s with the old
-SATA r3.0 drives, it should also work just fine at 3.0 Gb/s with the
-new SATA r3.3 drives.  But I have no actual knowledge about that.
+  	ufshcd_hpb_configure(hba, sdev);
 
-[1] https://docs.broadcom.com/doc/12352180
+-	q->limits.driver_preserves_write_order = true;
++	q->limits.driver_preserves_write_order =
++		!ufshcd_is_auto_hibern8_supported(hba) ||
++		FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) == 0;
+  	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
+  	if (hba->quirks & UFSHCD_QUIRK_4KB_DMA_ALIGNMENT)
+  		blk_queue_update_dma_alignment(q, SZ_4K - 1);
 
-> Last question: If I would have to replace the controllers, what controller
-> would be recommended?
-> 
-> Thank you in advance
-> 
-> BR
-> 
-> 
-> # lspci
-> 01:00.0 SCSI storage controller: Broadcom / LSI SAS1068E PCI-Express
-> Fusion-MPT SAS (rev 08)
-> 08:00.0 SCSI storage controller: Broadcom / LSI SAS1068E PCI-Express
-> Fusion-MPT SAS (rev 08)
-> 
-> # dmidecode
-> 
-> Handle 0x0002, DMI type 2, 15 bytes
-> Base Board Information
->         Manufacturer: ASUSTeK COMPUTER INC.
->         Product Name: M5A97 EVO R2.0
->         Version: Rev 1.xx
-> 
-> Handle 0x0028, DMI type 9, 17 bytes
-> System Slot Information
->         Designation: PCIEX16_2
->         Type: x16 PCI Express
->         Current Usage: Available
->         Length: Short
->         ID: 3
->         Characteristics:
->                 3.3 V is provided
->                 Opening is shared
->                 PME signal is supported
->         Bus Address: 0000:00:1c.5
-> 
-> 
-> 
-> # smartctl
-> 
-> === START OF INFORMATION SECTION ===
-> Model Family:     WD Blue / Red / Green SSDs
-> Device Model:     WDC  WDS200T1R0A-68A4W0
-> ...
-> Firmware Version: 411010WR
-> User Capacity:    2,000,398,934,016 bytes [2.00 TB]
-> Sector Size:      512 bytes logical/physical
-> Rotation Rate:    Solid State Device
-> Form Factor:      2.5 inches
-> TRIM Command:     Available, deterministic, zeroed
-> Device is:        In smartctl database [for details use: -P show]
-> ATA Version is:   ACS-4 T13/BSR INCITS 529 revision 5
-> SATA Version is:  SATA 3.3, 6.0 Gb/s (current: 1.5 Gb/s) <<<<<<<<<<<< HERE
-> Local Time is:    Sun Aug 13 10:38:11 2023 CEST
-> SMART support is: Available - device has SMART capability.
-> SMART support is: Enabled
-> 
-> === START OF INFORMATION SECTION ===
-> Model Family:     Western Digital Red
-> Device Model:     WDC WD20EFRX-68EUZN0
-> ...
-> Firmware Version: 82.00A82
-> User Capacity:    2,000,398,934,016 bytes [2.00 TB]
-> Sector Sizes:     512 bytes logical, 4096 bytes physical
-> Rotation Rate:    5400 rpm
-> Device is:        In smartctl database [for details use: -P show]
-> ATA Version is:   ACS-2 (minor revision not indicated)
-> SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 3.0 Gb/s) <<<<<<<<<<<< HERE
-> Local Time is:    Sun Aug 13 10:38:11 2023 CEST
-> SMART support is: Available - device has SMART capability.
-> SMART support is: Enabled
-> 
-> -- 
-> FCD6 3719 0FFB F1BF 38EA 4727 5348 5F1F DCFE BCB0
-> 
+Thanks,
+
+Bart.
+
