@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A39BC04E69
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Aug 2023 12:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F24C41513
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Aug 2023 12:37:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229872AbjHNMeV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Aug 2023 08:34:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50348 "EHLO
+        id S229541AbjHNMga (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Aug 2023 08:36:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229689AbjHNMdv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 08:33:51 -0400
+        with ESMTP id S229809AbjHNMgO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 08:36:14 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ACB6CC;
-        Mon, 14 Aug 2023 05:33:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A381E4A;
+        Mon, 14 Aug 2023 05:36:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1937C6146B;
-        Mon, 14 Aug 2023 12:33:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66F98C433C8;
-        Mon, 14 Aug 2023 12:33:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 17D08618D3;
+        Mon, 14 Aug 2023 12:36:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4ADF7C433C7;
+        Mon, 14 Aug 2023 12:36:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692016429;
-        bh=pWj7KH8ASKmWbVWlAOELqcUEv/MbdNdv3xXF+vOT060=;
+        s=k20201202; t=1692016572;
+        bh=PewIxFzhI0QdMT3vsDdCq2tb8zokzi+f46xvK8cV81Q=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=No00WK5uOiprcIzKGGKMh31Hl9JsYDeKTRGbuV48Vm6MMMXTelMLw/4ycvwI0gXgu
-         KyjE+l1KwhtMse0hhjQFIJzZOc6SYzCAoDWeIL0Ip8js5/tn9swWDVX6VHsGTvSb+G
-         dyIz4BLEn1xV2zTABG1XdaQTCGXY2B4WIGxQ4XiyQ+TlIiSt9z2BHrkDdMLjQgmWHm
-         nayhQgg02qRPgPjGKPDQml0XpQIYpvfm6h8GXXvbXFnLpKxjV5jxxNB0QNv2B8ceyR
-         TMIMwi0PCWJbvwfspAnqurk9ceLDLNj+zFNOBGdAkpgCwqZc+i4q6quRuBxNhp/4/8
-         0onBlyHuIVMQQ==
-Message-ID: <0ba79726-fb9c-c5ae-146f-ffc29703ec21@kernel.org>
-Date:   Mon, 14 Aug 2023 21:33:47 +0900
+        b=Dw76zc61TMU++pLT2ibKtEDZAGKhuZN3CvOt/T8qnEMrkbc4fZXAYmWosqfdcXRD3
+         29FxZLt9DKfJqAK5ExWANDw5sEYsDaJ35p/dfIwkXQu/sgN05AXD+463ml5eFuSB1e
+         RJIYPL3r5cXByYFKtZTbRyy8Y8HG9iN1LkzVjmRfLQ5gyy3mPjWx+4qI5BEj+DUmFJ
+         6GlDvg/aChBjgDWLhukRJFzOTUY2SwU2po6lmvQSOiPpioa5+MItb13nulIz5XgM3p
+         +gn5wvLU4g5Lcyj6egVUVNzl01rJPWp8vsNDFfHTCUcK+igwfvirca8LwBth8G1/x/
+         TRhn8CfZYHOng==
+Message-ID: <7dd67537-1ad8-79ca-281c-540bade2cb83@kernel.org>
+Date:   Mon, 14 Aug 2023 21:36:10 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH v8 2/9] block/mq-deadline: Only use zone locking if
- necessary
+Subject: Re: [PATCH v8 5/9] scsi: core: Retry unaligned zoned writes
 Content-Language: en-US
 To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
 References: <20230811213604.548235-1-bvanassche@acm.org>
- <20230811213604.548235-3-bvanassche@acm.org>
+ <20230811213604.548235-6-bvanassche@acm.org>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230811213604.548235-3-bvanassche@acm.org>
+In-Reply-To: <20230811213604.548235-6-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -56,83 +56,100 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 8/12/23 06:35, Bart Van Assche wrote:
-> Measurements have shown that limiting the queue depth to one per zone for
-> zoned writes has a significant negative performance impact on zoned UFS
-> devices. Hence this patch that disables zone locking by the mq-deadline
-> scheduler if the storage controller preserves the command order. This
-> patch is based on the following assumptions:
-> - It happens infrequently that zoned write requests are reordered by the
->   block layer.
-> - The I/O priority of all write requests is the same per zone.
-> - Either no I/O scheduler is used or an I/O scheduler is used that
->   serializes write requests per zone.
+> If zoned writes (REQ_OP_WRITE) for a sequential write required zone have
+> a starting LBA that differs from the write pointer, e.g. because zoned
+> writes have been reordered, then the storage device will respond with an
+> UNALIGNED WRITE COMMAND error. Send commands that failed with an
+> unaligned write error to the SCSI error handler if zone write locking is
+> disabled. Let the SCSI error handler sort SCSI commands per LBA before
+> resubmitting these.
 > 
+> If zone write locking is disabled, increase the number of retries for
+> write commands sent to a sequential zone to the maximum number of
+> outstanding commands because in the worst case the number of times
+> reordered zoned writes have to be retried is (number of outstanding
+> writes per sequential zone) - 1.
+> 
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
 > Cc: Damien Le Moal <dlemoal@kernel.org>
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: Ming Lei <ming.lei@redhat.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  block/mq-deadline.c | 14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
+>  drivers/scsi/scsi_error.c | 16 ++++++++++++++++
+>  drivers/scsi/scsi_lib.c   |  1 +
+>  drivers/scsi/sd.c         |  2 ++
+>  include/scsi/scsi.h       |  1 +
+>  4 files changed, 20 insertions(+)
 > 
-> diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-> index f958e79277b8..5c2fc4003bc0 100644
-> --- a/block/mq-deadline.c
-> +++ b/block/mq-deadline.c
-> @@ -353,7 +353,7 @@ deadline_fifo_request(struct deadline_data *dd, struct dd_per_prio *per_prio,
->  		return NULL;
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 0d7835bdc8af..7ae43fac07b7 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -699,6 +699,22 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
+>  		fallthrough;
 >  
->  	rq = rq_entry_fifo(per_prio->fifo_list[data_dir].next);
-> -	if (data_dir == DD_READ || !blk_queue_is_zoned(rq->q))
-> +	if (data_dir == DD_READ || !rq->q->limits.use_zone_write_lock)
->  		return rq;
->  
->  	/*
-> @@ -398,7 +398,7 @@ deadline_next_request(struct deadline_data *dd, struct dd_per_prio *per_prio,
->  	if (!rq)
->  		return NULL;
->  
-> -	if (data_dir == DD_READ || !blk_queue_is_zoned(rq->q))
-> +	if (data_dir == DD_READ || !rq->q->limits.use_zone_write_lock)
->  		return rq;
->  
->  	/*
-> @@ -526,8 +526,9 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
->  	}
->  
->  	/*
-> -	 * For a zoned block device, if we only have writes queued and none of
-> -	 * them can be dispatched, rq will be NULL.
-> +	 * For a zoned block device that requires write serialization, if we
-> +	 * only have writes queued and none of them can be dispatched, rq will
-> +	 * be NULL.
->  	 */
->  	if (!rq)
->  		return NULL;
-> @@ -552,7 +553,8 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
->  	/*
->  	 * If the request needs its target zone locked, do it.
->  	 */
-> -	blk_req_zone_write_lock(rq);
-> +	if (rq->q->limits.use_zone_write_lock)
-> +		blk_req_zone_write_lock(rq);
->  	rq->rq_flags |= RQF_STARTED;
->  	return rq;
->  }
-> @@ -934,7 +936,7 @@ static void dd_finish_request(struct request *rq)
->  
->  	atomic_inc(&per_prio->stats.completed);
->  
-> -	if (blk_queue_is_zoned(q)) {
-> +	if (rq->q->limits.use_zone_write_lock) {
+>  	case ILLEGAL_REQUEST:
+> +		/*
+> +		 * Unaligned write command. This may indicate that zoned writes
+> +		 * have been received by the device in the wrong order. If zone
+> +		 * write locking is disabled, retry after all pending commands
+> +		 * have completed.
+> +		 */
+> +		if (sshdr.asc == 0x21 && sshdr.ascq == 0x04 &&
+> +		    !req->q->limits.use_zone_write_lock &&
+> +		    blk_rq_is_seq_zoned_write(req)) {
+> +			SCSI_LOG_ERROR_RECOVERY(3,
+> +				sdev_printk(KERN_INFO, scmd->device,
+> +					    "Retrying unaligned write at LBA %#llx.\n",
+> +					    scsi_get_lba(scmd)));
+> +			return NEEDS_DELAYED_RETRY;
+> +		}
+> +
+>  		if (sshdr.asc == 0x20 || /* Invalid command operation code */
+>  		    sshdr.asc == 0x21 || /* Logical block address out of range */
+>  		    sshdr.asc == 0x22 || /* Invalid function */
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 59176946ab56..69da8aee13df 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1443,6 +1443,7 @@ static void scsi_complete(struct request *rq)
+>  	case ADD_TO_MLQUEUE:
+>  		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+>  		break;
+> +	case NEEDS_DELAYED_RETRY:
+>  	default:
+>  		scsi_eh_scmd_add(cmd);
+>  		break;
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 4d9c6ad11cca..c8466c6c7387 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1238,6 +1238,8 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>  	cmd->transfersize = sdp->sector_size;
+>  	cmd->underflow = nr_blocks << 9;
+>  	cmd->allowed = sdkp->max_retries;
+> +	if (!rq->q->limits.use_zone_write_lock && blk_rq_is_seq_zoned_write(rq))
 
-This is all nice and simple ! However, an inline helper to check
-rq->q->limits.use_zone_write_lock would be nice. E.g.
-blk_queue_use_zone_write_lock() ?
+This condition could be written as a little inline helper
+blk_req_need_zone_write_lock(), which could be used in mq-dealine patch 2.
 
->  		unsigned long flags;
+> +		cmd->allowed += rq->q->nr_requests;
+>  	cmd->sdb.length = nr_blocks * sdp->sector_size;
 >  
->  		spin_lock_irqsave(&dd->zone_lock, flags);
+>  	SCSI_LOG_HLQUEUE(1,
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index ec093594ba53..6600db046227 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -93,6 +93,7 @@ static inline int scsi_status_is_check_condition(int status)
+>   * Internal return values.
+>   */
+>  enum scsi_disposition {
+> +	NEEDS_DELAYED_RETRY	= 0x2000,
+>  	NEEDS_RETRY		= 0x2001,
+>  	SUCCESS			= 0x2002,
+>  	FAILED			= 0x2003,
 
 -- 
 Damien Le Moal
