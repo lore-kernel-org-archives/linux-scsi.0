@@ -2,100 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4454CC04A94
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Aug 2023 04:19:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB58AEB64DD
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Aug 2023 10:15:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232946AbjHNES5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Aug 2023 00:18:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44210 "EHLO
+        id S234464AbjHNKOl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Aug 2023 06:14:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232934AbjHNESc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 00:18:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22FC2AD;
-        Sun, 13 Aug 2023 21:18:29 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B1EA761735;
-        Mon, 14 Aug 2023 04:18:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2270C433C7;
-        Mon, 14 Aug 2023 04:18:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691986708;
-        bh=sdCfbwOrNrhHX8FDcR9lXmBqbKqdYnF0NA1vNvBZblY=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=JBrSLtIZyE7zg2HN4loSGX9LSMxSSG7S9UdIGKDmIBkPmKYB+63ZAhFOv+2efgWNM
-         it+vAbFZD68GQMyHt+fX1pt6g92KGtOsY3vTp+w7I4gPDkYyyR7bzsUe8RkT+aAWlC
-         4ZyVz4zPB0f1AO8GmhuTbuYrV3mXj018cLs1EhXKcT+jyckOfZzhgHXfhEjCrozbpj
-         9Sp4aFbXi0ETw2YcC7CIriYumMTyuQD04jYR9U1xbazqNyYyr13GTbHn8CHaVRZdH4
-         BNHLOZiFAnIKphRKLHwiyasz5NMP40MSe9RY8eGFrkRCMbjMpvx30rv9I+MbhTeKMn
-         /r4fG2T+brfFQ==
-Message-ID: <5b6f882b-82ab-6a00-4a2d-4e93b8c1d973@kernel.org>
-Date:   Mon, 14 Aug 2023 13:18:25 +0900
+        with ESMTP id S236674AbjHNKO0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 06:14:26 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDC48E6D
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2023 03:14:24 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id a640c23a62f3a-99c4923195dso563690866b.2
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2023 03:14:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fairphone.com; s=fair; t=1692008063; x=1692612863;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=tmievXtIctu/+ybkBLI3TuLZaNyu3VYe3/9M8wY7rGY=;
+        b=YEXYiLN4MiXDAN+PnkgwHu8fM1V089UultUVA2sft6OfrcEoVvSU6iQOTMMuRdLWWk
+         jxhzqsTOqFQ8iJNJjeDQDPBRExjAjh1cXfe/J8vfU0eXXAITmoWd/tugvBsLeKj83h04
+         llWWlAkm7rZPZOyuhf/C2EARYxNxLuVIF6d4UZPwXeRfVcT/VuUb0uUkvHHNP6at35BR
+         3d/85SsUbBO+gkVzNlpYcWpk99bs9lXe3+TFKeDyd4/esEZGOmfe4pHpqGzquGBscg0q
+         h1lRRz8T4j4hDNHcN4yLjgZgrojotQ/Y+nNhNlY8L/+1qyfi16bkuSKdZfkugkeRYLVw
+         YpXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692008063; x=1692612863;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=tmievXtIctu/+ybkBLI3TuLZaNyu3VYe3/9M8wY7rGY=;
+        b=WCTth0XI1bDVEvj43jVb6tEismLGxBbgCOzE7X0t6pnbqbWKSXv6Sw8jR+JDF4EKGL
+         9ZwHOVuX+NbYV3TaEG4sndTRZVZZjcrlF30f6vAfSsdFMX0cGZcfU93VpdVQY76OB3ip
+         gY5zwO5txrTYhO8XyuErIXSD2+BdbYaUAVwy1eIe0eXjhxNWW3oNvnPeP4BCBQunUeWA
+         cbGnFiduZ1xA1JBxH2sojvNN4S8tWK1wJvgTBTa/5G2N1CIMTZGFQ08hWsZebNeHZ7t1
+         nKVZJLHUoafu7Z8hr1YoB0PvBlePi+fq02jkWXWRiXVYKw2mTdZoiPFOANS0/QdufMaH
+         PEhA==
+X-Gm-Message-State: AOJu0YxaCQdfEqL+25fvLRXeIgF6hbttJ0QPCT/8a+LKeJu+Ko2Aq1lq
+        nhBJQwK6Oq/G6BZQl7In6f7yYw==
+X-Google-Smtp-Source: AGHT+IEVgwvO/dKriPsv+vdgRRyCY4UXV0TtWrF8Ahp+OdMvoW2pra4Vy6xR+oHZ0p68/sWIkeVa6A==
+X-Received: by 2002:a17:906:5a4b:b0:99c:8906:4b25 with SMTP id my11-20020a1709065a4b00b0099c89064b25mr7412624ejc.74.1692008063479;
+        Mon, 14 Aug 2023 03:14:23 -0700 (PDT)
+Received: from otso.luca.vpn.lucaweiss.eu (212095005216.public.telering.at. [212.95.5.216])
+        by smtp.gmail.com with ESMTPSA id os5-20020a170906af6500b00993a37aebc5sm5472870ejb.50.2023.08.14.03.14.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Aug 2023 03:14:23 -0700 (PDT)
+From:   Luca Weiss <luca.weiss@fairphone.com>
+Date:   Mon, 14 Aug 2023 12:14:15 +0200
+Subject: [PATCH v6 3/4] dt-bindings: ufs: qcom: Add ICE to sm8450 example
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v8 3/9] scsi: core: Call .eh_prepare_resubmit() before
- resubmitting
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230811213604.548235-1-bvanassche@acm.org>
- <20230811213604.548235-4-bvanassche@acm.org>
- <29cca660-4e66-002c-7378-2d2df5c79a08@kernel.org>
- <057e08f2-7349-bcad-c21d-11586c059fac@acm.org>
- <02d18d6a-ece5-f8f6-0c6c-4468c86c9ea1@kernel.org>
- <ee3e2f36-1089-f95c-8145-ea91d5912fde@acm.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ee3e2f36-1089-f95c-8145-ea91d5912fde@acm.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <20230814-dt-binding-ufs-v6-3-fd94845adeda@fairphone.com>
+References: <20230814-dt-binding-ufs-v6-0-fd94845adeda@fairphone.com>
+In-Reply-To: <20230814-dt-binding-ufs-v6-0-fd94845adeda@fairphone.com>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Iskren Chernev <me@iskren.info>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+        linux-crypto@vger.kernel.org,
+        Luca Weiss <luca.weiss@fairphone.com>,
+        Rob Herring <robh@kernel.org>
+X-Mailer: b4 0.12.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/14/23 12:23, Bart Van Assche wrote:
-> On 8/13/23 19:41, Damien Le Moal wrote:
->> But at the very least, may be mention in the commit message that you also add
->> the unit tests associated with the change ?
-> 
-> Hi Damien,
-> 
-> I will mention this in the patch description when I repost this patch.
-> 
->> Another remark: we'll need this sorting only for devices that are zoned and do
->> not need zone write locking. For other cases (most cases in fact), we don't and
->> this could have some performance impact (e.g. fast RAID systems). Is there a way
->> to have this eh_prepare_resubmit to do nothing for regular devices to avoid that ?
-> 
-> The common case is that all commands passed to the SCSI error handler
-> are associated with the same ULD. For this case list_sort() iterates
-> once over the list with commands that have to be resubmitted because
-> all eh_prepare_resubmit pointers are identical. The code introduced
-> in the next patch requires O(n^2) time with n the number of commands
-> passed to the error handler. I expect this time to be smaller than the
-> time needed to wake up the error handler if n < 100. Waking up the
-> error handler involves expediting the grace period (call_rcu_hurry())
-> and a context switch. I expect that these two mechanisms combined will
-> take more time than the list_sort() call if the number of commands that
-> failed is below 100. In other words, I don't think that
-> scsi_call_prepare_resubmit() will slow down error handling measurably
-> for the cases we care about.
-> 
-> Do you perhaps want me to change the code in the next patch such that
-> it takes O(n) time instead of O(n^2) time in case no zoned devices are
-> involved?
+SM8450 actually supports ICE (Inline Crypto Engine) so adjust the
+example to match.
 
-I was more thinking of a mean to not call scsi_call_prepare_resubmit() at all if
-no zoned devices with use_zone_write_lock == true are involved.
+Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+index 2b0831622cf0..462ead5a1cec 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -317,5 +317,6 @@ examples:
+                             <0 0>,
+                             <0 0>,
+                             <0 0>;
++            qcom,ice = <&ice>;
+         };
+     };
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.41.0
 
