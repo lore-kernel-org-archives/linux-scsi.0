@@ -2,122 +2,160 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB9F3C001DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Aug 2023 11:27:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 230FCC001DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Aug 2023 12:32:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234412AbjHNL1L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Aug 2023 07:27:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51954 "EHLO
+        id S230291AbjHNMcO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Aug 2023 08:32:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233903AbjHNL0h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 07:26:37 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19765E61;
-        Mon, 14 Aug 2023 04:26:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692012397; x=1723548397;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=4alXUbWY/jCOus0cSzC/GsFDI54X66LesvCwVXEbq2Q=;
-  b=QiLhtCqXbOnXrdGQwFAEa2Drn7srzXPoiJrVjnFEuh0CF2c6Q+uUNqOo
-   dRDRd3kM93rY9/uoCYeM0MQO40Nw2qIdbHr7eCOrxzxEvfJt5bQN+uBu7
-   0MFODSdx9poECVZvkQZJjPreHD69oOh1wwnZR7auJXk+Lb0AsJxBjhjxV
-   YEE2L1fVFOOfPfqAdkbqDFDW/e9JA70N3YZRXK8w/w6RxFYLeEpeosPg6
-   Ie6rcUUK4y04ugedzHaJaCUuvjXzDOE8FNb66PvE8NodgOxSFmi51APCY
-   VfSrEJTpU4baVRfp6PMukyK1Pte++o38j0Q8s7IbRprwib7LwAAVGWljA
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10801"; a="356980149"
-X-IronPort-AV: E=Sophos;i="6.01,172,1684825200"; 
-   d="scan'208";a="356980149"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Aug 2023 04:26:36 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10801"; a="762906161"
-X-IronPort-AV: E=Sophos;i="6.01,172,1684825200"; 
-   d="scan'208";a="762906161"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.51.71])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Aug 2023 04:26:32 -0700
-Message-ID: <f1e154c4-bbb3-18a2-cb7a-41adae292b48@intel.com>
-Date:   Mon, 14 Aug 2023 14:26:27 +0300
+        with ESMTP id S231294AbjHNMcI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 08:32:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB17CCC;
+        Mon, 14 Aug 2023 05:32:07 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 79CE962D5E;
+        Mon, 14 Aug 2023 12:32:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEFB7C433C8;
+        Mon, 14 Aug 2023 12:32:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692016326;
+        bh=0DJHJ3rAXmJtkRIBadVM+FdIyJCgIhDp0E+687UQdnk=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=VqE2HWtj76+zmKkRWjjiH2qbvY27jDLfKUgAVDzgyvDsmudGHpVdO9Qv/1jTL3a4C
+         p/h8sm59CsWPRsqElEvTfNyspdylh4gJ7msg4l7Eum4unsEDc25Vy2nLAdoyWyjQeZ
+         6mozxkIajwgy2lP6mQIbk/GL1nzHFaXTeLmUS8/vmw7X4+tWhb6NVnwYZacnYJnLOL
+         zxSL5JPL2AjgnUJHTYX/LjGi38YbCbJdG5Z6pkmhYB0og8oYzNa3XliLRfjVvMR2R4
+         sEUo4KLmGNBeu+84aIjCTKsONuRndTrd+fiBHfzQ7/CJ1FfGLNA4+E0UfDTaRgVAWr
+         tVWBqbDERiC5A==
+Message-ID: <3188f400-b387-7be8-0f21-cf5089fe1411@kernel.org>
+Date:   Mon, 14 Aug 2023 21:32:04 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.14.0
-Subject: Re: [RESEND PATCH v3 2/2] ufs: poll HCS.UCRDY before issuing a UIC
- command
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v8 1/9] block: Introduce more member variables related to
+ zone write locking
 Content-Language: en-US
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, sc.suh@samsung.com,
-        hy50.seo@samsung.com, sh425.lee@samsung.com,
-        kwangwon.min@samsung.com, junwoo80.lee@samsung.com,
-        wkon.kim@samsung.com
-References: <cover.1690939662.git.kwmad.kim@samsung.com>
- <CGME20230802013852epcas2p2334d33036d7d1a0bdbefaf5bb844928e@epcas2p2.samsung.com>
- <9c7ccbfb8fe05c29ab3e31d9cd14e6b91065b8b0.1690939662.git.kwmad.kim@samsung.com>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <9c7ccbfb8fe05c29ab3e31d9cd14e6b91065b8b0.1690939662.git.kwmad.kim@samsung.com>
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+References: <20230811213604.548235-1-bvanassche@acm.org>
+ <20230811213604.548235-2-bvanassche@acm.org>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230811213604.548235-2-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/08/23 04:28, Kiwoong Kim wrote:
-> With auto hibern8 enabled, UIC could be working
-> for a while to process a hibern8 operation and HCI
-> reports UIC not ready for a short term through HCS.UCRDY.
-> And UFS driver can't recognize the operation.
-> UFSHCI spec specifies UCRDY like this:
-> whether the host controller is ready to process UIC COMMAND
+On 8/12/23 06:35, Bart Van Assche wrote:
+> Many but not all storage controllers require serialization of zoned writes.
+> Introduce a new request queue limit member variable
+> (driver_preserves_write_order) that allows block drivers to indicate that
+> the order of write commands is preserved and hence that serialization of
+> writes per zone is not required.
 > 
-> The 'ready' could be seen as many different meanings. If the meaning
-> includes not processing any request from HCI, processing a hibern8
-> operation can be 'not ready'. In this situation, the driver needs to
-> wait until the operations is completed.
+> Make disk_set_zoned() set 'use_zone_write_lock' only if the block device
+> has zones and if the block driver does not preserve the order of write
+> requests.
 > 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/ufs/core/ufshcd.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+>  block/blk-settings.c   |  7 +++++++
+>  include/linux/blkdev.h | 10 ++++++++++
+>  2 files changed, 17 insertions(+)
 > 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index a89d39a..10ccc85 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -22,6 +22,7 @@
->  #include <linux/module.h>
->  #include <linux/regulator/consumer.h>
->  #include <linux/sched/clock.h>
-> +#include <linux/iopoll.h>
->  #include <scsi/scsi_cmnd.h>
->  #include <scsi/scsi_dbg.h>
->  #include <scsi/scsi_driver.h>
-> @@ -2365,7 +2366,11 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
->   */
->  static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
->  {
-> -	return ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY;
-> +	u32 val;
-> +	int ret = read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
-> +				    500, UIC_CMD_TIMEOUT * 1000, false, hba,
-> +				    REG_CONTROLLER_STATUS);
-> +	return ret == 0 ? true : false;
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 0046b447268f..3a7748af1bef 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -56,6 +56,8 @@ void blk_set_default_limits(struct queue_limits *lim)
+>  	lim->alignment_offset = 0;
+>  	lim->io_opt = 0;
+>  	lim->misaligned = 0;
+> +	lim->driver_preserves_write_order = false;
+> +	lim->use_zone_write_lock = false;
+>  	lim->zoned = BLK_ZONED_NONE;
+>  	lim->zone_write_granularity = 0;
+>  	lim->dma_alignment = 511;
+> @@ -685,6 +687,9 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>  						   b->max_secure_erase_sectors);
+>  	t->zone_write_granularity = max(t->zone_write_granularity,
+>  					b->zone_write_granularity);
+> +	/* Request-based stacking drivers do not reorder requests. */
+> +	t->driver_preserves_write_order = b->driver_preserves_write_order;
+> +	t->use_zone_write_lock = b->use_zone_write_lock;
 
-Could use a comment in the code.
+I do not think this is correct as the last target of a multi target device will
+dictate the result, regardless of the other targets. So this should be something
+like:
 
-And perhaps the following is neater:
+	t->driver_preserves_write_order = t->driver_preserves_write_order &&
+		b->driver_preserves_write_order;
+	t->use_zone_write_lock =
+		t->use_zone_write_lock || b->use_zone_write_lock;
 
-	u32 val;
+However, given that driver_preserves_write_order is initialized as false, this
+would always be false. Not sure how to handle that...
 
-	return !read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
-				  500, UIC_CMD_TIMEOUT * 1000, false, hba,
-				  REG_CONTROLLER_STATUS);
-
+>  	t->zoned = max(t->zoned, b->zoned);
+>  	return ret;
 >  }
+> @@ -949,6 +954,8 @@ void disk_set_zoned(struct gendisk *disk, enum blk_zoned_model model)
+>  	}
 >  
->  /**
+>  	q->limits.zoned = model;
+> +	q->limits.use_zone_write_lock = model != BLK_ZONED_NONE &&
+> +		!q->limits.driver_preserves_write_order;
+
+I think this needs a comment to explain the condition as it takes a while to
+understand it.
+
+>  	if (model != BLK_ZONED_NONE) {
+>  		/*
+>  		 * Set the zone write granularity to the device logical block
+
+You also should set use_zone_write_lock to false in disk_clear_zone_settings().
+
+In patch 9, ufshcd_auto_hibern8_update() changes the value of
+driver_preserves_write_order, which will change the value of use_zone_write_lock
+only if disk_set_zoned() is called again after ufshcd_auto_hibern8_update(). Is
+that the case ? Is the drive revalidated always after
+ufshcd_auto_hibern8_update() is executed ?
+
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 2f5371b8482c..2c090a28ec78 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -316,6 +316,16 @@ struct queue_limits {
+>  	unsigned char		misaligned;
+>  	unsigned char		discard_misaligned;
+>  	unsigned char		raid_partial_stripes_expensive;
+> +	/*
+> +	 * Whether or not the block driver preserves the order of write
+> +	 * requests. Set by the block driver.
+> +	 */
+> +	bool			driver_preserves_write_order;
+> +	/*
+> +	 * Whether or not zone write locking should be used. Set by
+> +	 * disk_set_zoned().
+> +	 */
+> +	bool			use_zone_write_lock;
+>  	enum blk_zoned_model	zoned;
+>  
+>  	/*
+
+-- 
+Damien Le Moal
+Western Digital Research
 
