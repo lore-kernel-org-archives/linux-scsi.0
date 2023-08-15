@@ -2,84 +2,102 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59261C04A6A
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 17:30:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEF67C001DE
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 17:50:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238720AbjHOR3p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Aug 2023 13:29:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40138 "EHLO
+        id S234865AbjHORtu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Aug 2023 13:49:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238850AbjHOR3R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 13:29:17 -0400
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 376641BD8;
-        Tue, 15 Aug 2023 10:29:16 -0700 (PDT)
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-55b0e7efb1cso3246935a12.1;
-        Tue, 15 Aug 2023 10:29:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692120555; x=1692725355;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zNwqp9voclo+2OrmEl7irib0fmM01jgzFFd6N4aipkU=;
-        b=Y9gbNzRn9BrSzyxEcnvfd1sziEAmksQj2AKTJ2671L+gdUcrMbQrj4sk+r987p/mH/
-         YlgfwCyBOiDUVjeZVd0kxBj4Si2aoo9ZCjL5VEEN7QYf/7FlFm9v6ps0sT/y4vnBRfyg
-         JpG04fb7fAWeDnhbg5Axv+J0AbIabHt4lG3rwQI28yebh92m2IVFWTvoUpuaDG/LtCai
-         eTQw5ZIsWbj8C25CEs+jkkmjjIZjRZW5f8lw0n0CqNhNe6DNmuefS5iwF5auf7efHP5J
-         4k/5rwd9mbkAKU+WSpGCeozkcht7MaLP/cdlVt+IPBWpcKfCqh7+be7kV0O8fn5c8aSH
-         BtnQ==
-X-Gm-Message-State: AOJu0Yx0tmBuLgEQlUXa3Oazn7CPYX8BXdNJ2ST9rCZOs0t1MgVkDAEw
-        G8C0Q4OOka+Frk801ZFDZ2hebWmZ0bc=
-X-Google-Smtp-Source: AGHT+IFPrvD8w3zR7VM7jALX0ugy7C4j8913EAX3lwW4uAnHyoDPk163z+N+iLw1avQKxWbwuDZMLA==
-X-Received: by 2002:a17:90b:e8b:b0:263:e133:b9c9 with SMTP id fv11-20020a17090b0e8b00b00263e133b9c9mr9918840pjb.34.1692120555560;
-        Tue, 15 Aug 2023 10:29:15 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:a40d:28ad:b5b9:2ae2? ([2620:15c:211:201:a40d:28ad:b5b9:2ae2])
-        by smtp.gmail.com with ESMTPSA id ij13-20020a170902ab4d00b001b02bd00c61sm11478165plb.237.2023.08.15.10.29.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Aug 2023 10:29:15 -0700 (PDT)
-Message-ID: <3161926c-b1cb-9617-bf71-73b8711e86de@acm.org>
-Date:   Tue, 15 Aug 2023 10:29:13 -0700
+        with ESMTP id S238952AbjHORtp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 13:49:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5B21BCC;
+        Tue, 15 Aug 2023 10:49:44 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6883865462;
+        Tue, 15 Aug 2023 17:49:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EE4EC433C7;
+        Tue, 15 Aug 2023 17:49:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692121783;
+        bh=vENtrbyvbr57KOdBcWWu7mgYK7vmBKZyiaF/cHz+85Q=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=He2qDjdiqELmH/bMcpvsqeSkqg7u3XUQHTXNM5QwNBZRH3A6WtvAAwviqWhVhJ580
+         G8eAdcZ/Fup8V8Yoje+2YO5n5zIXI5pRXPvC0mHzpGXxR5m1Zb5CNUWwU/W1m7f2+B
+         Hx1BkwX6vqdZ/W6y6Frzxt7RnHJWv6d0hWXAr8CywwhnVw/CzXzf786hNDh2OBLyBv
+         5CA5L+gDN296l67kfk8w3zCYgp0IWT5oNNfFCx7JBAI3jWbD17oBZKqtMG7gaUvjza
+         sJmZbebPb6MDXlfZglGHzn9OZzTqtUwFWFxr6n/bKMkXuqDJAyAGaMQ03OraXon4ol
+         hEoMxCzqwn/AQ==
+Date:   Tue, 15 Aug 2023 12:49:42 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     deloptes <emanoil.kotsev@deloptes.org>
+Cc:     linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Subject: Re: SSD SATA 3.3 and Broadcom / LSI SAS1068E PCI-Express Fusion-MPT
+ SAS
+Message-ID: <20230815174942.GA211975@bhelgaas>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.1
-Subject: Re: [PATCH v8 5/9] scsi: core: Retry unaligned zoned writes
-Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230811213604.548235-1-bvanassche@acm.org>
- <20230811213604.548235-6-bvanassche@acm.org>
- <7dd67537-1ad8-79ca-281c-540bade2cb83@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <7dd67537-1ad8-79ca-281c-540bade2cb83@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ubedo7$151n$1@ciao.gmane.io>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/14/23 05:36, Damien Le Moal wrote:
-> On 8/12/23 06:35, Bart Van Assche wrote:
->> --- a/drivers/scsi/sd.c
->> +++ b/drivers/scsi/sd.c
->> @@ -1238,6 +1238,8 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
->>   	cmd->transfersize = sdp->sector_size;
->>   	cmd->underflow = nr_blocks << 9;
->>   	cmd->allowed = sdkp->max_retries;
->> +	if (!rq->q->limits.use_zone_write_lock && blk_rq_is_seq_zoned_write(rq))
+On Tue, Aug 15, 2023 at 01:35:35AM +0200, deloptes wrote:
+> Bjorn Helgaas wrote:
 > 
-> This condition could be written as a little inline helper
-> blk_req_need_zone_write_lock(), which could be used in mq-dealine patch 2.
+> > I don't know why that would be.  Are there any hints in the dmesg log?
+> > Can you collect the complete dmesg log with the old drives and again
+> > with the new SSDs so we can compare them?  I assume you have good
+> > cables?  I assume the same cables worked at 3.0 Gb/s with the old
+> > drives.
+> > 
+> > I would *expect* that SATA r3.3 would be completely backwards
+> > compatible, so since mptsas worked just fine at 3.0 Gb/s with the old
+> > SATA r3.0 drives, it should also work just fine at 3.0 Gb/s with the
+> > new SATA r3.3 drives.  But I have no actual knowledge about that.
+> 
+> Thank you for your answer. I am also confused and couldn't think of any
+> meaningful reason. This is why I allowed myself to bother you.
+> 
+> I did not change anything - wiring or such. The server has 12 disk bays on
+> the front. Old disks were pulled out and new disks were inserted into the
+> bays.
+> 
+> You (probably much knowable in this matters than me) also assume negotiation
+> should result in 3.0Gb/s. And if I understand correctly it should be not a
+> driver issue.
+> 
+> The only difference I could find out for now is that Rev3.3 introduced PWDIS
+> on Pin 3. To check if the cables provide wiring on P3 I should disassemble
+> the server, but I can do this in September :/ and it is a lot of effort.
+> 
+> I am attaching a portion of the log and dmesg with the relevant information.
+> I see that ASPM is disabled by default (could it be related to P3?).
 
-The above test differs from the tests in the mq-deadline I/O scheduler.
-The mq-deadline I/O scheduler uses write locking if
-rq->q->limits.use_zone_write_lock && q->disk->seq_zones_wlock &&
-blk_rq_is_seq_zoned_write(rq). The above test is different and occurs
-two times in scsi_error.c and one time in sd.c. Do you still want me to
-introduce a helper function for that expression?
+ASPM is a PCIe feature that applies to the PCIe Links between 00:02.0
+and 01:00.0 (the first 1068E) and 00:15.0 and 08:00.0 (the second
+1068E).
 
-Thanks,
+PWDIS is a feature on the SATA cables between the SAS1068E adapters
+and the SSDs.
 
-Bart.
+PWDIS/P3 should not be related to ASPM.  I assume you're referring to
+the "disabling ASPM on pre-1.1 PCIe device" message.  That should
+happen with both the old r3.0 HDDs and the new r3.3 SSDs.
+
+I wish I had some good ideas for you, but I don't know anything about
+the SATA side.  I googled for "1068 ssd sata 1.5 gb/s" and found a few
+hints about system firmware, LSI firmware, etc, but nothing concrete.
+
+I think some controllers have a BIOS setup user interface; have you
+poked around in there?
+
+Bjorn
