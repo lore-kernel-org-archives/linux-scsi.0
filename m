@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A99C001B0
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 02:10:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E16C001B0
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 02:11:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234111AbjHOCKT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Aug 2023 22:10:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52976 "EHLO
+        id S234137AbjHOCKz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Aug 2023 22:10:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234156AbjHOCKI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 22:10:08 -0400
+        with ESMTP id S234157AbjHOCKy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 22:10:54 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEF07E5F;
-        Mon, 14 Aug 2023 19:10:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93CD0E5F;
+        Mon, 14 Aug 2023 19:10:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4C818646FE;
-        Tue, 15 Aug 2023 02:10:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC024C433C7;
-        Tue, 15 Aug 2023 02:10:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 312D660AC4;
+        Tue, 15 Aug 2023 02:10:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60194C433C8;
+        Tue, 15 Aug 2023 02:10:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692065406;
-        bh=NcUdYJw9J/Et8H7NUY2lS+O95aVKgMNpDQrE3Ksi+iI=;
+        s=k20201202; t=1692065451;
+        bh=FLYOlStsvGeLjc5wAEsJAq7Q7sfqnj++AnIu5mNa9ko=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=C4G9UWDJxekxQjf+gIHVuydJu1C/HzNqPrxT0gCN+oXqxcz0DONUU4UAPJMiaqjLl
-         3wVu60Nf0gvG7/Iye0nwacsaARRXwbK0/q/XIuACe6AV2wjQw99AcHCpVUFdbKjOUh
-         sKgzyCdHilp0Zyjfvmpa2RvECD0KCd4nuafIsXmH0qCFaUJISyINK81Vm2idkIXLFG
-         AwMcAdgx3bVFKzsVQ57+L5AVR7lSxaygoa7+VdtL8lel19q0+pOunEXoJzS2J5yM8P
-         1Sy5E2RmPSCVCTkZYT5e3DTjQtVHT97l4LJAYbKFLpVZj/WMnI6leN2NTUTtQ2LLPb
-         A25cNq6ZaWp5w==
-Message-ID: <3469722a-b905-4de5-5eba-57dae0ea3d3d@kernel.org>
-Date:   Tue, 15 Aug 2023 11:10:04 +0900
+        b=sme/n9Y8BKt97Jr2NrhOUSgrEc3Wq9REXncbYf0cbRf9pJm575Ce5GcAa4/IVoVYU
+         3LFCJbeQyG6XO7xxBC04W2Ys73RfG5+PSWgRjneY3SeUlJ4uAS0nNPzcQoqEFOFe+9
+         PW/rRHG9bNIUKNsqk4uxs2b1ICh0FnJJOj7Jj/4G5Ufk2G4w6QEcpVcvKw7QdrOV6V
+         5fM4c3xeguvHw27oJJ1EiHJ7UFXAmxkGxcBWPo/ZgC3LVenUb2WbFJI1BH2Mmfnd6z
+         xVtXnLExZ6u9j8gpWQ4lfYD5fYuN9u5X+i7dwF1l22fFS/sF2kPst4nUpO51OrHSE/
+         zPyMFY56Ye0ZQ==
+Message-ID: <71d416bd-d8ac-74ca-e596-60c44839177c@kernel.org>
+Date:   Tue, 15 Aug 2023 11:10:49 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH 04/10] scsi: libsas: Delete struct scsi_core
+Subject: Re: [PATCH 05/10] scsi: libsas: Delete sas_ssp_task.retry_count
 Content-Language: en-US
 To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
         martin.petersen@oracle.com, chenxiang66@hisilicon.com,
@@ -45,10 +45,10 @@ To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
         jinpu.wang@cloud.ionos.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20230814141022.36875-1-john.g.garry@oracle.com>
- <20230814141022.36875-5-john.g.garry@oracle.com>
+ <20230814141022.36875-6-john.g.garry@oracle.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230814141022.36875-5-john.g.garry@oracle.com>
+In-Reply-To: <20230814141022.36875-6-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -56,10 +56,11 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 8/14/23 23:10, John Garry wrote:
-> Since commit 79855d178557 ("libsas: remove task_collector mode"), struct
-> scsi_core only contains a reference to the shost. struct scsi_core is only
-> used in sas_ha_struct.core, so delete scsi_core and replace with a
-> reference to the shost there.
+> Since libsas was introduced in commit 2908d778ab3e ("[SCSI] aic94xx: new
+> driver"), sas_ssp_task.retry_count is only ever set, so delete it.
+> 
+> The aic94xx driver also had its own retry_count definition in struct scb
+> sub-structs, which may have caused a mix-up.
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 
