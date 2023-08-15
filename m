@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F800C001B0
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 02:07:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A18FC001B0
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 02:08:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234089AbjHOCHI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Aug 2023 22:07:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44150 "EHLO
+        id S234103AbjHOCIM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Aug 2023 22:08:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234177AbjHOCHE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 22:07:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85DAE10F9;
-        Mon, 14 Aug 2023 19:07:03 -0700 (PDT)
+        with ESMTP id S234114AbjHOCHp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2023 22:07:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92673172C;
+        Mon, 14 Aug 2023 19:07:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 25D1C6401F;
-        Tue, 15 Aug 2023 02:07:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81DFDC433C8;
-        Tue, 15 Aug 2023 02:07:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 27113644FF;
+        Tue, 15 Aug 2023 02:07:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8410BC433C7;
+        Tue, 15 Aug 2023 02:07:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692065222;
-        bh=LEwFbGN66DpGHdgH52WI5KYqDRheJ9RE0tXXKR4QYSY=;
+        s=k20201202; t=1692065263;
+        bh=Sf1f6HcmcCqT/xTbQgDjPUCBG8YZBaGPXD/uAr2kD/s=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=faTDecExM8FodG+/9UvieIrr3DLMfChcld8Py5Dl/95QGg88Abu4KHtd0G7FIg3Al
-         Gv4afe+7FUOIWl4u5gBv8Obhx/fK/Wk1gakiIkhOWh5EsVZmOl8sGAF9eL0p2wwgX1
-         Obu58OxsGfbcv9G4E9hl/8rHsn2Ay3X6uNofeXp8OYe/uBswOVRS1qK2/xXLXDj3bV
-         Oxi8SiSgkQU60NXDlSTXU937hBj6xgPdIXW9G5VF9W8Vz+jyDSpOmonrBIrtn5Z98Z
-         jxguV+De5Kqskhr3ukF6cCFZdBHFVXD4tQzDO9+JNDNXWgfMNRKMPR6aRYNG8C/Cx/
-         iCgd27WfPAxjg==
-Message-ID: <dd7044e2-2a2b-635e-a92f-f75a4c47bd19@kernel.org>
-Date:   Tue, 15 Aug 2023 11:07:00 +0900
+        b=uBaCkgjhSyPsburjeK5c7wIYGPuij3HRcF+k5XA66AD5bj8I9BmtWv7LE8g/Dlti8
+         No3EA0M7KutVgr6A3xCgTciLyEaft4qzy1mwd4AtxoAzVZzi6LVDvTWEbgaPSquf8a
+         akbcT1Qz0kg7A7R4+f2AwEiYOAzS/X6ZRxEMTwLq2yLaEsWTD4YlcBCy6UEpQ13rSA
+         dOYJkh0RICVYHHbYbqXzK5gaBTU5UJtGD6QsqUy0fDrSzjjvk8FU1k8Da/bLfw45tc
+         0jryd1gFzVXR0dgYiiE9R8PTF2T/tkZ43eMGYFe3azy9FK3Pqdc2i5ldfQhwBZ3U41
+         XJlfqc1M5pomQ==
+Message-ID: <c42b475c-8fdc-e1cc-45d1-a693faffd4ca@kernel.org>
+Date:   Tue, 15 Aug 2023 11:07:41 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH 01/10] scsi: libsas: Delete sas_ha_struct.lldd_module
+Subject: Re: [PATCH 02/10] scsi: libsas: Delete enum sas_class
 Content-Language: en-US
 To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
         martin.petersen@oracle.com, chenxiang66@hisilicon.com,
@@ -45,10 +45,10 @@ To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
         jinpu.wang@cloud.ionos.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20230814141022.36875-1-john.g.garry@oracle.com>
- <20230814141022.36875-2-john.g.garry@oracle.com>
+ <20230814141022.36875-3-john.g.garry@oracle.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230814141022.36875-2-john.g.garry@oracle.com>
+In-Reply-To: <20230814141022.36875-3-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -56,11 +56,11 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 8/14/23 23:10, John Garry wrote:
-> Since libsas was introduced in commit 2908d778ab3e ("[SCSI] aic94xx: new
-> driver"), sas_ha_struct.lldd_module has only ever been set, so remove it.
+> enum sas_class prob would have been useful if function sas_show_class() was
+> ever implemented, which it wasn't.
 > 
-> Struct scsi_host_template already has a reference to the LLD driver
-> module as to stop the driver being removed unexpectedly.
+> enum sas_class is used as asd_sas_port.class and asd_sas_phy.class, which
+> are only ever set, so delete these members and the enum.
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 
