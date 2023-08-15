@@ -2,102 +2,79 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEF67C001DE
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 17:50:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C47A2C0015E
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 23:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234865AbjHORtu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Aug 2023 13:49:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60180 "EHLO
+        id S240518AbjHOXPi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Aug 2023 19:15:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238952AbjHORtp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 13:49:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5B21BCC;
-        Tue, 15 Aug 2023 10:49:44 -0700 (PDT)
+        with ESMTP id S240565AbjHOXPW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 19:15:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1EFBB3;
+        Tue, 15 Aug 2023 16:15:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6883865462;
-        Tue, 15 Aug 2023 17:49:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EE4EC433C7;
-        Tue, 15 Aug 2023 17:49:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5449260F0A;
+        Tue, 15 Aug 2023 23:15:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8248BC433C7;
+        Tue, 15 Aug 2023 23:15:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692121783;
-        bh=vENtrbyvbr57KOdBcWWu7mgYK7vmBKZyiaF/cHz+85Q=;
+        s=k20201202; t=1692141320;
+        bh=pa2nvZfQw/bdnEHOh3aiTLrBqJ4/hUwiSG2TjOGJLQg=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=He2qDjdiqELmH/bMcpvsqeSkqg7u3XUQHTXNM5QwNBZRH3A6WtvAAwviqWhVhJ580
-         G8eAdcZ/Fup8V8Yoje+2YO5n5zIXI5pRXPvC0mHzpGXxR5m1Zb5CNUWwU/W1m7f2+B
-         Hx1BkwX6vqdZ/W6y6Frzxt7RnHJWv6d0hWXAr8CywwhnVw/CzXzf786hNDh2OBLyBv
-         5CA5L+gDN296l67kfk8w3zCYgp0IWT5oNNfFCx7JBAI3jWbD17oBZKqtMG7gaUvjza
-         sJmZbebPb6MDXlfZglGHzn9OZzTqtUwFWFxr6n/bKMkXuqDJAyAGaMQ03OraXon4ol
-         hEoMxCzqwn/AQ==
-Date:   Tue, 15 Aug 2023 12:49:42 -0500
+        b=c4c9Gl+MoIkUJ+7vUF6e87lxuQumIH4uoBbaCKDZS6AsNOCP1d23AqczDntDGSheX
+         K7MUydOcC7kHIuRM7sXHY0ZuFV+aYc4mnpNAllllNW3VRHFs/yhWhaTrXb4bE0BzwO
+         9zepIF0W5oFdayEF4tyOCB6/mO8TZ+0X70Fzfa3fsUwaRwpxLAgDG6nKIJUIL0SRGl
+         xW6wZFitUH4Xo04qLa9xu+0WXOMBcKifSelsUBScE7XsweU4kdE6Oy+LOJ8qoxh85r
+         SxGQNb7WUPUvFWEJ/GD4pf0AYK7RFnKS/wZyBX9+XqZ8yvYPTMTC8m4h0TX4pBUCQO
+         jXSKwH+654o5Q==
+Date:   Tue, 15 Aug 2023 18:15:17 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     deloptes <emanoil.kotsev@deloptes.org>
 Cc:     linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+        linux-kernel@vger.kernel.org
 Subject: Re: SSD SATA 3.3 and Broadcom / LSI SAS1068E PCI-Express Fusion-MPT
  SAS
-Message-ID: <20230815174942.GA211975@bhelgaas>
+Message-ID: <20230815231517.GA271814@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ubedo7$151n$1@ciao.gmane.io>
+In-Reply-To: <ubgv7c$43t$1@ciao.gmane.io>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 15, 2023 at 01:35:35AM +0200, deloptes wrote:
+On Wed, Aug 16, 2023 at 12:46:03AM +0200, deloptes wrote:
 > Bjorn Helgaas wrote:
-> 
-> > I don't know why that would be.  Are there any hints in the dmesg log?
-> > Can you collect the complete dmesg log with the old drives and again
-> > with the new SSDs so we can compare them?  I assume you have good
-> > cables?  I assume the same cables worked at 3.0 Gb/s with the old
-> > drives.
-> > 
-> > I would *expect* that SATA r3.3 would be completely backwards
-> > compatible, so since mptsas worked just fine at 3.0 Gb/s with the old
-> > SATA r3.0 drives, it should also work just fine at 3.0 Gb/s with the
-> > new SATA r3.3 drives.  But I have no actual knowledge about that.
-> 
-> Thank you for your answer. I am also confused and couldn't think of any
-> meaningful reason. This is why I allowed myself to bother you.
-> 
-> I did not change anything - wiring or such. The server has 12 disk bays on
-> the front. Old disks were pulled out and new disks were inserted into the
-> bays.
-> 
-> You (probably much knowable in this matters than me) also assume negotiation
-> should result in 3.0Gb/s. And if I understand correctly it should be not a
-> driver issue.
-> 
-> The only difference I could find out for now is that Rev3.3 introduced PWDIS
-> on Pin 3. To check if the cables provide wiring on P3 I should disassemble
-> the server, but I can do this in September :/ and it is a lot of effort.
-> 
-> I am attaching a portion of the log and dmesg with the relevant information.
-> I see that ASPM is disabled by default (could it be related to P3?).
+> ...
 
-ASPM is a PCIe feature that applies to the PCIe Links between 00:02.0
-and 01:00.0 (the first 1068E) and 00:15.0 and 08:00.0 (the second
-1068E).
+> > I think some controllers have a BIOS setup user interface; have you
+> > poked around in there?
+> 
+> I have not seen the bios of the machine for many years. I was looking
+> forward to plug it to a console, so that I can reboot remotely, but for
+> some reason it was not possible. It was may be 5y ago. I will definitely
+> double check this, allthough there will be nothing regarding SATA3.3 there
+> as these were build many years before SATA3.3 saw daylight.
 
-PWDIS is a feature on the SATA cables between the SAS1068E adapters
-and the SSDs.
+I saw some mention about BIOS knobs that controlled the minimum
+acceptable SATA link speed or something; that's the kind of thing I
+wondered about.
 
-PWDIS/P3 should not be related to ASPM.  I assume you're referring to
-the "disabling ASPM on pre-1.1 PCIe device" message.  That should
-happen with both the old r3.0 HDDs and the new r3.3 SSDs.
+> As mentioned in the other posting I will attach those SSDs directly to the
+> mobo. There are 6 SATA ports there. I think this is the best approach.
+> But you know curiosity is a force you can not resist, so I still want to
+> know why?! :)
 
-I wish I had some good ideas for you, but I don't know anything about
-the SATA side.  I googled for "1068 ssd sata 1.5 gb/s" and found a few
-hints about system firmware, LSI firmware, etc, but nothing concrete.
-
-I think some controllers have a BIOS setup user interface; have you
-poked around in there?
+Haha, yeah, I know!  I noticed in your response to Sathya that you're
+running a 4.19.288 kernel, which is really, really old.  If it's
+practical, the first thing I would try is booting a current kernel,
+e.g., v6.4, on the chance that something has been fixed since v4.19.
+I didn't try to compare the mptsas driver to see if it has changed
+since then, so I don't know whether it's likely.
 
 Bjorn
