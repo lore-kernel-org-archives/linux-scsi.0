@@ -2,200 +2,200 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCC62C04FDF
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 11:53:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 114A4C001DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Aug 2023 12:11:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236988AbjHOLxg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Aug 2023 07:53:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43772 "EHLO
+        id S237061AbjHOMKm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Aug 2023 08:10:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236984AbjHOLxG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 07:53:06 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C3AD173C;
-        Tue, 15 Aug 2023 04:53:03 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37FAg0ZT004807;
-        Tue, 15 Aug 2023 11:52:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=7E0uXqGclzM/1d//wdrT4WexD6JOcU4jHvfMywnhYGg=;
- b=QA7oSOkGtVMgwISn9nFfA8U/f2f1PYEF1WIq/Xu0h9qUClNkwkrByjLOfZHblZkHml62
- eKMfmorOk/+j5mTtMqYRDCtDBI/iLE9HgOirAjFubWCSZiwDeRWuPaMnFNGm5U4EzMdq
- tEO8CKmg8e1Xha97Jkifd7prhWrgyqnC1Gwe5M+K4JEo/CAdy/ChAfqvFwD+cMclK7iK
- rubEQZT5m5U3dHl1Q8UbjnK+bY0JCVIn52OpAO2E3+1RnKVniqxzmbDgtrdTyhscLKPK
- dSPTLfy0Fuvq7F3Bx9f2LkWW/0JghJ34GoYFwCAlVD2CTf86q0RGWv6ept+n0EPgEl5x Bg== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3se349cgk3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Aug 2023 11:52:48 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 37F9Vaxa019924;
-        Tue, 15 Aug 2023 11:52:48 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2108.outbound.protection.outlook.com [104.47.55.108])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3sey3v7tnp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Aug 2023 11:52:48 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=l+REnMujas5pnfcWSUwT9TKGufh6RNHkKAioRaiZEat2W5AfM2GUFHUJtw9J/EmqLZ1CVAMVhnPe9uL9zB/99A9PG8fwrVJyZ/dOT4H582lH3l+ZYJXQ798U/75vXnguLXc5zHqfymihNYZtqX6Jdb7++8TpuPEY5rg2GY4j3qYQs4LjSddWzpIq4hAsprtxtsd56o3PESjraXCxdf9RQJpembnKhPt0t22sKAehgP4h8aKnue9Kaa99afJAOG1lAVTvLABT5ONVC8jlUItUlXO8Pie3Hk2Gv43hc6kDtPMKvcT/aS50Py4vrHtj73bQpgK8ErP2ZgoV2pHFl31LfA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7E0uXqGclzM/1d//wdrT4WexD6JOcU4jHvfMywnhYGg=;
- b=YSl0AuXq34aVTBkt0n8th1eOT8lqTudkY4dqFppotUgHCnrpl65QFrdBO3spUJVaTfUVAO7F9g1IRNG4BWru24Z15ydUI1Wb0J3c5/Ryx+XN+Uax6zXo54QsVTvDLlGIdiLsLYC7LQJfuLcUELxJqibuzyFmdcVkFNkLy9n+h5TMeSX/GJI3huPWr7Gb87+4zGKQB5P8dU2H5a8dVqG+sCfhBiIcLk44wd76OOdmP17P+nZAnAOReCjKWFmdQNu+/kCWvmr0dG8LgLQALdSMDWVoIZ19lK0TEXzaCw3mxLjyw4dYY/p6/18G3Y67Lk075opVLt0TpE1MGAzBoMB/jA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7E0uXqGclzM/1d//wdrT4WexD6JOcU4jHvfMywnhYGg=;
- b=qntWYvu1Uw8sQZc2R9nqEVyd8eLPqwLmpvPKgT0ikMk+5pvdfbF0y8+q+kILODLjZ8fzn16G8OFxhl8wFAqStOQtLkEhq3Q8auyNW1GBEfaNZjYUI4wipDTbbHRr2tIElwXMSMPdFdg6+VO7sqK61DNhDmpM6ZIhcKyVIxbG26g=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by IA1PR10MB6710.namprd10.prod.outlook.com (2603:10b6:208:419::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6678.24; Tue, 15 Aug
- 2023 11:52:45 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ebfd:c49c:6b8:6fce]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ebfd:c49c:6b8:6fce%7]) with mapi id 15.20.6678.022; Tue, 15 Aug 2023
- 11:52:45 +0000
-From:   John Garry <john.g.garry@oracle.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        chenxiang66@hisilicon.com, artur.paszkiewicz@intel.com,
-        yanaijie@huawei.com, jinpu.wang@cloud.ionos.com, dlemoal@kernel.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        John Garry <john.g.garry@oracle.com>
-Subject: [PATCH v2 10/10] scsi: libsas: Delete sas_ata_task.retry_count
-Date:   Tue, 15 Aug 2023 11:51:56 +0000
-Message-Id: <20230815115156.343535-11-john.g.garry@oracle.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230815115156.343535-1-john.g.garry@oracle.com>
-References: <20230815115156.343535-1-john.g.garry@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SA9PR13CA0117.namprd13.prod.outlook.com
- (2603:10b6:806:24::32) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        with ESMTP id S237076AbjHOMKZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 08:10:25 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8649171B;
+        Tue, 15 Aug 2023 05:10:22 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RQ96N6wGqzrScB;
+        Tue, 15 Aug 2023 20:09:00 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Tue, 15 Aug 2023 20:10:19 +0800
+Message-ID: <5f3794ef-6719-d9fd-a264-8c467db52ae6@huawei.com>
+Date:   Tue, 15 Aug 2023 20:10:19 +0800
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|IA1PR10MB6710:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1c6eb8c6-13d8-465e-f9f6-08db9d8623be
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ryRsVNceQx6kfcNJH8+GSMmcJOPl5sKOSRe35IhU3/vYGjSoKagbdY8QrWyEp8xx6ynT9hNxSDJtdDRbs/27sv7jLtajaDysqR7wYCIjT439jv9JaZZtbeFnNtEWDuLKrDSwOAPte5QKnSKkJrBgB4rDaLke4j8M5IwDzWHl/ksRNfDZUuyf81PMyJvhPedvUjVjccK8SyUZNw2KEG7ObtVVl3RxOTd4rCSO5Sgkip6jMzzfTZd2cT1Ui4Zym0mni76+iTSuz76oJS7VaboX0VTwZ1WoiUEL6iR6ypjbfmHgLeHfBkDcAvFaqkENA84pt3om3n7IyZ0SRDGJBrGMr8ftIjEzzGINQSIk3iHJ5l/VKQfeGXQHRU3rctfLQQpKUbLQ+I6Pb260k3RtrISNJP3A1yS5oQiJyu/tlvBGphhtc+MKNKXf7Qjm4y7O2I/hL5gb7Fg0ZDh9H7SOBTckT2YVtKbmYvSh65iWMCM1+L5V/xv7H+iOPfSZVesPmeoCecevqVnjIcL00EDlduOFX+pAoG6fVY21PkGsS/0YhEt0TimcsJ9DwnZIQ9Xz131V
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230030)(366004)(346002)(396003)(376002)(39860400002)(136003)(1800799009)(186009)(451199023)(38100700002)(41300700001)(107886003)(6512007)(2616005)(5660300002)(103116003)(2906002)(36756003)(4326008)(316002)(66946007)(66476007)(6666004)(83380400001)(478600001)(8936002)(66556008)(26005)(1076003)(86362001)(8676002)(6486002)(6506007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Zwx/q7l3TlUPi35GRJzWGrTvaZKP9ytHcF2qRbedQXs9N7Gd6f7Ts3cJYTvt?=
- =?us-ascii?Q?KoZ+oTYguVj284D/p4IjiPe5EkNc2EC6w9Z9R7JTGiKnFpFWRbHXJCgc9FP6?=
- =?us-ascii?Q?tuBtlVpX0ohzUetIa3mkT7k0FF8lbaiGGkiC1hMp5xZ9DIgYORum1pyiYE1J?=
- =?us-ascii?Q?Lhp7OLXlFJ2zmcP6IJYP2i7HgDv8hia64YtudTKn70Etb5DFFrDLqcoyyriz?=
- =?us-ascii?Q?CZhWxo6fOhTef59YhP/pGB5nEiyBFcRi6TyMGf5u9ubam3PFuLaaKOjHvD8a?=
- =?us-ascii?Q?GiSK8qP/mA2ZUJqsQP0bV4T31cJ8WaAs5Whmfh2kriAPokSKSiGlR8WYyr0d?=
- =?us-ascii?Q?2dWSqPdvNsV91fDJ2fpxzKo1AjM1R2x4d06UBXiU6fWSGADvAWsELvnpj3V0?=
- =?us-ascii?Q?fx8pcuiPLqj3hJ7nR5E4RJWBsRZVtdgFBvftKRiU7hS3sJvSZoaFHECltpk9?=
- =?us-ascii?Q?7PqxwiIPHcmV8VXuSM0CzGU7Iebz2dXAxeLqFxaqd4sl17W2eU50Xx14EMSS?=
- =?us-ascii?Q?++6NYE4dsW66ORzcahTWMdDqt6+WZiXfKo/jWLsot8NbZ8wnuet6aZvzlp08?=
- =?us-ascii?Q?ROLQsNbMIQM+UzC+6oQ/jPKmUO1rd10OvCWzmCebswDLSS60hvunSdcXLe7F?=
- =?us-ascii?Q?MoJQ+gTVuVYFiJhICxjakM97UIRZcIp4RxJ/uPcOIxZr3l981ibbrz9rBfvr?=
- =?us-ascii?Q?QUaPBfJL5AnL4Kg6LF1Vt7O6H3qT1E2+ZhmcVPIRq/2yKxHQpiKRN5I/Bnbf?=
- =?us-ascii?Q?gJ1md51jkxwaeecGSZHxEpDRocrSyTPmZQn8BpUzqHfrkZLxerZ4xdYl8gkv?=
- =?us-ascii?Q?0zrRmRlg6+HCYlYDJTBYB3BxeEhYbzuO++LsM1FAW+43oBuxMrbrUt82J9FL?=
- =?us-ascii?Q?8ixiOvrgMXNG3bTnX19KgEatCoC+azgAfrFiaei0XxeuDg+sEX10nQknM9SJ?=
- =?us-ascii?Q?ph3yg0ez7ZV2MhjKPYhZD55Xapz2FoObzYz6yuyJijsH6ZueB3ydpdQdu28p?=
- =?us-ascii?Q?f3LZCoEE+W39hbBpRGgVi1cf2x+bq0sdXQXNClfbnEJ+SbIJ+i2Dvt/1viN9?=
- =?us-ascii?Q?Al2PdUAitJxDMwtbCUq+1az/PDoDWPJEziyl8cl9UvqRFlkOO3PjFqkywNXp?=
- =?us-ascii?Q?Pg5fIwrS0RyrRLJ1qtPdtIXS+i/DFdaFdV62Z1PmS12pg4i8ToV/OqlEF6vd?=
- =?us-ascii?Q?5yv4VYqZEg+fE7ZEPzFC7Pp1HLJzS0OC13Xil7zCvffQ6MqlQT/JwYxOSYs9?=
- =?us-ascii?Q?9iPyxh4HLobxiybsowz2ALFq1veXuCWH6zV7sh3uK1vMRl5u5poEgtvjgZVA?=
- =?us-ascii?Q?1nsLzA40dVm8MzZsUxlSX5IPVgeMC6Scpl7n/5fuBY9RtpioSJCDgY1AOaSN?=
- =?us-ascii?Q?hSCe1snqAvUsqQYNNG2S/g7YvahDD8ZZIqHn/rj/j+jFpK018zsUwNLrAuS7?=
- =?us-ascii?Q?BOnBI5JIkeNZpqBCbNx+K1P4tqamu8PzADtYOXHe6sIZ7jCuS4ujv1+Eal99?=
- =?us-ascii?Q?YvrmOgCH7k9tgsD6a9AAeCDxytJAX9+VAVVAYo1CSurzSP+SifVHkSU3+35y?=
- =?us-ascii?Q?E7yko3qOiWDJqMbLxbLnu4yOScaj0O7TbP77WK4f0qqE5+ACXNgfNrAxHgFk?=
- =?us-ascii?Q?Qw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?PY9oA//1nDuOZs/aubH6scI7HEVlOZ9HS/RPka7sbvEx0asRs0/hGKcpycAl?=
- =?us-ascii?Q?OlEdqXB9Kf8kBdxefiiI0vVOFnQssBd0Hws9ik9DmYBw3ws41/koNh9MopSH?=
- =?us-ascii?Q?TvteoyjLy2iMQi/FaQxLLMU73WKGMJM1ov4PHzDHE9rnb121mD365AW8xjfb?=
- =?us-ascii?Q?ivELnrT3DpLoU3c7If5TWdMP7yRgq6TIpl++9c7d2OmRk0ho4enafh9jp5eT?=
- =?us-ascii?Q?f94oRCBYWp5q0XPztdaR4/xLVEvHrYja+9bESxmBkIVB8fBJOZ0JeRfBBTyg?=
- =?us-ascii?Q?2pIr/tng0qLVc0weX2sOKlgdYkdj2LzAAaOnOHJSuKZObnw3ZKNGfSKggPX4?=
- =?us-ascii?Q?Qe6m8SmSReGhsyOpHVluE5mxsyFodkdCltsJ5ErqFUBPDJwYCmMUVybvT+A2?=
- =?us-ascii?Q?fe8Jd3YhHjYlRfec44180yKlsnhPueqPkpQxPL9UYFaERJGNRA8GcYpd/Ram?=
- =?us-ascii?Q?5KtWW23s7NBaJrgXZoJIDBzdhw8IfemOzvgcKqfJDFXEWpbhVMqYxGLYP6Lm?=
- =?us-ascii?Q?zL+opRO3vkecAychQF1MSwUyGUJdcsb3JsfPC0g8Ea6HjK6XPA4ldCaiF/i2?=
- =?us-ascii?Q?OvuhL7rKrDSn9+LVal/xYfA8bdsGYjyXPLqm/YLPFd5323t1IAb52oaaonzS?=
- =?us-ascii?Q?aQL+XCvWCtOJYE/RU5LEs5E6DWHhc2wDykU6hyF6vd+21vjbF0pAMDk00SBn?=
- =?us-ascii?Q?qA56Eb46lrzFwzvrC8QmoQrcv+SF/TnZ2yK1VnMxOU0bYg9BsE6aR9QxxqOZ?=
- =?us-ascii?Q?t00k2yQS019CA6OWK6gE1sa8+zJg2CPeDUOn/XtRFOJQjYdAilW0xFao1bsr?=
- =?us-ascii?Q?4QBKurnOYI09upWG2I9gh5r9Us6y8zzmb/JZmvOAm/EyZmr8zUmJXg6jh2+u?=
- =?us-ascii?Q?Ld1DKymYev4A2CEfZHC6HqXiWgEwchCuROkIGwHZfrykvbL8Onkv64gmYWYS?=
- =?us-ascii?Q?qclxxGW52nZcsxGJzSpIKQ=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1c6eb8c6-13d8-465e-f9f6-08db9d8623be
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2023 11:52:45.5965
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: dI1+hKWOeE+d3teDAPw+HMvmEoRnWcFrJ7kN30BY8cvGoY9MOf49a3OImmukIJHUzaBuSO6WwFjNb0cHd20Flw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB6710
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-15_10,2023-08-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999
- spamscore=0 mlxscore=0 adultscore=0 bulkscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308150106
-X-Proofpoint-GUID: LmaKw13GmYBHo0sbG9VTBZUAbNhvtspu
-X-Proofpoint-ORIG-GUID: LmaKw13GmYBHo0sbG9VTBZUAbNhvtspu
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v3 9/9] scsi:scsi_debug: Add debugfs interface to fail
+ target reset
+Content-Language: en-US
+To:     kernel test robot <oliver.sang@intel.com>
+CC:     <oe-lkp@lists.linux.dev>, <lkp@intel.com>,
+        <linux-scsi@vger.kernel.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        <linux-kernel@vger.kernel.org>, Dan Carpenter <error27@gmail.com>,
+        <louhongxiang@huawei.com>
+References: <202308031027.5941ce5f-oliver.sang@intel.com>
+From:   "haowenchao (C)" <haowenchao2@huawei.com>
+In-Reply-To: <202308031027.5941ce5f-oliver.sang@intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemm600012.china.huawei.com (7.193.23.74)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since libsas was introduced in commit 2908d778ab3e ("[SCSI] aic94xx: new
-driver"), sas_ata_task.retry_count is never set, so delete it and the
-reference in asd_build_ata_ascb().
+On 2023/8/3 14:26, kernel test robot wrote:
+> 
+> 
+> Hello,
+> 
+> kernel test robot noticed "BUG:sleeping_function_called_from_invalid_context_at_kernel/locking/rwsem.c" on:
+> 
+> commit: b75b216522fef4d99e145fd9a1535db987ef2836 ("[PATCH v3 9/9] scsi:scsi_debug: Add debugfs interface to fail target reset")
+> url: https://github.com/intel-lab-lkp/linux/commits/Wenchao-Hao/scsi-scsi_debug-create-scsi_debug-directory-in-the-debugfs-filesystem/20230723-182123
+> base: https://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git for-next
+> patch link: https://lore.kernel.org/all/20230723234105.1628982-10-haowenchao2@huawei.com/
+> patch subject: [PATCH v3 9/9] scsi:scsi_debug: Add debugfs interface to fail target reset
+> 
+> in testcase: xfstests
+> version: xfstests-x86_64-bb8af9c-1_20230801
+> with following parameters:
+> 
+> 	disk: 4HDD
+> 	fs: ext4
+> 	test: generic-350
+> 
+> 
+> 
+> compiler: gcc-12
+> test machine: 4 threads Intel(R) Core(TM) i5-6500 CPU @ 3.20GHz (Skylake) with 32G memory
+> 
+> (please refer to attached dmesg/kmsg for entire log/backtrace)
+> 
+> 
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <oliver.sang@intel.com>
+> | Closes: https://lore.kernel.org/oe-lkp/202308031027.5941ce5f-oliver.sang@intel.com
+> 
+> 
 
-Signed-off-by: John Garry <john.g.garry@oracle.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
----
- drivers/scsi/aic94xx/aic94xx_task.c | 2 +-
- include/scsi/libsas.h               | 2 --
- 2 files changed, 1 insertion(+), 3 deletions(-)
+Would be fixed in v4 patch.
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
-index 21b69e592664..4bfd03724ad6 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -388,7 +388,7 @@ static int asd_build_ata_ascb(struct asd_ascb *ascb, struct sas_task *task,
- 		flags |= data_dir_flags[task->data_dir];
- 		scb->ata_task.ata_flags = flags;
- 
--		scb->ata_task.retry_count = task->ata_task.retry_count;
-+		scb->ata_task.retry_count = 0;
- 
- 		scb->ata_task.flags = 0;
- 	}
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index a65c16643315..2601f5775a99 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -525,8 +525,6 @@ struct sas_ata_task {
- 	struct host_to_dev_fis fis;
- 	u8     atapi_packet[16];  /* 0 if not ATAPI task */
- 
--	u8     retry_count;	  /* hardware retry, should be > 0 */
--
- 	u8     dma_xfer:1;	  /* PIO:0 or DMA:1 */
- 	u8     use_ncq:1;
- 
--- 
-2.31.1
+
+> [  224.728219][ T2216] BUG: sleeping function called from invalid context at kernel/locking/rwsem.c:1572
+> [  224.737418][ T2216] in_atomic(): 1, irqs_disabled(): 1, non_block: 0, pid: 2216, name: modprobe
+> [  224.746095][ T2216] preempt_count: 1, expected: 0
+> [  224.750787][ T2216] RCU nest depth: 0, expected: 0
+> [  224.755564][ T2216] CPU: 3 PID: 2216 Comm: modprobe Tainted: G          I        6.5.0-rc1-00013-gb75b216522fe #1
+> [  224.765799][ T2216] Hardware name: Dell Inc. OptiPlex 7040/0Y7WYT, BIOS 1.1.1 10/07/2015
+> [  224.773867][ T2216] Call Trace:
+> [  224.777011][ T2216]  <TASK>
+> [ 224.779796][ T2216] dump_stack_lvl (lib/dump_stack.c:107 (discriminator 1))
+> [ 224.784146][ T2216] __might_resched (kernel/sched/core.c:10190)
+> [ 224.788753][ T2216] ? preempt_notifier_dec (kernel/sched/core.c:10144)
+> [ 224.793792][ T2216] ? preempt_notifier_dec (kernel/sched/core.c:10144)
+> [ 224.798851][ T2216] down_write (include/linux/kernel.h:111 kernel/locking/rwsem.c:1572)
+> [ 224.802936][ T2216] ? rwsem_down_write_slowpath (kernel/locking/rwsem.c:1571)
+> [ 224.808582][ T2216] ? kobject_put (arch/x86/include/asm/atomic.h:103 include/linux/atomic/atomic-arch-fallback.h:940 include/linux/atomic/atomic-instrumented.h:401 include/linux/refcount.h:272 include/linux/refcount.h:315 include/linux/refcount.h:333 include/linux/kref.h:64 lib/kobject.c:730)
+> [ 224.812858][ T2216] simple_recursive_removal (include/linux/dcache.h:385 include/linux/dcache.h:400 include/linux/dcache.h:410 fs/libfs.c:273)
+> [ 224.818256][ T2216] ? start_creating (fs/tracefs/inode.c:135)
+> [ 224.823555][ T2216] ? _raw_spin_lock_irqsave (arch/x86/include/asm/atomic.h:115 include/linux/atomic/atomic-arch-fallback.h:2155 include/linux/atomic/atomic-instrumented.h:1296 include/asm-generic/qspinlock.h:111 include/linux/spinlock.h:187 include/linux/spinlock_api_smp.h:111 kernel/locking/spinlock.c:162)
+> [ 224.828766][ T2216] ? _raw_read_unlock_irqrestore (kernel/locking/spinlock.c:161)
+> [ 224.834412][ T2216] debugfs_remove (fs/debugfs/inode.c:766)
+> [ 224.838758][ T2216] sdebug_target_destroy (drivers/scsi/scsi_debug.c:1147) scsi_debug
+> [ 224.844874][ T2216] scsi_target_destroy (drivers/scsi/scsi_scan.c:401)
+> [ 224.849830][ T2216] __scsi_remove_device (drivers/scsi/scsi_sysfs.c:1517)
+> [ 224.854889][ T2216] scsi_forget_host (drivers/scsi/scsi_scan.c:1988)
+> [ 224.859508][ T2216] scsi_remove_host (drivers/scsi/hosts.c:182)
+> [ 224.864113][ T2216] sdebug_driver_remove (drivers/scsi/scsi_debug.c:8342) scsi_debug
+> [ 224.870201][ T2216] ? kernfs_remove_by_name_ns (fs/kernfs/dir.c:1679)
+> [ 224.875758][ T2216] device_release_driver_internal (drivers/base/dd.c:1272 drivers/base/dd.c:1293)
+> [ 224.881662][ T2216] bus_remove_device (include/linux/kobject.h:191 drivers/base/base.h:73 drivers/base/bus.c:581)
+> [ 224.886442][ T2216] device_del (drivers/base/core.c:3815)
+> [ 224.890616][ T2216] ? __device_link_del (drivers/base/core.c:3769)
+> [ 224.895567][ T2216] ? mutex_unlock (arch/x86/include/asm/atomic64_64.h:109 include/linux/atomic/atomic-arch-fallback.h:4303 include/linux/atomic/atomic-long.h:1499 include/linux/atomic/atomic-instrumented.h:4446 kernel/locking/mutex.c:181 kernel/locking/mutex.c:540)
+> [ 224.899915][ T2216] ? __mutex_unlock_slowpath+0x2b0/0x2b0
+> [ 224.906427][ T2216] device_unregister (drivers/base/core.c:3732 drivers/base/core.c:3845)
+> [ 224.911038][ T2216] sdebug_do_remove_host (drivers/scsi/scsi_debug.c:7691) scsi_debug
+> [ 224.917309][ T2216] scsi_debug_exit (drivers/scsi/scsi_debug.c:8170) scsi_debug
+> [ 224.922889][ T2216] __do_sys_delete_module+0x316/0x540
+> [ 224.929162][ T2216] ? module_flags (kernel/module/main.c:698)
+> [ 224.933689][ T2216] ? task_work_cancel (kernel/task_work.c:147)
+> [ 224.938388][ T2216] ? _raw_spin_lock (arch/x86/include/asm/atomic.h:115 include/linux/atomic/atomic-arch-fallback.h:2155 include/linux/atomic/atomic-instrumented.h:1296 include/asm-generic/qspinlock.h:111 include/linux/spinlock.h:187 include/linux/spinlock_api_smp.h:134 kernel/locking/spinlock.c:154)
+> [ 224.942921][ T2216] ? exit_to_user_mode_loop (include/linux/sched.h:2337 include/linux/resume_user_mode.h:61 kernel/entry/common.c:171)
+> [ 224.948222][ T2216] do_syscall_64 (arch/x86/entry/common.c:50 arch/x86/entry/common.c:80)
+> [ 224.952483][ T2216] entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:120)
+> [  224.958217][ T2216] RIP: 0033:0x7fe4243fc417
+> [ 224.962479][ T2216] Code: 73 01 c3 48 8b 0d 79 1a 0d 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 b8 b0 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 49 1a 0d 00 f7 d8 64 89 01 48
+> All code
+> ========
+>     0:	73 01                	jae    0x3
+>     2:	c3                   	retq
+>     3:	48 8b 0d 79 1a 0d 00 	mov    0xd1a79(%rip),%rcx        # 0xd1a83
+>     a:	f7 d8                	neg    %eax
+>     c:	64 89 01             	mov    %eax,%fs:(%rcx)
+>     f:	48 83 c8 ff          	or     $0xffffffffffffffff,%rax
+>    13:	c3                   	retq
+>    14:	66 2e 0f 1f 84 00 00 	nopw   %cs:0x0(%rax,%rax,1)
+>    1b:	00 00 00
+>    1e:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
+>    23:	b8 b0 00 00 00       	mov    $0xb0,%eax
+>    28:	0f 05                	syscall
+>    2a:*	48 3d 01 f0 ff ff    	cmp    $0xfffffffffffff001,%rax		<-- trapping instruction
+>    30:	73 01                	jae    0x33
+>    32:	c3                   	retq
+>    33:	48 8b 0d 49 1a 0d 00 	mov    0xd1a49(%rip),%rcx        # 0xd1a83
+>    3a:	f7 d8                	neg    %eax
+>    3c:	64 89 01             	mov    %eax,%fs:(%rcx)
+>    3f:	48                   	rex.W
+> 
+> Code starting with the faulting instruction
+> ===========================================
+>     0:	48 3d 01 f0 ff ff    	cmp    $0xfffffffffffff001,%rax
+>     6:	73 01                	jae    0x9
+>     8:	c3                   	retq
+>     9:	48 8b 0d 49 1a 0d 00 	mov    0xd1a49(%rip),%rcx        # 0xd1a59
+>    10:	f7 d8                	neg    %eax
+>    12:	64 89 01             	mov    %eax,%fs:(%rcx)
+>    15:	48                   	rex.W
+> [  224.981910][ T2216] RSP: 002b:00007ffc194cd048 EFLAGS: 00000206 ORIG_RAX: 00000000000000b0
+> [  224.990153][ T2216] RAX: ffffffffffffffda RBX: 00005641e66c7c70 RCX: 00007fe4243fc417
+> [  224.997962][ T2216] RDX: 0000000000000000 RSI: 0000000000000800 RDI: 00005641e66c7cd8
+> [  225.005769][ T2216] RBP: 00005641e66c7c70 R08: 0000000000000000 R09: 0000000000000000
+> [  225.013579][ T2216] R10: 00007fe42447cac0 R11: 0000000000000206 R12: 00005641e66c7cd8
+> [  225.021386][ T2216] R13: 0000000000000000 R14: 0000000000000000 R15: 00005641e66c7df0
+> [  225.029197][ T2216]  </TASK>
+> [  225.355582][ T2223] EXT4-fs (sda1): unmounting filesystem fc80755b-20bd-48b4-996a-4bc58040c94e.
+> [  225.676238][  T277] generic/350       _check_dmesg: something found in dmesg (see /lkp/benchmarks/xfstests/results//generic/350.dmesg)
+> [  225.676268][  T277]
+> [  304.321275][  T277]
+> [  304.321304][  T277]
+> [  304.343153][  T277] Ran: generic/350
+> [  304.343170][  T277]
+> [  304.349423][  T277] Failures: generic/350
+> [  304.349436][  T277]
+> [  304.356135][  T277] Failed 1 of 1 tests
+> 
+> 
+> To reproduce:
+> 
+>          git clone https://github.com/intel/lkp-tests.git
+>          cd lkp-tests
+>          sudo bin/lkp install job.yaml           # job file is attached in this email
+>          bin/lkp split-job --compatible job.yaml # generate the yaml file for lkp run
+>          sudo bin/lkp run generated-yaml-file
+> 
+>          # if come across any failure that blocks the test,
+>          # please remove ~/.lkp and /lkp dir to run from a clean state.
+> 
+> 
+> 
 
