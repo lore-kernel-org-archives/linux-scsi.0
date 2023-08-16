@@ -2,85 +2,67 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D8FFC41513
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 02:15:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76D08C001B0
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 02:42:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241216AbjHPCPL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Aug 2023 22:15:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55104 "EHLO
+        id S241314AbjHPClf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Aug 2023 22:41:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241208AbjHPCOn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 22:14:43 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F35CEC1;
-        Tue, 15 Aug 2023 19:14:41 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4RQWrb2Cc2z1GDY1;
-        Wed, 16 Aug 2023 10:13:19 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
+        with ESMTP id S232210AbjHPClG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 22:41:06 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 001461FC7;
+        Tue, 15 Aug 2023 19:41:04 -0700 (PDT)
+Received: from canpemm100004.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RQXQ942vWzVjl9;
+        Wed, 16 Aug 2023 10:38:57 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Wed, 16 Aug 2023 10:14:38 +0800
-Message-ID: <78ad90a8-79f1-7930-302e-28072aedd0fe@huawei.com>
-Date:   Wed, 16 Aug 2023 10:14:37 +0800
+ 15.1.2507.31; Wed, 16 Aug 2023 10:41:02 +0800
+Subject: Re: [PATCH v2 07/10] scsi: libsas: Delete sas_ssp_task.task_prio
+To:     John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <chenxiang66@hisilicon.com>,
+        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
+        <dlemoal@kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20230815115156.343535-1-john.g.garry@oracle.com>
+ <20230815115156.343535-8-john.g.garry@oracle.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <734d15a9-28bb-cbe8-c872-d0287b37db01@huawei.com>
+Date:   Wed, 16 Aug 2023 10:41:01 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 00/13] scsi: Support LUN/target based error handle
+In-Reply-To: <20230815115156.343535-8-john.g.garry@oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     Dan Carpenter <error27@gmail.com>, <louhongxiang@huawei.com>
-References: <20230723234422.1629194-1-haowenchao2@huawei.com>
- <1eb055e9-6343-260c-de04-c08d8fb24789@huawei.com>
- <bbf42f55-1f85-9d9f-db72-1d1c08d254ea@acm.org>
-From:   "haowenchao (C)" <haowenchao2@huawei.com>
-In-Reply-To: <bbf42f55-1f85-9d9f-db72-1d1c08d254ea@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemm600012.china.huawei.com (7.193.23.74)
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ canpemm100004.china.huawei.com (7.192.105.92)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/8/15 23:48, Bart Van Assche wrote:
-> On 8/15/23 07:17, haowenchao (C) wrote:
->> We can reduce probability of blocking whole host when handle error
->> commands with this patchset, which is important for servers which
->> deploy large scale disks. And the new error handler is not enabled
->> default, so it would not affect drivers which do not need it.
+On 2023/8/15 19:51, John Garry wrote:
+> Since libsas was introduced in commit 2908d778ab3e ("[SCSI] aic94xx: new
+> driver"), sas_ssp_task.task_prio is never set, so delete it
+> and any references which depend on it being set (all of them).
 > 
-> Which drivers need this new error handler? I don't see any changes for
-> SCSI drivers in this patch series other than scsi_debug. Has this patch
-> series perhaps been developed for a pass-through driver between virtual
-> machine guests and their host? If so, has it been considered to
-> configure pass-through such that there is one disk per SCSI host instead
-> of multiple?
-> 
+> Signed-off-by: John Garry<john.g.garry@oracle.com>
+> ---
+>   drivers/scsi/aic94xx/aic94xx_task.c    | 1 -
+>   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 3 +--
+>   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 3 +--
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
+>   drivers/scsi/isci/request.c            | 2 +-
+>   drivers/scsi/mvsas/mv_sas.c            | 3 +--
+>   drivers/scsi/pm8001/pm8001_hwi.c       | 1 -
+>   drivers/scsi/pm8001/pm80xx_hwi.c       | 1 -
+>   include/scsi/libsas.h                  | 1 -
+>   9 files changed, 5 insertions(+), 12 deletions(-)
 
-I tested the error hander with our private hardware(the driver code was
-not pushed in mainline), as discussed, megaraid_sas, mpt3sas, smartpqi,
-hiraid and hisi_sas need this new error handler too, while hisi_sas
-needs more steps to using it because it is tightly coupled with
-libsas/libata. I want the basic frame to be reviewed first, so just
-modify the scsi_debug, which is accessible for everyone and easy to
-simulate various kind of error.
-
-I do not know how pass-through driver between virtual machine guests
-and their host work, do you mean virtio-scsi in guests OS?
-Can you describe more?
-
-Thanks.
-
-> Thanks,
-> 
-> Bart.
-> 
-> 
-
+Reviewed-by: Jason Yan <yanaijie@huawei.com>
