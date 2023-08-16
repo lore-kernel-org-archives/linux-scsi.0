@@ -2,70 +2,102 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA376C001B0
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 07:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FA7EC04A94
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 08:51:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242475AbjHPHko (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Aug 2023 03:40:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38500 "EHLO
+        id S243040AbjHPIu3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Aug 2023 04:50:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242525AbjHPHkN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 03:40:13 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C24219A7;
-        Wed, 16 Aug 2023 00:40:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692171612; x=1723707612;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=zkD8GEaOkZ8+9zvX3nbQCJwPb7xHrPG3SCaPvxJzOF8=;
-  b=RjHEp0Zl5vG77tBTkR0ELbakSkqlxGc6Q4pZKoSRWL5A1E3j/yj9h0uC
-   jj+bZp4jU4gw9BW+2CeIiHdPns7eE0GI0lnidJDT9HnrgPDb5kHPHVjus
-   XHBWVsH1Sp5uUpXrh7K0Vn+0282rbFOXNYGFHCIFcyZth/eevOwOrsSis
-   RW6TzPeg4a7OC14R9DLmuGtBc5x0Z9R3iSFdO5UsrB4UYo38qDsTtma9Z
-   b2f+ZB/jkEUSP+jOsHTHTzpvt4Sn8Si7ulbjOHFtuBLmtgaH4lUcgdGwB
-   x+Chewr0l5ulhqRZ9GcK6jr9j00/sp3gTx6hHflq7wYVe+wCggOuOUVdS
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="375237888"
-X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="375237888"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 00:40:11 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="980642522"
-X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="980642522"
-Received: from apaszkie-desk.igk.intel.com (HELO [10.102.102.225]) ([10.102.102.225])
-  by fmsmga006.fm.intel.com with ESMTP; 16 Aug 2023 00:40:09 -0700
-Message-ID: <45089a6f-0173-d33f-425f-48cbf83051ed@intel.com>
-Date:   Wed, 16 Aug 2023 09:40:09 +0200
+        with ESMTP id S243071AbjHPIuQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 04:50:16 -0400
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60E6CB9;
+        Wed, 16 Aug 2023 01:50:15 -0700 (PDT)
+Received: by mail-pg1-x535.google.com with SMTP id 41be03b00d2f7-565ea1088fbso836036a12.2;
+        Wed, 16 Aug 2023 01:50:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1692175815; x=1692780615;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=3eRsINPgpxkvQxXZIsw3b1mbCLVjAw0qj7X5Yoa2AdQ=;
+        b=EXuOgcs5leGr6lrNtouluD66V/+g+wcjBC8VncFDX/z5oSxbNv8lniPRWgcIkIU517
+         kvY+gOuyUDYz4FHfXQjNnB2cn/1wibvt3Ofh80i8/X8O2o4B6pH/cYaLPWV1gOHVKBSs
+         mMLPvEPtnNrxskvrQxm3MyjqQ2irEf4xYQKipJfWHj8FrgiwJ3OacVkezSC2BTtLA3PG
+         +dcxy9sh/sTk6FPldqdXkAWheOLRAF6WO7eVV2EoVIyYBKTCaMRx1aVGyKDzBe+5aMvX
+         +5K2JkAmIeeEclgzYDSxrLEM3hPxXHvPgyHK7ebXfDRcd+br+o33G+k0TK52Ts8PWQoY
+         gR1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692175815; x=1692780615;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=3eRsINPgpxkvQxXZIsw3b1mbCLVjAw0qj7X5Yoa2AdQ=;
+        b=MHkkQBZUpFaJyzR2J4DJ7g9tw1yGwY8Xkhghqh4TsfmWwonbsVEgfI21izS/7YDBtT
+         o6gUYWMEuDaHGtMqeQw6pB0Ysr9NQrrGg4Cz/ePsLNOOhdII4wCbUdhNCMjJ+WyaZ0gQ
+         PoxfZamo28lC0aGAPrSr5nGei1AiPufuBYP2lrJ/GbM3z9VkpRkDwib5aeBYz0WP2EeL
+         nzXYihpm/t+dGz+PtUcHVo0Hf3QAWv8ZCTtF/Q+qX3lLfXefviJbYjm5fbPPxRyNc6RI
+         SOyMJbzXqFox08QC5dWraDkIlnN37I1jVbIyzR8u0bZTNsJL8UV6ZC6gLGrrsg+tVTFU
+         YcQw==
+X-Gm-Message-State: AOJu0YxOrsMy3a8jnmo9Q9r8oTNe58fF2VSMLYaMKT76GDi9JBdOWqIl
+        eNP9HBGugmGNc9FNDYne/QM=
+X-Google-Smtp-Source: AGHT+IEwBVEqGJfVVew3i80dbzb/4zO2dSuu0e4uG1Qf05xeb9utK3KlIXl5ZZBY604UBE7xJajVjw==
+X-Received: by 2002:a05:6a20:734b:b0:137:8599:691e with SMTP id v11-20020a056a20734b00b001378599691emr1563784pzc.49.1692175814754;
+        Wed, 16 Aug 2023 01:50:14 -0700 (PDT)
+Received: from localhost.localdomain ([2409:40c2:100b:771e:e5ae:d854:9f75:d38f])
+        by smtp.gmail.com with ESMTPSA id j8-20020aa78008000000b00682669dc19bsm10529706pfi.201.2023.08.16.01.50.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Aug 2023 01:50:14 -0700 (PDT)
+From:   coolrrsh@gmail.com
+To:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        rdunlap@infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     linux-kernel-mentees@lists.linuxfoundation.org,
+        Rajeshwar R Shinde <coolrrsh@gmail.com>
+Subject: [PATCH] scsi: sli4: Remove code duplication
+Date:   Wed, 16 Aug 2023 14:20:07 +0530
+Message-Id: <20230816085007.10591-1-coolrrsh@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.6.1
-Subject: Re: [PATCH] scsi: isci: init Return result of sas_register_ha()
-Content-Language: en-US
-To:     Artem Chernyshev <artem.chernyshev@red-soft.ru>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org
-References: <20230813202336.240874-1-artem.chernyshev@red-soft.ru>
-From:   Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-In-Reply-To: <20230813202336.240874-1-artem.chernyshev@red-soft.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13.08.2023 22:23, Artem Chernyshev wrote:
-> To properly manage possible failure of sas_register_ha() in
-> isci_register_sas_ha() return it's result instead of zero
-> 
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
-> 
-> Signed-off-by: Artem Chernyshev <artem.chernyshev@red-soft.ru>
+From: Rajeshwar R Shinde <coolrrsh@gmail.com>
 
-Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+In the function sli_xmit_bls_rsp64_wqe, the 'if' and 'else' conditions 
+evaluates the same expression and gives same output. So removing the redundant 
+code duplication to optimise the code.
+
+This fixes warning such as:
+drivers/scsi/elx/libefc_sli/sli4.c:2320:2-4: WARNING: possible condition with no effect (if == else)
+
+Signed-off-by: Rajeshwar R Shinde <coolrrsh@gmail.com>
+---
+ drivers/scsi/elx/libefc_sli/sli4.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+index 8f96049f62dd..5e7fb110bc3f 100644
+--- a/drivers/scsi/elx/libefc_sli/sli4.c
++++ b/drivers/scsi/elx/libefc_sli/sli4.c
+@@ -2317,12 +2317,8 @@ sli_xmit_bls_rsp64_wqe(struct sli4 *sli, void *buf,
+ 		SLI4_GENERIC_CONTEXT_VPI << SLI4_BLS_RSP_WQE_CT_SHFT;
+ 		bls->context_tag = cpu_to_le16(params->vpi);
+ 
+-		if (params->s_id != U32_MAX)
+-			bls->local_n_port_id_dword |=
+-				cpu_to_le32(params->s_id & 0x00ffffff);
+-		else
+-			bls->local_n_port_id_dword |=
+-				cpu_to_le32(params->s_id & 0x00ffffff);
++		bls->local_n_port_id_dword |=
++			cpu_to_le32(params->s_id & 0x00ffffff);
+ 
+ 		dw_ridflags = (dw_ridflags & ~SLI4_BLS_RSP_RID) |
+ 			       (params->d_id & SLI4_BLS_RSP_RID);
+-- 
+2.25.1
 
