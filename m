@@ -2,114 +2,85 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 669BEC04A6A
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 01:40:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D8FFC41513
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 02:15:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241117AbjHPBje (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Aug 2023 21:39:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44496 "EHLO
+        id S241216AbjHPCPL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Aug 2023 22:15:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241111AbjHPBj2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 21:39:28 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CEE11FDE;
-        Tue, 15 Aug 2023 18:39:27 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37G1cgS4008875;
-        Wed, 16 Aug 2023 01:38:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=1h7x2LAT852xPcHkKmLQfJ+8rJh7doh2ik0+V80+rkc=;
- b=fjY++XMvXhDD3PcnAGzmn94SUwaFBqI6XBB5crgqyA8ALlQiN964bmn4EgNzRcODHWJY
- gULGBBqAuxnc3g3mNipVnXzNNU+kaC0yAhctBG5ZTWKWWYzeDzj+6uafyNBBADpT8KMY
- 8SOf1zeGynwdSjtSiPdV3RkF6rEET+L1Anhvd0x21OAtUqh9JZmzwuzJ4X2CrHm4Qi7l
- 7+9sI4qwTlVCxzPb4TuiRmapE1iMo9EITwL6PXXRal9HariWQqajPgRX0XoLUUVmH3tK
- HIXyTbaVpazucEyH2Fshs/rIfdB6xFMz1GwH/Ppmxdb5qQXNgiRoy/f6p8LYpNNAFUUT kA== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sfuj8jm8n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 16 Aug 2023 01:38:48 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37G1clc0014693
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 16 Aug 2023 01:38:47 GMT
-Received: from stor-berry.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.30; Tue, 15 Aug 2023 18:38:46 -0700
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-To:     <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>,
-        <bvanassche@acm.org>, <avri.altman@wdc.com>, <beanhuo@micron.com>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Yang Li <yang.lee@linux.alibaba.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v1 1/1] scsi: ufs: mcq: Fix the search/wrap around logic
-Date:   Tue, 15 Aug 2023 18:38:29 -0700
-Message-ID: <ff49c15be205135ed3ec186f3086694c02867dbd.1692149603.git.quic_nguyenb@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        with ESMTP id S241208AbjHPCOn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 22:14:43 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F35CEC1;
+        Tue, 15 Aug 2023 19:14:41 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4RQWrb2Cc2z1GDY1;
+        Wed, 16 Aug 2023 10:13:19 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Wed, 16 Aug 2023 10:14:38 +0800
+Message-ID: <78ad90a8-79f1-7930-302e-28072aedd0fe@huawei.com>
+Date:   Wed, 16 Aug 2023 10:14:37 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: D8O-W_2VdTQcsN6Pf0dxwEdCjOmkej29
-X-Proofpoint-GUID: D8O-W_2VdTQcsN6Pf0dxwEdCjOmkej29
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-15_22,2023-08-15_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
- spamscore=0 malwarescore=0 priorityscore=1501 phishscore=0
- lowpriorityscore=0 mlxlogscore=999 bulkscore=0 impostorscore=0
- clxscore=1011 adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308160013
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 00/13] scsi: Support LUN/target based error handle
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     Dan Carpenter <error27@gmail.com>, <louhongxiang@huawei.com>
+References: <20230723234422.1629194-1-haowenchao2@huawei.com>
+ <1eb055e9-6343-260c-de04-c08d8fb24789@huawei.com>
+ <bbf42f55-1f85-9d9f-db72-1d1c08d254ea@acm.org>
+From:   "haowenchao (C)" <haowenchao2@huawei.com>
+In-Reply-To: <bbf42f55-1f85-9d9f-db72-1d1c08d254ea@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemm600012.china.huawei.com (7.193.23.74)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The search and wrap around logic in the ufshcd_mcq_sqe_search()
-function does not work correctly when the hwq's queue depth
-is not a power of two number. Correct it so that any queue depth
-with a positive integer value within the supported range would work.
+On 2023/8/15 23:48, Bart Van Assche wrote:
+> On 8/15/23 07:17, haowenchao (C) wrote:
+>> We can reduce probability of blocking whole host when handle error
+>> commands with this patchset, which is important for servers which
+>> deploy large scale disks. And the new error handler is not enabled
+>> default, so it would not affect drivers which do not need it.
+> 
+> Which drivers need this new error handler? I don't see any changes for
+> SCSI drivers in this patch series other than scsi_debug. Has this patch
+> series perhaps been developed for a pass-through driver between virtual
+> machine guests and their host? If so, has it been considered to
+> configure pass-through such that there is one disk per SCSI host instead
+> of multiple?
+> 
 
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
----
- drivers/ufs/core/ufs-mcq.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+I tested the error hander with our private hardware(the driver code was
+not pushed in mainline), as discussed, megaraid_sas, mpt3sas, smartpqi,
+hiraid and hisi_sas need this new error handler too, while hisi_sas
+needs more steps to using it because it is tightly coupled with
+libsas/libata. I want the basic frame to be reviewed first, so just
+modify the scsi_debug, which is accessible for everyone and easy to
+simulate various kind of error.
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 66a4e24..2ba8ec2 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -578,7 +578,6 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
- {
- 	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
- 	struct utp_transfer_req_desc *utrd;
--	u32 mask = hwq->max_entries - 1;
- 	__le64  cmd_desc_base_addr;
- 	bool ret = false;
- 	u64 addr, match;
-@@ -606,7 +605,10 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
- 			ret = true;
- 			goto out;
- 		}
--		sq_head_slot = (sq_head_slot + 1) & mask;
-+
-+		sq_head_slot++;
-+		if (sq_head_slot == hwq->max_entries)
-+			sq_head_slot = 0;
- 	}
- 
- out:
--- 
-2.7.4
+I do not know how pass-through driver between virtual machine guests
+and their host work, do you mean virtio-scsi in guests OS?
+Can you describe more?
+
+Thanks.
+
+> Thanks,
+> 
+> Bart.
+> 
+> 
 
