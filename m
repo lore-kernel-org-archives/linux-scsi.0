@@ -2,67 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E25C001DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 17:12:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 359C0C07E8C
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 18:28:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345103AbjHPRMY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Aug 2023 13:12:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36064 "EHLO
+        id S1345514AbjHPS2H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Aug 2023 14:28:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345141AbjHPRMH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 13:12:07 -0400
-Received: from mail-qt1-x830.google.com (mail-qt1-x830.google.com [IPv6:2607:f8b0:4864:20::830])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C23326A6;
-        Wed, 16 Aug 2023 10:11:47 -0700 (PDT)
-Received: by mail-qt1-x830.google.com with SMTP id d75a77b69052e-40fee14093dso39749521cf.1;
-        Wed, 16 Aug 2023 10:11:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692205906; x=1692810706;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=CHrFV+BLoLqZb0sjEUEfiiQy/Dpvp5ulOgsMUMyh6vc=;
-        b=bVmyMeNTGFC2e+qf7OvmuYs32gbrMj2ecg8/3lAPyfgD9q4gWVLkJea3wVuYGwORrf
-         jF87Vw9qYnSbuJVtaX/pK6Do/pXjZ/6PEc+3Vq0jbKZFF6llvMKIxe9XYn6G0IYGXlLg
-         XJHdm06o4NrdIC19Z5KGYCNY1cxQWA4UjYNhdmBN31XccquMAmB8UyYZwY5Sed1pskvq
-         7evciXoaL7os3j7sWIGgQ0ggWCPeKc7icNarbraTGuthHpjrxQULQhenNaWroqs/5UNc
-         2YCVQyDUEmbsRAiewaysysEm6xsvxTnm0gSs+ui02u13gg1DnrSs/JQERcQlAcy6I2Dr
-         ci9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692205906; x=1692810706;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=CHrFV+BLoLqZb0sjEUEfiiQy/Dpvp5ulOgsMUMyh6vc=;
-        b=k7bhXC3uXd/moPy9mRi+yzAsm9vgACabKeb4Dm12bi+uL41JJC4FKYSP6UivvezYXV
-         EDAOiW5Ubo4S3UnzpO8SoJi8m0QNDQkYKHXkGcqkGk66DptRCystqZqw9QF/Svx78LrX
-         E+MbUwM38koBoA9IgEuQM84LnNZxBwFGmV2BjSReC5d6qehr76R97jdjRPm1PXrBCN5a
-         hs4dN/qL3CFo3x0inybxzein5PI5qdzvpiPUTX6KdouHAOhaBfxnBSrBvFIWovhqZpmn
-         09FRtcaXg4WA1BRO186n7P1XgpOQPuxDu+VLnI0+LJyfB0qflyU+tjk6q80tNM5c07tX
-         1blA==
-X-Gm-Message-State: AOJu0YzbdgvM0WEpbz1uTqieHjxB45ZpMprRqLzKMa32ZgDjjkQtq3CP
-        laLSeowVIYcTchrrKv2Uajc22PtmHJhyyC+4lvw=
-X-Google-Smtp-Source: AGHT+IFikkkFMd9V+q5JWBKVMPcqRsK9mmGFbFtEwrVeoS8einVCHYVPyl4AqUDrlyhYHQfPCF61vLGfrEs0lCzNXi8=
-X-Received: by 2002:ac8:5a8a:0:b0:40f:e946:a3d6 with SMTP id
- c10-20020ac85a8a000000b0040fe946a3d6mr2258618qtc.31.1692205906654; Wed, 16
- Aug 2023 10:11:46 -0700 (PDT)
+        with ESMTP id S1345603AbjHPS15 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 14:27:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 939C92D62;
+        Wed, 16 Aug 2023 11:27:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E3C5165251;
+        Wed, 16 Aug 2023 18:27:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E4A6C433C8;
+        Wed, 16 Aug 2023 18:27:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692210449;
+        bh=Fg2XRsx4gyYp75jugZem87t39C7lGAKLhehiSRy0yPE=;
+        h=Date:From:To:Cc:Subject:From;
+        b=uBGQJT8EM5FdwmbALcSATSzwZ1asOC8rvnZWoKy5nxj+nC2k1P9eA0JXFmGi6rPbp
+         YvgiImdy/e7sdRF+iSNGW9KiKi7uZIjtPj0XJGf8v7qvGvQ+qxOfVnbe3qxvIuotF6
+         uLj3GnB+Ii1Tf++aO/gI1vo+Azi44l6dvkyzpk7fMxm1e/6ue5dfLsYrEH92e9gYPp
+         En76RXbuPa/Szz65A5vgarSYK/iMGdyKNrZ1cyCzR5xUnsHo7i0pPuXaUXTaH+pnz7
+         fVz/T5KSl8zt6a5gdVP7GqCklvdogVi5dUoV+wBxxkGI65AJDlbbhjp5X4DsmWM4mM
+         niJPe7KmPSjQw==
+Date:   Wed, 16 Aug 2023 12:28:30 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH][next] scsi: bfa: Replace one-element array with
+ flexible-array member in struct fc_rscn_pl_s
+Message-ID: <ZN0VTpDBOSVHGayb@work>
 MIME-Version: 1.0
-References: <20230816155524.5913-1-dg573847474@gmail.com> <25b4000b-b61d-c109-0d5c-f71656d896d4@suse.de>
-In-Reply-To: <25b4000b-b61d-c109-0d5c-f71656d896d4@suse.de>
-From:   Chengfeng Ye <dg573847474@gmail.com>
-Date:   Thu, 17 Aug 2023 01:11:34 +0800
-Message-ID: <CAAo+4rVpKc1tc4yGmYekb3s4tgbs8tsdjhSoCSfYXWG6Ab93EQ@mail.gmail.com>
-Subject: Re: [PATCH RESEND] scsi: fcoe: Fix potential deadlock on &fip->ctlr_lock
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        bigeasy@linutronix.de, dave@stgolabs.net, satishkh@cisco.com,
-        sebaddel@cisco.com, kartilak@cisco.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks for the review!
+One-element and zero-length arrays are deprecated. So, replace
+one-element array in struct fc_rscn_pl_s with flexible-array member.
 
-Best,
-Chengfeng
+This results in no differences in binary output.
+
+Link: https://github.com/KSPP/linux/issues/339
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ drivers/scsi/bfa/bfa_fc.h      | 2 +-
+ drivers/scsi/bfa/bfa_fcbuild.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
+index a12d693065ce..1091aa428533 100644
+--- a/drivers/scsi/bfa/bfa_fc.h
++++ b/drivers/scsi/bfa/bfa_fc.h
+@@ -800,7 +800,7 @@ struct fc_rscn_pl_s {
+ 	u8	command;
+ 	u8	pagelen;
+ 	__be16	payldlen;
+-	struct fc_rscn_event_s event[1];
++	struct fc_rscn_event_s event[];
+ };
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_fcbuild.c b/drivers/scsi/bfa/bfa_fcbuild.c
+index 773c84af784c..52303e8c716d 100644
+--- a/drivers/scsi/bfa/bfa_fcbuild.c
++++ b/drivers/scsi/bfa/bfa_fcbuild.c
+@@ -1051,7 +1051,7 @@ fc_rscn_build(struct fchs_s *fchs, struct fc_rscn_pl_s *rscn,
+ 	rscn->event[0].format = FC_RSCN_FORMAT_PORTID;
+ 	rscn->event[0].portid = s_id;
+ 
+-	return sizeof(struct fc_rscn_pl_s);
++	return struct_size(rscn, event, 1);
+ }
+ 
+ u16
+-- 
+2.34.1
+
