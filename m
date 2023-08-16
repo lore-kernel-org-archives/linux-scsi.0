@@ -2,93 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 359C0C07E8C
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 18:28:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD52DC10F19
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 19:36:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345514AbjHPS2H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Aug 2023 14:28:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52108 "EHLO
+        id S1345827AbjHPTg1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Aug 2023 15:36:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345603AbjHPS15 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 14:27:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 939C92D62;
-        Wed, 16 Aug 2023 11:27:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E3C5165251;
-        Wed, 16 Aug 2023 18:27:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E4A6C433C8;
-        Wed, 16 Aug 2023 18:27:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692210449;
-        bh=Fg2XRsx4gyYp75jugZem87t39C7lGAKLhehiSRy0yPE=;
-        h=Date:From:To:Cc:Subject:From;
-        b=uBGQJT8EM5FdwmbALcSATSzwZ1asOC8rvnZWoKy5nxj+nC2k1P9eA0JXFmGi6rPbp
-         YvgiImdy/e7sdRF+iSNGW9KiKi7uZIjtPj0XJGf8v7qvGvQ+qxOfVnbe3qxvIuotF6
-         uLj3GnB+Ii1Tf++aO/gI1vo+Azi44l6dvkyzpk7fMxm1e/6ue5dfLsYrEH92e9gYPp
-         En76RXbuPa/Szz65A5vgarSYK/iMGdyKNrZ1cyCzR5xUnsHo7i0pPuXaUXTaH+pnz7
-         fVz/T5KSl8zt6a5gdVP7GqCklvdogVi5dUoV+wBxxkGI65AJDlbbhjp5X4DsmWM4mM
-         niJPe7KmPSjQw==
-Date:   Wed, 16 Aug 2023 12:28:30 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] scsi: bfa: Replace one-element array with
- flexible-array member in struct fc_rscn_pl_s
-Message-ID: <ZN0VTpDBOSVHGayb@work>
+        with ESMTP id S1345823AbjHPTf6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 15:35:58 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E439270C;
+        Wed, 16 Aug 2023 12:35:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+        bh=2EGYLJQaPR1NXrPNObCs2DqcDBIJjR1YHbvOU+64Xqo=; b=XC9AV8RD/fx9oQa7BAGuxKKIcd
+        IWwTZgE7qo35FOZjk3/7if+FSrSlAwg63eYLK/XRutn6wKDgFYCD8zx46cLpchLSplKyqAOGo++c5
+        rY74GUGM27gtGK7Cj0/JlcMYjSZ176v04akHCjQUKpOU+/t98Q8sonS2Fg+Ipbot4zFfzK31OXYR8
+        tSA6hsblTzXflhaKRxClOzmO+NctLN6PXh7MF3xFbSWX9WPmmX2MTO7VvhZQpDvcIq/gecfuh0LeY
+        jRyNeeSa/RUv7QshGULIoQItpSmyt7YCAxkW3ytVuTEkXlqCLvPgOFwTyvPs5wGrHFk3to4TXID1M
+        n4lpsTaA==;
+Received: from [2601:1c2:980:9ec0::2764]
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qWMJ7-004tWe-1P;
+        Wed, 16 Aug 2023 19:35:53 +0000
+Message-ID: <38158855-5738-16a9-2237-34980917566b@infradead.org>
+Date:   Wed, 16 Aug 2023 12:35:52 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+Subject: Re: [PATCH] scsi: sli4: Remove code duplication
+Content-Language: en-US
+To:     coolrrsh@gmail.com, james.smart@broadcom.com,
+        ram.vegesna@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     linux-kernel-mentees@lists.linuxfoundation.org
+References: <20230816085007.10591-1-coolrrsh@gmail.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20230816085007.10591-1-coolrrsh@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-One-element and zero-length arrays are deprecated. So, replace
-one-element array in struct fc_rscn_pl_s with flexible-array member.
+Hi--
 
-This results in no differences in binary output.
+On 8/16/23 01:50, coolrrsh@gmail.com wrote:
+> From: Rajeshwar R Shinde <coolrrsh@gmail.com>
+> 
+> In the function sli_xmit_bls_rsp64_wqe, the 'if' and 'else' conditions 
+> evaluates the same expression and gives same output. So removing the redundant 
+> code duplication to optimise the code.
+> 
+> This fixes warning such as:
+> drivers/scsi/elx/libefc_sli/sli4.c:2320:2-4: WARNING: possible condition with no effect (if == else)
 
-Link: https://github.com/KSPP/linux/issues/339
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/scsi/bfa/bfa_fc.h      | 2 +-
- drivers/scsi/bfa/bfa_fcbuild.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+What tool produces this message?
 
-diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
-index a12d693065ce..1091aa428533 100644
---- a/drivers/scsi/bfa/bfa_fc.h
-+++ b/drivers/scsi/bfa/bfa_fc.h
-@@ -800,7 +800,7 @@ struct fc_rscn_pl_s {
- 	u8	command;
- 	u8	pagelen;
- 	__be16	payldlen;
--	struct fc_rscn_event_s event[1];
-+	struct fc_rscn_event_s event[];
- };
- 
- /*
-diff --git a/drivers/scsi/bfa/bfa_fcbuild.c b/drivers/scsi/bfa/bfa_fcbuild.c
-index 773c84af784c..52303e8c716d 100644
---- a/drivers/scsi/bfa/bfa_fcbuild.c
-+++ b/drivers/scsi/bfa/bfa_fcbuild.c
-@@ -1051,7 +1051,7 @@ fc_rscn_build(struct fchs_s *fchs, struct fc_rscn_pl_s *rscn,
- 	rscn->event[0].format = FC_RSCN_FORMAT_PORTID;
- 	rscn->event[0].portid = s_id;
- 
--	return sizeof(struct fc_rscn_pl_s);
-+	return struct_size(rscn, event, 1);
- }
- 
- u16
+> Signed-off-by: Rajeshwar R Shinde <coolrrsh@gmail.com>
+> ---
+>  drivers/scsi/elx/libefc_sli/sli4.c | 8 ++------
+>  1 file changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+> index 8f96049f62dd..5e7fb110bc3f 100644
+> --- a/drivers/scsi/elx/libefc_sli/sli4.c
+> +++ b/drivers/scsi/elx/libefc_sli/sli4.c
+> @@ -2317,12 +2317,8 @@ sli_xmit_bls_rsp64_wqe(struct sli4 *sli, void *buf,
+>  		SLI4_GENERIC_CONTEXT_VPI << SLI4_BLS_RSP_WQE_CT_SHFT;
+>  		bls->context_tag = cpu_to_le16(params->vpi);
+>  
+> -		if (params->s_id != U32_MAX)
+> -			bls->local_n_port_id_dword |=
+> -				cpu_to_le32(params->s_id & 0x00ffffff);
+> -		else
+> -			bls->local_n_port_id_dword |=
+> -				cpu_to_le32(params->s_id & 0x00ffffff);
+> +		bls->local_n_port_id_dword |=
+> +			cpu_to_le32(params->s_id & 0x00ffffff);
+
+That could be correct. Or there could be a bug there.
+Who knows? I don't.
+
+But maybe it doesn't matter since AFAICT that field isn't used
+anywhere after it is set.
+
+>  
+>  		dw_ridflags = (dw_ridflags & ~SLI4_BLS_RSP_RID) |
+>  			       (params->d_id & SLI4_BLS_RSP_RID);
+
 -- 
-2.34.1
-
+~Randy
