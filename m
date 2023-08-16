@@ -2,67 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76D08C001B0
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 02:42:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA376C001B0
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 07:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241314AbjHPClf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Aug 2023 22:41:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45488 "EHLO
+        id S242475AbjHPHko (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Aug 2023 03:40:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232210AbjHPClG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2023 22:41:06 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 001461FC7;
-        Tue, 15 Aug 2023 19:41:04 -0700 (PDT)
-Received: from canpemm100004.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RQXQ942vWzVjl9;
-        Wed, 16 Aug 2023 10:38:57 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Wed, 16 Aug 2023 10:41:02 +0800
-Subject: Re: [PATCH v2 07/10] scsi: libsas: Delete sas_ssp_task.task_prio
-To:     John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <chenxiang66@hisilicon.com>,
-        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
-        <dlemoal@kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20230815115156.343535-1-john.g.garry@oracle.com>
- <20230815115156.343535-8-john.g.garry@oracle.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <734d15a9-28bb-cbe8-c872-d0287b37db01@huawei.com>
-Date:   Wed, 16 Aug 2023 10:41:01 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S242525AbjHPHkN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 03:40:13 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C24219A7;
+        Wed, 16 Aug 2023 00:40:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692171612; x=1723707612;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=zkD8GEaOkZ8+9zvX3nbQCJwPb7xHrPG3SCaPvxJzOF8=;
+  b=RjHEp0Zl5vG77tBTkR0ELbakSkqlxGc6Q4pZKoSRWL5A1E3j/yj9h0uC
+   jj+bZp4jU4gw9BW+2CeIiHdPns7eE0GI0lnidJDT9HnrgPDb5kHPHVjus
+   XHBWVsH1Sp5uUpXrh7K0Vn+0282rbFOXNYGFHCIFcyZth/eevOwOrsSis
+   RW6TzPeg4a7OC14R9DLmuGtBc5x0Z9R3iSFdO5UsrB4UYo38qDsTtma9Z
+   b2f+ZB/jkEUSP+jOsHTHTzpvt4Sn8Si7ulbjOHFtuBLmtgaH4lUcgdGwB
+   x+Chewr0l5ulhqRZ9GcK6jr9j00/sp3gTx6hHflq7wYVe+wCggOuOUVdS
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="375237888"
+X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
+   d="scan'208";a="375237888"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 00:40:11 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="980642522"
+X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
+   d="scan'208";a="980642522"
+Received: from apaszkie-desk.igk.intel.com (HELO [10.102.102.225]) ([10.102.102.225])
+  by fmsmga006.fm.intel.com with ESMTP; 16 Aug 2023 00:40:09 -0700
+Message-ID: <45089a6f-0173-d33f-425f-48cbf83051ed@intel.com>
+Date:   Wed, 16 Aug 2023 09:40:09 +0200
 MIME-Version: 1.0
-In-Reply-To: <20230815115156.343535-8-john.g.garry@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.6.1
+Subject: Re: [PATCH] scsi: isci: init Return result of sas_register_ha()
 Content-Language: en-US
+To:     Artem Chernyshev <artem.chernyshev@red-soft.ru>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lvc-project@linuxtesting.org
+References: <20230813202336.240874-1-artem.chernyshev@red-soft.ru>
+From:   Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+In-Reply-To: <20230813202336.240874-1-artem.chernyshev@red-soft.ru>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm100004.china.huawei.com (7.192.105.92)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/8/15 19:51, John Garry wrote:
-> Since libsas was introduced in commit 2908d778ab3e ("[SCSI] aic94xx: new
-> driver"), sas_ssp_task.task_prio is never set, so delete it
-> and any references which depend on it being set (all of them).
+On 13.08.2023 22:23, Artem Chernyshev wrote:
+> To properly manage possible failure of sas_register_ha() in
+> isci_register_sas_ha() return it's result instead of zero
 > 
-> Signed-off-by: John Garry<john.g.garry@oracle.com>
-> ---
->   drivers/scsi/aic94xx/aic94xx_task.c    | 1 -
->   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 3 +--
->   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 3 +--
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
->   drivers/scsi/isci/request.c            | 2 +-
->   drivers/scsi/mvsas/mv_sas.c            | 3 +--
->   drivers/scsi/pm8001/pm8001_hwi.c       | 1 -
->   drivers/scsi/pm8001/pm80xx_hwi.c       | 1 -
->   include/scsi/libsas.h                  | 1 -
->   9 files changed, 5 insertions(+), 12 deletions(-)
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
+> 
+> Signed-off-by: Artem Chernyshev <artem.chernyshev@red-soft.ru>
 
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
+Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+
