@@ -2,320 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B978C2FC04
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 23:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D25E5C41513
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 23:44:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347181AbjHPXcM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Aug 2023 19:32:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54646 "EHLO
+        id S1347189AbjHPXnn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Aug 2023 19:43:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347189AbjHPXcC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 19:32:02 -0400
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0AAE12720;
-        Wed, 16 Aug 2023 16:32:00 -0700 (PDT)
-Received: by linux.microsoft.com (Postfix, from userid 1152)
-        id 32840211F61A; Wed, 16 Aug 2023 16:31:59 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 32840211F61A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-        s=default; t=1692228719;
-        bh=J6mAVcuDUUkGCq7a0/n68XNrg34IWu48uqF8U0WpAm0=;
-        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
-        b=UAHmt4NDP8ojpDlHQ7mmfTrBhz6yBDALkfRASJl8rpxed90SBL69nHszacBg/ijpD
-         +3t4AODe3l90DjlPAMRZIM1J8sHzttOHyMRb+ZBcNobzelIn2ll8NU26zPrwK0UfUb
-         Oh8xeqwChGFhBkCGk3AF8bWMPEqMUJDD1i7Bzf8o=
-Received: from localhost (localhost [127.0.0.1])
-        by linux.microsoft.com (Postfix) with ESMTP id 2C00230705BA;
-        Wed, 16 Aug 2023 16:31:59 -0700 (PDT)
-Date:   Wed, 16 Aug 2023 16:31:59 -0700 (PDT)
-From:   Shyam Saini <shyamsaini@linux.microsoft.com>
-To:     Ulf Hansson <ulf.hansson@linaro.org>
-cc:     linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-        op-tee@lists.trustedfirmware.org, linux-scsi@vger.kernel.org,
-        =?ISO-8859-15?Q?Alex_Benn=E9e?= <alex.bennee@linaro.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        Sumit Garg <sumit.garg@linaro.org>,
-        Tyler Hicks <code@tyhicks.com>,
-        "Srivatsa S . Bhat" <srivatsa@csail.mit.edu>,
-        Paul Moore <paul@paul-moore.com>,
-        Allen Pais <apais@linux.microsoft.com>
-Subject: Re: [RFC, PATCH 1/1] rpmb: add Replay Protected Memory Block (RPMB)
- driver
-In-Reply-To: <CAPDyKFoBC+GaGerGDEAjg9q4ayV9mMBKkfFk3nO-zcQzOZ_H6Q@mail.gmail.com>
-Message-ID: <b875892c-1777-d84a-987e-1b0d5ac29df@linux.microsoft.com>
-References: <20230722014037.42647-1-shyamsaini@linux.microsoft.com> <20230722014037.42647-2-shyamsaini@linux.microsoft.com> <CAPDyKFoBC+GaGerGDEAjg9q4ayV9mMBKkfFk3nO-zcQzOZ_H6Q@mail.gmail.com>
+        with ESMTP id S1347185AbjHPXnT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 19:43:19 -0400
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7197E56;
+        Wed, 16 Aug 2023 16:43:18 -0700 (PDT)
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-686be3cbea0so266881b3a.0;
+        Wed, 16 Aug 2023 16:43:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692229398; x=1692834198;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=C+al/uns7Mj/j1eeauJBDRlosu2yd/IAjnaAqltgPxc=;
+        b=IYvSA5lAqvvKJsErY613+TwlOwZvlFqeaXyfX09L5Jl/gMByip4dhedqb21Y0Vmm0z
+         FdXKz6sbon2BakLPWRsTP5Wv5VUf6txlvgRTWR8Cf5MyG39MP1iWlpWcE69Rno86TEAC
+         iImKNqTCUks3yOaYEiqSLQP/kxRK1DfEzRVcNEctMgxOKj2GOCB+o8wVgCIhTDKRvhMN
+         qDFJDBsEMudTFQ5vTArEYxmdvV/+07XVhpS4KMCKcP75s6rNfuMjL6SNtsN0/cMfLRdr
+         i1qx/IQqNLv7om/2dAGX6P7XpJoTuIpG3XVqflBzMbsezLHNAFMY2iQh/YxqbVByaT/8
+         VbCA==
+X-Gm-Message-State: AOJu0YznYmhwEPXJFEUbn/dwXSPATd4KbHTKxSUYWVWA31J5n0/SVpGi
+        tZGtDCgSI7O/06SS7nMBcsw=
+X-Google-Smtp-Source: AGHT+IEi08LNdPxlNyWGLV/p1WibxJbrIBtrarN7EJujqGleoNTcg6HblQ9L/r16U4diSFTo7/x/iw==
+X-Received: by 2002:a05:6a00:134d:b0:688:47d5:ede with SMTP id k13-20020a056a00134d00b0068847d50edemr1088337pfu.6.1692229397906;
+        Wed, 16 Aug 2023 16:43:17 -0700 (PDT)
+Received: from ?IPV6:2601:647:5f00:5f5:4a46:e57b:bee0:6bc6? ([2601:647:5f00:5f5:4a46:e57b:bee0:6bc6])
+        by smtp.gmail.com with ESMTPSA id d20-20020aa78694000000b006889348ba6esm1424537pfo.127.2023.08.16.16.43.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Aug 2023 16:43:17 -0700 (PDT)
+Message-ID: <f68ae375-d55b-f377-3d76-f71ac40f64c2@acm.org>
+Date:   Wed, 16 Aug 2023 16:43:15 -0700
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="656392-1707973189-1692228719=:10222"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+Subject: Re: [PATCH 1/3] scsi: core: Fix the scsi_set_resid() documentation
+To:     Benjamin Block <bblock@linux.ibm.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        stable@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Steffen Maier <maier@linux.ibm.com>,
+        John Garry <john.g.garry@oracle.com>
+References: <20230721160154.874010-1-bvanassche@acm.org>
+ <20230721160154.874010-2-bvanassche@acm.org>
+ <20230816095816.GA9823@p1gen4-pw042f0m.fritz.box>
+Content-Language: en-US
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230816095816.GA9823@p1gen4-pw042f0m.fritz.box>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---656392-1707973189-1692228719=:10222
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-
-Hi Ulf,
-
-> On Sat, 22 Jul 2023 at 03:41, Shyam Saini
-> <shyamsaini@linux.microsoft.com> wrote:
+On 8/16/23 02:58, Benjamin Block wrote:
+> On Fri, Jul 21, 2023 at 09:01:32AM -0700, Bart Van Assche wrote:
+>> Because scsi_finish_command() subtracts the residual from the buffer
+>> length, residual overflows must not be reported. Reflect this in the
+>> SCSI documentation. See also commit 9237f04e12cc ("scsi: core: Fix
+>> scsi_get/set_resid() interface")
 >>
->> From: Alex Bennée <alex.bennee@linaro.org>
+>> Cc: Damien Le Moal <dlemoal@kernel.org>
+>> Cc: Hannes Reinecke <hare@suse.de>
+>> Cc: Douglas Gilbert <dgilbert@interlog.com>
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> ---
+>>   Documentation/scsi/scsi_mid_low_api.rst | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
 >>
->> [This is patch 1 from [1] Alex's submission and this RPMB layer was
->> originally proposed by [2]Thomas Winkler ]
->>
->> A number of storage technologies support a specialised hardware
->> partition designed to be resistant to replay attacks. The underlying
->> HW protocols differ but the operations are common. The RPMB partition
->> cannot be accessed via standard block layer, but by a set of specific
->> commands: WRITE, READ, GET_WRITE_COUNTER, and PROGRAM_KEY. Such a
->> partition provides authenticated and replay protected access, hence
->> suitable as a secure storage.
->>
->> The initial aim of this patch is to provide a simple RPMB Driver which
->> can be accessed by Linux's optee driver to facilitate fast-path for
->> RPMB access to optee OS(secure OS) during the boot time. [1] Currently,
->> Optee OS relies on user-tee supplicant to access eMMC RPMB partition.
->>
->> A TEE device driver can claim the RPMB interface, for example, via
->> class_interface_register(). The RPMB driver provides a series of
->> operations for interacting with the device.
->
-> I don't quite follow this. More exactly, how will the TEE driver know
-> what RPMB device it should use?
+>> diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi/scsi_mid_low_api.rst
+>> index 6fa3a6279501..022198c51350 100644
+>> --- a/Documentation/scsi/scsi_mid_low_api.rst
+>> +++ b/Documentation/scsi/scsi_mid_low_api.rst
+>> @@ -1190,11 +1190,11 @@ Members of interest:
+>>   		 - pointer to scsi_device object that this command is
+>>                      associated with.
+>>       resid
+>> -		 - an LLD should set this signed integer to the requested
+>> +		 - an LLD should set this unsigned integer to the requested
+>>                      transfer length (i.e. 'request_bufflen') less the number
+>>                      of bytes that are actually transferred. 'resid' is
+>>                      preset to 0 so an LLD can ignore it if it cannot detect
+>> -                   underruns (overruns should be rare). If possible an LLD
+>> +                   underruns (overruns should not be reported). An LLD
+> 
+> I'm very late to party, sorry. But we have certainly seen at least one
+> overrun reported some years ago on a FC SAN. We've changed some handling
+> in zFCP due to that (
+> a099b7b1fc1f ("scsi: zfcp: add handling for FCP_RESID_OVER to the fcp ingress path")
+> ). The theory back than was, that it was cause by either a faulty ISL in
+> the fabric, or some other "bit-errors" on the wire that caused some FC
+> frames being dropped during transmit.
+> 
+> I added that we mark such commands with `DID_ERROR`, so they are
+> retried, if that is permissible.
+> 
+>>                      should set 'resid' prior to invoking 'done'. The most
+>>                      interesting case is data transfers from a SCSI target
+>>                      device (e.g. READs) that underrun.
+> 
 
-I don't have complete code to for this yet, but i think OP-TEE driver
-should register with RPMB subsystem and then we can have eMMC/UFS/NVMe
-specific implementation for RPMB operations.
+Thanks, that's interesting feedback. Feel free to submit a patch that 
+refines the scsi_set_resid() documentation further.
 
-Linux optee driver can handle RPMB frames and pass it to RPMB subsystem
-
-[1] U-Boot has mmc specific implementation
-
-I think OPTEE-OS has CFG_RPMB_FS_DEV_ID option
-CFG_RPMB_FS_DEV_ID=1 for /dev/mmcblk1rpmb, but in case if a
-system has multiple RPMB devices such as UFS/eMMC/NVMe, one them
-should be declared as secure storage and optee should access that one 
-only.
-
-Sumit, do you have suggestions for this ?
-
-
->>
->>   * program_key - a one time operation for setting up a new device
->>   * get_capacity - introspect the device capacity
->>   * get_write_counter - check the write counter
->>   * write_blocks - write a series of blocks to the RPMB device
->>   * read_blocks - read a series of blocks from the RPMB device
->>
->> The detailed operation of implementing the access is left to the TEE
->> device driver itself.
->>
->> The framing details and HW specific bits (JDEC vs NVME frames) are
->> left to the lower level TEE driver to worry about.
->>
->> Without kernel fast path to RPMB access doesn't work when IMA try to
->> extend ftpm's PCR registers.
->>
->> This fast-path would require additional work in linux optee driver and
->> as well as in MMC driver.
->>
->> [1] https://lore.kernel.org/lkml/20220405093759.1126835-2-alex.bennee@linaro.org/
->> [2] https://lore.kernel.org/linux-mmc/1478548394-8184-2-git-send-email-tomas.winkler@intel.com/
->> [3] https://optee.readthedocs.io/en/latest/architecture/secure_storage.html
->>
->> Signed-off-by: Alex Bennée <alex.bennee@linaro.org>
->> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->> Signed-off-by: Shyam Saini <shyamsaini@linux.microsoft.com>
->>
->
-> [...]
->
->> +/**
->> + * rpmb_dev_find_device() - return first matching rpmb device
->> + * @data: data for the match function
->> + * @match: the matching function
->> + *
->> + * Return: matching rpmb device or NULL on failure
->> + */
->> +static
->> +struct rpmb_dev *rpmb_dev_find_device(const void *data,
->> +                                     int (*match)(struct device *dev,
->> +                                                  const void *data))
->> +{
->> +       struct device *dev;
->> +
->> +       dev = class_find_device(&rpmb_class, NULL, data, match);
->> +
->> +       return dev ? to_rpmb_dev(dev) : NULL;
->> +}
->> +
->> +struct device_with_target {
->> +       const struct device *dev;
->> +       u8 target;
->> +};
->> +
->> +static int match_by_parent(struct device *dev, const void *data)
->> +{
->> +       const struct device_with_target *d = data;
->> +       struct rpmb_dev *rdev = to_rpmb_dev(dev);
->> +
->> +       return (d->dev && dev->parent == d->dev && rdev->target == d->target);
->> +}
->> +
->> +/**
->> + * rpmb_dev_find_by_device() - retrieve rpmb device from the parent device
->> + * @parent: parent device of the rpmb device
->> + * @target: RPMB target/region within the physical device
->> + *
->> + * Return: NULL if there is no rpmb device associated with the parent device
->> + */
->> +struct rpmb_dev *rpmb_dev_find_by_device(struct device *parent, u8 target)
->> +{
->> +       struct device_with_target t;
->> +
->> +       if (!parent)
->> +               return NULL;
->> +
->> +       t.dev = parent;
->> +       t.target = target;
->> +
->> +       return rpmb_dev_find_device(&t, match_by_parent);
->> +}
->> +EXPORT_SYMBOL_GPL(rpmb_dev_find_by_device);
->
-> Is this what the TEE driver would be calling to find the rpmb device/partition?
-
-yes, that's the idea.
-
->> +
->> +/**
->> + * rpmb_dev_unregister() - unregister RPMB partition from the RPMB subsystem
->> + * @rdev: the rpmb device to unregister
->> + * Return:
->> + * *        0 on success
->> + * *        -EINVAL on wrong parameters
->> + */
->> +int rpmb_dev_unregister(struct rpmb_dev *rdev)
->> +{
->> +       if (!rdev)
->> +               return -EINVAL;
->> +
->> +       mutex_lock(&rdev->lock);
->> +       rpmb_cdev_del(rdev);
->
-> I can't find the function above. I guess it should be included as a
-> part of the patch too?
-
-Sorry for the confusion, this is leftover from original version
-Will be removed in next iteration.
-
->> +       device_del(&rdev->dev);
->> +       mutex_unlock(&rdev->lock);
->> +
->> +       rpmb_dev_put(rdev);
->> +
->> +       return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(rpmb_dev_unregister);
->
-> [...]
->
->> +/**
->> + * rpmb_dev_register - register RPMB partition with the RPMB subsystem
->> + * @dev: storage device of the rpmb device
->> + * @target: RPMB target/region within the physical device
->> + * @ops: device specific operations
->> + *
->> + * Return: a pointer to rpmb device
->> + */
->> +struct rpmb_dev *rpmb_dev_register(struct device *dev, u8 target,
->> +                                  const struct rpmb_ops *ops)
->> +{
->> +       struct rpmb_dev *rdev;
->> +       int id;
->> +       int ret;
->> +
->> +       if (!dev || !ops)
->> +               return ERR_PTR(-EINVAL);
->> +
->> +       if (!ops->program_key)
->> +               return ERR_PTR(-EINVAL);
->> +
->> +       if (!ops->get_capacity)
->> +               return ERR_PTR(-EINVAL);
->> +
->> +       if (!ops->get_write_counter)
->> +               return ERR_PTR(-EINVAL);
->> +
->> +       if (!ops->write_blocks)
->> +               return ERR_PTR(-EINVAL);
->> +
->> +       if (!ops->read_blocks)
->> +               return ERR_PTR(-EINVAL);
->> +
->> +       rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
->> +       if (!rdev)
->> +               return ERR_PTR(-ENOMEM);
->> +
->> +       id = ida_simple_get(&rpmb_ida, 0, 0, GFP_KERNEL);
->> +       if (id < 0) {
->> +               ret = id;
->> +               goto exit;
->> +       }
->> +
->> +       mutex_init(&rdev->lock);
->> +       rdev->ops = ops;
->> +       rdev->id = id;
->> +       rdev->target = target;
->> +
->> +       dev_set_name(&rdev->dev, "rpmb%d", id);
->> +       rdev->dev.class = &rpmb_class;
->> +       rdev->dev.parent = dev;
->> +
->> +       rpmb_cdev_prepare(rdev);
->
-> Ditto.
-
-same as my last comment
->> +
->> +       ret = device_register(&rdev->dev);
->> +       if (ret)
->> +               goto exit;
->> +
->> +       rpmb_cdev_add(rdev);
->
-> Ditto.
-
-same as above.
-
->> +
->> +       dev_dbg(&rdev->dev, "registered device\n");
->> +
->> +       return rdev;
->> +
->> +exit:
->> +       if (id >= 0)
->> +               ida_simple_remove(&rpmb_ida, id);
->> +       kfree(rdev);
->> +       return ERR_PTR(ret);
->> +}
->> +EXPORT_SYMBOL_GPL(rpmb_dev_register);
->> +
->
-> [...]
->
-
-
-[1] https://source.denx.de/u-boot/u-boot/-/commit/4853ad3e13e21462a86e09caee4ea27ae68e764b
-
-Best Regards,
-Shyam
---656392-1707973189-1692228719=:10222--
+Bart.
