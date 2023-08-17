@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0FABC41513
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B7E4C2FC24
 	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 13:13:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351256AbjHQNMw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 09:12:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39684 "EHLO
+        id S1351329AbjHQNMy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 09:12:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351374AbjHQNM2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 09:12:28 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02A183591
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 06:12:01 -0700 (PDT)
+        with ESMTP id S1351408AbjHQNMg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 09:12:36 -0400
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 610753598
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 06:12:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1692277920; x=1723813920;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=sJvnErBOzSXsSIPJZWHGnycYkGaFssUg37w+ziaVPiY=;
-  b=Ksir3ZHPJKmCqpV/T/nIsHhwpzjrJJ69ok7IOpuCjruECrPCkRmicAjN
-   pWPF8Ewez045frgXJM183mzbqKMpgRf5NQqxDw8xo6l+BVkcg/YMJPGaJ
-   9uewhoZM/1brYaLYnxOrZtY7XeIfObcJR9jhb7W7AmK0ZAREaaa0CT/dE
-   BnXgTnpwn1DLhYWJ/Xdp/9n+tEob86GimUZkn8bGFCRnOHgDdnXB8RWJf
-   zgeQU/xmKmQfA9M4nZPWxa1TnwSFNZBn8fynrQulTqcU8PPEQ+SEHNO9E
-   5x0ept+3zZh/A5g2K05R6xJM3PSC294Qen8l5VQdIoke94pdvl99KIZyZ
-   Q==;
+  t=1692277931; x=1723813931;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=9B7U6pD9tMIjJLDsJ1hgKCr04EnqHyirE6EeSamgd/I=;
+  b=bIWmSjCn8G0ghJa4Mcy/1Ajg2rCfy6wgNx9f47gcGkzak1X4XKDCcvDF
+   728FFji//Q6Y3BhMRUMw2pt2yPD09IhcfOWQ6r18P8cjfjUoUJDbpL+U/
+   kiWkEOQUJWp3nbwC/Kdp0RE0r5TNl5MobuT1G97I1jhEhubQrCgbhnD2u
+   xuTMXCYV+3nnCzPTyHdSChPpA4Qek8+g3SNKkmQuFqvoHYcZqjJ4KueNE
+   oXwPupUGBCE4avdf4E1OTCUEpswPpdnCdkHWwWcoEN00K0xte9FxR41W6
+   tVkJtFCBcgzaLL92Y8EGfEu2D+Lc5YR+oP8ITsoFBqvncN19p7cMucv5D
+   A==;
 X-IronPort-AV: E=Sophos;i="6.01,180,1684825200"; 
-   d="scan'208";a="242128325"
+   d="scan'208";a="230249337"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Aug 2023 06:11:02 -0700
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Aug 2023 06:11:27 -0700
 Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Thu, 17 Aug 2023 06:10:23 -0700
+ 15.1.2507.21; Thu, 17 Aug 2023 06:11:08 -0700
 Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex01.mchp-main.com
  (10.10.85.143) with Microsoft SMTP Server id 15.1.2507.21 via Frontend
- Transport; Thu, 17 Aug 2023 06:10:22 -0700
+ Transport; Thu, 17 Aug 2023 06:11:07 -0700
 From:   Don Brace <don.brace@microchip.com>
 To:     <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
         <scott.teel@microchip.com>, <Justin.Lindley@microchip.com>,
@@ -49,10 +49,12 @@ To:     <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Subject: [PATCH 0/9] smartpqi updates
-Date:   Thu, 17 Aug 2023 08:12:23 -0500
-Message-ID: <20230817131232.86754-1-don.brace@microchip.com>
+Subject: [PATCH 7/9] smartpqi: enhance controller offline notification
+Date:   Thu, 17 Aug 2023 08:12:30 -0500
+Message-ID: <20230817131232.86754-8-don.brace@microchip.com>
 X-Mailer: git-send-email 2.42.0.rc2
+In-Reply-To: <20230817131232.86754-1-don.brace@microchip.com>
+References: <20230817131232.86754-1-don.brace@microchip.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -60,83 +62,87 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-These patches are based on Martin Petersen's 6.6/scsi-queue tree
-  https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
-  6.6/scsi-queue
+From: David Strahan <David.Strahan@microchip.com>
 
-There is a large format-only patch to align our kernel.org driver with
-our out-of-box driver. We add patches to our oob driver first, run
-regression tests on these patches, then apply them to our kernel.org
-driver. Having the formatting align facilitates patch management and
-internal reviews. The contextual differences was becoming quite
-tedious.
+Add a description for the reason the controller has been taken off-line.
 
-The biggest functional change to smartpqi is the addition of an abort
-handler. Some customers were complaining about I/O stalls to all devices
-when only one device is reset. Adding an abort handler helps to prevent
-I/O stalls to all devices.
-
-All of the reset of the patches are small changes to logging messages,
-MACRO and variable name changes, and one minor change for LUN assignments.
-
-This set of changes consists of:
-* smartpqi-reformat-to-align-with-oob-driver
-  There have been a lot of format changes to our out-of-box driver. To
-  make adding patches from our oob driver to our kernel.org driver
-  (in-box), align formatting.
-  This is a format-only patch. No functional changes.
-* smartpqi-add-abort-handler
-  When a device reset occurs, the SML pauses I/O to all devices presented
-  by a controller instance causing some performance issues.
-  To only affect device with a problematic request, we added an abort handler.
-  The abort handler is implemented by using a device reset, but I/O to the
-  other devices is no longer affected.
-* smartpqi-refactor-rename-MACRO-to-clarify-purpose
-  The MACRO SOP_RC_INCORRECT_LOGICAL_UNIT was used to check for a condition 
-  where a TMF was sent an incorrect LUN. We renamed this MACRO to
-  SOP_TMF_INCORRECT_LOGICAL_UNIT for clarity.
-* smartpqi-refactor-rename-pciinfo-to-pci_info
-  Change the pciinfo variable to pci_info to make more readable code.
-  No functional changes.
-* smartpqi-simplify-lun_number-assignment
-  We simplified the conditional expression used to populate LUN numbers
-  for requests.
-* smartpqi-enhance-shutdown-notification
-  Clarify controller cache flush errors. We added in more precise information
-  to the cache flush informational message.
-  No functional changes.
-* smartpqi-enhance-controller-offline-notification
-  The driver can offline a controller for multiple reasons. We added
-  a description of why these rare offline actions are taken. And a function
-  to provide the specific details of the shutdown.
-* smartpqi-enhance-error-messages
-  We added host:bus:target:lun to messages emitted in our reset/abort handlers.
-  No functional changes.
-* smartpqi-change-driver-version-to-2.1.24-046
-
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: David Strahan <David.Strahan@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
+ drivers/scsi/smartpqi/smartpqi_init.c | 50 ++++++++++++++++++++++++++-
+ 1 file changed, 49 insertions(+), 1 deletion(-)
 
-David Strahan (3):
-  smartpqi: simplify lun_number assignment
-  smartpqi: enhance shutdown notification
-  smartpqi: enhance controller offline notification
-
-Don Brace (1):
-  smartpqi: change driver version to 2.1.24-046
-
-Kevin Barnett (4):
-  smartpqi: reformat to align with oob driver
-  smartpqi: add abort handler
-  smartpqi: refactor rename MACRO to clarify purpose
-  smartpqi: refactor rename pciinfo to pci_info
-
-Mahesh Rajashekhara (1):
-  smartpqi: enhance error messages
-
- drivers/scsi/smartpqi/smartpqi.h      |   16 +-
- drivers/scsi/smartpqi/smartpqi_init.c | 1852 ++++++++++---------------
- 2 files changed, 755 insertions(+), 1113 deletions(-)
-
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 2612818d476d..a497a35431b2 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -8712,6 +8712,52 @@ static void pqi_ctrl_offline_worker(struct work_struct *work)
+ 	pqi_take_ctrl_offline_deferred(ctrl_info);
+ }
+ 
++static char *pqi_ctrl_shutdown_reason_to_string(enum pqi_ctrl_shutdown_reason ctrl_shutdown_reason)
++{
++	char *string;
++
++	switch (ctrl_shutdown_reason) {
++	case PQI_IQ_NOT_DRAINED_TIMEOUT:
++		string = "inbound queue not drained timeout";
++		break;
++	case PQI_LUN_RESET_TIMEOUT:
++		string = "LUN reset timeout";
++		break;
++	case PQI_IO_PENDING_POST_LUN_RESET_TIMEOUT:
++		string = "I/O pending timeout after LUN reset";
++		break;
++	case PQI_NO_HEARTBEAT:
++		string = "no controller heartbeat detected";
++		break;
++	case PQI_FIRMWARE_KERNEL_NOT_UP:
++		string = "firmware kernel not ready";
++		break;
++	case PQI_OFA_RESPONSE_TIMEOUT:
++		string = "OFA response timeout";
++		break;
++	case PQI_INVALID_REQ_ID:
++		string = "invalid request ID";
++		break;
++	case PQI_UNMATCHED_REQ_ID:
++		string = "unmatched request ID";
++		break;
++	case PQI_IO_PI_OUT_OF_RANGE:
++		string = "I/O queue producer index out of range";
++		break;
++	case PQI_EVENT_PI_OUT_OF_RANGE:
++		string = "event queue producer index out of range";
++		break;
++	case PQI_UNEXPECTED_IU_TYPE:
++		string = "unexpected IU type";
++		break;
++	default:
++		string = "unknown reason";
++		break;
++	}
++
++	return string;
++}
++
+ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info,
+ 	enum pqi_ctrl_shutdown_reason ctrl_shutdown_reason)
+ {
+@@ -8724,7 +8770,9 @@ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info,
+ 	if (!pqi_disable_ctrl_shutdown)
+ 		sis_shutdown_ctrl(ctrl_info, ctrl_shutdown_reason);
+ 	pci_disable_device(ctrl_info->pci_dev);
+-	dev_err(&ctrl_info->pci_dev->dev, "controller offline\n");
++	dev_err(&ctrl_info->pci_dev->dev,
++		"controller offline: reason code 0x%x (%s)\n",
++		ctrl_shutdown_reason, pqi_ctrl_shutdown_reason_to_string(ctrl_shutdown_reason));
+ 	schedule_work(&ctrl_info->ctrl_offline_work);
+ }
+ 
 -- 
 2.42.0.rc2
 
