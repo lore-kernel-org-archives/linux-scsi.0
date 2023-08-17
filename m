@@ -2,89 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 455FBC531DC
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 19:35:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B664EC64EB4
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 20:58:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354712AbjHQTf1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 15:35:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39350 "EHLO
+        id S1355080AbjHQU5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 16:57:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354716AbjHQTe5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 15:34:57 -0400
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22C173583;
-        Thu, 17 Aug 2023 12:34:55 -0700 (PDT)
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-68859ba3a93so142097b3a.1;
-        Thu, 17 Aug 2023 12:34:55 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692300894; x=1692905694;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IkYsqPHeGOcAe37CZg+iCwOxJmQMW/Nix/GR+gPC8m8=;
-        b=fQKFNz4FuxbA46PCG7yx07oXAb3QFu77NB2lG2TOYfullMgPzJPdTs+86NQP0kbP1+
-         i9/vUIXE2MBJGhe60G5n4Ia7gD8sp5IeytSUKUnToFRk2G8bC5++8cETMtD+h5XMnUXe
-         CpupGkIWo5AJdtDDiDtdejIerfbKYNhdqm3jyPsTB6LNQGj2E+PiRN73liYXwmze91P3
-         Apvk0ZPHMj5NfwNyR/zNvQQE/42GihKLlPhvrDxJPqePHIgj3yPn1PtPryHXsf5cYC/E
-         F6oCNyQTABReMSisYPFTpOmyoq4gfstfoYFdUbfx5ZoApgO0T2KXkRWmw4+8GNrcoxwT
-         jrww==
-X-Gm-Message-State: AOJu0YzxUjFmUbhsb9DfQxAQsqXvNpS7mV8Hvlxfpe0GlGZF7IsX7mVE
-        SDcdganEXuqOtzZM98sMcoQ=
-X-Google-Smtp-Source: AGHT+IFeklRJVVmmYbBY8aTEugS8kMUwppcWsIun0xyFNQhnrJsiAAyJMz42lF8lDR8S+wCivnC1zQ==
-X-Received: by 2002:a05:6a00:1249:b0:676:20f8:be41 with SMTP id u9-20020a056a00124900b0067620f8be41mr529604pfi.16.1692300894418;
-        Thu, 17 Aug 2023 12:34:54 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:dfd:6f25:f7be:a9ca? ([2620:15c:211:201:dfd:6f25:f7be:a9ca])
-        by smtp.gmail.com with ESMTPSA id e7-20020a62ee07000000b00689f3ae4ca8sm122959pfi.112.2023.08.17.12.34.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Aug 2023 12:34:53 -0700 (PDT)
-Message-ID: <4f332520-329c-6355-3aa3-cd5e29716a06@acm.org>
-Date:   Thu, 17 Aug 2023 12:34:52 -0700
+        with ESMTP id S1355075AbjHQU5Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 16:57:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9583830F6;
+        Thu, 17 Aug 2023 13:57:24 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3358D61F4A;
+        Thu, 17 Aug 2023 20:57:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41FB8C433C7;
+        Thu, 17 Aug 2023 20:57:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1692305843;
+        bh=Cz0bpZIHuJ97+/eXABSNnd6abp7icCo53irEIi6xom8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=spITFcVVlHEtmVsTgC3Q31Ykp2iku/xtv5XwL1pBcBZOIbV6UX0oi4KQqbLDl11bL
+         GFiayMB2cNx8kAXVwgTaO85j3Ipesr1hy0pLVSjc3oxfXy7Y0KznBwx8HToLd808JR
+         jTFpzG8LG1703IDEWF3JL1eEqiKrErC93xyMwbOo=
+Date:   Thu, 17 Aug 2023 22:57:21 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Ram Kishore Vegesna <ram.vegesna@broadcom.com>
+Cc:     Dmitry Bogdanov <d.bogdanov@yadro.com>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
+        rdunlap@infradead.org, james.smart@broadcom.com,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org
+Subject: Re: [PATCH v2] scsi: sli4: Remove the buggy code
+Message-ID: <2023081755-virus-showman-f3b2@gregkh>
+References: <20230817103751.16350-1-coolrrsh@gmail.com>
+ <20230817105252.GA14370@yadro.com>
+ <CAF7aS0rrZvZK_bE21Umrr+RAGgQB6-qDdoqSPnKh6f7HcX8Ovw@mail.gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.1
-Subject: Re: [PATCH v9 17/17] scsi: ufs: Inform the block layer about write
- ordering
-Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Can Guo <quic_cang@quicinc.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-References: <20230816195447.3703954-1-bvanassche@acm.org>
- <20230816195447.3703954-18-bvanassche@acm.org>
- <666c6d78-d975-c9f9-4ad2-c9fa86497b47@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <666c6d78-d975-c9f9-4ad2-c9fa86497b47@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAF7aS0rrZvZK_bE21Umrr+RAGgQB6-qDdoqSPnKh6f7HcX8Ovw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/23 12:00, Bao D. Nguyen wrote:
-> In legacy SDB mode with auto-hibernation enabled, the default setting for the
-> driver_preserves_write_order = false.
- >
-> Using the default setting, it may be missing this check that is part of the ufshcd_auto_hibern8_update()->ufshcd_update_preserves_write_order().
+On Thu, Aug 17, 2023 at 06:03:32PM +0530, Ram Kishore Vegesna via Linux-kernel-mentees wrote:
+> -- 
+> This electronic communication and the information and any files transmitted 
+> with it, or attached to it, are confidential and are intended solely for 
+> the use of the individual or entity to whom it is addressed and may contain 
+> information that is confidential, legally privileged, protected by privacy 
+> laws, or otherwise restricted from disclosure to anyone else. If you are 
+> not the intended recipient or the person responsible for delivering the 
+> e-mail to the intended recipient, you are hereby notified that any use, 
+> copying, distributing, dissemination, forwarding, printing, or copying of 
+> this e-mail is strictly prohibited. If you received this e-mail in error, 
+> please return the e-mail to the sender, delete it from your computer, and 
+> destroy any printed copy of it.
 
-If auto-hibernation is enabled by the host driver, driver_preserves_write_order
-is set by the following code in ufshcd_slave_configure():
+Now deleted.
 
-	q->limits.driver_preserves_write_order =
-		!ufshcd_is_auto_hibern8_supported(hba) ||
-		FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) == 0;
-
-Does this answer your question?
-
-Thanks,
-
-Bart.
+(hint, this footer is not compatible with kernel development, please fix
+your email system...)
