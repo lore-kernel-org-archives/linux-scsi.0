@@ -2,86 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5254C30626
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 14:36:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BA7FC3062E
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 14:53:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351959AbjHQOf2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 10:35:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51632 "EHLO
+        id S1352308AbjHQOwg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 10:52:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351997AbjHQOfS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 10:35:18 -0400
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A73A2D73;
-        Thu, 17 Aug 2023 07:35:16 -0700 (PDT)
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-688787570ccso1903008b3a.2;
-        Thu, 17 Aug 2023 07:35:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692282916; x=1692887716;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=oEBxKdfaDkKngC/qlNvTeJaOp27bSzBmkIz5LjR/vig=;
-        b=KxqyelhzdQNoz2PvXcePsHO/Oop5HCR8sG9EUT1U1UOlb6btdfagjK2LzgecUiTDl0
-         5Ddm0Ozzawbz4vHjoKANipz40E8CulqS5crV6KWdXG1jRr3wWjHwN9gh0ACJ7DV5BIUR
-         tuQ1LhH5H0AomJ34zpTIVRzu27pFDSW5uscw76AY3cG4lsnB81j2NjvRnub8+OI7HAQM
-         nLFn8ei54y7Bf4jZpsPUKuqJTL8nkgVGPwg5V36e+/Q/+oGSWDaDbtq+JaMOYPSl3xPR
-         lUvOBnxbJ98wl8RcA1dEIUEkybmhkpTCuUwHYE0vrSfBnP4X0JvkmxnwPmO+9PBc6/pm
-         Fk2g==
-X-Gm-Message-State: AOJu0Yw6HcPfs6rTGqAGagiQLtklc86dZMeAXjMFl6H5UE3gnjlTntYY
-        nTRi9RnJ9UHAjUm8dEh2xTM=
-X-Google-Smtp-Source: AGHT+IH3Q+qd4daBkdlN+fkSnPs3IbmDvnhPoUphtm3NTqIfY2TTwIrY24AVeiwrnCtzj4HLqtC7fw==
-X-Received: by 2002:a05:6a00:2495:b0:66d:263f:d923 with SMTP id c21-20020a056a00249500b0066d263fd923mr5838228pfv.20.1692282915897;
-        Thu, 17 Aug 2023 07:35:15 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:dfd:6f25:f7be:a9ca? ([2620:15c:211:201:dfd:6f25:f7be:a9ca])
-        by smtp.gmail.com with ESMTPSA id 9-20020aa79249000000b0067aea93af40sm12879923pfp.2.2023.08.17.07.35.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Aug 2023 07:35:15 -0700 (PDT)
-Message-ID: <b9ce6883-2777-bfbc-a132-caafc51c11d3@acm.org>
-Date:   Thu, 17 Aug 2023 07:35:13 -0700
+        with ESMTP id S1352295AbjHQOwF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 10:52:05 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA12FBF;
+        Thu, 17 Aug 2023 07:52:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+        bh=wYEcyK46K6KN9IIi0RnZeATO9I6pLm4XjX5dQ7B0Nws=; b=3D1BJw0TbO+uh99t4IPtzRJYVV
+        PkVR5R8XjKuFSvfoUrZxbUfdehUeELlZHQOG6lN1uJMfLngnfLswZ0n144vNIWwCfppUd6Bn1wBna
+        ufjHuFM3vU/FkHA/3skCuXnzUFNjXpZsPJvN+V75G1k3fAkMIQvjm/Rc5HGiEcidZkrOSrPRYm1ke
+        crOexaePXayA81TG+qVn4g+ocK4vqGp5Pr3OBkyz1YZniI0Ajuyo5KsQk9Awrt5g0fJV5pQyjCUqj
+        ErKBzSV6W15nnIPEL6YPA/ieDeTp41UmOEiRfP2CRTioeWXO6sbhpS3yy27cX+OZo5NhA5k66zmuj
+        a1bicnfA==;
+Received: from [2601:1c2:980:9ec0::2764]
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qWeLs-006bSc-2I;
+        Thu, 17 Aug 2023 14:51:56 +0000
+Message-ID: <79ac6ee9-247a-c3da-c0f7-8c26bd0b1ad0@infradead.org>
+Date:   Thu, 17 Aug 2023 07:51:56 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.1
-Subject: Re: [PATCH v9 09/17] scsi: scsi_debug: Support disabling zone write
- locking
+ Thunderbird/102.14.0
+Subject: Re: [PATCH v2] scsi: sli4: Remove the buggy code
 Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230816195447.3703954-1-bvanassche@acm.org>
- <20230816195447.3703954-10-bvanassche@acm.org>
- <cbce2335-7a64-e5bf-c8bc-e5f294efc763@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <cbce2335-7a64-e5bf-c8bc-e5f294efc763@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Dmitry Bogdanov <d.bogdanov@yadro.com>, coolrrsh@gmail.com
+Cc:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org
+References: <20230817103751.16350-1-coolrrsh@gmail.com>
+ <20230817105252.GA14370@yadro.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20230817105252.GA14370@yadro.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/23 04:25, Damien Le Moal wrote:
->>   static int scsi_debug_slave_alloc(struct scsi_device *sdp)
->>   {
->> +	struct request_queue *q = sdp->request_queue;
->> +
->>   	if (sdebug_verbose)
->>   		pr_info("slave_alloc <%u %u %u %llu>\n",
->>   		       sdp->host->host_no, sdp->channel, sdp->id, sdp->lun);
->> +	if (sdeb_no_zwrl)
->> +		q->limits.driver_preserves_write_order = true;
+
+
+On 8/17/23 03:52, Dmitry Bogdanov wrote:
+> On Thu, Aug 17, 2023 at 04:07:51PM +0530, coolrrsh@gmail.com wrote:
+>>
+>> From: Rajeshwar R Shinde <coolrrsh@gmail.com>
+>>
+>> In the function sli_xmit_bls_rsp64_wqe, the 'if' and 'else' conditions
+>> evaluates the same expression and gives same output. Also the variable
+>> bls->local_n_port_id_dword is not used anywhere. Therefore removing the
+>> redundant code.
+>>
+>> This fixes coccinelle warning such as:
+>> drivers/scsi/elx/libefc_sli/sli4.c:2320:2-4: WARNING: possible
+>> condition with no effect (if == else)
+>>
+>> Signed-off-by: Rajeshwar R Shinde <coolrrsh@gmail.com>
+>> ---
+>> v1->v2
+>> Modified patch and verified with checkpatch.pl.
+>>
+>> ---
+>>  drivers/scsi/elx/libefc_sli/sli4.c | 7 -------
+>>  1 file changed, 7 deletions(-)
+>>
+>> diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+>> index 8f96049f62dd..af661b769464 100644
+>> --- a/drivers/scsi/elx/libefc_sli/sli4.c
+>> +++ b/drivers/scsi/elx/libefc_sli/sli4.c
+>> @@ -2317,13 +2317,6 @@ sli_xmit_bls_rsp64_wqe(struct sli4 *sli, void *buf,
+>>                 SLI4_GENERIC_CONTEXT_VPI << SLI4_BLS_RSP_WQE_CT_SHFT;
+>>                 bls->context_tag = cpu_to_le16(params->vpi);
+>>
+>> -               if (params->s_id != U32_MAX)
+>> -                       bls->local_n_port_id_dword |=
+>> -                               cpu_to_le32(params->s_id & 0x00ffffff);
+>> -               else
+>> -                       bls->local_n_port_id_dword |=
+>> -                               cpu_to_le32(params->s_id & 0x00ffffff);
+>> -
 > 
-> The option is named and discribed as "no_zone_write_lock", which is a block
-> layer concept. Given that this sets driver_preserves_write_order and does not
-> touch the use_zone_write_locking limit, I think it is better to name the option
-> "preserve_write_order" (or similar) to avoid confusion.
+> omg, it is not an unused variable. Whole bls is a HW descriptor, all of
+> its variables are used by HW. You should keep v1 version of the patch.
+> According to the comment at the beginning of the funciton s_id here shall
+> be != U32_MAX. That is an explanation for your v1 patch.
+> 
 
-I will make this change.
+Thanks for your comments.
 
-Thanks,
+>>                 dw_ridflags = (dw_ridflags & ~SLI4_BLS_RSP_RID) |
+>>                                (params->d_id & SLI4_BLS_RSP_RID);
+>>
+>> --
+>> 2.25.1
+>>
 
-Bart.
-
+-- 
+~Randy
