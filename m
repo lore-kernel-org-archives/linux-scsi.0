@@ -2,105 +2,103 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19264C2FC1A
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 11:01:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EC32C41513
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 11:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350103AbjHQLBA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 07:01:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59028 "EHLO
+        id S1350112AbjHQLCD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 07:02:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350157AbjHQLAr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 07:00:47 -0400
-X-Greylist: delayed 467 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 17 Aug 2023 04:00:43 PDT
-Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8AF30C0;
-        Thu, 17 Aug 2023 04:00:43 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 4E341C0009
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-        t=1692269574; bh=AehP888etUrm7amHfFcvQ6JX0HnlZBk7UUTpgRujN1s=;
-        h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
-        b=Fmv5SawTv711CAVIx9xFXRxB7Ue6mmxK0aBMfy333sVwh1EjxK7fdxHwdN/OSsH4l
-         EF17JKgSJpqoC+ASrZTUrGUoHhoJVTldV/jwD0sncSuHbiHCDpejBHH6eGudDmNdxo
-         dzZRsjCMeTQaIaOqwmak/cgHg+UUMWyEOzz8uDyvcv2cehgDAvlxKC/DveHpSLLE+T
-         XuQHBuwBIUBBxCdHfN89ZdboWUaJ54ry2pzaKSLKtuvFJwOucX+S1feKRF/puwCHiT
-         g4Cmu3OsabcDdW7iZhzUYVYPllbH7Xl/UgCuXZ7l450qls/H6nB9neRoMED/gexM2Q
-         gGA2RQOeQoQeA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-        t=1692269574; bh=AehP888etUrm7amHfFcvQ6JX0HnlZBk7UUTpgRujN1s=;
-        h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
-        b=L9Pss4wafQgF4+j4US+bbq98ahyzt05LdL8ktiIdf3ZsrhLTD6BQRqciiBqnrO88Y
-         0oDJlyNAmioKau5c6jB7sae9gc7xH6XsU7V5lol+QG1ESSh/kdoV86Z7mEY9TQv/8S
-         5YFHTCnjrH79S4j3Kf02DuXIY9CmVF4c80nLnqrrKlfaropWlRxn+b17R6b/+6eyTJ
-         WcMBI/91LbNyMF9RgfB4nsLrCH8IK1/U/sO1dv0F/pPG9eiAE34csMnlVMNk/4oKa4
-         V80yzQad7zvJZch2B6gBTY8F13Dbht7BQo+DxdjB8sXH4urEq28sKmGw5gPkO0UKJe
-         jOQtNqk2elE2g==
-Date:   Thu, 17 Aug 2023 13:52:52 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     <coolrrsh@gmail.com>
-CC:     <james.smart@broadcom.com>, <ram.vegesna@broadcom.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <rdunlap@infradead.org>, <linux-scsi@vger.kernel.org>,
-        <target-devel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-kernel-mentees@lists.linuxfoundation.org>
-Subject: Re: [PATCH v2] scsi: sli4: Remove the buggy code
-Message-ID: <20230817105252.GA14370@yadro.com>
-References: <20230817103751.16350-1-coolrrsh@gmail.com>
+        with ESMTP id S1350204AbjHQLBa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 07:01:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F3292D78;
+        Thu, 17 Aug 2023 04:01:21 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B237063496;
+        Thu, 17 Aug 2023 11:01:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55BA6C433C8;
+        Thu, 17 Aug 2023 11:01:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692270080;
+        bh=NxwG7nqbQi0pWVUN3Nm1m8HI9r6b0qPeq/ibhoYdS9w=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=Usv8QoEhrbndl9Z9ETO9IQ5juJ/VN1lqdjAWSH29Iu73DRUZR7pafYzjDo2tFlUPc
+         F6i82JpRSs5ZqurdkV1kVGhdg9j1FjonDEM8WUwAhrzFJcBcBoJKqv9hopGVohpyr+
+         ZiPIgudhhGS6U58Th6nGMAEByogS6WCPJMF7+VUg/XShthq9NbTUUC7jSQKmVMgK7q
+         JjnIDeuSi6QfYANYCnpK3lDM8JmYSgzof3kl/etYnne5hkW7p9VQPMjJB2Q7nabS2q
+         Of9LyJV0fIS0kIjHtL1z78XGAfGNHFG0sIQsIpm5T1d+ZQpbpf+7vbZlCNyqBMZLiY
+         yikbgQLcIjiEw==
+Message-ID: <0b3b4453-52a1-75e3-4dfd-6aae74c8c257@kernel.org>
+Date:   Thu, 17 Aug 2023 20:01:18 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20230817103751.16350-1-coolrrsh@gmail.com>
-X-ClientProxiedBy: T-EXCH-08.corp.yadro.com (172.17.11.58) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v9 02/17] block: Only use write locking if necessary
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+References: <20230816195447.3703954-1-bvanassche@acm.org>
+ <20230816195447.3703954-3-bvanassche@acm.org>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230816195447.3703954-3-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 17, 2023 at 04:07:51PM +0530, coolrrsh@gmail.com wrote:
-> 
-> From: Rajeshwar R Shinde <coolrrsh@gmail.com>
-> 
-> In the function sli_xmit_bls_rsp64_wqe, the 'if' and 'else' conditions
-> evaluates the same expression and gives same output. Also the variable
-> bls->local_n_port_id_dword is not used anywhere. Therefore removing the
-> redundant code.
-> 
-> This fixes coccinelle warning such as:
-> drivers/scsi/elx/libefc_sli/sli4.c:2320:2-4: WARNING: possible
-> condition with no effect (if == else)
-> 
-> Signed-off-by: Rajeshwar R Shinde <coolrrsh@gmail.com>
-> ---
-> v1->v2
-> Modified patch and verified with checkpatch.pl.
-> 
-> ---
->  drivers/scsi/elx/libefc_sli/sli4.c | 7 -------
->  1 file changed, 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
-> index 8f96049f62dd..af661b769464 100644
-> --- a/drivers/scsi/elx/libefc_sli/sli4.c
-> +++ b/drivers/scsi/elx/libefc_sli/sli4.c
-> @@ -2317,13 +2317,6 @@ sli_xmit_bls_rsp64_wqe(struct sli4 *sli, void *buf,
->                 SLI4_GENERIC_CONTEXT_VPI << SLI4_BLS_RSP_WQE_CT_SHFT;
->                 bls->context_tag = cpu_to_le16(params->vpi);
-> 
-> -               if (params->s_id != U32_MAX)
-> -                       bls->local_n_port_id_dword |=
-> -                               cpu_to_le32(params->s_id & 0x00ffffff);
-> -               else
-> -                       bls->local_n_port_id_dword |=
-> -                               cpu_to_le32(params->s_id & 0x00ffffff);
-> -
+On 8/17/23 04:53, Bart Van Assche wrote:
+> Make blk_req_needs_zone_write_lock() return false if
+> q->limits.use_zone_write_lock is false. Inline this function because it
+> is short and because it is called from the hot path of the mq-deadline
+> I/O scheduler.
 
-omg, it is not an unused variable. Whole bls is a HW descriptor, all of
-its variables are used by HW. You should keep v1 version of the patch.
-According to the comment at the beginning of the funciton s_id here shall
-be != U32_MAX. That is an explanation for your v1 patch.
+Your are not actually inlining the function. Did you forget to move it to
+blkdev.h ?
 
->                 dw_ridflags = (dw_ridflags & ~SLI4_BLS_RSP_RID) |
->                                (params->d_id & SLI4_BLS_RSP_RID);
+Otherwise, the change looks OK.
+
 > 
-> --
-> 2.25.1
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  block/blk-zoned.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
 > 
+> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+> index 112620985bff..d8a80cce832f 100644
+> --- a/block/blk-zoned.c
+> +++ b/block/blk-zoned.c
+> @@ -53,11 +53,16 @@ const char *blk_zone_cond_str(enum blk_zone_cond zone_cond)
+>  EXPORT_SYMBOL_GPL(blk_zone_cond_str);
+>  
+>  /*
+> - * Return true if a request is a write requests that needs zone write locking.
+> + * Return true if a request is a write request that needs zone write locking.
+>   */
+>  bool blk_req_needs_zone_write_lock(struct request *rq)
+>  {
+> -	if (!rq->q->disk->seq_zones_wlock)
+> +	struct request_queue *q = rq->q;
+> +
+> +	if (!q->limits.use_zone_write_lock)
+> +		return false;
+> +
+> +	if (!q->disk->seq_zones_wlock)
+>  		return false;
+>  
+>  	return blk_rq_is_seq_zoned_write(rq);
+
+-- 
+Damien Le Moal
+Western Digital Research
+
