@@ -2,152 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB676C2FC0F
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 18:24:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54C0AC3DA58
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 18:41:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354342AbjHQSYI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 14:24:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58860 "EHLO
+        id S1352184AbjHQSks (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 14:40:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354480AbjHQSX6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 14:23:58 -0400
-Received: from rcdn-iport-4.cisco.com (rcdn-iport-4.cisco.com [173.37.86.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3DA23C06;
-        Thu, 17 Aug 2023 11:23:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=3332; q=dns/txt; s=iport;
-  t=1692296613; x=1693506213;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=EAFmCMjCURKVOVoD03Cmoz021Qx7FN68afEqBii0SgA=;
-  b=Jc7fp++knzYmrMr7VNa+2ZT3tCvzh0QK14up38tkmI0RdSrgUkomDsy3
-   Q9OW4GJ2jCtkI1eKC/oMzZj1+WILZR2qDJZOzcbR+rnfdKNp+dhQv2Xwa
-   5bt/GYE+NgyDt5Ah8siC/l09+M1JGprNgqpQAGlRuBD6dqB2/rVjMmlHF
-   s=;
-X-IronPort-AV: E=Sophos;i="6.01,180,1684800000"; 
-   d="scan'208";a="102870598"
-Received: from rcdn-core-7.cisco.com ([173.37.93.143])
-  by rcdn-iport-4.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 18:22:21 +0000
-Received: from localhost.cisco.com ([10.193.101.253])
-        (authenticated bits=0)
-        by rcdn-core-7.cisco.com (8.15.2/8.15.2) with ESMTPSA id 37HIMCar015707
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Thu, 17 Aug 2023 18:22:20 GMT
-From:   Karan Tilak Kumar <kartilak@cisco.com>
-To:     sebaddel@cisco.com
-Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
-        mkai2@cisco.com, satishkh@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH] scsi: fnic: Replace sgreset tag with max_tag_id
-Date:   Thu, 17 Aug 2023 11:21:46 -0700
-Message-Id: <20230817182146.229059-1-kartilak@cisco.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S1354541AbjHQSk2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 14:40:28 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AA5030D4;
+        Thu, 17 Aug 2023 11:40:27 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37HDgcr1003956;
+        Thu, 17 Aug 2023 18:40:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=8beUAYvVt+q73E7VB8BGUK84aeEF3fecJqSz3gMPZbM=;
+ b=f8wN1NJPs9v5zmuNyrI3jWwSt7eVe8ih99yVQcYR0sajvx/GLMY/r5CVGCk6yUNWCq5u
+ CVD0PuBAbYePuCfyE+E5bYjV9u116CxFnIznvmqa32bM7IeLrLuSaPHREApKj0gDfstQ
+ 92FjrwaQPtHWjNOjj08folon4B21ro+YLoy/HB5n6Z8cBpUhFVW1YqdfAGoFERWfCfso
+ lwq7wzSuQEXDBM0PGQDr8dGw/zUy+36pX7eqr2eOFXFD79WVD23eGqS2PM4KmABYQWLn
+ 63XXDW1ELd8xSzzGZLpkuw/O2thtxVOcvQmXUFBvcp0e4SzUlpwWVG5BVOaZKaKzDBLT 8g== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sh3xxas4j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 17 Aug 2023 18:40:08 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37HIe8X1007501
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 17 Aug 2023 18:40:08 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 17 Aug
+ 2023 11:40:07 -0700
+Message-ID: <3b1caab8-c95e-eb81-57ef-21b746795ba6@quicinc.com>
+Date:   Thu, 17 Aug 2023 11:40:07 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
-X-Outbound-Node: rcdn-core-7.cisco.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v9 12/17] scsi: ufs: mediatek: Rework the code for
+ disabling auto-hibernation
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+References: <20230816195447.3703954-1-bvanassche@acm.org>
+ <20230816195447.3703954-13-bvanassche@acm.org>
+Content-Language: en-US
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <20230816195447.3703954-13-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ROd2cc_OXYpNHcdJUDgJ851jEobzE3m_
+X-Proofpoint-ORIG-GUID: ROd2cc_OXYpNHcdJUDgJ851jEobzE3m_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-17_14,2023-08-17_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 malwarescore=0
+ bulkscore=0 mlxlogscore=999 clxscore=1011 priorityscore=1501
+ impostorscore=0 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308170168
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sgreset is issued with a scsi command pointer.
-The device reset code assumes that it was issued
-on a hardware queue, and calls block multiqueue
-layer. However, the assumption is broken, and
-there is no hardware queue associated with the
-sgreset, and this leads to a crash due to a
-null pointer exception.
+On 8/16/2023 12:53 PM, Bart Van Assche wrote:
+> Call ufshcd_auto_hibern8_update() instead of writing directly into the
+> auto-hibernation control register. This patch is part of an effort to
+> move all auto-hibernation register changes into the UFSHCI driver core.
+> 
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/ufs/host/ufs-mediatek.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+> index e68b05976f9e..a3cf30e603ca 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -1252,7 +1252,7 @@ static void ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
+>   	int ret;
+>   
+>   	/* disable auto-hibern8 */
+> -	ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +	ufshcd_auto_hibern8_update(hba, 0);
+Since you now use ufshcd_auto_hibern8_update(), the caller should not 
+need to check for ufshcd_is_auto_hibern8_supported() because this is 
+already part of the hibern8_update(). Suggest remove the if statement 
+from the caller.
 
-Fix the code to use the max_tag_id as a tag
-which does not overlap with the other tags
-issued by mid layer.
+	if (ufshcd_is_auto_hibern8_supported(hba))
+		ufs_mtk_auto_hibern8_disable(hba);
 
-Tested by running FC traffic for a few minutes,
-and by issuing sgreset on the device in parallel.
-Without the fix, the crash is observed right away.
-With this fix, no crash is observed.
-
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
----
- drivers/scsi/fnic/fnic.h      |  3 ++-
- drivers/scsi/fnic/fnic_scsi.c | 20 +++++++++-----------
- 2 files changed, 11 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index e51e92f932fa..93c68931a593 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -27,7 +27,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.55"
-+#define DRV_VERSION		"1.6.0.56"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
-@@ -236,6 +236,7 @@ struct fnic {
- 	unsigned int wq_count;
- 	unsigned int cq_count;
- 
-+	struct mutex sgreset_mutex;
- 	struct dentry *fnic_stats_debugfs_host;
- 	struct dentry *fnic_stats_debugfs_file;
- 	struct dentry *fnic_reset_debugfs_file;
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index be89ce96df46..185142efee3d 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -2222,7 +2222,6 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 	struct reset_stats *reset_stats;
- 	int tag = rq->tag;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
--	int tag_gen_flag = 0;   /*to track tags allocated by fnic driver*/
- 	bool new_sc = 0;
- 
- 	/* Wait for rport to unblock */
-@@ -2252,17 +2251,17 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 	}
- 
- 	fnic_priv(sc)->flags = FNIC_DEVICE_RESET;
--	/* Allocate tag if not present */
- 
- 	if (unlikely(tag < 0)) {
- 		/*
--		 * Really should fix the midlayer to pass in a proper
--		 * request for ioctls...
-+		 * For device reset issued through sg3utils, we let
-+		 * only one LUN_RESET to go through and use a special
-+		 * tag equal to max_tag_id so that we don't have to allocate
-+		 * or free it. It won't interact with tags
-+		 * allocated by mid layer.
- 		 */
--		tag = fnic_scsi_host_start_tag(fnic, sc);
--		if (unlikely(tag == SCSI_NO_TAG))
--			goto fnic_device_reset_end;
--		tag_gen_flag = 1;
-+		mutex_lock(&fnic->sgreset_mutex);
-+		tag = fnic->fnic_max_tag_id;
- 		new_sc = 1;
- 	}
- 	io_lock = fnic_io_lock_hash(fnic, sc);
-@@ -2434,9 +2433,8 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
- 		  fnic_flags_and_state(sc));
- 
--	/* free tag if it is allocated */
--	if (unlikely(tag_gen_flag))
--		fnic_scsi_host_end_tag(fnic, sc);
-+	if (new_sc)
-+		mutex_unlock(&fnic->sgreset_mutex);
- 
- 	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 		      "Returning from device reset %s\n",
--- 
-2.31.1
+>   
+>   	/* wait host return to idle state when auto-hibern8 off */
+>   	ufs_mtk_wait_idle_state(hba, 5);
 
