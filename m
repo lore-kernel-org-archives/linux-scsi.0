@@ -2,77 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50AAAC71130
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 23:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F41B7C678DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 23:51:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356114AbjHQXgw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 19:36:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50186 "EHLO
+        id S244172AbjHQXuz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 19:50:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356193AbjHQXgt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 19:36:49 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77A6435A5
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 16:36:47 -0700 (PDT)
+        with ESMTP id S1356339AbjHQXuc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 19:50:32 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA6953A80
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 16:50:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1692315407; x=1723851407;
+  t=1692316227; x=1723852227;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-id:content-transfer-encoding:
    mime-version;
-  bh=6wzyduurAysIq9zOxVbw0ERdeUF0Uf4O4293JJNJCao=;
-  b=lu+1d4gaG6ZbY0A0IvPlX3F7aJzul7DMM7/hiDa1xCPsOvBgvj2YEUnX
-   +ovAsnuK7spLFK4G/94Nn3RWz8fQcd5sW935/o0Z6AtlidB2ulXvG4MbP
-   I1CP15Dm9B0U/KYoViuN1oZxaBOi9Ss3WiYkKBkW8SgA+07Xy/2CUE13Q
-   OzsJqGQoxWDAMyeIYdIkNN88vfjEL/e6eLEaSowmB2r7JjENXEwWfrVrO
-   a3ONiuYmLmxFxmEzT66/JILY63jteQy2JvtiXSuLOGJPrEyHpaSEJ3wRm
-   XiFNmQa+GUte0vpSm3XxAp04XosabDxCiHxo8HI4NEVFC3DqNy9IzxaTI
+  bh=Twc/vsy/YBp/b5EqrZbu/kUXBlWUlq3rB9cZZopHr64=;
+  b=X8hyJZqZ4tf6aNV53UNZxo+x3SJM2cyCzCu8kXuobpd2mUwmjho05x49
+   ymuCO0IQCgb/ii4zKAm7GCpPXqKWEvKYhJJC92QtvpB/n6s48nkLUCSRw
+   sCBfN4Ow+vdiV4St/3gshIe267Aa73Z8T5JBeWvHPcQZdM2p4qV/8y49k
+   9yk4Kc+/Fpnx0jHrACgG8wV7eSne4rgLpf/h8Yac4Zx3+MywuOoYgNp7j
+   zZzCuKi5b73joFTq/Nm0ZyGcahFLSNEl/2rRU3xbSapn9KL3LZC9Vxqib
+   s4wwHubSNta7d5nQKopFXI076yiBEqnrhQjmQy4iLExAWVS9/N2NbnMb0
    w==;
 X-IronPort-AV: E=Sophos;i="6.01,181,1684771200"; 
-   d="scan'208";a="346616281"
-Received: from mail-bn8nam11lp2168.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.168])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Aug 2023 07:36:45 +0800
+   d="scan'208";a="241311926"
+Received: from mail-bn8nam11lp2169.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.169])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Aug 2023 07:50:26 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dVVFnrtoDJjlx1imwHe+awxNm2ht2ALqLunLyyuyXxbGlCNSLtXmwrt8hKsyE3z7NzWNKwphqOJaGMZZO4jdXRViX/WB6IZqiq93HU+4qn7nEHX8C5lDuLIJaTJ2ZZLk5zP1swqlZU7U+CRuOxQ0VbRQn1chY1gy5xX4JKSFqLqLAJGBB65W87qWFknKMAYzY9ZhPMnszLEdqZ/Ti6Ssn0p6UqSp6gk8itl4XNR67CeZ05ezlZesZlpYEYVNBXOmw9Qtz6H1hwZSnNCu/3h8Lr36kOz6YYZvxxxG3CmyofsVMmRQ3aUOSQ7PkcrbvrzR2V17y8Owk/WCAKFXBoi52g==
+ b=lRoPJlHuiSfOY5Sy87/un8t1D3v2u6mmnCm/qBuOxQWW1OGafi9A4W+91Ct8DvYIxV48oRrnfpgg4oUDvxttZAkZ5WbTulpxuIL/QzXDE5D8ilmsDImsh/RIlvJ2QGJjwt0LAfZJDrG8oMMod8NrEAfKgRaALDKjZyU7ifO9K2f+ISVcIxLdHb6bpP7VP9N1Cn2u+gBLnTJ7/TRmIw3iOim49vRyTZrL7nfhcgukS5OyG+mi8NURTjWXlEpioAutgXrVTmRY7jWs73JUS2KSdeU3JLm4FPtp/7hIMISPTFpysfO7/J0b01G0c7VjL4RHnkvps4IgSSwG9o0I8PbA2A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=X2RkgeOWAmGWWTyb45/n+vzS6l4kor3KYxQVMpjuOok=;
- b=j9urX3IGjD6SMAbup01XHQek7bU/WWNqmy1m7CR346UMb6O84pwnbdYYY3XUY8+a3RhgaX4oE9yDK/ykwoFPVj5GjTcNO5OCOl0GIsmgQfofyqLUfaR21kVRdZV0Kc/sitfXygc8t5wEoIBQWjdCWCcBKl91ziR6Eh+Kvnr3xfi5bWTU3YrCzLcgfy1uBIDU/VfOt7vhIOQFWUuqsClwrhK5uJ3ucvB7ZyML45cVTVjntZduClh4RDrLgv+Fon7DD2F7S0/tiQbE2LFi2jKOp+l7RsNilihg0Cc5nNofQP7ebAM+EccNjokTXU+cvvSt+kkyagbZwe6tPXUHHiHcvQ==
+ bh=H0E82SFKdrg8boXEiMdlc5cfQEc0t5SEjJ3ykEiB2Nw=;
+ b=DU77TgJJzs+PDWKoN87tPHOUua25acs3Ryqym06Rm1bLSIQbY1J478SwysmhT2A4LsBnQUl9PMrBejgeGygqNbHN6XMubJiPPF7imiG5coV31LXvBLwaYDxAineYJiujIxrZlomwTb3HbF5YoopSIC6OGrNo2RKKwlazYeE66K0STMOsEyvkAnCCz0YvICh4ubLIJJOMENgANbWBDSJ4MZPoYHxZxtQf+gNfpPf3W48NWKqTdNKjj0nH/9KUL2z/e2Pm6D1ZMfZR4V1SCHd0yXmPuwTYyU+m5iQrk3u9YPNRkTIWBohuTuZIrEqd4xckQwSfPCpwyh//yoWM2tftcQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=X2RkgeOWAmGWWTyb45/n+vzS6l4kor3KYxQVMpjuOok=;
- b=EvC94heQORRajgpi26yS4rpxEkSgLY4JblouF3OPmvXnwk8KZthfRy3AJvIA8TW99EqdLtWS8M8PnvLGx1fITpqlTB/Ky5XjEiIXL4W2stlMmwp31LvbKcajN6h+ZXfi8HFc62MdP+Rgu3VYHybAT6lhhm07Zy5tIOxNuNlb66k=
+ bh=H0E82SFKdrg8boXEiMdlc5cfQEc0t5SEjJ3ykEiB2Nw=;
+ b=JzH/HXAorSPzcqmkkYYxCqs5QpBZUfiRlMDSCpGGkEmc8cqmbn9ArkkMyavX3lMPRXXzUidevW0lGmRJBxp8iHjIBBwM1+xq8pN8GzT1gzBSL1l/3yQsMFOmgqjuSO8oenKP03/u/05kAKvsYgbo76Tuz+Q8zPUCUZruzKFhc2U=
 Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
- by PH0PR04MB7383.namprd04.prod.outlook.com (2603:10b6:510:13::9) with
+ by MW4PR04MB7444.namprd04.prod.outlook.com (2603:10b6:303:7c::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6678.31; Thu, 17 Aug
- 2023 23:36:43 +0000
+ 2023 23:50:23 +0000
 Received: from MN2PR04MB6272.namprd04.prod.outlook.com
  ([fe80::d093:80b3:59e5:c8a9]) by MN2PR04MB6272.namprd04.prod.outlook.com
  ([fe80::d093:80b3:59e5:c8a9%6]) with mapi id 15.20.6678.031; Thu, 17 Aug 2023
- 23:36:43 +0000
+ 23:50:23 +0000
 From:   Niklas Cassel <Niklas.Cassel@wdc.com>
-To:     Igor Pylypiv <ipylypiv@google.com>
-CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+To:     Damien Le Moal <dlemoal@kernel.org>
+CC:     Igor Pylypiv <ipylypiv@google.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jack Wang <jinpu.wang@cloud.ionos.com>
 Subject: Re: [PATCH 2/3] scsi: libsas: Add return_fis_on_success to
  sas_ata_task
 Thread-Topic: [PATCH 2/3] scsi: libsas: Add return_fis_on_success to
  sas_ata_task
-Thread-Index: AQHZ0VO0fxFCEX0RQUu2CJj+KjRNT6/vJK+A
-Date:   Thu, 17 Aug 2023 23:36:43 +0000
-Message-ID: <ZN6vB0COt0eJU93A@x1-carbon>
+Thread-Index: AQHZ0VO0fxFCEX0RQUu2CJj+KjRNT6/vHc4AgAAKsoA=
+Date:   Thu, 17 Aug 2023 23:50:23 +0000
+Message-ID: <ZN6yO8Zcd6BXqKrX@x1-carbon>
 References: <20230817214137.462044-1-ipylypiv@google.com>
  <20230817214137.462044-2-ipylypiv@google.com>
-In-Reply-To: <20230817214137.462044-2-ipylypiv@google.com>
+ <1a3f8cbb-9d2c-08c1-d1ea-4d9898eb0e23@kernel.org>
+In-Reply-To: <1a3f8cbb-9d2c-08c1-d1ea-4d9898eb0e23@kernel.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -80,188 +81,144 @@ X-MS-TNEF-Correlator:
 authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=wdc.com;
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|PH0PR04MB7383:EE_
-x-ms-office365-filtering-correlation-id: 6895e1fb-3b35-4c90-975b-08db9f7ad053
+x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|MW4PR04MB7444:EE_
+x-ms-office365-filtering-correlation-id: a6189433-c7e2-42fe-f973-08db9f7cb919
 wdcipoutbound: EOP-TRUE
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: nAvWX1c8GQOkA7uRFt0onsO/5w7fHWyKpYzArbZIkcpgCHDPskZGZFc4mzI3mHzdwLQY347hxwRm4WfFGui7Md9RmeNKhCZ4x2nCjqCcw6mbX8NTp/kDfogBsNPkeEj1Ew7fWRdbXvcxy2lFaX24PIwVqTGxnSdIjnr++JfoWgz8QKJipAq6jLivxHwgB8WF0p97Z0emiX1lPMwBRU/CKSrlc8QPYP0dDtImRDpXjjv/cbc74AqVdpjv0/qIasPcUQCs3mqcVUaN2GI140g/Ju8PitPQSJoWUaHBSfG0UfW7yt7vXp2l/8oUuoyHaxaomWrAqI3iphWUF8pyz0t92oyl2yZ8VokCoH8CwtCrnAAPlgNUD+vbiEYV8luLNjHkfTVo/FB5c/bxoH7xTmRBtN9IUJugySVnC/jtMo+tXjK4r5YxpvmY83AJ5H6qMB1RjJDG5PDr+vqhoNn0nu6vey6jNgtYgz9CRFT9mWjQ99oc8TIPeOOirLxdnTTyTMV0sXHIokwKAWf15VaJECVs6UaVATiKcP6K9JXmeWGSphrbwv+LQ54ATjjjOAf7lN+47OrP6ZXEBN9DKm9H0cMds+ti0zOb6bpHQAwlSle4t45OFLRWTXbh2i0ZK8OysNOw7mud8+6LkBvcqtWbz/l5Lw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(396003)(136003)(346002)(39860400002)(366004)(376002)(451199024)(1800799009)(186009)(86362001)(38100700002)(122000001)(38070700005)(33716001)(82960400001)(478600001)(76116006)(966005)(5660300002)(66556008)(66446008)(66476007)(64756008)(91956017)(71200400001)(6506007)(6486002)(6916009)(54906003)(316002)(66946007)(9686003)(6512007)(26005)(41300700001)(8936002)(4326008)(8676002)(2906002)(83380400001);DIR:OUT;SFP:1102;
+x-microsoft-antispam-message-info: ttDlWQ6fppHAck6adr5zWNqtAt03zNqtjkHN1UH2P8awt590p2xIUFvXnrVsRprV4d7Yd7UejQagCaqG8PHhd71zsaW1abLtZLt0CB7TUHS7zF8Mp7opSaJSx7K7q2BV+kAqn4oKSW5rYufUTmNfltvDCek4Bpw8g0Pb+kEEx0PXoIwTF7OIaPiEwFJFDMLRbf3jQ30kUPfuZXcVFx/GDVUvbmw+pBb864T23zr65w+5R2Nns0lg0T5y3VZtAi3tbFeNS7otwUwO6f19V8BtCKvaNqPyCL66aD3OuTSqkHDYz/oB9+HnACGFrN8LzAm67qLxThBXCkYd0kw33+1JLEcq4IK7yBnbuy8RqAYk4CuE1eeO9t8ob/Mtg3zUT5BpR160YU1UuPMkc4zYf1ugDmXxcpQTIJOgNlLGMUU8Yb+olhX/AR9dxtrI8QrW5S5WksMHhXbd/qftObD+YeYF8e/eVfzSwNDOfQATK69YXiCJSYrk+o7OlDa1shjCUD5hjk4q2g+xPOfKqZpKjnKftgBy6IXCudF7YfKsYtYLYadFc2w5EbnT5rnFQYWK9npCd1TaunFh9aouwu4S6kuQnryIhOllUoMpX9smZf/ivIEvamUfAaGfxdUJvJnBv0HP
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(366004)(376002)(396003)(136003)(39860400002)(346002)(186009)(451199024)(1800799009)(33716001)(86362001)(83380400001)(4326008)(8676002)(53546011)(2906002)(5660300002)(8936002)(41300700001)(6506007)(26005)(6486002)(71200400001)(9686003)(6512007)(76116006)(478600001)(91956017)(316002)(122000001)(66946007)(54906003)(82960400001)(6916009)(66476007)(64756008)(66446008)(66556008)(38070700005)(38100700002);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?7Svn3idCEKLP2PPDJJ5qQTMf/8swJ9ccCOItQyrOsZz9OiIWox9snUqDl3EB?=
- =?us-ascii?Q?FnkitxBsJ1ZQAeza/sutt4E50L7tUCzVZogX97Z8qsR3qFAiq9Ivwe/Y0BxY?=
- =?us-ascii?Q?4Dwi6uAPxvHXSwtGE8IxaoyEHB+TdtTkax5k8SBANK1PWW4v1NpgocwncyNT?=
- =?us-ascii?Q?Tmo96ejyZMWlIvUG6ezI2jS3UvG+kIgEeyOS62bxMaIQKJ1+tAPUcWEuob9q?=
- =?us-ascii?Q?zEvwgd6imMMRXJdceXUgtnwwaJ0MVac9nxL7Sv2gNF0YcaFU0RgqP8gLw5Kf?=
- =?us-ascii?Q?MSAcM0eavISCMXo56SWSDavz4mCGYr9N17RcWOdSnoTfjW94j7a5ZwaWJLsb?=
- =?us-ascii?Q?o5AuOuqE05BBLhaPDagrXBGGqL7hbf8a60Us/H5p/g2hOtVDYOfOESyfIgWc?=
- =?us-ascii?Q?KgpX8zZ14zOv4zPmfSJ90D1h2Dm7L9ZOu7HN/EFNJeqhVDfo9WnFgf8/Kj0d?=
- =?us-ascii?Q?RuYPspYEno6WryCZj1PigTKB3tXRE02njCN6XcYabBNZ501iUfC56qwi7A9N?=
- =?us-ascii?Q?XE6jIenaqaKL/b6FE5qWJMm5wHNiqzsHGdLAM3tomGiYZ1fdmvaVGy049DK+?=
- =?us-ascii?Q?uJ3DCwDA8MIqtqOCpg7sXwH/1GmvBVM7kGXzpVuDfYnvdJJ9vwGHrCd32URz?=
- =?us-ascii?Q?4SH+A9aK/WoO/AbpebPSo9Ofd1iEogc5hxV9pZxFihbiKSIXx5UBjCDOuM4z?=
- =?us-ascii?Q?GnFa6wc7j6KwgkReXV9OWnctxjYlOkCVnW4oRrf/33Uz02pcpl6k8xySf/TC?=
- =?us-ascii?Q?y84CGUb6V65rMRIBKM4tln11ltKEsmD+5GbHhtTJLyoQObRvQ0eGbbdSP3HD?=
- =?us-ascii?Q?mdG4kCZrVveUSuit+D8x2OuX379UBcXg7uZ7M5u4t2KBnFd+eF0G2TQUsf30?=
- =?us-ascii?Q?Gp5VmOHPnaVM+XoOysJg9Mk+kmHyam6Jz9ao7JQl0MCTyEcYgiUvm4j186Ep?=
- =?us-ascii?Q?p+zZzryjniNTAfFcviVUy7yHVp7FrBpTF+LuH8yryPCL51wu8zqFofs9ty75?=
- =?us-ascii?Q?m0/3qIa5LnE+oAFq/2iiD26ZPXMN1Ys9mo2qcMiem3GyfoqmAG/S1u9bACZC?=
- =?us-ascii?Q?OveXORKXrBuLinEDMUJaqzVgZOUpT5O31wUXiAWut11vW5qolhk0tWGq9CkA?=
- =?us-ascii?Q?H6/CxzDr4BvHo+LbLVuTV2lhrqNuvmFoEiSnAvLUa67TZ+B9UjfxQfLqAkKr?=
- =?us-ascii?Q?oUi/Q2Gux+YW6Qh6aXFhpfKbU43YsoiWrdH2HKDOsAuSVlQrspGkaI9S3qzY?=
- =?us-ascii?Q?X2FH9vlbHHzNvADzseZTWfidJxutHQLH7SGqOzrvDyTt6SPTnC5ML7my3xD0?=
- =?us-ascii?Q?HDTWeXXFKHW76TWil/JgGMBf/bvqLGiLVnlw3+FO5Rdzk23hWQVB0tdbwfIy?=
- =?us-ascii?Q?McnyvEL6CKMt2LuWdXFK+uB01kyiCs9yyoLkSwdVpQ57InWqjJWQ3y+kCLG4?=
- =?us-ascii?Q?twBdt+ABfZSYjk3fxwZjm39vAuEmUjFWO8tyYIBnnVbHxEFmJ7Xl0UuPbMTl?=
- =?us-ascii?Q?Su2G2Dz+Oyrd6D/UNTnRKdaqvJQdtWvRSMKNIMHSTdl+/wQ8Ar/Zh00OYUt0?=
- =?us-ascii?Q?mWr6X67NWvOZzM8tFRKxLvrm+plYTVvHIT2BHOWox7V6oxvSoUygtOANx35L?=
- =?us-ascii?Q?jg=3D=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?PlWNLbaHOu2WpSoXzjPBJ6OStlLznkFfovaCe+6IemrLvfd+6msyNb4/nEbL?=
+ =?us-ascii?Q?ZA03wDPgbasV1iS/dXrUJXdZr3CSS08rez9B7eu0fD+kaFMOCDaSLl64RFfK?=
+ =?us-ascii?Q?SxccyR4dxJ5+paYuo2gPOp5ez3DNkIBPDrRECt6WDgCrCTsI/+jDivBurVHK?=
+ =?us-ascii?Q?n2LPhKgyfnpzBcVJ44/JPeTtm2csMuZFBG/neFLvQ/Su3/Pa/TDObWC4DQN+?=
+ =?us-ascii?Q?+/GZZUSsHUB3dpxX0gaD0drzay4maTlI+MNp6Pg7N7+FRPde05/iFtS8cltg?=
+ =?us-ascii?Q?zWPlXXF19l7EL/Y9xMRV49cAwgjOFMZsZv3EFLj4Sin0T18F7fJtv2+LRyvh?=
+ =?us-ascii?Q?cvCM0FOVf+oDeBdAn8LjxKewqT0rinfW1L/cJ43qmkFJmAWvPdwZlDi7qYtJ?=
+ =?us-ascii?Q?YNEXpL9sN86gw1NJeJ6VqKKX8YKC5P8hpQLSI1vxObaExk59A8T3LpUuopPC?=
+ =?us-ascii?Q?4Yr6HkU3Yldz/XQ/ruJk+YJ71E1vWNdIfZ1v4rw/UN46nrSnK6cOaTu6EKHS?=
+ =?us-ascii?Q?C19CAbCeRotM17i8kx8o3y7SvzmgKOmnfa6XrVZc4MXAV3j7uxtJvv+jldzq?=
+ =?us-ascii?Q?4ikO5j1+NQd+xWOwZ5Y/ggm1V/l5jjKvfUxJBnx3t9H7gbo4jdw9n6y2tCcl?=
+ =?us-ascii?Q?vYNTqfxQUeFSE8jJeYoJvFDEDlMy7yjlbvaSZveQ9yGZAplcaWAL8nfd8ZaJ?=
+ =?us-ascii?Q?GrV0xOiKrK4vDua/Fr+EhbsPp8GBUXYkw/1c6UpNfX3jv0EcZYQ9mj+dxcBe?=
+ =?us-ascii?Q?zkKvp0416QiuSws2/jbFlQM/6vX4Qfh7tRPbzNG1giUGNUw/ynDrbJUdzPLZ?=
+ =?us-ascii?Q?7veBC9NFDBcJkr2Vy/SfU9zuOEGIvC23N68WACqIJivuhDj81yEAeeT8cqsc?=
+ =?us-ascii?Q?LAZRxzN7AauC8MSwYe+OcBAdvs21/gTLSL0IlJffDh4ToNV2D8dkAR3unZbJ?=
+ =?us-ascii?Q?4hltR1To+hRR9Pm50vSwmC+J72XaVlsjiuGtkOE8wWk++vBMJg9RlCvEMjbe?=
+ =?us-ascii?Q?4+tF3jM0r/dkQSvhl18C4pp5rK0RaZN3SJNlr+8f/j+CcutcmTepvuG9k060?=
+ =?us-ascii?Q?YrVJbPe/MKCTjvejnUrlSQ3M7fZ7B7Xjstb53KrjJV8A6G5cD3vybMmspoS+?=
+ =?us-ascii?Q?5Vs+Shcw2DIADBl1zcBBiTOBobDeYpPCJfwCRB7qEFh6j5ckwkM6YfWVdj7K?=
+ =?us-ascii?Q?9CmLKeEIfHzVOl1b8gaN38gksfMNAGNJENHi9pdLD9u9CaX4ncfwDGpW3BMx?=
+ =?us-ascii?Q?xvsrz6/Qo/sL8aUE6mP538/SycIFl6SCWTQyc9Farz+BGWYfVAoZU9wWrwV8?=
+ =?us-ascii?Q?XB/xTrvhky3BXY721WnbrtrNXp6HIFlpMzYwRbEbLqMHXF3zLJqcBYNlcYXe?=
+ =?us-ascii?Q?P5cXp/9lg7a7+NqeVbJqNPgeVEX+0agpCJmDqeJbth2uIAhfsCn7096c52Ou?=
+ =?us-ascii?Q?4mgge2p7JonTgcCKEE5cgb6cpkHw0uXL1OuTPphtL/kPZnYyNFWrDOtx9veq?=
+ =?us-ascii?Q?OPSlgArfVzTu5WQOa43LwkqglDifY/M7+crRcC6nESCwa/rjro/rYCHoEcxS?=
+ =?us-ascii?Q?hIJmKy0X001WZWEIwSarlMu47P8fNBpo5MLjWhXv0N0XDj+N7T/piPQJFHJn?=
+ =?us-ascii?Q?kw=3D=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <C035184982B04F4297707E1851661884@namprd04.prod.outlook.com>
+Content-ID: <5DD4D68E78757149BE5C38963272BD19@namprd04.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?lOrVBnfnktLQ6hDhBh6UAmwKWaQMokeO96QUcmeppP6sRWrZyBDBHkYZD4e9?=
- =?us-ascii?Q?EL3ndN96epctnVQGoDUdNSLZv/DKXlPwOeY9hsu6a96LYocFu6XDjOjkpJG8?=
- =?us-ascii?Q?bpLHBikBHnxAln8k0lJvGoRgU6UmfntwID1lt2TkaAAHWNpCZD5pkbTFWs5+?=
- =?us-ascii?Q?QYEWMYAD/iB2c7sv25gxXndxfQZCPnCdk0qHGHZivapxazarujhSPZtKiDJP?=
- =?us-ascii?Q?oH7XF4Lw8NHqOr69XoCKLiB3Aw/fsFg2oKjuDLINQxBmAAErs95MYFVHbZDl?=
- =?us-ascii?Q?NjN9Cco2b/YFrW7z7Ghf1MlYJo0eVv28FtI+ftr12RgbDrmjoJTQ8oOpuScM?=
- =?us-ascii?Q?wxUN9Vc0AwmwOEAcgLgPgNdKQ7cp8ZMG0YyqxS8ZT90OCI6R7f35JNvsTety?=
- =?us-ascii?Q?IN5Ia4qkuVCblSn34r5UeW0/SF8KbWZPD+yrnLH6J25YSwiKBgm0TQNg1ggG?=
- =?us-ascii?Q?mNGOUsCt0VIN8th9rMkJ+dSVvUfWkHwh93ppsRqOhDM9QnEDgjh/cOhaOzYc?=
- =?us-ascii?Q?HEkVGJGLtMRNXo39cX2956J94mlkn1D2JXoG63DrYJadTjjTGlUaYwLbW/Y4?=
- =?us-ascii?Q?jneGT/e9fLEZZsGWmurdzx7d7Fd9Bnube3T/Nxd0MSZtU1nJMbpOrGMQ4TKE?=
- =?us-ascii?Q?z9+jRV+FZuBPRjOFOQRHoLrDPs26qEk/n7HYuV9i2xzpqwn5McKAKQ8whxII?=
- =?us-ascii?Q?NZobzOD5TJdPCUFE1acDSSbfyBkGTE/6rgmJqBZYx/pkU0Ywj0p9OBi3UePM?=
- =?us-ascii?Q?CdbliLCYdcK2860auUCQ70qW58qSFmjO+Spzfqdi3yTaAD+s9aRldPl//YfG?=
- =?us-ascii?Q?RlZ6JFvWgItvy9Ftu1uzAT3qDjkOEarMDv6F9JmH7crkHqB1ueGnml/Z0DxR?=
- =?us-ascii?Q?93JvE7wWh0WgNscY26dnPiMvh3H0JZtP8IoKteLNgJJqLU8XQjETp98QZxGo?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?yplN6s2LuXFmi9v24p6Xrakxa7Sp3DWQbL5uxPUOulIzrWaSMWtQbz9y+AkI?=
+ =?us-ascii?Q?gklDpIR9ikzcmCT+Eu433mKxZcXDFkb6Bv5PGGbFUAh87vlw2+uumrz0pSkU?=
+ =?us-ascii?Q?nQe8dzbbJQ3bk+5F62YQfOpddtyWeSjwsEDLRr/iW0ordGsgzfSgRLETBAa4?=
+ =?us-ascii?Q?WmjldDrjoN+drECTpVPHph5+4Pj9TKznhaMHXgCr4Qy1PwfI9fE+lOCu9W4u?=
+ =?us-ascii?Q?lSqo4cWVmLpritc1PZEImwoBhcrSeAs1OPBshDtggVWij3k86usiaOfAG7GV?=
+ =?us-ascii?Q?iPUsCf+NxsRlmGJ/gLJzlBNJuXb+th8Prqs4zhzeeF4y6YFPppnd5dVUU1Ez?=
+ =?us-ascii?Q?c0SF5qPCbPYydun96FQNkbi8HJsHW8DiBKc9dVU5cL9rVwdpYXcWhudBvxAG?=
+ =?us-ascii?Q?r2YCbjCxpbmzMfo9VX41XWPYecC8XzFUs7w+6NY2sXIdqZoDl/ukn8SWrISE?=
+ =?us-ascii?Q?6YX4FrCiHsOTw1+M5lafSW0phq83PROZejHDsB91YTQM8NykZAf3hh+psabn?=
+ =?us-ascii?Q?qEHT1EwuPHSMmq+tFtlstyxBgWguNzFdsSZZWATZ0arHh48qIbY0z52dc9P8?=
+ =?us-ascii?Q?qlo/HvQosIw+b7tsVXLbXCMKgQ6ffR1OacAePvPIt4bOjF3WJ1v/jmZ3y3Ym?=
+ =?us-ascii?Q?/InC9nVBxu7xcrxxVzF7yZ52uvpiOSax6HO1v0Nx2/T7I5vZdXDyKVCdxgIM?=
+ =?us-ascii?Q?W3y/Q/+GbL5zUwOAtKC0Ayasd4MnFh0Ony7fFzUNCCiL9Xi0JWGbd6k3wyIB?=
+ =?us-ascii?Q?usP7II0MP3EOBgrj+nFjsVVUS8LyAhgQtBAdXUk8mqRqc/UJxIV1bkreDly2?=
+ =?us-ascii?Q?s6y9gaXf7ImPkD+YkwMrK++4ATlCwLYOuzh8RMAw2OspmkymoxAzaO6xAILk?=
+ =?us-ascii?Q?nLBPxZf3Ivas/J9GpowyFyZ3d6Z0/uTsw2E0Q4+dwyc18+1l5HGzSmTynvlY?=
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6895e1fb-3b35-4c90-975b-08db9f7ad053
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Aug 2023 23:36:43.2719
+X-MS-Exchange-CrossTenant-Network-Message-Id: a6189433-c7e2-42fe-f973-08db9f7cb919
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Aug 2023 23:50:23.2681
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: PtWqXVzcj/OE6FGve9goLNmDZr/YmvrXs2mTRqfRiNoxOYJmcgQf2NZ2xMhzozqayO1oh7pzgqEa+OoBu9G2tw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB7383
+X-MS-Exchange-CrossTenant-userprincipalname: FaDvvCAlZHU9GvuuOg15Qnnw5b0IPZdQYOTs+4VCOROTlWZcQLnvnIDNbgcQkNtovIOrTi9PbYgsnmr+M1psOQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR04MB7444
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 17, 2023 at 02:41:36PM -0700, Igor Pylypiv wrote:
-
-Hello Igor,
-
-> For Command Duration Limits policy 0xD (command completes without
-> an error) libata needs FIS in order to detect the ATA_SENSE bit and
-> read the Sense Data for Successful NCQ Commands log (0Fh).
+On Fri, Aug 18, 2023 at 08:12:02AM +0900, Damien Le Moal wrote:
+> On 2023/08/18 6:41, Igor Pylypiv wrote:
+> > For Command Duration Limits policy 0xD (command completes without
+> > an error) libata needs FIS in order to detect the ATA_SENSE bit and
+> > read the Sense Data for Successful NCQ Commands log (0Fh).
+> >=20
+> > Set return_fis_on_success for commands that have a CDL descriptor
+> > since any CDL descriptor can be configured with policy 0xD.
+> >=20
+> > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> > ---
+> >  drivers/scsi/libsas/sas_ata.c | 3 +++
+> >  include/scsi/libsas.h         | 1 +
+> >  2 files changed, 4 insertions(+)
+> >=20
+> > diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_at=
+a.c
+> > index 77714a495cbb..da67c4f671b2 100644
+> > --- a/drivers/scsi/libsas/sas_ata.c
+> > +++ b/drivers/scsi/libsas/sas_ata.c
+> > @@ -207,6 +207,9 @@ static unsigned int sas_ata_qc_issue(struct ata_que=
+ued_cmd *qc)
+> >  	task->ata_task.use_ncq =3D ata_is_ncq(qc->tf.protocol);
+> >  	task->ata_task.dma_xfer =3D ata_is_dma(qc->tf.protocol);
+> > =20
+> > +	/* CDL policy 0xD requires FIS for successful (no error) completions =
+*/
+> > +	task->ata_task.return_fis_on_success =3D ata_qc_has_cdl(qc);
 >=20
-> Set return_fis_on_success for commands that have a CDL descriptor
-> since any CDL descriptor can be configured with policy 0xD.
+> From the comments on patch 1, this should be:
 >=20
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> ---
->  drivers/scsi/libsas/sas_ata.c | 3 +++
->  include/scsi/libsas.h         | 1 +
->  2 files changed, 4 insertions(+)
+> 	if (qc->flags & ATA_QCFLAG_HAS_CDL)
+> 		task->ata_task.return_sdb_fis_on_success =3D 1;
 >=20
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.=
-c
-> index 77714a495cbb..da67c4f671b2 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -207,6 +207,9 @@ static unsigned int sas_ata_qc_issue(struct ata_queue=
-d_cmd *qc)
->  	task->ata_task.use_ncq =3D ata_is_ncq(qc->tf.protocol);
->  	task->ata_task.dma_xfer =3D ata_is_dma(qc->tf.protocol);
-> =20
-> +	/* CDL policy 0xD requires FIS for successful (no error) completions */
-> +	task->ata_task.return_fis_on_success =3D ata_qc_has_cdl(qc);
+> Note the renaming to "return_sdb_fis_on_success" to be clear about the FI=
+S type.
 
-In ata_qc_complete(), for a successful command, we call fill_result_tf()
-if (qc->flags & ATA_QCFLAG_RESULT_TF):
-https://github.com/torvalds/linux/blob/v6.5-rc6/drivers/ata/libata-core.c#L=
-4926
+I'm not sure if I agree with this comment.
 
-My point is, I think that you should set
-task->ata_task.return_fis_on_success =3D ata_qc_wants_result(qc);
+According to the pm80xx programmers manual,
+setting the RETFIS bit enables the HBA to return a FIS for a successful
+command:
 
-where ata_qc_wants_result()
-returns true if ATA_QCFLAG_RESULT_TF is set.
+PIO Read: Nothing is returned
+PIO Write: Device To Host FIS received from the device.
+DMA Read: Device To Host FIS received from the device.
+DMA Write: Device To Host FIS received from the device.
+FPDMA Read: Set Device Bit FIS received from the device.
+FPDMA Write: Set Device Bit FIS received from the device.
+Non-Data: Device To Host FIS received from the device.
 
-(ata_set_tf_cdl() will set both ATA_QCFLAG_HAS_CDL and ATA_QCFLAG_RESULT_TF=
-).
+So the FIS you get back can also be e.g. a D2H FIS, if you send
+e.g. a DMA read command.
 
-That way, e.g. an internal command (i.e. a command issued by
-ata_exec_internal_sg()), which always has ATA_QCFLAG_RESULT_TF set,
-will always gets an up to date tf status and tf error value back,
-because the SAS HBA will send a FIS back.
+If the RETFIS bit is not set, and the command was successful,
+no FIS will be returned.
 
-If we don't do this, then libsas will instead fill in the tf status and
-tf error from the last command that returned a FIS (which might be out
-of date).
+So if you really want to rename this bit, then we would also need to
+change the logic in pm80xx to be something like:
+if (ata_is_ncq() && task->ata_task.return_sdb_fis_on_success)
+	set_RETFIS_bit;
 
-
-> +
->  	if (qc->scsicmd)
->  		ASSIGN_SAS_TASK(qc->scsicmd, task);
-> =20
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 159823e0afbf..9e2c69c13dd3 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -550,6 +550,7 @@ struct sas_ata_task {
->  	u8     use_ncq:1;
->  	u8     set_affil_pol:1;
->  	u8     stp_affil_pol:1;
-> +	u8     return_fis_on_success:1;
-> =20
->  	u8     device_control_reg_update:1;
-> =20
-> --=20
-> 2.42.0.rc1.204.g551eb34607-goog
->=20
-
-Considering that libsas return value is defined like this:
-https://github.com/torvalds/linux/blob/v6.5-rc6/include/scsi/libsas.h#L507
-
-Basically, if you returned a FIS in resp->ending_fis, you should return
-SAS_PROTO_RESPONSE. If you didn't return a FIS for your command, then
-you return SAS_SAM_STAT_GOOD (or if it is an error, a SAS_ error code
-that is not SAS_PROTO_RESPONSE, as you didn't return a FIS).
-
-Since you have implemented this only for pm80xx, how about adding something
-like this to sas_ata_task_done:
-
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 77714a495cbb..e1c56c2c00a5 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -114,6 +114,15 @@ static void sas_ata_task_done(struct sas_task *task)
-                }
-        }
-=20
-+       /*
-+        * If a FIS was requested for a good command, and the lldd returned
-+        * SAS_SAM_STAT_GOOD instead of SAS_PROTO_RESPONSE, then the lldd
-+        * has not implemented support for sas_ata_task.return_fis_on_succe=
-ss
-+        * Warn about this once. If we don't return FIS on success, then we
-+        * won't be able to return an up to date TF.status and TF.error.
-+        */
-+       WARN_ON_ONCE(ata_qc_wants_result(qc) && stat->stat =3D=3D SAS_SAM_S=
-TAT_GOOD);
-+
-        if (stat->stat =3D=3D SAS_PROTO_RESPONSE ||
-            stat->stat =3D=3D SAS_SAM_STAT_GOOD ||
-            (stat->stat =3D=3D SAS_SAM_STAT_CHECK_CONDITION &&
-
-
+Doesn't it make more sense for this generic libsas flag to keep its
+current name, i.e. it means that we enable FIS reception for successful
+commands, regardless of FIS type?
 
 
 Kind regards,
