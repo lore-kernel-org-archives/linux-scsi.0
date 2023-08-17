@@ -2,107 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EAA8C41513
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 10:38:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E912C2FC1A
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 11:01:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349948AbjHQKiN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 06:38:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51508 "EHLO
+        id S1350094AbjHQLA0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 07:00:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349920AbjHQKiA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 06:38:00 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F15DE2D5A;
-        Thu, 17 Aug 2023 03:37:58 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1bb84194bf3so48761105ad.3;
-        Thu, 17 Aug 2023 03:37:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692268678; x=1692873478;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=e8u6STTTo0IQbi3lQd+vgtiTbyFEHsVCA7HA0UeiZdw=;
-        b=OMZXTeKwtW1HkrTRzX9/ceRnBHtM5YJ6w2M3N4KNUttvLDqZJeNUGjKnRFHkkkjJ7a
-         4mWnKqvrd+W8U3GtAzJWdvpVjc/jxwVLPvnM2UjiYMXRfWk9T8va3JaUAvl1Cu/VJ6QH
-         Qfgvuvrp7iWpEcCodll03rjut+S44okzhw/avRSBxNp2naDF46FNu6cXCLbD/XiJgFpl
-         B+j4q4HhduNEz8/DyvzfsFD6xe8rM8WPhAH5j5djuIRt9J5E2dkDp8K9dK86MLjBmiN+
-         E5/e2s0eeHTRVn4RrM5TKSp0YwTLkdYtZS7lJS0RDHSuJo52Gfp2IhpqjilIfrdpQfUK
-         KVVg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692268678; x=1692873478;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=e8u6STTTo0IQbi3lQd+vgtiTbyFEHsVCA7HA0UeiZdw=;
-        b=P4v5gRWdX61ihvTrMHqNcbIWGoWmUaQc9EQu28zXfu2GX353l55EH0zqqQE7Dp7fBn
-         O7BEGD2SQo3+4gWlasl7X6UssiWiWv8Q/qvnxu5dYnVkrIdxy/yNwtJI1FhTq6vYhG18
-         9wmhKagx2SmebapCi8SHFH845AkNhqkoPAoTpNAX7KX9FLfI35/p70bMh2uiKJsjpDIS
-         q5+bq8xz3Gjcm0EXP5p7qOPdB4Emmhhc+VGj9JRiJL41S7UXFBW5KOXidQt/5qlkU/zR
-         QMXZQgvewIHx7aF1TOQqDof9i0TBD4f0fo56VVcFd+OTx7VFUaQFzbCDbWoPKVFbH1D6
-         ptfA==
-X-Gm-Message-State: AOJu0Yz1fdDQdSsjdc1AH33bPGhmZDy85+XmXTVwlK8oevTX5t6NkUCp
-        U3qra+4BzQx/jrEhE8nHs/I=
-X-Google-Smtp-Source: AGHT+IFpAGL5N3vaudEA7MH3XwrMMJeUBz6yL0NjKOczZnqyaaL5xXtsNl/eXPB/emWKCmX2nsxYvQ==
-X-Received: by 2002:a17:902:cec5:b0:1bc:81f2:ddf0 with SMTP id d5-20020a170902cec500b001bc81f2ddf0mr5157403plg.67.1692268678398;
-        Thu, 17 Aug 2023 03:37:58 -0700 (PDT)
-Received: from localhost.localdomain ([2409:40c2:1016:aeca:454:68e4:51c8:d1cf])
-        by smtp.gmail.com with ESMTPSA id h17-20020a170902f7d100b001b87d3e845bsm14963467plw.149.2023.08.17.03.37.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Aug 2023 03:37:58 -0700 (PDT)
-From:   coolrrsh@gmail.com
-To:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        rdunlap@infradead.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     linux-kernel-mentees@lists.linuxfoundation.org,
-        Rajeshwar R Shinde <coolrrsh@gmail.com>
-Subject: [PATCH v2] scsi: sli4: Remove the buggy code
-Date:   Thu, 17 Aug 2023 16:07:51 +0530
-Message-Id: <20230817103751.16350-1-coolrrsh@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S1350109AbjHQLAV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 07:00:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 603272D4A;
+        Thu, 17 Aug 2023 04:00:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F231E608D5;
+        Thu, 17 Aug 2023 11:00:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BA50C433C8;
+        Thu, 17 Aug 2023 11:00:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692270019;
+        bh=6o6ovJTGhJp9a+Kyp0jno4rIqedxLlLLMba/7wSjIyE=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=QJS9Kw7ls4+8g9PTfr6mJ/n0zQbHCCpcx6bNNm1PMEnrajVfQWmrolJv/3zuYBQi+
+         wEzVQ0+2wCR/HdOuAqOlBmy6AubGwug0guVW6xaFZesBz07//oBs3izMGd0bVV5lIb
+         hT1tup3bhXelDzH4zpmaBhrJ7i8MZiMRzsl2V67eb9H+hjsem2AobvpTR3YtP1x9Lu
+         ioo2sNrRbw1zLdKsIqYueyLKgBwQTX4aUENrI5XUJRQ11Vydnek7YdVT8Ryhj3uJuW
+         RQ4kgahBUR0dIRw7VSgMDC3TfGWcHgcHiGaYP2wAqRVHn8N3cNINebso41BWWvl+F/
+         fB5wkVF+h4H0A==
+Message-ID: <6d823671-db2b-2280-0c93-87d03a2f471e@kernel.org>
+Date:   Thu, 17 Aug 2023 20:00:17 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v9 01/17] block: Introduce more member variables related
+ to zone write locking
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+References: <20230816195447.3703954-1-bvanassche@acm.org>
+ <20230816195447.3703954-2-bvanassche@acm.org>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230816195447.3703954-2-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Rajeshwar R Shinde <coolrrsh@gmail.com>
+On 8/17/23 04:53, Bart Van Assche wrote:
+> Many but not all storage controllers require serialization of zoned writes.
+> Introduce two new request queue limit member variables related to write
+> serialization. 'driver_preserves_write_order' allows block drivers to
+> indicate that the order of write commands is preserved and hence that
+> serialization of writes per zone is not required. 'use_zone_write_lock' is
+> set by disk_set_zoned() if and only if the block device has zones and if
+> the block driver does not preserve the order of write requests.
+> 
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-In the function sli_xmit_bls_rsp64_wqe, the 'if' and 'else' conditions
-evaluates the same expression and gives same output. Also the variable
-bls->local_n_port_id_dword is not used anywhere. Therefore removing the 
-redundant code.
+Looks OK to me.
 
-This fixes coccinelle warning such as:
-drivers/scsi/elx/libefc_sli/sli4.c:2320:2-4: WARNING: possible
-condition with no effect (if == else)
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-Signed-off-by: Rajeshwar R Shinde <coolrrsh@gmail.com>
----
-v1->v2
-Modified patch and verified with checkpatch.pl.
-
----
- drivers/scsi/elx/libefc_sli/sli4.c | 7 -------
- 1 file changed, 7 deletions(-)
-
-diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
-index 8f96049f62dd..af661b769464 100644
---- a/drivers/scsi/elx/libefc_sli/sli4.c
-+++ b/drivers/scsi/elx/libefc_sli/sli4.c
-@@ -2317,13 +2317,6 @@ sli_xmit_bls_rsp64_wqe(struct sli4 *sli, void *buf,
- 		SLI4_GENERIC_CONTEXT_VPI << SLI4_BLS_RSP_WQE_CT_SHFT;
- 		bls->context_tag = cpu_to_le16(params->vpi);
- 
--		if (params->s_id != U32_MAX)
--			bls->local_n_port_id_dword |=
--				cpu_to_le32(params->s_id & 0x00ffffff);
--		else
--			bls->local_n_port_id_dword |=
--				cpu_to_le32(params->s_id & 0x00ffffff);
--
- 		dw_ridflags = (dw_ridflags & ~SLI4_BLS_RSP_RID) |
- 			       (params->d_id & SLI4_BLS_RSP_RID);
- 
 -- 
-2.25.1
+Damien Le Moal
+Western Digital Research
 
