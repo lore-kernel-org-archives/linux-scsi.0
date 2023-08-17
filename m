@@ -2,175 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 141BCC677C4
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 21:43:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E427C678DC
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 21:48:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355408AbjHQVmu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 17:42:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36716 "EHLO
+        id S1355430AbjHQVsR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 17:48:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355407AbjHQVmU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 17:42:20 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED747E4F
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 14:42:18 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id 3f1490d57ef6-d6ce0c4489bso327378276.2
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 14:42:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1692308538; x=1692913338;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Qtl6EpumWNGPoRz7oaS5PTYvxovlVgZ6i46m27dXaq4=;
-        b=cl7isfNShgcgUXX+bIwc6SL9TYZ+oE3/kJae10YUFS24BqiFrqqw+JQe70bvc3gg4n
-         6SwcN0j37z71dphycVkQPAa62jUnHMXwKMjmHDDIQcNPEXyy4USrNXpLR2uD33wXc0LO
-         T9IJ0jTOsd1eBN0DNRL8AJ5TzOckT/mU/uA/J1F5evgf3CqLRIwqX4XHtoy59i4oa1o4
-         3beHdUhm/TuzoRgiwS/QOyEFzepYhCG1NBfFfh2+nk/sZPtPmZ28c+QWdPRkcxGsnTzr
-         8nGj74ponNusbpL0hjMRXXzptGkP12k/0Lk3xKCUKAjgf+EoUzQM2cLeuEg3h5Qk/DgR
-         4PUQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692308538; x=1692913338;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Qtl6EpumWNGPoRz7oaS5PTYvxovlVgZ6i46m27dXaq4=;
-        b=JiVNjAsqQZAlvHTWXYj+BCofPpNghNt8Hs1lAxvtKxGo76V+udRcCG0rWTNXPTT82k
-         bx1aioS/+VWSe70jCcjZ4G+DUW9CDr44g4gRnOBcr8FrID/zYWkbnlNByfSWrXzsqODz
-         FTYsJK8exwESnRWI8MjZC5tzCHXCqyIcXm6UwFM8brIGU8Md3QVici8eNgA1gU/g/gcO
-         0fnX0Is0dbBT/AtV+ObLb5XX1lBbH+AR5mkdGV3JWp2jl3YugGEeVu8cIqyEQ5dhi1mc
-         +4LngO31PuOEtC4phAg97p2YOguZJGtLYngqo1s5rKG4QONOUf3S8l2NSOsf5EKEk3E8
-         lnfA==
-X-Gm-Message-State: AOJu0YxNsbCdPjhLv0mis3tCZPNxdrZ7wUmoAjihRuZrK/lqBDmQqkyH
-        PAxvjGnyKoKKdwnKGqEYlwnsRY08hKNc7w==
-X-Google-Smtp-Source: AGHT+IHrRtetB/alA9IynLSO6i/2PCQBhpOYIoUI37adIRvWn3Xs+ORUb6jfqmp0nZ5s0YhUZQQ3Z5VOo5/hxQ==
-X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:ab26:9b32:155b:9418])
- (user=ipylypiv job=sendgmr) by 2002:a25:946:0:b0:d4f:638b:d806 with SMTP id
- u6-20020a250946000000b00d4f638bd806mr10595ybm.8.1692308538248; Thu, 17 Aug
- 2023 14:42:18 -0700 (PDT)
-Date:   Thu, 17 Aug 2023 14:41:37 -0700
-In-Reply-To: <20230817214137.462044-1-ipylypiv@google.com>
-Mime-Version: 1.0
-References: <20230817214137.462044-1-ipylypiv@google.com>
-X-Mailer: git-send-email 2.42.0.rc1.204.g551eb34607-goog
-Message-ID: <20230817214137.462044-3-ipylypiv@google.com>
-Subject: [PATCH 3/3] scsi: pm80xx: Set RETFIS when requested by libsas
-From:   Igor Pylypiv <ipylypiv@google.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        with ESMTP id S1355428AbjHQVsI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 17:48:08 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2752F123;
+        Thu, 17 Aug 2023 14:48:07 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37HKjXWP008778;
+        Thu, 17 Aug 2023 21:47:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=aiyqthPCZmbfbfAJ8roBzH7300hp+FwPmcUCnP9AKc8=;
+ b=gO0JJZ+Gjc32KNmNFS5VAOPwOb3MLRsE52lqBpbDDBxZO/Pl2N+X8UmiXA1mnh1GXKO2
+ DXIK2vtfpBAyh9ihhwvTimi1o9ozkZh+8wegzogROfCqI26W7pwQu4I82XrHjvXaTLvc
+ O7IdTG5Itl2oeIdEST9cTgFgadNQgc0gU6M6FCgOlRm1E6yyrKNy2HZpiwYZ6EEQIzoU
+ EHqWqEIbac9PpW+f3AuqnGQh0BPjG1NuCX3pqdDiQPjXX2sBVVMK58LuGQ0JaFqGnoEd
+ +0uguu3HMXMTA3sS9KNWw/hry37LmcnWP5x6Cu0YRr8boeD4ivl7mO0ncZWKjbSpSJZ1 NA== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3shscrg9ab-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 17 Aug 2023 21:47:39 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37HLlbOm019804
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 17 Aug 2023 21:47:37 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 17 Aug
+ 2023 14:47:37 -0700
+Message-ID: <97100392-0c17-e950-1dd4-c52b97aecbe8@quicinc.com>
+Date:   Thu, 17 Aug 2023 14:47:36 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v9 17/17] scsi: ufs: Inform the block layer about write
+ ordering
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Can Guo" <quic_cang@quicinc.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Damien Le Moal" <dlemoal@kernel.org>,
+        Ming Lei <ming.lei@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        Igor Pylypiv <ipylypiv@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Bean Huo" <beanhuo@micron.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Arthur Simchaev" <Arthur.Simchaev@wdc.com>
+References: <20230816195447.3703954-1-bvanassche@acm.org>
+ <20230816195447.3703954-18-bvanassche@acm.org>
+ <666c6d78-d975-c9f9-4ad2-c9fa86497b47@quicinc.com>
+ <4f332520-329c-6355-3aa3-cd5e29716a06@acm.org>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <4f332520-329c-6355-3aa3-cd5e29716a06@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: L8mQZpcvwmscM0-6ijtrE_A3-2HfgETt
+X-Proofpoint-ORIG-GUID: L8mQZpcvwmscM0-6ijtrE_A3-2HfgETt
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-17_18,2023-08-17_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1015
+ priorityscore=1501 mlxscore=0 bulkscore=0 spamscore=0 malwarescore=0
+ phishscore=0 lowpriorityscore=0 suspectscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308170193
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-By default PM80xx HBAs return FIS only when a drive reports an error.
-The RETFIS bit forces the controller to populate FIS even when a drive
-reports no error.
+On 8/17/2023 12:34 PM, Bart Van Assche wrote:
+> On 8/17/23 12:00, Bao D. Nguyen wrote:
+>> In legacy SDB mode with auto-hibernation enabled, the default setting 
+>> for the
+>> driver_preserves_write_order = false.
+>  >
+>> Using the default setting, it may be missing this check that is part 
+>> of the 
+>> ufshcd_auto_hibern8_update()->ufshcd_update_preserves_write_order().
+> 
+> If auto-hibernation is enabled by the host driver, 
+> driver_preserves_write_order
+> is set by the following code in ufshcd_slave_configure():
+> 
+>      q->limits.driver_preserves_write_order =
+>          !ufshcd_is_auto_hibern8_supported(hba) ||
+>          FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) == 0;
+> 
+> Does this answer your question?
+Hi Bart,
+My concern is that in the ufshcd_update_preserves_write_order() you have 
+this logic:
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c |  8 +++++---
- drivers/scsi/pm8001/pm8001_hwi.h |  2 +-
- drivers/scsi/pm8001/pm80xx_hwi.c | 11 ++++++-----
- drivers/scsi/pm8001/pm80xx_hwi.h |  2 +-
- 4 files changed, 13 insertions(+), 10 deletions(-)
+	if (!preserves_write_order) {
+		shost_for_each_device(sdev, hba->host) {
+			struct request_queue *q = sdev->request_queue;
+			/*...*/
+			if (blk_queue_is_zoned(q) && !q->elevator)
+				return -EPERM;
+		}
+	}
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 73cd25f30ca5..255553dcadb9 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -4095,7 +4095,7 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	u32 hdr_tag, ncg_tag = 0;
- 	u64 phys_addr;
- 	u32 ATAP = 0x0;
--	u32 dir;
-+	u32 dir, retfis;
- 	u32  opc = OPC_INB_SATA_HOST_OPSTART;
- 
- 	memset(&sata_cmd, 0, sizeof(sata_cmd));
-@@ -4124,8 +4124,10 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	sata_cmd.tag = cpu_to_le32(tag);
- 	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
- 	sata_cmd.data_len = cpu_to_le32(task->total_xfer_len);
--	sata_cmd.ncqtag_atap_dir_m =
--		cpu_to_le32(((ncg_tag & 0xff)<<16)|((ATAP & 0x3f) << 10) | dir);
-+	retfis = task->ata_task.return_fis_on_success;
-+	sata_cmd.retfis_ncqtag_atap_dir_m =
-+		cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
-+				((ATAP & 0x3f) << 10) | dir);
- 	sata_cmd.sata_fis = task->ata_task.fis;
- 	if (likely(!task->ata_task.device_control_reg_update))
- 		sata_cmd.sata_fis.flags |= 0x80;/* C=1: update ATA cmd reg */
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-index 961d0465b923..fc2127dcb58d 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.h
-+++ b/drivers/scsi/pm8001/pm8001_hwi.h
-@@ -515,7 +515,7 @@ struct sata_start_req {
- 	__le32	tag;
- 	__le32	device_id;
- 	__le32	data_len;
--	__le32	ncqtag_atap_dir_m;
-+	__le32	retfis_ncqtag_atap_dir_m;
- 	struct host_to_dev_fis	sata_fis;
- 	u32	reserved1;
- 	u32	reserved2;
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 39a12ee94a72..e839fb53f0e3 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4457,7 +4457,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	u64 phys_addr, end_addr;
- 	u32 end_addr_high, end_addr_low;
- 	u32 ATAP = 0x0;
--	u32 dir;
-+	u32 dir, retfis;
- 	u32 opc = OPC_INB_SATA_HOST_OPSTART;
- 	memset(&sata_cmd, 0, sizeof(sata_cmd));
- 
-@@ -4487,6 +4487,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	sata_cmd.tag = cpu_to_le32(tag);
- 	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
- 	sata_cmd.data_len = cpu_to_le32(task->total_xfer_len);
-+	retfis = task->ata_task.return_fis_on_success;
- 
- 	sata_cmd.sata_fis = task->ata_task.fis;
- 	if (likely(!task->ata_task.device_control_reg_update))
-@@ -4502,8 +4503,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 		opc = OPC_INB_SATA_DIF_ENC_IO;
- 
- 		/* set encryption bit */
--		sata_cmd.ncqtag_atap_dir_m_dad =
--			cpu_to_le32(((ncg_tag & 0xff)<<16)|
-+		sata_cmd.retfis_ncqtag_atap_dir_m_dad =
-+			cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
- 				((ATAP & 0x3f) << 10) | 0x20 | dir);
- 							/* dad (bit 0-1) is 0 */
- 		/* fill in PRD (scatter/gather) table, if any */
-@@ -4569,8 +4570,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			   "Sending Normal SATA command 0x%x inb %x\n",
- 			   sata_cmd.sata_fis.command, q_index);
- 		/* dad (bit 0-1) is 0 */
--		sata_cmd.ncqtag_atap_dir_m_dad =
--			cpu_to_le32(((ncg_tag & 0xff)<<16) |
-+		sata_cmd.retfis_ncqtag_atap_dir_m_dad =
-+			cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
- 					((ATAP & 0x3f) << 10) | dir);
- 
- 		/* fill in PRD (scatter/gather) table, if any */
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index acf6e3005b84..eb8fd37b2066 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -731,7 +731,7 @@ struct sata_start_req {
- 	__le32	tag;
- 	__le32	device_id;
- 	__le32	data_len;
--	__le32	ncqtag_atap_dir_m_dad;
-+	__le32	retfis_ncqtag_atap_dir_m_dad;
- 	struct host_to_dev_fis	sata_fis;
- 	u32	reserved1;
- 	u32	reserved2;	/* dword 11. rsvd for normal I/O. */
--- 
-2.42.0.rc1.204.g551eb34607-goog
+The above logic is only invoked when ufshcd_auto_hibern8_update() is 
+called. During initialization, ufshcd_auto_hibern8_update() is not 
+called. Therefore, you may have SDB mode with auto hibernate enabled -> 
+preserves_write_order = false, and (blk_queue_is_zoned(q) && 
+!q->elevator) is true. Is that a problem? If you called 
+ufshcd_auto_hibern8_update() during ufs probe, you would have returned 
+-EPERM and not enable auto-hibernation in that case.
+
+Thanks,
+Bao
+
+
+> 
+> Thanks,
+> 
+> Bart.
 
