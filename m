@@ -2,95 +2,77 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E97C27C7A
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 13:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B830C2FC3D
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 14:21:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351160AbjHQNNX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 09:13:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50026 "EHLO
+        id S1351805AbjHQOVZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 10:21:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351357AbjHQNM5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 09:12:57 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CAE135B3
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 06:12:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1692277947; x=1723813947;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=kAYa92dc/XaTLUpBkmr9xqxW0SmLU8LvXUePTs0Nivs=;
-  b=PpQ8eWn0OVeXnZjyVgxxnfy+sHVFg0DT0+QGuxwI4Et7yaiUGPprLvih
-   s0rBxUBHQYEliAAuWhXcXM6xHxHB1RzfR4TSiPBRTK7eYfV3wZ5dxTB5W
-   O5tDu0ANgvEL8qCZUVZ8J+xRnQ9Og8uiBe99iD35dBTV0whFXXUe2oGq/
-   ZWXgV2Fwm2/DT3IG00eM1G2uZQXEaOodGRuOblBelEhRBMjBOY7W5hMYK
-   tJIH7e0RVauV+pjIDaMZdwzuDvDsfEVGPkyTq96SCqleBInD6onhjHBDX
-   sAPVYb05hc4gCupML5mDAiKyVIt8640ep6b/rfNF+NiWk6TlXDx6Kle+1
-   w==;
-X-IronPort-AV: E=Sophos;i="6.01,180,1684825200"; 
-   d="scan'208";a="242128506"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Aug 2023 06:11:28 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Thu, 17 Aug 2023 06:11:10 -0700
-Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server id 15.1.2507.21 via Frontend
- Transport; Thu, 17 Aug 2023 06:11:09 -0700
-From:   Don Brace <don.brace@microchip.com>
-To:     <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
-        <scott.teel@microchip.com>, <Justin.Lindley@microchip.com>,
-        <scott.benesh@microchip.com>, <gerry.morong@microchip.com>,
-        <mahesh.rajashekhara@microchip.com>, <mike.mcgowen@microchip.com>,
-        <murthy.bhat@microchip.com>, <kumar.meiyappan@microchip.com>,
-        <jeremy.reeves@microchip.com>, <david.strahan@microchip.com>,
-        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
-        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-Subject: [PATCH 9/9] smartpqi: change driver version to 2.1.24-046
-Date:   Thu, 17 Aug 2023 08:12:32 -0500
-Message-ID: <20230817131232.86754-10-don.brace@microchip.com>
-X-Mailer: git-send-email 2.42.0.rc2
-In-Reply-To: <20230817131232.86754-1-don.brace@microchip.com>
-References: <20230817131232.86754-1-don.brace@microchip.com>
+        with ESMTP id S1351811AbjHQOVV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 10:21:21 -0400
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEFA230C6;
+        Thu, 17 Aug 2023 07:21:19 -0700 (PDT)
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1bdc8081147so7019095ad.1;
+        Thu, 17 Aug 2023 07:21:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692282079; x=1692886879;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=doPszRaxb9/4aAuNDgX3hC/2hLgfoHZ5dbhDCD5Yc84=;
+        b=GE46xeWYJM8E+28luULAeiTHBf1zb3k5yYa8GzC5oQrTfnv2Uum1D9vQ2nkr4RnulG
+         76rOQ0Hal8TaZdwihhaLQlBS9+sTuR1SEzL2RVk4HTEzhLgaXHRb5uzXFvEizB5LoHO0
+         P0gNseEKZyyGD1b96AFwuSZ545GgpTzt1hiWuANd6KzUeUIGHPV1xp62RHbkWRnm0QtP
+         uiNTEPN74AIIg75LsTNFKRN/ZBiGI2Pu44NEeptjERGIPh8FIlXjrxpC2tBsn2WFN5pd
+         +bf1lMcIetmkjvux8lY2dv6nqnIh5YhSYO2i6DqlSbVmYu2+C7c2uSaecb5U1ELOUVQ2
+         mODA==
+X-Gm-Message-State: AOJu0Yycwz0IJ6K0t2yi/s8ST1w0J3jK2u0azuWJZMRy8PplTA7OrR+D
+        DyXJjOzLgnmGxMhADf0MIh0=
+X-Google-Smtp-Source: AGHT+IGK2O968MxULonLkiIvt0R8Fnr37jU6Li4FQru1mc7wC2vtfEJavqSEFjuNCY3YSvHzpj1YWA==
+X-Received: by 2002:a17:902:d4c2:b0:1bd:9498:f15d with SMTP id o2-20020a170902d4c200b001bd9498f15dmr3298255plg.24.1692282079283;
+        Thu, 17 Aug 2023 07:21:19 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:dfd:6f25:f7be:a9ca? ([2620:15c:211:201:dfd:6f25:f7be:a9ca])
+        by smtp.gmail.com with ESMTPSA id jh15-20020a170903328f00b001bde77f3d0esm7673475plb.117.2023.08.17.07.21.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 17 Aug 2023 07:21:18 -0700 (PDT)
+Message-ID: <5f45675d-20ac-02b5-8f88-edcc0d4ffc8a@acm.org>
+Date:   Thu, 17 Aug 2023 07:21:16 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.1
+Subject: Re: [PATCH v9 02/17] block: Only use write locking if necessary
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+References: <20230816195447.3703954-1-bvanassche@acm.org>
+ <20230816195447.3703954-3-bvanassche@acm.org>
+ <0b3b4453-52a1-75e3-4dfd-6aae74c8c257@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0b3b4453-52a1-75e3-4dfd-6aae74c8c257@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Reviewed-by: Gerry Morong <gerry.morong@microchip.com>
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On 8/17/23 04:01, Damien Le Moal wrote:
+> On 8/17/23 04:53, Bart Van Assche wrote:
+>> Make blk_req_needs_zone_write_lock() return false if
+>> q->limits.use_zone_write_lock is false. Inline this function because it
+>> is short and because it is called from the hot path of the mq-deadline
+>> I/O scheduler.
+> 
+> Your are not actually inlining the function. Did you forget to move it to
+> blkdev.h ?
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index cab44f1f6256..74359e260ef5 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -33,11 +33,11 @@
- #define BUILD_TIMESTAMP
- #endif
- 
--#define DRIVER_VERSION		"2.1.22-040"
-+#define DRIVER_VERSION		"2.1.24-046"
- #define DRIVER_MAJOR		2
- #define DRIVER_MINOR		1
--#define DRIVER_RELEASE		22
--#define DRIVER_REVISION		40
-+#define DRIVER_RELEASE		24
-+#define DRIVER_REVISION		46
- 
- #define DRIVER_NAME		"Microchip SmartPQI Driver (v" \
- 				DRIVER_VERSION BUILD_TIMESTAMP ")"
--- 
-2.42.0.rc2
+I considered inlining but eventually decided not to inline 
+blk_req_needs_zone_write_lock(). I will update the patch description.
+
+Thanks,
+
+Bart.
 
