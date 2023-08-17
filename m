@@ -2,50 +2,51 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A88BC30639
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 15:04:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B7EC41513
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 16:22:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352644AbjHQPDa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 11:03:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58300 "EHLO
+        id S1353625AbjHQQWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 12:22:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352738AbjHQPDR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 11:03:17 -0400
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98AB7271B;
-        Thu, 17 Aug 2023 08:03:13 -0700 (PDT)
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1bee82fad0fso18653365ad.2;
-        Thu, 17 Aug 2023 08:03:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692284593; x=1692889393;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :to:subject:from:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=VkyNVwau1UkJkpgmnHLFLBBi23j/yIVeTDH1Jc5k/Qg=;
-        b=d19XwFkMrdswzgSoG+8AW7IETyaDR/HsRU3DVwt8i7TOMl7eanYrdaGiA9eAMvsV5e
-         UZxln3/8OGe/ItNO190R8kQas16F6rSwrrEsNUfzeaqNl53AKALkpB9gI6ajXSXClF2t
-         +QcCHPisVcdJsq6iU6piFV6A7tHP5XjIaVGXDKdIbi85JtPUVHOALhvyUWJZssskpreC
-         zDLs2NxBReOEq6BDpwRY9aBacd1NWOduEEE11i9a5Qfs4mvu6iPqJFYFAHxvOOk23+TU
-         tQSDNZp16mcybyJxSYnn1dQaOLmFtuGl2ucTzO5AcRB9C5fHWmAwV2gAR74/LewmRUUH
-         NeqQ==
-X-Gm-Message-State: AOJu0Yzna/UnoBbObEpyRHpBahmTx9A1r53asG01wtz8NM+kjj0RGBHk
-        Cv/EP3qSr2fzzNo7SFHM6ElHpZKujzY=
-X-Google-Smtp-Source: AGHT+IFzTe6mUffmd4kapTQ7pVQiqSk1++WWnA9Gzt+QXxx8XNfvImd5LK5Q/zhrd6OKLIKwbwl4BQ==
-X-Received: by 2002:a17:902:db0e:b0:1b7:e49f:1d with SMTP id m14-20020a170902db0e00b001b7e49f001dmr5240397plx.62.1692284592802;
-        Thu, 17 Aug 2023 08:03:12 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:dfd:6f25:f7be:a9ca? ([2620:15c:211:201:dfd:6f25:f7be:a9ca])
-        by smtp.gmail.com with ESMTPSA id e5-20020a17090301c500b001b8a8154f3fsm15250113plh.270.2023.08.17.08.03.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Aug 2023 08:03:11 -0700 (PDT)
-Message-ID: <b9ade5d5-a160-5ecb-8dc5-777e8a586d51@acm.org>
-Date:   Thu, 17 Aug 2023 08:02:46 -0700
+        with ESMTP id S1353612AbjHQQV4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 12:21:56 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45A4C358D;
+        Thu, 17 Aug 2023 09:21:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692289315; x=1723825315;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=Bv6xL5qkb79fBPG084R3pJENvc5/Ahe+5p+9JBEEGBI=;
+  b=LKHreA7M2M3niCYNMEJIqPdc6scOwJ3c2HYi/yRmxM/6rJ4FW+UKSS+2
+   voZmGsvAAaI8DCCaUPzQsFKwzziYfRv0/dWcEat5y2Hohen2g4kMJus4X
+   0uPvIgKnJRBou2uc3JSMCXK5FNw7ai/t3yWOqVa3OB3OWlNCkPb+XY6ZT
+   jvMmjFwyDn+xn3FC6MoH9kobi96nKGMQRi0IRvqLU2EcP6jF3VP/+qVHO
+   u59MRjh46u9pdceIIcxsY5d2AjmDEDbbrn4JuQxyZlK4k9tXScqBllC4p
+   7C7xfrnvrItr+pJ1MDuHonNzLBiUL04XHUw16zZTzEctDI9M/7BLKalsd
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10805"; a="370325515"
+X-IronPort-AV: E=Sophos;i="6.01,180,1684825200"; 
+   d="scan'208";a="370325515"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 09:17:03 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10805"; a="737774313"
+X-IronPort-AV: E=Sophos;i="6.01,180,1684825200"; 
+   d="scan'208";a="737774313"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.249.40.107])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 09:16:59 -0700
+Message-ID: <817a6dda-c227-8f90-97f3-204c7d03fb54@intel.com>
+Date:   Thu, 17 Aug 2023 19:16:53 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.1
-From:   Bart Van Assche <bvanassche@acm.org>
+ Firefox/102.0 Thunderbird/102.14.0
 Subject: Re: [RESEND PATCH v3 2/2] ufs: poll HCS.UCRDY before issuing a UIC
  command
-To:     Adrian Hunter <adrian.hunter@intel.com>,
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
         Kiwoong Kim <kwmad.kim@samsung.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
@@ -57,31 +58,37 @@ References: <cover.1690939662.git.kwmad.kim@samsung.com>
  <CGME20230802013852epcas2p2334d33036d7d1a0bdbefaf5bb844928e@epcas2p2.samsung.com>
  <9c7ccbfb8fe05c29ab3e31d9cd14e6b91065b8b0.1690939662.git.kwmad.kim@samsung.com>
  <f1e154c4-bbb3-18a2-cb7a-41adae292b48@intel.com>
-Content-Language: en-US
-In-Reply-To: <f1e154c4-bbb3-18a2-cb7a-41adae292b48@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ <b9ade5d5-a160-5ecb-8dc5-777e8a586d51@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <b9ade5d5-a160-5ecb-8dc5-777e8a586d51@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/14/23 04:26, Adrian Hunter wrote:
-> And perhaps the following is neater:
+On 17/08/23 18:02, Bart Van Assche wrote:
+> On 8/14/23 04:26, Adrian Hunter wrote:
+>> And perhaps the following is neater:
+>>
+>>     u32 val;
+>>
+>>     return !read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
+>>                   500, UIC_CMD_TIMEOUT * 1000, false, hba,
+>>                   REG_CONTROLLER_STATUS);
 > 
-> 	u32 val;
+> Would the above make readers of that code wonder whether read_poll_timeout()
+> perhaps returns a boolean? Wouldn't it be better to test the
+> read_poll_timeout() return value as follows?
 > 
-> 	return !read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
-> 				  500, UIC_CMD_TIMEOUT * 1000, false, hba,
-> 				  REG_CONTROLLER_STATUS);
+>      return read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
+>                    500, UIC_CMD_TIMEOUT * 1000, false, hba,
+>                    REG_CONTROLLER_STATUS) == 0;
+> 
 
-Would the above make readers of that code wonder whether read_poll_timeout()
-perhaps returns a boolean? Wouldn't it be better to test the
-read_poll_timeout() return value as follows?
+Either is fine, otherwise:
 
-  	return read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
-  				  500, UIC_CMD_TIMEOUT * 1000, false, hba,
-  				  REG_CONTROLLER_STATUS) == 0;
+Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
 
-Thanks,
-
-Bart.
