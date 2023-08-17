@@ -2,76 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 242A4C2FC04
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Aug 2023 23:46:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB3A4C05052
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 01:51:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347205AbjHPXpy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Aug 2023 19:45:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60486 "EHLO
+        id S1347491AbjHQBu3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Aug 2023 21:50:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347240AbjHPXpf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 19:45:35 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75921272C;
-        Wed, 16 Aug 2023 16:45:33 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-68896d7eb1eso533190b3a.3;
-        Wed, 16 Aug 2023 16:45:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692229533; x=1692834333;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SnY/yGoj6nHDhHvr9WuPTW+0izn3EbM5Po7pZrQVm+s=;
-        b=eS+IT3TxTlpwHnG+yYbWMxuNDSo8Fsszi9KMelLRbjdLriatbxlZQSFaDfnG3NTEF9
-         lVZn8HYVQd992yVQDckK1LVbmNAXPNKDl9g6wa67t5lIEmzt50wsSNR1g22Z/XoMMlBQ
-         UMcd1shHrPQ98Mt7QBvb4LPuyt+IJxMpIbb7LQOZJ2kkH9cdoeUD/TKinT9IaI/F3O53
-         dIwS2a1dVi1AqBLRihQ9MYj6d9diCNw/EgUQUYT5pwjS3yyl4YOggHmI1B9OjKA7ZBJg
-         edcjnwJQN/wVQ5TjZyqWpd8PSGnkQE/QmA/aRkbukoHx5n/nk320W9S8951Q0hAN8uHo
-         7PUQ==
-X-Gm-Message-State: AOJu0YztL+tuppiuYNh+7tmuzM9r6/qGZNgBH1YMJrhnBD5igPvvT0dJ
-        zIn0MT4gQUW7BUGk7cmumu4=
-X-Google-Smtp-Source: AGHT+IFI2GGcw2Y2TjCUhuvguu20fUYcEI4mDmBOmmhfmqK8EPQP6DKhuZjuGdQ+3a4qIJErZ8oE5A==
-X-Received: by 2002:a05:6a20:ce9c:b0:131:5f8b:9c7d with SMTP id if28-20020a056a20ce9c00b001315f8b9c7dmr2849424pzb.22.1692229532686;
-        Wed, 16 Aug 2023 16:45:32 -0700 (PDT)
-Received: from ?IPV6:2601:647:5f00:5f5:4a46:e57b:bee0:6bc6? ([2601:647:5f00:5f5:4a46:e57b:bee0:6bc6])
-        by smtp.gmail.com with ESMTPSA id fm22-20020a056a002f9600b00688459a9bdcsm3487440pfb.135.2023.08.16.16.45.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Aug 2023 16:45:32 -0700 (PDT)
-Message-ID: <de179ae2-0d26-79f4-b689-cb038099a5e7@acm.org>
-Date:   Wed, 16 Aug 2023 16:45:30 -0700
+        with ESMTP id S1347599AbjHQBuS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2023 21:50:18 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3692BF;
+        Wed, 16 Aug 2023 18:50:16 -0700 (PDT)
+Received: from kwepemi500012.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RR7CR0Gy9zNmhd;
+        Thu, 17 Aug 2023 09:46:43 +0800 (CST)
+Received: from huawei.com (10.90.53.73) by kwepemi500012.china.huawei.com
+ (7.221.188.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Thu, 17 Aug
+ 2023 09:50:14 +0800
+From:   Li Zetao <lizetao1@huawei.com>
+To:     <martin.petersen@oracle.com>
+CC:     <lizetao1@huawei.com>, <linux-scsi@vger.kernel.org>,
+        <target-devel@vger.kernel.org>
+Subject: [PATCH -next] scsi: target: core: Use helper function IS_ERR_OR_NULL()
+Date:   Thu, 17 Aug 2023 09:49:58 +0800
+Message-ID: <20230817014958.3094614-1-lizetao1@huawei.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH v1 1/1] scsi: ufs: mcq: Fix the search/wrap around logic
-Content-Language: en-US
-To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, avri.altman@wdc.com, beanhuo@micron.com,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Yang Li <yang.lee@linux.alibaba.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <ff49c15be205135ed3ec186f3086694c02867dbd.1692149603.git.quic_nguyenb@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ff49c15be205135ed3ec186f3086694c02867dbd.1692149603.git.quic_nguyenb@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.90.53.73]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500012.china.huawei.com (7.221.188.12)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/15/23 18:38, Bao D. Nguyen wrote:
-> The search and wrap around logic in the ufshcd_mcq_sqe_search()
-> function does not work correctly when the hwq's queue depth
-> is not a power of two number. Correct it so that any queue depth
-> with a positive integer value within the supported range would work.
+Use IS_ERR_OR_NULL() to detect an error pointer or a null pointer
+open-coding to simplify the code.
 
-Does this patch need a Fixes: tag?
+Signed-off-by: Li Zetao <lizetao1@huawei.com>
+---
+ drivers/target/target_core_fabric_configfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Anyway:
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index b7c637644cd4..4b93f9b619b8 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -479,7 +479,7 @@ static struct config_group *target_fabric_make_np(
+ 	}
+ 
+ 	se_tpg_np = tf->tf_ops->fabric_make_np(se_tpg, group, name);
+-	if (!se_tpg_np || IS_ERR(se_tpg_np))
++	if (IS_ERR_OR_NULL(se_tpg_np))
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	se_tpg_np->tpg_np_parent = se_tpg;
+@@ -937,7 +937,7 @@ static struct config_group *target_fabric_make_tpg(
+ 	}
+ 
+ 	se_tpg = tf->tf_ops->fabric_make_tpg(wwn, name);
+-	if (!se_tpg || IS_ERR(se_tpg))
++	if (IS_ERR_OR_NULL(se_tpg))
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	config_group_init_type_name(&se_tpg->tpg_group, name,
+@@ -1088,7 +1088,7 @@ static struct config_group *target_fabric_make_wwn(
+ 	}
+ 
+ 	wwn = tf->tf_ops->fabric_make_wwn(tf, group, name);
+-	if (!wwn || IS_ERR(wwn))
++	if (IS_ERR_OR_NULL(wwn))
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	wwn->cmd_compl_affinity = SE_COMPL_AFFINITY_CPUID;
+-- 
+2.34.1
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
