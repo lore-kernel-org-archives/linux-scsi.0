@@ -2,79 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E9C7C2FC0E
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 11:31:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15C88C41513
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Aug 2023 11:44:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350316AbjHQLbL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 07:31:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35404 "EHLO
+        id S1350415AbjHQLnj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 07:43:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350335AbjHQLam (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 07:30:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8824730ED;
-        Thu, 17 Aug 2023 04:30:17 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5BAAF645C9;
-        Thu, 17 Aug 2023 11:30:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB699C433C8;
-        Thu, 17 Aug 2023 11:29:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692271800;
-        bh=9iBX8eFneX6qmfZrwbciUSeBSx9wphMtbzaqOc1osH4=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=ivUXrD2PK4g+Qf8EhfLT3X34j40bqLsHWWW92PoUjMkq+HAvMQXRtxec5E2YgH/yl
-         ZlRoDcwfmtxr6/AYldCesxSHmAB2yefZbyRb2OG1xkeTxbAkucjliRhxizohdepULe
-         7W/o2hqJMN/Vpsz3yCsQPkl6rq71a2Y/4ejNMH8cYL95UaEyJ842KZMGGyBD/iC3tL
-         KCvjPyw2QTqlZKgg0gyT7Ukrx9w/iXcXvBj59tPJIRIFWq9bulXtJ/fOvzWim5oLaI
-         xvXfXmZYhWOXnrcCM0at/tRnr6Mn1kC+4gm6pu7C1DU4oLEHhPEGISdyJct5h99rKF
-         jzV+aW00Uuu1g==
-Message-ID: <7cb19c97-e18b-9cb3-d7f4-489d8f01f5d1@kernel.org>
-Date:   Thu, 17 Aug 2023 20:29:59 +0900
+        with ESMTP id S1350410AbjHQLnK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 07:43:10 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC0C2198C;
+        Thu, 17 Aug 2023 04:43:08 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1bb84194bf3so49161895ad.3;
+        Thu, 17 Aug 2023 04:43:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1692272588; x=1692877388;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=45rLKFe/XGdWEKHKL/OvhqCh4xyXYRWTSCuP5teWtaA=;
+        b=PsO2n5E3s0Nq8bo5r7Wbpoo97Bw4xVKOmW9g+n/5j1f96rtp8ah+m0dGMPO0tzt3d8
+         WlyrW7jIxqqObwuKgO3Dy4mkQD+I4n091NzGIMmRqvRzewT1XDngW+7abAvyjbI0yKdu
+         amyTa9kr/u50Vi8Zsiw6FnqmHZ1Uc6AEAzAZvsjqE/Qr9FU/7HMbWQS1Jj6TOck4/VD/
+         BgZBIN4KI0VYY0m38b6WnMi6mbODbZ5tmdcV+3DfUswxbDIo2kDiTWrBK14IPCI9HmEO
+         Am+L6pX/vxkCL0Gri+6eB2jFJYAUlhJQz9hQhqkmY+0qqJnZ4TRUVErPuQ4n21cahIZx
+         aniQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692272588; x=1692877388;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=45rLKFe/XGdWEKHKL/OvhqCh4xyXYRWTSCuP5teWtaA=;
+        b=WouLOEQ55XMkTbT+V6XfB1LIcA6flFO5E1YqqvijEuton3bgqNVzfVETe5dhIT8E7O
+         wLUb5gEWKxiajCK5Bum6sdtjP4DCHt3TCRAmlgGZDVELNLj7jHaPcAjmXrqGVIrlGSbl
+         9TIt+YkOeU81QKjmBJHmXtkjCHPsLS3Us/3h1gwvnrWG/zg+lRwKfy2lnEIw3RSFR/WA
+         KfuLbwbJ4geCEg0prcq6qj6DBOQjDH3UlJ6xWYvI11jRQzj5nv/pZPuO7nYK6VfwZdRS
+         sFmSWkRfzmm1pguIVkGq9+iGUIt6BSGK+Tz2yZSdRA6pAL6nfTv1FlMmrDFNjkmT1X7I
+         dyYA==
+X-Gm-Message-State: AOJu0Yz37c8tWZPKeNb2LrvhfRxfyjS/Sh2alZc1ib4/KgCjmh/D+/Sn
+        eVmr7XKnHl5ULVnEfTWaaF4=
+X-Google-Smtp-Source: AGHT+IEW0RBHUjzorOFWrjg2otfzDibWdKDDtxIBhh0+8BxwA+o0wRWvCn53MdbaZnI7SyLeOBTsAg==
+X-Received: by 2002:a17:902:db0e:b0:1bb:25bd:d091 with SMTP id m14-20020a170902db0e00b001bb25bdd091mr4862224plx.30.1692272588373;
+        Thu, 17 Aug 2023 04:43:08 -0700 (PDT)
+Received: from localhost.localdomain ([2409:40c2:1016:aeca:454:68e4:51c8:d1cf])
+        by smtp.gmail.com with ESMTPSA id iw12-20020a170903044c00b001bb9d6b1baasm14951767plb.198.2023.08.17.04.43.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Aug 2023 04:43:07 -0700 (PDT)
+From:   coolrrsh@gmail.com
+To:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        rdunlap@infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     linux-kernel-mentees@lists.linuxfoundation.org,
+        Rajeshwar R Shinde <coolrrsh@gmail.com>
+Subject: [PATCH v3] scsi: sli4: Remove code duplication
+Date:   Thu, 17 Aug 2023 17:13:01 +0530
+Message-Id: <20230817114301.17601-1-coolrrsh@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v9 10/17] scsi: scsi_debug: Support injecting unaligned
- write errors
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230816195447.3703954-1-bvanassche@acm.org>
- <20230816195447.3703954-11-bvanassche@acm.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230816195447.3703954-11-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/23 04:53, Bart Van Assche wrote:
-> Allow user space software, e.g. a blktests test, to inject unaligned
-> write errors.
-> 
-> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+From: Rajeshwar R Shinde <coolrrsh@gmail.com>
 
-Looks OK to me.
+In the function sli_xmit_bls_rsp64_wqe, the 'if' and 'else' conditions
+evaluates the same expression and gives same output. Also, params->s_id
+shall not be equal to U32_MAX. Therefore removing the unused code.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+This fixes coccinelle warning such as:
+drivers/scsi/elx/libefc_sli/sli4.c:2320:2-4: WARNING: possible
+condition with no effect (if == else)
 
+Signed-off-by: Rajeshwar R Shinde <coolrrsh@gmail.com>
+---
+v1->v2
+Modified patch and the corrected the warnings using checkpatch.
+v2->v3
+Modified patch details keeping HW descriptor variable.
 
+---
+ drivers/scsi/elx/libefc_sli/sli4.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+index 8f96049f62dd..5e7fb110bc3f 100644
+--- a/drivers/scsi/elx/libefc_sli/sli4.c
++++ b/drivers/scsi/elx/libefc_sli/sli4.c
+@@ -2317,12 +2317,8 @@ sli_xmit_bls_rsp64_wqe(struct sli4 *sli, void *buf,
+ 		SLI4_GENERIC_CONTEXT_VPI << SLI4_BLS_RSP_WQE_CT_SHFT;
+ 		bls->context_tag = cpu_to_le16(params->vpi);
+ 
+-		if (params->s_id != U32_MAX)
+-			bls->local_n_port_id_dword |=
+-				cpu_to_le32(params->s_id & 0x00ffffff);
+-		else
+-			bls->local_n_port_id_dword |=
+-				cpu_to_le32(params->s_id & 0x00ffffff);
++		bls->local_n_port_id_dword |=
++			cpu_to_le32(params->s_id & 0x00ffffff);
+ 
+ 		dw_ridflags = (dw_ridflags & ~SLI4_BLS_RSP_RID) |
+ 			       (params->d_id & SLI4_BLS_RSP_RID);
 -- 
-Damien Le Moal
-Western Digital Research
+2.25.1
 
