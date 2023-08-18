@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A690FC71132
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 00:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94000C7113E
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 00:10:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356487AbjHRAJM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 20:09:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58738 "EHLO
+        id S1356599AbjHRAJs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 20:09:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356634AbjHRAJF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 20:09:05 -0400
+        with ESMTP id S1356658AbjHRAJk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 20:09:40 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35DA23C15
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 17:08:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AA613A8C
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 17:09:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F2AA462FFF
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 00:08:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC290C433C7;
-        Fri, 18 Aug 2023 00:08:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B28A362FFF
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 00:09:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67CEEC433C8;
+        Fri, 18 Aug 2023 00:09:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692317308;
-        bh=JMXywPqL5r+3mARNxpzbH8PKm0oXiYzxNXxnXtT6xWY=;
+        s=k20201202; t=1692317352;
+        bh=Xqy9n94fgz0nv8G+4a7d+fNxjBjBkpK+6S8kCaPdb6U=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=VMnikuesqEabcgrUlhFFGmPBqUc8jZYMad7LPmSW28qAGsUDoZDUfrcA4tN0ZKEHq
-         OBMBWMXfqww9MLJvbBYcxOmIBO47UOhpTpiXNJekepFCh7md7V15uZ+vztATR0U5dh
-         j4FuAO0G5dg3pKax3D33faHj6JyCzBoTetmqNDJHbv9or69yhMIRlG50TRpuKy20Cc
-         CkZOtzWhD0l/1QpyGASNhNotfXS5Wca9PLbGZ9pAXt2STfswqYYUK4CkXRCSElRxCu
-         X+sw75J03160qEAGaXtMViL5H/Dbxzztxupxr6Pi6SejvgbjDrf5apEAx4r+tu96nr
-         j6I9eAr7ArU2Q==
-Message-ID: <4e139042-948e-1bab-4c43-02a309ccf357@kernel.org>
-Date:   Fri, 18 Aug 2023 09:08:26 +0900
+        b=TV+uBtlxYaQ/b8wl8GpQHtcCgg/R+SgvduH8Iwrgp1CFHZfEQzh7XhcnC0Tun0eL1
+         JsytVPNmKLQRepf8Vqgyxn8yqktrVR/8HeLhAX9FQSJapDxLYcexCPLbYcpO6ijlkY
+         9pzho9XNtUyavEh4XCjDhZqWECr4T/GkcDU1xhPppeyES/MyQMy1LkwXN0qs6a8g6B
+         MnXpZLhYbK8XblrwutbMlEhNKfshEGP4H/1ETg0UfOQ3Er0r/2n7hnKMy7iLnlZ4Nv
+         HjzSkaYxLg+YialkDBa+FTBZ2y3ekLRRGztU8Lt4+Pl2vsyDK6EDLM61o/ce+Ku4LG
+         sdPXvzHFi5uqA==
+Message-ID: <1d8a6b95-987b-f3d0-98fb-599a5a85ded7@kernel.org>
+Date:   Fri, 18 Aug 2023 09:09:10 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.14.0
@@ -95,12 +95,6 @@ On 2023/08/18 8:36, Niklas Cassel wrote:
 > 
 > where ata_qc_wants_result()
 > returns true if ATA_QCFLAG_RESULT_TF is set.
-
-I do not think we need that helper. Testing the flag directly would be fine.
-If you really insist on introducing the helper, then at least go through libata
-and replace all direct tests of that flag with the helper. But I do not think it
-is worth the churn.
-
 > 
 > (ata_set_tf_cdl() will set both ATA_QCFLAG_HAS_CDL and ATA_QCFLAG_RESULT_TF).
 > 
@@ -108,69 +102,13 @@ is worth the churn.
 > ata_exec_internal_sg()), which always has ATA_QCFLAG_RESULT_TF set,
 > will always gets an up to date tf status and tf error value back,
 > because the SAS HBA will send a FIS back.
+
++1
+
 > 
 > If we don't do this, then libsas will instead fill in the tf status and
 > tf error from the last command that returned a FIS (which might be out
 > of date).
-> 
-> 
->> +
->>  	if (qc->scsicmd)
->>  		ASSIGN_SAS_TASK(qc->scsicmd, task);
->>  
->> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
->> index 159823e0afbf..9e2c69c13dd3 100644
->> --- a/include/scsi/libsas.h
->> +++ b/include/scsi/libsas.h
->> @@ -550,6 +550,7 @@ struct sas_ata_task {
->>  	u8     use_ncq:1;
->>  	u8     set_affil_pol:1;
->>  	u8     stp_affil_pol:1;
->> +	u8     return_fis_on_success:1;
->>  
->>  	u8     device_control_reg_update:1;
->>  
->> -- 
->> 2.42.0.rc1.204.g551eb34607-goog
->>
-> 
-> Considering that libsas return value is defined like this:
-> https://github.com/torvalds/linux/blob/v6.5-rc6/include/scsi/libsas.h#L507
-> 
-> Basically, if you returned a FIS in resp->ending_fis, you should return
-> SAS_PROTO_RESPONSE. If you didn't return a FIS for your command, then
-> you return SAS_SAM_STAT_GOOD (or if it is an error, a SAS_ error code
-> that is not SAS_PROTO_RESPONSE, as you didn't return a FIS).
-> 
-> Since you have implemented this only for pm80xx, how about adding something
-> like this to sas_ata_task_done:
-> 
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> index 77714a495cbb..e1c56c2c00a5 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -114,6 +114,15 @@ static void sas_ata_task_done(struct sas_task *task)
->                 }
->         }
->  
-> +       /*
-> +        * If a FIS was requested for a good command, and the lldd returned
-> +        * SAS_SAM_STAT_GOOD instead of SAS_PROTO_RESPONSE, then the lldd
-> +        * has not implemented support for sas_ata_task.return_fis_on_success
-> +        * Warn about this once. If we don't return FIS on success, then we
-> +        * won't be able to return an up to date TF.status and TF.error.
-> +        */
-> +       WARN_ON_ONCE(ata_qc_wants_result(qc) && stat->stat == SAS_SAM_STAT_GOOD);
-> +
->         if (stat->stat == SAS_PROTO_RESPONSE ||
->             stat->stat == SAS_SAM_STAT_GOOD ||
->             (stat->stat == SAS_SAM_STAT_CHECK_CONDITION &&
-> 
-> 
-> 
-> 
-> Kind regards,
-> Niklas
 
 -- 
 Damien Le Moal
