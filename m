@@ -2,189 +2,228 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 404A9EE4992
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 22:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D62E9EE4992
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 22:46:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241315AbjHRWA4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Aug 2023 18:00:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43428 "EHLO
+        id S241694AbjHRWqE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Aug 2023 18:46:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241299AbjHRWAg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Aug 2023 18:00:36 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A73A2D58
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 15:00:33 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1bbff6b2679so10909985ad.1
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 15:00:33 -0700 (PDT)
+        with ESMTP id S241581AbjHRWpd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Aug 2023 18:45:33 -0400
+Received: from mail-oa1-x33.google.com (mail-oa1-x33.google.com [IPv6:2001:4860:4864:20::33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 300E82D5A
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 15:45:32 -0700 (PDT)
+Received: by mail-oa1-x33.google.com with SMTP id 586e51a60fabf-1c4c6717e61so942110fac.1
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 15:45:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1692396033; x=1693000833;
+        d=google.com; s=20221208; t=1692398731; x=1693003531;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=0o8mHhzupwszEmNqN85M/fT34kJaGw1d668flMasK2k=;
-        b=pXRnBnb3YGWuT80vxyv4nN986wl2D1wpu9wPIfSMx57Nrxx9YNlDH3+oaXFg4hLu6y
-         ntPkJTB5B0kbB3VPwGMfyTSpoSqXdiQpwkD0LpkJbkVpFREmuZ/1P5ErET5nlXPkxZLP
-         AgL4GG826kwkpeeLtswCWrHFZ15NTNPMN8w8kxYco4K7ejilj0MxLezHw6dYhW+TDgsW
-         MPeO89yJKnRw9wXROCupoNxN3mEBzV/ofQWARA54mpAjbGO1g/CauVKYvQct4VUEemWa
-         0Sy5a7RrmfFf4u4KUYIz3p9S1qW+MOsYlUSi8esBaWZa5idFpqWG19nlx9Vonpi4IKzY
-         bF/A==
+        bh=QygEeSu2+EI7ASxsujX9swnwPudJtp2NTT1DQMu/YOY=;
+        b=13eNzCD9sX2VN/KksrBUrqJj3CGxkKFOftkmqC9MoQ5hJVsQ9127+SZDg5ckS/b3Kw
+         KhTQf8vpNt3pdyL1Kk7Nsz78fYti+ZhRuHEcb9Q67blmaPLrEbouJCi6VU15h8ryspFV
+         MC7DFKEFdO+hTaZJDPDw96NxIrylQfhQfKPA+l2luv2yHIZ80tqZZV6gol4ugWM4sEFE
+         5wqWUP6MhU0DNBvrndI8tcsx1UB1RaRC5dqgKKTBSkYx/7eaeieoqRrwiVXIg7nv/cQt
+         UpSqC80A0gw1ecCFMYLGI/n7dVbC1yiaVNImYieaRw2yFhx8mn/xA4YY/39t8CnGlKcD
+         ibsg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692396033; x=1693000833;
+        d=1e100.net; s=20221208; t=1692398731; x=1693003531;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0o8mHhzupwszEmNqN85M/fT34kJaGw1d668flMasK2k=;
-        b=SVg0a9wsLX1d8o4t2r7hBXVUkews0UieJMSOZA7h1puqCsgldD2KEqnV7I4ECScx7c
-         Hjr/jLGqjlX9KBWkrQuC9i4tfreIl/82W3pBWDYdDzZlI8s0LDB1v5hcdzQh+VP5ugOy
-         h0Yf9AFMSs0+7QtOGdpWTJhdRCOTlUK5v9oisi/OS/JveO/ILlnX+fXlQu6GgI109j6G
-         tYKzswGKc9HQOhYxgsw1D6SrMMAFE65MN3exaXTEpN1AUrZ7s2HjUpugKrnuQwyYs4ze
-         sJtuSTZaY75dJu8QRCrQM/IcBuMxkMaemKjUflsDpO7uOcvcYTrqayrhjSZe3pdOWeuP
-         DZGw==
-X-Gm-Message-State: AOJu0Yx4MEcX97KdZ8Xsx1kEw/SW+vahRpgYd/py2LCihrg5r/1AmDR4
-        +zTnpygL8XHr6jlQOEKtDTN6nDFzIXkpM3HL1eX0+zP6
-X-Google-Smtp-Source: AGHT+IFBZbLYA7M/+b2sw05Z2uAO6hrau2N+qVZtyceJc5gWtdDr+41ibYl1EhFZLrYiCrtu3UZ4qA==
-X-Received: by 2002:a17:902:9898:b0:1b9:ebf4:5d2 with SMTP id s24-20020a170902989800b001b9ebf405d2mr452748plp.33.1692396032712;
-        Fri, 18 Aug 2023 15:00:32 -0700 (PDT)
+        bh=QygEeSu2+EI7ASxsujX9swnwPudJtp2NTT1DQMu/YOY=;
+        b=CDkhEiGaP8BZsyhE0AxMfS5dovh6+LVN32JAOvVZFhisxh1QyYgDdQS+KrPLacTDYJ
+         pJlej9yVntaAlOxDsQblB+Y2+dyDlvY5kgeK0hXm5LIvQ0oX9caAbBlRjuFIxhZ5N4Wv
+         vY6DQoyVyUJLsV3ZGgDW3D6D8xHKkL+kCmDYGDBwcd/ORngOiw6y6jjSO2NS8FfSXBXF
+         Mb+DxlsRNfQTOdGpvcm+5S2MSEQhqVEzhLJATfk/ZThF0HF5TN8SFacQgP8+CRczou26
+         +iRljdIWFTfcQizwGLxMVlO85we4fFcc0tnqAlil5xz4kWpXrahqh0RZTtcy7sD6D8yd
+         6XNw==
+X-Gm-Message-State: AOJu0Yz4ymIXAz71/PrykhCMAdRSPNhxROwXY5c95bEsYhJm2jONB0nR
+        u7DFKYXluhmHDiy4WaxsWni+PQ==
+X-Google-Smtp-Source: AGHT+IHHLZE3H+zbLOa5NBrwKUFwLqQmXu4bECmXZKV5vhrm0a5tdv9fJXyOcjWdzH50ZAebC+Ea6A==
+X-Received: by 2002:a05:6871:68d:b0:187:92fb:6ecb with SMTP id l13-20020a056871068d00b0018792fb6ecbmr650959oao.20.1692398730939;
+        Fri, 18 Aug 2023 15:45:30 -0700 (PDT)
 Received: from google.com ([2620:15c:2c5:13:4f6e:2bd9:cb46:7849])
-        by smtp.gmail.com with ESMTPSA id n1-20020a170902e54100b001b89c313185sm2228060plf.205.2023.08.18.15.00.31
+        by smtp.gmail.com with ESMTPSA id 101-20020a17090a09ee00b00263f8915aa3sm4038761pjo.31.2023.08.18.15.45.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Aug 2023 15:00:32 -0700 (PDT)
-Date:   Fri, 18 Aug 2023 15:00:27 -0700
+        Fri, 18 Aug 2023 15:45:30 -0700 (PDT)
+Date:   Fri, 18 Aug 2023 15:45:25 -0700
 From:   Igor Pylypiv <ipylypiv@google.com>
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     Damien Le Moal <dlemoal@kernel.org>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
         Jack Wang <jinpu.wang@cloud.ionos.com>
-Subject: Re: [PATCH 2/3] scsi: libsas: Add return_fis_on_success to
- sas_ata_task
-Message-ID: <ZN/p+4J6vDR0iX/s@google.com>
+Subject: Re: [PATCH 3/3] scsi: pm80xx: Set RETFIS when requested by libsas
+Message-ID: <ZN/0heaKv6DfNrFj@google.com>
 References: <20230817214137.462044-1-ipylypiv@google.com>
- <20230817214137.462044-2-ipylypiv@google.com>
- <ZN6vB0COt0eJU93A@x1-carbon>
+ <20230817214137.462044-3-ipylypiv@google.com>
+ <febb997e-fc77-5ac2-0a58-57f66c20b313@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZN6vB0COt0eJU93A@x1-carbon>
+In-Reply-To: <febb997e-fc77-5ac2-0a58-57f66c20b313@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 17, 2023 at 11:36:43PM +0000, Niklas Cassel wrote:
-> On Thu, Aug 17, 2023 at 02:41:36PM -0700, Igor Pylypiv wrote:
+On Fri, Aug 18, 2023 at 08:12:13AM +0900, Damien Le Moal wrote:
+> On 2023/08/18 6:41, Igor Pylypiv wrote:
+> > By default PM80xx HBAs return FIS only when a drive reports an error.
 > 
-> Hello Igor,
+> s/FIS/SDB FIS or even better "Set Device Bits (SDB) FIS" to be clear.
 > 
-> > For Command Duration Limits policy 0xD (command completes without
-> > an error) libata needs FIS in order to detect the ATA_SENSE bit and
-> > read the Sense Data for Successful NCQ Commands log (0Fh).
-> > 
-> > Set return_fis_on_success for commands that have a CDL descriptor
-> > since any CDL descriptor can be configured with policy 0xD.
+> > The RETFIS bit forces the controller to populate FIS even when a drive
+> > reports no error.
+> 
+> And here s/FIS/SDB FIS
+
+Keeping "FIS" per discussion in PATCH 2/3 (SDB FIS applies only to NCQ).
+
+> 
 > > 
 > > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 > > ---
-> >  drivers/scsi/libsas/sas_ata.c | 3 +++
-> >  include/scsi/libsas.h         | 1 +
-> >  2 files changed, 4 insertions(+)
+> >  drivers/scsi/pm8001/pm8001_hwi.c |  8 +++++---
+> >  drivers/scsi/pm8001/pm8001_hwi.h |  2 +-
+> >  drivers/scsi/pm8001/pm80xx_hwi.c | 11 ++++++-----
+> >  drivers/scsi/pm8001/pm80xx_hwi.h |  2 +-
+> >  4 files changed, 13 insertions(+), 10 deletions(-)
 > > 
-> > diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> > index 77714a495cbb..da67c4f671b2 100644
-> > --- a/drivers/scsi/libsas/sas_ata.c
-> > +++ b/drivers/scsi/libsas/sas_ata.c
-> > @@ -207,6 +207,9 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
-> >  	task->ata_task.use_ncq = ata_is_ncq(qc->tf.protocol);
-> >  	task->ata_task.dma_xfer = ata_is_dma(qc->tf.protocol);
+> > diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> > index 73cd25f30ca5..255553dcadb9 100644
+> > --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> > +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> > @@ -4095,7 +4095,7 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+> >  	u32 hdr_tag, ncg_tag = 0;
+> >  	u64 phys_addr;
+> >  	u32 ATAP = 0x0;
+> > -	u32 dir;
+> > +	u32 dir, retfis;
+> >  	u32  opc = OPC_INB_SATA_HOST_OPSTART;
 > >  
-> > +	/* CDL policy 0xD requires FIS for successful (no error) completions */
-> > +	task->ata_task.return_fis_on_success = ata_qc_has_cdl(qc);
+> >  	memset(&sata_cmd, 0, sizeof(sata_cmd));
+> > @@ -4124,8 +4124,10 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+> >  	sata_cmd.tag = cpu_to_le32(tag);
+> >  	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
+> >  	sata_cmd.data_len = cpu_to_le32(task->total_xfer_len);
+> > -	sata_cmd.ncqtag_atap_dir_m =
+> > -		cpu_to_le32(((ncg_tag & 0xff)<<16)|((ATAP & 0x3f) << 10) | dir);
+> > +	retfis = task->ata_task.return_fis_on_success;
 > 
-> In ata_qc_complete(), for a successful command, we call fill_result_tf()
-> if (qc->flags & ATA_QCFLAG_RESULT_TF):
-> https://github.com/torvalds/linux/blob/v6.5-rc6/drivers/ata/libata-core.c#L4926
+> While I think this should be OK, I think it would be safer to do:
 > 
-> My point is, I think that you should set
-> task->ata_task.return_fis_on_success = ata_qc_wants_result(qc);
+> 	u32 dir, retfis = 0;
 > 
-> where ata_qc_wants_result()
-> returns true if ATA_QCFLAG_RESULT_TF is set.
+> 	...
 > 
-> (ata_set_tf_cdl() will set both ATA_QCFLAG_HAS_CDL and ATA_QCFLAG_RESULT_TF).
+> 	if (task->ata_task.return_fis_on_success)
+> 		retfis = 1;
 > 
-> That way, e.g. an internal command (i.e. a command issued by
-> ata_exec_internal_sg()), which always has ATA_QCFLAG_RESULT_TF set,
-> will always gets an up to date tf status and tf error value back,
-> because the SAS HBA will send a FIS back.
+> to avoid issues with funky compilers doing some tricky handling of single bit
+> fields.
 > 
-> If we don't do this, then libsas will instead fill in the tf status and
-> tf error from the last command that returned a FIS (which might be out
-> of date).
+> > +	sata_cmd.retfis_ncqtag_atap_dir_m =
+> > +		cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
+> > +				((ATAP & 0x3f) << 10) | dir);
+> 
+> Please align this line with "(retfis << 24)" above.
 
-Hi Niklas,
+Thanks Damien! I'll update the code in v2.
+ 
+> >  	sata_cmd.sata_fis = task->ata_task.fis;
+> >  	if (likely(!task->ata_task.device_control_reg_update))
+> >  		sata_cmd.sata_fis.flags |= 0x80;/* C=1: update ATA cmd reg */
+> > diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
+> > index 961d0465b923..fc2127dcb58d 100644
+> > --- a/drivers/scsi/pm8001/pm8001_hwi.h
+> > +++ b/drivers/scsi/pm8001/pm8001_hwi.h
+> > @@ -515,7 +515,7 @@ struct sata_start_req {
+> >  	__le32	tag;
+> >  	__le32	device_id;
+> >  	__le32	data_len;
+> > -	__le32	ncqtag_atap_dir_m;
+> > +	__le32	retfis_ncqtag_atap_dir_m;
+> 
+> Naming this field from what is set in it is unusual... Not sure how the
+> controller spce named this field, but we should use that and stop changing it's
+> name whenever we change the bits that are set.
 
-Thanks for the suggestion! I'll update the check to ATA_QCFLAG_RESULT_TF in v2.
+I see this naming as "what can be set" rather than "what is set" (yes, retfis
+wasn't there for some reason). These four bytes are assentially a bitfield.
+
+While we can change this to a bitfield I would like to keep the current single
+filed as there are other fields that follow the same naming pattern
+e.g. ase_sh_lm_slr_phyid, phyid_npip_portstate, phyid_portid, etc.
 
 > 
-> 
-> > +
-> >  	if (qc->scsicmd)
-> >  		ASSIGN_SAS_TASK(qc->scsicmd, task);
+> >  	struct host_to_dev_fis	sata_fis;
+> >  	u32	reserved1;
+> >  	u32	reserved2;
+> > diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> > index 39a12ee94a72..e839fb53f0e3 100644
+> > --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> > +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> > @@ -4457,7 +4457,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+> >  	u64 phys_addr, end_addr;
+> >  	u32 end_addr_high, end_addr_low;
+> >  	u32 ATAP = 0x0;
+> > -	u32 dir;
+> > +	u32 dir, retfis;
+> >  	u32 opc = OPC_INB_SATA_HOST_OPSTART;
+> >  	memset(&sata_cmd, 0, sizeof(sata_cmd));
 > >  
-> > diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> > index 159823e0afbf..9e2c69c13dd3 100644
-> > --- a/include/scsi/libsas.h
-> > +++ b/include/scsi/libsas.h
-> > @@ -550,6 +550,7 @@ struct sas_ata_task {
-> >  	u8     use_ncq:1;
-> >  	u8     set_affil_pol:1;
-> >  	u8     stp_affil_pol:1;
-> > +	u8     return_fis_on_success:1;
+> > @@ -4487,6 +4487,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+> >  	sata_cmd.tag = cpu_to_le32(tag);
+> >  	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
+> >  	sata_cmd.data_len = cpu_to_le32(task->total_xfer_len);
+> > +	retfis = task->ata_task.return_fis_on_success;
 > >  
-> >  	u8     device_control_reg_update:1;
+> >  	sata_cmd.sata_fis = task->ata_task.fis;
+> >  	if (likely(!task->ata_task.device_control_reg_update))
+> > @@ -4502,8 +4503,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+> >  		opc = OPC_INB_SATA_DIF_ENC_IO;
 > >  
-> > -- 
-> > 2.42.0.rc1.204.g551eb34607-goog
-> > 
+> >  		/* set encryption bit */
+> > -		sata_cmd.ncqtag_atap_dir_m_dad =
+> > -			cpu_to_le32(((ncg_tag & 0xff)<<16)|
+> > +		sata_cmd.retfis_ncqtag_atap_dir_m_dad =
+> > +			cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
+> >  				((ATAP & 0x3f) << 10) | 0x20 | dir);
 > 
-> Considering that libsas return value is defined like this:
-> https://github.com/torvalds/linux/blob/v6.5-rc6/include/scsi/libsas.h#L507
+> Same comments here.
 > 
-> Basically, if you returned a FIS in resp->ending_fis, you should return
-> SAS_PROTO_RESPONSE. If you didn't return a FIS for your command, then
-> you return SAS_SAM_STAT_GOOD (or if it is an error, a SAS_ error code
-> that is not SAS_PROTO_RESPONSE, as you didn't return a FIS).
+> >  							/* dad (bit 0-1) is 0 */
+> >  		/* fill in PRD (scatter/gather) table, if any */
+> > @@ -4569,8 +4570,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
+> >  			   "Sending Normal SATA command 0x%x inb %x\n",
+> >  			   sata_cmd.sata_fis.command, q_index);
+> >  		/* dad (bit 0-1) is 0 */
+> > -		sata_cmd.ncqtag_atap_dir_m_dad =
+> > -			cpu_to_le32(((ncg_tag & 0xff)<<16) |
+> > +		sata_cmd.retfis_ncqtag_atap_dir_m_dad =
+> > +			cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
+> >  					((ATAP & 0x3f) << 10) | dir);
+> >  
+> >  		/* fill in PRD (scatter/gather) table, if any */
+> > diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+> > index acf6e3005b84..eb8fd37b2066 100644
+> > --- a/drivers/scsi/pm8001/pm80xx_hwi.h
+> > +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+> > @@ -731,7 +731,7 @@ struct sata_start_req {
+> >  	__le32	tag;
+> >  	__le32	device_id;
+> >  	__le32	data_len;
+> > -	__le32	ncqtag_atap_dir_m_dad;
+> > +	__le32	retfis_ncqtag_atap_dir_m_dad;
+> >  	struct host_to_dev_fis	sata_fis;
+> >  	u32	reserved1;
+> >  	u32	reserved2;	/* dword 11. rsvd for normal I/O. */
 > 
-> Since you have implemented this only for pm80xx, how about adding something
-> like this to sas_ata_task_done:
-> 
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> index 77714a495cbb..e1c56c2c00a5 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -114,6 +114,15 @@ static void sas_ata_task_done(struct sas_task *task)
->                 }
->         }
->  
-> +       /*
-> +        * If a FIS was requested for a good command, and the lldd returned
-> +        * SAS_SAM_STAT_GOOD instead of SAS_PROTO_RESPONSE, then the lldd
-> +        * has not implemented support for sas_ata_task.return_fis_on_success
-> +        * Warn about this once. If we don't return FIS on success, then we
-> +        * won't be able to return an up to date TF.status and TF.error.
-> +        */
-> +       WARN_ON_ONCE(ata_qc_wants_result(qc) && stat->stat == SAS_SAM_STAT_GOOD);
+> -- 
+> Damien Le Moal
+> Western Digital Research
 
-I'm a bit hesitant about adding this warning. pm80xx manual states that FIS
-is not getting returned for PIO Read commands. ata_dev_read_id() sends
-ATA_CMD_ID_ATA (0xEC) PIO command during bus probe resulting in this warning
-getting triggered every time. Checking for !PIO doesn't seem to be the right
-thing to do. I'll hold off from adding the warning.
-
-> +
->         if (stat->stat == SAS_PROTO_RESPONSE ||
->             stat->stat == SAS_SAM_STAT_GOOD ||
->             (stat->stat == SAS_SAM_STAT_CHECK_CONDITION &&
-> 
-
-Thanks,
-Igor
+Thank you,
+Igor 
