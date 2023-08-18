@@ -2,115 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94000C7113E
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 00:10:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DE99C7112B
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 00:21:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356599AbjHRAJs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Aug 2023 20:09:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47102 "EHLO
+        id S237352AbjHRAU2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Aug 2023 20:20:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356658AbjHRAJk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 20:09:40 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AA613A8C
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2023 17:09:13 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B28A362FFF
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 00:09:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67CEEC433C8;
-        Fri, 18 Aug 2023 00:09:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692317352;
-        bh=Xqy9n94fgz0nv8G+4a7d+fNxjBjBkpK+6S8kCaPdb6U=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=TV+uBtlxYaQ/b8wl8GpQHtcCgg/R+SgvduH8Iwrgp1CFHZfEQzh7XhcnC0Tun0eL1
-         JsytVPNmKLQRepf8Vqgyxn8yqktrVR/8HeLhAX9FQSJapDxLYcexCPLbYcpO6ijlkY
-         9pzho9XNtUyavEh4XCjDhZqWECr4T/GkcDU1xhPppeyES/MyQMy1LkwXN0qs6a8g6B
-         MnXpZLhYbK8XblrwutbMlEhNKfshEGP4H/1ETg0UfOQ3Er0r/2n7hnKMy7iLnlZ4Nv
-         HjzSkaYxLg+YialkDBa+FTBZ2y3ekLRRGztU8Lt4+Pl2vsyDK6EDLM61o/ce+Ku4LG
-         sdPXvzHFi5uqA==
-Message-ID: <1d8a6b95-987b-f3d0-98fb-599a5a85ded7@kernel.org>
-Date:   Fri, 18 Aug 2023 09:09:10 +0900
+        with ESMTP id S1356767AbjHRAUZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2023 20:20:25 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DEA6E40;
+        Thu, 17 Aug 2023 17:20:21 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37HNvdlr003288;
+        Fri, 18 Aug 2023 00:20:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=yXOZciuPqV7chtvYkLfAMYNoC63CULRatWttkUl5tWY=;
+ b=Nm54F/gCtM+O+1+Z/Px54IYW9Y9yfu5fXIAg+d2xEWbvAp6Z3/Z5l5DWPG6h6FaOVhUq
+ iUf44tcyS6B+kh3ysgm7d9CCvQ5EB/cWTei4ygGjE/dXGgXcZRAOwywMM+7RY6YgDw/D
+ L6m5T4MECfent9OWj7vLA7/ri1u9HuaP3egxioY4dTUJjcEwJMJtC1Q7p0TUTWEde7U5
+ 7fJ+683Gs72pNS+CNYLkzwtICyK0VWPLdRRBc5bZ7k2UVGjOg88upR4lxEB1qxGx0FPo
+ tvOL0eo/YyZKwO0KsBWVIXAtFJqKAJqNTP/115PRfBp+RWeSk45iJfLNsvJ/G4u1GShi Bg== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3shbc0thwm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 18 Aug 2023 00:20:00 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37I0JxhC007832
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 18 Aug 2023 00:19:59 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 17 Aug
+ 2023 17:19:58 -0700
+Message-ID: <8299025e-e895-8fdb-c62d-80f1d4c9b64c@quicinc.com>
+Date:   Thu, 17 Aug 2023 17:19:58 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.14.0
-Subject: Re: [PATCH 2/3] scsi: libsas: Add return_fis_on_success to
- sas_ata_task
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v9 17/17] scsi: ufs: Inform the block layer about write
+ ordering
 Content-Language: en-US
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Igor Pylypiv <ipylypiv@google.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Can Guo" <quic_cang@quicinc.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Damien Le Moal" <dlemoal@kernel.org>,
+        Ming Lei <ming.lei@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-References: <20230817214137.462044-1-ipylypiv@google.com>
- <20230817214137.462044-2-ipylypiv@google.com> <ZN6vB0COt0eJU93A@x1-carbon>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ZN6vB0COt0eJU93A@x1-carbon>
-Content-Type: text/plain; charset=UTF-8
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Bean Huo" <beanhuo@micron.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Arthur Simchaev" <Arthur.Simchaev@wdc.com>
+References: <20230816195447.3703954-1-bvanassche@acm.org>
+ <20230816195447.3703954-18-bvanassche@acm.org>
+ <666c6d78-d975-c9f9-4ad2-c9fa86497b47@quicinc.com>
+ <4f332520-329c-6355-3aa3-cd5e29716a06@acm.org>
+ <97100392-0c17-e950-1dd4-c52b97aecbe8@quicinc.com>
+ <5d8e90b9-34c8-5cab-2653-6f28e68eda94@acm.org>
+From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <5d8e90b9-34c8-5cab-2653-6f28e68eda94@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: Ji8X2EJjH3Rg1o2phHdFnSpCmpXcyD7N
+X-Proofpoint-GUID: Ji8X2EJjH3Rg1o2phHdFnSpCmpXcyD7N
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-17_18,2023-08-17_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
+ mlxlogscore=999 clxscore=1015 priorityscore=1501 impostorscore=0
+ adultscore=0 spamscore=0 lowpriorityscore=0 phishscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308180001
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/08/18 8:36, Niklas Cassel wrote:
-> On Thu, Aug 17, 2023 at 02:41:36PM -0700, Igor Pylypiv wrote:
+On 8/17/2023 3:05 PM, Bart Van Assche wrote:
+> On 8/17/23 14:47, Bao D. Nguyen wrote:
+>> During initialization, ufshcd_auto_hibern8_update() is not called. 
+>> Therefore,
+>> you may have SDB mode with auto hibernate enabled -> 
+>> preserves_write_order = false, [ ... ]
 > 
-> Hello Igor,
+> Hi Bao,
 > 
->> For Command Duration Limits policy 0xD (command completes without
->> an error) libata needs FIS in order to detect the ATA_SENSE bit and
->> read the Sense Data for Successful NCQ Commands log (0Fh).
->>
->> Set return_fis_on_success for commands that have a CDL descriptor
->> since any CDL descriptor can be configured with policy 0xD.
->>
->> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
->> ---
->>  drivers/scsi/libsas/sas_ata.c | 3 +++
->>  include/scsi/libsas.h         | 1 +
->>  2 files changed, 4 insertions(+)
->>
->> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
->> index 77714a495cbb..da67c4f671b2 100644
->> --- a/drivers/scsi/libsas/sas_ata.c
->> +++ b/drivers/scsi/libsas/sas_ata.c
->> @@ -207,6 +207,9 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
->>  	task->ata_task.use_ncq = ata_is_ncq(qc->tf.protocol);
->>  	task->ata_task.dma_xfer = ata_is_dma(qc->tf.protocol);
->>  
->> +	/* CDL policy 0xD requires FIS for successful (no error) completions */
->> +	task->ata_task.return_fis_on_success = ata_qc_has_cdl(qc);
-> 
-> In ata_qc_complete(), for a successful command, we call fill_result_tf()
-> if (qc->flags & ATA_QCFLAG_RESULT_TF):
-> https://github.com/torvalds/linux/blob/v6.5-rc6/drivers/ata/libata-core.c#L4926
-> 
-> My point is, I think that you should set
-> task->ata_task.return_fis_on_success = ata_qc_wants_result(qc);
-> 
-> where ata_qc_wants_result()
-> returns true if ATA_QCFLAG_RESULT_TF is set.
-> 
-> (ata_set_tf_cdl() will set both ATA_QCFLAG_HAS_CDL and ATA_QCFLAG_RESULT_TF).
-> 
-> That way, e.g. an internal command (i.e. a command issued by
-> ata_exec_internal_sg()), which always has ATA_QCFLAG_RESULT_TF set,
-> will always gets an up to date tf status and tf error value back,
-> because the SAS HBA will send a FIS back.
+> ufshcd_slave_configure() is called before any SCSI commands are 
+> submitted to a
+> logical unit. ufshcd_slave_configure() sets 'preserves_write_order' 
+> depending on
+> the value of hba->ahit. Does this answer your question?
 
-+1
+Sorry Bart. Not yet :-) Please let me try to explain myself again.
+
+For example, in SDB mode, after the probe and you want to enable 
+auto-hibern8, you would call ufshcd_auto_hibern8_update() which then calls
+ufshcd_update_preserves_write_order(). Before auto-hibern8 is enabled, 
+you would check this condition:
+	if (blk_queue_is_zoned(q) && !q->elevator)
+
+In other words, auto-hibern8 is enabled only if the above condition false.
+
+However, the during a normal operation, the ufshcd_auto_hibern8_update() 
+may not get called at all, and auto-hibern8 can be enabled in SDB mode 
+as part of ufs init. Would that be a problem to have auto-hibern8 
+enabled without checking whether the above condition is false?
+
+Thanks
+Bao
 
 > 
-> If we don't do this, then libsas will instead fill in the tf status and
-> tf error from the last command that returned a FIS (which might be out
-> of date).
-
--- 
-Damien Le Moal
-Western Digital Research
+> Thanks,
+> 
+> Bart.
 
