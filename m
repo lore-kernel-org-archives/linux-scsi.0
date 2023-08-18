@@ -2,50 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7135EC7113C
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 09:02:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07ABCC001DE
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 09:05:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233040AbjHRJCW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Aug 2023 05:02:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37916 "EHLO
+        id S1346986AbjHRJFD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Aug 2023 05:05:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358902AbjHRJBz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Aug 2023 05:01:55 -0400
-X-Greylist: delayed 1505 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 18 Aug 2023 02:01:32 PDT
-Received: from mail.leachkin.pl (mail.leachkin.pl [217.61.97.203])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A65422E
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 02:01:32 -0700 (PDT)
-Received: by mail.leachkin.pl (Postfix, from userid 1001)
-        id 5F19F84103; Fri, 18 Aug 2023 09:16:06 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leachkin.pl; s=mail;
-        t=1692346573; bh=elHzctRz/z3PfTIhGYJKd0TeBTmca98Y+JNgX4gfsPI=;
-        h=Date:From:To:Subject:From;
-        b=af/cIJrcuKTu9BgzmdbZSRnDVvMjd1Zdfy0606nhLBhfbzFJ2B3iwt5esBMNBFwFQ
-         aodF035ALBci0LEqlMDHw404SSZfCPUMGWeg6iSRhHywsqNBOU+niO927XreTKgCzg
-         0Z0LuwzNrA4UDhFB3uSVgQYhbx6FXGt+PHvEHqtpepUXiehzFBDlPc7o5ELt5aEDuw
-         G5jM04XEPLCPuvpQ1MmIL/zz/IS+qFKe6wM8X/k/7DTaIBcMWiXDng8KVM2lLfQLcP
-         xTroj4Cg1ZAiPrub2z8BWTzYtj0WLoO3HujBuOmT6pYFqETd73cQhTgcVRH2dAjQ4L
-         rUNs46Th7wX3g==
-Received: by mail.leachkin.pl for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 08:15:51 GMT
-Message-ID: <20230818074501-0.1.4u.ctxf.0.5bnzh6qxop@leachkin.pl>
-Date:   Fri, 18 Aug 2023 08:15:51 GMT
-From:   "Jakub Lemczak" <jakub.lemczak@leachkin.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: =?UTF-8?Q?Pytanie_o_samoch=C3=B3d?=
-X-Mailer: mail.leachkin.pl
+        with ESMTP id S1359037AbjHRJEa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Aug 2023 05:04:30 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88C3C3C17;
+        Fri, 18 Aug 2023 02:04:26 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RRwnm4fXdztSD2;
+        Fri, 18 Aug 2023 17:00:44 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Fri, 18 Aug 2023 17:04:22 +0800
+Message-ID: <71b9f3c2-0228-b52d-3f6e-25b8b21df5a7@huawei.com>
+Date:   Fri, 18 Aug 2023 17:04:22 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v4 0/9] scsi:scsi_debug: Add error injection for single
+ device
+Content-Language: en-US
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <louhongxiang@huawei.com>
+References: <20230815122316.4129333-1-haowenchao2@huawei.com>
+From:   "haowenchao (C)" <haowenchao2@huawei.com>
+In-Reply-To: <20230815122316.4129333-1-haowenchao2@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm600012.china.huawei.com (7.193.23.74)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 2023/8/15 20:23, Wenchao Hao wrote:
+> The original error injection mechanism was based on scsi_host which
+> could not inject fault for a single SCSI device.
+> 
+> This patchset provides the ability to inject errors for a single
+> SCSI device. Now we supports inject timeout errors, queuecommand
+> errors, and hostbyte, driverbyte, statusbyte, and sense data for
+> specific SCSI Command. Two new error injection is defined to make
+> abort command or reset LUN failed.
+> 
+> Besides error injection for single device, this patchset add a
+> new interface to make reset target failed for each scsi_target.
+> 
+> The first two patch add an debugfs interface to add and inquiry single
+> device's error injection info; the third patch defined how to remove
+> an injection which has been added. The following 5 patches use the
+> injection info and generate the related error type. The last one just
+> Add a new interface to make reset target failed.
+> 
 
-Czy interesuje Pa=C5=84stwa rozwi=C4=85zanie umo=C5=BCliwiaj=C4=85ce moni=
-torowanie samochod=C3=B3w firmowych oraz optymalizacj=C4=99 koszt=C3=B3w =
-ich utrzymania?=20
+Friendly ping...
 
+> V4:
+>    - Fix BUG_ON triggered by schedule in atomic context when rmmod scsi_debug
+>      Closes: https://lore.kernel.org/oe-lkp/202308031027.5941ce5f-oliver.sang@intel.com
+> 
+> V3:
+>    - Add two more error types to fail abort command and lun reset
+>    - Fix memleak when rmmod scsi_debug without clearing errors injected
+>    - Fix memkeak because did not implement release in sdebug_error_fops
+>    - Fix possible NULL point access in scsi_debug_slave_destroy
+>    - Move specific error type's description to each single patch which
+>      implement this error type
+>    - Add interface to make target reset fail
+> 
+> V2:
+>    - Using debugfs rather than sysfs attribute interface to manage error
+> 
+> Wenchao Hao (9):
+>    scsi:scsi_debug: create scsi_debug directory in the debugfs filesystem
+>    scsi:scsi_debug: Add interface to manage single device's error inject
+>    scsi:scsi_debug: Define grammar to remove added error injection
+>    scsi:scsi_debug: timeout command if the error is injected
+>    scsi:scsi_debug: Return failed value if the error is injected
+>    scsi:scsi_debug: set command's result and sense data if the error is injected
+>    scsi:scsi_debug: Add new error injection abort failed
+>    scsi:scsi_debug: Add new error injection reset lun failed
+>    scsi:scsi_debug: Add debugfs interface to fail target reset
+> 
+>   drivers/scsi/scsi_debug.c | 512 +++++++++++++++++++++++++++++++++++++-
+>   1 file changed, 507 insertions(+), 5 deletions(-)
+> 
 
-Pozdrawiam,
-Jakub Lemczak
