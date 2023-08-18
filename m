@@ -2,266 +2,128 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9468C71159
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 16:39:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BA5DEE4991
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Aug 2023 17:57:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353048AbjHRQjT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Aug 2023 12:39:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57018 "EHLO
+        id S1379220AbjHRR5O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Aug 2023 13:57:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378602AbjHRQi5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Aug 2023 12:38:57 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B42D83C2D
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 09:38:54 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id ffacd0b85a97d-31ae6bf91a9so437477f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2023 09:38:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1692376733; x=1692981533;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=hioN9yIb6DiuH5vYuZ8K+q3z+TRx08Kn30SmaMqQ98s=;
-        b=UjqjbqJqlx1sD/IJvAaiFllwJ5Ij3zbiTRvVpxCTpNABlXzmh9ZJeI1jHjS+Y58Y/f
-         2XvUOmBo7ghmuj8oMbMFYwOzY6cWkjzB70b6F0++jDh9SWE9id/7m+QfunE8Yr5isNiB
-         uk/Q6I74iD7glRHjez54xKqSLMxs1mT0sFe+M=
+        with ESMTP id S1379336AbjHRR4y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Aug 2023 13:56:54 -0400
+Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 840074214;
+        Fri, 18 Aug 2023 10:56:52 -0700 (PDT)
+Received: by mail-oi1-f181.google.com with SMTP id 5614622812f47-3a7d7de894bso819673b6e.3;
+        Fri, 18 Aug 2023 10:56:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692376733; x=1692981533;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=hioN9yIb6DiuH5vYuZ8K+q3z+TRx08Kn30SmaMqQ98s=;
-        b=jyf8LrRHJNWEQvrhhpSxjV4J0urPapMBJZmTxwc5n5fWyX6MOyy1J1cRSjDgMoX5tw
-         Vc7e52a3Fh7WCOuhKEM2U0gmYYEqWGfJ/dZauV6g3RGgUNAisHAIvyqmd+BHpBSBEn7b
-         gxHZLLpsiALsaiJpf4YrV0vd8JJPtrnnC09Y+hQpYRmLgvE1mZRbPlH6YeMCm2ON1kp3
-         Dc/CSI2oMxuZh+lM8QbSs94+VA9ItM5uhcXTkiU00eDZXcnyG/3EsD6rQ1TdwycpMtnn
-         T1P5swFb1X4e+dMaJOgceL3vRxHBylJWhAR8/hx4BN9K/CiNWiU0vKsvAtbbpc0l0jue
-         lJ6w==
-X-Gm-Message-State: AOJu0YzYJtemMEbUcHN1bfAQb8TicJ14q6NCGHC0AmDHqRezr5k+0/qO
-        Tjh/ICm4n/Ot8OLlKBatUWm3bJLtRhxsq2XwUwjzOzwG1UMTI+MAhsidwIv8Jf9/AgA7G1R2Yiz
-        7SQjFcdXhuz6zAOGcAWoc/maU8BdT
-X-Google-Smtp-Source: AGHT+IGYJTvPQvDOknuNCul1TomOrAN+2k4GmXj6zZuHXE6aPNwSXH76hTgL4953dyFM9H1FDSGuyomTq1irShzfntI=
-X-Received: by 2002:a5d:428d:0:b0:31a:d9bc:47aa with SMTP id
- k13-20020a5d428d000000b0031ad9bc47aamr2334683wrq.67.1692376732916; Fri, 18
- Aug 2023 09:38:52 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1692381412; x=1692986212;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=yuI8MkzJJoYh9dvd2xid2uOhj8pnHKRXjd43RBRg0rA=;
+        b=YRUUy0d97cF3EieH1zBYnulOqjt0CsKF2rXIm82o4FR16NisD7RhgXHmotxszwon8z
+         57CGrasuoKfew3m9keBTB4ZS0zDSIFzXiAloZk0QbewZdTw62duZHeYt4bJ2Wzj7lLhf
+         83Lp2XT0tfrQkoiR4kCgJqhF/XFWquWR76NNDeWawpQVGNKmmPc7NzXP9jOeC23o3uCx
+         ngDpUBrgx6IcOulaZcvbHgSPVERIcOrMwlEHI3sWJPie75YHjS709dWw1T6LfuEaGDg6
+         AiUl/o2wokk0Lxs8+jYrv9CpVeGLYHxaks49riXKkE0Q/f+z1QL7RSAfwY4AzWEaFGv/
+         Iy9A==
+X-Gm-Message-State: AOJu0YxOHQweRRjSnu0FghZjwi9vd3jGBNNuil+6MRUlExo6+zlUba70
+        jVkAjJoX/q2VjPLO2hn6qI7HMckwKus=
+X-Google-Smtp-Source: AGHT+IG3s71S8mL+h2YgIMAHMOvvnlkeYHbs5HTsCQlY3OPhMzNh2LAEGZwiYZ2jf+LcFR/QsYV4Xg==
+X-Received: by 2002:a05:6808:1307:b0:3a4:894a:9f57 with SMTP id y7-20020a056808130700b003a4894a9f57mr4428972oiv.6.1692381411564;
+        Fri, 18 Aug 2023 10:56:51 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:5012:5192:47aa:c304? ([2620:15c:211:201:5012:5192:47aa:c304])
+        by smtp.gmail.com with ESMTPSA id p8-20020a63ab08000000b005642a68a508sm1858800pgf.35.2023.08.18.10.56.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 18 Aug 2023 10:56:50 -0700 (PDT)
+Message-ID: <06d34c2f-a89e-3134-d78f-3c071aa490cf@acm.org>
+Date:   Fri, 18 Aug 2023 10:56:49 -0700
 MIME-Version: 1.0
-References: <20230818155452.875781-1-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <20230818155452.875781-1-andriy.shevchenko@linux.intel.com>
-From:   Justin Tee <justin.tee@broadcom.com>
-Date:   Fri, 18 Aug 2023 09:38:41 -0700
-Message-ID: <CAAmqgVMFQKg4cKbT4_pdh3TTT0_ft8adQuWMwaKA2U8GdRS2Ag@mail.gmail.com>
-Subject: Re: [PATCH v3 1/1] scsi: lpfc: Do not abuse UUID APIs and LPFC_COMPRESS_VMID_SIZE
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000004a2270603352a60"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.1
+Subject: Re: [PATCH v9 17/17] scsi: ufs: Inform the block layer about write
+ ordering
+Content-Language: en-US
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Can Guo <quic_cang@quicinc.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+References: <20230816195447.3703954-1-bvanassche@acm.org>
+ <20230816195447.3703954-18-bvanassche@acm.org>
+ <666c6d78-d975-c9f9-4ad2-c9fa86497b47@quicinc.com>
+ <4f332520-329c-6355-3aa3-cd5e29716a06@acm.org>
+ <97100392-0c17-e950-1dd4-c52b97aecbe8@quicinc.com>
+ <5d8e90b9-34c8-5cab-2653-6f28e68eda94@acm.org>
+ <8299025e-e895-8fdb-c62d-80f1d4c9b64c@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <8299025e-e895-8fdb-c62d-80f1d4c9b64c@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000004a2270603352a60
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 8/17/23 17:19, Bao D. Nguyen wrote:
+> For example, in SDB mode, after the probe and you want to enable auto-hibern8, you would call ufshcd_auto_hibern8_update() which then calls
+> ufshcd_update_preserves_write_order(). Before auto-hibern8 is enabled, you would check this condition:
+>      if (blk_queue_is_zoned(q) && !q->elevator)
+> 
+> In other words, auto-hibern8 is enabled only if the above condition false.
+> 
+> However, the during a normal operation, the ufshcd_auto_hibern8_update() may not get called at all, and auto-hibern8 can be enabled in SDB mode as part of ufs init. Would that be a problem to have auto-hibern8 enabled without checking whether the above condition is false?
 
-Hi Andy,
+Hi Bao,
 
-Thanks!
+Probing the host controller happens as follows:
+* The host controller probing function is called, e.g. ufs_qcom_probe().
+* ufshcd_alloc_host() and ufshcd_init() are called directly or indirectly
+   by the host controller probe function.
+* ufshcd_init() calls scsi_add_host() and async_schedule(ufshcd_async_scan, hba).
 
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+Once ufshcd_async_scan() is called asynchronously, it performs the
+following actions:
+* ufs_probe_hba() is called. This function calls ufshcd_link_startup()
+   indirectly. That function invokes the link_startup_notify vop if it has
+   been defined. Some host drivers set hba->ahit from inside that vop.
+* scsi_scan_host() is called and calls scsi_alloc_sdev() indirectly.
+* scsi_alloc_sdev() calls blk_mq_init_queue() and shost->hostt->slave_alloc().
+* scsi_add_lun() calls sdev->host->hostt->slave_configure().
+* scsi_add_lun() calls scsi_sysfs_add_sdev(). This indirectly causes sd_probe()
+   to be called asynchronously.
+* sd_probe() calls sd_revalidate_disk(). This results in an indirect call of
+   disk_set_zoned(). Additionally, the ELEVATOR_F_ZBD_SEQ_WRITE flag is set by
+   the sd driver if q->limits.driver_preserves_write_order has not been set.
+* Still from inside sd_probe(), device_add_disk() is called and a scheduler
+   is selected based on the value of q->required_elevator_features.
 
-Regards,
-Justin
+There are two ways in which host drivers initialize auto-hibernation:
+* Either by setting hba->ahit before ufshcd_init() is called.
+* Or by calling ufshcd_auto_hibern8_update() from the link_startup_notify
+   vop.
+
+I think the above shows that the zoned model is queried *after* the above methods
+for enabling auto-hibernation have completed and hence that blk_queue_is_zoned()
+evaluates to false if a host driver calls ufshcd_auto_hibern8_update() from
+inside the link_startup_notify vop.
+
+If auto-hibernation is enabled from inside the host driver then that should
+happen before sd_probe() is called. sd_probe() will use the value of
+q->limits.driver_preserves_write_order that has been set by
+ufshcd_slave_configure() so there is no risk for inconsistencies between the
+auto-hibernation configuration and the request queue configuration.
+
+Bart.
 
 
-On Fri, Aug 18, 2023 at 8:55=E2=80=AFAM Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
->
-> The lpfc_vmid_host_uuid is not defined as uuid_t and its usage is not
-> the same as for uuid_t operations (like exporting or importing).
-> Hence replace call to uuid_is_null() by respective memchr_inv() without
-> abusing casting.
->
-> With that, replace LPFC_COMPRESS_VMID_SIZE with plain number and
-> respective sizeof() to make code robust to changes in the future,
-> if any.
->
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
-> v3: dropped LPFC_COMPRESS_VMID_SIZE completely at the same time
->  drivers/scsi/lpfc/lpfc.h     |  3 +--
->  drivers/scsi/lpfc/lpfc_els.c | 12 +++++++-----
->  2 files changed, 8 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index bc1c5f6df090..af15f7a22d25 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -309,7 +309,6 @@ struct lpfc_hba;
->  #define LPFC_VMID_TIMER   300  /* timer interval in seconds */
->
->  #define LPFC_MAX_VMID_SIZE      256
-> -#define LPFC_COMPRESS_VMID_SIZE 16
->
->  union lpfc_vmid_io_tag {
->         u32 app_id;     /* App Id vmid */
-> @@ -667,7 +666,7 @@ struct lpfc_vport {
->         uint32_t cfg_first_burst_size;
->         uint32_t dev_loss_tmo_changed;
->         /* VMID parameters */
-> -       u8 lpfc_vmid_host_uuid[LPFC_COMPRESS_VMID_SIZE];
-> +       u8 lpfc_vmid_host_uuid[16];
->         u32 max_vmid;   /* maximum VMIDs allowed per port */
->         u32 cur_vmid_cnt;       /* Current VMID count */
->  #define LPFC_MIN_VMID  4
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index b5cd6d1c0a5a..54e47f268235 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -1331,7 +1331,8 @@ lpfc_issue_els_flogi(struct lpfc_vport *vport, stru=
-ct lpfc_nodelist *ndlp,
->         if (phba->cfg_vmid_priority_tagging) {
->                 sp->cmn.priority_tagging =3D 1;
->                 /* lpfc_vmid_host_uuid is combination of wwpn and wwnn */
-> -               if (uuid_is_null((uuid_t *)vport->lpfc_vmid_host_uuid)) {
-> +               if (!memchr_inv(vport->lpfc_vmid_host_uuid, 0,
-> +                               sizeof(vport->lpfc_vmid_host_uuid))) {
->                         memcpy(vport->lpfc_vmid_host_uuid, phba->wwpn,
->                                sizeof(phba->wwpn));
->                         memcpy(&vport->lpfc_vmid_host_uuid[8], phba->wwnn=
-,
-> @@ -12357,9 +12358,10 @@ lpfc_vmid_uvem(struct lpfc_vport *vport,
->         elsiocb->vmid_tag.vmid_context =3D vmid_context;
->         pcmd =3D (u8 *)elsiocb->cmd_dmabuf->virt;
->
-> -       if (uuid_is_null((uuid_t *)vport->lpfc_vmid_host_uuid))
-> +       if (!memchr_inv(vport->lpfc_vmid_host_uuid, 0,
-> +                       sizeof(vport->lpfc_vmid_host_uuid)))
->                 memcpy(vport->lpfc_vmid_host_uuid, vmid->host_vmid,
-> -                      LPFC_COMPRESS_VMID_SIZE);
-> +                      sizeof(vport->lpfc_vmid_host_uuid));
->
->         *((u32 *)(pcmd)) =3D ELS_CMD_UVEM;
->         len =3D (u32 *)(pcmd + 4);
-> @@ -12369,13 +12371,13 @@ lpfc_vmid_uvem(struct lpfc_vport *vport,
->         vem_id_desc->tag =3D be32_to_cpu(VEM_ID_DESC_TAG);
->         vem_id_desc->length =3D be32_to_cpu(LPFC_UVEM_VEM_ID_DESC_SIZE);
->         memcpy(vem_id_desc->vem_id, vport->lpfc_vmid_host_uuid,
-> -              LPFC_COMPRESS_VMID_SIZE);
-> +              sizeof(vem_id_desc->vem_id));
->
->         inst_desc =3D (struct instantiated_ve_desc *)(pcmd + 32);
->         inst_desc->tag =3D be32_to_cpu(INSTANTIATED_VE_DESC_TAG);
->         inst_desc->length =3D be32_to_cpu(LPFC_UVEM_VE_MAP_DESC_SIZE);
->         memcpy(inst_desc->global_vem_id, vmid->host_vmid,
-> -              LPFC_COMPRESS_VMID_SIZE);
-> +              sizeof(inst_desc->global_vem_id));
->
->         bf_set(lpfc_instantiated_nport_id, inst_desc, vport->fc_myDID);
->         bf_set(lpfc_instantiated_local_id, inst_desc,
-> --
-> 2.40.0.1.gaa8946217a0b
->
 
---=20
-This electronic communication and the information and any files transmitted=
-=20
-with it, or attached to it, are confidential and are intended solely for=20
-the use of the individual or entity to whom it is addressed and may contain=
-=20
-information that is confidential, legally privileged, protected by privacy=
-=20
-laws, or otherwise restricted from disclosure to anyone else. If you are=20
-not the intended recipient or the person responsible for delivering the=20
-e-mail to the intended recipient, you are hereby notified that any use,=20
-copying, distributing, dissemination, forwarding, printing, or copying of=
-=20
-this e-mail is strictly prohibited. If you received this e-mail in error,=
-=20
-please return the e-mail to the sender, delete it from your computer, and=
-=20
-destroy any printed copy of it.
-
---00000000000004a2270603352a60
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-QsyUohclvlxgt5d/MsBG6WZxZ+uppzNvjEk/wUu+6JQNUVEMviA6eBCCi+4ShjZUbGPES11h5lw/
-wuyQZDIjy+1hGPtLHBXI/QQEbU3OVdTRn+aEMwIDAQABo4IB2DCCAdQwDgYDVR0PAQH/BAQDAgWg
-MIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9iYWxzaWdu
-LmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUFBzABhjVo
-dHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMDBNBgNV
-HSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2ln
-bi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRwOi8vY3Js
-Lmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAiBgNVHREEGzAZ
-gRdqdXN0aW4udGVlQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAW
-gBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUlHfvnuNaLp52RO2Y2En9J+7MKI4wDQYJ
-KoZIhvcNAQELBQADggEBAGaBsEmLZwejb3YsmigadLZGto3hJ7Erq2YZLhL7Pgtxft1/j4JNLsRN
-t3ZJIW2Xzfbj0p328xRekSP1gjZ9Szre0fxEFXH1sS1a7WP9E0fHxVW07xVsxGxo5opAh5Gf/bQH
-S4x9pCO48FJI310L1RGQiqFKY/OECnXO821y8MAyObbGo9HNHP4Sk6F5J1v2qJzbLtMfj8ybbTGe
-SidstRgjOIqMldZs2Koio14QFE7hJY+8KRiKfq+eb1EwQTMzBxZsMOL5vUSZjYg2+Fqwyr6YYp0w
-Lsq/wH9o18xSvL/FikpG4JRxiT20RdM6DQrk9lv8ijASZCuN3JR61WUNz2AxggJtMIICaQIBATBr
-MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9i
-YWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwMd6BsMSBDsagVFtYwDQYJYIZI
-AWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEQ7PuPr+NXOE++RWjUm+xOk9FxW8pI1mXzso8fm
-F5xLMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDgxODE2Mzg1
-M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQB
-AjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkq
-hkiG9w0BAQEFAASCAQCRhOWetwwHWNjecinj7SoNJtiVbS3RMnEylKUVPohjk+bHCo2Y6dUM+jQH
-egNIPLwnUNLPrp0DK/a7OvkRv3tb/NwJMpPN4GWpMoPaC/iie3ndbf3BzyY4vlg4uf7j47b1wYK5
-vNmOk7WhTqhXm3PuUWmtciotfQMZsPmbyn7IpPfdGxt5KGuEQOuJqmVTNhh7M4jaNZvmePpi5apt
-s3j+sl8a2bzIQ4LkhLN+kuW9xbtSYPYX8TiTm384/nTtdhYe20Iby1gdVFsX9vUFLOOkQKTOg4mq
-t8QYqIHqpci+2tMjhycc5BgQAqYaGmSa35y8HLtfju1ypNMCpA2R7e9X
---00000000000004a2270603352a60--
