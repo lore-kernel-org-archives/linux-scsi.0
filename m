@@ -2,87 +2,78 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC6DEE49AA
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Aug 2023 08:05:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D64EE49A8
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Aug 2023 08:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344870AbjHSIF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Aug 2023 04:05:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56956 "EHLO
+        id S229619AbjHSIkS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Aug 2023 04:40:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344829AbjHSIEz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2023 04:04:55 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50CEB170E;
-        Sat, 19 Aug 2023 01:04:53 -0700 (PDT)
+        with ESMTP id S229457AbjHSIkS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2023 04:40:18 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 999459FC42;
+        Sat, 19 Aug 2023 01:40:15 -0700 (PDT)
 Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4RSWSb6BdBz1L9GH;
-        Sat, 19 Aug 2023 16:02:55 +0800 (CST)
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RSXF722k6zVkJQ;
+        Sat, 19 Aug 2023 16:38:03 +0800 (CST)
 Received: from hulk-vt.huawei.com (10.67.174.21) by
  dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Sat, 19 Aug 2023 16:04:19 +0800
+ 15.1.2507.31; Sat, 19 Aug 2023 16:40:12 +0800
 From:   Zhu Wang <wangzhu9@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+To:     <kartilak@cisco.com>, <sebaddel@cisco.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <nmusini@cisco.com>,
         <bvanassche@acm.org>, <dan.carpenter@linaro.org>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 CC:     <wangzhu9@huawei.com>
-Subject: [PATCH -next] scsi: core: fix double free in raid_component_add()
-Date:   Sat, 19 Aug 2023 08:03:45 +0000
-Message-ID: <20230819080345.149144-1-wangzhu9@huawei.com>
+Subject: [PATCH -next] scsi: snic: fix double free in snic_tgt_create()
+Date:   Sat, 19 Aug 2023 08:39:41 +0000
+Message-ID: <20230819083941.164365-1-wangzhu9@huawei.com>
 X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [10.67.174.21]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  dggpeml500025.china.huawei.com (7.185.36.35)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Previous commit 04b5b5cb0136 ("scsi: core: Fix possible memory leak if
-device_add() fails") introduced a double free when device_add() failed.
-When device_add() failed, the put_device(&rc->dev) is called, which will
-call raid_component_release(), and this function will call
-put_device(rc->dev.parent) and kfree(rc), but in the error path of
-raid_component_release() above two functions are called again, so 'rc' are
-freed twice.
+The commit 41320b18a0e0 ("scsi: snic: Fix possible memory leak if
+device_add() fails") fix the memory leak caused by dev_set_name() when
+device_add() failed. While it did not consider that 'tgt' has already been
+released when put_device(&tgt->dev) is called. We removed kfree(tgt) in
+the error path to avoid double free 'tgt'. And we moved
+put_device(&tgt->dev) after the removed kfree(tgt) to avoid UAF
+(Use-After-Free).
 
-We do not just revert the patch, since the memory allocated by
-dev_set_name() is not released in the error path, it should be released
-through calling put_device(&rc->dev) which will call kobject_cleanup(),
-and the device name will be released in it. Though the commit 04b5b5cb0136
-("scsi: core: Fix possible memory leak if device_add() fails") fixed the
-memory leak, it didn't consider the double free problem. We removed
-put_device(rc->dev.parent) and kfree(rc) in the error path, and we moved
-put_device(&rc->dev) after rd->component-count--, since after
-put_device(&rc->dev) is called, 'rc' is freed, so list_del(&rc->node)
-cannot be called again.
-
-Fixes: 04b5b5cb0136 ("scsi: core: Fix possible memory leak if device_add() fails")
+Fixes: 41320b18a0e0 ("scsi: snic: Fix possible memory leak if device_add() fails")
 Signed-off-by: Zhu Wang <wangzhu9@huawei.com>
 ---
- drivers/scsi/raid_class.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/snic/snic_disc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
-index 711252e52d8e..86ed1f66d749 100644
---- a/drivers/scsi/raid_class.c
-+++ b/drivers/scsi/raid_class.c
-@@ -248,11 +248,9 @@ int raid_component_add(struct raid_template *r,struct device *raid_dev,
- 	return 0;
+diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
+index e429ad23c396..4db3ba62fcd3 100644
+--- a/drivers/scsi/snic/snic_disc.c
++++ b/drivers/scsi/snic/snic_disc.c
+@@ -303,12 +303,11 @@ snic_tgt_create(struct snic *snic, struct snic_tgt_id *tgtid)
+ 			      "Snic Tgt: device_add, with err = %d\n",
+ 			      ret);
  
- err_out:
--	put_device(&rc->dev);
- 	list_del(&rc->node);
- 	rd->component_count--;
--	put_device(component_dev);
--	kfree(rc);
-+	put_device(&rc->dev);
- 	return err;
- }
- EXPORT_SYMBOL(raid_component_add);
+-		put_device(&tgt->dev);
+ 		put_device(&snic->shost->shost_gendev);
+ 		spin_lock_irqsave(snic->shost->host_lock, flags);
+ 		list_del(&tgt->list);
+ 		spin_unlock_irqrestore(snic->shost->host_lock, flags);
+-		kfree(tgt);
++		put_device(&tgt->dev);
+ 		tgt = NULL;
+ 
+ 		return tgt;
 -- 
 2.34.1
 
