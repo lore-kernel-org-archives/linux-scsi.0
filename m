@@ -2,189 +2,126 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF19AEE49A6
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Aug 2023 00:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFFF6EE4996
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 05:32:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229634AbjHTAVO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Aug 2023 20:21:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40402 "EHLO
+        id S233188AbjHUFcR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Aug 2023 01:32:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229672AbjHTAUm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2023 20:20:42 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D17ACDBAAC
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Aug 2023 14:30:53 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id 3f1490d57ef6-d6adc83eb10so2914077276.2
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Aug 2023 14:30:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1692480653; x=1693085453;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ioX0pdqkRflpWbTw+qj+p6Veh+H84lgpwVPnZSVgPAQ=;
-        b=WNmE+qvIBL3rNtHbrqlF5+tJwsqGIeAXHPVIMDovres4gZSyLQn8BMTdUEHTJKKjsA
-         DN7UPxXm+n1sDxvxUHUALow532RG8736pac3x5DO7MkKQ72z0gx4yt0ehziFwk2OeL0+
-         xVzHKvN4m0VCI0ONsWDALMc5ICRBAWXaWzRmSQMjEuOEzm6DVmj6MtzRw6nzo5RjJD5F
-         HGQguyFzRVIpqIzjSnTMUEQko/WZ++ngOfvfToy0HMjoT+xfoI3mEKq/Q+eojCEqNF/7
-         a6/8l43L4OtqkbCUvxTu1+oZLPqCfu71olOl2T2LG52UAVe2+fOrXHQB7cfBzMUJmaHq
-         D2rw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692480653; x=1693085453;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ioX0pdqkRflpWbTw+qj+p6Veh+H84lgpwVPnZSVgPAQ=;
-        b=Zm/0pK0sfJH2xjw+gnvKRKKCLTxziBbOFNjtQdSfiX0VvYrqjKE0QJ+2OpfKYXXUgx
-         LHJh8OqprxX9b+eD7kz0QCcqA03GlbYQDGfCGD+f8STwX2WQKqDSABSvrK0f/+FmcGqT
-         1jIpBzTdACS5X+s+7zMng6lgdrCMvalY7iVrovkOHGjWenN/3js2M/pzcZmBOU+ZU/IX
-         00lB3EMYncm62JbpaWOtwgW+vRn8QoScBnTadHWkSPpsyWnKC3S8J9gyU14NJeAusjpM
-         1Y9p0JpPrL+8rd7cCuDeZvkHBsUCinCEKB1u0yR43B5N8eadX6rynSvA/JBjxKpQBIFS
-         y0Fw==
-X-Gm-Message-State: AOJu0Yz6s/g/h4YT49U4qzjb/inMXC7gPDK6OKzePpvHBrK+XFk1tPbn
-        2Qhk+OzoL5QeCHxFT+toiV53gW1PN60MIQ==
-X-Google-Smtp-Source: AGHT+IG2JIpfNwsH9wx0p/mzC2Ju99IGnsxTvqvn4e9IUixHyQwWEmBbuzVNsqAUbT8ovvbSRjT6kWcUQ6IUqw==
-X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:7789:3ff3:28cf:bae9])
- (user=ipylypiv job=sendgmr) by 2002:a25:cb17:0:b0:d71:36b5:e9ee with SMTP id
- b23-20020a25cb17000000b00d7136b5e9eemr23326ybg.8.1692480653096; Sat, 19 Aug
- 2023 14:30:53 -0700 (PDT)
-Date:   Sat, 19 Aug 2023 14:30:40 -0700
-In-Reply-To: <20230819213040.1101044-1-ipylypiv@google.com>
-Mime-Version: 1.0
-References: <20230819213040.1101044-1-ipylypiv@google.com>
-X-Mailer: git-send-email 2.42.0.rc1.204.g551eb34607-goog
-Message-ID: <20230819213040.1101044-3-ipylypiv@google.com>
-Subject: [PATCH v2 2/2] scsi: pm80xx: Set RETFIS when requested by libsas
-From:   Igor Pylypiv <ipylypiv@google.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        with ESMTP id S233186AbjHUFcQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 01:32:16 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB29CA6;
+        Sun, 20 Aug 2023 22:32:11 -0700 (PDT)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37L5LbpD019203;
+        Mon, 21 Aug 2023 05:31:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=ks7BlhSDzyxYb5voeOdaDvlPc/UZIwDWK8UKz2XmTTc=;
+ b=aPabMcbR2F7kF8Alx8azdaf8xVUpjNrvbswIyNdYjks6CyVCN7lIgVc/SwagSIC0lDeP
+ 44QVF9Dl/lPWNeNmW2irzH1SpVN02WGjgLuIjYSKkHu0JoyKPRATsr+o37VNVkKOpBzf
+ BQ9zsP18xu3MGT95LiJo4I/YsnR9Cvefh+IWWQAuYVSnv4eXAINQfREqN9VbE2fZGF9S
+ /FOlKI8Bw4V2zZj/FEBAWNTHyjqOm5bQLT599rcnDFcUVMKGTaowasSf/c1zhV/eN2nu
+ GRY/ua4JSd2L0iCsOMZnrQ3mUwdxA9CECJ64/eF+STEWzwm252826UZq43LX/GZSXHaX Lg== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sjn2rapmx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 21 Aug 2023 05:31:17 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37L5VFuL003028
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 21 Aug 2023 05:31:15 GMT
+Received: from [10.253.34.146] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Sun, 20 Aug
+ 2023 22:31:11 -0700
+Message-ID: <ac21eb11-8588-8e0b-2eca-d59593712a82@quicinc.com>
+Date:   Mon, 21 Aug 2023 13:30:07 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+Subject: Re: [PATCH v10 11/18] scsi: ufs: Change the return type of
+ ufshcd_auto_hibern8_update()
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Niklas Cassel <niklas.cassel@wdc.com>
-Cc:     linux-scsi@vger.kernel.org, Jack Wang <jinpu.wang@cloud.ionos.com>,
-        Igor Pylypiv <ipylypiv@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        Bean Huo <beanhuo@micron.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Lu Hongfei <luhongfei@vivo.com>,
+        Daniil Lunev <dlunev@chromium.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Manivannan Sadhasivam" <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Arthur Simchaev" <arthur.simchaev@wdc.com>,
+        zhanghui <zhanghui31@xiaomi.com>,
+        "Po-Wen Kao" <powen.kao@mediatek.com>,
+        Eric Biggers <ebiggers@google.com>,
+        "Keoseong Park" <keosung.park@samsung.com>
+References: <20230818193546.2014874-1-bvanassche@acm.org>
+ <20230818193546.2014874-12-bvanassche@acm.org>
+Content-Language: en-US
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <20230818193546.2014874-12-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: tk-ddMVT0Rx2OOObaxjHZydHu6cOFYx0
+X-Proofpoint-ORIG-GUID: tk-ddMVT0Rx2OOObaxjHZydHu6cOFYx0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-20_15,2023-08-18_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1011
+ lowpriorityscore=0 mlxlogscore=999 spamscore=0 priorityscore=1501
+ phishscore=0 suspectscore=0 mlxscore=0 impostorscore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308210051
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-By default PM80xx HBAs return FIS only when a drive reports an error.
-The RETFIS bit forces the controller to populate FIS even when a drive
-reports no error.
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c |  9 ++++++---
- drivers/scsi/pm8001/pm8001_hwi.h |  2 +-
- drivers/scsi/pm8001/pm80xx_hwi.c | 24 +++++++++++-------------
- drivers/scsi/pm8001/pm80xx_hwi.h |  2 +-
- 4 files changed, 19 insertions(+), 18 deletions(-)
+On 8/19/2023 3:34 AM, Bart Van Assche wrote:
+> A later patch will introduce an error path in ufshcd_auto_hibern8_update().
+> Change the return type of that function before introducing calls to that
+> function in the host drivers such that the host drivers only have to be
+> modified once.
+>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Can Guo <quic_cang@quicinc.com>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/ufs/core/ufs-sysfs.c   | 2 +-
+>   drivers/ufs/core/ufshcd-priv.h | 1 -
+>   drivers/ufs/core/ufshcd.c      | 6 ++++--
+>   include/ufs/ufshcd.h           | 2 +-
+>   4 files changed, 6 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index 6c72075750dd..a693dea1bd18 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -203,7 +203,7 @@ static ssize_t auto_hibern8_store(struct device *dev,
+>   		goto out;
+>   	}
+>   
+> -	ufshcd_auto_hibern8_update(hba, ufshcd_us_to_ahit(timer));
+> +	ret = ufshcd_auto_hibern8_update(hba, ufshcd_us_to_ahit(timer));
+>   
+>   out:
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 73cd25f30ca5..649724a1d134 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -4095,7 +4095,7 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	u32 hdr_tag, ncg_tag = 0;
- 	u64 phys_addr;
- 	u32 ATAP = 0x0;
--	u32 dir;
-+	u32 dir, retfis = 0;
- 	u32  opc = OPC_INB_SATA_HOST_OPSTART;
- 
- 	memset(&sata_cmd, 0, sizeof(sata_cmd));
-@@ -4124,8 +4124,11 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	sata_cmd.tag = cpu_to_le32(tag);
- 	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
- 	sata_cmd.data_len = cpu_to_le32(task->total_xfer_len);
--	sata_cmd.ncqtag_atap_dir_m =
--		cpu_to_le32(((ncg_tag & 0xff)<<16)|((ATAP & 0x3f) << 10) | dir);
-+	if (task->ata_task.return_fis_on_success)
-+		retfis = 1;
-+	sata_cmd.retfis_ncqtag_atap_dir_m =
-+		cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
-+			    ((ATAP & 0x3f) << 10) | dir);
- 	sata_cmd.sata_fis = task->ata_task.fis;
- 	if (likely(!task->ata_task.device_control_reg_update))
- 		sata_cmd.sata_fis.flags |= 0x80;/* C=1: update ATA cmd reg */
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-index 961d0465b923..fc2127dcb58d 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.h
-+++ b/drivers/scsi/pm8001/pm8001_hwi.h
-@@ -515,7 +515,7 @@ struct sata_start_req {
- 	__le32	tag;
- 	__le32	device_id;
- 	__le32	data_len;
--	__le32	ncqtag_atap_dir_m;
-+	__le32	retfis_ncqtag_atap_dir_m;
- 	struct host_to_dev_fis	sata_fis;
- 	u32	reserved1;
- 	u32	reserved2;
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 39a12ee94a72..a5021577a15f 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4457,7 +4457,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	u64 phys_addr, end_addr;
- 	u32 end_addr_high, end_addr_low;
- 	u32 ATAP = 0x0;
--	u32 dir;
-+	u32 dir, retfis = 0;
- 	u32 opc = OPC_INB_SATA_HOST_OPSTART;
- 	memset(&sata_cmd, 0, sizeof(sata_cmd));
- 
-@@ -4487,7 +4487,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 	sata_cmd.tag = cpu_to_le32(tag);
- 	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
- 	sata_cmd.data_len = cpu_to_le32(task->total_xfer_len);
--
-+	if (task->ata_task.return_fis_on_success)
-+		retfis = 1;
- 	sata_cmd.sata_fis = task->ata_task.fis;
- 	if (likely(!task->ata_task.device_control_reg_update))
- 		sata_cmd.sata_fis.flags |= 0x80;/* C=1: update ATA cmd reg */
-@@ -4500,12 +4501,10 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			   "Encryption enabled.Sending Encrypt SATA cmd 0x%x\n",
- 			   sata_cmd.sata_fis.command);
- 		opc = OPC_INB_SATA_DIF_ENC_IO;
--
--		/* set encryption bit */
--		sata_cmd.ncqtag_atap_dir_m_dad =
--			cpu_to_le32(((ncg_tag & 0xff)<<16)|
--				((ATAP & 0x3f) << 10) | 0x20 | dir);
--							/* dad (bit 0-1) is 0 */
-+		/* set encryption bit; dad (bits 0-1) is 0 */
-+		sata_cmd.retfis_ncqtag_atap_dir_m_dad =
-+			cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
-+				    ((ATAP & 0x3f) << 10) | 0x20 | dir);
- 		/* fill in PRD (scatter/gather) table, if any */
- 		if (task->num_scatter > 1) {
- 			pm8001_chip_make_sg(task->scatter,
-@@ -4568,11 +4567,10 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 		pm8001_dbg(pm8001_ha, IO,
- 			   "Sending Normal SATA command 0x%x inb %x\n",
- 			   sata_cmd.sata_fis.command, q_index);
--		/* dad (bit 0-1) is 0 */
--		sata_cmd.ncqtag_atap_dir_m_dad =
--			cpu_to_le32(((ncg_tag & 0xff)<<16) |
--					((ATAP & 0x3f) << 10) | dir);
--
-+		/* dad (bits 0-1) is 0 */
-+		sata_cmd.retfis_ncqtag_atap_dir_m_dad =
-+			cpu_to_le32((retfis << 24) | ((ncg_tag & 0xff) << 16) |
-+				    ((ATAP & 0x3f) << 10) | dir);
- 		/* fill in PRD (scatter/gather) table, if any */
- 		if (task->num_scatter > 1) {
- 			pm8001_chip_make_sg(task->scatter,
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index acf6e3005b84..eb8fd37b2066 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -731,7 +731,7 @@ struct sata_start_req {
- 	__le32	tag;
- 	__le32	device_id;
- 	__le32	data_len;
--	__le32	ncqtag_atap_dir_m_dad;
-+	__le32	retfis_ncqtag_atap_dir_m_dad;
- 	struct host_to_dev_fis	sata_fis;
- 	u32	reserved1;
- 	u32	reserved2;	/* dword 11. rsvd for normal I/O. */
--- 
-2.42.0.rc1.204.g551eb34607-goog
+Reviewed-by: Can Guo <quic_cang@quicinc.com>
 
