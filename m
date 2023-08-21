@@ -2,179 +2,63 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F277CEE49A6
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 19:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CAB6EE49A6
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 19:51:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229541AbjHUTvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Aug 2023 15:51:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46748 "EHLO
+        id S229654AbjHUTv4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Aug 2023 15:51:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229504AbjHUTvB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 15:51:01 -0400
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 258F8FD;
-        Mon, 21 Aug 2023 12:51:00 -0700 (PDT)
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-68a56401b9aso758613b3a.1;
-        Mon, 21 Aug 2023 12:51:00 -0700 (PDT)
+        with ESMTP id S229641AbjHUTvz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 15:51:55 -0400
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC452FB;
+        Mon, 21 Aug 2023 12:51:49 -0700 (PDT)
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1bf62258c4dso11296015ad.2;
+        Mon, 21 Aug 2023 12:51:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692647459; x=1693252259;
-        h=content-transfer-encoding:in-reply-to:from:references:to
+        d=1e100.net; s=20221208; t=1692647508; x=1693252308;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xx5Uthgldx00An2/L6ejuAbCLX0Oztz/EL/6IJtQiIs=;
-        b=QMkRU04FfAufVI4zmlgq7pyHbkesIRifEx4Pb7VIvaE72fQc2t0+o3/qIez6JhjMSU
-         m/SQrg5MG+ZuJ8arTx+JJ7eQ9+CevcBEE4n5gGhm+mV4vmRcRKslM0ev3u1qklkWMw3I
-         Bp8D7n5A3+sl8a5ZrV8W+QZHUpoWp3CeCBqPJSSw7/CBi52VQAVsF3bYOUUSDDc4uBtE
-         uPM7/1pIb/HkGnvhtkoCZYERqyFE69TDwEit9IkhxS25pJETCu4iTBuJ7jd3z/40SA/W
-         i5m1MJYaLZPFY2VHuIIPm2W8pT5Px4z4o40NUcYSM1gSywVwPnU/7x7o6PY6FoQJKaZF
-         G9kQ==
-X-Gm-Message-State: AOJu0Yy15mb6GMAzy2rDX/PWIBhJWxTqcWpPvhEV/UTinDawzuBY327C
-        ntLDKmyn63EDBBoDe0sqHwg=
-X-Google-Smtp-Source: AGHT+IFPsthbkyU8yghE0Hqd5iE5QOP15RmMlYWL8ipmJSQdr5giU4o4ZbDJLuJ1Jd/K1fUF/2B4Lw==
-X-Received: by 2002:a05:6a21:3e01:b0:13e:fe55:b99f with SMTP id bk1-20020a056a213e0100b0013efe55b99fmr5088264pzc.56.1692647459311;
-        Mon, 21 Aug 2023 12:50:59 -0700 (PDT)
+        bh=F8CBJ63cjV+sJ8R1OQRGZ+key9gcGCvoYCJAYk4zDWM=;
+        b=cVu6BWnyQJRTWC0/h88Y6Citcdu81mRC2Hu7gWI98oQssG34OSGNpcLelHIR74c4g7
+         1sI/jQ2owsy+pdWn9i1K3WCfkAA7HC95VE1z+PD7BrQSTubw1BYbR8E3mLFpSl1aYay8
+         BQxK6fRrUEtXlcvGQW3nB/IXHUUmwPDmOrd+8bgdv5brr+2AKiXBXxIW+0FsenwwK+69
+         8GUmqGUXd+gcRxX5FoXLL079OkOJiEG79XOlI40s00mnCK7E7Kz4Aaij3JYXeS3Onepp
+         xMbeLR6hPAJzi6CQDNM8Cu6EpgpD1ZcVTSyWU6XP4MP580LWRdX8b5egRJc3hpHDLv/D
+         Jh7Q==
+X-Gm-Message-State: AOJu0YxzDDtNmWzqzcdzL7+L9Kg0dLMox1Tr0CXZh6QX7nD9KiwHwtKn
+        1XgYMNyRXQYtOsk1kMtJedc=
+X-Google-Smtp-Source: AGHT+IGgZcWk8B+dqH1Io20kRBwIjPYbBJXqCXNsTNtCXp7V8m/4CNxClHt23uRvUZBDwe0ZfNxWOw==
+X-Received: by 2002:a17:902:ea11:b0:1bd:f69e:6630 with SMTP id s17-20020a170902ea1100b001bdf69e6630mr7576684plg.65.1692647508532;
+        Mon, 21 Aug 2023 12:51:48 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:ef58:6534:ec7a:8ab2? ([2620:15c:211:201:ef58:6534:ec7a:8ab2])
-        by smtp.gmail.com with ESMTPSA id l9-20020a635b49000000b00565dd935938sm6640860pgm.85.2023.08.21.12.50.58
+        by smtp.gmail.com with ESMTPSA id t7-20020a170902bc4700b001beef2c9bffsm7402546plz.85.2023.08.21.12.51.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Aug 2023 12:50:58 -0700 (PDT)
-Message-ID: <baecaad7-7124-b9ae-ab79-1b7c6fa95c98@acm.org>
-Date:   Mon, 21 Aug 2023 12:50:57 -0700
+        Mon, 21 Aug 2023 12:51:48 -0700 (PDT)
+Message-ID: <0f957502-bcb4-9fdd-66e8-3ee92c958f99@acm.org>
+Date:   Mon, 21 Aug 2023 12:51:46 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.1
-Subject: Re: [PATCH -next] scsi: core: fix double free in raid_component_add()
+Subject: Re: [PATCH -next] scsi: pm8001: Remove unused declarations
 Content-Language: en-US
-To:     Zhu Wang <wangzhu9@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, dan.carpenter@linaro.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230819080345.149144-1-wangzhu9@huawei.com>
+To:     Yue Haibing <yuehaibing@huawei.com>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        john.garry@huawei.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230818124700.49724-1-yuehaibing@huawei.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230819080345.149144-1-wangzhu9@huawei.com>
+In-Reply-To: <20230818124700.49724-1-yuehaibing@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/19/23 01:03, Zhu Wang wrote:
-> Previous commit 04b5b5cb0136 ("scsi: core: Fix possible memory leak if
-> device_add() fails") introduced a double free when device_add() failed.
-> When device_add() failed, the put_device(&rc->dev) is called, which will
-> call raid_component_release(), and this function will call
-> put_device(rc->dev.parent) and kfree(rc), but in the error path of
-> raid_component_release() above two functions are called again, so 'rc' are
-> freed twice.
-> 
-> We do not just revert the patch, since the memory allocated by
-> dev_set_name() is not released in the error path, it should be released
-> through calling put_device(&rc->dev) which will call kobject_cleanup(),
-> and the device name will be released in it. Though the commit 04b5b5cb0136
-> ("scsi: core: Fix possible memory leak if device_add() fails") fixed the
-> memory leak, it didn't consider the double free problem. We removed
-> put_device(rc->dev.parent) and kfree(rc) in the error path, and we moved
-> put_device(&rc->dev) after rd->component-count--, since after
-> put_device(&rc->dev) is called, 'rc' is freed, so list_del(&rc->node)
-> cannot be called again.
-> 
-> Fixes: 04b5b5cb0136 ("scsi: core: Fix possible memory leak if device_add() fails")
-> Signed-off-by: Zhu Wang <wangzhu9@huawei.com>
-> ---
->   drivers/scsi/raid_class.c | 4 +---
->   1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
-> index 711252e52d8e..86ed1f66d749 100644
-> --- a/drivers/scsi/raid_class.c
-> +++ b/drivers/scsi/raid_class.c
-> @@ -248,11 +248,9 @@ int raid_component_add(struct raid_template *r,struct device *raid_dev,
->   	return 0;
->   
->   err_out:
-> -	put_device(&rc->dev);
->   	list_del(&rc->node);
->   	rd->component_count--;
-> -	put_device(component_dev);
-> -	kfree(rc);
-> +	put_device(&rc->dev);
->   	return err;
->   }
->   EXPORT_SYMBOL(raid_component_add);
+On 8/18/23 05:47, Yue Haibing wrote:
+> Commit 4fcf812ca392 ("[SCSI] libsas: export sas_alloc_task()")
+> removed these implementations but not the declarations.
 
-Please consider replacing the above patch by the patch below:
-
-[PATCH] scsi: Remove raid_component_add()
-
-The raid_component_add() function was added to the kernel tree via
-patch "[SCSI] embryonic RAID class" (2005). Remove this function since
-it never has had any callers in the Linux kernel.
-
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
-  drivers/scsi/raid_class.c  | 38 --------------------------------------
-  include/linux/raid_class.h |  4 ----
-  2 files changed, 42 deletions(-)
-
-diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
-index 898a0bdf8df6..99f806d1d317 100644
---- a/drivers/scsi/raid_class.c
-+++ b/drivers/scsi/raid_class.c
-@@ -218,44 +218,6 @@ static void raid_component_release(struct device *dev)
-  	kfree(rc);
-  }
-
--int raid_component_add(struct raid_template *r,struct device *raid_dev,
--		       struct device *component_dev)
--{
--	struct device *cdev =
--		attribute_container_find_class_device(&r->raid_attrs.ac,
--						      raid_dev);
--	struct raid_component *rc;
--	struct raid_data *rd = dev_get_drvdata(cdev);
--	int err;
--
--	rc = kzalloc(sizeof(*rc), GFP_KERNEL);
--	if (!rc)
--		return -ENOMEM;
--
--	INIT_LIST_HEAD(&rc->node);
--	device_initialize(&rc->dev);
--	rc->dev.release = raid_component_release;
--	rc->dev.parent = get_device(component_dev);
--	rc->num = rd->component_count++;
--
--	dev_set_name(&rc->dev, "component-%d", rc->num);
--	list_add_tail(&rc->node, &rd->component_list);
--	rc->dev.class = &raid_class.class;
--	err = device_add(&rc->dev);
--	if (err)
--		goto err_out;
--
--	return 0;
--
--err_out:
--	list_del(&rc->node);
--	rd->component_count--;
--	put_device(component_dev);
--	kfree(rc);
--	return err;
--}
--EXPORT_SYMBOL(raid_component_add);
--
-  struct raid_template *
-  raid_class_attach(struct raid_function_template *ft)
-  {
-diff --git a/include/linux/raid_class.h b/include/linux/raid_class.h
-index 6a9b177d5c41..e50416ba9cd9 100644
---- a/include/linux/raid_class.h
-+++ b/include/linux/raid_class.h
-@@ -77,7 +77,3 @@ DEFINE_RAID_ATTRIBUTE(enum raid_state, state)
-  	
-  struct raid_template *raid_class_attach(struct raid_function_template *);
-  void raid_class_release(struct raid_template *);
--
--int __must_check raid_component_add(struct raid_template *, struct device *,
--				    struct device *);
--
-
-
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
