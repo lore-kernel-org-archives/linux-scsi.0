@@ -2,143 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E285EE49A8
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 09:49:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C58EEE49A5
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 09:49:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234304AbjHUJtY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Aug 2023 05:49:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48830 "EHLO
+        id S234345AbjHUJty (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Aug 2023 05:49:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230024AbjHUJtY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 05:49:24 -0400
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44A89A9
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2023 02:49:21 -0700 (PDT)
-Received: by mail-wr1-x429.google.com with SMTP id ffacd0b85a97d-31ad9155414so2787313f8f.3
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2023 02:49:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1692611359; x=1693216159;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=sSvoRy7pHM24HvuKyCDk4ZOyjKwBTskjmD2ROspre9E=;
-        b=tYxWADTkgBkCM3YwWAPugmBztT4bc8tXPky17DRaN53c3tT6ojyXUauUdsuO71dWSw
-         xpIk6spPcjhbkzrtSCTgOsteMlb8AGlrmNmcbg03OjINB5IhoQm4/0y95OpyY9ojbQKB
-         FmvFGKzdPc0+ppDAvCK5ix6hq0hv+FOuSkDbzMfeCkJEpABHHPnrxO+m/HeGoPVwBuyZ
-         3vhIk8EEM8iqapb4gd3u2QtMXa6jq/HfhDuRTT8uLZJjPLaRt2hkplIRxTmw9QMx2UAj
-         JDtjISCof3twuIM6wRvW2ljAGwIgCTQpqG0uGVp+9rmvllLQ4nAhmrjpVa6irghqgVTX
-         tW9A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692611359; x=1693216159;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sSvoRy7pHM24HvuKyCDk4ZOyjKwBTskjmD2ROspre9E=;
-        b=Q3bebfsUnPOApYr4iGe0TPlNOg49qL3oFf5vQdwRu8NkSB321ROoeEZJ+lQ58kj4Sc
-         vE5VtRg2VokU1v9FNQX9IRnj7ihAgx+UwR2cla6fAe6IISrItJTZ3bexu0a2l6doYB7g
-         BoFtXYSzK58ogH3OiWZG0B72SSZZooLxie6vp/vb+m6sLFPM2SBjVm7aFgx04u9xPSnR
-         XrWYD4ovB01htf9qapUefQOywUUhwoKQdlM/EM2ud3ZroBJ+04DXakJNXgDNy+iYCGgx
-         R1WyvZON6wLkLIr9VGHS7AanUIj+WMC+x4I8XT5Si7zmRYq18x88YWE/ri7YKxWk9qLE
-         /92w==
-X-Gm-Message-State: AOJu0YzlIE/ROJ3Atny0cCKuDWrQINy1x9CtlQDxvEPkVnqV3sFQXb2D
-        AHEJfkTLywwUc0F567fZSSf3EA==
-X-Google-Smtp-Source: AGHT+IGR8J+UxmGlPhMYPoghyRo+W4JZb8uPZ1wIyKUB8DuWVNka4u16jKnVlBcMDbQgJIWDu8EQNw==
-X-Received: by 2002:adf:f184:0:b0:314:1fd7:188b with SMTP id h4-20020adff184000000b003141fd7188bmr4440406wro.17.1692611359488;
-        Mon, 21 Aug 2023 02:49:19 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:3cb:7bb0:86ea:e59d:2685:7a39? ([2a01:e0a:3cb:7bb0:86ea:e59d:2685:7a39])
-        by smtp.gmail.com with ESMTPSA id p11-20020adfe60b000000b003176c6e87b1sm11895702wrm.81.2023.08.21.02.49.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Aug 2023 02:49:19 -0700 (PDT)
-Message-ID: <94728786-b41b-1467-63c1-8e2d5acfa5e4@linaro.org>
-Date:   Mon, 21 Aug 2023 11:49:18 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [RFC, PATCH 1/1] rpmb: add Replay Protected Memory Block (RPMB)
- driver
-To:     Shyam Saini <shyamsaini@linux.microsoft.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Cc:     linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-        op-tee@lists.trustedfirmware.org, linux-scsi@vger.kernel.org,
-        =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        Tyler Hicks <code@tyhicks.com>,
-        "Srivatsa S . Bhat" <srivatsa@csail.mit.edu>,
-        Paul Moore <paul@paul-moore.com>,
-        Allen Pais <apais@linux.microsoft.com>
-References: <20230722014037.42647-1-shyamsaini@linux.microsoft.com>
- <20230722014037.42647-2-shyamsaini@linux.microsoft.com>
- <CAPDyKFoBC+GaGerGDEAjg9q4ayV9mMBKkfFk3nO-zcQzOZ_H6Q@mail.gmail.com>
- <b875892c-1777-d84a-987e-1b0d5ac29df@linux.microsoft.com>
-Content-Language: en-US
-From:   Jerome Forissier <jerome.forissier@linaro.org>
-In-Reply-To: <b875892c-1777-d84a-987e-1b0d5ac29df@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S232357AbjHUJtx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 05:49:53 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68849A9;
+        Mon, 21 Aug 2023 02:49:52 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37L8wSiW014830;
+        Mon, 21 Aug 2023 09:49:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=FDN+u2Bx3hkkBprQZ2n88cSyQE8Gk0JVqhSE2T0qpvU=;
+ b=T6wDWjuVsU8tahAU8xirAprzovT0ZqzI0C8mPWwRLW9U1+tBnSAt+LK9vMQPXEP3Bmmu
+ +gSMH9IxGHo2/5wvL5mqgw/iQ9yrMw5kgJKAN9DMsBExWn1ygsKA4nCyK7pcJbpEt7lO
+ OlRbz4isrb4plrJKXgeSQ2gQpiG3P1ktygEmLiLwfktaPiaJmPA3oIoHEE0kEcKbuI/p
+ OkZkRL7ONdEezeds9s3NAex4sQ03XIRLsQ8pI5EsHDisVsim+FPO5DZRKf/NH5A2ctKN
+ VQWyWUF62DHrZoPD4C3ROA0wWuZ5tHNnVew030uwjtBdI0DVkqcsMhGaOkIJBmcHHLcE fg== 
+Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sjnu138ke-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 21 Aug 2023 09:49:43 +0000
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 37L9ne1C026922;
+        Mon, 21 Aug 2023 09:49:40 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3sjptkfk09-1;
+        Mon, 21 Aug 2023 09:49:40 +0000
+Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37L9ndO1026917;
+        Mon, 21 Aug 2023 09:49:40 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 37L9ndp1026916;
+        Mon, 21 Aug 2023 09:49:39 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+        id ED4A45013BF; Mon, 21 Aug 2023 15:19:38 +0530 (+0530)
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+To:     mani@kernel.org, agross@kernel.org, andersson@kernel.org,
+        konrad.dybcio@linaro.org, alim.akhtar@samsung.com,
+        bvanassche@acm.org, robh+dt@kernel.org, avri.altman@wdc.com,
+        cros-qcom-dts-watchers@chromium.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V1 0/2] Add UFS host controller and Phy nodes for sc7280
+Date:   Mon, 21 Aug 2023 15:19:35 +0530
+Message-Id: <20230821094937.13059-1-quic_nitirawa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: u35YAbqCjCS75SvJjRsOFGtLUiXlWzqW
+X-Proofpoint-GUID: u35YAbqCjCS75SvJjRsOFGtLUiXlWzqW
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-21_01,2023-08-18_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
+ impostorscore=0 clxscore=1011 mlxlogscore=518 suspectscore=0
+ malwarescore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0
+ priorityscore=1501 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2306200000 definitions=main-2308210089
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This patch adds UFS host controller and Phy nodes for Qualcomm SC7280 SOC.
 
+This patch is dependent on below patch-
+"dt-bindings: phy: Add QMP UFS PHY comptible for SC7280"
+(https://lore.kernel.org/lkml/481ac6b3-1dda-1e9e-7339-e39a17d2eed9@linaro.org/)
 
-On 8/17/23 01:31, Shyam Saini wrote:
-> 
-> Hi Ulf,
-> 
->> On Sat, 22 Jul 2023 at 03:41, Shyam Saini
->> <shyamsaini@linux.microsoft.com> wrote:
->>>
->>> From: Alex Bennée <alex.bennee@linaro.org>
->>>
->>> [This is patch 1 from [1] Alex's submission and this RPMB layer was
->>> originally proposed by [2]Thomas Winkler ]
->>>
->>> A number of storage technologies support a specialised hardware
->>> partition designed to be resistant to replay attacks. The underlying
->>> HW protocols differ but the operations are common. The RPMB partition
->>> cannot be accessed via standard block layer, but by a set of specific
->>> commands: WRITE, READ, GET_WRITE_COUNTER, and PROGRAM_KEY. Such a
->>> partition provides authenticated and replay protected access, hence
->>> suitable as a secure storage.
->>>
->>> The initial aim of this patch is to provide a simple RPMB Driver which
->>> can be accessed by Linux's optee driver to facilitate fast-path for
->>> RPMB access to optee OS(secure OS) during the boot time. [1] Currently,
->>> Optee OS relies on user-tee supplicant to access eMMC RPMB partition.
->>>
->>> A TEE device driver can claim the RPMB interface, for example, via
->>> class_interface_register(). The RPMB driver provides a series of
->>> operations for interacting with the device.
->>
->> I don't quite follow this. More exactly, how will the TEE driver know
->> what RPMB device it should use?
-> 
-> I don't have complete code to for this yet, but i think OP-TEE driver
-> should register with RPMB subsystem and then we can have eMMC/UFS/NVMe
-> specific implementation for RPMB operations.
-> 
-> Linux optee driver can handle RPMB frames and pass it to RPMB subsystem
-> 
-> [1] U-Boot has mmc specific implementation
-> 
-> I think OPTEE-OS has CFG_RPMB_FS_DEV_ID option
-> CFG_RPMB_FS_DEV_ID=1 for /dev/mmcblk1rpmb,
+Nitin Rawat (2):
+  scsi: ufs: qcom: dt-bindings: Add SC7280 compatible string
+  arm64: dts: qcom: sc7280: Add UFS host controller and phy nodes
 
-Correct. Note that tee-supplicant will ignore this device ID if --rmb-cid
-is given and use the specified RPMB instead (the CID is a non-ambiguous way
-to identify a RPMB device).
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     |  2 +
+ arch/arm64/boot/dts/qcom/sc7280-idp.dtsi      | 19 ++++++
+ arch/arm64/boot/dts/qcom/sc7280.dtsi          | 64 +++++++++++++++++++
+ 3 files changed, 85 insertions(+)
 
-> but in case if a
-> system has multiple RPMB devices such as UFS/eMMC/NVMe, one them
-> should be declared as secure storage and optee should access that one only.
+--
+2.17.1
 
-Indeed, that would be an equivalent of tee-supplicant's --rpmb-cid.
-
-> Sumit, do you have suggestions for this ?
-
-
--- 
-Jerome
