@@ -2,119 +2,153 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96F6CEE4996
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 20:42:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E02EFEE4996
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 20:44:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231304AbjHUUml (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Aug 2023 16:42:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39524 "EHLO
+        id S231443AbjHUUop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Aug 2023 16:44:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231359AbjHUUmG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 16:42:06 -0400
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B302E62
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2023 13:41:07 -0700 (PDT)
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1bf6ea270b2so10251675ad.0
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2023 13:41:07 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692650466; x=1693255266;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=2TLXSffV0Mdb76aW2RDBjh2NGDe6pa1hzPKUkIdKlZA=;
-        b=Qav/+AIxfWzflvA05SvQ4WOpWcWH0bKMQaEwelRHmC51CzgFwojv9G/QlN/qt5r61n
-         KriGQhbNbE2LbJllvX0MWxs1s6xAiLTLpwrIL2A505OpUJ/1n0M9tWAY2GX6nVtZM57Q
-         Jrrgnv4rE7mVkHkgwlcjMv2p05tPoMrCBlcPwc9k6+ugJUrvaiIqMJeaSYh4NVeK9+a7
-         Epzor7iq4mxlqq4y/EtBMCcdTOxf+Nf88fhi1W/BrfVH0f9joV6i+H5+UhXAW+yTGgbk
-         bk6LoH3yCG5BjC0m4CURMlm7telgGt3kem2mUtM7wHl60h8ZoMieE/N5xwyrxBx9bfQx
-         CIiQ==
-X-Gm-Message-State: AOJu0Yy/bOKJT6q13kuzP61156hJvAim/d3WBhHh9fhS6isSd6Hi4Xu9
-        P7MRJBkKloU6CqUbWXS8T+A=
-X-Google-Smtp-Source: AGHT+IE3si9sPg2kAnR3LwcNKZWsLv79dykOUvJf8i6J6iHGBiu45dP+fvhL/WaTa0qoLeq7nKMzIw==
-X-Received: by 2002:a17:902:f68a:b0:1b8:2ba0:c9c0 with SMTP id l10-20020a170902f68a00b001b82ba0c9c0mr6024570plg.59.1692650466506;
-        Mon, 21 Aug 2023 13:41:06 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ef58:6534:ec7a:8ab2])
-        by smtp.gmail.com with ESMTPSA id 19-20020a170902c11300b001ab39cd875csm7521097pli.133.2023.08.21.13.41.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Aug 2023 13:41:06 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH] scsi: core: Report error list information in debugfs
-Date:   Mon, 21 Aug 2023 13:41:01 -0700
-Message-ID: <20230821204101.3601799-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.42.0.rc1.204.g551eb34607-goog
+        with ESMTP id S230160AbjHUUoQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 16:44:16 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97CEEE7B;
+        Mon, 21 Aug 2023 13:42:47 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37LFxuvc028627;
+        Mon, 21 Aug 2023 20:42:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=c1OuceOe1arvzXT01gusw2krW4XI4kQ3GbK5taCWWzI=;
+ b=P8NFDA+nc69f0oxlXmD9NbpaM9r/plnsIBdyEIq+OPdNtbLgmjiwT18ScZwuEVRDspAt
+ WMRk9NtLbd2v1ERkgJqfu9/NzAf5wnat7AQoq24C7pohqc8nZlTk3C/9LZWbnM0Yxka/
+ cCMaRv8pJkfjl8jcnmsxEay5hDniv391py34nAenJiUdDj+K+ElBkqPvpS95ePvg8ggZ
+ 7FPKdr935osJi85zc4YkGI0DZROUg5Ioyn7ko6AnhSyIOTNRto6G7D12WnpDgd59r51x
+ jT0GOz8sIovWwMpX+ojjHSs7FtHSMukJtvBngc1UavqdriB/cfVgqZ1P6USRdR7IVwcS Gw== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3sjp9ubs09-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Aug 2023 20:42:44 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 37LKKcZQ029896;
+        Mon, 21 Aug 2023 20:42:43 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2044.outbound.protection.outlook.com [104.47.66.44])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3sjm6aexvk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Aug 2023 20:42:42 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Lpyh9dP0tTwLcAMKVyXlHnTI7C8GmB+3ej7woyb9gbzLq3NvZ+90zSEQxYhP6CGsCNO+e6W/N7MEHuvk2ZEt21xYy01hJUXOlA8BB6Gmr/C6+xmrJDRrFKRc/gl9LCIvN4zgW5z+6NVmoQPVLHzQERH83U3/3qhXaw+XQPy9sj5Cpelh64blyat5eQvsGKSjX5oZPaSCgy0piQXDr+twAvQ8jZZ+oSpc4ChnqEEErBlc2ARej2d5cj8ZlR5k2dQoIBNzCTj+JTKPOcA2lrwWbKymjCGZ07KgxclR6KEsM40+cNaDpoS6bek35ZztIeQ08jjW09rZ7+JsKEZKXc9a1w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=c1OuceOe1arvzXT01gusw2krW4XI4kQ3GbK5taCWWzI=;
+ b=XEWAqxvDfXrkXS5MfWiOFHfFBqyl3egX39vaDnZ4sopG5zgDMFkkzb/bhZH2wYSUhXqxLio01aJ6Z2xYYyxD8uurt13Nc7QqFfvi1W476P7xz1l2lj9USN7Ak9uDweVg4DziVrFMri2sxRognhxYmHtlydxE6ma+yZeG0frax2QobuUgF7xy6h2cpQX2ZVx+PAHwyDntBHaBO9MvwPkeecPIUCLPWUAHtToyuZXf5rNtbNRHtdHU7HxKCAjSam0E1jQSSDmN9d63g002ssRvLvy5LOQ9UicUjI6+PyGy9dxYOw5f6AarqK6L8D4ziPAIgwAolZyN4hCJzmg9DCXMHw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=c1OuceOe1arvzXT01gusw2krW4XI4kQ3GbK5taCWWzI=;
+ b=jwvLosuJxPcU6TuerBPWkp+iEciy3wZvlzZUjt+8VurEKt8oONbTlNiI//kLoSq28PxbWM6BshCI+tNesg6Gk8qPKIIyngq6G+xzwkPu8vueoC8jO2UqjHkKsX8Zz9YOWfKDaevTUIAs1tSm0WCLjuQ3cerV3Pn1/NgTm4LAs0s=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by DM6PR10MB4234.namprd10.prod.outlook.com (2603:10b6:5:21f::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.24; Mon, 21 Aug
+ 2023 20:42:40 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::59f3:b30d:a592:36be]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::59f3:b30d:a592:36be%7]) with mapi id 15.20.6699.022; Mon, 21 Aug 2023
+ 20:42:40 +0000
+To:     Tony Battersby <tonyb@cybernetics.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] scsi: core: Use 32-bit hostnum in scsi_host_lookup()
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1fs4c86vc.fsf@ca-mkp.ca.oracle.com>
+References: <a02497e7-c12b-ef15-47fc-3f0a0b00ffce@cybernetics.com>
+Date:   Mon, 21 Aug 2023 16:42:38 -0400
+In-Reply-To: <a02497e7-c12b-ef15-47fc-3f0a0b00ffce@cybernetics.com> (Tony
+        Battersby's message of "Mon, 14 Aug 2023 10:03:25 -0400")
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR08CA0014.namprd08.prod.outlook.com
+ (2603:10b6:a03:100::27) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DM6PR10MB4234:EE_
+X-MS-Office365-Filtering-Correlation-Id: f18afe07-4070-4ad9-35f3-08dba2872991
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: irhk1fSg5wrfHth8+HUlvhcZqt5U52dfVjesB75kLknc97W/rNuRRsjRk2HF42+8oJegu6stJ4RAFHem0YzveOTrcnVpyQo4fdXZO+II2jMP/ht4L9SYM7J3SordCt62CJQPba1oxfdPHSD767gjNC0fFgvjEl41c8miShylt1HmIlTXdKUg6xEbo3Q6pdyJsZTP2PzlAv39lYu2/qfDnqcmYH4o/F9VLAAmTF9Vf+Ua3edR+sppZUgcCF+UeHfojpCS+SmfbWYUmgE2SrnN9M5ArB3rehr5jgTxHsGWHl6sGOucPqWfsSJ1Nv3MhtVRaYuHAKA/Wizk/Nke5jFeiF+WGRxS6LjPxGgf1Vhsyn/OjnNkQBLQENBjk8yghWse5iJOxwO+i0pNKgOh8ZoCVizR52ZymnZz1CdKx6Vxp9DoeP97VWU1SqA+AnbrlCL6Qzw/cmoyIasdDBUbb5quQ0XMH7M8ydmSvCeVLooXXg9T1vpMVAot/3zhXkvwLyiiqtct7CJLJUUrhbJRmdF1lDrGrFFSnZ9TB2HQxXky5mAGvf4GZu5HUWQq99p0ssE/
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(376002)(136003)(346002)(39860400002)(366004)(186009)(1800799009)(451199024)(54906003)(6916009)(66476007)(66556008)(316002)(66946007)(6512007)(8676002)(8936002)(4326008)(41300700001)(478600001)(38100700002)(36916002)(6506007)(6486002)(558084003)(2906002)(86362001)(5660300002)(26005);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8DYXUF5z0s3qP2NggPIp5/GCixD6sh+XnhTdFg72hi6qA1elkqhT2eW1PPWD?=
+ =?us-ascii?Q?EmiB/G38iF+0vKpEBDQ95uC+OMwasexQJZuh6R9k7HJ9vlGCYhla0Cz/Z9pX?=
+ =?us-ascii?Q?cFVJyZg9WaIy5fAyP7EJBG+UXTNsovkm2KSzLyBVaJEevwafYpPMiPEPTCpb?=
+ =?us-ascii?Q?TY3YZE8Q/y5DadK+V2kHNREkAELD8bAiLodd3GbTtawy1HNX4bgJeFJOt16d?=
+ =?us-ascii?Q?sOHpBDDM6mYMMUVXW5DvotoYCtBOeFyJxGLwqSkAhJT7OgdmsHaaYYQEN07j?=
+ =?us-ascii?Q?OsGlULzkSMRKtbTdvCKMBM6hgYJr556r4rL7cbw6K0cOe5KELC+8cUlcJ3yr?=
+ =?us-ascii?Q?LZRg6dUJ3tEnhnjrtYPSm05c2BhXLLLK2YRsp0pbc65WPidD5Zvii1bJLds2?=
+ =?us-ascii?Q?zyrWb2wu7DqIfG6V66hz+LIzsaavOMeqMnriVeFN4LO8c/7XFb4vo8Vc9x9K?=
+ =?us-ascii?Q?yUAcooYG4v4OZri0AMa6dIZda1eFdgbPX+gf48Y8UzGo0Lkd2IL4euJGEV4d?=
+ =?us-ascii?Q?JctsRwWFIpPg7HeUGNNAsdUvhWIdqjNa2sAE152x+osuTV4e4Ls1oTkHqB1C?=
+ =?us-ascii?Q?Pwd366zWRrflp3dWT3j3P4/hT53iDBTtLiKGmt7FYD+54TfMItlWO/VVSuP5?=
+ =?us-ascii?Q?3q0oY9yXAi2DnNjMX9DDe0kYmaENUH4p+KFe8t/oSVI6RufqsHImWY/HQgyq?=
+ =?us-ascii?Q?83mLZLIMe6YWSqLiJzDMIEGszTP/MY8og6XcmzqGK4vKr16axfpkphzXflfb?=
+ =?us-ascii?Q?zdFf1i+E8biKhVKiZ4H38cNiJDXitxM5oJAfzwBCGkhJZoNlsQwMHwAI8PLL?=
+ =?us-ascii?Q?/tAHBawqI0a1d4pLSRyL/sQ2NuTYzZ+cCg2zB3Wo9VPA/3N11p5VgU0dLHqM?=
+ =?us-ascii?Q?woRINNFGomBrP9HHGhngFbeb4c27fk51XnxH13bls2+3XlrMk9hvDZUNkC5t?=
+ =?us-ascii?Q?v5R9T5aTcU0z5SU5a1nD+w8FsGozEyhp0BUhS2mqOe2/+3iby+hWPgI7gmnE?=
+ =?us-ascii?Q?O38uY2taEOScBYhnsLSIjyuOHohO4nOGxc3CsZvSaEsbcuAcAUARyYPUtd3x?=
+ =?us-ascii?Q?UxviMplR51+WEwARvAiqRG8K48QPy+ATNzkgvEYtHyYTKWAqB0RxstatiySo?=
+ =?us-ascii?Q?I1e74tMuvuh8JZ2jxtFXJGlXs1ZAQEH3+xAwVAUCM1V1ycG3TBDjuiz1FnC9?=
+ =?us-ascii?Q?ngHKHhlVVmxkAlBr2zBfRN8XODYzOHCgXxUcTZ20Da1R7rMXZErcOzv4c8WR?=
+ =?us-ascii?Q?OeglDaT0uHiQIJ7OP7A6Wh81O4vrAG0i4N8/lAOE8ghn5PWofvG+Sg+MQQuz?=
+ =?us-ascii?Q?tAP50kpuvYwl9NVdm7H+Fcu67ciWHSLPqINA+J1trOtPoWFsTNHRQ38v8PAv?=
+ =?us-ascii?Q?8gYGSEH4HcOeQ/mZGdhgehZqarFAuG1s+nZT+70DzFqQWDpIeNhunub2Beh3?=
+ =?us-ascii?Q?PXw7DKTZfcC6YF7yV4dDL7ii1SkOOESuwsbpnz86kBL3qBWK3guHbYB2DNiW?=
+ =?us-ascii?Q?VjQYU+7FVNfIzv2OZMCl+QCUpkiontsFjWPQL2ttEWsuhLQ8WDX7tpwYZydx?=
+ =?us-ascii?Q?XN7HgnI3G7uKQHgG6+3eFW0XxwfypxnsQshGi7vL1XVvuUkXTbIjILYbjIGj?=
+ =?us-ascii?Q?Bg=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 0x+HlJMB1iT5/nS9QB8rwZnG2EGNScgEdwl3LS9p56rat6V1Jl0JXbmF+PAQ7tkAQHI3KITNFgxtrYFP5nrUdc4sLkwEPriqTp1LAwivvUxUxgEUVPS6R4ZKJcfO0EhM+r5H3LgWOl33/0aNvo6+trlque9hLG4NHAg0nk2CrINT5AK7jEaQXTmepoLCZ2RTF9R7Qf6341fF+KfeZkkn1YwizReGPY9OGe8su8mZGh+IWLwQSe2zjiPBoh42AVuXUSUGBEV0bC8HFcc3uV1dJNHfcHbe+TnNg8RwfqC4iokfv0PEP0y66NTFqo/+NuQM5xUQw5XHl7UWdwjImY8vCWRLpeq8KhYot69an2bXaXngtrBAnc2DnW2shgoUvruYF+6I3TiXEA5ptoX7LZaXJmAvhenGYzR5dPs9bkqwe+WduOUgKtc5XUFOvTeg73izn6ARCn3MVU8VQHNOT7ZUGSGDQ9Ex4OHiD/tItvq8/I39JGWDb9QWv4nRcCUCS4UJHqnJ/uIM7coqiha5/90GPgqkW6mpAFPO1jMy483s3kLuIojWxq/Hi3HV0oEO/XRA3c+yMiqKC2UDOIOKM8psAMQj+UKIXKslWu1LkK19WtbOMeeH0ySz1QekzPiNNUNN+h66MbJ4rZC0l74zuiyYPneSovNS2kyWDxaN9roCMlgwsi8zwASELqRhv8TUxA1iOeXB5bgw06sXquVIJAaLPaRj8ckRzlk8WxPRtmwOes/8K3Uksk5neU2e+i6+CNuE7zQv2QANG+slhGjPEq9bnLor0DXEKeqaGFEp0Mz5qz3JoO18qm5zHaOujQGjF27P4m6EVQKNlrs7RXkSwhGV4g==
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f18afe07-4070-4ad9-35f3-08dba2872991
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Aug 2023 20:42:40.5834
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: VXVjzJI06jzQ/le3GQkzNYaskRYD7f1NpTdXT83R03aCOKMgbtlSIiKYIQnKS3IleASfpZ8U/JxWmgSU1lu7tSilR5ltSp1qj9JZE/6YkgY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB4234
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-21_10,2023-08-18_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 suspectscore=0
+ bulkscore=0 malwarescore=0 mlxscore=0 adultscore=0 mlxlogscore=912
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
+ definitions=main-2308210192
+X-Proofpoint-ORIG-GUID: U2qVteGMR_MkD_HHqyJyvKmlMz9uRZew
+X-Proofpoint-GUID: U2qVteGMR_MkD_HHqyJyvKmlMz9uRZew
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Provide information in debugfs about SCSI error handling to make it
-easier to debug the SCSI error handler. Additionally, report the maximum
-number of retries in debugfs (.allowed).
 
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: John Garry <john.g.garry@oracle.com>
-Cc: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_debugfs.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
+Tony,
 
-diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
-index 217b70c678c3..a9bc5f7ce745 100644
---- a/drivers/scsi/scsi_debugfs.c
-+++ b/drivers/scsi/scsi_debugfs.c
-@@ -3,6 +3,7 @@
- #include <linux/seq_file.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_host.h>
- #include "scsi_debugfs.h"
- 
- #define SCSI_CMD_FLAG_NAME(name)[const_ilog2(SCMD_##name)] = #name
-@@ -33,14 +34,32 @@ static int scsi_flags_show(struct seq_file *m, const unsigned long flags,
- 
- void scsi_show_rq(struct seq_file *m, struct request *rq)
- {
--	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq), *cmd2;
-+	struct Scsi_Host *shost = cmd->device->host;
- 	int alloc_ms = jiffies_to_msecs(jiffies - cmd->jiffies_at_alloc);
- 	int timeout_ms = jiffies_to_msecs(rq->timeout);
-+	const char *list_info = NULL;
- 	char buf[80] = "(?)";
- 
-+	spin_lock_irq(shost->host_lock);
-+	list_for_each_entry(cmd2, &shost->eh_abort_list, eh_entry) {
-+		if (cmd == cmd2) {
-+			list_info = "on eh_abort_list";
-+			break;
-+		}
-+	}
-+	list_for_each_entry(cmd2, &shost->eh_cmd_q, eh_entry) {
-+		if (cmd == cmd2) {
-+			list_info = "on eh_cmd_q";
-+			break;
-+		}
-+	}
-+	spin_unlock_irq(shost->host_lock);
-+
- 	__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd->cmd_len);
--	seq_printf(m, ", .cmd=%s, .retries=%d, .result = %#x, .flags=", buf,
--		   cmd->retries, cmd->result);
-+	seq_printf(m, ", .cmd=%s, .retries=%d, .allowed=%d, .result = %#x, %s%s.flags=",
-+		   buf, cmd->retries, cmd->allowed, cmd->result,
-+		   list_info ? : "", list_info ? ", " : "");
- 	scsi_flags_show(m, cmd->flags, scsi_cmd_flags,
- 			ARRAY_SIZE(scsi_cmd_flags));
- 	seq_printf(m, ", .timeout=%d.%03d, allocated %d.%03d s ago",
+> Change scsi_host_lookup() hostnum argument type from unsigned short to
+> unsigned int to match the type used everywhere else.
+
+Applied to 6.6/scsi-staging, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
