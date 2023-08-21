@@ -2,63 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CAB6EE49A6
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 19:51:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51008EE49A6
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 19:55:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229654AbjHUTv4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Aug 2023 15:51:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44542 "EHLO
+        id S229766AbjHUTzU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Aug 2023 15:55:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229641AbjHUTvz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 15:51:55 -0400
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC452FB;
-        Mon, 21 Aug 2023 12:51:49 -0700 (PDT)
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1bf62258c4dso11296015ad.2;
-        Mon, 21 Aug 2023 12:51:49 -0700 (PDT)
+        with ESMTP id S229765AbjHUTzT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 15:55:19 -0400
+Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEFB011F
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2023 12:55:17 -0700 (PDT)
+Received: by mail-ed1-x534.google.com with SMTP id 4fb4d7f45d1cf-51d95aed33aso4624007a12.3
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2023 12:55:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1692647716; x=1693252516;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eHODIufbnuwNvzgvQHGm/W1L7WZK7VyHnjitbLRSOfQ=;
+        b=ECdKsJIaDY8mYAOCu7++duAU5j+20akQbKY9Cz4RIVWAg0kB5bFzbf1MmAv3MnRxxg
+         2fr8agBagTfv8iDS+HQb8PUOFtOqxnSAedB2a0mTtKeS8qlE2HMUSVf+HeXGx8Nkw0fs
+         sBhEwtUCKBLrZ8M8f8BWi3F32u+VW75OxlfguZ+rbnhDWdCRGGQ2dc+o8sbICgpJLmPr
+         elFaTwMd1RdY/6SWOTVV0eRbBsGUdVkLmxVMyNbx6/vOtbA6n+ZqWUjtMY7j2H1q6RE4
+         AvzadKha8wxVSeO48nCYHMGPU/DAC2rn/uC7Y8CoWt8xnPe7p4XjCgW65Py4/ZaSFc1u
+         IoEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692647508; x=1693252308;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=F8CBJ63cjV+sJ8R1OQRGZ+key9gcGCvoYCJAYk4zDWM=;
-        b=cVu6BWnyQJRTWC0/h88Y6Citcdu81mRC2Hu7gWI98oQssG34OSGNpcLelHIR74c4g7
-         1sI/jQ2owsy+pdWn9i1K3WCfkAA7HC95VE1z+PD7BrQSTubw1BYbR8E3mLFpSl1aYay8
-         BQxK6fRrUEtXlcvGQW3nB/IXHUUmwPDmOrd+8bgdv5brr+2AKiXBXxIW+0FsenwwK+69
-         8GUmqGUXd+gcRxX5FoXLL079OkOJiEG79XOlI40s00mnCK7E7Kz4Aaij3JYXeS3Onepp
-         xMbeLR6hPAJzi6CQDNM8Cu6EpgpD1ZcVTSyWU6XP4MP580LWRdX8b5egRJc3hpHDLv/D
-         Jh7Q==
-X-Gm-Message-State: AOJu0YxzDDtNmWzqzcdzL7+L9Kg0dLMox1Tr0CXZh6QX7nD9KiwHwtKn
-        1XgYMNyRXQYtOsk1kMtJedc=
-X-Google-Smtp-Source: AGHT+IGgZcWk8B+dqH1Io20kRBwIjPYbBJXqCXNsTNtCXp7V8m/4CNxClHt23uRvUZBDwe0ZfNxWOw==
-X-Received: by 2002:a17:902:ea11:b0:1bd:f69e:6630 with SMTP id s17-20020a170902ea1100b001bdf69e6630mr7576684plg.65.1692647508532;
-        Mon, 21 Aug 2023 12:51:48 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:ef58:6534:ec7a:8ab2? ([2620:15c:211:201:ef58:6534:ec7a:8ab2])
-        by smtp.gmail.com with ESMTPSA id t7-20020a170902bc4700b001beef2c9bffsm7402546plz.85.2023.08.21.12.51.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Aug 2023 12:51:48 -0700 (PDT)
-Message-ID: <0f957502-bcb4-9fdd-66e8-3ee92c958f99@acm.org>
-Date:   Mon, 21 Aug 2023 12:51:46 -0700
+        d=1e100.net; s=20221208; t=1692647716; x=1693252516;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=eHODIufbnuwNvzgvQHGm/W1L7WZK7VyHnjitbLRSOfQ=;
+        b=FAYUGjoeth3IYTIp9Py+9oN0lpUri7YDXHN+0vtl088Y5cXh998MlbSPRZ4SK1GsbY
+         X0knSnw2i+hGHxUyUDuUz9JYtF1ttqVHyD52Wa/UR5+wdXwmFX5IocZL+BcB1DZTLQCK
+         O6bycQ6T/U0YI6VfAPaNTgei53+xxXJ/jcycHQ7as+eaA4AUNVfMBPr79vah8Tp0Mb4u
+         pi9S+jtUqx0OVd7K+7gb4nWAi/JQxRuv0Bu07xiAupMeV/KhuuBMX8PCEEZY0TpyDXPQ
+         zxoLeIWGpjqYiczIO8dp9ZEjDsZLnCHK7GpRMm8xDa2aDUvg7rqHbiOf+J0iHXWvm++J
+         PBEw==
+X-Gm-Message-State: AOJu0YwKp8DVOcaxQ2oGdLQjELF2B/ldph4G7wx9CO99KjErZs2ZHK1F
+        4hK30eWOuvior0qFS1KrNv48Ma6Wb0xRphTYHE83UOWaWIZN0RaP
+X-Google-Smtp-Source: AGHT+IHpcacR+65lK0QtvUrOM1B+HCXuvqiFC2KyBeECPkljyaCq7+rk45xyQyeeBX92RprgjlMv++PeNak2wr1N4H8=
+X-Received: by 2002:aa7:dcc4:0:b0:524:5e4c:2fa4 with SMTP id
+ w4-20020aa7dcc4000000b005245e4c2fa4mr5069116edu.14.1692647716449; Mon, 21 Aug
+ 2023 12:55:16 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.1
-Subject: Re: [PATCH -next] scsi: pm8001: Remove unused declarations
-Content-Language: en-US
-To:     Yue Haibing <yuehaibing@huawei.com>, jinpu.wang@cloud.ionos.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        john.garry@huawei.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20230818124700.49724-1-yuehaibing@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
 In-Reply-To: <20230818124700.49724-1-yuehaibing@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Mon, 21 Aug 2023 21:55:05 +0200
+Message-ID: <CAMGffEnGLyHtzV5L1OTek27dy3eL+qLBP53nNB2n6ppOQ8k2dg@mail.gmail.com>
+Subject: Re: [PATCH -next] scsi: pm8001: Remove unused declarations
+To:     Yue Haibing <yuehaibing@huawei.com>
+Cc:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, john.garry@huawei.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/18/23 05:47, Yue Haibing wrote:
+On Fri, Aug 18, 2023 at 2:47=E2=80=AFPM Yue Haibing <yuehaibing@huawei.com>=
+ wrote:
+>
 > Commit 4fcf812ca392 ("[SCSI] libsas: export sas_alloc_task()")
 > removed these implementations but not the declarations.
-
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+>
+> Signed-off-by: Yue Haibing <yuehaibing@huawei.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_sas.h | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm800=
+1_sas.h
+> index 953572fc0d9e..2fadd353f1c1 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -702,8 +702,6 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba=
+_info *pm8001_ha,
+>                                                         void *piomb);
+>  int pm8001_mpi_general_event(struct pm8001_hba_info *pm8001_ha, void *pi=
+omb);
+>  int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *=
+piomb);
+> -struct sas_task *pm8001_alloc_task(void);
+> -void pm8001_free_task(struct sas_task *task);
+>  void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag);
+>  struct pm8001_device *pm8001_find_dev(struct pm8001_hba_info *pm8001_ha,
+>                                         u32 device_id);
+> --
+> 2.34.1
+>
