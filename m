@@ -2,113 +2,179 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0BB3EE49AC
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 14:15:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F277CEE49A6
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Aug 2023 19:51:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235750AbjHUOP6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Aug 2023 10:15:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32856 "EHLO
+        id S229541AbjHUTvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Aug 2023 15:51:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235736AbjHUOP4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 10:15:56 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B257EA;
-        Mon, 21 Aug 2023 07:15:53 -0700 (PDT)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37LCxV0n015340;
-        Mon, 21 Aug 2023 14:15:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=P2pxWYrUAq5IVWa8JMqth4Lq064tcqTCVzu8AMdl10U=;
- b=BtssP9ME07JuhzRlh+Bi4AbNgVMCrs1VrB0Wv5Ckpikt/FwA73qJ6i7JG/UD4iax4P2F
- 9gKtFFm2ekwKP45IvO7RoOacyZCQ7BRxphTQLvaM9Dsn/QKq7TMRNKTGv8yXxxoSs7ve
- FRo4mkHWTlvEQHqYbjFkv7vl0ykbULXBieE3t+k4A4urQknOL3Ib3DZVW6v+XYAKh85X
- aH9WrrGBmq5mhhJfuaW9mn3yp4v4NqDa6mZ/LIt+uvInVrVwkHFYQS+UhxbGPVrsxZEu
- PcNy/aOHKBuXbz25x5kCjNToOp7rEfqCZUg+ieDhzwh5WqFpj5d9x9QuButpe13dPcGP RA== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sm6uugdf8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 21 Aug 2023 14:15:40 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37LEFdrv018571
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 21 Aug 2023 14:15:39 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Mon, 21 Aug
- 2023 07:15:39 -0700
-Message-ID: <d4ef1d99-58f9-96d0-19e8-740bf5b76791@quicinc.com>
-Date:   Mon, 21 Aug 2023 07:15:38 -0700
+        with ESMTP id S229504AbjHUTvB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2023 15:51:01 -0400
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 258F8FD;
+        Mon, 21 Aug 2023 12:51:00 -0700 (PDT)
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-68a56401b9aso758613b3a.1;
+        Mon, 21 Aug 2023 12:51:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692647459; x=1693252259;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=xx5Uthgldx00An2/L6ejuAbCLX0Oztz/EL/6IJtQiIs=;
+        b=QMkRU04FfAufVI4zmlgq7pyHbkesIRifEx4Pb7VIvaE72fQc2t0+o3/qIez6JhjMSU
+         m/SQrg5MG+ZuJ8arTx+JJ7eQ9+CevcBEE4n5gGhm+mV4vmRcRKslM0ev3u1qklkWMw3I
+         Bp8D7n5A3+sl8a5ZrV8W+QZHUpoWp3CeCBqPJSSw7/CBi52VQAVsF3bYOUUSDDc4uBtE
+         uPM7/1pIb/HkGnvhtkoCZYERqyFE69TDwEit9IkhxS25pJETCu4iTBuJ7jd3z/40SA/W
+         i5m1MJYaLZPFY2VHuIIPm2W8pT5Px4z4o40NUcYSM1gSywVwPnU/7x7o6PY6FoQJKaZF
+         G9kQ==
+X-Gm-Message-State: AOJu0Yy15mb6GMAzy2rDX/PWIBhJWxTqcWpPvhEV/UTinDawzuBY327C
+        ntLDKmyn63EDBBoDe0sqHwg=
+X-Google-Smtp-Source: AGHT+IFPsthbkyU8yghE0Hqd5iE5QOP15RmMlYWL8ipmJSQdr5giU4o4ZbDJLuJ1Jd/K1fUF/2B4Lw==
+X-Received: by 2002:a05:6a21:3e01:b0:13e:fe55:b99f with SMTP id bk1-20020a056a213e0100b0013efe55b99fmr5088264pzc.56.1692647459311;
+        Mon, 21 Aug 2023 12:50:59 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ef58:6534:ec7a:8ab2? ([2620:15c:211:201:ef58:6534:ec7a:8ab2])
+        by smtp.gmail.com with ESMTPSA id l9-20020a635b49000000b00565dd935938sm6640860pgm.85.2023.08.21.12.50.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Aug 2023 12:50:58 -0700 (PDT)
+Message-ID: <baecaad7-7124-b9ae-ab79-1b7c6fa95c98@acm.org>
+Date:   Mon, 21 Aug 2023 12:50:57 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH V1 1/2] scsi: ufs: qcom: dt-bindings: Add SC7280
- compatible string
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.1
+Subject: Re: [PATCH -next] scsi: core: fix double free in raid_component_add()
 Content-Language: en-US
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>, <mani@kernel.org>,
-        <agross@kernel.org>, <andersson@kernel.org>,
-        <konrad.dybcio@linaro.org>, <alim.akhtar@samsung.com>,
-        <bvanassche@acm.org>, <robh+dt@kernel.org>, <avri.altman@wdc.com>,
-        <cros-qcom-dts-watchers@chromium.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>
-CC:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-References: <20230821094937.13059-1-quic_nitirawa@quicinc.com>
- <20230821094937.13059-2-quic_nitirawa@quicinc.com>
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <20230821094937.13059-2-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To:     Zhu Wang <wangzhu9@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, dan.carpenter@linaro.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230819080345.149144-1-wangzhu9@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230819080345.149144-1-wangzhu9@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: JmSI3S2eqjjMRUBS4gTg9MNlTH-P8hah
-X-Proofpoint-GUID: JmSI3S2eqjjMRUBS4gTg9MNlTH-P8hah
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-21_01,2023-08-18_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
- spamscore=0 clxscore=1011 malwarescore=0 adultscore=0 lowpriorityscore=0
- suspectscore=0 mlxscore=0 priorityscore=1501 phishscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
- definitions=main-2308210132
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/21/2023 2:49 AM, Nitin Rawat wrote:
-> Document the compatible string for the UFS found on SC7280.
+On 8/19/23 01:03, Zhu Wang wrote:
+> Previous commit 04b5b5cb0136 ("scsi: core: Fix possible memory leak if
+> device_add() fails") introduced a double free when device_add() failed.
+> When device_add() failed, the put_device(&rc->dev) is called, which will
+> call raid_component_release(), and this function will call
+> put_device(rc->dev.parent) and kfree(rc), but in the error path of
+> raid_component_release() above two functions are called again, so 'rc' are
+> freed twice.
 > 
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> We do not just revert the patch, since the memory allocated by
+> dev_set_name() is not released in the error path, it should be released
+> through calling put_device(&rc->dev) which will call kobject_cleanup(),
+> and the device name will be released in it. Though the commit 04b5b5cb0136
+> ("scsi: core: Fix possible memory leak if device_add() fails") fixed the
+> memory leak, it didn't consider the double free problem. We removed
+> put_device(rc->dev.parent) and kfree(rc) in the error path, and we moved
+> put_device(&rc->dev) after rd->component-count--, since after
+> put_device(&rc->dev) is called, 'rc' is freed, so list_del(&rc->node)
+> cannot be called again.
+> 
+> Fixes: 04b5b5cb0136 ("scsi: core: Fix possible memory leak if device_add() fails")
+> Signed-off-by: Zhu Wang <wangzhu9@huawei.com>
 > ---
->   Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
->   1 file changed, 2 insertions(+)
+>   drivers/scsi/raid_class.c | 4 +---
+>   1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index bdfa86a0cc98..861bbf6a57f6 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -27,6 +27,7 @@ properties:
->             - qcom,msm8996-ufshc
->             - qcom,msm8998-ufshc
->             - qcom,sa8775p-ufshc
-> +          - qcom,sc7280-ufshc
->             - qcom,sc8280xp-ufshc
->             - qcom,sdm845-ufshc
->             - qcom,sm6350-ufshc
-> @@ -111,6 +112,7 @@ allOf:
->               enum:
->                 - qcom,msm8998-ufshc
->                 - qcom,sa8775p-ufshc
-> +              - qcom,sc7280-ufshc
->                 - qcom,sc8280xp-ufshc
->                 - qcom,sm8250-ufshc
->                 - qcom,sm8350-ufshc
-> --
-> 2.17.1
-> 
+> diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
+> index 711252e52d8e..86ed1f66d749 100644
+> --- a/drivers/scsi/raid_class.c
+> +++ b/drivers/scsi/raid_class.c
+> @@ -248,11 +248,9 @@ int raid_component_add(struct raid_template *r,struct device *raid_dev,
+>   	return 0;
+>   
+>   err_out:
+> -	put_device(&rc->dev);
+>   	list_del(&rc->node);
+>   	rd->component_count--;
+> -	put_device(component_dev);
+> -	kfree(rc);
+> +	put_device(&rc->dev);
+>   	return err;
+>   }
+>   EXPORT_SYMBOL(raid_component_add);
 
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Please consider replacing the above patch by the patch below:
+
+[PATCH] scsi: Remove raid_component_add()
+
+The raid_component_add() function was added to the kernel tree via
+patch "[SCSI] embryonic RAID class" (2005). Remove this function since
+it never has had any callers in the Linux kernel.
+
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+  drivers/scsi/raid_class.c  | 38 --------------------------------------
+  include/linux/raid_class.h |  4 ----
+  2 files changed, 42 deletions(-)
+
+diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
+index 898a0bdf8df6..99f806d1d317 100644
+--- a/drivers/scsi/raid_class.c
++++ b/drivers/scsi/raid_class.c
+@@ -218,44 +218,6 @@ static void raid_component_release(struct device *dev)
+  	kfree(rc);
+  }
+
+-int raid_component_add(struct raid_template *r,struct device *raid_dev,
+-		       struct device *component_dev)
+-{
+-	struct device *cdev =
+-		attribute_container_find_class_device(&r->raid_attrs.ac,
+-						      raid_dev);
+-	struct raid_component *rc;
+-	struct raid_data *rd = dev_get_drvdata(cdev);
+-	int err;
+-
+-	rc = kzalloc(sizeof(*rc), GFP_KERNEL);
+-	if (!rc)
+-		return -ENOMEM;
+-
+-	INIT_LIST_HEAD(&rc->node);
+-	device_initialize(&rc->dev);
+-	rc->dev.release = raid_component_release;
+-	rc->dev.parent = get_device(component_dev);
+-	rc->num = rd->component_count++;
+-
+-	dev_set_name(&rc->dev, "component-%d", rc->num);
+-	list_add_tail(&rc->node, &rd->component_list);
+-	rc->dev.class = &raid_class.class;
+-	err = device_add(&rc->dev);
+-	if (err)
+-		goto err_out;
+-
+-	return 0;
+-
+-err_out:
+-	list_del(&rc->node);
+-	rd->component_count--;
+-	put_device(component_dev);
+-	kfree(rc);
+-	return err;
+-}
+-EXPORT_SYMBOL(raid_component_add);
+-
+  struct raid_template *
+  raid_class_attach(struct raid_function_template *ft)
+  {
+diff --git a/include/linux/raid_class.h b/include/linux/raid_class.h
+index 6a9b177d5c41..e50416ba9cd9 100644
+--- a/include/linux/raid_class.h
++++ b/include/linux/raid_class.h
+@@ -77,7 +77,3 @@ DEFINE_RAID_ATTRIBUTE(enum raid_state, state)
+  	
+  struct raid_template *raid_class_attach(struct raid_function_template *);
+  void raid_class_release(struct raid_template *);
+-
+-int __must_check raid_component_add(struct raid_template *, struct device *,
+-				    struct device *);
+-
+
+
+
