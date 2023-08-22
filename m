@@ -2,78 +2,103 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E43FFEE4996
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Aug 2023 05:52:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06247EE4996
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Aug 2023 06:48:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232898AbjHVFwX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Aug 2023 01:52:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35358 "EHLO
+        id S232599AbjHVGsX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Aug 2023 02:48:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232900AbjHVFwW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 01:52:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5403F199
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2023 22:52:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S231357AbjHVGsW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 02:48:22 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E98C3FB;
+        Mon, 21 Aug 2023 23:48:20 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E1B6E61122
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Aug 2023 05:52:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1672C433C8;
-        Tue, 22 Aug 2023 05:52:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692683535;
-        bh=wBDsmtjjIuZYRyhm+GeZPyBHWJEfetyFyHEJ/wpD0lM=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=BjzSpjxr1duP4vFKRG9v5G0+54X9c0FqajsK9abZJnc1i2DjwkJJcaDYQQm/xBvyN
-         yf+UVLD2QcTBOHobagCyCWvDqineaRSEVJYW2ub2dSPOcI0h6VnjK/a90V7ZhaaPRA
-         r0iRF8fyaO71WYN8wW9FXyZ+WkWptHNmLAYmcS9luFzIfkbykmZ/k4eMMovkRpO6EE
-         Rva6BQ1YoZ+TrWCuyenfq4b01kR7bpBYHT55YK+jbiMg/iNxdAdx+ijxsfgjDC55t/
-         If5U2LrM7lcQAWlpKkK8j9KCaubFpzNoxzghLlApA5z8FlVU2X66eHT/BKMNavNgxT
-         9R7QeALef+5Dg==
-Message-ID: <9badf5d0-a813-a92a-e72b-f4b2b9b65fcd@kernel.org>
-Date:   Tue, 22 Aug 2023 14:52:12 +0900
+        by smtp-out1.suse.de (Postfix) with ESMTPS id AB61022C44;
+        Tue, 22 Aug 2023 06:48:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1692686899; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=APnjFGwfih6UCAXoJMMRdQoOq8OBAmD6tC504XVu2hI=;
+        b=bkwRhsaNBr7hSCKRdCiTWuVi4gmgk2wU/CZXn9i1WP5nUbWsubap59D0RKgZhAPMvqgAn+
+        tHlmT28NkT8ql+7GpI/XExWnlfBPR0yes3G9BRSAR3iAFuECjrtiKXPKvGq/8kqY+D5V0+
+        gIqBb+pKx1aeQ90DZ+EwK6IgpBXsV9k=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 63BCB132B9;
+        Tue, 22 Aug 2023 06:48:19 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id gEfnFjNa5GT1RQAAMHmgww
+        (envelope-from <jgross@suse.com>); Tue, 22 Aug 2023 06:48:19 +0000
+From:   Juergen Gross <jgross@suse.com>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        xen-devel@lists.xenproject.org,
+        Dan Carpenter <dan.carpenter@linaro.org>
+Subject: [PATCH] xen/scsifront: shost_priv() can never return NULL
+Date:   Tue, 22 Aug 2023 08:48:17 +0200
+Message-Id: <20230822064817.27257-1-jgross@suse.com>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] scsi: core: Report error list information in debugfs
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230821204101.3601799-1-bvanassche@acm.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230821204101.3601799-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/22/23 05:41, Bart Van Assche wrote:
-> Provide information in debugfs about SCSI error handling to make it
-> easier to debug the SCSI error handler. Additionally, report the maximum
-> number of retries in debugfs (.allowed).
-> 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Cc: John Garry <john.g.garry@oracle.com>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+There is no need to check whether shost_priv() returns a non-NULL
+value, as the pointer returned is just an offset to the passed in
+parameter.
 
-Looks OK to me.
+While at it replace an open coded shost_priv() instance.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+Signed-off-by: Juergen Gross <jgross@suse.com>
+---
+ drivers/scsi/xen-scsifront.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+index caae61aa2afe..9ec55ddc1204 100644
+--- a/drivers/scsi/xen-scsifront.c
++++ b/drivers/scsi/xen-scsifront.c
+@@ -743,7 +743,7 @@ static int scsifront_sdev_configure(struct scsi_device *sdev)
+ 	if (info->host_active == STATE_ERROR)
+ 		return -EIO;
+ 
+-	if (info && current == info->curr) {
++	if (current == info->curr) {
+ 		err = xenbus_printf(XBT_NIL, info->dev->nodename,
+ 			      info->dev_state_path, "%d", XenbusStateConnected);
+ 		if (err) {
+@@ -761,7 +761,7 @@ static void scsifront_sdev_destroy(struct scsi_device *sdev)
+ 	struct vscsifrnt_info *info = shost_priv(sdev->host);
+ 	int err;
+ 
+-	if (info && current == info->curr) {
++	if (current == info->curr) {
+ 		err = xenbus_printf(XBT_NIL, info->dev->nodename,
+ 			      info->dev_state_path, "%d", XenbusStateClosed);
+ 		if (err)
+@@ -903,7 +903,7 @@ static int scsifront_probe(struct xenbus_device *dev,
+ 		xenbus_dev_fatal(dev, err, "fail to allocate scsi host");
+ 		return err;
+ 	}
+-	info = (struct vscsifrnt_info *)host->hostdata;
++	info = shost_priv(host);
+ 
+ 	dev_set_drvdata(&dev->dev, info);
+ 	info->dev = dev;
 -- 
-Damien Le Moal
-Western Digital Research
+2.35.3
 
