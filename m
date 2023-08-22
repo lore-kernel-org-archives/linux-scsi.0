@@ -2,123 +2,188 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E919CEE4996
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Aug 2023 06:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 741A8EE49A3
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Aug 2023 07:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233099AbjHVGve (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Aug 2023 02:51:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46220 "EHLO
+        id S233182AbjHVHJA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Aug 2023 03:09:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233046AbjHVGvd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 02:51:33 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B49AFB
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2023 23:51:32 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S231804AbjHVHI7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 03:08:59 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47200130;
+        Tue, 22 Aug 2023 00:08:58 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id D1E5922C03;
-        Tue, 22 Aug 2023 06:51:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1692687090; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rJRZWX4JjeCMg72T7GT1udjmy2fDi22EL3wNM21oJog=;
-        b=H5WqN33S/CA2bE/HYSt7YpZwdCU7nTTLH/ADChPlBDsdhnxSypoU61qc3QmrVIBT52rmnS
-        7bI+bugYu36jjBFS8j/4r5sHBzANMe0xbrtz+Jpx9UCBe+gUYfFmhNR2esKxDwEBlsg4Hr
-        bjxpd2tyBDMClJUGZ4zKvcJJVMtJJdw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1692687090;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rJRZWX4JjeCMg72T7GT1udjmy2fDi22EL3wNM21oJog=;
-        b=3A0kACyMJQF9fdIL57OYOnuv3Xb0YwUFEM29Ggz8IJf7YPeIy2HWWzqggKKVi7XIBK5AC/
-        X5ZAwFcu+d3gkiBA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A8A1813919;
-        Tue, 22 Aug 2023 06:51:28 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 6QzKH/Ba5GQSRwAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 22 Aug 2023 06:51:28 +0000
-Message-ID: <285cd051-b7eb-be27-0d84-b4f2844cf1d7@suse.de>
-Date:   Tue, 22 Aug 2023 08:51:27 +0200
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CACC3649D9;
+        Tue, 22 Aug 2023 07:08:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 163FBC433C7;
+        Tue, 22 Aug 2023 07:08:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692688137;
+        bh=5hSodPEEf8w2mXzyybmlDZ2gdf+T/pqZKs15hGJ2vzQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cI6ZxRwJ4FRgxQg4afnEpd417/qgNVYmsbAcZfmEvwA9d/S4iKW4+OjK2DGyEQYkF
+         9tnMLTa7hMAZpUZi77tnGzPV+ACDM2iaesmkbxIA1gxhhdLiTLquv7MDB22+OQ3u1W
+         +MC/jjikMYdyMncp0XxCU7Lq8K8CWH3BkbfGaGKrAIGrcqkwtNI95FEA1FSegKxYWa
+         RezDJPa+iO0DsxCjhJUPzBCqqZokjrF8au5ihyr/BbMzWvc1cN+UubZ/klBxNiN4MC
+         MPuIVx9QqeAzISY7gX1J/bkLfnrxCiW+Z30gir7Id0Z3tfmq6Wi/liAtw6qzT5gOcy
+         7+arXCY1ulWhg==
+Date:   Tue, 22 Aug 2023 12:38:41 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Nitin Rawat <quic_nitirawa@quicinc.com>
+Cc:     mani@kernel.org, agross@kernel.org, andersson@kernel.org,
+        konrad.dybcio@linaro.org, alim.akhtar@samsung.com,
+        bvanassche@acm.org, robh+dt@kernel.org, avri.altman@wdc.com,
+        cros-qcom-dts-watchers@chromium.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH V1 2/2] arm64: dts: qcom: sc7280: Add UFS host controller
+ and phy nodes
+Message-ID: <20230822070841.GA24753@thinkpad>
+References: <20230821094937.13059-1-quic_nitirawa@quicinc.com>
+ <20230821094937.13059-3-quic_nitirawa@quicinc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH] scsi: core: Improve type safety of scsi_rescan_device()
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Don Brace <don.brace@microchip.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>
-References: <20230821204009.3601639-1-bvanassche@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230821204009.3601639-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230821094937.13059-3-quic_nitirawa@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/21/23 22:40, Bart Van Assche wrote:
-> Most callers of scsi_rescan_device() have the scsi_device pointer
-> available. Pass a struct scsi_device pointer to scsi_rescan_device()
-> instead of a struct device pointer. This change prevents that a
-> pointer to another struct device pointer would be passed accidentally to
-> scsi_rescan_device().
+On Mon, Aug 21, 2023 at 03:19:37PM +0530, Nitin Rawat wrote:
+> Add UFS host controller and PHY nodes for sc7280.
 > 
-> Remove the scsi_rescan_device() declaration from the scsi_priv.h header
-> file since it duplicates the declaration in <scsi/scsi_host.h>.
-> 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Cc: John Garry <john.g.garry@oracle.com>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+
+You should split this patch into 2. One for SoC and another for board.
+
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 > ---
->   drivers/ata/libata-scsi.c             | 2 +-
->   drivers/scsi/aacraid/commsup.c        | 2 +-
->   drivers/scsi/mvumi.c                  | 2 +-
->   drivers/scsi/scsi_lib.c               | 2 +-
->   drivers/scsi/scsi_priv.h              | 1 -
->   drivers/scsi/scsi_scan.c              | 4 ++--
->   drivers/scsi/scsi_sysfs.c             | 4 ++--
->   drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
->   drivers/scsi/storvsc_drv.c            | 2 +-
->   drivers/scsi/virtio_scsi.c            | 2 +-
->   include/scsi/scsi_host.h              | 2 +-
->   11 files changed, 12 insertions(+), 13 deletions(-)
+>  arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++
+>  arch/arm64/boot/dts/qcom/sc7280.dtsi     | 64 ++++++++++++++++++++++++
+>  2 files changed, 83 insertions(+)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> index 2ff549f4dc7a..c60cdd511222 100644
+> --- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> @@ -451,6 +451,25 @@
+>  	status = "okay";
+>  };
+> 
+> +&ufs_mem_hc {
+> +	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
+> +	vcc-supply = <&vreg_l7b_2p9>;
+> +	vcc-max-microamp = <800000>;
+> +	vccq-supply = <&vreg_l9b_1p2>;
+> +	vccq-max-microamp = <900000>;
+> +	vccq2-supply = <&vreg_l9b_1p2>;
+> +	vccq2-max-microamp = <900000>;
+> +
+> +	status = "okay";
+> +};
+> +
+> +&ufs_mem_phy {
+> +	vdda-phy-supply = <&vreg_l10c_0p8>;
+> +	vdda-pll-supply = <&vreg_l6b_1p2>;
+> +
+> +	status = "okay";
+> +};
+> +
+>  &sdhc_1 {
+>  	status = "okay";
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> index 925428a5f6ae..d4a15d56b384 100644
+> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> @@ -908,6 +908,70 @@
+>  			};
+>  		};
+> 
+> +		ufs_mem_phy: phy@1d87000 {
 
-Cheers,
+Please sort the nodes in ascending order.
 
-Hannes
+> +			compatible = "qcom,sc7280-qmp-ufs-phy";
+> +			reg = <0x0 0x01d87000 0x0 0xe00>;
+> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
+> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
+> +				 <&gcc GCC_UFS_1_CLKREF_EN>;
+> +			clock-names = "ref", "ref_aux", "qref";
+> +
+> +			resets = <&ufs_mem_hc 0>;
+> +			reset-names = "ufsphy";
+> +
+> +			#clock-cells = <1>;
+> +			#phy-cells = <0>;
+> +
+> +			status = "disabled";
+> +
+> +		};
+> +
+> +		ufs_mem_hc: ufs@1d84000 {
+> +			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
+> +				     "jedec,ufs-2.0";
+> +			reg = <0x0 0x01d84000 0x0 0x3000>;
+> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+> +			phys = <&ufs_mem_phy>;
+> +			phy-names = "ufsphy";
+> +			lanes-per-direction = <2>;
+> +			#reset-cells = <1>;
+> +			resets = <&gcc GCC_UFS_PHY_BCR>;
+> +			reset-names = "rst";
+> +
+> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
+> +			required-opps = <&rpmhpd_opp_nom>;
+> +
+> +			iommus = <&apps_smmu 0x80 0x0>;
+> +			dma-coherent;
+> +
+> +			clock-names = "core_clk",
+> +				      "bus_aggr_clk",
+> +				      "iface_clk",
+> +				      "core_clk_unipro",
+> +				      "ref_clk",
+> +				      "tx_lane0_sync_clk",
+> +				      "rx_lane0_sync_clk",
+> +				      "rx_lane1_sync_clk";
+
+"clocks" property should come first.
+
+- Mani
+
+> +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
+> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
+> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
+> +				 <&rpmhcc RPMH_CXO_CLK>,
+> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
+> +			freq-table-hz =
+> +				<75000000 300000000>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<75000000 300000000>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<0 0>;
+> +			status = "disabled";
+> +		};
+> +
+>  		sdhc_1: mmc@7c4000 {
+>  			compatible = "qcom,sc7280-sdhci", "qcom,sdhci-msm-v5";
+>  			pinctrl-names = "default", "sleep";
+> --
+> 2.17.1
+> 
+
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+மணிவண்ணன் சதாசிவம்
