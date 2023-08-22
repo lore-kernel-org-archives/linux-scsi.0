@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E079EE49AF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Aug 2023 11:37:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8689EE49A3
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Aug 2023 11:37:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235101AbjHVLhv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Aug 2023 07:37:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46612 "EHLO
+        id S235133AbjHVLhx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Aug 2023 07:37:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235219AbjHVLht (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 07:37:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77F22CF4;
-        Tue, 22 Aug 2023 04:37:25 -0700 (PDT)
+        with ESMTP id S235182AbjHVLhq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 07:37:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51D7410CF;
+        Tue, 22 Aug 2023 04:37:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DE8046212E;
-        Tue, 22 Aug 2023 11:36:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ECAEC433C9;
-        Tue, 22 Aug 2023 11:35:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2729265388;
+        Tue, 22 Aug 2023 11:37:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77159C433C9;
+        Tue, 22 Aug 2023 11:37:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692704160;
-        bh=pvJdUALjSZAnEbiVwlMc9LnquObyVPzOkzw0N12SH/M=;
+        s=k20201202; t=1692704222;
+        bh=FODGZO/FzoIXMOEKBXTbvEviexppK6BohpTtch1xkoU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UU13g76Sh1QRgxuGqO5E04rLmcTYeJopabNVYoDkB7IgEykNqZN+lQ3FUZCjFp5wf
-         Iy1kOe2ZUKjeLzjVEMMytBGvLpKHyabFy0EZxcpBJYCjprJsuugUW8R2pwGM44QVMU
-         oXDZ6UBwNjKddYtzoanD8rdGdUhf/o+nACGhmesphQkWae1zDlJWcZbDS9OIYPV3J3
-         mvhoGuXJ+fTEkeLrrRuNXrHXddaVt6IAL0QH6Vcpzrd0F10008H6HCcmW/Nh6p5Uo+
-         ZToscfJovnf/du7B4saAdPGe5OjsEPNU/TOC8aX06ZN1lZ/SuTV1TJUcPU0J59I0PM
-         oUvE6UNS4ZE7Q==
+        b=tGTyIkX/P9wag3bpjQflVKf2rFGwTExgUx3cr7XOXdgZwJvCBrYfuMfIzwmgODHhV
+         dqaIDO3qZtIooTH7raQojKWQs0qeMBGFidzuisf9vrZfWCv/k3lypXdizJ0DkE+pBo
+         4Wdm1iS50iH4SdPT7b4HkVI6SHpwenSPiCgt7VgUY3NWSOIbuF/2tGB8Fha+RBlkXQ
+         ogZCPe4whnmoLAFErSmq6FOVYurhoeV8dhQIbihWt8Vk7D+Pk4axUbm9+OHq9D6y4J
+         XniTa3u/50X4Wei6oot+DqVoZ/+pvjDsrEHItHq76L2/LAxjbV8H0fJdjqE9D91rIT
+         RWgx0pfIeZkew==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Justin Tee <justin.tee@broadcom.com>,
@@ -39,16 +39,16 @@ Cc:     Justin Tee <justin.tee@broadcom.com>,
         Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
         dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.4 03/11] scsi: lpfc: Remove reftag check in DIF paths
-Date:   Tue, 22 Aug 2023 07:35:45 -0400
-Message-Id: <20230822113553.3551206-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 2/6] scsi: lpfc: Remove reftag check in DIF paths
+Date:   Tue, 22 Aug 2023 07:36:54 -0400
+Message-Id: <20230822113658.3551550-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230822113553.3551206-1-sashal@kernel.org>
-References: <20230822113553.3551206-1-sashal@kernel.org>
+In-Reply-To: <20230822113658.3551550-1-sashal@kernel.org>
+References: <20230822113658.3551550-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.4.11
+X-stable-base: Linux 5.15.127
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -73,19 +73,19 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index e989f130434e4..e34a41fb3e1cb 100644
+index edae98a35fc3b..4813adec0301d 100644
 --- a/drivers/scsi/lpfc/lpfc_scsi.c
 +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -109,8 +109,6 @@ lpfc_sli4_set_rsp_sgl_last(struct lpfc_hba *phba,
+@@ -117,8 +117,6 @@ lpfc_sli4_set_rsp_sgl_last(struct lpfc_hba *phba,
  	}
  }
  
 -#define LPFC_INVALID_REFTAG ((u32)-1)
 -
  /**
-  * lpfc_rampdown_queue_depth - Post RAMP_DOWN_QUEUE event to worker thread
-  * @phba: The Hba for which this call is being executed.
-@@ -978,8 +976,6 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  * lpfc_update_stats - Update statistical data for the command completion
+  * @vport: The virtual port on which this call is executing.
+@@ -1042,8 +1040,6 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  
  	sgpe = scsi_prot_sglist(sc);
  	lba = scsi_prot_ref_tag(sc);
@@ -94,7 +94,7 @@ index e989f130434e4..e34a41fb3e1cb 100644
  
  	/* First check if we need to match the LBA */
  	if (phba->lpfc_injerr_lba != LPFC_INJERR_LBA_OFF) {
-@@ -1560,8 +1556,6 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -1624,8 +1620,6 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  
  	/* extract some info from the scsi command for pde*/
  	reftag = scsi_prot_ref_tag(sc);
@@ -103,7 +103,7 @@ index e989f130434e4..e34a41fb3e1cb 100644
  
  #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
  	rc = lpfc_bg_err_inject(phba, sc, &reftag, NULL, 1);
-@@ -1723,8 +1717,6 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -1787,8 +1781,6 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  	/* extract some info from the scsi command */
  	blksize = scsi_prot_interval(sc);
  	reftag = scsi_prot_ref_tag(sc);
@@ -112,7 +112,7 @@ index e989f130434e4..e34a41fb3e1cb 100644
  
  #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
  	rc = lpfc_bg_err_inject(phba, sc, &reftag, NULL, 1);
-@@ -1953,8 +1945,6 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -2018,8 +2010,6 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  
  	/* extract some info from the scsi command for pde*/
  	reftag = scsi_prot_ref_tag(sc);
@@ -121,7 +121,7 @@ index e989f130434e4..e34a41fb3e1cb 100644
  
  #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
  	rc = lpfc_bg_err_inject(phba, sc, &reftag, NULL, 1);
-@@ -2154,8 +2144,6 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -2219,8 +2209,6 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  	/* extract some info from the scsi command */
  	blksize = scsi_prot_interval(sc);
  	reftag = scsi_prot_ref_tag(sc);
@@ -130,7 +130,7 @@ index e989f130434e4..e34a41fb3e1cb 100644
  
  #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
  	rc = lpfc_bg_err_inject(phba, sc, &reftag, NULL, 1);
-@@ -2746,8 +2734,6 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+@@ -2812,8 +2800,6 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
  
  		src = (struct scsi_dif_tuple *)sg_virt(sgpe);
  		start_ref_tag = scsi_prot_ref_tag(cmd);
@@ -139,7 +139,7 @@ index e989f130434e4..e34a41fb3e1cb 100644
  		start_app_tag = src->app_tag;
  		len = sgpe->length;
  		while (src && protsegcnt) {
-@@ -3493,11 +3479,11 @@ lpfc_bg_scsi_prep_dma_buf_s4(struct lpfc_hba *phba,
+@@ -3660,11 +3646,11 @@ lpfc_bg_scsi_prep_dma_buf_s4(struct lpfc_hba *phba,
  			     scsi_cmnd->sc_data_direction);
  
  	lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
