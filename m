@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63EA5EE49AC
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Aug 2023 11:38:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7521EE49B3
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Aug 2023 11:38:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235303AbjHVLiS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Aug 2023 07:38:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37420 "EHLO
+        id S235344AbjHVLiU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Aug 2023 07:38:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235247AbjHVLiD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 07:38:03 -0400
+        with ESMTP id S235269AbjHVLiR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 07:38:17 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A526E78;
-        Tue, 22 Aug 2023 04:37:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E717910C2;
+        Tue, 22 Aug 2023 04:37:40 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E6956538D;
-        Tue, 22 Aug 2023 11:37:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43D63C433CA;
-        Tue, 22 Aug 2023 11:37:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6FF0E653C4;
+        Tue, 22 Aug 2023 11:37:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0753C433BD;
+        Tue, 22 Aug 2023 11:37:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692704243;
-        bh=Eyk4zl1JZYzGKhBc5ZOMVyD/BZx/6Hjfqpbnnq3Cvuw=;
+        s=k20201202; t=1692704249;
+        bh=bqFIQ8BzoCmH/Pqp4vfpKG6taYTV8k9y40f0iRjvZk0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mmSRuQPp+f/WbqThRdZoi1+ExiXJ8HPECPj4glQVHpZt/VKAyRs8O4Sym7RJEUBlY
-         xPvOkFLLVAtSHD25Fm5VXaaEhi0FM4M9Ztv5TnPLQ3RaRxBCgZMpueIArNjg2Spg/U
-         Y3nxk4dGe1wd6mI5wkqAB7Fj66pVqgs5hKajUxtZ5KK7WVZF1VFg5HkirqJ3cig+N+
-         yL3haEutpG+UD3QEsJZTGZYQsY1wv7El9tnJGHzfXzQ3Od66ZO9+5pG91oQTFAx7x3
-         Y3OC1MjHdmhCkQlpuAiTQ8DD6o3N/zg0Od4RdEIcHKLhhcjjcGu4yq63+bQQL9LGKW
-         sxNQLn3u5/XPw==
+        b=HEVxi1Z7psdNar0fUsp0lHBTTKJLfowqsS9fGzFWIeU129EWPYqSKQrvFfnLuYd/M
+         X3XTFkzX5wkA+I/gjKV7EWoow8XqazVQVCDMD7veWZcbkLx+tyQvGr1bKYmMCKuo25
+         c68UHSvL8sJWrqXifp+8B99UtCDXoWjEl+oaDGh+R+V5/C1o7oTrvDxnlY4Iq9gGVC
+         uG4AAa9617zNkbdokYU0uOD9wU9awXlt7SDcYtE5Za7v26MXrsV9/k0i0Dhak/Bzd8
+         A208b21Fx65BYAg7aY4ADte8gPL0SoTTlReigGne3CBEPZ6iD2W+bJbQur0bTNzM9n
+         EO2VMZqrIAa5g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Chengfeng Ye <dg573847474@gmail.com>,
@@ -40,16 +40,16 @@ Cc:     Chengfeng Ye <dg573847474@gmail.com>,
         Sasha Levin <sashal@kernel.org>, njavali@marvell.com,
         GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 2/3] scsi: qedi: Fix potential deadlock on &qedi_percpu->p_work_lock
-Date:   Tue, 22 Aug 2023 07:37:18 -0400
-Message-Id: <20230822113719.3551639-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 2/2] scsi: qedi: Fix potential deadlock on &qedi_percpu->p_work_lock
+Date:   Tue, 22 Aug 2023 07:37:25 -0400
+Message-Id: <20230822113725.3551688-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230822113719.3551639-1-sashal@kernel.org>
-References: <20230822113719.3551639-1-sashal@kernel.org>
+In-Reply-To: <20230822113725.3551688-1-sashal@kernel.org>
+References: <20230822113725.3551688-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.191
+X-stable-base: Linux 5.4.254
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -91,10 +91,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index cc2152c56d355..96e470746767a 100644
+index 92c4a367b7bd7..6b47921202eba 100644
 --- a/drivers/scsi/qedi/qedi_main.c
 +++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1981,8 +1981,9 @@ static int qedi_cpu_offline(unsigned int cpu)
+@@ -1910,8 +1910,9 @@ static int qedi_cpu_offline(unsigned int cpu)
  	struct qedi_percpu_s *p = this_cpu_ptr(&qedi_percpu);
  	struct qedi_work *work, *tmp;
  	struct task_struct *thread;
@@ -105,7 +105,7 @@ index cc2152c56d355..96e470746767a 100644
  	thread = p->iothread;
  	p->iothread = NULL;
  
-@@ -1993,7 +1994,7 @@ static int qedi_cpu_offline(unsigned int cpu)
+@@ -1922,7 +1923,7 @@ static int qedi_cpu_offline(unsigned int cpu)
  			kfree(work);
  	}
  
