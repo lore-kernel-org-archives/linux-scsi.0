@@ -2,166 +2,114 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC39EC7EE2C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 19:20:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4F24C7113B
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 19:47:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238292AbjHWTUA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Aug 2023 15:20:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37930 "EHLO
+        id S238377AbjHWTqe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Aug 2023 15:46:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237998AbjHWTTb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 15:19:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C530F10CB;
-        Wed, 23 Aug 2023 12:19:29 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4216965FE9;
-        Wed, 23 Aug 2023 19:19:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBAFDC433CD;
-        Wed, 23 Aug 2023 19:19:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692818368;
-        bh=z7owpDA4k2E0Ij+VJAllz0k9twsgKGzrUNXPPIMEbGc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RLK+HCznqKathi9Leh0P+xR1D8A/NYgTQJMo99gN/QSAnrhe1rGOwhqFu+HNYKKB7
-         2oFKgjPA5KRsI8k9bM3r6fM63p4dgpOrMWVS3cNPMbRnDgP7p0VZhaKEqnNmvRLGq4
-         8tzIsC7ROMJzD3+DcpGvGFUmtSoNTsHdCJWIMaD7uPpo6m3YGadz35mz6L3ILULNBF
-         jpPX0PzakI7//HGxxl5lrQiUw4t/3xORFy++z4b8j5vZSoS3N/2gXdguykfxsD5ghQ
-         fIRFPmPWhInlFvcrM+4EmP7zA6kapAXO9bpURBOpE/ujA7h3qLXTKOkhxqZ5cx81xj
-         6cIxmFtSwXhuA==
-Date:   Wed, 23 Aug 2023 21:19:25 +0200
-From:   Wolfram Sang <wsa@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Mike Leach <mike.leach@linaro.org>,
-        James Clark <james.clark@arm.com>,
-        Leo Yan <leo.yan@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Alexandre Torgue <alexandre.torgue@foss.st.com>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Andy Shevchenko <andy@kernel.org>,
-        Chen-Yu Tsai <wens@csie.org>, Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Emil Renner Berthing <kernel@esmil.dk>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Corey Minyard <minyard@acm.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        M ark Brown <broonie@kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Anshuman Khandual <anshuman.khandual@arm.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        coresight@lists.linaro.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-hwmon@vger.kernel.org, linux-i3c@lists.infradead.org,
-        linux-iio@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-media@vger.kernel.org, linux-mips@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-        alsa-devel@alsa-project.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: Drop remaining unneeded quotes
-Message-ID: <ZOZbvbQCfE/7za7A@shikoro>
-Mail-Followup-To: Wolfram Sang <wsa@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Mike Leach <mike.leach@linaro.org>,
-        James Clark <james.clark@arm.com>, Leo Yan <leo.yan@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Alexandre Torgue <alexandre.torgue@foss.st.com>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Andy Shevchenko <andy@kernel.org>, Chen-Yu Tsai <wens@csie.org>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Emil Renner Berthing <kernel@esmil.dk>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Corey Minyard <minyard@acm.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        M ark Brown <broonie@kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Anshuman Khandual <anshuman.khandual@arm.com>,
-        Sudeep Holla <sudeep.holla@arm.com>, coresight@lists.linaro.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org,
-        linux-i3c@lists.infradead.org, linux-iio@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-media@vger.kernel.org, linux-mips@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-        alsa-devel@alsa-project.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-References: <20230823183749.2609013-1-robh@kernel.org>
+        with ESMTP id S238410AbjHWTqd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 15:46:33 -0400
+Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 485A910CC;
+        Wed, 23 Aug 2023 12:46:32 -0700 (PDT)
+Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-6bd0a0a6766so4308131a34.2;
+        Wed, 23 Aug 2023 12:46:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692819991; x=1693424791;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=p4jOIqQFtRoqjLGEv4mDatBugt3hVKTLzS2seQK1Jvk=;
+        b=k/lFBm7DvAvDw+f7T3TPSlfUmPaDkFwWmTMgCVAGFfM8c+6vnBgdy7Rz70BrkCzSBq
+         rDCQP6iyvVvnTi6EmW6iq4XPZCrnrrqZtEEXL92sceHXbqhEAJT6VZSeB8OPotmbUphd
+         ETgcHyjcalUPhqnyXUeDFTD5InUHH8I3OkmofXZirBUMCUPu4HkwkmJCOJjZoPMpDz5o
+         mBAWYCR3MpLh6lGuY5zsk8PWyDc6vmtBecDsPPhSdo8oni2Dc9UILNmAAgJ6OM8HFDcT
+         95u0DBPr+bgZqWI30P+jRn+iA9WXAbrUiSJy+iMa0bZclXQODaIOcCzheWgDu8uxUiqS
+         oDEQ==
+X-Gm-Message-State: AOJu0YzyUvPsr4Gfcm08J9TPdLB3YOXC5MGCoUFb8iB5bWIRAXcx2ZwM
+        homKkARALbzGJXtIMFSoaruEWeLS/8g=
+X-Google-Smtp-Source: AGHT+IFoUCesbrhxPJhkAPyN8lGtfPyw9z6ECRkpGfLVxxh1OKmGj1GzCbBY2Vf0ojLcV6Lin6yqSQ==
+X-Received: by 2002:a05:6830:84:b0:6bc:9078:81c8 with SMTP id a4-20020a056830008400b006bc907881c8mr328908oto.20.1692819991403;
+        Wed, 23 Aug 2023 12:46:31 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ecb6:e8b9:f433:b4b4? ([2620:15c:211:201:ecb6:e8b9:f433:b4b4])
+        by smtp.gmail.com with ESMTPSA id d2-20020a639902000000b00564b313d526sm10062404pge.54.2023.08.23.12.46.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Aug 2023 12:46:30 -0700 (PDT)
+Message-ID: <2668f6c9-df53-b3c5-3452-d411d11057e1@acm.org>
+Date:   Wed, 23 Aug 2023 12:46:29 -0700
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="W9LDWghRC/uN9wQg"
-Content-Disposition: inline
-In-Reply-To: <20230823183749.2609013-1-robh@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.1
+Subject: Re: [bug report] blktests srp/002 hang
+Content-Language: en-US
+To:     Bob Pearson <rpearsonhpe@gmail.com>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+ <0c5c732c-283c-b29a-0ac2-c32211fc7e17@gmail.com>
+ <yewvcfcketee5qduraajra2g37t2mpxdlmj7aqny3umf7mkavk@wsm5forumsou>
+ <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
+ <27e31e00-74a3-6209-5ad5-1783d6e67a0d@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <27e31e00-74a3-6209-5ad5-1783d6e67a0d@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 8/23/23 09:19, Bob Pearson wrote:
+> I have also seen the same hangs in siw. Not as frequently but the same symptoms.
+> About every month or so I take another run at trying to find and fix this bug but
+> I have not succeeded yet. I haven't seen anything that looks like bad behavior from
+> the rxe side but that doesn't prove anything. I also saw these hangs on my system
+> before the WQ patch went in if my memory serves. Out main application for this
+> driver at HPE is Lustre which is a little different than SRP but uses the same
+> general approach with fast MRs. Currently we are finding the driver to be quite stable
+> even under very heavy stress.
+> 
+> I would be happy to collaborate with someone (you?) who knows the SRP side well to resolve
+> this hang. I think that is the quickest way to fix this. I have no idea what SRP is waiting for.
 
---W9LDWghRC/uN9wQg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Bob,
 
-On Wed, Aug 23, 2023 at 01:28:47PM -0500, Rob Herring wrote:
-> Cleanup bindings dropping the last remaining unneeded quotes. With this,
-> the check for this can be enabled in yamllint.
->=20
-> Signed-off-by: Rob Herring <robh@kernel.org>
+I cannot reproduce these issues. All SRP tests work reliably on my test setup on
+top of the v6.5-rc7 kernel, whether I use the siw driver or whether I use the
+rdma_rxe driver. Additionally, I do not see any SRP abort messages.
 
-Acked-by: Wolfram Sang <wsa@kernel.org> # for AT24/I2C
+# uname -a
+Linux opensuse-vm 6.5.0-rc7 #28 SMP PREEMPT_DYNAMIC Wed Aug 23 10:42:35 PDT 2023 x86_64 x86_64 x86_64 GNU/Linux
+# journalctl --since=today | grep 'SRP abort' | wc
+       0       0       0
 
+Since I installed openSUSE Tumbleweed in the VM in which I run kernel tests: if
+you are using a Linux distro that is based on Debian it may include a buggy
+version of multipathd. Last time I ran the SRP tests in a Debian VM I had to
+build multipathd from source - the SRP tests did not work with the Debian version
+of multipathd. The shell script that I use to build and install multipathd is as
+follows (must be run in the multipath-tools source directory):
 
---W9LDWghRC/uN9wQg
-Content-Type: application/pgp-signature; name="signature.asc"
+#!/bin/bash
 
------BEGIN PGP SIGNATURE-----
+scriptdir="$(dirname "$0")"
 
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmTmW70ACgkQFA3kzBSg
-KbYDpQ//TxfkWdWliCVOwgunoynDj8QbT0LI4crB95MmkexsMTX8+s4LTc8eQGfV
-pyqAEdN6UWa+iETe1rDdvwMKvSik7m3o9JvCy3BwxcTkHeVsnH3aqQvORh1ehka6
-HKXT+KozcWWe7ZVqyqCApjqb9VIE6six7kI2381p9eSiSTzpjZR988QLcEcV3fIK
-hdH21sLgCm+pt7vwnhNLyL4DqSKc4a3xBjcCDY2fW0XYAEhdsi8mVu58gnct1yTF
-mRcbv717gndwG4XgL9wnA0DCZVPc27acPi/daHtp+jPsvsqMQSnQz9TDbkTRJX95
-z47oWS6p2ol6iJqbbr80wZ2ozdE0avfydrdhwHEWx6ndnAQ3DZgqVeSwmwEE+mxQ
-FZvFYVM06i7rX8DScen91PFvcLpkGmvmBED6KKvsrovou0cPlcTEIdycxKlNtxEk
-bbahDY5Kl7MLuUxfLMZV03upU/y/S8AgWwd26kE0zUBolCi09v9e822TqLgfd2TO
-VmPqs3dvxwmykO9s8HkGdTSrgkdgGv9NMXnm6Psg5MlTtkDk12CspSFQ4fdD4VgY
-GPCKVGvGzdhrJ0vUe7GODt2C/uHGCO1W7/efVtFbcdOvLcmQIr9uqD/JpfBXGh70
-tjpBBAx/9dVKkiFTHjhZ2CzBQS22G6GWuDFnJaWIygpWTE7XaE0=
-=RXY7
------END PGP SIGNATURE-----
+if type -p zypper >/dev/null 2>&1; then
+     rpms=(device-mapper-devel libaio-devel libjson-c-devel librados-devel
+	  liburcu-devel readline-devel systemd-devel)
+     for p in "${rpms[@]}"; do
+	sudo zypper install -y "$p"
+     done
+elif type -p apt-get >/dev/null 2>&1; then
+     export LIB=/lib
+     sudo apt-get install -y libaio-dev libdevmapper-dev libjson-c-dev librados-dev \
+	    libreadline-dev libsystemd-dev liburcu-dev
+fi
 
---W9LDWghRC/uN9wQg--
+git clean -f
+make -s "$@"
+sudo make -s "$@" install
+
+Bart.
