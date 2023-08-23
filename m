@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C60EE49B0
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 15:44:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73E20EE49B6
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 15:44:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235555AbjHWPo2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Aug 2023 11:44:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55484 "EHLO
+        id S235631AbjHWPo3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Aug 2023 11:44:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232038AbjHWPo1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 11:44:27 -0400
+        with ESMTP id S232357AbjHWPo2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 11:44:28 -0400
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F015E70;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A1C2E71;
         Wed, 23 Aug 2023 08:44:26 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37NDDXgW012456;
-        Wed, 23 Aug 2023 15:44:19 GMT
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37NBrd7C015705;
+        Wed, 23 Aug 2023 15:44:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=MHjQtJmdnklgfC97Z+9qIdhrLaowKL2QnIkLQkzJl7o=;
- b=YaPeytV9JEyP2aGwlqXUrjEui1Sh+L+xdcNTGogtu/ECuOTy52uKKk5jrKtlZ/YUi7gS
- 0NNu1ZhMN9OpIZsfut/MZx3+NkL6ljt5IyLxaluyYN3WdM9FxO/OyZKazwgv/juu/J0F
- RYEFE2PnlH+lfiTxo2zv+8AZmO50MlP17Gwi35izCbv1mlFZ3qCfRPs+RqPBOR4NG7N0
- 4O9ZoywfMjX/CvS1Hu3KyhkiNmfXwvvirAI7GPwW+OlScnkfcVoOotFWFhSaeN0h5DdT
- ozbqrypNjfXXkl4l/kaQ135gYH9W8mpOnvX3s+/mIh/B76lU/qWdBuUkQLEw7/gESlvw PQ== 
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=D6bHKDZ9QMKDyv2gadC3pzjbGIfbRCN+evpDghxX9DQ=;
+ b=Po182Og9BpLx6kgexaknMI1DKbNkSaF6g+JpAJJForMwx8V/N5vm0P8jOHHEY9qGiLnc
+ 6xNDb6ZdAzTGQuncDCbH9HUeZj1oVkZrRn0k2WziCrUaVsRqs9qye7ou1ltUbn8tiOC+
+ TUD5tDmlbeI3OCUWa0TZh1ce2Cn4ewN/Nu2t1g3ghk+2TEktF/UbXm/tDG52azQrQnPx
+ arXqj9LcrXAzaaSNEphpuSsnOGf8rUS40a2Y3NKukLkMpTZMpzjX8mXYJRX5w457vh0h
+ eb9jEliwx5kUvmax2IwgXR9A7ev30crdy0dc3zUQLqEOc3qRpYSiTnixFCR8bEYuSNsJ Bg== 
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sn2ext9ns-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sn3tqj65h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 23 Aug 2023 15:44:19 +0000
+        Wed, 23 Aug 2023 15:44:21 +0000
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 37NFiGuj029184;
-        Wed, 23 Aug 2023 15:44:16 GMT
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 37NFiGuk029184;
+        Wed, 23 Aug 2023 15:44:18 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sjptm3qdf-1;
-        Wed, 23 Aug 2023 15:44:16 +0000
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sjptm3qe3-1;
+        Wed, 23 Aug 2023 15:44:18 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37NFiGKq029178;
-        Wed, 23 Aug 2023 15:44:16 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37NFiHTt029212;
+        Wed, 23 Aug 2023 15:44:18 GMT
 Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 37NFiG7o029177;
-        Wed, 23 Aug 2023 15:44:16 +0000
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 37NFiHDb029207;
+        Wed, 23 Aug 2023 15:44:18 +0000
 Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-        id 576B35000AA; Wed, 23 Aug 2023 21:14:15 +0530 (+0530)
+        id 2F0375000AB; Wed, 23 Aug 2023 21:14:17 +0530 (+0530)
 From:   Nitin Rawat <quic_nitirawa@quicinc.com>
 To:     mani@kernel.org, agross@kernel.org, andersson@kernel.org,
         konrad.dybcio@linaro.org, jejb@linux.ibm.com,
@@ -50,61 +50,72 @@ To:     mani@kernel.org, agross@kernel.org, andersson@kernel.org,
 Cc:     quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-msm@vger.kernel.org,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V5 0/6] scsi: ufs: qcom: Align programming sequence as per HW spec
-Date:   Wed, 23 Aug 2023 21:14:07 +0530
-Message-Id: <20230823154413.23788-1-quic_nitirawa@quicinc.com>
+        Nitin Rawat <quic_nitirawa@quicinc.com>,
+        Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+Subject: [PATCH V5 4/6] scsi: ufs: qcom: Align unipro clk attributes as per Hardware specification
+Date:   Wed, 23 Aug 2023 21:14:11 +0530
+Message-Id: <20230823154413.23788-5-quic_nitirawa@quicinc.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230823154413.23788-1-quic_nitirawa@quicinc.com>
+References: <20230823154413.23788-1-quic_nitirawa@quicinc.com>
 X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 4bRYYtqvE5LG8IHvEqPo65NhqpwjjGHP
-X-Proofpoint-ORIG-GUID: 4bRYYtqvE5LG8IHvEqPo65NhqpwjjGHP
+X-Proofpoint-GUID: sNlmSZy_WwPCdNgGtyC6j7UJLvO80NtF
+X-Proofpoint-ORIG-GUID: sNlmSZy_WwPCdNgGtyC6j7UJLvO80NtF
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
  definitions=2023-08-23_09,2023-08-22_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxlogscore=720
- mlxscore=0 lowpriorityscore=0 priorityscore=1501 impostorscore=0
- malwarescore=0 suspectscore=0 adultscore=0 phishscore=0 bulkscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 suspectscore=0
+ bulkscore=0 spamscore=0 phishscore=0 mlxscore=0 lowpriorityscore=0
+ malwarescore=0 priorityscore=1501 mlxlogscore=970 adultscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2308100000 definitions=main-2308230142
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch aligns programming sequence as per Qualcomm UFS
-hardware specification.
+Currently CORE_CLK_1US_CYCLES, PA_VS_CORE_CLK_40NS_CYCLES are configured
+in clk scaling post change ops. Move this to clk scaling pre change ops to
+align with the hardware specification.
 
-Changes from v4:
-- Addressed bjorn comment to split single patch to multiple patches.
+Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Changes from v3:
--Addressed bjorn comment to update commit msg to capture change details.
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 8162b19191a9..491c0173603e 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1399,12 +1399,6 @@ static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba,
+ }
 
-Changes from v2:
-- Addressed bao comment, removed duplicate clock timer cfg API call
+ static int ufs_qcom_clk_scale_up_pre_change(struct ufs_hba *hba)
+-{
+-	/* nothing to do as of now */
+-	return 0;
+-}
+-
+-static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
 
-Changes from v1:
-- Addressed bao comment, removed wrapper function
-- Tab alignment
+@@ -1414,6 +1408,11 @@ static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
+ 	return ufs_qcom_cfg_core_clk_ctrl(hba);
+ }
 
-Nitin Rawat (6):
-  scsi: ufs: qcom: Update offset for core_clk_1us_cycles
-  scsi: ufs: qcom: Configure PA_VS_CORE_CLK_40NS_CYCLES for Unipro core
-    clk
-  scsi: ufs: qcom: Add multiple frequency support for unipro clk
-    attributes
-  scsi: ufs: qcom: Align unipro clk attributes as per Hardware
-    specification
-  scsi: ufs: qcom: Refactor ufs_qcom_cfg_timers function.
-  scsi: ufs: qcom: Handle unipro clk HW division based on scaling
-    conditions.
-
- drivers/ufs/host/ufs-qcom.c | 239 +++++++++++++++++++++++++++---------
- drivers/ufs/host/ufs-qcom.h |  15 ++-
- 2 files changed, 197 insertions(+), 57 deletions(-)
-
++static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
++{
++	return 0;
++}
++
+ static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
 --
 2.17.1
 
