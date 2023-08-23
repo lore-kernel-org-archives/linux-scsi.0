@@ -2,97 +2,187 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE6E5EE4993
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 10:06:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D01EE49BC
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 10:49:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231812AbjHWKF6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Aug 2023 06:05:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42230 "EHLO
+        id S234182AbjHWKti (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Aug 2023 06:49:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236001AbjHWJiC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 05:38:02 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FC735588
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2023 02:29:58 -0700 (PDT)
-X-UUID: 9c50dd76419711eeb20a276fd37b9834-20230823
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=WHTqxrFEmuBd3YvMSfVGlAXWreyi/5MI1M+PBZMby+U=;
-        b=GtfGNWPVvpuwi6Re+NMWYa8PKgXnKPFLMfzD9EbqOnydp33fT6uQvbspA1damx7KHVy0WdmJ57waggedpyMxQeA7W2oW35AXVxi1lyJPOt/1Jfszm+1VbS43omTUs9l3ZZpMF6XdUexLvdrJooTCr875Mjr7pm+/DXbLM8MZYe4=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.31,REQID:a46e833a-4358-4b10-9d9f-b5c56a171fcc,IP:0,U
-        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:90
-X-CID-INFO: VERSION:1.1.31,REQID:a46e833a-4358-4b10-9d9f-b5c56a171fcc,IP:0,URL
-        :0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
-        N:quarantine,TS:90
-X-CID-META: VersionHash:0ad78a4,CLOUDID:c218dbee-9a6e-4c39-b73e-f2bc08ca3dc5,B
-        ulkID:2308231729542OGO2GVW,BulkQuantity:0,Recheck:0,SF:38|29|28|17|19|48,T
-        C:nil,Content:0,EDM:-3,IP:nil,URL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,CO
-        L:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_SDM,TF_CID_SPAM_ASC,TF_CID_SPAM_FAS,
-        TF_CID_SPAM_FSD,TF_CID_SPAM_ULN
-X-UUID: 9c50dd76419711eeb20a276fd37b9834-20230823
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 240061959; Wed, 23 Aug 2023 17:29:51 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 23 Aug 2023 17:29:50 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 23 Aug 2023 17:29:50 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <tun-yu.yu@mediatek.com>,
-        <eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>
-Subject: [PATCH v1 1/3] ufs: core: only suspend clock scaling if scale down
-Date:   Wed, 23 Aug 2023 17:29:46 +0800
-Message-ID: <20230823092948.22734-2-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20230823092948.22734-1-peter.wang@mediatek.com>
-References: <20230823092948.22734-1-peter.wang@mediatek.com>
+        with ESMTP id S233987AbjHWKt1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 06:49:27 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D141810CC;
+        Wed, 23 Aug 2023 03:49:01 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 1F89B21EDA;
+        Wed, 23 Aug 2023 10:48:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1692787738; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=czbolVCNdiRIhtzRMydBVuDGtNoMVf0uK7rI8VUw4Wg=;
+        b=cea+STFByaV36NWMjg8zifEKP9bUJaVFrhrdsQ1BHrDjc+6YKTyOk0XUYe/aGcn7z1GdBW
+        Sp5Xg8/PcrR30C9G8GkmtNgleVHgoFT9VpO4HmYAD81nOJQ/2ts6Z2GJ97FCPouubZqTfM
+        7Ki5cRwEgj/8O3iByHVAhCDVhrdgZS0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1692787738;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=czbolVCNdiRIhtzRMydBVuDGtNoMVf0uK7rI8VUw4Wg=;
+        b=ccloVX/Tox8MPvEstSnU1swyihs7KV2puBqol0j3M4wpbT7Z67JF74RuKmYp8i9zsSQ2aK
+        Q/J06H24OiSZjOBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0486813592;
+        Wed, 23 Aug 2023 10:48:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id hdjcABrk5WQsIAAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 23 Aug 2023 10:48:58 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 0E216A0774; Wed, 23 Aug 2023 12:48:57 +0200 (CEST)
+From:   Jan Kara <jack@suse.cz>
+To:     Christian Brauner <brauner@kernel.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, <linux-fsdevel@vger.kernel.org>,
+        <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: [PATCH v3 0/29] block: Make blkdev_get_by_*() return handle
+Date:   Wed, 23 Aug 2023 12:48:11 +0200
+Message-Id: <20230818123232.2269-1-jack@suse.cz>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3781; i=jack@suse.cz; h=from:subject:message-id; bh=cMBb8bZk7tVGWo+BW5D78pH+ebOvNFFLsxdd3Uvzd/w=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBk5ePhrEMij+4xGF6e8K//xuADex0OXIFxlpO0VT6g 42vu5BeJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZOXj4QAKCRCcnaoHP2RA2RqoB/ 91nt6Qs4NSStbt9M1WXY1akBbAqu+Bv3ZXdZ6WMy9kKyYwY7zCnyQziikP60M2MjCrud4NP9os4YAr 4uXdyOyVcdJ9TjbciDgTyoYdfkFl7g+rZhj1pyPeep1xmvDMn3QtNJ28EbhLegdC+nkmL6+bxPGEwd IdsuBKGrdIIEryWwhBq0+BWowL3nzmQjs5GoDtXLoHADfHYhgC8RKYK/4FaML1/SsAZRvGJ/C8wFB4 JUGsDGFE4CJx9XgiRx407CSIGNSoCciqBpMaMA7x/dbq9Tu76xcqN4/DZrtT2qyG4I7GZYetndEl3F vWMZMQFPauZmB2S1r30HY+nn2IOCrM
+X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+Hello,
 
-If clock scale up and suspend clock scaling, ufs will keep high
-performance/power mode but no read/write requests on going.
-It is logic wrong and have power concern.
+this is a v3 of the patch series which implements the idea of blkdev_get_by_*()
+calls returning bdev_handle which is then passed to blkdev_put() [1]. This
+makes the get and put calls for bdevs more obviously matching and allows us to
+propagate context from get to put without having to modify all the users
+(again!). In particular I need to propagate used open flags to blkdev_put() to
+be able count writeable opens and add support for blocking writes to mounted
+block devices. I'll send that series separately.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The series is based on Christian's vfs tree as of today as there is quite
+some overlap. Patches have passed some reasonable testing - I've tested block
+changes, md, dm, bcache, xfs, btrfs, ext4, swap. More testing or review is
+always welcome. Thanks! I've pushed out the full branch to:
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 129446775796..e3672e55efae 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1458,7 +1458,7 @@ static int ufshcd_devfreq_target(struct device *dev,
- 		ktime_to_us(ktime_sub(ktime_get(), start)), ret);
- 
- out:
--	if (sched_clk_scaling_suspend_work)
-+	if (sched_clk_scaling_suspend_work && !scale_up)
- 		queue_work(hba->clk_scaling.workq,
- 			   &hba->clk_scaling.suspend_work);
- 
--- 
-2.18.0
+git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
 
+to ease review / testing. Since there were not many comments for v2 and
+Christoph has acked the series I think we should start discussing how to merge
+the series. Most collisions with this series seem to happen in the filesystems
+area so VFS tree would seem as the least painful way to merge this. Jens,
+are you OK with that?
+
+Changes since v2:
+* Rebased on top of current vfs tree
+* Added some acks
+* Reflected minor nits from Christoph
+* Added missing conversion of blkdev_put() calls in cramfs and erofs
+* Fixed possible leak of bdev handle in xfs if logdev is the same as fs dev
+
+Changes since v1:
+* Rebased on top of current vfs tree
+* Renamed final functions to bdev_open_by_*() and bdev_release()
+* Fixed detection of exclusive open in blkdev_ioctl() and blkdev_fallocate()
+* Fixed swap conversion to properly reinitialize swap_info->bdev_handle
+* Fixed xfs conversion to not oops with rtdev without logdev
+* Couple other minor fixups
+
+								Honza
+
+[1] https://lore.kernel.org/all/ZJGNsVDhZx0Xgs2H@infradead.org
+
+CC: Alasdair Kergon <agk@redhat.com>
+CC: Andrew Morton <akpm@linux-foundation.org>
+CC: Anna Schumaker <anna@kernel.org>
+CC: Chao Yu <chao@kernel.org>
+CC: Christian Borntraeger <borntraeger@linux.ibm.com>
+CC: Coly Li <colyli@suse.de
+CC: "Darrick J. Wong" <djwong@kernel.org>
+CC: Dave Kleikamp <shaggy@kernel.org>
+CC: David Sterba <dsterba@suse.com>
+CC: dm-devel@redhat.com
+CC: drbd-dev@lists.linbit.com
+CC: Gao Xiang <xiang@kernel.org>
+CC: Jack Wang <jinpu.wang@ionos.com>
+CC: Jaegeuk Kim <jaegeuk@kernel.org>
+CC: jfs-discussion@lists.sourceforge.net
+CC: Joern Engel <joern@lazybastard.org>
+CC: Joseph Qi <joseph.qi@linux.alibaba.com>
+CC: Kent Overstreet <kent.overstreet@gmail.com>
+CC: linux-bcache@vger.kernel.org
+CC: linux-btrfs@vger.kernel.org
+CC: linux-erofs@lists.ozlabs.org
+CC: <linux-ext4@vger.kernel.org>
+CC: linux-f2fs-devel@lists.sourceforge.net
+CC: linux-mm@kvack.org
+CC: linux-mtd@lists.infradead.org
+CC: linux-nfs@vger.kernel.org
+CC: linux-nilfs@vger.kernel.org
+CC: linux-nvme@lists.infradead.org
+CC: linux-pm@vger.kernel.org
+CC: linux-raid@vger.kernel.org
+CC: linux-s390@vger.kernel.org
+CC: linux-scsi@vger.kernel.org
+CC: linux-xfs@vger.kernel.org
+CC: "Md. Haris Iqbal" <haris.iqbal@ionos.com>
+CC: Mike Snitzer <snitzer@kernel.org>
+CC: Minchan Kim <minchan@kernel.org>
+CC: ocfs2-devel@oss.oracle.com
+CC: reiserfs-devel@vger.kernel.org
+CC: Sergey Senozhatsky <senozhatsky@chromium.org>
+CC: Song Liu <song@kernel.org>
+CC: Sven Schnelle <svens@linux.ibm.com>
+CC: target-devel@vger.kernel.org
+CC: Ted Tso <tytso@mit.edu>
+CC: Trond Myklebust <trond.myklebust@hammerspace.com>
+CC: xen-devel@lists.xenproject.org
+
+Previous versions:
+Link: http://lore.kernel.org/r/20230629165206.383-1-jack@suse.cz # v1
+Link: http://lore.kernel.org/r/20230810171429.31759-1-jack@suse.cz # v2
