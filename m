@@ -2,75 +2,77 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9C16EE49A0
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 03:19:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1576FEE49A3
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 04:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231475AbjHWDTA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Aug 2023 23:19:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49678 "EHLO
+        id S232206AbjHWEHS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Aug 2023 00:07:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229824AbjHWDS7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2023 23:18:59 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4D25CD6
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Aug 2023 20:18:10 -0700 (PDT)
+        with ESMTP id S229477AbjHWEHR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 00:07:17 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B99E7E56
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Aug 2023 21:06:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692760689;
+        s=mimecast20190719; t=1692763587;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding;
-        bh=gPPC+4I80FZSXByCGFoIo8BosdPQoyHkCmUbzTAsc+g=;
-        b=YwzZBwbEPz0KGYeIwdk0fGBLi/FcQLaqNnXmDXjttt1XnVASzzgApHgwV6jjSaPM3Lu4/n
-        QbBrLbmLL1WMUCn6PJxEEBMIUAll/sKU3RS8W73f5ll/deJpLKeyuSjRIA8nrmzjKxt+8F
-        njH2V6QqGhYGEGi3279WMFZvgALALbs=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-512-mtvJBpj5OJSiq1104KCPNQ-1; Tue, 22 Aug 2023 23:18:08 -0400
-X-MC-Unique: mtvJBpj5OJSiq1104KCPNQ-1
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-76dbe1865c1so34875685a.0
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Aug 2023 20:18:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692760687; x=1693365487;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=gPPC+4I80FZSXByCGFoIo8BosdPQoyHkCmUbzTAsc+g=;
-        b=APdFlQomFyGbffEe7a/fmEper0BSi8hzvmAHsrRiR/6RQlZadXHk815R1/hHSAR+EJ
-         25OiyLsftgTym7Vab6/7D+Sr3Q2w2GaQ7olvHjqLPTTRj1lw0HXqOHFgKs4/4OlEj462
-         GllY7F7gPhb7xgb9Obutjr9USw/MZZfrVJDxBZuapX3gijCMt00MPV0jLBmgVQ/cW3z/
-         SUeIRhkHT8oSReWjRoRN2OdUa6SNQTAjwCtQoJQRoJrWNAJC+H/6uN2trKz7wrHY8tMd
-         xaz8JmtGFxyFRyYYjkiebtieD+MckG0EeCq7UewHJaPQ8OxgCc2hgKObf1I8mB+5J/2h
-         DO+w==
-X-Gm-Message-State: AOJu0YzHTQgFEFWIcCo+uxjVGZxhUy05zgTNnVaWEnVOcZnOYAcV/4Fd
-        F9XTtSSa6tgyKfvlVr8gzjjdX8PHdOBz0SrJfoLPRaIAnA/UWexUewL6+qnEko8aiz3XwuQPpVL
-        /ZNpxmYOx1cvEu3F76f1w0XxGV7p5l6I5w29DmjNyJd4GJFkuPJE=
-X-Received: by 2002:a05:620a:25cc:b0:76d:b119:c60d with SMTP id y12-20020a05620a25cc00b0076db119c60dmr4512203qko.36.1692760687177;
-        Tue, 22 Aug 2023 20:18:07 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHYmRWw6op0HNd8qKTWWwC00NQ5oB8oIdloDee6KsYAPr9LOXh6d04EPiKHcUijlz3qcyJjGFwMSqfISYxpLTA=
-X-Received: by 2002:a05:620a:25cc:b0:76d:b119:c60d with SMTP id
- y12-20020a05620a25cc00b0076db119c60dmr4512188qko.36.1692760686914; Tue, 22
- Aug 2023 20:18:06 -0700 (PDT)
+        bh=knjULuIUAUpmbh8wfNYlcP4aAvW27EL4Ea7IQUb8oGs=;
+        b=dPjHiJyn9ryMavvJJcr7i7Ke6ZooYO0sgBJpALLti403qtlfRphyldDr0Fx3pwicyx97s2
+        HtERNVUCEabTADs6LibpJs/oBsAy6L3Y4DcvI3bVO3bw68poivsyyUlwpLfZn6CpsHfiZV
+        USDlOzfkRobe28LZKjDEMUv+UsPHgjM=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-423-SSALQ9w2MeWn-Wc2SbM0OA-1; Wed, 23 Aug 2023 00:06:25 -0400
+X-MC-Unique: SSALQ9w2MeWn-Wc2SbM0OA-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id EBF80856F67;
+        Wed, 23 Aug 2023 04:06:24 +0000 (UTC)
+Received: from fedora (unknown [10.72.120.10])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4606F492C14;
+        Wed, 23 Aug 2023 04:06:19 +0000 (UTC)
+Date:   Wed, 23 Aug 2023 12:06:14 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     linux-fsdevel@vger.kernel.org,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-kernel@vger.kernel.org
+Cc:     ming.lei@redhat.com, linux-scsi@vger.kernel.org,
+        Changhui Zhong <czhong@redhat.com>
+Subject: [czhong@redhat.com: [bug report] WARNING: CPU: 121 PID: 93233 at
+ fs/dcache.c:365 __dentry_kill+0x214/0x278]
+Message-ID: <ZOWFtqA2om0w5Vmz@fedora>
 MIME-Version: 1.0
-From:   Changhui Zhong <czhong@redhat.com>
-Date:   Wed, 23 Aug 2023 11:17:55 +0800
-Message-ID: <CAGVVp+W0gP38YMCPyaepmSLjeHLDOP7hkfsvuiaRXtn19JBqTA@mail.gmail.com>
-Subject: [bug report] WARNING: CPU: 121 PID: 93233 at fs/dcache.c:365 __dentry_kill+0x214/0x278
-To:     linux-scsi@vger.kernel.org
-Cc:     Ming Lei <ming.lei@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
+
+
+Looks the issue is more related with vfs, so forward to vfs list.
+
+----- Forwarded message from Changhui Zhong <czhong@redhat.com> -----
+
+Date: Wed, 23 Aug 2023 11:17:55 +0800
+From: Changhui Zhong <czhong@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: Ming Lei <ming.lei@redhat.com>
+Subject: [bug report] WARNING: CPU: 121 PID: 93233 at fs/dcache.c:365 __dentry_kill+0x214/0x278
 
 Hello,
 
 triggered below warning issue with branch
 "
 Tree: mainline.kernel.org-clang
-Repository: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.=
-git
+Repository: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 @ master
 Commit Hash: 89bf6209cad66214d3774dac86b6bbf2aec6a30d
 Commit Name: v6.5-rc7-18-g89bf6209cad6
@@ -78,16 +80,14 @@ Kernel information:
 Commit message: Merge tag 'devicetree-fixes-for-6.5-2' of
 git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux
 "
-for more detail=EF=BC=8Cplease check
+for more detail，please check
 https://datawarehouse.cki-project.org/kcidb/tests/9232643
 
-#modprobe scsi_debug virtual_gb=3D128
+#modprobe scsi_debug virtual_gb=128
 #echo none > /sys/block/sdb/queue/scheduler
-#fio --bs=3D4k --ioengine=3Dlibaio --iodepth=3D1 --numjobs=3D4 --rw=3Drandr=
-w
---name=3Dsdb-libaio-randrw-4k --filename=3D/dev/sdb --direct=3D1 --size=3D6=
-0G
---runtime=3D60
+#fio --bs=4k --ioengine=libaio --iodepth=1 --numjobs=4 --rw=randrw
+--name=sdb-libaio-randrw-4k --filename=/dev/sdb --direct=1 --size=60G
+--runtime=60
 
 [ 3056.092761] Device: sdb  Engine: libaio Sched: none Pattern: randrw
  Direct: 1 Depth: 1  Block size: 4K Size: 60G
@@ -104,31 +104,20 @@ unloaded: scsi_debug]
 [ 3117.103572] CPU: 121 PID: 93233 Comm: bash Not tainted 6.5.0-rc7 #1
 [ 3117.109827] Hardware name: GIGABYTE R152-P31-00/MP32-AR1-00, BIOS
 F31n (SCP: 2.10.20220810) 09/30/2022
-[ 3117.119119] pstate: 20400009 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=
-=3D--)
+[ 3117.119119] pstate: 20400009 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
 [ 3117.126068] pc : __dentry_kill+0x214/0x278
 [ 3117.130152] lr : __dentry_kill+0x194/0x278
 [ 3117.134236] sp : ffff800084993870
-[ 3117.137537] x29: ffff800084993870 x28: ffff0800830e2200 x27: 00000000000=
-80400
-[ 3117.144661] x26: 00000000fff7fbff x25: 0000000000000001 x24: ffff07ff884=
-73198
-[ 3117.151783] x23: ffff07ff884731c0 x22: ffff07ff9d033c80 x21: ffff07ff884=
-731d0
-[ 3117.158906] x20: ffff07ff88473198 x19: ffff07ff88473140 x18: ffffbc0d073=
-9ceb4
-[ 3117.166028] x17: 0000000000000000 x16: ffffbc0d073528c0 x15: ffff07ff89c=
-761f8
-[ 3117.173151] x14: 0000000000000002 x13: 0000000000000000 x12: 00000000000=
-00001
-[ 3117.180273] x11: ffff080f33fe0850 x10: ffffffffffffffff x9 : 00000001000=
-00000
-[ 3117.187395] x8 : ffffbc0d08aa1e98 x7 : 0000000000000000 x6 : 00000000000=
-0003f
-[ 3117.194518] x5 : ffff800084993a30 x4 : ffff800084993908 x3 : ffff07ff9cb=
-7e210
-[ 3117.201640] x2 : ffff07ff884731d0 x1 : 0000000000000000 x0 : ffff07ff884=
-731f0
+[ 3117.137537] x29: ffff800084993870 x28: ffff0800830e2200 x27: 0000000000080400
+[ 3117.144661] x26: 00000000fff7fbff x25: 0000000000000001 x24: ffff07ff88473198
+[ 3117.151783] x23: ffff07ff884731c0 x22: ffff07ff9d033c80 x21: ffff07ff884731d0
+[ 3117.158906] x20: ffff07ff88473198 x19: ffff07ff88473140 x18: ffffbc0d0739ceb4
+[ 3117.166028] x17: 0000000000000000 x16: ffffbc0d073528c0 x15: ffff07ff89c761f8
+[ 3117.173151] x14: 0000000000000002 x13: 0000000000000000 x12: 0000000000000001
+[ 3117.180273] x11: ffff080f33fe0850 x10: ffffffffffffffff x9 : 0000000100000000
+[ 3117.187395] x8 : ffffbc0d08aa1e98 x7 : 0000000000000000 x6 : 000000000000003f
+[ 3117.194518] x5 : ffff800084993a30 x4 : ffff800084993908 x3 : ffff07ff9cb7e210
+[ 3117.201640] x2 : ffff07ff884731d0 x1 : 0000000000000000 x0 : ffff07ff884731f0
 [ 3117.208763] Call trace:
 [ 3117.211197]  __dentry_kill+0x214/0x278
 [ 3117.214934]  shrink_dentry_list+0x134/0x2b0
@@ -152,8 +141,7 @@ F31n (SCP: 2.10.20220810) 09/30/2022
 [ 3117.282733] ---[ end trace 0000000000000000 ]---
 [ 3119.372909] Device: sdb  Engine: libaio Sched: none Pattern: randrw
  Direct: 1 Depth: 1  Block size: 16K Size: 60G
-[ 3144.068984] watchdog: BUG: soft lockup - CPU#97 stuck for 26s! [fio:9377=
-7]
+[ 3144.068984] watchdog: BUG: soft lockup - CPU#97 stuck for 26s! [fio:93777]
 [ 3144.069984] watchdog: BUG: soft lockup - CPU#99 stuck for 26s!
 [systemd-udevd:1680]
 [ 3144.075849] Modules linked in: scsi_debug nvme
@@ -217,8 +205,7 @@ F31n (SCP: 2.10.20220810) 09/30/2022
 [ 3144.220459] Hardware name: GIGABYTE R152-P31-00/MP32-AR1-00, BIOS
 F31n (SCP: 2.10.20220810) 09/30/2022
 [ 3144.221939]  crct10dif_ce
-[ 3144.229493] pstate: 00400009 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=
-=3D--)
+[ 3144.229493] pstate: 00400009 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
 [ 3144.231320]  polyval_ce
 [ 3144.240610] pc : d_alloc_parallel+0x204/0x520
 [ 3144.243218]  polyval_generic
@@ -248,8 +235,7 @@ W          6.5.0-rc7 #1
 F31n (SCP: 2.10.20220810) 09/30/2022
 [ 3144.308902]
 [ 3144.308903] x20: ffffbc0d08aa1e98
-[ 3144.310381] pstate: 20400009 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=
-=3D--)
+[ 3144.310381] pstate: 20400009 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
 [ 3144.313682]  x19: ffff07ff9eeac918 x18: 00000000fffffffb
 [ 3144.322019] pc : d_alloc_parallel+0x17c/0x520
 [ 3144.327316]
@@ -317,12 +303,9 @@ F31n (SCP: 2.10.20220810) 09/30/2022
 [ 3144.511590]  x10: 0000000000000000
 [ 3144.514891]  el0t_64_sync+0x194/0x198
 [ 3144.516370]  x9 : ffff07ff9400a06b
-[ 3144.564153] x8 : ffff07ff884731f1 x7 : 25732500716d016b x6 : 00000000327=
-57063
-[ 3144.571280] x5 : ffff07ff9de4783d x4 : ffff07ff9400a070 x3 : ffff07ff9de=
-46c90
-[ 3144.578407] x2 : ffff8000844ab9cc x1 : ffff8000844abb30 x0 : 00000000000=
-00000
+[ 3144.564153] x8 : ffff07ff884731f1 x7 : 25732500716d016b x6 : 0000000032757063
+[ 3144.571280] x5 : ffff07ff9de4783d x4 : ffff07ff9400a070 x3 : ffff07ff9de46c90
+[ 3144.578407] x2 : ffff8000844ab9cc x1 : ffff8000844abb30 x0 : 0000000000000000
 [ 3144.585534] Call trace:
 [ 3144.587969]  d_alloc_parallel+0x17c/0x520
 [ 3144.591971]  path_openat+0x238/0xc70
@@ -335,10 +318,15 @@ F31n (SCP: 2.10.20220810) 09/30/2022
 [ 3144.617555]  el0_svc+0x34/0x110
 [ 3144.620690]  el0t_64_sync_handler+0x84/0x100
 [ 3144.624954]  el0t_64_sync+0x194/0x198
-[ 3168.068867] watchdog: BUG: soft lockup - CPU#97 stuck for 48s! [fio:9377=
-7]
+[ 3168.068867] watchdog: BUG: soft lockup - CPU#97 stuck for 48s! [fio:93777]
 [ 3168.069867] watchdog: BUG: soft lockup - CPU#99 stuck for 48s!
 [systemd-udevd:1680]
 
-Thanks=EF=BC=8C
+Thanks，
+
+
+----- End forwarded message -----
+
+-- 
+Ming
 
