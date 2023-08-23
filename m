@@ -2,159 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6936EE49AB
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 06:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7ADDEE49AE
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 08:10:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232926AbjHWG0e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Aug 2023 02:26:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38146 "EHLO
+        id S233775AbjHWIKb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Aug 2023 04:10:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232443AbjHWG0d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 02:26:33 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ED31E70;
-        Tue, 22 Aug 2023 23:26:05 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id E49571F38A;
-        Wed, 23 Aug 2023 06:26:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1692771963; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XN7LqX2H6SbWhNZUOepPsDIemoCNTeP1hUkjrQMnJg8=;
-        b=PnlH3/MXDHI1G5VSHUSwJpitXWLZwqhVXHd5X6Z8fzkcK/tRvNJ4wBT6nAN/sn8xYOaGtJ
-        JgA8naWgSwjR9wfqqiCARSLuuyiGipCGUtY2kQ+JqK/VWye+Qu6Uc0IABXyEsTDuvyfedc
-        HEpc+NHnoxhjPKl+6CZEilaAgEBtOOA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1692771963;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XN7LqX2H6SbWhNZUOepPsDIemoCNTeP1hUkjrQMnJg8=;
-        b=RR1WmuBmp+ULiqf+0l2Rf8346o1IVs89YHBjgEnWr1qccmrFyWhO28tBMtbsATGPJ45PU0
-        0TLw/wk7o7jA/NAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 44BCE13458;
-        Wed, 23 Aug 2023 06:26:02 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id AqV8D3qm5WTLJAAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 23 Aug 2023 06:26:02 +0000
-Message-ID: <3562fc36-4bc2-b4fb-a2ad-1e310baf1b47@suse.de>
-Date:   Wed, 23 Aug 2023 08:26:00 +0200
+        with ESMTP id S233736AbjHWIF4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 04:05:56 -0400
+Received: from mail-yb1-xb2c.google.com (mail-yb1-xb2c.google.com [IPv6:2607:f8b0:4864:20::b2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 148861721
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2023 01:04:34 -0700 (PDT)
+Received: by mail-yb1-xb2c.google.com with SMTP id 3f1490d57ef6-d77a4e30e97so995671276.2
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2023 01:04:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1692777873; x=1693382673;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4x18HgxcXuVIfqokI9MrmvgHbYOVzb20sqxbnbY2CMg=;
+        b=BHPJJYWgI3y8TP+PbXbXHe9EoUB31NFYFuLKGqC5SqPy+mO00AhzDYg37HhppnIFo/
+         SgZQ76lABeqqefWejNA8ZYtuNbl4+Jti7DDluHO3AdrC089eSQ7E0sQ8fO3c01iULqQe
+         +HPiFlsQiTi72puH++Rr3EHGb/gykt/ga28g3Ed48yIX9X3yf3APdqmO+ZpB6au+26e9
+         4Jq1uAwaTcoua7wJzglFidCTg03+QAN3H/A0wXe1BdIdY1dCpP+HY9KUJCDhjVGPeW+h
+         ElbRVjE3M6iDP/2zT3WjFNr3GZc/lBkpl72tSCK61cxQqfJqTeIXP1H7FurNxCVco1KL
+         vg6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692777873; x=1693382673;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4x18HgxcXuVIfqokI9MrmvgHbYOVzb20sqxbnbY2CMg=;
+        b=c8NdeE5J37p6x12IyiNpRntJhF5G7BUnQ2D3GYyeDQqEuheH6INfI073Kf5qOLbqIL
+         CC4LZV/jojK7g3tFKDLCrWqQV3aXvItnLUPuDsY2eU5SLKlHA38cbVmSsVb5N4hZmF3J
+         HXWbeLZVNhJBLoSphHMEGN8kk/EyScytvD3rC8fJ9gkp/i6vEbxZKVsNTR14MbdEyMTh
+         vR7QrInTcc3fQbij7eseXvmdEEFPzpYKwpEk4g/GkgZy6p2XyJjMdjd1XzARJyqd7Qn/
+         b/rHlPxfrctacESe8EtLHai0iJ9TZ4/G5SCg5TpESjMid09uCdMpxWj+RXjGQVjAuG91
+         RWvg==
+X-Gm-Message-State: AOJu0YwYuzoLzjeUVyFtqhmW2c+tviiBN8Whppooj6iXoqeQaCvw7f8r
+        sKO92hxT/aEQ748u6A3J8c9RO/KJzzF1Xb9/ApsaAg==
+X-Google-Smtp-Source: AGHT+IGrOMMEwVtHryHwU0XzgH5J6pb+GFBjuvEmvNHq8LAg555gZ6ClRom7dtM4aWc9Doh+9kYdPlPZ/Q8JzX59BZQ=
+X-Received: by 2002:a25:aa26:0:b0:d56:7556:93f1 with SMTP id
+ s35-20020a25aa26000000b00d56755693f1mr12580669ybi.29.1692777873522; Wed, 23
+ Aug 2023 01:04:33 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH v11 04/16] scsi: core: Introduce a mechanism for
- reordering requests in the error handler
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230822191822.337080-1-bvanassche@acm.org>
- <20230822191822.337080-5-bvanassche@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230822191822.337080-5-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20230722014037.42647-1-shyamsaini@linux.microsoft.com>
+ <20230722014037.42647-2-shyamsaini@linux.microsoft.com> <CAPDyKFoBC+GaGerGDEAjg9q4ayV9mMBKkfFk3nO-zcQzOZ_H6Q@mail.gmail.com>
+ <b875892c-1777-d84a-987e-1b0d5ac29df@linux.microsoft.com> <94728786-b41b-1467-63c1-8e2d5acfa5e4@linaro.org>
+ <CAFA6WYNPViMs=3cbNsEdhqnjNOUCsHE_8uqiDTzwCKDNNiDkCw@mail.gmail.com>
+ <CAHUa44Ek0k2b-igA6Gd1ZXVzibTh2sNDMnE-weQwFFKEZ_1jOA@mail.gmail.com>
+ <CAC_iWjKKap47PhiCi=BfPZC_wJhVDB10WSf9oWMgdwSgWCfO_A@mail.gmail.com>
+ <CAFA6WYMPsBUutjKrm+6qTNHpVr80K2GcSLoYa+MFE3CfLSo8ew@mail.gmail.com> <226aa02d-1247-a42c-123d-1c86b6b43d9f@linux.microsoft.com>
+In-Reply-To: <226aa02d-1247-a42c-123d-1c86b6b43d9f@linux.microsoft.com>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Wed, 23 Aug 2023 10:04:20 +0200
+Message-ID: <CACRpkdb=AnJXG2J_DRsN-RUEh=7_eAs8+_CxPYuueVM0c=DP3Q@mail.gmail.com>
+Subject: Re: [RFC, PATCH 1/1] rpmb: add Replay Protected Memory Block (RPMB) driver
+To:     Shyam Saini <shyamsaini@linux.microsoft.com>
+Cc:     Sumit Garg <sumit.garg@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Jens Wiklander <jens.wiklander@linaro.org>,
+        Jerome Forissier <jerome.forissier@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
+        op-tee@lists.trustedfirmware.org, linux-scsi@vger.kernel.org,
+        =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>,
+        Tyler Hicks <code@tyhicks.com>,
+        "Srivatsa S . Bhat" <srivatsa@csail.mit.edu>,
+        Paul Moore <paul@paul-moore.com>,
+        Allen Pais <apais@linux.microsoft.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/22/23 21:16, Bart Van Assche wrote:
-> Introduce the .eh_needs_prepare_resubmit and the .eh_prepare_resubmit
-> function pointers in struct scsi_driver. Make the error handler call
-> .eh_prepare_resubmit() before resubmitting commands if any of the
-> .eh_needs_prepare_resubmit() invocations return true. A later patch
-> will use this functionality to sort SCSI commands by LBA from inside
-> the SCSI disk driver before these are resubmitted by the error handler.
-> 
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/scsi_error.c  | 65 ++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/scsi_priv.h   |  1 +
->   include/scsi/scsi_driver.h |  2 ++
->   3 files changed, 68 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index c67cdcdc3ba8..c4d817f044a0 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -27,6 +27,7 @@
->   #include <linux/blkdev.h>
->   #include <linux/delay.h>
->   #include <linux/jiffies.h>
-> +#include <linux/list_sort.h>
->   
->   #include <scsi/scsi.h>
->   #include <scsi/scsi_cmnd.h>
-> @@ -2186,6 +2187,68 @@ void scsi_eh_ready_devs(struct Scsi_Host *shost,
->   }
->   EXPORT_SYMBOL_GPL(scsi_eh_ready_devs);
->   
-> +/*
-> + * Returns true if .eh_prepare_resubmit should be called for the commands in
-> + * @done_q.
-> + */
-> +static bool scsi_needs_preparation(struct list_head *done_q)
-> +{
-> +	struct scsi_cmnd *scmd;
-> +
-> +	list_for_each_entry(scmd, done_q, eh_entry) {
-> +		struct scsi_driver *uld = scsi_cmd_to_driver(scmd);
-> +		bool (*npr)(struct scsi_cmnd *) = uld->eh_needs_prepare_resubmit;
-> +
-> +		if (npr && npr(scmd))
-> +			return true;
-> +	}
-> +
-> +	return false;
-> +}
-> + > +/*
-> + * Comparison function that allows to sort SCSI commands by ULD driver.
-> + */
-> +static int scsi_cmp_uld(void *priv, const struct list_head *_a,
-> +			const struct list_head *_b)
-> +{
-> +	struct scsi_cmnd *a = list_entry(_a, typeof(*a), eh_entry);
-> +	struct scsi_cmnd *b = list_entry(_b, typeof(*b), eh_entry);
-> +
-> +	/* See also the comment above the list_sort() definition. */
-> +	return scsi_cmd_to_driver(a) > scsi_cmd_to_driver(b);
+On Tue, Aug 22, 2023 at 9:07=E2=80=AFPM Shyam Saini
+<shyamsaini@linux.microsoft.com> wrote:
 
-I have to agree with Christoph here.
-Comparing LBA numbers at the SCSI level is really the wrong place.
-SCSI commands might be anything, and quite some of these commands don't
-even have LBA numbers. So trying to order them will be pointless.
+> do we plan to disable access to RPMB devices, once we have this RPMB
+> driver in place. User space tools like mmc-utils/nvme/ufs utils
+> can still access RPMB and programme the key and should
+> RPMB driver deny access to RPMB ?
 
-The reordering mechanism really has to go into the block layer, with
-the driver failing the request and the block layer resubmitting in-order.
+We don't break userspace. Just not. This is not an option.
 
-Sorry.
+The RPMB subsystem simply has to provide the rpmb character
+device the same way the MMC subsystem did, or provide an
+in-kernel backend to the MMC subsystem so that it can provide
+the same device. Whatever solution is best.
 
-Cheers,
+No deprecation and deletion and breaking userspace. Ever.
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+Yours,
+Linus Walleij
