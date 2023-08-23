@@ -2,100 +2,142 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7ADDEE49AE
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 08:10:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DA82EE4993
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 08:40:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233775AbjHWIKb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Aug 2023 04:10:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59200 "EHLO
+        id S234352AbjHWIkW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Aug 2023 04:40:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233736AbjHWIF4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 04:05:56 -0400
-Received: from mail-yb1-xb2c.google.com (mail-yb1-xb2c.google.com [IPv6:2607:f8b0:4864:20::b2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 148861721
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2023 01:04:34 -0700 (PDT)
-Received: by mail-yb1-xb2c.google.com with SMTP id 3f1490d57ef6-d77a4e30e97so995671276.2
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2023 01:04:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1692777873; x=1693382673;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4x18HgxcXuVIfqokI9MrmvgHbYOVzb20sqxbnbY2CMg=;
-        b=BHPJJYWgI3y8TP+PbXbXHe9EoUB31NFYFuLKGqC5SqPy+mO00AhzDYg37HhppnIFo/
-         SgZQ76lABeqqefWejNA8ZYtuNbl4+Jti7DDluHO3AdrC089eSQ7E0sQ8fO3c01iULqQe
-         +HPiFlsQiTi72puH++Rr3EHGb/gykt/ga28g3Ed48yIX9X3yf3APdqmO+ZpB6au+26e9
-         4Jq1uAwaTcoua7wJzglFidCTg03+QAN3H/A0wXe1BdIdY1dCpP+HY9KUJCDhjVGPeW+h
-         ElbRVjE3M6iDP/2zT3WjFNr3GZc/lBkpl72tSCK61cxQqfJqTeIXP1H7FurNxCVco1KL
-         vg6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692777873; x=1693382673;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4x18HgxcXuVIfqokI9MrmvgHbYOVzb20sqxbnbY2CMg=;
-        b=c8NdeE5J37p6x12IyiNpRntJhF5G7BUnQ2D3GYyeDQqEuheH6INfI073Kf5qOLbqIL
-         CC4LZV/jojK7g3tFKDLCrWqQV3aXvItnLUPuDsY2eU5SLKlHA38cbVmSsVb5N4hZmF3J
-         HXWbeLZVNhJBLoSphHMEGN8kk/EyScytvD3rC8fJ9gkp/i6vEbxZKVsNTR14MbdEyMTh
-         vR7QrInTcc3fQbij7eseXvmdEEFPzpYKwpEk4g/GkgZy6p2XyJjMdjd1XzARJyqd7Qn/
-         b/rHlPxfrctacESe8EtLHai0iJ9TZ4/G5SCg5TpESjMid09uCdMpxWj+RXjGQVjAuG91
-         RWvg==
-X-Gm-Message-State: AOJu0YwYuzoLzjeUVyFtqhmW2c+tviiBN8Whppooj6iXoqeQaCvw7f8r
-        sKO92hxT/aEQ748u6A3J8c9RO/KJzzF1Xb9/ApsaAg==
-X-Google-Smtp-Source: AGHT+IGrOMMEwVtHryHwU0XzgH5J6pb+GFBjuvEmvNHq8LAg555gZ6ClRom7dtM4aWc9Doh+9kYdPlPZ/Q8JzX59BZQ=
-X-Received: by 2002:a25:aa26:0:b0:d56:7556:93f1 with SMTP id
- s35-20020a25aa26000000b00d56755693f1mr12580669ybi.29.1692777873522; Wed, 23
- Aug 2023 01:04:33 -0700 (PDT)
+        with ESMTP id S234281AbjHWIiI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 04:38:08 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6354B10EB
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2023 01:36:34 -0700 (PDT)
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230823083630epoutp0291f82df363d7bda1fa86b7426602ccbb~99kBBWQAE0455304553epoutp02A
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2023 08:36:30 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230823083630epoutp0291f82df363d7bda1fa86b7426602ccbb~99kBBWQAE0455304553epoutp02A
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1692779790;
+        bh=Ii8WoNaCJtIXgM9alRAZ493rkok15OWS8yABytABtw4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=tZk+p5viTTr0UFoefZH2SthLeIegIE+Um+bpCc9XmSr9Or13VOc79o9KSeeX7+9h7
+         6y2r05d9Gxlt4GvyWUIb4lex9Vs3GzT7FLvmGUXqnaBBVJ1r0VVrvMjNOVEGaT6lG6
+         bfwkrv604qiCRG2I60dDv9FyBKdjfEOso3GKHb3U=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20230823083630epcas5p3c12027568fa9c178f92dd0a35fba72ee~99kAr_OwI3073130731epcas5p3t;
+        Wed, 23 Aug 2023 08:36:30 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.181]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4RW01S3lwgz4x9Q2; Wed, 23 Aug
+        2023 08:36:28 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        CB.ED.44250.C05C5E46; Wed, 23 Aug 2023 17:36:28 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230823081141epcas5p334bc13e48a06ee3b518be9a33bc105d9~99OVs24XB2582625826epcas5p3Y;
+        Wed, 23 Aug 2023 08:11:41 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230823081141epsmtrp2c794a1110177027b69a56b07425e22f7~99OVrPeGM0327903279epsmtrp2b;
+        Wed, 23 Aug 2023 08:11:41 +0000 (GMT)
+X-AuditID: b6c32a4a-c4fff7000000acda-ba-64e5c50cb73f
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E9.4D.64355.C3FB5E46; Wed, 23 Aug 2023 17:11:41 +0900 (KST)
+Received: from green245 (unknown [107.99.41.245]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230823081139epsmtip1a5ef02a6acc827de23eee7c88be2d01e~99OUEEUX32123121231epsmtip1j;
+        Wed, 23 Aug 2023 08:11:39 +0000 (GMT)
+Date:   Wed, 23 Aug 2023 13:38:20 +0530
+From:   Nitesh Shetty <nj.shetty@samsung.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v11 01/16] block: Introduce more member variables
+ related to zone write locking
+Message-ID: <20230823080820.oxgehloydemqg466@green245>
 MIME-Version: 1.0
-References: <20230722014037.42647-1-shyamsaini@linux.microsoft.com>
- <20230722014037.42647-2-shyamsaini@linux.microsoft.com> <CAPDyKFoBC+GaGerGDEAjg9q4ayV9mMBKkfFk3nO-zcQzOZ_H6Q@mail.gmail.com>
- <b875892c-1777-d84a-987e-1b0d5ac29df@linux.microsoft.com> <94728786-b41b-1467-63c1-8e2d5acfa5e4@linaro.org>
- <CAFA6WYNPViMs=3cbNsEdhqnjNOUCsHE_8uqiDTzwCKDNNiDkCw@mail.gmail.com>
- <CAHUa44Ek0k2b-igA6Gd1ZXVzibTh2sNDMnE-weQwFFKEZ_1jOA@mail.gmail.com>
- <CAC_iWjKKap47PhiCi=BfPZC_wJhVDB10WSf9oWMgdwSgWCfO_A@mail.gmail.com>
- <CAFA6WYMPsBUutjKrm+6qTNHpVr80K2GcSLoYa+MFE3CfLSo8ew@mail.gmail.com> <226aa02d-1247-a42c-123d-1c86b6b43d9f@linux.microsoft.com>
-In-Reply-To: <226aa02d-1247-a42c-123d-1c86b6b43d9f@linux.microsoft.com>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Wed, 23 Aug 2023 10:04:20 +0200
-Message-ID: <CACRpkdb=AnJXG2J_DRsN-RUEh=7_eAs8+_CxPYuueVM0c=DP3Q@mail.gmail.com>
-Subject: Re: [RFC, PATCH 1/1] rpmb: add Replay Protected Memory Block (RPMB) driver
-To:     Shyam Saini <shyamsaini@linux.microsoft.com>
-Cc:     Sumit Garg <sumit.garg@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        Jens Wiklander <jens.wiklander@linaro.org>,
-        Jerome Forissier <jerome.forissier@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-        op-tee@lists.trustedfirmware.org, linux-scsi@vger.kernel.org,
-        =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Arnd Bergmann <arnd.bergmann@linaro.org>,
-        Tyler Hicks <code@tyhicks.com>,
-        "Srivatsa S . Bhat" <srivatsa@csail.mit.edu>,
-        Paul Moore <paul@paul-moore.com>,
-        Allen Pais <apais@linux.microsoft.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20230822191822.337080-2-bvanassche@acm.org>
+User-Agent: NeoMutt/20171215
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrBJsWRmVeSWpSXmKPExsWy7bCmli7P0acpBpM2ylisvtvPZjHtw09m
+        iwf77S1Wrj7KZLH3lrZF9/UdbBbLj/9jsjg0uZnJgcPj8hVvj8tnSz02repk89h9s4HN4+PT
+        Wywe7/ddZfP4vEkugD0q2yYjNTEltUghNS85PyUzL91WyTs43jne1MzAUNfQ0sJcSSEvMTfV
+        VsnFJ0DXLTMH6CIlhbLEnFKgUEBicbGSvp1NUX5pSapCRn5xia1SakFKToFJgV5xYm5xaV66
+        Xl5qiZWhgYGRKVBhQnbGogvzWQvec1T8+XeNqYHxFnsXIweHhICJxL8J3l2MXBxCArsZJX5/
+        /c0O4XxilOhY/JEZzlky8R1rFyMnWMeBJycYIRI7GSXW9j5ghXCeMUos/PCQHaSKRUBV4tC6
+        Y2wgO9gEtCVO/+cACYsIaEh8e7CcBaSeWeAHUP2GfywgCWGBVIk/fT3MIDavgJnEh+9TmSBs
+        QYmTM5+A1XAKWEpsbVvACGKLCshIzFj6Few8CYFeDonfm1pYIM5zkehe/R7qVGGJV8e3sEPY
+        UhKf3+1lg7DLJVZOWcEG0dzCKDHr+ixGiIS9ROupfrArmAUyJC4ceAE1VFZi6ql1TBBxPone
+        30+YIOK8EjvmwdjKEmvWL4BaIClx7XsjlO0h0XS2lxUexAc3NzJPYJSfheS7WUj2QdhWEp0f
+        mlhnAUOPWUBaYvk/DghTU2L9Lv0FjKyrGCVTC4pz01OLTQuM8lLL4VGenJ+7iRGcZLW8djA+
+        fPBB7xAjEwfjIUYJDmYlEV7p7w9ThHhTEiurUovy44tKc1KLDzGaAmNrIrOUaHI+MM3nlcQb
+        mlgamJiZmZlYGpsZKonzvm6dmyIkkJ5YkpqdmlqQWgTTx8TBKdXAtO5vgFH7ydsxE9pT0x5E
+        OFxQvGdvGWszz6btF0tse+yhKco/At7mXZ/YPvvIlXPVc7pZVae9a2zO6D2lvO36wier26rm
+        aX1w3m/Mk/DPdcHZfwZy0xjWr5efq9T6xv5FmN/VDDV1Ps2y2oXCP/5OjU0P8TBdbLCqvOwY
+        l3Git8Klua9W8G4/fG5tE+defR2j5CssDNKeH8/fOXje4J/647C6xT+XKah8t0j/LWtvPmXR
+        98mSqQk1l9qNWXOT9//uzSgOEbimOYd10v3cXK9JDJfDeqpM4kU8Eh6F5PDVeX8stDfNTJ3b
+        eEE6u6QhNfVCzbwkU8bi46yHHGqFBDyrdPoVdSIu/hOX/PGYQ1+JpTgj0VCLuag4EQA3hScQ
+        OwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrMLMWRmVeSWpSXmKPExsWy7bCSnK7t/qcpBncnMFqsvtvPZjHtw09m
+        iwf77S1Wrj7KZLH3lrZF9/UdbBbLj/9jsjg0uZnJgcPj8hVvj8tnSz02repk89h9s4HN4+PT
+        Wywe7/ddZfP4vEkugD2KyyYlNSezLLVI3y6BK2PmhQPMBQvZKk6c383WwLiMtYuRk0NCwETi
+        wJMTjF2MXBxCAtsZJaa/OMEEkZCUWPb3CDOELSyx8t9zdhBbSOAJo8Ttu6EgNouAqsShdcfY
+        uhg5ONgEtCVO/+cACYsIaEh8e7CcBWQms8AvRok5f+cxgiSEBVIlDm+YDDafV8BM4sP3qUwQ
+        M9Ml5m1dygwRF5Q4OfMJC4jNDFQzb/NDZpD5zALSEsv/gc3nFLCU2Nq2AGykqICMxIylX5kn
+        MArOQtI9C0n3LITuBYzMqxhFUwuKc9NzkwsM9YoTc4tL89L1kvNzNzGC40EraAfjsvV/9Q4x
+        MnEwHmKU4GBWEuGV/v4wRYg3JbGyKrUoP76oNCe1+BCjNAeLkjivck5nCtD5iSWp2ampBalF
+        MFkmDk6pBqapieHLz0WkFjs4bM2+wsjTaqm4fYHSDveHWtNLnDosZ1/jXnEtomAd756NRmd/
+        WWv9/mycs/5UYMMbrdmbfhhxREx0WFH+4fLXRcGtqhx/GHO/Pha0emEa+tJy59E9MW8O2q6t
+        +di7pmnG8a5NIVOmdi1+8H71Qvcnk0KePE90q9/iM/9BMnMT+/FHOe9y1klpyM0Wl2k5JTvv
+        weeYzdkfwniKBZX4lqvtKwq/2bH289SvYQf0X8pGVa3dXzMt7OC2I/lPXmfEt3x18hJX+rf1
+        XRCzWpK5bo9HqU/hp7QMy+8voth1nFiTbz1+I9Aq0/u9NmjZVCPOONuoQOa+WRP15peJlG6P
+        2P5TRlGcb6ESS3FGoqEWc1FxIgCFL4Le9gIAAA==
+X-CMS-MailID: 20230823081141epcas5p334bc13e48a06ee3b518be9a33bc105d9
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+        boundary="----2jlpTr02XJ1Dz0Ro0nWDo60KkQ.efMTj2bJXEJ.ys0a_1.o3=_8083f_"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230823081141epcas5p334bc13e48a06ee3b518be9a33bc105d9
+References: <20230822191822.337080-1-bvanassche@acm.org>
+        <20230822191822.337080-2-bvanassche@acm.org>
+        <CGME20230823081141epcas5p334bc13e48a06ee3b518be9a33bc105d9@epcas5p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 22, 2023 at 9:07=E2=80=AFPM Shyam Saini
-<shyamsaini@linux.microsoft.com> wrote:
+------2jlpTr02XJ1Dz0Ro0nWDo60KkQ.efMTj2bJXEJ.ys0a_1.o3=_8083f_
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Disposition: inline
 
-> do we plan to disable access to RPMB devices, once we have this RPMB
-> driver in place. User space tools like mmc-utils/nvme/ufs utils
-> can still access RPMB and programme the key and should
-> RPMB driver deny access to RPMB ?
+On 23/08/22 12:16PM, Bart Van Assche wrote:
+>Many but not all storage controllers require serialization of zoned writes.
+>Introduce two new request queue limit member variables related to write
+>serialization. 'driver_preserves_write_order' allows block drivers to
+>indicate that the order of write commands is preserved and hence that
+>serialization of writes per zone is not required. 'use_zone_write_lock' is
+>set by disk_set_zoned() if and only if the block device has zones and if
+>the block driver does not preserve the order of write requests.
+>
+>Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+>Cc: Christoph Hellwig <hch@lst.de>
+>Cc: Ming Lei <ming.lei@redhat.com>
+>Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>---
 
-We don't break userspace. Just not. This is not an option.
+Reviewed-by: Nitesh Shetty <nj.shetty@samsung.com>
 
-The RPMB subsystem simply has to provide the rpmb character
-device the same way the MMC subsystem did, or provide an
-in-kernel backend to the MMC subsystem so that it can provide
-the same device. Whatever solution is best.
+------2jlpTr02XJ1Dz0Ro0nWDo60KkQ.efMTj2bJXEJ.ys0a_1.o3=_8083f_
+Content-Type: text/plain; charset="utf-8"
 
-No deprecation and deletion and breaking userspace. Ever.
 
-Yours,
-Linus Walleij
+------2jlpTr02XJ1Dz0Ro0nWDo60KkQ.efMTj2bJXEJ.ys0a_1.o3=_8083f_--
