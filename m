@@ -2,230 +2,125 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E232EE49B9
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 10:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2037EE49A3
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Aug 2023 15:17:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234209AbjHWKuZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Aug 2023 06:50:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34038 "EHLO
+        id S236859AbjHWPRi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Aug 2023 11:17:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232494AbjHWKuG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 06:50:06 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3519E5A;
-        Wed, 23 Aug 2023 03:49:25 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id DD73121F46;
-        Wed, 23 Aug 2023 10:48:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1692787738; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=xLp8wxdpKpq8KTQotrZDbbnw1nZi05RZ0xIeaAOP2x4=;
-        b=i4MLB5+BZGRlAVIOnQNWV2KtbDqP1LLiqJk8XnLozBQIqF4hGi7oPeFBJH2l60Ho8NJGSa
-        38FppjxGs16pCwGz/xlaVDAcpkTn7I/iorICvcjpqttBqIEKG5T561IX5lFk2wHLktBgIt
-        aw+PKxy0GOtQ4H23RIQ7UOWko3SI/PM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1692787738;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=xLp8wxdpKpq8KTQotrZDbbnw1nZi05RZ0xIeaAOP2x4=;
-        b=kUSs9Z3bn6eUI+XIoAhTpobeuWWFRDqiEp52dbKNrSXgOuxDaXisMSpHLNC6FJnimgg8cv
-        /UadFtIImI/NKUCg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C35EA13592;
-        Wed, 23 Aug 2023 10:48:58 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id eyenLxrk5WRTIAAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 23 Aug 2023 10:48:58 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 60F96A078F; Wed, 23 Aug 2023 12:48:57 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, <linux-fsdevel@vger.kernel.org>,
-        <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/29] scsi: target: Convert to bdev_open_by_path()
-Date:   Wed, 23 Aug 2023 12:48:26 +0200
-Message-Id: <20230823104857.11437-15-jack@suse.cz>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20230818123232.2269-1-jack@suse.cz>
-References: <20230818123232.2269-1-jack@suse.cz>
+        with ESMTP id S236635AbjHWPRf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2023 11:17:35 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB38FE7B;
+        Wed, 23 Aug 2023 08:17:08 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-68a5457b930so2274862b3a.2;
+        Wed, 23 Aug 2023 08:17:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692803750; x=1693408550;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zODWKjFLTG3KmUmUSCQMpsPng8pgZqpf54yZxjbJeIM=;
+        b=Mbvia6qOwvJMIc84ucyrorABNwIaVgU7xgFquIfaU1P0V4BiFSf1RGYaQbBbNWEAUD
+         /jpGJicYQ9mqdget5pA8lFwZFjPvsebpNB+Uli6vN1UUGZ5vaAUFgwgxREgFNX0tpkFK
+         HdtXi/ayQI6/K02iBf1jJG/vE49Ag9TvyW58yfcDyK+63MigH20l46tEDyvDMW/x32/e
+         Vu3yCWrF8JYIDN2yCMA/d3xIStEO35c3Gk5u7+IXyoyAteMCVG/ImCTQ7pSWERLksHVy
+         N5z/dMJkJHXRULkJAHz2nrXcUAeO63iRSIANdXYxg00T3otlErAaggYm6Z351ifpozuC
+         u9hg==
+X-Gm-Message-State: AOJu0YzfkRAK1LnTWfULv0AVZxdLD2TQkCyygcnMh66k0lAy6vzhF+cA
+        T/J6Jjo9Ejw5m/SArnK5zq4=
+X-Google-Smtp-Source: AGHT+IEn9RxZPIi/WKzeL2IegtOWXt2Mn6gK9OOAe4ovitiHA04S28ASCgRbLGZCBJ5jxFFtvK946g==
+X-Received: by 2002:a05:6a20:548f:b0:137:23f1:4281 with SMTP id i15-20020a056a20548f00b0013723f14281mr12825204pzk.12.1692803749675;
+        Wed, 23 Aug 2023 08:15:49 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ecb6:e8b9:f433:b4b4? ([2620:15c:211:201:ecb6:e8b9:f433:b4b4])
+        by smtp.gmail.com with ESMTPSA id f21-20020a170902e99500b001b896686c78sm11068708plb.66.2023.08.23.08.15.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Aug 2023 08:15:48 -0700 (PDT)
+Message-ID: <078d2954-f4af-6678-29ce-d8f65ff1397a@acm.org>
+Date:   Wed, 23 Aug 2023 08:15:47 -0700
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5419; i=jack@suse.cz; h=from:subject; bh=6kZvIq8BZizDHY8AGnmJ3i/dK8lV3iBpu+CtF7nME7M=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBk5eP7oIFf66pcHWOaFjbkKBeqFiapoWsAciZgdrSG K/m0GauJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZOXj+wAKCRCcnaoHP2RA2f9CCA CDmUs+SH0RqU6uC1VVkYLvqWDeQV/uOmRnoGAWfEvQ98+vHWaRygHr9PXLFYuCT+I4H/caIfK6Chma wQAvV1jLDwita3AK8vwlMF1/7pioa1XLFQQErVXXUUW3gtIxERfB0+ew2qJEs1TGFc+nqWNEKZtUKo NyCeyCR8ViEFw9XP8kR0bi3rJ9stipaMNRm4oH2C8HZEitR09hdGB5S26BeNgZNB6C+p1W7bs340// OX9+ivxqM65EbX4frfp75G+jrdY7aOfpDaD9HTOs6G9xgkBoq/pWOMDNci9AiriBXOnJkk5dWolPcG gWBu8s0+jJkIspiGCW2u3LDKCZE4mA
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.1
+Subject: Re: [PATCH v11 04/16] scsi: core: Introduce a mechanism for
+ reordering requests in the error handler
+Content-Language: en-US
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20230822191822.337080-1-bvanassche@acm.org>
+ <20230822191822.337080-5-bvanassche@acm.org>
+ <3562fc36-4bc2-b4fb-a2ad-1e310baf1b47@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <3562fc36-4bc2-b4fb-a2ad-1e310baf1b47@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Convert iblock and pscsi drivers to use bdev_open_by_path() and pass the
-handle around.
+On 8/22/23 23:26, Hannes Reinecke wrote:
+> On 8/22/23 21:16, Bart Van Assche wrote:
+>> +/*
+>> + * Comparison function that allows to sort SCSI commands by ULD driver.
+>> + */
+>> +static int scsi_cmp_uld(void *priv, const struct list_head *_a,
+>> +            const struct list_head *_b)
+>> +{
+>> +    struct scsi_cmnd *a = list_entry(_a, typeof(*a), eh_entry);
+>> +    struct scsi_cmnd *b = list_entry(_b, typeof(*b), eh_entry);
+>> +
+>> +    /* See also the comment above the list_sort() definition. */
+>> +    return scsi_cmd_to_driver(a) > scsi_cmd_to_driver(b);
+> 
+> I have to agree with Christoph here.
+> Comparing LBA numbers at the SCSI level is really the wrong place.
+> SCSI commands might be anything, and quite some of these commands don't
+> even have LBA numbers. So trying to order them will be pointless.
+> 
+> The reordering mechanism really has to go into the block layer, with
+> the driver failing the request and the block layer resubmitting in-order.
 
-CC: target-devel@vger.kernel.org
-CC: linux-scsi@vger.kernel.org
-Acked-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- drivers/target/target_core_iblock.c | 19 +++++++++++--------
- drivers/target/target_core_iblock.h |  1 +
- drivers/target/target_core_pscsi.c  | 26 +++++++++++++-------------
- drivers/target/target_core_pscsi.h  |  2 +-
- 4 files changed, 26 insertions(+), 22 deletions(-)
+Hi Hannes,
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 3d1b511ea284..3695a9f8d8a5 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -91,7 +91,8 @@ static int iblock_configure_device(struct se_device *dev)
- {
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
- 	struct request_queue *q;
--	struct block_device *bd = NULL;
-+	struct bdev_handle *bdev_handle;
-+	struct block_device *bd;
- 	struct blk_integrity *bi;
- 	blk_mode_t mode = BLK_OPEN_READ;
- 	unsigned int max_write_zeroes_sectors;
-@@ -116,12 +117,14 @@ static int iblock_configure_device(struct se_device *dev)
- 	else
- 		dev->dev_flags |= DF_READ_ONLY;
- 
--	bd = blkdev_get_by_path(ib_dev->ibd_udev_path, mode, ib_dev, NULL);
--	if (IS_ERR(bd)) {
--		ret = PTR_ERR(bd);
-+	bdev_handle = bdev_open_by_path(ib_dev->ibd_udev_path, mode, ib_dev,
-+					NULL);
-+	if (IS_ERR(bdev_handle)) {
-+		ret = PTR_ERR(bdev_handle);
- 		goto out_free_bioset;
- 	}
--	ib_dev->ibd_bd = bd;
-+	ib_dev->ibd_bdev_handle = bdev_handle;
-+	ib_dev->ibd_bd = bd = bdev_handle->bdev;
- 
- 	q = bdev_get_queue(bd);
- 
-@@ -177,7 +180,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	return 0;
- 
- out_blkdev_put:
--	blkdev_put(ib_dev->ibd_bd, ib_dev);
-+	bdev_release(ib_dev->ibd_bdev_handle);
- out_free_bioset:
- 	bioset_exit(&ib_dev->ibd_bio_set);
- out:
-@@ -202,8 +205,8 @@ static void iblock_destroy_device(struct se_device *dev)
- {
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
- 
--	if (ib_dev->ibd_bd != NULL)
--		blkdev_put(ib_dev->ibd_bd, ib_dev);
-+	if (ib_dev->ibd_bdev_handle)
-+		bdev_release(ib_dev->ibd_bdev_handle);
- 	bioset_exit(&ib_dev->ibd_bio_set);
- }
- 
-diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
-index 8c55375d2f75..683f9a55945b 100644
---- a/drivers/target/target_core_iblock.h
-+++ b/drivers/target/target_core_iblock.h
-@@ -32,6 +32,7 @@ struct iblock_dev {
- 	u32	ibd_flags;
- 	struct bio_set	ibd_bio_set;
- 	struct block_device *ibd_bd;
-+	struct bdev_handle *ibd_bdev_handle;
- 	bool ibd_readonly;
- 	struct iblock_dev_plug *ibd_plug;
- } ____cacheline_aligned;
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 0d4f09693ef4..41b7489d37ce 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -352,7 +352,7 @@ static int pscsi_create_type_disk(struct se_device *dev, struct scsi_device *sd)
- 	struct pscsi_hba_virt *phv = dev->se_hba->hba_ptr;
- 	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
- 	struct Scsi_Host *sh = sd->host;
--	struct block_device *bd;
-+	struct bdev_handle *bdev_handle;
- 	int ret;
- 
- 	if (scsi_device_get(sd)) {
-@@ -366,18 +366,18 @@ static int pscsi_create_type_disk(struct se_device *dev, struct scsi_device *sd)
- 	 * Claim exclusive struct block_device access to struct scsi_device
- 	 * for TYPE_DISK and TYPE_ZBC using supplied udev_path
- 	 */
--	bd = blkdev_get_by_path(dev->udev_path, BLK_OPEN_WRITE | BLK_OPEN_READ,
--				pdv, NULL);
--	if (IS_ERR(bd)) {
--		pr_err("pSCSI: blkdev_get_by_path() failed\n");
-+	bdev_handle = bdev_open_by_path(dev->udev_path,
-+				BLK_OPEN_WRITE | BLK_OPEN_READ, pdv, NULL);
-+	if (IS_ERR(bdev_handle)) {
-+		pr_err("pSCSI: bdev_open_by_path() failed\n");
- 		scsi_device_put(sd);
--		return PTR_ERR(bd);
-+		return PTR_ERR(bdev_handle);
- 	}
--	pdv->pdv_bd = bd;
-+	pdv->pdv_bdev_handle = bdev_handle;
- 
- 	ret = pscsi_add_device_to_list(dev, sd);
- 	if (ret) {
--		blkdev_put(pdv->pdv_bd, pdv);
-+		bdev_release(bdev_handle);
- 		scsi_device_put(sd);
- 		return ret;
- 	}
-@@ -564,9 +564,9 @@ static void pscsi_destroy_device(struct se_device *dev)
- 		 * from pscsi_create_type_disk()
- 		 */
- 		if ((sd->type == TYPE_DISK || sd->type == TYPE_ZBC) &&
--		    pdv->pdv_bd) {
--			blkdev_put(pdv->pdv_bd, pdv);
--			pdv->pdv_bd = NULL;
-+		    pdv->pdv_bdev_handle) {
-+			bdev_release(pdv->pdv_bdev_handle);
-+			pdv->pdv_bdev_handle = NULL;
- 		}
- 		/*
- 		 * For HBA mode PHV_LLD_SCSI_HOST_NO, release the reference
-@@ -994,8 +994,8 @@ static sector_t pscsi_get_blocks(struct se_device *dev)
- {
- 	struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
- 
--	if (pdv->pdv_bd)
--		return bdev_nr_sectors(pdv->pdv_bd);
-+	if (pdv->pdv_bdev_handle)
-+		return bdev_nr_sectors(pdv->pdv_bdev_handle->bdev);
- 	return 0;
- }
- 
-diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
-index 23d9a6e340d4..b0a3ef136592 100644
---- a/drivers/target/target_core_pscsi.h
-+++ b/drivers/target/target_core_pscsi.h
-@@ -37,7 +37,7 @@ struct pscsi_dev_virt {
- 	int	pdv_channel_id;
- 	int	pdv_target_id;
- 	int	pdv_lun_id;
--	struct block_device *pdv_bd;
-+	struct bdev_handle *pdv_bdev_handle;
- 	struct scsi_device *pdv_sd;
- 	struct Scsi_Host *pdv_lld_host;
- } ____cacheline_aligned;
--- 
-2.35.3
+Please take another look at patches 04/16 and 05/16. As one can see no
+LBA numbers are being compared in the SCSI core - comparing LBA numbers
+happens in the sd (SCSI disk) driver. The code that you replied to
+compares ULD pointers, a well-defined concept in the SCSI core.
 
+Your request to move the functionality from patches 04/16 and 05/16 into
+the block layer would involve the following:
+* Report the unaligned write errors (because a write did not happen at the
+   write pointer) to the block layer (BLK_STS_WP_MISMATCH?).
+* Introduce a mechanism in the block layer for postponing error handling
+   until all outstanding commands have failed. The approach from the SCSI
+   core (tracking the number of failed and the number of busy commands
+   and only waking up the error handler after these counters are equal)
+   would be unacceptable because of the runtime overhead this mechanism
+   would introduce in the block layer hot path. Additionally, I strongly
+   doubt that it is possible to introduce any mechanism for postponing
+   error handling in the block layer without introducing additional
+   overhead in the hot path.
+* Christoph's opinion is that NVMe software should use zone append
+   (REQ_OP_ZONE_APPEND) instead of regular writes (REQ_OP_WRITE) when
+   writing to a zoned namespace. So the SCSI subsystem would be the only
+   user of the new mechanism introduced in the block layer. The reason we
+   chose REQ_OP_WRITE for zoned UFS devices is because the SCSI standard
+   does not support a zone append command and introducing a zone append
+   command in the SCSI standards is not something that can be realized in
+   time for the first generation of zoned UFS devices.
+
+Because I assume that both Jens and Christoph disagree strongly with your
+request: I have no plans to move the code for sorting zoned writes into
+the block layer core.
+
+Jens and Christoph, please correct me if I misunderstood something.
+
+Thanks,
+
+Bart.
