@@ -2,70 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 626B4C27C40
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Aug 2023 14:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45567C27C40
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Aug 2023 14:08:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239430AbjHXOCR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Aug 2023 10:02:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43284 "EHLO
+        id S241449AbjHXOIR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Aug 2023 10:08:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241300AbjHXOBt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 10:01:49 -0400
-Received: from mail-vs1-xe30.google.com (mail-vs1-xe30.google.com [IPv6:2607:f8b0:4864:20::e30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BFA21BC0
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Aug 2023 07:01:40 -0700 (PDT)
-Received: by mail-vs1-xe30.google.com with SMTP id ada2fe7eead31-44d60bb6a96so1193047137.1
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Aug 2023 07:01:40 -0700 (PDT)
+        with ESMTP id S241454AbjHXOHw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 10:07:52 -0400
+Received: from mail-ua1-x934.google.com (mail-ua1-x934.google.com [IPv6:2607:f8b0:4864:20::934])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C771F10FF
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Aug 2023 07:07:44 -0700 (PDT)
+Received: by mail-ua1-x934.google.com with SMTP id a1e0cc1a2514c-7a29ef55d5fso528643241.3
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Aug 2023 07:07:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1692885699; x=1693490499;
+        d=linaro.org; s=google; t=1692886064; x=1693490864;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=rgE1Z6hS5PELjPgipAhTPY+hEOvvc5P1iG+fu9pr+/k=;
-        b=I/VxC+vxoc/EHs7XzgN70uqxwVQTpl3vtai+42TcV7nR3KFDq5Jz+LHjOIETirfusw
-         aZE7uWz37nO2Ojt+VPpwhNsdgir8vpsjIlQzUeYrBCorvnmx2/Y9kBbGauUj6qZ4TNuq
-         WlmmW5m4pn3UxEM0879scGUNVrSz67NVYjRpGJUZ9tBIE3byC19kIQ8qfO5ETL4mcM64
-         1+o1S02w66PI4vGBv+5MV5OOENYuz0mJzG2N8+3Z6zeS6EQ/eXXWl77RjE2LmIUDwyki
-         0phopVDvdd95+88ffBZG/qhNtStivEf8hD1kd7jAE033VppkBzSNKEx05mqeaAvV6Gab
-         J40w==
+        bh=nubETBtS1dSMDEJwWh8wDc13qNb3ZnI/Mhe6CDKWUrY=;
+        b=NDBBXis0GAqmpnhGcmqetzvHRk95k4JKV94ty/pUhLVbOloUBxQYr6ACZU7+U8noVR
+         gZT+t6qPDRPXoXbFz6ftt7wMu7K3zk57zdbLsMVHLy+bU6UijdY94FfDbIVUIAMlPPoc
+         iW8vVCSAOrzxMA8bZcze96fJObEiKDjNMZzYO8Knu3YzV6hSOo7lOk4ng5mhRZ0AaAY9
+         AepZ0+vOq2rYi6EdpG4BaDRGfUFTmYTJVgVFXJ3SRFhtrvN2q1CPYmZIR23AlAeTTLjk
+         tiVSvAavhpwAL/nq/v1a9HQUNZuj4E35rKow8gIs7CID/qadF/0BSsh3ZcwJDlNJTWLO
+         +kdw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692885699; x=1693490499;
+        d=1e100.net; s=20221208; t=1692886064; x=1693490864;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=rgE1Z6hS5PELjPgipAhTPY+hEOvvc5P1iG+fu9pr+/k=;
-        b=JeSR8E8wzHY54ZfslBm6QhJS9B/GO+0BOxk/uCr/koIT+iSxeH5fTNmbsv/9c6UcMi
-         qsiC6AZpdzeqOANHVBiM/3Og/XcfRF2x0yclEvyZOyvtVs0TEa+u4dy9stqsMaz9yPSb
-         VIubjQtT0vpsTR5ko1fgzsGzksBG/3ww3gGGulOk8Sm4Dj4fiqDwGX8sy2yuPeG1fc9O
-         vLhq5pi9OJEN+8XT/ebjDOQjb/NViq5BdSdMjEGHYZc2gmolkscRpWYydOGmurhoX4cd
-         yb4EvWksOZuexrFvHdAKJzpfPKj2p89cXlOM9qtjxVPIlZW1ILqkmjruc7ICfKXBsQ0R
-         HT8w==
-X-Gm-Message-State: AOJu0YwM2MbUQvHZP/NELi6cdfOu8baZJi+/1SqLQkrx6RSBQUvEnlyn
-        9ihtl2PBY5fn3fgTqYdHNQ6y8ooATHkZ7weKaKdrpg==
-X-Google-Smtp-Source: AGHT+IExU45Wzw0uDMlScM3eigEjBo+8qsRt5W/u2kC/1ACD7gi5tr+OsjcvOtx3XwBJj1sC2cOVTqxGHuIn12NMr2I=
-X-Received: by 2002:a67:e9d6:0:b0:44e:9ab0:ed24 with SMTP id
- q22-20020a67e9d6000000b0044e9ab0ed24mr1452325vso.24.1692885699504; Thu, 24
- Aug 2023 07:01:39 -0700 (PDT)
+        bh=nubETBtS1dSMDEJwWh8wDc13qNb3ZnI/Mhe6CDKWUrY=;
+        b=NBLbZ6eTu7fZCxGvs2Tx+7WU6s6dSBAze0uZR5FPp7Es2V1ggK/QsKj03+ewNvFsf8
+         M6VZf3EjtEjCVqWWNfOEHA/VAQ79eo2dVg5846oKfDOjAhUUECOesFrXbmtLWkd2j2Gc
+         MXZsHrqaOyMZoG5k2SakDbg5EjRllddjRa1TEdFTxW0WDE74svXRO4RRd3rmWzgdeGQN
+         GF/YyT/jghDuSMqZnTLv870ZbKanqn4QYcriuktupQxLxwNmt8DNw8vq2NH3fKVSZrtI
+         QkoHNdl2xP0l//D9dNNNaPT1rZG+dWq2sfMUNeDlAYdddCtKIh0FagdpotbYg3QYKko6
+         2Wvw==
+X-Gm-Message-State: AOJu0YzsxkxEDKUs35vPx9kXuO5D//uBowyXGjaWaLZHumnCIjkwrW59
+        Mo4d/+JQbI5asAheWjhQto3XaUCDsYdMV4RzEGBLPw==
+X-Google-Smtp-Source: AGHT+IFi8WE8IuqIkp3xscE8hBCweptvFoLBwE4VDIDacVQuEjD3TVXgS17/HTbfVwoLKABmUudE1m0H55XNC6Bzio0=
+X-Received: by 2002:a05:6102:7b0:b0:44d:55a4:227a with SMTP id
+ x16-20020a05610207b000b0044d55a4227amr9065006vsg.14.1692886063858; Thu, 24
+ Aug 2023 07:07:43 -0700 (PDT)
 MIME-Version: 1.0
 References: <20230722014037.42647-1-shyamsaini@linux.microsoft.com>
  <20230722014037.42647-2-shyamsaini@linux.microsoft.com> <CAPDyKFoBC+GaGerGDEAjg9q4ayV9mMBKkfFk3nO-zcQzOZ_H6Q@mail.gmail.com>
  <b875892c-1777-d84a-987e-1b0d5ac29df@linux.microsoft.com> <94728786-b41b-1467-63c1-8e2d5acfa5e4@linaro.org>
- <CAFA6WYNPViMs=3cbNsEdhqnjNOUCsHE_8uqiDTzwCKDNNiDkCw@mail.gmail.com> <d24dba8-a777-1acb-98f0-747998b6e8a3@linux.microsoft.com>
-In-Reply-To: <d24dba8-a777-1acb-98f0-747998b6e8a3@linux.microsoft.com>
+ <CAFA6WYNPViMs=3cbNsEdhqnjNOUCsHE_8uqiDTzwCKDNNiDkCw@mail.gmail.com>
+ <CAHUa44Ek0k2b-igA6Gd1ZXVzibTh2sNDMnE-weQwFFKEZ_1jOA@mail.gmail.com>
+ <CAC_iWjKKap47PhiCi=BfPZC_wJhVDB10WSf9oWMgdwSgWCfO_A@mail.gmail.com>
+ <CAFA6WYMPsBUutjKrm+6qTNHpVr80K2GcSLoYa+MFE3CfLSo8ew@mail.gmail.com>
+ <226aa02d-1247-a42c-123d-1c86b6b43d9f@linux.microsoft.com> <CACRpkdb=AnJXG2J_DRsN-RUEh=7_eAs8+_CxPYuueVM0c=DP3Q@mail.gmail.com>
+In-Reply-To: <CACRpkdb=AnJXG2J_DRsN-RUEh=7_eAs8+_CxPYuueVM0c=DP3Q@mail.gmail.com>
 From:   Sumit Garg <sumit.garg@linaro.org>
-Date:   Thu, 24 Aug 2023 19:31:28 +0530
-Message-ID: <CAFA6WYMYepbFwF0nWpR1vNkmzvFUoNojY1cWRPtGQAF8U8ngfA@mail.gmail.com>
+Date:   Thu, 24 Aug 2023 19:37:32 +0530
+Message-ID: <CAFA6WYNzLj3ZGj0MP_8n-9ZsMrHs+nFyd11XTARTUXHv4gFs3Q@mail.gmail.com>
 Subject: Re: [RFC, PATCH 1/1] rpmb: add Replay Protected Memory Block (RPMB) driver
-To:     Shyam Saini <shyamsaini@linux.microsoft.com>
-Cc:     Jerome Forissier <jerome.forissier@linaro.org>,
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     Shyam Saini <shyamsaini@linux.microsoft.com>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Jens Wiklander <jens.wiklander@linaro.org>,
+        Jerome Forissier <jerome.forissier@linaro.org>,
         Ulf Hansson <ulf.hansson@linaro.org>,
         linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
         op-tee@lists.trustedfirmware.org, linux-scsi@vger.kernel.org,
         =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
         Tomas Winkler <tomas.winkler@intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
         Arnd Bergmann <arnd.bergmann@linaro.org>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
         Tyler Hicks <code@tyhicks.com>,
         "Srivatsa S . Bhat" <srivatsa@csail.mit.edu>,
         Paul Moore <paul@paul-moore.com>,
@@ -76,143 +81,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 23 Aug 2023 at 00:29, Shyam Saini
-<shyamsaini@linux.microsoft.com> wrote:
+On Wed, 23 Aug 2023 at 13:34, Linus Walleij <linus.walleij@linaro.org> wrot=
+e:
 >
+> On Tue, Aug 22, 2023 at 9:07=E2=80=AFPM Shyam Saini
+> <shyamsaini@linux.microsoft.com> wrote:
 >
-> Hi Sumit,
+> > do we plan to disable access to RPMB devices, once we have this RPMB
+> > driver in place. User space tools like mmc-utils/nvme/ufs utils
+> > can still access RPMB and programme the key and should
+> > RPMB driver deny access to RPMB ?
 >
-> > On Mon, 21 Aug 2023 at 15:19, Jerome Forissier
-> > <jerome.forissier@linaro.org> wrote:
-> >>
-> >>
-> >>
-> >> On 8/17/23 01:31, Shyam Saini wrote:
-> >>>
-> >>> Hi Ulf,
-> >>>
-> >>>> On Sat, 22 Jul 2023 at 03:41, Shyam Saini
-> >>>> <shyamsaini@linux.microsoft.com> wrote:
-> >>>>>
-> >>>>> From: Alex Benn=C3=A9e <alex.bennee@linaro.org>
-> >>>>>
-> >>>>> [This is patch 1 from [1] Alex's submission and this RPMB layer was
-> >>>>> originally proposed by [2]Thomas Winkler ]
-> >>>>>
-> >>>>> A number of storage technologies support a specialised hardware
-> >>>>> partition designed to be resistant to replay attacks. The underlyin=
-g
-> >>>>> HW protocols differ but the operations are common. The RPMB partiti=
-on
-> >>>>> cannot be accessed via standard block layer, but by a set of specif=
-ic
-> >>>>> commands: WRITE, READ, GET_WRITE_COUNTER, and PROGRAM_KEY. Such a
-> >>>>> partition provides authenticated and replay protected access, hence
-> >>>>> suitable as a secure storage.
-> >>>>>
-> >>>>> The initial aim of this patch is to provide a simple RPMB Driver wh=
-ich
-> >>>>> can be accessed by Linux's optee driver to facilitate fast-path for
-> >>>>> RPMB access to optee OS(secure OS) during the boot time. [1] Curren=
-tly,
-> >>>>> Optee OS relies on user-tee supplicant to access eMMC RPMB partitio=
-n.
-> >>>>>
-> >>>>> A TEE device driver can claim the RPMB interface, for example, via
-> >>>>> class_interface_register(). The RPMB driver provides a series of
-> >>>>> operations for interacting with the device.
-> >>>>
-> >>>> I don't quite follow this. More exactly, how will the TEE driver kno=
-w
-> >>>> what RPMB device it should use?
-> >>>
-> >>> I don't have complete code to for this yet, but i think OP-TEE driver
-> >>> should register with RPMB subsystem and then we can have eMMC/UFS/NVM=
-e
-> >>> specific implementation for RPMB operations.
-> >>>
-> >>> Linux optee driver can handle RPMB frames and pass it to RPMB subsyst=
-em
-> >>>
-> >
-> > It would be better to have this OP-TEE use case fully implemented. So
-> > that we can justify it as a valid user for this proposed RPMB
-> > subsystem. If you are looking for any further suggestions then please
-> > let us know.
+> We don't break userspace. Just not. This is not an option.
 >
-> I was looking into UFS/NVMe user-space utils, it seems we may have to
-> adapt rpmb frame data structure in optee-os to to handle NVMe/UFS
-> specific bits.
+> The RPMB subsystem simply has to provide the rpmb character
+> device the same way the MMC subsystem did, or provide an
+> in-kernel backend to the MMC subsystem so that it can provide
+> the same device. Whatever solution is best.
 >
-> For nvme rpmb data frame, I think we would need an extra "target" member
-> in rpmb data frame structure,
-> as NVMe can support upto 7 RPMB units, see  [1] "struct rpmb_data_frame_t=
-"
-> UFS may support upto 3 or 4 RPMB regions.
+> No deprecation and deletion and breaking userspace. Ever.
 >
-> So even if we use CID to uniquely identify RPMB device either from
-> eMMC/NVMe/UFS, we still need identify which RPMB target/unit in case
-> if the device is NVMe, and which RPMB region if the device UFS.
->
-> Also both NVMe/UFS utils have two extra RPMB operations implemented,
-> Although new request/response operation than eMMC spec:
->   1) Authenticated Device Configuration Block Write
->   2) Authenticated Device Configuration Block Read
->
-> see [2] enum rpmb_request/response_type and [3]enum rpmb_op_type
->
-> do we need those implemented as well ?
 
-IMO, we should start with eMMC RPMB support first with OP-TEE. This is
-what OP-TEE currently supports. And later on we can extend that
-framework for UFS and NVMe RPMB.
-
-We need to put extra care here regarding the eMMC RPMB ABI among
-OP-TEE and Linux kernel. It should be designed in a way that it is
-future compatible for UFS/NMVe. IOW, the bits that you have already
-discovered above.
-
-Also, we have to be backwards compatible with eMMC RPMB ABI towards
-u-boot too since OP-TEE would use the same ABI whether it is towards
-Linux or u-boot.
+Agree, that's the golden rule of thumb we follow in kernel
+development. Also, we still need to allow cases where trusted
+provisioning user-space tools can program OP-TEE RPMB key during
+factory provisioning. And once that is provisioned, I don't think
+there is much harm in still exposing the RPMB device to user-space
+since it can't do anything malicious without access to OP-TEE RPMB
+key.
 
 -Sumit
 
->
-> Please let me know what you think about these.
->
-> [1] https://github.com/linux-nvme/nvme-cli/blob/master/nvme-rpmb.c#L252
-> [2] https://github.com/linux-nvme/nvme-cli/blob/master/nvme-rpmb.c#L230
-> [3] https://github.com/westerndigitalcorporation/ufs-utils/blob/dev/ufs_r=
-pmb.c#L27
->
-> >>> [1] U-Boot has mmc specific implementation
-> >>>
-> >>> I think OPTEE-OS has CFG_RPMB_FS_DEV_ID option
-> >>> CFG_RPMB_FS_DEV_ID=3D1 for /dev/mmcblk1rpmb,
-> >>
-> >> Correct. Note that tee-supplicant will ignore this device ID if --rmb-=
-cid
-> >> is given and use the specified RPMB instead (the CID is a non-ambiguou=
-s way
-> >> to identify a RPMB device).
-> >>
-> >>> but in case if a
-> >>> system has multiple RPMB devices such as UFS/eMMC/NVMe, one them
-> >>> should be declared as secure storage and optee should access that one=
- only.
-> >>
-> >> Indeed, that would be an equivalent of tee-supplicant's --rpmb-cid.
-> >>
-> >>> Sumit, do you have suggestions for this ?
-> >>
-> >
-> > I would suggest having an OP-TEE secure DT property that would provide
-> > the RPMB CID which is allocated to the secure world.
-> >
-> > -Sumit
-> >
-> >>
-> >> --
-> >> Jerome
-> >
+> Yours,
+> Linus Walleij
