@@ -2,95 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EF5EEE49A5
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Aug 2023 15:57:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 269D0C6FA8F
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Aug 2023 16:05:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242318AbjHXP45 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Aug 2023 11:56:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37294 "EHLO
+        id S242359AbjHXQFZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Aug 2023 12:05:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233862AbjHXP4c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 11:56:32 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E2B61996
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Aug 2023 08:56:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1692892590; x=1724428590;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=YhYj+fHejWbjdHlrejxL/4PPisqGzgxG6VxY9uHpUUE=;
-  b=P2hOLaqQjALOXCluck0objQEc4rXYFU4FPp270lZc0vprI5vhPV6UlRz
-   3FcKGtRa2Me02TlVNdYuw3MpET05YGUobHRTee+36FEDGz0Qnsw4vl5nB
-   Epe20gPRu7KJt9G6Iv3TOnezsZ+4XNFXXtZTuHbV9sl/We+W0OXrwx8qu
-   rEaA5/bPQ8J9eG+sgGCVCKSTIJ3N/hvnrxPPflAZ2U36u/Yh+eohbNSJx
-   801DdM7kVHQuNeZNvlDiU9McF08nnEFxLIKDePebYhHyFHRqmq34dNXsE
-   ZdfEzZgGPg8eHx/Kp/4gbo9YNaTG4S22yjtSGzmhkIBPQVotLUgIwI6cU
-   A==;
-X-IronPort-AV: E=Sophos;i="6.02,195,1688454000"; 
-   d="scan'208";a="1149059"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 24 Aug 2023 08:56:29 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Thu, 24 Aug 2023 08:56:16 -0700
-Received: from brunhilda.pdev.net (10.10.85.11) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.2507.21 via Frontend
- Transport; Thu, 24 Aug 2023 08:56:15 -0700
-From:   Don Brace <don.brace@microchip.com>
-To:     <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
-        <scott.teel@microchip.com>, <Justin.Lindley@microchip.com>,
-        <scott.benesh@microchip.com>, <gerry.morong@microchip.com>,
-        <mahesh.rajashekhara@microchip.com>, <mike.mcgowen@microchip.com>,
-        <murthy.bhat@microchip.com>, <kumar.meiyappan@microchip.com>,
-        <jeremy.reeves@microchip.com>, <david.strahan@microchip.com>,
-        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
-        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-Subject: [PATCH v2 5/8] smartpqi: enhance shutdown notification
-Date:   Thu, 24 Aug 2023 10:58:09 -0500
-Message-ID: <20230824155812.789913-6-don.brace@microchip.com>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20230824155812.789913-1-don.brace@microchip.com>
-References: <20230824155812.789913-1-don.brace@microchip.com>
+        with ESMTP id S242358AbjHXQFV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 12:05:21 -0400
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 444E5E50;
+        Thu, 24 Aug 2023 09:05:19 -0700 (PDT)
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1bd9b4f8e0eso565455ad.1;
+        Thu, 24 Aug 2023 09:05:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692893118; x=1693497918;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=38+OtvkyXnf02zDocHJo+dRMRYtmgN/w6d9FbovXz0c=;
+        b=RNKlUY6E6PULzluDZ1OzI2/XISp2dUFGNWsrzQKK66iyvI5yJHvfRr6XM0NPD/apjm
+         /oDtYV2EGAIwPnLzudVqMdFUvg2RImqbF2y5nZvhTczFCMr6n0n0h5/x2Zfl/HzNBUol
+         JJoO9pNxTb+Sh4e+hJqFnQNpREgt+Y0w1tz1Jf4w4jS9ROmJu4FkvX4OOjQaoPr+PAv3
+         5eqIHwV6ZRQ02x7tHWn8oymIZ+JXUV9p2qC3m9o+7wozq+hqUVxasRE3fLuVw7sZa5/b
+         Ld/ENEqq+v/qADmbyA+7GZwcXCf+kg3ffWQmSId6/6MpT61J/6JNFJUhELqpiYjxQP8E
+         oAIg==
+X-Gm-Message-State: AOJu0Yw36WzhJgc+qfqYEuv83AnSM2Jv+EtNx0i1Q/4VifFy1rSaO0bz
+        j0e4owXRrN2MLr1eY5W+PlA=
+X-Google-Smtp-Source: AGHT+IGFZyIMWAR17FuYTBBNUHXr5hZUbuVvgP5+5UZeQl9/aCg1amnMgQfWRiFYUZabX2tqcLQJQw==
+X-Received: by 2002:a17:903:1248:b0:1bd:c7e2:462 with SMTP id u8-20020a170903124800b001bdc7e20462mr14292507plh.11.1692893118435;
+        Thu, 24 Aug 2023 09:05:18 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:e6ec:4683:972:2d78? ([2620:15c:211:201:e6ec:4683:972:2d78])
+        by smtp.gmail.com with ESMTPSA id e3-20020a170902744300b001b8c689060dsm12922251plt.28.2023.08.24.09.05.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Aug 2023 09:05:17 -0700 (PDT)
+Message-ID: <55e63dc7-a523-3a58-ea35-f1ce34d9c50f@acm.org>
+Date:   Thu, 24 Aug 2023 09:05:16 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.1
+Subject: Re: [bug report] blktests srp/002 hang
+Content-Language: en-US
+To:     Bernard Metzler <BMT@zurich.ibm.com>,
+        Bob Pearson <rpearsonhpe@gmail.com>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+ <0c5c732c-283c-b29a-0ac2-c32211fc7e17@gmail.com>
+ <yewvcfcketee5qduraajra2g37t2mpxdlmj7aqny3umf7mkavk@wsm5forumsou>
+ <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
+ <27e31e00-74a3-6209-5ad5-1783d6e67a0d@gmail.com>
+ <SN7PR15MB57550E846867D9A74F00DC47991DA@SN7PR15MB5755.namprd15.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <SN7PR15MB57550E846867D9A74F00DC47991DA@SN7PR15MB5755.namprd15.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: David Strahan <David.Strahan@microchip.com>
+On 8/24/23 08:35, Bernard Metzler wrote:
+> I spent some time testing the srp/002 blktest with siw, still
+> trying to get it hanging.
+> Looking closer into the logs: While most of the time RDMA CM
+> connection setup works, I also see some connection rejects being
+> created by the passive ULP side during setup:
+> 
+> [16848.757937] scsi host11: ib_srp: REJ received
+> [16848.757939] scsi host11:   REJ reason 0xffffff98
+> 
+> This does not affect the overall success of the current test
+> run, other connect attempts succeed etc. Is that connection
+> rejection intended behavior of the test?
 
-Provide more detailed information about cache flush errors
-during shutdown.
+Hi Bernard,
 
-Reviewed-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: David Strahan <David.Strahan@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In the logs I see that the SRP initiator (ib_srp) may try to log in before
+the SRP target driver (ib_srpt) has finished associating with the configured
+RDMA ports. I think this is why REJ messages appear in the logs. The retry
+loop in the test script should be sufficient to deal with this.
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 999bed578138..aacb40cb6b79 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -9161,7 +9161,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
- 	rc = pqi_flush_cache(ctrl_info, shutdown_event);
- 	if (rc)
- 		dev_err(&pci_dev->dev,
--			"unable to flush controller cache\n");
-+			"unable to flush controller cache during shutdown\n");
- 
- 	pqi_crash_if_pending_command(ctrl_info);
- 	pqi_reset(ctrl_info);
--- 
-2.42.0
-
+Bart.
