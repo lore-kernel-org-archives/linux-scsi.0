@@ -2,57 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24BE8C727B3
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 01:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 451D6C727A1
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 01:15:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240238AbjHYBOK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Aug 2023 21:14:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50844 "EHLO
+        id S237792AbjHYBOc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Aug 2023 21:14:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238145AbjHYBNx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 21:13:53 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 006A319BB
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Aug 2023 18:13:51 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37OJEJdZ009509;
-        Fri, 25 Aug 2023 01:13:43 GMT
+        with ESMTP id S230062AbjHYBN6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 21:13:58 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23E0E1BF1;
+        Thu, 24 Aug 2023 18:13:57 -0700 (PDT)
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37OJEYX5026981;
+        Fri, 25 Aug 2023 01:13:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=DvcvUFxxQ2tu8a2n9689kWZ4iSvtMXDysJ8fnFipCds=;
- b=z8Z/rsyXzbd4FOWJn27sx+uwuhcW/naq0Fuq9ZLSlhzA0zZb5mJj/7ssiAjxTPSu3+Jg
- fsda+g5syr1IGV+30OStmJNZhtQDvt/2jZ0wSbqCHvbeWJvL8nhUYB8hl1zRfCRQwixW
- uGjXOklCvlYr5P3hO4x8ughA0CC4eUPT/iiChq44+9bVQsPxaHOn5IFfqcXosU8oW66h
- jQ8LyU0Vq4dhUaJ+OfYL3X+QwdefnKiD8CeTRsY67+NWsBfhMVTuDPoFKEcvCGGBqd6c
- ANkD9p9f2nADp+fi62M7AJ4zlsCS/ZiO0iE+lnizCp1/kXpqEZDUj0XDjoVNeR2z/htv iw== 
+ bh=NAqqIX1D9aCgkRNDwHK/98Ct1JDGzdFBC51IMBe4un4=;
+ b=qeL5UreZqPSk/TG9DPl9wgOFFq2oxncdW4cYaf+d77PfzP7hVdXDkn+uKe7B+tzc/F8C
+ /dZNiGj9M6a0CdDGkcqYbrjYpCj6NeQnFR2T1mDzyI07I72JVwM/peeSffIft4BkxhoQ
+ Reog1X+cBPm+HBqGYdeGb/FO6kjCvsDqzEIQwO1KUpB4IMW7Qt8GbYIt9OuUIxZG7vHv
+ xEwc9CHW2C9ENcAJZc/ggkZWdIGkEBH3EQqmuycl9xOOdmU5njkEzEBigP8oBg2j3Te1
+ 8ngHdjNM9NAXRSIAMH5RaC+7I2T463OGHmoTy49AjsfG1UAVGRG42FO7PHBhiDDWWbgx 6w== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3sn1ytwdyr-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3sn20ddctt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Aug 2023 01:13:43 +0000
+        Fri, 25 Aug 2023 01:13:41 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 37P0SPnL036014;
-        Fri, 25 Aug 2023 01:13:43 GMT
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 37ONkQMs036091;
+        Fri, 25 Aug 2023 01:13:40 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3sn1ywqfnt-1
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3sn1ywqfkx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Aug 2023 01:13:43 +0000
+        Fri, 25 Aug 2023 01:13:40 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37P1DVEU019787;
-        Fri, 25 Aug 2023 01:13:42 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37P1DVEC019787;
+        Fri, 25 Aug 2023 01:13:39 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3sn1ywqf8n-19;
-        Fri, 25 Aug 2023 01:13:42 +0000
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3sn1ywqf8n-10;
+        Fri, 25 Aug 2023 01:13:39 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, Zheng Zengkai <zhengzengkai@huawei.com>
+To:     jejb@linux.ibm.com, chenxiang66@hisilicon.com,
+        artur.paszkiewicz@intel.com, yanaijie@huawei.com,
+        jinpu.wang@cloud.ionos.com, dlemoal@kernel.org,
+        John Garry <john.g.garry@oracle.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, wangxiongfeng2@huawei.com
-Subject: Re: [PATCH -next] scsi: pmcraid: Use pci_dev_id() to simplify the code
-Date:   Thu, 24 Aug 2023 21:13:05 -0400
-Message-Id: <169292577177.789945.394133020727363992.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/10] libsas: Some tidy-up
+Date:   Thu, 24 Aug 2023 21:12:56 -0400
+Message-Id: <169292577178.789945.5198957349560725298.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230811111310.32364-1-zhengzengkai@huawei.com>
-References: <20230811111310.32364-1-zhengzengkai@huawei.com>
+In-Reply-To: <20230815115156.343535-1-john.g.garry@oracle.com>
+References: <20230815115156.343535-1-john.g.garry@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -60,27 +63,50 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
  definitions=2023-08-25_01,2023-08-24_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=825 adultscore=0
+ malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=962 adultscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2308100000 definitions=main-2308250009
-X-Proofpoint-ORIG-GUID: D_la_VDA4ptsn4ERqY6dq8Lk0KTbBEe1
-X-Proofpoint-GUID: D_la_VDA4ptsn4ERqY6dq8Lk0KTbBEe1
+X-Proofpoint-GUID: 2s0_KkNslxyZRl_BHci2ugg5UtdVm3-S
+X-Proofpoint-ORIG-GUID: 2s0_KkNslxyZRl_BHci2ugg5UtdVm3-S
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 11 Aug 2023 19:13:10 +0800, Zheng Zengkai wrote:
+On Tue, 15 Aug 2023 11:51:46 +0000, John Garry wrote:
 
-> PCI core API pci_dev_id() can be used to get the BDF number for a pci
-> device. We don't need to compose it manually. Use pci_dev_id() to
-> simplify the code a little bit.
+> This series tidies-up libsas a bit, including:
+> - delete structure(s) with only one member
+> - delete structure members which are only ever set
+> - delete structure members which are never set and code which relies on
+>   that member being set
 > 
+> This conflicts with the following series:
+> https://lore.kernel.org/linux-scsi/20230809132249.37948-1-yuehaibing@huawei.com/
 > 
+> [...]
 
 Applied to 6.6/scsi-queue, thanks!
 
-[1/1] scsi: pmcraid: Use pci_dev_id() to simplify the code
-      https://git.kernel.org/mkp/scsi/c/5d344c5eb415
+[01/10] scsi: libsas: Delete sas_ha_struct.lldd_module
+        https://git.kernel.org/mkp/scsi/c/b1bc49731770
+[02/10] scsi: libsas: Delete enum sas_class
+        https://git.kernel.org/mkp/scsi/c/c46a91709335
+[03/10] scsi: libsas: Delete enum sas_phy_type
+        https://git.kernel.org/mkp/scsi/c/2f4e20cd6ef8
+[04/10] scsi: libsas: Delete struct scsi_core
+        https://git.kernel.org/mkp/scsi/c/1136a0225d05
+[05/10] scsi: libsas: Delete sas_ssp_task.retry_count
+        https://git.kernel.org/mkp/scsi/c/31d9061b475c
+[06/10] scsi: libsas: Delete sas_ssp_task.enable_first_burst
+        https://git.kernel.org/mkp/scsi/c/ebf26e93cfec
+[07/10] scsi: libsas: Delete sas_ssp_task.task_prio
+        https://git.kernel.org/mkp/scsi/c/4dc051eb0c6b
+[08/10] scsi: libsas: Delete sas_ata_task.set_affil_pol
+        https://git.kernel.org/mkp/scsi/c/7b964c402285
+[09/10] scsi: libsas: Delete sas_ata_task.stp_affil_pol
+        https://git.kernel.org/mkp/scsi/c/44862dc2d2e7
+[10/10] scsi: libsas: Delete sas_ata_task.retry_count
+        https://git.kernel.org/mkp/scsi/c/86344494e364
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
