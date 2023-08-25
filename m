@@ -2,152 +2,154 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97CE5C3DA6F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 17:23:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD45C3DA6F
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 20:38:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238051AbjHYRWw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Aug 2023 13:22:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43644 "EHLO
+        id S230416AbjHYUhk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Aug 2023 16:37:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238025AbjHYRW3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 13:22:29 -0400
-Received: from DM6FTOPR00CU001.outbound.protection.outlook.com (mail-centralusazon11020021.outbound.protection.outlook.com [52.101.61.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C521211B;
-        Fri, 25 Aug 2023 10:22:27 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IdFcEG4aWYxP9+RPLwyE1Te2Ts1AlfN/won15p+RYPY4XtZi12VkM1qUEyN/ue0OtK8SoM1+JsP/0Glo6e962cY+6I9uHtisl1+O+yusjDkrhwjihlL6LCiKj2psekQJEAo5lX7COoOclRos08ZRxG26OTyTT/gD4vG/FDFW+oQ+tRijo55YThtDHjEImoJq5aEt5DucgBs24Di5dCRDBDBYuz5GUj5mIv48DP5JtMWXZ0LWgYcd9hrT7C+ogx6Mcwn5mDzey1Yp0Zv1t1UdoOmRVGccoqy//Op0WJCLmcz4pfYxWSj7CiEi3jbbXDKGpbH0JMN819oG7Kw1jOp7+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZZVfnhaS5Oh70SY+X3b9YB/OXDgSwdUlw0LzqJHczSM=;
- b=hhyoD+EJasZBKS9fhU28LA3x3/vLO3gBgjISUB0M/x7IQTy0NghRBvcJe+eQdBwd6QGO6FzNZBO9hNTAH7BfGcscBXJgb3c7Gr4whzHvx9z4kZv0DbdW7edAUmSIb27JCUze9iPh/hvushR5oj218cwEzciVypncCd/t6V+GkAX9O5vlSOmFzLcEDIchX+2gLXHiJkvJJAbv/V0Trhv15CShW0rk180wdEw9UDgUm/W9tGElXZBDK2EDkNZH5i+wOCZJAED60T6uFakphTWTuMYyI3SJ2/8vkNrBEfxPF0JdmQ81Zl2b2IvNngKPQK4iS270xYTlUXXNSigro1UNww==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZZVfnhaS5Oh70SY+X3b9YB/OXDgSwdUlw0LzqJHczSM=;
- b=Nn2tZ+wTYZl1e5IrlD7ctGT+7Q9MY/LS6tOlbY69eXQa1f4HCyLfxCa/XwcDcK3PHMZUSPF5zeY5szPP2Q+Dj8bUc2rIOenH2RzLuktHgyC//Cj900Y5yDBiDi5hIE5TmAxVvhPU4jE7mEjtawU+BW4flFgBndiRzWsiZ4Qyh+Y=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-Received: from DM6PR21MB1370.namprd21.prod.outlook.com (2603:10b6:5:16b::28)
- by MW4PR21MB2074.namprd21.prod.outlook.com (2603:10b6:303:121::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.9; Fri, 25 Aug
- 2023 17:22:24 +0000
-Received: from DM6PR21MB1370.namprd21.prod.outlook.com
- ([fe80::e42b:9288:e798:a524]) by DM6PR21MB1370.namprd21.prod.outlook.com
- ([fe80::e42b:9288:e798:a524%3]) with mapi id 15.20.6745.008; Fri, 25 Aug 2023
- 17:22:24 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     kys@microsoft.com, martin.petersen@oracle.com,
-        longli@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
-        jejb@linux.ibm.com, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     mikelley@microsoft.com
-Subject: [PATCH 1/1] scsi: storvsc: Handle additional SRB status values
-Date:   Fri, 25 Aug 2023 10:21:24 -0700
-Message-Id: <1692984084-95105-1-git-send-email-mikelley@microsoft.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain
-X-ClientProxiedBy: MW4PR04CA0222.namprd04.prod.outlook.com
- (2603:10b6:303:87::17) To DM6PR21MB1370.namprd21.prod.outlook.com
- (2603:10b6:5:16b::28)
+        with ESMTP id S231150AbjHYUhM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 16:37:12 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E78932129
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2023 13:37:10 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-68a520dba33so1118250b3a.0
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2023 13:37:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1692995830; x=1693600630;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TPFsDM2aS22oJkp4VKW1ExTBHZejf9jyFe0+feyfd/8=;
+        b=mVu8QcoKmRZGFyMEw5zhhZB9hgAkvVpPZgwSNIdByZWsNEpUoP6zjccLbvAPnGaHMf
+         XlsE7Ri967gFlG05B6gHkZ5MhJwjIW85r8Gv1x1n/hCCNu5YRnNKxYoqQ4j8fq2SXg6h
+         U5WQass8Y5x6l2yyFVNmqIu87TdSUqYnxntH4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692995830; x=1693600630;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TPFsDM2aS22oJkp4VKW1ExTBHZejf9jyFe0+feyfd/8=;
+        b=LrPAHnWYcampxl4njzj32PGGF3f5eorHAAbmjOP9HzQVF8YJSOsMiD09ZSuPeT0oR2
+         tEmyjDofIusTu/9ojcyG3vbT+M8O5xC68X61IyVtyeFyzrm56rcVpp9lkBbYU6oEvIR4
+         xK6yG/nRlGiMd8S2PhL8qe3yPH991DLPOAoaPUDR1aJPxqtBOMegQyn+T8o/udzk+5kt
+         xWc2q98zgpOZ2zs1/9JeSRAEiMYMbCEnaRpn59H3/gqlSIOWRdtlymfozUhoEDYo6+1z
+         pL+N5i9yC1nkaSDG9NXZq2O6ox+qbna9p2Dk7oxWmVs2C6NmPceGMzwxf78dnpaTqHmq
+         cZWw==
+X-Gm-Message-State: AOJu0Yy4zsZwamREa1ie9MJSfEPdZfzEWeka1s+p8QIPnm+IlO+w8CFn
+        6T0K4dgLwYXxQpLzwtmJrrB5SA==
+X-Google-Smtp-Source: AGHT+IHZeULT+i0DWpVrCSGuQ58y7gjL44hyK89F2DmJUhpzLU7kjzmSUnoK42OQIsZSrnZP5t77tg==
+X-Received: by 2002:a05:6a00:a13:b0:68a:3c7a:129e with SMTP id p19-20020a056a000a1300b0068a3c7a129emr20589880pfh.27.1692995830400;
+        Fri, 25 Aug 2023 13:37:10 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id m9-20020aa79009000000b00688435a9915sm1949344pfo.189.2023.08.25.13.37.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Aug 2023 13:37:09 -0700 (PDT)
+Date:   Fri, 25 Aug 2023 13:37:09 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     James Seo <james@equiv.tech>
+Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 02/12] scsi: mpt3sas: Make
+ MPI2_CONFIG_PAGE_IO_UNIT_8::Sensor[] a flexible array
+Message-ID: <202308251334.A4A10C2@keescook>
+References: <20230806170604.16143-1-james@equiv.tech>
+ <20230806170604.16143-3-james@equiv.tech>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR21MB1370:EE_|MW4PR21MB2074:EE_
-X-MS-Office365-Filtering-Correlation-Id: 47a248d7-4a3a-441c-d93f-08dba58fd8b7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: wGozXuUrJjba0EhGBpfH6k323DOXZVjH6o7FRh72ROuOIoWJhcoHyNfRU5uysMyNtvUrR2LaDcb2vwCKCdMbIjQVvlxy+g5caLzahZyKIci/efBGXTrS/YpHEr3ujPauO4FduztiIVstXa9Xd7VMFIuDq2ZNqAHaRAV4eEEMDVgt+QEXGfYyhug3IpL5N7jaPPV62PL3Vd9g7BbxXjpBCfhgxnmhQiN3EiKxmFgo5lu8MoR/482SAWdzBl+ymgaWSiMPjJ57LiM8jdKW5nCgKXQ2WPt5netcmOEgaGRQC0QlUoKj1MwbbC/eRBaYwTjxHzIhMMNpmJPkA5cSi3h9Ct/4d/Gf0xSeDiNtdADeHs4G2uUzaK8TgqGksRNRUsDKvk97CqzZrAyrhkWtpn74WURF1W5dcpnP8nQRErSdBLfZLJ5iAgItZjsi0kupRp52ySiUHOE0PtvazESukwMiEbrRXD4kJrZIxbnQ5LrzO6sqMIUn1nsHII0xaRTsxer9ja6JimWz6i/Gb1Tn8Y9LEHSnB8taoIjU5Bmmzm50Y6iHiJRhqksASqBFWibLhhTFbXY+rn9Z5+f5MtG9iDs22y4XBVMgytslAfGzSNakZMdfs6OoxUHY+3GaxrETprOKHgoU8yUjIWs0YdZYpUQEUMqsdPYhux1/qRIATxJbfZqEEAr5pdTfuhhOCv14gz9E/nTCgJk03ItNzJAoAFW1Ug==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(136003)(396003)(39860400002)(366004)(376002)(451199024)(1800799009)(186009)(66476007)(66556008)(66946007)(41300700001)(316002)(36756003)(478600001)(10290500003)(83380400001)(2906002)(12101799020)(2616005)(8676002)(8936002)(82950400001)(5660300002)(82960400001)(38100700002)(38350700002)(4326008)(86362001)(26005)(107886003)(6512007)(52116002)(6486002)(6506007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?y6R8pRPLtACHrPfGGj0rtswgPwy/RWXwRUABfzSPPLzZSTpgpmhAerS7mHHn?=
- =?us-ascii?Q?9r4VZUXAurwBywBpQo2DxjlAqp6X1+TBmr9ofy9ZjobJ00hvBvjReW4GAYSo?=
- =?us-ascii?Q?9pyLwnMRGEb/OECdzJJXOkrQc9drLmjewQ+INObNrK380dhxZQ1F0zKYwGXt?=
- =?us-ascii?Q?EBMJ6wM2boSMT3D3ImPh49omNYHlI560ZvnKJmaFXfeEzk0tFLbdFjGHtgD/?=
- =?us-ascii?Q?HQ96ptUOrW88Z5rijBb9z4Ab4W9ciBsR1wYqD/9QueZLAdBjuet7LLOv5iWC?=
- =?us-ascii?Q?Rtjr1FgJ4LNgInDHGFfc3vR5V4Aq/oe0Vlc+YzK0gG37o2onIlwt87o9mvyW?=
- =?us-ascii?Q?hZGsyk25uZDDnitj/TfTBfq/iLFZZ0jPVLl1uruOk56BtzqB+6n4X6+orIj3?=
- =?us-ascii?Q?QwYh/d7d35jN61XjfKfTY1VCNW4ccNn8BaG9K54OWeogLqjkfspievWdu+lt?=
- =?us-ascii?Q?cMakEj73ivPHHX3hxtuTA8pG4AFCUdsG/syUa6m0xMfPtnGIvcNUqEEJzQox?=
- =?us-ascii?Q?7PwN9OKFkvxKjDDcgTgg17V4FfC8wvf1qz7g0nHwCxizn/DvRGiDW9+Y1wc6?=
- =?us-ascii?Q?rpPLNXF1RYHCIPp5QheBUZY7QGLapRiX7b7eTTYl/N/KZXmcm0rH3wVvjPED?=
- =?us-ascii?Q?OW7IJUhlMWlM7uusfe1FruOEScln1NqWAkzbJB2xNO2QXdKIWYKnfnCPtO8V?=
- =?us-ascii?Q?R8ySWcJdDaEZlHqSClafPv5cdWUN8nHW+Y2EiW9UuzDqFM4KDdd5S929fgYR?=
- =?us-ascii?Q?ZfP8Mj6mnP7Zpeo59nq6kUQvdXJ7QBEBufC6Kb06OPZpJEDm1Qxry8J0guK3?=
- =?us-ascii?Q?buupUkmP/j6RgEsTI4LYFlAcYCga4LfZkk3qM/FmMWPnJbHnHvNtZFB4Pm/C?=
- =?us-ascii?Q?eQLsEbFWlUdYN4LxanpUs0+Uw0ASo+awQi5OdRFq6orE+f2uIL0BZwwoMKRS?=
- =?us-ascii?Q?5fcz5DSKzEDNpzcjtFEwrVkTiP3r5pIRDLjdWDOdjamUJYLr+MoULnM5iZwM?=
- =?us-ascii?Q?5hz6mtZFxzPP9/PMvyTxuLo7vwCHAtJ2/E7mea0tChonV0YtEchHnpVYfSuj?=
- =?us-ascii?Q?5BtGj1+T+7ew96v/ZqdMIWYiKxKKcOh6zvpzBSV2HGPBCBBFIAMYEv9ikOa6?=
- =?us-ascii?Q?AmqqLnoqavJfDmfcR3CW7B3Zj4x8b1Lwz/YZekRQH3WdsclvON9O7jeFhg+/?=
- =?us-ascii?Q?9pQXX+XXo0K33nYDI2Wvj6Xn/C42Cf7TIbYDv4y9OEfvFPAFlhi6zXiVjrYG?=
- =?us-ascii?Q?3Z3cMz0SNHa7Jr4TNnVtJE4U1e+dUD2rv/uyTTbTT/1iQuHmkEgC4iw3fxTO?=
- =?us-ascii?Q?qma88LNmVGT8jzh8InBVP/iCinNN0TAVXhLi+zzi0MGjWPlJF8CDwjBwPOuu?=
- =?us-ascii?Q?6f/Jg8Jgmrzf8lQPAa8CMDOqUPw5ZlZuW+3OZGGZBxESHxRKbdY2IRi5KggY?=
- =?us-ascii?Q?63e4wPhV3wHEUTU10CxsJP8HD/RFs48yFrt31t6XlbHhi+8Cwsn4ZzGdhNQn?=
- =?us-ascii?Q?Ml9DQYHrEfm2hOFEzlfBE5RaOSXbsjX4mDzcAHvSWbHAZeaR1CBo73Jhpuyu?=
- =?us-ascii?Q?NRqtc0A1qhzSywHJhi0zP7wKPyFXyX4/tV+YUupK?=
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 47a248d7-4a3a-441c-d93f-08dba58fd8b7
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1370.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2023 17:22:23.9344
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +QkSvlElez/KW/QNDg4KSE2kfxpQ3C4HpVzrCPcXPnJ0IDkgjkXzlhUQRWHeEyz92IO98E2IBK6dXABPIP4CCA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB2074
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230806170604.16143-3-james@equiv.tech>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Testing of virtual fibre channel devices under Hyper-V has
-shown additional SRB status values being returned for various
-error cases.  Because these SRB status values are not
-recognized by storvsc, the I/O operations are not flagged as
-an error. Request are treated as if they completed normally
-but with zero data transferred, which can cause a flood of
-retries.
+On Sun, Aug 06, 2023 at 10:05:54AM -0700, James Seo wrote:
+> This terminal 1-length variable array can be directly converted into
+> a C99 flexible array member.
+> 
+> As all users of MPI2_CONFIG_PAGE_IO_UNIT_8 (Mpi2IOUnitPage8_t) do not
+> use Sensor[], no further source changes are required to accommodate
+> its reduced sizeof():
+> 
+> - mpt3sas_config.c:mpt3sas_config_get_iounit_pg8() fetches a
+>   Mpi2IOUnitPage8_t into a caller-provided buffer, assuming
+>   sizeof(Mpi2IOUnitPage8_t) as the buffer size. It has one caller:
+> 
+>   - mpt3sas_base.c:_base_static_config_pages() passes the address of
+>     the Mpi2IOUnitPage8_t iounit_pg8 member of the per-adapter struct
+>     (struct MPT3SAS_ADAPTER *ioc) as the buffer. The assumed buffer
+>     size is therefore correct.
+> 
+>     However, the only subsequent use in mpt3sas of the thus populated
+>     ioc->iounit_pg8 is a little further on in the same function, and
+>     this use does not involve ioc->iounit_pg8.Sensor[].
+> 
+>     Note that iounit_pg8 occurs in the middle of the per-adapter
+>     struct, not at the end. The per-adapter struct is extensively
 
-Add definitions for these SRB status values and handle them
-like other error statuses from the Hyper-V host.
+This is especially bad/weird. Flex arrays aren't supposed to live there,
+so I think it'd be best to avoid this conversion (see below).
 
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+>     used throughout mpt3sas even if its iounit_pg8 member isn't,
+>     resulting in an especially large amount of noise when comparing
+>     binary changes attributable to this commit.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 7e92a48..ab286c1 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -316,6 +316,9 @@ enum storvsc_request_type {
- #define SRB_STATUS_ABORTED		0x02
- #define SRB_STATUS_ERROR		0x04
- #define SRB_STATUS_INVALID_REQUEST	0x06
-+#define SRB_STATUS_TIMEOUT		0x09
-+#define SRB_STATUS_SELECTION_TIMEOUT	0x0A
-+#define SRB_STATUS_BUS_RESET		0x0E
- #define SRB_STATUS_DATA_OVERRUN		0x12
- #define SRB_STATUS_INVALID_LUN		0x20
- #define SRB_STATUS_INTERNAL_ERROR	0x30
-@@ -980,6 +983,10 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 	case SRB_STATUS_ABORTED:
- 	case SRB_STATUS_INVALID_REQUEST:
- 	case SRB_STATUS_INTERNAL_ERROR:
-+	case SRB_STATUS_TIMEOUT:
-+	case SRB_STATUS_SELECTION_TIMEOUT:
-+	case SRB_STATUS_BUS_RESET:
-+	case SRB_STATUS_DATA_OVERRUN:
- 		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID) {
- 			/* Check for capacity change */
- 			if ((asc == 0x2a) && (ascq == 0x9)) {
+Since the size reduction makes it hard to validate, how about just
+leaving it alone? Since nothing is using Sensor[], you could just make
+it a single instance:
+
+-     MPI2_IOUNIT8_SENSOR
+-             Sensor[MPI2_IOUNITPAGE8_SENSOR_ENTRIES];/*0x10 */
++     MPI2_IOUNIT8_SENSOR     Sensor;                 /*0x10 */
+
+
+or leave it as-is (i.e. drop this patch).
+
+> 
+> Signed-off-by: James Seo <james@equiv.tech>
+> ---
+>  drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 10 +++-------
+>  1 file changed, 3 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+> index 42d820159c44..12b656bd883d 100644
+> --- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+> +++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+> @@ -1200,12 +1200,9 @@ typedef struct _MPI2_IOUNIT8_SENSOR {
+>  #define MPI2_IOUNIT8_SENSOR_FLAGS_T0_ENABLE         (0x0001)
+>  
+>  /*
+> - *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
+> - *one and check the value returned for NumSensors at runtime.
+> + *Host code (drivers, BIOS, utilities, etc.) should check the value returned
+> + *for NumSensors at runtime before using Sensor[].
+>   */
+> -#ifndef MPI2_IOUNITPAGE8_SENSOR_ENTRIES
+> -#define MPI2_IOUNITPAGE8_SENSOR_ENTRIES     (1)
+> -#endif
+>  
+>  typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_8 {
+>  	MPI2_CONFIG_PAGE_HEADER Header;                 /*0x00 */
+> @@ -1214,8 +1211,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_8 {
+>  	U8                      NumSensors;             /*0x0C */
+>  	U8                      PollingInterval;        /*0x0D */
+>  	U16                     Reserved3;              /*0x0E */
+> -	MPI2_IOUNIT8_SENSOR
+> -		Sensor[MPI2_IOUNITPAGE8_SENSOR_ENTRIES];/*0x10 */
+> +	MPI2_IOUNIT8_SENSOR     Sensor[];               /*0x10 */
+>  } MPI2_CONFIG_PAGE_IO_UNIT_8,
+>  	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_8,
+>  	Mpi2IOUnitPage8_t, *pMpi2IOUnitPage8_t;
+> -- 
+> 2.39.2
+> 
+
 -- 
-1.8.3.1
-
+Kees Cook
