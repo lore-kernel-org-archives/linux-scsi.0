@@ -2,163 +2,244 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6719EE49AB
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 21:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0D56EE49B3
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 22:06:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229807AbjHYVyZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Aug 2023 17:54:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33982 "EHLO
+        id S229593AbjHYWG2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Aug 2023 18:06:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229502AbjHYVxv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 17:53:51 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65EA426AF;
-        Fri, 25 Aug 2023 14:53:48 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37PIEJG8011032;
-        Fri, 25 Aug 2023 21:53:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2023-03-30;
- bh=Nwek5df8OG5D5Iliip4VWRlyomrKCFEqYQkXldVmbHI=;
- b=Mpp2wYe5+AUm9HQYqde0DUSsGTZcZ86Thg1frWhQbK3iFkrMgRVrd/guD2HThtD1SW/A
- OmqQyfbYOdEfkSNnMGdyV7vM5QYseZvSQm54FuDODC8GGyvYxcDKgakYI2OaVaUCqJRk
- vKHiH5/myl62CeDgH6s/zPDIEBGiSkzNwA6TWz8LcBMx9wxOEAINZ2z1+CShiRs2PSWD
- 21ncY9gISuPMB2HLyIt5wN3p9PaF2ypifW9Okaabnj8u/WOhhtVvmtKfaLatpsLvG5rv
- rnAPViaOtHSfG3KmyFJaGkimGdSMGlVZ5B/giweQP8MzFWX0Pd3sdifIB+k9X5Bsc7Xa KQ== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3sn1yv7ckj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Aug 2023 21:53:41 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 37PJoHje036185;
-        Fri, 25 Aug 2023 21:53:40 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2047.outbound.protection.outlook.com [104.47.66.47])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3sn1yxvwkh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Aug 2023 21:53:40 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Beh4c3iZIrSCz+q5IlaICJ76BKvo1Agiaq7Y7GeP9rVlzi/lNoikODIFFVneckSl5AqQVD5eN8AvmZeiFlGVJiVrMZvqLUa/0n1fuv/3G7RL8u2pbqYt9eZESS1s0uPIn2VDbGYP3J8Mj/M3yksXxNSuDVv3bq6stmJx48rvMFZi7dHslccyOIniUuXkp6VA6ijNldxFBLXgoudGjC7W5MJmXQsA3Y0g+UVqPKlKvXKPrKj9zKu8sfB2c+SiQgd56+wwCKOXdK6ZKbVlN3tyTnCp1DH3LDz6BH7tSUUbQ0KU/bmamwEwVCzpCtkfnU2GfQcvvbF06TpRf+3Kd449Kw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Nwek5df8OG5D5Iliip4VWRlyomrKCFEqYQkXldVmbHI=;
- b=IxOPzr9CrM8ALOOiI/8YKvz/uM0XAEK8VtdZkanCZ2jwO12saTdIF//3ESGTM7v/nPPfaTFc0yOWXoNLVm02GF/BT7uSIYuVNM3BqaYbI0lSplfFeGBL8gackKwQpmuF1MzUA5GAvnwAFh5xNcpE33eLh3mSCab4XLdTaj2AdUZR3aiwcSWD32ghU3oia2WpJ5xkGpCSxd2prrlOWfDx7xU/CgdsDQZyOJTClB6wm1pK3iA2F3lBQfBOGnceOjFZUJSVxf9pwXDupdaK6nQxCeSn7A+ZcSGM5987gsvBr/IPE5caqv7Ifs3swglV9Ad8znmvY7hX8aLMa+102yYveg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Nwek5df8OG5D5Iliip4VWRlyomrKCFEqYQkXldVmbHI=;
- b=P4Yye7Th9lhyaxQ29Ux4wWgRRojDpZfdkugSTSS6g+rOxH4s5smnU376m3GqPyUdJoj4rl6q1vNtMBwbPQfyFSaNiEgRQmrQCFfKmtkavwxyp4CfLsw1002W1DgIqNYXOavXxj3XgjPzH9uRWuGg4Fn6jFORyI7DIg6D7ZArujI=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4518.namprd10.prod.outlook.com (2603:10b6:510:38::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.27; Fri, 25 Aug
- 2023 21:53:29 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::59f3:b30d:a592:36be]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::59f3:b30d:a592:36be%7]) with mapi id 15.20.6699.034; Fri, 25 Aug 2023
- 21:53:29 +0000
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     kys@microsoft.com, martin.petersen@oracle.com,
-        longli@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
-        jejb@linux.ibm.com, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/1] scsi: storvsc: Handle additional SRB status values
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1bkeuzt6l.fsf@ca-mkp.ca.oracle.com>
-References: <1692984084-95105-1-git-send-email-mikelley@microsoft.com>
-Date:   Fri, 25 Aug 2023 17:53:26 -0400
-In-Reply-To: <1692984084-95105-1-git-send-email-mikelley@microsoft.com>
-        (Michael Kelley's message of "Fri, 25 Aug 2023 10:21:24 -0700")
-Content-Type: text/plain
-X-ClientProxiedBy: BY5PR03CA0020.namprd03.prod.outlook.com
- (2603:10b6:a03:1e0::30) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        with ESMTP id S229785AbjHYWGI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 18:06:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A72E19B7;
+        Fri, 25 Aug 2023 15:06:06 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A3E3761F3A;
+        Fri, 25 Aug 2023 22:06:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98AD7C433C7;
+        Fri, 25 Aug 2023 22:06:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693001165;
+        bh=GSsgLsQlISlbKemeOpBHb0jzjo+aOwyVKNnTndsrXMM=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=opLXXCYuFJYlGNp9FhQv8s+A+sUBkycYfGrtpMAlp9BKNN0XjUHOmRxWFo42/EOoi
+         8GOY6GuTmnpj64uJQ7ZBWlK4rJNwHcLm9PwHwHqd4OSXow2QMqNO+okzVmmx7I5Gvi
+         QyS0X1bbMTQjPPkh5RAvqY5L5WQ/pcBFNB1SjNq2pZNLgemGORWgMFWX17+iVtnoIA
+         Kr0D2tLpygnvy3DmzhbHiMDPUEqLCVYkHVe2cX/63izKvK2bqkVCmHnvRDsqKQYyiG
+         HuCySknnxtTcocMQoN3AE24im9Y+OfF4eJan9ZuJQBX+wy3m37Pctx5Sv1QEyHtLaF
+         c+ewdWtpt07VA==
+Message-ID: <3472d984-c388-d311-ed1b-a4173e7c753c@kernel.org>
+Date:   Sat, 26 Aug 2023 07:06:01 +0900
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|PH0PR10MB4518:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0f9dc032-9774-495c-3ee8-08dba5b5b78f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: DdnLQupkOVY+CPQyQQu5PM85YE5Y7iYjEsasw+SPnCuxgsRXMYoU1GbDB8nol81Bwl2CSVNrIR8ZGo7ml7F+zZ8EEfAJUBIBMbgBm8m8XsaAMnX/jaNBubAjQrFiryM7BFX2C1tfe+lfnU3PoiEr6bxVS70yjuPTO6M7whX4wa8wudOmmn+o6/QLWf19VpB0BXiICpEE5HFPJsqva8sCqCyyQAHY8lppK/1h0TsD4gwtOx/6c84Eh9r9+IGDBpgYvImCZeLK7/JJ7dAwxYJQzgF+jSFXl9H/8h691FokSCuKjToO4mNLqHLpeHU2Ga4GdDwzjGjOuDLV7tLVlBlZ2r9gUSRMRC6WRagiqQQpGdTbaISRpWzJts2m+PXOtoFMgnS8U76qPqyW0jT74SOKxoZWNMK960kXdYvevZi1R4+jwV5Rbx0PrQrodyT5F7S2jJxg4ezP7hiz2mZe4qrqc0Qr/t6sffzGzxgD/P4LtMDYKvpp5JIc6c7CR+gzObG4D/FGQJmNJdM52GvLIM7iaJqlMcxY2OPmZo62mgoFK1M=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(376002)(39860400002)(346002)(136003)(366004)(1800799009)(186009)(451199024)(8936002)(8676002)(83380400001)(5660300002)(4744005)(4326008)(26005)(6666004)(38100700002)(6916009)(66556008)(66946007)(66476007)(316002)(478600001)(966005)(41300700001)(2906002)(36916002)(6506007)(86362001)(6486002)(6512007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?mAarsCBDXnNb3qzDvY5tT/ahPwIRHaI6ytIVSWudjz1YtQdvQ2Q7zLJFHSDw?=
- =?us-ascii?Q?H9cfdoec7yhD29CyysJBC4YR+hO4Cuw2V7Z0G+XunK8Qdq+5C7vi9J1+ywRU?=
- =?us-ascii?Q?UVGeGyCNGHtbePcLnfNgOP9Jbk6itdOZS2/ozCqOTqA3NhFBd3sA88QV0IOi?=
- =?us-ascii?Q?GenHgyVlOTGc9gEnAm7kgbvEca5dzuHtQ1Qnex46RzYu6J0PthtNutlQnMR2?=
- =?us-ascii?Q?ChPx3PrfOeIPeSd+EwNEFqcFB63P/B/0TlQo51f3PmzcWOu7MbFscSEGK/YW?=
- =?us-ascii?Q?o4qFWyYniTM5j5l5gTaWAoyyyF04DJctg8lo1GpenjQsSwtiAHh/2b9WwdYd?=
- =?us-ascii?Q?FA++a3Ix0nF0lQGoezWF/r0O1H4GgT94lbkeu8fubOf1WmX444LeDqUYXDqo?=
- =?us-ascii?Q?2MSCDb8Id5i/4MzCAyCvTfoaF583HuHDTLOERzHRNJvOl70ZpFlWx0V7ZmMH?=
- =?us-ascii?Q?BZGkpriwwghneyuszde/jEii0KnxGS0Nw7zQfrrqMmEzHHkvjGX6RleiwrLu?=
- =?us-ascii?Q?AT8RAh2uv0A8xUb41NzVy8F2TkK23YkAJg6nEDMtkKO0WYkxSf3Gkhhhh53P?=
- =?us-ascii?Q?Jygb7WqERibai7DokARGpybbfY4r4bBgRFEKz8AM7ZTOWm/Z8wgO3dLtJ/Er?=
- =?us-ascii?Q?BXZgw/OIOJn3ovfHfWA10mGjeFOs3SHuZAZXbAThYh+XJSL1qs0AuJpeOvBS?=
- =?us-ascii?Q?hBTntuK1npjBDBj6iBEeVmoY8P3X8YscPTNFj0gHs2NuAw++2tTFxayta9Bj?=
- =?us-ascii?Q?W6LSQxQzxgVc6OvwCrDoYuiPZ11f5vtMoDzZZFCJyS57EQNJmLDyXOjYrUd+?=
- =?us-ascii?Q?BpSRzX3Hs2inXL++1i4cC4ZYRqW+3l3Jwki+D7B/Q1QsWW5V2v3fI32vx6mI?=
- =?us-ascii?Q?CoyQc0HhT14SsAOW2dKPa0eTibl/vimiy3RUuF4sWL050PYoirWCMh9ZHOeN?=
- =?us-ascii?Q?z4TjzXsOOvAG1BXEQlxceTtGqCMua1SWL5+2quUzRb8Q2ZpoJq+ricI/YVgF?=
- =?us-ascii?Q?bIp2LgJzpahBuoFyZd36EJwESnu/5uQyGVigDG5bqdM2e4vR22j+uCF8VGdW?=
- =?us-ascii?Q?le3uZmwG5U6TTSRteJwruxt62Nuasp5HNsg3HMN7dztGbzcXkq9dlK2kDMb3?=
- =?us-ascii?Q?Pmqy9AIOpClaI5m7/f06zkOxff2RZK3Ru2VAd4+D7Bx1ouN60jA7Dnr+jnG7?=
- =?us-ascii?Q?1WmYrmKBimwifZg0czX0R/Nk4WCjNneAXibBInCyBfqemYBjKjMqSbqGhsrN?=
- =?us-ascii?Q?V0f2PjRaGO2P0FhIZQEw8+a5W5Nr8cTx7GKFI/Gls2F78nV0DNJdG6IVsqZy?=
- =?us-ascii?Q?/rIF7JhwELLgrpuVd0AiWNeurGv6YV6VydKdwp6zv+dS58U9QuNTOxBDSqx+?=
- =?us-ascii?Q?pwHq1rsP2W8kc1Hwp7G9+nSYRnmaVnErnPgBUoSJtykez97GFcx0n3sZgJfC?=
- =?us-ascii?Q?Z2pj4YdlM9a3Jy7HMiD/xhvDV0f41B7sFeme7r9RWcTzwtFa7Xqmm3QIa+Co?=
- =?us-ascii?Q?kN2TqOj22vjr1f++eRWP6LqHREXruBCK5lVsnEG5pBOSqEInEL23UB/XubFI?=
- =?us-ascii?Q?OK73dJKaAo96NW+dAdOBE62qjaxIa6L/TPAdN1TYrapdv1YxOejyehHLjUzO?=
- =?us-ascii?Q?3w=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: fugGbENQKYQmTfMC3gLOWpT5j3r3DE29HhjMrW+cIEuVzOwLiFdWb2n08vLAVoVGdPTJ0U2RJszClTJ46VNMPajwgSbH0GruaElaoYziPVL6MQ+ABKOqBmDMOgS7q+rw0UV6GnSmJ66mp2POOHgzgwVputYMdTxZx8HEBY5VfUX5/vn57vV/o9gvu1vNiEwwToG7NCBi1aIguS2pPjNWTzzzCI+O2lyCvYiDc2SZw5O9AH2KwvT5WYngyovslDuEESCPkd7lRI2t32Nzjp/X6JIbnGippj8JiKoSGVhUm4LYTeL60s9vack4INmeTQTbnRCJYbe/gQ3JFAlcgKuXKKdA2ehtxBhZeiJ9GGg6PNLcrJQoeAHwTMHuOtp392C9Edx6N0yFZQ7fDdpcRmnFhvDo88ovWiVkyAFQjGbjBTGOzNNex0BbR6WfML0rLvCcwttUBrNmAA3C1faIrfKdUJEJrRzmYvi/uzwAGsa6rDXGE3vBeOPsFqyTGeAmQpnrQYIziw9Pq5qyzPFLPweRkqCe8Ido4qdF5MYCKVUtV0Rz8q2P3v88dgaO/yo5F5GCs40Al5SVnmgf/RyxFVG6BhDNJL5zYfdD2XcYUokE/R0sBatXLbZOgI+B8vfyOoyLCYIHt86DAZ6SBu0a3X9C3oJ7Urb9ZtBkE1hSzFAmZ4kiamtege0lGW0whBE19991yluHPpePQZTGYSRBgMLVRn7B9eSSy8lrTfsj6Zs8OaeQO89SUbbjWqW3AnsLqAVN9U8bU4c7BjQp3jgmcGl4sVX7coDPLYVQ5EOmA0UT14m2mYc07WEoORezqcqZ9i0YdfIehsdQdJeG5iiVEOayG9XtcPg+IXLerhtppdsNbKY=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0f9dc032-9774-495c-3ee8-08dba5b5b78f
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2023 21:53:29.1827
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DJzzEIeY0jeImZG8I0sObZBdvcED25LRdSLL4oXRxAQZoE7lYzwmjIZvl346+f8VrdtrLpKQKajoxoM7xOcVZmL/RXIGbeQLSSUo+kZzykA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4518
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-25_19,2023-08-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=737 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2308250196
-X-Proofpoint-GUID: pAkxmGUcjDQFSmxQle1lPN0ra1GP4T87
-X-Proofpoint-ORIG-GUID: pAkxmGUcjDQFSmxQle1lPN0ra1GP4T87
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
+To:     Rodrigo Vivi <rodrigo.vivi@kernel.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Thorsten Leemhuis <regressions@leemhuis.info>,
+        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
+        Bart Van Assche <bvanassche@acm.org>
+References: <20230731003956.572414-1-dlemoal@kernel.org>
+ <ZOehTysWO+U3mVvK@rdvivi-mobl4>
+ <40adc06d-0835-2786-0bfb-83239f546d92@kernel.org>
+ <ZOjgJl4nlieu3+kL@rdvivi-mobl4>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZOjgJl4nlieu3+kL@rdvivi-mobl4>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 8/26/23 02:09, Rodrigo Vivi wrote:
+>> I would have expected issues on the resume side. But it seems you are getting a
+>> hang on suspend, which is new. How quick are your suspend/resume cycles ? I did
+>> use rtcqake for my tests as well, but I was setting the wake timer at +5s or
+>> more and suspending with "systemctl suspend".
+> 
+> I meant resume. It hangs during random parts at the resume sequence.
+> Brain thought resume, fingers typed 'Suspend', I'm sorry!
 
-Michael,
+That makes more sense :)
 
-> Testing of virtual fibre channel devices under Hyper-V has shown
-> additional SRB status values being returned for various error cases.
-> Because these SRB status values are not recognized by storvsc, the I/O
-> operations are not flagged as an error. Request are treated as if they
-> completed normally but with zero data transferred, which can cause a
-> flood of retries.
->
-> Add definitions for these SRB status values and handle them like other
-> error statuses from the Hyper-V host.
+>>> So, maybe we have some kind of disks/configuration out there where this
+>>> start upon resume is needed? Maybe it is just a matter of timming to
+>>> ensure some firmware underneath is up and back to life?
+>>
+>> I do not think so. Suspend will issue a start stop unit command to put the drive
+>> to sleep and resume will reset the port (which should wake up the drive) and
+>> then issue an IDENTIFY command (which will also wake up the drive) and other
+>> read logs etc to rescan the drive.
+>> In both cases, if the commands do not complete, we would see errors/timeout and
+>> likely port reset/drive gone events. So I think this is likely another subtle
+>> race between scsi suspend and ata suspend that is causing a deadlock.
+>>
+>> The main issue I think is that there is no direct ancestry between the ata port
+>> (device) and scsi device, so the change to scsi async pm ops made a mess of the
+>> suspend/resume operations ordering. For suspend, scsi device (child of ata port)
+>> should be first, then ata port device (parent). For resume, the reverse order is
+>> needed. PM normally ensures that parent/child ordering, but we lack that
+>> parent/child relationship. I am working on fixing that but it is very slow
+>> progress because I have been so far enable to recreate any of the issues that
+>> have been reported. I am patching "blind"...
+> 
+> I believe your suspicious makes sense. And on these lines, that patch you
+> attached earlier would fix that. However my initial tries of that didn't
+> help. I'm going to run more tests and get back to you.
 
-Applied to 6.5/scsi-fixes, thanks!
+Yes, I now better understand what is going on, somewhat.
+The patch I sent corrects the suspend side: the scsi device will be suspended
+first, which triggers issuing an IDLE command to spin down the drive, then that
+ATA port is suspended. All good. However, this patch does not address the resume
+side.
 
-[1/1] scsi: storvsc: Handle additional SRB status values
-      https://git.kernel.org/mkp/scsi/c/812fe6420a6e
+The ata port is resumed first. This operation is rather quick and only trigger
+ata EH asynchronously. The scsi device is resumed after the ata port. This
+operation triggers issuing a VERIFY command to spinup the drive and put it back
+in the active power state. Media access commands like VERIFY are the only
+commands that restore a disk to active state. However, the "no start on resume"
+patch I sent disables that, which is wrong. But reverting it is also not a full
+solution as there is no way to know when the VERIFY command will be issued with
+regard to ata EH triggered. That verify command should be issued after the port
+is resumed and before the revalidation start !
+
+I suspect that you get your lockup with the no start on resume patch because the
+revalidation never proceeds correctly as the drive is still sleeping. And things
+work with the patch reverted as you get lucky and the VERIFY command makes it
+through at the right timing... Would need to add more messages to confirm all
+this. I still cannot really explain the hard lockup though as in the end, you
+should be seeing command timeouts, port reset, retries, and eventually drive
+removal.
+
+Anyway, what is clear is that using scsi manage_start_stop cannot possibly work
+for resume. So more patches are needed to move the IDLE and VERIFY commands to
+libata EH so that these commands are issued within the EH context instead of the
+scsi device suspend/resume context.
+
+Working on that. I should have patches ready for you Monday.
+
+>> Any chance you could get a thread stack dump when the system hangs ?
+>>
+>> echo t > /proc/sysrq-trigger
+>>
+>> And:
+>>
+>> echo d > /proc/sysrq-trigger
+>>
+>> would be useful as well...
+>>
+>> That is, unless you really have a hard lockup...
+> 
+> no chance... it is a hard lockup.
+
+Too bad... I really would like to understand where things get deadlocked.
+
+> I have the CONFIG_PM_DEBUG here with no_console_suspend.
+> If you remember any other config or parameter that would help, please let
+> me know that I collect it again:
+> 
+> [  104.571459] PM: suspend entry (deep)
+> [  104.585967] Filesystems sync: 0.010 seconds
+> [  104.618685] Freezing user space processes
+> [  104.625374] Freezing user space processes completed (elapsed 0.002 seconds)
+> [  104.632448] OOM killer disabled.
+> [  104.635712] Freezing remaining freezable tasks
+> [  104.641899] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+> [  104.669767] wlp6s0: deauthenticating from 08:36:c9:85:df:ef by local choice (Reason: 3=DEAUTH_LEAVING)
+> [  104.679812] serial 00:01: disabled
+> [  104.683466] sd 7:0:0:0: [sdc] Synchronizing SCSI cache
+> [  104.688902] sd 7:0:0:0: [sdc] Stopping disk
+> [  104.693176] sd 5:0:0:0: [sdb] Synchronizing SCSI cache
+> [  104.698419] sd 4:0:0:0: [sda] Synchronizing SCSI cache
+> [  104.703730] sd 4:0:0:0: [sda] Stopping disk
+> [  104.885912] sd 5:0:0:0: [sdb] Stopping disk
+
+So we have:
+4:0:0:0 -> ata5 port
+5:0:0:0 -> ata6 port
+7:0:0:0 -> ata8 port
+
+> [  106.163215] PM: suspend devices took 1.514 seconds
+> [  107.003217] serial 00:01: activated
+> [  107.076779] nvme nvme0: 16/0/0 default/read/poll queues
+> [  107.123917] r8169 0000:07:00.0 enp7s0: Link is Down
+> [  107.208945] PM: resume devices took 0.241 seconds
+> [  107.214746] pcieport 0000:00:1c.0: PCI bridge to [bus 06]
+> [  107.220274] pcieport 0000:00:1c.0:   bridge window [mem 0x43700000-0x437fffff]
+> [  107.227538] OOM killer enabled.
+> [  107.230710] Restarting tasks ...
+> [  107.231803] pcieport 0000:00:1c.2: PCI bridge to [bus 07]
+> [  107.236474] done.
+> [  107.240599] pcieport 0000:00:1c.2:   bridge window [io  0x4000-0x4fff]
+> [  107.242574] random: crng reseeded on system resumption
+> [  107.249119] pcieport 0000:00:1c.2:   bridge window [mem 0x43600000-0x436fffff]
+> [  107.249405] pcieport 0000:00:1c.6: PCI bridge to [bus 08]
+> [  107.259714] PM: suspend exit
+> [  107.261623] pcieport 0000:00:1c.6:   bridge window [io  0x3000-0x3fff]
+> [  107.276554] pcieport 0000:00:1c.6:   bridge window [mem 0x43500000-0x435fffff]
+> [  107.283849] pcieport 0000:00:1c.6:   bridge window [mem 0x70900000-0x709fffff 64bit pref]
+
+The messages below come from libata EH which was triggered asynchronously and
+end up running after PM exit, which is fine as PM does not need to wait for the
+drive to spin up.
+
+> [  107.293567] ata7: SATA link down (SStatus 4 SControl 300)
+> [  107.304150] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  107.310975] ata6: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  107.319173] ata5.00: configured for UDMA/133
+> [  107.324620] ata5.00: Enabling discard_zeroes_data
+> [  107.398370] ata6.00: configured for UDMA/133
+
+Looks like libata EH is finished here. And then comes the next suspend.
+
+> [  108.563229] PM: suspend entry (deep)
+> [  108.573610] Filesystems sync: 0.006 seconds
+> [  108.580617] Freezing user space processes
+> [  108.586774] Freezing user space processes completed (elapsed 0.002 seconds)
+> [  108.593793] OOM killer disabled.
+> [  108.597055] Freezing remaining freezable tasks
+> [  108.603246] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+> [  108.621515] sd 7:0:0:0: [sdc] Synchronizing SCSI cache
+> [  108.621522] sd 5:0:0:0: [sdb] Synchronizing SCSI cache
+> [  108.622018] serial 00:01: disabled
+> [  108.635420] sd 4:0:0:0: [sda] Synchronizing SCSI cache
+> [  108.640747] sd 4:0:0:0: [sda] Stopping disk
+> [  108.644148] sd 5:0:0:0: [sdb] Stopping disk
+> [  108.983487] ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  108.991923] ata8.00: configured for UDMA/133
+
+Looks like ata EH from the previous resume was actually not finished and
+completes here.
+
+> [  108.996423] sd 7:0:0:0: [sdc] Stopping disk
+> [  109.973722] PM: suspend devices took 1.363 seconds
+> [  110.721600] serial 00:01: activated
+> [  110.802094] nvme nvme0: 16/0/0 default/read/poll queues
+> [  110.873036] r8169 0000:07:00.0 enp7s0: Link is Down
+> [  111.032278] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  111.038583] ata7: SATA link down (SStatus 4 SControl 300)
+> [  111.044065] ata6: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  111.051326] ata5.00: configured for UDMA/133
+> [  111.056118] ata5.00: Enabling discard_zeroes_data
+> [  111.131795] ata6.00: configured for UDMA/133
+> [  112.713764] ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  112.724250] ata8.00: configured for UDMA/133
+
+Looks like the drives have all come back but there is no "PM exit" to be seen,
+so I suspect the scsi device resume side is stuck... Not sure why, especially
+with the "no start on resume" patch.
+
+Will send patches to fix all this as soon as possible.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Damien Le Moal
+Western Digital Research
+
