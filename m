@@ -2,164 +2,64 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB50C3DA6F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 10:21:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCBCEC3DA6F
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 12:16:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231579AbjHYKUb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Aug 2023 06:20:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34974 "EHLO
+        id S244546AbjHYMQR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Aug 2023 08:16:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243471AbjHYKUG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 06:20:06 -0400
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C9CD133
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2023 03:19:44 -0700 (PDT)
-Received: by mail-ej1-x636.google.com with SMTP id a640c23a62f3a-99cdb0fd093so89983266b.1
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2023 03:19:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1692958783; x=1693563583;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=8hmeN79sYGm2yupcg1U1ZPEVlv8mSwCgTnsR3HDlFcg=;
-        b=P1oUEbW6Avm1OcDDYWJCLmKiBo8QGj9EuaqkPpWDnihUz9zA78OWflrSORwwLycFFe
-         +hzuHp1q1lpm/Pt43kAvQvoVhHQd1Gt9IoNLMVAqkfa9inOi3g451+u9nKAOF4uvzfM7
-         w6YBMQZd0bdA8CokkDkOVw00zhPitOpLevFM8O5KTeV6qmF5XPxe6nPc/ctTqrZGH2Im
-         dUaI6+kpgRMaxoEgUk0xHP5G8TpB6idTW8qsN4VxK4X9T5SiGZGAasGtb6tyGtMN0uDd
-         za9gsaGZRzZ3LVzjqYEg0ljOelY8Ix3GmiMTbyi5RgQi4zAGzF66kk/HzC0k+uw1WZTC
-         NYRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692958783; x=1693563583;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=8hmeN79sYGm2yupcg1U1ZPEVlv8mSwCgTnsR3HDlFcg=;
-        b=laQ5KFJi7DpBdVrEkRtk3RcqPtnLrFu2DYyXKyYT+pXi+cwMiKqczZoSYMi6fmZ3O+
-         BlrC9UD7RD/RGW2TAtFsE6JXP7CvW5LIBunGeRSarIL/QvN/K0YNUGr7fja7Jlx+ToJr
-         2UZ7veQJ791ckvxhUcRAUB9MasV7btNpElvoeH/DmBpUgvBZLV1EtHxkchIpYKDbzXwn
-         y1pmtAxaBlx8qE1a/UM9ZxsivRDd40ghQolhO4nRKE7tFPdJBNZKw6TktOqaEyZ+rSvj
-         37hYQ6Nq0Lx7j5LAOBTGhikgSl+a4IilUXcIw93xYFP5ypYTQpL343eJvaKo8cBBf48X
-         8VgQ==
-X-Gm-Message-State: AOJu0Yxf2GEx1dosWyuRVp0JqA2YmHGLIKkLc7spkdNnEY72oJVaLPfd
-        RBgdOGjUbzupCbF1ZWJBCxNPsA==
-X-Google-Smtp-Source: AGHT+IFLSi2VQHJDpvE/O9nRgSIMhEaB16ib6oXZqIwxs7UTphQws++T+eBZGRZa8TvD2hXubHxxqw==
-X-Received: by 2002:a17:906:220f:b0:9a3:faf:7aa8 with SMTP id s15-20020a170906220f00b009a30faf7aa8mr2104632ejs.10.1692958782813;
-        Fri, 25 Aug 2023 03:19:42 -0700 (PDT)
-Received: from [192.168.1.195] ([5.133.47.210])
-        by smtp.googlemail.com with ESMTPSA id z7-20020a17090655c700b00992f309cfe8sm810217ejp.178.2023.08.25.03.19.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Aug 2023 03:19:42 -0700 (PDT)
-Message-ID: <f4b5512b-9922-1511-fc22-f14d25e2426a@linaro.org>
-Date:   Fri, 25 Aug 2023 11:19:41 +0100
+        with ESMTP id S244611AbjHYMPw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 08:15:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FF7AE6B;
+        Fri, 25 Aug 2023 05:15:51 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A1BC262263;
+        Fri, 25 Aug 2023 12:15:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52634C433CD;
+        Fri, 25 Aug 2023 12:15:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692965750;
+        bh=hmmaKalEHmRrjbliPzu7rTUes6QoqRdIs5b3PhZ12mw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=h/PuitcNvu4dx/i7MIDWMFu4egRfQD43sXTSd0WzHTvc5A+fbE8Id23tPtrFVzpbO
+         s679Rjrs7kgLCEqKsIaMVafeRix4UWcdRW2WaSQJx71/aXUO0CGLQWDCb2jkYAlxpz
+         Z8tfs6zDPerC9E4djq2vfxyDCLeMhllzDEy4TTN1S4KxSRqhntaQCmLSBBftDgOKQq
+         sX/0sx6WNckj3TK6m1Yqm2+bwczYu41rDncBYf6X4Z3ouCf41++cfWH69XxYfZcIEE
+         ktIxhbdBZm6MN1GozoF4a/beKdeX1I8PsE8jHNe9ayiJ2msb1A3k7g0X+E5Q5uE4oY
+         vt7AjNL6W5jbQ==
+Date:   Fri, 25 Aug 2023 14:15:45 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 15/29] scsi: target: Convert to bdev_open_by_path()
+Message-ID: <20230825-entrollt-ausgearbeitet-850021749ef7@brauner>
+References: <20230818123232.2269-1-jack@suse.cz>
+ <20230823104857.11437-15-jack@suse.cz>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
- ufs
-Content-Language: en-US
-To:     Gaurav Kashyap <quic_gaurkash@quicinc.com>,
-        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        ebiggers@google.com
-Cc:     linux-mmc@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, omprsing@qti.qualcomm.com,
-        quic_psodagud@quicinc.com, avmenon@quicinc.com,
-        abel.vesa@linaro.org, quic_spuppala@quicinc.com
-References: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
-From:   Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-In-Reply-To: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20230823104857.11437-15-jack@suse.cz>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On 19/07/2023 18:04, Gaurav Kashyap wrote:
-> These patches add support to Qualcomm ICE (Inline Crypto Enginr) for hardware
-> wrapped keys using Qualcomm Hardware Key Manager (HWKM) and are made on top
-> of a rebased version  Eric Bigger's set of changes to support wrapped keys in
-> fscrypt and block below:
-> https://git.kernel.org/pub/scm/fs/fscrypt/linux.git/log/?h=wrapped-keys-v7
-> (The rebased patches are not uploaded here)
+On Wed, Aug 23, 2023 at 12:48:26PM +0200, Jan Kara wrote:
+> Convert iblock and pscsi drivers to use bdev_open_by_path() and pass the
+> handle around.
 > 
-> Ref v1 here:
-> https://lore.kernel.org/linux-scsi/20211206225725.77512-1-quic_gaurkash@quicinc.com/
-> 
-> Explanation and use of hardware-wrapped-keys can be found here:
-> Documentation/block/inline-encryption.rst
-> 
-> This patch is organized as follows:
-> 
-> Patch 1 - Prepares ICE and storage layers (UFS and EMMC) to pass around wrapped keys.
-> Patch 2 - Adds a new SCM api to support deriving software secret when wrapped keys are used
-> Patch 3-4 - Adds support for wrapped keys in the ICE driver. This includes adding HWKM support
-> Patch 5-6 - Adds support for wrapped keys in UFS
-> Patch 7-10 - Supports generate, prepare and import functionality in ICE and UFS
-> 
-> NOTE: MMC will have similar changes to UFS and will be uploaded in a different patchset
->        Patch 3, 4, 8, 10 will have MMC equivalents.
-> 
-> Testing:
-> Test platform: SM8550 MTP
-> Engineering trustzone image is required to test this feature only
-> for SM8550. For SM8650 onwards, all trustzone changes to support this
-> will be part of the released images.
+> CC: target-devel@vger.kernel.org
+> CC: linux-scsi@vger.kernel.org
+> Acked-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
 
-AFAIU, Prior to these proposed changes in scm, HWKM was done with help 
-of TA(Trusted Application) for generate, import, unwrap ... functionality.
-
-1. What is the reason for moving this from TA to new smc calls?
-
-Is this because of missing smckinvoke support in upstream?
-
-How scalable is this approach? Are we going to add new sec sys calls to 
-every interface to TA?
-
-2. How are the older SoCs going to deal with this, given that you are 
-changing drivers that are common across these?
-
-Have you tested these patches on any older platforms?
-
-What happens if someone want to add support to wrapped keys to this 
-platforms in upstream, How is that going to be handled?
-
-As I understand with this, we will endup with two possible solutions 
-over time in upstream.
-
-
-thanks,
---srini
-
-> The engineering changes primarily contain hooks to generate, import and
-> prepare keys for HW wrapped disk encryption.
-> 
-> The changes were tested by mounting initramfs and running the fscryptctl
-> tool (Ref: https://github.com/ebiggers/fscryptctl/tree/wip-wrapped-keys) to
-> generate and prepare keys, as well as to set policies on folders, which
-> consequently invokes disk encryption flows through UFS.
-> 
-> Gaurav Kashyap (10):
->    ice, ufs, mmc: use blk_crypto_key for program_key
->    qcom_scm: scm call for deriving a software secret
->    soc: qcom: ice: add hwkm support in ice
->    soc: qcom: ice: support for hardware wrapped keys
->    ufs: core: support wrapped keys in ufs core
->    ufs: host: wrapped keys support in ufs qcom
->    qcom_scm: scm call for create, prepare and import keys
->    ufs: core: add support for generate, import and prepare keys
->    soc: qcom: support for generate, import and prepare key
->    ufs: host: support for generate, import and prepare key
-> 
->   drivers/firmware/qcom_scm.c            | 292 +++++++++++++++++++++++
->   drivers/firmware/qcom_scm.h            |   4 +
->   drivers/mmc/host/cqhci-crypto.c        |   7 +-
->   drivers/mmc/host/cqhci.h               |   2 +
->   drivers/mmc/host/sdhci-msm.c           |   6 +-
->   drivers/soc/qcom/ice.c                 | 309 +++++++++++++++++++++++--
->   drivers/ufs/core/ufshcd-crypto.c       |  92 +++++++-
->   drivers/ufs/host/ufs-qcom.c            |  63 ++++-
->   include/linux/firmware/qcom/qcom_scm.h |  13 ++
->   include/soc/qcom/ice.h                 |  18 +-
->   include/ufs/ufshcd.h                   |  25 ++
->   11 files changed, 797 insertions(+), 34 deletions(-)
-> 
+Looks good to me,
+Acked-by: Christian Brauner <brauner@kernel.org>
