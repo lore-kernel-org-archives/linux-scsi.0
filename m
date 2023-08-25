@@ -2,157 +2,77 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8D3FEE49B2
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 13:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E13DC3DA6F
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 13:50:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245261AbjHYNs2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Aug 2023 09:48:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41158 "EHLO
+        id S245242AbjHYNuD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Aug 2023 09:50:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234813AbjHYNsE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 09:48:04 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA72C2136;
-        Fri, 25 Aug 2023 06:47:58 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 49AEC21F79;
-        Fri, 25 Aug 2023 13:47:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1692971277; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BpzfsfMiRxmg30OdFnKzv1mOgTevyt5wkPNcyneGwG0=;
-        b=uohLnKnqtpENx2vCia+CF25VunAvqKNxW8Gl/JZPjm2522sG0QzHP89CKm9gvg5uhIQmJN
-        WBEcUX07tygEsfRFeW0MDCmmX2lneinhEWFdq+jYTgqP+tDCYKowqEsMW88igvW28lrojs
-        hfcd/30g2Ie/qrM4mt7e3dhBm3c9V28=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1692971277;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BpzfsfMiRxmg30OdFnKzv1mOgTevyt5wkPNcyneGwG0=;
-        b=avw/hNX+TPhBa6q/Pyjq6dsHiVTX81moNODEW9+kRWtkr4cKF/cxPXXUPquXV79uoK0IL4
-        nSbq/d/haJGtPRAQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 28033138F9;
-        Fri, 25 Aug 2023 13:47:57 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id UJRbCQ2x6GQZAwAAMHmgww
-        (envelope-from <jack@suse.cz>); Fri, 25 Aug 2023 13:47:57 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id A432FA0774; Fri, 25 Aug 2023 15:47:56 +0200 (CEST)
-Date:   Fri, 25 Aug 2023 15:47:56 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org, Jens Axboe <axboe@kernel.dk>,
-        Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <20230825134756.o3wpq6bogndukn53@quack3>
-References: <20230810171429.31759-1-jack@suse.cz>
- <20230825015843.GB95084@ZenIV>
+        with ESMTP id S245266AbjHYNtn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 09:49:43 -0400
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1C462134;
+        Fri, 25 Aug 2023 06:49:41 -0700 (PDT)
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-56c250ff3d3so1458983a12.1;
+        Fri, 25 Aug 2023 06:49:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692971381; x=1693576181;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5BoRjLg4nGdp7vIzAcWK0iyi7HX6jnkYl9l+pRzvaes=;
+        b=f/8iZJlHrXQRLzIYteN0YmapwsW+UZnwNLPFjm/jTZI3/cS1ZFNCWT1hal+Eh4PIA9
+         olgCTcuCSnWGU9PZVyvlFT781RnN49QybIOKxKd7/2sdkPafMJDPqGCouEjRv8YnrPQR
+         vSv/9inTx6UIJO3kyBgbDP2uhbyvZ1AmA9SMpOLpubZr8/+cY+aRFwsMYVutqIJiA3kq
+         ofz3EvuRTzGTnPw3TwafNOL1iiU5fAHQbFRpitP67s6UxyVrOpasNM1CZ9c10tRw02Aq
+         3FM745O2VVmkigZwSnQL505fgmg8gsHOnNPhJeNPMg2dyUQaBPl2BgzocobObaAKaHUN
+         c/9w==
+X-Gm-Message-State: AOJu0YxGoHt4GwuaPyNYlZoKXluOAos/u8CFQY53PwlCyZZDeb+8i1kx
+        eD7Gtrra+TURldk3FYOJSWRgzPIbjgM=
+X-Google-Smtp-Source: AGHT+IEXcaFT8ACCYHdh6CcpROSxHESrZGv+dn9c7yBuAgmfQNfw1EQavA+OCxHvRa2cdTTWsnVdrg==
+X-Received: by 2002:a17:90a:7408:b0:26b:513a:30b0 with SMTP id a8-20020a17090a740800b0026b513a30b0mr28675817pjg.10.1692971380999;
+        Fri, 25 Aug 2023 06:49:40 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id js23-20020a17090b149700b0026094c23d0asm1668170pjb.17.2023.08.25.06.49.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 25 Aug 2023 06:49:40 -0700 (PDT)
+Message-ID: <55f5361a-13d2-470a-876b-383822121af8@acm.org>
+Date:   Fri, 25 Aug 2023 06:49:38 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230825015843.GB95084@ZenIV>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [bug report] blktests srp/002 hang
+Content-Language: en-US
+To:     Bob Pearson <rpearsonhpe@gmail.com>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+ <0c5c732c-283c-b29a-0ac2-c32211fc7e17@gmail.com>
+ <yewvcfcketee5qduraajra2g37t2mpxdlmj7aqny3umf7mkavk@wsm5forumsou>
+ <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
+ <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
+ <783a432a-1875-d508-741d-ccc1277bb67a@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <783a432a-1875-d508-741d-ccc1277bb67a@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri 25-08-23 02:58:43, Al Viro wrote:
-> On Fri, Aug 11, 2023 at 01:04:31PM +0200, Jan Kara wrote:
-> > Hello,
-> > 
-> > this is a v2 of the patch series which implements the idea of blkdev_get_by_*()
-> > calls returning bdev_handle which is then passed to blkdev_put() [1]. This
-> > makes the get and put calls for bdevs more obviously matching and allows us to
-> > propagate context from get to put without having to modify all the users
-> > (again!).  In particular I need to propagate used open flags to blkdev_put() to
-> > be able count writeable opens and add support for blocking writes to mounted
-> > block devices. I'll send that series separately.
-> > 
-> > The series is based on Christian's vfs tree as of yesterday as there is quite
-> > some overlap. Patches have passed some reasonable testing - I've tested block
-> > changes, md, dm, bcache, xfs, btrfs, ext4, swap. This obviously doesn't cover
-> > everything so I'd like to ask respective maintainers to review / test their
-> > changes. Thanks! I've pushed out the full branch to:
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
-> > 
-> > to ease review / testing.
-> 
-> Hmm...  Completely Insane Idea(tm): how about turning that thing inside out and
-> having your bdev_open_by... return an actual opened struct file?
-> 
-> After all, we do that for sockets and pipes just fine and that's a whole lot
-> hotter area.
-> 
-> Suppose we leave blkdev_open()/blkdev_release() as-is.  No need to mess with
-> what we have for normal opened files for block devices.  And have block_open_by_dev()
-> that would find bdev, etc., same yours does and shove it into anon file.
-> 
-> Paired with plain fput() - no need to bother with new primitives for closing.
-> With a helper returning I_BDEV(bdev_file_inode(file)) to get from those to bdev.
-> 
-> NOTE: I'm not suggesting replacing ->s_bdev with struct file * if we do that -
-> we want that value cached, obviously.  Just store both...
-> 
-> Not saying it's a good idea, but... might be interesting to look into.
-> Comments?
+On 8/24/23 18:36, Bob Pearson wrote:
+> Did you see Bart's comment about srp not working with older versions of multipathd?
+> He is currently not seeing any hangs at all.
 
-I can see the appeal of not having to introduce the new bdev_handle type
-and just using struct file which unifies in-kernel and userspace block
-device opens. But I can see downsides too - the last fput() happening from
-task work makes me a bit nervous whether it will not break something
-somewhere with exclusive bdev opens. Getting from struct file to bdev is
-somewhat harder but I guess a helper like F_BDEV() would solve that just
-fine.
+Hi Bob,
 
-So besides my last fput() worry about I think this could work and would be
-probably a bit nicer than what I have. But before going and redoing the whole
-series let me gather some more feedback so that we don't go back and forth.
-Christoph, Christian, Jens, any opinion?
+It seems like my comment was not clear enough. The SRP tests are compatible
+with all upstream versions of multipathd, including those from ten years ago.
+While testing on Debian, one year ago I noticed that the only way to make
+the SRP tests pass was to replace the Debian version of multipathd with an
+upstream version. I'm not sure of this but my guess is that I encountered a
+Debian version of multipathd with a bug introduced by the Debian maintainers.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Bart.
+
