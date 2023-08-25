@@ -2,117 +2,130 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6FB9EE49A0
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 21:04:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8300EE49A0
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 21:08:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231298AbjHYVDt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Aug 2023 17:03:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47460 "EHLO
+        id S231488AbjHYVIF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Aug 2023 17:08:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231272AbjHYVD0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 17:03:26 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 181A22114
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2023 14:03:25 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1bf7a6509deso9827335ad.3
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2023 14:03:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1692997404; x=1693602204;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gUlxmH/dGUJclmdBEKi1Fz0Bb8RWQp73AiP7WLDESYs=;
-        b=WvoNUjaWOJnbRajoU56mgqW/lItOF4Pc/05X8ZFZMmElxhb1DfAAhNksvc+VuMoyw8
-         +3mAdBuH7p8OaiT0edExs4vUwHgK/lZB5OLvxMWZxcnbm9eH/ajUDdoljM/7L2sN6h+C
-         JBxvbmA4ptVnbjGu7Jl14lGlzprTEOTC9hv1s=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692997404; x=1693602204;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gUlxmH/dGUJclmdBEKi1Fz0Bb8RWQp73AiP7WLDESYs=;
-        b=DTdycVeKjFWX/8ZJaSdMXfWfkzEsOV1y97xM24tY9uxsPKnfZcBQZhSUWv3mW8SCEo
-         bQ5t2KTFZXObZ8iatJ1mRiaZtFtZoilbG5jY35XEJ06U0lbEpTqbUikQgBGYHm/flvbT
-         KQSmndxiUQqvUetQE72oqc3Vg/Vm+Ir4GswqBC/lMhnoQyHl79jdwXtktPz9THpOVe3p
-         RUP20ErAk/02V79Qfel8kH0jK42Ow7UWRyL92bghrRriTE16Dyu8KmYtOFEId62lsqrv
-         EacvSVj0KWoL9A81cUCmTDY7dl9mBSSNcbXZ0WhaKEkSxrfSrteWfweq7d/k6OIgPeIg
-         aK8w==
-X-Gm-Message-State: AOJu0Yy/uPeE1cUy6vSzK6x+dd8LJO3Wihzfo1MglLLcvRs6qn/PqEVF
-        dEatbR8tjsiBKjr9ztmrW1VfGA==
-X-Google-Smtp-Source: AGHT+IEXNuyzFMSex8+HsXvaJyCHuZ8R/NSDeNZ8O0dtyFXKmAsfu74ZxXeo0Z8txaDNSsWHxuS5+g==
-X-Received: by 2002:a17:902:a409:b0:1b9:c68f:91a5 with SMTP id p9-20020a170902a40900b001b9c68f91a5mr14598728plq.6.1692997404511;
-        Fri, 25 Aug 2023 14:03:24 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id j16-20020a170902da9000b001b9de2b905asm2193722plx.231.2023.08.25.14.03.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Aug 2023 14:03:23 -0700 (PDT)
-Date:   Fri, 25 Aug 2023 14:03:23 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     James Seo <james@equiv.tech>
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 03/12] scsi: mpt3sas: Make
- MPI2_CONFIG_PAGE_RAID_VOL_0::PhysDisk[] a flexible array
-Message-ID: <202308251357.38AF364@keescook>
-References: <20230806170604.16143-1-james@equiv.tech>
- <20230806170604.16143-4-james@equiv.tech>
+        with ESMTP id S231344AbjHYVHc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2023 17:07:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8810E210D;
+        Fri, 25 Aug 2023 14:07:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C8A2623E9;
+        Fri, 25 Aug 2023 21:07:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CFC4C433C8;
+        Fri, 25 Aug 2023 21:07:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692997649;
+        bh=3LZslYY/Z/fNex0qpgIIxBGEpf6J7Qp2wNTLVeCxNak=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=LR9LYHTCSNbzSLc+a2zNZ2I+W25v/mVPTtA0dzLRVhwjv9G0VM6C/01wxbPexNJtO
+         IN/lLLs1iPoI+nWUt3VCKz1XqUmuLxiAnZjft463YjEooqf2k74YRuhYY2sgojQpww
+         2w6ScwoHoYzScThIWRmnw+vI3kWLkM5Kn4Gr3VHZEEhTDd0X0IHsQdeL4SY870EbV1
+         DkkSIsiiqW2O7RsRITyHVZmniYFOgVbiQ4NOQEFj7zNv0s596W/h8p9WYVIpNkRuyD
+         Aqk/94KqUdul3h4G3phhhwwYh3HQYqt1WnZlAZhqehRfSHC2yVWQ00I693urTikF50
+         80QLqKOqr3tEg==
+Date:   Fri, 25 Aug 2023 14:07:27 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Cc:     Gaurav Kashyap <quic_gaurkash@quicinc.com>,
+        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, omprsing@qti.qualcomm.com,
+        quic_psodagud@quicinc.com, avmenon@quicinc.com,
+        abel.vesa@linaro.org, quic_spuppala@quicinc.com
+Subject: Re: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
+ ufs
+Message-ID: <20230825210727.GA1366@sol.localdomain>
+References: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
+ <f4b5512b-9922-1511-fc22-f14d25e2426a@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230806170604.16143-4-james@equiv.tech>
+In-Reply-To: <f4b5512b-9922-1511-fc22-f14d25e2426a@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Aug 06, 2023 at 10:05:55AM -0700, James Seo wrote:
-> This terminal 1-length variable array can be directly converted into
-> a C99 flexible array member.
+Hi Srinivas,
+
+On Fri, Aug 25, 2023 at 11:19:41AM +0100, Srinivas Kandagatla wrote:
 > 
-> As all users of MPI2_CONFIG_PAGE_RAID_VOL_0 (Mpi2RaidVolPage0_t)
-> either calculate its size without depending on its sizeof() or do not
-> use PhysDisk[], no further source changes are required:
+> On 19/07/2023 18:04, Gaurav Kashyap wrote:
+> > These patches add support to Qualcomm ICE (Inline Crypto Enginr) for hardware
+> > wrapped keys using Qualcomm Hardware Key Manager (HWKM) and are made on top
+> > of a rebased version  Eric Bigger's set of changes to support wrapped keys in
+> > fscrypt and block below:
+> > https://git.kernel.org/pub/scm/fs/fscrypt/linux.git/log/?h=wrapped-keys-v7
+> > (The rebased patches are not uploaded here)
+> > 
+> > Ref v1 here:
+> > https://lore.kernel.org/linux-scsi/20211206225725.77512-1-quic_gaurkash@quicinc.com/
+> > 
+> > Explanation and use of hardware-wrapped-keys can be found here:
+> > Documentation/block/inline-encryption.rst
+> > 
+> > This patch is organized as follows:
+> > 
+> > Patch 1 - Prepares ICE and storage layers (UFS and EMMC) to pass around wrapped keys.
+> > Patch 2 - Adds a new SCM api to support deriving software secret when wrapped keys are used
+> > Patch 3-4 - Adds support for wrapped keys in the ICE driver. This includes adding HWKM support
+> > Patch 5-6 - Adds support for wrapped keys in UFS
+> > Patch 7-10 - Supports generate, prepare and import functionality in ICE and UFS
+> > 
+> > NOTE: MMC will have similar changes to UFS and will be uploaded in a different patchset
+> >        Patch 3, 4, 8, 10 will have MMC equivalents.
+> > 
+> > Testing:
+> > Test platform: SM8550 MTP
+> > Engineering trustzone image is required to test this feature only
+> > for SM8550. For SM8650 onwards, all trustzone changes to support this
+> > will be part of the released images.
+> 
+> AFAIU, Prior to these proposed changes in scm, HWKM was done with help of
+> TA(Trusted Application) for generate, import, unwrap ... functionality.
+> 
+> 1. What is the reason for moving this from TA to new smc calls?
+> 
+> Is this because of missing smckinvoke support in upstream?
+> 
+> How scalable is this approach? Are we going to add new sec sys calls to
+> every interface to TA?
+> 
+> 2. How are the older SoCs going to deal with this, given that you are
+> changing drivers that are common across these?
+> 
+> Have you tested these patches on any older platforms?
+> 
+> What happens if someone want to add support to wrapped keys to this
+> platforms in upstream, How is that going to be handled?
+> 
+> As I understand with this, we will endup with two possible solutions over
+> time in upstream.
 
-Tons of binary changes in this file too. I see this:
+It's true that Qualcomm based Android devices already use HW-wrapped keys on
+SoCs earlier than SM8650.  The problem is that the key generation, import, and
+conversion were added to Android's KeyMint HAL, as a quick way to get the
+feature out the door when it was needed (so to speak).  Unfortunately this
+coupled this feature unnecessarily to the Android KeyMint and the corresponding
+(closed source) userspace HAL provided by Qualcomm, which it's not actually
+related to.  I'd guess that Qualcomm's closed source userspace HAL makes SMC
+calls into Qualcomm's KeyMint TA, but I have no insight into those details.
 
-        Mpi2RaidVolPage0_t config_page;
-	...
-        r = _config_request(ioc, &mpi_request, &mpi_reply,
-            MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, &config_page,
-            sizeof(Mpi2RaidVolPage0_t));
+The new SMC calls eliminate the dependency on the Android-specific KeyMint.
+They're also being documented by Qualcomm.  So, as this patchset does, they can
+be used by Linux in the implementation of new ioctls which provide a vendor
+independent interface to HW-wrapped key generation, import, and conversion.
 
-So it's already changing this size (and possibly under-allocating now).
+I think the new approach is the only one that is viable outside the Android
+context.  As such, I don't think anyone has any plan to upstream support for
+HW-wrapped keys for older Qualcomm SoCs that lack the new interface.
 
-> - mpt3sas_config.c:mpt3sas_config_get_number_pds() fetches a
->   Mpi2RaidVolPage0_t for itself, but does not use PhysDisk[].
-
-Is it certain that _config_request()'s use of mpt3sas_wait_for_ioc()
-won't result in the hardware being upset that config_page_sz shrank?
-
-> @@ -1826,8 +1823,7 @@ typedef struct _MPI2_CONFIG_PAGE_RAID_VOL_0 {
->  	U8                      Reserved2;         /*0x25 */
->  	U8                      Reserved3;         /*0x26 */
->  	U8                      InactiveStatus;    /*0x27 */
-> -	MPI2_RAIDVOL0_PHYS_DISK
-> -	PhysDisk[MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX]; /*0x28 */
-> +	MPI2_RAIDVOL0_PHYS_DISK PhysDisk[];        /*0x28 */
->  } MPI2_CONFIG_PAGE_RAID_VOL_0,
-
-Without the mpt3sas maintainers chiming in on this, I think the only
-safe changes to make here are those with 0 binary differences. So for
-things like this, it'll need to be:
-
--	MPI2_RAIDVOL0_PHYS_DISK
--	PhysDisk[MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX]; /*0x28 */
-+	union {
-+		MPI2_RAIDVOL0_PHYS_DISK legacy_padding;        /*0x28 */
-+		DECLARE_FLEX_ARRAY(MPI2_RAIDVOL0_PHYS_DISK, PhysDisk);
-+	};
-
--- 
-Kees Cook
+- Eric
