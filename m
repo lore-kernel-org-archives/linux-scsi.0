@@ -2,125 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA622C88CB9
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 01:36:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D00CDEE49B4
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 01:59:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235060AbjHYBgX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Aug 2023 21:36:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44676 "EHLO
+        id S240380AbjHYB7a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Aug 2023 21:59:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237296AbjHYBgQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 21:36:16 -0400
-Received: from mail-oo1-xc29.google.com (mail-oo1-xc29.google.com [IPv6:2607:f8b0:4864:20::c29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8775B10F4;
-        Thu, 24 Aug 2023 18:36:14 -0700 (PDT)
-Received: by mail-oo1-xc29.google.com with SMTP id 006d021491bc7-573449a364fso43793eaf.1;
-        Thu, 24 Aug 2023 18:36:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692927374; x=1693532174;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=z/J0omGWWqNb2lMsShSCKML3nG38sMLDItX9/6kkpSM=;
-        b=ghwdi/pUKZINdZz2l4kfv1QyLxUqEhgfgr8IJJo6b5eZ0kwOieHyM5MNoU9H9j7UzG
-         4NXvZjcAt76qgk0QTG26Zmcd6s4+ACtZjY7EFiEJjurtbtk/I9JLahHGLnEBctXtUT+Z
-         UIDh85mlxaZBUy9Im/pysgl0ZxuwuCPU2E5NcuU4xupT3qWT1MbqBIeup56eeTK2qeMQ
-         OTy3JNmxLs/ksuIdCgLxd0BRO3FhK99aI9iqg+uObOYhU5snQ4Lb8ztbS2QgP26y/lHB
-         r/pNCgVleD/t0uz860UO9lMfi+dfa+UJdVtaBFwOgG0vBFAfNx2GofDNofYSsrMNFYnD
-         eD0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692927374; x=1693532174;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=z/J0omGWWqNb2lMsShSCKML3nG38sMLDItX9/6kkpSM=;
-        b=g+JX/jsVnl3sg+B0MsphfB9FqSNvHj7TjLilbZStuLTed90RR2HDlXm8c/QLLiTjdn
-         x++0G7CNp83pO5X3StyAq7cREVfoXwfxuOP3zp47EWPL+Uk0zkIO2mXa4qEyYgFZBW2G
-         7L0ng3Dmp079WXNH01keLxEC8ICS3noFlIxEt4Xlej049lFcWcXXMTJZrQN1VRDeCjke
-         RzOX65AoEjzfhBDD3/PJtINCracMIv2Bjcv2CeG17omeiXHsVzWvX/8WcDxloE7NIIRB
-         r7gji/PnAeX0uv/UhE57bYXF49BQ0KX1fkIqQXy1z7nSdWSk710AbRvoQocO/yJH8LBk
-         Shpg==
-X-Gm-Message-State: AOJu0YyE4GGQMOHO5ANUT2GCzf02tBxtff/ZHIeOIytyiYgoUTjPspXS
-        lLL9gHSpL+te7qeNTf4B4ok=
-X-Google-Smtp-Source: AGHT+IEuBSZOsPDKl0FcnEcAoJvcly+KdDFrwj4aOrUCmbM3HJNWs6imVkiloelWBirEoZ7IpQ7gRQ==
-X-Received: by 2002:a05:6870:330a:b0:1bf:e1e9:a320 with SMTP id x10-20020a056870330a00b001bfe1e9a320mr1691589oae.13.1692927373767;
-        Thu, 24 Aug 2023 18:36:13 -0700 (PDT)
-Received: from ?IPV6:2603:8081:140c:1a00:16dd:44f3:4ece:f186? (2603-8081-140c-1a00-16dd-44f3-4ece-f186.res6.spectrum.com. [2603:8081:140c:1a00:16dd:44f3:4ece:f186])
-        by smtp.gmail.com with ESMTPSA id z43-20020a056870c22b00b001cd04c355d8sm169721oae.29.2023.08.24.18.36.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Aug 2023 18:36:13 -0700 (PDT)
-Message-ID: <783a432a-1875-d508-741d-ccc1277bb67a@gmail.com>
-Date:   Thu, 24 Aug 2023 20:36:12 -0500
+        with ESMTP id S229797AbjHYB6z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 21:58:55 -0400
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A012B1BD1;
+        Thu, 24 Aug 2023 18:58:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=GqmLor0hgV4H3x7IuvuyaB/m3hDiUm8Yzrd7b9keFg8=; b=bxxlNJ96rsx4L2kKszQ8LF6ai5
+        iNtBNOQ6lzvCMPjrA8d2B5SKpMA8ehWy3QlKX8FPouK+kPzVIEZKx+nUetaQRW5JSdDZgZ40B7sUp
+        hz637OO4Su1eEUgn8Gl/dIA4NQM5w6cHamU5x0h4uc+j+8uZ5OMjiX5dOjWaEByfsbwcty7NjoKFy
+        3XYbSKjy+5wYC+oyCRnyAV7fQupk+8Mu6cgtvaubPBjXdneuinMhpNkKRGbKhUYZMh2pnc+qlSq3t
+        /phSE0e2tky2IO5H3c5MgeU2/J9SsgCPwQOsXy7U4/wxiV2850iLaIsQdHEKmyDTGxCmoecJk/YQG
+        iXEtALAQ==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qZM5z-000dvR-0M;
+        Fri, 25 Aug 2023 01:58:43 +0000
+Date:   Fri, 25 Aug 2023 02:58:43 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
+Message-ID: <20230825015843.GB95084@ZenIV>
+References: <20230810171429.31759-1-jack@suse.cz>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [bug report] blktests srp/002 hang
-Content-Language: en-US
-To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <0c5c732c-283c-b29a-0ac2-c32211fc7e17@gmail.com>
- <yewvcfcketee5qduraajra2g37t2mpxdlmj7aqny3umf7mkavk@wsm5forumsou>
- <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
- <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
-From:   Bob Pearson <rpearsonhpe@gmail.com>
-In-Reply-To: <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230810171429.31759-1-jack@suse.cz>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/24/23 20:11, Shinichiro Kawasaki wrote:
-> On Aug 22, 2023 / 08:20, Bart Van Assche wrote:
->> On 8/22/23 03:18, Shinichiro Kawasaki wrote:
->>> CC+: Bart,
->>>
->>> On Aug 21, 2023 / 20:46, Bob Pearson wrote:
->>> [...]
->>>> Shinichiro,
->>>
->>> Hello Bob, thanks for the response.
->>>
->>>>
->>>> I have been aware for a long time that there is a problem with blktests/srp. I see hangs in
->>>> 002 and 011 fairly often.
->>>
->>> I repeated the test case srp/011, and observed it hangs. This hang at srp/011
->>> also can be recreated in stable manner. I reverted the commit 9b4b7c1f9f54
->>> then observed the srp/011 hang disappeared. So, I guess these two hangs have
->>> same root cause.
->>>
->>>> I have not been able to figure out the root cause but suspect that
->>>> there is a timing issue in the srp drivers which cannot handle the slowness of the software
->>>> RoCE implemtation. If you can give me any clues about what you are seeing I am happy to help
->>>> try to figure this out.
->>>
->>> Thanks for sharing your thoughts. I myself do not have srp driver knowledge, and
->>> not sure what clue I should provide. If you have any idea of the action I can
->>> take, please let me know.
->>
->> Hi Shinichiro and Bob,
->>
->> When I initially developed the SRP tests these were working reliably in
->> combination with the rdma_rxe driver. Since 2017 I frequently see issues when
->> running the SRP tests on top of the rdma_rxe driver, issues that I do not see
->> if I run the SRP tests on top of the soft-iWARP driver (siw). How about
->> changing the default for the SRP tests from rdma_rxe to siw and to let the
->> RDMA community resolve the rdma_rxe issues?
+On Fri, Aug 11, 2023 at 01:04:31PM +0200, Jan Kara wrote:
+> Hello,
 > 
-> If it takes time to resolve the issues, it sounds a good idea to make siw driver
-> default, since it will make the hangs less painful for blktests users. Another
-> idea to reduce the pain is to improve srp/002 and srp/011 to detect the hangs
-> and report them as failures.
+> this is a v2 of the patch series which implements the idea of blkdev_get_by_*()
+> calls returning bdev_handle which is then passed to blkdev_put() [1]. This
+> makes the get and put calls for bdevs more obviously matching and allows us to
+> propagate context from get to put without having to modify all the users
+> (again!).  In particular I need to propagate used open flags to blkdev_put() to
+> be able count writeable opens and add support for blocking writes to mounted
+> block devices. I'll send that series separately.
 > 
-> Having said that, some discussion started on this thread for resolution
-> (thanks!) I would wait for a while and see how long it will take for solution,
-> and if the actions on blktests side are valuable or not.
+> The series is based on Christian's vfs tree as of yesterday as there is quite
+> some overlap. Patches have passed some reasonable testing - I've tested block
+> changes, md, dm, bcache, xfs, btrfs, ext4, swap. This obviously doesn't cover
+> everything so I'd like to ask respective maintainers to review / test their
+> changes. Thanks! I've pushed out the full branch to:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
+> 
+> to ease review / testing.
 
-Did you see Bart's comment about srp not working with older versions of multipathd?
-He is currently not seeing any hangs at all.
+Hmm...  Completely Insane Idea(tm): how about turning that thing inside out and
+having your bdev_open_by... return an actual opened struct file?
 
-Bob
+After all, we do that for sockets and pipes just fine and that's a whole lot
+hotter area.
+
+Suppose we leave blkdev_open()/blkdev_release() as-is.  No need to mess with
+what we have for normal opened files for block devices.  And have block_open_by_dev()
+that would find bdev, etc., same yours does and shove it into anon file.
+
+Paired with plain fput() - no need to bother with new primitives for closing.
+With a helper returning I_BDEV(bdev_file_inode(file)) to get from those to bdev.
+
+NOTE: I'm not suggesting replacing ->s_bdev with struct file * if we do that -
+we want that value cached, obviously.  Just store both...
+
+Not saying it's a good idea, but... might be interesting to look into.
+Comments?
