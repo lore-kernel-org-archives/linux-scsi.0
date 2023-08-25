@@ -2,60 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71E37C727A9
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 01:14:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C22F5C727A6
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Aug 2023 01:14:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240022AbjHYBOI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Aug 2023 21:14:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50776 "EHLO
+        id S239693AbjHYBOF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Aug 2023 21:14:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237616AbjHYBNu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 21:13:50 -0400
+        with ESMTP id S237818AbjHYBNv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2023 21:13:51 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4791F1BFE;
-        Thu, 24 Aug 2023 18:13:49 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37OJEKpx016614;
-        Fri, 25 Aug 2023 01:13:39 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 205541BFB;
+        Thu, 24 Aug 2023 18:13:50 -0700 (PDT)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37OJEofR022564;
+        Fri, 25 Aug 2023 01:13:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=IRM7clTLJsFv7y8+IXvQPcdHCoU8AJwOLyxoShZ6Z7Q=;
- b=2nvWZmJzWLP4ad6agOlfDpmembyGqDsNBfdMJ8rmifIf8Nzp56/VQG41L2zHuxpfHqeD
- 7Q3uxkSE94VO6mSYU8uLg2uweTqblG9jkmD7CXrYYdhD6Ay7Pc46GrS1VngqSBlURf4X
- 4TESlvWlMqTaYj0saW2CquDc4LClBasTAxV5Z2gAPous6nTGX9KhxLe3WUMAPU+ZP9TP
- 5R0GitDq1zAPZ3DGdKVeg/ZnOBljLrZUbpy4iAjbZJYmWVlCH9zDogofCFLJ3guuf2Uf
- IK/7CuTeRxL7hgwPE3idFOAulq3QJXHr39nGpOva9B3llkZs8omBX0nQ7p5Vzr5L6o8Y Hg== 
+ bh=wjYnDCnJ/gIL/9h6HNzHJABHTPt5pAV93o57WL/6Eqc=;
+ b=xY0G3vv2fTUpOq8qwsUCzoZb15Y86AY0VWn5HNpzbIbZFBO45lt4v3wKXPqpzLUBnjhk
+ /oXh68o10s91z7gWeCrFTZJWMzUb1f1dUjzdIgLXHcWMSr4ULwc6CwkgTMDOfAc5WhR6
+ 6vZspcvXmKzPYxEZTwqNrw3tWi1l/Vy277QhfADL3FZT4hzHggYl96XJAMF/zkhcVZMm
+ 9M0x5aJjKdDjk9s1lLfpGjvHTMkv8+HnyB29biumLjFJlz8WC7BI1KmbIpmYcLMORURU
+ aeSHATtLgFPucomjZgzuSxakr4uYTVezjG2hhi9g5YR6zgVft8bRGH15xRMoHMFg/lLj DA== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3sn1yvwfua-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3sn1yu5hts-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Aug 2023 01:13:39 +0000
+        Fri, 25 Aug 2023 01:13:42 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 37OMuKkl036170;
-        Fri, 25 Aug 2023 01:13:38 GMT
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 37P0d735036245;
+        Fri, 25 Aug 2023 01:13:41 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3sn1ywqfjv-1
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3sn1ywqfn1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Aug 2023 01:13:38 +0000
+        Fri, 25 Aug 2023 01:13:41 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37P1DVE4019787;
-        Fri, 25 Aug 2023 01:13:38 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37P1DVEM019787;
+        Fri, 25 Aug 2023 01:13:41 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3sn1ywqf8n-6;
-        Fri, 25 Aug 2023 01:13:37 +0000
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3sn1ywqf8n-15;
+        Fri, 25 Aug 2023 01:13:41 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
-        jejb@linux.ibm.com, rdunlap@infradead.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, coolrrsh@gmail.com
+To:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
+        john.garry@huawei.com, Yue Haibing <yuehaibing@huawei.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel-mentees@lists.linuxfoundation.org
-Subject: Re: [PATCH v3] scsi: sli4: Remove code duplication
-Date:   Thu, 24 Aug 2023 21:12:52 -0400
-Message-Id: <169292577168.789945.14600068133090244401.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -next] scsi: pm8001: Remove unused declarations
+Date:   Thu, 24 Aug 2023 21:13:01 -0400
+Message-Id: <169292577173.789945.10303176343285024737.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230817114301.17601-1-coolrrsh@gmail.com>
-References: <20230817114301.17601-1-coolrrsh@gmail.com>
+In-Reply-To: <20230818124700.49724-1-yuehaibing@huawei.com>
+References: <20230818124700.49724-1-yuehaibing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -63,31 +61,26 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
  definitions=2023-08-25_01,2023-08-24_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=636 adultscore=0
+ malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=623 adultscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2308100000 definitions=main-2308250009
-X-Proofpoint-GUID: 0QsdpT99nTfZs8tZTKnjNxT1geXAbs2_
-X-Proofpoint-ORIG-GUID: 0QsdpT99nTfZs8tZTKnjNxT1geXAbs2_
+X-Proofpoint-GUID: YijWXBgkF5bYVGOQju-tAhHNBAVcxgsP
+X-Proofpoint-ORIG-GUID: YijWXBgkF5bYVGOQju-tAhHNBAVcxgsP
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 17 Aug 2023 17:13:01 +0530, coolrrsh@gmail.com wrote:
+On Fri, 18 Aug 2023 20:47:00 +0800, Yue Haibing wrote:
 
-> In the function sli_xmit_bls_rsp64_wqe, the 'if' and 'else' conditions
-> evaluates the same expression and gives same output. Also, params->s_id
-> shall not be equal to U32_MAX. Therefore removing the unused code.
+> Commit 4fcf812ca392 ("[SCSI] libsas: export sas_alloc_task()")
+> removed these implementations but not the declarations.
 > 
-> This fixes coccinelle warning such as:
-> drivers/scsi/elx/libefc_sli/sli4.c:2320:2-4: WARNING: possible
-> condition with no effect (if == else)
 > 
-> [...]
 
 Applied to 6.6/scsi-queue, thanks!
 
-[1/1] scsi: sli4: Remove code duplication
-      https://git.kernel.org/mkp/scsi/c/2d6f70fe175e
+[1/1] scsi: pm8001: Remove unused declarations
+      https://git.kernel.org/mkp/scsi/c/04aff456af18
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
