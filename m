@@ -2,110 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF75C83F11
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Aug 2023 13:38:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B9BC83F01
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Aug 2023 14:51:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230148AbjH0Ni2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Aug 2023 09:38:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50734 "EHLO
+        id S230251AbjH0OvA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Aug 2023 10:51:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231262AbjH0NiA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Aug 2023 09:38:00 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8479011C;
-        Sun, 27 Aug 2023 06:37:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693143477; x=1724679477;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=2++8yCZGRSSz4uOxVbgjndMH1wIP9iMn3E11M0dDVTs=;
-  b=IPYiVkjRRr66ClnIkWnZCf3Kk5iHNR+sh2d95aM1bJZRfOvMRsBXeRjb
-   51PyPUO40gf/HKnqcH1FE6T0Z2nv7HMmRXzA3K0hLDtymNkt0w81MpCLV
-   DzyefOylslcYXqgVThEHuhk5Wk6mUInaY+l/NUXrniv6PzU2LYkorH9z3
-   PNFgQBRC7bpIYc1cxc7IY1bTk9GcOtlb9hhcEMDCFGEZqQdgAXOLtyylO
-   xX9urYG+b20PtIgMAEN9JXfGaOpc2Gs2scnSix9jdiHW13UydVMG6dPht
-   2agwlsFnHuekMFR1rdDeZxZI689PRZpoaPUpZlr3OsjNSAwbb1Hr61LK5
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10815"; a="354471056"
-X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
-   d="scan'208";a="354471056"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 06:37:57 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10815"; a="1068752214"
-X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
-   d="scan'208";a="1068752214"
-Received: from dplotkin-mobl.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.249.41.231])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 06:37:53 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Andi Shyti <andi.shyti@kernel.org>,
-        =?UTF-8?q?Philippe=20Mathieu-Daud=C3=A9?= <philmd@linaro.org>,
-        Brian King <brking@us.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v2 8/8] scsi: ipr: Do PCI error checks on own line
-Date:   Sun, 27 Aug 2023 16:37:05 +0300
-Message-Id: <20230827133705.12991-9-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230827133705.12991-1-ilpo.jarvinen@linux.intel.com>
-References: <20230827133705.12991-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S230447AbjH0Oum (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Aug 2023 10:50:42 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A36C3139
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Aug 2023 07:50:39 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-99c1f6f3884so292857866b.0
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Aug 2023 07:50:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1693147838; x=1693752638;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=Aur7k0McRiFXCUTD2gEOTvsFVl8EBmZX7s+nttC/DQI=;
+        b=a6ELKFswxwSyE+EgI3MO3wA1KtAnk3QemRUwTI4gwwiVb2U3zO+TaDHl2ZDmvyC6rz
+         24EwpRQv53W37rjYVuQGEMZBG5W06hIg4+ZtjlG2T5kSBHMopuISPklRrm8yTVugda/J
+         bC7tXucAGHlA5goiZQTewNRpPsZF24u+8jMbQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693147838; x=1693752638;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Aur7k0McRiFXCUTD2gEOTvsFVl8EBmZX7s+nttC/DQI=;
+        b=fcVOHywnjJKlydLkxz+QQFcXu9pwvCRT+OP6awphOhdm4wrs3dbAF2hXj8d9xdaCIR
+         EHvmgfbhcImNB/z72punOp3VBxaacDQTlsZYW7d58uT3yDwHQBLSrRjDvlupxvEnbcvZ
+         dCzDbPavVuL4Pu2Jzu+x752WcGanSQaCmmr/Rpyzsh0P9A6orFt1scMSNbRdXbkU8IzY
+         3cKM5impuEtcIqZe7LcnR8FAy/UeGuoQ25yhuuu1VGai0j2GMvrU4FDk9nFQbpq/0/JW
+         a/OIKHSCnO9YosVqvS6b6Id/bzhdXhBRxdQJPuW9QsXsGB/Q5Z6g11gYsZ31OIr+wD9r
+         Cb3w==
+X-Gm-Message-State: AOJu0YyqEhfdoF1T/yYT1TX+WEP+pvvwaMm6hxQnmc4t9HqcGGkma/zi
+        q4a3lnST/1noyKEcd1HebdHWzXodJEsopopHvQCSqg==
+X-Google-Smtp-Source: AGHT+IHHtrLriUeyUmUEriYZZzw7D5yA6eMWLjvyAga97Wvh6SnYB9K7f/pfPxiQkMYDHS68DYPhlQ==
+X-Received: by 2002:a17:907:a04a:b0:99c:4ea0:ed18 with SMTP id gz10-20020a170907a04a00b0099c4ea0ed18mr17013582ejc.8.1693147837874;
+        Sun, 27 Aug 2023 07:50:37 -0700 (PDT)
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com. [209.85.208.44])
+        by smtp.gmail.com with ESMTPSA id jj26-20020a170907985a00b0099bd86f9248sm3500950ejc.63.2023.08.27.07.50.37
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 27 Aug 2023 07:50:37 -0700 (PDT)
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-52a1132b685so3479640a12.1
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Aug 2023 07:50:37 -0700 (PDT)
+X-Received: by 2002:a17:906:10dc:b0:9a1:bf00:ae4e with SMTP id
+ v28-20020a17090610dc00b009a1bf00ae4emr13151173ejv.54.1693147836857; Sun, 27
+ Aug 2023 07:50:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <4fa74fe53f7a1302b1c4c7c4e17590aa97f9ecc5.camel@HansenPartnership.com>
+In-Reply-To: <4fa74fe53f7a1302b1c4c7c4e17590aa97f9ecc5.camel@HansenPartnership.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sun, 27 Aug 2023 07:50:20 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wi=D=y2z9YQkbMMQpHsCqZaM0x54E78UAbiNBf8FGVRig@mail.gmail.com>
+Message-ID: <CAHk-=wi=D=y2z9YQkbMMQpHsCqZaM0x54E78UAbiNBf8FGVRig@mail.gmail.com>
+Subject: Re: [GIT PULL] SCSI fixes for 6.5-rc7
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of if conditions with line splits, use the usual error handling
-pattern with a separate variable to improve readability.
+On Sun, 27 Aug 2023 at 00:01, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-No functional changes intended.
+Hmm. For some reason the pr-tracker-bot is not tracking.
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/scsi/ipr.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+So here's a manual, non-robot, "has been merged" message.
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 4e13797b2a4a..81e3d464d1f6 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -761,12 +761,14 @@ static void ipr_mask_and_clear_interrupts(struct ipr_ioa_cfg *ioa_cfg,
- static int ipr_save_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
- {
- 	int pcix_cmd_reg = pci_find_capability(ioa_cfg->pdev, PCI_CAP_ID_PCIX);
-+	int rc;
- 
- 	if (pcix_cmd_reg == 0)
- 		return 0;
- 
--	if (pci_read_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
--				 &ioa_cfg->saved_pcix_cmd_reg) != PCIBIOS_SUCCESSFUL) {
-+	rc = pci_read_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
-+				  &ioa_cfg->saved_pcix_cmd_reg);
-+	if (rc != PCIBIOS_SUCCESSFUL) {
- 		dev_err(&ioa_cfg->pdev->dev, "Failed to save PCI-X command register\n");
- 		return -EIO;
- 	}
-@@ -785,10 +787,12 @@ static int ipr_save_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
- static int ipr_set_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
- {
- 	int pcix_cmd_reg = pci_find_capability(ioa_cfg->pdev, PCI_CAP_ID_PCIX);
-+	int rc;
- 
- 	if (pcix_cmd_reg) {
--		if (pci_write_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
--					  ioa_cfg->saved_pcix_cmd_reg) != PCIBIOS_SUCCESSFUL) {
-+		rc = pci_write_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
-+					   ioa_cfg->saved_pcix_cmd_reg);
-+		if (rc != PCIBIOS_SUCCESSFUL) {
- 			dev_err(&ioa_cfg->pdev->dev, "Failed to setup PCI-X command register\n");
- 			return -EIO;
- 		}
--- 
-2.30.2
+Konstantin, is everything ok in robot-land?
 
+                Linus
