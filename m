@@ -2,126 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB4ECC83F11
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Aug 2023 07:07:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF75C83F11
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Aug 2023 13:38:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229869AbjH0HG5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Aug 2023 03:06:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59032 "EHLO
+        id S230148AbjH0Ni2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Aug 2023 09:38:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbjH0HG3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Aug 2023 03:06:29 -0400
-Received: from rs227.mailgun.us (rs227.mailgun.us [209.61.151.227])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D51C120
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Aug 2023 00:06:24 -0700 (PDT)
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=equiv.tech; q=dns/txt;
- s=mx; t=1693119984; x=1693127184; h=In-Reply-To: Content-Type: MIME-Version:
- References: Message-ID: Subject: Subject: Cc: To: To: From: From: Date:
- Sender: Sender; bh=a2QNVHpCy69phGF1UsAYo4X/AG2eDB3F/Vurqfii8Wo=;
- b=XoLrmrvvUEMbf1dzDmEFxWOfhNfO+VVJIak4YGVIXVwsqOqVwm+MVfnlUj2zZhVoEYB/iy1tLE6Tm896zz+Z5c79bW1tl5OBFL2H/7TvWVa5uUmOe+Mqc+JHd80F/w7dykkyqr3RB7lLWYw01B4IIH7nu1MBsQ5RinPBSlOB36jBYhxK95CxCwuQ+ciVvxZJCOup3/9zklPvzTugULv9zV8cw8v7HC7ii53VJQW0swniiIMD49u6Aa5ILJVuBReUOoTYZTFyg4dLKABCZBgdeEobaCZX2v+DIMpv5mgvpvwV0sWtmwJ3WhVMeRCuA3wuF4aGxKRJY4BFzmExSUcvDQ==
-X-Mailgun-Sending-Ip: 209.61.151.227
-X-Mailgun-Sid: WyI0OWM5MyIsImxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnIiwiOTNkNWFiIl0=
-Received: from mail.equiv.tech (equiv.tech [142.93.28.83]) by 6fa3ba917c3f with SMTP id
- 64eaf5f0cd2de71bad0a6ca0 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 27 Aug 2023 07:06:24 GMT
-Sender: james@equiv.tech
-Date:   Sun, 27 Aug 2023 00:06:23 -0700
-From:   James Seo <james@equiv.tech>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
+        with ESMTP id S231262AbjH0NiA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Aug 2023 09:38:00 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8479011C;
+        Sun, 27 Aug 2023 06:37:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693143477; x=1724679477;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=2++8yCZGRSSz4uOxVbgjndMH1wIP9iMn3E11M0dDVTs=;
+  b=IPYiVkjRRr66ClnIkWnZCf3Kk5iHNR+sh2d95aM1bJZRfOvMRsBXeRjb
+   51PyPUO40gf/HKnqcH1FE6T0Z2nv7HMmRXzA3K0hLDtymNkt0w81MpCLV
+   DzyefOylslcYXqgVThEHuhk5Wk6mUInaY+l/NUXrniv6PzU2LYkorH9z3
+   PNFgQBRC7bpIYc1cxc7IY1bTk9GcOtlb9hhcEMDCFGEZqQdgAXOLtyylO
+   xX9urYG+b20PtIgMAEN9JXfGaOpc2Gs2scnSix9jdiHW13UydVMG6dPht
+   2agwlsFnHuekMFR1rdDeZxZI689PRZpoaPUpZlr3OsjNSAwbb1Hr61LK5
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10815"; a="354471056"
+X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
+   d="scan'208";a="354471056"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 06:37:57 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10815"; a="1068752214"
+X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
+   d="scan'208";a="1068752214"
+Received: from dplotkin-mobl.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.249.41.231])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 06:37:53 -0700
+From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Andi Shyti <andi.shyti@kernel.org>,
+        =?UTF-8?q?Philippe=20Mathieu-Daud=C3=A9?= <philmd@linaro.org>,
+        Brian King <brking@us.ibm.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 03/12] scsi: mpt3sas: Make
- MPI2_CONFIG_PAGE_RAID_VOL_0::PhysDisk[] a flexible array
-Message-ID: <ZOr175KsKEoCss8U@equiv.tech>
-References: <20230806170604.16143-1-james@equiv.tech>
- <20230806170604.16143-4-james@equiv.tech>
- <202308251357.38AF364@keescook>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v2 8/8] scsi: ipr: Do PCI error checks on own line
+Date:   Sun, 27 Aug 2023 16:37:05 +0300
+Message-Id: <20230827133705.12991-9-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230827133705.12991-1-ilpo.jarvinen@linux.intel.com>
+References: <20230827133705.12991-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <202308251357.38AF364@keescook>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 25, 2023 at 02:03:23PM -0700, Kees Cook wrote:
-> On Sun, Aug 06, 2023 at 10:05:55AM -0700, James Seo wrote:
->> This terminal 1-length variable array can be directly converted into
->> a C99 flexible array member.
->> 
->> As all users of MPI2_CONFIG_PAGE_RAID_VOL_0 (Mpi2RaidVolPage0_t)
->> either calculate its size without depending on its sizeof() or do not
->> use PhysDisk[], no further source changes are required:
-> 
-> Tons of binary changes in this file too. I see this:
-> 
->         Mpi2RaidVolPage0_t config_page;
-> 	...
->         r = _config_request(ioc, &mpi_request, &mpi_reply,
->             MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, &config_page,
->             sizeof(Mpi2RaidVolPage0_t));
-> 
-> So it's already changing this size (and possibly under-allocating now).
+Instead of if conditions with line splits, use the usual error handling
+pattern with a separate variable to improve readability.
 
-Yes. I didn't explicitly identify _config_request() as a user of the
-five structs for which I parted out changes into their own commits,
-as it's a generalized helper indirectly called when working with
-other config page structs as well. Rest assured that I took it into
-account, and that the reduced struct sizes don't represent
-under-allocations (see below).
+No functional changes intended.
 
->> - mpt3sas_config.c:mpt3sas_config_get_number_pds() fetches a
->>   Mpi2RaidVolPage0_t for itself, but does not use PhysDisk[].
-> 
-> Is it certain that _config_request()'s use of mpt3sas_wait_for_ioc()
-> won't result in the hardware being upset that config_page_sz shrank?
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/scsi/ipr.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 4e13797b2a4a..81e3d464d1f6 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -761,12 +761,14 @@ static void ipr_mask_and_clear_interrupts(struct ipr_ioa_cfg *ioa_cfg,
+ static int ipr_save_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
+ {
+ 	int pcix_cmd_reg = pci_find_capability(ioa_cfg->pdev, PCI_CAP_ID_PCIX);
++	int rc;
  
-Sorry if I missed it, but I don't see what config_page_sz has to do
-with _config_request()'s use of mpt3sas_wait_for_ioc(). Could you
-explain what you meant?
+ 	if (pcix_cmd_reg == 0)
+ 		return 0;
+ 
+-	if (pci_read_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
+-				 &ioa_cfg->saved_pcix_cmd_reg) != PCIBIOS_SUCCESSFUL) {
++	rc = pci_read_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
++				  &ioa_cfg->saved_pcix_cmd_reg);
++	if (rc != PCIBIOS_SUCCESSFUL) {
+ 		dev_err(&ioa_cfg->pdev->dev, "Failed to save PCI-X command register\n");
+ 		return -EIO;
+ 	}
+@@ -785,10 +787,12 @@ static int ipr_save_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
+ static int ipr_set_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
+ {
+ 	int pcix_cmd_reg = pci_find_capability(ioa_cfg->pdev, PCI_CAP_ID_PCIX);
++	int rc;
+ 
+ 	if (pcix_cmd_reg) {
+-		if (pci_write_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
+-					  ioa_cfg->saved_pcix_cmd_reg) != PCIBIOS_SUCCESSFUL) {
++		rc = pci_write_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
++					   ioa_cfg->saved_pcix_cmd_reg);
++		if (rc != PCIBIOS_SUCCESSFUL) {
+ 			dev_err(&ioa_cfg->pdev->dev, "Failed to setup PCI-X command register\n");
+ 			return -EIO;
+ 		}
+-- 
+2.30.2
 
-More generally, changes in config_page_sz shouldn't faze the hardware
-because all usages of _config_request() occur in pairs - a
-preparatory call that returns the actual size of a given config page
-in mpi_reply, then a follow-up call during which a temporary
-DMA-capable buffer is allocated per the size in mpi_reply and the
-hardware reads/writes the entirety of this buffer. config_page_sz
-just determines the number of bytes copied between config_page and
-the temp buffer after a hardware read/before a hardware write.
-
-Well, as far I can tell, anyway. Maybe Broadcom knows otherwise.
-
->> @@ -1826,8 +1823,7 @@ typedef struct _MPI2_CONFIG_PAGE_RAID_VOL_0 {
->>  	U8                      Reserved2;         /*0x25 */
->>  	U8                      Reserved3;         /*0x26 */
->>  	U8                      InactiveStatus;    /*0x27 */
->> -	MPI2_RAIDVOL0_PHYS_DISK
->> -	PhysDisk[MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX]; /*0x28 */
->> +	MPI2_RAIDVOL0_PHYS_DISK PhysDisk[];        /*0x28 */
->>  } MPI2_CONFIG_PAGE_RAID_VOL_0,
-> 
-> Without the mpt3sas maintainers chiming in on this, I think the only
-> safe changes to make here are those with 0 binary differences. So for
-> things like this, it'll need to be:
-> 
-> -	MPI2_RAIDVOL0_PHYS_DISK
-> -	PhysDisk[MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX]; /*0x28 */
-> +	union {
-> +		MPI2_RAIDVOL0_PHYS_DISK legacy_padding;        /*0x28 */
-> +		DECLARE_FLEX_ARRAY(MPI2_RAIDVOL0_PHYS_DISK, PhysDisk);
-> +	};
-> 
-> -- 
-> Kees Cook
-
-Thanks for clearing that up. Here's hoping those mpt3sas maintainers
-do chime in. I'll go with the union workaround if they don't.
-
-James
