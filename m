@@ -2,130 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 749E5C83F14
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 00:41:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92A00C83F1F
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 06:43:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229476AbjH1A2s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Aug 2023 20:28:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40616 "EHLO
+        id S229597AbjH1GnX convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Aug 2023 02:43:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbjH1A2l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Aug 2023 20:28:41 -0400
-Received: from out4-smtp.messagingengine.com (out4-smtp.messagingengine.com [66.111.4.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D76BE119
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Aug 2023 17:28:37 -0700 (PDT)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-        by mailout.nyi.internal (Postfix) with ESMTP id 74E405C0053;
-        Sun, 27 Aug 2023 20:28:35 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute6.internal (MEProxy); Sun, 27 Aug 2023 20:28:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1693182515; x=1693268915; bh=xc
-        LVCCbMQLt60fTvFnyYMrc/Kwbs+EjRtjdgfwIaROM=; b=H47qwOLn27JM1wpEW5
-        9fTk16w9O1yEUkTdXNdi4STyWHUl1q6Fiz8C394ug9pqk3lfeamLd5FPU+VQldYP
-        U09/iJtHAg288Iuw5qD1zzCDfqWTkXvDND9R0wcH6zARd8bNZA0tvKz/cEZqH7T9
-        3XFwutNWlMmoOyYRYES5zcUQF45FUW2J7XHRv4ZZdBOor16j2gr1/jghhHU4jeRl
-        c5HgWsq/gYClsnvymomDSDID0E5VEvRV8WPN+3zUaodangrOmTHwlywrHs87QZNp
-        ZGIJVEkbBrcGNivvQRPYHgZBY3eIQIH17i9C4JItqlL4WlaBpRao+OnCcL6/Ph3t
-        m36Q==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; t=1693182515; x=1693268915; bh=xcLVCCbMQLt60
-        fTvFnyYMrc/Kwbs+EjRtjdgfwIaROM=; b=kPsW61YspQ3sZum7Yn9f1mwgvw9Ce
-        FrERhDnwx8x7sChl+nzSWa52n7uBTOS6n7RiSiIzQacgnYZEp9DoOwGYXUPsRCgy
-        EVfNX7Vm7LN1fam/i/tdzrGhMe+2hBFmwqLwTWmAtLs9JXHiWjXoAoPRMBkOax0R
-        zi7fliYuO6WxIdXfjm7AxYR69Qi3XQ/nxmvUYq33+VMMogffnJdp9Q9nFbThNAxe
-        LP+8k2Dgf2NbL4chhuzq/0CSSC93h+NNHOyHmx6texv6a9QW2E5WJ5MIWmJYcWOe
-        3/fvIhBoULaLPqKn9XHNqSU4rvKwkTt+aLO8T7hb0SDZ8FsaN2wELtp2g==
-X-ME-Sender: <xms:MurrZHx_q1hvW1SrI8iFNEmfmeFsDI78_Tnj7EodXNRsmVEEsy7p0g>
-    <xme:MurrZPTL1CsH4x6XtRBiP4aB0IToUUNzT2fxgtuJjuPpRLovfKMFBC9DOTVY7gXE3
-    QnUjvwREotzwovbuBk>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedviedrudeffedgfeegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepvefhffeltdegheeffffhtdegvdehjedtgfekueevgfduffettedtkeekueef
-    hedunecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpe
-    dtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrrhhnugesrghrnhgusgdruggv
-X-ME-Proxy: <xmx:MurrZBVnKG1cu_ve950MYczoB9-UaNxU80gQYgGycnrESkgT1wfMkA>
-    <xmx:MurrZBguEEn1YPy5OLXp84yFrjx0hBxUhllS5gvimWIyvxknB2Itzw>
-    <xmx:MurrZJD0sC_F1VMMbcSp7towjdHmAQz6MsDpd-_E2UX-gyqArE4_2A>
-    <xmx:M-rrZN7Kfd90TZJg_TJ2tLJkiI1bYs-RA1hokefLNF-gpJqLozRUyA>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 2E0BFB60089; Sun, 27 Aug 2023 20:28:34 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-647-g545049cfe6-fm-20230814.001-g545049cf
-Mime-Version: 1.0
-Message-Id: <2e916711-e2ce-47d2-bdf5-0524dae7e207@app.fastmail.com>
-In-Reply-To: <20230827233042.12945-1-bvanassche@acm.org>
-References: <20230827233042.12945-1-bvanassche@acm.org>
-Date:   Sun, 27 Aug 2023 20:28:13 -0400
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Bart Van Assche" <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, "kernel test robot" <lkp@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Stanley Chu" <stanley.chu@mediatek.com>,
-        "Can Guo" <quic_cang@quicinc.com>,
-        "Manivannan Sadhasivam" <mani@kernel.org>,
-        "Asutosh Das" <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        "Bean Huo" <beanhuo@micron.com>,
-        "Arthur Simchaev" <Arthur.Simchaev@wdc.com>,
-        "Avri Altman" <avri.altman@wdc.com>
-Subject: Re: [PATCH] scsi: ufs: Fix the build for big endian 32-bit ARM systems
-Content-Type: text/plain
+        with ESMTP id S229507AbjH1Gm4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 02:42:56 -0400
+Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38B22C4;
+        Sun, 27 Aug 2023 23:42:54 -0700 (PDT)
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-58ca499456dso35642847b3.1;
+        Sun, 27 Aug 2023 23:42:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693204973; x=1693809773;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1ZAs6BPn0UEnVbrYLaaDeF3O9l7Iturm7FWJFQ5jda0=;
+        b=VAz5SDZnSv/j4h6SjG4uBv8sOT0HChvsC1/jJgIQymXVjMucFLcusx1WPA5CWMaW4O
+         MaqjxMuTCIiFvFr5nIgrOxTqh2L/nVlazbCQgK6V+u6eTrU21RWq+nCzAx6EOz8QRJh2
+         oxG7ltFhQ6dZ4mRdnecCxhGpVB9FUF4jIy6Xnr09PO5FHfs0gYqM0qFVFwUYRSAC2Mex
+         OXIux5OM34WtFn1QAcGXvpYYjHluYItgsqQhUvJ7HcA/Ljnj00FinMQxGV3EXDWLGSon
+         HdEwXybrMl/OIVwdC3zrujq8ACFZZPs7Ag97MtpZSuB84rDn8exZHRVce+TdfHrZRizE
+         tpkA==
+X-Gm-Message-State: AOJu0YxMvHtIySreGZUxGNS0Aj6gbLZeGwc5gaBPrbkL3/02tJMdbBOk
+        J8zV0oAqwt18awLH3ZLcnkePgv2u0PTbxA==
+X-Google-Smtp-Source: AGHT+IEmYuCZ2oQNMpW7RRwA17Ofyq/MfcmWHEuG57kibh5t95/QQvu+3sCttxs8+iZ3o97wiO+7kA==
+X-Received: by 2002:a25:42cc:0:b0:d77:94d6:aa6f with SMTP id p195-20020a2542cc000000b00d7794d6aa6fmr14827618yba.15.1693204973092;
+        Sun, 27 Aug 2023 23:42:53 -0700 (PDT)
+Received: from mail-yb1-f179.google.com (mail-yb1-f179.google.com. [209.85.219.179])
+        by smtp.gmail.com with ESMTPSA id 184-20020a2504c1000000b00c64533e4e20sm1554144ybe.33.2023.08.27.23.42.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 27 Aug 2023 23:42:51 -0700 (PDT)
+Received: by mail-yb1-f179.google.com with SMTP id 3f1490d57ef6-d780bca9275so2580309276.1;
+        Sun, 27 Aug 2023 23:42:51 -0700 (PDT)
+X-Received: by 2002:a25:8502:0:b0:d7a:e348:1e47 with SMTP id
+ w2-20020a258502000000b00d7ae3481e47mr3956815ybk.36.1693204971245; Sun, 27 Aug
+ 2023 23:42:51 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230810141947.1236730-1-arnd@kernel.org> <169292577153.789945.11297239773543112051.b4-ty@oracle.com>
+ <3956e2a4-c545-1212-e95f-3cf61a60d6a4@gmail.com> <CAMuHMdWC2S330_Vb_NTHTDC=BakBsw4ouP-eFJv0erV1-jmvTQ@mail.gmail.com>
+ <130b3b57-edb0-184d-5b5f-69b013715773@gmail.com>
+In-Reply-To: <130b3b57-edb0-184d-5b5f-69b013715773@gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 28 Aug 2023 08:42:39 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdUkZmkBSksvaGcDCKz2tsgkwyWgDa+WwCJm2UxFMCj1jw@mail.gmail.com>
+Message-ID: <CAMuHMdUkZmkBSksvaGcDCKz2tsgkwyWgDa+WwCJm2UxFMCj1jw@mail.gmail.com>
+Subject: Re: (subset) [PATCH 00/17] -Wmissing-prototype warning fixes
+To:     Michael Schmitz <schmitzmic@gmail.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Matt Turner <mattst88@gmail.com>,
+        Vineet Gupta <vgupta@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>, Guo Ren <guoren@kernel.org>,
+        Brian Cain <bcain@quicinc.com>,
+        Huacai Chen <chenhuacai@kernel.org>,
+        WANG Xuerui <kernel@xen0n.name>,
+        Michal Simek <monstr@monstr.eu>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Dinh Nguyen <dinguyen@kernel.org>,
+        Jonas Bonn <jonas@southpole.se>,
+        Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+        Stafford Horne <shorne@gmail.com>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        x86@kernel.org, Borislav Petkov <bp@alien8.de>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-next@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-snps-arc@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-csky@vger.kernel.org,
+        linux-hexagon@vger.kernel.org, linux-ia64@vger.kernel.org,
+        loongarch@lists.linux.dev, linux-m68k@lists.linux-m68k.org,
+        linux-mips@vger.kernel.org, linux-openrisc@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kbuild@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Aug 27, 2023, at 19:30, Bart Van Assche wrote:
-> Although it is not clear to me why, this patch fixes the following build
-> error for big endian 32-bit ARM systems:
->
-> include/linux/build_bug.h:78:41: error: static assertion failed: 
-> "sizeof(struct utp_upiu_header) == 12"
->
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Reported-by: kernel test robot <lkp@intel.com>
-> Closes: 
-> https://lore.kernel.org/oe-kbuild-all/202308251634.tuRn4OVv-lkp@intel.com/
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On Sat, Aug 26, 2023 at 12:44 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+> (Incidentally - did you ever publish the m68k full history tree anywhere
+> in git?)
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+You mean the gitified version of the Linux/m68k CVS tree Ralf created
+for me because my machine wasn't powerful enough?
+No, and I should look into doing that...
 
-The fix makes sense, but I think the description is wrong:
-The weird struct padding on Arm randconfig builds happens
-with CONFIG_AEABI disabled (implying the old OABI),
-regardless of CONFIG_CPU_BIG_ENDIAN.
+Gr{oetje,eeting}s,
 
-> -			union {
-> -				__u8 tm_function;
-> -				__u8 query_function;
-> -			};
-> +			__u8 tm_or_query_function;
->  			__u8 response;
+                        Geert
 
-The problem on OABI is that any struct or union is word
-aligned. I would assume that marking the union as __packed
-also addresses the problem here, but I have not tested that
-and your patch seems fine.
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-There are bugs like this in many places of the kernel where
-the struct alignment actually matters but is broken on OABI,
-but the machines that used to run OABI kernels in the
-past also run a very small set of drivers in practice.
-
-On my own build test setup, I have made CONFIG_AEABI dependent
-on !CONFIG_COMILE_TEST, which prevents me from running into
-this problem (and others) on randconfig builds. Maybe I should
-try again to send that upstream.
-
-     Arnd
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
