@@ -2,76 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACAA2C83F11
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 13:00:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 027C8C83F19
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 13:22:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231337AbjH1NA2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Aug 2023 09:00:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45006 "EHLO
+        id S231555AbjH1NVe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Aug 2023 09:21:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232630AbjH1M7y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 08:59:54 -0400
+        with ESMTP id S230254AbjH1NVH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 09:21:07 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EABDD126;
-        Mon, 28 Aug 2023 05:59:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95217122;
+        Mon, 28 Aug 2023 06:21:05 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 77D6363A73;
-        Mon, 28 Aug 2023 12:59:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E2D5C433C8;
-        Mon, 28 Aug 2023 12:59:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 26B0562964;
+        Mon, 28 Aug 2023 13:21:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6569C433C8;
+        Mon, 28 Aug 2023 13:20:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693227590;
-        bh=UWDYrB+OaFsKrZ4prIKM9qiS9QoBdhDptwEyds6RsBQ=;
+        s=k20201202; t=1693228864;
+        bh=QtirhpZ6M4wRBs0PcZuQKaZInNnIQCord7zI9oR3eYc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NlYjenbhMOadwbG6IQ8/yxoAXRKMTlZBeWOqCzDudhuHdmqFm6TSrix8lzt8Gk1dY
-         8KU9wHNTaqBuxZEaoCJUFpmlSqevjIuHJ8FOwHF+D81XQ0hIZfEAgSlGaHZ/oE8FgF
-         +g3zXGbLRPArUplYKArXA6twkHoAvL946Zy7ZM6uQSFxxJeNTxNZFMjBr36pimJCPm
-         7/bX1fRCAp9gSAGeUbHSrErfh8iy0/O4uGCXTKMdvnBJUD3433NLmNQhdECa1dzyYJ
-         9bEq0X+6vsu0+Lo/B/H1wTRagUqYKAOYvZOVVXPPRrJz4hg8nsmXCPVJiZkefJ5DnD
-         qORdGmTSuH6ZQ==
-Date:   Mon, 28 Aug 2023 18:29:35 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Nitin Rawat <quic_nitirawa@quicinc.com>, mani@kernel.org,
-        agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        jejb@linux.ibm.com, quic_cang@quicinc.com,
-        quic_nguyenb@quicinc.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH V5 0/6] scsi: ufs: qcom: Align programming sequence as
- per HW spec
-Message-ID: <20230828125935.GJ5148@thinkpad>
-References: <20230823154413.23788-1-quic_nitirawa@quicinc.com>
- <yq1h6omztl3.fsf@ca-mkp.ca.oracle.com>
+        b=dGzUUvJG87+eWzsz6xzROYCBNDl7W5LTOJNZSdrdj6kC4UZhu/D9tYCBTY1kzrQPe
+         x7WILXB1VLYusnI7i57xbkDNp7AlezoIITxDEYtPZbpKeaRaDjmpnSpx19pqxTzCO1
+         eHWv5jG6Kk405k0HzfGlQ5FnGrphH6RQF/qbsChQZpHtUi1E5k/RJY2W8E0veW1Pw4
+         WmlHIAC8kSpEcFeEGWLjHX2ee4G742ubGUZGwha6A7RHD325wN5SUYbEQ3omUMFDG/
+         CM1aA/cNlMXqkEYlHa/Phek8pvPKy4SQPmUA3IhuobWAQwG6yFUbEhG6jgGYrQO+H2
+         J9dq9/E4F2ZeQ==
+Date:   Mon, 28 Aug 2023 15:20:47 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org, Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
+Message-ID: <20230828-durften-hauswand-67319ee0c17c@brauner>
+References: <20230810171429.31759-1-jack@suse.cz>
+ <20230825015843.GB95084@ZenIV>
+ <20230825134756.o3wpq6bogndukn53@quack3>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <yq1h6omztl3.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <20230825134756.o3wpq6bogndukn53@quack3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 25, 2023 at 05:44:01PM -0400, Martin K. Petersen wrote:
-> 
-> Nitin,
-> 
-> > This patch aligns programming sequence as per Qualcomm UFS hardware
-> > specification.
-> 
-> Which tree is this against? Doesn't apply to 6.6/scsi-queue...
-> 
+> So besides my last fput() worry about I think this could work and would be
+> probably a bit nicer than what I have. But before going and redoing the whole
+> series let me gather some more feedback so that we don't go back and forth.
+> Christoph, Christian, Jens, any opinion?
 
-Martin, thanks for considering this series. However, I'd request you to wait for
-an Ack from atleast one reviewer/maintainer before merging the Qcom patches.
-Reviews might be delayed, but for sure we are keeping an eye on all patches.
-
-- Mani
-
-> -- 
-> Martin K. Petersen	Oracle Linux Engineering
-
--- 
-மணிவண்ணன் சதாசிவம்
+I'll be a bit under water for the next few days, I expect but I'll get
+back to this. I think not making you redo this whole thing from scratch
+is what I'd prefer unless there's really clear advantages. But I don't
+want to offer a haphazard opinion in the middle of the merge window.
