@@ -2,69 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A4EEC83F12
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 18:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C97C71153
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 21:32:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231517AbjH1S6r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Aug 2023 14:58:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34660 "EHLO
+        id S233648AbjH1Vbg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Aug 2023 17:31:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233247AbjH1S6r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 14:58:47 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8326BF;
-        Mon, 28 Aug 2023 11:58:43 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-68a402c1fcdso2412176b3a.1;
-        Mon, 28 Aug 2023 11:58:43 -0700 (PDT)
+        with ESMTP id S233736AbjH1VbO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 17:31:14 -0400
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88819194;
+        Mon, 28 Aug 2023 14:31:04 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id ffacd0b85a97d-31c71898109so3164599f8f.2;
+        Mon, 28 Aug 2023 14:31:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1693258263; x=1693863063;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=v0x0vlFhawEtT6ZLRUNUkUNLsMfxgSs9gin/e6c5kP8=;
+        b=gxr01ZE/NCLkm5nQhEpmWAN5SoIZl2UnWfvFHYEBnK85ptaU421j936pMn+Kz9OoR3
+         izDxxZUB3gJGdv4Qd3uHJ4zGhxrxXcU+CDwgR5mfHsTH7vfuISrVeu2YTqbM1brggKtG
+         IdO/WiUiKaLWiBT4ZjPaips8Ip+YtaDarujz4Wjpm+j0x+ePlDYwELCARfYt3Pj0S3z+
+         Cvd0NjqegsPx/PhkWvJAmDripl415+nmJgVIxALumsniYDFf+UYwrzrZBDgl5EWpL0xK
+         ezUpFm6jPM1j3MpmkxwHSIx/MR5Tqnmgwp9Jy2cjHkJdipcsXqUC98ikSqKgWDErSsea
+         O0JA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693249123; x=1693853923;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fK31F9cafBzF8CUN76FooxutzNLW1cai5sPG2/i18LY=;
-        b=G1zLLWHR0M02qkUiK3qLCqvc3iaiqtkspsWHDZwFIHsPTcR3bGUFEIBAL64CbCUI33
-         6rNdmbspGD6MkF0UlsvfqnAk+vnIZZ5J0zRBIl+J1MoUqfRhU5pxkG1Qda5oPKVGWDH3
-         DR6hDGfYPVFwN9FGCQVfuBghOISZb21Xw4FbLsWlZruCGsrHKYYASnRkLxAJYFddbnjp
-         lDWWDLT0CftV1O+k/7VsMu9wOjAGs8zg9Y3HJBpxKFLx01VKgh5CgT/fOykxke6Ye8jQ
-         mP7tIJqOcql3lS3ci4OdiNwHaI64ZgsCGy8DPe2QL5oJ7iz5jR1HCYPf87NDULCp0fuq
-         M33g==
-X-Gm-Message-State: AOJu0Yzqw3jDcAbMjW+U449GbD/k3vyY8xYt44B6Lje3VlMlMfw7G/QF
-        41f8KExAdGy7FywgT8+zSk8=
-X-Google-Smtp-Source: AGHT+IF6mcOgWHsxnO5SN2JW5V0RBAz2U1MyDf5EJzUiHEDnFd9MfhAnMeNglXIJ9tbcdQRyQ3zVpg==
-X-Received: by 2002:a05:6a20:12c2:b0:138:60e:9c4 with SMTP id v2-20020a056a2012c200b00138060e09c4mr26361178pzg.23.1693249122797;
-        Mon, 28 Aug 2023 11:58:42 -0700 (PDT)
-Received: from [192.168.165.167] ([216.9.110.6])
-        by smtp.gmail.com with ESMTPSA id e17-20020a62ee11000000b006889601aba4sm6912716pfi.210.2023.08.28.11.58.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Aug 2023 11:58:42 -0700 (PDT)
-Message-ID: <80acfd34-a4b9-43c5-94f6-f1120b81e08f@acm.org>
-Date:   Mon, 28 Aug 2023 11:58:37 -0700
+        d=1e100.net; s=20221208; t=1693258263; x=1693863063;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=v0x0vlFhawEtT6ZLRUNUkUNLsMfxgSs9gin/e6c5kP8=;
+        b=WdHj/AaBRRqcLOxqm2KlvDscDa4cf8OF7vYhMeLujPqhC86KTGaDmHhXbFCS/FpFE4
+         qNOAvhO3hx30CDoJSHB1VHzOs2qBWyqUI+TpCX1SPogAFMmq+dnsykSY/PwnBk/d8yAh
+         OrDrBy/fJSdxNbm6zQYV9J5xTO/gJswI2TOXDw7rPzsJLv0LIJhr/fpQBTt9o7uRao3E
+         gfPFy2/OjjgxniN+cpGgQbSTs0oilPF1A072QhY8odzhqwj+ozQYKe16tIFXR8ucvjmC
+         f4E4mz0Y+RMwy1g1i3B9v7VeNoCb7PemT45F3XT7pkR4F3DX/ku3u/1aj+2sT+RsTrs3
+         rTDA==
+X-Gm-Message-State: AOJu0Yz0q1mcSqN1QH+nMSPhjCJ4/xXWtEGWcKveRY1v9U+B1SGFGlJF
+        hisfA1lbyRatlOL6c7mBiU2SaJxodNE=
+X-Google-Smtp-Source: AGHT+IEI2oQ1tZ9EVEM2cyDcjwgEDA8bCclGhtkajA6M2Br5vngzbkGo6kV6BGGtTh65lxMIV0YMmw==
+X-Received: by 2002:adf:edca:0:b0:31a:d7fc:28f with SMTP id v10-20020adfedca000000b0031ad7fc028fmr21272839wro.19.1693258262696;
+        Mon, 28 Aug 2023 14:31:02 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id h8-20020a056000000800b0031759e6b43fsm11593148wrx.39.2023.08.28.14.31.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Aug 2023 14:31:01 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] scsi: qla2xxx: Fix spelling mistake "tranport" -> "transport"
+Date:   Mon, 28 Aug 2023 22:31:01 +0100
+Message-Id: <20230828213101.758609-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 0/2] Changes for UFS advanced RPMB
-To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
-        jonghwi.rha@samsung.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230809181847.102123-1-beanhuo@iokpp.de>
- <07a52c7643215c2dedd541df60c1a8499666f24a.camel@iokpp.de>
-Content-Language: en-US
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <07a52c7643215c2dedd541df60c1a8499666f24a.camel@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/27/23 13:00, Bean Huo wrote:
-> what's opinion of this series of patch??
+There is a spelling mistake in a ql_dbg message. Fix it.
 
-Hi Bean,
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+---
+ drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I had not yet reviewed these patches since my employer is not using
-advanced RPMB. Anyway, since both patches look good to me:
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 62a67662cbf3..04e02de36100 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -1189,7 +1189,7 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha, struct purex_item *item)
+ 				 &item->iocb, item->size);
+ #endif
+ 	if (ret) {
+-		ql_dbg(ql_dbg_unsol, vha, 0x2125, "NVMe tranport ls_req failed\n");
++		ql_dbg(ql_dbg_unsol, vha, 0x2125, "NVMe transport ls_req failed\n");
+ 		memset((void *)&a, 0, sizeof(a));
+ 		a.vp_idx = vha->vp_idx;
+ 		a.nport_handle = uctx->nport_handle;
+-- 
+2.39.2
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
