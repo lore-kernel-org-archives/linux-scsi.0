@@ -2,144 +2,268 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0152C83F13
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 08:09:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA604C83F13
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 08:14:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230075AbjH1IJO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Aug 2023 04:09:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55294 "EHLO
+        id S229704AbjH1IOC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Aug 2023 04:14:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229937AbjH1IIj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 04:08:39 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 391921BB;
-        Mon, 28 Aug 2023 01:08:02 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1bf1935f6c2so19085105ad.1;
-        Mon, 28 Aug 2023 01:08:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693210077; x=1693814877;
-        h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
-         :message-id:from:cc:references:to:subject:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pnrE6dyfVAprK/xFUC60jFewyVljQRt3NNtTMulp0V0=;
-        b=LVg55P2ejT0BJXH9H1+hgJHcBL2A+IF5g+KpwZsnJ2WoqXmcrL9ZfEfa3T6fNEdxE+
-         ga2nqaZ+gZjmffBcNuVnaXDtmvodkJeUEflTba5i6j/rIlhBduWdBgZRPVnHwy+erFMo
-         Q2sF5ZgAuDt+03EKZEd8qEogPdBU5cTg8EccDlTx6cSnC2QLYfomUfDCZyZGJl19L0Ry
-         zfDO9BgqWN0KlkikpK3fWA7KZvQWChySAj+L6JXiUhVTo7xH2gRnW3f4Al2lAGJTZzAW
-         5ZruNkogVGDYB3ptB7Tk7PeewBGyh+fZdTDyBJ7/jPzoGq3RnYeGV17VCUydj0j+5OXO
-         MJDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693210077; x=1693814877;
-        h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
-         :message-id:from:cc:references:to:subject:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=pnrE6dyfVAprK/xFUC60jFewyVljQRt3NNtTMulp0V0=;
-        b=kx2AbQTuZzgjqeFlKchv8jO7AJiM7c3VlC8NfaV+q52q9T+J75VLbGGUz5p1FsAl6M
-         /1UmeHL7uXBzA4bhtcaDeQ5M2p/QC2/RjV8f3Ggekio2VHKQrQ/fMVVdVob1tp/nPETL
-         aaV3cMvyHQ9X3cxTrAvdEUIi2Mwh4dHPjNQdAWloEG87p0SAw9gwcJhOE9t8TbSEHqAQ
-         /MjskPjAjLoKi64Vc2l/+8ISC0SUk5acxV0xnIXImrtLWQYon8khxhuWz3lx0t1GoaDM
-         1gKRsR04XkdyvcqBlD3sIQSj8s3DReR/TCbdQLODL4RCOKBX61FDo4x0nMIu3/ij/ynI
-         KPVQ==
-X-Gm-Message-State: AOJu0YxXEuACwavoq7XtdyCkfFO+zXU8Ht0PMWp6kK2NrFqIyFDMqx0o
-        80v+MhYvCUFcG6ybUpGrgxBDzLvYkMTO1A==
-X-Google-Smtp-Source: AGHT+IHEN6rjlzubXIy3DuU1iYHuYGfJmUDj7MCrRMJIjxExjNAtfO/xrf/2cugqJ3sCcKtAmuhffg==
-X-Received: by 2002:a17:903:41d1:b0:1bf:193a:70b6 with SMTP id u17-20020a17090341d100b001bf193a70b6mr38374653ple.5.1693210077452;
-        Mon, 28 Aug 2023 01:07:57 -0700 (PDT)
-Received: from [10.1.1.24] (125-236-136-221-fibre.sparkbb.co.nz. [125.236.136.221])
-        by smtp.gmail.com with ESMTPSA id x19-20020a170902ea9300b001bc445e2497sm6610519plb.79.2023.08.28.01.07.30
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 28 Aug 2023 01:07:57 -0700 (PDT)
-Subject: Re: (subset) [PATCH 00/17] -Wmissing-prototype warning fixes
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-References: <20230810141947.1236730-1-arnd@kernel.org>
- <169292577153.789945.11297239773543112051.b4-ty@oracle.com>
- <3956e2a4-c545-1212-e95f-3cf61a60d6a4@gmail.com>
- <CAMuHMdWC2S330_Vb_NTHTDC=BakBsw4ouP-eFJv0erV1-jmvTQ@mail.gmail.com>
- <130b3b57-edb0-184d-5b5f-69b013715773@gmail.com>
- <CAMuHMdUkZmkBSksvaGcDCKz2tsgkwyWgDa+WwCJm2UxFMCj1jw@mail.gmail.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Matt Turner <mattst88@gmail.com>,
-        Vineet Gupta <vgupta@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>, Guo Ren <guoren@kernel.org>,
-        Brian Cain <bcain@quicinc.com>,
-        Huacai Chen <chenhuacai@kernel.org>,
-        WANG Xuerui <kernel@xen0n.name>,
-        Michal Simek <monstr@monstr.eu>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Dinh Nguyen <dinguyen@kernel.org>,
-        Jonas Bonn <jonas@southpole.se>,
-        Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
-        Stafford Horne <shorne@gmail.com>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        Helge Deller <deller@gmx.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-        x86@kernel.org, Borislav Petkov <bp@alien8.de>,
-        Max Filippov <jcmvbkbc@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Richard Weinberger <richard@nod.at>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        linux-next@vger.kernel.org, linux-alpha@vger.kernel.org,
-        linux-snps-arc@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-csky@vger.kernel.org,
-        linux-hexagon@vger.kernel.org, linux-ia64@vger.kernel.org,
-        loongarch@lists.linux.dev, linux-m68k@lists.linux-m68k.org,
-        linux-mips@vger.kernel.org, linux-openrisc@vger.kernel.org,
-        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
-        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kbuild@vger.kernel.org
-From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <dbed3311-6b8e-a396-7e9e-2747902c5d6a@gmail.com>
-Date:   Mon, 28 Aug 2023 20:07:27 +1200
-User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
- Icedove/45.4.0
+        with ESMTP id S229604AbjH1INl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 04:13:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2EDAC3;
+        Mon, 28 Aug 2023 01:13:38 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6810061BB0;
+        Mon, 28 Aug 2023 08:13:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E30FC433C7;
+        Mon, 28 Aug 2023 08:13:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693210417;
+        bh=hd/R5+8WKXSM6MSDGplXLgC6cLPA3Fl48ZQBoeKIDsQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Wzos5I9hdoFPrgs+BtNj5RiQjPZGxbvTpScJuk1li3qZb8mHcqa89joZ69lMhUbMb
+         icnTVYywEO2cDVkUKA2BrvpBgjQPcuUHiKbxFvhMmn03BquvnXCBSeaNqBi47wfhXQ
+         nX6eeIEMDS7YP/ommi1ivpRTsjEQFWCq78tflHbMUUSblktGaHRzfLgzGFOztMJDJD
+         o/VFaFuIyyjy3NnAmnu7K1SiLgn/yybVWzVDqZ92u69gVEQqpqYthrlgDxLBlscAyj
+         B/8kD3/vyjLzBarNn9n/LeY4unBJ8qaa5RYEsFZ2QbEqZPnzllXLdMEOk1OScSwzBI
+         XAo+Chi/aCK5Q==
+Date:   Mon, 28 Aug 2023 13:43:23 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Nitin Rawat <quic_nitirawa@quicinc.com>
+Cc:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+Subject: Re: [PATCH V5 3/6] scsi: ufs: qcom: Add multiple frequency support
+ for unipro clk attributes
+Message-ID: <20230828081323.GF5148@thinkpad>
+References: <20230823154413.23788-1-quic_nitirawa@quicinc.com>
+ <20230823154413.23788-4-quic_nitirawa@quicinc.com>
+ <20230828080522.GD5148@thinkpad>
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdUkZmkBSksvaGcDCKz2tsgkwyWgDa+WwCJm2UxFMCj1jw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230828080522.GD5148@thinkpad>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Geert,
+On Mon, Aug 28, 2023 at 01:35:37PM +0530, Manivannan Sadhasivam wrote:
+> On Wed, Aug 23, 2023 at 09:14:10PM +0530, Nitin Rawat wrote:
+> > Add Support to configure CORE_CLK_1US_CYCLES, PA_VS_CORE_CLK_40NS_CYCLES
+> > for multiple unipro clock frequencies. Currently this is handled only for
+> > only 150Mhz and 75MHz.
+> > 
+> > Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+> > Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+> > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> > ---
+> >  drivers/ufs/host/ufs-qcom.c | 88 ++++++++++++++++++++++++++++++++-----
+> >  drivers/ufs/host/ufs-qcom.h |  9 ++++
+> >  2 files changed, 87 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > index abc0e7f7d1b0..8162b19191a9 100644
+> > --- a/drivers/ufs/host/ufs-qcom.c
+> > +++ b/drivers/ufs/host/ufs-qcom.c
+> > @@ -671,6 +671,45 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
+> >  	return 0;
+> >  }
+> > 
+> > +static int ufs_qcom_cfg_core_clk_ctrl(struct ufs_hba *hba)
+> > +{
+> > +	struct list_head *head = &hba->clk_list_head;
+> > +	struct ufs_clk_info *clki;
+> > +	u32 max_freq = 0;
+> > +	int err;
+> 
+> Let's use "ret" from now onwards. Existing "err" can be cleaned up later.
+> 
+> > +
+> > +	list_for_each_entry(clki, head, list) {
+> > +		if (!IS_ERR_OR_NULL(clki->clk) &&
+> > +			!strcmp(clki->name, "core_clk_unipro")) {
+> 
+> Odd indentation.
+> 
+> > +			max_freq = clki->max_freq;
+> > +			break;
+> > +		}
+> > +	}
+> > +
+> > +	switch (max_freq) {
+> > +	case MHZ_403:
+> 
+> UNIPRO_CORE_CLK_FREQ_403_MHZ?
+> 
+> Same applies to other defines.
+> 
+> > +		err = ufs_qcom_set_core_clk_ctrl(hba, 403, 16);
+> 
+> #define to_cycles_per_1us(freq)		(freq / (1000 * 1000))
+> 
+> 		ret = ufs_qcom_set_core_clk_ctrl(hba, to_cycles_per_1us(max_freq), 16);
+> 
 
-Am 28.08.2023 um 18:42 schrieb Geert Uytterhoeven:
-> On Sat, Aug 26, 2023 at 12:44 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
->> (Incidentally - did you ever publish the m68k full history tree anywhere
->> in git?)
->
-> You mean the gitified version of the Linux/m68k CVS tree Ralf created
-> for me because my machine wasn't powerful enough?
+You could also use:
 
-The very same ...
+#define to_cycles_per_40us(freq) (freq / (25 * 1000 * 1000))
 
-> No, and I should look into doing that...
+		ret = ufs_qcom_set_core_clk_ctrl(hba, to_cycles_per_1us(max_freq),
+						 to_cycles_per_40us(max_freq));
 
-No pressure!
+This also gives me an impression that the caller could just pass the max_freq
+and the ufs_qcom_set_core_clk_ctrl() function could internally calculate 1us and
+40us cycles value.
 
-Cheers,
+- Mani
 
-	Michael
+> > +		break;
+> > +	case MHZ_300:
+> > +		err = ufs_qcom_set_core_clk_ctrl(hba, 300, 12);
+> > +		break;
+> > +	case MHZ_201_5:
+> > +		err = ufs_qcom_set_core_clk_ctrl(hba, 202, 8);
+> > +		break;
+> > +	case MHZ_150:
+> > +		err = ufs_qcom_set_core_clk_ctrl(hba, 150, 6);
+> > +		break;
+> > +	case MHZ_100:
+> > +		err = ufs_qcom_set_core_clk_ctrl(hba, 100, 4);
+> > +		break;
+> > +	default:
+> > +		dev_err(hba->dev, "unipro max_freq=%u entry missing\n", max_freq);
+> 
+> "UNIPRO clk max frequency (%u) not supported!"
+> 
+> > +		err = -EINVAL;
+> 
+> -ERANGE
+> 
+> > +		break;
+> > +	}
+> > +
+> > +	return err;
+> > +}
+> >  static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+> >  					enum ufs_notify_change_status status)
+> >  {
+> > @@ -686,12 +725,15 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+> >  			return -EINVAL;
+> >  		}
+> > 
+> > -		if (ufs_qcom_cap_qunipro(host))
+> > -			/*
+> > -			 * set unipro core clock cycles to 150 & clear clock
+> > -			 * divider
+> > -			 */
+> > -			err = ufs_qcom_set_core_clk_ctrl(hba, 150, 6);
+> > +		if (ufs_qcom_cap_qunipro(host)) {
+> > +			err = ufs_qcom_cfg_core_clk_ctrl(hba);
+> > +			if (err) {
+> > +				dev_err(hba->dev,
+> > +					"%s cfg core clk ctrl failed\n",
+> 
+> "Failed to configure UNIPRO core clk"
+> 
+> > +					__func__);
+> > +				return err;
+> > +			}
+> > +		}
+> > 
+> >  		/*
+> >  		 * Some UFS devices (and may be host) have issues if LCC is
+> > @@ -1369,8 +1411,7 @@ static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
+> >  	if (!ufs_qcom_cap_qunipro(host))
+> >  		return 0;
+> > 
+> > -	/* set unipro core clock cycles to 150 and clear clock divider */
+> > -	return ufs_qcom_set_core_clk_ctrl(hba, 150, 6);
+> > +	return ufs_qcom_cfg_core_clk_ctrl(hba);
+> >  }
+> > 
+> >  static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
+> > @@ -1401,12 +1442,39 @@ static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
+> >  static int ufs_qcom_clk_scale_down_post_change(struct ufs_hba *hba)
+> >  {
+> >  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> > +	struct list_head *head = &hba->clk_list_head;
+> > +	struct ufs_clk_info *clki;
+> > +	u32 curr_freq = 0;
+> > +	int err;
+> > 
+> >  	if (!ufs_qcom_cap_qunipro(host))
+> >  		return 0;
+> > 
+> > -	/* set unipro core clock cycles to 75 and clear clock divider */
+> > -	return ufs_qcom_set_core_clk_ctrl(hba, 75, 3);
+> > +
+> > +	list_for_each_entry(clki, head, list) {
+> > +		if (!IS_ERR_OR_NULL(clki->clk) &&
+> > +			!strcmp(clki->name, "core_clk_unipro")) {
+> > +			curr_freq = clk_get_rate(clki->clk);
+> > +			break;
+> > +		}
+> > +	}
+> > +	switch (curr_freq) {
+> > +	case MHZ_37_5:
+> > +		err = ufs_qcom_set_core_clk_ctrl(hba, 38, 2);
+> > +		break;
+> > +	case MHZ_75:
+> > +		err = ufs_qcom_set_core_clk_ctrl(hba, 75, 3);
+> > +		break;
+> > +	case MHZ_100:
+> > +		err = ufs_qcom_set_core_clk_ctrl(hba, 100, 4);
+> > +		break;
+> > +	default:
+> > +		err = -EINVAL;
+> > +		dev_err(hba->dev, "unipro curr_freq=%u entry missing\n", curr_freq);
+> > +		break;
+> > +	}
+> > +
+> > +	return err;
+> 
+> Why can't you use the existing ufs_qcom_cfg_core_clk_ctrl() function?
+> 
+> - Mani
+> 
+> >  }
+> > 
+> >  static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+> > diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> > index 325f08aca260..56550fd36c4e 100644
+> > --- a/drivers/ufs/host/ufs-qcom.h
+> > +++ b/drivers/ufs/host/ufs-qcom.h
+> > @@ -79,6 +79,15 @@ enum {
+> >  	UFS_MEM_CQIS_VS		= 0x8,
+> >  };
+> > 
+> > +/* QCOM UFS host controller core clk frequencies */
+> > +#define MHZ_37_5	37500000
+> > +#define MHZ_50		50000000
+> > +#define MHZ_75		75000000
+> > +#define MHZ_100		100000000
+> > +#define MHZ_150		150000000
+> > +#define MHZ_300		300000000
+> > +#define MHZ_201_5	201500000
+> > +#define MHZ_403		403000000
+> >  #define UFS_CNTLR_2_x_x_VEN_REGS_OFFSET(x)	(0x000 + x)
+> >  #define UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(x)	(0x400 + x)
+> > 
+> > --
+> > 2.17.1
+> > 
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
 
->
-> Gr{oetje,eeting}s,
->
->                         Geert
->
+-- 
+மணிவண்ணன் சதாசிவம்
