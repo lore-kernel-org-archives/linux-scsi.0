@@ -2,107 +2,102 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19488C6FA8F
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 22:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14EA8C83F18
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 22:23:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231401AbjH2WGD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Aug 2023 18:06:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47348 "EHLO
+        id S237064AbjH2WXC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Aug 2023 18:23:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238830AbjH2WFr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 18:05:47 -0400
-Received: from wout3-smtp.messagingengine.com (wout3-smtp.messagingengine.com [64.147.123.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12433132;
-        Tue, 29 Aug 2023 15:05:45 -0700 (PDT)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-        by mailout.west.internal (Postfix) with ESMTP id 2E9563200951;
-        Tue, 29 Aug 2023 18:05:44 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute6.internal (MEProxy); Tue, 29 Aug 2023 18:05:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1693346743; x=1693433143; bh=n4
-        +LqOxV9x7zOhvxyuDhHD7aHn1YAjQnTQK98pjvt30=; b=eP7m6cm0f/tMSWRIlx
-        7F9QPolnrJC4QuR/J3ObIua5wIgsL8k5ipB/2cDt9RaEudMM2LZz4Bv2HOWN1Ojq
-        W3QoMBUmB1YRjKLtBrT4kgBYVB/xVVmJq8pwKMbwUD0JA17wZ7sBogZlu15vHJ7A
-        HX9FVIN+p3UZPEmYDG01yLPTYSe8QmXDbEY/KYH4UmyIa+uhjgGr7PdbTJtl0Lpx
-        mp30OA+Nqvp5GlMTPIis29TrOwXhCdxeP4+ZaI0WWTUYUbQ9C0W68aYkG9bgP7qo
-        qFYgBMTmz5mUtIOKXg93dTGkUiroBHm6Vbjo4XCuaxQwdmjPEyaRe1lDu8PXsfIF
-        vAHw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; t=1693346743; x=1693433143; bh=n4+LqOxV9x7zO
-        hvxyuDhHD7aHn1YAjQnTQK98pjvt30=; b=RYIkXnqmnlLPa0n9E0UJ23wS20fla
-        xGnuRbz1zR6JGbtEQ8lmg0/Vzoy0jTAp5wbWSrn19hLD4MqIbBxwHSfFEU2Pf9sP
-        sf19ned/eACTE+2AqqLAKh2jGtTZ62E6P8QI1lGiMpin68NX88qg7bXYrs9Dhae4
-        A7Go0EVirYX5APQ2c6AxYMJQ1MxM/+ZI76KX7MqxxMh22WXJFBkN0G/ULDCHVUPi
-        rjxdbO9wqsPNJzc7K+C5x+QblEoN6c+5sfv97KERpb54fy706J+wM1hlCEHvJv6y
-        6HM2nUQLx2urGrHssfuiYepPn2b6yIGEsqJiKLJ8+IZyljjRw7e3DZUJg==
-X-ME-Sender: <xms:t2vuZO5KWY_WqkTbQgUkfQylspUpICkqif2_mQsKQeflbfpy841jvw>
-    <xme:t2vuZH7XtAGLqQ9mL_UQAiraA5bSiNh7F3SZhVSF5uDPfZKMpVEBGdOg6TimsV2Yj
-    MggFmZ9zV6amVB_A8Q>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedviedrudefjedgtdefucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
-    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:t2vuZNdMIxd3ierFJsGN_OJUCs8vvK8aTlrpHU2ZvS-ScFi9nOcQIg>
-    <xmx:t2vuZLJNKB4Q2ZBsiVm5Xzvfs9eZrScCynednckBnWyu2d51AbK4Pw>
-    <xmx:t2vuZCLFUkUweNX2TZX2EmGS--6CTzyjYsmm0SBBb8faVcsi4z4Hbg>
-    <xmx:t2vuZJWU0LCWV9gsJEpy7kjNVZE7ud4sWhRsAHymFdYN_-4YhDbJ5w>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 4FB49B60089; Tue, 29 Aug 2023 18:05:43 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-701-g9b2f44d3ee-fm-20230823.001-g9b2f44d3
-Mime-Version: 1.0
-Message-Id: <4a7d0dda-c24f-4875-892f-c8c5ef700882@app.fastmail.com>
-In-Reply-To: <20230829214517.14448-1-schmitzmic@gmail.com>
-References: <20230829214517.14448-1-schmitzmic@gmail.com>
-Date:   Tue, 29 Aug 2023 18:05:22 -0400
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Michael Schmitz" <schmitzmic@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     linux-m68k@vger.kernel.org,
-        "Geert Uytterhoeven" <geert@linux-m68k.org>
-Subject: Re: [PATCH] scsi: gvp11: add module parameter for DMA transfer bit mask
-Content-Type: text/plain
+        with ESMTP id S241074AbjH2WWw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 18:22:52 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61D501A6
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2023 15:21:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1693347718;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=PqISBsTRAs8s0SDVGqAo0GVx9lg65p3h18k5XhcvCvU=;
+        b=hVgg+5jIhr0JFIqC+O+qU50a7bFJxNsCEyb3VKhaWVytfnWF2NDHve0acU2ni5PNsdjXYs
+        I3mrAPOU0Z8K+ga0g4q4rymTFKypeCzNXb645BDQpQerBDZl6MPe4D/A/c1/+lwWY/3tPX
+        AMl8QFfmlpwzaw0drYe6DTXHHnQ7amU=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-287-ykalpRGnOsGFrqrdfHvWmA-1; Tue, 29 Aug 2023 18:21:57 -0400
+X-MC-Unique: ykalpRGnOsGFrqrdfHvWmA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B1424805F05;
+        Tue, 29 Aug 2023 22:21:56 +0000 (UTC)
+Received: from [10.22.9.144] (unknown [10.22.9.144])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6E6C91678B;
+        Tue, 29 Aug 2023 22:21:56 +0000 (UTC)
+Message-ID: <7fb6c8ee-6e4c-eaca-83ac-7754172be05f@redhat.com>
+Date:   Tue, 29 Aug 2023 18:21:55 -0400
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH 2/2] scsi: tape: add unexpected rewind handling
+Content-Language: en-US
+To:     =?UTF-8?Q?Kai_M=c3=a4kisara_=28Kolumbus=29?= 
+        <kai.makisara@kolumbus.fi>
+Cc:     linux-scsi@vger.kernel.org, loberman@redhat.com, jhutz@cmu.edu
+References: <20230822181413.1210647-1-jmeneghi@redhat.com>
+ <20230822181413.1210647-2-jmeneghi@redhat.com>
+ <4C6BF678-6623-48D1-8238-37B312BCA085@kolumbus.fi>
+From:   John Meneghini <jmeneghi@redhat.com>
+Organization: RHEL Core Storge Team
+In-Reply-To: <4C6BF678-6623-48D1-8238-37B312BCA085@kolumbus.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 29, 2023, at 17:45, Michael Schmitz wrote:
-> SCSI boards on Amiga. There now is no way to set a non-default
-> DMA mask on these boards.
+On 8/24/23 05:13, "Kai Mäkisara (Kolumbus)" wrote:
+> 
+> 
+>> On 22. Aug 2023, at 21.14, John Meneghini <jmeneghi@redhat.com> wrote:
+>>
+>> Handle the unexpected condition where the tape drive reports
+>> that tape is rewinding.
+>>
+>> ...
+>> I'm providing this patch because I think it's valuable for testing
+>> purposes and it should be safe. Any time the device unexpectedly
+>> reports "Rewind is in progress", it should be safe to set
+>> pos_unknown in the driver.
+>>
+> I am a bit hesitant about this, because it does not recognize if the rewind in
+> progress was initiated by the user or not. In immediate mode (ST_NOWAIT
+> option), a user rewind may be still in progress when a (impatient) user
+> tries to do something else.
 
-It might help to mention here in which cases the default mask
-is actually wrong.
+That's fine.  We can drop this patch if you are uncomfortable with it.  The real need it patch 1, which is and will affect 
+customers using the AWS tape gateway.
 
-> +module_param(gvp11_xfer_mask,  int, 0444);
-> +MODULE_PARM_DESC(gvp11_xfer_mask, "DMA mask (0xff000000 == 24 bit DMA)");
-> +
+> One possibility would be to make this conditional on !STp->immediate.
+> 
+> Another, perhaps better, method would be to use the STps->rw state
+> variable. A new state ST_REWINDING could be introduced (or state
+> should be set to ST_IDLE when rewinding).
+> 
+> (Looking at the state, I think it should be set to something else than
+> ST_WRITING more frequently. This could, in some cases prevent
+> improper automatic writing of filemarks. See, for instance, the problem
+> with failing rewinds in the report with PATCH 1/2.)
 
-I think the comment is the wrong way round, it should be
-0x00ffffff in this case, which also matches the default
-mask for ZORRO_PROD_GVP_SERIES_II, in the match table:
+Agreed. This patch was only a improvised way to run the code I needed to test in patch 1/2.
 
-static struct zorro_device_id gvp11_zorro_tbl[] = {
-        { ZORRO_PROD_GVP_COMBO_030_R3_SCSI,     ~0x00ffffff },
-        { ZORRO_PROD_GVP_SERIES_II,             ~0x00ffffff },
-        { ZORRO_PROD_GVP_GFORCE_030_SCSI,       ~0x01ffffff },
-        { ZORRO_PROD_GVP_A530_SCSI,             ~0x01ffffff },
-        { ZORRO_PROD_GVP_COMBO_030_R4_SCSI,     ~0x01ffffff },
-        { ZORRO_PROD_GVP_A1291,                 ~0x07ffffff },
-        { ZORRO_PROD_GVP_GFORCE_040_SCSI_1,     ~0x07ffffff },
-        { 0 }
-};
+Let's leave this patch out.
 
-      Arnd
+Thanks,
+
+/John
+
