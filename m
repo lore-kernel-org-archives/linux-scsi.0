@@ -2,99 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A4DDC83F18
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 13:36:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2011C71153
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 14:35:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236316AbjH2Nf4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Aug 2023 09:35:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52034 "EHLO
+        id S232596AbjH2Of2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Aug 2023 10:35:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236374AbjH2NfB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 09:35:01 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECAC0E52;
-        Tue, 29 Aug 2023 06:34:16 -0700 (PDT)
+        with ESMTP id S236973AbjH2OfQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 10:35:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77A9A98
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2023 07:35:14 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2B8956579C;
-        Tue, 29 Aug 2023 13:34:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65FC3C433C8;
-        Tue, 29 Aug 2023 13:34:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 15769658D8
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2023 14:35:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03FA4C433C7;
+        Tue, 29 Aug 2023 14:35:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693316043;
-        bh=/JQIq8+Xe+tEaNmG1PPau7O5jYGCuR4wfNkPxQoPmyo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hsrbu6dd2PuS1mQYblV+OsrRGsXwQr9+6XlVeEAlAfA4LyrPvQgXCUcv4oLlrJXVq
-         1yNnJGDC4Aa37w0vbLIpxwJGIfj9UbSEi/lSdJqQbMfd+/aeUyigeJK3bJn2lq8F86
-         5ImQPmf1GICHBho5iQKbqq8qEsy1TaJX8Of45NqvUSSEpAx6bpe4E/F4legbqRNgZy
-         T5XJDD/3bOz/04Z91SsOOAS1Hm6Gb6WrUPEM6Cqn0r2dMyNU6yx5t6ylvitkV3J232
-         p6QQP+9/jBy8BOFEkHEgiA8OaNfL+DILy0c72Nku0o99ZiOA6r+2+E30+bONVPwgUE
-         bfOt3wgZd39nQ==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Michael Kelley <mikelley@microsoft.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, kys@microsoft.com,
-        haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
-        jejb@linux.ibm.com, linux-hyperv@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 5/6] scsi: storvsc: Always set no_report_opcodes
-Date:   Tue, 29 Aug 2023 09:33:51 -0400
-Message-Id: <20230829133352.520671-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230829133352.520671-1-sashal@kernel.org>
-References: <20230829133352.520671-1-sashal@kernel.org>
+        s=k20201202; t=1693319713;
+        bh=j8pYqlZwUNuo65/dF3fFiMQs7PZWSYLwDSTEEVX7aNo=;
+        h=From:Date:Subject:To:Cc:From;
+        b=Xz9/nfYjENbQgSTnF+WYLlg+Q5+VWrTYtpyW1TSVZNv63IRsaWGjyyDjwNADefLb6
+         Goul/cWlAAEc+RAo0Xp7XoYhfJTRgutR7pNMLw3QIg5lz1cec81nFivXgXM+7kkeqc
+         95ED3TWTRpX47r+x9ZY6Y62P2Hpd/quKDKJWBYg3QARf4uH8z3ZOuzofSWDf+tECpz
+         VPX74kx5PFVRUC2GoB31vrt1dVQA+V7WvVAWIU9u9LDdPkHG2cq9FqH3ccTR/peQiC
+         P7ouN38N4H/WUEd0nVhYDnoQ8ngaYh36Zb3Qu8vr5Q3Hqth8SiMUiucPad6DuFO41q
+         p4ixmBCxer0QA==
+From:   Nathan Chancellor <nathan@kernel.org>
+Date:   Tue, 29 Aug 2023 07:35:06 -0700
+Subject: [PATCH] scsi: qla2xxx: Fix unused variable warning in
+ qla2xxx_process_purls_pkt()
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.254
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20230829-qla_nvme-fix-unused-fcport-v1-1-51c7560ecaee@kernel.org>
+X-B4-Tracking: v=1; b=H4sIABkC7mQC/x3MUQqDMBBF0a3IfDsQo0J1KyISzUs70EZNVARx7
+ 4Z+HrjciyKCIFKbXRRwSJTZJxR5RtPH+DdYbDJppUv10g2vXzP44wd2cvLu9wjLblrmsHFtDKq
+ mhh2dojRYAlL0n3f9fT8orraNbAAAAA==
+To:     njavali@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        martin.petersen@oracle.com
+Cc:     jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        patches@lists.linux.dev, Stephen Rothwell <sfr@canb.auug.org.au>,
+        kernel test robot <lkp@intel.com>,
+        Nathan Chancellor <nathan@kernel.org>
+X-Mailer: b4 0.13-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1931; i=nathan@kernel.org;
+ h=from:subject:message-id; bh=j8pYqlZwUNuo65/dF3fFiMQs7PZWSYLwDSTEEVX7aNo=;
+ b=owGbwMvMwCEmm602sfCA1DTG02pJDCnvmBQUa//ovDE8GzKb2fb2zhYzm1MmvZcnt65LuXtBY
+ 1Ox/prdHaUsDGIcDLJiiizVj1WPGxrOOct449QkmDmsTCBDGLg4BWAiHksYGfYZmXTU5RxM5tBe
+ ucjolEGL+uuPDHf9WGfFdE6VWflOaSnDf99fXuKy6wrl2goPZMjuc7OXDv506lHskm22nvuCVcw
+ 1+AA=
+X-Developer-Key: i=nathan@kernel.org; a=openpgp;
+ fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Michael Kelley <mikelley@microsoft.com>
+When CONFIG_NVME_FC is not set, fcport is unused:
 
-[ Upstream commit 31d16e712bdcaee769de4780f72ff8d6cd3f0589 ]
+  drivers/scsi/qla2xxx/qla_nvme.c: In function 'qla2xxx_process_purls_pkt':
+  drivers/scsi/qla2xxx/qla_nvme.c:1183:20: warning: unused variable 'fcport' [-Wunused-variable]
+   1183 |         fc_port_t *fcport = uctx->fcport;
+        |                    ^~~~~~
 
-Hyper-V synthetic SCSI devices do not support the MAINTENANCE_IN SCSI
-command, so scsi_report_opcode() always fails, resulting in messages like
-this:
+While this preprocessor usage could be converted to a normal if
+statement to allow the compiler to always see fcport as used, it is
+equally easy to just eliminate the fcport variable and use uctx->fcport
+directly.
 
-hv_storvsc <guid>: tag#205 cmd 0xa3 status: scsi 0x2 srb 0x86 hv 0xc0000001
-
-The recently added support for command duration limits calls
-scsi_report_opcode() four times as each device comes online, which
-significantly increases the number of messages logged in a system with many
-disks.
-
-Fix the problem by always marking Hyper-V synthetic SCSI devices as not
-supporting scsi_report_opcode(). With this setting, the MAINTENANCE_IN SCSI
-command is not issued and no messages are logged.
-
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-Link: https://lore.kernel.org/r/1686343101-18930-1-git-send-email-mikelley@microsoft.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Fixes: 27177862de96 ("scsi: qla2xxx: Fix nvme_fc_rcv_ls_req() undefined error")
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Closes: https://lore.kernel.org/linux-next/20230828131304.269a2a40@canb.auug.org.au/
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202308290833.sKkoSSeO-lkp@intel.com/
+Signed-off-by: Nathan Chancellor <nathan@kernel.org>
 ---
- drivers/scsi/storvsc_drv.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/qla2xxx/qla_nvme.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 8d1b19b2322f5..a91ee2b03c382 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1423,6 +1423,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 62a67662cbf3..f9f4a7da2ed6 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -1180,12 +1180,11 @@ static void
+ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha, struct purex_item *item)
  {
- 	blk_queue_rq_timeout(sdevice->request_queue, (storvsc_timeout * HZ));
+ 	struct qla_nvme_unsol_ctx *uctx = item->purls_context;
+-	fc_port_t *fcport = uctx->fcport;
+ 	struct qla_nvme_lsrjt_pt_arg a;
+ 	int ret = 1;
  
-+	/* storvsc devices don't support MAINTENANCE_IN SCSI cmd */
-+	sdevice->no_report_opcodes = 1;
- 	sdevice->no_write_same = 1;
- 
- 	/*
+ #if (IS_ENABLED(CONFIG_NVME_FC))
+-	ret = nvme_fc_rcv_ls_req(fcport->nvme_remote_port, &uctx->lsrsp,
++	ret = nvme_fc_rcv_ls_req(uctx->fcport->nvme_remote_port, &uctx->lsrsp,
+ 				 &item->iocb, item->size);
+ #endif
+ 	if (ret) {
+
+---
+base-commit: 15924b0503630016dee4dbb945a8df4df659070b
+change-id: 20230829-qla_nvme-fix-unused-fcport-5aae495edbf0
+
+Best regards,
 -- 
-2.40.1
+Nathan Chancellor <nathan@kernel.org>
 
