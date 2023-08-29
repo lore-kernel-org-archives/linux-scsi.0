@@ -2,113 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A0B9C83F22
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 13:34:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4669DC83F19
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 13:35:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236232AbjH2Ndz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Aug 2023 09:33:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59926 "EHLO
+        id S233635AbjH2Neu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Aug 2023 09:34:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236262AbjH2Ndk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 09:33:40 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE893199;
-        Tue, 29 Aug 2023 06:33:34 -0700 (PDT)
+        with ESMTP id S236268AbjH2Nd6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 09:33:58 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AA73CDB;
+        Tue, 29 Aug 2023 06:33:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 50E7E65707;
-        Tue, 29 Aug 2023 13:33:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69B71C433CB;
-        Tue, 29 Aug 2023 13:33:32 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9B59A657A4;
+        Tue, 29 Aug 2023 13:33:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1DC9C433CA;
+        Tue, 29 Aug 2023 13:33:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693316013;
-        bh=RVu0fPP9AhrXqlXMZtgHZWvJDCC0fB1HQPWmwrfPeyo=;
+        s=k20201202; t=1693316030;
+        bh=zjCyClAbSddK0G/BsujVzB6NcEfzr6b4xukEH0rpEhg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QxpgaTxjNPfXMzIWYx1DsROhyBy8s7RxQ8Abq4SaiBowTeoa1eHhhEJBUBuEGvilo
-         ZyB3ulr5DGRRB+8YRVm0se7eP6zptsZVwlQTeta5M4LLFItUcJ6KD9VmETKEbo2f5Y
-         c1eenk/Zdz+LjmRhPydI3feUkLIdYE6r4r9phGRKQjpBniTwL+TBO/6+CcmiLc2dt7
-         XyJjbm++uRMeLFosMEMzRYx7o7v41W7aNCTLxOSbnHhOjXoDOshJFjqAZy9f5kxKw3
-         Kcs00yoXrX2Hjuni+W7OISDkoS/Q4zvturQaD1ThtNOjrcZbOmvvUBFKH5CrqiSo1g
-         EJjjVDxAyD8jg==
+        b=pPP+a8PjayANZ9nOo7drcW0lStOzlatWV/ilPhjOaKvKehamQ+ii4uLqbOAP637as
+         NQDENekLR5Jivegd6PSe5cZaQ7Xt5jqxZasHhEXQRBm4/ea3ozNgGs7Lrc2o/S3qtd
+         sEla08r8z46aKunL11MJoof1lbBVU7jvVo/wmeaQGU4Wvk0+9eIE6Wi8FihzoKBxzY
+         +1l0EDRSfAagzd4nMJZbg6/ir3gkcVvF7wLrJyoSokdaMubaCQNe1j3eP94/wP+pha
+         tNNFazptMqcJLf0eLjWOTQysy30IJfhtgpfHM8dHIafa55QcPGeaJs/H3QnKTaR00g
+         BFd/YUMfqJzGw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Justin Tee <justintee8345@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
-        kernel test robot <lkp@intel.com>,
+Cc:     Michael Kelley <mikelley@microsoft.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, kys@microsoft.com,
+        haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+        jejb@linux.ibm.com, linux-hyperv@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 8/9] scsi: lpfc: Fix incorrect big endian type assignment in bsg loopback path
-Date:   Tue, 29 Aug 2023 09:33:15 -0400
-Message-Id: <20230829133316.520410-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 6/7] scsi: storvsc: Always set no_report_opcodes
+Date:   Tue, 29 Aug 2023 09:33:35 -0400
+Message-Id: <20230829133336.520573-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230829133316.520410-1-sashal@kernel.org>
-References: <20230829133316.520410-1-sashal@kernel.org>
+In-Reply-To: <20230829133336.520573-1-sashal@kernel.org>
+References: <20230829133336.520573-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.128
+X-stable-base: Linux 5.10.192
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Justin Tee <justintee8345@gmail.com>
+From: Michael Kelley <mikelley@microsoft.com>
 
-[ Upstream commit 9cefd6e7e0a77b0fbca5c793f6fb6821b0962775 ]
+[ Upstream commit 31d16e712bdcaee769de4780f72ff8d6cd3f0589 ]
 
-The kernel test robot reported sparse warnings regarding incorrect type
-assignment for __be16 variables in bsg loopback path.
+Hyper-V synthetic SCSI devices do not support the MAINTENANCE_IN SCSI
+command, so scsi_report_opcode() always fails, resulting in messages like
+this:
 
-Change the flagged lines to use the be16_to_cpu() and cpu_to_be16() macros
-appropriately.
+hv_storvsc <guid>: tag#205 cmd 0xa3 status: scsi 0x2 srb 0x86 hv 0xc0000001
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20230614175944.3577-1-justintee8345@gmail.com
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202306110819.sDIKiGgg-lkp@intel.com/
+The recently added support for command duration limits calls
+scsi_report_opcode() four times as each device comes online, which
+significantly increases the number of messages logged in a system with many
+disks.
+
+Fix the problem by always marking Hyper-V synthetic SCSI devices as not
+supporting scsi_report_opcode(). With this setting, the MAINTENANCE_IN SCSI
+command is not issued and no messages are logged.
+
+Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+Link: https://lore.kernel.org/r/1686343101-18930-1-git-send-email-mikelley@microsoft.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/storvsc_drv.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index fdf08cb572071..ed827f198cb68 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -911,7 +911,7 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			struct lpfc_iocbq *piocbq)
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 70b4868fe2f7d..17efb6c9e21f4 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1537,6 +1537,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
  {
- 	uint32_t evt_req_id = 0;
--	uint32_t cmd;
-+	u16 cmd;
- 	struct lpfc_dmabuf *dmabuf = NULL;
- 	struct lpfc_bsg_event *evt;
- 	struct event_data *evt_dat = NULL;
-@@ -936,7 +936,7 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	blk_queue_rq_timeout(sdevice->request_queue, (storvsc_timeout * HZ));
  
- 	ct_req = (struct lpfc_sli_ct_request *)bdeBuf1->virt;
- 	evt_req_id = ct_req->FsType;
--	cmd = ct_req->CommandResponse.bits.CmdRsp;
-+	cmd = be16_to_cpu(ct_req->CommandResponse.bits.CmdRsp);
++	/* storvsc devices don't support MAINTENANCE_IN SCSI cmd */
++	sdevice->no_report_opcodes = 1;
+ 	sdevice->no_write_same = 1;
  
- 	spin_lock_irqsave(&phba->ct_ev_lock, flags);
- 	list_for_each_entry(evt, &phba->ct_ev_waiters, node) {
-@@ -3243,8 +3243,8 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
- 			ctreq->RevisionId.bits.InId = 0;
- 			ctreq->FsType = SLI_CT_ELX_LOOPBACK;
- 			ctreq->FsSubType = 0;
--			ctreq->CommandResponse.bits.CmdRsp = ELX_LOOPBACK_DATA;
--			ctreq->CommandResponse.bits.Size   = size;
-+			ctreq->CommandResponse.bits.CmdRsp = cpu_to_be16(ELX_LOOPBACK_DATA);
-+			ctreq->CommandResponse.bits.Size   = cpu_to_be16(size);
- 			segment_offset = ELX_LOOPBACK_HEADER_SZ;
- 		} else
- 			segment_offset = 0;
+ 	/*
 -- 
 2.40.1
 
