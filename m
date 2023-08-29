@@ -2,117 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACC4FC83F12
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Aug 2023 23:42:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 942A2C71153
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 01:03:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234451AbjH1Xlw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Aug 2023 19:41:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46212 "EHLO
+        id S234923AbjH2BDC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Aug 2023 21:03:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234476AbjH1Xlc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 19:41:32 -0400
-Received: from mail-qk1-x734.google.com (mail-qk1-x734.google.com [IPv6:2607:f8b0:4864:20::734])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D135212F
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2023 16:41:29 -0700 (PDT)
-Received: by mail-qk1-x734.google.com with SMTP id af79cd13be357-76da22c090dso261528485a.2
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2023 16:41:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1693266089; x=1693870889;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SjMIoXslynq24DOJiW33MMcsv/sh8tQtQqHO+N8He+8=;
-        b=1EoXeb3OOiImuMjjfHwUlmsY0ztLDASdSyw8ID2X17CIXW81x9Atszg92hG4E2wnZE
-         KGvFfl9TzCZD1ThqK7VxGiOZIEZY5QDYRrJmf3G4Y1hOimVgFXBkqKkI6RME54XbQxmg
-         49+M8MDQEzj8Mp6tpKM9nm5fbethPmE8p2Z8TkL1a1t3yGqpWW1liz1CT3GbCClMINb5
-         Nb9dxjJCGXv7sirwAPdSlEQLQBIOGt2j5rqYvuNk9lIvy8QT/9vdebPh+1+51bDOkixU
-         AltTHjCtpB8jaL71XD97KMCuukI+SYF/aX3RVXN4nlGg9XfopfBs9gc3qEqhA03zShb4
-         ctKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693266089; x=1693870889;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=SjMIoXslynq24DOJiW33MMcsv/sh8tQtQqHO+N8He+8=;
-        b=MN1FdqcQORI5/Lp4szNAt0Y0DQJvaBP7AZPNqB8uI8+4Y61MKh8ch2XIRkx9qXzWYe
-         w9m3EC++AF210CMquo8ENOgo2pLH3Vdilib9yaagSVTxfYf+5VBmQgUg+cjhngXmzYHd
-         BkMPFqWT3p+PndBPJ4K7HJBsIvJioUTsM5V/j0Ajg8d+twejuiiqS7H7oduAkRZiAKol
-         ubggamFZ6bzRhxPxDruW/NCum+H6rqFt8VH32Ee9NzmwGNcJfwdyIyrJMdOKobaO1Wdt
-         zdbus+U3Vyt+v/VZllmzc7RsEDrJKt7HJSOLEmbIH/uZYtB+PXFQsiFEzL6gYgfOUYWb
-         NhLA==
-X-Gm-Message-State: AOJu0YyAo/op+KShZcLt9GoOFEIOnPBS/ko1rI0p8ROTTbA6YsUCid46
-        FwanR0mQ8LY9wBvxCZX7ofHozkcldWxzoSzmIIn8J/qJNHy46FtdrRI=
-X-Google-Smtp-Source: AGHT+IGz2NbllmhHMPcJmnADheTpGmYefJXR5RnW4sLSsK1HF+0ZQuC9eNUyS3O1ILjxAa720JTnJHJznRBM7D4EWpM=
-X-Received: by 2002:a05:620a:444f:b0:76d:b0d9:8714 with SMTP id
- w15-20020a05620a444f00b0076db0d98714mr26714497qkp.5.1693266088761; Mon, 28
- Aug 2023 16:41:28 -0700 (PDT)
+        with ESMTP id S232718AbjH2BCb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2023 21:02:31 -0400
+Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B9CF12D;
+        Mon, 28 Aug 2023 18:02:27 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R621e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0VqoOHHI_1693270944;
+Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0VqoOHHI_1693270944)
+          by smtp.aliyun-inc.com;
+          Tue, 29 Aug 2023 09:02:25 +0800
+From:   Yang Li <yang.lee@linux.alibaba.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com, satishkh@cisco.com,
+        sebaddel@cisco.com, kartilak@cisco.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yang Li <yang.lee@linux.alibaba.com>
+Subject: [PATCH -next] scsi: fnic: Remove unused function fnic_scsi_host_start/end_tag()
+Date:   Tue, 29 Aug 2023 09:02:22 +0800
+Message-Id: <20230829010222.33393-1-yang.lee@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
-References: <20230828-scsi_fortify-v1-0-8dde624a3b2c@google.com>
-In-Reply-To: <20230828-scsi_fortify-v1-0-8dde624a3b2c@google.com>
-From:   Nick Desaulniers <ndesaulniers@google.com>
-Date:   Mon, 28 Aug 2023 16:41:18 -0700
-Message-ID: <CAKwvOdmaeupeLgJWjMD4iJ1pi9NFTN-MTp3uC0jDVp2T2+Ctxw@mail.gmail.com>
-Subject: Re: [PATCH 0/2] scsi: fix 2 cases of -Wfortify-source
-To:     Hannes Reinecke <hare@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Nathan Chancellor <nathan@kernel.org>
-Cc:     Tom Rix <trix@redhat.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, llvm@lists.linux.dev,
-        Ard Biesheuvel <ardb@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 28, 2023 at 3:25=E2=80=AFPM Nick Desaulniers
-<ndesaulniers@google.com> wrote:
->
-> clang-18 has improved its support for detecting operations that will
-> truncate values at runtime via -wfortify-source resulting in two new
+The function fnic_scsi_host_start_tag() and fnic_scsi_host_end_tag()
+are not used anywhere, so remove them.
 
-^ -Wfortify-source
+silence the warnings:
+drivers/scsi/fnic/fnic_scsi.c:2175:1: warning: unused function 'fnic_scsi_host_start_tag'
+drivers/scsi/fnic/fnic_scsi.c:2196:1: warning: unused function 'fnic_scsi_host_end_tag'
 
-> warnings (or errors with CONFIG_WERROR=3Dy):
->
->   drivers/scsi/myrb.c:1906:10: warning: 'snprintf' will always be
->   truncated; specified size is 32, but format string expands to at least
->   34 [-Wfortify-source]
->
->   drivers/scsi/myrs.c:1089:10: warning: 'snprintf' will always be
->   truncated; specified size is 32, but format string expands to at least
->   34 [-Wfortify-source]
->
-> When we have a string literal that does not contain any format flags,
-> rather than use snprintf (sometimes with a size that's too small), let's
-> use sprintf.
+Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+---
+ drivers/scsi/fnic/fnic_scsi.c | 33 ---------------------------------
+ 1 file changed, 33 deletions(-)
 
-Even better, Ard points out this could be strcpy (or one of the
-variants). Will send a v2 tomorrow.
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 185142efee3d..9761b2c9db48 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -2167,39 +2167,6 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
+ 	return ret;
+ }
+ 
+-/*
+- * fnic_scsi_host_start_tag
+- * Allocates tagid from host's tag list
+- **/
+-static inline int
+-fnic_scsi_host_start_tag(struct fnic *fnic, struct scsi_cmnd *sc)
+-{
+-	struct request *rq = scsi_cmd_to_rq(sc);
+-	struct request_queue *q = rq->q;
+-	struct request *dummy;
+-
+-	dummy = blk_mq_alloc_request(q, REQ_OP_WRITE, BLK_MQ_REQ_NOWAIT);
+-	if (IS_ERR(dummy))
+-		return SCSI_NO_TAG;
+-
+-	rq->tag = dummy->tag;
+-	sc->host_scribble = (unsigned char *)dummy;
+-
+-	return dummy->tag;
+-}
+-
+-/*
+- * fnic_scsi_host_end_tag
+- * frees tag allocated by fnic_scsi_host_start_tag.
+- **/
+-static inline void
+-fnic_scsi_host_end_tag(struct fnic *fnic, struct scsi_cmnd *sc)
+-{
+-	struct request *dummy = (struct request *)sc->host_scribble;
+-
+-	blk_mq_free_request(dummy);
+-}
+-
+ /*
+  * SCSI Eh thread issues a Lun Reset when one or more commands on a LUN
+  * fail to get aborted. It calls driver's eh_device_reset with a SCSI command
+-- 
+2.20.1.7.g153144c
 
->
-> This is pattern is cleaned up throughout two files.
->
-> Signed-off-by: Nick Desaulniers <ndesaulniers@google.com>
-> ---
-> Nick Desaulniers (2):
->       scsi: myrb: fix -Wfortify-source
->       scsi: myrs: fix -Wfortify-source
->
->  drivers/scsi/myrb.c |  8 ++++----
->  drivers/scsi/myrs.c | 14 +++++++-------
->  2 files changed, 11 insertions(+), 11 deletions(-)
-> ---
-> base-commit: 2dde18cd1d8fac735875f2e4987f11817cc0bc2c
-> change-id: 20230828-scsi_fortify-9f8d279bf9aa
->
-> Best regards,
-> --
-> Nick Desaulniers <ndesaulniers@google.com>
->
-
-
---=20
-Thanks,
-~Nick Desaulniers
