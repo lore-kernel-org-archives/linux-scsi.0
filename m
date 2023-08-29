@@ -2,89 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 430CCC83F1F
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 11:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A0BEC83F25
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 13:34:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235309AbjH2LDi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Aug 2023 07:03:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36964 "EHLO
+        id S236182AbjH2Ndx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Aug 2023 09:33:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235370AbjH2LDP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 07:03:15 -0400
+        with ESMTP id S236242AbjH2Ndi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 09:33:38 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07E8DCDA;
-        Tue, 29 Aug 2023 04:03:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AA02194;
+        Tue, 29 Aug 2023 06:33:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 54FF9654FA;
-        Tue, 29 Aug 2023 11:03:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A91DC433C8;
-        Tue, 29 Aug 2023 11:02:50 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 616C461ADB;
+        Tue, 29 Aug 2023 13:33:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF787C433C9;
+        Tue, 29 Aug 2023 13:33:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693306979;
-        bh=U8tO0dLFljDnktuq80r4afitP93wv2ZaRihVU0Qyu2I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Zpf44oWH5Z2L6QhPNIGp7PeBhJpnP4KfVurKgcL9DEj/BIRmEq8ijJzbb6q5k8Ovs
-         9bWmbNzBkJw5MyDAxRy27lwjHGda6NbScABpEWJtXeah3765gQ9TUqIkk0ScRRsr4B
-         pgJc/+HtIStX4e0zZcs6Mgm/y0cAQCiR+vX0i9HUCQ2jW21Dvj1m5KvDe2xJG8sZD9
-         7J/ySnM4IatjDikdEeiDLegDHPGVAKFz5CZJOY4FIoLRlouJhKb12RDwuxVPSp/21Q
-         Im6ZTKLVuSh6T0hvwNEhJP5WmzsfCpgy49EfIICESoo8yOH/FPp5HVYEAtlfB2KJ19
-         jLNduaFs+ry8A==
-Date:   Tue, 29 Aug 2023 13:02:47 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v3 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <20230829-stark-trapez-2251bf78c6a9@brauner>
-References: <20230818123232.2269-1-jack@suse.cz>
- <20230825-hubraum-gedreht-8c5c4db9330a@brauner>
- <20230828170744.iifdmaw732cfiauf@quack3>
+        s=k20201202; t=1693315987;
+        bh=CRQOBcDKkYXV+TFZ5KF31xG95sqxncyXnME8XF38jKA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=SjBwa10IUQ4xX9yRDlw+b5dBZDdt5anTY0LR8g/jGLw6DZ17zTqMQRsggp9SNZ7mk
+         nA+XUnLykgEhXc+CNUgV2Gm6UUkXvH9xWB3bi0qYmYZ919M34lB0Dph6+7TVgzCWrZ
+         CSC3lagC62xo08C5bixJEPwzSpSJcJwc/VibIT2bjU+XmCNI1fGOeE6EFyx7QvbhLf
+         nuLklj2hb57hxMhD1bTxhWhtlLWR4rsa7FIGPMhwvjzNgGaERRlFth7M03GQo70mNn
+         H4PF/nNBzQIXOXM++TmS73jruSi2wL1oJxNtNhVv7FxZYyiXtDIBw8xMJiqdzq3jiq
+         JaUn608ZoqiUQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Justin Tee <justintee8345@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
+        kernel test robot <lkp@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 12/15] scsi: lpfc: Fix incorrect big endian type assignment in bsg loopback path
+Date:   Tue, 29 Aug 2023 09:32:42 -0400
+Message-Id: <20230829133245.520176-12-sashal@kernel.org>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230829133245.520176-1-sashal@kernel.org>
+References: <20230829133245.520176-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20230828170744.iifdmaw732cfiauf@quack3>
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.1.49
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> replacement) I think we can go ahead with the series as is. As you said
-> there will be some conflicts in btrfs and I've learned about f2fs conflicts
-> as well so I can rebase & repost the series on top of rc1 to make life
-> easier for you.
+From: Justin Tee <justintee8345@gmail.com>
 
-That is be much appreciated. Thank you!
+[ Upstream commit 9cefd6e7e0a77b0fbca5c793f6fb6821b0962775 ]
+
+The kernel test robot reported sparse warnings regarding incorrect type
+assignment for __be16 variables in bsg loopback path.
+
+Change the flagged lines to use the be16_to_cpu() and cpu_to_be16() macros
+appropriately.
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20230614175944.3577-1-justintee8345@gmail.com
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202306110819.sDIKiGgg-lkp@intel.com/
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_bsg.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 852b025e2fecf..b54fafb486e06 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -889,7 +889,7 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 			struct lpfc_iocbq *piocbq)
+ {
+ 	uint32_t evt_req_id = 0;
+-	uint32_t cmd;
++	u16 cmd;
+ 	struct lpfc_dmabuf *dmabuf = NULL;
+ 	struct lpfc_bsg_event *evt;
+ 	struct event_data *evt_dat = NULL;
+@@ -915,7 +915,7 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 
+ 	ct_req = (struct lpfc_sli_ct_request *)bdeBuf1->virt;
+ 	evt_req_id = ct_req->FsType;
+-	cmd = ct_req->CommandResponse.bits.CmdRsp;
++	cmd = be16_to_cpu(ct_req->CommandResponse.bits.CmdRsp);
+ 
+ 	spin_lock_irqsave(&phba->ct_ev_lock, flags);
+ 	list_for_each_entry(evt, &phba->ct_ev_waiters, node) {
+@@ -3186,8 +3186,8 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
+ 			ctreq->RevisionId.bits.InId = 0;
+ 			ctreq->FsType = SLI_CT_ELX_LOOPBACK;
+ 			ctreq->FsSubType = 0;
+-			ctreq->CommandResponse.bits.CmdRsp = ELX_LOOPBACK_DATA;
+-			ctreq->CommandResponse.bits.Size   = size;
++			ctreq->CommandResponse.bits.CmdRsp = cpu_to_be16(ELX_LOOPBACK_DATA);
++			ctreq->CommandResponse.bits.Size   = cpu_to_be16(size);
+ 			segment_offset = ELX_LOOPBACK_HEADER_SZ;
+ 		} else
+ 			segment_offset = 0;
+-- 
+2.40.1
+
