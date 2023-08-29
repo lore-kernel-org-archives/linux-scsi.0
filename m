@@ -2,96 +2,150 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C3D8C6FA8F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE103C83F14
 	for <linux-scsi@archiver.kernel.org>; Tue, 29 Aug 2023 09:02:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234322AbjH2JCD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S234324AbjH2JCD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 29 Aug 2023 05:02:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46494 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232469AbjH2JBc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 05:01:32 -0400
-Received: from mail-oi1-x22d.google.com (mail-oi1-x22d.google.com [IPv6:2607:f8b0:4864:20::22d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 742D3B5
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2023 02:01:26 -0700 (PDT)
-Received: by mail-oi1-x22d.google.com with SMTP id 5614622812f47-3a7e68f4214so3127957b6e.1
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2023 02:01:26 -0700 (PDT)
+        with ESMTP id S234308AbjH2JBf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2023 05:01:35 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71FE2107
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2023 02:01:32 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-68a6f6a66e1so2982458b3a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2023 02:01:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1693299685; x=1693904485;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=/vdq8u1LH38E9v3PmL3qXMOa4TkUAkRK7dCze0HsCT0=;
-        b=eMCtb/5rhSLy49qFz+oH2Aibbb+fA8r2vwbYeGKv2E2LtAsXiZ7/iwyYQDwPJDPpzZ
-         p6HpY4y8tdtdvSdujI79dXGozb771jwTyU5k2KSEA1FYEElbyqRXUvje25MZm79s3JTp
-         cqFLMRlX+apUsVzcDJXqz7BRW/vkLkyzg/Cr8=
+        d=broadcom.com; s=google; t=1693299691; x=1693904491;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=HP7bPTh2t64yvkD1jIQj3kbAWr2Z8YpfIsxVcB/C1rM=;
+        b=h3cC/h1kUlPEMJOwWTjRJ6b6V/X+ZO+S+8TZdlwiLYyeR72ucq9WdvExnKYwXEKagQ
+         RwmQOxvkuY11N+nEFC+2/T5IGeyjCIWjpqcRJIjZPo87iwrCl26E+RxXNjG/KmCkz58S
+         YXKSL9orwY6mGBiPfK9uAfu0O8+wDcX78z/cw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693299685; x=1693904485;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/vdq8u1LH38E9v3PmL3qXMOa4TkUAkRK7dCze0HsCT0=;
-        b=eVYIQmMNnPreycn08yhi8+gYAOxFdTjmn5AzDYW/eT8NDmQUID/BjUk3AlxYpaLqAw
-         AgOWu20Sy4CGQhH6rFiNi+75CFfywxnj9dZ/ACtqV/m+/t1i1ocfi8bh1yyac+zRDdev
-         WMraDRUaBDeyDVorP1d8F7um+LDaTrT0VUriSLg3KUz3Jh5S8+cAzsZgsaUKF8GJruzj
-         BqNAhNlcSmMvQ9LY8l6Cx9rSrRYQvXZg+Wglnb2iD3CBYeDFQsiI4Crg0JZ/L+9+VZ5V
-         JvP7aLAYMcNJmeu6/O/v890c8nsl4ML/pfi0sEi2pGjO23RJ/mMQW8MenVYTYSV8cUWY
-         WkhA==
-X-Gm-Message-State: AOJu0YzxnljqqNjF5W9EbBSJbe8uOZiXCGEXISO/iYvRfzXCLpU0rqp3
-        8w6Xqd4gqRqzeMa/YRHa7XfHjge1WytsS0XzFLFQglpv6UtE75NwvNQZUfPrLZoVLvSOJtPe96n
-        SG/8JWgMEUjOoPyCmSt0G437VtsXuvUWiDKxvejYLld5PyMChBJs1zn7ooY7hyBvT6MylUQXPD5
-        gtQH41YAU5vQ==
-X-Google-Smtp-Source: AGHT+IFWaip5gZDDEfNfcpP9QGQty1c31YUU1u5+00h6ws84jbDirdlCgKtvjl2BsY0AKhuA05GOyg==
-X-Received: by 2002:a05:6808:1293:b0:3a8:4f87:f92c with SMTP id a19-20020a056808129300b003a84f87f92cmr17363087oiw.44.1693299685382;
-        Tue, 29 Aug 2023 02:01:25 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1693299691; x=1693904491;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=HP7bPTh2t64yvkD1jIQj3kbAWr2Z8YpfIsxVcB/C1rM=;
+        b=lT+Dq28EC4ZKt+Ky9Y/2VKlbdUwNML9rLUHYNNQaJY5w5IF0nH2wCqZ4rrpsc40dpu
+         LLErNySO9F49tForpE091ymlPZfEE2p4gX5oaJ/OPPubdIBnb/ssBMbo9j/xJJdYXBOx
+         0EB7RXELBX2/B9y0ZRBAr51QF56zSi80JPSVKLDrf/D+FIsPFI1cV4kxzSzJzESF6tkR
+         N6eF2Z4KVLrPKJgDDw7tJDujyJ4BvtjEZeGsf3Hrd+T8oXIHQxti2jasGxRPQG1T7ZMw
+         ZkH1jP3zH63cgRbDF/ih7vwMVFEA+xYYma6ZmMUpERa8miZVwg6DjeG7b34RU7+IuNHq
+         LGOA==
+X-Gm-Message-State: AOJu0YxfSHASysqS8Udb+5xRnGcG8rYKE9brSywBgqjAuv5bqxnxauw8
+        EbbW991FYUnJE+Jv/MGPKAHwQW5/QaJmghoSmIoTUw9XpeJbOZeDBeLDDdcR0MlV/cxryiu8G7Z
+        QGhbsjNPbWJCxRlWDeWah+QyTDnJjtu2+ZWBOJBAI9rp9LuZYxgdlSwnZR2+c8cSti7Z4WJ6QpZ
+        ZLomKzqagVlg==
+X-Google-Smtp-Source: AGHT+IGyDFPVF2QTGCBpsAGURoq3UrAbYpxYJ4jTn/jqU6Jdv168VvJIBEu1kudcEeXBC76MIZfZfQ==
+X-Received: by 2002:a05:6a00:a13:b0:68a:4e3c:eb43 with SMTP id p19-20020a056a000a1300b0068a4e3ceb43mr22116593pfh.10.1693299691425;
+        Tue, 29 Aug 2023 02:01:31 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id c27-20020a63725b000000b0056456fff676sm8589978pgn.66.2023.08.29.02.01.22
+        by smtp.gmail.com with ESMTPSA id c27-20020a63725b000000b0056456fff676sm8589978pgn.66.2023.08.29.02.01.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Aug 2023 02:01:23 -0700 (PDT)
+        Tue, 29 Aug 2023 02:01:30 -0700 (PDT)
 From:   Ranjan Kumar <ranjan.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
         sumit.saxena@broadcom.com, Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v4 0/2] mpt3sas: Additional retries when reading specific registers
-Date:   Tue, 29 Aug 2023 14:30:18 +0530
-Message-Id: <20230829090020.5417-1-ranjan.kumar@broadcom.com>
+Subject: [PATCH v4 2/2] mpt3sas: Removing volatile qualifier
+Date:   Tue, 29 Aug 2023 14:30:20 +0530
+Message-Id: <20230829090020.5417-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230829090020.5417-1-ranjan.kumar@broadcom.com>
+References: <20230829090020.5417-1-ranjan.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000043bb7406040c0e31"
+        boundary="000000000000a25fab06040c0e44"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000043bb7406040c0e31
+--000000000000a25fab06040c0e44
 Content-Transfer-Encoding: 8bit
 
-Doorbell and Host diagnostic registers could return 0 even
-after 3 retries and that leads to occasional resets of the
-controllers, hence increased the retry count to thirty.
+Removing reduntant volatile qualifier
 
-v1->v2:
--added a new patch for volatile as suggested by Greg KH.
--renamed macro as suggested by Damien Le Moal.
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpi/mpi2.h     | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-v2->v3:
--Modified patch description with more details.
-
-v3->v4:
-- Code simplification
-
-Ranjan Kumar (2):
-  mpt3sas: Perform additional retries if Doorbell read returns 0
-  mpt3sas: Removing volatile qualifier
-
- drivers/scsi/mpt3sas/mpi/mpi2.h     |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_base.c | 50 ++++++++++++++++++++---------
- drivers/scsi/mpt3sas/mpt3sas_base.h |  3 +-
- 3 files changed, 38 insertions(+), 17 deletions(-)
-
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index ed3923f8db4f..6de35b32223c 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -199,7 +199,7 @@
+ *
+ *****************************************************************************/
+ 
+-typedef volatile struct _MPI2_SYSTEM_INTERFACE_REGS {
++typedef struct _MPI2_SYSTEM_INTERFACE_REGS {
+ 	U32 Doorbell;		/*0x00 */
+ 	U32 WriteSequence;	/*0x04 */
+ 	U32 HostDiagnostic;	/*0x08 */
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 5284584e4cd2..61a32bf00747 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -139,7 +139,7 @@ static void
+ _base_clear_outstanding_commands(struct MPT3SAS_ADAPTER *ioc);
+ 
+ static u32
+-_base_readl_ext_retry(const volatile void __iomem *addr);
++_base_readl_ext_retry(const void __iomem *addr);
+ 
+ /**
+  * mpt3sas_base_check_cmd_timeout - Function
+@@ -204,7 +204,7 @@ module_param_call(mpt3sas_fwfault_debug, _scsih_set_fwfault_debug,
+  * while reading the system interface register.
+  */
+ static inline u32
+-_base_readl_aero(const volatile void __iomem *addr)
++_base_readl_aero(const void __iomem *addr)
+ {
+ 	u32 i = 0, ret_val;
+ 
+@@ -217,7 +217,7 @@ _base_readl_aero(const volatile void __iomem *addr)
+ }
+ 
+ static u32
+-_base_readl_ext_retry(const volatile void __iomem *addr)
++_base_readl_ext_retry(const void __iomem *addr)
+ {
+ 	u32 i, ret_val;
+ 
+@@ -231,7 +231,7 @@ _base_readl_ext_retry(const volatile void __iomem *addr)
+ }
+ 
+ static inline u32
+-_base_readl(const volatile void __iomem *addr)
++_base_readl(const void __iomem *addr)
+ {
+ 	return readl(addr);
+ }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 10055c7e4a9f..1be0850ca17a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -994,7 +994,7 @@ typedef void (*NVME_BUILD_PRP)(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ typedef void (*PUT_SMID_IO_FP_HIP) (struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ 	u16 funcdep);
+ typedef void (*PUT_SMID_DEFAULT) (struct MPT3SAS_ADAPTER *ioc, u16 smid);
+-typedef u32 (*BASE_READ_REG) (const volatile void __iomem *addr);
++typedef u32 (*BASE_READ_REG) (const void __iomem *addr);
+ /*
+  * To get high iops reply queue's msix index when high iops mode is enabled
+  * else get the msix index of general reply queues.
 -- 
 2.31.1
 
 
---00000000000043bb7406040c0e31
+--000000000000a25fab06040c0e44
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -162,13 +216,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOqkaC9azmFeXECocrKJOXKuKH3TzHAK
-m4eBTBplV91+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDgy
-OTA5MDEyNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICmKUNPHwSd4Df1yj+fnDnhkw5VFXSf/
+hvBSthNRziUcMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMDgy
+OTA5MDEzMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQB4gDCnFF2LgcGVnqTpGdGcLvg4+miYiFMoE84XzKPat/AkTCXE
-Xq5e+gTJwmMrFP44VwldGSmu5OBHQpkr4conO1oRKvZF/H+qioEJ/10tMdf94s9zVdVMhrZoeRzp
-X35vq9VlxfvNoo/8ug2BP5uHAEcM8s0H+y7f12LinsRSNEIPfScNoPrS1T8GykNcN9VZpL1BH/zx
-n06AZLDjyOIBxmsldLVZX2zojQbgknuPjfzg7P3mUqtym1V33gHW5I/bsaN0yj9BbcXLW6LcRnMh
-jYaQSWrbtSfJKy0/TjcxfuTVqQiT/59wSJNDLhaznTNGqS0h6H7FwusBWk4UmXLP
---00000000000043bb7406040c0e31--
+ATANBgkqhkiG9w0BAQEFAASCAQA71G3cT4tsbVG5ulk2NK5BK9Ggciq1/+vho9eoAwQMM6RXLmZn
+1m1NCFVFXNve61RJfifz1btQN5MBYYUmGEoqilGxKgUbHsND/dHvvghWeb9vO2vMnqINqSSTtdBT
+adQgQO92hmgEEyxDk07q71FAWT4fM3UOzVKPX3E7o389soyoVvocIKjaOyKaX7qbeEGLaM5rkGfn
+XJPQ4LmY6BxW4bENoehE5ZTm0Sj0IpcH+h6TN0WjQu47dXq1NarbpNvk/MnJV8L9+rhOm5IbJ9zP
+KievULRs3d2fOJyG+xB3rEiu2Hc+pZH96yyN/9x82cVAlnZ+600PLbyhMfVd8Qvf
+--000000000000a25fab06040c0e44--
