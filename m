@@ -2,123 +2,220 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B4EC83F1B
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Aug 2023 18:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83EB7C83F1B
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Aug 2023 18:38:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234024AbjH3Si0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:38:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39860 "EHLO
+        id S233420AbjH3Si2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:38:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343738AbjH3QoJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2023 12:44:09 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E668C1A2
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Aug 2023 09:44:04 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id a640c23a62f3a-99cce6f7de2so760368666b.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Aug 2023 09:44:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1693413843; x=1694018643; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=mJJlek7R83oK8d/2pVvV6qgerAYb4e+pH9LJHZNOAZM=;
-        b=D9KzcvWHxGTCcuSHpVJU3DTCfH/So/HRBvz8ql4UyMhXFvkxcBAbFaDerquf25aaTQ
-         bWmZSx9Ounbv/EBI1f2SIEOBj3ykLJRGkz0YKY/Rf4W7du3jt7hqN0MQP/r0fTu7XP8a
-         0eLne5If7BrstuWwej6YXBYm8SFvQzC0BmncZAn+LaPrdX8sjIZ/JaVS1EzFgEx3Jhf7
-         lLYTlxXRoKk8o+hE32qUwDMp5koxynXUrBer6MlEEKt1yGMpxpRLfItkOkURzokOuePu
-         KPMNz8o5DklmXvehkTcqWoySOqlZCH8Nzuho1/NAwfWEkbqhtyHCZUO5pY56+4FuIlfr
-         w2GQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693413843; x=1694018643;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mJJlek7R83oK8d/2pVvV6qgerAYb4e+pH9LJHZNOAZM=;
-        b=TUBUOiwQdr1jb8Tt5O9oatpwQYEL69/s8YZQetp/C5y2WP+gx7+2Uvp/kIsD0Av2SG
-         IbdudnyH9zvNDDnlinZRIgn3U1l0zjkf6a3iPqor/8TowRsV2iUvqRNxpicqy2UFNMHf
-         IksNS/x9s4l/QEKnPLh6w9KCW273S/DP084bna0BaqUMh1Dr3F/Gqqlb+Q69I/DT2i85
-         vXHFSazx7HKWn4El+uKi97+wUp08Piow6g+3HD/0e0RgwdtWVCjsTL9fi/JUiIHo7ggC
-         4HR/5dt71u2YqHXO06dKqViCUy9dRuKDWm0nPFv2dOwj5hy9RV+1e6d4pSD+J0c70oPi
-         cmFQ==
-X-Gm-Message-State: AOJu0YyQ6nj0RB0YVsoB+0yvSu/kku+jdJ3JBjX5n37mCAxREjT46/Rl
-        nboCxSkDFDQuiIVYGt6igFoQyQ==
-X-Google-Smtp-Source: AGHT+IEh9vHrZXzLULcxeCJyYvXSmxHauWdNpvw1Ksk5IA4QZMsBUUukL43s/mHCdq4zsxlM5OGixQ==
-X-Received: by 2002:a17:906:109a:b0:99c:75f7:19c1 with SMTP id u26-20020a170906109a00b0099c75f719c1mr2218651eju.39.1693413843373;
-        Wed, 30 Aug 2023 09:44:03 -0700 (PDT)
-Received: from [192.168.86.24] ([5.133.47.210])
-        by smtp.googlemail.com with ESMTPSA id rn14-20020a170906d92e00b00992afee724bsm7358857ejb.76.2023.08.30.09.44.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Aug 2023 09:44:02 -0700 (PDT)
-Message-ID: <18db547c-45b3-4d2a-cd98-d1d1a01270d3@linaro.org>
-Date:   Wed, 30 Aug 2023 17:44:01 +0100
+        with ESMTP id S1343966AbjH3RiR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2023 13:38:17 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E74E193;
+        Wed, 30 Aug 2023 10:38:14 -0700 (PDT)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37UCwtR7013946;
+        Wed, 30 Aug 2023 17:38:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=unTaW1cc+E1fk9z7cI1y3TILfJHIRP/6p6MZnXpgt1s=;
+ b=VMu/r1CQCVFrAbR/Kuf6SoDOjr/nkpQkJKFNDnmawYDQcyx5cNbWaYQ8geLoTo1W5wKI
+ Db5t/od26CuoSSa1UjFIL+UqUNUiYMSX9NcdJFd+qkxnGbJpqs8UfWj0/9xMgcw6XQIv
+ z2ZSVqs8kHVPQcFIT9Rnna/Gi0IEMnkb8KIkF+3nCtxYyWywQ+BV1JHN5C/iGJtU1jib
+ m1lM8+Zw9PKN3ezcrHv8PVuIq7LEk4FWvIKKyCTPNGSSD2e140z+bFBr3N3znf+NnzK0
+ trT3agiWtjtXnt3xn3ckHItZc2g0CCBn96QqVr6kw3D65cZKsSjUTuu7KY3q8jMwzQJ3 Hw== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ssy5q1a7g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 30 Aug 2023 17:38:08 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37UHc7E5004517
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 30 Aug 2023 17:38:07 GMT
+Received: from [10.216.23.190] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 30 Aug
+ 2023 10:38:02 -0700
+Message-ID: <dbf4e4d1-ba4f-eb7b-f211-ffae7ba1ef27@quicinc.com>
+Date:   Wed, 30 Aug 2023 23:07:59 +0530
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v2 00/10] Hardware wrapped key support for qcom ice and
- ufs
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: [PATCH V5 2/6] scsi: ufs: qcom: Configure
+ PA_VS_CORE_CLK_40NS_CYCLES for Unipro core clk
 Content-Language: en-US
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Gaurav Kashyap <quic_gaurkash@quicinc.com>,
-        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, omprsing@qti.qualcomm.com,
-        quic_psodagud@quicinc.com, avmenon@quicinc.com,
-        abel.vesa@linaro.org, quic_spuppala@quicinc.com
-References: <20230719170423.220033-1-quic_gaurkash@quicinc.com>
- <f4b5512b-9922-1511-fc22-f14d25e2426a@linaro.org>
- <20230825210727.GA1366@sol.localdomain>
- <f63ce281-1434-f86f-3f4e-e1958a684bbd@linaro.org>
- <20230829181223.GA2066264@google.com>
- <2230571a-114c-0d03-d02a-fa08c2a8d483@linaro.org>
- <20230830161215.GA893@sol.localdomain>
-From:   Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-In-Reply-To: <20230830161215.GA893@sol.localdomain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Manivannan Sadhasivam <mani@kernel.org>
+CC:     <agross@kernel.org>, <andersson@kernel.org>,
+        <konrad.dybcio@linaro.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <quic_cang@quicinc.com>,
+        <quic_nguyenb@quicinc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        "Naveen Kumar Goud Arepalli" <quic_narepall@quicinc.com>
+References: <20230823154413.23788-1-quic_nitirawa@quicinc.com>
+ <20230823154413.23788-3-quic_nitirawa@quicinc.com>
+ <20230828074023.GC5148@thinkpad>
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20230828074023.GC5148@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: E4zcC-Heco_OSnUemXojZuVqh9JKZn1r
+X-Proofpoint-GUID: E4zcC-Heco_OSnUemXojZuVqh9JKZn1r
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-30_14,2023-08-29_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 spamscore=0
+ suspectscore=0 priorityscore=1501 malwarescore=0 phishscore=0
+ clxscore=1015 adultscore=0 lowpriorityscore=0 mlxlogscore=999 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2308300162
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
-On 30/08/2023 17:12, Eric Biggers wrote:
-> On Wed, Aug 30, 2023 at 11:00:07AM +0100, Srinivas Kandagatla wrote:
+On 8/28/2023 1:10 PM, Manivannan Sadhasivam wrote:
+> On Wed, Aug 23, 2023 at 09:14:09PM +0530, Nitin Rawat wrote:
+>> For Qualcomm UFS controller V4.0 and above PA_VS_CORE_CLK_40NS_CYCLES
+>> attribute needs to be programmed with frequency of unipro core clk.
+>> Hence Configure PA_VS_CORE_CLK_40NS_CYCLES attribute for Unipro core clk.
 >>
->> 3. We are adding these apis/callbacks in common code without doing any
->> compatible or SoC checks. Is this going to be a issue if someone tries
->> fscrypt?
 > 
-> ufs-qcom only declares support for wrapped keys if it's supported.  See patch 5
-> of this series:
+> Same comment applies as patch 1.
 > 
-> +	if (qcom_ice_hwkm_supported(host->ice))
-> +		hba->quirks |= UFSHCD_QUIRK_USES_WRAPPED_CRYPTO_KEYS;
-> 
-> That in turn uses:
-> 
-> +bool qcom_ice_hwkm_supported(struct qcom_ice *ice)
-> +{
-> +	return (ice->hwkm_version > 0);
-> +}
-> +EXPORT_SYMBOL_GPL(qcom_ice_hwkm_supported);
-> 
-> Which in turn comes from the ICE version being >= 3.2.  It does seem a bit
-> suspicious; it probably should check for both the ICE version and the
-> availability of QCOM_SCM_ES_GENERATE_ICE_KEY, QCOM_SCM_ES_PREPARE_ICE_KEY, and
-> QCOM_SCM_ES_IMPORT_ICE_KEY.  Regardless, it sounds like you want it to be
-> determined by something set in the device tree instead?  I don't think it's been
-> demonstrated that that's necessary.  If we can detect the hardware capabilities
-> dynamically, we should do that, right?
+> - Mani
 
-I don't mind either way.
+Sure...Will take care of this in next patchset. Thanks
 
-It would be perfect if we can dynamically query the TZ version to 
-determine these capabilities.
+-Nitin
 
 
-If not we are left with some way to derive that information either via 
-DT or other means.
-
---srini
 > 
-> - Eric
+>> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+>> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>> ---
+>>   drivers/ufs/host/ufs-qcom.c | 45 ++++++++++++++++++++++++++++---------
+>>   drivers/ufs/host/ufs-qcom.h |  2 ++
+>>   2 files changed, 37 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>> index 1108b0cd43b3..abc0e7f7d1b0 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -93,8 +93,9 @@ static const struct __ufs_qcom_bw_table {
+>>   static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
+>>
+>>   static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+>> -static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+>> -						       u32 clk_cycles);
+>> +static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba,
+>> +					u32 clk_cycles,
+>> +					u32 clk_40ns_cycles);
+>>
+>>   static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
+>>   {
+>> @@ -690,8 +691,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+>>   			 * set unipro core clock cycles to 150 & clear clock
+>>   			 * divider
+>>   			 */
+>> -			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
+>> -									  150);
+>> +			err = ufs_qcom_set_core_clk_ctrl(hba, 150, 6);
+>>
+>>   		/*
+>>   		 * Some UFS devices (and may be host) have issues if LCC is
+>> @@ -1296,12 +1296,13 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
+>>   	phy_exit(host->generic_phy);
+>>   }
+>>
+>> -static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+>> -						       u32 clk_1us_cycles)
+>> +static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba,
+>> +					u32 clk_1us_cycles,
+>> +					u32 clk_40ns_cycles)
+>>   {
+>>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>>   	u32 mask = DME_VS_CORE_CLK_CTRL_MAX_CORE_CLK_1US_CYCLES_MASK;
+>> -	u32 core_clk_ctrl_reg;
+>> +	u32 core_clk_ctrl_reg, reg;
+>>   	u32 offset = 0;
+>>   	int err;
+>>
+>> @@ -1326,9 +1327,33 @@ static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+>>   	/* Clear CORE_CLK_DIV_EN */
+>>   	core_clk_ctrl_reg &= ~DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT;
+>>
+>> -	return ufshcd_dme_set(hba,
+>> +	err = ufshcd_dme_set(hba,
+>>   			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
+>>   			    core_clk_ctrl_reg);
+>> +	/*
+>> +	 * UFS host controller V4.0.0 onwards needs to program
+>> +	 * PA_VS_CORE_CLK_40NS_CYCLES attribute per programmed
+>> +	 * frequency of unipro core clk of UFS host controller.
+>> +	 */
+>> +	if (!err && (host->hw_ver.major >= 4)) {
+>> +		if (clk_40ns_cycles > PA_VS_CORE_CLK_40NS_CYCLES_MASK)
+>> +			return -EINVAL;
+>> +
+>> +		err = ufshcd_dme_get(hba,
+>> +				     UIC_ARG_MIB(PA_VS_CORE_CLK_40NS_CYCLES),
+>> +				     &reg);
+>> +		if (err)
+>> +			return err;
+>> +
+>> +		reg &= ~PA_VS_CORE_CLK_40NS_CYCLES_MASK;
+>> +		reg |= clk_40ns_cycles;
+>> +
+>> +		err = ufshcd_dme_set(hba,
+>> +				     UIC_ARG_MIB(PA_VS_CORE_CLK_40NS_CYCLES),
+>> +				     reg);
+>> +	}
+>> +
+>> +	return err;
+>>   }
+>>
+>>   static int ufs_qcom_clk_scale_up_pre_change(struct ufs_hba *hba)
+>> @@ -1345,7 +1370,7 @@ static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
+>>   		return 0;
+>>
+>>   	/* set unipro core clock cycles to 150 and clear clock divider */
+>> -	return ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba, 150);
+>> +	return ufs_qcom_set_core_clk_ctrl(hba, 150, 6);
+>>   }
+>>
+>>   static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
+>> @@ -1381,7 +1406,7 @@ static int ufs_qcom_clk_scale_down_post_change(struct ufs_hba *hba)
+>>   		return 0;
+>>
+>>   	/* set unipro core clock cycles to 75 and clear clock divider */
+>> -	return ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba, 75);
+>> +	return ufs_qcom_set_core_clk_ctrl(hba, 75, 3);
+>>   }
+>>
+>>   static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+>> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+>> index a829296e11bb..325f08aca260 100644
+>> --- a/drivers/ufs/host/ufs-qcom.h
+>> +++ b/drivers/ufs/host/ufs-qcom.h
+>> @@ -133,6 +133,8 @@ enum {
+>>   #define MAX_CORE_CLK_1US_CYCLES_OFFSET_V4	0x10
+>>   #define DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT		BIT(8)
+>>   #define DME_VS_CORE_CLK_CTRL_MAX_CORE_CLK_1US_CYCLES_MASK	0xFF
+>> +#define PA_VS_CORE_CLK_40NS_CYCLES	0x9007
+>> +#define PA_VS_CORE_CLK_40NS_CYCLES_MASK	0x3F
+>>
+>>   static inline void
+>>   ufs_qcom_get_controller_revision(struct ufs_hba *hba,
+>> --
+>> 2.17.1
+>>
+> 
