@@ -2,160 +2,133 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45FE2C83F01
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Aug 2023 21:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED512C83F14
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Aug 2023 22:03:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240705AbjH3VKa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Aug 2023 17:10:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42774 "EHLO
+        id S244277AbjH3WDO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Aug 2023 18:03:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240443AbjH3VK3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2023 17:10:29 -0400
-Received: from mail-il1-f179.google.com (mail-il1-f179.google.com [209.85.166.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B263DE76;
-        Wed, 30 Aug 2023 14:09:49 -0700 (PDT)
-Received: by mail-il1-f179.google.com with SMTP id e9e14a558f8ab-34ccedcc584so321245ab.0;
-        Wed, 30 Aug 2023 14:09:49 -0700 (PDT)
+        with ESMTP id S234731AbjH3WDN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2023 18:03:13 -0400
+Received: from mail-ot1-x333.google.com (mail-ot1-x333.google.com [IPv6:2607:f8b0:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CBDEE6D;
+        Wed, 30 Aug 2023 15:02:47 -0700 (PDT)
+Received: by mail-ot1-x333.google.com with SMTP id 46e09a7af769-6bf01bcb1aeso228399a34.3;
+        Wed, 30 Aug 2023 15:02:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693429661; x=1694034461; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ofr1jYcnUdNDcThGOeqc7mheVMPv4mVGcLb0lf2Uv9c=;
-        b=Zu39t0/OcKtwC+SPf80xR1v8iapM+UGPebWTs+7k+rG2PCfBWf2bC/wy1QUTM5yDib
-         rdCb1ulPkm9vROGwEpxhExgNYSCda8tgPyTNnnVUYXnQMBhtBpflnsTzoQ4vUGkwfa1r
-         H0Tf0X1mFodej2e0vHA1AKLSqb2YZ++InHVK8YrnxMEBadCUO+27M75CvkpJhX7I+bqK
-         qxGFQTIZgb5yn2l5lSprUVVrjl3aVpWC1VrACTOcxiXFrlFW/Vg/ZNQmUNLrYe4HPe+6
-         ae2teLSBNNkx3uTRNZO3ggAkZD1WHynFmue+4FTjKsVIBISGooQlSTLDDH06JLtJJy4V
-         azIw==
+        d=gmail.com; s=20221208; t=1693432896; x=1694037696; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ueoe83p5TP/BX5e5mMzX6M9AVSVyHZ9ZgbLNvbyWLBk=;
+        b=ekcC95f56mj3jGoqdGBbfIUXvzrr18N6mNzXbYJlEZSZlF8GOxWYPebKPZx3V5rTW3
+         fSQDPILnq2rZzcVjgxNKEXiE22k1Pw0LlLgQkVBZb9O8I3LHBYO/zn6bAnlLlbNXB8cD
+         BI2fRy/2FDm/G7gxgtb6gLaofUsjIbbyH14OudVWt1RkUGCfyvaKV5aDA2weTzvxWWy1
+         x4qXzyTBHlFsJjF1EeheFZ0IldA/2i5RGpspjX9JhIFCPBmN/LQmjbgIqoxAwB1LYd5O
+         2rcps3zJXYN17VIXrGVmBcomsyZY87kCSEbUon0T9SLwwnbPETEVa0oc8hOim7FhQYKz
+         9I/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693429661; x=1694034461;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ofr1jYcnUdNDcThGOeqc7mheVMPv4mVGcLb0lf2Uv9c=;
-        b=EbiE+SifZNrMYmVmjt2/QyU3C4TQnmsYOTA+fk2sAZZKlUfEG6Z50O3+hU8dcGaEOc
-         MMw/a9HRAIneS3w2lO64AXiDbIllIenqRYsMFE7gxwXvCFDcQ1sYOhpW0qC7i4bV/cYE
-         zbxqpesww+YzcAfRCdYJgTbfjrmo+DoGgfjnjd5abrkFklJbQ5US2xLRppe/3X1mpQEe
-         eq84kPLbhH6LbTp2oklP5T+Au/YZTPQctFGtH9oKnFAxbosKp60tDg5Gv+5zhEr8V3X5
-         NioxUUpEhiPzf4HM13I/fe37xxMckJX8Hbbc378URkYE/nLmz55J+EFgYuHGNmHl/06X
-         fgeg==
-X-Gm-Message-State: AOJu0YzPkMjmuLpJMjFx/8ByV2LmiEf+YQyWZWM9ZDIdeDBUnREt/CgF
-        aWj1qfZwLrCAMKpGmjEVWS7boSQz1mj3lJfb
-X-Google-Smtp-Source: AGHT+IFDTEJlxTlaQiAOqsKetI2wXncxQtVs9v69CWR7izlVYs1P7AgO0mxLpg+EsJ1yRk/Nc8Oydg==
-X-Received: by 2002:a05:6e02:17c9:b0:349:345b:6595 with SMTP id z9-20020a056e0217c900b00349345b6595mr611217ilu.11.1693429661168;
-        Wed, 30 Aug 2023 14:07:41 -0700 (PDT)
-Received: from azeems-kspp.c.googlers.com.com (161.74.123.34.bc.googleusercontent.com. [34.123.74.161])
-        by smtp.gmail.com with ESMTPSA id ee16-20020a056638293000b0042b227eb1ddsm3958497jab.55.2023.08.30.14.07.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Aug 2023 14:07:40 -0700 (PDT)
-From:   Azeem Shaikh <azeemshaikh38@gmail.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-hardening@vger.kernel.org,
-        Azeem Shaikh <azeemshaikh38@gmail.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: target: Replace strlcpy with strscpy
-Date:   Wed, 30 Aug 2023 21:07:24 +0000
-Message-ID: <20230830210724.4156575-1-azeemshaikh38@gmail.com>
-X-Mailer: git-send-email 2.42.0.283.g2d96d420d3-goog
+        d=1e100.net; s=20221208; t=1693432896; x=1694037696;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ueoe83p5TP/BX5e5mMzX6M9AVSVyHZ9ZgbLNvbyWLBk=;
+        b=iMuljDoE4lk/USniueVC9xPIHoU31tYdSlpEGp9+DTzTP9JG6+Pl9vHGncT9V7Smpw
+         MF0elb5cLK5CrnXs3SHAYZmexbBo3Q8KLmOVMEg1k4xJq1bpA0I+7rwYGAD31q8mqvCa
+         dc8EcuIdHeo/l6k8w9IslrBctab4HRohB+D4bm6zvKDvLFVeb0RnhhJj1d4i6ZmaKKC+
+         vrlmdzt+3NkwWn0NYk2SoQGjDr9+tuMfeO0MH74SWQBltXKIVXby2qeAjD2gxYhsgmzX
+         AQbYVqG2TWw5mxyhHzXOAbJ58NBW8GuuoM/Jt8zCgaI5+SB9OxeLt1f6ix0Z1jNji5SN
+         SNCw==
+X-Gm-Message-State: AOJu0YxnCgpvgnpliLA4O/4kpmEE/YnPjj9bPo4xhbWhcXEyXovGKXrJ
+        EwgUVKwtV9ZisS0WuROVCp0c3diB+eSAhTMH/lA=
+X-Google-Smtp-Source: AGHT+IGOjrhJiurHDG9CO68WFg+Lj3uKyBzjsZmu31JRwGBSDIWI65s5f4XLYn5/36TmhNRh+UGv5SlC4Hd8+XPDAwU=
+X-Received: by 2002:a05:6358:4414:b0:12f:2573:45b4 with SMTP id
+ z20-20020a056358441400b0012f257345b4mr3002501rwc.26.1693432896229; Wed, 30
+ Aug 2023 15:01:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230830210724.4156575-1-azeemshaikh38@gmail.com> <20230830215330.6gyhpq3ohkbbtsam@google.com>
+In-Reply-To: <20230830215330.6gyhpq3ohkbbtsam@google.com>
+From:   Azeem Shaikh <azeemshaikh38@gmail.com>
+Date:   Wed, 30 Aug 2023 18:01:25 -0400
+Message-ID: <CADmuW3VbUZBRXVyZVeVuS4cbPGjfgD8fntQwMCUskR5W-CyNVQ@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: target: Replace strlcpy with strscpy
+To:     Justin Stitt <justinstitt@google.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-strlcpy() reads the entire source buffer first.
-This read may exceed the destination size limit.
-This is both inefficient and can lead to linear read
-overflows if a source string is not NUL-terminated [1].
-In an effort to remove strlcpy() completely [2], replace
-strlcpy() here with strscpy().
-
-Direct replacement is safe here since return value of -errno
-is used to check for truncation instead of sizeof(dest).
-
-[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
-[2] https://github.com/KSPP/linux/issues/89
-
-Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
----
-v2:
- * Replace all instances of strlcpy in this file instead of just 1.
-
-v1:
- * https://lore.kernel.org/all/20230830200717.4129442-1-azeemshaikh38@gmail.com/
-
- drivers/target/target_core_configfs.c |   27 ++++++++++++---------------
- 1 file changed, 12 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 936e5ff1b209..10a22a428267 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -1392,16 +1392,15 @@ static ssize_t target_wwn_vendor_id_store(struct config_item *item,
- 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
- 	unsigned char buf[INQUIRY_VENDOR_LEN + 2];
- 	char *stripped = NULL;
--	size_t len;
-+	ssize_t len;
- 	ssize_t ret;
-
--	len = strlcpy(buf, page, sizeof(buf));
--	if (len < sizeof(buf)) {
-+	len = strscpy(buf, page, sizeof(buf));
-+	if (len > 0) {
- 		/* Strip any newline added from userspace. */
- 		stripped = strstrip(buf);
--		len = strlen(stripped);
- 	}
--	if (len > INQUIRY_VENDOR_LEN) {
-+	if (len < 0 || strlen(stripped) > INQUIRY_VENDOR_LEN) {
- 		pr_err("Emulated T10 Vendor Identification exceeds"
- 			" INQUIRY_VENDOR_LEN: " __stringify(INQUIRY_VENDOR_LEN)
- 			"\n");
-@@ -1448,16 +1447,15 @@ static ssize_t target_wwn_product_id_store(struct config_item *item,
- 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
- 	unsigned char buf[INQUIRY_MODEL_LEN + 2];
- 	char *stripped = NULL;
--	size_t len;
-+	ssize_t len;
- 	ssize_t ret;
-
--	len = strlcpy(buf, page, sizeof(buf));
--	if (len < sizeof(buf)) {
-+	len = strscpy(buf, page, sizeof(buf));
-+	if (len > 0) {
- 		/* Strip any newline added from userspace. */
- 		stripped = strstrip(buf);
--		len = strlen(stripped);
- 	}
--	if (len > INQUIRY_MODEL_LEN) {
-+	if (len < 0 || strlen(stripped) > INQUIRY_MODEL_LEN) {
- 		pr_err("Emulated T10 Vendor exceeds INQUIRY_MODEL_LEN: "
- 			 __stringify(INQUIRY_MODEL_LEN)
- 			"\n");
-@@ -1504,16 +1502,15 @@ static ssize_t target_wwn_revision_store(struct config_item *item,
- 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
- 	unsigned char buf[INQUIRY_REVISION_LEN + 2];
- 	char *stripped = NULL;
--	size_t len;
-+	ssize_t len;
- 	ssize_t ret;
-
--	len = strlcpy(buf, page, sizeof(buf));
--	if (len < sizeof(buf)) {
-+	len = strscpy(buf, page, sizeof(buf));
-+	if (len > 0) {
- 		/* Strip any newline added from userspace. */
- 		stripped = strstrip(buf);
--		len = strlen(stripped);
- 	}
--	if (len > INQUIRY_REVISION_LEN) {
-+	if (len < 0 || strlen(stripped) > INQUIRY_REVISION_LEN) {
- 		pr_err("Emulated T10 Revision exceeds INQUIRY_REVISION_LEN: "
- 			 __stringify(INQUIRY_REVISION_LEN)
- 			"\n");
+On Wed, Aug 30, 2023 at 5:53=E2=80=AFPM Justin Stitt <justinstitt@google.co=
+m> wrote:
+>
+> On Wed, Aug 30, 2023 at 09:07:24PM +0000, Azeem Shaikh wrote:
+> > strlcpy() reads the entire source buffer first.
+> > This read may exceed the destination size limit.
+> > This is both inefficient and can lead to linear read
+> > overflows if a source string is not NUL-terminated [1].
+> > In an effort to remove strlcpy() completely [2], replace
+> > strlcpy() here with strscpy().
+> >
+> > Direct replacement is safe here since return value of -errno
+> > is used to check for truncation instead of sizeof(dest).
+> >
+> > [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strl=
+cpy
+> > [2] https://github.com/KSPP/linux/issues/89
+> >
+> > Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
+> > ---
+> > v2:
+> >  * Replace all instances of strlcpy in this file instead of just 1.
+> >
+> > v1:
+> >  * https://lore.kernel.org/all/20230830200717.4129442-1-azeemshaikh38@g=
+mail.com/
+> >
+> >  drivers/target/target_core_configfs.c |   27 ++++++++++++-------------=
 --
-2.42.0.283.g2d96d420d3-goog
+> >  1 file changed, 12 insertions(+), 15 deletions(-)
+> >
+> > diff --git a/drivers/target/target_core_configfs.c b/drivers/target/tar=
+get_core_configfs.c
+> > index 936e5ff1b209..10a22a428267 100644
+> > --- a/drivers/target/target_core_configfs.c
+> > +++ b/drivers/target/target_core_configfs.c
+> > @@ -1392,16 +1392,15 @@ static ssize_t target_wwn_vendor_id_store(struc=
+t config_item *item,
+> >       /* +2 to allow for a trailing (stripped) '\n' and null-terminator=
+ */
+> >       unsigned char buf[INQUIRY_VENDOR_LEN + 2];
+> >       char *stripped =3D NULL;
+> > -     size_t len;
+> > +     ssize_t len;
+> >       ssize_t ret;
+> >
+> > -     len =3D strlcpy(buf, page, sizeof(buf));
+> > -     if (len < sizeof(buf)) {
+> > +     len =3D strscpy(buf, page, sizeof(buf));
+> > +     if (len > 0) {
+> >               /* Strip any newline added from userspace. */
+> >               stripped =3D strstrip(buf);
+> > -             len =3D strlen(stripped);
+> >       }
+> > -     if (len > INQUIRY_VENDOR_LEN) {
+> > +     if (len < 0 || strlen(stripped) > INQUIRY_VENDOR_LEN) {
+> >               pr_err("Emulated T10 Vendor Identification exceeds"
+> >                       " INQUIRY_VENDOR_LEN: " __stringify(INQUIRY_VENDO=
+R_LEN)
+> >                       "\n");
+>
+> Should we be explicitly checking for `len =3D=3D -E2BIG` instead of the m=
+ore
+> generic `len < 0`? Perhaps this is a nitpick but I prefer the former.
+>
 
-
+Most maintainers to whom I have sent such patches in the past have
+preferred `len < 0` since it is not "rigid" in checking for -E2BIG
+which is an implementation detail of strscpy.
