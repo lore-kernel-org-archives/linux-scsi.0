@@ -2,89 +2,165 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 095ACC83F01
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Aug 2023 14:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3C33C83F01
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Aug 2023 14:36:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346143AbjHaOJo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Aug 2023 10:09:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55124 "EHLO
+        id S243966AbjHaOgy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Aug 2023 10:36:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245476AbjHaOJm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Aug 2023 10:09:42 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7F7BD7
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Aug 2023 07:09:37 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Rc30B5bvkzrSQ9;
-        Thu, 31 Aug 2023 22:07:54 +0800 (CST)
-Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
- (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Thu, 31 Aug
- 2023 22:09:34 +0800
-From:   Jinjie Ruan <ruanjinjie@huawei.com>
-To:     <linux-scsi@vger.kernel.org>, Nilesh Javali <njavali@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Arun Easi <aeasi@marvell.com>
-CC:     <ruanjinjie@huawei.com>
-Subject: [PATCH] scsi: qla2xxx: Fix the NULL vs IS_ERR() bug for debugfs_create_dir()
-Date:   Thu, 31 Aug 2023 22:09:29 +0800
-Message-ID: <20230831140930.3166359-1-ruanjinjie@huawei.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S239985AbjHaOgw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Aug 2023 10:36:52 -0400
+Received: from mail-io1-xd30.google.com (mail-io1-xd30.google.com [IPv6:2607:f8b0:4864:20::d30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CE1C1BF;
+        Thu, 31 Aug 2023 07:36:49 -0700 (PDT)
+Received: by mail-io1-xd30.google.com with SMTP id ca18e2360f4ac-79277cfc73bso32740039f.1;
+        Thu, 31 Aug 2023 07:36:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1693492609; x=1694097409; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=5R1GdPaeLcvWWf/P/bdBnkb1To4X1joTlLoTaa9dNMw=;
+        b=Fp8ZAVbTJwfUxPao4o/YHV/16QlpLImTT+Sd6PrZLuhVM+Wp5GiH0WDDxyqQua49xA
+         mZ5iCruERv+JXAnpD7LkraarXDp9psq4z5BjjNov4lz/f63lofA9ZAe2gGlnm316oGK6
+         75EopaDQNreC1ymRALKkOpw2NRXw/MndMdS3OaFn6GmmkkHB0G5ICSf0VB80YxgKul5d
+         9UecFrgvZBoYTzjbNhT99NBrc/QPm7kXNs87TkGdzF1F2rzXv2kiHmWwKe56ANFa27/Y
+         vLXPOaN7o2+cmA1EbKXDi0hvU2PyVnKPm+SHe4G7PUGfO2T5fQkNdzEilwR0ASpGz8FA
+         cV0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693492609; x=1694097409;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=5R1GdPaeLcvWWf/P/bdBnkb1To4X1joTlLoTaa9dNMw=;
+        b=S/Q2xGsH4atNXRY+3u4Cs69aM8E1hgoNxN4VjPC2V9M4pNgLK7XH4je2CZC/GBqHNI
+         CioipfoFVJMYe7Uwy4gtAX1FL+AAaw4DRmxas4k6MCfnGZohKkYo9tuR0jyd0xdWIX8z
+         UvEUKsMop1ysG8IyTtT1j7AIxeBU1J9QxkQq4bRbpoLyUUqKbxvjiIeWTVplmq6fRbnY
+         VoBnCMuEbxXShwaKOco5/+0ywqBjz9xMfCUMrvGTACFMKviV57xsA2sdBa4iCF4LbM+k
+         k/vyr9iDmbO5sPd0MKlLAZPGSBgodxVoaoZV1TSiForuGv2w6SqK5ZfZCMY6pfIMAxQr
+         3g9w==
+X-Gm-Message-State: AOJu0YznYTP+3X1ZFRuLEIPCaM8ASPlOT/8+yqvlPo7zHyO3GMZAhMKS
+        QQJxlKgPsJOO0hvomiRwXPU=
+X-Google-Smtp-Source: AGHT+IHc4441gdCO3ea8BbmsDiYb9wcircb59yZeHUBrb9SNWuN5jM+SsQvtxyiKZd/l8q9YDDUByw==
+X-Received: by 2002:a05:6e02:10a:b0:34b:ae9b:d039 with SMTP id t10-20020a056e02010a00b0034bae9bd039mr5578936ilm.18.1693492608886;
+        Thu, 31 Aug 2023 07:36:48 -0700 (PDT)
+Received: from azeems-kspp.c.googlers.com.com (161.74.123.34.bc.googleusercontent.com. [34.123.74.161])
+        by smtp.gmail.com with ESMTPSA id ee15-20020a056638292f00b0042b47e8869bsm434201jab.49.2023.08.31.07.36.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Aug 2023 07:36:48 -0700 (PDT)
+From:   Azeem Shaikh <azeemshaikh38@gmail.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kees Cook <keescook@chromium.org>
+Cc:     linux-hardening@vger.kernel.org,
+        Azeem Shaikh <azeemshaikh38@gmail.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3] scsi: target: Replace strlcpy with strscpy
+Date:   Thu, 31 Aug 2023 14:36:38 +0000
+Message-ID: <20230831143638.232596-1-azeemshaikh38@gmail.com>
+X-Mailer: git-send-email 2.42.0.283.g2d96d420d3-goog
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.90.53.73]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemi500008.china.huawei.com (7.221.188.139)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since both debugfs_create_dir() and debugfs_create_file() return
-ERR_PTR and never return NULL, So use IS_ERR() to check it
-instead of checking NULL.
+strlcpy() reads the entire source buffer first.
+This read may exceed the destination size limit.
+This is both inefficient and can lead to linear read
+overflows if a source string is not NUL-terminated [1].
+In an effort to remove strlcpy() completely [2], replace
+strlcpy() here with strscpy().
 
-Fixes: 1e98fb0f9208 ("scsi: qla2xxx: Setup debugfs entries for remote ports")
-Signed-off-by: Jinjie Ruan <ruanjinjie@huawei.com>
+Direct replacement is safe here since return value of -errno
+is used to check for truncation instead of sizeof(dest).
+
+[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
+[2] https://github.com/KSPP/linux/issues/89
+
+Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_dfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+v3:
+ * Address readability comment.
 
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index f060e593685d..a7a364760b80 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -116,7 +116,7 @@ qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp)
- 
- 	sprintf(wwn, "pn-%016llx", wwn_to_u64(fp->port_name));
- 	fp->dfs_rport_dir = debugfs_create_dir(wwn, vha->dfs_rport_root);
--	if (!fp->dfs_rport_dir)
-+	if (IS_ERR(fp->dfs_rport_dir))
- 		return;
- 	if (NVME_TARGET(vha->hw, fp))
- 		debugfs_create_file("dev_loss_tmo", 0600, fp->dfs_rport_dir,
-@@ -708,14 +708,14 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
- 	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha)) {
- 		ha->tgt.dfs_naqp = debugfs_create_file("naqp",
- 		    0400, ha->dfs_dir, vha, &dfs_naqp_ops);
--		if (!ha->tgt.dfs_naqp) {
-+		if (IS_ERR(ha->tgt.dfs_naqp)) {
- 			ql_log(ql_log_warn, vha, 0xd011,
- 			       "Unable to create debugFS naqp node.\n");
- 			goto out;
- 		}
+v2:
+ * Replace all instances of strlcpy in this file instead of just 1.
+ * https://lore.kernel.org/all/20230830210724.4156575-1-azeemshaikh38@gmail.com/
+
+v1:
+ * https://lore.kernel.org/all/20230830200717.4129442-1-azeemshaikh38@gmail.com/
+
+ drivers/target/target_core_configfs.c |   24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 936e5ff1b209..d5860c1c1f46 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -1392,16 +1392,16 @@ static ssize_t target_wwn_vendor_id_store(struct config_item *item,
+ 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+ 	unsigned char buf[INQUIRY_VENDOR_LEN + 2];
+ 	char *stripped = NULL;
+-	size_t len;
++	ssize_t len;
+ 	ssize_t ret;
+
+-	len = strlcpy(buf, page, sizeof(buf));
+-	if (len < sizeof(buf)) {
++	len = strscpy(buf, page, sizeof(buf));
++	if (len > 0) {
+ 		/* Strip any newline added from userspace. */
+ 		stripped = strstrip(buf);
+ 		len = strlen(stripped);
  	}
- 	vha->dfs_rport_root = debugfs_create_dir("rports", ha->dfs_dir);
--	if (!vha->dfs_rport_root) {
-+	if (IS_ERR(vha->dfs_rport_root)) {
- 		ql_log(ql_log_warn, vha, 0xd012,
- 		       "Unable to create debugFS rports node.\n");
- 		goto out;
--- 
-2.34.1
+-	if (len > INQUIRY_VENDOR_LEN) {
++	if (len < 0 || len > INQUIRY_VENDOR_LEN) {
+ 		pr_err("Emulated T10 Vendor Identification exceeds"
+ 			" INQUIRY_VENDOR_LEN: " __stringify(INQUIRY_VENDOR_LEN)
+ 			"\n");
+@@ -1448,16 +1448,16 @@ static ssize_t target_wwn_product_id_store(struct config_item *item,
+ 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+ 	unsigned char buf[INQUIRY_MODEL_LEN + 2];
+ 	char *stripped = NULL;
+-	size_t len;
++	ssize_t len;
+ 	ssize_t ret;
+
+-	len = strlcpy(buf, page, sizeof(buf));
+-	if (len < sizeof(buf)) {
++	len = strscpy(buf, page, sizeof(buf));
++	if (len > 0) {
+ 		/* Strip any newline added from userspace. */
+ 		stripped = strstrip(buf);
+ 		len = strlen(stripped);
+ 	}
+-	if (len > INQUIRY_MODEL_LEN) {
++	if (len < 0 || len > INQUIRY_MODEL_LEN) {
+ 		pr_err("Emulated T10 Vendor exceeds INQUIRY_MODEL_LEN: "
+ 			 __stringify(INQUIRY_MODEL_LEN)
+ 			"\n");
+@@ -1504,16 +1504,16 @@ static ssize_t target_wwn_revision_store(struct config_item *item,
+ 	/* +2 to allow for a trailing (stripped) '\n' and null-terminator */
+ 	unsigned char buf[INQUIRY_REVISION_LEN + 2];
+ 	char *stripped = NULL;
+-	size_t len;
++	ssize_t len;
+ 	ssize_t ret;
+
+-	len = strlcpy(buf, page, sizeof(buf));
+-	if (len < sizeof(buf)) {
++	len = strscpy(buf, page, sizeof(buf));
++	if (len > 0) {
+ 		/* Strip any newline added from userspace. */
+ 		stripped = strstrip(buf);
+ 		len = strlen(stripped);
+ 	}
+-	if (len > INQUIRY_REVISION_LEN) {
++	if (len < 0 || len > INQUIRY_REVISION_LEN) {
+ 		pr_err("Emulated T10 Revision exceeds INQUIRY_REVISION_LEN: "
+ 			 __stringify(INQUIRY_REVISION_LEN)
+ 			"\n");
+--
+2.42.0.283.g2d96d420d3-goog
+
 
