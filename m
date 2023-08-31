@@ -2,284 +2,232 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30A23C83F29
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Aug 2023 05:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F80AC83F2B
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Aug 2023 06:55:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243537AbjHaF6r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Aug 2023 01:58:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35908 "EHLO
+        id S241759AbjHaGzZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Aug 2023 02:55:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232797AbjHaF6r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Aug 2023 01:58:47 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35EBE1B0
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Aug 2023 22:58:44 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1bdca7cc28dso3412605ad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Aug 2023 22:58:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693461523; x=1694066323; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=3aQZE1wcOOroljRdU+eYQ9YtzJkIn9tmw/Uf4XCv85g=;
-        b=pq7VJpS4GmsuGJmzT/1AfNTkatFBxGJUrftAEaCQJQ4WgZ2TrD4xA3LyzomfmQwEX4
-         NhSPUrzgA68b7nrkUXqYvMV4C8z09TPkP9TmhvCCwFIKBZjnh3Hvz59iUCqwsEMfxJe3
-         dtPMENW/BiBCG1BWdVqm5AV1RkOiDJ1s772RMQIrZwoKpm0K+/w2O0VIIekIAy9ROO/I
-         DWIL6j0xH/GdmDetfoiLpheM50Rht1Vtyb2OmRYArk+Kvo5tDXS7c9zDzvbqXNo1kfbS
-         Sczj/YR+efK/8AAX2qLVGzbQSyZ29cG5AYfY2cKmp1Dyx03am37fDbBzfQ8Q2OdqBXMr
-         +1SQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693461523; x=1694066323;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3aQZE1wcOOroljRdU+eYQ9YtzJkIn9tmw/Uf4XCv85g=;
-        b=K3zZXykSc47QAMPqSGUoxSHA6mhQltT4d6dkAEw9aHgMRKvZmuG4eZ3jw+mxmdIN8O
-         /QzEnZlYop4nLs98UH1Tm0FRSjKW32jf+brcTzQkr21OfRoZyKzmH0RH+VzBA/ZHpem9
-         o+hG4NhdYa3SjdwxWgcE7tOaUCfM9br9sez0J7ha4+BYrGs9kWcoQEu7w9lohHkYDEp+
-         bMe99XZFdooFLU3RGDkhC3evSx/Q0STqwvHZnSihyAppRVluqvh5nx+zskgJHgC8YHn+
-         Inn0hALpRIlhrV46GJLDwDSpssV3VzHx4tZSHuUCY76WgaxbxsjGypr6IvG1ASyRaash
-         hr2w==
-X-Gm-Message-State: AOJu0YwTX/60PEIabArTJOFNy/Audw53gtSd1bqLtV9o2kTuL+r8uZpM
-        ScUGAdi+KOuaEkrmI4EDzcETVZf+jcKF4g==
-X-Google-Smtp-Source: AGHT+IGUz8QG/wEZ7bCmu8QaryJ+RZ/A/EDnbgiZBw6ACS/cx4+tHzdP9534dBgxA4qUjtDDWk1fCQ==
-X-Received: by 2002:a17:902:f68e:b0:1bc:1b01:8961 with SMTP id l14-20020a170902f68e00b001bc1b018961mr5010878plg.1.1693461523329;
-        Wed, 30 Aug 2023 22:58:43 -0700 (PDT)
-Received: from xavier.lan ([166.70.251.153])
-        by smtp.gmail.com with ESMTPSA id d1-20020a170903230100b001b9dab0397bsm480072plh.29.2023.08.30.22.58.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Aug 2023 22:58:42 -0700 (PDT)
-From:   Alex Henrie <alexhenrie24@gmail.com>
-To:     linux-scsi@vger.kernel.org, linux-parport@lists.infradead.org,
-        martin.petersen@oracle.com
-Cc:     Alex Henrie <alexhenrie24@gmail.com>
-Subject: [PATCH] scsi: imm: Add a module parameter for the transfer mode
-Date:   Wed, 30 Aug 2023 23:23:48 -0600
-Message-ID: <20230831054620.515611-1-alexhenrie24@gmail.com>
-X-Mailer: git-send-email 2.42.0
+        with ESMTP id S242097AbjHaGzY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Aug 2023 02:55:24 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D097E0;
+        Wed, 30 Aug 2023 23:55:16 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 17D3DB8214E;
+        Thu, 31 Aug 2023 06:55:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB377C433C7;
+        Thu, 31 Aug 2023 06:55:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693464913;
+        bh=grzKBzpetMZY5pdHGAMbnhEOjQCjw9xTNEpumNTXwc0=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=sspU5rM1PBNw//1BbhEu4+mqq94+fmuemobfJp5WDzZsgguk+bGecuAatllWXvuGM
+         mVc9JlEnqfLb4Cxqu3SdIP4JA093SJsWiGy/83LDTIrXklcN6QewyDTpsCdl565QY9
+         zGyVuytze8UgNF9kbkYLkX2OYSmHenaNIaBB7/PF/Gz5sOLLdWSqFNtDxJPAsv1ku0
+         XTMJ3qEi6xIuwLVxqYumt1onQ/HwwqpIPoV7ysqquYsCR3RQBt5HJPas5wie21+MuB
+         nk0Om86w4MwsHy8wq6B8sYKCjSB+/UWjGbfReszLgPnTLcCFS2juv58SFOwcMsZ4kD
+         rhjvvyOVFVIBQ==
+Message-ID: <33be5c62-fd51-0485-ed4d-d9c79f26d85a@kernel.org>
+Date:   Thu, 31 Aug 2023 15:55:10 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
+Content-Language: en-US
+To:     Rodrigo Vivi <rodrigo.vivi@kernel.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Thorsten Leemhuis <regressions@leemhuis.info>,
+        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
+        Linux Power Management <linux-pm@vger.kernel.org>
+References: <20230731003956.572414-1-dlemoal@kernel.org>
+ <ZOehTysWO+U3mVvK@rdvivi-mobl4>
+ <40adc06d-0835-2786-0bfb-83239f546d92@kernel.org>
+ <ZOjgJl4nlieu3+kL@rdvivi-mobl4>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZOjgJl4nlieu3+kL@rdvivi-mobl4>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix in the imm driver the same problem that was fixed in the ppa driver
-by commit 68a4f84a17c1 ("scsi: ppa: Add a module parameter for the
-transfer mode").
+On 8/26/23 02:09, Rodrigo Vivi wrote:
+> I have the CONFIG_PM_DEBUG here with no_console_suspend.
+> If you remember any other config or parameter that would help, please let
+> me know that I collect it again:
 
-Tested and confirmed working with an Iomega Z250P zip drive and a
-StarTech PEX1P2 AX99100 PCIe parallel port.
+Coming back to this previous dmesg output as I am in fact seeing something very
+similar now. See below.
 
-Signed-off-by: Alex Henrie <alexhenrie24@gmail.com>
----
- drivers/scsi/Kconfig | 15 ----------
- drivers/scsi/imm.c   | 70 +++++++++++++++++++++++---------------------
- drivers/scsi/imm.h   |  4 ---
- 3 files changed, 37 insertions(+), 52 deletions(-)
+> [  104.571459] PM: suspend entry (deep)
+> [  104.585967] Filesystems sync: 0.010 seconds
+> [  104.618685] Freezing user space processes
+> [  104.625374] Freezing user space processes completed (elapsed 0.002 seconds)
+> [  104.632448] OOM killer disabled.
+> [  104.635712] Freezing remaining freezable tasks
+> [  104.641899] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 695a57d894cd..addac7fbe37b 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -834,21 +834,6 @@ config SCSI_IMM
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called imm.
- 
--config SCSI_IZIP_EPP16
--	bool "ppa/imm option - Use slow (but safe) EPP-16"
--	depends on SCSI_IMM
--	help
--	  EPP (Enhanced Parallel Port) is a standard for parallel ports which
--	  allows them to act as expansion buses that can handle up to 64
--	  peripheral devices.
--
--	  Some parallel port chipsets are slower than their motherboard, and
--	  so we have to control the state of the chipset's FIFO queue every
--	  now and then to avoid data loss. This will be done if you say Y
--	  here.
--
--	  Generally, saying Y is the safe option and slows things down a bit.
--
- config SCSI_IZIP_SLOW_CTR
- 	bool "ppa/imm option - Assume slow parport control register"
- 	depends on SCSI_PPA || SCSI_IMM
-diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
-index 07db98161a03..180a5ddedb2c 100644
---- a/drivers/scsi/imm.c
-+++ b/drivers/scsi/imm.c
-@@ -51,10 +51,15 @@ typedef struct {
- } imm_struct;
- 
- static void imm_reset_pulse(unsigned int base);
--static int device_check(imm_struct *dev);
-+static int device_check(imm_struct *dev, bool autodetect);
- 
- #include "imm.h"
- 
-+static unsigned int mode = IMM_AUTODETECT;
-+module_param(mode, uint, 0644);
-+MODULE_PARM_DESC(mode, "Transfer mode (0 = Autodetect, 1 = SPP 4-bit, "
-+	"2 = SPP 8-bit, 3 = EPP 8-bit, 4 = EPP 16-bit, 5 = EPP 32-bit");
-+
- static inline imm_struct *imm_dev(struct Scsi_Host *host)
- {
- 	return *(imm_struct **)&host->hostdata;
-@@ -366,13 +371,10 @@ static int imm_out(imm_struct *dev, char *buffer, int len)
- 	case IMM_EPP_8:
- 		epp_reset(ppb);
- 		w_ctr(ppb, 0x4);
--#ifdef CONFIG_SCSI_IZIP_EPP16
--		if (!(((long) buffer | len) & 0x01))
--			outsw(ppb + 4, buffer, len >> 1);
--#else
--		if (!(((long) buffer | len) & 0x03))
-+		if (dev->mode == IMM_EPP_32 && !(((long) buffer | len) & 0x03))
- 			outsl(ppb + 4, buffer, len >> 2);
--#endif
-+		else if (dev->mode == IMM_EPP_16 && !(((long) buffer | len) & 0x01))
-+			outsw(ppb + 4, buffer, len >> 1);
- 		else
- 			outsb(ppb + 4, buffer, len);
- 		w_ctr(ppb, 0xc);
-@@ -426,13 +428,10 @@ static int imm_in(imm_struct *dev, char *buffer, int len)
- 	case IMM_EPP_8:
- 		epp_reset(ppb);
- 		w_ctr(ppb, 0x24);
--#ifdef CONFIG_SCSI_IZIP_EPP16
--		if (!(((long) buffer | len) & 0x01))
--			insw(ppb + 4, buffer, len >> 1);
--#else
--		if (!(((long) buffer | len) & 0x03))
--			insl(ppb + 4, buffer, len >> 2);
--#endif
-+		if (dev->mode == IMM_EPP_32 && !(((long) buffer | len) & 0x03))
-+			insw(ppb + 4, buffer, len >> 2);
-+		else if (dev->mode == IMM_EPP_16 && !(((long) buffer | len) & 0x01))
-+			insl(ppb + 4, buffer, len >> 1);
- 		else
- 			insb(ppb + 4, buffer, len);
- 		w_ctr(ppb, 0x2c);
-@@ -589,13 +588,28 @@ static int imm_select(imm_struct *dev, int target)
- 
- static int imm_init(imm_struct *dev)
- {
-+	bool autodetect = dev->mode == IMM_AUTODETECT;
-+
-+	if (autodetect) {
-+		int modes = dev->dev->port->modes;
-+
-+		/* Mode detection works up the chain of speed
-+		 * This avoids a nasty if-then-else-if-... tree
-+		 */
-+		dev->mode = IMM_NIBBLE;
-+
-+		if (modes & PARPORT_MODE_TRISTATE)
-+			dev->mode = IMM_PS2;
-+	}
-+
- 	if (imm_connect(dev, 0) != 1)
- 		return -EIO;
- 	imm_reset_pulse(dev->base);
- 	mdelay(1);	/* Delay to allow devices to settle */
- 	imm_disconnect(dev);
- 	mdelay(1);	/* Another delay to allow devices to settle */
--	return device_check(dev);
-+
-+	return device_check(dev, autodetect);
- }
- 
- static inline int imm_send_command(struct scsi_cmnd *cmd)
-@@ -1000,7 +1014,7 @@ static int imm_reset(struct scsi_cmnd *cmd)
- 	return SUCCESS;
- }
- 
--static int device_check(imm_struct *dev)
-+static int device_check(imm_struct *dev, bool autodetect)
- {
- 	/* This routine looks for a device and then attempts to use EPP
- 	   to send a command. If all goes as planned then EPP is available. */
-@@ -1012,8 +1026,8 @@ static int device_check(imm_struct *dev)
- 	old_mode = dev->mode;
- 	for (loop = 0; loop < 8; loop++) {
- 		/* Attempt to use EPP for Test Unit Ready */
--		if ((ppb & 0x0007) == 0x0000)
--			dev->mode = IMM_EPP_32;
-+		if (autodetect && (ppb & 0x0007) == 0x0000)
-+			dev->mode = IMM_EPP_8;
- 
- 	      second_pass:
- 		imm_connect(dev, CONNECT_EPP_MAYBE);
-@@ -1038,7 +1052,7 @@ static int device_check(imm_struct *dev)
- 			udelay(1000);
- 			imm_disconnect(dev);
- 			udelay(1000);
--			if (dev->mode == IMM_EPP_32) {
-+			if (dev->mode != old_mode) {
- 				dev->mode = old_mode;
- 				goto second_pass;
- 			}
-@@ -1063,7 +1077,7 @@ static int device_check(imm_struct *dev)
- 			udelay(1000);
- 			imm_disconnect(dev);
- 			udelay(1000);
--			if (dev->mode == IMM_EPP_32) {
-+			if (dev->mode != old_mode) {
- 				dev->mode = old_mode;
- 				goto second_pass;
- 			}
-@@ -1150,7 +1164,6 @@ static int __imm_attach(struct parport *pb)
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waiting);
- 	DEFINE_WAIT(wait);
- 	int ports;
--	int modes, ppb;
- 	int err = -ENOMEM;
- 	struct pardev_cb imm_cb;
- 
-@@ -1162,7 +1175,7 @@ static int __imm_attach(struct parport *pb)
- 
- 
- 	dev->base = -1;
--	dev->mode = IMM_AUTODETECT;
-+	dev->mode = mode < IMM_UNKNOWN ? mode : IMM_AUTODETECT;
- 	INIT_LIST_HEAD(&dev->list);
- 
- 	temp = find_parent();
-@@ -1197,18 +1210,9 @@ static int __imm_attach(struct parport *pb)
- 	}
- 	dev->waiting = NULL;
- 	finish_wait(&waiting, &wait);
--	ppb = dev->base = dev->dev->port->base;
-+	dev->base = dev->dev->port->base;
- 	dev->base_hi = dev->dev->port->base_hi;
--	w_ctr(ppb, 0x0c);
--	modes = dev->dev->port->modes;
--
--	/* Mode detection works up the chain of speed
--	 * This avoids a nasty if-then-else-if-... tree
--	 */
--	dev->mode = IMM_NIBBLE;
--
--	if (modes & PARPORT_MODE_TRISTATE)
--		dev->mode = IMM_PS2;
-+	w_ctr(dev->base, 0x0c);
- 
- 	/* Done configuration */
- 
-diff --git a/drivers/scsi/imm.h b/drivers/scsi/imm.h
-index 411cf94af5b0..398fa5b15181 100644
---- a/drivers/scsi/imm.h
-+++ b/drivers/scsi/imm.h
-@@ -100,11 +100,7 @@ static char *IMM_MODE_STRING[] =
- 	[IMM_PS2]	 = "PS/2",
- 	[IMM_EPP_8]	 = "EPP 8 bit",
- 	[IMM_EPP_16]	 = "EPP 16 bit",
--#ifdef CONFIG_SCSI_IZIP_EPP16
--	[IMM_EPP_32]	 = "EPP 16 bit",
--#else
- 	[IMM_EPP_32]	 = "EPP 32 bit",
--#endif
- 	[IMM_UNKNOWN]	 = "Unknown",
- };
- 
+suspend start and freezes the user tasks, as expected.
+
+> [  104.669767] wlp6s0: deauthenticating from 08:36:c9:85:df:ef by local choice (Reason: 3=DEAUTH_LEAVING)
+> [  104.679812] serial 00:01: disabled
+> [  104.683466] sd 7:0:0:0: [sdc] Synchronizing SCSI cache
+> [  104.688902] sd 7:0:0:0: [sdc] Stopping disk
+> [  104.693176] sd 5:0:0:0: [sdb] Synchronizing SCSI cache
+> [  104.698419] sd 4:0:0:0: [sda] Synchronizing SCSI cache
+> [  104.703730] sd 4:0:0:0: [sda] Stopping disk
+> [  104.885912] sd 5:0:0:0: [sdb] Stopping disk
+> [  106.163215] PM: suspend devices took 1.514 seconds
+
+All devices are suspended. No issues. Then resume starts...
+
+> [  107.003217] serial 00:01: activated
+> [  107.076779] nvme nvme0: 16/0/0 default/read/poll queues
+> [  107.123917] r8169 0000:07:00.0 enp7s0: Link is Down
+> [  107.208945] PM: resume devices took 0.241 seconds
+> [  107.214746] pcieport 0000:00:1c.0: PCI bridge to [bus 06]
+> [  107.220274] pcieport 0000:00:1c.0:   bridge window [mem 0x43700000-0x437fffff]
+> [  107.227538] OOM killer enabled.
+> [  107.230710] Restarting tasks ...
+
+... remember this one ...
+
+> [  107.231803] pcieport 0000:00:1c.2: PCI bridge to [bus 07]
+> [  107.236474] done.
+> [  107.240599] pcieport 0000:00:1c.2:   bridge window [io  0x4000-0x4fff]
+> [  107.242574] random: crng reseeded on system resumption
+> [  107.249119] pcieport 0000:00:1c.2:   bridge window [mem 0x43600000-0x436fffff]
+> [  107.249405] pcieport 0000:00:1c.6: PCI bridge to [bus 08]
+> [  107.259714] PM: suspend exit
+> [  107.261623] pcieport 0000:00:1c.6:   bridge window [io  0x3000-0x3fff]
+> [  107.276554] pcieport 0000:00:1c.6:   bridge window [mem 0x43500000-0x435fffff]
+> [  107.283849] pcieport 0000:00:1c.6:   bridge window [mem 0x70900000-0x709fffff 64bit pref]
+> [  107.293567] ata7: SATA link down (SStatus 4 SControl 300)
+> [  107.304150] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  107.310975] ata6: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  107.319173] ata5.00: configured for UDMA/133
+> [  107.324620] ata5.00: Enabling discard_zeroes_data
+> [  107.398370] ata6.00: configured for UDMA/133
+
+started bringing back up devices, but suspend comes back again.
+
+> [  108.563229] PM: suspend entry (deep)
+> [  108.573610] Filesystems sync: 0.006 seconds
+> [  108.580617] Freezing user space processes
+> [  108.586774] Freezing user space processes completed (elapsed 0.002 seconds)
+> [  108.593793] OOM killer disabled.
+> [  108.597055] Freezing remaining freezable tasks
+> [  108.603246] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+
+which freezes the tasks, again.
+
+> [  108.621515] sd 7:0:0:0: [sdc] Synchronizing SCSI cache
+> [  108.621522] sd 5:0:0:0: [sdb] Synchronizing SCSI cache
+> [  108.622018] serial 00:01: disabled
+> [  108.635420] sd 4:0:0:0: [sda] Synchronizing SCSI cache
+> [  108.640747] sd 4:0:0:0: [sda] Stopping disk
+> [  108.644148] sd 5:0:0:0: [sdb] Stopping disk
+> [  108.983487] ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  108.991923] ata8.00: configured for UDMA/133
+> [  108.996423] sd 7:0:0:0: [sdc] Stopping disk
+> [  109.973722] PM: suspend devices took 1.363 seconds
+
+And suspend finishes, followed by resume starting.
+
+> [  110.721600] serial 00:01: activated
+> [  110.802094] nvme nvme0: 16/0/0 default/read/poll queues
+> [  110.873036] r8169 0000:07:00.0 enp7s0: Link is Down
+> [  111.032278] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  111.038583] ata7: SATA link down (SStatus 4 SControl 300)
+> [  111.044065] ata6: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  111.051326] ata5.00: configured for UDMA/133
+> [  111.056118] ata5.00: Enabling discard_zeroes_data
+> [  111.131795] ata6.00: configured for UDMA/133
+> [  112.713764] ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [  112.724250] ata8.00: configured for UDMA/133
+
+Resume restarted the devices, but there is no "Restarting tasks" ! So the user
+tasks are frozen, hence the "hang". There are no user processes to run, so no
+coming back to the shell.
+
+So even without the libata patches fixing the resume mess, this issue does not
+look like a libata issue. I think your bisect hitting the no_start_on_resume
+patch is simply because that patch changes the timing of things and makes it
+easier to hit this issue.
+
+Adding PM folks because I am out of my depth on this one...
+
+PM folks,
+
+Rodrigo hit an issue doing suspend+resume cycles in a loop, with the resume
+triggered a very short time (wakealarm) after starting resume. This ends up
+with a hang. I could recreate the same in qemu. I cannot get wakealarm to work
+for some reason, but I have a virtio device not supporting suspend which
+triggers the resume in the middle of suspend. And repeating "systemctl suspend"
+again and again, I end up with a similar hang:
+
+[   98.455929] PM: suspend entry (s2idle)
+[   98.466622] Filesystems sync: 0.008 seconds
+[   98.473871] Freezing user space processes
+[   98.476372] Freezing user space processes completed (elapsed 0.001 seconds)
+[   98.478197] OOM killer disabled.
+[   98.479199] Freezing remaining freezable tasks
+[   98.481887] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+
+suspend starts, freezineg the tasks.
+
+[   98.493890] virtio-fs: suspend/resume not yet supported
+[   98.493971] sd 2:0:0:0: [sdc] Synchronizing SCSI cache
+[   98.499658] virtio-pci 0000:00:05.0: PM: pci_pm_suspend():
+virtio_pci_freeze+0x0/0x50 returns -95
+[   98.504241] virtio-pci 0000:00:05.0: PM: dpm_run_callback():
+pci_pm_suspend+0x0/0x230 returns -95
+[   98.507762] virtio-pci 0000:00:05.0: PM: failed to suspend async: error -95
+
+Failure of the virtio device suspend which will trigger pm_recover+resume.
+
+[   98.509451] ata3.00: Entering standby power mode
+[   98.511197] sd 1:0:0:0: [sdb] Synchronizing SCSI cache
+[   98.512917] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+
+Here, the scsi devices already suspended (asynchronously) do their thing.
+
+[   98.515562] PM: Some devices failed to suspend, or early wake event detected
+[   98.521098] virtio_blk virtio3: 4/0/0 default/read/poll queues
+[   98.548229] OOM killer enabled.
+[   98.549338] Restarting tasks ... done.
+
+The tasks are restarted due to the suspend error above.
+
+[   98.551734] random: crng reseeded on system resumption
+[   98.559697] PM: suspend exit
+[   98.561038] PM: suspend entry (s2idle)
+[   98.566692] Filesystems sync: 0.004 seconds
+[   98.574461] Freezing user space processes
+[   98.577265] Freezing user space processes completed (elapsed 0.001 seconds)
+[   98.579351] OOM killer disabled.
+[   98.580341] Freezing remaining freezable tasks
+[   98.583109] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+
+but here, for whatever reason, the tasks are suspended again despite the fact
+that we should be resuming. After this, I only see the scsi&ata devices
+finishing suspend and then being resumed all normally. But no coming back to
+the shell. It is frozen...
+
+Any idea ?
+
 -- 
-2.42.0
+Damien Le Moal
+Western Digital Research
 
