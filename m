@@ -2,71 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D955CA0FE6
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Sep 2023 07:11:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 557E7CA0FE1
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Sep 2023 08:54:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348453AbjIAHLo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Sep 2023 03:11:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57268 "EHLO
+        id S243927AbjIAIyd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Sep 2023 04:54:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231418AbjIAHLo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2023 03:11:44 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5295FE49;
-        Fri,  1 Sep 2023 00:11:41 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RcTdF0JvYzNn0g;
-        Fri,  1 Sep 2023 15:08:01 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Fri, 1 Sep 2023 15:11:39 +0800
-Message-ID: <14010198-c128-4960-0d56-5ee28f4da53f@huawei.com>
-Date:   Fri, 1 Sep 2023 15:11:38 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
+        with ESMTP id S229452AbjIAIyd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2023 04:54:33 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2CFE10D2;
+        Fri,  1 Sep 2023 01:54:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693558470; x=1725094470;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=2/bqX217T+NIJ6k+UnOTcD+QbA7ZngdBr03vA4SIUyg=;
+  b=c8OuS/+P8QWJN8QPiY9iu7JqnLWgNkHdDzwdHYFkHwC6BKZo/Dq6vsSl
+   ep+dkXk00GCgJqKMAHqqWfynzjPY5oYvbsXjGabRrti/mHEMqaBdq8SGg
+   Y9C/tFWT0ikH2e6bJcTOr7huWhojrbQvn4/7QTSfcRZQ3+E48C2NL+DXG
+   jqFe6wg6CGkMqDvqGEebKRaYDkmO1O0prAez0kyayAkSjQz4bgX7+OlnQ
+   6PvEB8rpUWr+Gse6sFvJ0Lmjxb5rj9uwe22QqPY1JYMWkx7hhRqj0MGLi
+   hY9UQ/mNVXbBzdv/evillEUpCXHM5v0uX0YksGMdxNbAXLo2S7Xi9oZYi
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10819"; a="440151313"
+X-IronPort-AV: E=Sophos;i="6.02,219,1688454000"; 
+   d="scan'208";a="440151313"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2023 01:54:30 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10819"; a="1070669202"
+X-IronPort-AV: E=Sophos;i="6.02,219,1688454000"; 
+   d="scan'208";a="1070669202"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by fmsmga005.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2023 01:54:23 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1qbzv1-005cqw-0F;
+        Fri, 01 Sep 2023 11:54:19 +0300
+Date:   Fri, 1 Sep 2023 11:54:18 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     yangxingui <yangxingui@huawei.com>
+Cc:     Luo Jiaxing <luojiaxing@huawei.com>, akpm@linux-foundation.org,
+        viro@zeniv.linux.org.uk, linux-kernel@vger.kernel.org,
+        martin.petersen@oracle.com, john.garry@huawei.com,
+        himanshu.madhani@cavium.com, felipe.balbi@linux.intel.com,
+        gregkh@linuxfoundation.org, uma.shankar@intel.com,
+        anshuman.gupta@intel.com, animesh.manna@intel.com,
+        linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
 Subject: Re: [PATCH v4 0/5] Introduce a new helper macro
  DEFINE_SHOW_STORE_ATTRIBUTE at seq_file.c
-Content-Language: en-CA
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Luo Jiaxing <luojiaxing@huawei.com>
-CC:     <akpm@linux-foundation.org>, <viro@zeniv.linux.org.uk>,
-        <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <john.garry@huawei.com>, <himanshu.madhani@cavium.com>,
-        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
-        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
-        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
+Message-ID: <ZPGmulPTWGa1W3OM@smile.fi.intel.com>
 References: <1605164864-58944-1-git-send-email-luojiaxing@huawei.com>
  <ZPDZtR8W1TLcOHW+@smile.fi.intel.com>
-From:   yangxingui <yangxingui@huawei.com>
-In-Reply-To: <ZPDZtR8W1TLcOHW+@smile.fi.intel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.67.120.108]
-X-ClientProxiedBy: dggpemm100005.china.huawei.com (7.185.36.231) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+ <14010198-c128-4960-0d56-5ee28f4da53f@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <14010198-c128-4960-0d56-5ee28f4da53f@huawei.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2023/9/1 2:19, Andy Shevchenko wrote:
-> On Thu, Nov 12, 2020 at 03:07:38PM +0800, Luo Jiaxing wrote:
->> We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
->> for read-only file, but we found many of drivers also want a helper macro
->> for read-write file too.
->>
->> So we add this macro to help decrease code duplication.
+On Fri, Sep 01, 2023 at 03:11:38PM +0800, yangxingui wrote:
+> On 2023/9/1 2:19, Andy Shevchenko wrote:
+> > On Thu, Nov 12, 2020 at 03:07:38PM +0800, Luo Jiaxing wrote:
+> > > We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+> > > for read-only file, but we found many of drivers also want a helper macro
+> > > for read-write file too.
+> > > 
+> > > So we add this macro to help decrease code duplication.
+> > 
+> > Are you going to pursue this one?
+> Hi Andy
 > 
-> Are you going to pursue this one?
-Hi Andy
+> Jiaxing has left his job, and his email is invalid.
 
-Jiaxing has left his job, and his email is invalid.
+OK! Anybody else to continue this to be finished?
 
-Thanks,
-Xingui
-> 
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
