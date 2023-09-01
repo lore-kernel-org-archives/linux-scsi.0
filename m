@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CB71CA0FE1
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Sep 2023 09:43:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E2FECA0FEA
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Sep 2023 09:43:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348890AbjIAJnL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Sep 2023 05:43:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39400 "EHLO
+        id S1349007AbjIAJnM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Sep 2023 05:43:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349010AbjIAJmo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2023 05:42:44 -0400
+        with ESMTP id S1348950AbjIAJmv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2023 05:42:51 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F38061BC6;
-        Fri,  1 Sep 2023 02:42:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D3611708;
+        Fri,  1 Sep 2023 02:42:23 -0700 (PDT)
 Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RcY171GZlzrS0g;
-        Fri,  1 Sep 2023 17:40:27 +0800 (CST)
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RcY184S2czrSMV;
+        Fri,  1 Sep 2023 17:40:28 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Fri, 1 Sep 2023 17:42:08 +0800
+ 15.1.2507.31; Fri, 1 Sep 2023 17:42:09 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -28,9 +28,9 @@ To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
 CC:     Hannes Reinecke <hare@suse.de>, <linux-kernel@vger.kernel.org>,
         <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: [RFC PATCH v2 16/19] scsi: smartpqi: Add param to control LUN based error handle
-Date:   Fri, 1 Sep 2023 17:41:24 +0800
-Message-ID: <20230901094127.2010873-17-haowenchao2@huawei.com>
+Subject: [RFC PATCH v2 18/19] scsi: virtio_scsi: Add param to control LUN based error handle
+Date:   Fri, 1 Sep 2023 17:41:26 +0800
+Message-ID: <20230901094127.2010873-19-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20230901094127.2010873-1-haowenchao2@huawei.com>
 References: <20230901094127.2010873-1-haowenchao2@huawei.com>
@@ -46,54 +46,66 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Add new param lun_eh to control if enable LUN based error handler, since
-smartpqi did not define other further reset callbacks, it is not
+virtio_scsi did not define other further reset callbacks, it is not
 necessary to fallback to further recover any more, so set the LUN
 error handler with fallback set to 0.
 
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/scsi/virtio_scsi.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 6aaaa7ebca37..107156d85d85 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -187,6 +187,10 @@ module_param_named(ctrl_ready_timeout,
- MODULE_PARM_DESC(ctrl_ready_timeout,
- 	"Timeout in seconds for driver to wait for controller ready.");
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index bd5633667d01..7bf4a34cdd20 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -28,6 +28,7 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_devinfo.h>
++#include <scsi/scsi_eh.h>
+ #include <linux/seqlock.h>
+ #include <linux/blk-mq-virtio.h>
  
-+static bool pqi_lun_eh;
-+module_param_named(lun_eh, pqi_lun_eh, bool, 0444);
+@@ -37,6 +38,10 @@
+ #define VIRTIO_SCSI_EVENT_LEN 8
+ #define VIRTIO_SCSI_VQ_BASE 2
+ 
++static bool lun_eh;
++module_param(lun_eh, bool, 0444);
 +MODULE_PARM_DESC(lun_eh, "LUN based error handle (def=0)");
 +
- static char *raid_levels[] = {
- 	"RAID-0",
- 	"RAID-4",
-@@ -6356,6 +6360,13 @@ static int pqi_slave_alloc(struct scsi_device *sdev)
- 	struct pqi_ctrl_info *ctrl_info;
- 	struct scsi_target *starget;
- 	struct sas_rphy *rphy;
-+	int ret = 0;
+ /* Command queue element */
+ struct virtio_scsi_cmd {
+ 	struct scsi_cmnd *sc;
+@@ -679,9 +684,18 @@ static int virtscsi_device_alloc(struct scsi_device *sdevice)
+ 	 */
+ 	sdevice->sdev_bflags = BLIST_TRY_VPD_PAGES;
+ 
++	if (lun_eh)
++		return scsi_device_setup_eh(sdevice, 0);
 +
-+	if (pqi_lun_eh) {
-+		ret = scsi_device_setup_eh(sdev, 0);
-+		if (ret)
-+			return ret;
-+	}
+ 	return 0;
+ }
  
- 	ctrl_info = shost_to_hba(sdev->host);
- 
-@@ -6439,6 +6450,9 @@ static void pqi_slave_destroy(struct scsi_device *sdev)
- 
- 	ctrl_info = shost_to_hba(sdev->host);
- 
-+	if (pqi_lun_eh)
-+		scsi_device_clear_eh(sdev);
++static void virtscsi_device_destroy(struct scsi_device *sdevice)
++{
++	if (lun_eh)
++		return scsi_device_clear_eh(sdevice);
++}
 +
- 	mutex_acquired = mutex_trylock(&ctrl_info->scan_mutex);
- 	if (!mutex_acquired)
- 		return;
+ 
+ /**
+  * virtscsi_change_queue_depth() - Change a virtscsi target's queue depth
+@@ -757,7 +771,7 @@ static const struct scsi_host_template virtscsi_host_template = {
+ 	.eh_device_reset_handler = virtscsi_device_reset,
+ 	.eh_timed_out = virtscsi_eh_timed_out,
+ 	.slave_alloc = virtscsi_device_alloc,
+-
++	.slave_destroy = virtscsi_device_destroy,
+ 	.dma_boundary = UINT_MAX,
+ 	.map_queues = virtscsi_map_queues,
+ 	.track_queue_depth = 1,
 -- 
 2.35.3
 
