@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CC47CA0FE9
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Sep 2023 09:43:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58EE0CA0FE1
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Sep 2023 09:43:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349002AbjIAJnL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Sep 2023 05:43:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43622 "EHLO
+        id S232071AbjIAJn2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Sep 2023 05:43:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349020AbjIAJmp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2023 05:42:45 -0400
+        with ESMTP id S1349043AbjIAJm7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2023 05:42:59 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09E831BD6;
-        Fri,  1 Sep 2023 02:42:19 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RcXyb5wpNzhZJb;
-        Fri,  1 Sep 2023 17:38:15 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE8141BE3;
+        Fri,  1 Sep 2023 02:42:30 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RcXyd20CjzhZJn;
+        Fri,  1 Sep 2023 17:38:17 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Fri, 1 Sep 2023 17:42:08 +0800
+ 15.1.2507.31; Fri, 1 Sep 2023 17:42:10 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -28,9 +28,9 @@ To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
 CC:     Hannes Reinecke <hare@suse.de>, <linux-kernel@vger.kernel.org>,
         <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: [RFC PATCH v2 17/19] scsi: megaraid_sas: Add param to control target based error handle
-Date:   Fri, 1 Sep 2023 17:41:25 +0800
-Message-ID: <20230901094127.2010873-18-haowenchao2@huawei.com>
+Subject: [RFC PATCH v2 19/19] scsi: iscsi_tcp: Add param to control LUN based error handle
+Date:   Fri, 1 Sep 2023 17:41:27 +0800
+Message-ID: <20230901094127.2010873-20-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20230901094127.2010873-1-haowenchao2@huawei.com>
 References: <20230901094127.2010873-1-haowenchao2@huawei.com>
@@ -45,69 +45,68 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add new param target_eh to control if enable target based error
-handler, since megaraid_sas did not define callback eh_device_reset,
-so only target based error handler is enabled; and megaraid_sas
-defined eh_host_reset, so make it fallback to further recover
-when target based recovery can not recover all error commands.
+Add new param lun_eh to control if enable LUN based error handler,
+since iscsi_tcp defined callback eh_target_reset, so make it
+fallback to further recover when LUN based recovery can not recover
+all error commands.
 
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 20 ++++++++++++++++++++
+ drivers/scsi/iscsi_tcp.c | 20 ++++++++++++++++++++
  1 file changed, 20 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 050eed8e2684..cc00cd5b213d 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -45,6 +45,7 @@
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9ab8555180a3..83474dc0ecd5 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -35,6 +35,7 @@
  #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_transport_iscsi.h>
 +#include <scsi/scsi_eh.h>
- #include "megaraid_sas_fusion.h"
- #include "megaraid_sas.h"
+ #include <trace/events/iscsi.h>
+ #include <trace/events/sock.h>
  
-@@ -127,6 +128,10 @@ int host_tagset_enable = 1;
- module_param(host_tagset_enable, int, 0444);
- MODULE_PARM_DESC(host_tagset_enable, "Shared host tagset enable/disable Default: enable(1)");
+@@ -63,6 +64,10 @@ module_param_named(debug_iscsi_tcp, iscsi_sw_tcp_dbg, int,
+ MODULE_PARM_DESC(debug_iscsi_tcp, "Turn on debugging for iscsi_tcp module "
+ 		 "Set to 1 to turn on, and zero to turn off. Default is off.");
  
-+static bool target_eh;
-+module_param(target_eh, bool, 0444);
-+MODULE_PARM_DESC(target_eh, "target based error handle (def=0)");
++static bool iscsi_sw_tcp_lun_eh;
++module_param_named(lun_eh, iscsi_sw_tcp_lun_eh, bool, 0444);
++MODULE_PARM_DESC(lun_eh, "LUN based error handle (def=0)");
 +
- MODULE_LICENSE("GPL");
- MODULE_VERSION(MEGASAS_VERSION);
- MODULE_AUTHOR("megaraidlinux.pdl@broadcom.com");
-@@ -2174,6 +2179,19 @@ static void megasas_slave_destroy(struct scsi_device *sdev)
- 	sdev->hostdata = NULL;
+ #define ISCSI_SW_TCP_DBG(_conn, dbg_fmt, arg...)		\
+ 	do {							\
+ 		if (iscsi_sw_tcp_dbg)				\
+@@ -1065,6 +1070,19 @@ static int iscsi_sw_tcp_slave_configure(struct scsi_device *sdev)
+ 	return 0;
  }
  
-+static int megasas_target_alloc(struct scsi_target *starget)
++static int iscsi_sw_tcp_slave_alloc(struct scsi_device *sdev)
 +{
-+	if (target_eh)
-+		return scsi_target_setup_eh(starget, 1);
++	if (iscsi_sw_tcp_lun_eh)
++		return scsi_device_setup_eh(sdev, 1);
 +	return 0;
 +}
 +
-+static void megasas_target_destroy(struct scsi_target *starget)
++static void iscsi_sw_tcp_slave_destroy(struct scsi_device *sdev)
 +{
-+	if (target_eh)
-+		scsi_target_clear_eh(starget);
++	if (iscsi_sw_tcp_lun_eh)
++		return scsi_device_clear_eh(sdev);
 +}
 +
- /*
- * megasas_complete_outstanding_ioctls - Complete outstanding ioctls after a
- *                                       kill adapter
-@@ -3525,6 +3543,8 @@ static const struct scsi_host_template megasas_template = {
- 	.change_queue_depth = scsi_change_queue_depth,
- 	.max_segment_size = 0xffffffff,
- 	.cmd_size = sizeof(struct megasas_cmd_priv),
-+	.target_alloc = megasas_target_alloc,
-+	.target_destroy = megasas_target_destroy,
- };
- 
- /**
+ static const struct scsi_host_template iscsi_sw_tcp_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "iSCSI Initiator over TCP/IP",
+@@ -1080,6 +1098,8 @@ static const struct scsi_host_template iscsi_sw_tcp_sht = {
+ 	.eh_target_reset_handler = iscsi_eh_recover_target,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+ 	.slave_configure        = iscsi_sw_tcp_slave_configure,
++	.slave_alloc		= iscsi_sw_tcp_slave_alloc,
++	.slave_destroy		= iscsi_sw_tcp_slave_destroy,
+ 	.proc_name		= "iscsi_tcp",
+ 	.this_id		= -1,
+ 	.track_queue_depth	= 1,
 -- 
 2.35.3
 
