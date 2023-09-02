@@ -2,187 +2,392 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C06CA0FE5
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Sep 2023 16:14:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCCBACA0FFC
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Sep 2023 07:39:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344469AbjIAQOG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Sep 2023 12:14:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60368 "EHLO
+        id S1351740AbjIBHj1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Sep 2023 03:39:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344278AbjIAQOF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2023 12:14:05 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7618DE66;
-        Fri,  1 Sep 2023 09:14:02 -0700 (PDT)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 381AN3v5002267;
-        Fri, 1 Sep 2023 16:13:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
- cc : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=qcppdkim1; bh=D6BD8lu7M170piKgEeDyJDTQX30KQ8FXTrlYp2xoQw0=;
- b=khkrvtKgOkZQ1YnYsZh5B9SQP3AV0n5GRzs3L6dw2Tun0bg5lrI5akJh2s309WEise5y
- Q5BJdP6gOKhdi7oIt8glFKLJjj4FzVF+VxXlYaGW1RHmOajKyy6lg6yI/XHjJv8Itm8E
- q7zVwItFSwga0ZF9/5ryI7lUBjYWbuC1TKEiofoblSPO9outNH9IafQ5ubNtlDMyemBg
- triMxBls8jhbLDL562PIf+dsJ5Y43SC5mccGIOx23NGKPaz57rnnwcJ+m0d5Ddb8f+5Q
- uvGGrPpxw8ZuOO57fgiJ1CEwFR+9oAvwrlnERJJpurn9zF/PBOMa2kIShwYtKnTktZRB Tw== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3su36v26ax-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 01 Sep 2023 16:13:54 +0000
-Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 381GDrTV000445
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 1 Sep 2023 16:13:53 GMT
-Received: from hu-bjorande-lv.qualcomm.com (10.49.16.6) by
- nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.30; Fri, 1 Sep 2023 09:13:53 -0700
-Date:   Fri, 1 Sep 2023 09:13:51 -0700
-From:   Bjorn Andersson <quic_bjorande@quicinc.com>
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>
-CC:     <mani@kernel.org>, <agross@kernel.org>, <andersson@kernel.org>,
-        <konrad.dybcio@linaro.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <quic_cang@quicinc.com>,
-        <quic_nguyenb@quicinc.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        "Naveen Kumar Goud Arepalli" <quic_narepall@quicinc.com>
-Subject: Re: [PATCH V6 6/6] scsi: ufs: qcom: Configure clk HW division based
- on scaling conditions.
-Message-ID: <20230901161351.GW818859@hu-bjorande-lv.qualcomm.com>
-References: <20230901114336.31339-1-quic_nitirawa@quicinc.com>
- <20230901114336.31339-7-quic_nitirawa@quicinc.com>
+        with ESMTP id S1351739AbjIBHj1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Sep 2023 03:39:27 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94597B4
+        for <linux-scsi@vger.kernel.org>; Sat,  2 Sep 2023 00:39:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1693640359;
+        bh=72jvGsMbaLqtJDjGj/syYm98ANE2aGXGlry6noHtsfM=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=NvedaXUeGtHQwwvoTFneCapKpaEgXWox4Yv3au/6zuabRXQ17NpOWO0Iy2RqR1GaT
+         jCZ7i3ds7+esuduifvFJu+w9yrMC/gRPzbNGGVwZXjPaI21qcKnKldXjbKCabAf31G
+         W79QK6PHgiXQhBa73J+vXFrfXHMkDni8UMARa60g=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 2C2A41285D97;
+        Sat,  2 Sep 2023 03:39:19 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id L4DB55Bju1ft; Sat,  2 Sep 2023 03:39:19 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1693640358;
+        bh=72jvGsMbaLqtJDjGj/syYm98ANE2aGXGlry6noHtsfM=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=V6aj5EH6ZPgx+jJB5rYbLcVzPhaQu4fCEgZorjNwECnr6YvESJg4WqMim/EGNFFe+
+         h1FNsgEKimNkHh1PEFrOw7ZZRUjtCfyoCwyJnpJEjHhz6xcxpaIHNyQ/7rUbKRnI8g
+         xlnKfCryYYDzfLZVxcxKFP/gso2doR5952xX0MRk=
+Received: from [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c] (unknown [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 99EAC12818AF;
+        Sat,  2 Sep 2023 03:39:17 -0400 (EDT)
+Message-ID: <6908480e8808a2d025926f2ff1f9a2468d1b6bb9.camel@HansenPartnership.com>
+Subject: [GIT PULL] first round of SCSI updates for the 6.4+ merge window
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 02 Sep 2023 08:39:13 +0100
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20230901114336.31339-7-quic_nitirawa@quicinc.com>
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01c.na.qualcomm.com (10.47.97.35)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: H9wlssHvEVUGZFenlxxt7zz_yzgS8fHX
-X-Proofpoint-GUID: H9wlssHvEVUGZFenlxxt7zz_yzgS8fHX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-01_13,2023-08-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- suspectscore=0 mlxlogscore=999 clxscore=1015 malwarescore=0 adultscore=0
- spamscore=0 phishscore=0 impostorscore=0 mlxscore=0 lowpriorityscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309010151
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Sep 01, 2023 at 05:13:36PM +0530, Nitin Rawat wrote:
-> a) Enable internal HW division of unipro core_clk for scale up condition.
-> b) Clear internal HW division of unipro core_clk for scale down condition.
-> 
+Updates to the usual drivers (ufs, lpfc, qla2xxx, mpi3mr, libsas) and
+the usual minor updates and bug fixes but no significant core changes.
 
-This commit message isn't good.
+There is a top level merge to pull in a stray fix that missed the last
+-rc cutoff.
 
-> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 31 +++++++++++++++++--------------
->  drivers/ufs/host/ufs-qcom.h |  2 +-
->  2 files changed, 18 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index c251c98a74f0..2ddda9356abc 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1389,18 +1389,21 @@ static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba,
->  		core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK, cycles_in_1us);
->  	}
-> 
-> -	/* Clear CORE_CLK_DIV_EN */
-> -	core_clk_ctrl_reg &= ~DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT;
-> +	/* Enable CORE_CLK_DIV_EN for scale up condition */
-> +	if (is_max_freq)
-> +		core_clk_ctrl_reg |= CORE_CLK_DIV_EN_BIT;
-> 
->  	ret = ufshcd_dme_set(hba,
->  			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
->  			    core_clk_ctrl_reg);
-> +	if (ret)
-> +		return ret;
+The patch is available here:
 
-Nice, but don't mix logical and stylistic changes in the same patch.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
->  	/*
->  	 * UFS host controller V4.0.0 onwards needs to program
->  	 * PA_VS_CORE_CLK_40NS_CYCLES attribute per programmed
->  	 * frequency of unipro core clk of UFS host controller.
->  	 */
-> -	if (!ret && (host->hw_ver.major >= 4)) {
-> +	if (host->hw_ver.major >= 4) {
->  		if (cycles_in_40ns > PA_VS_CORE_CLK_40NS_CYCLES_MASK)
->  			return -EINVAL;
-> 
-> @@ -1451,26 +1454,26 @@ static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
->  static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> -	int err;
-> -	u32 core_clk_ctrl_reg;
-> +	int ret;
-> +	u32 reg;
+The short changelog is:
 
-This just obfuscates the logical changes you're making.
+Alex Henrie (2):
+      scsi: ppa: Add a module parameter for the transfer mode
+      scsi: ppa: Fix compilation with PPA_DEBUG=1
 
+Andy Shevchenko (1):
+      scsi: lpfc: Do not abuse UUID APIs and LPFC_COMPRESS_VMID_SIZE
 
-Frankly, I've been staring at this for several minutes now. The commit
-message says there is a change here (but fails to describe what problem
-is solves or what the change is)...but I can't find the change!
+Arnd Bergmann (3):
+      scsi: gvp11: Remove unused gvp11_setup() function
+      scsi: qlogicpti: Mark qlogicpti_info() static
+      scsi: ufs: qcom: Remove unused variable
 
-Regards,
-Bjorn
+Artem Chernyshev (1):
+      scsi: isci: Return result of sas_register_ha()
 
-> 
->  	if (!ufs_qcom_cap_qunipro(host))
->  		return 0;
-> 
-> -	err = ufshcd_dme_get(hba,
-> +	ret = ufshcd_dme_get(hba,
->  			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
-> -			    &core_clk_ctrl_reg);
-> +			    &reg);
-> +	if (ret)
-> +		return ret;
-> 
->  	/* make sure CORE_CLK_DIV_EN is cleared */
-> -	if (!err &&
-> -	    (core_clk_ctrl_reg & DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT)) {
-> -		core_clk_ctrl_reg &= ~DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT;
-> -		err = ufshcd_dme_set(hba,
-> +	if (reg & CORE_CLK_DIV_EN_BIT) {
-> +		reg &= ~CORE_CLK_DIV_EN_BIT;
-> +		ret = ufshcd_dme_set(hba,
->  				    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
-> -				    core_clk_ctrl_reg);
-> +				    reg);
->  	}
-> -
-> -	return err;
-> +	return ret;
->  }
-> 
->  static int ufs_qcom_clk_scale_down_post_change(struct ufs_hba *hba)
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index bc176ef58e3e..bf0c370c79c7 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -141,7 +141,7 @@ enum {
->  /* bit and mask definitions for DME_VS_CORE_CLK_CTRL attribute */
->  #define CLK_1US_CYCLES_MASK_V4				GENMASK(27, 16)
->  #define CLK_1US_CYCLES_MASK				GENMASK(7, 0)
-> -#define DME_VS_CORE_CLK_CTRL_CORE_CLK_DIV_EN_BIT	BIT(8)
-> +#define CORE_CLK_DIV_EN_BIT				BIT(8)
->  #define PA_VS_CORE_CLK_40NS_CYCLES			0x9007
->  #define PA_VS_CORE_CLK_40NS_CYCLES_MASK			GENMASK(6, 0)
-> 
-> --
-> 2.17.1
-> 
+Bart Van Assche (18):
+      scsi: ufs: core: Fix the build for gcc 9 and before
+      scsi: ufs: Simplify response header parsing
+      scsi: ufs: Simplify transfer request header initialization
+      scsi: ufs: Remove a member variable
+      scsi: ufs: Simplify ufshcd_abort_all()
+      scsi: ufs: Remove a local variable from ufshcd_abort_all()
+      scsi: ufs: Improve type safety
+      scsi: ufs: Simplify zero-initialization
+      scsi: ufs: Minimize #include directives
+      scsi: ufs: Rename a function argument
+      scsi: ufs: Fix kernel-doc headers
+      scsi: ufs: Document all return values
+      scsi: ufs: Follow the kernel-doc syntax for documenting return values
+      scsi: ufs: Fix residual handling
+      scsi: RDMA/srp: Fix residual handling
+      scsi: ufs: core: Remove HPB support
+      scsi: core: Fix the scsi_set_resid() documentation
+      scsi: ufs: core: Convert UPIU_HEADER_DWORD() into a function
+
+Brian Masney (2):
+      scsi: ufs: host: Convert to dev_err_probe() in ufshcd_pltfrm_init()
+      scsi: ufs: core: Convert to dev_err_probe() in ufshcd_variant_hba_init()
+
+Chengfeng Ye (1):
+      scsi: fcoe: Fix potential deadlock on &fip->ctlr_lock
+
+Gustavo A. R. Silva (1):
+      scsi: bfa: Replace one-element array with flexible-array member in struct fc_rscn_pl_s
+
+Igor Pylypiv (2):
+      scsi: pm80xx: Set RETFIS when requested by libsas
+      scsi: libsas: Add return_fis_on_success to sas_ata_task
+
+Jeuk Kim (1):
+      scsi: ufs: ufs-pci: Add support for QEMU
+
+Jialin Zhang (3):
+      scsi: megaraid: Use pci_dev_id() to simplify the code
+      scsi: megaraid_sas: Use pci_dev_id() to simplify the code
+      scsi: mvumi: Use pci_dev_id() to simplify the code
+
+John Garry (10):
+      scsi: libsas: Delete sas_ata_task.retry_count
+      scsi: libsas: Delete sas_ata_task.stp_affil_pol
+      scsi: libsas: Delete sas_ata_task.set_affil_pol
+      scsi: libsas: Delete sas_ssp_task.task_prio
+      scsi: libsas: Delete sas_ssp_task.enable_first_burst
+      scsi: libsas: Delete sas_ssp_task.retry_count
+      scsi: libsas: Delete struct scsi_core
+      scsi: libsas: Delete enum sas_phy_type
+      scsi: libsas: Delete enum sas_class
+      scsi: libsas: Delete sas_ha_struct.lldd_module
+
+Justin Tee (13):
+      scsi: lpfc: Modify when a node should be put in device recovery mode during RSCN
+      scsi: lpfc: Copyright updates for 14.2.0.14 patches
+      scsi: lpfc: Update lpfc version to 14.2.0.14
+      scsi: lpfc: Clean up SLI-4 sysfs resource reporting
+      scsi: lpfc: Refactor cpu affinity assignment paths
+      scsi: lpfc: Abort outstanding ELS cmds when mailbox timeout error is detected
+      scsi: lpfc: Make fabric zone discovery more robust when handling unsolicited LOGO
+      scsi: lpfc: Set Establish Image Pair service parameter only for Target Functions
+      scsi: lpfc: Revise ndlp kref handling for dev_loss_tmo_callbk and lpfc_drop_node
+      scsi: lpfc: Qualify ndlp discovery state when processing RSCN
+      scsi: lpfc: Remove extra ndlp kref decrement in FLOGI cmpl for loop topology
+      scsi: lpfc: Simplify fcp_abort transport callback log message
+      scsi: lpfc: Pull out fw diagnostic dump log message from driver's trace buffer
+
+Konstantin Shelekhin (2):
+      scsi: target: iscsi: Stop using sprintf() in iscsi_target_configfs.c
+      scsi: target: iscsi: Fix buffer overflow in lio_target_nacl_info_show()
+
+Lin Ma (4):
+      scsi: qla4xxx: Add length check when parsing nlattrs
+      scsi: be2iscsi: Add length check when parsing nlattrs
+      scsi: iscsi: Add strlen() check in iscsi_if_set{_host}_param()
+      scsi: iscsi: Add length check for nlattr payload
+
+Manivannan Sadhasivam (3):
+      scsi: ufs: qcom: Make struct ufs_qcom_bw_table static const
+      scsi: ufs: qcom: Add support for scaling interconnects
+      scsi: ufs: core: Add enums for UFS lanes
+
+Maurizio Lombardi (1):
+      scsi: target: iscsi: Remove the unused netif_timeout attribute
+
+Michael Kelley (1):
+      scsi: storvsc: Handle additional SRB status values
+
+Mike Christie (1):
+      scsi: target: Fix write perf due to unneeded throttling
+
+Nilesh Javali (1):
+      scsi: qla2xxx: Update version to 10.02.08.500-k
+
+Nitin Rawat (3):
+      scsi: ufs: ufs-qcom: Check host controller state
+      scsi: ufs: core: Export ufshcd_is_hba_active()
+      scsi: ufs: ufs-qcom: Change UFS devfreq timer to delayed
+
+Oleksandr Natalenko (3):
+      scsi: qedf: Do not touch __user pointer in qedf_dbg_fp_int_cmd_read() directly
+      scsi: qedf: Do not touch __user pointer in qedf_dbg_debug_cmd_read() directly
+      scsi: qedf: Do not touch __user pointer in qedf_dbg_stop_io_on_error_cmd_read() directly
+
+Po-Wen Kao (2):
+      scsi: ufs: ufs-mediatek: Add MCQ support for MTK platform
+      scsi: ufs: core: Export symbols for MTK driver module
+
+Quinn Tran (9):
+      scsi: qla2xxx: fix inconsistent TMF timeout
+      scsi: qla2xxx: Fix TMF leak through
+      scsi: qla2xxx: Turn off noisy message log
+      scsi: qla2xxx: Fix session hang in gnl
+      scsi: qla2xxx: Fix erroneous link up failure
+      scsi: qla2xxx: Fix command flush during TMF
+      scsi: qla2xxx: Limit TMF to 8 per function
+      scsi: qla2xxx: Adjust IOCB resource on qpair create
+      scsi: qla2xxx: Fix deletion race condition
+
+Rajeshwar R Shinde (1):
+      scsi: elx: sli4: Remove code duplication
+
+Ranjan Kumar (6):
+      scsi: mpi3mr: Update driver version to 8.5.0.0.0
+      scsi: mpi3mr: Enhance handling of devices removed after controller reset
+      scsi: mpi3mr: WRITE SAME implementation
+      scsi: mpi3mr: Add support for more than 1MB I/O
+      scsi: mpi3mr: Update MPI Headers to version 3.00.28
+      scsi: mpi3mr: Invoke soft reset upon TSU or event ack time out
+
+Rob Herring (3):
+      scsi: sun_esp: Explicitly include correct DT includes
+      scsi: qlogicpti: Explicitly include correct DT includes
+      scsi: ufs: Explicitly include correct DT includes
+
+Sunil V L (1):
+      scsi: hisi_sas: Fix warning detected by sparse
+
+Tony Battersby (1):
+      scsi: core: Use 32-bit hostnum in scsi_host_lookup()
+
+Udit Kumar (1):
+      scsi: ufs: ti-j721e: Expose device tree aliases
+
+Wang Jinchao (1):
+      scsi: aic7xxx: Fix firmware build fatal error
+
+Xiang Yang (1):
+      scsi: arcmsr: Add __init and __exit for arcmsr_module_{init,exit}()
+
+Xingui Yang (1):
+      scsi: hisi_sas: Fix normally completed I/O analysed as failed
+
+Yang Li (2):
+      scsi: ufs: core: Fix some kernel-doc comments
+      scsi: ufs: ufs-mediatek: Remove redundant dev_err()
+
+Yihang Li (2):
+      scsi: hisi_sas: Delete unused lock in hisi_sas_port_notify_formed()
+      scsi: hisi_sas: Block requests before a debugfs snapshot
+
+Yue Haibing (4):
+      scsi: pm8001: Remove unused declarations
+      scsi: qla2xxx: Remove unused declarations
+      scsi: core: Remove unused extern declarations
+      scsi: libsas: Remove unused declarations
+
+YueHaibing (1):
+      scsi: iscsi: Remove unused extern declaration iscsi_lookup_iface()
+
+Zheng Zengkai (1):
+      scsi: pmcraid: Use pci_dev_id() to simplify the code
+
+Ziqi Chen (2):
+      scsi: ufs: qcom: Hold the mutex lock when configuring ESI
+      scsi: ufs: qcom: Get queue ID from MSI index in ESI handler
+
+And the diffstat:
+
+ Documentation/ABI/testing/sysfs-driver-ufs   |  247 ---
+ Documentation/scsi/scsi_mid_low_api.rst      |    4 +-
+ drivers/infiniband/ulp/srp/ib_srp.c          |    4 -
+ drivers/scsi/Kconfig                         |    2 +-
+ drivers/scsi/aic7xxx/aicasm/Makefile         |   18 +-
+ drivers/scsi/aic7xxx/aicasm/aicasm_symbol.c  |    1 +
+ drivers/scsi/aic94xx/aic94xx_hwi.c           |    4 +-
+ drivers/scsi/aic94xx/aic94xx_init.c          |    7 +-
+ drivers/scsi/aic94xx/aic94xx_task.c          |   12 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c             |    4 +-
+ drivers/scsi/be2iscsi/be_iscsi.c             |    4 +
+ drivers/scsi/bfa/bfa_fc.h                    |    2 +-
+ drivers/scsi/bfa/bfa_fcbuild.c               |    2 +-
+ drivers/scsi/elx/libefc_sli/sli4.c           |    8 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c                |   20 +-
+ drivers/scsi/gvp11.c                         |    5 -
+ drivers/scsi/hisi_sas/hisi_sas_main.c        |   14 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c       |    9 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c       |   14 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c       |   27 +-
+ drivers/scsi/hosts.c                         |    4 +-
+ drivers/scsi/isci/host.h                     |    2 +-
+ drivers/scsi/isci/init.c                     |    9 +-
+ drivers/scsi/isci/phy.c                      |    2 -
+ drivers/scsi/isci/request.c                  |    2 +-
+ drivers/scsi/libsas/sas_ata.c                |   12 +-
+ drivers/scsi/libsas/sas_discover.c           |    8 +-
+ drivers/scsi/libsas/sas_expander.c           |    2 +-
+ drivers/scsi/libsas/sas_host_smp.c           |    4 +-
+ drivers/scsi/libsas/sas_init.c               |   16 +-
+ drivers/scsi/libsas/sas_internal.h           |    7 -
+ drivers/scsi/libsas/sas_phy.c                |    8 +-
+ drivers/scsi/libsas/sas_port.c               |    8 +-
+ drivers/scsi/libsas/sas_scsi_host.c          |   15 +-
+ drivers/scsi/lpfc/lpfc.h                     |   23 +-
+ drivers/scsi/lpfc/lpfc_attr.c                |  136 +-
+ drivers/scsi/lpfc/lpfc_ct.c                  |   20 +-
+ drivers/scsi/lpfc/lpfc_els.c                 |   70 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c             |   77 +-
+ drivers/scsi/lpfc/lpfc_hw.h                  |    2 +
+ drivers/scsi/lpfc/lpfc_init.c                |   53 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c           |   94 +-
+ drivers/scsi/lpfc/lpfc_nvme.c                |   16 +-
+ drivers/scsi/lpfc/lpfc_nvmet.c               |    5 +-
+ drivers/scsi/lpfc/lpfc_sli.c                 |    8 +-
+ drivers/scsi/lpfc/lpfc_version.h             |    2 +-
+ drivers/scsi/megaraid/megaraid_mbox.c        |    2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c    |    2 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h         |    2 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h          |    1 +
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h    |    2 +-
+ drivers/scsi/mpi3mr/mpi3mr.h                 |   23 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c              |   37 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c              |  155 +-
+ drivers/scsi/mvsas/mv_init.c                 |    7 +-
+ drivers/scsi/mvsas/mv_sas.c                  |    9 +-
+ drivers/scsi/mvumi.c                         |    2 +-
+ drivers/scsi/pm8001/pm8001_hwi.c             |   12 +-
+ drivers/scsi/pm8001/pm8001_hwi.h             |    2 +-
+ drivers/scsi/pm8001/pm8001_init.c            |    5 +-
+ drivers/scsi/pm8001/pm8001_sas.h             |    2 -
+ drivers/scsi/pm8001/pm80xx_hwi.c             |   27 +-
+ drivers/scsi/pm8001/pm80xx_hwi.h             |    2 +-
+ drivers/scsi/pmcraid.c                       |    3 +-
+ drivers/scsi/ppa.c                           |   84 +-
+ drivers/scsi/ppa.h                           |    4 -
+ drivers/scsi/qedf/qedf_dbg.h                 |    2 +
+ drivers/scsi/qedf/qedf_debugfs.c             |   35 +-
+ drivers/scsi/qla2xxx/qla_def.h               |    9 +-
+ drivers/scsi/qla2xxx/qla_gbl.h               |   11 +-
+ drivers/scsi/qla2xxx/qla_init.c              |  217 ++-
+ drivers/scsi/qla2xxx/qla_iocb.c              |    1 +
+ drivers/scsi/qla2xxx/qla_isr.c               |    7 +-
+ drivers/scsi/qla2xxx/qla_mbx.c               |    3 +
+ drivers/scsi/qla2xxx/qla_nvme.c              |    3 +-
+ drivers/scsi/qla2xxx/qla_os.c                |   11 +-
+ drivers/scsi/qla2xxx/qla_target.c            |   14 +-
+ drivers/scsi/qla2xxx/qla_version.h           |    4 +-
+ drivers/scsi/qla4xxx/ql4_os.c                |   15 +
+ drivers/scsi/qlogicpti.c                     |    4 +-
+ drivers/scsi/scsi_priv.h                     |    2 -
+ drivers/scsi/scsi_transport_iscsi.c          |   80 +-
+ drivers/scsi/storvsc_drv.c                   |    7 +
+ drivers/scsi/sun_esp.c                       |    3 +-
+ drivers/target/iscsi/iscsi_target_configfs.c |   74 +-
+ drivers/target/iscsi/iscsi_target_tpg.c      |   26 -
+ drivers/target/iscsi/iscsi_target_tpg.h      |    1 -
+ drivers/target/target_core_iblock.c          |    7 +-
+ drivers/ufs/core/Kconfig                     |    8 -
+ drivers/ufs/core/Makefile                    |    1 -
+ drivers/ufs/core/ufs-hwmon.c                 |    3 +-
+ drivers/ufs/core/ufs-mcq.c                   |   34 +-
+ drivers/ufs/core/ufs-sysfs.c                 |   22 -
+ drivers/ufs/core/ufs_bsg.c                   |    2 +
+ drivers/ufs/core/ufshcd-crypto.h             |   20 +-
+ drivers/ufs/core/ufshcd-priv.h               |    4 +-
+ drivers/ufs/core/ufshcd.c                    |  627 +++---
+ drivers/ufs/core/ufshpb.c                    | 2668 --------------------------
+ drivers/ufs/core/ufshpb.h                    |  318 ---
+ drivers/ufs/host/cdns-pltfrm.c               |   27 +-
+ drivers/ufs/host/tc-dwc-g210-pci.c           |    2 +-
+ drivers/ufs/host/tc-dwc-g210.c               |   32 +-
+ drivers/ufs/host/ti-j721e-ufs.c              |    2 +
+ drivers/ufs/host/ufs-mediatek.c              |  180 +-
+ drivers/ufs/host/ufs-mediatek.h              |   33 +
+ drivers/ufs/host/ufs-qcom.c                  |  174 +-
+ drivers/ufs/host/ufs-qcom.h                  |    4 +-
+ drivers/ufs/host/ufs-renesas.c               |    2 +-
+ drivers/ufs/host/ufshcd-dwc.c                |   22 +-
+ drivers/ufs/host/ufshcd-pci.c                |    3 +-
+ drivers/ufs/host/ufshcd-pltfrm.c             |   13 +-
+ include/scsi/libsas.h                        |   32 +-
+ include/scsi/scsi_host.h                     |    2 +-
+ include/scsi/scsi_transport_iscsi.h          |    1 -
+ include/target/iscsi/iscsi_target_core.h     |    4 -
+ include/uapi/scsi/scsi_bsg_ufs.h             |   52 +-
+ include/ufs/ufs.h                            |   90 +-
+ include/ufs/ufs_quirks.h                     |    6 -
+ include/ufs/ufshcd.h                         |   60 +-
+ include/ufs/ufshci.h                         |   53 +-
+ include/ufs/unipro.h                         |    6 +
+ 121 files changed, 1878 insertions(+), 4561 deletions(-)
+ delete mode 100644 drivers/ufs/core/ufshpb.c
+ delete mode 100644 drivers/ufs/core/ufshpb.h
+
+James
+
