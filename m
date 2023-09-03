@@ -2,70 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E19C001DB
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Sep 2023 19:18:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1BBBC71153
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Sep 2023 07:41:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233004AbjIBTSh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Sep 2023 15:18:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37466 "EHLO
+        id S232587AbjICHlu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Sep 2023 03:41:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232134AbjIBTSg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Sep 2023 15:18:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACF4FCD7;
-        Sat,  2 Sep 2023 12:18:33 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S231276AbjICHlu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Sep 2023 03:41:50 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15DA0124;
+        Sun,  3 Sep 2023 00:41:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1693726905;
+        bh=iv1pLLc+v8+kime8HKgyY+vHVntfdfZAs7FRY9OE20I=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=hBOHXo9TLbOATfk0TiEL83BU5xf4IrWX9OpF0NI8y57gn2kNZM/AkvHYI6yuKfWIu
+         hoYJWDlBCAf3+BTbvd6gYE6HXTO+ORtmUHGulDBzW7BojMD3WpPTWU+UzMhhMIqSfp
+         TozoRFHnsjS0juiZVaJiXr3RDwijnIUZTpbVkvzY=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id BB5A9128178D;
+        Sun,  3 Sep 2023 03:41:45 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id gnRfFe011lwK; Sun,  3 Sep 2023 03:41:45 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1693726905;
+        bh=iv1pLLc+v8+kime8HKgyY+vHVntfdfZAs7FRY9OE20I=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=hBOHXo9TLbOATfk0TiEL83BU5xf4IrWX9OpF0NI8y57gn2kNZM/AkvHYI6yuKfWIu
+         hoYJWDlBCAf3+BTbvd6gYE6HXTO+ORtmUHGulDBzW7BojMD3WpPTWU+UzMhhMIqSfp
+         TozoRFHnsjS0juiZVaJiXr3RDwijnIUZTpbVkvzY=
+Received: from [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c] (unknown [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 34EB560AE1;
-        Sat,  2 Sep 2023 19:18:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8E328C433C7;
-        Sat,  2 Sep 2023 19:18:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693682312;
-        bh=2t9OaVOAU4X/VPxc0uIvTvEOMgS/9R01uM/8vOV+sC4=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=K8mMQS6H3DjtVbvv7d6EQ/cVNiwNkQW18y+yPz8VrPm+dm11fZgPk4lK+fyppENv+
-         SWA6MSrvHO2J/bdE0yFisyCvz4ug0lK8nXDJSNiL0EbNAPIIP6+m0SMz5ZeQgKVajP
-         ysHAAArp29kvqFuSe7gYD0jPa5HLXSMzBHxvJA6/8MV3/ljPukasjx/YLZhZAcX837
-         faGhMxOQEVnsjCGcYfDJctb/QDNxXbEpk+eq4X3fbkr4cBfXqF/y8wYlV+OECgLj9F
-         WDC54XAgCRh+FwQ9ZTFr+2dgAWoV0japfBnuPoJqRXJwJqWqCW/z5Zgpzb69iZiQj+
-         Ph+s/gcIdPnYA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 6DC43E26D49;
-        Sat,  2 Sep 2023 19:18:32 +0000 (UTC)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 2D9811280E00;
+        Sun,  3 Sep 2023 03:41:43 -0400 (EDT)
+Message-ID: <2740c0e76e3feffbd43956d342c1805082396c99.camel@HansenPartnership.com>
 Subject: Re: [GIT PULL] first round of SCSI updates for the 6.4+ merge window
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <6908480e8808a2d025926f2ff1f9a2468d1b6bb9.camel@HansenPartnership.com>
-References: <6908480e8808a2d025926f2ff1f9a2468d1b6bb9.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <6908480e8808a2d025926f2ff1f9a2468d1b6bb9.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: e03843a0f0bceb7ecff78584b242aad94fc0c64f
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: b89b029377c8c441649c7a6be908386e74ea9420
-Message-Id: <169368231237.25293.3929023886121101199.pr-tracker-bot@kernel.org>
-Date:   Sat, 02 Sep 2023 19:18:32 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
 Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
         linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sun, 03 Sep 2023 08:41:41 +0100
+In-Reply-To: <CAHk-=wgA6CBwnJ02H+vSgneKPcPRP0BWQ-Kx2Re1B56Y2hXkFQ@mail.gmail.com>
+References: <6908480e8808a2d025926f2ff1f9a2468d1b6bb9.camel@HansenPartnership.com>
+         <CAHk-=wgA6CBwnJ02H+vSgneKPcPRP0BWQ-Kx2Re1B56Y2hXkFQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 02 Sep 2023 08:39:13 +0100:
+On Sat, 2023-09-02 at 12:08 -0700, Linus Torvalds wrote:
+> On Sat, 2 Sept 2023 at 00:39, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > 
+> > Updates to the usual drivers (ufs, lpfc, qla2xxx, mpi3mr, libsas)
+> > and the usual minor updates and bug fixes but no significant core
+> > changes.
+> 
+> Removing 3000+ lines for UFS HPB support wasn't even worth
+> mentioning?
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+Sorry, my bias is showing.  I always thought HPB was a useless
+marketing feature and was against including it, so removing it is just
+the world going back to being more correct.  To be honest, I also
+didn't think you cared at all about UFS ...
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/b89b029377c8c441649c7a6be908386e74ea9420
+> I am happy to see it gone, and maybe as a technology it was a failure
+> not worth it, but as a "we gave up on it as being worthless" might
+> still have been worth a word or two..
+> 
+> Sadly, I see from the commit message that apparently the next stage
+> is going to involve zoned storage. Now *there* is a technology that
+> seems to be a complete failure, brought to us by the same kind of
+> failed hardware people who tried to convince us that we should care
+> about 64kB pages in SSD's.
 
-Thank you!
+Well, we put HPB in in spite of most of us thinking it was a bad idea
+because there was a tiny chance it might work and it could be yanked
+out if it didn't.  There's no reason not to extend the same courtesy to
+zoned storage.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+> Oh well. With enough thrust, even a pig will fly. I suspect that's
+> the motivating factor behind all those zoned storage things too.
+
+That's why RFC1925 exists, yes ...
+
+James
+
