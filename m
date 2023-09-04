@@ -2,88 +2,63 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF23CA0FF8
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D3B4CA0FF8
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:05:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233382AbjIEQF0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:05:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35908 "EHLO
+        id S236348AbjIEQF2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:05:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354242AbjIEKTA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 06:19:00 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8E918D
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Sep 2023 03:18:57 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3853OxC8024407;
-        Tue, 5 Sep 2023 10:18:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=wJ5b2TiYPo9yu2X9Lcwjdeb9+G7zTWdGA+TRaWadVKI=;
- b=oGzTarSfonvd+mU98wSBYGSURF8jUShWYdVV5FIEzXYrPOlVLzUumkgf1RlvirjJprIo
- Jbw+DJH5asUbxSXJb1QLRytTH/ak8lHbl6uckhu3u5XUmjbr94Wd+geoxCUdPfluN0qD
- nbvOZQtwXs92UI9VYE6FtvcwvxhSFG6sGcJ3Khd2H7pmknJLYDYJV9ftY5enYsoxZMTt
- Wv2T1bfKb+S4dWgysmNgwF+4FgNHguXL0CYQ68qhD4Xu9A7WQiEfI6V3kKEang9BNCBZ
- 9ZokaE8H1tzDIZIgfCzp1Orkn3LA7XOy4nvA7GAp1ZJdtKrJlKv1iaLIP40UTyraUQ7d vA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3suvntvvup-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Sep 2023 10:18:50 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3859Ba3M029057;
-        Tue, 5 Sep 2023 10:18:49 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3suug4j8bg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Sep 2023 10:18:49 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 385AIlOX032271;
-        Tue, 5 Sep 2023 10:18:49 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3suug4j85n-2;
-        Tue, 05 Sep 2023 10:18:49 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        kernel test robot <lkp@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: Re: [PATCH] scsi: ufs: Fix the build for the old ARM OABI
-Date:   Tue,  5 Sep 2023 06:18:25 -0400
-Message-Id: <169390541191.1533355.3501860660032738921.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230829163547.1200183-1-bvanassche@acm.org>
-References: <20230829163547.1200183-1-bvanassche@acm.org>
+        with ESMTP id S1354106AbjIEJjb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 05:39:31 -0400
+X-Greylist: delayed 4368 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 05 Sep 2023 02:39:28 PDT
+Received: from mail.equinoxrise.pl (mail.equinoxrise.pl [217.61.112.157])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15B181A7
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Sep 2023 02:39:28 -0700 (PDT)
+Received: by mail.equinoxrise.pl (Postfix, from userid 1002)
+        id B2D4283321; Mon,  4 Sep 2023 09:40:58 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=equinoxrise.pl;
+        s=mail; t=1693813304;
+        bh=v6OgBfK5dN7P5dQ0wCu59rOfZaiqziJeLNblJ8dOcGI=;
+        h=Date:From:To:Subject:From;
+        b=mTddXVzdGsm10vG4HUjqpgZ6U2DufLf8p5nPG0jh5XFY83Y7z/q5QZGc2DdY7KIZ7
+         itMZOD1c3qRmu3V5oGTTtoXX2pRgpho+wK0DyzYGunb4HSGpGrJYOOW7dt8XWdgWGo
+         SWSPYSd1l+CHkXfzdl1SQLZKMjFPI14tVV9XgAYj7y9VoiUFBkLpBGGIP17HpWQyNn
+         /JhdoVgze+wRIKl0NUbeQRfWeVgD+Rg+LLlA25rCCRJG/gBFdf4L2hV//s8Udgq41X
+         LRWSMyZaB6x8hRBlV3upYGGcRObmVPmmKhrMpcgfI66+oUhYjxItbL+iq0rt8h7B2J
+         3551gwKsWGq3w==
+Received: by mail.equinoxrise.pl for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 07:40:34 GMT
+Message-ID: <20230904084500-0.1.7.qjl.0.9a96fb2r5e@equinoxrise.pl>
+Date:   Mon,  4 Sep 2023 07:40:34 GMT
+From:   "Mateusz Talaga" <mateusz.talaga@equinoxrise.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: Prezentacja
+X-Mailer: mail.equinoxrise.pl
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-05_08,2023-08-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 suspectscore=0
- bulkscore=0 mlxlogscore=558 malwarescore=0 phishscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
- definitions=main-2309050092
-X-Proofpoint-ORIG-GUID: GzxHq6FDG2mfh8Ez_pC9wOi2liRG6h1g
-X-Proofpoint-GUID: GzxHq6FDG2mfh8Ez_pC9wOi2liRG6h1g
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 29 Aug 2023 09:35:42 -0700, Bart Van Assche wrote:
+Dzie=C5=84 dobry!
 
-> All structs and unions are word aligned when using the OABI. Mark the union
-> in struct utp_upiu_header as packed to prevent that the compiler inserts
-> padding bytes.
-> 
-> 
+Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
+=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
+zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
 
-Applied to 6.6/scsi-queue, thanks!
+Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
+=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
+dostaw.
 
-[1/1] scsi: ufs: Fix the build for the old ARM OABI
-      https://git.kernel.org/mkp/scsi/c/d0bac0ec89d6
+Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
+nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
+ co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
+=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
+zania w Pa=C5=84stwa firmie.
+
+
+Pozdrawiam
+Mateusz Talaga
