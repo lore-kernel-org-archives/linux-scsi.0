@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EAAC71153
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 08:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 318A0C71153
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 08:33:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346226AbjIDI2k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Sep 2023 04:28:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59766 "EHLO
+        id S1351141AbjIDIdD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Sep 2023 04:33:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346664AbjIDI2j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 04:28:39 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B437E11D
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 01:28:33 -0700 (PDT)
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230904082831epoutp04cc8a0edf35cde664f74bc9d0ccd1aac7~BpMdeAR1M0973809738epoutp04e
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 08:28:31 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230904082831epoutp04cc8a0edf35cde664f74bc9d0ccd1aac7~BpMdeAR1M0973809738epoutp04e
+        with ESMTP id S234201AbjIDIdC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 04:33:02 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12F3A94
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 01:32:59 -0700 (PDT)
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230904083256epoutp03ce53ceb44595e0ddb62384976db6e070~BpQUoYGNg0735807358epoutp03H
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 08:32:56 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230904083256epoutp03ce53ceb44595e0ddb62384976db6e070~BpQUoYGNg0735807358epoutp03H
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1693816111;
-        bh=pqZMEtXF8khk+aqi2sWEdZGk9hIFpnSAUPxL2kkqvUE=;
+        s=mail20170921; t=1693816376;
+        bh=Q1yqxXmwlHA4EQx5felIcWYStF2OEXaRHYhXVJP76E8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZC9vx+E8n8uvOg1WlVm+ADfq3vuuNtTjvwSJbnh9L2JsXWhCwqT30VuSlm2wlVadT
-         mLPxg24MAUGjqEkbcKETIRBjfeymj9Y3pHmhtEw6s+Y3+SEFSI1LV17fP76hUbXydG
-         qYQijvPidCwnIpVWZhRN8WPsHqFc9WlAx6wiG2Lo=
+        b=Ja7GwogaM3P4T1twM7/fj0C/So6YqVnMpygu4JIAXtmrE1Ik2Bv6NaOF+w6wyNjJj
+         gEzQAdCqyXBuOYJPwvw3nQeflzTo8suWPSzAwYhUPVNXgDTNf9R2/q9A0QVc39Ape2
+         V/wmh0FJ3QvkbCaWVpy0ZPOIR+RFbyYKSC6AbeDI=
 Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20230904082830epcas1p293318144f09e703757133fd0cbb334d6~BpMcxjfNA2571925719epcas1p2j;
-        Mon,  4 Sep 2023 08:28:30 +0000 (GMT)
-Received: from epsmges1p3.samsung.com (unknown [182.195.38.243]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4RfMGk1PzTz4x9QD; Mon,  4 Sep
-        2023 08:28:30 +0000 (GMT)
-Received: from epcas1p3.samsung.com ( [182.195.41.47]) by
-        epsmges1p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        81.E9.09646.E2595F46; Mon,  4 Sep 2023 17:28:30 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20230904082829epcas1p23ee3e36b0ef77a1f6112897afcacd93e~BpMcMgGG72571825718epcas1p2k;
-        Mon,  4 Sep 2023 08:28:29 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20230904082829epsmtrp11052edc93668d685fced4125df5fbcd1~BpMcK6E9o0877608776epsmtrp19;
-        Mon,  4 Sep 2023 08:28:29 +0000 (GMT)
-X-AuditID: b6c32a37-b23ff700000025ae-36-64f5952eb413
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1C.BE.08788.D2595F46; Mon,  4 Sep 2023 17:28:29 +0900 (KST)
+        epcas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20230904083255epcas1p13117cf2fe0b6ecb723403a6299b92ad6~BpQUCyhVm1023110231epcas1p1P;
+        Mon,  4 Sep 2023 08:32:55 +0000 (GMT)
+Received: from epsmges1p4.samsung.com (unknown [182.195.38.240]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4RfMMq31yxz4x9Q5; Mon,  4 Sep
+        2023 08:32:55 +0000 (GMT)
+Received: from epcas1p1.samsung.com ( [182.195.41.45]) by
+        epsmges1p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        06.3D.10163.73695F46; Mon,  4 Sep 2023 17:32:55 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
+        20230904083254epcas1p43e2cde7ddcf301970561041c582bc4b0~BpQTREYlX0378203782epcas1p4v;
+        Mon,  4 Sep 2023 08:32:54 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230904083254epsmtrp24fee961f46218f055172614f72e03b46~BpQTP3U0u1249612496epsmtrp2A;
+        Mon,  4 Sep 2023 08:32:54 +0000 (GMT)
+X-AuditID: b6c32a38-28bff700000027b3-51-64f59637a096
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        3D.FE.18916.63695F46; Mon,  4 Sep 2023 17:32:54 +0900 (KST)
 Received: from localhost.localdomain (unknown [10.253.100.232]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230904082829epsmtip17447f8ae9152b8c4262ad5e3170c8100~BpMb6wu5E3126031260epsmtip11;
-        Mon,  4 Sep 2023 08:28:29 +0000 (GMT)
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20230904083254epsmtip2c987be467209b3a15961cb1047c4e418~BpQS-saIB1973819738epsmtip2j;
+        Mon,  4 Sep 2023 08:32:54 +0000 (GMT)
 From:   Chanwoo Lee <cw9316.lee@samsung.com>
 To:     kwmad.kim@samsung.com
 Cc:     adrian.hunter@intel.com, alim.akhtar@samsung.com,
@@ -60,69 +60,77 @@ Cc:     adrian.hunter@intel.com, alim.akhtar@samsung.com,
         linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         sc.suh@samsung.com, sh425.lee@samsung.com, wkon.kim@samsung.com,
         Chanwoo Lee <cw9316.lee@samsung.com>
-Subject: Re: [RESEND PATCH v3 1/2] ufs: make __ufshcd_send_uic_cmd not
- wrapped by host_lock
-Date:   Mon,  4 Sep 2023 17:23:29 +0900
-Message-Id: <20230904082329.19317-1-cw9316.lee@samsung.com>
+Subject: Re: [RESEND,v3,2/2] ufs: poll HCS.UCRDY before issuing a UIC
+ command
+Date:   Mon,  4 Sep 2023 17:27:56 +0900
+Message-Id: <20230904082756.19693-1-cw9316.lee@samsung.com>
 X-Mailer: git-send-email 2.29.0
-In-Reply-To: <782ba5f26f0a96e58d85dff50751787d2d2a6b2b.1693790060.git.kwmad.kim@samsung.com>
+In-Reply-To: <550484ffb66300bdcec63d3e304dfd55cb432f1f.1693790060.git.kwmad.kim@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrHJsWRmVeSWpSXmKPExsWy7bCmvq7e1K8pBhu+sVmcfLKGzeLBvG1s
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLJsWRmVeSWpSXmKPExsWy7bCmrq75tK8pBue+ilicfLKGzeLBvG1s
         Fi9/XmWzOPiwk8Vi2oefzBYzTrWxWqxe/IDFYtGNbUwWu/42M1lsvbGTxeLmlqMsFpd3zWGz
         6L6+g81i+fF/TBZdd28wWiz995bFYvOlbywOgh6Xr3h7LN7zksljwqIDjB7f13eweXx8eovF
         o2/LKkaPz5vkPNoPdDMFcERl22SkJqakFimk5iXnp2TmpdsqeQfHO8ebmhkY6hpaWpgrKeQl
         5qbaKrn4BOi6ZeYAvaGkUJaYUwoUCkgsLlbSt7Mpyi8tSVXIyC8usVVKLUjJKTAr0CtOzC0u
-        zUvXy0stsTI0MDAyBSpMyM74vnsGY8Fs5orHXevZGhjvMHUxcnJICJhITOmbx9bFyMUhJLCD
-        UeL/jVMsEM4nRolDz6ayQzjfGCUuLz8I1MIB0fJfDiK+l1HizuzlUO1fGCV2T2sAK2IT0JK4
-        fcwbZIWIgKTE5ulTwWqYBaYxSzx4uIkFJCEsECtxcV83G4jNIqAq8frcUmYQm1fAWuLYyzVs
-        EPfJS/y53wMW5xSIkfiy8jRUjaDEyZlPwOYwA9U0b53NDLJAQuAMh8T+5l52iGYXieWt7cwQ
-        trDEq+NboOJSEi/729ghGpoZJRa+OQ7VPYFR4svH21Cr7SWaW5vZQN5hFtCUWL9LHyKsKLHz
-        91xGiM18Eu++9rBCgoVXoqNNCKJERWJO1zk2mF0fbzxmhbA9JOYse8AECa31jBJde5exTmBU
-        mIXkoVlIHpqFsHkBI/MqRrHUguLc9NRiwwJjeBwn5+duYgQnbC3zHYzT3n7QO8TIxMF4iFGC
-        g1lJhFdO+1OKEG9KYmVValF+fFFpTmrxIUZTYHBPZJYSTc4H5oy8knhDE0sDEzMjEwtjS2Mz
-        JXHeW896U4QE0hNLUrNTUwtSi2D6mDg4pRqYtlYuyua3St8d272isP242RbeKMk+M/tbX+J3
-        TQ1sarRolf+Z/fTAhRuT9b+/P7H2UkxRwDk96dqn0iEGl7TVe8NLTd6XzHN13n+AsWN939Jd
-        Zjyt8fNW3iiY9WPXq15GvxY3bsENvOeMrtf+Ud4x/YWM3HHD8rS2d/r5h36KHGRne/VwK3vX
-        xo8ntZ7+2yJ4pV30oVZdrwNTc1iSsKuL5ZW9h8xlr+z+fzjh/ZeJvmke367uWqAX/W9LaHae
-        gfaL02eE7rI+uSQmc/XSdS9vvZaPG56sT5ySs1HiTd7Od3PbpyXp7pkR/pDxwnXBZ73f+958
-        N9T+a34l917vXIU5f0zO/m1/mtDFe/b0TZebvUosxRmJhlrMRcWJAHP9SJdhBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmkeLIzCtJLcpLzFFi42LZdlhJTld36tcUg3M7lSxOPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZosZp9pYLVYvfsBisejGNiaLXX+bmSy23tjJYnFzy1EWi8u75rBZ
-        dF/fwWax/Pg/JouuuzcYLZb+e8tisfnSNxYHQY/LV7w9Fu95yeQxYdEBRo/v6zvYPD4+vcXi
-        0bdlFaPH501yHu0HupkCOKK4bFJSczLLUov07RK4Mr7vnsFYMJu54nHXerYGxjtMXYwcHBIC
-        JhJT/st1MXJyCAnsZpT48ykVxJYQkJLYvf88G0SJsMThw8VdjFxAJZ8YJZbv/cYIEmcT0JK4
-        fcwbpFxEQFJi8/SpbCA2s8AqZol3n6xBbGGBaInbK26yg9gsAqoSr88tZQaxeQWsJY69XMMG
-        sUpe4s/9HrA4p0CMxJeVp5khzomWuHx0CRtEvaDEyZlPWCDmy0s0b53NPIFRYBaS1CwkqQWM
-        TKsYJVMLinPTc4sNC4zyUsv1ihNzi0vz0vWS83M3MYLjSUtrB+OeVR/0DjEycTAeYpTgYFYS
-        4ZXT/pQixJuSWFmVWpQfX1Sak1p8iFGag0VJnPfb694UIYH0xJLU7NTUgtQimCwTB6dUA5Pq
-        gSNMlleKr5i2Ljb6vGPOB9nl0orXG1IXsb55fX3XIXE9af20f5P/av45LyD41lPiM/87y7fs
-        cb+6SoLCd31fdnzy1encp7a/2KH782puYXvWjD8c+zwY76eHmkfn/Xzn9HfD7Wt+JpYBNrLp
-        UxLmdJvcW3u0f2Zd4gOxI5pLbdi3nJfyFZy7bbfRV6uHYhP39guLywufq3x15faS585VKdeq
-        FjZusJxyUtpu0qENzrGqkzYdMg5WlukIfmaTELQ5VNvLeE4xR7H+rGtP3thUOxn8f/35fLbC
-        eof5JZKWJ8x3Wz34vEx27pn7aj73buwIFVDZ8ciAuaNLKe3sHJtfF69fmD8x7ue2iUy958Sr
-        lViKMxINtZiLihMBdDESsBYDAAA=
-X-CMS-MailID: 20230904082829epcas1p23ee3e36b0ef77a1f6112897afcacd93e
+        zUvXy0stsTI0MDAyBSpMyM5Y8Tel4A5bxbSPWg2Mh1m7GDk5JARMJKY8ec3excjFISSwg1Hi
+        1+YuZgjnE6PEp0u7meCc3f8PM8G07Pg+hwUisZNR4uHyFkYI5wujxI+VzWxdjBwcbAJaEreP
+        eYM0iAhISmyePpUNpIZZYBqzxIOHm1hAEsIC/hL/2/rAprIIqEq8bzzPDGLzClhLTHr9mhli
+        m7zEn/s9YDanQIzElx39bBA1ghInZz4Bm8MMVNO8dTbY3RICBzgkLrduYoNodpE4eG87lC0s
+        8er4FnYIW0ri87u9bBANzYwSC98ch+qewCjx5eNtqA57ieZWiHeYBTQl1u/ShwgrSuz8PZcR
+        YjOfxLuvPawgJRICvBIdbUIQJSoSc7rOscHs+njjMTS0PST2X7oJDdP1jBIbpz5imcCoMAvJ
+        Q7OQPDQLYfMCRuZVjGKpBcW56anFhgUm8ChOzs/dxAhO11oWOxjnvv2gd4iRiYPxEKMEB7OS
+        CK+c9qcUId6UxMqq1KL8+KLSnNTiQ4ymwOCeyCwlmpwPzBh5JfGGJpYGJmZGJhbGlsZmSuK8
+        x171pggJpCeWpGanphakFsH0MXFwSjUwBXCpRoZkb16zKcmD5c7tZWYJ7tZGtVlr9bVyf7xy
+        u9A8L2rK6zaN548Vq6uPNJ9KOix3ha3tsPHepTe7WqyW/IvaU73GOeFGUOCNtmmTJv+1Xfxn
+        yufUjbn1/s3X5txn59jz/KWxSCPvt8gdJjO0Wd3cbHV3WP/XvDAl4ra8bkbfesZ/QTdN3m5w
+        DWvIv2uqdsj7w2/1S+rf4p4L7axk7r64Za9mSL7b+cToJVp7BeY2Zne+vjE5Zf+TEuG2c4ss
+        K7rNV0027rCdXbRBtklymbl/2NJtNvtfvdpx/lPVO+bt6g4GR47rKx7U4TzhHBdY3uH/f/bq
+        J4f7XstyftedPS1e4ZKpV0NQ3TqBKfXblViKMxINtZiLihMBDYg10mAEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrHLMWRmVeSWpSXmKPExsWy7bCSvK7ZtK8pBu0dJhYnn6xhs3gwbxub
+        xcufV9ksDj7sZLGY9uEns8WMU22sFqsXP2CxWHRjG5PFrr/NTBZbb+xksbi55SiLxeVdc9gs
+        uq/vYLNYfvwfk0XX3RuMFkv/vWWx2HzpG4uDoMflK94ei/e8ZPKYsOgAo8f39R1sHh+f3mLx
+        6NuyitHj8yY5j/YD3UwBHFFcNimpOZllqUX6dglcGSv+phTcYauY9lGrgfEwaxcjJ4eEgInE
+        ju9zWLoYuTiEBLYzSvRMb2GESEhJ7N5/nq2LkQPIFpY4fLgYouYTo8SJx9tYQOJsAloSt495
+        g5SLCEhKbJ4+lQ3EZhZYxSzx7pM1iC0s4CuxffEGJhCbRUBV4n3jeWYQm1fAWmLS69fMEKvk
+        Jf7c7wGzOQViJL7s6AdbKyQQLXG0XR2iXFDi5MwnLBDj5SWat85mnsAoMAtJahaS1AJGplWM
+        oqkFxbnpuckFhnrFibnFpXnpesn5uZsYwVGkFbSDcdn6v3qHGJk4GA8xSnAwK4nwyml/ShHi
+        TUmsrEotyo8vKs1JLT7EKM3BoiTOq5zTmSIkkJ5YkpqdmlqQWgSTZeLglGpgir7HE+75bqr6
+        v7fLYpy9zwkbcQr+3PnBPWqe49Gsos5POrkqJns194mJT95RlbJNecLsplWB+RXsnB95Ipum
+        H59hmCWf7DL1/udXi20vNcZwZz7fZ58q+eSP6QMvpYvqxfe33HfMLFJ1fafTrTGHj3npTpkI
+        4/f91aypSvnyV03n7GhdlC7XfpPRcs2K1KAXa18cXBTJqVG8UOn3JJtZ0wr1ClRznv0MCLKu
+        nPfxjP0SdwOvdRLXfwk/Pfw7oijhcsavc41vG5NOZn8qN85eWWTreFK462lNsI5du5OGS2DT
+        Ih+vosULQk47iYi5bU4KbGyTnhh+b9VDg8Yl5xe5XJ6SlVcyYXa8eJ/U4lNKLMUZiYZazEXF
+        iQDSEw+yEQMAAA==
+X-CMS-MailID: 20230904083254epcas1p43e2cde7ddcf301970561041c582bc4b0
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: SVC_REQ_APPROVE
 CMS-TYPE: 101P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230904082829epcas1p23ee3e36b0ef77a1f6112897afcacd93e
-References: <782ba5f26f0a96e58d85dff50751787d2d2a6b2b.1693790060.git.kwmad.kim@samsung.com>
-        <CGME20230904082829epcas1p23ee3e36b0ef77a1f6112897afcacd93e@epcas1p2.samsung.com>
+X-CMS-RootMailID: 20230904083254epcas1p43e2cde7ddcf301970561041c582bc4b0
+References: <550484ffb66300bdcec63d3e304dfd55cb432f1f.1693790060.git.kwmad.kim@samsung.com>
+        <CGME20230904083254epcas1p43e2cde7ddcf301970561041c582bc4b0@epcas1p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> __ufshcd_send_uic_cmd is wrapped uic_cmd_mutex and
-> its related contexts are accessed within the period wrappted
-> by uic_cmd_mutex. Thus, wrapping with host_lock is
-> redundant.
+On 9/04/23 5:31 PM, cw9316.lee@samsung.com wrote:
+> With auto hibern8 enabled, UIC could be working
+> for a while to process a hibern8 operation and HCI
+> reports UIC not ready for a short term through HCS.UCRDY.
+> And UFS driver can't recognize the operation.
+> UFSHCI spec specifies UCRDY like this:
+> whether the host controller is ready to process UIC COMMAND
+> 
+> The 'ready' could be seen as many different meanings. If the meaning
+> includes not processing any request from HCI, processing a hibern8
+> operation can be 'not ready'. In this situation, the driver needs to
+> wait until the operations is completed.
 > 
 > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
 > ---
 
 Reviewed-by: Junwoo Lee <junwoo80.lee@samsung.com>
