@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B79C6C83F33
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 08:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0747CA0FE3
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 08:56:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352608AbjIDI46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1352619AbjIDI46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 4 Sep 2023 04:56:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59846 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234157AbjIDI45 (ORCPT
+        with ESMTP id S238563AbjIDI45 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 04:56:57 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0020512E;
-        Mon,  4 Sep 2023 01:56:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01B67131;
+        Mon,  4 Sep 2023 01:56:54 -0700 (PDT)
 Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RfMsQ25bLzrSRf;
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RfMsQ4lCtzrSSZ;
         Mon,  4 Sep 2023 16:55:06 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Mon, 4 Sep 2023 16:56:51 +0800
+ 15.1.2507.31; Mon, 4 Sep 2023 16:56:52 +0800
 From:   Xingui Yang <yangxingui@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <john.g.garry@oracle.com>, <damien.lemoal@opensource.wdc.com>
@@ -33,10 +33,12 @@ CC:     <andriy.shevchenko@linux.intel.com>, <akpm@linux-foundation.org>,
         <linuxarm@huawei.com>, <yangxingui@huawei.com>,
         <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
         <chenxiang66@hisilicon.com>
-Subject: [PATCH v5 0/3] Add helper macro DEFINE_SHOW_STORE_ATTRIBUTE at seq_file.c
-Date:   Mon, 4 Sep 2023 08:48:01 +0000
-Message-ID: <20230904084804.39564-1-yangxingui@huawei.com>
+Subject: [PATCH v5 2/3] scsi: hisi_sas: Use DEFINE_SHOW_STORE_ATTRIBUTE helper for debugfs
+Date:   Mon, 4 Sep 2023 08:48:03 +0000
+Message-ID: <20230904084804.39564-3-yangxingui@huawei.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230904084804.39564-1-yangxingui@huawei.com>
+References: <20230904084804.39564-1-yangxingui@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.50.163.32]
@@ -47,41 +49,219 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
-for read-only file, but we found many of drivers also want a helper macro
-for read-write file too.
+Use DEFINE_SHOW_STORE_ATTRIBUTE helper for read-write file to reduce some
+duplicated code.
 
-So we add this helper macro to reduce duplicate code.
-
-Changes from v4:
-- Reduce the scope to scsi subsystem based on Andy's suggestion.
-- Remove unused macros in qla_dfs.c
-- Adjust some descriptions in commit.
-
-Changes from v3:
-- Add AI Viro's comment to v1->v2's revision description.
-- Fixed a spelling mistakes of "marco" to "macro".
-
-Changes from v2:
-- Fixed some spelling mistakes in commit.
-- Revision description are added for easy tracing.
-
-Changes from v1:
-- Rename DEFINE_STORE_ATTRIBUTE() to DEFINE_SHOW_STORE_ATTRIBUTE().
-- AI Viro points out that he doesn't like the definition of macros
-  like DEFINE_SHOW_ATTRIBUTE.
-
-
-Luo Jiaxing (3):
-  seq_file: Add helper macro to define attribute for rw file
-  scsi: hisi_sas: Use DEFINE_SHOW_STORE_ATTRIBUTE helper for debugfs
-  scsi: qla2xxx: Use DEFINE_SHOW_STORE_ATTRIBUTE helper for debugfs
-
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 137 ++-----------------------
- drivers/scsi/qla2xxx/qla_dfs.c         | 113 +-------------------
- include/linux/seq_file.h               |  15 +++
- 3 files changed, 26 insertions(+), 239 deletions(-)
+ 1 file changed, 9 insertions(+), 128 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index bbb64ee6afd7..5bb35c3ea4e5 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3990,22 +3990,7 @@ static ssize_t debugfs_bist_linkrate_v3_hw_write(struct file *filp,
+ 
+ 	return count;
+ }
+-
+-static int debugfs_bist_linkrate_v3_hw_open(struct inode *inode,
+-					    struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_linkrate_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_linkrate_v3_hw_fops = {
+-	.open = debugfs_bist_linkrate_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_linkrate_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_linkrate_v3_hw);
+ 
+ static const struct {
+ 	int		value;
+@@ -4080,22 +4065,7 @@ static ssize_t debugfs_bist_code_mode_v3_hw_write(struct file *filp,
+ 
+ 	return count;
+ }
+-
+-static int debugfs_bist_code_mode_v3_hw_open(struct inode *inode,
+-					     struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_code_mode_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_code_mode_v3_hw_fops = {
+-	.open = debugfs_bist_code_mode_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_code_mode_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_code_mode_v3_hw);
+ 
+ static ssize_t debugfs_bist_phy_v3_hw_write(struct file *filp,
+ 					    const char __user *buf,
+@@ -4129,22 +4099,7 @@ static int debugfs_bist_phy_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_bist_phy_v3_hw_open(struct inode *inode,
+-				       struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_phy_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_phy_v3_hw_fops = {
+-	.open = debugfs_bist_phy_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_phy_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_phy_v3_hw);
+ 
+ static ssize_t debugfs_bist_cnt_v3_hw_write(struct file *filp,
+ 					const char __user *buf,
+@@ -4177,22 +4132,7 @@ static int debugfs_bist_cnt_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_bist_cnt_v3_hw_open(struct inode *inode,
+-					  struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_cnt_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_cnt_v3_hw_ops = {
+-	.open = debugfs_bist_cnt_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_cnt_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_cnt_v3_hw);
+ 
+ static const struct {
+ 	int		value;
+@@ -4256,22 +4196,7 @@ static ssize_t debugfs_bist_mode_v3_hw_write(struct file *filp,
+ 
+ 	return count;
+ }
+-
+-static int debugfs_bist_mode_v3_hw_open(struct inode *inode,
+-					struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_mode_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_mode_v3_hw_fops = {
+-	.open = debugfs_bist_mode_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_mode_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_mode_v3_hw);
+ 
+ static ssize_t debugfs_bist_enable_v3_hw_write(struct file *filp,
+ 					       const char __user *buf,
+@@ -4309,22 +4234,7 @@ static int debugfs_bist_enable_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_bist_enable_v3_hw_open(struct inode *inode,
+-					  struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_enable_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_enable_v3_hw_fops = {
+-	.open = debugfs_bist_enable_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_enable_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_enable_v3_hw);
+ 
+ static const struct {
+ 	char *name;
+@@ -4362,21 +4272,7 @@ static int debugfs_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_v3_hw_open(struct inode *inode, struct file *filp)
+-{
+-	return single_open(filp, debugfs_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_v3_hw_fops = {
+-	.open = debugfs_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_v3_hw);
+ 
+ static ssize_t debugfs_phy_down_cnt_v3_hw_write(struct file *filp,
+ 						const char __user *buf,
+@@ -4407,22 +4303,7 @@ static int debugfs_phy_down_cnt_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_phy_down_cnt_v3_hw_open(struct inode *inode,
+-					   struct file *filp)
+-{
+-	return single_open(filp, debugfs_phy_down_cnt_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_phy_down_cnt_v3_hw_fops = {
+-	.open = debugfs_phy_down_cnt_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_phy_down_cnt_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_phy_down_cnt_v3_hw);
+ 
+ enum fifo_dump_mode_v3_hw {
+ 	FIFO_DUMP_FORVER =		(1U << 0),
+@@ -4832,7 +4713,7 @@ static void debugfs_bist_init_v3_hw(struct hisi_hba *hisi_hba)
+ 			    hisi_hba, &debugfs_bist_phy_v3_hw_fops);
+ 
+ 	debugfs_create_file("cnt", 0600, hisi_hba->debugfs_bist_dentry,
+-			    hisi_hba, &debugfs_bist_cnt_v3_hw_ops);
++			    hisi_hba, &debugfs_bist_cnt_v3_hw_fops);
+ 
+ 	debugfs_create_file("loopback_mode", 0600,
+ 			    hisi_hba->debugfs_bist_dentry,
 -- 
 2.17.1
 
