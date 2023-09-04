@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27455C71153
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 15:22:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE985C83F2C
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 15:22:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245555AbjIDPWC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Sep 2023 11:22:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42812 "EHLO
+        id S240113AbjIDPWO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Sep 2023 11:22:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231893AbjIDPWB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 11:22:01 -0400
+        with ESMTP id S1350954AbjIDPWN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 11:22:13 -0400
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAC101993;
-        Mon,  4 Sep 2023 08:21:39 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 384ELLWt008554;
-        Mon, 4 Sep 2023 15:21:10 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D26F10D2;
+        Mon,  4 Sep 2023 08:21:47 -0700 (PDT)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 384ELKad002752;
+        Mon, 4 Sep 2023 15:21:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=aTn9E5GgcFMM6Ytd+TxIz5tcKKpOGiM3fyZwhZgomAs=;
- b=btb4YjWGwrSytMok9s+BrRkafzVW0a+Ms42CTV3ckITP5jgwJol0B9eBQR0qOAThVVgV
- haa+xUlsm3gl9bwkYix22uQaaAkYk93+F3xGE5lrsHqcrZOxsfzeM+D9oB0Fp4Nsr8z4
- 82H0Ci8k4pZTXCnfzZtjy+o5GfdVXHde2hNYs0oWMK6/nYym7gvfMsG9YQryU5MEvS47
- DlppwJGmmeRRlJS0sJQfVijw+CPkqfDUuJYqOLuHuc41FFGX/y2inpwGk03206JX3PiP
- cu82q+wd++4yu28T8LtibaMXU8PQYBMtE8Rj/k4GrFzhuYC8lZqiXNkbrRxFkvOhMXb8 Ww== 
+ bh=yUPH/1UBUaZN9bbJwTz5ZzMaIwqc4zDOhDEB0WXktYg=;
+ b=eiQKJUXt/6nwuMCGDvPbM+NqWp+KmnQik3j/vP12+MgPLYCgiMkLMI1dOCisb0R+djtJ
+ 8w+55dvlaKrwQ+NsjlCv2FoJrqL4xDkU7/+ov/+V+GMjwRaxHH+dwdkiaseQiSEkrE0r
+ DaU5zxmYbvc0/UADih7nnZZWKjUylmja9z/SPCeNqwISAACAvAcjiUtFo22T+RlsO4sw
+ v0xO9zuc63wGVSLr1JhTkcVJCN5+SZY86yS2HV1UdlmEU+1QAKlyNqmqnnWUZi0Ojary
+ wFYoZeCa8xf8/qFnR9whoJscJ9lPNzcAw7u2nzIGDFlhawNxeAnvB7g8HfWdbznh5fCH Zw== 
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3swfae0d6m-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3suw99c6xd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 04 Sep 2023 15:21:09 +0000
+        Mon, 04 Sep 2023 15:21:14 +0000
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 384FL6ds023859;
-        Mon, 4 Sep 2023 15:21:06 GMT
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 384FL8bT023882;
+        Mon, 4 Sep 2023 15:21:11 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sux4k8yqh-1;
-        Mon, 04 Sep 2023 15:21:06 +0000
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sux4k8yr5-1;
+        Mon, 04 Sep 2023 15:21:11 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 384FL6VC023852;
-        Mon, 4 Sep 2023 15:21:06 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 384FLA7F023951;
+        Mon, 4 Sep 2023 15:21:10 GMT
 Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 384FL6q8023851;
-        Mon, 04 Sep 2023 15:21:06 +0000
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 384FLAlT023948;
+        Mon, 04 Sep 2023 15:21:10 +0000
 Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-        id 2704D504920; Mon,  4 Sep 2023 20:51:05 +0530 (+0530)
+        id AC32D504920; Mon,  4 Sep 2023 20:51:09 +0530 (+0530)
 From:   Nitin Rawat <quic_nitirawa@quicinc.com>
 To:     mani@kernel.org, agross@kernel.org, andersson@kernel.org,
         konrad.dybcio@linaro.org, jejb@linux.ibm.com,
@@ -52,9 +52,9 @@ Cc:     quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
         linux-arm-msm@vger.kernel.org,
         Nitin Rawat <quic_nitirawa@quicinc.com>,
         Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Subject: [PATCH V7 2/5] scsi: ufs: qcom: Add multiple frequency support for MAX_CORE_CLK_1US_CYCLES
-Date:   Mon,  4 Sep 2023 20:50:57 +0530
-Message-Id: <20230904152100.30404-3-quic_nitirawa@quicinc.com>
+Subject: [PATCH V7 5/5] scsi: ufs: qcom: Configure SYS1CLK_1US_REG for UFS V4 and above
+Date:   Mon,  4 Sep 2023 20:51:00 +0530
+Message-Id: <20230904152100.30404-6-quic_nitirawa@quicinc.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230904152100.30404-1-quic_nitirawa@quicinc.com>
 References: <20230904152100.30404-1-quic_nitirawa@quicinc.com>
@@ -62,155 +62,165 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: cW3HtVmyQYjPBBJWjr9K28pFN0a9hc_-
-X-Proofpoint-ORIG-GUID: cW3HtVmyQYjPBBJWjr9K28pFN0a9hc_-
+X-Proofpoint-GUID: Q0-BMvFHb0eRX4gjjvLUIaF2k6CzL0Om
+X-Proofpoint-ORIG-GUID: Q0-BMvFHb0eRX4gjjvLUIaF2k6CzL0Om
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
  definitions=2023-09-04_08,2023-08-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 spamscore=0
- phishscore=0 priorityscore=1501 mlxlogscore=999 suspectscore=0
- lowpriorityscore=0 clxscore=1015 impostorscore=0 mlxscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309040137
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
+ priorityscore=1501 impostorscore=0 adultscore=0 mlxscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 mlxlogscore=999 lowpriorityscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
+ definitions=main-2309040137
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Qualcomm UFS Controller V4 and above supports multiple unipro frequencies
-like 403MHz, 300MHz, 202MHz, 150 MHz, 75Mhz, 37.5 MHz. Current code
-supports only 150MHz and 75MHz which have performance impact due to low
-UFS controller frequencies.
+SYS1CLK_1US represents the required number of system 1-clock cycles for
+one microsecond. UFS Host Controller V4.0 and above mandates to write
+SYS1CLK_1US_REG register and also these timer configuration needs to be
+called from clk scaling pre ops as per HPG.
 
-For targets which supports frequencies other than 150 MHz and 75 Mhz,
-needs an update of MAX_CORE_CLK_1US_CYCLES to match the configured
-frequency to avoid functionality issues. Add multiple frequency support
-for MAX_CORE_CLK_1US_CYCLES based on the frequency configured.
+Refactor ufs_qcom_cfg_timers and add the below code support to align
+with HPG.
+
+a)Configure SYS1CLK_1US_REG for UFS V4 and above.
+b)Introduce a new argument is_pre_scale_up for ufs_qcom_cfg_timers
+to configure SYS1CLK_1US for max freq during prescale and link startup
+condition.
+c)Move ufs_qcom_cfg_timers from clk scaling post change ops
+to clk scaling pre change ops.
 
 Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
 Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
 Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 51 ++++++++++++++++++++++---------------
- drivers/ufs/host/ufs-qcom.h |  1 +
- 2 files changed, 31 insertions(+), 21 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 55 ++++++++++++++++++++++++++-----------
+ 1 file changed, 39 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index d846e68a5734..b2be9ff272a4 100644
+index d437c75c8e14..19cbf0c5fbea 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -93,8 +93,7 @@ static const struct __ufs_qcom_bw_table {
- static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
-
- static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
--static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
--						       u32 clk_cycles);
-+static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up);
-
- static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
- {
-@@ -685,14 +684,11 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 			return -EINVAL;
- 		}
-
--		if (ufs_qcom_cap_qunipro(host))
--			/*
--			 * set unipro core clock cycles to 150 & clear clock
--			 * divider
--			 */
--			err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
--									  150);
--
-+		if (ufs_qcom_cap_qunipro(host)) {
-+			err = ufs_qcom_set_core_clk_ctrl(hba, true);
-+			if (err)
-+				dev_err(hba->dev, "cfg core clk ctrl failed\n");
-+		}
- 		/*
- 		 * Some UFS devices (and may be host) have issues if LCC is
- 		 * enabled. So we are setting PA_Local_TX_LCC_Enable to 0
-@@ -1296,12 +1292,25 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
- 	phy_exit(host->generic_phy);
+@@ -527,11 +527,19 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+ 	return err;
  }
 
--static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
--						       u32 clk_cycles)
-+static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up)
+-/*
++/**
++ * ufs_qcom_cfg_timers - Configure ufs qcom cfg timers
++ *
++ * @hba: host controller instance
++ * @hs: current power mode
++ * @rate: current rate
++ * @update_link_startup_timer indicate if link_start in progress
++ * @is_pre_scale_up: flag to check if pre scale up condition.
+  * Return: zero for success and non-zero in case of a failure.
+  */
+ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
+-			       u32 hs, u32 rate, bool update_link_startup_timer)
++			       u32 hs, u32 rate, bool update_link_startup_timer,
++			       bool is_pre_scale_up)
  {
  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
--	int err;
-+	struct list_head *head = &hba->clk_list_head;
-+	struct ufs_clk_info *clki;
-+	u32 cycles_in_1us;
- 	u32 core_clk_ctrl_reg;
-+	int err;
-+
-+	list_for_each_entry(clki, head, list) {
-+		if (!IS_ERR_OR_NULL(clki->clk) &&
-+			!strcmp(clki->name, "core_clk_unipro")) {
-+			if (is_scale_up)
-+				cycles_in_1us = ceil(clki->max_freq, (1000 * 1000));
-+			else
-+				cycles_in_1us = ceil(clk_get_rate(clki->clk), (1000 * 1000));
-+			break;
-+		}
-+	}
+ 	struct ufs_clk_info *clki;
+@@ -562,11 +570,14 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
+ 	/*
+ 	 * The Qunipro controller does not use following registers:
+ 	 * SYS1CLK_1US_REG, TX_SYMBOL_CLK_1US_REG, CLK_NS_REG &
+-	 * UFS_REG_PA_LINK_STARTUP_TIMER
+-	 * But UTP controller uses SYS1CLK_1US_REG register for Interrupt
++	 * UFS_REG_PA_LINK_STARTUP_TIMER.
++	 * However UTP controller uses SYS1CLK_1US_REG register for Interrupt
+ 	 * Aggregation logic.
+-	*/
+-	if (ufs_qcom_cap_qunipro(host) && !ufshcd_is_intr_aggr_allowed(hba))
++	 * It is mandatory to write SYS1CLK_1US_REG register on UFS host
++	 * controller V4.0.0 onwards.
++	 */
++	if (host->hw_ver.major < 4 && ufs_qcom_cap_qunipro(host) &&
++	    !ufshcd_is_intr_aggr_allowed(hba))
+ 		return 0;
 
- 	err = ufshcd_dme_get(hba,
- 			    UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
-@@ -1311,15 +1320,15 @@ static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
-
- 	/* Bit mask is different for UFS host controller V4.0.0 onwards */
- 	if (host->hw_ver.major >= 4) {
--		if (!FIELD_FIT(CLK_1US_CYCLES_MASK_V4, clk_cycles))
-+		if (!FIELD_FIT(CLK_1US_CYCLES_MASK_V4, cycles_in_1us))
- 			return -ERANGE;
- 		core_clk_ctrl_reg &= ~CLK_1US_CYCLES_MASK_V4;
--		core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK_V4, clk_cycles);
-+		core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK_V4, cycles_in_1us);
- 	} else {
--		if (!FIELD_FIT(CLK_1US_CYCLES_MASK, clk_cycles))
-+		if (!FIELD_FIT(CLK_1US_CYCLES_MASK, cycles_in_1us))
- 			return -ERANGE;
- 		core_clk_ctrl_reg &= ~CLK_1US_CYCLES_MASK;
--		core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK, clk_cycles);
-+		core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK, cycles_in_1us);
+ 	if (gear == 0) {
+@@ -575,8 +586,14 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
  	}
 
- 	/* Clear CORE_CLK_DIV_EN */
-@@ -1343,8 +1352,8 @@ static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
+ 	list_for_each_entry(clki, &hba->clk_list_head, list) {
+-		if (!strcmp(clki->name, "core_clk"))
+-			core_clk_rate = clk_get_rate(clki->clk);
++		if (!strcmp(clki->name, "core_clk")) {
++			if (is_pre_scale_up)
++				core_clk_rate = clki->max_freq;
++			else
++				core_clk_rate = clk_get_rate(clki->clk);
++			break;
++		}
++
+ 	}
+
+ 	/* If frequency is smaller than 1MHz, set to 1MHz */
+@@ -678,7 +695,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+ 	switch (status) {
+ 	case PRE_CHANGE:
+ 		if (ufs_qcom_cfg_timers(hba, UFS_PWM_G1, SLOWAUTO_MODE,
+-					0, true)) {
++					0, true, false)) {
+ 			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
+ 				__func__);
+ 			return -EINVAL;
+@@ -922,7 +939,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 	case POST_CHANGE:
+ 		if (ufs_qcom_cfg_timers(hba, dev_req_params->gear_rx,
+ 					dev_req_params->pwr_rx,
+-					dev_req_params->hs_rate, false)) {
++					dev_req_params->hs_rate, false, false)) {
+ 			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
+ 				__func__);
+ 			/*
+@@ -1418,10 +1435,22 @@ static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up)
+ static int ufs_qcom_clk_scale_up_pre_change(struct ufs_hba *hba)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++	struct ufs_pa_layer_attr *attr = &host->dev_req_params;
++	int ret;
+
  	if (!ufs_qcom_cap_qunipro(host))
  		return 0;
 
--	/* set unipro core clock cycles to 150 and clear clock divider */
--	return ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba, 150);
-+	/* set unipro core clock attributes and clear clock divider */
-+	return ufs_qcom_set_core_clk_ctrl(hba, true);
++	if (attr) {
++		ret = ufs_qcom_cfg_timers(hba, attr->gear_rx,
++					attr->pwr_rx, attr->hs_rate,
++					false, true);
++		if (ret) {
++			dev_err(hba->dev, "%s ufs cfg timer failed\n",
++						__func__);
++			return ret;
++		}
++	}
+ 	/* set unipro core clock attributes and clear clock divider */
+ 	return ufs_qcom_set_core_clk_ctrl(hba, true);
  }
+@@ -1471,7 +1500,6 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 		bool scale_up, enum ufs_notify_change_status status)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-	struct ufs_pa_layer_attr *dev_req_params = &host->dev_req_params;
+ 	int err = 0;
 
- static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
-@@ -1379,8 +1388,8 @@ static int ufs_qcom_clk_scale_down_post_change(struct ufs_hba *hba)
- 	if (!ufs_qcom_cap_qunipro(host))
- 		return 0;
+ 	/* check the host controller state before sending hibern8 cmd */
+@@ -1501,11 +1529,6 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 			return err;
+ 		}
 
--	/* set unipro core clock cycles to 75 and clear clock divider */
--	return ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba, 75);
-+	/* set unipro core clock attributes and clear clock divider */
-+	return ufs_qcom_set_core_clk_ctrl(hba, false);
- }
-
- static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index 8a9d3dbec297..3c6ef1259af3 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -245,6 +245,7 @@ ufs_qcom_get_debug_reg_offset(struct ufs_qcom_host *host, u32 reg)
- #define ufs_qcom_is_link_off(hba) ufshcd_is_link_off(hba)
- #define ufs_qcom_is_link_active(hba) ufshcd_is_link_active(hba)
- #define ufs_qcom_is_link_hibern8(hba) ufshcd_is_link_hibern8(hba)
-+#define ceil(freq, div) ((freq) % (div) == 0 ? ((freq)/(div)) : ((freq)/(div) + 1))
-
- int ufs_qcom_testbus_config(struct ufs_qcom_host *host);
-
+-		ufs_qcom_cfg_timers(hba,
+-				    dev_req_params->gear_rx,
+-				    dev_req_params->pwr_rx,
+-				    dev_req_params->hs_rate,
+-				    false);
+ 		ufs_qcom_icc_update_bw(host);
+ 		ufshcd_uic_hibern8_exit(hba);
+ 	}
 --
 2.17.1
 
