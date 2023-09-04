@@ -2,91 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8557CA0FF6
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 08:57:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6F4CC71153
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 10:53:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352628AbjIDI5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Sep 2023 04:57:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59864 "EHLO
+        id S1351906AbjIDKx6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Sep 2023 06:53:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352604AbjIDI46 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 04:56:58 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50F9A133;
-        Mon,  4 Sep 2023 01:56:54 -0700 (PDT)
-Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RfMrV1RfSzTm9p;
-        Mon,  4 Sep 2023 16:54:18 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Mon, 4 Sep 2023 16:56:51 +0800
-From:   Xingui Yang <yangxingui@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.g.garry@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC:     <andriy.shevchenko@linux.intel.com>, <akpm@linux-foundation.org>,
-        <viro@zeniv.linux.org.uk>, <himanshu.madhani@cavium.com>,
-        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
-        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
-        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
-        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
-        <chenxiang66@hisilicon.com>
-Subject: [PATCH v5 1/3] seq_file: Add helper macro to define attribute for rw file
-Date:   Mon, 4 Sep 2023 08:48:02 +0000
-Message-ID: <20230904084804.39564-2-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230904084804.39564-1-yangxingui@huawei.com>
+        with ESMTP id S1348666AbjIDKxx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 06:53:53 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6663A13E;
+        Mon,  4 Sep 2023 03:53:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693824830; x=1725360830;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=4KxRMBRIV9+UB0WisLQgpxuAFxB3nVSMwhSdnQ1sLp0=;
+  b=i0ew9g/9w31t8+n8BCAAy3ygedFfT/woWaRuIdk8Zwa4I8sn1p/G8flS
+   G1u8evpufkPs+wJ/6wgskeOEFc4+DDyt7zPi7GQ8cIQjVeiGmaYsvsmXR
+   8WC0RkZxBZKSEMTMOjBphIjVOSXg5VhlXfK4nVT2K3VebTkDAPuaK67oL
+   kg/M198TFF5yakeBgPMZ+Rn+npJIPhsn9j6Wo0FLtPaAl/PXgtEkSbej0
+   LSiQ8LauUl8zDUBOvipbq3hRWfYQBbxFECOBHDrS3GJgghMHD2uDd59eg
+   Y5adH5SuxE+RL2Fxtaiixc71IgdBkoi+cqOnakx5KAXb4mM/ztEGU0bcN
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10822"; a="440540407"
+X-IronPort-AV: E=Sophos;i="6.02,226,1688454000"; 
+   d="scan'208";a="440540407"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Sep 2023 03:53:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10822"; a="806229194"
+X-IronPort-AV: E=Sophos;i="6.02,226,1688454000"; 
+   d="scan'208";a="806229194"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by fmsmga008.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Sep 2023 03:53:44 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1qd7DB-006P8K-0c;
+        Mon, 04 Sep 2023 13:53:41 +0300
+Date:   Mon, 4 Sep 2023 13:53:40 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Xingui Yang <yangxingui@huawei.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        john.g.garry@oracle.com, damien.lemoal@opensource.wdc.com,
+        akpm@linux-foundation.org, viro@zeniv.linux.org.uk,
+        himanshu.madhani@cavium.com, felipe.balbi@linux.intel.com,
+        gregkh@linuxfoundation.org, uma.shankar@intel.com,
+        anshuman.gupta@intel.com, animesh.manna@intel.com,
+        linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        prime.zeng@hisilicon.com, kangfenglong@huawei.com,
+        chenxiang66@hisilicon.com
+Subject: Re: [PATCH v5 1/3] seq_file: Add helper macro to define attribute
+ for rw file
+Message-ID: <ZPW3NFT9av+AYwnL@smile.fi.intel.com>
 References: <20230904084804.39564-1-yangxingui@huawei.com>
+ <20230904084804.39564-2-yangxingui@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.50.163.32]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230904084804.39564-2-yangxingui@huawei.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
-for read-only file, but many of drivers want a helper macro for read-write
-file too.
+On Mon, Sep 04, 2023 at 08:48:02AM +0000, Xingui Yang wrote:
+> We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+> for read-only file, but many of drivers want a helper macro for read-write
+> file too.
+> 
+> So we add DEFINE_SHOW_STORE_ATTRIBUTE helper to reduce duplicated code.
+> 
+> Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 
-So we add DEFINE_SHOW_STORE_ATTRIBUTE helper to reduce duplicated code.
+I believe you need to preserve Luo's authorship.
 
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
- include/linux/seq_file.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Perhaps,
+Co-developed-by: Xingui ...
+(depending if you really do some job in the certain patch(es) or not).
 
-diff --git a/include/linux/seq_file.h b/include/linux/seq_file.h
-index bd023dd38ae6..e400007e410c 100644
---- a/include/linux/seq_file.h
-+++ b/include/linux/seq_file.h
-@@ -207,6 +207,21 @@ static const struct file_operations __name ## _fops = {			\
- 	.release	= single_release,				\
- }
- 
-+#define DEFINE_SHOW_STORE_ATTRIBUTE(__name)				\
-+static int __name ## _open(struct inode *inode, struct file *file)	\
-+{									\
-+	return single_open(file, __name ## _show, inode->i_private);	\
-+}									\
-+									\
-+static const struct file_operations __name ## _fops = {			\
-+	.owner		= THIS_MODULE,					\
-+	.open		= __name ## _open,				\
-+	.read		= seq_read,					\
-+	.write		= __name ## _write,				\
-+	.llseek		= seq_lseek,					\
-+	.release	= single_release,				\
-+}
-+
- #define DEFINE_PROC_SHOW_ATTRIBUTE(__name)				\
- static int __name ## _open(struct inode *inode, struct file *file)	\
- {									\
+> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+
+Code wise LGTM, FWIW,
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
 -- 
-2.17.1
+With Best Regards,
+Andy Shevchenko
+
 
