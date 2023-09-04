@@ -2,137 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 318A0C71153
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 08:33:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B79C6C83F33
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 08:56:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351141AbjIDIdD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Sep 2023 04:33:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49862 "EHLO
+        id S1352608AbjIDI46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Sep 2023 04:56:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234201AbjIDIdC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 04:33:02 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12F3A94
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 01:32:59 -0700 (PDT)
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230904083256epoutp03ce53ceb44595e0ddb62384976db6e070~BpQUoYGNg0735807358epoutp03H
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 08:32:56 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230904083256epoutp03ce53ceb44595e0ddb62384976db6e070~BpQUoYGNg0735807358epoutp03H
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1693816376;
-        bh=Q1yqxXmwlHA4EQx5felIcWYStF2OEXaRHYhXVJP76E8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ja7GwogaM3P4T1twM7/fj0C/So6YqVnMpygu4JIAXtmrE1Ik2Bv6NaOF+w6wyNjJj
-         gEzQAdCqyXBuOYJPwvw3nQeflzTo8suWPSzAwYhUPVNXgDTNf9R2/q9A0QVc39Ape2
-         V/wmh0FJ3QvkbCaWVpy0ZPOIR+RFbyYKSC6AbeDI=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20230904083255epcas1p13117cf2fe0b6ecb723403a6299b92ad6~BpQUCyhVm1023110231epcas1p1P;
-        Mon,  4 Sep 2023 08:32:55 +0000 (GMT)
-Received: from epsmges1p4.samsung.com (unknown [182.195.38.240]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4RfMMq31yxz4x9Q5; Mon,  4 Sep
-        2023 08:32:55 +0000 (GMT)
-Received: from epcas1p1.samsung.com ( [182.195.41.45]) by
-        epsmges1p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        06.3D.10163.73695F46; Mon,  4 Sep 2023 17:32:55 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
-        20230904083254epcas1p43e2cde7ddcf301970561041c582bc4b0~BpQTREYlX0378203782epcas1p4v;
-        Mon,  4 Sep 2023 08:32:54 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230904083254epsmtrp24fee961f46218f055172614f72e03b46~BpQTP3U0u1249612496epsmtrp2A;
-        Mon,  4 Sep 2023 08:32:54 +0000 (GMT)
-X-AuditID: b6c32a38-28bff700000027b3-51-64f59637a096
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        3D.FE.18916.63695F46; Mon,  4 Sep 2023 17:32:54 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.253.100.232]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20230904083254epsmtip2c987be467209b3a15961cb1047c4e418~BpQS-saIB1973819738epsmtip2j;
-        Mon,  4 Sep 2023 08:32:54 +0000 (GMT)
-From:   Chanwoo Lee <cw9316.lee@samsung.com>
-To:     kwmad.kim@samsung.com
-Cc:     adrian.hunter@intel.com, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, beanhuo@micron.com, bvanassche@acm.org,
-        hy50.seo@samsung.com, jejb@linux.ibm.com, junwoo80.lee@samsung.com,
-        kwangwon.min@samsung.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        sc.suh@samsung.com, sh425.lee@samsung.com, wkon.kim@samsung.com,
-        Chanwoo Lee <cw9316.lee@samsung.com>
-Subject: Re: [RESEND,v3,2/2] ufs: poll HCS.UCRDY before issuing a UIC
- command
-Date:   Mon,  4 Sep 2023 17:27:56 +0900
-Message-Id: <20230904082756.19693-1-cw9316.lee@samsung.com>
-X-Mailer: git-send-email 2.29.0
-In-Reply-To: <550484ffb66300bdcec63d3e304dfd55cb432f1f.1693790060.git.kwmad.kim@samsung.com>
+        with ESMTP id S234157AbjIDI45 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 04:56:57 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0020512E;
+        Mon,  4 Sep 2023 01:56:53 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RfMsQ25bLzrSRf;
+        Mon,  4 Sep 2023 16:55:06 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Mon, 4 Sep 2023 16:56:51 +0800
+From:   Xingui Yang <yangxingui@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.g.garry@oracle.com>, <damien.lemoal@opensource.wdc.com>
+CC:     <andriy.shevchenko@linux.intel.com>, <akpm@linux-foundation.org>,
+        <viro@zeniv.linux.org.uk>, <himanshu.madhani@cavium.com>,
+        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
+        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
+        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
+        <chenxiang66@hisilicon.com>
+Subject: [PATCH v5 0/3] Add helper macro DEFINE_SHOW_STORE_ATTRIBUTE at seq_file.c
+Date:   Mon, 4 Sep 2023 08:48:01 +0000
+Message-ID: <20230904084804.39564-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLJsWRmVeSWpSXmKPExsWy7bCmrq75tK8pBue+ilicfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Vi2oefzBYzTrWxWqxe/IDFYtGNbUwWu/42M1lsvbGTxeLmlqMsFpd3zWGz
-        6L6+g81i+fF/TBZdd28wWiz995bFYvOlbywOgh6Xr3h7LN7zksljwqIDjB7f13eweXx8eovF
-        o2/LKkaPz5vkPNoPdDMFcERl22SkJqakFimk5iXnp2TmpdsqeQfHO8ebmhkY6hpaWpgrKeQl
-        5qbaKrn4BOi6ZeYAvaGkUJaYUwoUCkgsLlbSt7Mpyi8tSVXIyC8usVVKLUjJKTAr0CtOzC0u
-        zUvXy0stsTI0MDAyBSpMyM5Y8Tel4A5bxbSPWg2Mh1m7GDk5JARMJKY8ec3excjFISSwg1Hi
-        1+YuZgjnE6PEp0u7meCc3f8PM8G07Pg+hwUisZNR4uHyFkYI5wujxI+VzWxdjBwcbAJaEreP
-        eYM0iAhISmyePpUNpIZZYBqzxIOHm1hAEsIC/hL/2/rAprIIqEq8bzzPDGLzClhLTHr9mhli
-        m7zEn/s9YDanQIzElx39bBA1ghInZz4Bm8MMVNO8dTbY3RICBzgkLrduYoNodpE4eG87lC0s
-        8er4FnYIW0ri87u9bBANzYwSC98ch+qewCjx5eNtqA57ieZWiHeYBTQl1u/ShwgrSuz8PZcR
-        YjOfxLuvPawgJRICvBIdbUIQJSoSc7rOscHs+njjMTS0PST2X7oJDdP1jBIbpz5imcCoMAvJ
-        Q7OQPDQLYfMCRuZVjGKpBcW56anFhgUm8ChOzs/dxAhO11oWOxjnvv2gd4iRiYPxEKMEB7OS
-        CK+c9qcUId6UxMqq1KL8+KLSnNTiQ4ymwOCeyCwlmpwPzBh5JfGGJpYGJmZGJhbGlsZmSuK8
-        x171pggJpCeWpGanphakFsH0MXFwSjUwBXCpRoZkb16zKcmD5c7tZWYJ7tZGtVlr9bVyf7xy
-        u9A8L2rK6zaN548Vq6uPNJ9KOix3ha3tsPHepTe7WqyW/IvaU73GOeFGUOCNtmmTJv+1Xfxn
-        yufUjbn1/s3X5txn59jz/KWxSCPvt8gdJjO0Wd3cbHV3WP/XvDAl4ra8bkbfesZ/QTdN3m5w
-        DWvIv2uqdsj7w2/1S+rf4p4L7axk7r64Za9mSL7b+cToJVp7BeY2Zne+vjE5Zf+TEuG2c4ss
-        K7rNV0027rCdXbRBtklymbl/2NJtNvtfvdpx/lPVO+bt6g4GR47rKx7U4TzhHBdY3uH/f/bq
-        J4f7XstyftedPS1e4ZKpV0NQ3TqBKfXblViKMxINtZiLihMBDYg10mAEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrHLMWRmVeSWpSXmKPExsWy7bCSvK7ZtK8pBu0dJhYnn6xhs3gwbxub
-        xcufV9ksDj7sZLGY9uEns8WMU22sFqsXP2CxWHRjG5PFrr/NTBZbb+xksbi55SiLxeVdc9gs
-        uq/vYLNYfvwfk0XX3RuMFkv/vWWx2HzpG4uDoMflK94ei/e8ZPKYsOgAo8f39R1sHh+f3mLx
-        6NuyitHj8yY5j/YD3UwBHFFcNimpOZllqUX6dglcGSv+phTcYauY9lGrgfEwaxcjJ4eEgInE
-        ju9zWLoYuTiEBLYzSvRMb2GESEhJ7N5/nq2LkQPIFpY4fLgYouYTo8SJx9tYQOJsAloSt495
-        g5SLCEhKbJ4+lQ3EZhZYxSzx7pM1iC0s4CuxffEGJhCbRUBV4n3jeWYQm1fAWmLS69fMEKvk
-        Jf7c7wGzOQViJL7s6AdbKyQQLXG0XR2iXFDi5MwnLBDj5SWat85mnsAoMAtJahaS1AJGplWM
-        oqkFxbnpuckFhnrFibnFpXnpesn5uZsYwVGkFbSDcdn6v3qHGJk4GA8xSnAwK4nwyml/ShHi
-        TUmsrEotyo8vKs1JLT7EKM3BoiTOq5zTmSIkkJ5YkpqdmlqQWgSTZeLglGpgir7HE+75bqr6
-        v7fLYpy9zwkbcQr+3PnBPWqe49Gsos5POrkqJns194mJT95RlbJNecLsplWB+RXsnB95Ipum
-        H59hmCWf7DL1/udXi20vNcZwZz7fZ58q+eSP6QMvpYvqxfe33HfMLFJ1fafTrTGHj3npTpkI
-        4/f91aypSvnyV03n7GhdlC7XfpPRcs2K1KAXa18cXBTJqVG8UOn3JJtZ0wr1ClRznv0MCLKu
-        nPfxjP0SdwOvdRLXfwk/Pfw7oijhcsavc41vG5NOZn8qN85eWWTreFK462lNsI5du5OGS2DT
-        Ih+vosULQk47iYi5bU4KbGyTnhh+b9VDg8Yl5xe5XJ6SlVcyYXa8eJ/U4lNKLMUZiYZazEXF
-        iQDSEw+yEQMAAA==
-X-CMS-MailID: 20230904083254epcas1p43e2cde7ddcf301970561041c582bc4b0
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: SVC_REQ_APPROVE
-CMS-TYPE: 101P
-DLP-Filter: Pass
+Content-Type: text/plain
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230904083254epcas1p43e2cde7ddcf301970561041c582bc4b0
-References: <550484ffb66300bdcec63d3e304dfd55cb432f1f.1693790060.git.kwmad.kim@samsung.com>
-        <CGME20230904083254epcas1p43e2cde7ddcf301970561041c582bc4b0@epcas1p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/04/23 5:31 PM, cw9316.lee@samsung.com wrote:
-> With auto hibern8 enabled, UIC could be working
-> for a while to process a hibern8 operation and HCI
-> reports UIC not ready for a short term through HCS.UCRDY.
-> And UFS driver can't recognize the operation.
-> UFSHCI spec specifies UCRDY like this:
-> whether the host controller is ready to process UIC COMMAND
-> 
-> The 'ready' could be seen as many different meanings. If the meaning
-> includes not processing any request from HCI, processing a hibern8
-> operation can be 'not ready'. In this situation, the driver needs to
-> wait until the operations is completed.
-> 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-> Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
-> ---
+We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+for read-only file, but we found many of drivers also want a helper macro
+for read-write file too.
 
-Reviewed-by: Junwoo Lee <junwoo80.lee@samsung.com>
-Reviewed-by: Chanwoo Lee <cw9316.lee@samsung.com>
+So we add this helper macro to reduce duplicate code.
+
+Changes from v4:
+- Reduce the scope to scsi subsystem based on Andy's suggestion.
+- Remove unused macros in qla_dfs.c
+- Adjust some descriptions in commit.
+
+Changes from v3:
+- Add AI Viro's comment to v1->v2's revision description.
+- Fixed a spelling mistakes of "marco" to "macro".
+
+Changes from v2:
+- Fixed some spelling mistakes in commit.
+- Revision description are added for easy tracing.
+
+Changes from v1:
+- Rename DEFINE_STORE_ATTRIBUTE() to DEFINE_SHOW_STORE_ATTRIBUTE().
+- AI Viro points out that he doesn't like the definition of macros
+  like DEFINE_SHOW_ATTRIBUTE.
+
+
+Luo Jiaxing (3):
+  seq_file: Add helper macro to define attribute for rw file
+  scsi: hisi_sas: Use DEFINE_SHOW_STORE_ATTRIBUTE helper for debugfs
+  scsi: qla2xxx: Use DEFINE_SHOW_STORE_ATTRIBUTE helper for debugfs
+
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 137 ++-----------------------
+ drivers/scsi/qla2xxx/qla_dfs.c         | 113 +-------------------
+ include/linux/seq_file.h               |  15 +++
+ 3 files changed, 26 insertions(+), 239 deletions(-)
+
+-- 
+2.17.1
 
