@@ -2,98 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1BBBC71153
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Sep 2023 07:41:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 534BDC83F2D
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 01:41:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232587AbjICHlu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Sep 2023 03:41:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58106 "EHLO
+        id S1350348AbjIDBl6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Sep 2023 21:41:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231276AbjICHlu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Sep 2023 03:41:50 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15DA0124;
-        Sun,  3 Sep 2023 00:41:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1693726905;
-        bh=iv1pLLc+v8+kime8HKgyY+vHVntfdfZAs7FRY9OE20I=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=hBOHXo9TLbOATfk0TiEL83BU5xf4IrWX9OpF0NI8y57gn2kNZM/AkvHYI6yuKfWIu
-         hoYJWDlBCAf3+BTbvd6gYE6HXTO+ORtmUHGulDBzW7BojMD3WpPTWU+UzMhhMIqSfp
-         TozoRFHnsjS0juiZVaJiXr3RDwijnIUZTpbVkvzY=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id BB5A9128178D;
-        Sun,  3 Sep 2023 03:41:45 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id gnRfFe011lwK; Sun,  3 Sep 2023 03:41:45 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1693726905;
-        bh=iv1pLLc+v8+kime8HKgyY+vHVntfdfZAs7FRY9OE20I=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=hBOHXo9TLbOATfk0TiEL83BU5xf4IrWX9OpF0NI8y57gn2kNZM/AkvHYI6yuKfWIu
-         hoYJWDlBCAf3+BTbvd6gYE6HXTO+ORtmUHGulDBzW7BojMD3WpPTWU+UzMhhMIqSfp
-         TozoRFHnsjS0juiZVaJiXr3RDwijnIUZTpbVkvzY=
-Received: from [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c] (unknown [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 2D9811280E00;
-        Sun,  3 Sep 2023 03:41:43 -0400 (EDT)
-Message-ID: <2740c0e76e3feffbd43956d342c1805082396c99.camel@HansenPartnership.com>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 6.4+ merge window
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sun, 03 Sep 2023 08:41:41 +0100
-In-Reply-To: <CAHk-=wgA6CBwnJ02H+vSgneKPcPRP0BWQ-Kx2Re1B56Y2hXkFQ@mail.gmail.com>
-References: <6908480e8808a2d025926f2ff1f9a2468d1b6bb9.camel@HansenPartnership.com>
-         <CAHk-=wgA6CBwnJ02H+vSgneKPcPRP0BWQ-Kx2Re1B56Y2hXkFQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S1350282AbjIDBl5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Sep 2023 21:41:57 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 561B5F9
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Sep 2023 18:41:53 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230904014149epoutp03901276fd669e96570ff83b9aa18029f4~BjpX9NAal1705417054epoutp03j
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 01:41:49 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230904014149epoutp03901276fd669e96570ff83b9aa18029f4~BjpX9NAal1705417054epoutp03j
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1693791709;
+        bh=UTp2spf180fapim/QCGBMuGvcRmlmKbbwTJawClBTJo=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=EkU2cTu3rrHWN876t+KkFF2ZDBC3woBGRCb79RphC5+DWatNgoVKS00p/VaFd8MO9
+         sQyFpJyQQnx6WxhtdJetN3akwXQ0bbus0SMBbhYtjOBLR8AKrrtYqbxTY4GTQg6J5U
+         opt8IdqZHDXqbi/pOHDEJtUUokQKJdTl5wl8GkK0=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20230904014148epcas2p3df99419c636d78ea9e6bf22857a2452d~BjpWwNIsb2851428514epcas2p3O;
+        Mon,  4 Sep 2023 01:41:48 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4RfBFR5wLfz4x9QM; Mon,  4 Sep
+        2023 01:41:47 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        79.48.09649.BD535F46; Mon,  4 Sep 2023 10:41:47 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230904014146epcas2p37d6690a5eb3a5652571bb00e358231a3~BjpVSCK-91655016550epcas2p38;
+        Mon,  4 Sep 2023 01:41:46 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230904014146epsmtrp188e98d322e15dd493b14d2b4326e84ef~BjpVRMHU40625906259epsmtrp1E;
+        Mon,  4 Sep 2023 01:41:46 +0000 (GMT)
+X-AuditID: b6c32a46-943ff700000025b1-e9-64f535db9d19
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        76.E0.18916.AD535F46; Mon,  4 Sep 2023 10:41:46 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20230904014146epsmtip106f24fa5813680b7a66f39407aa2fc9d~BjpU-NdfJ1118011180epsmtip1R;
+        Mon,  4 Sep 2023 01:41:46 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, kwangwon.min@samsung.com,
+        junwoo80.lee@samsung.com, wkon.kim@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [RESEND PATCH v3 0/2] change UIC command handling
+Date:   Mon,  4 Sep 2023 10:30:43 +0900
+Message-Id: <cover.1693790060.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupgk+LIzCtJLcpLzFFi42LZdljTVPe26dcUg08ftSxOPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2sljc3HKUxeLyrjlsFt3Xd7BZ
+        LD/+j8mi6+4NRoul/96yWGy+9I3FQcDj8hVvj8V7XjJ5TFh0gNHj+/oONo+PT2+xePRtWcXo
+        8XmTnEf7gW6mAI6obJuM1MSU1CKF1Lzk/JTMvHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUX
+        nwBdt8wcoA+UFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnFJbZKqQUpOQXmBXrFibnFpXnpenmp
+        JVaGBgZGpkCFCdkZuw8/YCuYxlxxfP111gbGQ0xdjJwcEgImEnN/HWDsYuTiEBLYwSjx5OBO
+        dgjnE6PEseYNTHDOhz2n2WBaXq/YzgpiCwnsZJT4tLwUougHo8TGllWMIAk2AU2JpzengnWL
+        CHxgkvi/fBtYgllAXWLXhBNgy4UFrCQOv5wINpVFQFXi3KaT7CA2r4CFRM+MJSwQ2+Qkbp7r
+        ZAYZJCHQyCGx4v1jRoiEi8TxX8+gThKWeHV8CzuELSXxsr8NyOYAsrMl9iwUgwhXSCye9hZq
+        prHErGftjCAlzECHrt+lD1GtLHHkFgvElXwSHYf/Qg3hlehoE4JoVJb4NWky1H5JiZk370CV
+        eEi8320GCZFYiSdbTrNMYJSdhTB+ASPjKkax1ILi3PTUYqMCI3gUJefnbmIEJ0kttx2MU95+
+        0DvEyMTBeIhRgoNZSYRXTvtTihBvSmJlVWpRfnxRaU5q8SFGU2BgTWSWEk3OB6bpvJJ4QxNL
+        AxMzM0NzI1MDcyVx3nutc1OEBNITS1KzU1MLUotg+pg4OKUamDId+LdOeKYbt2bfty6ntYHX
+        Otg3OCVFf2v8kquSx3FrgvctjwmKr5ebtyzzEnjfwW70IVme7W6y299AOZYNTuzi9+/ezBL9
+        V7jjeLnR2p7LOUWF8SZv+po5tFcZN3d9/mx+pf+1rchEt4LNz5JWxLrPzGhYKhruGx5aJXZR
+        xitoltspl2li5jdiu2Nmnm16zKCwJs1yod0kZeuLXhF5Ou7fpF0vNvMs0rJ+/7V1xsGpvxc7
+        RNcLP2Ov2XV1Yu6KVxGbi7yUQqSWbzrGt/bz87Nnf+fIRC+My/q+R/1J6HubS76tElZaDuqP
+        JzxvbLhRVs+7WfPYhox5KSum3V0mzvdlwjrjlaIH1Vf92JatoMRSnJFoqMVcVJwIAGu4vvgb
+        BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrOLMWRmVeSWpSXmKPExsWy7bCSnO4t068pBjvvaFmcfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Vi2oefzBarFz9gsVh0YxuTxa6/zUwWW2/sZLG4ueUoi8XlXXPYLLqv72Cz
+        WH78H5NF190bjBZL/71lsdh86RuLg4DH5SveHov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR
+        4/MmOY/2A91MARxRXDYpqTmZZalF+nYJXBm7Dz9gK5jGXHF8/XXWBsZDTF2MnBwSAiYSr1ds
+        Z+1i5OIQEtjOKPFo0zRGiISkxImdz6FsYYn7LUegir4xStz8v5AFJMEmoCnx9OZUJpCEiEAT
+        s8Sl2dPBEswC6hK7JpwAWyEsYCVx+OVENhCbRUBV4tymk+wgNq+AhUTPjCUsEBvkJG6e62Se
+        wMizgJFhFaNoakFxbnpucoGhXnFibnFpXrpecn7uJkZw2GoF7WBctv6v3iFGJg7GQ4wSHMxK
+        Irxy2p9ShHhTEiurUovy44tKc1KLDzFKc7AoifMq53SmCAmkJ5akZqemFqQWwWSZODilGpga
+        9m3inVL75ubD2Yd+nSr1MpiiO3P/ctnfW/gfzLxzUT6zbqPUtrk9RS/lD8vGijV8F+MTPSsZ
+        JuU9M87x+D+53b8j+c+u6qw7eLOxheOgRL7czl77OeaZx47dM38xOV+jNI1TbY7toYL5Mw4E
+        7uNkEQnzTXh7pZjRgZvntItutk+x9um0F4f8tz328o7KD5VqmNd6b7FaleG7awIHEkwuWfzY
+        2nJsyTfbp49zNui+48ormKG8/8/656KPFtz/mh8Vzus/LfcQs5zG5WcTHxw00vfgF7x3855G
+        dHP4lkOPti1bG6PYKNh1UqF1xWwG5qfpvLw+5xerPsueIR8n2S0aZ8cYKDWpX+LJ1C1e9xOV
+        WIozEg21mIuKEwE31Nq2ygIAAA==
+X-CMS-MailID: 20230904014146epcas2p37d6690a5eb3a5652571bb00e358231a3
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230904014146epcas2p37d6690a5eb3a5652571bb00e358231a3
+References: <CGME20230904014146epcas2p37d6690a5eb3a5652571bb00e358231a3@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2023-09-02 at 12:08 -0700, Linus Torvalds wrote:
-> On Sat, 2 Sept 2023 at 00:39, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > 
-> > Updates to the usual drivers (ufs, lpfc, qla2xxx, mpi3mr, libsas)
-> > and the usual minor updates and bug fixes but no significant core
-> > changes.
-> 
-> Removing 3000+ lines for UFS HPB support wasn't even worth
-> mentioning?
+v2 -> v3: rule out the change of polling w/ pmc from this thread.
+(I'll post the change later)
+v1 -> v2: remove an unused variable in __ufshcd_send_uic_cmd
 
-Sorry, my bias is showing.  I always thought HPB was a useless
-marketing feature and was against including it, so removing it is just
-the world going back to being more correct.  To be honest, I also
-didn't think you cared at all about UFS ...
+Kiwoong Kim (2):
+  ufs: make __ufshcd_send_uic_cmd not wrapped by host_lock
+  ufs: poll HCS.UCRDY before issuing a UIC command
 
-> I am happy to see it gone, and maybe as a technology it was a failure
-> not worth it, but as a "we gave up on it as being worthless" might
-> still have been worth a word or two..
-> 
-> Sadly, I see from the commit message that apparently the next stage
-> is going to involve zoned storage. Now *there* is a technology that
-> seems to be a complete failure, brought to us by the same kind of
-> failed hardware people who tried to convince us that we should care
-> about 64kB pages in SSD's.
+ drivers/ufs/core/ufshcd.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Well, we put HPB in in spite of most of us thinking it was a bad idea
-because there was a tiny chance it might work and it could be yanked
-out if it didn't.  There's no reason not to extend the same courtesy to
-zoned storage.
-
-> Oh well. With enough thrust, even a pig will fly. I suspect that's
-> the motivating factor behind all those zoned storage things too.
-
-That's why RFC1925 exists, yes ...
-
-James
+-- 
+2.7.4
 
