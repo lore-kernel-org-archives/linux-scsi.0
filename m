@@ -2,160 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E335C83F2C
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 01:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECE4CC83F3F
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Sep 2023 07:12:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350360AbjIDBmC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Sep 2023 21:42:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45334 "EHLO
+        id S1352289AbjIDHM7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Sep 2023 03:12:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350349AbjIDBmB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Sep 2023 21:42:01 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71E33FA
-        for <linux-scsi@vger.kernel.org>; Sun,  3 Sep 2023 18:41:54 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230904014151epoutp040a2ac182fe5407f36314f3e77b6365c3~BjpZzIFFN2224122241epoutp04k
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 01:41:51 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230904014151epoutp040a2ac182fe5407f36314f3e77b6365c3~BjpZzIFFN2224122241epoutp04k
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1693791711;
-        bh=m6tNa1euH0CrBZM8YLUI+1xoSFOzw2Hl6DICf1W0u3Q=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:In-Reply-To:References:From;
-        b=D/po5D8g9Qy58xCa2XMn5j3b/vg5hU+cmMBRkRWSwZKG3rWwjo9OaEYpmAZh1PxYc
-         BZn/4pxOZPRJl/+pYt+1oPoXTG751zaL0WZYNdjKH7Kv0lmCSmh1cGKudgi/3UWBY6
-         i/sTQE4v7XnokhRvNQbFk8Jo9+6NRaeZfDqjXhZ8=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20230904014151epcas2p40465a203ed390b7d781e56715986275d~BjpZb8g-c1199211992epcas2p4u;
-        Mon,  4 Sep 2023 01:41:51 +0000 (GMT)
-Received: from epsmgec2p1.samsung.com (unknown [182.195.36.89]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4RfBFV3V1dz4x9QG; Mon,  4 Sep
-        2023 01:41:50 +0000 (GMT)
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmgec2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        AA.7B.08583.ED535F46; Mon,  4 Sep 2023 10:41:50 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20230904014150epcas2p251f19c2220ec8938559bc2873e8e265a~BjpYOi5FV1919219192epcas2p2P;
-        Mon,  4 Sep 2023 01:41:50 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230904014149epsmtrp2edda104effb058a4cb656c67c313a18f~BjpYNvK400621306213epsmtrp2f;
-        Mon,  4 Sep 2023 01:41:49 +0000 (GMT)
-X-AuditID: b6c32a43-6f7ff70000002187-86-64f535deede6
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        9F.DF.08742.DD535F46; Mon,  4 Sep 2023 10:41:49 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230904014149epsmtip1fc51cc73d9cdae55403127b1af1ed537~BjpX_jc6c1092710927epsmtip1Q;
-        Mon,  4 Sep 2023 01:41:49 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, kwangwon.min@samsung.com,
-        junwoo80.lee@samsung.com, wkon.kim@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [RESEND PATCH v3 2/2] ufs: poll HCS.UCRDY before issuing a UIC
- command
-Date:   Mon,  4 Sep 2023 10:30:45 +0900
-Message-Id: <550484ffb66300bdcec63d3e304dfd55cb432f1f.1693790060.git.kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1693790060.git.kwmad.kim@samsung.com>
-In-Reply-To: <cover.1693790060.git.kwmad.kim@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrIJsWRmVeSWpSXmKPExsWy7bCmue49068pBqsmS1qcfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Vi2oefzBarFz9gsVh0YxuTxa6/zUwWW2/sZLG4ueUoi8XlXXPYLLqv72Cz
-        WH78H5NF190bjBZL/71lsdh86RuLg4DH5SveHov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR
-        4/MmOY/2A91MARxR2TYZqYkpqUUKqXnJ+SmZeem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkou
-        PgG6bpk5QB8oKZQl5pQChQISi4uV9O1sivJLS1IVMvKLS2yVUgtScgrMC/SKE3OLS/PS9fJS
-        S6wMDQyMTIEKE7IzrjxtZS54ylPx4NMBtgbGc1xdjBwcEgImEg8m8XQxcnEICexglGi7cpIF
-        wvnEKPHz/1dmCOcbUOb9DLYuRk6wjtmfl0Il9jJKTOvrYgZJCAn8YJTo3M8DYrMJaEo8vTmV
-        CaRIROADk8T/5dsYQRLMAuoSuyacYAKxhQUCJW69Oc4OYrMIqEqs2DyXFcTmFYiWWPjoKhPE
-        NjmJm+c6wRZwClhKfPh0hwWVzQVUs5RD4mfLYRaIBheJnyuOMkPYwhKvjm9hh7ClJD6/28sG
-        8XS2xJ6FYhDhConF095CtRpLzHrWzghSwgz0wPpd+hDVyhJHbrFAXM8n0XH4LztEmFeio00I
-        olFZ4tekyYwQtqTEzJt3oHZ6SCxs/sMOCaoeRoklR9azTmCUn4WwYAEj4ypGsdSC4tz01GSj
-        AkN43CXn525iBKdVLecdjFfm/9M7xMjEwXiIUYKDWUmEV077U4oQb0piZVVqUX58UWlOavEh
-        RlNgME5klhJNzgcm9rySeEMTSwMTMzNDcyNTA3Mlcd57rXNThATSE0tSs1NTC1KLYPqYODil
-        GphYZ0QpSPyfzle5+9ZhofX3dNK4Q2dVe827uuX8zxzLJUsVNj/qXarBH5Jhe2mF1MwdmuE7
-        hA7k61R8my8jM2kyl5DuvltJLjOLI96fVvv8q94oL38Wcx9z+ISGWBHVhZsVJ5Ue//Hu2qSn
-        e38f9/m3Y1u7rK27y+nevFrJiT9dvITuVc6Xff5RIOVF5RpD46NpEcbPdbbdMHarWWRSLlOR
-        qxH0TVJPw3Dd932bHuy7o2r+eNrsL8fm9viu0l13tPWtodW1tASHpZv7EtZMEslb4GLQxHJ/
-        jqG8/pWGYw6Zm0plnAre63u1J8zf/Mlteb1JxK2wnVaO85/3P3KbvqJbPt/x7o/FzqXSb7s/
-        fNuhxFKckWioxVxUnAgAEBWYvzQEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrFLMWRmVeSWpSXmKPExsWy7bCSnO5d068pBmc7zCxOPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2sljc3HKUxeLyrjlsFt3Xd7BZ
-        LD/+j8mi6+4NRoul/96yWGy+9I3FQcDj8hVvj8V7XjJ5TFh0gNHj+/oONo+PT2+xePRtWcXo
-        8XmTnEf7gW6mAI4oLpuU1JzMstQifbsErowrT1uZC57yVDz4dICtgfEcVxcjJ4eEgInE7M9L
-        mbsYuTiEBHYzSvzp3MACkZCUOLHzOSOELSxxv+UIK4gtJPCNUWJTjwqIzSagKfH05lQmkGYR
-        gSZmiUuzp4M1MwuoS+yacIIJxBYW8Jc4sbsNLM4ioCqxYvNcsEG8AtESCx9dZYJYICdx81wn
-        M4jNKWAp8eHTHRaIZRYSa9Z8Z8ElPoFRYAEjwypGydSC4tz03GLDAsO81HK94sTc4tK8dL3k
-        /NxNjODo0NLcwbh91Qe9Q4xMHIyHGCU4mJVEeOW0P6UI8aYkVlalFuXHF5XmpBYfYpTmYFES
-        5xV/0ZsiJJCeWJKanZpakFoEk2Xi4JRqYLIoaU4q2qPyTmhvm+PK/5Nnfmi3vfY09N8tiXLN
-        l52rTu7zXbU1YM2xj2pRtewZygd9zl7XnRYj982W9d8XfbGNwd/cRJPrbb/vlJ28fJN52tPQ
-        7HizRZc3HKv8danQM2L9hRtH7d/nKpzQrrRne6uSf6tbVO3h4t2nTWyN1sgIdPIt6F/993/v
-        9wNvyq/V8nJrvHtQ3HV+UsiB7ywye9esft5Z+jEiqmZPsP/he151a7Ijfnz8+6xyZcWEI4/z
-        A7ftcpylzXVYR5j5Pp/b7vYl20VqhIvmSBVMFlDtZHc5+WvO8hUajxnNPvxzzZb48NEh+grH
-        PEal532X3opMrply3mnRNo6tZ98aJk7MLzNVYinOSDTUYi4qTgQATHfpoP0CAAA=
-X-CMS-MailID: 20230904014150epcas2p251f19c2220ec8938559bc2873e8e265a
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
+        with ESMTP id S230299AbjIDHM6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 03:12:58 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39A55A0;
+        Mon,  4 Sep 2023 00:12:55 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RfKXW4dffzTlT1;
+        Mon,  4 Sep 2023 15:10:19 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Mon, 4 Sep 2023 15:12:53 +0800
+Message-ID: <8b8f4005-3058-d41b-2f40-18584c69e2fd@huawei.com>
+Date:   Mon, 4 Sep 2023 15:12:53 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v4 0/5] Introduce a new helper macro
+ DEFINE_SHOW_STORE_ATTRIBUTE at seq_file.c
+Content-Language: en-CA
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+CC:     Luo Jiaxing <luojiaxing@huawei.com>, <akpm@linux-foundation.org>,
+        <viro@zeniv.linux.org.uk>, <linux-kernel@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <john.garry@huawei.com>,
+        <himanshu.madhani@cavium.com>, <felipe.balbi@linux.intel.com>,
+        <gregkh@linuxfoundation.org>, <uma.shankar@intel.com>,
+        <anshuman.gupta@intel.com>, <animesh.manna@intel.com>,
+        <linux-usb@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>
+References: <1605164864-58944-1-git-send-email-luojiaxing@huawei.com>
+ <ZPDZtR8W1TLcOHW+@smile.fi.intel.com>
+ <14010198-c128-4960-0d56-5ee28f4da53f@huawei.com>
+ <ZPGmulPTWGa1W3OM@smile.fi.intel.com>
+From:   yangxingui <yangxingui@huawei.com>
+In-Reply-To: <ZPGmulPTWGa1W3OM@smile.fi.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.67.120.108]
+X-ClientProxiedBy: dggpemm500006.china.huawei.com (7.185.36.236) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230904014150epcas2p251f19c2220ec8938559bc2873e8e265a
-References: <cover.1693790060.git.kwmad.kim@samsung.com>
-        <CGME20230904014150epcas2p251f19c2220ec8938559bc2873e8e265a@epcas2p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-With auto hibern8 enabled, UIC could be working
-for a while to process a hibern8 operation and HCI
-reports UIC not ready for a short term through HCS.UCRDY.
-And UFS driver can't recognize the operation.
-UFSHCI spec specifies UCRDY like this:
-whether the host controller is ready to process UIC COMMAND
 
-The 'ready' could be seen as many different meanings. If the meaning
-includes not processing any request from HCI, processing a hibern8
-operation can be 'not ready'. In this situation, the driver needs to
-wait until the operations is completed.
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
----
- drivers/ufs/core/ufshcd.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+On 2023/9/1 16:54, Andy Shevchenko wrote:
+> On Fri, Sep 01, 2023 at 03:11:38PM +0800, yangxingui wrote:
+>> On 2023/9/1 2:19, Andy Shevchenko wrote:
+>>> On Thu, Nov 12, 2020 at 03:07:38PM +0800, Luo Jiaxing wrote:
+>>>> We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+>>>> for read-only file, but we found many of drivers also want a helper macro
+>>>> for read-write file too.
+>>>>
+>>>> So we add this macro to help decrease code duplication.
+>>>
+>>> Are you going to pursue this one?
+>> Hi Andy
+>>
+>> Jiaxing has left his job, and his email is invalid.
+> 
+> OK! Anybody else to continue this to be finished?
+I'll continue to do this for him. Thank you for your attention and 
+advice. We'll apply it only to the scsi subsystem first.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 6300ed6..7bc3fc4 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -22,6 +22,7 @@
- #include <linux/module.h>
- #include <linux/regulator/consumer.h>
- #include <linux/sched/clock.h>
-+#include <linux/iopoll.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_driver.h>
-@@ -2322,7 +2323,11 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
-  */
- static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
- {
--	return ufshcd_readl(hba, REG_CONTROLLER_STATUS) & UIC_COMMAND_READY;
-+	u32 val;
-+	int ret = read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
-+				    500, UIC_CMD_TIMEOUT * 1000, false, hba,
-+				    REG_CONTROLLER_STATUS);
-+	return ret == 0 ? true : false;
- }
- 
- /**
--- 
-2.7.4
+Thanks.
 
+Xingui
+> 
