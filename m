@@ -2,131 +2,131 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E025FCCF9E1
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 23:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B84D4CCF9E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 23:17:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240992AbjIEXRg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Sep 2023 19:17:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47628 "EHLO
+        id S241713AbjIEXRk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Sep 2023 19:17:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240049AbjIEXRe (ORCPT
+        with ESMTP id S240460AbjIEXRe (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 19:17:34 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EBDE199
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58E801B6
         for <linux-scsi@vger.kernel.org>; Tue,  5 Sep 2023 16:17:31 -0700 (PDT)
 Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 385KnVxF009289;
-        Tue, 5 Sep 2023 23:17:17 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 385Knnut009401;
+        Tue, 5 Sep 2023 23:17:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=zeaxAonKaiQqN+p3SwlkicF8o+JQW42uspkAmXUybac=;
- b=oNCZXuMzwY7ktudraoRwia4D4jbz1/BjFujOGGtm4wXJAGbYuUw5XIqajYVUjjJYvTJU
- MONKHwx+mZ1UEMt1swemjnr8/y5ZSR5pd6exPBLyhkfnYDx9kISPyRTQh0QNC0NkCn1a
- M7idjFa+ez+NikvhAbNUFw7XvqrItlz55DhNgcTpdkX0aLw4a/bF8Y9wm4NQbU6iA+kv
- wQ3Kzwtyd4abMCVqtOgPvUkid2Og0jM4zRgb80YAlnqh7Z8y7QPKTM6AswcbthrAa2mQ
- ADISQ8hiemNLCBMdIbC1zF34Sm+bnWrIBMINRXAJK/wDEFmeDt54wlwa5pLdkPdXTjOM 2Q== 
+ s=corp-2023-03-30; bh=hJi7gF7W4IMBy3HnZ99YekM/GbZ6vP7twLnLbOd91OQ=;
+ b=EG45FpG4jrtV7ikBe3Kk9M7/G/i9L21cSPw8cS/LvE/NQHRzIVRJQvuUIj1wtHGa5Q48
+ VFu9jEs31UJhmqrXHs8eSAy2TAy/sjy8pD6IRTytZB3+u88u6Mnyo13SWPxxHXtLonXy
+ vWgC9gs0hGnDrTcYegil4FNo6cfEehTQRYEXJQ8D7a0YakVSI5DKNkLZlp53ZCaWePCq
+ MFu6cNQ4j36Q/ECTpknHY3nUjAJCLbnLNja9dED+Glmbnipj4o2VZfq2Lu+F3MsPKoZt
+ XlR/m2P3Ei4IB4AUcdEzrmz1rIX2tV6TWnt2P+pkwVmWvQFhIRRWo9nPq0BSeMVK6XKk rw== 
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3sxbq3894h-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3sxbq3894q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Sep 2023 23:17:17 +0000
+        Tue, 05 Sep 2023 23:17:19 +0000
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 385LwVYh028173;
-        Tue, 5 Sep 2023 23:17:17 GMT
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 385LwVYm028173;
+        Tue, 5 Sep 2023 23:17:18 GMT
 Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2173.outbound.protection.outlook.com [104.47.56.173])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3suug5e4hn-1
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3suug5e4hn-5
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Sep 2023 23:17:16 +0000
+        Tue, 05 Sep 2023 23:17:18 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=bhrY2PhtU9EZ6uBSSJpAsARE3/7qfDk6dJ0SqQpm/wCl9QBV1vUP1zkZ7/Y9z4RnaWgTOKAk1CEr6lvHKQTwY3+HEYwth71781IyiLUiQ8nITZdTDgVlLgSYNaVJ6Ao3MemS+e1k+/BFsTyaZFYgEe+j5OcDESMssHVhSLVVcST0uhZWa6Dj5EausidK5V13LaNxKtGb5lQlpGoMWV98t96e3tmwUlo766+r2Oqbd1RCudZKDsa1tBHoX7v5ZBCOSOHIRL/woKALD77W3jFGxkNdM3P7+LWzAdHN5CzX3+orrbsf8u+18NC8kfMEkGK2A7F0c7puMlOtX1Vc2IMjlw==
+ b=MPcQ4fkUwVfcXEwBnPdKeB+L3vjHFdDAg40Oa7gH+IkT4+T/TNUB74vGZLxp5k0VPmT3S6wtWb3mISL0bOb8jY5tMPVd/D30k/IslwF0tTpd7MtATSbttCxCrb4fC18txV4WlYUXgiImPzGNrw6e85ItAT2BpbhvDs+9J9vjJrz+dEGecTcr1IqNdfNMX5vlVcUJAQUbUK+GhmTIydY6yBwOSdtR5UPpV6uKm8di6IfwfVnCt3S337vxr/F9wUu4GJfj314yPqyfHsSPX53JNissMNUWH6swzjv8Vi3ET/jf3sp+lviEvib0bYAj0prWSEVatbXayf52GtDn1ESu/w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zeaxAonKaiQqN+p3SwlkicF8o+JQW42uspkAmXUybac=;
- b=G1hAdYmRxNygUq50IksifycYxDPAF7iJkY37qPu19TlA5y6gGhWlao4JgQZVNB1jHgqPT+3Ks/U074YJ/TzsD+DbPVMr80tLv9893GO2L+eXhVnNaVbgR2Lf4w8rdzEIm4Xf67rfDKVSU5BdXKksjJij7kgpTyPM9bcSclGapnP0p3JDtV1777tFT47CZUB044YC/HQPBEl1AEO9s/lPYgXU3msFZPSLn9HlNjoX6RlAVAei9Tmr5bjPfF619B7k9djenkhSbiMiaXsk8N2E/ge45vP/fbIz9pMUcFBPytycWY8lMjiiXplDaGV8/VTDdxWiuAzTOwgWyq3fJNPv+A==
+ bh=hJi7gF7W4IMBy3HnZ99YekM/GbZ6vP7twLnLbOd91OQ=;
+ b=j1BWPmKQB3bVp7Ew+7lLSiLY7uKh0/ANi9RMhVHbYsCLtrfd7pvwURqRQqR4rYQZwBSTU/Q6M2EVT9bkdvSt/T6DZ6cE/9XEybO7Ky4B6qKRJRHAPmrm2zyoWMy1r/viTDsWtLydBfjaA/5pOu58tUXYV5IyMAK4i56Z2oYkYHANi3PWkvxuelQTgzdliPtxMY8ozLsiRu1zuP1uDDJqQvTgV89/E4X5GWXGuCEU7gGZbx/f60izNfVDcxagRAPrGOysAZ5ZzS+SHkULxODr4xkygfQBZiKzx2fdn32MLzO4Zo1ki9OHf9BrbcZ6VF6eMfR880Uf3z1rhabrS5RJxA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zeaxAonKaiQqN+p3SwlkicF8o+JQW42uspkAmXUybac=;
- b=PBKR6x3rLaBu1vBKVGR6ab6lX498jsALmMhh2HMbyh1hRPcTBJs81xsBJC4hZt4vtOoxqqMO9wxsIEVuLPClgph0CfImioahnguzmzsyqNPayhJVfaaHlOCnZueraVcrEb/qZ6p75EGZpDAFCmZKNp7PT0jVJZ2SIP+BRLHUUPA=
+ bh=hJi7gF7W4IMBy3HnZ99YekM/GbZ6vP7twLnLbOd91OQ=;
+ b=LGdWt6mL2R7h86PYuyOZ0dFcTFauDm7uilOPVPG9P/HIqc1YI+DMop1X3fBGpNeXBTiZ8yajunjGLTqcrWs7AZWZnv7b6Wr52CA69WkClttCZ8U8XtI4gbBArEVe+24CC6yMsSa+0NcwXwTglJhtQWND66HM7B1IbpknaNvGeC0=
 Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
  by PH7PR10MB5748.namprd10.prod.outlook.com (2603:10b6:510:131::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.33; Tue, 5 Sep
- 2023 23:17:14 +0000
+ 2023 23:17:16 +0000
 Received: from CY8PR10MB7243.namprd10.prod.outlook.com
  ([fe80::2a3e:cf81:52db:a66a]) by CY8PR10MB7243.namprd10.prod.outlook.com
  ([fe80::2a3e:cf81:52db:a66a%4]) with mapi id 15.20.6745.030; Tue, 5 Sep 2023
- 23:17:14 +0000
+ 23:17:16 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     john.g.garry@oracle.com, bvanassche@acm.org, mwilck@suse.com,
         hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         james.bottomley@hansenpartnership.com
 Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v11 30/34] scsi: Fix sshdr use in scsi_test_unit_ready
-Date:   Tue,  5 Sep 2023 18:15:43 -0500
-Message-Id: <20230905231547.83945-31-michael.christie@oracle.com>
+Subject: [PATCH v11 34/34] scsi: Add kunit tests for scsi_check_passthrough
+Date:   Tue,  5 Sep 2023 18:15:47 -0500
+Message-Id: <20230905231547.83945-35-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230905231547.83945-1-michael.christie@oracle.com>
 References: <20230905231547.83945-1-michael.christie@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: DS7PR03CA0290.namprd03.prod.outlook.com
- (2603:10b6:5:3ad::25) To CY8PR10MB7243.namprd10.prod.outlook.com
+X-ClientProxiedBy: DM6PR02CA0144.namprd02.prod.outlook.com
+ (2603:10b6:5:332::11) To CY8PR10MB7243.namprd10.prod.outlook.com
  (2603:10b6:930:7c::10)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|PH7PR10MB5748:EE_
-X-MS-Office365-Filtering-Correlation-Id: a4177ebf-dc66-4596-561c-08dbae662ba5
+X-MS-Office365-Filtering-Correlation-Id: ad0a3bbc-d065-4c9f-0c3b-08dbae662f4c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: UqLUsx26ixrHtKekPaQQIo2DVG2tYnJVSShzrIZUNzwiV/AhaklDL0AwLp6HgCvYuDMQRyDuJGoCjHkn/sgzQRcyvIAD71hF8M84KZoGQwaXP6fLuDM9lADpHD0lJaTnBErOOF3MfbVciNfpaTa5eGDvygxbet5n2BhhcGc13DQiw88C8taFiGrF+35+QxE+4Q1sVkNKb5uzGcTGTPUHy29ZP9s03LscnWIuufF4OYoGdsp7Ez3NvrmiZGurhv2zKMe403Xp/fWy7JwstI8AR2I4purDC0nZJDhovB1p1M7La19k5CMpKUhXdSO9TjRWPRh73hgdjIed3y3oUV1+cBeaAcBXwdcEUTn1X8XLckwifJMiJs39qTS2rpjuEHqOoPH/XxNv1qSLCWUkomMlUyx0bmE0P7eYR218vMkDZP3fKY7l3nhzsFVPM5AIOirJDA8Dx0fFxKSDdy4d8o5sk0qvhwh3K5P7WWz3ZymVh8Tfnu0sck2wEA7Gs6gR3On/te29lABdkDXGMy8iz472SIKWSuJlK8a2u0a7y8qtebo2DXVRfVYJFltKOo/aEFqU
+X-Microsoft-Antispam-Message-Info: 6dCynh/PqvEvYfQmpcbNP4Wda/6iKWv7y3//j3oK3tsw6HuOoxDzS1g4EpfPfSJ8O9j5+z3iTgVuYAxIRcq5lp14TatzmUwzb1uGEx3tDWHI/fyV/jTKwJoEDpy5Ome3xrshh4B0wkKBwevWvJOjtgMBwQI9c+ybQzmNRDBFTh7PepPeI0sDoLs7MUvnrTRpLeOPqCUpzuzhvEvcrGVsniCSqcgI0PxxHGSE11LzxJUsYq+QvIpu8v/BxPnUO21qgkP8IkasuN4K9AVmmnDIfA7ZKbdEbho4iVo1o6ZbB1unJzOSRuzjJWT+IBdshm/Xa7gQC44B/LHlptmjxrD25T2ZVXOyZv/idqHwwzv76kQLojo6XffAaEvu8g+lGWtuX62Js57a/xYlt1YoWI1NISsLsbiLK1j0nwnjQAIVDLLWiZ3vJDiPb90pl491dn0YCSLL9BKXnTVw7FUozd+BiKUP+ifCCFy9sy5bmDhNjHkr/p+cxP4sHaHyvCJ2U5izwt7Ahvz38CK1ritYEZmEGuDprXsvrYc/P80JX5uhjVjqfU6+GMkb2vwdN5fc8pLp
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(366004)(39860400002)(346002)(136003)(376002)(186009)(451199024)(1800799009)(2906002)(38100700002)(36756003)(86362001)(41300700001)(6512007)(6506007)(6486002)(66556008)(316002)(66476007)(4326008)(8676002)(107886003)(66946007)(2616005)(8936002)(1076003)(6666004)(478600001)(26005)(5660300002)(83380400001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1idkpEI8OaB1Ieu6+OlUAdXQQDWF2oK6wh7LiKl1IZDEwfwikWdh+H1TGVHP?=
- =?us-ascii?Q?t0o5yQWSq/foug5G4xiIYJfExaKCIZcN259witPmONt2ggatBcgWDTwnPzvE?=
- =?us-ascii?Q?IcPxJA/1S3E4LRBybvEnOEyu9qPQIhUOrKy16s5ZHF26hpV/rtCS6qmk+xeb?=
- =?us-ascii?Q?JrZnCL3xkd6Cq4anHe6aq/ukE63lJdpLB1sGx1Wf9NJNwfWMauE7yaSymbTf?=
- =?us-ascii?Q?awtMEe1xcayuLam5fNDJEaAMOBqiQXmRendSKZ7bpj0pqheODxI+NVbQHx4b?=
- =?us-ascii?Q?COA+6RtJrWfCCOars+UpRDYYMW7tEPzkmmOeKQwe65AgOucFOObb+W/HTLzy?=
- =?us-ascii?Q?JcQYrsLc13J2FJFlSgo6ouGFEwpYZZeDXaRK8PS19awjDTbbdO0LQYPOo227?=
- =?us-ascii?Q?tjCNIdTJ6ZTnj1vKjOM/RnbHwFMqjP+3tf2eNPwwQA5EMWKBopYzXzLquN/n?=
- =?us-ascii?Q?wGCylvc+RK8M5dq5pCyKRAe3UJ0Rlc4kxYDoufUQFiKbfL35nJCryTgZOoZc?=
- =?us-ascii?Q?6IuP050bdT9wnrEe3t43XeEJqvEVrCTAf0kbMVg0I96Y0mA3EI55BaUAoPnX?=
- =?us-ascii?Q?WTspNdkDNNIsYH7VnAR1AnbSWxaj48D20M+ZPG0N2EK5IF+d8x2IJRF3vdEr?=
- =?us-ascii?Q?3H8oJKlklqrxmO5gTmY74/xty0Pn1y03e/I1CQPk9CIsDOUFypp/+XxdZoUh?=
- =?us-ascii?Q?rn9rDuV/pp4J7Ddccy2tJ8CXQb2Ll00QbTr4BoIowBw+cMZkq7THmIoz7Jla?=
- =?us-ascii?Q?A36+Rv0v64j62pn6ahdT8IFeu631+Hq1YqQ1UMPSPJjFJJGdN5hFQuX6l0Eo?=
- =?us-ascii?Q?zpe369AWS/mZZ97zuSf9cbQfgBpXpaahLFl9i4jl4CYI1Emq0IFsjSuktmXx?=
- =?us-ascii?Q?ApRQrUmOWLn/T+AWXvqDlPjhu9RvswDQnIN0wWYiG4XGk+BVuJuwtMqezY44?=
- =?us-ascii?Q?NlkY7W48DyXOhcYDhkUdTUrlBh2LUoVKqCVnU15wBUfxS0xQUJyB60WsgJtG?=
- =?us-ascii?Q?NSTYt+e9H6mzrBt2R6EnSRjEkLAHDDaZvA4VYx1OX+PiQMhb/sn1HH84fk7O?=
- =?us-ascii?Q?GF88tjIb7R97eyV8mgvlPCNB1zi7ZERyyk8/vxBxouV6CBye7GcA/PIunv+g?=
- =?us-ascii?Q?3WhYa1E+xOP2BJ9Jc2P7W7uJnRePPO9CFNjFWHk2xsZ6aVlsGTImkKuCLKc+?=
- =?us-ascii?Q?6hp3LRybeemu235X+Z4lckQH3rFisAr/abwvEw2dXrxTUuNYUW+ggFtSyodO?=
- =?us-ascii?Q?BPM8/Ziu4bfmjEQ+LrRwLyWGBitHDn6pHGZRRY3HTXpKp/WtlBOhkpedi/T6?=
- =?us-ascii?Q?muNmT5jBjutEQi4VVfCo8YO2oGaOYGgzn0hGizRcd7QaaNwHRBfI1P3IaQ5a?=
- =?us-ascii?Q?vB3UhZIbLUmsyYwSYnPJ302720HfK5YOsV266ZujLk63QSHc//Fr1Q1iFQVc?=
- =?us-ascii?Q?6wro/1bD1SvwcgYYCSKcauimlgkTqVzQe84FYG+4DRcd8pq6dbqaZKabP5tj?=
- =?us-ascii?Q?6rbaqV65s4d4aTa6kNtFlpMrD3b+kGdr5JyZmRg7NktB4Bq8EXjQI2XU8J3g?=
- =?us-ascii?Q?H1uvUyE3+ytIfAClqnzhEmgeIFA60pKc1+E5eMi8H0uVmOF1CWK4SNE3r/dV?=
- =?us-ascii?Q?xA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?J+CqRDJ5Xk5q75uDqJjcuqYM6eSXX6EMFkwouDu5ijuK7xYULuaA7YleqS3Q?=
+ =?us-ascii?Q?Xbcb22/Beyk7W56qAEXTGUeUs7FWI9DWto+5zZY1azsa4aD+ENbuEaI1IBO7?=
+ =?us-ascii?Q?FSa9IM9lSpgu++6Wb0e4NQHVWfqTLWWERqgh6d3p958EVh9AWfrE0c+TvlYL?=
+ =?us-ascii?Q?PJzu+BsBy83nHxQ+NC3CwZZomdcVCaE+PCY/wrtteZW46cS4Tdyw2zMfDKDe?=
+ =?us-ascii?Q?CZl5zp42ABGYiCZzyRcA96MBW22ZIfNs55kmwR9srxCsiY2KdjfyL8e5bghx?=
+ =?us-ascii?Q?CAKzKKrZC+reLZGRuExtT1AgifOQpJUVLcrPtuG4oXnIVmiXlnyd5rpWupAt?=
+ =?us-ascii?Q?o9zRmorMKT3lVhTz3lSzjvWaoNv3IojO7Qe9x63JXvUuk9fShFcyJmBx6zFk?=
+ =?us-ascii?Q?Q18rXZ8/Qcvh76HCpyYCXHKgPp04ZhUQ9S7yErwpPHCRpgxqgYGHY3VE68vm?=
+ =?us-ascii?Q?b1jCqPhDI63abeYsrElS5xMUqENegDkcRKnGjJzw8LMFqDB1pa/YVqkTvxHS?=
+ =?us-ascii?Q?qSV+6OPm/rAYG3icNBSkRWjFTACCPnik9V4hPMoeZ0mAmIsUanYpuNDMe5RU?=
+ =?us-ascii?Q?no0cfPLe4YwoCRTmOEf6cLcu64zJQqsdVm3rb1TkVNfm+h2rsdV8zWli/dgN?=
+ =?us-ascii?Q?bmRlTiLyLoxKVVyZeaI6lvaZ7W2IwJrBQuW4eQeSMD6lMkThzYfKsPhLEqqX?=
+ =?us-ascii?Q?o4Ge3mYVLOFOCgUybiK+sWw4ECIk0mJRDYjwL+gYHRJwLHg4MijBeO5QPFUe?=
+ =?us-ascii?Q?K1JC5UxwZA4D6mMvFEFLlxwu1JqVhCFp0kLwdUSlAg1BuU2qVIQWmF+RX0H7?=
+ =?us-ascii?Q?zc/wa/sbMMA0XG8VtEjzlsp/atlzu5IRiKrzDd2V7EQVkvbXLHlWkkcXw11Z?=
+ =?us-ascii?Q?lqcgFJ3TUNyR1Hi5diKDiasgL2yjqQ9jWgYoXYwLZ9phBXDLVbZbx+1s5Bh+?=
+ =?us-ascii?Q?UCnY0vCElNkZUNbYF1oqd2ygreUuiLRa37D+ELnTmD30uEOdMI2SmqgYqjJC?=
+ =?us-ascii?Q?GT67zVcJ3Sdpuv3P+z45NjmAlr0edr3bgd8pIwsf43KWQYnog7w1Se8l49up?=
+ =?us-ascii?Q?YRm7gLsmNCMzlm0J38FjJu5znJmRHaQkMkhSp0pTv3NEQuSBliEVnBzPegbn?=
+ =?us-ascii?Q?3eQ7oC5/X//y9k6wucjbU1mpzv0a/6f4wK+Ca2up24/L+mEPuB0niSqg64Mc?=
+ =?us-ascii?Q?CkulqKQNxiaYySd4Ur5Mb2pt8icz2qT//zE1DBRCFa4gZef4myFDJNEW5C1e?=
+ =?us-ascii?Q?KuOG7ofAPsgEhaiwB64NuC7kjZfHo6ObXX7nQiIJ2Dkog+Bi0d61C7zWatTU?=
+ =?us-ascii?Q?phf8nwuukXYhxUbDimNSQn8xE2OA9pIgasIcRCsQKw80H9ePWo4NjZPufQw0?=
+ =?us-ascii?Q?j30gKsOJimpugmVidP8GVgqEd1n3WSu5jTGW/TZ1Z7t+Vj5RGZpG7NaecCY3?=
+ =?us-ascii?Q?WuSwbagCeCD6hIuQ/GCMM2z5dDsHhI1VjqP8HGz2OOekF07W+UePFppAH/yB?=
+ =?us-ascii?Q?7udta0M+ToiiNvtX3Fnf5yJJhxmIrMIL5YCAVA5lmvfLdTlwZw39FUD3/IVa?=
+ =?us-ascii?Q?2OlJCxOetU9Ffm9mAH743EBYX/jWVGONXKVlJhlBnghAD1h9By+yoBd6ZNtJ?=
+ =?us-ascii?Q?Kw=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: sWXei7pErI1U+78OoeE/kQpjb+cy09pFR1KOlILps+w8iSstgtNF48bC+QR4louN4NvGNAoL7AOVwBBeQd0pZ4Hsk7VlpkNk0Y079LKgt55AiPDzYWWaFriDNs+WkyNTF8Ikm7qU7PD9tDJ3EGt1DBJWxdoVoF9nnu+Dsy/On7XqiszlbqQ7kAmxW4KiHH/7AFY5RVrvoZnW0YvsNpmlWL+QUI9JCBAWrlgYYMMRHdOuwLTlHP3LpUFTKRqzwz6vKuwaANzeFVIchJzgLVjC5zF3Zs/MF/2SYBJPjzhhiuzLxtx0PcdMs8UA1gpLoG/FGpI3IyK406vPaUBsyGgd0feJgAXq0ECfrbSVaG6Vi8ciGbaV3QfH/Op7DAI2EJllCi1WscypVhkLsUKOanpzc1oro1HSZKkMibKxSC87hyCb+vuookfwFQyWFjU8PmC6vdycaQGADtntxB/AV6NZPThLuM79VXUJUafHrA/i8G2TULOPayby2wrmaZtHCXqunvHoJTNILDcbS+48zv8OA69wsu9UwThi64vNvxKuDcbZeuOIF4QzF0NfTmjaQFiFbYMlbJkRlg5/Omb3/xJTh++XYmB+feAUZOM39bB8BVF20SSKKTb6O6iVtX/P2jUTbQdWAHrJNAjMTQCEB907Es0aN24ghEHmpRMj2bKs5ttTSg4luA9sNMciui47y8+ILjZHOqZX8AqSVL3pQTS9ndPpU5Znx5/+DZEssARg90NsMAjIhN1LObsoBEnevWZ7K6XRUNmidFb82AXUIVREJ1oMVu8xTaecTTsQ1n5j4ZIDlLyBuaI9wvCIa178NmZNUoyohh7oDJN17trg6Ld9u2VyVwzq1mY0Ryl001i0WbHt/DG6bal5ydlAr6jMxJO3
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: Cgz07qgpYfxtieECtnH2QFuTIz4EN2vJ6Wb1UKWvAroS4/rJ07OeOczmAy2ubWkyYqutnIi11UMS/Z3kAEZ/e+NsDhteZBU3RUcgPzPCRNySW1yM2yKTjqUyGOOvBQqrONa+JEd01ESomFSHI8aW3DWy5K9Gj28FayV5eCVU8dE/B6DuISA7oBL3nYQ0RMYw17RJKCX4ttlSUU973ZykfMlM4SKZShm9NVYmvkukj69AqqAGoLgIp050Q9WbFELFaBJLSDPghDBq6x7f2raWWOLUR85Z2VPGZsdKxBlzvzm0w/AO2Rl8mnHKnov2+UOGr83GpE0cr/zgC0SWYFtw37i+GpbHnGamQjlRBn7RPXf7u1UV6E/+zV2dMRBHzrIHENCzT1jwV42PjpN/C9SIEPeNKva2z7guhBH0E0Cbmzj0T6QIKBPEZ8y34hrS9eVhPGMd6MSylXoyPpEk709UG1G5+3Q+iTAkz7B/6gab89bfcOIAQKQriEbrCqaICcw7cqo0RmInvUJX4oS6Qvqk39+7aooeJOpofzk+X3KlirRKOgwQ2TilLs1S9aUNIhr6eMvDk+DJvgZ8mvY+E/tDjXWkRfwMgqUwLM3HVy+cx+WBqVYxPg8NaNp7PUM0jZa1R/YTndWMXxK4O4nwYHa/SqL/kewNTw32b02MmJnArFYShkhX7U+H9AYgKFOL/tnluO6X3ptWghAxhcMJzUH1elQZjEopp9xig3AcI6ewwGOvgoxmNhyt/Nt/o8tp0cH1/juy29ADUBjYaGNHburuH/930iS8QUB6R58uBtiBWR955MeTNejMSkDDecZ4VYHH+iDXrWSXoAgPpr/+bADCS5ZbGGIcjFW2RdMH2AE8+RLewgINrAH4NLPDXpXb2gWH
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a4177ebf-dc66-4596-561c-08dbae662ba5
+X-MS-Exchange-CrossTenant-Network-Message-Id: ad0a3bbc-d065-4c9f-0c3b-08dbae662f4c
 X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Sep 2023 23:16:44.6336
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Sep 2023 23:16:50.7617
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hdS1TY86Vl75nWMddbooxVXVnjrITMVtflVYGL+3NWjjr7aTZNzhttgn42rwDcXg1T1FpaLCe/qWAzEX4JjDuJaeutYAJEhj7fnUDtWv3GU=
+X-MS-Exchange-CrossTenant-UserPrincipalName: zPXaaYhtsfWBPwOpxfBKEjiwG7aQNb4bmkCfEpm7O7ZlwwBpzpPMBzTNXffdtm7fi7cVPmL2A3XUHk6gmWbTBYwHb/tAokKhywA3Emtw2e4=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB5748
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
@@ -135,41 +135,233 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlo
  adultscore=0 phishscore=0 bulkscore=0 mlxscore=0 suspectscore=0
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2308100000 definitions=main-2309050201
-X-Proofpoint-GUID: jdPHArp9Wnfy4qp7fTOVRVQYVmx5xn6S
-X-Proofpoint-ORIG-GUID: jdPHArp9Wnfy4qp7fTOVRVQYVmx5xn6S
+X-Proofpoint-GUID: _DgxDDwGG9t_QKkHaDq85gnd0cyE5NqB
+X-Proofpoint-ORIG-GUID: _DgxDDwGG9t_QKkHaDq85gnd0cyE5NqB
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If scsi_execute_cmd returns < 0, it doesn't initialize the sshdr, so we
-shouldn't access the sshdr. If it returns 0, then the cmd executed
-successfully, so there is no need to check the sshdr. This has us access
-the sshdr when we get a return value > 0.
+Add some kunit tests for scsi_check_passthrough so we can easily make sure
+we are hitting the cases it's difficult to replicate in hardware or even
+scsi_debug.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/scsi/scsi_lib.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/Kconfig           |   9 ++
+ drivers/scsi/scsi_error.c      |   4 +
+ drivers/scsi/scsi_error_test.c | 170 +++++++++++++++++++++++++++++++++
+ 3 files changed, 183 insertions(+)
+ create mode 100644 drivers/scsi/scsi_error_test.c
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 67d74f175c4c..756e13637f15 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2319,10 +2319,10 @@ scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries,
- 	do {
- 		result = scsi_execute_cmd(sdev, cmd, REQ_OP_DRV_IN, NULL, 0,
- 					  timeout, 1, &exec_args);
--		if (sdev->removable && scsi_sense_valid(sshdr) &&
-+		if (sdev->removable && result > 0 && scsi_sense_valid(sshdr) &&
- 		    sshdr->sense_key == UNIT_ATTENTION)
- 			sdev->changed = 1;
--	} while (scsi_sense_valid(sshdr) &&
-+	} while (result > 0 && scsi_sense_valid(sshdr) &&
- 		 sshdr->sense_key == UNIT_ATTENTION && --retries);
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 695a57d894cd..b7ffb435afb5 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -67,6 +67,15 @@ config SCSI_PROC_FS
  
- 	return result;
+ 	  If unsure say Y.
+ 
++config SCSI_KUNIT_TEST
++	tristate "KUnit tests for SCSI Mid Layer" if !KUNIT_ALL_TESTS
++	depends on KUNIT
++	default KUNIT_ALL_TESTS
++	help
++	  Run SCSI Mid Layer's KUnit tests.
++
++	  If unsure say N.
++
+ comment "SCSI support type (disk, tape, CD-ROM)"
+ 	depends on SCSI
+ 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d2fb28212880..f12ab199a03f 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2663,3 +2663,7 @@ bool scsi_get_sense_info_fld(const u8 *sense_buffer, int sb_len,
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_get_sense_info_fld);
++
++#ifdef CONFIG_SCSI_KUNIT_TEST
++#include "scsi_error_test.c"
++#endif
+diff --git a/drivers/scsi/scsi_error_test.c b/drivers/scsi/scsi_error_test.c
+new file mode 100644
+index 000000000000..c01201ad8702
+--- /dev/null
++++ b/drivers/scsi/scsi_error_test.c
+@@ -0,0 +1,170 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * KUnit tests for scsi_error.c.
++ *
++ * Copyright (C) 2022, Oracle Corporation
++ */
++#include <kunit/test.h>
++
++#include <scsi/scsi_proto.h>
++#include <scsi/scsi_cmnd.h>
++
++#define SCSI_TEST_ERROR_MAX_ALLOWED 3
++
++static void scsi_test_error_check_passthough(struct kunit *test)
++{
++	struct scsi_failure multiple_sense_failures[] = {
++		{
++			.sense = DATA_PROTECT,
++			.asc = 0x1,
++			.ascq = 0x1,
++			.allowed = 0,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{
++			.sense = UNIT_ATTENTION,
++			.asc = 0x11,
++			.ascq = 0x0,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{
++			.sense = NOT_READY,
++			.asc = 0x11,
++			.ascq = 0x22,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{
++			.sense = ABORTED_COMMAND,
++			.asc = 0x11,
++			.ascq = SCMD_FAILURE_ASCQ_ANY,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{
++			.sense = HARDWARE_ERROR,
++			.asc = SCMD_FAILURE_ASC_ANY,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{
++			.sense = ILLEGAL_REQUEST,
++			.asc = 0x91,
++			.ascq = 0x36,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{}
++	};
++	struct scsi_failure retryable_host_failures[] = {
++		{
++			.result = DID_TRANSPORT_DISRUPTED << 16,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++		},
++		{
++			.result = DID_TIME_OUT << 16,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++		},
++		{}
++	};
++	struct scsi_failure any_status_failures[] = {
++		{
++			.result = SCMD_FAILURE_STAT_ANY,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++		},
++		{}
++	};
++	struct scsi_failure any_sense_failures[] = {
++		{
++			.result = SCMD_FAILURE_SENSE_ANY,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++		},
++		{}
++	};
++	struct scsi_failure any_failures[] = {
++		{
++			.result = SCMD_FAILURE_RESULT_ANY,
++			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
++		},
++		{}
++	};
++	u8 sense[SCSI_SENSE_BUFFERSIZE] = {};
++	struct scsi_cmnd sc = {
++		.sense_buffer = sense,
++		.failures = multiple_sense_failures,
++	};
++	int i;
++
++	/* Match end of array */
++	scsi_build_sense(&sc, 0, ILLEGAL_REQUEST, 0x91, 0x36);
++	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
++	/* Basic match in array */
++	scsi_build_sense(&sc, 0, UNIT_ATTENTION, 0x11, 0x0);
++	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
++	/* No matching sense entry */
++	scsi_build_sense(&sc, 0, MISCOMPARE, 0x11, 0x11);
++	KUNIT_EXPECT_EQ(test, SCSI_RETURN_NOT_HANDLED,
++			scsi_check_passthrough(&sc));
++	/* Match using SCMD_FAILURE_ASCQ_ANY */
++	scsi_build_sense(&sc, 0, ABORTED_COMMAND, 0x22, 0x22);
++	KUNIT_EXPECT_EQ(test, SCSI_RETURN_NOT_HANDLED,
++			scsi_check_passthrough(&sc));
++	/* Match using SCMD_FAILURE_ASC_ANY */
++	scsi_build_sense(&sc, 0, HARDWARE_ERROR, 0x11, 0x22);
++	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
++	/* No matching status entry */
++	sc.result = SAM_STAT_RESERVATION_CONFLICT;
++	KUNIT_EXPECT_EQ(test, SCSI_RETURN_NOT_HANDLED,
++			scsi_check_passthrough(&sc));
++
++	/* Test hitting allowed limit */
++	scsi_build_sense(&sc, 0, NOT_READY, 0x11, 0x22);
++	for (i = 0; i < SCSI_TEST_ERROR_MAX_ALLOWED; i++)
++		KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
++	KUNIT_EXPECT_EQ(test, SUCCESS, scsi_check_passthrough(&sc));
++
++	/* Match using SCMD_FAILURE_SENSE_ANY */
++	sc.failures = any_sense_failures;
++	scsi_build_sense(&sc, 0, MEDIUM_ERROR, 0x11, 0x22);
++	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
++
++	/* reset retries so we can retest */
++	scsi_reset_failures(multiple_sense_failures);
++
++	/* Test no retries allowed */
++	sc.failures = multiple_sense_failures;
++	scsi_build_sense(&sc, 0, DATA_PROTECT, 0x1, 0x1);
++	KUNIT_EXPECT_EQ(test, SUCCESS, scsi_check_passthrough(&sc));
++
++	/* No matching host byte entry */
++	sc.failures = retryable_host_failures;
++	sc.result = DID_NO_CONNECT << 16;
++	KUNIT_EXPECT_EQ(test, SCSI_RETURN_NOT_HANDLED,
++			scsi_check_passthrough(&sc));
++	/* Matching host byte entry */
++	sc.result = DID_TIME_OUT << 16;
++	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
++
++	/* Match SCMD_FAILURE_RESULT_ANY */
++	sc.failures = any_failures;
++	sc.result = DID_TRANSPORT_FAILFAST << 16;
++	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
++
++	/* Test any status handling */
++	sc.failures = any_status_failures;
++	sc.result = SAM_STAT_RESERVATION_CONFLICT;
++	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
++}
++
++static struct kunit_case scsi_test_error_cases[] = {
++	KUNIT_CASE(scsi_test_error_check_passthough),
++	{}
++};
++
++static struct kunit_suite scsi_test_error_suite = {
++	.name = "scsi_error",
++	.test_cases = scsi_test_error_cases,
++};
++
++kunit_test_suite(scsi_test_error_suite);
 -- 
 2.34.1
 
