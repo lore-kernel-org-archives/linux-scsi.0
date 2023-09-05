@@ -2,63 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D3B4CA0FF8
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:05:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE7F0CA0FF8
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:05:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236348AbjIEQF2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:05:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53350 "EHLO
+        id S238120AbjIEQFd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:05:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354106AbjIEJjb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 05:39:31 -0400
-X-Greylist: delayed 4368 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 05 Sep 2023 02:39:28 PDT
-Received: from mail.equinoxrise.pl (mail.equinoxrise.pl [217.61.112.157])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15B181A7
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Sep 2023 02:39:28 -0700 (PDT)
-Received: by mail.equinoxrise.pl (Postfix, from userid 1002)
-        id B2D4283321; Mon,  4 Sep 2023 09:40:58 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=equinoxrise.pl;
-        s=mail; t=1693813304;
-        bh=v6OgBfK5dN7P5dQ0wCu59rOfZaiqziJeLNblJ8dOcGI=;
-        h=Date:From:To:Subject:From;
-        b=mTddXVzdGsm10vG4HUjqpgZ6U2DufLf8p5nPG0jh5XFY83Y7z/q5QZGc2DdY7KIZ7
-         itMZOD1c3qRmu3V5oGTTtoXX2pRgpho+wK0DyzYGunb4HSGpGrJYOOW7dt8XWdgWGo
-         SWSPYSd1l+CHkXfzdl1SQLZKMjFPI14tVV9XgAYj7y9VoiUFBkLpBGGIP17HpWQyNn
-         /JhdoVgze+wRIKl0NUbeQRfWeVgD+Rg+LLlA25rCCRJG/gBFdf4L2hV//s8Udgq41X
-         LRWSMyZaB6x8hRBlV3upYGGcRObmVPmmKhrMpcgfI66+oUhYjxItbL+iq0rt8h7B2J
-         3551gwKsWGq3w==
-Received: by mail.equinoxrise.pl for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 07:40:34 GMT
-Message-ID: <20230904084500-0.1.7.qjl.0.9a96fb2r5e@equinoxrise.pl>
-Date:   Mon,  4 Sep 2023 07:40:34 GMT
-From:   "Mateusz Talaga" <mateusz.talaga@equinoxrise.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: Prezentacja
-X-Mailer: mail.equinoxrise.pl
+        with ESMTP id S1343910AbjIEC53 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 22:57:29 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1A7FCC7;
+        Mon,  4 Sep 2023 19:57:25 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RfqpP119MzMl5y;
+        Tue,  5 Sep 2023 10:54:05 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Tue, 5 Sep 2023 10:57:23 +0800
+From:   Xingui Yang <yangxingui@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.g.garry@oracle.com>, <damien.lemoal@opensource.wdc.com>
+CC:     <andriy.shevchenko@linux.intel.com>, <akpm@linux-foundation.org>,
+        <viro@zeniv.linux.org.uk>, <himanshu.madhani@cavium.com>,
+        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
+        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
+        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
+        <chenxiang66@hisilicon.com>
+Subject: [PATCH v6 1/3] seq_file: Add helper macro to define attribute for rw file
+Date:   Tue, 5 Sep 2023 02:48:33 +0000
+Message-ID: <20230905024835.43219-2-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230905024835.43219-1-yangxingui@huawei.com>
+References: <20230905024835.43219-1-yangxingui@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry!
+We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+for read-only file, but many of drivers want a helper macro for read-write
+file too.
 
-Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
-=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
-zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
+So we add DEFINE_SHOW_STORE_ATTRIBUTE() helper to reduce duplicated code.
 
-Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
-=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
-dostaw.
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Co-developed-by: Xingui Yang <yangxingui@huawei.com>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ include/linux/seq_file.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
-nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
- co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
+diff --git a/include/linux/seq_file.h b/include/linux/seq_file.h
+index bd023dd38ae6..e400007e410c 100644
+--- a/include/linux/seq_file.h
++++ b/include/linux/seq_file.h
+@@ -207,6 +207,21 @@ static const struct file_operations __name ## _fops = {			\
+ 	.release	= single_release,				\
+ }
+ 
++#define DEFINE_SHOW_STORE_ATTRIBUTE(__name)				\
++static int __name ## _open(struct inode *inode, struct file *file)	\
++{									\
++	return single_open(file, __name ## _show, inode->i_private);	\
++}									\
++									\
++static const struct file_operations __name ## _fops = {			\
++	.owner		= THIS_MODULE,					\
++	.open		= __name ## _open,				\
++	.read		= seq_read,					\
++	.write		= __name ## _write,				\
++	.llseek		= seq_lseek,					\
++	.release	= single_release,				\
++}
++
+ #define DEFINE_PROC_SHOW_ATTRIBUTE(__name)				\
+ static int __name ## _open(struct inode *inode, struct file *file)	\
+ {									\
+-- 
+2.17.1
 
-Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
-=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
-zania w Pa=C5=84stwa firmie.
-
-
-Pozdrawiam
-Mateusz Talaga
