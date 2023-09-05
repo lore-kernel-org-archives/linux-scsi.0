@@ -2,21 +2,21 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39CBFCA0FE2
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:06:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39312CA0FFB
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:06:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236840AbjIEQGO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:06:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38712 "EHLO
+        id S236064AbjIEQGQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:06:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343917AbjIEC53 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 22:57:29 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C23BECC9;
+        with ESMTP id S1343933AbjIEC5a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 22:57:30 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDA37CCB;
         Mon,  4 Sep 2023 19:57:25 -0700 (PDT)
 Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RfqpP0YmVzMl5w;
-        Tue,  5 Sep 2023 10:54:05 +0800 (CST)
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Rfqp021wczNnB3;
+        Tue,  5 Sep 2023 10:53:44 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -33,10 +33,12 @@ CC:     <andriy.shevchenko@linux.intel.com>, <akpm@linux-foundation.org>,
         <linuxarm@huawei.com>, <yangxingui@huawei.com>,
         <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
         <chenxiang66@hisilicon.com>
-Subject: [PATCH v6 0/3] Add helper macro DEFINE_SHOW_STORE_ATTRIBUTE() at seq_file.c
-Date:   Tue, 5 Sep 2023 02:48:32 +0000
-Message-ID: <20230905024835.43219-1-yangxingui@huawei.com>
+Subject: [PATCH v6 3/3] scsi: qla2xxx: Use DEFINE_SHOW_STORE_ATTRIBUTE() helper for debugfs
+Date:   Tue, 5 Sep 2023 02:48:35 +0000
+Message-ID: <20230905024835.43219-4-yangxingui@huawei.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230905024835.43219-1-yangxingui@huawei.com>
+References: <20230905024835.43219-1-yangxingui@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.50.163.32]
@@ -47,45 +49,126 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
-for read-only file, but we found many of drivers also want a helper macro
-for read-write file too.
+Use DEFINE_SHOW_STORE_ATTRIBUTE() helper for read-write file to reduce some
+duplicated code.
 
-So we add this helper macro to reduce duplicated code.
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Co-developed-by: Xingui Yang <yangxingui@huawei.com>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/scsi/qla2xxx/qla_dfs.c | 59 ++++------------------------------
+ 1 file changed, 7 insertions(+), 52 deletions(-)
 
-Changes from v5:
-- Undelete the unused macros in qla_dfs.c and rewrite them using reference
-  to the new macro on Andy's suggestion.
-- Adjust some descriptions in commit based on Andy's suggestion.
-
-Changes from v4:
-- Reduce the scope to scsi subsystem based on Andy's suggestion.
-- Remove unused macros in qla_dfs.c
-- Adjust some descriptions in commit.
-
-Changes from v3:
-- Add AI Viro's comment to v1->v2's revision description.
-- Fixed a spelling mistakes of "marco" to "macro".
-
-Changes from v2:
-- Fixed some spelling mistakes in commit.
-- Revision description are added for easy tracing.
-
-Changes from v1:
-- Rename DEFINE_STORE_ATTRIBUTE() to DEFINE_SHOW_STORE_ATTRIBUTE().
-- AI Viro points out that he doesn't like the definition of macros
-  like DEFINE_SHOW_ATTRIBUTE.
-
-Luo Jiaxing (3):
-  seq_file: Add helper macro to define attribute for rw file
-  scsi: hisi_sas: Use DEFINE_SHOW_STORE_ATTRIBUTE() helper for debugfs
-  scsi: qla2xxx: Use DEFINE_SHOW_STORE_ATTRIBUTE() helper for debugfs
-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 137 ++-----------------------
- drivers/scsi/qla2xxx/qla_dfs.c         |  59 ++---------
- include/linux/seq_file.h               |  15 +++
- 3 files changed, 31 insertions(+), 180 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index f060e593685d..debb14d71e8a 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -528,51 +528,22 @@ qla_dfs_naqp_show(struct seq_file *s, void *unused)
+  *
+  * Example for creating "TEST" sysfs file:
+  * 1. struct qla_hw_data { ... struct dentry *dfs_TEST; }
+- * 2. QLA_DFS_SETUP_RD(TEST, scsi_qla_host_t);
++ * 2. QLA_DFS_SETUP_RD(TEST);
+  * 3. In qla2x00_dfs_setup():
+  * QLA_DFS_CREATE_FILE(ha, TEST, 0600, ha->dfs_dir, vha);
+  * 4. In qla2x00_dfs_remove():
+  * QLA_DFS_REMOVE_FILE(ha, TEST);
+  */
+-#define QLA_DFS_SETUP_RD(_name, _ctx_struct)				\
+-static int								\
+-qla_dfs_##_name##_open(struct inode *inode, struct file *file)		\
+-{									\
+-	_ctx_struct *__ctx = inode->i_private;				\
+-									\
+-	return single_open(file, qla_dfs_##_name##_show, __ctx);	\
+-}									\
+-									\
+-static const struct file_operations qla_dfs_##_name##_ops = {		\
+-	.open           = qla_dfs_##_name##_open,			\
+-	.read           = seq_read,					\
+-	.llseek         = seq_lseek,					\
+-	.release        = single_release,				\
+-};
++#define QLA_DFS_SETUP_RD(_name)	DEFINE_SHOW_ATTRIBUTE(qla_dfs_##_name)
+ 
+-#define QLA_DFS_SETUP_RW(_name, _ctx_struct)				\
+-static int								\
+-qla_dfs_##_name##_open(struct inode *inode, struct file *file)		\
+-{									\
+-	_ctx_struct *__ctx = inode->i_private;				\
+-									\
+-	return single_open(file, qla_dfs_##_name##_show, __ctx);	\
+-}									\
+-									\
+-static const struct file_operations qla_dfs_##_name##_ops = {		\
+-	.open           = qla_dfs_##_name##_open,			\
+-	.read           = seq_read,					\
+-	.llseek         = seq_lseek,					\
+-	.release        = single_release,				\
+-	.write		= qla_dfs_##_name##_write,			\
+-};
++#define QLA_DFS_SETUP_RW(_name)	DEFINE_SHOW_STORE_ATTRIBUTE(qla_dfs_##_name)
+ 
+ #define QLA_DFS_ROOT_CREATE_FILE(_name, _perm, _ctx)			\
+ 	do {								\
+ 		if (!qla_dfs_##_name)					\
+ 			qla_dfs_##_name = debugfs_create_file(#_name,	\
+ 					_perm, qla2x00_dfs_root, _ctx,	\
+-					&qla_dfs_##_name##_ops);	\
++					&qla_dfs_##_name##_fops);	\
+ 	} while (0)
+ 
+ #define QLA_DFS_ROOT_REMOVE_FILE(_name)					\
+@@ -587,7 +558,7 @@ static const struct file_operations qla_dfs_##_name##_ops = {		\
+ 	do {								\
+ 		(_struct)->dfs_##_name = debugfs_create_file(#_name,	\
+ 					_perm, _parent, _ctx,		\
+-					&qla_dfs_##_name##_ops)		\
++					&qla_dfs_##_name##_fops)	\
+ 	} while (0)
+ 
+ #define QLA_DFS_REMOVE_FILE(_struct, _name)				\
+@@ -598,14 +569,6 @@ static const struct file_operations qla_dfs_##_name##_ops = {		\
+ 		}							\
+ 	} while (0)
+ 
+-static int
+-qla_dfs_naqp_open(struct inode *inode, struct file *file)
+-{
+-	struct scsi_qla_host *vha = inode->i_private;
+-
+-	return single_open(file, qla_dfs_naqp_show, vha);
+-}
+-
+ static ssize_t
+ qla_dfs_naqp_write(struct file *file, const char __user *buffer,
+     size_t count, loff_t *pos)
+@@ -653,15 +616,7 @@ qla_dfs_naqp_write(struct file *file, const char __user *buffer,
+ 	kfree(buf);
+ 	return rc;
+ }
+-
+-static const struct file_operations dfs_naqp_ops = {
+-	.open		= qla_dfs_naqp_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-	.write		= qla_dfs_naqp_write,
+-};
+-
++QLA_DFS_SETUP_RW(naqp);
+ 
+ int
+ qla2x00_dfs_setup(scsi_qla_host_t *vha)
+@@ -707,7 +662,7 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
+ 
+ 	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha)) {
+ 		ha->tgt.dfs_naqp = debugfs_create_file("naqp",
+-		    0400, ha->dfs_dir, vha, &dfs_naqp_ops);
++		    0400, ha->dfs_dir, vha, &qla_dfs_naqp_fops);
+ 		if (!ha->tgt.dfs_naqp) {
+ 			ql_log(ql_log_warn, vha, 0xd011,
+ 			       "Unable to create debugFS naqp node.\n");
 -- 
 2.17.1
 
