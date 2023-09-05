@@ -2,157 +2,91 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93D27C83F2C
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:05:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D58A0CA0FF3
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:05:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237976AbjIEQFT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:05:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43668 "EHLO
+        id S238023AbjIEQFU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:05:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350510AbjIEFEI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 01:04:08 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FFFFCC5
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Sep 2023 22:03:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1693890189;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QF++iXxEZpFrQCnUt3ZrjX7wcQsJCw0Lcgs8IhL6Xus=;
-        b=A9MmwfG5tdrl+fR56NHgsk3QBgp3NsartWRthBTENO+D912ARdcGoIaF1ciLoRhUSSOO/x
-        arO2kP072ljyc8myQCP81rzY4TkojiBIcp+VIGSg7+wKJrhzvGtiNq1uo/ij4xl1NDxQ0d
-        VXMTwloDa4LtTMqh7HmxJLesTz0dwtg=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-625-4rUGPEBPMYipOttOl5wP7g-1; Tue, 05 Sep 2023 01:03:06 -0400
-X-MC-Unique: 4rUGPEBPMYipOttOl5wP7g-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B587B1817904;
-        Tue,  5 Sep 2023 05:03:05 +0000 (UTC)
-Received: from localhost (unknown [10.72.113.126])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B496340C6CCC;
-        Tue,  5 Sep 2023 05:03:04 +0000 (UTC)
-Date:   Tue, 5 Sep 2023 13:03:01 +0800
-From:   Baoquan He <bhe@redhat.com>
-To:     Hari Bathini <hbathini@linux.ibm.com>, mpe@ellerman.id.au
-Cc:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Pingfan Liu <piliu@redhat.com>, Dave Young <dyoung@redhat.com>,
-        npiggin@gmail.com, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        Wen Xiong <wenxiong@linux.ibm.com>, kexec@lists.infradead.org,
-        Keith Busch <kbusch@kernel.org>, linuxppc-dev@lists.ozlabs.org,
-        Christoph Hellwig <hch@lst.de>,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>
-Subject: Re: [PATCH V3 01/14] blk-mq: add blk_mq_max_nr_hw_queues()
-Message-ID: <ZPa2hbRQUdFRNqr9@MiWiFi-R3L-srv>
-References: <20230808104239.146085-1-ming.lei@redhat.com>
- <20230808104239.146085-2-ming.lei@redhat.com>
- <20230809134401.GA31852@lst.de>
- <ZNQqt1C0pXspGl3d@fedora>
- <ZNQ64xhCIBU6XM/5@MiWiFi-R3L-srv>
- <ZNRGNsRzEJfzUEzH@fedora>
- <ZNRTGrRuwf69EgnE@MiWiFi-R3L-srv>
- <772c4140-3035-16d8-0253-f5893c3698e2@linux.ibm.com>
+        with ESMTP id S1354245AbjIEKTb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 06:19:31 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C95518D
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Sep 2023 03:19:28 -0700 (PDT)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3853Nxn1007719;
+        Tue, 5 Sep 2023 10:18:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2023-03-30;
+ bh=Cpx7AJKafpZ66kRhp2gYo4d4upKVHPj0Ge3Ytotmm04=;
+ b=Ea2xiiqoVPyr3ivEnYYO0voLtg1inSpsYqMUH4dZbvkZpULSa3ivqe1BFKFO8DWDbiH5
+ d0im8WLq2Rdue563SpOQvN7cfodN12/XVw1exgItMTB2LowimmTjY1/wu9E2Y3vRtxga
+ y94mr0W56ZpmVc9DIr9X07GeIEjMLqS1wmFaipjNlwW7HPJSHqwL8OoVwlLWdK8L9bO0
+ +l5ZJo4AGGMl2YWCa4ebscgF777Xkws6xFpldC2YkRX9YzeDDGZdMOONaK58lx+HNQEO
+ KcD6Nm/eoGxvEjDWoGLg2KKfmtUUduDAV9rlNwDlqHgW9eZDuzBqUZeb5TGAqGZ1n9ZS dw== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3suw3cvx84-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 05 Sep 2023 10:18:55 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3859d34T029123;
+        Tue, 5 Sep 2023 10:18:54 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3suug4j8d2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 05 Sep 2023 10:18:54 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 385AIlOd032271;
+        Tue, 5 Sep 2023 10:18:53 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3suug4j85n-5;
+        Tue, 05 Sep 2023 10:18:53 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     njavali@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        Nathan Chancellor <nathan@kernel.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        patches@lists.linux.dev, Stephen Rothwell <sfr@canb.auug.org.au>,
+        kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Fix unused variable warning in qla2xxx_process_purls_pkt()
+Date:   Tue,  5 Sep 2023 06:18:28 -0400
+Message-Id: <169390541189.1533355.3293116922945527160.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230829-qla_nvme-fix-unused-fcport-v1-1-51c7560ecaee@kernel.org>
+References: <20230829-qla_nvme-fix-unused-fcport-v1-1-51c7560ecaee@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <772c4140-3035-16d8-0253-f5893c3698e2@linux.ibm.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.2
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-05_08,2023-08-31_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 suspectscore=0
+ bulkscore=0 mlxlogscore=930 malwarescore=0 phishscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
+ definitions=main-2309050092
+X-Proofpoint-GUID: yt4LHwr4CeeWxo0cPwTs9PPqQGx-AkzG
+X-Proofpoint-ORIG-GUID: yt4LHwr4CeeWxo0cPwTs9PPqQGx-AkzG
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Hari, Michael
+On Tue, 29 Aug 2023 07:35:06 -0700, Nathan Chancellor wrote:
 
-On 08/11/23 at 01:23pm, Hari Bathini wrote:
+> When CONFIG_NVME_FC is not set, fcport is unused:
 > 
+>   drivers/scsi/qla2xxx/qla_nvme.c: In function 'qla2xxx_process_purls_pkt':
+>   drivers/scsi/qla2xxx/qla_nvme.c:1183:20: warning: unused variable 'fcport' [-Wunused-variable]
+>    1183 |         fc_port_t *fcport = uctx->fcport;
+>         |                    ^~~~~~
 > 
-> On 10/08/23 8:31 am, Baoquan He wrote:
-> > On 08/10/23 at 10:06am, Ming Lei wrote:
-> > > On Thu, Aug 10, 2023 at 09:18:27AM +0800, Baoquan He wrote:
-> > > > On 08/10/23 at 08:09am, Ming Lei wrote:
-> > > > > On Wed, Aug 09, 2023 at 03:44:01PM +0200, Christoph Hellwig wrote:
-> > > > > > I'm starting to sound like a broken record, but we can't just do random
-> > > > > > is_kdump checks, and it's not going to get better by resending it again and
-> > > > > > again.  If kdump kernels limit the number of possible CPUs, it needs to
-> > > > > > reflected in cpu_possible_map and we need to use that information.
-> > > > > > 
-> > > > > 
-> > > > > Can you look at previous kdump/arch guys' comment about kdump usage &
-> > > > > num_possible_cpus?
-> > > > > 
-> > > > >      https://lore.kernel.org/linux-block/CAF+s44RuqswbosY9kMDx35crviQnxOeuvgNsuE75Bb0Y2Jg2uw@mail.gmail.com/
-> > > > >      https://lore.kernel.org/linux-block/ZKz912KyFQ7q9qwL@MiWiFi-R3L-srv/
-> > > > > 
-> > > > > The point is that kdump kernels does not limit the number of possible CPUs.
-> > > > > 
-> > > > > 1) some archs support 'nr_cpus=1' for kdump kernel, which is fine, since
-> > > > > num_possible_cpus becomes 1.
-> > > > 
-> > > > Yes, "nr_cpus=" is strongly suggested in kdump kernel because "nr_cpus="
-> > > > limits the possible cpu numbers, while "maxcpuss=" only limits the cpu
-> > > > number which can be brought up during bootup. We noticed this diference
-> > > > because a large number of possible cpus will cost more memory in kdump
-> > > > kernel. e.g percpu initialization, even though kdump kernel have set
-> > > > "maxcpus=1".
-> > > > 
-> > > > Currently x86 and arm64 all support "nr_cpus=". Pingfan ever spent much
-> > > > effort to make patches to add "nr_cpus=" support to ppc64, seems ppc64
-> > > > dev and maintainers do not care about it. Finally the patches are not
-> > > > accepted, and the work is not continued.
-> > > > 
-> > > > Now, I am wondering what is the barrier to add "nr_cpus=" to power ach.
-> > > > Can we reconsider adding 'nr_cpus=' to power arch since real issue
-> > > > occurred in kdump kernel?
-> > > 
-> > > If 'nr_cpus=' can be supported on ppc64, this patchset isn't needed.
-> > > 
-> > > > 
-> > > > As for this patchset, it can be accpeted so that no failure in kdump
-> > > > kernel is seen on ARCHes w/o "nr_cpus=" support? My personal opinion.
-> > > 
-> > > IMO 'nr_cpus=' support should be preferred, given it is annoying to
-> > > maintain two kinds of implementation for kdump kernel from driver
-> > > viewpoint. I guess kdump things can be simplified too with supporting
-> > > 'nr_cpus=' only.
-> > 
-> > Yes, 'nr_cpus=' is ideal. Not sure if there's some underlying concerns so
-> > that power people decided to not support it.
-> 
-> Though "nr_cpus=1" is an ideal solution, maintainer was not happy with
-> the patch as the code changes have impact for regular boot path and
-> it is likely to cause breakages. So, even if "nr_cpus=1" support for
-> ppc64 is revived, the change is going to take time to be accepted
-> upstream.
+> [...]
 
-I talked to pingfan recently, he said he posted patches to add 'nr_cpus='
-support in powerpc in order to reduce memory amount for kdump kernel.
-His patches were rejected by maintainer because maintainer thought the
-reason is not sufficient. So up to now, in architectures fedora/RHEL
-supports to provide default crashkernel reservation value, powerpc costs
-most. Now with this emerging issue, can we reconsider supporting
-'nr_cpus=' in powerpc?
+Applied to 6.6/scsi-queue, thanks!
 
-> 
-> Also, I see is_kdump_kernel() being used irrespective of "nr_cpus=1"
-> support for other optimizations in the driver for the special dump
-> capture environment kdump is.
-> 
-> If there is no other downside for driver code, to use is_kdump_kernel(),
-> other than the maintainability aspect, I think the above changes are
-> worth considering.
+[1/1] scsi: qla2xxx: Fix unused variable warning in qla2xxx_process_purls_pkt()
+      https://git.kernel.org/mkp/scsi/c/d4781807f050
 
-Hi Hari,
-
-By the way, will you use the ppc specific is_kdump_kernel() and
-is_crashdump_kernel() in your patches to fix this issue?
-
-Thanks
-Baoquan
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
