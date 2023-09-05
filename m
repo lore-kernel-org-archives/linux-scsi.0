@@ -2,226 +2,268 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0720ECA0FFA
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:05:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4371CA0FE2
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:05:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234439AbjIEQFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:05:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34576 "EHLO
+        id S237942AbjIEQFQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:05:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351685AbjIEFYq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 01:24:46 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F5BECCB;
-        Mon,  4 Sep 2023 22:24:42 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3855OWa5013157;
-        Tue, 5 Sep 2023 05:24:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=xf/2nGjSik8b/0EhB8apq7LpsXXUl07A3GKBk2B6mxE=;
- b=bWDC8MaM9eTQ3Sq/YyMlY8Sf1/FKxA4/bOYdE5dP3l/lN9gGj9E5JcxIE14tkY8vH3f4
- ixfrWrsWDovi45CSJXoxSBrWMyXemfDpCP0CwIXsvUdxL34xl9JhEe/k/iGZvMEUuV0V
- E2HbxSZia2UjYEUQbC5f+nSJPLNZNw36p6Xj3bARzeT8oQcjD6dn7dZ+WjyeiIC21DsW
- AR+8788Jh7yX9kFK8ywIvOpJgAe+elXa7TVdYBw5IU+RJBDGXQpkgq030bce5sc7bYyd
- ArzXFJsPUJgmXnpPf+pWktvwVyOTYZb4RQJ+/qeD86br8dO2wyFwYV64e2sXSidQ/+kX yA== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3swfae1j0m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 05 Sep 2023 05:24:32 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3855O5Pf029359;
-        Tue, 5 Sep 2023 05:24:10 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3sux4kjpw6-1;
-        Tue, 05 Sep 2023 05:24:10 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3855O9qo029500;
-        Tue, 5 Sep 2023 05:24:09 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3855O9Ti029498;
-        Tue, 05 Sep 2023 05:24:09 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-        id A4CD7504921; Tue,  5 Sep 2023 10:54:08 +0530 (+0530)
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-To:     mani@kernel.org, agross@kernel.org, andersson@kernel.org,
-        konrad.dybcio@linaro.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        Nitin Rawat <quic_nitirawa@quicinc.com>,
-        Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Subject: [PATCH V8 5/5] scsi: ufs: qcom: Configure SYS1CLK_1US_REG for UFS V4 and above
-Date:   Tue,  5 Sep 2023 10:54:00 +0530
-Message-Id: <20230905052400.13935-6-quic_nitirawa@quicinc.com>
+        with ESMTP id S1343932AbjIEC53 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 22:57:29 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDFA5CC6;
+        Mon,  4 Sep 2023 19:57:25 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RfqpP2nKDzMl5x;
+        Tue,  5 Sep 2023 10:54:05 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Tue, 5 Sep 2023 10:57:23 +0800
+From:   Xingui Yang <yangxingui@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.g.garry@oracle.com>, <damien.lemoal@opensource.wdc.com>
+CC:     <andriy.shevchenko@linux.intel.com>, <akpm@linux-foundation.org>,
+        <viro@zeniv.linux.org.uk>, <himanshu.madhani@cavium.com>,
+        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
+        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
+        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
+        <chenxiang66@hisilicon.com>
+Subject: [PATCH v6 2/3] scsi: hisi_sas: Use DEFINE_SHOW_STORE_ATTRIBUTE() helper for debugfs
+Date:   Tue, 5 Sep 2023 02:48:34 +0000
+Message-ID: <20230905024835.43219-3-yangxingui@huawei.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230905052400.13935-1-quic_nitirawa@quicinc.com>
-References: <20230905052400.13935-1-quic_nitirawa@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: BAOW-TZ_DwGwrr9DMIYqR1IGvAnWs1dj
-X-Proofpoint-ORIG-GUID: BAOW-TZ_DwGwrr9DMIYqR1IGvAnWs1dj
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-05_04,2023-08-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 spamscore=0
- phishscore=0 priorityscore=1501 mlxlogscore=999 suspectscore=0
- lowpriorityscore=0 clxscore=1015 impostorscore=0 mlxscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309050048
+In-Reply-To: <20230905024835.43219-1-yangxingui@huawei.com>
+References: <20230905024835.43219-1-yangxingui@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SYS1CLK_1US represents the required number of system 1-clock cycles for
-one microsecond. UFS Host Controller V4.0 and above mandates to write
-SYS1CLK_1US_REG register and also these timer configuration needs to be
-called from clk scaling pre ops as per HPG.
+Use DEFINE_SHOW_STORE_ATTRIBUTE() helper for read-write file to reduce some
+duplicated code.
 
-Refactor ufs_qcom_cfg_timers and add the below code support to align
-with HPG.
-
-a)Configure SYS1CLK_1US_REG for UFS V4 and above.
-b)Introduce a new argument is_pre_scale_up for ufs_qcom_cfg_timers
-to configure SYS1CLK_1US for max freq during prescale and link startup
-condition.
-c)Move ufs_qcom_cfg_timers from clk scaling post change ops
-to clk scaling pre change ops.
-
-Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Co-developed-by: Xingui Yang <yangxingui@huawei.com>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 56 ++++++++++++++++++++++++++-----------
- 1 file changed, 40 insertions(+), 16 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 137 ++-----------------------
+ 1 file changed, 9 insertions(+), 128 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index d437c75c8e14..dd549363fb2a 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -527,11 +527,20 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
- 	return err;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index bbb64ee6afd7..5bb35c3ea4e5 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3990,22 +3990,7 @@ static ssize_t debugfs_bist_linkrate_v3_hw_write(struct file *filp,
+ 
+ 	return count;
  }
-
--/*
-+/**
-+ * ufs_qcom_cfg_timers - Configure ufs qcom cfg timers
-+ *
-+ * @hba: host controller instance
-+ * @gear: Current operating gear
-+ * @hs: current power mode
-+ * @rate: current operating rate (A or B)
-+ * @update_link_startup_timer: indicate if link_start ongoing
-+ * @is_pre_scale_up: flag to check if pre scale up condition.
-  * Return: zero for success and non-zero in case of a failure.
-  */
- static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
--			       u32 hs, u32 rate, bool update_link_startup_timer)
-+			       u32 hs, u32 rate, bool update_link_startup_timer,
-+			       bool is_pre_scale_up)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	struct ufs_clk_info *clki;
-@@ -562,11 +571,14 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
- 	/*
- 	 * The Qunipro controller does not use following registers:
- 	 * SYS1CLK_1US_REG, TX_SYMBOL_CLK_1US_REG, CLK_NS_REG &
--	 * UFS_REG_PA_LINK_STARTUP_TIMER
--	 * But UTP controller uses SYS1CLK_1US_REG register for Interrupt
-+	 * UFS_REG_PA_LINK_STARTUP_TIMER.
-+	 * However UTP controller uses SYS1CLK_1US_REG register for Interrupt
- 	 * Aggregation logic.
--	*/
--	if (ufs_qcom_cap_qunipro(host) && !ufshcd_is_intr_aggr_allowed(hba))
-+	 * It is mandatory to write SYS1CLK_1US_REG register on UFS host
-+	 * controller V4.0.0 onwards.
-+	 */
-+	if (host->hw_ver.major < 4 && ufs_qcom_cap_qunipro(host) &&
-+	    !ufshcd_is_intr_aggr_allowed(hba))
- 		return 0;
-
- 	if (gear == 0) {
-@@ -575,8 +587,14 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
- 	}
-
- 	list_for_each_entry(clki, &hba->clk_list_head, list) {
--		if (!strcmp(clki->name, "core_clk"))
--			core_clk_rate = clk_get_rate(clki->clk);
-+		if (!strcmp(clki->name, "core_clk")) {
-+			if (is_pre_scale_up)
-+				core_clk_rate = clki->max_freq;
-+			else
-+				core_clk_rate = clk_get_rate(clki->clk);
-+			break;
-+		}
-+
- 	}
-
- 	/* If frequency is smaller than 1MHz, set to 1MHz */
-@@ -678,7 +696,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 	switch (status) {
- 	case PRE_CHANGE:
- 		if (ufs_qcom_cfg_timers(hba, UFS_PWM_G1, SLOWAUTO_MODE,
--					0, true)) {
-+					0, true, false)) {
- 			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
- 				__func__);
- 			return -EINVAL;
-@@ -922,7 +940,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 	case POST_CHANGE:
- 		if (ufs_qcom_cfg_timers(hba, dev_req_params->gear_rx,
- 					dev_req_params->pwr_rx,
--					dev_req_params->hs_rate, false)) {
-+					dev_req_params->hs_rate, false, false)) {
- 			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
- 				__func__);
- 			/*
-@@ -1418,10 +1436,22 @@ static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up)
- static int ufs_qcom_clk_scale_up_pre_change(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	struct ufs_pa_layer_attr *attr = &host->dev_req_params;
-+	int ret;
-
- 	if (!ufs_qcom_cap_qunipro(host))
- 		return 0;
-
-+	if (attr) {
-+		ret = ufs_qcom_cfg_timers(hba, attr->gear_rx,
-+					attr->pwr_rx, attr->hs_rate,
-+					false, true);
-+		if (ret) {
-+			dev_err(hba->dev, "%s ufs cfg timer failed\n",
-+						__func__);
-+			return ret;
-+		}
-+	}
- 	/* set unipro core clock attributes and clear clock divider */
- 	return ufs_qcom_set_core_clk_ctrl(hba, true);
+-
+-static int debugfs_bist_linkrate_v3_hw_open(struct inode *inode,
+-					    struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_linkrate_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_linkrate_v3_hw_fops = {
+-	.open = debugfs_bist_linkrate_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_linkrate_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_linkrate_v3_hw);
+ 
+ static const struct {
+ 	int		value;
+@@ -4080,22 +4065,7 @@ static ssize_t debugfs_bist_code_mode_v3_hw_write(struct file *filp,
+ 
+ 	return count;
  }
-@@ -1471,7 +1501,6 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
- 		bool scale_up, enum ufs_notify_change_status status)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
--	struct ufs_pa_layer_attr *dev_req_params = &host->dev_req_params;
- 	int err = 0;
-
- 	/* check the host controller state before sending hibern8 cmd */
-@@ -1501,11 +1530,6 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
- 			return err;
- 		}
-
--		ufs_qcom_cfg_timers(hba,
--				    dev_req_params->gear_rx,
--				    dev_req_params->pwr_rx,
--				    dev_req_params->hs_rate,
--				    false);
- 		ufs_qcom_icc_update_bw(host);
- 		ufshcd_uic_hibern8_exit(hba);
- 	}
---
+-
+-static int debugfs_bist_code_mode_v3_hw_open(struct inode *inode,
+-					     struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_code_mode_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_code_mode_v3_hw_fops = {
+-	.open = debugfs_bist_code_mode_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_code_mode_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_code_mode_v3_hw);
+ 
+ static ssize_t debugfs_bist_phy_v3_hw_write(struct file *filp,
+ 					    const char __user *buf,
+@@ -4129,22 +4099,7 @@ static int debugfs_bist_phy_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_bist_phy_v3_hw_open(struct inode *inode,
+-				       struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_phy_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_phy_v3_hw_fops = {
+-	.open = debugfs_bist_phy_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_phy_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_phy_v3_hw);
+ 
+ static ssize_t debugfs_bist_cnt_v3_hw_write(struct file *filp,
+ 					const char __user *buf,
+@@ -4177,22 +4132,7 @@ static int debugfs_bist_cnt_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_bist_cnt_v3_hw_open(struct inode *inode,
+-					  struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_cnt_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_cnt_v3_hw_ops = {
+-	.open = debugfs_bist_cnt_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_cnt_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_cnt_v3_hw);
+ 
+ static const struct {
+ 	int		value;
+@@ -4256,22 +4196,7 @@ static ssize_t debugfs_bist_mode_v3_hw_write(struct file *filp,
+ 
+ 	return count;
+ }
+-
+-static int debugfs_bist_mode_v3_hw_open(struct inode *inode,
+-					struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_mode_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_mode_v3_hw_fops = {
+-	.open = debugfs_bist_mode_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_mode_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_mode_v3_hw);
+ 
+ static ssize_t debugfs_bist_enable_v3_hw_write(struct file *filp,
+ 					       const char __user *buf,
+@@ -4309,22 +4234,7 @@ static int debugfs_bist_enable_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_bist_enable_v3_hw_open(struct inode *inode,
+-					  struct file *filp)
+-{
+-	return single_open(filp, debugfs_bist_enable_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_bist_enable_v3_hw_fops = {
+-	.open = debugfs_bist_enable_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_bist_enable_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_bist_enable_v3_hw);
+ 
+ static const struct {
+ 	char *name;
+@@ -4362,21 +4272,7 @@ static int debugfs_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_v3_hw_open(struct inode *inode, struct file *filp)
+-{
+-	return single_open(filp, debugfs_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_v3_hw_fops = {
+-	.open = debugfs_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_v3_hw);
+ 
+ static ssize_t debugfs_phy_down_cnt_v3_hw_write(struct file *filp,
+ 						const char __user *buf,
+@@ -4407,22 +4303,7 @@ static int debugfs_phy_down_cnt_v3_hw_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int debugfs_phy_down_cnt_v3_hw_open(struct inode *inode,
+-					   struct file *filp)
+-{
+-	return single_open(filp, debugfs_phy_down_cnt_v3_hw_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations debugfs_phy_down_cnt_v3_hw_fops = {
+-	.open = debugfs_phy_down_cnt_v3_hw_open,
+-	.read = seq_read,
+-	.write = debugfs_phy_down_cnt_v3_hw_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_phy_down_cnt_v3_hw);
+ 
+ enum fifo_dump_mode_v3_hw {
+ 	FIFO_DUMP_FORVER =		(1U << 0),
+@@ -4832,7 +4713,7 @@ static void debugfs_bist_init_v3_hw(struct hisi_hba *hisi_hba)
+ 			    hisi_hba, &debugfs_bist_phy_v3_hw_fops);
+ 
+ 	debugfs_create_file("cnt", 0600, hisi_hba->debugfs_bist_dentry,
+-			    hisi_hba, &debugfs_bist_cnt_v3_hw_ops);
++			    hisi_hba, &debugfs_bist_cnt_v3_hw_fops);
+ 
+ 	debugfs_create_file("loopback_mode", 0600,
+ 			    hisi_hba->debugfs_bist_dentry,
+-- 
 2.17.1
 
