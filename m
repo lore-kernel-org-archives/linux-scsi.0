@@ -2,97 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29FA4CA0FE2
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:06:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39CBFCA0FE2
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Sep 2023 16:06:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238449AbjIEQGL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:06:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35570 "EHLO
+        id S236840AbjIEQGO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:06:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354246AbjIEKTe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 06:19:34 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A2B618D;
-        Tue,  5 Sep 2023 03:19:31 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3853PHAT011372;
-        Tue, 5 Sep 2023 10:18:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=EcuX8KjamwI7Dq570CAvr+Skf4pa4oyab+qhvsVTb8k=;
- b=J91QkLkgzxT5Si7NG6c+3JhqkLy94fXYlHHbAMLdDOUQqJSip2UD8QhL9kFwtUxiTkw/
- p75fAeMnNYyGD59SCJo1pUWhSKydH6cR/G3iQvesHas5c8GVMlTLaAQLRSrrkAZxUBtb
- a152pkB7PX7pVZZcnDtHBLY2gc201IjvUCDmH+kyBdUxeYaXm2D244sCJhw3N27vz5cM
- NaiKtQbuLtl3iizt280dOv/rd25RyqM5Xr8qcaJklcUI63HRxovAJRXjvtJLp9tjrJuD
- 4Kcdmw1b1zE+Z9kUqj7JvwAgBnBXb9oXz4UsaFYFHrDGD5QkzGMF6Cr2aIFJE0ndGApT Aw== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3suuu3mxup-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Sep 2023 10:18:49 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3859eCR1029092;
-        Tue, 5 Sep 2023 10:18:48 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3suug4j8b2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Sep 2023 10:18:48 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 385AIlOV032271;
-        Tue, 5 Sep 2023 10:18:47 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3suug4j85n-1;
-        Tue, 05 Sep 2023 10:18:47 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        stanley.chu@mediatek.com, beanhuo@micron.com, bvanassche@acm.org,
-        tomas.winkler@intel.com, cang@codeaurora.org,
-        jonghwi.rha@samsung.com, Bean Huo <beanhuo@iokpp.de>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 0/2] Changes for UFS advanced RPMB
-Date:   Tue,  5 Sep 2023 06:18:24 -0400
-Message-Id: <169390541198.1533355.3634162443096116989.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230809181847.102123-1-beanhuo@iokpp.de>
-References: <20230809181847.102123-1-beanhuo@iokpp.de>
+        with ESMTP id S1343917AbjIEC53 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Sep 2023 22:57:29 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C23BECC9;
+        Mon,  4 Sep 2023 19:57:25 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RfqpP0YmVzMl5w;
+        Tue,  5 Sep 2023 10:54:05 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Tue, 5 Sep 2023 10:57:23 +0800
+From:   Xingui Yang <yangxingui@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.g.garry@oracle.com>, <damien.lemoal@opensource.wdc.com>
+CC:     <andriy.shevchenko@linux.intel.com>, <akpm@linux-foundation.org>,
+        <viro@zeniv.linux.org.uk>, <himanshu.madhani@cavium.com>,
+        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
+        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
+        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
+        <chenxiang66@hisilicon.com>
+Subject: [PATCH v6 0/3] Add helper macro DEFINE_SHOW_STORE_ATTRIBUTE() at seq_file.c
+Date:   Tue, 5 Sep 2023 02:48:32 +0000
+Message-ID: <20230905024835.43219-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-05_08,2023-08-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 suspectscore=0
- bulkscore=0 mlxlogscore=619 malwarescore=0 phishscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
- definitions=main-2309050092
-X-Proofpoint-ORIG-GUID: VfTuX7lK00J7tZbqDhGwzp7TbcIHBSjf
-X-Proofpoint-GUID: VfTuX7lK00J7tZbqDhGwzp7TbcIHBSjf
+Content-Type: text/plain
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 09 Aug 2023 20:18:45 +0200, Bean Huo wrote:
+We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+for read-only file, but we found many of drivers also want a helper macro
+for read-write file too.
 
-> Bean Huo (2):
->   scsi: ufs: core: Add advanced RPMB support where UFSHCI 4.0 does not
->     support EHS length in UTRD
->   scsi: ufs: core: No need to update UPIU.header.flags and lun in
->     advanced RPMB handler
-> 
-> drivers/ufs/core/ufs_bsg.c |  3 +--
->  drivers/ufs/core/ufshcd.c  | 14 ++++++++++----
->  2 files changed, 11 insertions(+), 6 deletions(-)
-> 
-> [...]
+So we add this helper macro to reduce duplicated code.
 
-Applied to 6.6/scsi-queue, thanks!
+Changes from v5:
+- Undelete the unused macros in qla_dfs.c and rewrite them using reference
+  to the new macro on Andy's suggestion.
+- Adjust some descriptions in commit based on Andy's suggestion.
 
-[1/2] scsi: ufs: core: Add advanced RPMB support where UFSHCI 4.0 does not support EHS length in UTRD
-      https://git.kernel.org/mkp/scsi/c/c91e585cfb3d
-[2/2] scsi: ufs: core: No need to update UPIU.header.flags and lun in advanced RPMB handler
-      https://git.kernel.org/mkp/scsi/c/9f6fec656613
+Changes from v4:
+- Reduce the scope to scsi subsystem based on Andy's suggestion.
+- Remove unused macros in qla_dfs.c
+- Adjust some descriptions in commit.
+
+Changes from v3:
+- Add AI Viro's comment to v1->v2's revision description.
+- Fixed a spelling mistakes of "marco" to "macro".
+
+Changes from v2:
+- Fixed some spelling mistakes in commit.
+- Revision description are added for easy tracing.
+
+Changes from v1:
+- Rename DEFINE_STORE_ATTRIBUTE() to DEFINE_SHOW_STORE_ATTRIBUTE().
+- AI Viro points out that he doesn't like the definition of macros
+  like DEFINE_SHOW_ATTRIBUTE.
+
+Luo Jiaxing (3):
+  seq_file: Add helper macro to define attribute for rw file
+  scsi: hisi_sas: Use DEFINE_SHOW_STORE_ATTRIBUTE() helper for debugfs
+  scsi: qla2xxx: Use DEFINE_SHOW_STORE_ATTRIBUTE() helper for debugfs
+
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 137 ++-----------------------
+ drivers/scsi/qla2xxx/qla_dfs.c         |  59 ++---------
+ include/linux/seq_file.h               |  15 +++
+ 3 files changed, 31 insertions(+), 180 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.17.1
+
