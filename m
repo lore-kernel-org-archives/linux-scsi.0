@@ -2,213 +2,207 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80626EB8FB6
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Sep 2023 10:10:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFD2AEB8FB7
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Sep 2023 11:15:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238570AbjIFKKM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Sep 2023 06:10:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60548 "EHLO
+        id S237992AbjIFLPP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Sep 2023 07:15:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229947AbjIFKKL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2023 06:10:11 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00967171D;
-        Wed,  6 Sep 2023 03:10:04 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1qdpTx-0003eF-Va; Wed, 06 Sep 2023 12:09:58 +0200
-Message-ID: <4a639fff-445e-455b-9a31-57368d6b7021@leemhuis.info>
-Date:   Wed, 6 Sep 2023 12:09:56 +0200
+        with ESMTP id S237140AbjIFLPL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2023 07:15:11 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98EC6A8;
+        Wed,  6 Sep 2023 04:15:06 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.54])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Rgfp81mp8zMl5s;
+        Wed,  6 Sep 2023 19:11:44 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Wed, 6 Sep 2023 19:15:03 +0800
+Message-ID: <7ec75e40-671b-e080-9e7b-2afd5edb25db@huawei.com>
+Date:   Wed, 6 Sep 2023 19:15:02 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-Subject: Re: [PATCH AUTOSEL 6.1 10/15] scsi: aacraid: Reply queue mapping to
- CPUs based on IRQ affinity
-Content-Language: en-US, de-DE
-To:     Sasha Levin <sashal@kernel.org>,
-        Sagar Biradar <sagar.biradar@microchip.com>
-Cc:     Gilbert Wu <gilbert.wu@microchip.com>,
-        John Garry <john.g.garry@oracle.com>,
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
+ mechanism
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        aacraid@microsemi.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org,
-        Linux kernel regressions list <regressions@lists.linux.dev>,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20230829133245.520176-1-sashal@kernel.org>
- <20230829133245.520176-10-sashal@kernel.org>
-From:   "Linux regression tracking (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-In-Reply-To: <20230829133245.520176-10-sashal@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        <linux-scsi@vger.kernel.org>
+CC:     Hannes Reinecke <hare@suse.de>, <linux-kernel@vger.kernel.org>,
+        <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>
+References: <20230901094127.2010873-1-haowenchao2@huawei.com>
+ <b8350de1-6ac8-4d5f-aaa7-7b03e2f7aa93@oracle.com>
+From:   "haowenchao (C)" <haowenchao2@huawei.com>
+In-Reply-To: <b8350de1-6ac8-4d5f-aaa7-7b03e2f7aa93@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1693995005;d2075766;
-X-HE-SMSGID: 1qdpTx-0003eF-Va
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemm600012.china.huawei.com (7.193.23.74)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29.08.23 15:32, Sasha Levin wrote:
-> From: Sagar Biradar <sagar.biradar@microchip.com>
+On 2023/9/6 8:22, Mike Christie wrote:
+> On 9/1/23 4:41 AM, Wenchao Hao wrote:
+>> It's unbearable for systems with large scale scsi devices share HBAs to
+>> block all devices' IOs when handle error commands, we need a new error
+>> handle mechanism to address this issue.
+>>
+>> I consulted about this issue a year ago, the discuss link can be found in
+>> refenence. Hannes replied about why we have to block the SCSI host
+>> then perform error recovery kindly. I think it's unnecessary to block
+>> SCSI host for all drivers and can try a small level recovery(LUN based for
+>> example) first to avoid block the SCSI host.
+>>
+>> The new error handle mechanism introduced in this patchset has been
+>> developed and tested with out self developed hardware since one year
+>> ago, now we want this mechanism can be used by more drivers.
+>>
+>> Drivers can decide if using the new error handle mechanism and how to
+>> handle error commands when scsi_device are scanned,the new mechanism
+>> makes SCSI error handle more flexible.
+>>
+>> SCSI error recovery strategy after blocking host's IO is mainly
+>> following steps:
+>>
+>> - LUN reset
+>> - Target reset
+>> - Bus reset
+>> - Host reset
+>>
+>> Some drivers did not implement callbacks for host reset, it's unnecessary
+>> to block host's IO for these drivers. For example, smartpqi only registered
+>> device reset, if device reset failed, it's meaningless to fallback to target
+>> reset, bus reset or host reset any more, because these steps would also
+>> failed.
+>>
+>> Here are some drivers we concerned:(there are too many kinds of drivers
+>> to figure out, so here I just list some drivers I am familiar with)
+>>
+>> +-------------+--------------+--------------+-----------+------------+
+>> |  drivers    | device_reset | target_reset | bus_reset | host_reset |
+>> +-------------+--------------+--------------+-----------+------------+
+>> | mpt3sas     |     Y        |     Y        |    N      |    Y       |
+>> +-------------+--------------+--------------+-----------+------------+
+>> | smartpqi    |     Y        |     N        |    N      |    N       |
+>> +-------------+--------------+--------------+-----------+------------+
+>> | megaraidsas |     N        |     Y        |    N      |    Y       |
+>> +-------------+--------------+--------------+-----------+------------+
+>> | virtioscsi  |     Y        |     N        |    N      |    N       |
+>> +-------------+--------------+--------------+-----------+------------+
+>> | iscsi_tcp   |     Y        |     Y        |    N      |    N       |
+>> +-------------+--------------+--------------+-----------+------------+
+>> | hisisas     |     Y        |     Y        |    N      |    N       |
+>> +-------------+--------------+--------------+-----------+------------+
+>>
+>> For LUN based error handle, when scsi command is classified as error,
+>> we would block the scsi device's IO and try to recover this scsi
+>> device, if still can not recover all error commands, it might
+>> fallback to target or host level recovery.
+>>
+>> It's same for target based error handle, but target based error handle
+>> would block the scsi target's IO then try to recover the error commands
+>> of this target.
+>>
+>> The first patch defines basic framework to support LUN/target based error
+>> handle mechanism, three key operations are abstracted which are:
+>>   - add error command
+>>   - wake up error handle
+>>   - block IOs when error command is added and recoverying.
+>>
+>> Drivers can implement these three function callbacks and setup to SCSI
+>> middle level; I also add a general LUN/target based error handle strategy
+>> which can be called directly from drivers to implement LUN/tartget based
+>> error handle.
+>>
+>> The changes of SCSI middle level's error handle are tested with scsi_debug
+>> which support single LUN error injection, the scsi_debug patches can be
+>> found in reference, following scenarios are tested.
+>>
+>> Scenario1: LUN based error handle is enabled:
+>> +-----------+---------+-------------------------------------------------------+
+>> | lun reset | TUR     | Desired result                                        |
+>> + --------- + ------- + ------------------------------------------------------+
+>> | success   | success | retry or finish with  EIO(may offline disk)           |
+>> + --------- + ------- + ------------------------------------------------------+
+>> | success   | fail    | fallback to host  recovery, retry or finish with      |
+>> |           |         | EIO(may offline disk)                                 |
 > 
-> [ Upstream commit 9dc704dcc09eae7d21b5da0615eb2ed79278f63e ]
 > 
-> Fix the I/O hang that arises because of the MSIx vector not having a mapped
-> online CPU upon receiving completion.
-
-Sasha: you might want to consider dropping this from the 6.1 and 5.15
-autosel queues for now, as this commit apparently causes a regression:
-https://bugzilla.kernel.org/show_bug.cgi?id=217599
-
-Sagar Biradar: as this is a commit of yours; could you please look into
-the report? It was bisected a few weeks ago, but I suspect nobody told
-you. Ahh, the joys of bugzilla.
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
-
-> SCSI cmds take the blk_mq route, which is setup during init. Reserved cmds
-> fetch the vector_no from mq_map after init is complete. Before init, they
-> have to use 0 - as per the norm.
+> I didn't get this part about when we offline the disk now. For this LUN case, is
+> it if the driver has called scsi_device_setup_eh with the fallback arg with false?
+> If so why doesn't it just try target reset -> bus reset -> host reset like before?
 > 
-> Reviewed-by: Gilbert Wu <gilbert.wu@microchip.com>
-> Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
-> Reviewed-by: John Garry <john.g.garry@oracle.com>
-> Link: https://lore.kernel.org/r/20230519230834.27436-1-sagar.biradar@microchip.com
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Signed-off-by: Sasha Levin <sashal@kernel.org>
-> ---
->  drivers/scsi/aacraid/aacraid.h |  1 +
->  drivers/scsi/aacraid/commsup.c |  6 +++++-
->  drivers/scsi/aacraid/linit.c   | 14 ++++++++++++++
->  drivers/scsi/aacraid/src.c     | 25 +++++++++++++++++++++++--
->  4 files changed, 43 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> index 5e115e8b2ba46..7c6efde75da66 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -1678,6 +1678,7 @@ struct aac_dev
->  	u32			handle_pci_error;
->  	bool			init_reset;
->  	u8			soft_reset_support;
-> +	u8			use_map_queue;
->  };
->  
->  #define aac_adapter_interrupt(dev) \
-> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-> index deb32c9f4b3e6..3f062e4013ab6 100644
-> --- a/drivers/scsi/aacraid/commsup.c
-> +++ b/drivers/scsi/aacraid/commsup.c
-> @@ -223,8 +223,12 @@ int aac_fib_setup(struct aac_dev * dev)
->  struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
->  {
->  	struct fib *fibptr;
-> +	u32 blk_tag;
-> +	int i;
->  
-> -	fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
-> +	blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
-> +	i = blk_mq_unique_tag_to_tag(blk_tag);
-> +	fibptr = &dev->fibs[i];
->  	/*
->  	 *	Null out fields that depend on being zero at the start of
->  	 *	each I/O
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 5ba5c18b77b46..bff49b8ab057d 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -19,6 +19,7 @@
->  
->  #include <linux/compat.h>
->  #include <linux/blkdev.h>
-> +#include <linux/blk-mq-pci.h>
->  #include <linux/completion.h>
->  #include <linux/init.h>
->  #include <linux/interrupt.h>
-> @@ -505,6 +506,15 @@ static int aac_slave_configure(struct scsi_device *sdev)
->  	return 0;
->  }
->  
-> +static void aac_map_queues(struct Scsi_Host *shost)
-> +{
-> +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
-> +
-> +	blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
-> +			      aac->pdev, 0);
-> +	aac->use_map_queue = true;
-> +}
-> +
->  /**
->   *	aac_change_queue_depth		-	alter queue depths
->   *	@sdev:	SCSI device we are considering
-> @@ -1489,6 +1499,7 @@ static struct scsi_host_template aac_driver_template = {
->  	.bios_param			= aac_biosparm,
->  	.shost_groups			= aac_host_groups,
->  	.slave_configure		= aac_slave_configure,
-> +	.map_queues			= aac_map_queues,
->  	.change_queue_depth		= aac_change_queue_depth,
->  	.sdev_groups			= aac_dev_groups,
->  	.eh_abort_handler		= aac_eh_abort,
-> @@ -1776,6 +1787,8 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  	shost->max_lun = AAC_MAX_LUN;
->  
->  	pci_set_drvdata(pdev, shost);
-> +	shost->nr_hw_queues = aac->max_msix;
-> +	shost->host_tagset = 1;
->  
->  	error = scsi_add_host(shost, &pdev->dev);
->  	if (error)
-> @@ -1908,6 +1921,7 @@ static void aac_remove_one(struct pci_dev *pdev)
->  	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
->  
->  	aac_cancel_rescan_worker(aac);
-> +	aac->use_map_queue = false;
->  	scsi_remove_host(shost);
->  
->  	__aac_shutdown(aac);
-> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-> index 11ef58204e96f..61949f3741886 100644
-> --- a/drivers/scsi/aacraid/src.c
-> +++ b/drivers/scsi/aacraid/src.c
-> @@ -493,6 +493,10 @@ static int aac_src_deliver_message(struct fib *fib)
->  #endif
->  
->  	u16 vector_no;
-> +	struct scsi_cmnd *scmd;
-> +	u32 blk_tag;
-> +	struct Scsi_Host *shost = dev->scsi_host_ptr;
-> +	struct blk_mq_queue_map *qmap;
->  
->  	atomic_inc(&q->numpending);
->  
-> @@ -505,8 +509,25 @@ static int aac_src_deliver_message(struct fib *fib)
->  		if ((dev->comm_interface == AAC_COMM_MESSAGE_TYPE3)
->  			&& dev->sa_firmware)
->  			vector_no = aac_get_vector(dev);
-> -		else
-> -			vector_no = fib->vector_no;
-> +		else {
-> +			if (!fib->vector_no || !fib->callback_data) {
-> +				if (shost && dev->use_map_queue) {
-> +					qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
-> +					vector_no = qmap->mq_map[raw_smp_processor_id()];
-> +				}
-> +				/*
-> +				 *	We hardcode the vector_no for
-> +				 *	reserved commands as a valid shost is
-> +				 *	absent during the init
-> +				 */
-> +				else
-> +					vector_no = 0;
-> +			} else {
-> +				scmd = (struct scsi_cmnd *)fib->callback_data;
-> +				blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
-> +				vector_no = blk_mq_unique_tag_to_hwq(blk_tag);
-> +			}
-> +		}
->  
->  		if (native_hba) {
->  			if (fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF) {
+
+There are two scenarios to offline disk when LUN reset succeed and TUR failed:
+
+1. The driver has called scsi_device_setup_eh with the fallback arg with false.
+    Drivers who did not implement eh_xxx_reset for target reset, bus reset and
+    host reset should set fallback to false because these steps would failed,
+    so it's meaningless to try target reset -> bus reset -> host reset any more.
+
+2. The disk would also be offlined by sd_eh_action() defined in sd.c when error
+    recovery succeed but command times out contiuously.
+
+int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp) {
+	...
+	/*
+	* If the device keeps failing read/write commands but TEST UNIT
+	* READY always completes successfully we assume that medium
+	* access is no longer possible and take the device offline.
+	*/
+	if (sdkp->medium_access_timed_out >= sdkp->max_medium_access_timeouts) {
+			scmd_printk(KERN_ERR, scmd,
+						"Medium access timeout failure. Offlining disk!\n");
+			mutex_lock(&sdev->state_mutex);
+			scsi_device_set_state(sdev, SDEV_OFFLINE);
+			mutex_unlock(&sdev->state_mutex);
+
+			return SUCCESS;
+	}
+	...
+}
+
+>>From a high level I have the following questions/comments:
+> 
+> 1. The modparam and drivers calling scsi_device_setup_eh/scsi_device_clear_eh
+> seem uneeded.
+> 
+> If the driver supports performing multiple TMFs/resets in parallel then why
+> not always enable it?
+> 
+
+Not all hardware/drivers support performing multiple TMFs/resets in parallel,
+so I think it is necessary to call scsi_device_setup_eh/scsi_device_clear_eh
+in specific drivers.
+As to modparam, my original intention is let administrators determine whether
+to enable LUN/target based error handle since it's a feature for host with
+large scale of scsi devices.
+If most users think the modparam is unnecessary, I would remove it.
+
+> 2. You probably need to work more closely for some of the drivers. For the iscsi
+> patch, we would want to allocate a tmf per device and per target, or if a cmd
+> timesout on a second lun, that will always fail since the iscsi host has only
+> one tmf preallocated and it would be in use by the first reset.
+> 
+
+Sorry I did not check iscsi's device/target reset in detail.
+
+> For the other drivers, did you review what they support? If so, how many drivers
+> can you just turn this on for? Or what drivers did you test so far?
+> 
+I reviewed the drivers changed in this patchset briefly, and it seems ok for
+these drivers to turn this on. The tests are in progress but not finished now.
+I would post the results in future.
+
+My intention of posting this patchset is want people discuss about this new
+error recovery mechanism. As to drivers, we would test drivers one by one, and
+we are welcome others join us to analyze and test more drivers with these
