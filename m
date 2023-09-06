@@ -2,207 +2,159 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFD2AEB8FB7
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Sep 2023 11:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB282EB8FAF
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Sep 2023 11:33:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237992AbjIFLPP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Sep 2023 07:15:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32936 "EHLO
+        id S239893AbjIFLdn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Sep 2023 07:33:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237140AbjIFLPL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2023 07:15:11 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98EC6A8;
-        Wed,  6 Sep 2023 04:15:06 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.54])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Rgfp81mp8zMl5s;
-        Wed,  6 Sep 2023 19:11:44 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Wed, 6 Sep 2023 19:15:03 +0800
-Message-ID: <7ec75e40-671b-e080-9e7b-2afd5edb25db@huawei.com>
-Date:   Wed, 6 Sep 2023 19:15:02 +0800
+        with ESMTP id S235498AbjIFLdk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2023 07:33:40 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C80D619BF
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Sep 2023 04:33:10 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id 4fb4d7f45d1cf-51e28cac164so1748427a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Sep 2023 04:33:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1693999989; x=1694604789; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=F4ZnpdubhyYmtydqMWzP1BxA67KulQROyAS5/n5ddvg=;
+        b=cSNOCLP9rwHzQU30rS/LlTgMX0K/0YCEfgOb2EtqDmDbQPtm+7tJiiSArqVd5LyEBE
+         uiwqq/bcyVlyDAhf9m2rYXERaR2Vb2AKyS7rc81lYQ+LsPRMpGdw8+n8+dqLcM0tc92E
+         30Pm+CS1qjg2+cxEWO9Ip49hTYQbewoG9Lr+25s/zLDVwumd4UdTibePp0Ya78tj0SDk
+         tWLUNc1VHttW1NFRqeHwa33cwG0QTjz0rFjxWJk/HW2Afdy6NESXcuLVgw9zAXBbgSKd
+         dJeAuNOJ6Js9sI0gdTAFbKNP/fbEduMuDgwDdxeQrPymxrMkZve9Mm1gHqNovZcO6cE/
+         jdAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693999989; x=1694604789;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=F4ZnpdubhyYmtydqMWzP1BxA67KulQROyAS5/n5ddvg=;
+        b=MhNvk4J16h2Ic2pAQUo55aIhiJttk7iafDNm+E1+fjr3tZpsuOKHbUf3907uZMxCvm
+         Eo6wIQsJjXi6bxi6SOCbu5nLXvjevvsPv0yyTkEFBYr4BOnffWdHKzte4LalRprDrZ2Z
+         1h7Zc250oODNNG3CRg81n17huCb5IDKQuCIZ4SEba2Tk0Dbshxjoskzvzx4QklF+V0xK
+         koedKM0lQaT4TuZWCcaHUxLzdoh3aO/r6zfdMzH1B6hcmPR3ghLmZzqcxHo3cj4lzXkH
+         WamuDuszSRdyBB62oBw979w9yw3+26Da8S+xCesKYAh2S1VJPtc6fp0Yx3PR8sQf0CVu
+         wUbA==
+X-Gm-Message-State: AOJu0YzpJCvri4JnQ7kN3xv1a/NIftaMQTBOcx3dEi4Zf7vL47UbbkxR
+        apVRZU7/ZJgij+3B7dZEYhIMcw==
+X-Google-Smtp-Source: AGHT+IHendEcILigzm+13T6wKgoeOTOCi5Gg0KhlfTRaErItptfzN10sryNjfJSw8Ig2bTdARTW8Fg==
+X-Received: by 2002:aa7:d351:0:b0:523:c36e:ec8b with SMTP id m17-20020aa7d351000000b00523c36eec8bmr2531498edr.9.1693999988721;
+        Wed, 06 Sep 2023 04:33:08 -0700 (PDT)
+Received: from krzk-bin.. (77-252-46-238.static.ip.netia.com.pl. [77.252.46.238])
+        by smtp.gmail.com with ESMTPSA id m6-20020a056402050600b0052a404e5929sm8157907edv.66.2023.09.06.04.33.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Sep 2023 04:33:08 -0700 (PDT)
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        linux-scsi@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH] scsi: ufs: do not look for unsupported vdd-hba-max-microamp
+Date:   Wed,  6 Sep 2023 13:33:02 +0200
+Message-Id: <20230906113302.201888-1-krzysztof.kozlowski@linaro.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
- mechanism
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     Hannes Reinecke <hare@suse.de>, <linux-kernel@vger.kernel.org>,
-        <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>
-References: <20230901094127.2010873-1-haowenchao2@huawei.com>
- <b8350de1-6ac8-4d5f-aaa7-7b03e2f7aa93@oracle.com>
-From:   "haowenchao (C)" <haowenchao2@huawei.com>
-In-Reply-To: <b8350de1-6ac8-4d5f-aaa7-7b03e2f7aa93@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm600012.china.huawei.com (7.193.23.74)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/6 8:22, Mike Christie wrote:
-> On 9/1/23 4:41 AM, Wenchao Hao wrote:
->> It's unbearable for systems with large scale scsi devices share HBAs to
->> block all devices' IOs when handle error commands, we need a new error
->> handle mechanism to address this issue.
->>
->> I consulted about this issue a year ago, the discuss link can be found in
->> refenence. Hannes replied about why we have to block the SCSI host
->> then perform error recovery kindly. I think it's unnecessary to block
->> SCSI host for all drivers and can try a small level recovery(LUN based for
->> example) first to avoid block the SCSI host.
->>
->> The new error handle mechanism introduced in this patchset has been
->> developed and tested with out self developed hardware since one year
->> ago, now we want this mechanism can be used by more drivers.
->>
->> Drivers can decide if using the new error handle mechanism and how to
->> handle error commands when scsi_device are scanned,the new mechanism
->> makes SCSI error handle more flexible.
->>
->> SCSI error recovery strategy after blocking host's IO is mainly
->> following steps:
->>
->> - LUN reset
->> - Target reset
->> - Bus reset
->> - Host reset
->>
->> Some drivers did not implement callbacks for host reset, it's unnecessary
->> to block host's IO for these drivers. For example, smartpqi only registered
->> device reset, if device reset failed, it's meaningless to fallback to target
->> reset, bus reset or host reset any more, because these steps would also
->> failed.
->>
->> Here are some drivers we concerned:(there are too many kinds of drivers
->> to figure out, so here I just list some drivers I am familiar with)
->>
->> +-------------+--------------+--------------+-----------+------------+
->> |  drivers    | device_reset | target_reset | bus_reset | host_reset |
->> +-------------+--------------+--------------+-----------+------------+
->> | mpt3sas     |     Y        |     Y        |    N      |    Y       |
->> +-------------+--------------+--------------+-----------+------------+
->> | smartpqi    |     Y        |     N        |    N      |    N       |
->> +-------------+--------------+--------------+-----------+------------+
->> | megaraidsas |     N        |     Y        |    N      |    Y       |
->> +-------------+--------------+--------------+-----------+------------+
->> | virtioscsi  |     Y        |     N        |    N      |    N       |
->> +-------------+--------------+--------------+-----------+------------+
->> | iscsi_tcp   |     Y        |     Y        |    N      |    N       |
->> +-------------+--------------+--------------+-----------+------------+
->> | hisisas     |     Y        |     Y        |    N      |    N       |
->> +-------------+--------------+--------------+-----------+------------+
->>
->> For LUN based error handle, when scsi command is classified as error,
->> we would block the scsi device's IO and try to recover this scsi
->> device, if still can not recover all error commands, it might
->> fallback to target or host level recovery.
->>
->> It's same for target based error handle, but target based error handle
->> would block the scsi target's IO then try to recover the error commands
->> of this target.
->>
->> The first patch defines basic framework to support LUN/target based error
->> handle mechanism, three key operations are abstracted which are:
->>   - add error command
->>   - wake up error handle
->>   - block IOs when error command is added and recoverying.
->>
->> Drivers can implement these three function callbacks and setup to SCSI
->> middle level; I also add a general LUN/target based error handle strategy
->> which can be called directly from drivers to implement LUN/tartget based
->> error handle.
->>
->> The changes of SCSI middle level's error handle are tested with scsi_debug
->> which support single LUN error injection, the scsi_debug patches can be
->> found in reference, following scenarios are tested.
->>
->> Scenario1: LUN based error handle is enabled:
->> +-----------+---------+-------------------------------------------------------+
->> | lun reset | TUR     | Desired result                                        |
->> + --------- + ------- + ------------------------------------------------------+
->> | success   | success | retry or finish with  EIO(may offline disk)           |
->> + --------- + ------- + ------------------------------------------------------+
->> | success   | fail    | fallback to host  recovery, retry or finish with      |
->> |           |         | EIO(may offline disk)                                 |
-> 
-> 
-> I didn't get this part about when we offline the disk now. For this LUN case, is
-> it if the driver has called scsi_device_setup_eh with the fallback arg with false?
-> If so why doesn't it just try target reset -> bus reset -> host reset like before?
-> 
-> 
+Bindings do not allow vdd-hba-max-microamp property and the driver does
+not use it (does not control load of vdd-hba supply).  Skip looking for
+this property to avoid misleading dmesg messages:
 
-There are two scenarios to offline disk when LUN reset succeed and TUR failed:
+  ufshcd-qcom 1d84000.ufs: ufshcd_populate_vreg: unable to find vdd-hba-max-microamp
 
-1. The driver has called scsi_device_setup_eh with the fallback arg with false.
-    Drivers who did not implement eh_xxx_reset for target reset, bus reset and
-    host reset should set fallback to false because these steps would failed,
-    so it's meaningless to try target reset -> bus reset -> host reset any more.
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ drivers/ufs/host/ufs-mediatek.c  |  2 +-
+ drivers/ufs/host/ufshcd-pltfrm.c | 15 ++++++++++-----
+ drivers/ufs/host/ufshcd-pltfrm.h |  2 +-
+ 3 files changed, 12 insertions(+), 7 deletions(-)
 
-2. The disk would also be offlined by sd_eh_action() defined in sd.c when error
-    recovery succeed but command times out contiuously.
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 2383ecd88f1c..941f58744d08 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -806,7 +806,7 @@ static int ufs_mtk_vreg_fix_vcc(struct ufs_hba *hba)
+ 		return 0;
+ 	}
+ 
+-	err = ufshcd_populate_vreg(dev, vcc_name, &info->vcc);
++	err = ufshcd_populate_vreg(dev, vcc_name, &info->vcc, false);
+ 	if (err)
+ 		return err;
+ 
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index 797a4dfe45d9..61cf8b957da4 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -121,7 +121,7 @@ static bool phandle_exists(const struct device_node *np,
+ 
+ #define MAX_PROP_SIZE 32
+ int ufshcd_populate_vreg(struct device *dev, const char *name,
+-			 struct ufs_vreg **out_vreg)
++			 struct ufs_vreg **out_vreg, bool skip_current)
+ {
+ 	char prop_name[MAX_PROP_SIZE];
+ 	struct ufs_vreg *vreg = NULL;
+@@ -147,6 +147,11 @@ int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 	if (!vreg->name)
+ 		return -ENOMEM;
+ 
++	if (skip_current) {
++		vreg->max_uA = 0;
++		goto out;
++	}
++
+ 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+ 	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
+ 		dev_info(dev, "%s: unable to find %s\n", __func__, prop_name);
+@@ -175,19 +180,19 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
+ 	struct device *dev = hba->dev;
+ 	struct ufs_vreg_info *info = &hba->vreg_info;
+ 
+-	err = ufshcd_populate_vreg(dev, "vdd-hba", &info->vdd_hba);
++	err = ufshcd_populate_vreg(dev, "vdd-hba", &info->vdd_hba, true);
+ 	if (err)
+ 		goto out;
+ 
+-	err = ufshcd_populate_vreg(dev, "vcc", &info->vcc);
++	err = ufshcd_populate_vreg(dev, "vcc", &info->vcc, false);
+ 	if (err)
+ 		goto out;
+ 
+-	err = ufshcd_populate_vreg(dev, "vccq", &info->vccq);
++	err = ufshcd_populate_vreg(dev, "vccq", &info->vccq, false);
+ 	if (err)
+ 		goto out;
+ 
+-	err = ufshcd_populate_vreg(dev, "vccq2", &info->vccq2);
++	err = ufshcd_populate_vreg(dev, "vccq2", &info->vccq2, false);
+ out:
+ 	return err;
+ }
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.h b/drivers/ufs/host/ufshcd-pltfrm.h
+index 2df108f4ac13..a86a3ada4bef 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.h
++++ b/drivers/ufs/host/ufshcd-pltfrm.h
+@@ -32,6 +32,6 @@ void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param);
+ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 		       const struct ufs_hba_variant_ops *vops);
+ int ufshcd_populate_vreg(struct device *dev, const char *name,
+-			 struct ufs_vreg **out_vreg);
++			 struct ufs_vreg **out_vreg, bool skip_current);
+ 
+ #endif /* UFSHCD_PLTFRM_H_ */
+-- 
+2.34.1
 
-int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp) {
-	...
-	/*
-	* If the device keeps failing read/write commands but TEST UNIT
-	* READY always completes successfully we assume that medium
-	* access is no longer possible and take the device offline.
-	*/
-	if (sdkp->medium_access_timed_out >= sdkp->max_medium_access_timeouts) {
-			scmd_printk(KERN_ERR, scmd,
-						"Medium access timeout failure. Offlining disk!\n");
-			mutex_lock(&sdev->state_mutex);
-			scsi_device_set_state(sdev, SDEV_OFFLINE);
-			mutex_unlock(&sdev->state_mutex);
-
-			return SUCCESS;
-	}
-	...
-}
-
->>From a high level I have the following questions/comments:
-> 
-> 1. The modparam and drivers calling scsi_device_setup_eh/scsi_device_clear_eh
-> seem uneeded.
-> 
-> If the driver supports performing multiple TMFs/resets in parallel then why
-> not always enable it?
-> 
-
-Not all hardware/drivers support performing multiple TMFs/resets in parallel,
-so I think it is necessary to call scsi_device_setup_eh/scsi_device_clear_eh
-in specific drivers.
-As to modparam, my original intention is let administrators determine whether
-to enable LUN/target based error handle since it's a feature for host with
-large scale of scsi devices.
-If most users think the modparam is unnecessary, I would remove it.
-
-> 2. You probably need to work more closely for some of the drivers. For the iscsi
-> patch, we would want to allocate a tmf per device and per target, or if a cmd
-> timesout on a second lun, that will always fail since the iscsi host has only
-> one tmf preallocated and it would be in use by the first reset.
-> 
-
-Sorry I did not check iscsi's device/target reset in detail.
-
-> For the other drivers, did you review what they support? If so, how many drivers
-> can you just turn this on for? Or what drivers did you test so far?
-> 
-I reviewed the drivers changed in this patchset briefly, and it seems ok for
-these drivers to turn this on. The tests are in progress but not finished now.
-I would post the results in future.
-
-My intention of posting this patchset is want people discuss about this new
-error recovery mechanism. As to drivers, we would test drivers one by one, and
-we are welcome others join us to analyze and test more drivers with these
