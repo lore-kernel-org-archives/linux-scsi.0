@@ -2,130 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCEEBEB8FAD
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Sep 2023 03:08:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEB8FEB8FB5
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Sep 2023 09:05:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231279AbjIFDIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Sep 2023 23:08:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56306 "EHLO
+        id S236247AbjIFJFi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Sep 2023 05:05:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229767AbjIFDIX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2023 23:08:23 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C61B12A
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Sep 2023 20:08:19 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RgS2D1RcyzrSCp;
-        Wed,  6 Sep 2023 11:06:28 +0800 (CST)
-Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
- (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Wed, 6 Sep
- 2023 11:08:15 +0800
-From:   Jinjie Ruan <ruanjinjie@huawei.com>
-To:     <linux-scsi@vger.kernel.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Justin Tee <justin.tee@broadcom.com>
-CC:     <ruanjinjie@huawei.com>
-Subject: [PATCH] scsi: lpfc: Fix Fix the NULL vs IS_ERR() bug for debugfs_create_file()
-Date:   Wed, 6 Sep 2023 11:08:09 +0800
-Message-ID: <20230906030809.2847970-1-ruanjinjie@huawei.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S234467AbjIFJFh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2023 05:05:37 -0400
+X-Greylist: delayed 886 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 06 Sep 2023 02:05:27 PDT
+Received: from mail-m12796.qiye.163.com (mail-m12796.qiye.163.com [115.236.127.96])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF032E50;
+        Wed,  6 Sep 2023 02:05:27 -0700 (PDT)
+Received: from [0.0.0.0] (unknown [IPV6:240e:3b7:3271:d360:6114:c74f:a1fe:c4fd])
+        by mail-m15581.qiye.163.com (Hmail) with ESMTPA id E2575720217;
+        Wed,  6 Sep 2023 16:37:44 +0800 (CST)
+Message-ID: <e20bfd11-175d-e5ae-a224-c0e02e1646b8@sangfor.com.cn>
+Date:   Wed, 6 Sep 2023 16:37:43 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.90.53.73]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemi500008.china.huawei.com (7.221.188.139)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Subject: Re: [PATCH] scsi: scsi_dh_rdac: Avoid crash when a disk attach failed
+Content-Language: en-US
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     pengdonglin@sangfor.com.cn, Huang Cun <huangcun@sangfor.com.cn>
+References: <20230803112841.588822-1-huangcun@sangfor.com.cn>
+From:   Ding Hui <dinghui@sangfor.com.cn>
+In-Reply-To: <20230803112841.588822-1-huangcun@sangfor.com.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlDSk5NVk8YSBkYGh1PTR0fQ1UTARMWGhIXJBQOD1
+        lXWRgSC1lBWUlPSx5BSBlMQUhJTEpBH0hNS0FNSkpPQRhMTx1BGkodHkEYTx0fWVdZFhoPEhUdFF
+        lBWU9LSFVKTU9JTE5VSktLVUpCS0tZBg++
+X-HM-Tid: 0a8a69a3ed5d2e9ekusne2575720217
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Ky46GRw6Mj1OER8sMwlNGjgj
+        TBBPCTVVSlVKTUJIQkNCT01OQktCVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
+        QVlJT0seQUgZTEFISUxKQR9ITUtBTUpKT0EYTE8dQRpKHR5BGE8dH1lXWQgBWUFITkhJNwY+
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since debugfs_create_file() return ERR_PTR and never return NULL, so use
-IS_ERR() to check it instead of checking NULL.
+Friendly ping.
 
-Fixes: 2fcbc569b9f5 ("scsi: lpfc: Make debugfs ktime stats generic for NVME and SCSI")
-Fixes: 4c47efc140fa ("scsi: lpfc: Move SCSI and NVME Stats to hardware queue structures")
-Fixes: 6a828b0f6192 ("scsi: lpfc: Support non-uniform allocation of MSIX vectors to hardware queues")
-Fixes: 95bfc6d8ad86 ("scsi: lpfc: Make FW logging dynamically configurable")
-Fixes: 9f77870870d8 ("scsi: lpfc: Add debugfs support for cm framework buffers")
-Fixes: c490850a0947 ("scsi: lpfc: Adapt partitioned XRI lists to efficient sharing")
-Signed-off-by: Jinjie Ruan <ruanjinjie@huawei.com>
----
- drivers/scsi/lpfc/lpfc_debugfs.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+On 2023/8/3 19:28, Huang Cun wrote:
+> When a disk fails to attach, the struct rdac_dh_data is released,
+> but it is not removed from the ctlr->dh_list. When attaching another
+> disk, the released rdac_dh_data will be accessed and the following
+> BUG_ON() may be observed:
+> 
+> [  414.696167] scsi 5:0:0:7: rdac: Attach failed (8)
+> ...
+> [  423.615364] kernel BUG at drivers/scsi/device_handler/scsi_dh_rdac.c:427!
+> [  423.615731] invalid opcode: 0000 [#1] SMP NOPTI
+> ...
+> [  423.623247] Call Trace:
+> [  423.623598]  rdac_bus_attach+0x203/0x4c0
+> [  423.623949]  ? scsi_dh_handler_attach+0x2d/0x90
+> [  423.624300]  scsi_dh_handler_attach+0x2d/0x90
+> [  423.624652]  scsi_sysfs_add_sdev+0x88/0x270
+> [  423.625004]  scsi_probe_and_add_lun+0xc47/0xd50
+> [  423.625354]  scsi_report_lun_scan+0x339/0x3b0
+> [  423.625705]  __scsi_scan_target+0xe9/0x220
+> [  423.626056]  scsi_scan_target+0xf6/0x100
+> [  423.626404]  fc_scsi_scan_rport+0xa5/0xb0
+> [  423.626757]  process_one_work+0x15e/0x3f0
+> [  423.627106]  worker_thread+0x4c/0x440
+> [  423.627453]  ? rescuer_thread+0x350/0x350
+> [  423.627804]  kthread+0xf8/0x130
+> [  423.628153]  ? kthread_destroy_worker+0x40/0x40
+> [  423.628509]  ret_from_fork+0x1f/0x40
+> 
+> Fixes: 1a5dc166cd88 ("scsi_dh_rdac: update 'access_state' field")
+> Signed-off-by: Huang Cun <huangcun@sangfor.com.cn>
+> Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
+> Cc: Donglin Peng <pengdonglin@sangfor.com.cn>
+> ---
+>   drivers/scsi/device_handler/scsi_dh_rdac.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+> index c5538645057a..9d487c2b7708 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+> @@ -762,8 +762,10 @@ static int rdac_bus_attach(struct scsi_device *sdev)
+>   
+>   clean_ctlr:
+>   	spin_lock(&list_lock);
+> +	list_del_rcu(&h->node);
+>   	kref_put(&h->ctlr->kref, release_controller);
+>   	spin_unlock(&list_lock);
+> +	synchronize_rcu();
+>   
+>   failed:
+>   	kfree(h);
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 7f9b221e7c34..ea9b42225e62 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -6073,7 +6073,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 					    phba->hba_debugfs_root,
- 					    phba,
- 					    &lpfc_debugfs_op_multixripools);
--		if (!phba->debug_multixri_pools) {
-+		if (IS_ERR(phba->debug_multixri_pools)) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 					 "0527 Cannot create debugfs multixripools\n");
- 			goto debug_failed;
-@@ -6085,7 +6085,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG | 0644,
- 					    phba->hba_debugfs_root,
- 					    phba, &lpfc_cgn_buffer_op);
--		if (!phba->debug_cgn_buffer) {
-+		if (IS_ERR(phba->debug_cgn_buffer)) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 					 "6527 Cannot create debugfs "
- 					 "cgn_buffer\n");
-@@ -6098,7 +6098,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG | 0644,
- 					    phba->hba_debugfs_root,
- 					    phba, &lpfc_rx_monitor_op);
--		if (!phba->debug_rx_monitor) {
-+		if (IS_ERR(phba->debug_rx_monitor)) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 					 "6528 Cannot create debugfs "
- 					 "rx_monitor\n");
-@@ -6111,7 +6111,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, 0644,
- 					    phba->hba_debugfs_root,
- 					    phba, &lpfc_debugfs_ras_log);
--		if (!phba->debug_ras_log) {
-+		if (IS_ERR(phba->debug_ras_log)) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 					 "6148 Cannot create debugfs"
- 					 " ras_log\n");
-@@ -6132,7 +6132,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 			debugfs_create_file(name, S_IFREG | 0644,
- 					    phba->hba_debugfs_root,
- 					    phba, &lpfc_debugfs_op_lockstat);
--		if (!phba->debug_lockstat) {
-+		if (IS_ERR(phba->debug_lockstat)) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 					 "4610 Can't create debugfs lockstat\n");
- 			goto debug_failed;
-@@ -6358,7 +6358,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		debugfs_create_file(name, 0644,
- 				    vport->vport_debugfs_root,
- 				    vport, &lpfc_debugfs_op_scsistat);
--	if (!vport->debug_scsistat) {
-+	if (IS_ERR(vport->debug_scsistat)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 				 "4611 Cannot create debugfs scsistat\n");
- 		goto debug_failed;
-@@ -6369,7 +6369,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		debugfs_create_file(name, 0644,
- 				    vport->vport_debugfs_root,
- 				    vport, &lpfc_debugfs_op_ioktime);
--	if (!vport->debug_ioktime) {
-+	if (IS_ERR(vport->debug_ioktime)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 				 "0815 Cannot create debugfs ioktime\n");
- 		goto debug_failed;
 -- 
-2.34.1
+Thanks,
+- Ding Hui
 
