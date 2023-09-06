@@ -2,105 +2,213 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEB8FEB8FB5
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Sep 2023 09:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80626EB8FB6
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Sep 2023 10:10:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236247AbjIFJFi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Sep 2023 05:05:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56476 "EHLO
+        id S238570AbjIFKKM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Sep 2023 06:10:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234467AbjIFJFh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2023 05:05:37 -0400
-X-Greylist: delayed 886 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 06 Sep 2023 02:05:27 PDT
-Received: from mail-m12796.qiye.163.com (mail-m12796.qiye.163.com [115.236.127.96])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF032E50;
-        Wed,  6 Sep 2023 02:05:27 -0700 (PDT)
-Received: from [0.0.0.0] (unknown [IPV6:240e:3b7:3271:d360:6114:c74f:a1fe:c4fd])
-        by mail-m15581.qiye.163.com (Hmail) with ESMTPA id E2575720217;
-        Wed,  6 Sep 2023 16:37:44 +0800 (CST)
-Message-ID: <e20bfd11-175d-e5ae-a224-c0e02e1646b8@sangfor.com.cn>
-Date:   Wed, 6 Sep 2023 16:37:43 +0800
+        with ESMTP id S229947AbjIFKKL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2023 06:10:11 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00967171D;
+        Wed,  6 Sep 2023 03:10:04 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qdpTx-0003eF-Va; Wed, 06 Sep 2023 12:09:58 +0200
+Message-ID: <4a639fff-445e-455b-9a31-57368d6b7021@leemhuis.info>
+Date:   Wed, 6 Sep 2023 12:09:56 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [PATCH] scsi: scsi_dh_rdac: Avoid crash when a disk attach failed
-Content-Language: en-US
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     pengdonglin@sangfor.com.cn, Huang Cun <huangcun@sangfor.com.cn>
-References: <20230803112841.588822-1-huangcun@sangfor.com.cn>
-From:   Ding Hui <dinghui@sangfor.com.cn>
-In-Reply-To: <20230803112841.588822-1-huangcun@sangfor.com.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla Thunderbird
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+Subject: Re: [PATCH AUTOSEL 6.1 10/15] scsi: aacraid: Reply queue mapping to
+ CPUs based on IRQ affinity
+Content-Language: en-US, de-DE
+To:     Sasha Levin <sashal@kernel.org>,
+        Sagar Biradar <sagar.biradar@microchip.com>
+Cc:     Gilbert Wu <gilbert.wu@microchip.com>,
+        John Garry <john.g.garry@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        aacraid@microsemi.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org,
+        Linux kernel regressions list <regressions@lists.linux.dev>,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20230829133245.520176-1-sashal@kernel.org>
+ <20230829133245.520176-10-sashal@kernel.org>
+From:   "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+In-Reply-To: <20230829133245.520176-10-sashal@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlDSk5NVk8YSBkYGh1PTR0fQ1UTARMWGhIXJBQOD1
-        lXWRgSC1lBWUlPSx5BSBlMQUhJTEpBH0hNS0FNSkpPQRhMTx1BGkodHkEYTx0fWVdZFhoPEhUdFF
-        lBWU9LSFVKTU9JTE5VSktLVUpCS0tZBg++
-X-HM-Tid: 0a8a69a3ed5d2e9ekusne2575720217
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Ky46GRw6Mj1OER8sMwlNGjgj
-        TBBPCTVVSlVKTUJIQkNCT01OQktCVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
-        QVlJT0seQUgZTEFISUxKQR9ITUtBTUpKT0EYTE8dQRpKHR5BGE8dH1lXWQgBWUFITkhJNwY+
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1693995005;d2075766;
+X-HE-SMSGID: 1qdpTx-0003eF-Va
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Friendly ping.
+On 29.08.23 15:32, Sasha Levin wrote:
+> From: Sagar Biradar <sagar.biradar@microchip.com>
+> 
+> [ Upstream commit 9dc704dcc09eae7d21b5da0615eb2ed79278f63e ]
+> 
+> Fix the I/O hang that arises because of the MSIx vector not having a mapped
+> online CPU upon receiving completion.
 
-On 2023/8/3 19:28, Huang Cun wrote:
-> When a disk fails to attach, the struct rdac_dh_data is released,
-> but it is not removed from the ctlr->dh_list. When attaching another
-> disk, the released rdac_dh_data will be accessed and the following
-> BUG_ON() may be observed:
+Sasha: you might want to consider dropping this from the 6.1 and 5.15
+autosel queues for now, as this commit apparently causes a regression:
+https://bugzilla.kernel.org/show_bug.cgi?id=217599
+
+Sagar Biradar: as this is a commit of yours; could you please look into
+the report? It was bisected a few weeks ago, but I suspect nobody told
+you. Ahh, the joys of bugzilla.
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
+
+> SCSI cmds take the blk_mq route, which is setup during init. Reserved cmds
+> fetch the vector_no from mq_map after init is complete. Before init, they
+> have to use 0 - as per the norm.
 > 
-> [  414.696167] scsi 5:0:0:7: rdac: Attach failed (8)
-> ...
-> [  423.615364] kernel BUG at drivers/scsi/device_handler/scsi_dh_rdac.c:427!
-> [  423.615731] invalid opcode: 0000 [#1] SMP NOPTI
-> ...
-> [  423.623247] Call Trace:
-> [  423.623598]  rdac_bus_attach+0x203/0x4c0
-> [  423.623949]  ? scsi_dh_handler_attach+0x2d/0x90
-> [  423.624300]  scsi_dh_handler_attach+0x2d/0x90
-> [  423.624652]  scsi_sysfs_add_sdev+0x88/0x270
-> [  423.625004]  scsi_probe_and_add_lun+0xc47/0xd50
-> [  423.625354]  scsi_report_lun_scan+0x339/0x3b0
-> [  423.625705]  __scsi_scan_target+0xe9/0x220
-> [  423.626056]  scsi_scan_target+0xf6/0x100
-> [  423.626404]  fc_scsi_scan_rport+0xa5/0xb0
-> [  423.626757]  process_one_work+0x15e/0x3f0
-> [  423.627106]  worker_thread+0x4c/0x440
-> [  423.627453]  ? rescuer_thread+0x350/0x350
-> [  423.627804]  kthread+0xf8/0x130
-> [  423.628153]  ? kthread_destroy_worker+0x40/0x40
-> [  423.628509]  ret_from_fork+0x1f/0x40
-> 
-> Fixes: 1a5dc166cd88 ("scsi_dh_rdac: update 'access_state' field")
-> Signed-off-by: Huang Cun <huangcun@sangfor.com.cn>
-> Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
-> Cc: Donglin Peng <pengdonglin@sangfor.com.cn>
+> Reviewed-by: Gilbert Wu <gilbert.wu@microchip.com>
+> Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> Link: https://lore.kernel.org/r/20230519230834.27436-1-sagar.biradar@microchip.com
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
 > ---
->   drivers/scsi/device_handler/scsi_dh_rdac.c | 2 ++
->   1 file changed, 2 insertions(+)
+>  drivers/scsi/aacraid/aacraid.h |  1 +
+>  drivers/scsi/aacraid/commsup.c |  6 +++++-
+>  drivers/scsi/aacraid/linit.c   | 14 ++++++++++++++
+>  drivers/scsi/aacraid/src.c     | 25 +++++++++++++++++++++++--
+>  4 files changed, 43 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> index c5538645057a..9d487c2b7708 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -762,8 +762,10 @@ static int rdac_bus_attach(struct scsi_device *sdev)
->   
->   clean_ctlr:
->   	spin_lock(&list_lock);
-> +	list_del_rcu(&h->node);
->   	kref_put(&h->ctlr->kref, release_controller);
->   	spin_unlock(&list_lock);
-> +	synchronize_rcu();
->   
->   failed:
->   	kfree(h);
-
--- 
-Thanks,
-- Ding Hui
-
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+> index 5e115e8b2ba46..7c6efde75da66 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -1678,6 +1678,7 @@ struct aac_dev
+>  	u32			handle_pci_error;
+>  	bool			init_reset;
+>  	u8			soft_reset_support;
+> +	u8			use_map_queue;
+>  };
+>  
+>  #define aac_adapter_interrupt(dev) \
+> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+> index deb32c9f4b3e6..3f062e4013ab6 100644
+> --- a/drivers/scsi/aacraid/commsup.c
+> +++ b/drivers/scsi/aacraid/commsup.c
+> @@ -223,8 +223,12 @@ int aac_fib_setup(struct aac_dev * dev)
+>  struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
+>  {
+>  	struct fib *fibptr;
+> +	u32 blk_tag;
+> +	int i;
+>  
+> -	fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
+> +	blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
+> +	i = blk_mq_unique_tag_to_tag(blk_tag);
+> +	fibptr = &dev->fibs[i];
+>  	/*
+>  	 *	Null out fields that depend on being zero at the start of
+>  	 *	each I/O
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+> index 5ba5c18b77b46..bff49b8ab057d 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -19,6 +19,7 @@
+>  
+>  #include <linux/compat.h>
+>  #include <linux/blkdev.h>
+> +#include <linux/blk-mq-pci.h>
+>  #include <linux/completion.h>
+>  #include <linux/init.h>
+>  #include <linux/interrupt.h>
+> @@ -505,6 +506,15 @@ static int aac_slave_configure(struct scsi_device *sdev)
+>  	return 0;
+>  }
+>  
+> +static void aac_map_queues(struct Scsi_Host *shost)
+> +{
+> +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+> +
+> +	blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+> +			      aac->pdev, 0);
+> +	aac->use_map_queue = true;
+> +}
+> +
+>  /**
+>   *	aac_change_queue_depth		-	alter queue depths
+>   *	@sdev:	SCSI device we are considering
+> @@ -1489,6 +1499,7 @@ static struct scsi_host_template aac_driver_template = {
+>  	.bios_param			= aac_biosparm,
+>  	.shost_groups			= aac_host_groups,
+>  	.slave_configure		= aac_slave_configure,
+> +	.map_queues			= aac_map_queues,
+>  	.change_queue_depth		= aac_change_queue_depth,
+>  	.sdev_groups			= aac_dev_groups,
+>  	.eh_abort_handler		= aac_eh_abort,
+> @@ -1776,6 +1787,8 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	shost->max_lun = AAC_MAX_LUN;
+>  
+>  	pci_set_drvdata(pdev, shost);
+> +	shost->nr_hw_queues = aac->max_msix;
+> +	shost->host_tagset = 1;
+>  
+>  	error = scsi_add_host(shost, &pdev->dev);
+>  	if (error)
+> @@ -1908,6 +1921,7 @@ static void aac_remove_one(struct pci_dev *pdev)
+>  	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+>  
+>  	aac_cancel_rescan_worker(aac);
+> +	aac->use_map_queue = false;
+>  	scsi_remove_host(shost);
+>  
+>  	__aac_shutdown(aac);
+> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+> index 11ef58204e96f..61949f3741886 100644
+> --- a/drivers/scsi/aacraid/src.c
+> +++ b/drivers/scsi/aacraid/src.c
+> @@ -493,6 +493,10 @@ static int aac_src_deliver_message(struct fib *fib)
+>  #endif
+>  
+>  	u16 vector_no;
+> +	struct scsi_cmnd *scmd;
+> +	u32 blk_tag;
+> +	struct Scsi_Host *shost = dev->scsi_host_ptr;
+> +	struct blk_mq_queue_map *qmap;
+>  
+>  	atomic_inc(&q->numpending);
+>  
+> @@ -505,8 +509,25 @@ static int aac_src_deliver_message(struct fib *fib)
+>  		if ((dev->comm_interface == AAC_COMM_MESSAGE_TYPE3)
+>  			&& dev->sa_firmware)
+>  			vector_no = aac_get_vector(dev);
+> -		else
+> -			vector_no = fib->vector_no;
+> +		else {
+> +			if (!fib->vector_no || !fib->callback_data) {
+> +				if (shost && dev->use_map_queue) {
+> +					qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
+> +					vector_no = qmap->mq_map[raw_smp_processor_id()];
+> +				}
+> +				/*
+> +				 *	We hardcode the vector_no for
+> +				 *	reserved commands as a valid shost is
+> +				 *	absent during the init
+> +				 */
+> +				else
+> +					vector_no = 0;
+> +			} else {
+> +				scmd = (struct scsi_cmnd *)fib->callback_data;
+> +				blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
+> +				vector_no = blk_mq_unique_tag_to_hwq(blk_tag);
+> +			}
+> +		}
+>  
+>  		if (native_hba) {
+>  			if (fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF) {
