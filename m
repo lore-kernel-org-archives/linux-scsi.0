@@ -2,296 +2,214 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F9B6EE14AA
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Sep 2023 01:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CCF2EC873D
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Sep 2023 15:47:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238684AbjIGB7f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Sep 2023 21:59:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39084 "EHLO
+        id S234483AbjIGPq7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Sep 2023 11:46:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237271AbjIGB7f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2023 21:59:35 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3DEE19A7
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Sep 2023 18:59:29 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230907015927epoutp02e54c6e7bfce2c1b1da231c42be36924c~Ce0oKjg4o2423124231epoutp023
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Sep 2023 01:59:27 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230907015927epoutp02e54c6e7bfce2c1b1da231c42be36924c~Ce0oKjg4o2423124231epoutp023
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1694051967;
-        bh=DNJJ1OytfW755Q77Ddf8MGHEt9FiJitFL4Jj1PUMvuU=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=cSbQsq5xFSniRzS1xG17Kn1EI5zLGsm9PV5vzlsaFayps3Y36C0J2VQqMxFWnexMI
-         SK5foa4MJVy7Q2tTbkJn66Zhl1xPAXRHGtgzmODWzon++jpyMrw/h2fBY2XQig8vcq
-         xkduHN5aqO9aNI8Ds2FFPeQlmfM3c2ruKnBwiH7M=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20230907015927epcas2p40eb32c1f77160943ed1460b27ccf6055~Ce0ncRM4a3251232512epcas2p4a;
-        Thu,  7 Sep 2023 01:59:27 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.70]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4Rh2VQ0J4Tz4x9Px; Thu,  7 Sep
-        2023 01:59:26 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        37.09.09649.D7E29F46; Thu,  7 Sep 2023 10:59:25 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20230907015925epcas2p3b9850bb03126e9caa43530e164884ae8~Ce0mAU8Bi0386603866epcas2p35;
-        Thu,  7 Sep 2023 01:59:25 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20230907015925epsmtrp1e7e856445819f2b2e225f54619cad90e~Ce0l-bC-C2578225782epsmtrp1p;
-        Thu,  7 Sep 2023 01:59:25 +0000 (GMT)
-X-AuditID: b6c32a46-b9ffa700000025b1-2a-64f92e7d8d61
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        6F.B9.08788.D7E29F46; Thu,  7 Sep 2023 10:59:25 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20230907015925epsmtip24ffc8da5764d90c4092974328dfb3e58~Ce0lxBjgC2709427094epsmtip2D;
-        Thu,  7 Sep 2023 01:59:25 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, kwangwon.min@samsung.com,
-        junwoo80.lee@samsung.com, wkon.kim@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v4] ufs: poll pmc until another pa request is completed
-Date:   Thu,  7 Sep 2023 10:48:26 +0900
-Message-Id: <1694051306-172962-1-git-send-email-kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupgk+LIzCtJLcpLzFFi42LZdljTVLdW72eKQdcNc4uTT9awWTyYt43N
-        4uXPq2wWBx92slhM+/CT2WL14gcsFotubGOy2PW3mcli642dLBY3txxlsbi8aw6bRff1HWwW
-        y4//Y7LounuD0WLpv7csFpsvfWNxEPC4fMXbY/Gel0weExYdYPT4vr6DzePj01ssHn1bVjF6
-        fN4k59F+oJspgCMq2yYjNTEltUghNS85PyUzL91WyTs43jne1MzAUNfQ0sJcSSEvMTfVVsnF
-        J0DXLTMH6AMlhbLEnFKgUEBicbGSvp1NUX5pSapCRn5xia1SakFKToF5gV5xYm5xaV66Xl5q
-        iZWhgYGRKVBhQnbGiiPbmAu6TSoWnH3P2sB4T6uLkZNDQsBE4v6dU0xdjFwcQgI7GCVe3/3K
-        DpIQEvjEKPHvhSBE4hujxJ62VnaYjvnH70N17GWUOHFtJguE84NRYsKLxywgVWwCmhJPb04F
-        qxIR+MAk8X/5NkaQBLOAusSuCSeYQGxhAXeJ7QvuM4PYLAKqErvvvQKr4RVwk/h+5APUOjmJ
-        m+c6mSHsTg6Jm6v0IGwXiRnfVzFB2MISr45vgaqXknjZ3wZkcwDZ2RJ7FopBhCskFk97ywJh
-        G0vMetbOCFLCDHTn+l36ENXKEkdusUAcySfRcfgv1BBeiY42IYhGZYlfkyYzQtiSEjNv3oHa
-        6SHRc+ssCyTcYiU+H5/NMoFRdhbC/AWMjKsYxVILinPTU4uNCozgUZScn7uJEZwktdx2ME55
-        +0HvECMTB+MhRgkOZiUR3nfy31KEeFMSK6tSi/Lji0pzUosPMZoCA2sis5Rocj4wTeeVxBua
-        WBqYmJkZmhuZGpgrifPea52bIiSQnliSmp2aWpBaBNPHxMEp1cC0d8WKP5kLtHstT5y9pWmo
-        4H8z+iAjg0Zt4s2urW//uoZrBc738jgR/z1d4GXfAec2Tenj33UtPBlUMowfBHotvC4473RF
-        ka5uwlbDnXnS7NGxDjJdnX0TvkoqlOx6GldytfMiz26jaenXf96KFrgm9kifffrUMMO4DObi
-        hhhG4fhdB2IcdT49eaKv333O8Nrl0PKMu5feXq4U3mCgecm5Wfjbm9xpHr6PjMLTJjDzcDwO
-        K5Y5UJ38KHPGHJ00zvc+36PZ5EWbLdb1bJRa8LGW1epBxIsq2SurrcV4/gRvPb01sYqZ2eHQ
-        vl9Fi5Km3At4KCRzRlNxs73ejojPzHrMG1QvbXF6tOeNr6q9thJLcUaioRZzUXEiAI8lWWgb
-        BAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrNLMWRmVeSWpSXmKPExsWy7bCSvG6t3s8UgxVLRS1OPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2sljc3HKUxeLyrjlsFt3Xd7BZ
-        LD/+j8mi6+4NRoul/96yWGy+9I3FQcDj8hVvj8V7XjJ5TFh0gNHj+/oONo+PT2+xePRtWcXo
-        8XmTnEf7gW6mAI4oLpuU1JzMstQifbsErowVR7YxF3SbVCw4+561gfGeVhcjJ4eEgInE/OP3
-        mboYuTiEBHYzSuxceIARIiEpcWLncyhbWOJ+yxFWiKJvjBJ/DkxgAUmwCWhKPL05FaxbRKCJ
-        WeLS7OlgCWYBdYldE04wgdjCAu4S2xfcZwaxWQRUJXbfewU2lVfATeL7kQ/sEBvkJG6e62Se
-        wMizgJFhFaNkakFxbnpusWGBUV5quV5xYm5xaV66XnJ+7iZGcPhqae1g3LPqg94hRiYOxkOM
-        EhzMSiK87+S/pQjxpiRWVqUW5ccXleakFh9ilOZgURLn/fa6N0VIID2xJDU7NbUgtQgmy8TB
-        KdXAlL/erPhTVqbYsp3zDnbo//pmyrZ7/vcJoS5lSW+bNL4Y7V50JH3a8pbNVYlLOHY9/dR7
-        Q9B60uQL5y3mfQ05zpO9Vnl10/eY2/6efhxh4Vu8HNQFb//tFY+NXTu77phhvSrHQ3mpdJGD
-        XFULlDKDvq8tebtV8tIcgyihz3Fb131el7TkAOOzHyrKLtFR+gXeEt8NbzWv+c++NGve1nJb
-        76tSrW7vG5bfN3rBmr7c6MuyT9p7UuZFvNijzbspcIaGVvUt61t7V67ZdpxnvcyNqMjJsRna
-        b4wmuRmuuuvSt6Ntx0zLaWezL67nPPg6WqAtwrzWJN/4rmHco+Sn06WeHA29ovZX92jE9pOH
-        b+eX3FdiKc5INNRiLipOBAAVqN8izgIAAA==
-X-CMS-MailID: 20230907015925epcas2p3b9850bb03126e9caa43530e164884ae8
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230907015925epcas2p3b9850bb03126e9caa43530e164884ae8
-References: <CGME20230907015925epcas2p3b9850bb03126e9caa43530e164884ae8@epcas2p3.samsung.com>
+        with ESMTP id S245404AbjIGP3X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2023 11:29:23 -0400
+Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2134.outbound.protection.outlook.com [40.107.117.134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7835EE45;
+        Thu,  7 Sep 2023 08:28:56 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=acWTaVculGuQlTXdM9SOlP78ulqOohCYuy7bqc3TB+AJC0sRs4mfTE2eVzG4f7/LJtBy8DcvoNuNBkcTLetcwbIzO6Z6LbOFv7/dVrtitwTWzJ0bPS3frrUcox5etGMGmvzZP1U3XJaWTvTWoVeulSeT7cS6HwBbg25PmZ3VOse8xFT38NEq3d8gmG0Xxf8WnQY1v3/pRV8vZ4r3+hvaYpW4UneDOcgJp+ww5j1MCT/KuufV+m9UaOFCtAnvIEk8F6I4DM1gNSeFWEu0TR9ukeZ9sAqan+6lMidvj0vbDPSOSrbJmC+XFsqhAGG1BsHlJQznMbeSDcl7DJGQWxrUxA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=faOjCBJdWQfJRX8G8ytuAi5eQKQYP3K28p5x6ojyXHc=;
+ b=eZOuaRIo+/tfOJGckC5mbhIJkeCCTgIW6RVIs0MaOkzP4ynqTXdVtfgYrkc/R6mwSHdAT8K0ZFy1Gmot+tDlWyPXNXvQoUBQQSyEw4L5ynGUB7Eqp/mGelq1emr7HbH8EICk8ft/h3w3JEdGlbaG2hoBKJEWxANnZzGeVCVh8xYZMYOwXH8qQ2s3BQJU0LfUDXWvCrejG42Np+s16YS1P6Vpjnjmx+4IauMy8KhhW9iVqfy9Pu5X2JmH+SYTBmcyF2Mcts+RxlVvfdyF6XoIbCUO9slVVSLwL8FfbwMyCTdz77/ftu9h9NkgTLdcdpn5ZHXN8k058cqGGFnh1F+sRQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=faOjCBJdWQfJRX8G8ytuAi5eQKQYP3K28p5x6ojyXHc=;
+ b=kiU/8vOK8GnORMUhgA3UNGCMS19GXl12YSYi1KlCSw4nnmvqM5zYfsuTbBJnc44vj9k0tzj/0KtdjR0x1+Dygv5aeYOmhG5y40dr2QP3wOp7xDM+EFX/EyM306tyEVIPr+T5ytPufYrvPDCq9Yl6Ad5foskA73+lzeL98YFPMltKE0PokNmKdxINuvVf+xSRD3YX4d2/fRQdMzeZws3Zm1fsKfx4XFRdYez7LDztjvZ3HfNnAC3EEbof/Hfsy9YkW6TcjRf7M4heQjQjmykP/JXoC27fDga9DQ6Q81eWcEji8RhnLrBJMsZYQAYQZtUmx7raAI18vDFcIwNAMn2EHA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from TYZPR06MB6697.apcprd06.prod.outlook.com (2603:1096:400:451::6)
+ by PSAPR06MB4229.apcprd06.prod.outlook.com (2603:1096:301:7b::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.34; Thu, 7 Sep
+ 2023 09:46:13 +0000
+Received: from TYZPR06MB6697.apcprd06.prod.outlook.com
+ ([fe80::5bef:53ac:2a7c:6f4e]) by TYZPR06MB6697.apcprd06.prod.outlook.com
+ ([fe80::5bef:53ac:2a7c:6f4e%3]) with mapi id 15.20.6745.034; Thu, 7 Sep 2023
+ 09:46:13 +0000
+From:   Lu Hongfei <luhongfei@vivo.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     opensource.kernel@vivo.com, luhongfei@vivo.com
+Subject: [PATCH 3/3] scsi: ufs: core: Add exception event handler to implicitly handle WB buffer resize event
+Date:   Thu,  7 Sep 2023 17:44:29 +0800
+Message-Id: <20230907094517.1961-1-luhongfei@vivo.com>
+X-Mailer: git-send-email 2.27.0.windows.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TYCPR01CA0152.jpnprd01.prod.outlook.com
+ (2603:1096:400:2b1::6) To TYZPR06MB6697.apcprd06.prod.outlook.com
+ (2603:1096:400:451::6)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYZPR06MB6697:EE_|PSAPR06MB4229:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7590d609-cc58-4c8b-7f5b-08dbaf8745a2
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: MD4sFbh31m0SAOtFJAsOpSUQ/KRrQMNcNnmWvaJoe8lIWjyY4dQiQRI8qrY8o34fT42/jI5a8kAs2voHichuqO4ltQ4DG15xHdolIBtKSPtFmI4ucqSIpCEWwGtbqFkdB59O8H0MnuPJ7gAVglgq8ei5Qafz1vj1m5NvAn4XZsJXogqncJowbpmhYom5CY6WZVVPso6bSRuuvUf/SmlbpJvBLVIsXM6Q1EGr2Pt/2FRWJsYOD4BzBM0H8iEUnpu1cdz3mQNEFYCsd1FZ1ztczfqS0Uv+k1/RqcwhXe9kMd21VXX5GFZAXvsY/0qyt0ZC3bJMCP9e0HwoYYckI+kxDLUeTobJsNN/vroZoCti7uTw8X5zgYmLivSuCgc5sDvNNWsD4Mpgb1/TBw/9D2oLpiaW+iWir/KJRvj8iXY01zii95pqH44tcbWJtNBd2/1QUkXIBKeu5B09c4VdPfoG//rR6dSm9rFOrcIaTGLduBdFAHNukQBkC67syq+FlSkd1oZQ5v7gpSE9ZjVun6ZxO8UENQArpeI0UZ1RJEntEL7DU2UdePmC7qDXZbcB88SEDhzq8vRP7f0EGUPCmQ9sxj7uxlmp0PLn9KPl3cPZs4DrGCqGN6NF3q14k21Qukv3
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB6697.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(39850400004)(346002)(376002)(136003)(396003)(366004)(451199024)(186009)(1800799009)(36756003)(38100700002)(38350700002)(921005)(86362001)(52116002)(6486002)(6666004)(6506007)(478600001)(5660300002)(110136005)(66556008)(4326008)(8936002)(8676002)(2906002)(66946007)(6512007)(83380400001)(316002)(66476007)(7416002)(41300700001)(26005)(2616005)(1076003)(107886003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?bEXR00uv+1/LWiwVrBHgEv36EIPjLFc3oyIhgLxNzbnRt9nOneotovXwN8nL?=
+ =?us-ascii?Q?eR1vfX+lY3mfeKP9KpkChTjOSHeflQHfCXIyCAVF1kNp5EYvXIO7PVl09Xq1?=
+ =?us-ascii?Q?xwlMg0l1uv8eEytQi5UGkhtXMNN6qGMGTj1VappapSdTLIfU6pOcFXRf686A?=
+ =?us-ascii?Q?GWWXoiVf+zl0gU8CQrq/e439xbi4ETDERAQD0ryEM2xjiZusNeiOYofTJHnN?=
+ =?us-ascii?Q?Zhzz978Jmd16hl/JY6tKcj5SxPLzhA3nWgNGUV+MUQSxDuRaLi3fqFkxMTbU?=
+ =?us-ascii?Q?UwN1hHOSdldX1mtBiFOLb5DO9QJDCDfJNVIcbGoCxcSKrXIlMPnMefGntABP?=
+ =?us-ascii?Q?LNFQrXDdyxGi9jYCMmFD/vLLcS9sJNw7gZWig/7zkSzjW8a/SsJKsf/vWh/+?=
+ =?us-ascii?Q?r/b0aBur1t7R66E0obfYWcyQid4MljBeb6GUCdlNnb5L1mOp1WHfVRqQQxss?=
+ =?us-ascii?Q?UgECkUOIbZvsWd3vRH9iqsfX+Ynfpm94UvtoFMXFtNIkWOxtn4hS0lVJehc5?=
+ =?us-ascii?Q?ZkxO3K5lxbN5xiinqlXJ+tm/ajI5H27+ELJ5R5qHQsl8ZURnSKaNVaX1f4Yt?=
+ =?us-ascii?Q?tT+Z9l+zwfTCqg/XotZ/JplWGtFwcS4/aIwMJBpr4sNgPX2MnoZvjkpgj0wV?=
+ =?us-ascii?Q?7+hiyMB/zB3HF/dzjNZvsaQwp6na0aKrzjXMylZxNAVbnidMvEcXSUgIWhkE?=
+ =?us-ascii?Q?/QO3SotwPAwWtpJl+SRUvpliivtOWmVl6ndolQQHX0J8A2G8Lv35kdC04pFR?=
+ =?us-ascii?Q?3hi/V8vTae8scQC/TyJDDs8dZBlewyESdWKx92mNe04WV0ypyz1A5UxI8rHN?=
+ =?us-ascii?Q?0G+2ve+IaH0hcmqbaGFNdI7vNx3Vm+iQewjUMnBrbsUg25nMTUL9ulBkbW/l?=
+ =?us-ascii?Q?xNWYczPIUVC4nZO76cphvEUdkGOeSxSXI5R41BXp+UMNf2axAPN0O91+lsbr?=
+ =?us-ascii?Q?OXRmZ+Yw/yWcP0+uxeitbWdTdyOvNtPkdGtg3ihL9yI0Xi0Pq+ZvsPCPHvpz?=
+ =?us-ascii?Q?C6fKS1rXzTf6f53NxjPl0INEKnyCNpZVQ95BhNZ30Yu98vrb6AcSz4Pasgwq?=
+ =?us-ascii?Q?e8r7LOQnV5ihOy5XyXvHSpmD2/3WedvOza4NHzXWW3NUhRy3768X3pQTT/+h?=
+ =?us-ascii?Q?G1EFSBifHqVjdV/xDFJcGsrMF6NawAJnUM4ivuSIUvf1x7glMiKPKc149W5S?=
+ =?us-ascii?Q?RHj1CHss7/XHivdJHefGGTDzUe4kZODooegnqRZ501OpeJ1jSnPVv+YfQZkC?=
+ =?us-ascii?Q?qo9C0qP/rUNGI4TVOKQSESjQ6y3KevoZITTnQGOQUmUkQkfR4tnqVpxom4l7?=
+ =?us-ascii?Q?sv3w8b1PwBnALPvoFox90hchQHTpifFmcn8YsQ5k/aOJyY65OaP0wRRyZfHk?=
+ =?us-ascii?Q?kSCq7sstMUqGAiU4QwoeYUu1ymZAddU0dhABCNtnLEVERmLUEz907PkfVZY2?=
+ =?us-ascii?Q?4JXbHBhSfksuOhLjj+JmBpk7VZoO5fzU7ZE0/xfNtjCARJAK3kyHBTrXfJpm?=
+ =?us-ascii?Q?tskfAIFtpb3U1oNNgh8ir+eIG8QJD9g3SIKkvivcMHjROCQJmY5GTOpxKGuc?=
+ =?us-ascii?Q?7tryn5I05/4VVltq1RgbVJ4f7JyrC+XUw7rPO9OK?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7590d609-cc58-4c8b-7f5b-08dbaf8745a2
+X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB6697.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Sep 2023 09:46:12.9010
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: oflF5XROjI5TAFXgmn1ArbLw/7NsFCi61TI5glhdgcCZ9RhdDbOryAHzwkyidBgseBtd0/kqXqwolF/7B0UYUg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PSAPR06MB4229
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Regarding 5.7.12.1.1 in Unipro v1.8, PA rejects sebsequent
-requests following the first request from upper layer or remote.
-In this situation, PA responds w/ BUSY in cases
-when they come from upper layer and does nothing for
-the requests. So HCI doesn't receive ind, a.k.a. indicator
-for its requests and an interrupt, IS.UPMS isn't generated.
+The WRITEBOOSTER_RESIZE_HINT event mechanism is enabled by
+setting the WRITEBOOSTER_RESIZE_HINT_EN bit of the
+wExceptionEventControl attribute.
 
-When LINERESET occurs, the error handler issues PMC which is
-recognized as a request for PA. If a host's PA gets or raises
-LINERESET, and a request for PMC, this could be a concurrent
-situation mentioned above. And I found that situation w/ my
-environment.
+The pre-conditions for enabling it include:
+    1. WB enable
+    2. Wb is in preserving user space mode
+    3. UFS version not less than 4.1
+    4. Host driver allows it to be opened
 
-[  222.929539]I[0:DefaultDispatch:20410] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecdl : 0x80000002
-[  222.999009]I[0: arch_disk_io_1:20413] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecpa : 0x80000010
-[  222.999200] [6:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufs_pwr_mode_restore_needed : mode = 0x15, pwr_rx = 1, pwr_tx = 1
-[  223.002876]I[0: arch_disk_io_3:20422] exynos-ufs 13500000.ufs: ufshcd_update_uic_error: uecpa : 0x80000010
-[  223.501050] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: pwr ctrl cmd 0x2 with mode 0x11 completion timeout
-[  223.502305] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_change_power_mode: power mode change failed -110
-[  223.502312] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_err_handler: Failed to restore power mode, err = -110
-[  223.502392] [4:  kworker/u16:2:  132] exynos-ufs 13500000.ufs: ufshcd_is_pwr_mode_restore_needed : mode = 0x11, pwr_rx = 1, pwr_tx = 1
+After enabled, when there is a recommendation about resize
+for the WB Buffer, the device inform the host by the
+WRITEBOOSTER_RESIZE_HINT exception mechanism.
 
-This patch is to poll PMC's result w/o checking its ind until
-the result is not busy, i.e. 09h, to avoid the rejection.
+Host driver will call ufshcd_wb_resize_exception_event_handler
+to handle the exception event.
 
-And this patch requires the following patch because it assumes
-__ufshcd_send_uic_cmd doesn't require host_lock.
-https://lore.kernel.org/linux-scsi/bec84ee1ce8f5c5971b98d8e501aeabb9b5b26d1.1686716811.git.kwmad.kim@samsung.com/
-
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-
+Signed-off-by: Lu Hongfei <luhongfei@vivo.com>
 ---
-v3 -> v4
-1) change description
-
-v2 -> v3
-1) check time in the loop with jiffies, instead of miliseconds.
-2) change a variable's name and fix a typo and wrong alignment.
-
-v1 -> v2
-1) remove clearing hba->active_uic_cmd at the end of __ufshcd_poll_uic_pwr
-2) change commit message on the cited clause: 5.7.12.11 -> 5.7.12.1.1
-3) add mdelay to avoid too many issueing
-4) change the timeout for the polling to 100ms because I found it
-sometimes takes much longer than expected.
-
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 93 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 65 insertions(+), 28 deletions(-)
+ drivers/ufs/core/ufshcd.c | 41 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+ mode change 100644 => 100755 drivers/ufs/core/ufshcd.c
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7bc3fc4..f6b8659 100644
+index c2df07545f96..f15d14c46789
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -98,6 +98,9 @@
- /* Polling time to wait for fDeviceInit */
- #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+@@ -306,6 +306,8 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
  
-+/* Polling time to wait until PA is ready */
-+#define UIC_PA_RDY_TIMEOUT	100	/* millisecs */
+ static void ufshcd_configure_wb(struct ufs_hba *hba)
+ {
++	u16 mask = 0;
 +
- /* UFSHC 4.0 compliant HC support this mode. */
- static bool use_mcq_mode = true;
+ 	if (!ufshcd_is_wb_allowed(hba))
+ 		return;
  
-@@ -4120,6 +4123,62 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+@@ -315,6 +317,14 @@ static void ufshcd_configure_wb(struct ufs_hba *hba)
+ 
+ 	if (ufshcd_is_wb_buf_flush_allowed(hba))
+ 		ufshcd_wb_toggle_buf_flush(hba, true);
++
++	/* Enable the WRITEBOOSTER_RESIZE_HINT exception mechanism. */
++	if (hba->dev_info->wspecversion >= 0x410
++	    && hba->dev_info->b_presrv_uspc_en
++	    && ufshcd_is_wb_buf_resize_allowed(hba)) {
++		mask |= MASK_EE_WRITEBOOSTER_RESIZE_HINT;
++		ufshcd_enable_ee(hba, mask);
++	}
  }
- EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
  
-+static int __ufshcd_poll_uic_pwr(struct ufs_hba *hba, struct uic_command *cmd,
-+		struct completion *cnf)
+ static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
+@@ -5868,6 +5878,34 @@ static void ufshcd_temp_exception_event_handler(struct ufs_hba *hba, u16 status)
+ 	 */
+ }
+ 
++static void ufshcd_wb_resize_exception_event_handler(struct ufs_hba *hba, u16 status)
 +{
-+	unsigned long flags;
-+	int ret;
-+	u32 mode = cmd->argument3;
-+	unsigned long deadline = jiffies +
-+		msecs_to_jiffies(UIC_PA_RDY_TIMEOUT);
++	u32 value;
++	int err;
 +
-+	do {
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		hba->active_uic_cmd = NULL;
-+		if (ufshcd_is_link_broken(hba)) {
-+			spin_unlock_irqrestore(hba->host->host_lock, flags);
-+			ret = -ENOLINK;
-+			goto out;
-+		}
-+		hba->uic_async_done = cnf;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
++	if (!(status | MASK_EE_WRITEBOOSTER_RESIZE_HINT))
++		return;
 +
-+		cmd->argument2 = 0;
-+		cmd->argument3 = mode;
-+		ret = __ufshcd_send_uic_cmd(hba, cmd, true);
-+		if (ret) {
-+			dev_err(hba->dev,
-+				"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
-+				cmd->command, cmd->argument3, ret);
-+			goto out;
-+		}
++	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++				QUERY_ATTR_IDN_WB_BUF_RESIZE_HINT, 0, 0, &value))
++		return;
 +
-+		/* This value is heuristic */
-+		if (!wait_for_completion_timeout(&cmd->done,
-+						 msecs_to_jiffies(5))) {
-+			ret = -ETIMEDOUT;
-+			dev_err(hba->dev,
-+				"pwr ctrl cmd 0x%x with mode 0x%x timeout\n",
-+				cmd->command, cmd->argument3);
-+			if (cmd->cmd_active)
-+				goto out;
++	dev_info(hba->dev, "WB Buffer Resize Hint info %u\n", value);
++	if (value != 0x01 && value != 0x02)
++		return;
 +
-+			dev_info(hba->dev, "%s: pwr ctrl cmd has already been completed\n", __func__);
-+		}
++	if (ufshcd_wait_for_doorbell_clr(hba, 1 * USEC_PER_SEC))
++		return;
 +
-+		/* retry only for busy cases */
-+		ret = cmd->argument2 & MASK_UIC_COMMAND_RESULT;
-+		if (ret != UIC_CMD_RESULT_BUSY)
-+			break;
++	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++		QUERY_ATTR_IDN_WB_BUF_RESIZE_EN, 0, 0, &value);
 +
-+		dev_info(hba->dev, "%s: PA is busy and can't handle a requeest, %d\n", __func__, ret);
-+		mdelay(1);
-+
-+	} while (time_before(jiffies, deadline));
-+out:
-+	return ret;
++	if (err) {
++		dev_err(hba->dev, "Issue %s WB buffer size cmd failed\n",
++				value == 0x01 ? "Decrease" : "Increase");
++	}
 +}
 +
- /**
-  * ufshcd_uic_pwr_ctrl - executes UIC commands (which affects the link power
-  * state) and waits for it to take effect.
-@@ -4142,33 +4201,13 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	unsigned long flags;
- 	u8 status;
- 	int ret;
--	bool reenable_intr = false;
+ static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
+ {
+ 	u8 index;
+@@ -6091,6 +6129,9 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 	if (status & hba->ee_drv_mask & MASK_EE_URGENT_TEMP)
+ 		ufshcd_temp_exception_event_handler(hba, status);
  
--	mutex_lock(&hba->uic_cmd_mutex);
--	ufshcd_add_delay_before_dme_cmd(hba);
--
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (ufshcd_is_link_broken(hba)) {
--		ret = -ENOLINK;
--		goto out_unlock;
--	}
--	hba->uic_async_done = &uic_async_done;
--	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
--		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
--		/*
--		 * Make sure UIC command completion interrupt is disabled before
--		 * issuing UIC command.
--		 */
--		wmb();
--		reenable_intr = true;
--	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
-+	ret = __ufshcd_poll_uic_pwr(hba, cmd, &uic_async_done);
- 	if (ret) {
--		dev_err(hba->dev,
--			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
--			cmd->command, cmd->argument3, ret);
--		goto out;
-+		if (ret == -ENOLINK)
-+			goto out_unlock;
-+		else
-+			goto out;
- 	}
- 
- 	if (!wait_for_completion_timeout(hba->uic_async_done,
-@@ -4205,14 +4244,12 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->active_uic_cmd = NULL;
- 	hba->uic_async_done = NULL;
--	if (reenable_intr)
--		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
- 	if (ret) {
- 		ufshcd_set_link_broken(hba);
- 		ufshcd_schedule_eh_work(hba);
- 	}
--out_unlock:
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+out_unlock:
- 	mutex_unlock(&hba->uic_cmd_mutex);
- 
- 	return ret;
++	if (status & hba->ee_drv_mask & MASK_EE_WRITEBOOSTER_RESIZE_HINT)
++		ufshcd_wb_resize_exception_event_handler(hba, status);
++
+ 	ufs_debugfs_exception_event(hba, status);
+ out:
+ 	ufshcd_scsi_unblock_requests(hba);
 -- 
-2.7.4
+2.39.0
 
