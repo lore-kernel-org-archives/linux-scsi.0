@@ -2,75 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E454AEC8742
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Sep 2023 17:28:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E68ACEC8743
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Sep 2023 17:42:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237255AbjIGR2E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Sep 2023 13:28:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46200 "EHLO
+        id S243847AbjIGRm5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Sep 2023 13:42:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243905AbjIGR1q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2023 13:27:46 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ECFD1FF2;
-        Thu,  7 Sep 2023 10:27:21 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RhJc51twBzGptg;
-        Thu,  7 Sep 2023 20:35:17 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Thu, 7 Sep 2023 20:38:57 +0800
-Message-ID: <e3a691e4-3fbc-98ba-28f0-627364d8b4d7@huawei.com>
-Date:   Thu, 7 Sep 2023 20:38:56 +0800
+        with ESMTP id S245436AbjIGRmx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2023 13:42:53 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 878801FCD
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Sep 2023 10:42:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 636C3C433C8
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Sep 2023 17:41:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694108495;
+        bh=R1nGd7r3OQ1KmM6crFlw2t46s+61/JH6RukTrciydKk=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=jbc1aHfmiyUmxihzaMMVSif6BxwSxI5pTUNOFcq+c02uST0Cd0LtQbXXoMKxn/NRK
+         bPb6AbbNiGr8/lJQOPQb9tk8D304DPySyEdeBM8zxAZY1Si7UpxdO3ocvbFGPHdomF
+         aBsUg2+gbWR2LW9WeXWHxcnHXJU4x+PfbPc5H9F3pEz9y8/8apt1qtAw8FWt65w06p
+         3eyMOY9O4FquAowzBCZ1WMtiODjXaijxmAMQQc7o83uZ9+S1Ms/FFpQIyftimfMX9t
+         bhrZLRGD5sr0WhIVHgI4CYkwZMkXkZwG18Pczx096sbYQkIumma00zEOD5IvRq0KpL
+         IVOzb5ycpF/Dg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 4F87EC53BC6; Thu,  7 Sep 2023 17:41:35 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date:   Thu, 07 Sep 2023 17:41:34 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: sagar.biradar@microchip.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-217599-11613-zr3S8esx7k@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
- mechanism
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     Hannes Reinecke <hare@suse.de>, <linux-kernel@vger.kernel.org>,
-        <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>
-References: <20230901094127.2010873-1-haowenchao2@huawei.com>
- <b8350de1-6ac8-4d5f-aaa7-7b03e2f7aa93@oracle.com>
- <7ec75e40-671b-e080-9e7b-2afd5edb25db@huawei.com>
- <d0566ed5-34df-412a-82ff-29d56d499abb@oracle.com>
-From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <d0566ed5-34df-412a-82ff-29d56d499abb@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemm600012.china.huawei.com (7.193.23.74)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/6 23:56, Mike Christie wrote:
-> On 9/6/23 6:15 AM, haowenchao (C) wrote:
->>>
->>> If the driver supports performing multiple TMFs/resets in parallel then why
->>> not always enable it?
->>>
->>
->> Not all hardware/drivers support performing multiple TMFs/resets in parallel,
->> so I think it is necessary to call scsi_device_setup_eh/scsi_device_clear_eh
->> in specific drivers.
-> 
-> Ah shoot sorry. I edited my email before I sent it and dropped part of it.
-> 
-> For the scsi_device_setup_eh/scsi_device_clear_eh comment I just meant it could
-> be a scsi_host_template field. scsi-ml would then see it and do the
-> scsi_device_setup_eh/scsi_device_clear_eh calls for the driver. The drivers
-> then don't have to deal with doing slave callouts and handling errors.
-> 
-> Also for the error handling case I think we want to still proceed if
-> scsi_device_setup_eh fails. Just use the old EH in that case.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-It looks better to add setup_eh/clear_eh in scsi_host_template, I would update in
-next version.
+Sagar (sagar.biradar@microchip.com) changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |aacraid@adaptec.com,
+                   |                            |sagar.biradar@microchip.com
+
+--- Comment #16 from Sagar (sagar.biradar@microchip.com) ---
+For the problems reported on Series-7 controllers :
+
+At Microchip, we tried to duplicate this issue on 6.4.9 kernel with a 71605=
+ and
+7805 controllers with the latest FW from adaptec.com (Version 32118) and we=
+ do
+not see the issue.
+
+Could you please mention what FW version is being used at your configuratio=
+n?
+The exact server model and the config details would also help us.
+Also, could you please try with the latest FW from the website and confirm =
+if
+you continue to see this issue?
+
+You can pick the latest FW version for the controller model can be download=
+ed
+at=20
+https://storage.microsemi.com/en-us/support/series7/index.php
+
+We look forward to hear your results.
+
+Thanks=20
+Sagar
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
