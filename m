@@ -2,71 +2,75 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E97EC8740
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Sep 2023 16:01:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E454AEC8742
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Sep 2023 17:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235627AbjIGQBO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Sep 2023 12:01:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44314 "EHLO
+        id S237255AbjIGR2E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Sep 2023 13:28:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238011AbjIGP62 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2023 11:58:28 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 651EF20900;
-        Thu,  7 Sep 2023 08:45:34 -0700 (PDT)
-Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: kholk11)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id B4A5B66072EB;
-        Thu,  7 Sep 2023 10:03:20 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1694077401;
-        bh=cxgHzHn8tiosscM7rs1t8c0B3y0bEz5hVnyonEDHwcQ=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=Jg1VsCm9fyb2bJm+Y5M/Ced1kTka548X7IOgeXjgnnWl67hvNS821o1bKeDkQu2WE
-         brIIQdtFGeGVK3M5Dk2Pt0NhVtC6msKiIq1jyReoAQwjBIrv6LCzEbihfwYz9k1HAx
-         lt7VIocWeYNT+7l6SezTDlpFKPLmRiY2hU34cR5LpuhG8Z5WQ9nKgNRxZjSKh00rQc
-         nxbnx1vT52hGtcgAsMgSHRT1pLGcl3sFQNawVJZ0+eE6IzDdtXHg2y2rw1mdhjLKki
-         s+87GyXOpqw8UQ/DD43vAn4RnWAlEmY0twKQPoTAOgdIoP4l+3emRC86Bq3kD3AN72
-         p3l9H8ciY53xA==
-Message-ID: <827ba3c8-198a-7d1d-4511-b7aa9710b27f@collabora.com>
-Date:   Thu, 7 Sep 2023 11:03:17 +0200
+        with ESMTP id S243905AbjIGR1q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2023 13:27:46 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ECFD1FF2;
+        Thu,  7 Sep 2023 10:27:21 -0700 (PDT)
+Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RhJc51twBzGptg;
+        Thu,  7 Sep 2023 20:35:17 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Thu, 7 Sep 2023 20:38:57 +0800
+Message-ID: <e3a691e4-3fbc-98ba-28f0-627364d8b4d7@huawei.com>
+Date:   Thu, 7 Sep 2023 20:38:56 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [PATCH] scsi: ufs: do not look for unsupported
- vdd-hba-max-microamp
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
+ mechanism
 Content-Language: en-US
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-scsi@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-References: <20230906113302.201888-1-krzysztof.kozlowski@linaro.org>
-From:   AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-In-Reply-To: <20230906113302.201888-1-krzysztof.kozlowski@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Mike Christie <michael.christie@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     Hannes Reinecke <hare@suse.de>, <linux-kernel@vger.kernel.org>,
+        <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>
+References: <20230901094127.2010873-1-haowenchao2@huawei.com>
+ <b8350de1-6ac8-4d5f-aaa7-7b03e2f7aa93@oracle.com>
+ <7ec75e40-671b-e080-9e7b-2afd5edb25db@huawei.com>
+ <d0566ed5-34df-412a-82ff-29d56d499abb@oracle.com>
+From:   Wenchao Hao <haowenchao2@huawei.com>
+In-Reply-To: <d0566ed5-34df-412a-82ff-29d56d499abb@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemm600012.china.huawei.com (7.193.23.74)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il 06/09/23 13:33, Krzysztof Kozlowski ha scritto:
-> Bindings do not allow vdd-hba-max-microamp property and the driver does
-> not use it (does not control load of vdd-hba supply).  Skip looking for
-> this property to avoid misleading dmesg messages:
+On 2023/9/6 23:56, Mike Christie wrote:
+> On 9/6/23 6:15 AM, haowenchao (C) wrote:
+>>>
+>>> If the driver supports performing multiple TMFs/resets in parallel then why
+>>> not always enable it?
+>>>
+>>
+>> Not all hardware/drivers support performing multiple TMFs/resets in parallel,
+>> so I think it is necessary to call scsi_device_setup_eh/scsi_device_clear_eh
+>> in specific drivers.
 > 
->    ufshcd-qcom 1d84000.ufs: ufshcd_populate_vreg: unable to find vdd-hba-max-microamp
+> Ah shoot sorry. I edited my email before I sent it and dropped part of it.
 > 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> For the scsi_device_setup_eh/scsi_device_clear_eh comment I just meant it could
+> be a scsi_host_template field. scsi-ml would then see it and do the
+> scsi_device_setup_eh/scsi_device_clear_eh calls for the driver. The drivers
+> then don't have to deal with doing slave callouts and handling errors.
+> 
+> Also for the error handling case I think we want to still proceed if
+> scsi_device_setup_eh fails. Just use the old EH in that case.
 
-For MediaTek:
-
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-
-
+It looks better to add setup_eh/clear_eh in scsi_host_template, I would update in
+next version.
