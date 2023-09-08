@@ -2,139 +2,102 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ECD7EE8015
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 14:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40FD0EE8017
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 15:31:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244223AbjIHOy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 10:54:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49870 "EHLO
+        id S244653AbjIHPbv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 11:31:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238184AbjIHOyw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 10:54:52 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9454F1FC0
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Sep 2023 07:54:31 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-68a3e943762so1988781b3a.1
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Sep 2023 07:54:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1694184871; x=1694789671; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=86VDfrxrf9fXsAcuShAF/QBfIIcppRCopsc3REU8feU=;
-        b=foYCpmudpOYOEyOlgjd/H4GRfBJvwfcvv/eP/3Do/94gnOGy7hQkR/nqa5IKjULOah
-         QWSCNRURaRseVKm2OgfPlMjgGuCw0XQXD0mVgTMdxGw+dYwV5kl4HvtGj37l3NVxK6Zt
-         wZmTs8vcyEsd9t4sQFsZ4CGKMnu4upyzdAEepMP6AEEwjk7VHWOCVRchGIrwebDTbUP9
-         QhB5VwZF30rERCgUwIf+HMGLtOQcI+6HGTVWz5aKB9bZkxWkO1rR8lFhvoyH+THBMHQt
-         siVEORQKc3XCxBb/yrOTCgepICeOsYR/d5yAvzOPR4MwYvujibDHdfm/JUmTuSTH6ciR
-         TS5g==
+        with ESMTP id S244681AbjIHPbu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 11:31:50 -0400
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B54B1FDF;
+        Fri,  8 Sep 2023 08:31:45 -0700 (PDT)
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-565403bda57so1600704a12.3;
+        Fri, 08 Sep 2023 08:31:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694184871; x=1694789671;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=86VDfrxrf9fXsAcuShAF/QBfIIcppRCopsc3REU8feU=;
-        b=cbYhhQ4oYbsxuwJey0Whp15ZXGN4y8w4aLbzoGbc++FH95p9S3NMVW1nH82ZnCyvzN
-         jXOR5tSW2C1lVijkdcXZ+9m24SrLeAXGGO9ncbKtI5gcPZmxwb7S4vxxjy/N8GAsDuA9
-         8FQOSGvnWUIMaYP38m1Nr9rfn6tHIAu3nNkPD0Mfd02MQxy5wb9MWxow8aCP3BmHakgW
-         XUty8jwW3+woAiDbGACZpS55/CWkY/zKpcYD9LxPQm/ENQmxiumhPY9IlJO0Xj77/O51
-         gM3m+g8HdhwOIvG1itDhgQHzgluHVEt7iuJv68axklhwzETOcfUWSa8p+fjCYnkg6HSq
-         DU8Q==
-X-Gm-Message-State: AOJu0YzO6J8bJLlMHQy6pPx7RTLhMwuu/XvQ+dkKOQNNX+Mklf07dlaH
-        GvL40MMzeJ40kko46anaQzmF
-X-Google-Smtp-Source: AGHT+IErgGYrFaXUzuw9fd5J4Q7ecSPBMtyBIW0tnDf6+Q6dpLwMXGDBzf1+DEzVXwJkB0T+g/zxqA==
-X-Received: by 2002:a05:6a20:7b03:b0:131:a21:9f96 with SMTP id s3-20020a056a207b0300b001310a219f96mr2266797pzh.6.1694184871044;
-        Fri, 08 Sep 2023 07:54:31 -0700 (PDT)
-Received: from localhost.localdomain ([117.193.215.15])
-        by smtp.gmail.com with ESMTPSA id t4-20020a62ea04000000b0068a30f6cf32sm1463212pfh.143.2023.09.08.07.54.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Sep 2023 07:54:30 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     bvanassche@acm.org, avri.altman@wdc.com, alim.akhtar@samsung.com,
-        andersson@kernel.org, konrad.dybcio@linaro.org,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 2/2] scsi: ufs: ufs-qcom: Rename "hs_gear" to "phy_gear"
-Date:   Fri,  8 Sep 2023 20:23:29 +0530
-Message-Id: <20230908145329.154024-2-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230908145329.154024-1-manivannan.sadhasivam@linaro.org>
-References: <20230908145329.154024-1-manivannan.sadhasivam@linaro.org>
+        d=1e100.net; s=20230601; t=1694187104; x=1694791904;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=TRShrLzitNqj8/xAQrhQg+U5yxxqgdL+nBg9BoZixwc=;
+        b=otGPbCKMb2A6JZZvXs+qDh+VyJ/xxzL71L9qeSROnFwVWGatQbgyA9xKBPG3rUDNqU
+         DiUqsm1aE4CpQNpCxOd1BPoOypYC7mRFonJGTd1L6rHSteg8nGHi/2wmNM5oS1SPx2G0
+         FzzkRzT1fLyAlBdou7O8nn6Vx/gfyLQIY2COVKyE+GpIMUhWNZpOdwjZ3wqEOu7FbAFc
+         6TD53oWga/xE9JGa6f/x+9qPZf9T7q8pUho7J38X0v3WX2yL9aaiOc7Wycr/G111YNzT
+         kkXEPJE5YmVQN8jP4po74XhbEs4gjowBcC+QmXvmkUbX9atH7Xj59Ez/Wb468ttFEHza
+         r0Tw==
+X-Gm-Message-State: AOJu0YyRUiKJJ6MRtDgoDbTGICULfwR7q+ymsqGIl/ZC7OEmKKBwlD5k
+        mfeWeA0EUvw5tuw5h9Uo0JY=
+X-Google-Smtp-Source: AGHT+IEcBraudG9VxXOdBpAHPRzQ7KM+OGNSywEvYs5bNKBS/U1td5xCZjS0z/CSSNgtcNY5yhzRHQ==
+X-Received: by 2002:a05:6a21:798a:b0:152:5f8b:359a with SMTP id bh10-20020a056a21798a00b001525f8b359amr2538304pzc.28.1694187104269;
+        Fri, 08 Sep 2023 08:31:44 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id e22-20020aa78256000000b0068c61848785sm1434660pfn.208.2023.09.08.08.31.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 08 Sep 2023 08:31:43 -0700 (PDT)
+Message-ID: <13551c7e-af15-467b-a473-1941542d001d@acm.org>
+Date:   Fri, 8 Sep 2023 08:31:40 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/3] scsi: ufs: core: add wb buffer resize related
+ attr_idn
+Content-Language: en-US
+To:     Lu Hongfei <luhongfei@vivo.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>,
+        Arthur Simchaev <arthur.simchaev@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        zhanghui <zhanghui31@xiaomi.com>,
+        Po-Wen Kao <powen.kao@mediatek.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     opensource.kernel@vivo.com
+References: <20230908102113.547-1-luhongfei@vivo.com>
+ <20230908102113.547-2-luhongfei@vivo.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230908102113.547-2-luhongfei@vivo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The "hs_gear" variable is used to cache the gear setting for the PHY that
-will be used during ufs_qcom_power_up_sequence(). But it creates ambiguity
-with the gear setting used by the ufshcd driver.
+On 9/8/23 03:20, Lu Hongfei wrote:
+> UFS4.1 will support the WB buffer resize function, and UFS driver needs
+> to add definitions for attr_idn related to this function to support
+> this feature
 
-So let's rename it to "phy_gear" to make it explicit that this variable
-caches the gear setting for the PHY.
+needs to -> can
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/ufs/host/ufs-qcom.c | 14 +++++++-------
- drivers/ufs/host/ufs-qcom.h |  2 +-
- 2 files changed, 8 insertions(+), 8 deletions(-)
+Please also mention that the ballot for resizing the WriteBooster buffer 
+has been approved.
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index ebb8054a3b3e..93a72d0a1751 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -460,7 +460,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 		return ret;
- 	}
- 
--	phy_set_mode_ext(phy, PHY_MODE_UFS_HS_B, host->hs_gear);
-+	phy_set_mode_ext(phy, PHY_MODE_UFS_HS_B, host->phy_gear);
- 
- 	/* power on phy - start serdes and phy's power and clocks */
- 	ret = phy_power_on(phy);
-@@ -910,12 +910,12 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 		}
- 
- 		/*
--		 * Update hs_gear only when the gears are scaled to a higher value. This is because,
--		 * the PHY gear settings are backwards compatible and we only need to change the PHY
--		 * settings while scaling to higher gears.
-+		 * Update phy_gear only when the gears are scaled to a higher value. This is
-+		 * because, the PHY gear settings are backwards compatible and we only need to
-+		 * change the PHY gear settings while scaling to higher gears.
- 		 */
--		if (dev_req_params->gear_tx > host->hs_gear)
--			host->hs_gear = dev_req_params->gear_tx;
-+		if (dev_req_params->gear_tx > host->phy_gear)
-+			host->phy_gear = dev_req_params->gear_tx;
- 
- 		/* enable the device ref clock before changing to HS mode */
- 		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
-@@ -1282,7 +1282,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 	 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
- 	 * Switching to max gear will be performed during reinit if supported.
- 	 */
--	host->hs_gear = UFS_HS_G2;
-+	host->phy_gear = UFS_HS_G2;
- 
- 	return 0;
- 
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index dc27395ecba1..8d8613eff959 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -227,7 +227,7 @@ struct ufs_qcom_host {
- 
- 	struct gpio_desc *device_reset;
- 
--	u32 hs_gear;
-+	u32 phy_gear;
- 
- 	int esi_base;
- 	bool esi_enabled;
--- 
-2.25.1
+> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+> index 0cced88f4531..8016bf30c8c4 100644
+> --- a/include/ufs/ufs.h
+> +++ b/include/ufs/ufs.h
+> @@ -179,7 +179,10 @@ enum attr_idn {
+>   	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+>   	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
+>   	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
+> -	QUERY_ATTR_IDN_TIMESTAMP		= 0x30
+> +	QUERY_ATTR_IDN_TIMESTAMP		= 0x30,
+> +	QUERY_ATTR_IDN_WB_BUF_RESIZE_HINT	= 0x3C,
+> +	QUERY_ATTR_IDN_WB_BUF_RESIZE_EN		= 0x3D,
+> +	QUERY_ATTR_IDN_WB_BUF_RESIZE_STATUS	= 0x3E
+
+Please add a trailing comma after "0x3E".
+
+Thanks,
+
+Bart.
 
