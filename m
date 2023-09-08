@@ -2,207 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AABDEE8009
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 14:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 096DDEE8012
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 14:54:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243725AbjIHOMX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 10:12:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46814 "EHLO
+        id S244143AbjIHOyx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 10:54:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232491AbjIHOMW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 10:12:22 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82EA71BEA;
-        Fri,  8 Sep 2023 07:12:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694182336; x=1725718336;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=qHRQJaYAD2oPzbtau/I7LzLm8A7noCwIpXT890WHdIk=;
-  b=HmEBWVrNiwW4M4YGOV89GpYHhOclcRTWIbUgVw/9C5kdBXLzsqLK/hdX
-   BktrQ3QkuLJwBpF9GIZXjZFDq0qu4Ko/fRkWxB0MhAm+ORZPvQdlJ/5DI
-   NLrKeIhV471A6qb5OFcOLdQxrX9MBhpLe0Lontt30nWwLfJi3Zk22KGNH
-   ueIwPeH+m2ma/jTWobd8bXMfEQ5Ppk04of+mj+RqplBAgjaBnI/YA4gTX
-   lG8cirfaCiTRFQnFxslOotwQWVnYi6JSJF126fQuS40J1xhwOlQ6GGL8M
-   uEi68n1AidHzaWIJ5AMAWkiwtxKB/P9bpZ4xXkfV5wqtiW8GLcmxuVAwG
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10827"; a="357955761"
-X-IronPort-AV: E=Sophos;i="6.02,237,1688454000"; 
-   d="scan'208";a="357955761"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2023 07:12:15 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10827"; a="735965660"
-X-IronPort-AV: E=Sophos;i="6.02,237,1688454000"; 
-   d="scan'208";a="735965660"
-Received: from lkp-server01.sh.intel.com (HELO 59b3c6e06877) ([10.239.97.150])
-  by orsmga007.jf.intel.com with ESMTP; 08 Sep 2023 07:12:09 -0700
-Received: from kbuild by 59b3c6e06877 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qecDP-0002KR-0L;
-        Fri, 08 Sep 2023 14:12:07 +0000
-Date:   Fri, 8 Sep 2023 22:11:38 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Lu Hongfei <luhongfei@vivo.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <arthur.simchaev@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        zhanghui <zhanghui31@xiaomi.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-        opensource.kernel@vivo.com
-Subject: Re: [PATCH v2 2/3] scsi: ufs: core: Add ufshcd_wb_buf_resize
- function to enable WB buffer resize
-Message-ID: <202309082109.DPcrgu3e-lkp@intel.com>
-References: <20230908102113.547-3-luhongfei@vivo.com>
+        with ESMTP id S236263AbjIHOyw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 10:54:52 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C4BD2100
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Sep 2023 07:54:27 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-68a3b66f350so1975320b3a.3
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Sep 2023 07:54:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1694184867; x=1694789667; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=v0/IfcD+bVp+TwfTl9BonGyGe+3MQ6GUS3Cq64UrgTs=;
+        b=i/prfLoQBAJv5JeNcRoJ0k7D8scN144PeGCyyS0LqUMlyJwGCJ9Toh40FXN1kjxNpS
+         0xFIQ8REKv/o6Qe8uxTEjjBwPTYXxORatEKbKfTpTOINPzclQoMh6E3eHxvsXd/xDWK0
+         GGBM0/SyY0sCKHkWQzvk5KGrjEySG+kWQm7QQ8LNU7IeTi1WBcWTeVj1etOWpAOLAb9d
+         GoqCbVcINuwhPyBOIXU/Afqw5FLsBySQT+g1QzaEMnAuTHlHsPTjKm3O+kLw409svJDv
+         8drIGiIpHrOI53of/ec616ewcAq+GaufzLAfjfN5dR8ACp/3ovufiAfRfXADcFEKFj1O
+         PUow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694184867; x=1694789667;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=v0/IfcD+bVp+TwfTl9BonGyGe+3MQ6GUS3Cq64UrgTs=;
+        b=Vbx3lAtsub3JhD/6sdaLFxOdfi84oZMchD+7s6rBne6OpXNsfoypT/MZk6SBdlQCJd
+         hDPjjWO0+lYIRAOykkEC4hS87eQs7mmiEorQbpyarkZgQjU/2KbUIj6v0rjKlC0dDoFY
+         0CFqHjhuKONFg9DTrWDg8B5qm7tx/a40vBzvC4RGNJ3CwTV96+3WUaT83BBSQR6XfoSn
+         jui/bDNxNGy2NO7pbQxSHom7lF5wxhAMYeEMSpEH3o2iPgkD9RjexUnfpfSlmn8/+jWN
+         67UZ5NHerKc7JLv/ROegyYMYgpOHJFlgK1a++Kpml5iG5bOC+l1xQrnzf7IYJEoXyYUx
+         Gjxw==
+X-Gm-Message-State: AOJu0YxYxwAgtuuzolveJpCBZDcf+qcba7TaM/OQ9SF6LBdTPWKoil7T
+        yZOUQazgSUXSRfTUpFKcxjgz
+X-Google-Smtp-Source: AGHT+IHYIFo3OMAOQfRI0s5oC0CJ3wzrb/Rkg+Xten7sB/lRtfVzRDXX2fUj57YnJVr4eUxM1qFMjg==
+X-Received: by 2002:a05:6a00:1825:b0:68e:2dad:13a5 with SMTP id y37-20020a056a00182500b0068e2dad13a5mr2811724pfa.10.1694184866738;
+        Fri, 08 Sep 2023 07:54:26 -0700 (PDT)
+Received: from localhost.localdomain ([117.193.215.15])
+        by smtp.gmail.com with ESMTPSA id t4-20020a62ea04000000b0068a30f6cf32sm1463212pfh.143.2023.09.08.07.54.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Sep 2023 07:54:26 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     bvanassche@acm.org, avri.altman@wdc.com, alim.akhtar@samsung.com,
+        andersson@kernel.org, konrad.dybcio@linaro.org,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        stable@vger.kernel.org
+Subject: [PATCH 1/2] scsi: ufs: ufs-qcom: Update PHY settings only when scaling to higher gears
+Date:   Fri,  8 Sep 2023 20:23:28 +0530
+Message-Id: <20230908145329.154024-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230908102113.547-3-luhongfei@vivo.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Lu,
+The "hs_gear" variable is used to program the PHY settings (submode) during
+ufs_qcom_power_up_sequence(). Currently, it is being updated every time the
+agreed gear changes. Due to this, if the gear got downscaled before suspend
+(runtime/system), then while resuming, the PHY settings for the lower gear
+will be applied first and later when scaling to max gear with REINIT, the
+PHY settings for the max gear will be applied.
 
-kernel test robot noticed the following build warnings:
+This adds a latency while resuming and also really not needed as the PHY
+gear settings are backwards compatible i.e., we can continue using the PHY
+settings for max gear with lower gear speed.
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master v6.5 next-20230908]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+So let's update the "hs_gear" variable _only_ when the agreed gear is
+greater than the current one. This guarantees that the PHY settings will be
+changed only during probe time and fatal error condition.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Lu-Hongfei/scsi-ufs-core-add-wb-buffer-resize-related-attr_idn/20230908-182656
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230908102113.547-3-luhongfei%40vivo.com
-patch subject: [PATCH v2 2/3] scsi: ufs: core: Add ufshcd_wb_buf_resize function to enable WB buffer resize
-config: s390-randconfig-001-20230908 (https://download.01.org/0day-ci/archive/20230908/202309082109.DPcrgu3e-lkp@intel.com/config)
-compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project.git 4a5ac14ee968ff0ad5d2cc1ffa0299048db4c88a)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20230908/202309082109.DPcrgu3e-lkp@intel.com/reproduce)
+Due to this, UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH can now be skipped
+when the PM operation is in progress.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202309082109.DPcrgu3e-lkp@intel.com/
+Cc: stable@vger.kernel.org
+Fixes: 96a7141da332 ("scsi: ufs: core: Add support for reinitializing the UFS device")
+Reported-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/ufs/core/ufshcd.c   | 3 ++-
+ drivers/ufs/host/ufs-qcom.c | 9 +++++++--
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-All warnings (new ones prefixed by >>):
-
-   In file included from drivers/ufs/core/ufshcd.c:25:
-   In file included from include/linux/iopoll.h:14:
-   In file included from include/linux/io.h:13:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:547:31: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     547 |         val = __raw_readb(PCI_IOBASE + addr);
-         |                           ~~~~~~~~~~ ^
-   include/asm-generic/io.h:560:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     560 |         val = __le16_to_cpu((__le16 __force)__raw_readw(PCI_IOBASE + addr));
-         |                                                         ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/big_endian.h:37:59: note: expanded from macro '__le16_to_cpu'
-      37 | #define __le16_to_cpu(x) __swab16((__force __u16)(__le16)(x))
-         |                                                           ^
-   include/uapi/linux/swab.h:102:54: note: expanded from macro '__swab16'
-     102 | #define __swab16(x) (__u16)__builtin_bswap16((__u16)(x))
-         |                                                      ^
-   In file included from drivers/ufs/core/ufshcd.c:25:
-   In file included from include/linux/iopoll.h:14:
-   In file included from include/linux/io.h:13:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:573:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     573 |         val = __le32_to_cpu((__le32 __force)__raw_readl(PCI_IOBASE + addr));
-         |                                                         ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/big_endian.h:35:59: note: expanded from macro '__le32_to_cpu'
-      35 | #define __le32_to_cpu(x) __swab32((__force __u32)(__le32)(x))
-         |                                                           ^
-   include/uapi/linux/swab.h:115:54: note: expanded from macro '__swab32'
-     115 | #define __swab32(x) (__u32)__builtin_bswap32((__u32)(x))
-         |                                                      ^
-   In file included from drivers/ufs/core/ufshcd.c:25:
-   In file included from include/linux/iopoll.h:14:
-   In file included from include/linux/io.h:13:
-   In file included from arch/s390/include/asm/io.h:75:
-   include/asm-generic/io.h:584:33: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     584 |         __raw_writeb(value, PCI_IOBASE + addr);
-         |                             ~~~~~~~~~~ ^
-   include/asm-generic/io.h:594:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     594 |         __raw_writew((u16 __force)cpu_to_le16(value), PCI_IOBASE + addr);
-         |                                                       ~~~~~~~~~~ ^
-   include/asm-generic/io.h:604:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     604 |         __raw_writel((u32 __force)cpu_to_le32(value), PCI_IOBASE + addr);
-         |                                                       ~~~~~~~~~~ ^
-   include/asm-generic/io.h:692:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     692 |         readsb(PCI_IOBASE + addr, buffer, count);
-         |                ~~~~~~~~~~ ^
-   include/asm-generic/io.h:700:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     700 |         readsw(PCI_IOBASE + addr, buffer, count);
-         |                ~~~~~~~~~~ ^
-   include/asm-generic/io.h:708:20: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     708 |         readsl(PCI_IOBASE + addr, buffer, count);
-         |                ~~~~~~~~~~ ^
-   include/asm-generic/io.h:717:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     717 |         writesb(PCI_IOBASE + addr, buffer, count);
-         |                 ~~~~~~~~~~ ^
-   include/asm-generic/io.h:726:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     726 |         writesw(PCI_IOBASE + addr, buffer, count);
-         |                 ~~~~~~~~~~ ^
-   include/asm-generic/io.h:735:21: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     735 |         writesl(PCI_IOBASE + addr, buffer, count);
-         |                 ~~~~~~~~~~ ^
->> drivers/ufs/core/ufshcd.c:6055:6: warning: variable 'ret' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
-    6055 |         if (ufshcd_wait_for_doorbell_clr(hba, 1 * USEC_PER_SEC))
-         |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/ufs/core/ufshcd.c:6067:9: note: uninitialized use occurs here
-    6067 |         return ret;
-         |                ^~~
-   drivers/ufs/core/ufshcd.c:6055:2: note: remove the 'if' if its condition is always false
-    6055 |         if (ufshcd_wait_for_doorbell_clr(hba, 1 * USEC_PER_SEC))
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    6056 |                 goto out;
-         | ~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/ufs/core/ufshcd.c:6051:9: note: initialize the variable 'ret' to silence this warning
-    6051 |         int ret;
-         |                ^
-         |                 = 0
-   13 warnings generated.
-
-
-vim +6055 drivers/ufs/core/ufshcd.c
-
-  6048	
-  6049	int ufshcd_wb_buf_resize(struct ufs_hba *hba, u32 resize_op)
-  6050	{
-  6051		int ret;
-  6052		u8 index;
-  6053	
-  6054		ufshcd_scsi_block_requests(hba);
-> 6055		if (ufshcd_wait_for_doorbell_clr(hba, 1 * USEC_PER_SEC))
-  6056			goto out;
-  6057	
-  6058		index = ufshcd_wb_get_query_index(hba);
-  6059		ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-  6060			QUERY_ATTR_IDN_WB_BUF_RESIZE_EN, index, 0, &resize_op);
-  6061		if (ret)
-  6062			dev_err(hba->dev,
-  6063				"%s: Enable WB buf resize operation failed %d\n",
-  6064				__func__, ret);
-  6065	out:
-  6066		ufshcd_scsi_unblock_requests(hba);
-  6067		return ret;
-  6068	}
-  6069	
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 34472871610d..1f0a9d96e613 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8782,7 +8782,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+ 	if (ret)
+ 		goto out;
+ 
+-	if (hba->quirks & UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH) {
++	if (!hba->pm_op_in_progress &&
++	    (hba->quirks & UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH)) {
+ 		/* Reset the device and controller before doing reinit */
+ 		ufshcd_device_reset(hba);
+ 		ufshcd_hba_stop(hba);
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 78689d3479e4..ebb8054a3b3e 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -909,8 +909,13 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 			return ret;
+ 		}
+ 
+-		/* Use the agreed gear */
+-		host->hs_gear = dev_req_params->gear_tx;
++		/*
++		 * Update hs_gear only when the gears are scaled to a higher value. This is because,
++		 * the PHY gear settings are backwards compatible and we only need to change the PHY
++		 * settings while scaling to higher gears.
++		 */
++		if (dev_req_params->gear_tx > host->hs_gear)
++			host->hs_gear = dev_req_params->gear_tx;
+ 
+ 		/* enable the device ref clock before changing to HS mode */
+ 		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.25.1
+
