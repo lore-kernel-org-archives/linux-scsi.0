@@ -2,137 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C50EC875F
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 01:04:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B19EE57E7
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 08:54:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238058AbjIHBEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Sep 2023 21:04:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42750 "EHLO
+        id S234918AbjIHIyK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 04:54:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230150AbjIHBEE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2023 21:04:04 -0400
-Received: from mail-m127155.qiye.163.com (mail-m127155.qiye.163.com [115.236.127.155])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55EB01BD7;
-        Thu,  7 Sep 2023 18:03:58 -0700 (PDT)
-Received: from [0.0.0.0] (unknown [IPV6:240e:3b7:3272:3e30:6019:3b45:b56:d340])
-        by mail-m15581.qiye.163.com (Hmail) with ESMTPA id 15C42720193;
-        Fri,  8 Sep 2023 09:03:55 +0800 (CST)
-Message-ID: <8dcc39ab-be6d-6bb8-9f43-ff8695908f15@sangfor.com.cn>
-Date:   Fri, 8 Sep 2023 09:03:52 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [PATCH] scsi: scsi_dh_rdac: Avoid crash when a disk attach failed
-Content-Language: en-US
-From:   Ding Hui <dinghui@sangfor.com.cn>
-To:     Mike Christie <michael.christie@oracle.com>,
-        Huang Cun <huangcun@sangfor.com.cn>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     pengdonglin@sangfor.com.cn
-References: <20230803112841.588822-1-huangcun@sangfor.com.cn>
- <d2f486dc-c987-4b8a-a694-825305f0cba0@oracle.com>
- <77e3e206-fbc7-04ca-41f7-13d6b8435b45@sangfor.com.cn>
-In-Reply-To: <77e3e206-fbc7-04ca-41f7-13d6b8435b45@sangfor.com.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlCQh9JVktJTEMfHUIZTUJCGlUTARMWGhIXJBQOD1
-        lXWRgSC1lBWUlPSx5BSBlMQUhJTElBSB5IS0FNS0pCQUgZT05BGU5NQR9IT0tZV1kWGg8SFR0UWU
-        FZT0tIVUpNT0lMTlVKS0tVSkJLS1kG
-X-HM-Tid: 0a8a725126332e9ekusn15c42720193
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Pi46Nio6Nj0BGRM3FT9DMD04
-        KxAKCRVVSlVKTUJPSkhOS0hOQ0JMVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
-        QVlJT0seQUgZTEFISUxJQUgeSEtBTUtKQkFIGU9OQRlOTUEfSE9LWVdZCAFZQU5LT003Bg++
+        with ESMTP id S229844AbjIHIyJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 04:54:09 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF59B1BEA;
+        Fri,  8 Sep 2023 01:54:04 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3888pS56030341;
+        Fri, 8 Sep 2023 08:53:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=q9s9v96wDMX4jHjojn/Hh1/cvT2BZYbPHDTPhvzg6uo=;
+ b=CUwmhUl8lPlUiWVGaTtKl5QJzR5pn60dCk/uUv6Du9uWTjuV02M+f3mrhuU0oCJA9Yi7
+ KtK8dRnTmvaY0b8wSutlSs4Br08J7wqBVMr4hJEKNAUOvivjKelSdRaQUeRkyGWKRaKA
+ O6TZ6de2xaWzQRU+1IVsO8C12sszPwy0J+5hDIWA+WAVF3AbVFa73q9tnYnghCxjYWKR
+ 3o3aguJSVN8xX7G9dh91F0MUjnk0tNm7q2ruFucKlFLQeg19SyqpO9uZO9OUQhnyGd4n
+ 4k1IqNcJ/MRCieTHd1msoDrNV43n/56k8Mm3AAmZmi8U5UCPHUUFj1OWVdPQzhF3SnNv Rw== 
+Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sy7m0k7p3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 08 Sep 2023 08:53:41 +0000
+Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+        by APTAIPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3888rcTh028772;
+        Fri, 8 Sep 2023 08:53:38 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 3sux4kugv5-1;
+        Fri, 08 Sep 2023 08:53:38 +0000
+Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3888rcLv028767;
+        Fri, 8 Sep 2023 08:53:38 GMT
+Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
+        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 3888rcQm028765;
+        Fri, 08 Sep 2023 08:53:38 +0000
+Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
+        id DCD2E4DE7; Fri,  8 Sep 2023 16:53:36 +0800 (CST)
+From:   Ziqi Chen <quic_ziqichen@quicinc.com>
+To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        bvanassche@acm.org, mani@kernel.org, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com, quic_nguyenb@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_ziqichen@quicinc.com
+Cc:     linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] scsi: ufs: qcom: dt-bindings: Add MCQ ESI property
+Date:   Fri,  8 Sep 2023 16:53:23 +0800
+Message-Id: <1694163203-39123-1-git-send-email-quic_ziqichen@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 94ua46SlIBwaMT2Kv43d9JZx19qco7F2
+X-Proofpoint-ORIG-GUID: 94ua46SlIBwaMT2Kv43d9JZx19qco7F2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-08_06,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
+ lowpriorityscore=0 adultscore=0 mlxlogscore=999 spamscore=0 malwarescore=0
+ suspectscore=0 mlxscore=0 bulkscore=0 priorityscore=1501 clxscore=1011
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
+ definitions=main-2309080081
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/7 9:45, Ding Hui wrote:
-> On 2023/9/6 23:51, Mike Christie wrote:
->> On 8/3/23 6:28 AM, Huang Cun wrote:
->>> When a disk fails to attach, the struct rdac_dh_data is released,
->>> but it is not removed from the ctlr->dh_list. When attaching another
->>> disk, the released rdac_dh_data will be accessed and the following
->>> BUG_ON() may be observed:
->>>
->>> [  414.696167] scsi 5:0:0:7: rdac: Attach failed (8)
->>> ...
->>> [  423.615364] kernel BUG at drivers/scsi/device_handler/scsi_dh_rdac.c:427!
->>> [  423.615731] invalid opcode: 0000 [#1] SMP NOPTI
->>> ...
->>> [  423.623247] Call Trace:
->>> [  423.623598]  rdac_bus_attach+0x203/0x4c0
->>> [  423.623949]  ? scsi_dh_handler_attach+0x2d/0x90
->>> [  423.624300]  scsi_dh_handler_attach+0x2d/0x90
->>> [  423.624652]  scsi_sysfs_add_sdev+0x88/0x270
->>> [  423.625004]  scsi_probe_and_add_lun+0xc47/0xd50
->>> [  423.625354]  scsi_report_lun_scan+0x339/0x3b0
->>> [  423.625705]  __scsi_scan_target+0xe9/0x220
->>> [  423.626056]  scsi_scan_target+0xf6/0x100
->>> [  423.626404]  fc_scsi_scan_rport+0xa5/0xb0
->>> [  423.626757]  process_one_work+0x15e/0x3f0
->>> [  423.627106]  worker_thread+0x4c/0x440
->>> [  423.627453]  ? rescuer_thread+0x350/0x350
->>> [  423.627804]  kthread+0xf8/0x130
->>> [  423.628153]  ? kthread_destroy_worker+0x40/0x40
->>> [  423.628509]  ret_from_fork+0x1f/0x40
->>>
->>> Fixes: 1a5dc166cd88 ("scsi_dh_rdac: update 'access_state' field")
->>> Signed-off-by: Huang Cun <huangcun@sangfor.com.cn>
->>> Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
->>> Cc: Donglin Peng <pengdonglin@sangfor.com.cn>
->>> ---
->>>   drivers/scsi/device_handler/scsi_dh_rdac.c | 2 ++
->>>   1 file changed, 2 insertions(+)
->>>
->>> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
->>> index c5538645057a..9d487c2b7708 100644
->>> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
->>> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
->>> @@ -762,8 +762,10 @@ static int rdac_bus_attach(struct scsi_device *sdev)
->>>   clean_ctlr:
->>>       spin_lock(&list_lock);
->>> +    list_del_rcu(&h->node);
->>>       kref_put(&h->ctlr->kref, release_controller);
->>>       spin_unlock(&list_lock);
->>> +    synchronize_rcu();
->>
->> Should this be:
->>
->> spin_lock(&list_lock);
->> list_del_rcu(&h->node);
->> spin_unlock(&list_lock);
->>
->> synchronize_rcu();
->>
->> kref_put(&h->ctlr->kref, release_controller);
->>
->>
->> ?
->>
->> If you do the synchronize_rcu after the kref_put, then the kref_put
->> could free the rdac_dh_data, while check_ownership is still
->> accessing the rdac_dh_data, right?
->>
-> 
-> You are right.
-> 
-> But I think we should keep the kref_put() and release callback be protected by list_lock, and only free
-> the ctlr after synchronize_rcu().
-> 
+Document the description for the qcom,esi-affinity-mask.
 
-Sorry, I thought again, maybe we don't need to worry about it.
+Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+---
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-The ctlr->kref is protected by list_lock, and release_controller() DO free the ctlr, NOT rdac_dh_data,
-kfree(rdac_dh_data) is already after synchronize_rcu().
-
-If check_ownership() shared the same ctlr, the kref must be greater than or equal to 2, so the ctlr will
-not be released by kref_put(). On the other hand, if the ctlr is different, releasing it will not affect
-others.
-
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+index bdfa86a..323595f 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -97,6 +97,10 @@ properties:
+     description:
+       GPIO connected to the RESET pin of the UFS memory device.
+ 
++  qcom,esi-affinity-mask:
++    description:
++       UFS MCQ ESI affinity mask. Affine ESI on registration according to this CPU mask.
++
+ required:
+   - compatible
+   - reg
 -- 
-Thanks,
-- Ding Hui
+2.7.4
 
