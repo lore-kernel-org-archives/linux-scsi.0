@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40FD0EE8017
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 15:31:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83EBCEE8013
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 15:38:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244653AbjIHPbv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 11:31:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53900 "EHLO
+        id S241530AbjIHPiU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 11:38:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244681AbjIHPbu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 11:31:50 -0400
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B54B1FDF;
-        Fri,  8 Sep 2023 08:31:45 -0700 (PDT)
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-565403bda57so1600704a12.3;
-        Fri, 08 Sep 2023 08:31:45 -0700 (PDT)
+        with ESMTP id S238178AbjIHPiT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 11:38:19 -0400
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30A161BFF;
+        Fri,  8 Sep 2023 08:38:15 -0700 (PDT)
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-268bc714ce0so2432898a91.0;
+        Fri, 08 Sep 2023 08:38:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694187104; x=1694791904;
+        d=1e100.net; s=20230601; t=1694187494; x=1694792294;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=TRShrLzitNqj8/xAQrhQg+U5yxxqgdL+nBg9BoZixwc=;
-        b=otGPbCKMb2A6JZZvXs+qDh+VyJ/xxzL71L9qeSROnFwVWGatQbgyA9xKBPG3rUDNqU
-         DiUqsm1aE4CpQNpCxOd1BPoOypYC7mRFonJGTd1L6rHSteg8nGHi/2wmNM5oS1SPx2G0
-         FzzkRzT1fLyAlBdou7O8nn6Vx/gfyLQIY2COVKyE+GpIMUhWNZpOdwjZ3wqEOu7FbAFc
-         6TD53oWga/xE9JGa6f/x+9qPZf9T7q8pUho7J38X0v3WX2yL9aaiOc7Wycr/G111YNzT
-         kkXEPJE5YmVQN8jP4po74XhbEs4gjowBcC+QmXvmkUbX9atH7Xj59Ez/Wb468ttFEHza
-         r0Tw==
-X-Gm-Message-State: AOJu0YyRUiKJJ6MRtDgoDbTGICULfwR7q+ymsqGIl/ZC7OEmKKBwlD5k
-        mfeWeA0EUvw5tuw5h9Uo0JY=
-X-Google-Smtp-Source: AGHT+IEcBraudG9VxXOdBpAHPRzQ7KM+OGNSywEvYs5bNKBS/U1td5xCZjS0z/CSSNgtcNY5yhzRHQ==
-X-Received: by 2002:a05:6a21:798a:b0:152:5f8b:359a with SMTP id bh10-20020a056a21798a00b001525f8b359amr2538304pzc.28.1694187104269;
-        Fri, 08 Sep 2023 08:31:44 -0700 (PDT)
+        bh=fOERKHutiZlXz7bvmf0W6NeUuFZ/gnqQS2q918Qpw+o=;
+        b=L27d15moJ2fOaO9eeyvvLQgTfRZR7gYV6l4b1aPrUAMSvfqLXK5vPceh6WxWA3Dzgw
+         ZEtNOfsIoFYaLw8F8RJaX6DGwxI/KatQ4AgkfO5NMwWIL5yqMTWiXIY7IxHsp7wD4HkV
+         1WlDFdbinj+sp2qhVnu4y9ylXiviEr6TMxORFOnOjAW9UVuKFpZjTriC2JcMvNlJV/qY
+         A4eFRU0xlWmC/SHt8OwhIuOlVfIl1/z1J+j4YzD22D/fjkxzuqftK+XnkUvQEZkUZMFH
+         fbjjxMzcvPHeUAtkYFBfX0SgFkRNcLvTxOC5/t/8IEnBeggEynckx8oYpi/bCmhdWcyX
+         2wDQ==
+X-Gm-Message-State: AOJu0Yzpzw81GOfp1iS5uaq9vrhMK+XForH6lSDy+RTCFJalrKgQVE+D
+        uyra7kxFYlLUxn3l95xokjI=
+X-Google-Smtp-Source: AGHT+IFMO9+uxTS912paVNHVIS3J3nEA8gF0LqIwO0anJXYopM9bDy69Y4RdtISx/Q1ok84HeGmWMw==
+X-Received: by 2002:a17:90a:9ae:b0:261:2824:6b8c with SMTP id 43-20020a17090a09ae00b0026128246b8cmr7914329pjo.13.1694187494371;
+        Fri, 08 Sep 2023 08:38:14 -0700 (PDT)
 Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id e22-20020aa78256000000b0068c61848785sm1434660pfn.208.2023.09.08.08.31.41
+        by smtp.gmail.com with ESMTPSA id f2-20020a17090a120200b0026307fa0442sm3414804pja.49.2023.09.08.08.38.12
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 08 Sep 2023 08:31:43 -0700 (PDT)
-Message-ID: <13551c7e-af15-467b-a473-1941542d001d@acm.org>
-Date:   Fri, 8 Sep 2023 08:31:40 -0700
+        Fri, 08 Sep 2023 08:38:13 -0700 (PDT)
+Message-ID: <e03f1e62-1f22-422d-9bf8-fab480ccefb7@acm.org>
+Date:   Fri, 8 Sep 2023 08:38:10 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] scsi: ufs: core: add wb buffer resize related
- attr_idn
+Subject: Re: [PATCH v2 2/3] scsi: ufs: core: Add ufshcd_wb_buf_resize function
+ to enable WB buffer resize
 Content-Language: en-US
 To:     Lu Hongfei <luhongfei@vivo.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
@@ -62,9 +62,9 @@ To:     Lu Hongfei <luhongfei@vivo.com>,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc:     opensource.kernel@vivo.com
 References: <20230908102113.547-1-luhongfei@vivo.com>
- <20230908102113.547-2-luhongfei@vivo.com>
+ <20230908102113.547-3-luhongfei@vivo.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230908102113.547-2-luhongfei@vivo.com>
+In-Reply-To: <20230908102113.547-3-luhongfei@vivo.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -72,32 +72,78 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/8/23 03:20, Lu Hongfei wrote:
-> UFS4.1 will support the WB buffer resize function, and UFS driver needs
-> to add definitions for attr_idn related to this function to support
-> this feature
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+> index f42d99ce5bf1..85caefa421f7 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -98,6 +98,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+>   			     enum query_opcode desc_op);
+>   
+>   int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
+> +int ufshcd_wb_buf_resize(struct ufs_hba *hba, u32 resize_op);
+>   
+>   /* Wrapper functions for safely calling variant operations */
+>   static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 93417518c04d..7e4461360cbd 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -6045,6 +6045,27 @@ static bool ufshcd_wb_need_flush(struct ufs_hba *hba)
+>   	return ufshcd_wb_presrv_usrspc_keep_vcc_on(hba, avail_buf);
+>   }
+>   
+> +int ufshcd_wb_buf_resize(struct ufs_hba *hba, u32 resize_op)
+> +{
+> +	int ret;
+> +	u8 index;
+> +
+> +	ufshcd_scsi_block_requests(hba);
+> +	if (ufshcd_wait_for_doorbell_clr(hba, 1 * USEC_PER_SEC))
+> +		goto out;
+> +
+> +	index = ufshcd_wb_get_query_index(hba);
+> +	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +		QUERY_ATTR_IDN_WB_BUF_RESIZE_EN, index, 0, &resize_op);
+> +	if (ret)
+> +		dev_err(hba->dev,
+> +			"%s: Enable WB buf resize operation failed %d\n",
+> +			__func__, ret);
+> +out:
+> +	ufshcd_scsi_unblock_requests(hba);
+> +	return ret;
+> +}
+> +
+>   static void ufshcd_rpm_dev_flush_recheck_work(struct work_struct *work)
+>   {
+>   	struct ufs_hba *hba = container_of(to_delayed_work(work),
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 7d07b256e906..7dd560dc22c6 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -1381,6 +1381,7 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
+>   				     struct ufs_ehs *ehs_rsp, int sg_cnt,
+>   				     struct scatterlist *sg_list, enum dma_data_direction dir);
+>   int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
+> +int ufshcd_wb_buf_resize(struct ufs_hba *hba, u32 resize_op);
+>   int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable);
+>   int ufshcd_suspend_prepare(struct device *dev);
+>   int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
 
-needs to -> can
-
-Please also mention that the ballot for resizing the WriteBooster buffer 
-has been approved.
-
-> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-> index 0cced88f4531..8016bf30c8c4 100644
-> --- a/include/ufs/ufs.h
-> +++ b/include/ufs/ufs.h
-> @@ -179,7 +179,10 @@ enum attr_idn {
->   	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
->   	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
->   	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
-> -	QUERY_ATTR_IDN_TIMESTAMP		= 0x30
-> +	QUERY_ATTR_IDN_TIMESTAMP		= 0x30,
-> +	QUERY_ATTR_IDN_WB_BUF_RESIZE_HINT	= 0x3C,
-> +	QUERY_ATTR_IDN_WB_BUF_RESIZE_EN		= 0x3D,
-> +	QUERY_ATTR_IDN_WB_BUF_RESIZE_STATUS	= 0x3E
-
-Please add a trailing comma after "0x3E".
+My feedback about this patch is as follows:
+- If a new function (ufshcd_wb_buf_resize()) is introduced, a caller for 
+that function should be introduced in the same patch.
+- Function declarations should be added either in the private header 
+file or in the public header file (include/ufs/ufshcd.h) but not in both.
+- The name of the ufshcd_wb_buf_resize() function seems misleading to 
+me. To me that name suggests that this functions resizes the 
+WriteBooster buffer. That's not what that function does - what it does 
+it to configure whether or not the UFS device is allowed to resize the 
+WB buffer.
+- Please remove the ufshcd_scsi_block_requests(), 
+ufshcd_wait_for_doorbell_clr() and ufshcd_scsi_unblock_requests() calls. 
+I'm not aware of any requirement to pause SCSI command submission while 
+changing whether or not WB buffer resizing is enabled or disabled.
 
 Thanks,
 
 Bart.
-
