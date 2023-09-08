@@ -2,106 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF114EE8013
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 15:44:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D141EEB570
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 20:48:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244745AbjIHPoM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 11:44:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60398 "EHLO
+        id S237024AbjIHUsM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 16:48:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237259AbjIHPoL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 11:44:11 -0400
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92F501FF2;
-        Fri,  8 Sep 2023 08:44:02 -0700 (PDT)
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-26d50a832a9so1738565a91.3;
-        Fri, 08 Sep 2023 08:44:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694187842; x=1694792642;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bsFpBp1iOychJuJJ7GPCZs+E2CRFMb0GWiZRHuwanc8=;
-        b=WQrN5K/S+nX4oP8pVsELxkveEcfeULMakgP7PHeZ/z61SAcSk1oM8n8V1NE0SasyIx
-         v6iKCvDg4+nZ/4M1Uc38z8mguUE/KVmYZRLNUc0rOzWPRZEEkWwr1C+/+Y6XvNc2/U+/
-         WFFetM3vUf8mFxbG/uS1X4Wb8/UtqYgwm6nn0S0L58y8ptmMvtTLoiig4M+sm7oUDR3O
-         5gaFtYNGniy7kgA4GtzSkaoiWed9h2FrDr20hePIvmR5k15SsZlGz8E1OxJJQKCGoDvb
-         aJLpvORrSv3Wypex1wuyPVFv5QATbt32dRaDJt80FSBASJiJmUdXyzzeYcis3ds88Zpx
-         wtTw==
-X-Gm-Message-State: AOJu0YxXlZC3AHV3sU470jHeLS//HeH8Zh5Nw5aEEjpuaVkhm92mXGkr
-        lInYvO9uWr0APzznpv04Y/w=
-X-Google-Smtp-Source: AGHT+IGJUusUCZ4506LsQdCeW3WgQORt7eGXWD0XUYtBExhbIigtYdVwyzpdUEYQzFA/2jrp9VH8kA==
-X-Received: by 2002:a17:90a:c88:b0:268:29a3:bd05 with SMTP id v8-20020a17090a0c8800b0026829a3bd05mr2573201pja.48.1694187841658;
-        Fri, 08 Sep 2023 08:44:01 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id j2-20020a17090a840200b00260a5ecd273sm1464513pjn.1.2023.09.08.08.43.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 08 Sep 2023 08:44:00 -0700 (PDT)
-Message-ID: <d5e3a6e6-882d-4f75-8eef-5f3e1058f921@acm.org>
-Date:   Fri, 8 Sep 2023 08:43:58 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] scsi: ufs: core: Add sysfs attributes to control
- WB buffer resize function
-Content-Language: en-US
-To:     Lu Hongfei <luhongfei@vivo.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S229755AbjIHUsM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 16:48:12 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0F309C
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Sep 2023 13:48:07 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.76.159) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 8 Sep 2023
+ 23:48:04 +0300
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <arthur.simchaev@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        zhanghui <zhanghui31@xiaomi.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     opensource.kernel@vivo.com
-References: <20230908102113.547-1-luhongfei@vivo.com>
- <20230908102113.547-4-luhongfei@vivo.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230908102113.547-4-luhongfei@vivo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        <linux-scsi@vger.kernel.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: scsi: hosts: check result of scsi_host_set_state() in
+ scsi_add_host_with_dma()
+Organization: Open Mobile Platform
+Message-ID: <812c97ce-9b41-400a-9eb9-ddeef0156bbe@omp.ru>
+Date:   Fri, 8 Sep 2023 23:48:03 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.76.159]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 09/08/2023 20:34:53
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 179760 [Sep 08 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 530 530 ecb1547b3f72d1df4c71c0b60e67ba6b4aea5432
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: {rdns complete}
+X-KSE-AntiSpam-Info: {fromrtbl complete}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.76.159
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/08/2023 20:39:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 9/8/2023 5:21:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +What:		/sys/bus/platform/drivers/ufshcd/*/enable_wb_buf_resize
-> +What:		/sys/bus/platform/devices/*.ufs/enable_wb_buf_resize
-> +Date:		Sept 2023
-> +Contact:	Lu Hongfei <luhongfei@vivo.com>
-> +Description:
-> +		The host can decrease or increase the WriteBooster Buffer size by setting
-> +		this file.
-> +
-> +		======  ======================================
-> +		   00h  Idle (There is no resize operation)
-> +		   01h  Decrease WriteBooster Buffer Size
-> +		   02h  Increase WriteBooster Buffer Size
-> +		Others  Reserved
-> +		======  ======================================
-> +
-> +		The file is write only.
+SCSI core uses scsi_host_set_state() to control the host's state machine;
+this function returns 0 on success and -EINVAL on failure to change host's
+state. The only place where the result of scsi_host_set_state() is ignored
+is in scsi_add_host_with_dma() -- that blithely continues initializing the
+SCSI host even if the host's state couldn't be set to SHOST_RUNNING...
+I guess the logic behind this is that scsi_add_host_with_dma() call is
+always preceded by scsi_host_alloc() call which leaves the host's state
+machine in the SHOST_CREATED state which is a valid previous state for
+SHOST_RUNNING. I think we'd better check result of scsi_host_set_state()
+always -- better safe than sorry!
 
-The name "enable_wb_buf_resize" seems misleading to me. 
-"wb_buf_resize_control" is probably a better name for this attribute 
-since this attribute can be used to increase and decrease the WB buffer 
-size.
+Found by Linux Verification Center (linuxtesting.org) with the Svace static
+analysis tool.
 
-> +	if (hba->dev_info.wspecversion < 0x410 ||
-> +	    !hba->dev_info.b_presrv_uspc_en) {
-> +		dev_err(dev, "The WB buf resize is not allowed!\n");
-> +		return -EINVAL;
-> +	}
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Please leave out the version number check. There probably will be UFS 
-4.0 devices that will implement this feature.
+---
+The patch is against the 'for-next' branch of Martin Petersen's 'scsi.git' repo.
 
-Thanks,
+ drivers/scsi/hosts.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Bart.
+Index: scsi/drivers/scsi/hosts.c
+===================================================================
+--- scsi.orig/drivers/scsi/hosts.c
++++ scsi/drivers/scsi/hosts.c
+@@ -272,7 +272,10 @@ int scsi_add_host_with_dma(struct Scsi_H
+ 	if (error)
+ 		goto out_disable_runtime_pm;
+ 
+-	scsi_host_set_state(shost, SHOST_RUNNING);
++	error = scsi_host_set_state(shost, SHOST_RUNNING);
++	if (error)
++		goto out_disable_runtime_pm;
++
+ 	get_device(shost->shost_gendev.parent);
+ 
+ 	device_enable_async_suspend(&shost->shost_dev);
