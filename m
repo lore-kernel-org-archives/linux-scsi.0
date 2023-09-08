@@ -2,171 +2,137 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CEDEC875F
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 00:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C50EC875F
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 01:04:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240052AbjIHA0h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Sep 2023 20:26:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33864 "EHLO
+        id S238058AbjIHBEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Sep 2023 21:04:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238921AbjIHA0e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2023 20:26:34 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F4D11BCD
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Sep 2023 17:26:30 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 387NeUGq015513;
-        Fri, 8 Sep 2023 00:26:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=2czvY7E/+gcny2XL9WJB8oDH27bAv/V5UmdApAvTy+U=;
- b=FsciUPZzUyqHW54mT5RU5YeWU/FlaRhIGgWXT3URQA0c/60IVn50lUd1jnz5iHEB1G4E
- q4y39Nhf3RFDwxuY2TrU/7DPHzHZ0Y7FLHUtOMmOKRQfAYT7G7f8/uS+bcPWGPqPGfYo
- WlqTJqrn0K7wmIN1pvxrqaafklx+Comskdr3Bv6/DroGYw8rKQwvCOa8vTe6r48nwju5
- YQWy+2J0MXhkug2dlPLCBjGnRcbkhrI5p//wCepuUGdkBcu9uJJ8oaE5+zV7Ip0IriiN
- krOiD9aFbQXtOHCF3zDZyHW7hnjDZX8FZzItQR2IlSbDj/BFf9l3mZJFJ4pNFLWNeDuT YA== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3synyq8a2t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 08 Sep 2023 00:26:09 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3880Pnwk003585
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 8 Sep 2023 00:25:49 GMT
-Received: from [10.253.8.161] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 7 Sep
- 2023 17:25:44 -0700
-Message-ID: <2fef7d17-2451-9910-a069-8eeb01492eb2@quicinc.com>
-Date:   Fri, 8 Sep 2023 08:25:34 +0800
+        with ESMTP id S230150AbjIHBEE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2023 21:04:04 -0400
+Received: from mail-m127155.qiye.163.com (mail-m127155.qiye.163.com [115.236.127.155])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55EB01BD7;
+        Thu,  7 Sep 2023 18:03:58 -0700 (PDT)
+Received: from [0.0.0.0] (unknown [IPV6:240e:3b7:3272:3e30:6019:3b45:b56:d340])
+        by mail-m15581.qiye.163.com (Hmail) with ESMTPA id 15C42720193;
+        Fri,  8 Sep 2023 09:03:55 +0800 (CST)
+Message-ID: <8dcc39ab-be6d-6bb8-9f43-ff8695908f15@sangfor.com.cn>
+Date:   Fri, 8 Sep 2023 09:03:52 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH v2] scsi: ufs: Include the SCSI ID in UFS command tracing
- output
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-References: <20230907183739.905938-1-bvanassche@acm.org>
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Subject: Re: [PATCH] scsi: scsi_dh_rdac: Avoid crash when a disk attach failed
 Content-Language: en-US
-From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20230907183739.905938-1-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: KMghW7l7SDaOyS2CwYSZ0zpqr5Z8rECK
-X-Proofpoint-GUID: KMghW7l7SDaOyS2CwYSZ0zpqr5Z8rECK
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-07_14,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxscore=0
- spamscore=0 clxscore=1011 malwarescore=0 priorityscore=1501 suspectscore=0
- mlxlogscore=999 impostorscore=0 phishscore=0 bulkscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309080002
+From:   Ding Hui <dinghui@sangfor.com.cn>
+To:     Mike Christie <michael.christie@oracle.com>,
+        Huang Cun <huangcun@sangfor.com.cn>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     pengdonglin@sangfor.com.cn
+References: <20230803112841.588822-1-huangcun@sangfor.com.cn>
+ <d2f486dc-c987-4b8a-a694-825305f0cba0@oracle.com>
+ <77e3e206-fbc7-04ca-41f7-13d6b8435b45@sangfor.com.cn>
+In-Reply-To: <77e3e206-fbc7-04ca-41f7-13d6b8435b45@sangfor.com.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlCQh9JVktJTEMfHUIZTUJCGlUTARMWGhIXJBQOD1
+        lXWRgSC1lBWUlPSx5BSBlMQUhJTElBSB5IS0FNS0pCQUgZT05BGU5NQR9IT0tZV1kWGg8SFR0UWU
+        FZT0tIVUpNT0lMTlVKS0tVSkJLS1kG
+X-HM-Tid: 0a8a725126332e9ekusn15c42720193
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Pi46Nio6Nj0BGRM3FT9DMD04
+        KxAKCRVVSlVKTUJPSkhOS0hOQ0JMVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
+        QVlJT0seQUgZTEFISUxJQUgeSEtBTUtKQkFIGU9OQRlOTUEfSE9LWVdZCAFZQU5LT003Bg++
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2023/9/7 9:45, Ding Hui wrote:
+> On 2023/9/6 23:51, Mike Christie wrote:
+>> On 8/3/23 6:28 AM, Huang Cun wrote:
+>>> When a disk fails to attach, the struct rdac_dh_data is released,
+>>> but it is not removed from the ctlr->dh_list. When attaching another
+>>> disk, the released rdac_dh_data will be accessed and the following
+>>> BUG_ON() may be observed:
+>>>
+>>> [  414.696167] scsi 5:0:0:7: rdac: Attach failed (8)
+>>> ...
+>>> [  423.615364] kernel BUG at drivers/scsi/device_handler/scsi_dh_rdac.c:427!
+>>> [  423.615731] invalid opcode: 0000 [#1] SMP NOPTI
+>>> ...
+>>> [  423.623247] Call Trace:
+>>> [  423.623598]  rdac_bus_attach+0x203/0x4c0
+>>> [  423.623949]  ? scsi_dh_handler_attach+0x2d/0x90
+>>> [  423.624300]  scsi_dh_handler_attach+0x2d/0x90
+>>> [  423.624652]  scsi_sysfs_add_sdev+0x88/0x270
+>>> [  423.625004]  scsi_probe_and_add_lun+0xc47/0xd50
+>>> [  423.625354]  scsi_report_lun_scan+0x339/0x3b0
+>>> [  423.625705]  __scsi_scan_target+0xe9/0x220
+>>> [  423.626056]  scsi_scan_target+0xf6/0x100
+>>> [  423.626404]  fc_scsi_scan_rport+0xa5/0xb0
+>>> [  423.626757]  process_one_work+0x15e/0x3f0
+>>> [  423.627106]  worker_thread+0x4c/0x440
+>>> [  423.627453]  ? rescuer_thread+0x350/0x350
+>>> [  423.627804]  kthread+0xf8/0x130
+>>> [  423.628153]  ? kthread_destroy_worker+0x40/0x40
+>>> [  423.628509]  ret_from_fork+0x1f/0x40
+>>>
+>>> Fixes: 1a5dc166cd88 ("scsi_dh_rdac: update 'access_state' field")
+>>> Signed-off-by: Huang Cun <huangcun@sangfor.com.cn>
+>>> Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
+>>> Cc: Donglin Peng <pengdonglin@sangfor.com.cn>
+>>> ---
+>>>   drivers/scsi/device_handler/scsi_dh_rdac.c | 2 ++
+>>>   1 file changed, 2 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+>>> index c5538645057a..9d487c2b7708 100644
+>>> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
+>>> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+>>> @@ -762,8 +762,10 @@ static int rdac_bus_attach(struct scsi_device *sdev)
+>>>   clean_ctlr:
+>>>       spin_lock(&list_lock);
+>>> +    list_del_rcu(&h->node);
+>>>       kref_put(&h->ctlr->kref, release_controller);
+>>>       spin_unlock(&list_lock);
+>>> +    synchronize_rcu();
+>>
+>> Should this be:
+>>
+>> spin_lock(&list_lock);
+>> list_del_rcu(&h->node);
+>> spin_unlock(&list_lock);
+>>
+>> synchronize_rcu();
+>>
+>> kref_put(&h->ctlr->kref, release_controller);
+>>
+>>
+>> ?
+>>
+>> If you do the synchronize_rcu after the kref_put, then the kref_put
+>> could free the rdac_dh_data, while check_ownership is still
+>> accessing the rdac_dh_data, right?
+>>
+> 
+> You are right.
+> 
+> But I think we should keep the kref_put() and release callback be protected by list_lock, and only free
+> the ctlr after synchronize_rcu().
+> 
 
-On 9/8/2023 2:37 AM, Bart Van Assche wrote:
-> The logical unit information is missing from the UFS command tracing
-> output. Although the device name is logged, e.g. 13200000.ufs, this
-> name does not include logical unit information. Hence this patch that
-> replaces the device name with the SCSI ID in the tracing output. An
-> example of tracing output with this patch applied:
->
->      kworker/8:0H-80      [008] .....    89.106063: ufshcd_command: send_req: 0:0:0:4: tag: 10, DB: 0x7ffffbff, size: 524288, IS: 0, LBA: 1085538, opcode: 0x8a (WRITE_16), group_id: 0x0
->                dd-4225    [000] d.h..    89.106219: ufshcd_command: complete_rsp: 0:0:0:4: tag: 11, DB: 0x7ffff7ff, size: 524288, IS: 0, LBA: 1081728, opcode: 0x8a (WRITE_16), group_id: 0x0
->
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Steven Rostedt <rostedt@goodmis.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/ufs/core/ufshcd.c  |  4 ++--
->   include/trace/events/ufs.h | 15 ++++++++-------
->   2 files changed, 10 insertions(+), 9 deletions(-)
->
-> Changes compared to v1 (see also
-> https://lore.kernel.org/linux-scsi/20230706215124.4113546-1-bvanassche@acm.org/):
-> replaced major and minor numbers with the SCSI ID.
->
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index c2df07545f96..bb3f100276c5 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -447,8 +447,8 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
->   	} else {
->   		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
->   	}
-> -	trace_ufshcd_command(dev_name(hba->dev), str_t, tag,
-> -			doorbell, hwq_id, transfer_len, intr, lba, opcode, group_id);
-> +	trace_ufshcd_command(cmd->device, str_t, tag, doorbell, hwq_id,
-> +			     transfer_len, intr, lba, opcode, group_id);
->   }
->   
->   static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
-> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-> index 992517ac3292..b930669bd1f0 100644
-> --- a/include/trace/events/ufs.h
-> +++ b/include/trace/events/ufs.h
-> @@ -267,15 +267,15 @@ DEFINE_EVENT(ufshcd_template, ufshcd_wl_runtime_resume,
->   	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
->   
->   TRACE_EVENT(ufshcd_command,
-> -	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t,
-> +	TP_PROTO(struct scsi_device *sdev, enum ufs_trace_str_t str_t,
->   		 unsigned int tag, u32 doorbell, u32 hwq_id, int transfer_len,
->   		 u32 intr, u64 lba, u8 opcode, u8 group_id),
->   
-> -	TP_ARGS(dev_name, str_t, tag, doorbell, hwq_id, transfer_len,
-> -			intr, lba, opcode, group_id),
-> +	TP_ARGS(sdev, str_t, tag, doorbell, hwq_id, transfer_len, intr, lba,
-> +		opcode, group_id),
->   
->   	TP_STRUCT__entry(
-> -		__string(dev_name, dev_name)
-> +		__field(struct scsi_device *, sdev)
->   		__field(enum ufs_trace_str_t, str_t)
->   		__field(unsigned int, tag)
->   		__field(u32, doorbell)
-> @@ -288,7 +288,7 @@ TRACE_EVENT(ufshcd_command,
->   	),
->   
->   	TP_fast_assign(
-> -		__assign_str(dev_name, dev_name);
-> +		__entry->sdev = sdev;
->   		__entry->str_t = str_t;
->   		__entry->tag = tag;
->   		__entry->doorbell = doorbell;
-> @@ -302,8 +302,9 @@ TRACE_EVENT(ufshcd_command,
->   
->   	TP_printk(
->   		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, hwq_id: %d",
-> -		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
-> -		__entry->tag, __entry->doorbell, __entry->transfer_len, __entry->intr,
-> +		show_ufs_cmd_trace_str(__entry->str_t),
-> +		dev_name(&__entry->sdev->sdev_dev), __entry->tag,
-> +		__entry->doorbell, __entry->transfer_len, __entry->intr,
->   		__entry->lba, (u32)__entry->opcode, str_opcode(__entry->opcode),
->   		(u32)__entry->group_id, __entry->hwq_id
->   	)
+Sorry, I thought again, maybe we don't need to worry about it.
 
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
+The ctlr->kref is protected by list_lock, and release_controller() DO free the ctlr, NOT rdac_dh_data,
+kfree(rdac_dh_data) is already after synchronize_rcu().
+
+If check_ownership() shared the same ctlr, the kref must be greater than or equal to 2, so the ctlr will
+not be released by kref_put(). On the other hand, if the ctlr is different, releasing it will not affect
+others.
+
+-- 
+Thanks,
+- Ding Hui
 
