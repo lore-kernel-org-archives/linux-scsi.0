@@ -2,112 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D141EEB570
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 20:48:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 582E2EEB56E
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 21:07:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237024AbjIHUsM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 16:48:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53854 "EHLO
+        id S241837AbjIHVHS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 17:07:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229755AbjIHUsM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 16:48:12 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0F309C
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Sep 2023 13:48:07 -0700 (PDT)
-Received: from [192.168.1.103] (178.176.76.159) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 8 Sep 2023
- 23:48:04 +0300
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: scsi: hosts: check result of scsi_host_set_state() in
- scsi_add_host_with_dma()
-Organization: Open Mobile Platform
-Message-ID: <812c97ce-9b41-400a-9eb9-ddeef0156bbe@omp.ru>
-Date:   Fri, 8 Sep 2023 23:48:03 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229959AbjIHVHS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 17:07:18 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37ECEE46
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Sep 2023 14:07:14 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1bf095e1becso4264225ad.1
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Sep 2023 14:07:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1694207233; x=1694812033; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZRKEa/CY/U/2y8kmmXWkghfIC2mOr39+66dCxV2EImc=;
+        b=rf2eKTrXoYxe3brtqJ/knZyH63rmrFYdB12PcGFiMpCWTBRK0NEbxHvGt7CIkCMMIZ
+         SeN9KMw92J9XoGIadaVp+Pz6KLGc7tlwR1n0DYLQ6UvQwzZFWP7Sq+irY7BCWoS+IX1i
+         rkj7vhTHzF0uU6QP5PYNaV34yedjxxlvoIjzHZ/i9W/FhMWzDsSaCrqMglMwhB+B0hlr
+         YVHk8HVeUCRnQCNK2GgP48Efw5aCcbD1J7FBOCcsW9Pl+Y5MGpcXHM1DjjbQeFdEWaa8
+         sFryow9o5A1rH3magMi0BhPsJkIg+CAsBE1JJo0vZj9ibGk4wB5a27n6ErO9qwESvC10
+         bsig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694207233; x=1694812033;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZRKEa/CY/U/2y8kmmXWkghfIC2mOr39+66dCxV2EImc=;
+        b=SwY3WlqHHC9lQqKH/yxhNIsk3hywCKn/Y5DTPGej0+WTlUq5UUbwleQhdypR9NOqbl
+         8WMfu6uLas9oB+VHvCiqGzbdQxiaiCbSrg8+ubXDeSNaOxBgo+C7X7Cf6XiQqUk3qdZu
+         gK6e06nQgRTD+w1u9JaCi1bWtD4QU7M3vM9/oFijVyKxsVEa2BYKswQisCDYzQ6KmegF
+         8iLmXRNsSDXgo+w6VU9bR75woM50L65hltQja3uH9BKsvuOkakhftrwmohsmNTwQ6Tsz
+         7wdXvbxg6Nj4lP0xUOZU+bGwL34c3knygR150wv1W1+zmSZ0AZ76VYVYY3oWL7fR729i
+         OB7w==
+X-Gm-Message-State: AOJu0Ywwi7ycp8bI8d9hk3xCHELtp8GOq4actc3roqUIgHvaFbjPC0kN
+        RfkuzPT1yI/wMmzF+7nT1tcWIGYImDI=
+X-Google-Smtp-Source: AGHT+IFKzzk8pMLCz8rDNo+L5rANlAvsD7/57KLl9LB5Yvptc7hFL8LJo0BYMZKlV5b9muYzGTqoyg==
+X-Received: by 2002:a17:903:41c8:b0:1c0:bf60:ba4f with SMTP id u8-20020a17090341c800b001c0bf60ba4fmr3823363ple.4.1694207233451;
+        Fri, 08 Sep 2023 14:07:13 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id g22-20020a170902869600b001bdc3768ca5sm1992021plo.254.2023.09.08.14.07.12
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 08 Sep 2023 14:07:13 -0700 (PDT)
+From:   Justin Tee <justintee8345@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
+        Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 1/1] lpfc: Early return after marking final NLP_DROPPED flag in dev_loss_tmo
+Date:   Fri,  8 Sep 2023 14:18:52 -0700
+Message-Id: <20230908211852.37576-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.76.159]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 09/08/2023 20:34:53
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 179760 [Sep 08 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 530 530 ecb1547b3f72d1df4c71c0b60e67ba6b4aea5432
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: {rdns complete}
-X-KSE-AntiSpam-Info: {fromrtbl complete}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.76.159
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 09/08/2023 20:39:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 9/8/2023 5:21:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCSI core uses scsi_host_set_state() to control the host's state machine;
-this function returns 0 on success and -EINVAL on failure to change host's
-state. The only place where the result of scsi_host_set_state() is ignored
-is in scsi_add_host_with_dma() -- that blithely continues initializing the
-SCSI host even if the host's state couldn't be set to SHOST_RUNNING...
-I guess the logic behind this is that scsi_add_host_with_dma() call is
-always preceded by scsi_host_alloc() call which leaves the host's state
-machine in the SHOST_CREATED state which is a valid previous state for
-SHOST_RUNNING. I think we'd better check result of scsi_host_set_state()
-always -- better safe than sorry!
+When a dev_loss_tmo event occurs, an ndlp lock is taken before checking
+nlp_flag for NLP_DROPPED.  There is an attempt to restore the ndlp lock
+when exiting the if statement, but the nlp_put kref could be the final
+decrement causing a use-after-free memory access on a released ndlp object.
 
-Found by Linux Verification Center (linuxtesting.org) with the Svace static
-analysis tool.
+Instead of trying to reacquire the ndlp lock after checking nlp_flag, just
+return after calling nlp_put.
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
-The patch is against the 'for-next' branch of Martin Petersen's 'scsi.git' repo.
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/scsi/hosts.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 51afb60859eb..674dd07aae72 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -203,7 +203,7 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 			ndlp->nlp_flag |= NLP_DROPPED;
+ 			spin_unlock_irqrestore(&ndlp->lock, iflags);
+ 			lpfc_nlp_put(ndlp);
+-			spin_lock_irqsave(&ndlp->lock, iflags);
++			return;
+ 		}
+ 
+ 		spin_unlock_irqrestore(&ndlp->lock, iflags);
+-- 
+2.38.0
 
-Index: scsi/drivers/scsi/hosts.c
-===================================================================
---- scsi.orig/drivers/scsi/hosts.c
-+++ scsi/drivers/scsi/hosts.c
-@@ -272,7 +272,10 @@ int scsi_add_host_with_dma(struct Scsi_H
- 	if (error)
- 		goto out_disable_runtime_pm;
- 
--	scsi_host_set_state(shost, SHOST_RUNNING);
-+	error = scsi_host_set_state(shost, SHOST_RUNNING);
-+	if (error)
-+		goto out_disable_runtime_pm;
-+
- 	get_device(shost->shost_gendev.parent);
- 
- 	device_enable_async_suspend(&shost->shost_dev);
