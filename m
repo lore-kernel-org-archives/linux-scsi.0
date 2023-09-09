@@ -2,206 +2,141 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D47BEEB57C
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 01:37:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF951EEB589
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 11:05:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344730AbjIIBha (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 21:37:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50012 "EHLO
+        id S237575AbjIILFF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Sep 2023 07:05:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344028AbjIIBhZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 21:37:25 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DD5B1FEF;
-        Fri,  8 Sep 2023 18:37:17 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1AB1C43395;
-        Sat,  9 Sep 2023 00:41:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694220067;
-        bh=nRAG+nq9dQbioBw6tFeqe+rJXsKNI0X1CFwweRh9MCk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nrqvgSVEWjPP5K4DfSYVqMrc8Pz3m9Z/RTNHiFQq3YYpLYurOLkff9GwPXsTUChYf
-         6uIwivxSRFOdH9m0kTj0o/qV2/TCS4jU1OqinRKrKRKocA0/V9kVihFlrRG3YxxKNa
-         XeB4vevpZURtFgtPyq1j2Q1HT1UeKUfE/HN3I0oNVIM2CY/BCQa/dHta75UD+aFHOX
-         JM/mjOfMOJLtvTtDlwlr6wxvXyEIquBrhEAjYISdIrhi7hgCHK7A0n2vpyKiNWG3Bq
-         JLpU5P1HNhHhAwuTnsaz1D0JSFR6ltIIAOBYUhFQ5kBwhGRxA5Nt6S3nr/Fa6gwsEE
-         BKHr75igk+p+w==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Konstantin Shelekhin <k.shelekhin@yadro.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, mlombard@redhat.com,
-        michael.christie@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 10/14] scsi: target: iscsi: Fix buffer overflow in lio_target_nacl_info_show()
-Date:   Fri,  8 Sep 2023 20:40:41 -0400
-Message-Id: <20230909004045.3581014-10-sashal@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230909004045.3581014-1-sashal@kernel.org>
-References: <20230909004045.3581014-1-sashal@kernel.org>
+        with ESMTP id S1344830AbjIILFE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2023 07:05:04 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ED0CE43
+        for <linux-scsi@vger.kernel.org>; Sat,  9 Sep 2023 04:04:58 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id 2adb3069b0e04-502934c88b7so4386347e87.2
+        for <linux-scsi@vger.kernel.org>; Sat, 09 Sep 2023 04:04:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1694257496; x=1694862296; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=1XUxNwo0jgK1hqYvQ/OBgnXp62Vg7lM+YHP+s8+7VI8=;
+        b=hcoQ/ZccTWwacp/tp4GaHs9wwFhCNF1y9967vcPDmVAI2H5zMSQcCqhhTKYOS+l949
+         2GTZdiH36g7D5F2sGYap/h+5bBrkrRZZuNoSLSDr7NHfwpk3flg883Vwh4OxD/zUwYJk
+         W0/y5FUd0sMArVKb34KJs4RN1l+uH9iotOiCFYvcQE9htjjcVRvi1JlT3lFy/AuYS8o3
+         P2Nblc7UboBOOmqHcKs64YDu0dbkHQpUmGh/yME3WjYWTfz/OOiDk+rDB0BU91RGU287
+         u5S1q5APIx5vALpYwQUYZiFfo4UY0jWL4eA8LXrL/FvDB64K8oTqM3AEnO8g+eNFsMxl
+         gWuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694257496; x=1694862296;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1XUxNwo0jgK1hqYvQ/OBgnXp62Vg7lM+YHP+s8+7VI8=;
+        b=jbki63Xku0kiRkV7GDVGGXsIZVP7dlsl3aInuBkB3+yaqlmVGS5XUFBsrOIKqF3hEE
+         vHjVyHyxj3AKmtx8zctJVX9Nh2AbxF/YYvCwOCJmfvL7Qzd0q+rohZFfAs75yOIjFR7K
+         CLJxF4Crsb844bcpOsvGXjom/OZ79PYjtdQsQiKtFvdK3wFx+NKW9vOVpCwUkdYdW7nf
+         M0+xpzJ4FRL0q1TMfiNbu4oQIxgWT1GpMLVxVBSUj2axA/ElOwe3TIrENNVSBR2Bebt0
+         yiMwPM8WReFVY3LQoWTopcAJtXlUcVTqmmg3vyNZlhMqqhTgPkq1Q4VvkSssllEr5V8u
+         8RSA==
+X-Gm-Message-State: AOJu0Ywu9ez38SoZmAgzC8njOqeTdwrc0g71QCC6K/WKhcb9HnCiSCvZ
+        kswwcHQRGg2BwlN+G+xlGfiIjA==
+X-Google-Smtp-Source: AGHT+IElvzkHK7O75wRqtSaZ+3vi5iwX2B4KJcq4CGw/JKy94J6nuTMOmN7FG9+8KVOQ9x+pCxFMAw==
+X-Received: by 2002:a2e:b015:0:b0:2bc:bf29:18d3 with SMTP id y21-20020a2eb015000000b002bcbf2918d3mr3548096ljk.31.1694257495993;
+        Sat, 09 Sep 2023 04:04:55 -0700 (PDT)
+Received: from [192.168.37.232] (178235177205.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.205])
+        by smtp.gmail.com with ESMTPSA id jj27-20020a170907985b00b009929d998abcsm2177208ejc.209.2023.09.09.04.04.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 09 Sep 2023 04:04:55 -0700 (PDT)
+Message-ID: <5722031e-96ab-48f6-9848-086be17fe5bf@linaro.org>
+Date:   Sat, 9 Sep 2023 13:04:52 +0200
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.294
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] scsi: ufs: ufs-qcom: Update PHY settings only when
+ scaling to higher gears
+Content-Language: en-US
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     bvanassche@acm.org, avri.altman@wdc.com, alim.akhtar@samsung.com,
+        andersson@kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
+        stable@vger.kernel.org
+References: <20230908145329.154024-1-manivannan.sadhasivam@linaro.org>
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
+ 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
+ izWDgYvmBE8=
+In-Reply-To: <20230908145329.154024-1-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Konstantin Shelekhin <k.shelekhin@yadro.com>
+On 8.09.2023 16:53, Manivannan Sadhasivam wrote:
+> The "hs_gear" variable is used to program the PHY settings (submode) during
+> ufs_qcom_power_up_sequence(). Currently, it is being updated every time the
+> agreed gear changes. Due to this, if the gear got downscaled before suspend
+> (runtime/system), then while resuming, the PHY settings for the lower gear
+> will be applied first and later when scaling to max gear with REINIT, the
+> PHY settings for the max gear will be applied.
+> 
+> This adds a latency while resuming and also really not needed as the PHY
+> gear settings are backwards compatible i.e., we can continue using the PHY
+> settings for max gear with lower gear speed.
+> 
+> So let's update the "hs_gear" variable _only_ when the agreed gear is
+> greater than the current one. This guarantees that the PHY settings will be
+> changed only during probe time and fatal error condition.
+> 
+> Due to this, UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH can now be skipped
+> when the PM operation is in progress.
+> 
+> Cc: stable@vger.kernel.org
+> Fixes: 96a7141da332 ("scsi: ufs: core: Add support for reinitializing the UFS device")
+> Reported-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+Would that not increase power consumption?
 
-[ Upstream commit 801f287c93ff95582b0a2d2163f12870a2f076d4 ]
+I'd presume that the PHY needs to work harder at higher gear
+settings to preserve signal integrity with more data flow.
 
-The function lio_target_nacl_info_show() uses sprintf() in a loop to print
-details for every iSCSI connection in a session without checking for the
-buffer length. With enough iSCSI connections it's possible to overflow the
-buffer provided by configfs and corrupt the memory.
+And if so, would that power consumption increase be measurable?
+Or is it so small that it doesn't matter?
 
-This patch replaces sprintf() with sysfs_emit_at() that checks for buffer
-boundries.
-
-Signed-off-by: Konstantin Shelekhin <k.shelekhin@yadro.com>
-Link: https://lore.kernel.org/r/20230722152657.168859-2-k.shelekhin@yadro.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/target/iscsi/iscsi_target_configfs.c | 54 ++++++++++----------
- 1 file changed, 27 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index d25cadc4f4f11..ac071abae7e90 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -516,102 +516,102 @@ static ssize_t lio_target_nacl_info_show(struct config_item *item, char *page)
- 	spin_lock_bh(&se_nacl->nacl_sess_lock);
- 	se_sess = se_nacl->nacl_sess;
- 	if (!se_sess) {
--		rb += sprintf(page+rb, "No active iSCSI Session for Initiator"
-+		rb += sysfs_emit_at(page, rb, "No active iSCSI Session for Initiator"
- 			" Endpoint: %s\n", se_nacl->initiatorname);
- 	} else {
- 		sess = se_sess->fabric_sess_ptr;
- 
--		rb += sprintf(page+rb, "InitiatorName: %s\n",
-+		rb += sysfs_emit_at(page, rb, "InitiatorName: %s\n",
- 			sess->sess_ops->InitiatorName);
--		rb += sprintf(page+rb, "InitiatorAlias: %s\n",
-+		rb += sysfs_emit_at(page, rb, "InitiatorAlias: %s\n",
- 			sess->sess_ops->InitiatorAlias);
- 
--		rb += sprintf(page+rb,
-+		rb += sysfs_emit_at(page, rb,
- 			      "LIO Session ID: %u   ISID: 0x%6ph  TSIH: %hu  ",
- 			      sess->sid, sess->isid, sess->tsih);
--		rb += sprintf(page+rb, "SessionType: %s\n",
-+		rb += sysfs_emit_at(page, rb, "SessionType: %s\n",
- 				(sess->sess_ops->SessionType) ?
- 				"Discovery" : "Normal");
--		rb += sprintf(page+rb, "Session State: ");
-+		rb += sysfs_emit_at(page, rb, "Session State: ");
- 		switch (sess->session_state) {
- 		case TARG_SESS_STATE_FREE:
--			rb += sprintf(page+rb, "TARG_SESS_FREE\n");
-+			rb += sysfs_emit_at(page, rb, "TARG_SESS_FREE\n");
- 			break;
- 		case TARG_SESS_STATE_ACTIVE:
--			rb += sprintf(page+rb, "TARG_SESS_STATE_ACTIVE\n");
-+			rb += sysfs_emit_at(page, rb, "TARG_SESS_STATE_ACTIVE\n");
- 			break;
- 		case TARG_SESS_STATE_LOGGED_IN:
--			rb += sprintf(page+rb, "TARG_SESS_STATE_LOGGED_IN\n");
-+			rb += sysfs_emit_at(page, rb, "TARG_SESS_STATE_LOGGED_IN\n");
- 			break;
- 		case TARG_SESS_STATE_FAILED:
--			rb += sprintf(page+rb, "TARG_SESS_STATE_FAILED\n");
-+			rb += sysfs_emit_at(page, rb, "TARG_SESS_STATE_FAILED\n");
- 			break;
- 		case TARG_SESS_STATE_IN_CONTINUE:
--			rb += sprintf(page+rb, "TARG_SESS_STATE_IN_CONTINUE\n");
-+			rb += sysfs_emit_at(page, rb, "TARG_SESS_STATE_IN_CONTINUE\n");
- 			break;
- 		default:
--			rb += sprintf(page+rb, "ERROR: Unknown Session"
-+			rb += sysfs_emit_at(page, rb, "ERROR: Unknown Session"
- 					" State!\n");
- 			break;
- 		}
- 
--		rb += sprintf(page+rb, "---------------------[iSCSI Session"
-+		rb += sysfs_emit_at(page, rb, "---------------------[iSCSI Session"
- 				" Values]-----------------------\n");
--		rb += sprintf(page+rb, "  CmdSN/WR  :  CmdSN/WC  :  ExpCmdSN"
-+		rb += sysfs_emit_at(page, rb, "  CmdSN/WR  :  CmdSN/WC  :  ExpCmdSN"
- 				"  :  MaxCmdSN  :     ITT    :     TTT\n");
- 		max_cmd_sn = (u32) atomic_read(&sess->max_cmd_sn);
--		rb += sprintf(page+rb, " 0x%08x   0x%08x   0x%08x   0x%08x"
-+		rb += sysfs_emit_at(page, rb, " 0x%08x   0x%08x   0x%08x   0x%08x"
- 				"   0x%08x   0x%08x\n",
- 			sess->cmdsn_window,
- 			(max_cmd_sn - sess->exp_cmd_sn) + 1,
- 			sess->exp_cmd_sn, max_cmd_sn,
- 			sess->init_task_tag, sess->targ_xfer_tag);
--		rb += sprintf(page+rb, "----------------------[iSCSI"
-+		rb += sysfs_emit_at(page, rb, "----------------------[iSCSI"
- 				" Connections]-------------------------\n");
- 
- 		spin_lock(&sess->conn_lock);
- 		list_for_each_entry(conn, &sess->sess_conn_list, conn_list) {
--			rb += sprintf(page+rb, "CID: %hu  Connection"
-+			rb += sysfs_emit_at(page, rb, "CID: %hu  Connection"
- 					" State: ", conn->cid);
- 			switch (conn->conn_state) {
- 			case TARG_CONN_STATE_FREE:
--				rb += sprintf(page+rb,
-+				rb += sysfs_emit_at(page, rb,
- 					"TARG_CONN_STATE_FREE\n");
- 				break;
- 			case TARG_CONN_STATE_XPT_UP:
--				rb += sprintf(page+rb,
-+				rb += sysfs_emit_at(page, rb,
- 					"TARG_CONN_STATE_XPT_UP\n");
- 				break;
- 			case TARG_CONN_STATE_IN_LOGIN:
--				rb += sprintf(page+rb,
-+				rb += sysfs_emit_at(page, rb,
- 					"TARG_CONN_STATE_IN_LOGIN\n");
- 				break;
- 			case TARG_CONN_STATE_LOGGED_IN:
--				rb += sprintf(page+rb,
-+				rb += sysfs_emit_at(page, rb,
- 					"TARG_CONN_STATE_LOGGED_IN\n");
- 				break;
- 			case TARG_CONN_STATE_IN_LOGOUT:
--				rb += sprintf(page+rb,
-+				rb += sysfs_emit_at(page, rb,
- 					"TARG_CONN_STATE_IN_LOGOUT\n");
- 				break;
- 			case TARG_CONN_STATE_LOGOUT_REQUESTED:
--				rb += sprintf(page+rb,
-+				rb += sysfs_emit_at(page, rb,
- 					"TARG_CONN_STATE_LOGOUT_REQUESTED\n");
- 				break;
- 			case TARG_CONN_STATE_CLEANUP_WAIT:
--				rb += sprintf(page+rb,
-+				rb += sysfs_emit_at(page, rb,
- 					"TARG_CONN_STATE_CLEANUP_WAIT\n");
- 				break;
- 			default:
--				rb += sprintf(page+rb,
-+				rb += sysfs_emit_at(page, rb,
- 					"ERROR: Unknown Connection State!\n");
- 				break;
- 			}
- 
--			rb += sprintf(page+rb, "   Address %pISc %s", &conn->login_sockaddr,
-+			rb += sysfs_emit_at(page, rb, "   Address %pISc %s", &conn->login_sockaddr,
- 				(conn->network_transport == ISCSI_TCP) ?
- 				"TCP" : "SCTP");
--			rb += sprintf(page+rb, "  StatSN: 0x%08x\n",
-+			rb += sysfs_emit_at(page, rb, "  StatSN: 0x%08x\n",
- 				conn->stat_sn);
- 		}
- 		spin_unlock(&sess->conn_lock);
--- 
-2.40.1
-
+Konrad
