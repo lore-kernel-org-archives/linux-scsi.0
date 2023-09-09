@@ -2,239 +2,206 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEE05EEB57D
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 01:37:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D47BEEB57C
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 01:37:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239898AbjIIBhU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 21:37:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45280 "EHLO
+        id S1344730AbjIIBha (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 21:37:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233706AbjIIBhT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 21:37:19 -0400
+        with ESMTP id S1344028AbjIIBhZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 21:37:25 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80C7E1FE0;
-        Fri,  8 Sep 2023 18:37:15 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 472DFC116A0;
-        Sat,  9 Sep 2023 00:38:35 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DD5B1FEF;
+        Fri,  8 Sep 2023 18:37:17 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1AB1C43395;
+        Sat,  9 Sep 2023 00:41:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694219916;
-        bh=KGfBSIRPIJzAVGwc/Mg0wty6svnlbO03li2t89cwHKI=;
+        s=k20201202; t=1694220067;
+        bh=nRAG+nq9dQbioBw6tFeqe+rJXsKNI0X1CFwweRh9MCk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=r6/JYwwS87+bT6KB72hXQ0x5ZDgpPCwsgdqnfrQZ+kPPIRJkMcFDeWny8yIibtVMF
-         AmspNBIzrIBDCk5GP5WnkhZK4kZM+v0yBbq9ZIfcI4jwa/W+ODFMZJ8cD7oOYib8KY
-         anHkJHKh58ES06GZe8YcBMxjWVQu3wnwJD7SZZxYJBUnM6CfCU6GYRyN0h8Fdqsxtz
-         jChVWKkGlF4+bme08QVx8XB0qjq8mlrlyUOB075wPW7deZIrrq2aBWWmA1I+OAzurl
-         ECftORjfnoE+GaP1m6JWNjv1fCySbo1twu/M5aQCNRIHRZ/odC/zx7Oe6HM964R1ym
-         PydoS1mrA5Kxw==
+        b=nrqvgSVEWjPP5K4DfSYVqMrc8Pz3m9Z/RTNHiFQq3YYpLYurOLkff9GwPXsTUChYf
+         6uIwivxSRFOdH9m0kTj0o/qV2/TCS4jU1OqinRKrKRKocA0/V9kVihFlrRG3YxxKNa
+         XeB4vevpZURtFgtPyq1j2Q1HT1UeKUfE/HN3I0oNVIM2CY/BCQa/dHta75UD+aFHOX
+         JM/mjOfMOJLtvTtDlwlr6wxvXyEIquBrhEAjYISdIrhi7hgCHK7A0n2vpyKiNWG3Bq
+         JLpU5P1HNhHhAwuTnsaz1D0JSFR6ltIIAOBYUhFQ5kBwhGRxA5Nt6S3nr/Fa6gwsEE
+         BKHr75igk+p+w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Justin Tee <justin.tee@broadcom.com>,
+Cc:     Konstantin Shelekhin <k.shelekhin@yadro.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 09/24] scsi: lpfc: Abort outstanding ELS cmds when mailbox timeout error is detected
-Date:   Fri,  8 Sep 2023 20:38:01 -0400
-Message-Id: <20230909003818.3580081-9-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, mlombard@redhat.com,
+        michael.christie@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 10/14] scsi: target: iscsi: Fix buffer overflow in lio_target_nacl_info_show()
+Date:   Fri,  8 Sep 2023 20:40:41 -0400
+Message-Id: <20230909004045.3581014-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230909003818.3580081-1-sashal@kernel.org>
-References: <20230909003818.3580081-1-sashal@kernel.org>
+In-Reply-To: <20230909004045.3581014-1-sashal@kernel.org>
+References: <20230909004045.3581014-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.52
+X-stable-base: Linux 4.19.294
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Konstantin Shelekhin <k.shelekhin@yadro.com>
 
-[ Upstream commit 089ea22e374aa20043e72243c47b5867d5419d38 ]
+[ Upstream commit 801f287c93ff95582b0a2d2163f12870a2f076d4 ]
 
-A mailbox timeout error usually indicates something has gone wrong, and a
-follow up reset of the HBA is a typical recovery mechanism.  Introduce a
-MBX_TMO_ERR flag to detect such cases and have lpfc_els_flush_cmd abort ELS
-commands if the MBX_TMO_ERR flag condition was set.  This ensures all of
-the registered SGL resources meant for ELS traffic are not leaked after an
-HBA reset.
+The function lio_target_nacl_info_show() uses sprintf() in a loop to print
+details for every iSCSI connection in a session without checking for the
+buffer length. With enough iSCSI connections it's possible to overflow the
+buffer provided by configfs and corrupt the memory.
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20230712180522.112722-9-justintee8345@gmail.com
+This patch replaces sprintf() with sysfs_emit_at() that checks for buffer
+boundries.
+
+Signed-off-by: Konstantin Shelekhin <k.shelekhin@yadro.com>
+Link: https://lore.kernel.org/r/20230722152657.168859-2-k.shelekhin@yadro.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h      |  1 +
- drivers/scsi/lpfc/lpfc_els.c  | 25 ++++++++++++++++++-------
- drivers/scsi/lpfc/lpfc_init.c | 20 +++++++++++++++++---
- drivers/scsi/lpfc/lpfc_sli.c  |  8 +++++++-
- 4 files changed, 43 insertions(+), 11 deletions(-)
+ drivers/target/iscsi/iscsi_target_configfs.c | 54 ++++++++++----------
+ 1 file changed, 27 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 9ad233b40a9e2..664ac3069c4be 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -895,6 +895,7 @@ enum lpfc_irq_chann_mode {
- enum lpfc_hba_bit_flags {
- 	FABRIC_COMANDS_BLOCKED,
- 	HBA_PCI_ERR,
-+	MBX_TMO_ERR,
- };
- 
- struct lpfc_hba {
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 43ebb41ded593..6b5ce9869e6b4 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -9410,11 +9410,13 @@ void
- lpfc_els_flush_cmd(struct lpfc_vport *vport)
- {
- 	LIST_HEAD(abort_list);
-+	LIST_HEAD(cancel_list);
- 	struct lpfc_hba  *phba = vport->phba;
- 	struct lpfc_sli_ring *pring;
- 	struct lpfc_iocbq *tmp_iocb, *piocb;
- 	u32 ulp_command;
- 	unsigned long iflags = 0;
-+	bool mbx_tmo_err;
- 
- 	lpfc_fabric_abort_vport(vport);
- 
-@@ -9436,15 +9438,16 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		spin_lock(&pring->ring_lock);
- 
-+	mbx_tmo_err = test_bit(MBX_TMO_ERR, &phba->bit_flags);
- 	/* First we need to issue aborts to outstanding cmds on txcmpl */
- 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
--		if (piocb->cmd_flag & LPFC_IO_LIBDFC)
-+		if (piocb->cmd_flag & LPFC_IO_LIBDFC && !mbx_tmo_err)
- 			continue;
- 
- 		if (piocb->vport != vport)
- 			continue;
- 
--		if (piocb->cmd_flag & LPFC_DRIVER_ABORTED)
-+		if (piocb->cmd_flag & LPFC_DRIVER_ABORTED && !mbx_tmo_err)
- 			continue;
- 
- 		/* On the ELS ring we can have ELS_REQUESTs or
-@@ -9463,8 +9466,8 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 			 */
- 			if (phba->link_state == LPFC_LINK_DOWN)
- 				piocb->cmd_cmpl = lpfc_cmpl_els_link_down;
--		}
--		if (ulp_command == CMD_GEN_REQUEST64_CR)
-+		} else if (ulp_command == CMD_GEN_REQUEST64_CR ||
-+			   mbx_tmo_err)
- 			list_add_tail(&piocb->dlist, &abort_list);
- 	}
- 
-@@ -9476,11 +9479,19 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	list_for_each_entry_safe(piocb, tmp_iocb, &abort_list, dlist) {
- 		spin_lock_irqsave(&phba->hbalock, iflags);
- 		list_del_init(&piocb->dlist);
--		lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
-+		if (mbx_tmo_err)
-+			list_move_tail(&piocb->list, &cancel_list);
-+		else
-+			lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
-+
- 		spin_unlock_irqrestore(&phba->hbalock, iflags);
- 	}
--	/* Make sure HBA is alive */
--	lpfc_issue_hb_tmo(phba);
-+	if (!list_empty(&cancel_list))
-+		lpfc_sli_cancel_iocbs(phba, &cancel_list, IOSTAT_LOCAL_REJECT,
-+				      IOERR_SLI_ABORTED);
-+	else
-+		/* Make sure HBA is alive */
-+		lpfc_issue_hb_tmo(phba);
- 
- 	if (!list_empty(&abort_list))
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index d54fd153cb115..f59de61803dc8 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7563,6 +7563,8 @@ lpfc_disable_pci_dev(struct lpfc_hba *phba)
- void
- lpfc_reset_hba(struct lpfc_hba *phba)
- {
-+	int rc = 0;
-+
- 	/* If resets are disabled then set error state and return. */
- 	if (!phba->cfg_enable_hba_reset) {
- 		phba->link_state = LPFC_HBA_ERROR;
-@@ -7573,13 +7575,25 @@ lpfc_reset_hba(struct lpfc_hba *phba)
- 	if (phba->sli.sli_flag & LPFC_SLI_ACTIVE) {
- 		lpfc_offline_prep(phba, LPFC_MBX_WAIT);
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index d25cadc4f4f11..ac071abae7e90 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -516,102 +516,102 @@ static ssize_t lio_target_nacl_info_show(struct config_item *item, char *page)
+ 	spin_lock_bh(&se_nacl->nacl_sess_lock);
+ 	se_sess = se_nacl->nacl_sess;
+ 	if (!se_sess) {
+-		rb += sprintf(page+rb, "No active iSCSI Session for Initiator"
++		rb += sysfs_emit_at(page, rb, "No active iSCSI Session for Initiator"
+ 			" Endpoint: %s\n", se_nacl->initiatorname);
  	} else {
-+		if (test_bit(MBX_TMO_ERR, &phba->bit_flags)) {
-+			/* Perform a PCI function reset to start from clean */
-+			rc = lpfc_pci_function_reset(phba);
-+			lpfc_els_flush_all_cmd(phba);
-+		}
- 		lpfc_offline_prep(phba, LPFC_MBX_NO_WAIT);
- 		lpfc_sli_flush_io_rings(phba);
- 	}
- 	lpfc_offline(phba);
--	lpfc_sli_brdrestart(phba);
--	lpfc_online(phba);
--	lpfc_unblock_mgmt_io(phba);
-+	clear_bit(MBX_TMO_ERR, &phba->bit_flags);
-+	if (unlikely(rc)) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+				"8888 PCI function reset failed rc %x\n",
-+				rc);
-+	} else {
-+		lpfc_sli_brdrestart(phba);
-+		lpfc_online(phba);
-+		lpfc_unblock_mgmt_io(phba);
-+	}
- }
+ 		sess = se_sess->fabric_sess_ptr;
  
- /**
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index b44bb3ae22ad9..427a6ac803e50 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -3919,6 +3919,8 @@ void lpfc_poll_eratt(struct timer_list *t)
- 	uint64_t sli_intr, cnt;
+-		rb += sprintf(page+rb, "InitiatorName: %s\n",
++		rb += sysfs_emit_at(page, rb, "InitiatorName: %s\n",
+ 			sess->sess_ops->InitiatorName);
+-		rb += sprintf(page+rb, "InitiatorAlias: %s\n",
++		rb += sysfs_emit_at(page, rb, "InitiatorAlias: %s\n",
+ 			sess->sess_ops->InitiatorAlias);
  
- 	phba = from_timer(phba, t, eratt_poll);
-+	if (!(phba->hba_flag & HBA_SETUP))
-+		return;
- 
- 	/* Here we will also keep track of interrupts per sec of the hba */
- 	sli_intr = phba->sli.slistat.sli_intr;
-@@ -7712,7 +7714,9 @@ lpfc_sli4_repost_sgl_list(struct lpfc_hba *phba,
- 		spin_unlock_irq(&phba->hbalock);
- 	} else {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"3161 Failure to post sgl to port.\n");
-+				"3161 Failure to post sgl to port,status %x "
-+				"blkcnt %d totalcnt %d postcnt %d\n",
-+				status, block_cnt, total_cnt, post_cnt);
- 		return -EIO;
- 	}
- 
-@@ -8495,6 +8499,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 			spin_unlock_irq(&phba->hbalock);
+-		rb += sprintf(page+rb,
++		rb += sysfs_emit_at(page, rb,
+ 			      "LIO Session ID: %u   ISID: 0x%6ph  TSIH: %hu  ",
+ 			      sess->sid, sess->isid, sess->tsih);
+-		rb += sprintf(page+rb, "SessionType: %s\n",
++		rb += sysfs_emit_at(page, rb, "SessionType: %s\n",
+ 				(sess->sess_ops->SessionType) ?
+ 				"Discovery" : "Normal");
+-		rb += sprintf(page+rb, "Session State: ");
++		rb += sysfs_emit_at(page, rb, "Session State: ");
+ 		switch (sess->session_state) {
+ 		case TARG_SESS_STATE_FREE:
+-			rb += sprintf(page+rb, "TARG_SESS_FREE\n");
++			rb += sysfs_emit_at(page, rb, "TARG_SESS_FREE\n");
+ 			break;
+ 		case TARG_SESS_STATE_ACTIVE:
+-			rb += sprintf(page+rb, "TARG_SESS_STATE_ACTIVE\n");
++			rb += sysfs_emit_at(page, rb, "TARG_SESS_STATE_ACTIVE\n");
+ 			break;
+ 		case TARG_SESS_STATE_LOGGED_IN:
+-			rb += sprintf(page+rb, "TARG_SESS_STATE_LOGGED_IN\n");
++			rb += sysfs_emit_at(page, rb, "TARG_SESS_STATE_LOGGED_IN\n");
+ 			break;
+ 		case TARG_SESS_STATE_FAILED:
+-			rb += sprintf(page+rb, "TARG_SESS_STATE_FAILED\n");
++			rb += sysfs_emit_at(page, rb, "TARG_SESS_STATE_FAILED\n");
+ 			break;
+ 		case TARG_SESS_STATE_IN_CONTINUE:
+-			rb += sprintf(page+rb, "TARG_SESS_STATE_IN_CONTINUE\n");
++			rb += sysfs_emit_at(page, rb, "TARG_SESS_STATE_IN_CONTINUE\n");
+ 			break;
+ 		default:
+-			rb += sprintf(page+rb, "ERROR: Unknown Session"
++			rb += sysfs_emit_at(page, rb, "ERROR: Unknown Session"
+ 					" State!\n");
+ 			break;
  		}
- 	}
-+	phba->hba_flag &= ~HBA_SETUP;
  
- 	lpfc_sli4_dip(phba);
+-		rb += sprintf(page+rb, "---------------------[iSCSI Session"
++		rb += sysfs_emit_at(page, rb, "---------------------[iSCSI Session"
+ 				" Values]-----------------------\n");
+-		rb += sprintf(page+rb, "  CmdSN/WR  :  CmdSN/WC  :  ExpCmdSN"
++		rb += sysfs_emit_at(page, rb, "  CmdSN/WR  :  CmdSN/WC  :  ExpCmdSN"
+ 				"  :  MaxCmdSN  :     ITT    :     TTT\n");
+ 		max_cmd_sn = (u32) atomic_read(&sess->max_cmd_sn);
+-		rb += sprintf(page+rb, " 0x%08x   0x%08x   0x%08x   0x%08x"
++		rb += sysfs_emit_at(page, rb, " 0x%08x   0x%08x   0x%08x   0x%08x"
+ 				"   0x%08x   0x%08x\n",
+ 			sess->cmdsn_window,
+ 			(max_cmd_sn - sess->exp_cmd_sn) + 1,
+ 			sess->exp_cmd_sn, max_cmd_sn,
+ 			sess->init_task_tag, sess->targ_xfer_tag);
+-		rb += sprintf(page+rb, "----------------------[iSCSI"
++		rb += sysfs_emit_at(page, rb, "----------------------[iSCSI"
+ 				" Connections]-------------------------\n");
  
-@@ -9317,6 +9322,7 @@ lpfc_mbox_timeout_handler(struct lpfc_hba *phba)
- 	 * would get IOCB_ERROR from lpfc_sli_issue_iocb, allowing
- 	 * it to fail all outstanding SCSI IO.
- 	 */
-+	set_bit(MBX_TMO_ERR, &phba->bit_flags);
- 	spin_lock_irq(&phba->pport->work_port_lock);
- 	phba->pport->work_port_events &= ~WORKER_MBOX_TMO;
- 	spin_unlock_irq(&phba->pport->work_port_lock);
+ 		spin_lock(&sess->conn_lock);
+ 		list_for_each_entry(conn, &sess->sess_conn_list, conn_list) {
+-			rb += sprintf(page+rb, "CID: %hu  Connection"
++			rb += sysfs_emit_at(page, rb, "CID: %hu  Connection"
+ 					" State: ", conn->cid);
+ 			switch (conn->conn_state) {
+ 			case TARG_CONN_STATE_FREE:
+-				rb += sprintf(page+rb,
++				rb += sysfs_emit_at(page, rb,
+ 					"TARG_CONN_STATE_FREE\n");
+ 				break;
+ 			case TARG_CONN_STATE_XPT_UP:
+-				rb += sprintf(page+rb,
++				rb += sysfs_emit_at(page, rb,
+ 					"TARG_CONN_STATE_XPT_UP\n");
+ 				break;
+ 			case TARG_CONN_STATE_IN_LOGIN:
+-				rb += sprintf(page+rb,
++				rb += sysfs_emit_at(page, rb,
+ 					"TARG_CONN_STATE_IN_LOGIN\n");
+ 				break;
+ 			case TARG_CONN_STATE_LOGGED_IN:
+-				rb += sprintf(page+rb,
++				rb += sysfs_emit_at(page, rb,
+ 					"TARG_CONN_STATE_LOGGED_IN\n");
+ 				break;
+ 			case TARG_CONN_STATE_IN_LOGOUT:
+-				rb += sprintf(page+rb,
++				rb += sysfs_emit_at(page, rb,
+ 					"TARG_CONN_STATE_IN_LOGOUT\n");
+ 				break;
+ 			case TARG_CONN_STATE_LOGOUT_REQUESTED:
+-				rb += sprintf(page+rb,
++				rb += sysfs_emit_at(page, rb,
+ 					"TARG_CONN_STATE_LOGOUT_REQUESTED\n");
+ 				break;
+ 			case TARG_CONN_STATE_CLEANUP_WAIT:
+-				rb += sprintf(page+rb,
++				rb += sysfs_emit_at(page, rb,
+ 					"TARG_CONN_STATE_CLEANUP_WAIT\n");
+ 				break;
+ 			default:
+-				rb += sprintf(page+rb,
++				rb += sysfs_emit_at(page, rb,
+ 					"ERROR: Unknown Connection State!\n");
+ 				break;
+ 			}
+ 
+-			rb += sprintf(page+rb, "   Address %pISc %s", &conn->login_sockaddr,
++			rb += sysfs_emit_at(page, rb, "   Address %pISc %s", &conn->login_sockaddr,
+ 				(conn->network_transport == ISCSI_TCP) ?
+ 				"TCP" : "SCTP");
+-			rb += sprintf(page+rb, "  StatSN: 0x%08x\n",
++			rb += sysfs_emit_at(page, rb, "  StatSN: 0x%08x\n",
+ 				conn->stat_sn);
+ 		}
+ 		spin_unlock(&sess->conn_lock);
 -- 
 2.40.1
 
