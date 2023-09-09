@@ -2,149 +2,239 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CD6AEEB56E
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Sep 2023 21:07:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4311EEB57A
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 00:37:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244077AbjIHVHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 17:07:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53940 "EHLO
+        id S1345632AbjIIAhr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 20:37:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244052AbjIHVHn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 17:07:43 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 110D1E46
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Sep 2023 14:07:39 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1befe39630bso4890795ad.0
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Sep 2023 14:07:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1694207258; x=1694812058; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=/Nf0u4ogCffDxE08j9QV267NZXB3azJx1DU6+f3NfbQ=;
-        b=gXgd7ys8DpHshX7BYhrvrwnIbqgsE3qoIV/OuWaVYOt632UYz4Do29P+5+pVudV+S9
-         NcHyZVCtUJDp+rOiSXt1HjwojNuRNTzEiL8Tj9UWwW5u4lvZenEjt0GQwYcEb2pR5GrE
-         CMLuTUnVhFM1mpQVWSIwxoeNcJ8nGZzGPdUDMWwkg+17g6pmLHB9efpMqz9vwuS0ZAH+
-         Qd1EH6Gjdv1PTB171H9RhF0WDJGnCZQJ7y5IgK8dPCYcVZ+9Cw4uc9USuN4LMiP2fjH9
-         WSvq6vry9Z11NALZKNgoQGFfs6biWGtymfOff+hVFx/L+3BAoMutMVC4M8hUi6jOu5hb
-         gRHA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694207258; x=1694812058;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/Nf0u4ogCffDxE08j9QV267NZXB3azJx1DU6+f3NfbQ=;
-        b=p6AlJTLzqQzDVTs7Cfv6Fxq0Li3Ydl3bSfP98HUQaAb7ovvRIVGQQG/lbu4xBcgRm3
-         rArqYFlYV94Xu5SCFKTuePPGBcfLu1ePIpYMfyTMCUDsPYCGrcN3ap9xHe9aoFudhz8A
-         xjBnnC3rvxc+BYANyj2BJDr2bbG5e6MY9TDKv6ENx5cFPG7ox5k4+AnAYyNiXZPNfOws
-         cdNc8kwRwLRHUyiIBW7EyUZ8WAvFSJRVpJyVZYXbOCAyUxEE3n1fQKelALwvcgxn3wCC
-         vH0QIBUG3nLd/OgV93cyEY1/oSlWE8AKTtgFhUYLwDgL2XdyhNWYpsqBmWfNqfICc86p
-         NRSg==
-X-Gm-Message-State: AOJu0Yw/o/6I5yalMyIJQSV5YZLf28U7xP0aNAt54Pml+i0U1T6hozj1
-        ysSUCmEhe0fkMO8mhRztSerzK3y3oUU=
-X-Google-Smtp-Source: AGHT+IH2nm9mqsmNnk8oilMBdaWN7Y4YLFP3P05/1Li/BbK7HDyCNVcWWTzVpJhrLMWbVqZXg5XMvg==
-X-Received: by 2002:a17:902:e546:b0:1bb:9e6e:a9f3 with SMTP id n6-20020a170902e54600b001bb9e6ea9f3mr3760516plf.4.1694207258315;
-        Fri, 08 Sep 2023 14:07:38 -0700 (PDT)
-Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id f2-20020a170902ff0200b001b83dc8649dsm1985712plj.250.2023.09.08.14.07.37
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 08 Sep 2023 14:07:38 -0700 (PDT)
-From:   Justin Tee <justintee8345@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
-        Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 1/1] lpfc: Prevent use-after-free during rmmod with mapped NVME rports
-Date:   Fri,  8 Sep 2023 14:19:23 -0700
-Message-Id: <20230908211923.37603-1-justintee8345@gmail.com>
-X-Mailer: git-send-email 2.38.0
+        with ESMTP id S1345619AbjIIAhq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 20:37:46 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 049CD1FF6;
+        Fri,  8 Sep 2023 17:37:20 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61F45C43395;
+        Sat,  9 Sep 2023 00:36:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694219782;
+        bh=hMAmNXpzZyhIam9PxJgPYiOubzmfWmK3kCABk+XfVJ0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=TyeudXrwjbZF0A7Y8/HWW5yHF9E0aoXUbO+G56la2FJVaB51+okDCr+CxQcWw19q+
+         gObKNc9kaCGqnJlrftimuf6dtCsVE0Fl7TX2ChzxeS4EURSKLBLj//jgRAS9UTJERk
+         U0dK4hU2lxymEiLnmrRbXfaCWhOImmsZct48JbWXMzUg2lNfO3khcNSK+dxrQ4NgDZ
+         QS/FLOCBhnXIU/3ycSolVhYQoUdfn2pNgQK/o1OAQd20Cr9u8mZ+aGsBGhywIkIaJk
+         48q//gfS0Zl6nSu+1fosX98BSxVcseah/XSs6xB3ik4MmOFqcbqswRHQ6e8kXm+9Pl
+         a9tUec2dlO+7Q==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Justin Tee <justin.tee@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 09/28] scsi: lpfc: Abort outstanding ELS cmds when mailbox timeout error is detected
+Date:   Fri,  8 Sep 2023 20:35:43 -0400
+Message-Id: <20230909003604.3579407-9-sashal@kernel.org>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230909003604.3579407-1-sashal@kernel.org>
+References: <20230909003604.3579407-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.5.2
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During rmmod, when dev_loss_tmo callback is called, an ndlp kref count is
-decremented twice.  Once for scsi transport registration and second to
-remove the initial node allocation kref.  If there is also an NVME
-transport registration, another reference count decrement is expected in
-lpfc_nvme_unregister_port().
+From: Justin Tee <justin.tee@broadcom.com>
 
-Race conditions between the NVME transport remoteport_delete and
-dev_loss_tmo callbacks sometimes results in premature ndlp object release
-resulting in use-after-free issues.
+[ Upstream commit 089ea22e374aa20043e72243c47b5867d5419d38 ]
 
-Fix by not dropping the ndlp object in dev_loss_tmo callback with an
-outstanding NVMe transport registration.  Inversely, mark the final
-NLP_DROPPED flag in lpfc_nvme_unregister_port when rmmod flag is set.
+A mailbox timeout error usually indicates something has gone wrong, and a
+follow up reset of the HBA is a typical recovery mechanism.  Introduce a
+MBX_TMO_ERR flag to detect such cases and have lpfc_els_flush_cmd abort ELS
+commands if the MBX_TMO_ERR flag condition was set.  This ensures all of
+the registered SGL resources meant for ELS traffic are not leaked after an
+HBA reset.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20230712180522.112722-9-justintee8345@gmail.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c |  3 ++-
- drivers/scsi/lpfc/lpfc_nvme.c    | 24 +++++++++++++++++-------
- 2 files changed, 19 insertions(+), 8 deletions(-)
+ drivers/scsi/lpfc/lpfc.h      |  1 +
+ drivers/scsi/lpfc/lpfc_els.c  | 25 ++++++++++++++++++-------
+ drivers/scsi/lpfc/lpfc_init.c | 20 +++++++++++++++++---
+ drivers/scsi/lpfc/lpfc_sli.c  |  8 +++++++-
+ 4 files changed, 43 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 51afb60859eb..b7f922f31e26 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -199,7 +199,8 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
- 		/* Only 1 thread can drop the initial node reference.  If
- 		 * another thread has set NLP_DROPPED, this thread is done.
- 		 */
--		if (!(ndlp->nlp_flag & NLP_DROPPED)) {
-+		if (!(ndlp->fc4_xpt_flags & NVME_XPT_REGD) &&
-+		    !(ndlp->nlp_flag & NLP_DROPPED)) {
- 			ndlp->nlp_flag |= NLP_DROPPED;
- 			spin_unlock_irqrestore(&ndlp->lock, iflags);
- 			lpfc_nlp_put(ndlp);
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 39acbcb7ec66..96e11a26c297 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -228,8 +228,7 @@ lpfc_nvme_remoteport_delete(struct nvme_fc_remote_port *remoteport)
- 	spin_unlock_irq(&ndlp->lock);
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 9a89636843693..e8d7eeeb21856 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -872,6 +872,7 @@ enum lpfc_irq_chann_mode {
+ enum lpfc_hba_bit_flags {
+ 	FABRIC_COMANDS_BLOCKED,
+ 	HBA_PCI_ERR,
++	MBX_TMO_ERR,
+ };
  
- 	/* On a devloss timeout event, one more put is executed provided the
--	 * NVME and SCSI rport unregister requests are complete.  If the vport
--	 * is unloading, this extra put is executed by lpfc_drop_node.
-+	 * NVME and SCSI rport unregister requests are complete.
- 	 */
- 	if (!(ndlp->fc4_xpt_flags & fc4_xpt_flags))
- 		lpfc_disc_state_machine(vport, ndlp, NULL, NLP_EVT_DEVICE_RM);
-@@ -2567,11 +2566,7 @@ lpfc_nvme_rescan_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
-  * nvme_transport perspective.  Loss of an rport just means IO cannot
-  * be sent and recovery is completely up to the initator.
-  * For now, the driver just unbinds the DID and port_role so that
-- * no further IO can be issued.  Changes are planned for later.
-- *
-- * Notes - the ndlp reference count is not decremented here since
-- * since there is no nvme_transport api for devloss.  Node ref count
-- * is only adjusted in driver unload.
-+ * no further IO can be issued.
-  */
- void
- lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
-@@ -2646,6 +2641,21 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 					 "6167 NVME unregister failed %d "
- 					 "port_state x%x\n",
- 					 ret, remoteport->port_state);
+ struct lpfc_hba {
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 2bad9954c355f..6f6ef5235ee3b 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -9588,11 +9588,13 @@ void
+ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ {
+ 	LIST_HEAD(abort_list);
++	LIST_HEAD(cancel_list);
+ 	struct lpfc_hba  *phba = vport->phba;
+ 	struct lpfc_sli_ring *pring;
+ 	struct lpfc_iocbq *tmp_iocb, *piocb;
+ 	u32 ulp_command;
+ 	unsigned long iflags = 0;
++	bool mbx_tmo_err;
+ 
+ 	lpfc_fabric_abort_vport(vport);
+ 
+@@ -9614,15 +9616,16 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ 	if (phba->sli_rev == LPFC_SLI_REV4)
+ 		spin_lock(&pring->ring_lock);
+ 
++	mbx_tmo_err = test_bit(MBX_TMO_ERR, &phba->bit_flags);
+ 	/* First we need to issue aborts to outstanding cmds on txcmpl */
+ 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
+-		if (piocb->cmd_flag & LPFC_IO_LIBDFC)
++		if (piocb->cmd_flag & LPFC_IO_LIBDFC && !mbx_tmo_err)
+ 			continue;
+ 
+ 		if (piocb->vport != vport)
+ 			continue;
+ 
+-		if (piocb->cmd_flag & LPFC_DRIVER_ABORTED)
++		if (piocb->cmd_flag & LPFC_DRIVER_ABORTED && !mbx_tmo_err)
+ 			continue;
+ 
+ 		/* On the ELS ring we can have ELS_REQUESTs or
+@@ -9641,8 +9644,8 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ 			 */
+ 			if (phba->link_state == LPFC_LINK_DOWN)
+ 				piocb->cmd_cmpl = lpfc_cmpl_els_link_down;
+-		}
+-		if (ulp_command == CMD_GEN_REQUEST64_CR)
++		} else if (ulp_command == CMD_GEN_REQUEST64_CR ||
++			   mbx_tmo_err)
+ 			list_add_tail(&piocb->dlist, &abort_list);
+ 	}
+ 
+@@ -9654,11 +9657,19 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ 	list_for_each_entry_safe(piocb, tmp_iocb, &abort_list, dlist) {
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
+ 		list_del_init(&piocb->dlist);
+-		lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
++		if (mbx_tmo_err)
++			list_move_tail(&piocb->list, &cancel_list);
++		else
++			lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
 +
-+			if (vport->load_flag & FC_UNLOADING) {
-+				/* Only 1 thread can drop the initial node
-+				 * reference. Check if another thread has set
-+				 * NLP_DROPPED.
-+				 */
-+				spin_lock_irq(&ndlp->lock);
-+				if (!(ndlp->nlp_flag & NLP_DROPPED)) {
-+					ndlp->nlp_flag |= NLP_DROPPED;
-+					spin_unlock_irq(&ndlp->lock);
-+					lpfc_nlp_put(ndlp);
-+					return;
-+				}
-+				spin_unlock_irq(&ndlp->lock);
-+			}
+ 		spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 	}
+-	/* Make sure HBA is alive */
+-	lpfc_issue_hb_tmo(phba);
++	if (!list_empty(&cancel_list))
++		lpfc_sli_cancel_iocbs(phba, &cancel_list, IOSTAT_LOCAL_REJECT,
++				      IOERR_SLI_ABORTED);
++	else
++		/* Make sure HBA is alive */
++		lpfc_issue_hb_tmo(phba);
+ 
+ 	if (!list_empty(&abort_list))
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 3221a934066bb..ce9e4cdd6004c 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7550,6 +7550,8 @@ lpfc_disable_pci_dev(struct lpfc_hba *phba)
+ void
+ lpfc_reset_hba(struct lpfc_hba *phba)
+ {
++	int rc = 0;
++
+ 	/* If resets are disabled then set error state and return. */
+ 	if (!phba->cfg_enable_hba_reset) {
+ 		phba->link_state = LPFC_HBA_ERROR;
+@@ -7560,13 +7562,25 @@ lpfc_reset_hba(struct lpfc_hba *phba)
+ 	if (phba->sli.sli_flag & LPFC_SLI_ACTIVE) {
+ 		lpfc_offline_prep(phba, LPFC_MBX_WAIT);
+ 	} else {
++		if (test_bit(MBX_TMO_ERR, &phba->bit_flags)) {
++			/* Perform a PCI function reset to start from clean */
++			rc = lpfc_pci_function_reset(phba);
++			lpfc_els_flush_all_cmd(phba);
++		}
+ 		lpfc_offline_prep(phba, LPFC_MBX_NO_WAIT);
+ 		lpfc_sli_flush_io_rings(phba);
+ 	}
+ 	lpfc_offline(phba);
+-	lpfc_sli_brdrestart(phba);
+-	lpfc_online(phba);
+-	lpfc_unblock_mgmt_io(phba);
++	clear_bit(MBX_TMO_ERR, &phba->bit_flags);
++	if (unlikely(rc)) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"8888 PCI function reset failed rc %x\n",
++				rc);
++	} else {
++		lpfc_sli_brdrestart(phba);
++		lpfc_online(phba);
++		lpfc_unblock_mgmt_io(phba);
++	}
+ }
+ 
+ /**
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 58d10f8f75a78..4dfadf254a727 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -3935,6 +3935,8 @@ void lpfc_poll_eratt(struct timer_list *t)
+ 	uint64_t sli_intr, cnt;
+ 
+ 	phba = from_timer(phba, t, eratt_poll);
++	if (!(phba->hba_flag & HBA_SETUP))
++		return;
+ 
+ 	/* Here we will also keep track of interrupts per sec of the hba */
+ 	sli_intr = phba->sli.slistat.sli_intr;
+@@ -7693,7 +7695,9 @@ lpfc_sli4_repost_sgl_list(struct lpfc_hba *phba,
+ 		spin_unlock_irq(&phba->hbalock);
+ 	} else {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+-				"3161 Failure to post sgl to port.\n");
++				"3161 Failure to post sgl to port,status %x "
++				"blkcnt %d totalcnt %d postcnt %d\n",
++				status, block_cnt, total_cnt, post_cnt);
+ 		return -EIO;
+ 	}
+ 
+@@ -8478,6 +8482,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 			spin_unlock_irq(&phba->hbalock);
  		}
  	}
- 	return;
++	phba->hba_flag &= ~HBA_SETUP;
+ 
+ 	lpfc_sli4_dip(phba);
+ 
+@@ -9282,6 +9287,7 @@ lpfc_mbox_timeout_handler(struct lpfc_hba *phba)
+ 	 * would get IOCB_ERROR from lpfc_sli_issue_iocb, allowing
+ 	 * it to fail all outstanding SCSI IO.
+ 	 */
++	set_bit(MBX_TMO_ERR, &phba->bit_flags);
+ 	spin_lock_irq(&phba->pport->work_port_lock);
+ 	phba->pport->work_port_events &= ~WORKER_MBOX_TMO;
+ 	spin_unlock_irq(&phba->pport->work_port_lock);
 -- 
-2.38.0
+2.40.1
 
