@@ -2,141 +2,122 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF951EEB589
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 11:05:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4254DEEB572
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 13:58:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237575AbjIILFF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Sep 2023 07:05:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33410 "EHLO
+        id S1346134AbjIIN6V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Sep 2023 09:58:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344830AbjIILFE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2023 07:05:04 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ED0CE43
-        for <linux-scsi@vger.kernel.org>; Sat,  9 Sep 2023 04:04:58 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id 2adb3069b0e04-502934c88b7so4386347e87.2
-        for <linux-scsi@vger.kernel.org>; Sat, 09 Sep 2023 04:04:58 -0700 (PDT)
+        with ESMTP id S1345979AbjIIN6U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2023 09:58:20 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8B4FCCA
+        for <linux-scsi@vger.kernel.org>; Sat,  9 Sep 2023 06:58:14 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-68fb2e9ebbfso71776b3a.2
+        for <linux-scsi@vger.kernel.org>; Sat, 09 Sep 2023 06:58:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1694257496; x=1694862296; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=1XUxNwo0jgK1hqYvQ/OBgnXp62Vg7lM+YHP+s8+7VI8=;
-        b=hcoQ/ZccTWwacp/tp4GaHs9wwFhCNF1y9967vcPDmVAI2H5zMSQcCqhhTKYOS+l949
-         2GTZdiH36g7D5F2sGYap/h+5bBrkrRZZuNoSLSDr7NHfwpk3flg883Vwh4OxD/zUwYJk
-         W0/y5FUd0sMArVKb34KJs4RN1l+uH9iotOiCFYvcQE9htjjcVRvi1JlT3lFy/AuYS8o3
-         P2Nblc7UboBOOmqHcKs64YDu0dbkHQpUmGh/yME3WjYWTfz/OOiDk+rDB0BU91RGU287
-         u5S1q5APIx5vALpYwQUYZiFfo4UY0jWL4eA8LXrL/FvDB64K8oTqM3AEnO8g+eNFsMxl
-         gWuw==
+        d=linaro.org; s=google; t=1694267894; x=1694872694; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=qchtHR7zhGIMr/ysoIMSyHwPGpt0Wf8RVcq19XX2dq0=;
+        b=OXuxGN55ayyBcOVpBb031XC9WQMrWtNoZ6SPvcQdSq+iPoccL0c968c5BYKp5fzOqq
+         1bYP4fvlFVO13BHBbhILuF5Oqkoc8ozaiDpiysis0FrxZOESU0yZphIUqjSvYBxDAXR2
+         uw6ddh7g8c5FcukSdft8FCpANf7jHd1UG9o5u4jT7KkrYYWPY/j9OPDfTQgBAq0EWkxN
+         uuZiQX8KBpObMNIaVYVGF/LfHUdBsW5Bh3B976w9HbFGDVUP2CjzbdDJxL87h4mb6sq1
+         8ZPiEGSvNr/MrQhWlblj8gBlubczA/O5hJwH6ujAYnE5ZDvAMdQrH3rG50zofrGQd67+
+         8nug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694257496; x=1694862296;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1694267894; x=1694872694;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1XUxNwo0jgK1hqYvQ/OBgnXp62Vg7lM+YHP+s8+7VI8=;
-        b=jbki63Xku0kiRkV7GDVGGXsIZVP7dlsl3aInuBkB3+yaqlmVGS5XUFBsrOIKqF3hEE
-         vHjVyHyxj3AKmtx8zctJVX9Nh2AbxF/YYvCwOCJmfvL7Qzd0q+rohZFfAs75yOIjFR7K
-         CLJxF4Crsb844bcpOsvGXjom/OZ79PYjtdQsQiKtFvdK3wFx+NKW9vOVpCwUkdYdW7nf
-         M0+xpzJ4FRL0q1TMfiNbu4oQIxgWT1GpMLVxVBSUj2axA/ElOwe3TIrENNVSBR2Bebt0
-         yiMwPM8WReFVY3LQoWTopcAJtXlUcVTqmmg3vyNZlhMqqhTgPkq1Q4VvkSssllEr5V8u
-         8RSA==
-X-Gm-Message-State: AOJu0Ywu9ez38SoZmAgzC8njOqeTdwrc0g71QCC6K/WKhcb9HnCiSCvZ
-        kswwcHQRGg2BwlN+G+xlGfiIjA==
-X-Google-Smtp-Source: AGHT+IElvzkHK7O75wRqtSaZ+3vi5iwX2B4KJcq4CGw/JKy94J6nuTMOmN7FG9+8KVOQ9x+pCxFMAw==
-X-Received: by 2002:a2e:b015:0:b0:2bc:bf29:18d3 with SMTP id y21-20020a2eb015000000b002bcbf2918d3mr3548096ljk.31.1694257495993;
-        Sat, 09 Sep 2023 04:04:55 -0700 (PDT)
-Received: from [192.168.37.232] (178235177205.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.205])
-        by smtp.gmail.com with ESMTPSA id jj27-20020a170907985b00b009929d998abcsm2177208ejc.209.2023.09.09.04.04.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 09 Sep 2023 04:04:55 -0700 (PDT)
-Message-ID: <5722031e-96ab-48f6-9848-086be17fe5bf@linaro.org>
-Date:   Sat, 9 Sep 2023 13:04:52 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+        bh=qchtHR7zhGIMr/ysoIMSyHwPGpt0Wf8RVcq19XX2dq0=;
+        b=qkytCr1ca2TdEz4CvbWIB7p54pS/CjZAUpECiem0avtHtQgHVay8JU5YK4i9OJoRy9
+         43hMQZmztXdH5nQCjfzOtnx/1c24tPE4y00TE0Lm+oRlXG5lZWHUwsHh2phN0DNrBG86
+         PXIkET+BsVhEtkNorjQFFaE+G3Ry/DRluzk+bBa8fAsTQxAE7roKi7FVShBu1HMaPS7y
+         QMj1Xfh3Eiq2JL6O/zL2U8p8/yPSp/G+B2qJgjhlRzInndfV67wquI3qFej7B5xCWQdL
+         pS9mJ30rbbOAbxgHm3m6dTRKyCMCccYxqZ3uMvq6DPUx6HyI4qi/ZNphx0oB2MVEy0o3
+         1o0g==
+X-Gm-Message-State: AOJu0YwyiKbxsw8x+lRE7nOk4pDGRrYlb5Ik5lK6O6y6yh8Ks4uz6Jgt
+        Nv1gueq6A1/broxixLZAe9ms
+X-Google-Smtp-Source: AGHT+IFLRT3bHuBcTCK14edjBktGiNKcvwlxhAcGkqIYJMH9kSuMd9drFXH3fkHzPCtXiz7izcT/vw==
+X-Received: by 2002:a05:6a21:35c2:b0:14c:d5d8:9fed with SMTP id ba2-20020a056a2135c200b0014cd5d89fedmr4565623pzc.54.1694267894030;
+        Sat, 09 Sep 2023 06:58:14 -0700 (PDT)
+Received: from thinkpad ([117.217.187.163])
+        by smtp.gmail.com with ESMTPSA id v8-20020a170902b7c800b001b51b3e84cesm3292415plz.166.2023.09.09.06.58.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 09 Sep 2023 06:58:13 -0700 (PDT)
+Date:   Sat, 9 Sep 2023 19:28:05 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Konrad Dybcio <konrad.dybcio@linaro.org>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, andersson@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, stable@vger.kernel.org
 Subject: Re: [PATCH 1/2] scsi: ufs: ufs-qcom: Update PHY settings only when
  scaling to higher gears
-Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     bvanassche@acm.org, avri.altman@wdc.com, alim.akhtar@samsung.com,
-        andersson@kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
-        stable@vger.kernel.org
+Message-ID: <20230909135805.GA2864@thinkpad>
 References: <20230908145329.154024-1-manivannan.sadhasivam@linaro.org>
-From:   Konrad Dybcio <konrad.dybcio@linaro.org>
-Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
- 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
- izWDgYvmBE8=
-In-Reply-To: <20230908145329.154024-1-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <5722031e-96ab-48f6-9848-086be17fe5bf@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5722031e-96ab-48f6-9848-086be17fe5bf@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8.09.2023 16:53, Manivannan Sadhasivam wrote:
-> The "hs_gear" variable is used to program the PHY settings (submode) during
-> ufs_qcom_power_up_sequence(). Currently, it is being updated every time the
-> agreed gear changes. Due to this, if the gear got downscaled before suspend
-> (runtime/system), then while resuming, the PHY settings for the lower gear
-> will be applied first and later when scaling to max gear with REINIT, the
-> PHY settings for the max gear will be applied.
+On Sat, Sep 09, 2023 at 01:04:52PM +0200, Konrad Dybcio wrote:
+> On 8.09.2023 16:53, Manivannan Sadhasivam wrote:
+> > The "hs_gear" variable is used to program the PHY settings (submode) during
+> > ufs_qcom_power_up_sequence(). Currently, it is being updated every time the
+> > agreed gear changes. Due to this, if the gear got downscaled before suspend
+> > (runtime/system), then while resuming, the PHY settings for the lower gear
+> > will be applied first and later when scaling to max gear with REINIT, the
+> > PHY settings for the max gear will be applied.
+> > 
+> > This adds a latency while resuming and also really not needed as the PHY
+> > gear settings are backwards compatible i.e., we can continue using the PHY
+> > settings for max gear with lower gear speed.
+> > 
+> > So let's update the "hs_gear" variable _only_ when the agreed gear is
+> > greater than the current one. This guarantees that the PHY settings will be
+> > changed only during probe time and fatal error condition.
+> > 
+> > Due to this, UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH can now be skipped
+> > when the PM operation is in progress.
+> > 
+> > Cc: stable@vger.kernel.org
+> > Fixes: 96a7141da332 ("scsi: ufs: core: Add support for reinitializing the UFS device")
+> > Reported-by: Can Guo <quic_cang@quicinc.com>
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> Would that not increase power consumption?
 > 
-> This adds a latency while resuming and also really not needed as the PHY
-> gear settings are backwards compatible i.e., we can continue using the PHY
-> settings for max gear with lower gear speed.
+> I'd presume that the PHY needs to work harder at higher gear
+> settings to preserve signal integrity with more data flow.
 > 
-> So let's update the "hs_gear" variable _only_ when the agreed gear is
-> greater than the current one. This guarantees that the PHY settings will be
-> changed only during probe time and fatal error condition.
+> And if so, would that power consumption increase be measurable?
+> Or is it so small that it doesn't matter?
 > 
-> Due to this, UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH can now be skipped
-> when the PM operation is in progress.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 96a7141da332 ("scsi: ufs: core: Add support for reinitializing the UFS device")
-> Reported-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
-Would that not increase power consumption?
 
-I'd presume that the PHY needs to work harder at higher gear
-settings to preserve signal integrity with more data flow.
+Well, the power consumption won't be much. Currently the PHY driver supports
+only 2 PHY init sequence, default one (G3/G4) and G4/G5. When ufshcd decides to
+run at G4/G5, second sequence would be used and for rest of the gears, first one
+would be used. So even today, the G3/G4 sequence is used when ufshcd decides to
+downscale to lowest gear G1.
 
-And if so, would that power consumption increase be measurable?
-Or is it so small that it doesn't matter?
+Moreover, on future SoCs the init sequence won't be compatible i.e., we cannot
+switch between them. For these reasons, it makes sense to stick to the init
+sequence of max gear.
 
-Konrad
+- Mani
+
+> Konrad
+
+-- 
+மணிவண்ணன் சதாசிவம்
