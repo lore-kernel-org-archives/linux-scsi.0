@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E2E7EEB57D
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 00:44:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D252EEB57D
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 00:45:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346212AbjIIAo2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 20:44:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37514 "EHLO
+        id S1346261AbjIIApM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 20:45:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238714AbjIIAno (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 20:43:44 -0400
+        with ESMTP id S1346178AbjIIAoR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 20:44:17 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB32C2D7E;
-        Fri,  8 Sep 2023 17:41:14 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A1BFC433B6;
-        Sat,  9 Sep 2023 00:40:04 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 676B749CB;
+        Fri,  8 Sep 2023 17:41:51 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F207C116AB;
+        Sat,  9 Sep 2023 00:41:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694220005;
-        bh=suV9ORvsUVvFdWwogADjnpo7gXYEUh5IQeD4DHpalKo=;
+        s=k20201202; t=1694220099;
+        bh=5/W9bgOsqRGm4oSwXdt3rHgfOEk4q5vvY0fobBLbOUY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e5Lxbx5z/ukBxbCn9/w2ZtL7zHk+AHnxdDOo0Svuh7r+ky4wdR36YyE1varH7xTF3
-         ick4FTs6OF+ACYEdVrlrjw4ie/mPHcK2S8gT/2/3hMZB20v4IJUj0GwPuBi8wGaeo3
-         6h4Jhfm9yaaIOM3511c+xv2L3p+/Y0FeXewCG+V8fB/Fr231AAXClpeH10mCM7kNmB
-         7zwUetU6Jq2QOFkq8zGbQvoPLUoI4pfobCKCBZ3BfZZ63txd5eG/dVnQ0o5Qty8Nht
-         soII/cwsEtEedkALPeeYvn62H/D2bPuSIJTSu0vWRK4HdRNSKR6PoUila8rSP6D9xC
-         DtbZg1OcwxV8w==
+        b=KbghNC3Ye4nQzDIaQeGdZwOpx6nfs7/1hjPifD6zlRJvW4YAbaMD6/vrgXDjWxbMH
+         h2LwmIAjEgw8Olkfp3Bf0tF6XSh+8UlbP1qouf32pkMUjTu21PBQ3nXDHagDCb2TnF
+         1lwT65Nx0NPiaAJHVPRBY59us4ce0irMfWtyf9U/zpOnWVc5EMdzbJsE6+S3ZOGfxc
+         vrpa1bDZKwFK4F4t9G5TiOkSQpSB4HK2v2iclLMs/vS8ONqhSZIZHKt5ctfe9rWkBT
+         AM9tNETEK8j5oeSroRPMsf6E1yEPwr49qLZzeCjT10kwi84O0IBUwdxJ82IUmSG/tu
+         YZc1Zn/nkNCZg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Konstantin Shelekhin <k.shelekhin@yadro.com>,
@@ -33,16 +33,16 @@ Cc:     Konstantin Shelekhin <k.shelekhin@yadro.com>,
         Sasha Levin <sashal@kernel.org>, mlombard@redhat.com,
         michael.christie@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 11/16] scsi: target: iscsi: Fix buffer overflow in lio_target_nacl_info_show()
-Date:   Fri,  8 Sep 2023 20:39:36 -0400
-Message-Id: <20230909003941.3580631-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 10/12] scsi: target: iscsi: Fix buffer overflow in lio_target_nacl_info_show()
+Date:   Fri,  8 Sep 2023 20:41:13 -0400
+Message-Id: <20230909004115.3581195-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230909003941.3580631-1-sashal@kernel.org>
-References: <20230909003941.3580631-1-sashal@kernel.org>
+In-Reply-To: <20230909004115.3581195-1-sashal@kernel.org>
+References: <20230909004115.3581195-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.194
+X-stable-base: Linux 4.14.325
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -69,10 +69,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 27 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index 0fa1d57b26fa8..3cd671bbb9a41 100644
+index 4191e4a8a9ed6..b3d445ef84237 100644
 --- a/drivers/target/iscsi/iscsi_target_configfs.c
 +++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -508,102 +508,102 @@ static ssize_t lio_target_nacl_info_show(struct config_item *item, char *page)
+@@ -516,102 +516,102 @@ static ssize_t lio_target_nacl_info_show(struct config_item *item, char *page)
  	spin_lock_bh(&se_nacl->nacl_sess_lock);
  	se_sess = se_nacl->nacl_sess;
  	if (!se_sess) {
