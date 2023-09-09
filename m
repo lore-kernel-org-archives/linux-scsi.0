@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB413EEB57A
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 00:39:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2485AEEB57D
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 00:40:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241167AbjIIAjB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Sep 2023 20:39:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33546 "EHLO
+        id S1345946AbjIIAkU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Sep 2023 20:40:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232058AbjIIAie (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 20:38:34 -0400
+        with ESMTP id S1345941AbjIIAjl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Sep 2023 20:39:41 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A42B273C;
-        Fri,  8 Sep 2023 17:38:03 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A4FCC433BD;
-        Sat,  9 Sep 2023 00:37:44 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F9D82720;
+        Fri,  8 Sep 2023 17:38:59 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70AF0C116A6;
+        Sat,  9 Sep 2023 00:38:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694219865;
+        s=k20201202; t=1694219928;
         bh=FmxSrNQT6q8Z/aqU4VCkOAJy8UyrNaAPvy5gamFQjg4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kBJjPhw+UgLajsmX/bJg3P5eceZqb3ETaLC4xWaYBWSKIN2WICz+/ZXMktygHQja3
-         OHAS2ma83Hgprh62tohwj8tgqvv2OskJ2hAR4bFnU1ECaWTSnJDiBK3PLhb7p1aaEV
-         YyEi1dtSRXtJITloveU9v5VXP3mQYNuzgsLddyMXkmy65xbZ+ROQZeZTq2qRSq7TsF
-         gzY53uk2vx7NB+adQc/f7HUcNrorJV9G5SMULIaMJdC7ShSb4KliWvJT3eWrXycUs2
-         gEzVImIAWHAWFu5lyyy6gZMEJG904a9FSBOohGXoSpkjoiXAapAUhfSXchmwdatNA2
-         an60KLkXxT1tQ==
+        b=UhYt9gXTrdeekbRSjPwleHIjOSwJFDv5GuiszgE6FnoyC7yclaoPlNB7GFf7u68bo
+         s0q5M0mLV92DFW5DI89Mi7J9rJhxcgjx5Lh3k66jSVcjDJulBsVuSKvxHReSVs+fjB
+         SjTUP6Gg0E2LvPVqoc1yqC1MdN+xdNAgcvubRJltCbnzFcdR/hU/05isTAUD/zBsPQ
+         8dZIHdSZoc3KErHyTxo8J1o2zL87wtUroksBiQ21kuZPypGmYkdG8YG9Tk1iSHpwbR
+         +Vg/K+iH7nx+Nm7e1a67Hv7Bbxj3O/7fkTbTXGv4ZuXmFVeHW0deMWPGyPENG0fgI/
+         kiABiPaXxAoxw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Konstantin Shelekhin <k.shelekhin@yadro.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, mlombard@redhat.com,
-        michael.christie@oracle.com, linux-scsi@vger.kernel.org,
+        Sasha Levin <sashal@kernel.org>, michael.christie@oracle.com,
+        mlombard@redhat.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.4 15/25] scsi: target: iscsi: Fix buffer overflow in lio_target_nacl_info_show()
-Date:   Fri,  8 Sep 2023 20:37:03 -0400
-Message-Id: <20230909003715.3579761-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 15/24] scsi: target: iscsi: Fix buffer overflow in lio_target_nacl_info_show()
+Date:   Fri,  8 Sep 2023 20:38:07 -0400
+Message-Id: <20230909003818.3580081-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230909003715.3579761-1-sashal@kernel.org>
-References: <20230909003715.3579761-1-sashal@kernel.org>
+In-Reply-To: <20230909003818.3580081-1-sashal@kernel.org>
+References: <20230909003818.3580081-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.4.15
+X-stable-base: Linux 6.1.52
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
