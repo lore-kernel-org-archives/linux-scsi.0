@@ -2,64 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26245EE14C3
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Sep 2023 19:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8ECEE49BF
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Sep 2023 01:57:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242760AbjIITJx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Sep 2023 15:09:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44298 "EHLO
+        id S1345293AbjIJB5s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Sep 2023 21:57:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233716AbjIITJu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2023 15:09:50 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B052E1A8;
-        Sat,  9 Sep 2023 12:09:46 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 57E17C433C7;
-        Sat,  9 Sep 2023 19:09:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694286586;
-        bh=nAsGVx32mqfYa1CG8elemlFNk3pd6vI3NNZ+Pb7sdeI=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=m2U3x+14jXKg79zC3FMosVtz3QgVinKeagMgJDnRVvy4UXEMMhDc0FYSQ+GFo5M3C
-         U4ovMYH1evjlWL7rMLyihGWU4aOwUoozfCMHMHiXsNKbjNc5LvSyKbCX4saZwuaODr
-         joVWxLi9KaofSK2YLPmX0VhUKV7fVlQTSnyFR67nDE2AODWr7lVm1mjF9sSZB/Squ/
-         Wz+F7q3lPghl6CTGH+CVLGe+WPw39gBVf+9yxaNxfahVPEgiRmEHwn+rX/qWaIqpYm
-         lyCIlxlVllG5Z3Et3rULxK5W/xZYx7pj9+Oqb4cyDfuucUwpWqI6bRgBCXE11PTLI/
-         xMpIREkFFyAGg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 43884E22AFC;
-        Sat,  9 Sep 2023 19:09:46 +0000 (UTC)
-Subject: Re: [GIT PULL] final round of SCSI updates for the 6.5+ merge window
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <285d43b9cbe7bc2b9aaa8537345f14aeec93c982.camel@HansenPartnership.com>
-References: <285d43b9cbe7bc2b9aaa8537345f14aeec93c982.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <285d43b9cbe7bc2b9aaa8537345f14aeec93c982.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: 9f6fec65661381e301ae0f9ee8b4c12b0214a579
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 2a5a4326e58339a26cd1510259e7310b8c0980ff
-Message-Id: <169428658626.22338.9113772074168776903.pr-tracker-bot@kernel.org>
-Date:   Sat, 09 Sep 2023 19:09:46 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S233350AbjIJB5r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2023 21:57:47 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96B0012F;
+        Sat,  9 Sep 2023 18:57:43 -0700 (PDT)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38A1vBuD007274;
+        Sun, 10 Sep 2023 01:57:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=UgNmCL48KvJzWpeJp2njVSkbKUCG3Hczt0Z3oyO7n44=;
+ b=ATNOJgJvm186Vr0TM35nAGBbH9AopJZCFqkiNRiOQNjO5jXdY0O/H3oU6pTGSVM8LJpt
+ 7b4iAqjaUJh3pe7MB5UisKifxYiBeV7O4DjLqs8GObYQdFIMrk1X4bXEpzET0LgH0DBI
+ MS8marxnPboxfmAHG92iVKBwMzoIQkjUTYBXB+qEXP6I2KQ2uhVnoSqCkQ6DqDNVTw/2
+ 2yvnUkVxhDC6GWTFBUDf2+zL83Y7qZTiK/vl6kpqFkjrKhgiGSaFs83LJPmjM3e3dfqG
+ frDOG+zLwKnF5tREIE8vtowF50UZCLq3/2WC/TaoBfhPeXCAlHXTsAVpqzs622cYsgAX mg== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t0ga6h6k6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 10 Sep 2023 01:57:14 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38A1vDC3019478
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 10 Sep 2023 01:57:13 GMT
+Received: from [10.253.38.52] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Sat, 9 Sep
+ 2023 18:57:08 -0700
+Message-ID: <b67daba2-3a64-f8b1-b579-f52ea66318bf@quicinc.com>
+Date:   Sun, 10 Sep 2023 09:56:38 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+Subject: Re: [PATCH v2 0/3] scsi: ufs: core: support WB buffer resize function
+Content-Language: en-US
+To:     Lu Hongfei <luhongfei@vivo.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Arthur Simchaev <arthur.simchaev@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Manivannan Sadhasivam" <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        zhanghui <zhanghui31@xiaomi.com>,
+        Po-Wen Kao <powen.kao@mediatek.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+CC:     <opensource.kernel@vivo.com>
+References: <20230908102113.547-1-luhongfei@vivo.com>
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <20230908102113.547-1-luhongfei@vivo.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: vNhlsA765I0wkrIv1nUguM9jWFdpUOvO
+X-Proofpoint-ORIG-GUID: vNhlsA765I0wkrIv1nUguM9jWFdpUOvO
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-09_22,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ suspectscore=0 priorityscore=1501 adultscore=0 malwarescore=0 mlxscore=0
+ mlxlogscore=879 clxscore=1011 spamscore=0 lowpriorityscore=0 bulkscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309100015
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 09 Sep 2023 10:47:26 -0400:
+Hi Hongfei,
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+On 9/8/2023 6:20 PM, Lu Hongfei wrote:
+> Hello,
+>
+> This v2 series implements the function of controlling the wb buffer resize
+> via sysfs that will be supported in UFS4.1.
+>
+>
+UFS4.1 JEDEC standard is targeting Q3 2024, before it is finalized, 
+please don't put up changes for new features (which are still in draft) 
+on upstream.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/2a5a4326e58339a26cd1510259e7310b8c0980ff
 
-Thank you!
+Thanks,
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Can Guo.
+
