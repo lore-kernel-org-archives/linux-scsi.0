@@ -2,106 +2,163 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8ECEE49BF
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Sep 2023 01:57:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A2CC71153
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 01:35:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345293AbjIJB5s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Sep 2023 21:57:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54834 "EHLO
+        id S232307AbjIKBfi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Sep 2023 21:35:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233350AbjIJB5r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2023 21:57:47 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96B0012F;
-        Sat,  9 Sep 2023 18:57:43 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38A1vBuD007274;
-        Sun, 10 Sep 2023 01:57:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=UgNmCL48KvJzWpeJp2njVSkbKUCG3Hczt0Z3oyO7n44=;
- b=ATNOJgJvm186Vr0TM35nAGBbH9AopJZCFqkiNRiOQNjO5jXdY0O/H3oU6pTGSVM8LJpt
- 7b4iAqjaUJh3pe7MB5UisKifxYiBeV7O4DjLqs8GObYQdFIMrk1X4bXEpzET0LgH0DBI
- MS8marxnPboxfmAHG92iVKBwMzoIQkjUTYBXB+qEXP6I2KQ2uhVnoSqCkQ6DqDNVTw/2
- 2yvnUkVxhDC6GWTFBUDf2+zL83Y7qZTiK/vl6kpqFkjrKhgiGSaFs83LJPmjM3e3dfqG
- frDOG+zLwKnF5tREIE8vtowF50UZCLq3/2WC/TaoBfhPeXCAlHXTsAVpqzs622cYsgAX mg== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t0ga6h6k6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 10 Sep 2023 01:57:14 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38A1vDC3019478
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 10 Sep 2023 01:57:13 GMT
-Received: from [10.253.38.52] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Sat, 9 Sep
- 2023 18:57:08 -0700
-Message-ID: <b67daba2-3a64-f8b1-b579-f52ea66318bf@quicinc.com>
-Date:   Sun, 10 Sep 2023 09:56:38 +0800
+        with ESMTP id S230386AbjIKBfi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Sep 2023 21:35:38 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 431E4122
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Sep 2023 18:35:32 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230911013530epoutp04a80b19e5a8170db7735f3d883c57a1ae~DtE2Shx8f0398403984epoutp049
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 01:35:30 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230911013530epoutp04a80b19e5a8170db7735f3d883c57a1ae~DtE2Shx8f0398403984epoutp049
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1694396130;
+        bh=8eJgZeaFbEsj0QhssoQfhVmof4A93dXSX4xLkpJuYSc=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=WMJvSpz9IazInBaj4LWe2DNIogwNql99+t2yu2wQu2i7zQJ4D/Q+BQ3d8Z5td41Ex
+         CsDdLNLYE24xC6EFbtgHsa5uZ2kT/qQ6C0iGeTh9kXXm4vbQqyrfZJb4yw7sP48LJT
+         qybBx+H3BxvP3nazMTWiZJ8OGFLDqNgNFbCZs4BQ=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20230911013529epcas2p1009fec4ec3e20bfbf1d37f12ef633a0e~DtE1fa41Z1935419354epcas2p1_;
+        Mon, 11 Sep 2023 01:35:29 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.88]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4RkTmw4x6jz4x9Pw; Mon, 11 Sep
+        2023 01:35:28 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        90.69.09660.0EE6EF46; Mon, 11 Sep 2023 10:35:28 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20230911013528epcas2p13cf413d9d41ab93ee1f6a924c4e3f935~DtE0k3Ypl2910929109epcas2p1U;
+        Mon, 11 Sep 2023 01:35:28 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230911013528epsmtrp205038945a3ba1db08fbc323537fec7d0~DtE0kF6cS0370003700epsmtrp2S;
+        Mon, 11 Sep 2023 01:35:28 +0000 (GMT)
+X-AuditID: b6c32a47-afdff700000025bc-e2-64fe6ee06bef
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        71.EA.08649.0EE6EF46; Mon, 11 Sep 2023 10:35:28 +0900 (KST)
+Received: from KORCO011456 (unknown [10.229.38.105]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230911013527epsmtip22961711704d618a2950bba6d3cb1c194~DtE0R_VgX2379423794epsmtip2r;
+        Mon, 11 Sep 2023 01:35:27 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Martin K. Petersen'" <martin.petersen@oracle.com>
+Cc:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <bvanassche@acm.org>, <jejb@linux.ibm.com>, <beanhuo@micron.com>,
+        <adrian.hunter@intel.com>, <sc.suh@samsung.com>,
+        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
+        <kwangwon.min@samsung.com>, <junwoo80.lee@samsung.com>,
+        <wkon.kim@samsung.com>
+In-Reply-To: <yq1jzt5j5go.fsf@ca-mkp.ca.oracle.com>
+Subject: RE: [RESEND PATCH v3 0/2] change UIC command handling
+Date:   Mon, 11 Sep 2023 10:35:27 +0900
+Message-ID: <02b701d9e450$3e7d5ca0$bb7815e0$@samsung.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH v2 0/3] scsi: ufs: core: support WB buffer resize function
-Content-Language: en-US
-To:     Lu Hongfei <luhongfei@vivo.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <arthur.simchaev@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "Manivannan Sadhasivam" <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        zhanghui <zhanghui31@xiaomi.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-CC:     <opensource.kernel@vivo.com>
-References: <20230908102113.547-1-luhongfei@vivo.com>
-From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20230908102113.547-1-luhongfei@vivo.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: vNhlsA765I0wkrIv1nUguM9jWFdpUOvO
-X-Proofpoint-ORIG-GUID: vNhlsA765I0wkrIv1nUguM9jWFdpUOvO
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-09_22,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- suspectscore=0 priorityscore=1501 adultscore=0 malwarescore=0 mlxscore=0
- mlxlogscore=879 clxscore=1011 spamscore=0 lowpriorityscore=0 bulkscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309100015
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIwe0l2XHSCkaXhuPDRLLuGM/RalAHEhVGBAhaVcJivSNAtgA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLJsWRmVeSWpSXmKPExsWy7bCmue6DvH8pBjf+q1icfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Vi2oefzBarFz9gsVh0YxuTxa6/zUwWW2/sZLG4vGsOm0X39R1sFsuP/2Oy
+        6Lp7g9Fi6b+3LBabL31jceD3uHzF22PxnpdMHhMWHWD0+L6+g83j49NbLB59W1YxenzeJOfR
+        fqCbKYAjKtsmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0z
+        B+h4JYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6BeYFecWJucWleul5eaomVoYGB
+        kSlQYUJ2xvw1M5kK7vBWXNh2i7GB8RZ3FyMnh4SAicT/u7PZuxi5OIQEdjBKrL98ixnC+cQo
+        8ef+EyjnG6PE9hfPmGFaPn84CtWyl1Fi2rF5TBDOS0aJ5sZPbCBVbALaEtMe7mYFsUUEzCUm
+        TjjKAlLELPCBSWL97RlgRZwCxhLPl50Dsjk4hAXsJO7vkAMxWQRUJR4+rwap4BWwlOh/fIoF
+        whaUODnzCZjNLGAg8f7cfGYIW15i+9s5UMcpSPx8ugxqrZPEgSPfmSBqRCRmd7aBfSMh8IRD
+        4vq2/awQDS4S/WsghkoICEu8Or6FHcKWkvj8bi/YaRIC2RJ7FopBhCskFk97C1VuLDHrWTsj
+        RImyxJFbUKfxSXQc/ssOEeaV6GgTgqhWlvg1aTIjhC0pMfPmHfYJjEqzkDw2C8ljs5A8NgvJ
+        AwsYWVYxiqUWFOempxYbFRjDIzs5P3cTIzhda7nvYJzx9oPeIUYmDsZDjBIczEoivCWH/qYI
+        8aYkVlalFuXHF5XmpBYfYjQFBvVEZinR5HxgxsgriTc0sTQwMTMzNDcyNTBXEue91zo3RUgg
+        PbEkNTs1tSC1CKaPiYNTqoFp+V21OyIbIx7EHK6onbB5Pl+wgW1aiI8Si2burntCxqEae3c7
+        qfDrWgk6CngYcb3fH7GZhy2JZd7NOya72y8d5lR/2C/m4pi/Vc9IjZmlcp7xDJeWd64vNVIZ
+        vf4Uuld/Wl4589DSsKRJFfPcn+RpuH8P+vCY80ngCc7Nl59wHLWfcfpXY0jiWn6DD0kca4TD
+        +WIeaExnfqRUX1bxIf67f4DmI4YN97MvvrL2FRSblsowh7N80tvfzlGfneVamZI6707pKNkS
+        +njRAq/uJv5NpwyffXK0DNatUVn9p0KOv/mhqWni57m8WvyFiSGdCdvfNnyZdnth2G5Th5w5
+        bwKloq2v8pmWyQct8ToyRYmlOCPRUIu5qDgRAGcTHutgBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBIsWRmVeSWpSXmKPExsWy7bCSvO6DvH8pBqcb2SxOPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2slhc3jWHzaL7+g42i+XH/zFZ
+        dN29wWix9N9bFovNl76xOPB7XL7i7bF4z0smjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNo
+        P9DNFMARxWWTkpqTWZZapG+XwJUxf81MpoI7vBUXtt1ibGC8xd3FyMkhIWAi8fnDUXYQW0hg
+        N6PErPXqEHFJiRM7nzNC2MIS91uOsHYxcgHVPGeU+D7tEBNIgk1AW2Law92sILaIgLnExAlH
+        WUCKmAUamCUa1h9kg+jYyChxfOIWsCpOAWOJ58vOASU4OIQF7CTu75ADMVkEVCUePq8GqeAV
+        sJTof3yKBcIWlDg58wmYzSxgJHHu0H42CFteYvvbOcwQxylI/Hy6DOoGJ4kDR74zQdSISMzu
+        bGOewCg8C8moWUhGzUIyahaSlgWMLKsYJVMLinPTc5MNCwzzUsv1ihNzi0vz0vWS83M3MYIj
+        V0tjB+O9+f/0DjEycTAeYpTgYFYS4S059DdFiDclsbIqtSg/vqg0J7X4EKM0B4uSOK/hjNkp
+        QgLpiSWp2ampBalFMFkmDk6pBiaF7z3P2j/KCyvelDs9QTO0mfmTv74Ek+Vnjndf2hdE/trN
+        GfaoKkRxTsAVvVcNcbeuhfusEFI+u8k2wyzk3K6F9cuD2x75fgi7EzlZ6lwvv1JhnNPcie1N
+        Rre3/ljq9ubWmvm6vbFT6/b5H1PRVPAV+378ddHFjvdmYsV9z65t1321tvZoZX19l29Aiq/C
+        OQWR8mPmDGx7nmvyxF1fbJG5+12+kmKuWMQflTDVPWs+XVh7qyC39NBZls9/z5lObH1+67vr
+        ZDsD/rO3VXsuP1xw6mK25M11Jf+U9S233OBxjWE0k3gYUrX1LsfM/DQWey6GY74lvWF3HvCf
+        WFbV6ZvzfFVOrFF3TcyMDenz1ZVYijMSDbWYi4oTATt4iOtLAwAA
+X-CMS-MailID: 20230911013528epcas2p13cf413d9d41ab93ee1f6a924c4e3f935
+X-Msg-Generator: CA
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230904014146epcas2p37d6690a5eb3a5652571bb00e358231a3
+References: <CGME20230904014146epcas2p37d6690a5eb3a5652571bb00e358231a3@epcas2p3.samsung.com>
+        <cover.1693790060.git.kwmad.kim@samsung.com>
+        <yq1jzt5j5go.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Hongfei,
+> > v2 -> v3: rule out the change of polling w/ pmc from this thread.
+> > (I'll post the change later)
+> > v1 -> v2: remove an unused variable in __ufshcd_send_uic_cmd
+> >
+> > Kiwoong Kim (2):
+> >   ufs: make __ufshcd_send_uic_cmd not wrapped by host_lock
+> >   ufs: poll HCS.UCRDY before issuing a UIC command
+> 
+> Applied to 6.6/scsi-staging, thanks!
+> 
+> --
+> Martin K. Petersen	Oracle Linux Engineering
 
-On 9/8/2023 6:20 PM, Lu Hongfei wrote:
-> Hello,
->
-> This v2 series implements the function of controlling the wb buffer resize
-> via sysfs that will be supported in UFS4.1.
->
->
-UFS4.1 JEDEC standard is targeting Q3 2024, before it is finalized, 
-please don't put up changes for new features (which are still in draft) 
-on upstream.
+Hi, Martin
 
+The following patch seems to make trouble because of using
+read_poll_timeout.
+Its initial version used udelay and after discussion it's been changed.
+Could you revert this patch set?
 
-Thanks,
+> ufs: poll HCS.UCRDY before issuing a UIC command
 
-Can Guo.
+[ 4671.226480] [3: kworker/u20:29:17140] BUG: scheduling while atomic:
+kworker/u20:29/17140/0x00000002
+..
+[ 4671.228723] [3: kworker/u20:29:17140]  panic+0x16c/0x388
+[ 4671.228745] [3: kworker/u20:29:17140]  check_panic_on_warn+0x60/0x94
+[ 4671.228764] [3: kworker/u20:29:17140]  __schedule_bug+0x6c/0x94
+[ 4671.228786] [3: kworker/u20:29:17140]  __schedule+0x6f4/0xa64
+[ 4671.228806] [3: kworker/u20:29:17140]  schedule+0x7c/0xe8
+[ 4671.228824] [3: kworker/u20:29:17140]
+schedule_hrtimeout_range_clock+0x98/0x114
+[ 4671.228841] [3: kworker/u20:29:17140]  schedule_hrtimeout_range+0x14/0x24
+[ 4671.228856] [3: kworker/u20:29:17140]  usleep_range_state+0x60/0x94
+[ 4671.228871] [3: kworker/u20:29:17140]  __ufshcd_send_uic_cmd+0xa0/0x1c4
+[ 4671.228893] [3: kworker/u20:29:17140]  ufshcd_uic_pwr_ctrl+0x15c/0x390
+[ 4671.228908] [3: kworker/u20:29:17140]
+ufshcd_uic_hibern8_enter+0x9c/0x25c
+[ 4671.228922] [3: kworker/u20:29:17140]
+ufshcd_link_state_transition+0x34/0xb0
+[ 4671.228939] [3: kworker/u20:29:17140]  __ufshcd_wl_suspend+0x3f0/0x4b4
+
+Thanks you.
 
