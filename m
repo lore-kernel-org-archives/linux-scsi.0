@@ -2,139 +2,168 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19CD8EE57DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 08:21:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E81EFEE3F02
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:50:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233870AbjIKIVW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 04:21:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48878 "EHLO
+        id S233343AbjIKUus (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 16:50:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229546AbjIKIVW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 04:21:22 -0400
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75F4AAC
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 01:21:17 -0700 (PDT)
-Received: by mail-wm1-x32e.google.com with SMTP id 5b1f17b1804b1-401d80f4ef8so44249935e9.1
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 01:21:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1694420476; x=1695025276; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/BDrwWCwQweCJpnOjMvyDpdv3oCDm8reO9zhEoTmqPY=;
-        b=eJgYzFFD787nFqWHQjRc9Lj0MiJOjZ3gQa5Ntg1jK5NuXsIEFDyEnpuXsyLcx9F3nO
-         x/waxv9DsCRWuGiCIB7MDDeSfB8FbAcXhkay/q9qMSObuZUcX+eR+Uk00g9WqEsrUk2E
-         jvJDNg2OiqlIB0N3EZIH31lIKJJBfMuEGbJ2zNlmQzEQS6tTewqZdLMGP2Qmo72pdQf9
-         eMgngNQzAUtdhMRcZFZihfjfC9DOQIrC7lvZ5U4Q5UThtX0oG6hYMAE5JNBk9XEU/iG6
-         ViFhYXT9+BvQ6GUeNzL3dTiO/CYFQmJP2t8Okqwm3Prd+2QFTl4uEkdiLPtkRKpO6fJo
-         peVg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694420476; x=1695025276;
-        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/BDrwWCwQweCJpnOjMvyDpdv3oCDm8reO9zhEoTmqPY=;
-        b=IOvsgto8uDUG7con5uj9nDQ6x3qHn64XZczm1Z2vBdIfAAM6JZd77SgA7Vpr6+J9Bx
-         AZIgW6SV2jQR8krvr53+60e3wO+i57tWa8jJf7zKBnrKE39m4m3U/Oii+gqiUoVGS9xP
-         20D4LP6w80Ew/R4rD5q5I4qzuONwdN96apYGuIlMatpixOKbT+B8n/dZ7gXffejNOHks
-         KpLvc6zesNwFSfU72HrNTOPH2LbSX5WD1b1cPo9CRP0ZcJN5fGmwhNFiTUBWXxDN7m2S
-         tpvwVNHloc6nYVCJfHSUsDHvtCzV2LeilQGP5QqOgzCkPKh5AWR1RaLINGtl+FuroCC5
-         AJ1w==
-X-Gm-Message-State: AOJu0Yy55gDuu4knGWBZIExy7K5N0N3dbqVOJ2++GIoV20HUJLto/mIj
-        T2jYLTMlmRbR4+rQVby09KpeZw==
-X-Google-Smtp-Source: AGHT+IE6CSFqIInSaAKyMklQvvbm7xvtW2aQnxdjnlwEcRBBouP3ODBqMLatWe+GphUOQdu3rhSxBA==
-X-Received: by 2002:a05:600c:2307:b0:401:38dc:891c with SMTP id 7-20020a05600c230700b0040138dc891cmr7425353wmo.5.1694420475694;
-        Mon, 11 Sep 2023 01:21:15 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id s12-20020a05600c45cc00b00403b63e87f2sm557670wmo.32.2023.09.11.01.21.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Sep 2023 01:21:15 -0700 (PDT)
-Date:   Mon, 11 Sep 2023 11:21:12 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     oe-kbuild@lists.linux.dev, Lu Hongfei <luhongfei@vivo.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <arthur.simchaev@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        zhanghui <zhanghui31@xiaomi.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     lkp@intel.com, oe-kbuild-all@lists.linux.dev,
-        opensource.kernel@vivo.com
-Subject: Re: [PATCH v2 2/3] scsi: ufs: core: Add ufshcd_wb_buf_resize
- function to enable WB buffer resize
-Message-ID: <172b2898-29bd-4bf5-9842-16c9105b25fc@kadam.mountain>
+        with ESMTP id S236278AbjIKKHJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 06:07:09 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBF7C101;
+        Mon, 11 Sep 2023 03:07:04 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38B9gQ2w020649;
+        Mon, 11 Sep 2023 10:02:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=BOJ07bV4t2/uag4UNTUkpBRa2NMKQP1lRLDwm6QfzlE=;
+ b=foUUgrpP5Kt2DqDWXLYzSwX5MwSyNGE8vxIqIdovuAQicf8WvrJYKduvLbdR912sQnYp
+ tYukODwENivPl9cWoYYi9fxcm5A0kBaYNq06cIwuEqZUGiCqLl2sAGVuD3QHYfY4hI8w
+ nw8SfYpZaCyPQ6J9uAuBw54N602U9t0phtPfPiD4kSUiSqSZoUvtS1CmaFEgFYv7fPbp
+ vnisLw4FLn+a3kvcI+p0xmc0Xtd1k6wf1XRfj/9VqDcGRG3I+TM3pFU2KHFrN1Xiv67U
+ 5iVQiM5JS/NkR1kXo4MNzJjVrrMP7Bs55FBIkEu/qoQxlwMFJ5X1xoIoMK+lbCIekcdi Ng== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t0h3du4bd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 10:02:57 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38BA2uU0000951
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 10:02:56 GMT
+Received: from [10.253.14.78] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Mon, 11 Sep
+ 2023 03:02:53 -0700
+Message-ID: <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
+Date:   Mon, 11 Sep 2023 18:02:50 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230908102113.547-3-luhongfei@vivo.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
+Content-Language: en-US
+To:     Konrad Dybcio <konrad.dybcio@linaro.org>, <mani@kernel.org>,
+        <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        "Bjorn Andersson" <andersson@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
+ <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+ <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
+ <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org>
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: _zm_SmkmFyd3BL5yPQYTnMgcv3R3EEnr
+X-Proofpoint-ORIG-GUID: _zm_SmkmFyd3BL5yPQYTnMgcv3R3EEnr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-11_06,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ bulkscore=0 phishscore=0 mlxlogscore=999 adultscore=0 spamscore=0
+ suspectscore=0 impostorscore=0 malwarescore=0 mlxscore=0
+ lowpriorityscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2308100000 definitions=main-2309110091
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Lu,
 
-kernel test robot noticed the following build warnings:
+On 9/11/2023 5:46 PM, Konrad Dybcio wrote:
+> On 11.09.2023 11:42, Can Guo wrote:
+>> Hi Konrad,
+>>
+>> On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
+>>> On 11.09.2023 07:59, Can Guo wrote:
+>>>> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+>>>>
+>>>> Retrieve UFS device version from UFS host controller's spare register
+>>>> which is populated by bootloader, and use the UFS device version together
+>>>> with host controller's HW version to decide the proper power modes which
+>>>> should be used to configure the UFS PHY.
+>>> That sounds a bit fishy.. is there no bootloader-independent
+>>> solution to that? Can't we bring in the code that the bootloader
+>>> uses to determine these values?
+>>>
+>>> Konrad
+>>
+>> Agree, it is.
+>>
+>>
+>> All these complexities come from one request from PHY design team - power saving.
+>>
+>> And to achieve power saving, Qualcomm UFS developers are requested to use the
+>>
+>> lowest hanging PHY settings which can sustain the Max agreed HS Gear (btw host
+>>
+>> and UFS device) during UFS's lifecycle in High Level OS,  whereas the power saving
+>>
+>> request does not apply to bootloader, which works for only a few seconds during
+>>
+>> bootup. Hence, there is no such version detect code in bootloader -  it just uses the
+>>
+>> highest PHY settings to configure PHY, boot up UFS and put UFS device version in this
+>>
+>> register.
+> First of all, your email client seems to be inserting 2 newlines
+> instead of 1. If you're using thunderbird, you may want to edit:
+>
+> mail.identity.(default or your mail identity idx).default.compose_html
+>
+> to `false`
+>
+> and add that to your internal wiki page, as I see many @quic folks having
+> this issue.
+>
+>
+> Going back to the main topic, I don't think we understood each other.
+> The commit message states:
+>
+>
+> "Retrieve UFS device version from UFS host controller's spare register
+> which is populated by bootloader"
+>
+>
+> Which means the bootloader is able to somehow determine the value
+> that's in the spare register and write it there.
+>
+> I'm asking whether we can take the logic behind this value and
+> move it to Linux so that we don't depend on the bootloader to
+> guarantee it (e.g. Chrome or some other devices with more exotic
+> fw may not work this way).
+>
+>
+> Konrad
 
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Lu-Hongfei/scsi-ufs-core-add-wb-buffer-resize-related-attr_idn/20230908-182656
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20230908102113.547-3-luhongfei%40vivo.com
-patch subject: [PATCH v2 2/3] scsi: ufs: core: Add ufshcd_wb_buf_resize function to enable WB buffer resize
-config: i386-randconfig-141-20230909 (https://download.01.org/0day-ci/archive/20230909/202309091536.TRk3mftu-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce: (https://download.01.org/0day-ci/archive/20230909/202309091536.TRk3mftu-lkp@intel.com/reproduce)
+There is no logic behind this value at all in bootloader, as I 
+explained, after bootloader
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-| Closes: https://lore.kernel.org/r/202309091536.TRk3mftu-lkp@intel.com/
+initializes UFS, bootloader simply reads UFS's device version (the value 
+you are referring)
 
-New smatch warnings:
-drivers/ufs/core/ufshcd.c:6067 ufshcd_wb_buf_resize() error: uninitialized symbol 'ret'.
+and write it to the register. But in Linux kernel, we need (or want to 
+know) this value
 
-Old smatch warnings:
-drivers/ufs/core/ufshcd.c:5353 ufshcd_uic_cmd_compl() error: we previously assumed 'hba->active_uic_cmd' could be null (see line 5341)
+BEFORE we initialize UFS host controller (and UFS device).
 
-vim +/ret +6067 drivers/ufs/core/ufshcd.c
 
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6049  int ufshcd_wb_buf_resize(struct ufs_hba *hba, u32 resize_op)
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6050  {
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6051  	int ret;
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6052  	u8 index;
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6053  
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6054  	ufshcd_scsi_block_requests(hba);
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6055  	if (ufshcd_wait_for_doorbell_clr(hba, 1 * USEC_PER_SEC))
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6056  		goto out;
+Thanks,
 
-ret is unitialized.
-
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6057  
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6058  	index = ufshcd_wb_get_query_index(hba);
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6059  	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6060  		QUERY_ATTR_IDN_WB_BUF_RESIZE_EN, index, 0, &resize_op);
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6061  	if (ret)
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6062  		dev_err(hba->dev,
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6063  			"%s: Enable WB buf resize operation failed %d\n",
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6064  			__func__, ret);
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6065  out:
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6066  	ufshcd_scsi_unblock_requests(hba);
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08 @6067  	return ret;
-                                                                               ^^^
-
-7b70b34c503067 drivers/ufs/core/ufshcd.c Lu Hongfei  2023-09-08  6068  }
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Can Guo.
 
