@@ -2,156 +2,183 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEF4AEE7FF4
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 07:48:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D16EE57DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 07:54:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232384AbjIKHsl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 03:48:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52024 "EHLO
+        id S233487AbjIKHyM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 03:54:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233487AbjIKHsl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 03:48:41 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7816E1FE7
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 00:48:11 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 03D29C43395
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 07:47:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694418450;
-        bh=STtS2XPkeFve3dQpiB7o5qxhu/dI4cexTdu/ehOVCHE=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=O8ifnJkOjj6PaTcvv+SIwlx0z/t18Y2pNyvGVaN7NXBcJQKhzrnEpIVf+fxSJM+CX
-         DvEZgoT+cBx5Xydt5rSFZXDe/YHLlfNMNrX6v1qgPbWBdFLcWUdK5SlLiVamcVbspv
-         HAaFmAx7jR863sq86N8PQ4t4durnYWimGbIeL/9Iis7i7at3RrRvPonWw3sucxAWgw
-         lGJ7HJ0on5OBGXKXaVgNUjbkmkBmRsgNhshL/doWIfpvmdEtAC0KEDc9je0pI9efbi
-         7hiDaZaFjw/zSZJFKuJfdklidkQAerYnE0tNABr8f0dRwWbPppTtWHgO6qNC8tflJf
-         Ku1euDxPWcq4g==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id E80E3C53BC6; Mon, 11 Sep 2023 07:47:29 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215943] UBSAN: array-index-out-of-bounds in
- drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
-Date:   Mon, 11 Sep 2023 07:47:29 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: ubuntologic@inbox.ru
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-215943-11613-ZhZxfYEihp@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215943-11613@https.bugzilla.kernel.org/>
-References: <bug-215943-11613@https.bugzilla.kernel.org/>
+        with ESMTP id S230265AbjIKHyM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 03:54:12 -0400
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FAD2D9
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 00:54:07 -0700 (PDT)
+Received: by mail-lf1-x136.google.com with SMTP id 2adb3069b0e04-501ce655fcbso6516292e87.2
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 00:54:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1694418845; x=1695023645; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RhTYTWTzuxqkqrCwo9QGoe0JCZRDwm89I5O/cCtJNvg=;
+        b=TxUyuvaxgWn2GkCEFt91ncLSSbnZZol0L11rZFNxm3Q58J8OG8g+pWY3iNjG8Szx8f
+         mC2CPDfT2sZYRbXPJAFVDf2vRP42za9wunP6tuDsbI+noXQRQCZLO/pbcMU0qhrWiA9u
+         TKfAKTAWwp3Lnz258eywFWXHz2SBJ7dUtjApr0xX1Ok0Uc7aHTaJlA8aU0zDCXfF9crg
+         uZR4yXnTh96d3um1wQcts0gmc9/0Y3//l9OszIaE3EB+i2CPorWgbPMqA8nAROTzbggd
+         smMp5YlL5DkwGd/PTwIrAhoWTGCtCZgv8LUDBQXsm69B71DegCqYr0t9dotWomgZJY8E
+         geYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694418845; x=1695023645;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RhTYTWTzuxqkqrCwo9QGoe0JCZRDwm89I5O/cCtJNvg=;
+        b=AIGlJLFAHWMT9YwH8Th5B8oRP4HmC0ewgjgMi7B3AmNiuiUKDEy2gGiHCIQpEjPbOw
+         cgFWO31dVKC3FR42vGcneEkhpiETFmOV5HbZhmoZrF8cKKi8XqGFYpm7OyVRphNG8Z5X
+         pNpziAMtCcIwi/C8jYCVX+Tq6vDmIki6qRJjdEXVJi7sZdidViO+SkZh07XwxVprjoFl
+         JT6pvQCueH6cFqo5Pc5P/e/mlyrTvvHO2hy52xavBpRV9Y+d53gRE9qDwZzdvQqNPxCV
+         s83QK1CT75zqz7Tit8ZYyj283GL9vuLepiFgCSXEtP3Dp1cIpTzZIOmpA8yVI48zNEHv
+         p+Tw==
+X-Gm-Message-State: AOJu0Yx4m1TebppftGzPVXXxHNfXkg2JwRdmtj/6J7JFSfet78QJGWs8
+        wnp9WSLtJJhUK+nDDDcgu/HiR9yt7BWSAJ1CaG6lUGAdGGSSBONJ
+X-Google-Smtp-Source: AGHT+IG5dRWyA/6kySQ1UbCWtXHZAoxSmt46R2hbrSuIH2rP2ocwe3clqKrSVCacTxqrEJUyo1Rsvr2JCrNaOAheEkE=
+X-Received: by 2002:a05:6512:2824:b0:4fe:2d93:2b50 with SMTP id
+ cf36-20020a056512282400b004fe2d932b50mr7833234lfb.31.1694418845555; Mon, 11
+ Sep 2023 00:54:05 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230911030207.242917-1-dlemoal@kernel.org> <20230911030207.242917-2-dlemoal@kernel.org>
+In-Reply-To: <20230911030207.242917-2-dlemoal@kernel.org>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Mon, 11 Sep 2023 09:53:54 +0200
+Message-ID: <CAMGffE=x5aQrDF62eiStLr40b21X1DdkuuR3x=C=gSbLOrT4rw@mail.gmail.com>
+Subject: Re: [PATCH 01/10] scsi: pm8001: Setup IRQs on resume
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
-MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215943
-
-ubuntologic@inbox.ru changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |ubuntologic@inbox.ru
-
---- Comment #11 from ubuntologic@inbox.ru ---
-ATOM BIOS: CAPILANO
-radeon 0000:02:00.0: VRAM: 1024M 0x0000000000000000 - 0x000000003FFFFFFF (1=
-024M
-used)
-radeon 0000:02:00.0: GTT: 1024M 0x0000000040000000 - 0x000000007FFFFFFF
-[drm] Detected VRAM RAM=3D1024M, BAR=3D256M
-[drm] RAM width 128bits DDR
-[drm] radeon: 1024M of VRAM memory ready
-[drm] radeon: 1024M of GTT memory ready.
-[drm] Loading REDWOOD Microcode
-[drm] Internal thermal controller without fan control
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D
-UBSAN: array-index-out-of-bounds in
-/home/kernel/COD/linux/drivers/gpu/drm/radeon/radeon_atombios.c:2620:43
-index 1 is out of range for type 'UCHAR [1]'
-CPU: 2 PID: 140 Comm: systemd-udevd Not tainted 6.5.1-060501-generic
-#202309020842
-Hardware name: Acer Aspire 7741/JE70_CP, BIOS V1.26 04/28/2011
-Call Trace:
- <TASK>
- dump_stack_lvl+0x48/0x70
- dump_stack+0x10/0x20
- __ubsan_handle_out_of_bounds+0xc6/0x110
- radeon_atombios_parse_power_table_4_5+0x3c9/0x3f0 [radeon]
- radeon_atombios_get_power_modes+0x205/0x210 [radeon]
- radeon_pm_init_dpm+0x8e/0x2f0 [radeon]
- radeon_pm_init+0xd0/0x100 [radeon]
- evergreen_init+0x158/0x400 [radeon]
- radeon_device_init+0x540/0xa90 [radeon]
- radeon_driver_load_kms+0xcc/0x2f0 [radeon]
- drm_dev_register+0x10e/0x240 [drm]
- radeon_pci_probe+0xec/0x180 [radeon]
- local_pci_probe+0x47/0xb0
- pci_call_probe+0x55/0x190
- pci_device_probe+0x84/0x120
- really_probe+0x1c7/0x410
- __driver_probe_device+0x8c/0x180
- driver_probe_device+0x24/0xd0
- __driver_attach+0x10b/0x210
- ? __pfx___driver_attach+0x10/0x10
- bus_for_each_dev+0x8d/0xf0
- driver_attach+0x1e/0x30
- bus_add_driver+0x127/0x240
- driver_register+0x5e/0x130
- ? __pfx_radeon_module_init+0x10/0x10 [radeon]
- __pci_register_driver+0x62/0x70
- __pci_register_driver+0x62/0x70
- radeon_module_init+0x4c/0xff0 [radeon]
- do_one_initcall+0x5e/0x340
- do_init_module+0x68/0x260
- load_module+0xba1/0xcf0
- ? ima_post_read_file+0xe8/0x110
- ? security_kernel_post_read_file+0x75/0x90
- init_module_from_file+0x96/0x100
- ? init_module_from_file+0x96/0x100
- idempotent_init_module+0x11c/0x2b0
- __x64_sys_finit_module+0x64/0xd0
- do_syscall_64+0x5c/0x90
- ? do_syscall_64+0x68/0x90
- ? syscall_exit_to_user_mode+0x37/0x60
- ? do_syscall_64+0x68/0x90
- entry_SYSCALL_64_after_hwframe+0x6e/0xd8
-RIP: 0033:0x7fe86023089d
-Code: 5d c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 89 f8 48 89 f7 =
-48
-89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 0>
-RSP: 002b:00007fffe4257b08 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
-RAX: ffffffffffffffda RBX: 0000560b8b980a10 RCX: 00007fe86023089d
-RDX: 0000000000000000 RSI: 00007fe8603b0458 RDI: 0000000000000013
-RBP: 00007fe8603b0458 R08: 0000000000000000 R09: 00007fffe4257c30
-R10: 0000000000000013 R11: 0000000000000246 R12: 0000000000020000
-R13: 0000560b8b978140 R14: 0000000000000000 R15: 0000560b8b90faf0
- </TASK>
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
+On Mon, Sep 11, 2023 at 5:02=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org>=
+ wrote:
+>
+> The function pm8001_pci_resume() only calls pm8001_request_irq() without
+> calling pm8001_setup_irq(). This causes the IRQ allocation to fail,
+> whihc leads all drives being removed from the system.
+>
+> Fix this issue by integrating the code for pm8001_setup_irq() directly
+> inside pm8001_request_irq() so that msix setup is performed both during
+> normal initialization and resume operations.
+>
+> Fixes: dbf9bfe61571 ("[SCSI] pm8001: add SAS/SATA HBA driver")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+lgtm, thx!
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c | 51 +++++++++++--------------------
+>  1 file changed, 17 insertions(+), 34 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm80=
+01_init.c
+> index 5e5ce1e74c3b..443a3176c6c0 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -273,7 +273,6 @@ static irqreturn_t pm8001_interrupt_handler_intx(int =
+irq, void *dev_id)
+>         return ret;
+>  }
+>
+> -static u32 pm8001_setup_irq(struct pm8001_hba_info *pm8001_ha);
+>  static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha);
+>
+>  /**
+> @@ -294,13 +293,6 @@ static int pm8001_alloc(struct pm8001_hba_info *pm80=
+01_ha,
+>         pm8001_dbg(pm8001_ha, INIT, "pm8001_alloc: PHY:%x\n",
+>                    pm8001_ha->chip->n_phy);
+>
+> -       /* Setup Interrupt */
+> -       rc =3D pm8001_setup_irq(pm8001_ha);
+> -       if (rc) {
+> -               pm8001_dbg(pm8001_ha, FAIL,
+> -                          "pm8001_setup_irq failed [ret: %d]\n", rc);
+> -               goto err_out;
+> -       }
+>         /* Request Interrupt */
+>         rc =3D pm8001_request_irq(pm8001_ha);
+>         if (rc)
+> @@ -1031,47 +1023,38 @@ static u32 pm8001_request_msix(struct pm8001_hba_=
+info *pm8001_ha)
+>  }
+>  #endif
+>
+> -static u32 pm8001_setup_irq(struct pm8001_hba_info *pm8001_ha)
+> -{
+> -       struct pci_dev *pdev;
+> -
+> -       pdev =3D pm8001_ha->pdev;
+> -
+> -#ifdef PM8001_USE_MSIX
+> -       if (pci_find_capability(pdev, PCI_CAP_ID_MSIX))
+> -               return pm8001_setup_msix(pm8001_ha);
+> -       pm8001_dbg(pm8001_ha, INIT, "MSIX not supported!!!\n");
+> -#endif
+> -       return 0;
+> -}
+> -
+>  /**
+>   * pm8001_request_irq - register interrupt
+>   * @pm8001_ha: our ha struct.
+>   */
+>  static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
+>  {
+> -       struct pci_dev *pdev;
+> +       struct pci_dev *pdev =3D pm8001_ha->pdev;
+> +#ifdef PM8001_USE_MSIX
+>         int rc;
+>
+> -       pdev =3D pm8001_ha->pdev;
+> +       if (pci_find_capability(pdev, PCI_CAP_ID_MSIX)) {
+> +               rc =3D pm8001_setup_msix(pm8001_ha);
+> +               if (rc) {
+> +                       pm8001_dbg(pm8001_ha, FAIL,
+> +                                  "pm8001_setup_irq failed [ret: %d]\n",=
+ rc);
+> +                       return rc;
+> +               }
+>
+> -#ifdef PM8001_USE_MSIX
+> -       if (pdev->msix_cap && pci_msi_enabled())
+> -               return pm8001_request_msix(pm8001_ha);
+> -       else {
+> -               pm8001_dbg(pm8001_ha, INIT, "MSIX not supported!!!\n");
+> -               goto intx;
+> +               if (pdev->msix_cap && pci_msi_enabled())
+> +                       return pm8001_request_msix(pm8001_ha);
+>         }
+> +
+> +       pm8001_dbg(pm8001_ha, INIT, "MSIX not supported!!!\n");
+>  #endif
+>
+> -intx:
+>         /* initialize the INT-X interrupt */
+>         pm8001_ha->irq_vector[0].irq_id =3D 0;
+>         pm8001_ha->irq_vector[0].drv_inst =3D pm8001_ha;
+> -       rc =3D request_irq(pdev->irq, pm8001_interrupt_handler_intx, IRQF=
+_SHARED,
+> -               pm8001_ha->name, SHOST_TO_SAS_HA(pm8001_ha->shost));
+> -       return rc;
+> +
+> +       return request_irq(pdev->irq, pm8001_interrupt_handler_intx,
+> +                          IRQF_SHARED, pm8001_ha->name,
+> +                          SHOST_TO_SAS_HA(pm8001_ha->shost));
+>  }
+>
+>  /**
+> --
+> 2.41.0
+>
