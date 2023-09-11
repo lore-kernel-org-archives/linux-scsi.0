@@ -2,37 +2,37 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB74CA0EC3
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 02:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE081CA0EC8
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 02:32:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239046AbjILCc2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 22:32:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39530 "EHLO
+        id S239238AbjILCca (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 22:32:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239098AbjILCcN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 22:32:13 -0400
+        with ESMTP id S239077AbjILCcS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 22:32:18 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4A8318B8AD
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B462932C32
         for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 18:57:25 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67EB1C116B4;
-        Mon, 11 Sep 2023 23:27:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40D95C116B6;
+        Mon, 11 Sep 2023 23:27:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694474868;
-        bh=kNHaaj0jx8YOghOyszCDjy8PPD3WeMoDW2go3Tasx+M=;
+        s=k20201202; t=1694474869;
+        bh=gKOvxGB4qVeFzI7hX1eispc+sVINwxTBdGEtgTCls1s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CvzDEaB9j2ssmnQfh52z3ETx3q5J4Ta11XFsxVXYs5swJpTF+iBfPs340IihzKl48
-         uN6Uac3JvMZInEc8s5IGBv3nHyYyZCXRpWxS4rZ5YagaJNTs62ge0XzxFw0IXeL6LR
-         ZC2vT6GZLttbnKknyYfiFgRoFqWuIZV6S02feC9iIJQxgf0Jo/AEa9yqyxQkFms4Ac
-         WgDiHfau1wABcH2QEBnAN5TwehvQfkbn7DCccPTIu9T2Hb5b7TC1WwrnLxd6T4QSuV
-         fJPavq9wMPkjIbnegjks/VjuA3M8dGhIpTMzliJuEBg/3i24oL5C9VqMeGaH5UtOR1
-         wwOtrB4/GD1ng==
+        b=BIvhzXVjMtRC2esqOmuy4dO88usEcfjkERIliQu9+GZzJGA5wE9yl/UhkmYJKCTKC
+         vBLA6TOkbvcM78vQe0e1gxysl2meVWUqgq/R2Kqh/NAOgj1RjGSiLVdQbwK55Bo14C
+         woMeOu2lF+LaGfv88NDBKDNW7I7KS5Jfw0yG3L2J5CKhl6pVnhZsua4o8ZiukuCbzA
+         DlydJEz3sv4h0NkH9ulI7P63UWDSt00xbvYTG7n3OTy3PDbBu828jI/sMjuP8nL1vi
+         9unXDdEG7x9H5cSdOEE3BF21DWncMkqKbbvNqTCc1WVhQZbmfJvTpZPzPy3HTzI58d
+         9sr72Do8TKSrg==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
 Cc:     Jack Wang <jinpu.wang@ionos.com>
-Subject: [PATCH v2 01/10] scsi: pm8001: Setup IRQs on resume
-Date:   Tue, 12 Sep 2023 08:27:36 +0900
-Message-ID: <20230911232745.325149-2-dlemoal@kernel.org>
+Subject: [PATCH v2 03/10] scsi: pm8001: Introduce pm8001_init_tasklet()
+Date:   Tue, 12 Sep 2023 08:27:38 +0900
+Message-ID: <20230911232745.325149-4-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230911232745.325149-1-dlemoal@kernel.org>
 References: <20230911232745.325149-1-dlemoal@kernel.org>
@@ -42,113 +42,106 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function pm8001_pci_resume() only calls pm8001_request_irq() without
-calling pm8001_setup_irq(). This causes the IRQ allocation to fail,
-whihc leads all drives being removed from the system.
+Factor out the identical code for initializing tasklets in
+pm8001_pci_alloc() and pm8001_pci_resume() and instead use the new
+function pm8001_init_tasklet().
 
-Fix this issue by integrating the code for pm8001_setup_irq() directly
-inside pm8001_request_irq() so that msix setup is performed both during
-normal initialization and resume operations.
-
-Fixes: dbf9bfe61571 ("[SCSI] pm8001: add SAS/SATA HBA driver")
-Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Acked-by: Jack Wang <jinpu.wang@ionos.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 51 +++++++++++--------------------
- 1 file changed, 17 insertions(+), 34 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c | 51 ++++++++++++++++---------------
+ 1 file changed, 27 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 5e5ce1e74c3b..443a3176c6c0 100644
+index 3b7d47cd70ba..c490c8509494 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -273,7 +273,6 @@ static irqreturn_t pm8001_interrupt_handler_intx(int irq, void *dev_id)
- 	return ret;
+@@ -218,6 +218,27 @@ static void pm8001_tasklet(unsigned long opaque)
+ 		BUG_ON(1);
+ 	PM8001_CHIP_DISP->isr(pm8001_ha, irq_vector->irq_id);
  }
- 
--static u32 pm8001_setup_irq(struct pm8001_hba_info *pm8001_ha);
- static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha);
++
++static void pm8001_init_tasklet(struct pm8001_hba_info *pm8001_ha)
++{
++	int i;
++
++	/*  Tasklet for non msi-x interrupt handler */
++	if ((!pm8001_ha->pdev->msix_cap || !pci_msi_enabled()) ||
++	    (pm8001_ha->chip_id == chip_8001)) {
++		tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
++			     (unsigned long)&(pm8001_ha->irq_vector[0]));
++		return;
++	}
++	for (i = 0; i < PM8001_MAX_MSIX_VEC; i++)
++		tasklet_init(&pm8001_ha->tasklet[i], pm8001_tasklet,
++			     (unsigned long)&(pm8001_ha->irq_vector[i]));
++}
++
++#else
++
++static void pm8001_init_tasklet(struct pm8001_hba_info *pm8001_ha) {}
++
+ #endif
  
  /**
-@@ -294,13 +293,6 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
- 	pm8001_dbg(pm8001_ha, INIT, "pm8001_alloc: PHY:%x\n",
- 		   pm8001_ha->chip->n_phy);
+@@ -512,7 +533,6 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
+ {
+ 	struct pm8001_hba_info *pm8001_ha;
+ 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+-	int j;
  
--	/* Setup Interrupt */
--	rc = pm8001_setup_irq(pm8001_ha);
--	if (rc) {
--		pm8001_dbg(pm8001_ha, FAIL,
--			   "pm8001_setup_irq failed [ret: %d]\n", rc);
--		goto err_out;
--	}
- 	/* Request Interrupt */
+ 	pm8001_ha = sha->lldd_ha;
+ 	if (!pm8001_ha)
+@@ -543,17 +563,8 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
+ 	else
+ 		pm8001_ha->iomb_size = IOMB_SIZE_SPC;
+ 
+-#ifdef PM8001_USE_TASKLET
+-	/* Tasklet for non msi-x interrupt handler */
+-	if ((!pdev->msix_cap || !pci_msi_enabled())
+-	    || (pm8001_ha->chip_id == chip_8001))
+-		tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
+-			(unsigned long)&(pm8001_ha->irq_vector[0]));
+-	else
+-		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
+-			tasklet_init(&pm8001_ha->tasklet[j], pm8001_tasklet,
+-				(unsigned long)&(pm8001_ha->irq_vector[j]));
+-#endif
++	pm8001_init_tasklet(pm8001_ha);
++
+ 	if (pm8001_ioremap(pm8001_ha))
+ 		goto failed_pci_alloc;
+ 	if (!pm8001_alloc(pm8001_ha, ent))
+@@ -1362,7 +1373,7 @@ static int __maybe_unused pm8001_pci_resume(struct device *dev)
+ 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+ 	struct pm8001_hba_info *pm8001_ha;
+ 	int rc;
+-	u8 i = 0, j;
++	u8 i = 0;
+ 	DECLARE_COMPLETION_ONSTACK(completion);
+ 
+ 	pm8001_ha = sha->lldd_ha;
+@@ -1390,17 +1401,9 @@ static int __maybe_unused pm8001_pci_resume(struct device *dev)
  	rc = pm8001_request_irq(pm8001_ha);
  	if (rc)
-@@ -1031,47 +1023,38 @@ static u32 pm8001_request_msix(struct pm8001_hba_info *pm8001_ha)
- }
- #endif
- 
--static u32 pm8001_setup_irq(struct pm8001_hba_info *pm8001_ha)
--{
--	struct pci_dev *pdev;
--
--	pdev = pm8001_ha->pdev;
--
--#ifdef PM8001_USE_MSIX
--	if (pci_find_capability(pdev, PCI_CAP_ID_MSIX))
--		return pm8001_setup_msix(pm8001_ha);
--	pm8001_dbg(pm8001_ha, INIT, "MSIX not supported!!!\n");
+ 		goto err_out_disable;
+-#ifdef PM8001_USE_TASKLET
+-	/*  Tasklet for non msi-x interrupt handler */
+-	if ((!pdev->msix_cap || !pci_msi_enabled()) ||
+-	    (pm8001_ha->chip_id == chip_8001))
+-		tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
+-			(unsigned long)&(pm8001_ha->irq_vector[0]));
+-	else
+-		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
+-			tasklet_init(&pm8001_ha->tasklet[j], pm8001_tasklet,
+-				(unsigned long)&(pm8001_ha->irq_vector[j]));
 -#endif
--	return 0;
--}
--
- /**
-  * pm8001_request_irq - register interrupt
-  * @pm8001_ha: our ha struct.
-  */
- static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
- {
--	struct pci_dev *pdev;
-+	struct pci_dev *pdev = pm8001_ha->pdev;
-+#ifdef PM8001_USE_MSIX
- 	int rc;
- 
--	pdev = pm8001_ha->pdev;
-+	if (pci_find_capability(pdev, PCI_CAP_ID_MSIX)) {
-+		rc = pm8001_setup_msix(pm8001_ha);
-+		if (rc) {
-+			pm8001_dbg(pm8001_ha, FAIL,
-+				   "pm8001_setup_irq failed [ret: %d]\n", rc);
-+			return rc;
-+		}
- 
--#ifdef PM8001_USE_MSIX
--	if (pdev->msix_cap && pci_msi_enabled())
--		return pm8001_request_msix(pm8001_ha);
--	else {
--		pm8001_dbg(pm8001_ha, INIT, "MSIX not supported!!!\n");
--		goto intx;
-+		if (pdev->msix_cap && pci_msi_enabled())
-+			return pm8001_request_msix(pm8001_ha);
- 	}
 +
-+	pm8001_dbg(pm8001_ha, INIT, "MSIX not supported!!!\n");
- #endif
- 
--intx:
- 	/* initialize the INT-X interrupt */
- 	pm8001_ha->irq_vector[0].irq_id = 0;
- 	pm8001_ha->irq_vector[0].drv_inst = pm8001_ha;
--	rc = request_irq(pdev->irq, pm8001_interrupt_handler_intx, IRQF_SHARED,
--		pm8001_ha->name, SHOST_TO_SAS_HA(pm8001_ha->shost));
--	return rc;
++	pm8001_init_tasklet(pm8001_ha);
 +
-+	return request_irq(pdev->irq, pm8001_interrupt_handler_intx,
-+			   IRQF_SHARED, pm8001_ha->name,
-+			   SHOST_TO_SAS_HA(pm8001_ha->shost));
- }
- 
- /**
+ 	PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, 0);
+ 	if (pm8001_ha->chip_id != chip_8001) {
+ 		for (i = 1; i < pm8001_ha->number_of_intr; i++)
 -- 
 2.41.0
 
