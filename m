@@ -2,118 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF85EE3F08
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3C79EE3F05
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237048AbjIKUu5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 16:50:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42426 "EHLO
+        id S233250AbjIKUvA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 16:51:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237504AbjIKMyd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 08:54:33 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95F19E4B;
-        Mon, 11 Sep 2023 05:54:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694436869; x=1725972869;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=RKVN1bWO+6tJ6WlmxsOXbk1vq7oGMYXcJ+RHQjqKcpI=;
-  b=bUWitqMHJGU633zc/Q/sIHhMdeFHAvfs/B8VP5XJ6il1JBZefbVulsxG
-   fA00ac7Cnc/s2hzzvrtjBvHQ3abVM59iirsEfL44JgMnVu6E8DVTJ4YTY
-   aBqVxCFXyX9ZGPjAd/NlthlVSiv6WkggN8i4buRyBOEP7NGwdxvPoGxAQ
-   OwUqoudOJJ4x44nqUCJPy+vDr3jbUo9uSehQSSHUlmmBcws646fMBOMX/
-   98LC0B5OOerAZ/G6LP/Mp2YRY4UVMiox4xMS7d9fPR3z7eJfSOCRM0UDg
-   VxgSX5Qc2qeDjwjgj1kx6ibvN5N1OLjQg0I3nksP9OQY8E2fQVwvOFDkb
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="357511221"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="357511221"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858304289"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="858304289"
-Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:23 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org, Chas Williams <3chas3@gmail.com>,
-        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     brking@us.ibm.com, dalias@libc.org, glaubitz@physik.fu-berlin.de,
-        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, kw@linux.com,
-        linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
-        lpieralisi@kernel.org, martin.petersen@oracle.com,
-        mattst88@gmail.com, richard.henderson@linaro.org,
-        toan@os.amperecomputing.com, ysato@users.sourceforge.jp,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v3 3/6] atm: iphase: Do PCI error checks on own line
-Date:   Mon, 11 Sep 2023 15:53:51 +0300
-Message-Id: <20230911125354.25501-4-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
-References: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S235356AbjIKI2R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 04:28:17 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34FC8FB
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 01:28:11 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id 4fb4d7f45d1cf-52bcd4db4cbso5199289a12.1
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 01:28:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1694420889; x=1695025689; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YBxIxDBPX2uE4bhwMr4vV3mzF4qpVG8rCPy6CtitBO4=;
+        b=jEKxd9edzah7j7EDVgWbhAucH3WVsLNYo60IZQ1MvRGez96AWwUrJAi/BqFJDhrfg8
+         tNTVL4fnkDCIShyVzSLlYXS+S2nE4RqS39uPVsRUiTxylpZTlvRFRgc/JjkX2RB1QSlp
+         pFmxJ57wSxS8l1oSx2vYcbp8Ep5JfUeh2RrDFNcyFlRltKrgF6DkR0On9mhK4ydWyzSo
+         8cF2KwLxhAELSLeTbiTTkS8G4b4bzwjmbqLjjWUNfwsakv1pr1sh0zbmy8eT8HiM7rDu
+         d+nW1o6NnYBpsiTcEoON87XjZWPFzh+dPcAvCaoxnl4fwynWTq0i4tbhy4O8d8c55dii
+         Fl6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694420889; x=1695025689;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=YBxIxDBPX2uE4bhwMr4vV3mzF4qpVG8rCPy6CtitBO4=;
+        b=PZp+j1fhU4DIpP2V/YWEXPZRDF/otYBHlzXhZ4E9NWsBge/h7XJhJKIwDGW0r6iGYi
+         q7OSXku2dwoEyu5ep0JcIl+irfingnhqT0FMBd0RJv4JuimoTzxRvGy7OhjSW7NleAwa
+         ldx973MhoybfUao+zGBxD1v8icxj82XMFZAsJlP02pabOIGylcV1+LVqJgVUTry4yTnO
+         1Y/WfRAGc92ITlh2w6C9CRtwXPQATf+qlQygh5/6A7+zrzF5tbKeXtCB/7cAeJ2uWpDc
+         1/VqYLklVq88Z8Eihxm1ud09Uk+C7Y++WI/AEzH711Di13hNlj/eIl7z/w0g7qG9B1Ve
+         7oYw==
+X-Gm-Message-State: AOJu0YzEvnx3IsZx9PXFa7JVWrsGD3pBd1ia2IcHqjS30e/tGnrSFDoD
+        SXfjpChfuGODnrsnn0T4yShzNJdQsHi/HQ5jRWphErkNC9fRUXkPn48=
+X-Google-Smtp-Source: AGHT+IHszTxyQyEAdAC4oLjOHzyZvzcPxVVDhxQDlDiSQrzAaYli4cCufb3eqDnYWirIeLCBj1B49LA8AHEAx7lmpnw=
+X-Received: by 2002:a05:6402:138d:b0:523:1ce9:1f41 with SMTP id
+ b13-20020a056402138d00b005231ce91f41mr6895754edv.18.1694420889633; Mon, 11
+ Sep 2023 01:28:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20230911030207.242917-1-dlemoal@kernel.org>
+In-Reply-To: <20230911030207.242917-1-dlemoal@kernel.org>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Mon, 11 Sep 2023 10:27:58 +0200
+Message-ID: <CAMGffEk5ALBPpAUay5v73t4Tp8tE4rDfqoFURZjHQn3_vvNpjw@mail.gmail.com>
+Subject: Re: [PATCH 00/10] scsi: pm8001: Bug fix and cleanup
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In get_esi() PCI errors are checked inside line-split if conditions (in
-addition to the file not following the coding style). To make the code
-in get_esi() more readable, fix the coding style and use the usual
-error handling pattern with a separate variable.
+On Mon, Sep 11, 2023 at 5:02=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org>=
+ wrote:
+>
+> The first patch of this series fixes an issue with IRQ setup which
+> prevents the controller from resuming after a system suspend.
+> The following patches are code cleanup without any functional changes.
+>
+> Damien Le Moal (10):
+>   scsi: pm8001: Setup IRQs on resume
+>   scsi: pm8001: Introduce pm8001_free_irq()
+>   scsi: pm8001: Introduce pm8001_init_tasklet()
+>   scsi: pm8001: Introduce pm8001_kill_tasklet()
+>   scsi: pm8001: Introduce pm8001_handle_irq()
+>   scsi: pm8001: Simplify pm8001_chip_interrupt_enable/disable()
+>   scsi: pm8001: Remove pm80xx_chip_intx_interrupt_enable/disable()
+>   scsi: pm8001: Remove PM8001_USE_MSIX
+>   scsi: pm8001: Remove PM8001_USE_TASKLET
+>   scsi: pm8001: Remove PM8001_READ_VPD
+>
+>  drivers/scsi/pm8001/pm8001_hwi.c  |  89 ++-------
+>  drivers/scsi/pm8001/pm8001_init.c | 322 +++++++++++++++---------------
+>  drivers/scsi/pm8001/pm8001_sas.h  |  11 +-
+>  drivers/scsi/pm8001/pm80xx_hwi.c  |  59 ++----
+>  4 files changed, 202 insertions(+), 279 deletions(-)
+>
+> --
+> 2.41.0
+>
+Thanks for the patchset.
 
-In addition, initialization of 'error' variable at declaration is not
-needed.
-
-No function changes intended.
-
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/atm/iphase.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/atm/iphase.c b/drivers/atm/iphase.c
-index 324148686953..9bba8f280a4d 100644
---- a/drivers/atm/iphase.c
-+++ b/drivers/atm/iphase.c
-@@ -2291,19 +2291,21 @@ static int get_esi(struct atm_dev *dev)
- static int reset_sar(struct atm_dev *dev)  
- {  
- 	IADEV *iadev;  
--	int i, error = 1;  
-+	int i, error;
- 	unsigned int pci[64];  
- 	  
- 	iadev = INPH_IA_DEV(dev);  
--	for(i=0; i<64; i++)  
--	  if ((error = pci_read_config_dword(iadev->pci,  
--				i*4, &pci[i])) != PCIBIOS_SUCCESSFUL)  
--  	      return error;  
-+	for (i = 0; i < 64; i++) {
-+		error = pci_read_config_dword(iadev->pci, i * 4, &pci[i]);
-+		if (error != PCIBIOS_SUCCESSFUL)
-+			return error;
-+	}
- 	writel(0, iadev->reg+IPHASE5575_EXT_RESET);  
--	for(i=0; i<64; i++)  
--	  if ((error = pci_write_config_dword(iadev->pci,  
--					i*4, pci[i])) != PCIBIOS_SUCCESSFUL)  
--	    return error;  
-+	for (i = 0; i < 64; i++) {
-+		error = pci_write_config_dword(iadev->pci, i * 4, pci[i]);
-+		if (error != PCIBIOS_SUCCESSFUL)
-+			return error;
-+	}
- 	udelay(5);  
- 	return 0;  
- }  
--- 
-2.30.2
-
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
