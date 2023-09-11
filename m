@@ -2,283 +2,137 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC9E5EE801F
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:41:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E99D0EE57DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:43:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234320AbjIKGl0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 02:41:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52174 "EHLO
+        id S233479AbjIKGnE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 02:43:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjIKGl0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:41:26 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6363BB5;
-        Sun, 10 Sep 2023 23:41:21 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 248811F460;
-        Mon, 11 Sep 2023 06:41:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1694414480; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Su9H5zW8IqgJyVM3r/PxezJPyIArPc5Mx29bWyzN9Eg=;
-        b=hJrx8MqBXznE2k19M9WZ1JivWlJ3+4z4UJ6pCttlc/PmaXtnJqAxNQf6Nl8BjSZJPki25N
-        YeK/wj6jFSONXXM9P2Qhxp990Ffa08X48VqcDQpahSIwNiQlW1ts7mtLEKkWiImSBIjFBs
-        iLsC/Xy1MzJ+l+EKc1xzKC+gamKAhQg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1694414480;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Su9H5zW8IqgJyVM3r/PxezJPyIArPc5Mx29bWyzN9Eg=;
-        b=Afdvs+emtL29I+JjcrK78nKp0IG0rnLH4B/M45418HzD7BeB/jru/68eSI5wbbj7NMmR9w
-        6s7EkcEBlHyETmDw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DDBE213780;
-        Mon, 11 Sep 2023 06:41:19 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id VvGVM4+2/mQpTAAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 11 Sep 2023 06:41:19 +0000
-Message-ID: <e8ca70d1-9c88-4a80-83e4-a65f4bbe6b72@suse.de>
-Date:   Mon, 11 Sep 2023 08:41:19 +0200
+        with ESMTP id S232031AbjIKGnE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:43:04 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 073E5126;
+        Sun, 10 Sep 2023 23:42:59 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38B6HBSq025874;
+        Mon, 11 Sep 2023 06:42:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=mJgaCC6bHfC3tt0UFE/W3pn4k1iUQh7kxD9oPUUTjsg=;
+ b=KlEIA3kf/sQl6BA1EfUZN/3zokEdypmWbHJv3SeUGGCaidmXghs0zll6Uzx8Og6HDzI0
+ fEIPnTmxDT7vWIojsa4JLvPkq4nGJV3yfcVZPvs2X/yhAORFWtkxiXA+fNEWNF9cU0rr
+ fYKtjvs+Uk4qSBzuIq+afuzu5Aq+Tyjdq1GAl9iUx8r3rFxZ67leVubnpTazQQ8Txt8v
+ NPlrxZGy/dMFkEgpTC6npqVoOzbZ9CaO7N0nukNCR1pC+kNvH6mWPNDYM+lmEK0X77jV
+ Js4JnKpzrDh7nxQdgGgWjc3icCA2oQ27i4HYFiA22Je/wR9U+uHTbptq1opCQ0uifoDt 9w== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t0h3dtnt8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 06:42:52 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38B6gp1o030227
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 06:42:51 GMT
+Received: from [10.253.14.78] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Sun, 10 Sep
+ 2023 23:42:48 -0700
+Message-ID: <b16aa25f-5cb9-4afa-e884-cb60c0aa1268@quicinc.com>
+Date:   Mon, 11 Sep 2023 14:42:46 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/19] ata: libata-scsi: link ata port and scsi device
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Subject: Re: [PATCH V8 0/5] scsi: ufs: qcom: Align programming sequence as per
+ HW spec
+To:     Nitin Rawat <quic_nitirawa@quicinc.com>, <mani@kernel.org>,
+        <agross@kernel.org>, <andersson@kernel.org>,
+        <konrad.dybcio@linaro.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <quic_nguyenb@quicinc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+References: <20230905052400.13935-1-quic_nitirawa@quicinc.com>
 Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-4-dlemoal@kernel.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230911040217.253905-4-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <20230905052400.13935-1-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: l9KVxlKX2RUg-z-VEGXwihnJMVaWJDOR
+X-Proofpoint-ORIG-GUID: l9KVxlKX2RUg-z-VEGXwihnJMVaWJDOR
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-11_03,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ bulkscore=0 phishscore=0 mlxlogscore=668 adultscore=0 spamscore=0
+ suspectscore=0 impostorscore=0 malwarescore=0 mlxscore=0
+ lowpriorityscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2308100000 definitions=main-2309110060
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/11/23 06:02, Damien Le Moal wrote:
-> There is no direct device ancestry defined between an ata_device and
-> its scsi device which prevents the power management code from correctly
-> ordering suspend and resume operations. Create such ancestry with the
-> ata device as the parent to ensure that the scsi device (child) is
-> suspended before the ata device and that resume handles the ata device
-> before the scsi device.
-> 
-> The parent-child (supplier-consumer) relationship is established between
-> the ata_port (parent) and the scsi device (child) with the function
-> device_add_link(). The parent used is not the ata_device as the PM
-> operations are defined per port and the status of all devices connected
-> through that port is controlled from the port operations.
-> 
-> The device link is established with the new function
-> ata_scsi_dev_alloc(). This function is used to define the ->slave_alloc
-> callback of the scsi host template of most drivers.
-> 
-> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/ata/libata-scsi.c | 46 ++++++++++++++++++++++++++++++++++-----
->   drivers/ata/libata.h      |  1 +
->   drivers/ata/pata_macio.c  |  1 +
->   drivers/ata/sata_mv.c     |  1 +
->   drivers/ata/sata_nv.c     |  2 ++
->   drivers/ata/sata_sil24.c  |  1 +
->   include/linux/libata.h    |  3 +++
->   7 files changed, 50 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index d3f28b82c97b..f63cf6e7332e 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1089,6 +1089,45 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
->   	return 0;
->   }
->   
-> +int ata_scsi_dev_alloc(struct scsi_device *sdev, struct ata_port *ap)
-> +{
-> +	struct device_link *link;
-> +
-> +	ata_scsi_sdev_config(sdev);
-> +
-> +	/*
-> +	 * Create a link from the ata_port device to the scsi device to ensure
-> +	 * that PM does suspend/resume in the correct order: the scsi device is
-> +	 * consumer (child) and the ata port the supplier (parent).
-> +	 */
-> +	link = device_link_add(&sdev->sdev_gendev, &ap->tdev,
-> +			       DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
-> +	if (!link) {
-> +		ata_port_err(ap, "Failed to create link to scsi device %s\n",
-> +			     dev_name(&sdev->sdev_gendev));
-> +		return -ENODEV;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + *	ata_scsi_slave_alloc - Early setup of SCSI device
-> + *	@sdev: SCSI device to examine
-> + *
-> + *	This is called from scsi_alloc_sdev() when the scsi device
-> + *	associated with an ATA device is scanned on a port.
-> + *
-> + *	LOCKING:
-> + *	Defined by SCSI layer.  We don't really care.
-> + */
-> +
-> +int ata_scsi_slave_alloc(struct scsi_device *sdev)
-> +{
-> +	return ata_scsi_dev_alloc(sdev, ata_shost_to_port(sdev->host));
-> +}
-> +EXPORT_SYMBOL_GPL(ata_scsi_slave_alloc);
-> +
->   /**
->    *	ata_scsi_slave_config - Set SCSI device attributes
->    *	@sdev: SCSI device to examine
-> @@ -1105,14 +1144,11 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
->   {
->   	struct ata_port *ap = ata_shost_to_port(sdev->host);
->   	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
-> -	int rc = 0;
-> -
-> -	ata_scsi_sdev_config(sdev);
->   
->   	if (dev)
-> -		rc = ata_scsi_dev_config(sdev, dev);
-> +		return ata_scsi_dev_config(sdev, dev);
->   
-> -	return rc;
-> +	return 0;
->   }
->   EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
->   
-> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-> index 6e7d352803bd..079981e7156a 100644
-> --- a/drivers/ata/libata.h
-> +++ b/drivers/ata/libata.h
-> @@ -111,6 +111,7 @@ extern struct ata_device *ata_scsi_find_dev(struct ata_port *ap,
->   extern int ata_scsi_add_hosts(struct ata_host *host,
->   			      const struct scsi_host_template *sht);
->   extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
-> +extern int ata_scsi_dev_alloc(struct scsi_device *sdev, struct ata_port *ap);
->   extern int ata_scsi_offline_dev(struct ata_device *dev);
->   extern bool ata_scsi_sense_is_valid(u8 sk, u8 asc, u8 ascq);
->   extern void ata_scsi_set_sense(struct ata_device *dev,
-> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-> index 17f6ccee53c7..32968b4cf8e4 100644
-> --- a/drivers/ata/pata_macio.c
-> +++ b/drivers/ata/pata_macio.c
-> @@ -918,6 +918,7 @@ static const struct scsi_host_template pata_macio_sht = {
->   	 * use 64K minus 256
->   	 */
->   	.max_segment_size	= MAX_DBDMA_SEG,
-> +	.slave_alloc		= ata_scsi_slave_alloc,
->   	.slave_configure	= pata_macio_slave_config,
->   	.sdev_groups		= ata_common_sdev_groups,
->   	.can_queue		= ATA_DEF_QUEUE,
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index d105db5c7d81..353ac7b2f14a 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -673,6 +673,7 @@ static const struct scsi_host_template mv6_sht = {
->   	.sdev_groups		= ata_ncq_sdev_groups,
->   	.change_queue_depth	= ata_scsi_change_queue_depth,
->   	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
-> +	.slave_alloc		= ata_scsi_slave_alloc,
->   	.slave_configure	= ata_scsi_slave_config
->   };
->   
-> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-> index 0a0cee755bde..5428dc2ec5e3 100644
-> --- a/drivers/ata/sata_nv.c
-> +++ b/drivers/ata/sata_nv.c
-> @@ -380,6 +380,7 @@ static const struct scsi_host_template nv_adma_sht = {
->   	.can_queue		= NV_ADMA_MAX_CPBS,
->   	.sg_tablesize		= NV_ADMA_SGTBL_TOTAL_LEN,
->   	.dma_boundary		= NV_ADMA_DMA_BOUNDARY,
-> +	.slave_alloc		= ata_scsi_slave_alloc,
->   	.slave_configure	= nv_adma_slave_config,
->   	.sdev_groups		= ata_ncq_sdev_groups,
->   	.change_queue_depth     = ata_scsi_change_queue_depth,
-> @@ -391,6 +392,7 @@ static const struct scsi_host_template nv_swncq_sht = {
->   	.can_queue		= ATA_MAX_QUEUE - 1,
->   	.sg_tablesize		= LIBATA_MAX_PRD,
->   	.dma_boundary		= ATA_DMA_BOUNDARY,
-> +	.slave_alloc		= ata_scsi_slave_alloc,
->   	.slave_configure	= nv_swncq_slave_config,
->   	.sdev_groups		= ata_ncq_sdev_groups,
->   	.change_queue_depth     = ata_scsi_change_queue_depth,
-> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-> index 142e70bfc498..e0b1b3625031 100644
-> --- a/drivers/ata/sata_sil24.c
-> +++ b/drivers/ata/sata_sil24.c
-> @@ -381,6 +381,7 @@ static const struct scsi_host_template sil24_sht = {
->   	.tag_alloc_policy	= BLK_TAG_ALLOC_FIFO,
->   	.sdev_groups		= ata_ncq_sdev_groups,
->   	.change_queue_depth	= ata_scsi_change_queue_depth,
-> +	.slave_alloc		= ata_scsi_slave_alloc,
->   	.slave_configure	= ata_scsi_slave_config
->   };
->   
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 52d58b13e5ee..c8cfea386c16 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1144,6 +1144,7 @@ extern int ata_std_bios_param(struct scsi_device *sdev,
->   			      struct block_device *bdev,
->   			      sector_t capacity, int geom[]);
->   extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
-> +extern int ata_scsi_slave_alloc(struct scsi_device *sdev);
->   extern int ata_scsi_slave_config(struct scsi_device *sdev);
->   extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
->   extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
-> @@ -1401,12 +1402,14 @@ extern const struct attribute_group *ata_common_sdev_groups[];
->   	__ATA_BASE_SHT(drv_name),				\
->   	.can_queue		= ATA_DEF_QUEUE,		\
->   	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,		\
-> +	.slave_alloc		= ata_scsi_slave_alloc,		\
->   	.slave_configure	= ata_scsi_slave_config
->   
->   #define ATA_SUBBASE_SHT_QD(drv_name, drv_qd)			\
->   	__ATA_BASE_SHT(drv_name),				\
->   	.can_queue		= drv_qd,			\
->   	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,		\
-> +	.slave_alloc		= ata_scsi_slave_alloc,		\
->   	.slave_configure	= ata_scsi_slave_config
->   
->   #define ATA_BASE_SHT(drv_name)					\
-I do understand the rationale here, as the relationship between ata port 
-and scsi devices are blurred. Question is: blurred by what?
-Is it the libata/SAS duality where SCSI devices will have a different
-ancestry for libata and libsas?
-If so, why don't we need the 'link' mechanism for SAS?
-Or is it something else?
+On 9/5/2023 1:23 PM, Nitin Rawat wrote:
+> This patch series adds programming support for Qualcomm UFS V4 and above
+> to align avoid with Hardware Specification. This patch series will address
+> stability and performance issues.
+>
+> In this patch series below changes are taken care.
+>
+> 1) Register layout for DME_VS_CORE_CLK_CTRL has changed for v4 and above.
+> 2) Adds Support to configure PA_VS_CORE_CLK_40NS_CYCLES attibute for UFS V4
+>     and above.
+> 3) Adds Support to configure multiple unipro frequencies like 403MHz,
+>     300MHz, 202MHz, 150 MHz, 75Mhz, 37.5 MHz for Qualcomm UFS Controller V4
+>     and above.
+> 4) Allow configuration of SYS1CLK_1US_REG for UFS V4 and above.
+>
+> Changes From v7:
+> - Fix the compilation error for kernel doc
+>
+> Changes from v6:
+> - Addressed bjorn comment to optimize the code.
+> - Addressed bjorn comment to update commit message
+> - removed clean up part related for clk div configuration comapared to v6
+>
+> changes from v5:
+> - Addressed Mani comment to FIELD_PREP and FIELD_FIT.
+> - Optimised ufs_qcom_set_core_clk_ctrl API.
+> - Updated commit text for few patches to capture more details.
+>
+> Changes from v4:
+> - Addressed bjorn comment to split single patch to multiple patches.
+>
+> Changes from v3:
+> -Addressed bjorn comment to update commit msg to capture change details.
+>
+> Changes from v2:
+> - Addressed bao comment, removed duplicate clock timer cfg API call
+>
+> Changes from v1:
+> - Addressed bao comment, removed wrapper function
+> - Tab alignment
+>
+> Nitin Rawat (5):
+>    scsi: ufs: qcom: Update MAX_CORE_CLK_1US_CYCLES for UFS V4 and above
+>    scsi: ufs: qcom: Add multiple frequency support for
+>      MAX_CORE_CLK_1US_CYCLES
+>    scsi: ufs: qcom: Add support to Configure PA_VS_CORE_CLK_40NS_CYCLES
+>    scsi: ufs: qcom: Align programing of unipro clk attributes
+>    scsi: ufs: qcom: Configure SYS1CLK_1US_REG for UFS V4 and above
+>
+>   drivers/ufs/host/ufs-qcom.c | 202 ++++++++++++++++++++++++++++--------
+>   drivers/ufs/host/ufs-qcom.h |  18 +++-
+>   2 files changed, 175 insertions(+), 45 deletions(-)
+>
+> --
+> 2.17.1
 
-Cheers,
+To the whole series -
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+Reviewed-by: Can Guo <quic_cang@quicinc.com>
 
