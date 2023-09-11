@@ -2,106 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C9AAEE3F01
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7050EE3F07
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234358AbjIKUvI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 16:51:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40442 "EHLO
+        id S235004AbjIKUvL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 16:51:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237500AbjIKMy1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 08:54:27 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B8C3E4B;
-        Mon, 11 Sep 2023 05:54:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694436863; x=1725972863;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=tnx7Bflw7Y/aVGaG8EH0QBwqdgCKqxJb3mqsR3QL2Es=;
-  b=ipEenqZC/TbR4sspeEDz6DPiQH7eglzBAWTy0KtnvVno1wIb3IcZwGVF
-   DKpIwFdkeEE69H+yFAS/CCiPo+fo1RBXedZLPzxwoGljadGaS1+6X7nww
-   pqgxpsAGh1lsefVbii/JgN+YTZrl9yHpx2nsOxHk1lKG0P4ZOwHejMRog
-   3PSLllKj9S8VP/FRe0uNvWmbRQ0XQGlXKdodzbxGwnJVCp4xdH+EPRaf0
-   vYflbBgSCp/6FI68vcXa0nag3ewDsJ30f3BpYwscO3fOXBaEqYHtA5sGY
-   18ZMdCGXNe3RLXARK4SowECS1R+TFL+vPVr3HCwSLAA8gbDIprvj/c8kJ
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="357511201"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="357511201"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:22 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858304223"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="858304223"
-Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:16 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-        linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     3chas3@gmail.com, brking@us.ibm.com, ink@jurassic.park.msu.ru,
-        jejb@linux.ibm.com, kw@linux.com, linux-alpha@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-atm-general@lists.sourceforge.net,
-        linux-scsi@vger.kernel.org, lpieralisi@kernel.org,
-        martin.petersen@oracle.com, mattst88@gmail.com,
-        netdev@vger.kernel.org, richard.henderson@linaro.org,
-        toan@os.amperecomputing.com,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v3 2/6] sh: pci: Do PCI error check on own line
-Date:   Mon, 11 Sep 2023 15:53:50 +0300
-Message-Id: <20230911125354.25501-3-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
-References: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S239258AbjIKOPw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 10:15:52 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BFC1DE;
+        Mon, 11 Sep 2023 07:15:48 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CA03C433C9;
+        Mon, 11 Sep 2023 14:15:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1694441748;
+        bh=8uCFW7lYB/gsfNLN2r0tDYE3nhVcCCP5zKe+9i/YvlI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=i/cPLhiMoTX0Rz5bzWCh4q8S5MWgpqgjHavVsMri1lJpJxjw6zxQZ96fKZc/4hNqA
+         rhq8XIvgAOz0VPcvTvgKQj90v9YiYjK2Vat4SFonU3TfnyspuYMsd/GNoaOPxIJ63V
+         JktoTRXjy37HPJUteR/vLGdlHmSwLDzGwqi052eU=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     stable@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        patches@lists.linux.dev, Saurav Kashyap <skashyap@marvell.com>,
+        Rob Evers <revers@redhat.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        David Laight <David.Laight@ACULAB.COM>,
+        Jozef Bacik <jobacik@redhat.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Oleksandr Natalenko <oleksandr@redhat.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 6.5 496/739] scsi: qedf: Do not touch __user pointer in qedf_dbg_debug_cmd_read() directly
+Date:   Mon, 11 Sep 2023 15:44:55 +0200
+Message-ID: <20230911134704.979777082@linuxfoundation.org>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20230911134650.921299741@linuxfoundation.org>
+References: <20230911134650.921299741@linuxfoundation.org>
+User-Agent: quilt/0.67
+X-stable: review
+X-Patchwork-Hint: ignore
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of a if condition with a line split, use the usual error
-handling pattern with a separate variable to improve readability.
+6.5-stable review patch.  If anyone has any objections, please let me know.
 
-No functional changes intended.
+------------------
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Acked-by: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+From: Oleksandr Natalenko <oleksandr@redhat.com>
+
+[ Upstream commit 31b5991a9a91ba97237ac9da509d78eec453ff72 ]
+
+The qedf_dbg_debug_cmd_read() function invokes sprintf() directly on a
+__user pointer, which may crash the kernel.
+
+Avoid doing that by using a small on-stack buffer for scnprintf() and then
+calling simple_read_from_buffer() which does a proper copy_to_user() call.
+
+Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Link: https://lore.kernel.org/lkml/20230724120241.40495-1-oleksandr@redhat.com/
+Link: https://lore.kernel.org/linux-scsi/20230726101236.11922-1-skashyap@marvell.com/
+Cc: Saurav Kashyap <skashyap@marvell.com>
+Cc: Rob Evers <revers@redhat.com>
+Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: David Laight <David.Laight@ACULAB.COM>
+Cc: Jozef Bacik <jobacik@redhat.com>
+Cc: Laurence Oberman <loberman@redhat.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: GR-QLogic-Storage-Upstream@marvell.com
+Cc: linux-scsi@vger.kernel.org
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Tested-by: Laurence Oberman <loberman@redhat.com>
+Acked-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Oleksandr Natalenko <oleksandr@redhat.com>
+Link: https://lore.kernel.org/r/20230731084034.37021-3-oleksandr@redhat.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- arch/sh/drivers/pci/common.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/qedf/qedf_debugfs.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/arch/sh/drivers/pci/common.c b/arch/sh/drivers/pci/common.c
-index 2fd2b77e12ce..f59e5b9a6a80 100644
---- a/arch/sh/drivers/pci/common.c
-+++ b/arch/sh/drivers/pci/common.c
-@@ -53,15 +53,16 @@ int __init pci_is_66mhz_capable(struct pci_channel *hose,
- 	unsigned short vid;
- 	int cap66 = -1;
- 	u16 stat;
-+	int ret;
+diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
+index 3eb4334ac6a32..1c5716540e465 100644
+--- a/drivers/scsi/qedf/qedf_debugfs.c
++++ b/drivers/scsi/qedf/qedf_debugfs.c
+@@ -138,15 +138,14 @@ qedf_dbg_debug_cmd_read(struct file *filp, char __user *buffer, size_t count,
+ 			loff_t *ppos)
+ {
+ 	int cnt;
++	char cbuf[32];
+ 	struct qedf_dbg_ctx *qedf_dbg =
+ 				(struct qedf_dbg_ctx *)filp->private_data;
  
- 	pr_info("PCI: Checking 66MHz capabilities...\n");
+ 	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "debug mask=0x%x\n", qedf_debug);
+-	cnt = sprintf(buffer, "debug mask = 0x%x\n", qedf_debug);
++	cnt = scnprintf(cbuf, sizeof(cbuf), "debug mask = 0x%x\n", qedf_debug);
  
- 	for (pci_devfn = 0; pci_devfn < 0xff; pci_devfn++) {
- 		if (PCI_FUNC(pci_devfn))
- 			continue;
--		if (early_read_config_word(hose, top_bus, current_bus,
--					   pci_devfn, PCI_VENDOR_ID, &vid) !=
--		    PCIBIOS_SUCCESSFUL)
-+		ret = early_read_config_word(hose, top_bus, current_bus,
-+					     pci_devfn, PCI_VENDOR_ID, &vid);
-+		if (ret != PCIBIOS_SUCCESSFUL)
- 			continue;
- 		if (vid == 0xffff)
- 			continue;
+-	cnt = min_t(int, count, cnt - *ppos);
+-	*ppos += cnt;
+-	return cnt;
++	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
+ }
+ 
+ static ssize_t
 -- 
-2.30.2
+2.40.1
+
+
 
