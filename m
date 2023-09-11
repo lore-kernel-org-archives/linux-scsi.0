@@ -2,137 +2,140 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E99D0EE57DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:43:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB69FEE801F
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:44:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233479AbjIKGnE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 02:43:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43422 "EHLO
+        id S234474AbjIKGoW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 02:44:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232031AbjIKGnE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:43:04 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 073E5126;
-        Sun, 10 Sep 2023 23:42:59 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38B6HBSq025874;
-        Mon, 11 Sep 2023 06:42:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=mJgaCC6bHfC3tt0UFE/W3pn4k1iUQh7kxD9oPUUTjsg=;
- b=KlEIA3kf/sQl6BA1EfUZN/3zokEdypmWbHJv3SeUGGCaidmXghs0zll6Uzx8Og6HDzI0
- fEIPnTmxDT7vWIojsa4JLvPkq4nGJV3yfcVZPvs2X/yhAORFWtkxiXA+fNEWNF9cU0rr
- fYKtjvs+Uk4qSBzuIq+afuzu5Aq+Tyjdq1GAl9iUx8r3rFxZ67leVubnpTazQQ8Txt8v
- NPlrxZGy/dMFkEgpTC6npqVoOzbZ9CaO7N0nukNCR1pC+kNvH6mWPNDYM+lmEK0X77jV
- Js4JnKpzrDh7nxQdgGgWjc3icCA2oQ27i4HYFiA22Je/wR9U+uHTbptq1opCQ0uifoDt 9w== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t0h3dtnt8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Sep 2023 06:42:52 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38B6gp1o030227
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Sep 2023 06:42:51 GMT
-Received: from [10.253.14.78] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Sun, 10 Sep
- 2023 23:42:48 -0700
-Message-ID: <b16aa25f-5cb9-4afa-e884-cb60c0aa1268@quicinc.com>
-Date:   Mon, 11 Sep 2023 14:42:46 +0800
+        with ESMTP id S232031AbjIKGoV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:44:21 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9722F120;
+        Sun, 10 Sep 2023 23:44:17 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1724FC433CA;
+        Mon, 11 Sep 2023 06:44:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694414657;
+        bh=BDtbK6skN/ze3p/6RlCNM57CdgzOGLa77e0zwF/NxHo=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=Tf8hBGkH4iSJC8ZGDF/62JApX9eZmV4gab645I5Oi8HIIcxKxrdsdYAK1SreH9VPd
+         qrd+C89V2p2KgMflIUnc4aGz4o+YsEPExVl4x3drrEMFMwF43OATwGFTIA32mTzWx8
+         ESwSdrPgptWSvM+0q8GsSQMWBTNNYA84Xr086TmLAPCDiwXG3TK+RY0VNZVpteF5ay
+         LBRekNDBt/Tt2yVozf/zsbuSkXG66OySDlDyqHeTFkpPFhrDUzDUElmVW5ajTUYci4
+         B4EfvMIPVT1gE4Pmrrg7oT4q5RPUfuRJuorfgKb6b0S/a2194doCOtEaZnjqtLqbuu
+         hb9iDb3dZlTKg==
+Message-ID: <db4e461c-d797-fb76-7d97-e38d3640de89@kernel.org>
+Date:   Mon, 11 Sep 2023 15:44:15 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [PATCH V8 0/5] scsi: ufs: qcom: Align programming sequence as per
- HW spec
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>, <mani@kernel.org>,
-        <agross@kernel.org>, <andersson@kernel.org>,
-        <konrad.dybcio@linaro.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <quic_nguyenb@quicinc.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
-References: <20230905052400.13935-1-quic_nitirawa@quicinc.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH 02/19] ata: libata-core: Fix port and device removal
 Content-Language: en-US
-From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20230905052400.13935-1-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: l9KVxlKX2RUg-z-VEGXwihnJMVaWJDOR
-X-Proofpoint-ORIG-GUID: l9KVxlKX2RUg-z-VEGXwihnJMVaWJDOR
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-11_03,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- bulkscore=0 phishscore=0 mlxlogscore=668 adultscore=0 spamscore=0
- suspectscore=0 impostorscore=0 malwarescore=0 mlxscore=0
- lowpriorityscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2308100000 definitions=main-2309110060
+To:     Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+References: <20230911040217.253905-1-dlemoal@kernel.org>
+ <20230911040217.253905-3-dlemoal@kernel.org>
+ <add77796-ff0f-4311-8c4d-6597695e89ed@suse.de>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <add77796-ff0f-4311-8c4d-6597695e89ed@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/5/2023 1:23 PM, Nitin Rawat wrote:
-> This patch series adds programming support for Qualcomm UFS V4 and above
-> to align avoid with Hardware Specification. This patch series will address
-> stability and performance issues.
->
-> In this patch series below changes are taken care.
->
-> 1) Register layout for DME_VS_CORE_CLK_CTRL has changed for v4 and above.
-> 2) Adds Support to configure PA_VS_CORE_CLK_40NS_CYCLES attibute for UFS V4
->     and above.
-> 3) Adds Support to configure multiple unipro frequencies like 403MHz,
->     300MHz, 202MHz, 150 MHz, 75Mhz, 37.5 MHz for Qualcomm UFS Controller V4
->     and above.
-> 4) Allow configuration of SYS1CLK_1US_REG for UFS V4 and above.
->
-> Changes From v7:
-> - Fix the compilation error for kernel doc
->
-> Changes from v6:
-> - Addressed bjorn comment to optimize the code.
-> - Addressed bjorn comment to update commit message
-> - removed clean up part related for clk div configuration comapared to v6
->
-> changes from v5:
-> - Addressed Mani comment to FIELD_PREP and FIELD_FIT.
-> - Optimised ufs_qcom_set_core_clk_ctrl API.
-> - Updated commit text for few patches to capture more details.
->
-> Changes from v4:
-> - Addressed bjorn comment to split single patch to multiple patches.
->
-> Changes from v3:
-> -Addressed bjorn comment to update commit msg to capture change details.
->
-> Changes from v2:
-> - Addressed bao comment, removed duplicate clock timer cfg API call
->
-> Changes from v1:
-> - Addressed bao comment, removed wrapper function
-> - Tab alignment
->
-> Nitin Rawat (5):
->    scsi: ufs: qcom: Update MAX_CORE_CLK_1US_CYCLES for UFS V4 and above
->    scsi: ufs: qcom: Add multiple frequency support for
->      MAX_CORE_CLK_1US_CYCLES
->    scsi: ufs: qcom: Add support to Configure PA_VS_CORE_CLK_40NS_CYCLES
->    scsi: ufs: qcom: Align programing of unipro clk attributes
->    scsi: ufs: qcom: Configure SYS1CLK_1US_REG for UFS V4 and above
->
->   drivers/ufs/host/ufs-qcom.c | 202 ++++++++++++++++++++++++++++--------
->   drivers/ufs/host/ufs-qcom.h |  18 +++-
->   2 files changed, 175 insertions(+), 45 deletions(-)
->
-> --
-> 2.17.1
+On 9/11/23 15:37, Hannes Reinecke wrote:
+> On 9/11/23 06:02, Damien Le Moal wrote:
+>> Whenever an ATA adapter driver is removed (e.g. rmmod),
+>> ata_port_detach() is called repeatedly for all the adapter ports to
+>> remove (unload) the devices attached to the port and delete the port
+>> device itself. Removing of devices is done using libata EH with the
+>> ATA_PFLAG_UNLOADING port flag set. This causes libata EH to execute
+>> ata_eh_unload() which disables all devices attached to the port.
+>>
+>> ata_port_detach() finishes by calling scsi_remove_host() to remove the
+>> scsi host associated with the port. This function will trigger the
+>> removal of all scsi devices attached to the host and in the case of
+>> disks, calls to sd_shutdown() which will flush the device write cache
+>> and stop the device. However, given that the devices were already
+>> disabled by ata_eh_unload(), the synchronize write cache command and
+>> start stop unit commands fail. E.g. running "rmmod ahci" with first
+>> removing sd_mod results in error messages like:
+>>
+>> ata13.00: disable device
+>> sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>> sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result:
+>> hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+>> sd 0:0:0:0: [sda] Stopping disk
+>> sd 0:0:0:0: [sda] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET
+>> driverbyte=DRIVER_OK
+>>
+>> Fix this by removing all scsi devices of the ata devices connected to
+>> the port before scheduling libata EH to disable the ATA devices.
+>>
+>> Fixes: 720ba12620ee ("[PATCH] libata-hp: update unload-unplug")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>> ---
+>>   drivers/ata/libata-core.c | 21 ++++++++++++++++++++-
+>>   1 file changed, 20 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index c4898483d716..693cb3cd70cd 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -5952,11 +5952,30 @@ static void ata_port_detach(struct ata_port *ap)
+>>       struct ata_link *link;
+>>       struct ata_device *dev;
+>>   -    /* tell EH we're leaving & flush EH */
+>> +    /* Wait for any ongoing EH */
+>> +    ata_port_wait_eh(ap);
+>> +
+>> +    mutex_lock(&ap->scsi_scan_mutex);
+>>       spin_lock_irqsave(ap->lock, flags);
+>> +
+>> +    /* Remove scsi devices */
+>> +    ata_for_each_link(link, ap, HOST_FIRST) {
+>> +        ata_for_each_dev(dev, link, ALL) {
+>> +            if (dev->sdev) {
+>> +                spin_unlock_irqrestore(ap->lock, flags);
+>> +                scsi_remove_device(dev->sdev);
+>> +                spin_lock_irqsave(ap->lock, flags);
+>> +                dev->sdev = NULL;
+>> +            }
+>> +        }
+>> +    }
+>> +
+>> +    /* Tell EH to disable all devices */
+>>       ap->pflags |= ATA_PFLAG_UNLOADING;
+>>       ata_port_schedule_eh(ap);
+>> +
+>>       spin_unlock_irqrestore(ap->lock, flags);
+>> +    mutex_unlock(&ap->scsi_scan_mutex);
+>>   
+> Are you sure about releasing scan_mutex after ata_port_schedule_eh()?
+> Technically ata_port_schedule_eh() will be calling into SCSI rescan, which
+> would take scan_mutex ...
+> Not that it matter much, seeing that we've disconnected all devices, but still ...
 
-To the whole series -
+UNLOADING is set and in that case, EH does nothing else than removing the
+devices. So I think this is OK.
 
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
+> 
+> Cheers,
+> 
+> Hannes
+
+-- 
+Damien Le Moal
+Western Digital Research
 
