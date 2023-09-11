@@ -2,130 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C1BEE3F00
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 117D3EE3F0E
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237144AbjIKUvY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S237193AbjIKUvY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 11 Sep 2023 16:51:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45158 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235856AbjIKJmY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 05:42:24 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FE8D102;
-        Mon, 11 Sep 2023 02:42:20 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38B7YVST007689;
-        Mon, 11 Sep 2023 09:42:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=65meyQ02zDJ9RS5oezOgVlLzi+P4MnDTHmSa6k7EHu0=;
- b=pVLzyEa/3g63V1aOUyiIGR26qGeABWEclQKIS8AtllhpNnVnGrhOohnYwkmXeFRsOLlQ
- ehcvCwE+FZ181/svY5aezM2+RSf7LapWZ5eylwW2UYue/0KVG0yEbBjkoYDVHrU71enK
- htp0/A0g5RpOAlj3UlNZY7nfH7sdapFy4GlI80SK1x9hg9VGxgMDDwNoO0uWS3LkUCwj
- EVnKZV7SqvrBdJ0tC8lDG0lmmvWPtXt7rOZpLi0NVKShxgJh6spRWfU8SLaBjVa+zqN/
- htomcG4dvwWu9R/RPmrptnb2yV+9lMIQ76YdP9gnLHbTJicPVii62MgaWQArm49UbHrX pA== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t1xjmr79r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Sep 2023 09:42:13 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38B9gCd2004112
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Sep 2023 09:42:12 GMT
-Received: from [10.253.14.78] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Mon, 11 Sep
- 2023 02:42:09 -0700
-Message-ID: <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
-Date:   Mon, 11 Sep 2023 17:42:06 +0800
+        with ESMTP id S236316AbjIKKPF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 06:15:05 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 078DCE5F;
+        Mon, 11 Sep 2023 03:15:01 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-502a4f33440so3805175e87.1;
+        Mon, 11 Sep 2023 03:15:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1694427299; x=1695032099; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UHCnoccZNiz4HQ8Bo9b1jZ414TiCPpgUdOpHpw/rPXw=;
+        b=c1Sq9ZgjSYTJXSXnjb/fXBWFdtviDwrR/xxzraHb5Qe3mkeVZ4y6gqiugdFn2DmrfK
+         3hXeC4A0Gv9jVyIh1AVqFhQ5LPLvTbQ940omt9msE7CXyJx9gRXS7vyBqWA6UbnbDl0N
+         rLHZ/J+TpzIBUs5IAfVML3N4SI2YdcdFHUeZboEJ2Cu0POOzV7HgweiitgZ9DzX8J/5m
+         0izqa9YWkHL8rCBz7/KY1ZKvDJFdO14deqziDGdJmxPoAhLU+lwOJNe7DEsFWXgR+Opn
+         jeMNblwWtYVdAn+7dblPH1O789ul+ZXSw+9gPjUDD8Cja5V9vbQyFpsO2LV22oPhitLa
+         GQOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694427299; x=1695032099;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=UHCnoccZNiz4HQ8Bo9b1jZ414TiCPpgUdOpHpw/rPXw=;
+        b=TfWn3VyQVF6fuL61Fp6w4HBL0+FDuBwYSroTIAzLXSD/1OBlXrzJKnA/Do41MY9YQD
+         T2fXJ0B7bcxjdX+pFOwZwphFdoxIGzvssDGo9T6OywZSDoHB1Yc6tTYitr8AEIjt5sky
+         SOkAvzrxa9wXJ4hmHYqH02YERjduGxW0oD3F1KhwIWckHqaaheTTljxqN5/LN7LPngrc
+         Kjv9GkAg6HmK9HAF3sNLbG+sBRUpgGm/H/FGqRDL2qAh6Je8nQKE9Z70SyZPaXMJ+GcE
+         Cg+FEnWhF73y+tfOmcXKVKIaERwy83AGsxbqEiqvhCyO7h3qU+ZFBFlvSOiUvRJYCE01
+         pndA==
+X-Gm-Message-State: AOJu0YxmSl+MIaRlQdJAcL7Ul+7oIXs7e/bQTxGCmQIXRrnggq5Geff3
+        9IZ9ITrfcCO5JsjA5MDfaE0=
+X-Google-Smtp-Source: AGHT+IEBzImGafYSjy+sKGHiF/inpe78xQ3N0eED9tvnQyipiObNqw+8hKQHd3OOq3uiMbbz8quuUQ==
+X-Received: by 2002:a19:ca18:0:b0:4f8:62a6:8b2 with SMTP id a24-20020a19ca18000000b004f862a608b2mr6380933lfg.46.1694427298875;
+        Mon, 11 Sep 2023 03:14:58 -0700 (PDT)
+Received: from [192.168.1.103] ([178.176.75.0])
+        by smtp.gmail.com with ESMTPSA id q1-20020a19a401000000b005009c4ba3f0sm1291041lfc.72.2023.09.11.03.14.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 11 Sep 2023 03:14:58 -0700 (PDT)
+Subject: Re: [PATCH 18/19] ata: libata-eh: Reduce "disable device" message
+ verbosity
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+References: <20230911040217.253905-1-dlemoal@kernel.org>
+ <20230911040217.253905-19-dlemoal@kernel.org>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <3df11a20-bd80-304b-0a78-9875fa1a9e9b@gmail.com>
+Date:   Mon, 11 Sep 2023 13:14:56 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
- version detection
-To:     Konrad Dybcio <konrad.dybcio@linaro.org>, <mani@kernel.org>,
-        <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
-        "Bjorn Andersson" <andersson@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
- <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
- <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+In-Reply-To: <20230911040217.253905-19-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 6GygYcleddw3CRSgzKVR14os9b2zjpjH
-X-Proofpoint-GUID: 6GygYcleddw3CRSgzKVR14os9b2zjpjH
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-11_06,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- phishscore=0 lowpriorityscore=0 suspectscore=0 mlxlogscore=999
- malwarescore=0 adultscore=0 priorityscore=1501 clxscore=1015 bulkscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309110088
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Konrad,
+Hello!
 
-On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
-> On 11.09.2023 07:59, Can Guo wrote:
->> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
->>
->> Retrieve UFS device version from UFS host controller's spare register
->> which is populated by bootloader, and use the UFS device version together
->> with host controller's HW version to decide the proper power modes which
->> should be used to configure the UFS PHY.
-> That sounds a bit fishy.. is there no bootloader-independent
-> solution to that? Can't we bring in the code that the bootloader
-> uses to determine these values?
->
-> Konrad
+On 9/11/23 7:02 AM, Damien Le Moal wrote:
 
+> There is no point in warning about a device being diabled when we expect
 
-Agree, it is.
+   Disabled. :-)
 
+> it to be, that is, on suspend, shutdown or when detaching a device.
+> Suppress this message for these cases by introducing the EH static
+> function ata_eh_dev_disable() and by using it in ata_eh_unload() and
+> ata_eh_detach_dev(). ata_dev_disable() code is modified to call this new
+> function after printing the "disable device" message.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+[...]
 
-All these complexities come from one request from PHY design team - 
-power saving.
-
-And to achieve power saving, Qualcomm UFS developers are requested to 
-use the
-
-lowest hanging PHY settings which can sustain the Max agreed HS Gear 
-(btw host
-
-and UFS device) during UFS's lifecycle in High Level OS,  whereas the 
-power saving
-
-request does not apply to bootloader, which works for only a few seconds 
-during
-
-bootup. Hence, there is no such version detect code in bootloader -  it 
-just uses the
-
-highest PHY settings to configure PHY, boot up UFS and put UFS device 
-version in this
-
-register.
-
-
-Thanks,
-
-Can Guo.
-
+MBR, Sergey
