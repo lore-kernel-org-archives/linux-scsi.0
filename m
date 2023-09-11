@@ -2,252 +2,167 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 104B0EE7FF4
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:03:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32B46EE57DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:06:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232388AbjIKGDY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 02:03:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32808 "EHLO
+        id S233597AbjIKGGW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 02:06:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229601AbjIKGDY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:03:24 -0400
-Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sgaapc01on2123.outbound.protection.outlook.com [40.107.215.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA71BCCA;
-        Sun, 10 Sep 2023 23:02:36 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Gd1ZHP+kvQBcybqhsdI2o1cIrY5CKQAhbf4YaIAru/6+exUFg7lxSDbSwizY6tADQJs5wORb4v2T4p2+dGWylqkz310YCMnIQ5Eidw8yEmf2mid9qdbWwqjXbTLvIo3fz275YFeYMSIBdtxh27I9jS7tu8IOkTzoizHeqR33GaLQ+ao/J9mR6ZTCGhk5UvGUfB6R5xB0SojPlLunN20p/E05uyEZFNEn0Edvu47j7Wpm1zINU+Y255E8H4Kija2rRNuIuqxzRtnjiwlJHzka6SluAleGtkGAu4/bFX/rSx2YhjB0/wI+fV8NDUwHuwF8AUDMNS9bERDU0FhfhbpxWA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Q7Dj6MV8nNkR1UwpIiC2lqwGABf+zapLZechNgC9OU0=;
- b=W3rBzst0F4iy7Yu2D53arJHnIvpV5vQDZf8Ocd1hi4DeegOxdJxVkXuI2s6ZPF7jbQ6CGryOVGHkGEMvX1TnTCI/JOHiD7Ve/1Dd3zOYmtujSP9ioriH3BlNJyom/VTWpBM1nwxZ6ZJtlGOkBqUEyKadnotJDJa3/+tpO1QpzinGLxAfRuLdHEGRtZkJkpdw8Zh3ZDxPlnzS1bGc9AymbS84p5qOR2cuC+wViiRtHpEWjHNk3uJZiDQ9fJsl10qMoNza3HmQbY9L2SKK7UZgo6j7fU8V8ysjT0RtzNRZ0pExM7SshxXJo7cEZrQdVGFBOm9DGDXxNIfBX+U7yjz8rA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q7Dj6MV8nNkR1UwpIiC2lqwGABf+zapLZechNgC9OU0=;
- b=UuRhQ8H4B3neongWRGGxh46e7gsTA+3Cw/Exk+yCpS7dI+xYvjX2KgrANzqXSXG4lCiuUp+JXV18noa642noGnyBlLPwhHjPD1vu8HxwCQCKWfc5wf38We1JtY67f18RQ5AeqyATutlztGVBo2+muoSxTf5FURMYBC6bhczRIFOyt3x7ZUWffP598JZ5b8vPreSpni0lmMxBxfQFh58YS/4C2ldspdzifaKvFwzYisPNWjHUnWUS4EG46F1veFKvkfg7ArmjzkPmiATAd7E0yOXchbooH/jmC3bDx1n96bJEPkGkBKA1DKhgSyA9Jx7kJ3FbE6ZuFc8w+J8yO1xH3w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from TYZPR06MB6697.apcprd06.prod.outlook.com (2603:1096:400:451::6)
- by SEYPR06MB5645.apcprd06.prod.outlook.com (2603:1096:101:c2::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.36; Mon, 11 Sep
- 2023 06:02:13 +0000
-Received: from TYZPR06MB6697.apcprd06.prod.outlook.com
- ([fe80::5bef:53ac:2a7c:6f4e]) by TYZPR06MB6697.apcprd06.prod.outlook.com
- ([fe80::5bef:53ac:2a7c:6f4e%3]) with mapi id 15.20.6768.029; Mon, 11 Sep 2023
- 06:02:12 +0000
-From:   Lu Hongfei <luhongfei@vivo.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+        with ESMTP id S230242AbjIKGGU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:06:20 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E436CCD1;
+        Sun, 10 Sep 2023 23:05:46 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38B5bFLX011277;
+        Mon, 11 Sep 2023 06:00:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=2sVTtfHQyoPSBsPZGshT/pHcneEVu4iOjNd4wVdto10=;
+ b=H5Cggt6zuLjIPl+aPBve3YV7z0Y+Ig4AhQU7qUS8lA+fWcxL+rt5uLFprq5sW3aQ8gEY
+ ztvZSG0hsFLmB8XBxcHui+IGAV6Unh6TjloAMSNM5ae/hhVFlghAA4cZOou+gf9x3oIU
+ b4sJsW8HS0+8x4lSI8i21LsD+KQ5HSSsWm05V3v2IWRuYmk2/tNUpiCV38KvaYGzTx0h
+ Dq6G0qj1x5EodBKJz6Pn64fJAPUcLeXy2H9H4cVSfvle+REixzxrTFWcE5eIqYvwSFL1
+ 4/E9kWPwRPZtens5cNgY8PnufocvYcfipGc2Yi3ZRN5wT09+iagWDoDyZN3o0SUkzx9J xQ== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t0hvyjr9n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 06:00:37 +0000
+Received: from pps.filterd (NASANPPMTA04.qualcomm.com [127.0.0.1])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 38B5ic2M015870;
+        Mon, 11 Sep 2023 06:00:37 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3t0hskq2fw-1;
+        Mon, 11 Sep 2023 06:00:37 +0000
+Received: from NASANPPMTA04.qualcomm.com (NASANPPMTA04.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38B60E7S007369;
+        Mon, 11 Sep 2023 06:00:36 GMT
+Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
+        by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 38B60a0P007883;
+        Mon, 11 Sep 2023 06:00:36 +0000
+Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
+        id 7A83E20DEF; Sun, 10 Sep 2023 23:00:36 -0700 (PDT)
+From:   Can Guo <quic_cang@quicinc.com>
+To:     quic_cang@quicinc.com, mani@kernel.org, quic_nguyenb@quicinc.com,
+        quic_nitirawa@quicinc.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Lu Hongfei <luhongfei@vivo.com>, Bean Huo <beanhuo@micron.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Arthur Simchaev <arthur.simchaev@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     opensource.kernel@vivo.com
-Subject: [PATCH v3 3/3] scsi: ufs: core: Add sysfs attributes to get the hint information and status of WB buffer resize
-Date:   Mon, 11 Sep 2023 13:57:08 +0800
-Message-Id: <20230911055810.879-4-luhongfei@vivo.com>
-X-Mailer: git-send-email 2.27.0.windows.1
-In-Reply-To: <20230911055810.879-1-luhongfei@vivo.com>
-References: <20230911055810.879-1-luhongfei@vivo.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR06CA0234.apcprd06.prod.outlook.com
- (2603:1096:4:ac::18) To TYZPR06MB6697.apcprd06.prod.outlook.com
- (2603:1096:400:451::6)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TYZPR06MB6697:EE_|SEYPR06MB5645:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2f983df7-6569-4a2b-58ce-08dbb28ca415
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: SyDfhisxoLncAJZSjxdCoXN5nBppd+COQ0u4jqQdKvskga0wlncKusuzgKimj73KkikwbAA5h6JxGK9LHCO8Vh+7xRZe+6hA9rpq4q1pk7qcv+Pd/4Q3LVyvzyEyghk7pFwyCSxCLDFdGkkIuSKALCDQ25FLfJD6mNuxh7wn7463G5HKBu2GP4u7cDXIDD7cx4V54oAbnahhynY3NS+mZ7jto58/3/jRAD+1rbfOBiy2tLRpmzVPHUQLseImGuun1svOcMvCg3b1gGqqusT4k7YIQ2dVD91/lw3m/DRxPRmsVvmHxMG6hZYjAypYhIxFunlhNCWOcSjNFRG0+pmmC9yyU6D0MO89dqcTBCgOpZSsJph2Z/H/M8tT7TkEC6la7nlJa5iFKKmYQBQ3esSl/5hkLUxY+jzJCIuVUEtIGJ3M5YjhYGM8gF30ahrklTx0L4r6aZpuKTQXz8hw8N9Y3slzkMr6GDLl8jiZgq8z2J8im/SCTM/nDhp0mABBhbXJKGlDpOTWjj8D6jrjj4FatoCboj2vo3pSaLoVpGSXekCXKijzWtgX1sbaDx2WAQHbbPtfoZiNmFkS6OvMfuFsAhVVlOitZbfQnthUf6i2q4Kjc21vEBthLXTIk/17dEG4xSZeE9Cg5zu8hpW10ByTY94fTqv5mFzWBaZACU/dFBI=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB6697.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(39860400002)(376002)(366004)(396003)(136003)(1800799009)(186009)(451199024)(2616005)(1076003)(36756003)(107886003)(41300700001)(6486002)(86362001)(6512007)(26005)(83380400001)(6506007)(52116002)(6666004)(921005)(4326008)(5660300002)(66476007)(66946007)(66556008)(316002)(7416002)(110136005)(8936002)(2906002)(38100700002)(38350700002)(478600001)(8676002)(15583001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?VGg05Jzwza/XAbnlREVDF2tTGP554Mvd2TvUKb+wyAb9NAEZDuo+j3OkAj5S?=
- =?us-ascii?Q?HyXM6iao3FGtk4L8m/1Wda+7X37/NgL+tLkEt57YtRbGr6y/fOqbZa2Oo8hJ?=
- =?us-ascii?Q?cVvnoPLWVe7JG8TMOAt2SIwSIOQhzWKSqsfxfxOEpsrXqMtycOCEe/mnHkix?=
- =?us-ascii?Q?JHI8XBTsnaYl5bT7KW+mxxNcyxmPi2Q+2qewpquSeFVarSpDXTcWFQuoLeFl?=
- =?us-ascii?Q?t+BSobFLIhplaK6QW07W+UlY2LUCixbbvWSXRTDdKmNfnB3e5yUOgXYA1MxQ?=
- =?us-ascii?Q?aSytLcaRRfA5KGVMWVPNIhWcSugwAfvAZuxZBwHZyBX+BI6U8Az+UCO9XLxe?=
- =?us-ascii?Q?l7YGhtLZrVPP8rQ6iPdIA3mQgcbXNZvBHJcpv+tmN2V02DfLPiB8oWmRWI1y?=
- =?us-ascii?Q?yzal0XFzzy3vJfLAKS/2lGRj5ZH/EDgWgPNEMsMvDoqVg0xM+yHRy2HEEgFS?=
- =?us-ascii?Q?m+yQYc7n/MeyYYJXTwTuhtoRYIgS89ixrwYqVF2UxFuejrxa65wDmQbZAe8d?=
- =?us-ascii?Q?X19plveQFbttLDxkMYNWZw/nYLyupzcF90I+dd8tfqUofvj49wQc20gt8MGW?=
- =?us-ascii?Q?HGYWfR5/diVaXNZTkXULZT30jNOMPLqn28CTCmd9yz20hKGhgESPujl8vDKf?=
- =?us-ascii?Q?h+TOvFCCpZYrDpychhm2C1GOPq67y6pgESf1+S6ocT0ZmmHrqjct0/eYl4U5?=
- =?us-ascii?Q?UondgjlJKvYWOuUw3wwzAE2XlQyKQdDWKGCo2Y5f5rTpyiofBh3BATTRACRo?=
- =?us-ascii?Q?W1WP8IkRHsWBJOe3KAKjsQicwebf0dzMWXRhZjNPheoHAukdc//xiLls06M0?=
- =?us-ascii?Q?mwOBMYpNKXoHvIzZgO2p8Pt6aMK/F4MLv1ZpXLStOY3ihRLpAJIC8A71njrz?=
- =?us-ascii?Q?MLOwRBZeVdiWeeqGFmQTgZ5BAYQmIsVzWAOiPdGeXxEBb1VJQxAzw9MGRJR2?=
- =?us-ascii?Q?j4nExU2qkliF0gQNpxNKlTcpJbJXoes2T55r+oc/GwJx0gYvmjdB6D8Phdab?=
- =?us-ascii?Q?TBYC23nZGwG5FxX5BcdlPSCOdrKFUUbfpSNJ1Y6+5f8F3oN+j+B8IjFM8D+A?=
- =?us-ascii?Q?3uvUgk+EtP18rP0kw22GFl5LsU29keSQiW1Gx2ul6GAXztwFIlaWdyuIB1Xd?=
- =?us-ascii?Q?nCCdSUzY8lFR7+2JvUnwrZZxGpodCMLO9J9XcUgb0W3XHEIy6oJqzJtqSE1k?=
- =?us-ascii?Q?AJ0Sli9fbcP+y+PrnoC8rT6xNKLVLmBQGe9Zv2rrP/zofnewnqaF38fqUaP5?=
- =?us-ascii?Q?rDNrvIX2af2lC4RAYydkbTIXVrwXly+wRXX0IVv1A1oe/OpDvllBmwihcgjG?=
- =?us-ascii?Q?X0is3NTQanJX/MZqUA1+8POmEthPAlpuoZGOzMuzQah6EqYHRyKU2k970AoX?=
- =?us-ascii?Q?vR7c5Pc5ytW3xfe9R3YzbRHV04cZHlzlj6+q1QGAwbed8cB/K1khhiGGE3Wb?=
- =?us-ascii?Q?PV6bIJD2MlKYZLX4rfyRAMbRGAyTaPVATz9ZBy3FNWytjXYJ0m+CnOZsS59N?=
- =?us-ascii?Q?vH0zdnmEuSMYGU/lpXeoR23g41pI+7DdZxrwB3PbBe4KRVsKpRCBGSRV4U93?=
- =?us-ascii?Q?a0QSOmpSGWWmmLu8VE5YsnQfuTZsuv5f+4pA3YMB?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2f983df7-6569-4a2b-58ce-08dbb28ca415
-X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB6697.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Sep 2023 06:02:12.2503
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JpahU8NAtvsmxVdAVYRhxDfObr0/lZho1oTq09DqO8DY5DoT4teFGPqH/tv0tzhq7J437bHXLEeQtaUQd0Erow==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEYPR06MB5645
+        linux-arm-msm@vger.kernel.org (open list:UNIVERSAL FLASH STORAGE HOST
+        CONTROLLER DRIVER...), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device version detection
+Date:   Sun, 10 Sep 2023 22:59:23 -0700
+Message-Id: <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: hvxIvFIcC1mjgiBPhKG4ZWV5fS_b81mT
+X-Proofpoint-GUID: hvxIvFIcC1mjgiBPhKG4ZWV5fS_b81mT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-11_03,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
+ clxscore=1015 mlxscore=0 malwarescore=0 impostorscore=0 adultscore=0
+ priorityscore=1501 mlxlogscore=999 spamscore=0 lowpriorityscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309110054
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The host can get the hint information and status of WB buffer resize
-through sysfs. To achieve this goal, two sysfs nodes have been added:
-    1. wb_buf_resize_hint
-    2. wb_buf_resize_status
+From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 
-The host can read wb_buf_resize_hint, obtain the hint information about
-which type of resize for wb buffer, and enable wb buffer resize based on
-the hint information. Considering that this process may take a long time,
-the host can confirm the resize status by reading wb_buf_resize_status.
+Retrieve UFS device version from UFS host controller's spare register
+which is populated by bootloader, and use the UFS device version together
+with host controller's HW version to decide the proper power modes which
+should be used to configure the UFS PHY.
 
-The detailed definition of the two nodes can be found in the sysfs
-documentation.
-
-Signed-off-by: Lu Hongfei <luhongfei@vivo.com>
+Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
 ---
- Documentation/ABI/testing/sysfs-driver-ufs | 35 ++++++++++++++++++++
- drivers/ufs/core/ufs-sysfs.c               | 38 ++++++++++++++++++++++
- 2 files changed, 73 insertions(+)
+ drivers/ufs/host/ufs-qcom.c | 30 +++++++++++++++++++++++-------
+ drivers/ufs/host/ufs-qcom.h |  2 ++
+ 2 files changed, 25 insertions(+), 7 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index b8bd7e844cb0..4b03f4b8cd49 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1454,6 +1454,41 @@ Description:
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 710f079..8a9d54f 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1030,7 +1030,7 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+ 				| UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP);
+ 	}
  
- 		The file is write only.
- 
-+What:		/sys/bus/platform/drivers/ufshcd/*/wb_buf_resize_hint
-+What:		/sys/bus/platform/devices/*.ufs/wb_buf_resize_hint
-+Date:		Sept 2023
-+Contact:	Lu Hongfei <luhongfei@vivo.com>
-+Description:
-+		wb_buf_resize_hint indicates hint information about which type of resize for
-+		WriteBooster Buffer is recommended by the device.
-+
-+		======  ======================================
-+		   00h  Recommend keep the buffer size
-+		   01h  Recommend to decrease the buffer size
-+		   02h  Recommend to increase the buffer size
-+		Others: Reserved
-+		======  ======================================
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/wb_buf_resize_status
-+What:		/sys/bus/platform/devices/*.ufs/wb_buf_resize_status
-+Date:		Sept 2023
-+Contact:	Lu Hongfei <luhongfei@vivo.com>
-+Description:
-+		The host can check the Resize operation status of the WriteBooster Buffer
-+		by reading this file.
-+
-+		======  ========================================
-+		   00h  Idle (resize operation is not issued)
-+		   01h  Resize operation in progress
-+		   02h  Resize operation completed successfully
-+		   03h  Resize operation general failure
-+		Others  Reserved
-+		======  ========================================
-+
-+		The file is read only.
-+
- Contact:	Daniil Lunev <dlunev@chromium.org>
- What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/
- What:		/sys/bus/platform/devices/*.ufs/capabilities/
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index c14da6770316..e416b9802ad3 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -359,6 +359,40 @@ static ssize_t wb_buf_resize_control_store(struct device *dev,
- 	return count;
+-	if (host->hw_ver.major > 0x3)
++	if (host->hw_ver.major > 0x3 && host->hw_ver.major < 0x5)
+ 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
  }
  
-+static ssize_t wb_buf_resize_hint_show(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 value;
-+	u8 index = ufshcd_wb_get_query_index(hba);
-+
-+	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+			QUERY_ATTR_IDN_WB_BUF_RESIZE_HINT, index, 0, &value)) {
-+		dev_err(hba->dev, "Read WB Buffer Resize Hint info failed\n");
-+		return  -EINVAL;
-+	}
-+
-+	return sysfs_emit(buf, "%u\n", value);
-+}
-+
-+static ssize_t wb_buf_resize_status_show(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 value;
-+	u8 index = ufshcd_wb_get_query_index(hba);
-+
-+	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+			QUERY_ATTR_IDN_WB_BUF_RESIZE_STATUS, index, 0, &value)) {
-+		dev_err(hba->dev, "Read WB Buffer Resize Status info failed\n");
-+		return -EINVAL;
-+	}
-+
-+	return sysfs_emit(buf, "%u\n", value);
-+}
-+
- static DEVICE_ATTR_RW(rpm_lvl);
- static DEVICE_ATTR_RO(rpm_target_dev_state);
- static DEVICE_ATTR_RO(rpm_target_link_state);
-@@ -370,6 +404,8 @@ static DEVICE_ATTR_RW(wb_on);
- static DEVICE_ATTR_RW(enable_wb_buf_flush);
- static DEVICE_ATTR_RW(wb_flush_threshold);
- static DEVICE_ATTR_WO(wb_buf_resize_control);
-+static DEVICE_ATTR_RO(wb_buf_resize_hint);
-+static DEVICE_ATTR_RO(wb_buf_resize_status);
+@@ -1038,11 +1038,33 @@ static void ufs_qcom_set_pwr_mode_limits(struct ufs_hba *hba)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct ufs_dev_params *host_pwr_cap = &host->host_pwr_cap;
++	u32 val, dev_major = 0;
  
- static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rpm_lvl.attr,
-@@ -383,6 +419,8 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_enable_wb_buf_flush.attr,
- 	&dev_attr_wb_flush_threshold.attr,
- 	&dev_attr_wb_buf_resize_control.attr,
-+	&dev_attr_wb_buf_resize_hint.attr,
-+	&dev_attr_wb_buf_resize_status.attr,
- 	NULL
+ 	ufshcd_init_pwr_dev_param(host_pwr_cap);
+ 
+ 	/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
+ 	host_pwr_cap->hs_tx_gear = host_pwr_cap->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
++	host->phy_gear = host_pwr_cap->hs_rx_gear;
++
++	if (host->hw_ver.major < 0x5) {
++		/*
++		 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
++		 * Switching to max gear will be performed during reinit if supported.
++		 */
++		host->phy_gear = UFS_HS_G2;
++	} else {
++		val = ufshcd_readl(host->hba, REG_UFS_DEBUG_SPARE_CFG);
++		dev_major = FIELD_GET(GENMASK(7, 4), val);
++
++		if (host->hw_ver.major == 0x5 && (dev_major >= 0x4 ||
++						  dev_major == 0)) {
++			/* For UFS 4.0 and newer, or dev version is not populated */
++			host_pwr_cap->hs_rate = PA_HS_MODE_A;
++		} else if (dev_major < 0x4 && dev_major > 0) {
++			/* For UFS 3.1 and older, apply HS-G4 PHY settings to save power */
++			host->phy_gear = UFS_HS_G4;
++		}
++	}
+ }
+ 
+ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+@@ -1287,12 +1309,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 		dev_warn(dev, "%s: failed to configure the testbus %d\n",
+ 				__func__, err);
+ 
+-	/*
+-	 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
+-	 * Switching to max gear will be performed during reinit if supported.
+-	 */
+-	host->phy_gear = UFS_HS_G2;
+-
+ 	return 0;
+ 
+ out_variant_clear:
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index 4db64d9..e10889f 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -56,6 +56,8 @@ enum {
+ 	UFS_AH8_CFG				= 0xFC,
+ 
+ 	REG_UFS_CFG3				= 0x271C,
++
++	REG_UFS_DEBUG_SPARE_CFG			= 0x284C,
  };
  
+ /* QCOM UFS host controller vendor specific debug registers */
 -- 
-2.39.0
+2.7.4
 
