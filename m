@@ -2,123 +2,141 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4350DEE57DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 07:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33ECEEE7FF4
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 07:23:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231979AbjIKHKr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 03:10:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51430 "EHLO
+        id S233911AbjIKHXv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 03:23:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230359AbjIKHKq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 03:10:46 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 585D3133;
-        Mon, 11 Sep 2023 00:10:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694416242; x=1725952242;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=zygAe0g9eEkvkw9jlbTXNrao7JfvQbh1k7e620DHvt8=;
-  b=lih5jCX9Aii+oyLAm1pBKNN+cbRJs9ANsgLVS9p0Mh2uA6GI557IbCUy
-   JaZ4DoCSTGY4SNFbrQVHUCaw1+9zQpuMByRJCRE+ZtTALVQR5/NP1sbsR
-   GaT1kmftJtv8vmRHCxxZSGLgVltfJsPoC0rWdN7qFal7OtQaCgSPW75bp
-   mNBog3qOAJvEsQmxvbxaA1UOHmTpULotwjSvYwLMjvkESAygz1XbDO30N
-   BYDap1lBevvi6QFITgO+T0N8wLz5zOhc6r/GIxgKG9v5+pvBWrCIOOXGQ
-   6VGai49FFyQWNOjwf86KkFRlGr6ufSUf/5JTATKri6N5+qmAxHF3Mt9IU
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10829"; a="408980598"
-X-IronPort-AV: E=Sophos;i="6.02,243,1688454000"; 
-   d="scan'208";a="408980598"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 00:10:32 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10829"; a="736674597"
-X-IronPort-AV: E=Sophos;i="6.02,243,1688454000"; 
-   d="scan'208";a="736674597"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.251.216.218])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 00:10:15 -0700
-Message-ID: <fc40e4f8-6e84-9fbf-e2ca-87330c25c52a@intel.com>
-Date:   Mon, 11 Sep 2023 10:10:09 +0300
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.15.0
-Subject: Re: [RESEND PATCH v3 0/2] change UIC command handling
-To:     Kiwoong Kim <kwmad.kim@samsung.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, beanhuo@micron.com, sc.suh@samsung.com,
-        hy50.seo@samsung.com, sh425.lee@samsung.com,
-        kwangwon.min@samsung.com, junwoo80.lee@samsung.com,
-        wkon.kim@samsung.com,
+        with ESMTP id S229820AbjIKHXs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 03:23:48 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEF70CD1
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 00:23:41 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20230911072330epoutp01b41c92a1fda1e24c8be24295b1f33daf~Dx0sZUXOC2623726237epoutp01n
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 07:23:30 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20230911072330epoutp01b41c92a1fda1e24c8be24295b1f33daf~Dx0sZUXOC2623726237epoutp01n
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1694417010;
+        bh=0cqbyRFCKmi63OyNBNtFjoSfHRsW9qWhqCUBZfMBOno=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=W3lOuursiRImtUIpyQHjsuP24XSiivngCgRNRgfqmZPDXUA1JXAzAHMNgxG1P5/pc
+         pq5oDx6t/8/V9RcOEYYwudIfiZELUJYzUHTHau6V5OSpuwVDAzP+qpDNk9Vvvt2WEy
+         ml/cjrPyqYv08dlw7tMxqGqMTrHCyA4DUvB5ZNP8=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20230911072329epcas2p320ee0d429530e82330a979ebd64617bb~Dx0rxLGC32211322113epcas2p3M;
+        Mon, 11 Sep 2023 07:23:29 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.88]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4RkdVS6s8yz4x9Py; Mon, 11 Sep
+        2023 07:23:28 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        60.0B.09693.070CEF46; Mon, 11 Sep 2023 16:23:28 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20230911072328epcas2p448317f3bb857c6007b79beebb3de9192~Dx0qy_t-l1593215932epcas2p4G;
+        Mon, 11 Sep 2023 07:23:28 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230911072328epsmtrp130d2e9168973998081b7046cd86fab7e~Dx0qx4PDe1933019330epsmtrp1I;
+        Mon, 11 Sep 2023 07:23:28 +0000 (GMT)
+X-AuditID: b6c32a45-abbfd700000025dd-35-64fec070c8bf
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        73.65.08788.070CEF46; Mon, 11 Sep 2023 16:23:28 +0900 (KST)
+Received: from KORCO011456 (unknown [10.229.38.105]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20230911072328epsmtip147c4de304029c1b04799bf8edb0e1ada~Dx0qfrseL0806708067epsmtip1p;
+        Mon, 11 Sep 2023 07:23:28 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Adrian Hunter'" <adrian.hunter@intel.com>
+Cc:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <bvanassche@acm.org>, <jejb@linux.ibm.com>, <beanhuo@micron.com>,
+        <sc.suh@samsung.com>, <hy50.seo@samsung.com>,
+        <sh425.lee@samsung.com>, <kwangwon.min@samsung.com>,
+        <junwoo80.lee@samsung.com>, <wkon.kim@samsung.com>,
         "'Martin K. Petersen'" <martin.petersen@oracle.com>
+In-Reply-To: <fc40e4f8-6e84-9fbf-e2ca-87330c25c52a@intel.com>
+Subject: RE: [RESEND PATCH v3 0/2] change UIC command handling
+Date:   Mon, 11 Sep 2023 16:23:28 +0900
+Message-ID: <000601d9e480$dc0ebb00$942c3100$@samsung.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: ko
+Thread-Index: AQIwe0l2XHSCkaXhuPDRLLuGM/RalAHEhVGBAhaVcJgBqZylIwKkta+hAXHHmqUB3zC/568MNyXg
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrJJsWRmVeSWpSXmKPExsWy7bCmmW7BgX8pBouvmlicfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Vi2oefzBarFz9gsVh0YxuTxa6/zUwWW2/sZLG4vGsOm0X39R1sFsuP/2Oy
+        6Lp7g9Fi6b+3LBabL31jceD3uHzF22PxnpdMHhMWHWD0+L6+g83j49NbLB59W1YxenzeJOfR
+        fqCbKYAjKtsmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0z
+        B+h4JYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6BeYFecWJucWleul5eaomVoYGB
+        kSlQYUJ2xvqWVpaCeSwVf7esY2lg3MDcxcjJISFgIrH/0hcgm4tDSGAHo8SvtX2MEM4nRomZ
+        ux6wQTjfGCW6z98HKuMAazm1LBIivpdR4vnDPVBFLxkltny+yA4yl01AW2Law92sILaIgL7E
+        hv13wHYwC3QxS6y/94oFJMEpYCsx4fpLdpCpwgJ2Evd3yIGYLAKqEn+ORINU8ApYSsw+8JEV
+        whaUODnzCVgnM9D4ZQtfQ72gIPHz6TJWiLiIxOzONmaItVES/7f9ZoWoecEhsfSUK4TtInF7
+        8WeouLDEq+Nb2CFsKYmX/W3sED9mS+xZKAYRrpBYPO0tC4RtLDHrWTsjSAmzgKbE+l36ENXK
+        EkduQR3GJ9Fx+C/UEF6JjjYhiEZliV+TJjNC2JISM2/eYZ/AqDQLyVuzkLw1C8krsxB2LWBk
+        WcUollpQnJueWmxUYAiP6OT83E2M4DSt5bqDcfLbD3qHGJk4GA8xSnAwK4nwlhz6myLEm5JY
+        WZValB9fVJqTWnyI0RQYzhOZpUST84GZIq8k3tDE0sDEzMzQ3MjUwFxJnPde69wUIYH0xJLU
+        7NTUgtQimD4mDk6pBqbk6kmOz5u3qvcGsZTLPnfXZWE88UO6g19x0vymrJ0zTJMDtpfmiArL
+        yO+75LVjnnlf7I0fjpomUYfyG5atqpH5f0r4qfed2qV+H10spNTWPLdfLaKR8EyeK0I4OTMh
+        R1TkzKtsxYT3r10jfCQfP89+fZH1iOTFT9d0JIOezOq0SZt+3OiD1C4fmwP/2JgXvtNb8Zyj
+        bHqLrfKrD9OzcsO2lCSuXTSLTYfpSk5oTzovT98SHWV7XQd5n7qbn44mMF86KB8n3b00at3k
+        tenF+UUerp8VO4u2zXjXZHzAUsyPm4dLd4rQB+uFHKcsjp089jTgeVJ4OPsfs/97v7L/C/hn
+        WdvgxqJ5jr8l7XClEktxRqKhFnNRcSIA8YB39VwEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGIsWRmVeSWpSXmKPExsWy7bCSnG7BgX8pBh/bhS1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZovVix+wWCy6sY3JYtffZiaLrTd2slhc3jWHzaL7+g42i+XH/zFZ
+        dN29wWix9N9bFovNl76xOPB7XL7i7bF4z0smjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNo
+        P9DNFMARxWWTkpqTWZZapG+XwJXx++hO1oL5LBUT/+Y3MK5n7mLk4JAQMJE4tSyyi5GLQ0hg
+        N6PEjs5F7F2MnEBxSYkTO58zQtjCEvdbjrBCFD1nlPjy7T9YEZuAtsS0h7tZQWwRAX2JDfvv
+        MIMUMQvMYpZYuHY1WEJI4D2TxMYmHhCbU8BWYsL1l+wgm4UF7CTu75ADMVkEVCX+HIkGqeAV
+        sJSYfeAjK4QtKHFy5hMWEJsZaFXvw1ZGGHvZwtfMELcpSPx8uowVIi4iMbuzjRninCiJ/9t+
+        s05gFJ6FZNQsJKNmIRk1C0n7AkaWVYySqQXFuem5xYYFRnmp5XrFibnFpXnpesn5uZsYwVGr
+        pbWDcc+qD3qHGJk4GA8xSnAwK4nwlhz6myLEm5JYWZValB9fVJqTWnyIUZqDRUmc99vr3hQh
+        gfTEktTs1NSC1CKYLBMHp1QDU17hGaGtnLOkloR+fLL4anTQpSn7ZzW+af+Vty7YZU1ngXaH
+        4nKfLd5CX1ZOuvTecAEv06Sb7dc3Nr3oWjP/8fN4Bb+Pyz4Lvcm8VJG2++L2XVuCYlwzj20q
+        WWEln7orsnHlnVvZ8Wtb+DTnln6TFpvh76KcbDntcPs05//7Op9GpJnqbnFlsmBcO3duqtUE
+        rulO/22fSanVzanonzFrphSHVMtz1++/mjzqBY//jo+w3TH/284dN4MZJip/bZj650S2fgCn
+        pmRu5PubrJ/r5jGsfxdXkjJnmVtViMpOYblZU/pmnZlX4PHmvXqNYsMVqxqvikm/+oMu/OSc
+        Jzbx1WKbLXHl3qU3cnz7Dke4NyixFGckGmoxFxUnAgC4WdzRSQMAAA==
+X-CMS-MailID: 20230911072328epcas2p448317f3bb857c6007b79beebb3de9192
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230904014146epcas2p37d6690a5eb3a5652571bb00e358231a3
 References: <CGME20230904014146epcas2p37d6690a5eb3a5652571bb00e358231a3@epcas2p3.samsung.com>
- <cover.1693790060.git.kwmad.kim@samsung.com>
- <yq1jzt5j5go.fsf@ca-mkp.ca.oracle.com>
- <02b701d9e450$3e7d5ca0$bb7815e0$@samsung.com>
- <7dc56344-ee1c-43d4-9751-ded8f76d5852@intel.com>
- <001001d9e479$ac74c5d0$055e5170$@samsung.com>
-Content-Language: en-US
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <001001d9e479$ac74c5d0$055e5170$@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        <cover.1693790060.git.kwmad.kim@samsung.com>
+        <yq1jzt5j5go.fsf@ca-mkp.ca.oracle.com>
+        <02b701d9e450$3e7d5ca0$bb7815e0$@samsung.com>
+        <7dc56344-ee1c-43d4-9751-ded8f76d5852@intel.com>
+        <001001d9e479$ac74c5d0$055e5170$@samsung.com>
+        <fc40e4f8-6e84-9fbf-e2ca-87330c25c52a@intel.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/09/23 09:32, Kiwoong Kim wrote:
->>>> ufs: poll HCS.UCRDY before issuing a UIC command
->>>
->>> [ 4671.226480] [3: kworker/u20:29:17140] BUG: scheduling while atomic:
->>> kworker/u20:29/17140/0x00000002
->>> ..
->>> [ 4671.228723] [3: kworker/u20:29:17140]  panic+0x16c/0x388 [
->>> 4671.228745] [3: kworker/u20:29:17140]  check_panic_on_warn+0x60/0x94
->>> [ 4671.228764] [3: kworker/u20:29:17140]  __schedule_bug+0x6c/0x94 [
->>> 4671.228786] [3: kworker/u20:29:17140]  __schedule+0x6f4/0xa64 [
->>> 4671.228806] [3: kworker/u20:29:17140]  schedule+0x7c/0xe8 [
->>> 4671.228824] [3: kworker/u20:29:17140]
->>> schedule_hrtimeout_range_clock+0x98/0x114
->>> [ 4671.228841] [3: kworker/u20:29:17140]
->>> schedule_hrtimeout_range+0x14/0x24
->>> [ 4671.228856] [3: kworker/u20:29:17140]  usleep_range_state+0x60/0x94
->>> [ 4671.228871] [3: kworker/u20:29:17140]
->>> __ufshcd_send_uic_cmd+0xa0/0x1c4 [ 4671.228893] [3:
->>> kworker/u20:29:17140]  ufshcd_uic_pwr_ctrl+0x15c/0x390 [ 4671.228908]
->>> [3: kworker/u20:29:17140] ufshcd_uic_hibern8_enter+0x9c/0x25c
->>> [ 4671.228922] [3: kworker/u20:29:17140]
->>> ufshcd_link_state_transition+0x34/0xb0
->>> [ 4671.228939] [3: kworker/u20:29:17140]
->>> __ufshcd_wl_suspend+0x3f0/0x4b4
->>
->> Do you know what is in that path that makes it an atomic context?
-> 
-> Hi,
-> This made that.
-> 
-> static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
-> ..
->         bool reenable_intr = false;
-> 
->         mutex_lock(&hba->uic_cmd_mutex); <<<<
+> > static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command
+> > *cmd) ..
+> >         bool reenable_intr =3D false;
+> >
+> >         mutex_lock(&hba->uic_cmd_mutex); <<<<
+>=20
+> It is OK to schedule while holding a mutex.  Are you sure this is the
+> problem?
 
-It is OK to schedule while holding a mutex.  Are you sure
-this is the problem?
+Ah, I mis-understood it. It was for not applying this.
+https://lore.kernel.org/linux-scsi/782ba5f26f0a96e58d85dff50751787d2d2a6b2b=
+.1693790060.git.kwmad.kim=40samsung.com/
 
-> 
-> 
-> At first, I was willing to post together w/ the following patch but I've got a suggestion to split the patch set because of different topic and I split the patch set.
-> - This patch removes the mutex, so it can fix the issue.
-> https://lore.kernel.org/linux-scsi/1694051306-172962-1-git-send-email-kwmad.kim@samsung.com/
-> 
-> 
-> But now I'm thinking again that simply removing the mutex could hurt atomicity of UIC command process
-> that the original code intended for the first time.
-> So I think this polling UCRDY should be modified rather than applying removal of the mutex.
-> 
-> 
-> 
+So this patch set has no problem. Sorry for bothering all of you.
+
+Thanks.
+
 
