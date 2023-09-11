@@ -2,160 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 692E5EE3F02
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D74CBEE3F0B
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:52:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236221AbjIKUvd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 16:51:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47230 "EHLO
+        id S237782AbjIKUvp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 16:51:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237508AbjIKMyo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 08:54:44 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97597E40;
-        Mon, 11 Sep 2023 05:54:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694436880; x=1725972880;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=QCUHLcOIhxBRk27P/kLo+OYYTB7a6Wv3t3NHhSYLmJ0=;
-  b=gyuhulO1f4sSNWvKqFVmH51yb9CiwI0WX0vTlhOdWgZEkzRDh8i7oSUI
-   1HiI4MH5LzbH08Jlv96YouT0MWOVBEuA03qRfGoDE4Wfe03shkkf4vmmj
-   bjE1jNGb/c9u/ZxxxJvYxrzyjdbpr35vg2+vp97tehXw9JCNkd7LoAI2T
-   EZWKq1K2w365gAXnXvI0D5y8/hCRbY+7ub+CXWVpDJ02LEWoNz6VNxo1K
-   eZbrHc77ibTY91otw+Lcjg8Li0Xt7msRsQbLZCcsySLO0oz9d9KynZqSS
-   qWnov/S6qEfw5f5WQgfbOd9bJugrKROiUQrdrT32/2sJn7t0A1zLW7Sqv
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="357511257"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="357511257"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:40 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858304426"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="858304426"
-Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:34 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org
-Cc:     3chas3@gmail.com, brking@us.ibm.com, dalias@libc.org,
-        glaubitz@physik.fu-berlin.de, ink@jurassic.park.msu.ru,
-        jejb@linux.ibm.com, kw@linux.com, linux-alpha@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-atm-general@lists.sourceforge.net,
-        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
-        lpieralisi@kernel.org, martin.petersen@oracle.com,
-        mattst88@gmail.com, netdev@vger.kernel.org,
-        richard.henderson@linaro.org, toan@os.amperecomputing.com,
-        ysato@users.sourceforge.jp,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v3 4/6] PCI: Do error check on own line to split long if conditions
-Date:   Mon, 11 Sep 2023 15:53:52 +0300
-Message-Id: <20230911125354.25501-5-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
-References: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S242105AbjIKPW3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 11:22:29 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCBABDB;
+        Mon, 11 Sep 2023 08:22:24 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0873EC433C8;
+        Mon, 11 Sep 2023 15:22:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1694445744;
+        bh=1/J/nUuQ89SJmDKI9w4Yzveptl9co7zbzpn/NM0dReQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=PbDwPFrir6EGIx/Cig2KO4zowahyRn6YGxaWhszKq3jN4EUaIWuyimPXx907G8YO1
+         T7okgDtkvvEEyg1gffagZXLw3TLi5npEhCnyGG3POVGao/QN4m/UGmA/Dbat8/pHfd
+         3YM74nVDSL3O90RJBnNJ6lwZxO/3Wkih3gruA2Rk=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     stable@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        patches@lists.linux.dev, Saurav Kashyap <skashyap@marvell.com>,
+        Rob Evers <revers@redhat.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        David Laight <David.Laight@ACULAB.COM>,
+        Jozef Bacik <jobacik@redhat.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Oleksandr Natalenko <oleksandr@redhat.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 6.1 430/600] scsi: qedf: Do not touch __user pointer in qedf_dbg_stop_io_on_error_cmd_read() directly
+Date:   Mon, 11 Sep 2023 15:47:43 +0200
+Message-ID: <20230911134646.353882519@linuxfoundation.org>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20230911134633.619970489@linuxfoundation.org>
+References: <20230911134633.619970489@linuxfoundation.org>
+User-Agent: quilt/0.67
+X-stable: review
+X-Patchwork-Hint: ignore
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Placing PCI error code check inside if condition usually results in
-need to split lines. Combined with additional conditions the if
-condition becomes messy.
+6.1-stable review patch.  If anyone has any objections, please let me know.
 
-Convert to the usual error handling pattern with an additional variable
-to improve code readability. In addition, reverse the logic in
-pci_find_vsec_capability() to get rid of &&.
+------------------
 
-No functional changes intended.
+From: Oleksandr Natalenko <oleksandr@redhat.com>
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+[ Upstream commit 7d3d20dee4f648ec44e9717d5f647d594d184433 ]
+
+The qedf_dbg_stop_io_on_error_cmd_read() function invokes sprintf()
+directly on a __user pointer, which may crash the kernel.
+
+Avoid doing that by using a small on-stack buffer for scnprintf() and then
+calling simple_read_from_buffer() which does a proper copy_to_user() call.
+
+Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Link: https://lore.kernel.org/lkml/20230724120241.40495-1-oleksandr@redhat.com/
+Link: https://lore.kernel.org/linux-scsi/20230726101236.11922-1-skashyap@marvell.com/
+Cc: Saurav Kashyap <skashyap@marvell.com>
+Cc: Rob Evers <revers@redhat.com>
+Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: David Laight <David.Laight@ACULAB.COM>
+Cc: Jozef Bacik <jobacik@redhat.com>
+Cc: Laurence Oberman <loberman@redhat.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: GR-QLogic-Storage-Upstream@marvell.com
+Cc: linux-scsi@vger.kernel.org
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Tested-by: Laurence Oberman <loberman@redhat.com>
+Acked-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Oleksandr Natalenko <oleksandr@redhat.com>
+Link: https://lore.kernel.org/r/20230731084034.37021-2-oleksandr@redhat.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci.c    | 9 ++++++---
- drivers/pci/probe.c  | 6 +++---
- drivers/pci/quirks.c | 6 +++---
- 3 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/scsi/qedf/qedf_debugfs.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 59c01d68c6d5..5e51e8bd5c13 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -732,15 +732,18 @@ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap)
+diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
+index a3ed681c8ce3f..3eb4334ac6a32 100644
+--- a/drivers/scsi/qedf/qedf_debugfs.c
++++ b/drivers/scsi/qedf/qedf_debugfs.c
+@@ -185,18 +185,17 @@ qedf_dbg_stop_io_on_error_cmd_read(struct file *filp, char __user *buffer,
+ 				   size_t count, loff_t *ppos)
  {
- 	u16 vsec = 0;
- 	u32 header;
-+	int ret;
+ 	int cnt;
++	char cbuf[7];
+ 	struct qedf_dbg_ctx *qedf_dbg =
+ 				(struct qedf_dbg_ctx *)filp->private_data;
+ 	struct qedf_ctx *qedf = container_of(qedf_dbg,
+ 	    struct qedf_ctx, dbg_ctx);
  
- 	if (vendor != dev->vendor)
- 		return 0;
+ 	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "entered\n");
+-	cnt = sprintf(buffer, "%s\n",
++	cnt = scnprintf(cbuf, sizeof(cbuf), "%s\n",
+ 	    qedf->stop_io_on_error ? "true" : "false");
  
- 	while ((vsec = pci_find_next_ext_capability(dev, vsec,
- 						     PCI_EXT_CAP_ID_VNDR))) {
--		if (pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER,
--					  &header) == PCIBIOS_SUCCESSFUL &&
--		    PCI_VNDR_HEADER_ID(header) == cap)
-+		ret = pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
-+		if (ret != PCIBIOS_SUCCESSFUL)
-+			continue;
-+
-+		if (PCI_VNDR_HEADER_ID(header) == cap)
- 			return vsec;
- 	}
+-	cnt = min_t(int, count, cnt - *ppos);
+-	*ppos += cnt;
+-	return cnt;
++	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
+ }
  
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab2a4a3a4c06..0ad440190a32 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1651,15 +1651,15 @@ static void pci_set_removable(struct pci_dev *dev)
- static bool pci_ext_cfg_is_aliased(struct pci_dev *dev)
- {
- #ifdef CONFIG_PCI_QUIRKS
--	int pos;
-+	int pos, ret;
- 	u32 header, tmp;
- 
- 	pci_read_config_dword(dev, PCI_VENDOR_ID, &header);
- 
- 	for (pos = PCI_CFG_SPACE_SIZE;
- 	     pos < PCI_CFG_SPACE_EXP_SIZE; pos += PCI_CFG_SPACE_SIZE) {
--		if (pci_read_config_dword(dev, pos, &tmp) != PCIBIOS_SUCCESSFUL
--		    || header != tmp)
-+		ret = pci_read_config_dword(dev, pos, &tmp);
-+		if ((ret != PCIBIOS_SUCCESSFUL) || (header != tmp))
- 			return false;
- 	}
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 5de09d2eb014..0d2e6b0f56cc 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5383,7 +5383,7 @@ int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
-  */
- static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- {
--	int pos, i = 0;
-+	int pos, i = 0, ret;
- 	u8 next_cap;
- 	u16 reg16, *cap;
- 	struct pci_cap_saved_state *state;
-@@ -5429,8 +5429,8 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- 		pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
- 
- 		pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
--		if (pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status) !=
--		    PCIBIOS_SUCCESSFUL || (status == 0xffffffff))
-+		ret = pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status);
-+		if ((ret != PCIBIOS_SUCCESSFUL) || (status == 0xffffffff))
- 			pdev->cfg_size = PCI_CFG_SPACE_SIZE;
- 
- 		if (pci_find_saved_cap(pdev, PCI_CAP_ID_EXP))
+ static ssize_t
 -- 
-2.30.2
+2.40.1
+
+
 
