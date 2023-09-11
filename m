@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECE0BEE801F
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:46:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A58E5EE57DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:47:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234482AbjIKGqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 02:46:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38336 "EHLO
+        id S234531AbjIKGrt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 02:47:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230432AbjIKGqQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:46:16 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FA5E106;
-        Sun, 10 Sep 2023 23:46:11 -0700 (PDT)
+        with ESMTP id S234560AbjIKGrs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:47:48 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27634130;
+        Sun, 10 Sep 2023 23:47:43 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 2ADB21F460;
-        Mon, 11 Sep 2023 06:46:10 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id DF7EF1F460;
+        Mon, 11 Sep 2023 06:47:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1694414770; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1694414861; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=KZjbUQbusqrUPcdy1d9eOEIcbSsa4V/pZkocVFGtZG0=;
-        b=ePj1fY9/5I0ukEJn3LW7n71Sf5etvYEpm5wYS9iljNeitAeaBfT3kOr927+EOG2xT3wmxY
-        bhtXw9XDwlwIkcftAIRJ0+Q8l3Gm1Z1yS/8PB9F7TqALhDJ5AyosxJPCaNUtGHr44cMlws
-        nXp2PiIfxrsC92JQrRRxPJTo3RiMhjU=
+        bh=QbRUq8M+AuJGxyK62vg5bcs2IX4Pwh8PhDGt5oLfRvI=;
+        b=2QQgCOs2Iz4+NS04otJcQhqp6CrdD70j6OBz+B/OxuodNquNDTI7KjlPxB1hcxXWwpNMxh
+        St1j7x3M/TcvBpQFSFIDEhzl77QRMTmQ5ArALwc1owPJAXE4NvPYCQUouqIPIR4P6KOpy6
+        5cRNSjrW+SOmQNCGV8FEgZiEGmr3VpU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1694414770;
+        s=susede2_ed25519; t=1694414861;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=KZjbUQbusqrUPcdy1d9eOEIcbSsa4V/pZkocVFGtZG0=;
-        b=Ciu/IFDAuvoGS3v0ieJOYEt3EjyRRbIJe9MuBRzv6H85MobELeNlqKyxFs7DctUhP73Whf
-        R8wL3AYCA9vtTsDw==
+        bh=QbRUq8M+AuJGxyK62vg5bcs2IX4Pwh8PhDGt5oLfRvI=;
+        b=TdYm9CfvGG1xBAU/7f0W4nifzGnOgHTZDPjYHQFhZygP42UfUuCL5gn4jCLpTyId9e1cVQ
+        1U4uWCphrW524wDA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EE8F113780;
-        Mon, 11 Sep 2023 06:46:09 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 82D9213780;
+        Mon, 11 Sep 2023 06:47:41 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id uYM6ObG3/mRuTgAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 11 Sep 2023 06:46:09 +0000
-Message-ID: <0d7e1e2d-06a8-4992-be0b-7a97646c170d@suse.de>
-Date:   Mon, 11 Sep 2023 08:46:09 +0200
+        id UJq7HQ24/mRuTgAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 11 Sep 2023 06:47:41 +0000
+Message-ID: <7189b979-0baa-4134-ba7e-068e27c2268c@suse.de>
+Date:   Mon, 11 Sep 2023 08:47:41 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 04/19] ata: libata-scsi: Disable scsi device
- manage_start_stop
+Subject: Re: [PATCH 05/19] ata: libata-scsi: Fix delayed scsi_rescan_device()
+ execution
 Content-Language: en-US
 To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -64,9 +64,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
 References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-5-dlemoal@kernel.org>
+ <20230911040217.253905-6-dlemoal@kernel.org>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230911040217.253905-5-dlemoal@kernel.org>
+In-Reply-To: <20230911040217.253905-6-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -74,62 +74,48 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/11/23 06:02, Damien Le Moal wrote:
-> The introduction of a device link to create a consumer/supplier
-> relationship between the scsi device of an ATA device and the ATA port
-> of the ATA device fixed the ordering of the suspend and resume
-> operations. For suspend, the scsi device is suspended first and the ata
-> port after it. This is fine as this allows the synchronize cache and
-> START STOP UNIT commands issued by the scsi disk driver to be executed
-> before the ata port is disabled.
+> Commit 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after
+> device resume") modified ata_scsi_dev_rescan() to check the scsi device
+> "is_suspended" power field to ensure that the scsi device associated
+> with an ATA device is fully resumed when scsi_rescan_device() is
+> executed. However, this fix is problematic as:
+> 1) it relies on a PM internal field that should not be used without PM
+>     device locking protection.
+> 2) The check for is_suspended and the call to ata_scsi_dev_rescan() are
+>     not atomic and a suspend PM even may be triggered between them,
+>     casuing ata_scsi_dev_rescan() to be called on a suspended device,
+>     resulting in that function blocking while holding the scsi device
+>     lock, which would deadlock a following resume operation.
+> These problems can trigger PM deadlocks on resume, especially with
+> resume operations triggered quickly after or during suspend operations.
+> E.g., a simple bash script like:
 > 
-> For resume operations, the ata port is resumed first, followed
-> by the scsi device. This allows having the request queue of the scsi
-> device to be unfrozen after the ata port restart is scheduled in EH,
-> thus avoiding to see new requests issued to the ATA device prematurely.
-> However, since libata sets manage_start_stop to 1, the scsi disk resume
-> operation also results in issuing a START STOP UNIT command to wakeup
-> the device. This is too late and that must be done before libata EH
-> resume handling starts revalidating the drive with IDENTIFY etc
-> commands. Commit 0a8589055936 ("ata,scsi: do not issue START STOP UNIT
-> on resume") disabled issuing the START STOP UNIT command to avoid
-> issues with it. However, this is incorrect as transitioning a device to
-> the active power mode from the standby power mode set on suspend
-> requires a media access command. The device link reset and subsequent
-> SET FEATURES, IDENTIFY and READ LOG commands executed in libata EH
-> context triggered by the ata port resume operation may thus fail.
+> for (( i=0; i<10; i++ )); do
+> 	echo "+2 > /sys/class/rtc/rtc0/wakealarm
+> 	echo mem > /sys/power/state
+> done
 > 
-> Fix this by handling a device power mode transitions for suspend and
-> resume in libata EH context without relying on the scsi disk management
-> triggered with the manage_start_stop flag.
+> that triggers a resume 2 seconds after starting suspending a system can
+> quickly lead to a PM deadlock preventing the system from correctly
+> resuming.
 > 
-> To do this, the following libata helper functions are introduced:
+> Fix this by replacing the check on is_suspended with a check on the scsi
+> device state inside ata_scsi_dev_rescan(), while holding the scsi device
+> lock, thus making the device rescan atomic with regard to PM operations.
+> Additionnly, make sure that scheduled rescan tasks are first cancelled
+> before suspending an ata port.
 > 
-> 1) ata_dev_power_set_standby():
+> Fixes: 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after device resume")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/ata/libata-core.c | 16 ++++++++++++++++
+>   drivers/ata/libata-scsi.c | 36 ++++++++++++++++++------------------
+>   drivers/scsi/scsi_scan.c  | 12 +++++++++++-
+>   include/scsi/scsi_host.h  |  2 +-
+>   4 files changed, 46 insertions(+), 20 deletions(-)
 > 
-> This function issues a STANDBY IMMEDIATE command to transitiom a device
-> to the standby power mode. For HDDs, this spins down the disks. This
-> function applies only to ATA and ZAC devices and does nothing otherwise.
-> This function also does nothing for devices that have the
-> ATA_FLAG_NO_POWEROFF_SPINDOWN or ATA_FLAG_NO_HIBERNATE_SPINDOWN flag
-> set.
-> 
-> For suspend, call ata_dev_power_set_standby() in
-> ata_eh_handle_port_suspend() before the port is disabled and frozen.
-> ata_eh_unload() is also modified to transition all enabled devices to
-> the standby power mode when the system is shutdown or devices removed.
-> 
-> 2) ata_dev_power_set_active() and
-> 
-> This function applies to ATA or ZAC devices and issues a VERIFY command
-> for 1 sector at LBA 0 to transition the device to the active power mode.
-> For HDDs, since this function will complete only once the disk spin up.
-> Its execution uses the same timeouts as for reset, to give the drive
-> enough time to complete spinup without triggering a command timeout.
-> 
-Neat. But why VERIFY?
-Isn't there a dedicated command (ie the opposite of STANDBY IMMEDIATE)?
-And can we be sure that VERIFY is implemented everywhere?
-It's not that this command had been in active use until now ...
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
