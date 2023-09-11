@@ -2,123 +2,156 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9864DEE7FF4
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 07:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEF4AEE7FF4
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 07:48:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234105AbjIKHet (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 03:34:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35094 "EHLO
+        id S232384AbjIKHsl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 03:48:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229902AbjIKHes (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 03:34:48 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F316012C
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 00:34:42 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230911073441epoutp02a69d4cce2eb90ebba73665ab9de6f3fa~Dx_dbb7xd1415814158epoutp02U
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 07:34:41 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230911073441epoutp02a69d4cce2eb90ebba73665ab9de6f3fa~Dx_dbb7xd1415814158epoutp02U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1694417681;
-        bh=IKpHLoRkEZ25dLla5ObOQQje8kvo8BLHGCCdBwGXhCQ=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=XxjfDhCcXxzOKarTNZ9pAXPpP8Q4gLvv6bir/t7tkAbWvHMOzT0cpN5vdNTZaU7sA
-         BOhlva9HDN+apw/ckIVrp16Ep7IjDyxluAXc6zTii3lVvkxEO496qD3gDtHOgKRSI9
-         5y4rEbOBSFYtjQGhh3GPP9mC6nhL08+30060ifgg=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20230911073438epcas2p1ee7b4aba97e141f987e4b4e65d6bc33d~Dx_bK0NqM0846908469epcas2p10;
-        Mon, 11 Sep 2023 07:34:38 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.101]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4RkdlL2RDjz4x9Q6; Mon, 11 Sep
-        2023 07:34:38 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        59.EB.09765.E03CEF46; Mon, 11 Sep 2023 16:34:38 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-        20230911073437epcas2p13fff13f4756dd4949cf88c3716d3011c~Dx_aJN0Kp0659906599epcas2p12;
-        Mon, 11 Sep 2023 07:34:37 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20230911073437epsmtrp1b3a429076c6b686e3f7813b1dcca8ce6~Dx_aIW3Oq2620326203epsmtrp1R;
-        Mon, 11 Sep 2023 07:34:37 +0000 (GMT)
-X-AuditID: b6c32a48-40fff70000002625-59-64fec30edf42
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        AE.51.08649.D03CEF46; Mon, 11 Sep 2023 16:34:37 +0900 (KST)
-Received: from KORCO011456 (unknown [10.229.38.105]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20230911073437epsmtip1bc7841b7be0509ff455477cc2e20a694~Dx_Z3PnS61614516145epsmtip1G;
-        Mon, 11 Sep 2023 07:34:37 +0000 (GMT)
-From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <bvanassche@acm.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <adrian.hunter@intel.com>, <sc.suh@samsung.com>,
-        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
-        <kwangwon.min@samsung.com>, <junwoo80.lee@samsung.com>,
-        <wkon.kim@samsung.com>
-In-Reply-To: <1694051306-172962-1-git-send-email-kwmad.kim@samsung.com>
-Subject: RE: [PATCH v4] ufs: poll pmc until another pa request is completed
-Date:   Mon, 11 Sep 2023 16:34:37 +0900
-Message-ID: <000801d9e482$6b023b10$4106b130$@samsung.com>
+        with ESMTP id S233487AbjIKHsl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 03:48:41 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7816E1FE7
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 00:48:11 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 03D29C43395
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 07:47:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694418450;
+        bh=STtS2XPkeFve3dQpiB7o5qxhu/dI4cexTdu/ehOVCHE=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=O8ifnJkOjj6PaTcvv+SIwlx0z/t18Y2pNyvGVaN7NXBcJQKhzrnEpIVf+fxSJM+CX
+         DvEZgoT+cBx5Xydt5rSFZXDe/YHLlfNMNrX6v1qgPbWBdFLcWUdK5SlLiVamcVbspv
+         HAaFmAx7jR863sq86N8PQ4t4durnYWimGbIeL/9Iis7i7at3RrRvPonWw3sucxAWgw
+         lGJ7HJ0on5OBGXKXaVgNUjbkmkBmRsgNhshL/doWIfpvmdEtAC0KEDc9je0pI9efbi
+         7hiDaZaFjw/zSZJFKuJfdklidkQAerYnE0tNABr8f0dRwWbPppTtWHgO6qNC8tflJf
+         Ku1euDxPWcq4g==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id E80E3C53BC6; Mon, 11 Sep 2023 07:47:29 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215943] UBSAN: array-index-out-of-bounds in
+ drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
+Date:   Mon, 11 Sep 2023 07:47:29 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: ubuntologic@inbox.ru
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-215943-11613-ZhZxfYEihp@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215943-11613@https.bugzilla.kernel.org/>
+References: <bug-215943-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Content-Language: ko
-Thread-Index: AQHCOs06MSlmgDNb/VB40Dx452KEGwMC5LjvsCx3ivA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGJsWRmVeSWpSXmKPExsWy7bCmqS7f4X8pBu9+CFicfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Vi2oefzBarFz9gsVh0YxuTxa6/zUwWW2/sZLG4vGsOm0X39R1sFsuP/2Oy
-        6Lp7g9Fi6b+3LBabL31jceD3uHzF22PxnpdMHhMWHWD0+L6+g83j49NbLB59W1YxenzeJOfR
-        fqCbKYAjKtsmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0z
-        B+h4JYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6BeYFecWJucWleul5eaomVoYGB
-        kSlQYUJ2xoH3YgUrGSuObp3G3MDYydjFyMkhIWAi8XDzKnYQW0hgB6PE7x/yEPYnRokbs3m6
-        GLmA7G+MEp3HHrLDNEy//ogRIrGXUeJwx0ImCOclo8S0Tf/AxrIJaEtMe7ibFSQhItDHLHFx
-        2QIWkASngLvEo32f2boYOTiEBbwlTvRYgoRZBFQlfjz+wg4S5hWwlJj/SAYkzCsgKHFy5hOw
-        TmYBeYntb+cwQxyhIPHz6TJWiLiIxOzONmaQVhEBK4lv+9lBtkoI3OGQmP7uDytIXELARWL5
-        cS+IVmGJV8e3QP0iJfGyv40doiRbYs9CMYhwhcTiaW9ZIGxjiVnP2hlBSpgFNCXW79KHqFaW
-        OHIL6i4+iY7Df6GG8Ep0tAlBNCpL/Jo0GRrIkhIzb96B2ukh0XPrLMsERsVZSD6cheTDWUi+
-        moWwdwEjyypGsdSC4tz01GKjAhN4LCfn525iBCdoLY8djLPfftA7xMjEwXiIUYKDWUmEt+TQ
-        3xQh3pTEyqrUovz4otKc1OJDjKbAIJ/ILCWanA/MEXkl8YYmlgYmZmaG5kamBuZK4rz3Wuem
-        CAmkJ5akZqemFqQWwfQxcXBKNTAlXvHpXxN75bfXwTvplnVd266f1Z9U2hr26FWUidz5v46v
-        GQv4LOsqKpaxhIYlyAdkCiUfS5Th11yyvmGXaKFYWL9+0IRtKzc4lO39ZSbdfqE/5eeSaZfC
-        JllMZvqk+Idx6uuYkmn9gi3e1mJqf265+3rV6HXUa3Qd+HZaZOJ2/qtGJ9pdmdx3PfgQXhjx
-        6nXlvPNSbBxFZ7fqXdzb4Du1S4xb1ezilU+Wz+54z77+as2CM882zJz74onBoVqRufod52o6
-        yv3nWiXdtN34Ret+tOz+g832/Ukzz1xa9kTk+ew1yipzXzVNrHDYkrx6C/O5khOaPjevMX24
-        XxZ1O1518cQ0mX//bX9MMup7zsijxFKckWioxVxUnAgAy6biiFkEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJIsWRmVeSWpSXmKPExsWy7bCSnC7v4X8pBo//aVqcfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Vi2oefzBarFz9gsVh0YxuTxa6/zUwWW2/sZLG4vGsOm0X39R1sFsuP/2Oy
-        6Lp7g9Fi6b+3LBabL31jceD3uHzF22PxnpdMHhMWHWD0+L6+g83j49NbLB59W1YxenzeJOfR
-        fqCbKYAjissmJTUnsyy1SN8ugSvjwHuxgpWMFUe3TmNuYOxk7GLk5JAQMJGYfv0RmC0ksJtR
-        Yt1bDoi4pMSJnc+haoQl7rccYYWoec4o0bFAFsRmE9CWmPZwN1Cci0NEYAGzxLXVS1lAHCGB
-        GYwS33s7mECqOAXcJR7t+8zWxcjBISzgLXGixxIkzCKgKvHj8Rd2kDCvgKXE/EcyIGFeAUGJ
-        kzOfsIDYzEDzex+2MkLY8hLb385hhrhHQeLn02WsEHERidmdbcwgY0QErCS+7WefwCg0C8mk
-        WUgmzUIyaRaS7gWMLKsYJVMLinPTc5MNCwzzUsv1ihNzi0vz0vWS83M3MYJjU0tjB+O9+f/0
-        DjEycTAeYpTgYFYS4S059DdFiDclsbIqtSg/vqg0J7X4EKM0B4uSOK/hjNkpQgLpiSWp2amp
-        BalFMFkmDk6pBqap//3WezBWSqdOyu721WBgj3rXbh/LVb7v9uPkN/uar7a4n77OGhrt9uiI
-        /+JXi3hmz+TrP9LfZsoWdLnDJ8yS6ebaqIuh+dtrFXa6rFrht3TfQ4vfqz/3fnA+VdP3a+K6
-        E/8bJp+Wu8Qb16DEdGnxny8cTr9YlzG4qv245SPz4krrj1r1dfuOeP3+dShpyxOTJuPdgRoz
-        1d7tfzV9p3980mqrO6y27/PPRZ9TF91+40DO7Ef+ij+7Hl+ZESNo/TE+sklPLiltvkG20s/5
-        1Z9bzpx6P73rkmev9slJx3a37he2PZl4+uGio9fP/vzE8rrs2JL1a07MtN98I/CXxuVT547k
-        /WzX/jnlhIZx+Yq+tUosxRmJhlrMRcWJAF7f30U8AwAA
-X-CMS-MailID: 20230911073437epcas2p13fff13f4756dd4949cf88c3716d3011c
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230907015925epcas2p3b9850bb03126e9caa43530e164884ae8
-References: <CGME20230907015925epcas2p3b9850bb03126e9caa43530e164884ae8@epcas2p3.samsung.com>
-        <1694051306-172962-1-git-send-email-kwmad.kim@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thinking again, removing the mutex completely doesn't seem properly
-because this could hurting atomicity of UIC command process.
-Let me modify and post it again.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215943
 
+ubuntologic@inbox.ru changed:
 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |ubuntologic@inbox.ru
+
+--- Comment #11 from ubuntologic@inbox.ru ---
+ATOM BIOS: CAPILANO
+radeon 0000:02:00.0: VRAM: 1024M 0x0000000000000000 - 0x000000003FFFFFFF (1=
+024M
+used)
+radeon 0000:02:00.0: GTT: 1024M 0x0000000040000000 - 0x000000007FFFFFFF
+[drm] Detected VRAM RAM=3D1024M, BAR=3D256M
+[drm] RAM width 128bits DDR
+[drm] radeon: 1024M of VRAM memory ready
+[drm] radeon: 1024M of GTT memory ready.
+[drm] Loading REDWOOD Microcode
+[drm] Internal thermal controller without fan control
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+UBSAN: array-index-out-of-bounds in
+/home/kernel/COD/linux/drivers/gpu/drm/radeon/radeon_atombios.c:2620:43
+index 1 is out of range for type 'UCHAR [1]'
+CPU: 2 PID: 140 Comm: systemd-udevd Not tainted 6.5.1-060501-generic
+#202309020842
+Hardware name: Acer Aspire 7741/JE70_CP, BIOS V1.26 04/28/2011
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x48/0x70
+ dump_stack+0x10/0x20
+ __ubsan_handle_out_of_bounds+0xc6/0x110
+ radeon_atombios_parse_power_table_4_5+0x3c9/0x3f0 [radeon]
+ radeon_atombios_get_power_modes+0x205/0x210 [radeon]
+ radeon_pm_init_dpm+0x8e/0x2f0 [radeon]
+ radeon_pm_init+0xd0/0x100 [radeon]
+ evergreen_init+0x158/0x400 [radeon]
+ radeon_device_init+0x540/0xa90 [radeon]
+ radeon_driver_load_kms+0xcc/0x2f0 [radeon]
+ drm_dev_register+0x10e/0x240 [drm]
+ radeon_pci_probe+0xec/0x180 [radeon]
+ local_pci_probe+0x47/0xb0
+ pci_call_probe+0x55/0x190
+ pci_device_probe+0x84/0x120
+ really_probe+0x1c7/0x410
+ __driver_probe_device+0x8c/0x180
+ driver_probe_device+0x24/0xd0
+ __driver_attach+0x10b/0x210
+ ? __pfx___driver_attach+0x10/0x10
+ bus_for_each_dev+0x8d/0xf0
+ driver_attach+0x1e/0x30
+ bus_add_driver+0x127/0x240
+ driver_register+0x5e/0x130
+ ? __pfx_radeon_module_init+0x10/0x10 [radeon]
+ __pci_register_driver+0x62/0x70
+ __pci_register_driver+0x62/0x70
+ radeon_module_init+0x4c/0xff0 [radeon]
+ do_one_initcall+0x5e/0x340
+ do_init_module+0x68/0x260
+ load_module+0xba1/0xcf0
+ ? ima_post_read_file+0xe8/0x110
+ ? security_kernel_post_read_file+0x75/0x90
+ init_module_from_file+0x96/0x100
+ ? init_module_from_file+0x96/0x100
+ idempotent_init_module+0x11c/0x2b0
+ __x64_sys_finit_module+0x64/0xd0
+ do_syscall_64+0x5c/0x90
+ ? do_syscall_64+0x68/0x90
+ ? syscall_exit_to_user_mode+0x37/0x60
+ ? do_syscall_64+0x68/0x90
+ entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+RIP: 0033:0x7fe86023089d
+Code: 5d c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 89 f8 48 89 f7 =
+48
+89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 0>
+RSP: 002b:00007fffe4257b08 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+RAX: ffffffffffffffda RBX: 0000560b8b980a10 RCX: 00007fe86023089d
+RDX: 0000000000000000 RSI: 00007fe8603b0458 RDI: 0000000000000013
+RBP: 00007fe8603b0458 R08: 0000000000000000 R09: 00007fffe4257c30
+R10: 0000000000000013 R11: 0000000000000246 R12: 0000000000020000
+R13: 0000560b8b978140 R14: 0000000000000000 R15: 0000560b8b90faf0
+ </TASK>
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
