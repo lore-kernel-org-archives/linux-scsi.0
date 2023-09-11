@@ -2,96 +2,133 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45AF0C71153
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 04:03:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25885EE801F
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 05:40:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229759AbjIKEDa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 00:03:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
+        id S234033AbjIKFkf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 01:40:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233682AbjIKEDG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 00:03:06 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE685CD1;
-        Sun, 10 Sep 2023 21:02:56 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46CDBC433CB;
-        Mon, 11 Sep 2023 04:02:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694404976;
-        bh=PglKl+2cZKAn6/abU6Om/fmPGDXe+6D9MEqoWlkSk90=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=m9+O1ivdMSnKT/uMvaVBeIxdKK8pGsUlmEhaegmd75+rH8JaeJlc4C0Iwq8ac1qSv
-         PDng6Rlr+f3ZNz8kJApaXTdHcsGU8Zn3TaZT/beQ0QuQfAa6FC4s4/gVl1ZYhePERq
-         SXnUcSFV1m2TkVSOdukmkVN4/pqeOQtrgPgmb8KLhFuG6ydMFj5zpDMH0O3Wnw9f1i
-         TTPCDhZibpvoaXShMUHrq5JoNhIQ5u6UaGCPVU1Xbc95tRIT/WTomS7IrrSIyVF1mv
-         XGS1aliYFvIN3ClDNUfGwNQYtA0EPC+PhymCzf4bZKqcnDBll5WI+dS9DV+M5v0+wu
-         ab/wpF0Dqr/Xw==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH 19/19] ata: libata: Cleanup inline DMA helper functions
-Date:   Mon, 11 Sep 2023 13:02:17 +0900
-Message-ID: <20230911040217.253905-20-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230911040217.253905-1-dlemoal@kernel.org>
-References: <20230911040217.253905-1-dlemoal@kernel.org>
+        with ESMTP id S229981AbjIKFkf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 01:40:35 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5B1E1B8;
+        Sun, 10 Sep 2023 22:40:30 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38B5Bnpl012956;
+        Mon, 11 Sep 2023 05:40:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=sk1Z3D5+cgXDrA4WA90F+J0Bcy/RvmZhsVZ+O5IE88s=;
+ b=k6iavvVcml+2DPMIpgNwQf9ZwDEPcgS75ewKsgFwNB4mN4cAkL6NDrxmH0MegaoPVjUp
+ 5aM/o5NfunY+LeDMT2HhAMyn2dI0lMXjP/JEgK45n56sMaP6JY4y0el/KtmFs37RiaGZ
+ tmguAFLW9q9wv9klgmdPp8XUg7d+vkSUr9Uwt60TeCL40e00daKXb3y3rW5kIqhcrIc1
+ GLOiTO5aFLPCE4dUGS9iojIwIHImT6H06mlBOQMllc01eP3Bz2+onrYeKzCiiET5wB/q
+ pbIpap0cdQy42Xci6F4q3WOWf8fImc97l0MFdFipX2OHWzU5kavIduf5Ww84eYh6ZqTa qg== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t1u3yr5f2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 05:40:05 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38B5e4g7022709
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 05:40:04 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Sun, 10 Sep
+ 2023 22:39:59 -0700
+Message-ID: <ea1b8d2a-a519-c7f1-5a93-d73c16c4bd04@quicinc.com>
+Date:   Mon, 11 Sep 2023 13:36:38 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH] scsi: ufs: qcom: dt-bindings: Add MCQ ESI property
+Content-Language: en-US
+To:     <neil.armstrong@linaro.org>, <quic_asutoshd@quicinc.com>,
+        <quic_cang@quicinc.com>, <bvanassche@acm.org>, <mani@kernel.org>,
+        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
+        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
+        <quic_nitirawa@quicinc.com>
+CC:     <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        "Bjorn Andersson" <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1694163203-39123-1-git-send-email-quic_ziqichen@quicinc.com>
+ <861a1baa-bbdb-49c2-b732-35c16f5e927e@linaro.org>
+From:   Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <861a1baa-bbdb-49c2-b732-35c16f5e927e@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: tR4KC8Nr6gn_TtWPhsezR8nURtdWy87l
+X-Proofpoint-ORIG-GUID: tR4KC8Nr6gn_TtWPhsezR8nURtdWy87l
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-11_03,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 adultscore=0
+ clxscore=1011 phishscore=0 impostorscore=0 suspectscore=0 bulkscore=0
+ priorityscore=1501 mlxscore=0 mlxlogscore=999 malwarescore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309110051
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simplify the inline DMA helper functions ata_using_mwdma(),
-ata_using_udma() and ata_dma_enabled() to directly return as a boolean
-the result of their test condition.
+Hi Neil，
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- include/linux/libata.h | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+Yes，I will post reg-name and msi-parent properties in next version as soon.
+reg is required property and already exist. but I will make some changes
+on this property.
+As for qcom,esi-affinity-mask, we will put it off.
 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 6593c79b7290..f48fe27dae94 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1878,23 +1878,21 @@ static inline unsigned long ata_deadline(unsigned long from_jiffies,
-    change in future hardware and specs, secondly 0xFF means 'no DMA' but is
-    > UDMA_0. Dyma ddreigiau */
- 
--static inline int ata_using_mwdma(struct ata_device *adev)
-+static inline bool ata_using_mwdma(struct ata_device *adev)
- {
--	if (adev->dma_mode >= XFER_MW_DMA_0 && adev->dma_mode <= XFER_MW_DMA_4)
--		return 1;
--	return 0;
-+	return adev->dma_mode >= XFER_MW_DMA_0 &&
-+		adev->dma_mode <= XFER_MW_DMA_4;
- }
- 
--static inline int ata_using_udma(struct ata_device *adev)
-+static inline bool ata_using_udma(struct ata_device *adev)
- {
--	if (adev->dma_mode >= XFER_UDMA_0 && adev->dma_mode <= XFER_UDMA_7)
--		return 1;
--	return 0;
-+	return adev->dma_mode >= XFER_UDMA_0 &&
-+		adev->dma_mode <= XFER_UDMA_7;
- }
- 
--static inline int ata_dma_enabled(struct ata_device *adev)
-+static inline bool ata_dma_enabled(struct ata_device *adev)
- {
--	return (adev->dma_mode == 0xFF ? 0 : 1);
-+	return adev->dma_mode != 0xFF;
- }
- 
- /**************************************************************************
--- 
-2.41.0
+Thanks,
+Ziqi
 
+On 9/8/2023 5:35 PM, Neil Armstrong wrote:
+> Hi,
+> 
+> On 08/09/2023 10:53, Ziqi Chen wrote:
+>> Document the description for the qcom,esi-affinity-mask.
+> 
+> Do you plan to add all the other MCQ and ESI properties ? (reg, 
+> reg-names, msi-parent)
+> 
+> Thanks,
+> Neil
+> 
+>>
+>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+>> ---
+>>   Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 4 ++++
+>>   1 file changed, 4 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml 
+>> b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> index bdfa86a..323595f 100644
+>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> @@ -97,6 +97,10 @@ properties:
+>>       description:
+>>         GPIO connected to the RESET pin of the UFS memory device.
+>> +  qcom,esi-affinity-mask:
+>> +    description:
+>> +       UFS MCQ ESI affinity mask. Affine ESI on registration 
+>> according to this CPU mask.
+>> +
+>>   required:
+>>     - compatible
+>>     - reg
+> 
