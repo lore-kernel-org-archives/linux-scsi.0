@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7301EE801F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45AF0C71153
 	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 04:03:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229607AbjIKEDb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 00:03:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58140 "EHLO
+        id S229759AbjIKEDa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 00:03:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233656AbjIKEDG (ORCPT
+        with ESMTP id S233682AbjIKEDG (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 00:03:06 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 599C41B9;
-        Sun, 10 Sep 2023 21:02:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52609C433CA;
-        Mon, 11 Sep 2023 04:02:53 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE685CD1;
+        Sun, 10 Sep 2023 21:02:56 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46CDBC433CB;
+        Mon, 11 Sep 2023 04:02:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694404974;
-        bh=Dgf8t8rvF95CKc1xqlbfk/7IBYHIUJKutmuItoRyjiE=;
+        s=k20201202; t=1694404976;
+        bh=PglKl+2cZKAn6/abU6Om/fmPGDXe+6D9MEqoWlkSk90=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PU0vaAhY4Bsv0sxM3UbSBIR99xY+n8YrZMEnMRnNrUdqC3Q5svOUPd86NBP6XXGD5
-         4nQWcDrLS04+x5kikYxXHDIIosoRQUbI5GqWUyE4pnOt6kot/YakUuese0r5H9PaVJ
-         xtrLFDaONKXCsh7NcQw3vUGZWnSTMw0tjU1dMuHcIKYOED0P/J+EoI1kQa543XMHWZ
-         KoKbJ++TD3fmreythi5QBVsPmG7m5tKd5FVohzME9jAaiiP4ZD+sbJRQ7N74LQ+ilu
-         /sCMExDQpazo/4UyIsLjr7TUccYQSDrlBz1I+m1eFnBWqto+vYjjiRRMScmy/ndYQl
-         hVnpZBFc2whlQ==
+        b=m9+O1ivdMSnKT/uMvaVBeIxdKK8pGsUlmEhaegmd75+rH8JaeJlc4C0Iwq8ac1qSv
+         PDng6Rlr+f3ZNz8kJApaXTdHcsGU8Zn3TaZT/beQ0QuQfAa6FC4s4/gVl1ZYhePERq
+         SXnUcSFV1m2TkVSOdukmkVN4/pqeOQtrgPgmb8KLhFuG6ydMFj5zpDMH0O3Wnw9f1i
+         TTPCDhZibpvoaXShMUHrq5JoNhIQ5u6UaGCPVU1Xbc95tRIT/WTomS7IrrSIyVF1mv
+         XGS1aliYFvIN3ClDNUfGwNQYtA0EPC+PhymCzf4bZKqcnDBll5WI+dS9DV+M5v0+wu
+         ab/wpF0Dqr/Xw==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH 18/19] ata: libata-eh: Reduce "disable device" message verbosity
-Date:   Mon, 11 Sep 2023 13:02:16 +0900
-Message-ID: <20230911040217.253905-19-dlemoal@kernel.org>
+Subject: [PATCH 19/19] ata: libata: Cleanup inline DMA helper functions
+Date:   Mon, 11 Sep 2023 13:02:17 +0900
+Message-ID: <20230911040217.253905-20-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230911040217.253905-1-dlemoal@kernel.org>
 References: <20230911040217.253905-1-dlemoal@kernel.org>
@@ -47,85 +47,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no point in warning about a device being diabled when we expect
-it to be, that is, on suspend, shutdown or when detaching a device.
-Suppress this message for these cases by introducing the EH static
-function ata_eh_dev_disable() and by using it in ata_eh_unload() and
-ata_eh_detach_dev(). ata_dev_disable() code is modified to call this new
-function after printing the "disable device" message.
+Simplify the inline DMA helper functions ata_using_mwdma(),
+ata_using_udma() and ata_dma_enabled() to directly return as a boolean
+the result of their test condition.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/libata-eh.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+ include/linux/libata.h | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index bbc522d16f44..5bad5dabffe0 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -494,6 +494,18 @@ void ata_eh_release(struct ata_port *ap)
- 	mutex_unlock(&ap->host->eh_mutex);
- }
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 6593c79b7290..f48fe27dae94 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1878,23 +1878,21 @@ static inline unsigned long ata_deadline(unsigned long from_jiffies,
+    change in future hardware and specs, secondly 0xFF means 'no DMA' but is
+    > UDMA_0. Dyma ddreigiau */
  
-+static void ata_eh_dev_disable(struct ata_device *dev)
-+{
-+	ata_acpi_on_disable(dev);
-+	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
-+	dev->class++;
-+
-+	/* From now till the next successful probe, ering is used to
-+	 * track probe failures.  Clear accumulated device error info.
-+	 */
-+	ata_ering_clear(&dev->ering);
-+}
-+
- static void ata_eh_unload(struct ata_port *ap)
+-static inline int ata_using_mwdma(struct ata_device *adev)
++static inline bool ata_using_mwdma(struct ata_device *adev)
  {
- 	struct ata_link *link;
-@@ -517,8 +529,8 @@ static void ata_eh_unload(struct ata_port *ap)
- 	 */
- 	ata_for_each_link(link, ap, PMP_FIRST) {
- 		sata_scr_write(link, SCR_CONTROL, link->saved_scontrol & 0xff0);
--		ata_for_each_dev(dev, link, ALL)
--			ata_dev_disable(dev);
-+		ata_for_each_dev(dev, link, ENABLED)
-+			ata_eh_dev_disable(dev);
- 	}
- 
- 	/* freeze and set UNLOADED */
-@@ -1211,14 +1223,8 @@ void ata_dev_disable(struct ata_device *dev)
- 		return;
- 
- 	ata_dev_warn(dev, "disable device\n");
--	ata_acpi_on_disable(dev);
--	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
--	dev->class++;
- 
--	/* From now till the next successful probe, ering is used to
--	 * track probe failures.  Clear accumulated device error info.
--	 */
--	ata_ering_clear(&dev->ering);
-+	ata_eh_dev_disable(dev);
+-	if (adev->dma_mode >= XFER_MW_DMA_0 && adev->dma_mode <= XFER_MW_DMA_4)
+-		return 1;
+-	return 0;
++	return adev->dma_mode >= XFER_MW_DMA_0 &&
++		adev->dma_mode <= XFER_MW_DMA_4;
  }
- EXPORT_SYMBOL_GPL(ata_dev_disable);
  
-@@ -1240,12 +1246,12 @@ void ata_eh_detach_dev(struct ata_device *dev)
+-static inline int ata_using_udma(struct ata_device *adev)
++static inline bool ata_using_udma(struct ata_device *adev)
+ {
+-	if (adev->dma_mode >= XFER_UDMA_0 && adev->dma_mode <= XFER_UDMA_7)
+-		return 1;
+-	return 0;
++	return adev->dma_mode >= XFER_UDMA_0 &&
++		adev->dma_mode <= XFER_UDMA_7;
+ }
  
- 	/*
- 	 * If the device is still enabled, transition it to standby power mode
--	 * (i.e. spin down HDDs).
-+	 * (i.e. spin down HDDs) and disable it.
- 	 */
--	if (ata_dev_enabled(dev))
-+	if (ata_dev_enabled(dev)) {
- 		ata_dev_power_set_standby(dev);
--
--	ata_dev_disable(dev);
-+		ata_eh_dev_disable(dev);
-+	}
+-static inline int ata_dma_enabled(struct ata_device *adev)
++static inline bool ata_dma_enabled(struct ata_device *adev)
+ {
+-	return (adev->dma_mode == 0xFF ? 0 : 1);
++	return adev->dma_mode != 0xFF;
+ }
  
- 	spin_lock_irqsave(ap->lock, flags);
- 
+ /**************************************************************************
 -- 
 2.41.0
 
