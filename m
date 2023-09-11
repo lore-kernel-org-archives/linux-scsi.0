@@ -2,170 +2,117 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C48CEE3F01
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3095EE3F06
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233666AbjIKUuy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 16:50:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55470 "EHLO
+        id S237039AbjIKUu4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 16:50:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237851AbjIKNPU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 09:15:20 -0400
-Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67AF0EB
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 06:15:14 -0700 (PDT)
-Received: by mail-lj1-x234.google.com with SMTP id 38308e7fff4ca-2b962c226ceso73888051fa.3
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 06:15:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1694438112; x=1695042912; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=YL6EQgEy3tU456+JOD18a+m3T5ccWapszSBNRkdsmHI=;
-        b=vHXNjYDzKOqcrn+XNPyUE8dUN6iSLRGOgkGduve+2Vl6HYAwqoSmASwtSEPt4r7xld
-         BNp5fZNgi8ZfR76pkGpk9b618vvZretLDMSAtaJTD7cjisIQv5+dIRnaT/D/fpCYBymt
-         OxuqW/rEAZQIJ7jWFUfs7CvKk2m/FvDSZQLv9WJ99w6TnPvuk2ampIYxFXbCbEWH2YMh
-         pr7firIk7xBadI1aqRJ/hTJQbXupUNBfC32kd1lpcB2XRLdsC5BORce6hPvGbiWceJId
-         5rpoia8SGhdZjUhHIt2R6hI73X2M63l3mVnbr1mfKkn0qrExZzmU69F3AZ/3quCKg5Qy
-         q1Xg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694438112; x=1695042912;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=YL6EQgEy3tU456+JOD18a+m3T5ccWapszSBNRkdsmHI=;
-        b=u0z5FOQ+NCL4NaqbiVRIRJDwK+qpsIY8fMPmkc3lwwtIqPgeaODmLCNkPgjR17bL/f
-         0p3gtHZkTECGcWZjAmxoicvMAKx10qW9B31FRw9Reu9jioEdRQ5lE68GrA+o8Wf8cBkd
-         leU+E6tRxhc9bEBDv8A9iAWoF9oSBYtWYLVQ+YQHhOWUoDzsstvpPYnNrIT4574yBEhg
-         +idGnqJHdmm9QdNybe1DAUh2mh2Rk1GKNT6LmBlggx6RTstwCLLi5EZTUQ/+9p8ofHgT
-         YDXc/iYr+8Oab24DGPlLhcJfiHLZ1NlVqOhm8RQNA7eYNoSAwfYdhjwXbOr1QzSZzA5B
-         OvsQ==
-X-Gm-Message-State: AOJu0YyiWvUDRTVj9DNmZhubq0BLSQu4Y3pDzJVSaJEB4KSydKOpeeJg
-        kNeKD03hniKd0gkfMQ3dOLg65w==
-X-Google-Smtp-Source: AGHT+IHgPjvN+UWeNyYfeTibcUFW047uMqqj3CXvvMBXFOfU+Wn748lBxSTCSiRTpolOZ0ariUm+vA==
-X-Received: by 2002:a05:651c:14b:b0:2bc:da4a:4649 with SMTP id c11-20020a05651c014b00b002bcda4a4649mr8568770ljd.22.1694438112248;
-        Mon, 11 Sep 2023 06:15:12 -0700 (PDT)
-Received: from [10.2.145.31] ([193.65.47.217])
-        by smtp.gmail.com with ESMTPSA id p17-20020a2ea411000000b002b70aff9a97sm1533510ljn.16.2023.09.11.06.15.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Sep 2023 06:15:11 -0700 (PDT)
-Message-ID: <04eb9f71-78f0-41f2-96a6-fc759ba296fa@linaro.org>
-Date:   Mon, 11 Sep 2023 16:15:10 +0300
+        with ESMTP id S236982AbjIKLsW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 07:48:22 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 564EDCDD;
+        Mon, 11 Sep 2023 04:48:18 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A7BCC433CB;
+        Mon, 11 Sep 2023 11:48:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694432897;
+        bh=Ka8kxyqihersE36rdzLjT/pV65yW2aDcxlKjtq+pLA0=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=MtAtZOrGGcZUa38EeLQZ1SAz27ziuqGgb5GAYyV1SdPhDiihIQbhPoiT9HLvPcJZT
+         Y0IJ6cUuwaW0yoCfH3GiYOmG1KvLKQhyDT8La6ZHciZaaH1s/aAuaGbCZbcR8e9TZa
+         RIY09wf9CQeiY76W1iZzlqbBykGP/YLeRKNxplI1vgN3bebwbkCET9NHTb+UOtczgo
+         lI7zRH3qANlVODl7j5TfNeHsQrkh0FxP99m/3NdJ214/JBTbiYj9BUzYZEE5MdGeVY
+         JjFJ/7gKbjgptCWyzN3txkvZJ2IGyujxxD3+V6N9T8M3P40gP7l0I3xH0dTASiL3Aq
+         U0NIZgwg9pWug==
+Message-ID: <f56e4e80-1905-0dcd-fb59-aaba7a9f8adb@kernel.org>
+Date:   Mon, 11 Sep 2023 20:48:14 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 5/6] arm64: dts: qcom: sdm845: Add OPP table support to
- UFSHC
-Content-Language: en-GB
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org
-References: <20230731163357.49045-1-manivannan.sadhasivam@linaro.org>
- <20230731163357.49045-6-manivannan.sadhasivam@linaro.org>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-In-Reply-To: <20230731163357.49045-6-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH 03/19] ata: libata-scsi: link ata port and scsi device
+To:     John Garry <john.g.garry@oracle.com>,
+        Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+References: <20230911040217.253905-1-dlemoal@kernel.org>
+ <20230911040217.253905-4-dlemoal@kernel.org>
+ <e8ca70d1-9c88-4a80-83e4-a65f4bbe6b72@suse.de>
+ <8874a3d5-355e-c354-fd85-0dfa7ab77b54@kernel.org>
+ <5825b4b9-0bc8-4c27-d576-070c7113e1f8@oracle.com>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <5825b4b9-0bc8-4c27-d576-070c7113e1f8@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 31/07/2023 19:33, Manivannan Sadhasivam wrote:
-> From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+On 9/11/23 19:38, John Garry wrote:
+> On 11/09/2023 07:48, Damien Le Moal wrote:
+>>>>   #define ATA_BASE_SHT(drv_name)                    \
+>>> I do understand the rationale here, as the relationship between ata port and
+>>> scsi devices are blurred. Question is: blurred by what?
+>>> Is it the libata/SAS duality where SCSI devices will have a different
+>>> ancestry for libata and libsas?
+>>> If so, why don't we need the 'link' mechanism for SAS?
+>>> Or is it something else?
+>> On scsi, ancestry from Scsi_Host is clear: host->target->device->disk.
+>> For ATA, it is also clear: port->link->device
+>>
+>> The relationship is that ata port has its own Scsi_Host, but no "family"
+>> relationship here. They are just "friends", so scsi disk and ata_port have no
+>> direct ancestry. Adding the link creates that.
+>>
+>> libsas does not need the link because it does its own PM management of the
+>> ports, not relying on PM to order things.
+>>
 > 
-> UFS host controller, when scaling gears, should choose appropriate
-> performance state of RPMh power domain controller along with clock
-> frequency. So let's add the OPP table support to specify both clock
-> frequency and RPMh performance states replacing the old "freq-table-hz"
-> property.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> [mani: Splitted pd change and used rpmhpd_opp_low_svs]
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->   arch/arm64/boot/dts/qcom/sdm845.dtsi | 42 +++++++++++++++++++++-------
->   1 file changed, 32 insertions(+), 10 deletions(-)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> index 055ca80c0075..2ea6eb44953e 100644
-> --- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> @@ -2605,22 +2605,44 @@ ufs_mem_hc: ufshc@1d84000 {
->   				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
->   				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
->   				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-> -			freq-table-hz =
-> -				<50000000 200000000>,
-> -				<0 0>,
-> -				<0 0>,
-> -				<37500000 150000000>,
-> -				<0 0>,
-> -				<0 0>,
-> -				<0 0>,
-> -				<0 0>,
-> -				<75000000 300000000>;
-> +
-> +			operating-points-v2 = <&ufs_opp_table>;
->   
->   			interconnects = <&aggre1_noc MASTER_UFS_MEM 0 &mem_noc SLAVE_EBI1 0>,
->   					<&gladiator_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_UFS_MEM_CFG 0>;
->   			interconnect-names = "ufs-ddr", "cpu-ufs";
->   
->   			status = "disabled";
-> +
-> +			ufs_opp_table: opp-table {
-> +				compatible = "operating-points-v2";
-> +
-> +				opp-50000000 {
-> +					opp-hz = /bits/ 64 <50000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <37500000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <75000000>;
-> +					required-opps = <&rpmhpd_opp_low_svs>;
-> +				};
+> For hisi_sas v3, RPM is supported and a link was required to be added in 
+> that driver between the sdev and those host controller device - see 
+> 16fd4a7c59. And that is for a similar reason here. I see that we already 
+> have an ancestry for libata between ata_dev -> ata_link -> ata_port -> 
+> ata_host dev, so it seems reasonable to add ata_dev  <-> sdev dependency 
+> here.
 
-I'd say, I'm still slightly unhappy about the 0 clock rates here.
-We need only three clocks here: core, core_clk_unipro and optional 
-ice_core_clk. Can we modify ufshcd_parse_operating_points() to pass only 
-these two or three clock names to devm_pm_opp_set_config() ? The OPP 
-core doesn't need to know about all the rest of the clocks.
+libata creates a link between ata_port and sdev. This is not very natural, but
+as I said in the cover letter, the power management model is weird as everything
+is per port, even if a port has multiple devices. Nevertheless, I tried to apply
+the same for libsas but failed: if I add the link creation in the slave_alloc
+method, I fail to get the scsi disks to show up (no /dev/sdX device files). Not
+sure why. That was with my pm8001 adapter, which is the only libsas one I have.
 
-> +
-> +				opp-200000000 {
-> +					opp-hz = /bits/ 64 <200000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <150000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <300000000>;
-> +					required-opps = <&rpmhpd_opp_nom>;
-> +				};
-> +			};
->   		};
->   
->   		ufs_mem_phy: phy@1d87000 {
+Side note: having an ata_debug (ata equivalent of scsi_debug) driver that could
+act as a pure libata driver or as a libsas adapter would really be awesome for
+this kind of tests :)
+
+> I think that this should really be added for all libsas drivers which 
+> support RPM - pm8001 is missing, IIRC.
+
+Will try again tomorrow looking at hisi driver for inspiration. The other thing
+I need to better understand is how the suspend & resume operations of libsas get
+triggered. For suspend, it is easy-ish, but for resume, it seems to be tightly
+coupled with discovery, so the the adapter resume (scsi host class resume ?).
+If that is the case, then that is done *before* the scsi_dev resume because of
+the existing device link dependencies. So I am not yet entirely convinced that
+adding a link between ata_port and sdev will serve any purpose now that the
+asynchronous libata resume is fixed and synchronized with the scsi disk
+resume... Will dig further.
+
+That said, it may be good to move libsas suspend/resume fixes to another patch
+series. There is an outstanding regression/problem for pure libata devices that
+this series fixes. So would like to get the fixes patches in Linus tree ASAP.
+
+Cheers.
 
 -- 
-With best wishes
-Dmitry
+Damien Le Moal
+Western Digital Research
 
