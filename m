@@ -2,166 +2,130 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8D8EE3F09
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C1BEE3F00
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237116AbjIKUvW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 16:51:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50790 "EHLO
+        id S237144AbjIKUvY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 16:51:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239259AbjIKOPz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 10:15:55 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 321BEDE;
-        Mon, 11 Sep 2023 07:15:51 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5128FC433C7;
-        Mon, 11 Sep 2023 14:15:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1694441750;
-        bh=olfnYoifI/jB02aaWHx94sHM9URKSWWctONpv2KPAFk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mMbIPNcvyRYM1FU35kCYfJMGypSCes8rcFLhAswqVdi1JS3dZpugNM2t2/Rtt9OMZ
-         WiHmPq2zsXMZzdZ147Z1K5WnSh6cKUg5L6BRZOBdwZb152H1jDTFTCvUcNg/SKsaTY
-         jf4njDq/BPg0E4v04OFHpSH1zrhKoM9Akq85eefc=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     stable@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        patches@lists.linux.dev, Saurav Kashyap <skashyap@marvell.com>,
-        Rob Evers <revers@redhat.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        David Laight <David.Laight@ACULAB.COM>,
-        Jozef Bacik <jobacik@redhat.com>,
-        Laurence Oberman <loberman@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Oleksandr Natalenko <oleksandr@redhat.com>,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 6.5 497/739] scsi: qedf: Do not touch __user pointer in qedf_dbg_fp_int_cmd_read() directly
-Date:   Mon, 11 Sep 2023 15:44:56 +0200
-Message-ID: <20230911134705.007493394@linuxfoundation.org>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20230911134650.921299741@linuxfoundation.org>
-References: <20230911134650.921299741@linuxfoundation.org>
-User-Agent: quilt/0.67
-X-stable: review
-X-Patchwork-Hint: ignore
+        with ESMTP id S235856AbjIKJmY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 05:42:24 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FE8D102;
+        Mon, 11 Sep 2023 02:42:20 -0700 (PDT)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38B7YVST007689;
+        Mon, 11 Sep 2023 09:42:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=65meyQ02zDJ9RS5oezOgVlLzi+P4MnDTHmSa6k7EHu0=;
+ b=pVLzyEa/3g63V1aOUyiIGR26qGeABWEclQKIS8AtllhpNnVnGrhOohnYwkmXeFRsOLlQ
+ ehcvCwE+FZ181/svY5aezM2+RSf7LapWZ5eylwW2UYue/0KVG0yEbBjkoYDVHrU71enK
+ htp0/A0g5RpOAlj3UlNZY7nfH7sdapFy4GlI80SK1x9hg9VGxgMDDwNoO0uWS3LkUCwj
+ EVnKZV7SqvrBdJ0tC8lDG0lmmvWPtXt7rOZpLi0NVKShxgJh6spRWfU8SLaBjVa+zqN/
+ htomcG4dvwWu9R/RPmrptnb2yV+9lMIQ76YdP9gnLHbTJicPVii62MgaWQArm49UbHrX pA== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t1xjmr79r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 09:42:13 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38B9gCd2004112
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 09:42:12 GMT
+Received: from [10.253.14.78] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Mon, 11 Sep
+ 2023 02:42:09 -0700
+Message-ID: <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
+Date:   Mon, 11 Sep 2023 17:42:06 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
+To:     Konrad Dybcio <konrad.dybcio@linaro.org>, <mani@kernel.org>,
+        <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        "Bjorn Andersson" <andersson@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
+ <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+Content-Language: en-US
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 6GygYcleddw3CRSgzKVR14os9b2zjpjH
+X-Proofpoint-GUID: 6GygYcleddw3CRSgzKVR14os9b2zjpjH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-11_06,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
+ phishscore=0 lowpriorityscore=0 suspectscore=0 mlxlogscore=999
+ malwarescore=0 adultscore=0 priorityscore=1501 clxscore=1015 bulkscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309110088
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-6.5-stable review patch.  If anyone has any objections, please let me know.
+Hi Konrad,
 
-------------------
-
-From: Oleksandr Natalenko <oleksandr@redhat.com>
-
-[ Upstream commit 25dbc20deab5165f847b4eb42f376f725a986ee8 ]
-
-The qedf_dbg_fp_int_cmd_read() function invokes sprintf() directly on a
-__user pointer, which may crash the kernel.
-
-Avoid doing that by vmalloc()'ating a buffer for scnprintf() and then
-calling simple_read_from_buffer() which does a proper copy_to_user() call.
-
-Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
-Link: https://lore.kernel.org/lkml/20230724120241.40495-1-oleksandr@redhat.com/
-Link: https://lore.kernel.org/linux-scsi/20230726101236.11922-1-skashyap@marvell.com/
-Cc: Saurav Kashyap <skashyap@marvell.com>
-Cc: Rob Evers <revers@redhat.com>
-Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: David Laight <David.Laight@ACULAB.COM>
-Cc: Jozef Bacik <jobacik@redhat.com>
-Cc: Laurence Oberman <loberman@redhat.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com
-Cc: linux-scsi@vger.kernel.org
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
-Acked-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Oleksandr Natalenko <oleksandr@redhat.com>
-Link: https://lore.kernel.org/r/20230731084034.37021-4-oleksandr@redhat.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qedf/qedf_dbg.h     |  2 ++
- drivers/scsi/qedf/qedf_debugfs.c | 21 +++++++++++++++------
- 2 files changed, 17 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/qedf/qedf_dbg.h b/drivers/scsi/qedf/qedf_dbg.h
-index f4d81127239eb..5ec2b817c694a 100644
---- a/drivers/scsi/qedf/qedf_dbg.h
-+++ b/drivers/scsi/qedf/qedf_dbg.h
-@@ -59,6 +59,8 @@ extern uint qedf_debug;
- #define QEDF_LOG_NOTICE	0x40000000	/* Notice logs */
- #define QEDF_LOG_WARN		0x80000000	/* Warning logs */
- 
-+#define QEDF_DEBUGFS_LOG_LEN (2 * PAGE_SIZE)
-+
- /* Debug context structure */
- struct qedf_dbg_ctx {
- 	unsigned int host_no;
-diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
-index 1c5716540e465..451fd236bfd05 100644
---- a/drivers/scsi/qedf/qedf_debugfs.c
-+++ b/drivers/scsi/qedf/qedf_debugfs.c
-@@ -8,6 +8,7 @@
- #include <linux/uaccess.h>
- #include <linux/debugfs.h>
- #include <linux/module.h>
-+#include <linux/vmalloc.h>
- 
- #include "qedf.h"
- #include "qedf_dbg.h"
-@@ -98,7 +99,9 @@ static ssize_t
- qedf_dbg_fp_int_cmd_read(struct file *filp, char __user *buffer, size_t count,
- 			 loff_t *ppos)
- {
-+	ssize_t ret;
- 	size_t cnt = 0;
-+	char *cbuf;
- 	int id;
- 	struct qedf_fastpath *fp = NULL;
- 	struct qedf_dbg_ctx *qedf_dbg =
-@@ -108,19 +111,25 @@ qedf_dbg_fp_int_cmd_read(struct file *filp, char __user *buffer, size_t count,
- 
- 	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "entered\n");
- 
--	cnt = sprintf(buffer, "\nFastpath I/O completions\n\n");
-+	cbuf = vmalloc(QEDF_DEBUGFS_LOG_LEN);
-+	if (!cbuf)
-+		return 0;
-+
-+	cnt += scnprintf(cbuf + cnt, QEDF_DEBUGFS_LOG_LEN - cnt, "\nFastpath I/O completions\n\n");
- 
- 	for (id = 0; id < qedf->num_queues; id++) {
- 		fp = &(qedf->fp_array[id]);
- 		if (fp->sb_id == QEDF_SB_ID_NULL)
- 			continue;
--		cnt += sprintf((buffer + cnt), "#%d: %lu\n", id,
--			       fp->completions);
-+		cnt += scnprintf(cbuf + cnt, QEDF_DEBUGFS_LOG_LEN - cnt,
-+				 "#%d: %lu\n", id, fp->completions);
- 	}
- 
--	cnt = min_t(int, count, cnt - *ppos);
--	*ppos += cnt;
--	return cnt;
-+	ret = simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
-+
-+	vfree(cbuf);
-+
-+	return ret;
- }
- 
- static ssize_t
--- 
-2.40.1
+On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
+> On 11.09.2023 07:59, Can Guo wrote:
+>> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+>>
+>> Retrieve UFS device version from UFS host controller's spare register
+>> which is populated by bootloader, and use the UFS device version together
+>> with host controller's HW version to decide the proper power modes which
+>> should be used to configure the UFS PHY.
+> That sounds a bit fishy.. is there no bootloader-independent
+> solution to that? Can't we bring in the code that the bootloader
+> uses to determine these values?
+>
+> Konrad
 
 
+Agree, it is.
+
+
+All these complexities come from one request from PHY design team - 
+power saving.
+
+And to achieve power saving, Qualcomm UFS developers are requested to 
+use the
+
+lowest hanging PHY settings which can sustain the Max agreed HS Gear 
+(btw host
+
+and UFS device) during UFS's lifecycle in High Level OS,  whereas the 
+power saving
+
+request does not apply to bootloader, which works for only a few seconds 
+during
+
+bootup. Hence, there is no such version detect code in bootloader -  it 
+just uses the
+
+highest PHY settings to configure PHY, boot up UFS and put UFS device 
+version in this
+
+register.
+
+
+Thanks,
+
+Can Guo.
 
