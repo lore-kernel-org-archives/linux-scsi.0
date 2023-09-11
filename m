@@ -2,94 +2,178 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3C79EE3F05
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A387AEE3F01
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233250AbjIKUvA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 16:51:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50690 "EHLO
+        id S234442AbjIKUvE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 16:51:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235356AbjIKI2R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 04:28:17 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34FC8FB
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 01:28:11 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id 4fb4d7f45d1cf-52bcd4db4cbso5199289a12.1
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 01:28:11 -0700 (PDT)
+        with ESMTP id S235923AbjIKJqa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 05:46:30 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94F7CE4A
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 02:46:25 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id 2adb3069b0e04-501be2d45e0so7075329e87.3
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 02:46:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1694420889; x=1695025689; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YBxIxDBPX2uE4bhwMr4vV3mzF4qpVG8rCPy6CtitBO4=;
-        b=jEKxd9edzah7j7EDVgWbhAucH3WVsLNYo60IZQ1MvRGez96AWwUrJAi/BqFJDhrfg8
-         tNTVL4fnkDCIShyVzSLlYXS+S2nE4RqS39uPVsRUiTxylpZTlvRFRgc/JjkX2RB1QSlp
-         pFmxJ57wSxS8l1oSx2vYcbp8Ep5JfUeh2RrDFNcyFlRltKrgF6DkR0On9mhK4ydWyzSo
-         8cF2KwLxhAELSLeTbiTTkS8G4b4bzwjmbqLjjWUNfwsakv1pr1sh0zbmy8eT8HiM7rDu
-         d+nW1o6NnYBpsiTcEoON87XjZWPFzh+dPcAvCaoxnl4fwynWTq0i4tbhy4O8d8c55dii
-         Fl6Q==
+        d=linaro.org; s=google; t=1694425584; x=1695030384; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=IVd11RHi3QFilUBHjU00d5ZhZ23EKtBEFJIkR9qPnqI=;
+        b=p3Yft8uZgnqnlV0n2qBp1KG8aWzm6GwMEF5m4LwpgH7j59aNMPCv4/iOHWgjvAXBMR
+         4h3sX0ySoIhDxEoe5W6NyxMGIHb/iESoe1E4p3awdKpo6s9CzwN0dqQZrHlVsImU0clU
+         G7bbRlVGv6DwPQJ2BENA93RcAw+qpldvoE/e7eZndeseQy/nRfDtx3CJw+cenObY+ZRJ
+         OZwWFVi7L3ZP+c+dfZNKWpDSy0vFX57kVkomLRuj9Clf2TaFlj4CfM0KQrHf+Ypc4knF
+         lFs7O36nIMfmF2aV6QsqPMIA4xngAwaRUKI2PX44zMEp9x8TqBCT3e6YzBUamf1Ntf+V
+         gV4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694420889; x=1695025689;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YBxIxDBPX2uE4bhwMr4vV3mzF4qpVG8rCPy6CtitBO4=;
-        b=PZp+j1fhU4DIpP2V/YWEXPZRDF/otYBHlzXhZ4E9NWsBge/h7XJhJKIwDGW0r6iGYi
-         q7OSXku2dwoEyu5ep0JcIl+irfingnhqT0FMBd0RJv4JuimoTzxRvGy7OhjSW7NleAwa
-         ldx973MhoybfUao+zGBxD1v8icxj82XMFZAsJlP02pabOIGylcV1+LVqJgVUTry4yTnO
-         1Y/WfRAGc92ITlh2w6C9CRtwXPQATf+qlQygh5/6A7+zrzF5tbKeXtCB/7cAeJ2uWpDc
-         1/VqYLklVq88Z8Eihxm1ud09Uk+C7Y++WI/AEzH711Di13hNlj/eIl7z/w0g7qG9B1Ve
-         7oYw==
-X-Gm-Message-State: AOJu0YzEvnx3IsZx9PXFa7JVWrsGD3pBd1ia2IcHqjS30e/tGnrSFDoD
-        SXfjpChfuGODnrsnn0T4yShzNJdQsHi/HQ5jRWphErkNC9fRUXkPn48=
-X-Google-Smtp-Source: AGHT+IHszTxyQyEAdAC4oLjOHzyZvzcPxVVDhxQDlDiSQrzAaYli4cCufb3eqDnYWirIeLCBj1B49LA8AHEAx7lmpnw=
-X-Received: by 2002:a05:6402:138d:b0:523:1ce9:1f41 with SMTP id
- b13-20020a056402138d00b005231ce91f41mr6895754edv.18.1694420889633; Mon, 11
- Sep 2023 01:28:09 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1694425584; x=1695030384;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=IVd11RHi3QFilUBHjU00d5ZhZ23EKtBEFJIkR9qPnqI=;
+        b=vfgYIrdThD71GNROxQQUMapStlFV3kQPI9A7UqIM/+22nFUZwBPtwAdKgTLDqfY9ql
+         /kha/OyEEOmJoJ6nS6wVwp2iWYe9dLYK2Xuy2UTjvGUm11ouaDKSky9DBJHUbWmYaErF
+         LXTnYNpu5CZnXvzZ/G4e5f4s5KaPlQ4MdEHVvD2eF5Xm+01MSn6uCFTiddGyUQAb/LuW
+         7dEGVT64Uvv6sTYxTVD0f4O0EiUZpboKpNOheknwsATs07iyV5IwybrlY472sEKuC1w7
+         RFhiTycq5o2KBoZTOmerKNP/I9d9BathAoLCl8kFuuvHU1dHGXQIsOPBNxdvwt6Z0XTn
+         dD0w==
+X-Gm-Message-State: AOJu0Yw51kXjn5qFYaIw1fjPkv19z3vQpQatfLMjAiC3/RbQnamMBgik
+        6UHsJ5C8e27QG00HHwalV6C/jg==
+X-Google-Smtp-Source: AGHT+IF6e7LCXAYSeQSvEKbbuvVGlfF4fTaSqGpUJS2I7Qrq7ixXgSnRRAiOQ4jtvT1DD3aHjqTJmg==
+X-Received: by 2002:a05:6512:3b25:b0:4ff:a25b:bca1 with SMTP id f37-20020a0565123b2500b004ffa25bbca1mr8830096lfv.33.1694425583740;
+        Mon, 11 Sep 2023 02:46:23 -0700 (PDT)
+Received: from [192.168.37.232] (178235177061.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.61])
+        by smtp.gmail.com with ESMTPSA id x18-20020aa7d6d2000000b005257f90c976sm4377665edr.3.2023.09.11.02.46.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 11 Sep 2023 02:46:23 -0700 (PDT)
+Message-ID: <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org>
+Date:   Mon, 11 Sep 2023 11:46:20 +0200
 MIME-Version: 1.0
-References: <20230911030207.242917-1-dlemoal@kernel.org>
-In-Reply-To: <20230911030207.242917-1-dlemoal@kernel.org>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Mon, 11 Sep 2023 10:27:58 +0200
-Message-ID: <CAMGffEk5ALBPpAUay5v73t4Tp8tE4rDfqoFURZjHQn3_vvNpjw@mail.gmail.com>
-Subject: Re: [PATCH 00/10] scsi: pm8001: Bug fix and cleanup
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
+Content-Language: en-US
+To:     Can Guo <quic_cang@quicinc.com>, mani@kernel.org,
+        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
+ <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+ <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
+ 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
+ izWDgYvmBE8=
+In-Reply-To: <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 11, 2023 at 5:02=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org>=
- wrote:
->
-> The first patch of this series fixes an issue with IRQ setup which
-> prevents the controller from resuming after a system suspend.
-> The following patches are code cleanup without any functional changes.
->
-> Damien Le Moal (10):
->   scsi: pm8001: Setup IRQs on resume
->   scsi: pm8001: Introduce pm8001_free_irq()
->   scsi: pm8001: Introduce pm8001_init_tasklet()
->   scsi: pm8001: Introduce pm8001_kill_tasklet()
->   scsi: pm8001: Introduce pm8001_handle_irq()
->   scsi: pm8001: Simplify pm8001_chip_interrupt_enable/disable()
->   scsi: pm8001: Remove pm80xx_chip_intx_interrupt_enable/disable()
->   scsi: pm8001: Remove PM8001_USE_MSIX
->   scsi: pm8001: Remove PM8001_USE_TASKLET
->   scsi: pm8001: Remove PM8001_READ_VPD
->
->  drivers/scsi/pm8001/pm8001_hwi.c  |  89 ++-------
->  drivers/scsi/pm8001/pm8001_init.c | 322 +++++++++++++++---------------
->  drivers/scsi/pm8001/pm8001_sas.h  |  11 +-
->  drivers/scsi/pm8001/pm80xx_hwi.c  |  59 ++----
->  4 files changed, 202 insertions(+), 279 deletions(-)
->
-> --
-> 2.41.0
->
-Thanks for the patchset.
+On 11.09.2023 11:42, Can Guo wrote:
+> Hi Konrad,
+> 
+> On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
+>> On 11.09.2023 07:59, Can Guo wrote:
+>>> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+>>>
+>>> Retrieve UFS device version from UFS host controller's spare register
+>>> which is populated by bootloader, and use the UFS device version together
+>>> with host controller's HW version to decide the proper power modes which
+>>> should be used to configure the UFS PHY.
+>> That sounds a bit fishy.. is there no bootloader-independent
+>> solution to that? Can't we bring in the code that the bootloader
+>> uses to determine these values?
+>>
+>> Konrad
+> 
+> 
+> Agree, it is.
+> 
+> 
+> All these complexities come from one request from PHY design team - power saving.
+> 
+> And to achieve power saving, Qualcomm UFS developers are requested to use the
+> 
+> lowest hanging PHY settings which can sustain the Max agreed HS Gear (btw host
+> 
+> and UFS device) during UFS's lifecycle in High Level OS,  whereas the power saving
+> 
+> request does not apply to bootloader, which works for only a few seconds during
+> 
+> bootup. Hence, there is no such version detect code in bootloader -  it just uses the
+> 
+> highest PHY settings to configure PHY, boot up UFS and put UFS device version in this
+> 
+> register.
+First of all, your email client seems to be inserting 2 newlines
+instead of 1. If you're using thunderbird, you may want to edit:
 
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
+mail.identity.(default or your mail identity idx).default.compose_html
+
+to `false`
+
+and add that to your internal wiki page, as I see many @quic folks having
+this issue.
+
+
+Going back to the main topic, I don't think we understood each other.
+The commit message states:
+
+
+"Retrieve UFS device version from UFS host controller's spare register
+which is populated by bootloader"
+
+
+Which means the bootloader is able to somehow determine the value
+that's in the spare register and write it there.
+
+I'm asking whether we can take the logic behind this value and
+move it to Linux so that we don't depend on the bootloader to
+guarantee it (e.g. Chrome or some other devices with more exotic
+fw may not work this way).
+
+
+Konrad
