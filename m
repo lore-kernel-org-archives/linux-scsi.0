@@ -2,94 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 117D3EE3F0E
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F20DEE3F04
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:51:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237193AbjIKUvY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 16:51:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41838 "EHLO
+        id S237258AbjIKUvZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 16:51:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236316AbjIKKPF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 06:15:05 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 078DCE5F;
-        Mon, 11 Sep 2023 03:15:01 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-502a4f33440so3805175e87.1;
-        Mon, 11 Sep 2023 03:15:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1694427299; x=1695032099; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UHCnoccZNiz4HQ8Bo9b1jZ414TiCPpgUdOpHpw/rPXw=;
-        b=c1Sq9ZgjSYTJXSXnjb/fXBWFdtviDwrR/xxzraHb5Qe3mkeVZ4y6gqiugdFn2DmrfK
-         3hXeC4A0Gv9jVyIh1AVqFhQ5LPLvTbQ940omt9msE7CXyJx9gRXS7vyBqWA6UbnbDl0N
-         rLHZ/J+TpzIBUs5IAfVML3N4SI2YdcdFHUeZboEJ2Cu0POOzV7HgweiitgZ9DzX8J/5m
-         0izqa9YWkHL8rCBz7/KY1ZKvDJFdO14deqziDGdJmxPoAhLU+lwOJNe7DEsFWXgR+Opn
-         jeMNblwWtYVdAn+7dblPH1O789ul+ZXSw+9gPjUDD8Cja5V9vbQyFpsO2LV22oPhitLa
-         GQOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694427299; x=1695032099;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UHCnoccZNiz4HQ8Bo9b1jZ414TiCPpgUdOpHpw/rPXw=;
-        b=TfWn3VyQVF6fuL61Fp6w4HBL0+FDuBwYSroTIAzLXSD/1OBlXrzJKnA/Do41MY9YQD
-         T2fXJ0B7bcxjdX+pFOwZwphFdoxIGzvssDGo9T6OywZSDoHB1Yc6tTYitr8AEIjt5sky
-         SOkAvzrxa9wXJ4hmHYqH02YERjduGxW0oD3F1KhwIWckHqaaheTTljxqN5/LN7LPngrc
-         Kjv9GkAg6HmK9HAF3sNLbG+sBRUpgGm/H/FGqRDL2qAh6Je8nQKE9Z70SyZPaXMJ+GcE
-         Cg+FEnWhF73y+tfOmcXKVKIaERwy83AGsxbqEiqvhCyO7h3qU+ZFBFlvSOiUvRJYCE01
-         pndA==
-X-Gm-Message-State: AOJu0YxmSl+MIaRlQdJAcL7Ul+7oIXs7e/bQTxGCmQIXRrnggq5Geff3
-        9IZ9ITrfcCO5JsjA5MDfaE0=
-X-Google-Smtp-Source: AGHT+IEBzImGafYSjy+sKGHiF/inpe78xQ3N0eED9tvnQyipiObNqw+8hKQHd3OOq3uiMbbz8quuUQ==
-X-Received: by 2002:a19:ca18:0:b0:4f8:62a6:8b2 with SMTP id a24-20020a19ca18000000b004f862a608b2mr6380933lfg.46.1694427298875;
-        Mon, 11 Sep 2023 03:14:58 -0700 (PDT)
-Received: from [192.168.1.103] ([178.176.75.0])
-        by smtp.gmail.com with ESMTPSA id q1-20020a19a401000000b005009c4ba3f0sm1291041lfc.72.2023.09.11.03.14.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Sep 2023 03:14:58 -0700 (PDT)
-Subject: Re: [PATCH 18/19] ata: libata-eh: Reduce "disable device" message
- verbosity
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-19-dlemoal@kernel.org>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <3df11a20-bd80-304b-0a78-9875fa1a9e9b@gmail.com>
-Date:   Mon, 11 Sep 2023 13:14:56 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S240738AbjIKOwZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 10:52:25 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3BE9118;
+        Mon, 11 Sep 2023 07:52:20 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F289EC433C7;
+        Mon, 11 Sep 2023 14:52:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1694443940;
+        bh=8k7yvM6UqimuVPBlvfAyut5D2bVf7w+KZrhEhQXFOmw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=jBWV3+Dq6kild6S83sVTJjNoqFsFaeQfF27AHrxoCL6U8LCfzduzrqHj9tFnFo4bX
+         v92EbtZc4aPHOHtd6xkDdAtJxdjDOPWRW01tyy8F2Jt5UM0g8WbzglbfaumrPHS/bN
+         N1sS+c4zMfw6n/F8kN1CPCJwquL8b+WNlKD0n/C4=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     stable@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        patches@lists.linux.dev, Saurav Kashyap <skashyap@marvell.com>,
+        Rob Evers <revers@redhat.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        David Laight <David.Laight@ACULAB.COM>,
+        Jozef Bacik <jobacik@redhat.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Oleksandr Natalenko <oleksandr@redhat.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 6.4 525/737] scsi: qedf: Do not touch __user pointer in qedf_dbg_debug_cmd_read() directly
+Date:   Mon, 11 Sep 2023 15:46:24 +0200
+Message-ID: <20230911134705.241928535@linuxfoundation.org>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20230911134650.286315610@linuxfoundation.org>
+References: <20230911134650.286315610@linuxfoundation.org>
+User-Agent: quilt/0.67
+X-stable: review
+X-Patchwork-Hint: ignore
 MIME-Version: 1.0
-In-Reply-To: <20230911040217.253905-19-dlemoal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello!
+6.4-stable review patch.  If anyone has any objections, please let me know.
 
-On 9/11/23 7:02 AM, Damien Le Moal wrote:
+------------------
 
-> There is no point in warning about a device being diabled when we expect
+From: Oleksandr Natalenko <oleksandr@redhat.com>
 
-   Disabled. :-)
+[ Upstream commit 31b5991a9a91ba97237ac9da509d78eec453ff72 ]
 
-> it to be, that is, on suspend, shutdown or when detaching a device.
-> Suppress this message for these cases by introducing the EH static
-> function ata_eh_dev_disable() and by using it in ata_eh_unload() and
-> ata_eh_detach_dev(). ata_dev_disable() code is modified to call this new
-> function after printing the "disable device" message.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-[...]
+The qedf_dbg_debug_cmd_read() function invokes sprintf() directly on a
+__user pointer, which may crash the kernel.
 
-MBR, Sergey
+Avoid doing that by using a small on-stack buffer for scnprintf() and then
+calling simple_read_from_buffer() which does a proper copy_to_user() call.
+
+Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Link: https://lore.kernel.org/lkml/20230724120241.40495-1-oleksandr@redhat.com/
+Link: https://lore.kernel.org/linux-scsi/20230726101236.11922-1-skashyap@marvell.com/
+Cc: Saurav Kashyap <skashyap@marvell.com>
+Cc: Rob Evers <revers@redhat.com>
+Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: David Laight <David.Laight@ACULAB.COM>
+Cc: Jozef Bacik <jobacik@redhat.com>
+Cc: Laurence Oberman <loberman@redhat.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: GR-QLogic-Storage-Upstream@marvell.com
+Cc: linux-scsi@vger.kernel.org
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Tested-by: Laurence Oberman <loberman@redhat.com>
+Acked-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Oleksandr Natalenko <oleksandr@redhat.com>
+Link: https://lore.kernel.org/r/20230731084034.37021-3-oleksandr@redhat.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qedf/qedf_debugfs.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
+index 3eb4334ac6a32..1c5716540e465 100644
+--- a/drivers/scsi/qedf/qedf_debugfs.c
++++ b/drivers/scsi/qedf/qedf_debugfs.c
+@@ -138,15 +138,14 @@ qedf_dbg_debug_cmd_read(struct file *filp, char __user *buffer, size_t count,
+ 			loff_t *ppos)
+ {
+ 	int cnt;
++	char cbuf[32];
+ 	struct qedf_dbg_ctx *qedf_dbg =
+ 				(struct qedf_dbg_ctx *)filp->private_data;
+ 
+ 	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "debug mask=0x%x\n", qedf_debug);
+-	cnt = sprintf(buffer, "debug mask = 0x%x\n", qedf_debug);
++	cnt = scnprintf(cbuf, sizeof(cbuf), "debug mask = 0x%x\n", qedf_debug);
+ 
+-	cnt = min_t(int, count, cnt - *ppos);
+-	*ppos += cnt;
+-	return cnt;
++	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
+ }
+ 
+ static ssize_t
+-- 
+2.40.1
+
+
+
