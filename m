@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BAC8EE7FF4
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:34:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B59DCEE801F
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 06:37:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234255AbjIKGel (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 02:34:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59768 "EHLO
+        id S229449AbjIKGhq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 02:37:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234060AbjIKGek (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:34:40 -0400
+        with ESMTP id S234472AbjIKGhp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 02:37:45 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26D74EA;
-        Sun, 10 Sep 2023 23:34:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0FA9102;
+        Sun, 10 Sep 2023 23:37:40 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id B73F11F460;
-        Mon, 11 Sep 2023 06:34:33 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 618E01F8A6;
+        Mon, 11 Sep 2023 06:37:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1694414073; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1694414259; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=4Liqnv5C9u1WHhOFs/fW4H5rN+Pdwcw1Js6uR9GkKos=;
-        b=Du2y4LIrZN0R0QLzj9cXUTesWrIqsj5vwQ7StDTY5u+g4WktfvKgiWf3F7TRVHm6jP96rX
-        9h3qN96k42BoDf0JOwITHm5HgL92EGvA96tHbyO1NkimI7YkMWBsioJfvzz3vBDMDAbrcy
-        1wieXfs+qqpKSa/Ob4KKKgCe8wU09Yo=
+        bh=cRJchIqMKPgyHM5acDlxNF95Rrwsfxnvw2B/NZLWoiY=;
+        b=csSWwZ+7I3GaZjRWLiB9JeJWuDbnr5+1Ixkz/M1LFVL1Eqfx2E7R8gC7qDVUPbHFSnDiM+
+        jHOyEl5N+lzlvhju5GhWZTUkKEDAzm9uzvYiDPVuirS44AApc6L0Nw36wWUv/ljl34Dabr
+        LeBAaNoublbjfZdWK2eY1J2qvNHtrcY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1694414073;
+        s=susede2_ed25519; t=1694414259;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=4Liqnv5C9u1WHhOFs/fW4H5rN+Pdwcw1Js6uR9GkKos=;
-        b=abNxOQo8Wxv8W+d06te0dX4E1URCmAYGMT/oOcb9zczdkv8I//ulttZRs69Ybs/PtnOJtg
-        V2fxO7oPohpKCbBQ==
+        bh=cRJchIqMKPgyHM5acDlxNF95Rrwsfxnvw2B/NZLWoiY=;
+        b=naSrL20F0O8ir8l04L21U0ZjsP6u8ZTrVj5ZVCnNmUeHXlzKbZa2jzY2PeWTBTV4GzesKQ
+        pvKg4kFJWUuHrADw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 02C1213780;
-        Mon, 11 Sep 2023 06:34:32 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2C09F13780;
+        Mon, 11 Sep 2023 06:37:39 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id NNMvN/i0/mS1SAAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 11 Sep 2023 06:34:32 +0000
-Message-ID: <36c6e364-a003-4879-831c-82d2eef87137@suse.de>
-Date:   Mon, 11 Sep 2023 08:34:32 +0200
+        id rADDCbO1/mRUSgAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 11 Sep 2023 06:37:39 +0000
+Message-ID: <add77796-ff0f-4311-8c4d-6597695e89ed@suse.de>
+Date:   Mon, 11 Sep 2023 08:37:38 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/19] ata: libata-core: Fix ata_port_request_pm() locking
+Subject: Re: [PATCH 02/19] ata: libata-core: Fix port and device removal
 Content-Language: en-US
 To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -63,34 +63,87 @@ Cc:     linux-scsi@vger.kernel.org,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
 References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-2-dlemoal@kernel.org>
+ <20230911040217.253905-3-dlemoal@kernel.org>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230911040217.253905-2-dlemoal@kernel.org>
+In-Reply-To: <20230911040217.253905-3-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/11/23 06:01, Damien Le Moal wrote:
-> The function ata_port_request_pm() checks the port flag
-> ATA_PFLAG_PM_PENDING and calls ata_port_wait_eh() if this flag is set to
-> ensure that power management operations for a port are not secheduled
-> simultaneously. However, this flag check is done without holding the
-> port lock.
+On 9/11/23 06:02, Damien Le Moal wrote:
+> Whenever an ATA adapter driver is removed (e.g. rmmod),
+> ata_port_detach() is called repeatedly for all the adapter ports to
+> remove (unload) the devices attached to the port and delete the port
+> device itself. Removing of devices is done using libata EH with the
+> ATA_PFLAG_UNLOADING port flag set. This causes libata EH to execute
+> ata_eh_unload() which disables all devices attached to the port.
 > 
-> Fix this by taking the port lock on entry to the function and checking
-> the flag under this lock. The lock is released and re-taken if
-> ata_port_wait_eh() needs to be called.
+> ata_port_detach() finishes by calling scsi_remove_host() to remove the
+> scsi host associated with the port. This function will trigger the
+> removal of all scsi devices attached to the host and in the case of
+> disks, calls to sd_shutdown() which will flush the device write cache
+> and stop the device. However, given that the devices were already
+> disabled by ata_eh_unload(), the synchronize write cache command and
+> start stop unit commands fail. E.g. running "rmmod ahci" with first
+> removing sd_mod results in error messages like:
 > 
-> Fixes: 5ef41082912b ("ata: add ata port system PM callbacks")
+> ata13.00: disable device
+> sd 0:0:0:0: [sda] Synchronizing SCSI cache
+> sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 0:0:0:0: [sda] Stopping disk
+> sd 0:0:0:0: [sda] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> 
+> Fix this by removing all scsi devices of the ata devices connected to
+> the port before scheduling libata EH to disable the ATA devices.
+> 
+> Fixes: 720ba12620ee ("[PATCH] libata-hp: update unload-unplug")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/libata-core.c | 17 +++++++++--------
->   1 file changed, 9 insertions(+), 8 deletions(-)
+>   drivers/ata/libata-core.c | 21 ++++++++++++++++++++-
+>   1 file changed, 20 insertions(+), 1 deletion(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index c4898483d716..693cb3cd70cd 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5952,11 +5952,30 @@ static void ata_port_detach(struct ata_port *ap)
+>   	struct ata_link *link;
+>   	struct ata_device *dev;
+>   
+> -	/* tell EH we're leaving & flush EH */
+> +	/* Wait for any ongoing EH */
+> +	ata_port_wait_eh(ap);
+> +
+> +	mutex_lock(&ap->scsi_scan_mutex);
+>   	spin_lock_irqsave(ap->lock, flags);
+> +
+> +	/* Remove scsi devices */
+> +	ata_for_each_link(link, ap, HOST_FIRST) {
+> +		ata_for_each_dev(dev, link, ALL) {
+> +			if (dev->sdev) {
+> +				spin_unlock_irqrestore(ap->lock, flags);
+> +				scsi_remove_device(dev->sdev);
+> +				spin_lock_irqsave(ap->lock, flags);
+> +				dev->sdev = NULL;
+> +			}
+> +		}
+> +	}
+> +
+> +	/* Tell EH to disable all devices */
+>   	ap->pflags |= ATA_PFLAG_UNLOADING;
+>   	ata_port_schedule_eh(ap);
+> +
+>   	spin_unlock_irqrestore(ap->lock, flags);
+> +	mutex_unlock(&ap->scsi_scan_mutex);
+>   
+Are you sure about releasing scan_mutex after ata_port_schedule_eh()?
+Technically ata_port_schedule_eh() will be calling into SCSI rescan, 
+which would take scan_mutex ...
+Not that it matter much, seeing that we've disconnected all devices, but 
+still ...
 
 Cheers,
 
