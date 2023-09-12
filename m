@@ -2,82 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D8FFCA0EC3
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 08:53:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9435CA0EC3
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 09:01:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232941AbjILIxv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Sep 2023 04:53:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60278 "EHLO
+        id S233160AbjILJBr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Sep 2023 05:01:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231764AbjILIxr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 04:53:47 -0400
+        with ESMTP id S233454AbjILJB2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 05:01:28 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64622E79
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Sep 2023 01:53:43 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75DD6C433C9;
-        Tue, 12 Sep 2023 08:53:42 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 743E310DE;
+        Tue, 12 Sep 2023 02:00:56 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6369C433C9;
+        Tue, 12 Sep 2023 09:00:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694508823;
-        bh=h9V/TxWvkCsPWm4aDXzjcBB9gkQayI8njTw8esu6BCk=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=nm1f4y1OZOKCQlge1/EOGyftBtt1HhSM+OJRClhw424c7iWCpOt9KOumsXmG7F8Ri
-         zkh5c/muN4XyBwLIYk2HjGnVlJ3RGkyNALVFJJ15uDq67oTNwqSwBGzITyZV4u4/uL
-         XgJL41U6Jy/6Xf5X+fEMPxbsZlkJdxIfNyeMJPMVSQgEi7Twav9LdbUx46SqeBDj6A
-         X4HEKkuvgt/IOW2xN8iJ+h/52Eds5sxjUUYiVceSTxJbgT7CUZHFFQ1faxKKdqSgGm
-         nXMEEwA1+TuXqRmpuM3qM/FMu8TJwTUA+SoJ4wbT5tPkk9yVgQYuvBhpvftAd6TE7r
-         hbw0MB9VIqXSQ==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>
-Subject: [PATCH v2 3/3] scsi: libsas: Declare sas_discover_end_dev() static
-Date:   Tue, 12 Sep 2023 17:53:38 +0900
-Message-ID: <20230912085338.434381-4-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230912085338.434381-1-dlemoal@kernel.org>
-References: <20230912085338.434381-1-dlemoal@kernel.org>
+        s=k20201202; t=1694509256;
+        bh=uB6NBCia8j7lCfVRxg9y7/CUA7Jyy1+qX4ogEzcYYQ4=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=nZzQxemJGTrIHrso+LPiYkb4EfRP3YptYERjm/oCqNSSIWyIfi0mHDY9gpE9texJp
+         I0iyuU9GURdF9PyVOmEQsqN08C3XwozT27E5RS3wE9uvETt+t5kERGJCBOrt9DyfqY
+         i0AF58xyjvSWgXdscI7a8b9sbuN3LGkzo2K0g7hHbprD4nYoFsPAePzJrDQqMmVocF
+         5gBDG1hfWpR3MKWVai+om5Inw8Ce9o0F7+8SLl8L++zewkh0Qr97Ic8M8zkMO+LjoN
+         WLPu0qv6/tjcYJNx+8rBb4+PbH09m9MGxE9SaFfYrxDqhm3cRr9ft1LoPou1Qdsbt5
+         Z9gTMeD2fOfhA==
+Message-ID: <7f690cc0-cfc1-8e31-debe-baac032d97da@kernel.org>
+Date:   Tue, 12 Sep 2023 18:00:53 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH 03/19] ata: libata-scsi: link ata port and scsi device
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>,
+        Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+References: <20230911040217.253905-1-dlemoal@kernel.org>
+ <20230911040217.253905-4-dlemoal@kernel.org>
+ <e8ca70d1-9c88-4a80-83e4-a65f4bbe6b72@suse.de>
+ <8874a3d5-355e-c354-fd85-0dfa7ab77b54@kernel.org>
+ <5825b4b9-0bc8-4c27-d576-070c7113e1f8@oracle.com>
+ <f56e4e80-1905-0dcd-fb59-aaba7a9f8adb@kernel.org>
+ <764fa7a6-109f-0ea5-5d25-3e39874e9c8a@oracle.com>
+ <b3af36cd-a126-24ac-739c-5d1a192c2b2b@kernel.org>
+ <bb89fdf9-7f7a-c7ee-7295-edbb4563dd2a@oracle.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <bb89fdf9-7f7a-c7ee-7295-edbb4563dd2a@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sas_discover_end_dev() is defined and used used only in sas_discover.c.
-Define this function as static.
+On 9/12/23 17:49, John Garry wrote:
+>> +int sas_ata_slave_configure(struct scsi_device *sdev)
+>> +{
+>> +       struct domain_device *dev = sdev_to_domain_dev(sdev);
+>> +       struct ata_port *ap = dev->sata_dev.ap;
+>> +       struct device *sdev_dev = &sdev->sdev_gendev;
+>> +       struct device_link *link;
+>> +
+>> +       ata_sas_slave_configure(sdev, ap);
+>> +
+>> +       link = device_link_add(sdev_dev, &ap->tdev,
+>> +                              DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
+> 
+> I am not sure what is the point of this. For libsas/pm8001 driver, there 
+> is no ata_port -> .. -> host dev link, right? If so, it just seems that 
+> you are are adding a dependency to a device (&ap->tdev) which has no 
+> dependency to a real device itself.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
----
- drivers/scsi/libsas/sas_discover.c | 2 +-
- include/scsi/libsas.h              | 2 --
- 2 files changed, 1 insertion(+), 3 deletions(-)
+For libata, the point is to have PM order suspend resume operations correctly:
+suspend: scsi dev first, then ata_port
+resume: ata_port first then scsi dev
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index ff7b63b10aeb..8fb7c41c0962 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -275,7 +275,7 @@ static void sas_resume_devices(struct work_struct *work)
-  *
-  * See comment in sas_discover_sata().
-  */
--int sas_discover_end_dev(struct domain_device *dev)
-+static int sas_discover_end_dev(struct domain_device *dev)
- {
- 	return sas_notify_lldd_dev_found(dev);
- }
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index d3ace28ee41f..f5257103fdb6 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -696,8 +696,6 @@ extern struct scsi_transport_template *
- sas_domain_attach_transport(struct sas_domain_function_template *);
- extern struct device_attribute dev_attr_phy_event_threshold;
- 
--int  sas_discover_end_dev(struct domain_device *);
--
- void sas_task_abort(struct sas_task *);
- int sas_eh_abort_handler(struct scsi_cmnd *cmd);
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd);
+Strictly speaking, we should do that with ata_dev and scsi dev, but libata PM
+operations are defined for ata_port, not ata_dev.
+
+For libsas, the PM operations come from scsi, so scsi bus operations for
+devices. And given that:
+1) we should already have the dev chain:
+hba dev -> scsi host ->scsi target -> scsi dev
+2) libsas does its own ata PM control when suspending & resuming the HBA (if I
+understand things correctly)
+
+we should thus not need anything special for libsas. ata devices suspend/resume
+will be done in the right order without an extra link. I do not really
+understand why hisi_sas need to create that link. If it is indeed needed, then
+we probably should have it created always by libsas generic code...
+
 -- 
-2.41.0
+Damien Le Moal
+Western Digital Research
 
