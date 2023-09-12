@@ -2,81 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14C0DCA0ECF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 07:47:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDCB0CA0ECF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 07:52:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231797AbjILHr3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Sep 2023 03:47:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57152 "EHLO
+        id S231918AbjILHw3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Sep 2023 03:52:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231781AbjILHr0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 03:47:26 -0400
+        with ESMTP id S232038AbjILHwS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 03:52:18 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8F8E79
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Sep 2023 00:47:22 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74437C433C7;
-        Tue, 12 Sep 2023 07:47:21 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3ACA10CA;
+        Tue, 12 Sep 2023 00:52:14 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A955C433C7;
+        Tue, 12 Sep 2023 07:52:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694504842;
-        bh=7K3Te840Hth/WiXD63jli4PIbfxwQNxsR4MNc1WnHmo=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=T6hODUsMqEtkeFD4l9vJaARLpeY7QFGG0O6Fuu7/bahNTlCVyOjOLmjfTqHSg5EVs
-         aQ3+c6wz5D3+2+q3+U0lL7OnlGAZhwJde0Ff+9zjo7uU2YlfSN0L+xOpNdsmDjAqTd
-         KwNzlkoW7xNR+lH985qKqy1KeKPgErpEGxMJDlK6YYRZDSvp/adFOj3Tc5pAJy+ccq
-         PLH7z11zOrLki2utcjCV47L1cBQjPpc9LgqHfYyR3zIaRN+exc+8H9U0fiNi/EjyS6
-         tH9QzsmHQi1kqMwLamLPkHTrD1pLklclwU+zwJwltOeAszZ7dYR7rzoFI8Ge+bgUzt
-         SKxjH81fyMyeg==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>
-Subject: [PATCH 3/3] scsi: libsas: Declare sas_discover_end_dev() static
-Date:   Tue, 12 Sep 2023 16:47:15 +0900
-Message-ID: <20230912074715.424062-4-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230912074715.424062-1-dlemoal@kernel.org>
-References: <20230912074715.424062-1-dlemoal@kernel.org>
+        s=k20201202; t=1694505134;
+        bh=7RziTGtFs4XWiI0qMIkpq6u2RT7BBMRF7ihhn7LshJs=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=IFSvBa/YDTY8r9C7/SoDzLmhtFsbZDfhyiZ6W6i1Lwgcu9vN/AaxgCi79GeQG6VoJ
+         6M1HwgV5qIjbs1ZcUOPg8subMJVZgnLLn/ztobll/tzqv5WZIPwdJh8468S7CzT12e
+         G0OlkpAVE6oCb88iXRYb8t9TOq9/H7ZaMgZ31FSlhdtqS4GtNRehVFfqX7r96K3Z/i
+         qcdJ7s2FgzsZv4AX/NlVBr+HUvt/uKIkgAKvHQWAnnnER2qMq9jorx+ndnZOrGpb64
+         Yo3gmZryl794QdCOavDWvp+Ku1aQ3mQRc3kAKBkGJfQpldGMZBS1Pk1Qek9R43jpjW
+         MZYUDPoFD0EQw==
+Message-ID: <3b50010d-efd5-a38a-7dec-46aab50f3071@kernel.org>
+Date:   Tue, 12 Sep 2023 16:52:12 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v2 18/21] ata: libata-sata: Improve
+ ata_sas_slave_configure()
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+References: <20230912005655.368075-1-dlemoal@kernel.org>
+ <20230912005655.368075-19-dlemoal@kernel.org>
+ <6b137561-a5f0-4dc2-c4ff-1c31cb1a0c7e@oracle.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <6b137561-a5f0-4dc2-c4ff-1c31cb1a0c7e@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sas_discover_end_dev() is defined and used used only in sas_discover.c.
-Define this function as static.
+On 9/12/23 16:43, John Garry wrote:
+> On 12/09/2023 01:56, Damien Le Moal wrote:
+>> Change ata_sas_slave_configure() to return the return value of
+>> ata_scsi_dev_config() to ensure that any error from that function is
+>> propagated to libsas.
+> 
+> This seems reasonable, but does libsas even check the return code? From 
+> a glance, I don't think that it does...
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/scsi/libsas/sas_discover.c | 2 +-
- include/scsi/libsas.h              | 2 --
- 2 files changed, 1 insertion(+), 3 deletions(-)
+Indeed it does not. This functions still always return 0 at present, so not a
+big deal. But for consistency , I will add the check in libsas.
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index ff7b63b10aeb..8fb7c41c0962 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -275,7 +275,7 @@ static void sas_resume_devices(struct work_struct *work)
-  *
-  * See comment in sas_discover_sata().
-  */
--int sas_discover_end_dev(struct domain_device *dev)
-+static int sas_discover_end_dev(struct domain_device *dev)
- {
- 	return sas_notify_lldd_dev_found(dev);
- }
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 5ee86b225359..4ce4809aec42 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -696,8 +696,6 @@ extern struct scsi_transport_template *
- sas_domain_attach_transport(struct sas_domain_function_template *);
- extern struct device_attribute dev_attr_phy_event_threshold;
- 
--int  sas_discover_end_dev(struct domain_device *);
--
- void sas_init_dev(struct domain_device *);
- 
- void sas_task_abort(struct sas_task *);
+> 
+>>
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> 
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> 
+>> ---
+>>   drivers/ata/libata-sata.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+>> index 5d31c08be013..0748e9ea4f5f 100644
+>> --- a/drivers/ata/libata-sata.c
+>> +++ b/drivers/ata/libata-sata.c
+>> @@ -1169,8 +1169,8 @@ EXPORT_SYMBOL_GPL(ata_sas_tport_delete);
+>>   int ata_sas_slave_configure(struct scsi_device *sdev, struct ata_port *ap)
+>>   {
+>>   	ata_scsi_sdev_config(sdev);
+>> -	ata_scsi_dev_config(sdev, ap->link.device);
+>> -	return 0;
+>> +
+>> +	return ata_scsi_dev_config(sdev, ap->link.device);
+>>   }
+>>   EXPORT_SYMBOL_GPL(ata_sas_slave_configure);
+>>   
+> 
+
 -- 
-2.41.0
+Damien Le Moal
+Western Digital Research
 
