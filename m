@@ -2,124 +2,188 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B2CCA0EC9
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 06:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAF96CA0ECA
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 06:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229744AbjILGOr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Sep 2023 02:14:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37914 "EHLO
+        id S231240AbjILG7l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Sep 2023 02:59:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229626AbjILGOp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 02:14:45 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B800EAF;
-        Mon, 11 Sep 2023 23:14:41 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 454081F381;
-        Tue, 12 Sep 2023 06:14:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1694499280; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dAXoWPEvGc6lHluWYthrxYlj9c8w/cRncutnCOYJXb8=;
-        b=oZQ0l/dmyDsooTvXVN4sIM+gfXlASy5u/v7D9jy3YaSzYAIWv0bHOyJvarboUpnff+jakF
-        YPXjjiuORtttxdS3mH+1lzrZEs6URZEhxqp6NzbhEUJG90AvkYHE7tzX+P8vubMconrVgi
-        jaQXQQuEpIZzpcR8OuCENtyg4EoTNto=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1694499280;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dAXoWPEvGc6lHluWYthrxYlj9c8w/cRncutnCOYJXb8=;
-        b=5oVAXJHvBpDU8UeC/OTD6GU+OxGslpEqLWUqoZvy3w3K6CkQbPGzUKrulNN6i2QiNsYonS
-        cPFVPObvVVBpvxBg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EB54F13A39;
-        Tue, 12 Sep 2023 06:14:39 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id II7JN88BAGX5WQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 12 Sep 2023 06:14:39 +0000
-Message-ID: <8f91ba92-ed69-4bf1-8060-b3b2ca100146@suse.de>
-Date:   Tue, 12 Sep 2023 08:14:39 +0200
+        with ESMTP id S231211AbjILG7i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 02:59:38 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF92F10DC
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 23:59:33 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-68fac16ee5fso2010774b3a.1
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2023 23:59:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1694501973; x=1695106773; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=LlO3N7pqp4fi5xGA4ZVrbbV2rUdgOmvkPdAdAMdS/98=;
+        b=Gk7dvV+JXskLV+T9xokIsdQckwrxM+BEs2NeEq6aRJiz8a18TCLfL+XgPQOMa9J3gC
+         IpWt1MghMIN5VgYSSxpJ1x913Poq7yOTdi9s59YM0J9FiJ3XhhF7CmJoI6SZ/bvtxwG0
+         YCgoA6DLCKYPF+l1yP8Jd1/hWt9plcXWJ/kxV4HHmfFisVyCTd5jrihVJM60NP52QNFv
+         N5cdt4nojDUoxgudn5hBg8nJnbE+g8kk08kmHFhNT3qsRO86NEHOaD5l6PqTD1LZRSrA
+         VRBAAyE9W97ejIpkZ53WzhEM7ne6QoPNABWFyzg2ltAr7QFYCHrBTWOsxjCHxhCUIvDw
+         dN9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694501973; x=1695106773;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=LlO3N7pqp4fi5xGA4ZVrbbV2rUdgOmvkPdAdAMdS/98=;
+        b=FGd0HXUkZJV9eqGwJstTX1SzyDUCT7pN8AlH9kBiEST4LPZNoPd0lRNY/cB90JVc+k
+         gy9qu9vH2tjx05O+PYV/zK31ovCVxd/m9ULmg05mZdNsoTwYOYHUT2382ko3nTsCUsP9
+         l8J6JcPL2FjCugcI6YJxapEr26g2byqFTPSkjKk6ozSKXZC93HEIOegipsGL6Q+w/mqp
+         +NAr7l1cyQwPRXJyblQk2HZ4hLfnYoJkxUSusiMCR59a1n9elPr7gncW7mdGWbSuGVdF
+         2sEKyO5H2ycJi0x0obuIMqilm5v7kq/O4/rW3erFnQCSGKewBejvbwdqhjI+9cTdCeSR
+         TKjA==
+X-Gm-Message-State: AOJu0YwVpFlyuQzNWFn01RQh9Eg5Y//BEMQugm7aB13sOocIY4xo0G2k
+        ZSU7s0tL+RyKAO3F9vmY2XE3
+X-Google-Smtp-Source: AGHT+IHiiSfJhGC0JZK1XwVhpgMz9qY8FvoEghC/BG98cbA6Z+dik3F1LlzN6wd5MSvhL0wQSV6MRw==
+X-Received: by 2002:a05:6a20:9706:b0:14b:ecab:a6ba with SMTP id hr6-20020a056a20970600b0014becaba6bamr9283969pzc.28.1694501973237;
+        Mon, 11 Sep 2023 23:59:33 -0700 (PDT)
+Received: from thinkpad ([117.206.119.163])
+        by smtp.gmail.com with ESMTPSA id fu8-20020a17090ad18800b00262e485156esm8406071pjb.57.2023.09.11.23.59.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Sep 2023 23:59:32 -0700 (PDT)
+Date:   Tue, 12 Sep 2023 12:29:18 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
+        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
+        cw00.choi@samsung.com, andersson@kernel.org,
+        konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 5/6] arm64: dts: qcom: sdm845: Add OPP table support
+ to UFSHC
+Message-ID: <20230912065918.GB6404@thinkpad>
+References: <20230731163357.49045-1-manivannan.sadhasivam@linaro.org>
+ <20230731163357.49045-6-manivannan.sadhasivam@linaro.org>
+ <04eb9f71-78f0-41f2-96a6-fc759ba296fa@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 09/21] ata: libata-eh: Fix compilation warning in
- ata_eh_link_report()
-Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-References: <20230912005655.368075-1-dlemoal@kernel.org>
- <20230912005655.368075-10-dlemoal@kernel.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230912005655.368075-10-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <04eb9f71-78f0-41f2-96a6-fc759ba296fa@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/12/23 02:56, Damien Le Moal wrote:
-> The 6 bytes length of the tries_buf string in ata_eh_link_report() is
-> too short and results in a gcc compilation warning with W-!:
+On Mon, Sep 11, 2023 at 04:15:10PM +0300, Dmitry Baryshkov wrote:
+> On 31/07/2023 19:33, Manivannan Sadhasivam wrote:
+> > From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> > 
+> > UFS host controller, when scaling gears, should choose appropriate
+> > performance state of RPMh power domain controller along with clock
+> > frequency. So let's add the OPP table support to specify both clock
+> > frequency and RPMh performance states replacing the old "freq-table-hz"
+> > property.
+> > 
+> > Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> > [mani: Splitted pd change and used rpmhpd_opp_low_svs]
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> >   arch/arm64/boot/dts/qcom/sdm845.dtsi | 42 +++++++++++++++++++++-------
+> >   1 file changed, 32 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+> > index 055ca80c0075..2ea6eb44953e 100644
+> > --- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
+> > +++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+> > @@ -2605,22 +2605,44 @@ ufs_mem_hc: ufshc@1d84000 {
+> >   				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+> >   				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
+> >   				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
+> > -			freq-table-hz =
+> > -				<50000000 200000000>,
+> > -				<0 0>,
+> > -				<0 0>,
+> > -				<37500000 150000000>,
+> > -				<0 0>,
+> > -				<0 0>,
+> > -				<0 0>,
+> > -				<0 0>,
+> > -				<75000000 300000000>;
+> > +
+> > +			operating-points-v2 = <&ufs_opp_table>;
+> >   			interconnects = <&aggre1_noc MASTER_UFS_MEM 0 &mem_noc SLAVE_EBI1 0>,
+> >   					<&gladiator_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_UFS_MEM_CFG 0>;
+> >   			interconnect-names = "ufs-ddr", "cpu-ufs";
+> >   			status = "disabled";
+> > +
+> > +			ufs_opp_table: opp-table {
+> > +				compatible = "operating-points-v2";
+> > +
+> > +				opp-50000000 {
+> > +					opp-hz = /bits/ 64 <50000000>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <37500000>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <75000000>;
+> > +					required-opps = <&rpmhpd_opp_low_svs>;
+> > +				};
 > 
-> drivers/ata/libata-eh.c: In function ‘ata_eh_link_report’:
-> drivers/ata/libata-eh.c:2371:59: warning: ‘%d’ directive output may be truncated writing between 1 and 11 bytes into a region of size 4 [-Wformat-truncation=]
->   2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
->        |                                                           ^~
-> drivers/ata/libata-eh.c:2371:56: note: directive argument in the range [-2147483648, 4]
->   2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
->        |                                                        ^~~~~~
-> drivers/ata/libata-eh.c:2371:17: note: ‘snprintf’ output between 4 and 14 bytes into a destination of size 6
->   2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
->        |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->   2372 |                          ap->eh_tries);
->        |                          ~~~~~~~~~~~~~
-> 
-> Avoid this warning by increasing the string size to 16B.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/ata/libata-eh.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 43b0a1509548..03c45630a35b 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -2332,7 +2332,7 @@ static void ata_eh_link_report(struct ata_link *link)
->   	struct ata_eh_context *ehc = &link->eh_context;
->   	struct ata_queued_cmd *qc;
->   	const char *frozen, *desc;
-> -	char tries_buf[6] = "";
-> +	char tries_buf[16] = "";
->   	int tag, nr_failed = 0;
->   
->   	if (ehc->i.flags & ATA_EHI_QUIET)
+> I'd say, I'm still slightly unhappy about the 0 clock rates here.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Neither do I. But it is the only viable option I could found.
 
-Cheers,
+> We need only three clocks here: core, core_clk_unipro and optional
+> ice_core_clk. Can we modify ufshcd_parse_operating_points() to pass only
+> these two or three clock names to devm_pm_opp_set_config() ? The OPP core
+> doesn't need to know about all the rest of the clocks.
+> 
 
-Hannes
+We need to enable/disable all of the clocks, but only need to control the rate
+for these 3 clocks. So we cannot just use 3 clocks.
+
+If the OPP table has only 3 entries (omitting the gate-only clocks), then we
+need some hack in the driver to match the rates against the clock entries. Doing
+so will result in hardcoding the clock info in the driver which I do not want to
+do.
+
+If we have something like "opp-hz-names" to relate the rates to clock-names, it
+might do the job. But it needs some input from Viresh.
+
+- Mani
+
+> > +
+> > +				opp-200000000 {
+> > +					opp-hz = /bits/ 64 <200000000>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <150000000>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <0>,
+> > +						 /bits/ 64 <300000000>;
+> > +					required-opps = <&rpmhpd_opp_nom>;
+> > +				};
+> > +			};
+> >   		};
+> >   		ufs_mem_phy: phy@1d87000 {
+> 
+> -- 
+> With best wishes
+> Dmitry
+> 
+
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+மணிவண்ணன் சதாசிவம்
