@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB4FCA0ECF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 02:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86708CA0EC8
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 02:08:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236722AbjILCIC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 22:08:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56422 "EHLO
+        id S236838AbjILCIE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 22:08:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237192AbjILCCB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 22:02:01 -0400
+        with ESMTP id S237144AbjILCCA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 22:02:00 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5699A1A39B6;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 167A31A39AE;
         Mon, 11 Sep 2023 18:32:26 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 647B8C32794;
-        Tue, 12 Sep 2023 00:57:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 811E4C36AE6;
+        Tue, 12 Sep 2023 00:57:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694480228;
-        bh=rdBLpZr0nte9cBd9BX1sL7lfQw3Y7w0fgD+Dbtdw+H0=;
+        s=k20201202; t=1694480248;
+        bh=SUQ1ONHLZRQICe+mf6elU/cxoVog56qhZUq3IY+ouMw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EWa8BEgsBswvonlZxZjVc/6V6Nwuz1bAvQGQy3r4sSKqUWSVoA2bIEX2aVO1yFw2K
-         lA7h7eIoP2W8gWGh5xK5UI/l3onF/JKbmRcG1+M8g83zUDdNVPRw5SqmMUMHbsvwDp
-         SOZqNss3BGOeB08bzpgrJ+cNYSc2UzJY+xlA2Rp6T87S8nKih1s7WUH6oaMIOHDZS6
-         SofDU81SkKzvibuYw5m8r5sVwPhdZw8mnq3hMW9HzXN+zio1p3erYbUVB4XaVSkUlF
-         p9YeZFZg5OXaNdSlK7ls5OwxkZjiTR6Ri9yLUGzNqeXutWIB5bDAzxJCQ3LkRA5c6T
-         HVGnYB0qh83bQ==
+        b=Vy/gMpafUy7Nf++ggk6vRr0IYGbu3oJNKGY13g/vA1IEog2hVwr3FQriSP8TrGuUs
+         VoUYZs7J++5RLZirz9nY/UBGr1p1zWypBaTf4K8XOQFn+/6gmfjxj1bGMKrDeH9SqI
+         WdSm1k4wLPe7onJb8jebgiwvNu74qL8E26hGlc5Xhnt3pEyNIzYPgAEhADSmpvSayV
+         j/pjrY0ExEwqZl/LILBlRB8SL0PSJXV9kWf347RmAJ1gsSRSnUcwDV3kExratUqheT
+         lIR4meqExNVh7OHEf/AcFNZxxx7xjYGSdaMSAKgWLLykQu8a2bJ+ULThdSUntWoPf+
+         hN7cTk+hgXTgw==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH v2 07/21] scsi: sd: Do not issue commands to suspended disks on remove
-Date:   Tue, 12 Sep 2023 09:56:41 +0900
-Message-ID: <20230912005655.368075-8-dlemoal@kernel.org>
+Subject: [PATCH v2 21/21] ata: libata: Cleanup inline DMA helper functions
+Date:   Tue, 12 Sep 2023 09:56:55 +0900
+Message-ID: <20230912005655.368075-22-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230912005655.368075-1-dlemoal@kernel.org>
 References: <20230912005655.368075-1-dlemoal@kernel.org>
@@ -47,38 +47,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If an error occurs when resuming a host adapter before the devices
-attached to the adapter are resumed, the adapter low level driver may
-remove the scsi host, resulting in a call to sd_remove() for the
-disks of the host. However, since this function calls sd_shutdown(),
-a synchronize cache command and a start stop unit may be issued with the
-drive still sleeping and the HBA non-functional. This causes PM resume
-to hang, forcing a reset of the machine to recover.
+Simplify the inline DMA helper functions ata_using_mwdma(),
+ata_using_udma() and ata_dma_enabled() to directly return as a boolean
+the result of their test condition.
 
-Fix this by checking a device host state in sd_shutdown() and by
-returning early doing nothing if the host state is not SHOST_RUNNING.
-
-Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/linux/libata.h | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c92a317ba547..a415abb721d3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3763,7 +3763,8 @@ static void sd_shutdown(struct device *dev)
- 	if (!sdkp)
- 		return;         /* this can happen */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 6593c79b7290..f48fe27dae94 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1878,23 +1878,21 @@ static inline unsigned long ata_deadline(unsigned long from_jiffies,
+    change in future hardware and specs, secondly 0xFF means 'no DMA' but is
+    > UDMA_0. Dyma ddreigiau */
  
--	if (pm_runtime_suspended(dev))
-+	if (pm_runtime_suspended(dev) ||
-+	    sdkp->device->host->shost_state != SHOST_RUNNING)
- 		return;
+-static inline int ata_using_mwdma(struct ata_device *adev)
++static inline bool ata_using_mwdma(struct ata_device *adev)
+ {
+-	if (adev->dma_mode >= XFER_MW_DMA_0 && adev->dma_mode <= XFER_MW_DMA_4)
+-		return 1;
+-	return 0;
++	return adev->dma_mode >= XFER_MW_DMA_0 &&
++		adev->dma_mode <= XFER_MW_DMA_4;
+ }
  
- 	if (sdkp->WCE && sdkp->media_present) {
+-static inline int ata_using_udma(struct ata_device *adev)
++static inline bool ata_using_udma(struct ata_device *adev)
+ {
+-	if (adev->dma_mode >= XFER_UDMA_0 && adev->dma_mode <= XFER_UDMA_7)
+-		return 1;
+-	return 0;
++	return adev->dma_mode >= XFER_UDMA_0 &&
++		adev->dma_mode <= XFER_UDMA_7;
+ }
+ 
+-static inline int ata_dma_enabled(struct ata_device *adev)
++static inline bool ata_dma_enabled(struct ata_device *adev)
+ {
+-	return (adev->dma_mode == 0xFF ? 0 : 1);
++	return adev->dma_mode != 0xFF;
+ }
+ 
+ /**************************************************************************
 -- 
 2.41.0
 
