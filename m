@@ -2,113 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 043CEEE3F0B
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Sep 2023 20:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92F92CA0EC7
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Sep 2023 01:14:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237390AbjIKUva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Sep 2023 16:51:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40430 "EHLO
+        id S233511AbjILBOc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Sep 2023 21:14:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237498AbjIKMyY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 08:54:24 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD86CE40;
-        Mon, 11 Sep 2023 05:54:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694436859; x=1725972859;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=EIzH6I89fHcXXY3uRmCZDeB2Y9jdsZHRRgZCynpqYTM=;
-  b=JuPSEvYIB+mM2lBRXxT7OwqrRO6ynrEoIGnior6iD3Zg9K0yqd3ivFuX
-   d5mWodOT3ThLbjXpxwfvMKUjwpOVHBcyKLOzbMdN//AO0Bg6HH50h6BXe
-   sNGZwt2hOW/zWca6n5BcKR57CRMM+GEp8O++Wdakx68G0qQLXYnG24l3Z
-   iexVdpZtzVkOMq+pUMcppi7f6qefJ/XBP6IHqAdlzPXNj4cKwGyGxhoGP
-   riCEEGvTjMmYNLaSIelvjYdVCUbkV+egVcHg5UiCiZkrBiT7+TYNTwSev
-   7vZA2RswbgW1pjtYpJ7IrHJldXlhqiBi2bM2xrinlvk10qktjikfrgF9X
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="357511174"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="357511174"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:15 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858304167"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="858304167"
-Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:10 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Richard Henderson <richard.henderson@linaro.org>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>, linux-alpha@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     3chas3@gmail.com, brking@us.ibm.com, dalias@libc.org,
-        glaubitz@physik.fu-berlin.de, jejb@linux.ibm.com, kw@linux.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-atm-general@lists.sourceforge.net,
-        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
-        lpieralisi@kernel.org, martin.petersen@oracle.com,
-        netdev@vger.kernel.org, toan@os.amperecomputing.com,
-        ysato@users.sourceforge.jp,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v3 1/6] alpha: Streamline convoluted PCI error handling
-Date:   Mon, 11 Sep 2023 15:53:49 +0300
-Message-Id: <20230911125354.25501-2-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
-References: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S230150AbjILBOX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Sep 2023 21:14:23 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 354953E1D1;
+        Mon, 11 Sep 2023 18:03:22 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB3A6C3279B;
+        Tue, 12 Sep 2023 00:57:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694480240;
+        bh=C1HsbQi2la2V04e3k2OPKNpxNTVhh2TIOvP0cEy8ins=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=VpLbuKagvZ3AkwNRlktIq1NCOjuLC/2HjnjIs/hPLTSyVHNYLuBTYpwd6phXEIz87
+         lL9lO6pe48HetnHtLemT2RBtJqTrn8Hr1EHWSuJW7/iv5D4TbvsUH3DtyOoFgXDzJX
+         gB6Bl+jYsIoqLB8CLjEcN0dqKPoP+nvdmbIKUVBCZY98XLf8g/bsz4p8wg5xSRKYNe
+         K6jyyHwLt9W9ULTHuhyPMPTPgtLjinzJmAV/dJFZEajiFCvv8/S2xIMJ6NzwN/JmLT
+         gQ1YOvTB17ozllQ+rl55/raULXDjsOuEAAZ/xngIOoFaXtyLGTrDP3l963voLPrZ3+
+         G9KlrLCGRGA1Q==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+Subject: [PATCH v2 15/21] ata: libata-core: Remove ata_port_resume_async()
+Date:   Tue, 12 Sep 2023 09:56:49 +0900
+Message-ID: <20230912005655.368075-16-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230912005655.368075-1-dlemoal@kernel.org>
+References: <20230912005655.368075-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-miata_map_irq() handles PCI device and read config related errors in a
-conditional block that is more complex than necessary.
+Remove ata_port_resume_async() and replace it with a modified
+ata_port_resume() taking an additional bool argument indicating if
+ata EH resume operation should be executed synchronously or
+asynchronously. With this change, the variable ata_port_resume_ehi is
+not longer necessary and its value (ATA_EHI_XXX flags) passed directly
+to ata_port_request_pm().
 
-Streamline the code flow and error handling.
-
-No functional changes intended.
-
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- arch/alpha/kernel/sys_miata.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ drivers/ata/libata-core.c | 21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/arch/alpha/kernel/sys_miata.c b/arch/alpha/kernel/sys_miata.c
-index e1bee8f84c58..33b2798de8fc 100644
---- a/arch/alpha/kernel/sys_miata.c
-+++ b/arch/alpha/kernel/sys_miata.c
-@@ -183,16 +183,17 @@ miata_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-            the 2nd 8259 controller. So we have to check for it first. */
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index cdfe71ae6a6c..a4389dd807e5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5223,22 +5223,17 @@ static int ata_port_pm_poweroff(struct device *dev)
+ 	return 0;
+ }
  
- 	if((slot == 7) && (PCI_FUNC(dev->devfn) == 3)) {
--		u8 irq=0;
- 		struct pci_dev *pdev = pci_get_slot(dev->bus, dev->devfn & ~7);
--		if(pdev == NULL || pci_read_config_byte(pdev, 0x40,&irq) != PCIBIOS_SUCCESSFUL) {
--			pci_dev_put(pdev);
-+		u8 irq = 0;
-+		int ret;
-+
-+		if (!pdev)
- 			return -1;
--		}
--		else	{
--			pci_dev_put(pdev);
--			return irq;
--		}
-+
-+		ret = pci_read_config_byte(pdev, 0x40, &irq);
-+		pci_dev_put(pdev);
-+
-+		return ret == PCIBIOS_SUCCESSFUL ? irq : -1;
- 	}
+-static const unsigned int ata_port_resume_ehi = ATA_EHI_NO_AUTOPSY
+-						| ATA_EHI_QUIET;
+-
+-static void ata_port_resume(struct ata_port *ap, pm_message_t mesg)
++static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
++			    bool async)
+ {
+-	ata_port_request_pm(ap, mesg, ATA_EH_RESET, ata_port_resume_ehi, false);
+-}
+-
+-static void ata_port_resume_async(struct ata_port *ap, pm_message_t mesg)
+-{
+-	ata_port_request_pm(ap, mesg, ATA_EH_RESET, ata_port_resume_ehi, true);
++	ata_port_request_pm(ap, mesg, ATA_EH_RESET,
++			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET,
++			    async);
+ }
  
- 	return COMMON_TABLE_LOOKUP;
+ static int ata_port_pm_resume(struct device *dev)
+ {
+-	ata_port_resume_async(to_ata_port(dev), PMSG_RESUME);
++	ata_port_resume(to_ata_port(dev), PMSG_RESUME, true);
+ 	pm_runtime_disable(dev);
+ 	pm_runtime_set_active(dev);
+ 	pm_runtime_enable(dev);
+@@ -5277,7 +5272,7 @@ static int ata_port_runtime_suspend(struct device *dev)
+ 
+ static int ata_port_runtime_resume(struct device *dev)
+ {
+-	ata_port_resume(to_ata_port(dev), PMSG_AUTO_RESUME);
++	ata_port_resume(to_ata_port(dev), PMSG_AUTO_RESUME, false);
+ 	return 0;
+ }
+ 
+@@ -5307,7 +5302,7 @@ EXPORT_SYMBOL_GPL(ata_sas_port_suspend);
+ 
+ void ata_sas_port_resume(struct ata_port *ap)
+ {
+-	ata_port_resume_async(ap, PMSG_RESUME);
++	ata_port_resume(ap, PMSG_RESUME, true);
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_port_resume);
+ 
 -- 
-2.30.2
+2.41.0
 
