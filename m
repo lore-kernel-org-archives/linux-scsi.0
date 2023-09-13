@@ -2,105 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC8A1EE020D
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 20:51:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBDCDEE0211
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 22:03:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232670AbjIMUvG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Sep 2023 16:51:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53076 "EHLO
+        id S232920AbjIMWDm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Sep 2023 18:03:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232483AbjIMUvF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2023 16:51:05 -0400
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 522881BCA;
-        Wed, 13 Sep 2023 13:51:01 -0700 (PDT)
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-573ccec985dso158396a12.2;
-        Wed, 13 Sep 2023 13:51:01 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694638261; x=1695243061;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Msn0U1VWh9oVe5foHqcoipC16WJL8JKILJwhgE7Qyeg=;
-        b=xMSRypzujqFclDSPLDgogZpvrWst25qwSxw2eA3JOByoOiZ7kHUQ4pfM66lr1An/du
-         6xYDorVGrCuZuQpAwNH0e1ejWfWP3Rzop4uONd8mS9+efVuIMqdnX/kcOxS11R0YWmwz
-         YapZleqr0hTNuL+qd4dAjxle9SDwPYZqREmgRZQtc+p0DLcmVC9prZ4W8HEf8cWe6b0n
-         mKdT4Eix5CMTzKa2ALdbmxte3TPZUeBV3qD3n2V+ijicmg1E5XzWAbmx2uPm3pnEqfiA
-         hs4lKjsuRvFa3tb6go5/PdMzmyIVelUnCwlerHXyQEaNQjHh0S2zeSfqZwHvtrgCzNyy
-         1UYQ==
-X-Gm-Message-State: AOJu0YxkqCjuqMBMGyw+45sOngrMB/eeGgz+JONA7vIaBb12mBbSpj2S
-        kTla43Of84OkF4Imyx4h114=
-X-Google-Smtp-Source: AGHT+IGFHd0+C0PoovBNU3xq0ujnBaeYDlUnoPQzNgO39uRyeE6Rfne9TmubdDoci25R6qjsB029Mw==
-X-Received: by 2002:a17:90a:e7d0:b0:273:f229:a479 with SMTP id kb16-20020a17090ae7d000b00273f229a479mr3366975pjb.34.1694638260505;
-        Wed, 13 Sep 2023 13:51:00 -0700 (PDT)
-Received: from ?IPV6:2601:647:5f00:5f5:4a46:e57b:bee0:6bc6? ([2601:647:5f00:5f5:4a46:e57b:bee0:6bc6])
-        by smtp.gmail.com with ESMTPSA id gp2-20020a17090adf0200b002680dfd368dsm36605pjb.51.2023.09.13.13.50.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Sep 2023 13:51:00 -0700 (PDT)
-Message-ID: <c3a4ccb9-2e4d-906c-3c8f-1985a2d444a8@acm.org>
-Date:   Wed, 13 Sep 2023 13:50:58 -0700
+        with ESMTP id S229918AbjIMWDl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2023 18:03:41 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 906F2173A;
+        Wed, 13 Sep 2023 15:03:37 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C939DC433C8;
+        Wed, 13 Sep 2023 22:03:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694642617;
+        bh=BoTNd5zgMTXBPsV3pEakWcb2gOQmwA6QqYwWBLVXs70=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=t3VgoWNyH8uGAaC8Sq2kjITg8mfUJjdFqxzviOIWhOl5V4GfayA4jsVp1eVnW7m0a
+         9IHMtQgFXJ85NfLqQt0oHWT4f8a/TPdfO7vjbEUfibKksoODy3B0NVpiBmrAfjbsNG
+         s0aywBeeugakt6F4lHDqpksGG+6EgK+FP0l/p2B22UQjVE1CiI+TSBXGoKpOOTmoU4
+         SFstx+/u5M6gd6GRqWWAVfM4jKcuuXQJdy8q7RpM952f4hESgf+jiLnpLwfxITsxcr
+         gSYmYsXEuRCZNfpYU56SVnJvFpLWqzh/qmqKe3ckvqBzCj8MIWY0tk6YsIl/HVLXfv
+         IivpZqcLFap9g==
+Message-ID: <2d90bd7c-5c34-a345-bc29-44dfa923fc19@kernel.org>
+Date:   Thu, 14 Sep 2023 07:03:34 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH 07/19] scsi: sd: Do not issue commands to suspended disks
- on remove
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
         Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-8-dlemoal@kernel.org>
+        Thorsten Leemhuis <regressions@leemhuis.info>,
+        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-renesas-soc@vger.kernel.org
+References: <20230731003956.572414-1-dlemoal@kernel.org>
+ <8be9c370-2f1-5815-431-f68ab868669@linux-m68k.org>
+ <ffc1442b-698e-65ab-9aaf-e4ca076b697c@kernel.org>
+ <CAMuHMdXK-pnzMNzbNw=zWaMbQtWtca850eYv98oUjQkypgBfwg@mail.gmail.com>
 Content-Language: en-US
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230911040217.253905-8-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CAMuHMdXK-pnzMNzbNw=zWaMbQtWtca850eYv98oUjQkypgBfwg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/10/23 21:02, Damien Le Moal wrote:
-> If an error occurs when resuming a host adapter before the devices
-> attached to the adapter are resumed, the adapter low level driver may
-> remove the scsi host, resulting in a call to sd_remove() for the
-> disks of the host. However, since this function calls sd_shutdown(),
-> a synchronize cache command and a start stop unit may be issued with the
-> drive still sleeping and the HBA non-functional. This causes PM resume
-> to hang, forcing a reset of the machine to recover.
+On 9/13/23 19:21, Geert Uytterhoeven wrote:
+>> Thanks for the report. The delay for the first data access from user space right
+>> after resume is 100% expected, with or without this patch. The reason is that
+>> waking up the drive (spinning it up) is done asynchronously from the PM resume
+>> context, so when you get "PM suspend exit" message signaling that the system is
+>> resumed, the drive may not yet be spinning. Any access will wait for that to
+>> happen before proceeding. Depending on the drive that can take up to 10s or so.
 > 
-> Fix this by checking a device host state in sd_shutdown() and by
-> returning early doing nothing if the host state is not SHOST_RUNNING.
+> That does not match with what I am seeing: before this patch, there
+> was no delay on first data access from user space, as the drive is fully
+> spun up when system resume returns.
+
+Yes, that is a possibility, but not by design. Some users have complained about
+the long resume times which causes laptop screens to be "black" until disks spin
+up. That did not happen before 5.16, when the change to scsi using the PM async
+ops to do suspend/resume created all the issues with suspend/resume on ata side.
+I am going to run 5.15 again to check.
+
+The patch "do not issue START STOP UNIT on resume" was a botch attempt to remove
+this delay. But it is a bad one because the ATA specs define that a drive can
+get out of standby (spun down) power state only with a media access command (a
+VERIFY command is used to spin up the disk). And furthermore, the specs also
+says that even a reset shall not change the device power state. So issuing a
+VERIFY command to spin up the drive is required per specs. Note that I do see
+many of my drives (I have hundreds in the lab) spinning up on reset, which is
+against the specs. But not all of them. So with the patch "do not issue START
+STOP UNIT on resume", one risks not seeing the drive resuming correctly (timeout
+errors on IDENTIFY command issued on resume will get the drive removed).
+
+> With this patch, system resume returns earlier, and the drive is only
+> spun up when user space starts accessing data.
+
+Yes, but "when user space starts accessing data" -> "user space accesses are
+processed only after the drive completes spinning up" would be more accurate.
+That is by design and expected. This is the behavior one would see if the drive
+is set to use standby timers (to go to standby on its own after some idle time)
+or if runtime suspend is used. I do not see any issue with this behavior. Is
+this causing any issue on your end ? Do you have concerns about this approach ?
+
+Having the resume process wait for the drive to fully spin-up is easy to do. But
+as I mentioned, many users are really not happy about how slow resuming become
+with that. If I do that, you will get back the previous behavior you mention,
+but I will be again getting emails about "resume is broken".
+
+I made a decision: no waiting for spinup. That causes a delay for the user on
+first access, but that makes resume overall far faster. I do not want to go back
+on that, unless you can confirm that there is a real regression/error/data
+corruption happening.
+
+> Note that I do not have any file system mounted, and use
+> "hd /dev/sda | head -70" to access the disk.
+
+That is fine. dd would do as well. Any media access, from user or from an FS
+will be delayed until the disk spins up. The default timeout for commands is
+30s, which is plenty of time for the drive to complete spinup. So unless one
+starts pounding the drive with some crazy workload right after user space
+resumes, there should be no timeout errors or any issues with that.
+
+>> I am not entirely sure where the net win you see come from. But the patch you
+>> mention is in fact completely wrong and does not fix the underlying issues with
+>> ata suspend/resume and potential deadlocks in PM due to ata ports relationship
+>> with scsi devices. So I have been working on fixing this for the last 2 weeks,
+>> after another user also reported issues with the patch you mention [1].
+>>
+>> Could you try libata for-next branch on your system ? There are 7 fix patches in
+>> there that I plan to send out for 6.6-rc2 to fix the patch in question and other
+>> issues potentially causing deadlocks on resume. The patches were posted also [2].
+>>
+>> https://lore.kernel.org/linux-ide/20230912005655.368075-1-dlemoal@kernel.org/T/#t
 > 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/scsi/sd.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index c92a317ba547..a415abb721d3 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3763,7 +3763,8 @@ static void sd_shutdown(struct device *dev)
->   	if (!sdkp)
->   		return;         /* this can happen */
->   
-> -	if (pm_runtime_suspended(dev))
-> +	if (pm_runtime_suspended(dev) ||
-> +	    sdkp->device->host->shost_state != SHOST_RUNNING)
->   		return;
->   
->   	if (sdkp->WCE && sdkp->media_present) {
+> Unfortunately that didn't work, as /dev/sda no longer exists.
+> Will reply to the patch I bisected the issue to...
 
-Why to test the host state instead of dev->power.runtime_status? I don't
-think that it is safe to skip shutdown if the error handler is active.
-If the error handler can recover the device a SYNCHRONIZE CACHE command
-should be submitted.
+Now that is a problem...
 
-Thanks,
+-- 
+Damien Le Moal
+Western Digital Research
 
-Bart.
