@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18FA2EE57DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 01:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E939EE49B7
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 01:43:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238062AbjIMBnL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Sep 2023 21:43:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47908 "EHLO
+        id S238099AbjIMBnr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Sep 2023 21:43:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231204AbjIMBnK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 21:43:10 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE4DF115;
-        Tue, 12 Sep 2023 18:43:06 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-68fc292de9dso345829b3a.0;
-        Tue, 12 Sep 2023 18:43:06 -0700 (PDT)
+        with ESMTP id S231204AbjIMBnr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 21:43:47 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74E5C10FE;
+        Tue, 12 Sep 2023 18:43:43 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1bdf4752c3cso45431085ad.2;
+        Tue, 12 Sep 2023 18:43:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1694569386; x=1695174186; darn=vger.kernel.org;
+        d=gmail.com; s=20221208; t=1694569423; x=1695174223; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=stQy8kqciEO3ukYVfjCIxPN/rm7nEGBK6N1teU6wSA0=;
-        b=OTkhkwckVkjFfTvas4KRgi8FC2LY4+lFnt3vsfX8ACyX8QDnDKpDf1HxRzWXD4G1f+
-         67+uIIv7zXHoK4daam44Hppzwcr+Zsme+pOnQplKfaFtG1iYGKmByz9p/SIdQBjWezLL
-         zZR8QKZg3YCifCM4oZn07mGipZTrlieyTmZyf6utQptShwOJAkri4q6XSEObNE+oTm9z
-         wQZMMCho0mIcZ3UoX+a3U1fnZetad5EaOHr7X98er2un9WaEa7ZcJFmnSA2wnmzChAub
-         Tx00vlM8YElECc6CBM/f6rTk8+K6lnpv/wqPzrJC5zO6erUEoRO6VdALMN5xBM5CPjzH
-         aw3A==
+        bh=8ixcBjWybbozkvti+xSs6ChEuyizwDJvsKhmgMBPWy4=;
+        b=qmmdsfZBC81EShApMeOgewEwjAY0y5LP4cvqlfQeBstorqMvKN0vdCcv6dElq+f+g9
+         weXEcXrCfzrfP5A2ts4QskNlNNzWZ3G19gtsWJIkde0FHVBOGcPp1x64ua4WlToOSPiw
+         RbnbvVL4eiUttp582lE0ExDuVR4LMu8XHpdR7+sSEhRZ6UDJjVQ7S4EAxajOyIlY/e0M
+         p4sYMuW+EgTzOeJnCVTyAkOHtGY8cpHNI2s34SR66Awoi11LSXLyRPDly3My2JY4o2Fk
+         tNQZ5uqpfdJOnTZO+n/jQOBN2ngga9scafI1a4GYa/LG1yrQ1VAQZyHlSGiIPsWP0JtZ
+         YfOQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694569386; x=1695174186;
+        d=1e100.net; s=20230601; t=1694569423; x=1695174223;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=stQy8kqciEO3ukYVfjCIxPN/rm7nEGBK6N1teU6wSA0=;
-        b=i70CITBFJGLOAscJNQilLD/UY/pLn81rI1iRhfyd4NTFojnWO4RyoF6u3Mx3mGnCTr
-         cZY8Rl8RszUvB9dybLfvWyU+ZnqAJ5i+CyEkHr9I/uEIGSiCk49JsYos+s7KjX97RtnC
-         45MWz8yfxV/AApLS0tUiFj0UTwLjrPElGMq8a9rI1KuXBLXSUKlLYdyDgtOGikZ3gwBn
-         UH52KeaWhCtoXcj4KeQoEu2lpWxPBXfAjLkV+YVCo1ZWLpPk6PMITIj7y1LcKdBem3ct
-         EOwHRZVQAhAGkOh1ItbadnLtoLll9L3ogIB0rTVvxdTEVyzqiX3EErGleU3romlmoJvd
-         HJ9A==
-X-Gm-Message-State: AOJu0YyUBiTyAOJDnBXOFZZeb20/HMe6x/UXH2UoRG380TT5obv1DU48
-        n61ZRdm6cHLRdwe7OLqFmXA=
-X-Google-Smtp-Source: AGHT+IF/cW3QPxSPcmSYWJJ31gSnw+R0ZizrDpYT4YRoqK4PC6697pcoOOtujz0asAcA4bwIi2a3Eg==
-X-Received: by 2002:a05:6a00:b85:b0:68f:bb16:d16a with SMTP id g5-20020a056a000b8500b0068fbb16d16amr1749250pfj.5.1694569386008;
-        Tue, 12 Sep 2023 18:43:06 -0700 (PDT)
+        bh=8ixcBjWybbozkvti+xSs6ChEuyizwDJvsKhmgMBPWy4=;
+        b=bFu0uw47Q3/wUQ1ljNIPJXU0+TBe4Bidt8DwGu5rCEtJhc/Xd+DWxWlM0vx7bhsrVM
+         SRvHvpyDm2XDrE15EVfQKTcTYSo+uU9vt4jmQvCQJqPwtsyPZDqPdVuQYFqIRpggOB1N
+         lRoEfHuWRBEEDdyQEn6/L8oIwKCp7d/unbWC4UzhhHbJijatPHZnQVerDYHRGvba7p8v
+         xrqmHWAK5M+Nfqcbr7m1ccjU2BC2Prny6ZEbdmdHbKF2URUG/5AkXHWjbU5WCY6plCkv
+         QHUDuEOPmXJM5TbaE/SuPCWP5iTjzIhbJnGca+VNsbFXINwjGsM1mAJ3VrwES5U5TWlk
+         gycg==
+X-Gm-Message-State: AOJu0YzYYlOSEbjS/2SScygXZRtyz/lzAg/2d8OYcvV8G9d/05MLX6No
+        7LOWuaNfSlDYamYbToBSAYA=
+X-Google-Smtp-Source: AGHT+IHozvJC4euUPKRlIhqYLBwXDny0FjsdDzazzTNn3C2f74wT/WEev3YWJ2d/sZzhLMfNwVyxoQ==
+X-Received: by 2002:a17:902:7fcc:b0:1c1:e7b2:27ad with SMTP id t12-20020a1709027fcc00b001c1e7b227admr1286766plb.60.1694569422803;
+        Tue, 12 Sep 2023 18:43:42 -0700 (PDT)
 Received: from acelan-xps15-9560 (118-163-61-247.hinet-ip.hinet.net. [118.163.61.247])
-        by smtp.gmail.com with ESMTPSA id 3-20020aa79103000000b0064fd4a6b306sm7954406pfh.76.2023.09.12.18.43.04
+        by smtp.gmail.com with ESMTPSA id f13-20020a170902e98d00b001b8af7f632asm9182304plb.176.2023.09.12.18.43.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Sep 2023 18:43:05 -0700 (PDT)
+        Tue, 12 Sep 2023 18:43:42 -0700 (PDT)
 Sender: AceLan Kao <acelan@gmail.com>
-Date:   Wed, 13 Sep 2023 09:43:01 +0800
+Date:   Wed, 13 Sep 2023 09:43:37 +0800
 From:   "Chia-Lin Kao (AceLan)" <acelan.kao@canonical.com>
 To:     Damien Le Moal <dlemoal@kernel.org>
 Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -60,45 +60,37 @@ Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: Re: [PATCH 02/19] ata: libata-core: Fix port and device removal
-Message-ID: <ZQETpdC3S9Ruiqyg@acelan-xps15-9560>
+Subject: Re: [PATCH 03/19] ata: libata-scsi: link ata port and scsi device
+Message-ID: <ZQETySHg2wWufWsO@acelan-xps15-9560>
 References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-3-dlemoal@kernel.org>
+ <20230911040217.253905-4-dlemoal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230911040217.253905-3-dlemoal@kernel.org>
+In-Reply-To: <20230911040217.253905-4-dlemoal@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 11, 2023 at 01:02:00PM +0900, Damien Le Moal wrote:
-> Whenever an ATA adapter driver is removed (e.g. rmmod),
-> ata_port_detach() is called repeatedly for all the adapter ports to
-> remove (unload) the devices attached to the port and delete the port
-> device itself. Removing of devices is done using libata EH with the
-> ATA_PFLAG_UNLOADING port flag set. This causes libata EH to execute
-> ata_eh_unload() which disables all devices attached to the port.
+On Mon, Sep 11, 2023 at 01:02:01PM +0900, Damien Le Moal wrote:
+> There is no direct device ancestry defined between an ata_device and
+> its scsi device which prevents the power management code from correctly
+> ordering suspend and resume operations. Create such ancestry with the
+> ata device as the parent to ensure that the scsi device (child) is
+> suspended before the ata device and that resume handles the ata device
+> before the scsi device.
 > 
-> ata_port_detach() finishes by calling scsi_remove_host() to remove the
-> scsi host associated with the port. This function will trigger the
-> removal of all scsi devices attached to the host and in the case of
-> disks, calls to sd_shutdown() which will flush the device write cache
-> and stop the device. However, given that the devices were already
-> disabled by ata_eh_unload(), the synchronize write cache command and
-> start stop unit commands fail. E.g. running "rmmod ahci" with first
-> removing sd_mod results in error messages like:
+> The parent-child (supplier-consumer) relationship is established between
+> the ata_port (parent) and the scsi device (child) with the function
+> device_add_link(). The parent used is not the ata_device as the PM
+> operations are defined per port and the status of all devices connected
+> through that port is controlled from the port operations.
 > 
-> ata13.00: disable device
-> sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> sd 0:0:0:0: [sda] Stopping disk
-> sd 0:0:0:0: [sda] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> The device link is established with the new function
+> ata_scsi_dev_alloc(). This function is used to define the ->slave_alloc
+> callback of the scsi host template of most drivers.
 > 
-> Fix this by removing all scsi devices of the ata devices connected to
-> the port before scheduling libata EH to disable the ATA devices.
-> 
-> Fixes: 720ba12620ee ("[PATCH] libata-hp: update unload-unplug")
+> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
