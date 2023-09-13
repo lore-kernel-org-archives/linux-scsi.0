@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F6CBEE49B7
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 01:49:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A603EEE49B7
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 01:49:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238118AbjIMBti (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Sep 2023 21:49:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60096 "EHLO
+        id S238121AbjIMBt5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Sep 2023 21:49:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230323AbjIMBth (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 21:49:37 -0400
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD0BABE;
-        Tue, 12 Sep 2023 18:49:33 -0700 (PDT)
-Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-68fbd5cd0ceso2499321b3a.1;
-        Tue, 12 Sep 2023 18:49:33 -0700 (PDT)
+        with ESMTP id S238110AbjIMBt4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Sep 2023 21:49:56 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E261010F7;
+        Tue, 12 Sep 2023 18:49:51 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-68fbb10dec7so2729132b3a.3;
+        Tue, 12 Sep 2023 18:49:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1694569773; x=1695174573; darn=vger.kernel.org;
+        d=gmail.com; s=20221208; t=1694569791; x=1695174591; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=+75F0J9tRLXf19xaP5XcU1nx/xjl2HCMzyH/CekR/Ik=;
-        b=WL+/RDntUm1Inr+9/dI6xzEWu37L8kKFo4p26dNg6eN8tgv80YfQXX8RnB90JtUUhK
-         hAPVfdDbDBVy4mq22JtWoPFGPlXe+o3KoL0mvzGrD0dWdOzhwoD9Xill+FXkxxCrnX++
-         7Yc+rSLgLHT5SDpScqVjOFTKFyg5kKs54NJb3hFOBYO4sqEd/MKlgEI0KwcQZxKX6Vga
-         3cuur/aZM8TVkBGKLZ1T3Bd7BYTNWxyb8Tm6iBaNYQFZHk0dZRBkewKn/pwFRTg45OD3
-         otTKAmXzMiLChZ4YoKdWana1n9aXz5BouLQ1SB3JQeE3a1MYTAvh5q7QwMbTYWN2AVjA
-         mXNA==
+        bh=p/dI5UNys8XFb8RLLtavncz3Is9+ORDUqMBUWeYOdQw=;
+        b=UdsoWi+TopQQMewjnw6WS+WmS74JnvmbcJ0/lmB2exGeew9LOeIBbTUHlU7N9YIXev
+         cPcjKAyhTBLI7PGAAo63TGWUq1M8ScQc7XHQTKSdvaAxN+U74W99FU0YwA+bCpy52Fqh
+         ULZwPuy2b3w/x2LxdqewL7Hf/vqaVx0MqRC7ek25ROwvFRDIr1vGCt5w7TL1kcdtEEdz
+         K/1ouivA52RisCDJ+xDA2Ta9WoOZFxkDSwYWI9CIFdKec9lyY0qcMQZwkOHr6oD0USnQ
+         14lSsgWr6FRaFf2uMtkI8ZWn1dgPE0IMZ/FX8CEolZm5I7McAtxI9VXDgTsWu1vYsqHF
+         HA6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694569773; x=1695174573;
+        d=1e100.net; s=20230601; t=1694569791; x=1695174591;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=+75F0J9tRLXf19xaP5XcU1nx/xjl2HCMzyH/CekR/Ik=;
-        b=h/VliPbxPPMaELHAGyhgtGYUcGhX0Ii5usfi13/IsdjBvNmbCeHC6Rq3b60Hmam586
-         TeJWWbsngw5h4kw8KDIey+Rnt6ntfH1I3yxPIXqKOoCHidzzv3+Tmla9miV3170ctY2C
-         OSMkiKniSIPKCjic8JTcvDNReZwlrrTbEoFfgGCKWh+Xpe0j8eoJtZSg5ToeJL+XDMbz
-         4KYs0WJyGkT99qY57JJjnXP8Ltg5p9ZhWPsIFeJj4BDsZ2Ezfo1FkhUocBUmgU8H8iPJ
-         lh9aQj5uhQ2me7UAaUzrUKzq4Uj+2q4g80oNIFwtOUVEHsq5jydxswPrXGi8wjDGrMyW
-         9Afg==
-X-Gm-Message-State: AOJu0Yw+aT31ogwii+VIi+dcPWuZtvNrk/aUMRDWPdh7B48NAf1RVD7E
-        Py3FMFPdrkAbS+w7rJ1pz8U=
-X-Google-Smtp-Source: AGHT+IFg/mNt23AeHrY3OT07r+Of7E8bnOGrfOtmAqItHG+79aTeF295QIxWDXCkO0dtWM1uLMJ41A==
-X-Received: by 2002:a05:6a00:15ce:b0:68e:23c9:b306 with SMTP id o14-20020a056a0015ce00b0068e23c9b306mr1631158pfu.30.1694569773124;
-        Tue, 12 Sep 2023 18:49:33 -0700 (PDT)
+        bh=p/dI5UNys8XFb8RLLtavncz3Is9+ORDUqMBUWeYOdQw=;
+        b=o5l0XFD/gaKr+4lfgfK0nSX1/HR4+j32+w0NzRlNcBxdr01W1Z5Dzu506a5Q8C7pfO
+         YC1pSRMxZZu9gU4Beqy/x2mcPXQhFB8XzmeRohjHckpJXWadUQi0blzIb3V5vI7YLNgW
+         8SyWbLBNnI+x/BGOcFBWJMzLVyT/0OL2RA6S8tXt8ZPZqBIEkZHpAC95C6ndPYWqRDSu
+         BMT3J2k3Dxmt2QnkPc6Qx53d4Mu4oLhNl8VWIV2AkZ82ynfTfZbKQAJ7XVacHyiAxoJj
+         3YkUTPei4obZzVxCwrE9eZsmf0nlycQmJeaTJ8yu3HEG3KcvMIB7F9jqT3CLlESmz0L7
+         Px4w==
+X-Gm-Message-State: AOJu0YxZZp9AWgtMEcT0oyDc3x73MAWFlmVoQI7Amo9QXzru/6nNTWkL
+        AOJbvyhGoS8sXmUEcEAYPxA=
+X-Google-Smtp-Source: AGHT+IEHOHjyf8NirHRb7WKrsb4PiAPE4ZXfsZMMiQL7hzJnGEA5GJAFUsMpeUrg7YoUjTDQYEAIeg==
+X-Received: by 2002:a05:6a00:168a:b0:68f:b3ed:7d4d with SMTP id k10-20020a056a00168a00b0068fb3ed7d4dmr1693611pfc.15.1694569791376;
+        Tue, 12 Sep 2023 18:49:51 -0700 (PDT)
 Received: from acelan-xps15-9560 (118-163-61-247.hinet-ip.hinet.net. [118.163.61.247])
-        by smtp.gmail.com with ESMTPSA id y19-20020aa78553000000b0068e4c5a4f3esm1795216pfn.71.2023.09.12.18.49.30
+        by smtp.gmail.com with ESMTPSA id j1-20020aa78dc1000000b006883561b421sm7993803pfr.162.2023.09.12.18.49.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Sep 2023 18:49:32 -0700 (PDT)
+        Tue, 12 Sep 2023 18:49:51 -0700 (PDT)
 Sender: AceLan Kao <acelan@gmail.com>
-Date:   Wed, 13 Sep 2023 09:49:27 +0800
+Date:   Wed, 13 Sep 2023 09:49:47 +0800
 From:   "Chia-Lin Kao (AceLan)" <acelan.kao@canonical.com>
 To:     Damien Le Moal <dlemoal@kernel.org>
 Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -60,26 +60,22 @@ Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: Re: [PATCH 18/19] ata: libata-eh: Reduce "disable device" message
- verbosity
-Message-ID: <ZQEVJ63+wWVGCrVx@acelan-xps15-9560>
+Subject: Re: [PATCH 19/19] ata: libata: Cleanup inline DMA helper functions
+Message-ID: <ZQEVO8gaCmqCA+ea@acelan-xps15-9560>
 References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-19-dlemoal@kernel.org>
+ <20230911040217.253905-20-dlemoal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230911040217.253905-19-dlemoal@kernel.org>
+In-Reply-To: <20230911040217.253905-20-dlemoal@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 11, 2023 at 01:02:16PM +0900, Damien Le Moal wrote:
-> There is no point in warning about a device being diabled when we expect
-> it to be, that is, on suspend, shutdown or when detaching a device.
-> Suppress this message for these cases by introducing the EH static
-> function ata_eh_dev_disable() and by using it in ata_eh_unload() and
-> ata_eh_detach_dev(). ata_dev_disable() code is modified to call this new
-> function after printing the "disable device" message.
+On Mon, Sep 11, 2023 at 01:02:17PM +0900, Damien Le Moal wrote:
+> Simplify the inline DMA helper functions ata_using_mwdma(),
+> ata_using_udma() and ata_dma_enabled() to directly return as a boolean
+> the result of their test condition.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
