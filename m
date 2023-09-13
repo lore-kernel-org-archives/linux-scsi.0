@@ -2,100 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC623EDEC4D
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 13:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E26EDEC7E
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 15:56:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240944AbjIMNmu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Sep 2023 09:42:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42062 "EHLO
+        id S230194AbjIMP4j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Sep 2023 11:56:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236378AbjIMNms (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2023 09:42:48 -0400
-Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FEA819BF
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Sep 2023 06:42:44 -0700 (PDT)
-Received: by mail-ed1-x52c.google.com with SMTP id 4fb4d7f45d1cf-52a250aa012so8829108a12.3
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Sep 2023 06:42:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1694612563; x=1695217363; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OPiMXPatZJVjyv7SBGb+AlKmkuYF/0lvNelGkcgX1eE=;
-        b=b+sDv3R8iV4tRXFYAvD5TO1w7dCln3c59/fQj6E1kou1FMYUwmDCAy9+NKzamE1nAK
-         hYZOiFt0FFoQSFnvLcB5X/QwbC2Dk6L6z9t/2sE0frL0vzSZzSBlpjYlHHMieQghcjaj
-         tLnA+2I+XF8SSG1IYAihI9zcWkLQ+uXEaG+7iKHSKGadzDWcWmN34bcqzS2IyjphDYuU
-         gVUR/0UBuTUsQ7FW1/DSCAGa9hoHRZmvSWj+EuX6E+5IdUQ3rtiDZAl3Lpgc3xCUX9Yb
-         HXIinCOlOG1BOrN7gKh3k6eq+pYBUGE7TbjmD0SQALArjb5hr1tpS7vfEfo9Tus0pk65
-         W3Ug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694612563; x=1695217363;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OPiMXPatZJVjyv7SBGb+AlKmkuYF/0lvNelGkcgX1eE=;
-        b=OAn/Ck1kJUMXDGA52K9njjkn9W6d70QLmQUtkZdVRgr4hY6WlvERHJ8rig/nlUHQM6
-         BYH+sBNy4AiLeSfJ8pQNyzHbEcCaYcaJ3B7Tprwz1yJTj0CypB/KX+i/QFgcvQrsD2XA
-         GIVCBDhPGd6GCPOm7M+ZiLishnpPLHqToQXDvYXUS8O1Z8tZeAEbcUa9+Sqib96ypyPJ
-         Wz1jS7p6iJIhowEZCdURYyHNaBqGUBtGWO7MFKx9CVOmk6tAv1LAgXIZcNF2hCrIm0u/
-         VkY1AfdWMtpnp6y5kp0DvuaSx/tLUC73qeXFG6T6EiT911aH+IjINTgkGtpit3cLjXgT
-         PFdA==
-X-Gm-Message-State: AOJu0YxB4MOiSSYn87qmdhaR3eSfzUPZxUeeHXWWXhUDzkYKj6+FpZi9
-        D7KSUNcrwWDKo/06JYbJj0YGSc2dtJIRbS9C5B6Gkvt8vD9atYkNVE8=
-X-Google-Smtp-Source: AGHT+IF9n/C9qnYQx3bsd4Pgzhwlxwmzz75gOLhHdUsGRW0QiTyJilwXXxQkeyjbuVClCY2VglvzkOOTJ1Cs884ZYf0=
-X-Received: by 2002:a05:6402:2028:b0:523:1410:b611 with SMTP id
- ay8-20020a056402202800b005231410b611mr2261215edb.25.1694612563055; Wed, 13
- Sep 2023 06:42:43 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230911170340.699533-1-mge@meta.com> <20230911170340.699533-2-mge@meta.com>
-In-Reply-To: <20230911170340.699533-2-mge@meta.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Wed, 13 Sep 2023 15:42:32 +0200
-Message-ID: <CAMGffE=kWc1rsNfn6n8d1qkYw2U8sz+n5E-GEkWB7=835j=66g@mail.gmail.com>
-Subject: Re: [PATCH 2/2] pm80xx: Avoid leaking tags when processing
- OPC_INB_SET_CONTROLLER_CONFIG command
+        with ESMTP id S230224AbjIMP4h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2023 11:56:37 -0400
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4640B1BCA
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Sep 2023 08:56:33 -0700 (PDT)
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38DEjWGC006340
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Sep 2023 08:56:32 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : content-type :
+ content-transfer-encoding : mime-version; s=s2048-2021-q4;
+ bh=22ok7B2PvqkfYpwpJ7o1ydqnVK288ID8TPWPyMwUpkc=;
+ b=WQtwkF0oDXlT2fcSv0kWupviemeqjGr5Y331rfPJy0R6pXn0fq0WGzeA2ixvDemcRsbI
+ M5zKkDXvCsU7QpBiz2EI3S9F4H6aUfsFN0EZfzw4tEKV9BTg1JNeN5uuiSzG/A3+RlGC
+ juAMWbnogCYOidIsFujVpUuoMVFWDL42ac7a0suW5ED/JqzZya2cbT/hXfoTLoaQSC2U
+ a0omo5uy9tdbp/NS44CVrWTwG710J02HgxgBxvochxqg8q8s+4INHb/o18wTdCM9oLTa
+ tSrBqavmB4X0T5ThBQktj3cuM+ixjUXNka47sVP+j+9Fp+3T5jCGbc6kwgOpJyBWPRY3 uQ== 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3t336374tu-4
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Sep 2023 08:56:32 -0700
+Received: from twshared24695.38.frc1.facebook.com (2620:10d:c0a8:1b::30) by
+ mail.thefacebook.com (2620:10d:c0a8:82::b) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Wed, 13 Sep 2023 08:56:29 -0700
+Received: by devvm715.rva0.facebook.com (Postfix, from userid 240176)
+        id 7EDD52954BBFD; Wed, 13 Sep 2023 08:56:27 -0700 (PDT)
+From:   Michal Grzedzicki <mge@meta.com>
 To:     Michal Grzedzicki <mge@meta.com>
-Cc:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+CC:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Jack Wang <jinpu.wang@ionos.com>
+Subject: [PATCH v2 1/2] pm80xx: Use phy specific sas address when sending PHY_START command
+Date:   Wed, 13 Sep 2023 08:56:10 -0700
+Message-ID: <20230913155611.3183612-1-mge@meta.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <CAMGffE=kWc1rsNfn6n8d1qkYw2U8sz+n5E-GEkWB7=835j=66g@mail.gmail.com>
+References: <CAMGffE=kWc1rsNfn6n8d1qkYw2U8sz+n5E-GEkWB7=835j=66g@mail.gmail.com>
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: dhiKTa1gYzJbYo2xlXWyfUVhDjMpZBak
+X-Proofpoint-GUID: dhiKTa1gYzJbYo2xlXWyfUVhDjMpZBak
 Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-13_10,2023-09-13_01,2023-05-22_02
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 11, 2023 at 7:03=E2=80=AFPM Michal Grzedzicki <mge@meta.com> wr=
-ote:
->
-> Tags allocated for OPC_INB_SET_CONTROLLER_CONFIG command need to be freed
-> when we receive the response.
->
-> Signed-off-by: Michal Grzedzicki <mge@meta.com>
-can you please add the fixes tag, so stable can pick it accordingly?
+Some cards have more than one sas addresses. Using incorrect
+address causes communication issues with some devices like expanders.
+
+Closes: https://lore.kernel.org/linux-kernel/A57AEA84-5CA0-403E-8053-106033=
+C73C70@fb.com/
+Signed-off-by: Michal Grzedzicki <mge@meta.com>
 Acked-by: Jack Wang <jinpu.wang@ionos.com>
-> ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
-x_hwi.c
-> index 1b2c40b1381c..3afd9443c425 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -3671,10 +3671,12 @@ static int mpi_set_controller_config_resp(struct =
-pm8001_hba_info *pm8001_ha,
->                         (struct set_ctrl_cfg_resp *)(piomb + 4);
->         u32 status =3D le32_to_cpu(pPayload->status);
->         u32 err_qlfr_pgcd =3D le32_to_cpu(pPayload->err_qlfr_pgcd);
-> +       u32 tag =3D le32_to_cpu(pPayload->tag);
->
->         pm8001_dbg(pm8001_ha, MSG,
->                    "SET CONTROLLER RESP: status 0x%x qlfr_pgcd 0x%x\n",
->                    status, err_qlfr_pgcd);
-> +       pm8001_tag_free(pm8001_ha, tag);
->
->         return 0;
->  }
-> --
-> 2.34.1
->
+---
+Changes in v2: add Closes tag
+
+ drivers/scsi/pm8001/pm8001_hwi.c | 2 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_=
+hwi.c
+index 33053db5a713..90069c7b1642 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -4180,7 +4180,7 @@ pm8001_chip_phy_start_req(struct pm8001_hba_info *pm8=
+001_ha, u8 phy_id)
+ 	payload.sas_identify.dev_type =3D SAS_END_DEVICE;
+ 	payload.sas_identify.initiator_bits =3D SAS_PROTOCOL_ALL;
+ 	memcpy(payload.sas_identify.sas_addr,
+-		pm8001_ha->sas_addr, SAS_ADDR_SIZE);
++		&pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
+ 	payload.sas_identify.phy_id =3D phy_id;
+=20
+ 	return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_=
+hwi.c
+index f6857632dc7c..1b2c40b1381c 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -4671,7 +4671,7 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8=
+001_ha, u8 phy_id)
+ 	payload.sas_identify.dev_type =3D SAS_END_DEVICE;
+ 	payload.sas_identify.initiator_bits =3D SAS_PROTOCOL_ALL;
+ 	memcpy(payload.sas_identify.sas_addr,
+-	  &pm8001_ha->sas_addr, SAS_ADDR_SIZE);
++		&pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
+ 	payload.sas_identify.phy_id =3D phy_id;
+=20
+ 	return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
+--=20
+2.34.1
+
