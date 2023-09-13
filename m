@@ -2,88 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7545CEDEC51
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 13:16:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A717EDEC4D
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Sep 2023 13:41:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240849AbjIMNQZ convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Sep 2023 09:16:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55428 "EHLO
+        id S234545AbjIMNlk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Sep 2023 09:41:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240852AbjIMNQQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2023 09:16:16 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6927C19B4;
-        Wed, 13 Sep 2023 06:16:12 -0700 (PDT)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Rm1770cw6z6D9CR;
-        Wed, 13 Sep 2023 21:11:31 +0800 (CST)
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Wed, 13 Sep
- 2023 14:16:10 +0100
-Date:   Wed, 13 Sep 2023 14:16:09 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-CC:     <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        "Nilesh Javali" <njavali@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 08/10] scsi: qla2xxx: Use FIELD_GET() to extract PCIe
- capability fields
-Message-ID: <20230913141609.000030cd@Huawei.com>
-In-Reply-To: <20230913122748.29530-9-ilpo.jarvinen@linux.intel.com>
-References: <20230913122748.29530-1-ilpo.jarvinen@linux.intel.com>
-        <20230913122748.29530-9-ilpo.jarvinen@linux.intel.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S230414AbjIMNlk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Sep 2023 09:41:40 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F32241BC3
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Sep 2023 06:41:35 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id 2adb3069b0e04-50079d148aeso11722602e87.3
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Sep 2023 06:41:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1694612494; x=1695217294; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xZ1rUv5g/qQPI1agYI/yIm65VV4BKQNh+OmVlPyNu3k=;
+        b=e962oToqcpH5a8kXi5VpIH78SfLr8H/Z0pJc8zeYkclZ2/SrEVzNoo3utcg2jGILEG
+         uNG8w2dOzQFrUE6tdO3bB7Am0CV8jwKb5OMoxm9M6GWCTgyqbzRXDig+22ehaPaXXxUx
+         vyE/A48Y9s148C2APDEsIK8EdvJcHEDrh3X0YbqDhfWT+umZ47yC8KuV5+ULTjRFAcX8
+         So7lBFwUMf8JhMA82DxcrlOV2qhATN8ePjv76HbFUeZj38E5qR97zbQgALi1P58gSJKL
+         1+UHFt8XFIP0S/jTGJ2C4nMz2qMdUz8xfMOhylLbTqbHh/znI5vGjR9LpFFBEKstSuHv
+         OWYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694612494; x=1695217294;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=xZ1rUv5g/qQPI1agYI/yIm65VV4BKQNh+OmVlPyNu3k=;
+        b=YeyAQvZBHcAHH3E43j0D3e9HOJU/Q4TcYE0GSTqZan7SwprqxjDetLhZnd5ZK/kF+I
+         0p5PbKFInqtYXyFnZQ0sJW+aA0+N50HJeormhhq2XS6kUBXnoSszZN+Vl0Esiwglm+8C
+         jnBtM+xJbht0MtDU/jM4DQMyYZVmJVrYownMtdnOUXPtelcTazkP7XiBGkL9PnA5PcIh
+         JAI9qcx7mBeweC4Bw6EXM+myASPvpCG7g4S+rp4AEzuE2F0JrQtB8+GR8v5xN6gOF4Ni
+         56AbTKCmsZuur0yHqUWYfylRYO8R+P0ohT2h5tOz/jDt9gdy4ExrbhxNZMAlpoeTgnCR
+         pciA==
+X-Gm-Message-State: AOJu0Yzj5qs0qtMiKmMuUtf5pCmYF+as/GBojs6q/WWM+jx0ViKfuVb0
+        XvFEQVtRAH597iFNmPL8FeMU83tNwa03zLhEvSKXYQ==
+X-Google-Smtp-Source: AGHT+IFaRgGOtENQHeZDax7vKLrpvaqziPhUjnjmndkG6cnhLYp5RFYRwQm6c9zj4eSLFyVrPqtdL7ljEGWFqQAvbOo=
+X-Received: by 2002:a05:6512:312c:b0:4fe:7dcc:3dc1 with SMTP id
+ p12-20020a056512312c00b004fe7dcc3dc1mr1784034lfd.44.1694612494095; Wed, 13
+ Sep 2023 06:41:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8BIT
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml500005.china.huawei.com (7.191.163.240) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+References: <20230911170340.699533-1-mge@meta.com>
+In-Reply-To: <20230911170340.699533-1-mge@meta.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Wed, 13 Sep 2023 15:41:23 +0200
+Message-ID: <CAMGffEm4dSagsKJBrCd5XLb-RonocWrTO2bsZJXG7tojxOLKiQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] pm80xx: Use phy specific sas address when sending
+ PHY_START command
+To:     Michal Grzedzicki <mge@meta.com>
+Cc:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 13 Sep 2023 15:27:46 +0300
-Ilpo Järvinen <ilpo.jarvinen@linux.intel.com> wrote:
-
-> Use FIELD_GET() to extract PCIe capability registers field instead of
-> custom masking and shifting.
-> 
-> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-
+On Mon, Sep 11, 2023 at 7:03=E2=80=AFPM Michal Grzedzicki <mge@meta.com> wr=
+ote:
+>
+> Some cards have more than one sas addresses. Using incorrect
+> address causes communication issues with some devices like expanders.
+>
+> Signed-off-by: Michal Grzedzicki <mge@meta.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
 > ---
->  drivers/scsi/qla2xxx/qla_os.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 50db08265c51..7e103d711825 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -5,6 +5,7 @@
->   */
->  #include "qla_def.h"
->  
-> +#include <linux/bitfield.h>
->  #include <linux/moduleparam.h>
->  #include <linux/vmalloc.h>
->  #include <linux/delay.h>
-> @@ -633,8 +634,8 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha, char *str, size_t str_len)
->  		const char *speed_str;
->  
->  		pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
-> -		lspeed = lstat & PCI_EXP_LNKCAP_SLS;
-> -		lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
-> +		lspeed = FIELD_GET(PCI_EXP_LNKCAP_SLS, lstat);
-> +		lwidth = FIELD_GET(PCI_EXP_LNKCAP_MLW, lstat);
->  
->  		switch (lspeed) {
->  		case 1:
-
+>  drivers/scsi/pm8001/pm8001_hwi.c | 2 +-
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm800=
+1_hwi.c
+> index 33053db5a713..90069c7b1642 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -4180,7 +4180,7 @@ pm8001_chip_phy_start_req(struct pm8001_hba_info *p=
+m8001_ha, u8 phy_id)
+>         payload.sas_identify.dev_type =3D SAS_END_DEVICE;
+>         payload.sas_identify.initiator_bits =3D SAS_PROTOCOL_ALL;
+>         memcpy(payload.sas_identify.sas_addr,
+> -               pm8001_ha->sas_addr, SAS_ADDR_SIZE);
+> +               &pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
+>         payload.sas_identify.phy_id =3D phy_id;
+>
+>         return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
+x_hwi.c
+> index f6857632dc7c..1b2c40b1381c 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -4671,7 +4671,7 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *p=
+m8001_ha, u8 phy_id)
+>         payload.sas_identify.dev_type =3D SAS_END_DEVICE;
+>         payload.sas_identify.initiator_bits =3D SAS_PROTOCOL_ALL;
+>         memcpy(payload.sas_identify.sas_addr,
+> -         &pm8001_ha->sas_addr, SAS_ADDR_SIZE);
+> +               &pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
+>         payload.sas_identify.phy_id =3D phy_id;
+>
+>         return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
+> --
+> 2.34.1
+>
