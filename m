@@ -2,148 +2,178 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84515EDE983
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 07:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0568AEDE989
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 07:18:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232090AbjINHSB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Sep 2023 03:18:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39802 "EHLO
+        id S232210AbjINHSM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Sep 2023 03:18:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230475AbjINHSB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 03:18:01 -0400
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB955E4B
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Sep 2023 00:17:56 -0700 (PDT)
-Received: by mail-wr1-x42a.google.com with SMTP id ffacd0b85a97d-31fd89c27e2so482588f8f.0
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Sep 2023 00:17:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1694675875; x=1695280675; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=TnyV9af3KTDSn5LmFo4v6eXcrqZ+B9e5Qxfuac0pjUY=;
-        b=bBbpkGr2n0HTB6HQGlZEQHjLa0Tpxp1IpvUIgNVu3aEXG/u1wqNiL9RxT+wFLnVAYy
-         lPYZSiSU4+dwTbDl+IGFoxUUQUosc8UeoUMfYbiUIl782pzdNqpyRwCktg9c4nVFRXLm
-         gBkPYu82+qa7S3WbZfzhkViQiSBxJbOfQRAUi27r1hseHd+buQOw14PaM8URO0OxFhsX
-         CMHqyrAl1/AKfEPm1sFEICCOjo4cdLFWHUtMAwrUgr/cS+hgl6ORmdowGd1C1Gdy9/bY
-         RZ9iWU5fCtdPoj6s74p7WfHO38h1xLLtMb50CrDf/Y28likNu0J6nXW249GkdCUqp3Gj
-         c+kQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694675875; x=1695280675;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=TnyV9af3KTDSn5LmFo4v6eXcrqZ+B9e5Qxfuac0pjUY=;
-        b=bUYuRyd/hJ/SooDYwMhkc2c3xGZgHYBSqd9FUbLKTUmC12xaQVAztbzhDJou8fyGGX
-         XLwzr3Z42e0dPH1Gln0sd5XOwEdS2nLNvBeX2ef6RUBRsP1H1oCP5c/Nz9ggIk/fNI/6
-         1PLFArmFm05iVAKn1DdSeOv6p4/WE0xAni9qgY1/5Y23S7ginwMHROuKFZfVaFGg6Eha
-         gIHSVyEShhV53bEg4YP8gQn5vcq9bAzAQMFgtEFT1VEZYnUEUvb9HYvYT68/B50dmwA3
-         BE83ONC+xkElrVBXEEDs1KuE8+FVQcHnFCIKUtQhXt2u4Z60+flwTw4PjJvJODNr5GPU
-         PRDA==
-X-Gm-Message-State: AOJu0YxQx5fkKZeRvbg+FbC5u579+Rfx36pkj6aVleaA9zrtVy11qK7J
-        5G3Ww4QK4rUAfic5P3OXFKNHEg==
-X-Google-Smtp-Source: AGHT+IEK6SYA+nBzWeG6lMDvkeq82QWkULn4oFR/HTZ2x3sw8wMbXcV31yc++OhQtubr4HHqola0wA==
-X-Received: by 2002:adf:de8a:0:b0:314:3bd7:6a0c with SMTP id w10-20020adfde8a000000b003143bd76a0cmr3970173wrl.33.1694675875014;
-        Thu, 14 Sep 2023 00:17:55 -0700 (PDT)
-Received: from [192.168.1.20] ([178.197.214.188])
-        by smtp.gmail.com with ESMTPSA id q5-20020a5d6585000000b0031f5f0d0be0sm933196wru.31.2023.09.14.00.17.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Sep 2023 00:17:54 -0700 (PDT)
-Message-ID: <bccc1cad-c50b-c10e-6cb0-80b6fb7ac4cd@linaro.org>
-Date:   Thu, 14 Sep 2023 09:17:51 +0200
+        with ESMTP id S230475AbjINHSM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 03:18:12 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38C55E4D;
+        Thu, 14 Sep 2023 00:18:08 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03D4BC433C7;
+        Thu, 14 Sep 2023 07:18:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694675887;
+        bh=pHV0xAlB9G48OcMeZS58qvGiqojXj3S1FuPmY33vnFA=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=uJygONfSib2mtauDAWndq5/wIp/nkporgCf2aCu7Hmxnr3xKjHapcqgGlfxp4QgKy
+         q8IME4agNWBqvOnU1urB+BMQUkEf9urA9ywbyQpjuFhhsldLpdnjuptwbvMNCFrI//
+         pMK28TB2TvQDsS3+BuAyba+xvpHZZT+cxspmGSl6hE9Q93trAip6sMVfX0uPio8u51
+         9aGNGbQ+G0zZxld7PwJrZWhYB/SDcIpObGORtp3yYik41sl8QPBzFyz+zaJ0hQyqv6
+         ZJIp5CYld/UC3opRkseJcfNJ3fBdugY54brj7KEHnDTMVCYoBkwtttfP9c2msC07xn
+         5NcGuQhDwd6DQ==
+Message-ID: <44b61fbd-65c1-bed6-73bc-10b9ef2e5856@kernel.org>
+Date:   Thu, 14 Sep 2023 16:18:04 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [PATCH v2] scsi: ufs: qcom: dt-bindings: Add MCQ properties
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v2 03/21] ata: libata-scsi: link ata port and scsi device
 Content-Language: en-US
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
-        quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, quic_nguyenb@quicinc.com,
-        quic_nitirawa@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1694675158-38301-1-git-send-email-quic_ziqichen@quicinc.com>
- <1e89183a-b42a-b447-0c1a-bbfe646705ef@linaro.org>
-In-Reply-To: <1e89183a-b42a-b447-0c1a-bbfe646705ef@linaro.org>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        linux-renesas-soc@vger.kernel.org
+References: <20230912005655.368075-1-dlemoal@kernel.org>
+ <20230912005655.368075-4-dlemoal@kernel.org>
+ <1e25e64-a6bc-49e8-62c8-101f3f6de113@linux-m68k.org>
+ <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/09/2023 09:16, Krzysztof Kozlowski wrote:
-> On 14/09/2023 09:05, Ziqi Chen wrote:
->> Remove the maxItem limitation to property 'reg',
-
-Your commit should answer to "why". Not "what".
-
->> and add description for the property 'msi-parent'.
+On 9/14/23 16:08, Geert Uytterhoeven wrote:
+> Hi Damien,
+> 
+> On Wed, Sep 13, 2023 at 12:27 PM Geert Uytterhoeven
+> <geert@linux-m68k.org> wrote:
+>> On Tue, 12 Sep 2023, Damien Le Moal wrote:
+>>> There is no direct device ancestry defined between an ata_device and
+>>> its scsi device which prevents the power management code from correctly
+>>> ordering suspend and resume operations. Create such ancestry with the
+>>> ata device as the parent to ensure that the scsi device (child) is
+>>> suspended before the ata device and that resume handles the ata device
+>>> before the scsi device.
+>>>
+>>> The parent-child (supplier-consumer) relationship is established between
+>>> the ata_port (parent) and the scsi device (child) with the function
+>>> device_add_link(). The parent used is not the ata_device as the PM
+>>> operations are defined per port and the status of all devices connected
+>>> through that port is controlled from the port operations.
+>>>
+>>> The device link is established with the new function
+>>> ata_scsi_dev_alloc(). This function is used to define the ->slave_alloc
+>>> callback of the scsi host template of most drivers.
+>>>
+>>> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
+>>> Cc: stable@vger.kernel.org
+>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
 >>
->> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->> ---
->>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 12 +++++++++++-
->>  1 file changed, 11 insertions(+), 1 deletion(-)
+>> Thanks for your patch, which is now commit 99626085d036ec32 ("ata:
+>> libata-scsi: link ata port and scsi device") in libata/for-next.
 >>
->> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->> index bdfa86a..5ec2717 100644
->> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->> @@ -77,7 +77,13 @@ properties:
->>  
->>    reg:
->>      minItems: 1
->> -    maxItems: 2
+>> This patch causes /dev/sda to disappear on Renesas Salvator-XS with
+>> R-Car H3 ES2.0.  Changes to dmesg before/after:
+>>
+>>       sata_rcar ee300000.sata: ignoring dependency for device, assuming no driver
+>>       scsi host0: sata_rcar
+>>      -ata1: SATA max UDMA/133 irq 184 lpm-pol 0
+>>      +ata1: SATA max UDMA/133 irq 179 lpm-pol 0
+>>       ata1: link resume succeeded after 1 retries
+>>       ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>>       ata1.00: ATA-7: Maxtor 6L160M0, BANC1G10, max UDMA/133
+>>       ata1.00: 320173056 sectors, multi 0: LBA48 NCQ (not used)
+>>       ata1.00: configured for UDMA/133
+>>       scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L160M0   1G10 PQ: 0 ANSI: 5
+>>      -sd 0:0:0:0: [sda] 320173056 512-byte logical blocks: (164 GB/153 GiB)
+>>      -sd 0:0:0:0: [sda] Write Protect is off
+>>      -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>>      -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>>      -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+>>      - sda: sda1
+>>      -sd 0:0:0:0: [sda] Attached SCSI disk
 > 
-> So 20 items are allowed? No, that's not correct.
+> I see the same issue on SH/Landisk, which has CompactFLASH:
 > 
+>     -ata1: PATA max PIO0 ioport cmd 0xc0023040 ctl 0xc002302c irq 26
+>     +ata1: PATA max PIO0 ioport cmd 0xc0023040 ctl 0xc002302c irq 26 lpm-pol 0
+>      ata1.00: CFA: TS8GCF133, 20171204, max UDMA/100
+>      ata1.00: 15662304 sectors, multi 0: LBA48
+>      ata1.00: configured for PIO
+>      scsi 0:0:0:0: Direct-Access     ATA      TS8GCF133        1204
+> PQ: 0 ANSI: 5
+>     -sd 0:0:0:0: [sda] 15662304 512-byte logical blocks: (8.02 GB/7.47 GiB)
+>     -sd 0:0:0:0: [sda] Write Protect is off
+>     -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>     -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled,
+> doesn't support DPO or FUA
+>     -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+>     - sda: sda1 sda2 sda3
+>     -sd 0:0:0:0: [sda] Attached SCSI removable disk
 > 
->> +    description:
->> +      Register base addresses and lengths of the UFS areas.
+> and m68k/ARAnyM:
 > 
-> Drop description - it's useless and redundant.
+>      atari-falcon-ide atari-falcon-ide: Atari Falcon and Q40/Q60 PATA controller
+>      scsi host0: pata_falcon
+>      ata1: PATA max PIO4 cmd fff00000 ctl fff00038 data fff00000 no
+> IRQ, using PIO polling
+>      ata1.00: ATA-2: Sarge m68k, , max PIO2
+>      ata1.00: 2118816 sectors, multi 0: LBA
+>      ata1.00: configured for PIO
+>      scsi 0:0:0:0: Direct-Access     ATA      Sarge m68k       n/a
+> PQ: 0 ANSI: 5
+>     -sd 0:0:0:0: [sda] 2118816 512-byte logical blocks: (1.08 GB/1.01 GiB)
+>     -sd 0:0:0:0: [sda] Write Protect is off
+>     -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>     -sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled,
+> doesn't support DPO or FUA
+>     -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+>     - sda: AHDI sda1 sda2
+>     -sd 0:0:0:0: [sda] Attached SCSI disk
 > 
->> +
->> +  reg-names:
->> +    minItems: 1
->> +    description:
->> +      Names of the reg areas to use during resource lookup.
+> Reverting 99626085d036ec32 fixes the issue.
+
+Yes. I can confirm this. I can recreate the issue, because I have a major
+screw-up with that patch: the device_link_add() done in the new ->slave_alloc
+operation for the scsi_host_template for the driver was in fact NOT set for
+AHCI. So all my testing confirming that suspend/resume is OK was done *without*
+that device link being created... That is embarrassing :)
+
+The sata_rcar driver does get that slave_alloc method set through ATA_BASE_SHT()
+-> ATA_SUBBASE_SHT(), and you get the problem. If I fix AHCI_SHT() macro to set
+slave_alloc, I do get the issue as well: no scsi disk device is created after
+the port scan. No clue why.
+
+And I also now have no clue how suddenly the suspend/resume operations get
+magically ordered correctly... I could recreate various issues before the
+patches in for-6.7.
+
+So going back to the beginning to sort things out. I probably "inadvertently"
+fixed the issues with another change that has implications I am not seeing.
+
+Will get back to you ASAP.
+
 > 
-> Drop such description it's useless, instead list and describe items.
+> Gr{oetje,eeting}s,
 > 
-> Also, why all devices now have two regs? No, this is just wrong. And
-> haven't we been here with two items?
-> 
-> 
->>  
->>    required-opps:
->>      maxItems: 1
->> @@ -97,6 +103,10 @@ properties:
->>      description:
->>        GPIO connected to the RESET pin of the UFS memory device.
->>  
->> +  msi-parent:
->> +    description:
->> +      Pointer to the hardware entity that serves as the MSI controller for thi UFS controller.
-> 
-> typo in "thi". Not wrapped according to Linux coding style (as written
-> in coding style document). BTW, this is usually just "true" and without
-> need for description.
+>                         Geert
 > 
 
-BTW, for both my comments - for reg/reg-names and this property - where
-is the user? Except adding this to example, I expect to see users somewhere.
-
-Best regards,
-Krzysztof
+-- 
+Damien Le Moal
+Western Digital Research
 
