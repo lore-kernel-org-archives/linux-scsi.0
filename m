@@ -2,123 +2,169 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22611EDE983
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 07:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBC4BEDE989
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 07:09:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235798AbjINHG7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Sep 2023 03:06:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56024 "EHLO
+        id S230141AbjINHJF convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Sep 2023 03:09:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235734AbjINHG6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 03:06:58 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A32ECCD;
-        Thu, 14 Sep 2023 00:06:54 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38E4eWEO019692;
-        Thu, 14 Sep 2023 07:06:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=9aOOk9ynVAmWGU7p1tgp3K1zQoP/ZtPSYFChk1O2lX0=;
- b=KJLouSjkTlYSkwYFEeMHa/Zkickw51+euU1PyaJTMhMLSnPNIRu1bCYYQ1m1App4VAH5
- QtseUDvpElqJI/Cx6Nj4ae3EuRq9a+VG1IRUts64kJ6dxE+UWQx7M8vi++UKNtqQ6nII
- L77JH/azkmeZaw3hvQcY11ZnF3H1w10X8hjWE34Gau9x/UlGNu8y1k8G3K7MY/I/F15B
- sz6LUaikZTgIkyv3pSwe5+ezpDYnk5wO/Lh8lGTHKuOp6cuojbbcRipcvUTdlxwTMa1u
- H91cL2vSrhxLyVEraUzan3XLlxBx41/V+kN2ro90K7w2gpPbh3lciAuNgWEyNni86jdy Kg== 
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t3ds4282j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Sep 2023 07:06:33 +0000
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-        by APTAIPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 38E76UW5009468;
-        Thu, 14 Sep 2023 07:06:30 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 3t0hsknfsy-1;
-        Thu, 14 Sep 2023 07:06:30 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38E76UER009463;
-        Thu, 14 Sep 2023 07:06:30 GMT
-Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-        by APTAIPPMTA02.qualcomm.com (PPS) with ESMTP id 38E76TbY009462;
-        Thu, 14 Sep 2023 07:06:30 +0000
-Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id BD19B4E55; Thu, 14 Sep 2023 15:06:28 +0800 (CST)
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        bvanassche@acm.org, mani@kernel.org, adrian.hunter@intel.com,
-        beanhuo@micron.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, quic_ziqichen@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2] scsi: ufs: qcom: dt-bindings: Add MCQ properties
-Date:   Thu, 14 Sep 2023 15:05:57 +0800
-Message-Id: <1694675158-38301-1-git-send-email-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: i5uueF1biYhGaabLagsYIGNaMsfNM_ab
-X-Proofpoint-GUID: i5uueF1biYhGaabLagsYIGNaMsfNM_ab
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-14_03,2023-09-13_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=475 spamscore=0
- lowpriorityscore=0 malwarescore=0 bulkscore=0 adultscore=0 mlxscore=0
- priorityscore=1501 impostorscore=0 suspectscore=0 clxscore=1015
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309140062
+        with ESMTP id S232122AbjINHJE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 03:09:04 -0400
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9AF6CE5;
+        Thu, 14 Sep 2023 00:09:00 -0700 (PDT)
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-592976e5b6dso7074747b3.2;
+        Thu, 14 Sep 2023 00:09:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694675339; x=1695280139;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3bPJRE7Dn9tq7+g0e7rhq+WGthyqvVeFUvuw6jaNTDs=;
+        b=uzZXV9hCnonHbq9N6ArFkrsgTM1HG/3QVxaxPK451YodhmyPPkF591lSoF1e5B+lbP
+         0k4W6K3JG13+bDvil8v41DN3ub2JoWgURARpF/szkeYcpcI4j7u99pE6bLwj6PlNHtpJ
+         ifV/XssGnVjY4tEMZ/kbDHHIiZgR3qE8ZrE1LwWcsuT3us1rD6f99rwXL6tuedL6QLNR
+         tdFQ+So2z1HMvXwYNq4FHVI0IB+e40LR89ixWZUc5ML9QSLE/9Sc01Jeuw7DtfO+Nxl5
+         BrCyaWx1Q+u8hGIyOmKYC+aHuSc3t+AaJwQrdhQFIJLfc0xS4ZEJBj6R1gH3YWgynTS3
+         rIqQ==
+X-Gm-Message-State: AOJu0YwVBT7793eQXffGN1dmVbrPCdcpkC02wyj2tsczflxqwSIKxMFD
+        zJDOJk9xjhXvjYkq419chKpSDtq8soJPvA==
+X-Google-Smtp-Source: AGHT+IFAJr0rFWvsx6qy3Cb2Qxk+FIXM4o1SpbgfjQUvTuzQ6/0zmIqEfNMWjAj4BaQB5DyqsLM9Xw==
+X-Received: by 2002:a81:9c44:0:b0:571:11ea:b2dd with SMTP id n4-20020a819c44000000b0057111eab2ddmr4777501ywa.32.1694675339567;
+        Thu, 14 Sep 2023 00:08:59 -0700 (PDT)
+Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com. [209.85.219.172])
+        by smtp.gmail.com with ESMTPSA id y62-20020a0dd641000000b0059b24bd4f2asm198864ywd.57.2023.09.14.00.08.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 14 Sep 2023 00:08:59 -0700 (PDT)
+Received: by mail-yb1-f172.google.com with SMTP id 3f1490d57ef6-d7820f9449bso665955276.1;
+        Thu, 14 Sep 2023 00:08:59 -0700 (PDT)
+X-Received: by 2002:a25:e60a:0:b0:d78:123:5a97 with SMTP id
+ d10-20020a25e60a000000b00d7801235a97mr4565755ybh.25.1694675338816; Thu, 14
+ Sep 2023 00:08:58 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230912005655.368075-1-dlemoal@kernel.org> <20230912005655.368075-4-dlemoal@kernel.org>
+ <1e25e64-a6bc-49e8-62c8-101f3f6de113@linux-m68k.org>
+In-Reply-To: <1e25e64-a6bc-49e8-62c8-101f3f6de113@linux-m68k.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Thu, 14 Sep 2023 09:08:46 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
+Message-ID: <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
+Subject: Re: [PATCH v2 03/21] ata: libata-scsi: link ata port and scsi device
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        linux-renesas-soc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove the maxItem limitation to property 'reg',
-and add description for the property 'msi-parent'.
+Hi Damien,
 
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
----
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+On Wed, Sep 13, 2023 at 12:27 PM Geert Uytterhoeven
+<geert@linux-m68k.org> wrote:
+> On Tue, 12 Sep 2023, Damien Le Moal wrote:
+> > There is no direct device ancestry defined between an ata_device and
+> > its scsi device which prevents the power management code from correctly
+> > ordering suspend and resume operations. Create such ancestry with the
+> > ata device as the parent to ensure that the scsi device (child) is
+> > suspended before the ata device and that resume handles the ata device
+> > before the scsi device.
+> >
+> > The parent-child (supplier-consumer) relationship is established between
+> > the ata_port (parent) and the scsi device (child) with the function
+> > device_add_link(). The parent used is not the ata_device as the PM
+> > operations are defined per port and the status of all devices connected
+> > through that port is controlled from the port operations.
+> >
+> > The device link is established with the new function
+> > ata_scsi_dev_alloc(). This function is used to define the ->slave_alloc
+> > callback of the scsi host template of most drivers.
+> >
+> > Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> > Reviewed-by: Hannes Reinecke <hare@suse.de>
+>
+> Thanks for your patch, which is now commit 99626085d036ec32 ("ata:
+> libata-scsi: link ata port and scsi device") in libata/for-next.
+>
+> This patch causes /dev/sda to disappear on Renesas Salvator-XS with
+> R-Car H3 ES2.0.  Changes to dmesg before/after:
+>
+>       sata_rcar ee300000.sata: ignoring dependency for device, assuming no driver
+>       scsi host0: sata_rcar
+>      -ata1: SATA max UDMA/133 irq 184 lpm-pol 0
+>      +ata1: SATA max UDMA/133 irq 179 lpm-pol 0
+>       ata1: link resume succeeded after 1 retries
+>       ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>       ata1.00: ATA-7: Maxtor 6L160M0, BANC1G10, max UDMA/133
+>       ata1.00: 320173056 sectors, multi 0: LBA48 NCQ (not used)
+>       ata1.00: configured for UDMA/133
+>       scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L160M0   1G10 PQ: 0 ANSI: 5
+>      -sd 0:0:0:0: [sda] 320173056 512-byte logical blocks: (164 GB/153 GiB)
+>      -sd 0:0:0:0: [sda] Write Protect is off
+>      -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>      -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>      -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+>      - sda: sda1
+>      -sd 0:0:0:0: [sda] Attached SCSI disk
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index bdfa86a..5ec2717 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -77,7 +77,13 @@ properties:
- 
-   reg:
-     minItems: 1
--    maxItems: 2
-+    description:
-+      Register base addresses and lengths of the UFS areas.
-+
-+  reg-names:
-+    minItems: 1
-+    description:
-+      Names of the reg areas to use during resource lookup.
- 
-   required-opps:
-     maxItems: 1
-@@ -97,6 +103,10 @@ properties:
-     description:
-       GPIO connected to the RESET pin of the UFS memory device.
- 
-+  msi-parent:
-+    description:
-+      Pointer to the hardware entity that serves as the MSI controller for thi UFS controller.
-+
- required:
-   - compatible
-   - reg
+I see the same issue on SH/Landisk, which has CompactFLASH:
+
+    -ata1: PATA max PIO0 ioport cmd 0xc0023040 ctl 0xc002302c irq 26
+    +ata1: PATA max PIO0 ioport cmd 0xc0023040 ctl 0xc002302c irq 26 lpm-pol 0
+     ata1.00: CFA: TS8GCF133, 20171204, max UDMA/100
+     ata1.00: 15662304 sectors, multi 0: LBA48
+     ata1.00: configured for PIO
+     scsi 0:0:0:0: Direct-Access     ATA      TS8GCF133        1204
+PQ: 0 ANSI: 5
+    -sd 0:0:0:0: [sda] 15662304 512-byte logical blocks: (8.02 GB/7.47 GiB)
+    -sd 0:0:0:0: [sda] Write Protect is off
+    -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+    -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled,
+doesn't support DPO or FUA
+    -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+    - sda: sda1 sda2 sda3
+    -sd 0:0:0:0: [sda] Attached SCSI removable disk
+
+and m68k/ARAnyM:
+
+     atari-falcon-ide atari-falcon-ide: Atari Falcon and Q40/Q60 PATA controller
+     scsi host0: pata_falcon
+     ata1: PATA max PIO4 cmd fff00000 ctl fff00038 data fff00000 no
+IRQ, using PIO polling
+     ata1.00: ATA-2: Sarge m68k, , max PIO2
+     ata1.00: 2118816 sectors, multi 0: LBA
+     ata1.00: configured for PIO
+     scsi 0:0:0:0: Direct-Access     ATA      Sarge m68k       n/a
+PQ: 0 ANSI: 5
+    -sd 0:0:0:0: [sda] 2118816 512-byte logical blocks: (1.08 GB/1.01 GiB)
+    -sd 0:0:0:0: [sda] Write Protect is off
+    -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+    -sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled,
+doesn't support DPO or FUA
+    -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+    - sda: AHDI sda1 sda2
+    -sd 0:0:0:0: [sda] Attached SCSI disk
+
+Reverting 99626085d036ec32 fixes the issue.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.7.4
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
