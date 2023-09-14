@@ -2,179 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58B3DEEAA41
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 13:43:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DAD8EEAA4E
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 14:39:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239107AbjINNny convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Sep 2023 09:43:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41220 "EHLO
+        id S240206AbjINOjv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Sep 2023 10:39:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239118AbjINNnx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 09:43:53 -0400
-Received: from mail-yb1-f173.google.com (mail-yb1-f173.google.com [209.85.219.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA13B1FC7;
-        Thu, 14 Sep 2023 06:43:49 -0700 (PDT)
-Received: by mail-yb1-f173.google.com with SMTP id 3f1490d57ef6-d7f1bc4ece3so1029233276.1;
-        Thu, 14 Sep 2023 06:43:49 -0700 (PDT)
+        with ESMTP id S240180AbjINOju (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 10:39:50 -0400
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46D38CC7;
+        Thu, 14 Sep 2023 07:39:46 -0700 (PDT)
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-68fac346f6aso899861b3a.3;
+        Thu, 14 Sep 2023 07:39:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694699029; x=1695303829;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ZiptDfWO3OwfTjyJFpjGsOnaFbidC8Yv0wyXW7E/kKg=;
-        b=rT4lYk22GQplPgvgkjZb7cDPnRTYfYrFuSz0bF7D9L+nKoejrUlqNBIrkohQ+WkW4b
-         qDWT+joSeeTJMigUXku0Ktx8DSX6AYGJnbcrA2yKu7hc+r59NQ3ohJTnmg8Vt+6BPpYI
-         bk4a9ZdGrDhbGSSTzI78uZjPcxh5z6lZyA1hsdHEIzrCctz32JkGYUAnDjeCl+l7jQq8
-         /a0DzT4EbzLCOihvS6ZBcgnwfZXuX1jPpYtTxvVOZT/1H1nnQuNAGnn1W8fQfOrWOQ1d
-         zbU8AQmvB3efjj+JAXCh2Jw0RvNiVHSTv1WcwSxvAzpJYzyr7U2DVMjHmY3XuPHcNa9Y
-         Ubkg==
-X-Gm-Message-State: AOJu0YzJIAKbrSug/SyHi4n5qAlC5gFc6s57RwULToOUNDoATlym2mcM
-        HbLcSBU3klIjtCdCRkHuk38yaKI7MFusXw==
-X-Google-Smtp-Source: AGHT+IGymgDYimFcXcqMDM093U3hqxeAi2iO9y6W80QmgJVZ3FK0v5kxq8n2rHUA5WlYsi81UlCBSg==
-X-Received: by 2002:a5b:308:0:b0:d12:25d:fd60 with SMTP id j8-20020a5b0308000000b00d12025dfd60mr5449804ybp.9.1694699028570;
-        Thu, 14 Sep 2023 06:43:48 -0700 (PDT)
-Received: from mail-yb1-f174.google.com (mail-yb1-f174.google.com. [209.85.219.174])
-        by smtp.gmail.com with ESMTPSA id l26-20020a25b31a000000b00d7745e2bb19sm335953ybj.29.2023.09.14.06.43.48
+        d=1e100.net; s=20230601; t=1694702386; x=1695307186;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=bRoKtsiFAz/RMqwXABsGqDBkTSHzyKsRHQZwuhxYtn8=;
+        b=rlU7z48Wi7gubkowFviIKU5RMPq1J+ehlZYSEXqc4ceXTQiN+pfWgPEqHkmEOzj36J
+         4jb5rTTVvbHvn7fo54hl4KrJeZuLfu+utxgEhVJc2N1VPoNdU/MLDQyuL/WOm6t8hpnU
+         W9PBrIonJex+OS2GSKGyWhhKRCseXhIY7F8WECs7eU4vFIZoEgWFKP0kXLTqwax5Zha1
+         G49c2ETX+6JZdBIzHvo+O523Rj5uKD3+eh4iwh1AVOkQ2kCBZYmvams4BNoqyZlFFbTm
+         EQYLOBC7bnzHCIlcu7Tok6E+EFplQkidGU1ferYzKpak4lXLZ9ruqzpoccOXLbAbh5mu
+         rC6Q==
+X-Gm-Message-State: AOJu0Yy0X0IKup29lofe6e7HkA+Z/g6J9sXNI7ov06ku8xQox0gF/yo1
+        OvROD0rvxbh8iqlr6Txcy2U=
+X-Google-Smtp-Source: AGHT+IHSffktFu5d7/9xYkPcrFaRgCjhC9+0LWv5uXUshmnt1VeMITaWSMWJU1jIHVMsLsifkVqHLQ==
+X-Received: by 2002:a17:902:d4c8:b0:1bb:9c45:130f with SMTP id o8-20020a170902d4c800b001bb9c45130fmr6375747plg.69.1694702385550;
+        Thu, 14 Sep 2023 07:39:45 -0700 (PDT)
+Received: from ?IPV6:2601:647:5f00:5f5:4a46:e57b:bee0:6bc6? ([2601:647:5f00:5f5:4a46:e57b:bee0:6bc6])
+        by smtp.gmail.com with ESMTPSA id jn18-20020a170903051200b001a98f844e60sm1663848plb.263.2023.09.14.07.39.44
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Sep 2023 06:43:48 -0700 (PDT)
-Received: by mail-yb1-f174.google.com with SMTP id 3f1490d57ef6-d7e904674aeso1010563276.3;
-        Thu, 14 Sep 2023 06:43:48 -0700 (PDT)
-X-Received: by 2002:a25:24d5:0:b0:ce8:4567:a382 with SMTP id
- k204-20020a2524d5000000b00ce84567a382mr5547542ybk.1.1694699027800; Thu, 14
- Sep 2023 06:43:47 -0700 (PDT)
+        Thu, 14 Sep 2023 07:39:45 -0700 (PDT)
+Message-ID: <b1ae5e2f-458f-4675-80df-9871cad05dfc@acm.org>
+Date:   Thu, 14 Sep 2023 07:39:43 -0700
 MIME-Version: 1.0
-References: <20230912005655.368075-1-dlemoal@kernel.org> <20230912005655.368075-4-dlemoal@kernel.org>
- <1e25e64-a6bc-49e8-62c8-101f3f6de113@linux-m68k.org> <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
- <472eebb7-d1d7-e1cb-4688-5266cc6e2a60@kernel.org>
-In-Reply-To: <472eebb7-d1d7-e1cb-4688-5266cc6e2a60@kernel.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Thu, 14 Sep 2023 15:43:35 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUV5k3fj-wVzw6JJzcZNfdJBth5YNPCDW7h=RXEBJiB7A@mail.gmail.com>
-Message-ID: <CAMuHMdUV5k3fj-wVzw6JJzcZNfdJBth5YNPCDW7h=RXEBJiB7A@mail.gmail.com>
-Subject: Re: [PATCH v2 03/21] ata: libata-scsi: link ata port and scsi device
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 07/19] scsi: sd: Do not issue commands to suspended disks
+ on remove
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         John Garry <john.g.garry@oracle.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        linux-renesas-soc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+        Joe Breuer <linux-kernel@jmbreuer.net>
+References: <20230911040217.253905-1-dlemoal@kernel.org>
+ <20230911040217.253905-8-dlemoal@kernel.org>
+ <c3a4ccb9-2e4d-906c-3c8f-1985a2d444a8@acm.org>
+ <7471ad70-e72c-473c-3c50-7e52b6bad69b@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <7471ad70-e72c-473c-3c50-7e52b6bad69b@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Damien,
+On 9/13/23 17:29, Damien Le Moal wrote:
+> On 9/14/23 05:50, Bart Van Assche wrote:
+>> On 9/10/23 21:02, Damien Le Moal wrote:
+>>> If an error occurs when resuming a host adapter before the devices
+>>> attached to the adapter are resumed, the adapter low level driver may
+>>> remove the scsi host, resulting in a call to sd_remove() for the
+>>> disks of the host. However, since this function calls sd_shutdown(),
+>>> a synchronize cache command and a start stop unit may be issued with the
+>>> drive still sleeping and the HBA non-functional. This causes PM resume
+>>> to hang, forcing a reset of the machine to recover.
+>>>
+>>> Fix this by checking a device host state in sd_shutdown() and by
+>>> returning early doing nothing if the host state is not SHOST_RUNNING.
+>>>
+>>> Cc: stable@vger.kernel.org
+>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>>> ---
+>>>    drivers/scsi/sd.c | 3 ++-
+>>>    1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>>> index c92a317ba547..a415abb721d3 100644
+>>> --- a/drivers/scsi/sd.c
+>>> +++ b/drivers/scsi/sd.c
+>>> @@ -3763,7 +3763,8 @@ static void sd_shutdown(struct device *dev)
+>>>    	if (!sdkp)
+>>>    		return;         /* this can happen */
+>>>    
+>>> -	if (pm_runtime_suspended(dev))
+>>> +	if (pm_runtime_suspended(dev) ||
+>>> +	    sdkp->device->host->shost_state != SHOST_RUNNING)
+>>>    		return;
+>>>    
+>>>    	if (sdkp->WCE && sdkp->media_present) {
+>>
+>> Why to test the host state instead of dev->power.runtime_status? I don't
+>> think that it is safe to skip shutdown if the error handler is active.
+>> If the error handler can recover the device a SYNCHRONIZE CACHE command
+>> should be submitted.
+> 
+> But there is no synchronization with EH that I can see anyway. At least for
+> sd_remove(), I would assume that this is called only once the device references
+> were all dropped, so presumably EH is not doing anything with the drive when
+> that happen, no ?
+> 
+> In any case, looking at dev->power.runtime_status is not correct as this is set
+> to RPM_ACTIVE when the device is suspended through system suspend. We could
+> replace the test "sdkp->device->host->shost_state != SHOST_RUNNING" with
+> "dev->power.is_suspended", as that indicates true (1) for a suspended device.
+> However, I really do not like that as that is a PM internal field and should not
+> be accessing it directly. The PM code comments say as much. Any better idea ?
 
-On Thu, Sep 14, 2023 at 3:18 PM Damien Le Moal <dlemoal@kernel.org> wrote:
-> On 9/14/23 16:08, Geert Uytterhoeven wrote:
-> > On Wed, Sep 13, 2023 at 12:27 PM Geert Uytterhoeven
-> > <geert@linux-m68k.org> wrote:
-> >> On Tue, 12 Sep 2023, Damien Le Moal wrote:
-> >>> There is no direct device ancestry defined between an ata_device and
-> >>> its scsi device which prevents the power management code from correctly
-> >>> ordering suspend and resume operations. Create such ancestry with the
-> >>> ata device as the parent to ensure that the scsi device (child) is
-> >>> suspended before the ata device and that resume handles the ata device
-> >>> before the scsi device.
-> >>>
-> >>> The parent-child (supplier-consumer) relationship is established between
-> >>> the ata_port (parent) and the scsi device (child) with the function
-> >>> device_add_link(). The parent used is not the ata_device as the PM
-> >>> operations are defined per port and the status of all devices connected
-> >>> through that port is controlled from the port operations.
-> >>>
-> >>> The device link is established with the new function
-> >>> ata_scsi_dev_alloc(). This function is used to define the ->slave_alloc
-> >>> callback of the scsi host template of most drivers.
-> >>>
-> >>> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
-> >>> Cc: stable@vger.kernel.org
-> >>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> >>> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> >>
-> >> Thanks for your patch, which is now commit 99626085d036ec32 ("ata:
-> >> libata-scsi: link ata port and scsi device") in libata/for-next.
-> >>
-> >> This patch causes /dev/sda to disappear on Renesas Salvator-XS with
-> >> R-Car H3 ES2.0.  Changes to dmesg before/after:
-> >>
-> >>       sata_rcar ee300000.sata: ignoring dependency for device, assuming no driver
-> >>       scsi host0: sata_rcar
-> >>      -ata1: SATA max UDMA/133 irq 184 lpm-pol 0
-> >>      +ata1: SATA max UDMA/133 irq 179 lpm-pol 0
-> >>       ata1: link resume succeeded after 1 retries
-> >>       ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>       ata1.00: ATA-7: Maxtor 6L160M0, BANC1G10, max UDMA/133
-> >>       ata1.00: 320173056 sectors, multi 0: LBA48 NCQ (not used)
-> >>       ata1.00: configured for UDMA/133
-> >>       scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L160M0   1G10 PQ: 0 ANSI: 5
-> >>      -sd 0:0:0:0: [sda] 320173056 512-byte logical blocks: (164 GB/153 GiB)
-> >>      -sd 0:0:0:0: [sda] Write Protect is off
-> >>      -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> >>      -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> >>      -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
-> >>      - sda: sda1
-> >>      -sd 0:0:0:0: [sda] Attached SCSI disk
-> >
-> > I see the same issue on SH/Landisk, which has CompactFLASH:
-> > and m68k/ARAnyM:
+I will reply to the above question on v2 of this patch.
 
-> > Reverting 99626085d036ec32 fixes the issue.
->
-> Without reverting, can you try this incremental update ?
->
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index 4bae95b06ae3..72085756f4ba 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -398,6 +398,7 @@ extern const struct attribute_group *ahci_sdev_groups[];
->         .sdev_groups            = ahci_sdev_groups,                     \
->         .change_queue_depth     = ata_scsi_change_queue_depth,          \
->         .tag_alloc_policy       = BLK_TAG_ALLOC_RR,                     \
-> +       .slave_alloc            = ata_scsi_slave_alloc,                 \
->         .slave_configure        = ata_scsi_slave_config
->
->  extern struct ata_port_operations ahci_ops;
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 7aa70af1fc07..5a0513452150 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1093,6 +1093,7 @@ int ata_scsi_dev_alloc(struct scsi_device *sdev, struct ata_port *ap)
->          * consumer (child) and the ata port the supplier (parent).
->          */
->         link = device_link_add(&sdev->sdev_gendev, &ap->tdev,
-> +                              DL_FLAG_STATELESS |
->                                DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
->         if (!link) {
->                 ata_port_err(ap, "Failed to create link to scsi device %s\n",
-> @@ -1164,6 +1165,8 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
->         unsigned long flags;
->         struct ata_device *dev;
->
-> +       device_link_remove(&sdev->sdev_gendev, &ap->tdev);
-> +
->         spin_lock_irqsave(ap->lock, flags);
->         dev = __ata_scsi_find_dev(ap, sdev);
->         if (dev && dev->sdev) {
->
-> This solves the issue for me. If you confirm it works for you, I will squash
-> this into 99626085d036ec32.
+Bart.
 
-Thank you, /dev/sda is back into business on R-Car SATA, Landisk, and
-ARAnyM.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
