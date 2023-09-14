@@ -2,193 +2,193 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E855EDE9BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 12:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D11FEE0215
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 13:19:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238217AbjINMka (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Sep 2023 08:40:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53728 "EHLO
+        id S239009AbjINNTX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Sep 2023 09:19:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230120AbjINMk3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 08:40:29 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A22351FCC;
-        Thu, 14 Sep 2023 05:40:25 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38E5XEqF028349;
-        Thu, 14 Sep 2023 12:40:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=qez4CXnGUw1IypJ0y5ikMWPHFvJWDjjYZe2toiWMvUU=;
- b=BWZsMU2gH4P8heNOb6AkE8zY4pcGgw8aLNU87BpwPNysTKj2P+LevDJuKDH1ezuolFWw
- gg3p1ItaVprjh0za0BfyLBLa0PCuoAg836F4CdSk9qFSzZ5STwQe4mH0E91M11J8+Ntz
- YYhKCbXUm5Wx7SONjVtMz7ickLeCBVHD6E/GT39zksYUBwaF4TIZyohVqKHrfa+MXOX9
- rDu3yTu1Z7Ke91h6xP6Q5I9Ujtog1mnJli438Tx199s+Cn2kHheZVn9SxGhNtUSpjIrW
- V785793+cqP2sQqlxScbzkBczZsjDVOPxzxOyZpugiusGagu4UWvHGrLaRly8EHIYZ/x fw== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t3v4h94q8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Sep 2023 12:40:16 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38ECeF9X015297
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Sep 2023 12:40:15 GMT
-Received: from [10.218.45.181] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 14 Sep
- 2023 05:40:11 -0700
-Message-ID: <5a2dc1a8-6a69-2eaa-aa20-127b2ee3d4d0@quicinc.com>
-Date:   Thu, 14 Sep 2023 18:10:08 +0530
+        with ESMTP id S239049AbjINNSS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 09:18:18 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93F90210B;
+        Thu, 14 Sep 2023 06:18:14 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAC11C433C7;
+        Thu, 14 Sep 2023 13:18:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694697494;
+        bh=3rrKxqJFMyAiow/Va4P0fnZ7exO1JWYi/ZplSTEpyc8=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=TjtX24KHQfMx0stckbDiv1xg/YbxtdXQ7PpYnuYTcbEWbrlC5sMJV+gCtSzHFDcTc
+         1p/waCqT0E2gSdJiHACQrcT6aY/a8cOC1N9+xqtBfIhmCs+/LXMplFvkYY4R67bV4Z
+         w53PS/Cqwg7DWgp/HAktZ5qB8rAmJCJmOgRDcujqti4NNgQpyqDqRFQmq11f5shBn8
+         0U4uZ/NGpZiIb6T5HIc6qhQDrlU4bZcnCZan8VhmS8ZpFc3Sobv6e/pltoQ4fdZDvF
+         ajOah7I3EVDd6nZgMfExepfUr2RrVsXvMk5mUKAhUj2HpWbNIMWi1BmLjOKgDX+p6K
+         u5BmMpf1KyY1Q==
+Message-ID: <472eebb7-d1d7-e1cb-4688-5266cc6e2a60@kernel.org>
+Date:   Thu, 14 Sep 2023 22:18:11 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.2
-Subject: Re: [PATCH 1/6] scsi: ufs: ufs-qcom: Setup host power mode during
- init
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v2 03/21] ata: libata-scsi: link ata port and scsi device
 Content-Language: en-US
-To:     Can Guo <quic_cang@quicinc.com>, <mani@kernel.org>,
-        <quic_nguyenb@quicinc.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
-        "Bjorn Andersson" <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
- <1694411968-14413-2-git-send-email-quic_cang@quicinc.com>
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <1694411968-14413-2-git-send-email-quic_cang@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: T-PizfkFyaJOGysut6OsFsnTAyCdceIq
-X-Proofpoint-GUID: T-PizfkFyaJOGysut6OsFsnTAyCdceIq
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-14_09,2023-09-14_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
- clxscore=1015 spamscore=0 impostorscore=0 malwarescore=0
- lowpriorityscore=0 mlxscore=0 bulkscore=0 mlxlogscore=999 adultscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309140109
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        linux-renesas-soc@vger.kernel.org
+References: <20230912005655.368075-1-dlemoal@kernel.org>
+ <20230912005655.368075-4-dlemoal@kernel.org>
+ <1e25e64-a6bc-49e8-62c8-101f3f6de113@linux-m68k.org>
+ <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 9/11/2023 11:29 AM, Can Guo wrote:
-> Setup host power mode and its limitations during UFS host driver init to
-> avoid repetitive work during every power mode change.
+On 9/14/23 16:08, Geert Uytterhoeven wrote:
+> Hi Damien,
 > 
-> Co-developed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-
-Hi Can,
-
-Patch looks good. Please can you just change the order of Signed-off-by.
-I think it should be like below:
-
-Co-developed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-
---Nitin
-
-> ---
->   drivers/ufs/host/ufs-qcom.c | 27 ++++++++++++++++++---------
->   drivers/ufs/host/ufs-qcom.h |  1 +
->   2 files changed, 19 insertions(+), 9 deletions(-)
+> On Wed, Sep 13, 2023 at 12:27 PM Geert Uytterhoeven
+> <geert@linux-m68k.org> wrote:
+>> On Tue, 12 Sep 2023, Damien Le Moal wrote:
+>>> There is no direct device ancestry defined between an ata_device and
+>>> its scsi device which prevents the power management code from correctly
+>>> ordering suspend and resume operations. Create such ancestry with the
+>>> ata device as the parent to ensure that the scsi device (child) is
+>>> suspended before the ata device and that resume handles the ata device
+>>> before the scsi device.
+>>>
+>>> The parent-child (supplier-consumer) relationship is established between
+>>> the ata_port (parent) and the scsi device (child) with the function
+>>> device_add_link(). The parent used is not the ata_device as the PM
+>>> operations are defined per port and the status of all devices connected
+>>> through that port is controlled from the port operations.
+>>>
+>>> The device link is established with the new function
+>>> ata_scsi_dev_alloc(). This function is used to define the ->slave_alloc
+>>> callback of the scsi host template of most drivers.
+>>>
+>>> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
+>>> Cc: stable@vger.kernel.org
+>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>>
+>> Thanks for your patch, which is now commit 99626085d036ec32 ("ata:
+>> libata-scsi: link ata port and scsi device") in libata/for-next.
+>>
+>> This patch causes /dev/sda to disappear on Renesas Salvator-XS with
+>> R-Car H3 ES2.0.  Changes to dmesg before/after:
+>>
+>>       sata_rcar ee300000.sata: ignoring dependency for device, assuming no driver
+>>       scsi host0: sata_rcar
+>>      -ata1: SATA max UDMA/133 irq 184 lpm-pol 0
+>>      +ata1: SATA max UDMA/133 irq 179 lpm-pol 0
+>>       ata1: link resume succeeded after 1 retries
+>>       ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>>       ata1.00: ATA-7: Maxtor 6L160M0, BANC1G10, max UDMA/133
+>>       ata1.00: 320173056 sectors, multi 0: LBA48 NCQ (not used)
+>>       ata1.00: configured for UDMA/133
+>>       scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L160M0   1G10 PQ: 0 ANSI: 5
+>>      -sd 0:0:0:0: [sda] 320173056 512-byte logical blocks: (164 GB/153 GiB)
+>>      -sd 0:0:0:0: [sda] Write Protect is off
+>>      -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>>      -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>>      -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+>>      - sda: sda1
+>>      -sd 0:0:0:0: [sda] Attached SCSI disk
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index c3215d3..710f079 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -443,7 +443,11 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba)
->   static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->   {
->   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	struct ufs_dev_params *host_pwr_cap = &host->host_pwr_cap;
->   	struct phy *phy = host->generic_phy;
-> +	enum phy_mode mode = host_pwr_cap->hs_rate == PA_HS_MODE_B ?
-> +							PHY_MODE_UFS_HS_B :
-> +							PHY_MODE_UFS_HS_A;
->   	int ret;
->   
->   	/* Reset UFS Host Controller and PHY */
-> @@ -460,7 +464,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->   		return ret;
->   	}
->   
-> -	phy_set_mode_ext(phy, PHY_MODE_UFS_HS_B, host->phy_gear);
-> +	phy_set_mode_ext(phy, mode, host->phy_gear);
->   
->   	/* power on phy - start serdes and phy's power and clocks */
->   	ret = phy_power_on(phy);
-> @@ -884,7 +888,6 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
->   				struct ufs_pa_layer_attr *dev_req_params)
->   {
->   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> -	struct ufs_dev_params ufs_qcom_cap;
->   	int ret = 0;
->   
->   	if (!dev_req_params) {
-> @@ -894,13 +897,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
->   
->   	switch (status) {
->   	case PRE_CHANGE:
-> -		ufshcd_init_pwr_dev_param(&ufs_qcom_cap);
-> -		ufs_qcom_cap.hs_rate = UFS_QCOM_LIMIT_HS_RATE;
-> -
-> -		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
-> -		ufs_qcom_cap.hs_tx_gear = ufs_qcom_cap.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
-> -
-> -		ret = ufshcd_get_pwr_dev_param(&ufs_qcom_cap,
-> +		ret = ufshcd_get_pwr_dev_param(&host->host_pwr_cap,
->   					       dev_max_params,
->   					       dev_req_params);
->   		if (ret) {
-> @@ -1037,6 +1034,17 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
->   		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
->   }
->   
-> +static void ufs_qcom_set_pwr_mode_limits(struct ufs_hba *hba)
-> +{
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	struct ufs_dev_params *host_pwr_cap = &host->host_pwr_cap;
-> +
-> +	ufshcd_init_pwr_dev_param(host_pwr_cap);
-> +
-> +	/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
-> +	host_pwr_cap->hs_tx_gear = host_pwr_cap->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
-> +}
-> +
->   static void ufs_qcom_set_caps(struct ufs_hba *hba)
->   {
->   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> @@ -1259,6 +1267,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->   	if (err)
->   		goto out_variant_clear;
->   
-> +	ufs_qcom_set_pwr_mode_limits(hba);
->   	ufs_qcom_set_caps(hba);
->   	ufs_qcom_advertise_quirks(hba);
->   
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index fa54248..4db64d9 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -227,6 +227,7 @@ struct ufs_qcom_host {
->   
->   	struct gpio_desc *device_reset;
->   
-> +	struct ufs_dev_params host_pwr_cap;
->   	u32 phy_gear;
->   
->   	bool esi_enabled;
+> I see the same issue on SH/Landisk, which has CompactFLASH:
+> 
+>     -ata1: PATA max PIO0 ioport cmd 0xc0023040 ctl 0xc002302c irq 26
+>     +ata1: PATA max PIO0 ioport cmd 0xc0023040 ctl 0xc002302c irq 26 lpm-pol 0
+>      ata1.00: CFA: TS8GCF133, 20171204, max UDMA/100
+>      ata1.00: 15662304 sectors, multi 0: LBA48
+>      ata1.00: configured for PIO
+>      scsi 0:0:0:0: Direct-Access     ATA      TS8GCF133        1204
+> PQ: 0 ANSI: 5
+>     -sd 0:0:0:0: [sda] 15662304 512-byte logical blocks: (8.02 GB/7.47 GiB)
+>     -sd 0:0:0:0: [sda] Write Protect is off
+>     -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>     -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled,
+> doesn't support DPO or FUA
+>     -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+>     - sda: sda1 sda2 sda3
+>     -sd 0:0:0:0: [sda] Attached SCSI removable disk
+> 
+> and m68k/ARAnyM:
+> 
+>      atari-falcon-ide atari-falcon-ide: Atari Falcon and Q40/Q60 PATA controller
+>      scsi host0: pata_falcon
+>      ata1: PATA max PIO4 cmd fff00000 ctl fff00038 data fff00000 no
+> IRQ, using PIO polling
+>      ata1.00: ATA-2: Sarge m68k, , max PIO2
+>      ata1.00: 2118816 sectors, multi 0: LBA
+>      ata1.00: configured for PIO
+>      scsi 0:0:0:0: Direct-Access     ATA      Sarge m68k       n/a
+> PQ: 0 ANSI: 5
+>     -sd 0:0:0:0: [sda] 2118816 512-byte logical blocks: (1.08 GB/1.01 GiB)
+>     -sd 0:0:0:0: [sda] Write Protect is off
+>     -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>     -sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled,
+> doesn't support DPO or FUA
+>     -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+>     - sda: AHDI sda1 sda2
+>     -sd 0:0:0:0: [sda] Attached SCSI disk
+> 
+> Reverting 99626085d036ec32 fixes the issue.
+
+Without reverting, can you try this incremental update ?
+
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 4bae95b06ae3..72085756f4ba 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -398,6 +398,7 @@ extern const struct attribute_group *ahci_sdev_groups[];
+        .sdev_groups            = ahci_sdev_groups,                     \
+        .change_queue_depth     = ata_scsi_change_queue_depth,          \
+        .tag_alloc_policy       = BLK_TAG_ALLOC_RR,                     \
++       .slave_alloc            = ata_scsi_slave_alloc,                 \
+        .slave_configure        = ata_scsi_slave_config
+ 
+ extern struct ata_port_operations ahci_ops;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7aa70af1fc07..5a0513452150 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1093,6 +1093,7 @@ int ata_scsi_dev_alloc(struct scsi_device *sdev, struct ata_port *ap)
+         * consumer (child) and the ata port the supplier (parent).
+         */
+        link = device_link_add(&sdev->sdev_gendev, &ap->tdev,
++                              DL_FLAG_STATELESS |
+                               DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
+        if (!link) {
+                ata_port_err(ap, "Failed to create link to scsi device %s\n",
+@@ -1164,6 +1165,8 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
+        unsigned long flags;
+        struct ata_device *dev;
+ 
++       device_link_remove(&sdev->sdev_gendev, &ap->tdev);
++
+        spin_lock_irqsave(ap->lock, flags);
+        dev = __ata_scsi_find_dev(ap, sdev);
+        if (dev && dev->sdev) {
+
+This solves the issue for me. If you confirm it works for you, I will squash
+this into 99626085d036ec32.
+
+Thanks !
+
+-- 
+Damien Le Moal
+Western Digital Research
+
