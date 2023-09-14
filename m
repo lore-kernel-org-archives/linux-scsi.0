@@ -2,178 +2,194 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0568AEDE989
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 07:18:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B9D7EDE9A4
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 11:34:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232210AbjINHSM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Sep 2023 03:18:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43862 "EHLO
+        id S233007AbjINLeV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Sep 2023 07:34:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230475AbjINHSM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 03:18:12 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38C55E4D;
-        Thu, 14 Sep 2023 00:18:08 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03D4BC433C7;
-        Thu, 14 Sep 2023 07:18:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694675887;
-        bh=pHV0xAlB9G48OcMeZS58qvGiqojXj3S1FuPmY33vnFA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=uJygONfSib2mtauDAWndq5/wIp/nkporgCf2aCu7Hmxnr3xKjHapcqgGlfxp4QgKy
-         q8IME4agNWBqvOnU1urB+BMQUkEf9urA9ywbyQpjuFhhsldLpdnjuptwbvMNCFrI//
-         pMK28TB2TvQDsS3+BuAyba+xvpHZZT+cxspmGSl6hE9Q93trAip6sMVfX0uPio8u51
-         9aGNGbQ+G0zZxld7PwJrZWhYB/SDcIpObGORtp3yYik41sl8QPBzFyz+zaJ0hQyqv6
-         ZJIp5CYld/UC3opRkseJcfNJ3fBdugY54brj7KEHnDTMVCYoBkwtttfP9c2msC07xn
-         5NcGuQhDwd6DQ==
-Message-ID: <44b61fbd-65c1-bed6-73bc-10b9ef2e5856@kernel.org>
-Date:   Thu, 14 Sep 2023 16:18:04 +0900
+        with ESMTP id S235307AbjINLeV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 07:34:21 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFF811FC9;
+        Thu, 14 Sep 2023 04:34:16 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38EBOZ2p011614;
+        Thu, 14 Sep 2023 11:33:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=v/rgcR0kkyQPdpyr7j0ww+hfbXTrJx0WvQpvJwPUWPI=;
+ b=Ced2txkveHOCo78dV1YmnFJi6JFO7m2vMd3GxbSoDqUK5z9ti88yGjGdh6Lp7Kr5ThST
+ 9BjFuXOQdIpQ/Y7YpoTYGCgnRFjwRyVx6olghbQYs1pOwaq4Ibei+wrnl4ftZNNgLEmg
+ j3ECyPTVE0BuqwdA792jekhXVPKx/UlFhJ8Bo23zxFqYKpdqZmW1LBgZswRkxX7O14xV
+ VGaTLRxMVksPw8Iy9SfRbmHKEqtrySckoQBdYDBKLDelMUCQ2xTlexHWhWgu7mmWnWWu
+ OccHa3fWtz3iTnGFLa134C+0VXr8m85r90KBzLBChxpoplrCSqhijqOGhHg5x6I8i5ys TQ== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t3r15sart-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 14 Sep 2023 11:33:33 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38EBXWBD030265
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 14 Sep 2023 11:33:32 GMT
+Received: from [10.218.45.181] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 14 Sep
+ 2023 04:33:27 -0700
+Message-ID: <8a9cc52c-9c7d-1f8f-8a98-1a816f59aa79@quicinc.com>
+Date:   Thu, 14 Sep 2023 17:03:24 +0530
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v2 03/21] ata: libata-scsi: link ata port and scsi device
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: [PATCH 5/6] scsi: ufs: ufs-sysfs: Expose UFS power info
+To:     Can Guo <quic_cang@quicinc.com>, <mani@kernel.org>,
+        <quic_nguyenb@quicinc.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "Arthur Simchaev" <arthur.simchaev@wdc.com>,
+        Lu Hongfei <luhongfei@vivo.com>,
+        "open list" <linux-kernel@vger.kernel.org>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-6-git-send-email-quic_cang@quicinc.com>
 Content-Language: en-US
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        linux-renesas-soc@vger.kernel.org
-References: <20230912005655.368075-1-dlemoal@kernel.org>
- <20230912005655.368075-4-dlemoal@kernel.org>
- <1e25e64-a6bc-49e8-62c8-101f3f6de113@linux-m68k.org>
- <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <CAMuHMdUy2T60au+kB7g=K1uP2NaebC-aTNdmqY_tKYP6-m-3rQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <1694411968-14413-6-git-send-email-quic_cang@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: XIyqZAed4Z4Jm6wGSYLkz5OKfSPiDUvD
+X-Proofpoint-ORIG-GUID: XIyqZAed4Z4Jm6wGSYLkz5OKfSPiDUvD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-14_09,2023-09-14_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 impostorscore=0
+ malwarescore=0 adultscore=0 spamscore=0 lowpriorityscore=0 suspectscore=0
+ phishscore=0 priorityscore=1501 mlxlogscore=999 bulkscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
+ definitions=main-2309140098
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/14/23 16:08, Geert Uytterhoeven wrote:
-> Hi Damien,
-> 
-> On Wed, Sep 13, 2023 at 12:27 PM Geert Uytterhoeven
-> <geert@linux-m68k.org> wrote:
->> On Tue, 12 Sep 2023, Damien Le Moal wrote:
->>> There is no direct device ancestry defined between an ata_device and
->>> its scsi device which prevents the power management code from correctly
->>> ordering suspend and resume operations. Create such ancestry with the
->>> ata device as the parent to ensure that the scsi device (child) is
->>> suspended before the ata device and that resume handles the ata device
->>> before the scsi device.
->>>
->>> The parent-child (supplier-consumer) relationship is established between
->>> the ata_port (parent) and the scsi device (child) with the function
->>> device_add_link(). The parent used is not the ata_device as the PM
->>> operations are defined per port and the status of all devices connected
->>> through that port is controlled from the port operations.
->>>
->>> The device link is established with the new function
->>> ata_scsi_dev_alloc(). This function is used to define the ->slave_alloc
->>> callback of the scsi host template of most drivers.
->>>
->>> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
->>> Cc: stable@vger.kernel.org
->>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->>> Reviewed-by: Hannes Reinecke <hare@suse.de>
->>
->> Thanks for your patch, which is now commit 99626085d036ec32 ("ata:
->> libata-scsi: link ata port and scsi device") in libata/for-next.
->>
->> This patch causes /dev/sda to disappear on Renesas Salvator-XS with
->> R-Car H3 ES2.0.  Changes to dmesg before/after:
->>
->>       sata_rcar ee300000.sata: ignoring dependency for device, assuming no driver
->>       scsi host0: sata_rcar
->>      -ata1: SATA max UDMA/133 irq 184 lpm-pol 0
->>      +ata1: SATA max UDMA/133 irq 179 lpm-pol 0
->>       ata1: link resume succeeded after 1 retries
->>       ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>       ata1.00: ATA-7: Maxtor 6L160M0, BANC1G10, max UDMA/133
->>       ata1.00: 320173056 sectors, multi 0: LBA48 NCQ (not used)
->>       ata1.00: configured for UDMA/133
->>       scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L160M0   1G10 PQ: 0 ANSI: 5
->>      -sd 0:0:0:0: [sda] 320173056 512-byte logical blocks: (164 GB/153 GiB)
->>      -sd 0:0:0:0: [sda] Write Protect is off
->>      -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
->>      -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->>      -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
->>      - sda: sda1
->>      -sd 0:0:0:0: [sda] Attached SCSI disk
-> 
-> I see the same issue on SH/Landisk, which has CompactFLASH:
-> 
->     -ata1: PATA max PIO0 ioport cmd 0xc0023040 ctl 0xc002302c irq 26
->     +ata1: PATA max PIO0 ioport cmd 0xc0023040 ctl 0xc002302c irq 26 lpm-pol 0
->      ata1.00: CFA: TS8GCF133, 20171204, max UDMA/100
->      ata1.00: 15662304 sectors, multi 0: LBA48
->      ata1.00: configured for PIO
->      scsi 0:0:0:0: Direct-Access     ATA      TS8GCF133        1204
-> PQ: 0 ANSI: 5
->     -sd 0:0:0:0: [sda] 15662304 512-byte logical blocks: (8.02 GB/7.47 GiB)
->     -sd 0:0:0:0: [sda] Write Protect is off
->     -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
->     -sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled,
-> doesn't support DPO or FUA
->     -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
->     - sda: sda1 sda2 sda3
->     -sd 0:0:0:0: [sda] Attached SCSI removable disk
-> 
-> and m68k/ARAnyM:
-> 
->      atari-falcon-ide atari-falcon-ide: Atari Falcon and Q40/Q60 PATA controller
->      scsi host0: pata_falcon
->      ata1: PATA max PIO4 cmd fff00000 ctl fff00038 data fff00000 no
-> IRQ, using PIO polling
->      ata1.00: ATA-2: Sarge m68k, , max PIO2
->      ata1.00: 2118816 sectors, multi 0: LBA
->      ata1.00: configured for PIO
->      scsi 0:0:0:0: Direct-Access     ATA      Sarge m68k       n/a
-> PQ: 0 ANSI: 5
->     -sd 0:0:0:0: [sda] 2118816 512-byte logical blocks: (1.08 GB/1.01 GiB)
->     -sd 0:0:0:0: [sda] Write Protect is off
->     -sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
->     -sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled,
-> doesn't support DPO or FUA
->     -sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
->     - sda: AHDI sda1 sda2
->     -sd 0:0:0:0: [sda] Attached SCSI disk
-> 
-> Reverting 99626085d036ec32 fixes the issue.
 
-Yes. I can confirm this. I can recreate the issue, because I have a major
-screw-up with that patch: the device_link_add() done in the new ->slave_alloc
-operation for the scsi_host_template for the driver was in fact NOT set for
-AHCI. So all my testing confirming that suspend/resume is OK was done *without*
-that device link being created... That is embarrassing :)
 
-The sata_rcar driver does get that slave_alloc method set through ATA_BASE_SHT()
--> ATA_SUBBASE_SHT(), and you get the problem. If I fix AHCI_SHT() macro to set
-slave_alloc, I do get the issue as well: no scsi disk device is created after
-the port scan. No clue why.
+On 9/11/2023 11:29 AM, Can Guo wrote:
+> Having UFS power info available in sysfs makes it easier to tell the state
+> of the link during runtime considering we have a bounch of power saving
+> features and various combinations for backward compatiblity.
 
-And I also now have no clue how suddenly the suspend/resume operations get
-magically ordered correctly... I could recreate various issues before the
-patches in for-6.7.
+Please fix spelling mistake - *bounch -> bunch
 
-So going back to the beginning to sort things out. I probably "inadvertently"
-fixed the issues with another change that has implications I am not seeing.
-
-Will get back to you ASAP.
 
 > 
-> Gr{oetje,eeting}s,
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> ---
+>   drivers/ufs/core/ufs-sysfs.c | 71 ++++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 71 insertions(+)
 > 
->                         Geert
-> 
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index c959064..53af490 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -628,6 +628,76 @@ static const struct attribute_group ufs_sysfs_monitor_group = {
+>   	.attrs = ufs_sysfs_monitor_attrs,
+>   };
+>   
+> +static ssize_t gear_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%u\n", hba->pwr_info.gear_rx);
+> +}
+> +
+> +static ssize_t lane_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%u\n", hba->pwr_info.lane_rx);
+> +}
+> +
+> +static ssize_t mode_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%u\n", hba->pwr_info.pwr_rx);
+> +}
+> +
+> +static ssize_t rate_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%u\n", hba->pwr_info.hs_rate);
+> +}
+> +
+> +static ssize_t dev_pm_show(struct device *dev, struct device_attribute *attr,
+> +			   char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%d\n", hba->curr_dev_pwr_mode);
+> +}
+> +
+> +static ssize_t link_state_show(struct device *dev,
+> +			       struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%d\n", hba->uic_link_state);
+> +}
+> +
+> +static DEVICE_ATTR_RO(gear);
+> +static DEVICE_ATTR_RO(lane);
+> +static DEVICE_ATTR_RO(mode);
+> +static DEVICE_ATTR_RO(rate);
+> +static DEVICE_ATTR_RO(dev_pm);
+> +static DEVICE_ATTR_RO(link_state);
+> +
+> +static struct attribute *ufs_power_info_attrs[] = {
+> +	&dev_attr_gear.attr,
+> +	&dev_attr_lane.attr,
+> +	&dev_attr_mode.attr,
+> +	&dev_attr_rate.attr,
+> +	&dev_attr_dev_pm.attr,
+> +	&dev_attr_link_state.attr,
+> +	NULL
+> +};
+> +
+> +static const struct attribute_group ufs_sysfs_power_info_group = {
+> +	.name = "power_info",
+> +	.attrs = ufs_power_info_attrs,
+> +};
+> +
+>   static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+>   				  enum desc_idn desc_id,
+>   				  u8 desc_index,
+> @@ -1233,6 +1303,7 @@ static const struct attribute_group *ufs_sysfs_groups[] = {
+>   	&ufs_sysfs_default_group,
+>   	&ufs_sysfs_capabilities_group,
+>   	&ufs_sysfs_monitor_group,
+> +	&ufs_sysfs_power_info_group,
+>   	&ufs_sysfs_device_descriptor_group,
+>   	&ufs_sysfs_interconnect_descriptor_group,
+>   	&ufs_sysfs_geometry_descriptor_group,
 
--- 
-Damien Le Moal
-Western Digital Research
 
+How about having one power mode attribute displaying all useful info 
+(lane, gear, mode, rate).
+
+Regards,
+Nitin Rawat
