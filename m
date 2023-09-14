@@ -2,129 +2,76 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61330EEAA50
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 14:49:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00CAAEEAA4E
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 15:47:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240480AbjINOtY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Sep 2023 10:49:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49212 "EHLO
+        id S241180AbjINPrL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Sep 2023 11:47:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240457AbjINOtJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 10:49:09 -0400
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FA9F2D4F;
-        Thu, 14 Sep 2023 07:48:52 -0700 (PDT)
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1bf6ea270b2so7955575ad.0;
-        Thu, 14 Sep 2023 07:48:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694702931; x=1695307731;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MUVkVGd2/O30yuMMSc55V+qBaodFy5pKsA3QVk7wARk=;
-        b=imJ4p9vpbPnQB9QkKA4Mq4IRg/R8rs3GkZIPqWKYxAnEHSjGA0zEPhJM8wyFJDqYhn
-         vYMzyM0TxQcW527tgq8hUo2MUvcvk+7dbbr2v1aa7PzS3pOSE9h3s1UlmyRni+zjLWKB
-         Rq1IaiTdYrO11uyZjuOZs4WoGPsEKjp/DISDHAe/iHdCSsSyuaKrW3ciuAspHWpCvDQf
-         FQofcHqF4/LKcs8eGUgHEPiUukTI5AGanB1MBITChQunf5LKud7+aPWdPrid895OAB1y
-         9bB1/dva+eEeKyanAE92CbkBGCQHKBinLXsuyv9Hs84Gw87RRo4J21sy3S+YtTbRfjxE
-         zEvA==
-X-Gm-Message-State: AOJu0YxJ5IjJk53Jor96hVcBgTOZSfMsWPdegQwFzx8kZsxFdQGW6ZDZ
-        nfEb6S3wC/+bpYzn3lDhBHRpnSxXZyo=
-X-Google-Smtp-Source: AGHT+IGpaI4gfXp4LnO69V/jyJ0hmZsCzM4emofgB4hjbQSpfjLZKfuVxVxxTFgsGjhG+OewRwlOCA==
-X-Received: by 2002:a17:902:c20d:b0:1bb:1523:b311 with SMTP id 13-20020a170902c20d00b001bb1523b311mr5909518pll.41.1694702931465;
-        Thu, 14 Sep 2023 07:48:51 -0700 (PDT)
-Received: from ?IPV6:2601:647:5f00:5f5:4a46:e57b:bee0:6bc6? ([2601:647:5f00:5f5:4a46:e57b:bee0:6bc6])
-        by smtp.gmail.com with ESMTPSA id ay6-20020a1709028b8600b001b896d0eb3dsm1691650plb.8.2023.09.14.07.48.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Sep 2023 07:48:50 -0700 (PDT)
-Message-ID: <b706672c-5f43-4a78-a976-0a47093ec612@acm.org>
-Date:   Thu, 14 Sep 2023 07:48:49 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 07/21] scsi: sd: Do not issue commands to suspended
- disks on remove
-Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
+        with ESMTP id S241163AbjINPrK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 11:47:10 -0400
+X-Greylist: delayed 330 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 14 Sep 2023 08:47:06 PDT
+Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68104E0;
+        Thu, 14 Sep 2023 08:47:06 -0700 (PDT)
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+        id 122451394AC; Thu, 14 Sep 2023 11:41:35 -0400 (EDT)
+References: <20230731003956.572414-1-dlemoal@kernel.org>
+ <8be9c370-2f1-5815-431-f68ab868669@linux-m68k.org>
+ <ffc1442b-698e-65ab-9aaf-e4ca076b697c@kernel.org>
+ <CAMuHMdXK-pnzMNzbNw=zWaMbQtWtca850eYv98oUjQkypgBfwg@mail.gmail.com>
+ <2d90bd7c-5c34-a345-bc29-44dfa923fc19@kernel.org>
+User-agent: mu4e 1.7.12; emacs 27.1
+From:   Phillip Susi <phill@thesusis.net>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
         Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-References: <20230912005655.368075-1-dlemoal@kernel.org>
- <20230912005655.368075-8-dlemoal@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230912005655.368075-8-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Thorsten Leemhuis <regressions@leemhuis.info>,
+        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
+Date:   Thu, 14 Sep 2023 11:29:59 -0400
+In-reply-to: <2d90bd7c-5c34-a345-bc29-44dfa923fc19@kernel.org>
+Message-ID: <87edj0yd74.fsf@vps.thesusis.net>
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/11/23 17:56, Damien Le Moal wrote:
-> If an error occurs when resuming a host adapter before the devices
-> attached to the adapter are resumed, the adapter low level driver may
-> remove the scsi host, resulting in a call to sd_remove() for the
-> disks of the host. However, since this function calls sd_shutdown(),
-> a synchronize cache command and a start stop unit may be issued with the
-> drive still sleeping and the HBA non-functional. This causes PM resume
-> to hang, forcing a reset of the machine to recover.
-> 
-> Fix this by checking a device host state in sd_shutdown() and by
-> returning early doing nothing if the host state is not SHOST_RUNNING.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/sd.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index c92a317ba547..a415abb721d3 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3763,7 +3763,8 @@ static void sd_shutdown(struct device *dev)
->   	if (!sdkp)
->   		return;         /* this can happen */
->   
-> -	if (pm_runtime_suspended(dev))
-> +	if (pm_runtime_suspended(dev) ||
-> +	    sdkp->device->host->shost_state != SHOST_RUNNING)
->   		return;
->   
->   	if (sdkp->WCE && sdkp->media_present) {
 
-The above seems wrong to me because no SYNCHRONIZE CACHE command will be
-sent even if the device is still present, if the SCSI error handler is
-active and if it will succeed at a later time. How about replacing the
-above patch with something like the untested patch below?
+Damien Le Moal <dlemoal@kernel.org> writes:
 
-Thanks,
+> VERIFY command is used to spin up the disk). And furthermore, the specs also
+> says that even a reset shall not change the device power state. So issuing a
+> VERIFY command to spin up the drive is required per specs. Note that I do see
+> many of my drives (I have hundreds in the lab) spinning up on reset, which is
+> against the specs. But not all of them. So with the patch "do not issue START
+> STOP UNIT on resume", one risks not seeing the drive resuming correctly (timeout
+> errors on IDENTIFY command issued on resume will get the drive removed).
 
-Bart.
+I tried to get some patches merged a few years back along these lines to
+be able to keep some ATA disks in a mostly permanent state of being
+powered down.  I don't recall the specs saying that a reset would not
+change power states.  What I do recall is that as a general rule, ATA
+disks automatically spin up after power on, unless the Power Up in
+Standby feature is activated, which at least for Western Digital drives,
+requires a jumper to short some pins on the drive.
 
+IIRC, I had a patch to skip the START UNIT command on resume based on a
+sysfs setting.  I think it was rejected because SCSI disks can not be
+accessed without the START UNIT command, and even though the scsi eh
+path will notice when a drive needs this and issue it, there was
+something not good about the eh path.  I think it was something along
+the lines of all IO to all disks on the whole scsi host are suspended
+during eh.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 4cd281368826..c0e069d9d58e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3689,12 +3689,14 @@ static int sd_probe(struct device *dev)
-  static int sd_remove(struct device *dev)
-  {
-  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	int rpm_get_res;
-
--	scsi_autopm_get_device(sdkp->device);
-+	rpm_get_res = scsi_autopm_get_device(sdkp->device);
-
-  	device_del(&sdkp->disk_dev);
-  	del_gendisk(sdkp->disk);
--	sd_shutdown(dev);
-+	if (rpm_get_res >= 0)
-+		sd_shutdown(dev);
-
-  	put_disk(sdkp->disk);
-  	return 0;
-
+I also tried to have the runtime pm notice whether the drive auto
+powered up or not and set the runtime pm state to correctly indicate
+whether the drive is running or not, as well as to use the deeper ATA
+SLEEP state to save more power over STANDBY and allow the ATA link to be
+runtime pm suspended.
