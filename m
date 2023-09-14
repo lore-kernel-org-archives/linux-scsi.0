@@ -2,232 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36240EDE983
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 06:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E29C9EDE988
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Sep 2023 06:53:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234896AbjINGUb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Sep 2023 02:20:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59136 "EHLO
+        id S234331AbjINGxa convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Sep 2023 02:53:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230413AbjINGU3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 02:20:29 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86CABF9;
-        Wed, 13 Sep 2023 23:20:25 -0700 (PDT)
-Received: from kwepemm600012.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RmRvz0s3bzrSpF;
-        Thu, 14 Sep 2023 14:18:23 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Thu, 14 Sep 2023 14:20:20 +0800
-Message-ID: <bfc9e734-3a04-9600-58e7-91d7e7f53010@huawei.com>
-Date:   Thu, 14 Sep 2023 14:20:20 +0800
+        with ESMTP id S232878AbjINGx0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 02:53:26 -0400
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0D81CE5;
+        Wed, 13 Sep 2023 23:53:22 -0700 (PDT)
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-59bcd927b45so7232017b3.1;
+        Wed, 13 Sep 2023 23:53:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694674401; x=1695279201;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=MubaXS4LapmWRsdSNbB72rtVm488qlzx9GSVnCeypz4=;
+        b=crTTfMT/yzelgeN+eHU8SlsdQmSKN2K6OnWR9fWFLBs7l2F1s9tMRDCvTNeYpRWoKV
+         rvzkqPjAPjoagQmscZM2ehjoXimQGCvrDVL+C3+Bth6uw0FlZAv5NyVly7IS1798Zq5u
+         8YMhAtc4pwVdZBQUFzaIdP4nL8B992FI2RcoFBKlwK6/LRCkmb3y1Bx82xonSr6qsJBe
+         S1c0vwqdFyYSmD06Ova9F7mJVO0y+3nJFzxl6x9IMwk4dl9+z4IZKII3lmMCAenE6hd8
+         /RC4Urs5+XNjW5hmHOuOBlKsTlSrTb8bSonA8PIdsiFginwQDrTfHiVvyY/FEaEu2HBg
+         pb0w==
+X-Gm-Message-State: AOJu0Yz/LVqPujfFDwUST1BFFgZOKRW49rNYwCefBefHcjT63g5j86s/
+        GSCNF/ILZmzgY5laVhc5UFiDJunGz01lVA==
+X-Google-Smtp-Source: AGHT+IHOHpzLQZ6f18LYofB8tRO4sNSSlhTgdOKCw92hfJ355vQ+Qyvj+zqhuZLWUxkzoptf2c8c9g==
+X-Received: by 2002:a81:4705:0:b0:59a:b7b2:5f02 with SMTP id u5-20020a814705000000b0059ab7b25f02mr5171564ywa.18.1694674401715;
+        Wed, 13 Sep 2023 23:53:21 -0700 (PDT)
+Received: from mail-yb1-f181.google.com (mail-yb1-f181.google.com. [209.85.219.181])
+        by smtp.gmail.com with ESMTPSA id m131-20020a0dca89000000b005773afca47bsm192932ywd.27.2023.09.13.23.53.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 Sep 2023 23:53:20 -0700 (PDT)
+Received: by mail-yb1-f181.google.com with SMTP id 3f1490d57ef6-d815a5eee40so610500276.2;
+        Wed, 13 Sep 2023 23:53:20 -0700 (PDT)
+X-Received: by 2002:a25:acd5:0:b0:d80:a9d:aea9 with SMTP id
+ x21-20020a25acd5000000b00d800a9daea9mr4631207ybd.34.1694674400192; Wed, 13
+ Sep 2023 23:53:20 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
- mechanism
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+References: <20230731003956.572414-1-dlemoal@kernel.org> <8be9c370-2f1-5815-431-f68ab868669@linux-m68k.org>
+ <ffc1442b-698e-65ab-9aaf-e4ca076b697c@kernel.org> <CAMuHMdXK-pnzMNzbNw=zWaMbQtWtca850eYv98oUjQkypgBfwg@mail.gmail.com>
+ <2d90bd7c-5c34-a345-bc29-44dfa923fc19@kernel.org>
+In-Reply-To: <2d90bd7c-5c34-a345-bc29-44dfa923fc19@kernel.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Thu, 14 Sep 2023 08:53:08 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVHu3zeM0WA7TcTA2QT9X68cTttU-TzjsQw6ZuYCu4t=A@mail.gmail.com>
+Message-ID: <CAMuHMdVHu3zeM0WA7TcTA2QT9X68cTttU-TzjsQw6ZuYCu4t=A@mail.gmail.com>
+Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     Hannes Reinecke <hare@suse.de>, <linux-kernel@vger.kernel.org>,
-        <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>
-References: <20230901094127.2010873-1-haowenchao2@huawei.com>
-Content-Language: en-US
-From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <20230901094127.2010873-1-haowenchao2@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm600012.china.huawei.com (7.193.23.74)
-X-CFilter-Loop: Reflected
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Thorsten Leemhuis <regressions@leemhuis.info>,
+        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-renesas-soc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/1 17:41, Wenchao Hao wrote:
-> It's unbearable for systems with large scale scsi devices share HBAs to
-> block all devices' IOs when handle error commands, we need a new error
-> handle mechanism to address this issue.
-> 
-> I consulted about this issue a year ago, the discuss link can be found in
-> refenence. Hannes replied about why we have to block the SCSI host
-> then perform error recovery kindly. I think it's unnecessary to block
-> SCSI host for all drivers and can try a small level recovery(LUN based for
-> example) first to avoid block the SCSI host.
-> 
-> The new error handle mechanism introduced in this patchset has been
-> developed and tested with out self developed hardware since one year
-> ago, now we want this mechanism can be used by more drivers.
-> 
-> Drivers can decide if using the new error handle mechanism and how to
-> handle error commands when scsi_device are scanned,the new mechanism
-> makes SCSI error handle more flexible.
-> 
-> SCSI error recovery strategy after blocking host's IO is mainly
-> following steps:
-> 
-> - LUN reset
-> - Target reset
-> - Bus reset
-> - Host reset
-> 
+Hi Damien,
 
-Mike gave some suggestions and I found a bug in fallback logic, I would
-address these and resend in next few days.
+On Thu, Sep 14, 2023 at 12:03 AM Damien Le Moal <dlemoal@kernel.org> wrote:
+> On 9/13/23 19:21, Geert Uytterhoeven wrote:
+> >> Thanks for the report. The delay for the first data access from user space right
+> >> after resume is 100% expected, with or without this patch. The reason is that
+> >> waking up the drive (spinning it up) is done asynchronously from the PM resume
+> >> context, so when you get "PM suspend exit" message signaling that the system is
+> >> resumed, the drive may not yet be spinning. Any access will wait for that to
+> >> happen before proceeding. Depending on the drive that can take up to 10s or so.
+> >
+> > That does not match with what I am seeing: before this patch, there
+> > was no delay on first data access from user space, as the drive is fully
+> > spun up when system resume returns.
+>
+> Yes, that is a possibility, but not by design. Some users have complained about
+> the long resume times which causes laptop screens to be "black" until disks spin
+> up. That did not happen before 5.16, when the change to scsi using the PM async
+> ops to do suspend/resume created all the issues with suspend/resume on ata side.
+> I am going to run 5.15 again to check.
+>
+> The patch "do not issue START STOP UNIT on resume" was a botch attempt to remove
+> this delay. But it is a bad one because the ATA specs define that a drive can
+> get out of standby (spun down) power state only with a media access command (a
+> VERIFY command is used to spin up the disk). And furthermore, the specs also
+> says that even a reset shall not change the device power state. So issuing a
+> VERIFY command to spin up the drive is required per specs. Note that I do see
+> many of my drives (I have hundreds in the lab) spinning up on reset, which is
+> against the specs. But not all of them. So with the patch "do not issue START
+> STOP UNIT on resume", one risks not seeing the drive resuming correctly (timeout
+> errors on IDENTIFY command issued on resume will get the drive removed).
+>
+> > With this patch, system resume returns earlier, and the drive is only
+> > spun up when user space starts accessing data.
+>
+> Yes, but "when user space starts accessing data" -> "user space accesses are
+> processed only after the drive completes spinning up" would be more accurate.
 
-> Some drivers did not implement callbacks for host reset, it's unnecessary
-> to block host's IO for these drivers. For example, smartpqi only registered
-> device reset, if device reset failed, it's meaningless to fallback to target
-> reset, bus reset or host reset any more, because these steps would also
-> failed.
-> 
-> Here are some drivers we concerned:(there are too many kinds of drivers
-> to figure out, so here I just list some drivers I am familiar with)
-> 
-> +-------------+--------------+--------------+-----------+------------+
-> |  drivers    | device_reset | target_reset | bus_reset | host_reset |
-> +-------------+--------------+--------------+-----------+------------+
-> | mpt3sas     |     Y        |     Y        |    N      |    Y       |
-> +-------------+--------------+--------------+-----------+------------+
-> | smartpqi    |     Y        |     N        |    N      |    N       |
-> +-------------+--------------+--------------+-----------+------------+
-> | megaraidsas |     N        |     Y        |    N      |    Y       |
-> +-------------+--------------+--------------+-----------+------------+
-> | virtioscsi  |     Y        |     N        |    N      |    N       |
-> +-------------+--------------+--------------+-----------+------------+
-> | iscsi_tcp   |     Y        |     Y        |    N      |    N       |
-> +-------------+--------------+--------------+-----------+------------+
-> | hisisas     |     Y        |     Y        |    N      |    N       |
-> +-------------+--------------+--------------+-----------+------------+
-> 
-> For LUN based error handle, when scsi command is classified as error,
-> we would block the scsi device's IO and try to recover this scsi
-> device, if still can not recover all error commands, it might
-> fallback to target or host level recovery.
-> 
-> It's same for target based error handle, but target based error handle
-> would block the scsi target's IO then try to recover the error commands
-> of this target.
-> 
-> The first patch defines basic framework to support LUN/target based error
-> handle mechanism, three key operations are abstracted which are:
->   - add error command
->   - wake up error handle
->   - block IOs when error command is added and recoverying.
-> 
-> Drivers can implement these three function callbacks and setup to SCSI
-> middle level; I also add a general LUN/target based error handle strategy
-> which can be called directly from drivers to implement LUN/tartget based
-> error handle.
-> 
-> The changes of SCSI middle level's error handle are tested with scsi_debug
-> which support single LUN error injection, the scsi_debug patches can be
-> found in reference, following scenarios are tested.
-> 
-> Scenario1: LUN based error handle is enabled:
-> +-----------+---------+-------------------------------------------------------+
-> | lun reset | TUR     | Desired result                                        |
-> + --------- + ------- + ------------------------------------------------------+
-> | success   | success | retry or finish with  EIO(may offline disk)           |
-> + --------- + ------- + ------------------------------------------------------+
-> | success   | fail    | fallback to host  recovery, retry or finish with      |
-> |           |         | EIO(may offline disk)                                 |
-> + --------- + ------- + ------------------------------------------------------+
-> | fail      | NA      | fallback to host  recovery, retry or finish with      |
-> |           |         | EIO(may offline disk)                                 |
-> + --------- + ------- + ------------------------------------------------------+
-> 
-> Scenario2: target based error handle is enabled:
-> +-----------+---------+--------------+---------+------------------------------+
-> | lun reset | TUR     | target reset | TUR     | Desired result               |
-> +-----------+---------+--------------+---------+------------------------------+
-> | success   | success | NA           | NA      | retry or finish with         |
-> |           |         |              |         | EIO(may offline disk)        |
-> +-----------+---------+--------------+---------+------------------------------+
-> | success   | fail    | success      | success | retry or finish with         |
-> |           |         |              |         | EIO(may offline disk)        |
-> +-----------+---------+--------------+---------+------------------------------+
-> | fail      | NA      | success      | success | retry or finish with         |
-> |           |         |              |         | EIO(may offline disk)        |
-> +-----------+---------+--------------+---------+------------------------------+
-> | fail      | NA      | success      | fail    | fallback to host recovery,   |
-> |           |         |              |         | retry or finish with EIO(may |
-> |           |         |              |         | offline disk)                |
-> +-----------+---------+--------------+---------+------------------------------+
-> | fail      | NA      | fail         | NA      | fallback to host  recovery,  |
-> |           |         |              |         | retry or finish with EIO(may |
-> |           |         |              |         | offline disk)                |
-> +-----------+---------+--------------+---------+------------------------------+
-> 
-> Scenario3: both LUN and target based error handle are enabled:
-> +-----------+---------+--------------+---------+------------------------------+
-> | lun reset | TUR     | target reset | TUR     | Desired result               |
-> +-----------+---------+--------------+---------+------------------------------+
-> | success   | success | NA           | NA      | retry or finish with         |
-> |           |         |              |         | EIO(may offline disk)        |
-> +-----------+---------+--------------+---------+------------------------------+
-> | success   | fail    | success      | success | lun recovery fallback to     |
-> |           |         |              |         | target recovery, retry or    |
-> |           |         |              |         | finish with EIO(may offline  |
-> |           |         |              |         | disk                         |
-> +-----------+---------+--------------+---------+------------------------------+
-> | fail      | NA      | success      | success | lun recovery fallback to     |
-> |           |         |              |         | target recovery, retry or    |
-> |           |         |              |         | finish with EIO(may offline  |
-> |           |         |              |         | disk                         |
-> +-----------+---------+--------------+---------+------------------------------+
-> | fail      | NA      | success      | fail    | lun recovery fallback to     |
-> |           |         |              |         | target recovery, then fall   |
-> |           |         |              |         | back to host recovery, retry |
-> |           |         |              |         | or fhinsi with EIO(may       |
-> |           |         |              |         | offline disk)                |
-> +-----------+---------+--------------+---------+------------------------------+
-> | fail      | NA      | fail         | NA      | lun recovery fallback to     |
-> |           |         |              |         | target recovery, then fall   |
-> |           |         |              |         | back to host recovery, retry |
-> |           |         |              |         | or fhinsi with EIO(may       |
-> |           |         |              |         | offline disk)                |
-> +-----------+---------+--------------+---------+------------------------------+
-> 
-> References: https://lore.kernel.org/linux-scsi/20230815122316.4129333-1-haowenchao2@huawei.com/
-> References: https://lore.kernel.org/linux-scsi/71e09bb4-ff0a-23fe-38b4-fe6425670efa@huawei.com/
-> 
-> Wenchao Hao (19):
->    scsi: scsi_error: Define framework for LUN/target based error handle
->    scsi: scsi_error: Move complete variable eh_action from shost to sdevice
->    scsi: scsi_error: Check if to do reset in scsi_try_xxx_reset
->    scsi: scsi_error: Add helper scsi_eh_sdev_stu to do START_UNIT
->    scsi: scsi_error: Add helper scsi_eh_sdev_reset to do lun reset
->    scsi: scsi_error: Add flags to mark error handle steps has done
->    scsi: scsi_error: Add helper to handle scsi device's error command list
->    scsi: scsi_error: Add a general LUN based error handler
->    scsi: core: increase/decrease target_busy without check can_queue
->    scsi: scsi_error: Add helper to handle scsi target's error command list
->    scsi: scsi_error: Add a general target based error handler
->    scsi: scsi_debug: Add param to control LUN bassed error handler
->    scsi: scsi_debug: Add param to control target based error handle
->    scsi: mpt3sas: Add param to control LUN based error handle
->    scsi: mpt3sas: Add param to control target based error handle
->    scsi: smartpqi: Add param to control LUN based error handle
->    scsi: megaraid_sas: Add param to control target based error handle
->    scsi: virtio_scsi: Add param to control LUN based error handle
->    scsi: iscsi_tcp: Add param to control LUN based error handle
-> 
->   drivers/scsi/iscsi_tcp.c                  |  20 +
->   drivers/scsi/megaraid/megaraid_sas_base.c |  20 +
->   drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  28 +
->   drivers/scsi/scsi_debug.c                 |  24 +
->   drivers/scsi/scsi_error.c                 | 756 ++++++++++++++++++++--
->   drivers/scsi/scsi_lib.c                   |  23 +-
->   drivers/scsi/scsi_priv.h                  |  18 +
->   drivers/scsi/smartpqi/smartpqi_init.c     |  14 +
->   drivers/scsi/virtio_scsi.c                |  16 +-
->   include/scsi/scsi_device.h                |  97 +++
->   include/scsi/scsi_eh.h                    |   8 +
->   include/scsi/scsi_host.h                  |   2 -
->   12 files changed, 963 insertions(+), 63 deletions(-)
-> 
+Sure, I wrote it down in terms of what the user is experiencing, which may
+not be identical to what's happening under the hood.
 
+> That is by design and expected. This is the behavior one would see if the drive
+> is set to use standby timers (to go to standby on its own after some idle time)
+> or if runtime suspend is used. I do not see any issue with this behavior. Is
+> this causing any issue on your end ? Do you have concerns about this approach ?
+>
+> Having the resume process wait for the drive to fully spin-up is easy to do. But
+> as I mentioned, many users are really not happy about how slow resuming become
+> with that. If I do that, you will get back the previous behavior you mention,
+> but I will be again getting emails about "resume is broken".
+>
+> I made a decision: no waiting for spinup. That causes a delay for the user on
+> first access, but that makes resume overall far faster. I do not want to go back
+> on that, unless you can confirm that there is a real regression/error/data
+> corruption happening.
+
+I agree that is fine.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
