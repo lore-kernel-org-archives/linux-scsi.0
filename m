@@ -2,55 +2,54 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CBB4CD37AA
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 21:38:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9608DCD37AD
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 21:39:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234089AbjIOViP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 17:38:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52008 "EHLO
+        id S236887AbjIOVir (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 17:38:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237786AbjIOVhr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 17:37:47 -0400
+        with ESMTP id S237718AbjIOVio (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 17:38:44 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11F74B8
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 14:37:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB26DB8
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 14:38:38 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id C21CF2191A;
-        Fri, 15 Sep 2023 21:37:40 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 8C54B218EC;
+        Fri, 15 Sep 2023 21:38:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1694813860; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+        t=1694813917; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Lua5GCLg03U43C63KeZsPJ/YFS0eceXgW0ZOu6+byM4=;
-        b=r/rlS/HfGr+9XWV4f+4oQYMafLRP/WN7DBck9iVjd2+HgB7Pu3MGS1TdW70PpBEcvyYOm+
-        wXXvPm4lHryYaN6jQglCXoibAg8Wjj9PE6NU1mDU03b11kSYSYDtEmp6i8azflbBc6cJG6
-        K9bHTtfvtw2c8xMIVzKSXjvfKDzPetY=
+        bh=MB1T5Zsrz+PIdZlXDOXFi7InwurvHcyPde7OIP6eeiE=;
+        b=Du4Ykh8cLlJfti8rviqBwBVrM5KePHTCsWdAEUJjwIDGDGhSdD+XkTbzwZO1NbP/rA6ddE
+        XD+4EreMIi3n9EsGPZxFJ+X6GkWRbS8i149fdrnCrxeK7XeTYleuiDocxEEfe0Bg4dowWr
+        NbzLMDSNLgS5fAHCaOCxlhrihDTP8KY=
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 743E513251;
-        Fri, 15 Sep 2023 21:37:40 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 480D913251;
+        Fri, 15 Sep 2023 21:38:37 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id +VnDGqTOBGUpKgAAMHmgww
-        (envelope-from <mwilck@suse.com>); Fri, 15 Sep 2023 21:37:40 +0000
-Message-ID: <e3cb7ea5a8c625ca6803c060503514d28ee1bfee.camel@suse.com>
-Subject: Re: [PATCH v11 29/34] scsi: ufs: Have scsi-ml retry start stop
- errors
+        id xvPbD93OBGV9KgAAMHmgww
+        (envelope-from <mwilck@suse.com>); Fri, 15 Sep 2023 21:38:37 +0000
+Message-ID: <35a6ff585ea3dba85a2c6ec28c5c34fd81fd011d.camel@suse.com>
+Subject: Re: [PATCH v11 30/34] scsi: Fix sshdr use in scsi_test_unit_ready
 From:   Martin Wilck <mwilck@suse.com>
 To:     Mike Christie <michael.christie@oracle.com>,
         john.g.garry@oracle.com, bvanassche@acm.org, hch@lst.de,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         james.bottomley@hansenpartnership.com
-Date:   Fri, 15 Sep 2023 23:37:39 +0200
-In-Reply-To: <20230905231547.83945-30-michael.christie@oracle.com>
+Date:   Fri, 15 Sep 2023 23:38:36 +0200
+In-Reply-To: <20230905231547.83945-31-michael.christie@oracle.com>
 References: <20230905231547.83945-1-michael.christie@oracle.com>
-         <20230905231547.83945-30-michael.christie@oracle.com>
+         <20230905231547.83945-31-michael.christie@oracle.com>
 Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.48.4 
@@ -60,10 +59,16 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Tue, 2023-09-05 at 18:15 -0500, Mike Christie wrote:
-> This has scsi-ml retry errors instead of driving them itself.
+> If scsi_execute_cmd returns < 0, it doesn't initialize the sshdr, so
+> we
+> shouldn't access the sshdr. If it returns 0, then the cmd executed
+> successfully, so there is no need to check the sshdr. This has us
+> access
+> the sshdr when we get a return value > 0.
 >=20
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
 
 Reviewed-by: Martin Wilck <mwilck@suse.com>
+
