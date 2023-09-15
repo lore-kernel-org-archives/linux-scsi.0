@@ -2,96 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B7EEDE989
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 02:01:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A3EEDE989
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 02:07:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231584AbjIOCBE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Sep 2023 22:01:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50776 "EHLO
+        id S231506AbjIOCHm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Sep 2023 22:07:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231234AbjIOCBD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 22:01:03 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36DF91AE;
-        Thu, 14 Sep 2023 19:00:59 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38F1V6Q5005452;
-        Fri, 15 Sep 2023 02:00:18 GMT
+        with ESMTP id S231269AbjIOCHm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Sep 2023 22:07:42 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4BA51BF8;
+        Thu, 14 Sep 2023 19:07:37 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38F1vjQB031639;
+        Fri, 15 Sep 2023 02:07:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
  mime-version : subject : to : cc : references : from : in-reply-to :
  content-type : content-transfer-encoding; s=qcppdkim1;
- bh=Wwhkcd5KuFfRX3TvSmdFYq+5k6+JLBhSTaII9+ZyzRk=;
- b=b381ccfuetInRtus+AKdVnOj/ofVv0qF2txAIpgiQQXw42Sviu6WzEafciLZKOS3SXH0
- gA+rLp6+tqt17QDjrRu2Wg1GKVFjmqRNajItYilH5OB0W/PxzKqWCe2Se0zq3X4kdxbC
- HAz8rp+UiDKjzWxpAkxgw2kkYRiPjdlzJg35+LVJT80gKPwWyQFXRWr6zo5oioiNsA3J
- +GnZCCBTRh39EeJehFQAGFtyngTQpYfkPW/otUEzbIqe/4FktLdPD41UJYgIvPH0pnCU
- cHgnm2c69EbArlV5JrgNi0145LEGGAanoJtD0j+DwQ38EgS6c+ew26KUM7kilZ+ic3yY lg== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t4dnng1nn-1
+ bh=DFfM3gwuXEv/bD4DPO1UqZiRQA0ptdzLpBiMIY5+g28=;
+ b=HJ+Dcw3kxGd/kBzjt1pQxuP3reD8ksTOy+XaBRVZ2/RFRW4RDxtrBrPLp54Qzth2NSEo
+ qnLVnnn8RfTybYKJSLG7OdiBWH9CM8aJ3yZtKDud3pR03HuJgPiKVjexO3NdpenGwJQV
+ 8szMNp827AaCj1bsjKPwvjHSHN8bQVKCGBvZuWuSHn5xlzjBytHH9lH1OyH4SAOzjDQ6
+ 7/8QYA2eOGz7wB8FI+pEPhwnjGwmIFCN3yXiSl8wctF1CuP+0eYuTq0tSan53yBrh7VS
+ EikDFrRurnXCXyZVMnqz0nq2SjPJqOd08oIdyq4B9vPtrCfzWch7jd2HSwKyMpnd58Ex FQ== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t4e2b00uj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 15 Sep 2023 02:00:18 +0000
+        Fri, 15 Sep 2023 02:07:25 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38F20HYa029583
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38F27OOR015603
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 15 Sep 2023 02:00:17 GMT
+        Fri, 15 Sep 2023 02:07:24 GMT
 Received: from [10.253.10.13] (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 14 Sep
- 2023 19:00:15 -0700
-Message-ID: <dadd1df8-a861-3baa-8a21-0cd7dbabcbe3@quicinc.com>
-Date:   Fri, 15 Sep 2023 10:00:12 +0800
+ 2023 19:07:21 -0700
+Message-ID: <289ec1a4-1930-4bed-b6ff-f1a591dc4295@quicinc.com>
+Date:   Fri, 15 Sep 2023 10:07:18 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.15.0
-Subject: Re: [PATCH 6/6] scsi: ufs: ufs-sysfs: Introduce UFS power info sysfs
- nodes
+Subject: Re: [PATCH 3/6] phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed Gear
+ 5 support for SM8550
 Content-Language: en-US
 To:     Nitin Rawat <quic_nitirawa@quicinc.com>, <mani@kernel.org>,
         <quic_nguyenb@quicinc.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>,
-        "Bean Huo" <beanhuo@micron.com>, Lu Hongfei <luhongfei@vivo.com>,
+CC:     <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        "Bjorn Andersson" <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>,
         open list <linux-kernel@vger.kernel.org>
 References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
- <1694411968-14413-7-git-send-email-quic_cang@quicinc.com>
- <8d95d169-452f-e426-938f-ccadf26de9ca@quicinc.com>
+ <1694411968-14413-4-git-send-email-quic_cang@quicinc.com>
+ <bce78c63-139a-852a-f8bb-50510f9c4e7d@quicinc.com>
 From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <8d95d169-452f-e426-938f-ccadf26de9ca@quicinc.com>
+In-Reply-To: <bce78c63-139a-852a-f8bb-50510f9c4e7d@quicinc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: bpJqWIAhwrzmugtubIlKdZDO6PNTLL2u
-X-Proofpoint-GUID: bpJqWIAhwrzmugtubIlKdZDO6PNTLL2u
+X-Proofpoint-GUID: KvPY1xCdSu9q2FxTzy_2c-X3ysk1Efh3
+X-Proofpoint-ORIG-GUID: KvPY1xCdSu9q2FxTzy_2c-X3ysk1Efh3
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.601,FMLib:17.11.176.26
  definitions=2023-09-15_02,2023-09-14_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- mlxlogscore=729 lowpriorityscore=0 impostorscore=0 adultscore=0 mlxscore=0
- malwarescore=0 suspectscore=0 spamscore=0 clxscore=1015 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309150016
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 spamscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=0 adultscore=0 mlxscore=0
+ lowpriorityscore=0 impostorscore=0 clxscore=1015 phishscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309150017
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Nitin,
 
-On 9/14/2023 7:35 PM, Nitin Rawat wrote:
+On 9/14/2023 8:26 PM, Nitin Rawat wrote:
 >
 >
 > On 9/11/2023 11:29 AM, Can Guo wrote:
->> Having UFS power info available in sysfs makes it easier to tell the 
->> state
->> of the link during runtime considering we have a bounch of power saving
->> features and various combinations for backward compatiblity.
+>> Split High Speed Gear 4 PHY settings from common tables, and add PHY
+>> settings to support High Speed Gear 5.
+>>
 >
-> Please fix spelling mistake *bounch -> bunch
-
-done
-
+> Hi Can,
+>
+> Can you please add more details explaining the change. We can mention 
+> that are we spliting serdes setting for g3 and g4.
+Sure.
+>
+> Also how about having 2 patches, one for splitting serdes 
+> configuration b/w gear3 and gear4 and other patch about new g5 setting.
+No, we should have them in one patch, because after splitting, just 
+writing the common settings won't work for G5 mode.
+>
+> -Nitin
+>
 
 Thanks,
 
