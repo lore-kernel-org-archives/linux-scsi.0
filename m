@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 441D7EE6446
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 08:26:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65CB7EE6446
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 08:26:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233005AbjIOI0l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 04:26:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54182 "EHLO
+        id S233141AbjIOI05 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 04:26:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233111AbjIOI0f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 04:26:35 -0400
+        with ESMTP id S233116AbjIOI0t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 04:26:49 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2F652719;
-        Fri, 15 Sep 2023 01:24:00 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10360C433BC;
-        Fri, 15 Sep 2023 08:15:48 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8CAF3AA5;
+        Fri, 15 Sep 2023 01:25:20 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C32BAC433B8;
+        Fri, 15 Sep 2023 08:15:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694765750;
-        bh=anjHLV/xNgtacDAnwtkR64IDyr8df5COra7Y6hLZ6M8=;
+        s=k20201202; t=1694765743;
+        bh=0GOi0mloXAEJIC+S6NGXQSMf1o5GU58qEdFx1YeNYX0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aj3x5tBNBtKSvEqKco9BCJf/BZVIPASbeqzNZr4CM1+DA8L7yfc38wUaFyF5kZK25
-         WPRk5uuh0dh6FK1S0ZVHFxIZO6k0O+Vc/Q1+VcVqGjnVRP0lkFyNJrzh2qkPgzgt1O
-         3r9CdNNa2Up69eruc4eeP2fSqU7/bjpMIB8Oj1AdWxvDT18RWLRZGbjm36OSZvlSeX
-         qif55vIvblJUJuyVGuSEkmjzk0PmKGvGlvMMoAS0GfAmXGszJjz2/60MlFc1BtDA+/
-         XUuq6IqxZtLHyHv4dj5X2xxDtga7kCac8xPV2MsYLhjLO+kwVWvoo/+eZcWEaeULVS
-         JEuPqDKnrI95g==
+        b=WdmunzguMNXTPhYSlEoHlAMqPrzwRKDNUeWTiYFWy2kNbvyZ/dG7YWWNv/YaV9PcZ
+         Kde3++KNSfxVoZICOYJ3KBkSjKRejHslgiLy2TgqX3p48esXDSWNcgAgVOHSHu7h2y
+         OHOJ5mALKtqjhIfZ1UM1ncsV1oCleoUYQkIdVjoDlcBiRCS6pSOjiZEyFb6wky94fi
+         yLxK4DiNHTk3gtao1FT+uPdPcO/16kq0w9LNRHzAopkqvMXqGxbGG4QWVXnusX2Ve5
+         rJPEB0a/z3i/Vg7Cf2M/5tiCZsb/WCEqv+VGZVogkmggYndRrLZtLTf4rkXk56csfq
+         8ZlikM/8czz2A==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,9 +37,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v3 22/23] ata: libata-eh: Reduce "disable device" message verbosity
-Date:   Fri, 15 Sep 2023 17:15:06 +0900
-Message-ID: <20230915081507.761711-23-dlemoal@kernel.org>
+Subject: [PATCH v3 18/23] ata: libata-core: Do not poweroff runtime suspended ports
+Date:   Fri, 15 Sep 2023 17:15:02 +0900
+Message-ID: <20230915081507.761711-19-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230915081507.761711-1-dlemoal@kernel.org>
 References: <20230915081507.761711-1-dlemoal@kernel.org>
@@ -49,89 +49,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no point in warning about a device being disabled when we
-expect it to be, that is, on suspend, shutdown or when detaching the
-device.
-
-Suppress the message "disable device" for these cases by introducing the
-EH static function ata_eh_dev_disable() and by using it in
-ata_eh_unload() and ata_eh_detach_dev(). ata_dev_disable() code is
-modified to call this new function after printing the "disable device"
-message.
+When powering off, there is no need to suspend a port that has already
+been runtime suspended. Skip the EH PM request in ata_port_pm_poweroff()
+in this case.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 ---
- drivers/ata/libata-eh.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+ drivers/ata/libata-core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 2b933e7a357a..9cad16bcbebc 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -494,6 +494,18 @@ void ata_eh_release(struct ata_port *ap)
- 	mutex_unlock(&ap->host->eh_mutex);
- }
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index a4389dd807e5..c3adaa01cbe3 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5219,7 +5219,8 @@ static int ata_port_pm_freeze(struct device *dev)
  
-+static void ata_eh_dev_disable(struct ata_device *dev)
-+{
-+	ata_acpi_on_disable(dev);
-+	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
-+	dev->class++;
-+
-+	/* From now till the next successful probe, ering is used to
-+	 * track probe failures.  Clear accumulated device error info.
-+	 */
-+	ata_ering_clear(&dev->ering);
-+}
-+
- static void ata_eh_unload(struct ata_port *ap)
+ static int ata_port_pm_poweroff(struct device *dev)
  {
- 	struct ata_link *link;
-@@ -517,8 +529,8 @@ static void ata_eh_unload(struct ata_port *ap)
- 	 */
- 	ata_for_each_link(link, ap, PMP_FIRST) {
- 		sata_scr_write(link, SCR_CONTROL, link->saved_scontrol & 0xff0);
--		ata_for_each_dev(dev, link, ALL)
--			ata_dev_disable(dev);
-+		ata_for_each_dev(dev, link, ENABLED)
-+			ata_eh_dev_disable(dev);
- 	}
- 
- 	/* freeze and set UNLOADED */
-@@ -1211,14 +1223,8 @@ void ata_dev_disable(struct ata_device *dev)
- 		return;
- 
- 	ata_dev_warn(dev, "disable device\n");
--	ata_acpi_on_disable(dev);
--	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
--	dev->class++;
- 
--	/* From now till the next successful probe, ering is used to
--	 * track probe failures.  Clear accumulated device error info.
--	 */
--	ata_ering_clear(&dev->ering);
-+	ata_eh_dev_disable(dev);
+-	ata_port_suspend(to_ata_port(dev), PMSG_HIBERNATE, false);
++	if (!pm_runtime_suspended(dev))
++		ata_port_suspend(to_ata_port(dev), PMSG_HIBERNATE, false);
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(ata_dev_disable);
- 
-@@ -1240,12 +1246,12 @@ void ata_eh_detach_dev(struct ata_device *dev)
- 
- 	/*
- 	 * If the device is still enabled, transition it to standby power mode
--	 * (i.e. spin down HDDs).
-+	 * (i.e. spin down HDDs) and disable it.
- 	 */
--	if (ata_dev_enabled(dev))
-+	if (ata_dev_enabled(dev)) {
- 		ata_dev_power_set_standby(dev);
--
--	ata_dev_disable(dev);
-+		ata_eh_dev_disable(dev);
-+	}
- 
- 	spin_lock_irqsave(ap->lock, flags);
  
 -- 
 2.41.0
