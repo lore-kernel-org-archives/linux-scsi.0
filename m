@@ -2,102 +2,182 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91266EED619
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 17:11:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D373EED61F
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 18:56:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233088AbjIORLb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 13:11:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50544 "EHLO
+        id S236589AbjIOS4B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:56:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235466AbjIORLV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 13:11:21 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42A5A19BC
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 10:11:15 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id 3f1490d57ef6-cf4cb742715so2826929276.2
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 10:11:15 -0700 (PDT)
+        with ESMTP id S236932AbjIOSzr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 14:55:47 -0400
+Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93C4D35B8
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 11:53:29 -0700 (PDT)
+Received: by mail-lj1-x22c.google.com with SMTP id 38308e7fff4ca-2bfc8c02e82so36886551fa.0
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 11:53:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1694797874; x=1695402674; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+        d=linaro.org; s=google; t=1694804008; x=1695408808; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:references
+         :in-reply-to:user-agent:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=bOqFz4mwu4R8vVhIHYO47D/MyrIS2uBdDRxhIpCvwuY=;
-        b=JwG+DbNsDLV9VBySrOCi5UcX1b+LS9Fwx3tlhXxoP8wrVMUFqFAwOMejtEb2gnVkhh
-         d4ShbJCa06o/n1ggzQ/CQQJxq+ejRVKK6k0sX0LPfwcAMiEK5Y+Rx668AlEldyo2vGmP
-         cRxKD4u3FMNiMQj6seoRTGyQa3dAXr++DZiiJEGrBfZXfkjcamOIhtBdZ8Rj3HQINyvy
-         LjGi0T5bySYIJZY4kmMzR3qGl91DR+ZgR8AtVVt0UZbXgoZDzWyogNN13Vbo1FSX7CxD
-         QGiOB/LXNv6ZPGwkx5y89+wXYETRyBNcBt1jS6VymByrj4DLXTcfroic3NF28O9705zB
-         6seg==
+        bh=0FAxuwdbhL1UZWKRYCu/VMuW55QBQ5O7sg1MPHSWY4E=;
+        b=jIQE6ALDQscrqMQc8P6Q7nLsCs98uFFGQU6xEY9CpZMUuA3QpXgmKcQ4M5bwisTwI6
+         y1oP6dpukR0PR+qsAm71qaXlq3HNcUFEBiotajR+27mr+hjWaCUjyKl0VBVgnQV9UfCz
+         0UvMg/3TSWW40MNxi6IBBPJxsNo8FeXD9xNk9iMJ3HN876gYg/3KHOMDCuLbhsgkPbqQ
+         ZyqNaP7RMvVHlgDgDTAgDDFLCch4kQO1GjJGEnbPdrr5TrkDspkM49uS4NKVn+DzQSGN
+         ObU4zs3ESOJujx4wiAQMftoyGYhuBwHgT1Vka7eIYzsrIbltm9OnTBMP431CfhjlpQE1
+         o3bw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694797874; x=1695402674;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+        d=1e100.net; s=20230601; t=1694804008; x=1695408808;
+        h=content-transfer-encoding:mime-version:message-id:references
+         :in-reply-to:user-agent:subject:cc:to:from:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=bOqFz4mwu4R8vVhIHYO47D/MyrIS2uBdDRxhIpCvwuY=;
-        b=UjSuNApuDWiJ+bobvjD/3latl2WMxNP6RyylB72ThuZ/sFqR46cHXaNTszU005B8m/
-         WAzIe/cNxfQK6fV0tqG9LxOdZbVvGNIIZOcSi5hWqgwzSuOswJgoBcVbfe3XAIowAdbf
-         jVGX0tU14/GlNdT03pdqRFaNeFxcwrgnvNcA3Jcdjr9UwdZTYslifEEZVnXkpAy+WXiu
-         /c4jdRtJ9KtuGYpQju3f8JDgoRndSer4RdwsqsAlKOwUcA9QXHgNykRvL74yAgVmFcRv
-         FuqiwF6gYiu+Q48Zb9KLkc8VGmQmOJcJqM7t2vnsyXovOIOezWLr0fBBFZEAuB7I8AbB
-         tUnQ==
-X-Gm-Message-State: AOJu0Yy7VDOyK5HD2a6VG+wdR/1kFxtz7fuUeoSyAU2icG8VXC9Wsnfj
-        1KYyKOMTxb8aQ6BppghTjeSH204FjvbDvw==
-X-Google-Smtp-Source: AGHT+IG7rGE3Ztuz1Grnmkp8w2vtWInjs5QzEYeJJbfCf6lDpmA/8jA7FGucjoqfvQlgDMwKTaP3deHGl0CsJQ==
-X-Received: from edumazet1.c.googlers.com ([fda3:e722:ac3:cc00:2b:7d90:c0a8:395a])
- (user=edumazet job=sendgmr) by 2002:a05:6902:118a:b0:d80:183c:92b9 with SMTP
- id m10-20020a056902118a00b00d80183c92b9mr60345ybu.4.1694797874299; Fri, 15
- Sep 2023 10:11:14 -0700 (PDT)
-Date:   Fri, 15 Sep 2023 17:11:11 +0000
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.42.0.459.ge4e396fd5e-goog
-Message-ID: <20230915171111.4057930-1-edumazet@google.com>
-Subject: [PATCH] scsi: iscsi_tcp: restrict to TCP sockets
-From:   Eric Dumazet <edumazet@google.com>
-To:     Lee Duncan <lduncan@suse.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Chris Leech <cleech@redhat.com>
-Cc:     linux-kernel <linux-kernel@vger.kernel.org>,
-        netdev@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
-        Eric Dumazet <eric.dumazet@gmail.com>,
+        bh=0FAxuwdbhL1UZWKRYCu/VMuW55QBQ5O7sg1MPHSWY4E=;
+        b=Syl61t4n6oHFin1c3qfDcl985vHXU9cnej8w+QVLzzvpQaRhTXol+OCAl8PHwP9TGR
+         lUkWHVEmCwYfL8CHQfABhklMHiDNaGKieHkql8gGTmlpcqhnV50+/g0Wpdx6Ay5kTMWG
+         9ot/HwoMn9hUStIoHeJHmRfC6FD/LD7UdIQ3BJ7eBQWhSA3HsMYyUPpxpjqvwD1gfNm6
+         W9v4bHE5kAq4crRPgiLkj+Wygzd8fpCGGKa9+68de5vkfngj9oS46VHaOtu6F4D4IiBG
+         8YBkDrP1vyN+VyQpyHTC+7fav7ARW8oBiUjdetHyGFpC+QmifVxlMHJD55GQqmaObCRF
+         AX+g==
+X-Gm-Message-State: AOJu0Yz/8vBjpduViNHVc98/DbIbcImxScGl94H5UbLgs0hF3kxZduTH
+        /rPfAN4Zd4SW/lv+zf7uW/WjPw==
+X-Google-Smtp-Source: AGHT+IEP0i/tzM96cbqyLGXPCqm1aai/p4wEqDzPSxtw+6pTtUjvSOEHloAluxuoxtcLZWKmedVJMA==
+X-Received: by 2002:a2e:850b:0:b0:2bf:ac97:df26 with SMTP id j11-20020a2e850b000000b002bfac97df26mr2304956lji.25.1694804007626;
+        Fri, 15 Sep 2023 11:53:27 -0700 (PDT)
+Received: from [127.0.0.1] ([37.153.55.125])
+        by smtp.gmail.com with ESMTPSA id i20-20020a2e8094000000b002b9bf5b071bsm819625ljg.20.2023.09.15.11.53.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 15 Sep 2023 11:53:27 -0700 (PDT)
+Date:   Fri, 15 Sep 2023 05:31:45 +0300
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+To:     Can Guo <quic_cang@quicinc.com>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>, mani@kernel.org,
+        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+        martin.petersen@oracle.com
+CC:     linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_2/6=5D_scsi=3A_ufs=3A_ufs-qcom=3A_Add?= =?US-ASCII?Q?_support_for_UFS_device_version_detection?=
+User-Agent: K-9 Mail for Android
+In-Reply-To: <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com> <1694411968-14413-3-git-send-email-quic_cang@quicinc.com> <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org> <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com> <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org> <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
+Message-ID: <1413119B-8B9C-4DE4-A086-476B2BAA60AD@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Nothing prevents iscsi_sw_tcp_conn_bind() to receive file descriptor
-pointing to non TCP socket (af_unix for example).
+On 11 September 2023 13:02:50 GMT+03:00, Can Guo <quic_cang@quicinc=2Ecom> =
+wrote:
+>
+>On 9/11/2023 5:46 PM, Konrad Dybcio wrote:
+>> On 11=2E09=2E2023 11:42, Can Guo wrote:
+>>> Hi Konrad,
+>>>=20
+>>> On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
+>>>> On 11=2E09=2E2023 07:59, Can Guo wrote:
+>>>>> From: "Bao D=2E Nguyen" <quic_nguyenb@quicinc=2Ecom>
+>>>>>=20
+>>>>> Retrieve UFS device version from UFS host controller's spare registe=
+r
+>>>>> which is populated by bootloader, and use the UFS device version tog=
+ether
+>>>>> with host controller's HW version to decide the proper power modes w=
+hich
+>>>>> should be used to configure the UFS PHY=2E
+>>>> That sounds a bit fishy=2E=2E is there no bootloader-independent
+>>>> solution to that? Can't we bring in the code that the bootloader
+>>>> uses to determine these values?
+>>>>=20
+>>>> Konrad
+>>>=20
+>>> Agree, it is=2E
+>>>=20
+>>>=20
+>>> All these complexities come from one request from PHY design team - po=
+wer saving=2E
+>>>=20
+>>> And to achieve power saving, Qualcomm UFS developers are requested to =
+use the
+>>>=20
+>>> lowest hanging PHY settings which can sustain the Max agreed HS Gear (=
+btw host
+>>>=20
+>>> and UFS device) during UFS's lifecycle in High Level OS,=C2=A0 whereas=
+ the power saving
+>>>=20
+>>> request does not apply to bootloader, which works for only a few secon=
+ds during
+>>>=20
+>>> bootup=2E Hence, there is no such version detect code in bootloader -=
+=C2=A0 it just uses the
+>>>=20
+>>> highest PHY settings to configure PHY, boot up UFS and put UFS device =
+version in this
+>>>=20
+>>> register=2E
+>> First of all, your email client seems to be inserting 2 newlines
+>> instead of 1=2E If you're using thunderbird, you may want to edit:
+>>=20
+>> mail=2Eidentity=2E(default or your mail identity idx)=2Edefault=2Ecompo=
+se_html
+>>=20
+>> to `false`
+>>=20
+>> and add that to your internal wiki page, as I see many @quic folks havi=
+ng
+>> this issue=2E
+>>=20
+>>=20
+>> Going back to the main topic, I don't think we understood each other=2E
+>> The commit message states:
+>>=20
+>>=20
+>> "Retrieve UFS device version from UFS host controller's spare register
+>> which is populated by bootloader"
+>>=20
+>>=20
+>> Which means the bootloader is able to somehow determine the value
+>> that's in the spare register and write it there=2E
+>>=20
+>> I'm asking whether we can take the logic behind this value and
+>> move it to Linux so that we don't depend on the bootloader to
+>> guarantee it (e=2Eg=2E Chrome or some other devices with more exotic
+>> fw may not work this way)=2E
+>>=20
+>>=20
+>> Konrad
+>
+>
+>There is no logic behind this value at all in bootloader, as I explained,=
+ after bootloader
+>
+>initializes UFS, bootloader simply reads UFS's device version (the value =
+you are referring)
+>
+>and write it to the register=2E But in Linux kernel, we need (or want to =
+know) this value
+>
+>BEFORE we initialize UFS host controller (and UFS device)=2E
 
-Return -EINVAL if this is attempted, instead of crashing the kernel.
+Depending on the bootloader behaviour is not an option=2E For example the =
+kernel might be started via kexec=2E Or via u-boot=2E Or grub=2E Or any oth=
+er bootloader=2E So please duplicate the logic to read the UFS version inst=
+ead=2E
 
-Fixes: 7ba247138907 ("[SCSI] open-iscsi/linux-iscsi-5 Initiator: Initiator code")
-Signed-off-by: Eric Dumazet <edumazet@google.com>
-Cc: Lee Duncan <lduncan@suse.com>
-Cc: Chris Leech <cleech@redhat.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: open-iscsi@googlegroups.com
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/iscsi_tcp.c | 4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 9ab8555180a3a0bd159b621a57c99bcb8f0413ae..8e14cea15f980829e99afa2c43bf6872fcfd965c 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -724,6 +724,10 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
- 		return -EEXIST;
- 	}
- 
-+	err = -EINVAL;
-+	if (!sk_is_tcp(sock->sk))
-+		goto free_socket;
-+
- 	err = iscsi_conn_bind(cls_session, cls_conn, is_leading);
- 	if (err)
- 		goto free_socket;
--- 
-2.42.0.459.ge4e396fd5e-goog
+P=2ES=2E you have been asked to fix your email client=2E Please do so=2E O=
+r, if you are inserting these linebreaks manually, please stop=2E
+
+>Thanks,
+>
+>Can Guo=2E
+>
 
