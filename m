@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD1CEE645A
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 12:30:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33777EE6457
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 12:30:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234772AbjIOMaE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 08:30:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36838 "EHLO
+        id S234836AbjIOMaa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 08:30:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229841AbjIOMaD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 08:30:03 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21FE4A1;
-        Fri, 15 Sep 2023 05:29:58 -0700 (PDT)
+        with ESMTP id S229841AbjIOMa3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 08:30:29 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBD3399;
+        Fri, 15 Sep 2023 05:30:24 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id D195C21887;
-        Fri, 15 Sep 2023 12:29:56 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 868A81F8BF;
+        Fri, 15 Sep 2023 12:30:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1694780996; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1694781023; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=GyoxUOFAPJdcF6p4rmOuD/KvaHZmxy13Vmq8t+ZZgZs=;
-        b=aiUsKAEsWsFfXdCldCAvfrIdDd+lqqeqlJEbnSFIrePG9XUoz3sq8j02+drNbbGa07aAkx
-        2bUkY2+S4Z8ih2ldpo1UzZqW7puwv2/AMgTlyrLJPK0SabuksuLMX/SRqHqSD/NUIR7hRC
-        gnV6ah8oElSO3d3oKBzBDWPuypwqzpo=
+        bh=WNvnypZd0AwEn5+jkqm4FZhYwmjymG9SkG1G0L7YrxI=;
+        b=dZyGu723SSpzgNokZDLmbL4TVxjEV/Qfj3l5MpFaVvsVLjyXYXi6/RJO6c+aEXvkYUtAZ+
+        rXwxPnDqJeRdqdudm30G8UL5aVlWYtQ9bn84L7N9CBTgAA5EjN/lGVrnm+7nemI/UNA/Hu
+        Whtf1hkehCK50ztasAl1zAPiq35f20Y=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1694780996;
+        s=susede2_ed25519; t=1694781023;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=GyoxUOFAPJdcF6p4rmOuD/KvaHZmxy13Vmq8t+ZZgZs=;
-        b=yRvrTqiy84I3ySCPsNm5e1vFKrWU61iMsP5mBRK824OMLv9iiCSgtSLdCr1+73XdjBup55
-        Ll85JfjORfJXDaAA==
+        bh=WNvnypZd0AwEn5+jkqm4FZhYwmjymG9SkG1G0L7YrxI=;
+        b=RjObrnZ8nCZ3xVlE54MaRwOR+qED0Hcrmo427xvI15uV6cGpbzkMdDqR+VO0Ogh7Sbq6T4
+        Qf5zk4UMJESIMjCg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 92F8513251;
-        Fri, 15 Sep 2023 12:29:56 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 56B8713251;
+        Fri, 15 Sep 2023 12:30:23 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id qB7LIkROBGX6PwAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 15 Sep 2023 12:29:56 +0000
-Message-ID: <085acf14-d9c3-0187-e25f-965152bb6209@suse.de>
-Date:   Fri, 15 Sep 2023 14:29:56 +0200
+        id mNUAFF9OBGX6PwAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 15 Sep 2023 12:30:23 +0000
+Message-ID: <3404155e-a436-612e-970c-13c17a9b59ff@suse.de>
+Date:   Fri, 15 Sep 2023 14:30:23 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 07/23] ata: libata-scsi: Fix delayed
- scsi_rescan_device() execution
+Subject: Re: [PATCH v3 09/23] scsi: sd: Do not issue commands to suspended
+ disks on shutdown
 Content-Language: en-US
 To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -66,7 +66,7 @@ Cc:     linux-scsi@vger.kernel.org,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
 References: <20230915081507.761711-1-dlemoal@kernel.org>
- <20230915081507.761711-8-dlemoal@kernel.org>
+ <20230915081507.761711-10-dlemoal@kernel.org>
 From:   Hannes Reinecke <hare@suse.de>
 Autocrypt: addr=hare@suse.de; keydata=
  xsFNBE6KyREBEACwRN6XKClPtxPiABx5GW+Yr1snfhjzExxkTYaINHsWHlsLg13kiemsS6o7
@@ -112,7 +112,7 @@ Autocrypt: addr=hare@suse.de; keydata=
  QuSHPtufr0nWz7vC3IackvoFHNjQ92ZbHhFbOqLYFHvqaBu8N2PE0YhPh0y0/sjmHM9DHUQh
  jbCcdMlwO54T4hHLBbuR/lU6locuDn9SsF5lFeoPtfnztU0+GtqTw+cRSo0g2ARonLsydcQ0
  YwtooKEemPj2lg==
-In-Reply-To: <20230915081507.761711-8-dlemoal@kernel.org>
+In-Reply-To: <20230915081507.761711-10-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -120,44 +120,40 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/15/23 10:14, Damien Le Moal wrote:
-> Commit 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after
-> device resume") modified ata_scsi_dev_rescan() to check the scsi device
-> "is_suspended" power field to ensure that the scsi device associated
-> with an ATA device is fully resumed when scsi_rescan_device() is
-> executed. However, this fix is problematic as:
-> 1) It relies on a PM internal field that should not be used without PM
->     device locking protection.
-> 2) The check for is_suspended and the call to scsi_rescan_device() are
->     not atomic and a suspend PM event may be triggered between them,
->     casuing scsi_rescan_device() to be called on a suspended device and
->     in that function blocking while holding the scsi device lock. This
->     would deadlock a following resume operation.
-> These problems can trigger PM deadlocks on resume, especially with
-> resume operations triggered quickly after or during suspend operations.
-> E.g., a simple bash script like:
+> If an error occurs when resuming a host adapter before the devices
+> attached to the adapter are resumed, the adapter low level driver may
+> remove the scsi host, resulting in a call to sd_remove() for the
+> disks of the host. This in turn results in a call to sd_shutdown() which
+> will issue a synchronize cache command and a start stop unit command to
+> spindown the disk. sd_shutdown() issues the commands only if the device
+> is not already suspended but does not check the power state for
+> system-wide suspend/resume. That is, the commands may be issued with the
+> device in a suspended state, which causes PM resume to hang, forcing a
+> reset of the machine to recover.
 > 
-> for (( i=0; i<10; i++ )); do
-> 	echo "+2 > /sys/class/rtc/rtc0/wakealarm
-> 	echo mem > /sys/power/state
-> done
+> Fix this by not calling sd_shutdown() in sd_remove() if the device
+> is not running.
 > 
-> that triggers a resume 2 seconds after starting suspending a system can
-> quickly lead to a PM deadlock preventing the system from correctly
-> resuming.
-> 
-> Fix this by replacing the check on is_suspended with a check on the
-> return value given by scsi_rescan_device() as that function will fail if
-> called against a suspended device. Also make sure rescan tasks already
-> scheduled are first cancelled before suspending an ata port.
-> 
-> Fixes: 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after device resume")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/libata-core.c | 16 ++++++++++++++++
->   drivers/ata/libata-scsi.c | 33 +++++++++++++++------------------
->   2 files changed, 31 insertions(+), 18 deletions(-)
+>   drivers/scsi/sd.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
 > 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 1d106c8ad5af..d86306d42445 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3727,7 +3727,8 @@ static int sd_remove(struct device *dev)
+>   
+>   	device_del(&sdkp->disk_dev);
+>   	del_gendisk(sdkp->disk);
+> -	sd_shutdown(dev);
+> +	if (sdkp->device->sdev_state == SDEV_RUNNING)
+> +		sd_shutdown(dev);
+>   
+>   	put_disk(sdkp->disk);
+>   	return 0;
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
