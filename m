@@ -2,167 +2,195 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33777EE6457
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 12:30:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AC96EE645B
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 12:48:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234836AbjIOMaa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 08:30:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50586 "EHLO
+        id S235012AbjIOMtB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 08:49:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229841AbjIOMa3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 08:30:29 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBD3399;
-        Fri, 15 Sep 2023 05:30:24 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 868A81F8BF;
-        Fri, 15 Sep 2023 12:30:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1694781023; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=WNvnypZd0AwEn5+jkqm4FZhYwmjymG9SkG1G0L7YrxI=;
-        b=dZyGu723SSpzgNokZDLmbL4TVxjEV/Qfj3l5MpFaVvsVLjyXYXi6/RJO6c+aEXvkYUtAZ+
-        rXwxPnDqJeRdqdudm30G8UL5aVlWYtQ9bn84L7N9CBTgAA5EjN/lGVrnm+7nemI/UNA/Hu
-        Whtf1hkehCK50ztasAl1zAPiq35f20Y=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1694781023;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=WNvnypZd0AwEn5+jkqm4FZhYwmjymG9SkG1G0L7YrxI=;
-        b=RjObrnZ8nCZ3xVlE54MaRwOR+qED0Hcrmo427xvI15uV6cGpbzkMdDqR+VO0Ogh7Sbq6T4
-        Qf5zk4UMJESIMjCg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 56B8713251;
-        Fri, 15 Sep 2023 12:30:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id mNUAFF9OBGX6PwAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 15 Sep 2023 12:30:23 +0000
-Message-ID: <3404155e-a436-612e-970c-13c17a9b59ff@suse.de>
-Date:   Fri, 15 Sep 2023 14:30:23 +0200
+        with ESMTP id S234967AbjIOMtA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 08:49:00 -0400
+Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86D5E1713
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 05:48:55 -0700 (PDT)
+Received: by mail-lf1-x12c.google.com with SMTP id 2adb3069b0e04-5007616b756so3358348e87.3
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 05:48:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1694782134; x=1695386934; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=5i0WGwPOIuosSgjTn5NrbismLE/MeEP0vSOG+InMUVA=;
+        b=iw42YSG6ggrN7YVq4YepW7s14whA2HyRfBWQxi/sPiFISAWXqlfI7TXuWunUKEabxr
+         0z4gO3tGDO04ORKUAF2F/qZvT8RavBq/DCiOjFG1J9AI2/MP63bFaGg3I2jlBn7VYTAs
+         anQir4bLj4UloInfM9eMM/hPsnEoKC5pPaGFt+sOO4yiycc2z+1R01vVtB9PHMStxuup
+         AoVzg9rSWKvaViroNl+EX5/BFkOTCFthASljjY2HRPEJhxyAakJjtcVLid+KmoEAAaKB
+         lZoDLVdGqC30RX50Y3nWWxL3n1LlTm6DvTRJv72YGAoTTssFZEa9RJWEf4HTrUOyXTos
+         UM4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694782134; x=1695386934;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5i0WGwPOIuosSgjTn5NrbismLE/MeEP0vSOG+InMUVA=;
+        b=jRTP3YjFccEyH2NtXqFWUhhI/bOKcz2+muFoMXU5b5DKqlZUX4g0J8zAchY3+3zjBz
+         FvMIz+ssq+7EoDFY7D7DFCaaF25qxJdWxzWwFMwlJYDAPDfJqHSu4/ucISaWxdy/PIxC
+         WGEdRGxq9uPyPVIRsBtHqtAb/PDaROtrHjzM8lSERA9k7IN66pvVYXFz19cUfFq37WEW
+         BZie4DwCdZlWeoWsXAvvUU1YCqLCVLvo9U/3pdBDie2D9R17/DBRBQlNKOuFsDS2nU29
+         xcBtig3dRSK8KIcP4HSV17FDs3yF/pNxsmIGMJANR8qA3syYyzszvO2G/zj0oAWzCmfu
+         RBmA==
+X-Gm-Message-State: AOJu0YzN8zxOS9NhTCEOAcgpQIDeobxueMy/wX6YzQvD1nWMDK4zNPbP
+        Ru0tosA4fwWlywY+o5HNuN/vVw==
+X-Google-Smtp-Source: AGHT+IGLqRFaqXd/mEeemTxxlAfS7+KAgBxG+kIszP8FvxCKBQrtG90SO1rcF1jCVM1ECpsl1iBSJg==
+X-Received: by 2002:a05:6512:252c:b0:500:ac0b:8d52 with SMTP id be44-20020a056512252c00b00500ac0b8d52mr1527805lfb.7.1694782133756;
+        Fri, 15 Sep 2023 05:48:53 -0700 (PDT)
+Received: from ?IPV6:2a00:f41:cbe:bc7d:62a6:5d09:5ba7:be5b? ([2a00:f41:cbe:bc7d:62a6:5d09:5ba7:be5b])
+        by smtp.gmail.com with ESMTPSA id r17-20020ac25a51000000b004fbab80ecefsm633283lfn.145.2023.09.15.05.48.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 15 Sep 2023 05:48:53 -0700 (PDT)
+Message-ID: <b6e729ee-d63d-4167-925d-f3ec5e49ae75@linaro.org>
+Date:   Fri, 15 Sep 2023 14:48:51 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 09/23] scsi: sd: Do not issue commands to suspended
- disks on shutdown
+Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
 Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230915081507.761711-1-dlemoal@kernel.org>
- <20230915081507.761711-10-dlemoal@kernel.org>
-From:   Hannes Reinecke <hare@suse.de>
-Autocrypt: addr=hare@suse.de; keydata=
- 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
- YwtooKEemPj2lg==
-In-Reply-To: <20230915081507.761711-10-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Can Guo <quic_cang@quicinc.com>, mani@kernel.org,
+        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
+ <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+ <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
+ <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org>
+ <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
+ 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
+ izWDgYvmBE8=
+In-Reply-To: <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/15/23 10:14, Damien Le Moal wrote:
-> If an error occurs when resuming a host adapter before the devices
-> attached to the adapter are resumed, the adapter low level driver may
-> remove the scsi host, resulting in a call to sd_remove() for the
-> disks of the host. This in turn results in a call to sd_shutdown() which
-> will issue a synchronize cache command and a start stop unit command to
-> spindown the disk. sd_shutdown() issues the commands only if the device
-> is not already suspended but does not check the power state for
-> system-wide suspend/resume. That is, the commands may be issued with the
-> device in a suspended state, which causes PM resume to hang, forcing a
-> reset of the machine to recover.
+On 11.09.2023 12:02, Can Guo wrote:
 > 
-> Fix this by not calling sd_shutdown() in sd_remove() if the device
-> is not running.
+> On 9/11/2023 5:46 PM, Konrad Dybcio wrote:
+>> On 11.09.2023 11:42, Can Guo wrote:
+>>> Hi Konrad,
+>>>
+>>> On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
+>>>> On 11.09.2023 07:59, Can Guo wrote:
+>>>>> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+>>>>>
+>>>>> Retrieve UFS device version from UFS host controller's spare register
+>>>>> which is populated by bootloader, and use the UFS device version together
+>>>>> with host controller's HW version to decide the proper power modes which
+>>>>> should be used to configure the UFS PHY.
+>>>> That sounds a bit fishy.. is there no bootloader-independent
+>>>> solution to that? Can't we bring in the code that the bootloader
+>>>> uses to determine these values?
+>>>>
+>>>> Konrad
+>>>
+>>> Agree, it is.
+>>>
+>>>
+>>> All these complexities come from one request from PHY design team - power saving.
+>>>
+>>> And to achieve power saving, Qualcomm UFS developers are requested to use the
+>>>
+>>> lowest hanging PHY settings which can sustain the Max agreed HS Gear (btw host
+>>>
+>>> and UFS device) during UFS's lifecycle in High Level OS,  whereas the power saving
+>>>
+>>> request does not apply to bootloader, which works for only a few seconds during
+>>>
+>>> bootup. Hence, there is no such version detect code in bootloader -  it just uses the
+>>>
+>>> highest PHY settings to configure PHY, boot up UFS and put UFS device version in this
+>>>
+>>> register.
+>> First of all, your email client seems to be inserting 2 newlines
+>> instead of 1. If you're using thunderbird, you may want to edit:
+>>
+>> mail.identity.(default or your mail identity idx).default.compose_html
+>>
+>> to `false`
+>>
+>> and add that to your internal wiki page, as I see many @quic folks having
+>> this issue.
+>>
+>>
+>> Going back to the main topic, I don't think we understood each other.
+>> The commit message states:
+>>
+>>
+>> "Retrieve UFS device version from UFS host controller's spare register
+>> which is populated by bootloader"
+>>
+>>
+>> Which means the bootloader is able to somehow determine the value
+>> that's in the spare register and write it there.
+>>
+>> I'm asking whether we can take the logic behind this value and
+>> move it to Linux so that we don't depend on the bootloader to
+>> guarantee it (e.g. Chrome or some other devices with more exotic
+>> fw may not work this way).
+>>
+>>
+>> Konrad
 > 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/scsi/sd.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 1d106c8ad5af..d86306d42445 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3727,7 +3727,8 @@ static int sd_remove(struct device *dev)
->   
->   	device_del(&sdkp->disk_dev);
->   	del_gendisk(sdkp->disk);
-> -	sd_shutdown(dev);
-> +	if (sdkp->device->sdev_state == SDEV_RUNNING)
-> +		sd_shutdown(dev);
->   
->   	put_disk(sdkp->disk);
->   	return 0;
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> There is no logic behind this value at all in bootloader, as I explained, after bootloader
+> 
+> initializes UFS, bootloader simply reads UFS's device version (the value you are referring)
+> 
+> and write it to the register. But in Linux kernel, we need (or want to know) this value
+> 
+> BEFORE we initialize UFS host controller (and UFS device).
+Can't you just initialize the PHY at G4 or G5 unconditionally,
+read back the required info and then decide based on that?
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Frankenstr. 146, 90461 Nürnberg
-Managing Directors: I. Totev, A. Myers, A. McDonald, M. B. Moerman
-(HRB 36809, AG Nürnberg)
-
+Konrad
