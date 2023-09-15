@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1CB8EE645B
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 12:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B8F7EE645A
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 12:27:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234895AbjIOM0t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 08:26:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46272 "EHLO
+        id S232548AbjIOM2D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 08:28:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234862AbjIOM0q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 08:26:46 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB76E1FFA;
-        Fri, 15 Sep 2023 05:26:38 -0700 (PDT)
+        with ESMTP id S229841AbjIOM2C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 08:28:02 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6361D2721;
+        Fri, 15 Sep 2023 05:27:47 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 2AC931F38C;
-        Fri, 15 Sep 2023 12:26:37 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 20C541F894;
+        Fri, 15 Sep 2023 12:27:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1694780797; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1694780866; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=hIXNbi6wiscYzEM+Ewsr+kV3eovSGwVPeJZVGCtQ4kg=;
-        b=toTplLb2dorxT+xDSJ4yCvYowdh5fmlBOZ/wHI+Uh6bO88WSdGMgWORe3tDfqUBHlgO2fG
-        T1dGE0xry9lR6MVi3KmxD3Bhy+RkDVh7vFhUEu1XaRPqyRoGA051yZWTHNEUuJS+QvML/8
-        EFQLfR3F1MeYvSqf1x/TIFMgwvaaMXc=
+        bh=qOXlC1iWbH0cLIupFushnx0fcpoAStfjTAxu7eGncv8=;
+        b=SHa/PDx1dKprBlec+hTOSwyQ+3FKkCB2YYRA85/F7aSO8Y/5rGJ9n2K1Jbn9hcqcqGSsxp
+        s5i+0fewZ2HpB4gUxFup3ACoBwwV9pQGAjEh+Od5P77jQcmSBVadVBxJ+63VDtehWRVNgY
+        K9Ah6oRZH5fn2yuRwkR3lYgUd++cWGA=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1694780797;
+        s=susede2_ed25519; t=1694780866;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=hIXNbi6wiscYzEM+Ewsr+kV3eovSGwVPeJZVGCtQ4kg=;
-        b=Rgauoq5HJHhTQ9RefWsfxvmi9L3/3hBhdIyMLngiRjZ+iNApnmTL0P+ULu/L3YPlD2kZId
-        BV9zHsOT5LTfFFCw==
+        bh=qOXlC1iWbH0cLIupFushnx0fcpoAStfjTAxu7eGncv8=;
+        b=Nahu0uWpdnNnGnFim3uV2ZlDxLDBfGscK8gYQnd2Z+EBeg3TJhROBDY0kOM76d6KrwvebS
+        cjJCx0gL3PC/G8Bw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id ABC1E13251;
-        Fri, 15 Sep 2023 12:26:36 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EA48C13251;
+        Fri, 15 Sep 2023 12:27:45 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id XUf9J3xNBGX6PwAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 15 Sep 2023 12:26:36 +0000
-Message-ID: <0aa09483-20be-d868-3a89-352c2f793031@suse.de>
-Date:   Fri, 15 Sep 2023 14:26:35 +0200
+        id MDUIOMFNBGX6PwAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 15 Sep 2023 12:27:45 +0000
+Message-ID: <a909935f-ef5e-535a-08ae-b60d8c83e25a@suse.de>
+Date:   Fri, 15 Sep 2023 14:27:45 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
+Subject: Re: [PATCH v3 05/23] ata: libata-scsi: Disable scsi device
+ manage_system_start_stop
 Content-Language: en-US
 To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -66,7 +66,7 @@ Cc:     linux-scsi@vger.kernel.org,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
 References: <20230915081507.761711-1-dlemoal@kernel.org>
- <20230915081507.761711-5-dlemoal@kernel.org>
+ <20230915081507.761711-6-dlemoal@kernel.org>
 From:   Hannes Reinecke <hare@suse.de>
 Autocrypt: addr=hare@suse.de; keydata=
  xsFNBE6KyREBEACwRN6XKClPtxPiABx5GW+Yr1snfhjzExxkTYaINHsWHlsLg13kiemsS6o7
@@ -112,7 +112,7 @@ Autocrypt: addr=hare@suse.de; keydata=
  QuSHPtufr0nWz7vC3IackvoFHNjQ92ZbHhFbOqLYFHvqaBu8N2PE0YhPh0y0/sjmHM9DHUQh
  jbCcdMlwO54T4hHLBbuR/lU6locuDn9SsF5lFeoPtfnztU0+GtqTw+cRSo0g2ARonLsydcQ0
  YwtooKEemPj2lg==
-In-Reply-To: <20230915081507.761711-5-dlemoal@kernel.org>
+In-Reply-To: <20230915081507.761711-6-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -120,41 +120,86 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/15/23 10:14, Damien Le Moal wrote:
-> The underlying device and driver of a scsi disk may have different
-> system and runtime power mode control requirements. This is because
-> runtime power management affects only the scsi disk, while sustem level
-> power management affects all devices, including the controller for the
-> scsi disk.
+> The introduction of a device link to create a consumer/supplier
+> relationship between the scsi device of an ATA device and the ATA port
+> of that ATA device fixes the ordering of system suspend and resume
+> operations. For suspend, the scsi device is suspended first and the ata
+> port after it. This is fine as this allows the synchronize cache and
+> START STOP UNIT commands issued by the scsi disk driver to be executed
+> before the ata port is disabled.
 > 
-> For instance, issuing a START STOP UNIT command when a scsi disk is
-> runtime suspended and resumed is fine: the command is translated to a
-> STANDBY IMMEDIATE command to spin down the ATA disk and to a VERIFY
-> command to wake it up. The scsi disk runtime operations have no effect
-> on the ata port device used to connect the ATA disk. However, for
-> system suspend/resume operations, the ATA port used to connect the
-> device will also be suspended and resumed, with the resum operation
-> requiring re-validating the device link and the device itseld. In this
-> case, issuing a VERIFY command to spinup the disk must be done before
-> starting to revalidate the device, when the ata port is being resumed.
-> In such case, we must not allow the scsi disk driver to issue START STOP
-> UNIT commands.
+> For resume operations, the ata port is resumed first, followed
+> by the scsi device. This allows having the request queue of the scsi
+> device to be unfrozen after the ata port resume is scheduled in EH,
+> thus avoiding to see new requests prematurely issued to the ATA device.
+> Since libata sets manage_system_start_stop to 1, the scsi disk resume
+> operation also results in issuing a START STOP UNIT command to the
+> device being resumed so that the device exits standby power mode.
 > 
-> Allow a low level driver to refine the scsi disk start/stop management
-> by differentiating system and runtime cases with two new scsi device
-> flags: manage_system_start_stop and manage_runtime_start_stop. These new
-> flags replace the current manage_start_stop flag. Drivers setting the
-> manage_start_stop are modifed to set both new flags, thus preserving the
-> existing start/stop management behavior.
+> However, restoring the ATA device to the active power mode must be
+> synchronized with libata EH processing of the port resume operation to
+> avoid either 1) seeing the start stop unit command being received too
+> early when the port is not yet resumed and ready to accept commands, or
+> after the port resume process issues commands such as IDENTIFY to
+> revalidate the device. In this last case, the risk is that the device
+> revalidation fails with timeout errors as the drive is still spun down.
+> 
+> Commit 0a8589055936 ("ata,scsi: do not issue START STOP UNIT on resume")
+> disabled issuing the START STOP UNIT command to avoid issues with it.
+> But this is incorrect as transitioning a device to the active power
+> mode from the standby power mode set on suspend requires a media access
+> command. The IDENTIFY, READ LOG and SET FEATURES commands executed in
+> libata EH context triggered by the ata port resume operation may thus
+> fail.
+> 
+> Fix these synchronization issues is by handling a device power mode
+> transitions for system suspend and resume directly in libata EH context,
+> without relying on the scsi disk driver management triggered with the
+> manage_system_start_stop flag.
+> 
+> To do this, the following libata helper functions are introduced:
+> 
+> 1) ata_dev_power_set_standby():
+> 
+> This function issues a STANDBY IMMEDIATE command to transitiom a device
+> to the standby power mode. For HDDs, this spins down the disks. This
+> function applies only to ATA and ZAC devices and does nothing otherwise.
+> This function also does nothing for devices that have the
+> ATA_FLAG_NO_POWEROFF_SPINDOWN or ATA_FLAG_NO_HIBERNATE_SPINDOWN flag
+> set.
+> 
+> For suspend, call ata_dev_power_set_standby() in
+> ata_eh_handle_port_suspend() before the port is disabled and frozen.
+> ata_eh_unload() is also modified to transition all enabled devices to
+> the standby power mode when the system is shutdown or devices removed.
+> 
+> 2) ata_dev_power_set_active() and
+> 
+> This function applies to ATA or ZAC devices and issues a VERIFY command
+> for 1 sector at LBA 0 to transition the device to the active power mode.
+> For HDDs, since this function will complete only once the disk spin up.
+> Its execution uses the same timeouts as for reset, to give the drive
+> enough time to complete spinup without triggering a command timeout.
+> 
+> For resume, call ata_dev_power_set_active() in
+> ata_eh_revalidate_and_attach() after the port has been enabled and
+> before any other command is issued to the device.
+> 
+> With these changes, the manage_system_start_stop and no_start_on_resume
+> scsi device flags do not need to be set in ata_scsi_dev_config(). The
+> flag manage_runtime_start_stop is still set to allow the sd driver to
+> spinup/spindown a disk through the sd runtime operations.
 > 
 > Fixes: 0a8589055936 ("ata,scsi: do not issue START STOP UNIT on resume")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/libata-scsi.c  |  3 +-
->   drivers/firewire/sbp2.c    |  9 +++--
->   drivers/scsi/sd.c          | 78 ++++++++++++++++++++++++++++----------
->   include/scsi/scsi_device.h |  3 +-
->   4 files changed, 69 insertions(+), 24 deletions(-)
+>   drivers/ata/libata-core.c | 90 +++++++++++++++++++++++++++++++++++++++
+>   drivers/ata/libata-eh.c   | 46 +++++++++++++++++++-
+>   drivers/ata/libata-scsi.c | 16 +++----
+>   drivers/ata/libata.h      |  2 +
+>   include/linux/libata.h    |  6 ++-
+>   5 files changed, 148 insertions(+), 12 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
