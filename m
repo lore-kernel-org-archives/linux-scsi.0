@@ -2,179 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5A0ACD37AD
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 21:01:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C169CD37AA
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 21:02:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237697AbjIOVBZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 17:01:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43076 "EHLO
+        id S237467AbjIOVC1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 17:02:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237925AbjIOVBS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 17:01:18 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12424CCD
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 13:58:50 -0700 (PDT)
+        with ESMTP id S238001AbjIOVBz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 17:01:55 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B1511AC
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 14:00:40 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id BD1631FD7F;
-        Fri, 15 Sep 2023 20:58:48 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 440002188F;
+        Fri, 15 Sep 2023 21:00:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1694811528; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+        t=1694811639; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2+/rwjTCzJ3goXjE4BeODbGGNRpY6ipANTOHKFU6C+A=;
-        b=fxd3dZBRldrQFx1dPB3335FXqaU1afRHY3YuL58y3f08D3plNpqUK7hpYmvrLmLmlCtP8t
-        GIqNmbXyMBEc5iu2p6GiHdMGXvHLcbqBrYAvH2svozRDZvdHL0GQaUD86LHqC5iQ5U+CLI
-        noNr/SI0mcEDs3xUtMqzV77bK0WV9kY=
+        bh=fxbS3dVOrRjNWDqLgC5P3CPZDsIRiYuEXn+IjNvtY2g=;
+        b=uuk+ANed+kMzmW7AvPcIdtUjUGXIFAUgEH39yEcCTo50STzcmOnEdGO2QhEXeHQEaQ2AYy
+        /FnsLYV8tMIvkxqvoAWS6ckvJJ05Mfeb2QlCAEWE69uxLcMQMM++ORdhs0NGSu69YVUsAq
+        jUNe/aAwa83Rf0mlX0mj2uUCNtL8Tac=
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7512613251;
-        Fri, 15 Sep 2023 20:58:48 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E9C0F13251;
+        Fri, 15 Sep 2023 21:00:38 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id ffvHGojFBGUqHQAAMHmgww
-        (envelope-from <mwilck@suse.com>); Fri, 15 Sep 2023 20:58:48 +0000
-Message-ID: <f87d6c24e18b606a8ab3e4056e80959e43a360a7.camel@suse.com>
-Subject: Re: [PATCH v11 15/34] scsi: rdac: Have scsi-ml retry
- send_mode_select errors
+        id lmdZN/bFBGUSHgAAMHmgww
+        (envelope-from <mwilck@suse.com>); Fri, 15 Sep 2023 21:00:38 +0000
+Message-ID: <893f015815a2b1548193f6c2854d604da1befd5f.camel@suse.com>
+Subject: Re: [PATCH v11 17/34] scsi: spi: Have scsi-ml retry spi_execute
+ errors
 From:   Martin Wilck <mwilck@suse.com>
 To:     Mike Christie <michael.christie@oracle.com>,
         john.g.garry@oracle.com, bvanassche@acm.org, hch@lst.de,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         james.bottomley@hansenpartnership.com
-Date:   Fri, 15 Sep 2023 22:58:47 +0200
-In-Reply-To: <20230905231547.83945-16-michael.christie@oracle.com>
+Date:   Fri, 15 Sep 2023 23:00:38 +0200
+In-Reply-To: <20230905231547.83945-18-michael.christie@oracle.com>
 References: <20230905231547.83945-1-michael.christie@oracle.com>
-         <20230905231547.83945-16-michael.christie@oracle.com>
+         <20230905231547.83945-18-michael.christie@oracle.com>
 Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.48.4 
 MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDIzLTA5LTA1IGF0IDE4OjE1IC0wNTAwLCBNaWtlIENocmlzdGllIHdyb3RlOgo+
-IFRoaXMgaGFzIHJkYWMgaGF2ZSBzY3NpLW1sIHJldHJ5IGVycm9ycyBpbnN0ZWFkIG9mIGRyaXZp
-bmcgdGhlbQo+IGl0c2VsZi4KPiAKPiBUaGVyZSBpcyBvbmUgYmVoYXZpb3IgY2hhbmdlIHdpdGgg
-dGhpcyBwYXRjaC4gV2UgdXNlZCB0byBnZXQgYSB0b3RhbAo+IG9mCj4gNSByZXRyaWVzIGZvciBl
-cnJvcnMgbW9kZV9zZWxlY3RfaGFuZGxlX3NlbnNlIHJldHVybmVkIFNDU0lfREhfUkVUUlkuCj4g
-V2UKPiBub3cgZ2V0IDUgcmV0cmllcyBmb3IgZWFjaCBmYWlsdXJlLgoKLi4uIG1ha2luZyBtZSB0
-aGluayBvZiB0aGUgdG90YWwgcmV0cnkgY291bnQgYWdhaW4uCgo+IAo+IFNpZ25lZC1vZmYtYnk6
-IE1pa2UgQ2hyaXN0aWUgPG1pY2hhZWwuY2hyaXN0aWVAb3JhY2xlLmNvbT4KPiBSZXZpZXdlZC1i
-eTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Cj4gLS0tCj4goGRyaXZlcnMvc2NzaS9k
-ZXZpY2VfaGFuZGxlci9zY3NpX2RoX3JkYWMuYyB8IDg3ICsrKysrKysrKysrKy0tLS0tLS0tCj4g
-LS0KPiCgMSBmaWxlIGNoYW5nZWQsIDQ5IGluc2VydGlvbnMoKyksIDM4IGRlbGV0aW9ucygtKQo+
-IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9kaF9yZGFj
-LmMKPiBiL2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3NpX2RoX3JkYWMuYwo+IGluZGV4
-IDFhYzJhZTE3ZThiZS4uNzcxMTA4YTMzMmNiIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvc2NzaS9k
-ZXZpY2VfaGFuZGxlci9zY3NpX2RoX3JkYWMuYwo+ICsrKyBiL2RyaXZlcnMvc2NzaS9kZXZpY2Vf
-aGFuZGxlci9zY3NpX2RoX3JkYWMuYwo+IEBAIC00ODUsNDMgKzQ4NSwxNyBAQCBzdGF0aWMgaW50
-IHNldF9tb2RlX3NlbGVjdChzdHJ1Y3Qgc2NzaV9kZXZpY2UKPiAqc2Rldiwgc3RydWN0IHJkYWNf
-ZGhfZGF0YSAqaCkKPiCgc3RhdGljIGludCBtb2RlX3NlbGVjdF9oYW5kbGVfc2Vuc2Uoc3RydWN0
-IHNjc2lfZGV2aWNlICpzZGV2LAo+IKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-IHN0cnVjdCBzY3NpX3NlbnNlX2hkciAqc2Vuc2VfaGRyKQo+IKB7Cj4gLaCgoKCgoKBpbnQgZXJy
-ID0gU0NTSV9ESF9JTzsKPiCgoKCgoKCgoHN0cnVjdCByZGFjX2RoX2RhdGEgKmggPSBzZGV2LT5o
-YW5kbGVyX2RhdGE7Cj4goAo+IKCgoKCgoKCgaWYgKCFzY3NpX3NlbnNlX3ZhbGlkKHNlbnNlX2hk
-cikpCj4gLaCgoKCgoKCgoKCgoKCgoGdvdG8gZG9uZTsKPiAtCj4gLaCgoKCgoKBzd2l0Y2ggKHNl
-bnNlX2hkci0+c2Vuc2Vfa2V5KSB7Cj4gLaCgoKCgoKBjYXNlIE5PX1NFTlNFOgo+IC2goKCgoKCg
-Y2FzZSBBQk9SVEVEX0NPTU1BTkQ6Cj4gLaCgoKCgoKBjYXNlIFVOSVRfQVRURU5USU9OOgo+IC2g
-oKCgoKCgoKCgoKCgoKBlcnIgPSBTQ1NJX0RIX1JFVFJZOwo+IC2goKCgoKCgoKCgoKCgoKBicmVh
-azsKPiAtoKCgoKCgoGNhc2UgTk9UX1JFQURZOgo+IC2goKCgoKCgoKCgoKCgoKBpZiAoc2Vuc2Vf
-aGRyLT5hc2MgPT0gMHgwNCAmJiBzZW5zZV9oZHItPmFzY3EgPT0KPiAweDAxKQo+IC2goKCgoKCg
-oKCgoKCgoKCgoKCgoKCgoC8qIExVTiBOb3QgUmVhZHkgYW5kIGlzIGluIHRoZSBQcm9jZXNzIG9m
-Cj4gQmVjb21pbmcKPiAtoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiBSZWFkeQo+IC2goKCgoKCg
-oKCgoKCgoKCgoKCgoKCgoCAqLwo+IC2goKCgoKCgoKCgoKCgoKCgoKCgoKCgoGVyciA9IFNDU0lf
-REhfUkVUUlk7Cj4gLaCgoKCgoKCgoKCgoKCgoGJyZWFrOwo+IC2goKCgoKCgY2FzZSBJTExFR0FM
-X1JFUVVFU1Q6Cj4gLaCgoKCgoKCgoKCgoKCgoGlmIChzZW5zZV9oZHItPmFzYyA9PSAweDkxICYm
-IHNlbnNlX2hkci0+YXNjcSA9PQo+IDB4MzYpCj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLyoK
-PiAtoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiBDb21tYW5kIExvY2sgY29udGVudGlvbgo+IC2g
-oKCgoKCgoKCgoKCgoKCgoKCgoKCgoCAqLwo+IC2goKCgoKCgoKCgoKCgoKCgoKCgoKCgoGVyciA9
-IFNDU0lfREhfSU1NX1JFVFJZOwo+IC2goKCgoKCgoKCgoKCgoKBicmVhazsKPiAtoKCgoKCgoGRl
-ZmF1bHQ6Cj4gLaCgoKCgoKCgoKCgoKCgoGJyZWFrOwo+IC2goKCgoKCgfQo+ICugoKCgoKCgoKCg
-oKCgoKByZXR1cm4gU0NTSV9ESF9JTzsKPiCgCj4goKCgoKCgoKBSREFDX0xPRyhSREFDX0xPR19G
-QUlMT1ZFUiwgc2RldiwgImFycmF5ICVzLCBjdGxyICVkLCAiCj4goKCgoKCgoKCgoKCgoKCgoCJN
-T0RFX1NFTEVDVCByZXR1cm5lZCB3aXRoIHNlbnNlICUwMngvJTAyeC8lMDJ4IiwKPiCgoKCgoKCg
-oKCgoKCgoKCgKGNoYXIgKikgaC0+Y3Rsci0+YXJyYXlfbmFtZSwgaC0+Y3Rsci0+aW5kZXgsCj4g
-oKCgoKCgoKCgoKCgoKCgoHNlbnNlX2hkci0+c2Vuc2Vfa2V5LCBzZW5zZV9oZHItPmFzYywgc2Vu
-c2VfaGRyLQo+ID5hc2NxKTsKPiCgCj4gLWRvbmU6Cj4gLaCgoKCgoKByZXR1cm4gZXJyOwo+ICug
-oKCgoKCgcmV0dXJuIFNDU0lfREhfSU87Cj4goH0KPiCgCj4goHN0YXRpYyB2b2lkIHNlbmRfbW9k
-ZV9zZWxlY3Qoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQo+IEBAIC01MzAsNyArNTA0LDcgQEAg
-c3RhdGljIHZvaWQgc2VuZF9tb2RlX3NlbGVjdChzdHJ1Y3Qgd29ya19zdHJ1Y3QKPiAqd29yaykK
-PiCgoKCgoKCgoKCgoKCgoKCgY29udGFpbmVyX29mKHdvcmssIHN0cnVjdCByZGFjX2NvbnRyb2xs
-ZXIsIG1zX3dvcmspOwo+IKCgoKCgoKCgc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2ID0gY3Rsci0+
-bXNfc2RldjsKPiCgoKCgoKCgoHN0cnVjdCByZGFjX2RoX2RhdGEgKmggPSBzZGV2LT5oYW5kbGVy
-X2RhdGE7Cj4gLaCgoKCgoKBpbnQgcmMsIGVyciwgcmV0cnlfY250ID0gUkRBQ19SRVRSWV9DT1VO
-VDsKPiAroKCgoKCgoGludCByYywgZXJyOwo+IKCgoKCgoKCgc3RydWN0IHJkYWNfcXVldWVfZGF0
-YSAqdG1wLCAqcWRhdGE7Cj4goKCgoKCgoKBMSVNUX0hFQUQobGlzdCk7Cj4goKCgoKCgoKB1bnNp
-Z25lZCBjaGFyIGNkYltNQVhfQ09NTUFORF9TSVpFXTsKPiBAQCAtNTM4LDggKzUxMiw1MiBAQCBz
-dGF0aWMgdm9pZCBzZW5kX21vZGVfc2VsZWN0KHN0cnVjdCB3b3JrX3N0cnVjdAo+ICp3b3JrKQo+
-IKCgoKCgoKCgdW5zaWduZWQgaW50IGRhdGFfc2l6ZTsKPiCgoKCgoKCgoGJsa19vcGZfdCBvcGYg
-PSBSRVFfT1BfRFJWX09VVCB8IFJFUV9GQUlMRkFTVF9ERVYgfAo+IKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgoKCgoKCgoKCgUkVRX0ZBSUxGQVNUX1RSQU5TUE9SVCB8Cj4gUkVRX0ZBSUxGQVNUX0RS
-SVZFUjsKPiAroKCgoKCgoHN0cnVjdCBzY3NpX2ZhaWx1cmUgZmFpbHVyZXNbXSA9IHsKPiAroKCg
-oKCgoKCgoKCgoKCgewo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5zZW5zZSA9IE5PX1NFTlNF
-LAo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5hc2MgPSBTQ01EX0ZBSUxVUkVfQVNDX0FOWSwK
-PiAroKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAuYXNjcSA9IFNDTURfRkFJTFVSRV9BU0NRX0FOWSwK
-PiAroKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAuYWxsb3dlZCA9IFJEQUNfUkVUUllfQ09VTlQsCj4g
-K6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLnJlc3VsdCA9IFNBTV9TVEFUX0NIRUNLX0NPTkRJVElP
-TiwKPiAroKCgoKCgoKCgoKCgoKCgfSwKPiAroKCgoKCgoKCgoKCgoKCgewo+ICugoKCgoKCgoKCg
-oKCgoKCgoKCgoKCgoC5zZW5zZSA9IEFCT1JURURfQ09NTUFORCwKPiAroKCgoKCgoKCgoKCgoKCg
-oKCgoKCgoKAuYXNjID0gU0NNRF9GQUlMVVJFX0FTQ19BTlksCj4gK6CgoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgLmFzY3EgPSBTQ01EX0ZBSUxVUkVfQVNDUV9BTlksCj4gK6CgoKCgoKCgoKCgoKCgoKCg
-oKCgoKCgLmFsbG93ZWQgPSBSREFDX1JFVFJZX0NPVU5ULAo+ICugoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoC5yZXN1bHQgPSBTQU1fU1RBVF9DSEVDS19DT05ESVRJT04sCj4gK6CgoKCgoKCgoKCgoKCg
-oH0sCj4gK6CgoKCgoKCgoKCgoKCgoHsKPiAroKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAuc2Vuc2Ug
-PSBVTklUX0FUVEVOVElPTiwKPiAroKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAuYXNjID0gU0NNRF9G
-QUlMVVJFX0FTQ19BTlksCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLmFzY3EgPSBTQ01EX0ZB
-SUxVUkVfQVNDUV9BTlksCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLmFsbG93ZWQgPSBSREFD
-X1JFVFJZX0NPVU5ULAo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5yZXN1bHQgPSBTQU1fU1RB
-VF9DSEVDS19DT05ESVRJT04sCj4gK6CgoKCgoKCgoKCgoKCgoH0sCj4gK6CgoKCgoKCgoKCgoKCg
-oHsKPiAroKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAvKgo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-oCAqIExVTiBOb3QgUmVhZHkgYW5kIGlzIGluIHRoZSBQcm9jZXNzIG9mCj4gQmVjb21pbmcKPiAr
-oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiBSZWFkeQo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-oCAqLwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5zZW5zZSA9IE5PVF9SRUFEWSwKPiAroKCg
-oKCgoKCgoKCgoKCgoKCgoKCgoKAuYXNjID0gMHgwNCwKPiAroKCgoKCgoKCgoKCgoKCgoKCgoKCg
-oKAuYXNjcSA9IDB4MDEsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLmFsbG93ZWQgPSBSREFD
-X1JFVFJZX0NPVU5ULAo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5yZXN1bHQgPSBTQU1fU1RB
-VF9DSEVDS19DT05ESVRJT04sCj4gK6CgoKCgoKCgoKCgoKCgoH0sCj4gK6CgoKCgoKCgoKCgoKCg
-oHsKPiAroKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAvKiBDb21tYW5kIExvY2sgY29udGVudGlvbiAq
-Lwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5zZW5zZSA9IElMTEVHQUxfUkVRVUVTVCwKPiAr
-oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAuYXNjID0gMHg5MSwKPiAroKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKAuYXNjcSA9IDB4MzYsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLmFsbG93ZWQgPSBT
-Q01EX0ZBSUxVUkVfTk9fTElNSVQsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLnJlc3VsdCA9
-IFNBTV9TVEFUX0NIRUNLX0NPTkRJVElPTiwKPiAroKCgoKCgoKCgoKCgoKCgfSwKPiAroKCgoKCg
-oKCgoKCgoKCge30KPiAroKCgoKCgoH07Cj4goKCgoKCgoKBjb25zdCBzdHJ1Y3Qgc2NzaV9leGVj
-X2FyZ3MgZXhlY19hcmdzID0gewo+IKCgoKCgoKCgoKCgoKCgoKAuc3NoZHIgPSAmc3NoZHIsCj4g
-K6CgoKCgoKCgoKCgoKCgoC5mYWlsdXJlcyA9IGZhaWx1cmVzLAo+IKCgoKCgoKCgfTsKPiCgCj4g
-oKCgoKCgoKBzcGluX2xvY2soJmN0bHItPm1zX2xvY2spOwo+IEBAIC01NDgsMTUgKzU2NiwxMiBA
-QCBzdGF0aWMgdm9pZCBzZW5kX21vZGVfc2VsZWN0KHN0cnVjdCB3b3JrX3N0cnVjdAo+ICp3b3Jr
-KQo+IKCgoKCgoKCgY3Rsci0+bXNfc2RldiA9IE5VTEw7Cj4goKCgoKCgoKBzcGluX3VubG9jaygm
-Y3Rsci0+bXNfbG9jayk7Cj4goAo+IC0gcmV0cnk6Cj4goKCgoKCgoKBtZW1zZXQoY2RiLCAwLCBz
-aXplb2YoY2RiKSk7Cj4goAo+IKCgoKCgoKCgZGF0YV9zaXplID0gcmRhY19mYWlsb3Zlcl9nZXQo
-Y3RsciwgJmxpc3QsIGNkYik7Cj4goAo+IC2goKCgoKCgUkRBQ19MT0coUkRBQ19MT0dfRkFJTE9W
-RVIsIHNkZXYsICJhcnJheSAlcywgY3RsciAlZCwgIgo+IC2goKCgoKCgoKCgoKCgoKAiJXMgTU9E
-RV9TRUxFQ1QgY29tbWFuZCIsCj4gLaCgoKCgoKCgoKCgoKCgoChjaGFyICopIGgtPmN0bHItPmFy
-cmF5X25hbWUsIGgtPmN0bHItPmluZGV4LAo+IC2goKCgoKCgoKCgoKCgoKAocmV0cnlfY250ID09
-IFJEQUNfUkVUUllfQ09VTlQpID8gInF1ZXVlaW5nIiA6Cj4gInJldHJ5aW5nIik7Cj4gK6CgoKCg
-oKBSREFDX0xPRyhSREFDX0xPR19GQUlMT1ZFUiwgc2RldiwgImFycmF5ICVzLCBjdGxyICVkLAo+
-IHF1ZXVlaW5nTU9ERV9TRUxFQ1QgY29tbWFuZCIsCgptaXNzaW5nIHNwYWNlPwoKCj4gK6CgoKCg
-oKCgoKCgoKCgoChjaGFyICopIGgtPmN0bHItPmFycmF5X25hbWUsIGgtPmN0bHItPmluZGV4KTsK
-PiCgCj4goKCgoKCgoKByYyA9IHNjc2lfZXhlY3V0ZV9jbWQoc2RldiwgY2RiLCBvcGYsICZoLT5j
-dGxyLT5tb2RlX3NlbGVjdCwKPiBkYXRhX3NpemUsCj4goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
-oKCgoKAgUkRBQ19USU1FT1VUICogSFosIFJEQUNfUkVUUklFUywKPiAmZXhlY19hcmdzKTsKPiBA
-QCAtNTcwLDEwICs1ODUsNiBAQCBzdGF0aWMgdm9pZCBzZW5kX21vZGVfc2VsZWN0KHN0cnVjdCB3
-b3JrX3N0cnVjdAo+ICp3b3JrKQo+IKCgoKCgoKCgoKCgoKCgoKBlcnIgPSBTQ1NJX0RIX0lPOwo+
-IKCgoKCgoKCgfSBlbHNlIHsKPiCgoKCgoKCgoKCgoKCgoKCgZXJyID0gbW9kZV9zZWxlY3RfaGFu
-ZGxlX3NlbnNlKHNkZXYsICZzc2hkcik7Cj4gLaCgoKCgoKCgoKCgoKCgoGlmIChlcnIgPT0gU0NT
-SV9ESF9SRVRSWSAmJiByZXRyeV9jbnQtLSkKPiAtoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKBnb3Rv
-IHJldHJ5Owo+IC2goKCgoKCgoKCgoKCgoKBpZiAoZXJyID09IFNDU0lfREhfSU1NX1JFVFJZKQo+
-IC2goKCgoKCgoKCgoKCgoKCgoKCgoKCgoGdvdG8gcmV0cnk7Cj4goKCgoKCgoKB9Cj4goAo+IKCg
-oKCgoKCgbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKHFkYXRhLCB0bXAsICZsaXN0LCBlbnRyeSkg
-ewoK
+On Tue, 2023-09-05 at 18:15 -0500, Mike Christie wrote:
+> This has spi_execute have scsi-ml retry errors instead of driving
+> them.
+>=20
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+
+Reviewed-by: Martin Wilck <mwilck@suse.com>
 
