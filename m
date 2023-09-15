@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 475DFEE6442
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 08:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CED6EE6442
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 08:26:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233001AbjIOI0J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 04:26:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53744 "EHLO
+        id S232963AbjIOI0S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 04:26:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233085AbjIOI0B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 04:26:01 -0400
+        with ESMTP id S233066AbjIOI0O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 04:26:14 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DE1F449C;
-        Fri, 15 Sep 2023 01:23:42 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED033C433C9;
-        Fri, 15 Sep 2023 08:15:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AEE03AB2;
+        Fri, 15 Sep 2023 01:24:55 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97F83C433BA;
+        Fri, 15 Sep 2023 08:15:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694765712;
-        bh=g3BIcIFco/oFr9nhk2nJIvAHcMrNUjY6hk5vgy3kEqE=;
+        s=k20201202; t=1694765745;
+        bh=MGyUTr147OXTgvJoJwfeJdXivkMDvvXqnQv8JHunP8o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zyfc7ra35gePyg/Pws+81nGy/H6Rfi6GIgk9FO8Ty3ycZh/cATRdY50sRISPESel1
-         1jjnpwJWYAKP5F46nE/cqaDvEb9e8Vd7SRBH14bI1CUD3hKSh8cScDmcCMx7eAEvKo
-         qoRSkCGLujISNhRNmKVN+mUSegAU1DI8tm6lz3mD7x+4oyRZHTe+XW6cnYSF/NX6zx
-         whWkl1Iti3jkYg8LlFXEQwv2l9MyW8/YoB8x3CEPRApxXRwYrTyUo6/IR78LErHara
-         6tmEt6a7rM9fSq/HmAUakODgcAOd2qb3X8yf/G7mH2v7WINFVv18PPDyJjOO/Sh+E6
-         t5EtW7iCYSPgA==
+        b=LQGtx68aOodF4YT/Iknf367EzGBH2L8fIAvqeAgpJpu0JPhC+EbxksuBf1gsAimD9
+         IGJIYTupCgBc6/pR63RKGk+cK6UCG65wsWA1qwPEYb5LxATIimd7gBu4N2bkK8l5KD
+         nOlBGExoYpVRGroZdiSmKHfAtbGrg8PDb3Cja+Veis19tcW4/fGJ0mYYUQMrD0qXf3
+         LLh0Npb/5M29zC9JZoir2TrdIYm0SmPqJMpl9FhQmgUmPQhAXmrqH4+PDPk5FnbNPl
+         jSX98Z5mowShMKDCt/nsVwvuvhYshr3OoWOU7s6vgwyGKpyI4PYaQzCTD8zgQxUQCP
+         D9Wr8yZ0hiLLQ==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,9 +37,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v3 01/23] ata: libata-core: Fix ata_port_request_pm() locking
-Date:   Fri, 15 Sep 2023 17:14:45 +0900
-Message-ID: <20230915081507.761711-2-dlemoal@kernel.org>
+Subject: [PATCH v3 19/23] ata: libata-core: Do not resume runtime suspended ports
+Date:   Fri, 15 Sep 2023 17:15:03 +0900
+Message-ID: <20230915081507.761711-20-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230915081507.761711-1-dlemoal@kernel.org>
 References: <20230915081507.761711-1-dlemoal@kernel.org>
@@ -49,67 +49,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function ata_port_request_pm() checks the port flag
-ATA_PFLAG_PM_PENDING and calls ata_port_wait_eh() if this flag is set to
-ensure that power management operations for a port are not secheduled
-simultaneously. However, this flag check is done without holding the
-port lock.
+The scsi disk driver does not resume disks that have been runtime
+suspended by the user. To be consistent with this behavior, do the same
+for ata ports and skip the PM request in ata_port_pm_resume() if the
+port was already runtime suspended. With this change, it is no longer
+necessary to for the PM state of the port to ACTIVE as the PM core code
+will take care of that when handling runtime resume.
 
-Fix this by taking the port lock on entry to the function and checking
-the flag under this lock. The lock is released and re-taken if
-ata_port_wait_eh() needs to be called.
-
-Fixes: 5ef41082912b ("ata: add ata port system PM callbacks")
-Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 ---
- drivers/ata/libata-core.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ drivers/ata/libata-core.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 74314311295f..c4898483d716 100644
+index c3adaa01cbe3..080b451e7ddd 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -5040,17 +5040,20 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	struct ata_link *link;
- 	unsigned long flags;
+@@ -5234,10 +5234,8 @@ static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
  
--	/* Previous resume operation might still be in
--	 * progress.  Wait for PM_PENDING to clear.
-+	spin_lock_irqsave(ap->lock, flags);
-+
-+	/*
-+	 * A previous PM operation might still be in progress. Wait for
-+	 * ATA_PFLAG_PM_PENDING to clear.
- 	 */
- 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
-+		spin_unlock_irqrestore(ap->lock, flags);
- 		ata_port_wait_eh(ap);
-+		spin_lock_irqsave(ap->lock, flags);
- 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
- 	}
- 
--	/* request PM ops to EH */
--	spin_lock_irqsave(ap->lock, flags);
--
-+	/* Request PM operation to EH */
- 	ap->pm_mesg = mesg;
- 	ap->pflags |= ATA_PFLAG_PM_PENDING;
- 	ata_for_each_link(link, ap, HOST_FIRST) {
-@@ -5062,10 +5065,8 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
--	if (!async) {
-+	if (!async)
- 		ata_port_wait_eh(ap);
--		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
--	}
+ static int ata_port_pm_resume(struct device *dev)
+ {
+-	ata_port_resume(to_ata_port(dev), PMSG_RESUME, true);
+-	pm_runtime_disable(dev);
+-	pm_runtime_set_active(dev);
+-	pm_runtime_enable(dev);
++	if (!pm_runtime_suspended(dev))
++		ata_port_resume(to_ata_port(dev), PMSG_RESUME, true);
+ 	return 0;
  }
  
- /*
 -- 
 2.41.0
 
