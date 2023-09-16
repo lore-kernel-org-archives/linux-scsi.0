@@ -2,90 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DD70CD37AA
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Sep 2023 22:51:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D7ACD37B0
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Sep 2023 02:34:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237824AbjIOWui (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Sep 2023 18:50:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46222 "EHLO
+        id S233157AbjIPCdm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Sep 2023 22:33:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237975AbjIOWuQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 18:50:16 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A74335A6
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 15:46:37 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50314C433C8;
-        Fri, 15 Sep 2023 22:46:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694817965;
-        bh=IzjPPKoebKVnCje0Q1YLIdmbdDI/kBVFrSTloxETtbQ=;
+        with ESMTP id S236653AbjIPCdb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Sep 2023 22:33:31 -0400
+X-Greylist: delayed 513 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 15 Sep 2023 19:33:26 PDT
+Received: from sphereful.davidgow.net (sphereful.davidgow.net [203.29.242.92])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4513F7
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2023 19:33:26 -0700 (PDT)
+Received: by sphereful.davidgow.net (Postfix, from userid 119)
+        id 2F1C11D5836; Sat, 16 Sep 2023 10:24:49 +0800 (AWST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
+        s=201606; t=1694831089;
+        bh=jBpVTCxi4sGh7+c3O2f5gZuyUZzB9wdHYZRzW/WXyAU=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Mpx2Aj9KC2MY8qKkgf1htUPYC/fSd3ILKnnZG/4V0KYut6avLeD27p0QWzTw35gXD
-         wuf0571b1xg8fsy1ECU5PaR9BLd+l8+3ETWTagE8cHEUFa3H5rpUWn+lTAz4FmFl+k
-         N12eyIwnCEX/pn8jDIC9W/q0M/WPzFRS64YLgo6TZehUag67ny4lHWiCGLGd4KGhk+
-         Q/JC9CFhLgb6YZM2j8tuHQxaF7CWy6F4opD4YOdwlPZ0n9U5/PBIKffQqdo8t7rM+T
-         N8fF790xRKyN9YIshewtVUKVUsPUtN8pIsfMbhpSvTaanoJOvZgtTyLqCyiCmIgXMK
-         fvxyD4zHcZz3Q==
-Message-ID: <0080de55-6ca1-3b6d-027c-bd3a36e9577a@kernel.org>
-Date:   Sat, 16 Sep 2023 07:46:04 +0900
+        b=OpphjgZzhzHyr3Crj6khajzLxN+TiXabNevBXe7vSofNYvm4xPXegrtFt5B7yHavH
+         jUnFhFNZv8VD1AwFXYiaGnscbwLoJWemZoPOvOVieYJjDyOTw2UitTlfiVXnaAnnFi
+         iuh0GgnrqXM/up3r2DOwtVgvSE3W1mNHiNjv7titPTeobri2OT4o2Ud0PcJiSYDxch
+         PJ9QmyAFXBJDyXbHxMNKM3K95dD3TKLzA+0tE1NFbuFe/rcvTVvuEgVFPOp27r+uhh
+         G9LFuBLMOGll6urdG/FMSMjNkiYdJZ6YTVZIHDrfsWrN0nKiqmKOVjh1hYFQTMESiC
+         zcEDBXWJ3WUpM9rd9BX9Lz5FjJjhsqKfOjhNqhogOYnsNm1ZKW0I9bqmGpHstdg9bN
+         ZxndE8WvaujI66Y2RLHkPpGhM5Ev0IcpmPBpq0pY2adW2SL/RWZTjx9uaTpIL6HeOI
+         WjYhvMesBIo3d8chYBwYA7AC9MtSIT3uv3lF/EWQxr6MQaoyeT1JJu2TWasP8Y104G
+         UbLrwdmwC3YPQBdW8n0QFezSEdIfDsIPySCIaFQRBqqBODejKM3XQJ+azH2/Wo4g/G
+         lk3YXDY+iqccyUBscwuN6maJzvJ+kvvPVR+7TmUbQ7lsiJVVZn0J6UccsrC2Eg4Sb/
+         C2fw7holStSgvYAPzpmgk+SE=
+Received: from [IPV6:2001:8003:8824:9e00::bec] (unknown [IPv6:2001:8003:8824:9e00::bec])
+        by sphereful.davidgow.net (Postfix) with ESMTPSA id 191D41D580B;
+        Sat, 16 Sep 2023 10:24:48 +0800 (AWST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
+        s=201606; t=1694831088;
+        bh=jBpVTCxi4sGh7+c3O2f5gZuyUZzB9wdHYZRzW/WXyAU=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=sXstOT1J99zKLsG934V4UP+cvHIHY/WK54b2w+pZQ+2wpgfCzzZKTwtZ0jWdVRQbn
+         Y/lclgR8cA8I4vVPlohvFMUel/T6vOeqB5LSM91dOKB5ApPGhep1JJCdkIiu5huSHg
+         Uon1Qbgg2ChAkg6kDe6vrFAuiYvzGCsH7/55ttZ/Q7Yzq1OjkzsLSYmlWcr69iAnWo
+         IO8NIC7O+qExTlb5Xmje0We5F41GANKizo+hsKnyrGAsrGQEYdB5fGEUwgVwZ8I4w5
+         qjc7NcDo/cqLFWpgbO+FjTwy3YUQjkhyDo0dCa3m9oV+LESzig+4kgXp+r6ydlQHBk
+         iV+xkrOf+R1iXwZZYghD7Ro+Rk5O+oSVrzlzueyEUu7qgAOiCLpMgsAKU+1gSyy90R
+         HDdxgbOpGuj/GAgGvaJDLeAFcsk99Mq4597SyKuk6CJscRjl9cSppGvXsNn3Xbxvd7
+         82ALJTKpLX1CRnIhNS76Bg1AW8WeUShjY1Znd95IqIGr4aXjef7+IykNaHb5H+Ofph
+         QGjEJB6ltRooa2Pr5K8OLgbD77V2rcxp7dc1MV/z9c3Ioxql2RzXEnD+hOmcbCAl8Z
+         zhjngmj4BeKIerfF6bZ86aOI04seKdlT9nayxWnWZGZwjxxvYvtFQwzEZhTpSW0uqZ
+         5eEZmZnlaedbXL0JNg+VrJwI=
+Message-ID: <50423b13-9814-47eb-b3ee-a4ef074c3e9a@davidgow.net>
+Date:   Sat, 16 Sep 2023 10:24:45 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [Bug 217914] New: scsi_eh_1 process high cpu after upgrading to
- 6.5
-Content-Language: en-US
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     "bugzilla-daemon@kernel.org" <bugzilla-daemon@kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <bug-217914-11613@https.bugzilla.kernel.org/>
- <41689a20-af9d-420f-af4f-72e299a765b7@acm.org> <ZQTUQGG0Q5k+CMSV@x1-carbon>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ZQTUQGG0Q5k+CMSV@x1-carbon>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: Do no try to probe for CDL on old drives
+Content-Language: fr
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     John David Anglin <dave.anglin@bell.net>
+References: <20230915022034.678121-1-dlemoal@kernel.org>
+From:   David Gow <david@davidgow.net>
+In-Reply-To: <20230915022034.678121-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/16/23 07:01, Niklas Cassel wrote:
-> On Fri, Sep 15, 2023 at 01:42:18PM -0700, Bart Van Assche wrote:
->> On 9/15/23 12:33, bugzilla-daemon@kernel.org wrote:
->>> The users loqs and leonshaw helped to narrow it down to this commit:
->>>
->>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=624885209f31eb9985bf51abe204ecbffe2fdeea
->>
->> Damien, can you please take a look?
->>
+Le 2023/09/15 à 10:20, Damien Le Moal a écrit :
+> Some old drives (e.g. an Ultra320 SCSI disk as reported by John) do not
+> seem to execute MAINTENANCE_IN / MI_REPORT_SUPPORTED_OPERATION_CODES
+> commands correctly and hang when a non-zero service action is specified
+> (one command format with service action case in scsi_report_opcode()).
 > 
-> Hello Bart,
+> Currently, CDL probing with scsi_cdl_check_cmd() is the only caller
+> using a non zero service action for scsi_report_opcode(). To avoid
+> issues with these old drives, do not attempt CDL probe if the device
+> reports support for an SPC version lower than 5 (CDL was introduced in
+> SPC-5). To keep things working with ATA devices which probe for the CDL
+> T2A and T2B pages introduced with SPC-6, modify ata_scsiop_inq_std() to
+> claim SPC-6 version compatibility for ATA drives supporting CDL.
 > 
-> It seems like:
-> https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
+> SPC-6 standard version number is defined as Dh (= 13) in SPC-6 r09. Fix
+> scsi_probe_lun() to correctly capture this value by changing the bit
+> mask for the second byte of the INQUIRY response from 0x7 to 0xf.
+> include/scsi/scsi.h is modified to add the definition SCSI_SPC_6 with
+> the value 14 (Dh + 1). The missing definitions for the SCSI_SPC_4 and
+> SCSI_SPC_5 versions are also added.
 > 
-> Solves the problem.
-> 
-> From a quick look at the logs with extra log leves enabled:
-> https://pastebin.com/f2LQ8kQD
-> it appears that the MAINTENANCE_IN / MI_REPORT_SUPPORTED_OPERATION_CODES
-> command with a non-zero service action issued by scsi_cdl_check() fails,
-> and will be added to SCSI EH over and over.
+> Reported-by: John David Anglin <dave.anglin@bell.net>
+> Fixes: 624885209f31 ("scsi: core: Detect support for command duration limits")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
 
-Looks like the vmware emulated scsi cdrom (sr) does not like this command...
-While SPC would allow cdroms to support CDL, I do not think we will ever see
-that. So we could restrict CDL probe to block devices only. That still does not
-explain why the constant retry. The MAINTENANCE_IN /
-MI_REPORT_SUPPORTED_OPERATION_CODES failing is expected in most cases so it
-should silently move on with cdl probe returning false. My patch is still needed
-as some drives seem to hang on that command.
+This fixes the log spam I was seeing on a Marvell 88SE9230, which had 
+looked like this:
+[    1.744094] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.744368] ata14.00: configured for UDMA/66
 
-> 
-> 
-> Kind regards,
-> Niklas
+It now just gets configured the once at boot, as it did before the CDL 
+patch.
 
--- 
-Damien Le Moal
-Western Digital Research
+Tested-by: David Gow <david@davidgow.net>
+
+Thanks a lot,
+-- David
 
