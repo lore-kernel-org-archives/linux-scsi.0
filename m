@@ -2,171 +2,184 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 109D3CD13CF
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 01:53:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 669CEC46CA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 07:38:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236161AbjIRBwq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 17 Sep 2023 21:52:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56872 "EHLO
+        id S239315AbjIRHiV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Sep 2023 03:38:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236717AbjIRBwi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Sep 2023 21:52:38 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ED7ED2;
-        Sun, 17 Sep 2023 18:52:31 -0700 (PDT)
-Received: from dggpeml500021.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RpnlD2x8QzMlZy;
-        Mon, 18 Sep 2023 09:48:56 +0800 (CST)
-Received: from [10.174.177.174] (10.174.177.174) by
- dggpeml500021.china.huawei.com (7.185.36.21) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Mon, 18 Sep 2023 09:52:28 +0800
-Message-ID: <a6b10684-39ee-960a-10ab-663746800f85@huawei.com>
-Date:   Mon, 18 Sep 2023 09:52:28 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.2
-Subject: Re: [czhong@redhat.com: [bug report] WARNING: CPU: 121 PID: 93233 at
- fs/dcache.c:365 __dentry_kill+0x214/0x278]
+        with ESMTP id S238398AbjIRHhu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 03:37:50 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A7ABCF4;
+        Mon, 18 Sep 2023 00:34:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1695022495; x=1726558495;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=PZxWt5m6k/mTkrGKk32Ftls6yBi4/8hcZHg4r6zq7fI=;
+  b=JxxIFuhM+XGOI1jbkE8U+4FGbk+GNqWE0yf+ejCMpKfVWp7/i1Fnhms9
+   ycAFrY0s4Z2RF0znbOxg3URWXvcXo3mh0uMqf+OaQDT0zAO2Dryqsh7IH
+   13wQKzTSUKlqG/rfpnBW8mUJ9slWb3ZDxS0j+QSkKTuURvdboChReLMsx
+   DPf01x9LlzFe239qb4dVZJSx9kx9fMEzwk4UPZYgN3OiTySk8aLxaPUeR
+   TB4yeOz3c/vuKrQavBgLP8i49cxwoZ7dCnvckN51StYhq3C4E1as7dX7h
+   NwJTeTgb5w0gL498HzPWbFoidoVHpjL71QvDIVtoErHP557j5NPr1tyUG
+   Q==;
+X-CSE-ConnectionGUID: /6Q7CdytQmOWesHzf7K7NQ==
+X-CSE-MsgGUID: AHIR+pSfSIGHr8PgaK4QrQ==
+X-IronPort-AV: E=Sophos;i="6.02,156,1688400000"; 
+   d="scan'208";a="242422850"
+Received: from mail-bn8nam12lp2173.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.173])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Sep 2023 15:34:53 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BPQ4LCK5rB7EujEj8fJushfkpXRkvQqLdaHrZkEbnDl/d9NkQWtkKavmsGHgeCjUjgOKuvPmAr2xI1t2Y8/hOiEjvG4OViOdZF4wMfqTJmjvX0Q0pcX/Sq745Un70honQroIuk1+B8VMwqMWzYJQGaf69w4s0gl2wxf+OVjlFpYd5H96OCXK7GobPlkIPR/7LUbaT0bEQxQM999thSaX7/8HmkdUJwMgI2MaZFPBKKGYEzTuzN7Kpofe3cRt/EH1cJLG+s8grNZ+v/ukfkpPuxfUrMvemSPfZlv7r51BAiBP8h4/ZDb9iXZdxTiws4lYFxzrpJBZ4GHoFVffHLQZMw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PZxWt5m6k/mTkrGKk32Ftls6yBi4/8hcZHg4r6zq7fI=;
+ b=fIRtZf/ntLkc00Xbs8M/fQHqn3yX7vjbkRI0qV1TmYvqxrJ+yLLxTrJLV+SgoMB3loURLxRjCG4Dew78L84nZKQ81eQEHgn7ppKl1PkYYuyAouGZY3mfO6fHuZelJUDsCjQOe3r3jg7D+y4c0eyMkUvl1fd0x5EmcuRcHCkhQ6v5W6F2PXYmi5QglKNEGGG/FaPgNgH77mqgNP9QFBqMfgwN/mrT+Ain5BLRIV4SrLjcHJ/f5vRZDsWm/hBdngJMny3JgYylAiKfNRxwSLWniMVvtGeSZJ0KtK8z2fk/cMtwMKr2EE3inLzudqLW9JKxAfrBXKqrn05j7/RjCWERHg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PZxWt5m6k/mTkrGKk32Ftls6yBi4/8hcZHg4r6zq7fI=;
+ b=cBlIk3kmwTkav20Crs92SthHkDEaMm8Lp5uEeAtx5/ei2fQjyRmzFAiFH/zFPlX5CMSdG2uutT94sIJfFNtlDKORxOh8ZLf+uDWDQtEGJh23IvKQT6K7mNJYFmEaRGZjYgEEb2k2qLyCZu3HgXsBCNtchZEphzHoyusxv9SB23s=
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
+ by CH2PR04MB6872.namprd04.prod.outlook.com (2603:10b6:610:93::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6813.16; Mon, 18 Sep
+ 2023 07:34:51 +0000
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::dc1b:888b:342:3b75]) by MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::dc1b:888b:342:3b75%6]) with mapi id 15.20.6813.013; Mon, 18 Sep 2023
+ 07:34:51 +0000
+From:   Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     Bagas Sanjaya <bagasdotme@gmail.com>
+CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Linux IDE and libata <linux-ide@vger.kernel.org>,
+        Linux RAID <linux-raid@vger.kernel.org>
+Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
+Thread-Topic: Fwd: Marvell RAID Controller issues since 6.5.x
+Thread-Index: AQHZ6gKbG/jznQ51z0m6I88wj8s10A==
+Date:   Mon, 18 Sep 2023 07:34:50 +0000
+Message-ID: <ZQf9mh3v5qfN5Tm0@x1-carbon>
+References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
+In-Reply-To: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Peter Zijlstra <peterz@infradead.org>
-CC:     Yi Zhang <yi.zhang@redhat.com>, Ming Lei <ming.lei@redhat.com>,
-        <mark.rutland@arm.com>, Christian Brauner <brauner@kernel.org>,
-        <linux-fsdevel@vger.kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        Changhui Zhong <czhong@redhat.com>,
-        yangerkun <yangerkun@huawei.com>,
-        "zhangyi (F)" <yi.zhang@huawei.com>,
-        Kees Cook <keescook@chromium.org>,
-        chengzhihao <chengzhihao1@huawei.com>,
-        Baokun Li <libaokun1@huawei.com>
-References: <ZOWFtqA2om0w5Vmz@fedora>
- <20230823-kuppe-lassen-bc81a20dd831@brauner>
- <CAFj5m9KiBDzNHCsTjwUevZh3E3RRda2ypj9+QcRrqEsJnf9rXQ@mail.gmail.com>
- <CAHj4cs_MqqWYy+pKrNrLqTb=eoSOXcZdjPXy44x-aA1WvdVv0w@mail.gmail.com>
- <89d049ed-6bbf-bba7-80d4-06c060e65e5b@huawei.com>
- <20230917091031.GA1543@noisy.programming.kicks-ass.net>
- <20230917092616.GA8409@noisy.programming.kicks-ass.net>
-From:   Baokun Li <libaokun1@huawei.com>
-In-Reply-To: <20230917092616.GA8409@noisy.programming.kicks-ass.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.177.174]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpeml500021.china.huawei.com (7.185.36.21)
-X-CFilter-Loop: Reflected
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|CH2PR04MB6872:EE_
+x-ms-office365-filtering-correlation-id: da33f6a9-3793-469a-f9ec-08dbb819be5d
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: f2UgcLW7Rf0jRERhBxz5xv3BOwVg+geaQXATr1Bn9s8A9ZDnzmNweTktUFi5E2SvsR4+jxpGknmLNEQ/zspe/0zptM+lrpJoDk7POq88NmbhiVTOkCAmSo2LLZsSPGsHXSojN8z1FogbkJhNPqWwScSOMI5zR9q0ZOcC4L0vTLoFub+98op19PVRuAlVLoHTfmEh0CoqQBDJkDqrCs9slhc4w3FgkNDO596jnTycxkzKxV+sgBi7s6DB0DBkaG/k5RiKmNupKb/kE4si+WhaL7gZHP9a4mcDEKo57Hwfr7NgRPiz5i4vZYTCeZwBv8jqmtClkc8ksrNxwCEVw7SiUq6H5wWhoGyOcA+NDAyM+p5yXbunFxMZ2ljruMm22Pa0qfgxx7/EtSLz1YMliKCQuKHaqmfuSI636nROERNVBhZA7r4rrN4f9hOuCActQCFomnzVdUwRrdgm8SumGa988fIETIJXHQm7u2iLoDplbZCHZ2Ddngm5KBMEDczZQT97X5EQ4tZ5lpH0wpfUMmWxpjOmv6rm9F4iivPWrtkOl8K/YSyo2iLn/BIq8SeDBU+Aj349pb8eHEEncjhFxT2ZrskuARvAqGY7CW1aUGIKgkY=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(346002)(396003)(366004)(39860400002)(376002)(136003)(451199024)(186009)(1800799009)(64756008)(6506007)(54906003)(6486002)(66946007)(66556008)(66476007)(66446008)(38070700005)(316002)(38100700002)(6916009)(82960400001)(83380400001)(91956017)(76116006)(86362001)(33716001)(6512007)(9686003)(966005)(478600001)(26005)(2906002)(71200400001)(4326008)(8936002)(8676002)(7416002)(4744005)(122000001)(5660300002)(41300700001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?eedtoHlQV0l+A80Xq/luziFyRocOTduwAX7KzBVH6nkx4jPAWZ7+5WZrk9x7?=
+ =?us-ascii?Q?Tha53FJVMtS+193/TcQzcNhlJfN4zazjv0kuqj1JaPbuf4amBFEI5IHoL1rL?=
+ =?us-ascii?Q?3KCebn8JDnXdum4eAO1Xn0eDLS9DptUl6FioU1WvmEHUFCFeY6pdMWvc9ank?=
+ =?us-ascii?Q?syzbTcjGWGc/1yhoJts8YZKlS9vyBMH28g7hJrPKTLWNs0UYRMT/TxsbdUSv?=
+ =?us-ascii?Q?zE5jVDQH3bPmvUwTHGiN1mtAknd6WxesmHfduhgSX8CCwMbgQhahfJY7UGqO?=
+ =?us-ascii?Q?tdJ+nTa07RcZI46IL4a2Ek8VqDpuxR1cSWUY6BidsYmafSVyJ2IC3FP9FSkB?=
+ =?us-ascii?Q?pMYJdrxrXZbVq64EMpkNwOCHFqbzdFJN57v5WjlS8CS817jYegN8oA4+kJQh?=
+ =?us-ascii?Q?Jz+qMpxY3MGfNuPd1t3ccLgGY5kQvD43wpI7vw8i3c/MkVPjJhqPnShXzuWf?=
+ =?us-ascii?Q?pB0d9CfhqjaPSo55/fLjFp9C1q3Ts5JL+a2h/NejRjs4jVols3EFCshjW1Ai?=
+ =?us-ascii?Q?PGKI9zpjjQipHtXcXQDQagiEVDZaiLb9E5TskXJH4OEk3rGwdfFHRkJN46d4?=
+ =?us-ascii?Q?gzT+OHhysHRinPqDKAQ6D9eB7hH4Y2FV1FpPyXj1bSBottc7UmnvKDAipXmK?=
+ =?us-ascii?Q?RqGRmCpBLQXGzCewBf0SgInw47QzOlEViri6SjwFQKNQhLbDmXbvcPhvcEr6?=
+ =?us-ascii?Q?gNl2uSXZKNVDEHOELk+XVl1vwgOm8zPSS/ZsoN7pnNyWIXHWuzyGRmHzC+I5?=
+ =?us-ascii?Q?6UU45vB+VQcJZaJr83W4+Nmu8w7eBfMTMcoVI7HtiGWr+oiEPlkkDkGl52TM?=
+ =?us-ascii?Q?mlrUuT0aU5nj4QqureD158iDPNDbPYBNARcyyA43ZGR9u5yVqkpc7FkL36nr?=
+ =?us-ascii?Q?m8TL63zF1LPNFiAQkzJJCf9+SwmR+jimP8d+xuaFohKTDIgC3M3TXWVYgMNU?=
+ =?us-ascii?Q?+XoJnVi8lHl3kwZI2bgK4Qy+wf1FYa9G3oHT3tHwqrtEIpQMmblw5xHRzfSo?=
+ =?us-ascii?Q?uWzurWz9PvIHHjnwUrGSYli1dGvOSgK3XeRaTTRSCKrB1aZjfwaPMfbCKv1r?=
+ =?us-ascii?Q?Heh4ELHFM0HjPx5NwoH9d2gunc0lP+cquCVN6JJZ7ULrR1AmS6Wg4oeXFPym?=
+ =?us-ascii?Q?R3yABKeniruuvNCneEvYNvor8sgxBdFdkqZcbSWplzhjp+/1cTegR+CgLPSl?=
+ =?us-ascii?Q?WLX5i+vjVZ5/Qz8g1B9AhEIJAPcscEIQMKUkgCvWOXjghv02+VIGcaPPjd46?=
+ =?us-ascii?Q?np4rgC0qYWAzVdpzur/FgsN88txWg7ZND0rlOlYuhLMYvy6qacegiKZO9BsZ?=
+ =?us-ascii?Q?bVhkS23SQPw9BeTP0+k/XOAzmBSU1CnvS9LKTN3OKUkm+zXRJuMuObZPZWMc?=
+ =?us-ascii?Q?tGmHnDUhnqjXQIdIkxXlB8pitWx9ylMOhN13wlcWH021H8FscO8Jk2v7l0dN?=
+ =?us-ascii?Q?pwCczhC79fF9bSybCdfHSGTvhwd7RlOlcVZ4Kln7rmtDfQfcm1l2gvWmIcY4?=
+ =?us-ascii?Q?UiSM7VKvxcXqdgI6n8eBpCfHpqI0FTotbIEHXoKsnP0YTmkDOvxYzJlu7gvF?=
+ =?us-ascii?Q?P7aKlH7Q0fxxhCWCUg1WMr7nSjo4FanvlJjwCqM1CwwHOHs/Z8kCfOZErWGY?=
+ =?us-ascii?Q?Gw=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <1539F7F2F13DDA469EFD154DD1D494BA@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?3UVpH1Z0nwuGcEC81AyiuTsRS4Ao+lG4Dr/Tf9FOH9aYDH4yeLK5Huc+cEnh?=
+ =?us-ascii?Q?xW/39uy4mc6Q+APhsnONT4FWHm9n8RnFyJ9TQAuB8r+oJQffLXtzrmgefJ8D?=
+ =?us-ascii?Q?St7CzQ4gxjQrdamOQM5BCPqivRZEiq99mmARBIc4ruEaPkxLy2La3QU9QV1V?=
+ =?us-ascii?Q?I+zcZUgXACx2yvtA/t3EZHqqyU6NIbn1cuVUmBKIEw52+f5rGo3dkHik3TBB?=
+ =?us-ascii?Q?6jjnbmUbF5T7om2IelyEbunEsS+e4x7LZZaIBHcMKAgu+JoWT/tarlJHNYOF?=
+ =?us-ascii?Q?W4DMmoIC/8Bui/zmenH5yJ//EtkwOV7BTiIS/nBdRgHC2Tfh4n8vukWUKc98?=
+ =?us-ascii?Q?CAgwVSygsTf7+Cryhl1isRhiPzAXIPhYg6iOGCJLelYWTrHho4ZfayaY149p?=
+ =?us-ascii?Q?OA27v3fw+5vxEw6Y99x+xptfFJKAxDt8zwdHax9686rgadQtrTQ1c0Pad1En?=
+ =?us-ascii?Q?51of//mLtDSju0oMBjxOK4b3q0r+FKJjHIvdkQpF2n4iLQ1oV58nU4CG8p4C?=
+ =?us-ascii?Q?KbTI6jgGvEfxScKsVwVeqilwBiFPf2HT+PYeDHeN7Ly+CB00oIalQw6GuS1f?=
+ =?us-ascii?Q?JaeLfwP3Sv1WzrbuwvGLEJaF4MsEvquH9RYiGKfSpJqCzg/rXW3NouVp+hj4?=
+ =?us-ascii?Q?03Jzzl6h3Nn/YQcOcqoe0sqVEDtwem1I+QypsCH+c3qgErFBWUDEzwr3PkaS?=
+ =?us-ascii?Q?NUqPevan5767mmRg1lpufanB4u+g8IVulKKZV6c5c55W3Lt9RWh9yiFutP5D?=
+ =?us-ascii?Q?6qq2/Out0kJp9mG1JNlNT5Z8RaNLUGFZRp9KYsfDi35cp3ffUYbegZqQgWkr?=
+ =?us-ascii?Q?TdCyVMpymBms8q3R/8MdktR1j9BrpbKHlwxA6yZZQ02HHCEqgX9b4MR1EvEf?=
+ =?us-ascii?Q?PURWXnpiIEt4XeYh742HaOhj8S89PawQjvVFCi5L4IbcIbSw32D4Ke/sCcHS?=
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: da33f6a9-3793-469a-f9ec-08dbb819be5d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Sep 2023 07:34:51.0152
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: qIPisiGDpLMupcBtqKA3HYrmOs2CdPNEqbKyn40htstGmw1oizUVlnH3HSRNmKM+Xc5W5vAUxJ5VMcC7fNdgew==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR04MB6872
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/17 17:26, Peter Zijlstra wrote:
-> On Sun, Sep 17, 2023 at 11:10:32AM +0200, Peter Zijlstra wrote:
->> On Sat, Sep 16, 2023 at 02:55:47PM +0800, Baokun Li wrote:
->>> On 2023/9/13 16:59, Yi Zhang wrote:
->>>> The issue still can be reproduced on the latest linux tree[2].
->>>> To reproduce I need to run about 1000 times blktests block/001, and
->>>> bisect shows it was introduced with commit[1], as it was not 100%
->>>> reproduced, not sure if it's the culprit?
->>>>
->>>>
->>>> [1] 9257959a6e5b locking/atomic: scripts: restructure fallback ifdeffery
->>> Hello, everyone！
->>>
->>> We have confirmed that the merge-in of this patch caused hlist_bl_lock
->>> (aka, bit_spin_lock) to fail, which in turn triggered the issue above.
->>> [root@localhost ~]# insmod mymod.ko
->>> [   37.994787][  T621] >>> a = 725, b = 724
->>> [   37.995313][  T621] ------------[ cut here ]------------
->>> [   37.995951][  T621] kernel BUG at fs/mymod/mymod.c:42!
->>> [r[  oo 3t7@.l996o4c61al]h[o s T6t21] ~ ]#Int ernal error: Oops - BUG:
->>> 00000000f2000800 [#1] SMP
->>> [   37.997420][  T621] Modules linked in: mymod(E)
->>> [   37.997891][  T621] CPU: 9 PID: 621 Comm: bl_lock_thread2 Tainted:
->>> G            E      6.4.0-rc2-00034-g9257959a6e5b-dirty #117
->>> [   37.999038][  T621] Hardware name: linux,dummy-virt (DT)
->>> [   37.999571][  T621] pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS
->>> BTYPE=--)
->>> [   38.000344][  T621] pc : increase_ab+0xcc/0xe70 [mymod]
->>> [   38.000882][  T621] lr : increase_ab+0xcc/0xe70 [mymod]
->>> [   38.001416][  T621] sp : ffff800008b4be40
->>> [   38.001822][  T621] x29: ffff800008b4be40 x28: 0000000000000000 x27:
->>> 0000000000000000
->>> [   38.002605][  T621] x26: 0000000000000000 x25: 0000000000000000 x24:
->>> 0000000000000000
->>> [   38.003385][  T621] x23: ffffd9930c698190 x22: ffff800008a0ba38 x21:
->>> 0000000000000001
->>> [   38.004174][  T621] x20: ffffffffffffefff x19: ffffd9930c69a580 x18:
->>> 0000000000000000
->>> [   38.004955][  T621] x17: 0000000000000000 x16: ffffd9933011bd38 x15:
->>> ffffffffffffffff
->>> [   38.005754][  T621] x14: 0000000000000000 x13: 205d313236542020 x12:
->>> ffffd99332175b80
->>> [   38.006538][  T621] x11: 0000000000000003 x10: 0000000000000001 x9 :
->>> ffffd9933022a9d8
->>> [   38.007325][  T621] x8 : 00000000000bffe8 x7 : c0000000ffff7fff x6 :
->>> ffffd993320b5b40
->>> [   38.008124][  T621] x5 : ffff0001f7d1c708 x4 : 0000000000000000 x3 :
->>> 0000000000000000
->>> [   38.008912][  T621] x2 : 0000000000000000 x1 : 0000000000000000 x0 :
->>> 0000000000000015
->>> [   38.009709][  T621] Call trace:
->>> [   38.010035][  T621]  increase_ab+0xcc/0xe70 [mymod]
->>> [   38.010539][  T621]  kthread+0xdc/0xf0
->>> [   38.010927][  T621]  ret_from_fork+0x10/0x20
->>> [   38.011370][  T621] Code: 17ffffe0 90000020 91044000 9400000d (d4210000)
->>> [   38.012067][  T621] ---[ end trace 0000000000000000 ]---
->> Is this arm64 or something? You seem to have forgotten to mention what
->> platform you're using.
-> Is that an LSE or LLSC arm64 ?
+On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
+> Hi,
+>=20
+> I notice a regression report on Bugzilla [1]. Quoting from it:
+>=20
+> Anyway, I'm adding this regression to be tracked by regzbot:
+>=20
+> #regzbot introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cgi?=
+id=3D217920
+> #regzbot title: UDMA configured spam on Marvell RAID controller
+>=20
+> Thanks.
+>=20
+> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=3D217920
 
-I'm not sure how to distinguish if it's LSE or LLSC, here's some info on 
-the cpu:
+Hello Bagas,
 
-$ cat /sys/devices/system/cpu/cpu0/regs/identification/midr_el1
-0x00000000481fd010
+This is a duplicate of:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217902
 
-$ lscpu
-Architecture:        aarch64
-Byte Order:          Little Endian
-CPU(s):              96
-On-line CPU(s) list: 0-95
-Thread(s) per core:  1
-Core(s) per socket:  48
-Socket(s):           2
-NUMA node(s):        4
-Vendor ID:           HiSilicon
-BIOS Vendor ID:      HiSilicon
-Model:               0
-Model name:          Kunpeng-920
-BIOS Model name:     Kunpeng 920-4826
-Stepping:            0x1
-BogoMIPS:            200.00
-L1d cache:           64K
-L1i cache:           64K
-L2 cache:            512K
-L3 cache:            49152K
-NUMA node0 CPU(s):   0-23
-NUMA node1 CPU(s):   24-47
-NUMA node2 CPU(s):   48-71
-NUMA node3 CPU(s):   72-95
-Flags:               fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics 
-fphp asimdhp cpuid asimdrdm jscvt fcma dcpop asimddp asimdfhm
+Problem is solved by:
+https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.o=
+rg/
 
-> Anyway, it seems that ARM64 shouldn't be using the fallback as it does
-> everything itself.
->
-> Mark, can you have a look please? At first glance the
-> atomic64_fetch_or_acquire() that's being used by generic bitops/lock.h
-> seems in order..
->
-We also suspect some implicit mechanism change in
-raw_atomic64_fetch_or_acquire. You can reproduce the problem with the
-above mod that can reproduce the problem to make it easier to locate.
-I can help reproduce it and grab some information if you can't reproduce
-it on your end.
 
--- 
-With Best Regards,
-Baokun Li
-.
+Kind regards,
+Niklas=
