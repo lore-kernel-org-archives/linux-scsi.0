@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F1ABCD13D8
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 16:58:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09CF7C46CA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 16:58:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231335AbjIRQ6H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Sep 2023 12:58:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42100 "EHLO
+        id S231352AbjIRQ6I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Sep 2023 12:58:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230421AbjIRQ54 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 12:57:56 -0400
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E825EA;
-        Mon, 18 Sep 2023 09:57:47 -0700 (PDT)
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-68fb2e9ebcdso3529627b3a.2;
-        Mon, 18 Sep 2023 09:57:47 -0700 (PDT)
+        with ESMTP id S231228AbjIRQ55 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 12:57:57 -0400
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E64FF10A;
+        Mon, 18 Sep 2023 09:57:49 -0700 (PDT)
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-68fbbea0dfeso3656623b3a.0;
+        Mon, 18 Sep 2023 09:57:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695056267; x=1695661067;
+        d=1e100.net; s=20230601; t=1695056268; x=1695661068;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=035k58Gc0xjZLYCOymyww+e8cIPTj80YBwmkGqX/6yA=;
-        b=KQUE+Cu+glNe01/mL1NVpIdYt/BVhj1zDqOgRDUJGcm9qBLXzGIXgZXFn5uWmSa7iY
-         LpQ0PjSSAuFeCNikRHD96tpYMLZRdBgdLQlSLVz3YshEl/RblbAXvClZ/wfnqYzMwzpI
-         FR+39Kfv60MjYb0Iu0fbNN4VopYNPivY7htW2h7io/mA27VR8g1L4ZB+RpGHWAr/fKln
-         TKcc12mjIzAOqhnw1ncEe8o+1VjMDv5kMeHPLVJR9K43t3Cbf8nifPEkxsDgWFeT0nFF
-         fF87pE81bWBmQ/1BNrGmdQqJ/GEpItnz/dgKxcilF6MzSQOJY0uU9rvNgXo64pFc7bVG
-         1E1A==
-X-Gm-Message-State: AOJu0YwF3JyP8J14IYj6dj9jk/t5Ui9gaLWxKxQG3etl1r2g+d5pX6Rb
-        luSazIl3fPRBA6Ct1Ix57U399kH6zPg=
-X-Google-Smtp-Source: AGHT+IHKOmCwZYrtRoCkrFGBs0eXXCkYRoLI8Y+y+xQfh0NrRpBEKwzUt0OOmoymhLMTHqXE6BxNow==
-X-Received: by 2002:a05:6a00:b92:b0:68e:2cc4:c720 with SMTP id g18-20020a056a000b9200b0068e2cc4c720mr9811359pfj.12.1695056266986;
-        Mon, 18 Sep 2023 09:57:46 -0700 (PDT)
+        bh=mKw3Aw2p8++zyZ3GJZp8ItEvankLwq1zpCMHoyF24eQ=;
+        b=biTOiz/GAFmQwkBulssCFfSM9s7BhJ4diQQn95N3u/n552UscZsXksW+f4qfo+2kC1
+         sxYtMFpZzPg0K08SHLMxi5+gBOMeb0zvfeUGOY+T3EonFEgXNJ0UyzHLaj9qYc/4XK1l
+         z4SGg311PEmD6Z7WlrYz1h8TYpAwwKwvM7ycj65SkTqNMle+G/NRIwfywwMnh3qR7ORM
+         P3rpYX9C87sRLCIPtQFoqwok5iLGA1FBxoMsfZv1Le4dsW89QTtX7TH7JXljN67NFZJl
+         OH9XIOMy9vdh22C0quuz7sXkpKF8OJvszgTYAaNj066mLYU1LV7PXDjRD9Ah3I+HCvge
+         uReQ==
+X-Gm-Message-State: AOJu0YwvWRHVna6me1UIiGOArTWfYHhZFIuPp4awKg/6UUJKmdjPmhcm
+        QQj4az2wXOey5kBg8Y1F984=
+X-Google-Smtp-Source: AGHT+IFSdQoKejJepaWyVdlxzn0Kh5C0JHRq8ZDNBciGIKfjkuRx3T4OA8rF/cD8xD4N3qmdRDtgeA==
+X-Received: by 2002:a05:6a21:7889:b0:140:730b:4b3f with SMTP id bf9-20020a056a21788900b00140730b4b3fmr10743727pzc.1.1695056268495;
+        Mon, 18 Sep 2023 09:57:48 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:33e7:1437:5d00:8e3b])
-        by smtp.gmail.com with ESMTPSA id p17-20020a639511000000b005740aa41237sm5658041pgd.74.2023.09.18.09.57.45
+        by smtp.gmail.com with ESMTPSA id p17-20020a639511000000b005740aa41237sm5658041pgd.74.2023.09.18.09.57.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Sep 2023 09:57:46 -0700 (PDT)
+        Mon, 18 Sep 2023 09:57:48 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -47,9 +47,9 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Damien Le Moal <dlemoal@kernel.org>,
         Ming Lei <ming.lei@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v12 09/16] scsi: scsi_debug: Add the preserves_write_order module parameter
-Date:   Mon, 18 Sep 2023 09:55:48 -0700
-Message-ID: <20230918165713.1598705-10-bvanassche@acm.org>
+Subject: [PATCH v12 10/16] scsi: scsi_debug: Support injecting unaligned write errors
+Date:   Mon, 18 Sep 2023 09:55:49 -0700
+Message-ID: <20230918165713.1598705-11-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.459.ge4e396fd5e-goog
 In-Reply-To: <20230918165713.1598705-1-bvanassche@acm.org>
 References: <20230918165713.1598705-1-bvanassche@acm.org>
@@ -59,62 +59,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Zone write locking is not used for zoned devices if the block driver
-reports that it preserves the order of write commands. Make it easier to
-test not using zone write locking by adding support for setting the
-driver_preserves_write_order flag.
+Allow user space software, e.g. a blktests test, to inject unaligned
+write errors.
 
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_debug.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/scsi_debug.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 9c0af50501f9..1ea4925d2c2f 100644
+index 1ea4925d2c2f..164e82c218ff 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -832,6 +832,7 @@ static int dix_reads;
- static int dif_errors;
+@@ -181,6 +181,7 @@ static const char *sdebug_version_date = "20210520";
+ #define SDEBUG_OPT_NO_CDB_NOISE		0x4000
+ #define SDEBUG_OPT_HOST_BUSY		0x8000
+ #define SDEBUG_OPT_CMD_ABORT		0x10000
++#define SDEBUG_OPT_UNALIGNED_WRITE	0x20000
+ #define SDEBUG_OPT_ALL_NOISE (SDEBUG_OPT_NOISE | SDEBUG_OPT_Q_NOISE | \
+ 			      SDEBUG_OPT_RESET_NOISE)
+ #define SDEBUG_OPT_ALL_INJECTING (SDEBUG_OPT_RECOVERED_ERR | \
+@@ -188,7 +189,8 @@ static const char *sdebug_version_date = "20210520";
+ 				  SDEBUG_OPT_DIF_ERR | SDEBUG_OPT_DIX_ERR | \
+ 				  SDEBUG_OPT_SHORT_TRANSFER | \
+ 				  SDEBUG_OPT_HOST_BUSY | \
+-				  SDEBUG_OPT_CMD_ABORT)
++				  SDEBUG_OPT_CMD_ABORT | \
++				  SDEBUG_OPT_UNALIGNED_WRITE)
+ #define SDEBUG_OPT_RECOV_DIF_DIX (SDEBUG_OPT_RECOVERED_ERR | \
+ 				  SDEBUG_OPT_DIF_ERR | SDEBUG_OPT_DIX_ERR)
  
- /* ZBC global data */
-+static bool sdeb_preserves_write_order;
- static bool sdeb_zbc_in_use;	/* true for host-aware and host-managed disks */
- static int sdeb_zbc_zone_cap_mb;
- static int sdeb_zbc_zone_size_mb;
-@@ -5138,9 +5139,13 @@ static struct sdebug_dev_info *find_build_dev_info(struct scsi_device *sdev)
+@@ -3587,6 +3589,14 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
+ 	u8 *cmd = scp->cmnd;
  
- static int scsi_debug_slave_alloc(struct scsi_device *sdp)
- {
-+	struct request_queue *q = sdp->request_queue;
++	if (unlikely(sdebug_opts & SDEBUG_OPT_UNALIGNED_WRITE &&
++		     atomic_read(&sdeb_inject_pending))) {
++		atomic_set(&sdeb_inject_pending, 0);
++		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE,
++				UNALIGNED_WRITE_ASCQ);
++		return check_condition_result;
++	}
 +
- 	if (sdebug_verbose)
- 		pr_info("slave_alloc <%u %u %u %llu>\n",
- 		       sdp->host->host_no, sdp->channel, sdp->id, sdp->lun);
-+	if (sdeb_preserves_write_order)
-+		q->limits.driver_preserves_write_order = true;
- 	return 0;
- }
- 
-@@ -5755,6 +5760,8 @@ module_param_named(statistics, sdebug_statistics, bool, S_IRUGO | S_IWUSR);
- module_param_named(strict, sdebug_strict, bool, S_IRUGO | S_IWUSR);
- module_param_named(submit_queues, submit_queues, int, S_IRUGO);
- module_param_named(poll_queues, poll_queues, int, S_IRUGO);
-+module_param_named(preserves_write_order, sdeb_preserves_write_order, bool,
-+		   S_IRUGO);
- module_param_named(tur_ms_to_ready, sdeb_tur_ms_to_ready, int, S_IRUGO);
- module_param_named(unmap_alignment, sdebug_unmap_alignment, int, S_IRUGO);
- module_param_named(unmap_granularity, sdebug_unmap_granularity, int, S_IRUGO);
-@@ -5812,6 +5819,8 @@ MODULE_PARM_DESC(ndelay, "response delay in nanoseconds (def=0 -> ignore)");
- MODULE_PARM_DESC(no_lun_0, "no LU number 0 (def=0 -> have lun 0)");
- MODULE_PARM_DESC(no_rwlock, "don't protect user data reads+writes (def=0)");
- MODULE_PARM_DESC(no_uld, "stop ULD (e.g. sd driver) attaching (def=0))");
-+MODULE_PARM_DESC(preserves_write_order,
-+		 "Whether or not to inform the block layer that this driver preserves the order of WRITE commands (def=0)");
- MODULE_PARM_DESC(num_parts, "number of partitions(def=0)");
- MODULE_PARM_DESC(num_tgts, "number of targets per host to simulate(def=1)");
- MODULE_PARM_DESC(opt_blks, "optimal transfer length in blocks (def=1024)");
+ 	switch (cmd[0]) {
+ 	case WRITE_16:
+ 		ei_lba = 0;
