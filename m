@@ -2,81 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CC17CD13D2
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 16:17:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D9FCD13DE
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 16:26:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229978AbjIRQRn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Sep 2023 12:17:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50776 "EHLO
+        id S229704AbjIRQ0b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Sep 2023 12:26:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229802AbjIRQRl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 12:17:41 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0847D1997
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:03:01 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-68fac346f6aso4260503b3a.3
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:03:00 -0700 (PDT)
+        with ESMTP id S229998AbjIRQ0S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 12:26:18 -0400
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C63DB24457
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:22:22 -0700 (PDT)
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1c46b30a1ceso14839285ad.3
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:22:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695052528; x=1695657328;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=NiSTaTd3OYgJAeKHG13E9l3sLX2n80jn9tb+CPaNnb8=;
-        b=RwxGVgzIe9CR4wxHF+SEHuaym+1rA7f1GRRLc+jsjp4nRagPBjZiE0/bxwUGwFmTgm
-         ZOzoDmzdok4n57kLCpwtxOR3vROxCIuUL8DnqIoB2rmyrNApsCEB+gyNDKD7EQbld9Mt
-         f7PrfGoI/OaI5ntZU/veA9y7Pql9vszITxeEK3uweHFhCHNNBTC3TyCaFTndB4GhCl0P
-         rn3OVwSvawuoP9ByezqGQT09gEarO3Zc3NpyRAuQCHI86x5IAyZcFEaqTt6tTj+RChTH
-         FRhN+fk50HyE/IrTaXfstbPHYL9v8GRxl0yMf8ydGmlfQ4RJzBQ/nFeGrjw2Aj9hVrjd
-         OMsA==
-X-Gm-Message-State: AOJu0YzFE1zbYvPapXV5SRhA5me//RpoRyYZX0Sd4BWMWgR8CNqnDJVu
-        EINEhvqaUQHhwhobyCVYaCw=
-X-Google-Smtp-Source: AGHT+IH0CvmtChKcNYlg7JPgMJJoEQx4TvMmBxeyGMgPwXhQ9izpJdLOYqAWbrdF0xsGtOhQiUch/g==
-X-Received: by 2002:a05:6a00:2446:b0:68e:236a:93d9 with SMTP id d6-20020a056a00244600b0068e236a93d9mr9076055pfj.17.1695052528046;
-        Mon, 18 Sep 2023 08:55:28 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:33e7:1437:5d00:8e3b? ([2620:15c:211:201:33e7:1437:5d00:8e3b])
-        by smtp.gmail.com with ESMTPSA id n53-20020a056a000d7500b00690b8961bf4sm372909pfv.146.2023.09.18.08.55.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Sep 2023 08:55:27 -0700 (PDT)
-Message-ID: <61f69028-b028-42d2-9f8a-bd70692994c1@acm.org>
-Date:   Mon, 18 Sep 2023 08:55:25 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: scsi: hosts: check result of scsi_host_set_state() in
- scsi_add_host_with_dma()
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <812c97ce-9b41-400a-9eb9-ddeef0156bbe@omp.ru>
+        d=1e100.net; s=20230601; t=1695054115; x=1695658915;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=2TqlPkjwyXKr2IgdDGn6gtkPnsspM7borbVflhN6PYE=;
+        b=AkKuf2qKAnWC7/MUMINu5aBQ1n8wEArtNc0Lp+2/eYzHvflKvFpeqAOlPvUYd1y1kw
+         QaeXRGOLDOKH/RiQpT31dg+igXNmc6Z7mKZTSyMMG1Mv2gW++ec4HXnUSpwQIraJdFuu
+         faT+6FctkTjZXf6fvNb/kIZ7Gk/QLqfoGyxwEkw3ZLgQfXFGweilvh01bQL4o/bJacR/
+         7rxt/HzUHiKklCjZpNY23Xn6HIwvKot8vT6kKCzcRvUF/VoxS2V4tJ49mnq49DQ6PE7Q
+         bFsYA3T8qt++KUTJACHvhbkDCs8VMr/PtsgekGlVDyFZC1qLbU+OeG6NEc4Fbe6imsRr
+         mqzw==
+X-Gm-Message-State: AOJu0Yx4yDs0F5R11RQwNlS9I8TvVSWLw0Y6ranQ0slci8mOfCfHKIQh
+        5oCsqp6fme3/N7bOKi1yMAE=
+X-Google-Smtp-Source: AGHT+IGykO8rgz3pzEAG9rNGtSQWPl96pMDMWwiFml4LSfIh6Z0qIXNKJRes0ANNk8hDjTqlX18PDA==
+X-Received: by 2002:a17:902:d2d2:b0:1c4:bc8:4b64 with SMTP id n18-20020a170902d2d200b001c40bc84b64mr10464851plc.5.1695054114622;
+        Mon, 18 Sep 2023 09:21:54 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:33e7:1437:5d00:8e3b])
+        by smtp.gmail.com with ESMTPSA id z14-20020a170902d54e00b001bd28b9c3ddsm8489414plf.299.2023.09.18.09.21.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Sep 2023 09:21:54 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <812c97ce-9b41-400a-9eb9-ddeef0156bbe@omp.ru>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <quic_cang@quicinc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH 4/4] scsi: ufs: Set the Command Priority (CP) flag for RT requests
+Date:   Mon, 18 Sep 2023 09:20:15 -0700
+Message-ID: <20230918162058.1562033-5-bvanassche@acm.org>
+X-Mailer: git-send-email 2.42.0.459.ge4e396fd5e-goog
+In-Reply-To: <20230918162058.1562033-1-bvanassche@acm.org>
+References: <20230918162058.1562033-1-bvanassche@acm.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/8/23 13:48, Sergey Shtylyov wrote:
-> --- scsi.orig/drivers/scsi/hosts.c
-> +++ scsi/drivers/scsi/hosts.c
-> @@ -272,7 +272,10 @@ int scsi_add_host_with_dma(struct Scsi_H
->   	if (error)
->   		goto out_disable_runtime_pm;
->   
-> -	scsi_host_set_state(shost, SHOST_RUNNING);
-> +	error = scsi_host_set_state(shost, SHOST_RUNNING);
-> +	if (error)
-> +		goto out_disable_runtime_pm;
-> +
->   	get_device(shost->shost_gendev.parent);
->   
->   	device_enable_async_suspend(&shost->shost_dev);
+Make the UFS device execute realtime (RT) requests before other requests.
+This will be used in Android to reduce the I/O latency of the foreground
+app.
 
-The scsi_host_set_state(shost, SHOST_RUNNING) call shouldn't fail. 
-Hence, I think that adding error handling for the failure case will 
-confuse anyone who is reading that code.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 4 ++++
+ include/ufs/ufs.h         | 3 ++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-Thanks,
-
-Bart.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index c69bf532c4ab..54c3811d5534 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2717,6 +2717,8 @@ static int ufshcd_compose_devman_upiu(struct ufs_hba *hba,
+  */
+ static void ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ {
++	struct request *rq = scsi_cmd_to_rq(lrbp->cmd);
++	unsigned int ioprio_class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
+ 	u8 upiu_flags;
+ 
+ 	if (hba->ufs_version <= ufshci_version(1, 1))
+@@ -2726,6 +2728,8 @@ static void ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 
+ 	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags,
+ 				    lrbp->cmd->sc_data_direction, 0);
++	if (ioprio_class == IOPRIO_CLASS_RT)
++		upiu_flags |= UPIU_CMD_FLAGS_CP;
+ 	ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
+ }
+ 
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index 0cced88f4531..e77ab1786856 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -98,9 +98,10 @@ enum upiu_response_transaction {
+ 	UPIU_TRANSACTION_REJECT_UPIU	= 0x3F,
+ };
+ 
+-/* UPIU Read/Write flags */
++/* UPIU Read/Write flags. See also table "UPIU Flags" in the UFS standard. */
+ enum {
+ 	UPIU_CMD_FLAGS_NONE	= 0x00,
++	UPIU_CMD_FLAGS_CP	= 0x04,
+ 	UPIU_CMD_FLAGS_WRITE	= 0x20,
+ 	UPIU_CMD_FLAGS_READ	= 0x40,
+ };
