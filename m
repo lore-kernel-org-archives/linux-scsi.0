@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2CAACD37B0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 16:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7B53C46CA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 16:27:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229905AbjIRQ0t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Sep 2023 12:26:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52718 "EHLO
+        id S230081AbjIRQ16 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Sep 2023 12:27:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230074AbjIRQ0T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 12:26:19 -0400
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4181C23CDE
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:22:14 -0700 (PDT)
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1c3d8fb23d9so36559185ad.0
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:22:14 -0700 (PDT)
+        with ESMTP id S229982AbjIRQ1g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 12:27:36 -0400
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA206216C5
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:21:47 -0700 (PDT)
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1bf55a81eeaso33933745ad.0
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:21:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695054100; x=1695658900;
+        d=1e100.net; s=20230601; t=1695054076; x=1695658876;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=JzlqkJgudxivYIXs+IzQPdAZD4igib+RglO/avRHMBM=;
-        b=cs6fHObstPwRC8WlBAs6XhgLYhRR3YqTa+f7My0TFnenxJ9tNWVmJtgMiJQGgXYc0r
-         JPl6ircR45nUaiIfYGs6n5U7wXYevvuej0fHzT893ORplEacCteyOqwchRvXB1GPOxdR
-         4MaquY7VDz6WRbyPqOxkNQEZLGMwE5qDMUdpwPpySLpJ9C/mtCnKHeuMh63am2lrH7pN
-         fcMR7DRBzFY5L423Ygimg/vRXPcYnAtRxyaSO8h9KoLuK2R3wC0qySrRXLlSsG87zQKl
-         nRyObFu1qg6AKNGdDNq41CneB5Ofn6ZnEyNC9S9xh1E9K7nlNf55iJORb4wld910NYA/
-         FP6g==
-X-Gm-Message-State: AOJu0YzIFj5Gh1kLtfe9p5z7mdkXvyvlDixezk3MbNCVbldOQ5Hmekx+
-        150SZAlkRccjcjatuPH5oYI=
-X-Google-Smtp-Source: AGHT+IG8DRZWuIiIjDmDqQ2lyTzrXqVie076wcPl/1FkVjfPrnZaZiSpfPLnDSN6SAbI59ZngwuTUA==
-X-Received: by 2002:a17:902:d491:b0:1c3:e3b1:98df with SMTP id c17-20020a170902d49100b001c3e3b198dfmr10136949plg.52.1695054099719;
-        Mon, 18 Sep 2023 09:21:39 -0700 (PDT)
+        bh=HC1c+srrjijA9jfgQkIRw/emAtgfwjLgM9wA0nVlBAo=;
+        b=L3lB9l46EJQWPyU9uCyAZ4VhJ0GEgJZHPP89G13sZ7si5oym5GhYs/KrUyWedK5wM/
+         mghcUxxnjVn6D+fhjR+nxGOYM2pHo7bJAXzcLd7Nuu6UiKo63BWDXv1i+okr/qPkq/MC
+         zWx6iax2iEIDCvJonmMfrr19Z5lePcfsZyspsf4iIaH90NkWH4r5Im1Hrfx2+yAANJHj
+         OecMKesPufUj5C3xZRyWjDkFm1zjlxe7nXyjqOEoEmlFpwfvZkQNoLr1YnEFTS8tzkyx
+         TXKuoRdIL4DA3i2NkHpQcxVjz1M19qaOQID3GK6POISCHAkDhdHiK2clC323qcKmKUTV
+         6mpg==
+X-Gm-Message-State: AOJu0YwUogZo1JnLoruD+/lnfozdH5oKy2OQvRuc5fWMI3wKU2qgRKV7
+        owf4iTiyIOUVXdpR3a8FJ0M=
+X-Google-Smtp-Source: AGHT+IHA4U1qTUfeeVMynnYgVNGhp6pYTwN2F3wjv9PwEjhWCy2SlrTYqMgjYwy3fTN5t5cXArw5Ig==
+X-Received: by 2002:a17:902:f689:b0:1c3:e5bf:a9ec with SMTP id l9-20020a170902f68900b001c3e5bfa9ecmr9061164plg.51.1695054075831;
+        Mon, 18 Sep 2023 09:21:15 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:33e7:1437:5d00:8e3b])
-        by smtp.gmail.com with ESMTPSA id z14-20020a170902d54e00b001bd28b9c3ddsm8489414plf.299.2023.09.18.09.21.38
+        by smtp.gmail.com with ESMTPSA id z14-20020a170902d54e00b001bd28b9c3ddsm8489414plf.299.2023.09.18.09.21.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Sep 2023 09:21:39 -0700 (PDT)
+        Mon, 18 Sep 2023 09:21:15 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
@@ -48,9 +48,9 @@ Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Bean Huo <beanhuo@micron.com>,
         "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH 3/4] scsi: ufs: Simplify ufshcd_comp_scsi_upiu()
-Date:   Mon, 18 Sep 2023 09:20:14 -0700
-Message-ID: <20230918162058.1562033-4-bvanassche@acm.org>
+Subject: [PATCH 1/4] scsi: ufs: Return in case of an invalid tag
+Date:   Mon, 18 Sep 2023 09:20:12 -0700
+Message-ID: <20230918162058.1562033-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.459.ge4e396fd5e-goog
 In-Reply-To: <20230918162058.1562033-1-bvanassche@acm.org>
 References: <20230918162058.1562033-1-bvanassche@acm.org>
@@ -60,48 +60,67 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ufshcd_comp_scsi_upiu() has one caller and that caller ensures that
-lrbp->cmd != NULL. Hence leave out the lrbp->cmd check from
-ufshcd_comp_scsi_upiu().
+If a tag is invalid, instead of only issuing a kernel warning, also
+return. This patch suppresses Coverity warnings about left shifts with a
+negative right hand operand.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 16 ++++------------
- 1 file changed, 4 insertions(+), 12 deletions(-)
+ drivers/ufs/core/ufshcd.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 100729981738..c69bf532c4ab 100644
+index dc1285351336..5fccec3c1091 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2714,27 +2714,19 @@ static int ufshcd_compose_devman_upiu(struct ufs_hba *hba,
-  *			   for SCSI Purposes
-  * @hba: per adapter instance
-  * @lrbp: pointer to local reference block
-- *
-- * Return: 0 upon success; < 0 upon failure.
+@@ -2822,7 +2822,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	int err = 0;
+ 	struct ufs_hw_queue *hwq = NULL;
+ 
+-	WARN_ONCE(tag < 0 || tag >= hba->nutrs, "Invalid tag %d\n", tag);
++	if (WARN_ONCE(tag < 0 || tag >= hba->nutrs, "Invalid tag %d\n", tag))
++		return 0;
+ 
+ 	switch (hba->ufshcd_state) {
+ 	case UFSHCD_STATE_OPERATIONAL:
+@@ -6923,8 +6924,11 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	spin_lock_irqsave(host->host_lock, flags);
+ 
+ 	task_tag = req->tag;
+-	WARN_ONCE(task_tag < 0 || task_tag >= hba->nutmrs, "Invalid tag %d\n",
+-		  task_tag);
++	if (WARN_ONCE(task_tag < 0 || task_tag >= hba->nutmrs,
++		      "Invalid tag %d\n", task_tag)) {
++		err = -EINVAL;
++		goto unlock;
++	}
+ 	hba->tmf_rqs[req->tag] = req;
+ 	treq->upiu_req.req_header.task_tag = task_tag;
+ 
+@@ -6963,6 +6967,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->tmf_rqs[req->tag] = NULL;
+ 	__clear_bit(task_tag, &hba->outstanding_tasks);
++unlock:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	ufshcd_release(hba);
+@@ -7485,7 +7490,7 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+  * ufshcd_abort - scsi host template eh_abort_handler callback
+  * @cmd: SCSI command pointer
+  *
+- * Return: SUCCESS or FAILED.
++ * Return: SUCCESS, FAILED or FAST_IO_FAIL.
   */
--static int ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ static int ufshcd_abort(struct scsi_cmnd *cmd)
  {
- 	u8 upiu_flags;
--	int ret = 0;
+@@ -7498,7 +7503,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	bool outstanding;
+ 	u32 reg;
  
- 	if (hba->ufs_version <= ufshci_version(1, 1))
- 		lrbp->command_type = UTP_CMD_TYPE_SCSI;
- 	else
- 		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
+-	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
++	if (WARN_ONCE(tag < 0, "Invalid tag %d\n", tag))
++		return FAST_IO_FAIL;
  
--	if (likely(lrbp->cmd)) {
--		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, lrbp->cmd->sc_data_direction, 0);
--		ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
--	} else {
--		ret = -EINVAL;
--	}
--
--	return ret;
-+	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags,
-+				    lrbp->cmd->sc_data_direction, 0);
-+	ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
- }
+ 	ufshcd_hold(hba);
  
- /**
