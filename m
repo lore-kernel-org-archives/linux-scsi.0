@@ -2,177 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CCA5CD13D2
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 10:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA03FC46CA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 10:26:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240698AbjIRKWL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Sep 2023 06:22:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49456 "EHLO
+        id S239670AbjIRKZ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Sep 2023 06:25:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241094AbjIRKVr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 06:21:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F054CAA
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 03:20:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1695032456;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=yU55zmy+tifjpDLUpfSCylMp4XR9haoWnULzlns5xls=;
-        b=MurVU8+4Z8s+Q3xe4MUZviebgLj4z+XkZBjVoHtT+yrFzLukOqY6hRs6ArcAQ0IRplHFr4
-        fT5Gay35I/TtLS0MazWUFefNjgURxVA92RU5mG/LIa8bw3H1JM5Ua7pPStjsBtgJdOjbwG
-        QwR5Irp0aEacpT4XrsQyWxuQoEEIlWM=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-663-ZZKfgo4CMBiytQbfiJLyfQ-1; Mon, 18 Sep 2023 06:20:55 -0400
-X-MC-Unique: ZZKfgo4CMBiytQbfiJLyfQ-1
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-27472e97c0bso2661077a91.3
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 03:20:54 -0700 (PDT)
+        with ESMTP id S240873AbjIRKZc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 06:25:32 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9F30AD
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 03:25:21 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1c328b53aeaso38414545ad.2
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 03:25:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=areca-com-tw.20230601.gappssmtp.com; s=20230601; t=1695032721; x=1695637521; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:to:from:subject
+         :message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=2R1uFPZQh5rHaFChaIdksfqptVdy9O1APe6DAZC5D0I=;
+        b=gHnyFUgGgcQkE5CuJjm5EQ4vN6BEuMahmI64hqssUMHjMJb34/uTV8TxWtmUKDxTzI
+         cYrnatzJ36aG4YF7WkN0/nsFYeuCCFtJK5//kQM7yduJsiNi4Bk+aCHT0yQEfJ/g8qM7
+         K/YadinEiuJHfpNxVsiqHM5WISGlUbvO4yUeAYjIwLQjExLkzgIcfteXz4vRuZzw/iU4
+         mWeqA0yjqa9YBlMRxJBXqlpNPPDXmDQZGpicad6BMPCJ/NwxeRTKwhdpGKXuecbuBWB4
+         V6aGP+p3YyfteW9QmJPT1FzG7oNshx2MnggA5+jWqgkffL37u2hGCGokKp+h70tPzUOO
+         foMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695032454; x=1695637254;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yU55zmy+tifjpDLUpfSCylMp4XR9haoWnULzlns5xls=;
-        b=mcUpM1u1D9I2AT1Gf590Rd/LGPUnyAoorwAxcEtXjtCIbEQSVmwicyH9OKJj1msV37
-         258gSM+2L9ivX/rrz/qmgu7HjJvXl/SiM9JF83rqYVnGmoDe7XyN6Iep3KfZ90HARJ9/
-         07Kgf8Wd3d+pC9CMa/w9RILUEE7NbIGrnHWEzCjhJ6BU9xgkxCyXNTbd1PTXktS/Lalh
-         EeAh8UejtvKeLZMmRD40qNb1K6Xc3Q0MB6DdsrYYPApQupPFFH2blVle5rlST1l8jElX
-         QjcPmc3HOB52hdI8a1jdz15ImntO+y2VXPmhwXD0bBS3oe0z84we7VuDyAHNZJKALXby
-         N7PA==
-X-Gm-Message-State: AOJu0YyUg0CtEE/b85o6qE8qJXnAkpvkBPNGrondZkBKXlebg1hQSZof
-        y3W2SWsXwpf7IL6KYyRmg8pu3RASH4LABK+e0k0wJggN7C8k4MimLDeJMc1J+FMAghjV9PSWQYB
-        KVC2swOKoD9OSgCoxEkbdmxwRQ1r7GnpQPMAfxg==
-X-Received: by 2002:a17:90b:23c4:b0:259:466:940f with SMTP id md4-20020a17090b23c400b002590466940fmr5945974pjb.22.1695032454024;
-        Mon, 18 Sep 2023 03:20:54 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGEtH10NqI0T9ljzjjgrVprcPWZuTNpuV3VTBMkk2Q5qVxQsg5e+/Uzg2XIHnu21aI/ILioVf9Pa2At0kqn5VI=
-X-Received: by 2002:a17:90b:23c4:b0:259:466:940f with SMTP id
- md4-20020a17090b23c400b002590466940fmr5945960pjb.22.1695032453718; Mon, 18
- Sep 2023 03:20:53 -0700 (PDT)
-MIME-Version: 1.0
-References: <ZOWFtqA2om0w5Vmz@fedora> <20230823-kuppe-lassen-bc81a20dd831@brauner>
- <CAFj5m9KiBDzNHCsTjwUevZh3E3RRda2ypj9+QcRrqEsJnf9rXQ@mail.gmail.com>
- <CAHj4cs_MqqWYy+pKrNrLqTb=eoSOXcZdjPXy44x-aA1WvdVv0w@mail.gmail.com>
- <89d049ed-6bbf-bba7-80d4-06c060e65e5b@huawei.com> <20230917091031.GA1543@noisy.programming.kicks-ass.net>
- <9efe2f14-c3d9-e526-d561-b6a0aca6c491@huawei.com>
-In-Reply-To: <9efe2f14-c3d9-e526-d561-b6a0aca6c491@huawei.com>
-From:   Yi Zhang <yi.zhang@redhat.com>
-Date:   Mon, 18 Sep 2023 18:20:41 +0800
-Message-ID: <CAHj4cs-6M+fORJOGOxH3sO5BytBwi4y9hcnS+xQ3wLZO20UXWg@mail.gmail.com>
-Subject: Re: [czhong@redhat.com: [bug report] WARNING: CPU: 121 PID: 93233 at
- fs/dcache.c:365 __dentry_kill+0x214/0x278]
-To:     Baokun Li <libaokun1@huawei.com>
-Cc:     Peter Zijlstra <peterz@infradead.org>,
-        Ming Lei <ming.lei@redhat.com>, mark.rutland@arm.com,
-        Christian Brauner <brauner@kernel.org>,
-        linux-fsdevel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Changhui Zhong <czhong@redhat.com>,
-        yangerkun <yangerkun@huawei.com>,
-        "zhangyi (F)" <yi.zhang@huawei.com>,
-        Kees Cook <keescook@chromium.org>,
-        chengzhihao <chengzhihao1@huawei.com>
+        d=1e100.net; s=20230601; t=1695032721; x=1695637521;
+        h=content-transfer-encoding:mime-version:date:to:from:subject
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=2R1uFPZQh5rHaFChaIdksfqptVdy9O1APe6DAZC5D0I=;
+        b=ID/yjXMStF7Mp0C4AlNU5/4tEewRwygXWIdzxdDPk4Udnp1QFBQYGA2vkBMyVMFD3x
+         L9dDGKkoDL8LXEHokhBqAxlEhQHxrzxzM4eotEdnB7wjVulMLVNVxAX2eZku21eBHRf8
+         GDx15UBfH+YASjtzJ/UNDHhfSH6qDbRyuiTIKRD2kj4cKvEYGRPZjO6c2dI6JSeDEvar
+         tJxzHRt6dFh8+wb5uK5340WOAdQDvlU8vU4/o03atRJG9Ku1u4D7Rr3Go/K0pk1jWOyk
+         lNwqigY4mfok7vX+Kyt1M1x1zsMWu6WKci5jTmwrYG5CZh0L9fTxpKGwO0+/UN4X3B6o
+         0Hdw==
+X-Gm-Message-State: AOJu0YzbhzB26CURQt/m81q8hLhawUYcEON7Om09l+mJjwyZtkvmGAK7
+        Dlj+dEz5mRpTXNaKZ4D/EPN62w==
+X-Google-Smtp-Source: AGHT+IF+u2kWo8jwH97CBxsh0Pl65Wiztx0Y7Z+VM2CcJTy3FdfSVviraEX4BckReV+C05bmFGJa4Q==
+X-Received: by 2002:a17:902:efc6:b0:1bb:7b6c:983a with SMTP id ja6-20020a170902efc600b001bb7b6c983amr7623614plb.59.1695032721344;
+        Mon, 18 Sep 2023 03:25:21 -0700 (PDT)
+Received: from centos78 (60-248-88-209.hinet-ip.hinet.net. [60.248.88.209])
+        by smtp.googlemail.com with ESMTPSA id j17-20020a170902da9100b001bf095dfb79sm7953757plx.235.2023.09.18.03.25.19
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 18 Sep 2023 03:25:20 -0700 (PDT)
+Message-ID: <0608654a043206078d3a27d23cd5e3c2851ee415.camel@areca.com.tw>
+Subject: [PATCH 0/3] scsi: arcmsr: support Areca ARC-1688 Raid controller
+From:   ching Huang <ching2048@areca.com.tw>
+To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
+        linux-scsi@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date:   Mon, 18 Sep 2023 18:25:21 +0800
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 18, 2023 at 9:10=E2=80=AFAM Baokun Li <libaokun1@huawei.com> wr=
-ote:
->
-> On 2023/9/17 17:10, Peter Zijlstra wrote:
-> > On Sat, Sep 16, 2023 at 02:55:47PM +0800, Baokun Li wrote:
-> >> On 2023/9/13 16:59, Yi Zhang wrote:
-> >>> The issue still can be reproduced on the latest linux tree[2].
-> >>> To reproduce I need to run about 1000 times blktests block/001, and
-> >>> bisect shows it was introduced with commit[1], as it was not 100%
-> >>> reproduced, not sure if it's the culprit?
-> >>>
-> >>>
-> >>> [1] 9257959a6e5b locking/atomic: scripts: restructure fallback ifdeff=
-ery
-> >> Hello, everyone=EF=BC=81
-> >>
-> >> We have confirmed that the merge-in of this patch caused hlist_bl_lock
-> >> (aka, bit_spin_lock) to fail, which in turn triggered the issue above.
-> >> [root@localhost ~]# insmod mymod.ko
-> >> [   37.994787][  T621] >>> a =3D 725, b =3D 724
-> >> [   37.995313][  T621] ------------[ cut here ]------------
-> >> [   37.995951][  T621] kernel BUG at fs/mymod/mymod.c:42!
-> >> [r[  oo 3t7@.l996o4c61al]h[o s T6t21] ~ ]#Int ernal error: Oops - BUG:
-> >> 00000000f2000800 [#1] SMP
-> >> [   37.997420][  T621] Modules linked in: mymod(E)
-> >> [   37.997891][  T621] CPU: 9 PID: 621 Comm: bl_lock_thread2 Tainted:
-> >> G            E      6.4.0-rc2-00034-g9257959a6e5b-dirty #117
-> >> [   37.999038][  T621] Hardware name: linux,dummy-virt (DT)
-> >> [   37.999571][  T621] pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT=
- -SSBS
-> >> BTYPE=3D--)
-> >> [   38.000344][  T621] pc : increase_ab+0xcc/0xe70 [mymod]
-> >> [   38.000882][  T621] lr : increase_ab+0xcc/0xe70 [mymod]
-> >> [   38.001416][  T621] sp : ffff800008b4be40
-> >> [   38.001822][  T621] x29: ffff800008b4be40 x28: 0000000000000000 x27=
-:
-> >> 0000000000000000
-> >> [   38.002605][  T621] x26: 0000000000000000 x25: 0000000000000000 x24=
-:
-> >> 0000000000000000
-> >> [   38.003385][  T621] x23: ffffd9930c698190 x22: ffff800008a0ba38 x21=
-:
-> >> 0000000000000001
-> >> [   38.004174][  T621] x20: ffffffffffffefff x19: ffffd9930c69a580 x18=
-:
-> >> 0000000000000000
-> >> [   38.004955][  T621] x17: 0000000000000000 x16: ffffd9933011bd38 x15=
-:
-> >> ffffffffffffffff
-> >> [   38.005754][  T621] x14: 0000000000000000 x13: 205d313236542020 x12=
-:
-> >> ffffd99332175b80
-> >> [   38.006538][  T621] x11: 0000000000000003 x10: 0000000000000001 x9 =
-:
-> >> ffffd9933022a9d8
-> >> [   38.007325][  T621] x8 : 00000000000bffe8 x7 : c0000000ffff7fff x6 =
-:
-> >> ffffd993320b5b40
-> >> [   38.008124][  T621] x5 : ffff0001f7d1c708 x4 : 0000000000000000 x3 =
-:
-> >> 0000000000000000
-> >> [   38.008912][  T621] x2 : 0000000000000000 x1 : 0000000000000000 x0 =
-:
-> >> 0000000000000015
-> >> [   38.009709][  T621] Call trace:
-> >> [   38.010035][  T621]  increase_ab+0xcc/0xe70 [mymod]
-> >> [   38.010539][  T621]  kthread+0xdc/0xf0
-> >> [   38.010927][  T621]  ret_from_fork+0x10/0x20
-> >> [   38.011370][  T621] Code: 17ffffe0 90000020 91044000 9400000d (d421=
-0000)
-> >> [   38.012067][  T621] ---[ end trace 0000000000000000 ]---
-> > Is this arm64 or something? You seem to have forgotten to mention what
-> > platform you're using.
-> >
-> Sorry for the late reply.
-> We tested both x86 and arm64, and the problem is only encountered under
-> arm64.
+The following patches are made over mkp's 6.7/scsi-staging
 
-Yeah, my reproduced environment is also aarch64.
+This series add supporting new Raid and new PCI device ID controllers
+- support new Raid controller ARC-1688
+- support new PCI device ID 1883 and 1886
+- updated driver's version to v1.51.00.14-20230915
+---
 
-
-
->
-> --
-> With Best Regards,
-> Baokun Li
-> .
->
-
-
---=20
-Best Regards,
-  Yi Zhang
 
