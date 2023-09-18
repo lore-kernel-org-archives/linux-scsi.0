@@ -2,132 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69E8BCD37B0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 15:41:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CC17CD13D2
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Sep 2023 16:17:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229696AbjIRPlu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Sep 2023 11:41:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57520 "EHLO
+        id S229978AbjIRQRn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Sep 2023 12:17:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229635AbjIRPlu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 11:41:50 -0400
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70666E4D;
-        Mon, 18 Sep 2023 08:40:21 -0700 (PDT)
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1c43166b7e5so29452705ad.3;
-        Mon, 18 Sep 2023 08:40:11 -0700 (PDT)
+        with ESMTP id S229802AbjIRQRl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Sep 2023 12:17:41 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0847D1997
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:03:01 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-68fac346f6aso4260503b3a.3
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2023 09:03:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695051385; x=1695656185;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20230601; t=1695052528; x=1695657328;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6cD+cmIkq/0xe1bl+vQZsxyzlQSlIBNKWB/nPmFWtiM=;
-        b=VgnYRtgtEY4P8rHQVoQoWxW4+wVIftOauhOF572nXZgKA3Ny5fq6EXDNI5t73lkkty
-         1hyYwTrAimQ0EC0G4lMddweexCi3TlmQPiyv1jbx3ZkAY9VmrmAzUTDVauyd3ASnNjod
-         W6v1JRGGSWfY+VBxCQaQODmfY8wx3RFPzu5+baKyBVtAnU0C8d5UCrjPiRyOPQJX5/HA
-         xvfjJy63ol88Emxs6p5kCiHrf79oDNcFPGHv16EeFKjt4ZmIA8UuxIyhkL6zK8+zXBFt
-         zQ3asvsAv1BNrAItTRRuhgmKYOBXjNP0rS4fHKnoVVK3cDvyDXdeVe7CDO8D/DpOc1GO
-         aokA==
-X-Gm-Message-State: AOJu0YxAWh7tQ2NmU0YobMVE6hJas7waFzoS8kk1zt+6iI802G4CwpJ0
-        oWTXFXRYR2EmuT52vP/EQ24=
-X-Google-Smtp-Source: AGHT+IGR184+HRuFV3B3NfFTF4LThXA2jwJxkhQ6O8Hu6lLmMW70MpsX8E267KMD6Pk87zk9rLPvEQ==
-X-Received: by 2002:a17:903:32cd:b0:1c4:1343:8329 with SMTP id i13-20020a17090332cd00b001c413438329mr11852832plr.27.1695051385239;
-        Mon, 18 Sep 2023 08:36:25 -0700 (PDT)
+        bh=NiSTaTd3OYgJAeKHG13E9l3sLX2n80jn9tb+CPaNnb8=;
+        b=RwxGVgzIe9CR4wxHF+SEHuaym+1rA7f1GRRLc+jsjp4nRagPBjZiE0/bxwUGwFmTgm
+         ZOzoDmzdok4n57kLCpwtxOR3vROxCIuUL8DnqIoB2rmyrNApsCEB+gyNDKD7EQbld9Mt
+         f7PrfGoI/OaI5ntZU/veA9y7Pql9vszITxeEK3uweHFhCHNNBTC3TyCaFTndB4GhCl0P
+         rn3OVwSvawuoP9ByezqGQT09gEarO3Zc3NpyRAuQCHI86x5IAyZcFEaqTt6tTj+RChTH
+         FRhN+fk50HyE/IrTaXfstbPHYL9v8GRxl0yMf8ydGmlfQ4RJzBQ/nFeGrjw2Aj9hVrjd
+         OMsA==
+X-Gm-Message-State: AOJu0YzFE1zbYvPapXV5SRhA5me//RpoRyYZX0Sd4BWMWgR8CNqnDJVu
+        EINEhvqaUQHhwhobyCVYaCw=
+X-Google-Smtp-Source: AGHT+IH0CvmtChKcNYlg7JPgMJJoEQx4TvMmBxeyGMgPwXhQ9izpJdLOYqAWbrdF0xsGtOhQiUch/g==
+X-Received: by 2002:a05:6a00:2446:b0:68e:236a:93d9 with SMTP id d6-20020a056a00244600b0068e236a93d9mr9076055pfj.17.1695052528046;
+        Mon, 18 Sep 2023 08:55:28 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:33e7:1437:5d00:8e3b? ([2620:15c:211:201:33e7:1437:5d00:8e3b])
-        by smtp.gmail.com with ESMTPSA id n5-20020a170902e54500b001b9d95945afsm8464160plf.155.2023.09.18.08.36.22
+        by smtp.gmail.com with ESMTPSA id n53-20020a056a000d7500b00690b8961bf4sm372909pfv.146.2023.09.18.08.55.26
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Sep 2023 08:36:23 -0700 (PDT)
-Message-ID: <de7e76f8-5ed6-4de0-8084-24e220deb4b3@acm.org>
-Date:   Mon, 18 Sep 2023 08:36:21 -0700
+        Mon, 18 Sep 2023 08:55:27 -0700 (PDT)
+Message-ID: <61f69028-b028-42d2-9f8a-bd70692994c1@acm.org>
+Date:   Mon, 18 Sep 2023 08:55:25 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 6/6] scsi: ufs: ufs-sysfs: Introduce UFS power info sysfs
- nodes
+Subject: Re: scsi: hosts: check result of scsi_host_set_state() in
+ scsi_add_host_with_dma()
 Content-Language: en-US
-To:     Can Guo <quic_cang@quicinc.com>, mani@kernel.org,
-        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Bean Huo <beanhuo@micron.com>,
-        Lu Hongfei <luhongfei@vivo.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
- <1694411968-14413-7-git-send-email-quic_cang@quicinc.com>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <812c97ce-9b41-400a-9eb9-ddeef0156bbe@omp.ru>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1694411968-14413-7-git-send-email-quic_cang@quicinc.com>
+In-Reply-To: <812c97ce-9b41-400a-9eb9-ddeef0156bbe@omp.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/10/23 22:59, Can Guo wrote:
-> Having UFS power info available in sysfs makes it easier to tell the state
-> of the link during runtime considering we have a bounch of power saving
-> features and various combinations for backward compatiblity.
-
-bounch -> bunch
-compatiblity -> compatibility
-
-Additionally, please combine this patch with patch 5/6 into a single patch.
-
-> -What:		/sys/bus/platform/drivers/ufshcd/*/monitor/write_req_latency_sum
-> -What:		/sys/bus/platform/devices/*.ufs/monitor/write_req_latency_sum
-> -Date:		January 2021
-
-Has the above information perhaps been removed by accident?
-
-> +What:		/sys/bus/platform/drivers/ufshcd/*/power_info/gear
-> +What:		/sys/bus/platform/devices/*.ufs/power_info/gear
-> +Date:		September 2023
->   Contact:	Can Guo <quic_cang@quicinc.com>
-> -Description:	This file shows the total latency (in micro seconds) of write
-> -		requests after monitor gets started.
-> +Description:	This file shows the gear of UFS link.
+On 9/8/23 13:48, Sergey Shtylyov wrote:
+> --- scsi.orig/drivers/scsi/hosts.c
+> +++ scsi/drivers/scsi/hosts.c
+> @@ -272,7 +272,10 @@ int scsi_add_host_with_dma(struct Scsi_H
+>   	if (error)
+>   		goto out_disable_runtime_pm;
+>   
+> -	scsi_host_set_state(shost, SHOST_RUNNING);
+> +	error = scsi_host_set_state(shost, SHOST_RUNNING);
+> +	if (error)
+> +		goto out_disable_runtime_pm;
 > +
-> +		The file is read only.
+>   	get_device(shost->shost_gendev.parent);
+>   
+>   	device_enable_async_suspend(&shost->shost_dev);
 
-Please explain what "gear" means and also what the unit is of the 
-numbers reported via this sysfs attribute.
-
-> +What:		/sys/bus/platform/drivers/ufshcd/*/power_info/mode
-> +What:		/sys/bus/platform/devices/*.ufs/power_info/mode
-> +Date:		September 2023
-> +Contact:	Can Guo <quic_cang@quicinc.com>
-> +Description:	This file shows the power mode of UFS link.
-> +
-> +		The file is read only.
-
-Please document the meaning of the numbers reported via this sysfs 
-attribute.
-
-> +What:		/sys/bus/platform/drivers/ufshcd/*/power_info/rate
-> +What:		/sys/bus/platform/devices/*.ufs/power_info/rate
-> +Date:		September 2023
-> +Contact:	Can Guo <quic_cang@quicinc.com>
-> +Description:	This file shows the high speed rate of UFS link.
-> +
-> +		The file is read only.
-
-Please document the unit of the numbers reported via this sysfs attribute.
-
-> +What:		/sys/bus/platform/drivers/ufshcd/*/power_info/dev_pm
-> +What:		/sys/bus/platform/devices/*.ufs/power_info/dev_pm
-> +Date:		September 2023
-> +Contact:	Can Guo <quic_cang@quicinc.com>
-> +Description:	This file shows the UFS device power mode, i.e., the power mode
-> +		set to UFS device via the Start Stop Unit command.
-
-Please document the meaning of the numbers reported through this sysfs 
-attribute.
-
-> +What:		/sys/bus/platform/drivers/ufshcd/*/power_info/link_state
-> +What:		/sys/bus/platform/devices/*.ufs/power_info/link_state
-> +Date:		September 2023
-> +Contact:	Can Guo <quic_cang@quicinc.com>
-> +Description:	This file shows the the state of the UFS link.
-
-Please document the meaning of the numbers reported through this sysfs 
-attribute.
+The scsi_host_set_state(shost, SHOST_RUNNING) call shouldn't fail. 
+Hence, I think that adding error handling for the failure case will 
+confuse anyone who is reading that code.
 
 Thanks,
 
