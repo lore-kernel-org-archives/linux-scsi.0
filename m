@@ -2,124 +2,50 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB42CD3444
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 06:54:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 679D1CD548A
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 07:37:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231612AbjISGyF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Sep 2023 02:54:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40556 "EHLO
+        id S231819AbjISHhl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Sep 2023 03:37:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229803AbjISGyF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 02:54:05 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2CA4102;
-        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1c39f2b4f5aso38513465ad.0;
-        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695106439; x=1695711239; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4JrZnIbFr81fyCrGJLUv7gvnp4WA+u4UAg0ITzEeBQA=;
-        b=V0HulJtnyd287prA7csMZJ1DEhcH9lGSlYuXptrtZxfNSGEHUM0uusEVsxyBSR/SDe
-         yAxtCeOEYZ/e2/uCu7LkVj/ovpWocEd4DRr0e5sbUfFx4CErxxDqDzzXyzNM7EmZRYPF
-         PCYU3NxLxcgO0HU7ET/EX+UfFMNcIy4C69kQE5m33tUlvH2EUiqJQP2iVJh4kO+fU50z
-         ZxLHUJ0uUtEe3s495dRNA5PaMLqBJml4r4YHKqTBYv6XosimKtNRA5lgW+WOzcMVIsEz
-         7etzsqBvYToKlvCJ435kHSaBRsxYJk0MZScoH2u4Y9gbC1S9vihbXL5NVO96CsvtJF5U
-         YFFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695106439; x=1695711239;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4JrZnIbFr81fyCrGJLUv7gvnp4WA+u4UAg0ITzEeBQA=;
-        b=wb9Rie1A1EdarcWSPQqNrEuof1Q7RaUT+KY/NIz5KqKW+FcCGSn6Pb37/+YeDsAeXk
-         /dyIo9W1Ny7Smlwx6/uzMn6Fw9qLbUF8plY0brC2zDtXPE6nVWSArfiEdviw9XOLbLZ/
-         XpQL8u0AXG1xXkoiMdLZ33OY/VDhFxHax9KDK7ZFNKoAMAL+PBIQu4Ius0NGD18AdAnW
-         X8yMW73VEgWItNr2OZFHaJbBKAwj6qycKsJeEiZ+Y+OQdAh0gShLlH/5hTSgrfBSxEpP
-         4csZD4tEpablyFgtBdKuyd3HrQf8+FpB/Wi6kns95CN+xdWBCcWPe/G3G2eATjgEo9yL
-         axLg==
-X-Gm-Message-State: AOJu0Yz6yd9NE79+fUxXnM2+eAWFmffhESb8COWFsFO98RDfvZUN1uX8
-        eoEs3CHZjZ6jH6u8cGQ4fnQ=
-X-Google-Smtp-Source: AGHT+IGMP5NsHVZjmSi0Vp0O55hNYbTudKLiyCcpM3EX+lbrIZBfzGSRrcHKVwGrQqLqcbzPEIvN+g==
-X-Received: by 2002:a17:902:ea0f:b0:1bf:557c:5a2c with SMTP id s15-20020a170902ea0f00b001bf557c5a2cmr10880147plg.44.1695106439085;
-        Mon, 18 Sep 2023 23:53:59 -0700 (PDT)
-Received: from debian.me ([103.124.138.83])
-        by smtp.gmail.com with ESMTPSA id l7-20020a170902f68700b001bda30ecaa6sm9338288plg.51.2023.09.18.23.53.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Sep 2023 23:53:58 -0700 (PDT)
-Received: by debian.me (Postfix, from userid 1000)
-        id 2DDEF81B96EC; Tue, 19 Sep 2023 13:53:56 +0700 (WIB)
-Date:   Tue, 19 Sep 2023 13:53:55 +0700
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux SCSI <linux-scsi@vger.kernel.org>,
-        Linux IDE and libata <linux-ide@vger.kernel.org>,
-        Linux RAID <linux-raid@vger.kernel.org>
-Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
-Message-ID: <ZQlFg4GsULu633P1@debian.me>
-References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
- <ZQf9mh3v5qfN5Tm0@x1-carbon>
- <ZQgCoJ17UioOtdOJ@debian.me>
+        with ESMTP id S231803AbjISHhe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 03:37:34 -0400
+X-Greylist: delayed 423 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 19 Sep 2023 00:37:29 PDT
+Received: from mail.leeswilly.pl (mail.leeswilly.pl [89.116.26.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67EC910F
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Sep 2023 00:37:28 -0700 (PDT)
+Received: by mail.leeswilly.pl (Postfix, from userid 1001)
+        id 327F7761146; Tue, 19 Sep 2023 09:30:19 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leeswilly.pl; s=mail;
+        t=1695108621; bh=qCQG4c3C0tvkuSSy6okg6Td4OKi9mrw7rI9pE9SwJ9g=;
+        h=Date:From:To:Subject:From;
+        b=aSbj/I5asTZMvPZj8BafnlRzCvwlMcpfZhZIBE9/cSE+97ZEIRsT0afekxCgJWxWO
+         YlaHxcj3JKlp6OOPw4YsF5JcT7pE/tXKqr8SO/g7jU1yTcXOYxatA+bGYL6xFObWW3
+         ofXboVQIpc0wBYBK2IZCyMOSjUd9ZvLPBm+4B2gOCzvh2dpStzz/whIl15+d7CeXu8
+         SEIamh3+kj1MmtE3DI3oUj6CqoVvCVRnOVS6rWV+s3dNlVIVWw6b+koCrkjejTm5Zu
+         t2rSR3YaQGNAv75EyEWK/nFDyWnC3fhYulIJUNIcHU0UKatv0DZJNYAfNRI49g+MJu
+         D1oD7oL9nYK9A==
+Received: by mail.leeswilly.pl for <linux-scsi@vger.kernel.org>; Tue, 19 Sep 2023 07:30:18 GMT
+Message-ID: <20230919084500-0.1.3z.bb8l.0.z66mj5k559@leeswilly.pl>
+Date:   Tue, 19 Sep 2023 07:30:18 GMT
+From:   "Jakub Lemczak" <jakub.lemczak@leeswilly.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: =?UTF-8?Q?Pytanie_o_samoch=C3=B3d?=
+X-Mailer: mail.leeswilly.pl
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="6jU0HxXziu/VyJx9"
-Content-Disposition: inline
-In-Reply-To: <ZQgCoJ17UioOtdOJ@debian.me>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Dzie=C5=84 dobry,
 
---6jU0HxXziu/VyJx9
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Czy interesuje Pa=C5=84stwa rozwi=C4=85zanie umo=C5=BCliwiaj=C4=85ce moni=
+torowanie samochod=C3=B3w firmowych oraz optymalizacj=C4=99 koszt=C3=B3w =
+ich utrzymania?=20
 
-On Mon, Sep 18, 2023 at 02:56:16PM +0700, Bagas Sanjaya wrote:
-> On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
-> > On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
-> >=20
-> > Hello Bagas,
-> >=20
-> > This is a duplicate of:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D217902
-> >=20
-> > Problem is solved by:
-> > https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kern=
-el.org/
-> >=20
-> >=20
->=20
-> I have asked the reporter on Bugzilla to check the fix above. When he
-> reports back successfully, I'll mark this report as fixed.
->=20
 
-Another user has confirmed the fix (see Bugzilla), so:
-
-#regzbot fix: https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dl=
-emoal@kernel.org/
-
-Thanks.
-
---=20
-An old man doll... just what I always wanted! - Clara
-
---6jU0HxXziu/VyJx9
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZQlFfgAKCRD2uYlJVVFO
-owDyAP0RHtQvjlMD6aj+pXaLGlKI2/uSHkRaBy0v0QW8rlurUQEArZwuCVUahkRb
-pL10drC+YaEem5L2bn6mk4iPiP+U4QA=
-=8Uj2
------END PGP SIGNATURE-----
-
---6jU0HxXziu/VyJx9--
+Pozdrawiam
+Jakub Lemczak
