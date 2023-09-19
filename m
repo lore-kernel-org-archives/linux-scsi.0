@@ -2,85 +2,179 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F03DCD54B5
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 11:32:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0871CD5BA3
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 12:08:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231158AbjISLcf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Sep 2023 07:32:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33730 "EHLO
+        id S231488AbjISMIs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Sep 2023 08:08:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbjISLce (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 07:32:34 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9A894;
-        Tue, 19 Sep 2023 04:32:27 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1qiYxq-0007SV-K9; Tue, 19 Sep 2023 13:32:22 +0200
-Message-ID: <9c791f68-bbfe-4722-9cbb-5e791ce042ec@leemhuis.info>
-Date:   Tue, 19 Sep 2023 13:32:21 +0200
+        with ESMTP id S231549AbjISMIm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 08:08:42 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACE59137;
+        Tue, 19 Sep 2023 05:08:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 377BAC433C8;
+        Tue, 19 Sep 2023 12:08:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695125316;
+        bh=W9ipK051ocJIW66PJaJ8tCAwQFhj7/D8IpoO8hvwg3U=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=F+sxGf/Ps9MkN76zQsIZhziQGMCL3UmGSP+jg9uePF3wcQehC7XveEB1nq5ivWU8A
+         JRPGC4imkxkxAtPBmlvDCWXeaivAw3wtoEyuxjxqD4R+gvls0eGp+rp/Uvm/qHT5jA
+         Hqz8cIe214/uBVjya7eEZ+Jh8b8ASLFRk+JKtLRlfl33DR+Az6sFw5nsRMkgpcLaCH
+         pMN4sS+h1MsRg73aEVOYiT9e6sN45ivQOn9Klxzk05epDQ75gGOgQ9kvvjQLnyvs7y
+         pSqAkjsDAAULD2z67gt/NZOormcfIg8X5lFnDFEMYEaETXSbCTGHoq/HJkC8AuXpLs
+         AFdyIhFe3+ecw==
+Date:   Tue, 19 Sep 2023 14:08:29 +0200
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Can Guo <quic_cang@quicinc.com>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
+Message-ID: <20230919120829.GB4732@thinkpad>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
+ <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+ <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
+ <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org>
+ <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
+ <1413119B-8B9C-4DE4-A086-476B2BAA60AD@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
-Content-Language: en-US, de-DE
-To:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux SCSI <linux-scsi@vger.kernel.org>,
-        Linux IDE and libata <linux-ide@vger.kernel.org>,
-        Linux RAID <linux-raid@vger.kernel.org>
-References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
- <ZQf9mh3v5qfN5Tm0@x1-carbon> <ZQgCoJ17UioOtdOJ@debian.me>
- <ZQlFg4GsULu633P1@debian.me>
-From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <ZQlFg4GsULu633P1@debian.me>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1695123147;844ed6a3;
-X-HE-SMSGID: 1qiYxq-0007SV-K9
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1413119B-8B9C-4DE4-A086-476B2BAA60AD@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[TLDR: This mail in primarily relevant for Linux kernel regression
-tracking. See link in footer if these mails annoy you.]
-
-On 19.09.23 08:53, Bagas Sanjaya wrote:
-> On Mon, Sep 18, 2023 at 02:56:16PM +0700, Bagas Sanjaya wrote:
->> On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
->>> On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
->>>
->>> This is a duplicate of:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=217902
->>>
->>> Problem is solved by:
->>> https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
->>
->> I have asked the reporter on Bugzilla to check the fix above. When he
->> reports back successfully, I'll mark this report as fixed.
->>
+On Fri, Sep 15, 2023 at 05:31:45AM +0300, Dmitry Baryshkov wrote:
+> On 11 September 2023 13:02:50 GMT+03:00, Can Guo <quic_cang@quicinc.com> wrote:
+> >
+> >On 9/11/2023 5:46 PM, Konrad Dybcio wrote:
+> >> On 11.09.2023 11:42, Can Guo wrote:
+> >>> Hi Konrad,
+> >>> 
+> >>> On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
+> >>>> On 11.09.2023 07:59, Can Guo wrote:
+> >>>>> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+> >>>>> 
+> >>>>> Retrieve UFS device version from UFS host controller's spare register
+> >>>>> which is populated by bootloader, and use the UFS device version together
+> >>>>> with host controller's HW version to decide the proper power modes which
+> >>>>> should be used to configure the UFS PHY.
+> >>>> That sounds a bit fishy.. is there no bootloader-independent
+> >>>> solution to that? Can't we bring in the code that the bootloader
+> >>>> uses to determine these values?
+> >>>> 
+> >>>> Konrad
+> >>> 
+> >>> Agree, it is.
+> >>> 
+> >>> 
+> >>> All these complexities come from one request from PHY design team - power saving.
+> >>> 
+> >>> And to achieve power saving, Qualcomm UFS developers are requested to use the
+> >>> 
+> >>> lowest hanging PHY settings which can sustain the Max agreed HS Gear (btw host
+> >>> 
+> >>> and UFS device) during UFS's lifecycle in High Level OS,  whereas the power saving
+> >>> 
+> >>> request does not apply to bootloader, which works for only a few seconds during
+> >>> 
+> >>> bootup. Hence, there is no such version detect code in bootloader -  it just uses the
+> >>> 
+> >>> highest PHY settings to configure PHY, boot up UFS and put UFS device version in this
+> >>> 
+> >>> register.
+> >> First of all, your email client seems to be inserting 2 newlines
+> >> instead of 1. If you're using thunderbird, you may want to edit:
+> >> 
+> >> mail.identity.(default or your mail identity idx).default.compose_html
+> >> 
+> >> to `false`
+> >> 
+> >> and add that to your internal wiki page, as I see many @quic folks having
+> >> this issue.
+> >> 
+> >> 
+> >> Going back to the main topic, I don't think we understood each other.
+> >> The commit message states:
+> >> 
+> >> 
+> >> "Retrieve UFS device version from UFS host controller's spare register
+> >> which is populated by bootloader"
+> >> 
+> >> 
+> >> Which means the bootloader is able to somehow determine the value
+> >> that's in the spare register and write it there.
+> >> 
+> >> I'm asking whether we can take the logic behind this value and
+> >> move it to Linux so that we don't depend on the bootloader to
+> >> guarantee it (e.g. Chrome or some other devices with more exotic
+> >> fw may not work this way).
+> >> 
+> >> 
+> >> Konrad
+> >
+> >
+> >There is no logic behind this value at all in bootloader, as I explained, after bootloader
+> >
+> >initializes UFS, bootloader simply reads UFS's device version (the value you are referring)
+> >
+> >and write it to the register. But in Linux kernel, we need (or want to know) this value
+> >
+> >BEFORE we initialize UFS host controller (and UFS device).
 > 
-> Another user has confirmed the fix (see Bugzilla), so:
+> Depending on the bootloader behaviour is not an option. For example the kernel might be started via kexec. Or via u-boot. Or grub. Or any other bootloader. So please duplicate the logic to read the UFS version instead.
 > 
-> #regzbot fix: https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
 
-Bagas, FWIW, using "#regzbot fix" is not supported (maybe it should, but
-I have other priorities currently), hence let me fix this up:
+As Can said, there is no logic in the bootloader. What it does it, after doing
+the UFS initialization, it writes the agreed gear (between host and the device)
+to this register. And in linux, we use that value to initialize the device
+(i.e., not doing init based on the min gear).
 
-#regzbot fix: scsi: Do no try to probe for CDL on old drives
-#regzbot monitor:
-https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
-#regzbot ignore-activity
+But the important factor here is that, we use this gear value to program the PHY
+init sequence. So if there is no hint from the bootloader, linux will program
+the min phy sequence (G3/G4) and then once the gear scaling happens, it will
+program the max phy sequence (G4/G5).
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-That page also explains what to do if mails like this annoy you.
+Now on recent platforms, the init sequences are not compatible with each other
+i.e., once the min seq. is programmed, then before programming max seq. the
+registers not common to both seq. should be programmed to default value. In
+other words, min seq. specific registers should be reset to the default value.
+Otherwise, there will be stability issues in the PHY.
+
+So to avoid that, if we get the hint from bootloader (always the max supported
+gear between host and device), then only one seq. will be programmed.
+
+Other way to solve this issue is to reset the non common registers in the init
+seq. to default value. But that will be an additional overhead.
+
+But... if the bootloader doesn't populate this register (if the boot device is
+not UFS, like in compute platforms), then this whole logic won't work. This
+should also be taken into consideration.
+
+- Mani
+
+> 
+> P.S. you have been asked to fix your email client. Please do so. Or, if you are inserting these linebreaks manually, please stop.
+> 
+> >Thanks,
+> >
+> >Can Guo.
+> >
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
