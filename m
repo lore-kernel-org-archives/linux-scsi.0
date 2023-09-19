@@ -2,145 +2,270 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B161CE79A9
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 18:12:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0724DCE79A9
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 18:25:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232156AbjISSMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Sep 2023 14:12:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52836 "EHLO
+        id S232016AbjISSZH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Sep 2023 14:25:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229853AbjISSMG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 14:12:06 -0400
-Received: from mail-oo1-xc32.google.com (mail-oo1-xc32.google.com [IPv6:2607:f8b0:4864:20::c32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D83D8F;
-        Tue, 19 Sep 2023 11:11:56 -0700 (PDT)
-Received: by mail-oo1-xc32.google.com with SMTP id 006d021491bc7-573921661a6so3450471eaf.1;
-        Tue, 19 Sep 2023 11:11:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695147116; x=1695751916; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EpolQSnynorSkLR4MKF0xH2DyyIUKJh04TziLNWeL8s=;
-        b=RL1KEHBl6aeV3ze3Nu+ktRg9FHvpqoyBnmzQIP0OeAIjx96w1+QgCB5UbOYjZulutM
-         UI/okbnRiqmWoboVR1oZd8hwW39wApuDpLTxYUra2KcKogeaI63ZQt7BXatUtvseydLi
-         CVS3K70KbElQwjpZA/47QyvOrWWj/8MSOVkhNMrVrUHXZMEEBnfZfzd/rziJ0C4qwD2p
-         EZJW/bRBhHCDXyA2C2l+oa0nBPVONe6qfmgKq4sSR0vdPnTd/piG2c2xhv5nS1/vwajX
-         JBLsqJkUqntRnaP5BqsgDWAIxZDeLP33mvs5WhaXfdaQJp2lsVrKXN6z1FE6kSGkdnCm
-         eMTQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695147116; x=1695751916;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=EpolQSnynorSkLR4MKF0xH2DyyIUKJh04TziLNWeL8s=;
-        b=O+lym6raQgnrB/aEllu8DfQadMdxNAsEPkvecWEvokdstlIP+hnMmNMWLkYZkubhvF
-         xTyYDXvAFg9h3vR2OEVQTDG2vaoYcPSPjeUN69JksrUHIosLiQ2oIci4sJB6fwAKAb4z
-         T+Vx0g8oTofwqV8O/1LKO2Rv8FSF114VEDVAJYqAgBl+mFYDs6fxxojbd3BSQ+wJOCnG
-         qBzn9xVywRxZ2J+1rHajmw/m9jYUc9Q/b3LQpBXbmFHeFWnGQUuiULubCu7IkWF8qCKR
-         enhY/bNh6j/Ixh+6b/BY7uo8h5cBowO25MSVGM3b/SBKCpES3pVM9KgQOthCg5HIOnMm
-         ikjw==
-X-Gm-Message-State: AOJu0Ywz3shhgbZ00VsLk2J+EcTsdMKbTM+eeTIHJdVogyzN2YFv8BXK
-        PSYo2FKxgmFjz3eskYdddZ8=
-X-Google-Smtp-Source: AGHT+IFT+b/dcs+E5G/IencVhkBBLWOSR/P6icSf6yCKJhZl47TfsRC+1f8qsvDeAfTbFoXFGMeimA==
-X-Received: by 2002:a4a:dfa3:0:b0:573:2ac5:43b4 with SMTP id k3-20020a4adfa3000000b005732ac543b4mr452120ook.5.1695147115721;
-        Tue, 19 Sep 2023 11:11:55 -0700 (PDT)
-Received: from ?IPV6:2603:8081:1405:679b:b0bb:fc45:82b2:7448? (2603-8081-1405-679b-b0bb-fc45-82b2-7448.res6.spectrum.com. [2603:8081:1405:679b:b0bb:fc45:82b2:7448])
-        by smtp.gmail.com with ESMTPSA id v17-20020a4a9751000000b00573f5173a57sm5902486ooi.23.2023.09.19.11.11.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Sep 2023 11:11:55 -0700 (PDT)
-Message-ID: <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
-Date:   Tue, 19 Sep 2023 13:11:53 -0500
+        with ESMTP id S232066AbjISSZG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 14:25:06 -0400
+Received: from rcdn-iport-3.cisco.com (rcdn-iport-3.cisco.com [173.37.86.74])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EC28BC;
+        Tue, 19 Sep 2023 11:25:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=cisco.com; i=@cisco.com; l=7559; q=dns/txt; s=iport;
+  t=1695147900; x=1696357500;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Rsn3PPMulBps4MjaC5P5HHpE7afvTwGULlEwTuNevO4=;
+  b=eok0yt6XlnidbjY7o/d9PHx7LHiY+z9qYSEzsycuDg7qC1HBF5cAlNRJ
+   7EFvZqGCzZx8ASia5j3UwU99dO7qYGWT4Fz4AofYhFqOiOKOPbPMpMaTz
+   VwEI+KF/EjtnXCNaKnQr+6vMuNkEAeSVuq1ZHxngs9Ngpg9gBBWyZXuxk
+   0=;
+X-CSE-ConnectionGUID: Wlx2ulGsQTyj0Utd6R4ZYA==
+X-CSE-MsgGUID: ynZzxJJzRGCM0OpoVlM7Bg==
+X-IronPort-AV: E=Sophos;i="6.02,160,1688428800"; 
+   d="scan'208";a="117513323"
+Received: from rcdn-core-5.cisco.com ([173.37.93.156])
+  by rcdn-iport-3.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2023 18:24:59 +0000
+Received: from localhost.cisco.com ([10.193.101.253])
+        (authenticated bits=0)
+        by rcdn-core-5.cisco.com (8.15.2/8.15.2) with ESMTPSA id 38JIOpo9021635
+        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Tue, 19 Sep 2023 18:24:58 GMT
+From:   Karan Tilak Kumar <kartilak@cisco.com>
+To:     sebaddel@cisco.com
+Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
+        mkai2@cisco.com, satishkh@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH] scsi: fnic: Fix sg_reset success path
+Date:   Tue, 19 Sep 2023 11:24:36 -0700
+Message-Id: <20230919182436.6895-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [bug report] blktests srp/002 hang
-To:     Zhu Yanjun <yanjun.zhu@linux.dev>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <0c5c732c-283c-b29a-0ac2-c32211fc7e17@gmail.com>
- <yewvcfcketee5qduraajra2g37t2mpxdlmj7aqny3umf7mkavk@wsm5forumsou>
- <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
- <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
- <18a3ae8c-145b-4c7f-a8f5-67840feeb98c@acm.org>
- <ab93655f-c187-fdab-6c67-3bfb2d9aa516@gmail.com>
- <9dd0aa0a-d696-a95b-095b-f54d6d31a6ab@linux.dev>
- <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev>
- <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
- <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev>
-Content-Language: en-US
-From:   Bob Pearson <rpearsonhpe@gmail.com>
-In-Reply-To: <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
+X-Outbound-Node: rcdn-core-5.cisco.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/19/23 03:07, Zhu Yanjun wrote:
-> 在 2023/9/19 12:14, Shinichiro Kawasaki 写道:
->> On Sep 16, 2023 / 13:59, Zhu Yanjun wrote:
->> [...]
->>> On Debian, with the latest multipathd or revert the commit 9b4b7c1f9f54
->>> ("RDMA/rxe: Add workqueue support for rxe tasks"), this problem will
->>> disappear.
->>
->> Zhu, thank you for the actions.
->>
->>> On Fedora 38, if the commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support
->>> for rxe tasks") is reverted, will this problem still appear?
->>> I do not have such test environment. The commit is in the attachment,
->>> can anyone have a test? Please let us know the test result. Thanks.
->>
->> I tried the latest kernel tag v6.6-rc2 with my Fedora 38 test systems. With the
->> v6.6-rc2 kernel, I still see the hang. I repeated the blktests test case srp/002
->> 30 time or so, then the hang was recreated. Then I reverted the commit
->> 9b4b7c1f9f54 from v6.6-rc2, and the hang disappeared. I repeated the blktests
->> test case 100 times, and did not see the hang.
->>
->> I confirmed these results under two multipathd conditions: 1) with Fedora latest
->> device-mapper-multipath package v0.9.4, and 2) the latest multipath-tools v0.9.6
->> that I built from source code.
->>
->> So, when the commit gets reverted, the hang disappears as I reported for
->> v6.5-rcX kernels.
-> Thanks, Shinichiro Kawasaki. Your helps are appreciated.
-> 
-> This problem is related with the followings:
-> 
-> 1). Linux distributions: Ubuntu, Debian and Fedora;
-> 
-> 2). multipathd;
-> 
-> 3). the commits 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support for rxe tasks")
-> 
-> On Ubuntu, with or without the commit, this problem does not occur.
-> 
-> On Debian, without this commit, this problem does not occur. With this commit, this problem will occur.
-> 
-> On Fedora, without this commit, this problem does not occur. With this commit, this problem will occur.
-> 
-> The commits 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support for rxe tasks") is from Bob Pearson.
-> 
-> Hi, Bob, do you have any comments about this problem? It seems that this commit is not compatible with blktests.
-> 
-> Hi, Jason and Leon, please comment on this problem.
-> 
-> Thanks a lot.
-> 
-> Zhu Yanjun
+sg_reset performs a device reset/lun reset on a lun.
+Since it is issued by the user, it does not come into the
+driver with a tag or a queue id.
+Fix the fnic driver to create an io_req and use a scsi command tag.
+Fix the ITMF path to special case the sg_reset response.
 
-My belief is that the issue is related to timing not the logical operation of the code.
-Work queues are just kernel processes and can be scheduled (if not holding spinlocks)
-while soft IRQs lock up the CPU until they exit. This can cause longer delays in responding
-to ULPs. The work queue tasks for each QP are strictly single threaded which is managed by
-the work queue framework the same as tasklets.
+Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
+Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+---
+ drivers/scsi/fnic/fnic.h      |  4 ++-
+ drivers/scsi/fnic/fnic_io.h   |  2 ++
+ drivers/scsi/fnic/fnic_main.c |  2 ++
+ drivers/scsi/fnic/fnic_scsi.c | 64 +++++++++++++++++++++++++----------
+ 4 files changed, 54 insertions(+), 18 deletions(-)
 
-Earlier in time I have also seen the exact same hang behavior with the siw driver but not
-recently. Also I have seen sensitivity to logging changes in the hang behavior. These are
-indications that timing may be the cause of the issue.
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 93c68931a593..22cef283b2b9 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -27,7 +27,7 @@
+ 
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+-#define DRV_VERSION		"1.6.0.56"
++#define DRV_VERSION		"1.6.0.57"
+ #define PFX			DRV_NAME ": "
+ #define DFX                     DRV_NAME "%d: "
+ 
+@@ -237,6 +237,8 @@ struct fnic {
+ 	unsigned int cq_count;
+ 
+ 	struct mutex sgreset_mutex;
++	spinlock_t sgreset_lock; /* lock for sgreset */
++	struct scsi_cmnd *sgreset_sc;
+ 	struct dentry *fnic_stats_debugfs_host;
+ 	struct dentry *fnic_stats_debugfs_file;
+ 	struct dentry *fnic_reset_debugfs_file;
+diff --git a/drivers/scsi/fnic/fnic_io.h b/drivers/scsi/fnic/fnic_io.h
+index f4c8769df312..9ec41aadb04e 100644
+--- a/drivers/scsi/fnic/fnic_io.h
++++ b/drivers/scsi/fnic/fnic_io.h
+@@ -52,6 +52,8 @@ struct fnic_io_req {
+ 	unsigned long start_time; /* in jiffies */
+ 	struct completion *abts_done; /* completion for abts */
+ 	struct completion *dr_done; /* completion for device reset */
++	unsigned int tag;
++	struct scsi_cmnd *sc; /* midlayer's cmd pointer*/
+ };
+ 
+ enum fnic_port_speeds {
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 984bc5fc55e2..f27f9319e0b2 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -754,6 +754,8 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	for (i = 0; i < FNIC_IO_LOCKS; i++)
+ 		spin_lock_init(&fnic->io_req_lock[i]);
+ 
++	spin_lock_init(&fnic->sgreset_lock);
++
+ 	err = -ENOMEM;
+ 	fnic->io_req_pool = mempool_create_slab_pool(2, fnic_io_req_cache);
+ 	if (!fnic->io_req_pool)
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 9761b2c9db48..416d81954819 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -1047,9 +1047,9 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+ {
+ 	u8 type;
+ 	u8 hdr_status;
+-	struct fcpio_tag tag;
++	struct fcpio_tag ftag;
+ 	u32 id;
+-	struct scsi_cmnd *sc;
++	struct scsi_cmnd *sc = NULL;
+ 	struct fnic_io_req *io_req;
+ 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+ 	struct abort_stats *abts_stats = &fnic->fnic_stats.abts_stats;
+@@ -1058,27 +1058,43 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+ 	unsigned long flags;
+ 	spinlock_t *io_lock;
+ 	unsigned long start_time;
++	unsigned int tag;
+ 
+-	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &tag);
+-	fcpio_tag_id_dec(&tag, &id);
++	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &ftag);
++	fcpio_tag_id_dec(&ftag, &id);
+ 
+-	if ((id & FNIC_TAG_MASK) >= fnic->fnic_max_tag_id) {
++	tag = id & FNIC_TAG_MASK;
++	if (tag == fnic->fnic_max_tag_id) {
++		if (!(id & FNIC_TAG_DEV_RST)) {
++			shost_printk(KERN_ERR, fnic->lport->host,
++						"Tag out of range id 0x%x hdr status = %s\n",
++						id, fnic_fcpio_status_to_str(hdr_status));
++			return;
++		}
++	} else if (tag > fnic->fnic_max_tag_id) {
+ 		shost_printk(KERN_ERR, fnic->lport->host,
+-		"Tag out of range tag %x hdr status = %s\n",
+-		id, fnic_fcpio_status_to_str(hdr_status));
++					"Tag out of range tag 0x%x hdr status = %s\n",
++					tag, fnic_fcpio_status_to_str(hdr_status));
+ 		return;
+ 	}
+ 
+-	sc = scsi_host_find_tag(fnic->lport->host, id & FNIC_TAG_MASK);
++	if ((tag == fnic->fnic_max_tag_id) && (id & FNIC_TAG_DEV_RST)) {
++		sc = fnic->sgreset_sc;
++		io_lock = &fnic->sgreset_lock;
++	} else {
++		sc = scsi_host_find_tag(fnic->lport->host, id & FNIC_TAG_MASK);
++		io_lock = fnic_io_lock_hash(fnic, sc);
++	}
++
+ 	WARN_ON_ONCE(!sc);
+ 	if (!sc) {
+ 		atomic64_inc(&fnic_stats->io_stats.sc_null);
+ 		shost_printk(KERN_ERR, fnic->lport->host,
+ 			  "itmf_cmpl sc is null - hdr status = %s tag = 0x%x\n",
+-			  fnic_fcpio_status_to_str(hdr_status), id);
++			  fnic_fcpio_status_to_str(hdr_status), tag);
+ 		return;
+ 	}
+-	io_lock = fnic_io_lock_hash(fnic, sc);
++
+ 	spin_lock_irqsave(io_lock, flags);
+ 	io_req = fnic_priv(sc)->io_req;
+ 	WARN_ON_ONCE(!io_req);
+@@ -1089,7 +1105,7 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+ 		shost_printk(KERN_ERR, fnic->lport->host,
+ 			  "itmf_cmpl io_req is null - "
+ 			  "hdr status = %s tag = 0x%x sc 0x%p\n",
+-			  fnic_fcpio_status_to_str(hdr_status), id, sc);
++			  fnic_fcpio_status_to_str(hdr_status), tag, sc);
+ 		return;
+ 	}
+ 	start_time = io_req->start_time;
+@@ -1938,6 +1954,10 @@ static inline int fnic_queue_dr_io_req(struct fnic *fnic,
+ 	struct scsi_lun fc_lun;
+ 	int ret = 0;
+ 	unsigned long intr_flags;
++	unsigned int tag = scsi_cmd_to_rq(sc)->tag;
++
++	if (tag == SCSI_NO_TAG)
++		tag = io_req->tag;
+ 
+ 	spin_lock_irqsave(host->host_lock, intr_flags);
+ 	if (unlikely(fnic_chk_state_flags_locked(fnic,
+@@ -1964,7 +1984,8 @@ static inline int fnic_queue_dr_io_req(struct fnic *fnic,
+ 	/* fill in the lun info */
+ 	int_to_scsilun(sc->device->lun, &fc_lun);
+ 
+-	fnic_queue_wq_copy_desc_itmf(wq, scsi_cmd_to_rq(sc)->tag | FNIC_TAG_DEV_RST,
++	tag |= FNIC_TAG_DEV_RST;
++	fnic_queue_wq_copy_desc_itmf(wq, tag,
+ 				     0, FCPIO_ITMF_LUN_RESET, SCSI_NO_TAG,
+ 				     fc_lun.scsi_lun, io_req->port_id,
+ 				     fnic->config.ra_tov, fnic->config.ed_tov);
+@@ -2146,8 +2167,7 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
+ 		.ret = SUCCESS,
+ 	};
+ 
+-	if (new_sc)
+-		iter_data.lr_sc = lr_sc;
++	iter_data.lr_sc = lr_sc;
+ 
+ 	scsi_host_busy_iter(fnic->lport->host,
+ 			    fnic_pending_aborts_iter, &iter_data);
+@@ -2230,8 +2250,14 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ 		mutex_lock(&fnic->sgreset_mutex);
+ 		tag = fnic->fnic_max_tag_id;
+ 		new_sc = 1;
+-	}
+-	io_lock = fnic_io_lock_hash(fnic, sc);
++		fnic->sgreset_sc = sc;
++		io_lock = &fnic->sgreset_lock;
++		FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
++			"fcid: 0x%x lun: 0x%llx flags: 0x%x tag: 0x%x Issuing sgreset\n",
++			rport->port_id, sc->device->lun, fnic_priv(sc)->flags, tag);
++	} else
++		io_lock = fnic_io_lock_hash(fnic, sc);
++
+ 	spin_lock_irqsave(io_lock, flags);
+ 	io_req = fnic_priv(sc)->io_req;
+ 
+@@ -2247,6 +2273,8 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ 		}
+ 		memset(io_req, 0, sizeof(*io_req));
+ 		io_req->port_id = rport->port_id;
++		io_req->tag = tag;
++		io_req->sc = sc;
+ 		fnic_priv(sc)->io_req = io_req;
+ 	}
+ 	io_req->dr_done = &tm_done;
+@@ -2400,8 +2428,10 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ 		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
+ 		  fnic_flags_and_state(sc));
+ 
+-	if (new_sc)
++	if (new_sc) {
++		fnic->sgreset_sc = NULL;
+ 		mutex_unlock(&fnic->sgreset_mutex);
++	}
+ 
+ 	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+ 		      "Returning from device reset %s\n",
+-- 
+2.31.1
 
-Bob
