@@ -2,92 +2,163 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 113F8CD5BA6
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 12:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8904BCD5BA0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 12:17:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231476AbjISMPi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Sep 2023 08:15:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45682 "EHLO
+        id S232087AbjISMRb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Sep 2023 08:17:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229552AbjISMPg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 08:15:36 -0400
+        with ESMTP id S231839AbjISMRY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 08:17:24 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56184E3;
-        Tue, 19 Sep 2023 05:15:31 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96AB2C433C7;
-        Tue, 19 Sep 2023 12:15:27 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3337CD9;
+        Tue, 19 Sep 2023 05:16:33 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 173C5C433C9;
+        Tue, 19 Sep 2023 12:16:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695125731;
-        bh=xvCx7ZWNm6jnB4edU9vEvToGC6Z5Sc/hEVmL8SgiqZU=;
+        s=k20201202; t=1695125792;
+        bh=Lc5xs7WnAK+N37XS6wUjcU4LxvvMUYqTgysilfrXRco=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HZseuY35WtH77s0q6NFTQCnN8iQjLfnq+vTD+TAUlrk1wwvuAA+DFYeeWDHg+Fvv2
-         2p6iwRJRenvbl6ao3MJAEqtuyGay6DGmaLxjZg6b1l2VHtsnzUtBHtes7Oij33Zb77
-         ZfFX+F1k6Mf3stSs08AxTMhP+Go1OwBLN5x1+1uwlvf/2EhbrGuYo3QXWoHcFjP2Gw
-         ZyDw0apc9XL/oqWyk+cv6tI5vgjRRTRkDU87aT5x4nGDyfPua3g5WTFmVoZeyMe+LT
-         5Nt4CcQC2lHyCUj1KsDJGxI7CwdjierL8EemVsHwQ7gRYVYCp+RKS6T+xspknKRDa9
-         bZAI19Hco5l0g==
-Date:   Tue, 19 Sep 2023 14:15:24 +0200
+        b=Mfrqp5VAS4erPq6YdeOlcSTUN2s/B4vowHUx1e+xbzkvJg1O2PqYUiLp6hkEUmsUU
+         AJtgUEShsAIsdQQZ+z3HDLJxJLCqtdBVLggbR8664cL8+d4QzNJZiB6BEPdzQlD7wz
+         xbR4/5Qy4JyN2FQbaiA81WsHT8VgqK75UxfPBZ7vsfg45Z7PM1/UqPTd1WbpPoRah/
+         Vt5GHXw1ZvXb65BVpl/r1RiYsvjKzgz6rs+rOOXhZhXUOtvUbRHFLS0HTStdyGLjCL
+         7dU0PUHS2JENFjIsT5dn0g0oJMfBR+KJ+hGTTOl7CsT46datquwwxQjTC3PCZU6Isz
+         Kta5glU8vtFUA==
+Date:   Tue, 19 Sep 2023 14:16:27 +0200
 From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc:     Can Guo <quic_cang@quicinc.com>, quic_nguyenb@quicinc.com,
-        quic_nitirawa@quicinc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>
-Subject: Re: [PATCH 4/6] phy: qualcomm: phy-qcom-qmp-ufs: Move data structs
- and setting tables to header
-Message-ID: <20230919121524.GD4732@thinkpad>
+To:     Can Guo <quic_cang@quicinc.com>
+Cc:     quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Arthur Simchaev <arthur.simchaev@wdc.com>,
+        Lu Hongfei <luhongfei@vivo.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 5/6] scsi: ufs: ufs-sysfs: Expose UFS power info
+Message-ID: <20230919121627.GE4732@thinkpad>
 References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
- <1694411968-14413-5-git-send-email-quic_cang@quicinc.com>
- <CAA8EJpoWnXeJKPB04kJW6Qo7ifAnt1u2ZSiq+W2HWOez=hi5gA@mail.gmail.com>
+ <1694411968-14413-6-git-send-email-quic_cang@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAA8EJpoWnXeJKPB04kJW6Qo7ifAnt1u2ZSiq+W2HWOez=hi5gA@mail.gmail.com>
+In-Reply-To: <1694411968-14413-6-git-send-email-quic_cang@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 14, 2023 at 03:28:59PM +0300, Dmitry Baryshkov wrote:
-> On Mon, 11 Sept 2023 at 09:01, Can Guo <quic_cang@quicinc.com> wrote:
-> >
-> > To make the code more readable, move the data structs and PHY settting
-> > tables to a header file, namely the phy-qcom-qmp-ufs.h.
-> >
-> > Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> > ---
-> >  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 802 +------------------------------
-> >  drivers/phy/qualcomm/phy-qcom-qmp-ufs.h | 805 ++++++++++++++++++++++++++++++++
-> >  2 files changed, 806 insertions(+), 801 deletions(-)
-> >  create mode 100644 drivers/phy/qualcomm/phy-qcom-qmp-ufs.h
-> 
-> Is there any reason to do so? Other than just moving stuff around, it
-> doesn't give us anything. This header will not be shared with any
-> other driver. Just moving data tables to the header (ugh, static data
-> in the header) doesn't make code more readable.
+On Sun, Sep 10, 2023 at 10:59:26PM -0700, Can Guo wrote:
+> Having UFS power info available in sysfs makes it easier to tell the state
+> of the link during runtime considering we have a bounch of power saving
+> features and various combinations for backward compatiblity.
 > 
 
-I think the motive here is to move the static tables to one file and have the
-rest of the code in another. Because, the static tables itself occupy 1.2k LoC
-now and it is going to grow. So let's keep them in a single file to avoid mixing
-it with rest of the driver code.
+Please move the sysfs patches to a separate series.
 
 - Mani
 
-> If you really would like to clean up the QMP drivers, please consider
-> splitting _common_ parts. But at this point I highly doubt that it is
-> possible in a useful way.
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> ---
+>  drivers/ufs/core/ufs-sysfs.c | 71 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 71 insertions(+)
 > 
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index c959064..53af490 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -628,6 +628,76 @@ static const struct attribute_group ufs_sysfs_monitor_group = {
+>  	.attrs = ufs_sysfs_monitor_attrs,
+>  };
+>  
+> +static ssize_t gear_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%u\n", hba->pwr_info.gear_rx);
+> +}
+> +
+> +static ssize_t lane_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%u\n", hba->pwr_info.lane_rx);
+> +}
+> +
+> +static ssize_t mode_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%u\n", hba->pwr_info.pwr_rx);
+> +}
+> +
+> +static ssize_t rate_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%u\n", hba->pwr_info.hs_rate);
+> +}
+> +
+> +static ssize_t dev_pm_show(struct device *dev, struct device_attribute *attr,
+> +			   char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%d\n", hba->curr_dev_pwr_mode);
+> +}
+> +
+> +static ssize_t link_state_show(struct device *dev,
+> +			       struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "%d\n", hba->uic_link_state);
+> +}
+> +
+> +static DEVICE_ATTR_RO(gear);
+> +static DEVICE_ATTR_RO(lane);
+> +static DEVICE_ATTR_RO(mode);
+> +static DEVICE_ATTR_RO(rate);
+> +static DEVICE_ATTR_RO(dev_pm);
+> +static DEVICE_ATTR_RO(link_state);
+> +
+> +static struct attribute *ufs_power_info_attrs[] = {
+> +	&dev_attr_gear.attr,
+> +	&dev_attr_lane.attr,
+> +	&dev_attr_mode.attr,
+> +	&dev_attr_rate.attr,
+> +	&dev_attr_dev_pm.attr,
+> +	&dev_attr_link_state.attr,
+> +	NULL
+> +};
+> +
+> +static const struct attribute_group ufs_sysfs_power_info_group = {
+> +	.name = "power_info",
+> +	.attrs = ufs_power_info_attrs,
+> +};
+> +
+>  static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+>  				  enum desc_idn desc_id,
+>  				  u8 desc_index,
+> @@ -1233,6 +1303,7 @@ static const struct attribute_group *ufs_sysfs_groups[] = {
+>  	&ufs_sysfs_default_group,
+>  	&ufs_sysfs_capabilities_group,
+>  	&ufs_sysfs_monitor_group,
+> +	&ufs_sysfs_power_info_group,
+>  	&ufs_sysfs_device_descriptor_group,
+>  	&ufs_sysfs_interconnect_descriptor_group,
+>  	&ufs_sysfs_geometry_descriptor_group,
 > -- 
-> With best wishes
-> Dmitry
+> 2.7.4
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
