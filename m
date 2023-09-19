@@ -2,123 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BBD7CD5BD6
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 15:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 731F2CE79A9
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 16:27:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233086AbjISPKd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Sep 2023 11:10:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53238 "EHLO
+        id S230351AbjISQ1n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Sep 2023 12:27:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233071AbjISPKb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 11:10:31 -0400
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D6227C6;
-        Tue, 19 Sep 2023 08:10:24 -0700 (PDT)
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8AFF51FB;
-        Tue, 19 Sep 2023 08:11:01 -0700 (PDT)
-Received: from FVFF77S0Q05N.cambridge.arm.com (FVFF77S0Q05N.cambridge.arm.com [10.1.31.185])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 4CACC3F59C;
-        Tue, 19 Sep 2023 08:10:22 -0700 (PDT)
-Date:   Tue, 19 Sep 2023 16:10:14 +0100
-From:   Mark Rutland <mark.rutland@arm.com>
-To:     Baokun Li <libaokun1@huawei.com>
-Cc:     Yi Zhang <yi.zhang@redhat.com>, Ming Lei <ming.lei@redhat.com>,
-        Christian Brauner <brauner@kernel.org>,
-        linux-fsdevel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Changhui Zhong <czhong@redhat.com>,
-        yangerkun <yangerkun@huawei.com>,
-        "zhangyi (F)" <yi.zhang@huawei.com>, peterz@infradead.org,
-        Kees Cook <keescook@chromium.org>,
-        chengzhihao <chengzhihao1@huawei.com>,
-        Will Deacon <will@kernel.org>
-Subject: Re: [czhong@redhat.com: [bug report] WARNING: CPU: 121 PID: 93233 at
- fs/dcache.c:365 __dentry_kill+0x214/0x278]
-Message-ID: <ZQmwcagwXBQCTpUY@FVFF77S0Q05N.cambridge.arm.com>
-References: <ZOWFtqA2om0w5Vmz@fedora>
- <20230823-kuppe-lassen-bc81a20dd831@brauner>
- <CAFj5m9KiBDzNHCsTjwUevZh3E3RRda2ypj9+QcRrqEsJnf9rXQ@mail.gmail.com>
- <CAHj4cs_MqqWYy+pKrNrLqTb=eoSOXcZdjPXy44x-aA1WvdVv0w@mail.gmail.com>
- <89d049ed-6bbf-bba7-80d4-06c060e65e5b@huawei.com>
+        with ESMTP id S229648AbjISQ1m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 12:27:42 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A50B092;
+        Tue, 19 Sep 2023 09:27:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78516C433C7;
+        Tue, 19 Sep 2023 16:27:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695140856;
+        bh=/YtV+6W6LsODiFxiATsenledXoIGVof4Rjz+HVc9CFM=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=ey/ijgBoAm4dBs1RlT+Ryr35UkeRsRrjeuR0x7w/3SAcOA3Mh5dfIvoyDq9Hkxq6i
+         C3pUSIah0Am3OxoENWZvAtPhksXOg4qBxrurco4pkmc3lJlDnZ4GAZmAmBDqCU6PAk
+         ZAbzdoVRmECqAOKW+M1Y89cNEIzGtHYLE7KCWfUlKEOADRUKWxWeRxj6MZPaHSO+5a
+         pPPSNhXkIyhSJNkF5Me7gDoYD2KtIcmmiWHgPBzevwgUEjv/PAFySOSPBd3LcxNya4
+         qdpH0j6Ifftvo07nPH151ujyQnyomg1zphNkvi64rM8/i8ldijglvkCMOa+hRRMp8q
+         b8vQPpn1qGO3A==
+Message-ID: <be4525e4-2761-897a-f186-0759e092ab14@kernel.org>
+Date:   Tue, 19 Sep 2023 09:27:34 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <89d049ed-6bbf-bba7-80d4-06c060e65e5b@huawei.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.0
+Subject: Re: [PATCH v3 03/23] ata: libata-scsi: link ata port and scsi device
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230915081507.761711-1-dlemoal@kernel.org>
+ <20230915081507.761711-4-dlemoal@kernel.org> <ZQmgU/j8OD8t4KLs@x1-carbon>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZQmgU/j8OD8t4KLs@x1-carbon>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Sep 16, 2023 at 02:55:47PM +0800, Baokun Li wrote:
-> On 2023/9/13 16:59, Yi Zhang wrote:
-> > The issue still can be reproduced on the latest linux tree[2].
-> > To reproduce I need to run about 1000 times blktests block/001, and
-> > bisect shows it was introduced with commit[1], as it was not 100%
-> > reproduced, not sure if it's the culprit?
-> > 
-> > 
-> > [1] 9257959a6e5b locking/atomic: scripts: restructure fallback ifdeffery
-> Hello, everyone！
+On 2023/09/19 6:21, Niklas Cassel wrote:
+>> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+>> index 17f6ccee53c7..32968b4cf8e4 100644
+>> --- a/drivers/ata/pata_macio.c
+>> +++ b/drivers/ata/pata_macio.c
+>> @@ -918,6 +918,7 @@ static const struct scsi_host_template pata_macio_sht = {
+>>  	 * use 64K minus 256
+>>  	 */
+>>  	.max_segment_size	= MAX_DBDMA_SEG,
+>> +	.slave_alloc		= ata_scsi_slave_alloc,
+>>  	.slave_configure	= pata_macio_slave_config,
+>>  	.sdev_groups		= ata_common_sdev_groups,
+>>  	.can_queue		= ATA_DEF_QUEUE,
+>> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+>> index d105db5c7d81..353ac7b2f14a 100644
+>> --- a/drivers/ata/sata_mv.c
+>> +++ b/drivers/ata/sata_mv.c
+>> @@ -673,6 +673,7 @@ static const struct scsi_host_template mv6_sht = {
+>>  	.sdev_groups		= ata_ncq_sdev_groups,
+>>  	.change_queue_depth	= ata_scsi_change_queue_depth,
+>>  	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+>> +	.slave_alloc		= ata_scsi_slave_alloc,
 > 
-> We have confirmed that the merge-in of this patch caused hlist_bl_lock
-> (aka, bit_spin_lock) to fail, which in turn triggered the issue above.
+> It seems wrong to add .slave_alloc to all different ata_port_operations structs.
+> The .slave_configure is added on all different ata_port_operations structs,
+> because the callback can be different for different drivers.
+> 
+> However, adding the device link is done in .ata_scsi_slave_alloc,
+> removing the device link is done in .ata_scsi_slave_destroy.
+> 
+> Thus, I suggest that we only add the
+> .slave_alloc = ata_scsi_slave_alloc,
+> 
+> to __ATA_BASE_SHT() in libata.h, which is currently the only
+> place which has .slave_destroy defined.
 
-Thanks for this!
+Good point. I will make this change.
 
-I believe I know what the issue is.
 
-I took a look at the generated assembly for hlist_bl_lock() and
-hlist_bl_unlock(), and for the latter I see a plain store rather than a
-store-release as was intended.
+-- 
+Damien Le Moal
+Western Digital Research
 
-I believe that in 9257959a6e5b, I messed up the fallback logic for
-atomic*_set_release():
-
-| static __always_inline void 
-| raw_atomic64_set_release(atomic64_t *v, s64 i)
-| {
-| #if defined(arch_atomic64_set_release)
-|         arch_atomic64_set_release(v, i);
-| #elif defined(arch_atomic64_set)
-|         arch_atomic64_set(v, i);
-| #else
-|         if (__native_word(atomic64_t)) {
-|                 smp_store_release(&(v)->counter, i);
-|         } else {
-|                 __atomic_release_fence();
-|                 raw_atomic64_set(v, i);
-|         }    
-| #endif
-| }
-
-On arm64 we want to use smp_store_release(), and don't provide
-arch_atomic64_set_release(). Unfortunately we *do* provide arch_atomic64_set(),
-and the ifdeffery above will choose that in preference.
-
-Prior to that commit, the ifdeffery would do what we want:
-
-| #ifndef arch_atomic64_set_release
-| static __always_inline void
-| arch_atomic64_set_release(atomic64_t *v, s64 i)
-| {
-|         if (__native_word(atomic64_t)) {
-|                 smp_store_release(&(v)->counter, i);
-|         } else {
-|                 __atomic_release_fence();
-|                 arch_atomic64_set(v, i);
-|         }
-| }
-| #define arch_atomic64_set_release arch_atomic64_set_release
-| #endif
-
-That explains the lock going wrong -- we lose the RELEASE semantic on
-hlist_bl_unlock(), and so loads and stores within the critical section aren't
-guaranteed to be visible to the next hlist_bl_lock(). On x86 this happens to
-work becauase of TSO.
-
-I'm working on fixing that now; I'll try to have a patch shortly.
-
-Thanks,
-Mark.
