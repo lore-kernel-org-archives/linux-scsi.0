@@ -2,62 +2,62 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4880CD5BBB
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 13:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68FD8CD5BB9
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Sep 2023 13:21:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232274AbjISNVa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Sep 2023 09:21:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39240 "EHLO
+        id S232276AbjISNVr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Sep 2023 09:21:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231739AbjISNV3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 09:21:29 -0400
+        with ESMTP id S231739AbjISNVq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Sep 2023 09:21:46 -0400
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0B9DF4;
-        Tue, 19 Sep 2023 06:21:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31591F4;
+        Tue, 19 Sep 2023 06:21:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1695129681; x=1726665681;
+  t=1695129700; x=1726665700;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-id:content-transfer-encoding:
    mime-version;
-  bh=/PhIj9O6FDOBMVzjSsxppD5bikwB875oVdOUlDKNWIE=;
-  b=Gl0qWgf45dXyIFYjVqXh4iItSKUijyB8dBZmWYiJ3Kqtl7fhT+S8fBz9
-   dgBC7W7TL2VuMGEj78JOU4GUFubNmJy+beJBWCHySiin6g13E093hdqFd
-   1wbbF88+l5IyTc5GRRXJC4J5+ao5zo0rtJHmwscHboZHjgr5/VAKbAfKo
-   05OFNUsxVvUzUTU8GgvJLm5rVelM/bas39I9nfaBSNEmWK1TJXS7NoZKE
-   5iHyYg+IXYUpE5RIzWSNrRrYQdODyqvu7ojPCbXqEZd1qugvfs9hTwCxY
-   jjLLUjaHIUENuhqq8HyFgMrjBt5dZ9tO3zISd/4KQI8cj1NuUy00d0gxp
+  bh=5Ern5EYegb8PCzuFFoTo/Qtf8FaK9pMYRtpE5IkagVw=;
+  b=k/spIvQ5zbU0fxADDtvS8g9MjHXv8BSROskDPrLepfWg5YwQfzHn2jdz
+   8E0ehMyCHZqYB3mm+vgxNJybHOtXLkdexM/ce/YCRNl4GjcCPjVWAp6cD
+   YsYUIve+Ep5fOrIwCuYjtFL7pYqqAY43ZG0j6IaN82K2XBzAyctif9jlf
+   gjaH13NhletbpHTM8OXmi3bN060whueItp3lTsLIYaLe72IBi6JsoMBGi
+   y2WhGwCoGKjfKyM4iUO+9rRZQS3krbuZRXEOecyhnQUviMEQMXuh7Iyi7
+   Vb6DoFHbOFV0fd5OzGG67fbKFS4BtICqxbuFwhfDJGuYkfj+HpxvLkn8L
    Q==;
-X-CSE-ConnectionGUID: 6bNaHup7SYex1rVKC72M9Q==
-X-CSE-MsgGUID: 6+mnrW9iShSsFMzciR0zXw==
+X-CSE-ConnectionGUID: 1Q3Mu+fBQ7mCWO26jXINog==
+X-CSE-MsgGUID: m2dydkGHRGyORG+kqJ6aBg==
 X-IronPort-AV: E=Sophos;i="6.02,159,1688400000"; 
-   d="scan'208";a="356416898"
-Received: from mail-sn1nam02lp2047.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.57.47])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Sep 2023 21:21:20 +0800
+   d="scan'208";a="356416922"
+Received: from mail-sn1nam02lp2041.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.57.41])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Sep 2023 21:21:38 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=a/9GtqXjDbDs0yAgb5Z3g53yc4EZqybPEJkavOaFamvK/RssVlBn0wlfhHU7ngmTWIzCiUMMHmvJAJTAR2SCZaDLIXMDmSp3sdI166H+exYc4g4ULSwtZ+IvaQ8TqhXi1a6n2cBEHmDCKsjBNwIAnZOp/Kz+H/qecciGPEJgqMzGD/ULrcWr4LbaTYoFM08qJ0rBTZxIPzo4LmkuHWjIvZHcuuzo6H/KBGTxAkMCgxC/YXo3t2y/FMz2djJwx6lcJDOwHZGj1Mikg5A44YMUKql7Z/Qpt8nejIvm764ibUHGrnDNAfUD8fSYDBbBguuFXtvraPKtyUohyjWZ34YBAw==
+ b=MYlJX7L6DkhFZ8nCpf9em03yeJeagZkh57Enxul/bB7szrnSMIFyuz/VTAUfI+vos6ZzEB69zRwUZRn+iztLuhLHRB9P6DIUHGSJzdujH9qbT8Mu+C/J9vGE7ScayNqDBaXtcYQPCAebUX3Qy3WgYlPNxWg+dfSXYpxtWuwnhmiIbEVTlF3n+yrHMXm6P1iGEux1iAD7nlSu9KuhaF/xMDNRXYt9dcUIP2JofRtXo+ygvZMvQccpBFAAPLZSLe0JKzwoi7Bmke79n5ZJtJI+k+PGxPDpDxWYmalx1PpcxLq+6GxwAGGFVTRyq9rbYpiOJnMsXDZV6Km7lJOGWVb6cA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bWHe/9gmUIKMPW6LQeRazKM04qsUjTOyk4qp6ZQZX10=;
- b=Sg7np7Uhcb9Mep8PHRstx5/oBLzbZQN/AHuMBLBleYrhRUwQFHf0xdbXlVMKQyTM53M9JJvt/STXLslPSbz1aZDh3nwWy9ZIIWVNLOHll0nswxvnOE09BKs+7ArqJPxV7JwQBziMXSdyXpHM5FB+byKhqZbYvK4nhnGYaxfW1kKflc9Tq1g1rhC0Yej6gxd2c+0WvVcKko1i4I/TTWOP07tU8OgCzbLMnmYMVOGFx2X0afTe6wRXtzQ3BLUyzxOAkYKEk1FU1d/2ap6rMGylM+PxeTq2tZSD0U05lcj+2XF/mvf3K2QZqSv2YU+K3Jd1wpv89thk0ZJszdqOBVcusg==
+ bh=HjSOreRHbVndGegbOxUdlq4heKikFSeb9KCsWnx6sHI=;
+ b=VU6LNcHRlmLa0UJru6RtOyK/egsgYuIAveeWbC+2nRmcjVTQcArBAvcujOf1wbPYeHS4IXNMIhgs8BR4UfudsnGzPnL/gt2xb7MUGZLwZcST7D25KniXYhOp3HNkoAYIQkk9Ra+atJVPEfa181X0LLCGDmGMNewGlwmfCz/AGT7O0rjwQPfn+XRGz7Rw/VM7/zd2WJZ3kPdG99PqqiH+j6L5mOd+oTWaDikDyhCmPKKuCsFyiOk0WG5nA/gEN/zvoSzdLBuRxjvQpCVvmTW4N9Bm1SM1orZA9jtzqqZU6y9ALWj4SN5ZqXIa9j/jmSZPcn6cNpnUq4G62PzrAvnAAw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bWHe/9gmUIKMPW6LQeRazKM04qsUjTOyk4qp6ZQZX10=;
- b=p+UQ4ggt+xJGW/m/5i6M4lAfipEDdh7qJDtWtS13xQLpile6P9sSnEQn25rRh6UYk8xoPGF1Pa7ULpgIsNfs1SzUKPE9UN+QN9Lf5Yl8M0a38a0qInrfh2rkmXwgJGBg+df1di9Vz4u8yT6bX6sQFbNwvMnYwX4hjmqBTUNpA70=
+ bh=HjSOreRHbVndGegbOxUdlq4heKikFSeb9KCsWnx6sHI=;
+ b=pD4nxgADcMl+BrfTKQKQbSiZTHkDm0gkqtt7oW6a+uBkFUJm7ENc/zRhilfTB/wKxiicFeTxxwQa6AsiUire7bAgQ1snjnxSjojv6YF1EEBGKgEZoPrVWEyz1uuK+w+eQdCO5URJk2QcaRISXT9jeEPbWIS7tWjGVZuDJLMt06Q=
 Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
  by CO6PR04MB7779.namprd04.prod.outlook.com (2603:10b6:303:13d::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6813.16; Tue, 19 Sep
- 2023 13:21:17 +0000
+ 2023 13:21:31 +0000
 Received: from MN2PR04MB6272.namprd04.prod.outlook.com
  ([fe80::59a:f2ee:fcb1:4eca]) by MN2PR04MB6272.namprd04.prod.outlook.com
  ([fe80::59a:f2ee:fcb1:4eca%4]) with mapi id 15.20.6813.014; Tue, 19 Sep 2023
- 13:21:17 +0000
+ 13:21:31 +0000
 From:   Niklas Cassel <Niklas.Cassel@wdc.com>
 To:     Damien Le Moal <dlemoal@kernel.org>
 CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
@@ -70,14 +70,14 @@ CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v3 02/23] ata: libata-core: Fix port and device removal
-Thread-Topic: [PATCH v3 02/23] ata: libata-core: Fix port and device removal
-Thread-Index: AQHZ6vwrHmh5RObK00qsdvgp8QKk5A==
-Date:   Tue, 19 Sep 2023 13:21:17 +0000
-Message-ID: <ZQmgSgm+Kovh+27q@x1-carbon>
+Subject: Re: [PATCH v3 03/23] ata: libata-scsi: link ata port and scsi device
+Thread-Topic: [PATCH v3 03/23] ata: libata-scsi: link ata port and scsi device
+Thread-Index: AQHZ6vw0AhT5k3s04UyP3kHnOdDdAg==
+Date:   Tue, 19 Sep 2023 13:21:31 +0000
+Message-ID: <ZQmgU/j8OD8t4KLs@x1-carbon>
 References: <20230915081507.761711-1-dlemoal@kernel.org>
- <20230915081507.761711-3-dlemoal@kernel.org>
-In-Reply-To: <20230915081507.761711-3-dlemoal@kernel.org>
+ <20230915081507.761711-4-dlemoal@kernel.org>
+In-Reply-To: <20230915081507.761711-4-dlemoal@kernel.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -86,165 +86,328 @@ authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=wdc.com;
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|CO6PR04MB7779:EE_
-x-ms-office365-filtering-correlation-id: 951653ed-39b8-45b6-c0d7-08dbb9134e7e
+x-ms-office365-filtering-correlation-id: cc0f217e-e93e-428b-7682-08dbb91356ae
 wdcipoutbound: EOP-TRUE
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: EFXJIFqFg7RlR9i8hI88IYOjAQQ+ob+K6mRv8d9YvDwkrKwCMSuWLuTGbawL/Q3Sn4t38Qjw32gX9jkVcIYbMMWA8u3wDhKjLKOq71Bg/5dTMmkCeSzvaqrqg7mr/CgM/aYb5VlCD4o/Qz8fvXnFWg4AQLugPHk/IR26nBU1O4RjMoDiPNkpBU4A2D0oaNKtdn1WesET9iavrKWh3bua2uFpGVR9qNskS9iyLVWxsTEodVrl1QrjoIldhNvR9WQRSCszXm0oQ/4CAtAeRycPRcmMSBz+pn2rGDCQ4l+ytb4EDZxLUlxdAFl4quJFtPHXE27YAKNYHwZJ1zDIs4R3eqNfQL908fCCMH39ClPNZ6K1fmVEVrgJR/Zp046mKaDo5gaGJP7nsaa/sZyGuiSYYiCoJ4NCAV7VEXC2FvpMisVpauzJ/03HIH542WKHqulQRMM6q/aohLPn5opbVVR44Vmj17S05ooBdJ3pc+SvOFkZ5kMD14tX/xxs7+K0JuoOoj+Ko4VM8d9cbTgNMZJk5co45W96qnK50iITnMuKKqFXKkp7ReK5gOUT/PPpOayilmi3orrlezPrIeif9Pl9WTakMvxcRFcLD+Zc/GXkhsUsq7KyJFvgX+O4sJfnANKZ
+x-microsoft-antispam-message-info: x3yKxl83jlueXnZ5IVWaD7rUgzDJoz7UVaZfWmCZeTdNkPkQssGBJwh1T4RzqH0U9B80R0/xDTRPk10UIZbrHt5GQ7VNCKsFK7owWac/l9C9eLS5568DrzLVpv+ZsbB68wf7jUsphvYG0LnUdxwqvxRkSa1LGq/2RxCHS58VuGmX64BhbLKdd6q4yESwbqkb/XB90EzQ+kTwiuaiL4JK76+vXDLFTp9tZyuiuN/xVN7TwuKrI/pjMJVNQqsF32iktMjv6rN/CVO9NSkGmSmFHArc3e+24PO34yJUaiKGvV0fMwZ2pnUJ8+SocdgPgAG/N82flvRveBcfmbPnSGHG+fmz5BXXHQYL7EKvIXFdxAD+BFB+6maEIzJF90dOk1WFgTfSREftCYwqKP3qG+U6I/rdyJ/qbFwkCeF2mybL7lsTudkBz0EUFMDhNdxBg5Zy5tm1fs9mskLsuPbQ28CvkC/rKtMSdVFLwirbPMoYSpEKhFKknG/qSXJQ9czGsO6ltwz+gOr1VREtii06iR7dohf/ykksXU0TYNvN6GDhJZvBGqW8+yx+bLmkFqVpKBZmRpq+LVqnlwhdHSjPjPCJ56xgD21iyYqHrFI3F9MWWzJRBYqZZ+fysNOvEaHk8yjW
 x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(39860400002)(396003)(376002)(136003)(346002)(366004)(451199024)(1800799009)(186009)(83380400001)(71200400001)(478600001)(86362001)(26005)(2906002)(7416002)(6486002)(6506007)(9686003)(6512007)(82960400001)(8676002)(76116006)(6916009)(316002)(66946007)(66556008)(41300700001)(64756008)(66476007)(66446008)(54906003)(33716001)(4326008)(122000001)(91956017)(5660300002)(38100700002)(8936002)(38070700005);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?z+dFeOAJVsuv9EZLhSzPvTTgdmJ87PPpctWgxGIhIrdImkF87NoOmvIVUKjO?=
- =?us-ascii?Q?j77kW2FjaHA+2ctLClqIIgpItbbgv6jrcd4geq7uAiNY3+cHxz3svxr7EvjQ?=
- =?us-ascii?Q?RGnngzytLjNOK3fg+jWTKXt1Qi6vhQi/J1QCwJbBPvxFvZ471gLqaPZUV2VA?=
- =?us-ascii?Q?FbxLk+XQik9wtD01f0lXpfoaEUGOGeC+2MU4wdHAnRugCOeo+JcZTHqXpHLN?=
- =?us-ascii?Q?v3dXqrnvytbQotKR9dyq5vxfb0Fd5pqXe4FLo0MN7KZxW0FfMA5uU2hFTqEW?=
- =?us-ascii?Q?kv7jtt7Eo37zcRvT+p39TC1xs39bVJzOTLgMaqS1c0Qn6Gi3RGPO9zZXuqJb?=
- =?us-ascii?Q?F+ztf9cPwDUmveyxM5LKQ1msvl55nVvg8XRqPIdTbb7NxXkIeM0JdFXNlPok?=
- =?us-ascii?Q?eLzMSVpG5g7UiHPJ4OTK2xLiOhdC2e3tEVhY3DHnFgRuB787eonluz3MRvyY?=
- =?us-ascii?Q?notIJ4MwrrtPn1o1N6xRv2Ro+HYnI/z1iuD9TAngSZ/q2WHlxrA7vsludm2c?=
- =?us-ascii?Q?y6+Qcs4/wU4ZyJgqnlUsEq0EwTzSteHo1S3tbcutniKT7g+OJFF0fiXfRDKx?=
- =?us-ascii?Q?WGxCKohx6KekOfameAsi0QRhg6ubtP1H22NVX6ux2E6WF6vnq3LzVfA5XACc?=
- =?us-ascii?Q?drWPBuKcLenjBxpG7uTj8cR5DZN5f2IZ2RRSFc+vhOGHP9mlhPANubvTbEJg?=
- =?us-ascii?Q?YhRaytZ/L+HB1tGYtK8iIXEwZsRfvZunug9qLtcOlgt+cWOG7McPf5stM6Xw?=
- =?us-ascii?Q?E0Ps28I1eLb1MGuVrMy14Kvs1H8d/2JqezbupsQ29goFyI3QC14AnqhvqEaq?=
- =?us-ascii?Q?/PAbfAs2jr6JQ/KjHFO5ejcY4jLxxXfyz5shxJxbpuJzTgaH1PAr/HGNn4oD?=
- =?us-ascii?Q?+Dg7ZxCj09f4UsF60X/B76vkQLOXsCKbbs+1ObmL8dUpfvag/2zzv7PhBEcJ?=
- =?us-ascii?Q?k5pAx3EWIUU2BbZLEYEh3x4LujuTrErVmj2yCX6aduMrXNBKCrSvA1EQrTQx?=
- =?us-ascii?Q?C1DCgsP6/V2Se/TvawHHxT7Qc4x9I9nC1ydLckkyoSgrf/pVXQ5GyMxk2We4?=
- =?us-ascii?Q?oT50yc3rmBMbXeV0zKR14i9B059uXeAJ/Zc1HQVllANCxHOj6mZ/G2olVbKj?=
- =?us-ascii?Q?DVv5oiqgn3QVGIjfoFPD3yimmu6Po1sj+ljqzBi29rAktbGnTejF+lG4CqH/?=
- =?us-ascii?Q?zJMZ9YgnOFUUn5++g07OHz9lbEFBBx3iVDtbSHuaJZg/bN5zB79/Q7s6FYzm?=
- =?us-ascii?Q?Og4y6icD4GYmEwIUXaTA5Qq2/1nnQqXeiV4ORYLXwKGNBnika/lnYKgVDWlp?=
- =?us-ascii?Q?q6qqrr4WVEV1Q0Oir0ayOcJIXOAYaldK/RJF+u2dm5bFd0y4nH3Bhe0SsDzx?=
- =?us-ascii?Q?N3htSQtzj8rPwVh3qu/CxvhFHKLT1sJXlOQ8rAv4dPAHOAbuCkGFgzwqUPzo?=
- =?us-ascii?Q?HC5nxZp38R7pTJHsqdon0TelqP9ZPpLyFv479FiYnL+br6RYJSKA82zCTM1n?=
- =?us-ascii?Q?OBNoc2+kMfar2/IhgXyKYXrQqyPye/rFcz6wailwNw5SeGzKM8F7UcvmKeIU?=
- =?us-ascii?Q?gzSfYqqgk4QvX+mB0Hd+A3wYkY3pyWZe4+YwEGTK0HNFEe1Mgn+wJCKDQG1A?=
- =?us-ascii?Q?uQ=3D=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?GMcjzqpVGI9XbhuKvfdJXTe/WSKalAnVRCx3uFmmMMALQtUna21SBhf0toYi?=
+ =?us-ascii?Q?j9xkZVamHZw7LU154EmW5HDoup5e3iAezNFlkLj90U3r5Ha4D/itwpCyjFfJ?=
+ =?us-ascii?Q?SpaVJ6MV0w2hd58VkrLHkmfq7S3P8Q0nSTGqUtqfEGyBLGfOIS6waaus5yIb?=
+ =?us-ascii?Q?vP2AWI59Hz7zEJQAQA1m+1vr7ErmFb96jUKt+iGLJG4wAs228FNO0gQhxb1D?=
+ =?us-ascii?Q?OSu1dbH0OEdyIS+KazKaxn8855eC79eAr04t40EnQcPnc4DzILWplv3NdrJS?=
+ =?us-ascii?Q?h0e14R8QNu2gNRrcK8lH2UlyQ3j0Kc5W1yHNnFBxchIciwCop4lUndqyIKQu?=
+ =?us-ascii?Q?ZFA9Bw6YKlQX7Ih+2gORC77RfPqFsUGzQYf6kkojt6TVzgFWofogXWkoubdt?=
+ =?us-ascii?Q?j0XHmlG1JQflgOHSIpQy9MZVwtS1kQp7NlnUNxCirQlbv3gQhyi2GX+aLGrU?=
+ =?us-ascii?Q?8DJvgBJthGZN6wJv+WdrNhBjBWsSJQfSuzdvd2ac/BVn+EFdKk942WlXuuSC?=
+ =?us-ascii?Q?BVGjnfFVH4lF1fAnBmqaF2GEsnJsQ+myWq/eVPUH58U44qA6pGfhAViE3md5?=
+ =?us-ascii?Q?wcjMlUXFmJqh/pg/DENM86URzlitHN42W96KDD9Sbu9nrsibV2ZvRjuiMMfc?=
+ =?us-ascii?Q?+JImJpMRJjCv9akqNgRSPcnww6Khc57aHNoXKdyzORrwuvgFniAke2jD5rUM?=
+ =?us-ascii?Q?KxsPNugyXY3G8zrrKb3IsoKkodkPJti22dr9mS+PL25bqdcD3m7MWpz3aVx8?=
+ =?us-ascii?Q?MKraFqvI6EHg0EBsO3PpTtYr9Wkn4/vwywM8Io06o6eUo7TwmRSjDa8p8ZOE?=
+ =?us-ascii?Q?S7UO7QhLrfTphZKXqLLdAx17I0vncv6sibdFph8SoSkTMwgGp0w6mdci9v1t?=
+ =?us-ascii?Q?dFgq8fcAFgH8+mGRogUQ1xl8UhJnVZIkN8z2/RYNtmtFKjhev6h08WpOAwoG?=
+ =?us-ascii?Q?AbQS93buVCurtBIEts0w9iDKiDoTo179BiDUiWTsUTSljmEKrHM0/1KmcgHD?=
+ =?us-ascii?Q?sel/1CydiC8RxkIijU1zWsERw0ucKDHZiesqKOHfp/1pNFxRwvp9wHjU0Kge?=
+ =?us-ascii?Q?EG21VlD2bCi+SjkGlqew0Pm7oG/KcU5fQZM0Yl3zo2SInA92zzVE4q8EAFDV?=
+ =?us-ascii?Q?MoWW99H7QZ5/j3I1zW866t9JEGxsvjQUH4/FGBdWZSpWdGk7Lj8EQXcctjHW?=
+ =?us-ascii?Q?6wkCT1g+Oj4ERfluMpkwAFRbhqAVOxpGpmCOcb+4RGW3j/pyE4C/CYm2b9OV?=
+ =?us-ascii?Q?ysj/VeItpxQVkCIRoTN9ASLMadwEn3bGSQ3dmEGP7NbpJIS9PAbAD+s002CR?=
+ =?us-ascii?Q?3A+Wy8ua0q9zoDXTYAhsVpMcllRjwcDrmwDvaf1fIGf7aNxKt89AsC99uw1b?=
+ =?us-ascii?Q?MEMik1SPUgHj5cmCtQh1d7uinhI+CU6eZcjMa2gVayiU/JNFcY/352TzTLHc?=
+ =?us-ascii?Q?z2f7CI1QqpyQhAJsjegRPJr1JMzNJv7wYp4tV1n2mhBVF3phLHZZ5R/1Wg6I?=
+ =?us-ascii?Q?o0Oa4xbXLAuEKpFd1KN6bCKsjVuzpCglgjC3T/lPwqubPOwwS841TofqAKDg?=
+ =?us-ascii?Q?Vxi5ZPMdyLc0QX3CibEpm5g9e62rQ6vtIVMRXu0nvR+tFYBPqzomO8rWM8H+?=
+ =?us-ascii?Q?rQ=3D=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <417E61CFF812B2449B5F64A25D0292C7@namprd04.prod.outlook.com>
+Content-ID: <531CB04D47E28C4BB3F42C16560C37D5@namprd04.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?YwawrPBWXJsXebpbYqQj9DZpVI/nlDk/a3apz8YqPHO+9zFdbhvKv2XppPg2?=
- =?us-ascii?Q?cw9mrdwHb1w3jYs4XEuaW07vKifVVHh/nzEzNIgLvNHau8gBcsg4HZUtJJfa?=
- =?us-ascii?Q?1uJx9dprRX692ko0VSZlhG8my4fJvyMnxmNmuUnhGPPMlpLA+OBKGIOJKv1z?=
- =?us-ascii?Q?nVD7Qbuoen9jnKJHuAOZBbjS0TjrAsyckns9fift6uoKMKGCMIBOrST0KwMG?=
- =?us-ascii?Q?muS6vD7wTKMKMH/kqOuXy2W6XaYnWceh/hMDKCHLpsrTzfUN4klBiLHntD+M?=
- =?us-ascii?Q?Q65wsWigm1+Lf4xHnBqqVxj9GoaevPjEegnAOdq2FRx8mzg1gSu0KSzAvl1K?=
- =?us-ascii?Q?paPEdaWULPaHP/C78Ro0k8mgswdRt6zPBlhBtZEG+l6XJ6R1EaP61StCd2Ct?=
- =?us-ascii?Q?h+ZeCnUznWUTRowZMLH09qdaXz5GBZ6NyVc+9g9FU52U1exMEn76aVj3cQl1?=
- =?us-ascii?Q?+eMfjnlE5xbCuQ7bwwSv/4B7Ey1CZNGHfKAm+kLE0b47eHCVd1oLKT/OrbPt?=
- =?us-ascii?Q?yeNKSYayq9JJxqXrX0RLNrYXpdFfBAun56ChCaob+EbrKlwc1u45g5Xnfp/c?=
- =?us-ascii?Q?QV+hoymKU3x6cAUdHfiTffobWqAOKXoWkF7a99xOOa2asaT4JLWVRrC7kuZo?=
- =?us-ascii?Q?UcvMtl7hfZzA+pHv2HwEIkG1KIMxoN5U5aIja4n28PrLp8oighSrpBe7IdF5?=
- =?us-ascii?Q?Y5z6RK5WZ/QcrT/suDrS2+XQs2ak+VF+98OZbtC0IjbvG5ilHAYNDXRcrzfC?=
- =?us-ascii?Q?dWiGSudx9Uy8d8TsT2breoDBfsImQvPzrS9xP2UxOsNm4O9pCZxaVmcYaOp3?=
- =?us-ascii?Q?jVoWip/Zly5NjpY5ZfJS8LvzpTMOpi4itP73+1hQBPBqZ39K7R/QeBj5YH35?=
- =?us-ascii?Q?1BwRt9CRnMsyuPbK4wkXCqXT30crQALKmKkZofZJouceoPzlzF9ViTskUSaI?=
- =?us-ascii?Q?BYNilrIgIcPNGVgiLsbOf1ybVc5CGTuxJtPg5lGxHWFj5YzSgfZCs/wcnD1S?=
- =?us-ascii?Q?0O5U?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?IEy0UhjL8qOnW6ITXfvGeJETAVMZ8MxMJ1dHiAGmpUYWzdJn6lqY+KNKuTzH?=
+ =?us-ascii?Q?Ujox15xvBL4P5a1PCUeFbLNqFYXctbdnMriGACL46e9an5u6FDSjZ6tgJ5UD?=
+ =?us-ascii?Q?x8ZSg0NU29unttLZGvfTlbu9LP3xs8in4JFiYKgs86E8NRS10HaTAI8OTIIY?=
+ =?us-ascii?Q?s9OJIjNbfvIEfvNLOopP6RsAy/D02wT6GCId/P4YY+WdSS1ZKjf0cGG96NXc?=
+ =?us-ascii?Q?gK/bfl5Rv3SlUjxHd/km5hTmPFNmaqJ62QjLsty+GMekupXV0EURMxt+mgy1?=
+ =?us-ascii?Q?0/G4OYSFSupT6yC9A9+HWkvHTP/T0BgXgNZUFlwAxXkqP1rQISMqpYCRI48F?=
+ =?us-ascii?Q?I03PRnEHqU72Ks5I7FYj4Fy0JASneKhDvdind9ZVqQcxYE641eV9vrTubu7H?=
+ =?us-ascii?Q?cCZWe7nvNXACitLDWvmxC1t6y9Jy7OyO1a2OgOA2Xbdbzn65Ea3xN2vPrmEG?=
+ =?us-ascii?Q?iD/8gHJXvDRzqsPtosln9oQPfzxneu867+TBnSSn4lCR7H9Ni1u5ZR3wo6jN?=
+ =?us-ascii?Q?x9eOV4MY3nwfcqkhMwAh2QONLZ1Z6Ag/vgWacni39+AYAscDYDQSS7mRNYHp?=
+ =?us-ascii?Q?EfkqMTPCaYliaeynftXQfWeBm1L/NGjMbVwxpGl8UJBiY2NSMGPWG4ZQjZr7?=
+ =?us-ascii?Q?aCcgh7IIenmAhvbbltWBsUQznJc+q/ylRON3+49nUHaivbO64/8ifpaORRtX?=
+ =?us-ascii?Q?ZzUl/mJjI3gLRTUlKRaIT49YQVug4e/Wd3CaV2PX5FXHSCABLEP4aQFVYQJE?=
+ =?us-ascii?Q?ML34/xvTwdmujGdoJ14/5K4CaYKZ9b8uQmtjNa7Smp8xUjQanciorMlTM7oM?=
+ =?us-ascii?Q?vvgMmQ3zKFJO5TLlwJU2lCrbJxN/rofkK59WYZeqqTSKU8fiJaXGqzk97Q3K?=
+ =?us-ascii?Q?vB6r38p7Ziu8mY3HaNwqxT6bFfJ+Y20Qa5Ubkmy1AzxJttIvT8Nsgg8zma2n?=
+ =?us-ascii?Q?nq+ngQLzGhWdtaiftfWo8R+2I4EOvH7ouoxxqCQed+omUpfOLIdwu4yZ/29V?=
+ =?us-ascii?Q?2cz+?=
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 951653ed-39b8-45b6-c0d7-08dbb9134e7e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2023 13:21:17.5452
+X-MS-Exchange-CrossTenant-Network-Message-Id: cc0f217e-e93e-428b-7682-08dbb91356ae
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2023 13:21:31.2166
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4jRslQKtiThS6bKKm+8Llo8TMAVV90gc4qP6Zx1yIodkQVW5SjJzAt3nPB7F0humoG4gRI4JbNXk8oo/E/0okQ==
+X-MS-Exchange-CrossTenant-userprincipalname: UVz9YPOp1syQNVYlE6Sne+YvVfStA5eGNCInYwce/qx/rlyZm7snqgEWwyIeK6xXC5q6kyNVeNjDdR53geUYzA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR04MB7779
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 05:14:46PM +0900, Damien Le Moal wrote:
-> Whenever an ATA adapter driver is removed (e.g. rmmod),
-> ata_port_detach() is called repeatedly for all the adapter ports to
-> remove (unload) the devices attached to the port and delete the port
-> device itself. Removing of devices is done using libata EH with the
-> ATA_PFLAG_UNLOADING port flag set. This causes libata EH to execute
-> ata_eh_unload() which disables all devices attached to the port.
+On Fri, Sep 15, 2023 at 05:14:47PM +0900, Damien Le Moal wrote:
+> There is no direct device ancestry defined between an ata_device and
+> its scsi device which prevents the power management code from correctly
+> ordering suspend and resume operations. Create such ancestry with the
+> ata device as the parent to ensure that the scsi device (child) is
+> suspended before the ata device and that resume handles the ata device
+> before the scsi device.
 >=20
-> ata_port_detach() finishes by calling scsi_remove_host() to remove the
-> scsi host associated with the port. This function will trigger the
-> removal of all scsi devices attached to the host and in the case of
-> disks, calls to sd_shutdown() which will flush the device write cache
-> and stop the device. However, given that the devices were already
-> disabled by ata_eh_unload(), the synchronize write cache command and
-> start stop unit commands fail. E.g. running "rmmod ahci" with first
-> removing sd_mod results in error messages like:
+> The parent-child (supplier-consumer) relationship is established between
+> the ata_port (parent) and the scsi device (child) with the function
+> device_add_link(). The parent used is not the ata_device as the PM
+> operations are defined per port and the status of all devices connected
+> through that port is controlled from the port operations.
 >=20
-> ata13.00: disable device
-> sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=3DDID_BA=
-D_TARGET driverbyte=3DDRIVER_OK
-> sd 0:0:0:0: [sda] Stopping disk
-> sd 0:0:0:0: [sda] Start/Stop Unit failed: Result: hostbyte=3DDID_BAD_TARG=
-ET driverbyte=3DDRIVER_OK
+> The device link is established with the new function
+> ata_scsi_dev_alloc(). This function is used to define the ->slave_alloc
+> callback of the scsi host template of most drivers.
 >=20
-> Fix this by removing all scsi devices of the ata devices connected to
-> the port before scheduling libata EH to disable the ATA devices.
->=20
-> Fixes: 720ba12620ee ("[PATCH] libata-hp: update unload-unplug")
+> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for =
+async power management")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 > ---
->  drivers/ata/libata-core.c | 21 ++++++++++++++++++++-
->  1 file changed, 20 insertions(+), 1 deletion(-)
+>  drivers/ata/ahci.h        |  1 +
+>  drivers/ata/libata-scsi.c | 49 +++++++++++++++++++++++++++++++++++----
+>  drivers/ata/libata.h      |  1 +
+>  drivers/ata/pata_macio.c  |  1 +
+>  drivers/ata/sata_mv.c     |  1 +
+>  drivers/ata/sata_nv.c     |  2 ++
+>  drivers/ata/sata_sil24.c  |  1 +
+>  include/linux/libata.h    |  3 +++
+>  8 files changed, 54 insertions(+), 5 deletions(-)
 >=20
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index c4898483d716..693cb3cd70cd 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5952,11 +5952,30 @@ static void ata_port_detach(struct ata_port *ap)
->  	struct ata_link *link;
->  	struct ata_device *dev;
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 4bae95b06ae3..72085756f4ba 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -398,6 +398,7 @@ extern const struct attribute_group *ahci_sdev_groups=
+[];
+>  	.sdev_groups		=3D ahci_sdev_groups,			\
+>  	.change_queue_depth     =3D ata_scsi_change_queue_depth,		\
+>  	.tag_alloc_policy       =3D BLK_TAG_ALLOC_RR,             	\
+> +	.slave_alloc		=3D ata_scsi_slave_alloc,			\
+>  	.slave_configure        =3D ata_scsi_slave_config
 > =20
-> -	/* tell EH we're leaving & flush EH */
-> +	/* Wait for any ongoing EH */
-> +	ata_port_wait_eh(ap);
+>  extern struct ata_port_operations ahci_ops;
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index d3f28b82c97b..eef76af1af90 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1089,6 +1089,46 @@ int ata_scsi_dev_config(struct scsi_device *sdev, =
+struct ata_device *dev)
+>  	return 0;
+>  }
+> =20
+> +int ata_scsi_dev_alloc(struct scsi_device *sdev, struct ata_port *ap)
+> +{
+> +	struct device_link *link;
 > +
-> +	mutex_lock(&ap->scsi_scan_mutex);
->  	spin_lock_irqsave(ap->lock, flags);
+> +	ata_scsi_sdev_config(sdev);
 > +
-> +	/* Remove scsi devices */
-> +	ata_for_each_link(link, ap, HOST_FIRST) {
-> +		ata_for_each_dev(dev, link, ALL) {
-> +			if (dev->sdev) {
-> +				spin_unlock_irqrestore(ap->lock, flags);
-> +				scsi_remove_device(dev->sdev);
-> +				spin_lock_irqsave(ap->lock, flags);
-> +				dev->sdev =3D NULL;
-> +			}
-> +		}
+> +	/*
+> +	 * Create a link from the ata_port device to the scsi device to ensure
+> +	 * that PM does suspend/resume in the correct order: the scsi device is
+> +	 * consumer (child) and the ata port the supplier (parent).
+> +	 */
+> +	link =3D device_link_add(&sdev->sdev_gendev, &ap->tdev,
+> +			       DL_FLAG_STATELESS |
+> +			       DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
+> +	if (!link) {
+> +		ata_port_err(ap, "Failed to create link to scsi device %s\n",
+> +			     dev_name(&sdev->sdev_gendev));
+> +		return -ENODEV;
 > +	}
 > +
-> +	/* Tell EH to disable all devices */
->  	ap->pflags |=3D ATA_PFLAG_UNLOADING;
->  	ata_port_schedule_eh(ap);
+> +	return 0;
+> +}
 > +
->  	spin_unlock_irqrestore(ap->lock, flags);
-> +	mutex_unlock(&ap->scsi_scan_mutex);
+> +/**
+> + *	ata_scsi_slave_alloc - Early setup of SCSI device
+> + *	@sdev: SCSI device to examine
+> + *
+> + *	This is called from scsi_alloc_sdev() when the scsi device
+> + *	associated with an ATA device is scanned on a port.
+> + *
+> + *	LOCKING:
+> + *	Defined by SCSI layer.  We don't really care.
+> + */
+> +
+> +int ata_scsi_slave_alloc(struct scsi_device *sdev)
+> +{
+> +	return ata_scsi_dev_alloc(sdev, ata_shost_to_port(sdev->host));
+> +}
+> +EXPORT_SYMBOL_GPL(ata_scsi_slave_alloc);
+> +
+>  /**
+>   *	ata_scsi_slave_config - Set SCSI device attributes
+>   *	@sdev: SCSI device to examine
+> @@ -1105,14 +1145,11 @@ int ata_scsi_slave_config(struct scsi_device *sde=
+v)
+>  {
+>  	struct ata_port *ap =3D ata_shost_to_port(sdev->host);
+>  	struct ata_device *dev =3D __ata_scsi_find_dev(ap, sdev);
+> -	int rc =3D 0;
+> -
+> -	ata_scsi_sdev_config(sdev);
 > =20
->  	/* wait till EH commits suicide */
->  	ata_port_wait_eh(ap);
+>  	if (dev)
+> -		rc =3D ata_scsi_dev_config(sdev, dev);
+> +		return ata_scsi_dev_config(sdev, dev);
+> =20
+> -	return rc;
+> +	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
+> =20
+> @@ -1136,6 +1173,8 @@ void ata_scsi_slave_destroy(struct scsi_device *sde=
+v)
+>  	unsigned long flags;
+>  	struct ata_device *dev;
+> =20
+> +	device_link_remove(&sdev->sdev_gendev, &ap->tdev);
+> +
+>  	spin_lock_irqsave(ap->lock, flags);
+>  	dev =3D __ata_scsi_find_dev(ap, sdev);
+>  	if (dev && dev->sdev) {
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index 6e7d352803bd..079981e7156a 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -111,6 +111,7 @@ extern struct ata_device *ata_scsi_find_dev(struct at=
+a_port *ap,
+>  extern int ata_scsi_add_hosts(struct ata_host *host,
+>  			      const struct scsi_host_template *sht);
+>  extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
+> +extern int ata_scsi_dev_alloc(struct scsi_device *sdev, struct ata_port =
+*ap);
+>  extern int ata_scsi_offline_dev(struct ata_device *dev);
+>  extern bool ata_scsi_sense_is_valid(u8 sk, u8 asc, u8 ascq);
+>  extern void ata_scsi_set_sense(struct ata_device *dev,
+> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+> index 17f6ccee53c7..32968b4cf8e4 100644
+> --- a/drivers/ata/pata_macio.c
+> +++ b/drivers/ata/pata_macio.c
+> @@ -918,6 +918,7 @@ static const struct scsi_host_template pata_macio_sht=
+ =3D {
+>  	 * use 64K minus 256
+>  	 */
+>  	.max_segment_size	=3D MAX_DBDMA_SEG,
+> +	.slave_alloc		=3D ata_scsi_slave_alloc,
+>  	.slave_configure	=3D pata_macio_slave_config,
+>  	.sdev_groups		=3D ata_common_sdev_groups,
+>  	.can_queue		=3D ATA_DEF_QUEUE,
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index d105db5c7d81..353ac7b2f14a 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -673,6 +673,7 @@ static const struct scsi_host_template mv6_sht =3D {
+>  	.sdev_groups		=3D ata_ncq_sdev_groups,
+>  	.change_queue_depth	=3D ata_scsi_change_queue_depth,
+>  	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,
+> +	.slave_alloc		=3D ata_scsi_slave_alloc,
+
+It seems wrong to add .slave_alloc to all different ata_port_operations str=
+ucts.
+The .slave_configure is added on all different ata_port_operations structs,
+because the callback can be different for different drivers.
+
+However, adding the device link is done in .ata_scsi_slave_alloc,
+removing the device link is done in .ata_scsi_slave_destroy.
+
+Thus, I suggest that we only add the
+.slave_alloc =3D ata_scsi_slave_alloc,
+
+to __ATA_BASE_SHT() in libata.h, which is currently the only
+place which has .slave_destroy defined.
+
+All the other port operations inherit from __ATA_BASE_SHT().
+
+
+>  	.slave_configure	=3D ata_scsi_slave_config
+>  };
+> =20
+> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+> index 0a0cee755bde..5428dc2ec5e3 100644
+> --- a/drivers/ata/sata_nv.c
+> +++ b/drivers/ata/sata_nv.c
+> @@ -380,6 +380,7 @@ static const struct scsi_host_template nv_adma_sht =
+=3D {
+>  	.can_queue		=3D NV_ADMA_MAX_CPBS,
+>  	.sg_tablesize		=3D NV_ADMA_SGTBL_TOTAL_LEN,
+>  	.dma_boundary		=3D NV_ADMA_DMA_BOUNDARY,
+> +	.slave_alloc		=3D ata_scsi_slave_alloc,
+>  	.slave_configure	=3D nv_adma_slave_config,
+>  	.sdev_groups		=3D ata_ncq_sdev_groups,
+>  	.change_queue_depth     =3D ata_scsi_change_queue_depth,
+> @@ -391,6 +392,7 @@ static const struct scsi_host_template nv_swncq_sht =
+=3D {
+>  	.can_queue		=3D ATA_MAX_QUEUE - 1,
+>  	.sg_tablesize		=3D LIBATA_MAX_PRD,
+>  	.dma_boundary		=3D ATA_DMA_BOUNDARY,
+> +	.slave_alloc		=3D ata_scsi_slave_alloc,
+>  	.slave_configure	=3D nv_swncq_slave_config,
+>  	.sdev_groups		=3D ata_ncq_sdev_groups,
+>  	.change_queue_depth     =3D ata_scsi_change_queue_depth,
+> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+> index 142e70bfc498..e0b1b3625031 100644
+> --- a/drivers/ata/sata_sil24.c
+> +++ b/drivers/ata/sata_sil24.c
+> @@ -381,6 +381,7 @@ static const struct scsi_host_template sil24_sht =3D =
+{
+>  	.tag_alloc_policy	=3D BLK_TAG_ALLOC_FIFO,
+>  	.sdev_groups		=3D ata_ncq_sdev_groups,
+>  	.change_queue_depth	=3D ata_scsi_change_queue_depth,
+> +	.slave_alloc		=3D ata_scsi_slave_alloc,
+>  	.slave_configure	=3D ata_scsi_slave_config
+>  };
+> =20
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 52d58b13e5ee..c8cfea386c16 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -1144,6 +1144,7 @@ extern int ata_std_bios_param(struct scsi_device *s=
+dev,
+>  			      struct block_device *bdev,
+>  			      sector_t capacity, int geom[]);
+>  extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
+> +extern int ata_scsi_slave_alloc(struct scsi_device *sdev);
+>  extern int ata_scsi_slave_config(struct scsi_device *sdev);
+>  extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+>  extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+> @@ -1401,12 +1402,14 @@ extern const struct attribute_group *ata_common_s=
+dev_groups[];
+>  	__ATA_BASE_SHT(drv_name),				\
+>  	.can_queue		=3D ATA_DEF_QUEUE,		\
+>  	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,		\
+> +	.slave_alloc		=3D ata_scsi_slave_alloc,		\
+>  	.slave_configure	=3D ata_scsi_slave_config
+> =20
+>  #define ATA_SUBBASE_SHT_QD(drv_name, drv_qd)			\
+>  	__ATA_BASE_SHT(drv_name),				\
+>  	.can_queue		=3D drv_qd,			\
+>  	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,		\
+> +	.slave_alloc		=3D ata_scsi_slave_alloc,		\
+>  	.slave_configure	=3D ata_scsi_slave_config
+> =20
+>  #define ATA_BASE_SHT(drv_name)					\
 > --=20
 > 2.41.0
->=20
-
-Looks good:
-Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
-
-Could you perhaps also fix the WARN_ON(!(ap->pflags & ATA_PFLAG_UNLOADED));
-in this very same function.
-
-The pflag is checked without holding the lock.
-
-
-Kind regards,
-Niklas=
+> =
