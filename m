@@ -2,158 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5D36CE79C2
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 10:55:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3811DCE79CC
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 11:06:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234306AbjITKzl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Sep 2023 06:55:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58014 "EHLO
+        id S234401AbjITLGa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Sep 2023 07:06:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233615AbjITKzk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 06:55:40 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DCC983;
-        Wed, 20 Sep 2023 03:55:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695207334; x=1726743334;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=LVfQr+3NYOJBB85Xy9NQj00gO9lfxtO7rH9xEOTjYvQ=;
-  b=eV02gQPSP0kbcSpp/RsZe5aiUatwTGpWzlIdwkkLzjwMbLItKipbSV4d
-   kzA3DDEy9rOGzNaeScGro9PTrcaeitYB08SAKvwbg0L+0dNzZArRLSGzn
-   yPTVQhnX9RWCOFHJY0N0AwPNf4UTwe284zhk3XcmyjasPMQcjZcvHfTNM
-   E9F7uI+Z7vuPk37SdDK/qMIZxI13TSbALjxdq/8SAfstwNmtHq1NYuCvk
-   bYYKuC1ddQBuZYbFk0N6RbNy1wbnFfvq2sJWEBEdEkWpsNYFEgWqiEEwT
-   JEckPT8bj6HY+5S7h1Wos8ohgMkG0ZK1PqZI3IBB/SFXI5APeXWJiLNI4
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10838"; a="365238749"
-X-IronPort-AV: E=Sophos;i="6.02,161,1688454000"; 
-   d="scan'208";a="365238749"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Sep 2023 03:55:33 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10838"; a="781647988"
-X-IronPort-AV: E=Sophos;i="6.02,161,1688454000"; 
-   d="scan'208";a="781647988"
-Received: from lkp-server02.sh.intel.com (HELO 9ef86b2655e5) ([10.239.97.151])
-  by orsmga001.jf.intel.com with ESMTP; 20 Sep 2023 03:55:27 -0700
-Received: from kbuild by 9ef86b2655e5 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qiurd-0008fM-16;
-        Wed, 20 Sep 2023 10:55:25 +0000
-Date:   Wed, 20 Sep 2023 18:54:55 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Nitesh Shetty <nj.shetty@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-Cc:     oe-kbuild-all@lists.linux.dev, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, nitheshshetty@gmail.com,
-        anuj1072538@gmail.com, gost.dev@samsung.com, mcgrof@kernel.org,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Anuj Gupta <anuj20.g@samsung.com>,
-        Vincent Fu <vincent.fu@samsung.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v16 12/12] null_blk: add support for copy offload
-Message-ID: <202309201836.c2wRnper-lkp@intel.com>
-References: <20230920080756.11919-13-nj.shetty@samsung.com>
+        with ESMTP id S234339AbjITKTi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 06:19:38 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FD0D110;
+        Wed, 20 Sep 2023 03:19:30 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B3A0C433C8;
+        Wed, 20 Sep 2023 10:19:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695205169;
+        bh=OjA7iTECs8f9+839G62xTmbLSGvLzLZmyK1Rhd04rVI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=q/c412THfLmc6qea7o9R/VfTdCcbfi8mZ0ttkYhqouACRznUQ57Hgkrh50E+LknXY
+         MsvMbvVdu3CI0iswDjXXT1cE9xD7hw1r7DxwXZHkSCJZ4kkdAMhcTnA8c9iiYaPvFI
+         qxp/Dq5zi8dMXWFL9cqQ7Yh8HtihnHVlOT/w5qdkxQyyaOcMIThvdICKC3l/yruyC/
+         CvnUUY2ViVFNbMN6npMy68oMuxuFq2CEXdjLOYboGmqqXb8QnduuJitRCizNUqQ9MJ
+         1sIT5v+0WLYUzck3AAyVe5MrZ2tHlbHP/3po/cyjALIIIIU4MRASh6jiTa0i16OC6q
+         KaiBFXp2gFQHA==
+Date:   Wed, 20 Sep 2023 12:19:23 +0200
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Can Guo <quic_cang@quicinc.com>, quic_nguyenb@quicinc.com,
+        quic_nitirawa@quicinc.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>
+Subject: Re: [PATCH 4/6] phy: qualcomm: phy-qcom-qmp-ufs: Move data structs
+ and setting tables to header
+Message-ID: <20230920101923.GG4732@thinkpad>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-5-git-send-email-quic_cang@quicinc.com>
+ <CAA8EJpoWnXeJKPB04kJW6Qo7ifAnt1u2ZSiq+W2HWOez=hi5gA@mail.gmail.com>
+ <20230919121524.GD4732@thinkpad>
+ <CAA8EJpoqRBxS7HJrFdRAvv677hKJw+d_K+fN_4ABDrj+68r28w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230920080756.11919-13-nj.shetty@samsung.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAA8EJpoqRBxS7HJrFdRAvv677hKJw+d_K+fN_4ABDrj+68r28w@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Nitesh,
+On Wed, Sep 20, 2023 at 01:30:21AM +0300, Dmitry Baryshkov wrote:
+> On Tue, 19 Sept 2023 at 15:15, Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> > On Thu, Sep 14, 2023 at 03:28:59PM +0300, Dmitry Baryshkov wrote:
+> > > On Mon, 11 Sept 2023 at 09:01, Can Guo <quic_cang@quicinc.com> wrote:
+> > > >
+> > > > To make the code more readable, move the data structs and PHY settting
+> > > > tables to a header file, namely the phy-qcom-qmp-ufs.h.
+> > > >
+> > > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> > > > ---
+> > > >  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 802 +------------------------------
+> > > >  drivers/phy/qualcomm/phy-qcom-qmp-ufs.h | 805 ++++++++++++++++++++++++++++++++
+> > > >  2 files changed, 806 insertions(+), 801 deletions(-)
+> > > >  create mode 100644 drivers/phy/qualcomm/phy-qcom-qmp-ufs.h
+> > >
+> > > Is there any reason to do so? Other than just moving stuff around, it
+> > > doesn't give us anything. This header will not be shared with any
+> > > other driver. Just moving data tables to the header (ugh, static data
+> > > in the header) doesn't make code more readable.
+> > >
+> >
+> > I think the motive here is to move the static tables to one file and have the
+> > rest of the code in another. Because, the static tables itself occupy 1.2k LoC
+> > now and it is going to grow. So let's keep them in a single file to avoid mixing
+> > it with rest of the driver code.
+> 
+> My 2c is that this is mostly useless. The headers are for sharing, not
+> for moving the data out of the .c files. Not to mention that the
+> driver code comes after the tables.
+> I'd really suggest starting such a move with separating common parts
+> of all the QMP drivers.
+> 
 
-kernel test robot noticed the following build warnings:
+Makes sense.
 
-[auto build test WARNING on 7fc7222d9680366edeecc219c21ca96310bdbc10]
+Can, please propose a separate series if you want to pursue the effort.
+Also, I'd say that instead of moving the tables to a header (which defeats the
+purpose of the header), the tables can be moved to a separate .c file. Like,
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Introduce-queue-limits-and-sysfs-for-copy-offload-support/20230920-170132
-base:   7fc7222d9680366edeecc219c21ca96310bdbc10
-patch link:    https://lore.kernel.org/r/20230920080756.11919-13-nj.shetty%40samsung.com
-patch subject: [PATCH v16 12/12] null_blk: add support for copy offload
-config: parisc-allyesconfig (https://download.01.org/0day-ci/archive/20230920/202309201836.c2wRnper-lkp@intel.com/config)
-compiler: hppa-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20230920/202309201836.c2wRnper-lkp@intel.com/reproduce)
+phy-qcom-qmp-ufs-tables.c
+phy-qcom-qmp-ufs.c
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202309201836.c2wRnper-lkp@intel.com/
+Btw, why do we have "phy-qcom" prefix inside drivers/phy/qualcomm/?
 
-All warnings (new ones prefixed by >>):
+- Mani
 
-   In file included from include/trace/define_trace.h:102,
-                    from drivers/block/null_blk/trace.h:104,
-                    from drivers/block/null_blk/main.c:15:
-   drivers/block/null_blk/./trace.h: In function 'trace_raw_output_nullb_copy_op':
->> drivers/block/null_blk/./trace.h:91:27: warning: format '%lu' expects argument of type 'long unsigned int', but argument 7 has type 'size_t' {aka 'unsigned int'} [-Wformat=]
-      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
-         |                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/trace/trace_events.h:203:34: note: in definition of macro 'DECLARE_EVENT_CLASS'
-     203 |         trace_event_printf(iter, print);                                \
-         |                                  ^~~~~
-   include/trace/trace_events.h:45:30: note: in expansion of macro 'PARAMS'
-      45 |                              PARAMS(print));                   \
-         |                              ^~~~~~
-   drivers/block/null_blk/./trace.h:73:1: note: in expansion of macro 'TRACE_EVENT'
-      73 | TRACE_EVENT(nullb_copy_op,
-         | ^~~~~~~~~~~
-   drivers/block/null_blk/./trace.h:91:17: note: in expansion of macro 'TP_printk'
-      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
-         |                 ^~~~~~~~~
-   In file included from include/trace/trace_events.h:237:
-   drivers/block/null_blk/./trace.h:91:68: note: format string is defined here
-      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
-         |                                                                  ~~^
-         |                                                                    |
-         |                                                                    long unsigned int
-         |                                                                  %u
-
-
-vim +91 drivers/block/null_blk/./trace.h
-
-    72	
-    73	TRACE_EVENT(nullb_copy_op,
-    74			TP_PROTO(struct request *req,
-    75				 sector_t dst, sector_t src, size_t len),
-    76			TP_ARGS(req, dst, src, len),
-    77			TP_STRUCT__entry(
-    78					 __array(char, disk, DISK_NAME_LEN)
-    79					 __field(enum req_op, op)
-    80					 __field(sector_t, dst)
-    81					 __field(sector_t, src)
-    82					 __field(size_t, len)
-    83			),
-    84			TP_fast_assign(
-    85				       __entry->op = req_op(req);
-    86				       __assign_disk_name(__entry->disk, req->q->disk);
-    87				       __entry->dst = dst;
-    88				       __entry->src = src;
-    89				       __entry->len = len;
-    90			),
-  > 91			TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
-    92				  __print_disk_name(__entry->disk),
-    93				  blk_op_str(__entry->op),
-    94				  __entry->dst, __entry->src, __entry->len)
-    95	);
-    96	#endif /* _TRACE_NULLB_H */
-    97	
+> >
+> > - Mani
+> >
+> > > If you really would like to clean up the QMP drivers, please consider
+> > > splitting _common_ parts. But at this point I highly doubt that it is
+> > > possible in a useful way.
+> 
+> 
+> -- 
+> With best wishes
+> Dmitry
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+மணிவண்ணன் சதாசிவம்
