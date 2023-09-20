@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3660FC04FEE
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 19:15:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1858FC04FF6
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 19:15:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229969AbjITTP2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Sep 2023 15:15:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38616 "EHLO
+        id S230096AbjITTP3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Sep 2023 15:15:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230031AbjITTP0 (ORCPT
+        with ESMTP id S230009AbjITTP0 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 15:15:26 -0400
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A195EB;
-        Wed, 20 Sep 2023 12:14:55 -0700 (PDT)
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-690fe10b6a4so110997b3a.3;
-        Wed, 20 Sep 2023 12:14:55 -0700 (PDT)
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EDA418E;
+        Wed, 20 Sep 2023 12:14:52 -0700 (PDT)
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2764b04dc5cso50739a91.3;
+        Wed, 20 Sep 2023 12:14:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695237295; x=1695842095;
+        d=1e100.net; s=20230601; t=1695237291; x=1695842091;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Z+1lG1eCcPW2wHVHtVCKpPCzIcbg4+wuQozGsxMVYEs=;
-        b=uMqZqYwUMJYYvgERJHKPij9DD33BM7xaJwSpjoKE5oesQ7f8qUeN3kR8hfweuBfn2M
-         NGp77PhOVFyXCjY55tOggeP33xgsS7a0OhhJZNFPg2oHhN/jSGlQ0KvZb6csyQY20tdF
-         gCxsG5///B0G5CqkyU9o1180UospGrAJrRTJ1rvTUd3lv8xqa4qbpCWX6OavILmQtRDM
-         vZzgUw46silk1Fnq+0NKsHvAW/2R3KjWWbDopwaQtm1yaXSAJUhCA2Xotug0IuExDflS
-         cLAbaLrnJzTvkmc98cdQCYEhAPnnRR6QRbdvJ9yfL+xobhi1dStweB+NE1+V5u+PcyBz
-         Yg3g==
-X-Gm-Message-State: AOJu0Yxk+xEfNauHXg4bKck1yUY6J9kyjOS4NEdIvaV0vDA03RLEtohY
-        LRt8GdLslWNmjFCAlPJ9Jgg=
-X-Google-Smtp-Source: AGHT+IGEXiZXOYHWyW1BNez1YEG58AWmtPf5pJ4HY0WudDf4UY3bmILtstoF6ghA6t0iYA+hsQLZFw==
-X-Received: by 2002:a05:6a20:914e:b0:159:c2d0:9fc6 with SMTP id x14-20020a056a20914e00b00159c2d09fc6mr3876841pzc.8.1695237294679;
-        Wed, 20 Sep 2023 12:14:54 -0700 (PDT)
+        bh=dj/w+iFsOw+9R6TOmv8TsPrH6RWn9igJVx+jEqxf1A0=;
+        b=Dn80mG3YqQMD9zOF1ZKM77tp/1vQVXyoxFbD3RN3nibfvxr/LGlRvK3EQ89Hkd2e3i
+         rBv6F3C60clawv9NLLuRl7YC4w86geMz0ieFzbB1CACKZHdj5KCA/VJymAXfAXcFhsuh
+         C3AbQOiAsoEepNzKxHe+oisjGEfQTpf9wB7P6SNLhHr7aoCudsBA1oJG5EIsK3ASlD19
+         osaeS5+6Lyam+mX6dGvMHQSTdzwIkX00eB/9etOQYwDt3AgaEqBqxsHwldblI6nRg46e
+         vE5wNjBnp35UbU7JbHacdlvLNJv4T5lcV6xbiHgkT1/LPE/zKOFVhrjWf+Y6EYVkG7ds
+         STbQ==
+X-Gm-Message-State: AOJu0YxiPuzagX6LCTiNdts7MgUe3vlVkwo7w4fNyfxpn88AnWftZLsP
+        93Reyt0f8FLYOAaAez5dqI4=
+X-Google-Smtp-Source: AGHT+IFNycPbitH/IfCXqwt9tHmiKj3elCAyr0qCcP5EmmHoWHWTHI31P50Luu1cTGe8uWmAb0ZKkA==
+X-Received: by 2002:a17:90b:3902:b0:274:9a85:2596 with SMTP id ob2-20020a17090b390200b002749a852596mr3680924pjb.32.1695237291121;
+        Wed, 20 Sep 2023 12:14:51 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:b0c6:e5b6:49ef:e0bd])
-        by smtp.gmail.com with ESMTPSA id a13-20020a17090a8c0d00b002633fa95ac2sm1656318pjo.13.2023.09.20.12.14.53
+        by smtp.gmail.com with ESMTPSA id a13-20020a17090a8c0d00b002633fa95ac2sm1656318pjo.13.2023.09.20.12.14.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Sep 2023 12:14:54 -0700 (PDT)
+        Wed, 20 Sep 2023 12:14:50 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -44,17 +44,11 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Benjamin LaHaise <bcrl@kvack.org>,
-        David Howells <dhowells@redhat.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>
-Subject: [PATCH 03/13] fs: Restore kiocb.ki_hint
-Date:   Wed, 20 Sep 2023 12:14:28 -0700
-Message-ID: <20230920191442.3701673-4-bvanassche@acm.org>
+        Jonathan Corbet <corbet@lwn.net>
+Subject: [PATCH 01/13] fs/f2fs: Restore the whint_mode mount option
+Date:   Wed, 20 Sep 2023 12:14:26 -0700
+Message-ID: <20230920191442.3701673-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.459.ge4e396fd5e-goog
 In-Reply-To: <20230920191442.3701673-1-bvanassche@acm.org>
 References: <20230920191442.3701673-1-bvanassche@acm.org>
@@ -64,170 +58,329 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Restore support for passing write hint information from a filesystem to the
-block layer. Write hint information can be set via fcntl(fd, F_SET_RW_HINT,
-&hint). This patch reverts commit 41d36a9f3e53 ("fs: remove kiocb.ki_hint").
+Restore support for the whint_mode mount option by reverting commit
+930e2607638d ("f2fs: remove obsolete whint_mode").
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Chao Yu <chao@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- fs/aio.c                    |  1 +
- fs/cachefiles/io.c          |  2 ++
- fs/f2fs/file.c              |  6 ++++++
- include/linux/fs.h          | 12 ++++++++++++
- include/trace/events/f2fs.h |  5 ++++-
- io_uring/rw.c               |  1 +
- 6 files changed, 26 insertions(+), 1 deletion(-)
+ Documentation/filesystems/f2fs.rst | 70 ++++++++++++++++++++++
+ fs/f2fs/f2fs.h                     |  9 +++
+ fs/f2fs/segment.c                  | 95 ++++++++++++++++++++++++++++++
+ fs/f2fs/super.c                    | 32 +++++++++-
+ 4 files changed, 205 insertions(+), 1 deletion(-)
 
-diff --git a/fs/aio.c b/fs/aio.c
-index a4c2a6bac72c..a09743049738 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1466,6 +1466,7 @@ static int aio_prep_rw(struct kiocb *req, const struct iocb *iocb)
- 	req->ki_flags = req->ki_filp->f_iocb_flags;
- 	if (iocb->aio_flags & IOCB_FLAG_RESFD)
- 		req->ki_flags |= IOCB_EVENTFD;
-+	req->ki_hint = ki_hint_validate(file_write_hint(req->ki_filp));
- 	if (iocb->aio_flags & IOCB_FLAG_IOPRIO) {
- 		/*
- 		 * If the IOCB_FLAG_IOPRIO flag of aio_flags is set, then
-diff --git a/fs/cachefiles/io.c b/fs/cachefiles/io.c
-index 009d23cd435b..ad2870748c15 100644
---- a/fs/cachefiles/io.c
-+++ b/fs/cachefiles/io.c
-@@ -138,6 +138,7 @@ static int cachefiles_read(struct netfs_cache_resources *cres,
- 	ki->iocb.ki_filp	= file;
- 	ki->iocb.ki_pos		= start_pos + skipped;
- 	ki->iocb.ki_flags	= IOCB_DIRECT;
-+	ki->iocb.ki_hint	= ki_hint_validate(file_write_hint(file));
- 	ki->iocb.ki_ioprio	= get_current_ioprio();
- 	ki->skipped		= skipped;
- 	ki->object		= object;
-@@ -306,6 +307,7 @@ int __cachefiles_write(struct cachefiles_object *object,
- 	ki->iocb.ki_filp	= file;
- 	ki->iocb.ki_pos		= start_pos;
- 	ki->iocb.ki_flags	= IOCB_DIRECT | IOCB_WRITE;
-+	ki->iocb.ki_hint	= ki_hint_validate(file_write_hint(file));
- 	ki->iocb.ki_ioprio	= get_current_ioprio();
- 	ki->object		= object;
- 	ki->start		= start_pos;
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index ca5904129b16..9dc0e06c38ba 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -4634,8 +4634,10 @@ static ssize_t f2fs_dio_write_iter(struct kiocb *iocb, struct iov_iter *from,
- 	struct f2fs_inode_info *fi = F2FS_I(inode);
- 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
- 	const bool do_opu = f2fs_lfs_mode(sbi);
-+	const int whint_mode = F2FS_OPTION(sbi).whint_mode;
- 	const loff_t pos = iocb->ki_pos;
- 	const ssize_t count = iov_iter_count(from);
-+	const enum rw_hint hint = iocb->ki_hint;
- 	unsigned int dio_flags;
- 	struct iomap_dio *dio;
- 	ssize_t ret;
-@@ -4668,6 +4670,8 @@ static ssize_t f2fs_dio_write_iter(struct kiocb *iocb, struct iov_iter *from,
- 		if (do_opu)
- 			f2fs_down_read(&fi->i_gc_rwsem[READ]);
- 	}
-+	if (whint_mode == WHINT_MODE_OFF)
-+		iocb->ki_hint = WRITE_LIFE_NOT_SET;
+diff --git a/Documentation/filesystems/f2fs.rst b/Documentation/filesystems/f2fs.rst
+index d32c6209685d..de412ddebcc8 100644
+--- a/Documentation/filesystems/f2fs.rst
++++ b/Documentation/filesystems/f2fs.rst
+@@ -242,6 +242,12 @@ offgrpjquota		 Turn off group journalled quota.
+ offprjjquota		 Turn off project journalled quota.
+ quota			 Enable plain user disk quota accounting.
+ noquota			 Disable all plain disk quota option.
++whint_mode=%s		 Control which write hints are passed down to block
++			 layer. This supports "off", "user-based", and
++			 "fs-based".  In "off" mode (default), f2fs does not pass
++			 down hints. In "user-based" mode, f2fs tries to pass
++			 down hints given by users. And in "fs-based" mode, f2fs
++			 passes down hints with its policy.
+ alloc_mode=%s		 Adjust block allocation policy, which supports "reuse"
+ 			 and "default".
+ fsync_mode=%s		 Control the policy of fsync. Currently supports "posix",
+@@ -776,6 +782,70 @@ In order to identify whether the data in the victim segment are valid or not,
+ F2FS manages a bitmap. Each bit represents the validity of a block, and the
+ bitmap is composed of a bit stream covering whole blocks in main area.
  
- 	/*
- 	 * We have to use __iomap_dio_rw() and iomap_dio_complete() instead of
-@@ -4690,6 +4694,8 @@ static ssize_t f2fs_dio_write_iter(struct kiocb *iocb, struct iov_iter *from,
- 		ret = iomap_dio_complete(dio);
- 	}
++Write-hint Policy
++-----------------
++
++1) whint_mode=off. F2FS only passes down WRITE_LIFE_NOT_SET.
++
++2) whint_mode=user-based. F2FS tries to pass down hints given by
++users.
++
++===================== ======================== ===================
++User                  F2FS                     Block
++===================== ======================== ===================
++N/A                   META                     WRITE_LIFE_NOT_SET
++N/A                   HOT_NODE                 "
++N/A                   WARM_NODE                "
++N/A                   COLD_NODE                "
++ioctl(COLD)           COLD_DATA                WRITE_LIFE_EXTREME
++extension list        "                        "
++
++-- buffered io
++WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++WRITE_LIFE_NONE       "                        "
++WRITE_LIFE_MEDIUM     "                        "
++WRITE_LIFE_LONG       "                        "
++
++-- direct io
++WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++WRITE_LIFE_NONE       "                        WRITE_LIFE_NONE
++WRITE_LIFE_MEDIUM     "                        WRITE_LIFE_MEDIUM
++WRITE_LIFE_LONG       "                        WRITE_LIFE_LONG
++===================== ======================== ===================
++
++3) whint_mode=fs-based. F2FS passes down hints with its policy.
++
++===================== ======================== ===================
++User                  F2FS                     Block
++===================== ======================== ===================
++N/A                   META                     WRITE_LIFE_MEDIUM;
++N/A                   HOT_NODE                 WRITE_LIFE_NOT_SET
++N/A                   WARM_NODE                "
++N/A                   COLD_NODE                WRITE_LIFE_NONE
++ioctl(COLD)           COLD_DATA                WRITE_LIFE_EXTREME
++extension list        "                        "
++
++-- buffered io
++WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_LONG
++WRITE_LIFE_NONE       "                        "
++WRITE_LIFE_MEDIUM     "                        "
++WRITE_LIFE_LONG       "                        "
++
++-- direct io
++WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++WRITE_LIFE_NONE       "                        WRITE_LIFE_NONE
++WRITE_LIFE_MEDIUM     "                        WRITE_LIFE_MEDIUM
++WRITE_LIFE_LONG       "                        WRITE_LIFE_LONG
++===================== ======================== ===================
++
+ Fallocate(2) Policy
+ -------------------
  
-+	if (whint_mode == WHINT_MODE_OFF)
-+		iocb->ki_hint = hint;
- 	if (do_opu)
- 		f2fs_up_read(&fi->i_gc_rwsem[READ]);
- 	f2fs_up_read(&fi->i_gc_rwsem[WRITE]);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ba2c5c90af6d..8ebed22dfc88 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -374,6 +374,7 @@ struct kiocb {
- 	void (*ki_complete)(struct kiocb *iocb, long ret);
- 	void			*private;
- 	int			ki_flags;
-+	u16			ki_hint;
- 	u16			ki_ioprio; /* See linux/ioprio.h */
- 	union {
- 		/*
-@@ -2143,11 +2144,21 @@ static inline enum rw_hint file_write_hint(struct file *file)
- 	return file_inode(file)->i_write_hint;
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 6d688e42d89c..39ffad5c4087 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -157,6 +157,7 @@ struct f2fs_mount_info {
+ 	int s_jquota_fmt;			/* Format of quota to use */
+ #endif
+ 	/* For which write hints are passed down to block layer */
++	int whint_mode;
+ 	int alloc_mode;			/* segment allocation policy */
+ 	int fsync_mode;			/* fsync policy */
+ 	int fs_mode;			/* fs mode: LFS or ADAPTIVE */
+@@ -1343,6 +1344,12 @@ enum {
+ 	FS_MODE_FRAGMENT_BLK,		/* block fragmentation mode */
+ };
+ 
++enum {
++	WHINT_MODE_OFF,		/* not pass down write hints */
++	WHINT_MODE_USER,	/* try to pass down hints given by users */
++	WHINT_MODE_FS,		/* pass down hints with F2FS policy */
++};
++
+ enum {
+ 	ALLOC_MODE_DEFAULT,	/* stay default */
+ 	ALLOC_MODE_REUSE,	/* reuse segments as much as possible */
+@@ -3727,6 +3734,8 @@ void f2fs_destroy_segment_manager(struct f2fs_sb_info *sbi);
+ int __init f2fs_create_segment_manager_caches(void);
+ void f2fs_destroy_segment_manager_caches(void);
+ int f2fs_rw_hint_to_seg_type(enum rw_hint hint);
++enum rw_hint f2fs_io_type_to_rw_hint(struct f2fs_sb_info *sbi,
++			enum page_type type, enum temp_type temp);
+ unsigned int f2fs_usable_segs_in_sec(struct f2fs_sb_info *sbi,
+ 			unsigned int segno);
+ unsigned int f2fs_usable_blks_in_seg(struct f2fs_sb_info *sbi,
+diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
+index d05b41608fc0..38c0cb8d9571 100644
+--- a/fs/f2fs/segment.c
++++ b/fs/f2fs/segment.c
+@@ -3290,6 +3290,101 @@ int f2fs_rw_hint_to_seg_type(enum rw_hint hint)
+ 	}
  }
  
-+static inline u16 ki_hint_validate(enum rw_hint hint)
-+{
-+	typeof(((struct kiocb *)0)->ki_hint) max_hint = -1;
++/* This returns write hints for each segment type. This hints will be
++ * passed down to block layer. There are mapping tables which depend on
++ * the mount option 'whint_mode'.
++ *
++ * 1) whint_mode=off. F2FS only passes down WRITE_LIFE_NOT_SET.
++ *
++ * 2) whint_mode=user-based. F2FS tries to pass down hints given by users.
++ *
++ * User                  F2FS                     Block
++ * ----                  ----                     -----
++ *                       META                     WRITE_LIFE_NOT_SET
++ *                       HOT_NODE                 "
++ *                       WARM_NODE                "
++ *                       COLD_NODE                "
++ * ioctl(COLD)           COLD_DATA                WRITE_LIFE_EXTREME
++ * extension list        "                        "
++ *
++ * -- buffered io
++ * WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++ * WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++ * WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++ * WRITE_LIFE_NONE       "                        "
++ * WRITE_LIFE_MEDIUM     "                        "
++ * WRITE_LIFE_LONG       "                        "
++ *
++ * -- direct io
++ * WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++ * WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++ * WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++ * WRITE_LIFE_NONE       "                        WRITE_LIFE_NONE
++ * WRITE_LIFE_MEDIUM     "                        WRITE_LIFE_MEDIUM
++ * WRITE_LIFE_LONG       "                        WRITE_LIFE_LONG
++ *
++ * 3) whint_mode=fs-based. F2FS passes down hints with its policy.
++ *
++ * User                  F2FS                     Block
++ * ----                  ----                     -----
++ *                       META                     WRITE_LIFE_MEDIUM;
++ *                       HOT_NODE                 WRITE_LIFE_NOT_SET
++ *                       WARM_NODE                "
++ *                       COLD_NODE                WRITE_LIFE_NONE
++ * ioctl(COLD)           COLD_DATA                WRITE_LIFE_EXTREME
++ * extension list        "                        "
++ *
++ * -- buffered io
++ * WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++ * WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++ * WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_LONG
++ * WRITE_LIFE_NONE       "                        "
++ * WRITE_LIFE_MEDIUM     "                        "
++ * WRITE_LIFE_LONG       "                        "
++ *
++ * -- direct io
++ * WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++ * WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++ * WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++ * WRITE_LIFE_NONE       "                        WRITE_LIFE_NONE
++ * WRITE_LIFE_MEDIUM     "                        WRITE_LIFE_MEDIUM
++ * WRITE_LIFE_LONG       "                        WRITE_LIFE_LONG
++ */
 +
-+	if (hint <= max_hint)
-+		return hint;
-+	return 0;
++enum rw_hint f2fs_io_type_to_rw_hint(struct f2fs_sb_info *sbi,
++				enum page_type type, enum temp_type temp)
++{
++	if (F2FS_OPTION(sbi).whint_mode == WHINT_MODE_USER) {
++		if (type == DATA) {
++			if (temp == WARM)
++				return WRITE_LIFE_NOT_SET;
++			else if (temp == HOT)
++				return WRITE_LIFE_SHORT;
++			else if (temp == COLD)
++				return WRITE_LIFE_EXTREME;
++		} else {
++			return WRITE_LIFE_NOT_SET;
++		}
++	} else if (F2FS_OPTION(sbi).whint_mode == WHINT_MODE_FS) {
++		if (type == DATA) {
++			if (temp == WARM)
++				return WRITE_LIFE_LONG;
++			else if (temp == HOT)
++				return WRITE_LIFE_SHORT;
++			else if (temp == COLD)
++				return WRITE_LIFE_EXTREME;
++		} else if (type == NODE) {
++			if (temp == WARM || temp == HOT)
++				return WRITE_LIFE_NOT_SET;
++			else if (temp == COLD)
++				return WRITE_LIFE_NONE;
++		} else if (type == META) {
++			return WRITE_LIFE_MEDIUM;
++		}
++	}
++	return WRITE_LIFE_NOT_SET;
 +}
 +
- static inline void init_sync_kiocb(struct kiocb *kiocb, struct file *filp)
+ static int __get_segment_type_2(struct f2fs_io_info *fio)
  {
- 	*kiocb = (struct kiocb) {
- 		.ki_filp = filp,
- 		.ki_flags = filp->f_iocb_flags,
-+		.ki_hint = ki_hint_validate(file_write_hint(filp)),
- 		.ki_ioprio = get_current_ioprio(),
- 	};
- }
-@@ -2158,6 +2169,7 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
- 	*kiocb = (struct kiocb) {
- 		.ki_filp = filp,
- 		.ki_flags = kiocb_src->ki_flags,
-+		.ki_hint = kiocb_src->ki_hint,
- 		.ki_ioprio = kiocb_src->ki_ioprio,
- 		.ki_pos = kiocb_src->ki_pos,
- 	};
-diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
-index 793f82cc1515..9247ad58034e 100644
---- a/include/trace/events/f2fs.h
-+++ b/include/trace/events/f2fs.h
-@@ -946,6 +946,7 @@ TRACE_EVENT(f2fs_direct_IO_enter,
- 		__field(ino_t,	ino)
- 		__field(loff_t,	ki_pos)
- 		__field(int,	ki_flags)
-+		__field(u16,    ki_hint)
- 		__field(u16,	ki_ioprio)
- 		__field(unsigned long,	len)
- 		__field(int,	rw)
-@@ -956,16 +957,18 @@ TRACE_EVENT(f2fs_direct_IO_enter,
- 		__entry->ino		= inode->i_ino;
- 		__entry->ki_pos		= iocb->ki_pos;
- 		__entry->ki_flags	= iocb->ki_flags;
-+		__entry->ki_hint	= iocb->ki_hint;
- 		__entry->ki_ioprio	= iocb->ki_ioprio;
- 		__entry->len		= len;
- 		__entry->rw		= rw;
- 	),
+ 	if (fio->type == DATA)
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index a8c8232852bb..5bb062075acf 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -141,6 +141,7 @@ enum {
+ 	Opt_jqfmt_vfsold,
+ 	Opt_jqfmt_vfsv0,
+ 	Opt_jqfmt_vfsv1,
++	Opt_whint,
+ 	Opt_alloc,
+ 	Opt_fsync,
+ 	Opt_test_dummy_encryption,
+@@ -220,6 +221,7 @@ static match_table_t f2fs_tokens = {
+ 	{Opt_jqfmt_vfsold, "jqfmt=vfsold"},
+ 	{Opt_jqfmt_vfsv0, "jqfmt=vfsv0"},
+ 	{Opt_jqfmt_vfsv1, "jqfmt=vfsv1"},
++	{Opt_whint, "whint_mode=%s"},
+ 	{Opt_alloc, "alloc_mode=%s"},
+ 	{Opt_fsync, "fsync_mode=%s"},
+ 	{Opt_test_dummy_encryption, "test_dummy_encryption=%s"},
+@@ -988,6 +990,22 @@ static int parse_options(struct super_block *sb, char *options, bool is_remount)
+ 			f2fs_info(sbi, "quota operations not supported");
+ 			break;
+ #endif
++		case Opt_whint:
++			name = match_strdup(&args[0]);
++			if (!name)
++				return -ENOMEM;
++			if (!strcmp(name, "user-based")) {
++				F2FS_OPTION(sbi).whint_mode = WHINT_MODE_USER;
++			} else if (!strcmp(name, "off")) {
++				F2FS_OPTION(sbi).whint_mode = WHINT_MODE_OFF;
++			} else if (!strcmp(name, "fs-based")) {
++				F2FS_OPTION(sbi).whint_mode = WHINT_MODE_FS;
++			} else {
++				kfree(name);
++				return -EINVAL;
++			}
++			kfree(name);
++			break;
+ 		case Opt_alloc:
+ 			name = match_strdup(&args[0]);
+ 			if (!name)
+@@ -1389,6 +1407,12 @@ static int parse_options(struct super_block *sb, char *options, bool is_remount)
+ 		return -EINVAL;
+ 	}
  
--	TP_printk("dev = (%d,%d), ino = %lu pos = %lld len = %lu ki_flags = %x ki_ioprio = %x rw = %d",
-+	TP_printk("dev = (%d,%d), ino = %lu pos = %lld len = %lu ki_flags = %x ki_hint = %x ki_ioprio = %x rw = %d",
- 		show_dev_ino(__entry),
- 		__entry->ki_pos,
- 		__entry->len,
- 		__entry->ki_flags,
-+		__entry->ki_hint,
- 		__entry->ki_ioprio,
- 		__entry->rw)
- );
-diff --git a/io_uring/rw.c b/io_uring/rw.c
-index c8c822fa7980..c41ae6654116 100644
---- a/io_uring/rw.c
-+++ b/io_uring/rw.c
-@@ -677,6 +677,7 @@ static int io_rw_init_file(struct io_kiocb *req, fmode_t mode)
- 		req->flags |= io_file_get_flags(file);
++	/* Not pass down write hints if the number of active logs is lesser
++	 * than NR_CURSEG_PERSIST_TYPE.
++	 */
++	if (F2FS_OPTION(sbi).active_logs != NR_CURSEG_PERSIST_TYPE)
++		F2FS_OPTION(sbi).whint_mode = WHINT_MODE_OFF;
++
+ 	if (f2fs_sb_has_readonly(sbi) && !f2fs_readonly(sbi->sb)) {
+ 		f2fs_err(sbi, "Allow to mount readonly mode only");
+ 		return -EROFS;
+@@ -2060,6 +2084,10 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
+ 		seq_puts(seq, ",prjquota");
+ #endif
+ 	f2fs_show_quota_options(seq, sbi->sb);
++	if (F2FS_OPTION(sbi).whint_mode == WHINT_MODE_USER)
++		seq_printf(seq, ",whint_mode=%s", "user-based");
++	else if (F2FS_OPTION(sbi).whint_mode == WHINT_MODE_FS)
++		seq_printf(seq, ",whint_mode=%s", "fs-based");
  
- 	kiocb->ki_flags = file->f_iocb_flags;
-+	kiocb->ki_hint = file_inode(file)->i_write_hint;
- 	ret = kiocb_set_rw_flags(kiocb, rw->flags);
- 	if (unlikely(ret))
- 		return ret;
+ 	fscrypt_show_test_dummy_encryption(seq, ',', sbi->sb);
+ 
+@@ -2129,6 +2157,7 @@ static void default_options(struct f2fs_sb_info *sbi, bool remount)
+ 		F2FS_OPTION(sbi).active_logs = NR_CURSEG_PERSIST_TYPE;
+ 
+ 	F2FS_OPTION(sbi).inline_xattr_size = DEFAULT_INLINE_XATTR_ADDRS;
++	F2FS_OPTION(sbi).whint_mode = WHINT_MODE_OFF;
+ 	if (le32_to_cpu(F2FS_RAW_SUPER(sbi)->segment_count_main) <=
+ 							SMALL_VOLUME_SEGMENTS)
+ 		F2FS_OPTION(sbi).alloc_mode = ALLOC_MODE_REUSE;
+@@ -2443,7 +2472,8 @@ static int f2fs_remount(struct super_block *sb, int *flags, char *data)
+ 		need_stop_gc = true;
+ 	}
+ 
+-	if (*flags & SB_RDONLY) {
++	if (*flags & SB_RDONLY ||
++	    F2FS_OPTION(sbi).whint_mode != org_mount_opt.whint_mode) {
+ 		sync_inodes_sb(sb);
+ 
+ 		set_sbi_flag(sbi, SBI_IS_DIRTY);
