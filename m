@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D381C04FF7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60DF2C04FEF
 	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 19:15:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230110AbjITTPa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Sep 2023 15:15:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38598 "EHLO
+        id S230120AbjITTPb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Sep 2023 15:15:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229597AbjITTPZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 15:15:25 -0400
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE83CDD;
-        Wed, 20 Sep 2023 12:14:53 -0700 (PDT)
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-68fdcc37827so877793b3a.0;
-        Wed, 20 Sep 2023 12:14:53 -0700 (PDT)
+        with ESMTP id S230014AbjITTP1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 15:15:27 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0348192;
+        Wed, 20 Sep 2023 12:15:00 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2746ab05409so72778a91.0;
+        Wed, 20 Sep 2023 12:15:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695237293; x=1695842093;
+        d=1e100.net; s=20230601; t=1695237300; x=1695842100;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=CgjfA+NFbyOFJy7VI1AAXxPugeWclnjTAzkFxQOWY48=;
-        b=WwCSkjFv5tRTj6IJGoHwKcs/5/p0ZTpjF008jIjD9UGKysdAoIQawEKUTuVKDguCDS
-         b7gKLQLpn67K0BukRTK/ZFB3M3EqY70riqwjiEM/oew+d8Y3JSDS36yopN4hGLQc01DN
-         6Xxro+oskWc4Pyx7tfw4pYX2BoiOLxbPFgGYCLvYemdprzulOiaNeJTAzpKdcZgLACOV
-         oMPXz3iBaTtAacL/v+GoUQ0ygZPGLp/HBtDC7rS4qzrirV3lZngRk/sYansgiwvEFcn3
-         T9a5X13fPuVHKLMkCKaQFTw1V3le73AMCgZDmZ67wnSFpGaQSItR/lmg9jDwMpFUdMog
-         dzWQ==
-X-Gm-Message-State: AOJu0YwRiII79sl8SLTCLvZjfWJSRs+DU+HFqfBR5FMbux8rcs0NJVB3
-        7X2EbM+GR/94j4KeuvsigSAuQDe1jXs=
-X-Google-Smtp-Source: AGHT+IEwSUN6YpTGWAKfPHwR8Rl/USX8Aye0jemdGclQ2Nh+Tz738zlB6D4H+6RdgiXus+f1lTCueg==
-X-Received: by 2002:a17:90b:4f8b:b0:276:696b:1dd9 with SMTP id qe11-20020a17090b4f8b00b00276696b1dd9mr8659049pjb.15.1695237292721;
-        Wed, 20 Sep 2023 12:14:52 -0700 (PDT)
+        bh=+H1FOxnhDByXxYVS4N7lGmsSndMwiTiWuFLv9FuLudk=;
+        b=gkATPVSZwS2kD9M0/OXPhjml3yDuOXr6V2sZtR6oKT67IIZU2IWTPRy8BJ7sPPHs/1
+         DGknAgyxAGQC5qK5qiMb+NcKT9SRaGjmye/0oyZLxXG0NejSLbqt204/c76STqhiGaJY
+         LchNbyxKJxkVglPJiz6nUjrMkgJpJ8Rcl7bIiddPDMoQe5EvnxkvXKhL96Rek8uPGlMx
+         tohTTOJwGzGZ9oKN6u37T8HnckCdjmVuM18OFlLKjSVBwS81Kk31lU+TvJh3X+74Tk+i
+         g0KR21DQIU0tU0/UAT1LzpH8EEJPAMkuMFMQt/RFqNVqpM+n49LzUn8GNVJMp3CB6UnY
+         //tg==
+X-Gm-Message-State: AOJu0YzGHJf6vaAN8rN1cwbdbSdBbMBHqZtyfe1ITx0NoRI19mFfxlav
+        6v0fOvfGf0OuJ0J+YnqfRPw=
+X-Google-Smtp-Source: AGHT+IFMO7bJ2K5PZlLh44y+YE7KTgq3gNaxS0NyMhDKnXe+DwJ196hSEowVxx0ZvSMyFnu3770nnQ==
+X-Received: by 2002:a17:90b:8d6:b0:274:8330:c7da with SMTP id ds22-20020a17090b08d600b002748330c7damr3690498pjb.28.1695237299975;
+        Wed, 20 Sep 2023 12:14:59 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:b0c6:e5b6:49ef:e0bd])
-        by smtp.gmail.com with ESMTPSA id a13-20020a17090a8c0d00b002633fa95ac2sm1656318pjo.13.2023.09.20.12.14.51
+        by smtp.gmail.com with ESMTPSA id a13-20020a17090a8c0d00b002633fa95ac2sm1656318pjo.13.2023.09.20.12.14.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Sep 2023 12:14:52 -0700 (PDT)
+        Wed, 20 Sep 2023 12:14:59 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -44,14 +44,10 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Jeff Layton <jlayton@kernel.org>,
-        Chuck Lever <chuck.lever@oracle.com>
-Subject: [PATCH 02/13] fs: Restore support for F_GET_FILE_RW_HINT and F_SET_FILE_RW_HINT
-Date:   Wed, 20 Sep 2023 12:14:27 -0700
-Message-ID: <20230920191442.3701673-3-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH 06/13] scsi_proto: Add struct io_group_descriptor
+Date:   Wed, 20 Sep 2023 12:14:31 -0700
+Message-ID: <20230920191442.3701673-7-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.459.ge4e396fd5e-goog
 In-Reply-To: <20230920191442.3701673-1-bvanassche@acm.org>
 References: <20230920191442.3701673-1-bvanassche@acm.org>
@@ -61,90 +57,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Restore support for F_GET_FILE_RW_HINT and F_SET_FILE_RW_HINT by
-reverting commit 7b12e49669c9 ("fs: remove fs.f_write_hint").
+Prepare for adding code that will fill in and parse this data structure.
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- fs/fcntl.c         | 18 ++++++++++++++++++
- fs/open.c          |  1 +
- include/linux/fs.h |  9 +++++++++
- 3 files changed, 28 insertions(+)
+ include/scsi/scsi_proto.h | 40 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index e871009f6c88..acaa49fb1a35 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -292,6 +292,22 @@ static long fcntl_rw_hint(struct file *file, unsigned int cmd,
- 	u64 h;
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index 07d65c1f59db..4e3691cb67da 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -10,6 +10,7 @@
+ #ifndef _SCSI_PROTO_H_
+ #define _SCSI_PROTO_H_
  
- 	switch (cmd) {
-+	case F_GET_FILE_RW_HINT:
-+		h = file_write_hint(file);
-+		if (copy_to_user(argp, &h, sizeof(*argp)))
-+			return -EFAULT;
-+		return 0;
-+	case F_SET_FILE_RW_HINT:
-+		if (copy_from_user(&h, argp, sizeof(h)))
-+			return -EFAULT;
-+		hint = (enum rw_hint) h;
-+		if (!rw_hint_valid(hint))
-+			return -EINVAL;
++#include <linux/build_bug.h>
+ #include <linux/types.h>
+ 
+ /*
+@@ -275,6 +276,45 @@ struct scsi_lun {
+ 	__u8 scsi_lun[8];
+ };
+ 
++/* SBC-5 IO advice hints group descriptor */
++struct scsi_io_group_descriptor {
++#if defined(__BIG_ENDIAN)
++	u8 io_advice_hints_mode: 2;
++	u8 reserved1: 3;
++	u8 st_enble: 1;
++	u8 cs_enble: 1;
++	u8 ic_enable: 1;
++#elif defined(__LITTLE_ENDIAN)
++	u8 ic_enable: 1;
++	u8 cs_enble: 1;
++	u8 st_enble: 1;
++	u8 reserved1: 3;
++	u8 io_advice_hints_mode: 2;
++#else
++#error
++#endif
++	u8 reserved2[3];
++	/* Logical block markup descriptor */
++#if defined(__BIG_ENDIAN)
++	u8 acdlu: 1;
++	u8 reserved3: 1;
++	u8 rlbsr: 2;
++	u8 lbm_descriptor_type: 4;
++#elif defined(__LITTLE_ENDIAN)
++	u8 lbm_descriptor_type: 4;
++	u8 rlbsr: 2;
++	u8 reserved3: 1;
++	u8 acdlu: 1;
++#else
++#error
++#endif
++	u8 params[2];
++	u8 reserved4;
++	u8 reserved5[8];
++};
 +
-+		spin_lock(&file->f_lock);
-+		file->f_write_hint = hint;
-+		spin_unlock(&file->f_lock);
-+		return 0;
- 	case F_GET_RW_HINT:
- 		h = inode->i_write_hint;
- 		if (copy_to_user(argp, &h, sizeof(*argp)))
-@@ -417,6 +433,8 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
- 		break;
- 	case F_GET_RW_HINT:
- 	case F_SET_RW_HINT:
-+	case F_GET_FILE_RW_HINT:
-+	case F_SET_FILE_RW_HINT:
- 		err = fcntl_rw_hint(filp, cmd, arg);
- 		break;
- 	default:
-diff --git a/fs/open.c b/fs/open.c
-index 98f6601fbac6..9e31b8c50cc4 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -942,6 +942,7 @@ static int do_dentry_open(struct file *f,
- 	if (f->f_mapping->a_ops && f->f_mapping->a_ops->direct_IO)
- 		f->f_mode |= FMODE_CAN_ODIRECT;
- 
-+	f->f_write_hint = WRITE_LIFE_NOT_SET;
- 	f->f_flags &= ~(O_CREAT | O_EXCL | O_NOCTTY | O_TRUNC);
- 	f->f_iocb_flags = iocb_flags(f);
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 4aeb3fa11927..ba2c5c90af6d 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1001,6 +1001,7 @@ struct file {
- 	 * Must not be taken from IRQ context.
- 	 */
- 	spinlock_t		f_lock;
-+	enum rw_hint		f_write_hint;
- 	fmode_t			f_mode;
- 	atomic_long_t		f_count;
- 	struct mutex		f_pos_lock;
-@@ -2134,6 +2135,14 @@ static inline bool HAS_UNMAPPED_ID(struct mnt_idmap *idmap,
- 	       !vfsgid_valid(i_gid_into_vfsgid(idmap, inode));
- }
- 
-+static inline enum rw_hint file_write_hint(struct file *file)
-+{
-+	if (file->f_write_hint != WRITE_LIFE_NOT_SET)
-+		return file->f_write_hint;
++static_assert(sizeof(struct scsi_io_group_descriptor) == 16);
 +
-+	return file_inode(file)->i_write_hint;
-+}
-+
- static inline void init_sync_kiocb(struct kiocb *kiocb, struct file *filp)
- {
- 	*kiocb = (struct kiocb) {
+ /* SPC asymmetric access states */
+ #define SCSI_ACCESS_STATE_OPTIMAL     0x00
+ #define SCSI_ACCESS_STATE_ACTIVE      0x01
