@@ -2,228 +2,171 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6944ECE79AB
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 09:20:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B11CE79BF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 10:20:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234001AbjITJUc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Sep 2023 05:20:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54120 "EHLO
+        id S233864AbjITKUs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Sep 2023 06:20:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234072AbjITI7W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 04:59:22 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92943CCE
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Sep 2023 01:58:45 -0700 (PDT)
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230920085841epoutp03531764346e5d5b75e318e91c8cb4bc80~Gj7Xr_XdC1763017630epoutp033
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Sep 2023 08:58:41 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230920085841epoutp03531764346e5d5b75e318e91c8cb4bc80~Gj7Xr_XdC1763017630epoutp033
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1695200321;
-        bh=zohq6qFcyNQPlL9CW1gp72Nbdr99RwoaaLJ8/DxbinM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gjRORKPKWwdNEX125R3gRx6iZHENFQzfHk9BtRzQ75h7biE8KXgwu216qFOcN4vtp
-         9CqQ902AwVy9J2qRXnOfxDkVr1EneweJfV+YxNQf2mJvckwIScbtWUYR1rPj757rN8
-         IKzeCIXZE7QkuNuSpO6hKSCuNFkjKw/GOKR97ejA=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20230920085840epcas5p3beb33fd273b4b923788b1dad210b43b3~Gj7W4-4Zz1154211542epcas5p3e;
-        Wed, 20 Sep 2023 08:58:40 +0000 (GMT)
-Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.176]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4RrCB66xRDz4x9Q9; Wed, 20 Sep
-        2023 08:58:38 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        54.F1.19094.E34BA056; Wed, 20 Sep 2023 17:58:38 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20230920081548epcas5p14d9620a58744270e4f31a7cea4eec920~GjV7u96b42942529425epcas5p1j;
-        Wed, 20 Sep 2023 08:15:48 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230920081548epsmtrp2376c601f064748387c98462119b603fd~GjV7t1bN80262802628epsmtrp2U;
-        Wed, 20 Sep 2023 08:15:48 +0000 (GMT)
-X-AuditID: b6c32a50-39fff70000004a96-c7-650ab43e328d
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        56.0F.08742.43AAA056; Wed, 20 Sep 2023 17:15:48 +0900 (KST)
-Received: from green245.sa.corp.samsungelectronics.net (unknown
-        [107.99.41.245]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230920081545epsmtip11c54e63139d09068832067b7cda16d8d~GjV4v7hjY0186201862epsmtip1g;
-        Wed, 20 Sep 2023 08:15:45 +0000 (GMT)
-From:   Nitesh Shetty <nj.shetty@samsung.com>
-To:     Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        nitheshshetty@gmail.com, anuj1072538@gmail.com,
-        gost.dev@samsung.com, mcgrof@kernel.org,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org
-Subject: [PATCH v16 09/12] dm: Add support for copy offload
-Date:   Wed, 20 Sep 2023 13:37:46 +0530
-Message-Id: <20230920080756.11919-10-nj.shetty@samsung.com>
-X-Mailer: git-send-email 2.35.1.500.gb896f729e2
-In-Reply-To: <20230920080756.11919-1-nj.shetty@samsung.com>
+        with ESMTP id S234208AbjITKUq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 06:20:46 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BDD7B6;
+        Wed, 20 Sep 2023 03:20:40 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 951C2C433C7;
+        Wed, 20 Sep 2023 10:20:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695205240;
+        bh=7oQVfk9e+fkrDoBpzxVo3BvE7Armt3+KizjRyusSLgU=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=eY5PAmPoSD0DwsnWjov7/jCh+GzEwdxvMDExZifylLuZRCYk+1D3y5KDXUJnFEJaC
+         LvOasZyam4ABk+0KUMgdibLEhkf0abUAiAh/xk7jMTND6TmuKRQgcTmhIpsn0giSwo
+         8+mdkJ76EizDcG1dOTJ6TH7wnpwntrIp82YvIQDmH67JWjaSLMPFwND2yYxWhFEE3z
+         7xkZ7rmPQhq/TjUrVu1mAdMQl91uex6eQYX5cm3zs//7PFCYi03FQcik/wGclLhk68
+         peyBGrSAfT8MEaAq5HNBmQXQJuPhp9g9MBA88CEz9vSbz6QB3jX5KpUHwkYwiAbfAx
+         kiqWgyCK0dcIg==
+Message-ID: <8e61327a-3248-e518-27f7-9b915ef34eaa@kernel.org>
+Date:   Wed, 20 Sep 2023 03:20:39 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Tf1CTZRzned/t3eBYvQIeDyuTRtIJARtt86GA5CJ6T6vj8q7rvJR28ArE
-        2Hb7RYkZIr/EY5tYmZsgHRwgeIATaAJLghKHISE4YIF2OqxzByqkZYi0uVH+9/l8nu+vz/e5
-        LxsPKmdx2bkyNa2USaQ8IoDRPbg5Kia5M4DmG1xi1D58AUf37i8zUOusnkCuwUWAnP3lAFkX
-        TEw03X8OQ6daf8JQ9YAdoLmrRgxZHdHo27IGBuqz2hhovOcEgU42zrHQ4UkLgZqGHmNoyjAH
-        kMV5AKDu5ZM4anPdYaCLjufQ6MoQc2sodc44y6JGr51hUOMjGsrccoigzjZ8QfVOFxFUve4o
-        k6o6uEBQ9+YcDOrO91cJStfZAqgl8wuU2TmPpXN25iXm0JIsWhlOyzLlWbmy7CTe9h0Zb2aI
-        xHxBjCABbeGFyyT5dBIv9Z30mLRcqds6L1wrkWrcUrpEpeLFJScq5Ro1HZ4jV6mTeLQiS6oQ
-        KmJVknyVRpYdK6PVrwn4/HiRO/DjvJyKywu44sewT0/fHMOLwK2QSuDPhqQQ3lw0MSpBADuI
-        7AOw97ti3EsWAXSV9PvIAwCr9GVgLaX+ktH3YAVw0mXCvKQUg4biGncUm02Q0fDSKtujh5BF
-        OOzorQcegpPTGBw53415SgWTr8PqGjPuwQxyEyy12ZgezHHrh1ZLMU8hSMZB/fV1HtnfLS81
-        TLK8Ieug7biT4cE4uREe7DI9mQiSJn9o+MPC9I6aCvVlJsKLg+HtoU6WF3Ph0oLVpxfAU182
-        E97kEgCNk0afzzdg6bAe9wyBk5the0+cV94Avxpuw7yNn4FVy07Mq3OgpXYNR8DT7XW++mHQ
-        /tcBH6ag/vwV37Z1AK40d7IMINz4lCHjU4aM/7euA3gL4NIKVX42nSlSCGJkdMF/H50pzzeD
-        JxcRlW4BrR0rsQMAY4MBANk4L4STHxlAB3GyJJ/tpZXyDKVGSqsGgMi98SM4d32m3H1SMnWG
-        QJjAF4rFYmHCq2IBL5TjKq3JCiKzJWo6j6YVtHItD2P7c4uwFwlp1bHlfYXFZ2+32WWRh1nV
-        jyyz1ydCTrylOsPc3wAujD1Mfkm9u7Bx/ed/b3lIvB0dEVIxvi/l0YYH5Zf70V3/yOniXXVU
-        49Z5P9eex99ENJekOXfurdVpfjGPT6Tx/T6o3b87UTLbMq+Nabo2Y4vfKKXnqeP/3GrSKuX6
-        EW3Xxe2y+yVax5VuZsHyR4N+rbB2suUVaUWS6909Myk67ScVP3+t+XPGeoM71rfY9NvLO+zj
-        gUdsol14qrrDVngj7Af7VCIdqHs2vtLataQ7Jvowc1teT9iKflNg6GhFeav9/cG6bVNRsbXP
-        dx2V/7oaLnQkTvxuCSL9gg1xtCNh4m7KezyGKkciiMKVKsm/YnSQgZoEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Ra0hTcRjG+59zdnZczU5T2N8Mg4VCSaZ0+2Mp9aE8fZHKCLpArTyZ5Oba
-        1CysJqKlecMiaJqXWpabuVqpM1uJpnMus6g0l3ahbYrS0ixJp1tOCfr2vM/veZ/3w0vhgmZi
-        OZUoTWHlUnGSiOQRDW2ioLUbNDw2vN2wAum6OnA0/ttFIO1gEYlG234CZGu5BJDRWcpB/S1N
-        GKrRtmOopLUXIPt7FYaM1lBUlaMm0FOjmUBvn5SRqKLazkVX+gwkumtyY+hDsR0ggy0ToAZX
-        BY7qRn8QqNMaiHpmTZxtQqZJNchlej49JJi33amMXpNLMo/UF5nmfiXJ3C68ymEKspwkM263
-        EsyPZ+9JpvCxBjAT+iBGb/uO7eYf5G2NZ5MS01j5uuijvJOXXzlx2YuA9Npvb3AlcPjnAR8K
-        0hvgbYsKzwM8SkA3A+jKe85ZAAGwevYFvqD9YI17iLsQysJgf3XHHKAokg6FFg/l9f3pPBzm
-        NjkJ74DTdgyOT00C77YfvQWW3NTPNxF0MMw2m+cv8Of8XE825i2C9DpY9HmZ1/aZsyfUfVyv
-        FtCR0PK6grsQXwbNN2yEV+P0SphVX4oXA1r1H1L9hyoBpgEBrEwhSZAoImQRUvZMmEIsUaRK
-        E8KOJ0v0YP6/a1YbQKNmLKwVYBRoBZDCRf58SQiPFfDjxWfPsfLkI/LUJFbRCgIpQiTkC4cL
-        4gV0gjiFPcWyMlb+j2KUz3Il9mAix2+XK1KzNebCAXdy13SHNi0GO+bDGksTu4FHMirMeNOx
-        qXe71JmTxrk/5jaFzCxh6PrUrj2O9NDfv7Cv6/dFTo1xSCz9cXRdzZdHlwe6PpuU11tehgt0
-        K0umzwV79sYYlSqHMmrHoaNZnYz12oW+WJG/aSg8LmT0mi528UB5pTm7Nj8luaJQ8t0t6R35
-        GWWrPFHf/mm3LqApKUNmbL8Xl88b/tIYNpj2x+Kr3n5w063IjQMjZewp+1DnZHTsDK/6252Z
-        4jKL53hBprVBiC1ShsvPb5ad1jYsDR5eX9DmUAb5uoodq6oO7NfWfqxrrIq+eqVw5zvd4YeT
-        bkO5iFCcFEesweUK8V93BZtWTgMAAA==
-X-CMS-MailID: 20230920081548epcas5p14d9620a58744270e4f31a7cea4eec920
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230920081548epcas5p14d9620a58744270e4f31a7cea4eec920
-References: <20230920080756.11919-1-nj.shetty@samsung.com>
-        <CGME20230920081548epcas5p14d9620a58744270e4f31a7cea4eec920@epcas5p1.samsung.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.1
+Subject: Re: [PATCH v3 01/23] ata: libata-core: Fix ata_port_request_pm()
+ locking
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230915081507.761711-1-dlemoal@kernel.org>
+ <20230915081507.761711-2-dlemoal@kernel.org> <ZQmgNUCLV8rDXg5I@x1-carbon>
+ <0c2c5b5b-85b5-89c6-5d62-c4d3a029fb2b@kernel.org>
+ <ZQqdap5Q3ky6lV4p@x1-carbon>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZQqdap5Q3ky6lV4p@x1-carbon>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Before enabling copy for dm target, check if underlying devices and
-dm target support copy. Avoid split happening inside dm target.
-Fail early if the request needs split, currently splitting copy
-request is not supported.
+On 2023/09/20 0:21, Niklas Cassel wrote:
+> On Tue, Sep 19, 2023 at 09:31:04AM -0700, Damien Le Moal wrote:
+>> On 2023/09/19 6:21, Niklas Cassel wrote:
+>>> On Fri, Sep 15, 2023 at 05:14:45PM +0900, Damien Le Moal wrote:
+>>>> The function ata_port_request_pm() checks the port flag
+>>>> ATA_PFLAG_PM_PENDING and calls ata_port_wait_eh() if this flag is set to
+>>>> ensure that power management operations for a port are not secheduled
+>>>
+>>> s/secheduled/scheduled/
+>>>
+>>>> simultaneously. However, this flag check is done without holding the
+>>>> port lock.
+>>>>
+>>>> Fix this by taking the port lock on entry to the function and checking
+>>>> the flag under this lock. The lock is released and re-taken if
+>>>> ata_port_wait_eh() needs to be called.
+>>>>
+>>>> Fixes: 5ef41082912b ("ata: add ata port system PM callbacks")
+>>>> Cc: stable@vger.kernel.org
+>>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>>>> Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
+>>>> ---
+>>>>  drivers/ata/libata-core.c | 17 +++++++++--------
+>>>>  1 file changed, 9 insertions(+), 8 deletions(-)
+>>>>
+>>>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>>>> index 74314311295f..c4898483d716 100644
+>>>> --- a/drivers/ata/libata-core.c
+>>>> +++ b/drivers/ata/libata-core.c
+>>>> @@ -5040,17 +5040,20 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+>>>>  	struct ata_link *link;
+>>>>  	unsigned long flags;
+>>>>  
+>>>> -	/* Previous resume operation might still be in
+>>>> -	 * progress.  Wait for PM_PENDING to clear.
+>>>> +	spin_lock_irqsave(ap->lock, flags);
+>>>> +
+>>>> +	/*
+>>>> +	 * A previous PM operation might still be in progress. Wait for
+>>>> +	 * ATA_PFLAG_PM_PENDING to clear.
+>>>>  	 */
+>>>>  	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
+>>>> +		spin_unlock_irqrestore(ap->lock, flags);
+>>>>  		ata_port_wait_eh(ap);
+>>>> +		spin_lock_irqsave(ap->lock, flags);
+>>>>  		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+>>>>  	}
+>>>>  
+>>>> -	/* request PM ops to EH */
+>>>> -	spin_lock_irqsave(ap->lock, flags);
+>>>> -
+>>>> +	/* Request PM operation to EH */
+>>>>  	ap->pm_mesg = mesg;
+>>>>  	ap->pflags |= ATA_PFLAG_PM_PENDING;
+>>>>  	ata_for_each_link(link, ap, HOST_FIRST) {
+>>>> @@ -5062,10 +5065,8 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+>>>>  
+>>>>  	spin_unlock_irqrestore(ap->lock, flags);
+>>>>  
+>>>> -	if (!async) {
+>>>> +	if (!async)
+>>>>  		ata_port_wait_eh(ap);
+>>>> -		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+>>>
+>>> Perhaps you should mention why this WARN_ON() is removed in the commit
+>>> message.
+>>>
+>>> I don't understand why you keep the WARN_ON() higher up in this function,
+>>> but remove this WARN_ON(). They seem to have equal worth to me.
+>>> Perhaps just take and release the lock around the WARN_ON() here as well?
+>>
+>> Yes, they have the same worth == not super useful... I kept the one higher up as
+>> it is OK because we hold the lock, but removed the second one as checking pflags
+>> without the lock is just plain wrong. Thinking of it, the first WRN_ON() is also
+>> wrong I think because EH could be rescheduled right after wait_eh and before we
+>> take the lock. In that case, the warn on would be a flase positive. I will
+>> remove it as well.
+> 
+> We are checking if ATA_PFLAG_PM_PENDING is set, if it is, we do
+> ata_port_wait_eh(), which will wait until both ATA_PFLAG_EH_PENDING and
+> ATA_PFLAG_EH_IN_PROGRESS is cleared.
+> 
+> Note that ATA_PFLAG_PM_PENDING and ATA_PFLAG_EH_PENDING have very similar
+> names... I really think we should rename ATA_PFLAG_PM_PENDING to something
+> like ATA_PFLAG_EH_PM_PENDING (the PM is performed by EH), in order to make
+> it harder to mix them up.
 
-Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
----
- drivers/md/dm-table.c         | 37 +++++++++++++++++++++++++++++++++++
- drivers/md/dm.c               |  7 +++++++
- include/linux/device-mapper.h |  3 +++
- 3 files changed, 47 insertions(+)
+Let's do the renaming in a followup patch, not in this fix patch.
 
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 37b48f63ae6a..8803c351624c 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -1878,6 +1878,38 @@ static bool dm_table_supports_nowait(struct dm_table *t)
- 	return true;
- }
- 
-+static int device_not_copy_capable(struct dm_target *ti, struct dm_dev *dev,
-+				   sector_t start, sector_t len, void *data)
-+{
-+	struct request_queue *q = bdev_get_queue(dev->bdev);
-+
-+	return !q->limits.max_copy_sectors;
-+}
-+
-+static bool dm_table_supports_copy(struct dm_table *t)
-+{
-+	struct dm_target *ti;
-+	unsigned int i;
-+
-+	for (i = 0; i < t->num_targets; i++) {
-+		ti = dm_table_get_target(t, i);
-+
-+		if (!ti->copy_offload_supported)
-+			return false;
-+
-+		/*
-+		 * target provides copy support (as implied by setting
-+		 * 'copy_offload_supported')
-+		 * and it relies on _all_ data devices having copy support.
-+		 */
-+		if (!ti->type->iterate_devices ||
-+		    ti->type->iterate_devices(ti, device_not_copy_capable, NULL))
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
- static int device_not_discard_capable(struct dm_target *ti, struct dm_dev *dev,
- 				      sector_t start, sector_t len, void *data)
- {
-@@ -1960,6 +1992,11 @@ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
- 		q->limits.discard_misaligned = 0;
- 	}
- 
-+	if (!dm_table_supports_copy(t)) {
-+		q->limits.max_copy_sectors = 0;
-+		q->limits.max_copy_hw_sectors = 0;
-+	}
-+
- 	if (!dm_table_supports_secure_erase(t))
- 		q->limits.max_secure_erase_sectors = 0;
- 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 64a1f306c96c..eca336487d44 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1714,6 +1714,13 @@ static blk_status_t __split_and_process_bio(struct clone_info *ci)
- 	if (unlikely(ci->is_abnormal_io))
- 		return __process_abnormal_io(ci, ti);
- 
-+	if ((unlikely(op_is_copy(ci->bio->bi_opf)) &&
-+	    max_io_len(ti, ci->sector) < ci->sector_count)) {
-+		DMERR("Error, IO size(%u) > max target size(%llu)\n",
-+		      ci->sector_count, max_io_len(ti, ci->sector));
-+		return BLK_STS_IOERR;
-+	}
-+
- 	/*
- 	 * Only support bio polling for normal IO, and the target io is
- 	 * exactly inside the dm_io instance (verified in dm_poll_dm_io)
-diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
-index 69d0435c7ebb..98db52d1c773 100644
---- a/include/linux/device-mapper.h
-+++ b/include/linux/device-mapper.h
-@@ -396,6 +396,9 @@ struct dm_target {
- 	 * bio_set_dev(). NOTE: ideally a target should _not_ need this.
- 	 */
- 	bool needs_bio_set_dev:1;
-+
-+	/* copy offload is supported */
-+	bool copy_offload_supported:1;
- };
- 
- void *dm_per_bio_data(struct bio *bio, size_t data_size);
+> 
+> Since the only place that sets ATA_PFLAG_PM_PENDING is ata_port_request_pm()
+> and since PM core holds the device lock (device_lock()), I don't think that
+> ATA_PFLAG_PM_PENDING can get set while inside ata_port_request_pm().
+> And since we wait for EH to complete, and since both
+> ata_eh_handle_port_suspend() and ata_eh_handle_port_resume() are called
+> unconditionally by EH, they will only return if ATA_PFLAG_PM_PENDING is not
+> set, and since these functions both clear ATA_PFLAG_PM_PENDING unconditionally,
+> I would agree with you, that these two WARN_ON() seem superfluous.
+> 
+> (Yes, EH could trigger again if we got an error IRQ before ata_port_request_pm()
+> takes the lock the second time, but that can only set ATA_PFLAG_EH_PENDING,
+> it can not set ATA_PFLAG_PM_PENDING.)
+> 
+> 
+> Kind regards,
+> Niklas
+
 -- 
-2.35.1.500.gb896f729e2
+Damien Le Moal
+Western Digital Research
 
