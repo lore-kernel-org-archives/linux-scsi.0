@@ -2,27 +2,27 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A2B3CE79D2
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 12:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38543CE79CF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Sep 2023 12:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235381AbjITMPZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Sep 2023 08:15:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44994 "EHLO
+        id S236138AbjITMcE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Sep 2023 08:32:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235581AbjITMOs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 08:14:48 -0400
+        with ESMTP id S236130AbjITMcD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Sep 2023 08:32:03 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D5E283;
-        Wed, 20 Sep 2023 05:14:43 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3269EC433C7;
-        Wed, 20 Sep 2023 12:14:42 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7E2EB6;
+        Wed, 20 Sep 2023 05:31:56 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5D30C433C7;
+        Wed, 20 Sep 2023 12:31:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1695212082;
-        bh=QxvcglF6fyjwj4N2JK8HJ1Xocnl9O8mup/I6FLvRzhk=;
+        s=korg; t=1695213116;
+        bh=U+BYMb6Pv8pOH/welilpNzRgqgls2WTOwm9liCZ3Sqw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=asYg1hy+FgVMPrwESNl6eI/h9Se2hpWP5UNqJYNxmXruraYv56AKNqptISJPOJKv9
-         OhuzFDQzxNBYDSa0CdPU5fRGDCRP0LV+7WSVD90yA8JQb7I+WF5hvjX9wjl182N5VH
-         GMpVNQ0UlkQpaZ/h9IUql+NAZ3/G1ycB8XFGkH4Y=
+        b=y8sm7cbnyVijMypNpl9AUQC5O4ipzC9Sodvx0bQKqcSwdpCaihkpXV5CzMPD5jE4c
+         afU4mtf35mlH2J/kL/jn3YVGAu0uhmMapWOwlgIytUPqzQ4X2eMzVDUMYWQKqMv326
+         wIT/Xa1fEThiozj3AuKjt7nfP+0vjavEybUE5IN8=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     stable@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -38,12 +38,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Oleksandr Natalenko <oleksandr@redhat.com>,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 4.19 144/273] scsi: qedf: Do not touch __user pointer in qedf_dbg_fp_int_cmd_read() directly
-Date:   Wed, 20 Sep 2023 13:29:44 +0200
-Message-ID: <20230920112850.981982607@linuxfoundation.org>
+Subject: [PATCH 5.4 167/367] scsi: qedf: Do not touch __user pointer in qedf_dbg_stop_io_on_error_cmd_read() directly
+Date:   Wed, 20 Sep 2023 13:29:04 +0200
+Message-ID: <20230920112902.968111493@linuxfoundation.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20230920112846.440597133@linuxfoundation.org>
-References: <20230920112846.440597133@linuxfoundation.org>
+In-Reply-To: <20230920112858.471730572@linuxfoundation.org>
+References: <20230920112858.471730572@linuxfoundation.org>
 User-Agent: quilt/0.67
 X-stable: review
 X-Patchwork-Hint: ignore
@@ -53,18 +53,18 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-4.19-stable review patch.  If anyone has any objections, please let me know.
+5.4-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
 From: Oleksandr Natalenko <oleksandr@redhat.com>
 
-[ Upstream commit 25dbc20deab5165f847b4eb42f376f725a986ee8 ]
+[ Upstream commit 7d3d20dee4f648ec44e9717d5f647d594d184433 ]
 
-The qedf_dbg_fp_int_cmd_read() function invokes sprintf() directly on a
-__user pointer, which may crash the kernel.
+The qedf_dbg_stop_io_on_error_cmd_read() function invokes sprintf()
+directly on a __user pointer, which may crash the kernel.
 
-Avoid doing that by vmalloc()'ating a buffer for scnprintf() and then
+Avoid doing that by using a small on-stack buffer for scnprintf() and then
 calling simple_read_from_buffer() which does a proper copy_to_user() call.
 
 Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
@@ -85,78 +85,36 @@ Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Tested-by: Laurence Oberman <loberman@redhat.com>
 Acked-by: Saurav Kashyap <skashyap@marvell.com>
 Signed-off-by: Oleksandr Natalenko <oleksandr@redhat.com>
-Link: https://lore.kernel.org/r/20230731084034.37021-4-oleksandr@redhat.com
+Link: https://lore.kernel.org/r/20230731084034.37021-2-oleksandr@redhat.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedf/qedf_dbg.h     |  2 ++
- drivers/scsi/qedf/qedf_debugfs.c | 21 +++++++++++++++------
- 2 files changed, 17 insertions(+), 6 deletions(-)
+ drivers/scsi/qedf/qedf_debugfs.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_dbg.h b/drivers/scsi/qedf/qedf_dbg.h
-index dd0109653aa32..9c7f7b444daa7 100644
---- a/drivers/scsi/qedf/qedf_dbg.h
-+++ b/drivers/scsi/qedf/qedf_dbg.h
-@@ -63,6 +63,8 @@ extern uint qedf_debug;
- #define QEDF_LOG_NOTICE	0x40000000	/* Notice logs */
- #define QEDF_LOG_WARN		0x80000000	/* Warning logs */
- 
-+#define QEDF_DEBUGFS_LOG_LEN (2 * PAGE_SIZE)
-+
- /* Debug context structure */
- struct qedf_dbg_ctx {
- 	unsigned int host_no;
 diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
-index 917b047f66f10..84f1ddcfbb218 100644
+index b88bed9bb1338..88378a277a015 100644
 --- a/drivers/scsi/qedf/qedf_debugfs.c
 +++ b/drivers/scsi/qedf/qedf_debugfs.c
-@@ -11,6 +11,7 @@
- #include <linux/uaccess.h>
- #include <linux/debugfs.h>
- #include <linux/module.h>
-+#include <linux/vmalloc.h>
- 
- #include "qedf.h"
- #include "qedf_dbg.h"
-@@ -117,7 +118,9 @@ static ssize_t
- qedf_dbg_fp_int_cmd_read(struct file *filp, char __user *buffer, size_t count,
- 			 loff_t *ppos)
+@@ -187,18 +187,17 @@ qedf_dbg_stop_io_on_error_cmd_read(struct file *filp, char __user *buffer,
+ 				   size_t count, loff_t *ppos)
  {
-+	ssize_t ret;
- 	size_t cnt = 0;
-+	char *cbuf;
- 	int id;
- 	struct qedf_fastpath *fp = NULL;
+ 	int cnt;
++	char cbuf[7];
  	struct qedf_dbg_ctx *qedf_dbg =
-@@ -127,19 +130,25 @@ qedf_dbg_fp_int_cmd_read(struct file *filp, char __user *buffer, size_t count,
+ 				(struct qedf_dbg_ctx *)filp->private_data;
+ 	struct qedf_ctx *qedf = container_of(qedf_dbg,
+ 	    struct qedf_ctx, dbg_ctx);
  
  	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "entered\n");
- 
--	cnt = sprintf(buffer, "\nFastpath I/O completions\n\n");
-+	cbuf = vmalloc(QEDF_DEBUGFS_LOG_LEN);
-+	if (!cbuf)
-+		return 0;
-+
-+	cnt += scnprintf(cbuf + cnt, QEDF_DEBUGFS_LOG_LEN - cnt, "\nFastpath I/O completions\n\n");
- 
- 	for (id = 0; id < qedf->num_queues; id++) {
- 		fp = &(qedf->fp_array[id]);
- 		if (fp->sb_id == QEDF_SB_ID_NULL)
- 			continue;
--		cnt += sprintf((buffer + cnt), "#%d: %lu\n", id,
--			       fp->completions);
-+		cnt += scnprintf(cbuf + cnt, QEDF_DEBUGFS_LOG_LEN - cnt,
-+				 "#%d: %lu\n", id, fp->completions);
- 	}
+-	cnt = sprintf(buffer, "%s\n",
++	cnt = scnprintf(cbuf, sizeof(cbuf), "%s\n",
+ 	    qedf->stop_io_on_error ? "true" : "false");
  
 -	cnt = min_t(int, count, cnt - *ppos);
 -	*ppos += cnt;
 -	return cnt;
-+	ret = simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
-+
-+	vfree(cbuf);
-+
-+	return ret;
++	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
  }
  
  static ssize_t
