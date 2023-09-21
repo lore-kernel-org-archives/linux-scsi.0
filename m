@@ -2,140 +2,191 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 418C9E7D0A5
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 18:15:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48130E7D0A6
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 18:34:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229824AbjIUSPn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 14:15:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54562 "EHLO
+        id S229592AbjIUSeb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 14:34:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230227AbjIUSP0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 14:15:26 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E33BC55AFB;
-        Thu, 21 Sep 2023 10:17:37 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1c328b53aeaso10363605ad.2;
-        Thu, 21 Sep 2023 10:17:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695316657; x=1695921457; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=bUTWTEvhwTmI9spZVufqCsTCajVPfsOh06nRiT/DqSA=;
-        b=JTLXo5ErKyB5oDjF3Ae0ABIDCZkD/YjKQ5z6M+UJEaN5Nx30ub8HeZ+z/U6B0IDo4N
-         0ReZKpLA/rRju4imdcmKO1Mvi7jp3xsutz6o475vOHh94KS1oRqgr/cdUT39qdJNKZZ7
-         u+3YkYj1iKhts3ZK1+h2MK3AJaEIRjuXwEohk2fNKtqET/J3XVC0zo8AZPkGhoGzBWfw
-         HuzSx0osPbzMMMNilz76KIFLkUh03TijbzUQfNtmlxvLxOvezbGGOv3E5jJcYTvmWk3A
-         bjWD4bg7VWfSGMBnyPr2HeMcl8fQLHuiBRr2qKRLRhS92gQTHyKwyPLlX6r41SviaZGh
-         CcKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695316657; x=1695921457;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bUTWTEvhwTmI9spZVufqCsTCajVPfsOh06nRiT/DqSA=;
-        b=ikpPY01JakvvODs/iUFw46+i/lNf4po5k8M5fFEMFyistKSLqxswy30QwgRIozgxWQ
-         dNRMxOlTfMYaVFuheo+IBLrziVWhPuuqUtOeiFkqsrNEts+jAvYycHH3DHwStztI4tAD
-         VYZUeljLhGsoOLyV0d9Hv8ewAZvsYZxoJdRrMR+oyr9u8+c+qoNJISaJmTZTw7mdOshw
-         xOBZi2U24Pi/UBp/gOSAAI4VrXKKDhAEbdI+ZthigR7SBONz8eL1n4zVaERtvDndFuyc
-         P3P9daZXKoWEr5gCJcuUTpTx9SPHEocztfd54OrOQCZbFfO/kt5rGd6hncEukYDlIC6j
-         eEhQ==
-X-Gm-Message-State: AOJu0YwTC8NmV06DC6hDhmRF2vZbJimSZ011Kh1DNVxmNbQziHGvivMf
-        kRASHSlchhsUa/txefMUmmNHn6UMvnY=
-X-Google-Smtp-Source: AGHT+IHJsK2B1N42OTju2WOjLPqH71PpWleq53Hj3J9skkT7LAvWU6Jh9wn4vIVNARWcTwtIv9JYpg==
-X-Received: by 2002:a05:6808:1395:b0:3ae:8a9:e44a with SMTP id c21-20020a056808139500b003ae08a9e44amr1468872oiw.31.1695307180191;
-        Thu, 21 Sep 2023 07:39:40 -0700 (PDT)
-Received: from ?IPV6:2603:8081:1405:679b:2790:d0a7:1c4e:2824? (2603-8081-1405-679b-2790-d0a7-1c4e-2824.res6.spectrum.com. [2603:8081:1405:679b:2790:d0a7:1c4e:2824])
-        by smtp.gmail.com with ESMTPSA id bx9-20020a0568081b0900b003adcaf28f61sm400680oib.41.2023.09.21.07.39.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Sep 2023 07:39:39 -0700 (PDT)
-Message-ID: <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
-Date:   Thu, 21 Sep 2023 09:39:38 -0500
+        with ESMTP id S229602AbjIUSe2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 14:34:28 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 070A7B0130;
+        Thu, 21 Sep 2023 11:08:14 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 602AEC433CA;
+        Thu, 21 Sep 2023 18:08:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695319693;
+        bh=rJW129HUEI+i7sEOi+MwFJDKZiE3wWYKpSxhauMI17E=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=D3us8PrAXFEoGq+DaSyZkF1xTjM6wIWqXQTyWcOVLoJEEhGOWDU+hNE3fv27IUWlw
+         pl7UYmPh6jBm4uBDUnXE0B/5P+zLDEZWP+OqVBogRUpAAO0jAtABuBvYQO6quJGJSn
+         3Iex73oLQ4e4/caniuR+JLKumVRd3JA/B2Xf+x5WSYc+W/MyPqvOEh9PMIyntkPL8D
+         ueQi/Cb6BjjCPjgWa12tROlKQSY7aNl5fCqYM8blzfruEf6GYtLoqRJy7V9ZNCKouJ
+         v1c6Su+y2ugjWQJ8D+fFTTuLYam1jxOItrxANHrGF+grg7y0wcmU/f7dMYF7DB4IIc
+         /8eS+bGmyJErQ==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+Subject: [PATCH v5 07/23] ata: libata-scsi: Fix delayed scsi_rescan_device() execution
+Date:   Fri, 22 Sep 2023 03:07:42 +0900
+Message-ID: <20230921180758.955317-8-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230921180758.955317-1-dlemoal@kernel.org>
+References: <20230921180758.955317-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [bug report] blktests srp/002 hang
-Content-Language: en-US
-To:     Rain River <rain.1986.08.12@gmail.com>,
-        Daisuke Matsuda <matsuda-daisuke@fujitsu.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Zhu Yanjun <yanjun.zhu@linux.dev>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <yewvcfcketee5qduraajra2g37t2mpxdlmj7aqny3umf7mkavk@wsm5forumsou>
- <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
- <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
- <18a3ae8c-145b-4c7f-a8f5-67840feeb98c@acm.org>
- <ab93655f-c187-fdab-6c67-3bfb2d9aa516@gmail.com>
- <9dd0aa0a-d696-a95b-095b-f54d6d31a6ab@linux.dev>
- <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev>
- <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
- <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev>
- <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
- <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev>
- <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
- <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
- <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
- <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
- <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
- <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
-From:   Bob Pearson <rpearsonhpe@gmail.com>
-In-Reply-To: <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/21/23 09:23, Rain River wrote:
-> On Thu, Sep 21, 2023 at 2:53 AM Bob Pearson <rpearsonhpe@gmail.com> wrote:
->>
->> On 9/20/23 12:22, Bart Van Assche wrote:
->>> On 9/20/23 10:18, Bob Pearson wrote:
->>>> But I have also seen the same behavior in the siw driver which is
->>>> completely independent.
->>>
->>> Hmm ... I haven't seen any hangs yet with the siw driver.
->>
->> I was on Ubuntu 6-9 months ago. Currently I don't see hangs on either.
->>>
->>>> As mentioned above at the moment Ubuntu is failing rarely. But it used to fail reliably (srp/002 about 75% of the time and srp/011 about 99% of the time.) There haven't been any changes to rxe to explain this.
->>>
->>> I think that Zhu mentioned commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue
->>> support for rxe tasks")?
->>
->> That change happened well before the failures went away. I was seeing failures at the same rate with tasklets
->> and wqs. But after updating Ubuntu and the kernel at some point they all went away.
-> 
-> I made tests on the latest Ubuntu with the latest kernel without the
-> commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support for rxe tasks").
-> The latest kernel is v6.6-rc2, the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
-> workqueue support for rxe tasks") is reverted.
-> I made blktest tests for about 30 times, this problem does not occur.
-> 
-> So I confirm that without this commit, this hang problem does not
-> occur on Ubuntu without the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
-> workqueue support for rxe tasks").
-> 
-> Nanthan
-> 
->>
->>>
->>> Thanks,
->>>
->>> Bart.
->>
->>
+Commit 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after
+device resume") modified ata_scsi_dev_rescan() to check the scsi device
+"is_suspended" power field to ensure that the scsi device associated
+with an ATA device is fully resumed when scsi_rescan_device() is
+executed. However, this fix is problematic as:
+1) It relies on a PM internal field that should not be used without PM
+   device locking protection.
+2) The check for is_suspended and the call to scsi_rescan_device() are
+   not atomic and a suspend PM event may be triggered between them,
+   casuing scsi_rescan_device() to be called on a suspended device and
+   in that function blocking while holding the scsi device lock. This
+   would deadlock a following resume operation.
+These problems can trigger PM deadlocks on resume, especially with
+resume operations triggered quickly after or during suspend operations.
+E.g., a simple bash script like:
 
-This commit is very important for several reasons. It is needed for the ODP implementation
-that is in the works from Daisuke Matsuda and also for QP scaling of performance. The work
-queue implementation scales well with increasing qp number while the tasklet implementation
-does not. This is critical for the drivers use in large scale storage applications. So, if
-there is a bug in the work queue implementation it needs to be fixed not reverted.
+for (( i=0; i<10; i++ )); do
+	echo "+2 > /sys/class/rtc/rtc0/wakealarm
+	echo mem > /sys/power/state
+done
 
-I am still hoping that someone will diagnose what is causing the ULPs to hang in terms of
-something missing causing it to wait.
+that triggers a resume 2 seconds after starting suspending a system can
+quickly lead to a PM deadlock preventing the system from correctly
+resuming.
 
-Bob
+Fix this by replacing the check on is_suspended with a check on the
+return value given by scsi_rescan_device() as that function will fail if
+called against a suspended device. Also make sure rescan tasks already
+scheduled are first cancelled before suspending an ata port.
+
+Fixes: 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after device resume")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
+Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/ata/libata-core.c | 16 ++++++++++++++++
+ drivers/ata/libata-scsi.c | 33 +++++++++++++++------------------
+ 2 files changed, 31 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index a0bc01606b30..092372334e92 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5168,11 +5168,27 @@ static const unsigned int ata_port_suspend_ehi = ATA_EHI_QUIET
+ 
+ static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg)
+ {
++	/*
++	 * We are about to suspend the port, so we do not care about
++	 * scsi_rescan_device() calls scheduled by previous resume operations.
++	 * The next resume will schedule the rescan again. So cancel any rescan
++	 * that is not done yet.
++	 */
++	cancel_delayed_work_sync(&ap->scsi_rescan_task);
++
+ 	ata_port_request_pm(ap, mesg, 0, ata_port_suspend_ehi, false);
+ }
+ 
+ static void ata_port_suspend_async(struct ata_port *ap, pm_message_t mesg)
+ {
++	/*
++	 * We are about to suspend the port, so we do not care about
++	 * scsi_rescan_device() calls scheduled by previous resume operations.
++	 * The next resume will schedule the rescan again. So cancel any rescan
++	 * that is not done yet.
++	 */
++	cancel_delayed_work_sync(&ap->scsi_rescan_task);
++
+ 	ata_port_request_pm(ap, mesg, 0, ata_port_suspend_ehi, true);
+ }
+ 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a69d63e7b919..576bb51cb480 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4756,7 +4756,7 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+ 	unsigned long flags;
+-	bool delay_rescan = false;
++	int ret = 0;
+ 
+ 	mutex_lock(&ap->scsi_scan_mutex);
+ 	spin_lock_irqsave(ap->lock, flags);
+@@ -4765,37 +4765,34 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+ 		ata_for_each_dev(dev, link, ENABLED) {
+ 			struct scsi_device *sdev = dev->sdev;
+ 
++			/*
++			 * If the port was suspended before this was scheduled,
++			 * bail out.
++			 */
++			if (ap->pflags & ATA_PFLAG_SUSPENDED)
++				goto unlock;
++
+ 			if (!sdev)
+ 				continue;
+ 			if (scsi_device_get(sdev))
+ 				continue;
+ 
+-			/*
+-			 * If the rescan work was scheduled because of a resume
+-			 * event, the port is already fully resumed, but the
+-			 * SCSI device may not yet be fully resumed. In such
+-			 * case, executing scsi_rescan_device() may cause a
+-			 * deadlock with the PM code on device_lock(). Prevent
+-			 * this by giving up and retrying rescan after a short
+-			 * delay.
+-			 */
+-			delay_rescan = sdev->sdev_gendev.power.is_suspended;
+-			if (delay_rescan) {
+-				scsi_device_put(sdev);
+-				break;
+-			}
+-
+ 			spin_unlock_irqrestore(ap->lock, flags);
+-			scsi_rescan_device(sdev);
++			ret = scsi_rescan_device(sdev);
+ 			scsi_device_put(sdev);
+ 			spin_lock_irqsave(ap->lock, flags);
++
++			if (ret)
++				goto unlock;
+ 		}
+ 	}
+ 
++unlock:
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 	mutex_unlock(&ap->scsi_scan_mutex);
+ 
+-	if (delay_rescan)
++	/* Reschedule with a delay if scsi_rescan_device() returned an error */
++	if (ret)
+ 		schedule_delayed_work(&ap->scsi_rescan_task,
+ 				      msecs_to_jiffies(5));
+ }
+-- 
+2.41.0
+
