@@ -2,82 +2,141 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF88E7D0A2
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 19:53:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77B86E7D0A7
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 20:10:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229834AbjIUTxJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:53:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41342 "EHLO
+        id S229599AbjIUUKl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 16:10:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231176AbjIUTw4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 15:52:56 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0707A3B191;
-        Thu, 21 Sep 2023 12:46:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=n6Owd0b29R3F+oLZERwwfQvWcqOKx+MYNJ1GGP2+h9U=; b=qaiShqcW//4ZUh/Q19Qnfc5j5v
-        0yqGTwlooSpRgQu9pHhXVLmbYoYnEmLoizakwQV7WHA2S1eUkpsY8ih6mV8FWy9PH4bZQ/fa2N+ol
-        pUZxeNtw8h9nLG6H17ePerko06JIjLHBdziKF1BPjZ1fu+LU95Hb2aMzclZYl4hMFE4+XPTpsd8RC
-        meDsKcYQLnqAPvjGgD9P2OIKOGD0WJWGnOByCmOs3pa/t5lR/dhIrMmFVHzJBhWZ1WVsCo2mERdoV
-        GUckSpfYv0RF2f+0IH0FFoeryAEVipth+IfKKE1f0gjXH1yVxPa43KHdvHwX0jZCvIctnVmbITp6F
-        qjttXlrQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qjPcf-00Dm0V-Ny; Thu, 21 Sep 2023 19:46:01 +0000
-Date:   Thu, 21 Sep 2023 20:46:01 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 00/13] Pass data temperature information to zoned UFS
- devices
-Message-ID: <ZQydeSIoHHJDQjHW@casper.infradead.org>
-References: <20230920191442.3701673-1-bvanassche@acm.org>
- <ZQtHwsNvS1wYDKfG@casper.infradead.org>
- <1522d8ec-6b15-45d5-b6d9-517337e2c8cf@acm.org>
- <ZQv07Mg7qIXayHlf@x1-carbon>
- <8781636a-57ac-4dbd-8ec6-b49c10c81345@acm.org>
- <ZQyZEqXJymyFWlKV@casper.infradead.org>
- <4cacae64-6a11-41ab-9bec-f8915da00106@acm.org>
+        with ESMTP id S231774AbjIUUJ4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 16:09:56 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A71327A12C;
+        Thu, 21 Sep 2023 12:53:53 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A149C433C8;
+        Thu, 21 Sep 2023 19:53:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695326032;
+        bh=9tegRpBn0T7ZwEv7hvddeZlERiRItKLoI9ZsE/YWkMc=;
+        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+        b=dtp/wudWE0lRsa0DaxQrOfkAlSIv3LkFgy6iGkBu4WdM841oiUQyuZbTFih40t3Bx
+         pFPYLYHirDkUoLTwt51ztuI9sl5jnxr8iJqC2/Y5WrqChzEhG3KtxPq/WXUZM0FfGm
+         FtUEZma+wgVj/wrcvF49dLIGfqc+rZaSScij7CgehEEY1Jbst3gHnUjRYNNE8gb7nk
+         eBvbG0hdZO9/vq+NqjJl3m1EuGyMrm2RBAlO7RqH1r2lTNqZk0rX+RIUjfxpNTS+vr
+         b+8ITHxZ2oCFByIsaHp+SU3xEzi7sCC7o/0fJtKEuYr8QtsVdRXVX2x9Yek/Uyo7sS
+         OBzwA2BOcKzPA==
+Message-ID: <09688c78-6708-fa1e-1447-3105b69ccb49@kernel.org>
+Date:   Thu, 21 Sep 2023 12:53:51 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4cacae64-6a11-41ab-9bec-f8915da00106@acm.org>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.1
+Subject: Re: [PATCH v4 00/23] Fix libata suspend/resume handling and code
+ cleanup
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+        linux-ide@vger.kernel.org
+References: <20230920135439.929695-1-dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20230920135439.929695-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 21, 2023 at 12:39:00PM -0700, Bart Van Assche wrote:
-> On 9/21/23 12:27, Matthew Wilcox wrote:
-> > On Thu, Sep 21, 2023 at 07:27:08AM -0700, Bart Van Assche wrote:
-> > > On 9/21/23 00:46, Niklas Cassel wrote:
-> > > > Should NVMe streams be brought back? Yes? No?
-> > > 
-> > > From commit 561593a048d7 ("Merge tag 'for-5.18/write-streams-2022-03-18'
-> > > of git://git.kernel.dk/linux-block"): "This removes the write streams
-> > > support in NVMe. No vendor ever really shipped working support for this,
-> > > and they are not interested in supporting it."
-> > 
-> > It sounds like UFS is at the same stage that NVMe got to -- standard
-> > exists, no vendor has committed to actually shipping it.  Isn't bringing
-> > it back a little premature?
+On 2023/09/20 6:54, Damien Le Moal wrote:
+> The first 9 patches of this series fix several issues with suspend/resume
+> power management operations in scsi and libata. The most significant
+> changes introduced are in patch 4 and 5, where the manage_start_stop
+> flag of scsi devices is split into the manage_system_start_stop and
+> manage_runtime_start_stop flags to allow keeping scsi runtime power
+> operations for spining up/down ATA devices but have libata do its own
+> system suspend/resume device power state management using EH.
 > 
-> Hi Matthew,
-> 
-> That's a misunderstanding. UFS vendors support interpreting the SCSI GROUP
-> NUMBER as a data temperature since many years, probably since more than ten
-> years. Additionally, for multiple UFS vendors having the data temperature
-> available is important for achieving good performance. This message shows
-> how UFS vendors were using that information before write hint support was
-> removed: https://lore.kernel.org/linux-block/PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com/
+> The remaining patches are code cleanup that do not introduce any
+> significant functional change.
 
-If vendor support already exists, then why did you dodge the question
-asking for quantified data that I asked earlier?  And can we have that
-data now?
+Martin,
+
+Could you please review and Ack (if appropriate) the scsi bits of this series ?
+I would like to send out the first 9 patches ASAP to address regressions.
+Thanks !
+
+> 
+> This series was tested on qemu and on various PCs and servers. I am
+> CC-ing people who recently reported issues with suspend/resume.
+> Additional testing would be much appreciated.
+> 
+> Changes from v3:
+>  * Corrected pathc 1 (typo in commit message and WARN_ON() removal)
+>  * Changed path 3 as suggested by Niklas (moved definition of
+>    ->slave_alloc)
+>  * Rebased on rc2
+>  * Added review tags
+> 
+> Changes from v2:
+>  * Added patch 4 as simply disabling manage_start_stop from libata was
+>    breaking individual disk runtime suspend/autosuspend. Patch 5 was
+>    reworked accordingly to the changes in patch 4.
+>  * Fixed patch 3: applying the link creation was missing and the link
+>    creation itself was also incorrect, preventing sd probe to execute
+>    correctly. Thanks to Geert for testing and reporting this issue.
+>  * Split the "Fix delayed scsi_rescan_device() execution" patch into
+>    patch 6 (scsi part) and patch 7 (ata part).
+>  * Modified patch 9 to not call sd_shutdown() from sd_remove() for
+>    devices that are not running.
+>  * Added Chia-Lin Tested tag to unchanged patches
+> 
+> Changes from v1:
+>  * Added patch 8 and 9 to fix compilation warnings with W=1
+>  * Addressed John comment in patch 19
+>  * Fixed patch 20 commit message (Sergei)
+>  * Added Hannes Review tag
+> 
+> Damien Le Moal (23):
+>   ata: libata-core: Fix ata_port_request_pm() locking
+>   ata: libata-core: Fix port and device removal
+>   ata: libata-scsi: link ata port and scsi device
+>   scsi: sd: Differentiate system and runtime start/stop management
+>   ata: libata-scsi: Disable scsi device manage_system_start_stop
+>   scsi: Do not attempt to rescan suspended devices
+>   ata: libata-scsi: Fix delayed scsi_rescan_device() execution
+>   ata: libata-core: Do not register PM operations for SAS ports
+>   scsi: sd: Do not issue commands to suspended disks on shutdown
+>   ata: libata-core: Fix compilation warning in ata_dev_config_ncq()
+>   ata: libata-eh: Fix compilation warning in ata_eh_link_report()
+>   scsi: Remove scsi device no_start_on_resume flag
+>   ata: libata-scsi: Cleanup ata_scsi_start_stop_xlat()
+>   ata: libata-core: Synchronize ata_port_detach() with hotplug
+>   ata: libata-core: Detach a port devices on shutdown
+>   ata: libata-core: Remove ata_port_suspend_async()
+>   ata: libata-core: Remove ata_port_resume_async()
+>   ata: libata-core: Do not poweroff runtime suspended ports
+>   ata: libata-core: Do not resume runtime suspended ports
+>   ata: libata-sata: Improve ata_sas_slave_configure()
+>   ata: libata-eh: Improve reset error messages
+>   ata: libata-eh: Reduce "disable device" message verbosity
+>   ata: libata: Cleanup inline DMA helper functions
+> 
+>  drivers/ata/libata-core.c      | 242 +++++++++++++++++++++++++--------
+>  drivers/ata/libata-eh.c        |  76 +++++++++--
+>  drivers/ata/libata-sata.c      |   5 +-
+>  drivers/ata/libata-scsi.c      | 146 ++++++++++----------
+>  drivers/ata/libata-transport.c |   9 +-
+>  drivers/ata/libata.h           |   7 +
+>  drivers/firewire/sbp2.c        |   9 +-
+>  drivers/scsi/scsi_scan.c       |  18 ++-
+>  drivers/scsi/sd.c              |  88 ++++++++----
+>  include/linux/libata.h         |  26 ++--
+>  include/scsi/scsi_device.h     |   4 +-
+>  include/scsi/scsi_host.h       |   2 +-
+>  12 files changed, 444 insertions(+), 188 deletions(-)
+> 
+
+-- 
+Damien Le Moal
+Western Digital Research
+
