@@ -2,128 +2,121 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EF79E7D0B0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 22:21:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D6EDE7D0B0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 22:26:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233251AbjIUWVR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 18:21:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36526 "EHLO
+        id S233207AbjIUW0F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 18:26:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232963AbjIUWUq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 18:20:46 -0400
-X-Greylist: delayed 120 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 21 Sep 2023 10:07:36 PDT
-Received: from out-215.mta0.migadu.com (out-215.mta0.migadu.com [IPv6:2001:41d0:1004:224b::d7])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F1F710934
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 10:07:36 -0700 (PDT)
-Message-ID: <c20343e9-44d2-1fbc-4191-7ef19f71fbb3@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1695308920;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=M9/SAz1EzoxnJVrN89NE7Xu5/5CKesHUXGlRvXE1pb4=;
-        b=UwCyKM274bp3lyCTckhxDcmosWuCzvGAQi2vbX80FfVhWUdnEpXvsXnQFrr38Xo/jo514Z
-        bpo+sIUDyw6gKP/Vimh9X0ublgA8Yh/tNfEzgqflmOYsi51FWy4X/fe3nRDpsNOFUqrs90
-        m9OIGW5AS1cYBjhA7jAdUlNyGayTmhU=
-Date:   Thu, 21 Sep 2023 23:08:32 +0800
+        with ESMTP id S233203AbjIUWZd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 18:25:33 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FA1A6E90;
+        Thu, 21 Sep 2023 10:05:22 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LBPFsB015981;
+        Thu, 21 Sep 2023 13:58:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
+ cc : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=qcppdkim1; bh=cD5Or24CZG81ZUTaaF+5Vpj9oUT+HOKZ5Ed4kTL/4UM=;
+ b=fDXsRMv2cxiHx925ps72qevFS8eYbv887C5VeEW3NjJDItoDd2HGvz+lkF6jQ8FBsejO
+ Uz99BoNrOwiWmQe7KQ5dED6cvG9x5MgL73T1zpquMJr8usXzdVCEdESRAxOOQEs5RccX
+ YsKgg9ITuOkfpD2vjxcbHbUx6kAh+gWOe0ZI/B1bIm+tKc968sqC4JCRQuQZ+WofKgbu
+ 178rSic6zncbtvSSYPzA9XDBbwJepCfYD57e9Lhs0CAwtSOa5nvNeC5Fg+sVY9wShxpv
+ l42hJY2kqEl9bnWalvWjMMRb48IHI7bw1p9x4zTIM2iYn9tKENTOpPdER6UrA9Our885 Eg== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t87511u14-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 13:58:46 +0000
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38LDwkB3023005
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 13:58:46 GMT
+Received: from hu-bjorande-lv.qualcomm.com (10.49.16.6) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.36; Thu, 21 Sep 2023 06:58:45 -0700
+Date:   Thu, 21 Sep 2023 06:58:44 -0700
+From:   Bjorn Andersson <quic_bjorande@quicinc.com>
+To:     Manivannan Sadhasivam <mani@kernel.org>
+CC:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Can Guo <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>,
+        <quic_nitirawa@quicinc.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>
+Subject: Re: [PATCH 4/6] phy: qualcomm: phy-qcom-qmp-ufs: Move data structs
+ and setting tables to header
+Message-ID: <20230921135844.GJ1487598@hu-bjorande-lv.qualcomm.com>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-5-git-send-email-quic_cang@quicinc.com>
+ <CAA8EJpoWnXeJKPB04kJW6Qo7ifAnt1u2ZSiq+W2HWOez=hi5gA@mail.gmail.com>
+ <20230919121524.GD4732@thinkpad>
 MIME-Version: 1.0
-Subject: Re: [bug report] blktests srp/002 hang
-To:     Bob Pearson <rpearsonhpe@gmail.com>,
-        Rain River <rain.1986.08.12@gmail.com>,
-        Daisuke Matsuda <matsuda-daisuke@fujitsu.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
- <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
- <18a3ae8c-145b-4c7f-a8f5-67840feeb98c@acm.org>
- <ab93655f-c187-fdab-6c67-3bfb2d9aa516@gmail.com>
- <9dd0aa0a-d696-a95b-095b-f54d6d31a6ab@linux.dev>
- <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev>
- <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
- <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev>
- <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
- <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev>
- <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
- <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
- <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
- <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
- <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
- <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
- <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20230919121524.GD4732@thinkpad>
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: IW9xvv3U4ODVgGvl-Jx7bxMrXq2se5ma
+X-Proofpoint-ORIG-GUID: IW9xvv3U4ODVgGvl-Jx7bxMrXq2se5ma
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-21_11,2023-09-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1011
+ phishscore=0 mlxlogscore=953 impostorscore=0 suspectscore=0
+ priorityscore=1501 mlxscore=0 spamscore=0 adultscore=0 lowpriorityscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309210121
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue, Sep 19, 2023 at 02:15:24PM +0200, Manivannan Sadhasivam wrote:
+> On Thu, Sep 14, 2023 at 03:28:59PM +0300, Dmitry Baryshkov wrote:
+> > On Mon, 11 Sept 2023 at 09:01, Can Guo <quic_cang@quicinc.com> wrote:
+> > >
+> > > To make the code more readable, move the data structs and PHY settting
+> > > tables to a header file, namely the phy-qcom-qmp-ufs.h.
+> > >
+> > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> > > ---
+> > >  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 802 +------------------------------
+> > >  drivers/phy/qualcomm/phy-qcom-qmp-ufs.h | 805 ++++++++++++++++++++++++++++++++
+> > >  2 files changed, 806 insertions(+), 801 deletions(-)
+> > >  create mode 100644 drivers/phy/qualcomm/phy-qcom-qmp-ufs.h
+> > 
+> > Is there any reason to do so? Other than just moving stuff around, it
+> > doesn't give us anything. This header will not be shared with any
+> > other driver. Just moving data tables to the header (ugh, static data
+> > in the header) doesn't make code more readable.
+> > 
+> 
+> I think the motive here is to move the static tables to one file and have the
+> rest of the code in another. Because, the static tables itself occupy 1.2k LoC
+> now and it is going to grow. So let's keep them in a single file to avoid mixing
+> it with rest of the driver code.
+> 
 
-在 2023/9/21 22:39, Bob Pearson 写道:
-> On 9/21/23 09:23, Rain River wrote:
->> On Thu, Sep 21, 2023 at 2:53 AM Bob Pearson <rpearsonhpe@gmail.com> wrote:
->>> On 9/20/23 12:22, Bart Van Assche wrote:
->>>> On 9/20/23 10:18, Bob Pearson wrote:
->>>>> But I have also seen the same behavior in the siw driver which is
->>>>> completely independent.
->>>> Hmm ... I haven't seen any hangs yet with the siw driver.
->>> I was on Ubuntu 6-9 months ago. Currently I don't see hangs on either.
->>>>> As mentioned above at the moment Ubuntu is failing rarely. But it used to fail reliably (srp/002 about 75% of the time and srp/011 about 99% of the time.) There haven't been any changes to rxe to explain this.
->>>> I think that Zhu mentioned commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue
->>>> support for rxe tasks")?
->>> That change happened well before the failures went away. I was seeing failures at the same rate with tasklets
->>> and wqs. But after updating Ubuntu and the kernel at some point they all went away.
->> I made tests on the latest Ubuntu with the latest kernel without the
->> commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support for rxe tasks").
->> The latest kernel is v6.6-rc2, the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
->> workqueue support for rxe tasks") is reverted.
->> I made blktest tests for about 30 times, this problem does not occur.
->>
->> So I confirm that without this commit, this hang problem does not
->> occur on Ubuntu without the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
->> workqueue support for rxe tasks").
->>
->> Nanthan
->>
->>>> Thanks,
->>>>
->>>> Bart.
->>>
-> This commit is very important for several reasons. It is needed for the ODP implementation
-> that is in the works from Daisuke Matsuda and also for QP scaling of performance. The work
-> queue implementation scales well with increasing qp number while the tasklet implementation
-> does not. This is critical for the drivers use in large scale storage applications. So, if
-> there is a bug in the work queue implementation it needs to be fixed not reverted.
->
-> I am still hoping that someone will diagnose what is causing the ULPs to hang in terms of
-> something missing causing it to wait.
+To me, the problem with the current layout is that we have:
+* structures
+* data
+* structures
+* implementation
 
-Hi, Bob
+So to find the second structures you need to jump somewhere in the
+middle of the file. If we shift those up, it's easy to jump between the
+three portions of the file.
 
-
-You submitted this commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support 
-for rxe tasks").
-
-You should be very familiar with this commit.
-
-And this commit causes regression.
-
-So you should delved into the source code to find the root cause, then 
-fix it.
-
-
-Jason && Leon, please comment on this.
-
-
-Best Regards,
-
-Zhu Yanjun
-
->
-> Bob
+Regards,
+Bjorn
