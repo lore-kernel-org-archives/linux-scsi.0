@@ -2,40 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 469CEE7D0A0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 17:23:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D76E7D0A3
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 17:24:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229566AbjIURXv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 13:23:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60702 "EHLO
+        id S229884AbjIURYb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 13:24:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229493AbjIURXW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 13:23:22 -0400
-Received: from out-214.mta1.migadu.com (out-214.mta1.migadu.com [95.215.58.214])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 439C824865
+        with ESMTP id S229789AbjIURYK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 13:24:10 -0400
+Received: from out-220.mta1.migadu.com (out-220.mta1.migadu.com [95.215.58.220])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ED2724868
         for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 10:11:31 -0700 (PDT)
-Message-ID: <cd1891e1-75f8-938e-317e-9a9760db7e13@linux.dev>
+Message-ID: <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1695275225;
+        t=1695309013;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=aN+EUH0vaJjZAAWY+RQaRw5xxfN01hvoxcEUTvT6ACw=;
-        b=JxwbhX3i+3E+Yoc0pOM8/UsDWVsL2ZUD7tD7mdZaYMuxw4k2kS/Fi1VEWwLsaSWYwEFnlA
-        QfBhsO+wQTb1ypSJH6uZhrnxYa1Oke1fdEFAEXX4spIsMyhK3zlReAWDvnQ6VLt67nq+zz
-        mZWPPKgt10ZhLl8nrnaWfnoBJE8wrtk=
-Date:   Thu, 21 Sep 2023 13:46:56 +0800
+        bh=M9/SAz1EzoxnJVrN89NE7Xu5/5CKesHUXGlRvXE1pb4=;
+        b=HF+m8M7iNRj1sdkdOKmUzwFs7Mv7trfEcy3F5aRbyKaOXV+wdYS4FQ7cY8Lr1/BPJOusXe
+        d1f8YpAZnY6+0t9GcErtCDUQc+5FbXukpoufktBSA/JZh5a3HQroSE20Odpb37uWt7qaqA
+        DpThtA917wjzpA/qaOXTI1+I7nhWUgQ=
+Date:   Thu, 21 Sep 2023 23:10:05 +0800
 MIME-Version: 1.0
 Subject: Re: [bug report] blktests srp/002 hang
 To:     Bob Pearson <rpearsonhpe@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc:     "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        Rain River <rain.1986.08.12@gmail.com>,
+        Daisuke Matsuda <matsuda-daisuke@fujitsu.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        "leon@kernel.org" <leon@kernel.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        RDMA mailing list <linux-rdma@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <0c5c732c-283c-b29a-0ac2-c32211fc7e17@gmail.com>
- <yewvcfcketee5qduraajra2g37t2mpxdlmj7aqny3umf7mkavk@wsm5forumsou>
  <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
  <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
  <18a3ae8c-145b-4c7f-a8f5-67840feeb98c@acm.org>
@@ -51,9 +53,11 @@ References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
  <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
  <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
  <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
+ <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
+ <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From:   Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
+In-Reply-To: <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
@@ -62,46 +66,65 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-在 2023/9/21 1:29, Bob Pearson 写道:
-> On 9/20/23 12:22, Bart Van Assche wrote:
->> On 9/20/23 10:18, Bob Pearson wrote:
->>> But I have also seen the same behavior in the siw driver which is
->>> completely independent.
->> Hmm ... I haven't seen any hangs yet with the siw driver.
-> I was on Ubuntu 6-9 months ago. Currently I don't see hangs on either.
->>> As mentioned above at the moment Ubuntu is failing rarely. But it used to fail reliably (srp/002 about 75% of the time and srp/011 about 99% of the time.) There haven't been any changes to rxe to explain this.
->> I think that Zhu mentioned commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue
->> support for rxe tasks")?
-> That change happened well before the failures went away. I was seeing failures at the same rate with tasklets
-> and wqs. But after updating Ubuntu and the kernel at some point they all went away.
+在 2023/9/21 22:39, Bob Pearson 写道:
+> On 9/21/23 09:23, Rain River wrote:
+>> On Thu, Sep 21, 2023 at 2:53 AM Bob Pearson <rpearsonhpe@gmail.com> wrote:
+>>> On 9/20/23 12:22, Bart Van Assche wrote:
+>>>> On 9/20/23 10:18, Bob Pearson wrote:
+>>>>> But I have also seen the same behavior in the siw driver which is
+>>>>> completely independent.
+>>>> Hmm ... I haven't seen any hangs yet with the siw driver.
+>>> I was on Ubuntu 6-9 months ago. Currently I don't see hangs on either.
+>>>>> As mentioned above at the moment Ubuntu is failing rarely. But it used to fail reliably (srp/002 about 75% of the time and srp/011 about 99% of the time.) There haven't been any changes to rxe to explain this.
+>>>> I think that Zhu mentioned commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue
+>>>> support for rxe tasks")?
+>>> That change happened well before the failures went away. I was seeing failures at the same rate with tasklets
+>>> and wqs. But after updating Ubuntu and the kernel at some point they all went away.
+>> I made tests on the latest Ubuntu with the latest kernel without the
+>> commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support for rxe tasks").
+>> The latest kernel is v6.6-rc2, the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
+>> workqueue support for rxe tasks") is reverted.
+>> I made blktest tests for about 30 times, this problem does not occur.
+>>
+>> So I confirm that without this commit, this hang problem does not
+>> occur on Ubuntu without the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
+>> workqueue support for rxe tasks").
+>>
+>> Nanthan
+>>
+>>>> Thanks,
+>>>>
+>>>> Bart.
+>>>
+> This commit is very important for several reasons. It is needed for the ODP implementation
+> that is in the works from Daisuke Matsuda and also for QP scaling of performance. The work
+> queue implementation scales well with increasing qp number while the tasklet implementation
+> does not. This is critical for the drivers use in large scale storage applications. So, if
+> there is a bug in the work queue implementation it needs to be fixed not reverted.
+>
+> I am still hoping that someone will diagnose what is causing the ULPs to hang in terms of
+> something missing causing it to wait.
 
-Thanks, Bob. From what you said, in Ubuntu, this problem does not occur 
-now.
+Hi, Bob
 
-To now,
 
-On Debian, without the commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue 
-support for rxe tasks"), this hang does not occur.
+You submitted this commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support 
+for rxe tasks").
 
-On Fedora, similar to Debian.
+You should be very familiar with this commit.
 
-On Ubuntu, this problem does not occur now. But not sure if this commit 
-exists or not.
+And this commit causes regression.
 
-Hi, Bob, can you make tests without the above commit to verify if the 
-same problem occurs or not on Ubuntu?
+So you should delved into the source code to find the root cause, then 
+fix it.
 
-Can any one who has test environments to verify if this problem still 
-occurs on Ubuntu without this commit?
 
 Jason && Leon, please comment on this.
 
-Thanks a lot.
+
+Best Regards,
 
 Zhu Yanjun
 
 >
->> Thanks,
->>
->> Bart.
->
+> Bob
