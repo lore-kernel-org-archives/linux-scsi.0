@@ -2,148 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B50FFE7109A
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 17:07:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 469CEE7D0A0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 17:23:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230189AbjIURHJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 13:07:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38556 "EHLO
+        id S229566AbjIURXv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 13:23:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229922AbjIURGd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 13:06:33 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9CAF4493;
-        Thu, 21 Sep 2023 10:04:05 -0700 (PDT)
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LAbsbV008389;
-        Thu, 21 Sep 2023 10:47:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=tC0z5s3RdP9QagJBrQju/hCR80f7lEFVYo0jybcVgTM=;
- b=HdWa/AEjA4+xZ3TUtE1VtWYjY1c7NEir8CR9mzXEm2zoafqm/DVkf4mvOuZFnL75iZCX
- AsPKuAf8lorZYFJoJ6/BEZqu1vvAqfvLZzWN66caULCp6WZdvh+2gdfj5J8gS7M0JPuv
- XEth5u3wftn+eKwsb1O7WVix3oWTH46u8txnpr5MGRvKIQ8JAdTFtYDcTqeaLm+1sm5g
- FIH7kUQ0QN8Ga5ZH1FkWpSixRzSAjek2u3V6tkm0yVPFuh9HlOULIMNzZEPrHCBMt0c9
- 4cQvpGDkYOrIw9cFgoY77x9MopU2xWsQm27hBpRrUgNPIXQIdDqIFRF5xWovlK+ZvO90 OA== 
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3t848tfpq9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 10:47:53 +0000
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-        by ppma11.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 38L9g03G016432;
-        Thu, 21 Sep 2023 10:47:52 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-        by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 3t5sd2ffs1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 10:47:52 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 38LAllZM28639826
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 21 Sep 2023 10:47:47 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C4C082004B;
-        Thu, 21 Sep 2023 10:47:47 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B169220043;
-        Thu, 21 Sep 2023 10:47:47 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.196.32.213])
-        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Thu, 21 Sep 2023 10:47:47 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1qjHDm-001qiu-1v;
-        Thu, 21 Sep 2023 12:47:46 +0200
-Date:   Thu, 21 Sep 2023 12:47:46 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Dinghao Liu <dinghao.liu@zju.edu.cn>
-Cc:     Steffen Maier <maier@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        James Bottomley <James.Bottomley@suse.de>,
-        Swen Schillig <swen@vnet.ibm.com>, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Mailing List linux-scsi <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH] scsi: zfcp: Fix a potential double free in
- zfcp_port_enqueue
-Message-ID: <20230921104746.GG10864@p1gen4-pw042f0m.fritz.box>
-References: <20230921063915.7703-1-dinghao.liu@zju.edu.cn>
- <20230921102102.GF10864@p1gen4-pw042f0m.fritz.box>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20230921102102.GF10864@p1gen4-pw042f0m.fritz.box>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 4HTqd0pstE7eD7KZs3X4dIgUVQj2m89p
-X-Proofpoint-ORIG-GUID: 4HTqd0pstE7eD7KZs3X4dIgUVQj2m89p
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S229493AbjIURXW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 13:23:22 -0400
+Received: from out-214.mta1.migadu.com (out-214.mta1.migadu.com [95.215.58.214])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 439C824865
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 10:11:31 -0700 (PDT)
+Message-ID: <cd1891e1-75f8-938e-317e-9a9760db7e13@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1695275225;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aN+EUH0vaJjZAAWY+RQaRw5xxfN01hvoxcEUTvT6ACw=;
+        b=JxwbhX3i+3E+Yoc0pOM8/UsDWVsL2ZUD7tD7mdZaYMuxw4k2kS/Fi1VEWwLsaSWYwEFnlA
+        QfBhsO+wQTb1ypSJH6uZhrnxYa1Oke1fdEFAEXX4spIsMyhK3zlReAWDvnQ6VLt67nq+zz
+        mZWPPKgt10ZhLl8nrnaWfnoBJE8wrtk=
+Date:   Thu, 21 Sep 2023 13:46:56 +0800
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-21_07,2023-09-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
- adultscore=0 impostorscore=0 lowpriorityscore=0 mlxlogscore=940
- suspectscore=0 clxscore=1011 bulkscore=0 malwarescore=0 spamscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309210092
+Subject: Re: [bug report] blktests srp/002 hang
+To:     Bob Pearson <rpearsonhpe@gmail.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+ <0c5c732c-283c-b29a-0ac2-c32211fc7e17@gmail.com>
+ <yewvcfcketee5qduraajra2g37t2mpxdlmj7aqny3umf7mkavk@wsm5forumsou>
+ <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
+ <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
+ <18a3ae8c-145b-4c7f-a8f5-67840feeb98c@acm.org>
+ <ab93655f-c187-fdab-6c67-3bfb2d9aa516@gmail.com>
+ <9dd0aa0a-d696-a95b-095b-f54d6d31a6ab@linux.dev>
+ <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev>
+ <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
+ <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev>
+ <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
+ <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev>
+ <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
+ <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
+ <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
+ <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
+ <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Zhu Yanjun <yanjun.zhu@linux.dev>
+In-Reply-To: <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 21, 2023 at 12:21:02PM +0200, Benjamin Block wrote:
-> Hello Liu Dinghao,
-> 
-> good find.
 
-Oh, also, please put linux-scsi on the CC list. Patches to zfcp go via
-linux-scsi, not linux-s390.
+åœ¨ 2023/9/21 1:29, Bob Pearson å†™é“:
+> On 9/20/23 12:22, Bart Van Assche wrote:
+>> On 9/20/23 10:18, Bob Pearson wrote:
+>>> But I have also seen the same behavior in the siw driver which is
+>>> completely independent.
+>> Hmm ... I haven't seen any hangs yet with the siw driver.
+> I was on Ubuntu 6-9 months ago. Currently I don't see hangs on either.
+>>> As mentioned above at the moment Ubuntu is failing rarely. But it used to fail reliably (srp/002 about 75% of the time and srp/011 about 99% of the time.) There haven't been any changes to rxe to explain this.
+>> I think that Zhu mentioned commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue
+>> support for rxe tasks")?
+> That change happened well before the failures went away. I was seeing failures at the same rate with tasklets
+> and wqs. But after updating Ubuntu and the kernel at some point they all went away.
 
-> 
-> On Thu, Sep 21, 2023 at 02:39:15PM +0800, Dinghao Liu wrote:
-> > When device_register() fails, zfcp_port_release() will be called
-> > after put_device(). As a result, the zfcp_ccw_adapter_put() after
-> > err_out is redundant because it will be called in the call-back
-> > function zfcp_port_release(). Remove it from this error path.
-> 
-> So the reference on the adapter object is doubly put, which may
-> lead to a premature free of the adapter object itself. Please mention that
-> either in the subject, or description; it makes it easier to see what exactly
-> breaks at a glance.
-> 
-> > 
-> > Fixes: f3450c7b9172 ("[SCSI] zfcp: Replace local reference counting with common kref")
-> > Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
-> > ---
-> >  drivers/s390/scsi/zfcp_aux.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
-> > index df782646e856..489e6239dedf 100644
-> > --- a/drivers/s390/scsi/zfcp_aux.c
-> > +++ b/drivers/s390/scsi/zfcp_aux.c
-> > @@ -552,7 +552,7 @@ struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *adapter, u64 wwpn,
-> >  
-> >  	if (device_register(&port->dev)) {
-> >  		put_device(&port->dev);
-> > -		goto err_out;
-> > +		return ERR_PTR(retval);
-> 
-> I'd rather have a new label at the bottom, in front of the return that is
-> already there, and jump to that, instead of a different function exit point.
-> 
-> >  	}
-> >  
-> >  	write_lock_irq(&adapter->port_list_lock);
-> > -- 
-> > 2.17.1
-> > 
+Thanks, Bob. From what you said, in Ubuntu, this problem does not occur 
+now.
 
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+To now,
+
+On Debian, without the commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue 
+support for rxe tasks"), this hang does not occur.
+
+On Fedora, similar to Debian.
+
+On Ubuntu, this problem does not occur now. But not sure if this commit 
+exists or not.
+
+Hi, Bob, can you make tests without the above commit to verify if the 
+same problem occurs or not on Ubuntu?
+
+Can any one who has test environments to verify if this problem still 
+occurs on Ubuntu without this commit?
+
+Jason && Leon, please comment on this.
+
+Thanks a lot.
+
+Zhu Yanjun
+
+>
+>> Thanks,
+>>
+>> Bart.
+>
