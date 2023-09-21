@@ -2,112 +2,148 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE3CDE71094
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 17:01:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B50FFE7109A
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 17:07:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229925AbjIURBX convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 13:01:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40416 "EHLO
+        id S230189AbjIURHJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 13:07:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229870AbjIURBF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 13:01:05 -0400
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF98FCFC;
-        Thu, 21 Sep 2023 10:00:31 -0700 (PDT)
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1c1e3a4a06fso9671505ad.3;
-        Thu, 21 Sep 2023 10:00:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695315510; x=1695920310;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=idFDQKNDkzP5RSqt/nkSyZRNM7uFs093DSH/JN+PAAU=;
-        b=fFTvydo4h1rhHMSkuOsaU5d86+b6eIFARZ0Msf8qKg6gcPKeNpiGggU4mw2y577Tkn
-         CXCoDADizXKU8O4IYhUrbqE0cI0NJp0F6D2+X6e7Zl/7u13hIuDwo0uSh6Ot7OsNtJ7/
-         CiLF9+nQax0U9bpa+WTt80G8o7LaipzfhE9KDx/XtfIA7p7rPr4JHqKBOcrf9gl2P/8E
-         6bajL0LNKsbttu4j+xti70fwazDlyPjV6msd5UK8vy596KQvlkGl/VU4KQL56vX8YL5n
-         sX7OgZ+YwMfHwmyzGJGbAxSIGkVptjOfD4Zomitiik0sU6UoOtMsOAZhHVz8DAwQzeYS
-         /nQQ==
-X-Gm-Message-State: AOJu0YwPdTMzzJQXtPnJUswQNN11fUB1WWidrKBLYNRIGihuXgsTmK+O
-        LzMw7PEabOis5DmtZ/UHHn2xtr9DrjYHgUaF
-X-Google-Smtp-Source: AGHT+IG9TawMETPzBfgvTvEik3uLo+46CYkwSSW145R4ndL8xfUPnjLov+cYq7MQY9IKWRebCjtByg==
-X-Received: by 2002:a81:4f4a:0:b0:576:7dfc:e73e with SMTP id d71-20020a814f4a000000b005767dfce73emr5263457ywb.32.1695288144779;
-        Thu, 21 Sep 2023 02:22:24 -0700 (PDT)
-Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com. [209.85.128.172])
-        by smtp.gmail.com with ESMTPSA id x202-20020a81a0d3000000b0057399b3bd26sm232511ywg.33.2023.09.21.02.22.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Sep 2023 02:22:24 -0700 (PDT)
-Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-59c0442a359so9002237b3.0;
-        Thu, 21 Sep 2023 02:22:24 -0700 (PDT)
-X-Received: by 2002:a0d:ea15:0:b0:59b:c11:ad7c with SMTP id
- t21-20020a0dea15000000b0059b0c11ad7cmr4927105ywe.18.1695288143988; Thu, 21
- Sep 2023 02:22:23 -0700 (PDT)
+        with ESMTP id S229922AbjIURGd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 13:06:33 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9CAF4493;
+        Thu, 21 Sep 2023 10:04:05 -0700 (PDT)
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LAbsbV008389;
+        Thu, 21 Sep 2023 10:47:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=tC0z5s3RdP9QagJBrQju/hCR80f7lEFVYo0jybcVgTM=;
+ b=HdWa/AEjA4+xZ3TUtE1VtWYjY1c7NEir8CR9mzXEm2zoafqm/DVkf4mvOuZFnL75iZCX
+ AsPKuAf8lorZYFJoJ6/BEZqu1vvAqfvLZzWN66caULCp6WZdvh+2gdfj5J8gS7M0JPuv
+ XEth5u3wftn+eKwsb1O7WVix3oWTH46u8txnpr5MGRvKIQ8JAdTFtYDcTqeaLm+1sm5g
+ FIH7kUQ0QN8Ga5ZH1FkWpSixRzSAjek2u3V6tkm0yVPFuh9HlOULIMNzZEPrHCBMt0c9
+ 4cQvpGDkYOrIw9cFgoY77x9MopU2xWsQm27hBpRrUgNPIXQIdDqIFRF5xWovlK+ZvO90 OA== 
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3t848tfpq9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 10:47:53 +0000
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+        by ppma11.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 38L9g03G016432;
+        Thu, 21 Sep 2023 10:47:52 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+        by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 3t5sd2ffs1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 10:47:52 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+        by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 38LAllZM28639826
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Sep 2023 10:47:47 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C4C082004B;
+        Thu, 21 Sep 2023 10:47:47 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B169220043;
+        Thu, 21 Sep 2023 10:47:47 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.196.32.213])
+        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Thu, 21 Sep 2023 10:47:47 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1qjHDm-001qiu-1v;
+        Thu, 21 Sep 2023 12:47:46 +0200
+Date:   Thu, 21 Sep 2023 12:47:46 +0200
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Dinghao Liu <dinghao.liu@zju.edu.cn>
+Cc:     Steffen Maier <maier@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        James Bottomley <James.Bottomley@suse.de>,
+        Swen Schillig <swen@vnet.ibm.com>, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Mailing List linux-scsi <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] scsi: zfcp: Fix a potential double free in
+ zfcp_port_enqueue
+Message-ID: <20230921104746.GG10864@p1gen4-pw042f0m.fritz.box>
+References: <20230921063915.7703-1-dinghao.liu@zju.edu.cn>
+ <20230921102102.GF10864@p1gen4-pw042f0m.fritz.box>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20230921102102.GF10864@p1gen4-pw042f0m.fritz.box>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 4HTqd0pstE7eD7KZs3X4dIgUVQj2m89p
+X-Proofpoint-ORIG-GUID: 4HTqd0pstE7eD7KZs3X4dIgUVQj2m89p
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-References: <20230920135439.929695-1-dlemoal@kernel.org> <CAMuHMdWHXC=qPTcLS9VeqfFy7Js84pd84oZqqWdd7E+bAHrcqw@mail.gmail.com>
-In-Reply-To: <CAMuHMdWHXC=qPTcLS9VeqfFy7Js84pd84oZqqWdd7E+bAHrcqw@mail.gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Thu, 21 Sep 2023 11:22:13 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdXeeDNjwErH7HfCtnxSYF2o-6ZnkDuOe8u_mX14WKqqBQ@mail.gmail.com>
-Message-ID: <CAMuHMdXeeDNjwErH7HfCtnxSYF2o-6ZnkDuOe8u_mX14WKqqBQ@mail.gmail.com>
-Subject: Re: [PATCH v4 00/23] Fix libata suspend/resume handling and code cleanup
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Chia-Lin Kao <acelan.kao@canonical.com>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-21_07,2023-09-20_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ adultscore=0 impostorscore=0 lowpriorityscore=0 mlxlogscore=940
+ suspectscore=0 clxscore=1011 bulkscore=0 malwarescore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309210092
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 21, 2023 at 11:21â€¯AM Geert Uytterhoeven
-<geert@linux-m68k.org> wrote:
-> On Wed, Sep 20, 2023 at 3:54â€¯PM Damien Le Moal <dlemoal@kernel.org> wrote:
-> > The first 9 patches of this series fix several issues with suspend/resume
-> > power management operations in scsi and libata. The most significant
-> > changes introduced are in patch 4 and 5, where the manage_start_stop
-> > flag of scsi devices is split into the manage_system_start_stop and
-> > manage_runtime_start_stop flags to allow keeping scsi runtime power
-> > operations for spining up/down ATA devices but have libata do its own
-> > system suspend/resume device power state management using EH.
-> >
-> > The remaining patches are code cleanup that do not introduce any
-> > significant functional change.
-> >
-> > This series was tested on qemu and on various PCs and servers. I am
-> > CC-ing people who recently reported issues with suspend/resume.
-> > Additional testing would be much appreciated.
-> >
-> > Changes from v3:
-> >  * Corrected pathc 1 (typo in commit message and WARN_ON() removal)
-> >  * Changed path 3 as suggested by Niklas (moved definition of
-> >    ->slave_alloc)
-> >  * Rebased on rc2
-> >  * Added review tags
->
-> Thanks for the update!
->
-> I gave this a try on Renesas Salvator-XS with R-Car H3 ES2.0 and
-> a SATA hard drive:
->   - The drive is spun up during system resume,
->   - Accessing the drive after the system was resumed is instantaneous.
+On Thu, Sep 21, 2023 at 12:21:02PM +0200, Benjamin Block wrote:
+> Hello Liu Dinghao,
+> 
+> good find.
 
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Oh, also, please put linux-scsi on the CC list. Patches to zfcp go via
+linux-scsi, not linux-s390.
 
-Gr{oetje,eeting}s,
-
-                        Geert
+> 
+> On Thu, Sep 21, 2023 at 02:39:15PM +0800, Dinghao Liu wrote:
+> > When device_register() fails, zfcp_port_release() will be called
+> > after put_device(). As a result, the zfcp_ccw_adapter_put() after
+> > err_out is redundant because it will be called in the call-back
+> > function zfcp_port_release(). Remove it from this error path.
+> 
+> So the reference on the adapter object is doubly put, which may
+> lead to a premature free of the adapter object itself. Please mention that
+> either in the subject, or description; it makes it easier to see what exactly
+> breaks at a glance.
+> 
+> > 
+> > Fixes: f3450c7b9172 ("[SCSI] zfcp: Replace local reference counting with common kref")
+> > Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+> > ---
+> >  drivers/s390/scsi/zfcp_aux.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+> > index df782646e856..489e6239dedf 100644
+> > --- a/drivers/s390/scsi/zfcp_aux.c
+> > +++ b/drivers/s390/scsi/zfcp_aux.c
+> > @@ -552,7 +552,7 @@ struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *adapter, u64 wwpn,
+> >  
+> >  	if (device_register(&port->dev)) {
+> >  		put_device(&port->dev);
+> > -		goto err_out;
+> > +		return ERR_PTR(retval);
+> 
+> I'd rather have a new label at the bottom, in front of the return that is
+> already there, and jump to that, instead of a different function exit point.
+> 
+> >  	}
+> >  
+> >  	write_lock_irq(&adapter->port_list_lock);
+> > -- 
+> > 2.17.1
+> > 
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
