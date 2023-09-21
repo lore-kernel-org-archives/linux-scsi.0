@@ -2,94 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5598E7D0B8
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 22:40:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5889AE7D0B6
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 22:54:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229865AbjIUWkc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 18:40:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55088 "EHLO
+        id S229649AbjIUWyt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 18:54:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232238AbjIUWkZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 18:40:25 -0400
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8D7B3C22;
-        Thu, 21 Sep 2023 13:11:05 -0700 (PDT)
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1c1ff5b741cso12529355ad.2;
-        Thu, 21 Sep 2023 13:11:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695327065; x=1695931865;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AqLUJredNWFn6UV9EpZQHzPOud7X+d09rY2QfVP8FfM=;
-        b=hB++SQVsehyjfHesltdoKUlix0BRL+fSqltcUJUpDSz0hE4z2v3h17Yn7tT5cr6eA4
-         fuxNjGLSy15TF9h0wRHOCgBrbR3VARg4ovhRmzamN9unix/8twLGHTd9GHnI7N/6WovJ
-         UnqaY+TPIyI6Xcnq5IMeiNQVQP6CDlH9CcGNvMy8sNMClDxphv4nOrJ6Jt2YFavfOJ8Z
-         UJskvTvezFck9oe5WxqPB35kkemR6pAYN/PeiJrRAbZ+O8UbkN8Fl1/RjLvWki88AIXw
-         jhfjlr6uaP3kfYE1KkZamw8j1iHv9cgta24m/z7pOq3HB6cNv2fKt3Tvg5AugJ9Q2ZED
-         Nzow==
-X-Gm-Message-State: AOJu0YxBLOJG1vJoR1s1nW2IErM/uppeLm8s2GLWT0YTmGH7jkAS4yZy
-        kXre58vLoAksw15UZAOLYZc=
-X-Google-Smtp-Source: AGHT+IE4uBXaKeNClIyeQxDM3JodKlX79G3w3w9XgQ/pS0vx9mNOOgruGpeL+ibjNdK7nkmnSAy4Ag==
-X-Received: by 2002:a17:902:82c3:b0:1c3:f745:1cd5 with SMTP id u3-20020a17090282c300b001c3f7451cd5mr6113963plz.34.1695327065034;
-        Thu, 21 Sep 2023 13:11:05 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:6903:9a1f:51f3:593e? ([2620:15c:211:201:6903:9a1f:51f3:593e])
-        by smtp.gmail.com with ESMTPSA id a7-20020a170902ecc700b001b87bedcc6fsm1922245plh.93.2023.09.21.13.11.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Sep 2023 13:11:03 -0700 (PDT)
-Message-ID: <e547d35e-856b-4d0e-a77d-7f37fad3dde5@acm.org>
-Date:   Thu, 21 Sep 2023 13:11:02 -0700
+        with ESMTP id S229449AbjIUWys (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 18:54:48 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED6D7F7
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 15:54:42 -0700 (PDT)
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LMmasM023458;
+        Thu, 21 Sep 2023 22:54:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=RB7rw6nlQUUlWLdjf3n68TJHCNiDe97LdM3CZFQ8EDc=;
+ b=X/NuH3iq3U8AQKj3Kqewtdr4hoRzrbyGhkV75mSK6YBoyNZtz8WUHjjY8JjSpKDnXNLb
+ 8nGMmlpyAz8EXWApKKKZs5OGJHQt8qgT/gTyqjpnMN6xzTwA6K+BvryE2x6m5ELsC9jc
+ aSTvtZVjCvBCbDYsewsE6f9fMQWKt3VayMeP4JsdG28x7MCIFCKMlaybS/w4yh9jWStx
+ YqFzDDJFzxQtyrmyXs2WKtaCrK/DgfRguNjWCNyCqio1Gkmhd6+bobYRh8m75mmSDEZq
+ pbUN5mPlJvRwfSoaTn9kHa4e97SjlVJ4YQ0gSgxprBFsMiLM0JcQD9ftWkvW4hdk9FRx eQ== 
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3t8x1018f8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 22:54:38 +0000
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+        by ppma22.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 38LLqutl018872;
+        Thu, 21 Sep 2023 22:54:38 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
+        by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3t8tsnm729-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 22:54:38 +0000
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+        by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 38LMsbAB21693142
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Sep 2023 22:54:37 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5039C58051;
+        Thu, 21 Sep 2023 22:54:37 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 18F425805F;
+        Thu, 21 Sep 2023 22:54:37 +0000 (GMT)
+Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
+        by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Thu, 21 Sep 2023 22:54:37 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, brking@linux.ibm.com,
+        james.bottomley@hansenpartnership.com,
+        Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v2 00/11] ibmvfc: fixes and generic prep work for NVMeoF support
+Date:   Thu, 21 Sep 2023 17:54:24 -0500
+Message-Id: <20230921225435.3537728-1-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/13] Pass data temperature information to zoned UFS
- devices
-Content-Language: en-US
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Bean Huo <huobean@gmail.com>,
-        Bean Huo <beanhuo@iokpp.de>, Avri Altman <avri.altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Luca Porzio <lporzio@micron.com>
-References: <20230920191442.3701673-1-bvanassche@acm.org>
- <ZQtHwsNvS1wYDKfG@casper.infradead.org>
- <1522d8ec-6b15-45d5-b6d9-517337e2c8cf@acm.org> <ZQv07Mg7qIXayHlf@x1-carbon>
- <8781636a-57ac-4dbd-8ec6-b49c10c81345@acm.org>
- <ZQyZEqXJymyFWlKV@casper.infradead.org>
- <4cacae64-6a11-41ab-9bec-f8915da00106@acm.org>
- <ZQydeSIoHHJDQjHW@casper.infradead.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZQydeSIoHHJDQjHW@casper.infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 5lVLDBwAx9sWk8D7cG86O_hZln4RGSCc
+X-Proofpoint-GUID: 5lVLDBwAx9sWk8D7cG86O_hZln4RGSCc
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-21_19,2023-09-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxlogscore=978
+ mlxscore=0 phishscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
+ bulkscore=0 malwarescore=0 priorityscore=1501 clxscore=1015 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
+ definitions=main-2309210196
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/21/23 12:46, Matthew Wilcox wrote:
-> If vendor support already exists, then why did you dodge the question
-> asking for quantified data that I asked earlier?  And can we have that
-> data now?
+This series includes a couple minor fixes, generalization of some code that is
+not protocol specific, and a reworking of the way event pool buffers are
+accounted for by the driver. This is a precursor to a series to follow that
+introduces support for NVMeoF protocol with ibmvfc.
 
- From Rho, Eunhee, Kanchan Joshi, Seung-Uk Shin, Nitesh Jagadeesh 
-Shetty, Jooyoung Hwang, Sangyeun Cho, Daniel DG Lee, and Jaeheon Jeong. 
-"{FStream}: Managing Flash Streams in the File System." In 16th USENIX 
-Conference on File and Storage Technologies (FAST 18), pp. 257-264. 
-2018: "Experimental results show that FStream enhances the filebench 
-performance by 5%∼35% and reduces WAF (Write Amplification Factor) by 
-7%∼46%. For a NoSQL database benchmark, performance is improved by up to 
-38% and WAF is reduced by up to 81%." Please note that these results are 
-for ext4 instead of F2FS. The benefit for F2FS is probably smaller since 
-F2FS is optimized for NAND flash media.
+v2 Changes:
+* Fixed kernel test bot build warnings in patches 1 & 2
 
-I have Cc-ed open source contributors from multiple UFS vendors on this 
-email and I hope that they can share performance numbers for F2FS.
+Tyrel Datwyler (11):
+  ibmvfc: remove BUG_ON in the case of an empty event pool
+  ibmvfc: implement channel queue depth and event buffer accounting
+  ibmvfc: limit max hw queues by num_online_cpus()
+  ibmvfc: fix erroneous use of rtas_busy_delay with hcall return code
+  ibmvfc: use a bitfield for boolean flags
+  ibmvfc: rename ibmvfc_scsi_channels to ibmvfc_channels
+  ibmvfc: track max and desired queue size in ibmvfc_channels
+  ibmvfc: make channel allocation generic
+  ibmvfc: add protocol field to ibmvfc_channels
+  ibmvfc: make discovery buffer per protocol channel group
+  ibmvfc: add protocol field to target structure
 
-Thanks,
+ drivers/scsi/ibmvscsi/ibmvfc.c | 438 ++++++++++++++++++++++++---------
+ drivers/scsi/ibmvscsi/ibmvfc.h |  50 ++--
+ 2 files changed, 353 insertions(+), 135 deletions(-)
 
-Bart.
+-- 
+2.31.1
 
