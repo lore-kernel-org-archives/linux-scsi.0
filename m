@@ -2,95 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0B1CE7D0B0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 22:26:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5598E7D0B8
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 22:40:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230018AbjIUW03 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 18:26:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49816 "EHLO
+        id S229865AbjIUWkc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 18:40:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232860AbjIUWJg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 18:09:36 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEAFA1F05;
-        Thu, 21 Sep 2023 15:06:56 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 068D3C433C8;
-        Thu, 21 Sep 2023 22:06:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695334016;
-        bh=kT0e72tCIEAvk5dMKfTfwqeHv4BEqCLZkqxf7evQD1o=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=tcLNscMwCk0715c6IAzqV1CA3r2EpHPWR5HxweRata8zenEqlbQXqvTuK+nLkDQ71
-         Can0UNlyCDH2HaATjUS9emOC1UvgZPji2ZSZUzy840sB5D+7E4JOfZvJRbDGybE+5y
-         92+wA4ZKOmF2U9UL3x3cLSQUmp2W+VINnvie0kG1fgOfcPJuy0JFlDh96pZHB7xL3e
-         JJk7ruqZKGGZxac140UJ2fcfNdeYqy+y2xwiJoH3BJAex/FTJ5eBafw64hUtSuObFj
-         4mhtGVnc90+rmiWdhAz+hbrquDXh4Ay76f8c9zNsS1oq8/ViuV+7O7P/KSahV8PedS
-         fqynT6FOj+s3w==
-Message-ID: <3dd76ffc-d66d-f37f-27da-6c39edbc7e9c@kernel.org>
-Date:   Thu, 21 Sep 2023 15:06:54 -0700
+        with ESMTP id S232238AbjIUWkZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 18:40:25 -0400
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8D7B3C22;
+        Thu, 21 Sep 2023 13:11:05 -0700 (PDT)
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1c1ff5b741cso12529355ad.2;
+        Thu, 21 Sep 2023 13:11:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695327065; x=1695931865;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=AqLUJredNWFn6UV9EpZQHzPOud7X+d09rY2QfVP8FfM=;
+        b=hB++SQVsehyjfHesltdoKUlix0BRL+fSqltcUJUpDSz0hE4z2v3h17Yn7tT5cr6eA4
+         fuxNjGLSy15TF9h0wRHOCgBrbR3VARg4ovhRmzamN9unix/8twLGHTd9GHnI7N/6WovJ
+         UnqaY+TPIyI6Xcnq5IMeiNQVQP6CDlH9CcGNvMy8sNMClDxphv4nOrJ6Jt2YFavfOJ8Z
+         UJskvTvezFck9oe5WxqPB35kkemR6pAYN/PeiJrRAbZ+O8UbkN8Fl1/RjLvWki88AIXw
+         jhfjlr6uaP3kfYE1KkZamw8j1iHv9cgta24m/z7pOq3HB6cNv2fKt3Tvg5AugJ9Q2ZED
+         Nzow==
+X-Gm-Message-State: AOJu0YxBLOJG1vJoR1s1nW2IErM/uppeLm8s2GLWT0YTmGH7jkAS4yZy
+        kXre58vLoAksw15UZAOLYZc=
+X-Google-Smtp-Source: AGHT+IE4uBXaKeNClIyeQxDM3JodKlX79G3w3w9XgQ/pS0vx9mNOOgruGpeL+ibjNdK7nkmnSAy4Ag==
+X-Received: by 2002:a17:902:82c3:b0:1c3:f745:1cd5 with SMTP id u3-20020a17090282c300b001c3f7451cd5mr6113963plz.34.1695327065034;
+        Thu, 21 Sep 2023 13:11:05 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:6903:9a1f:51f3:593e? ([2620:15c:211:201:6903:9a1f:51f3:593e])
+        by smtp.gmail.com with ESMTPSA id a7-20020a170902ecc700b001b87bedcc6fsm1922245plh.93.2023.09.21.13.11.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Sep 2023 13:11:03 -0700 (PDT)
+Message-ID: <e547d35e-856b-4d0e-a77d-7f37fad3dde5@acm.org>
+Date:   Thu, 21 Sep 2023 13:11:02 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.1
-Subject: Re: [PATCH v4 09/23] scsi: sd: Do not issue commands to suspended
- disks on shutdown
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/13] Pass data temperature information to zoned UFS
+ devices
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230920135439.929695-1-dlemoal@kernel.org>
- <20230920135439.929695-10-dlemoal@kernel.org>
- <daa44a6b-59fd-4735-b881-7d182a7d2a41@acm.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <daa44a6b-59fd-4735-b881-7d182a7d2a41@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        Christoph Hellwig <hch@lst.de>, Bean Huo <huobean@gmail.com>,
+        Bean Huo <beanhuo@iokpp.de>, Avri Altman <avri.altman@wdc.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Luca Porzio <lporzio@micron.com>
+References: <20230920191442.3701673-1-bvanassche@acm.org>
+ <ZQtHwsNvS1wYDKfG@casper.infradead.org>
+ <1522d8ec-6b15-45d5-b6d9-517337e2c8cf@acm.org> <ZQv07Mg7qIXayHlf@x1-carbon>
+ <8781636a-57ac-4dbd-8ec6-b49c10c81345@acm.org>
+ <ZQyZEqXJymyFWlKV@casper.infradead.org>
+ <4cacae64-6a11-41ab-9bec-f8915da00106@acm.org>
+ <ZQydeSIoHHJDQjHW@casper.infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ZQydeSIoHHJDQjHW@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/09/21 14:36, Bart Van Assche wrote:
-> On 9/20/23 06:54, Damien Le Moal wrote:
->> If an error occurs when resuming a host adapter before the devices
->> attached to the adapter are resumed, the adapter low level driver may
->> remove the scsi host, resulting in a call to sd_remove() for the
->> disks of the host. This in turn results in a call to sd_shutdown() which
->> will issue a synchronize cache command and a start stop unit command to
->> spindown the disk. sd_shutdown() issues the commands only if the device
->> is not already suspended but does not check the power state for
->> system-wide suspend/resume. That is, the commands may be issued with the
->> device in a suspended state, which causes PM resume to hang, forcing a
->> reset of the machine to recover.
->>
->> Fix this by not calling sd_shutdown() in sd_remove() if the device
->> is not running.
-> 
-> Hi Damien,
-> 
-> I'd like to look into an alternative fix (after this patch series went 
-> in) but I couldn't identify the call chain in the ATA resume code that 
-> results in removal of the SCSI host. Can you please show me the call 
-> chain that results in SCSI host removal if resuming fails?
+On 9/21/23 12:46, Matthew Wilcox wrote:
+> If vendor support already exists, then why did you dodge the question
+> asking for quantified data that I asked earlier?  And can we have that
+> data now?
 
-See the pm80xx driver for which I recently fixed a resume issue. That is how I
-found this problem with device removal: resuming the pm800xx HBA was failing and
-the driver then called scsi_remove_host() to drop the ports and that led to
-trying to removed sd devices that were still suspended.
+ From Rho, Eunhee, Kanchan Joshi, Seung-Uk Shin, Nitesh Jagadeesh 
+Shetty, Jooyoung Hwang, Sangyeun Cho, Daniel DG Lee, and Jaeheon Jeong. 
+"{FStream}: Managing Flash Streams in the File System." In 16th USENIX 
+Conference on File and Storage Technologies (FAST 18), pp. 257-264. 
+2018: "Experimental results show that FStream enhances the filebench 
+performance by 5%∼35% and reduces WAF (Write Amplification Factor) by 
+7%∼46%. For a NoSQL database benchmark, performance is improved by up to 
+38% and WAF is reduced by up to 81%." Please note that these results are 
+for ext4 instead of F2FS. The benefit for F2FS is probably smaller since 
+F2FS is optimized for NAND flash media.
 
-> 
-> Thanks,
-> 
-> Bart.
-> 
+I have Cc-ed open source contributors from multiple UFS vendors on this 
+email and I hope that they can share performance numbers for F2FS.
 
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+
+Bart.
 
