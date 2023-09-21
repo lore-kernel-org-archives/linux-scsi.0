@@ -2,56 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56A5EE7D0A2
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 19:25:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AE8EE7D0A2
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 19:25:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229508AbjIUTZL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:25:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38206 "EHLO
+        id S229606AbjIUTZ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 15:25:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbjIUTZK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 15:25:10 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17A35103F09
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 12:25:03 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-690ce3c55f1so1072243b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 12:25:03 -0700 (PDT)
+        with ESMTP id S229535AbjIUTZZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 15:25:25 -0400
+Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA318EA634
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 12:25:18 -0700 (PDT)
+Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-3add83c9043so767580b6e.2
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 12:25:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695324303; x=1695929103;
+        d=1e100.net; s=20230601; t=1695324318; x=1695929118;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=jr69ZzE96rrJ03FGKMd1mbdFXRauUkQbOQIy+kCgn0I=;
-        b=Qn3cC2PFSQOOSY+ogdoPtOUFCKpZovTVQjmOvPkaF9XQgENfuA1s0ACUknKsfeq1d6
-         qNhy4uFG9yzjD+tczE4dwN6CRrkzmcW4D7Fv/cv6WXPoddf6qhfCnrEIIwgc5sksOlJW
-         i5EZ0lkwXXi9dRNzv64G7DFRv9QSz03vr6fNDGHDPye7gpFuUUbAEx5SiAgKmiyOukag
-         rbDuIjuRjxefgbHciTe5iNxf5DiQ9TB5cHJG+6whB9+h6nV0AwnthWnHFPdxPEzOyLA3
-         cgvjDhHiebSJumQGxk3e7vY5PCDUl1HReyAG/8T3r9zAth+1rHByk/+5uLQoE3ZbruuA
-         lTZw==
-X-Gm-Message-State: AOJu0YxPzyvIMWwmpE84bMk6hvYC4ISbcvSZ79Kz13s/7U7IYnTVdl9A
-        rTLx0Ag1PgoRKGK9u2yTtu0=
-X-Google-Smtp-Source: AGHT+IFCBT2nR7262Fxfz7EZHTu8U1C0KhLj6sztvsXdoICiXL8fjSVrEF7QD4DPl3Uf0AWX5QPYBA==
-X-Received: by 2002:a05:6a00:88a:b0:68e:41e9:10be with SMTP id q10-20020a056a00088a00b0068e41e910bemr7603934pfj.20.1695324303200;
-        Thu, 21 Sep 2023 12:25:03 -0700 (PDT)
+        bh=YHs+ElUAcwdj8rHsrp4RPTRq4upkwDSCio/mlO9YgZ4=;
+        b=Gqh/iz//Z8/l/XXJ2B85nL/GnOU4qfUEdbHfl5u3Bo+8uCCIjDEmq4LHWihiA+sulR
+         o+rfHE4HgJYhhY7ee3IeD9r2nHhVYVY7Dme9kkUGxEZD1W1JMsEXt1yJzgcM+ppigXxO
+         cV1TOpNMeYV4DI6SwzQ8zQ3pDnUnYxqAAjGuBsLLooXDrtgYk5EQVRqQblvF4dx5sxem
+         FFtuZLM3nUhytjJZiHL4K+EZEyZhY9KgwNwRlBASyT7Mvz5PuFVNnSS243SUMzqq08Xn
+         YEu91NuZAQekVKw3/Zcz/AjlrKs8MFPHiJZz9+MHPygmG7WYjuRQUh0ZGmaBCVQUyS4A
+         qUQA==
+X-Gm-Message-State: AOJu0YynqJr578e5c0Oy4nh5680Y3BYceNdQZA3usb1XJe0dSmv2wFYU
+        /ljuEzaK3ViitStH/J3x/RA=
+X-Google-Smtp-Source: AGHT+IHqlDgzd03DiTiNNrBh0wOEAwIKwElKbkT3JtH9C8U+yvz6VS+QCoSNHq47oeXv1I4UY3oEZQ==
+X-Received: by 2002:a05:6808:d4d:b0:3a6:febf:fb with SMTP id w13-20020a0568080d4d00b003a6febf00fbmr7654317oik.22.1695324317924;
+        Thu, 21 Sep 2023 12:25:17 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:6903:9a1f:51f3:593e])
-        by smtp.gmail.com with ESMTPSA id fm1-20020a056a002f8100b00679a4b56e41sm1760061pfb.43.2023.09.21.12.25.02
+        by smtp.gmail.com with ESMTPSA id fm1-20020a056a002f8100b00679a4b56e41sm1760061pfb.43.2023.09.21.12.25.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Sep 2023 12:25:02 -0700 (PDT)
+        Thu, 21 Sep 2023 12:25:17 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        daejun7.park@samsung.com, John Garry <john.g.garry@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Can Guo <quic_cang@quicinc.com>,
         Manivannan Sadhasivam <mani@kernel.org>,
         Asutosh Das <quic_asutoshd@quicinc.com>,
         Bean Huo <beanhuo@micron.com>,
         "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH v2 1/4] scsi: ufs: Remove request tag range checks
-Date:   Thu, 21 Sep 2023 12:22:46 -0700
-Message-ID: <20230921192335.676924-2-bvanassche@acm.org>
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Po-Wen Kao <powen.kao@mediatek.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Keoseong Park <keosung.park@samsung.com>
+Subject: [PATCH v2 2/4] scsi: ufs: Move the 4K alignment code into the Exynos driver
+Date:   Thu, 21 Sep 2023 12:22:47 -0700
+Message-ID: <20230921192335.676924-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.515.g380fc7ccd1-goog
 In-Reply-To: <20230921192335.676924-1-bvanassche@acm.org>
 References: <20230921192335.676924-1-bvanassche@acm.org>
@@ -61,47 +65,105 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The block layer core guarantees that tag numbers are in the expected
-range. Hence remove the statements that check this. This patch suppresses
-Coverity warnings about left shifts with a negative right hand operand.
-The following commit originally introduced request tag range checks:
-14497328b6a6 ("scsi: ufs: verify command tag validity").
+The DMA alignment for the Exynos controller follows directly from the
+PRDT segment size configured in ufs-exynos.c. Hence, move the DMA
+alignment code into the Exynos driver source code.
 
-Cc: daejun7.park@samsung.com
-Cc: John Garry <john.g.garry@oracle.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/ufs/core/ufshcd.c     | 6 ++++--
+ drivers/ufs/host/ufs-exynos.c | 9 +++++++--
+ include/ufs/ufshcd.h          | 7 ++-----
+ 3 files changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index dc1285351336..f48a65fa3bf7 100644
+index f48a65fa3bf7..379229d51f04 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2822,8 +2822,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	int err = 0;
- 	struct ufs_hw_queue *hwq = NULL;
+@@ -5095,8 +5095,7 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+ 	struct request_queue *q = sdev->request_queue;
  
--	WARN_ONCE(tag < 0 || tag >= hba->nutrs, "Invalid tag %d\n", tag);
+ 	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
+-	if (hba->quirks & UFSHCD_QUIRK_4KB_DMA_ALIGNMENT)
+-		blk_queue_update_dma_alignment(q, SZ_4K - 1);
++
+ 	/*
+ 	 * Block runtime-pm until all consumers are added.
+ 	 * Refer ufshcd_setup_links().
+@@ -5112,6 +5111,9 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+ 	 */
+ 	sdev->silence_suspend = 1;
+ 
++	if (hba->vops && hba->vops->config_scsi_dev)
++		hba->vops->config_scsi_dev(sdev);
++
+ 	ufshcd_crypto_register(hba, q);
+ 
+ 	return 0;
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 3396e0388512..e5d145a2676e 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1511,6 +1511,11 @@ static int fsd_ufs_pre_link(struct exynos_ufs *ufs)
+ 	return 0;
+ }
+ 
++static void exynos_ufs_config_scsi_dev(struct scsi_device *sdev)
++{
++	blk_queue_update_dma_alignment(sdev->request_queue, SZ_4K - 1);
++}
++
+ static int fsd_ufs_post_link(struct exynos_ufs *ufs)
+ {
+ 	int i;
+@@ -1579,6 +1584,7 @@ static const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
+ 	.hibern8_notify			= exynos_ufs_hibern8_notify,
+ 	.suspend			= exynos_ufs_suspend,
+ 	.resume				= exynos_ufs_resume,
++	.config_scsi_dev		= exynos_ufs_config_scsi_dev,
+ };
+ 
+ static struct ufs_hba_variant_ops ufs_hba_exynosauto_vh_ops = {
+@@ -1680,8 +1686,7 @@ static const struct exynos_ufs_drv_data exynos_ufs_drvs = {
+ 				  UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR |
+ 				  UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR |
+ 				  UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL |
+-				  UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING |
+-				  UFSHCD_QUIRK_4KB_DMA_ALIGNMENT,
++				  UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING,
+ 	.opts			= EXYNOS_UFS_OPT_HAS_APB_CLK_CTRL |
+ 				  EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL |
+ 				  EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX |
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 7d07b256e906..e0d6590d163d 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -28,6 +28,7 @@
+ 
+ #define UFSHCD "ufshcd"
+ 
++struct scsi_device;
+ struct ufs_hba;
+ 
+ enum dev_cmd_type {
+@@ -371,6 +372,7 @@ struct ufs_hba_variant_ops {
+ 	int	(*get_outstanding_cqs)(struct ufs_hba *hba,
+ 				       unsigned long *ocqs);
+ 	int	(*config_esi)(struct ufs_hba *hba);
++	void	(*config_scsi_dev)(struct scsi_device *sdev);
+ };
+ 
+ /* clock gating state  */
+@@ -596,11 +598,6 @@ enum ufshcd_quirks {
+ 	 */
+ 	UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING = 1 << 13,
+ 
+-	/*
+-	 * Align DMA SG entries on a 4 KiB boundary.
+-	 */
+-	UFSHCD_QUIRK_4KB_DMA_ALIGNMENT			= 1 << 14,
 -
- 	switch (hba->ufshcd_state) {
- 	case UFSHCD_STATE_OPERATIONAL:
- 		break;
-@@ -6923,8 +6921,6 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
- 	spin_lock_irqsave(host->host_lock, flags);
- 
- 	task_tag = req->tag;
--	WARN_ONCE(task_tag < 0 || task_tag >= hba->nutmrs, "Invalid tag %d\n",
--		  task_tag);
- 	hba->tmf_rqs[req->tag] = req;
- 	treq->upiu_req.req_header.task_tag = task_tag;
- 
-@@ -7498,8 +7494,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	bool outstanding;
- 	u32 reg;
- 
--	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
--
- 	ufshcd_hold(hba);
- 
- 	if (!is_mcq_enabled(hba)) {
+ 	/*
+ 	 * This quirk needs to be enabled if the host controller does not
+ 	 * support UIC command
