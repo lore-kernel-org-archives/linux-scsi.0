@@ -2,129 +2,74 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D76E7D0A3
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 17:24:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E831E7D0A0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 17:26:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229884AbjIURYb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 13:24:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60734 "EHLO
+        id S229508AbjIUR0t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 13:26:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229789AbjIURYK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 13:24:10 -0400
-Received: from out-220.mta1.migadu.com (out-220.mta1.migadu.com [95.215.58.220])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ED2724868
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 10:11:31 -0700 (PDT)
-Message-ID: <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1695309013;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=M9/SAz1EzoxnJVrN89NE7Xu5/5CKesHUXGlRvXE1pb4=;
-        b=HF+m8M7iNRj1sdkdOKmUzwFs7Mv7trfEcy3F5aRbyKaOXV+wdYS4FQ7cY8Lr1/BPJOusXe
-        d1f8YpAZnY6+0t9GcErtCDUQc+5FbXukpoufktBSA/JZh5a3HQroSE20Odpb37uWt7qaqA
-        DpThtA917wjzpA/qaOXTI1+I7nhWUgQ=
-Date:   Thu, 21 Sep 2023 23:10:05 +0800
+        with ESMTP id S229789AbjIUR0j (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 13:26:39 -0400
+Received: from mail-oi1-f180.google.com (mail-oi1-f180.google.com [209.85.167.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AADCA2D69;
+        Thu, 21 Sep 2023 10:02:42 -0700 (PDT)
+Received: by mail-oi1-f180.google.com with SMTP id 5614622812f47-3a9b41ffe12so721443b6e.3;
+        Thu, 21 Sep 2023 10:02:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695315643; x=1695920443;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+myxey5KkFamPLG+BXl8bpHSYiVN4ySSOSWXnhTIWBM=;
+        b=lPAsCm5pDGAjc0MKLMT5rXPtBCpaj3iWxUsuja3hf7WnyaqDXsIBdIZtS6p4lJcP34
+         v17x/G+qwSgzK/9jlpvhoPpc9hXtuFlbMEBmK6RQ6Y1vlVNWo9B5MtEu09fGUJjV2nMt
+         lB5ngN7QkK1EbNfFs+Nm6Hw4AiMQPIMur4GGxB7FOKQCiQ7H6JO0evgKH3nWbWwMgeUm
+         dKuiCuYlLjImTAxqOrNy+g3zQXfNH0eXO5kxD9odGC+dssWQVm9QDu6kvklZzHphtt08
+         Cy2gJpUzlMKmdbP2mVx0x8A0hUjOiNKgg7CA0AF2Et0hWFRXgiCAQZS5fH1rEf71U4Iq
+         Uhzg==
+X-Gm-Message-State: AOJu0YyAgtlPdUvPFOA94XrwGeneefDyYDWZn+Xw1ucBy2VPM8RJ9LTW
+        MMMFkWOd1P0WWitzGXMersU=
+X-Google-Smtp-Source: AGHT+IHkCW88em4+s4HanHcm2/nYfuEsdBtW/TqjDkgg3Ju0IBXefT2+akGRuQadD4OJtCmXfBOe8w==
+X-Received: by 2002:a05:6808:191c:b0:3a4:f9b:b42e with SMTP id bf28-20020a056808191c00b003a40f9bb42emr7058259oib.26.1695315642918;
+        Thu, 21 Sep 2023 10:00:42 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:6903:9a1f:51f3:593e? ([2620:15c:211:201:6903:9a1f:51f3:593e])
+        by smtp.gmail.com with ESMTPSA id i10-20020a63bf4a000000b005646e6634dcsm1389910pgo.83.2023.09.21.10.00.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Sep 2023 10:00:41 -0700 (PDT)
+Message-ID: <9975f36c-cacd-4922-9d27-a7ff726793a3@acm.org>
+Date:   Thu, 21 Sep 2023 10:00:40 -0700
 MIME-Version: 1.0
-Subject: Re: [bug report] blktests srp/002 hang
-To:     Bob Pearson <rpearsonhpe@gmail.com>,
-        Rain River <rain.1986.08.12@gmail.com>,
-        Daisuke Matsuda <matsuda-daisuke@fujitsu.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        "leon@kernel.org" <leon@kernel.org>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        RDMA mailing list <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <8be8f611-e413-9584-7c2e-2c1abf4147be@acm.org>
- <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
- <18a3ae8c-145b-4c7f-a8f5-67840feeb98c@acm.org>
- <ab93655f-c187-fdab-6c67-3bfb2d9aa516@gmail.com>
- <9dd0aa0a-d696-a95b-095b-f54d6d31a6ab@linux.dev>
- <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev>
- <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
- <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev>
- <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
- <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev>
- <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
- <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
- <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
- <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
- <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
- <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
- <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/13] Pass data temperature information to zoned UFS
+ devices
+Content-Language: en-US
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20230920191442.3701673-1-bvanassche@acm.org>
+ <ZQtHwsNvS1wYDKfG@casper.infradead.org>
+ <1522d8ec-6b15-45d5-b6d9-517337e2c8cf@acm.org> <ZQv07Mg7qIXayHlf@x1-carbon>
+ <8781636a-57ac-4dbd-8ec6-b49c10c81345@acm.org> <ZQxiklow/4m4kvYu@x1-carbon>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ZQxiklow/4m4kvYu@x1-carbon>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 9/21/23 08:34, Niklas Cassel wrote:
+> Right now your cover letter is 4 lines :)
+> I don't recall when I last saw such a small cover letter for a feature
+> impacting so many different parts of the kernel.
 
-在 2023/9/21 22:39, Bob Pearson 写道:
-> On 9/21/23 09:23, Rain River wrote:
->> On Thu, Sep 21, 2023 at 2:53 AM Bob Pearson <rpearsonhpe@gmail.com> wrote:
->>> On 9/20/23 12:22, Bart Van Assche wrote:
->>>> On 9/20/23 10:18, Bob Pearson wrote:
->>>>> But I have also seen the same behavior in the siw driver which is
->>>>> completely independent.
->>>> Hmm ... I haven't seen any hangs yet with the siw driver.
->>> I was on Ubuntu 6-9 months ago. Currently I don't see hangs on either.
->>>>> As mentioned above at the moment Ubuntu is failing rarely. But it used to fail reliably (srp/002 about 75% of the time and srp/011 about 99% of the time.) There haven't been any changes to rxe to explain this.
->>>> I think that Zhu mentioned commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue
->>>> support for rxe tasks")?
->>> That change happened well before the failures went away. I was seeing failures at the same rate with tasklets
->>> and wqs. But after updating Ubuntu and the kernel at some point they all went away.
->> I made tests on the latest Ubuntu with the latest kernel without the
->> commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support for rxe tasks").
->> The latest kernel is v6.6-rc2, the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
->> workqueue support for rxe tasks") is reverted.
->> I made blktest tests for about 30 times, this problem does not occur.
->>
->> So I confirm that without this commit, this hang problem does not
->> occur on Ubuntu without the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
->> workqueue support for rxe tasks").
->>
->> Nanthan
->>
->>>> Thanks,
->>>>
->>>> Bart.
->>>
-> This commit is very important for several reasons. It is needed for the ODP implementation
-> that is in the works from Daisuke Matsuda and also for QP scaling of performance. The work
-> queue implementation scales well with increasing qp number while the tasklet implementation
-> does not. This is critical for the drivers use in large scale storage applications. So, if
-> there is a bug in the work queue implementation it needs to be fixed not reverted.
->
-> I am still hoping that someone will diagnose what is causing the ULPs to hang in terms of
-> something missing causing it to wait.
+I will expand the cover letter if I have to repost this patch series.
 
-Hi, Bob
+Thanks,
 
-
-You submitted this commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support 
-for rxe tasks").
-
-You should be very familiar with this commit.
-
-And this commit causes regression.
-
-So you should delved into the source code to find the root cause, then 
-fix it.
-
-
-Jason && Leon, please comment on this.
-
-
-Best Regards,
-
-Zhu Yanjun
-
->
-> Bob
+Bart.
