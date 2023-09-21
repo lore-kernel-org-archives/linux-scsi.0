@@ -2,85 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D73BE7D0A2
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 20:23:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02A13E7D0AA
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 20:25:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231795AbjIUUXH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 16:23:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49424 "EHLO
+        id S231672AbjIUUZ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 16:25:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231654AbjIUUWn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 16:22:43 -0400
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D29674B70A;
-        Thu, 21 Sep 2023 10:24:52 -0700 (PDT)
-Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-3aa14ed0e7eso652882b6e.1;
-        Thu, 21 Sep 2023 10:24:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695317091; x=1695921891;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rshe0jW7UhxhoxHzQRdwHHly+hnX6L1+KyeP6WuSdms=;
-        b=Z+IW+nx4wDQcTjHdy9q4ktNMuEQQ7Qr2EFvRMUsGU7VGjjsjwTACQB+QNOLqITHa5w
-         hqspMx5KpRPSDGcgsJ13heS/ch/kJItAJVOfy5HrDzNwyQMmIgSpP/MJpUd+FHEsa1Ut
-         9BFsxjsgk45bIWWeQhP27RNsZbQt7yRVK8nUxi5AMEA+KkrH+65umSKgWpimdRuj+UB+
-         VHA0SsFtQxsOzkaszJVEir8rSGUgqLweuHsc/6rCn28F3gapaOrhxvQLfOK0RzmuS44H
-         8yDb0nkYUToJaLoI2ofxe8Zn0OE2gyduehAlnIoMHKvV9qCUCTGTHp4OlmCXrvJbkxiz
-         4wSg==
-X-Gm-Message-State: AOJu0YzOFewXulSn5NUOBRJGvHPPbhKVEHoSMbSIsrBjExl5cVZzWcZ5
-        bQzDQ4V63QhThDTI120N35YOWDY9Mc8=
-X-Google-Smtp-Source: AGHT+IEckYqWZk5F9LFw20ucVdeJ8Lr3aC+IsVyPzXDqHASE0LSTBOEzKe0qNxhV6kLLw7xkoMLFug==
-X-Received: by 2002:a05:6a20:3c8a:b0:158:143d:e215 with SMTP id b10-20020a056a203c8a00b00158143de215mr12630984pzj.1.1695306430192;
-        Thu, 21 Sep 2023 07:27:10 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:6903:9a1f:51f3:593e? ([2620:15c:211:201:6903:9a1f:51f3:593e])
-        by smtp.gmail.com with ESMTPSA id y7-20020a637d07000000b0054fa8539681sm1362140pgc.34.2023.09.21.07.27.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Sep 2023 07:27:09 -0700 (PDT)
-Message-ID: <8781636a-57ac-4dbd-8ec6-b49c10c81345@acm.org>
-Date:   Thu, 21 Sep 2023 07:27:08 -0700
+        with ESMTP id S232256AbjIUUZK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 16:25:10 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD0967C70F;
+        Thu, 21 Sep 2023 10:36:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E66FC433CB;
+        Thu, 21 Sep 2023 17:30:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695317449;
+        bh=rQwERv8dKdHwaDi6a6xwWVgsYnuXNpiaD5h0nk6TXPE=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=XwlaN4iHuACVwgxmz4s4/3/dBUtKzE/tr1p9MAXauBwFp9MRMDcgfGvfW8nb+J/5J
+         +dVSeJWDGE7VzdUzgKGi5kKf2BU9t8RQ1JXei8jdx1QhbyCmTFhNeBEnQn6olNIY3u
+         NwFAYc8WgxwtnWgkwlWmSkiBAjbMXO4BkrIUUZXSXQfVTi9MxPsbDUYjn6XFZMui48
+         awna9/CoIgFbsljjhJKSGuabbJiQvUPnNOtDwNrhNHth9Gjgc/1bqP/nu7WQvKzKla
+         1UHy3IXBOiESNkRpshB1dv6IWVD2M68W3tTMBU768Wf6/xC5P5hzIU8V29u2EizDMG
+         soFb23gvh04Iw==
+Message-ID: <f122b793-cd19-24d6-4898-982702554f2c@kernel.org>
+Date:   Thu, 21 Sep 2023 10:30:48 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/13] Pass data temperature information to zoned UFS
- devices
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.1
+Subject: Re: [PATCH v4 00/23] Fix libata suspend/resume handling and code
+ cleanup
 Content-Language: en-US
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20230920191442.3701673-1-bvanassche@acm.org>
- <ZQtHwsNvS1wYDKfG@casper.infradead.org>
- <1522d8ec-6b15-45d5-b6d9-517337e2c8cf@acm.org> <ZQv07Mg7qIXayHlf@x1-carbon>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZQv07Mg7qIXayHlf@x1-carbon>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Chia-Lin Kao <acelan.kao@canonical.com>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20230920135439.929695-1-dlemoal@kernel.org>
+ <CAMuHMdWHXC=qPTcLS9VeqfFy7Js84pd84oZqqWdd7E+bAHrcqw@mail.gmail.com>
+ <CAMuHMdXeeDNjwErH7HfCtnxSYF2o-6ZnkDuOe8u_mX14WKqqBQ@mail.gmail.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CAMuHMdXeeDNjwErH7HfCtnxSYF2o-6ZnkDuOe8u_mX14WKqqBQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/21/23 00:46, Niklas Cassel wrote:
-> Considering that this API (F_GET_FILE_RW_HINT / F_SET_FILE_RW_HINT) 
-> was previously only used by NVMe (NVMe streams).
+On 2023/09/21 2:22, Geert Uytterhoeven wrote:
+> On Thu, Sep 21, 2023 at 11:21 AM Geert Uytterhoeven
+> <geert@linux-m68k.org> wrote:
+>> On Wed, Sep 20, 2023 at 3:54 PM Damien Le Moal <dlemoal@kernel.org> wrote:
+>>> The first 9 patches of this series fix several issues with suspend/resume
+>>> power management operations in scsi and libata. The most significant
+>>> changes introduced are in patch 4 and 5, where the manage_start_stop
+>>> flag of scsi devices is split into the manage_system_start_stop and
+>>> manage_runtime_start_stop flags to allow keeping scsi runtime power
+>>> operations for spining up/down ATA devices but have libata do its own
+>>> system suspend/resume device power state management using EH.
+>>>
+>>> The remaining patches are code cleanup that do not introduce any
+>>> significant functional change.
+>>>
+>>> This series was tested on qemu and on various PCs and servers. I am
+>>> CC-ing people who recently reported issues with suspend/resume.
+>>> Additional testing would be much appreciated.
+>>>
+>>> Changes from v3:
+>>>  * Corrected pathc 1 (typo in commit message and WARN_ON() removal)
+>>>  * Changed path 3 as suggested by Niklas (moved definition of
+>>>    ->slave_alloc)
+>>>  * Rebased on rc2
+>>>  * Added review tags
+>>
+>> Thanks for the update!
+>>
+>> I gave this a try on Renesas Salvator-XS with R-Car H3 ES2.0 and
+>> a SATA hard drive:
+>>   - The drive is spun up during system resume,
+>>   - Accessing the drive after the system was resumed is instantaneous.
+> 
+> Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-That doesn't sound correct to me. I think support for this API was added
-in F2FS in November 2017 (commit 4f0a03d34dd4 ("f2fs: apply write hints
-to select the type of segments for buffered write")). That was a few
-months after NVMe stream support was added (June 2017) by commit
-f5d118406247 ("nvme: add support for streams and directives").
+Thanks Geert !
 
-> Should NVMe streams be brought back? Yes? No?
+> 
+> Gr{oetje,eeting}s,
+> 
+>                         Geert
+> 
 
- From commit 561593a048d7 ("Merge tag 'for-5.18/write-streams-2022-03-18'
-of git://git.kernel.dk/linux-block"): "This removes the write streams
-support in NVMe. No vendor ever really shipped working support for this,
-and they are not interested in supporting it."
+-- 
+Damien Le Moal
+Western Digital Research
 
-I do not want to reopen the discussion about NVMe streams.
-
-Thanks,
-
-Bart.
