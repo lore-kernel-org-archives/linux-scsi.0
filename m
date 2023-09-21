@@ -2,116 +2,135 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F61E7D0A2
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 20:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D51D0E7D0AB
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 20:57:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232329AbjIUUrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 16:47:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53544 "EHLO
+        id S232244AbjIUU5f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 16:57:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232260AbjIUUrH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 16:47:07 -0400
+        with ESMTP id S232145AbjIUU5W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 16:57:22 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3D3E81FFE;
-        Thu, 21 Sep 2023 10:36:34 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72AB3C433C9;
-        Thu, 21 Sep 2023 17:30:28 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3250DB0129;
+        Thu, 21 Sep 2023 11:08:12 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B221C433C9;
+        Thu, 21 Sep 2023 18:08:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695317428;
-        bh=eddwPnBiRc58KTRuW67Y0mwiLdLjVpwMPN9Kc012Nrw=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=VZPkzXOBkkwCrPZl25Ie63srC1FMRQKxkcufqIYEeB85XeRwGdbUsEyEr0hbwD0iY
-         zSleFI7GLIGdBAzuGA2d/LseoUGALHkssv34NuiVCskS7GiHMNCgDfpSXwLbNNiuj8
-         h1CAkJqV5Nr3x99ygJCNTOwpfIcj/PlTIfewo5C7cL5Zl6W03vZ52IFr96L6lSF0++
-         3K899oqJtuXpNdytOsHZxURD5gbe+8G7+aEoc1xBtP1kCS714xsbfE47/O16FNN/ix
-         Scb0D0VWATW4VYytWBzRsuAfNkxKrdhCIoIT0JLcCs6yh4SAWz6245apdUnvelUu68
-         Jwb2YRX0Z2uSg==
-Message-ID: <2699e173-7fb5-59f5-c87c-32988c8cc90e@kernel.org>
-Date:   Thu, 21 Sep 2023 10:30:27 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.1
-Subject: Re: [PATCH v4 03/23] ata: libata-scsi: link ata port and scsi device
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>, linux-ide@vger.kernel.org
+        s=k20201202; t=1695319692;
+        bh=9R02ooJRIGAO910Ao7dxldyVJ6mm4+mDCWu7Vrp2rsI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=nYEvEci5elfemTrd1B6GJDmQ1S5lWe/jJYOBv1+Br29rcV1WGgNR+GY31ATGfWR+U
+         34LlIh3uZcVYaUNaaAZDpslRs9LnAv2vh2aKlZXyUE646oXGa2sRv3nzSoW7bOJYB4
+         WotIPUs1+HjwIEd8DNtwXwt2/v5J+0F/U8emCGFuLEkp6JebSuWkNkS1l5yMFKmv0I
+         M5m82O2EhqRj5+UJ8oFN7E9yQuilUbLniUi3JQChMaOUTDmfXjRmn4QTfpzQR7LzNG
+         Kc3md0NtEiAq0fTKbnm8I/3ZOTflIozdynoHxLHKGg4nlW4nD+sCKyJe1yG0ze6B0W
+         FFMp7ppC9j/6A==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230920135439.929695-1-dlemoal@kernel.org>
- <20230920135439.929695-4-dlemoal@kernel.org>
- <906621de-eba1-5a1c-dd26-c3030ad7b983@oracle.com>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <906621de-eba1-5a1c-dd26-c3030ad7b983@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v5 06/23] scsi: Do not attempt to rescan suspended devices
+Date:   Fri, 22 Sep 2023 03:07:41 +0900
+Message-ID: <20230921180758.955317-7-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230921180758.955317-1-dlemoal@kernel.org>
+References: <20230921180758.955317-1-dlemoal@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/09/21 7:16, John Garry wrote:
-> On 20/09/2023 14:54, Damien Le Moal wrote:
->> +int ata_scsi_dev_alloc(struct scsi_device *sdev, struct ata_port *ap)
-> 
-> nit: why not static? I could not see it used elsewhere. Indeed, I am not 
-> sure why it is not inlined in its only caller, ata_scsi_slave_alloc().
+scsi_rescan_device() takes a scsi device lock before executing a device
+handler and device driver rescan methods. Waiting for the completion of
+any command issued to the device by these methods will thus be done with
+the device lock held. As a result, there is a risk of deadlocking within
+the power management code if scsi_rescan_device() is called to handle a
+device resume with the associated scsi device not yet resumed.
 
-The initial version of this patchset used this function for libsas as well. But
-that is now gone, so I can indeed inline this.
-Note that with the STATELESS flag added, the linking of ata dev and scsi dev
-should work just fine for libsas now, so we could add it. But I am still not
-convinced that is necessary... Will have a look as a follow up.
+Avoid such situation by checking that the target scsi device is in the
+running state, that is, fully capable of executing commands, before
+proceeding with the rescan and bailout returning -EWOULDBLOCK otherwise.
+With this error return, the caller can retry rescaning the device after
+a delay.
 
-> 
-> Thanks,
-> John
-> 
->> +{
->> +	struct device_link *link;
->> +
->> +	ata_scsi_sdev_config(sdev);
->> +
->> +	/*
->> +	 * Create a link from the ata_port device to the scsi device to ensure
->> +	 * that PM does suspend/resume in the correct order: the scsi device is
->> +	 * consumer (child) and the ata port the supplier (parent).
->> +	 */
->> +	link = device_link_add(&sdev->sdev_gendev, &ap->tdev,
->> +			       DL_FLAG_STATELESS |
->> +			       DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
->> +	if (!link) {
->> +		ata_port_err(ap, "Failed to create link to scsi device %s\n",
->> +			     dev_name(&sdev->sdev_gendev));
->> +		return -ENODEV;
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->> +/**
->> + *	ata_scsi_slave_alloc - Early setup of SCSI device
->> + *	@sdev: SCSI device to examine
->> + *
->> + *	This is called from scsi_alloc_sdev() when the scsi device
->> + *	associated with an ATA device is scanned on a port.
->> + *
->> + *	LOCKING:
->> + *	Defined by SCSI layer.  We don't really care.
->> + */
->> +
->> +int ata_scsi_slave_alloc(struct scsi_device *sdev)
->> +{
->> +	return ata_scsi_dev_alloc(sdev, ata_shost_to_port(sdev->host));
->> +}
->> +EXPORT_SYMBOL_GPL(ata_scsi_slave_alloc);
-> 
+The state check is done with the device lock held and is thus safe
+against incoming suspend power management operations.
 
+Fixes: 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after device resume")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
+Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/scsi/scsi_scan.c | 18 +++++++++++++++++-
+ include/scsi/scsi_host.h |  2 +-
+ 2 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 52014b2d39e1..3db4d31a03a1 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1619,12 +1619,24 @@ int scsi_add_device(struct Scsi_Host *host, uint channel,
+ }
+ EXPORT_SYMBOL(scsi_add_device);
+ 
+-void scsi_rescan_device(struct scsi_device *sdev)
++int scsi_rescan_device(struct scsi_device *sdev)
+ {
+ 	struct device *dev = &sdev->sdev_gendev;
++	int ret = 0;
+ 
+ 	device_lock(dev);
+ 
++	/*
++	 * Bail out if the device is not running. Otherwise, the rescan may
++	 * block waiting for commands to be executed, with us holding the
++	 * device lock. This can result in a potential deadlock in the power
++	 * management core code when system resume is on-going.
++	 */
++	if (sdev->sdev_state != SDEV_RUNNING) {
++		ret = -EWOULDBLOCK;
++		goto unlock;
++	}
++
+ 	scsi_attach_vpd(sdev);
+ 	scsi_cdl_check(sdev);
+ 
+@@ -1638,7 +1650,11 @@ void scsi_rescan_device(struct scsi_device *sdev)
+ 			drv->rescan(dev);
+ 		module_put(dev->driver->owner);
+ 	}
++
++unlock:
+ 	device_unlock(dev);
++
++	return ret;
+ }
+ EXPORT_SYMBOL(scsi_rescan_device);
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 49f768d0ff37..4c2dc8150c6d 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -764,7 +764,7 @@ scsi_template_proc_dir(const struct scsi_host_template *sht);
+ #define scsi_template_proc_dir(sht) NULL
+ #endif
+ extern void scsi_scan_host(struct Scsi_Host *);
+-extern void scsi_rescan_device(struct scsi_device *);
++extern int scsi_rescan_device(struct scsi_device *sdev);
+ extern void scsi_remove_host(struct Scsi_Host *);
+ extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
+ extern int scsi_host_busy(struct Scsi_Host *shost);
 -- 
-Damien Le Moal
-Western Digital Research
+2.41.0
 
