@@ -2,94 +2,93 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7423CE7D0B7
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Sep 2023 23:05:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AB37E7D0BA
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 01:06:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229954AbjIUXFp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Sep 2023 19:05:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39012 "EHLO
+        id S229597AbjIVBGX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Sep 2023 21:06:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230198AbjIUXFb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 19:05:31 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93665561C4;
-        Thu, 21 Sep 2023 13:47:21 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEDE7C433C9;
-        Thu, 21 Sep 2023 20:47:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695329241;
-        bh=RLA8T3fc6qHtdc/his8qpk9mIDEAxM3xk0IjQR4r2PA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rsr/Lctcicc+50Eg3JXu0b8dhmZ2v3WiFXeY2wkmrCnTqXUF4B7nsPi9SuqW7wRul
-         J71+88B/rdDTyO0UzmenIyD+3u0qf56/39z2OoPLy2LZVxpos7P1sw4x+ZsjCPD1lQ
-         Oi9wT74862kw3Owh0dAp1xYUD+4S0G0QULBC/Bc82yvw4uqrhWsK/tI7wWQ7VPjEC8
-         khmD/u7EE/Fzc2tfF3nKmvx7KwOL6FCNMKwTQ4cwikFOFEDe8GintWgWS1PEIGrSOb
-         dnAd2mBBrhDizb7QLZ5SDOooRRhE27lfw506KM3naUySsxMrWD5uZ8F0beX7iHsWlf
-         o2ovLfeWYivnA==
-Date:   Thu, 21 Sep 2023 13:47:19 -0700
-From:   Jaegeuk Kim <jaegeuk@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 00/13] Pass data temperature information to zoned UFS
- devices
-Message-ID: <ZQyr1wR9rM48p65l@google.com>
-References: <20230920191442.3701673-1-bvanassche@acm.org>
- <ZQtHwsNvS1wYDKfG@casper.infradead.org>
- <1522d8ec-6b15-45d5-b6d9-517337e2c8cf@acm.org>
- <ZQv07Mg7qIXayHlf@x1-carbon>
- <8781636a-57ac-4dbd-8ec6-b49c10c81345@acm.org>
- <ZQyZEqXJymyFWlKV@casper.infradead.org>
- <4cacae64-6a11-41ab-9bec-f8915da00106@acm.org>
- <ZQydeSIoHHJDQjHW@casper.infradead.org>
+        with ESMTP id S229532AbjIVBGW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Sep 2023 21:06:22 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C831A102
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2023 18:06:16 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LIsM1D011449;
+        Fri, 22 Sep 2023 01:06:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2023-03-30;
+ bh=s3KgDwHMli+dUflNPh7Rdv8VVA8qPCrqJhxTI0w7iUI=;
+ b=bxTM9lNh92PCCtTjKCXEG04bC/u8Aiangol4Jvs7KpYt1I2RJRKzcEqARf1Z3jRxYm/O
+ t91f+V685E89Gb5ENM/0PUd9C51J78lbwUg7/w1Wg3qiZiTbzu6344qtkiBwv/H9Kuxb
+ e3khqvDqFWGx3QC7cP6eMOPC7y7+pEifa9tp2BV5i1WCzGgdqcZ0ag55rPJ1iDmXox5B
+ 8Tf4TKD4LKnAv8oMo/TLAXeclYl3IV6BShy+9za12t5IZadP4S8IiUZlt3c4xhbp45/m
+ DdLBuRN6x+KrGQ1JgKN04LKUubf3Ln68DEa1MAcNyBeFAky8nbhE40k5KdVTrT/MpOyo fA== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3t8tsvrkaf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Sep 2023 01:06:08 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 38LMdUv9040557;
+        Fri, 22 Sep 2023 01:06:07 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3t8u19bn3c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Sep 2023 01:06:07 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38M164st032168;
+        Fri, 22 Sep 2023 01:06:06 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3t8u19bn0m-3;
+        Fri, 22 Sep 2023 01:06:06 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+        Damien Le Moal <dlemoal@kernel.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 0/3] Minor cleanups
+Date:   Thu, 21 Sep 2023 21:05:53 -0400
+Message-Id: <169534443608.456601.1123273812993742673.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230912230551.454357-1-dlemoal@kernel.org>
+References: <20230912230551.454357-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZQydeSIoHHJDQjHW@casper.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-22_01,2023-09-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 spamscore=0
+ suspectscore=0 mlxlogscore=524 phishscore=0 mlxscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
+ definitions=main-2309220008
+X-Proofpoint-GUID: sQuqJFvmt9IpKp4lLjNcr3pNoH0l7fMr
+X-Proofpoint-ORIG-GUID: sQuqJFvmt9IpKp4lLjNcr3pNoH0l7fMr
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/21, Matthew Wilcox wrote:
-> On Thu, Sep 21, 2023 at 12:39:00PM -0700, Bart Van Assche wrote:
-> > On 9/21/23 12:27, Matthew Wilcox wrote:
-> > > On Thu, Sep 21, 2023 at 07:27:08AM -0700, Bart Van Assche wrote:
-> > > > On 9/21/23 00:46, Niklas Cassel wrote:
-> > > > > Should NVMe streams be brought back? Yes? No?
-> > > > 
-> > > > From commit 561593a048d7 ("Merge tag 'for-5.18/write-streams-2022-03-18'
-> > > > of git://git.kernel.dk/linux-block"): "This removes the write streams
-> > > > support in NVMe. No vendor ever really shipped working support for this,
-> > > > and they are not interested in supporting it."
-> > > 
-> > > It sounds like UFS is at the same stage that NVMe got to -- standard
-> > > exists, no vendor has committed to actually shipping it.  Isn't bringing
-> > > it back a little premature?
-> > 
-> > Hi Matthew,
-> > 
-> > That's a misunderstanding. UFS vendors support interpreting the SCSI GROUP
-> > NUMBER as a data temperature since many years, probably since more than ten
-> > years. Additionally, for multiple UFS vendors having the data temperature
-> > available is important for achieving good performance. This message shows
-> > how UFS vendors were using that information before write hint support was
-> > removed: https://lore.kernel.org/linux-block/PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com/
-> 
-> If vendor support already exists, then why did you dodge the question
-> asking for quantified data that I asked earlier?  And can we have that
-> data now?
+On Wed, 13 Sep 2023 08:05:48 +0900, Damien Le Moal wrote:
 
-I'm in doubt this patch-set really requires the quantified data which may be
-mostly confidential to all the companies, also given the revert reason was no
-user, IIUC. OTOH, I'm not sure whether you're famailiar with FTL, but, when
-we consider the entire stack ranging from f2fs to FTL which manages NAND blocks,
-I do see a clear benefit to give the temperature hints for FTL to align therein
-garbage collection unit with one in f2fs, which is the key idea on Zoned UFS
-in mobile world, I believe. Otherwise, it can show non-deterministic longer
-write latencies due to internal GCs, increase WAI feeding to shorter lifetime.
+> 3 patches to cleanup libsas functions declarations. No functional
+> changes.
+> 
+> Changes from v2:
+>  * Added argument name to sas_discover_event() in patch 1
+>  * Removed repeated word "used" from commit message of patch 3
+>  * Added Johannes' review tag
+> 
+> [...]
+
+Applied to 6.7/scsi-queue, thanks!
+
+[1/3] scsi: libsas: Move local functions declarations to sas_internal.h
+      https://git.kernel.org/mkp/scsi/c/d10b11dcb08f
+[2/3] scsi: libsas: Declare sas_set_phy_speed() static
+      https://git.kernel.org/mkp/scsi/c/9b52c1c6cafd
+[3/3] scsi: libsas: Declare sas_discover_end_dev() static
+      https://git.kernel.org/mkp/scsi/c/1345a7d909a3
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
