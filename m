@@ -2,99 +2,72 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65EA1CD4F27
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 07:48:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8797CCD4F2B
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 08:10:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231663AbjIVHsI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 03:48:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40420 "EHLO
+        id S232988AbjIVIKR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 04:10:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229647AbjIVHsH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 03:48:07 -0400
-Received: from zju.edu.cn (mail.zju.edu.cn [61.164.42.155])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E52D4C2;
-        Fri, 22 Sep 2023 00:47:59 -0700 (PDT)
-Received: from localhost.localdomain (unknown [10.181.203.255])
-        by mail-app3 (Coremail) with SMTP id cC_KCgDHz8OfRg1lmyKYAA--.16832S4;
-        Fri, 22 Sep 2023 15:47:47 +0800 (CST)
-From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
-To:     dinghao.liu@zju.edu.cn
-Cc:     linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        James Bottomley <James.Bottomley@suse.de>,
-        Swen Schillig <swen@vnet.ibm.com>,
-        Christof Schmitt <christof.schmitt@de.ibm.com>,
-        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] [v2] scsi: zfcp: Fix a double put in zfcp_port_enqueue
-Date:   Fri, 22 Sep 2023 15:46:31 +0800
-Message-Id: <20230922074631.9408-1-dinghao.liu@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cC_KCgDHz8OfRg1lmyKYAA--.16832S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7WF1rCF4UAry3Kw43Gw1xZrb_yoW8GF4kpa
-        1Fg3Z8ArWvvw4vvr4UAFyUXFZ5ua1Y9rWFva1jk34FkF95KF1IqrW7tFySyF4UAw4kW39x
-        JFWUWa1DAayUAw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvm1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
-        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
-        IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_GcWl84ACjcxK6I8E
-        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
-        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
-        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
-        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1l42xK82IY
-        c2Ij64vIr41l42xK82IY6x8ErcxFaVAv8VW8uw4UJr1UMxC20s026xCaFVCjc4AY6r1j6r
-        4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF
-        67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2I
-        x0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2
-        z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnU
-        UI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgAGBmUMUaAikwAEsv
+        with ESMTP id S232469AbjIVIJV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 04:09:21 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F27810E5
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2023 01:09:11 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-69101022969so1720139b3a.3
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2023 01:09:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=areca-com-tw.20230601.gappssmtp.com; s=20230601; t=1695370150; x=1695974950; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:to:from:subject
+         :message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=2R1uFPZQh5rHaFChaIdksfqptVdy9O1APe6DAZC5D0I=;
+        b=FMIJaogkkZtO2QxFoznDTYrHqdpcF/zgrndaId/L96DRM7Z79v+iQBbXbCw0NVoEyr
+         IWpij/rBZqhImADfeQdS7YX9n1TlHo72R7fn4IdgHoUz5uKkiJGrqvDG2d2glpZLf65w
+         +eR9NgKhM82VaAmx8s1KOB1PdAM+0V8tqghKsgKqL+K60ODb2txOwWobfznyQTkeipLw
+         gKKr4ns39v55htCgtEUPP5JL0QyvOuwmxsuJw2PdcXEJN+bCkpQTtaGseLIwL2c7hUwo
+         k+WPGO0XMGV2ADDLL49FU9xw3TbKrc3r4GviZwlZIjJXOTMo+TlRvanlebyF1vrSmJm6
+         vIrQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695370150; x=1695974950;
+        h=content-transfer-encoding:mime-version:date:to:from:subject
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=2R1uFPZQh5rHaFChaIdksfqptVdy9O1APe6DAZC5D0I=;
+        b=B/EimJtj5wQCH9viX6U9vBB2WtQK4Z3ZD3scu3pXUqajbRubnETZBSUTzL86A6zrWI
+         d1o8Ea561yS/TmBWmr2C4jfCQcQ8VBshURQUHM+ZBzfV8sjJQmpJCpLYKdp7H5WWZ8pk
+         JTiRojTrZc8rAb1vq+6A/RWT9AQkWi+mOQjp3cdvzHkLr8fkRL6NSdAlbeQjHUVlwYbH
+         YZNl2s7a7SuTVNZCN/UWAJchevvbaxon73AYDx4rXDBXp7dm9wIAqd6D9E2jY4c3tfAm
+         1tomF65ixMnBUWOPtUcidTyE1GTkfyiakdIKNJfGPWtna5ygbGhKQGET0EMS3ftVWp2A
+         G5IA==
+X-Gm-Message-State: AOJu0Yzz7xnJDiOZeTiyaA/4tJ1aPc4ugVc13pd+LW1KAtlnBo18pWSh
+        gQsbvq/+hTQ+GbuTin1qxPkWTA==
+X-Google-Smtp-Source: AGHT+IGog4fauLibzha4KpXKqEK5AYSa6a1Ny+SSsUJzl0+tJeVaaAPf3XdtD7Qo1Ghy/9d6mvjLDA==
+X-Received: by 2002:a05:6a20:8410:b0:12e:5f07:7ede with SMTP id c16-20020a056a20841000b0012e5f077edemr10419235pzd.41.1695370150487;
+        Fri, 22 Sep 2023 01:09:10 -0700 (PDT)
+Received: from centos78 (60-248-88-209.hinet-ip.hinet.net. [60.248.88.209])
+        by smtp.googlemail.com with ESMTPSA id c24-20020a170902d91800b001bf846dd2d0sm2852442plz.13.2023.09.22.01.09.08
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 22 Sep 2023 01:09:09 -0700 (PDT)
+Message-ID: <5445094045757819ea650b138a8e03d833e2cbfc.camel@areca.com.tw>
+Subject: [PATCH V2 0/3] scsi: arcmsr: support Areca ARC-1688 Raid controller
+From:   ching Huang <ching2048@areca.com.tw>
+To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
+        linux-scsi@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date:   Fri, 22 Sep 2023 16:09:09 +0800
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When device_register() fails, zfcp_port_release() will be called
-after put_device(). As a result, zfcp_ccw_adapter_put() will be
-called twice: one in zfcp_port_release() and one in the error path
-after device_register(). So the reference on the adapter object is
-doubly put, which may lead to a premature free. Fix this by adjusting
-the error tag after device_register().
+The following patches are made over mkp's 6.7/scsi-staging
 
-Fixes: f3450c7b9172 ("[SCSI] zfcp: Replace local reference counting with common kref")
-Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+This series add supporting new Raid and new PCI device ID controllers
+- support new Raid controller ARC-1688
+- support new PCI device ID 1883 and 1886
+- updated driver's version to v1.51.00.14-20230915
 ---
-
-Changelog:
-
-v2: -Improve the patch description.
-    -Add a new label 'err_register' to unify code style.
----
- drivers/s390/scsi/zfcp_aux.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
-index df782646e856..ad0ef9546501 100644
---- a/drivers/s390/scsi/zfcp_aux.c
-+++ b/drivers/s390/scsi/zfcp_aux.c
-@@ -552,7 +552,7 @@ struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *adapter, u64 wwpn,
- 
- 	if (device_register(&port->dev)) {
- 		put_device(&port->dev);
--		goto err_out;
-+		goto err_register;
- 	}
- 
- 	write_lock_irq(&adapter->port_list_lock);
-@@ -565,5 +565,6 @@ struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *adapter, u64 wwpn,
- 
- err_out:
- 	zfcp_ccw_adapter_put(adapter);
-+err_register:
- 	return ERR_PTR(retval);
- }
--- 
-2.17.1
 
