@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22F21CD4F3B
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 09:29:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8106FCD4F42
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 09:30:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233168AbjIVJaD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 05:30:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44516 "EHLO
+        id S233224AbjIVJaE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 05:30:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233228AbjIVJ3s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 05:29:48 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43B50CC6;
-        Fri, 22 Sep 2023 02:29:34 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RsRgw3H3lztSwS;
-        Fri, 22 Sep 2023 17:25:16 +0800 (CST)
+        with ESMTP id S233238AbjIVJ3t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 05:29:49 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EF38CD8;
+        Fri, 22 Sep 2023 02:29:35 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RsRhV6cCRzGpql;
+        Fri, 22 Sep 2023 17:25:46 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Fri, 22 Sep 2023 17:29:32 +0800
+ 15.1.2507.31; Fri, 22 Sep 2023 17:29:33 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -28,9 +28,9 @@ To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
 CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v5 01/10] scsi: scsi_debug: create scsi_debug directory in the debugfs filesystem
-Date:   Fri, 22 Sep 2023 17:28:57 +0800
-Message-ID: <20230922092906.2645265-2-haowenchao2@huawei.com>
+Subject: [PATCH v5 03/10] scsi: scsi_debug: Define grammar to remove added error injection
+Date:   Fri, 22 Sep 2023 17:28:59 +0800
+Message-ID: <20230922092906.2645265-4-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20230922092906.2645265-1-haowenchao2@huawei.com>
 References: <20230922092906.2645265-1-haowenchao2@huawei.com>
@@ -45,53 +45,72 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Create directory scsi_debug in the root of the debugfs filesystem.
-Prepare to add interface for manage error injection.
+The grammar to remove error injection is a line with fixed 3 columns
+separated by spaces.
+
+First column is fixed to "-". It tells this is a removal operation.
+Second column is the error code to match.
+Third column is the scsi command to match.
+
+For example the following command would remove timeout injection of
+inquiry command.
+    echo "- 0 0x12" > /sys/kernel/debug/scsi_debug/0:0:0:1/error
 
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 ---
- drivers/scsi/scsi_debug.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/scsi_debug.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 9c0af50501f9..35c336271b13 100644
+index ca1e2f4878bc..6235e828c430 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -41,6 +41,7 @@
- #include <linux/random.h>
- #include <linux/xarray.h>
- #include <linux/prefetch.h>
-+#include <linux/debugfs.h>
- 
- #include <net/checksum.h>
- 
-@@ -862,6 +863,8 @@ static const int device_qfull_result =
- 
- static const int condition_met_result = SAM_STAT_CONDITION_MET;
- 
-+static struct dentry *sdebug_debugfs_root;
-+
- 
- /* Only do the extra work involved in logical block provisioning if one or
-  * more of the lbpu, lbpws or lbpws10 parameters are given and we are doing
-@@ -7011,6 +7014,8 @@ static int __init scsi_debug_init(void)
- 		goto driver_unreg;
- 	}
- 
-+	sdebug_debugfs_root = debugfs_create_dir("scsi_debug", NULL);
-+
- 	for (k = 0; k < hosts_to_add; k++) {
- 		if (want_store && k == 0) {
- 			ret = sdebug_add_host_helper(idx);
-@@ -7057,6 +7062,7 @@ static void __exit scsi_debug_exit(void)
- 
- 	sdebug_erase_all_stores(false);
- 	xa_destroy(per_store_ap);
-+	debugfs_remove(sdebug_debugfs_root);
+@@ -930,6 +930,34 @@ static void sdebug_err_add(struct scsi_device *sdev, struct sdebug_err_inject *n
+ 	spin_unlock(&devip->list_lock);
  }
  
- device_initcall(scsi_debug_init);
++static int sdebug_err_remove(struct scsi_device *sdev, const char *buf, size_t count)
++{
++	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdev->hostdata;
++	struct sdebug_err_inject *err;
++	int type;
++	unsigned char cmd;
++
++	if (sscanf(buf, "- %d %hhx", &type, &cmd) != 2) {
++		kfree(buf);
++		return -EINVAL;
++	}
++
++	spin_lock(&devip->list_lock);
++	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
++		if (err->type == type && err->cmd == cmd) {
++			list_del_rcu(&err->list);
++			call_rcu(&err->rcu, sdebug_err_free);
++			spin_unlock(&devip->list_lock);
++			kfree(buf);
++			return count;
++		}
++	}
++	spin_unlock(&devip->list_lock);
++
++	kfree(buf);
++	return -EINVAL;
++}
++
+ static int sdebug_error_show(struct seq_file *m, void *p)
+ {
+ 	struct scsi_device *sdev = (struct scsi_device *)m->private;
+@@ -987,6 +1015,9 @@ static ssize_t sdebug_error_write(struct file *file, const char __user *ubuf,
+ 		return -EFAULT;
+ 	}
+ 
++	if (buf[0] == '-')
++		return sdebug_err_remove(sdev, buf, count);
++
+ 	if (sscanf(buf, "%d", &inject_type) != 1) {
+ 		kfree(buf);
+ 		return -EINVAL;
 -- 
 2.32.0
 
