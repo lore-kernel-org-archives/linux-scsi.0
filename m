@@ -2,96 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 561D6CD4F42
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 09:30:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56573CD4F3B
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 09:37:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233099AbjIVJaz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 05:30:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44550 "EHLO
+        id S233095AbjIVJhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 05:37:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233080AbjIVJ34 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 05:29:56 -0400
+        with ESMTP id S231503AbjIVJhF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 05:37:05 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64A51CF9;
-        Fri, 22 Sep 2023 02:29:41 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RsRkV0DkDzrSTM;
-        Fri, 22 Sep 2023 17:27:30 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0CF4199;
+        Fri, 22 Sep 2023 02:36:59 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RsRtx0WslzrRtM;
+        Fri, 22 Sep 2023 17:34:49 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Fri, 22 Sep 2023 17:29:38 +0800
+ 15.1.2507.31; Fri, 22 Sep 2023 17:36:57 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
         <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
 CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v5 10/10] scsi: scsi_debug: Add param to control sdev's allow_restart
-Date:   Fri, 22 Sep 2023 17:29:06 +0800
-Message-ID: <20230922092906.2645265-11-haowenchao2@huawei.com>
+Subject: [PATCH 0/2] Fix two issue between removing device and error handle
+Date:   Fri, 22 Sep 2023 17:36:34 +0800
+Message-ID: <20230922093636.2645961-1-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20230922092906.2645265-1-haowenchao2@huawei.com>
-References: <20230922092906.2645265-1-haowenchao2@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
  kwepemm000012.china.huawei.com (7.193.23.142)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add new module param "allow_restart" to control if setup
-scsi_device's allow_restart flag. This is used to test scsi
-command finished with sense_key 0x6, asc 0x4 and ascq 0x2
+I am testing SCSI error handle with my previous scsi_debug error
+injection patches, and found two issue when removing device and
+error handler happened together.
 
-Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
----
- drivers/scsi/scsi_debug.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+The first patch fix IO hang because scsi_eh_flush_done_q() would
+retry command if the device is in SDEV_CANCEL state;
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index ab4a6f7de1ef..52a9ddea57d3 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -843,6 +843,7 @@ static bool have_dif_prot;
- static bool write_since_sync;
- static bool sdebug_statistics = DEF_STATISTICS;
- static bool sdebug_wp;
-+static bool sdebug_allow_restart;
- /* Following enum: 0: no zbc, def; 1: host aware; 2: host managed */
- static enum blk_zoned_model sdeb_zbc_model = BLK_ZONED_NONE;
- static char *sdeb_zbc_model_s;
-@@ -5469,6 +5470,9 @@ static int scsi_debug_slave_configure(struct scsi_device *sdp)
- 		sdp->no_uld_attach = 1;
- 	config_cdb_len(sdp);
- 
-+	if (sdebug_allow_restart)
-+		sdp->allow_restart = 1;
-+
- 	devip->debugfs_entry = debugfs_create_dir(dev_name(&sdp->sdev_dev),
- 				sdebug_debugfs_root);
- 	debugfs_create_file("error", 0600, devip->debugfs_entry, sdp,
-@@ -6186,6 +6190,7 @@ module_param_named(zone_cap_mb, sdeb_zbc_zone_cap_mb, int, S_IRUGO);
- module_param_named(zone_max_open, sdeb_zbc_max_open, int, S_IRUGO);
- module_param_named(zone_nr_conv, sdeb_zbc_nr_conv, int, S_IRUGO);
- module_param_named(zone_size_mb, sdeb_zbc_zone_size_mb, int, S_IRUGO);
-+module_param_named(allow_restart, sdebug_allow_restart, bool, S_IRUGO | S_IWUSR);
- 
- MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
- MODULE_DESCRIPTION("SCSI debug adapter driver");
-@@ -6258,6 +6263,7 @@ MODULE_PARM_DESC(zone_cap_mb, "Zone capacity in MiB (def=zone size)");
- MODULE_PARM_DESC(zone_max_open, "Maximum number of open zones; [0] for no limit (def=auto)");
- MODULE_PARM_DESC(zone_nr_conv, "Number of conventional zones (def=1)");
- MODULE_PARM_DESC(zone_size_mb, "Zone size in MiB (def=auto)");
-+MODULE_PARM_DESC(allow_restart, "Set scsi_device's allow_restart flag(def=0)");
- 
- #define SDEBUG_INFO_LEN 256
- static char sdebug_info[SDEBUG_INFO_LEN];
+The second patch fix the issue which device's eh_device_reset_handler
+not called in recovery when device is in removing progress.
+
+Wenchao Hao (2):
+  scsi: core: scsi_device_online() return false if state is SDEV_CANCEL
+  scsi: scsi_error: Fix device reset is not triggered
+
+ drivers/infiniband/ulp/srp/ib_srp.c         |  2 +-
+ drivers/message/fusion/mptctl.c             |  6 ++--
+ drivers/message/fusion/mptsas.c             |  8 ++---
+ drivers/message/fusion/mptspi.c             |  6 ++--
+ drivers/s390/scsi/zfcp_fsf.c                |  4 +--
+ drivers/s390/scsi/zfcp_scsi.c               |  2 +-
+ drivers/scsi/arm/acornscsi.c                |  2 +-
+ drivers/scsi/arm/fas216.c                   |  4 +--
+ drivers/scsi/bfa/bfad_im.c                  |  4 +--
+ drivers/scsi/ibmvscsi/ibmvfc.c              |  2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c               |  4 +--
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c          |  4 +--
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        | 16 ++++-----
+ drivers/scsi/myrb.c                         |  2 +-
+ drivers/scsi/myrs.c                         |  2 +-
+ drivers/scsi/scsi.c                         | 37 ++++++++++++---------
+ drivers/scsi/scsi_debug.c                   |  2 +-
+ drivers/scsi/scsi_error.c                   | 12 +++----
+ drivers/scsi/scsi_lib.c                     |  6 ++--
+ drivers/scsi/scsi_scan.c                    |  2 +-
+ drivers/scsi/scsi_transport_srp.c           |  2 +-
+ drivers/scsi/ses.c                          |  2 +-
+ drivers/scsi/storvsc_drv.c                  |  2 +-
+ drivers/scsi/virtio_scsi.c                  |  2 +-
+ drivers/ufs/core/ufshcd.c                   |  4 +--
+ include/scsi/scsi_device.h                  | 15 ++++++---
+ 28 files changed, 85 insertions(+), 73 deletions(-)
+
 -- 
 2.32.0
 
