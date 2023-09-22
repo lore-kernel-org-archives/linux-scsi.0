@@ -2,132 +2,153 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4BF8E6FE58
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 15:44:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9A2ECD4840
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 16:06:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232572AbjIVPoh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 11:44:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39722 "EHLO
+        id S230443AbjIVQGQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 12:06:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232461AbjIVPog (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 11:44:36 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A591199;
-        Fri, 22 Sep 2023 08:44:29 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.86.50) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 22 Sep
- 2023 18:44:25 +0300
-Subject: Re: [PATCH v5 16/23] ata: libata-core: Remove
- ata_port_suspend_async()
-To:     Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230921180758.955317-1-dlemoal@kernel.org>
- <20230921180758.955317-17-dlemoal@kernel.org>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <b9cc6efe-6e91-1ce1-33dd-21bff181c9d0@omp.ru>
-Date:   Fri, 22 Sep 2023 18:44:24 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229572AbjIVQGO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 12:06:14 -0400
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED8D6100
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2023 09:06:08 -0700 (PDT)
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1c47309a8ccso27049125ad.1
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2023 09:06:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695398768; x=1696003568;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=sc770OlaE49GZgWY9dRnFqPa0lUiVYKCPXxKFeWKJIU=;
+        b=kbpaqo4YXvw3kzG9mGYxmIMR8jNdbiQCAYlbvw6We6bA1GxFubqyCilPYFufhgfCE/
+         UHQdJtuGk4kARgET4kGNpQKcfcmXbopc/fVTlnufwX2DnQJMSbezIqHQKvGnwtHhuMoW
+         4W/eUz28w+CsZ2Jpk+dPz6/Zf1LFdQwj5E6LVS4tAdu3ZSNTPwgaZYxM5N8Mc97bmOtY
+         E/d291CKSZAtd7VMIC+bWH2enDXda21SgkZqrpweTn5RlYihrZn1fd+BoR1GckmM+Ta4
+         bJJeqxAavGZ4FZKOtWbOcjsfk1im99t4a1lptJ9X+z4Eeytf9nbHjuy+8yOQnrzLnUKe
+         kDkA==
+X-Gm-Message-State: AOJu0YyXGljhmB5FALb6KA1FwMQHrUQNP0TiaBD+El0NXTbiPi0GIlxl
+        95qEU8d1QJaZasgTLERoYyM=
+X-Google-Smtp-Source: AGHT+IErCCNZlUzb+d9FfxnEF0XfSXKa1nmUOyrJsc00193Xh0fis9J535wTTRwmZlisTvJzTHWT+g==
+X-Received: by 2002:a17:902:ced2:b0:1bc:2fe1:1821 with SMTP id d18-20020a170902ced200b001bc2fe11821mr4638920plg.17.1695398768094;
+        Fri, 22 Sep 2023 09:06:08 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:70e9:c86f:4352:fcc? ([2620:15c:211:201:70e9:c86f:4352:fcc])
+        by smtp.gmail.com with ESMTPSA id j5-20020a170902c3c500b001b7fd27144dsm3678150plj.40.2023.09.22.09.06.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 Sep 2023 09:06:07 -0700 (PDT)
+Message-ID: <10bf17cf-8a92-469b-bc5c-1f0dba0ed5ed@acm.org>
+Date:   Fri, 22 Sep 2023 09:06:05 -0700
 MIME-Version: 1.0
-In-Reply-To: <20230921180758.955317-17-dlemoal@kernel.org>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+From:   Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v4] ufs: core: wlun send SSU timeout recovery
+To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com,
+        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
+        naomi.chu@mediatek.com
+References: <20230922090925.16339-1-peter.wang@mediatek.com>
 Content-Language: en-US
+In-Reply-To: <20230922090925.16339-1-peter.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.86.50]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 09/22/2023 15:20:17
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 180066 [Sep 22 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 534 534 808c2ea49f7195c68d40844e073217da4fa0d1e3
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.50 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.50 in (user) dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;127.0.0.199:7.1.2;31.173.86.50:7.1.2
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: {rdns complete}
-X-KSE-AntiSpam-Info: {fromrtbl complete}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.50
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 09/22/2023 15:24:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 9/22/2023 11:25:00 AM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/21/23 9:07 PM, Damien Le Moal wrote:
+On 9/22/23 02:09, peter.wang@mediatek.com wrote:
+> When runtime pm send SSU times out, the SCSI core invokes
+> eh_host_reset_handler, which hooks function ufshcd_eh_host_reset_handler
+> schedule eh_work and stuck at wait flush_work(&hba->eh_work).
+> However, ufshcd_err_handler hangs in wait rpm resume.
+> Do link recovery only in this case.
+> Below is IO hang stack dump in kernel-6.1
 
-> ata_port_suspend_async() is only called by ata_sas_port_suspend().
-> Modify ata_port_suspend() with an additional bool argument indicating an
-> asynchronous or synchronous suspend to allow removing that helper
-> function. With this change, the variable ata_port_resume_ehi can also be
-> removed and its value (ATA_EHI_XXX flags passed directly to
-> ata_port_request_pm().
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
-> Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
->  drivers/ata/libata-core.c | 46 +++++++++++++++------------------------
->  1 file changed, 17 insertions(+), 29 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 6b38ebaad019..b3615862ea30 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-[...]
-> @@ -5187,20 +5177,18 @@ static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg)
->  	 */
->  	cancel_delayed_work_sync(&ap->scsi_rescan_task);
->  
-> -	ata_port_request_pm(ap, mesg, 0, ata_port_suspend_ehi, false);
-> -}
-> -
-> -static void ata_port_suspend_async(struct ata_port *ap, pm_message_t mesg)
-> -{
->  	/*
-> -	 * We are about to suspend the port, so we do not care about
-> -	 * scsi_rescan_device() calls scheduled by previous resume operations.
-> -	 * The next resume will schedule the rescan again. So cancel any rescan
-> -	 * that is not done yet.
-> +	 * On some hardware, device fails to respond after spun down for
-> +	 * suspend. As the device wil not t be used until being resumed, we
+What does kernel-6.1 mean? Has commit 7029e2151a7c ("scsi: ufs: Fix a
+deadlock between PM and the SCSI error handler") been backported to
+that kernel?
 
-   Will not be used?
-   There were no typos in the original comment... :-)
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index c2df07545f96..7608d75bb4fe 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -7713,9 +7713,29 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
+>   	int err = SUCCESS;
+>   	unsigned long flags;
+>   	struct ufs_hba *hba;
+> +	struct device *dev;
+>   
+>   	hba = shost_priv(cmd->device->host);
+>   
+> +	/*
+> +	 * If runtime pm send SSU and got timeout, scsi_error_handler
+> +	 * stuck at this function to wait flush_work(&hba->eh_work).
+> +	 * And ufshcd_err_handler(eh_work) stuck at wait runtime pm active.
+> +	 * Do ufshcd_link_recovery instead shedule eh_work can prevent
+> +	 * dead lock happen.
+> +	 */
+> +	dev = &hba->ufs_device_wlun->sdev_gendev;
+> +	if ((dev->power.runtime_status == RPM_RESUMING) ||
+> +		(dev->power.runtime_status == RPM_SUSPENDING)) {
+> +		err = ufshcd_link_recovery(hba);
+> +		if (err) {
+> +			dev_err(hba->dev, "WL Device PM: status:%d, err:%d\n",
+> +				dev->power.runtime_status,
+> +				dev->power.runtime_error);
+> +		}
+> +		return err;
+> +	}
+> +
+>   	spin_lock_irqsave(hba->host->host_lock, flags);
+>   	hba->force_reset = true;
+>   	ufshcd_schedule_eh_work(hba);
 
-[...]
+I think this change is racy because the runtime power management status
+may change after the above checks have been performed and before
+ufshcd_err_handling_prepare() is called. If commit 7029e2151a7c is
+included in your kernel, does applying the untested patch below help?
 
-MBR, Sergey
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d45a7dd80ab8..656dabea678e 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -123,8 +123,7 @@ static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd, unsigned long msecs)
+  	}
+
+  	blk_mq_requeue_request(rq, false);
+-	if (!scsi_host_in_recovery(cmd->device->host))
+-		blk_mq_delay_kick_requeue_list(rq->q, msecs);
++	blk_mq_delay_kick_requeue_list(rq->q, msecs);
+  }
+
+  /**
+@@ -163,8 +162,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+  	 */
+  	cmd->result = 0;
+
+-	blk_mq_requeue_request(scsi_cmd_to_rq(cmd),
+-			       !scsi_host_in_recovery(cmd->device->host));
++	blk_mq_requeue_request(scsi_cmd_to_rq(cmd), true);
+  }
+
+  /**
+@@ -495,9 +493,6 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+
+  static void scsi_run_queue_async(struct scsi_device *sdev)
+  {
+-	if (scsi_host_in_recovery(sdev->host))
+-		return;
+-
+  	if (scsi_target(sdev)->single_lun ||
+  	    !list_empty(&sdev->host->starved_list)) {
+  		kblockd_schedule_work(&sdev->requeue_work);
+
+Thanks,
+
+Bart.
