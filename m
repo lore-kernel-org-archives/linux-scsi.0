@@ -2,59 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21622CD4F2B
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 08:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 226A7CD4F33
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 08:55:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232389AbjIVIvF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 04:51:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44228 "EHLO
+        id S232598AbjIVIzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 04:55:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230126AbjIVIvE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 04:51:04 -0400
-Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10A5E99
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2023 01:50:58 -0700 (PDT)
-Received: by mail-ot1-x32d.google.com with SMTP id 46e09a7af769-6c4b9e09521so321120a34.3
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2023 01:50:58 -0700 (PDT)
+        with ESMTP id S232277AbjIVIzL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 04:55:11 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8EE0CF
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2023 01:55:05 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id 98e67ed59e1d1-27702912521so1019736a91.1
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2023 01:55:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=areca-com-tw.20230601.gappssmtp.com; s=20230601; t=1695372657; x=1695977457; darn=vger.kernel.org;
+        d=areca-com-tw.20230601.gappssmtp.com; s=20230601; t=1695372905; x=1695977705; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:date:to:from:subject
          :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=4PHuq9az2BT1J4pWkEun/rtdrnMbw7XWd/k1yzA5bKs=;
-        b=eHwJ2MBXQIBf2KrzQ/K5Ra8l2VfkTb2t066zVHkVOiYb06r6CaiBMJrHJ2tcCAIHJN
-         0iYeiL7UDA/khPsHH8PtayKi/vIj+E0gz+HUHaA8TIpEoMqSES3QTgjjKYxX0gX3qQg5
-         tJTaMGdquSo1rIaibYG5cMg/udSFbNkBnzVzxCmg3ZeE2WhDHoKXTWfo9SigSSTwI4T7
-         CqE/t7AHAN6vvYIcL9I6z5fU1gvvh83Q2NaSUJ/mhwqQzhBpNN9/83brGatmqnyt0JUj
-         AJtYs/nNPKnAD9i/tJ+3GNsevCRuF+NBeZsF6P5TtxGG1dHgktIE36Q5yP4mUDRP284e
-         C9LQ==
+        bh=c0lvfh2z34kklQghRPHMgySN4X7ueSLfP71qd/q8Psw=;
+        b=w+C+kntTlRV4SjhIRAiDw/IFA8Ua/rLpwYwF2wXCbpK9yY2IF6cAUffnZBOAazDAAy
+         SJ/whFZEfZa0v46N9AmStPx8E70H0QADo99QjEryzBdykEkrW9WJ7GklOaB+gTUluihf
+         VJatWxfO9d0PXtZF6zHwxV7mFpdr5EbLUG+LOb2evKaleIPxlwGpQkyRyDubO5qvHg95
+         PHkZAoqTqeoKyo81Unn8yh/2N0sBfONP7F0LieXvSCWxM47jqdD6PwQ/jPxdVA26EEMy
+         L+P8PaPM4JRulEIEw95z/WoTVho9KgxmAuYa2bTj6Caho05oSkLj/OAT5ey2AO/PJIre
+         zr0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695372657; x=1695977457;
+        d=1e100.net; s=20230601; t=1695372905; x=1695977705;
         h=content-transfer-encoding:mime-version:date:to:from:subject
          :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=4PHuq9az2BT1J4pWkEun/rtdrnMbw7XWd/k1yzA5bKs=;
-        b=KpR4cNdntF1xSMdoiQadAToeBaDKtDivnA7ny6IuYnjPEe5XGi6gkRPL7+6xde4a3C
-         umZB0N5ebByuY+xmj+ITy9aGQMiuiSWke63jG9/OoeVKykIsAev9EzmbfYoQLrppcQLE
-         tZpfa8erOB5St+iqMoCDlqHqt0hBR2auObdsz553Y++klNQ/bbKY51oNSy6ayN781qvF
-         V1KXjq4OVl57KKmJkqJuM05DT2gTD3rdGxiLuI/XPiDjqeOyRTXU4dzNsmqcgdsH+vl+
-         h5fmJtpOE1JZAhibm6ZIoYHrqPrvplRNhFYRYL0rCaxGhk/WR1vNHriCyAXi6lI6NvOi
-         LuLQ==
-X-Gm-Message-State: AOJu0YxFMPvhPvZFW0z0MHk+mOLoAgWQPxPnfgCFXj+N4sYvnsQPSljk
-        qnkSsT9I1hh46mExkekkcoUuPAm5wV96C9KL0QBdWA==
-X-Google-Smtp-Source: AGHT+IHwIvv+JTwBRRW71Qa7xbgvdkU1c1eKrLfp2+xgZ7FYuatIo23pLIvxx+ja3FpUlneLYyfkBQ==
-X-Received: by 2002:a05:6830:45a5:b0:6c4:cf2e:59a3 with SMTP id az37-20020a05683045a500b006c4cf2e59a3mr134786otb.8.1695372657347;
-        Fri, 22 Sep 2023 01:50:57 -0700 (PDT)
+        bh=c0lvfh2z34kklQghRPHMgySN4X7ueSLfP71qd/q8Psw=;
+        b=NbFFDmJChANV4CKeEMoLZ4JbDSq8uZc17pvIQes6O0N/SMmVmmzVgbo8lY9UEQtI1d
+         7LfiGDif9llYFe6Hcugsm2HlV3N5bzCA9bH8hw+R9VYX4wTwyMbAN3rQ1d+KGREgoI2+
+         yYsBIzo+DHrf7o/OY7/P/IwfZ8VoeyKD2wsTnyt+O7mmWq0se0i1DzeNxHee4szQwIGt
+         abGpjE/Omfw00UiX7ptmorwN0951zV44MUOAG0v0oxdnPgk3OQxp21TmVtcn0+FxpoNg
+         PQYdG2O38CJGG2FjtnJ++Ib/nhdJh/eTih2eLm/nYjlTNPcsETl5oElivozpbxegmbcL
+         UYJg==
+X-Gm-Message-State: AOJu0Yyc/rwKw5M+h1bQXtuwPqyTAlQWhgguXaYLZkOEDHK7dcVCqFLz
+        Wo5UJjT1TD9JgyzG2aeN/teXTc2V6M23ZAz2k3Sdpg==
+X-Google-Smtp-Source: AGHT+IGVuCEWfM4GWuwLP0lEt6K5tzvKJGmMMe92XWJ9s/Bt6uPaeyTVva1kQ3Pbo+bF0/nDxRn+Pg==
+X-Received: by 2002:a17:90a:db82:b0:26b:513a:30b0 with SMTP id h2-20020a17090adb8200b0026b513a30b0mr3137713pjv.10.1695372905217;
+        Fri, 22 Sep 2023 01:55:05 -0700 (PDT)
 Received: from centos78 (60-248-88-209.hinet-ip.hinet.net. [60.248.88.209])
-        by smtp.googlemail.com with ESMTPSA id x2-20020aa784c2000000b006884844dfcdsm2715784pfn.55.2023.09.22.01.50.55
+        by smtp.googlemail.com with ESMTPSA id l6-20020a170902f68600b001c41e1e9ca7sm2911372plg.215.2023.09.22.01.55.03
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 22 Sep 2023 01:50:56 -0700 (PDT)
-Message-ID: <bc855b702c8a2fbb7d3ffff69f65b6ce89c9042c.camel@areca.com.tw>
-Subject: [PATCH V2 1/3] scsi: arcmsr: support Areca ARC-1688 Raid controller
+        Fri, 22 Sep 2023 01:55:04 -0700 (PDT)
+Message-ID: <4d58c52bffc20b0668b17977c8e813abbd219bf0.camel@areca.com.tw>
+Subject: [PATCH V2 2/3] scsi: arcmsr: support new PCI device ID 1883 and
+ 1886 Raid controllers
 From:   ching Huang <ching2048@areca.com.tw>
 To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
         linux-scsi@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date:   Fri, 22 Sep 2023 16:50:56 +0800
+Date:   Fri, 22 Sep 2023 16:55:05 +0800
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
 Mime-Version: 1.0
@@ -65,193 +66,56 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: ching Huang <ching2048@areca.com.tw>
 
-This patch supports Areca new Raid controller ARC-1688
+This patch supports Areca new PCI device ID 1883 and 1886 Raid controllers
 
 Signed-off-by: ching Huang <ching2048@areca.com.tw>
 ---
 
 diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
-index ed8d931..8f20d9c 100644
+index 8f20d9c..2f80a6a 100644
 --- a/drivers/scsi/arcmsr/arcmsr.h
 +++ b/drivers/scsi/arcmsr/arcmsr.h
-@@ -818,6 +818,23 @@ typedef struct deliver_completeQ {
- 	uint16_t	cmdLMID;        // reserved (0)
- 	uint16_t	cmdFlag2;       // reserved (0)
- } DeliverQ, CompletionQ, *pDeliver_Q, *pCompletion_Q;
-+
-+#define ARCMSR_XOR_SEG_SIZE	(1024 * 1024)
-+struct HostRamBuf {
-+	uint32_t	hrbSignature;	// must be "HRBS"
-+	uint32_t	hrbSize;	// total sg size, be multiples of MB
-+	uint32_t	hrbRes[2];	// reserved, must be set to 0
-+};
-+struct	Xor_sg {
-+	dma_addr_t	xorPhys;
-+	uint64_t	xorBufLen;
-+};
-+struct	XorHandle {
-+	dma_addr_t	xorPhys;
-+	uint64_t	xorBufLen;
-+	void		*xorVirt;
-+};
-+
- /*
- *******************************************************************************
- **                 Adapter Control Block
-@@ -929,6 +946,7 @@ struct AdapterControlBlock
- 	char			firm_model[12];
- 	char			firm_version[20];
- 	char			device_map[20];			/*21,84-99*/
-+	uint32_t		firm_PicStatus;
- 	struct work_struct 	arcmsr_do_message_isr_bh;
- 	struct timer_list	eternal_timer;
- 	unsigned short		fw_flag;
-@@ -937,6 +955,7 @@ struct AdapterControlBlock
- #define	FW_DEADLOCK			0x0010
- 	uint32_t		maxOutstanding;
- 	int			vector_count;
-+	int			xor_mega;
- 	uint32_t		maxFreeCCB;
- 	struct timer_list	refresh_timer;
- 	uint32_t		doneq_index;
-@@ -946,6 +965,10 @@ struct AdapterControlBlock
- 	uint32_t		completionQ_entry;
- 	pCompletion_Q		pCompletionQ;
- 	uint32_t		completeQ_size;
-+	void			*xorVirt;
-+	dma_addr_t		xorPhys;
-+	unsigned int		init2cfg_size;
-+	unsigned int		xorVirtOffset;
- };/* HW_DEVICE_EXTENSION */
- /*
- *******************************************************************************
+@@ -78,9 +78,13 @@ struct device_attribute;
+ #ifndef PCI_DEVICE_ID_ARECA_1203
+ #define PCI_DEVICE_ID_ARECA_1203	0x1203
+ #endif
++#ifndef PCI_DEVICE_ID_ARECA_1883
++#define PCI_DEVICE_ID_ARECA_1883	0x1883
++#endif
+ #ifndef PCI_DEVICE_ID_ARECA_1884
+ #define PCI_DEVICE_ID_ARECA_1884	0x1884
+ #endif
++#define PCI_DEVICE_ID_ARECA_1886_0	0x1886
+ #define PCI_DEVICE_ID_ARECA_1886	0x188A
+ #define	ARCMSR_HOURS			(1000 * 60 * 60 * 4)
+ #define	ARCMSR_MINUTES			(1000 * 60 * 60)
 diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index a66221c..e2c71ab 100644
+index e2c71ab..22a204e 100644
 --- a/drivers/scsi/arcmsr/arcmsr_hba.c
 +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -747,6 +747,57 @@ static bool arcmsr_alloc_io_queue(struct AdapterControlBlock *acb)
- 	return rtn;
- }
- 
-+static int arcmsr_alloc_xor_buffer(struct AdapterControlBlock *acb)
-+{
-+	int rc = 0;
-+	struct pci_dev *pdev = acb->pdev;
-+	void *dma_coherent;
-+	dma_addr_t dma_coherent_handle;
-+	int i, xor_ram;
-+	struct Xor_sg *pXorPhys;
-+	void **pXorVirt;
-+	struct HostRamBuf *pRamBuf;
-+
-+	// allocate 1 MB * N physically continuous memory for XOR engine.
-+	xor_ram = (acb->firm_PicStatus >> 24) & 0x0f;
-+	acb->xor_mega = (xor_ram - 1) * 32 + 128 + 3;
-+	acb->init2cfg_size = sizeof(struct HostRamBuf) +
-+		(sizeof(struct XorHandle) * acb->xor_mega);
-+	dma_coherent = dma_alloc_coherent(&pdev->dev, acb->init2cfg_size,
-+		&dma_coherent_handle, GFP_KERNEL);
-+	acb->xorVirt = dma_coherent;
-+	acb->xorPhys = dma_coherent_handle;
-+	pXorPhys = (struct Xor_sg *)((unsigned long)dma_coherent +
-+		sizeof(struct HostRamBuf));
-+	acb->xorVirtOffset = sizeof(struct HostRamBuf) +
-+		(sizeof(struct Xor_sg) * acb->xor_mega);
-+	pXorVirt = (void **)((unsigned long)dma_coherent +
-+		(unsigned long)acb->xorVirtOffset);
-+	for (i = 0; i < acb->xor_mega; i++) {
-+		dma_coherent = dma_alloc_coherent(&pdev->dev,
-+			ARCMSR_XOR_SEG_SIZE,
-+			&dma_coherent_handle, GFP_KERNEL);
-+		if (dma_coherent) {
-+			pXorPhys->xorPhys = dma_coherent_handle;
-+			pXorPhys->xorBufLen = ARCMSR_XOR_SEG_SIZE;
-+			*pXorVirt = dma_coherent;
-+			pXorPhys++;
-+			pXorVirt++;
-+		} else {
-+			printk("arcmsr%d: alloc max XOR buffer = 0x%x MB\n",
-+				acb->host->host_no, i);
-+			rc = -ENOMEM;
-+			break;
-+		}
-+	}
-+	pRamBuf = (struct HostRamBuf *)acb->xorVirt;
-+	pRamBuf->hrbSignature = 0x53425248;	//HRBS
-+	pRamBuf->hrbSize = i * ARCMSR_XOR_SEG_SIZE;
-+	pRamBuf->hrbRes[0] = 0;
-+	pRamBuf->hrbRes[1] = 0;
-+	return rc;
-+}
-+
- static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
- {
- 	struct pci_dev *pdev = acb->pdev;
-@@ -836,7 +887,11 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
- 		acb->completionQ_entry = acb->ioqueue_size / sizeof(struct deliver_completeQ);
- 		acb->doneq_index = 0;
+@@ -214,8 +214,12 @@ static struct pci_device_id arcmsr_device_id_table[] = {
+ 		.driver_data = ACB_ADAPTER_TYPE_A},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1880),
+ 		.driver_data = ACB_ADAPTER_TYPE_C},
++	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1883),
++		.driver_data = ACB_ADAPTER_TYPE_C},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1884),
+ 		.driver_data = ACB_ADAPTER_TYPE_E},
++	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1886_0),
++		.driver_data = ACB_ADAPTER_TYPE_F},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1886),
+ 		.driver_data = ACB_ADAPTER_TYPE_F},
+ 	{0, 0}, /* Terminating entry */
+@@ -4794,9 +4798,11 @@ static const char *arcmsr_info(struct Scsi_Host *host)
+ 	case PCI_DEVICE_ID_ARECA_1680:
+ 	case PCI_DEVICE_ID_ARECA_1681:
+ 	case PCI_DEVICE_ID_ARECA_1880:
++	case PCI_DEVICE_ID_ARECA_1883:
+ 	case PCI_DEVICE_ID_ARECA_1884:
+ 		type = "SAS/SATA";
  		break;
--	}	
-+	}
-+	if ((acb->firm_PicStatus >> 24) & 0x0f) {
-+		if (arcmsr_alloc_xor_buffer(acb))
-+			return -ENOMEM;
-+	}
- 	return 0;
- }
- 
-@@ -2022,6 +2077,29 @@ static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb)
- 
- static void arcmsr_free_ccb_pool(struct AdapterControlBlock *acb)
- {
-+	if (acb->xor_mega) {
-+		struct Xor_sg *pXorPhys;
-+		void **pXorVirt;
-+		int i;
-+
-+		pXorPhys = (struct Xor_sg *)(acb->xorVirt +
-+			sizeof(struct HostRamBuf));
-+		pXorVirt = (void **)((unsigned long)acb->xorVirt +
-+			(unsigned long)acb->xorVirtOffset);
-+		for (i = 0; i < acb->xor_mega; i++) {
-+			if (pXorPhys->xorPhys) {
-+				dma_free_coherent(&acb->pdev->dev,
-+					ARCMSR_XOR_SEG_SIZE,
-+					*pXorVirt, pXorPhys->xorPhys);
-+				pXorPhys->xorPhys = (dma_addr_t)NULL;
-+				*pXorVirt = NULL;
-+			}
-+			pXorPhys++;
-+			pXorVirt++;
-+		}
-+		dma_free_coherent(&acb->pdev->dev, acb->init2cfg_size,
-+			acb->xorVirt, acb->xorPhys);
-+	}
- 	dma_free_coherent(&acb->pdev->dev, acb->uncache_size, acb->dma_coherent, acb->dma_coherent_handle);
- }
- 
-@@ -3309,6 +3387,10 @@ static void arcmsr_get_adapter_config(struct AdapterControlBlock *pACB, uint32_t
- 	pACB->firm_sdram_size = readl(&rwbuffer[3]);
- 	pACB->firm_hd_channels = readl(&rwbuffer[4]);
- 	pACB->firm_cfg_version = readl(&rwbuffer[25]);
-+	if (pACB->adapter_type == ACB_ADAPTER_TYPE_F)
-+		pACB->firm_PicStatus = readl(&rwbuffer[30]);
-+	else
-+		pACB->firm_PicStatus = 0;
- 	pr_notice("Areca RAID Controller%d: Model %s, F/W %s\n",
- 		pACB->host->host_no,
- 		pACB->firm_model,
-@@ -4096,6 +4178,12 @@ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
- 		acb->msgcode_rwbuffer[5] = lower_32_bits(acb->dma_coherent_handle2);
- 		acb->msgcode_rwbuffer[6] = upper_32_bits(acb->dma_coherent_handle2);
- 		acb->msgcode_rwbuffer[7] = acb->completeQ_size;
-+		if (acb->xor_mega) {
-+			acb->msgcode_rwbuffer[8] = 0x455AA;	//Linux init 2
-+			acb->msgcode_rwbuffer[9] = 0;
-+			acb->msgcode_rwbuffer[10] = lower_32_bits(acb->xorPhys);
-+			acb->msgcode_rwbuffer[11] = upper_32_bits(acb->xorPhys);
-+		}
- 		writel(ARCMSR_INBOUND_MESG0_SET_CONFIG, &reg->inbound_msgaddr0);
- 		acb->out_doorbell ^= ARCMSR_HBEMU_DRV2IOP_MESSAGE_CMD_DONE;
- 		writel(acb->out_doorbell, &reg->iobound_doorbell);
++	case PCI_DEVICE_ID_ARECA_1886_0:
+ 	case PCI_DEVICE_ID_ARECA_1886:
+ 		type = "NVMe/SAS/SATA";
+ 		break;
 
