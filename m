@@ -2,77 +2,84 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6CC9CD4F49
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 10:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9090ACD4F57
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 11:06:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233165AbjIVKHR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 06:07:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32872 "EHLO
+        id S233291AbjIVLG5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 07:06:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229881AbjIVKHP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 06:07:15 -0400
-Received: from out30-111.freemail.mail.aliyun.com (out30-111.freemail.mail.aliyun.com [115.124.30.111])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 289E791;
-        Fri, 22 Sep 2023 03:07:08 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046059;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0Vsd7U46_1695377219;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0Vsd7U46_1695377219)
-          by smtp.aliyun-inc.com;
-          Fri, 22 Sep 2023 18:07:06 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     satishkh@cisco.com
-Cc:     sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] scsi: fnic: clean up some inconsistent indenting
-Date:   Fri, 22 Sep 2023 18:06:57 +0800
-Message-Id: <20230922100657.14566-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S233331AbjIVLGz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 07:06:55 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A452CA;
+        Fri, 22 Sep 2023 04:06:48 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qjdzi-0006uf-UB; Fri, 22 Sep 2023 13:06:46 +0200
+Message-ID: <e8b76fae-780a-470e-8ec4-c6b650793d10@leemhuis.info>
+Date:   Fri, 22 Sep 2023 13:06:46 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+Subject: Re: [bug report] blktests srp/002 hang
+Content-Language: en-US, de-DE
+To:     "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc:     Linux kernel regressions list <regressions@lists.linux.dev>
+References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+From:   "Linux regression tracking #adding (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+In-Reply-To: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1695380809;0523bf7f;
+X-HE-SMSGID: 1qjdzi-0006uf-UB
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-No functional modification involved.
+[TLDR: I'm adding this report to the list of tracked Linux kernel
+regressions; the text you find below is based on a few templates
+paragraphs you might have encountered already in similar form.
+See link in footer if these mails annoy you.]
 
-drivers/scsi/fnic/fnic_fcs.c:152 fnic_handle_link() warn: inconsistent indenting.
+On 21.08.23 08:46, Shinichiro Kawasaki wrote:
+> I observed a process hang at the blktests test case srp/002 occasionally, using
+> kernel v6.5-rcX. Kernel reported stall of many kworkers [1]. PID 2757 hanged at
+> inode_sleep_on_writeback(). Other kworkers hanged at __inode_wait_for_writeback.
+> 
+> The hang is recreated in stable manner by repeating the test case srp/002 (from
+> 15 times to 30 times).
+> 
+> I bisected and found the commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support
+> for rxe tasks") looks like the trigger commit. When I revert it from the kernel
+> v6.5-rc7, the hang symptom disappears. I'm not sure how the commit relates to
+> the hang. Comments will be welcomed.
+> […]
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=6678
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/scsi/fnic/fnic_fcs.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Thanks for the report. To be sure the issue doesn't fall through the
+cracks unnoticed, I'm adding it to regzbot, the Linux kernel regression
+tracking bot:
 
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 79ddfaaf71a4..55632c67a8f2 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -145,16 +145,17 @@ void fnic_handle_link(struct work_struct *work)
- 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
- 		if (fnic->config.flags & VFCF_FIP_CAPABLE) {
- 			/* start FCoE VLAN discovery */
--				fnic_fc_trace_set_data(
--				fnic->lport->host->host_no,
--				FNIC_FC_LE, "Link Status: DOWN_UP_VLAN",
--				strlen("Link Status: DOWN_UP_VLAN"));
-+			fnic_fc_trace_set_data(fnic->lport->host->host_no,
-+					       FNIC_FC_LE, "Link Status: DOWN_UP_VLAN",
-+					       strlen("Link Status: DOWN_UP_VLAN"));
- 			fnic_fcoe_send_vlan_req(fnic);
-+
- 			return;
- 		}
-+
- 		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, "link up\n");
- 		fnic_fc_trace_set_data(fnic->lport->host->host_no, FNIC_FC_LE,
--			"Link Status: DOWN_UP", strlen("Link Status: DOWN_UP"));
-+				       "Link Status: DOWN_UP", strlen("Link Status: DOWN_UP"));
- 		fcoe_ctlr_link_up(&fnic->ctlr);
- 	} else {
- 		/* UP -> DOWN */
--- 
-2.20.1.7.g153144c
+#regzbot ^introduced 9b4b7c1f9f54
+#regzbot title RDMA/rxe: occasionally pocess hang at the blktests test
+case srp/002
+#regzbot ignore-activity
 
+This isn't a regression? This issue or a fix for it are already
+discussed somewhere else? It was fixed already? You want to clarify when
+the regression started to happen? Or point out I got the title or
+something else totally wrong? Then just reply and tell me -- ideally
+while also telling regzbot about it, as explained by the page listed in
+the footer of this mail.
+
+Developers: When fixing the issue, remember to add 'Link:' tags pointing
+to the report (the parent of this mail). See page linked in footer for
+details.
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
