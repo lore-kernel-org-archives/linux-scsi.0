@@ -2,83 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20C19E6FE54
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 15:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4BF8E6FE58
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 15:44:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232556AbjIVPXZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 11:23:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49046 "EHLO
+        id S232572AbjIVPoh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 11:44:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229986AbjIVPXY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 11:23:24 -0400
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B865A1;
-        Fri, 22 Sep 2023 08:23:18 -0700 (PDT)
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-692a9bc32bcso705343b3a.2;
-        Fri, 22 Sep 2023 08:23:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695396198; x=1696000998;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=WZ743c23h82eWXrVp5Ju6MBdvRvF0AFD87bTIsRHhaE=;
-        b=QVUFMDEDRu5qJ44up4LdUP+Yd70b3Uwqhn7jv3yqQ3BSE8LBVu0b0M42I4rcKWsCgF
-         IIAu5Ingg4HxpRklNEykEl2klYF0BLbrlbNs4pHcvRhfzJXGqplxqtAxtFdhDlcnrl+6
-         1zOWy5nJPqUuOCIth24WSz+E+xg9pmbtGDoclfVNas8g0gQgDCWE5ROrEHfzW2F8mkGb
-         AR+QiZtx6HKB6JpSJZafGPqUyAYjCp1oX6IdXggW0RWML7uhfa5+F+SRXHHzKkl8nm5/
-         /RLL+cCBqPUPFTloWPmQ6dv7upuuxvWWw58xDJxAezsZTajb/BE2kkCU9sbQrCWgiNbs
-         gj5g==
-X-Gm-Message-State: AOJu0Yy6LUiFEGUB0lWOBcdKGFRUEiWdfjA8nOQjU9LtUCZTEOC08/Iq
-        5MzkpEoi9bHDT4QAC+NggW149uJ+d0g=
-X-Google-Smtp-Source: AGHT+IGv7VDAGfsVGtsA/+e+0gy37/34XU0WQXSHLpppFsXFrxJgkCC1DNxIUOTjLT8c5r5o+C5yNQ==
-X-Received: by 2002:a05:6a20:12c9:b0:157:7568:6796 with SMTP id v9-20020a056a2012c900b0015775686796mr8773128pzg.60.1695396197651;
-        Fri, 22 Sep 2023 08:23:17 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:70e9:c86f:4352:fcc? ([2620:15c:211:201:70e9:c86f:4352:fcc])
-        by smtp.gmail.com with ESMTPSA id a13-20020a17090a8c0d00b002633fa95ac2sm5081544pjo.13.2023.09.22.08.23.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Sep 2023 08:23:17 -0700 (PDT)
-Message-ID: <50b20a3e-e264-4788-8e52-f7b57cf944f0@acm.org>
-Date:   Fri, 22 Sep 2023 08:23:15 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: core: scsi_device_online() return false if
- state is SDEV_CANCEL
-Content-Language: en-US
-To:     Wenchao Hao <haowenchao2@huawei.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S232461AbjIVPog (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 11:44:36 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A591199;
+        Fri, 22 Sep 2023 08:44:29 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.86.50) by msexch01.omp.ru (10.188.4.12)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 22 Sep
+ 2023 18:44:25 +0300
+Subject: Re: [PATCH v5 16/23] ata: libata-core: Remove
+ ata_port_suspend_async()
+To:     Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, louhongxiang@huawei.com
-References: <20230922093636.2645961-1-haowenchao2@huawei.com>
- <20230922093636.2645961-2-haowenchao2@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230922093636.2645961-2-haowenchao2@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230921180758.955317-1-dlemoal@kernel.org>
+ <20230921180758.955317-17-dlemoal@kernel.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <b9cc6efe-6e91-1ce1-33dd-21bff181c9d0@omp.ru>
+Date:   Fri, 22 Sep 2023 18:44:24 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+In-Reply-To: <20230921180758.955317-17-dlemoal@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.86.50]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 09/22/2023 15:20:17
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 180066 [Sep 22 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 534 534 808c2ea49f7195c68d40844e073217da4fa0d1e3
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.50 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.50 in (user) dbl.spamhaus.org}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;127.0.0.199:7.1.2;31.173.86.50:7.1.2
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: {rdns complete}
+X-KSE-AntiSpam-Info: {fromrtbl complete}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.50
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/22/2023 15:24:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 9/22/2023 11:25:00 AM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/22/23 02:36, Wenchao Hao wrote:
-> SDEV_CANCEL is set when removing device and scsi_device_online() should
-> return false if sdev_state is SDEV_CANCEL.
-> 
-> IO hang would be caused if return true when state is SDEV_CANCEL with
-> following order:
-> 
-> T1:					    T2:scsi_error_handler
-> __scsi_remove_device()
->    scsi_device_set_state(sdev, SDEV_CANCEL)
->    					    scsi_eh_flush_done_q()
-> 					    if (scsi_device_online(sdev))
-> 					      scsi_queue_insert(scmd,...)
-> 
-> The command added by scsi_queue_insert() would never be handled any
-> more.
+On 9/21/23 9:07 PM, Damien Le Moal wrote:
 
-Why not? I think the blk_mq_destroy_queue() call in 
-__scsi_remove_device() will cause it to fail.
+> ata_port_suspend_async() is only called by ata_sas_port_suspend().
+> Modify ata_port_suspend() with an additional bool argument indicating an
+> asynchronous or synchronous suspend to allow removing that helper
+> function. With this change, the variable ata_port_resume_ehi can also be
+> removed and its value (ATA_EHI_XXX flags passed directly to
+> ata_port_request_pm().
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
+> Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+>  drivers/ata/libata-core.c | 46 +++++++++++++++------------------------
+>  1 file changed, 17 insertions(+), 29 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 6b38ebaad019..b3615862ea30 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+[...]
+> @@ -5187,20 +5177,18 @@ static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg)
+>  	 */
+>  	cancel_delayed_work_sync(&ap->scsi_rescan_task);
+>  
+> -	ata_port_request_pm(ap, mesg, 0, ata_port_suspend_ehi, false);
+> -}
+> -
+> -static void ata_port_suspend_async(struct ata_port *ap, pm_message_t mesg)
+> -{
+>  	/*
+> -	 * We are about to suspend the port, so we do not care about
+> -	 * scsi_rescan_device() calls scheduled by previous resume operations.
+> -	 * The next resume will schedule the rescan again. So cancel any rescan
+> -	 * that is not done yet.
+> +	 * On some hardware, device fails to respond after spun down for
+> +	 * suspend. As the device wil not t be used until being resumed, we
 
-Thanks,
+   Will not be used?
+   There were no typos in the original comment... :-)
 
-Bart.
+[...]
+
+MBR, Sergey
