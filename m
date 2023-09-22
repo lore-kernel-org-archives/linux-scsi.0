@@ -2,21 +2,21 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2362CD4F41
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 09:30:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93D85CD4F42
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Sep 2023 09:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233250AbjIVJaH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 05:30:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44260 "EHLO
+        id S232988AbjIVJaJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 05:30:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232946AbjIVJ3u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 05:29:50 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0FB4CE8;
+        with ESMTP id S232965AbjIVJ3v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 05:29:51 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7656BCE0;
         Fri, 22 Sep 2023 02:29:37 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RsRgz1mgCztSCF;
-        Fri, 22 Sep 2023 17:25:19 +0800 (CST)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.55])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4RsRkQ40kfz15NRJ;
+        Fri, 22 Sep 2023 17:27:26 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -28,9 +28,9 @@ To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
 CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>,
         Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v5 05/10] scsi: scsi_debug: Return failed value if the error is injected
-Date:   Fri, 22 Sep 2023 17:29:01 +0800
-Message-ID: <20230922092906.2645265-6-haowenchao2@huawei.com>
+Subject: [PATCH v5 04/10] scsi: scsi_debug: timeout command if the error is injected
+Date:   Fri, 22 Sep 2023 17:29:00 +0800
+Message-ID: <20230922092906.2645265-5-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20230922092906.2645265-1-haowenchao2@huawei.com>
 References: <20230922092906.2645265-1-haowenchao2@huawei.com>
@@ -45,14 +45,14 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If a fail queuecommand error is injected, return the failed value defined
-in the rule from queuecommand.
+If a timeout error is injected, return 0 from scsi_debug_queuecommand to
+make the command timeout.
 
-Make queuecommand return format:
+Timeout SCSI command format:
   +--------+------+-------------------------------------------------------+
   | Column | Type | Description                                           |
   +--------+------+-------------------------------------------------------+
-  |   1    |  u8  | Error type, fixed to 0x1                              |
+  |   1    |  u8  | Error type, fixed to 0x0                              |
   +--------+------+-------------------------------------------------------+
   |   2    |  s32 | Error count                                           |
   |        |      |  0: this rule will be ignored                         |
@@ -62,30 +62,29 @@ Make queuecommand return format:
   +--------+------+-------------------------------------------------------+
   |   3    |  x8  | SCSI command opcode, 0xff for all commands            |
   +--------+------+-------------------------------------------------------+
-  |   4    |  x32 | The queuecommand() return value we want               |
-  +--------+------+-------------------------------------------------------+
-
 Examples:
     error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
-    echo "1 1 0x12 0x1055" > ${error}
-will make each INQUIRY command sent to that device return
-0x1055 (SCSI_MLQUEUE_HOST_BUSY).
+    echo "0 -10 0x12" > ${error}
+will make the device's inquiry command timeout 10 times.
+    echo "0 1 0x12" > ${error}
+will make the device's inquiry timeout each time it is invoked on this
+device.
 
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 ---
- drivers/scsi/scsi_debug.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ drivers/scsi/scsi_debug.c | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 785ad5e5b4a4..dea40d983155 100644
+index 6235e828c430..785ad5e5b4a4 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -7759,6 +7759,34 @@ static int sdebug_timeout_cmd(struct scsi_cmnd *cmnd)
- 	return 0;
+@@ -7731,6 +7731,34 @@ static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 	return num_entries;
  }
  
-+static int sdebug_fail_queue_cmd(struct scsi_cmnd *cmnd)
++static int sdebug_timeout_cmd(struct scsi_cmnd *cmnd)
 +{
 +	struct scsi_device *sdp = cmnd->device;
 +	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
@@ -98,9 +97,9 @@ index 785ad5e5b4a4..dea40d983155 100644
 +
 +	rcu_read_lock();
 +	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
-+		if (err->type == ERR_FAIL_QUEUE_CMD &&
++		if (err->type == ERR_TMOUT_CMD &&
 +		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
-+			ret = err->cnt ? err->queuecmd_ret : 0;
++			ret = !!err->cnt;
 +			if (err->cnt < 0)
 +				err->cnt++;
 +
@@ -116,23 +115,14 @@ index 785ad5e5b4a4..dea40d983155 100644
  static int scsi_debug_queuecommand(struct Scsi_Host *shost,
  				   struct scsi_cmnd *scp)
  {
-@@ -7778,6 +7806,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 	u8 opcode = cmd[0];
- 	bool has_wlun_rl;
- 	bool inject_now;
-+	int ret = 0;
- 
- 	scsi_set_resid(scp, 0);
- 	if (sdebug_statistics) {
-@@ -7823,6 +7852,13 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 		return 0;
+@@ -7789,6 +7817,12 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		if (NULL == devip)
+ 			goto err_out;
  	}
- 
-+	ret = sdebug_fail_queue_cmd(scp);
-+	if (ret) {
-+		scmd_printk(KERN_INFO, scp, "fail queue command 0x%x with 0x%x\n",
-+				opcode, ret);
-+		return ret;
++
++	if (sdebug_timeout_cmd(scp)) {
++		scmd_printk(KERN_INFO, scp, "timeout command 0x%x\n", opcode);
++		return 0;
 +	}
 +
  	if (unlikely(inject_now && !atomic_read(&sdeb_inject_pending)))
