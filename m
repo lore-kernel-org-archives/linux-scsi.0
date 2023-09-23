@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A933CE7A81
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 Sep 2023 00:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CB24CE7A8A
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 Sep 2023 00:29:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230441AbjIWA3m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Sep 2023 20:29:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49246 "EHLO
+        id S230448AbjIWA3n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Sep 2023 20:29:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229586AbjIWA3l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 20:29:41 -0400
+        with ESMTP id S230440AbjIWA3m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Sep 2023 20:29:42 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C8AA1A7;
-        Fri, 22 Sep 2023 17:29:35 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77870C433C8;
-        Sat, 23 Sep 2023 00:29:33 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93B651A7;
+        Fri, 22 Sep 2023 17:29:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 046C3C433C9;
+        Sat, 23 Sep 2023 00:29:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695428974;
-        bh=zumr4uNM7Mw28lOq3N5L0uP4pr8jvfyEfGuXp6++sb4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=CC8hFxpHPvWkeT6iy9plGKbd/ld5spdgWOxFCG6dbU7sm32NDItVboxAmBJRaOZMw
-         3QPNSVTwcla9aeUzAs8r95wpKVDfsmlJVZQrXI4DpQQdvE3lyzb5LRT8sQPkVjBUJC
-         cHyL4z8DyeoSfFD6WROOOyYBRi22BqMNn8QgSccG4jmxGep9aZ0x6VKQ/ugE45eAmY
-         I4ZfHfUuuNsHX0xdCIOgAhSNOBNMOHlWya8T1MBljOMJgEu4A+QuqpFvjkwjcO5tbg
-         wAHS8mpkBqNnCuG3Gpltlo/2HzfgVBLVawtzskxcf+RpMxkQMAUcMw+Gpb+ob/EaZx
-         Oj4WHfM4fLTYA==
+        s=k20201202; t=1695428976;
+        bh=ldAq2tGryuf5HSb3UenWHmNL2txk3o4RbpCKtjqNOcU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=e5sF0g0cNIvP3B/BrOmbm52OnZEgJqG5rIhWn8OsLW5/nuHVxQLsSbofq6kYWFW/W
+         TAqrAbcghOQfD0JO4ASSIJAZnqQLgtGJW+EgBnvlApQua9KSZyIs4KRxiPI4/xqIBG
+         ll04UIYY3HRgH8om5CPSCfgnW2Itk+v5FRZk45RldXOS4pnDWzpsArsHzR0+kCla9V
+         +8CdU6dw1taquc3UYYvy9/5L5n9DwlWjF6N/5TJuJvMKKSzgxhiP3aDmD5t9Nq72YF
+         TXi/pTwOcOOkH5itdtHPwCNNcCoHmZn3nYofcOBiVqSAlLzli/CqPzBLc/LH5ElN4w
+         yIfGjt1MMPKOw==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,110 +37,84 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v6 00/23] Fix libata suspend/resume handling and code cleanup
-Date:   Sat, 23 Sep 2023 09:29:09 +0900
-Message-ID: <20230923002932.1082348-1-dlemoal@kernel.org>
+Subject: [PATCH v6 01/23] ata: libata-core: Fix ata_port_request_pm() locking
+Date:   Sat, 23 Sep 2023 09:29:10 +0900
+Message-ID: <20230923002932.1082348-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230923002932.1082348-1-dlemoal@kernel.org>
+References: <20230923002932.1082348-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The first 9 patches of this series fix several issues with suspend/resume
-power management operations in scsi and libata. The most significant
-changes introduced are in patch 4 and 5, where the manage_start_stop
-flag of scsi devices is split into the manage_system_start_stop and
-manage_runtime_start_stop flags to allow keeping scsi runtime power
-operations for spining up/down ATA devices but have libata do its own
-system suspend/resume device power state management using EH.
+The function ata_port_request_pm() checks the port flag
+ATA_PFLAG_PM_PENDING and calls ata_port_wait_eh() if this flag is set to
+ensure that power management operations for a port are not scheduled
+simultaneously. However, this flag check is done without holding the
+port lock.
 
-The remaining patches are code cleanup that do not introduce any
-significant functional change.
+Fix this by taking the port lock on entry to the function and checking
+the flag under this lock. The lock is released and re-taken if
+ata_port_wait_eh() needs to be called. The two WARN_ON() macros checking
+that the ATA_PFLAG_PM_PENDING flag was cleared are removed as the first
+call is racy and the second one done without holding the port lock.
 
-This series was tested on qemu and on various PCs and servers. I am
-CC-ing people who recently reported issues with suspend/resume.
-Additional testing would be much appreciated.
+Fixes: 5ef41082912b ("ata: add ata port system PM callbacks")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
+Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
+Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/ata/libata-core.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Changes from v5:
- * Typo and style corrections in patch 4 commit message
- * Changed patch 9 to use a new flag to track a disk suspended state
-   instead of using the scsi device state
- * Added review tags
-
-Changes from v4:
- * Remove ata_scsi_dev_alloc() function in patch 3, coding it directly
-   in ata_scsi_slave_alloc()
- * Correct typo in patch 19 commit message
- * Added Tested and review tags
-
-Changes from v3:
- * Corrected patch 1 (typo in commit message and WARN_ON() removal)
- * Changed path 3 as suggested by Niklas (moved definition of
-   ->slave_alloc)
- * Rebased on rc2
- * Added review tags
-
-Changes from v2:
- * Added patch 4 as simply disabling manage_start_stop from libata was
-   breaking individual disk runtime suspend/autosuspend. Patch 5 was
-   reworked accordingly to the changes in patch 4.
- * Fixed patch 3: applying the link creation was missing and the link
-   creation itself was also incorrect, preventing sd probe to execute
-   correctly. Thanks to Geert for testing and reporting this issue.
- * Split the "Fix delayed scsi_rescan_device() execution" patch into
-   patch 6 (scsi part) and patch 7 (ata part).
- * Modified patch 9 to not call sd_shutdown() from sd_remove() for
-   devices that are not running.
- * Added Chia-Lin Tested tag to unchanged patches
-
-Changes from v1:
- * Added patch 8 and 9 to fix compilation warnings with W=1
- * Addressed John comment in patch 19
- * Fixed patch 20 commit message (Sergei)
- * Added Hannes Review tag
-
-Damien Le Moal (23):
-  ata: libata-core: Fix ata_port_request_pm() locking
-  ata: libata-core: Fix port and device removal
-  ata: libata-scsi: link ata port and scsi device
-  scsi: sd: Differentiate system and runtime start/stop management
-  ata: libata-scsi: Disable scsi device manage_system_start_stop
-  scsi: Do not attempt to rescan suspended devices
-  ata: libata-scsi: Fix delayed scsi_rescan_device() execution
-  ata: libata-core: Do not register PM operations for SAS ports
-  scsi: sd: Do not issue commands to suspended disks on shutdown
-  ata: libata-core: Fix compilation warning in ata_dev_config_ncq()
-  ata: libata-eh: Fix compilation warning in ata_eh_link_report()
-  scsi: Remove scsi device no_start_on_resume flag
-  ata: libata-scsi: Cleanup ata_scsi_start_stop_xlat()
-  ata: libata-core: Synchronize ata_port_detach() with hotplug
-  ata: libata-core: Detach a port devices on shutdown
-  ata: libata-core: Remove ata_port_suspend_async()
-  ata: libata-core: Remove ata_port_resume_async()
-  ata: libata-core: Do not poweroff runtime suspended ports
-  ata: libata-core: Do not resume runtime suspended ports
-  ata: libata-sata: Improve ata_sas_slave_configure()
-  ata: libata-eh: Improve reset error messages
-  ata: libata-eh: Reduce "disable device" message verbosity
-  ata: libata: Cleanup inline DMA helper functions
-
- drivers/ata/libata-core.c      | 242 +++++++++++++++++++++++++--------
- drivers/ata/libata-eh.c        |  76 +++++++++--
- drivers/ata/libata-sata.c      |   5 +-
- drivers/ata/libata-scsi.c      | 142 ++++++++++---------
- drivers/ata/libata-transport.c |   9 +-
- drivers/ata/libata.h           |   6 +
- drivers/firewire/sbp2.c        |   9 +-
- drivers/scsi/scsi_scan.c       |  18 ++-
- drivers/scsi/sd.c              | 102 +++++++++++---
- drivers/scsi/sd.h              |   1 +
- include/linux/libata.h         |  26 ++--
- include/scsi/scsi_device.h     |   4 +-
- include/scsi/scsi_host.h       |   2 +-
- 13 files changed, 457 insertions(+), 185 deletions(-)
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 0072e0f9ad39..732f3d0b4fd9 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5037,17 +5037,19 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 	struct ata_link *link;
+ 	unsigned long flags;
+ 
+-	/* Previous resume operation might still be in
+-	 * progress.  Wait for PM_PENDING to clear.
++	spin_lock_irqsave(ap->lock, flags);
++
++	/*
++	 * A previous PM operation might still be in progress. Wait for
++	 * ATA_PFLAG_PM_PENDING to clear.
+ 	 */
+ 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
++		spin_unlock_irqrestore(ap->lock, flags);
+ 		ata_port_wait_eh(ap);
+-		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
++		spin_lock_irqsave(ap->lock, flags);
+ 	}
+ 
+-	/* request PM ops to EH */
+-	spin_lock_irqsave(ap->lock, flags);
+-
++	/* Request PM operation to EH */
+ 	ap->pm_mesg = mesg;
+ 	ap->pflags |= ATA_PFLAG_PM_PENDING;
+ 	ata_for_each_link(link, ap, HOST_FIRST) {
+@@ -5059,10 +5061,8 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+-	if (!async) {
++	if (!async)
+ 		ata_port_wait_eh(ap);
+-		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+-	}
+ }
+ 
+ /*
 -- 
 2.41.0
 
