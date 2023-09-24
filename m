@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F34CE7A88
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 06:29:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F4ACE7A88
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 06:37:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229795AbjIXG3Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Sep 2023 02:29:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43804 "EHLO
+        id S229498AbjIXGhO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Sep 2023 02:37:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjIXG3X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2023 02:29:23 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B426107;
-        Sat, 23 Sep 2023 23:29:16 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Rtbbg0lrXzMlfk;
-        Sun, 24 Sep 2023 14:25:35 +0800 (CST)
+        with ESMTP id S229437AbjIXGhO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2023 02:37:14 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99B7E107;
+        Sat, 23 Sep 2023 23:37:07 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4RtbpP15LZz15NRG;
+        Sun, 24 Sep 2023 14:34:53 +0800 (CST)
 Received: from [10.174.178.220] (10.174.178.220) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Sun, 24 Sep 2023 14:29:13 +0800
-Message-ID: <f2fb9e25-c022-58d2-ac56-db35c2edfedf@huawei.com>
-Date:   Sun, 24 Sep 2023 14:29:12 +0800
+ 15.1.2507.31; Sun, 24 Sep 2023 14:37:03 +0800
+Message-ID: <407be945-9fd2-8e00-e72b-82e2f311dbeb@huawei.com>
+Date:   Sun, 24 Sep 2023 14:37:02 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.8.0
-Subject: Re: [PATCH 2/2] scsi: Add comment of target_destroy in
- scsi_host_template
+Subject: Re: [PATCH 1/2] scsi: core: scsi_device_online() return false if
+ state is SDEV_CANCEL
 Content-Language: en-US
 To:     Bart Van Assche <bvanassche@acm.org>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>
-References: <20230922093842.2646157-1-haowenchao2@huawei.com>
- <20230922093842.2646157-3-haowenchao2@huawei.com>
- <9567a78a-baf8-432b-b279-cfc56d370a1d@acm.org>
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>,
+        <linux-scsi@vger.kernel.org>
+References: <20230922093636.2645961-1-haowenchao2@huawei.com>
+ <20230922093636.2645961-2-haowenchao2@huawei.com>
+ <50b20a3e-e264-4788-8e52-f7b57cf944f0@acm.org>
 From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <9567a78a-baf8-432b-b279-cfc56d370a1d@acm.org>
+In-Reply-To: <50b20a3e-e264-4788-8e52-f7b57cf944f0@acm.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.174.178.220]
@@ -49,36 +49,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/22 22:53, Bart Van Assche wrote:
-> On 9/22/23 02:38, Wenchao Hao wrote:
->> Add comment to tell callback function target_destroy of
->> scsi_host_template is called in atomic context.
+On 2023/9/22 23:23, Bart Van Assche wrote:
+> On 9/22/23 02:36, Wenchao Hao wrote:
+>> SDEV_CANCEL is set when removing device and scsi_device_online() should
+>> return false if sdev_state is SDEV_CANCEL.
 >>
->> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
->> ---
->>   include/scsi/scsi_host.h | 3 +++
->>   1 file changed, 3 insertions(+)
+>> IO hang would be caused if return true when state is SDEV_CANCEL with
+>> following order:
 >>
->> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
->> index 49f768d0ff37..a72248fa5adf 100644
->> --- a/include/scsi/scsi_host.h
->> +++ b/include/scsi/scsi_host.h
->> @@ -245,6 +245,9 @@ struct scsi_host_template {
->>        * midlayer calls this point so that the driver may deallocate
->>        * and terminate any references to the target.
->>        *
->> +     * Note: this callback in called with spin_lock held, so donot
->> +     * call functions might cause schedule
->> +     *
+>> T1:                        T2:scsi_error_handler
+>> __scsi_remove_device()
+>>    scsi_device_set_state(sdev, SDEV_CANCEL)
+>>                            scsi_eh_flush_done_q()
+>>                         if (scsi_device_online(sdev))
+>>                           scsi_queue_insert(scmd,...)
+>>
+>> The command added by scsi_queue_insert() would never be handled any
+>> more.
 > 
-> This comment should mention which spinlock is held.
+> Why not? I think the blk_mq_destroy_queue() call in __scsi_remove_device() will cause it to fail.
 > 
-
-Would update, thanks for your review suggestion.
-
 > Thanks,
 > 
 > Bart.
 > 
-> 
 
+Sorry, I did not describe in detail, the __scsi_remove_device() would be blocked
+in blk_mq_freeze_queue_wait() to wait all block requests finished, so
+blk_mq_destroy_queue() would not be called, and the task which try to remove
+scsi_device would be hung.
