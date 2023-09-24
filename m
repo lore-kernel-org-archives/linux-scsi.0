@@ -2,84 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 125D8CE7A8A
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 13:28:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B70CE7A8B
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 13:29:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbjIXN3A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Sep 2023 09:29:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38516 "EHLO
+        id S230427AbjIXN3h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Sep 2023 09:29:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229795AbjIXN2z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2023 09:28:55 -0400
+        with ESMTP id S230449AbjIXN3M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2023 09:29:12 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E9134C09;
-        Sun, 24 Sep 2023 06:20:12 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3BBAC433C7;
-        Sun, 24 Sep 2023 13:20:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47A483C07;
+        Sun, 24 Sep 2023 06:19:12 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22F12C43391;
+        Sun, 24 Sep 2023 13:19:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695561611;
-        bh=rrGqEnDbiseouW1pjvNQ9oBy5QoWCtLX2yZikVU8nVE=;
+        s=k20201202; t=1695561552;
+        bh=k/Dudfj2dCzdKgm5lxdRhsSh5iXATRaanZEV504qKT8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cDSDOewUA+7Cajq4i5FQRiubUij9xDaJrN+FwNkz98wFBfTFJrhRcm6AppzAvs23n
-         E1G9JC8yMQKvH5Ze46kw0EPA4XId2tlUHI6sglVAHlD5UEP4uispbx4X7Q6dgzMJ8F
-         GwQaYB5ldeip4ZqO3Cu6Rt7G1UkNZHNCOntccDMuHnYCk8wg47jsopiXlXsqsf7wx0
-         G/r45TQIqHsHNWJJgEc/QofZAhj1690XHrAPjm8OOrT5JCUNBVnIAagksyfu7ynmjo
-         Sd/af5fBGUSGYfvgGlbRE+nYm1CudVOrXihocR56xjgeD38lzeynBxD96Qy+58duQ4
-         NAV1Vg2jY4Sjg==
+        b=fP8fsZji5pQc63HA204X18/B2GcwP49e2Vf82dEkH9Ebj6JMYXJIOykB/qSAsS58F
+         8jECR8dbWUy0Vf7RW2Rp6p0gQ57bTXuYH6lvBtN4AEax13ZN77k0TdU7bPfZC/8Lz3
+         HcOXAtEiDfW/36+0j8odfbaqw+cEhrqKdUw+w7fHGM3+GXdsoSY1O4xC0ubN4RW9Ch
+         2hkYezJerbWR/QxzPqMRiDNPdI242r+AP8HKz9sIqM9ASlu5UbQUeNAHgt/hft2XHk
+         u9zBErNg64Il8bC8v81pmsi20cDfqT1F3OR28o8LqikY2WgnEHMHPMZ07rnHfaAa9M
+         ODXxyRpyOR2eA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Michal Grzedzicki <mge@meta.com>, Jack Wang <jinpu.wang@ionos.com>,
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Chanwoo Lee <cw9316.lee@samsung.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 12/13] scsi: pm80xx: Avoid leaking tags when processing OPC_INB_SET_CONTROLLER_CONFIG command
-Date:   Sun, 24 Sep 2023 09:19:42 -0400
-Message-Id: <20230924131945.1276562-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 06/18] scsi: ufs: core: Move __ufshcd_send_uic_cmd() outside host_lock
+Date:   Sun, 24 Sep 2023 09:18:43 -0400
+Message-Id: <20230924131857.1276330-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230924131945.1276562-1-sashal@kernel.org>
-References: <20230924131945.1276562-1-sashal@kernel.org>
+In-Reply-To: <20230924131857.1276330-1-sashal@kernel.org>
+References: <20230924131857.1276330-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.197
+X-stable-base: Linux 5.15.133
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Michal Grzedzicki <mge@meta.com>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
 
-[ Upstream commit c13e7331745852d0dd7c35eabbe181cbd5b01172 ]
+[ Upstream commit 2d3f59cf868b4a2dd678a96cd49bdd91411bd59f ]
 
-Tags allocated for OPC_INB_SET_CONTROLLER_CONFIG command need to be freed
-when we receive the response.
+__ufshcd_send_uic_cmd() is wrapped by uic_cmd_mutex and its related
+contexts are accessed within the section wrapped by uic_cmd_mutex. Thus,
+wrapping with host_lock is redundant.
 
-Signed-off-by: Michal Grzedzicki <mge@meta.com>
-Link: https://lore.kernel.org/r/20230911170340.699533-2-mge@meta.com
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Link: https://lore.kernel.org/r/782ba5f26f0a96e58d85dff50751787d2d2a6b2b.1693790060.git.kwmad.kim@samsung.com
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Chanwoo Lee <cw9316.lee@samsung.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index ed01c93062091..89051722e04d6 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3722,10 +3722,12 @@ static int mpi_set_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
- 			(struct set_ctrl_cfg_resp *)(piomb + 4);
- 	u32 status = le32_to_cpu(pPayload->status);
- 	u32 err_qlfr_pgcd = le32_to_cpu(pPayload->err_qlfr_pgcd);
-+	u32 tag = le32_to_cpu(pPayload->tag);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index d00d263705e15..f48036f09eab5 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2309,7 +2309,6 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
+ 		      bool completion)
+ {
+ 	lockdep_assert_held(&hba->uic_cmd_mutex);
+-	lockdep_assert_held(hba->host->host_lock);
  
- 	pm8001_dbg(pm8001_ha, MSG,
- 		   "SET CONTROLLER RESP: status 0x%x qlfr_pgcd 0x%x\n",
- 		   status, err_qlfr_pgcd);
-+	pm8001_tag_free(pm8001_ha, tag);
+ 	if (!ufshcd_ready_for_uic_cmd(hba)) {
+ 		dev_err(hba->dev,
+@@ -2336,15 +2335,12 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
+ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ {
+ 	int ret;
+-	unsigned long flags;
  
- 	return 0;
- }
+ 	ufshcd_hold(hba, false);
+ 	mutex_lock(&hba->uic_cmd_mutex);
+ 	ufshcd_add_delay_before_dme_cmd(hba);
+ 
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	if (!ret)
+ 		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
+ 
+@@ -3967,8 +3963,8 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 		wmb();
+ 		reenable_intr = true;
+ 	}
+-	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	ret = __ufshcd_send_uic_cmd(hba, cmd, false);
+ 	if (ret) {
+ 		dev_err(hba->dev,
+ 			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
 -- 
 2.40.1
 
