@@ -2,214 +2,207 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD3D3CE7A8B
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 Sep 2023 20:50:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA098CE7A88
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 01:18:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229563AbjIWUuJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 23 Sep 2023 16:50:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54520 "EHLO
+        id S229563AbjIXBSi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 23 Sep 2023 21:18:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbjIWUuI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Sep 2023 16:50:08 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C7A311B;
-        Sat, 23 Sep 2023 13:50:01 -0700 (PDT)
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38NJmhBS002200;
-        Sat, 23 Sep 2023 20:49:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-03-30;
- bh=BZMbcmchRzUwm39aPO4DT15zSQemC2JtwUsL/VDwfdU=;
- b=PuV3S+Zb0lahrImMJYWfcqh7jK3V3Ltph6A8Btp6ju+ksFhd53IRyZn/+k9pWOnas/bP
- Lt8cpth3+71Rp1VT9hEEZFKlYvpNSkW03AN6G2VNnU1iYqqzWqeTAU65f8zlMgd/1VY3
- ABRXDr/g5RdDwGs7Z5djW9aYmA+u4hjDt/078L7smK6tgJ82IAvDKUwPdaPcTdql9Q8P
- MlCMfWxkDqZ3/nAxjn53CbOF71rCoaRS0ZYyaI8158w6qH6TGEI01J93IKMjTmekwjhD
- Lrr6HXlGZ/g+oAzF33PHYcN/aw08x4r9GE9EffXJ/mY5docwnzNhZBcoQAz56r2IYptE AA== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3t9pxbs9ef-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 23 Sep 2023 20:49:59 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 38NKjEkn030643;
-        Sat, 23 Sep 2023 20:49:58 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2172.outbound.protection.outlook.com [104.47.59.172])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3t9pf2jdvs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 23 Sep 2023 20:49:58 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gW64sfdsWFNq8gq2k0H4dMrBwqLW9uEM4pzl0nO2F+eGReNJ5oYrF281dap96bmC70QSKbuRlwrG/y77fOb6JJdgv12v3zWIG7EgwwbkKxCyXxvXBBYau31R5mg57qdsN1X0ThhxbGh6u9XJ4un2iIms54/ebGNmQFtmQ9/rT0YlydlI3pNEd0Kl+AqUInIkp+1IbjygI/pb2ZgDgyNV3ABMYw70jMk++apitAl+kksHZvWPkQDEz0TtrXK1qWAeTRcnd0NYD3BXdYDwc7oIJuvX1yT7Qive5vkLlOALNmEkJGI+qdZB4lPPoxn7tvxE5gFxWcCeR5BcSqAG2kv+eg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BZMbcmchRzUwm39aPO4DT15zSQemC2JtwUsL/VDwfdU=;
- b=U65e9RNStxO1CGVlNs6ZKallS6X0i60diGhtbH/BkEYLcqwpaXYc3Dt+76nIX4zX8HnERNPN5oS7GpoF/Q0VjZmj4jP8JMAC5mIDeYwYO/+f+ecs36K3m7cpsRBUlwNliJqZt4W15IH1DqCHGMRZP27cszFYuQI7X0w/7fBQ3jMbS8dsRVZkyw67qWgC7xhgsxYoPIv1ppevrNQkmDd+kshZU/kOvEUa0r9NQ53g8ebnyt9QtCHsaxSwFHVu0U5VBp1glgc+HXZVdD7T3VLzpMag9htNaNKzQsiY3cPmtoKVqXPVGn5EKs5/9rp8Vsl6c9F+FmYYSPPLyyuLReontQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S229450AbjIXBSh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Sep 2023 21:18:37 -0400
+Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A92B113;
+        Sat, 23 Sep 2023 18:18:30 -0700 (PDT)
+Received: by mail-wm1-x331.google.com with SMTP id 5b1f17b1804b1-40535597f01so42318075e9.3;
+        Sat, 23 Sep 2023 18:18:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BZMbcmchRzUwm39aPO4DT15zSQemC2JtwUsL/VDwfdU=;
- b=YbFlxa6I66p4tPYaPBSh7+IqaSoNzHhzmuJulUzGscaoaS2hrSF+haiwrZiCqWR5LdWPcmQA+yUg1j8DAYiAInVFtgFV+ndDhn4HMyjmQJUKbsPa3kiy1NJY22pGUXuWArObmjt2olKaTz/BUH2FR2lGuDAMphZktdczS6st6cQ=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by CY8PR10MB7217.namprd10.prod.outlook.com (2603:10b6:930:71::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6813.21; Sat, 23 Sep
- 2023 20:49:56 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::37c3:3be:d433:74e8]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::37c3:3be:d433:74e8%6]) with mapi id 15.20.6813.017; Sat, 23 Sep 2023
- 20:49:56 +0000
-Message-ID: <cda2ceb0-e397-7a35-991a-ba094f969aba@oracle.com>
-Date:   Sat, 23 Sep 2023 15:49:53 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.1
-Subject: Re: [PATCH] scsi: target: fix deadlock by recursive locking
-To:     Junxiao Bi <junxiao.bi@oracle.com>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc:     martin.petersen@oracle.com, bvanassche@acm.org
-References: <20230918225848.66463-1-junxiao.bi@oracle.com>
-Content-Language: en-US
-From:   michael.christie@oracle.com
-In-Reply-To: <20230918225848.66463-1-junxiao.bi@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DM6PR18CA0028.namprd18.prod.outlook.com
- (2603:10b6:5:15b::41) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+        d=gmail.com; s=20230601; t=1695518308; x=1696123108; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3o1Vtnil+maWEYz4kYiJjl4J4Ef/lHddA5G0vURgGn8=;
+        b=BNZcC8phqTQEvJJHNynRfZ3LaOFFFMo1i1j8ZEjMNZXtALjWeVtJ9yf1UBUxlHkoJ3
+         hlMru3QgNMpVWDLoQziqe+RyZvESkqxNCSRG/O2danOm0ABlKA14yZ/39nnDyA/jdaPx
+         jJjO+hIGD14qgelKmEV9oYnjJxpPR3HPutwIkZtxEjEqK8eQUHkAdFAaa4m+PbR4JjNk
+         6tfQ7hKzf1dnXwdY3wsW2t/wKKfo5Zpq/YKSWOLa/Xmsbnoc1+t3+tfNqj2cY5H8eAXF
+         7YSHWPzk1yTR53yoYdDSE3Kv9LlkHUUTgzgFFt/hab8IDe/meqmI8tTYsGnv11BMGbg1
+         jG7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695518308; x=1696123108;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3o1Vtnil+maWEYz4kYiJjl4J4Ef/lHddA5G0vURgGn8=;
+        b=PAJ62ELOTQ8CZFsXH6d9VT9koSxbvImyC68hAf+5kMgjxoBe423ThTVFgXJ1xPWm54
+         s1jaiVqWmCL7uqJtt/lyYjWuwNsJ4txuuCd6iQoDcISndUxcjxoj4S2RGNFrE/DDxjm/
+         6oBqa6pTIWcQhxxIWtMKcXdzGdtj/vhPxlNTQe3glJ7CkgF63h6TzVvaYW3PE4ClAvAv
+         eVteJpky9StRxqZ0Z9t4KCSg21oF9cXaiB47BdGLLHZAckGVqWleDmzxeuDOkBL2l1VU
+         jtyK6rtVZ26e0sOsk1osOf1SiJjixKqW33pBi2Jg+5relRgPm5AxvDo22lHsGTdtHYql
+         FuKA==
+X-Gm-Message-State: AOJu0YwUeXVDkLEatjaaJKrsdpwklsfOcZnlbzpCT/yqPGcWNjcuCT+h
+        +80RUmWkZupNODLFv1u4kgF8M/pmrzCjzO5LRUvd+aBS
+X-Google-Smtp-Source: AGHT+IEef9xMaC6O8p+qM7ieRJC8d292f787Een2he3dwN6BRXiWAdfcSUuMSYVzaghO1q5pHZU/FO5EUK22rf/tnrY=
+X-Received: by 2002:adf:fa88:0:b0:31f:fe07:fde7 with SMTP id
+ h8-20020adffa88000000b0031ffe07fde7mr3039981wrr.1.1695518308390; Sat, 23 Sep
+ 2023 18:18:28 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|CY8PR10MB7217:EE_
-X-MS-Office365-Filtering-Correlation-Id: 25d490a5-ea15-4a92-1306-08dbbc76a4bd
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: uzedpWhKBGjQ5lrZbDTbnfqLsfSzVeoHqUcfhcsZBW71DNbs6NH39OHZRPEq12zME10YN3EFsc08MoCvSR/hq0lRIKSK0qHJ6kId00+3U++QNIMVwRlmMTSnkZw4humXJTWVZjx8sPRm2WDCJSnhZf6l+X/DXgnRFHQKxHhExWEjW76RHqDJjlHauMQgB5B58NR1QSZAIf0dKBrqEB3RsA6Y83OZPqhUgyuB5Fcoy4L03lqR/pJLcTckpT77P7WemvWBdK6wDyggLAFflaMiabJWB3aIR0aIcK+DZR2fXTycmm9t7yda6ZJR4qBdmqVax6uJInQSKc9HpaNAvxaDXMXmOFThZwEPFgHvMCw4tupJy9oYJOLp7o2BrQvKqTa8q3T3XrsOY60dSQa2z/pMyWKFo6zGOGkpciokuRtBy9iBOiiknHF17o3d/D0iHrtCxXJYKxCTe2aP1h5XY/XByq+1qeU31QXmREzuYDzF03gSxDjwIwWPF/UWh1ST9XhJq8QT+VEMO56MP7d0ykeLmeL5KF8is+gDykdD8PPtmgh3PVJmxcXlEZGN/loXZFVxjXM7kL944HcLUqGvQIdeu/OhGcZne+zDBo1hYO957opzb8SiA3TX8WuTgks1xUUE
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(39860400002)(396003)(376002)(136003)(346002)(366004)(230922051799003)(186009)(451199024)(1800799009)(316002)(66556008)(66476007)(36756003)(41300700001)(66946007)(31696002)(86362001)(478600001)(6512007)(8676002)(5660300002)(8936002)(4326008)(83380400001)(9686003)(2906002)(31686004)(26005)(38100700002)(2616005)(53546011)(6486002)(6506007)(6666004)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UWxnVEREUVkvTm1tYjU4Z2lZc3FRZVcvU0pFT2R3Rk5EZHZMTjJJRUFnZmhq?=
- =?utf-8?B?ZEdIZ291djlQQ3MvL2xvODlNVGlmKzRyVEJEaHA0NTBNWVdXTkpzd1dLd3lM?=
- =?utf-8?B?VG0vWENpbjdqSEV1YVhydVg0di9jdzJFY0piR2FGMDZRNVRKb3Z2WVR3cy8y?=
- =?utf-8?B?VDFVQ29hZ1pnUjZqU0hkeVpPOWtiUlFxWWMxYUI3V0hSd3JDU09hTXdkUGdF?=
- =?utf-8?B?MFNPQ3RuQXU5UmJCTlBSWHRFR0x0UlNVWm1mV0JIM3JaYXRCbnh1MWRQVXBs?=
- =?utf-8?B?N1dtM2ViVWtWblFEMGYzR3QvNTlpY1QvUStKcjB6eUszOVZ0ajJ5ZUd2UHVu?=
- =?utf-8?B?Sys3UlQ0R3dudFJRRkJRRkdNUVkvU3ZncXlyVUd5UTFieW9NSFh4OVhvaDY1?=
- =?utf-8?B?cUtRQXE1VnFLS3NsVEVLZlZLUDhkb3hST3o4bnYwWXJ4RW5zNCtiaDdpaHVq?=
- =?utf-8?B?dXd4UldnendBQTg4TUJnU2ZCSU8wdVVGTkxKa1FRN015V01HUzBXY2dIK0xp?=
- =?utf-8?B?Qm81NXZrRndDbkg1RStrS0xOZVMybW5QTnBvcWdabmgrdG5PaHYyRHhDcVBK?=
- =?utf-8?B?dUxiYnlPTlJrU3JuZlJtcUNrNEg0Ny96WEpOU0lPSnBTczI1ODFhT2k4ckov?=
- =?utf-8?B?ZTlQL1Q2eGFoNHdUMzU0WmdFWTcwbGVTTEt6UGlseDk3WS9uMWd6MVc5RFZY?=
- =?utf-8?B?OWJzRFp1WHB4bk1qM0lrbXV2SjhJTFFCR3VIVFlpNGc3ZWtSQ1JZUCtqSzgx?=
- =?utf-8?B?OWNEWVlObWhuQktYRDZOU08ycDJrcU9jalFiN1FFTFczYmpiVnJKTWNnMWZ5?=
- =?utf-8?B?dUtrS01BTFUvczUzSENqVm5SbkVGS1BRby9LZnpKS1V1KzJudmtSeFdKWVpH?=
- =?utf-8?B?VVlRZ3B2U2dZNmYrMzEyL1NjdXRhYW9ZenNiblBwRzQrQjd0TDVLV1VyUGRl?=
- =?utf-8?B?cDJSQnZxWDF6blI5Q09YcXJ6eWhQOEhHUE82Wm9PNUJvMHRTWnEwTkNOckNm?=
- =?utf-8?B?VTM1Rm95NXJLRmVvOVlST2U2R2loOTkvSkx6WStTT290NkcrK1gzUDdyeHhK?=
- =?utf-8?B?c09GZ2QxZExydnd6Qmk3Z1VRak9tTmNsQ01sNXFUQ201RGRjTFdRVkZRTUtW?=
- =?utf-8?B?SnlBZW1pWlo5MnFIY1krUXBTa25lM1hyUmtyNUgwekM4ZFdHd1BJdlZvcFIz?=
- =?utf-8?B?SGNzM0t1SktyR1Z4U1Z4Ykt6bnhNanR3b3pBaEhNSzQ5TitJWkVaRUN6cFNK?=
- =?utf-8?B?UTgydkY3YWpkc2pXNXRhT2xGMUJ3alFCc2ZoQnRBK2poTlZDN0lENXNDRHF5?=
- =?utf-8?B?c201amhpU1VVb0FEQWlkTWV5blk5TzVpZHdMZG1FdVFYZkpnUU1TbDJYLy9N?=
- =?utf-8?B?SGQ4VkVLMWpSb1RvNHBBVzIyUUdRUnRHSUt0RFB0YndoVEtqQzRoNGkyL0JO?=
- =?utf-8?B?SWpPNG5ZTmFaaVNsczB3aDNjYldqVzFrRFBjVklXNlR1SURsQ2NmK2xuc3BG?=
- =?utf-8?B?QTh2bDhDYUhtOEVTM2ljTlNSNHdBVlRkRlZSUU9DWllXMlF0TW96KzBmV0tk?=
- =?utf-8?B?YlArbXdoSmZreURaN0ZEdkRhMzJYUTk1Q1JMTGF6T05YajZkYmRmdEVxc0FM?=
- =?utf-8?B?T3NaMTRLc3FtZE5JRlNSckUyOUpGa251OHNDQytSNFkvRXdJenlQalpWVFlm?=
- =?utf-8?B?blZGM0hLbUVWMkxsK2dVZlZQaFIxdTJiYWZnSjh5aExrUmo5dXhpOVp4MHBP?=
- =?utf-8?B?Zm5iS3VGM1BLSDRpenBQY0JmaThmTFNGNGJvTk0zUndpdnJZNXE5TXdDVFpq?=
- =?utf-8?B?Ylh3b1dhbUYwQTFpZFc3UlY3ZWxtNTArdWVkelBad1F6N2E2Q1FDbkNzTlNM?=
- =?utf-8?B?TTZMaHpuajRnQ21GWHZncm04c2E5bFZTd0laR0JRb1ZPQzExaTAwbXlCVTZS?=
- =?utf-8?B?ZHpLSFgrL3NxSGVKNm03eThvYmZRTjIzTE5EN291S3FCZDdNNmxUdHpzRUdB?=
- =?utf-8?B?eHlhZjA1M0pOSDRsaldiTDNkU3hoRm9uVS82NTlvb2dXSzFXQWc0WW1rTTdF?=
- =?utf-8?B?RWtuRXVHS1JvYUJkVys4YUJKbUVvWm81dkx1QUZZdE8zOWlxc1RIbERNSHZM?=
- =?utf-8?B?WEo5VEVRejdEdkhnb1pyVHF5b0wyaVZ5SlBXemdFOEs0K0g5YnZwTWNXTU15?=
- =?utf-8?B?U0E9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: ZeSpV7LUOUDxfT7kUo1toPvHXmZFnruaqJXbVijLe/OByYqhpMPw+73UNk7wro+68qjcjmfALJKq/xEAWbGnCrM8/S57jYBbpBhM5Eypt8MP8TscpbVYlLAWzWXiJaQdiWfKhjp/wgF8W48+0vZGUQd8yjJ0+ODmCHVdV4Eky8HYJRSlJj2LMqa431AxjsEE2P0GH3usYa3suESTwfEITew/SdkbKOimujzQzY5LHqe8zDTegJcNY+9m/Hh76kzLnZkA6Hteq2tfRsu/dTM2xartcRHlE0xTZYcqqNYmdsHmMzSluN4cFUoqaqUNq7xhjBc6q0YaPyxM0dZa/rpJ3g1xSBnz7Zz0nLQz2SmB73BXvSx7CqKoprv5X2mItMzWK3z1s3nkzfSHyS8gzqyWRwmrMk9JQs/03tmrY6AeBYp4OSCc++vTQ86sOqXOzzKtm6iI8RaEGrA6AfyAQgqPfK9z6N+ooaZCYR5Fg84S1XAMI2imUSuPIHT1JuaPffoUAywboetLEJTw8nRwSV+yC/qNVNieXvrD0GB0ippE3JFI4LXxjsJ0NlPIKzzqQ6Grlrvf9rRrTvmzMBZgmx7kQTFdBEGb710bVy7nApxt3uUUPelQKzFpJCSP9vjesbjc+Yww2onViZIZ6OoJ6ccm/2PVQjkM5jhBMfmw80cXMHxshdV1Syr1OGUCL6jwIhDBgvDXsVfktAJwposGGwprYjHnMRtfa+ruYHLpOoPPhNv38BsQuzLFpm/IOPA5qZ5dPMXaC/3+XU9q12s9dggg8aVc6x0MCnjCr2QhBlhWAMo=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 25d490a5-ea15-4a92-1306-08dbbc76a4bd
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2023 20:49:56.2680
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: MuCedLa3KfQodRj0fzlw+eVL85YagQB43sZ3LCHY38DiTglftSM20T5oqct/6neObcGx9Z+2acvuvAoBGUzEtHWRZki/98rltMRc622uowQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR10MB7217
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-23_18,2023-09-21_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 phishscore=0
- mlxscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
- definitions=main-2309230180
-X-Proofpoint-GUID: 0xBvkyxdx8qJz6Jtp5VefrvxrAQyZUFe
-X-Proofpoint-ORIG-GUID: 0xBvkyxdx8qJz6Jtp5VefrvxrAQyZUFe
+References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+ <plrbpd5gg32uaferhjj6ibkt4wqybu3v3y32f4rlhvsruc7cu4@2pgrj2542da2>
+ <18a3ae8c-145b-4c7f-a8f5-67840feeb98c@acm.org> <ab93655f-c187-fdab-6c67-3bfb2d9aa516@gmail.com>
+ <9dd0aa0a-d696-a95b-095b-f54d6d31a6ab@linux.dev> <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev>
+ <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
+ <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev> <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
+ <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev> <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
+ <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org> <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
+ <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org> <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
+ <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
+ <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com> <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
+ <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
+In-Reply-To: <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
+From:   Rain River <rain.1986.08.12@gmail.com>
+Date:   Sun, 24 Sep 2023 09:17:46 +0800
+Message-ID: <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
+Subject: Re: [bug report] blktests srp/002 hang
+To:     Bob Pearson <rpearsonhpe@gmail.com>
+Cc:     Zhu Yanjun <yanjun.zhu@linux.dev>,
+        Daisuke Matsuda <matsuda-daisuke@fujitsu.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        "leon@kernel.org" <leon@kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        RDMA mailing list <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/18/23 5:58 PM, Junxiao Bi wrote:
-> The following call trace shown a deadlock issue due to recursive locking
-> of mutex "device_mutex" , first lock acquire in target_for_each_device()
-> and second in target_free_device().
-> 
->  PID: 148266   TASK: ffff8be21ffb5d00  CPU: 10   COMMAND: "iscsi_ttx"
->   #0 [ffffa2bfc9ec3b18] __schedule at ffffffffa8060e7f
->   #1 [ffffa2bfc9ec3ba0] schedule at ffffffffa8061224
->   #2 [ffffa2bfc9ec3bb8] schedule_preempt_disabled at ffffffffa80615ee
->   #3 [ffffa2bfc9ec3bc8] __mutex_lock at ffffffffa8062fd7
->   #4 [ffffa2bfc9ec3c40] __mutex_lock_slowpath at ffffffffa80631d3
->   #5 [ffffa2bfc9ec3c50] mutex_lock at ffffffffa806320c
->   #6 [ffffa2bfc9ec3c68] target_free_device at ffffffffc0935998 [target_core_mod]
->   #7 [ffffa2bfc9ec3c90] target_core_dev_release at ffffffffc092f975 [target_core_mod]
->   #8 [ffffa2bfc9ec3ca0] config_item_put at ffffffffa79d250f
->   #9 [ffffa2bfc9ec3cd0] config_item_put at ffffffffa79d2583
->  #10 [ffffa2bfc9ec3ce0] target_devices_idr_iter at ffffffffc0933f3a [target_core_mod]
->  #11 [ffffa2bfc9ec3d00] idr_for_each at ffffffffa803f6fc
->  #12 [ffffa2bfc9ec3d60] target_for_each_device at ffffffffc0935670 [target_core_mod]
->  #13 [ffffa2bfc9ec3d98] transport_deregister_session at ffffffffc0946408 [target_core_mod]
->  #14 [ffffa2bfc9ec3dc8] iscsit_close_session at ffffffffc09a44a6 [iscsi_target_mod]
->  #15 [ffffa2bfc9ec3df0] iscsit_close_connection at ffffffffc09a4a88 [iscsi_target_mod]
->  #16 [ffffa2bfc9ec3df8] finish_task_switch at ffffffffa76e5d07
->  #17 [ffffa2bfc9ec3e78] iscsit_take_action_for_connection_exit at ffffffffc0991c23 [iscsi_target_mod]
->  #18 [ffffa2bfc9ec3ea0] iscsi_target_tx_thread at ffffffffc09a403b [iscsi_target_mod]
->  #19 [ffffa2bfc9ec3f08] kthread at ffffffffa76d8080
->  #20 [ffffa2bfc9ec3f50] ret_from_fork at ffffffffa8200364
-> 
-> Fixes: 36d4cb460bcb ("scsi: target: Avoid that EXTENDED COPY commands trigger lock inversion")
-> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
-> ---
->  drivers/target/target_core_device.c | 11 ++++-------
->  1 file changed, 4 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index b7ac60f4a219..b6523d4b9259 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -843,7 +843,6 @@ sector_t target_to_linux_sector(struct se_device *dev, sector_t lb)
->  EXPORT_SYMBOL(target_to_linux_sector);
->  
->  struct devices_idr_iter {
-> -	struct config_item *prev_item;
->  	int (*fn)(struct se_device *dev, void *data);
->  	void *data;
->  };
-> @@ -853,11 +852,9 @@ static int target_devices_idr_iter(int id, void *p, void *data)
->  {
->  	struct devices_idr_iter *iter = data;
->  	struct se_device *dev = p;
-> +	struct config_item *item;
->  	int ret;
->  
-> -	config_item_put(iter->prev_item);
+On Sat, Sep 23, 2023 at 2:14=E2=80=AFAM Bob Pearson <rpearsonhpe@gmail.com>=
+ wrote:
+>
+> On 9/21/23 10:10, Zhu Yanjun wrote:
+> >
+> > =E5=9C=A8 2023/9/21 22:39, Bob Pearson =E5=86=99=E9=81=93:
+> >> On 9/21/23 09:23, Rain River wrote:
+> >>> On Thu, Sep 21, 2023 at 2:53=E2=80=AFAM Bob Pearson <rpearsonhpe@gmai=
+l.com> wrote:
+> >>>> On 9/20/23 12:22, Bart Van Assche wrote:
+> >>>>> On 9/20/23 10:18, Bob Pearson wrote:
+> >>>>>> But I have also seen the same behavior in the siw driver which is
+> >>>>>> completely independent.
+> >>>>> Hmm ... I haven't seen any hangs yet with the siw driver.
+> >>>> I was on Ubuntu 6-9 months ago. Currently I don't see hangs on eithe=
+r.
+> >>>>>> As mentioned above at the moment Ubuntu is failing rarely. But it =
+used to fail reliably (srp/002 about 75% of the time and srp/011 about 99% =
+of the time.) There haven't been any changes to rxe to explain this.
+> >>>>> I think that Zhu mentioned commit 9b4b7c1f9f54 ("RDMA/rxe: Add work=
+queue
+> >>>>> support for rxe tasks")?
+> >>>> That change happened well before the failures went away. I was seein=
+g failures at the same rate with tasklets
+> >>>> and wqs. But after updating Ubuntu and the kernel at some point they=
+ all went away.
+> >>> I made tests on the latest Ubuntu with the latest kernel without the
+> >>> commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support for rxe tasks")=
+.
+> >>> The latest kernel is v6.6-rc2, the commit 9b4b7c1f9f54 ("RDMA/rxe: Ad=
+d
+> >>> workqueue support for rxe tasks") is reverted.
+> >>> I made blktest tests for about 30 times, this problem does not occur.
+> >>>
+> >>> So I confirm that without this commit, this hang problem does not
+> >>> occur on Ubuntu without the commit 9b4b7c1f9f54 ("RDMA/rxe: Add
+> >>> workqueue support for rxe tasks").
+> >>>
+> >>> Nanthan
+> >>>
+> >>>>> Thanks,
+> >>>>>
+> >>>>> Bart.
+> >>>>
+> >> This commit is very important for several reasons. It is needed for th=
+e ODP implementation
+> >> that is in the works from Daisuke Matsuda and also for QP scaling of p=
+erformance. The work
+> >> queue implementation scales well with increasing qp number while the t=
+asklet implementation
+> >> does not. This is critical for the drivers use in large scale storage =
+applications. So, if
+> >> there is a bug in the work queue implementation it needs to be fixed n=
+ot reverted.
+> >>
+> >> I am still hoping that someone will diagnose what is causing the ULPs =
+to hang in terms of
+> >> something missing causing it to wait.
+> >
+> > Hi, Bob
+> >
+> >
+> > You submitted this commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue suppor=
+t for rxe tasks").
+> >
+> > You should be very familiar with this commit.
+> >
+> > And this commit causes regression.
+> >
+> > So you should delved into the source code to find the root cause, then =
+fix it.
+>
+> Zhu,
+>
+> I have spent tons of time over the months trying to figure out what is ha=
+ppening with blktests.
+> As I have mentioned several times I have seen the same exact failure in s=
+iw in the past although
+> currently that doesn't seem to happen so I had been suspecting that the p=
+roblem may be in the ULP.
+> The challenge is that the blktests represents a huge stack of software mu=
+ch of which I am not
+> familiar with. The bug is a hang in layers above the rxe driver and so fa=
+r no one has been able to
+> say with any specificity the rxe driver failed to do something needed to =
+make progress or violated
+> expected behavior. Without any clue as to where to look it has been hard =
+to make progress.
 
-I can't see why we did that (I had reviewed/signed-off on the patch that added
-the bug) and I don't see any reason why we would have needed it in the past.
-Looks like idr_for_each would have handled it ok back then as well. So patch looks
-ok to me.
+Bob
 
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Work queue will sleep. If work queue sleep for long time, the packets
+will not be sent to ULP. This is why this hang occurs.
+Difficult to handle this sleep in work queue. It had better revert
+this commit in RXE.
+Because work queue sleeps,  ULP can not wait for long time for the
+packets. If packets can not reach ULPs for long time, many problems
+will occur to ULPs.
 
+>
+> My main motivation is making Lustre run on rxe and it does and it's fast =
+enough to meet our needs.
+> Lustre is similar to srp as a ULP and in all of our testing we have never=
+ seen a similar hang. Other
+> hangs to be sure but not this one. I believe that this bug will never get=
+ resolved until someone with
+> a good understanding of the ulp drivers makes an effort to find out where=
+ and why the hang is occurring.
+> From there it should be straight forward to fix the problem. I am continu=
+ing to investigate and am learning
+> the device-manager/multipath/srp/scsi stack but I have a long ways to go.
+>
+> Bob
+>
+>
+> >
+> >
+> > Jason && Leon, please comment on this.
+> >
+> >
+> > Best Regards,
+> >
+> > Zhu Yanjun
+> >
+> >>
+> >> Bob
+>
