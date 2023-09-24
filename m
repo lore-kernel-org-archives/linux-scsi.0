@@ -2,223 +2,144 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCEACE7A88
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 07:49:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFBBCE7A8B
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 13:15:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229959AbjIXHti (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Sep 2023 03:49:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41244 "EHLO
+        id S229561AbjIXNQD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Sep 2023 09:16:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbjIXHti (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2023 03:49:38 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3D57106;
-        Sun, 24 Sep 2023 00:49:30 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RtdMN6W6KztSZQ;
-        Sun, 24 Sep 2023 15:45:04 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Sun, 24 Sep 2023 15:49:22 +0800
-Message-ID: <236310e2-b253-553e-d210-4a4928ed8ec8@huawei.com>
-Date:   Sun, 24 Sep 2023 15:49:21 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 1/2] scsi: core: cleanup scsi_dev_queue_ready()
-Content-Language: en-US
-From:   Wenchao Hao <haowenchao2@huawei.com>
-To:     Damien Le Moal <dlemoal@kernel.org>
-CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S229731AbjIXNQB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2023 09:16:01 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31552112;
+        Sun, 24 Sep 2023 06:15:49 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D4F2C433C9;
+        Sun, 24 Sep 2023 13:15:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695561348;
+        bh=e7wyZIRClwx6QhrA542JsvhuuvAQutUANRmOL4kP9x4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=hJmOslMrOWKG+O7K7ao3dwSdofJ5/unTC9PFFGXGUBoaXX3AWXH21Cn3u1vgvILdI
+         2MzVorzqLAUwQKsxtFevQkBMx/KNEQji8+HG2nFHOdf5KIFWL/RVTsEQlImymBLq7r
+         4PEXoT0YaZDRlh76FqfBnHePqasnq07KLkE73zxZur+epnUdFl3qnlQ9A2SWEii6tA
+         qCxlUUTTQgS//5zIjp80t2zzfqspjE3fippt5Iv+ZNujzR/j5YhVREUV44wbqbvqyk
+         iAMD34wA0x4WOeOgmsf9e9j1h+PyQrD+wX5BG+JDmt9OYtYywZaVvt/GQOiVFGrElQ
+         xr3HNQkpHmSNg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Javed Hasan <jhasan@marvell.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <louhongxiang@huawei.com>
-References: <20230922093842.2646157-1-haowenchao2@huawei.com>
- <20230922093842.2646157-2-haowenchao2@huawei.com>
- <ea28de69-8b9d-8ff8-b7fc-eb780123f055@kernel.org>
- <7a11374c-4e8e-b7f9-aca4-55686a6ec501@huawei.com>
-In-Reply-To: <7a11374c-4e8e-b7f9-aca4-55686a6ec501@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+        Sasha Levin <sashal@kernel.org>,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 08/41] scsi: qedf: Add synchronization between I/O completions and abort
+Date:   Sun, 24 Sep 2023 09:14:56 -0400
+Message-Id: <20230924131529.1275335-8-sashal@kernel.org>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230924131529.1275335-1-sashal@kernel.org>
+References: <20230924131529.1275335-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.5.5
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemm000012.china.huawei.com (7.193.23.142)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/24 14:27, Wenchao Hao wrote:
-> On 2023/9/22 20:50, Damien Le Moal wrote:
->> On 2023/09/22 2:38, Wenchao Hao wrote:
->>> This is just a cleanup for scsi_dev_queue_ready() to avoid
->>> redundant goto and if statement, it did not change the origin
->>> logic.
->>>
->>> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
->>> ---
->>>   drivers/scsi/scsi_lib.c | 35 ++++++++++++++++++-----------------
->>>   1 file changed, 18 insertions(+), 17 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->>> index ca5eb058d5c7..f3e388127dbd 100644
->>> --- a/drivers/scsi/scsi_lib.c
->>> +++ b/drivers/scsi/scsi_lib.c
->>> @@ -1254,28 +1254,29 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
->>>       int token;
->>>       token = sbitmap_get(&sdev->budget_map);
->>> -    if (atomic_read(&sdev->device_blocked)) {
->>> -        if (token < 0)
->>> -            goto out;
->>> +    if (token < 0)
->>> +        return -1;
->>
->> This is changing how this function works...
->>
-> 
-> I don't think so...
-> The origin function flow:
-> 
-> static inline int scsi_dev_queue_ready(struct request_queue *q,
->                    struct scsi_device *sdev)
-> {
->      ...
->      token = sbitmap_get(&sdev->budget_map);
->      if (atomic_read(&sdev->device_blocked)) {
->          if (token < 0)
->              goto out;
->      }
->      return token;
-> out:
->      return -1
-> }
-> 
-> If the token is less than 0, it would always return -1. So we can found
-> it's not necessary to check token after atomic_read().
-> 
->>> -        if (scsi_device_busy(sdev) > 1)
->>> -            goto out_dec;
->>> +    /*
->>> +     * device_blocked is not set at mostly time, so check it first
->>> +     * and return token when it is not set.
->>> +     */
->>> +    if (!atomic_read(&sdev->device_blocked))
->>> +        return token;
->>
->> ...because you reversed the tests order.
-> 
-> As explained in comment, the device_blocked is not set at mostly time,
-> so when it's not set, just return the token.
-> 
->>> -        /*
->>> -         * unblock after device_blocked iterates to zero
->>> -         */
->>> -        if (atomic_dec_return(&sdev->device_blocked) > 0)
->>> -            goto out_dec;
->>> -        SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
->>> -                   "unblocking device at zero depth\n"));
->>> +    /*
->>> +     * unblock after device_blocked iterates to zero
->>> +     */
->>> +    if (scsi_device_busy(sdev) > 1 ||
->>> +        atomic_dec_return(&sdev->device_blocked) > 0) {
->>
->> And here too, you are changing how the function works. The atomic_dec may not be
->> done if the first condition is true.
->>
-> 
-> the origin flow would not call atomic_dec_return() too when condition
-> "scsi_device_busy(sdev) > 1" is true like following:
-> 
-> static inline int scsi_dev_queue_ready(struct request_queue *q,
->                    struct scsi_device *sdev)
-> {
->      ...
->      if (atomic_read(&sdev->device_blocked)) {
->          if (scsi_device_busy(sdev) > 1)
->              goto out_dec;
-> 
->          /*
->           * unblock after device_blocked iterates to zero
->           */
->          if (atomic_dec_return(&sdev->device_blocked) > 0)
->              goto out_dec;
->          SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
->                     "unblocking device at zero depth\n"));
->      }
->      return token;
-> out_dec:
->      if (token >= 0)
->          sbitmap_put(&sdev->budget_map, token);
-> out:
->      return -1;
-> }
-> 
-> Here is the function before and after my change:
-> 
-> The old function:
-> static inline int scsi_dev_queue_ready(struct request_queue *q,
->                    struct scsi_device *sdev)
-> {
->      int token;
-> 
->      token = sbitmap_get(&sdev->budget_map);
->      if (token < 0)
->          return -1;
-> 
->      /*
->       * device_blocked is not set at mostly time, so check it first
->       * and return token when it is not set.
->       */
->      if (!atomic_read(&sdev->device_blocked))
->          return token;
-> 
->      /*
->       * unblock after device_blocked iterates to zero
->       */
->      if (scsi_device_busy(sdev) > 1 ||
->          atomic_dec_return(&sdev->device_blocked) > 0) {
->          sbitmap_put(&sdev->budget_map, token);
->          return -1;
->      }
-> 
->      SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
->               "unblocking device at zero depth\n"));
-> 
->      return token;
-> }
-> 
+From: Javed Hasan <jhasan@marvell.com>
 
-Sorry, I paste wrong for old function, the old function is:
+[ Upstream commit 7df0b2605489bef3f4223ad66f1f9bb8d50d4cd2 ]
 
-static inline int scsi_dev_queue_ready(struct request_queue *q,
-				  struct scsi_device *sdev)
-{
-	int token;
+Avoid race condition between I/O completion and abort processing by
+protecting the cmd_type with the rport lock.
 
-	token = sbitmap_get(&sdev->budget_map);
-	if (atomic_read(&sdev->device_blocked)) {
-		if (token < 0)
-			goto out;
+Signed-off-by: Javed Hasan <jhasan@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Link: https://lore.kernel.org/r/20230901060646.27885-1-skashyap@marvell.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qedf/qedf_io.c   | 10 ++++++++--
+ drivers/scsi/qedf/qedf_main.c |  7 ++++++-
+ 2 files changed, 14 insertions(+), 3 deletions(-)
 
-		if (scsi_device_busy(sdev) > 1)
-			goto out_dec;
-
-		/*
-		 * unblock after device_blocked iterates to zero
-		 */
-		if (atomic_dec_return(&sdev->device_blocked) > 0)
-			goto out_dec;
-		SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
-				   "unblocking device at zero depth\n"));
-	}
-
-	return token;
-out_dec:
-	if (token >= 0)
-		sbitmap_put(&sdev->budget_map, token);
-out:
-	return -1;
-}
+diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+index 4750ec5789a80..10fe3383855c0 100644
+--- a/drivers/scsi/qedf/qedf_io.c
++++ b/drivers/scsi/qedf/qedf_io.c
+@@ -1904,6 +1904,7 @@ int qedf_initiate_abts(struct qedf_ioreq *io_req, bool return_scsi_cmd_on_abts)
+ 		goto drop_rdata_kref;
+ 	}
+ 
++	spin_lock_irqsave(&fcport->rport_lock, flags);
+ 	if (!test_bit(QEDF_CMD_OUTSTANDING, &io_req->flags) ||
+ 	    test_bit(QEDF_CMD_IN_CLEANUP, &io_req->flags) ||
+ 	    test_bit(QEDF_CMD_IN_ABORT, &io_req->flags)) {
+@@ -1911,17 +1912,20 @@ int qedf_initiate_abts(struct qedf_ioreq *io_req, bool return_scsi_cmd_on_abts)
+ 			 "io_req xid=0x%x sc_cmd=%p already in cleanup or abort processing or already completed.\n",
+ 			 io_req->xid, io_req->sc_cmd);
+ 		rc = 1;
++		spin_unlock_irqrestore(&fcport->rport_lock, flags);
+ 		goto drop_rdata_kref;
+ 	}
+ 
++	/* Set the command type to abort */
++	io_req->cmd_type = QEDF_ABTS;
++	spin_unlock_irqrestore(&fcport->rport_lock, flags);
++
+ 	kref_get(&io_req->refcount);
+ 
+ 	xid = io_req->xid;
+ 	qedf->control_requests++;
+ 	qedf->packet_aborts++;
+ 
+-	/* Set the command type to abort */
+-	io_req->cmd_type = QEDF_ABTS;
+ 	io_req->return_scsi_cmd_on_abts = return_scsi_cmd_on_abts;
+ 
+ 	set_bit(QEDF_CMD_IN_ABORT, &io_req->flags);
+@@ -2210,7 +2214,9 @@ int qedf_initiate_cleanup(struct qedf_ioreq *io_req,
+ 		  refcount, fcport, fcport->rdata->ids.port_id);
+ 
+ 	/* Cleanup cmds re-use the same TID as the original I/O */
++	spin_lock_irqsave(&fcport->rport_lock, flags);
+ 	io_req->cmd_type = QEDF_CLEANUP;
++	spin_unlock_irqrestore(&fcport->rport_lock, flags);
+ 	io_req->return_scsi_cmd_on_abts = return_scsi_cmd_on_abts;
+ 
+ 	init_completion(&io_req->cleanup_done);
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 7825765c936cd..91f3f1d7098eb 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -2805,6 +2805,8 @@ void qedf_process_cqe(struct qedf_ctx *qedf, struct fcoe_cqe *cqe)
+ 	struct qedf_ioreq *io_req;
+ 	struct qedf_rport *fcport;
+ 	u32 comp_type;
++	u8 io_comp_type;
++	unsigned long flags;
+ 
+ 	comp_type = (cqe->cqe_data >> FCOE_CQE_CQE_TYPE_SHIFT) &
+ 	    FCOE_CQE_CQE_TYPE_MASK;
+@@ -2838,11 +2840,14 @@ void qedf_process_cqe(struct qedf_ctx *qedf, struct fcoe_cqe *cqe)
+ 		return;
+ 	}
+ 
++	spin_lock_irqsave(&fcport->rport_lock, flags);
++	io_comp_type = io_req->cmd_type;
++	spin_unlock_irqrestore(&fcport->rport_lock, flags);
+ 
+ 	switch (comp_type) {
+ 	case FCOE_GOOD_COMPLETION_CQE_TYPE:
+ 		atomic_inc(&fcport->free_sqes);
+-		switch (io_req->cmd_type) {
++		switch (io_comp_type) {
+ 		case QEDF_SCSI_CMD:
+ 			qedf_scsi_completion(qedf, cqe, io_req);
+ 			break;
+-- 
+2.40.1
 
