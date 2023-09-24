@@ -2,144 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C17C0CE7A8F
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 13:36:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5664CE7A8A
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Sep 2023 17:06:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230417AbjIXNgb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Sep 2023 09:36:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38844 "EHLO
+        id S229836AbjIXRGf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Sep 2023 13:06:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231621AbjIXN3z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2023 09:29:55 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7808210E;
-        Sun, 24 Sep 2023 06:19:59 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FBE6C4339A;
-        Sun, 24 Sep 2023 13:19:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695561599;
-        bh=W4gOwCebH9l85HDqJnUzdjc5g+llmjWrWn6tYfZp4vs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LC2Jv14oa4TfvuKzGpQBbjIW1Tt1l0WiBfuek9kYbxY396DxIiT+jQLkVFkON5oRu
-         l7LuxDQzLdb+yDYkF7VQ0v81rF6PG2goet6fXCWa02OV1faxsQOFjlKOhMAslXxSXb
-         IU4nOp7erSa+rd0PFmmwlKG8K41c6RGbJqBfvM06/9HrxqCjkoH4gDt6bCvoGqddq8
-         hVL5Fypr2v5MhHeRL+NCiGM0uhdXgwDRjbx6fDbdmbWmOj3WxFmnJ3lUm3shm/5uDw
-         /v5yOmKiCTYPlmG5EnnpnJ7oae7nIKypIh1enZpc/qUoBWBJCS24e8oVix6enPIlVZ
-         hWgmQWBwpjzFw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 05/13] scsi: qedf: Add synchronization between I/O completions and abort
-Date:   Sun, 24 Sep 2023 09:19:35 -0400
-Message-Id: <20230924131945.1276562-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230924131945.1276562-1-sashal@kernel.org>
-References: <20230924131945.1276562-1-sashal@kernel.org>
+        with ESMTP id S229437AbjIXRGf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Sep 2023 13:06:35 -0400
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A6B3CF;
+        Sun, 24 Sep 2023 10:06:29 -0700 (PDT)
+Received: by mail-lf1-x12f.google.com with SMTP id 2adb3069b0e04-5043a01ee20so5583305e87.0;
+        Sun, 24 Sep 2023 10:06:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695575187; x=1696179987; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gG8vnWQHvQhRnrvCqdEqT6JTTQ016xPNLohZ4GJlrMs=;
+        b=izTK4OoNLhWkjZEtI25JEFgNhwssqHSu4NJitCOmmkBopTZ/AvX2Hv/t0MFffFQS2+
+         EMTAR2XMXfA+HhSX1qJHPIkJtOx54KGFw0IFEYae0FA1JZNdepFIwZACH+sDVFHZSPCA
+         iPCBL2tyawmSUNrsQPKnz5BEaTwR0q3yuwozJKMtRXDUl0MPCPyjWF5G7QAWOhgM01D2
+         C0q7SGgZJ3CO8QM9j270aLDxfQHYGoUUru9PkQW63JIgBA2MhJdyNUbVa392dVFaigSA
+         DVP2CwujcuM7gDtuIYA+hLxOYMD1xF60K9cJaF0K/8DXZcTZxTZN74MIsGgscuUjXlBt
+         HR6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695575187; x=1696179987;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=gG8vnWQHvQhRnrvCqdEqT6JTTQ016xPNLohZ4GJlrMs=;
+        b=ck3Gs++ZjBbt8UsGj563EK9/ZTuw930UjJYfo45xzrmvTCMYNE/bSd6ESZdSlwxU06
+         YiXh5GGhxlCLZJYS3p3Xz6kPok3wuxMGPSRjoV6gZcv6jqxs4wmKadh0ITi2c7qyN+d2
+         QR6RC1+Nqv+6eYdb5+aE9yhJ5S/9XIeq46NpkDKWguCV8Y+PVqbqhkJ4xn+vSS0X0dgr
+         yJtD4cnozHmp0k02Pewq6VmBoW6Bv285uAuEwXFYyz1UMnDCaWRF8L2kyMIZPz764I9p
+         sJhEyavlVnj6gl3edpl4XB5A1YhzB2yMIQsYH7gkAvNZJ6sQwcbclL2wn0ZMDYav7YKB
+         9nDA==
+X-Gm-Message-State: AOJu0YyFqgAxUen6rPdQGykJUjWrxNd1koKpfbN92+iWHxYKxg3WB1Ti
+        cMveJzvq/Dr5ck7rEQmnu5s=
+X-Google-Smtp-Source: AGHT+IEtoFr2Pbg8fZweBJMsD1JXTiezgzBgcOIx0X/hI7Iqh7usEJ41J/mea3D1UezDz38TmVOXRg==
+X-Received: by 2002:a19:2d01:0:b0:503:36cb:5438 with SMTP id k1-20020a192d01000000b0050336cb5438mr4050615lfj.21.1695575186869;
+        Sun, 24 Sep 2023 10:06:26 -0700 (PDT)
+Received: from [192.168.178.40] ([146.52.231.36])
+        by smtp.gmail.com with ESMTPSA id y19-20020a056402135300b0052fdfd8870bsm4476566edw.89.2023.09.24.10.06.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 24 Sep 2023 10:06:26 -0700 (PDT)
+Message-ID: <bc42418d-117e-8d69-2630-0f072b9e196b@gmail.com>
+Date:   Sun, 24 Sep 2023 19:06:25 +0200
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.197
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH] scsi: target: tcmu: Annotate struct tcmu_tmr with
+ __counted_by
+To:     Kees Cook <keescook@chromium.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, linux-hardening@vger.kernel.org
+References: <20230922175300.work.148-kees@kernel.org>
+Content-Language: en-US
+From:   Bodo Stroesser <bostroesser@gmail.com>
+In-Reply-To: <20230922175300.work.148-kees@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
+On 22.09.23 19:53, Kees Cook wrote:
+> Prepare for the coming implementation by GCC and Clang of the __counted_by
+> attribute. Flexible array members annotated with __counted_by can have
+> their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
+> (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
+> functions).
+> 
+> As found with Coccinelle[1], add __counted_by for struct tcmu_tmr.
+> 
+> [1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
+> 
+> Cc: Bodo Stroesser <bostroesser@gmail.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: target-devel@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>   drivers/target/target_core_user.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 22cc6cac0ba2..7eb94894bd68 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -201,7 +201,7 @@ struct tcmu_tmr {
+>   
+>   	uint8_t tmr_type;
+>   	uint32_t tmr_cmd_cnt;
+> -	int16_t tmr_cmd_ids[];
+> +	int16_t tmr_cmd_ids[] __counted_by(tmr_cmd_cnt);
+>   };
+>   
+>   /*
 
-[ Upstream commit 7df0b2605489bef3f4223ad66f1f9bb8d50d4cd2 ]
+Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
 
-Avoid race condition between I/O completion and abort processing by
-protecting the cmd_type with the rport lock.
-
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Link: https://lore.kernel.org/r/20230901060646.27885-1-skashyap@marvell.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qedf/qedf_io.c   | 10 ++++++++--
- drivers/scsi/qedf/qedf_main.c |  7 ++++++-
- 2 files changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index 472374d83cede..1f8e81296beb7 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -1924,6 +1924,7 @@ int qedf_initiate_abts(struct qedf_ioreq *io_req, bool return_scsi_cmd_on_abts)
- 		goto drop_rdata_kref;
- 	}
- 
-+	spin_lock_irqsave(&fcport->rport_lock, flags);
- 	if (!test_bit(QEDF_CMD_OUTSTANDING, &io_req->flags) ||
- 	    test_bit(QEDF_CMD_IN_CLEANUP, &io_req->flags) ||
- 	    test_bit(QEDF_CMD_IN_ABORT, &io_req->flags)) {
-@@ -1931,17 +1932,20 @@ int qedf_initiate_abts(struct qedf_ioreq *io_req, bool return_scsi_cmd_on_abts)
- 			 "io_req xid=0x%x sc_cmd=%p already in cleanup or abort processing or already completed.\n",
- 			 io_req->xid, io_req->sc_cmd);
- 		rc = 1;
-+		spin_unlock_irqrestore(&fcport->rport_lock, flags);
- 		goto drop_rdata_kref;
- 	}
- 
-+	/* Set the command type to abort */
-+	io_req->cmd_type = QEDF_ABTS;
-+	spin_unlock_irqrestore(&fcport->rport_lock, flags);
-+
- 	kref_get(&io_req->refcount);
- 
- 	xid = io_req->xid;
- 	qedf->control_requests++;
- 	qedf->packet_aborts++;
- 
--	/* Set the command type to abort */
--	io_req->cmd_type = QEDF_ABTS;
- 	io_req->return_scsi_cmd_on_abts = return_scsi_cmd_on_abts;
- 
- 	set_bit(QEDF_CMD_IN_ABORT, &io_req->flags);
-@@ -2230,7 +2234,9 @@ int qedf_initiate_cleanup(struct qedf_ioreq *io_req,
- 		  refcount, fcport, fcport->rdata->ids.port_id);
- 
- 	/* Cleanup cmds re-use the same TID as the original I/O */
-+	spin_lock_irqsave(&fcport->rport_lock, flags);
- 	io_req->cmd_type = QEDF_CLEANUP;
-+	spin_unlock_irqrestore(&fcport->rport_lock, flags);
- 	io_req->return_scsi_cmd_on_abts = return_scsi_cmd_on_abts;
- 
- 	init_completion(&io_req->cleanup_done);
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 63c9368bafcf1..6923862be3fbc 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2803,6 +2803,8 @@ void qedf_process_cqe(struct qedf_ctx *qedf, struct fcoe_cqe *cqe)
- 	struct qedf_ioreq *io_req;
- 	struct qedf_rport *fcport;
- 	u32 comp_type;
-+	u8 io_comp_type;
-+	unsigned long flags;
- 
- 	comp_type = (cqe->cqe_data >> FCOE_CQE_CQE_TYPE_SHIFT) &
- 	    FCOE_CQE_CQE_TYPE_MASK;
-@@ -2836,11 +2838,14 @@ void qedf_process_cqe(struct qedf_ctx *qedf, struct fcoe_cqe *cqe)
- 		return;
- 	}
- 
-+	spin_lock_irqsave(&fcport->rport_lock, flags);
-+	io_comp_type = io_req->cmd_type;
-+	spin_unlock_irqrestore(&fcport->rport_lock, flags);
- 
- 	switch (comp_type) {
- 	case FCOE_GOOD_COMPLETION_CQE_TYPE:
- 		atomic_inc(&fcport->free_sqes);
--		switch (io_req->cmd_type) {
-+		switch (io_comp_type) {
- 		case QEDF_SCSI_CMD:
- 			qedf_scsi_completion(qedf, cqe, io_req);
- 			break;
--- 
-2.40.1
-
+Thank you,
+Bodo
