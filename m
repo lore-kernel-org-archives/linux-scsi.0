@@ -2,41 +2,43 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB79CE7A95
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Sep 2023 15:02:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EBE8CE7A81
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Sep 2023 15:07:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232413AbjIYPCX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Sep 2023 11:02:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34972 "EHLO
+        id S232553AbjIYPHu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Sep 2023 11:07:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229647AbjIYPCW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2023 11:02:22 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C48EB101;
-        Mon, 25 Sep 2023 08:02:15 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RvQym20rJzrSxy;
-        Mon, 25 Sep 2023 23:00:00 +0800 (CST)
+        with ESMTP id S230076AbjIYPHs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2023 11:07:48 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA451103;
+        Mon, 25 Sep 2023 08:07:39 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RvR3z5Tb9zVlF5;
+        Mon, 25 Sep 2023 23:04:31 +0800 (CST)
 Received: from [10.174.178.220] (10.174.178.220) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Mon, 25 Sep 2023 23:02:13 +0800
-Message-ID: <6531a3b0-915d-8078-b265-95231405ac4d@huawei.com>
-Date:   Mon, 25 Sep 2023 23:02:12 +0800
+ 15.1.2507.31; Mon, 25 Sep 2023 23:07:36 +0800
+Message-ID: <47bed3cb-f307-ec55-5c28-051687dab1ea@huawei.com>
+Date:   Mon, 25 Sep 2023 23:07:36 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.8.0
-Subject: Re: [PATCH 1/2] scsi: core: scsi_device_online() return false if
- state is SDEV_CANCEL
+Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
+ mechanism
 Content-Language: en-US
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>
-References: <20230922093636.2645961-1-haowenchao2@huawei.com>
- <20230922093636.2645961-2-haowenchao2@huawei.com>
+        <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>,
+        <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>,
+        <lixiaokeng@huawei.com>
+References: <20230901094127.2010873-1-haowenchao2@huawei.com>
+ <ZRGfc73BSW0yyUtI@infradead.org>
 From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <20230922093636.2645961-2-haowenchao2@huawei.com>
+In-Reply-To: <ZRGfc73BSW0yyUtI@infradead.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.174.178.220]
@@ -47,56 +49,15 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/22 17:36, Wenchao Hao wrote:
-> SDEV_CANCEL is set when removing device and scsi_device_online() should
-> return false if sdev_state is SDEV_CANCEL.
+On 2023/9/25 22:55, Christoph Hellwig wrote:
+> Before we add another new error handling mechanism we need to fix the
+> old one first.  Hannes' work on not passing the scsi_cmnd to the various
+> reset handlers hasn't made a lot of progress in the last five years and
+> we'll need to urgently fix that first before adding even more
+> complexity.
 > 
-> IO hang would be caused if return true when state is SDEV_CANCEL with
-> following order:
-> 
-> T1:					    T2:scsi_error_handler
-> __scsi_remove_device()
->    scsi_device_set_state(sdev, SDEV_CANCEL)
->    					    scsi_eh_flush_done_q()
-> 					    if (scsi_device_online(sdev))
-> 					      scsi_queue_insert(scmd,...)
-> 
-> The command added by scsi_queue_insert() would never be handled any
-> more.
-> 
-> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
-> ---
->   include/scsi/scsi_device.h | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 75b2235b99e2..c498a12f7715 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -517,7 +517,8 @@ static inline int scsi_device_online(struct scsi_device *sdev)
->   {
->   	return (sdev->sdev_state != SDEV_OFFLINE &&
->   		sdev->sdev_state != SDEV_TRANSPORT_OFFLINE &&
-> -		sdev->sdev_state != SDEV_DEL);
-> +		sdev->sdev_state != SDEV_DEL &&
-> +		sdev->sdev_state != SDEV_CANCEL);
->   }
->   static inline int scsi_device_blocked(struct scsi_device *sdev)
->   {
+I observed Hannes's patches posted about one year ago, it has not been
+applied yet. I don't know if he is still working on it.
 
-Return false when if sdev_state is SDEV_CANCEL seems change some flow in
-error handle, but I don't know if we should introduce these changes.
-I think it's both ok to finish the failed command or try more recovery steps.
-
-For example, in scsi_eh_bus_device_reset(), when scsi_try_bus_device_reset()
-returned SUCCEED but the sdev_state is SDEV_CANCEL, should skip TUR and just
-call scsi_eh_finish_cmd() to add this LUN's error command to done_q?
-
-We can address the issue of IO hang described in this patch by running
-scsi_device's queue regardless of the scsi_device's state and it seems
-a better solution because the main reason of IO hang is as following:
-
-scsi_restart_operations()
-	-> scsi_run_host_queues()
-		-> shost_for_each_device() // skip scsi_device with SDEV_DEL
-					   // or SDEV_CANCEL state
+My patches do not depend much on that work, I think the conflict can be
+solved fast between two changes.
