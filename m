@@ -2,92 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BDB7CE7A81
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Sep 2023 15:00:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB79CE7A95
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Sep 2023 15:02:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231247AbjIYPAu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Sep 2023 11:00:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59146 "EHLO
+        id S232413AbjIYPCX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Sep 2023 11:02:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229522AbjIYPAt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2023 11:00:49 -0400
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3959E101;
-        Mon, 25 Sep 2023 08:00:43 -0700 (PDT)
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-578a44dfa88so3790993a12.0;
-        Mon, 25 Sep 2023 08:00:43 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695654042; x=1696258842;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6JkCTDlMMy2k3BxcZSwpMg50epH4WzQdM8qZG/svhWE=;
-        b=L5tcDYB26Y1aHCEsTUwhh2+k7S/CygpCgwmUddKQkaysf2dQZi3+Uyfvcfz8zz7ndQ
-         muo9jG5chtIb4rxGK3LpLNy6Rl1/WnFT6AdGlSKvUXKCSrvodnEbcY8uNNtNtOkfBcyb
-         vznHnDI++TvreSJiY40xNi16jidYCGiN1YqdiX0pevZ9hAQImAwcdly6wnttoAyef/NF
-         JglJ+U94yEdt779ULslR6iHsa6zEwxwBT0DS33/0InFkw8IxgxzxtQIlzOFJWUdmZvs6
-         KrebUNDZOZnoXL+u9gTI8EC+xRlcM9ypEOJu5UynSHON73dEtGzEluY8yNUFQcqjInyP
-         VVpg==
-X-Gm-Message-State: AOJu0Yxt6YpIj5C6B2nTW8y7PsGAXRd75tGkoOdcdWXUJ5ja2B0X+D5c
-        N7AmwCxdhEWBEsqii1ooATA=
-X-Google-Smtp-Source: AGHT+IFYrzQfrJ/MBGu6dXPdgGPJ08jYURmS4dvkUJxpRp9+AS3acQbEqGbu6AD5oW1evgqOE+PSOA==
-X-Received: by 2002:a17:90b:4b48:b0:273:e8c0:f9b with SMTP id mi8-20020a17090b4b4800b00273e8c00f9bmr4781184pjb.15.1695654042260;
-        Mon, 25 Sep 2023 08:00:42 -0700 (PDT)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id 9-20020a17090a190900b0026fa1931f66sm8998771pjg.9.2023.09.25.08.00.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Sep 2023 08:00:41 -0700 (PDT)
-Message-ID: <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org>
-Date:   Mon, 25 Sep 2023 08:00:39 -0700
+        with ESMTP id S229647AbjIYPCW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2023 11:02:22 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C48EB101;
+        Mon, 25 Sep 2023 08:02:15 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RvQym20rJzrSxy;
+        Mon, 25 Sep 2023 23:00:00 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Mon, 25 Sep 2023 23:02:13 +0800
+Message-ID: <6531a3b0-915d-8078-b265-95231405ac4d@huawei.com>
+Date:   Mon, 25 Sep 2023 23:02:12 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [bug report] blktests srp/002 hang
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 1/2] scsi: core: scsi_device_online() return false if
+ state is SDEV_CANCEL
 Content-Language: en-US
-To:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
-        'Rain River' <rain.1986.08.12@gmail.com>,
-        Bob Pearson <rpearsonhpe@gmail.com>
-Cc:     Zhu Yanjun <yanjun.zhu@linux.dev>, Jason Gunthorpe <jgg@ziepe.ca>,
-        "leon@kernel.org" <leon@kernel.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        RDMA mailing list <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <9dd0aa0a-d696-a95b-095b-f54d6d31a6ab@linux.dev>
- <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev>
- <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
- <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev>
- <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
- <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev>
- <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
- <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
- <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
- <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
- <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
- <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
- <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
- <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
- <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
- <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
- <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>
+References: <20230922093636.2645961-1-haowenchao2@huawei.com>
+ <20230922093636.2645961-2-haowenchao2@huawei.com>
+From:   Wenchao Hao <haowenchao2@huawei.com>
+In-Reply-To: <20230922093636.2645961-2-haowenchao2@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/24/23 21:47, Daisuke Matsuda (Fujitsu) wrote:
-> As Bob wrote above, nobody has found any logical failure in rxe
-> driver.
+On 2023/9/22 17:36, Wenchao Hao wrote:
+> SDEV_CANCEL is set when removing device and scsi_device_online() should
+> return false if sdev_state is SDEV_CANCEL.
+> 
+> IO hang would be caused if return true when state is SDEV_CANCEL with
+> following order:
+> 
+> T1:					    T2:scsi_error_handler
+> __scsi_remove_device()
+>    scsi_device_set_state(sdev, SDEV_CANCEL)
+>    					    scsi_eh_flush_done_q()
+> 					    if (scsi_device_online(sdev))
+> 					      scsi_queue_insert(scmd,...)
+> 
+> The command added by scsi_queue_insert() would never be handled any
+> more.
+> 
+> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+> ---
+>   include/scsi/scsi_device.h | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 75b2235b99e2..c498a12f7715 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -517,7 +517,8 @@ static inline int scsi_device_online(struct scsi_device *sdev)
+>   {
+>   	return (sdev->sdev_state != SDEV_OFFLINE &&
+>   		sdev->sdev_state != SDEV_TRANSPORT_OFFLINE &&
+> -		sdev->sdev_state != SDEV_DEL);
+> +		sdev->sdev_state != SDEV_DEL &&
+> +		sdev->sdev_state != SDEV_CANCEL);
+>   }
+>   static inline int scsi_device_blocked(struct scsi_device *sdev)
+>   {
 
-That's wrong. In case you would not yet have noticed my latest email in
-this thread, please take a look at
-https://lore.kernel.org/linux-rdma/e8b76fae-780a-470e-8ec4-c6b650793d10@leemhuis.info/T/#m0fd8ea8a4cbc27b37b042ae4f8e9b024f1871a73. 
-I think the report in that email is a 100% proof that there is a 
-use-after-free issue in the rdma_rxe driver. Use-after-free issues have 
-security implications and also can cause data corruption. I propose to 
-revert the commit that introduced the rdma_rxe use-after-free unless 
-someone comes up with a fix for the rdma_rxe driver.
+Return false when if sdev_state is SDEV_CANCEL seems change some flow in
+error handle, but I don't know if we should introduce these changes.
+I think it's both ok to finish the failed command or try more recovery steps.
 
-Bart.
+For example, in scsi_eh_bus_device_reset(), when scsi_try_bus_device_reset()
+returned SUCCEED but the sdev_state is SDEV_CANCEL, should skip TUR and just
+call scsi_eh_finish_cmd() to add this LUN's error command to done_q?
+
+We can address the issue of IO hang described in this patch by running
+scsi_device's queue regardless of the scsi_device's state and it seems
+a better solution because the main reason of IO hang is as following:
+
+scsi_restart_operations()
+	-> scsi_run_host_queues()
+		-> shost_for_each_device() // skip scsi_device with SDEV_DEL
+					   // or SDEV_CANCEL state
