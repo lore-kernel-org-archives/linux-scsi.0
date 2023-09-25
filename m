@@ -2,194 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 842E3CE7AB3
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Sep 2023 17:55:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B957BCD54BF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Sep 2023 19:57:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230311AbjIYRzc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Sep 2023 13:55:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37668 "EHLO
+        id S232809AbjIYT5O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Sep 2023 15:57:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229777AbjIYRzb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2023 13:55:31 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D60AF10D;
-        Mon, 25 Sep 2023 10:55:17 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38PHkmHx030133;
-        Mon, 25 Sep 2023 17:54:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-03-30;
- bh=D5IGKR/bKSIAvzIdF7KFR9A5rX7fePyfiN/nQTAooVQ=;
- b=Mlb8d1mWNieJED783mlUXzjR98agE5e6GsHRoEQsUSVJMBMNxsBR5H9nJg5mRjDVlNQ2
- v3YHuPmvknbetGEqxN2f4BNxyVuOVL9ORxl+PgXYJXrZ7ndnP7nRvLPB0+6ldwKaZFie
- 5AyLou64paV7lzKyDeHUf9lIPZFGg6vRhdw11e5pfUCkDI3MmQw2iwWKVUYQePyB169h
- MjKjq5mhIMH48OCu3z5HOLJkpwgxWpAlCf8+W+SbQq6p07Sd3je/Fi/oaH9IwMkViNcP
- oTbELJQ2qXnAjXoKvSUCUCALA4UyhPSiIu6eb0jtoJL6E+y+gHAx+1gI/BFxZBYE7VWn gQ== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3t9qwbcb0p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 25 Sep 2023 17:54:55 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 38PGpqHR039337;
-        Mon, 25 Sep 2023 17:54:53 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2171.outbound.protection.outlook.com [104.47.56.171])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3t9pfaxku7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 25 Sep 2023 17:54:53 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PpnoT2rGsngER881yb0zSPByHOTyk8xmIbqhoWvxVIj1GaX3DYenDQYQ4CXhdp1w2OzYFiKD/BEevroALC9KH9jMQcXllkHwV+uZntLErmA/USvaynXp8XnhgIe2cMCna3Fl/pF9Eb8qVC1myfQeqT/dUXiZWMlAPXJFfOJUK/fTuOCe7gZcikVXQYuXsHlRCh2tDpf6Y+G9Xkr3TdTs91UTgKGuv2kcskjFtgux3CSIBA1aOTr6G94lvjm/HiTJ1dMds/eDZRyLbdIjoxyu8ZlF3LJMicYX/sijc8MqWaMJIwNN0DAgg1z4TLQUxbPq11Km0lrIISzyi3HqZkLlwQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=D5IGKR/bKSIAvzIdF7KFR9A5rX7fePyfiN/nQTAooVQ=;
- b=oJRUBUGHQ7L5Jkt7rrXmTz6XqJ8nF/nRj731tFL3mhydcdRJN4X+X0KTu3JcZc8oEQyIC1vT6aFC8OUUdUHTefpzDMa+kwg1WadEQMCZ1DOWA0sZ8odyYiI/X4UozGeTHFV+P3hSaQlHkCvQIMtqM34OhDvKip6MGwlF2Qd1vHvRgDS7i7ODLBAn90FzMDc2nsRqKZVv38nzXDdBBOwW4ODbPBlU5p1Vr0RmBUe3yYDhFJ1gAsrw9kA91iyW81mr4l5V4eaYcGBfVfcouSoKTYIFHZEDtMnMuMFCoelMn0lvHDI3DJu3vRetrJXFRGg5ypyAZeor0GYbAM0A6o5UHQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S229481AbjIYT5N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Sep 2023 15:57:13 -0400
+Received: from mail-ot1-x334.google.com (mail-ot1-x334.google.com [IPv6:2607:f8b0:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 032BD109;
+        Mon, 25 Sep 2023 12:57:07 -0700 (PDT)
+Received: by mail-ot1-x334.google.com with SMTP id 46e09a7af769-6bd0a0a6766so4428814a34.2;
+        Mon, 25 Sep 2023 12:57:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=D5IGKR/bKSIAvzIdF7KFR9A5rX7fePyfiN/nQTAooVQ=;
- b=ScP1lU6T03kymM68v0sLqVph7STHm6BS3L2xCKI55tbPobsBQuj0/wG+pEqrsb/QDuwkuDvnvJXjfAVGrE3THEX2lX+t/cPOZSJK2webLoavtUfgFnRBeAd/FZWC/AR+OOMfHlF52cTmUAI7g9nKiDP7C6oEaMg+Vsj7D+XRdeY=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by BY5PR10MB4259.namprd10.prod.outlook.com (2603:10b6:a03:212::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6813.28; Mon, 25 Sep
- 2023 17:54:51 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::37c3:3be:d433:74e8]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::37c3:3be:d433:74e8%6]) with mapi id 15.20.6813.017; Mon, 25 Sep 2023
- 17:54:51 +0000
-Message-ID: <a92f5e0c-1976-4fc6-ba48-7ff49546318a@oracle.com>
-Date:   Mon, 25 Sep 2023 12:54:48 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
- mechanism
-To:     Wenchao Hao <haowenchao2@huawei.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        linux-kernel@vger.kernel.org, louhongxiang@huawei.com,
-        lixiaokeng@huawei.com
-References: <20230901094127.2010873-1-haowenchao2@huawei.com>
- <ZRGfc73BSW0yyUtI@infradead.org>
- <47bed3cb-f307-ec55-5c28-051687dab1ea@huawei.com>
-Content-Language: en-US
-From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <47bed3cb-f307-ec55-5c28-051687dab1ea@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: DM6PR13CA0064.namprd13.prod.outlook.com
- (2603:10b6:5:134::41) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+        d=gmail.com; s=20230601; t=1695671826; x=1696276626; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=QoQR8sVnBTSW+x1TV0KYyE+v4HjgeuXZaKD4FJHjJSo=;
+        b=a9KezzxbSYklS8CskGqU+Inf1LmQ4AyQ7+nsSEnbffIqCL4Qh7oajdWHM2mRtSnr26
+         cFUcvXu5egueOWunrNRyb5AR7yWwBza49xkhRrYYqgUriH4IISKcnRqxQFJjM7GO2gi9
+         nqMtJVwR0bExIDEbpZxjS+49p996Sw4dTTduUOFcE5Fa/++k+kjHW0KO3MAG6hZqxYwu
+         L6/WGC3/O9R3Xs6wyTcemzGxztIYImRUPBD1FSIJya0rjG51ZSQJab4RlG5KfMIftfJO
+         2fbTM4MsfxoaUrH7yxOc/WlY+Ge/wSbH+u8PbnFrPy9wyHaOpU4RRkJQRCcz+8SoyStb
+         9u+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695671826; x=1696276626;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QoQR8sVnBTSW+x1TV0KYyE+v4HjgeuXZaKD4FJHjJSo=;
+        b=NmVLcR9eVxZfYQX2uN3zqvPJqCc2Kp3KzbV3ZCzSOCU9X3FH2vxvp9GgpEh/vIu/V3
+         JcnnxJTatRJMcHTZuPi7/S3S0a9CEMgsvpAXQJuuRNXUt0kb0IBF3siXljmJ6ma5dujL
+         D6YSDpRRGYl3mTqi77VI68VbmxrDLh9WHxof6WppvMugrBv3pUVICsLQcWIsPWQYMPei
+         zUP8ktsX3y2/JtVfXfAVR+2lZ4sKLyX+ltgRtN4jmLeq7F25TXTi9yk0w0njAhWu8Wwm
+         IlzU+MtKSDyg7Al8UoFejPMsL6F3n7h7mZKv2jx8t1UBNWCx1OTFkh3x26ONJxZ4pNs9
+         VdTw==
+X-Gm-Message-State: AOJu0YzkRH8hys9wDO4WgeLWTcz2XE/r9xY2Mu0F674C6qOY+9DADJDO
+        ie9xPCRiVvWvdfu1/wEBMNvQ5G3tagw=
+X-Google-Smtp-Source: AGHT+IG/WgYat+X3VM/i5/tr0basS1RnErm9JyZT0zT8IOyp/Zd+u9HY/ZUxv4TWe638akcMM2loog==
+X-Received: by 2002:a05:6830:14ca:b0:6c4:b4b0:c6c with SMTP id t10-20020a05683014ca00b006c4b4b00c6cmr8217450otq.3.1695671826203;
+        Mon, 25 Sep 2023 12:57:06 -0700 (PDT)
+Received: from ?IPV6:2603:8081:1405:679b:d60c:b4eb:7897:26a7? (2603-8081-1405-679b-d60c-b4eb-7897-26a7.res6.spectrum.com. [2603:8081:1405:679b:d60c:b4eb:7897:26a7])
+        by smtp.gmail.com with ESMTPSA id a15-20020a9d74cf000000b006b8a0c7e14asm1819684otl.55.2023.09.25.12.57.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Sep 2023 12:57:05 -0700 (PDT)
+Message-ID: <114ecd0b-42b0-4c1d-8b58-280e670550be@gmail.com>
+Date:   Mon, 25 Sep 2023 14:57:00 -0500
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|BY5PR10MB4259:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6324c2f9-08ca-44bf-a6d7-08dbbdf08410
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Yw13odKGJpSDmHNjwCIJPKYr6SIxtz1t/cCxJOdKZBrHk5wuK3VSnWhkqd/PjKIjrazGrPhNMdRh3We/3beKvP+Fbbl1TMOpS212Q+oX+uTe2pfSTeoEAkJpLKebiYm65jxzxuOPDPYJAXrgaFUJ21PN3me4zmuIIQ5uXYmxcLVa5kFzb1PItkAQOeKwZUmELNYKiLxI2spnL7ARQBIcOt3ITsKznsxiwhzMsEe0XVOZzruTJzUpvVG/AeDWG7i9Z2see7zFNnrIN7nj0hPDpSomKmh98WsYYXBNGaBEQpkiRZOJfSaJLJgIu4/ua9B+ratdJ51od+/r1OAe9HOpp+c98ljY1rAUouGAUS7AJkMqcrNxhFvt4oSblRo/wh0spGkv6WDU1Bou5ddvD2/sAHfi4lXtb0x94F4t8Gjn5yK+UotWQRMAvGlGgbIYaYFUwSKyo2GYmQGuVNO53IoMC6uVWgU6+hiMKBq3tYYEKMdzW+0nu4eHMhnT7DvmAMl/7pltO0Y8rXf6sKejHYgyrvHozTWtrmHLUjq/om39QvqUxfK4583IhJpsLFf9/NCfWuabm1eUyQll3hMZWCfbk7T9eWTZ9D5NW3Ej3xS8vUv3iSFXCSZ6tnFFcJRcdMqbmGZLrJ/vmZAooCvEfmo3jw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(39860400002)(376002)(396003)(366004)(346002)(230922051799003)(1800799009)(451199024)(186009)(2616005)(6506007)(26005)(6486002)(6512007)(53546011)(38100700002)(31696002)(86362001)(36756003)(83380400001)(8936002)(316002)(8676002)(4326008)(41300700001)(66476007)(66946007)(66556008)(54906003)(5660300002)(110136005)(31686004)(2906002)(6666004)(478600001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?TFRPbDJlRXFJc2VSZXVrZFFuTjZFUEpUMHBtVTdnZlp4RUZwT0NyMFZzYU9p?=
- =?utf-8?B?TFhwYXJsRTI3ZTkvanRJZjJQUllsR1lUVmd0NXVzL0FUb00xalp0QW1EeFpE?=
- =?utf-8?B?ZWN0bzJ6MTZJUjVGd3ZrdjR0UUE1T3I1TjVZQ2Uwa0N5T3QzVEJoSVVjNzNL?=
- =?utf-8?B?MTh0ZnNtWW5HU2xUdHQ5UmlGWHJxM2ZYOVByaUlLSVdPcm53bVNSK3JMNVFj?=
- =?utf-8?B?cTJZNmNFZ056MHNkSzNsK1VoK05WeFRXbm1FdzF5NGVlVmhZKy85aXBKYTI1?=
- =?utf-8?B?ZGl5SFc4b01KNUdwUkVQbXJEa1hKOGE3U3Y4endZZHBMT0k2Nit1RG1EZ1ZC?=
- =?utf-8?B?c0VGWWcxZXNvMDhLUW1oTTkxY2lNZVdGTU80aXJraUxFQXhTWFNxOFNHTmEz?=
- =?utf-8?B?UU5TcmZadkRLaTlidnBqbjBCRk9uR3ZXYW9rVElKM0FiVnQvNklvUjVDWDZM?=
- =?utf-8?B?MlJaVzB5cHFqRWtMQXArMW9aVXJmWjJZb2pWRGJqbUFwaEdnTS93b1NlY0lk?=
- =?utf-8?B?SmpUQ0ZVQStVcWhhcy9DSlQ5Q2NCY0hyUGZrUituVFBucEhQeHFJU29UaElS?=
- =?utf-8?B?TEhuOUkyclJXRTU3WFBxZjVjL0JoeHlGU0tIUmIxYVJzY1pnTktOdXFNczZ6?=
- =?utf-8?B?Y2ViVm1tRllaTkx5Zld6K1FHTEZxb0lWQWQ3VSs1b0ZGY2Qza3F1QjArZ1Ex?=
- =?utf-8?B?cVNLWWZZOXUwQUZVaWhScXRtaU0xdWs3NmdXNUlGRVh2cFBVWFdxMUZpd1ZC?=
- =?utf-8?B?aHZaK3B2R2xJc2g2OElZZ0NuTG5QK3grbzM3S00yeFlPVGVwaFFFaDdkZEVh?=
- =?utf-8?B?NG9yYW1VWGxqdXVkZmc4WWtKZHhuOFpRZDFaWUxaRlpKYlREcnNKNm8xY1NB?=
- =?utf-8?B?a1A3Z0hnZ1ltTjdmK2xzS1NibDJ3KzhQeWxSN3lHSnhzKzBMRVFTbVYvdFZF?=
- =?utf-8?B?R0Q5cm5KOTVsZHlpczFmSVNFY0J6QXVWMmp6TmkwVTBmMG52V1hValZ1NjdI?=
- =?utf-8?B?dEZHR2VtcXQxYlF5dVh6SEhJc0RCMGhUSEdGWEpEVGMzeFBJSWNMVFhsMHRk?=
- =?utf-8?B?b3o5SWJmMVhSWklnMGIyK04yZnBaNGVrQ2RPdGM5MzZoci8xTEFoV3B1dFFs?=
- =?utf-8?B?Vll1MUJkMUpiZEJyMENuUWthckJ1cVQzaHB3V1RwalJ1U2syeEg3VFQ3Vk1O?=
- =?utf-8?B?cjk1Y1BhcUxlZlVIZ3pDbEFGeG5vanlJK3FLa3libEN1TFBIMC9rZW1oZzJO?=
- =?utf-8?B?WkNXaGxGTGZXRWJMV1p3c0hPLy8rNzNhWGJxN3NlREc2ZWZ3ZUMwVDNyTSs1?=
- =?utf-8?B?NXpZazErKzhLZGVOOVhOQ3FtSVhOelFIMFFhMGs0OEk1WUVZTXBxZzBUTlJa?=
- =?utf-8?B?VnQxN2RobXpzNkVWc0lNbjBKMkZzaS9OWXBzZU9iMEo1cE1ZbDNLbTk5cWxv?=
- =?utf-8?B?cjZJKy84azdQUG9DQm02NlRLOFFLeDVsdzI2VmxCRFJaQW8rTjJ2TndnSWw5?=
- =?utf-8?B?U3R2RVhhUVEzMEpoaktKZkhlVnVRdm9YRGp4TDJFN3FXNXFneXo4MHByMXA5?=
- =?utf-8?B?TlV3d3dPajVZZW03R3pFTGdXYmk4bjJOQWxVUVNtdElJV3h1cmd1OXF4Vks1?=
- =?utf-8?B?Z2taTHltV092dStoSTZIeUt5RHpNRkxaUnhuOGdBOVhnbjdocnBPQnVKK2pU?=
- =?utf-8?B?d0k0SHBLVi84OFVIaGJKRzJNVEoxYXRQeHVvNlAvRzdTM1JpNExjMklIY0I1?=
- =?utf-8?B?ZWk1aDd0cVgyK3pUcXA5TUFKK1ltK3lMdlhPZ1dxbUxwOFY4cmRJSEU4Y04w?=
- =?utf-8?B?dldzSnhNRGFuakRUSEgwMisrTkJRaXBXZ29DT0pGTVM2UEdYcUtJMnl6UVhN?=
- =?utf-8?B?K3Q4Smo4dFNtemI5ZXM5Rlp5R3FOcDNjV3VWU2NRK044VDlLTlBwNEFYOExa?=
- =?utf-8?B?Nzh6N0xNMVZIY0hqczhkckRTOGc5T0luZDcrZTI3LzlBeEwwQ2dLaGxBVnAx?=
- =?utf-8?B?QldPR0FqQ2RYWmwrRG1jTlFYVGFUcllMNVJEMDB6YXNobjdnd0VaYlNvRlBo?=
- =?utf-8?B?UTV0N2QyL0w5dkFQcmJ0M0o3ZkVVbjBTTVZSRjd4UTY0ZWdKZWlkem5ZYi80?=
- =?utf-8?B?T2UySk1Wb1BreWtIWTJpWTUvclk1U0svOXRTMUNZc05VczQ2ZVJMdjhnNWlx?=
- =?utf-8?B?T1E9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 7LRA9AFSmHyBPABOI1KMBC1+gTzAqiOaMzPRZk2/nzAX3Hxjlh9iS/ZSbDBPxsraXfTYY82HSIP7rVpfiuDbHHvJkv6mYjYIW15V8l8P479veGxD3Y53ehb4X7W6+GWdq4eSuVR8E4EBRpojKxva71MTxu2Jh5X74pO0qbBY9TQAl5nRnoSNmDXNqG7iux3NDcGWhDocoZjBcPvQ6s0XI4Ph1b/CgPHxN1rq/FIvqzKFf7NUuDhBWisiJmCuIFDtk7jxEc2WfDP2YBytMhGKbX37ZJu3gE8ECJhBsJAXQ4/2RW/wSbJGfhwAlIzwicF0UCtiqXrqgBhS/1K0d9iWwQ2KpHqLp4Mc2juhoiHYO7bkMcsv+Bwa61rsWv6gyFk7IpVEdzkoZGjbkNm5WQalo0Tn9ziPMGw9vPZV7iCP4U+wnYFjOIVKRhyEgDixTwRqhgL/4pzHrWDEs+mK1ZVMFMjEa4dbaCp1JhJFYaR/uGIR+rhRrKANTxZnMEye3AWueusgUUu912BlJd80+IjTtPNtw1gjDW1qpYz8igYP5SJn5q2icaHQFKDM3KPZNprW243hAASpnF9m1csnEFl4j78D5o9DX/V3wdVPmAzS0OpXb17Y636uqOLv2BoOS31GBj08v9yyQeFoqA/vBHdUpE/92odNhIkkHO5qm+I7wpvY+bgCT5Ced7IHgtjAyIfCVl6lg6YCHxMuzEZxS3ArUkBXgQh5XLEolP7L1qxOywmr8eutHwgtcBorMHS9Tyq2r1cmhziKWfcuk6IFXIK1T1hHWEdRvtvqfSyTXS8VANmpu12oCp2/EyVr3r7KTFOKpMY4kUCptBqevHGZ88BdK46+X2je/qEcUHd9RRoSRYarrMMlQQHNt6bjNinmGkFZ
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6324c2f9-08ca-44bf-a6d7-08dbbdf08410
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Sep 2023 17:54:50.9562
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Psujaw1nGD6rxOj218yzS5zBrvjjDym9hYGb8T0kdmWRFUcCe/Sd0VgJCZbNX7ML2gc/4WMbMU/nVp4qVsRgmfiCBas4BnF88xAtjwa1WhU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4259
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-25_15,2023-09-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- suspectscore=0 adultscore=0 phishscore=0 mlxscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2309250140
-X-Proofpoint-GUID: YiTnzYEhWlS-piaJsFNazTkqDBsfuNzv
-X-Proofpoint-ORIG-GUID: YiTnzYEhWlS-piaJsFNazTkqDBsfuNzv
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [bug report] blktests srp/002 hang
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
+        'Rain River' <rain.1986.08.12@gmail.com>
+Cc:     Zhu Yanjun <yanjun.zhu@linux.dev>, Jason Gunthorpe <jgg@ziepe.ca>,
+        "leon@kernel.org" <leon@kernel.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        RDMA mailing list <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+ <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev>
+ <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
+ <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev>
+ <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
+ <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev>
+ <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
+ <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
+ <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
+ <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
+ <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
+ <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
+ <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
+ <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
+ <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
+ <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
+ <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
+ <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org>
+Content-Language: en-US
+From:   Bob Pearson <rpearsonhpe@gmail.com>
+In-Reply-To: <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/25/23 10:07 AM, Wenchao Hao wrote:
-> On 2023/9/25 22:55, Christoph Hellwig wrote:
->> Before we add another new error handling mechanism we need to fix the
->> old one first.  Hannes' work on not passing the scsi_cmnd to the various
->> reset handlers hasn't made a lot of progress in the last five years and
->> we'll need to urgently fix that first before adding even more
->> complexity.
->>
-> I observed Hannes's patches posted about one year ago, it has not been
-> applied yet. I don't know if he is still working on it.
+On 9/25/23 10:00, Bart Van Assche wrote:
+> On 9/24/23 21:47, Daisuke Matsuda (Fujitsu) wrote:
+>> As Bob wrote above, nobody has found any logical failure in rxe
+>> driver.
 > 
-> My patches do not depend much on that work, I think the conflict can be
-> solved fast between two changes.
+> That's wrong. In case you would not yet have noticed my latest email in
+> this thread, please take a look at
+> https://lore.kernel.org/linux-rdma/e8b76fae-780a-470e-8ec4-c6b650793d10@leemhuis.info/T/#m0fd8ea8a4cbc27b37b042ae4f8e9b024f1871a73. I think the report in that email is a 100% proof that there is a use-after-free issue in the rdma_rxe driver. Use-after-free issues have security implications and also can cause data corruption. I propose to revert the commit that introduced the rdma_rxe use-after-rpearson:src$ git clone git://git.kernel.org/pub/scm/linux/git/rafael/linux-pm
+Cloning into 'linux-pm'...
+fatal: remote error: access denied or repository not exported: /pub/scm/linux/git/rafael/linux-pm
+free unless someone comes up with a fix for the rdma_rxe driver.
+> 
+> Bart.
 
-I think we want to figure out Hannes's patches first.
+Bart,
 
-For a new EH design we will want to be able to do multiple TMFs in parallel
-on the same host/target right? 
+Having trouble following your recipe. The git repo you mention does not seem to be available. E.g.
 
-The problem is that we need to be able to make forward progress in the EH
-path and not fail just because we can't allocate memory for a TMF related
-struct. To accomplish this now, drivers will use mempools, preallocate TMF
-related structs/mem/tags with their scsi_cmnd related structs, preallocate
-per host/target/device related structs or ignore what I wrote above and just
-fail.
+rpearson:src$ git clone git://git.kernel.org/pub/scm/linux/git/rafael/linux-pm
+Cloning into 'linux-pm'...
+fatal: remote error: access denied or repository not exported: /pub/scm/linux/git/rafael/linux-pm
 
-Hannes's patches fix up the eh callouts so they don't pass in a scsi_cmnd
-when it's not needed. That seems nice because after that, then for your new
-EH we can begin to standardize on how to handle preallocation of drivers
-resources needed to perform TMFs for your new EH. It could be a per
-device/target/host callout to allow drivers to preallocate, then scsi-ml calls
-into the drivers with that data. It doesn't have to be exactly like that or
-anything close. It would be nice for drivers to not have to think about this
-type of thing and scsi-ml just to handle the resource management for us when
-there are multiple TMFs in progress.
+I am not sure how to obtain the tag if I cannot see the repo.
+
+If I just try to enable KASAN by setting CONFIG_KASAN=y in .config for the current linux-rdma repo
+and compile the kernel the kernel won't boot and is caught in some kind of SRSO hell. If I checkout
+Linus' v6.4 tag and add CONFIG_KASAN=y to a fresh .config file the kernel builds OK but when I
+try to boot it, it is unable to chroot to the root file system in boot.
+
+Any hints would be appreciated.
+
+Bob
 
