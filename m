@@ -2,24 +2,24 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9F4E7E649
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 15:21:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B17E7E649
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 15:36:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233134AbjIZPVw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 11:21:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51906 "EHLO
+        id S234692AbjIZPgN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 11:36:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbjIZPVv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 11:21:51 -0400
+        with ESMTP id S229520AbjIZPgM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 11:36:12 -0400
 Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB4110A;
-        Tue, 26 Sep 2023 08:21:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77308116;
+        Tue, 26 Sep 2023 08:36:05 -0700 (PDT)
 Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id 0B3EC13B602; Tue, 26 Sep 2023 11:21:44 -0400 (EDT)
+        id B6E5D13B615; Tue, 26 Sep 2023 11:36:04 -0400 (EDT)
 References: <20230923002932.1082348-1-dlemoal@kernel.org>
- <20230923002932.1082348-20-dlemoal@kernel.org>
- <87msxaupig.fsf@vps.thesusis.net>
- <e3ddb272-4ff6-e5a7-7a4e-cb2acf0595d7@kernel.org>
+ <20230923002932.1082348-6-dlemoal@kernel.org>
+ <87r0mmux6s.fsf@vps.thesusis.net>
+ <613610e3-5eaf-f3f9-005c-f9a3903b6e3c@kernel.org>
 User-agent: mu4e 1.7.12; emacs 27.1
 From:   Phillip Susi <phill@thesusis.net>
 To:     Damien Le Moal <dlemoal@kernel.org>
@@ -32,11 +32,11 @@ Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v6 19/23] ata: libata-core: Do not resume runtime
- suspended ports
-Date:   Tue, 26 Sep 2023 11:01:54 -0400
-In-reply-to: <e3ddb272-4ff6-e5a7-7a4e-cb2acf0595d7@kernel.org>
-Message-ID: <87bkdpdkon.fsf@vps.thesusis.net>
+Subject: Re: [PATCH v6 05/23] ata: libata-scsi: Disable scsi device
+ manage_system_start_stop
+Date:   Tue, 26 Sep 2023 11:25:53 -0400
+In-reply-to: <613610e3-5eaf-f3f9-005c-f9a3903b6e3c@kernel.org>
+Message-ID: <877coddk0r.fsf@vps.thesusis.net>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -46,23 +46,48 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Damien Le Moal <dlemoal@kernel.org> writes:
 
-> I suspect you are talking about resume from hybernation here, where the drive
-> may have been completely powered off... Yes, in such case, the drive will
-> spinup, unless you have PUIS and enabled it.
+> However, regarding the SET FEATURES command to spin up the drive, you are
+> confusing the basic power management (STANDBY IMMEDIATE command support), which
+> is a mandatory feature of ATA disks, with the Extended Power Conditions (EPC)
+> feature set, which is optional. The latter one defines the behavior of the SET
+> FEATURES command with the Extended Power Conditions subcommand to control the
+> disk power state and power state transitions timers. The former, basic power
+> management, does NOT have this. So trying what you suggest would only work for
+> drives that support and enable EPC. Given that EPC is optional, and that we are
+> not probing/supporting it currently in libata, we cannot rely on that.
 
-The same thing happens in suspend / S3.
+I'm talking about PuiS.  At least with my 10 year old WD 1 TB blue
+drives, if I enable PuiS, the drive will not spin up if you give it a
+READ or VERIFY command, you have to give it the SET FEATURES command.
+The kernel currently does this when it sees the drive requires it.
 
-> Sure, but please do not have this delay this patch series. The problem you are
-> describing above exists today already. This patch series is not making it worse,
-> nor is it trying to solve it. And note that this issue is not just for ATA. SCSI
-> devices locally attached to a machine that you hybernate will end up doing the
-> same and spinup when power is restored...
+> That already is all taken care of. That is the basics for even the initial scan
+> on boot where we send commands to the disk while it is still spinning up. The
+> timeout I am mentioning is the drive not responding at all because it is spun
+> down, no matter how many times one retries. And given that the ATA specs clearly
+> define that a drive should not change its power state with a reset, even the
+> reset after the command timeout does not change anything with some drives (I do
+> have some drives that actually spin up on reset, but many that don't, as per spec).
 
-You are saying that right now, the sd driver issues a START UNIT command
-on system resume ( it looks like there's a flag you can set now to prevent
-that ), then leaves the runtime pm state looking like the drive is still
-suspended?  I thought it handled that correctly but I don't see any code
-doing so right now.
+I believe the idea of "reset" here within the context of the ATA spec is
+the reset bit in the ATA TaskFile, not a hardware reset, or even an SATA
+link reset.  Those genereally DO spin up the disk unless it has PuiS enabled.
 
-If that's the case, then I suppose this series at least does not make
-things worse...
+> Exactly. As you said yourself, there are some drives that will not report
+> everything unless they are spun up. And I have some old drives that really do
+> not like receiving that command at all while spun down. So the safer approach
+> taken is to spinup the drive upfront, before doing anything else.
+
+I'd prefer to be able to avoid spinning up disks on system resume, but
+my point was that if you want it to spin up, a VERIFY command might not
+work.  For some drives with PuiS enabled, you have to use the SET
+FEATURES command to spin it up.
+
+> PUIS is another optional feature that we do not directly support in the kernel.
+> If you want/need that, patches are welcome. With detection of that feature
+> added, we could improve resume and avoid useless drive spinup. That is currently
+> outside the scope of this series since we are not supporting PUIS currently.
+
+The kernel at least currently issues the SET FEATURE command to wake a
+drive with PuiS enabled, if it says that it needs that.  I hope this
+patch series does not break that.
