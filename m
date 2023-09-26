@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0868CE7D24D
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 08:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FCCE7D24D
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 08:15:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233948AbjIZIPi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 04:15:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45486 "EHLO
+        id S233958AbjIZIPk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 04:15:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233929AbjIZIP3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 04:15:29 -0400
+        with ESMTP id S233920AbjIZIPh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 04:15:37 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68EBE116;
-        Tue, 26 Sep 2023 01:15:22 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E1DAC433C9;
-        Tue, 26 Sep 2023 08:15:19 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69773101;
+        Tue, 26 Sep 2023 01:15:30 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B078C433C8;
+        Tue, 26 Sep 2023 08:15:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695716122;
-        bh=k/n1E/0sX1Kh1J/5A7PeVx3HzBPcsCroCRQBlVX2+y4=;
+        s=k20201202; t=1695716130;
+        bh=Nuc+MZpf4KfLgN19GmaNjXBJFuRsq9TSy5jYG3r6bX4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Xuwgpr3n/fB+h8EdFfzEwH+uWC4caIaFa+P83BoiwdKp7UupqbE4a6I/bNPg0H6o4
-         xYL1+mAsW4ql0Kkaq+eO8Eon1iFgEzd5ZIiQB+L2ZtibSdWUp3+dp6KFQI33b/8yVS
-         DV9u/OGZh6Q+w1XwPsFoGqta3XNcWtUOAkSyV4TMAfcpWvzLPZ0IBreUQMbin4aYTu
-         V9Lfsm2UD1kp58Tu2mzN6bHvXgnw/kRtgmHZpDZPjqxdZbHlLvZisbQcU0ifQ0uhEG
-         IvwuPLyf94PYYvIMrJzj93Q+1oVqFUVeciQ556a8xmcs+wYyPA1yg+/Q7HJkgOn6xM
-         rE9KmOjSCDE0Q==
+        b=ill1uADfWFoEIO/lc96Dy5uZ6Z1MitSjljdX0Qy65ALRCv8HHizhxFsoOLUAejdnl
+         cl3SLWhQ1iiCMUUFbQorlsBk2ZrmYEiGMgNBYz/dRG1tP/TsVc8QU8hbPzxR2o5nSn
+         vRQ74BNiLcLtfX5GdA8PUVDIa2kcBCTqxHtHz1c93dEpkR7KsPucDSkPYaW01uyA2U
+         5P1u92xHWC2Rus02u8V8CqMD81w6JjiQUGig6OxFVavbVjnPx9VlqxcLykLiuxYS78
+         XNDkpOIrBX5TJqIEo+CjjXyVYe2tbA0/uapehuAt6P2SSMcfByGiKRpp5+tU/81tAH
+         0/3cpJsSnHBbQ==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,101 +37,63 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v7 06/23] scsi: Do not attempt to rescan suspended devices
-Date:   Tue, 26 Sep 2023 17:14:50 +0900
-Message-ID: <20230926081507.69346-7-dlemoal@kernel.org>
+Subject: [PATCH v7 10/23] ata: libata-core: Fix compilation warning in ata_dev_config_ncq()
+Date:   Tue, 26 Sep 2023 17:14:54 +0900
+Message-ID: <20230926081507.69346-11-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230926081507.69346-1-dlemoal@kernel.org>
 References: <20230926081507.69346-1-dlemoal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_rescan_device() takes a scsi device lock before executing a device
-handler and device driver rescan methods. Waiting for the completion of
-any command issued to the device by these methods will thus be done with
-the device lock held. As a result, there is a risk of deadlocking within
-the power management code if scsi_rescan_device() is called to handle a
-device resume with the associated scsi device not yet resumed.
+The 24 bytes length allocated to the ncq_desc string in
+ata_dev_config_lba() for ata_dev_config_ncq() to use is too short,
+causing the following gcc compilation warnings when compiling with W=1:
 
-Avoid such situation by checking that the target scsi device is in the
-running state, that is, fully capable of executing commands, before
-proceeding with the rescan and bailout returning -EWOULDBLOCK otherwise.
-With this error return, the caller can retry rescaning the device after
-a delay.
+drivers/ata/libata-core.c: In function ‘ata_dev_configure’:
+drivers/ata/libata-core.c:2378:56: warning: ‘%d’ directive output may be truncated writing between 1 and 2 bytes into a region of size between 1 and 11 [-Wformat-truncation=]
+ 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
+      |                                                        ^~
+In function ‘ata_dev_config_ncq’,
+    inlined from ‘ata_dev_config_lba’ at drivers/ata/libata-core.c:2649:8,
+    inlined from ‘ata_dev_configure’ at drivers/ata/libata-core.c:2952:9:
+drivers/ata/libata-core.c:2378:41: note: directive argument in the range [1, 32]
+ 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
+      |                                         ^~~~~~~~~~~~~~~~~~~~~
+drivers/ata/libata-core.c:2378:17: note: ‘snprintf’ output between 16 and 31 bytes into a destination of size 24
+ 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 2379 |                         ddepth, aa_desc);
+      |                         ~~~~~~~~~~~~~~~~
 
-The state check is done with the device lock held and is thus safe
-against incoming suspend power management operations.
+Avoid these warnings and the potential truncation by changing the size
+of the ncq_desc string to 32 characters.
 
-Fixes: 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after device resume")
-Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
 Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/scsi_scan.c | 18 +++++++++++++++++-
- include/scsi/scsi_host.h |  2 +-
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 52014b2d39e1..3db4d31a03a1 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1619,12 +1619,24 @@ int scsi_add_device(struct Scsi_Host *host, uint channel,
- }
- EXPORT_SYMBOL(scsi_add_device);
- 
--void scsi_rescan_device(struct scsi_device *sdev)
-+int scsi_rescan_device(struct scsi_device *sdev)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 261445c1851b..d8cc1e27a125 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2619,7 +2619,7 @@ static int ata_dev_config_lba(struct ata_device *dev)
  {
- 	struct device *dev = &sdev->sdev_gendev;
-+	int ret = 0;
+ 	const u16 *id = dev->id;
+ 	const char *lba_desc;
+-	char ncq_desc[24];
++	char ncq_desc[32];
+ 	int ret;
  
- 	device_lock(dev);
- 
-+	/*
-+	 * Bail out if the device is not running. Otherwise, the rescan may
-+	 * block waiting for commands to be executed, with us holding the
-+	 * device lock. This can result in a potential deadlock in the power
-+	 * management core code when system resume is on-going.
-+	 */
-+	if (sdev->sdev_state != SDEV_RUNNING) {
-+		ret = -EWOULDBLOCK;
-+		goto unlock;
-+	}
-+
- 	scsi_attach_vpd(sdev);
- 	scsi_cdl_check(sdev);
- 
-@@ -1638,7 +1650,11 @@ void scsi_rescan_device(struct scsi_device *sdev)
- 			drv->rescan(dev);
- 		module_put(dev->driver->owner);
- 	}
-+
-+unlock:
- 	device_unlock(dev);
-+
-+	return ret;
- }
- EXPORT_SYMBOL(scsi_rescan_device);
- 
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 49f768d0ff37..4c2dc8150c6d 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -764,7 +764,7 @@ scsi_template_proc_dir(const struct scsi_host_template *sht);
- #define scsi_template_proc_dir(sht) NULL
- #endif
- extern void scsi_scan_host(struct Scsi_Host *);
--extern void scsi_rescan_device(struct scsi_device *);
-+extern int scsi_rescan_device(struct scsi_device *sdev);
- extern void scsi_remove_host(struct Scsi_Host *);
- extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
- extern int scsi_host_busy(struct Scsi_Host *shost);
+ 	dev->flags |= ATA_DFLAG_LBA;
 -- 
 2.41.0
 
