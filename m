@@ -2,80 +2,77 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26C2DE7D242
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 07:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8EEDE7D245
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 07:36:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232684AbjIZH0h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 03:26:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47804 "EHLO
+        id S233345AbjIZHgY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 03:36:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232820AbjIZH0g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 03:26:36 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFED6FF;
-        Tue, 26 Sep 2023 00:26:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=BhD2k4kv2weMcWpVegjmwrLeUitKOOavmT6dEROSgKg=; b=sVFT0MJcIgXzs1t914uS8ZgrG1
-        ZKVz5rYu2XpPkRgaSrZVw6J1Ssio9elzSxEegENXqhC9MgXmnx1U3zDgdsiFetWDwrZ+JvaLreNHm
-        ikVjQkbdeEoD/ltBtrrdUWzQA4pffO6VcGXGHLZzRzopxjYtcpL7TB5DX6QMd6GUwIus85nPWjxfO
-        c+G8vYNn2pAiTO0SJaDOIWyEuLCCfgUovb7xfY48dUMiK6AOXiqp7G09cucspXrhGk4Mic9Dr4Mhd
-        qawZFAtFeHH4SkP0kfqF4JIu7418hwx4TPY3k9PWA3S43M9evo1YOIlIc0i50LxT9jvpW7wxnZ5Km
-        VftH76vA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1ql2Sg-00FnEn-1s;
-        Tue, 26 Sep 2023 07:26:26 +0000
-Date:   Tue, 26 Sep 2023 00:26:26 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     Wenchao Hao <haowenchao2@huawei.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        linux-kernel@vger.kernel.org, louhongxiang@huawei.com,
-        lixiaokeng@huawei.com
-Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error
- handle mechanism
-Message-ID: <ZRKHokGtOE/AgAFY@infradead.org>
-References: <20230901094127.2010873-1-haowenchao2@huawei.com>
- <ZRGfc73BSW0yyUtI@infradead.org>
- <47bed3cb-f307-ec55-5c28-051687dab1ea@huawei.com>
- <a92f5e0c-1976-4fc6-ba48-7ff49546318a@oracle.com>
+        with ESMTP id S232621AbjIZHgY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 03:36:24 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E8A4DC
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 00:36:18 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D7FEDC433CA
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 07:36:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695713777;
+        bh=ke/2TIMEfbz9/MBV4W7S4weKK8tajjAz48nfOUfnmco=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=bkR6UHJEEBK2J6z0OM94srj07zNF23DENvhTBjx1rXN3J3FZb1zK4QRz+rzS8OoYr
+         6oanEY76W2/gGOm2SQX1blhXoArdgfNKMgZ82276BV/NdQ2tISh1W/UwRaawn5xF9t
+         yopB3B5ktqbssflADIVFC3BqnlWUwuMG2Vc5MMvu2bu2AipNqAvgk24F1iIcf9d/EF
+         edStiLmavN4Wv9GuWqz3TOP1/O1MxEzNAsvCsBAKYQbNeRBVzYHUQYeQ7LBpgWuW5r
+         hqp+T36xc5J/Hq1/6IS8sDWkHBHJqm7t1JHssAd9adV6GWoj8VtDoKlFbkrRFrMp4M
+         xzidgP1oMUFuQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id BE8EBC53BC6; Tue, 26 Sep 2023 07:36:17 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date:   Tue, 26 Sep 2023 07:36:17 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: info@webix.ws
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-Yr2lO5LwkJ@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a92f5e0c-1976-4fc6-ba48-7ff49546318a@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 25, 2023 at 12:54:48PM -0500, Mike Christie wrote:
-> I think we want to figure out Hannes's patches first.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-Yes.
+--- Comment #20 from sanic (info@webix.ws) ---
+Hello!
 
-> For a new EH design we will want to be able to do multiple TMFs in parallel
-> on the same host/target right? 
-> 
-> The problem is that we need to be able to make forward progress in the EH
-> path and not fail just because we can't allocate memory for a TMF related
-> struct. To accomplish this now, drivers will use mempools, preallocate TMF
-> related structs/mem/tags with their scsi_cmnd related structs, preallocate
-> per host/target/device related structs or ignore what I wrote above and just
-> fail.
-> 
-> Hannes's patches fix up the eh callouts so they don't pass in a scsi_cmnd
-> when it's not needed. That seems nice because after that, then for your new
-> EH we can begin to standardize on how to handle preallocation of drivers
-> resources needed to perform TMFs for your new EH. It could be a per
-> device/target/host callout to allow drivers to preallocate, then scsi-ml calls
-> into the drivers with that data. It doesn't have to be exactly like that or
-> anything close. It would be nice for drivers to not have to think about this
-> type of thing and scsi-ml just to handle the resource management for us when
-> there are multiple TMFs in progress.
+I can confirm this behavior with 6.1.53-gentoo-r1 kernel. My previous kernel
+6.1.46-gentoo working ok. Patch mentioned in comment #13 has been applied in
+6.1.53-gentoo release. Controller Adaptec ASR71605E with 7.5-0 (32118) firm=
+ware
+(latest). I will try to revert this patch and provide results.
 
-Exactly!
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
