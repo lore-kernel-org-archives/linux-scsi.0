@@ -2,59 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8514E7E657
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 18:31:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E34D5E7E657
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 18:33:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235451AbjIZSbS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 14:31:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37480 "EHLO
+        id S235540AbjIZSdM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 14:33:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235359AbjIZSbR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 14:31:17 -0400
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAED710A
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 11:31:09 -0700 (PDT)
-Received: by mail-lj1-x232.google.com with SMTP id 38308e7fff4ca-2bffc55af02so154132341fa.2
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 11:31:09 -0700 (PDT)
+        with ESMTP id S235566AbjIZSdL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 14:33:11 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 098D3139
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 11:33:01 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id 2adb3069b0e04-5042bfb4fe9so14898940e87.1
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 11:33:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1695753068; x=1696357868; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1695753179; x=1696357979; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=d/myCHqw7Y6f+5xQcBNEbOGknqH3f0sUeqk2WLdYAig=;
-        b=N76C/9MbAZe8oDDZdHo1XxEhAkFD5l+Q4cA84twNFU4zbusv7xA9HgifN+R/ZjOx79
-         aTGBB7/TNe6x8gUD6b6rbIfrtr6PdrRcrLV3Z5mfxz8A66I+J2bWIKCbjaB7HD8ulmR3
-         1d4f+WkiYCS2oUPbOQsiNVMc1k+cLLdh/faMVqup7iFNrk0nnMX368+Qxp7EnT24oSRG
-         A1QLqX0XGm9jLr5VXCsi4C9cRWkMW2C4OxGrhjzYbbCNjxRkMpFEEVloyoTfsMoW1/Yp
-         quU8zJ4BclyQsPP+mIY7bT6xuzKd09UUyZxj3LVDbCTNowWHK8Joq64QDvRrnCGw9WC1
-         FPOg==
+        bh=QKVf1Emw3dSvJq1GjTn2XiVZrczJ8M+MUDSm4v82vj8=;
+        b=bQlm1d7Ir+fi+0Z8WCEURnWFDYiBiOpv/zsIjjOm9oqJ1TqvBrC70zyKZ6lCJyr+kr
+         C8qa/9B61l28DcXGnsXezmUW2JITOJ6Equ9uOgCvBMroX81eQPHCz703ZGSfllUqLMhc
+         E5OVOvmgxSk2rwYmVJlHBNAxF5vv/VpkH4LRn70Ukq8SpRoC/SjQ1vV0dz9Qb93OZEQo
+         9CHRBnrBSn0XOBsGs2kk0GXb3QWNw1AakxjlosMHpZtVF+ayJGkMW4qvqybRyLuqqxs4
+         Wirq6ctDORWJVAoLPNPpHlyx0x5YbQvb4NyEHJfJRJ+GYQzPoGCDOq428juVBm+dXHDK
+         KGIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695753068; x=1696357868;
+        d=1e100.net; s=20230601; t=1695753179; x=1696357979;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=d/myCHqw7Y6f+5xQcBNEbOGknqH3f0sUeqk2WLdYAig=;
-        b=YTrTWG0guqBOYkfG4v5MoFOgsMdcEEdplv5znbv3TMfv3Tz7fR2hCWd8K9wW7e7XYv
-         /mpgfyrBv9njsD+BpiBUi35L96ren9brf9SaBNNRRUXMk2mYpX+xC9Tc+i32Bdl6mcKr
-         wcillbVAWOK7I+3CZ3vtjyddaNISGMx5W64agYakeTLiSaVnuhX9QN2nwKqo9IQCnnEy
-         lZqO1ZgSUuYrlS2/4UfoX0RafMgQ0A8qXYdDD48+pnuHk6Yn7k6s2wJlIHyroa2Cik2j
-         7740aihKA1k1xJkDVe2DOlppv6k+UngGynhBrz8CY++p0rMC9Yvbgl1xJt90pSq6fOP7
-         hzMQ==
-X-Gm-Message-State: AOJu0YxDHY8yI9dwZeDl4R023ZgvPhf94j7PcTFD12/XmxRHFY5w8p5Z
-        +61SmMbFAyVtHYK+2/KMfWiIDQ==
-X-Google-Smtp-Source: AGHT+IE6U4dbpZkMiDLUilr+o3lM7oLQfDnwoNQRV1X9qb1YY2228fmM4TWOfFylp4qEhYmYaVX3ZQ==
-X-Received: by 2002:ac2:5b9c:0:b0:503:3587:fd15 with SMTP id o28-20020ac25b9c000000b005033587fd15mr8278374lfn.61.1695753067817;
-        Tue, 26 Sep 2023 11:31:07 -0700 (PDT)
+        bh=QKVf1Emw3dSvJq1GjTn2XiVZrczJ8M+MUDSm4v82vj8=;
+        b=lcOKYPD8ebkR9OVjKuoq38djvsgvHaAB/4TTusStpagfwWC1BR41dDtHMAjYaKuTeO
+         UcCWHroGXjsnRgAB11yWWdpM2NJqICJ14N/mxcjYFZVnp4xsDS8oQXpq+mO9iMVyzQwW
+         +sBJFhBg87qWxmljsfE+LRBZOmsdzwDbiBGQVo/bzBCujT2szam6x2WEZG0MhFWdfWLf
+         hSWwaFT/+Hq7MjX/yRGFS7/PDcGcoEq+DMR0GpOQRy3T5wRugD2SLGXe09FwSaZKs7Ru
+         8ju46pdd+XX1+DDtNZNNzH6HPk88OXWKNU/rC7FPxfLRnsUnZQiMZ2BEKjpAFZqNhBSh
+         5gVg==
+X-Gm-Message-State: AOJu0YyMGzKKAIbu82F53kSoX8FUe0p45aK/TLChWBX6DOmBoEuj1hA8
+        7adEamuxBut1FuaW3l1DzLHhKA==
+X-Google-Smtp-Source: AGHT+IFLV5Ipx5Mz2OCqfpQ52rEwvqLALF2SGwbyWVPmVTgbDOgheWGnwGxJR4x/oP2qgwHcfJA7Qw==
+X-Received: by 2002:a05:6512:b1a:b0:502:a942:d7a8 with SMTP id w26-20020a0565120b1a00b00502a942d7a8mr9441265lfu.69.1695753179076;
+        Tue, 26 Sep 2023 11:32:59 -0700 (PDT)
 Received: from [192.168.33.189] (178235177023.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.23])
-        by smtp.gmail.com with ESMTPSA id b6-20020ac24106000000b004ff9ee35739sm2295053lfi.283.2023.09.26.11.31.05
+        by smtp.gmail.com with ESMTPSA id u2-20020a056512040200b005030a35019dsm2287736lfk.178.2023.09.26.11.32.57
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Sep 2023 11:31:07 -0700 (PDT)
-Message-ID: <e6c77627-c257-45e1-b4bd-19807aefd829@linaro.org>
-Date:   Tue, 26 Sep 2023 20:31:05 +0200
+        Tue, 26 Sep 2023 11:32:58 -0700 (PDT)
+Message-ID: <daa73a81-569a-467e-aa28-0e711184331f@linaro.org>
+Date:   Tue, 26 Sep 2023 20:32:56 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 2/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- soc
+Subject: Re: [PATCH V2 3/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
+ IDP board
 Content-Language: en-US
 To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
         andersson@kernel.org, mani@kernel.org, alim.akhtar@samsung.com,
@@ -64,7 +64,7 @@ To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
 Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <20230926162042.14180-1-quic_nitirawa@quicinc.com>
- <20230926162042.14180-3-quic_nitirawa@quicinc.com>
+ <20230926162042.14180-4-quic_nitirawa@quicinc.com>
 From:   Konrad Dybcio <konrad.dybcio@linaro.org>
 Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
  xsFNBF9ALYUBEADWAhxdTBWrwAgDQQzc1O/bJ5O7b6cXYxwbBd9xKP7MICh5YA0DcCjJSOum
@@ -101,7 +101,7 @@ Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
  bGqMHex48FVZhexNPYOd58EY9/7mL5u0sJmo+jTeb4JBgIbFPJCFyng4HwbniWgQJZ1WqaUC
  nas9J77uICis2WH7N8Bs9jy0wQYezNzqS+FxoNXmDQg2jetX8en4bO2Di7Pmx0jXA4TOb9TM
  izWDgYvmBE8=
-In-Reply-To: <20230926162042.14180-3-quic_nitirawa@quicinc.com>
+In-Reply-To: <20230926162042.14180-4-quic_nitirawa@quicinc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -109,69 +109,32 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 26.09.2023 18:20, Nitin Rawat wrote:
-> Add UFS host controller and PHY nodes for sc7280 soc.
+> Add UFS host controller and PHY nodes for sc7280 IDP board.
 > 
 > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 > ---
->  arch/arm64/boot/dts/qcom/sc7280.dtsi | 64 ++++++++++++++++++++++++++++
->  1 file changed, 64 insertions(+)
+>  arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
 > 
-> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> index 66f1eb83cca7..3be8ea090ade 100644
-> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> @@ -3353,6 +3353,70 @@
->  			};
->  		};
+> diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> index 2ff549f4dc7a..a0059527d9e4 100644
+> --- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> @@ -499,6 +499,25 @@
+>  	status = "okay";
+>  };
 > 
-> +		ufs_mem_hc: ufs@1d84000 {
-> +			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
-> +				     "jedec,ufs-2.0";
-> +			reg = <0x0 0x01d84000 0x0 0x3000>;
-> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-> +			phys = <&ufs_mem_phy>;
-> +			phy-names = "ufsphy";
-> +			lanes-per-direction = <2>;
-> +			#reset-cells = <1>;
-> +			resets = <&gcc GCC_UFS_PHY_BCR>;
-> +			reset-names = "rst";
-> +
-> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
-> +			required-opps = <&rpmhpd_opp_nom>;
-> +
-> +			iommus = <&apps_smmu 0x80 0x0>;
-> +			dma-coherent;
-> +
-> +			clock-names = "core_clk",
-> +				      "bus_aggr_clk",
-> +				      "iface_clk",
-> +				      "core_clk_unipro",
-> +				      "ref_clk",
-> +				      "tx_lane0_sync_clk",
-> +				      "rx_lane0_sync_clk",
-> +				      "rx_lane1_sync_clk";
-As discussed, property-names is preferred to come after
-property, just like in the other node you're adding.
-
-[...]
-
-> +		ufs_mem_phy: phy@1d87000 {
-> +			compatible = "qcom,sc7280-qmp-ufs-phy";
-> +			reg = <0x0 0x01d87000 0x0 0xe00>;
-> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
-> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
-> +				 <&gcc GCC_UFS_1_CLKREF_EN>;
-> +			clock-names = "ref", "ref_aux", "qref";
-> +
-> +			resets = <&ufs_mem_hc 0>;
-> +			reset-names = "ufsphy";
-> +
-> +			#clock-cells = <1>;
-> +			#phy-cells = <0>;
-> +
-> +			status = "disabled";
-> +
-> +		};
-Stray newline above.
+> +&ufs_mem_hc {
+> +	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
+> +	vcc-supply = <&vreg_l7b_2p9>;
+> +	vcc-max-microamp = <800000>;
+> +	vccq-supply = <&vreg_l9b_1p2>;
+> +	vccq-max-microamp = <900000>;
+> +	vccq2-supply = <&vreg_l9b_1p2>;
+> +	vccq2-max-microamp = <900000>;
+Can you confirm VCCQ2 is in fact connected, to avoid the mistake
+fixed in [1]?
 
 Konrad
+
+[1] https://lore.kernel.org/linux-arm-msm/20230906104744.163479-1-krzysztof.kozlowski@linaro.org/#b
