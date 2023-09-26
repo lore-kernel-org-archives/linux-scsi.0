@@ -2,168 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EE1DE7D27D
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 11:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCA49E7D27D
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 11:03:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234468AbjIZLC0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 07:02:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38462 "EHLO
+        id S234502AbjIZLEB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 07:04:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234140AbjIZLCZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 07:02:25 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 217AC95;
-        Tue, 26 Sep 2023 04:02:19 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-690d25b1dbdso7457169b3a.2;
-        Tue, 26 Sep 2023 04:02:19 -0700 (PDT)
+        with ESMTP id S234451AbjIZLEA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 07:04:00 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E593E95;
+        Tue, 26 Sep 2023 04:03:53 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-690d2441b95so6291929b3a.1;
+        Tue, 26 Sep 2023 04:03:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695726138; x=1696330938; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1695726233; x=1696331033; darn=vger.kernel.org;
         h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pChK/efsCXIVzZQXlKNf+tDjwC1BKQ6UkiPs/KNBmZo=;
-        b=LYAiJCjFBsRwVgSMP7Jx1IQIplonKKkq1UEgb4WAYLXa+65Xrd3M0HhFLRARYjS34N
-         bki/72Qh6xUSMb366Z7/5aLQ2BlxnuIqXrjDxiDYzkVvuf9Q/0STnoxY9yP7BM6O2UQx
-         q5iQzrERZ671VJgG0M5qzc4TE2hneK8ArntWG1+HKBZ4SWVOd2rhNK07whpt9ai8QWBz
-         mDxNQCqIu8/VbE1uEg4lvnpBoF6vVwer//SslxbYD5lyUwSeDWpmkaobUQ8PNgcIpbN5
-         It+lMyNp67JYxyPUHx38hY80pvl8pmAjBDT9JtScZ5yHDcxcJJe1QGtrKvTSnz0wD6PJ
-         0Agw==
+        bh=wfI3/3LVivFD+ycaQCKtXt9/80PRWkq6i+B9OsvgUoQ=;
+        b=bzci90ACmcptF/MQKv5EkyN4cbSOgieX17pjigBppRjlLjcHw1l1DD5LF/PO6CIYzH
+         Hjt6FRx3O07cRk8gv9M5t/q5kt2NDlgOl3yn3HorLE7PL3bRY7Uo2Jw+na0KwfWWCB76
+         HlW/jU2sKCgkdeTiK+m5m3rGNddVqj8vNL1gfZvJj7/hEOKcs8HEZAVf15m/GnhF12rL
+         8KwdnLgSLC4Gp060DW7XWMlbx2eP+s2WYJUSbQDTfpBFlZykrptgrEFFezY5djzQ2+Wi
+         AWKGnjAcm9t2K01jGNpAkLBHwK5wtohfMPZiqAYYL1il4xx3K7Bkk1l/vYX8GjV563Ns
+         9dUg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695726138; x=1696330938;
+        d=1e100.net; s=20230601; t=1695726233; x=1696331033;
         h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pChK/efsCXIVzZQXlKNf+tDjwC1BKQ6UkiPs/KNBmZo=;
-        b=nAti7z1riWxdJIs4BjdwGqR1gql9GuiaR0I45iW7XF/1crcHJLPfqZVT6Yyv4WhhBn
-         k61Px6eEMzAvXODSX6BxNfRa2I89HU5OOGNaYLcmjZJVxpMlkVf7FGlZjZG04m9WBlz3
-         7sKpTb4MG0AqF8MtXJGIBbceA1aJ90HT6frJ0lyJvID3TGwiek9+jeuf2JdEo14gAEhk
-         +uckMCSzYNH++F5eG/ruvwG2RrWu3jMsO+PIPDUXGGPSS8kMr7tb/kPhyJ4mAxBZHJu4
-         fKFDzB76e3T5ZeVPdcqHeAtjWtvpdqqq2OEkAEDlADn95CR+zLK8lwdiC4CqSynAx1Uk
-         eJQQ==
-X-Gm-Message-State: AOJu0YwkEnCZuTgvccHJVreWTqGkKnEHRRbw9kY2QnEVDOgoouugk7kW
-        bhGlrko8kmmLWvjL8F9P0lWlfyM4ZJE7yA==
-X-Google-Smtp-Source: AGHT+IEmyeAdYeDz02GzILEqzqIYHAze7cUC0WkDabeqY7UwXRzvTKRA9vvQMJamUr5WhxDG37Uz6g==
-X-Received: by 2002:a05:6a00:80e:b0:68c:638b:e2c6 with SMTP id m14-20020a056a00080e00b0068c638be2c6mr11623933pfk.9.1695726138467;
-        Tue, 26 Sep 2023 04:02:18 -0700 (PDT)
+        bh=wfI3/3LVivFD+ycaQCKtXt9/80PRWkq6i+B9OsvgUoQ=;
+        b=aXy9XlECA7xVqiNIJak7b6c+80KvP6ydmI/KsjBRgFuB3F9HWOlfNFp4AKvIH0+tkb
+         zl9SHWsDpq+LJWBHSQhHb7/kkwcYhZd1YnbNTFMyw5VoaE9j6gE+FpvGL7YTlemIoOls
+         NpQLGImqXVfSN1mt6VG/jIoDz83W2jGMmgRQdpFYtW6DCOHBGKihyRFZ8Zm+ggYdX/82
+         tf4m/Ny/wF2vvD9piY+eDcl9ZyLj/GE1B7kiRioJ/RLK+GitvZ/X/juFOhdLsQ7z+Fiy
+         08QAMxPrjllBFzuhEkImMCTVMpS3HOcGugr0NhQcuok818kLxw8Huat47Ytxm/nPlDnr
+         jkuw==
+X-Gm-Message-State: AOJu0Yzx99HEaYIxK+UQeqoS42KDz6yYXGgo4bmqur2ahITt3Dk7t3m9
+        4p5vg/WglqdC29Rm1Dy7XhY=
+X-Google-Smtp-Source: AGHT+IG0VffM5J+dFIO8rNJNuwQ3gHpDzkP1TUkNwlndvy9Ikb+nOCeOkU0giVf3RFGo/Sw4uxvCgg==
+X-Received: by 2002:a05:6a21:18f:b0:134:73f6:5832 with SMTP id le15-20020a056a21018f00b0013473f65832mr3951818pzb.16.1695726233284;
+        Tue, 26 Sep 2023 04:03:53 -0700 (PDT)
 Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
-        by smtp.gmail.com with ESMTPSA id c5-20020aa781c5000000b0068883728c16sm9999804pfn.144.2023.09.26.04.02.16
+        by smtp.gmail.com with ESMTPSA id y5-20020aa78545000000b0068fd653321esm9717263pfn.58.2023.09.26.04.03.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Sep 2023 04:02:18 -0700 (PDT)
+        Tue, 26 Sep 2023 04:03:52 -0700 (PDT)
 From:   Chengfeng Ye <dg573847474@gmail.com>
-To:     chenxiang66@hisilicon.com, jejb@linux.ibm.com,
+To:     aacraid@microsemi.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Chengfeng Ye <dg573847474@gmail.com>
-Subject: [PATCH] scsi: libsas: Fix potential deadlock on &sas_dev->lock
-Date:   Tue, 26 Sep 2023 11:02:02 +0000
-Message-Id: <20230926110202.11589-1-dg573847474@gmail.com>
+Subject: [PATCH] scsi: ips: Fix potential deadlock on host->host_lock
+Date:   Tue, 26 Sep 2023 11:03:41 +0000
+Message-Id: <20230926110341.12028-1-dg573847474@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hard interrupt cq_interrupt_v1_hw() could introduce double locks on
-&sas_dev->lock.
+Hard interrupt do_ipsintr() could introduce double locks on
+host->host_lock.
 
 <Deadlock #1>
-hisi_sas_abort_task_set()
---> hisi_sas_release_task()
---> spin_lock(&sas_dev->lock)
+ips_eh_abort()
+--> spin_loc(host->host_lock)
 <interrupt>
-   --> cq_interrupt_v1_hw()
-   --> hisi_sas_slot_task_free()
-   --> spin_lock(&sas_dev->lock)
-
-<Deadlock #2>
-hisi_sas_abort_task()
---> hisi_sas_softreset_ata_disk()
---> hisi_sas_release_task()
---> hisi_sas_do_release_task()
---> hisi_sas_slot_task_free()
---> spin_lock(&sas_dev->lock)
-<interrupt>
-   --> cq_interrupt_v1_hw()
-   --> hisi_sas_slot_task_free()
-   --> spin_lock(&sas_dev->lock)
-
-<Deadlock #3>
-hisi_sas_queue_command()
---> hisi_sas_task_deliver()
---> spin_lock(&sas_dev->lock)
-<interrupt>
-   --> cq_interrupt_v1_hw()
-   --> hisi_sas_slot_task_free()
-   --> spin_lock(&sas_dev->lock)
+   --> do_ipsintr()
+   --> spin_lock(host->host_lock)
 
 This flaw was found by an experimental static analysis tool I am
 developing for irq-related deadlock.
 
 To prevent the potential deadlock, the patch use spin_lock_irqsave()
-on &sas_dev->lock.
+on host->host_lock.
 
 Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/scsi/ips.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 9472b9743aef..c2d3cc0e9e8d 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -207,6 +207,7 @@ static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
- void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 			     struct hisi_sas_slot *slot, bool need_lock)
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index bb206509265e..3caab8233d68 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -776,6 +776,8 @@ int ips_eh_abort(struct scsi_cmnd *SC)
  {
+ 	ips_ha_t *ha;
+ 	ips_copp_wait_item_t *item;
 +	unsigned long flags;
- 	int device_id = slot->device_id;
- 	struct hisi_sas_device *sas_dev = &hisi_hba->devices[device_id];
++
+ 	int ret;
+ 	struct Scsi_Host *host;
  
-@@ -240,9 +241,9 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+@@ -793,7 +795,7 @@ int ips_eh_abort(struct scsi_cmnd *SC)
+ 	if (!ha->active)
+ 		return (FAILED);
+ 
+-	spin_lock(host->host_lock);
++	spin_lock_irqsave(host->host_lock, flags);
+ 
+ 	/* See if the command is on the copp queue */
+ 	item = ha->copp_waitlist.head;
+@@ -814,7 +816,7 @@ int ips_eh_abort(struct scsi_cmnd *SC)
+ 		ret = (FAILED);
  	}
  
- 	if (need_lock) {
--		spin_lock(&sas_dev->lock);
-+		spin_lock_irqsave(&sas_dev->lock, flags);
- 		list_del_init(&slot->entry);
--		spin_unlock(&sas_dev->lock);
-+		spin_unlock_irqrestore(&sas_dev->lock, flags);
- 	} else {
- 		list_del_init(&slot->entry);
- 	}
-@@ -403,6 +404,7 @@ void hisi_sas_task_deliver(struct hisi_hba *hisi_hba,
- 	struct hisi_sas_cmd_hdr *cmd_hdr_base;
- 	int dlvry_queue_slot, dlvry_queue;
- 	struct sas_task *task = slot->task;
-+	unsigned long flags;
- 	int wr_q_index;
- 
- 	spin_lock(&dq->lock);
-@@ -410,9 +412,9 @@ void hisi_sas_task_deliver(struct hisi_hba *hisi_hba,
- 	dq->wr_point = (dq->wr_point + 1) % HISI_SAS_QUEUE_SLOTS;
- 	list_add_tail(&slot->delivery, &dq->list);
- 	spin_unlock(&dq->lock);
--	spin_lock(&sas_dev->lock);
-+	spin_lock_irqsave(&sas_dev->lock, flags);
- 	list_add_tail(&slot->entry, &sas_dev->list);
--	spin_unlock(&sas_dev->lock);
-+	spin_unlock_irqrestore(&sas_dev->lock, flags);
- 
- 	dlvry_queue = dq->id;
- 	dlvry_queue_slot = wr_q_index;
-@@ -1103,12 +1105,13 @@ static void hisi_sas_release_task(struct hisi_hba *hisi_hba,
- {
- 	struct hisi_sas_slot *slot, *slot2;
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	unsigned long flags;
- 
--	spin_lock(&sas_dev->lock);
-+	spin_lock_irqsave(&sas_dev->lock, flags);
- 	list_for_each_entry_safe(slot, slot2, &sas_dev->list, entry)
- 		hisi_sas_do_release_task(hisi_hba, slot->task, slot, false);
- 
--	spin_unlock(&sas_dev->lock);
-+	spin_unlock_irqrestore(&sas_dev->lock, flags);
+-	spin_unlock(host->host_lock);
++	spin_unlock_irqrestore(host->host_lock, flags);
+ 	return ret;
  }
  
- void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
 -- 
 2.17.1
 
