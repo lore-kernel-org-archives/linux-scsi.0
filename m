@@ -2,119 +2,91 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E56E7F14B
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 00:54:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B633E7F151
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 01:52:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234248AbjI0AyD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 20:54:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40850 "EHLO
+        id S233769AbjI0BwS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 21:52:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232381AbjI0AwB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 20:52:01 -0400
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A305B212A;
-        Tue, 26 Sep 2023 17:09:42 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-405361bb949so107665975e9.1;
-        Tue, 26 Sep 2023 17:09:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695773381; x=1696378181; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Q6IH4cIf/YUQbm0f3DbgR+Cr/DgsuA+viBGblpNrbFk=;
-        b=MsJBCV7wBWWUYJ91j18qO0dCJ9/I0x0WHIOPldnjmyo9QpbCBZy7V2qvWmW6n6JmJQ
-         /y80co0CgedCX0MijySHp0UCBenxGMF4r8iQJsxy/55Ef+Ky39m/5Coz51kBTCMemT+z
-         Tv2rAJaq6tQWgBvFM8ALNzXGneTC8EIWpeRY+dAb8HO/7ua2HzfE4UvqINB/UopQIMTJ
-         a8PvW8NnAdcQe+O7InQQZlEd0Iy1bnQpSjja3CtI5ALbyO6hKV+QGKDbHaZzoLRy9964
-         JsRRcCt0b4oL7WVx03d8BdcQ73Al4mHqoysRIOtDojOj3hq+R61fLIwXC8dgX65Ms0Zj
-         fWFw==
+        with ESMTP id S229825AbjI0BuR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 21:50:17 -0400
+Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 510AE1F9CE;
+        Tue, 26 Sep 2023 16:30:54 -0700 (PDT)
+Received: by mail-oi1-f181.google.com with SMTP id 5614622812f47-3ae5ee80c0dso713028b6e.3;
+        Tue, 26 Sep 2023 16:30:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695773381; x=1696378181;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Q6IH4cIf/YUQbm0f3DbgR+Cr/DgsuA+viBGblpNrbFk=;
-        b=D9fN/VfwDOjVvkdQrFBimBfSDzJ4AZBNnfEnEXWs8tUX4t8xWDOafGM5nbm3ywrtRU
-         XFmVaGQ12UUbdUtVqLGMapoaI09kc0cwuYR3s7ZYfUx1gBg4WBy29pJzuSiJsb4LGER0
-         t7NWh5xZEBT5lGS94yTnA/74FCv3ipDmS98sb2y0aHYIdXf2x8ZstlAzJyXmAP8cnott
-         8knQK1ExLx5ocTKHCWJmSQcyZYOTL3GVlZUboLsvzr37IAat4i7oTjEwyIYrroYLGZLA
-         xkDsCJih8DJZrRiMKuAuClw81kiVELOZmR4XUh6KGfY8i154l3Mt4FiOTbHdklt4RrJ8
-         gPxw==
-X-Gm-Message-State: AOJu0YwCj6gw3ZRR/2H+qnctbSvQNK2GsCQ54lMzDa8RKhrCZLVnK25m
-        60+GcUKtZ/exGAOu/8+A1cSXGMMOXqx8hW3DlfwkWDhizEs5LQ==
-X-Google-Smtp-Source: AGHT+IGaXPrvF+GuvM4qEASaLaiHb3SJbSTTjbzf4ykGiL7cgsFzVbhUrDL1HHWD8/28DSQM9J39SMQWqZcY1o84Dk0=
-X-Received: by 2002:a5d:6782:0:b0:321:65f3:4100 with SMTP id
- v2-20020a5d6782000000b0032165f34100mr181669wru.7.1695773380830; Tue, 26 Sep
- 2023 17:09:40 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1695771053; x=1696375853;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qpqjxGv637godH0bTfk5Je3fLHGyFwQagbqNm+b/J+g=;
+        b=cB7uCMLQV5fN0R5THJRxQYWgme5LUCzvntv6CW/R3TSiwcg7NLB/AatKaF3xShrEUy
+         kmy+epTew2VpHyly1wdrMxn3AG3udJaoawuCqtWZ0H+XBnBQrrgFP5XkYmefA3wTdlIi
+         wti2lOc0a9MLMbmpBEDO8neq8zRASNaBikJxp5PV0dSJcs5tx3BuZ9drzd0SJCjBRNwM
+         xwh3UxUX7hRFYk7SN3UHsz6A5AGdgdYg3ykAh5DagOiGdZj3LtTNIrgOHurIwNa9KSQ5
+         FG/1+2jZOmNJ1qdhYIEdQcS+x3ZF8QtRU+ghW/7vX9969cKmyTd8ilSTTRrGZlKCRPiK
+         1R5A==
+X-Gm-Message-State: AOJu0YzpwzrIbIZZSfF9bS7sjaLgWlsszX/dCr92F/tvsmoZo+5bIwQz
+        oJF28zFYvUbqNFh3ceOuSHA=
+X-Google-Smtp-Source: AGHT+IFWLP23MZC43ocbQN2sWQYB3tQQL000/vwi3GFjKFnjygXIOnm9cPVO85UtAkeHFk0cKaq1qQ==
+X-Received: by 2002:aca:2101:0:b0:3a3:95f9:c99b with SMTP id 1-20020aca2101000000b003a395f9c99bmr506927oiz.35.1695771053282;
+        Tue, 26 Sep 2023 16:30:53 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id fm1-20020a056a002f8100b00679a4b56e41sm10560926pfb.43.2023.09.26.16.30.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 Sep 2023 16:30:52 -0700 (PDT)
+Message-ID: <6a47b269-6481-40c3-8b32-90d7d6985401@acm.org>
+Date:   Tue, 26 Sep 2023 16:30:48 -0700
 MIME-Version: 1.0
-References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
- <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
- <20230926140656.GM1642130@unreal> <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
- <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com> <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
-In-Reply-To: <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
-From:   Rain River <rain.1986.08.12@gmail.com>
-Date:   Wed, 27 Sep 2023 08:08:50 +0800
-Message-ID: <CAJr_XRBcxkdXvzshntDtE9vnLnPzqHCKHxspjw-uKizSYT1HFw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe tasks"
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Bob Pearson <rpearsonhpe@gmail.com>,
-        Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
-        jgg@ziepe.ca, linux-rdma@vger.kernel.org,
-        matsuda-daisuke@fujitsu.com, shinichiro.kawasaki@wdc.com,
-        linux-scsi@vger.kernel.org, Zhu Yanjun <yanjun.zhu@intel.com>,
-        Zhu Yanjun <yanjun.zhu@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 09/23] scsi: sd: Do not issue commands to suspended
+ disks on shutdown
+Content-Language: en-US
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230923002932.1082348-1-dlemoal@kernel.org>
+ <20230923002932.1082348-10-dlemoal@kernel.org>
+ <ca064bd3-2496-4d79-b68c-beff775228c3@acm.org>
+ <2b3ceca3-9e1c-7266-1f60-19e5f032c3e3@kernel.org>
+ <8acc0983-79f2-4704-9963-e8e7f2dc03ed@acm.org>
+In-Reply-To: <8acc0983-79f2-4704-9963-e8e7f2dc03ed@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 4:37=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> On 9/26/23 11:34, Bob Pearson wrote:
-> > I am working to try to reproduce the KASAN warning. Unfortunately,
-> > so far I am not able to see it in Ubuntu + Linus' kernel (as you
-> > described) on metal. The config file is different but copies the
-> > CONFIG_KASAN_xxx exactly as yours. With KASAN enabled it hangs on
-> > every iteration of srp/002 but without a KASAN warning. I am now
-> > building an openSuSE VM for qemu and will see if that causes the
-> > warning.
->
-> Hi Bob,
->
-> Did you try to understand the report that I shared? My conclusion from
-> the report is that when using tasklets rxe_completer() only runs after
-> rxe_requester() has finished and also that when using work queues that
-> rxe_completer() may run concurrently with rxe_requester(). This patch
-> seems to fix all issues that I ran into with the rdma_rxe workqueue
-> patch (I have not tried to verify the performance implications of this
-> patch):
+On 9/26/23 07:51, Bart Van Assche wrote:
+> On 9/25/23 23:00, Damien Le Moal wrote:
+>> But as mentioned before, these are PM internal and should not be 
+>> touched without the device lock held. So the little "suspended" flag 
+>> simplifies things a lot.
+> 
+> Hmm ... I think there is plenty of code in the Linux kernel that reads
+> variables that can be modified by another thread without using locking.
+> Hasn't the READ_ONCE() macro been introduced for this purpose? Anyway, I
+> don't have a strong opinion about whether to read directly from the
+> scsi_device->power data structure or whether to introduce the new
+> 'suspended' member.
 
-In the same test environment in the link
-https://lore.kernel.org/all/4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com/=
-T/#m3294d00f5cf3247dfdb2ea3688b1467167f72704,
+(replying to my own email)
 
-RXE with workqueue has worse performance than RXE with tasklet.
-Sometimes RXE with workqueue can not work well.
+I think we need the new 'suspended' flag. device_resume(), a function
+executed during system-wide resume, executes the following code whether
+or not resuming succeeds:
 
-Need this commit in RXE.
+	dev->power.is_suspended = false;
 
->
-> diff --git a/drivers/infiniband/sw/rxe/rxe_task.c
-> b/drivers/infiniband/sw/rxe/rxe_task.c
-> index 1501120d4f52..6cd5d5a7a316 100644
-> --- a/drivers/infiniband/sw/rxe/rxe_task.c
-> +++ b/drivers/infiniband/sw/rxe/rxe_task.c
-> @@ -10,7 +10,7 @@ static struct workqueue_struct *rxe_wq;
->
->   int rxe_alloc_wq(void)
->   {
-> -       rxe_wq =3D alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
-> +       rxe_wq =3D alloc_workqueue("rxe_wq", WQ_UNBOUND, 1);
->          if (!rxe_wq)
->                  return -ENOMEM;
->
-> Thanks,
->
-> Bart.
+Bart.
+
