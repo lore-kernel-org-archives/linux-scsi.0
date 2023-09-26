@@ -2,86 +2,72 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C7C4E7D24F
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 08:16:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC7A7E7D270
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 09:43:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234009AbjIZIQ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 04:16:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55174 "EHLO
+        id S234240AbjIZJni (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 05:43:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233994AbjIZIQQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 04:16:16 -0400
+        with ESMTP id S234133AbjIZJnh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 05:43:37 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB191139;
-        Tue, 26 Sep 2023 01:15:47 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C20F0C433C9;
-        Tue, 26 Sep 2023 08:15:45 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76905EB;
+        Tue, 26 Sep 2023 02:43:31 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94144C433C9;
+        Tue, 26 Sep 2023 09:43:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695716147;
-        bh=R1tYu+zCjKRGxXsPNNRChzgkkzMhM2utM9Va0s9nexk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O3YPeUoiGGIh7llRrR8KL4Il7nRd/J/40k2J8KqqDD6/t4d4+17ifDks3N1ONPXAw
-         VBroHseuQtAqNmODqgRshpxZemKxJokhmrnTsqDbtXVfH99Fw8eI24NffbKMbueLcF
-         aGxbPXWm6HZGZLLlbqIUEN+BN30icYjWDmciBlHda+hqyosO9lgbrmDfmuSoalKw/e
-         6rRkq9P3XTriPCM3g4WxASxPkh3RrG+7YGgaC7er/wXQz7Kph6GAwSeUEhwyIB2WLM
-         BwCIKnltL+nzPIAzs4+N4qk/sgF1mpZvCp9g1oIboxskPSebTRrmk8nUCvQ9SPoBzk
-         DS1m8MV6MQKBw==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v7 19/23] ata: libata-core: Do not resume runtime suspended ports
-Date:   Tue, 26 Sep 2023 17:15:03 +0900
-Message-ID: <20230926081507.69346-20-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230926081507.69346-1-dlemoal@kernel.org>
-References: <20230926081507.69346-1-dlemoal@kernel.org>
+        s=k20201202; t=1695721411;
+        bh=62Ms2RdlEUDykhXpqwiq2jDEjnzL81U/ZQEs+uHkKxM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Ho38iDJqkErZAlYQJAGYYewQFHKBA47CdYXunzVInFmKO29dbWXPohvw1IJWQsIii
+         4gMUji6hWrJoKyIRWGHIkgPxfisKYm4MDfNuRajfQnFBbyHaM66Pd3JOvsyL6ejG8r
+         25WzYYU1pRxslm4f2LzEAzEyba2f3PPktSWd4k0Ie7PiZ3/ASjnnpylDnM7T2E2jCJ
+         1bwBGkZRo/9YQkSIlxW+3aRGJLIVkOeLY+Xzgz3nPp5efEjnmhyjW6ZWeD2Tr0Uspj
+         IccmdORTdbeGz65lA1Sj3mUlnQPFOB16D5x+cSEh7un8izQ6/pwXPoyepTuE3SoPi8
+         50vOP3CPI4hzg==
+Date:   Tue, 26 Sep 2023 12:43:27 +0300
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     zyjzyj2000@gmail.com, jgg@ziepe.ca, linux-rdma@vger.kernel.org,
+        rpearsonhpe@gmail.com, matsuda-daisuke@fujitsu.com,
+        shinichiro.kawasaki@wdc.com, linux-scsi@vger.kernel.org,
+        Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
+Message-ID: <20230926094327.GI1642130@unreal>
+References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
+ <841c0cf2-48f6-4a3c-a991-aaa5a737a9af@acm.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <841c0cf2-48f6-4a3c-a991-aaa5a737a9af@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The scsi disk driver does not resume disks that have been runtime
-suspended by the user. To be consistent with this behavior, do the same
-for ata ports and skip the PM request in ata_port_pm_resume() if the
-port was already runtime suspended. With this change, it is no longer
-necessary to force the PM state of the port to ACTIVE as the PM core
-code will take care of that when handling runtime resume.
+On Fri, Sep 22, 2023 at 09:42:08AM -0700, Bart Van Assche wrote:
+> On 9/22/23 09:32, Zhu Yanjun wrote:
+> > From: Zhu Yanjun <yanjun.zhu@linux.dev>
+> > 
+> > This reverts commit 9b4b7c1f9f54120940e243251e2b1407767b3381.
+> > 
+> > This commit replaces tasklet with workqueue. But this results
+> > in occasionally pocess hang at the blktests test case srp/002.
+> > After the discussion in the link[1], this commit is reverted.
+> > 
+> > Link: https://lore.kernel.org/linux-rdma/e8b76fae-780a-470e-8ec4-c6b650793d10@leemhuis.info/T/#t [1]
+> > Signed-off-by: Zhu Yanjun <yanjun.zhu@linux.dev>
+> > CC: rpearsonhpe@gmail.com
+> > CC: matsuda-daisuke@fujitsu.com
+> > CC: bvanassche@acm.org
+> > CC: shinichiro.kawasaki@wdc.com
+> 
+> Shouldn't the Cc-list occur before the Signed-off-by tag? Anyway:
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/ata/libata-core.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+chackpatch didn't complain, so I took it as is.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index df6ed386e6fc..58f03031a259 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5230,10 +5230,8 @@ static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
- 
- static int ata_port_pm_resume(struct device *dev)
- {
--	ata_port_resume(to_ata_port(dev), PMSG_RESUME, true);
--	pm_runtime_disable(dev);
--	pm_runtime_set_active(dev);
--	pm_runtime_enable(dev);
-+	if (!pm_runtime_suspended(dev))
-+		ata_port_resume(to_ata_port(dev), PMSG_RESUME, true);
- 	return 0;
- }
- 
--- 
-2.41.0
+> 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
+Thanks
