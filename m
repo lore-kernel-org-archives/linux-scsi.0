@@ -2,96 +2,176 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0777BE7E654
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 18:29:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8514E7E657
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 18:31:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235552AbjIZS3s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 14:29:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49298 "EHLO
+        id S235451AbjIZSbS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 14:31:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235678AbjIZS3m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 14:29:42 -0400
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 015E7CCC
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 11:29:33 -0700 (PDT)
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1c5c91bec75so67227825ad.3
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 11:29:33 -0700 (PDT)
+        with ESMTP id S235359AbjIZSbR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 14:31:17 -0400
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAED710A
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 11:31:09 -0700 (PDT)
+Received: by mail-lj1-x232.google.com with SMTP id 38308e7fff4ca-2bffc55af02so154132341fa.2
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Sep 2023 11:31:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1695753068; x=1696357868; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=d/myCHqw7Y6f+5xQcBNEbOGknqH3f0sUeqk2WLdYAig=;
+        b=N76C/9MbAZe8oDDZdHo1XxEhAkFD5l+Q4cA84twNFU4zbusv7xA9HgifN+R/ZjOx79
+         aTGBB7/TNe6x8gUD6b6rbIfrtr6PdrRcrLV3Z5mfxz8A66I+J2bWIKCbjaB7HD8ulmR3
+         1d4f+WkiYCS2oUPbOQsiNVMc1k+cLLdh/faMVqup7iFNrk0nnMX368+Qxp7EnT24oSRG
+         A1QLqX0XGm9jLr5VXCsi4C9cRWkMW2C4OxGrhjzYbbCNjxRkMpFEEVloyoTfsMoW1/Yp
+         quU8zJ4BclyQsPP+mIY7bT6xuzKd09UUyZxj3LVDbCTNowWHK8Joq64QDvRrnCGw9WC1
+         FPOg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695752973; x=1696357773;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1695753068; x=1696357868;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PqCnKovqYNIj8DxAuxi3A8OvLmIv66iPRLv7SkxKqmw=;
-        b=J17s+vQFLvpJvZU81qHttL+PvHp74tYO+xWm/kI9DfHTey+yspNyQXzgwixaLhSeL6
-         Om9QwUTmWZS6t/Vwu6+hHUW7Aim1Btub2HGWeKl5OSLj7u/HENqCFuzn1HIYqwuuqDyy
-         FJD/wa6ddDBQoc5i33fZrnhirWtSrvbZVPPx3tT+++ErR5+4FB2Xv8fEl/C8sChTt9d6
-         C/hp9rl/gClAhpv8l81KhfHYX85BJKXSxAsomTRCNa8/93njUWG6Jg7b4aOYLUatAB+c
-         /u0j/vc7EdmLt4geOEc4enePebmYGHr7pOY+FEzTMIvoF7kel/gaMvAWGXHVTFUDyixQ
-         EzbQ==
-X-Gm-Message-State: AOJu0Yz1WqZQl8dvZmsuSkRGz2MSHf/SPz9KX68vqZbs4u41x5q+P+q7
-        E1UFbPVDLE2G1b/HFEn83Hs2KNmxTmg=
-X-Google-Smtp-Source: AGHT+IHMqjzi7c5raBEJ21qHqYKV/IIXP9BNuusQNOPnQ8IVTL/LruBVyInOe/dyW6slLLnR4GuA8g==
-X-Received: by 2002:a17:902:c10c:b0:1c5:741d:f388 with SMTP id 12-20020a170902c10c00b001c5741df388mr8372368pli.9.1695752973263;
-        Tue, 26 Sep 2023 11:29:33 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:a80d:6f65:53d4:d1bf? ([2620:15c:211:201:a80d:6f65:53d4:d1bf])
-        by smtp.gmail.com with ESMTPSA id je20-20020a170903265400b001c5fc291f02sm7458673plb.216.2023.09.26.11.29.31
+        bh=d/myCHqw7Y6f+5xQcBNEbOGknqH3f0sUeqk2WLdYAig=;
+        b=YTrTWG0guqBOYkfG4v5MoFOgsMdcEEdplv5znbv3TMfv3Tz7fR2hCWd8K9wW7e7XYv
+         /mpgfyrBv9njsD+BpiBUi35L96ren9brf9SaBNNRRUXMk2mYpX+xC9Tc+i32Bdl6mcKr
+         wcillbVAWOK7I+3CZ3vtjyddaNISGMx5W64agYakeTLiSaVnuhX9QN2nwKqo9IQCnnEy
+         lZqO1ZgSUuYrlS2/4UfoX0RafMgQ0A8qXYdDD48+pnuHk6Yn7k6s2wJlIHyroa2Cik2j
+         7740aihKA1k1xJkDVe2DOlppv6k+UngGynhBrz8CY++p0rMC9Yvbgl1xJt90pSq6fOP7
+         hzMQ==
+X-Gm-Message-State: AOJu0YxDHY8yI9dwZeDl4R023ZgvPhf94j7PcTFD12/XmxRHFY5w8p5Z
+        +61SmMbFAyVtHYK+2/KMfWiIDQ==
+X-Google-Smtp-Source: AGHT+IE6U4dbpZkMiDLUilr+o3lM7oLQfDnwoNQRV1X9qb1YY2228fmM4TWOfFylp4qEhYmYaVX3ZQ==
+X-Received: by 2002:ac2:5b9c:0:b0:503:3587:fd15 with SMTP id o28-20020ac25b9c000000b005033587fd15mr8278374lfn.61.1695753067817;
+        Tue, 26 Sep 2023 11:31:07 -0700 (PDT)
+Received: from [192.168.33.189] (178235177023.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.23])
+        by smtp.gmail.com with ESMTPSA id b6-20020ac24106000000b004ff9ee35739sm2295053lfi.283.2023.09.26.11.31.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Sep 2023 11:29:32 -0700 (PDT)
-Message-ID: <f10fff07-8a7d-473e-b793-95c2796e63f2@acm.org>
-Date:   Tue, 26 Sep 2023 11:29:31 -0700
+        Tue, 26 Sep 2023 11:31:07 -0700 (PDT)
+Message-ID: <e6c77627-c257-45e1-b4bd-19807aefd829@linaro.org>
+Date:   Tue, 26 Sep 2023 20:31:05 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] ufs: core: wlun send SSU timeout recovery
+Subject: Re: [PATCH V2 2/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
+ soc
 Content-Language: en-US
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com,
-        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
-        naomi.chu@mediatek.com
-References: <20230922090925.16339-1-peter.wang@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230922090925.16339-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
+        andersson@kernel.org, mani@kernel.org, alim.akhtar@samsung.com,
+        bvanassche@acm.org, avri.altman@wdc.com, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        cros-qcom-dts-watchers@chromium.org
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+References: <20230926162042.14180-1-quic_nitirawa@quicinc.com>
+ <20230926162042.14180-3-quic_nitirawa@quicinc.com>
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
+ 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
+ izWDgYvmBE8=
+In-Reply-To: <20230926162042.14180-3-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/22/23 02:09, peter.wang@mediatek.com wrote:
-> +	/*
-> +	 * If runtime pm send SSU and got timeout, scsi_error_handler
-> +	 * stuck at this function to wait flush_work(&hba->eh_work).
-> +	 * And ufshcd_err_handler(eh_work) stuck at wait runtime pm active.
-> +	 * Do ufshcd_link_recovery instead shedule eh_work can prevent
-> +	 * dead lock happen.
-> +	 */
+On 26.09.2023 18:20, Nitin Rawat wrote:
+> Add UFS host controller and PHY nodes for sc7280 soc.
+> 
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> ---
+>  arch/arm64/boot/dts/qcom/sc7280.dtsi | 64 ++++++++++++++++++++++++++++
+>  1 file changed, 64 insertions(+)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> index 66f1eb83cca7..3be8ea090ade 100644
+> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> @@ -3353,6 +3353,70 @@
+>  			};
+>  		};
+> 
+> +		ufs_mem_hc: ufs@1d84000 {
+> +			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
+> +				     "jedec,ufs-2.0";
+> +			reg = <0x0 0x01d84000 0x0 0x3000>;
+> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+> +			phys = <&ufs_mem_phy>;
+> +			phy-names = "ufsphy";
+> +			lanes-per-direction = <2>;
+> +			#reset-cells = <1>;
+> +			resets = <&gcc GCC_UFS_PHY_BCR>;
+> +			reset-names = "rst";
+> +
+> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
+> +			required-opps = <&rpmhpd_opp_nom>;
+> +
+> +			iommus = <&apps_smmu 0x80 0x0>;
+> +			dma-coherent;
+> +
+> +			clock-names = "core_clk",
+> +				      "bus_aggr_clk",
+> +				      "iface_clk",
+> +				      "core_clk_unipro",
+> +				      "ref_clk",
+> +				      "tx_lane0_sync_clk",
+> +				      "rx_lane0_sync_clk",
+> +				      "rx_lane1_sync_clk";
+As discussed, property-names is preferred to come after
+property, just like in the other node you're adding.
 
-The above comment is hard to understand because of grammatical issues.
-Please try to improve this comment. A few examples: I think that "wait"
-should be changed into "wait for" and also that "happen" should be changed
-into "to happen".
+[...]
 
-> +	dev = &hba->ufs_device_wlun->sdev_gendev;
-> +	if ((dev->power.runtime_status == RPM_RESUMING) ||
-> +		(dev->power.runtime_status == RPM_SUSPENDING)) {
-> +		err = ufshcd_link_recovery(hba);
-> +		if (err) {
-> +			dev_err(hba->dev, "WL Device PM: status:%d, err:%d\n",
-> +				dev->power.runtime_status,
-> +				dev->power.runtime_error);
-> +		}
-> +		return err;
-> +	}
+> +		ufs_mem_phy: phy@1d87000 {
+> +			compatible = "qcom,sc7280-qmp-ufs-phy";
+> +			reg = <0x0 0x01d87000 0x0 0xe00>;
+> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
+> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
+> +				 <&gcc GCC_UFS_1_CLKREF_EN>;
+> +			clock-names = "ref", "ref_aux", "qref";
+> +
+> +			resets = <&ufs_mem_hc 0>;
+> +			reset-names = "ufsphy";
+> +
+> +			#clock-cells = <1>;
+> +			#phy-cells = <0>;
+> +
+> +			status = "disabled";
+> +
+> +		};
+Stray newline above.
 
-ufshcd_link_recovery() returns a Unix error code (e.g. -ETIMEDOUT) while
-ufshcd_eh_host_reset_handler() should return one of the following values:
-SUCCESS or FAILED. Please fix this.
-
-Thanks,
-
-Bart.
+Konrad
