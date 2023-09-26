@@ -2,116 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCA49E7D27D
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 11:03:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 196F0E7E62E
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 12:57:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234502AbjIZLEB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 07:04:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56570 "EHLO
+        id S234712AbjIZM5X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 08:57:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234451AbjIZLEA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 07:04:00 -0400
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E593E95;
-        Tue, 26 Sep 2023 04:03:53 -0700 (PDT)
-Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-690d2441b95so6291929b3a.1;
-        Tue, 26 Sep 2023 04:03:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695726233; x=1696331033; darn=vger.kernel.org;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wfI3/3LVivFD+ycaQCKtXt9/80PRWkq6i+B9OsvgUoQ=;
-        b=bzci90ACmcptF/MQKv5EkyN4cbSOgieX17pjigBppRjlLjcHw1l1DD5LF/PO6CIYzH
-         Hjt6FRx3O07cRk8gv9M5t/q5kt2NDlgOl3yn3HorLE7PL3bRY7Uo2Jw+na0KwfWWCB76
-         HlW/jU2sKCgkdeTiK+m5m3rGNddVqj8vNL1gfZvJj7/hEOKcs8HEZAVf15m/GnhF12rL
-         8KwdnLgSLC4Gp060DW7XWMlbx2eP+s2WYJUSbQDTfpBFlZykrptgrEFFezY5djzQ2+Wi
-         AWKGnjAcm9t2K01jGNpAkLBHwK5wtohfMPZiqAYYL1il4xx3K7Bkk1l/vYX8GjV563Ns
-         9dUg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695726233; x=1696331033;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wfI3/3LVivFD+ycaQCKtXt9/80PRWkq6i+B9OsvgUoQ=;
-        b=aXy9XlECA7xVqiNIJak7b6c+80KvP6ydmI/KsjBRgFuB3F9HWOlfNFp4AKvIH0+tkb
-         zl9SHWsDpq+LJWBHSQhHb7/kkwcYhZd1YnbNTFMyw5VoaE9j6gE+FpvGL7YTlemIoOls
-         NpQLGImqXVfSN1mt6VG/jIoDz83W2jGMmgRQdpFYtW6DCOHBGKihyRFZ8Zm+ggYdX/82
-         tf4m/Ny/wF2vvD9piY+eDcl9ZyLj/GE1B7kiRioJ/RLK+GitvZ/X/juFOhdLsQ7z+Fiy
-         08QAMxPrjllBFzuhEkImMCTVMpS3HOcGugr0NhQcuok818kLxw8Huat47Ytxm/nPlDnr
-         jkuw==
-X-Gm-Message-State: AOJu0Yzx99HEaYIxK+UQeqoS42KDz6yYXGgo4bmqur2ahITt3Dk7t3m9
-        4p5vg/WglqdC29Rm1Dy7XhY=
-X-Google-Smtp-Source: AGHT+IG0VffM5J+dFIO8rNJNuwQ3gHpDzkP1TUkNwlndvy9Ikb+nOCeOkU0giVf3RFGo/Sw4uxvCgg==
-X-Received: by 2002:a05:6a21:18f:b0:134:73f6:5832 with SMTP id le15-20020a056a21018f00b0013473f65832mr3951818pzb.16.1695726233284;
-        Tue, 26 Sep 2023 04:03:53 -0700 (PDT)
-Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
-        by smtp.gmail.com with ESMTPSA id y5-20020aa78545000000b0068fd653321esm9717263pfn.58.2023.09.26.04.03.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Sep 2023 04:03:52 -0700 (PDT)
-From:   Chengfeng Ye <dg573847474@gmail.com>
-To:     aacraid@microsemi.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Chengfeng Ye <dg573847474@gmail.com>
-Subject: [PATCH] scsi: ips: Fix potential deadlock on host->host_lock
-Date:   Tue, 26 Sep 2023 11:03:41 +0000
-Message-Id: <20230926110341.12028-1-dg573847474@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S234715AbjIZM5W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 08:57:22 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2179210A;
+        Tue, 26 Sep 2023 05:57:14 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Rw08227LKzrT2w;
+        Tue, 26 Sep 2023 20:54:58 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Tue, 26 Sep 2023 20:57:12 +0800
+Message-ID: <06268327-cfed-f266-34a7-fda69411ef2a@huawei.com>
+Date:   Tue, 26 Sep 2023 20:57:11 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
+ mechanism
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>
+CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>,
+        <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>,
+        <lixiaokeng@huawei.com>
+References: <20230901094127.2010873-1-haowenchao2@huawei.com>
+ <ZRGfc73BSW0yyUtI@infradead.org>
+ <47bed3cb-f307-ec55-5c28-051687dab1ea@huawei.com>
+ <a92f5e0c-1976-4fc6-ba48-7ff49546318a@oracle.com>
+From:   Wenchao Hao <haowenchao2@huawei.com>
+In-Reply-To: <a92f5e0c-1976-4fc6-ba48-7ff49546318a@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hard interrupt do_ipsintr() could introduce double locks on
-host->host_lock.
+On 2023/9/26 1:54, Mike Christie wrote:
+> On 9/25/23 10:07 AM, Wenchao Hao wrote:
+>> On 2023/9/25 22:55, Christoph Hellwig wrote:
+>>> Before we add another new error handling mechanism we need to fix the
+>>> old one first.  Hannes' work on not passing the scsi_cmnd to the various
+>>> reset handlers hasn't made a lot of progress in the last five years and
+>>> we'll need to urgently fix that first before adding even more
+>>> complexity.
+>>>
+>> I observed Hannes's patches posted about one year ago, it has not been
+>> applied yet. I don't know if he is still working on it.
+>>
+>> My patches do not depend much on that work, I think the conflict can be
+>> solved fast between two changes.
+> 
+> I think we want to figure out Hannes's patches first.
+> 
+> For a new EH design we will want to be able to do multiple TMFs in parallel
+> on the same host/target right?
+> 
 
-<Deadlock #1>
-ips_eh_abort()
---> spin_loc(host->host_lock)
-<interrupt>
-   --> do_ipsintr()
-   --> spin_lock(host->host_lock)
+It's not necessary to do multiple TMFs in parallel, it's ok to make sure
+each TMFs do not affect each other.
 
-This flaw was found by an experimental static analysis tool I am
-developing for irq-related deadlock.
+For example, we have two devices: 0:0:0:0 and 0:0:0:1
 
-To prevent the potential deadlock, the patch use spin_lock_irqsave()
-on host->host_lock.
+Both of them request device reset, they do not happened in parallel, but
+would in serial. If 0:0:0:0 is performing device reset in progress, 0:0:0:1
+just wait 0:0:0:0 to finish.
 
-Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
----
- drivers/scsi/ips.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index bb206509265e..3caab8233d68 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -776,6 +776,8 @@ int ips_eh_abort(struct scsi_cmnd *SC)
- {
- 	ips_ha_t *ha;
- 	ips_copp_wait_item_t *item;
-+	unsigned long flags;
-+
- 	int ret;
- 	struct Scsi_Host *host;
- 
-@@ -793,7 +795,7 @@ int ips_eh_abort(struct scsi_cmnd *SC)
- 	if (!ha->active)
- 		return (FAILED);
- 
--	spin_lock(host->host_lock);
-+	spin_lock_irqsave(host->host_lock, flags);
- 
- 	/* See if the command is on the copp queue */
- 	item = ha->copp_waitlist.head;
-@@ -814,7 +816,7 @@ int ips_eh_abort(struct scsi_cmnd *SC)
- 		ret = (FAILED);
- 	}
- 
--	spin_unlock(host->host_lock);
-+	spin_unlock_irqrestore(host->host_lock, flags);
- 	return ret;
- }
- 
--- 
-2.17.1
+> The problem is that we need to be able to make forward progress in the EH
+> path and not fail just because we can't allocate memory for a TMF related
+> struct. To accomplish this now, drivers will use mempools, preallocate TMF
+> related structs/mem/tags with their scsi_cmnd related structs, preallocate
+> per host/target/device related structs or ignore what I wrote above and just
+> fail.
+> 
+> Hannes's patches fix up the eh callouts so they don't pass in a scsi_cmnd
+> when it's not needed. That seems nice because after that, then for your new
+> EH we can begin to standardize on how to handle preallocation of drivers
+> resources needed to perform TMFs for your new EH. It could be a per
+> device/target/host callout to allow drivers to preallocate, then scsi-ml calls
+> into the drivers with that data. It doesn't have to be exactly like that or
+> anything close. It would be nice for drivers to not have to think about this
+> type of thing and scsi-ml just to handle the resource management for us when
+> there are multiple TMFs in progress.
+> 
 
