@@ -2,138 +2,95 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD0F2E7E644
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 15:37:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DC4EE7E64B
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 16:21:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235137AbjIZPh6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 11:37:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34428 "EHLO
+        id S235198AbjIZQVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 12:21:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234874AbjIZPh5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 11:37:57 -0400
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 004A5120;
-        Tue, 26 Sep 2023 08:37:49 -0700 (PDT)
-Received: by mail-wm1-x330.google.com with SMTP id 5b1f17b1804b1-40566f89f6eso61333935e9.3;
-        Tue, 26 Sep 2023 08:37:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695742668; x=1696347468; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mTYvK9pH/EJXRHP3ak9Ne9342oDswZw6qnzE3IYoQUw=;
-        b=T+ZCMMeG5dwEoCr0UfBL43NshlTQN7hXNrykwx+eZS89urOTwA5qgRu2ZBCdAERfJt
-         T6VRQ7KFFBBXYVBLwO3OpDU7dCAdXxH2pUcZcApfOGlZaCjfSVjgafmDIDIL0xoUh1V6
-         cIogswGhWBAV03+RFCFnndyuBZmXPV5wRgvRRsTgfOfmU30HJ9oyfezmiY0bGC5lCrzy
-         rlde2hGJ8k8BQp5lB2eK+qDdEoe9/IBrsjhcalbhus7qJb1k8vMkfXHM1duAfRhqjp32
-         B76WAWwAyd6P9YgSY1yjPFOik98dVrh9na04KCTG+HGxNcrp26lpXLer+FikQrfTLlDQ
-         Ut0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695742668; x=1696347468;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mTYvK9pH/EJXRHP3ak9Ne9342oDswZw6qnzE3IYoQUw=;
-        b=v1wNVPqE/anuWDXeMl1w454YfERh3gQpec89cHOlPYAyTOeLuz0Q+ctu6jOd/NI9gl
-         1o9dncYPQzQ8fOXaJGY7Godx3KL4rUCOHvgpUGCFgN0B3oJGFOfuA1h+4YbIzVk/+gkw
-         jDfWhHkJqDwDNwOwvwoYA98Dprzq+JgAhmODahjyXyBxB/O0TXom8BxaGrEPNPsVdPeG
-         r+aMgeUzMCPyTrCfuWjNcFMgpc/kTxXxHqbF7rQRgK7MNJhbcpPL3JCAOFv/vpA9Z3ee
-         AXMevE2Vwka/PwenK3U1s791vVAfVmAxVVUlOYl2BokO0duLsbcwuAJV8CpNTLqSSmAs
-         HmEg==
-X-Gm-Message-State: AOJu0YxL2bPDKowVhv4PIolu6vgpJ6Jj3Yo5e9wdMjSAe8DtWt4wThBP
-        ub+jPe2rUo1PXz+aXM/c/vIEAaD7rg+sdWmqoqE=
-X-Google-Smtp-Source: AGHT+IGIvAA9vf46tqgTuoSwI1yLVXfkOJL2ScPNS/SeN+QUpnNWwvD2vjAwoCJfV3eo1gCrvU4e1nJi6newv0RbXNg=
-X-Received: by 2002:a05:600c:895:b0:405:95ae:4aa7 with SMTP id
- l21-20020a05600c089500b0040595ae4aa7mr4333702wmp.10.1695742668157; Tue, 26
- Sep 2023 08:37:48 -0700 (PDT)
-MIME-Version: 1.0
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <d3205633-0cd2-f87e-1c40-21b8172b6da3@linux.dev> <nqdsj764d7e56kxevcwnq6qoi6ptuu3bi6ntfakb55vm3toda7@eo3ffzzqrot7>
- <5a4efe6f-d8c6-84ce-377e-eb64bcad706c@linux.dev> <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
- <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev> <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
- <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org> <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
- <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org> <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
- <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
- <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com> <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
- <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com> <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
- <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
- <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org> <114ecd0b-42b0-4c1d-8b58-280e670550be@gmail.com>
-In-Reply-To: <114ecd0b-42b0-4c1d-8b58-280e670550be@gmail.com>
-From:   Rain River <rain.1986.08.12@gmail.com>
-Date:   Tue, 26 Sep 2023 23:36:57 +0800
-Message-ID: <CAJr_XRBFnrtSGeVbybthd80Ro5ykki6NsNYbQ93hLJfCWcnJrQ@mail.gmail.com>
-Subject: Re: [bug report] blktests srp/002 hang
-To:     Bob Pearson <rpearsonhpe@gmail.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
-        Zhu Yanjun <yanjun.zhu@linux.dev>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        "leon@kernel.org" <leon@kernel.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        RDMA mailing list <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S235188AbjIZQVD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 12:21:03 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9785210A;
+        Tue, 26 Sep 2023 09:20:56 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38QD8X7G015172;
+        Tue, 26 Sep 2023 16:20:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=4egfuai/K1YaEUv09gPmcF8efD43YT+tVjuUW8tDWh4=;
+ b=N4WqbL7wY3jFMqFG83ksBNFNHsVOgBMlJmT0wQp0/HULRtA9zm+AC4/stwWuWho2rhm7
+ jVPDLwk01OUE0tncyka41JN5LFW7R9An/nR57zTB0IYfjMYezFv2Vo/bki3jCxMlax/h
+ iDkKSFkDbhqRShNzc4LWklr7u9L8+Uv9XeZd+PgiGhHQkJ1b13Q5bvnWq28GHjV9M4uy
+ d0LQM0FzlqR4f97ogv8ipXFqWND0dZ/nAubsB1/aq6IYuXDGcyYbBd0suZQ04EfPrG8L
+ giHduI+Sr9IfKdFw+eVrqA2+OzubGq3NkiCFJXPyuPgJR9lgwDQZg1wuMkFmGpiEwBor Sg== 
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tb7re3rp7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 26 Sep 2023 16:20:48 +0000
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 38QGKjw5010028;
+        Tue, 26 Sep 2023 16:20:45 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3t9s3kk6mr-1;
+        Tue, 26 Sep 2023 16:20:45 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38QGKiQ7010022;
+        Tue, 26 Sep 2023 16:20:44 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 38QGKiAf010021;
+        Tue, 26 Sep 2023 16:20:44 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+        id E04A8601917; Tue, 26 Sep 2023 21:50:43 +0530 (+0530)
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        mani@kernel.org, alim.akhtar@samsung.com, bvanassche@acm.org,
+        avri.altman@wdc.com, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        cros-qcom-dts-watchers@chromium.org
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V2 0/3] Add UFS host controller and Phy nodes for sc7280
+Date:   Tue, 26 Sep 2023 21:50:39 +0530
+Message-Id: <20230926162042.14180-1-quic_nitirawa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: -lu74KSH2ts1NxLe9C2n0mkt1P08Xxe_
+X-Proofpoint-GUID: -lu74KSH2ts1NxLe9C2n0mkt1P08Xxe_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-26_13,2023-09-26_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ lowpriorityscore=0 suspectscore=0 bulkscore=0 mlxlogscore=555 adultscore=0
+ priorityscore=1501 phishscore=0 clxscore=1011 spamscore=0 impostorscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2309260142
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 26, 2023 at 3:57=E2=80=AFAM Bob Pearson <rpearsonhpe@gmail.com>=
- wrote:
->
-> On 9/25/23 10:00, Bart Van Assche wrote:
-> > On 9/24/23 21:47, Daisuke Matsuda (Fujitsu) wrote:
-> >> As Bob wrote above, nobody has found any logical failure in rxe
-> >> driver.
-> >
-> > That's wrong. In case you would not yet have noticed my latest email in
-> > this thread, please take a look at
-> > https://lore.kernel.org/linux-rdma/e8b76fae-780a-470e-8ec4-c6b650793d10=
-@leemhuis.info/T/#m0fd8ea8a4cbc27b37b042ae4f8e9b024f1871a73. I think the re=
-port in that email is a 100% proof that there is a use-after-free issue in =
-the rdma_rxe driver. Use-after-free issues have security implications and a=
-lso can cause data corruption. I propose to revert the commit that introduc=
-ed the rdma_rxe use-after-rpearson:src$ git clone git://git.kernel.org/pub/=
-scm/linux/git/rafael/linux-pm
-> Cloning into 'linux-pm'...
-> fatal: remote error: access denied or repository not exported: /pub/scm/l=
-inux/git/rafael/linux-pm
-> free unless someone comes up with a fix for the rdma_rxe driver.
-> >
-> > Bart.
->
-> Bart,
->
-> Having trouble following your recipe. The git repo you mention does not s=
-eem to be available. E.g.
->
-> rpearson:src$ git clone git://git.kernel.org/pub/scm/linux/git/rafael/lin=
-ux-pm
-> Cloning into 'linux-pm'...
-> fatal: remote error: access denied or repository not exported: /pub/scm/l=
-inux/git/rafael/linux-pm
->
-> I am not sure how to obtain the tag if I cannot see the repo.
->
-> If I just try to enable KASAN by setting CONFIG_KASAN=3Dy in .config for =
-the current linux-rdma repo
-> and compile the kernel the kernel won't boot and is caught in some kind o=
-f SRSO hell. If I checkout
-> Linus' v6.4 tag and add CONFIG_KASAN=3Dy to a fresh .config file the kern=
-el builds OK but when I
-> try to boot it, it is unable to chroot to the root file system in boot.
+This patch adds UFS host controller and Phy nodes for Qualcomm sc7280 SOC
+and sc7280 Board.
 
-Bob,
+Changes from v1:
+- Addressed mani comment to separate soc and board change.
+- Addressed mani comment to sort ufs node in ascending order.
 
-Suggested by a friend who is an expert in process schedule and
-workqueue, I made a test as below.
-On each CPU, a cpu-intensive process runs with high priority. Then run
-rxe with the commit, the rping almost can not work well.
-Without this commit, rping can work with rxe in the same scenario.
-When you fix this problem, consider the above.
+Nitin Rawat (3):
+  scsi: ufs: qcom: dt-bindings: Add SC7280 compatible string
+  arm64: dts: qcom: sc7280: Add UFS nodes for sc7280 soc
+  arm64: dts: qcom: sc7280: Add UFS nodes for sc7280 IDP board
 
->
-> Any hints would be appreciated.
->
-> Bob
->
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     |  2 +
+ arch/arm64/boot/dts/qcom/sc7280-idp.dtsi      | 19 ++++++
+ arch/arm64/boot/dts/qcom/sc7280.dtsi          | 64 +++++++++++++++++++
+ 3 files changed, 85 insertions(+)
+
+--
+2.17.1
+
