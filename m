@@ -2,223 +2,87 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F82E7E64A
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 16:25:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 128DBE7E654
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 17:05:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235204AbjIZQZX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 12:25:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43196 "EHLO
+        id S229997AbjIZRF7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 13:05:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231668AbjIZQZW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 12:25:22 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D79C8E;
-        Tue, 26 Sep 2023 09:25:16 -0700 (PDT)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38QDwh5m020866;
-        Tue, 26 Sep 2023 16:25:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=Kn0NWfrf2PoJA+utp/K+B/7mDfqS5Mn1G1dsC5wgm6E=;
- b=j2xXP4VwzjZTvmyk4bS2D9EQ5n3uXudKaH7UeS0GwyN0LrQgWfVfGTFjXyN4CPk+TPm2
- uf/Rh6uRAimblBjYEOiJv4SUlOVRE/4o39+35ZgNKoi9dhqFBI6H6B1jNBLQEVK0/L9l
- PLzqSVTWyvhs0Xy1XLCknlJHK/HivC0wE3O46n3t+d6ZwfGiM63JiUvLWMiHEnJ/61+4
- s9ejxvoCZXOkwRkTSQYgI1bKyZhbS5vN9Yc4YOthMS2SU5Ybl+0OJhMdg9CCuPE01jlb
- TqSGX72UyoYCtRro2Al8D21yNye3DOECUWCvE+uQS9BRsM/GLpt6EyK3KLCLQ9i/1JeF Iw== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tbmwwt26q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 26 Sep 2023 16:25:02 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38QGOSsC010322
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 26 Sep 2023 16:24:28 GMT
-Received: from [10.218.45.181] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Tue, 26 Sep
- 2023 09:24:22 -0700
-Message-ID: <593fa9be-9f55-3649-e825-1dee31ac5c21@quicinc.com>
-Date:   Tue, 26 Sep 2023 21:54:19 +0530
+        with ESMTP id S229570AbjIZRF5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 13:05:57 -0400
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE29CE5;
+        Tue, 26 Sep 2023 10:05:50 -0700 (PDT)
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-69101022969so8263045b3a.3;
+        Tue, 26 Sep 2023 10:05:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695747950; x=1696352750;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ciyIL3UJ+mFPGzRDJSNW4K/Q77//MQkL34dUxJQCXb8=;
+        b=ZbvuumQrF3ab4ygjnENd6ng7xo/yb++PfJmlX9DsEeffs5yTJkLuSBn22pUuHjaHem
+         EOuuCgG2HBq1v3F3DBtqaSgsRdTrqkJE8rhCeJS2sidntU/q5Mn4ZMZ/u8Q5fzpkVI23
+         lXAbuvOXpehNc1hizM0+FMmiSBdh6QPE0XtXYdZkN/OHLQ2cZodQHh1LdG/iYML4EP9P
+         3L8BRFuu/QT2JAW1+wgHzyJFlbPkqOpbg/EHvIah0zq+G3aRUdDt5xqXK42qtqHTrJvR
+         QR3qMyQTwpiWDnXDoBt+EhFXsnc1KLVJIOnspOYIapnJFHqVIUH8fKCeoN92XLlX1kuJ
+         6lSw==
+X-Gm-Message-State: AOJu0YwKQhDfa9b9Dd1ZGUl93HBBB7FGkj1O08WPzHO688n4mB9YVWPl
+        PHzG+h2zsp5AZwI7r8K2trQ=
+X-Google-Smtp-Source: AGHT+IEJIczeDGpprRAJrao9yQ5dyRTC3m9+JVYk2bI5mNQlLSsr1U2DxP+wrQAKbvyim9J7gAkmIw==
+X-Received: by 2002:a05:6a00:1ace:b0:691:da6:47a with SMTP id f14-20020a056a001ace00b006910da6047amr12656670pfv.31.1695747949820;
+        Tue, 26 Sep 2023 10:05:49 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:a80d:6f65:53d4:d1bf? ([2620:15c:211:201:a80d:6f65:53d4:d1bf])
+        by smtp.gmail.com with ESMTPSA id x17-20020aa793b1000000b006884549adc8sm10213146pff.29.2023.09.26.10.05.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 Sep 2023 10:05:48 -0700 (PDT)
+Message-ID: <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
+Date:   Tue, 26 Sep 2023 10:05:46 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.2
-Subject: Re: [PATCH V1 2/2] arm64: dts: qcom: sc7280: Add UFS host controller
- and phy nodes
-To:     Manivannan Sadhasivam <mani@kernel.org>
-CC:     <agross@kernel.org>, <andersson@kernel.org>,
-        <konrad.dybcio@linaro.org>, <alim.akhtar@samsung.com>,
-        <bvanassche@acm.org>, <robh+dt@kernel.org>, <avri.altman@wdc.com>,
-        <cros-qcom-dts-watchers@chromium.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-References: <20230821094937.13059-1-quic_nitirawa@quicinc.com>
- <20230821094937.13059-3-quic_nitirawa@quicinc.com>
- <20230822070841.GA24753@thinkpad>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
 Content-Language: en-US
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <20230822070841.GA24753@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To:     Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
+        jgg@ziepe.ca, linux-rdma@vger.kernel.org, rpearsonhpe@gmail.com,
+        matsuda-daisuke@fujitsu.com, shinichiro.kawasaki@wdc.com,
+        linux-scsi@vger.kernel.org, Zhu Yanjun <yanjun.zhu@intel.com>
+Cc:     Zhu Yanjun <yanjun.zhu@linux.dev>
+References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
+ <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
+ <20230926140656.GM1642130@unreal>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230926140656.GM1642130@unreal>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 5TkmNezfs8z-kSjLn0mFlFVUitDhXyq9
-X-Proofpoint-ORIG-GUID: 5TkmNezfs8z-kSjLn0mFlFVUitDhXyq9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-26_13,2023-09-26_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
- bulkscore=0 impostorscore=0 malwarescore=0 lowpriorityscore=0 phishscore=0
- mlxlogscore=999 spamscore=0 priorityscore=1501 clxscore=1015 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
- definitions=main-2309260144
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 8/22/2023 12:38 PM, Manivannan Sadhasivam wrote:
-> On Mon, Aug 21, 2023 at 03:19:37PM +0530, Nitin Rawat wrote:
->> Add UFS host controller and PHY nodes for sc7280.
+On 9/26/23 07:06, Leon Romanovsky wrote:
+> On Tue, Sep 26, 2023 at 12:43:57PM +0300, Leon Romanovsky wrote:
 >>
+>> On Fri, 22 Sep 2023 12:32:31 -0400, Zhu Yanjun wrote:
+>>> This reverts commit 9b4b7c1f9f54120940e243251e2b1407767b3381.
+>>>
+>>> This commit replaces tasklet with workqueue. But this results
+>>> in occasionally pocess hang at the blktests test case srp/002.
+>>> After the discussion in the link[1], this commit is reverted.
+>>>
+>>>
+>>> [...]
+>>
+>> Applied, thanks!
+>>
+>> [1/1] Revert "RDMA/rxe: Add workqueue support for rxe tasks"
+>>        https://git.kernel.org/rdma/rdma/c/e710c390a8f860
 > 
-> You should split this patch into 2. One for SoC and another for board.
-Updated in Latest Patchset.
+> I applied this patch, but will delay it for some time with a hope that
+> fix will arrive in the near future.
 
-> 
->> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->> ---
->>   arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++
->>   arch/arm64/boot/dts/qcom/sc7280.dtsi     | 64 ++++++++++++++++++++++++
->>   2 files changed, 83 insertions(+)
->>
->> diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
->> index 2ff549f4dc7a..c60cdd511222 100644
->> --- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
->> +++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
->> @@ -451,6 +451,25 @@
->>   	status = "okay";
->>   };
->>
->> +&ufs_mem_hc {
->> +	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
->> +	vcc-supply = <&vreg_l7b_2p9>;
->> +	vcc-max-microamp = <800000>;
->> +	vccq-supply = <&vreg_l9b_1p2>;
->> +	vccq-max-microamp = <900000>;
->> +	vccq2-supply = <&vreg_l9b_1p2>;
->> +	vccq2-max-microamp = <900000>;
->> +
->> +	status = "okay";
->> +};
->> +
->> +&ufs_mem_phy {
->> +	vdda-phy-supply = <&vreg_l10c_0p8>;
->> +	vdda-pll-supply = <&vreg_l6b_1p2>;
->> +
->> +	status = "okay";
->> +};
->> +
->>   &sdhc_1 {
->>   	status = "okay";
->>
->> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
->> index 925428a5f6ae..d4a15d56b384 100644
->> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
->> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
->> @@ -908,6 +908,70 @@
->>   			};
->>   		};
->>
->> +		ufs_mem_phy: phy@1d87000 {
-> 
-> Please sort the nodes in ascending order.
-Updated in Latest Patchset.
+Thank you Leon. With this revert applied on top of the rdma for-next branch, I
+don't see the KASAN complaint anymore that I reported yesterday. I think this
+is more evidence that the KASAN complaint was caused by the RXE driver.
 
-> 
->> +			compatible = "qcom,sc7280-qmp-ufs-phy";
->> +			reg = <0x0 0x01d87000 0x0 0xe00>;
->> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
->> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
->> +				 <&gcc GCC_UFS_1_CLKREF_EN>;
->> +			clock-names = "ref", "ref_aux", "qref";
->> +
->> +			resets = <&ufs_mem_hc 0>;
->> +			reset-names = "ufsphy";
->> +
->> +			#clock-cells = <1>;
->> +			#phy-cells = <0>;
->> +
->> +			status = "disabled";
->> +
->> +		};
->> +
->> +		ufs_mem_hc: ufs@1d84000 {
->> +			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
->> +				     "jedec,ufs-2.0";
->> +			reg = <0x0 0x01d84000 0x0 0x3000>;
->> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
->> +			phys = <&ufs_mem_phy>;
->> +			phy-names = "ufsphy";
->> +			lanes-per-direction = <2>;
->> +			#reset-cells = <1>;
->> +			resets = <&gcc GCC_UFS_PHY_BCR>;
->> +			reset-names = "rst";
->> +
->> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
->> +			required-opps = <&rpmhpd_opp_nom>;
->> +
->> +			iommus = <&apps_smmu 0x80 0x0>;
->> +			dma-coherent;
->> +
->> +			clock-names = "core_clk",
->> +				      "bus_aggr_clk",
->> +				      "iface_clk",
->> +				      "core_clk_unipro",
->> +				      "ref_clk",
->> +				      "tx_lane0_sync_clk",
->> +				      "rx_lane0_sync_clk",
->> +				      "rx_lane1_sync_clk";
-> 
-> "clocks" property should come first.
-  DT binding shows clock-names first followed by clocks.
-  Let me know if see still see concern, would update .
-
-> 
-> - Mani
-> 
->> +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
->> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
->> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
->> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
->> +				 <&rpmhcc RPMH_CXO_CLK>,
->> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
->> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
->> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
->> +			freq-table-hz =
->> +				<75000000 300000000>,
->> +				<0 0>,
->> +				<0 0>,
->> +				<75000000 300000000>,
->> +				<0 0>,
->> +				<0 0>,
->> +				<0 0>,
->> +				<0 0>;
->> +			status = "disabled";
->> +		};
->> +
->>   		sdhc_1: mmc@7c4000 {
->>   			compatible = "qcom,sc7280-sdhci", "qcom,sdhci-msm-v5";
->>   			pinctrl-names = "default", "sleep";
->> --
->> 2.17.1
->>
-> 
-
-Thanks,
-Nitin
+Bart.
