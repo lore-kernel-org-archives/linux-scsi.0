@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D12AE7D24F
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 08:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA7CE7D252
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 08:15:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233913AbjIZIPX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 04:15:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58180 "EHLO
+        id S233917AbjIZIPZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 04:15:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231140AbjIZIPT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 04:15:19 -0400
+        with ESMTP id S232778AbjIZIPV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 04:15:21 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75EEBFC;
-        Tue, 26 Sep 2023 01:15:12 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 931F5C433C7;
-        Tue, 26 Sep 2023 08:15:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62F30101;
+        Tue, 26 Sep 2023 01:15:14 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A15BC433C9;
+        Tue, 26 Sep 2023 08:15:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695716112;
-        bh=ldAq2tGryuf5HSb3UenWHmNL2txk3o4RbpCKtjqNOcU=;
+        s=k20201202; t=1695716114;
+        bh=F1kHzoLUbhF3Y8aKwH4/dIwyg9TVGg/PIsUNzSFF1QE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aL1X7dgxXdHPMvwhMMOecVcXFgLoqUbsU9x6XnVGpJ8ruF6OR7TCzE+TlftgogIlt
-         wa+/LQN8s/gh4tDiYRx+YiauhD1aTY2nBBcE9kb+9W1IAXmaOiYge7OYss403bGj9D
-         DC9J1lrWu9aFqcGDBflYU0A+3alvkgoTF4w7thKhizlnBfeIzhpT8l0IZlRrMdHXsO
-         pOHd3BEtcS6+Cj3JABBTZsS24xPohPqoFf9HbCYOR7dVGE9phNd/uo/Q2LNV7X0jmX
-         Z7maW5op9D5I9iBieK2kHU+WmkvN2dn4CMXdcF+v+ygYIHNIinP+S0zbrApc+XCstO
-         oPF7tLLNuJz4Q==
+        b=RuZ4hnlrJFz/845mYfeBBB/2i2EHG+9RcWR5/bQkOSLM6LDA73xS7SuJc0S2TWjAo
+         T2DZEdxKHDmeFkm/r3gsr5H8VKch+oiQBONmG26pxYK3VCPbZr+994WKe+q/CHU5Hd
+         X9LyOFQ1+4VqmomHUIUWNjnAKT5D4KYXRHF8v+3BUTzG8cqCSFv2GG/QTM5NN2WWtf
+         NQ2loX2I+uIMUCrynw/XkCwiYM+/Q1/ovfdsukmv3JXxIFyorzWPisx+SlrZlprbnL
+         ftULnZiS9KP3NqbipIdt0WYc55heXrfNO3uYRS4s8qee9wazDSIJ9wV/g4LL+kb3vK
+         bwoS0ZFuKhhEg==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,9 +37,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v7 01/23] ata: libata-core: Fix ata_port_request_pm() locking
-Date:   Tue, 26 Sep 2023 17:14:45 +0900
-Message-ID: <20230926081507.69346-2-dlemoal@kernel.org>
+Subject: [PATCH v7 02/23] ata: libata-core: Fix port and device removal
+Date:   Tue, 26 Sep 2023 17:14:46 +0900
+Message-ID: <20230926081507.69346-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230926081507.69346-1-dlemoal@kernel.org>
 References: <20230926081507.69346-1-dlemoal@kernel.org>
@@ -49,72 +49,81 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function ata_port_request_pm() checks the port flag
-ATA_PFLAG_PM_PENDING and calls ata_port_wait_eh() if this flag is set to
-ensure that power management operations for a port are not scheduled
-simultaneously. However, this flag check is done without holding the
-port lock.
+Whenever an ATA adapter driver is removed (e.g. rmmod),
+ata_port_detach() is called repeatedly for all the adapter ports to
+remove (unload) the devices attached to the port and delete the port
+device itself. Removing of devices is done using libata EH with the
+ATA_PFLAG_UNLOADING port flag set. This causes libata EH to execute
+ata_eh_unload() which disables all devices attached to the port.
 
-Fix this by taking the port lock on entry to the function and checking
-the flag under this lock. The lock is released and re-taken if
-ata_port_wait_eh() needs to be called. The two WARN_ON() macros checking
-that the ATA_PFLAG_PM_PENDING flag was cleared are removed as the first
-call is racy and the second one done without holding the port lock.
+ata_port_detach() finishes by calling scsi_remove_host() to remove the
+scsi host associated with the port. This function will trigger the
+removal of all scsi devices attached to the host and in the case of
+disks, calls to sd_shutdown() which will flush the device write cache
+and stop the device. However, given that the devices were already
+disabled by ata_eh_unload(), the synchronize write cache command and
+start stop unit commands fail. E.g. running "rmmod ahci" with first
+removing sd_mod results in error messages like:
 
-Fixes: 5ef41082912b ("ata: add ata port system PM callbacks")
+ata13.00: disable device
+sd 0:0:0:0: [sda] Synchronizing SCSI cache
+sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+sd 0:0:0:0: [sda] Stopping disk
+sd 0:0:0:0: [sda] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+
+Fix this by removing all scsi devices of the ata devices connected to
+the port before scheduling libata EH to disable the ATA devices.
+Also delete the WAR_ON() call checking that the ATA_PFLAG_UNLOADING flag
+was cleared as that is done without holding the port lock.
+
+Fixes: 720ba12620ee ("[PATCH] libata-hp: update unload-unplug")
 Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
+Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/ata/libata-core.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/ata/libata-core.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0072e0f9ad39..732f3d0b4fd9 100644
+index 732f3d0b4fd9..8e35afe5e560 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -5037,17 +5037,19 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+@@ -5948,11 +5948,30 @@ static void ata_port_detach(struct ata_port *ap)
  	struct ata_link *link;
- 	unsigned long flags;
+ 	struct ata_device *dev;
  
--	/* Previous resume operation might still be in
--	 * progress.  Wait for PM_PENDING to clear.
-+	spin_lock_irqsave(ap->lock, flags);
+-	/* tell EH we're leaving & flush EH */
++	/* Wait for any ongoing EH */
++	ata_port_wait_eh(ap);
 +
-+	/*
-+	 * A previous PM operation might still be in progress. Wait for
-+	 * ATA_PFLAG_PM_PENDING to clear.
- 	 */
- 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
-+		spin_unlock_irqrestore(ap->lock, flags);
- 		ata_port_wait_eh(ap);
--		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
-+		spin_lock_irqsave(ap->lock, flags);
- 	}
- 
--	/* request PM ops to EH */
--	spin_lock_irqsave(ap->lock, flags);
--
-+	/* Request PM operation to EH */
- 	ap->pm_mesg = mesg;
- 	ap->pflags |= ATA_PFLAG_PM_PENDING;
- 	ata_for_each_link(link, ap, HOST_FIRST) {
-@@ -5059,10 +5061,8 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 
++	mutex_lock(&ap->scsi_scan_mutex);
+ 	spin_lock_irqsave(ap->lock, flags);
++
++	/* Remove scsi devices */
++	ata_for_each_link(link, ap, HOST_FIRST) {
++		ata_for_each_dev(dev, link, ALL) {
++			if (dev->sdev) {
++				spin_unlock_irqrestore(ap->lock, flags);
++				scsi_remove_device(dev->sdev);
++				spin_lock_irqsave(ap->lock, flags);
++				dev->sdev = NULL;
++			}
++		}
++	}
++
++	/* Tell EH to disable all devices */
+ 	ap->pflags |= ATA_PFLAG_UNLOADING;
+ 	ata_port_schedule_eh(ap);
++
  	spin_unlock_irqrestore(ap->lock, flags);
++	mutex_unlock(&ap->scsi_scan_mutex);
  
--	if (!async) {
-+	if (!async)
- 		ata_port_wait_eh(ap);
--		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
--	}
- }
- 
- /*
+ 	/* wait till EH commits suicide */
+ 	ata_port_wait_eh(ap);
 -- 
 2.41.0
 
