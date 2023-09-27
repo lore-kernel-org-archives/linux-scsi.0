@@ -2,121 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 894F3E7F128
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Sep 2023 20:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E56E7F14B
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 00:54:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232008AbjIZUmj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Sep 2023 16:42:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46042 "EHLO
+        id S234248AbjI0AyD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Sep 2023 20:54:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235911AbjIZUmh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 16:42:37 -0400
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3FE9121;
-        Tue, 26 Sep 2023 13:42:30 -0700 (PDT)
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1c47309a8ccso79454315ad.1;
-        Tue, 26 Sep 2023 13:42:30 -0700 (PDT)
+        with ESMTP id S232381AbjI0AwB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Sep 2023 20:52:01 -0400
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A305B212A;
+        Tue, 26 Sep 2023 17:09:42 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-405361bb949so107665975e9.1;
+        Tue, 26 Sep 2023 17:09:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695773381; x=1696378181; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Q6IH4cIf/YUQbm0f3DbgR+Cr/DgsuA+viBGblpNrbFk=;
+        b=MsJBCV7wBWWUYJ91j18qO0dCJ9/I0x0WHIOPldnjmyo9QpbCBZy7V2qvWmW6n6JmJQ
+         /y80co0CgedCX0MijySHp0UCBenxGMF4r8iQJsxy/55Ef+Ky39m/5Coz51kBTCMemT+z
+         Tv2rAJaq6tQWgBvFM8ALNzXGneTC8EIWpeRY+dAb8HO/7ua2HzfE4UvqINB/UopQIMTJ
+         a8PvW8NnAdcQe+O7InQQZlEd0Iy1bnQpSjja3CtI5ALbyO6hKV+QGKDbHaZzoLRy9964
+         JsRRcCt0b4oL7WVx03d8BdcQ73Al4mHqoysRIOtDojOj3hq+R61fLIwXC8dgX65Ms0Zj
+         fWFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695760950; x=1696365750;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nFirs3a2dJlXlflKvwTL4w4i69/0aKC6EzTD/RsrBrg=;
-        b=KXM0qmKddKIQGQ6QlP3gP/SBxZ/EOXZ2WdbWHOEwC/IZQ0w2P3qmqwiijKMewm730z
-         pgmkIq6psmCu61HNQXXKeuHFGYepZX070OGbrf29vPS9QdmlTq7lXSJVPKxHhbd9oaa9
-         MSku//lfEed4WoIs9gxlcDyvSIokp03gqvKvU2kugjGiNHZV1tslPwQYxuUF8qwYfrFZ
-         RCdUvW2jNotGcuSu3WtTH7GfwA9kWpfXje2ZgX6+IZ62O89mnuroFJ/1v5V4mjHukDhe
-         1qNP3wv3ktBbf0+rU2TvQbm+Z0m3Wclt1xSOYUqfgbJkLGc9WXUMw/lYj4SyV5cTHK0m
-         1iRQ==
-X-Gm-Message-State: AOJu0Yw+qnvcoReWRzavyRdCOjWlFMZi/lJJTYb/WtZb5Z3gSh8segWe
-        6gd+ZEQoSOp3J5Dry9N3n/M=
-X-Google-Smtp-Source: AGHT+IGvdjkSzAdf4+xtWTo5fRiNaDoKSXjD1Rp6l2jFft8ctuW78khLlQUi68T1isCkISewUidhbQ==
-X-Received: by 2002:a17:902:ecca:b0:1c3:432f:9f69 with SMTP id a10-20020a170902ecca00b001c3432f9f69mr26490plh.23.1695760950244;
-        Tue, 26 Sep 2023 13:42:30 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:a80d:6f65:53d4:d1bf? ([2620:15c:211:201:a80d:6f65:53d4:d1bf])
-        by smtp.gmail.com with ESMTPSA id c24-20020a170902d91800b001bf846dd2d0sm11479149plz.13.2023.09.26.13.42.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Sep 2023 13:42:29 -0700 (PDT)
-Message-ID: <2f7f884b-d4ce-4908-a69c-4110d9ee5907@acm.org>
-Date:   Tue, 26 Sep 2023 13:42:28 -0700
+        d=1e100.net; s=20230601; t=1695773381; x=1696378181;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Q6IH4cIf/YUQbm0f3DbgR+Cr/DgsuA+viBGblpNrbFk=;
+        b=D9fN/VfwDOjVvkdQrFBimBfSDzJ4AZBNnfEnEXWs8tUX4t8xWDOafGM5nbm3ywrtRU
+         XFmVaGQ12UUbdUtVqLGMapoaI09kc0cwuYR3s7ZYfUx1gBg4WBy29pJzuSiJsb4LGER0
+         t7NWh5xZEBT5lGS94yTnA/74FCv3ipDmS98sb2y0aHYIdXf2x8ZstlAzJyXmAP8cnott
+         8knQK1ExLx5ocTKHCWJmSQcyZYOTL3GVlZUboLsvzr37IAat4i7oTjEwyIYrroYLGZLA
+         xkDsCJih8DJZrRiMKuAuClw81kiVELOZmR4XUh6KGfY8i154l3Mt4FiOTbHdklt4RrJ8
+         gPxw==
+X-Gm-Message-State: AOJu0YwCj6gw3ZRR/2H+qnctbSvQNK2GsCQ54lMzDa8RKhrCZLVnK25m
+        60+GcUKtZ/exGAOu/8+A1cSXGMMOXqx8hW3DlfwkWDhizEs5LQ==
+X-Google-Smtp-Source: AGHT+IGaXPrvF+GuvM4qEASaLaiHb3SJbSTTjbzf4ykGiL7cgsFzVbhUrDL1HHWD8/28DSQM9J39SMQWqZcY1o84Dk0=
+X-Received: by 2002:a5d:6782:0:b0:321:65f3:4100 with SMTP id
+ v2-20020a5d6782000000b0032165f34100mr181669wru.7.1695773380830; Tue, 26 Sep
+ 2023 17:09:40 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 12/23] scsi: Remove scsi device no_start_on_resume flag
-Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230923002932.1082348-1-dlemoal@kernel.org>
- <20230923002932.1082348-13-dlemoal@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230923002932.1082348-13-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
+ <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
+ <20230926140656.GM1642130@unreal> <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
+ <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com> <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
+In-Reply-To: <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
+From:   Rain River <rain.1986.08.12@gmail.com>
+Date:   Wed, 27 Sep 2023 08:08:50 +0800
+Message-ID: <CAJr_XRBcxkdXvzshntDtE9vnLnPzqHCKHxspjw-uKizSYT1HFw@mail.gmail.com>
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe tasks"
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Bob Pearson <rpearsonhpe@gmail.com>,
+        Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
+        jgg@ziepe.ca, linux-rdma@vger.kernel.org,
+        matsuda-daisuke@fujitsu.com, shinichiro.kawasaki@wdc.com,
+        linux-scsi@vger.kernel.org, Zhu Yanjun <yanjun.zhu@intel.com>,
+        Zhu Yanjun <yanjun.zhu@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/22/23 17:29, Damien Le Moal wrote:
-> The scsi device flag no_start_on_resume is not set by any scsi low
-> level driver. Remove it. This reverts the changes introduced by commit
-> 0a8589055936 ("ata,scsi: do not issue START STOP UNIT on resume").
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
-> Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->   drivers/scsi/sd.c          | 13 ++++---------
->   include/scsi/scsi_device.h |  1 -
->   2 files changed, 4 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index bff8663be7e0..e372834bf56f 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3900,20 +3900,15 @@ static int sd_resume(struct device *dev, bool runtime)
->   	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
->   		return 0;
->   
-> -	if (!sd_do_start_stop(sdkp->device, runtime)) {
-> -		sdkp->suspended = 0;
-> -		return 0;
-> -	}
-> -
-> -	if (!sdkp->device->no_start_on_resume) {
-> +	if (sd_do_start_stop(sdkp->device, runtime)) {
->   		sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
->   		ret = sd_start_stop_device(sdkp, 1);
-> +		if (!ret)
-> +			opal_unlock_from_suspend(sdkp->opal_dev);
->   	}
->   
-> -	if (!ret) {
-> -		opal_unlock_from_suspend(sdkp->opal_dev);
-> +	if (!ret)
->   		sdkp->suspended = 0;
-> -	}
->   
->   	return ret;
->   }
+On Wed, Sep 27, 2023 at 4:37=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+>
+> On 9/26/23 11:34, Bob Pearson wrote:
+> > I am working to try to reproduce the KASAN warning. Unfortunately,
+> > so far I am not able to see it in Ubuntu + Linus' kernel (as you
+> > described) on metal. The config file is different but copies the
+> > CONFIG_KASAN_xxx exactly as yours. With KASAN enabled it hangs on
+> > every iteration of srp/002 but without a KASAN warning. I am now
+> > building an openSuSE VM for qemu and will see if that causes the
+> > warning.
+>
+> Hi Bob,
+>
+> Did you try to understand the report that I shared? My conclusion from
+> the report is that when using tasklets rxe_completer() only runs after
+> rxe_requester() has finished and also that when using work queues that
+> rxe_completer() may run concurrently with rxe_requester(). This patch
+> seems to fix all issues that I ran into with the rdma_rxe workqueue
+> patch (I have not tried to verify the performance implications of this
+> patch):
 
-I'm fine with removing the no_start_on_resume member but it seems to me
-that the above patch makes sd_resume() harder to read. I like the
-original approach (early return if sd_do_start_stop() returns false)
-better than the new approach (set ret inside an if-statement and clear
-sdkp->suspended after the sd_start_stop_device() call if ret == 0).
+In the same test environment in the link
+https://lore.kernel.org/all/4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com/=
+T/#m3294d00f5cf3247dfdb2ea3688b1467167f72704,
 
-In case others prefer the new flow: shouldn't that new flow have been
-introduced in patch 4/23 of this series instead of in this patch?
+RXE with workqueue has worse performance than RXE with tasklet.
+Sometimes RXE with workqueue can not work well.
 
-Thanks,
+Need this commit in RXE.
 
-Bart.
+>
+> diff --git a/drivers/infiniband/sw/rxe/rxe_task.c
+> b/drivers/infiniband/sw/rxe/rxe_task.c
+> index 1501120d4f52..6cd5d5a7a316 100644
+> --- a/drivers/infiniband/sw/rxe/rxe_task.c
+> +++ b/drivers/infiniband/sw/rxe/rxe_task.c
+> @@ -10,7 +10,7 @@ static struct workqueue_struct *rxe_wq;
+>
+>   int rxe_alloc_wq(void)
+>   {
+> -       rxe_wq =3D alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
+> +       rxe_wq =3D alloc_workqueue("rxe_wq", WQ_UNBOUND, 1);
+>          if (!rxe_wq)
+>                  return -ENOMEM;
+>
+> Thanks,
+>
+> Bart.
