@@ -2,131 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BC9AE810A2
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 08:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBEBDE810A4
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 08:33:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229698AbjI0IaY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 04:30:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59796 "EHLO
+        id S230453AbjI0Idx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 04:33:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230085AbjI0I3y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 04:29:54 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11E64F4;
-        Wed, 27 Sep 2023 01:29:41 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38R8FR7x032656;
-        Wed, 27 Sep 2023 08:29:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=HpJgdl/mtnzZkUABcW4CfNA7EBSkZK/fcBh9bbFEqCE=;
- b=Ge8rp72c3geUNE2DCAzKksxYNZCGE9D4gEnzP4Xx6gUi7yX1eEHIpVebspDg3QVTBtzQ
- o508+74V/10ypkUHHRmRp2Ut9xVgg4kYuE2ybs+G3Tz4KhQG3TnvZQMMuj5hoQrbVk3O
- lcy6dWW/B4ysdBi2KgQzL32HAqKkaTBsw8/dmOCS9Ha6zhnSaETkO+aoYeF55PQagd6k
- fL6V6sd+wCt4ExJW8kyM+6L/nNtaEx1CPZpiD3WSX0lNVEg9Qx2JfBNRZrtB3/hYgyrZ
- PDZflcRj3QzCqHfnmKvxUaqLpY/IBQLv0hvG5nZeWscmyn9hMKm5BVF++/8d48HzEw4+ yA== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tc8v48sem-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 27 Sep 2023 08:29:32 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38R8TVu9000622
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 27 Sep 2023 08:29:31 GMT
-Received: from [10.218.45.181] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 27 Sep
- 2023 01:29:26 -0700
-Message-ID: <c71623bd-d70b-7b25-2f13-a5ec3d4f7c93@quicinc.com>
-Date:   Wed, 27 Sep 2023 13:59:22 +0530
+        with ESMTP id S230468AbjI0IdU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 04:33:20 -0400
+Received: from jari.cn (unknown [218.92.28.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DF61D10D9;
+        Wed, 27 Sep 2023 01:32:58 -0700 (PDT)
+Received: from chenguohua$jari.cn ( [182.148.12.64] ) by
+ ajax-webmail-localhost.localdomain (Coremail) ; Wed, 27 Sep 2023 16:31:34
+ +0800 (GMT+08:00)
+X-Originating-IP: [182.148.12.64]
+Date:   Wed, 27 Sep 2023 16:31:34 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From:   chenguohua@jari.cn
+To:     lduncan@suse.com, cleech@redhat.com, michael.christie@oracle.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: iscsi: Clean up errors in libiscsi_tcp.c
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
+ 20230419(ff23bf83) Copyright (c) 2002-2023 www.mailtech.cn
+ mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.2
-Subject: Re: [PATCH V3 4/4] dt-bindings: ufs: qcom: Align clk binding property
- for Qualcomm UFS
-Content-Language: en-US
-To:     <agross@kernel.org>, <andersson@kernel.org>,
-        <konrad.dybcio@linaro.org>, <mani@kernel.org>,
-        <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <robh+dt@kernel.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
-        <cros-qcom-dts-watchers@chromium.org>
-CC:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
- <20230927081858.15961-5-quic_nitirawa@quicinc.com>
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <20230927081858.15961-5-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 0oSsOqBPKUmKC7wxsBT_Tw0AiuoVPywk
-X-Proofpoint-ORIG-GUID: 0oSsOqBPKUmKC7wxsBT_Tw0AiuoVPywk
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-27_03,2023-09-26_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- suspectscore=0 spamscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0
- phishscore=0 impostorscore=0 priorityscore=1501 mlxscore=0 adultscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2309270068
+Message-ID: <7db9a4b1.889.18ad5c3d0ef.Coremail.chenguohua@jari.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: AQAAfwDXaD5m6BNlifm9AA--.577W
+X-CM-SenderInfo: xfkh0w5xrk3tw6md2xgofq/1tbiAQAHEWUSpy8AOwAisx
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+        daVFxhVjvjDU=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi ,
-I have reposted this patch by removing the change id. Please ignore this.
-
-Regards,
-Nitin
-
-
-On 9/27/2023 1:48 PM, Nitin Rawat wrote:
-> Align the binding property for clock such that "clocks" property
-> comes first followed by "clock-names" property.
-> 
-> Change-Id: I53282da8eee8ec349d315de7ada56c99bb12b00d
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
->   .../devicetree/bindings/ufs/qcom,ufs.yaml        | 16 ++++++++--------
->   1 file changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index 802640efa956..d17bdc4e934f 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -295,14 +295,6 @@ examples:
->                               <&gem_noc MASTER_APPSS_PROC &config_noc SLAVE_UFS_MEM_CFG>;
->               interconnect-names = "ufs-ddr", "cpu-ufs";
->   
-> -            clock-names = "core_clk",
-> -                          "bus_aggr_clk",
-> -                          "iface_clk",
-> -                          "core_clk_unipro",
-> -                          "ref_clk",
-> -                          "tx_lane0_sync_clk",
-> -                          "rx_lane0_sync_clk",
-> -                          "rx_lane1_sync_clk";
->               clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
->                        <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
->                        <&gcc GCC_UFS_PHY_AHB_CLK>,
-> @@ -311,6 +303,14 @@ examples:
->                        <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
->                        <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
->                        <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> +            clock-names = "core_clk",
-> +                          "bus_aggr_clk",
-> +                          "iface_clk",
-> +                          "core_clk_unipro",
-> +                          "ref_clk",
-> +                          "tx_lane0_sync_clk",
-> +                          "rx_lane0_sync_clk",
-> +                          "rx_lane1_sync_clk";
->               freq-table-hz = <75000000 300000000>,
->                               <0 0>,
->                               <0 0>,
+Rml4IHRoZSBmb2xsb3dpbmcgZXJyb3JzIHJlcG9ydGVkIGJ5IGNoZWNrcGF0Y2g6CgpFUlJPUjog
+Iihmb28qKSIgc2hvdWxkIGJlICIoZm9vICopIgpFUlJPUjogc3BhY2UgcmVxdWlyZWQgYmVmb3Jl
+IHRoZSBvcGVuIHBhcmVudGhlc2lzICcoJwpFUlJPUjogc3BhY2UgcmVxdWlyZWQgYmVmb3JlIHRo
+ZSBvcGVuIGJyYWNlICd7JwoKU2lnbmVkLW9mZi1ieTogR3VvSHVhIENoZW5nIDxjaGVuZ3VvaHVh
+QGphcmkuY24+Ci0tLQogZHJpdmVycy9zY3NpL2xpYmlzY3NpX3RjcC5jIHwgMjAgKysrKysrKysr
+Ky0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCAxMCBkZWxldGlv
+bnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbGliaXNjc2lfdGNwLmMgYi9kcml2ZXJz
+L3Njc2kvbGliaXNjc2lfdGNwLmMKaW5kZXggYzE4MmFhODNmMmM5Li4xMWI5Y2Q0MWZjMWYgMTAw
+NjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9saWJpc2NzaV90Y3AuYworKysgYi9kcml2ZXJzL3Njc2kv
+bGliaXNjc2lfdGNwLmMKQEAgLTQ2MiwxNiArNDYyLDE2IEBAIHZvaWQgaXNjc2lfdGNwX2NsZWFu
+dXBfdGFzayhzdHJ1Y3QgaXNjc2lfdGFzayAqdGFzaykKIAogCXNwaW5fbG9ja19iaCgmdGNwX3Rh
+c2stPnF1ZXVlMnBvb2wpOwogCS8qIGZsdXNoIHRhc2sncyByMnQgcXVldWVzICovCi0Jd2hpbGUg
+KGtmaWZvX291dCgmdGNwX3Rhc2stPnIydHF1ZXVlLCAodm9pZCopJnIydCwgc2l6ZW9mKHZvaWQq
+KSkpIHsKLQkJa2ZpZm9faW4oJnRjcF90YXNrLT5yMnRwb29sLnF1ZXVlLCAodm9pZCopJnIydCwK
+LQkJCSAgICBzaXplb2Yodm9pZCopKTsKKwl3aGlsZSAoa2ZpZm9fb3V0KCZ0Y3BfdGFzay0+cjJ0
+cXVldWUsICh2b2lkICopJnIydCwgc2l6ZW9mKHZvaWQgKikpKSB7CisJCWtmaWZvX2luKCZ0Y3Bf
+dGFzay0+cjJ0cG9vbC5xdWV1ZSwgKHZvaWQgKikmcjJ0LAorCQkJICAgIHNpemVvZih2b2lkICop
+KTsKIAkJSVNDU0lfREJHX1RDUCh0YXNrLT5jb25uLCAicGVuZGluZyByMnQgZHJvcHBlZFxuIik7
+CiAJfQogCiAJcjJ0ID0gdGNwX3Rhc2stPnIydDsKIAlpZiAocjJ0ICE9IE5VTEwpIHsKLQkJa2Zp
+Zm9faW4oJnRjcF90YXNrLT5yMnRwb29sLnF1ZXVlLCAodm9pZCopJnIydCwKLQkJCSAgICBzaXpl
+b2Yodm9pZCopKTsKKwkJa2ZpZm9faW4oJnRjcF90YXNrLT5yMnRwb29sLnF1ZXVlLCAodm9pZCAq
+KSZyMnQsCisJCQkgICAgc2l6ZW9mKHZvaWQgKikpOwogCQl0Y3BfdGFzay0+cjJ0ID0gTlVMTDsK
+IAl9CiAJc3Bpbl91bmxvY2tfYmgoJnRjcF90YXNrLT5xdWV1ZTJwb29sKTsKQEAgLTQ5Niw3ICs0
+OTYsNyBAQCBzdGF0aWMgaW50IGlzY3NpX3RjcF9kYXRhX2luKHN0cnVjdCBpc2NzaV9jb25uICpj
+b25uLCBzdHJ1Y3QgaXNjc2lfdGFzayAqdGFzaykKIAkgKiBpcyBzdGF0dXMuCiAJICovCiAJaWYg
+KCEocmhkci0+ZmxhZ3MgJiBJU0NTSV9GTEFHX0RBVEFfU1RBVFVTKSkKLQkJaXNjc2lfdXBkYXRl
+X2NtZHNuKGNvbm4tPnNlc3Npb24sIChzdHJ1Y3QgaXNjc2lfbm9waW4qKXJoZHIpOworCQlpc2Nz
+aV91cGRhdGVfY21kc24oY29ubi0+c2Vzc2lvbiwgKHN0cnVjdCBpc2NzaV9ub3BpbiAqKXJoZHIp
+OwogCiAJaWYgKHRjcF9jb25uLT5pbi5kYXRhbGVuID09IDApCiAJCXJldHVybiAwOwpAQCAtNTgw
+LDcgKzU4MCw3IEBAIHN0YXRpYyBpbnQgaXNjc2lfdGNwX3IydF9yc3Aoc3RydWN0IGlzY3NpX2Nv
+bm4gKmNvbm4sIHN0cnVjdCBpc2NzaV9oZHIgKmhkcikKIAogCXRjcF90YXNrID0gdGFzay0+ZGRf
+ZGF0YTsKIAlyMnRzbiA9IGJlMzJfdG9fY3B1KHJoZHItPnIydHNuKTsKLQlpZiAodGNwX3Rhc2st
+PmV4cF9kYXRhc24gIT0gcjJ0c24peworCWlmICh0Y3BfdGFzay0+ZXhwX2RhdGFzbiAhPSByMnRz
+bikgewogCQlJU0NTSV9EQkdfVENQKGNvbm4sICJ0YXNrLT5leHBfZGF0YXNuKCVkKSAhPSByaGRy
+LT5yMnRzbiglZClcbiIsCiAJCQkgICAgICB0Y3BfdGFzay0+ZXhwX2RhdGFzbiwgcjJ0c24pOwog
+CQlyYyA9IElTQ1NJX0VSUl9SMlRTTjsKQEAgLTYzOCw3ICs2MzgsNyBAQCBzdGF0aWMgaW50IGlz
+Y3NpX3RjcF9yMnRfcnNwKHN0cnVjdCBpc2NzaV9jb25uICpjb25uLCBzdHJ1Y3QgaXNjc2lfaGRy
+ICpoZHIpCiAJcjJ0LT5zZW50ID0gMDsKIAogCXRjcF90YXNrLT5leHBfZGF0YXNuID0gcjJ0c24g
+KyAxOwotCWtmaWZvX2luKCZ0Y3BfdGFzay0+cjJ0cXVldWUsICh2b2lkKikmcjJ0LCBzaXplb2Yo
+dm9pZCopKTsKKwlrZmlmb19pbigmdGNwX3Rhc2stPnIydHF1ZXVlLCAodm9pZCAqKSZyMnQsIHNp
+emVvZih2b2lkICopKTsKIAljb25uLT5yMnRfcGR1c19jbnQrKzsKIAlzcGluX3VubG9jaygmdGNw
+X3Rhc2stPnBvb2wycXVldWUpOwogCkBAIC03MTUsNyArNzE1LDcgQEAgaXNjc2lfdGNwX2hkcl9k
+aXNzZWN0KHN0cnVjdCBpc2NzaV9jb25uICpjb25uLCBzdHJ1Y3QgaXNjc2lfaGRyICpoZHIpCiAJ
+SVNDU0lfREJHX1RDUChjb25uLCAib3Bjb2RlIDB4JXggYWhzbGVuICVkIGRhdGFsZW4gJWRcbiIs
+CiAJCSAgICAgIG9wY29kZSwgYWhzbGVuLCB0Y3BfY29ubi0+aW4uZGF0YWxlbik7CiAKLQlzd2l0
+Y2gob3Bjb2RlKSB7CisJc3dpdGNoIChvcGNvZGUpIHsKIAljYXNlIElTQ1NJX09QX1NDU0lfREFU
+QV9JTjoKIAkJc3Bpbl9sb2NrKCZjb25uLT5zZXNzaW9uLT5iYWNrX2xvY2spOwogCQl0YXNrID0g
+aXNjc2lfaXR0X3RvX2N0YXNrKGNvbm4sIGhkci0+aXR0KTsKQEAgLTExNzgsNyArMTE3OCw3IEBA
+IGludCBpc2NzaV90Y3BfcjJ0cG9vbF9hbGxvYyhzdHJ1Y3QgaXNjc2lfc2Vzc2lvbiAqc2Vzc2lv
+bikKIAogCQkvKiBSMlQgeG1pdCBxdWV1ZSAqLwogCQlpZiAoa2ZpZm9fYWxsb2MoJnRjcF90YXNr
+LT5yMnRxdWV1ZSwKLQkJICAgICAgc2Vzc2lvbi0+bWF4X3IydCAqIDQgKiBzaXplb2Yodm9pZCop
+LCBHRlBfS0VSTkVMKSkgeworCQkgICAgICBzZXNzaW9uLT5tYXhfcjJ0ICogNCAqIHNpemVvZih2
+b2lkICopLCBHRlBfS0VSTkVMKSkgewogCQkJaXNjc2lfcG9vbF9mcmVlKCZ0Y3BfdGFzay0+cjJ0
+cG9vbCk7CiAJCQlnb3RvIHIydF9hbGxvY19mYWlsOwogCQl9Ci0tIAoyLjE3LjEK
