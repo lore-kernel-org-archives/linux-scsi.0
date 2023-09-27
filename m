@@ -2,99 +2,67 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01776E810DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 12:43:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB57CE80AAB
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 14:01:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230109AbjI0Mn2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 08:43:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49864 "EHLO
+        id S232017AbjI0OBI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 10:01:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231378AbjI0Mn1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 08:43:27 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A51A6E6;
-        Wed, 27 Sep 2023 05:43:26 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E8D0C433C8;
-        Wed, 27 Sep 2023 12:43:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695818606;
-        bh=hot0489NCeMODOQPnfql7FbJn28GF6c4vF2S/pF88X4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tyWPcsVLiZasHkrVXcm9nVnluFasSlBWl5wPJQBuv+eho/mQs2sCvJD+87VwOWmpf
-         0JclVCe+5GHl9GEkjM0aTOmQN9XqmW0zIDD/bDtRMUMx3FLjK0qwsgv2GkJHCGzZVt
-         vzB1HDekfqQROvqSd/RQbhjJ9N/5KhAqMDTD1jT113/dcGpJOfR8lgitEe9S5yn/u6
-         nK1VB7/iUTzFXaxKAkdTaaWxwXDaY1LOzWfmOb8xjq7Cw5NtuOHivPuABzN6Fh4iG9
-         /l2LruT31kaTAoa/cEIgOOe24Ir/M8POKw9CTlYbboazOmH35rDosXOdHnsR6MRT2l
-         qCwZUpWUnJ+yA==
-Date:   Wed, 27 Sep 2023 14:43:17 +0200
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>
-Cc:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        alim.akhtar@samsung.com, bvanassche@acm.org, avri.altman@wdc.com,
-        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, cros-qcom-dts-watchers@chromium.org,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH V3 3/4] arm64: dts: qcom: sc7280: Add UFS nodes for
- sc7280 IDP board
-Message-ID: <20230927124317.GC18050@thinkpad>
-References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
- <20230927081858.15961-4-quic_nitirawa@quicinc.com>
+        with ESMTP id S231758AbjI0OBG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 10:01:06 -0400
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3441FC;
+        Wed, 27 Sep 2023 07:01:03 -0700 (PDT)
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-690fa0eea3cso10044682b3a.0;
+        Wed, 27 Sep 2023 07:01:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695823263; x=1696428063;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3GtW+9oznn0V0LSFljbT9XRIBI5HvP917KRuivWnT/Y=;
+        b=Hl5k4PQvTmMMH1WPTirVdKjgZUYPBShGucj8WpVpPzJo1PkZwl6HL1KgAKSroLSkrd
+         K3X4aipbuQIKbyQx20kY79/SDsJx//TK9TNJ4zRcIHDq+6sbxDGNIkQ5PQfhBn4YAFfx
+         HySDDUDO2h43biyj4xVWe9LgB6ByS0YUVNTWYveTRtZRiVbKi8VLwid0DNFErSE0n3sM
+         4EyUW949TKMLAtzb91kdibNrnQjevakYQnC3IdlxyLF/t6rbJpHaakPtNgLN2SHi7nqs
+         5EghHUn61MCu+X3TAiN1Rftq671twBMoEjhhnTNLcGP60BrEY8xSc0BsGis+kYG3FYUL
+         uQoA==
+X-Gm-Message-State: AOJu0YzGRDM80/NmVbH2z/lqwc56zfte0IFwSuptAu33cupk8jMFjqZM
+        d8mlvVH/FR54IxNAm3SldWg=
+X-Google-Smtp-Source: AGHT+IGni2WGxmceJYlnyrHoYDWDkUDWZLSDXqVbWvbNjy8hX/6e1sGoVNyYrz0LTs15yisqk4ICTA==
+X-Received: by 2002:a05:6a21:7881:b0:12e:73bb:cbb6 with SMTP id bf1-20020a056a21788100b0012e73bbcbb6mr2283615pzc.14.1695823263046;
+        Wed, 27 Sep 2023 07:01:03 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id s24-20020aa78d58000000b0068fdb59e9d6sm11636790pfe.78.2023.09.27.07.01.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Sep 2023 07:01:02 -0700 (PDT)
+Message-ID: <fc27ebc4-36b6-4acf-a0ef-77473c5dc237@acm.org>
+Date:   Wed, 27 Sep 2023 07:01:01 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230927081858.15961-4-quic_nitirawa@quicinc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: 3w-sas: Clean up errors in 3w-sas.h
+Content-Language: en-US
+To:     chenguohua@jari.cn, aradford@gmail.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <38a151ef.88d.18ad5d47214.Coremail.chenguohua@jari.cn>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <38a151ef.88d.18ad5d47214.Coremail.chenguohua@jari.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 01:48:57PM +0530, Nitin Rawat wrote:
-> Add UFS host controller and PHY nodes for sc7280 IDP board.
-> 
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+On 9/27/23 01:49, chenguohua@jari.cn wrote:
+> Fix the following errors reported by checkpatch:
 
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+checkpatch is a tool that should only be used to verify new patches
+before posting these on a Linux kernel related mailing list. It should
+not be used to "fix" old code.
 
-- Mani
+Thanks,
 
-> ---
->  arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-> index 2ff549f4dc7a..a0059527d9e4 100644
-> --- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-> @@ -499,6 +499,25 @@
->  	status = "okay";
->  };
-> 
-> +&ufs_mem_hc {
-> +	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
-> +	vcc-supply = <&vreg_l7b_2p9>;
-> +	vcc-max-microamp = <800000>;
-> +	vccq-supply = <&vreg_l9b_1p2>;
-> +	vccq-max-microamp = <900000>;
-> +	vccq2-supply = <&vreg_l9b_1p2>;
-> +	vccq2-max-microamp = <900000>;
-> +
-> +	status = "okay";
-> +};
-> +
-> +&ufs_mem_phy {
-> +	vdda-phy-supply = <&vreg_l10c_0p8>;
-> +	vdda-pll-supply = <&vreg_l6b_1p2>;
-> +
-> +	status = "okay";
-> +};
-> +
->  &usb_1 {
->  	status = "okay";
->  };
-> --
-> 2.17.1
-> 
+Bart.
 
--- 
-மணிவண்ணன் சதாசிவம்
