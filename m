@@ -2,85 +2,141 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93B45E82CAE
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 16:29:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B037AE82CB1
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 16:36:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231490AbjI0Q3c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 12:29:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44078 "EHLO
+        id S231720AbjI0QgO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 12:36:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229692AbjI0Q3a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 12:29:30 -0400
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA81291;
-        Wed, 27 Sep 2023 09:29:29 -0700 (PDT)
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1c44c0f9138so85542405ad.2;
-        Wed, 27 Sep 2023 09:29:29 -0700 (PDT)
+        with ESMTP id S231567AbjI0QgN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 12:36:13 -0400
+Received: from mail-oa1-x30.google.com (mail-oa1-x30.google.com [IPv6:2001:4860:4864:20::30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05345DD;
+        Wed, 27 Sep 2023 09:36:07 -0700 (PDT)
+Received: by mail-oa1-x30.google.com with SMTP id 586e51a60fabf-1dd54aca17cso3020168fac.3;
+        Wed, 27 Sep 2023 09:36:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695832567; x=1696437367; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=iLvNdA6wNm+HQDFw0nR5s2Yug1qheJyO4Wo6kLd26Hk=;
+        b=LNr/fg4/2i/qqbNSr0j7UYSVhWj5SJaLEWUDC27I6P2we4+s3EIdp6zMuBVRzajwdd
+         yI+aYxP3jIzo5rLVicbutD+3y85NGqdeLj2m0x+IrpSSZxiUfMjofukIoXRAO/isqq2p
+         Z9OxOlAc6yTFaBpwi/qHwGabMu2g/pqvcZAJb4iTDKZaaG0DiJ9Gr6ehT16EkEJRmVLQ
+         1iGegeWVU1A4pCmHlO/pvoQU2UaWVmYgb+351goHFst9vDxCC4CXJ579CjtWXvZ64TIb
+         XcjG+zVygV8n938fq5MhBu2afK5bOKA1Iu+E3eHv3s70emWBpTvFfkj+D+nBHtOMHYsb
+         sxVw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695832169; x=1696436969;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1695832567; x=1696437367;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=duvjCo0JuxZMgwCrfLCTY+iDLqat7LNdQ7M8fdOT0po=;
-        b=iXqa4P9X2fGBddzi7de9SnVPnyVi33WihaL0/OrK33EYJu0qxeZDlptVTdqlA6xcPL
-         y1cjbtbiWM9cEMgf1sZlpumXHBqK6QDO9Nbd4jDJ8QJkbka9IiTnt8deGS+9+Fn7CoJ5
-         1uKXAmyAJia670DpxiXuC0Y3LwIX0E3e71DcyH9mKww5UFrbhZW/IPsCgphfJtyBXn6m
-         AWZdH0Ru4j8P4ynaUIWcBYX5FJAkO2k8eNoAupygB2Vc2R8BJgGwnjckCFCy2YT1mDMB
-         7e6iUgJTapPVV6zoGW9LIQP9L1WK+pR4ruLrraZ9h7L6h4ra63pZdt2rYEIUZXuVzMVl
-         KWLw==
-X-Gm-Message-State: AOJu0YwGGCXQG34B/Aqxjzb3Og8KoteIrHTpv/SyM/Q3FGfK6yurbvyO
-        b2PbFT8nJFUrFBSf4opuczc=
-X-Google-Smtp-Source: AGHT+IHg7FxsvwgANgoqbtLbTNE3UuFHvB0DuslkKsiuySFg+EFbm13utdrF7qIUr4pWxRK5/diH8g==
-X-Received: by 2002:a17:902:d3cd:b0:1bd:d141:f02d with SMTP id w13-20020a170902d3cd00b001bdd141f02dmr2072088plb.68.1695832168888;
-        Wed, 27 Sep 2023 09:29:28 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:8f39:a76e:2f15:c958? ([2620:15c:211:201:8f39:a76e:2f15:c958])
-        by smtp.gmail.com with ESMTPSA id jw16-20020a170903279000b001b89b7e208fsm13434819plb.88.2023.09.27.09.29.27
+        bh=iLvNdA6wNm+HQDFw0nR5s2Yug1qheJyO4Wo6kLd26Hk=;
+        b=v8O0oplpkQ1q9YVq7LY7yUbDZdzdVlw6Ywh6f/rqXSsUOII42A70rz3HySBChroEnA
+         U98AeQkGQoxPKuQNWyyujho+ZkHXR/5iE00faxCiLlsDKreXkodu8tdl+34Oih0URzgl
+         QbrJnWjXxpsjke93V40fDWfAeq+4mCl6ywhbfvCSeJAmFgCOkej1EBaA94j+sMZWXhXK
+         0v1OV/IHjhLALXBgdriqgO7XfP8LxOaPNmCK5X6zLRky5KS6G44vGJ9ttsTNJAgSthCb
+         C0AdozsZjSWXAghyY+g9EJKOyVxgZUh8Gbiz7fYSXC1I8502H0HaBonhhu1tnUqYuc4V
+         DMsg==
+X-Gm-Message-State: AOJu0YxEWmkrB/lSylDq6aIjxlp38sNnaRw5xCI18yk2otXZnwJtSkz4
+        x6m4Z3vQeA8ZYyasGeOqYIo=
+X-Google-Smtp-Source: AGHT+IFGI9LuyhBTFKnF8s3xo4FoEsv/yRaVA5SnA81GDyVsHNrqOd3IvFXcY41T8uKslD1qQhHXJA==
+X-Received: by 2002:a05:6870:d24d:b0:1c1:12dc:70b1 with SMTP id h13-20020a056870d24d00b001c112dc70b1mr2809280oac.57.1695832566993;
+        Wed, 27 Sep 2023 09:36:06 -0700 (PDT)
+Received: from ?IPV6:2603:8081:1405:679b:78f5:97a9:4cba:5728? (2603-8081-1405-679b-78f5-97a9-4cba-5728.res6.spectrum.com. [2603:8081:1405:679b:78f5:97a9:4cba:5728])
+        by smtp.gmail.com with ESMTPSA id i5-20020a056870344500b001d4f1ec39b3sm3220649oah.23.2023.09.27.09.36.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Sep 2023 09:29:28 -0700 (PDT)
-Message-ID: <05e7792e-bae6-4501-b14c-773bd4a3fe98@acm.org>
-Date:   Wed, 27 Sep 2023 09:29:27 -0700
+        Wed, 27 Sep 2023 09:36:06 -0700 (PDT)
+Message-ID: <6fe0a64c-704f-6c8b-6a24-d725e7629d3a@gmail.com>
+Date:   Wed, 27 Sep 2023 11:36:04 -0500
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 09/23] scsi: sd: Do not issue commands to suspended
- disks on shutdown
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
+        jgg@ziepe.ca, linux-rdma@vger.kernel.org,
+        matsuda-daisuke@fujitsu.com, shinichiro.kawasaki@wdc.com,
+        linux-scsi@vger.kernel.org, Zhu Yanjun <yanjun.zhu@intel.com>
+Cc:     Zhu Yanjun <yanjun.zhu@linux.dev>
+References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
+ <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
+ <20230926140656.GM1642130@unreal>
+ <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
+ <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
+ <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
 Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230926081507.69346-1-dlemoal@kernel.org>
- <20230926081507.69346-10-dlemoal@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230926081507.69346-10-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From:   Bob Pearson <rpearsonhpe@gmail.com>
+In-Reply-To: <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/26/23 01:14, Damien Le Moal wrote:
-> If an error occurs when resuming a host adapter before the devices
-> attached to the adapter are resumed, the adapter low level driver may
-> remove the scsi host, resulting in a call to sd_remove() for the
-> disks of the host. This in turn results in a call to sd_shutdown() which
-> will issue a synchronize cache command and a start stop unit command to
-> spindown the disk. sd_shutdown() issues the commands only if the device
-> is not already runtime suspended but does not check the power state for
-> system-wide suspend/resume. That is, the commands may be issued with the
-> device in a suspended state, which causes PM resume to hang, forcing a
-> reset of the machine to recover.
+On 9/26/23 15:24, Bart Van Assche wrote:
+> On 9/26/23 11:34, Bob Pearson wrote:
+>> I am working to try to reproduce the KASAN warning. Unfortunately,
+>> so far I am not able to see it in Ubuntu + Linus' kernel (as you described) on metal. The config file is different but copies the CONFIG_KASAN_xxx exactly as yours. With KASAN enabled it hangs on every iteration of srp/002 but without a KASAN warning. I am now building an openSuSE VM for qemu and will see if that causes the warning.
 > 
-> Fix this by tracking the suspended state of a disk by introducing the
-> suspended boolean field in the scsi_disk structure. This flag is set to
-> true when the disk is suspended is sd_suspend_common() and resumed with
-> sd_resume(). When suspended is true, sd_shutdown() is not executed from
-> sd_remove().
+> Hi Bob,
+> 
+> Did you try to understand the report that I shared? 
 
+Looking at the three stack traces from KASAN (alloc, free, and use after free)
+it appears that there was an ack packet (skb) created in rxe_responder (normal) and
+then passed to rxe_completer which apparently successfully processed it and then
+freed the skb (also normal). Then the same skb is enqueued on the response queue
+in rxe_comp_queue_pkt(). This is very strange and hard to understand. The only way
+the original packet could have been 'completed' would be for it to have been first
+enqueued on qp->resp_pkts by skb_queue_tail() and then dequeued after the completer
+task runs by skb_dequeue(). The skb queue routines are protected by an irqsave spinlock
+so they should operate atomically. In other words the completer can't get the skb until
+skb_queue_tail() is finished touching the skb. So it looks like the first pass through
+rxe_comp_queue_pkt() shouldn't be to blame. There is no way I can imagine that the
+packet could be queued twice on the local loopback path. One strange thing in the
+trace is a "? rxe_recv_mcast_pkt" which seems unlikely to be true as all the packets
+are rc and hence not mcast. Not sure how to interpret this. Perhaps the stack is
+corrupted from scribbles which might cause the above impossibility.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+My conclusion from
+> the report is that when using tasklets rxe_completer() only runs after
+> rxe_requester() has finished and also that when using work queues that
+> rxe_completer() may run concurrently with rxe_requester(). 
+
+The completer task was always intended to run in parallel with the requester
+and responder tasks whether they are tasklets or workqueue items. Tasklets
+tend to run sequentially but there is no reason whey they can't run in
+parallel. The completer task is triggered by response packets from another
+process's queue pair which is asynchronous from the requester task which
+generated the request packets.
+
+For unrelated reasons I am planning to merge the requester task and completer
+task into a single task because in high scale situation with lots of qps
+it performs better and allows removing some of the locking between them.
+
+This patch
+> seems to fix all issues that I ran into with the rdma_rxe workqueue
+> patch (I have not tried to verify the performance implications of this
+> patch):
+> 
+> diff --git a/drivers/infiniband/sw/rxe/rxe_task.c b/drivers/infiniband/sw/rxe/rxe_task.c
+> index 1501120d4f52..6cd5d5a7a316 100644
+> --- a/drivers/infiniband/sw/rxe/rxe_task.c
+> +++ b/drivers/infiniband/sw/rxe/rxe_task.c
+> @@ -10,7 +10,7 @@ static struct workqueue_struct *rxe_wq;
+> 
+>  int rxe_alloc_wq(void)
+>  {
+> -       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
+> +       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, 1);
+>         if (!rxe_wq)
+>                 return -ENOMEM;
+> 
+> Thanks,
+> 
+> Bart.
+
