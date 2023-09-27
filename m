@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AADFBE810AD
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 09:39:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9800CE810B5
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 09:41:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229698AbjI0Jjo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 05:39:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32860 "EHLO
+        id S230221AbjI0Jlv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 05:41:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229550AbjI0Jjn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 05:39:43 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB7FDC0;
-        Wed, 27 Sep 2023 02:39:41 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.54])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RwWgx2MKdzMlpH;
-        Wed, 27 Sep 2023 17:35:57 +0800 (CST)
+        with ESMTP id S231281AbjI0Jlt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 05:41:49 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C98ADC0;
+        Wed, 27 Sep 2023 02:41:47 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RwWm21jq5zrTBX;
+        Wed, 27 Sep 2023 17:39:30 +0800 (CST)
 Received: from [10.174.178.220] (10.174.178.220) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Wed, 27 Sep 2023 17:39:39 +0800
-Message-ID: <374f2f3c-e0f0-cd28-4b43-fa46a1fd5002@huawei.com>
-Date:   Wed, 27 Sep 2023 17:39:38 +0800
+ 15.1.2507.31; Wed, 27 Sep 2023 17:41:45 +0800
+Message-ID: <98ea6e9b-cbfb-0485-6452-e3d979aaed54@huawei.com>
+Date:   Wed, 27 Sep 2023 17:41:44 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.8.0
 Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
  mechanism
 Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
+To:     Hannes Reinecke <hare@suse.de>,
+        Mike Christie <michael.christie@oracle.com>,
         Christoph Hellwig <hch@infradead.org>
 CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>,
-        <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>,
-        <lixiaokeng@huawei.com>
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>
 References: <20230901094127.2010873-1-haowenchao2@huawei.com>
  <ZRGfc73BSW0yyUtI@infradead.org>
  <47bed3cb-f307-ec55-5c28-051687dab1ea@huawei.com>
  <a92f5e0c-1976-4fc6-ba48-7ff49546318a@oracle.com>
  <06268327-cfed-f266-34a7-fda69411ef2a@huawei.com>
- <27eb28b9-46e9-489f-9826-5e8f9a9a662f@oracle.com>
+ <c3763949-c810-4a1f-87cc-e2248bfdc40b@suse.de>
 From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <27eb28b9-46e9-489f-9826-5e8f9a9a662f@oracle.com>
+In-Reply-To: <c3763949-c810-4a1f-87cc-e2248bfdc40b@suse.de>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  kwepemm000012.china.huawei.com (7.193.23.142)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/27 1:37, Mike Christie wrote:
-> On 9/26/23 7:57 AM, Wenchao Hao wrote:
+On 2023/9/27 15:59, Hannes Reinecke wrote:
+> On 9/26/23 14:57, Wenchao Hao wrote:
 >> On 2023/9/26 1:54, Mike Christie wrote:
 >>> On 9/25/23 10:07 AM, Wenchao Hao wrote:
 >>>> On 2023/9/25 22:55, Christoph Hellwig wrote:
@@ -85,44 +85,14 @@ On 2023/9/27 1:37, Mike Christie wrote:
 >> Both of them request device reset, they do not happened in parallel, but
 >> would in serial. If 0:0:0:0 is performing device reset in progress, 0:0:0:1
 >> just wait 0:0:0:0 to finish.
-> 
-> I see. I guess we still get the benefit of not having to stop other devices
-> when doing TMFs.
+>>
+> Well, not quite. Any higher-order TMFs are serialized by virtue of SCSI-EH, but command aborts (which also devolve down to TMFs on certain drivers) do run in parallel, and there we will be requiring multiple TMFs.
 > 
 
-Yes, it's better to support multiple TMFs in parallel than just run in serial.
-I would wait for Hannes's changes to be applied and send my change again.
+It's best that multiple  TMFs can run in parallel, again, looking forwarding
+to your changes.
 
-> I think we still want a common way to allocate/free and manage resources
-> drivers will use during this time. Maybe have a init_device/target/cmd/eh_priv
-> and exit_device/target/eh_priv (I'm not sure of the name, but something similar
-> to the init_cmd_priv/exit_cmd_priv we have for normal commands.
+> Cheers,
 > 
-> scsi-ml then calls into the new eh with the priv data. Drivers don't have to
-> do the preallocation and worry if it's per device/target/host.
-> 
-> I'm not 100% sure about the low level details. Check out how Hannes's is
-> handling tag management for TMFs as well.
-> 
-> 
->>
->>> The problem is that we need to be able to make forward progress in the EH
->>> path and not fail just because we can't allocate memory for a TMF related
->>> struct. To accomplish this now, drivers will use mempools, preallocate TMF
->>> related structs/mem/tags with their scsi_cmnd related structs, preallocate
->>> per host/target/device related structs or ignore what I wrote above and just
->>> fail.
->>>
->>> Hannes's patches fix up the eh callouts so they don't pass in a scsi_cmnd
->>> when it's not needed. That seems nice because after that, then for your new
->>> EH we can begin to standardize on how to handle preallocation of drivers
->>> resources needed to perform TMFs for your new EH. It could be a per
->>> device/target/host callout to allow drivers to preallocate, then scsi-ml calls
->>> into the drivers with that data. It doesn't have to be exactly like that or
->>> anything close. It would be nice for drivers to not have to think about this
->>> type of thing and scsi-ml just to handle the resource management for us when
->>> there are multiple TMFs in progress.
->>>
->>
-> 
+> Hannes
 
