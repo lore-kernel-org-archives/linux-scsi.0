@@ -2,28 +2,28 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 235BCE810A6
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 08:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13615E810A2
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 08:38:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229762AbjI0Igt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 04:36:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47340 "EHLO
+        id S230071AbjI0Iij (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 04:38:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230127AbjI0IgI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 04:36:08 -0400
+        with ESMTP id S229641AbjI0Iij (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 04:38:39 -0400
 Received: from jari.cn (unknown [218.92.28.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D06F4CC7;
-        Wed, 27 Sep 2023 01:35:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AB3829F;
+        Wed, 27 Sep 2023 01:38:37 -0700 (PDT)
 Received: from chenguohua$jari.cn ( [182.148.12.64] ) by
- ajax-webmail-localhost.localdomain (Coremail) ; Wed, 27 Sep 2023 16:34:26
+ ajax-webmail-localhost.localdomain (Coremail) ; Wed, 27 Sep 2023 16:37:19
  +0800 (GMT+08:00)
 X-Originating-IP: [182.148.12.64]
-Date:   Wed, 27 Sep 2023 16:34:26 +0800 (GMT+08:00)
+Date:   Wed, 27 Sep 2023 16:37:19 +0800 (GMT+08:00)
 X-CM-HeaderCharset: UTF-8
 From:   chenguohua@jari.cn
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: Clean up errors in mvme16x_scsi.c
+Subject: [PATCH] scsi: Clean up errors in sni_53c710.c
 X-Priority: 3
 X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
  20230419(ff23bf83) Copyright (c) 2002-2023 www.mailtech.cn
@@ -31,10 +31,10 @@ X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
 Content-Transfer-Encoding: base64
 Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-Message-ID: <6ddb5837.88a.18ad5c66ee8.Coremail.chenguohua@jari.cn>
+Message-ID: <11d7b9cb.88b.18ad5c91580.Coremail.chenguohua@jari.cn>
 X-Coremail-Locale: zh_CN
-X-CM-TRANSID: AQAAfwC3VUAS6RNl7fm9AA--.622W
-X-CM-SenderInfo: xfkh0w5xrk3tw6md2xgofq/1tbiAQAHEWUSpy8AOwAns0
+X-CM-TRANSID: AQAAfwDHZD+_6RNlUPq9AA--.629W
+X-CM-SenderInfo: xfkh0w5xrk3tw6md2xgofq/1tbiAQAHEWUSpy8AOwAps6
 X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
         CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
         daVFxhVjvjDU=
@@ -43,15 +43,17 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Rml4IHRoZSBmb2xsb3dpbmcgZXJyb3JzIHJlcG9ydGVkIGJ5IGNoZWNrcGF0Y2g6CgpFUlJPUjog
-ImZvbyAqIGJhciIgc2hvdWxkIGJlICJmb28gKmJhciIKClNpZ25lZC1vZmYtYnk6IEd1b0h1YSBD
-aGVuZyA8Y2hlbmd1b2h1YUBqYXJpLmNuPgotLS0KIGRyaXZlcnMvc2NzaS9tdm1lMTZ4X3Njc2ku
-YyB8IDIgKy0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQoK
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tdm1lMTZ4X3Njc2kuYyBiL2RyaXZlcnMvc2NzaS9t
-dm1lMTZ4X3Njc2kuYwppbmRleCAyMWQ2MzgyOTlhYjguLjkzMWI3Mjc0NzFiZiAxMDA2NDQKLS0t
-IGEvZHJpdmVycy9zY3NpL212bWUxNnhfc2NzaS5jCisrKyBiL2RyaXZlcnMvc2NzaS9tdm1lMTZ4
-X3Njc2kuYwpAQCAtMzcsNyArMzcsNyBAQCBzdGF0aWMgc3RydWN0IHBsYXRmb3JtX2RldmljZSAq
-bXZtZTE2eF9zY3NpX2RldmljZTsKIAogc3RhdGljIGludCBtdm1lMTZ4X3Byb2JlKHN0cnVjdCBw
-bGF0Zm9ybV9kZXZpY2UgKmRldikKIHsKLQlzdHJ1Y3QgU2NzaV9Ib3N0ICogaG9zdCA9IE5VTEw7
-CisJc3RydWN0IFNjc2lfSG9zdCAqaG9zdCA9IE5VTEw7CiAJc3RydWN0IE5DUl83MDBfSG9zdF9Q
-YXJhbWV0ZXJzICpob3N0ZGF0YTsKIAogCWlmICghTUFDSF9JU19NVk1FMTZ4KQotLSAKMi4xNy4x
-Cg==
+c3BhY2UgcmVxdWlyZWQgYmVmb3JlIHRoZSBvcGVuIHBhcmVudGhlc2lzICcoJwoKU2lnbmVkLW9m
+Zi1ieTogR3VvSHVhIENoZW5nIDxjaGVuZ3VvaHVhQGphcmkuY24+Ci0tLQogZHJpdmVycy9zY3Np
+L3NuaV81M2M3MTAuYyB8IDIgKy0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBk
+ZWxldGlvbigtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zbmlfNTNjNzEwLmMgYi9kcml2
+ZXJzL3Njc2kvc25pXzUzYzcxMC5jCmluZGV4IDY3ODY1MWI5YjRkZC4uZTIyNjIyNWQxMjM3IDEw
+MDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc25pXzUzYzcxMC5jCisrKyBiL2RyaXZlcnMvc2NzaS9z
+bmlfNTNjNzEwLmMKQEAgLTg2LDcgKzg2LDcgQEAgc3RhdGljIGludCBzbmlybTcxMF9wcm9iZShz
+dHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpkZXYpCiAJaG9zdC0+aXJxID0gcmMgPSBwbGF0Zm9ybV9n
+ZXRfaXJxKGRldiwgMCk7CiAJaWYgKHJjIDwgMCkKIAkJZ290byBvdXRfcHV0X2hvc3Q7Ci0JaWYo
+cmVxdWVzdF9pcnEoaG9zdC0+aXJxLCBOQ1JfNzAwX2ludHIsIElSUUZfU0hBUkVELCAic25pcm03
+MTAiLCBob3N0KSkgeworCWlmIChyZXF1ZXN0X2lycShob3N0LT5pcnEsIE5DUl83MDBfaW50ciwg
+SVJRRl9TSEFSRUQsICJzbmlybTcxMCIsIGhvc3QpKSB7CiAJCXByaW50ayhLRVJOX0VSUiAic25p
+cm03MTA6IHJlcXVlc3RfaXJxIGZhaWxlZCFcbiIpOwogCQlnb3RvIG91dF9wdXRfaG9zdDsKIAl9
+Ci0tIAoyLjE3LjEK
