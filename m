@@ -2,108 +2,152 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E57BBE810DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 12:42:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DED6E810DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 12:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231734AbjI0MmC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 08:42:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34218 "EHLO
+        id S231808AbjI0Mmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 08:42:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231717AbjI0MmA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 08:42:00 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD5E3192;
-        Wed, 27 Sep 2023 05:41:59 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99629C433C7;
-        Wed, 27 Sep 2023 12:41:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695818519;
-        bh=Ixc8H3ujplWohF9UM5gKrnB7hfl3ihySOlnIo40lRmI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XCHhvG16RGel5+Z1+o7eXq/d2peVyJWwL08/o6DS/knRJrIU3Hl9QEDUJidqXCM9f
-         1qPzrVo4ADY3eRQULUSGuqIKEX1ft+XhsDXoWLDH2qHv40v3F5jfD5W1a9/ypgdHMa
-         aNq4icL5RReK2pLwud1NYh+SYaSXwheGsj5vd0hTEBf2rGZ0mkPE/M1/HL3y/MFzAh
-         SUJHUdjlJ4i2+QIbniS4NILR2JJ5VKWl++S8RaHOkT8tBm+F7cQIxJGJ5z1ip5ktI6
-         BH+kQIUp5SMGNCxOxcSG/bluG6P4kwyhMbmZFW11mtArIP2W4m547AxPvwobbB1ntP
-         w25hFpMVRikMQ==
-Date:   Wed, 27 Sep 2023 14:41:49 +0200
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>
-Cc:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        mani@kernel.org, alim.akhtar@samsung.com, bvanassche@acm.org,
-        avri.altman@wdc.com, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        cros-qcom-dts-watchers@chromium.org, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH V3 2/4] arm64: dts: qcom: sc7280: Add UFS nodes for
- sc7280 soc
-Message-ID: <20230927124149.GB18050@thinkpad>
-References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
- <20230927081858.15961-3-quic_nitirawa@quicinc.com>
+        with ESMTP id S231769AbjI0Mmn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 08:42:43 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88E001B2;
+        Wed, 27 Sep 2023 05:42:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1695818558;
+        bh=SHMG6lgDFraU+H51dhM9rfzW2m2leq9l5xsXhHTv1F4=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=I29TFPrR/nk4TktrlrpVUwJADXhRUkwI3Sh2QToQZbd2rL/2yxRrWxqfOqPk80rG6
+         8LWgmw+iCd+7PoRyUOFc0/Yqj6/4+L3oP3bdC62TVDjAQvB3JtaEmcPxs88iM0As9m
+         tqAzvecqxaWWNogg5z/Q3N6w4jC13yHeJGe64Mro=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 2320A1285D49;
+        Wed, 27 Sep 2023 08:42:38 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id FF1qiZE4vKWb; Wed, 27 Sep 2023 08:42:38 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1695818557;
+        bh=SHMG6lgDFraU+H51dhM9rfzW2m2leq9l5xsXhHTv1F4=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=oHyhQAEhZZD6vj1svziS3T7KDe1b9KAx4HJUjn0d0NIWb/6kbSnxt9EWQtfrWsPoC
+         nGUGB5liSgtPm+R1bcPR1d67/1RdmsWYS/koTFOK2uAtJ1xgbplAy/DG9PPeOBuNKC
+         q0xrBjFgdFjVshLRzGvinbIDP/nvxes99jK0a2hE=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 6D91A128138F;
+        Wed, 27 Sep 2023 08:42:37 -0400 (EDT)
+Message-ID: <003149d84048d4fbf26eac75237bc67e188c5f84.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.6-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Wed, 27 Sep 2023 08:42:35 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230927081858.15961-3-quic_nitirawa@quicinc.com>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 01:48:56PM +0530, Nitin Rawat wrote:
-> Add UFS host controller and PHY nodes for sc7280 soc.
-> 
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
->  arch/arm64/boot/dts/qcom/sc7280.dtsi | 63 ++++++++++++++++++++++++++++
->  1 file changed, 63 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> index 66f1eb83cca7..0b50b8557311 100644
-> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> @@ -3353,6 +3353,69 @@
->  			};
->  		};
-> 
-> +		ufs_mem_hc: ufs@1d84000 {
-> +			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
-> +				     "jedec,ufs-2.0";
-> +			reg = <0x0 0x01d84000 0x0 0x3000>;
-> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-> +			phys = <&ufs_mem_phy>;
-> +			phy-names = "ufsphy";
-> +			lanes-per-direction = <2>;
-> +			#reset-cells = <1>;
-> +			resets = <&gcc GCC_UFS_PHY_BCR>;
-> +			reset-names = "rst";
-> +
-> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
-> +			required-opps = <&rpmhpd_opp_nom>;
-> +
-> +			iommus = <&apps_smmu 0x80 0x0>;
-> +			dma-coherent;
-> +
-> +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-> +				 <&rpmhcc RPMH_CXO_CLK>,
-> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> +			clock-names = "core_clk",
-> +				      "bus_aggr_clk",
-> +				      "iface_clk",
-> +				      "core_clk_unipro",
-> +				      "ref_clk",
-> +				      "tx_lane0_sync_clk",
-> +				      "rx_lane0_sync_clk",
-> +				      "rx_lane1_sync_clk";
+Single fix for libata: older devices don't support command duration
+limits (CDL) and some don't support report opcodes, meaning there's no
+way to tell if they support the command or not. Reduce the problems of
+incorrectly using CDL commands on older devices by checking SCSI spec
+compliance at SPC-5 (the spec which introduced the command) before
+turning on CDL.
 
-Please add the interconnect properties since mainline has the support.
+The patch is available here:
 
-- Mani
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
--- 
-மணிவண்ணன் சதாசிவம்
+The short changelog is:
+
+Damien Le Moal (1):
+      scsi: core: ata: Do no try to probe for CDL on old drives
+
+And the diffstat:
+
+ drivers/ata/libata-scsi.c |  3 +++
+ drivers/scsi/scsi.c       | 11 +++++++++++
+ drivers/scsi/scsi_scan.c  |  2 +-
+ include/scsi/scsi.h       |  3 +++
+ 4 files changed, 18 insertions(+), 1 deletion(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d3f28b82c97b..0e96ed408c71 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1835,6 +1835,9 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		hdr[2] = 0x7; /* claim SPC-5 version compatibility */
+ 	}
+ 
++	if (args->dev->flags & ATA_DFLAG_CDL)
++		hdr[2] = 0xd; /* claim SPC-6 version compatibility */
++
+ 	memcpy(rbuf, hdr, sizeof(hdr));
+ 	memcpy(&rbuf[8], "ATA     ", 8);
+ 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index d0911bc28663..89367c4bf0ef 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -613,6 +613,17 @@ void scsi_cdl_check(struct scsi_device *sdev)
+ 	bool cdl_supported;
+ 	unsigned char *buf;
+ 
++	/*
++	 * Support for CDL was defined in SPC-5. Ignore devices reporting an
++	 * lower SPC version. This also avoids problems with old drives choking
++	 * on MAINTENANCE_IN / MI_REPORT_SUPPORTED_OPERATION_CODES with a
++	 * service action specified, as done in scsi_cdl_check_cmd().
++	 */
++	if (sdev->scsi_level < SCSI_SPC_5) {
++		sdev->cdl_supported = 0;
++		return;
++	}
++
+ 	buf = kmalloc(SCSI_CDL_CHECK_BUF_LEN, GFP_KERNEL);
+ 	if (!buf) {
+ 		sdev->cdl_supported = 0;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 52014b2d39e1..eaa972bee6c0 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -822,7 +822,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * device is attached at LUN 0 (SCSI_SCAN_TARGET_PRESENT) so
+ 	 * non-zero LUNs can be scanned.
+ 	 */
+-	sdev->scsi_level = inq_result[2] & 0x07;
++	sdev->scsi_level = inq_result[2] & 0x0f;
+ 	if (sdev->scsi_level >= 2 ||
+ 	    (sdev->scsi_level == 1 && (inq_result[3] & 0x0f) == 1))
+ 		sdev->scsi_level++;
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index ec093594ba53..4498f845b112 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -157,6 +157,9 @@ enum scsi_disposition {
+ #define SCSI_3          4        /* SPC */
+ #define SCSI_SPC_2      5
+ #define SCSI_SPC_3      6
++#define SCSI_SPC_4	7
++#define SCSI_SPC_5	8
++#define SCSI_SPC_6	14
+ 
+ /*
+  * INQ PERIPHERAL QUALIFIERS
+
+
