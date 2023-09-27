@@ -2,118 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 880A2E810D2
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 11:40:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37074E810DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 12:39:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231420AbjI0Lk5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 07:40:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33890 "EHLO
+        id S231691AbjI0Mjm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 08:39:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230432AbjI0Lk4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 07:40:56 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5E92FC
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 04:40:54 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id a640c23a62f3a-9ada2e6e75fso1447836166b.2
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 04:40:54 -0700 (PDT)
+        with ESMTP id S229531AbjI0Mjl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 08:39:41 -0400
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0741512A
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 05:39:40 -0700 (PDT)
+Received: by mail-wm1-x330.google.com with SMTP id 5b1f17b1804b1-40572aeb6d0so75112425e9.1
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 05:39:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1695814853; x=1696419653; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GxIR3EO6aP2fK/+9UgrcHthkeV5Bvuqoj4iTIScM8Jo=;
-        b=B5IO8Md65dBvNmflYDE9Z+JQ88AbgH8OkIYFSy7m+NLl2Udmrbnt8GoWweNg30akWT
-         hcYONLNFO/lqdxKSsgcJN2fS8ZZ1lL9nnnUlEQoXPMeBgOw42Yy2l3L5kRbAZz9PjHtG
-         sjdopCXycQQq/K85qKf2XCaEPeJEdEW7DipfUTm7jGvcqtVcXa+DkHdzZplZQOj3IOeg
-         agYjq5xAzo6ILqG4l5MniDLmccVPPI33W+he9TgrynKeOWWRZVnvxRvQDj9slxDoikqq
-         RcjZFtLWIWU428kt4cWyWESGM8Aukq0WsnsvxjFGxbzxQH1rA/5fspdWenrDkKt7hrii
-         L7Iw==
+        d=linaro.org; s=google; t=1695818378; x=1696423178; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=v+cyOeFjn2n638CIp01wW+C7aq6a/BkmIOcsXz/bUSY=;
+        b=rp6R9jJ9TqBdLrZ81VnOI3v3v3JzGeI4++hLvQAIGn10K6UxZxFija9vX1hQA8SNTA
+         AnbeMm/jjYxnESyaXnF+/sFXKSTn4CnfR1YkzDAaondsghzuEFH0DtNqjf+iVI7y008/
+         lGUMxEtSnnzY2w05xoLAZZFlJWzslak5aVzS7o2TdlvcKqm0vAr5wkV7oWrQQCGK1NS9
+         rSnx4yTTg115W90xWEWAzLz4jn4Z8FZdGynWOMTvApqHTpBzKSDh5+GKQAJP00V8KTbe
+         DVy7B3/CAI2fF+Rt10xJX54MXRiB9xnXQkn94gq1cTirHdqLviVKoyH5DgXZ0MfORCP2
+         uIZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695814853; x=1696419653;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1695818378; x=1696423178;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GxIR3EO6aP2fK/+9UgrcHthkeV5Bvuqoj4iTIScM8Jo=;
-        b=K9OJBqxbcWAAe82PtKHD/dEDJWAeiX2IEfwlemCpNOvBNrrqqRAMw8ryy/k9bHmscV
-         wIsV6sIySihTMztiPnNwlf5Do5nz3mHFh6cHFu/ZpIfoYRdJNgps1Yu5crTXdjdZlk3H
-         z7DRNVWJVf5jc2KnnXvmbVGTv0lvECqyzXeX4gguMh/zStwnJXc5LIyLEjmDVnPREGGD
-         ptJj9OEKaC/+FG0dXP7R7WZJ5QQiPOKzYcaOO/EKjckjrHw2hlQwzfHThCstGOWr7+Ru
-         CQJ+ibmkKwTcAMGeQBJ739tmgm/UeW3CZs08FBZNER6hqKcY/j08HudFU/S54QBexbow
-         eD6A==
-X-Gm-Message-State: AOJu0YwvTHglhEzVGrYMOP4BPbZ8aprchRpJDGSsr3Mlkom6naKWmHx0
-        Fh1aC46v3RrNHRI+LPpuBjYJLA==
-X-Google-Smtp-Source: AGHT+IFxtNBQUKXcnlNppuZs8Xdyd86OoDEAtuanVddwZ5SqZfpvcCCeQW9hKBkzcqdxI6kE+xebCA==
-X-Received: by 2002:a17:906:738b:b0:9ae:3435:ad45 with SMTP id f11-20020a170906738b00b009ae3435ad45mr1421170ejl.76.1695814853182;
-        Wed, 27 Sep 2023 04:40:53 -0700 (PDT)
-Received: from [192.168.33.189] (178235177023.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.23])
-        by smtp.gmail.com with ESMTPSA id ep14-20020a1709069b4e00b009a168ab6ee2sm8591168ejc.164.2023.09.27.04.40.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Sep 2023 04:40:52 -0700 (PDT)
-Message-ID: <96c1e8b9-6e77-435f-8a65-b7d92fd5aae2@linaro.org>
-Date:   Wed, 27 Sep 2023 13:40:50 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 2/4] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- soc
-Content-Language: en-US
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
-        andersson@kernel.org, mani@kernel.org, alim.akhtar@samsung.com,
-        bvanassche@acm.org, avri.altman@wdc.com, robh+dt@kernel.org,
+        bh=v+cyOeFjn2n638CIp01wW+C7aq6a/BkmIOcsXz/bUSY=;
+        b=SX4vvdvnN9OpcwHOFRitbQlRmWItgYYh4JT3Ud+MgnUoneA3TloHE7YGrLrRoPxJWr
+         x/lvm/2iiBUe++C1rTkY8g4DqIxVze3Iv2uj39/HcF5EnvHxIx73HZnyBhkyclJUstM8
+         fW7Vf0+jIyProfzRSkmGu9sQ2/ZapmVtE/p38Yo5629lhxJT4nIhsRlQ3Auwi4y0bLNy
+         Vtna+uoTF4/1lVZ8rPS2G7R0VRK2VBrXh228rStbE0H071Um4yEriXokE7sysn6FVS4z
+         0f/2hwne4s7ly+K85XidsegKYC+4ZsOIWsD2FDdotShFrgdS8vmevxbbu7zPCBJ2Kftj
+         1ywQ==
+X-Gm-Message-State: AOJu0YyLCuTk8QHHz4DW/XEPJHccauUKfORK88fpgIynT4VzQfq6XaEU
+        sKUGuBZEkvtLNk5uSyBjIL+L
+X-Google-Smtp-Source: AGHT+IEUQrnf8x4OQMQgfuUC6w8g42eZnvd1DnAZZXZ1CqQ6BdhYwmEb1wrC3MAeK+npL0Ctv4zBDg==
+X-Received: by 2002:a7b:c7c6:0:b0:401:be70:53b6 with SMTP id z6-20020a7bc7c6000000b00401be7053b6mr1878257wmk.15.1695818378372;
+        Wed, 27 Sep 2023 05:39:38 -0700 (PDT)
+Received: from thinkpad ([2a02:2454:9d09:3f00:b024:394e:56d7:d8b4])
+        by smtp.gmail.com with ESMTPSA id 14-20020a05600c230e00b00402f7b50517sm17787716wmo.40.2023.09.27.05.39.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Sep 2023 05:39:37 -0700 (PDT)
+Date:   Wed, 27 Sep 2023 14:39:34 +0200
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Viresh Kumar <viresh.kumar@linaro.org>
+Cc:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, vireshk@kernel.org,
+        nm@ti.com, sboyd@kernel.org, myungjoo.ham@samsung.com,
+        kyungmin.park@samsung.com, cw00.choi@samsung.com,
+        andersson@kernel.org, konrad.dybcio@linaro.org, robh+dt@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        cros-qcom-dts-watchers@chromium.org
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
- <20230927081858.15961-3-quic_nitirawa@quicinc.com>
-From:   Konrad Dybcio <konrad.dybcio@linaro.org>
-Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
- 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
- izWDgYvmBE8=
-In-Reply-To: <20230927081858.15961-3-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 5/6] arm64: dts: qcom: sdm845: Add OPP table support
+ to UFSHC
+Message-ID: <20230927123934.GA18050@thinkpad>
+References: <20230731163357.49045-1-manivannan.sadhasivam@linaro.org>
+ <20230731163357.49045-6-manivannan.sadhasivam@linaro.org>
+ <04eb9f71-78f0-41f2-96a6-fc759ba296fa@linaro.org>
+ <20230912065918.GB6404@thinkpad>
+ <20230927111546.uyaod34zcjr7npgf@vireshk-i7>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230927111546.uyaod34zcjr7npgf@vireshk-i7>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27.09.2023 10:18, Nitin Rawat wrote:
-> Add UFS host controller and PHY nodes for sc7280 soc.
+On Wed, Sep 27, 2023 at 04:45:46PM +0530, Viresh Kumar wrote:
+> On 12-09-23, 12:29, Manivannan Sadhasivam wrote:
+> > On Mon, Sep 11, 2023 at 04:15:10PM +0300, Dmitry Baryshkov wrote:
+> > > I'd say, I'm still slightly unhappy about the 0 clock rates here.
+> > 
+> > Neither do I. But it is the only viable option I could found.
+> > 
+> > > We need only three clocks here: core, core_clk_unipro and optional
+> > > ice_core_clk. Can we modify ufshcd_parse_operating_points() to pass only
+> > > these two or three clock names to devm_pm_opp_set_config() ? The OPP core
+> > > doesn't need to know about all the rest of the clocks.
+> > > 
+> > 
+> > We need to enable/disable all of the clocks, but only need to control the rate
+> > for these 3 clocks. So we cannot just use 3 clocks.
+> > 
+> > If the OPP table has only 3 entries (omitting the gate-only clocks), then we
+> > need some hack in the driver to match the rates against the clock entries. Doing
+> > so will result in hardcoding the clock info in the driver which I do not want to
+> > do.
+> > 
+> > If we have something like "opp-hz-names" to relate the rates to clock-names, it
+> > might do the job. But it needs some input from Viresh.
 > 
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
-Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
-Tested-by: Konrad Dybcio <konrad.dybcio@linaro.org> # QCM6490 FP5
+> I have already given an option earlier about this [1]. You can change the order
+> of clks in the "clock-names" field, so that the first three are the one with
+> valid frequencies. You shouldn't need much of the hacks after that I guess.
+> 
 
-Konrad
+I do not remember all the details on the top of my head, but I did investigate on
+that and concluded that it won't fit.
+
+- Mani
+
+> Or maybe I missed something else now, talked about this a long time ago :)
+> 
+> -- 
+> viresh
+> [1] https://lore.kernel.org/all/20230713040918.jnf5oqiwymrdnrmq@vireshk-i7/
+
+-- 
+மணிவண்ணன் சதாசிவம்
