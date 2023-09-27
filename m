@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 359BDE810AD
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 09:25:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 813ACE810AD
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 09:27:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230382AbjI0JZO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 05:25:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47890 "EHLO
+        id S230500AbjI0J1P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 05:27:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230402AbjI0JZM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 05:25:12 -0400
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE795126
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 02:25:09 -0700 (PDT)
-Received: by mail-lj1-x232.google.com with SMTP id 38308e7fff4ca-2c131ddfc95so168277361fa.0
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 02:25:09 -0700 (PDT)
+        with ESMTP id S230498AbjI0J1K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 05:27:10 -0400
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5457519A
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 02:27:08 -0700 (PDT)
+Received: by mail-ej1-x62b.google.com with SMTP id a640c23a62f3a-9b27bc8b65eso771133366b.0
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 02:27:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1695806708; x=1696411508; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=Tx78fQ268fCCK112gQHRLPlPwlRrUAegvp0thTyf+O0=;
-        b=ytFTP/shvGPjo2aegje8dGrAaJ3ashrHJGXeAE96bFLbc/YObtgGLGRE14oQifF8vU
-         Upt86USnQBXJaJp8/mVqkLYEmTIGy58rtwHG2S+Ly5xTasutB34q0TLE9532qQf3jJCH
-         l5+UBiFD2qr0Aw4+n5kh8YQ+qrOOy5cXxcwoY5Yyg2BPoENr2W3wQr1a8/cEqSeDnMv5
-         lBceLjQxaiGVrkihsmnzpp+gVffGrrIQQTMITxFHqeufLpm4yemqPoeHe1P3EF4Qjyiw
-         45f+T/FKffKss347OKUqPdFKug27ZTaT+w67TjRWf4QcEKyyXwfYtn1Ur7g4VqLOreYJ
-         HvRA==
+        d=linaro.org; s=google; t=1695806826; x=1696411626; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=CZUa9QynsRyP88kkNNtrhZ1idJAiNJL7GxpJPtcGorg=;
+        b=i+JoI2J4fzdiQKA4JfLIJs0YIe+PPmjCtbuqoU4bm86u45j8e/793tYSplZKvD3d+Z
+         2CmeiTcJTZaaVOeLSQZBr1HvBDB4RkX0ksAuePi2cMFKs8DsyyK3EZ4TlvctXjy9ng1j
+         C0GBuF59x8siAAYQhvNO8P3PMGdemu6HS3pLbI+tXl3Q8NUR81sQcIvmoFs74thIe2kT
+         MYXSLcQfLujJvBfCg1FsBrHHADBK0+AWmHkwelB+Wg8BM0ufilGR/fSvSx2AJfzrntHW
+         dEj2ZtXMjHEHLouWaDxx0XTALCDqQszCfjl1zZauFZVma7hNaP34KukZzD/HtGt4+4u1
+         /xjA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695806708; x=1696411508;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Tx78fQ268fCCK112gQHRLPlPwlRrUAegvp0thTyf+O0=;
-        b=QvkJvX3BEvGbyP85sxM47mmqmEt3AMsoX+RIJ0g57e70qR91WMQU62VVBqxv2mDgJl
-         2JR+Wq/wLbWBP3Z1OjZIxN9Q4C/E8BGQSPSVFcE09gXCmbfpQka9gtRciPI9/eLCXHA8
-         L0iFyivciJU95l2EKWcrOlRl572u7R1gJHfPb9C8nNakJHXKhdk8+qCT+6T7sf4HO0Cp
-         gcaOJw4WCk+eWcopEgp1r2DAx/6w3h6moguKfCA9e5KLa7GH0GUO2owsDWldhzEEIbRL
-         0OuOJ4vX7QeNZODV2e/53WfCGKadivszhEmrBmdIyRiBFnCkvGVI8prFlu1i5yKaCHGP
-         KD3Q==
-X-Gm-Message-State: AOJu0YxUdOYRdr7MKRIQ/dCWZ6gHV01ZLBna1ZSz5VDiY96X+yrvzivS
-        2Yj3hJ/kMi2ut5BB+gPbA2buRw==
-X-Google-Smtp-Source: AGHT+IEQl8OWG1dKPh3/PDyouqW/3rBJ3LrvEdck5K0sQLWyR43DO7tYzx485e2tzfLp+C7KdL6BMQ==
-X-Received: by 2002:a2e:9815:0:b0:2c0:34ed:b5ea with SMTP id a21-20020a2e9815000000b002c034edb5eamr1271078ljj.45.1695806708061;
-        Wed, 27 Sep 2023 02:25:08 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1695806826; x=1696411626;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=CZUa9QynsRyP88kkNNtrhZ1idJAiNJL7GxpJPtcGorg=;
+        b=Bnk2Rpd6ichC0qoq8TosXq5nn4/o6J5JUc8DJMuS5K/J2EnDMd7AVn88whk0qCdXOu
+         z3QIhVByD71oW9WahJZEWMcqm5I8BzNiTgErFo+GYFoURN07SvukuKBwLXv7eQUileKR
+         urYVPNto0brqDgsLzMh9g3sy/LhplmSWQmqeikP6l3/dlhb26oAaVHLZFnCSTtdRsvli
+         D6lncOLNnBIGXEGfQZzWsMtjZOLioFta9HEJRFACEvJ/YJ4WUuz/F+eL3+LPZ6Ask7CN
+         EFXIgcpxpI7B/WyNzeoYudiyhqAmouvbI/IAgbdIIU58NbCGgZ3Zm7hqx15uULXaWwwx
+         5O2Q==
+X-Gm-Message-State: AOJu0Yzj0FQ6o8h7yhmz1n/iDblcjriJnwe7fDe/s5ge54hnoge6AgMr
+        71QzAY7Rst5XlUwT3t0MpCI3Kw==
+X-Google-Smtp-Source: AGHT+IH/XKbcxVthWqZwr7FiTmUKzI9hAYCBQ2Y0RKko7PLFYWm2XbBzUb7W1dBX/bz1V7Gl8y0QuQ==
+X-Received: by 2002:a17:906:255a:b0:9ae:6bef:4a54 with SMTP id j26-20020a170906255a00b009ae6bef4a54mr1129160ejb.3.1695806826476;
+        Wed, 27 Sep 2023 02:27:06 -0700 (PDT)
 Received: from [192.168.33.189] (178235177023.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.23])
-        by smtp.gmail.com with ESMTPSA id u23-20020a17090617d700b00993a9a951fasm9161055eje.11.2023.09.27.02.25.06
+        by smtp.gmail.com with ESMTPSA id cb8-20020a170906a44800b00988dbbd1f7esm8916710ejb.213.2023.09.27.02.27.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Sep 2023 02:25:07 -0700 (PDT)
-Message-ID: <b5146a7f-91b6-480c-b61a-514a365dc41d@linaro.org>
-Date:   Wed, 27 Sep 2023 11:25:05 +0200
+        Wed, 27 Sep 2023 02:27:06 -0700 (PDT)
+Message-ID: <cb8c7c3d-cec9-4e16-84cd-62bbaba0273f@linaro.org>
+Date:   Wed, 27 Sep 2023 11:27:03 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 3/4] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- IDP board
+Subject: Re: [PATCH V3 4/4] dt-bindings: ufs: qcom: Align clk binding property
+ for Qualcomm UFS
+Content-Language: en-US
 To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
         andersson@kernel.org, mani@kernel.org, alim.akhtar@samsung.com,
         bvanassche@acm.org, avri.altman@wdc.com, robh+dt@kernel.org,
@@ -64,8 +64,8 @@ To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
 Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
- <20230927081858.15961-4-quic_nitirawa@quicinc.com>
-Content-Language: en-US
+ <20230927081858.15961-5-quic_nitirawa@quicinc.com>
+ <c71623bd-d70b-7b25-2f13-a5ec3d4f7c93@quicinc.com>
 From:   Konrad Dybcio <konrad.dybcio@linaro.org>
 Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
  xsFNBF9ALYUBEADWAhxdTBWrwAgDQQzc1O/bJ5O7b6cXYxwbBd9xKP7MICh5YA0DcCjJSOum
@@ -102,39 +102,34 @@ Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
  bGqMHex48FVZhexNPYOd58EY9/7mL5u0sJmo+jTeb4JBgIbFPJCFyng4HwbniWgQJZ1WqaUC
  nas9J77uICis2WH7N8Bs9jy0wQYezNzqS+FxoNXmDQg2jetX8en4bO2Di7Pmx0jXA4TOb9TM
  izWDgYvmBE8=
-In-Reply-To: <20230927081858.15961-4-quic_nitirawa@quicinc.com>
+In-Reply-To: <c71623bd-d70b-7b25-2f13-a5ec3d4f7c93@quicinc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27.09.2023 10:18, Nitin Rawat wrote:
-> Add UFS host controller and PHY nodes for sc7280 IDP board.
+On 27.09.2023 10:29, Nitin Rawat wrote:
+> Hi ,
+> I have reposted this patch by removing the change id. Please ignore this.
 > 
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
->  arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-> index 2ff549f4dc7a..a0059527d9e4 100644
-> --- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-> @@ -499,6 +499,25 @@
->  	status = "okay";
->  };
-> 
-> +&ufs_mem_hc {
-> +	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
-> +	vcc-supply = <&vreg_l7b_2p9>;
-> +	vcc-max-microamp = <800000>;
-> +	vccq-supply = <&vreg_l9b_1p2>;
-> +	vccq-max-microamp = <900000>;
-> +	vccq2-supply = <&vreg_l9b_1p2>;
-> +	vccq2-max-microamp = <900000>;
-Were you able to confirm it's correct (see the q in [1])
+> Regards,
+> Nitin
+You resent this in a way that totally breaks threading:
+
+* cover letter v3
+	* patch 1 v3
+	* patch 2 v3
+	* patch 3 v3
+	* patch 4 v3
+* patch 4 v3
+
+For such minor changes, you can usually ask the maintainer
+to fix it up while applying - worst case scenario they'll
+ask you to resend the entire series.
+
+For the contents:
+
+Acked-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 
 Konrad
-
-[1] https://lore.kernel.org/linux-arm-msm/20230926162042.14180-1-quic_nitirawa@quicinc.com/T/#m72ca82a9145af380ffd37415455d6ef3d4195795
