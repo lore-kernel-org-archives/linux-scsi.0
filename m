@@ -2,86 +2,139 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30290E810B1
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 08:51:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 359BDE810AD
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 09:25:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229985AbjI0IvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 04:51:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55396 "EHLO
+        id S230382AbjI0JZO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 05:25:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230248AbjI0IvE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 04:51:04 -0400
-Received: from jari.cn (unknown [218.92.28.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B1120F4;
-        Wed, 27 Sep 2023 01:51:02 -0700 (PDT)
-Received: from chenguohua$jari.cn ( [182.148.12.64] ) by
- ajax-webmail-localhost.localdomain (Coremail) ; Wed, 27 Sep 2023 16:49:44
- +0800 (GMT+08:00)
-X-Originating-IP: [182.148.12.64]
-Date:   Wed, 27 Sep 2023 16:49:44 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From:   chenguohua@jari.cn
-To:     aradford@gmail.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: 3w-sas: Clean up errors in 3w-sas.h
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
- 20230419(ff23bf83) Copyright (c) 2002-2023 www.mailtech.cn
- mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+        with ESMTP id S230402AbjI0JZM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 05:25:12 -0400
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE795126
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 02:25:09 -0700 (PDT)
+Received: by mail-lj1-x232.google.com with SMTP id 38308e7fff4ca-2c131ddfc95so168277361fa.0
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Sep 2023 02:25:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1695806708; x=1696411508; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=Tx78fQ268fCCK112gQHRLPlPwlRrUAegvp0thTyf+O0=;
+        b=ytFTP/shvGPjo2aegje8dGrAaJ3ashrHJGXeAE96bFLbc/YObtgGLGRE14oQifF8vU
+         Upt86USnQBXJaJp8/mVqkLYEmTIGy58rtwHG2S+Ly5xTasutB34q0TLE9532qQf3jJCH
+         l5+UBiFD2qr0Aw4+n5kh8YQ+qrOOy5cXxcwoY5Yyg2BPoENr2W3wQr1a8/cEqSeDnMv5
+         lBceLjQxaiGVrkihsmnzpp+gVffGrrIQQTMITxFHqeufLpm4yemqPoeHe1P3EF4Qjyiw
+         45f+T/FKffKss347OKUqPdFKug27ZTaT+w67TjRWf4QcEKyyXwfYtn1Ur7g4VqLOreYJ
+         HvRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695806708; x=1696411508;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Tx78fQ268fCCK112gQHRLPlPwlRrUAegvp0thTyf+O0=;
+        b=QvkJvX3BEvGbyP85sxM47mmqmEt3AMsoX+RIJ0g57e70qR91WMQU62VVBqxv2mDgJl
+         2JR+Wq/wLbWBP3Z1OjZIxN9Q4C/E8BGQSPSVFcE09gXCmbfpQka9gtRciPI9/eLCXHA8
+         L0iFyivciJU95l2EKWcrOlRl572u7R1gJHfPb9C8nNakJHXKhdk8+qCT+6T7sf4HO0Cp
+         gcaOJw4WCk+eWcopEgp1r2DAx/6w3h6moguKfCA9e5KLa7GH0GUO2owsDWldhzEEIbRL
+         0OuOJ4vX7QeNZODV2e/53WfCGKadivszhEmrBmdIyRiBFnCkvGVI8prFlu1i5yKaCHGP
+         KD3Q==
+X-Gm-Message-State: AOJu0YxUdOYRdr7MKRIQ/dCWZ6gHV01ZLBna1ZSz5VDiY96X+yrvzivS
+        2Yj3hJ/kMi2ut5BB+gPbA2buRw==
+X-Google-Smtp-Source: AGHT+IEQl8OWG1dKPh3/PDyouqW/3rBJ3LrvEdck5K0sQLWyR43DO7tYzx485e2tzfLp+C7KdL6BMQ==
+X-Received: by 2002:a2e:9815:0:b0:2c0:34ed:b5ea with SMTP id a21-20020a2e9815000000b002c034edb5eamr1271078ljj.45.1695806708061;
+        Wed, 27 Sep 2023 02:25:08 -0700 (PDT)
+Received: from [192.168.33.189] (178235177023.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.23])
+        by smtp.gmail.com with ESMTPSA id u23-20020a17090617d700b00993a9a951fasm9161055eje.11.2023.09.27.02.25.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Sep 2023 02:25:07 -0700 (PDT)
+Message-ID: <b5146a7f-91b6-480c-b61a-514a365dc41d@linaro.org>
+Date:   Wed, 27 Sep 2023 11:25:05 +0200
 MIME-Version: 1.0
-Message-ID: <38a151ef.88d.18ad5d47214.Coremail.chenguohua@jari.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: AQAAfwDHZD+o7BNl7_u9AA--.630W
-X-CM-SenderInfo: xfkh0w5xrk3tw6md2xgofq/1tbiAQAHEWUSpy8AOwAts+
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-        daVFxhVjvjDU=
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 3/4] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
+ IDP board
+To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
+        andersson@kernel.org, mani@kernel.org, alim.akhtar@samsung.com,
+        bvanassche@acm.org, avri.altman@wdc.com, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        cros-qcom-dts-watchers@chromium.org
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
+ <20230927081858.15961-4-quic_nitirawa@quicinc.com>
+Content-Language: en-US
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
+ xsFNBF9ALYUBEADWAhxdTBWrwAgDQQzc1O/bJ5O7b6cXYxwbBd9xKP7MICh5YA0DcCjJSOum
+ BB/OmIWU6X+LZW6P88ZmHe+KeyABLMP5s1tJNK1j4ntT7mECcWZDzafPWF4F6m4WJOG27kTJ
+ HGWdmtO+RvadOVi6CoUDqALsmfS3MUG5Pj2Ne9+0jRg4hEnB92AyF9rW2G3qisFcwPgvatt7
+ TXD5E38mLyOPOUyXNj9XpDbt1hNwKQfiidmPh5e7VNAWRnW1iCMMoKqzM1Anzq7e5Afyeifz
+ zRcQPLaqrPjnKqZGL2BKQSZDh6NkI5ZLRhhHQf61fkWcUpTp1oDC6jWVfT7hwRVIQLrrNj9G
+ MpPzrlN4YuAqKeIer1FMt8cq64ifgTzxHzXsMcUdclzq2LTk2RXaPl6Jg/IXWqUClJHbamSk
+ t1bfif3SnmhA6TiNvEpDKPiT3IDs42THU6ygslrBxyROQPWLI9IL1y8S6RtEh8H+NZQWZNzm
+ UQ3imZirlPjxZtvz1BtnnBWS06e7x/UEAguj7VHCuymVgpl2Za17d1jj81YN5Rp5L9GXxkV1
+ aUEwONM3eCI3qcYm5JNc5X+JthZOWsbIPSC1Rhxz3JmWIwP1udr5E3oNRe9u2LIEq+wH/toH
+ kpPDhTeMkvt4KfE5m5ercid9+ZXAqoaYLUL4HCEw+HW0DXcKDwARAQABzShLb25yYWQgRHli
+ Y2lvIDxrb25yYWQuZHliY2lvQGxpbmFyby5vcmc+wsGOBBMBCAA4FiEEU24if9oCL2zdAAQV
+ R4cBcg5dfFgFAmQ5bqwCGwMFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQR4cBcg5dfFjO
+ BQ//YQV6fkbqQCceYebGg6TiisWCy8LG77zV7DB0VMIWJv7Km7Sz0QQrHQVzhEr3trNenZrf
+ yy+o2tQOF2biICzbLM8oyQPY8B///KJTWI2khoB8IJSJq3kNG68NjPg2vkP6CMltC/X3ohAo
+ xL2UgwN5vj74QnlNneOjc0vGbtA7zURNhTz5P/YuTudCqcAbxJkbqZM4WymjQhe0XgwHLkiH
+ 5LHSZ31MRKp/+4Kqs4DTXMctc7vFhtUdmatAExDKw8oEz5NbskKbW+qHjW1XUcUIrxRr667V
+ GWH6MkVceT9ZBrtLoSzMLYaQXvi3sSAup0qiJiBYszc/VOu3RbIpNLRcXN3KYuxdQAptacTE
+ mA+5+4Y4DfC3rUSun+hWLDeac9z9jjHm5rE998OqZnOU9aztbd6zQG5VL6EKgsVXAZD4D3RP
+ x1NaAjdA3MD06eyvbOWiA5NSzIcC8UIQvgx09xm7dThCuQYJR4Yxjd+9JPJHI6apzNZpDGvQ
+ BBZzvwxV6L1CojUEpnilmMG1ZOTstktWpNzw3G2Gis0XihDUef0MWVsQYJAl0wfiv/0By+XK
+ mm2zRR+l/dnzxnlbgJ5pO0imC2w0TVxLkAp0eo0LHw619finad2u6UPQAkZ4oj++iIGrJkt5
+ Lkn2XgB+IW8ESflz6nDY3b5KQRF8Z6XLP0+IEdLOOARkOW7yEgorBgEEAZdVAQUBAQdAwmUx
+ xrbSCx2ksDxz7rFFGX1KmTkdRtcgC6F3NfuNYkYDAQgHwsF2BBgBCAAgFiEEU24if9oCL2zd
+ AAQVR4cBcg5dfFgFAmQ5bvICGwwACgkQR4cBcg5dfFju1Q//Xta1ShwL0MLSC1KL1lXGXeRM
+ 8arzfyiB5wJ9tb9U/nZvhhdfilEDLe0jKJY0RJErbdRHsalwQCrtq/1ewQpMpsRxXzAjgfRN
+ jc4tgxRWmI+aVTzSRpywNahzZBT695hMz81cVZJoZzaV0KaMTlSnBkrviPz1nIGHYCHJxF9r
+ cIu0GSIyUjZ/7xslxdvjpLth16H27JCWDzDqIQMtg61063gNyEyWgt1qRSaK14JIH/DoYRfn
+ jfFQSC8bffFjat7BQGFz4ZpRavkMUFuDirn5Tf28oc5ebe2cIHp4/kajTx/7JOxWZ80U70mA
+ cBgEeYSrYYnX+UJsSxpzLc/0sT1eRJDEhI4XIQM4ClIzpsCIN5HnVF76UQXh3a9zpwh3dk8i
+ bhN/URmCOTH+LHNJYN/MxY8wuukq877DWB7k86pBs5IDLAXmW8v3gIDWyIcgYqb2v8QO2Mqx
+ YMqL7UZxVLul4/JbllsQB8F/fNI8AfttmAQL9cwo6C8yDTXKdho920W4WUR9k8NT/OBqWSyk
+ bGqMHex48FVZhexNPYOd58EY9/7mL5u0sJmo+jTeb4JBgIbFPJCFyng4HwbniWgQJZ1WqaUC
+ nas9J77uICis2WH7N8Bs9jy0wQYezNzqS+FxoNXmDQg2jetX8en4bO2Di7Pmx0jXA4TOb9TM
+ izWDgYvmBE8=
+In-Reply-To: <20230927081858.15961-4-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rml4IHRoZSBmb2xsb3dpbmcgZXJyb3JzIHJlcG9ydGVkIGJ5IGNoZWNrcGF0Y2g6CgpFUlJPUjog
-dGhhdCBvcGVuIGJyYWNlIHsgc2hvdWxkIGJlIG9uIHRoZSBwcmV2aW91cyBsaW5lCkVSUk9SOiBz
-cGFjZSByZXF1aXJlZCBhZnRlciB0aGF0ICcsJyAoY3R4OlZ4VikKRVJST1I6IG9wZW4gYnJhY2Ug
-J3snIGZvbGxvd2luZyBzdHJ1Y3QgZ28gb24gdGhlIHNhbWUgbGluZQoKU2lnbmVkLW9mZi1ieTog
-R3VvSHVhIENoZW5nIDxjaGVuZ3VvaHVhQGphcmkuY24+Ci0tLQogZHJpdmVycy9zY3NpLzN3LXNh
-cy5oIHwgMTkgKysrKysrKystLS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDggaW5zZXJ0aW9u
-cygrKSwgMTEgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpLzN3LXNhcy5o
-IGIvZHJpdmVycy9zY3NpLzN3LXNhcy5oCmluZGV4IDA5NmRlYzI5ZTJhYy4uMzQ0M2NjYmY3M2Ux
-IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvM3ctc2FzLmgKKysrIGIvZHJpdmVycy9zY3NpLzN3
-LXNhcy5oCkBAIC00Niw4ICs0Niw3IEBACiAjZGVmaW5lIF8zV19TQVNfSAogCiAvKiBBRU4gc2V2
-ZXJpdHkgdGFibGUgKi8KLXN0YXRpYyBjaGFyICp0d2xfYWVuX3NldmVyaXR5X3RhYmxlW10gPQot
-eworc3RhdGljIGNoYXIgKnR3bF9hZW5fc2V2ZXJpdHlfdGFibGVbXSA9IHsKIAkiTm9uZSIsICJF
-UlJPUiIsICJXQVJOSU5HIiwgIklORk8iLCAiREVCVUciLCBOVUxMCiB9OwogCkBAIC0xNTIsMTEg
-KzE1MSwxMSBAQCBzdGF0aWMgY2hhciAqdHdsX2Flbl9zZXZlcml0eV90YWJsZVtdID0KIC8qIEJp
-dG1hc2sgbWFjcm9zIHRvIGVsaW1pbmF0ZSBiaXRmaWVsZHMgKi8KIAogLyogb3Bjb2RlOiA1LCBy
-ZXNlcnZlZDogMyAqLwotI2RlZmluZSBUV19PUFJFU19JTih4LHkpICgoeCA8PCA1KSB8ICh5ICYg
-MHgxZikpCisjZGVmaW5lIFRXX09QUkVTX0lOKHgsIHkpICgoeCA8PCA1KSB8ICh5ICYgMHgxZikp
-CiAjZGVmaW5lIFRXX09QX09VVCh4KSAoeCAmIDB4MWYpCiAKIC8qIG9wY29kZTogNSwgc2dsb2Zm
-c2V0OiAzICovCi0jZGVmaW5lIFRXX09QU0dMX0lOKHgseSkgKCh4IDw8IDUpIHwgKHkgJiAweDFm
-KSkKKyNkZWZpbmUgVFdfT1BTR0xfSU4oeCwgeSkgKCh4IDw8IDUpIHwgKHkgJiAweDFmKSkKICNk
-ZWZpbmUgVFdfU0dMX09VVCh4KSAoKHggPj4gNSkgJiAweDcpCiAKIC8qIHNldmVyaXR5OiAzLCBy
-ZXNlcnZlZDogNSAqLwpAQCAtMjA0LDExICsyMDMsMTEgQEAgc3RhdGljIGNoYXIgKnR3bF9hZW5f
-c2V2ZXJpdHlfdGFibGVbXSA9CiAJKHdyaXRlbChUV0xfSVNTVUVfU09GVF9SRVNFVCwgVFdMX0hJ
-QkRCX1JFR19BRERSKHR3X2RldikpKQogCiAvKiBNYWNyb3MgKi8KLSNkZWZpbmUgVFdfUFJJTlRL
-KGgsYSxiLGMpIHsgXAorI2RlZmluZSBUV19QUklOVEsoaCwgYSwgYiwgYykgeyBcCiBpZiAoaCkg
-XAotcHJpbnRrKEtFUk5fV0FSTklORyAiM3ctc2FzOiBzY3NpJWQ6IEVSUk9SOiAoMHglMDJYOjB4
-JTA0WCk6ICVzLlxuIixoLT5ob3N0X25vLGEsYixjKTsgXAorcHJpbnRrKEtFUk5fV0FSTklORyAi
-M3ctc2FzOiBzY3NpJWQ6IEVSUk9SOiAoMHglMDJYOjB4JTA0WCk6ICVzLlxuIiwgaC0+aG9zdF9u
-bywgYSwgYiwgYyk7IFwKIGVsc2UgXAotcHJpbnRrKEtFUk5fV0FSTklORyAiM3ctc2FzOiBFUlJP
-UjogKDB4JTAyWDoweCUwNFgpOiAlcy5cbiIsYSxiLGMpOyBcCitwcmludGsoS0VSTl9XQVJOSU5H
-ICIzdy1zYXM6IEVSUk9SOiAoMHglMDJYOjB4JTA0WCk6ICVzLlxuIiwgYSwgYiwgYyk7IFwKIH0K
-ICNkZWZpbmUgVFdfTUFYX0xVTlMgMTYKICNkZWZpbmUgVFdfQ09NTUFORF9TSVpFIChzaXplb2Yo
-ZG1hX2FkZHJfdCkgPiA0ID8gNiA6IDQpCkBAIC0zMTAsOCArMzA5LDcgQEAgdHlwZWRlZiBzdHJ1
-Y3QgVEFHX1RXX0luaXRjb25uZWN0IHsKIH0gVFdfSW5pdGNvbm5lY3Q7CiAKIC8qIEV2ZW50IGlu
-Zm8gc3RydWN0dXJlICovCi10eXBlZGVmIHN0cnVjdCBUQUdfVFdfRXZlbnQKLXsKK3R5cGVkZWYg
-c3RydWN0IFRBR19UV19FdmVudCB7CiAJdW5zaWduZWQgaW50IHNlcXVlbmNlX2lkOwogCXVuc2ln
-bmVkIGludCB0aW1lX3N0YW1wX3NlYzsKIAl1bnNpZ25lZCBzaG9ydCBhZW5fY29kZTsKQEAgLTM0
-OCw4ICszNDYsNyBAQCB0eXBlZGVmIHN0cnVjdCB7CiB9IFRXX1BhcmFtX0FwYWNoZTsKIAogLyog
-Q29tcGF0aWJpbGl0eSBpbmZvcm1hdGlvbiBzdHJ1Y3R1cmUgKi8KLXR5cGVkZWYgc3RydWN0IFRB
-R19UV19Db21wYXRpYmlsaXR5X0luZm8KLXsKK3R5cGVkZWYgc3RydWN0IFRBR19UV19Db21wYXRp
-YmlsaXR5X0luZm8gewogCWNoYXIgZHJpdmVyX3ZlcnNpb25bMzJdOwogCXVuc2lnbmVkIHNob3J0
-IHdvcmtpbmdfc3JsOwogCXVuc2lnbmVkIHNob3J0IHdvcmtpbmdfYnJhbmNoOwotLSAKMi4xNy4x
-Cg==
+On 27.09.2023 10:18, Nitin Rawat wrote:
+> Add UFS host controller and PHY nodes for sc7280 IDP board.
+> 
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> ---
+>  arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> index 2ff549f4dc7a..a0059527d9e4 100644
+> --- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+> @@ -499,6 +499,25 @@
+>  	status = "okay";
+>  };
+> 
+> +&ufs_mem_hc {
+> +	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
+> +	vcc-supply = <&vreg_l7b_2p9>;
+> +	vcc-max-microamp = <800000>;
+> +	vccq-supply = <&vreg_l9b_1p2>;
+> +	vccq-max-microamp = <900000>;
+> +	vccq2-supply = <&vreg_l9b_1p2>;
+> +	vccq2-max-microamp = <900000>;
+Were you able to confirm it's correct (see the q in [1])
+
+Konrad
+
+[1] https://lore.kernel.org/linux-arm-msm/20230926162042.14180-1-quic_nitirawa@quicinc.com/T/#m72ca82a9145af380ffd37415455d6ef3d4195795
