@@ -2,123 +2,55 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A3CE810A1
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 08:00:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4A7EE810A3
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 08:01:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230044AbjI0IAJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 04:00:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54692 "EHLO
+        id S230073AbjI0IB3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 04:01:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230081AbjI0IAF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 04:00:05 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EC87199;
-        Wed, 27 Sep 2023 01:00:01 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 3188A1F8C4;
-        Wed, 27 Sep 2023 08:00:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1695801600; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=YVNRHsJW7fxIPxX1otv++5oBWUMe5xuAPdK1iJf8KC8=;
-        b=yqQ+sWh7IiBbT93CC8DmJVICOWpZ5i8ZWR5rGk8VAo1Fepqay+lF2t2glLXe4nueaSkgt4
-        u9RA1ctmgqroHgROpZ6fBEzHM2XbtvsEwOrdg5FDO7FNecGJuOs0aUAs6BkMwf2vZT0naU
-        57BE1ZZKPePUfFJLiMiM8XNOauiuIgI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1695801600;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=YVNRHsJW7fxIPxX1otv++5oBWUMe5xuAPdK1iJf8KC8=;
-        b=LGr2tbFw1b9AVN9EsdnzZruuKyWWnGmNugeXOKBFn/zwqczS0pjkbzoOfcQCrC7VBM4IPg
-        zdbDG0rlm7e44mBw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9BE4713479;
-        Wed, 27 Sep 2023 07:59:59 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id jzEYI//gE2UvWQAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 27 Sep 2023 07:59:59 +0000
-Message-ID: <c3763949-c810-4a1f-87cc-e2248bfdc40b@suse.de>
-Date:   Wed, 27 Sep 2023 09:59:58 +0200
+        with ESMTP id S230093AbjI0IB0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 04:01:26 -0400
+Received: from jari.cn (unknown [218.92.28.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 16681126;
+        Wed, 27 Sep 2023 01:01:21 -0700 (PDT)
+Received: from chenguohua$jari.cn ( [182.148.12.64] ) by
+ ajax-webmail-localhost.localdomain (Coremail) ; Wed, 27 Sep 2023 16:00:03
+ +0800 (GMT+08:00)
+X-Originating-IP: [182.148.12.64]
+Date:   Wed, 27 Sep 2023 16:00:03 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From:   chenguohua@jari.cn
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] netlink: Clean up errors in scsi_netlink.c
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
+ 20230419(ff23bf83) Copyright (c) 2002-2023 www.mailtech.cn
+ mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
- mechanism
-Content-Language: en-US
-To:     Wenchao Hao <haowenchao2@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        louhongxiang@huawei.com, lixiaokeng@huawei.com
-References: <20230901094127.2010873-1-haowenchao2@huawei.com>
- <ZRGfc73BSW0yyUtI@infradead.org>
- <47bed3cb-f307-ec55-5c28-051687dab1ea@huawei.com>
- <a92f5e0c-1976-4fc6-ba48-7ff49546318a@oracle.com>
- <06268327-cfed-f266-34a7-fda69411ef2a@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <06268327-cfed-f266-34a7-fda69411ef2a@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Message-ID: <7a749e12.886.18ad5a6f493.Coremail.chenguohua@jari.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: AQAAfwC3VUAD4RNlffW9AA--.620W
+X-CM-SenderInfo: xfkh0w5xrk3tw6md2xgofq/1tbiAQAHEWUSpy8AOwAcsP
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+        daVFxhVjvjDU=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/26/23 14:57, Wenchao Hao wrote:
-> On 2023/9/26 1:54, Mike Christie wrote:
->> On 9/25/23 10:07 AM, Wenchao Hao wrote:
->>> On 2023/9/25 22:55, Christoph Hellwig wrote:
->>>> Before we add another new error handling mechanism we need to fix the
->>>> old one first.  Hannes' work on not passing the scsi_cmnd to the 
->>>> various
->>>> reset handlers hasn't made a lot of progress in the last five years and
->>>> we'll need to urgently fix that first before adding even more
->>>> complexity.
->>>>
->>> I observed Hannes's patches posted about one year ago, it has not been
->>> applied yet. I don't know if he is still working on it.
->>>
->>> My patches do not depend much on that work, I think the conflict can be
->>> solved fast between two changes.
->>
->> I think we want to figure out Hannes's patches first.
->>
->> For a new EH design we will want to be able to do multiple TMFs in 
->> parallel
->> on the same host/target right?
->>
-> 
-> It's not necessary to do multiple TMFs in parallel, it's ok to make sure
-> each TMFs do not affect each other.
-> 
-> For example, we have two devices: 0:0:0:0 and 0:0:0:1
-> 
-> Both of them request device reset, they do not happened in parallel, but
-> would in serial. If 0:0:0:0 is performing device reset in progress, 0:0:0:1
-> just wait 0:0:0:0 to finish.
-> 
-Well, not quite. Any higher-order TMFs are serialized by virtue of 
-SCSI-EH, but command aborts (which also devolve down to TMFs on certain 
-drivers) do run in parallel, and there we will be requiring multiple TMFs.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+Rml4IHRoZSBmb2xsb3dpbmcgZXJyb3JzIHJlcG9ydGVkIGJ5IGNoZWNrcGF0Y2g6CgpFUlJPUjog
+ZWxzZSBzaG91bGQgZm9sbG93IGNsb3NlIGJyYWNlICd9JwoKU2lnbmVkLW9mZi1ieTogR3VvSHVh
+IENoZW5nIDxjaGVuZ3VvaHVhQGphcmkuY24+Ci0tLQogZHJpdmVycy9zY3NpL3Njc2lfbmV0bGlu
+ay5jIHwgMyArLS0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMiBkZWxldGlvbnMo
+LSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9uZXRsaW5rLmMgYi9kcml2ZXJzL3Nj
+c2kvc2NzaV9uZXRsaW5rLmMKaW5kZXggZDdmNzZmZDg0MjU2Li41ZmYyMmZlOTMyNzcgMTAwNjQ0
+Ci0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX25ldGxpbmsuYworKysgYi9kcml2ZXJzL3Njc2kvc2Nz
+aV9uZXRsaW5rLmMKQEAgLTkxLDggKzkxLDcgQEAgc2NzaV9ubF9yY3ZfbXNnKHN0cnVjdCBza19i
+dWZmICpza2IpCiAJCQlpZiAoZXJyKQogCQkJCXByaW50ayhLRVJOX1dBUk5JTkcgIiVzOiBNc2d0
+eXBlICVkIGZhaWxlZCAtIGVyciAlZFxuIiwKIAkJCQkgICAgICAgX19mdW5jX18sIGhkci0+bXNn
+dHlwZSwgZXJyKTsKLQkJfQotCQllbHNlCisJCX0gZWxzZQogCQkJZXJyID0gLUVOT0VOVDsKIAog
+bmV4dF9tc2c6Ci0tIAoyLjE3LjEK
