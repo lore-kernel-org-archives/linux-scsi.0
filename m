@@ -2,68 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F12E5E80AA1
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 07:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D675CE80AA4
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 07:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230017AbjI0HmS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 03:42:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53390 "EHLO
+        id S230015AbjI0Hqb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 03:46:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230019AbjI0HmQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 03:42:16 -0400
-Received: from jari.cn (unknown [218.92.28.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0125F11D;
-        Wed, 27 Sep 2023 00:42:14 -0700 (PDT)
-Received: from chenguohua$jari.cn ( [182.148.12.64] ) by
- ajax-webmail-localhost.localdomain (Coremail) ; Wed, 27 Sep 2023 15:40:55
- +0800 (GMT+08:00)
-X-Originating-IP: [182.148.12.64]
-Date:   Wed, 27 Sep 2023 15:40:55 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From:   chenguohua@jari.cn
-To:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aic7xxx: aic79xx: Clean up errors in aic79xx_proc.c
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
- 20230419(ff23bf83) Copyright (c) 2002-2023 www.mailtech.cn
- mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+        with ESMTP id S230044AbjI0Hq1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 03:46:27 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C803E11D;
+        Wed, 27 Sep 2023 00:46:25 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 715E121872;
+        Wed, 27 Sep 2023 07:46:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1695800784; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CbbQbrR06MjuXJUkpqQ4i2ColyIF9+FuLCUuRd70zN0=;
+        b=cehsKSIGqrkzjvuS+YRKKGY6hP4E+LsLP4CRw76jTvsSZZDZsIf6+ENVwusqslQbcRwLlh
+        YsluFvIeoz5EIfmKm1ZzA4EEfbJTIZ8dtaBwvY+my0wCg39ysRzZg+kNULIIBCUdW7gHG5
+        4Alo4nDaWcdgoDR+9ULJ3n8k6mTEN10=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1695800784;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CbbQbrR06MjuXJUkpqQ4i2ColyIF9+FuLCUuRd70zN0=;
+        b=IVVBb5U0XradsI9rNxG1aZiQ1Q5NON1UR3IgDTsrpzSZB/oR0HYjzxezTaa0Q2ZuZc9U3e
+        awWq63TCjs1Ti/BA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C79F61338F;
+        Wed, 27 Sep 2023 07:46:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id NAMeLs/dE2UmUQAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 27 Sep 2023 07:46:23 +0000
+Message-ID: <a08aa90e-7d3b-4601-812f-64c10bb6f10d@suse.de>
+Date:   Wed, 27 Sep 2023 09:46:23 +0200
 MIME-Version: 1.0
-Message-ID: <7f087bb5.884.18ad5957238.Coremail.chenguohua@jari.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: AQAAfwC3VUCH3BNltfK9AA--.619W
-X-CM-SenderInfo: xfkh0w5xrk3tw6md2xgofq/1tbiAQAHEWUSpy8AOwAWsF
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-        daVFxhVjvjDU=
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 09/23] scsi: sd: Do not issue commands to suspended
+ disks on shutdown
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230926081507.69346-1-dlemoal@kernel.org>
+ <20230926081507.69346-10-dlemoal@kernel.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230926081507.69346-10-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rml4IHRoZSBmb2xsb3dpbmcgZXJyb3JzIHJlcG9ydGVkIGJ5IGNoZWNrcGF0Y2g6CgpFUlJPUjog
-Iihmb28qKSIgc2hvdWxkIGJlICIoZm9vICopIgpFUlJPUjogcmV0dXJuIGlzIG5vdCBhIGZ1bmN0
-aW9uLCBwYXJlbnRoZXNlcyBhcmUgbm90IHJlcXVpcmVkCgpTaWduZWQtb2ZmLWJ5OiBHdW9IdWEg
-Q2hlbmcgPGNoZW5ndW9odWFAamFyaS5jbj4KLS0tCiBkcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3
-OXh4X3Byb2MuYyB8IDYgKysrLS0tCiAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAz
-IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzc5eHhf
-cHJvYy5jIGIvZHJpdmVycy9zY3NpL2FpYzd4eHgvYWljNzl4eF9wcm9jLmMKaW5kZXggNzQ2ZDBj
-YTJhNjU3Li44Y2E5YjE5OTQxZTkgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9haWM3eHh4L2Fp
-Yzc5eHhfcHJvYy5jCisrKyBiL2RyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzc5eHhfcHJvYy5jCkBA
-IC0yMjgsNyArMjI4LDcgQEAgYWhkX3Byb2Nfd3JpdGVfc2VlcHJvbShzdHJ1Y3QgU2NzaV9Ib3N0
-ICpzaG9zdCwgY2hhciAqYnVmZmVyLCBpbnQgbGVuZ3RoKQogCQlnb3RvIGRvbmU7CiAJfQogCi0J
-aGF2ZV9zZWVwcm9tID0gYWhkX3ZlcmlmeV9ja3N1bSgoc3RydWN0IHNlZXByb21fY29uZmlnKili
-dWZmZXIpOworCWhhdmVfc2VlcHJvbSA9IGFoZF92ZXJpZnlfY2tzdW0oKHN0cnVjdCBzZWVwcm9t
-X2NvbmZpZyAqKWJ1ZmZlcik7CiAJaWYgKGhhdmVfc2VlcHJvbSA9PSAwKSB7CiAJCXByaW50aygi
-YWhkX3Byb2Nfd3JpdGVfc2VlcHJvbTogY2tzdW0gdmVyaWZpY2F0aW9uIGZhaWxlZFxuIik7CiAJ
-CWdvdG8gZG9uZTsKQEAgLTI2Niw3ICsyNjYsNyBAQCBhaGRfcHJvY193cml0ZV9zZWVwcm9tKHN0
-cnVjdCBTY3NpX0hvc3QgKnNob3N0LCBjaGFyICpidWZmZXIsIGludCBsZW5ndGgpCiAJaWYgKCFw
-YXVzZWQpCiAJCWFoZF91bnBhdXNlKGFoZCk7CiAJYWhkX3VubG9jayhhaGQsICZzKTsKLQlyZXR1
-cm4gKHdyaXR0ZW4pOworCXJldHVybiB3cml0dGVuOwogfQogLyoKICAqIFJldHVybiBpbmZvcm1h
-dGlvbiB0byBoYW5kbGUgL3Byb2Mgc3VwcG9ydCBmb3IgdGhlIGRyaXZlci4KQEAgLTI5OCw3ICsy
-OTgsNyBAQCBhaGRfbGludXhfc2hvd19pbmZvKHN0cnVjdCBzZXFfZmlsZSAqbSwgc3RydWN0IFNj
-c2lfSG9zdCAqc2hvc3QpCiAJCQkJc2VxX3B1dGMobSwgJ1xuJyk7CiAJCQl9CiAJCQlzZXFfcHJp
-bnRmKG0sICIweCUuNHggIiwKLQkJCQkgICgodWludDE2X3QqKWFoZC0+c2VlcF9jb25maWcpW2ld
-KTsKKwkJCQkgICgodWludDE2X3QgKilhaGQtPnNlZXBfY29uZmlnKVtpXSk7CiAJCX0KIAkJc2Vx
-X3B1dGMobSwgJ1xuJyk7CiAJfQotLSAKMi4xNy4xCg==
+On 9/26/23 10:14, Damien Le Moal wrote:
+> If an error occurs when resuming a host adapter before the devices
+> attached to the adapter are resumed, the adapter low level driver may
+> remove the scsi host, resulting in a call to sd_remove() for the
+> disks of the host. This in turn results in a call to sd_shutdown() which
+> will issue a synchronize cache command and a start stop unit command to
+> spindown the disk. sd_shutdown() issues the commands only if the device
+> is not already runtime suspended but does not check the power state for
+> system-wide suspend/resume. That is, the commands may be issued with the
+> device in a suspended state, which causes PM resume to hang, forcing a
+> reset of the machine to recover.
+> 
+> Fix this by tracking the suspended state of a disk by introducing the
+> suspended boolean field in the scsi_disk structure. This flag is set to
+> true when the disk is suspended is sd_suspend_common() and resumed with
+> sd_resume(). When suspended is true, sd_shutdown() is not executed from
+> sd_remove().
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/scsi/sd.c | 17 +++++++++++++----
+>   drivers/scsi/sd.h |  1 +
+>   2 files changed, 14 insertions(+), 4 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
+
