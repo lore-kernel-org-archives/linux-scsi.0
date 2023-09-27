@@ -2,97 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9800CE810B5
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 09:41:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1730BE810BA
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 10:08:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230221AbjI0Jlv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 05:41:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45878 "EHLO
+        id S231240AbjI0KIZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 06:08:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231281AbjI0Jlt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 05:41:49 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C98ADC0;
-        Wed, 27 Sep 2023 02:41:47 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RwWm21jq5zrTBX;
-        Wed, 27 Sep 2023 17:39:30 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Wed, 27 Sep 2023 17:41:45 +0800
-Message-ID: <98ea6e9b-cbfb-0485-6452-e3d979aaed54@huawei.com>
-Date:   Wed, 27 Sep 2023 17:41:44 +0800
+        with ESMTP id S231210AbjI0KIW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 06:08:22 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F34CAEB;
+        Wed, 27 Sep 2023 03:08:20 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38R9dL5S001454;
+        Wed, 27 Sep 2023 10:08:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=vcmf/AbqgkauR+V3cXJxEoKuVFxfwi5GPyt7nCXwHtQ=;
+ b=iE3sLYMpOIdQzkImaHGeJihVeIQGwAu9Yr9Jpfwx8cP2UDB8CeLzQS2gfk3WyKIanhXD
+ WvzPK5YH8RHcVNEP4RyY2fq9n6JGaN/+SpewQ9GyIwka06RU61MB5tLa7EYxUG6G1226
+ RZ3xKPzWzfNyvFvR638NBaqMVjcvXS5q1wpLqK2e1aF8IOyGHOv+dFnL+2onD02fPuBY
+ Lyp3DY5wtiJaNAnrfzXRpia1dbjPVM7tr8aCM5XZXW311sFbF0Zw95n0kEw0LYO+4VnP
+ IVNOcaDo6rSclsbatH30r0ivhFLMnSJogzN+MA6ystF+9nRTlZGfrlW16VzoA4gHdL26 Ow== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tcda7rkqm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 27 Sep 2023 10:08:09 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38RA88v2017101
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 27 Sep 2023 10:08:08 GMT
+Received: from [10.218.45.181] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 27 Sep
+ 2023 03:08:03 -0700
+Message-ID: <4e130774-0f4f-eaf1-3916-2860ea232150@quicinc.com>
+Date:   Wed, 27 Sep 2023 15:38:00 +0530
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [RFC PATCH v2 00/18] scsi: scsi_error: Introduce new error handle
- mechanism
+ Thunderbird/102.3.2
+Subject: Re: [PATCH V3 3/4] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
+ IDP board
 Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
-        Mike Christie <michael.christie@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <louhongxiang@huawei.com>, <lixiaokeng@huawei.com>
-References: <20230901094127.2010873-1-haowenchao2@huawei.com>
- <ZRGfc73BSW0yyUtI@infradead.org>
- <47bed3cb-f307-ec55-5c28-051687dab1ea@huawei.com>
- <a92f5e0c-1976-4fc6-ba48-7ff49546318a@oracle.com>
- <06268327-cfed-f266-34a7-fda69411ef2a@huawei.com>
- <c3763949-c810-4a1f-87cc-e2248bfdc40b@suse.de>
-From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <c3763949-c810-4a1f-87cc-e2248bfdc40b@suse.de>
+To:     Konrad Dybcio <konrad.dybcio@linaro.org>, <agross@kernel.org>,
+        <andersson@kernel.org>, <mani@kernel.org>,
+        <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <robh+dt@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
+        <cros-qcom-dts-watchers@chromium.org>
+CC:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
+ <20230927081858.15961-4-quic_nitirawa@quicinc.com>
+ <b5146a7f-91b6-480c-b61a-514a365dc41d@linaro.org>
+From:   Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <b5146a7f-91b6-480c-b61a-514a365dc41d@linaro.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemm000012.china.huawei.com (7.193.23.142)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: xa7tpmUHRGUe-ofpUtvO91LwwWOcl2G4
+X-Proofpoint-GUID: xa7tpmUHRGUe-ofpUtvO91LwwWOcl2G4
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-27_05,2023-09-26_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
+ clxscore=1015 lowpriorityscore=0 impostorscore=0 bulkscore=0
+ mlxlogscore=846 priorityscore=1501 mlxscore=0 suspectscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2309270083
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/27 15:59, Hannes Reinecke wrote:
-> On 9/26/23 14:57, Wenchao Hao wrote:
->> On 2023/9/26 1:54, Mike Christie wrote:
->>> On 9/25/23 10:07 AM, Wenchao Hao wrote:
->>>> On 2023/9/25 22:55, Christoph Hellwig wrote:
->>>>> Before we add another new error handling mechanism we need to fix the
->>>>> old one first.  Hannes' work on not passing the scsi_cmnd to the various
->>>>> reset handlers hasn't made a lot of progress in the last five years and
->>>>> we'll need to urgently fix that first before adding even more
->>>>> complexity.
->>>>>
->>>> I observed Hannes's patches posted about one year ago, it has not been
->>>> applied yet. I don't know if he is still working on it.
->>>>
->>>> My patches do not depend much on that work, I think the conflict can be
->>>> solved fast between two changes.
->>>
->>> I think we want to figure out Hannes's patches first.
->>>
->>> For a new EH design we will want to be able to do multiple TMFs in parallel
->>> on the same host/target right?
->>>
+
+
+On 9/27/2023 2:55 PM, Konrad Dybcio wrote:
+> On 27.09.2023 10:18, Nitin Rawat wrote:
+>> Add UFS host controller and PHY nodes for sc7280 IDP board.
 >>
->> It's not necessary to do multiple TMFs in parallel, it's ok to make sure
->> each TMFs do not affect each other.
+>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>> ---
+>>   arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++++++++++++++
+>>   1 file changed, 19 insertions(+)
 >>
->> For example, we have two devices: 0:0:0:0 and 0:0:0:1
+>> diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+>> index 2ff549f4dc7a..a0059527d9e4 100644
+>> --- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+>> +++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
+>> @@ -499,6 +499,25 @@
+>>   	status = "okay";
+>>   };
 >>
->> Both of them request device reset, they do not happened in parallel, but
->> would in serial. If 0:0:0:0 is performing device reset in progress, 0:0:0:1
->> just wait 0:0:0:0 to finish.
->>
-> Well, not quite. Any higher-order TMFs are serialized by virtue of SCSI-EH, but command aborts (which also devolve down to TMFs on certain drivers) do run in parallel, and there we will be requiring multiple TMFs.
+>> +&ufs_mem_hc {
+>> +	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
+>> +	vcc-supply = <&vreg_l7b_2p9>;
+>> +	vcc-max-microamp = <800000>;
+>> +	vccq-supply = <&vreg_l9b_1p2>;
+>> +	vccq-max-microamp = <900000>;
+>> +	vccq2-supply = <&vreg_l9b_1p2>;
+>> +	vccq2-max-microamp = <900000>;
+> Were you able to confirm it's correct (see the q in [1])
+Sorry I missed to reply to your query in my last reply .
+Yes Kodiak support both UFS2.x and UFS3.x and UFS2.x needs
+vccq2 . Hence we need that node.
+
+
 > 
-
-It's best that multiple  TMFs can run in parallel, again, looking forwarding
-to your changes.
-
-> Cheers,
+> Konrad
 > 
-> Hannes
-
+> [1] https://lore.kernel.org/linux-arm-msm/20230926162042.14180-1-quic_nitirawa@quicinc.com/T/#m72ca82a9145af380ffd37415455d6ef3d4195795
