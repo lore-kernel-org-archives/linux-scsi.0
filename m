@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9D6AE80AB1
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 14:19:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEDA9E80AB4
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 14:19:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232173AbjI0OTV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 10:19:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52994 "EHLO
+        id S232183AbjI0OTW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 10:19:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232131AbjI0OS7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 10:18:59 -0400
+        with ESMTP id S232137AbjI0OTA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 10:19:00 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4657A1A6;
-        Wed, 27 Sep 2023 07:18:50 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 877C7C433CB;
-        Wed, 27 Sep 2023 14:18:48 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F406A1AA;
+        Wed, 27 Sep 2023 07:18:51 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CD5FC433C8;
+        Wed, 27 Sep 2023 14:18:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695824329;
-        bh=gRfGxVc1daq/nrFb0KHKXOqTTy7EybTfeFXo5KQ/LCU=;
+        s=k20201202; t=1695824331;
+        bh=MCJ2jnqPb87vnj3cqQeOcdyKKQhFLSSAKk5so46G2FI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WJ93e1O2aCfFSdkyFU3/iCzwDje75ztNopozysT7OLsLX9cGazN3fjsPH8bnjWu9i
-         ABPH4kmGAZ1iSOH5TzGpKm3AbP/ukaAkW0tRXv0QkFiFEF7maJI/lGIwBk7GhxuxYP
-         xaL70n3C9e/tfMJQrMHjuhdRbsRS9w/F9L+1uksWkW1BgY3PKC5wK4+lH2F8cqIEoA
-         LLR287zYEpFvjb0/WtbMLWy0ecobd/AhdGzDHxWhfV7hpLx5Zm7v0eMa0xgpC9D53M
-         0DDPd1ap8rwG1M3K+9VZvvEZeDmrz/JPYggWv8kj1/0ji2BXQo4NmvWxg8i3xxKZgp
-         D/Te+GoMq4Few==
+        b=nJr+zJbgZ98G6NBn0QWyHk35M2UTRTqR7yjXL+jQei2Edy4WjUcN7gArnfNCGlsYq
+         WiN9baeIusrnhDZde1bN7j3HC9IK2Dx3MGhSBuHSszo4Ask/Ua/xueiymox0TZyN9d
+         q0TsuunbYLO+LDtq2bS4O/IWcMJfZ/QO8yrgCGhvU9WPdRJsuQUpWyVwTZ30+AeZzi
+         nv+UO8aCzWFhK/YxMFeKxlE+yZg2qB/uvzP/cvOq2PBNvhJ7l/bRwHYCbtH3BpzUlP
+         d5ViG7+o8OovjrxziHspAW0UPjpKx08fjFDRbf5DgSxaMJrP9QOiQ3x70M2F9GW3sN
+         s6wp16Ou53XBQ==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,58 +37,71 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v8 11/23] ata: libata-eh: Fix compilation warning in ata_eh_link_report()
-Date:   Wed, 27 Sep 2023 23:18:16 +0900
-Message-ID: <20230927141828.90288-12-dlemoal@kernel.org>
+Subject: [PATCH v8 12/23] scsi: Remove scsi device no_start_on_resume flag
+Date:   Wed, 27 Sep 2023 23:18:17 +0900
+Message-ID: <20230927141828.90288-13-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230927141828.90288-1-dlemoal@kernel.org>
 References: <20230927141828.90288-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The 6 bytes length of the tries_buf string in ata_eh_link_report() is
-too short and results in a gcc compilation warning with W-!:
-
-drivers/ata/libata-eh.c: In function ‘ata_eh_link_report’:
-drivers/ata/libata-eh.c:2371:59: warning: ‘%d’ directive output may be truncated writing between 1 and 11 bytes into a region of size 4 [-Wformat-truncation=]
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                                                           ^~
-drivers/ata/libata-eh.c:2371:56: note: directive argument in the range [-2147483648, 4]
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                                                        ^~~~~~
-drivers/ata/libata-eh.c:2371:17: note: ‘snprintf’ output between 4 and 14 bytes into a destination of size 6
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 2372 |                          ap->eh_tries);
-      |                          ~~~~~~~~~~~~~
-
-Avoid this warning by increasing the string size to 16B.
+The scsi device flag no_start_on_resume is not set by any scsi low
+level driver. Remove it. This reverts the changes introduced by commit
+0a8589055936 ("ata,scsi: do not issue START STOP UNIT on resume").
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/ata/libata-eh.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/sd.c          | 9 +++------
+ include/scsi/scsi_device.h | 1 -
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index b1b2c276371e..5686353e442c 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2332,7 +2332,7 @@ static void ata_eh_link_report(struct ata_link *link)
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_queued_cmd *qc;
- 	const char *frozen, *desc;
--	char tries_buf[6] = "";
-+	char tries_buf[16] = "";
- 	int tag, nr_failed = 0;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index f911a64521e6..37a7d9cd2df3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3895,7 +3895,7 @@ static int sd_suspend_runtime(struct device *dev)
+ static int sd_resume(struct device *dev, bool runtime)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+-	int ret = 0;
++	int ret;
  
- 	if (ehc->i.flags & ATA_EHI_QUIET)
+ 	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
+ 		return 0;
+@@ -3905,11 +3905,8 @@ static int sd_resume(struct device *dev, bool runtime)
+ 		return 0;
+ 	}
+ 
+-	if (!sdkp->device->no_start_on_resume) {
+-		sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+-		ret = sd_start_stop_device(sdkp, 1);
+-	}
+-
++	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
++	ret = sd_start_stop_device(sdkp, 1);
+ 	if (!ret) {
+ 		opal_unlock_from_suspend(sdkp->opal_dev);
+ 		sdkp->suspended = false;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index fd41fdac0a8e..e6e476fe2272 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -197,7 +197,6 @@ struct scsi_device {
+ 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
+ 	unsigned no_start_on_add:1;	/* do not issue start on add */
+ 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
+-	unsigned no_start_on_resume:1; /* Do not issue START_STOP_UNIT on resume */
+ 	unsigned start_stop_pwr_cond:1;	/* Set power cond. in START_STOP_UNIT */
+ 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
+ 	unsigned select_no_atn:1;
 -- 
 2.41.0
 
