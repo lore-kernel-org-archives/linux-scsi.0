@@ -2,118 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1730BE810BA
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 10:08:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15B3AE810C1
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Sep 2023 10:40:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231240AbjI0KIZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 06:08:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60344 "EHLO
+        id S229985AbjI0KkZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 06:40:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231210AbjI0KIW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 06:08:22 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F34CAEB;
-        Wed, 27 Sep 2023 03:08:20 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38R9dL5S001454;
-        Wed, 27 Sep 2023 10:08:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=vcmf/AbqgkauR+V3cXJxEoKuVFxfwi5GPyt7nCXwHtQ=;
- b=iE3sLYMpOIdQzkImaHGeJihVeIQGwAu9Yr9Jpfwx8cP2UDB8CeLzQS2gfk3WyKIanhXD
- WvzPK5YH8RHcVNEP4RyY2fq9n6JGaN/+SpewQ9GyIwka06RU61MB5tLa7EYxUG6G1226
- RZ3xKPzWzfNyvFvR638NBaqMVjcvXS5q1wpLqK2e1aF8IOyGHOv+dFnL+2onD02fPuBY
- Lyp3DY5wtiJaNAnrfzXRpia1dbjPVM7tr8aCM5XZXW311sFbF0Zw95n0kEw0LYO+4VnP
- IVNOcaDo6rSclsbatH30r0ivhFLMnSJogzN+MA6ystF+9nRTlZGfrlW16VzoA4gHdL26 Ow== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tcda7rkqm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 27 Sep 2023 10:08:09 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38RA88v2017101
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 27 Sep 2023 10:08:08 GMT
-Received: from [10.218.45.181] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 27 Sep
- 2023 03:08:03 -0700
-Message-ID: <4e130774-0f4f-eaf1-3916-2860ea232150@quicinc.com>
-Date:   Wed, 27 Sep 2023 15:38:00 +0530
+        with ESMTP id S230143AbjI0IZ7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 04:25:59 -0400
+Received: from jari.cn (unknown [218.92.28.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 547C7CC4;
+        Wed, 27 Sep 2023 01:25:41 -0700 (PDT)
+Received: from chenguohua$jari.cn ( [182.148.12.64] ) by
+ ajax-webmail-localhost.localdomain (Coremail) ; Wed, 27 Sep 2023 16:24:13
+ +0800 (GMT+08:00)
+X-Originating-IP: [182.148.12.64]
+Date:   Wed, 27 Sep 2023 16:24:13 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From:   chenguohua@jari.cn
+To:     gotom@debian.or.jp, yokota@netlab.is.tsukuba.ac.jp,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: Clean up errors in nsp32_io.h
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
+ 20230419(ff23bf83) Copyright (c) 2002-2023 www.mailtech.cn
+ mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.2
-Subject: Re: [PATCH V3 3/4] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- IDP board
-Content-Language: en-US
-To:     Konrad Dybcio <konrad.dybcio@linaro.org>, <agross@kernel.org>,
-        <andersson@kernel.org>, <mani@kernel.org>,
-        <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <robh+dt@kernel.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
-        <cros-qcom-dts-watchers@chromium.org>
-CC:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
- <20230927081858.15961-4-quic_nitirawa@quicinc.com>
- <b5146a7f-91b6-480c-b61a-514a365dc41d@linaro.org>
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <b5146a7f-91b6-480c-b61a-514a365dc41d@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: xa7tpmUHRGUe-ofpUtvO91LwwWOcl2G4
-X-Proofpoint-GUID: xa7tpmUHRGUe-ofpUtvO91LwwWOcl2G4
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-27_05,2023-09-26_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
- clxscore=1015 lowpriorityscore=0 impostorscore=0 bulkscore=0
- mlxlogscore=846 priorityscore=1501 mlxscore=0 suspectscore=0 spamscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2309270083
+Message-ID: <7612214f.888.18ad5bd14bc.Coremail.chenguohua@jari.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: AQAAfwDnhD+t5hNlYPi9AA--.583W
+X-CM-SenderInfo: xfkh0w5xrk3tw6md2xgofq/1tbiAQAHEWUSpy8AOwAgsz
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+        daVFxhVjvjDU=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 9/27/2023 2:55 PM, Konrad Dybcio wrote:
-> On 27.09.2023 10:18, Nitin Rawat wrote:
->> Add UFS host controller and PHY nodes for sc7280 IDP board.
->>
->> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->> ---
->>   arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++++++++++++++
->>   1 file changed, 19 insertions(+)
->>
->> diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
->> index 2ff549f4dc7a..a0059527d9e4 100644
->> --- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
->> +++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
->> @@ -499,6 +499,25 @@
->>   	status = "okay";
->>   };
->>
->> +&ufs_mem_hc {
->> +	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
->> +	vcc-supply = <&vreg_l7b_2p9>;
->> +	vcc-max-microamp = <800000>;
->> +	vccq-supply = <&vreg_l9b_1p2>;
->> +	vccq-max-microamp = <900000>;
->> +	vccq2-supply = <&vreg_l9b_1p2>;
->> +	vccq2-max-microamp = <900000>;
-> Were you able to confirm it's correct (see the q in [1])
-Sorry I missed to reply to your query in my last reply .
-Yes Kodiak support both UFS2.x and UFS3.x and UFS2.x needs
-vccq2 . Hence we need that node.
-
-
-> 
-> Konrad
-> 
-> [1] https://lore.kernel.org/linux-arm-msm/20230926162042.14180-1-quic_nitirawa@quicinc.com/T/#m72ca82a9145af380ffd37415455d6ef3d4195795
+Rml4IHRoZSBmb2xsb3dpbmcgZXJyb3JzIHJlcG9ydGVkIGJ5IGNoZWNrcGF0Y2g6CgpFUlJPUjog
+c3BhY2UgcHJvaGliaXRlZCBiZWZvcmUgdGhhdCBjbG9zZSBwYXJlbnRoZXNpcyAnKScKRVJST1I6
+IHNwYWNlIHJlcXVpcmVkIGFmdGVyIHRoYXQgJywnIChjdHg6VnhWKQoKU2lnbmVkLW9mZi1ieTog
+R3VvSHVhIENoZW5nIDxjaGVuZ3VvaHVhQGphcmkuY24+Ci0tLQogZHJpdmVycy9zY3NpL25zcDMy
+X2lvLmggfCAxOCArKysrKysrKystLS0tLS0tLS0KIGRyaXZlcnMvc2NzaS9zY3NpX3BtLmMgIHwg
+IDQgKystLQogMiBmaWxlcyBjaGFuZ2VkLCAxMSBpbnNlcnRpb25zKCspLCAxMSBkZWxldGlvbnMo
+LSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbnNwMzJfaW8uaCBiL2RyaXZlcnMvc2NzaS9u
+c3AzMl9pby5oCmluZGV4IGUzZjNjMjdiMDFlZi4uNTkwMmYzMDM1YWZhIDEwMDY0NAotLS0gYS9k
+cml2ZXJzL3Njc2kvbnNwMzJfaW8uaAorKysgYi9kcml2ZXJzL3Njc2kvbnNwMzJfaW8uaApAQCAt
+MTI2LDcgKzEyNiw3IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBuc3AzMl9pbmRleF93cml0ZTEodW5z
+aWduZWQgaW50ICBiYXNlLAogCQkJCSAgICAgIHVuc2lnbmVkIGludCAgcmVnLAogCQkJCSAgICAg
+IHVuc2lnbmVkIGNoYXIgdmFsKQogewotCW91dGIocmVnLCBiYXNlICsgSU5ERVhfUkVHICAgKTsK
+KwlvdXRiKHJlZywgYmFzZSArIElOREVYX1JFRyk7CiAJb3V0Yih2YWwsIGJhc2UgKyBEQVRBX1JF
+R19MT1cpOwogfQogCkBAIC0xNDEsMTggKzE0MSwxOCBAQCBzdGF0aWMgaW5saW5lIHZvaWQgbnNw
+MzJfaW5kZXhfd3JpdGUyKHVuc2lnbmVkIGludCAgIGJhc2UsCiAJCQkJICAgICAgdW5zaWduZWQg
+aW50ICAgcmVnLAogCQkJCSAgICAgIHVuc2lnbmVkIHNob3J0IHZhbCkKIHsKLQlvdXRiKHJlZywg
+YmFzZSArIElOREVYX1JFRyAgICk7CisJb3V0YihyZWcsIGJhc2UgKyBJTkRFWF9SRUcpOwogCW91
+dHcodmFsLCBiYXNlICsgREFUQV9SRUdfTE9XKTsKIH0KIAogc3RhdGljIGlubGluZSB1bnNpZ25l
+ZCBsb25nIG5zcDMyX2luZGV4X3JlYWQ0KHVuc2lnbmVkIGludCBiYXNlLAogCQkJCQkgICAgICB1
+bnNpZ25lZCBpbnQgcmVnKQogewotCXVuc2lnbmVkIGxvbmcgaCxsOworCXVuc2lnbmVkIGxvbmcg
+aCwgbDsKIAogCW91dGIocmVnLCBiYXNlICsgSU5ERVhfUkVHKTsKIAlsID0gaW53KGJhc2UgKyBE
+QVRBX1JFR19MT1cpOwotCWggPSBpbncoYmFzZSArIERBVEFfUkVHX0hJICk7CisJaCA9IGludyhi
+YXNlICsgREFUQV9SRUdfSEkpOwogCiAJcmV0dXJuICgoaCA8PCAxNikgfCBsKTsKIH0KQEAgLTE2
+MSwxNCArMTYxLDE0IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBuc3AzMl9pbmRleF93cml0ZTQodW5z
+aWduZWQgaW50ICBiYXNlLAogCQkJCSAgICAgIHVuc2lnbmVkIGludCAgcmVnLAogCQkJCSAgICAg
+IHVuc2lnbmVkIGxvbmcgdmFsKQogewotCXVuc2lnbmVkIGxvbmcgaCxsOworCXVuc2lnbmVkIGxv
+bmcgaCwgbDsKIAogCWggPSAodmFsICYgMHhmZmZmMDAwMCkgPj4gMTY7CiAJbCA9ICh2YWwgJiAw
+eDAwMDBmZmZmKSA+PiAgMDsKIAotCW91dGIocmVnLCBiYXNlICsgSU5ERVhfUkVHICAgKTsKKwlv
+dXRiKHJlZywgYmFzZSArIElOREVYX1JFRyk7CiAJb3V0dyhsLCAgIGJhc2UgKyBEQVRBX1JFR19M
+T1cpOwotCW91dHcoaCwgICBiYXNlICsgREFUQV9SRUdfSEkgKTsKKwlvdXR3KGgsICAgYmFzZSAr
+IERBVEFfUkVHX0hJKTsKIH0KIAogLyo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09Ki8KQEAgLTE5NSw3ICsxOTUsNyBAQCBzdGF0aWMgaW5saW5lIHZvaWQgbnNw
+MzJfbW1pb19pbmRleF93cml0ZTEodW5zaWduZWQgbG9uZyBiYXNlLAogCWRhdGFfcHRyICA9ICh1
+bnNpZ25lZCBzaG9ydCAqKShiYXNlICsgTlNQMzJfTU1JT19PRkZTRVQgKyBEQVRBX1JFR19MT1cp
+OwogCiAJd3JpdGViKHJlZywgaW5kZXhfcHRyKTsKLQl3cml0ZWIodmFsLCBkYXRhX3B0ciApOwor
+CXdyaXRlYih2YWwsIGRhdGFfcHRyKTsKIH0KIAogc3RhdGljIGlubGluZSB1bnNpZ25lZCBzaG9y
+dCBuc3AzMl9tbWlvX2luZGV4X3JlYWQyKHVuc2lnbmVkIGxvbmcgYmFzZSwKQEAgLTIyMCw3ICsy
+MjAsNyBAQCBzdGF0aWMgaW5saW5lIHZvaWQgbnNwMzJfbW1pb19pbmRleF93cml0ZTIodW5zaWdu
+ZWQgbG9uZyAgYmFzZSwKIAlkYXRhX3B0ciAgPSAodW5zaWduZWQgc2hvcnQgKikoYmFzZSArIE5T
+UDMyX01NSU9fT0ZGU0VUICsgREFUQV9SRUdfTE9XKTsKIAogCXdyaXRlYihyZWcsICAgICAgICAg
+ICAgICBpbmRleF9wdHIpOwotCXdyaXRldyhjcHVfdG9fbGUxNih2YWwpLCBkYXRhX3B0ciApOwor
+CXdyaXRldyhjcHVfdG9fbGUxNih2YWwpLCBkYXRhX3B0cik7CiB9CiAKIC8qPT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PSovCmRpZmYgLS1naXQgYS9kcml2ZXJz
+L3Njc2kvc2NzaV9wbS5jIGIvZHJpdmVycy9zY3NpL3Njc2lfcG0uYwppbmRleCBkNTgxNjEzZDg3
+YzcuLmVlNDRmZGVkOGU1NSAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfcG0uYworKysg
+Yi9kcml2ZXJzL3Njc2kvc2NzaV9wbS5jCkBAIC0yMTgsNyArMjE4LDcgQEAgaW50IHNjc2lfYXV0
+b3BtX2dldF9kZXZpY2Uoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KQogCWludAllcnI7CiAKIAll
+cnIgPSBwbV9ydW50aW1lX2dldF9zeW5jKCZzZGV2LT5zZGV2X2dlbmRldik7Ci0JaWYgKGVyciA8
+IDAgJiYgZXJyICE9LUVBQ0NFUykKKwlpZiAoZXJyIDwgMCAmJiBlcnIgIT0gLUVBQ0NFUykKIAkJ
+cG1fcnVudGltZV9wdXRfc3luYygmc2Rldi0+c2Rldl9nZW5kZXYpOwogCWVsc2UKIAkJZXJyID0g
+MDsKQEAgLTI0Nyw3ICsyNDcsNyBAQCBpbnQgc2NzaV9hdXRvcG1fZ2V0X2hvc3Qoc3RydWN0IFNj
+c2lfSG9zdCAqc2hvc3QpCiAJaW50CWVycjsKIAogCWVyciA9IHBtX3J1bnRpbWVfZ2V0X3N5bmMo
+JnNob3N0LT5zaG9zdF9nZW5kZXYpOwotCWlmIChlcnIgPCAwICYmIGVyciAhPS1FQUNDRVMpCisJ
+aWYgKGVyciA8IDAgJiYgZXJyICE9IC1FQUNDRVMpCiAJCXBtX3J1bnRpbWVfcHV0X3N5bmMoJnNo
+b3N0LT5zaG9zdF9nZW5kZXYpOwogCWVsc2UKIAkJZXJyID0gMDsKLS0gCjIuMTcuMQo=
