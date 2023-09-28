@@ -2,70 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1D13E810DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 02:33:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21851CE7B09
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 07:36:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229715AbjI1CdZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 22:33:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58658 "EHLO
+        id S230171AbjI1HgW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 03:36:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbjI1CdZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 22:33:25 -0400
-Received: from jari.cn (unknown [218.92.28.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 95C4894;
-        Wed, 27 Sep 2023 19:33:21 -0700 (PDT)
-Received: from wangkailong$jari.cn ( [182.148.12.64] ) by
- ajax-webmail-localhost.localdomain (Coremail) ; Thu, 28 Sep 2023 10:32:02
- +0800 (GMT+08:00)
-X-Originating-IP: [182.148.12.64]
-Date:   Thu, 28 Sep 2023 10:32:02 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From:   "KaiLong Wang" <wangkailong@jari.cn>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: Clean up errors in lpfc_debugfs.c
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
- 20230419(ff23bf83) Copyright (c) 2002-2023 www.mailtech.cn
- mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+        with ESMTP id S229539AbjI1HgV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 03:36:21 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6E8692;
+        Thu, 28 Sep 2023 00:36:17 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Rx4tx1hVBzNnp5;
+        Thu, 28 Sep 2023 15:32:25 +0800 (CST)
+Received: from build.huawei.com (10.175.101.6) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Thu, 28 Sep 2023 15:36:14 +0800
+From:   Wenchao Hao <haowenchao2@huawei.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>,
+        Wenchao Hao <haowenchao2@huawei.com>
+Subject: [PATCH v2 2/4] scsi: scsi_error: Fix wrong statistic when print error info
+Date:   Thu, 28 Sep 2023 15:35:41 +0800
+Message-ID: <20230928073543.3496394-3-haowenchao2@huawei.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20230928073543.3496394-1-haowenchao2@huawei.com>
+References: <20230928073543.3496394-1-haowenchao2@huawei.com>
 MIME-Version: 1.0
-Message-ID: <7f56629a.8a3.18ad9a1036f.Coremail.wangkailong@jari.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: AQAAfwDXaD6i5RRli3y+AA--.585W
-X-CM-SenderInfo: 5zdqwypdlo00nj6mt2flof0/1tbiAQAJB2T8PZMAAQAgsY
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-        daVFxhVjvjDU=
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rml4IHRoZSBmb2xsb3dpbmcgZXJyb3JzIHJlcG9ydGVkIGJ5IGNoZWNrcGF0Y2g6CgpFUlJPUjog
-ZWxzZSBzaG91bGQgZm9sbG93IGNsb3NlIGJyYWNlICd9JwpFUlJPUjogc3BhY2VzIHJlcXVpcmVk
-IGFyb3VuZCB0aGF0ICc9JyAoY3R4OlZ4VikKRVJST1I6IHNwYWNlcyByZXF1aXJlZCBhcm91bmQg
-dGhhdCAnPCcgKGN0eDpWeFYpCgpTaWduZWQtb2ZmLWJ5OiBLYWlMb25nIFdhbmcgPHdhbmdrYWls
-b25nQGphcmkuY24+Ci0tLQogZHJpdmVycy9zY3NpL2xwZmMvbHBmY19kZWJ1Z2ZzLmMgfCA4ICsr
-Ky0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQoK
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9scGZjL2xwZmNfZGVidWdmcy5jIGIvZHJpdmVycy9z
-Y3NpL2xwZmMvbHBmY19kZWJ1Z2ZzLmMKaW5kZXggZWE5YjQyMjI1ZTYyLi5mYTAzN2M3MGFhOTYg
-MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9scGZjL2xwZmNfZGVidWdmcy5jCisrKyBiL2RyaXZl
-cnMvc2NzaS9scGZjL2xwZmNfZGVidWdmcy5jCkBAIC0yOTksOCArMjk5LDcgQEAgbHBmY19kZWJ1
-Z2ZzX2hicWluZm9fZGF0YShzdHJ1Y3QgbHBmY19oYmEgKnBoYmEsIGNoYXIgKmJ1ZiwgaW50IHNp
-emUpCiAJCSBscGZjX2RlYnVnZnNfbGFzdF9oYnErKzsKIAkJIGlmIChscGZjX2RlYnVnZnNfbGFz
-dF9oYnEgPj0gaSkKIAkJCWxwZmNfZGVidWdmc19sYXN0X2hicSA9IDA7Ci0JfQotCWVsc2UKKwl9
-IGVsc2UKIAkJbHBmY19kZWJ1Z2ZzX2xhc3RfaGJxID0gMDsKIAogCWkgPSBscGZjX2RlYnVnZnNf
-bGFzdF9oYnE7CkBAIC0zMjYsNyArMzI1LDcgQEAgbHBmY19kZWJ1Z2ZzX2hicWluZm9fZGF0YShz
-dHJ1Y3QgbHBmY19oYmEgKnBoYmEsIGNoYXIgKmJ1ZiwgaW50IHNpemUpCiAJCWhicXMtPm5leHRf
-aGJxUHV0SWR4LCBoYnFzLT5sb2NhbF9oYnFHZXRJZHgsIGdldGlkeCk7CiAKIAloYnFlID0gKHN0
-cnVjdCBscGZjX2hicV9lbnRyeSAqKSBwaGJhLT5oYnFzW2ldLmhicV92aXJ0OwotCWZvciAoaj0w
-OyBqPGhicXMtPmVudHJ5X2NvdW50OyBqKyspIHsKKwlmb3IgKGogPSAwOyBqIDwgaGJxcy0+ZW50
-cnlfY291bnQ7IGorKykgewogCQlsZW4gKz0gIHNjbnByaW50ZihidWYrbGVuLCBzaXplLWxlbiwK
-IAkJCSIlMDNkOiAlMDh4ICUwNHggJTA1eCAiLCBqLAogCQkJbGUzMl90b19jcHUoaGJxZS0+YmRl
-LmFkZHJMb3cpLApAQCAtMzQzLDggKzM0Miw3IEBAIGxwZmNfZGVidWdmc19oYnFpbmZvX2RhdGEo
-c3RydWN0IGxwZmNfaGJhICpwaGJhLCBjaGFyICpidWYsIGludCBzaXplKQogCQkJCQkJIlVudXNl
-ZFxuIik7CiAJCQkJZ290byBza2lwaXQ7CiAJCQl9Ci0JCX0KLQkJZWxzZSB7CisJCX0gZWxzZSB7
-CiAJCQlpZiAoKGogPj0gaGJxcy0+aGJxUHV0SWR4KSAmJgogCQkJCShqIDwgKGhicXMtPmVudHJ5
-X2NvdW50K2xvdykpKSB7CiAJCQkJbGVuICs9ICBzY25wcmludGYoYnVmICsgbGVuLCBzaXplIC0g
-bGVuLAotLSAKMi4xNy4xCg==
+shost_for_each_device() would skip devices which is in progress of
+removing, so commands of these devices would be ignored in
+scsi_eh_prt_fail_stats().
+
+Fix this issue by using shost_for_each_device_include_deleted()
+to iterate devices in scsi_eh_prt_fail_stats().
+
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+---
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c67cdcdc3ba8..2550f8cd182a 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -407,7 +407,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
+ 	int cmd_cancel = 0;
+ 	int devices_failed = 0;
+ 
+-	shost_for_each_device(sdev, shost) {
++	shost_for_each_device_include_deleted(sdev, shost) {
+ 		list_for_each_entry(scmd, work_q, eh_entry) {
+ 			if (scmd->device == sdev) {
+ 				++total_failures;
+-- 
+2.32.0
+
