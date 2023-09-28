@@ -2,117 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 078ADE732E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 14:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 446A4E732E5
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 15:21:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231321AbjI1OyT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 10:54:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35756 "EHLO
+        id S231795AbjI1PVL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 11:21:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230430AbjI1OyS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 10:54:18 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37211180;
-        Thu, 28 Sep 2023 07:54:17 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-690d8fb3b7eso11747996b3a.1;
-        Thu, 28 Sep 2023 07:54:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695912856; x=1696517656; darn=vger.kernel.org;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hkWxYDd3S5D6wQFdmPFmF36P9AFy13Nc4la9Zv9FLvQ=;
-        b=TdUGxaELeqNr2hfrvvWqGwupPErkAVMQRCS8PfbuSCqA4xg3/apSSG32UsUx/saT7N
-         9B+GTE9Lttul5hGbQViyT/iiJ7nZPjVN+3+TwnlRI4RbPUauS6KAfXotky8S0t82e+Dq
-         2pX2XWQjndpRtCZ9VSictr++472K1NIxoUWNaeXbM09rioP92uPIe59X77pR98FrPOwq
-         VXvRiAUyAFx4a/KYvVAVUh9SoXFDXGCfQ1uYNZbMiDj2X3EOGEdon+of8Iaenil2UJb1
-         NB29wzetq+0ICvcDGks37/XoWK5/FC5+x91bpJ6HV1Cjb9HP+RSoAqXjVQAQtHVBg5fV
-         dDRQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695912856; x=1696517656;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=hkWxYDd3S5D6wQFdmPFmF36P9AFy13Nc4la9Zv9FLvQ=;
-        b=GqA+9fNnDvvO7dm1PM53ZYWTJe7RxPdM6HV4MYAueYTCnLLb4QP5dsPWPZQBwhFyk7
-         4qkkErJb3+sVHPIw4j9WEuJMzuhMgrhofnsLsYWi/eE/wgSWoCZzo38OXu954IaOztp6
-         4WQDmDzTbHJgQxcIYd7OZoUVLiqmlpqjOqnQEULgHCHESDIZuuqtZeE9pyZIHjkmxeBp
-         TooCpWq+T4lrNJP9xKABzdyaKcKwMg5JkdZvYo0bvTO+R7iPxu0pmhb2MHsLA4v/zbGO
-         MmgxRsiVvNUTBoKhUvpgMphPZ/F054ECXuvWWnoPN3AOaexUPtKpINZZR9FT4+UIstE5
-         mQhQ==
-X-Gm-Message-State: AOJu0YwnRBB+MtSC+rcNxRrmcbg05irjswv9Df6b3Cu+zDpWPPFzDXDz
-        I3d3Gg7ZVYU0S0HiKLp0lYZhDaXLR748MA==
-X-Google-Smtp-Source: AGHT+IGJORolZKwgk2hGuKJ8rqV7+FP9Ss/peFl2G6BnkK4li8z738A/NKKXjR5hjdLcSusDzSEq5w==
-X-Received: by 2002:a05:6a00:b81:b0:691:fd26:f54a with SMTP id g1-20020a056a000b8100b00691fd26f54amr1552608pfj.20.1695912856538;
-        Thu, 28 Sep 2023 07:54:16 -0700 (PDT)
-Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
-        by smtp.gmail.com with ESMTPSA id s26-20020aa78d5a000000b00672ea40b8a9sm13828554pfe.170.2023.09.28.07.54.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Sep 2023 07:54:15 -0700 (PDT)
-From:   Chengfeng Ye <dg573847474@gmail.com>
-To:     njavali@marvell.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com,
-        michael.christie@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Chengfeng Ye <dg573847474@gmail.com>
-Subject: [PATCH] scsi: qla4xxx: fix potential deadlock on frwd/back lock
-Date:   Thu, 28 Sep 2023 14:54:01 +0000
-Message-Id: <20230928145401.32918-1-dg573847474@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S231620AbjI1PVK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 11:21:10 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC2A0EB;
+        Thu, 28 Sep 2023 08:21:09 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D63DC433CA;
+        Thu, 28 Sep 2023 15:21:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695914469;
+        bh=5QGsjlLA6+fSdsYbT2wgVXCyV5RBnz+gCDO8qtKxudM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=RI64Z/ulZuV+NXvyr13D2r3WHJHjvYSEBhhBuHPNVt9kRWrPnmiOgF6ordWF6ikFR
+         xgtdSFzrXqfJBZ5kkT2lmvoB/s5AbaPtBp/tnANflqyoMu0vA4hG+/6XSSId9g12q6
+         KIYQ9idMZhFhYNIT33lFaQWWQ7LAYSXQCODt0fs3+ZcZjnlILWt1TgJuLubdaAGUFf
+         pPbIcFQgW/we/P2hsbBFA0b+8eMvcO7guEHDNRQNPbG/MNmCgntCxM58JaxdGUeun5
+         x06+lzhwwWzX9K72+s9pnzD78ZB62/lme4WNkHldmaYNuNQwSl3mlzfexfOEF6/wbI
+         ZAR46SSqA5oOw==
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-40651a726acso8223865e9.1;
+        Thu, 28 Sep 2023 08:21:09 -0700 (PDT)
+X-Gm-Message-State: AOJu0YxuxNKOgC4u1ePiFMlqKCEMP/zddERIvPni/8kcjiybUUC91JLy
+        RSxD/21B6vHM6Qp+/MI+x+UR1N8BGIs6V0/bc2U=
+X-Google-Smtp-Source: AGHT+IFGxnL1jLxRJ82JHSkotXT+AJQbGwcj+NsBF8Wdz/LihQ1gwaw7yDfPbhv4CL9qBIGKh5TUPhf228x9wFIkjTk=
+X-Received: by 2002:a05:6512:1595:b0:500:b828:7a04 with SMTP id
+ bp21-20020a056512159500b00500b8287a04mr1542995lfb.18.1695914446757; Thu, 28
+ Sep 2023 08:20:46 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+ <65157da7.5d0a0220.13b5e.9e95SMTPIN_ADDED_BROKEN@mx.google.com>
+In-Reply-To: <65157da7.5d0a0220.13b5e.9e95SMTPIN_ADDED_BROKEN@mx.google.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 28 Sep 2023 08:20:34 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6WRen7Udqc+O+haAH8PZXH2jYdpUj1X7UCuQYngVWxoA@mail.gmail.com>
+Message-ID: <CAPhsuW6WRen7Udqc+O+haAH8PZXH2jYdpUj1X7UCuQYngVWxoA@mail.gmail.com>
+Subject: Re: [PATCH 13/15] raid: Remove now superfluous sentinel element from
+ ctl_table array
+To:     j.granados@samsung.com
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
+        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        David Ahern <dsahern@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-rdma@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-iscsi_complete_pdu() is called by several rx callback, under
-softirq context. Thus the callsite of it inside qla4xxx_task_work()
-should better disable bottom half, as work queue is executed under
-process context, it needs to protect race with softirq context
-locking to avoid deadlock.
+On Thu, Sep 28, 2023 at 6:20=E2=80=AFAM Joel Granados via B4 Relay
+<devnull+j.granados.samsung.com@kernel.org> wrote:
+>
+> From: Joel Granados <j.granados@samsung.com>
+>
+> This commit comes at the tail end of a greater effort to remove the
+> empty elements at the end of the ctl_table arrays (sentinels) which
+> will reduce the overall build time size of the kernel and run time
+> memory bloat by ~64 bytes per sentinel (further information Link :
+> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+>
+> Remove sentinel from raid_table
+>
+> Signed-off-by: Joel Granados <j.granados@samsung.com>
+> ---
+>  drivers/md/md.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index a104a025084d..3866d8f754a0 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -304,8 +304,7 @@ static struct ctl_table raid_table[] =3D {
+>                 .maxlen         =3D sizeof(int),
+>                 .mode           =3D S_IRUGO|S_IWUSR,
+>                 .proc_handler   =3D proc_dointvec,
+> -       },
+> -       { }
+> +       }
+>  };
 
-<potential deadlock #1>
-qla4xxx_task_work()
---> iscsi_complete_pdu()
---> spin_lock(&conn->session->back_lock);
-<interrupt>
-   --> iscsi_tcp_data_recv_done()
-   --> iscsi_complete_pdu()
-   --> spin_lock(&conn->session->back_lock) (deadlock)
+Please keep "}," as Greg suggested. Otherwise,
 
-<potential deadlock #2>
-qla4xxx_task_work()
---> iscsi_complete_pdu()
---> __iscsi_complete_pdu()
---> spin_lock(&conn->session->frwd_lock)
-<interrupt>
-   --> iscsi_tcp_data_recv_done()
-   --> iscsi_complete_pdu()
-   --> __iscsi_complete_pdu()
-   --> spin_lock(&conn->session->frwd_lock) (deadlock)
+Acked-by: Song Liu <song@kernel.org>
 
-This flaw was found by an experimental static analysis tool I am
-developing for irq-related deadlock.
-
-To avoid the problem, disable bh inside qla4xxx_task_work() before
-calling iscsi_complete_pdu().
-
-Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
----
- drivers/scsi/qla4xxx/ql4_os.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 675332e49a7b..c60781148e6c 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -3382,7 +3382,9 @@ static void qla4xxx_task_work(struct work_struct *wdata)
- 		hdr->itt = itt;
- 		data = task_data->resp_buffer + hdr_len;
- 		data_len = task_data->resp_len - hdr_len;
-+		local_bh_disable();
- 		iscsi_complete_pdu(conn, hdr, data, data_len);
-+		local_bh_enable();
- 		break;
- 	default:
- 		ql4_printk(KERN_ERR, ha, "Passthru failed status = 0x%x\n",
--- 
-2.17.1
-
+Thanks,
+Song
