@@ -2,77 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C213E82CBC
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 01:30:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22F7AE80A8A
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 01:39:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229975AbjI1Baq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Sep 2023 21:30:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48900 "EHLO
+        id S229899AbjI1BjC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Sep 2023 21:39:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjI1Bap (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 21:30:45 -0400
-X-Greylist: delayed 187 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 27 Sep 2023 18:30:37 PDT
-Received: from jari.cn (unknown [218.92.28.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 72478AC;
-        Wed, 27 Sep 2023 18:30:37 -0700 (PDT)
-Received: from wangkailong$jari.cn ( [182.148.12.64] ) by
- ajax-webmail-localhost.localdomain (Coremail) ; Thu, 28 Sep 2023 09:25:57
- +0800 (GMT+08:00)
-X-Originating-IP: [182.148.12.64]
-Date:   Thu, 28 Sep 2023 09:25:57 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From:   "KaiLong Wang" <wangkailong@jari.cn>
-To:     satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.co
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: fnic: Clean up errors in fnic_scsi.c
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.1-cmXT6 build
- 20230419(ff23bf83) Copyright (c) 2002-2023 www.mailtech.cn
- mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+        with ESMTP id S229437AbjI1BjC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Sep 2023 21:39:02 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 783BBAC;
+        Wed, 27 Sep 2023 18:38:59 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Rwx0S45CdzrStx;
+        Thu, 28 Sep 2023 09:36:40 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Thu, 28 Sep 2023 09:38:56 +0800
+Message-ID: <382fe161-95fb-3249-32cf-07058f81a4bc@huawei.com>
+Date:   Thu, 28 Sep 2023 09:38:55 +0800
 MIME-Version: 1.0
-Message-ID: <7b9428c6.895.18ad9648170.Coremail.wangkailong@jari.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: AQAAfwDnhD8l1hRlCnS+AA--.588W
-X-CM-SenderInfo: 5zdqwypdlo00nj6mt2flof0/1tbiAQAJB2T8PZMAAQAEs8
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-        daVFxhVjvjDU=
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v5 01/10] scsi: scsi_debug: create scsi_debug directory in
+ the debugfs filesystem
+Content-Language: en-US
+To:     <dgilbert@interlog.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>
+References: <20230922092906.2645265-1-haowenchao2@huawei.com>
+ <20230922092906.2645265-2-haowenchao2@huawei.com>
+ <8c7cfe09-d145-4387-91cf-da9d4e2398e1@interlog.com>
+From:   Wenchao Hao <haowenchao2@huawei.com>
+In-Reply-To: <8c7cfe09-d145-4387-91cf-da9d4e2398e1@interlog.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rml4IHRoZSBmb2xsb3dpbmcgZXJyb3JzIHJlcG9ydGVkIGJ5IGNoZWNrcGF0Y2g6CgpFUlJPUjog
-c3BhY2UgcmVxdWlyZWQgYmVmb3JlIHRoZSBvcGVuIHBhcmVudGhlc2lzICcoJwoKU2lnbmVkLW9m
-Zi1ieTogS2FpTG9uZyBXYW5nIDx3YW5na2FpbG9uZ0BqYXJpLmNuPgotLS0KIGRyaXZlcnMvc2Nz
-aS9mbmljL2ZuaWNfc2NzaS5jIHwgMTQgKysrKysrKy0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCA3
-IGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
-L2ZuaWMvZm5pY19zY3NpLmMgYi9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX3Njc2kuYwppbmRleCA5
-NzYxYjJjOWRiNDguLmZiNDE4NGY3OTRkYiAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL2ZuaWMv
-Zm5pY19zY3NpLmMKKysrIGIvZHJpdmVycy9zY3NpL2ZuaWMvZm5pY19zY3NpLmMKQEAgLTEwMTks
-MjIgKzEwMTksMjIgQEAgc3RhdGljIHZvaWQgZm5pY19mY3Bpb19pY21uZF9jbXBsX2hhbmRsZXIo
-c3RydWN0IGZuaWMgKmZuaWMsCiAJaW9fZHVyYXRpb25fdGltZSA9IGppZmZpZXNfdG9fbXNlY3Mo
-amlmZmllcykgLQogCQkJCQkJamlmZmllc190b19tc2VjcyhzdGFydF90aW1lKTsKIAotCWlmKGlv
-X2R1cmF0aW9uX3RpbWUgPD0gMTApCisJaWYgKGlvX2R1cmF0aW9uX3RpbWUgPD0gMTApCiAJCWF0
-b21pYzY0X2luYygmZm5pY19zdGF0cy0+aW9fc3RhdHMuaW9fYnR3XzBfdG9fMTBfbXNlYyk7Ci0J
-ZWxzZSBpZihpb19kdXJhdGlvbl90aW1lIDw9IDEwMCkKKwllbHNlIGlmIChpb19kdXJhdGlvbl90
-aW1lIDw9IDEwMCkKIAkJYXRvbWljNjRfaW5jKCZmbmljX3N0YXRzLT5pb19zdGF0cy5pb19idHdf
-MTBfdG9fMTAwX21zZWMpOwotCWVsc2UgaWYoaW9fZHVyYXRpb25fdGltZSA8PSA1MDApCisJZWxz
-ZSBpZiAoaW9fZHVyYXRpb25fdGltZSA8PSA1MDApCiAJCWF0b21pYzY0X2luYygmZm5pY19zdGF0
-cy0+aW9fc3RhdHMuaW9fYnR3XzEwMF90b181MDBfbXNlYyk7Ci0JZWxzZSBpZihpb19kdXJhdGlv
-bl90aW1lIDw9IDUwMDApCisJZWxzZSBpZiAoaW9fZHVyYXRpb25fdGltZSA8PSA1MDAwKQogCQlh
-dG9taWM2NF9pbmMoJmZuaWNfc3RhdHMtPmlvX3N0YXRzLmlvX2J0d181MDBfdG9fNTAwMF9tc2Vj
-KTsKLQllbHNlIGlmKGlvX2R1cmF0aW9uX3RpbWUgPD0gMTAwMDApCisJZWxzZSBpZiAoaW9fZHVy
-YXRpb25fdGltZSA8PSAxMDAwMCkKIAkJYXRvbWljNjRfaW5jKCZmbmljX3N0YXRzLT5pb19zdGF0
-cy5pb19idHdfNTAwMF90b18xMDAwMF9tc2VjKTsKLQllbHNlIGlmKGlvX2R1cmF0aW9uX3RpbWUg
-PD0gMzAwMDApCisJZWxzZSBpZiAoaW9fZHVyYXRpb25fdGltZSA8PSAzMDAwMCkKIAkJYXRvbWlj
-NjRfaW5jKCZmbmljX3N0YXRzLT5pb19zdGF0cy5pb19idHdfMTAwMDBfdG9fMzAwMDBfbXNlYyk7
-CiAJZWxzZSB7CiAJCWF0b21pYzY0X2luYygmZm5pY19zdGF0cy0+aW9fc3RhdHMuaW9fZ3JlYXRl
-cl90aGFuXzMwMDAwX21zZWMpOwogCi0JCWlmKGlvX2R1cmF0aW9uX3RpbWUgPiBhdG9taWM2NF9y
-ZWFkKCZmbmljX3N0YXRzLT5pb19zdGF0cy5jdXJyZW50X21heF9pb190aW1lKSkKKwkJaWYgKGlv
-X2R1cmF0aW9uX3RpbWUgPiBhdG9taWM2NF9yZWFkKCZmbmljX3N0YXRzLT5pb19zdGF0cy5jdXJy
-ZW50X21heF9pb190aW1lKSkKIAkJCWF0b21pYzY0X3NldCgmZm5pY19zdGF0cy0+aW9fc3RhdHMu
-Y3VycmVudF9tYXhfaW9fdGltZSwgaW9fZHVyYXRpb25fdGltZSk7CiAJfQogfQotLSAKMi4xNy4x
-Cgo=
+On 2023/9/28 9:13, Douglas Gilbert wrote:
+> On 2023-09-22 05:28, Wenchao Hao wrote:
+>> Create directory scsi_debug in the root of the debugfs filesystem.
+>> Prepare to add interface for manage error injection.
+>>
+>> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+>> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+>> ---
+>>   drivers/scsi/scsi_debug.c | 6 ++++++
+>>   1 file changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+>> index 9c0af50501f9..35c336271b13 100644
+>> --- a/drivers/scsi/scsi_debug.c
+>> +++ b/drivers/scsi/scsi_debug.c
+>> @@ -41,6 +41,7 @@
+>>   #include <linux/random.h>
+>>   #include <linux/xarray.h>
+>>   #include <linux/prefetch.h>
+>> +#include <linux/debugfs.h>
+>>   #include <net/checksum.h>
+>> @@ -862,6 +863,8 @@ static const int device_qfull_result =
+>>   static const int condition_met_result = SAM_STAT_CONDITION_MET;
+>> +static struct dentry *sdebug_debugfs_root;
+>> +
+>>   /* Only do the extra work involved in logical block provisioning if one or
+>>    * more of the lbpu, lbpws or lbpws10 parameters are given and we are doing
+>> @@ -7011,6 +7014,8 @@ static int __init scsi_debug_init(void)
+>>           goto driver_unreg;
+>>       }
+>> +    sdebug_debugfs_root = debugfs_create_dir("scsi_debug", NULL);
+> 
+> debugfs_create_dir() can fail and return NULL. Looking at other drivers, most
+> seem to assume it will work. Since the scsi_debug driver is often used to test
+> abnormal situations, perhaps adding something like:
+>      if (!sdebug_debugfs_root)
+>          pr_info("%s: failed to create initial debugfs directory\n", __func__);
+> 
+> might save someone a bit of time if a NULL dereference on sdebug_debugfs_root
+> follows later. That is what the mpt3sas driver does.
+> 
+
+Yes, I would fix it by checking return value of debugfs related call
+after your review suggestions for other patches.
+
+> Doug Gilbert
+> 
+>> +
+>>       for (k = 0; k < hosts_to_add; k++) {
+>>           if (want_store && k == 0) {
+>>               ret = sdebug_add_host_helper(idx);
+>> @@ -7057,6 +7062,7 @@ static void __exit scsi_debug_exit(void)
+>>       sdebug_erase_all_stores(false);
+>>       xa_destroy(per_store_ap);
+>> +    debugfs_remove(sdebug_debugfs_root);
+>>   }
+>>   device_initcall(scsi_debug_init);
+> 
+> 
+
