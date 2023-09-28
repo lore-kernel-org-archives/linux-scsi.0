@@ -2,142 +2,139 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA8DE732C5
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 12:39:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 950B2E732D1
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 13:20:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232266AbjI1MjR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 08:39:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35624 "EHLO
+        id S232062AbjI1NUk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 09:20:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231542AbjI1MjQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 08:39:16 -0400
+        with ESMTP id S231296AbjI1NUj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 09:20:39 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACC7F139;
-        Thu, 28 Sep 2023 05:39:14 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D035C433C9;
-        Thu, 28 Sep 2023 12:39:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD37A19D;
+        Thu, 28 Sep 2023 06:20:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3C67AC433CB;
+        Thu, 28 Sep 2023 13:20:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695904754;
-        bh=7+rUiTfKjFSIwtjXiUj+mlOS9BZpEUalpi9wzm1IKU4=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=akZTI9Sq4QRyDbywofflkENzhadscPk3X62nMbgpAQmvlsypIoqgzT+DmJ4xUhbg8
-         GfqWI+BrWaW37Y5fc3nfaykMUQq8n3dtFsEYV2HkVy8nh/osHdzv8TPjJnuZrqElf+
-         OBAqGRKfWHjTdrpKUnQyIq03+CG5qPOobRCqR7yVn2Vz4ap4nJOh+10LD9zqq9oT7o
-         J7gZKXMPEF2Pg7AFwFYi1cgSzoNHb1wOpykmge7YcnZcBZraMUS60udhROC2yI3iKf
-         0iYMoel8Q2UMEhPgpVpdZtaPV6fu88HmRFLNlScxbcWHqfneMBw77005gdQrnKDShD
-         DEWNjy7Nv6huQ==
-Message-ID: <538bb92c-0aa4-2f49-09b3-78cc944efd29@kernel.org>
-Date:   Thu, 28 Sep 2023 14:39:07 +0200
+        s=k20201202; t=1695907236;
+        bh=j/2eYg//PJ1GbwZhUAaOz18f7AbRQ4O+NNbYuKt3mq4=;
+        h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+        b=WRmGiG4AsourgR8PePRCUHkmrHTjGa0GLOwLlRslD9y6Gxglwb/sKdeaYMIiM+m2U
+         HCEzm7JFG1uUimaSxcCst+jqGOAk+LPd5ofcZjp7Dr/INDF6+dXWJzwECnaIlHFcRw
+         LEZBmRJGbn8CUOMTRZ7oRD405kgYVjEhh4TF32uTBtIqzoTuo9rHeIERNGqM3IsJTd
+         E3AOMsUDv9ORWkadDdcnKmhR9zz5DqiW7MH0ddnh45htLMFfazKbEwb6eN+rYXmR1r
+         qDAClZUoaj39Nqk9YphBEF7rdkqlcU4nn2uOKk0jMqKnWUeeRkM0qbnycd10U9Ld3x
+         iYyDOHPWNIO8w==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF38E732CF;
+        Thu, 28 Sep 2023 13:20:36 +0000 (UTC)
+From:   Joel Granados via B4 Relay 
+        <devnull+j.granados.samsung.com@kernel.org>
+Date:   Thu, 28 Sep 2023 15:21:26 +0200
+Subject: [PATCH 01/15] cdrom: Remove now superfluous sentinel element from
+ ctl_table array
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.1
-Subject: Re: [PATCH v7 00/23] Fix libata suspend/resume handling and code
- cleanup
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+In-Reply-To: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
+        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        David Ahern <dsahern@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Song Liu <song@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230926081507.69346-1-dlemoal@kernel.org>
- <CAMuHMdX_aNX2FZoydqgZTF+DA1uTt0zxbXcu1FXqeO5tUqry=Q@mail.gmail.com>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <CAMuHMdX_aNX2FZoydqgZTF+DA1uTt0zxbXcu1FXqeO5tUqry=Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>
+Cc:     linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-rdma@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        Joel Granados <j.granados@samsung.com>
+X-Mailer: b4 0.13-dev-86aa5
+X-Developer-Signature: v=1; a=openpgp-sha256; l=944; i=j.granados@samsung.com;
+ h=from:subject:message-id; bh=qSsthXDIpINcD2xITRy2TOv8R22x0qMRyMvqjqljpm0=;
+ b=owEB7QES/pANAwAKAbqXzVK3lkFPAcsmYgBlFX3bxBTXVZalX2OxDj+67GtOqe8IxIGJwSLF1
+ iLnIskFGxCJAbMEAAEKAB0WIQSuRwlXJeYxJc7LJ5C6l81St5ZBTwUCZRV92wAKCRC6l81St5ZB
+ T9hZC/wJ7EgDM6vrFYYmNrYQRkQQUSj4jjafOUPMhsZdNSqZu4kVh8xyDtcKgxhctnq+INR87Nr
+ dwm3eyWcssi6Zi3rFSiOI9vdZ2zESFY5OJ4dNUGBRAofgcVpLAvu4ZYQeXaCx7XzSIlzsCyd/dg
+ +Ym3KCHhaY2KSd0wJE8MuZN8/J6RxSwT1SyXgnBMjieGNWnw/mxbi7RnSHxARqjAMrAacvr1pUr
+ vqS9lxYeOv5aKInqTkx7sBu2iXx1/kgQGA7MNqvKgrgooVkICokoKPgcDvDR1nWTDzrnUzKEAa4
+ LroyVmn9iYYNuuXhhBl1BVgWeXVdkN7/r1r69wCAZWcVaadyFOoMNLxRsOvwsw6kynVTfbNOo+4
+ OxoS60XgqKVygBBx6urNukqqtiEYIzpDpU/QU00wUDSoHwIOyq4geKJEjTui+QORzF2/rfMdAii
+ IGAGzQM4oARjvwY26lxvyJdVBd4NtwRMk5g7yxIYVwfBC4G3Y6+/HFF2COHYzGYBEU5es=
+X-Developer-Key: i=j.granados@samsung.com; a=openpgp;
+ fpr=F1F8E46D30F0F6C4A45FF4465895FAAC338C6E77
+X-Endpoint-Received: by B4 Relay for j.granados@samsung.com/default with auth_id=70
+X-Original-From: Joel Granados <j.granados@samsung.com>
+Reply-To: <j.granados@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/09/28 14:26, Geert Uytterhoeven wrote:
-> Hi Damien,
-> 
-> (oops, found a two-day old email still in draft)
-> 
-> On Tue, Sep 26, 2023 at 10:15 AM Damien Le Moal <dlemoal@kernel.org> wrote:
->> The first 9 patches of this series fix several issues with suspend/resume
->> power management operations in scsi and libata. The most significant
->> changes introduced are in patch 4 and 5, where the manage_start_stop
->> flag of scsi devices is split into the manage_system_start_stop and
->> manage_runtime_start_stop flags to allow keeping scsi runtime power
->> operations for spining up/down ATA devices but have libata do its own
->> system suspend/resume device power state management using EH.
->>
->> The remaining patches are code cleanup that do not introduce any
->> significant functional change.
->>
->> This series was tested on qemu and on various PCs and servers. I am
->> CC-ing people who recently reported issues with suspend/resume.
->> Additional testing would be much appreciated.
-> 
-> JFTR, with current libata/for-next[*], I saw the following with
-> rcar-sata, once (interesting lines marked with "!"):
-> 
->     PM: suspend entry (s2idle)
->     Filesystems sync: 0.026 seconds
->     Freezing user space processes
->  !  ata1.00: qc timeout after 10000 msecs (cmd 0x40)
->     Freezing user space processes completed (elapsed 0.007 seconds)
->  !  ata1.00: VERIFY failed (err_mask=0x4)
->     OOM killer disabled.
->  !  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
->     Freezing remaining freezable tasks
->  !  ata1.00: revalidation failed (errno=-5)
->     Freezing remaining freezable tasks completed (elapsed 0.002 seconds)
->     sd 0:0:0:0: [sda] Synchronizing SCSI cache
->     ata1: link resume succeeded after 1 retries
->     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->     ata1.00: configured for UDMA/133
->     ata1.00: Entering active power mode
->     ata1.00: Entering standby power mode
->     ravb e6800000.ethernet eth0: Link is Down
->     Micrel KSZ9031 Gigabit PHY e6800000.ethernet-ffffffff:00: attached
-> PHY driver (mii_bus:phy_addr=e6800000.ethernet-ffffffff:00, irq=136)
->     OOM killer enabled.
->     Restarting tasks ... done.
->     random: crng reseeded on system resumption
->     PM: suspend exit
->     ata1: link resume succeeded after 1 retries
->     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->     ata1.00: Entering active power mode
->     ata1.00: configured for UDMA/133
->     ravb e6800000.ethernet eth0: Link is Up - 1Gbps/Full - flow control off
-> 
-> Regardless, the disk worked fine after resume.
+From: Joel Granados <j.granados@samsung.com>
 
-Looks like ata-EH was still doing a resume while the suspend was on-going...
-Hmm.. Will need to look at that. Regardless, I am going to send the fixes for
-rc4 given that they vastly improve things as they are. But there may still be
-some corner cases that are not handled.
-Thanks for testing.
+This commit comes at the tail end of a greater effort to remove the
+empty elements at the end of the ctl_table arrays (sentinels) which
+will reduce the overall build time size of the kernel and run time
+memory bloat by ~64 bytes per sentinel (further information Link :
+https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
 
-> 
-> Note that I saw this only once.
-> 
-> [*] Commit f940258b63da95f4 ("ata: libata: Cleanup inline DMA helper
-> functions").
->     No idea which version of this series that corresponds to, adding
->     Link:-tags to your commits would make it easier to track that.
->     https://www.kernel.org/doc/html/latest/maintainer/configure-git.html#creating-commit-links-to-lore-kernel-org
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
+Remove sentinel element from cdrom_table
+
+Signed-off-by: Joel Granados <j.granados@samsung.com>
+---
+ drivers/cdrom/cdrom.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index cc2839805983..451907ade389 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] = {
+ 		.maxlen		= sizeof(int),
+ 		.mode		= 0644,
+ 		.proc_handler	= cdrom_sysctl_handler
+-	},
+-	{ }
++	}
+ };
+ static struct ctl_table_header *cdrom_sysctl_header;
+ 
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.30.2
 
