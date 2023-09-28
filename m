@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CAA5E732D1
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 13:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C5FE732D0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 13:21:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232628AbjI1NUo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 09:20:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60448 "EHLO
+        id S232740AbjI1NVC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 09:21:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232392AbjI1NUm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 09:20:42 -0400
+        with ESMTP id S232088AbjI1NUk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 09:20:40 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A9C31AA;
-        Thu, 28 Sep 2023 06:20:40 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BED95C193E8;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E94991A4;
+        Thu, 28 Sep 2023 06:20:38 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6660CC433B7;
         Thu, 28 Sep 2023 13:20:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1695907236;
-        bh=nAi5VbjqEwCdzEJp+fv2i3DZ2flYuZxXsPFVaGvUXhY=;
+        bh=ZiddoNak8xngG9OnuptxMqfnw66bfyd+crUdRoxUWRA=;
         h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-        b=OCqp5Ov4BuszVW/bn2+B72ZJ/xR3YaoFzsxv1aU/Z/A6Yiz+vQBMRZYu9gRm50imR
-         K11dYBBDgVq7Y+4mkAEjfyc9Mr2Vddg80rfjalPbMOLCeYjxvJUtGTGjCtMsQDIyZG
-         69ACgpYY7cXbxiYCo8BeXxnyR6MXKMP9H8DMEu8plDx2Klk4byrQhBa6ZGR4w53klP
-         15pmoFTU9JD5o+tjgr5bW2Ty0Kf+493NXvptiLCb5TLwX7ifpFHe46htbDlZMKsRft
-         zFi2JB642EhNoMROZ50HGgRbYl+dJbDORovyFGMJkDrtkq9P9uVJgrhrn2mVRPayZD
-         w/mbiY4QoFQhQ==
+        b=IrDBFkuyzY+Ng43NW5CObULZ9zN56OlT2VEqKv18Oi62hn3Ba5jUPt4I3qx7DMfR1
+         iClMR/LIIt1XnQIgRltkMB4+LOIgkWSMhbR7CfhlbmnT/BGZJ2XtaXsEqgbb4xAB9t
+         TLYb061KJ4KoRTWSS5MdST92LOdBUCeEPjdspHnf4NGzu12f02uAb4Od6TC0OmAJnR
+         apSlxI9QTcGfdI3/lmQLCxo2rhbrFnSX7O7oFKg7FYUEXajtv64x6flcQ1V9ClpYZ+
+         nMbok3TzNwDG13BzdjvdLXGRqHIcBceyOjXpyc+4iU8lSgkD6RYUMjqAPbw3wacXHs
+         b0mvTk0cg0M3g==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.lore.kernel.org (Postfix) with ESMTP id A3DA3E732D1;
+        by smtp.lore.kernel.org (Postfix) with ESMTP id 49DE6E732D3;
         Thu, 28 Sep 2023 13:20:36 +0000 (UTC)
 From:   Joel Granados via B4 Relay 
         <devnull+j.granados.samsung.com@kernel.org>
-Date:   Thu, 28 Sep 2023 15:21:32 +0200
-Subject: [PATCH 07/15] macintosh: Remove the now superfluous sentinel
- element from ctl_table array
+Date:   Thu, 28 Sep 2023 15:21:28 +0200
+Subject: [PATCH 03/15] xen: Remove now superfluous sentinel element from
+ ctl_table array
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-7-e59120fca9f9@samsung.com>
+Message-Id: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-3-e59120fca9f9@samsung.com>
 References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
 In-Reply-To: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
 To:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
@@ -85,17 +85,17 @@ Cc:     linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
         intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         Joel Granados <j.granados@samsung.com>
 X-Mailer: b4 0.13-dev-86aa5
-X-Developer-Signature: v=1; a=openpgp-sha256; l=964; i=j.granados@samsung.com;
- h=from:subject:message-id; bh=ZdDGNSOnPHmccRg9DswRbcjrpwllnv7treH59axwgKs=;
- b=owEB7QES/pANAwAKAbqXzVK3lkFPAcsmYgBlFX3dFNTsUUB9JSBv/bi9fMcZELcv/Pd6Ielps
- Tv0fYg6ZTyJAbMEAAEKAB0WIQSuRwlXJeYxJc7LJ5C6l81St5ZBTwUCZRV93QAKCRC6l81St5ZB
- T86TDACD/olsUJCMaYNGhUK8fOC4ygULgoETxczjsUrJ3FqFvf/W9eYaJd8QqGpcMOYjw1h96ab
- o9zfYcNrx79mUCqL0BoqwuQuu11iB7mdcubin7N6ctOUnQ8WGw8URbiLP3jjYc91vkQPgtLk2Mk
- wvNRnAFG9xEe1DMlr4I7VrAIvMnA/9NYZ+Qw9UvC2pl8wNvR52krqU2VCn6kBWoexdWZws8BTQi
- jxm4KCrIsTy+GCeGsGQLYA2bO8Hc1og/PrMiZ0UzRkQAqsoVN3pdMsPMw9cbOYg+DdC9+C1sfp6
- Bl28JzSUEdBKn/gw5xOg2CuQYrwFvPIIKyQ5PxT7cnZcGIF8XtUJLAhQ8fbQ+lGxfqRvNEJPWpK
- FkouzOuPr0ghUqJ7B4QCGC+U0ubZrPdVrUHvniAcEBtCff5KXZJOiMn45G46hZB4ZKH91Egk66L
- 7ibjw96S82RLY88IHUBdKyX4xWoP14f8vilMOHLoR27kPe4oc4fVlOZcjQtA3ARSiai4o=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=912; i=j.granados@samsung.com;
+ h=from:subject:message-id; bh=ui4IGPfTdbR4IGIAbOL4shdoo/J3irZZsIZz3gQ0drk=;
+ b=owEB7QES/pANAwAKAbqXzVK3lkFPAcsmYgBlFX3cGe6+E9/0a9eLNoVmJv9uNx1R1TMQIFknp
+ t06QGx9crqJAbMEAAEKAB0WIQSuRwlXJeYxJc7LJ5C6l81St5ZBTwUCZRV93AAKCRC6l81St5ZB
+ T0iCC/4lxYvMPNd56KR9syOhBIjjjL9lOce4FFI9vFCYQ+mZ2iaIno0bBSEmQkEZmez5m10au1S
+ g0f8xmfOlU8VaBYmXZwS9WI6d/n6JlMrXlR3plY5Ibf6gPNZgkl8UA4+7SpV6EGGvTeGa4UAkzB
+ EXlfYtJNdHkEif74xQjVuQ90sFI3vTWw/qigOxjd4mGmsYhbplpB5NwvVmzV7W0LkH7B6avJXm3
+ +HQUyIr5z88PAoFr6xYA+jke9C0E8GfGNyC5xL2BQhlJODuT4otaVMK/c4JGh/LwqHcRCmmBGwY
+ 9lvf2bY9kysK3mP9qJMxP28IUTW7zlX6v4+ORKyLTUdUSB897zeP+PEecTC8Mq42dUyclAgoUNg
+ fLUIUT/Y/nXQcKkPBp8UIZ8Drd829GBO1HjbRjyyO4x2eFGLDe0i3eQPuSUZcYO97lbzOgGicJ8
+ XxdRUuA5sTcFBxzCjoIW+6HYKoJz9dRGmUI0TjgcgKEdCLlpYLezYmjA2W+fGyqkVcKT4=
 X-Developer-Key: i=j.granados@samsung.com; a=openpgp;
  fpr=F1F8E46D30F0F6C4A45FF4465895FAAC338C6E77
 X-Endpoint-Received: by B4 Relay for j.granados@samsung.com/default with auth_id=70
@@ -113,27 +113,27 @@ will reduce the overall build time size of the kernel and run time
 memory bloat by ~64 bytes per sentinel (further information Link :
 https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
 
-Remove sentinel from mac_hid_files
+Remove sentinel from balloon_table
 
 Signed-off-by: Joel Granados <j.granados@samsung.com>
 ---
- drivers/macintosh/mac_hid.c | 3 +--
+ drivers/xen/balloon.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/macintosh/mac_hid.c b/drivers/macintosh/mac_hid.c
-index d8c4d5664145..5a228c7d9aeb 100644
---- a/drivers/macintosh/mac_hid.c
-+++ b/drivers/macintosh/mac_hid.c
-@@ -235,8 +235,7 @@ static struct ctl_table mac_hid_files[] = {
- 		.maxlen		= sizeof(int),
- 		.mode		= 0644,
- 		.proc_handler	= proc_dointvec,
+diff --git a/drivers/xen/balloon.c b/drivers/xen/balloon.c
+index 586a1673459e..091eb2931ac4 100644
+--- a/drivers/xen/balloon.c
++++ b/drivers/xen/balloon.c
+@@ -93,8 +93,7 @@ static struct ctl_table balloon_table[] = {
+ 		.proc_handler	= proc_dointvec_minmax,
+ 		.extra1         = SYSCTL_ZERO,
+ 		.extra2         = SYSCTL_ONE,
 -	},
 -	{ }
 +	}
  };
  
- static struct ctl_table_header *mac_hid_sysctl_header;
+ #else
 
 -- 
 2.30.2
