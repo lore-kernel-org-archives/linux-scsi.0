@@ -2,99 +2,165 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83EACE732F4
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 17:04:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2410E732FD
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 17:52:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231742AbjI1REJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 13:04:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44398 "EHLO
+        id S231904AbjI1Rwi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 13:52:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231310AbjI1REI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 13:04:08 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77DD9BF;
-        Thu, 28 Sep 2023 10:04:05 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1FBCC433C7;
-        Thu, 28 Sep 2023 17:04:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695920645;
-        bh=jE9tXKJu50DRo7zgYMe7bHQgTESkYh7mtAmR3OQEMpg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=UlsIKJ7TuQZmmFT8Wjami1xXfBlzop3WKPQT6HsEijfovQ3Urvv0e33AUvrhlz+/U
-         vjS88aYIuJq3cWfdrTZ4DhUo6In1syyXbSCHe4BToSuwslHkZH7dPQo8Ti78ycDuw9
-         3fwBzw6aX2QFDYQ5S3JMRJHen/AQWkQaA7g0wuh4NjOCwaPN1epyjLOhIPyLFfqkil
-         FuKjAn/kVXUYWOaX+r1TGiVoeeMAI/eSwXLNgkbvDMvXuDXWag5T/Hh5ZassG1vO10
-         SuYQ0LBGWi6qnRLBg/uHUo5Kcpp0lRCzvnezd5rzufzlNRPRiKJGBxfnhzLWRBq7am
-         s0emOKO5muLiw==
-Received: (nullmailer pid 854231 invoked by uid 1000);
-        Thu, 28 Sep 2023 17:04:02 -0000
-Date:   Thu, 28 Sep 2023 12:04:02 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>
-Cc:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        mani@kernel.org, alim.akhtar@samsung.com, bvanassche@acm.org,
-        avri.altman@wdc.com, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, cros-qcom-dts-watchers@chromium.org,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH V3 4/4] dt-bindings: ufs: qcom: Align clk binding
- property for Qualcomm UFS
-Message-ID: <20230928170402.GA852313-robh@kernel.org>
-References: <20230927082700.17593-1-quic_nitirawa@quicinc.com>
-MIME-Version: 1.0
+        with ESMTP id S230349AbjI1Rwg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 13:52:36 -0400
+Received: from mx0b-002e3701.pphosted.com (mx0b-002e3701.pphosted.com [148.163.143.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79E0219D;
+        Thu, 28 Sep 2023 10:52:35 -0700 (PDT)
+Received: from pps.filterd (m0134424.ppops.net [127.0.0.1])
+        by mx0b-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38SHhHiB002198;
+        Thu, 28 Sep 2023 17:51:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=pps0720; bh=mZrC/t7ae+Z2o86iz704abLpUMsth0bb5IgGpyWjrnM=;
+ b=APaa5kKkE4mpyTjbaPlvnbYIWIT9A784n1fDZhZsP48Q4BO9uSG32bZsfAF52jrU1bOT
+ 1h7DtIZq8CfCoiXJzZq8iCLGpdSe2PlQIjBXHSbzsrerYmN3AzKoVoUge3gno+oOKne0
+ TZt5ZpPcmFxaL8khHe4Ax9IRzjtiszQvxqsciJsyNpAD6ZY84bLt17ZecVDpe5s/3MjB
+ a3q5Nj2zzP41qNl43/8ndPzzA6qoqUz03rp+3yjfOcXzoZpJvReW4KIp/RtMFfifP+Ul
+ Z6IbclgwAUZ5SJhoTsDmi8nxYS4v/OvpF1TAywHM0NXqhjlAEPK6WdmkxzbGRG8AthqO KA== 
+Received: from p1lg14881.it.hpe.com ([16.230.97.202])
+        by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 3tde4ur2yg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 28 Sep 2023 17:51:25 +0000
+Received: from p1lg14885.dc01.its.hpecorp.net (unknown [10.119.18.236])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by p1lg14881.it.hpe.com (Postfix) with ESMTPS id A9CF8805E26;
+        Thu, 28 Sep 2023 17:51:23 +0000 (UTC)
+Received: from swahl-home.5wahls.com (unknown [16.231.227.36])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by p1lg14885.dc01.its.hpecorp.net (Postfix) with ESMTPS id DAC6681566E;
+        Thu, 28 Sep 2023 17:51:16 +0000 (UTC)
+Date:   Thu, 28 Sep 2023 12:51:15 -0500
+From:   Steve Wahl <steve.wahl@hpe.com>
+To:     j.granados@samsung.com
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
+        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        David Ahern <dsahern@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Song Liu <song@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-rdma@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH 11/15] sgi-xp: Remove the now superfluous sentinel
+ element from ctl_table array
+Message-ID: <ZRW9Eywl831h/YhW@swahl-home.5wahls.com>
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+ <=?utf-8?q?=3C20230928-jag-sysctl=5Fremove=5Fempty=5Felem=5Fdrive?=>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230927082700.17593-1-quic_nitirawa@quicinc.com>
+In-Reply-To: <=?utf-8?q?=3C20230928-jag-sysctl=5Fremove=5Fempty=5Felem=5Fdrive?=>
+X-Proofpoint-GUID: ARXao25-avAoloITuhrfvukM5pXVcFhf
+X-Proofpoint-ORIG-GUID: ARXao25-avAoloITuhrfvukM5pXVcFhf
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-HPE-SCL: -1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-28_16,2023-09-28_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 phishscore=0
+ malwarescore=0 adultscore=0 spamscore=0 priorityscore=1501
+ lowpriorityscore=0 suspectscore=0 impostorscore=0 mlxlogscore=999
+ mlxscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2309280155
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 01:57:00PM +0530, Nitin Rawat wrote:
-> Align the binding property for clock such that "clocks" property
-> comes first followed by "clock-names" property.
-
-Why do we care?
-
+On Thu, Sep 28, 2023 at 03:21:36PM +0200, Joel Granados via B4 Relay wrote:
+> From: Joel Granados <j.granados@samsung.com>
 > 
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> This commit comes at the tail end of a greater effort to remove the
+> empty elements at the end of the ctl_table arrays (sentinels) which
+> will reduce the overall build time size of the kernel and run time
+> memory bloat by ~64 bytes per sentinel (further information Link :
+> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+> 
+> Remove sentinel from xpc_sys_xpc_hb and xpc_sys_xpc
+> 
+> Signed-off-by: Joel Granados <j.granados@samsung.com>
 > ---
->  .../devicetree/bindings/ufs/qcom,ufs.yaml        | 16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
+>  drivers/misc/sgi-xp/xpc_main.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index 802640efa956..d17bdc4e934f 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -295,14 +295,6 @@ examples:
->                              <&gem_noc MASTER_APPSS_PROC &config_noc SLAVE_UFS_MEM_CFG>;
->              interconnect-names = "ufs-ddr", "cpu-ufs";
+> diff --git a/drivers/misc/sgi-xp/xpc_main.c b/drivers/misc/sgi-xp/xpc_main.c
+> index 6da509d692bb..c898092ff3ac 100644
+> --- a/drivers/misc/sgi-xp/xpc_main.c
+> +++ b/drivers/misc/sgi-xp/xpc_main.c
+> @@ -109,8 +109,7 @@ static struct ctl_table xpc_sys_xpc_hb[] = {
+>  	 .mode = 0644,
+>  	 .proc_handler = proc_dointvec_minmax,
+>  	 .extra1 = &xpc_hb_check_min_interval,
+> -	 .extra2 = &xpc_hb_check_max_interval},
+> -	{}
+> +	 .extra2 = &xpc_hb_check_max_interval}
+>  };
+>  static struct ctl_table xpc_sys_xpc[] = {
+>  	{
+> @@ -120,8 +119,7 @@ static struct ctl_table xpc_sys_xpc[] = {
+>  	 .mode = 0644,
+>  	 .proc_handler = proc_dointvec_minmax,
+>  	 .extra1 = &xpc_disengage_min_timelimit,
+> -	 .extra2 = &xpc_disengage_max_timelimit},
+> -	{}
+> +	 .extra2 = &xpc_disengage_max_timelimit}
+>  };
+>  
+>  static struct ctl_table_header *xpc_sysctl;
 > 
-> -            clock-names = "core_clk",
-> -                          "bus_aggr_clk",
-> -                          "iface_clk",
-> -                          "core_clk_unipro",
-> -                          "ref_clk",
-> -                          "tx_lane0_sync_clk",
-> -                          "rx_lane0_sync_clk",
-> -                          "rx_lane1_sync_clk";
->              clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
->                       <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
->                       <&gcc GCC_UFS_PHY_AHB_CLK>,
-> @@ -311,6 +303,14 @@ examples:
->                       <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
->                       <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
->                       <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> +            clock-names = "core_clk",
-> +                          "bus_aggr_clk",
-> +                          "iface_clk",
-> +                          "core_clk_unipro",
-> +                          "ref_clk",
-> +                          "tx_lane0_sync_clk",
-> +                          "rx_lane0_sync_clk",
-> +                          "rx_lane1_sync_clk";
->              freq-table-hz = <75000000 300000000>,
->                              <0 0>,
->                              <0 0>,
-> --
-> 2.17.1
+> -- 
+> 2.30.2
 > 
+
+I assume you'll match the rest of the changes with regards to the
+trailing comma.
+
+Reviewed-by: Steve Wahl <steve.wahl@hpe.com>
+
+-- 
+Steve Wahl, Hewlett Packard Enterprise
