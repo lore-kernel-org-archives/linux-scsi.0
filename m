@@ -2,66 +2,71 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 029A4E732E9
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 16:25:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FF28E732E8
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 16:31:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231387AbjI1QZK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 12:25:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42112 "EHLO
+        id S231614AbjI1QbE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 12:31:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231263AbjI1QZI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 12:25:08 -0400
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34F2A136;
-        Thu, 28 Sep 2023 09:25:07 -0700 (PDT)
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-277564f049dso6508728a91.1;
-        Thu, 28 Sep 2023 09:25:07 -0700 (PDT)
+        with ESMTP id S231597AbjI1QbB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 12:31:01 -0400
+Received: from mail-oo1-f48.google.com (mail-oo1-f48.google.com [209.85.161.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA2151A8
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Sep 2023 09:30:52 -0700 (PDT)
+Received: by mail-oo1-f48.google.com with SMTP id 006d021491bc7-57b67c84999so7107590eaf.3
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Sep 2023 09:30:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695918306; x=1696523106;
+        d=1e100.net; s=20230601; t=1695918652; x=1696523452;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tOloAo3tqLI/VxHy6G+Dm/gSK2CBKX5itJ92CKMeKPw=;
-        b=CHzAkmi17yIPNxjTwknCuwxc76ysCKHyCniMtWl3yv9j8s+jScRhJmUCQ+OxWK1SaF
-         KQ7SLtvNqkDgp53KJUZBDzP7q7H0aEH0XuIWHH4e1GkzimEaH8FXhXwAsjq7DA0+/HN5
-         /eTx/TYKYBddmwvoOXAn3+l+uBwE+lRf+aB97EOXTcuBq08x8hOhHzwfbG+ZTlbuv573
-         kS0RjaVSRvUzK+4NSBJnK1hRmInzFFOEg+bsrIHOvrhiGQ/xx1MbotiARdEnaa+h8nJJ
-         JGAz2BJON5WoQI+oEwJoTp8LpSEo9v33NPPDjDQ2X/eqFaGQJG8wxu585AJtq5OqGXxd
-         yToA==
-X-Gm-Message-State: AOJu0YxIgySzgkU95YbLt6lVbYWbBSXP0ZWyYv4Kz9I9rBak153W6/hA
-        8romdr29LLmfKOCtAY7TrlKA37oEcA8=
-X-Google-Smtp-Source: AGHT+IHvIv1RXyblsRX8TG6D+0hOKcdcs0B/ajC/Hu2MZ4FP7dPYBlZX73TdUk4VwYhGxrCYJ5yq1w==
-X-Received: by 2002:a17:90a:e2c9:b0:271:9237:a07f with SMTP id fr9-20020a17090ae2c900b002719237a07fmr1700808pjb.32.1695918306545;
-        Thu, 28 Sep 2023 09:25:06 -0700 (PDT)
+        bh=Q2iqyjYpQGTrxNm51cwmEMqS/kvTM8R+SxrC6ZJz7Qc=;
+        b=SyWVl1/v4xQImSwdx8GhHoPqLRkTRRmNh3Vk4DXYzlmqB8qMq5r0t5HsuPeuBjFklM
+         yBjRQt90wEO9zwxQ85rodqpvuq1qPKNdiepMHpeaB5NmeivNY9iZ/HRM3HOEn4yn6Cz5
+         b6CkPeuobPDVkUDf5ydFeBXmEr8l+PSKqVmq04G/vW9IaROWwGamXyhs1nUcIwOMQaBg
+         3zHhMDnZ7QnAIcwyoxfhyI6fhhpjoSDeazYrcl2B51sf5PiMvKtjS08rfC5U1jkka9XB
+         l4ZCoNTGf99h4340S6PCClvRWW/WU6B8eAAupWgHy0Mr8+MO2frTL1gVbQ7LdqbgyxfQ
+         anwA==
+X-Gm-Message-State: AOJu0YxRMztIWOKAtZ4ZpWpzFFUE8CdzlcndW9bxrfO9LusXndeez5pf
+        8rLI6uKXLW87sW5VPpKKms0=
+X-Google-Smtp-Source: AGHT+IF7pCy57fl4xj1AT8sSnvd4RelGdW4sNUL0MQQFCnsQevUl9J895xnVbGqCHtzAiiVC314krg==
+X-Received: by 2002:a05:6358:4297:b0:143:9b23:e850 with SMTP id s23-20020a056358429700b001439b23e850mr1942507rwc.24.1695918651885;
+        Thu, 28 Sep 2023 09:30:51 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:4d78:c1af:9677:9afd? ([2620:15c:211:201:4d78:c1af:9677:9afd])
-        by smtp.gmail.com with ESMTPSA id x6-20020a17090a9dc600b00274a43c3414sm4961598pjv.47.2023.09.28.09.25.05
+        by smtp.gmail.com with ESMTPSA id c15-20020aa7880f000000b00690d64a0cb6sm13592829pfo.72.2023.09.28.09.30.50
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Sep 2023 09:25:06 -0700 (PDT)
-Message-ID: <5f504cd3-d7cd-4846-9978-011ef3780ae2@acm.org>
-Date:   Thu, 28 Sep 2023 09:25:03 -0700
+        Thu, 28 Sep 2023 09:30:51 -0700 (PDT)
+Message-ID: <ba3a0af8-8464-43d4-a2e6-a82de7ebe2ae@acm.org>
+Date:   Thu, 28 Sep 2023 09:30:49 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: lpfc: Clean up errors in lpfc_init.c
+Subject: Re: [PATCH v5] ufs: core: wlun send SSU timeout recovery
 Content-Language: en-US
-To:     KaiLong Wang <wangkailong@jari.cn>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <3ee2affd.8a2.18ad99dc0ef.Coremail.wangkailong@jari.cn>
+To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com,
+        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
+        naomi.chu@mediatek.com
+References: <20230927033557.13801-1-peter.wang@mediatek.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <3ee2affd.8a2.18ad99dc0ef.Coremail.wangkailong@jari.cn>
+In-Reply-To: <20230927033557.13801-1-peter.wang@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/27/23 19:28, KaiLong Wang wrote:
-> Fix the following errors reported by checkpatch:
+On 9/26/23 20:35, peter.wang@mediatek.com wrote:
+> When runtime pm send SSU times out, the SCSI core invokes
+> eh_host_reset_handler, which hooks function ufshcd_eh_host_reset_handler
+> schedule eh_work and stuck at wait flush_work(&hba->eh_work).
+> However, ufshcd_err_handler hangs in wait rpm resume.
+> Do link recovery only in this case.
 
-checkpatch is a tool that should only be used to verify new patches
-before posting these on a Linux kernel related mailing list. It should
-not be used to "fix" old code.
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
