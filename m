@@ -2,155 +2,97 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D8AE732D1
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 13:21:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFA36E732D8
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 13:26:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232753AbjI1NVL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 09:21:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60360 "EHLO
+        id S231788AbjI1N0o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 09:26:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231435AbjI1NUk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 09:20:40 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66E49199;
-        Thu, 28 Sep 2023 06:20:39 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8CE4FC4AF5E;
-        Thu, 28 Sep 2023 13:20:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695907236;
-        bh=8o6Wkw35mSCVhnOKFt6ClknFvPUd13GONPb8bhwpADE=;
-        h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-        b=HIlWOSKnflZYvel5mQyGeX+gmJJL1K+LilMXYd6IzuwCYD/pX0XE7cmHV9c4nOI4A
-         G/mkwjoUMxgPO9uLZV65HoYUoBxIiALIDd0v2EKOMEFnp5AOGGZpQFUJcruJ22uEaK
-         6hZ/DjT4HKVs4Gn2aq0Qzauo+hlbISOX5wXlDc4/dqdkKwmBrrv64aJxB/7ayPmA3u
-         SkJc3jtqdOhQq7fmfr4AfTJYsZ9nSQh0GwQ3B3bM6Ss0AJ+E8yLi6VkYwl9SjIv0Nk
-         dbDndA8ukr878p7LrXNVzfNdGRORSE7mwMQVaG7cGntwej+ICqVYE0DUR7BraOIYwS
-         zpRNDsJdBMXOw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.lore.kernel.org (Postfix) with ESMTP id 7596BE732D0;
-        Thu, 28 Sep 2023 13:20:36 +0000 (UTC)
-From:   Joel Granados via B4 Relay 
-        <devnull+j.granados.samsung.com@kernel.org>
-Date:   Thu, 28 Sep 2023 15:21:30 +0200
-Subject: [PATCH 05/15] scsi: Remove now superfluous sentinel element from
- ctl_table array
+        with ESMTP id S230420AbjI1N0n (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 09:26:43 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79EF619C;
+        Thu, 28 Sep 2023 06:26:42 -0700 (PDT)
+Received: from pps.filterd (m0353726.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38SDNYgv003097;
+        Thu, 28 Sep 2023 13:24:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=lmpzlY8g9RwccYcbPjBKo8rq9uQJ8dBjwPUEqyL4qCQ=;
+ b=BzF3+koZptecuNaiVQkPn7zaWaKx0470/zzUa3RItEkZni6dnHtE8jLJi5O3LvqVJUuk
+ OcjTAixgzCiPt5M8MoHpvcgE2fE2CdcDROO7emi7ty1v3HBCNvOGP5X0ymZ4IPcPSnMX
+ 1iYXuWLgjHhjoca+nKs8Uz/lowbJjTdMsl/GCPMDzUEjnNLMpG2yLgBSngoVC/8xjx4q
+ cDwG1/QgjrOyucLID8paDhrqi00M4lzniME3eG6Ut3HNWjNVik/k8VfU2LUYOO+4ITRe
+ WR3pDFqZLJDp2xixZGeycdSRt5CCHAIsVN2Z6d1I/1IaOLT836PuQrUK+OfG108LHeyZ Pw== 
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3tdab480eh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 28 Sep 2023 13:24:30 +0000
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+        by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 38SCRPnx030746;
+        Thu, 28 Sep 2023 13:24:29 GMT
+Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
+        by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3tacjkc6gp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 28 Sep 2023 13:24:29 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+        by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 38SDOT3k6685276
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 28 Sep 2023 13:24:29 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id F2EEB58059;
+        Thu, 28 Sep 2023 13:24:28 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id ECDC65805D;
+        Thu, 28 Sep 2023 13:24:27 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.67.144.155])
+        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Thu, 28 Sep 2023 13:24:27 +0000 (GMT)
+Message-ID: <2d5b7e1a55161588d7070657b52398cf583bfb9d.camel@linux.ibm.com>
+Subject: Re: [PATCH] scsi: Clean up errors in sni_53c710.c
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     chenguohua@jari.cn, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Thu, 28 Sep 2023 09:24:26 -0400
+In-Reply-To: <11d7b9cb.88b.18ad5c91580.Coremail.chenguohua@jari.cn>
+References: <11d7b9cb.88b.18ad5c91580.Coremail.chenguohua@jari.cn>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-5-e59120fca9f9@samsung.com>
-References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
-In-Reply-To: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
-To:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
-        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
-        Phillip Potter <phil@philpotter.co.uk>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        David Ahern <dsahern@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Robin Holt <robinmholt@gmail.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Song Liu <song@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>
-Cc:     linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-rdma@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        Joel Granados <j.granados@samsung.com>
-X-Mailer: b4 0.13-dev-86aa5
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1435;
- i=j.granados@samsung.com; h=from:subject:message-id;
- bh=AA2i2ffT9doWEzIff4Zajp6KzJDIS2fsOGTMhAaBzPI=;
- b=owEB7QES/pANAwAKAbqXzVK3lkFPAcsmYgBlFX3dBMzSGGCPjKqz33CWWmIlVPmX0ZG079rEE
- swyLW78XdWJAbMEAAEKAB0WIQSuRwlXJeYxJc7LJ5C6l81St5ZBTwUCZRV93QAKCRC6l81St5ZB
- T7GeC/9Fj9+4xEMnCkTQFapmBGFCFKtx2YJeRuHAo0GBWLACG0DDu2Bq/aeCqY5a1VRczUgy2iG
- MrB6KcEeBrzNF65Rwq9n3LkqKtvhqBlEjpL5VUDRytrhp++LB+9uWq7GBE9kSvsg2iFVLzL5Kf1
- vukcj20IN9ZHg5L7G6S1rf0Qme59NiTfQqPWrtQhBlLqQpUQFOyIwb4yWxeEK8uNy1IYuvqQ/E3
- wpfg3TIxo1KHtVLm3h8zqAlW+Pf7n9Y1ojT4DscU67RqIoN6p133XKh/Uq1z4e72TMkqH1aD5Qi
- l2C+Ecc0DO8jdIHFP+hmPcu5ZurChtUCC6BrrPHZRCo3loAWnJ5rBX3dOF4MCrvRNX6wOab8Flg
- pn8K8Ewtqr7MP+RrGIXSz9pUu0EjBHk0kMBzENIu+m0ePrG3gpz7NpW2WUBWjZiSiw4buzxgKzz
- ZFP6ljJZXft/+hBDXWcJJ+AnT99TNDZeD3fJ8/6bRGsWAUGQQuzNNpVq0vK4U47NfOCGI=
-X-Developer-Key: i=j.granados@samsung.com; a=openpgp;
- fpr=F1F8E46D30F0F6C4A45FF4465895FAAC338C6E77
-X-Endpoint-Received: by B4 Relay for j.granados@samsung.com/default with auth_id=70
-X-Original-From: Joel Granados <j.granados@samsung.com>
-Reply-To: <j.granados@samsung.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: pdFhTl0EVKQhX8sG9t2NDHot6hEKzF3U
+X-Proofpoint-GUID: pdFhTl0EVKQhX8sG9t2NDHot6hEKzF3U
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-28_12,2023-09-28_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
+ bulkscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
+ mlxlogscore=590 priorityscore=1501 clxscore=1011 spamscore=0
+ malwarescore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2309180000 definitions=main-2309280112
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Joel Granados <j.granados@samsung.com>
+On Wed, 2023-09-27 at 16:37 +0800, chenguohua@jari.cn wrote:
+> Fix the following errors reported by checkpatch:
+> 
+> ERROR: space required before the open parenthesis '('
 
-This commit comes at the tail end of a greater effort to remove the
-empty elements at the end of the ctl_table arrays (sentinels) which
-will reduce the overall build time size of the kernel and run time
-memory bloat by ~64 bytes per sentinel (further information Link :
-https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+checkpatch is advisory, not mandatory.
 
-Remove sentinel from scsi_table and sg_sysctls.
+While we usually fix its errors and warnings on current patches,
+checkpatch changes over time and code it once accepted sometimes no
+longer passes.  For that reason we don't accept patches to in-tree
+files which now fail checkpatch because there are a huge number of them
+and it generates an awful lot of churn which ends up either causing
+bugs or interfering with current development.
 
-Signed-off-by: Joel Granados <j.granados@samsung.com>
----
- drivers/scsi/scsi_sysctl.c | 3 +--
- drivers/scsi/sg.c          | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+Regards,
 
-diff --git a/drivers/scsi/scsi_sysctl.c b/drivers/scsi/scsi_sysctl.c
-index 7f0914ea168f..c74da88b20d3 100644
---- a/drivers/scsi/scsi_sysctl.c
-+++ b/drivers/scsi/scsi_sysctl.c
-@@ -17,8 +17,7 @@ static struct ctl_table scsi_table[] = {
- 	  .data		= &scsi_logging_level,
- 	  .maxlen	= sizeof(scsi_logging_level),
- 	  .mode		= 0644,
--	  .proc_handler	= proc_dointvec },
--	{ }
-+	  .proc_handler	= proc_dointvec }
- };
- 
- static struct ctl_table_header *scsi_table_header;
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 0d8afffd1683..22a59c5e22eb 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1649,8 +1649,7 @@ static struct ctl_table sg_sysctls[] = {
- 		.maxlen		= sizeof(int),
- 		.mode		= 0444,
- 		.proc_handler	= proc_dointvec,
--	},
--	{}
-+	}
- };
- 
- static struct ctl_table_header *hdr;
-
--- 
-2.30.2
+James
 
