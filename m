@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEEDEE732D0
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 14:17:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1FA0E732DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 14:47:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232500AbjI1ORk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 10:17:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36038 "EHLO
+        id S231559AbjI1Oro (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 10:47:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232425AbjI1ORj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 10:17:39 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DDF119D;
-        Thu, 28 Sep 2023 07:17:38 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1c364fb8a4cso117291645ad.1;
-        Thu, 28 Sep 2023 07:17:38 -0700 (PDT)
+        with ESMTP id S231327AbjI1Orh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 10:47:37 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A495FCE2;
+        Thu, 28 Sep 2023 07:47:31 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-68bed2c786eso10505286b3a.0;
+        Thu, 28 Sep 2023 07:47:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695910657; x=1696515457; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1695912451; x=1696517251; darn=vger.kernel.org;
         h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Abl3GLiCO/Mtwsa+rWPApo3TGuVO6fy8Q3QmwT9wZV8=;
-        b=EdfR6+i1yLmogZM55LPqiwSZlzmvABWwhxTyZ0wZ+9pOn5L10RYx17Yi4SB4mt6bGD
-         9+xK+MwSsSRf/JliwFOP5s+NONmi87CPwq76iUMuzKnc5pfSO+P/bBOksfFSbUL/M/aJ
-         ZqZenHJv0GfVwItxKV5AX4849Dm8J2L9q6Q7fV1WIzYg1aHVq5AcTe8zOrEGcMfjNXox
-         dKzYOusSNTfIx3TrLshu3kV46HhEpf/nvoLU+yu0ya/vCmfWaAvSgl87WSBA29XpxXxd
-         PDP9cMbEqeiG0wG9ZtakBXJqXmIYpWPLLi8RlY1yNYqtVFBI6RwcyNDqlUZiLSWw0a3f
-         nuVA==
+        bh=31ywSb3qC8T2hXHBoIxLY0cqLMBrm52j3brfGK+5VDk=;
+        b=f+yE7NiM9dgv241a68kANEqGzp330SNL0LJGCrME+rsVzotVvYK3kjt8HqnoXEYmJb
+         MQcT/Yc7aYBB/wA344xoX1yV1M8/1uDMoN0voIv9QWXezWZScAAD4LByeRlDfz7ShfvQ
+         blfE08wvgsCa3I61hI5euVk747UIp544250K8z0fhd16DBtEM9W4dC0xZt6HkXu0Lizo
+         uzys5fw+wq5k37/ONQfEVPUYy0niXMzsl5ewlQYXnEat/uibjnK6Ck//rxUUgMgSvrrH
+         0MVyZl2OUVGnWqxJWaWHV3YdU6Fztg78zmUEyRokXMfJ877eB3cC6c57cyFz5BbTwltd
+         J5qw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695910657; x=1696515457;
+        d=1e100.net; s=20230601; t=1695912451; x=1696517251;
         h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Abl3GLiCO/Mtwsa+rWPApo3TGuVO6fy8Q3QmwT9wZV8=;
-        b=FUOjFqN93Pjkd6gDUqBx7aYQ/0lOLoz54Uz1foyT3NUURjp2t6UOqkVyLqgbH1j6c0
-         CgJ+mD5XkyNn0QQvpWHAtZjwzNMS/6mMwk1jqOcR9yYy4Wy9ujL1A9nxSdTB+reXDaqY
-         C7msw0d+PzVjMo2W1HqPETbs+vSsOiNpdyCcOeSZs3Ukhgo3WVz/c2hDJd6FOYzksHPH
-         nDjr03BY5hvAGIdIPf7degtBpq55+HRwEf14pCAkAm0XFxZ2yobjO9fmfFKo4ljLD0hQ
-         yqLvi5Hw2XgDNs5n60jYTpiy8G9D9c296+J34Tjcnq0NvpPqpgxW4k/mV5SpgyjRMx+k
-         p2ew==
-X-Gm-Message-State: AOJu0YyYkf5HHu/jZATpUz0iKUCa2HZnyffqSOd4HGdlmKdlsYAQZMiG
-        5u4th96to58cN4V7N1ejHZM=
-X-Google-Smtp-Source: AGHT+IF+54CXMfQ+KegfyNfYPCQfbgujDayDN5Ih9PV2WrUjTmhmZ/wltUv2wxe5crUaomwCXCsYBg==
-X-Received: by 2002:a17:90a:bb88:b0:269:46d7:f1db with SMTP id v8-20020a17090abb8800b0026946d7f1dbmr1335120pjr.32.1695910657391;
-        Thu, 28 Sep 2023 07:17:37 -0700 (PDT)
+        bh=31ywSb3qC8T2hXHBoIxLY0cqLMBrm52j3brfGK+5VDk=;
+        b=tTTaGSqWyPnhx/rPG73ox6GWpL/5upLR2TIa6dYedu9BuM9XOVLRcqfaaXbxl8RQy7
+         GM8iPYBI2qI3f1Z7RIw4ygUgnhG8j+oF36Q8iomPBGBnWsx7lUopRqLzi8kMs5D1UI8m
+         bE2vRxNasOb2qxxd8gL+oUS8e4+p3mS/cumdwrdxK+eoDJ+laTVAfsc0oM6IOYUi+5c/
+         9JSaPT+mkwUoxSJnkX/RxUuBZ4qjKIqk8R8FOMqf1QoEclbqafFxYjdYZlNSnmQ+ZSwo
+         P8RWq7RuILsRcN/G3VAdH1qD5H0AyckvEUYssAH4fn63KPAUR7CzLGlJ2WwZFh1WrAyB
+         lGPA==
+X-Gm-Message-State: AOJu0Yy/XmulgPAZZkomxVfJHiBnTIA8e4f9XGs5OdFfd68ZE2RIvcUb
+        dbqX/4o4n/GoN8oHSkkvnS8=
+X-Google-Smtp-Source: AGHT+IHasBMM279XRXf3WJY8JE9QpwwuA1xlv6S8NobdAz0X9a3BbUKUS1gFuzu8ZnpSEzFPXShvjg==
+X-Received: by 2002:a05:6a21:7784:b0:15d:facd:f214 with SMTP id bd4-20020a056a21778400b0015dfacdf214mr1315190pzc.32.1695912450711;
+        Thu, 28 Sep 2023 07:47:30 -0700 (PDT)
 Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
-        by smtp.gmail.com with ESMTPSA id d7-20020a17090a2a4700b00278ff752eacsm3059079pjg.50.2023.09.28.07.17.34
+        by smtp.gmail.com with ESMTPSA id l5-20020a170902eb0500b001c619fbd5fbsm8531199plb.298.2023.09.28.07.47.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Sep 2023 07:17:36 -0700 (PDT)
+        Thu, 28 Sep 2023 07:47:30 -0700 (PDT)
 From:   Chengfeng Ye <dg573847474@gmail.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         john.g.garry@oracle.com, dlemoal@kernel.org, yanaijie@huawei.com,
         jinpu.wang@ionos.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Chengfeng Ye <dg573847474@gmail.com>
-Subject: [PATCH] scsi: mvsas: fix potential deadlock on &task->task_state_lock
-Date:   Thu, 28 Sep 2023 14:17:27 +0000
-Message-Id: <20230928141727.22190-1-dg573847474@gmail.com>
+Subject: [PATCH v2] scsi: mvsas: fix potential deadlock on &task->task_state_lock
+Date:   Thu, 28 Sep 2023 14:47:21 +0000
+Message-Id: <20230928144721.31794-1-dg573847474@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -102,18 +102,21 @@ mvs_port_notify_deformed()?
 
 Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
 ---
+Change in v2:
+  Declare varible name as "irqflags", since "flags" is already used
+---
  drivers/scsi/mvsas/mv_sas.c | 5 +++--
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 1444b1f1c4c8..ddd283ae1b92 100644
+index 1444b1f1c4c8..ea48c1e9f185 100644
 --- a/drivers/scsi/mvsas/mv_sas.c
 +++ b/drivers/scsi/mvsas/mv_sas.c
 @@ -1534,6 +1534,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
  	struct mvs_device *mvi_dev = NULL;
  	struct task_status_struct *tstat;
  	struct domain_device *dev;
-+	unsigned long flags;
++	unsigned long irqflags;
  	u32 aborted;
  
  	void *to;
@@ -122,13 +125,13 @@ index 1444b1f1c4c8..ddd283ae1b92 100644
  	mvi_dev = dev->lldd_dev;
  
 -	spin_lock(&task->task_state_lock);
-+	spin_lock_irqsave(&task->task_state_lock, flags);
++	spin_lock_irqsave(&task->task_state_lock, irqflags);
  	task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
  	task->task_state_flags |= SAS_TASK_STATE_DONE;
  	/* race condition*/
  	aborted = task->task_state_flags & SAS_TASK_STATE_ABORTED;
 -	spin_unlock(&task->task_state_lock);
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
++	spin_unlock_irqrestore(&task->task_state_lock, irqflags);
  
  	memset(tstat, 0, sizeof(*tstat));
  	tstat->resp = SAS_TASK_COMPLETE;
