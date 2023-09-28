@@ -2,97 +2,119 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFA36E732D8
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 13:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE38EE732D0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 13:37:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231788AbjI1N0o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 09:26:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39440 "EHLO
+        id S232088AbjI1NhD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 09:37:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230420AbjI1N0n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 09:26:43 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79EF619C;
-        Thu, 28 Sep 2023 06:26:42 -0700 (PDT)
-Received: from pps.filterd (m0353726.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38SDNYgv003097;
-        Thu, 28 Sep 2023 13:24:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=lmpzlY8g9RwccYcbPjBKo8rq9uQJ8dBjwPUEqyL4qCQ=;
- b=BzF3+koZptecuNaiVQkPn7zaWaKx0470/zzUa3RItEkZni6dnHtE8jLJi5O3LvqVJUuk
- OcjTAixgzCiPt5M8MoHpvcgE2fE2CdcDROO7emi7ty1v3HBCNvOGP5X0ymZ4IPcPSnMX
- 1iYXuWLgjHhjoca+nKs8Uz/lowbJjTdMsl/GCPMDzUEjnNLMpG2yLgBSngoVC/8xjx4q
- cDwG1/QgjrOyucLID8paDhrqi00M4lzniME3eG6Ut3HNWjNVik/k8VfU2LUYOO+4ITRe
- WR3pDFqZLJDp2xixZGeycdSRt5CCHAIsVN2Z6d1I/1IaOLT836PuQrUK+OfG108LHeyZ Pw== 
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3tdab480eh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Sep 2023 13:24:30 +0000
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-        by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 38SCRPnx030746;
-        Thu, 28 Sep 2023 13:24:29 GMT
-Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
-        by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3tacjkc6gp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Sep 2023 13:24:29 +0000
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-        by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 38SDOT3k6685276
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 28 Sep 2023 13:24:29 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id F2EEB58059;
-        Thu, 28 Sep 2023 13:24:28 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id ECDC65805D;
-        Thu, 28 Sep 2023 13:24:27 +0000 (GMT)
-Received: from lingrow.int.hansenpartnership.com (unknown [9.67.144.155])
-        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-        Thu, 28 Sep 2023 13:24:27 +0000 (GMT)
-Message-ID: <2d5b7e1a55161588d7070657b52398cf583bfb9d.camel@linux.ibm.com>
-Subject: Re: [PATCH] scsi: Clean up errors in sni_53c710.c
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     chenguohua@jari.cn, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Thu, 28 Sep 2023 09:24:26 -0400
-In-Reply-To: <11d7b9cb.88b.18ad5c91580.Coremail.chenguohua@jari.cn>
-References: <11d7b9cb.88b.18ad5c91580.Coremail.chenguohua@jari.cn>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S231868AbjI1NhD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 09:37:03 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5244519B;
+        Thu, 28 Sep 2023 06:37:01 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30ED8C433C8;
+        Thu, 28 Sep 2023 13:36:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1695908220;
+        bh=+wQRUm2msRT1Vv6LzHjx16q1r07oTZukLX6w4Q72cRo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fQY4RQBXMdvdqFGAIafv/Phk7Y1oE+EJjzKjC3TRuINAbWxqzcqLPwyX0a9VAn7db
+         lrLv0OwYBTVD2TtgiIEZJRfo0bKqoMi2GBhCLXf4v+k2xekgAHOfI6frhHYfLI3c4k
+         s478XPbm0PhMMeW0NqTPzj3Xl+SvTPCIBgs7SdE0=
+Date:   Thu, 28 Sep 2023 15:36:55 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     j.granados@samsung.com
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
+        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        David Ahern <dsahern@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Song Liu <song@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-rdma@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH 01/15] cdrom: Remove now superfluous sentinel element
+ from ctl_table array
+Message-ID: <2023092855-cultivate-earthy-4d25@gregkh>
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+ <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: pdFhTl0EVKQhX8sG9t2NDHot6hEKzF3U
-X-Proofpoint-GUID: pdFhTl0EVKQhX8sG9t2NDHot6hEKzF3U
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-28_12,2023-09-28_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
- bulkscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
- mlxlogscore=590 priorityscore=1501 clxscore=1011 spamscore=0
- malwarescore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2309180000 definitions=main-2309280112
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2023-09-27 at 16:37 +0800, chenguohua@jari.cn wrote:
-> Fix the following errors reported by checkpatch:
+On Thu, Sep 28, 2023 at 03:21:26PM +0200, Joel Granados via B4 Relay wrote:
+> From: Joel Granados <j.granados@samsung.com>
 > 
-> ERROR: space required before the open parenthesis '('
+> This commit comes at the tail end of a greater effort to remove the
+> empty elements at the end of the ctl_table arrays (sentinels) which
+> will reduce the overall build time size of the kernel and run time
+> memory bloat by ~64 bytes per sentinel (further information Link :
+> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+> 
+> Remove sentinel element from cdrom_table
+> 
+> Signed-off-by: Joel Granados <j.granados@samsung.com>
+> ---
+>  drivers/cdrom/cdrom.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+> index cc2839805983..451907ade389 100644
+> --- a/drivers/cdrom/cdrom.c
+> +++ b/drivers/cdrom/cdrom.c
+> @@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] = {
+>  		.maxlen		= sizeof(int),
+>  		.mode		= 0644,
+>  		.proc_handler	= cdrom_sysctl_handler
+> -	},
+> -	{ }
+> +	}
 
-checkpatch is advisory, not mandatory.
+You should have the final entry as "}," so as to make any future
+additions to the list to only contain that entry, that's long been the
+kernel style for lists like this.
 
-While we usually fix its errors and warnings on current patches,
-checkpatch changes over time and code it once accepted sometimes no
-longer passes.  For that reason we don't accept patches to in-tree
-files which now fail checkpatch because there are a huge number of them
-and it generates an awful lot of churn which ends up either causing
-bugs or interfering with current development.
+So your patches will just remove one line, not 2 and add 1, making it a
+smaller diff.
 
-Regards,
+thanks,
 
-James
-
+greg k-h
