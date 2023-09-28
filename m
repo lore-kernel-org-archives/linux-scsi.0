@@ -2,119 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE38EE732D0
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 13:37:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEEDEE732D0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 14:17:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232088AbjI1NhD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 09:37:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43032 "EHLO
+        id S232500AbjI1ORk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Sep 2023 10:17:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231868AbjI1NhD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 09:37:03 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5244519B;
-        Thu, 28 Sep 2023 06:37:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30ED8C433C8;
-        Thu, 28 Sep 2023 13:36:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1695908220;
-        bh=+wQRUm2msRT1Vv6LzHjx16q1r07oTZukLX6w4Q72cRo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fQY4RQBXMdvdqFGAIafv/Phk7Y1oE+EJjzKjC3TRuINAbWxqzcqLPwyX0a9VAn7db
-         lrLv0OwYBTVD2TtgiIEZJRfo0bKqoMi2GBhCLXf4v+k2xekgAHOfI6frhHYfLI3c4k
-         s478XPbm0PhMMeW0NqTPzj3Xl+SvTPCIBgs7SdE0=
-Date:   Thu, 28 Sep 2023 15:36:55 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     j.granados@samsung.com
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
-        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
-        Phillip Potter <phil@philpotter.co.uk>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        David Ahern <dsahern@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Robin Holt <robinmholt@gmail.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Song Liu <song@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-rdma@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH 01/15] cdrom: Remove now superfluous sentinel element
- from ctl_table array
-Message-ID: <2023092855-cultivate-earthy-4d25@gregkh>
-References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
- <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
+        with ESMTP id S232425AbjI1ORj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 10:17:39 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DDF119D;
+        Thu, 28 Sep 2023 07:17:38 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1c364fb8a4cso117291645ad.1;
+        Thu, 28 Sep 2023 07:17:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695910657; x=1696515457; darn=vger.kernel.org;
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Abl3GLiCO/Mtwsa+rWPApo3TGuVO6fy8Q3QmwT9wZV8=;
+        b=EdfR6+i1yLmogZM55LPqiwSZlzmvABWwhxTyZ0wZ+9pOn5L10RYx17Yi4SB4mt6bGD
+         9+xK+MwSsSRf/JliwFOP5s+NONmi87CPwq76iUMuzKnc5pfSO+P/bBOksfFSbUL/M/aJ
+         ZqZenHJv0GfVwItxKV5AX4849Dm8J2L9q6Q7fV1WIzYg1aHVq5AcTe8zOrEGcMfjNXox
+         dKzYOusSNTfIx3TrLshu3kV46HhEpf/nvoLU+yu0ya/vCmfWaAvSgl87WSBA29XpxXxd
+         PDP9cMbEqeiG0wG9ZtakBXJqXmIYpWPLLi8RlY1yNYqtVFBI6RwcyNDqlUZiLSWw0a3f
+         nuVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695910657; x=1696515457;
+        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Abl3GLiCO/Mtwsa+rWPApo3TGuVO6fy8Q3QmwT9wZV8=;
+        b=FUOjFqN93Pjkd6gDUqBx7aYQ/0lOLoz54Uz1foyT3NUURjp2t6UOqkVyLqgbH1j6c0
+         CgJ+mD5XkyNn0QQvpWHAtZjwzNMS/6mMwk1jqOcR9yYy4Wy9ujL1A9nxSdTB+reXDaqY
+         C7msw0d+PzVjMo2W1HqPETbs+vSsOiNpdyCcOeSZs3Ukhgo3WVz/c2hDJd6FOYzksHPH
+         nDjr03BY5hvAGIdIPf7degtBpq55+HRwEf14pCAkAm0XFxZ2yobjO9fmfFKo4ljLD0hQ
+         yqLvi5Hw2XgDNs5n60jYTpiy8G9D9c296+J34Tjcnq0NvpPqpgxW4k/mV5SpgyjRMx+k
+         p2ew==
+X-Gm-Message-State: AOJu0YyYkf5HHu/jZATpUz0iKUCa2HZnyffqSOd4HGdlmKdlsYAQZMiG
+        5u4th96to58cN4V7N1ejHZM=
+X-Google-Smtp-Source: AGHT+IF+54CXMfQ+KegfyNfYPCQfbgujDayDN5Ih9PV2WrUjTmhmZ/wltUv2wxe5crUaomwCXCsYBg==
+X-Received: by 2002:a17:90a:bb88:b0:269:46d7:f1db with SMTP id v8-20020a17090abb8800b0026946d7f1dbmr1335120pjr.32.1695910657391;
+        Thu, 28 Sep 2023 07:17:37 -0700 (PDT)
+Received: from 377044c6c369.cse.ust.hk (191host097.mobilenet.cse.ust.hk. [143.89.191.97])
+        by smtp.gmail.com with ESMTPSA id d7-20020a17090a2a4700b00278ff752eacsm3059079pjg.50.2023.09.28.07.17.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 Sep 2023 07:17:36 -0700 (PDT)
+From:   Chengfeng Ye <dg573847474@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        john.g.garry@oracle.com, dlemoal@kernel.org, yanaijie@huawei.com,
+        jinpu.wang@ionos.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Chengfeng Ye <dg573847474@gmail.com>
+Subject: [PATCH] scsi: mvsas: fix potential deadlock on &task->task_state_lock
+Date:   Thu, 28 Sep 2023 14:17:27 +0000
+Message-Id: <20230928141727.22190-1-dg573847474@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 28, 2023 at 03:21:26PM +0200, Joel Granados via B4 Relay wrote:
-> From: Joel Granados <j.granados@samsung.com>
-> 
-> This commit comes at the tail end of a greater effort to remove the
-> empty elements at the end of the ctl_table arrays (sentinels) which
-> will reduce the overall build time size of the kernel and run time
-> memory bloat by ~64 bytes per sentinel (further information Link :
-> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
-> 
-> Remove sentinel element from cdrom_table
-> 
-> Signed-off-by: Joel Granados <j.granados@samsung.com>
-> ---
->  drivers/cdrom/cdrom.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index cc2839805983..451907ade389 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] = {
->  		.maxlen		= sizeof(int),
->  		.mode		= 0644,
->  		.proc_handler	= cdrom_sysctl_handler
-> -	},
-> -	{ }
-> +	}
+&mvi->lock and &task->task_state_lock could be acquired under irq
+context from mvs_64xx_isr(). As mvs_port_deformed() also acquire
+the lock, called from workqueue sas_suspend_devices() under process
+context, and without irq protection.
 
-You should have the final entry as "}," so as to make any future
-additions to the list to only contain that entry, that's long been the
-kernel style for lists like this.
+<deadlock #1>
+mvs_port_deformed()
+--> mvs_port_notify_deformed()
+--> mvs_do_release_task()
+--> mvs_int_rx()
+--> mvs_slot_complete()
+--> spin_lock(&mvi->lock)
+<interrupt>
+   --> mvs_64xx_isr()
+   --> spin_lock(&mvi->lock)
 
-So your patches will just remove one line, not 2 and add 1, making it a
-smaller diff.
+<deadlock #2>
+mvs_port_deformed()
+--> mvs_port_notify_deformed()
+--> mvs_do_release_task()
+--> mvs_int_rx()
+--> mvs_slot_complete()
+--> spin_lock(&task->task_state_lock)
+<interrupt>
+   --> mvs_64xx_isr()
+   --> mvs_int_rx()
+   --> mvs_slot_complete()
+   --> spin_lock(&task->task_state_lock)
 
-thanks,
+Another strange thing is that while inspecting the code I find
+mvs_do_release_task() should be called with phy->mvi locked held,
+but the call chain from mvs_port_notify_deformed() seems do not
+hold the lock.
 
-greg k-h
+The current patch just switch spin_lock(&task->task_state_lock)
+to spin_lock_irqsave(). If I didn't miss anything, seems the better
+way could be adding a spin_lock_irqsave() to protect mvi->lock at
+mvs_port_notify_deformed()?
+
+Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
+---
+ drivers/scsi/mvsas/mv_sas.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 1444b1f1c4c8..ddd283ae1b92 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1534,6 +1534,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 	struct mvs_device *mvi_dev = NULL;
+ 	struct task_status_struct *tstat;
+ 	struct domain_device *dev;
++	unsigned long flags;
+ 	u32 aborted;
+ 
+ 	void *to;
+@@ -1546,12 +1547,12 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 	dev = task->dev;
+ 	mvi_dev = dev->lldd_dev;
+ 
+-	spin_lock(&task->task_state_lock);
++	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
+ 	task->task_state_flags |= SAS_TASK_STATE_DONE;
+ 	/* race condition*/
+ 	aborted = task->task_state_flags & SAS_TASK_STATE_ABORTED;
+-	spin_unlock(&task->task_state_lock);
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+ 	memset(tstat, 0, sizeof(*tstat));
+ 	tstat->resp = SAS_TASK_COMPLETE;
+-- 
+2.17.1
+
