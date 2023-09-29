@@ -2,163 +2,242 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0A3E71D3E
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Sep 2023 13:57:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87DA0E71D3D
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Sep 2023 14:02:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232925AbjI2N5L convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Sep 2023 09:57:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41278 "EHLO
+        id S232911AbjI2OCq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Sep 2023 10:02:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232875AbjI2N5K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2023 09:57:10 -0400
-Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67EB51A8;
-        Fri, 29 Sep 2023 06:57:08 -0700 (PDT)
-Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-57bb0f5d00aso5925842eaf.1;
-        Fri, 29 Sep 2023 06:57:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695995827; x=1696600627;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PAP4l0Hxbk/eOJWv3xiKABg+v2rRJgpEwr5u64onzi0=;
-        b=d6z0JWyoQPivk06x4S1ju/CgkXlB9XRYmOCMApMvZbVzkB6N8zZS8QGZUV9HTAGrUj
-         7a2nPhIkki5iPBLLq2S+sc8SpO5sAktWyO8cOEWR3b7lVegvWE+YDVO7frG3wjNljg0H
-         dMlzRBOPv8fvwqOVtkvpUertoC9AwWc/krcCsZkWoPkMqOBZmSWTe3YCO58CF8JpbBIO
-         yTJu3baj2gE8wEPKSnyHs4kEF0LhOBs14OOD2MuqgFVZ2Lon/AfT0AOqnJKhXteZ0N8F
-         l9PXuicBWpZQGYFO/wmjLxkU0UixWIqonpzH03sxqFYFavGfRm+BIRN3Fy0tF+LZOuBP
-         tkcw==
-X-Gm-Message-State: AOJu0YxH6SytKgbP4FZTBCvfUsJAxK7nE69ArF/YkMhit6s9BXlEA8sz
-        1LtOgSzHfQXAHEIxhqoLQi8RhyWVvIHzew==
-X-Google-Smtp-Source: AGHT+IERP0/hBHMTPYNPHYGXl2xCW3YWzwBD3bjwy0ev0FpQFSJ+oB0192t4ULSlbbnHe3N0yAkrPQ==
-X-Received: by 2002:a4a:6c02:0:b0:56e:466c:7393 with SMTP id q2-20020a4a6c02000000b0056e466c7393mr4729915ooc.5.1695995827349;
-        Fri, 29 Sep 2023 06:57:07 -0700 (PDT)
-Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com. [209.85.210.43])
-        by smtp.gmail.com with ESMTPSA id r3-20020a4ad4c3000000b0057b74352e3asm2842567oos.25.2023.09.29.06.57.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 29 Sep 2023 06:57:06 -0700 (PDT)
-Received: by mail-ot1-f43.google.com with SMTP id 46e09a7af769-6c0a42a469dso8425847a34.2;
-        Fri, 29 Sep 2023 06:57:06 -0700 (PDT)
-X-Received: by 2002:a9d:66cf:0:b0:6bd:152f:9918 with SMTP id
- t15-20020a9d66cf000000b006bd152f9918mr4402953otm.14.1695995825892; Fri, 29
- Sep 2023 06:57:05 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230926081507.69346-1-dlemoal@kernel.org> <CAMuHMdX_aNX2FZoydqgZTF+DA1uTt0zxbXcu1FXqeO5tUqry=Q@mail.gmail.com>
- <3a0e6a4d-1a82-0643-e1c0-9a7b1cc55b18@kernel.org>
-In-Reply-To: <3a0e6a4d-1a82-0643-e1c0-9a7b1cc55b18@kernel.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 29 Sep 2023 15:56:54 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUN0yiMiEjev6gx2tv8eqQoecv6kuHSSztxUhoAvQ9OdA@mail.gmail.com>
-Message-ID: <CAMuHMdUN0yiMiEjev6gx2tv8eqQoecv6kuHSSztxUhoAvQ9OdA@mail.gmail.com>
-Subject: Re: [PATCH v7 00/23] Fix libata suspend/resume handling and code cleanup
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
+        with ESMTP id S231429AbjI2OCp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2023 10:02:45 -0400
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 079391A8;
+        Fri, 29 Sep 2023 07:02:41 -0700 (PDT)
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20230929140240euoutp01afe66b9e4e0ffa1bcecba49359025df5~JY4WWDxoK3251532515euoutp01d;
+        Fri, 29 Sep 2023 14:02:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20230929140240euoutp01afe66b9e4e0ffa1bcecba49359025df5~JY4WWDxoK3251532515euoutp01d
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1695996160;
+        bh=Btrm8Ac8d2kEpEoRPdLI6EsuqjId3rLOgFjkXf4LLYQ=;
+        h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+        b=AFYNkKpSlDSLgKTy1BFqKkjzrxsiEUyok/P+wi9niUPxPhYWD9cBsK1yjoUw/noIU
+         XMR9yFl90mqqjH9tb/YgNMjRvuGUqinn8j+EtI2Bt9enmbe4U3pQT008WX8/SYh93R
+         gdC2CWgh1OKveRJVjaffdbYgq7tqctX33NWhJz6Y=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20230929140239eucas1p1917c6db31ae8d968a725d3a0824c4271~JY4WG4bVE1493514935eucas1p1Q;
+        Fri, 29 Sep 2023 14:02:39 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges2new.samsung.com (EUCPMTA) with SMTP id B7.4B.11320.FF8D6156; Fri, 29
+        Sep 2023 15:02:39 +0100 (BST)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20230929140239eucas1p100707358803bb5652bd2e506e93dfaf3~JY4VkDryJ1519215192eucas1p12;
+        Fri, 29 Sep 2023 14:02:39 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230929140239eusmtrp20681390d79a16dcf189beecae65e74a3~JY4VidnSl1185111851eusmtrp2b;
+        Fri, 29 Sep 2023 14:02:39 +0000 (GMT)
+X-AuditID: cbfec7f4-993ff70000022c38-bd-6516d8ffe5ca
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 3B.14.10549.EF8D6156; Fri, 29
+        Sep 2023 15:02:39 +0100 (BST)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20230929140238eusmtip2c25894434db9fa8e8bfc2867c15761a4~JY4VOmMMj3161831618eusmtip2F;
+        Fri, 29 Sep 2023 14:02:38 +0000 (GMT)
+Received: from localhost (106.210.248.178) by CAMSVWEXC02.scsc.local
+        (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
+        Fri, 29 Sep 2023 15:02:38 +0100
+Date:   Fri, 29 Sep 2023 16:03:47 +0200
+From:   Joel Granados <j.granados@samsung.com>
+To:     Wei Liu <wei.liu@kernel.org>
+CC:     Luis Chamberlain <mcgrof@kernel.org>, <willy@infradead.org>,
+        <josh@joshtriplett.org>, Kees Cook <keescook@chromium.org>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        David Ahern <dsahern@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Song Liu <song@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        <linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>,
+        <linux-serial@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-rdma@vger.kernel.org>,
+        <openipmi-developer@lists.sourceforge.net>,
+        <netdev@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <linux-hyperv@vger.kernel.org>, <intel-gfx@lists.freedesktop.org>,
+        <dri-devel@lists.freedesktop.org>
+Subject: Re: [PATCH 14/15] hyper-v/azure: Remove now superfluous sentinel
+ element from ctl_table array
+Message-ID: <20230929140347.dzpk5xfdfkxrcln7@localhost>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="pe36q5lo2npaavkw"
+Content-Disposition: inline
+In-Reply-To: <ZRWbGDlXCS4t8tMf@liuwe-devbox-debian-v2>
+X-Originating-IP: [106.210.248.178]
+X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
+        CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
+X-Brightmail-Tracker: H4sIAAAAAAAAA2VTfUxTVxzNfe/1vcpAn8jgBvwoqEtArcJQf3GwzMXF55Zs+0OXZdE4Im+g
+        k9a1osyFpG6IAuNbptQyih20ilSsWNsqQljkY2XaDZDa0c0PmE7q0A3kS9pRH24m+++c8zvn
+        3t+5yRWTwX1MuHinbC+vkCXtjqIDKHPr+PUVPmcov8rSHAPtvScJmCppZeC79tsE+MzFJGiu
+        Z1FwJcuE4MrxOhq6R4ZoMNoOETDQeoeBr3RnabhxkYMTRecJ0HedRXCrJxxOOs0ElB9vR6C5
+        GQd/VsyHxqrp87Ry6MxLA4e5QAT9tRcYODpRTUJZ8SMaumwaGg5X2hD83pJPQV6vhYZOXT4D
+        k6NeEejbvAQ4iwYQ5BYeRtCqDYWxyUkRXL7Vj+CJ3YOgrEYKFcNlJBg8FSQ0qW8wUF1uIKFN
+        P0VDrXE7NB09Q0Kz/ei05D0Ah74eZ+B7k4uAybHpi0cbSok3VnNd3e9wkxMliDuh+oniGk7d
+        JLi+aiviGp9oKc6qdjOc1pTO2WwHGe68IYbTXf6D4KZy1nCuwUTOdDqH5sYMhSRXdLIZvb/o
+        o4CEZH73zn28YuXrHwekTvV0MnvyQjJs6kuECk2wuUgsxmw8truoXBQgDmYNCNfd/oUUyDDC
+        /d+4kED+RriwZ4TJRbOeJZ4aymdceoRbXEPkv67GQ6OEQC4gPJllof0Ril2Kq358+ixOs8vx
+        dU8f6cchrASb3SrGHyBZ4xw8dNcg8g/msan46j014cdB7FpsvVbKCHgu7ijvp/yYZDPwzz4d
+        4W9BshFY7xX75VnsGvxgvJASVl2Mx+rttIAz8Q8NrmfLYTY7EDcN6kjhBTZg00OF4JmHH7Q1
+        zNScj33Wyhl/KcJN3keMQGoRrjk4Qgiu13BWd/9MYj1+fP/5obOx8+FcYc/ZuMR8bEYOwkey
+        gwX3K7j2Vw9VhBarX2imfqGZ+r9mgrwcay/9Rf9PXoZrqgZJASdio3GI0iLmNArj05VpKbwy
+        TsbvlyqT0pTpshTpDnmaCU1/Oru3bdiC9A8eS1sQIUYtaMl0+E59rQOFUzK5jI8KCcp2hPLB
+        QclJnx/gFfLtivTdvLIFRYipqLCgZYkdO4LZlKS9/Kc8v4dXPJ8S4lnhKiK549K7czJdsU2b
+        E6wSWFldsXDJwIL6Hs02Yr7U+mWCalm0s6JwaWCRJPBbzcVoLnZXKKrMXNvR5RqOL35c/dm6
+        6PwvHLGbblfGuWtydW7TvdlUnoob3/CWZPmHjQVvFp/IOdf8akaJzyt5e4Hnk9H6/N9y+8Ii
+        txgt7ZGS4qp8e99lIuLMqSn39uGSI3clPZHuuDvhg4sGN5bFd/Z2uuVOi2jze/vtAatliaVV
+        AdckWze9XBA24jhfWZAa4vDoJyJXZO/6QLa+F8uPiUUJzID0XMzdgc77iqW79oGje0lcYHf+
+        pvJS27qr8HCVL3lz/LYtmpe2beg1bb3YdW5hSupiT10UpUxNio0hFcqkfwAu818d7wQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA2WTe1BUVRzHPfde7l1osBsgXomE1rCGcGEXWH8oOE5TebEam2oiqYQdvAEF
+        u7QLaozNrMMb46XgwALGI1iUWgxkEUQgmpYt3iKIiA0Q4rAyIqmwvJZ225qc6b/P+f7O73N+
+        c+YcHu6wQrrwoqXxnFwqieGTdkS3qev3XRujzpzP6VIC9DcrMFg/o6PgO/0kBhvaPBxK+pMJ
+        aEuuR9BW+AMJN57Mk6BpScHgrm6KgqTKOhJGmlgozm3AQD1Uh2Bi2AUqRrUYFBXqEZTcEsGD
+        Ule4Vm72lcmg53QsDGizbWC6tpGC/JUqHAryHpIw1FJCQtq3LQhmOrMIOH3zCgk9lVkUrC6Z
+        bEDdZcJgNPcugsycNAS6Mmcwrq7aQOvENILF7jkEBdUCKH1cgEPNXCkO7aoRCqqKanDoUq+T
+        UKsJg/b873Ho6M43R6ZESPlmmYKf68cwWDWaD166fBbb788O3XiLXV05g9hi5SDBXr5wC2PH
+        q5oRe22xjGCbVXcotqw+gW1pOUWxDTWebGXrLMauZ4jZsftBbP3FDJI11uTgbG5FB3rXLVQQ
+        KJclxHPuUTJFfBD/YyGIBMIAEIj8AgRC392f7hH58733BR7lYqKPcXLvfeGCqLyNQiIuw+lE
+        +oMsQomMdCay5TG0H7NWU4RnIjueA12FGKUuj7AWXJkfHw/bWNmRWRvJJK2bFhCjHjUQ1kUj
+        Yp70dZGWXQTtwZT3rlEWJmkvpn9uHLewE+3OaO8oKUsDTmueZbI6rFpHOor55Z4Ks7A9vZtp
+        7jtLWa3FGPOHoZa0Fp5jfi2a/nsmnD7GXDVqzFaemZ9n1CaeJbalxYxhOeefsXcwxkvdpJW/
+        Zh6tz6Bc5Kh6yqR6yqT6z2SNPZlR0yz2v/hVprr8Pm7lIEajmSfKEHUROXEJitjIWIVQoJDE
+        KhKkkYIIWWw9Mj98rW654Qo6b1gQdCKMhzrRS+bOqUu1A8iFkMqkHN/JPnXAmXOwPyr5KpGT
+        y8LkCTGcohP5m68xD3fZEiEz/yJpfJhQ7OMv9BMH+PgHiH35W+2D49IlDnSkJJ77guPiOPm/
+        fRjP1kWJvT7m7zWett+0zS2s1TdaLAmX8ju0IvEKb0kxnHrkfTjhEdBYEGwzFvLC58qXw3m9
+        mZSkP5Tu+XDQePwTvZuBVSr+zA5+7zN9xF6N4WD6eRgfF82l73FOSlE/2tRmu7m3tqrVveWV
+        mPYU92L7N+I9xlOnUqJ3vsjfu91QeP3tn9w2IrWGukB1yDMHZq+uh8xo8u0mpX1RDxeGFnlf
+        em0xnNQfvj7ptJJ2mNt6aOLA2lTSIb9z98q3nTzlGtrkPZ+0Xp24Vqm6/U7yphzhbVHAjn4M
+        iO2c3cF+m4Ijv7l6f4CTF9xnRnc5bP7o3LzuzeWCqqadxzOZwdd6shu64voWm0gPgk8ooiRC
+        T1yukPwF2ZBtso0EAAA=
+X-CMS-MailID: 20230929140239eucas1p100707358803bb5652bd2e506e93dfaf3
+X-Msg-Generator: CA
+X-RootMTR: 20230928152622eucas1p20ca3dd701247895e232e59fb84e33e1f
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20230928152622eucas1p20ca3dd701247895e232e59fb84e33e1f
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+        <65157da8.050a0220.fb263.fdb1SMTPIN_ADDED_BROKEN@mx.google.com>
+        <CGME20230928152622eucas1p20ca3dd701247895e232e59fb84e33e1f@eucas1p2.samsung.com>
+        <ZRWbGDlXCS4t8tMf@liuwe-devbox-debian-v2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Damien,
+--pe36q5lo2npaavkw
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Sep 29, 2023 at 3:37 PM Damien Le Moal <dlemoal@kernel.org> wrote:
-> On 2023/09/28 14:26, Geert Uytterhoeven wrote:
-> > On Tue, Sep 26, 2023 at 10:15 AM Damien Le Moal <dlemoal@kernel.org> wrote:
-> >> The first 9 patches of this series fix several issues with suspend/resume
-> >> power management operations in scsi and libata. The most significant
-> >> changes introduced are in patch 4 and 5, where the manage_start_stop
-> >> flag of scsi devices is split into the manage_system_start_stop and
-> >> manage_runtime_start_stop flags to allow keeping scsi runtime power
-> >> operations for spining up/down ATA devices but have libata do its own
-> >> system suspend/resume device power state management using EH.
-> >>
-> >> The remaining patches are code cleanup that do not introduce any
-> >> significant functional change.
-> >>
-> >> This series was tested on qemu and on various PCs and servers. I am
-> >> CC-ing people who recently reported issues with suspend/resume.
-> >> Additional testing would be much appreciated.
-> >
-> > JFTR, with current libata/for-next[*], I saw the following with
-> > rcar-sata, once (interesting lines marked with "!"):
-> >
-> >     PM: suspend entry (s2idle)
-> >     Filesystems sync: 0.026 seconds
-> >     Freezing user space processes
-> >  !  ata1.00: qc timeout after 10000 msecs (cmd 0x40)
-> >     Freezing user space processes completed (elapsed 0.007 seconds)
-> >  !  ata1.00: VERIFY failed (err_mask=0x4)
-> >     OOM killer disabled.
-> >  !  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
-> >     Freezing remaining freezable tasks
-> >  !  ata1.00: revalidation failed (errno=-5)
-> >     Freezing remaining freezable tasks completed (elapsed 0.002 seconds)
-> >     sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> >     ata1: link resume succeeded after 1 retries
-> >     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >     ata1.00: configured for UDMA/133
-> >     ata1.00: Entering active power mode
-> >     ata1.00: Entering standby power mode
-> >     ravb e6800000.ethernet eth0: Link is Down
-> >     Micrel KSZ9031 Gigabit PHY e6800000.ethernet-ffffffff:00: attached
-> > PHY driver (mii_bus:phy_addr=e6800000.ethernet-ffffffff:00, irq=136)
-> >     OOM killer enabled.
-> >     Restarting tasks ... done.
-> >     random: crng reseeded on system resumption
-> >     PM: suspend exit
-> >     ata1: link resume succeeded after 1 retries
-> >     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >     ata1.00: Entering active power mode
-> >     ata1.00: configured for UDMA/133
-> >     ravb e6800000.ethernet eth0: Link is Up - 1Gbps/Full - flow control off
-> >
-> > Regardless, the disk worked fine after resume.
-> >
-> > Note that I saw this only once.
->
-> I think I found the reason for this, but to confirm, were you doing a suspend
-> right after resuming the system ? If yes, that I think I exactly understand the
-> issue and why you saw it only once (it is a subtle race with scheduling
-> libata-EH suspend/resume operations). I will send a fix next week.
+On Thu, Sep 28, 2023 at 03:26:16PM +0000, Wei Liu wrote:
+> Please change the prefix to "Drivers: hv:" in the subject line in the
+> two patches.
+I'll change the commit message for the 14/15 patch from "hyper-v/azure"
+to "Drivers: hv:". But I only see one patch that needs this. Which is
+the other one?
 
-Now you ask that, yes there was a system suspend before.
+best
+>=20
+> On Thu, Sep 28, 2023 at 03:21:39PM +0200, Joel Granados via B4 Relay wrot=
+e:
+> > From: Joel Granados <j.granados@samsung.com>
+> >=20
+> > This commit comes at the tail end of a greater effort to remove the
+> > empty elements at the end of the ctl_table arrays (sentinels) which
+> > will reduce the overall build time size of the kernel and run time
+> > memory bloat by ~64 bytes per sentinel (further information Link :
+> > https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+> >=20
+> > Remove sentinel from hv_ctl_table
+> >=20
+> > Signed-off-by: Joel Granados <j.granados@samsung.com>
+> > ---
+> >  drivers/hv/hv_common.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/hv/hv_common.c b/drivers/hv/hv_common.c
+> > index ccad7bca3fd3..bc7d678030aa 100644
+> > --- a/drivers/hv/hv_common.c
+> > +++ b/drivers/hv/hv_common.c
+> > @@ -147,8 +147,7 @@ static struct ctl_table hv_ctl_table[] =3D {
+> >  		.proc_handler	=3D proc_dointvec_minmax,
+> >  		.extra1		=3D SYSCTL_ZERO,
+> >  		.extra2		=3D SYSCTL_ONE
+> > -	},
+> > -	{}
+> > +	}
+>=20
+> Please keep the comma at the end.
+>=20
+> >  };
+> > =20
+> >  static int hv_die_panic_notify_crash(struct notifier_block *self,
+> >=20
+> > --=20
+> > 2.30.2
+> >=20
 
-Relevant log with timing info:
+--=20
 
-    [  130.177616] PM: suspend exit
-    [  130.257981] ata1: link resume succeeded after 1 retries
-    [  130.376714] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-    [  130.388525] ata1.00: Entering active power mode
+Joel Granados
 
-so the drive should have been ready here.
+--pe36q5lo2npaavkw
+Content-Type: application/pgp-signature; name="signature.asc"
 
-    [  140.452669] PM: suspend entry (s2idle)
-    [  140.488313] Filesystems sync: 0.026 seconds
-    [  140.515957] Freezing user space processes
-    [  140.518209] ata1.00: qc timeout after 10000 msecs (cmd 0x40)
-    [  140.523384] Freezing user space processes completed (elapsed
-0.007 seconds)
-    [  140.527718] ata1.00: VERIFY failed (err_mask=0x4)
-    [  140.532541] OOM killer disabled.
-    [  140.537270] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
-    [  140.542069] Freezing remaining freezable tasks
-    [  140.546784] ata1.00: revalidation failed (errno=-5)
+-----BEGIN PGP SIGNATURE-----
 
-Gr{oetje,eeting}s,
+iQGzBAABCgAdFiEErkcJVyXmMSXOyyeQupfNUreWQU8FAmUW2UEACgkQupfNUreW
+QU+ZyQv9HSXCGinIOipdlVjAjwhhj6RTSXKmVOPKYpS5Rg7aN0U82HzUpe/YGUvE
+dEkLD50b0Mo5onU0fxk7PxAo7caRLYwpTki5RqjceH1a3DgPuH0jozn4rbxb10ym
+v0B/fxvdHH9rxasac48TToOUPvqcbelPpQ59h7PEj84QwcYkd7pV6Wt7elbOt2fI
+w8dfe8vvnNXGLquYe0hqGv7c6TGjOXwY06dTtga5LzmalTp0IMELfKNebRsWhhPQ
+gsL9i6erlZUN75ZmgZM+YMnhEcEQwRFxapO1r2nENKMoWHNKglPIZ8BHfkZnXy48
+HCo5Kt8JZ1E1XArWKL6N58dcSyWJx2U9aMXC7Ugl8WWKDGuW3W9+v/1uxuxE7Bsi
+wfooQe5Df/UjY3wvmdcooleqJ8NFjWgv7/pU0i/WXS2dxzUB9VF27Ghgj9sRNY7V
+IUGRM7apb2US7rjwyn1DuDn4A+iO4ZRBH1tZr3RtnIigP9fboAI8E3+sEIhdL0FX
+R517c3qf
+=7vL7
+-----END PGP SIGNATURE-----
 
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+--pe36q5lo2npaavkw--
