@@ -2,165 +2,202 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2410E732FD
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Sep 2023 17:52:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC23DE743FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Sep 2023 09:01:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231904AbjI1Rwi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Sep 2023 13:52:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44192 "EHLO
+        id S232841AbjI2JBM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Sep 2023 05:01:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230349AbjI1Rwg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Sep 2023 13:52:36 -0400
-Received: from mx0b-002e3701.pphosted.com (mx0b-002e3701.pphosted.com [148.163.143.35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79E0219D;
-        Thu, 28 Sep 2023 10:52:35 -0700 (PDT)
-Received: from pps.filterd (m0134424.ppops.net [127.0.0.1])
-        by mx0b-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38SHhHiB002198;
-        Thu, 28 Sep 2023 17:51:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=pps0720; bh=mZrC/t7ae+Z2o86iz704abLpUMsth0bb5IgGpyWjrnM=;
- b=APaa5kKkE4mpyTjbaPlvnbYIWIT9A784n1fDZhZsP48Q4BO9uSG32bZsfAF52jrU1bOT
- 1h7DtIZq8CfCoiXJzZq8iCLGpdSe2PlQIjBXHSbzsrerYmN3AzKoVoUge3gno+oOKne0
- TZt5ZpPcmFxaL8khHe4Ax9IRzjtiszQvxqsciJsyNpAD6ZY84bLt17ZecVDpe5s/3MjB
- a3q5Nj2zzP41qNl43/8ndPzzA6qoqUz03rp+3yjfOcXzoZpJvReW4KIp/RtMFfifP+Ul
- Z6IbclgwAUZ5SJhoTsDmi8nxYS4v/OvpF1TAywHM0NXqhjlAEPK6WdmkxzbGRG8AthqO KA== 
-Received: from p1lg14881.it.hpe.com ([16.230.97.202])
-        by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 3tde4ur2yg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Sep 2023 17:51:25 +0000
-Received: from p1lg14885.dc01.its.hpecorp.net (unknown [10.119.18.236])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by p1lg14881.it.hpe.com (Postfix) with ESMTPS id A9CF8805E26;
-        Thu, 28 Sep 2023 17:51:23 +0000 (UTC)
-Received: from swahl-home.5wahls.com (unknown [16.231.227.36])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by p1lg14885.dc01.its.hpecorp.net (Postfix) with ESMTPS id DAC6681566E;
-        Thu, 28 Sep 2023 17:51:16 +0000 (UTC)
-Date:   Thu, 28 Sep 2023 12:51:15 -0500
-From:   Steve Wahl <steve.wahl@hpe.com>
-To:     j.granados@samsung.com
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
-        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
-        Phillip Potter <phil@philpotter.co.uk>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        David Ahern <dsahern@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Robin Holt <robinmholt@gmail.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Song Liu <song@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-rdma@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH 11/15] sgi-xp: Remove the now superfluous sentinel
- element from ctl_table array
-Message-ID: <ZRW9Eywl831h/YhW@swahl-home.5wahls.com>
-References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
- <=?utf-8?q?=3C20230928-jag-sysctl=5Fremove=5Fempty=5Felem=5Fdrive?=>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <=?utf-8?q?=3C20230928-jag-sysctl=5Fremove=5Fempty=5Felem=5Fdrive?=>
-X-Proofpoint-GUID: ARXao25-avAoloITuhrfvukM5pXVcFhf
-X-Proofpoint-ORIG-GUID: ARXao25-avAoloITuhrfvukM5pXVcFhf
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
-MIME-Version: 1.0
-X-HPE-SCL: -1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-28_16,2023-09-28_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 phishscore=0
- malwarescore=0 adultscore=0 spamscore=0 priorityscore=1501
- lowpriorityscore=0 suspectscore=0 impostorscore=0 mlxlogscore=999
- mlxscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2309280155
+        with ESMTP id S232803AbjI2JBK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2023 05:01:10 -0400
+Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 948DE11F
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2023 02:01:02 -0700 (PDT)
+Received: by mail-ej1-x635.google.com with SMTP id a640c23a62f3a-99bdcade7fbso1772173266b.1
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2023 02:01:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fairphone.com; s=fair; t=1695978061; x=1696582861; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jCib+YEJ6+7KaH85hc8Nb8MnFh17rpSkk5Oe5+3Arrc=;
+        b=AUTSRteTyo95zFGGVfWFGl3v8vYxH4Nrnn738GzkQogs6CJJyrteC1PupHgsY9Yb62
+         7WnGA8wfXdvUL6Xa/D1MStfhsB17K/BU32odY0TQvY4q5pEqjqPyOocyoQYrLoDtaakv
+         yHkDccJ6GM1zsAmBEHQ1s9wzyWCXisEvcs4+DGFL1Le9WEV6nix+rcvQEd1UlpBzcdlp
+         auPSSM+j9hXKvMPVt9WiY6sgN20r3qn6fVj3m9HTLLxo3aXH1FOpSCfy1QkyRGgiS+PA
+         or9zXUg/RNB2j/hiI3YgQd+e0SnoEkRRoITO0KzhuUkBQ5VR3OE48tOop7QCujYpYBJN
+         0DQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695978061; x=1696582861;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=jCib+YEJ6+7KaH85hc8Nb8MnFh17rpSkk5Oe5+3Arrc=;
+        b=VVtDvz397fXU1YkK/iq4263ZbjUljuEQORWBuP+SKRB49QDEokVKRdkLM6pENK79/v
+         zzckvSJ38cil0mw7FDiIC92/8Zc77pF3snsG/TbSm0+YgT1ooM1KQhykhZW67V3H2PJr
+         pF6H6JcQmwR3WiLOsKg9fJDyI297KNPc6OKyGztIk+3rEo2xYtwkjtjfmDNK0tC31jAM
+         UQrYLuKz9EbYUqj16AXuKWoOTXlWQzmnsjrwrsNE7UtK2XyFxp8QdC6bJeBtK+caeUKe
+         mdwHB6KE8eW5Izd9c0QWwcAC+SeON8iDioc0zBoSt4tuBHVLUF3b37Le6rq4QuIAthy3
+         RNHQ==
+X-Gm-Message-State: AOJu0Yw8Pcg5YkLc+hqTMLpQjNGxYHMdTV0SZ+pxhN9JCsnljVwrEN2X
+        KRwGu1p9J6LNMU8FyyMHAWufrQ==
+X-Google-Smtp-Source: AGHT+IF8LpBwznH+qjY6BeKJwXeYUOfJ8dYEkZ+qseK8NDxlpDW8TzadUKBD4uecOioziiIYg5ZmsA==
+X-Received: by 2002:a17:906:3050:b0:9ae:65a5:b6f4 with SMTP id d16-20020a170906305000b009ae65a5b6f4mr3370291ejd.20.1695978060936;
+        Fri, 29 Sep 2023 02:01:00 -0700 (PDT)
+Received: from localhost (144-178-202-138.static.ef-service.nl. [144.178.202.138])
+        by smtp.gmail.com with ESMTPSA id bl19-20020a170906c25300b0099bc8db97bcsm12087256ejb.131.2023.09.29.02.01.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Sep 2023 02:01:00 -0700 (PDT)
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date:   Fri, 29 Sep 2023 11:01:00 +0200
+Message-Id: <CVVA1OVF4W9E.380D6QC1K9GD6@otso>
+Cc:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V3 2/4] arm64: dts: qcom: sc7280: Add UFS nodes for
+ sc7280 soc
+From:   "Luca Weiss" <luca.weiss@fairphone.com>
+To:     "Nitin Rawat" <quic_nitirawa@quicinc.com>, <agross@kernel.org>,
+        <andersson@kernel.org>, <konrad.dybcio@linaro.org>,
+        <mani@kernel.org>, <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <robh+dt@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
+        <cros-qcom-dts-watchers@chromium.org>
+X-Mailer: aerc 0.15.2
+References: <20230927081858.15961-1-quic_nitirawa@quicinc.com>
+ <20230927081858.15961-3-quic_nitirawa@quicinc.com>
+In-Reply-To: <20230927081858.15961-3-quic_nitirawa@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 28, 2023 at 03:21:36PM +0200, Joel Granados via B4 Relay wrote:
-> From: Joel Granados <j.granados@samsung.com>
-> 
-> This commit comes at the tail end of a greater effort to remove the
-> empty elements at the end of the ctl_table arrays (sentinels) which
-> will reduce the overall build time size of the kernel and run time
-> memory bloat by ~64 bytes per sentinel (further information Link :
-> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
-> 
-> Remove sentinel from xpc_sys_xpc_hb and xpc_sys_xpc
-> 
-> Signed-off-by: Joel Granados <j.granados@samsung.com>
+Hi Nitin,
+
+On Wed Sep 27, 2023 at 10:18 AM CEST, Nitin Rawat wrote:
+> Add UFS host controller and PHY nodes for sc7280 soc.
+>
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 > ---
->  drivers/misc/sgi-xp/xpc_main.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/misc/sgi-xp/xpc_main.c b/drivers/misc/sgi-xp/xpc_main.c
-> index 6da509d692bb..c898092ff3ac 100644
-> --- a/drivers/misc/sgi-xp/xpc_main.c
-> +++ b/drivers/misc/sgi-xp/xpc_main.c
-> @@ -109,8 +109,7 @@ static struct ctl_table xpc_sys_xpc_hb[] = {
->  	 .mode = 0644,
->  	 .proc_handler = proc_dointvec_minmax,
->  	 .extra1 = &xpc_hb_check_min_interval,
-> -	 .extra2 = &xpc_hb_check_max_interval},
-> -	{}
-> +	 .extra2 = &xpc_hb_check_max_interval}
->  };
->  static struct ctl_table xpc_sys_xpc[] = {
->  	{
-> @@ -120,8 +119,7 @@ static struct ctl_table xpc_sys_xpc[] = {
->  	 .mode = 0644,
->  	 .proc_handler = proc_dointvec_minmax,
->  	 .extra1 = &xpc_disengage_min_timelimit,
-> -	 .extra2 = &xpc_disengage_max_timelimit},
-> -	{}
-> +	 .extra2 = &xpc_disengage_max_timelimit}
->  };
->  
->  static struct ctl_table_header *xpc_sysctl;
-> 
-> -- 
-> 2.30.2
-> 
+>  arch/arm64/boot/dts/qcom/sc7280.dtsi | 63 ++++++++++++++++++++++++++++
+>  1 file changed, 63 insertions(+)
+>
+> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/q=
+com/sc7280.dtsi
+> index 66f1eb83cca7..0b50b8557311 100644
+> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> @@ -3353,6 +3353,69 @@
+>  			};
+>  		};
 
-I assume you'll match the rest of the changes with regards to the
-trailing comma.
+I think above you should also have this diff:
 
-Reviewed-by: Steve Wahl <steve.wahl@hpe.com>
+--- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+@@ -868,11 +868,11 @@ gcc: clock-controller@100000 {
+ 			compatible =3D "qcom,gcc-sc7280";
+ 			reg =3D <0 0x00100000 0 0x1f0000>;
+ 			clocks =3D <&rpmhcc RPMH_CXO_CLK>,
+ 				 <&rpmhcc RPMH_CXO_CLK_A>, <&sleep_clk>,
+ 				 <0>, <&pcie1_lane>,
+-				 <0>, <0>, <0>, <0>;
++				 <&ufs_mem_phy 0>, <&ufs_mem_phy 1>, <&ufs_mem_phy 2>, <0>;
+ 			clock-names =3D "bi_tcxo", "bi_tcxo_ao", "sleep_clk",
+ 				      "pcie_0_pipe_clk", "pcie_1_pipe_clk",
+ 				      "ufs_phy_rx_symbol_0_clk", "ufs_phy_rx_symbol_1_clk",
+ 				      "ufs_phy_tx_symbol_0_clk",
+ 				      "usb3_phy_wrapper_gcc_usb30_pipe_clk";
 
--- 
-Steve Wahl, Hewlett Packard Enterprise
+>
+> +		ufs_mem_hc: ufs@1d84000 {
+> +			compatible =3D "qcom,sc7280-ufshc", "qcom,ufshc",
+> +				     "jedec,ufs-2.0";
+> +			reg =3D <0x0 0x01d84000 0x0 0x3000>;
+> +			interrupts =3D <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+> +			phys =3D <&ufs_mem_phy>;
+> +			phy-names =3D "ufsphy";
+> +			lanes-per-direction =3D <2>;
+> +			#reset-cells =3D <1>;
+> +			resets =3D <&gcc GCC_UFS_PHY_BCR>;
+> +			reset-names =3D "rst";
+> +
+> +			power-domains =3D <&gcc GCC_UFS_PHY_GDSC>;
+> +			required-opps =3D <&rpmhpd_opp_nom>;
+> +
+> +			iommus =3D <&apps_smmu 0x80 0x0>;
+> +			dma-coherent;
+> +
+> +			clocks =3D <&gcc GCC_UFS_PHY_AXI_CLK>,
+> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
+> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
+> +				 <&rpmhcc RPMH_CXO_CLK>,
+> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
+> +			clock-names =3D "core_clk",
+> +				      "bus_aggr_clk",
+> +				      "iface_clk",
+> +				      "core_clk_unipro",
+> +				      "ref_clk",
+> +				      "tx_lane0_sync_clk",
+> +				      "rx_lane0_sync_clk",
+> +				      "rx_lane1_sync_clk";
+> +			freq-table-hz =3D
+> +				<75000000 300000000>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<75000000 300000000>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<0 0>;
+> +			status =3D "disabled";
+> +		};
+> +
+> +		ufs_mem_phy: phy@1d87000 {
+> +			compatible =3D "qcom,sc7280-qmp-ufs-phy";
+> +			reg =3D <0x0 0x01d87000 0x0 0xe00>;
+> +			clocks =3D <&rpmhcc RPMH_CXO_CLK>,
+> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
+> +				 <&gcc GCC_UFS_1_CLKREF_EN>;
+> +			clock-names =3D "ref", "ref_aux", "qref";
+> +
+> +			resets =3D <&ufs_mem_hc 0>;
+> +			reset-names =3D "ufsphy";
+> +
+> +			#clock-cells =3D <1>;
+> +			#phy-cells =3D <0>;
+> +
+> +			status =3D "disabled";
+> +		};
+
+Would you mind adding something like the following at the same time?
+
++		ice: crypto@1d88000 {
++			compatible =3D "qcom,sc7280-inline-crypto-engine",
++				     "qcom,inline-crypto-engine";
++			reg =3D <0 0x01d88000 0 0x8000>;
++			clocks =3D <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
++		};
+
+
+And then link it to the ufs_mem_hc node with qcom,ice =3D <&ice>; ?
+
+Or add it in a followup patch, also fine with me.
+
+Other than that, looks pretty similar to the nodes that I have in my own
+tree which work fine for the most part.
+
+Regards
+Luca
+
+> +
+>  		usb_1_hsphy: phy@88e3000 {
+>  			compatible =3D "qcom,sc7280-usb-hs-phy",
+>  				     "qcom,usb-snps-hs-7nm-phy";
+> --
+> 2.17.1
+
