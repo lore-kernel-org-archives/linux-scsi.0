@@ -2,60 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7471FE71D2D
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Sep 2023 13:25:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A602E71D34
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Sep 2023 13:26:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232925AbjI2NZE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Sep 2023 09:25:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39140 "EHLO
+        id S233340AbjI2N0M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Sep 2023 09:26:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232990AbjI2NZD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2023 09:25:03 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EE7D1AB
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2023 06:25:00 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-9ae75ece209so1724626866b.3
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2023 06:25:00 -0700 (PDT)
+        with ESMTP id S233300AbjI2N0K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2023 09:26:10 -0400
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 040BB1AB
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2023 06:26:08 -0700 (PDT)
+Received: by mail-ej1-x636.google.com with SMTP id a640c23a62f3a-9b275afb6abso148587866b.1
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2023 06:26:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1695993899; x=1696598699; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=linaro.org; s=google; t=1695993966; x=1696598766; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=qagqmXxFav4/9NIFK4762ByrJQt8UaYPm4niYdjtpZs=;
-        b=UhyPKj/6Lfgzj8AUJbDbZ2uX39qMRQN+uf494SanraWUST+olUUTuKzoY4GQQQVA/t
-         kECOgirNcm7aU/WTX1O1STdVdki380GnMO8waBrA3dmtjmQ2XAmD/1AfVaTZBw0Of5Dd
-         g47v/qwSFGzvsBm0BC7dR/mm90l2xs/naFkH67YL0gR+KfGbXN3fqcHO6hSl8WtGgjCH
-         d1TuUdGFfhpQVEhwZjWCtc+8RJXs6Z3x40g2i0eQ94z2a52zX0qLHNcmbNhwE1GDsl5B
-         pzn8iDXs0yXjLEl1wBiXebDkMymH8g8NAs1SbxyFQW51dzYGzsSYhBaRJnhupk0keBtP
-         1IgQ==
+        bh=RU+nGBxPHmO+YMgDRXpz23ytpIb5xFuGx0xQN0oYtCA=;
+        b=qKXkGu/rA1llhGxBniJuo/rGF54DeHNh6kyKpWZmYiy6wyFCWnyh05lmOwfHrr5vqK
+         T13sv/tGjZilpg/x67IZfnnALkbJdp1KS4rOL4KMsasMzRj9caqTJTMb+JxzEQlqT+0E
+         YR1L4giF9Yepan2sFU61PvZCF2yYTihE0bNJo5TuPIYYII3nrBDMcKrOyvHueETf46K/
+         ydn7HtSdHgHt0zPciJ5jJZijmx8pCamSnNAgAc/LYgGPmBr74s5cLc5472bJFEybRFW+
+         PwDggl5X04vXJdCneCRyd4U+mSDZO6kONT3xnUfooBoQC8BQy7dXLh7H3MgXDPuBZgz0
+         K6ig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695993899; x=1696598699;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1695993966; x=1696598766;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qagqmXxFav4/9NIFK4762ByrJQt8UaYPm4niYdjtpZs=;
-        b=sK5FCyaudCWr61OHCE/ATVUHa2O/hAB5dPjIp9RSD22docsxHA3nPie6CWHgLQdG3K
-         TgSvgvsps8znteCwhvG/GZKGMza9yhxg+VbQAOOmRpbydRDZFzESXeitDiGxqY9xI7OS
-         GeFrffpZ1KhBtNBdgsMZ2LmLzei6XA5+arcQgkcycYq+PGq9iLQom1HIs/668NQAtUUW
-         KybWPKJU/UtVjLDDws+sfJnaoVvtZ1NphpJhDQ0vUDUAvrI6747l8rWWVsl8ovyFdfwL
-         I2bkzty0WS+opfw1gotl7UJ7hYEGKDlCZlWmLy+LwtLofXr4bEyW5FjzedBd6DoKyPR/
-         mefg==
-X-Gm-Message-State: AOJu0YwCrIK16q1mHsyMApOTS4dpF+2+7INwnJ59silFgVM9S2O5USAD
-        bLh2QH2Mp9bwtRNcPCIgWS3X9w==
-X-Google-Smtp-Source: AGHT+IG85WjZj97kdYjVbN8tWOk2oDGOZdRoVaBMP7/YHT4SQd1vdx4B2NPE04FCujEA10aJrFrTYQ==
-X-Received: by 2002:a17:907:8b8c:b0:9a1:bd33:4389 with SMTP id tb12-20020a1709078b8c00b009a1bd334389mr5309521ejc.74.1695993899056;
-        Fri, 29 Sep 2023 06:24:59 -0700 (PDT)
+        bh=RU+nGBxPHmO+YMgDRXpz23ytpIb5xFuGx0xQN0oYtCA=;
+        b=ZLacmO6Ku/sQeHNjmGUQ/OWHZ+gqgxVHnLgN3r0NbW/9DYM48ye8NxFaGjQvo1wwBY
+         4ziZARmI6/5VhpOoTGPkdDJ2i54G1hOi2Aj+khtZ7at0k/17wvnlzUV0MXxd9JPUy2DQ
+         bwaVHXhw+dzhwK15zKsO+HNaLD2Yx9uQuihJ60LImQPNAMrZZ2KfCgW2GwY0P7Q5k3XQ
+         6JtY8gB9EKw6OQeucBr9O740LrsxYn6yYISDwH2wEKmRUbWQKc4azk8ZCyfsYiDbAVD9
+         SAN44551nG9pZr6x0LK6LPPYU9FPLlDbRlLXlcE4rHCU2l18bEIKB+OncCh0yoGvCmlb
+         yyjA==
+X-Gm-Message-State: AOJu0YxQkkIt5/MdQte+skWfbIZtH3CtoSKnuAtoSRXzRjQcziO7i7jd
+        j1amt3wP8vL17p3w9prZniliUA==
+X-Google-Smtp-Source: AGHT+IHyYZ73egSBweUZ8ehMhZFpqK94+RpftDUfd4mbYz368Z/GKqdpJr+rjN+iLcM1tMDo+mnWrQ==
+X-Received: by 2002:a17:907:7b8f:b0:9ae:5a56:be32 with SMTP id ne15-20020a1709077b8f00b009ae5a56be32mr4249912ejc.38.1695993966418;
+        Fri, 29 Sep 2023 06:26:06 -0700 (PDT)
 Received: from [192.168.0.123] (178235177217.dynamic-4-waw-k-1-1-0.vectranet.pl. [178.235.177.217])
-        by smtp.gmail.com with ESMTPSA id h13-20020a170906584d00b00992b8d56f3asm12377832ejs.105.2023.09.29.06.24.57
+        by smtp.gmail.com with ESMTPSA id i22-20020a17090671d600b009a193a5acffsm12220458ejk.121.2023.09.29.06.26.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 29 Sep 2023 06:24:58 -0700 (PDT)
-Message-ID: <954ec977-f6a1-b8de-d267-74c86eca5161@linaro.org>
-Date:   Fri, 29 Sep 2023 15:25:00 +0200
+        Fri, 29 Sep 2023 06:26:06 -0700 (PDT)
+Message-ID: <ed61f6a1-a21d-cc23-b995-7692a2e8530a@linaro.org>
+Date:   Fri, 29 Sep 2023 15:26:07 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
  Thunderbird/102.15.1
-Subject: Re: [PATCH V4 2/4] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- soc
+Subject: Re: [PATCH V4 3/4] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
+ IDP board
+Content-Language: en-US
 To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
         andersson@kernel.org, mani@kernel.org, alim.akhtar@samsung.com,
         bvanassche@acm.org, avri.altman@wdc.com, robh+dt@kernel.org,
@@ -64,10 +65,9 @@ To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
 Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <20230929131936.29421-1-quic_nitirawa@quicinc.com>
- <20230929131936.29421-3-quic_nitirawa@quicinc.com>
-Content-Language: en-US
+ <20230929131936.29421-4-quic_nitirawa@quicinc.com>
 From:   Konrad Dybcio <konrad.dybcio@linaro.org>
-In-Reply-To: <20230929131936.29421-3-quic_nitirawa@quicinc.com>
+In-Reply-To: <20230929131936.29421-4-quic_nitirawa@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -77,21 +77,12 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 On 9/29/23 15:19, Nitin Rawat wrote:
-> Add UFS host controller and PHY nodes for sc7280 soc.
+> Add UFS host controller and PHY nodes for sc7280 IDP board.
 > 
 > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
-Not sure if intentionally, but you didn't include my review tags from v3.
-
-[...]
-
-> +			interconnects = <&aggre1_noc MASTER_UFS_MEM 0 &mc_virt SLAVE_EBI1 0>,
-> +					<&gem_noc MASTER_APPSS_PROC 0 &cnoc2 SLAVE_UFS_MEM_CFG 0>;
-include dt-bindings/interconnect/qcom,icc.h
-
-interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-		 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-		<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-		 &cnoc2 SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
+> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+> Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+> Tested-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+I did not add these tags to this patch, drop them.
 
 Konrad
