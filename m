@@ -2,102 +2,165 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06AB0E71D3D
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Sep 2023 14:22:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1E8FE71D41
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Sep 2023 14:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233420AbjI2OWc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Sep 2023 10:22:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35322 "EHLO
+        id S233314AbjI2O30 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Sep 2023 10:29:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233392AbjI2OWa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2023 10:22:30 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1164B1AC;
-        Fri, 29 Sep 2023 07:22:27 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38T9q4fB011558;
-        Fri, 29 Sep 2023 14:22:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=uel0KbMalDjHMwSQ7GdbifduKXHuQtJEkwaFOppR4OA=;
- b=bExpVf4++NQPRGlhHJa1C/CT1WlKE0vjhknyaXaM1DYF46odSnz9irIrOEDI918IflLB
- 66OCrU2hp7oUMZ9kNiD55wyp9/be+fmmpHk7azs32RbRkBHHAg75EbR1+o9eANp5s+/A
- j1puJeGPskA7jhoD5/Yza0VVz23Z0wWm2MQ4O1FYv/Iul/lKEgDJ16mNTJLJoZ900wIN
- 5WNVwBK4AHPD9Qn0ZdwL8kBOi4ohetdja5iL8embj0qC+9qqSk6T/OIps2Re5St34K5w
- vKH0IDDnAsRiG8zqengQokVKfX6xvsJEIxiWMyI7PxHkAqApY8dINW7XrqUTrUlqSvLx nw== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3td3ggbv2e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Sep 2023 14:22:15 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38TEME1W032607
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Sep 2023 14:22:15 GMT
-Received: from [10.218.45.181] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Fri, 29 Sep
- 2023 07:22:10 -0700
-Message-ID: <162b61dc-6304-353b-e9be-9ff941ab3e9b@quicinc.com>
-Date:   Fri, 29 Sep 2023 19:52:06 +0530
+        with ESMTP id S233435AbjI2O3X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Sep 2023 10:29:23 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D28421A4;
+        Fri, 29 Sep 2023 07:29:21 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76FE6C433C8;
+        Fri, 29 Sep 2023 14:29:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695997761;
+        bh=dsSez0uKoIOk9Mxexz12wUd4xkw2DYkVkPk3fI6+d6o=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=euzZzFui9CyoO98bZ+fR7jL1SqGvTgFhQ+gZokeQXCzHR7d8MtSYoDVJT6IYwC1NN
+         kAaehfee9IysaC7RsVEorhqrThfFuwwxnvZWb5f4/wN2HNB3UnqFscLJLZ88FwZH/S
+         AdFglToYvTAlzOT3+qtP1noXoVRMemADkN+8CnzyJkTkPliNshX4Au32LJFheBdXuB
+         YjX4i0jpTio8XcQMjisIH3GS5h5IFZTctcRZMl9RzHBzJe/L/3+z2dvB3zUxgLhzxA
+         7AAUfpB4lymmOFnO3J7j8KpRyeyn98lgKeihr4exciPDQv7qLge2s/O/T49MkKmEmS
+         BUL/K6AcnLwkw==
+Message-ID: <b37801fd-dc5f-3d79-a5b3-2fc0008037bf@kernel.org>
+Date:   Fri, 29 Sep 2023 16:29:17 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.2
-Subject: Re: [PATCH V4 3/4] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- IDP board
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.1
+Subject: Re: [PATCH v7 00/23] Fix libata suspend/resume handling and code
+ cleanup
 Content-Language: en-US
-To:     Konrad Dybcio <konrad.dybcio@linaro.org>, <agross@kernel.org>,
-        <andersson@kernel.org>, <mani@kernel.org>,
-        <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <robh+dt@kernel.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
-        <cros-qcom-dts-watchers@chromium.org>
-CC:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-References: <20230929131936.29421-1-quic_nitirawa@quicinc.com>
- <20230929131936.29421-4-quic_nitirawa@quicinc.com>
- <ed61f6a1-a21d-cc23-b995-7692a2e8530a@linaro.org>
-From:   Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <ed61f6a1-a21d-cc23-b995-7692a2e8530a@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 1RUuwAXoNCMWU-LHXJ03zpttm34mrTy7
-X-Proofpoint-ORIG-GUID: 1RUuwAXoNCMWU-LHXJ03zpttm34mrTy7
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-29_11,2023-09-28_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=470
- priorityscore=1501 bulkscore=0 malwarescore=0 clxscore=1015
- lowpriorityscore=0 suspectscore=0 mlxscore=0 spamscore=0 adultscore=0
- phishscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2309180000 definitions=main-2309290123
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230926081507.69346-1-dlemoal@kernel.org>
+ <CAMuHMdX_aNX2FZoydqgZTF+DA1uTt0zxbXcu1FXqeO5tUqry=Q@mail.gmail.com>
+ <3a0e6a4d-1a82-0643-e1c0-9a7b1cc55b18@kernel.org>
+ <CAMuHMdUN0yiMiEjev6gx2tv8eqQoecv6kuHSSztxUhoAvQ9OdA@mail.gmail.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CAMuHMdUN0yiMiEjev6gx2tv8eqQoecv6kuHSSztxUhoAvQ9OdA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 9/29/2023 6:56 PM, Konrad Dybcio wrote:
+On 2023/09/29 15:56, Geert Uytterhoeven wrote:
+> Hi Damien,
 > 
-> 
-> On 9/29/23 15:19, Nitin Rawat wrote:
->> Add UFS host controller and PHY nodes for sc7280 IDP board.
+> On Fri, Sep 29, 2023 at 3:37 PM Damien Le Moal <dlemoal@kernel.org> wrote:
+>> On 2023/09/28 14:26, Geert Uytterhoeven wrote:
+>>> On Tue, Sep 26, 2023 at 10:15 AM Damien Le Moal <dlemoal@kernel.org> wrote:
+>>>> The first 9 patches of this series fix several issues with suspend/resume
+>>>> power management operations in scsi and libata. The most significant
+>>>> changes introduced are in patch 4 and 5, where the manage_start_stop
+>>>> flag of scsi devices is split into the manage_system_start_stop and
+>>>> manage_runtime_start_stop flags to allow keeping scsi runtime power
+>>>> operations for spining up/down ATA devices but have libata do its own
+>>>> system suspend/resume device power state management using EH.
+>>>>
+>>>> The remaining patches are code cleanup that do not introduce any
+>>>> significant functional change.
+>>>>
+>>>> This series was tested on qemu and on various PCs and servers. I am
+>>>> CC-ing people who recently reported issues with suspend/resume.
+>>>> Additional testing would be much appreciated.
+>>>
+>>> JFTR, with current libata/for-next[*], I saw the following with
+>>> rcar-sata, once (interesting lines marked with "!"):
+>>>
+>>>     PM: suspend entry (s2idle)
+>>>     Filesystems sync: 0.026 seconds
+>>>     Freezing user space processes
+>>>  !  ata1.00: qc timeout after 10000 msecs (cmd 0x40)
+>>>     Freezing user space processes completed (elapsed 0.007 seconds)
+>>>  !  ata1.00: VERIFY failed (err_mask=0x4)
+>>>     OOM killer disabled.
+>>>  !  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+>>>     Freezing remaining freezable tasks
+>>>  !  ata1.00: revalidation failed (errno=-5)
+>>>     Freezing remaining freezable tasks completed (elapsed 0.002 seconds)
+>>>     sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>>>     ata1: link resume succeeded after 1 retries
+>>>     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>>>     ata1.00: configured for UDMA/133
+>>>     ata1.00: Entering active power mode
+>>>     ata1.00: Entering standby power mode
+>>>     ravb e6800000.ethernet eth0: Link is Down
+>>>     Micrel KSZ9031 Gigabit PHY e6800000.ethernet-ffffffff:00: attached
+>>> PHY driver (mii_bus:phy_addr=e6800000.ethernet-ffffffff:00, irq=136)
+>>>     OOM killer enabled.
+>>>     Restarting tasks ... done.
+>>>     random: crng reseeded on system resumption
+>>>     PM: suspend exit
+>>>     ata1: link resume succeeded after 1 retries
+>>>     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>>>     ata1.00: Entering active power mode
+>>>     ata1.00: configured for UDMA/133
+>>>     ravb e6800000.ethernet eth0: Link is Up - 1Gbps/Full - flow control off
+>>>
+>>> Regardless, the disk worked fine after resume.
+>>>
+>>> Note that I saw this only once.
 >>
->> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
->> Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
->> Tested-by: Konrad Dybcio <konrad.dybcio@linaro.org>
-> I did not add these tags to this patch, drop them.
-
-My Apologies.Actually Patch 2 and Patch3 review tag got swapped.
-Will update and send new patchset
+>> I think I found the reason for this, but to confirm, were you doing a suspend
+>> right after resuming the system ? If yes, that I think I exactly understand the
+>> issue and why you saw it only once (it is a subtle race with scheduling
+>> libata-EH suspend/resume operations). I will send a fix next week.
 > 
-> Konrad
+> Now you ask that, yes there was a system suspend before.
+> 
+> Relevant log with timing info:
+> 
+>     [  130.177616] PM: suspend exit
+>     [  130.257981] ata1: link resume succeeded after 1 retries
+>     [  130.376714] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>     [  130.388525] ata1.00: Entering active power mode
+> 
+> so the drive should have been ready here.
 
-Thanks,
-Nitin
+yep.
+
+> 
+>     [  140.452669] PM: suspend entry (s2idle)
+
+Then suspend again 10s later.
+
+>     [  140.488313] Filesystems sync: 0.026 seconds
+>     [  140.515957] Freezing user space processes
+>     [  140.518209] ata1.00: qc timeout after 10000 msecs (cmd 0x40)
+>     [  140.523384] Freezing user space processes completed (elapsed
+> 0.007 seconds)
+>     [  140.527718] ata1.00: VERIFY failed (err_mask=0x4)
+
+But that verify sent 10s earlier to spinup the drive failed... Hmmm... That is
+not exactly what I was thinking of. While the race between scheduling suspend
+while resume is still on-going does exist, it is likely not what is happening
+here given the time interval with suspend entry. Need to dig further.
+Do you perhaps have "Power-up in Standby" (PUIS) enabled on that drive ?
+
+>     [  140.532541] OOM killer disabled.
+>     [  140.537270] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+>     [  140.542069] Freezing remaining freezable tasks
+>     [  140.546784] ata1.00: revalidation failed (errno=-5)
+> 
+> Gr{oetje,eeting}s,
+> 
+>                         Geert
+> 
+
+-- 
+Damien Le Moal
+Western Digital Research
+
