@@ -2,137 +2,165 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAEAEE77376
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Sep 2023 14:45:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35DEEE7737A
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Sep 2023 16:52:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234318AbjI3Opc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Sep 2023 10:45:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60400 "EHLO
+        id S234588AbjI3Qw3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Sep 2023 12:52:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234316AbjI3Opa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Sep 2023 10:45:30 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81CF3100
-        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2023 07:45:28 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id 4fb4d7f45d1cf-533d9925094so16117451a12.2
-        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2023 07:45:28 -0700 (PDT)
+        with ESMTP id S234584AbjI3Qw0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Sep 2023 12:52:26 -0400
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0633DA
+        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2023 09:52:22 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id ffacd0b85a97d-3231df68584so10961692f8f.1
+        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2023 09:52:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1696085127; x=1696689927; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=U0aXx8azADvAAzDnt7rzoNegb07dJt2q3hiW+HGl1iM=;
-        b=c7tx/iakebWhxKTEqWDh55AGTRKEzjqDCklZ82SYzQN+fnfr9QKrlpoHt+Te40gk5x
-         spYnBDpPc9yJbUTxcShbjXJNTG/JxqK7+ugsdgnoUOhQTaz7tGx2gWsNWsAE2Dco+FjD
-         DpZFwrB9hKSCf7vPnLbtAW15c6FEbQ3BqIRBERaUjjC+R6n3Ohmjz8KaDrjtGIVVmND5
-         5COhAHVynoYjVBnGLYIz2O0zST1LXrqkm8I1JWqxXBktjuYf8bYUhyP5cqVFGM2lxy4h
-         c8ZFKr5VX+2l5OGGx0wuVuKkRBQ6NPK/bxgP3+KseNk7JzFOoebUAow2oDd8o6N2M3E+
-         0FGw==
+        d=philpotter-co-uk.20230601.gappssmtp.com; s=20230601; t=1696092741; x=1696697541; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TP49E0lt1lRfwVwEUZNQYaCBfTY4UGz9ptrNHBZhxcM=;
+        b=GODHPJ5OBk5OFYXKYp/AsgCbEs96zHybKMqld2zYIYMA8bWsDO9CD32R4Ve892efWh
+         Rw8h6Qoitfo9fDFRXeGZ1URS0UWu9IJBVx4Vya++BEVhXwx8iJTXEUg7vtyzXuhFlYS7
+         EaYP12e+2yYMGMjH/WAmkF/9TwNHyl/rOxe/+Raw1hFTZ4W/QiD6r+cTfVQujrg4ADiB
+         t0EwhcgT/w1sqCgn4S5QesL/mVLbCPhL0Gs4zfmBWFR0O2+lvC4PwMCbZsvAUBYBpImL
+         7PoPTdEUlEjZSUqF5Cz+l5zBQwpp7snU3QkdNZzBDQG/BZuIT+Nwotv31hy32RoOfd+U
+         mAYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696085127; x=1696689927;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=U0aXx8azADvAAzDnt7rzoNegb07dJt2q3hiW+HGl1iM=;
-        b=pSdhSx8at72YAQc4LPTiBordwNth7KnYdwYC2wuCsQArVU09eXt0TxJ/vBi2fzQvnQ
-         y56nqzU4RrokJnDegzYIShxhpDrfmFKnRKrGM/Yj3V3nMtNuSbLV1a89reoZOFVbes21
-         tjPSNen+Wyyg+bMH6o/OkVZ/5QqSUGn0L6/z0G5Dcqtj27cZo/xmHdrzF7qMQVHV4YGO
-         4thEg5L3VsNfFlY2u7xBOG/bh1Zc+lH4f6SHs3tUEgh1Xd+Nl8UVY8C11zoUhgcjQ/II
-         lwuEDjqb+G1GgGBMfKWvmL/3Vgo55Vhcq+YoL3UHgB57z/lM1Ie3h5jkakqeMIwV9Lzk
-         mOwQ==
-X-Gm-Message-State: AOJu0Yw/gy1zfaIWoqFlOvFWXHExTlFU9E3yrDsR8u9iJYIo+O1abd9R
-        13TwHqllJGekmjwaNPCbHm/PhQ==
-X-Google-Smtp-Source: AGHT+IGZkR7p9Tij35GSY32P5zCxYz3IJ1bYDDVySnI/vt42uRlLTRv6GtIOwYwiU6qbqlA2wz+qgQ==
-X-Received: by 2002:aa7:d846:0:b0:533:5e56:bef2 with SMTP id f6-20020aa7d846000000b005335e56bef2mr6983344eds.10.1696085126864;
-        Sat, 30 Sep 2023 07:45:26 -0700 (PDT)
-Received: from [192.168.8.76] ([88.154.47.206])
-        by smtp.gmail.com with ESMTPSA id a2-20020aa7cf02000000b005232ea6a330sm12832304edy.2.2023.09.30.07.45.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 30 Sep 2023 07:45:26 -0700 (PDT)
-Message-ID: <28260226-f1ec-4404-a684-4ca89106ad05@linaro.org>
-Date:   Sat, 30 Sep 2023 16:45:17 +0200
+        d=1e100.net; s=20230601; t=1696092741; x=1696697541;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TP49E0lt1lRfwVwEUZNQYaCBfTY4UGz9ptrNHBZhxcM=;
+        b=r2q5fZJe07asdPF7sGq5vXrzW/FAQt653nVp3HM7UMWhb+QYkQXyLxquPaIVfxE7xn
+         OzQGxa8SRoFgaAXHZjKf+or1kk3cgczSM7twZ7eG3d+C2gQNJJ1oCm4PH6ZStrZOC0Y3
+         UbzGWiq125AUdVX78BTIDZrcJNt0IDlqjrOawP1YoTmQYQTzIIfw9e9xuUY4J+rjuSdO
+         lbhJdCqHhdRRC4DL2l/+2KHvFNCypv+3DJgFpmbcZxFoKTJYqSHXxEKxSQmj9rXCkzHz
+         F+6KmeaSt+mNHwTVIUgcA0lbJCRIqPWL2O99o/ttkxADakYdxgT3WA5E9uPHG6mlVlX6
+         H+HQ==
+X-Gm-Message-State: AOJu0YxmzEiMs65hGexHTsgQKge9WZ+ifUGZC14DmksWrZvX1QZbdV1T
+        6vgC/mT2wUZUdATFu/zdeRSZwA==
+X-Google-Smtp-Source: AGHT+IFufhUosQmDbdYYO0lgqH5WgmabRsKPy1NuiT6FdEpd1klh9Lx806UT3kRvn4yTyQ0Y4WLs9Q==
+X-Received: by 2002:adf:cf0a:0:b0:323:1689:6607 with SMTP id o10-20020adfcf0a000000b0032316896607mr6789063wrj.5.1696092741022;
+        Sat, 30 Sep 2023 09:52:21 -0700 (PDT)
+Received: from equinox (2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.a.1.e.e.d.f.d.0.b.8.0.1.0.0.2.ip6.arpa. [2001:8b0:dfde:e1a0::2])
+        by smtp.gmail.com with ESMTPSA id u1-20020adfed41000000b003247d3e5d99sm4921066wro.55.2023.09.30.09.52.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 30 Sep 2023 09:52:20 -0700 (PDT)
+Date:   Sat, 30 Sep 2023 17:52:17 +0100
+From:   Phillip Potter <phil@philpotter.co.uk>
+To:     Joel Granados <j.granados@samsung.com>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
+        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        David Ahern <dsahern@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Song Liu <song@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-rdma@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 01/15] cdrom: Remove now superfluous sentinel element
+ from ctl_table array
+Message-ID: <ZRhSQaNDJih5xABq@equinox>
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+ <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
+ <CGME20230928133705eucas1p182bd81a8e6aff530e43f9b0746a24eaa@eucas1p1.samsung.com>
+ <2023092855-cultivate-earthy-4d25@gregkh>
+ <20230929121730.bwzhrpaptf45smfy@localhost>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4 4/4] dt-bindings: ufs: qcom: Align clk binding property
- for Qualcomm UFS
-Content-Language: en-US
-To:     Nitin Rawat <quic_nitirawa@quicinc.com>, agross@kernel.org,
-        andersson@kernel.org, konrad.dybcio@linaro.org, mani@kernel.org,
-        alim.akhtar@samsung.com, bvanassche@acm.org, avri.altman@wdc.com,
-        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, cros-qcom-dts-watchers@chromium.org
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-References: <20230929131936.29421-1-quic_nitirawa@quicinc.com>
- <20230929131936.29421-5-quic_nitirawa@quicinc.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzTRLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnp5c3p0b2Yua296bG93c2tpQGxpbmFyby5vcmc+wsGUBBMBCgA+FiEE
- m9B+DgxR+NWWd7dUG5NDfTtBYpsFAmI+BxMCGwMFCRRfreEFCwkIBwIGFQoJCAsCBBYCAwEC
- HgECF4AACgkQG5NDfTtBYptgbhAAjAGunRoOTduBeC7V6GGOQMYIT5n3OuDSzG1oZyM4kyvO
- XeodvvYv49/ng473E8ZFhXfrre+c1olbr1A8pnz9vKVQs9JGVa6wwr/6ddH7/yvcaCQnHRPK
- mnXyP2BViBlyDWQ71UC3N12YCoHE2cVmfrn4JeyK/gHCvcW3hUW4i5rMd5M5WZAeiJj3rvYh
- v8WMKDJOtZFXxwaYGbvFJNDdvdTHc2x2fGaWwmXMJn2xs1ZyFAeHQvrp49mS6PBQZzcx0XL5
- cU9ZjhzOZDn6Apv45/C/lUJvPc3lo/pr5cmlOvPq1AsP6/xRXsEFX/SdvdxJ8w9KtGaxdJuf
- rpzLQ8Ht+H0lY2On1duYhmro8WglOypHy+TusYrDEry2qDNlc/bApQKtd9uqyDZ+rx8bGxyY
- qBP6bvsQx5YACI4p8R0J43tSqWwJTP/R5oPRQW2O1Ye1DEcdeyzZfifrQz58aoZrVQq+innR
- aDwu8qDB5UgmMQ7cjDSeAQABdghq7pqrA4P8lkA7qTG+aw8Z21OoAyZdUNm8NWJoQy8m4nUP
- gmeeQPRc0vjp5JkYPgTqwf08cluqO6vQuYL2YmwVBIbO7cE7LNGkPDA3RYMu+zPY9UUi/ln5
- dcKuEStFZ5eqVyqVoZ9eu3RTCGIXAHe1NcfcMT9HT0DPp3+ieTxFx6RjY3kYTGLOwU0EVUNc
- NAEQAM2StBhJERQvgPcbCzjokShn0cRA4q2SvCOvOXD+0KapXMRFE+/PZeDyfv4dEKuCqeh0
- hihSHlaxTzg3TcqUu54w2xYskG8Fq5tg3gm4kh1Gvh1LijIXX99ABA8eHxOGmLPRIBkXHqJY
- oHtCvPc6sYKNM9xbp6I4yF56xVLmHGJ61KaWKf5KKWYgA9kfHufbja7qR0c6H79LIsiYqf92
- H1HNq1WlQpu/fh4/XAAaV1axHFt/dY/2kU05tLMj8GjeQDz1fHas7augL4argt4e+jum3Nwt
- yupodQBxncKAUbzwKcDrPqUFmfRbJ7ARw8491xQHZDsP82JRj4cOJX32sBg8nO2N5OsFJOcd
- 5IE9v6qfllkZDAh1Rb1h6DFYq9dcdPAHl4zOj9EHq99/CpyccOh7SrtWDNFFknCmLpowhct9
- 5ZnlavBrDbOV0W47gO33WkXMFI4il4y1+Bv89979rVYn8aBohEgET41SpyQz7fMkcaZU+ok/
- +HYjC/qfDxT7tjKXqBQEscVODaFicsUkjheOD4BfWEcVUqa+XdUEciwG/SgNyxBZepj41oVq
- FPSVE+Ni2tNrW/e16b8mgXNngHSnbsr6pAIXZH3qFW+4TKPMGZ2rZ6zITrMip+12jgw4mGjy
- 5y06JZvA02rZT2k9aa7i9dUUFggaanI09jNGbRA/ABEBAAHCwXwEGAEKACYCGwwWIQSb0H4O
- DFH41ZZ3t1Qbk0N9O0FimwUCYDzvagUJFF+UtgAKCRAbk0N9O0Fim9JzD/0auoGtUu4mgnna
- oEEpQEOjgT7l9TVuO3Qa/SeH+E0m55y5Fjpp6ZToc481za3xAcxK/BtIX5Wn1mQ6+szfrJQ6
- 59y2io437BeuWIRjQniSxHz1kgtFECiV30yHRgOoQlzUea7FgsnuWdstgfWi6LxstswEzxLZ
- Sj1EqpXYZE4uLjh6dW292sO+j4LEqPYr53hyV4I2LPmptPE9Rb9yCTAbSUlzgjiyyjuXhcwM
- qf3lzsm02y7Ooq+ERVKiJzlvLd9tSe4jRx6Z6LMXhB21fa5DGs/tHAcUF35hSJrvMJzPT/+u
- /oVmYDFZkbLlqs2XpWaVCo2jv8+iHxZZ9FL7F6AHFzqEFdqGnJQqmEApiRqH6b4jRBOgJ+cY
- qc+rJggwMQcJL9F+oDm3wX47nr6jIsEB5ZftdybIzpMZ5V9v45lUwmdnMrSzZVgC4jRGXzsU
- EViBQt2CopXtHtYfPAO5nAkIvKSNp3jmGxZw4aTc5xoAZBLo0OV+Ezo71pg3AYvq0a3/oGRG
- KQ06ztUMRrj8eVtpImjsWCd0bDWRaaR4vqhCHvAG9iWXZu4qh3ipie2Y0oSJygcZT7H3UZxq
- fyYKiqEmRuqsvv6dcbblD8ZLkz1EVZL6djImH5zc5x8qpVxlA0A0i23v5QvN00m6G9NFF0Le
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <20230929131936.29421-5-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230929121730.bwzhrpaptf45smfy@localhost>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29/09/2023 15:19, Nitin Rawat wrote:
-> Align the binding property for clock such that "clocks" property
-> comes first followed by "clock-names" property.
+On Fri, Sep 29, 2023 at 02:17:30PM +0200, Joel Granados wrote:
+> On Thu, Sep 28, 2023 at 03:36:55PM +0200, Greg Kroah-Hartman wrote:
+> > On Thu, Sep 28, 2023 at 03:21:26PM +0200, Joel Granados via B4 Relay wrote:
+> > > From: Joel Granados <j.granados@samsung.com>
+> > > 
+> > > This commit comes at the tail end of a greater effort to remove the
+> > > empty elements at the end of the ctl_table arrays (sentinels) which
+> > > will reduce the overall build time size of the kernel and run time
+> > > memory bloat by ~64 bytes per sentinel (further information Link :
+> > > https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+> > > 
+> > > Remove sentinel element from cdrom_table
+> > > 
+> > > Signed-off-by: Joel Granados <j.granados@samsung.com>
+> > > ---
+> > >  drivers/cdrom/cdrom.c | 3 +--
+> > >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+> > > index cc2839805983..451907ade389 100644
+> > > --- a/drivers/cdrom/cdrom.c
+> > > +++ b/drivers/cdrom/cdrom.c
+> > > @@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] = {
+> > >  		.maxlen		= sizeof(int),
+> > >  		.mode		= 0644,
+> > >  		.proc_handler	= cdrom_sysctl_handler
+> > > -	},
+> > > -	{ }
+> > > +	}
+> > 
+> > You should have the final entry as "}," so as to make any future
+> > additions to the list to only contain that entry, that's long been the
+> > kernel style for lists like this.
+> Will send a V2 with this included. Thx.
+> 
+> > 
+> > So your patches will just remove one line, not 2 and add 1, making it a
+> > smaller diff.
+> indeed.
+> 
+> > 
+> > thanks,
+> > 
+> > greg k-h
+> 
+> -- 
+> 
+> Joel Granados
 
-This is a friendly reminder during the review process.
+Hi Joel,
 
-It seems my previous comments were not fully addressed. Maybe my
-feedback got lost between the quotes, maybe you just forgot to apply it.
-Please go back to the previous discussion and either implement all
-requested changes or keep discussing them.
+Thank you for your patch. I look forward to seeing V2, and will be happy
+to review it.
 
-Thank you.
-
-Since you also ignored tags or added them wrong, let's be clear here:
-NAK till you solve all the issues.
-
-Best regards,
-Krzysztof
-
+Regards,
+Phil
