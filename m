@@ -2,165 +2,103 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35DEEE7737A
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Sep 2023 16:52:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A7C5E748E9
+	for <linux-scsi@archiver.kernel.org>; Sun,  1 Oct 2023 06:30:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234588AbjI3Qw3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Sep 2023 12:52:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35382 "EHLO
+        id S233790AbjJAGa7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 1 Oct 2023 02:30:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234584AbjI3Qw0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Sep 2023 12:52:26 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0633DA
-        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2023 09:52:22 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id ffacd0b85a97d-3231df68584so10961692f8f.1
-        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2023 09:52:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=philpotter-co-uk.20230601.gappssmtp.com; s=20230601; t=1696092741; x=1696697541; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=TP49E0lt1lRfwVwEUZNQYaCBfTY4UGz9ptrNHBZhxcM=;
-        b=GODHPJ5OBk5OFYXKYp/AsgCbEs96zHybKMqld2zYIYMA8bWsDO9CD32R4Ve892efWh
-         Rw8h6Qoitfo9fDFRXeGZ1URS0UWu9IJBVx4Vya++BEVhXwx8iJTXEUg7vtyzXuhFlYS7
-         EaYP12e+2yYMGMjH/WAmkF/9TwNHyl/rOxe/+Raw1hFTZ4W/QiD6r+cTfVQujrg4ADiB
-         t0EwhcgT/w1sqCgn4S5QesL/mVLbCPhL0Gs4zfmBWFR0O2+lvC4PwMCbZsvAUBYBpImL
-         7PoPTdEUlEjZSUqF5Cz+l5zBQwpp7snU3QkdNZzBDQG/BZuIT+Nwotv31hy32RoOfd+U
-         mAYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696092741; x=1696697541;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TP49E0lt1lRfwVwEUZNQYaCBfTY4UGz9ptrNHBZhxcM=;
-        b=r2q5fZJe07asdPF7sGq5vXrzW/FAQt653nVp3HM7UMWhb+QYkQXyLxquPaIVfxE7xn
-         OzQGxa8SRoFgaAXHZjKf+or1kk3cgczSM7twZ7eG3d+C2gQNJJ1oCm4PH6ZStrZOC0Y3
-         UbzGWiq125AUdVX78BTIDZrcJNt0IDlqjrOawP1YoTmQYQTzIIfw9e9xuUY4J+rjuSdO
-         lbhJdCqHhdRRC4DL2l/+2KHvFNCypv+3DJgFpmbcZxFoKTJYqSHXxEKxSQmj9rXCkzHz
-         F+6KmeaSt+mNHwTVIUgcA0lbJCRIqPWL2O99o/ttkxADakYdxgT3WA5E9uPHG6mlVlX6
-         H+HQ==
-X-Gm-Message-State: AOJu0YxmzEiMs65hGexHTsgQKge9WZ+ifUGZC14DmksWrZvX1QZbdV1T
-        6vgC/mT2wUZUdATFu/zdeRSZwA==
-X-Google-Smtp-Source: AGHT+IFufhUosQmDbdYYO0lgqH5WgmabRsKPy1NuiT6FdEpd1klh9Lx806UT3kRvn4yTyQ0Y4WLs9Q==
-X-Received: by 2002:adf:cf0a:0:b0:323:1689:6607 with SMTP id o10-20020adfcf0a000000b0032316896607mr6789063wrj.5.1696092741022;
-        Sat, 30 Sep 2023 09:52:21 -0700 (PDT)
-Received: from equinox (2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.a.1.e.e.d.f.d.0.b.8.0.1.0.0.2.ip6.arpa. [2001:8b0:dfde:e1a0::2])
-        by smtp.gmail.com with ESMTPSA id u1-20020adfed41000000b003247d3e5d99sm4921066wro.55.2023.09.30.09.52.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 30 Sep 2023 09:52:20 -0700 (PDT)
-Date:   Sat, 30 Sep 2023 17:52:17 +0100
-From:   Phillip Potter <phil@philpotter.co.uk>
-To:     Joel Granados <j.granados@samsung.com>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
-        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        David Ahern <dsahern@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Robin Holt <robinmholt@gmail.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Song Liu <song@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-serial@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-rdma@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 01/15] cdrom: Remove now superfluous sentinel element
- from ctl_table array
-Message-ID: <ZRhSQaNDJih5xABq@equinox>
-References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
- <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
- <CGME20230928133705eucas1p182bd81a8e6aff530e43f9b0746a24eaa@eucas1p1.samsung.com>
- <2023092855-cultivate-earthy-4d25@gregkh>
- <20230929121730.bwzhrpaptf45smfy@localhost>
+        with ESMTP id S233320AbjJAGa4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2023 02:30:56 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE460C2;
+        Sat, 30 Sep 2023 23:30:53 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1AA7C433C7;
+        Sun,  1 Oct 2023 06:30:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696141853;
+        bh=6e/Z9EDdbfohM0CT2JpFgF67+SDZWAsv5OmZaM9zIBI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HSbQVtq/LPy0O856bBsywsFdNuqek5sZFpI5LHujcv/+eY5cW9FYPNFZMQ57AUaQw
+         YS096OU+PkkHojhqZH/9qMs71VsEJ44SoMKl0EtG3pD0LQ7t5cfcyIcl9gzeKhnZR0
+         eC9EYAKQIskdEPCZf+Rs953CP0AF5g5FEw8der9kxtVe6gHifyPEGITPRMAHZIHzcX
+         B7qqPQIe+A/Xj3zzdfvByAbM4gjEp8cYBG362aVmSB6JMYfwmjdVJCfaWLH/sL4gIe
+         xAWnHyfHEp4qg3AnMjY36ZjvzMzuIHBD45ZUujyMZGUq5al80Y+5v5DewmnvvrfgSY
+         Ql4I9yzNb0Rmw==
+Date:   Sun, 1 Oct 2023 09:30:48 +0300
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Bob Pearson <rpearsonhpe@gmail.com>,
+        ". Bart Van Assche" <bvanassche@acm.org>
+Cc:     zyjzyj2000@gmail.com, jgg@ziepe.ca, linux-rdma@vger.kernel.org,
+        matsuda-daisuke@fujitsu.com, shinichiro.kawasaki@wdc.com,
+        linux-scsi@vger.kernel.org, Zhu Yanjun <yanjun.zhu@intel.com>,
+        Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
+Message-ID: <20231001063048.GA6351@unreal>
+References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
+ <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
+ <20230926140656.GM1642130@unreal>
+ <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
+ <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
+ <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
+ <6d9aaf05-c4cb-2b8e-c3dd-899e0360b6a1@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20230929121730.bwzhrpaptf45smfy@localhost>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6d9aaf05-c4cb-2b8e-c3dd-899e0360b6a1@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Sep 29, 2023 at 02:17:30PM +0200, Joel Granados wrote:
-> On Thu, Sep 28, 2023 at 03:36:55PM +0200, Greg Kroah-Hartman wrote:
-> > On Thu, Sep 28, 2023 at 03:21:26PM +0200, Joel Granados via B4 Relay wrote:
-> > > From: Joel Granados <j.granados@samsung.com>
-> > > 
-> > > This commit comes at the tail end of a greater effort to remove the
-> > > empty elements at the end of the ctl_table arrays (sentinels) which
-> > > will reduce the overall build time size of the kernel and run time
-> > > memory bloat by ~64 bytes per sentinel (further information Link :
-> > > https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
-> > > 
-> > > Remove sentinel element from cdrom_table
-> > > 
-> > > Signed-off-by: Joel Granados <j.granados@samsung.com>
-> > > ---
-> > >  drivers/cdrom/cdrom.c | 3 +--
-> > >  1 file changed, 1 insertion(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> > > index cc2839805983..451907ade389 100644
-> > > --- a/drivers/cdrom/cdrom.c
-> > > +++ b/drivers/cdrom/cdrom.c
-> > > @@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] = {
-> > >  		.maxlen		= sizeof(int),
-> > >  		.mode		= 0644,
-> > >  		.proc_handler	= cdrom_sysctl_handler
-> > > -	},
-> > > -	{ }
-> > > +	}
+On Wed, Sep 27, 2023 at 11:51:12AM -0500, Bob Pearson wrote:
+> On 9/26/23 15:24, Bart Van Assche wrote:
+> > On 9/26/23 11:34, Bob Pearson wrote:
+> >> I am working to try to reproduce the KASAN warning. Unfortunately,
+> >> so far I am not able to see it in Ubuntu + Linus' kernel (as you described) on metal. The config file is different but copies the CONFIG_KASAN_xxx exactly as yours. With KASAN enabled it hangs on every iteration of srp/002 but without a KASAN warning. I am now building an openSuSE VM for qemu and will see if that causes the warning.
 > > 
-> > You should have the final entry as "}," so as to make any future
-> > additions to the list to only contain that entry, that's long been the
-> > kernel style for lists like this.
-> Will send a V2 with this included. Thx.
-> 
+> > Hi Bob,
 > > 
-> > So your patches will just remove one line, not 2 and add 1, making it a
-> > smaller diff.
-> indeed.
-> 
+> > Did you try to understand the report that I shared? My conclusion from
+> > the report is that when using tasklets rxe_completer() only runs after
+> > rxe_requester() has finished and also that when using work queues that
+> > rxe_completer() may run concurrently with rxe_requester(). This patch
+> > seems to fix all issues that I ran into with the rdma_rxe workqueue
+> > patch (I have not tried to verify the performance implications of this
+> > patch):
 > > 
-> > thanks,
+> > diff --git a/drivers/infiniband/sw/rxe/rxe_task.c b/drivers/infiniband/sw/rxe/rxe_task.c
+> > index 1501120d4f52..6cd5d5a7a316 100644
+> > --- a/drivers/infiniband/sw/rxe/rxe_task.c
+> > +++ b/drivers/infiniband/sw/rxe/rxe_task.c
+> > @@ -10,7 +10,7 @@ static struct workqueue_struct *rxe_wq;
 > > 
-> > greg k-h
-> 
-> -- 
-> 
-> Joel Granados
+> >  int rxe_alloc_wq(void)
+> >  {
+> > -       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
+> > +       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, 1);
+> >         if (!rxe_wq)
+> >                 return -ENOMEM;
+> > 
+> > Thanks,
+> > 
+> > Bart.
 
-Hi Joel,
+<...>
 
-Thank you for your patch. I look forward to seeing V2, and will be happy
-to review it.
+> Nevertheless this is a good hint since it seems to imply that there is a race between the requester and
+> completer which is certainly possible.
 
-Regards,
-Phil
+Bob, Bart
+
+Can you please send this change as a formal patch?
+As we prefer workqueue with bad performance implementation over tasklets.
+
+Thanks
+
+> 
+> Bob
+> 
+> 
