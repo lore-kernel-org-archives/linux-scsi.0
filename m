@@ -2,123 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A9EE743C3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E663DE784BF
 	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 15:43:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238183AbjJBPnw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S238192AbjJBPnw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 2 Oct 2023 11:43:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41138 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238165AbjJBPnu (ORCPT
+        with ESMTP id S238164AbjJBPnu (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 11:43:50 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 319D1D8
-        for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 08:43:46 -0700 (PDT)
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E18F3BD
+        for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 08:43:44 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 79C061F747;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 8E44E21866;
         Mon,  2 Oct 2023 15:43:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1696261423; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=l2em2GE0evIiir8yfztiMXaUwpVXctIILEpclWbKYOw=;
-        b=LZ0QcrVWInEg9ai6RMKgdPGSWY4aPri4bgs9fD0zP6VIDvMw5XdN6FNgRL+cCIR53ZM5Dl
-        nJJN31PIUkwdH/pgQho6JAz6+OZ0tWfZMW4emDoT5Fl28vFUqoVhwvK0of5pR5yIxCsqUS
-        uUqxTzsPl1cuscWM38zWpqOwJNc9pwQ=
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3d2bePvtn8rp8JqzVM+GMYwJwHrHCANK3GJHCy7ehjc=;
+        b=DF7IUX4SivxcPw1NX0d6qLS2QU2Lsxo5Rs6eMO068FX/oMtE2DnR6WLJYwqNOog+JRWM2E
+        cGRxuWelfNUtjl2c5mHqwGGcvVHlDdCnnfOteZ++J9ONsa0aDeNI+UKl9YWI8RoimibASG
+        T/dfDtn+VSxhi+GWyVC3BISwGgB5Op8=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1696261423;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=l2em2GE0evIiir8yfztiMXaUwpVXctIILEpclWbKYOw=;
-        b=Rnisn4DZAc9NQK92tdWKmDEzlD6bLuPnQwBEySk1Ih6hUoZ+pN2st02LPJm3alNLvV31zR
-        S/5zclSLwRGXfICg==
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3d2bePvtn8rp8JqzVM+GMYwJwHrHCANK3GJHCy7ehjc=;
+        b=g9cjQsrE/zZRhX75ndV/Pl0nqWe31rancmf10eiyACYopxBPc//6dzHhTOWqfEHP++eC5d
+        +EV7BZ9qAbjp4TDg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 541642C142;
+        by relay2.suse.de (Postfix) with ESMTP id 6E7652C152;
         Mon,  2 Oct 2023 15:43:43 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 4071C51E7537; Mon,  2 Oct 2023 17:43:43 +0200 (CEST)
+        id 8594351E7547; Mon,  2 Oct 2023 17:43:43 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv5 00/18] scsi: EH rework prep patches, part 1
-Date:   Mon,  2 Oct 2023 17:43:10 +0200
-Message-Id: <20231002154328.43718-1-hare@suse.de>
+        Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 08/18] aic79xx: make BUILD_SCSIID() a function
+Date:   Mon,  2 Oct 2023 17:43:18 +0200
+Message-Id: <20231002154328.43718-9-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20231002154328.43718-1-hare@suse.de>
+References: <20231002154328.43718-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+Convert BUILD_SCSIID() into a function and add a scsi_device argument.
 
-(taking up an old thread:)
-here's the first batch of patches for my EH rework.
-It modifies the reset callbacks for SCSI drivers
-such that the final conversion to drop the 'struct scsi_cmnd'
-argument and use the entity in question (host, bus, target, device)
-as the argument to the SCSI EH callbacks becomes possible.
-The first part covers drivers which just requires minor tweaks.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+ drivers/scsi/aic7xxx/aic79xx_osm.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-As usual, comments and reviews are welcome.
-
-Changes to v4:
-- Rebase to latest linus tree
-
-Changes to v3:
-- Move fnic and snic patches to the next patchset
-- Include reviews from Ewan Milne
-
-Changes to v2:
-- Include reviews from John Garry
-- move mpi3mr, zfcp, sym53c8xx_2, and qla1280 patches to the
-  next patchset
-
-Changes to the initial version:
-- Include reviews from Christoph
-- Fixup build robot issues
-
-Hannes Reinecke (18):
-  mptfc: simplify mptfc_block_error_handler()
-  mptfusion: correct definitions for mptscsih_dev_reset()
-  mptfc: open-code mptfc_block_error_handler() for bus reset
-  qedf: use fc rport as argument for qedf_initiate_tmf()
-  bnx2fc: Do not rely on a scsi command for lun or target reset
-  aic7xxx: make BUILD_SCSIID() a function
-  aic7xxx: do not reference scsi command when resetting device
-  aic79xx: make BUILD_SCSIID() a function
-  aic79xx: do not reference scsi command when resetting device
-  ibmvfc: open-code reset loop for target reset
-  megaraid: pass in NULL scb for host reset
-  ips: Do not try to abort command from host reset
-  sym53c8xx_2: split off bus reset from host reset
-  sym53c8xx_2: rework reset handling
-  qla1280: separate out host reset function from qla1280_error_action()
-  pmcraid: Select device in pmcraid_eh_bus_reset_handler()
-  pmcraid: select device in pmcraid_eh_target_reset_handler()
-  mpi3mr: split off bus_reset function from host_reset
-
- drivers/message/fusion/mptfc.c      |  94 +++++++++-----
- drivers/message/fusion/mptscsih.c   |  55 +++++++-
- drivers/message/fusion/mptscsih.h   |   1 +
- drivers/scsi/aic7xxx/aic79xx_osm.c  |  32 +++--
- drivers/scsi/aic7xxx/aic7xxx_osm.c  | 127 ++++++++++---------
- drivers/scsi/bnx2fc/bnx2fc.h        |   1 +
- drivers/scsi/bnx2fc/bnx2fc_hwi.c    |  14 ++-
- drivers/scsi/bnx2fc/bnx2fc_io.c     |  94 +++++++-------
- drivers/scsi/ibmvscsi/ibmvfc.c      |  42 ++++---
- drivers/scsi/ips.c                  |  18 ---
- drivers/scsi/megaraid.c             |  42 +++----
- drivers/scsi/mpi3mr/mpi3mr_os.c     |  57 ++++++---
- drivers/scsi/pmcraid.c              |  60 +++++++--
- drivers/scsi/qedf/qedf.h            |   5 +-
- drivers/scsi/qedf/qedf_io.c         |  75 +++--------
- drivers/scsi/qedf/qedf_main.c       |  19 +--
- drivers/scsi/qla1280.c              |  42 ++++---
- drivers/scsi/sym53c8xx_2/sym_glue.c | 189 ++++++++++++++++++----------
- 18 files changed, 572 insertions(+), 395 deletions(-)
-
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index f2f3405cdec5..7e5253da04cd 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -541,8 +541,11 @@ ahd_linux_unmap_scb(struct ahd_softc *ahd, struct scb *scb)
+ }
+ 
+ /******************************** Macros **************************************/
+-#define BUILD_SCSIID(ahd, cmd)						\
+-	(((scmd_id(cmd) << TID_SHIFT) & TID) | (ahd)->our_id)
++static inline unsigned int ahd_build_scsiid(struct ahd_softc *ahd,
++					    struct scsi_device *sdev)
++{
++	return ((sdev_id(sdev) << TID_SHIFT) & TID) | (ahd)->our_id;
++}
+ 
+ /*
+  * Return a string describing the driver.
+@@ -818,7 +821,7 @@ ahd_linux_dev_reset(struct scsi_cmnd *cmd)
+ 	ahd_set_sense_residual(reset_scb, 0);
+ 	reset_scb->platform_data->xfer_len = 0;
+ 	reset_scb->hscb->control = 0;
+-	reset_scb->hscb->scsiid = BUILD_SCSIID(ahd,cmd);
++	reset_scb->hscb->scsiid = ahd_build_scsiid(ahd, cmd->device);
+ 	reset_scb->hscb->lun = cmd->device->lun;
+ 	reset_scb->hscb->cdb_len = 0;
+ 	reset_scb->hscb->task_management = SIU_TASKMGMT_LUN_RESET;
+@@ -1577,7 +1580,7 @@ ahd_linux_run_command(struct ahd_softc *ahd, struct ahd_linux_device *dev,
+ 	 * Fill out basics of the HSCB.
+ 	 */
+ 	hscb->control = 0;
+-	hscb->scsiid = BUILD_SCSIID(ahd, cmd);
++	hscb->scsiid = ahd_build_scsiid(ahd, cmd->device);
+ 	hscb->lun = cmd->device->lun;
+ 	scb->hscb->task_management = 0;
+ 	mask = SCB_GET_TARGET_MASK(ahd, scb);
 -- 
 2.35.3
 
