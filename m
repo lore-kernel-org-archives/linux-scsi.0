@@ -2,106 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C52F8E748FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 17:41:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5B0E74901
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 17:42:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236879AbjJBRl5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 13:41:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41818 "EHLO
+        id S235804AbjJBRm7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 13:42:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236383AbjJBRlz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 13:41:55 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD273B4
-        for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 10:41:52 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id 98e67ed59e1d1-278fde50024so2365840a91.1
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2023 10:41:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1696268512; x=1696873312; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4PQ5k5L1vf7U2VTih6tAHOOIpHZFCPz9bxhvZ9xLpPg=;
-        b=QnHgHkI54rM2dgH4r1tXPy6tXPBMD5ry1/ifdplX/l0guWws/HGKmd+izNN2lYbyQ8
-         ASsK6Oo5Z7sy1Q/Z0kBNIYuCbzpRqXuKX6VuKTPVDI4BqtUsZz1HroIhIotGjXD5xnh5
-         nFJxMKr5N8enwmuj+YAiIfixs5OqbH54QmgQk=
+        with ESMTP id S232711AbjJBRm6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 13:42:58 -0400
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4062290;
+        Mon,  2 Oct 2023 10:42:56 -0700 (PDT)
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1c760b34d25so444455ad.3;
+        Mon, 02 Oct 2023 10:42:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696268512; x=1696873312;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4PQ5k5L1vf7U2VTih6tAHOOIpHZFCPz9bxhvZ9xLpPg=;
-        b=mdK0eDnWl4gh9+UM2FNCGXbsRgPwhCbGU9VFryvw54PELSxl4JoY012spX5sYsgJaE
-         nYtwFlV1iBZ3OwIOlciVPmIvT5uTpoOI8GQbk+S3gZ/l2CIlOxfcH4tuXfXahFOGzTur
-         ueKl/bv3bBj0BiwjhrRe7JhPbuGNOMLkatkJoKGcDNdtzIUWsB1VidZ/w0tGjn/vB7ME
-         KA7KybU3I2FDFGP19+bfi/ICCjb9aD64Fe3vibLTl0e4Bb4LvFLlaqDI+fsjpbYAF/sA
-         V1YQYpJbtxabB7M+3OZ+1raXd2wTwQ7V9EUXWeq152uMv03eYpAU4JEAItNJbAwynmHd
-         rXvQ==
-X-Gm-Message-State: AOJu0YxUkasJT2iXtqQT2hVDH1TP3eilOX4YQw5oyBfKgTOAK2t30lZP
-        ChjUvGMzDm+5JCh4YvewV0wCqA==
-X-Google-Smtp-Source: AGHT+IEKwoN8US8SbhoaEXG8I/zbZA98vFUpxqN5OwarkAVod2EsBwbtDvEJWjc/sy7+JQaEzvI/Jw==
-X-Received: by 2002:a17:90b:128f:b0:279:c1e:a146 with SMTP id fw15-20020a17090b128f00b002790c1ea146mr341768pjb.23.1696268512222;
-        Mon, 02 Oct 2023 10:41:52 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id d24-20020a17090ac25800b00276cb03a0e9sm6392591pjx.46.2023.10.02.10.41.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Oct 2023 10:41:51 -0700 (PDT)
-Date:   Mon, 2 Oct 2023 10:41:48 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Justin Stitt <justinstitt@google.com>
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] scsi: message: fusion: replace deprecated strncpy with
- strscpy_pad
-Message-ID: <202310021041.FA60C9812@keescook>
-References: <20230927-strncpy-drivers-message-fusion-mptctl-c-v1-1-bb2eddc1743c@google.com>
+        d=1e100.net; s=20230601; t=1696268576; x=1696873376;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=uzfoNyI7EtAoSUXJSkLswvCWk9zxuBz7mX5SZWqHLNk=;
+        b=bN3P0Mvn366ZZvlest09e4DPb2iJMhAv30aQacK2KmfSONzb4uZbnrSJ9rl9p65+Fe
+         FT5lNKVP9Reuy5DgULAqJ6rRlWfMbiLZvV+lO4Ue5wXh6sy+WsjQx2P0pxQtKbWvsYw+
+         KkcybewKnGtyZ4EuWaS299IXD26S0iBxepRzxYD6tp68GpnSvo/t0yeSArLy5iwY6OKZ
+         lg1+GpHdhFFLQYwAoT4tvjFYCsvcHqS5jkUj4hcMU3R5VUt5/Ga3cgsGQqXGbQc9XW6A
+         1qGyhf6Ti8MgnVcBQereDBovzhDX5KytL0jtqBoPhPAwg5+nZS3hnIjBUbG0poZk16KM
+         sm9w==
+X-Gm-Message-State: AOJu0YzR6ZbSBZIK5zddYKVuN5xxGFIvAxsKccXupuLfz29paGeg8RGa
+        P4YFGwqUF4OHGW/ODYhOiOE=
+X-Google-Smtp-Source: AGHT+IEPQSNHWLKb6e5RVZ4Bu2+fMqMDXD5b9ZwPXm+S7oNcAusoPb4P+LN1k8uh46Fuo0SUOqvb7Q==
+X-Received: by 2002:a17:902:6806:b0:1c3:64f9:45ad with SMTP id h6-20020a170902680600b001c364f945admr9650084plk.48.1696268575546;
+        Mon, 02 Oct 2023 10:42:55 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:6ad7:f663:5f97:db57? ([2620:15c:211:201:6ad7:f663:5f97:db57])
+        by smtp.gmail.com with ESMTPSA id b12-20020a170903228c00b001bdd7579b5dsm22227499plh.240.2023.10.02.10.42.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Oct 2023 10:42:55 -0700 (PDT)
+Message-ID: <1b89c38e-55dc-484a-9bf3-b9d69d960ebe@acm.org>
+Date:   Mon, 2 Oct 2023 10:42:53 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230927-strncpy-drivers-message-fusion-mptctl-c-v1-1-bb2eddc1743c@google.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 07/13] sd: Translate data lifetime information
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20230920191442.3701673-1-bvanassche@acm.org>
+ <20230920191442.3701673-8-bvanassche@acm.org>
+ <DM6PR04MB6575B74B6F5526C9860A56F1FCC5A@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <DM6PR04MB6575B74B6F5526C9860A56F1FCC5A@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 04:06:09AM +0000, Justin Stitt wrote:
-> `strncpy` is deprecated for use on NUL-terminated destination strings
-> [1] and as such we should prefer more robust and less ambiguous string
-> interfaces.
-> 
-> Since all these structs are copied out to userspace let's keep them
-> NUL-padded by using `strscpy_pad` which guarantees NUL-termination of
-> the destination buffer while also providing the NUL-padding behavior
-> that strncpy has.
-> 
-> Let's also opt to use the more idiomatic strscpy usage of:
-> `dest, src, sizeof(dest)` in cases where the compiler can determine the
-> size of the destination buffer. Do this for all cases of strscpy...() in
-> this file.
-> 
-> To be abundantly sure we don't leak stack data out to user space let's
-> also change a strscpy to strscpy_pad. This strscpy was introduced in
-> Commit dbe37c71d1246ec2 ("scsi: message: fusion: Replace all
-> non-returning strlcpy() with strscpy()")
-> 
-> Note that since we are creating these structs with a copy_from_user()
-> and modifying fields and then copying back out to the user it is
-> probably OK not to explicitly NUL-pad everything as any data leak is
-> probably just data from the user themselves. If this is too eager, let's
-> opt for `strscpy` which is still in the spirit of removing deprecated
-> strncpy usage treewide.
-> 
-> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
-> Cc: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Justin Stitt <justinstitt@google.com>
+On 10/2/23 06:11, Avri Altman wrote:
+>> sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>>                  ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
+>>                                           protect | fua, dld);
+>>          } else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
+>> -                  sdp->use_10_for_rw || protect) {
+>> +                  sdp->use_10_for_rw || protect ||
+>> +                  rq->write_hint != WRITE_LIFE_NOT_SET) {
+>
+> Is this a typo?
 
-Agreed -- this looks more robust and readable. Thanks!
+I don't see a typo? Am I perhaps overlooking something?
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+>> +static void sd_read_io_hints(struct scsi_disk *sdkp, unsigned char *buffer)
+>> +{
+>> +       struct scsi_device *sdp = sdkp->device;
+>> +       const struct scsi_io_group_descriptor *desc, *start, *end;
+>> +       struct scsi_sense_hdr sshdr;
+>> +       struct scsi_mode_data data;
+>> +       int res;
+>> +
+>> +       res = scsi_mode_sense(sdp, /*dbd=*/0x8, /*modepage=*/0x0a,
+>> +                             /*subpage=*/0x05, buffer, SD_BUF_SIZE,
+>> +                             SD_TIMEOUT, sdkp->max_retries, &data, &sshdr);
+>> +       if (res < 0)
+>> +               return;
+>> +       start = (void *)buffer + data.header_length + 16;
+>> +       end = (void *)buffer + ((data.header_length + data.length)
+>> +                               & ~(sizeof(*end) - 1));
+>> +       /*
+>> +        * From "SBC-5 Constrained Streams with Data Lifetimes": Device severs
+>> +        * should assign the lowest numbered stream identifiers to permanent
+>> +        * streams.
+>> +        */
+>> +       for (desc = start; desc < end; desc++)
+>> +               if (!desc->st_enble)
+>> +                       break;
+> I don't see how you can conclude that the stream is permanent,
+> without reading the perm bit from the stream status descriptor.
 
--- 
-Kees Cook
+I will add code that retrieves the stream status and that checks the 
+PERM bit.
+
+>> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+>> index 84685168b6e0..1863de5ebae4 100644
+>> --- a/drivers/scsi/sd.h
+>> +++ b/drivers/scsi/sd.h
+>> @@ -125,6 +125,7 @@ struct scsi_disk {
+>>          unsigned int    physical_block_size;
+>>          unsigned int    max_medium_access_timeouts;
+>>          unsigned int    medium_access_timed_out;
+>> +       u16             permanent_stream_count; /* maximum number of streams
+>> */
+>
+> This comment is a bit misleading:
+> The Block Limits Extension VPD page has a "maximum number of streams" field.
+> Maybe avoid the unnecessary confusion?
+
+I will change that comment or leave it out.
+
+Thanks,
+
+Bart.
+
