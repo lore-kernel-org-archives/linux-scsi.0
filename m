@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE2EDE784AF
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 08:54:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2975CE784B4
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 08:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235936AbjJBIyR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 04:54:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54894 "EHLO
+        id S236020AbjJBIyT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 04:54:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235938AbjJBIxV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 04:53:21 -0400
+        with ESMTP id S235931AbjJBIxU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 04:53:20 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CEC7C4;
-        Mon,  2 Oct 2023 01:53:18 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 88FECC32776;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E280DE5;
+        Mon,  2 Oct 2023 01:53:17 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 15E89C433B8;
         Mon,  2 Oct 2023 08:53:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1696236795;
-        bh=amz0lmR6ktjSFYbXFf8SJ/rD/LGezf37esDcBUcG4VA=;
+        bh=5V+ck7zme+riQyx1xmqb0Z0EeDR6wxHbTqGoKbjtrmQ=;
         h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-        b=Ivo+qQiovpQQJq0vFwPkgisug1Pppm96a/bVqga8oaV4kgvEby500kN2Dhw1ukZNg
-         +q/m0XC+RByxKFw1CgR1L/RGthyJyQCHLdTbejDTWXaxQuqYA7Zcxa4zich+rCjo53
-         Ak/b8FhOqr3Nd/0oKFNdytahECQM3W04/BwpLjss74/NFOWkqovAALiGP5i3mWn/7p
-         68dCoKFe1ZkRjyjhHlua+jyGPELXpRm/+3tI9gcKKD9fhW+wmFz/FLNZRsvjfnd1yR
-         gfZeyuxKySJXmB+tspGrEdZn4VULNRVO6fRSbJPTuJ90m/yelcjvEL0MAGNFxyf46o
-         8pYt9MzyjQQBQ==
+        b=h9YSxCOBiZI18TS8F7IFLh6Qq5+WpoHRSjCXtJkW74v79cxU+xHBab6ovMTly8LKe
+         IDFqi8nG5On9c5mUzM2nMlLg9u/xCra/9Lupu7tXNo+obgVRsiSTMsjN8q8qMhZJwW
+         OZMb4LcQIuvVtxOSe5yyZwJwU7XQJTCScPZiAEqAQ6Vkh29H2SZ2WK88rj6FFDCll8
+         DP0Rxd0R3nyUifHTS43/yIIYwnebe2P7wSqXDQ/poAMdzJ4NNjLpkUftDL2+5srhXP
+         9tiFoq42TchWR1nIGuWKvALBVYUFpStNC/KPFdeVqueWUJZ1tJWqRhEb5xnTl49iW+
+         PgMcLW7jUn/tg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.lore.kernel.org (Postfix) with ESMTP id 6E722E784A4;
-        Mon,  2 Oct 2023 08:53:15 +0000 (UTC)
+        by smtp.lore.kernel.org (Postfix) with ESMTP id E6D5AE7849A;
+        Mon,  2 Oct 2023 08:53:14 +0000 (UTC)
 From:   Joel Granados via B4 Relay 
         <devnull+j.granados.samsung.com@kernel.org>
-Date:   Mon, 02 Oct 2023 10:55:25 +0200
-Subject: [PATCH v2 08/15] infiniband: Remove the now superfluous sentinel
- element from ctl_table array
+Date:   Mon, 02 Oct 2023 10:55:20 +0200
+Subject: [PATCH v2 03/15] xen: Remove now superfluous sentinel element from
+ ctl_table array
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-8-02dd0d46f71e@samsung.com>
+Message-Id: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-3-02dd0d46f71e@samsung.com>
 References: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-0-02dd0d46f71e@samsung.com>
 In-Reply-To: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-0-02dd0d46f71e@samsung.com>
 To:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
@@ -85,18 +85,17 @@ Cc:     Joel Granados <j.granados@samsung.com>,
         linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
         intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
 X-Mailer: b4 0.13-dev-86aa5
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1292;
- i=j.granados@samsung.com; h=from:subject:message-id;
- bh=gz7T61c3mpYSXDkYtspjqyukqPQ8G3NAC15+ZhhmUg8=;
- b=owEB7QES/pANAwAKAbqXzVK3lkFPAcsmYgBlGoV9Z1pjf+iYaTcrpDqomSqDrWKWFayUHCWw9
- +AUAffywyqJAbMEAAEKAB0WIQSuRwlXJeYxJc7LJ5C6l81St5ZBTwUCZRqFfQAKCRC6l81St5ZB
- T/JFC/9TTtJdLb2PgHoU/qPORU0LWDxrdSEgO8uCjljCKGZhuFpPUKZbEd0rpHrNpki2b8pKynT
- MLcOr1s9ad+5SDCpUH/yLdJliUTWWvOtoMlXpO48uDR59mZX0//MP5HkHzjmetk/8lTfgT5BO6l
- Qn5dUfYq+irkQRBRjgRMHwVyc4A4crKuZEE9Tct8092ObCV3YvfOgQm7zQMbfR29PHrnL+uPHE5
- sNi3FYH38aLdW399HO1ONj4ssyAcOKq5nEXFzCmX/u6dgWVruM+h4AvbhaWsrIDITXM6MNBdwUf
- i5spcncMQQ11S0U8mtiKNH/7XHqmJBSGNBCVX9VtvpUNfvHMRDpShUTcduVGg4Vs9IR8Im+0yuT
- fMV19bF+hlgs7vNHYDKVGZe+h9vlbcMsvnQZWkrlFVvlUj6yUxi9sw+K1QrW4UaCo6f7vt/1i46
- Q/Fu7wsyyGFTQAHbDASRb4cCDdYx7GuUIvwS4VXhlHj3fhXILPrJcYZfg3+CsF5zKhFfA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=846; i=j.granados@samsung.com;
+ h=from:subject:message-id; bh=8Nedf2Lwq/OA3aANfJ6n4h5+UsWWU6lX+VhCPVGEdNQ=;
+ b=owEB7QES/pANAwAKAbqXzVK3lkFPAcsmYgBlGoV8XTr6pqPXL2Smxc+bYMHo1/P6P4+Xz5jGM
+ LVmxskaoPCJAbMEAAEKAB0WIQSuRwlXJeYxJc7LJ5C6l81St5ZBTwUCZRqFfAAKCRC6l81St5ZB
+ T9KdC/0drEL8+dTyGyZg/6XaWVheHfUsBsgDQaWMOuKpb0rMHpDrn/Nci5oHt1wDz5sWP1TWjgs
+ FKsSDVxdnNBN+9X0ckqjWyGf5rl/Xxm/E9lR6RQB6eV9u8YjlU7L3mSPq3a4ZHmjFF6Pti2XKv+
+ Ca4WXU7SAKiu/C8OW/RyYQl32fKwwgcV6kONqEbCrLSbK4LveVwISI+vDPkola1wrfM+muUVDRw
+ FRJxuiV6BavJ4pXOXDh7tOjva65fGwnLqIA88sPKLc7utjrUtGNWNGYrMglM8hKWZwcYObt0s7V
+ C5U2+0FZ7+qLORCw2Yclx+UcLpl2pPXjwpWJu3ak3VT0hyjEXvIvIx1UYsdwlorQAitkTer2eKf
+ HDMMBMPbtS8OxA+Lb35G/9PWV/3LOjSYvqo4AEH+OQHh7/7ej55TZAEbYIlQCnXXLoOatbyUZ6I
+ beZVa+UQo/zcDzjjh9tSz1eY8UnBeuglio1DFA0Yfa5pbmOPP8X9qngGhl19spS4f0lqQ=
 X-Developer-Key: i=j.granados@samsung.com; a=openpgp;
  fpr=F1F8E46D30F0F6C4A45FF4465895FAAC338C6E77
 X-Endpoint-Received: by B4 Relay for j.granados@samsung.com/default with auth_id=70
@@ -114,38 +113,25 @@ will reduce the overall build time size of the kernel and run time
 memory bloat by ~64 bytes per sentinel (further information Link :
 https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
 
-Remove sentinel from iwcm_ctl_table and ucma_ctl_table
+Remove sentinel from balloon_table
 
 Signed-off-by: Joel Granados <j.granados@samsung.com>
 ---
- drivers/infiniband/core/iwcm.c | 1 -
- drivers/infiniband/core/ucma.c | 1 -
- 2 files changed, 2 deletions(-)
+ drivers/xen/balloon.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/infiniband/core/iwcm.c b/drivers/infiniband/core/iwcm.c
-index 2b47073c61a6..0301fcad4b48 100644
---- a/drivers/infiniband/core/iwcm.c
-+++ b/drivers/infiniband/core/iwcm.c
-@@ -111,7 +111,6 @@ static struct ctl_table iwcm_ctl_table[] = {
- 		.mode		= 0644,
- 		.proc_handler	= proc_dointvec,
+diff --git a/drivers/xen/balloon.c b/drivers/xen/balloon.c
+index 586a1673459e..976c6cdf9ee6 100644
+--- a/drivers/xen/balloon.c
++++ b/drivers/xen/balloon.c
+@@ -94,7 +94,6 @@ static struct ctl_table balloon_table[] = {
+ 		.extra1         = SYSCTL_ZERO,
+ 		.extra2         = SYSCTL_ONE,
  	},
 -	{ }
  };
  
- /*
-diff --git a/drivers/infiniband/core/ucma.c b/drivers/infiniband/core/ucma.c
-index bf42650f125b..5f5ad8faf86e 100644
---- a/drivers/infiniband/core/ucma.c
-+++ b/drivers/infiniband/core/ucma.c
-@@ -71,7 +71,6 @@ static struct ctl_table ucma_ctl_table[] = {
- 		.mode		= 0644,
- 		.proc_handler	= proc_dointvec,
- 	},
--	{ }
- };
- 
- struct ucma_file {
+ #else
 
 -- 
 2.30.2
