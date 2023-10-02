@@ -2,103 +2,147 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A7C5E748E9
-	for <linux-scsi@archiver.kernel.org>; Sun,  1 Oct 2023 06:30:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3046E784A9
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 01:59:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233790AbjJAGa7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 1 Oct 2023 02:30:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39560 "EHLO
+        id S235137AbjJBB7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 1 Oct 2023 21:59:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233320AbjJAGa4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2023 02:30:56 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE460C2;
-        Sat, 30 Sep 2023 23:30:53 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1AA7C433C7;
-        Sun,  1 Oct 2023 06:30:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696141853;
-        bh=6e/Z9EDdbfohM0CT2JpFgF67+SDZWAsv5OmZaM9zIBI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HSbQVtq/LPy0O856bBsywsFdNuqek5sZFpI5LHujcv/+eY5cW9FYPNFZMQ57AUaQw
-         YS096OU+PkkHojhqZH/9qMs71VsEJ44SoMKl0EtG3pD0LQ7t5cfcyIcl9gzeKhnZR0
-         eC9EYAKQIskdEPCZf+Rs953CP0AF5g5FEw8der9kxtVe6gHifyPEGITPRMAHZIHzcX
-         B7qqPQIe+A/Xj3zzdfvByAbM4gjEp8cYBG362aVmSB6JMYfwmjdVJCfaWLH/sL4gIe
-         xAWnHyfHEp4qg3AnMjY36ZjvzMzuIHBD45ZUujyMZGUq5al80Y+5v5DewmnvvrfgSY
-         Ql4I9yzNb0Rmw==
-Date:   Sun, 1 Oct 2023 09:30:48 +0300
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Bob Pearson <rpearsonhpe@gmail.com>,
-        ". Bart Van Assche" <bvanassche@acm.org>
-Cc:     zyjzyj2000@gmail.com, jgg@ziepe.ca, linux-rdma@vger.kernel.org,
-        matsuda-daisuke@fujitsu.com, shinichiro.kawasaki@wdc.com,
-        linux-scsi@vger.kernel.org, Zhu Yanjun <yanjun.zhu@intel.com>,
-        Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
-Message-ID: <20231001063048.GA6351@unreal>
-References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
- <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
- <20230926140656.GM1642130@unreal>
- <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
- <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
- <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
- <6d9aaf05-c4cb-2b8e-c3dd-899e0360b6a1@gmail.com>
+        with ESMTP id S234505AbjJBB7W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2023 21:59:22 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD2B5C9;
+        Sun,  1 Oct 2023 18:59:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1696211959; x=1727747959;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=W88JVX1gXyO0U29l0jTJHljfHkuQ/YgOQ/ZzLImDnS0=;
+  b=BdQe1xE4OIO0bvOUh3nbyB2rPtnNMViptKIOqnE8BDK18dFxQ8zcOfUy
+   1ROS9nk/l1phxusmkbcS7GZMja13uK6LSI7hnSq8EPnTnJ/D+ee3Rx1lJ
+   lFKlvuaai0M81VwJakdinXNyC9IFTPW+9I7UYOI/kz/KTqdpClmBubr75
+   54BPhKPcy6QFaDpE5O58v6kjzneBGEu1aJQm4yLWjuMtiHdgD67n3LjbX
+   73p6KeZDLFeFqXrQJw5v1AdgfK6/PnkAR/dsvP2a/4ouQfh5ZZjn6MZD3
+   kNTc8fzjSCflL5UtbwIkanh4ThxApc02dLA25jtg/wFjBAEb5PBlOX45v
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10850"; a="372920002"
+X-IronPort-AV: E=Sophos;i="6.03,193,1694761200"; 
+   d="scan'208";a="372920002"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2023 18:59:19 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10850"; a="840862065"
+X-IronPort-AV: E=Sophos;i="6.03,193,1694761200"; 
+   d="scan'208";a="840862065"
+Received: from lkp-server02.sh.intel.com (HELO c3b01524d57c) ([10.239.97.151])
+  by FMSMGA003.fm.intel.com with ESMTP; 01 Oct 2023 18:59:13 -0700
+Received: from kbuild by c3b01524d57c with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qn8DG-0005fl-1j;
+        Mon, 02 Oct 2023 01:59:10 +0000
+Date:   Mon, 2 Oct 2023 09:58:33 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Nitesh Shetty <nj.shetty@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>
+Cc:     oe-kbuild-all@lists.linux.dev, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, nitheshshetty@gmail.com,
+        anuj1072538@gmail.com, gost.dev@samsung.com, mcgrof@kernel.org,
+        Nitesh Shetty <nj.shetty@samsung.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v16 08/12] nvmet: add copy command support for bdev and
+ file ns
+Message-ID: <202310020910.TaSOIepO-lkp@intel.com>
+References: <20230920080756.11919-9-nj.shetty@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <6d9aaf05-c4cb-2b8e-c3dd-899e0360b6a1@gmail.com>
+In-Reply-To: <20230920080756.11919-9-nj.shetty@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 11:51:12AM -0500, Bob Pearson wrote:
-> On 9/26/23 15:24, Bart Van Assche wrote:
-> > On 9/26/23 11:34, Bob Pearson wrote:
-> >> I am working to try to reproduce the KASAN warning. Unfortunately,
-> >> so far I am not able to see it in Ubuntu + Linus' kernel (as you described) on metal. The config file is different but copies the CONFIG_KASAN_xxx exactly as yours. With KASAN enabled it hangs on every iteration of srp/002 but without a KASAN warning. I am now building an openSuSE VM for qemu and will see if that causes the warning.
-> > 
-> > Hi Bob,
-> > 
-> > Did you try to understand the report that I shared? My conclusion from
-> > the report is that when using tasklets rxe_completer() only runs after
-> > rxe_requester() has finished and also that when using work queues that
-> > rxe_completer() may run concurrently with rxe_requester(). This patch
-> > seems to fix all issues that I ran into with the rdma_rxe workqueue
-> > patch (I have not tried to verify the performance implications of this
-> > patch):
-> > 
-> > diff --git a/drivers/infiniband/sw/rxe/rxe_task.c b/drivers/infiniband/sw/rxe/rxe_task.c
-> > index 1501120d4f52..6cd5d5a7a316 100644
-> > --- a/drivers/infiniband/sw/rxe/rxe_task.c
-> > +++ b/drivers/infiniband/sw/rxe/rxe_task.c
-> > @@ -10,7 +10,7 @@ static struct workqueue_struct *rxe_wq;
-> > 
-> >  int rxe_alloc_wq(void)
-> >  {
-> > -       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
-> > +       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, 1);
-> >         if (!rxe_wq)
-> >                 return -ENOMEM;
-> > 
-> > Thanks,
-> > 
-> > Bart.
+Hi Nitesh,
 
-<...>
+kernel test robot noticed the following build warnings:
 
-> Nevertheless this is a good hint since it seems to imply that there is a race between the requester and
-> completer which is certainly possible.
+[auto build test WARNING on 7fc7222d9680366edeecc219c21ca96310bdbc10]
 
-Bob, Bart
+url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Introduce-queue-limits-and-sysfs-for-copy-offload-support/20230920-170132
+base:   7fc7222d9680366edeecc219c21ca96310bdbc10
+patch link:    https://lore.kernel.org/r/20230920080756.11919-9-nj.shetty%40samsung.com
+patch subject: [PATCH v16 08/12] nvmet: add copy command support for bdev and file ns
+config: i386-randconfig-061-20231002 (https://download.01.org/0day-ci/archive/20231002/202310020910.TaSOIepO-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231002/202310020910.TaSOIepO-lkp@intel.com/reproduce)
 
-Can you please send this change as a formal patch?
-As we prefer workqueue with bad performance implementation over tasklets.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202310020910.TaSOIepO-lkp@intel.com/
 
-Thanks
+sparse warnings: (new ones prefixed by >>)
+>> drivers/nvme/target/io-cmd-bdev.c:498:30: sparse: sparse: restricted __le16 degrades to integer
+>> drivers/nvme/target/io-cmd-bdev.c:514:41: sparse: sparse: incorrect type in argument 2 (different base types) @@     expected restricted blk_status_t [usertype] blk_sts @@     got int [assigned] [usertype] ret @@
+   drivers/nvme/target/io-cmd-bdev.c:514:41: sparse:     expected restricted blk_status_t [usertype] blk_sts
+   drivers/nvme/target/io-cmd-bdev.c:514:41: sparse:     got int [assigned] [usertype] ret
 
-> 
-> Bob
-> 
-> 
+vim +498 drivers/nvme/target/io-cmd-bdev.c
+
+   478	
+   479	/*
+   480	 * At present we handle only one range entry, since copy offload is aligned with
+   481	 * copy_file_range, only one entry is passed from block layer.
+   482	 */
+   483	static void nvmet_bdev_execute_copy(struct nvmet_req *rq)
+   484	{
+   485		struct nvme_copy_range range;
+   486		struct nvme_command *cmd = rq->cmd;
+   487		ssize_t ret;
+   488		off_t dst, src;
+   489	
+   490		u16 status;
+   491	
+   492		status = nvmet_copy_from_sgl(rq, 0, &range, sizeof(range));
+   493		if (status)
+   494			goto err_rq_complete;
+   495	
+   496		dst = le64_to_cpu(cmd->copy.sdlba) << rq->ns->blksize_shift;
+   497		src = le64_to_cpu(range.slba) << rq->ns->blksize_shift;
+ > 498		rq->copy_len = (range.nlb + 1) << rq->ns->blksize_shift;
+   499	
+   500		if (bdev_max_copy_sectors(rq->ns->bdev)) {
+   501			ret = blkdev_copy_offload(rq->ns->bdev, dst, src, rq->copy_len,
+   502						  nvmet_bdev_copy_endio,
+   503						  (void *)rq, GFP_KERNEL);
+   504		} else {
+   505			ret = blkdev_copy_emulation(rq->ns->bdev, dst,
+   506						    rq->ns->bdev, src, rq->copy_len,
+   507						    nvmet_bdev_copy_endio,
+   508						    (void *)rq, GFP_KERNEL);
+   509		}
+   510		if (ret == -EIOCBQUEUED)
+   511			return;
+   512	
+   513		rq->cqe->result.u32 = cpu_to_le32(0);
+ > 514		status = blk_to_nvme_status(rq, ret);
+   515	err_rq_complete:
+   516		nvmet_req_complete(rq, status);
+   517	}
+   518	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
