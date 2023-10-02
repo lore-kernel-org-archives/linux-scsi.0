@@ -2,127 +2,171 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5B0E74901
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 17:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C8D5E74902
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 17:47:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235804AbjJBRm7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 13:42:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33750 "EHLO
+        id S236420AbjJBRrv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 13:47:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232711AbjJBRm6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 13:42:58 -0400
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4062290;
-        Mon,  2 Oct 2023 10:42:56 -0700 (PDT)
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1c760b34d25so444455ad.3;
-        Mon, 02 Oct 2023 10:42:56 -0700 (PDT)
+        with ESMTP id S236303AbjJBRru (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 13:47:50 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2C9583
+        for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 10:47:46 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-690fe10b6a4so21842b3a.3
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2023 10:47:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1696268866; x=1696873666; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=YNQQwx91b/uOnSKKZUppyBENuJr/eDgIe44FB0FMCNo=;
+        b=AbT+IkSZ1SWfUy804U29it0vgHMydIrdscYuT8bTC5lUJWJ58WklfZIUl/+MloTZ6W
+         +JYYgXv+A2lCdtiqWcyrUdDp22jn6vuZ1yNdNeogmUygAufZ/JMDNWIthD35YzNyXOqZ
+         6YYqJjiZX997F4YgZ06AVWsu29AgD0KeZKWiU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696268576; x=1696873376;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=uzfoNyI7EtAoSUXJSkLswvCWk9zxuBz7mX5SZWqHLNk=;
-        b=bN3P0Mvn366ZZvlest09e4DPb2iJMhAv30aQacK2KmfSONzb4uZbnrSJ9rl9p65+Fe
-         FT5lNKVP9Reuy5DgULAqJ6rRlWfMbiLZvV+lO4Ue5wXh6sy+WsjQx2P0pxQtKbWvsYw+
-         KkcybewKnGtyZ4EuWaS299IXD26S0iBxepRzxYD6tp68GpnSvo/t0yeSArLy5iwY6OKZ
-         lg1+GpHdhFFLQYwAoT4tvjFYCsvcHqS5jkUj4hcMU3R5VUt5/Ga3cgsGQqXGbQc9XW6A
-         1qGyhf6Ti8MgnVcBQereDBovzhDX5KytL0jtqBoPhPAwg5+nZS3hnIjBUbG0poZk16KM
-         sm9w==
-X-Gm-Message-State: AOJu0YzR6ZbSBZIK5zddYKVuN5xxGFIvAxsKccXupuLfz29paGeg8RGa
-        P4YFGwqUF4OHGW/ODYhOiOE=
-X-Google-Smtp-Source: AGHT+IEPQSNHWLKb6e5RVZ4Bu2+fMqMDXD5b9ZwPXm+S7oNcAusoPb4P+LN1k8uh46Fuo0SUOqvb7Q==
-X-Received: by 2002:a17:902:6806:b0:1c3:64f9:45ad with SMTP id h6-20020a170902680600b001c364f945admr9650084plk.48.1696268575546;
-        Mon, 02 Oct 2023 10:42:55 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:6ad7:f663:5f97:db57? ([2620:15c:211:201:6ad7:f663:5f97:db57])
-        by smtp.gmail.com with ESMTPSA id b12-20020a170903228c00b001bdd7579b5dsm22227499plh.240.2023.10.02.10.42.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Oct 2023 10:42:55 -0700 (PDT)
-Message-ID: <1b89c38e-55dc-484a-9bf3-b9d69d960ebe@acm.org>
-Date:   Mon, 2 Oct 2023 10:42:53 -0700
+        d=1e100.net; s=20230601; t=1696268866; x=1696873666;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YNQQwx91b/uOnSKKZUppyBENuJr/eDgIe44FB0FMCNo=;
+        b=HnSUcj4nLYaCjRGdpuMSx7rEYWGo4sSyEHlpfA8eKuFOdLGZPPeeArx3J7my1r3tRQ
+         lqsTM3S/S5MQVjcuQycX/1l9SR1IlZi7/S3BaaNnE8mx2VUh9cRPELwcOx+jC8kG6kKb
+         8i+Ae8BALGKxE87ma8KPs4aYU1Q6/yzK+f1QaiJQNGdAQQAwF8BFYqdfMY+h8t7el/Pd
+         yWZnF9B69puGw+65ilL8kKl7+cI2/bCyVhAIFLlHlXt49Qts4jAqxReKxbWvOOyffkS/
+         +BPvvM07Qw2+2BlkazugFhnJgG7Y/lEvX0AOCN+Pa19HRn3JVgdS2DQPRt/EC/2MxRsM
+         jOvA==
+X-Gm-Message-State: AOJu0YykPRmyFxS9mzkmPe4z07XqnrdCMYQ0AndC9JDNzknY+ybCeg1+
+        mrKzobSo42ZzuKxkG2DRvg5/ew==
+X-Google-Smtp-Source: AGHT+IEOGmXwzJQMmP9O9e3J1zTzuRGD6g3Odz/FFlBFPYnkIsiyFPzZQHxZCCd8Ejh+aMpMYfz8TQ==
+X-Received: by 2002:a05:6a21:4841:b0:161:76a4:4f6e with SMTP id au1-20020a056a21484100b0016176a44f6emr11714690pzc.32.1696268866346;
+        Mon, 02 Oct 2023 10:47:46 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id s1-20020a170902ea0100b001c3be750900sm22314441plg.163.2023.10.02.10.47.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Oct 2023 10:47:45 -0700 (PDT)
+Date:   Mon, 2 Oct 2023 10:47:42 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Justin Stitt <justinstitt@google.com>
+Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: message: fusion: replace deprecated strncpy with
+ strscpy
+Message-ID: <202310021043.5BCA90FB92@keescook>
+References: <20230927-strncpy-drivers-message-fusion-mptsas-c-v1-1-edac65cd7010@google.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/13] sd: Translate data lifetime information
-Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230920191442.3701673-1-bvanassche@acm.org>
- <20230920191442.3701673-8-bvanassche@acm.org>
- <DM6PR04MB6575B74B6F5526C9860A56F1FCC5A@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB6575B74B6F5526C9860A56F1FCC5A@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230927-strncpy-drivers-message-fusion-mptsas-c-v1-1-edac65cd7010@google.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/2/23 06:11, Avri Altman wrote:
->> sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
->>                  ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
->>                                           protect | fua, dld);
->>          } else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
->> -                  sdp->use_10_for_rw || protect) {
->> +                  sdp->use_10_for_rw || protect ||
->> +                  rq->write_hint != WRITE_LIFE_NOT_SET) {
->
-> Is this a typo?
+On Wed, Sep 27, 2023 at 04:43:08AM +0000, Justin Stitt wrote:
+> `strncpy` is deprecated for use on NUL-terminated destination strings
+> [1] and as such we should prefer more robust and less ambiguous string
+> interfaces.
+> 
+> The only caller of mptsas_exp_repmanufacture_info() is
+> mptsas_probe_one_phy() which can allocate rphy in either
+> sas_end_device_alloc() or sas_expander_alloc(). Both of which
+> zero-allocate:
+> |       rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
+> ... this is supplied to mptsas_exp_repmanufacture_info() as edev meaning
+> that no future NUL-padding of edev members is needed.
+> 
+> Considering the above, a suitable replacement is `strscpy` [2] due to
+> the fact that it guarantees NUL-termination on the destination buffer
+> without unnecessarily NUL-padding.
+> 
+> Note that while `strscpy(dest, src, sizeof(dest))` is more idiomatic
+> strscpy usage, we should keep `SAS_EXPANDER...LEN` for length arguments
+> since changing these to sizeof would mean we are getting buffers one
+> character larger than expected due to the declaration for these members:
+> |       char   vendor_id[SAS_EXPANDER_VENDOR_ID_LEN+1];
+> |       char   product_id[SAS_EXPANDER_PRODUCT_ID_LEN+1];
+> |       char   product_rev[SAS_EXPANDER_PRODUCT_REV_LEN+1];
+> |       char   component_vendor_id[SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN+1];
+> ... and simply removing the "+1" in conjunction with using sizeof() may
+> not work as other code may rely on this adjusted buffer length for
+> sas_expander_device members.
 
-I don't see a typo? Am I perhaps overlooking something?
+I don't agree with this assessment: without the +1, moving to strscpy()
+could lead to early truncation. I would change all of them to use
+sizeof(), so that %NUL termination will happen at the right place when a
+maxmimally sized string source is used.
 
->> +static void sd_read_io_hints(struct scsi_disk *sdkp, unsigned char *buffer)
->> +{
->> +       struct scsi_device *sdp = sdkp->device;
->> +       const struct scsi_io_group_descriptor *desc, *start, *end;
->> +       struct scsi_sense_hdr sshdr;
->> +       struct scsi_mode_data data;
->> +       int res;
->> +
->> +       res = scsi_mode_sense(sdp, /*dbd=*/0x8, /*modepage=*/0x0a,
->> +                             /*subpage=*/0x05, buffer, SD_BUF_SIZE,
->> +                             SD_TIMEOUT, sdkp->max_retries, &data, &sshdr);
->> +       if (res < 0)
->> +               return;
->> +       start = (void *)buffer + data.header_length + 16;
->> +       end = (void *)buffer + ((data.header_length + data.length)
->> +                               & ~(sizeof(*end) - 1));
->> +       /*
->> +        * From "SBC-5 Constrained Streams with Data Lifetimes": Device severs
->> +        * should assign the lowest numbered stream identifiers to permanent
->> +        * streams.
->> +        */
->> +       for (desc = start; desc < end; desc++)
->> +               if (!desc->st_enble)
->> +                       break;
-> I don't see how you can conclude that the stream is permanent,
-> without reading the perm bit from the stream status descriptor.
+i.e. for this:
 
-I will add code that retrieves the stream status and that checks the 
-PERM bit.
+	dst[FOO + 1] = { };
 
->> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
->> index 84685168b6e0..1863de5ebae4 100644
->> --- a/drivers/scsi/sd.h
->> +++ b/drivers/scsi/sd.h
->> @@ -125,6 +125,7 @@ struct scsi_disk {
->>          unsigned int    physical_block_size;
->>          unsigned int    max_medium_access_timeouts;
->>          unsigned int    medium_access_timed_out;
->> +       u16             permanent_stream_count; /* maximum number of streams
->> */
->
-> This comment is a bit misleading:
-> The Block Limits Extension VPD page has a "maximum number of streams" field.
-> Maybe avoid the unnecessary confusion?
+	strncpy(dst, src, FOO);
 
-I will change that comment or leave it out.
+we will copy at most FOO bytes into dst, leaving dst[FOO] as '\0'.
 
-Thanks,
+If we replace it with:
 
-Bart.
+	strscpy(dst, src, FOO);
 
+Then we'll copy at most FOO-1 bytes into dst, setting dst[FOO - 1] = '\0';
+
+So, these need to be adjusted to use sizeof(dst)...
+
+-Kees
+
+> 
+> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+> Link: https://github.com/KSPP/linux/issues/90
+> Cc: linux-hardening@vger.kernel.org
+> Cc: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
+> ---
+> Note: build-tested only.
+> 
+> Note: similar to drivers/scsi/mpi3mr/mpi3mr_transport.c +212 which uses
+> strscpy
+> ---
+>  drivers/message/fusion/mptsas.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+> index 86f16f3ea478..1dc225701a50 100644
+> --- a/drivers/message/fusion/mptsas.c
+> +++ b/drivers/message/fusion/mptsas.c
+> @@ -2964,15 +2964,15 @@ mptsas_exp_repmanufacture_info(MPT_ADAPTER *ioc,
+>  			goto out_free;
+>  
+>  		manufacture_reply = data_out + sizeof(struct rep_manu_request);
+> -		strncpy(edev->vendor_id, manufacture_reply->vendor_id,
+> +		strscpy(edev->vendor_id, manufacture_reply->vendor_id,
+>  			SAS_EXPANDER_VENDOR_ID_LEN);
+> -		strncpy(edev->product_id, manufacture_reply->product_id,
+> +		strscpy(edev->product_id, manufacture_reply->product_id,
+>  			SAS_EXPANDER_PRODUCT_ID_LEN);
+> -		strncpy(edev->product_rev, manufacture_reply->product_rev,
+> +		strscpy(edev->product_rev, manufacture_reply->product_rev,
+>  			SAS_EXPANDER_PRODUCT_REV_LEN);
+>  		edev->level = manufacture_reply->sas_format;
+>  		if (manufacture_reply->sas_format) {
+> -			strncpy(edev->component_vendor_id,
+> +			strscpy(edev->component_vendor_id,
+>  				manufacture_reply->component_vendor_id,
+>  				SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN);
+>  			tmp = (u8 *)&manufacture_reply->component_id;
+> 
+> ---
+> base-commit: 6465e260f48790807eef06b583b38ca9789b6072
+> change-id: 20230927-strncpy-drivers-message-fusion-mptsas-c-f22d5a4082e2
+> 
+> Best regards,
+> --
+> Justin Stitt <justinstitt@google.com>
+> 
+
+-- 
+Kees Cook
