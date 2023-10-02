@@ -2,160 +2,87 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC83E784B2
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 09:03:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAC13E784AF
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 09:35:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236016AbjJBJDy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 05:03:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57874 "EHLO
+        id S236129AbjJBJfs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 05:35:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235969AbjJBJDs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 05:03:48 -0400
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEA0B1BD;
-        Mon,  2 Oct 2023 01:58:09 -0700 (PDT)
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-32483535e51so4252647f8f.0;
-        Mon, 02 Oct 2023 01:58:09 -0700 (PDT)
+        with ESMTP id S230459AbjJBJfr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 05:35:47 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 752669E
+        for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 02:35:42 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-690ba63891dso12654950b3a.2
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2023 02:35:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=areca-com-tw.20230601.gappssmtp.com; s=20230601; t=1696239342; x=1696844142; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:cc:to:from:subject
+         :message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=DSomhkdtUP7F+02/nCh3Eh/+Tdns1WIxU3dMozvIOWY=;
+        b=JKojgjMHUOnOLSFlqyYH4UIQuiDMer+l37yKpZcyx7qNfDIWZbGETYXnx5t+ZZkXT+
+         8yVllmAXt02oTFN8y0AzgEYW3J7ExbEPed2Miwogbj1t4GWZR2D7JXKOS2ylnl/GgHXQ
+         LnonoLTG2xhjxBuYeZA6DRspb1cpcsP4VXSqt5IgKqOMFz3gJmaPBguzNCwtGfCej3sq
+         PmxtPYcnSCCHLsrYsJvcemFS0A0Q4u30bL10qkXFVNYh68NXwoTKkhQ4ImV6krVcQY+Y
+         kNszN9mx9mD0Vi3p73ixIzKQoz2D2Cmbvblt4op1V5d9q5rfPWPznRe+gtThCPvrxU9e
+         OBEQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696237088; x=1696841888;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BA0erWjrRdMrGzi5ZNBknNRu9czNXtMxnytZ4Rmj09w=;
-        b=glK9x9JP5DKQoOveN7TqyF5k4cTxRZXQSjQzQVTgLIaF5ueguLfyjCbWWoqlSdk+WK
-         haIvQg6wLSqQEavGTtKLc5w9/KF94vabL0X/04M1a8GUccc5CzaUpyVFKCu9mTd7MOcB
-         Es3COy1DxpIu7gIsyE+HAqFOsajOywt73JUT+4s4IaKxUAxZiOn6gVZd4KdvYz6WRaHD
-         It4bil66JawJp6YSDie+NcZ9oEzFtDEy3+bSFgm9E2f0IRQCilO3VqiOaXguD+BC3d/n
-         m1c6q2NRcx4KGavQV799G7to96w3cl1Ql/d6QXrSGYBeyRx4l1luhXSlXdbLn0rmR71D
-         KBXw==
-X-Gm-Message-State: AOJu0YwvJsDTi1llkRdT8exRKFGAJliF5+3iXObjmNn6bwN7TFpflltb
-        GDr2yMzShso+PbbK3A8nReM=
-X-Google-Smtp-Source: AGHT+IFX1CH2yaFZ4DPjG0iRefZg6vNuBJleSj/4R9NuvQPLd/nkpUID7AsNvsjaQ8C58nXw2EwbTg==
-X-Received: by 2002:adf:fd10:0:b0:317:69d2:35be with SMTP id e16-20020adffd10000000b0031769d235bemr9508091wrr.30.1696237087773;
-        Mon, 02 Oct 2023 01:58:07 -0700 (PDT)
-Received: from ?IPV6:2a0b:e7c0:0:107::aaaa:59? ([2a0b:e7c0:0:107::aaaa:59])
-        by smtp.gmail.com with ESMTPSA id w11-20020adff9cb000000b00326c952716esm5441244wrr.61.2023.10.02.01.58.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Oct 2023 01:58:07 -0700 (PDT)
-Message-ID: <3ff36799-534d-47a6-9feb-3ae3c3d488e2@kernel.org>
-Date:   Mon, 2 Oct 2023 10:58:05 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 04/15] tty: Remove now superfluous sentinel element
- from ctl_table array
-Content-Language: en-US
-To:     j.granados@samsung.com, Luis Chamberlain <mcgrof@kernel.org>,
-        willy@infradead.org, josh@joshtriplett.org,
-        Kees Cook <keescook@chromium.org>,
-        Phillip Potter <phil@philpotter.co.uk>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        David Ahern <dsahern@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Robin Holt <robinmholt@gmail.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Song Liu <song@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>
-Cc:     linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-rdma@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-References: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-0-02dd0d46f71e@samsung.com>
- <20231002-jag-sysctl_remove_empty_elem_drivers-v2-4-02dd0d46f71e@samsung.com>
-From:   Jiri Slaby <jirislaby@kernel.org>
-Autocrypt: addr=jirislaby@kernel.org; keydata=
- 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
-In-Reply-To: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-4-02dd0d46f71e@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        d=1e100.net; s=20230601; t=1696239342; x=1696844142;
+        h=content-transfer-encoding:mime-version:date:cc:to:from:subject
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DSomhkdtUP7F+02/nCh3Eh/+Tdns1WIxU3dMozvIOWY=;
+        b=V/UX4fapWvregohmCDThmQ6zeCf2Tc5NK0MRrwRCyemghLX4Ua+Vwwb1v9GmMs68tY
+         LY1EZ6JuGBf1J/vSToEMF/tn6pyaq3Ry4b7rtapzzrIx8/eXY0ocY5ydKeZZ0OKC/Q5u
+         TUYD4hep0rvwuqNjpO2GWs4u0yF+DeA5JKFVopc+w1bT7LzRs1RbWf9j/r2R4xDpR9T2
+         f1kqA8QmVphWShQ+TcFB+nqvXvk/JVLSM1EScuCI21ex+aZPadKAWAn6z6Axq0dOFTPG
+         BmihLjEbVoXTc25Gv1I9tWSBEUWxbXRhTwLTC6MYiD3F1EhZxo1eNY+5bFLqXHuau3ON
+         bFbA==
+X-Gm-Message-State: AOJu0YzI/bnQP0LNYL1iwo8iUFgpNcEwnzJmawcqEenyWy8jDpI0POni
+        opx2d+jONxTLZBr/BQQWmQmDv/GCiT00G6uTSaI4kw==
+X-Google-Smtp-Source: AGHT+IGT75k9aPQu4D+LrRUl2l806picCBMRseS1HAFAQX5xJYALwIizFzIqsfwtIpMmySCtvtEp/A==
+X-Received: by 2002:a05:6a20:3d90:b0:15e:10e:12f3 with SMTP id s16-20020a056a203d9000b0015e010e12f3mr11697085pzi.0.1696239341920;
+        Mon, 02 Oct 2023 02:35:41 -0700 (PDT)
+Received: from centos78 (60-248-88-209.hinet-ip.hinet.net. [60.248.88.209])
+        by smtp.googlemail.com with ESMTPSA id a17-20020aa780d1000000b00690d4464b94sm8294693pfn.7.2023.10.02.02.35.39
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 02 Oct 2023 02:35:40 -0700 (PDT)
+Message-ID: <ca21468a8a5de0fa19397232ac409c1015f8e29f.camel@areca.com.tw>
+Subject: [PATCH v3 0/3] scsi: arcmsr: support Areca ARC-1688 Raid controller
+From:   ching Huang <ching2048@areca.com.tw>
+To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
+        linux-scsi@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc:     bvanassche@acm.org, kbuild test robot <lkp@intel.com>
+Date:   Mon, 02 Oct 2023 17:35:49 +0800
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 02. 10. 23, 10:55, Joel Granados via B4 Relay wrote:
-> From: Joel Granados <j.granados@samsung.com>
-> 
-> This commit comes at the tail end of a greater effort to remove the
-> empty elements at the end of the ctl_table arrays (sentinels) which
-> will reduce the overall build time size of the kernel and run time
-> memory bloat by ~64 bytes per sentinel (further information Link :
-> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
-> 
-> Remove sentinel from tty_table
-> 
-> Signed-off-by: Joel Granados <j.granados@samsung.com>
+This patch bases on git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
 
-Reviewed-by: Jiri Slaby <jirislaby@kernel.org>
+Changes from v3:
+- fix warning of cast from pointer to integer of different size
 
-thanks,
+Changes from v2:
+- remove mangled whitespace
+- fix wrapped lines
+
+ching Huang (3):
+  support new Raid controller ARC-1688
+  support new PCI device ID 1883 and 1886
+  update driver's version to v1.51.00.14-20230915
+
+ drivers/scsi/arcmsr/arcmsr.h     | 29 +++++++++-
+ drivers/scsi/arcmsr/arcmsr_hba.c | 96 +++++++++++++++++++++++++++++++-
+ 2 files changed, 123 insertions(+), 2 deletions(-)
+
 -- 
-js
-suse labs
+2.39.3
+
 
