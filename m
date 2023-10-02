@@ -2,53 +2,52 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2E2E748ED
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 15:44:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9950DE743C3
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 15:44:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238205AbjJBPoC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 11:44:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41194 "EHLO
+        id S238208AbjJBPoD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 11:44:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41220 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238182AbjJBPnw (ORCPT
+        with ESMTP id S238165AbjJBPnw (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 11:43:52 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B73E5AC
-        for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 08:43:48 -0700 (PDT)
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A90D93
+        for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 08:43:49 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 88CB71F854;
+        by smtp-out1.suse.de (Postfix) with ESMTP id BC2A421872;
         Mon,  2 Oct 2023 15:43:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1696261423; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=eUo+0hKcQuVBcJf57BIwLAn7pdwzhqzCyXkc+yfMnJo=;
-        b=FcuAVwNhMOSfxU/kwezQHFBahfJr6unz38XE11n+cynhkG/bx9Z5Ul+pjdc1hf/Y53Mrob
-        7vueXrUQVFogd3wJO+/fkCO/9Wqpjww8FjdU7935LsLcev9/23DUtEQ0vXfMRKJRG9Ygw9
-        OeTdTWNkecHwUesm7/xtkQIbTLrGNO0=
+        bh=mxPgedMzxjUPx2jzUy/0DKGY5tsr7s2uH5vzGcskRJ8=;
+        b=NaffFDS7MOgsjkfXD7UyaBawIhlqV9rP/gzKv2peQbh0wV5DzQYzLZc1Eeza3adb20gWaw
+        THB0Fc13G9Z1WWUfKwObKqq+afW60vrzlXVBffDOud0VXNbr+9w7Vuru0vRDc5oglVrGlD
+        XGUp6BbAkRlffA+dS+doDL+owDGawDo=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1696261423;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=eUo+0hKcQuVBcJf57BIwLAn7pdwzhqzCyXkc+yfMnJo=;
-        b=MldZEevyIlFcZVoj1IL336Yn5uLArzoRKgmOPriag7cMyiR4EKAm0l6vSyC6pzjfQA4NaD
-        sOz9M8nrumN52LCg==
+        bh=mxPgedMzxjUPx2jzUy/0DKGY5tsr7s2uH5vzGcskRJ8=;
+        b=pX5CbmlJcfpTVYhg7IVncIK+Rl8umQIbcFONIUV1J7dukHTYDXdrgeA+vlGgkr+4SaxJm/
+        Wn4hYMtn3M5OUZCg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 6335C2C14F;
+        by relay2.suse.de (Postfix) with ESMTP id 9CB122C15F;
         Mon,  2 Oct 2023 15:43:43 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 7A61851E7545; Mon,  2 Oct 2023 17:43:43 +0200 (CEST)
+        id B4BBA51E7553; Mon,  2 Oct 2023 17:43:43 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 07/18] aic7xxx: do not reference scsi command when resetting device
-Date:   Mon,  2 Oct 2023 17:43:17 +0200
-Message-Id: <20231002154328.43718-8-hare@suse.de>
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 14/18] sym53c8xx_2: rework reset handling
+Date:   Mon,  2 Oct 2023 17:43:24 +0200
+Message-Id: <20231002154328.43718-15-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231002154328.43718-1-hare@suse.de>
 References: <20231002154328.43718-1-hare@suse.de>
@@ -58,266 +57,144 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When sending a device reset we should not take a reference to the
-scsi command.
+Split off the combined abort and device reset handling into
+distinct functions. And rename the current device reset handler
+into a target reset handler, seeing that it really is a target
+reset.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/scsi/aic7xxx/aic7xxx_osm.c | 108 +++++++++++++++--------------
- 1 file changed, 57 insertions(+), 51 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 82 +++++++++++++++++++----------
+ 1 file changed, 55 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index 15e53b33b955..4ae0a1c4d374 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -366,7 +366,8 @@ static void ahc_linux_queue_cmd_complete(struct ahc_softc *ahc,
- 					 struct scsi_cmnd *cmd);
- static void ahc_linux_freeze_simq(struct ahc_softc *ahc);
- static void ahc_linux_release_simq(struct ahc_softc *ahc);
--static int  ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag);
-+static int  ahc_linux_queue_recovery_cmd(struct scsi_device *sdev,
-+					 struct scsi_cmnd *cmd);
- static void ahc_linux_initialize_scsi_bus(struct ahc_softc *ahc);
- static u_int ahc_linux_user_tagdepth(struct ahc_softc *ahc,
- 				     struct ahc_devinfo *devinfo);
-@@ -728,7 +729,7 @@ ahc_linux_abort(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 77e6c3a2a94e..a2560cc807d3 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -564,7 +564,10 @@ static void sym53c8xx_timer(struct timer_list *t)
+  *  Generic method for our eh processing.
+  *  The 'op' argument tells what we have to do.
+  */
+-static int sym_eh_handler(int op, char *opname, struct scsi_cmnd *cmd)
++/*
++ * Error handlers called from the eh thread (one thread per HBA).
++ */
++static int sym53c8xx_eh_abort_handler(struct scsi_cmnd *cmd)
  {
- 	int error;
+ 	struct sym_ucmd *ucmd = SYM_UCMD_PTR(cmd);
+ 	struct Scsi_Host *shost = cmd->device->host;
+@@ -576,7 +579,7 @@ static int sym_eh_handler(int op, char *opname, struct scsi_cmnd *cmd)
+ 	int sts = -1;
+ 	struct completion eh_done;
  
--	error = ahc_linux_queue_recovery_cmd(cmd, SCB_ABORT);
-+	error = ahc_linux_queue_recovery_cmd(cmd->device, cmd);
- 	if (error != SUCCESS)
- 		printk("aic7xxx_abort returns 0x%x\n", error);
- 	return (error);
-@@ -742,7 +743,7 @@ ahc_linux_dev_reset(struct scsi_cmnd *cmd)
- {
- 	int error;
+-	scmd_printk(KERN_WARNING, cmd, "%s operation started\n", opname);
++	scmd_printk(KERN_WARNING, cmd, "ABORT operation started\n");
  
--	error = ahc_linux_queue_recovery_cmd(cmd, SCB_DEVICE_RESET);
-+	error = ahc_linux_queue_recovery_cmd(cmd->device, NULL);
- 	if (error != SUCCESS)
- 		printk("aic7xxx_dev_reset returns 0x%x\n", error);
- 	return (error);
-@@ -2036,11 +2037,12 @@ ahc_linux_release_simq(struct ahc_softc *ahc)
- }
- 
- static int
--ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
-+ahc_linux_queue_recovery_cmd(struct scsi_device *sdev,
-+			     struct scsi_cmnd *cmd)
- {
- 	struct ahc_softc *ahc;
- 	struct ahc_linux_device *dev;
--	struct scb *pending_scb;
-+	struct scb *pending_scb = NULL, *scb;
- 	u_int  saved_scbptr;
- 	u_int  active_scb_index;
- 	u_int  last_phase;
-@@ -2053,18 +2055,19 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	int    disconnected;
- 	unsigned long flags;
- 
--	pending_scb = NULL;
- 	paused = FALSE;
- 	wait = FALSE;
--	ahc = *(struct ahc_softc **)cmd->device->host->hostdata;
-+	ahc = *(struct ahc_softc **)sdev->host->hostdata;
- 
--	scmd_printk(KERN_INFO, cmd, "Attempting to queue a%s message\n",
--	       flag == SCB_ABORT ? "n ABORT" : " TARGET RESET");
-+	sdev_printk(KERN_INFO, sdev, "Attempting to queue a%s message\n",
-+	       cmd ? "n ABORT" : " TARGET RESET");
- 
--	printk("CDB:");
--	for (cdb_byte = 0; cdb_byte < cmd->cmd_len; cdb_byte++)
--		printk(" 0x%x", cmd->cmnd[cdb_byte]);
--	printk("\n");
-+	if (cmd) {
-+		printk("CDB:");
-+		for (cdb_byte = 0; cdb_byte < cmd->cmd_len; cdb_byte++)
-+			printk(" 0x%x", cmd->cmnd[cdb_byte]);
-+		printk("\n");
-+	}
- 
- 	ahc_lock(ahc, &flags);
- 
-@@ -2075,7 +2078,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	 * at all, and the system wanted us to just abort the
- 	 * command, return success.
- 	 */
--	dev = scsi_transport_device_data(cmd->device);
-+	dev = scsi_transport_device_data(sdev);
- 
- 	if (dev == NULL) {
- 		/*
-@@ -2083,13 +2086,12 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		 * so we must not still own the command.
- 		 */
- 		printk("%s:%d:%d:%d: Is not an active device\n",
--		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
--		       (u8)cmd->device->lun);
-+		       ahc_name(ahc), sdev->channel, sdev->id, (u8)sdev->lun);
- 		retval = SUCCESS;
- 		goto no_cmd;
+ 	/*
+ 	 * Escalate to host reset if the PCI bus went down
+@@ -594,19 +597,7 @@ static int sym_eh_handler(int op, char *opname, struct scsi_cmnd *cmd)
+ 		}
  	}
  
--	if ((dev->flags & (AHC_DEV_Q_BASIC|AHC_DEV_Q_TAGGED)) == 0
-+	if (cmd && (dev->flags & (AHC_DEV_Q_BASIC|AHC_DEV_Q_TAGGED)) == 0
- 	 && ahc_search_untagged_queues(ahc, cmd, cmd->device->id,
- 				       cmd->device->channel + 'A',
- 				       (u8)cmd->device->lun,
-@@ -2104,25 +2106,28 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	/*
- 	 * See if we can find a matching cmd in the pending list.
- 	 */
--	LIST_FOREACH(pending_scb, &ahc->pending_scbs, pending_links) {
--		if (pending_scb->io_ctx == cmd)
--			break;
+-	/* Try to proceed the operation we have been asked for */
+-	sts = -1;
+-	switch(op) {
+-	case SYM_EH_ABORT:
+-		sts = sym_abort_scsiio(np, cmd, 1);
+-		break;
+-	case SYM_EH_DEVICE_RESET:
+-		sts = sym_reset_scsi_target(np, cmd->device->id);
+-		break;
+-	default:
+-		break;
 -	}
 -
--	if (pending_scb == NULL && flag == SCB_DEVICE_RESET) {
++	sts = sym_abort_scsiio(np, cmd, 1);
+ 	/* On error, restore everything and cross fingers :) */
+ 	if (sts)
+ 		cmd_queued = 0;
+@@ -623,23 +614,60 @@ static int sym_eh_handler(int op, char *opname, struct scsi_cmnd *cmd)
+ 		spin_unlock_irq(shost->host_lock);
+ 	}
+ 
+-	dev_warn(&cmd->device->sdev_gendev, "%s operation %s.\n", opname,
++	dev_warn(&cmd->device->sdev_gendev, "ABORT operation %s.\n",
+ 			sts==0 ? "complete" :sts==-2 ? "timed-out" : "failed");
+ 	return sts ? SCSI_FAILED : SCSI_SUCCESS;
+ }
+ 
 -
-+	if (cmd) {
-+		LIST_FOREACH(scb, &ahc->pending_scbs, pending_links) {
-+			if (scb->io_ctx == cmd) {
-+				pending_scb = scb;
-+				break;
+-/*
+- * Error handlers called from the eh thread (one thread per HBA).
+- */
+-static int sym53c8xx_eh_abort_handler(struct scsi_cmnd *cmd)
++static int sym53c8xx_eh_target_reset_handler(struct scsi_cmnd *cmd)
+ {
+-	return sym_eh_handler(SYM_EH_ABORT, "ABORT", cmd);
+-}
++	struct scsi_target *starget = scsi_target(cmd->device);
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct sym_data *sym_data = shost_priv(shost);
++	struct pci_dev *pdev = sym_data->pdev;
++	struct sym_hcb *np = sym_data->ncb;
++	SYM_QUEHEAD *qp;
++	int sts;
++	struct completion eh_done;
+ 
+-static int sym53c8xx_eh_device_reset_handler(struct scsi_cmnd *cmd)
+-{
+-	return sym_eh_handler(SYM_EH_DEVICE_RESET, "DEVICE RESET", cmd);
++	starget_printk(KERN_WARNING, starget,
++		       "TARGET RESET operation started\n");
++
++	/*
++	 * Escalate to host reset if the PCI bus went down
++	 */
++	if (pci_channel_offline(pdev))
++		return SCSI_FAILED;
++
++	spin_lock_irq(shost->host_lock);
++	sts = sym_reset_scsi_target(np, starget->id);
++	if (!sts) {
++		FOR_EACH_QUEUED_ELEMENT(&np->busy_ccbq, qp) {
++			struct sym_ccb *cp = sym_que_entry(qp, struct sym_ccb,
++							   link_ccbq);
++			struct scsi_cmnd *cmd = cp->cmd;
++			struct sym_ucmd *ucmd;
++
++			if (!cmd || cmd->device->channel != starget->channel ||
++			    cmd->device->id != starget->id)
++				continue;
++
++			ucmd = SYM_UCMD_PTR(cmd);
++			init_completion(&eh_done);
++			ucmd->eh_done = &eh_done;
++			spin_unlock_irq(shost->host_lock);
++			if (!wait_for_completion_timeout(&eh_done, 5*HZ)) {
++				ucmd->eh_done = NULL;
++				sts = -2;
 +			}
++			spin_lock_irq(shost->host_lock);
 +		}
-+	} else {
- 		/* Any SCB for this device will do for a target reset */
--		LIST_FOREACH(pending_scb, &ahc->pending_scbs, pending_links) {
--			if (ahc_match_scb(ahc, pending_scb, scmd_id(cmd),
--					  scmd_channel(cmd) + 'A',
-+		LIST_FOREACH(scb, &ahc->pending_scbs, pending_links) {
-+			if (ahc_match_scb(ahc, scb, sdev->id,
-+					  sdev->channel + 'A',
- 					  CAM_LUN_WILDCARD,
--					  SCB_LIST_NULL, ROLE_INITIATOR))
-+					  SCB_LIST_NULL, ROLE_INITIATOR)) {
-+				pending_scb = scb;
- 				break;
-+			}
- 		}
- 	}
++	}
++	spin_unlock_irq(shost->host_lock);
++
++	starget_printk(KERN_WARNING, starget, "TARGET RESET operation %s.\n",
++			sts==0 ? "complete" :sts==-2 ? "timed-out" : "failed");
++	return SCSI_SUCCESS;
+ }
  
- 	if (pending_scb == NULL) {
--		scmd_printk(KERN_INFO, cmd, "Command not found\n");
-+		sdev_printk(KERN_INFO, sdev, "Command not found\n");
- 		goto no_cmd;
- 	}
- 
-@@ -2153,22 +2158,22 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	ahc_dump_card_state(ahc);
- 
- 	disconnected = TRUE;
--	if (flag == SCB_ABORT) {
--		if (ahc_search_qinfifo(ahc, cmd->device->id,
--				       cmd->device->channel + 'A',
--				       cmd->device->lun,
-+	if (cmd) {
-+		if (ahc_search_qinfifo(ahc, sdev->id,
-+				       sdev->channel + 'A',
-+				       sdev->lun,
- 				       pending_scb->hscb->tag,
- 				       ROLE_INITIATOR, CAM_REQ_ABORTED,
- 				       SEARCH_COMPLETE) > 0) {
- 			printk("%s:%d:%d:%d: Cmd aborted from QINFIFO\n",
--			       ahc_name(ahc), cmd->device->channel,
--			       cmd->device->id, (u8)cmd->device->lun);
-+			       ahc_name(ahc), sdev->channel,
-+			       sdev->id, (u8)sdev->lun);
- 			retval = SUCCESS;
- 			goto done;
- 		}
--	} else if (ahc_search_qinfifo(ahc, cmd->device->id,
--				      cmd->device->channel + 'A',
--				      cmd->device->lun,
-+	} else if (ahc_search_qinfifo(ahc, sdev->id,
-+				      sdev->channel + 'A',
-+				      sdev->lun,
- 				      pending_scb->hscb->tag,
- 				      ROLE_INITIATOR, /*status*/0,
- 				      SEARCH_COUNT) > 0) {
-@@ -2181,7 +2186,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		bus_scb = ahc_lookup_scb(ahc, ahc_inb(ahc, SCB_TAG));
- 		if (bus_scb == pending_scb)
- 			disconnected = FALSE;
--		else if (flag != SCB_ABORT
-+		else if (!cmd
- 		      && ahc_inb(ahc, SAVED_SCSIID) == pending_scb->hscb->scsiid
- 		      && ahc_inb(ahc, SAVED_LUN) == SCB_GET_LUN(pending_scb))
- 			disconnected = FALSE;
-@@ -2201,18 +2206,18 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	saved_scsiid = ahc_inb(ahc, SAVED_SCSIID);
- 	if (last_phase != P_BUSFREE
- 	 && (pending_scb->hscb->tag == active_scb_index
--	  || (flag == SCB_DEVICE_RESET
--	   && SCSIID_TARGET(ahc, saved_scsiid) == scmd_id(cmd)))) {
-+	  || (!cmd && SCSIID_TARGET(ahc, saved_scsiid) == sdev->id))) {
- 
- 		/*
- 		 * We're active on the bus, so assert ATN
- 		 * and hope that the target responds.
- 		 */
- 		pending_scb = ahc_lookup_scb(ahc, active_scb_index);
--		pending_scb->flags |= SCB_RECOVERY_SCB|flag;
-+		pending_scb->flags |= SCB_RECOVERY_SCB;
-+		pending_scb->flags |= cmd ? SCB_ABORT : SCB_DEVICE_RESET;
- 		ahc_outb(ahc, MSG_OUT, HOST_MSG);
- 		ahc_outb(ahc, SCSISIGO, last_phase|ATNO);
--		scmd_printk(KERN_INFO, cmd, "Device is active, asserting ATN\n");
-+		sdev_printk(KERN_INFO, sdev, "Device is active, asserting ATN\n");
- 		wait = TRUE;
- 	} else if (disconnected) {
- 
-@@ -2233,7 +2238,8 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		 * an unsolicited reselection occurred.
- 		 */
- 		pending_scb->hscb->control |= MK_MESSAGE|DISCONNECTED;
--		pending_scb->flags |= SCB_RECOVERY_SCB|flag;
-+		pending_scb->flags |= SCB_RECOVERY_SCB;
-+		pending_scb->flags |= cmd ? SCB_ABORT : SCB_DEVICE_RESET;
- 
- 		/*
- 		 * Remove any cached copy of this SCB in the
-@@ -2242,9 +2248,9 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		 * same element in the SCB, SCB_NEXT, for
- 		 * both the qinfifo and the disconnected list.
- 		 */
--		ahc_search_disc_list(ahc, cmd->device->id,
--				     cmd->device->channel + 'A',
--				     cmd->device->lun, pending_scb->hscb->tag,
-+		ahc_search_disc_list(ahc, sdev->id,
-+				     sdev->channel + 'A',
-+				     sdev->lun, pending_scb->hscb->tag,
- 				     /*stop_on_first*/TRUE,
- 				     /*remove*/TRUE,
- 				     /*save_state*/FALSE);
-@@ -2267,9 +2273,9 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		 * so we are the next SCB for this target
- 		 * to run.
- 		 */
--		ahc_search_qinfifo(ahc, cmd->device->id,
--				   cmd->device->channel + 'A',
--				   cmd->device->lun, SCB_LIST_NULL,
-+		ahc_search_qinfifo(ahc, sdev->id,
-+				   sdev->channel + 'A',
-+				   (u8)sdev->lun, SCB_LIST_NULL,
- 				   ROLE_INITIATOR, CAM_REQUEUE_REQ,
- 				   SEARCH_COMPLETE);
- 		ahc_qinfifo_requeue_tail(ahc, pending_scb);
-@@ -2278,7 +2284,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		printk("Device is disconnected, re-queuing SCB\n");
- 		wait = TRUE;
- 	} else {
--		scmd_printk(KERN_INFO, cmd, "Unable to deliver message\n");
-+		sdev_printk(KERN_INFO, sdev, "Unable to deliver message\n");
- 		retval = FAILED;
- 		goto done;
- 	}
+ static int sym53c8xx_eh_bus_reset_handler(struct scsi_cmnd *cmd)
+@@ -1660,7 +1688,7 @@ static const struct scsi_host_template sym2_template = {
+ 	.slave_configure	= sym53c8xx_slave_configure,
+ 	.slave_destroy		= sym53c8xx_slave_destroy,
+ 	.eh_abort_handler	= sym53c8xx_eh_abort_handler,
+-	.eh_device_reset_handler = sym53c8xx_eh_device_reset_handler,
++	.eh_target_reset_handler = sym53c8xx_eh_target_reset_handler,
+ 	.eh_bus_reset_handler	= sym53c8xx_eh_bus_reset_handler,
+ 	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,
+ 	.this_id		= 7,
 -- 
 2.35.3
 
