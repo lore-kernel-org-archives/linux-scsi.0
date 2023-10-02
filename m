@@ -2,260 +2,200 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 986CEE784AE
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 07:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80115E784B5
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 07:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235772AbjJBHh1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 03:37:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43244 "EHLO
+        id S235811AbjJBH5l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 03:57:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235750AbjJBHh0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 03:37:26 -0400
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60059A7;
-        Mon,  2 Oct 2023 00:37:23 -0700 (PDT)
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20231002073720euoutp016fe876eca16495d8528d299c4c7ee324~KOjxvoWoO2433024330euoutp01V;
-        Mon,  2 Oct 2023 07:37:20 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20231002073720euoutp016fe876eca16495d8528d299c4c7ee324~KOjxvoWoO2433024330euoutp01V
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1696232240;
-        bh=GpVEgYMUf4T/XwZ7+6B8FXnwmrWJ6CC+FEbg1ZXjwco=;
-        h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-        b=JM5sjoqxx/czuPvDtr6u6fxp8xSrPIviov2zbGPSp0LDJiiG1I74OwklyDec1Metn
-         JK2ySWc7cGMV2W67P9g/7ad97JAe2EBmR9Eyyf+onObuwLvINkT9HUNoRE67yIs40m
-         t0+muUw20JcsUQkOaroHhZQO4xt+SQ1GO4Zc/y+E=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20231002073720eucas1p1f12614d17a256c78b37fa5d7de8f75c3~KOjxiX4bF3033930339eucas1p1E;
-        Mon,  2 Oct 2023 07:37:20 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id 9E.D4.11320.0337A156; Mon,  2
-        Oct 2023 08:37:20 +0100 (BST)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20231002073720eucas1p20d4ccb4caf9670a1d718bfbbbdcef951~KOjw9Admk1616816168eucas1p2l;
-        Mon,  2 Oct 2023 07:37:20 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20231002073720eusmtrp24b41570e0cc30e17e0bd40d2480fe1cf~KOjw6I0VU0549305493eusmtrp29;
-        Mon,  2 Oct 2023 07:37:20 +0000 (GMT)
-X-AuditID: cbfec7f4-97dff70000022c38-9b-651a7330d32d
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 18.CC.25043.F237A156; Mon,  2
-        Oct 2023 08:37:19 +0100 (BST)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20231002073719eusmtip246e1b150785e2296b5a160aff9b9a4f6~KOjwlh3jv1418614186eusmtip2W;
-        Mon,  2 Oct 2023 07:37:19 +0000 (GMT)
-Received: from localhost (106.110.32.133) by CAMSVWEXC02.scsc.local
-        (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-        Mon, 2 Oct 2023 08:37:19 +0100
-Date:   Mon, 2 Oct 2023 09:39:32 +0200
-From:   Joel Granados <j.granados@samsung.com>
-To:     Phillip Potter <phil@philpotter.co.uk>
-CC:     Luis Chamberlain <mcgrof@kernel.org>, <willy@infradead.org>,
-        <josh@joshtriplett.org>, Kees Cook <keescook@chromium.org>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        David Ahern <dsahern@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Robin Holt <robinmholt@gmail.com>,
-        Steve Wahl <steve.wahl@hpe.com>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
+        with ESMTP id S229712AbjJBH5h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 03:57:37 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E755BC;
+        Mon,  2 Oct 2023 00:57:34 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id AB8121F459;
+        Mon,  2 Oct 2023 07:57:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1696233452; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HRtvvsbDRmaIGA2qlEwuFNnN4SG9to1RwhMyTnDS1Ek=;
+        b=AelUG9FSlQyUcQTA9I9qRJmPzMA6mvk2OLx4Qv2PacqmgU2FkeI54uQfwuwk8GDISDrHf1
+        K6okkr5Yua+jK8r2TTOukY7745vay4e4z1caiTsHAigkH18O5VWdMY9s+0PKMe8/Ta1ITc
+        H4lySULw9TgNQsjwAFd513U/tj8Iifc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1696233452;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HRtvvsbDRmaIGA2qlEwuFNnN4SG9to1RwhMyTnDS1Ek=;
+        b=4yX5F6ZD5YaXQ1SgLuHClpbWfxc1xKg7esoSW59wSh/oO7HSeTROmd590v4TgEevJu81R5
+        RAceDQWhH8NjA0AQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 83FA513434;
+        Mon,  2 Oct 2023 07:57:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id JLsgIOx3GmUuEgAAMHmgww
+        (envelope-from <jack@suse.cz>); Mon, 02 Oct 2023 07:57:32 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 27D44A07C9; Mon,  2 Oct 2023 09:57:32 +0200 (CEST)
+Date:   Mon, 2 Oct 2023 09:57:32 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christian Brauner <brauner@kernel.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
         Song Liu <song@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        <linux-kernel@vger.kernel.org>, <xen-devel@lists.xenproject.org>,
-        <linux-serial@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-rdma@vger.kernel.org>,
-        <openipmi-developer@lists.sourceforge.net>,
-        <netdev@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <linux-hyperv@vger.kernel.org>, <intel-gfx@lists.freedesktop.org>,
-        <dri-devel@lists.freedesktop.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 01/15] cdrom: Remove now superfluous sentinel element
- from ctl_table array
-Message-ID: <20231002073932.72i2ey4zvvaqioqm@localhost>
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v4 0/29] block: Make blkdev_get_by_*() return handle
+Message-ID: <20231002075732.4c5oslpabrmw3niz@quack3>
+References: <20230818123232.2269-1-jack@suse.cz>
+ <20230927-prahlen-reintreten-93706074e58d@brauner>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="iym4gjoiy6yoe7oi"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZRhSQaNDJih5xABq@equinox>
-X-Originating-IP: [106.110.32.133]
-X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
-        CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA2WTe1ATVxjFvbub3UAbXYOjl8j4AEY7iKjU4leLHVsfs31M67T/aF9KYQWr
-        BIcYS5nBBlDkoYgIIwQogQhEwUADIqSgTlCCqIA85DHSiqK1EApW5RUNTVhaO9P/fufbc+53
-        z51ZMSntZmTiPfIDfLg8YJ877UxV1k80r1ytkPGro+MXQUNnPgEvU+sZONPQR8BU5UkSspsP
-        U3DpsAHBpYzzNLQ/H6ZBbzxCwMP6+wzEaktpuHORg6yUcgKK2koR3OuQQX5XJQGZGQ0Isrt9
-        4c8cN6jNs5+nCYObSaHQUpksgv7iCwykTRaQkH5yhIY2YzYNR3ONCB6ZjlOQ1FlFw03tcQas
-        YzYRFJltBHSlPESQeOIognrNfBi3WkVQc68fwegNC4L0Qh/IeZZOgs6SQ8Jl9R0GCjJ1JJiL
-        XtJQrN8Jl9NKSLhyI80+skXCkWMTDNQZegiwjtsXj1WcIja+xbW1f8RZJ1MRl6W6TXEVZ7sJ
-        7m5BNeJqRzUUV63uZTiNQckZjdEMV67z4rQ1fxDcywQ/rmdwA2c4l0Bz47oTJJeSfwVtW/yF
-        s38Qv2/PQT581bu7nEMyrg2I9mfhiLzeUZEKdbgkIicxZtfi05fi6ETkLJayOoR/etouEsQz
-        hAubOklBPEVYE9NnF+LpyMlbbo60lC1COLp2978eQ46JEUQ5wh3dI8jholhP/PB8GeFgmvXG
-        zZa7pIPnsV74as/j6d0ke2YOfnLm5+mAC7sLTw2niBwsYddh1ZE6SuC5+HpmP+W4BclGYFWn
-        QsCFuMgmdjic2OXYOthKCdXc8XPLcZHAUbixoodwrMJs4uv41osEkVBmMy5VbRU8LnjAXMEI
-        7IanqnNn/KcQvmwbYQRRbH+W6OeE4HoHH27vn0m8hxtL42deaDbuGprrGJN2TK08PTOW4Pg4
-        qeBehot/tVApyEP9n2LqV8XUr4qpp8/xxppf/qL/N16BC/MGSYE3YL1+mNIg5hxawCsVocG8
-        wlfOf++jCAhVKOXBPoFhoQZk/+Nu2MzPqlDRwBMfEyLEyIQ87eH7ZcUtSEbJw+S8+zxJXMt8
-        XioJCvghkg8P2xmu3McrTGihmHJfIFmx4XqglA0OOMDv5fn9fPg/Xwmxk0xF7F3cpG+p/XL3
-        j8l+Q/zBhKqe4RCR6/LYbL1TulIVUd3ELoxQbprnsWPywuyz2vrWQ7lb3KJ8l0iCpvb/tii/
-        1bmxZk/WSlkeXvzaNkXw73Ma7vguIywF8Cbjquhbk+Hi6p0zfC0uV5xuDHVJZqxtzKwHhaak
-        kAelTtra95F5fVTgh9o4/81fZ8QOHMK9sqUl9CcfPGpepf74IoyNXiW/+zQFjaTtmNjyTdO2
-        jmMxGxnj596bKmQLHmd7tFaZDyjjh0L6unBS75KQXI/xvN2fRTbfHtseSUhcvrJ4rlz/ZNaL
-        RbpvadJvbUxJjf9TY92q8XURUYFb1LK2+Vlvby+LeSN+qcGdUoQErPEiwxUBfwOF13L87AQA
-        AA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA2VTe0xTVxz23Hu5t4BoRzt2VlFnIVnGXHkI+MOJWebcLjNLlo0t2RzDRi/g
-        Bi1pwWyiBCfILA+L0gHlYQF5CArykEEDgoCVlwoiyEvnCJA5YMwHyLOsUJeZ7L/vfL/f98jJ
-        OTzSdo4W8Q7JwjiFTBospq2oduONB+84K0Wcy/htN2i5l0PA0hkDA+dbfidguSqJhIzb0RRc
-        jS5HcDX1Eg13p6doKNHHEDBqGGbgRG4pDb2/spCuriCgoLsUwcMeEeT0VRGQltqCIKPfDf7K
-        tIe6bJOfTg4dcSHQWZVoASPFVxhIns8jQZP0Nw3d+gwaYs/pEYw1JlAQd6+aho7cBAYWnhst
-        oOCGkYA+9SgC1elYBAadHcwuLFhA7cMRBDPtEwg0+RLIfKYhoXAik4R6bS8DeWmFJNwoWKKh
-        uMQf6pMvktDQnmyijEcgJn6OgabyAQIWZk3BzyvPEu95sN1397IL82cQmx7VRbGVF/oJdiiv
-        BrF1MzqKrdHeZ1hdeTir1x9n2IpCJza39hHBLp3yZAfGvdnyolM0O1t4mmTVOQ3o081fS3Yq
-        5OFh3BtBcmWYt3ifK7hJXL1A4ubuJXHdtt1vh5uH2HnXzoNc8KHDnMJ5135JkCH+EhWahn+4
-        16yno1C3QIV4PMx3x0k37VXIimfLz0O4abAPqZClibfHZc96LMxYgBd7VbR56THC8zUdLw4V
-        CM/2VFMrWxTfEY9eukysYJq/Fd+eGCJXsJDvhJsH/lgVkPzz63HJyeXVCAF/P16eUq9G2PC3
-        46iYJsrs+ozALYlaxjx4BbemjawmkPzDeKqgBq30JvkbcIGRt0Jb8t/EC+N3KHNVMZ6eSHhR
-        +xh+ujSG1EigfclJ+5KT9j8nM+2E+4yPiP/Rb+P87HHSjL1xSckUpUNMERJy4cqQwBClm0Qp
-        DVGGywIlB+Qh5cj07qsMc5XV6MKfjyWNiOChRuRoUg5fLu5EIkoml3Fioc3JTjvO1uag9Mcj
-        nELurwgP5pSNyMN0jUmk6NUDctMnkoX5u3q6eLi6e3q5eHh5bhO/ZuMT+rPUlh8oDeO+57hQ
-        TvGvjuBZiqKIYw7Kaj+nfXuuf0sMps4EWIvW7DUo4rhNdZOlAhf7yIZ1xmprm4923KQMwcRw
-        hDBldDL1S2MExopp1Vs7hIuft16M7qr6ZMvFn7LUnqVbMjcyv2xyYWYiac3ZD9p6NVmGTOpB
-        /x39h9eFS9neTz4rU4Snp3+Vp1F9lz7sd1/gcNQ6SzxtMbRxaq1fdOzRslvCAJ/FrWuLNnnm
-        v56y8/3jVxLVJ9rXtLXrfosobNe/G3DNhRsck/Y7t37hONlTm5gS0qeMFzDd9SNWvk8eNjts
-        2Oyr6HJctztmt+xaJF02sP4uk9bccUzztI3KkZ6LdJJ/o9Pu0Qt8faSdKrD7OGXulnBRTCmD
-        pK5OpEIp/Qd2Xc43jAQAAA==
-X-CMS-MailID: 20231002073720eucas1p20d4ccb4caf9670a1d718bfbbbdcef951
-X-Msg-Generator: CA
-X-RootMTR: 20230928133705eucas1p182bd81a8e6aff530e43f9b0746a24eaa
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20230928133705eucas1p182bd81a8e6aff530e43f9b0746a24eaa
-References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
-        <20230928-jag-sysctl_remove_empty_elem_drivers-v1-1-e59120fca9f9@samsung.com>
-        <CGME20230928133705eucas1p182bd81a8e6aff530e43f9b0746a24eaa@eucas1p1.samsung.com>
-        <2023092855-cultivate-earthy-4d25@gregkh>
-        <20230929121730.bwzhrpaptf45smfy@localhost> <ZRhSQaNDJih5xABq@equinox>
+In-Reply-To: <20230927-prahlen-reintreten-93706074e58d@brauner>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---iym4gjoiy6yoe7oi
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed 27-09-23 18:21:19, Christian Brauner wrote:
+> On Wed, 27 Sep 2023 11:34:07 +0200, Jan Kara wrote:
+> > Create struct bdev_handle that contains all parameters that need to be
+> > passed to blkdev_put() and provide bdev_open_* functions that return
+> > this structure instead of plain bdev pointer. This will eventually allow
+> > us to pass one more argument to blkdev_put() (renamed to bdev_release())
+> > without too much hassle.
+> > 
+> > 
+> > [...]
+> 
+> > to ease review / testing. Christian, can you pull the patches to your tree
+> > to get some exposure in linux-next as well? Thanks!
+> 
+> Yep. So I did it slighly differently. I pulled in the btrfs prereqs and
+> then applied your series on top of it so we get all the Link: tags right.
+> I'm running tests right now. Please double-check.
 
-On Sat, Sep 30, 2023 at 05:52:17PM +0100, Phillip Potter wrote:
-> On Fri, Sep 29, 2023 at 02:17:30PM +0200, Joel Granados wrote:
-> > On Thu, Sep 28, 2023 at 03:36:55PM +0200, Greg Kroah-Hartman wrote:
-> > > On Thu, Sep 28, 2023 at 03:21:26PM +0200, Joel Granados via B4 Relay =
-wrote:
-> > > > From: Joel Granados <j.granados@samsung.com>
-> > > >=20
-> > > > This commit comes at the tail end of a greater effort to remove the
-> > > > empty elements at the end of the ctl_table arrays (sentinels) which
-> > > > will reduce the overall build time size of the kernel and run time
-> > > > memory bloat by ~64 bytes per sentinel (further information Link :
-> > > > https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.o=
-rg/)
-> > > >=20
-> > > > Remove sentinel element from cdrom_table
-> > > >=20
-> > > > Signed-off-by: Joel Granados <j.granados@samsung.com>
-> > > > ---
-> > > >  drivers/cdrom/cdrom.c | 3 +--
-> > > >  1 file changed, 1 insertion(+), 2 deletions(-)
-> > > >=20
-> > > > diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> > > > index cc2839805983..451907ade389 100644
-> > > > --- a/drivers/cdrom/cdrom.c
-> > > > +++ b/drivers/cdrom/cdrom.c
-> > > > @@ -3654,8 +3654,7 @@ static struct ctl_table cdrom_table[] =3D {
-> > > >  		.maxlen		=3D sizeof(int),
-> > > >  		.mode		=3D 0644,
-> > > >  		.proc_handler	=3D cdrom_sysctl_handler
-> > > > -	},
-> > > > -	{ }
-> > > > +	}
-> > >=20
-> > > You should have the final entry as "}," so as to make any future
-> > > additions to the list to only contain that entry, that's long been the
-> > > kernel style for lists like this.
-> > Will send a V2 with this included. Thx.
-> >=20
-> > >=20
-> > > So your patches will just remove one line, not 2 and add 1, making it=
- a
-> > > smaller diff.
-> > indeed.
-> >=20
-> > >=20
-> > > thanks,
-> > >=20
-> > > greg k-h
-> >=20
-> > --=20
-> >=20
-> > Joel Granados
->=20
-> Hi Joel,
->=20
-> Thank you for your patch. I look forward to seeing V2, and will be happy
-> to review it.
-Am following a reported oops. Once I straighten that out, I'll send out
-a V2
+Thanks for picking patches up! I've checked the branch and it looks good to
+me. 
 
-Bet
+								Honza
 
->=20
-> Regards,
-> Phil
-
---=20
-
-Joel Granados
-
---iym4gjoiy6yoe7oi
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQGzBAABCgAdFiEErkcJVyXmMSXOyyeQupfNUreWQU8FAmUac7QACgkQupfNUreW
-QU/yCwv+ODTBSbi0ueMQdEZxBPJP69SZ4LKBMRpZjtDGBiifZrGt584PygiL6kff
-CdRuYLsAGk56gt/+3JZPjEH6tCnTFH6yZzFU3luYhw759BXEHpy79DyEpzv4cBme
-ZY3ghhzfhc9cilEW6/mwP4fPxj5/3QavA1Re8mqkCDHhMbGSSx60qJ7KeALt4kje
-liPm3oN8g9Rspq958o3ANDvWJsBHsuQinjUc9UdUU/T8DCQ886Rig7yQNnleUbcZ
-MvRchNw012YUtmPGk+0wYsu/30GiQ5hg1iodQjsFj05PCTrWIG0svFnZ3CQDKfcy
-27vtkqiWYMUCX/gXf373wwxVWsIEuLyJqCz0usoSC0bzgN0yu1NXyTWL6KWivWS3
-v1DBHUZV8lAGgUL95xlBfgMNgVInzu19ml5+DfvroOxkUYis2fEVGO+yaGIk6zWO
-LU8IcfGU8a2NMba60gnFqizl/uNhX4g9z0D9IC1HykgQ4WJMhxdJSeLSKEclwoXK
-6ILmm1E1
-=6JBa
------END PGP SIGNATURE-----
-
---iym4gjoiy6yoe7oi--
+> 
+> ---
+> 
+> Applied to the vfs.super branch of the vfs/vfs.git tree.
+> Patches in the vfs.super branch should appear in linux-next soon.
+> 
+> Please report any outstanding bugs that were missed during review in a
+> new review to the original patch series allowing us to drop it.
+> 
+> It's encouraged to provide Acked-bys and Reviewed-bys even though the
+> patch has now been applied. If possible patch trailers will be updated.
+> 
+> Note that commit hashes shown below are subject to change due to rebase,
+> trailer updates or similar. If in doubt, please check the listed branch.
+> 
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+> branch: vfs.super
+> 
+> [01/29] block: Provide bdev_open_* functions
+>        https://git.kernel.org/vfs/vfs/c/b7c828aa0b3c
+> [02/29] block: Use bdev_open_by_dev() in blkdev_open()
+>         https://git.kernel.org/vfs/vfs/c/d4e36f27b45a
+> [03/29] block: Use bdev_open_by_dev() in disk_scan_partitions() and blkdev_bszset()
+>         https://git.kernel.org/vfs/vfs/c/5f9bd6764c7a
+> [04/29] drdb: Convert to use bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/0220ca8e443d
+> [05/29] pktcdvd: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/7af10b889789
+> [06/29] rnbd-srv: Convert to use bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/3d27892a4be7
+> [07/29] xen/blkback: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/26afb0ed10b3
+> [08/29] zram: Convert to use bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/efc8e3f4c6dc
+> [09/29] bcache: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/dc893f51d24a
+> [10/29] dm: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/80c2267c6d07
+> [11/29] md: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/15db36126ca6
+> [12/29] mtd: block2mtd: Convert to bdev_open_by_dev/path()
+>         https://git.kernel.org/vfs/vfs/c/4c27234bf3ce
+> [13/29] nvmet: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/70cffddcc300
+> [14/29] s390/dasd: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/5581d03457f8
+> [15/29] scsi: target: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/43de7d844d47
+> [16/29] PM: hibernate: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/105ea4a2fd18
+> [17/29] PM: hibernate: Drop unused snapshot_test argument
+>         https://git.kernel.org/vfs/vfs/c/b589a66e3688
+> [18/29] mm/swap: Convert to use bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/615af8e29233
+> [19/29] fs: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/5173192bcfe6
+> [20/29] btrfs: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/8cf64782764f
+> [21/29] erofs: Convert to use bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/4d41880bf249
+> [22/29] ext4: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/f7507612395e
+> [23/29] f2fs: Convert to bdev_open_by_dev/path()
+>         https://git.kernel.org/vfs/vfs/c/d9ff8e3b6498
+> [24/29] jfs: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/459dc6376338
+> [25/29] nfs/blocklayout: Convert to use bdev_open_by_dev/path()
+>         https://git.kernel.org/vfs/vfs/c/5b1df9a40929
+> [26/29] ocfs2: Convert to use bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/b6b95acbd943
+> [27/29] reiserfs: Convert to bdev_open_by_dev/path()
+>         https://git.kernel.org/vfs/vfs/c/7e3615ff6119
+> [28/29] xfs: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/176ccb99e207
+> [29/29] block: Remove blkdev_get_by_*() functions
+>         https://git.kernel.org/vfs/vfs/c/953863a5a2ff
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
