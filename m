@@ -2,54 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2975CE784B4
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 08:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 278F4E784AF
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 09:02:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236020AbjJBIyT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 04:54:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54834 "EHLO
+        id S235931AbjJBJCr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 05:02:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235931AbjJBIxU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 04:53:20 -0400
+        with ESMTP id S230033AbjJBJCp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 05:02:45 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E280DE5;
-        Mon,  2 Oct 2023 01:53:17 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 15E89C433B8;
-        Mon,  2 Oct 2023 08:53:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696236795;
-        bh=5V+ck7zme+riQyx1xmqb0Z0EeDR6wxHbTqGoKbjtrmQ=;
-        h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-        b=h9YSxCOBiZI18TS8F7IFLh6Qq5+WpoHRSjCXtJkW74v79cxU+xHBab6ovMTly8LKe
-         IDFqi8nG5On9c5mUzM2nMlLg9u/xCra/9Lupu7tXNo+obgVRsiSTMsjN8q8qMhZJwW
-         OZMb4LcQIuvVtxOSe5yyZwJwU7XQJTCScPZiAEqAQ6Vkh29H2SZ2WK88rj6FFDCll8
-         DP0Rxd0R3nyUifHTS43/yIIYwnebe2P7wSqXDQ/poAMdzJ4NNjLpkUftDL2+5srhXP
-         9tiFoq42TchWR1nIGuWKvALBVYUFpStNC/KPFdeVqueWUJZ1tJWqRhEb5xnTl49iW+
-         PgMcLW7jUn/tg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.lore.kernel.org (Postfix) with ESMTP id E6D5AE7849A;
-        Mon,  2 Oct 2023 08:53:14 +0000 (UTC)
-From:   Joel Granados via B4 Relay 
-        <devnull+j.granados.samsung.com@kernel.org>
-Date:   Mon, 02 Oct 2023 10:55:20 +0200
-Subject: [PATCH v2 03/15] xen: Remove now superfluous sentinel element from
- ctl_table array
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-3-02dd0d46f71e@samsung.com>
-References: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-0-02dd0d46f71e@samsung.com>
-In-Reply-To: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-0-02dd0d46f71e@samsung.com>
-To:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
-        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49D4FA4;
+        Mon,  2 Oct 2023 02:02:42 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FE7CC433C8;
+        Mon,  2 Oct 2023 09:02:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1696237361;
+        bh=smbdD+CUEQ4ahMF3RqsYVNHHjGroQxTTaWRgCAR/D24=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=nMX+58jl6hq9UFJUHZd1tjzFPgSTOpSlydUnTfJQnD4JkBTo1W3OhKwdiqRz3OSHL
+         5qGb/GMTdZ1Zi7txcN44MpKcZqjCquccKdPkeOQfVVDMci/1xfBziuQgAa/1GdsgkO
+         fTB8auP7M3L0i1rXICcsdIgBp+nJtQayOSXiZzAY=
+Date:   Mon, 2 Oct 2023 11:02:38 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Christophe Leroy <christophe.leroy@csgroup.eu>
+Cc:     Jiri Slaby <jirislaby@kernel.org>,
+        "j.granados@samsung.com" <j.granados@samsung.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "josh@joshtriplett.org" <josh@joshtriplett.org>,
+        Kees Cook <keescook@chromium.org>,
         Phillip Potter <phil@philpotter.co.uk>,
         Clemens Ladisch <clemens@ladisch.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Juergen Gross <jgross@suse.com>,
+        Arnd Bergmann <arnd@arndb.de>, Juergen Gross <jgross@suse.com>,
         Stefano Stabellini <sstabellini@kernel.org>,
         Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Doug Gilbert <dgilbert@interlog.com>,
@@ -76,63 +63,98 @@ To:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
         Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
         David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>
-Cc:     Joel Granados <j.granados@samsung.com>,
-        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-rdma@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-X-Mailer: b4 0.13-dev-86aa5
-X-Developer-Signature: v=1; a=openpgp-sha256; l=846; i=j.granados@samsung.com;
- h=from:subject:message-id; bh=8Nedf2Lwq/OA3aANfJ6n4h5+UsWWU6lX+VhCPVGEdNQ=;
- b=owEB7QES/pANAwAKAbqXzVK3lkFPAcsmYgBlGoV8XTr6pqPXL2Smxc+bYMHo1/P6P4+Xz5jGM
- LVmxskaoPCJAbMEAAEKAB0WIQSuRwlXJeYxJc7LJ5C6l81St5ZBTwUCZRqFfAAKCRC6l81St5ZB
- T9KdC/0drEL8+dTyGyZg/6XaWVheHfUsBsgDQaWMOuKpb0rMHpDrn/Nci5oHt1wDz5sWP1TWjgs
- FKsSDVxdnNBN+9X0ckqjWyGf5rl/Xxm/E9lR6RQB6eV9u8YjlU7L3mSPq3a4ZHmjFF6Pti2XKv+
- Ca4WXU7SAKiu/C8OW/RyYQl32fKwwgcV6kONqEbCrLSbK4LveVwISI+vDPkola1wrfM+muUVDRw
- FRJxuiV6BavJ4pXOXDh7tOjva65fGwnLqIA88sPKLc7utjrUtGNWNGYrMglM8hKWZwcYObt0s7V
- C5U2+0FZ7+qLORCw2Yclx+UcLpl2pPXjwpWJu3ak3VT0hyjEXvIvIx1UYsdwlorQAitkTer2eKf
- HDMMBMPbtS8OxA+Lb35G/9PWV/3LOjSYvqo4AEH+OQHh7/7ej55TZAEbYIlQCnXXLoOatbyUZ6I
- beZVa+UQo/zcDzjjh9tSz1eY8UnBeuglio1DFA0Yfa5pbmOPP8X9qngGhl19spS4f0lqQ=
-X-Developer-Key: i=j.granados@samsung.com; a=openpgp;
- fpr=F1F8E46D30F0F6C4A45FF4465895FAAC338C6E77
-X-Endpoint-Received: by B4 Relay for j.granados@samsung.com/default with auth_id=70
-X-Original-From: Joel Granados <j.granados@samsung.com>
-Reply-To: <j.granados@samsung.com>
+        Daniel Vetter <daniel@ffwll.ch>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+        "openipmi-developer@lists.sourceforge.net" 
+        <openipmi-developer@lists.sourceforge.net>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH 04/15] tty: Remove now superfluous sentinel element from
+ ctl_table array
+Message-ID: <2023100252-plod-user-4504@gregkh>
+References: <20230928-jag-sysctl_remove_empty_elem_drivers-v1-0-e59120fca9f9@samsung.com>
+ <20230928-jag-sysctl_remove_empty_elem_drivers-v1-4-e59120fca9f9@samsung.com>
+ <63e7a4fe-58c9-470e-84c2-dd92e76462ae@kernel.org>
+ <4d7bf39e-e7f9-f497-13aa-73718456a653@csgroup.eu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4d7bf39e-e7f9-f497-13aa-73718456a653@csgroup.eu>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Joel Granados <j.granados@samsung.com>
+On Mon, Oct 02, 2023 at 08:47:53AM +0000, Christophe Leroy wrote:
+> 
+> 
+> Le 02/10/2023 à 10:17, Jiri Slaby a écrit :
+> > On 28. 09. 23, 15:21, Joel Granados via B4 Relay wrote:
+> >> From: Joel Granados <j.granados@samsung.com>
+> >>
+> >> This commit comes at the tail end of a greater effort to remove the
+> >> empty elements at the end of the ctl_table arrays (sentinels) which
+> >> will reduce the overall build time size of the kernel and run time
+> >> memory bloat by ~64 bytes per sentinel (further information Link :
+> >> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+> >>
+> >> Remove sentinel from tty_table
+> >>
+> >> Signed-off-by: Joel Granados <j.granados@samsung.com>
+> >> ---
+> >>   drivers/tty/tty_io.c | 3 +--
+> >>   1 file changed, 1 insertion(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/tty/tty_io.c b/drivers/tty/tty_io.c
+> >> index 8a94e5a43c6d..2f925dc54a20 100644
+> >> --- a/drivers/tty/tty_io.c
+> >> +++ b/drivers/tty/tty_io.c
+> >> @@ -3607,8 +3607,7 @@ static struct ctl_table tty_table[] = {
+> >>           .proc_handler    = proc_dointvec,
+> >>           .extra1        = SYSCTL_ZERO,
+> >>           .extra2        = SYSCTL_ONE,
+> >> -    },
+> >> -    { }
+> >> +    }
+> > 
+> > Why to remove the comma? One would need to add one when adding a new entry?
+> 
+> Does it make any difference at all ?
+> 
+> In one case you have:
+> 
+> @xxxx
+>   		something old,
+>   	},
+> +	{
+> +		something new,
+> +	},
+>   }
+> 
+> In the other case you have:
+> 
+> @xxxx
+>   		something old,
+> + 	},
+> +	{
+> +		something new,
+>   	}
+>   }
 
-This commit comes at the tail end of a greater effort to remove the
-empty elements at the end of the ctl_table arrays (sentinels) which
-will reduce the overall build time size of the kernel and run time
-memory bloat by ~64 bytes per sentinel (further information Link :
-https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+Because that way it is obvious you are only touching the "something new"
+lines and never have to touch the "something old" ones.
 
-Remove sentinel from balloon_table
+It's just a long-standing tradition in Linux, don't have an extra
+character if you don't need it :)
 
-Signed-off-by: Joel Granados <j.granados@samsung.com>
----
- drivers/xen/balloon.c | 1 -
- 1 file changed, 1 deletion(-)
+thanks,
 
-diff --git a/drivers/xen/balloon.c b/drivers/xen/balloon.c
-index 586a1673459e..976c6cdf9ee6 100644
---- a/drivers/xen/balloon.c
-+++ b/drivers/xen/balloon.c
-@@ -94,7 +94,6 @@ static struct ctl_table balloon_table[] = {
- 		.extra1         = SYSCTL_ZERO,
- 		.extra2         = SYSCTL_ONE,
- 	},
--	{ }
- };
- 
- #else
-
--- 
-2.30.2
-
+greg k-h
