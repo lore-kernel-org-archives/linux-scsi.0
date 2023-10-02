@@ -2,147 +2,104 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3046E784A9
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 01:59:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45B34E7849A
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 07:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235137AbjJBB7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 1 Oct 2023 21:59:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34722 "EHLO
+        id S229519AbjJBHDo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 03:03:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234505AbjJBB7W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2023 21:59:22 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD2B5C9;
-        Sun,  1 Oct 2023 18:59:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696211959; x=1727747959;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=W88JVX1gXyO0U29l0jTJHljfHkuQ/YgOQ/ZzLImDnS0=;
-  b=BdQe1xE4OIO0bvOUh3nbyB2rPtnNMViptKIOqnE8BDK18dFxQ8zcOfUy
-   1ROS9nk/l1phxusmkbcS7GZMja13uK6LSI7hnSq8EPnTnJ/D+ee3Rx1lJ
-   lFKlvuaai0M81VwJakdinXNyC9IFTPW+9I7UYOI/kz/KTqdpClmBubr75
-   54BPhKPcy6QFaDpE5O58v6kjzneBGEu1aJQm4yLWjuMtiHdgD67n3LjbX
-   73p6KeZDLFeFqXrQJw5v1AdgfK6/PnkAR/dsvP2a/4ouQfh5ZZjn6MZD3
-   kNTc8fzjSCflL5UtbwIkanh4ThxApc02dLA25jtg/wFjBAEb5PBlOX45v
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10850"; a="372920002"
-X-IronPort-AV: E=Sophos;i="6.03,193,1694761200"; 
-   d="scan'208";a="372920002"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2023 18:59:19 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10850"; a="840862065"
-X-IronPort-AV: E=Sophos;i="6.03,193,1694761200"; 
-   d="scan'208";a="840862065"
-Received: from lkp-server02.sh.intel.com (HELO c3b01524d57c) ([10.239.97.151])
-  by FMSMGA003.fm.intel.com with ESMTP; 01 Oct 2023 18:59:13 -0700
-Received: from kbuild by c3b01524d57c with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qn8DG-0005fl-1j;
-        Mon, 02 Oct 2023 01:59:10 +0000
-Date:   Mon, 2 Oct 2023 09:58:33 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Nitesh Shetty <nj.shetty@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-Cc:     oe-kbuild-all@lists.linux.dev, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, nitheshshetty@gmail.com,
-        anuj1072538@gmail.com, gost.dev@samsung.com, mcgrof@kernel.org,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v16 08/12] nvmet: add copy command support for bdev and
- file ns
-Message-ID: <202310020910.TaSOIepO-lkp@intel.com>
-References: <20230920080756.11919-9-nj.shetty@samsung.com>
+        with ESMTP id S235599AbjJBHDn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 03:03:43 -0400
+Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 987F1B3
+        for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 00:03:40 -0700 (PDT)
+Received: by mail-wm1-x32b.google.com with SMTP id 5b1f17b1804b1-406618d080eso21420925e9.2
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2023 00:03:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1696230219; x=1696835019; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Kl92UGXdQCpCYtjLhOWwwVhgGbl7MyqnIkOytX1vHZo=;
+        b=m+o65SG2K/Y3aUKYCDBSa6137HQKFqKF21mZe8jLmDfIfbm2E311fGvMMLwSYa2TQ3
+         5chtrqAMnBO4ilORiJzTPWdjeMkjURna88e+CPqOFNUAncmxry2frMSsO+H6XC+3vDtV
+         YcTUEtxhQcungQPrN9KDXqlmCBn34PTbj3eXx+MXZ5Bxj/W7T5y9sji3NBa6S/he0LjF
+         VdYKLmAzT5dRy8KhIU26pJqwIAjYJVxLidIWYVPkb4X7HpaxalKRGa1lljsgzlC8WFhs
+         FepNFlj8eYN8A0lyJHwtAU1uKTB0vkqjZhJdLf9rB2QKSzDmuqG28hSNiQkcsnerElR4
+         s62w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696230219; x=1696835019;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kl92UGXdQCpCYtjLhOWwwVhgGbl7MyqnIkOytX1vHZo=;
+        b=LZsn+zNxhr2dTcVcZphl3QJm0BJvnK4lp3s3VpWfJd+203r7uFwn5I9+91Mkern93Y
+         ldM6tIFn2QGzYP7NONczJC5rRcPna26Hxdn9fnbhULDWZ+q7IKsfrsROQUim9e284LS5
+         BbMEAK6qNnCgBQ17iRxmBB/xXFw4AdL6ak/uiO0oo481suDPU907y+kuu/kyIllgWVOM
+         yt02pgbay1MTvg6TleJKVNgYDKr9xydGHW/mxouTvCUDkOwnA0KYWa5eo//ns0lNA4fH
+         x0hsOH0vF6tWLGZ8poZv49bwUK+G79L1OUZVVOL+saUxwhPVPwvl7kEdZhzmHWN7SQ/X
+         RWpw==
+X-Gm-Message-State: AOJu0Yx6ioUAh9Ok+M3M2KE1vdbnZ1F9ELfLX1L149cQPQLfKRO87Hku
+        hQtRASJGuToYJE7JQT4vfE9Hlg==
+X-Google-Smtp-Source: AGHT+IEA8f8jbepvOECPPXUexkCLgyHOHQjzDCqVK7qMNT8c1bDfn1tTaebe+DDNrd13ra1QOlwa9w==
+X-Received: by 2002:a7b:c3c1:0:b0:404:7670:90b8 with SMTP id t1-20020a7bc3c1000000b00404767090b8mr9325417wmj.27.1696230218972;
+        Mon, 02 Oct 2023 00:03:38 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id 3-20020a05600c020300b004063cced50bsm6614798wmi.23.2023.10.02.00.03.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Oct 2023 00:03:38 -0700 (PDT)
+Date:   Mon, 2 Oct 2023 10:03:35 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     Manivannan Sadhasivam <mani@kernel.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: ufs: qcom: remove unnecessary check
+Message-ID: <fe3b8fcd-64a7-4887-bddd-32239a88a6a3@moroto.mountain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230920080756.11919-9-nj.shetty@samsung.com>
+X-Mailer: git-send-email haha only kidding
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Nitesh,
+The "attr" pointer points to an offset into the "host" struct so it
+can't be NULL.  Delete the if statement and pull the code in a tab.
 
-kernel test robot noticed the following build warnings:
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+---
+ drivers/ufs/host/ufs-qcom.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-[auto build test WARNING on 7fc7222d9680366edeecc219c21ca96310bdbc10]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Introduce-queue-limits-and-sysfs-for-copy-offload-support/20230920-170132
-base:   7fc7222d9680366edeecc219c21ca96310bdbc10
-patch link:    https://lore.kernel.org/r/20230920080756.11919-9-nj.shetty%40samsung.com
-patch subject: [PATCH v16 08/12] nvmet: add copy command support for bdev and file ns
-config: i386-randconfig-061-20231002 (https://download.01.org/0day-ci/archive/20231002/202310020910.TaSOIepO-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231002/202310020910.TaSOIepO-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202310020910.TaSOIepO-lkp@intel.com/
-
-sparse warnings: (new ones prefixed by >>)
->> drivers/nvme/target/io-cmd-bdev.c:498:30: sparse: sparse: restricted __le16 degrades to integer
->> drivers/nvme/target/io-cmd-bdev.c:514:41: sparse: sparse: incorrect type in argument 2 (different base types) @@     expected restricted blk_status_t [usertype] blk_sts @@     got int [assigned] [usertype] ret @@
-   drivers/nvme/target/io-cmd-bdev.c:514:41: sparse:     expected restricted blk_status_t [usertype] blk_sts
-   drivers/nvme/target/io-cmd-bdev.c:514:41: sparse:     got int [assigned] [usertype] ret
-
-vim +498 drivers/nvme/target/io-cmd-bdev.c
-
-   478	
-   479	/*
-   480	 * At present we handle only one range entry, since copy offload is aligned with
-   481	 * copy_file_range, only one entry is passed from block layer.
-   482	 */
-   483	static void nvmet_bdev_execute_copy(struct nvmet_req *rq)
-   484	{
-   485		struct nvme_copy_range range;
-   486		struct nvme_command *cmd = rq->cmd;
-   487		ssize_t ret;
-   488		off_t dst, src;
-   489	
-   490		u16 status;
-   491	
-   492		status = nvmet_copy_from_sgl(rq, 0, &range, sizeof(range));
-   493		if (status)
-   494			goto err_rq_complete;
-   495	
-   496		dst = le64_to_cpu(cmd->copy.sdlba) << rq->ns->blksize_shift;
-   497		src = le64_to_cpu(range.slba) << rq->ns->blksize_shift;
- > 498		rq->copy_len = (range.nlb + 1) << rq->ns->blksize_shift;
-   499	
-   500		if (bdev_max_copy_sectors(rq->ns->bdev)) {
-   501			ret = blkdev_copy_offload(rq->ns->bdev, dst, src, rq->copy_len,
-   502						  nvmet_bdev_copy_endio,
-   503						  (void *)rq, GFP_KERNEL);
-   504		} else {
-   505			ret = blkdev_copy_emulation(rq->ns->bdev, dst,
-   506						    rq->ns->bdev, src, rq->copy_len,
-   507						    nvmet_bdev_copy_endio,
-   508						    (void *)rq, GFP_KERNEL);
-   509		}
-   510		if (ret == -EIOCBQUEUED)
-   511			return;
-   512	
-   513		rq->cqe->result.u32 = cpu_to_le32(0);
- > 514		status = blk_to_nvme_status(rq, ret);
-   515	err_rq_complete:
-   516		nvmet_req_complete(rq, status);
-   517	}
-   518	
-
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 2128db0293b5..96cb8b5b4e66 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1447,15 +1447,11 @@ static int ufs_qcom_clk_scale_up_pre_change(struct ufs_hba *hba)
+ 	if (!ufs_qcom_cap_qunipro(host))
+ 		return 0;
+ 
+-	if (attr) {
+-		ret = ufs_qcom_cfg_timers(hba, attr->gear_rx,
+-					attr->pwr_rx, attr->hs_rate,
+-					false, true);
+-		if (ret) {
+-			dev_err(hba->dev, "%s ufs cfg timer failed\n",
+-						__func__);
+-			return ret;
+-		}
++	ret = ufs_qcom_cfg_timers(hba, attr->gear_rx, attr->pwr_rx,
++				  attr->hs_rate, false, true);
++	if (ret) {
++		dev_err(hba->dev, "%s ufs cfg timer failed\n", __func__);
++		return ret;
+ 	}
+ 	/* set unipro core clock attributes and clear clock divider */
+ 	return ufs_qcom_set_core_clk_ctrl(hba, true);
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.2
+
