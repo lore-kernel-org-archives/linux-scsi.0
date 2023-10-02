@@ -2,87 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEE41E784B3
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 13:51:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B87EE784B6
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 14:17:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237540AbjJBNvh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 09:51:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48966 "EHLO
+        id S237712AbjJBORm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 10:17:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237525AbjJBNvf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 09:51:35 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30BBDB8;
-        Mon,  2 Oct 2023 06:51:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696254693; x=1727790693;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=S3iQVHA5BHkLqfd9QE4Rl6YyMeWLrSfAyfSV26Quxho=;
-  b=GOEM3zb5byGmulXmCridfaiO2VinmY+8EkoJEi5r+NijkshvTc7WgwVh
-   xx07dJwFsmtYpdliu+BbZKiSEBsO5xvnB8n9A6UB3ETueusXpv74X5yfy
-   K+027/cYn1wC+NmHKQ5r9NOBbEdo7VFShX1+JHE53OQ2HpDWy7oN6eI4J
-   fEZzNcINIOLtrq+yj7KzMGo+hRwsbHNKCVRv5qwnM/jOX4QR5RnURnBc9
-   d4TqeVlBkaJqSBP1Qi0YbDAIRL4ID8VflrMhTjN23Ndpy/S4VgGIq7O62
-   8dQnGGpOU2CrzojtEbFDvoNEnx4obnmghb5q9jmyzcjm0niNCrDatsrlv
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10851"; a="372994639"
-X-IronPort-AV: E=Sophos;i="6.03,194,1694761200"; 
-   d="scan'208";a="372994639"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2023 06:51:31 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10851"; a="866500765"
-X-IronPort-AV: E=Sophos;i="6.03,194,1694761200"; 
-   d="scan'208";a="866500765"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga002.fm.intel.com with ESMTP; 02 Oct 2023 06:51:29 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 133231A7; Mon,  2 Oct 2023 16:51:27 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 1/1] scsi: ufs: ufs-pci: Switch to use acpi_evaluate_dsm_typed()
-Date:   Mon,  2 Oct 2023 16:51:25 +0300
-Message-Id: <20231002135125.2602895-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.40.0.1.gaa8946217a0b
+        with ESMTP id S237575AbjJBORl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 10:17:41 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC50EA4;
+        Mon,  2 Oct 2023 07:17:38 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53217C433C8;
+        Mon,  2 Oct 2023 14:17:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696256258;
+        bh=vkYSu3CMdUku1DYMLSbi1CqSIx/Y+w371ZyBOHbOWQU=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=exLEpilJBAgz5ZnsirATe9JxW+UqjlphdsbHWsfr4jfuvvcdvfFqCOOPADpHoegLG
+         QT1ZRviNOCQSFKPR+2ncqqKUmVN5OgF6Y3H/MOzAcM/iVe2Rhws0drvVplI+2eIc8B
+         vEtl9FK4HkZ3OOjR4RCkE9u+Gvi4K1kPyS1jOYkSvxJSQs2ZBIu74ouWye+qLIE93j
+         akqIqYVLy6LU2/F78IRxLEwEfXTSJG6/bFwFcDmsl1IBSzB7eh4B9D9E143cSdty4X
+         r2p6zx5xCX9grOdpP+GalyJ8YI4rJQvVL0i4iN5OQXuy6/X9d744gUtflnDsfOCo5Y
+         8pia5lOvzI0rg==
+Message-ID: <e493d101-348a-949d-5160-3d633817adf2@kernel.org>
+Date:   Mon, 2 Oct 2023 08:17:35 -0600
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.1
+Subject: Re: [PATCH v2 10/15] vrf: Remove the now superfluous sentinel element
+ from ctl_table array
+Content-Language: en-US
+To:     j.granados@samsung.com, Luis Chamberlain <mcgrof@kernel.org>,
+        willy@infradead.org, josh@joshtriplett.org,
+        Kees Cook <keescook@chromium.org>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Clemens Ladisch <clemens@ladisch.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Corey Minyard <minyard@acm.org>, Theodore Ts'o <tytso@mit.edu>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Robin Holt <robinmholt@gmail.com>,
+        Steve Wahl <steve.wahl@hpe.com>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Song Liu <song@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>
+Cc:     linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-rdma@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+References: <20231002-jag-sysctl_remove_empty_elem_drivers-v2-0-02dd0d46f71e@samsung.com>
+ <651a84ff.050a0220.51ca9.2e91SMTPIN_ADDED_BROKEN@mx.google.com>
+From:   David Ahern <dsahern@kernel.org>
+In-Reply-To: <651a84ff.050a0220.51ca9.2e91SMTPIN_ADDED_BROKEN@mx.google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The acpi_evaluate_dsm_typed() provides a way to check the type of the
-object evaluated by _DSM call. Use it instead of open coded variant.
+On 10/2/23 2:55 AM, Joel Granados via B4 Relay wrote:
+> From: Joel Granados <j.granados@samsung.com>
+> 
+> This commit comes at the tail end of a greater effort to remove the
+> empty elements at the end of the ctl_table arrays (sentinels) which
+> will reduce the overall build time size of the kernel and run time
+> memory bloat by ~64 bytes per sentinel (further information Link :
+> https://lore.kernel.org/all/ZO5Yx5JFogGi%2FcBo@bombadil.infradead.org/)
+> 
+> Remove sentinel from vrf_table
+> 
+> Signed-off-by: Joel Granados <j.granados@samsung.com>
+> ---
+>  drivers/net/vrf.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/ufs/host/ufshcd-pci.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Reviewed-by: David Ahern <dsahern@kernel.org>
 
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 248a49e5e7f3..0aca666d2199 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -58,11 +58,12 @@ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
- 	int err = 0;
- 	size_t len;
- 
--	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &intel_dsm_guid, 0, fn, NULL);
-+	obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(dev), &intel_dsm_guid, 0, fn, NULL,
-+				      ACPI_TYPE_BUFFER);
- 	if (!obj)
- 		return -EOPNOTSUPP;
- 
--	if (obj->type != ACPI_TYPE_BUFFER || obj->buffer.length < 1) {
-+	if (obj->buffer.length < 1) {
- 		err = -EINVAL;
- 		goto out;
- 	}
--- 
-2.40.0.1.gaa8946217a0b
 
