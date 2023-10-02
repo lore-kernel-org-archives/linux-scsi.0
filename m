@@ -2,53 +2,52 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 344F1E784BE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 024DCE743C3
 	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 15:49:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238283AbjJBPts (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 11:49:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44864 "EHLO
+        id S238284AbjJBPtt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 11:49:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238259AbjJBPtn (ORCPT
+        with ESMTP id S238261AbjJBPtn (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 11:49:43 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30EB5E1
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37C46E3
         for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 08:49:36 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id EC99B21878;
+        by smtp-out1.suse.de (Postfix) with ESMTP id F32BF2187B;
         Mon,  2 Oct 2023 15:49:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1696261770; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1696261771; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=eXEF3bQYTvhmrQF9D4XhodtWlYJiy0/OK2JtJ2tLzxU=;
-        b=EQdGYuS5UJCoQUUV+ZI0bv2VQPINIFt20dRFXaWezP/ElaY6YLD+YdoVNr67l2+CbP85/c
-        FmDB5+W+Mwt667NQGbuPuwGsjqqMGv2wrYHs+IfUyP5D7BaPQvLxuHPmDija/KcnV6sIK0
-        sfOLHKyj3jmZTd1zREIAjxi8z1SiegU=
+        bh=J0BOS1VGUNZ8Q/4/fxB8uhHSDzTbVnTTMhqCVkw2/ss=;
+        b=CJqeD9lxNJhj2ZeC4HaZZFVqW50b8samRnZcuCXluEjTeCDB5ZVPf4WPmEuY30qTXZ8wMJ
+        abr81LrVQ54DhbN30kBohOWTZYeCrplqKB45OY4WLoAoO8zCkVGSRg61qmxhrYC8ys1m6X
+        PBUc0bFXdFQjD8JPI+4rbZjQhPGtdYE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1696261770;
+        s=susede2_ed25519; t=1696261771;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=eXEF3bQYTvhmrQF9D4XhodtWlYJiy0/OK2JtJ2tLzxU=;
-        b=E/eJLReojVLzIZOY3BwvS26DJOcb7rovPT37fcnRidjY9IDiL5DLY+vH6pIok4PsxYiiXK
-        wsznfcZtoK2QUECQ==
+        bh=J0BOS1VGUNZ8Q/4/fxB8uhHSDzTbVnTTMhqCVkw2/ss=;
+        b=Yq0+KDFpg3t04tEUQPzuqIeuEaXvC2Kng7saskfL+7jkyDrXXe7O8YUnrXBsuoTwsaIcmQ
+        /OKtT3pFJxFSS3BQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id C95A22C15C;
+        by relay2.suse.de (Postfix) with ESMTP id D4E9D2C161;
         Mon,  2 Oct 2023 15:49:30 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id E0CB451E7575; Mon,  2 Oct 2023 17:49:30 +0200 (CEST)
+        id ED02651E757B; Mon,  2 Oct 2023 17:49:30 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 12/15] snic: Use scsi_host_busy_iter() to traverse commands
-Date:   Mon,  2 Oct 2023 17:49:24 +0200
-Message-Id: <20231002154927.68643-13-hare@suse.de>
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 15/15] csiostor: use separate TMF command
+Date:   Mon,  2 Oct 2023 17:49:27 +0200
+Message-Id: <20231002154927.68643-16-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231002154927.68643-1-hare@suse.de>
 References: <20231002154927.68643-1-hare@suse.de>
@@ -58,279 +57,207 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use scsi_host_busy_iter() to traverse commands instead of hand-crafted
-routines walking the command list.
+Set one command aside as a TMF command, and use this command to
+send the TMF. This avoids having to rely on the passed-in scsi
+command when resetting the device.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/scsi/snic/snic_scsi.c | 177 ++++++++++++++++------------------
- 1 file changed, 84 insertions(+), 93 deletions(-)
+ drivers/scsi/csiostor/csio_scsi.c | 72 ++++++++++++++++++++-----------
+ 1 file changed, 48 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index 06615619b84c..48261a37d4a6 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -63,7 +63,7 @@ static const char * const snic_io_status_str[] = {
- 	[SNIC_STAT_FATAL_ERROR]	= "SNIC_STAT_FATAL_ERROR",
- };
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 05e1a63e00c3..08597de49b7f 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -1724,7 +1724,10 @@ csio_scsi_err_handler(struct csio_hw *hw, struct csio_ioreq *req)
+ 	}
  
--static void snic_scsi_cleanup(struct snic *, int);
-+static void snic_scsi_cleanup(struct snic *);
+ 	cmnd->result = (((host_status) << 16) | scsi_status);
+-	scsi_done(cmnd);
++	if (csio_priv(cmnd)->fc_tm_flags == FCP_TMF_LUN_RESET)
++		blk_mq_set_request_complete(scsi_cmd_to_rq(cmnd));
++	else
++		scsi_done(cmnd);
  
- const char *
- snic_state_to_str(unsigned int state)
-@@ -958,7 +958,7 @@ snic_hba_reset_scsi_cleanup(struct snic *snic)
- 	long act_ios = 0, act_fwreqs = 0;
+ 	/* Wake up waiting threads */
+ 	csio_scsi_cmnd(req) = NULL;
+@@ -1752,7 +1755,10 @@ csio_scsi_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
+ 		}
  
- 	SNIC_SCSI_DBG(snic->shost, "HBA Reset scsi cleanup.\n");
--	snic_scsi_cleanup(snic, snic->max_tag_id);
-+	snic_scsi_cleanup(snic);
+ 		cmnd->result = (((host_status) << 16) | scsi_status);
+-		scsi_done(cmnd);
++		if (csio_priv(cmnd)->fc_tm_flags == FCP_TMF_LUN_RESET)
++			blk_mq_set_request_complete(scsi_cmd_to_rq(cmnd));
++		else
++			scsi_done(cmnd);
+ 		csio_scsi_cmnd(req) = NULL;
+ 		CSIO_INC_STATS(csio_hw_to_scsim(hw), n_tot_success);
+ 	} else {
+@@ -2056,17 +2062,21 @@ csio_tm_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
  
- 	/* Update stats on pending IOs */
- 	act_ios = atomic64_read(&st->io.active);
-@@ -2357,53 +2357,36 @@ snic_cmpl_pending_tmreq(struct snic *snic, struct scsi_cmnd *sc)
- 		complete(rqi->abts_done);
+ 	/* Wake up the TM handler thread */
+ 	csio_scsi_cmnd(req) = NULL;
++	cmnd->host_scribble = NULL;
  }
  
--/*
-- * snic_scsi_cleanup: Walks through tag map and releases the reqs
-- */
--static void
--snic_scsi_cleanup(struct snic *snic, int ex_tag)
-+static bool
-+snic_scsi_cleanup_iter(struct scsi_cmnd *sc, void *data, bool reserved)
+ static int
+ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
  {
-+	struct snic *snic = data;
- 	struct snic_req_info *rqi = NULL;
--	struct scsi_cmnd *sc = NULL;
- 	spinlock_t *io_lock = NULL;
+-	struct csio_lnode *ln = shost_priv(cmnd->device->host);
++	struct scsi_device *sdev = cmnd->device;
++	struct csio_lnode *ln = shost_priv(sdev->host);
+ 	struct csio_hw *hw = csio_lnode_to_hw(ln);
+ 	struct csio_scsim *scsim = csio_hw_to_scsim(hw);
+-	struct csio_rnode *rn = (struct csio_rnode *)(cmnd->device->hostdata);
++	struct csio_rnode *rn = (struct csio_rnode *)(sdev->hostdata);
+ 	struct csio_ioreq *ioreq = NULL;
+ 	struct csio_scsi_qset *sqset;
++	struct scsi_cmnd *tmf_cmnd;
++	struct request *req;
  	unsigned long flags;
--	int tag;
-+	int tag = scsi_cmd_to_rq(sc)->tag;
- 	u64 st_time = 0;
+ 	int retval;
+ 	int count, ret;
+@@ -2074,17 +2084,17 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	struct csio_scsi_level_data sld;
  
- 	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup.\n");
+ 	if (!rn)
+-		goto fail;
++		return FAILED;
  
--	for (tag = 0; tag < snic->max_tag_id; tag++) {
--		/* Skip ex_tag */
--		if (tag == ex_tag)
--			continue;
--
--		io_lock = snic_io_lock_tag(snic, tag);
--		spin_lock_irqsave(io_lock, flags);
--		sc = scsi_host_find_tag(snic->shost, tag);
--		if (!sc) {
--			spin_unlock_irqrestore(io_lock, flags);
--
--			continue;
--		}
--
--		if (unlikely(snic_tmreq_pending(sc))) {
--			/*
--			 * When FW Completes reset w/o sending completions
--			 * for outstanding ios.
--			 */
--			snic_cmpl_pending_tmreq(snic, sc);
--			spin_unlock_irqrestore(io_lock, flags);
--
--			continue;
--		}
-+	io_lock = snic_io_lock_tag(snic, tag);
-+	spin_lock_irqsave(io_lock, flags);
+ 	csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
+-		      cmnd->device->lun, rn->flowid, rn->scsi_id);
++		      sdev->lun, rn->flowid, rn->scsi_id);
  
--		rqi = (struct snic_req_info *) CMD_SP(sc);
--		if (!rqi) {
--			spin_unlock_irqrestore(io_lock, flags);
-+	if (unlikely(snic_tmreq_pending(sc))) {
-+		/*
-+		 * When FW Completes reset w/o sending completions
-+		 * for outstanding ios.
-+		 */
-+		snic_cmpl_pending_tmreq(snic, sc);
-+		spin_unlock_irqrestore(io_lock, flags);
+ 	if (!csio_is_lnode_ready(ln)) {
+ 		csio_err(hw,
+ 			 "LUN reset cannot be issued on non-ready"
+ 			 " local node vnpi:0x%x (LUN:%llu)\n",
+-			 ln->vnp_flowid, cmnd->device->lun);
+-		goto fail;
++			 ln->vnp_flowid, sdev->lun);
++		return FAILED;
+ 	}
  
--			goto cleanup;
--		}
-+		return true;
+ 	/* Lnode is ready, now wait on rport node readiness */
+@@ -2103,10 +2113,19 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 		csio_err(hw,
+ 			 "LUN reset cannot be issued on non-ready"
+ 			 " remote node ssni:0x%x (LUN:%llu)\n",
+-			 rn->flowid, cmnd->device->lun);
+-		goto fail;
++			 rn->flowid, sdev->lun);
++		return FAILED;
+ 	}
+ 
++	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
++				 BLK_MQ_REQ_NOWAIT);
++	if (!req) {
++		csio_err(hw,
++			 "LUN reset TMF already busy (LUN:%llu)\n",
++			 sdev->lun);
++		return FAILED;
 +	}
++	tmf_cmnd = blk_mq_rq_to_pdu(req);
+ 	/* Get a free ioreq structure - SM is already set to uninit */
+ 	ioreq = csio_get_scsi_ioreq_lock(hw, scsim);
  
-+	rqi = (struct snic_req_info *) CMD_SP(sc);
-+	if (!rqi)
-+		spin_unlock_irqrestore(io_lock, flags);
-+	else {
- 		SNIC_SCSI_DBG(snic->shost,
- 			      "sc_clean: sc %p, rqi %p, tag %d flags 0x%llx\n",
- 			      sc, rqi, tag, CMD_FLAGS(sc));
-@@ -2418,24 +2401,34 @@ snic_scsi_cleanup(struct snic *snic, int ex_tag)
- 			       rqi, CMD_FLAGS(sc));
+@@ -2123,11 +2142,11 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	ioreq->iq_idx		= sqset->iq_idx;
+ 	ioreq->eq_idx		= sqset->eq_idx;
  
- 		snic_release_req_buf(snic, rqi, sc);
-+	}
-+	sc->result = DID_TRANSPORT_DISRUPTED << 16;
-+	SNIC_HOST_INFO(snic->shost,
-+		       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
-+		       sc, tag, CMD_FLAGS(sc), rqi,
-+		       jiffies_to_msecs(jiffies - st_time));
+-	csio_scsi_cmnd(ioreq)	= cmnd;
+-	cmnd->host_scribble	= (unsigned char *)ioreq;
+-	csio_priv(cmnd)->wr_status = 0;
++	csio_scsi_cmnd(ioreq)	= tmf_cmnd;
++	tmf_cmnd->host_scribble	= (unsigned char *)ioreq;
++	csio_priv(tmf_cmnd)->wr_status = 0;
  
--cleanup:
--		sc->result = DID_TRANSPORT_DISRUPTED << 16;
--		SNIC_HOST_INFO(snic->shost,
--			       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
--			       sc, scsi_cmd_to_rq(sc)->tag, CMD_FLAGS(sc), rqi,
--			       jiffies_to_msecs(jiffies - st_time));
-+	/* Update IO stats */
-+	snic_stats_update_io_cmpl(&snic->s_stats);
+-	csio_priv(cmnd)->fc_tm_flags = FCP_TMF_LUN_RESET;
++	csio_priv(tmf_cmnd)->fc_tm_flags = FCP_TMF_LUN_RESET;
+ 	ioreq->tmo		= CSIO_SCSI_LUNRST_TMO_MS / 1000;
  
--		/* Update IO stats */
--		snic_stats_update_io_cmpl(&snic->s_stats);
-+	SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
-+		 jiffies_to_msecs(jiffies - st_time), 0,
-+		 SNIC_TRC_CMD(sc),
-+		 SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 	/*
+@@ -2144,30 +2163,33 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	sld.level = CSIO_LEV_LUN;
+ 	sld.lnode = ioreq->lnode;
+ 	sld.rnode = ioreq->rnode;
+-	sld.oslun = cmnd->device->lun;
++	sld.oslun = sdev->lun;
  
--		SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
--			 jiffies_to_msecs(jiffies - st_time), 0,
--			 SNIC_TRC_CMD(sc),
--			 SNIC_TRC_CMD_STATE_FLAGS(sc));
-+	scsi_done(sc);
-+	return true;
-+}
++	WRITE_ONCE(req->state, MQ_RQ_IN_FLIGHT);
+ 	spin_lock_irqsave(&hw->lock, flags);
+ 	/* Kick off TM SM on the ioreq */
+ 	retval = csio_scsi_start_tm(ioreq);
+ 	spin_unlock_irqrestore(&hw->lock, flags);
  
--		scsi_done(sc);
--	}
-+/*
-+ * snic_scsi_cleanup: Walks through tag map and releases the reqs
-+ */
-+static void
-+snic_scsi_cleanup(struct snic *snic)
-+{
-+	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup\n");
-+
-+	scsi_host_busy_iter(snic->shost, snic_scsi_cleanup_iter, snic);
- } /* end of snic_scsi_cleanup */
+ 	if (retval != 0) {
++		blk_mq_set_request_complete(req);
+ 		csio_err(hw, "Failed to issue LUN reset, req:%p, status:%d\n",
+ 			    ioreq, retval);
++		tmf_cmnd->host_scribble = NULL;
+ 		goto fail_ret_ioreq;
+ 	}
  
- void
-@@ -2443,7 +2436,7 @@ snic_shutdown_scsi_cleanup(struct snic *snic)
- {
- 	SNIC_HOST_INFO(snic->shost, "Shutdown time SCSI Cleanup.\n");
+ 	csio_dbg(hw, "Waiting max %d secs for LUN reset completion\n",
+ 		    count * (CSIO_SCSI_TM_POLL_MS / 1000));
+ 	/* Wait for completion */
+-	while ((((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd)
++	while ((((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == tmf_cmnd)
+ 								&& count--)
+ 		msleep(CSIO_SCSI_TM_POLL_MS);
  
--	snic_scsi_cleanup(snic, SCSI_NO_TAG);
-+	snic_scsi_cleanup(snic);
- } /* end of snic_shutdown_scsi_cleanup */
+ 	/* LUN reset timed-out */
+-	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd) {
++	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == tmf_cmnd) {
+ 		csio_err(hw, "LUN reset (%d:%llu) timed out\n",
+-			 cmnd->device->id, cmnd->device->lun);
++			 sdev->id, sdev->lun);
  
- /*
-@@ -2457,7 +2450,7 @@ snic_internal_abort_io(struct snic *snic, struct scsi_cmnd *sc, int tmf)
- 	spinlock_t *io_lock = NULL;
- 	unsigned long flags;
- 	u32 sv_state = 0;
--	int ret = 0;
-+	int ret = FAILED;
+ 		spin_lock_irq(&hw->lock);
+ 		csio_scsi_drvcleanup(ioreq);
+@@ -2178,10 +2200,10 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	}
  
- 	io_lock = snic_io_lock_hash(snic, sc);
- 	spin_lock_irqsave(io_lock, flags);
-@@ -2532,6 +2525,35 @@ snic_internal_abort_io(struct snic *snic, struct scsi_cmnd *sc, int tmf)
- 	return ret;
- } /* end of snic_internal_abort_io */
+ 	/* LUN reset returned, check cached status */
+-	if (csio_priv(cmnd)->wr_status != FW_SUCCESS) {
++	if (csio_priv(tmf_cmnd)->wr_status != FW_SUCCESS) {
+ 		csio_err(hw, "LUN reset failed (%d:%llu), status: %d\n",
+-			 cmnd->device->id, cmnd->device->lun,
+-			 csio_priv(cmnd)->wr_status);
++			 sdev->id, sdev->lun,
++			 csio_priv(tmf_cmnd)->wr_status);
+ 		goto fail;
+ 	}
  
-+struct snic_tgt_scsi_abort_io_data {
-+	struct snic *snic;
-+	struct snic_tgt *tgt;
-+	int tmf;
-+	int abt_cnt;
-+};
-+
-+static bool snic_tgt_scsi_abort_io_iter(struct scsi_cmnd *sc, void *data,
-+					bool reserved)
-+{
-+	struct snic_tgt_scsi_abort_io_data *iter_data = data;
-+	struct snic *snic = iter_data->snic;
-+	struct snic_tgt *sc_tgt;
-+	int ret;
-+
-+	sc_tgt = starget_to_tgt(scsi_target(sc->device));
-+	if (sc_tgt != iter_data->tgt)
-+		return true;
-+
-+	ret = snic_internal_abort_io(snic, sc, iter_data->tmf);
-+	if (ret == SUCCESS)
-+		iter_data->abt_cnt++;
-+	else
-+		SNIC_HOST_ERR(snic->shost,
-+			      "tgt_abt_io: Tag %x, Failed w err = %d\n",
-+			      scsi_cmd_to_rq(sc)->tag, ret);
-+	return true;
-+}
-+
- /*
-  * snic_tgt_scsi_abort_io : called by snic_tgt_del
-  */
-@@ -2539,11 +2561,9 @@ int
- snic_tgt_scsi_abort_io(struct snic_tgt *tgt)
- {
- 	struct snic *snic = NULL;
--	struct scsi_cmnd *sc = NULL;
--	struct snic_tgt *sc_tgt = NULL;
--	spinlock_t *io_lock = NULL;
--	unsigned long flags;
--	int ret = 0, tag, abt_cnt = 0, tmf = 0;
-+	struct snic_tgt_scsi_abort_io_data data = {
-+		.abt_cnt = 0,
-+	};
+@@ -2201,7 +2223,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	if (retval != 0) {
+ 		csio_err(hw,
+ 			 "Attempt to abort I/Os during LUN reset of %llu"
+-			 " returned %d\n", cmnd->device->lun, retval);
++			 " returned %d\n", sdev->lun, retval);
+ 		/* Return I/Os back to active_q */
+ 		spin_lock_irq(&hw->lock);
+ 		list_splice_tail_init(&local_q, &scsim->active_q);
+@@ -2212,14 +2234,16 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	CSIO_INC_STATS(rn, n_lun_rst);
  
- 	if (!tgt)
- 		return -1;
-@@ -2551,44 +2571,15 @@ snic_tgt_scsi_abort_io(struct snic_tgt *tgt)
- 	snic = shost_priv(snic_tgt_to_shost(tgt));
- 	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: Cleaning Pending IOs.\n");
- 
-+	data.snic = snic;
- 	if (tgt->tdata.typ == SNIC_TGT_DAS)
--		tmf = SNIC_ITMF_ABTS_TASK;
-+		data.tmf = SNIC_ITMF_ABTS_TASK;
- 	else
--		tmf = SNIC_ITMF_ABTS_TASK_TERM;
+ 	csio_info(hw, "LUN reset occurred (%d:%llu)\n",
+-		  cmnd->device->id, cmnd->device->lun);
 -
--	for (tag = 0; tag < snic->max_tag_id; tag++) {
--		io_lock = snic_io_lock_tag(snic, tag);
--
--		spin_lock_irqsave(io_lock, flags);
--		sc = scsi_host_find_tag(snic->shost, tag);
--		if (!sc) {
--			spin_unlock_irqrestore(io_lock, flags);
--
--			continue;
--		}
-+		data.tmf = SNIC_ITMF_ABTS_TASK_TERM;
++		  sdev->id, sdev->lun);
++	blk_mq_free_request(req);
+ 	return SUCCESS;
  
--		sc_tgt = starget_to_tgt(scsi_target(sc->device));
--		if (sc_tgt != tgt) {
--			spin_unlock_irqrestore(io_lock, flags);
--
--			continue;
--		}
--		spin_unlock_irqrestore(io_lock, flags);
--
--		ret = snic_internal_abort_io(snic, sc, tmf);
--		if (ret < 0) {
--			SNIC_HOST_ERR(snic->shost,
--				      "tgt_abt_io: Tag %x, Failed w err = %d\n",
--				      tag, ret);
--
--			continue;
--		}
--
--		if (ret == SUCCESS)
--			abt_cnt++;
--	}
-+	scsi_host_busy_iter(snic->shost, snic_tgt_scsi_abort_io_iter, &data);
+ fail_ret_ioreq:
+ 	csio_put_scsi_ioreq_lock(hw, scsim, ioreq);
+ fail:
+ 	CSIO_INC_STATS(rn, n_lun_rst_fail);
++	if (req)
++		blk_mq_free_request(req);
+ 	return FAILED;
+ }
  
--	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: abt_cnt = %d\n", abt_cnt);
-+	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: abt_cnt = %d\n", data.abt_cnt);
- 
- 	return 0;
- } /* end of snic_tgt_scsi_abort_io */
 -- 
 2.35.3
 
