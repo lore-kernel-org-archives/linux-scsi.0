@@ -2,54 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 779B9E748ED
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 15:43:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34078E784BF
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Oct 2023 15:43:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238195AbjJBPny (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Oct 2023 11:43:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41134 "EHLO
+        id S238199AbjJBPn4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Oct 2023 11:43:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238169AbjJBPnu (ORCPT
+        with ESMTP id S238171AbjJBPnu (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2023 11:43:50 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D248D3
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34D3FDA
         for <linux-scsi@vger.kernel.org>; Mon,  2 Oct 2023 08:43:46 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 886B921863;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 822561F74D;
         Mon,  2 Oct 2023 15:43:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1696261423; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=X7SuGaGxdMLpaUuaf+TQCAiIO/GB6H95aC7Uiqg+o1k=;
-        b=TAkGqnimhAkfeCRNf0vFSwRJ6bMV0ENHJt6xoRllQmTEnZS7Jm+RoL3mu8uxlUB3TP2UcJ
-        a4VJo72vBILNjNURM19e8Dtmm+6qXx5clWjS3HFrQUULzqnO0ncJhtEaGUwQ8XVYqJraWr
-        UDz6loIr6qJhpg7uaBQzWLGQYhGNcDw=
+        bh=A4q7E1/BXL2CF0ZlGv6XBmSRPCh23hXsLAL3al04zak=;
+        b=ojgXDdX1shxp9ps2RfoYPE0O/XWms+EmrAma/YxKchepzas3MHepqW1N5LpqSfFCVAd6zv
+        gCUCnNb4I/p4Q+bB0gJ5cwN2loILA+uW4QMMJmkzj7pM6GON2RTMZfobXH9IVxaiE66p3B
+        WZ1QhH8prW++9hL8DkIr21F9MFIUVGo=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1696261423;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=X7SuGaGxdMLpaUuaf+TQCAiIO/GB6H95aC7Uiqg+o1k=;
-        b=qJxy9NhzGDy1bXwVLSrpCIIcCEItQPe9iAZHwhupomFI+Wl90pGJ3k45+Zp392uZ0/ILkq
-        3uQlVFbJHOPmpxBQ==
+        bh=A4q7E1/BXL2CF0ZlGv6XBmSRPCh23hXsLAL3al04zak=;
+        b=NM9NX/GKQsXkQ/sqnIRda6m6/IUKYkwEyV8n8ZQTAxDsfihUWT6gDLoTXCzQYCucx6Dzag
+        uLdHcm2XhZJep4CA==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 6014F2C14B;
+        by relay2.suse.de (Postfix) with ESMTP id 59A3E2C146;
         Mon,  2 Oct 2023 15:43:43 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 6902951E7541; Mon,  2 Oct 2023 17:43:43 +0200 (CEST)
+        id 4566B51E7539; Mon,  2 Oct 2023 17:43:43 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Saurav Kashyap <skashyap@marvell.com>
-Subject: [PATCH 05/18] bnx2fc: Do not rely on a scsi command for lun or target reset
-Date:   Mon,  2 Oct 2023 17:43:15 +0200
-Message-Id: <20231002154328.43718-6-hare@suse.de>
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 01/18] mptfc: simplify mptfc_block_error_handler()
+Date:   Mon,  2 Oct 2023 17:43:11 +0200
+Message-Id: <20231002154328.43718-2-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231002154328.43718-1-hare@suse.de>
 References: <20231002154328.43718-1-hare@suse.de>
@@ -59,280 +58,148 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When a LUN or target reset is issued we should not rely on a scsi
-command to be present; we'll have to reset the entire device or
-target anyway.
+Instead of passing in a function to mptfc_block_error_handler()
+we can as well return a status and call the function afterwards.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc: Saurav Kashyap <skashyap@marvell.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h     |  1 +
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 14 +++--
- drivers/scsi/bnx2fc/bnx2fc_io.c  | 94 ++++++++++++++++----------------
- 3 files changed, 57 insertions(+), 52 deletions(-)
+ drivers/message/fusion/mptfc.c | 83 ++++++++++++++++++++++------------
+ 1 file changed, 54 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 046247420cfa..7e74f77da14f 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -384,6 +384,7 @@ struct bnx2fc_rport {
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index 22e7779a332b..5d5563ea90c2 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -183,73 +183,98 @@ static struct fc_function_template mptfc_transport_functions = {
  };
  
- struct bnx2fc_mp_req {
-+	u64 tm_lun;
- 	u8 tm_flags;
+ static int
+-mptfc_block_error_handler(struct scsi_cmnd *SCpnt,
+-			  int (*func)(struct scsi_cmnd *SCpnt),
+-			  const char *caller)
++mptfc_block_error_handler(struct fc_rport *rport)
+ {
+ 	MPT_SCSI_HOST		*hd;
+-	struct scsi_device	*sdev = SCpnt->device;
+-	struct Scsi_Host	*shost = sdev->host;
+-	struct fc_rport		*rport = starget_to_rport(scsi_target(sdev));
++	struct Scsi_Host	*shost = rport_to_shost(rport);
+ 	unsigned long		flags;
+ 	int			ready;
+-	MPT_ADAPTER 		*ioc;
++	MPT_ADAPTER		*ioc;
+ 	int			loops = 40;	/* seconds */
  
- 	u32 req_len;
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 776544385598..090d436bcef8 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1709,7 +1709,8 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- 	struct fcoe_cached_sge_ctx *cached_sge;
- 	struct fcoe_ext_mul_sges_ctx *sgl;
- 	int dev_type = tgt->dev_type;
--	u64 *fcp_cmnd;
-+	struct fcp_cmnd *fcp_cmnd;
-+	u64 *raw_fcp_cmnd;
- 	u64 tmp_fcp_cmnd[4];
- 	u32 context_id;
- 	int cnt, i;
-@@ -1778,16 +1779,19 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- 	task->txwr_rxrd.union_ctx.tx_seq.ctx.seq_cnt = 1;
- 
- 	/* Fill FCP_CMND IU */
--	fcp_cmnd = (u64 *)
-+	fcp_cmnd = (struct fcp_cmnd *)&tmp_fcp_cmnd;
-+	bnx2fc_build_fcp_cmnd(io_req, fcp_cmnd);
-+	int_to_scsilun(sc_cmd->device->lun, &fcp_cmnd->fc_lun);
-+	memcpy(fcp_cmnd->fc_cdb, sc_cmd->cmnd, sc_cmd->cmd_len);
-+	raw_fcp_cmnd = (u64 *)
- 		    task->txwr_rxrd.union_ctx.fcp_cmd.opaque;
--	bnx2fc_build_fcp_cmnd(io_req, (struct fcp_cmnd *)&tmp_fcp_cmnd);
- 
- 	/* swap fcp_cmnd */
- 	cnt = sizeof(struct fcp_cmnd) / sizeof(u64);
- 
- 	for (i = 0; i < cnt; i++) {
--		*fcp_cmnd = cpu_to_be64(tmp_fcp_cmnd[i]);
--		fcp_cmnd++;
-+		*raw_fcp_cmnd = cpu_to_be64(tmp_fcp_cmnd[i]);
-+		raw_fcp_cmnd++;
+-	hd = shost_priv(SCpnt->device->host);
++	hd = shost_priv(shost);
+ 	ioc = hd->ioc;
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	while ((ready = fc_remote_port_chkready(rport) >> 16) == DID_IMM_RETRY
+ 	 || (loops > 0 && ioc->active == 0)) {
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
+-			"mptfc_block_error_handler.%d: %d:%llu, port status is "
+-			"%x, active flag %d, deferring %s recovery.\n",
++			"mptfc_block_error_handler.%d: %s, port status is "
++			"%x, active flag %d, deferring recovery.\n",
+ 			ioc->name, ioc->sh->host_no,
+-			SCpnt->device->id, SCpnt->device->lun,
+-			ready, ioc->active, caller));
++			dev_name(&rport->dev), ready, ioc->active));
+ 		msleep(1000);
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		loops --;
  	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
  
- 	/* Rx Write Tx Read */
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index b42a9accb832..33057908f147 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -656,10 +656,9 @@ int bnx2fc_init_mp_req(struct bnx2fc_cmd *io_req)
- 	return SUCCESS;
+-	if (ready == DID_NO_CONNECT || !SCpnt->device->hostdata
+-	 || ioc->active == 0) {
++	if (ready == DID_NO_CONNECT || ioc->active == 0) {
+ 		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
+-			"%s.%d: %d:%llu, failing recovery, "
+-			"port state %x, active %d, vdevice %p.\n", caller,
++			"mpt_block_error_handler.%d: %s, failing recovery, "
++			"port state %x, active %d.\n",
+ 			ioc->name, ioc->sh->host_no,
+-			SCpnt->device->id, SCpnt->device->lun, ready,
+-			ioc->active, SCpnt->device->hostdata));
++			dev_name(&rport->dev), ready, ioc->active));
+ 		return FAILED;
+ 	}
+-	dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
+-		"%s.%d: %d:%llu, executing recovery.\n", caller,
+-		ioc->name, ioc->sh->host_no,
+-		SCpnt->device->id, SCpnt->device->lun));
+-	return (*func)(SCpnt);
++	return SUCCESS;
  }
  
--static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
-+static int bnx2fc_initiate_tmf(struct fc_lport *lport, struct fc_rport *rport,
-+			       u64 tm_lun, u8 tm_flags)
+ static int
+ mptfc_abort(struct scsi_cmnd *SCpnt)
  {
--	struct fc_lport *lport;
--	struct fc_rport *rport;
- 	struct fc_rport_libfc_priv *rp;
- 	struct fcoe_port *port;
- 	struct bnx2fc_interface *interface;
-@@ -668,7 +667,6 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	struct bnx2fc_mp_req *tm_req;
- 	struct fcoe_task_ctx_entry *task;
- 	struct fcoe_task_ctx_entry *task_page;
--	struct Scsi_Host *host = sc_cmd->device->host;
- 	struct fc_frame_header *fc_hdr;
- 	struct fcp_cmnd *fcp_cmnd;
- 	int task_idx, index;
-@@ -677,8 +675,6 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	u32 sid, did;
- 	unsigned long start = jiffies;
- 
--	lport = shost_priv(host);
--	rport = starget_to_rport(scsi_target(sc_cmd->device));
- 	port = lport_priv(lport);
- 	interface = port->priv;
- 
-@@ -689,7 +685,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	}
- 	rp = rport->dd_data;
- 
--	rc = fc_block_scsi_eh(sc_cmd);
-+	rc = fc_block_rport(rport);
- 	if (rc)
- 		return rc;
- 
-@@ -718,7 +714,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 		goto retry_tmf;
- 	}
- 	/* Initialize rest of io_req fields */
--	io_req->sc_cmd = sc_cmd;
-+	io_req->sc_cmd = NULL;
- 	io_req->port = port;
- 	io_req->tgt = tgt;
- 
-@@ -736,11 +732,13 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	/* Set TM flags */
- 	io_req->io_req_flags = 0;
- 	tm_req->tm_flags = tm_flags;
-+	tm_req->tm_lun = tm_lun;
- 
- 	/* Fill FCP_CMND */
- 	bnx2fc_build_fcp_cmnd(io_req, (struct fcp_cmnd *)tm_req->req_buf);
- 	fcp_cmnd = (struct fcp_cmnd *)tm_req->req_buf;
--	memset(fcp_cmnd->fc_cdb, 0,  sc_cmd->cmd_len);
-+	int_to_scsilun(tm_lun, &fcp_cmnd->fc_lun);
-+	memset(fcp_cmnd->fc_cdb, 0,  BNX2FC_MAX_CMD_LEN);
- 	fcp_cmnd->fc_dl = 0;
- 
- 	/* Fill FC header */
-@@ -763,8 +761,6 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	task = &(task_page[index]);
- 	bnx2fc_init_mp_task(io_req, task);
- 
--	bnx2fc_priv(sc_cmd)->io_req = io_req;
--
- 	/* Obtain free SQ entry */
- 	spin_lock_bh(&tgt->tgt_lock);
- 	bnx2fc_add_2_sq(tgt, xid);
-@@ -1062,7 +1058,10 @@ int bnx2fc_initiate_cleanup(struct bnx2fc_cmd *io_req)
-  */
- int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd)
- {
--	return bnx2fc_initiate_tmf(sc_cmd, FCP_TMF_TGT_RESET);
-+	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
-+	struct fc_lport *lport = shost_priv(rport_to_shost(rport));
+-	return
+-	    mptfc_block_error_handler(SCpnt, mptscsih_abort, __func__);
++	struct Scsi_Host *shost = SCpnt->device->host;
++	struct fc_rport *rport = starget_to_rport(scsi_target(SCpnt->device));
++	MPT_SCSI_HOST __maybe_unused *hd = shost_priv(shost);
++	int rtn;
 +
-+	return bnx2fc_initiate_tmf(lport, rport, 0, FCP_TMF_TGT_RESET);
- }
- 
- /**
-@@ -1075,7 +1074,11 @@ int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd)
-  */
- int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd)
- {
--	return bnx2fc_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
-+	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
-+	struct fc_lport *lport = shost_priv(rport_to_shost(rport));
-+
-+	return bnx2fc_initiate_tmf(lport, rport, sc_cmd->device->lun,
-+				   FCP_TMF_LUN_RESET);
- }
- 
- static int bnx2fc_abts_cleanup(struct bnx2fc_cmd *io_req)
-@@ -1450,10 +1453,9 @@ void bnx2fc_process_abts_compl(struct bnx2fc_cmd *io_req,
- 
- static void bnx2fc_lun_reset_cmpl(struct bnx2fc_cmd *io_req)
- {
--	struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
- 	struct bnx2fc_rport *tgt = io_req->tgt;
- 	struct bnx2fc_cmd *cmd, *tmp;
--	u64 tm_lun = sc_cmd->device->lun;
-+	struct bnx2fc_mp_req *tm_req = &io_req->mp_req;
- 	u64 lun;
- 	int rc = 0;
- 
-@@ -1465,8 +1467,10 @@ static void bnx2fc_lun_reset_cmpl(struct bnx2fc_cmd *io_req)
- 	 */
- 	list_for_each_entry_safe(cmd, tmp, &tgt->active_cmd_queue, link) {
- 		BNX2FC_TGT_DBG(tgt, "LUN RST cmpl: scan for pending IOs\n");
-+		if (!cmd->sc_cmd)
-+			continue;
- 		lun = cmd->sc_cmd->device->lun;
--		if (lun == tm_lun) {
-+		if (lun == tm_req->tm_lun) {
- 			/* Initiate ABTS on this cmd */
- 			if (!test_and_set_bit(BNX2FC_FLAG_ISSUE_ABTS,
- 					      &cmd->req_flags)) {
-@@ -1570,31 +1574,36 @@ void bnx2fc_process_tm_compl(struct bnx2fc_cmd *io_req,
- 		printk(KERN_ERR PFX "tmf's fc_hdr r_ctl = 0x%x\n",
- 			fc_hdr->fh_r_ctl);
- 	}
--	if (!bnx2fc_priv(sc_cmd)->io_req) {
--		printk(KERN_ERR PFX "tm_compl: io_req is NULL\n");
--		return;
--	}
--	switch (io_req->fcp_status) {
--	case FC_GOOD:
--		if (io_req->cdb_status == 0) {
--			/* Good IO completion */
--			sc_cmd->result = DID_OK << 16;
--		} else {
--			/* Transport status is good, SCSI status not good */
--			sc_cmd->result = (DID_OK << 16) | io_req->cdb_status;
-+	if (sc_cmd) {
-+		if (!bnx2fc_priv(sc_cmd)->io_req) {
-+			printk(KERN_ERR PFX "tm_compl: io_req is NULL\n");
-+			return;
-+		}
-+		switch (io_req->fcp_status) {
-+		case FC_GOOD:
-+			if (io_req->cdb_status == 0) {
-+				/* Good IO completion */
-+				sc_cmd->result = DID_OK << 16;
-+			} else {
-+				/* Transport status is good, SCSI status not good */
-+				sc_cmd->result = (DID_OK << 16) | io_req->cdb_status;
-+			}
-+			if (io_req->fcp_resid)
-+				scsi_set_resid(sc_cmd, io_req->fcp_resid);
-+			break;
-+
-+		default:
-+			BNX2FC_IO_DBG(io_req, "process_tm_compl: fcp_status = %d\n",
-+				      io_req->fcp_status);
-+			break;
- 		}
--		if (io_req->fcp_resid)
--			scsi_set_resid(sc_cmd, io_req->fcp_resid);
--		break;
- 
--	default:
--		BNX2FC_IO_DBG(io_req, "process_tm_compl: fcp_status = %d\n",
--			   io_req->fcp_status);
--		break;
--	}
-+		sc_cmd = io_req->sc_cmd;
-+		io_req->sc_cmd = NULL;
- 
--	sc_cmd = io_req->sc_cmd;
--	io_req->sc_cmd = NULL;
-+		bnx2fc_priv(sc_cmd)->io_req = NULL;
-+		scsi_done(sc_cmd);
++	rtn = mptfc_block_error_handler(rport);
++	if (rtn == SUCCESS) {
++		dfcprintk (hd->ioc, printk(MYIOC_s_DEBUG_FMT
++			"%s.%d: %d:%llu, executing recovery.\n", __func__,
++			hd->ioc->name, shost->host_no,
++			SCpnt->device->id, SCpnt->device->lun));
++		rtn = mptscsih_abort(SCpnt);
 +	}
++	return rtn;
+ }
  
- 	/* check if the io_req exists in tgt's tmf_q */
- 	if (io_req->on_tmf_queue) {
-@@ -1607,9 +1616,6 @@ void bnx2fc_process_tm_compl(struct bnx2fc_cmd *io_req,
- 		return;
- 	}
- 
--	bnx2fc_priv(sc_cmd)->io_req = NULL;
--	scsi_done(sc_cmd);
--
- 	kref_put(&io_req->refcount, bnx2fc_cmd_release);
- 	if (io_req->wait_for_abts_comp) {
- 		BNX2FC_IO_DBG(io_req, "tm_compl - wake up the waiter\n");
-@@ -1738,15 +1744,9 @@ static void bnx2fc_unmap_sg_list(struct bnx2fc_cmd *io_req)
- void bnx2fc_build_fcp_cmnd(struct bnx2fc_cmd *io_req,
- 				  struct fcp_cmnd *fcp_cmnd)
+ static int
+ mptfc_dev_reset(struct scsi_cmnd *SCpnt)
  {
--	struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
--
- 	memset(fcp_cmnd, 0, sizeof(struct fcp_cmnd));
+-	return
+-	    mptfc_block_error_handler(SCpnt, mptscsih_dev_reset, __func__);
++	struct Scsi_Host *shost = SCpnt->device->host;
++	struct fc_rport *rport = starget_to_rport(scsi_target(SCpnt->device));
++	MPT_SCSI_HOST __maybe_unused *hd = shost_priv(shost);
++	int rtn;
++
++	rtn = mptfc_block_error_handler(rport);
++	if (rtn == SUCCESS) {
++		dfcprintk (hd->ioc, printk(MYIOC_s_DEBUG_FMT
++			"%s.%d: %d:%llu, executing recovery.\n", __func__,
++			hd->ioc->name, shost->host_no,
++			SCpnt->device->id, SCpnt->device->lun));
++		rtn = mptscsih_dev_reset(SCpnt);
++	}
++	return rtn;
+ }
  
--	int_to_scsilun(sc_cmd->device->lun, &fcp_cmnd->fc_lun);
--
- 	fcp_cmnd->fc_dl = htonl(io_req->data_xfer_len);
--	memcpy(fcp_cmnd->fc_cdb, sc_cmd->cmnd, sc_cmd->cmd_len);
--
- 	fcp_cmnd->fc_cmdref = 0;
- 	fcp_cmnd->fc_pri_ta = 0;
- 	fcp_cmnd->fc_tm_flags = io_req->mp_req.tm_flags;
+ static int
+ mptfc_bus_reset(struct scsi_cmnd *SCpnt)
+ {
+-	return
+-	    mptfc_block_error_handler(SCpnt, mptscsih_bus_reset, __func__);
++	struct Scsi_Host *shost = SCpnt->device->host;
++	struct fc_rport *rport = starget_to_rport(scsi_target(SCpnt->device));
++	MPT_SCSI_HOST __maybe_unused *hd = shost_priv(shost);
++	int rtn;
++
++	rtn = mptfc_block_error_handler(rport);
++	if (rtn == SUCCESS) {
++		dfcprintk (hd->ioc, printk(MYIOC_s_DEBUG_FMT
++			"%s.%d: %d:%llu, executing recovery.\n", __func__,
++			hd->ioc->name, shost->host_no,
++			SCpnt->device->id, SCpnt->device->lun));
++		rtn = mptscsih_bus_reset(SCpnt);
++	}
++	return rtn;
+ }
+ 
+ static void
 -- 
 2.35.3
 
