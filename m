@@ -2,149 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96BCDE7544C
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 11:14:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2511AE75453
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 12:16:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239936AbjJCLOS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 07:14:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50226 "EHLO
+        id S232491AbjJCMQq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 08:16:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239971AbjJCLOO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 07:14:14 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74ED2CD4
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 04:13:55 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1c1ff5b741cso6363605ad.2
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 04:13:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1696331634; x=1696936434; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tI6Pcdke+ZCMScqm6RYMcPg5JywhhOVA13YJD5+toLE=;
-        b=xoE6GTnxtzOmBtrU0nbXMWzbjbfv2qlqXZLcvRabXNAmvnTCBKdY9rf7QY559wMji1
-         zE6Mp8OL8VGPoHruuOMbUoWcace46RhjLn0gN9cEw984LpnBP0mecrRuKa9Aq/YdYcAj
-         DrasvAGWqzO8RT2iXre3EkajAAdFbgrZYT+boVAmtvfb8gNHl2+cZfkxMvzIGk/dd0dV
-         oxPgKq9/xSxURUtYsfxT3fgOTTVhrcLIOUNU3QMgdkVnw4pF+XCoabjeDCtUjsAecoFA
-         GdHooBvmKSc2ZjCnMs8a+8iepR5gNos1DkJ6Psqo8WgcwtpObhD7ZNJMvXn9r0P9PoxP
-         berA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696331634; x=1696936434;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=tI6Pcdke+ZCMScqm6RYMcPg5JywhhOVA13YJD5+toLE=;
-        b=NOx/NX1QgRu/e03kN1tVgAQbNOO4R7HZoQAA7S3H8yyuH35YsmmsMApg/nGdEYcUaD
-         PWINLpgyI0ynNTh2PWWGvBXlaUFdpAqC12h11JWb0ux0fCfYi1TQ1uRxTZptvU26zmUs
-         9mPGT5Ht011KdRuqmkQbsGuR0hNFyl3WsEiU0qg14o22D/oAJSgSiGBckcbiHdd2jdvB
-         iDiuz8ydI7ogOed1dk6Z9tL2eUzhdaS83iwMk87a90BKF/xYGIU/JtdW8fFCr5Hy7lXS
-         u3Sk+hYuwX+K6b/PZIQum/rVskM+JHUAItxnuKV67gwHtvpUHdat+D+9AN0nmB5mb3wl
-         5WUg==
-X-Gm-Message-State: AOJu0YxCffnPoC+1nwtzMLsQZ/4IcO1Ir5+1ycYF3jk7xm5b97/LSGQS
-        kVwxGe+/wIIDXEp06+Jjx7KR
-X-Google-Smtp-Source: AGHT+IHXjGAwqaAR8iuZgLaLIJrFx9daiXcUrzw8Sxbliq+GRtrvjzxn10oK6FBXsg9SgUjmX2+rlA==
-X-Received: by 2002:a17:902:ed54:b0:1c6:2d13:5b79 with SMTP id y20-20020a170902ed5400b001c62d135b79mr13850679plb.47.1696331633859;
-        Tue, 03 Oct 2023 04:13:53 -0700 (PDT)
-Received: from localhost.localdomain ([117.217.185.220])
-        by smtp.gmail.com with ESMTPSA id d9-20020a170903230900b001ab2b4105ddsm1250328plh.60.2023.10.03.04.13.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Oct 2023 04:13:53 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v4 6/6] arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
-Date:   Tue,  3 Oct 2023 16:42:32 +0530
-Message-Id: <20231003111232.42663-7-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231003111232.42663-1-manivannan.sadhasivam@linaro.org>
-References: <20231003111232.42663-1-manivannan.sadhasivam@linaro.org>
-MIME-Version: 1.0
+        with ESMTP id S232371AbjJCMQp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 08:16:45 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29B64AF;
+        Tue,  3 Oct 2023 05:16:41 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D63D5C433C7;
+        Tue,  3 Oct 2023 12:16:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696335400;
+        bh=HOMiDWufZS8RdGpxw7PziOf8wnBkhbZbrB+flX6wANQ=;
+        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+        b=FXcS12JQDypAcLO2+RuZJymMiJLGw4aAALOhEi0MZt+Ft2rZWejpbEshkDj3Gp1nH
+         hu45WqKRqFhK7B2l2e51FzopfWdKbLDGuJyUSYp0tcAaf8IudgMStT/xymuBGMzvwm
+         jAv2hczSB68xiTnsnfzFNn2PoOu4rmLxvBjy4tNLh4cv4hYMMyu8EPGnsjEgYg1sDe
+         99VMzye2SB+bf6GDfpUsx2jx9aoMy+mL+xruZVTvd2rb0kwFKmu3UmA209CB1iRzZR
+         UPCJkvxI1xgMfdJ1LTI18ov9qbUEYyMfA21F7tozPBotila4H3dE8K/JZqlMFBIkgR
+         PX0PH+SDv2dfQ==
+Received: (nullmailer pid 282697 invoked by uid 1000);
+        Tue, 03 Oct 2023 12:16:35 -0000
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+From:   Rob Herring <robh@kernel.org>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     quic_narepall@quicinc.com, bmasney@redhat.com,
+        krzysztof.kozlowski+dt@linaro.org, quic_nitirawa@quicinc.com,
+        vireshk@kernel.org, quic_asutoshd@quicinc.com,
+        quic_bhaskarv@quicinc.com, avri.altman@wdc.com,
+        krzysztof.kozlowski@linaro.org, alim.akhtar@samsung.com,
+        robh+dt@kernel.org, quic_cang@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        jejb@linux.ibm.com, cw00.choi@samsung.com, andersson@kernel.org,
+        bvanassche@acm.org, conor+dt@kernel.org, kyungmin.park@samsung.com,
+        martin.petersen@oracle.com, nm@ti.com,
+        linux-kernel@vger.kernel.org, quic_richardp@quicinc.com,
+        linux-pm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-scsi@vger.kernel.org, myungjoo.ham@samsung.com,
+        konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
+        sboyd@kernel.org
+In-Reply-To: <20231003111232.42663-2-manivannan.sadhasivam@linaro.org>
+References: <20231003111232.42663-1-manivannan.sadhasivam@linaro.org>
+ <20231003111232.42663-2-manivannan.sadhasivam@linaro.org>
+Message-Id: <169633539510.282606.1450427416869008072.robh@kernel.org>
+Subject: Re: [PATCH v4 1/6] dt-bindings: ufs: common: add OPP table
+Date:   Tue, 03 Oct 2023 07:16:35 -0500
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS host controller, when scaling gears, should choose appropriate
-performance state of RPMh power domain controller along with clock
-frequency. So let's add the OPP table support to specify both clock
-frequency and RPMh performance states replacing the old "freq-table-hz"
-property.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- arch/arm64/boot/dts/qcom/sm8250.dtsi | 39 +++++++++++++++++++++-------
- 1 file changed, 30 insertions(+), 9 deletions(-)
+On Tue, 03 Oct 2023 16:42:27 +0530, Manivannan Sadhasivam wrote:
+> From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> 
+> Except scaling UFS and bus clocks, it's necessary to scale also the
+> voltages of regulators or power domain performance state levels.  Adding
+> Operating Performance Points table allows to adjust power domain
+> performance state, depending on the UFS clock speed.
+> 
+> OPPv2 deprecates previous property limited to clock scaling:
+> freq-table-hz.
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  .../devicetree/bindings/ufs/ufs-common.yaml   | 36 ++++++++++++++++---
+>  1 file changed, 32 insertions(+), 4 deletions(-)
+> 
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-index a4e58ad731c3..33abd84aae53 100644
---- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-@@ -2198,21 +2198,42 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
--			freq-table-hz =
--				<37500000 300000000>,
--				<0 0>,
--				<0 0>,
--				<37500000 300000000>,
--				<0 0>,
--				<0 0>,
--				<0 0>,
--				<0 0>;
-+
-+			operating-points-v2 = <&ufs_opp_table>;
- 
- 			interconnects = <&aggre1_noc MASTER_UFS_MEM 0 &mc_virt SLAVE_EBI_CH0 0>,
- 					<&gem_noc MASTER_AMPSS_M0 0 &config_noc SLAVE_UFS_MEM_CFG 0>;
- 			interconnect-names = "ufs-ddr", "cpu-ufs";
- 
- 			status = "disabled";
-+
-+			ufs_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-37500000 {
-+					opp-hz = /bits/ 64 <37500000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <37500000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-300000000 {
-+					opp-hz = /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+				};
-+			};
- 		};
- 
- 		ufs_mem_phy: phy@1d87000 {
--- 
-2.25.1
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
+
+yamllint warnings/errors:
+./Documentation/devicetree/bindings/ufs/ufs-common.yaml:90:20: [error] string value is redundantly quoted with any quotes (quoted-strings)
+./Documentation/devicetree/bindings/ufs/ufs-common.yaml:91:26: [error] string value is redundantly quoted with any quotes (quoted-strings)
+./Documentation/devicetree/bindings/ufs/ufs-common.yaml:91:36: [error] string value is redundantly quoted with any quotes (quoted-strings)
+
+dtschema/dtc warnings/errors:
+
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20231003111232.42663-2-manivannan.sadhasivam@linaro.org
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
