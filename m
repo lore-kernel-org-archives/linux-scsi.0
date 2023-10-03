@@ -2,89 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86CF6E7544A
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 10:59:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C53A7E7544B
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 11:00:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231950AbjJCK7d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 06:59:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44584 "EHLO
+        id S239727AbjJCLAH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 07:00:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231725AbjJCK7c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 06:59:32 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E88AA1
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 03:59:29 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-690d8c05784so556169b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 03:59:29 -0700 (PDT)
+        with ESMTP id S239721AbjJCLAF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 07:00:05 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3CC3B0
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 04:00:00 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1c60778a3bfso5925935ad.1
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 04:00:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1696330768; x=1696935568; darn=vger.kernel.org;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=mCEZcfZvIPiv3jEjq3mYAjbolol6RH2bxrmbZlx6V1Q=;
-        b=ZPVMs4ady8l+qvXWCuENa+a+OJVrZ/hM/uwkMzWJad/+KL8nQtHvYIxslTKKhA49B6
-         zOkms+axgay7bK7TnZE5vD5QWJVS/Ool/99mR51utotmzFEi6etAL9VCZgXsiUycgEyh
-         T4Z0n5UXIVBwSwxoRevpFw5fm6YldXLnhrgsw=
+        d=broadcom.com; s=google; t=1696330800; x=1696935600; darn=vger.kernel.org;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=PCJjBG2EmioeBWHfRoQl576X1AejGlq+N1hbuWIMVJ4=;
+        b=RHlmlB6ypMHBllHF4Oss054BFIfAlS3xYIIhCZRVJV3zlTl6bpfeMgbZJLMkCxR6zB
+         Z2cXaiR1RHUBHS/WJ2cvDu1Khi1/uxWhKEnnNrira7+LLCejQs6IhSK1Cl3lIgG8FmYE
+         Thh4mDdVmq+xAF3qxudNn6qSpri9tYMFU/f5I=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696330768; x=1696935568;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=mCEZcfZvIPiv3jEjq3mYAjbolol6RH2bxrmbZlx6V1Q=;
-        b=wnWi/oYLgoLe8r4HOVhk3gEnPOsiUuyNpq9JCYPjo/RICfi+1fVANbd4c9XySxYcOW
-         RfzWtrgIQhSgYw6zir7leKU+B4ajIIPF5QBH+owA0AWJQDFVsdf4q+43DROi2hzhIytp
-         NjdOO7Iked4Qo6e75h8Zm2Uuw+T9KxYS2ly5ABFC4K/0M8YQCoBty/cdhQC4wPEbggS9
-         Sy2RfHP6D68dTnVYX02JN9Zv2ULUYWG/UN44PyG4j15SwlLq4ein1iCpHwc/GiRLZvF7
-         enAy7Yt8fNO3aQFECip2NeW7h3Njs9Tu59zA/tVDPnzFSzcI09k8S175wMfUEKOYq5Su
-         jH7g==
-X-Gm-Message-State: AOJu0YytZ0FKHjwTNyUOh790LTXihKGeY01vLl30Ww2mS3xAEyKjudX5
-        ZlyPxmfl30FjWLpl/FeagcRuKuiDusNNZtNd4TdstUNV2x48ehSXd+UxaZZHbZ77C9I0TXuXXER
-        I6fxZ1SgOsSMb8Outhjrv2Ol1MzXrAqwVcCfXFUt8zErj+gnmtar2sobOo4kMD575yMsrdMIRZg
-        KwDGPH7POia7FpBhqfgpAO
-X-Google-Smtp-Source: AGHT+IFXARDPMcYORwAUvHyAFNdmHzf5PXc1b/4pazW8kR3r0Gl/0SsZkAbpaw2oxS9xpE/6pGA8NQ==
-X-Received: by 2002:a05:6a21:32aa:b0:15c:b7b9:fc21 with SMTP id yt42-20020a056a2132aa00b0015cb7b9fc21mr14477130pzb.14.1696330768210;
-        Tue, 03 Oct 2023 03:59:28 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1696330800; x=1696935600;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=PCJjBG2EmioeBWHfRoQl576X1AejGlq+N1hbuWIMVJ4=;
+        b=rqKhokZ2YRoeaqTVIeiARN92KxtfB3sOVssrOq/jwzwAY06NsG1EfCxxxa+QopwvZZ
+         Pf4CNXwUJvVQuyd5s+J/aVK12enxNQHQ4Ipi5jmjsa2daNN9QJRKb32EoGBhwRH1bo7z
+         iGo+wAFyaHmbmoQ5Va24hVjuboP2Ae1OZaexHZQR1KyvenDDWyMIZ6PhxkaTB0iFT5Yy
+         RjQsH4HWUWOX7ISOpifzUhf0lDPhggp5av67bns6mFdl/otI2z33NJ+qNiWjiPqpe5Cg
+         5NAcg5U85X/FQyW1tYgWl54V8tF+YM5I/20e2ruf/Yee25mqeizmh/wQLrWMCwV4401v
+         CY1w==
+X-Gm-Message-State: AOJu0Yzw4Qsy4dk6Rrg3B5/36pkwxxoqLtQM+o/C+mZ/mQJV53z08eFs
+        er69651DqGCv4qs3G+LwyGTZSD1vHpBbLsIrmaiQEovtvkFU6Ja4VdKZF3M7PjdX7ekSsLuA+T1
+        Xx4H1aeYjwLBa/jQKoPEIu6o4SEGdN/40QsKhP3VVEoIfxWMHdNssOPTsAXKGvyMHyIOecreZhx
+        Fn4clpWRE5paAdXRSS2ChQ
+X-Google-Smtp-Source: AGHT+IHUjH/dr4FxjIBVlmAqJekrdPXAMrWuoFNhrCJZX5LAnAiw5cqz4HQPCqxOXHNaTZfkfsbhfg==
+X-Received: by 2002:a17:903:428b:b0:1b8:2c6f:3248 with SMTP id ju11-20020a170903428b00b001b82c6f3248mr13995588plb.39.1696330799804;
+        Tue, 03 Oct 2023 03:59:59 -0700 (PDT)
 Received: from dhcp-10-123-20-35.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id a7-20020a170902ecc700b001bc6e6069a6sm1211909plh.122.2023.10.03.03.59.25
+        by smtp.gmail.com with ESMTPSA id a7-20020a170902ecc700b001bc6e6069a6sm1211909plh.122.2023.10.03.03.59.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Oct 2023 03:59:27 -0700 (PDT)
+        Tue, 03 Oct 2023 03:59:58 -0700 (PDT)
 From:   Chandrakanth patil <chandrakanth.patil@broadcom.com>
 To:     linux-scsi@vger.kernel.org, sumit.saxena@broadcom.com
-Cc:     Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 0/4] megaraid_sas: Driver version update to 07.727.03.00-rc1
-Date:   Tue,  3 Oct 2023 16:30:17 +0530
-Message-Id: <20231003110021.168862-1-chandrakanth.patil@broadcom.com>
+Cc:     Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+        stable@vger.kernel.org
+Subject: [PATCH 1/4] megaraid_sas: Increase register read retry rount from 3 to 30 for selected registers
+Date:   Tue,  3 Oct 2023 16:30:18 +0530
+Message-Id: <20231003110021.168862-2-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.39.3
+In-Reply-To: <20231003110021.168862-1-chandrakanth.patil@broadcom.com>
+References: <20231003110021.168862-1-chandrakanth.patil@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000e5fd050606cdc860"
+        boundary="000000000000c47f060606cdca4f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000e5fd050606cdc860
+--000000000000c47f060606cdca4f
 Content-Transfer-Encoding: 8bit
 
-This set of patches includes critical fixes, and updates to the
-maintainer list.
+In BMC environments with concurrent access to multiple registers, certain
+registers occasionally yield a value of 0 even after 3 retries due to
+hardware errata. As a fix, we have extended the retry count from 3 to 30.
 
-Chandrakanth patil (4):
-  megaraid_sas: Increase register read retry rount from 3 to 30 for
-    selected registers
-  megaraid_sas: Log message when controller reset is requested but not
-    issued
-  megaraid_sas: Driver version update to 07.727.03.00-rc1
-  megaraid_sas: Revision of Maintainer List
+The same errata applies to the mpt3sas driver, and a similar patch has
+been accepted. Please find more details in the mpt3sas patch reference
+link.
 
- MAINTAINERS                                 | 1 +
- drivers/scsi/megaraid/megaraid_sas.h        | 4 ++--
- drivers/scsi/megaraid/megaraid_sas_base.c   | 4 ++--
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 +++
- 4 files changed, 8 insertions(+), 4 deletions(-)
+Link: https://lore.kernel.org/r/20230829090020.5417-2-ranjan.kumar@broadcom.com
+Fixes: 272652fcbf1a ("scsi: megaraid_sas: add retry logic in megasas_readl")
+Cc: stable@vger.kernel.org
+Signed-off-by: Chandrakanth patil <chandrakanth.patil@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index e1aa667dae66..3d4f13da1ae8 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -263,13 +263,13 @@ u32 megasas_readl(struct megasas_instance *instance,
+ 	 * Fusion registers could intermittently return all zeroes.
+ 	 * This behavior is transient in nature and subsequent reads will
+ 	 * return valid value. As a workaround in driver, retry readl for
+-	 * upto three times until a non-zero value is read.
++	 * up to thirty times until a non-zero value is read.
+ 	 */
+ 	if (instance->adapter_type == AERO_SERIES) {
+ 		do {
+ 			ret_val = readl(addr);
+ 			i++;
+-		} while (ret_val == 0 && i < 3);
++		} while (ret_val == 0 && i < 30);
+ 		return ret_val;
+ 	} else {
+ 		return readl(addr);
 -- 
 2.39.3
 
 
---000000000000e5fd050606cdc860
+--000000000000c47f060606cdca4f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -155,14 +178,14 @@ W2v5XKnfV6+4iODhAb65bwLbcNq6dxzr1Yy/fGnIBfoR2qrX9UBDDxjZRpxJGdt7i0CcvsX7p2ia
 SgP+hUBq9GTgLiFqCGyh/gCm2DTB/TyYel0QsIP29qWC1F5mG+GOoSjagi/2SxnNI6LzK+4xfgvc
 80IlL0UapzuyZFExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILBcde6N
-2LysnkZAiqo5AZO5yb9lvVZyrIpPoeuKrRy6MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMTAwMzEwNTkyOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMooJH1a
+aIhMvMYZ22Hf49yP/7vOxTGWytwapdP73MqkMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMTAwMzExMDAwMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDjpgmmgytgWPstMpkv45Wk63jn
-/8kAo327lrFwDH7IdsHomEH42aY5Y3hxojpQSGDWQnQGpo0qdGXzlhSsRqY3UWuUao35d4uwm8wA
-ViK8i9k4JMfI86ibpoy3j29kNfqrEcxtIHkHv+Q9OgfJjYskoGGFT+gIQEA+rsROmN//EyIm8gLn
-4Jdth+UqPYujOBMUrty6TKk7f5iIKzxgPo/JT00ckKNvLN2jtRVk1e2alee06DcOEYtkkbpNqF/i
-yyLl2IIZvfxkGdC8IOAOAD2KO7FOaHx2cDP38ym751PXDpnIuUFlSU6dxLOyvzxWT22S7/pWNxny
-6YtrPpuse8py
---000000000000e5fd050606cdc860--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBus6YUOumwI06YvROBHJs5pT/0
+m3OQv3Ozjdkn5b4pIUIGqYlLERca8MkXcqArsGKhFvqLt5vkocZK1Xf6g40ps2SRqDhzw62xr4Hc
+qe3RalBp79EUNW28XsqgKg8sFi4VqAWEx8q3hfZvChELUAFzQ3zGfrhwmIQw45dU0McJhIqr9Wk+
+uY9m1642EAvuFEsUFsn9dVboSgpw8bCspjh9HXYLwF3niSkEooxTv4wAmbMI6U7Y0NrMb5559tQI
+nRh2cUbdAq3br6k+Poo4Ayjv81oyqkrN8iz0KXsRpiduCBqRjeVSH+WMl12s2lZWfpSD4ZKkPq8X
+O0HY/RE8aUwT
+--000000000000c47f060606cdca4f--
