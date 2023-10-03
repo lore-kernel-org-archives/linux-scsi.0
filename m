@@ -2,99 +2,89 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAD59E7AD76
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 16:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01453E7AD77
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 16:58:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240245AbjJCQFy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 12:05:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58520 "EHLO
+        id S240535AbjJCQ6g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 12:58:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232066AbjJCQFx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 12:05:53 -0400
-Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B817A9;
-        Tue,  3 Oct 2023 09:05:50 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:281:8300:73::646])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ms.lwn.net (Postfix) with ESMTPSA id 922B1381;
-        Tue,  3 Oct 2023 16:05:49 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 922B1381
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-        t=1696349149; bh=FJ0ABpqZ404qDATR9ZjzfiRpFdQTFHY4H48kFkpDdqE=;
-        h=From:To:Subject:In-Reply-To:References:Date:From;
-        b=ByBmQehZ9ZDltSjH06Xz6yT1qgZkCx/jKFQq5vGQMNYnUNAsWw5VRiHo0PzccGksa
-         gqlixKWWEgNhp6Y5PHM0QnX8YDksC0utj3gRWXz7g24l5PqHLfDgZqX1bgpuQjlTd/
-         0eAlHSE25aHwkynWubyn7prY+ca8QdG0XmJEXgCE5hVajN3um9Jk3zfan25A4Svpqm
-         e6bckqM5chLcb6+taKdlZEhJgBgiFn1No0MF6iM38yUXkNKfuKtdbd4GWNnuTS/+dC
-         hPSI6U9PcqlFTty4GZa5eG+hfY0iUEGivaGcfpmBY2ezucGrZ5aDp10a6JQXeFMVL0
-         pgpGyDfqQB/2g==
-From:   Jonathan Corbet <corbet@lwn.net>
-To:     Costa Shulyupin <costa.shul@redhat.com>,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        Linas Vepstas <linasvepstas@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        "Manoj N. Kumar" <manoj@linux.ibm.com>,
-        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
-        Qiang Zhao <qiang.zhao@nxp.com>, Li Yang <leoyang.li@nxp.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Costa Shulyupin <costa.shul@redhat.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Yanteng Si <siyanteng@loongson.cn>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Philippe =?utf-8?Q?Mathieu-Daud=C3=A9?= <philmd@linaro.org>,
-        Nicholas Miehlbradt <nicholas@linux.ibm.com>,
-        Benjamin Gray <bgray@linux.ibm.com>,
-        "Aneesh Kumar K.V" <aneesh.kumar@linux.ibm.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Segher Boessenkool <segher@kernel.crashing.org>,
-        Rohan McLure <rmclure@linux.ibm.com>,
-        Josh Poimboeuf <jpoimboe@kernel.org>,
-        "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-        Sathvika Vasireddy <sv@linux.ibm.com>,
-        Laurent Dufour <laurent.dufour@fr.ibm.com>,
-        Nathan Lynch <nathanl@linux.ibm.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kvm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-serial@vger.kernel.org
-Subject: Re: [PATCH] docs: move powerpc under arch
-In-Reply-To: <20230826165737.2101199-1-costa.shul@redhat.com>
-References: <169052340516.4355.10339828466636149348@legolas.ozlabs.org>
- <20230826165737.2101199-1-costa.shul@redhat.com>
-Date:   Tue, 03 Oct 2023 10:05:48 -0600
-Message-ID: <87cyxvelnn.fsf@meer.lwn.net>
+        with ESMTP id S240447AbjJCQ6g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 12:58:36 -0400
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0010EAF;
+        Tue,  3 Oct 2023 09:58:31 -0700 (PDT)
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-279150bad13so846456a91.3;
+        Tue, 03 Oct 2023 09:58:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696352311; x=1696957111;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ph4ZyrbtQrh7wyzDZ9eyeUo8WfNuy38zu7LMXqicMgg=;
+        b=g5MPi96d9Fhn/MZJuI3TeeXuwwBzvcaiF3z4jsroC5q10Kudb78d91oTgi/d/IbsEp
+         V/hFFIxcWEh9R1eRUJEPrkm9/dxLC/lmX8ciLQbLH7TpasyOkIpGtogLRw7JrqKVE5zh
+         G4za5TBCssIfjr7zGVQucYRhqKtCdfRBSg57Jo0yi7jVjKc0oRtRWcydJI4UegaqOk4K
+         vHNBy0xNrjIOOh0pXQpt4Ghoy2hpPrI1Kp8Cay5cpdZ0SIKz7/Adx9Gu4F9bnImawKQT
+         mYqX4vyVskcc5YWvoxOW5L/sbN6EdLv68wYJYkYkHa4sZgZfLQ5u3fg/nRcGbPNM0/nl
+         n82A==
+X-Gm-Message-State: AOJu0YzlFCnvDbbjsegtBm82BGApiOa1wEXMpaz3HfV0Q0RK0Ca0zMSb
+        EkTxac0/RDk94YdvKtE3PGU=
+X-Google-Smtp-Source: AGHT+IGQBlXYDBY7Pq4Ub5S8toLsTFGmr7CtYVutmPFo9OW0ks0zwF/l0SLYp82viXZAK3r8SsjQpA==
+X-Received: by 2002:a17:90b:1186:b0:279:2dac:80b3 with SMTP id gk6-20020a17090b118600b002792dac80b3mr11928768pjb.44.1696352311335;
+        Tue, 03 Oct 2023 09:58:31 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:fc96:5ba7:a6f5:b187? ([2620:15c:211:201:fc96:5ba7:a6f5:b187])
+        by smtp.gmail.com with ESMTPSA id g6-20020a17090a300600b0027768125e24sm8260191pjb.39.2023.10.03.09.58.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 03 Oct 2023 09:58:30 -0700 (PDT)
+Message-ID: <c3130686-3e28-4ff0-af0d-560b0f4e7227@acm.org>
+Date:   Tue, 3 Oct 2023 09:58:29 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 07/13] sd: Translate data lifetime information
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20230920191442.3701673-1-bvanassche@acm.org>
+ <20230920191442.3701673-8-bvanassche@acm.org>
+ <DM6PR04MB6575B74B6F5526C9860A56F1FCC5A@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <1b89c38e-55dc-484a-9bf3-b9d69d960ebe@acm.org>
+ <DM6PR04MB657537626F4D0BFB869E82D1FCC4A@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <DM6PR04MB657537626F4D0BFB869E82D1FCC4A@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Costa Shulyupin <costa.shul@redhat.com> writes:
+On 10/2/23 22:48, Avri Altman wrote:
+>> On 10/2/23 06:11, Avri Altman wrote:
+>>>> sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>>>>                   ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
+>>>>                                            protect | fua, dld);
+>>>>           } else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
+>>>> -                  sdp->use_10_for_rw || protect) {
+>>>> +                  sdp->use_10_for_rw || protect ||
+>>>> +                  rq->write_hint != WRITE_LIFE_NOT_SET) {
+>>>
+>>> Is this a typo?
+>>
+>> I don't see a typo? Am I perhaps overlooking something?
+ >
+> Forcing READ(6) into READ(10) because that req carries a write-hint,
+> Deserves an extra line in the commit log IMO.
 
-> and fix all in-tree references.
->
-> Architecture-specific documentation is being moved into Documentation/arch/
-> as a way of cleaning up the top-level documentation directory and making
-> the docs hierarchy more closely match the source hierarchy.
->
-> Signed-off-by: Costa Shulyupin <costa.shul@redhat.com>
-
-So this patch appears to have not been picked up, and to have received
-no comments.  I'll happily carry it in docs-next, but it would be nice
-to have an ack from the powerpc folks...?
+Right, I should explain that the READ(6) command does not support write 
+hints and hence that READ(10) is selected if a write hint is present.
 
 Thanks,
 
-jon
+Bart.
+
