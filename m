@@ -2,138 +2,375 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A52F5E75457
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 12:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63E00E7AD49
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 13:44:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230371AbjJCMo6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 08:44:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42206 "EHLO
+        id S235838AbjJCNoF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 09:44:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230283AbjJCMo5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 08:44:57 -0400
-Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37C02AC
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 05:44:53 -0700 (PDT)
-Received: by mail-qk1-x72c.google.com with SMTP id af79cd13be357-7741c5bac51so61927385a.1
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 05:44:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1696337092; x=1696941892; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=xDj1q+Ee+ORzJ70hRtintqC5xZdcBaiRQa5S4Cdho10=;
-        b=WRfTQWpvQp3+AMJ84YUZSAUj2gNVc7Hi3P+fItsZqVcekiIBUL/TLW2hha/Z/y+qYx
-         Ypz9th/0xCyj6J6TKhiJptrUgz+mVs8MQ4tpUzYmrtFMab05nANMLSS2wniw43cvALkD
-         YzobMSnDKQbJu66dv0HcEZZh/EKJXkIJ3i9/2MzSnNj3IDtBy2dYvSX+8ziIWkN0RQ8Q
-         QY3s/UkAvX8CSk/OPGQSjxEVuNzAmagoVfcfiIlC4SBNpZRSjN5GwdXoZBcUCVIALz/t
-         M45H8D9ECJKh0ku7Z+xyGPWKOWPliBb7OexwYMGZcHn/7CsQ3uWdIcB3ZKWy2ixoXqlx
-         8+CQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696337092; x=1696941892;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xDj1q+Ee+ORzJ70hRtintqC5xZdcBaiRQa5S4Cdho10=;
-        b=qHLFQEr4zRwkgY4BhLkxW1kE+Yta6Bj0IL0Stc+pDzGjKaete8J+Y8UFr7PXfnF9ZH
-         kJOA9JOOAp+V9XxA4c1jbTnzgok3zN/+iyWPMneV9wpDJMCYmTUbvztpnQVHgToxDzCB
-         d3YxVNXe9W8kxwuXIOV/+jcsGWHG5M3vmohYEt0jH30dg8HcI8GmtvJkcRefpAblSCBj
-         Qst8dlvvi3YaQ2TBiNUpsR0d9aNI9uiq4TzJiN/sXXBdJDkrs3RLvaPA+/dpi9fpRxCg
-         G1oGM3wlVZWu75WgOfjYKP0s7K2668vAYj/tCQXqJ04JVq+b/qRDvVM2zffV8nyKBlJS
-         y8EQ==
-X-Gm-Message-State: AOJu0Yy/SGVpD4kNBJnYdFh3P7/rgxFluXLEaHypAk8O19JH8V7vwXWx
-        B9gn06ox0VrqCELUJpSNbxaJ
-X-Google-Smtp-Source: AGHT+IEbRFcGxZgw52UjDfv1LBZdcZLdSA4iZ7N+WH5lAbH4U4/cWa8LNP/L/IMXn2BWS/8z2N+zyQ==
-X-Received: by 2002:a05:620a:4007:b0:775:9bc3:c492 with SMTP id h7-20020a05620a400700b007759bc3c492mr9066667qko.7.1696337092194;
-        Tue, 03 Oct 2023 05:44:52 -0700 (PDT)
-Received: from thinkpad ([117.217.185.220])
-        by smtp.gmail.com with ESMTPSA id d15-20020a05620a136f00b007756d233fbdsm425442qkl.37.2023.10.03.05.44.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Oct 2023 05:44:51 -0700 (PDT)
-Date:   Tue, 3 Oct 2023 18:14:35 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     quic_narepall@quicinc.com, bmasney@redhat.com,
-        krzysztof.kozlowski+dt@linaro.org, quic_nitirawa@quicinc.com,
-        vireshk@kernel.org, quic_asutoshd@quicinc.com,
-        quic_bhaskarv@quicinc.com, avri.altman@wdc.com,
-        krzysztof.kozlowski@linaro.org, alim.akhtar@samsung.com,
-        robh+dt@kernel.org, quic_cang@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        jejb@linux.ibm.com, cw00.choi@samsung.com, andersson@kernel.org,
-        bvanassche@acm.org, conor+dt@kernel.org, kyungmin.park@samsung.com,
-        martin.petersen@oracle.com, nm@ti.com,
-        linux-kernel@vger.kernel.org, quic_richardp@quicinc.com,
-        linux-pm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-scsi@vger.kernel.org, myungjoo.ham@samsung.com,
-        konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
-        sboyd@kernel.org
-Subject: Re: [PATCH v4 1/6] dt-bindings: ufs: common: add OPP table
-Message-ID: <20231003124435.GA44736@thinkpad>
-References: <20231003111232.42663-1-manivannan.sadhasivam@linaro.org>
- <20231003111232.42663-2-manivannan.sadhasivam@linaro.org>
- <169633539510.282606.1450427416869008072.robh@kernel.org>
+        with ESMTP id S235914AbjJCNoF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 09:44:05 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9426AB
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 06:44:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1696340638;
+        bh=h9Dl1eU0sLgzqglZswblCFsHlzD2Di7RAdG7+6ob61Y=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=EXf6bM7xe+OPhyON1dqFpnHVuz5ZsqfviJo+8uee14ZukSYYxZW0PaYxu/DEnBKHk
+         WXFe1dSNGS1mo3bvdx51cs2Qy6UP7JUmCIYfaAWo6437CeLQDdTOLxd31joH8MFKSd
+         ZdH377+MjPdsfPkkyX9i8pfN40xXQUeq6cEYfCKE=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id DA0C51280A7D;
+        Tue,  3 Oct 2023 09:43:58 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id klVYvpDGpFnT; Tue,  3 Oct 2023 09:43:58 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1696340638;
+        bh=h9Dl1eU0sLgzqglZswblCFsHlzD2Di7RAdG7+6ob61Y=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=EXf6bM7xe+OPhyON1dqFpnHVuz5ZsqfviJo+8uee14ZukSYYxZW0PaYxu/DEnBKHk
+         WXFe1dSNGS1mo3bvdx51cs2Qy6UP7JUmCIYfaAWo6437CeLQDdTOLxd31joH8MFKSd
+         ZdH377+MjPdsfPkkyX9i8pfN40xXQUeq6cEYfCKE=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits))
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 1C8AB128071D;
+        Tue,  3 Oct 2023 09:43:58 -0400 (EDT)
+Message-ID: <82544739f91f3d64c8307205cfddac59365fc137.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.6-rc4
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Tue, 03 Oct 2023 09:43:56 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <169633539510.282606.1450427416869008072.robh@kernel.org>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 03, 2023 at 07:16:35AM -0500, Rob Herring wrote:
-> 
-> On Tue, 03 Oct 2023 16:42:27 +0530, Manivannan Sadhasivam wrote:
-> > From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> > 
-> > Except scaling UFS and bus clocks, it's necessary to scale also the
-> > voltages of regulators or power domain performance state levels.  Adding
-> > Operating Performance Points table allows to adjust power domain
-> > performance state, depending on the UFS clock speed.
-> > 
-> > OPPv2 deprecates previous property limited to clock scaling:
-> > freq-table-hz.
-> > 
-> > Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> > Reviewed-by: Rob Herring <robh@kernel.org>
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > ---
-> >  .../devicetree/bindings/ufs/ufs-common.yaml   | 36 ++++++++++++++++---
-> >  1 file changed, 32 insertions(+), 4 deletions(-)
-> > 
-> 
-> My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-> on your patch (DT_CHECKER_FLAGS is new in v5.13):
-> 
-> yamllint warnings/errors:
-> ./Documentation/devicetree/bindings/ufs/ufs-common.yaml:90:20: [error] string value is redundantly quoted with any quotes (quoted-strings)
-> ./Documentation/devicetree/bindings/ufs/ufs-common.yaml:91:26: [error] string value is redundantly quoted with any quotes (quoted-strings)
-> ./Documentation/devicetree/bindings/ufs/ufs-common.yaml:91:36: [error] string value is redundantly quoted with any quotes (quoted-strings)
-> 
+Three fixes, all in drivers.  The fnic one is the most extensive
+because the little used user initiated device reset path never tagged
+the command and adding a tag is rather involved.  The other two fixes
+are smaller and more obvious.
 
-Oops! I ran the check on wrong binding file :/ Will fix it in next version.
+The patch is available here:
 
-- Mani
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-> dtschema/dtc warnings/errors:
-> 
-> doc reference errors (make refcheckdocs):
-> 
-> See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20231003111232.42663-2-manivannan.sadhasivam@linaro.org
-> 
-> The base for the series is generally the latest rc1. A different dependency
-> should be noted in *this* patch.
-> 
-> If you already ran 'make dt_binding_check' and didn't see the above
-> error(s), then make sure 'yamllint' is installed and dt-schema is up to
-> date:
-> 
-> pip3 install dtschema --upgrade
-> 
-> Please check and re-submit after running the above command yourself. Note
-> that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-> your schema. However, it must be unset to test all examples with your schema.
-> 
+The short changelog is:
 
--- 
-மணிவண்ணன் சதாசிவம்
+Dinghao Liu (1):
+      scsi: zfcp: Fix a double put in zfcp_port_enqueue()
+
+Junxiao Bi (1):
+      scsi: target: core: Fix deadlock due to recursive locking
+
+Karan Tilak Kumar (1):
+      scsi: fnic: Fix sg_reset success path
+
+And the diffstat:
+
+ drivers/s390/scsi/zfcp_aux.c        |  9 +++---
+ drivers/scsi/fnic/fnic.h            |  4 ++-
+ drivers/scsi/fnic/fnic_io.h         |  2 ++
+ drivers/scsi/fnic/fnic_main.c       |  2 ++
+ drivers/scsi/fnic/fnic_scsi.c       | 64 +++++++++++++++++++++++++++----------
+ drivers/target/target_core_device.c | 11 +++----
+ 6 files changed, 63 insertions(+), 29 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+index df782646e856..ab2f35bc294d 100644
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
+@@ -518,12 +518,12 @@ struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *adapter, u64 wwpn,
+ 	if (port) {
+ 		put_device(&port->dev);
+ 		retval = -EEXIST;
+-		goto err_out;
++		goto err_put;
+ 	}
+ 
+ 	port = kzalloc(sizeof(struct zfcp_port), GFP_KERNEL);
+ 	if (!port)
+-		goto err_out;
++		goto err_put;
+ 
+ 	rwlock_init(&port->unit_list_lock);
+ 	INIT_LIST_HEAD(&port->unit_list);
+@@ -546,7 +546,7 @@ struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *adapter, u64 wwpn,
+ 
+ 	if (dev_set_name(&port->dev, "0x%016llx", (unsigned long long)wwpn)) {
+ 		kfree(port);
+-		goto err_out;
++		goto err_put;
+ 	}
+ 	retval = -EINVAL;
+ 
+@@ -563,7 +563,8 @@ struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *adapter, u64 wwpn,
+ 
+ 	return port;
+ 
+-err_out:
++err_put:
+ 	zfcp_ccw_adapter_put(adapter);
++err_out:
+ 	return ERR_PTR(retval);
+ }
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 93c68931a593..22cef283b2b9 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -27,7 +27,7 @@
+ 
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+-#define DRV_VERSION		"1.6.0.56"
++#define DRV_VERSION		"1.6.0.57"
+ #define PFX			DRV_NAME ": "
+ #define DFX                     DRV_NAME "%d: "
+ 
+@@ -237,6 +237,8 @@ struct fnic {
+ 	unsigned int cq_count;
+ 
+ 	struct mutex sgreset_mutex;
++	spinlock_t sgreset_lock; /* lock for sgreset */
++	struct scsi_cmnd *sgreset_sc;
+ 	struct dentry *fnic_stats_debugfs_host;
+ 	struct dentry *fnic_stats_debugfs_file;
+ 	struct dentry *fnic_reset_debugfs_file;
+diff --git a/drivers/scsi/fnic/fnic_io.h b/drivers/scsi/fnic/fnic_io.h
+index f4c8769df312..5895ead20e14 100644
+--- a/drivers/scsi/fnic/fnic_io.h
++++ b/drivers/scsi/fnic/fnic_io.h
+@@ -52,6 +52,8 @@ struct fnic_io_req {
+ 	unsigned long start_time; /* in jiffies */
+ 	struct completion *abts_done; /* completion for abts */
+ 	struct completion *dr_done; /* completion for device reset */
++	unsigned int tag;
++	struct scsi_cmnd *sc; /* midlayer's cmd pointer */
+ };
+ 
+ enum fnic_port_speeds {
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 984bc5fc55e2..f27f9319e0b2 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -754,6 +754,8 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	for (i = 0; i < FNIC_IO_LOCKS; i++)
+ 		spin_lock_init(&fnic->io_req_lock[i]);
+ 
++	spin_lock_init(&fnic->sgreset_lock);
++
+ 	err = -ENOMEM;
+ 	fnic->io_req_pool = mempool_create_slab_pool(2, fnic_io_req_cache);
+ 	if (!fnic->io_req_pool)
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 9761b2c9db48..416d81954819 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -1047,9 +1047,9 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+ {
+ 	u8 type;
+ 	u8 hdr_status;
+-	struct fcpio_tag tag;
++	struct fcpio_tag ftag;
+ 	u32 id;
+-	struct scsi_cmnd *sc;
++	struct scsi_cmnd *sc = NULL;
+ 	struct fnic_io_req *io_req;
+ 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+ 	struct abort_stats *abts_stats = &fnic->fnic_stats.abts_stats;
+@@ -1058,27 +1058,43 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+ 	unsigned long flags;
+ 	spinlock_t *io_lock;
+ 	unsigned long start_time;
++	unsigned int tag;
+ 
+-	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &tag);
+-	fcpio_tag_id_dec(&tag, &id);
++	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &ftag);
++	fcpio_tag_id_dec(&ftag, &id);
+ 
+-	if ((id & FNIC_TAG_MASK) >= fnic->fnic_max_tag_id) {
++	tag = id & FNIC_TAG_MASK;
++	if (tag == fnic->fnic_max_tag_id) {
++		if (!(id & FNIC_TAG_DEV_RST)) {
++			shost_printk(KERN_ERR, fnic->lport->host,
++						"Tag out of range id 0x%x hdr status = %s\n",
++						id, fnic_fcpio_status_to_str(hdr_status));
++			return;
++		}
++	} else if (tag > fnic->fnic_max_tag_id) {
+ 		shost_printk(KERN_ERR, fnic->lport->host,
+-		"Tag out of range tag %x hdr status = %s\n",
+-		id, fnic_fcpio_status_to_str(hdr_status));
++					"Tag out of range tag 0x%x hdr status = %s\n",
++					tag, fnic_fcpio_status_to_str(hdr_status));
+ 		return;
+ 	}
+ 
+-	sc = scsi_host_find_tag(fnic->lport->host, id & FNIC_TAG_MASK);
++	if ((tag == fnic->fnic_max_tag_id) && (id & FNIC_TAG_DEV_RST)) {
++		sc = fnic->sgreset_sc;
++		io_lock = &fnic->sgreset_lock;
++	} else {
++		sc = scsi_host_find_tag(fnic->lport->host, id & FNIC_TAG_MASK);
++		io_lock = fnic_io_lock_hash(fnic, sc);
++	}
++
+ 	WARN_ON_ONCE(!sc);
+ 	if (!sc) {
+ 		atomic64_inc(&fnic_stats->io_stats.sc_null);
+ 		shost_printk(KERN_ERR, fnic->lport->host,
+ 			  "itmf_cmpl sc is null - hdr status = %s tag = 0x%x\n",
+-			  fnic_fcpio_status_to_str(hdr_status), id);
++			  fnic_fcpio_status_to_str(hdr_status), tag);
+ 		return;
+ 	}
+-	io_lock = fnic_io_lock_hash(fnic, sc);
++
+ 	spin_lock_irqsave(io_lock, flags);
+ 	io_req = fnic_priv(sc)->io_req;
+ 	WARN_ON_ONCE(!io_req);
+@@ -1089,7 +1105,7 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
+ 		shost_printk(KERN_ERR, fnic->lport->host,
+ 			  "itmf_cmpl io_req is null - "
+ 			  "hdr status = %s tag = 0x%x sc 0x%p\n",
+-			  fnic_fcpio_status_to_str(hdr_status), id, sc);
++			  fnic_fcpio_status_to_str(hdr_status), tag, sc);
+ 		return;
+ 	}
+ 	start_time = io_req->start_time;
+@@ -1938,6 +1954,10 @@ static inline int fnic_queue_dr_io_req(struct fnic *fnic,
+ 	struct scsi_lun fc_lun;
+ 	int ret = 0;
+ 	unsigned long intr_flags;
++	unsigned int tag = scsi_cmd_to_rq(sc)->tag;
++
++	if (tag == SCSI_NO_TAG)
++		tag = io_req->tag;
+ 
+ 	spin_lock_irqsave(host->host_lock, intr_flags);
+ 	if (unlikely(fnic_chk_state_flags_locked(fnic,
+@@ -1964,7 +1984,8 @@ static inline int fnic_queue_dr_io_req(struct fnic *fnic,
+ 	/* fill in the lun info */
+ 	int_to_scsilun(sc->device->lun, &fc_lun);
+ 
+-	fnic_queue_wq_copy_desc_itmf(wq, scsi_cmd_to_rq(sc)->tag | FNIC_TAG_DEV_RST,
++	tag |= FNIC_TAG_DEV_RST;
++	fnic_queue_wq_copy_desc_itmf(wq, tag,
+ 				     0, FCPIO_ITMF_LUN_RESET, SCSI_NO_TAG,
+ 				     fc_lun.scsi_lun, io_req->port_id,
+ 				     fnic->config.ra_tov, fnic->config.ed_tov);
+@@ -2146,8 +2167,7 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
+ 		.ret = SUCCESS,
+ 	};
+ 
+-	if (new_sc)
+-		iter_data.lr_sc = lr_sc;
++	iter_data.lr_sc = lr_sc;
+ 
+ 	scsi_host_busy_iter(fnic->lport->host,
+ 			    fnic_pending_aborts_iter, &iter_data);
+@@ -2230,8 +2250,14 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ 		mutex_lock(&fnic->sgreset_mutex);
+ 		tag = fnic->fnic_max_tag_id;
+ 		new_sc = 1;
+-	}
+-	io_lock = fnic_io_lock_hash(fnic, sc);
++		fnic->sgreset_sc = sc;
++		io_lock = &fnic->sgreset_lock;
++		FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
++			"fcid: 0x%x lun: 0x%llx flags: 0x%x tag: 0x%x Issuing sgreset\n",
++			rport->port_id, sc->device->lun, fnic_priv(sc)->flags, tag);
++	} else
++		io_lock = fnic_io_lock_hash(fnic, sc);
++
+ 	spin_lock_irqsave(io_lock, flags);
+ 	io_req = fnic_priv(sc)->io_req;
+ 
+@@ -2247,6 +2273,8 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ 		}
+ 		memset(io_req, 0, sizeof(*io_req));
+ 		io_req->port_id = rport->port_id;
++		io_req->tag = tag;
++		io_req->sc = sc;
+ 		fnic_priv(sc)->io_req = io_req;
+ 	}
+ 	io_req->dr_done = &tm_done;
+@@ -2400,8 +2428,10 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+ 		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
+ 		  fnic_flags_and_state(sc));
+ 
+-	if (new_sc)
++	if (new_sc) {
++		fnic->sgreset_sc = NULL;
+ 		mutex_unlock(&fnic->sgreset_mutex);
++	}
+ 
+ 	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+ 		      "Returning from device reset %s\n",
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index b7ac60f4a219..b6523d4b9259 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -843,7 +843,6 @@ sector_t target_to_linux_sector(struct se_device *dev, sector_t lb)
+ EXPORT_SYMBOL(target_to_linux_sector);
+ 
+ struct devices_idr_iter {
+-	struct config_item *prev_item;
+ 	int (*fn)(struct se_device *dev, void *data);
+ 	void *data;
+ };
+@@ -853,11 +852,9 @@ static int target_devices_idr_iter(int id, void *p, void *data)
+ {
+ 	struct devices_idr_iter *iter = data;
+ 	struct se_device *dev = p;
++	struct config_item *item;
+ 	int ret;
+ 
+-	config_item_put(iter->prev_item);
+-	iter->prev_item = NULL;
+-
+ 	/*
+ 	 * We add the device early to the idr, so it can be used
+ 	 * by backend modules during configuration. We do not want
+@@ -867,12 +864,13 @@ static int target_devices_idr_iter(int id, void *p, void *data)
+ 	if (!target_dev_configured(dev))
+ 		return 0;
+ 
+-	iter->prev_item = config_item_get_unless_zero(&dev->dev_group.cg_item);
+-	if (!iter->prev_item)
++	item = config_item_get_unless_zero(&dev->dev_group.cg_item);
++	if (!item)
+ 		return 0;
+ 	mutex_unlock(&device_mutex);
+ 
+ 	ret = iter->fn(dev, iter->data);
++	config_item_put(item);
+ 
+ 	mutex_lock(&device_mutex);
+ 	return ret;
+@@ -895,7 +893,6 @@ int target_for_each_device(int (*fn)(struct se_device *dev, void *data),
+ 	mutex_lock(&device_mutex);
+ 	ret = idr_for_each(&devices_idr, target_devices_idr_iter, &iter);
+ 	mutex_unlock(&device_mutex);
+-	config_item_put(iter.prev_item);
+ 	return ret;
+ }
+ 
+
