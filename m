@@ -2,54 +2,150 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCC05E8FDBA
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 21:32:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 850B1E8FDBC
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 22:15:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241230AbjJCVci (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 17:32:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38040 "EHLO
+        id S232528AbjJCWPy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 18:15:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232084AbjJCVch (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 17:32:37 -0400
-X-Greylist: delayed 590 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 03 Oct 2023 14:32:34 PDT
-Received: from vps.thesusis.net (vps.thesusis.net [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AAC3A1;
-        Tue,  3 Oct 2023 14:32:34 -0700 (PDT)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id 9A49013DDF4; Tue,  3 Oct 2023 17:22:40 -0400 (EDT)
-Date:   Tue, 3 Oct 2023 17:22:40 -0400
-From:   Phillip Susi <phill@thesusis.net>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v8 00/23] Fix libata suspend/resume handling and code
- cleanup
-Message-ID: <ZRyGIE+NpmtMu7XK@thesusis.net>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <874jj8sia5.fsf@vps.thesusis.net>
- <87h6n87dac.fsf@vps.thesusis.net>
- <269e2876-58fd-b73c-0c0d-1593c17c2809@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <269e2876-58fd-b73c-0c0d-1593c17c2809@kernel.org>
+        with ESMTP id S232113AbjJCWPw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 18:15:52 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5970DA1
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 15:15:48 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-d816fa2404aso1781399276.0
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 15:15:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1696371347; x=1696976147; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=glUGQRb/GBSrrTfvaW6K09zpdeEaoPTJ452gHEUadv0=;
+        b=WTKWNT/QY1KIvHBOebCr0+RgxvLLRJczRHQlHgZHKjwz3TVC7f5TpSS+6Al3tU4vmW
+         +yaV4kbsIemMjOWfRqCvkb4NHINO1OiwkLdk73sfWIJIaDsNwwQTL4ii7H8ubW9Pub0T
+         gJFtSz5E1D44t6vt0cze6YVGdkizEwWxc0LJozy03GiXqAe3xp++mbVOAWr66+tbrwTh
+         OkARiPtKX/uGMfzIK4otS7aybV3G7EQDZqP72gPCLvt4Pazw0r2At7xp4Nvyvwibtqs9
+         rDT8TkZfvsZwvtR1nfsP8UPYaAXAZRj+qmne4RJjR4IIJi/+g37N0GYkx5pdB2OaJwoo
+         ADVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696371347; x=1696976147;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=glUGQRb/GBSrrTfvaW6K09zpdeEaoPTJ452gHEUadv0=;
+        b=CQzbjylIHvIwtRvayY3tNybDUg9By1aCMkSSdqY4cUMOdqazPatTI7kppF4xkJ2yrS
+         eauLUqgo/H/MD3sWhq+qrHpHAFDCZGsnv2ed6NHwaIyNzD8nCxb9gIwVaNxOfiqbOnLf
+         39Z3XxaloV9Xe/LhH3wfL7YosZINnQBMpF2YO9quQpZTWXV7Lkn8hnyyOyvYWe5xN/l7
+         +m/j7exl3GyZP9tRiNhLw7aAoEvJ7YAjVufzE0+jw18pu9El+mfxUrxQoikrfqW8kGBq
+         OvxcEJe2kakbSjuTFtnNFEAaS6m5D+uoKPVWVlReCr5O7s4I+UPIxAK+i0jc5jJewJN0
+         zD3Q==
+X-Gm-Message-State: AOJu0Yw3F56tu6wi8VpmmzYXWgX5tzplc017xBQ0sV8n8fQlYBLaDLyb
+        BXUKipm8JkisqkHcMjxyhbAJSTikOdKKBjuU2A==
+X-Google-Smtp-Source: AGHT+IGdGCAuJA1wNrRfEOEXy8YnXpaqALyFXNbFGW3k419izX+ExXkii771wp0CrG+9MTGjPzGAAKtV27pphMrZug==
+X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
+ (user=justinstitt job=sendgmr) by 2002:a05:6902:1603:b0:d7a:bfcf:2d7 with
+ SMTP id bw3-20020a056902160300b00d7abfcf02d7mr8207ybb.6.1696371347547; Tue,
+ 03 Oct 2023 15:15:47 -0700 (PDT)
+Date:   Tue, 03 Oct 2023 22:15:45 +0000
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAJCSHGUC/5WNQQ6CMBBFr0K6dkw7iigr72FYNO0ATYSSGWwkh
+ LtbuIHL9/P/f6sS4kCi6mJVTClIiGMGPBXK9XbsCILPrFDjRT+wApl5dNMCnkMiFhhIxOZa+9m
+ nMEyzWAEHLaIv7VXfkVDlt4mpDd/D9Goy90HmyMshTmZP/3ckAwbIW3crna+00c8uxu5NZxcH1 Wzb9gOuMsAt3wAAAA==
+X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1696371346; l=3172;
+ i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
+ bh=D6TnBFlTL+yFDnhyUKzZ8WPpEO6pZlaPy5QQBmG4HnE=; b=+DWq/nrZH1zk08S36hWN94OBXnhx03M+unNMnYLjJ+uFT7PHncocUUu4CY/RrIzw97eg07gGy
+ UkHDufSUfF+CmRjkJLcW6IfcMUxy+o1rN7x/Ga2VZV3RcaabL63ZD3j
+X-Mailer: b4 0.12.3
+Message-ID: <20231003-strncpy-drivers-message-fusion-mptsas-c-v2-1-5ce07e60bd21@google.com>
+Subject: [PATCH v2] scsi: message: fusion: replace deprecated strncpy with strscpy
+From:   Justin Stitt <justinstitt@google.com>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+        Kees Cook <keescook@chromium.org>,
+        Justin Stitt <justinstitt@google.com>
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 03, 2023 at 09:44:50AM +0900, Damien Le Moal wrote:
-> Hmmm... So this could be the fs suspend then, which issues a sync but the device
-> is already suspended and was synced already. In that case, we should turn that
-> sync into a nop to not wakeup the drive unnecessarily. The fix may be needed on
-> scsi sd side rather than libata.
+`strncpy` is deprecated for use on NUL-terminated destination strings
+[1] and as such we should prefer more robust and less ambiguous string
+interfaces.
 
-I did some tracing today on a test ext4 fs I created on a loopback device, and it
-seems that the superblocks are written every time you sync, even if no files on the
-filesystem have even been opened for read access.
+The only caller of mptsas_exp_repmanufacture_info() is
+mptsas_probe_one_phy() which can allocate rphy in either
+sas_end_device_alloc() or sas_expander_alloc(). Both of which
+zero-allocate:
+|       rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
+... this is supplied to mptsas_exp_repmanufacture_info() as edev meaning
+that no future NUL-padding of edev members is needed.
+
+Considering the above, a suitable replacement is `strscpy` [2] due to
+the fact that it guarantees NUL-termination on the destination buffer
+without unnecessarily NUL-padding.
+
+Also use the more idiomatic strscpy pattern of (dest, src, sizeof(dest))
+
+Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+Link: https://github.com/KSPP/linux/issues/90
+Cc: linux-hardening@vger.kernel.org
+Cc: Kees Cook <keescook@chromium.org>
+Signed-off-by: Justin Stitt <justinstitt@google.com>
+---
+Changes in v2:
+- use sizeof(dest) pattern (thanks Kees)
+- rebase onto mainline cbf3a2cb156a2c91
+- Link to v1: https://lore.kernel.org/r/20230927-strncpy-drivers-message-fusion-mptsas-c-v1-1-edac65cd7010@google.com
+---
+Note: build-tested only.
+
+Note: similar to drivers/scsi/mpi3mr/mpi3mr_transport.c +212 which uses
+strscpy
+---
+ drivers/message/fusion/mptsas.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 86f16f3ea478..300f8e955a53 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -2964,17 +2964,17 @@ mptsas_exp_repmanufacture_info(MPT_ADAPTER *ioc,
+ 			goto out_free;
+ 
+ 		manufacture_reply = data_out + sizeof(struct rep_manu_request);
+-		strncpy(edev->vendor_id, manufacture_reply->vendor_id,
+-			SAS_EXPANDER_VENDOR_ID_LEN);
+-		strncpy(edev->product_id, manufacture_reply->product_id,
+-			SAS_EXPANDER_PRODUCT_ID_LEN);
+-		strncpy(edev->product_rev, manufacture_reply->product_rev,
+-			SAS_EXPANDER_PRODUCT_REV_LEN);
++		strscpy(edev->vendor_id, manufacture_reply->vendor_id,
++			sizeof(edev->vendor_id));
++		strscpy(edev->product_id, manufacture_reply->product_id,
++			sizeof(edev->product_id));
++		strscpy(edev->product_rev, manufacture_reply->product_rev,
++			sizeof(edev->product_rev));
+ 		edev->level = manufacture_reply->sas_format;
+ 		if (manufacture_reply->sas_format) {
+-			strncpy(edev->component_vendor_id,
++			strscpy(edev->component_vendor_id,
+ 				manufacture_reply->component_vendor_id,
+-				SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN);
++				sizeof(edev->component_vendor_id));
+ 			tmp = (u8 *)&manufacture_reply->component_id;
+ 			edev->component_id = tmp[0] << 8 | tmp[1];
+ 			edev->component_revision_id =
+
+---
+base-commit: cbf3a2cb156a2c911d8f38d8247814b4c07f49a2
+change-id: 20230927-strncpy-drivers-message-fusion-mptsas-c-f22d5a4082e2
+
+Best regards,
+--
+Justin Stitt <justinstitt@google.com>
+
