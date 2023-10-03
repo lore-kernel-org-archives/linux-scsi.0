@@ -2,96 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FBE0E7544B
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 11:00:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A949BE7544B
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 11:00:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239721AbjJCLAX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 07:00:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35360 "EHLO
+        id S239726AbjJCLAa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 07:00:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231723AbjJCLAV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 07:00:21 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A741BB
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 04:00:18 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1c760b34d25so5435665ad.3
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 04:00:18 -0700 (PDT)
+        with ESMTP id S230227AbjJCLA3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 07:00:29 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E950DB0
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 04:00:24 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-690ce3c55f1so576240b3a.0
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 04:00:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1696330817; x=1696935617; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1696330824; x=1696935624; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Mz9eWm8mJ7O58GRm2LyNfn61AcdrdI+UWxX1UDOTD7o=;
-        b=a5kcloFAzdqyGI2S/3H8E+ONwOSGUuTJ7f84i4jbXzklu3wpMNGWDa9zGWcl6tdxgj
-         xUGQ38MlQ1Wr/ObZwF8m2PwDZw3FZdMcABdJkmhEOJmGwVn37ZNYgXjXRGk11bos48p2
-         3oC/dObTAL5LJUPbGpJ7cr/Zh/Sq/Y4IFThhE=
+        bh=L83Frjya2J9rgLNq0gneXR+KC+5BWw5kbhTvCisPUNo=;
+        b=KGP4Wt0iPXGkAkAtE2pYZeFh4lC5Q7QhuqHcpEXtZy9lBY5AaVrvzN7q4xXf+ubwot
+         HvUw/6P85j0G4nB/pjRxOIqQDSsXVXhKu1Ds4oiHgN7lkpYWUbj/C8BPadludnjcvy5B
+         uN0gpRlzGRjuSwRiEt/NiDZxhRUdHctJBFVIo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696330817; x=1696935617;
+        d=1e100.net; s=20230601; t=1696330824; x=1696935624;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Mz9eWm8mJ7O58GRm2LyNfn61AcdrdI+UWxX1UDOTD7o=;
-        b=mGU+mgbKgvVUy7IVIct6OYgNr6k1yeCrObSEZ6RPE8Wyl+EwCdP9FnmbNcm6PLHtLA
-         PIRAxTyl2VVeedPCT2mEqGZCuKv/ZjEXSfJc79D2Dk00qqPJFRQyz7abMgc/7WWLivOK
-         LevYjnI4oTBMxW/TR7XNeovHwbxFJqjLVnk4JLtxPU2cG/FNf/9oSCrOKK+/l5+6z9hz
-         xSU3cXy38cBH2bbs/CQ7jIV/eaFw5DUjnK/kvvan0tR1ORUnwRZKtLpXy5HGlqwRSWmC
-         sxQK62OS3Iyw8Vd2LWAz7JdwDFhQZsrWXSa7RSblP/yGCdUq0JNH3L/kKAF+6RixMn+M
-         TMLA==
-X-Gm-Message-State: AOJu0Yzkn7mEvRWkBfGL4NDgx7EQFG9hmTN6PROnSgjQYs5aXjjVQfiv
-        nxb88dcD5wxEH+yKEbrlRGSXlzc8q8cvYZcQjOsaaJX54a7M7xAdgFUh0DQDbFYptI5QUM4yetJ
-        ZgoREQ5V5I5m9WNksCWeLvWtr2dNRRy+0ygV2YE/Fy2fm0uDS90+X6dhpe7pm6ikR64IdZgzMzY
-        DWFuOSqowX4VVHRlp8rCa7
-X-Google-Smtp-Source: AGHT+IFbP/UVMrgjNKl7+j9ciFLWtsBpiK7bOpFmSKxe9RlcCHwLnUgHElKyrYKte7EMEuvLPIgj4Q==
-X-Received: by 2002:a17:902:7682:b0:1c4:335:b06d with SMTP id m2-20020a170902768200b001c40335b06dmr10859728pll.32.1696330816832;
-        Tue, 03 Oct 2023 04:00:16 -0700 (PDT)
+        bh=L83Frjya2J9rgLNq0gneXR+KC+5BWw5kbhTvCisPUNo=;
+        b=c5Hs0EKYMsbXH3m4tLK9+7l/a96ad0Gl3gwciHOnvea8arLRmPhShKgwLS7rTpstz+
+         TEB4ydFXovUl2Lq/oUxLNcODx9X4+eUEy5r72GbWuZl3fcnygbIPct6jZR+Mu5aqAF6Z
+         yCOf1rvAefusROc9XoaCuZx/AILH0REd5tNpet1xuGafGoIkneUEfZtsTQJZfJqBKuZR
+         tQsdQo0H0vuEXfVzKh9wpwPKTcm39IBelTz6IAAdopnjJtgR9sPaJ9SGqH7FREIhGY7E
+         tYMGqmBg/I0m6G6HAPIJpKhnMVNntbteAZFwDy86ZoV3TjN+HjwfCmT8GO1/HBoZ1e8+
+         GqwQ==
+X-Gm-Message-State: AOJu0YyTyH4WUuGbJKadVQtDyD2qpSagQEYy6nVA8UiAWLtiH0fO4sUo
+        RZlEFZF5vMq3DdTo4p4UJBcc6OrFb6SZcbiRh7l/XyH5QAta6jADMLqlMufNIacbCC3trD/3C46
+        VIPPPJoEURS72E8bR5StokVvL5WU1MKM7jNFtXmPQlExhvNUaM1fqZJ2eoE+tFySRcv8QbxVNxT
+        ORinAaLJZm9VTQnHr4Kzpf
+X-Google-Smtp-Source: AGHT+IELZ7yyNNQrXnDnDTMxjDMLYnZHeDW04iedzr4G7uNoR3sDmWL7KbxJxP3b1C3hJ0LzMnUSFQ==
+X-Received: by 2002:a05:6a20:6a09:b0:14c:910d:972d with SMTP id p9-20020a056a206a0900b0014c910d972dmr14413244pzk.12.1696330823861;
+        Tue, 03 Oct 2023 04:00:23 -0700 (PDT)
 Received: from dhcp-10-123-20-35.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id a7-20020a170902ecc700b001bc6e6069a6sm1211909plh.122.2023.10.03.04.00.14
+        by smtp.gmail.com with ESMTPSA id a7-20020a170902ecc700b001bc6e6069a6sm1211909plh.122.2023.10.03.04.00.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Oct 2023 04:00:15 -0700 (PDT)
+        Tue, 03 Oct 2023 04:00:22 -0700 (PDT)
 From:   Chandrakanth patil <chandrakanth.patil@broadcom.com>
 To:     linux-scsi@vger.kernel.org, sumit.saxena@broadcom.com
 Cc:     Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 3/4] megaraid_sas: Driver version update to 07.727.03.00-rc1
-Date:   Tue,  3 Oct 2023 16:30:20 +0530
-Message-Id: <20231003110021.168862-4-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 4/4] megaraid_sas: Revision of Maintainer List
+Date:   Tue,  3 Oct 2023 16:30:21 +0530
+Message-Id: <20231003110021.168862-5-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.39.3
 In-Reply-To: <20231003110021.168862-1-chandrakanth.patil@broadcom.com>
 References: <20231003110021.168862-1-chandrakanth.patil@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000cb432c0606cdcbae"
+        boundary="000000000000342ab40606cdcc23"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000cb432c0606cdcbae
+--000000000000342ab40606cdcc23
 Content-Transfer-Encoding: 8bit
 
-Driver version update.
+Given my active involvement in megaraid_sas development, I am including
+myself in the maintainers list.
 
 Signed-off-by: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 94abba57582d..56624cbf7fa5 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -23,8 +23,8 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"07.725.01.00-rc1"
--#define MEGASAS_RELDATE				"Mar 2, 2023"
-+#define MEGASAS_VERSION				"07.727.03.00-rc1"
-+#define MEGASAS_RELDATE				"Oct 03, 2023"
- 
- #define MEGASAS_MSIX_NAME_LEN			32
- 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 90f13281d297..f8e22aa66119 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13535,6 +13535,7 @@ MEGARAID SCSI/SAS DRIVERS
+ M:	Kashyap Desai <kashyap.desai@broadcom.com>
+ M:	Sumit Saxena <sumit.saxena@broadcom.com>
+ M:	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
++M:	Chandrakanth patil <chandrakanth.patil@broadcom.com>
+ L:	megaraidlinux.pdl@broadcom.com
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
 -- 
 2.39.3
 
 
---000000000000cb432c0606cdcbae
+--000000000000342ab40606cdcc23
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -162,14 +160,14 @@ W2v5XKnfV6+4iODhAb65bwLbcNq6dxzr1Yy/fGnIBfoR2qrX9UBDDxjZRpxJGdt7i0CcvsX7p2ia
 SgP+hUBq9GTgLiFqCGyh/gCm2DTB/TyYel0QsIP29qWC1F5mG+GOoSjagi/2SxnNI6LzK+4xfgvc
 80IlL0UapzuyZFExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIM+1uOTv
-l7lCj/DbuKt2m96V0nbkXb19v+gsWh80u2HvMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMTAwMzExMDAxN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOO05FVk
+HNsMYAPOYQ9uaOwJQJNkB01Xy8tcAx5XFNIjMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMTAwMzExMDAyNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCimzmub5zZqJ5CTyITR8Z7GPZn
-rU4MiHwwnVEeVWTD/t9UQFVxyBbjbrKAxvvR5k+v5Pw7dMNLfs9cXlmdT9ogpqiEn07lr4bY+tXC
-orpkDROTB978z5fc4Ur5fzkrkYiqIDU7aQ/6s9UWqquQEuTBXrgNieaLK0vMUIGlNc57VodwWfyO
-kjiPjEVOuFNu98z2+ubvcaJBOXZKacF0yrrZtAP91CabaQOVU0o7ozeaKQiUs83YlxkHSyWIUDws
-HuWm+4Msof5JEt3uIYuu/n7GpDR1L9051pmtKibu8A8bh65se9aV76Lzqqahe71kPF5TfDPmV2kX
-XJZ3FxwYdsNS
---000000000000cb432c0606cdcbae--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB9FMJl+m4D0bBjJZHW6Co2Src9
+B6LFwrWX2XAaEYpZDrVUawX2pvIb5CIpPQmeCiimKms11VxbMxmAM5U/0Y2pXVCewEZLeDMcgr9Y
+YdYLWVLOkr04ra5PJ6rU+R0JR4t6CAc+pc51n+hrMlxRCTLcIyqtsKh21/fLdWH6gtST9ZtbzGDy
+Du9znChJNh621Gi0b7FHQPTF9RZOqVGFADdleN+G6dDCBX6eiJE62/GHtz2+1oMuGN4eqCowLyD7
+5v6nw6UF8gDqXUS+NR7m8aHBdySx60mpmuXrDoZxLStVz0HDjaldasbbd+xf0OBk015WdswXiEcP
+qO6LEsj3K/ry
+--000000000000342ab40606cdcc23--
