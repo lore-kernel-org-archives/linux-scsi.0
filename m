@@ -2,99 +2,77 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52122E8FDBF
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 23:45:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E95E8FDC2
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 23:46:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238149AbjJCXqA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 19:46:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51404 "EHLO
+        id S238468AbjJCXrA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 19:47:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237902AbjJCXp7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 19:45:59 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C7F5B0
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 16:45:56 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1c3d6d88231so11599145ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 16:45:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1696376755; x=1696981555; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RtHYjR3XxoRF+iJTkvp+E/jMMzI/Fs5RNWq+H0ugZaQ=;
-        b=Uv+54UEBZvITyMjEPII19CZmsTxTZvB5NDyFvUS5nkcYu7rsLrGfwtaxdwjj7+JYOW
-         INlN5xBxwlyY/IxesJp44tCcAW05pW5ACZ/4CqNs7+0CSGRFuSRd6tEFa5oSFWCaU8bU
-         XZUqzdUa7jp42b/HYHusuibM+HM3PWkhob+vU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696376755; x=1696981555;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RtHYjR3XxoRF+iJTkvp+E/jMMzI/Fs5RNWq+H0ugZaQ=;
-        b=cqlKt5i1wdRSwMfJg+iZylLti6lbp3hpb7bY0FU1KjXBMv4hbkScTZkA7C1HX6g2h1
-         5mwAjkKaSJIRdKbehaMWOXutESYWN7KvSUON913sVoOazPifNokGo+Q4OfJokiHLiPJy
-         IFl+duB8vw7ZFxzhLVG5KegO4ErLGTF42bRjLXVv+03mdbyzH1Kx5i9BVvO5d7mCLCRw
-         av12Aw8x/NBcwK707j9Oani2b5gNgUoxhzQt4zLQ2s+hYpFe+jdRAexy8E8eutTbpmTP
-         tVGkH1uPSXQd0KG8lvtiZpK8eiOH+HokFzIX8OCM5esRVBfsKuHkJoJBEeLTV61D3K9x
-         jz8g==
-X-Gm-Message-State: AOJu0Yyh0BX/CF7UJWW+B3JjbitA94oQ0j/IzLmEzXPKVQYwx/sDlGgj
-        oA/lkmNTSs0MMNoSfP40PlFKeUk3YS6OW8isalc=
-X-Google-Smtp-Source: AGHT+IHujQcVFHUY7j+G/kYmbSjiEDK3lKj5pw/1RC5Ut3/Cx7sRwL7lI9kZJjkyqrtiKpo0Jw7Fag==
-X-Received: by 2002:a17:902:e850:b0:1c5:d1a2:c3e8 with SMTP id t16-20020a170902e85000b001c5d1a2c3e8mr1097347plg.5.1696376755493;
-        Tue, 03 Oct 2023 16:45:55 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id ji13-20020a170903324d00b001c726147a45sm2196482plb.190.2023.10.03.16.45.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Oct 2023 16:45:55 -0700 (PDT)
-Date:   Tue, 3 Oct 2023 16:45:52 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Justin Stitt <justinstitt@google.com>
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: message: fusion: replace deprecated strncpy
- with strscpy
-Message-ID: <202310031645.FBD5955@keescook>
-References: <20231003-strncpy-drivers-message-fusion-mptsas-c-v2-1-5ce07e60bd21@google.com>
+        with ESMTP id S238629AbjJCXq7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 19:46:59 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23D7690;
+        Tue,  3 Oct 2023 16:46:56 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF154C433C7;
+        Tue,  3 Oct 2023 23:46:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696376815;
+        bh=5xKSNTSw2RYzEDddcwiPLExFg5N2zhaGw4448ZpIO8I=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=TVcmKVPPUhYCfhI1jUSw4Qn+voXTT74oWpLs4pogL5bsPPsE/TB+KxTwfP8oGIW2n
+         5UmsKCdCBM+b9F0n8uv37yNMjZkzVWAixeDhrN+nMnG61vRdqHyTDzdvQGQfTP+tmq
+         QnyUd4mso8XjGrtkDiOFI7T+wx7rHek4DzFUm7bl91QmOYyKdSjBv9IUOQqHQ2x3ZY
+         ywlLaoQ3MDEZ+BWmRVBhNurRHES1Pt2DX6ZnrL9NeppqJLvROhLms+6bwC2fOeoxce
+         yuaX3kFy059ma5xfVG6FGcYapFRn+wegt1Ncz4MI1SqNHUi6KmHHFz+phWRAE3a746
+         98GZrzf5Z95hQ==
+Message-ID: <3aae2b14-ce32-261a-46a4-cc8d5f3adab4@kernel.org>
+Date:   Wed, 4 Oct 2023 08:46:52 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231003-strncpy-drivers-message-fusion-mptsas-c-v2-1-5ce07e60bd21@google.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v8 00/23] Fix libata suspend/resume handling and code
+ cleanup
+Content-Language: en-US
+To:     Phillip Susi <phill@thesusis.net>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230927141828.90288-1-dlemoal@kernel.org>
+ <874jj8sia5.fsf@vps.thesusis.net> <87h6n87dac.fsf@vps.thesusis.net>
+ <269e2876-58fd-b73c-0c0d-1593c17c2809@kernel.org>
+ <ZRyGIE+NpmtMu7XK@thesusis.net>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZRyGIE+NpmtMu7XK@thesusis.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 03, 2023 at 10:15:45PM +0000, Justin Stitt wrote:
-> `strncpy` is deprecated for use on NUL-terminated destination strings
-> [1] and as such we should prefer more robust and less ambiguous string
-> interfaces.
+On 10/4/23 06:22, Phillip Susi wrote:
+> On Tue, Oct 03, 2023 at 09:44:50AM +0900, Damien Le Moal wrote:
+>> Hmmm... So this could be the fs suspend then, which issues a sync but the device
+>> is already suspended and was synced already. In that case, we should turn that
+>> sync into a nop to not wakeup the drive unnecessarily. The fix may be needed on
+>> scsi sd side rather than libata.
 > 
-> The only caller of mptsas_exp_repmanufacture_info() is
-> mptsas_probe_one_phy() which can allocate rphy in either
-> sas_end_device_alloc() or sas_expander_alloc(). Both of which
-> zero-allocate:
-> |       rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
-> ... this is supplied to mptsas_exp_repmanufacture_info() as edev meaning
-> that no future NUL-padding of edev members is needed.
-> 
-> Considering the above, a suitable replacement is `strscpy` [2] due to
-> the fact that it guarantees NUL-termination on the destination buffer
-> without unnecessarily NUL-padding.
-> 
-> Also use the more idiomatic strscpy pattern of (dest, src, sizeof(dest))
-> 
-> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
-> Cc: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Justin Stitt <justinstitt@google.com>
+> I did some tracing today on a test ext4 fs I created on a loopback device, and it
+> seems that the superblocks are written every time you sync, even if no files on the
+> filesystem have even been opened for read access.
 
-Thanks for adjusting the sizes. Looks good!
-
-Reviewed-by: Kees Cook <keescook@chromium.org>
+OK. So a fix would need to be on the FS side then if one wants to avoid that
+useless resume. However, this may clash with the FS need to record stuff in its
+sb and so we may not be able to avoid that.
 
 -- 
-Kees Cook
+Damien Le Moal
+Western Digital Research
+
