@@ -2,156 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C0B0E7AD73
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 15:25:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAD59E7AD76
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 16:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232496AbjJCPZk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 11:25:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39326 "EHLO
+        id S240245AbjJCQFy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 12:05:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232315AbjJCPZi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 11:25:38 -0400
-Received: from mail-yb1-xb31.google.com (mail-yb1-xb31.google.com [IPv6:2607:f8b0:4864:20::b31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D56DEAF
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 08:25:34 -0700 (PDT)
-Received: by mail-yb1-xb31.google.com with SMTP id 3f1490d57ef6-d818d65f23cso1084708276.3
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 08:25:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1696346734; x=1696951534; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=pGVoL3ekhfgR5Li2+FLv1BzUDvf3zy7Wq5DWcyBdbUU=;
-        b=WDC2/YcOqOniJIvVAev2kD5+N8BOqvh0iSj2BU3c8ZT/3+1YXSZiIYEsbaM6R3VWd2
-         zi0eeoDNBe6LEtF2CAxPXfgdO2jE5FtahMTycF9M7rOPu1MFuFsgPe/N0i2uADHxXItD
-         IASDEKvLCssIhYWUtePBkzbLfg3zTHZXN6aq3yUwgnObN6+1xisuYLMto7C1fV9T8oax
-         Byv2KVJkf4SQfDu/GoKopwQGcBGbzvLFtFVHmW8V3jkqaLYAsa2k62WpXi8wvXYgNTl1
-         0dGfsGVUjvBsF117P5oZWKMSZLfL5VpSY/xf8p3LJFxKjtbrvNek7VWE+NWY0WLYAOaX
-         dBSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696346734; x=1696951534;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=pGVoL3ekhfgR5Li2+FLv1BzUDvf3zy7Wq5DWcyBdbUU=;
-        b=jB2/LfRHdPX2z8q5Wdu7u+9yt5IotJ5zr06O3xrhXgjzUk+7d54ewBblVPYuXCyuW2
-         vcTSVBfxeQZM5cnSOfBqOXbv04VAfOOnEqmvxgk/Bw+x3tZ2aBXyo0phMrQGHzGtb3J9
-         ayOZnWiiEXzGriGKM7E6/KCI3GWp8fC9P+xyBvTmf7kSqVHOjrXrLgaqw+gXaf+Tknyp
-         ksgcYiiD4bEJvSti54xicimh0Nt6Su8jna7V2LsLb+0X2VpqtSMug+GZGyKU50Xrza+J
-         EfZTn7DqxscThgZrcqL/yzfNdLU160LSpllFhV3MI46frzjIKtxdinrQTkC3VhdyxdDz
-         vldg==
-X-Gm-Message-State: AOJu0Yxkr4bmZFEwCxChJUOwgPQd1+guP2QREQmrNnyKMpMyjv+xG29H
-        vk+EDMh4NQJRmMqA8fxdYMSiupcfAfKLyQe2wRgsLA==
-X-Google-Smtp-Source: AGHT+IHBCWgvfAHbcGjjccmTpSVhnByEgwm/tEgNLZP140ckpYMr/fckGC2+3rb/UBI5wvFTHimxcVKC8uoXZflpXQM=
-X-Received: by 2002:a25:e013:0:b0:d86:57ff:210c with SMTP id
- x19-20020a25e013000000b00d8657ff210cmr15084071ybg.17.1696346734044; Tue, 03
- Oct 2023 08:25:34 -0700 (PDT)
+        with ESMTP id S232066AbjJCQFx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 12:05:53 -0400
+Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B817A9;
+        Tue,  3 Oct 2023 09:05:50 -0700 (PDT)
+Received: from localhost (unknown [IPv6:2601:281:8300:73::646])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ms.lwn.net (Postfix) with ESMTPSA id 922B1381;
+        Tue,  3 Oct 2023 16:05:49 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 922B1381
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+        t=1696349149; bh=FJ0ABpqZ404qDATR9ZjzfiRpFdQTFHY4H48kFkpDdqE=;
+        h=From:To:Subject:In-Reply-To:References:Date:From;
+        b=ByBmQehZ9ZDltSjH06Xz6yT1qgZkCx/jKFQq5vGQMNYnUNAsWw5VRiHo0PzccGksa
+         gqlixKWWEgNhp6Y5PHM0QnX8YDksC0utj3gRWXz7g24l5PqHLfDgZqX1bgpuQjlTd/
+         0eAlHSE25aHwkynWubyn7prY+ca8QdG0XmJEXgCE5hVajN3um9Jk3zfan25A4Svpqm
+         e6bckqM5chLcb6+taKdlZEhJgBgiFn1No0MF6iM38yUXkNKfuKtdbd4GWNnuTS/+dC
+         hPSI6U9PcqlFTty4GZa5eG+hfY0iUEGivaGcfpmBY2ezucGrZ5aDp10a6JQXeFMVL0
+         pgpGyDfqQB/2g==
+From:   Jonathan Corbet <corbet@lwn.net>
+To:     Costa Shulyupin <costa.shul@redhat.com>,
+        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Linas Vepstas <linasvepstas@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        "Manoj N. Kumar" <manoj@linux.ibm.com>,
+        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
+        Uma Krishnan <ukrishn@linux.ibm.com>,
+        Qiang Zhao <qiang.zhao@nxp.com>, Li Yang <leoyang.li@nxp.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Costa Shulyupin <costa.shul@redhat.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Yanteng Si <siyanteng@loongson.cn>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Philippe =?utf-8?Q?Mathieu-Daud=C3=A9?= <philmd@linaro.org>,
+        Nicholas Miehlbradt <nicholas@linux.ibm.com>,
+        Benjamin Gray <bgray@linux.ibm.com>,
+        "Aneesh Kumar K.V" <aneesh.kumar@linux.ibm.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Segher Boessenkool <segher@kernel.crashing.org>,
+        Rohan McLure <rmclure@linux.ibm.com>,
+        Josh Poimboeuf <jpoimboe@kernel.org>,
+        "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+        Sathvika Vasireddy <sv@linux.ibm.com>,
+        Laurent Dufour <laurent.dufour@fr.ibm.com>,
+        Nathan Lynch <nathanl@linux.ibm.com>,
+        Brian King <brking@linux.vnet.ibm.com>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, kvm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-serial@vger.kernel.org
+Subject: Re: [PATCH] docs: move powerpc under arch
+In-Reply-To: <20230826165737.2101199-1-costa.shul@redhat.com>
+References: <169052340516.4355.10339828466636149348@legolas.ozlabs.org>
+ <20230826165737.2101199-1-costa.shul@redhat.com>
+Date:   Tue, 03 Oct 2023 10:05:48 -0600
+Message-ID: <87cyxvelnn.fsf@meer.lwn.net>
 MIME-Version: 1.0
-References: <20231003111232.42663-1-manivannan.sadhasivam@linaro.org> <20231003111232.42663-7-manivannan.sadhasivam@linaro.org>
-In-Reply-To: <20231003111232.42663-7-manivannan.sadhasivam@linaro.org>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date:   Tue, 3 Oct 2023 18:25:22 +0300
-Message-ID: <CAA8EJppOuAnVsnV0tYLyGqyJy3xVt2ToTZ+r9hyNd=VgK1Ez8Q@mail.gmail.com>
-Subject: Re: [PATCH v4 6/6] arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 3 Oct 2023 at 14:16, Manivannan Sadhasivam
-<manivannan.sadhasivam@linaro.org> wrote:
->
-> UFS host controller, when scaling gears, should choose appropriate
-> performance state of RPMh power domain controller along with clock
-> frequency. So let's add the OPP table support to specify both clock
-> frequency and RPMh performance states replacing the old "freq-table-hz"
-> property.
->
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  arch/arm64/boot/dts/qcom/sm8250.dtsi | 39 +++++++++++++++++++++-------
->  1 file changed, 30 insertions(+), 9 deletions(-)
->
-> diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-> index a4e58ad731c3..33abd84aae53 100644
-> --- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-> @@ -2198,21 +2198,42 @@ ufs_mem_hc: ufshc@1d84000 {
->                                 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
->                                 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
->                                 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> -                       freq-table-hz =
-> -                               <37500000 300000000>,
-> -                               <0 0>,
-> -                               <0 0>,
-> -                               <37500000 300000000>,
-> -                               <0 0>,
-> -                               <0 0>,
-> -                               <0 0>,
-> -                               <0 0>;
-> +
-> +                       operating-points-v2 = <&ufs_opp_table>;
->
->                         interconnects = <&aggre1_noc MASTER_UFS_MEM 0 &mc_virt SLAVE_EBI_CH0 0>,
->                                         <&gem_noc MASTER_AMPSS_M0 0 &config_noc SLAVE_UFS_MEM_CFG 0>;
->                         interconnect-names = "ufs-ddr", "cpu-ufs";
->
->                         status = "disabled";
-> +
-> +                       ufs_opp_table: opp-table {
-> +                               compatible = "operating-points-v2";
-> +
-> +                               opp-37500000 {
-> +                                       opp-hz = /bits/ 64 <37500000>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <37500000>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <0>;
+Costa Shulyupin <costa.shul@redhat.com> writes:
 
-I must say I still consider this to be uglier than hard coding clock
-names in the driver.
-
-> +                                       required-opps = <&rpmhpd_opp_low_svs>;
-> +                               };
-> +
-> +                               opp-300000000 {
-> +                                       opp-hz = /bits/ 64 <300000000>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <300000000>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <0>,
-> +                                                /bits/ 64 <0>;
-> +                                       required-opps = <&rpmhpd_opp_nom>;
-> +                               };
-> +                       };
->                 };
+> and fix all in-tree references.
 >
->                 ufs_mem_phy: phy@1d87000 {
-> --
-> 2.25.1
+> Architecture-specific documentation is being moved into Documentation/arch/
+> as a way of cleaning up the top-level documentation directory and making
+> the docs hierarchy more closely match the source hierarchy.
 >
+> Signed-off-by: Costa Shulyupin <costa.shul@redhat.com>
 
+So this patch appears to have not been picked up, and to have received
+no comments.  I'll happily carry it in docs-next, but it would be nice
+to have an ack from the powerpc folks...?
 
--- 
-With best wishes
-Dmitry
+Thanks,
+
+jon
