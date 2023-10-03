@@ -2,55 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B9A0E748FA
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 17:35:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 753B2E7AD77
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 17:39:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231873AbjJCRfD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 13:35:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47852 "EHLO
+        id S231811AbjJCRjk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 13:39:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230202AbjJCRfC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 13:35:02 -0400
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B47AAB
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 10:34:59 -0700 (PDT)
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1c62d61dc96so8822445ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 10:34:59 -0700 (PDT)
+        with ESMTP id S231941AbjJCRjh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 13:39:37 -0400
+Received: from mail-oi1-f177.google.com (mail-oi1-f177.google.com [209.85.167.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42D9C95
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Oct 2023 10:39:35 -0700 (PDT)
+Received: by mail-oi1-f177.google.com with SMTP id 5614622812f47-3ae214a077cso849160b6e.0
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Oct 2023 10:39:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696354499; x=1696959299;
+        d=1e100.net; s=20230601; t=1696354774; x=1696959574;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XxLptbuHTyAEtt354i/XMkHohGtzg+mHdePuKldsVmY=;
-        b=eOlLde6IPbtDGeaDBuGnUdv+iF2yLr8WF7zFFL+efdQAqpuPGqljVFgTTZL6j9Zj8a
-         qiwPmtenqFNdX/A2NNN9O9+EoLFrOY2IePU5F7/fXeJP/5yPxhZ/orcifqdsQkG5li4q
-         GQ1Tj3dhe/Omf0cWo7rUOOXgnnG7GdC9CcdTGRUB57P6ddG8BHBaMcUTNRCx8BvRnKqx
-         arrNw6rM2B+Td+FjbbSMmV+eNhrT/5MJqZU/C0EOUUvkh33iVWgrDQz5w4wpj1FEFgTE
-         hS+SrOxrbuKnuWtb4RQDCf+BLQjCWR2c6sb0+MJd5mAGzIuNRv4v+JiuMQThqnrLHkso
-         x5Cg==
-X-Gm-Message-State: AOJu0YzSGrtvTx0uV8kFAa9+UMvwXLRiBeIHvYwdGvpcRVOufHJ+Eq3U
-        PeCdFfA/fkpHz/cBIlg5GcQ=
-X-Google-Smtp-Source: AGHT+IEclbJpfOozejsnzQvkU6axR/xfCITG1wpUM+ihgSEgkKMfS15zvvLZRW48l5hio5x4n7ZgKQ==
-X-Received: by 2002:a17:903:41d2:b0:1c7:71d2:a96a with SMTP id u18-20020a17090341d200b001c771d2a96amr367683ple.12.1696354498917;
-        Tue, 03 Oct 2023 10:34:58 -0700 (PDT)
+        bh=m+cTWx3+VP6BG58Dc5PvoLOiJIHI60lc/cFAIkA4QIE=;
+        b=cUxU6RUVX0WX5Npe1jkgZIt784iCEy0rIxzZwqfN2J9+97eKBJlUC6f9Ad0w9Nq1H1
+         6U+nl7yclfIkeveYU40q20xdgQsGq0081OvHdvKl0CBpu4bkTw6H81nvHGGz2qWwqXQj
+         sY/Jjh+asKu1jVRVU5bSMm/Lc/n+b51cwlmtALAGbeyaot6SB2hPxIBgRlJIicXPEVWt
+         H2OoHdv/6MR8XzYlrDo5xajCMx93HlhI72PCyZjtF4SzaTl4P7+CJb+pOGWl4vLFGEJP
+         U9/RcdyEUOjUUWfg3moQ+4l6tEa9mTQ3D3WeBcbzern1b928rcu8ovbf2UBeE64nAYEK
+         PBwA==
+X-Gm-Message-State: AOJu0YyOVHnWiBcgvq5ua2uP+Dtyq2AyIY/0tvvyr1iLrpv9aHZnEKTu
+        5KO/v8tdNkK+wGJKZ0jN1Xc=
+X-Google-Smtp-Source: AGHT+IHjsMTWIEkf6ko+7I1BFtB23x4t9qY4ihcDbI+Arjlo13aVVeGmtnx9p+0P4KFXWg/8rOMNxQ==
+X-Received: by 2002:a05:6808:3084:b0:3ae:5357:ad43 with SMTP id bl4-20020a056808308400b003ae5357ad43mr251253oib.52.1696354774436;
+        Tue, 03 Oct 2023 10:39:34 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:fc96:5ba7:a6f5:b187? ([2620:15c:211:201:fc96:5ba7:a6f5:b187])
-        by smtp.gmail.com with ESMTPSA id x2-20020a170902ea8200b001c62d63b817sm1856449plb.179.2023.10.03.10.34.57
+        by smtp.gmail.com with ESMTPSA id l187-20020a633ec4000000b005703a63836esm1650248pga.57.2023.10.03.10.39.33
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Oct 2023 10:34:58 -0700 (PDT)
-Message-ID: <351269f7-ccca-443e-a3b0-3131eb7aada8@acm.org>
-Date:   Tue, 3 Oct 2023 10:34:56 -0700
+        Tue, 03 Oct 2023 10:39:33 -0700 (PDT)
+Message-ID: <4f67647d-b60e-4e76-b4b3-c79cac7951d0@acm.org>
+Date:   Tue, 3 Oct 2023 10:39:32 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 6/7] scsi: remove SUBMITTED_BY_SCSI_RESET_IOCTL
+Subject: Re: [PATCH 5/7] scsi: Do not allocate scsi command in
+ scsi_ioctl_reset()
 Content-Language: en-US
 To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 References: <20231002155915.109359-1-hare@suse.de>
- <20231002155915.109359-7-hare@suse.de>
+ <20231002155915.109359-6-hare@suse.de>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231002155915.109359-7-hare@suse.de>
+In-Reply-To: <20231002155915.109359-6-hare@suse.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -58,6 +59,8 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/2/23 08:59, Hannes Reinecke wrote:
-> Unused now.
+> As we now have moved the error handler functions to not rely on
+> a scsi command we can drop the out-of-band scsi command allocation
+> from scsi_ioctl_reset().
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
