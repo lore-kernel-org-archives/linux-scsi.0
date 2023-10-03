@@ -2,93 +2,64 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69AB8E7AD77
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 17:00:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BC51E7AD7C
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Oct 2023 17:25:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240531AbjJCRAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Oct 2023 13:00:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42940 "EHLO
+        id S240580AbjJCRZh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Oct 2023 13:25:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231620AbjJCRAD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 13:00:03 -0400
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53E239B;
-        Tue,  3 Oct 2023 10:00:00 -0700 (PDT)
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-3ae2896974bso668321b6e.0;
-        Tue, 03 Oct 2023 10:00:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696352399; x=1696957199;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MIq/p5A3JjbKHPYkXXq3MLFnIf7hkB5Y59MCBnaPJFY=;
-        b=ZVQrKlfVFMINlv5M/v1yVpXtipoqlPj+l+xA7lUjiwOY3RKD/fxeGnpjvWHbDCeHom
-         Xiug+ZeyN2r6dgEPpKG4fmaG8odSvbl1EUWlJIHWmDGO17VhodBS42w9VC3f6H9wS2lj
-         RLexrVNJzRNpXsOpHdlql2F2u7I0yuVZoR9S/48Ozb8FHyUUkem3rkCWk5qpHkJkYeMs
-         f6rMkyGSxiVERLpWh2bQMiQCREtfYt6otiMyfknpScVR/otv4IM5EM5+ZNB5IwbazwnW
-         bUCV0MRotnxJLI9lJ79ED54Wfd3jQXJ3ZgqGeO/E/0xYvRE2Jz2hbUc/VEeDyU1eiCZA
-         8VeA==
-X-Gm-Message-State: AOJu0YzK3EubXoJoxMLBjWeOAWbxnRZzIKc243CYvAtT97SuEahNKREE
-        Wwe9ABh2n8iiGC+hhiAJWJk=
-X-Google-Smtp-Source: AGHT+IEffoO2DsWstPvJ7q1LjMxdRFHl/Eg5NV5HnNiOMsU8dNldC5O4zhRuZ0vIocYsE3g8pk/8Dg==
-X-Received: by 2002:a05:6808:1a88:b0:3a9:c647:c9ca with SMTP id bm8-20020a0568081a8800b003a9c647c9camr157563oib.5.1696352399287;
-        Tue, 03 Oct 2023 09:59:59 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:fc96:5ba7:a6f5:b187? ([2620:15c:211:201:fc96:5ba7:a6f5:b187])
-        by smtp.gmail.com with ESMTPSA id g6-20020a17090a300600b0027768125e24sm8260191pjb.39.2023.10.03.09.59.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Oct 2023 09:59:58 -0700 (PDT)
-Message-ID: <cbe0be7f-2709-4a94-a92d-3bb2dc59966d@acm.org>
-Date:   Tue, 3 Oct 2023 09:59:58 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/13] sd: Translate data lifetime information
-Content-Language: en-US
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     Avri Altman <Avri.Altman@wdc.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20230920191442.3701673-1-bvanassche@acm.org>
- <20230920191442.3701673-8-bvanassche@acm.org>
- <DM6PR04MB6575B74B6F5526C9860A56F1FCC5A@DM6PR04MB6575.namprd04.prod.outlook.com>
- <1b89c38e-55dc-484a-9bf3-b9d69d960ebe@acm.org>
- <DM6PR04MB657537626F4D0BFB869E82D1FCC4A@DM6PR04MB6575.namprd04.prod.outlook.com>
- <c3130686-3e28-4ff0-af0d-560b0f4e7227@acm.org>
-In-Reply-To: <c3130686-3e28-4ff0-af0d-560b0f4e7227@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S240671AbjJCRZf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2023 13:25:35 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43E61A7;
+        Tue,  3 Oct 2023 10:25:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E1565C433C7;
+        Tue,  3 Oct 2023 17:25:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696353931;
+        bh=Wbg68zZ16AqpoAAsTHPWYZoBrh4u8riplJaUdQEKDyE=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=izGEoGK5WmursZi+kwy1NRfhXiEDvKo8TUlPCmM7BUIsoM+dnJxbdPFtIFBuwMFcC
+         1hJhlqtlaKIrXqoj+7naX+ANKHYg/dZPciu1Si2sIOo2p8JdBL7niPSVjxqTkUnG7v
+         trfxme01FB61B5ANxOIRlAOUnauBFlyXaFxkGy6XBZCuHBikBlS7+V4RlYslQM5RFO
+         4E+azfYvrA1DcHW/z5jb4sstzn44FM5s4s/Yz5LYB6fqmJxt6KkkUN8RIEQ6AKtPSb
+         zMYnO167/9llnZjEV+alZyW5s258GubZ28P7ZuV/Cg2ltEJp6hvl9GFgXFUPladoNJ
+         sdE5xiMnw0a0w==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id CA8FBE632D0;
+        Tue,  3 Oct 2023 17:25:31 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.6-rc4
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <82544739f91f3d64c8307205cfddac59365fc137.camel@HansenPartnership.com>
+References: <82544739f91f3d64c8307205cfddac59365fc137.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <82544739f91f3d64c8307205cfddac59365fc137.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: b481f644d9174670b385c3a699617052cd2a79d3
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 5e62ed3b1c8a397185af53d6b94f04b9ff21ec7d
+Message-Id: <169635393181.30954.3582177080656053169.pr-tracker-bot@kernel.org>
+Date:   Tue, 03 Oct 2023 17:25:31 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/3/23 09:58, Bart Van Assche wrote:
-> On 10/2/23 22:48, Avri Altman wrote:
->>> On 10/2/23 06:11, Avri Altman wrote:
->>>>> sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
->>>>>                   ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
->>>>>                                            protect | fua, dld);
->>>>>           } else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
->>>>> -                  sdp->use_10_for_rw || protect) {
->>>>> +                  sdp->use_10_for_rw || protect ||
->>>>> +                  rq->write_hint != WRITE_LIFE_NOT_SET) {
->>>>
->>>> Is this a typo?
->>>
->>> I don't see a typo? Am I perhaps overlooking something?
->  >
->> Forcing READ(6) into READ(10) because that req carries a write-hint,
->> Deserves an extra line in the commit log IMO.
-> 
-> Right, I should explain that the READ(6) command does not support write 
-> hints and hence that READ(10) is selected if a write hint is present.
+The pull request you sent on Tue, 03 Oct 2023 09:43:56 -0400:
 
-(replying to my own email)
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-In my answer READ should be changed into WRITE.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/5e62ed3b1c8a397185af53d6b94f04b9ff21ec7d
 
-Bart.
+Thank you!
 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
