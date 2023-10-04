@@ -2,116 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D3A6E7B615
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Oct 2023 13:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D130BE7C4E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Oct 2023 17:43:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242649AbjJDNbw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Oct 2023 09:31:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35686 "EHLO
+        id S233826AbjJDRna (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Oct 2023 13:43:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242594AbjJDNbw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2023 09:31:52 -0400
-Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B111A1;
-        Wed,  4 Oct 2023 06:31:48 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:281:8300:73::646])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ms.lwn.net (Postfix) with ESMTPSA id 1252D381;
-        Wed,  4 Oct 2023 13:31:47 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 1252D381
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-        t=1696426307; bh=sC0LHUI2i/VOkBSihVVbnuIN3LRhiyHfuQI+/ge6LnQ=;
-        h=From:To:Subject:In-Reply-To:References:Date:From;
-        b=gPerOzCb2TxaxqtLNVmpTmHrfVXfZPgs4plx0KBo4VM5iu9HsCU/GD+XeDa1ZwifI
-         cMK/+tF5afJWcVsp30wR/qQ4S+xX4JUdwBZEHXTX+bTSAmZndhyaEYGuqTt6NKd1u/
-         gLDhgdTdcUToRJLrwQipPLu3/zmDx3FwRYpbVhA4/LGnAM45fkjbmJTTope5LetHfj
-         EbBIU+VJMyITt9JR9pw5Fl+JgY1D8p31zWpzocL4TyyHK1REr2cb6yKKRsOXkWq1AH
-         u3P4l6AiXH4xZpcFcyMArEqQP4U6aHLkUPXrWfAetx/VQ4AAcuQt0hzDfyFsAUlS+w
-         bgsKJhbxbWONQ==
-From:   Jonathan Corbet <corbet@lwn.net>
-To:     Michael Ellerman <michael@ellerman.id.au>,
-        Costa Shulyupin <costa.shul@redhat.com>,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        Linas Vepstas <linasvepstas@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        "Manoj N. Kumar" <manoj@linux.ibm.com>,
-        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
-        Qiang Zhao <qiang.zhao@nxp.com>, Li Yang <leoyang.li@nxp.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Yanteng Si <siyanteng@loongson.cn>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Philippe =?utf-8?Q?Mathieu-Daud=C3=A9?= <philmd@linaro.org>,
-        Nicholas Miehlbradt <nicholas@linux.ibm.com>,
-        Benjamin Gray <bgray@linux.ibm.com>,
-        "Aneesh Kumar K.V" <aneesh.kumar@linux.ibm.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Segher Boessenkool <segher@kernel.crashing.org>,
-        Rohan McLure <rmclure@linux.ibm.com>,
-        Josh Poimboeuf <jpoimboe@kernel.org>,
-        "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
-        Sathvika Vasireddy <sv@linux.ibm.com>,
-        Laurent Dufour <laurent.dufour@fr.ibm.com>,
-        Nathan Lynch <nathanl@linux.ibm.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kvm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-serial@vger.kernel.org
-Subject: Re: [PATCH] docs: move powerpc under arch
-In-Reply-To: <46705070-17B2-4BDA-9524-1BB2F7BDBACA@ellerman.id.au>
-References: <169052340516.4355.10339828466636149348@legolas.ozlabs.org>
- <20230826165737.2101199-1-costa.shul@redhat.com>
- <87cyxvelnn.fsf@meer.lwn.net>
- <46705070-17B2-4BDA-9524-1BB2F7BDBACA@ellerman.id.au>
-Date:   Wed, 04 Oct 2023 07:31:46 -0600
-Message-ID: <878r8i4ipp.fsf@meer.lwn.net>
+        with ESMTP id S233497AbjJDRn3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2023 13:43:29 -0400
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AB30C1;
+        Wed,  4 Oct 2023 10:43:24 -0700 (PDT)
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1c61acd1285so17877295ad.2;
+        Wed, 04 Oct 2023 10:43:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696441404; x=1697046204;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=dJKK67XdDJnWMIawgaJp1SNND6qPELIXbFpREx31IAQ=;
+        b=YGaLkshz71rpnsBYLdtLfJCwWhcsmQcoBeznjyYjCjMVhaQeUr3es/ShG2RRiyCjWL
+         G/SC7VduzwbsXtTfNU6H3Ko+AXu1K87g7mn8PKaZpc8A0pUD26YEiB12tQLrGMZhkpy8
+         BgC3r5O79k/PYpjHi7qjQyxOYVaXwMp+s2vIacneYqEgaam8rEslpIv/vPKbsV5Cl5ZI
+         9JllHsbVLAKy4hXUOom9FNqdXK4Z0NME6KryrBhv0ACYa9m9rzv0hsZn5yJXw6ZpZV06
+         m9OjuVAIQEj4fXHI62iW9guUQgzzbg5LGT+zgB/4dzpZLsHsiOw6x0ht6mvO1FHEWHqo
+         1a4w==
+X-Gm-Message-State: AOJu0YxrbkdUNTwxZDb9ChZFabBCKyvnjkiNeyjlAw7aSrAVdzuFHTBp
+        HCbDD/6yMqyktPCAAX+vdSk=
+X-Google-Smtp-Source: AGHT+IFpPi4xetyPbGBA3KWF/Sj6KfQb7Ej3zHvtkHUqbvFilmO7u0DQoNyvyZjImIRoRGIgHveP/Q==
+X-Received: by 2002:a17:902:c40a:b0:1c7:5a63:43bb with SMTP id k10-20020a170902c40a00b001c75a6343bbmr3958783plk.8.1696441403646;
+        Wed, 04 Oct 2023 10:43:23 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:969d:167a:787c:a6c7? ([2620:15c:211:201:969d:167a:787c:a6c7])
+        by smtp.gmail.com with ESMTPSA id w5-20020a170902d3c500b001c74df14e72sm3981235plb.212.2023.10.04.10.43.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Oct 2023 10:43:23 -0700 (PDT)
+Message-ID: <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
+Date:   Wed, 4 Oct 2023 10:43:20 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
+Content-Language: en-US
+To:     Zhu Yanjun <yanjun.zhu@linux.dev>,
+        Bob Pearson <rpearsonhpe@gmail.com>,
+        Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
+        jgg@ziepe.ca, linux-rdma@vger.kernel.org,
+        matsuda-daisuke@fujitsu.com, shinichiro.kawasaki@wdc.com,
+        linux-scsi@vger.kernel.org, Zhu Yanjun <yanjun.zhu@intel.com>
+References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
+ <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
+ <20230926140656.GM1642130@unreal>
+ <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
+ <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
+ <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
+ <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Michael Ellerman <michael@ellerman.id.au> writes:
-
-> On October 4, 2023 3:05:48 AM GMT+11:00, Jonathan Corbet <corbet@lwn.net> wrote:
->>Costa Shulyupin <costa.shul@redhat.com> writes:
+On 10/3/23 20:41, Zhu Yanjun wrote:
+> 在 2023/9/27 4:24, Bart Van Assche 写道:
+>> diff --git a/drivers/infiniband/sw/rxe/rxe_task.c 
+>> b/drivers/infiniband/sw/rxe/rxe_task.c
+>> index 1501120d4f52..6cd5d5a7a316 100644
+>> --- a/drivers/infiniband/sw/rxe/rxe_task.c
+>> +++ b/drivers/infiniband/sw/rxe/rxe_task.c
+>> @@ -10,7 +10,7 @@ static struct workqueue_struct *rxe_wq;
 >>
->>> and fix all in-tree references.
->>>
->>> Architecture-specific documentation is being moved into Documentation/arch/
->>> as a way of cleaning up the top-level documentation directory and making
->>> the docs hierarchy more closely match the source hierarchy.
->>>
->>> Signed-off-by: Costa Shulyupin <costa.shul@redhat.com>
->>
->>So this patch appears to have not been picked up, and to have received
->>no comments.  I'll happily carry it in docs-next, but it would be nice
->>to have an ack from the powerpc folks...?
->
-> I acked it a few months back, and said I assumed you were merging it:
->
-> https://lore.kernel.org/linuxppc-dev/87bkfwem93.fsf@mail.lhotse/
->
-> I don't mind who merges it, I figured you merging it would generate fewer conflicts, but I'm happy to take it if you think that would be better.
->
-> Anyway here's another:
->
-> Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
+>>   int rxe_alloc_wq(void)
+>>   {
+>> -       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
+>> +       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, 1);
+>>          if (!rxe_wq)
+>>                  return -ENOMEM;
+> 
+> Hi, Bart
+> 
+> With the above commit, I still found a similar problem. But the problem 
+> occurs very rarely. With the following, to now, the problem does not occur.
+> 
+> diff --git a/drivers/infiniband/sw/rxe/rxe_task.c 
+> b/drivers/infiniband/sw/rxe/rxe_task.c
+> index 1501120d4f52..3189c3705295 100644
+> --- a/drivers/infiniband/sw/rxe/rxe_task.c
+> +++ b/drivers/infiniband/sw/rxe/rxe_task.c
+> @@ -10,7 +10,7 @@ static struct workqueue_struct *rxe_wq;
+> 
+>   int rxe_alloc_wq(void)
+>   {
+> -       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
+> +       rxe_wq = alloc_workqueue("rxe_wq", WQ_HIGHPRI | WQ_UNBOUND, 1);
+>          if (!rxe_wq)
+>                  return -ENOMEM;
+> 
+> 
+> And with the tasklet, this problem also does not occur.
+> 
+> With "alloc_workqueue("rxe_wq", WQ_HIGHPRI | WQ_UNBOUND, 1);", an 
+> ordered workqueue with high priority is allocated.
+> 
+> To the same number of work item, the ordered workqueue has the same 
+> runing time with the tasklet. But the tasklet is based on softirq. Its 
+> overhead on scheduling is less than workqueue. So in theory, tasklet's 
+> performance should be better than the ordered workqueue.
 
-OK, sorry, somehow I missed that.  I'll apply it shortly.
+Hi Zhu,
+
+Thank you for having reported this. I'm OK with integrating the above 
+change in my patch. However, code changes must be motivated. Do you 
+perhaps have an explanation of why WQ_HIGHPRI makes the issue disappear 
+that you observed?
+
+Regarding tasklets: tasklets are a nightmare from the point of view of
+the Linux kernel scheduler. As an example, these may make it impossible
+for the scheduler to schedule real-time threads in time.
 
 Thanks,
 
-jon
+Bart.
+
