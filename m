@@ -2,87 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3629AE8FDDE
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Oct 2023 08:58:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D3A6E7B615
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Oct 2023 13:31:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241855AbjJDI6I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Oct 2023 04:58:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52764 "EHLO
+        id S242649AbjJDNbw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Oct 2023 09:31:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232554AbjJDI6I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2023 04:58:08 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 682F7A6;
-        Wed,  4 Oct 2023 01:58:05 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 640A4C433C7;
-        Wed,  4 Oct 2023 08:58:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696409885;
-        bh=kaUcGXGYsxr4dX4XEVnR9qTr7F181aGeqx7apSckpUk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=rFSLAVyu5Ug8LIABDlehtbtllCyvihcLuDYMyYhF6viv+XG2VCZu3wOJtch/1otsp
-         KO/Dck3sxvUM4NtvaP7/uKclqkhbe259jZ3wQjwalWSq2sPrMe6ZXsg8xvWIrcCgoJ
-         PrCyO5OiWfVcJ8oiqZkdQ8EBJWKlAyjEvgTRLC+RO608KwDJB9vkW1z1ZO2N9Vs+ox
-         JBl7yqflDHWNCLIvh0AW2G57Vos/uNu44MCUh1iS3ZENkzwRNkOYjr0bdxpHbqtKGX
-         7DHbbuOHQV7MDxN+k8RtyDHVHV3rxdx/zX4X0IFZH743UbBk1AKdtQdD5W+va6QBEv
-         mmJ5iN63W2a0w==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Cc:     Petr Tesarik <petr@tesarici.cz>
-Subject: [PATCH] scsi: Do not rescan devices with a suspended queue
-Date:   Wed,  4 Oct 2023 17:58:03 +0900
-Message-ID: <20231004085803.130722-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
+        with ESMTP id S242594AbjJDNbw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2023 09:31:52 -0400
+Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B111A1;
+        Wed,  4 Oct 2023 06:31:48 -0700 (PDT)
+Received: from localhost (unknown [IPv6:2601:281:8300:73::646])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ms.lwn.net (Postfix) with ESMTPSA id 1252D381;
+        Wed,  4 Oct 2023 13:31:47 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 1252D381
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+        t=1696426307; bh=sC0LHUI2i/VOkBSihVVbnuIN3LRhiyHfuQI+/ge6LnQ=;
+        h=From:To:Subject:In-Reply-To:References:Date:From;
+        b=gPerOzCb2TxaxqtLNVmpTmHrfVXfZPgs4plx0KBo4VM5iu9HsCU/GD+XeDa1ZwifI
+         cMK/+tF5afJWcVsp30wR/qQ4S+xX4JUdwBZEHXTX+bTSAmZndhyaEYGuqTt6NKd1u/
+         gLDhgdTdcUToRJLrwQipPLu3/zmDx3FwRYpbVhA4/LGnAM45fkjbmJTTope5LetHfj
+         EbBIU+VJMyITt9JR9pw5Fl+JgY1D8p31zWpzocL4TyyHK1REr2cb6yKKRsOXkWq1AH
+         u3P4l6AiXH4xZpcFcyMArEqQP4U6aHLkUPXrWfAetx/VQ4AAcuQt0hzDfyFsAUlS+w
+         bgsKJhbxbWONQ==
+From:   Jonathan Corbet <corbet@lwn.net>
+To:     Michael Ellerman <michael@ellerman.id.au>,
+        Costa Shulyupin <costa.shul@redhat.com>,
+        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Linas Vepstas <linasvepstas@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        "Manoj N. Kumar" <manoj@linux.ibm.com>,
+        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
+        Uma Krishnan <ukrishn@linux.ibm.com>,
+        Qiang Zhao <qiang.zhao@nxp.com>, Li Yang <leoyang.li@nxp.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Yanteng Si <siyanteng@loongson.cn>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Philippe =?utf-8?Q?Mathieu-Daud=C3=A9?= <philmd@linaro.org>,
+        Nicholas Miehlbradt <nicholas@linux.ibm.com>,
+        Benjamin Gray <bgray@linux.ibm.com>,
+        "Aneesh Kumar K.V" <aneesh.kumar@linux.ibm.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Segher Boessenkool <segher@kernel.crashing.org>,
+        Rohan McLure <rmclure@linux.ibm.com>,
+        Josh Poimboeuf <jpoimboe@kernel.org>,
+        "Naveen N. Rao" <naveen.n.rao@linux.vnet.ibm.com>,
+        Sathvika Vasireddy <sv@linux.ibm.com>,
+        Laurent Dufour <laurent.dufour@fr.ibm.com>,
+        Nathan Lynch <nathanl@linux.ibm.com>,
+        Brian King <brking@linux.vnet.ibm.com>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, kvm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-serial@vger.kernel.org
+Subject: Re: [PATCH] docs: move powerpc under arch
+In-Reply-To: <46705070-17B2-4BDA-9524-1BB2F7BDBACA@ellerman.id.au>
+References: <169052340516.4355.10339828466636149348@legolas.ozlabs.org>
+ <20230826165737.2101199-1-costa.shul@redhat.com>
+ <87cyxvelnn.fsf@meer.lwn.net>
+ <46705070-17B2-4BDA-9524-1BB2F7BDBACA@ellerman.id.au>
+Date:   Wed, 04 Oct 2023 07:31:46 -0600
+Message-ID: <878r8i4ipp.fsf@meer.lwn.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit ff48b37802e5 ("scsi: Do not attempt to rescan suspended devices")
-modified scsi_rescan_device() to avoid attempting rescanning a suspended
-device. However, the modification added a check to verify that a SCSI
-device is in the running state without checking if the device request
-queue (in the case of block device) is also running, thus allowing the
-exectuion of internal requests. Without checking the device request
-queue, commit ff48b37802e5 fix is incomplete and deadlocks on resume can
-still happen. Use blk_queue_pm_only() to check if the device request
-queue allows executing commands in addition to checking the SCSI device
-state.
+Michael Ellerman <michael@ellerman.id.au> writes:
 
-Reported-by: Petr Tesarik <petr@tesarici.cz>
-Fixes: ff48b37802e5 ("scsi: Do not attempt to rescan suspended devices")
-Cc: stable@vger.kernel.org
-Tested-by: Petr Tesarik <petr@tesarici.cz>
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/scsi/scsi_scan.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+> On October 4, 2023 3:05:48 AM GMT+11:00, Jonathan Corbet <corbet@lwn.net> wrote:
+>>Costa Shulyupin <costa.shul@redhat.com> writes:
+>>
+>>> and fix all in-tree references.
+>>>
+>>> Architecture-specific documentation is being moved into Documentation/arch/
+>>> as a way of cleaning up the top-level documentation directory and making
+>>> the docs hierarchy more closely match the source hierarchy.
+>>>
+>>> Signed-off-by: Costa Shulyupin <costa.shul@redhat.com>
+>>
+>>So this patch appears to have not been picked up, and to have received
+>>no comments.  I'll happily carry it in docs-next, but it would be nice
+>>to have an ack from the powerpc folks...?
+>
+> I acked it a few months back, and said I assumed you were merging it:
+>
+> https://lore.kernel.org/linuxppc-dev/87bkfwem93.fsf@mail.lhotse/
+>
+> I don't mind who merges it, I figured you merging it would generate fewer conflicts, but I'm happy to take it if you think that would be better.
+>
+> Anyway here's another:
+>
+> Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3db4d31a03a1..b05a55f498a2 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1627,12 +1627,13 @@ int scsi_rescan_device(struct scsi_device *sdev)
- 	device_lock(dev);
- 
- 	/*
--	 * Bail out if the device is not running. Otherwise, the rescan may
--	 * block waiting for commands to be executed, with us holding the
--	 * device lock. This can result in a potential deadlock in the power
--	 * management core code when system resume is on-going.
-+	 * Bail out if the device or its queue are not running. Otherwise,
-+	 * the rescan may block waiting for commands to be executed, with us
-+	 * holding the device lock. This can result in a potential deadlock
-+	 * in the power management core code when system resume is on-going.
- 	 */
--	if (sdev->sdev_state != SDEV_RUNNING) {
-+	if (sdev->sdev_state != SDEV_RUNNING ||
-+	    blk_queue_pm_only(sdev->request_queue)) {
- 		ret = -EWOULDBLOCK;
- 		goto unlock;
- 	}
--- 
-2.41.0
+OK, sorry, somehow I missed that.  I'll apply it shortly.
 
+Thanks,
+
+jon
