@@ -2,105 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE3CBE7C4E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Oct 2023 17:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA7E8E7C4E8
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Oct 2023 18:12:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233953AbjJDRoU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Oct 2023 13:44:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43082 "EHLO
+        id S243973AbjJDSMu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Oct 2023 14:12:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233938AbjJDRoU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2023 13:44:20 -0400
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45A7F9E;
-        Wed,  4 Oct 2023 10:44:17 -0700 (PDT)
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1c61acd1285so17882385ad.2;
-        Wed, 04 Oct 2023 10:44:17 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696441457; x=1697046257;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bJgkrq7GmiJ8unsP5pb6TucMJYlIfTg12gaa15YTSuo=;
-        b=ttaK46vclASeCrrvs2KLrr4jcctxQJGWhmyerEsDpbWHdx7RFz4gx4m2hxh/mMj6if
-         Qfkkpqrn4dG8xP8a2aIDkkfTSHhvrj4hOxeXCcThLo80k9F/R2LoJB1V3yGpV3QMBnxF
-         ebB+k4i9XIZ8DoKUcB3ndzDOZJ1FyHud4Gjtb/nLwsBrNiRhb7uXLVMbDnsGSYcDzmLS
-         5IyGhI9aARtjj4Jyew5wYWiXg1AgqbuTUhUxTGySeRu7XSQ0igbP5qKSexz8NzWolouV
-         JEPYi+G5IjO2bivLKxtpZtoLxnZZOEhuVLC37F/OVZByAdLPX+o4/UXL0ORI69CGV94g
-         3uxA==
-X-Gm-Message-State: AOJu0Ywe29IWNIHb0Ro+zBs64IX3FPdNweXkqEY0J4ljKA8OZGZSDrrt
-        Z3rOFfzIQizm8WbePF0C9Ys=
-X-Google-Smtp-Source: AGHT+IH1Pe5GsASFzbSuo3PiMX1xlLFCxSD1HTklY6kEj1h3nf1HLLXg44ha6f3AXi+ihjqHxplOhw==
-X-Received: by 2002:a17:902:e88f:b0:1c5:cfd6:9e82 with SMTP id w15-20020a170902e88f00b001c5cfd69e82mr3486774plg.18.1696441456652;
-        Wed, 04 Oct 2023 10:44:16 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:969d:167a:787c:a6c7? ([2620:15c:211:201:969d:167a:787c:a6c7])
-        by smtp.gmail.com with ESMTPSA id w5-20020a170902d3c500b001c74df14e72sm3981235plb.212.2023.10.04.10.44.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Oct 2023 10:44:16 -0700 (PDT)
-Message-ID: <eb16cea2-d727-4799-b857-e872d7855909@acm.org>
-Date:   Wed, 4 Oct 2023 10:44:14 -0700
+        with ESMTP id S243762AbjJDSMt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2023 14:12:49 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1F5FF9;
+        Wed,  4 Oct 2023 11:12:43 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3CD5C433C7;
+        Wed,  4 Oct 2023 18:12:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1696443163;
+        bh=aHB26Dn9xFMRPa1pgn+27Z4IjU2PMvONyU6bWXS03Pg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=lBxF066fmZEBZhjq4RpXH41RgpwJFYooSIHh7T9thDRurrFzdhIqcBP/wtFhUiDiv
+         U63C+Y5OEfCwPyoBw8HIewKyDxNAUdd6yts7n3kRfP5RcSFgXIMiZUu0F6jzPAoSY3
+         X4rHFMOyZ5HRuiIftgn2o2OOMs5a6N7/3WWKR6/4=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     stable@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        patches@lists.linux.dev, Eric Dumazet <edumazet@google.com>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 6.1 058/259] scsi: iscsi_tcp: restrict to TCP sockets
+Date:   Wed,  4 Oct 2023 19:53:51 +0200
+Message-ID: <20231004175220.090852970@linuxfoundation.org>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231004175217.404851126@linuxfoundation.org>
+References: <20231004175217.404851126@linuxfoundation.org>
+User-Agent: quilt/0.67
+X-stable: review
+X-Patchwork-Hint: ignore
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
-Content-Language: en-US
-To:     Leon Romanovsky <leon@kernel.org>,
-        Bob Pearson <rpearsonhpe@gmail.com>
-Cc:     zyjzyj2000@gmail.com, jgg@ziepe.ca, linux-rdma@vger.kernel.org,
-        matsuda-daisuke@fujitsu.com, shinichiro.kawasaki@wdc.com,
-        linux-scsi@vger.kernel.org, Zhu Yanjun <yanjun.zhu@intel.com>,
-        Zhu Yanjun <yanjun.zhu@linux.dev>
-References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
- <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
- <20230926140656.GM1642130@unreal>
- <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
- <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
- <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
- <6d9aaf05-c4cb-2b8e-c3dd-899e0360b6a1@gmail.com>
- <20231001063048.GA6351@unreal>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231001063048.GA6351@unreal>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/30/23 23:30, Leon Romanovsky wrote:
-> On Wed, Sep 27, 2023 at 11:51:12AM -0500, Bob Pearson wrote:
->> On 9/26/23 15:24, Bart Van Assche wrote:
->>> diff --git a/drivers/infiniband/sw/rxe/rxe_task.c b/drivers/infiniband/sw/rxe/rxe_task.c
->>> index 1501120d4f52..6cd5d5a7a316 100644
->>> --- a/drivers/infiniband/sw/rxe/rxe_task.c
->>> +++ b/drivers/infiniband/sw/rxe/rxe_task.c
->>> @@ -10,7 +10,7 @@ static struct workqueue_struct *rxe_wq;
->>>
->>>   int rxe_alloc_wq(void)
->>>   {
->>> -       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
->>> +       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, 1);
->>>          if (!rxe_wq)
->>>                  return -ENOMEM;
->>>
->>> Thanks,
->>>
->>> Bart.
-> 
-> <...>
-> 
->> Nevertheless this is a good hint since it seems to imply that there is a race between the requester and
->> completer which is certainly possible.
-> 
-> Bob, Bart
-> 
-> Can you please send this change as a formal patch?
-> As we prefer workqueue with bad performance implementation over tasklets.
+6.1-stable review patch.  If anyone has any objections, please let me know.
 
-Hi Bob,
+------------------
 
-Do you perhaps have a preference for who posts the formal patch?
+From: Eric Dumazet <edumazet@google.com>
 
-Thanks,
+[ Upstream commit f4f82c52a0ead5ab363d207d06f81b967d09ffb8 ]
 
-Bart.
+Nothing prevents iscsi_sw_tcp_conn_bind() to receive file descriptor
+pointing to non TCP socket (af_unix for example).
+
+Return -EINVAL if this is attempted, instead of crashing the kernel.
+
+Fixes: 7ba247138907 ("[SCSI] open-iscsi/linux-iscsi-5 Initiator: Initiator code")
+Signed-off-by: Eric Dumazet <edumazet@google.com>
+Cc: Lee Duncan <lduncan@suse.com>
+Cc: Chris Leech <cleech@redhat.com>
+Cc: Mike Christie <michael.christie@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: open-iscsi@googlegroups.com
+Cc: linux-scsi@vger.kernel.org
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/iscsi_tcp.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 8009eab3b7bee..56ade46309707 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -724,6 +724,10 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
+ 		return -EEXIST;
+ 	}
+ 
++	err = -EINVAL;
++	if (!sk_is_tcp(sock->sk))
++		goto free_socket;
++
+ 	err = iscsi_conn_bind(cls_session, cls_conn, is_leading);
+ 	if (err)
+ 		goto free_socket;
+-- 
+2.40.1
+
+
 
