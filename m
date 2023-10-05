@@ -2,97 +2,122 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43466E92717
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 16:05:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FCBAE92733
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 19:41:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232660AbjJEQEy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Oct 2023 12:04:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34474 "EHLO
+        id S229910AbjJETli (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Oct 2023 15:41:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237503AbjJEQDR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 12:03:17 -0400
-Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 847327FF2D
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 08:56:23 -0700 (PDT)
-Received: by mail-qt1-x82f.google.com with SMTP id d75a77b69052e-41517088479so17987831cf.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Oct 2023 08:56:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1696521382; x=1697126182; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=uG4Ph64bewzJVU49JFBslaTgnXwJjaVRqO+mHvKsins=;
-        b=eRC9OuOnWgE+5IHji7P/SGFXu3/zgLv+Atumhq0U01RmN6egXpJ+BVP6jLMm9Lk6Gl
-         jYPQ470ltD0wuJrLWDC2wE1WKNlsdahmUjbHSggzwmCZW4vm5CjK/FBaXZTZPX8WGDzl
-         QJJrIp0OXFD3pO5sek6BH5Ge4PKkAeGqRIZm78FU1YRzHwNfymUPySUadOxjsHp4+Pdl
-         M3urN58FveKpLomrfDQLS5ryHM3DCcv3QruRoP6Ibb6mXJhHeh1JMj6C9oATkwA+qcjX
-         BBf4ry4GvLPPbwI6FI4TcIMkLHjk1j7IyuKKn+WHgS5cuQsr/RlVUbRbB/4GYorh55k2
-         mcZg==
+        with ESMTP id S229601AbjJETlh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 15:41:37 -0400
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63E8ECE;
+        Thu,  5 Oct 2023 12:41:36 -0700 (PDT)
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1c88b467ef8so4866195ad.0;
+        Thu, 05 Oct 2023 12:41:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696521382; x=1697126182;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uG4Ph64bewzJVU49JFBslaTgnXwJjaVRqO+mHvKsins=;
-        b=dQ5ApZKyEpJlv0UEahHBwdHlBF7AUZXlVCbHAu0eDvBSdjWbJNcy+hPS1FG5gU0NgE
-         HRTa/O2UJuwPWXM/HQFt8c9XzZrHJUC6cJr67kcLdnsplyMDkX/DmY6aQG8R6VqY4Z57
-         pynM148TJzszwLYLPAPewlo415HgSKNaT3plKYu6bIMBhnQCPOlMKrtT6U29HaPjczgK
-         1T1qEHU+MFnh6qekRH8WaFfYMS0FAufNaWsPGntWeCC9B7spb2vCf1IqqFaSx4BC3dGV
-         TBZntRk4MQYTn3c6Eu8LCnWadHNrpdhADDf1grSR7mlMTlmHz9sCvf4AHTg74Z1Mh2Fi
-         l+OA==
-X-Gm-Message-State: AOJu0YxGYK90bsiAqPhoVrvklRKZ4n+wm+B7pCKgxH48el6QvRZZ/ppG
-        PDGahXICnVJjtQrFs3i+uWcW28yyuqh1B6uAepY=
-X-Google-Smtp-Source: AGHT+IGWO/x3ytUeLf5AFCkVaB7RnAy+uiwHbX9L5BgFMBqhYq0K8pe3itPgQK5suUVO326lMXZwpg==
-X-Received: by 2002:a05:622a:14f:b0:417:fe21:b254 with SMTP id v15-20020a05622a014f00b00417fe21b254mr1562596qtw.18.1696521382422;
-        Thu, 05 Oct 2023 08:56:22 -0700 (PDT)
-Received: from ziepe.ca ([142.68.26.201])
-        by smtp.gmail.com with ESMTPSA id x24-20020ac87ed8000000b004181a3eeff4sm572363qtj.5.2023.10.05.08.56.21
+        d=1e100.net; s=20230601; t=1696534896; x=1697139696;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8PNVxsJWMiXLmTm8xBAOWRN8wkjHwA+8htAHskM1reQ=;
+        b=VAortn4XPNJZt1SsLlZJdzHzSVQMg4GrCJ3IOhc1zJAQhBsYDoNbKfdfa2oqm38toc
+         /0TL5oHCgPMKaJTFFRqp+4IB8B+XCDbI0TOIlaldwHq30UF/ehuJd1zvZRAIlz3LKiye
+         sjN+juGWf9Cy8GrJQai7/nL0s7+1D41RD6OgsOInKFz1XTosstcrl9gF1yXF7Ugvo2i5
+         rlbRquPc0oPGlh2Ppma7s1Sn00Hk/k8rozpslg5eEimWV81zrz8Xjfo3rErRwgy+VEJi
+         +8z+E0fFNjtbl9ghfTbgKoJXnTK36pf/omdGtQwsCDb/93b8jDR0+rT1us/XMt85QqLG
+         wy5Q==
+X-Gm-Message-State: AOJu0YyDiTqhwAaBEDGMBicHnd/lNcRuDcW3X7uoHv4iHnLgpmEI8nzV
+        RdP8zAyAHG4Y0tK9e9ZdDbU=
+X-Google-Smtp-Source: AGHT+IHYz2XdRKL3PBxgEAHlFeFWptqRewEQT3gWgB/hHliMo32MW2iVB1fnzBG+5n+CZQqJ4ZUcTQ==
+X-Received: by 2002:a17:902:e54a:b0:1c6:2d13:5b74 with SMTP id n10-20020a170902e54a00b001c62d135b74mr7264965plf.55.1696534895572;
+        Thu, 05 Oct 2023 12:41:35 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ca3e:70ef:bad:2f])
+        by smtp.gmail.com with ESMTPSA id u4-20020a170902e5c400b001a9b29b6759sm2129596plf.183.2023.10.05.12.41.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Oct 2023 08:56:21 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.95)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1qoQi0-0045ZW-1M;
-        Thu, 05 Oct 2023 12:56:16 -0300
-Date:   Thu, 5 Oct 2023 12:56:16 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Zhu Yanjun <yanjun.zhu@linux.dev>,
-        Bob Pearson <rpearsonhpe@gmail.com>,
-        Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
-        linux-rdma@vger.kernel.org, matsuda-daisuke@fujitsu.com,
-        shinichiro.kawasaki@wdc.com, linux-scsi@vger.kernel.org,
-        Zhu Yanjun <yanjun.zhu@intel.com>
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
-Message-ID: <20231005155616.GR13795@ziepe.ca>
-References: <20230926140656.GM1642130@unreal>
- <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
- <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
- <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
- <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
- <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
- <20231004183824.GQ13795@ziepe.ca>
- <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
- <20231005142148.GA970053@ziepe.ca>
- <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
+        Thu, 05 Oct 2023 12:41:34 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 00/15] Pass data temperature information to UFS devices
+Date:   Thu,  5 Oct 2023 12:40:46 -0700
+Message-ID: <20231005194129.1882245-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.42.0.609.gbb76f46606-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 05, 2023 at 07:50:28AM -0700, Bart Van Assche wrote:
-> On 10/5/23 07:21, Jason Gunthorpe wrote:
-> > Which is why it shows there are locking problems in this code.
-> 
-> Hi Jason,
-> 
-> Since the locking problems have not yet been root-caused, do you
-> agree that it is safer to revert patch "RDMA/rxe: Add workqueue
-> support for rxe tasks" rather than trying to fix it?
+Hi Jens,
 
-I don't think that makes the locking problems go away any more that
-using a single threaded work queue?
+UFS vendors need the data lifetime information to achieve good performance.
+Without this information there is significantly higher write amplification due
+to garbage collection. Hence this patch series that add support in F2FS and
+also in the block layer for data lifetime information. The SCSI disk (sd)
+driver is modified such that it passes write hint information to SCSI devices
+via the GROUP NUMBER field.
 
-Jason
+Please consider this patch series for the next merge window.
+
+Thanks,
+
+Bart.
+
+Changes compared to v1:
+- Use six bits from the ioprio field for data lifetime information. The
+  bio->bi_write_hint / req->write_hint / iocb->ki_hint members that were
+  introduced in v1 have been removed again.
+- The F_GET_FILE_RW_HINT and F_SET_FILE_RW_HINT fcntls have been removed.
+- In the SCSI disk (sd) driver, query the stream status and check the PERM bit.
+- The GET STREAM STATUS command has been implemented in the scsi_debug driver.
+
+Bart Van Assche (15):
+  block: Make bio_set_ioprio() modify fewer bio->bi_ioprio bits
+  blk-ioprio: Modify fewer bio->bi_ioprio bits
+  block: Support data lifetime in the I/O priority bitfield
+  fs: Restore write hint support
+  fs/f2fs: Restore the whint_mode mount option
+  scsi: core: Query the Block Limits Extension VPD page
+  scsi_proto: Add structures and constants related to I/O groups and
+    streams
+  sd: Translate data lifetime information
+  scsi_debug: Reduce code duplication
+  scsi_debug: Support the block limits extension VPD page
+  scsi_debug: Rework page code error handling
+  scsi_debug: Rework subpage code error handling
+  scsi_debug: Implement the IO Advice Hints Grouping mode page
+  scsi_debug: Implement GET STREAM STATUS
+  scsi_debug: Maintain write statistics per group number
+
+ Documentation/filesystems/f2fs.rst |  70 ++++++++
+ block/blk-ioprio.c                 |   9 +-
+ block/blk-mq.c                     |   3 +-
+ drivers/scsi/scsi.c                |   2 +
+ drivers/scsi/scsi_debug.c          | 247 +++++++++++++++++++++--------
+ drivers/scsi/scsi_sysfs.c          |  10 ++
+ drivers/scsi/sd.c                  | 112 ++++++++++++-
+ drivers/scsi/sd.h                  |   3 +
+ fs/f2fs/data.c                     |   3 +
+ fs/f2fs/f2fs.h                     |   9 ++
+ fs/f2fs/segment.c                  |  95 +++++++++++
+ fs/f2fs/super.c                    |  32 +++-
+ fs/iomap/buffered-io.c             |   3 +
+ fs/mpage.c                         |   2 +
+ include/linux/fs-lifetime.h        |  20 +++
+ include/linux/ioprio.h             |  10 ++
+ include/scsi/scsi_device.h         |   1 +
+ include/scsi/scsi_proto.h          |  75 +++++++++
+ include/uapi/linux/ioprio.h        |   8 +-
+ 19 files changed, 639 insertions(+), 75 deletions(-)
+ create mode 100644 include/linux/fs-lifetime.h
+
