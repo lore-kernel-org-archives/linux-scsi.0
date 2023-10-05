@@ -2,416 +2,422 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00996E9270D
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 14:43:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0537BE9270B
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 14:43:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239182AbjJEOnS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:43:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33434 "EHLO
+        id S234136AbjJEOnP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:43:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237727AbjJEOjb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 10:39:31 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9DC3884E
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 07:10:02 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3950Pf4J024095;
-        Thu, 5 Oct 2023 11:54:30 GMT
+        with ESMTP id S237002AbjJEOhl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 10:37:41 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 043D34F6D4
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 07:02:50 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 395CBSXg028063;
+        Thu, 5 Oct 2023 12:59:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
  subject : to : cc : references : from : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2023-03-30;
- bh=d/Vqxufczj5BXKh3cs0Iw+sW7sTqaf8eCqhL4PMLR1A=;
- b=wC/E5C+eqR1nfvz5Y9pTWuc0T81SPcFCU/S78oLF7j5ByYCYhruQp94XU7h1dRIkanDo
- 3jXDIew+4bVtyjPgk8BC5bGhdgvHcfkGSlukVXHOjhylkc6eexWpGIj0AUJ3eKOvgry+
- 4psk+ZdXP0C5lC3M4dqoFz1TYeM84jNeNyGnDCKOhauLxTgty5cMhGXTI0Q+PyA8QRRV
- g8C5KMwf65o5XHJz9U+Ak/LdAU9kgkBfoQOCMIwH4dex4Q0V4Dy9ibcftB1qqGDYaPbT
- XseC59IWVKYhBAVKMuLej6ANhJYfYDetEWxrwVW3G0pbQgxltPN6/YFW+IQGxCiSRwm/ oQ== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3teaf49bda-1
+ bh=upY0ttRhJW16DYR3xm8Zge1rKPTUjKRO9hoireGE/MU=;
+ b=PSSV5Ms1sfmmOy/807O+w0OX3uITAXPxm+YyjM7hdhMJKBe9aLl9omXkiMNSFUQ0Ynvr
+ RYezWTsVIbWAu4sPgsrP85J+fQSQutnoSo8iur9OFkz+x0ZqddDeJjsNoKBE8fqyOfHj
+ IKl8uFaUPBHS7x2KoXJP8T/oB9ASbbrGveD+1o/unm1PYgMkoMye8zN2VWqzb6iLWdT3
+ bWtYPmDoRWEC83W/zCTvU3e6u+XGCKjFwudQOs9Ad8RduUQ9gpGL0PCLLCxUsVPnriYU
+ X3u05+wzWekE95R4ZOGRG/BPwb+aa1M4/XE3rBTbaLts2aofn/ABCQxWUTxm1u8KoUPH tw== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3tebjc1b00-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Oct 2023 11:54:29 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 395BW1V2008802;
-        Thu, 5 Oct 2023 11:54:29 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2104.outbound.protection.outlook.com [104.47.55.104])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3tea49g38f-1
+        Thu, 05 Oct 2023 12:59:51 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 395CroMY010167;
+        Thu, 5 Oct 2023 12:59:50 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2177.outbound.protection.outlook.com [104.47.57.177])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3thcx6vn47-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Oct 2023 11:54:28 +0000
+        Thu, 05 Oct 2023 12:59:50 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iLj2xmR1OrQgVqrwZbAG2s3rcQIh1/SCHoQ2wTyMxO7FjWIOWLue4U3w4v2kJ3cp/bFUNGUq2kH/O2XoCFjtJPU0QhFgdoF1HcdRAhg2RSW9/IXGPUTyI0faE6sI1c4fJuwXvb9vTa3kTClK2Sby6dvaF/a2zGjh7ZOC/H9DjWOyplOTgNxAiK4/DyEKP5D1iB1gAaBPoPcWC8aLaIqcqWtlCS/VX0Y0VIzvXV8HYxQ3yNnAKcB/49V0Fa947o2m7pfY6ko2oRtOoEbX4QyBd30mTywdrIJ163iXdyThUdzPatIdvV2eUCti89ACGNHMUxcj2PY8lgC40MPmBUUywA==
+ b=JK3VOf9GAuGl3E8PU7/SsresiVbFAp05bD5JuEZv3saJRLF8lAku1veB0o+h+/ExJmBDooRdGWlB1vYXIYjPV6L9o6x12RPnWWTPcgAksgfZWEOssBdUl21Fq7FwzqKA6F7zZViWtQc30QYpm6+3DrUt5oU48KHFsZCUz/9VE73VYTEQohW7nrsebYKgIfyWurUevkHAIKtZqdYBj9kn4ceWP+DNN/RNvfcCyMttuHZ00iDRRBCHsXnuOn6mMHr+nAQAAlsJpMRMBI8dBpl8Whnv8N7CacF30g31/fwkGxjnZUEQoyNDL8JBKZw+izansFEDz4ZhiOSI/08wyBPT5Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=d/Vqxufczj5BXKh3cs0Iw+sW7sTqaf8eCqhL4PMLR1A=;
- b=SwOx+U3H5c1DdjsQB5Cm8hBvCaf5NenDsjmK7gmeYz4iNqvfYUaUHrwCtkSuKj+JomQSXEtLPVY4HvzvgUF48BeYosqJnxtXdfiI3ZkJTMAZ5iLk/FqqsRNDCcb1nmCP20hwqxhvNapXgl+Czc0wMlCBgIWwziFBPBA3AtVC3EAjk4KN679W0mdWiu+bBnxR2xMfKXEAkjeevFGOtUbPEmDXkga4vt5++8agMyW+tLtvlceDEuPjZgVhyKcCwAD0kc0bDs8BD3pAIy6Wnlz5oWQbS4o3I2nwMoDdAOTYz7tuTpRZc4Iovv9bA5BBwV29/JPgbinW2tjPYJr+rOgi1A==
+ bh=upY0ttRhJW16DYR3xm8Zge1rKPTUjKRO9hoireGE/MU=;
+ b=gsukHX4h9cy5Z+YQf8bTEmn+CVxzHs2w+GVBLu41J1tLP9kUE3VVvTpye2dJqyas2Fj1RWMiOEGUvVnce5DjxQmKvwaRkfYSIrF+inJTK2gZvLiR9OcXFk0OriqZvbYtCIvfMLrdJ+hxLnNljJVAMoYNrXSEOfdG9ICpZ3mrAI7JMkN8FVQ1YoDFdOX/0/3NuixVxISKaD0A6eSB7pXMeezdFhati5V2QeZsc1t9ftDALN/DgIfPEEnqEbm2YEcWkxOIAQ+CKrFrlOYRLmlsrm9byZzd0OWodwFLOwQ2x63PsygUvdgKAOq1IxM1v3c2ztQywg6K69qK+3INCPp4JA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=d/Vqxufczj5BXKh3cs0Iw+sW7sTqaf8eCqhL4PMLR1A=;
- b=tIR4n6G4xRbVCqrfG0u6QcV+TePvkWGS5GwA768qYhFDq753ON1JluG+69g+6/iJQH0ASLUWoWan3r/j1tOTfSXL96SQDNczcvhSr2bO3xU1GJ+wMsdb+Dw2kE0KZe1aOihR8oaDZb+8mclyZ5D4Yeg+LSqtyCUVAORNQ9fuYgo=
+ bh=upY0ttRhJW16DYR3xm8Zge1rKPTUjKRO9hoireGE/MU=;
+ b=IRlukTwYgtPWBQwz/DBJ/QHwOLIDoTMN4VyxirlWUauQuGXge6XaXuAwCrABpQHmwweMF0jvVax5o9pPxdhrQIYG2F/iOgnNGHX5sXCmzGVlkcXnK6s87RC1UT+gGMKOVnw1vsKY+9pD7yCMmdNeLW7Z6WBI9mCj8bYLBZdOwl4=
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by MW4PR10MB6440.namprd10.prod.outlook.com (2603:10b6:303:218::6) with
+ by DM6PR10MB4266.namprd10.prod.outlook.com (2603:10b6:5:210::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6838.31; Thu, 5 Oct
- 2023 11:54:25 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6838.33; Thu, 5 Oct
+ 2023 12:59:48 +0000
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::ebfd:c49c:6b8:6fce]) by DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::ebfd:c49c:6b8:6fce%7]) with mapi id 15.20.6838.033; Thu, 5 Oct 2023
- 11:54:25 +0000
-Message-ID: <b2182011-258c-cdda-2998-4e98fa510bba@oracle.com>
-Date:   Thu, 5 Oct 2023 12:54:21 +0100
+ 12:59:48 +0000
+Message-ID: <f8f4c253-1566-98f3-b8db-948ea8e803ad@oracle.com>
+Date:   Thu, 5 Oct 2023 13:59:43 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.15.1
-Subject: Re: [PATCH 2/7] scsi: Use Scsi_Host and channel number as argument
- for eh_bus_reset_handler()
+Subject: Re: [PATCH 4/7] scsi: Use scsi_device as argument to
+ eh_device_reset_handler()
 To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 References: <20231002155915.109359-1-hare@suse.de>
- <20231002155915.109359-3-hare@suse.de>
+ <20231002155915.109359-5-hare@suse.de>
 Content-Language: en-US
 From:   John Garry <john.g.garry@oracle.com>
 Organization: Oracle Corporation
-In-Reply-To: <20231002155915.109359-3-hare@suse.de>
+In-Reply-To: <20231002155915.109359-5-hare@suse.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO2P265CA0010.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:62::22) To DM6PR10MB4313.namprd10.prod.outlook.com
+X-ClientProxiedBy: LO3P265CA0030.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:387::12) To DM6PR10MB4313.namprd10.prod.outlook.com
  (2603:10b6:5:212::20)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|MW4PR10MB6440:EE_
-X-MS-Office365-Filtering-Correlation-Id: d99cfab2-d69c-4fc1-7ce1-08dbc599d29f
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DM6PR10MB4266:EE_
+X-MS-Office365-Filtering-Correlation-Id: b8940e8b-1583-4bfe-40b0-08dbc5a2f475
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: cHGFWwR7iuBjCRbwmwhOoNV6kgGcdeXk487SUrQqcjAKNXnyWiKqIFcevqcSBqLDHryGy+rcGXMKV98hoBnA+/mj3BL/dOhIJUyyaU3y03SQvxP9980UzaXHL8fN6wQPYlVDfpmNm1c6MIRa6LiIxrsmCfRGa5xS6gya/UxmC7xoWLx+WFEnKhSFj/sjASJ6hD7MXlblcWW9kdE7DV5J4VU4U7l4EtCDydsL3ILYebRvyi+GoE3HXo/5peSUFbvZhqlJtMCWHlDRjyvk9piCoZ5XlETT28uhcH/E+vgeBacVnv6hZC6NV28h3yyHyBO29U9aAvOZ5vafjChzQvMoC7nmjD/z9lAQDJse8i8HGCARqLPA48sub1N2BNeiuw64fFQQjZndbGys4XSL1VvjhPv8f25pZVCg2S5IXH0cRZOnEREQKNe2hAX2ua+YIXniu85jWZu0G2J/vWR1Q9fyyi5ATnJ8wZDYUJ2DsOSyfVzDqWYCxzOSXrCeUbNFWD0rZenRbGdOS4RaXw3246xZ+EEwWclmXo9mpJHWKJKafLRJoXNxDm2QHrgz4nm1YZtrMQr2U+bQYnbla8WRrDmeYNwf/gv/Ynto7AdgfPHsHWQhkJV4mnd+AfFjudBEoSLFMbCs2kBiLFYpuN0GjzX5mQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(376002)(39860400002)(346002)(396003)(366004)(230922051799003)(186009)(64100799003)(451199024)(1800799009)(6512007)(6486002)(6506007)(6666004)(36916002)(478600001)(26005)(83380400001)(2616005)(2906002)(6636002)(316002)(54906003)(110136005)(66476007)(66556008)(66946007)(8676002)(8936002)(5660300002)(4326008)(41300700001)(36756003)(38100700002)(86362001)(31696002)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: gU1EzCtHElLkmW2sFArogRn1GzD4d2PFwillCqUQRcFYdX8adSa86es4mLkJpUigVMKOqxYqd1r0ZAvFe4BxQ81qehbOBi8LFFkZ6cqOCoExBY4ynERh1Yoj+wPyRZ89h4FIUXy116Xp5bxRAwkAEwBAzV8tNWcws7sLjWmLCQ4jYebGJrbaNo+ykJ/4DK8dafaqoryB46SgZLiaSNOQ9S7B9GEuKF42sBvAygPaCvz0587NTeRhnT6hwLZfhdaDhSnyImjMgnslGIFTxRC7SBVdGRqFgb70ha3/TKEP/X35Ri7MZX1yUxg+zOP0urRB2z/V7jXa93tJ8B+m8ccD977lZy4X36NLlz6wgbImGnaKpisCUF3/uakSGr2U5VuvvSzl2rsXNNH/pB1iioGkrKjaLsvaTus+ZjDKM867/ukFI32Hg+2Z82i9uxfuc/vgLYRhcn8XCCb5yGtO8VdbeD2IUSii292GzITkIoTs+AOKibPa+BTE98pqs1+PC0CUu67sSqiE7PhKJCda45s33E7Pw3QzeBbk0gUitjzIsefpVMuh0u9hwVnOFmyILo/Um1SmrijyVOJK8Y8qtdxZVJtbW109BXItX1dC/wdpQ3e4sLT6fM5QxZy6aqL7RzpRJ8E7Juxwq8JcI5//kGdtJw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(39860400002)(376002)(136003)(366004)(396003)(230922051799003)(1800799009)(186009)(451199024)(64100799003)(31686004)(6486002)(53546011)(6512007)(6506007)(36916002)(2616005)(31696002)(86362001)(38100700002)(36756003)(6666004)(2906002)(4326008)(478600001)(83380400001)(26005)(8936002)(41300700001)(110136005)(5660300002)(6636002)(316002)(66946007)(54906003)(8676002)(66476007)(66556008)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dkV0RXN6QUhuR3YwVFhnUm95a3VuZkFwaXBCcld3ZXhFazFCN1BsbEtzK3NI?=
- =?utf-8?B?UVJRMmExWWZjdVFhQzg4and2dld6eEdJbjZVNWUyeEhnK0FZMENPc2ZLVC9M?=
- =?utf-8?B?TWRmSFZwT0JvOWd0YlVnNkoxY1dpVVp1YitvT1ZEUlBnRHNQWnd0M0ZjMThn?=
- =?utf-8?B?NU5ocXA4V05MaEIzbEViNjdHd1hmVmlkY3ducHVPc0Qxck1mOVZQaUlNdng2?=
- =?utf-8?B?TnZwZjJsc244WmFveDZ5My9BSzR3cStKRHNkYUVqSjRySklTWHZSblNheXQ2?=
- =?utf-8?B?OVNvazROd0d2Vzg0UVJzYWVaVXJ1VmNWMDRrMk9RM3ZSZmhQeTdpd0J0Nlp5?=
- =?utf-8?B?Q3g0Nk4wa1hFQmtOcER4ejhQMFdsSk0yaStFNGpxeU42WVdYU2I3YnRZSkNz?=
- =?utf-8?B?eVMrMDNxSFg4YUNtU29GR0xlWUQxZ2loRkhaa2dSYlVsc2pFcU82VXV1dmFT?=
- =?utf-8?B?RHhOZjdweXFFTjBranRJMVcxYlRKVlpPRFp3QkFOeFc3ZVd0aWppRkZteGFO?=
- =?utf-8?B?UG9MWTFQRndUVFNCeGp4NVpaZ3Y2T01LTEJ6U1lnNHBXMUV4cWZRSE80YmNo?=
- =?utf-8?B?dUY5WTB5OHFkUEJXZ1lzUW0wSUoreTBvSmk3ck02TTZNYXEzWnRwcUlCYlVY?=
- =?utf-8?B?NXVnK0N6R0FhbDcxTURJOFpFbHNiRVpqQnYxOUpVbDUwNnI4bERTQ3Jab2VJ?=
- =?utf-8?B?MW5UR0F0QWlXemJJTDJYMlZ4clJaaXlOdjhEMDhmR2FoN1NZMWVjTkZBTURV?=
- =?utf-8?B?UjFLM2VIMW1tdngyZWw5Q0pPYlZFLzRsK2F4M1pVcnQ5ZExkcUVtSlpobyt0?=
- =?utf-8?B?VklUZ3ZHbHdxN21CNVYweW9YdkJYM0hYaDIrTVBxQUdlNXIzMmFEMXRFVG5T?=
- =?utf-8?B?L0tJM21NZkxxRDg4RXVzMTZqdnM0OVJrS2UreW50T1YwVjhzSWc3SU5YUFpJ?=
- =?utf-8?B?c29waEF2amNueE14c09BVTFray82enpQZGFmU29ZVnNzZFlRNzI3akcrZXJo?=
- =?utf-8?B?ek4zR2JLVWZSVWRFdERmNlo4Wm5JdzFiNm9Cd1lDZUp4VXpOVlJTcVlyNk5Z?=
- =?utf-8?B?UlJMTG1jdXo3OVlnSGJXVkdrZk1wR3BMNUxzcnJJTEQ5TFlUOHdvemNYYUxj?=
- =?utf-8?B?cURxWE5Od0xNbGdRc2s2eUxYaHFwRERHWjFWTlJIdTFrUEFKanhXNkdCU2pm?=
- =?utf-8?B?eXhjejFCa3RrVGdZU0dTQjI2Q0llMzcyK0hvVWlrN1dvK0xxdi90ZkZHWmFK?=
- =?utf-8?B?Y3F4Y1NhcGYyQUI3Tmg5S0Z2WFFYK2RFVUVmdmF2b2lYVk5TZnQrWERiZU0w?=
- =?utf-8?B?OXVhNHZWYnJrSnAvNHhEVkZDRmRodVNObHlCQXlJVjdseVBBeVlMc0N5c3dk?=
- =?utf-8?B?YVI4MUFjbnB1WjhsV25SQkFnUzZUTmFva0lpbjVFbXB4blpDTlNjTGtZUmRS?=
- =?utf-8?B?K2MyU3hYNzh1VUloeTM5dHJKd2FQMEFFM25DZEJ2Qnk0Uzdwdkk0ekMySzA0?=
- =?utf-8?B?NnRsTDFCTDlHYUhWZElIa2x3QzVrdFd6OFZyNWYzUGZmM0NSRkg5eWMzRjBF?=
- =?utf-8?B?UlVxNUJlRzNPdHhsaWxQajdzVVYrZUduMXNLYVNPWGh2QlVPckN6UkdaMi85?=
- =?utf-8?B?dWdRMjhlWFNNZVRPazRmM0hhWnFQUGVNMnlaSDQrRTVCL0JNK25xcmo2bWUy?=
- =?utf-8?B?cllFb01GbWJ5eWR0L0pTMjlYcHJUTDhWVy9ydkUxSU5wWjNjNGJaQXAwOUll?=
- =?utf-8?B?bHN2Y0k1L1p3UFcrVFQzN21QV0RubS93MkMyOFZYaG9IdXl5UWlJOXJjSDRs?=
- =?utf-8?B?dFZvK1d1NWZWZHdtUnNqNFZucTlBM3AxWmh5TGFUNGQ5bUNLYjBRVTFsUDdz?=
- =?utf-8?B?WDBuMFFYTktBWEQxdk9rMWpXVGttRk9rTTMrcVdUbUtxQTdRVDVxOG9MdmpP?=
- =?utf-8?B?U2d2TFB5NHI4TzRXMFRMMzJRT1RjMjdTVkxNdjVVUVZsKzhKeXdVdUUrLzBL?=
- =?utf-8?B?cU9DNm9MenVwaGZzWndTNjNpUmRtT2tVWFZ5azFTVXdidXNGZFcyU1k3MFJm?=
- =?utf-8?B?TDhUNWtodm1wK2VXaWkxUGJ3QUpmYVpMaEdWRG5jZzJIc1Jkc2lYRkZkOFIy?=
- =?utf-8?Q?jr1/sF/FIEwYF0nek7W/WSFHk?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VXFtbTlONjc3R0dkM1ZtVUw3c3pmZ2ZoMklrR1hnTmxuRjBheHBORW85Wjdp?=
+ =?utf-8?B?UU1rL2JQNkhCckFrVUlOM0xSaHhsUWY4L2RsRitUd3JkMTQ1M2NpS3V3MVVQ?=
+ =?utf-8?B?Qy9qbDZrY3g2TVViV0UvYzdCTXMrZWxWUURGbkZsRGJwS090MWNqNnVUdU1P?=
+ =?utf-8?B?ZVVSbWFycUhXbmd1UysrdGMvdzNBTGFUM04xNElWTCtXTWljc0ZxejFMYXZa?=
+ =?utf-8?B?SjExc3RNWjhveW5FZVhDWlJ4YkM1UU52dHZDTEttS3YwQUdWZlIyM2huRFhF?=
+ =?utf-8?B?U29WSzR5MkJ4VU1TRDZOaFAwZGtUbEtya1NvTDJQWURnVG43RnVMOUd2L0xv?=
+ =?utf-8?B?Smo3Tkp1UTVMWUpKdHhGMXAzYUZlMk5PTjc2eWo0T3V3N0RJb3hWdEczeE5U?=
+ =?utf-8?B?NmZtVHQ1WVQyQ1BlMkQ5L092alJvNzZrZDF1SjliSzgySndPM2k2OEZOK1lD?=
+ =?utf-8?B?Y3FHS3J3dGFWdHVOcC9KTms2OG84cGZkYVREbTlzaWFZcVkzY3h0MFhyNi9S?=
+ =?utf-8?B?WjVWRWJRZUN4M05YU3NHS1c0WWJMcGhINkYvallyZDVlbFBkL0Fad0dDcWk5?=
+ =?utf-8?B?VXpDTDJvOFNTOEpCQzh3SDdNdWVuWEEvVHk4U3pISmFnanlVYU9NQTR1Y3Jh?=
+ =?utf-8?B?WjNFdHY4R3JncnorS01FSE9ULy9EbmhOckpHMDhaRytDSW9TTitjTUw0U2xk?=
+ =?utf-8?B?eXd5NkU1SXFVejBzbENtT1ROUjFMcGs1allwd3pXQTNyTlJHcnM2aHM3M0Rz?=
+ =?utf-8?B?Sk45V0tqNldBY0RUZ2U4b0lvWEFHTG9GWlRjRFJsQ2FWeDJMeE4ydFpyNU42?=
+ =?utf-8?B?dERpem9OSXJTNTJvbkxGRCtnVkc4aXlUVGtkZGNXeTBJZEpKVjQ0UVJVMzZi?=
+ =?utf-8?B?VnFRMWYvNm5TKzRyeEF6NTljcVJZb1ZIRWM0NnA5Q1RRbTRlcEdIQlBTYXZw?=
+ =?utf-8?B?U0ZsakZmSkwzZmZZSkpTZy9hY2dRMjYxTnQ1MmJGTlVYWUlhcFk3U0ZRYXBS?=
+ =?utf-8?B?WjYzeWltWnA4ZmZsdklUR2d4aHFoYmY2UEQyNHBwYmJWekhpVFFLZnE2L215?=
+ =?utf-8?B?TXN4SCtORHRwRHcyUFYwbGtYVm9Od0F3Tjg3T050dGZNTVNKNlorYURBcncr?=
+ =?utf-8?B?Z0VWZlJVVXQweFlhOGFpcFJQcll1T0lscitreU40cHR0a2UveVMwTFNxL0tF?=
+ =?utf-8?B?bWVXVHZIMGpnVHVaRkZhTC81STNQdmEwdVFpTzV5QjZSNFZPKzQ5azltTldL?=
+ =?utf-8?B?YW9MR2tDZEg1WUs0akJ6NUt1YUp0NDlFaU1UZmhRREE1OE45dDlQaUtOaWdB?=
+ =?utf-8?B?QTRuMThqUjZTM0xDdmdHanVCZWZWQXQvMW53enIvamY3RFdRQnRJdWNYUzdi?=
+ =?utf-8?B?dFk2eUdlOGhDNnFRcW1FL2c0MXRFRzJ6akFQVEV4eVBCNlVDYmcwbkZXMnBn?=
+ =?utf-8?B?NzFONDVUWU04S1U3UFUzSEIxMzJFb0pEc01BV1VSN3gzV1BEZitkeEpBQlpz?=
+ =?utf-8?B?eUVrMHQrcUJiOVFPckN4d1BKZnd6ZEF1U0V3Ry9kTU12WTVUaGNleGtkMjdP?=
+ =?utf-8?B?TytvN1ZPOExsSVFrMlBSRkRKTEpFL1VQV3ZvWUsvOEcrVWhjQ1E3WHFOSm00?=
+ =?utf-8?B?UXVyY01JMXpvUG0xVmV3cjd5R0FEOFFPMDlOOE1SSUh4UlRkRndLdEIwVUp1?=
+ =?utf-8?B?eDJiYkFVdENqOFZDMGQ3Ymp2OUJPSWtIMDVwbkdaeHhJZklEd0FUNTFxb2ha?=
+ =?utf-8?B?NUpEOFhlcFpCb3BtZDFQc0Rkbm9XM2dwUUtRc2hQUk9zMmE4UjhJSEt1b1FW?=
+ =?utf-8?B?emJyMmFvODZoOG1EQ2I3VGZvYjFGUnREODdOSFBCWklpS0hsSkg5QzFySUZs?=
+ =?utf-8?B?VVVjRmN2S0NHMm9WNDlQSGtsSURZa001RUtqRGI3UjRkeEt6eXZvSTcvaWh2?=
+ =?utf-8?B?Ri9zZHplZ3luNEtEOXZvNTNtZFpnVnFjQ3loRnQ4Sk9XUmp1YzJaQlBndWpV?=
+ =?utf-8?B?MGlmakxHMWI4Z0h5cndxakhTWFFzQkovRjNjY3kya1QxV245aXQwZ01MUFhN?=
+ =?utf-8?B?c0xrZUJLSkZtNWFaeVA2M0d2ODZaaDdQdTBkQmlnbjNGb0ltYXd6UE4yeEhQ?=
+ =?utf-8?Q?OYyCFMulLma826MoFs3E3NSCL?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: AYY32MBIth7lMw/8B6iKoiRQHIqUXI/sdY6L2sGQHd+Y+j1Fah9jBT3Rh/RRuI7krFemSVW1eBpGauP6L9I46wFDYeyh4b5/ex+RHT5Nwxv7LyPn1r2HoN6iLupLRiwHz+EZIHuCiBzNaMEHqZasFbuvcmrEgg3lHZaawRDNMrf17+T4y/23fiMnB/4zySLJjBgGORIksFFCkPjOLjqVEvQu0QgxOJ5gdKK/cS8U5Dzud6AOk5bMDkam+LIyHa+ifvWpOQDyoG5BOJJt+98kdIwFns/c2BQWGCC40zHOfu0AU6jztXrMwVndw5uSJxngtA9u9dvaylDYMfTRrjNyyBQdCkR0N6ow3LBppP9hDWx2Xr1R3hTrXD/tOg0P8O4Ink20uUkzHqhxMrTVWOaiFKE/QJYolh+Tlmk6cy1lAW59/+syGuN7gO+hGTBWf7ZC2L8Yh24IJkckwtGtPJ/YkWoOi+HjpOlSr51ToM12YnbNEOd2x6NgphWkQlkwBIt6MPQNotkFx9n6aw1N3utbEangxV7gZkCnY5MrMEZONpqgMkdW6MwlpOya9A+vCamMP2rE2Q2qHkV+Cj+WgeUX4SwQ+ik5JqEqrjW59Ezs18DUGR2G8LEbnl+i45OOswCMSx2RtxO5m00f7gjB+YFHeB0UYKmJ9dawgidA1ge7ClHTe+/an/Nk1NOEQu8YGdSVloWOe46rdENks6d7qjZWe1uk/wEOi+i/EcyblygBec0wEPKOOquR3m08bJAWhJocoRB/N2RSj6qfDXhZSJOaHetRtVo8wSmCJ7QuVehSrFB1hFm6pOxXX7+FQ2n6N67v4e0XCrxOQ4CEAsfchbea45GKaLj+4XwfL5LJEtvodNk=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 0mvrc7coBKFsHrlO3h7/RrLl0MC0frNqJNsae1a9p9L+fxBbolnIVgAADCS2A2kLcGOh4QUodGzqWug/UP1I4O5nQDuTJn2rAFhXOwSSm0AbHWch5PzN6pzTlv07LttL+72r1KNmO+RuZnIorgrqgT8KV+kCifu5nrCn5GDRuvw00iDN8I3xRAtEdvLaPOdGlzizc0gJ191EGfv8XvPyFpT/6JH/5BdoRANX+wa/npZLn6tZcg942GJsGpDR4ozoBLB0Uq3kYX8PytYRTL95TIX6L9BRapcZ5Jp8wlin2sPoKcR904f7li9Xa6tLYDeLcG6b1ew6X6cp3NExiAiUulwJ6yMYRK+vqWzNN+u/Pv0ZNpCZTT7WvXffht4Muz6/Z2Ilu8sqIBhyM1ZWh613U/5UjbX7G3B8lETSvnX/aeDTOo05dk0dB+n7NC8nKQ2mWylqaZBT+Dzs5irXKFqX3YZrrjqlsHTRgxoSdX3wwJ5ZverHX0zps4kxXvPd49XUmwPXLeCz4hfM/LAPeFd0gagLPlSmH10E3zaW5R7BA38N/JKtPdJzJHQUmQCdWbCVaTiWhTJdMOooWSC1ShmCOLk8N1brk3chnJ2LMg5xkiWhv9v1Zjtfj+5un2/VU0F9atFldKaoVPSmHIZDQ4f8mjDXpK/GHTGSzu5hANYQZv9l9FcrC4sFI5WhIWqHZYgs1zJiC2vZy9WRqcJgFiYzO8HYZevg+iTR/yTrqUN+RMga8BjZNQffOgO9ipbIH59cdlDqy4TU1t+ycaqgpfBBjgQuAXurRVfcmOGKKJWovk3RdPpsYYF6Le4sF2IpvwD2ETH2tFjSDFYwhntoENZRMXoFEHWZe76tvZRkI9aXqMg=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d99cfab2-d69c-4fc1-7ce1-08dbc599d29f
+X-MS-Exchange-CrossTenant-Network-Message-Id: b8940e8b-1583-4bfe-40b0-08dbc5a2f475
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2023 11:54:25.8479
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2023 12:59:48.1918
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: dgrWUndUWOwGpDZkhXDvHbWY9UiQuwGNplWt9deuDWgpqRngmvaRLXkvetDvEJkRVVuGCrFOo2YQ7v+odovuwA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR10MB6440
+X-MS-Exchange-CrossTenant-UserPrincipalName: K89lthIUk/oarHIO4FrkgLa3qxyyRxBi1VJ2HiF4AfRyaK3jXKm3g23cDvTaZ+OE2y5aE1ibKp9kZW6Hosktkg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB4266
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-10-05_08,2023-10-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 spamscore=0
- phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
+ bulkscore=0 suspectscore=0 mlxlogscore=999 spamscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
- definitions=main-2310050093
-X-Proofpoint-GUID: 5h_8p0x7zooVmuI6-T6fAkky4x9K086f
-X-Proofpoint-ORIG-GUID: 5h_8p0x7zooVmuI6-T6fAkky4x9K086f
+ definitions=main-2310050101
+X-Proofpoint-GUID: GEQbGYNBUZrFJxrwKQsJwSFwxuiWsn98
+X-Proofpoint-ORIG-GUID: GEQbGYNBUZrFJxrwKQsJwSFwxuiWsn98
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-> diff --git a/Documentation/scsi/scsi_eh.rst b/Documentation/scsi/scsi_eh.rst
-> index da95971b4f44..dbbfd754a928 100644
-> --- a/Documentation/scsi/scsi_eh.rst
-> +++ b/Documentation/scsi/scsi_eh.rst
-> @@ -216,7 +216,7 @@ considered to fail always.
->   
->       int (* eh_abort_handler)(struct scsi_cmnd *);
->       int (* eh_device_reset_handler)(struct scsi_cmnd *);
-> -    int (* eh_bus_reset_handler)(struct scsi_cmnd *);
-> +    int (* eh_bus_reset_handler)(struct Scsi_Host *, int);
-
-scsi_device.channel and scsi_target.channel are both unsigned int, so 
-could this also be unsigned int?
-
->       int (* eh_host_reset_handler)(struct Scsi_Host *);
->   
->   Higher-severity actions are taken only when lower-severity actions
-> diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi/scsi_mid_low_api.rst
-> index 85b1384ba4fd..88bb3b7578ba 100644
-> --- a/Documentation/scsi/scsi_mid_low_api.rst
-> +++ b/Documentation/scsi/scsi_mid_low_api.rst
-> @@ -741,7 +741,8 @@ Details::
-
-...
-
+On 02/10/2023 16:59, Hannes Reinecke wrote:
+> mptscsih_dev_reset(struct scsi_device * device)
+>   {
+>   	MPT_SCSI_HOST	*hd;
+>   	int		 retval;
+> @@ -1810,18 +1810,15 @@ mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
 >   
 >   	/* If we can't locate our host adapter structure, return FAILED status.
 >   	 */
 > -	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
-> +	if ((hd = shost_priv(shost)) == NULL){
->   		printk(KERN_ERR MYNAM ": bus reset: "
+> -		printk(KERN_ERR MYNAM ": lun reset: "
 > -		   "Can't locate host! (sc=%p)\n", SCpnt);
-> +		   "Can't locate host!\n");
+> +	if ((hd = shost_priv(device->host)) == NULL){
+> +		printk(KERN_ERR MYNAM ": lun reset: Can't locate host!\n");
+>   		return FAILED;
+
+again, I don't think that this is possible
+
+> @@ -2887,20 +2887,20 @@ static int ibmvfc_eh_abort_handler(struct scsi_cmnd *cmd)
+>   
+>   /**
+>    * ibmvfc_eh_device_reset_handler - Reset a single LUN
+> - * @cmd:	scsi command struct
+> + * @sdev:	scsi devicestruct 
+
+nit: device struct
+
+>    *
+..
+
+> @@ -1676,12 +1676,12 @@ static int ibmvscsi_eh_device_reset_handler(struct scsi_cmnd *cmd)
+>   	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+>   
+>   	if (rsp_rc != 0) {
+> -		sdev_printk(KERN_ERR, cmd->device,
+> +		sdev_printk(KERN_ERR, sdev,
+>   			    "failed to send reset event. rc=%d\n", rsp_rc);
 >   		return FAILED;
 >   	}
 >   
->   	ioc = hd->ioc;
-> -	printk(MYIOC_s_INFO_FMT "attempting bus reset! (sc=%p)\n",
-> -	       ioc->name, SCpnt);
-> -	scsi_print_command(SCpnt);
-> +	printk(MYIOC_s_INFO_FMT "attempting bus reset!\n",
-
-maybe printing the channel number may be helpful
-
-> +	       ioc->name);
->   
->   	if (ioc->timeouts < -1)
->   		ioc->timeouts++;
->   
-> -	vdevice = SCpnt->device->hostdata;
-> -	if (!vdevice || !vdevice->vtarget)
-> -		return SUCCESS;
->   	retval = mptscsih_IssueTaskMgmt(hd,
->   					MPI_SCSITASKMGMT_TASKTYPE_RESET_BUS,
-> -					vdevice->vtarget->channel, 0, 0, 0,
-> +					channel, 0, 0, 0,
->   					mptscsih_get_tm_timeout(ioc));
->   
-> -	printk(MYIOC_s_INFO_FMT "bus reset: %s (sc=%p)\n",
-> -	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
-> +	printk(MYIOC_s_INFO_FMT "bus reset: %s\n",
-> +	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ));
-
-Outer () can be removed
-
->   
->   	if (retval == 0)
->   		return SUCCESS;
-> diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
-
-...
-
->   	struct AdapterCtlBlk *acb =
-> -		(struct AdapterCtlBlk *)cmd->device->host->hostdata;
-> +		(struct AdapterCtlBlk *)shost->hostdata;
->   	dprintkl(KERN_INFO,
-> -		"eh_bus_reset: (0%p) target=<%02i-%i> cmd=%p\n",
-> -		cmd, cmd->device->id, (u8)cmd->device->lun, cmd);
-> +		 "eh_bus_reset: bus=<%02i>\n", channel);
->   
->   	if (timer_pending(&acb->waiting_timer))
->   		del_timer(&acb->waiting_timer);
->   
->   	/*
-> -	 * disable interrupt
-> +	 * disable interrupt
-
-what changed here?
-
->   	 */
->   	DC395x_write8(acb, TRM_S1040_DMA_INTEN, 0x00);
->   	DC395x_write8(acb, TRM_S1040_SCSI_INTEN, 0x00);
-> @@ -1172,7 +1171,7 @@ static int __dc395x_eh_bus_reset(struct scsi_cmnd *cmd)
->   	    HZ * acb->eeprom.delay_time;
->   
->   	/*
-> -	 * re-enable interrupt
-> +	 * re-enable interrupt
->   	 */
-
-...
-
->   
->   /* Internal functions */
-> diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-> index 168f01a34acc..ae647e2586d0 100644
-> --- a/drivers/scsi/esas2r/esas2r_main.c
-> +++ b/drivers/scsi/esas2r/esas2r_main.c
-> @@ -1097,10 +1097,8 @@ int esas2r_host_reset(struct Scsi_Host *shost)
->   	return esas2r_host_bus_reset(shost, true);
->   }
->   
-> -int esas2r_bus_reset(struct scsi_cmnd *cmd)
-> +int esas2r_bus_reset(struct Scsi_Host *shost, int channel)
->   {
-> -	struct Scsi_Host *shost = cmd->device->host;
-> -
->   	esas2r_log(ESAS2R_LOG_INFO, "bus_reset (%p)", shost);
-
-surely printing the channel would be better than the shost pointer
-
->   
->   	return esas2r_host_bus_reset(shost, false);
-> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index 355fec046220..c6a5721aef23 100644
-> --- a/drivers/scsi/esp_scsi.c
-> +++ b/drivers/scsi/esp_scsi.c
-> @@ -2604,9 +2604,9 @@ static int esp_eh_abort_handler(struct scsi_cmnd *cmd)
->   	return FAILED;
->   }
+> -	sdev_printk(KERN_INFO, cmd->device, "resetting device. lun 0x%llx\n",
+> +	sdev_printk(KERN_INFO, sdev, "resetting device. lun 0x%llx\n",
+>   		    (((u64) lun) << 48));
 >   
 
 ...
+>    *
+> - * Return: SUCCESS of successful termination of the scmd else
+> + * Return: SUCCESS of successful lun reset else
+>    *         FAILED
 
->   
+this can be united with the previous line
+> @@ -4174,38 +4172,34 @@ static int mpi3mr_eh_dev_reset(struct scsi_cmnd *scmd)
+>   	stgt_priv_data = sdev_priv_data->tgt_priv_data;
+>   	dev_handle = stgt_priv_data->dev_handle;
+>   	if (stgt_priv_data->dev_removed) {
+> -		struct scmd_priv *cmd_priv = scsi_cmd_priv(scmd);
+> -		sdev_printk(KERN_INFO, scmd->device,
+> +		sdev_printk(KERN_INFO, sdev,
+>   		    "%s: device(handle = 0x%04x) is removed, device(LUN) reset is not issued\n",
+>   		    mrioc->name, dev_handle);
+> -		if (!cmd_priv->in_lld_scope || cmd_priv->host_tag == MPI3MR_HOSTTAG_INVALID)
+> -			retval = SUCCESS;
+> -		else
+> -			retval = FAILED;
+> +		retval = FAILED;
+>   		goto out;
+>   	}
 > -	sdev_printk(KERN_INFO, scmd->device,
-> -		"Bus reset is %s for scmd(%p)\n",
-> -		((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-> +	shost_printk(KERN_INFO, shost,
-> +		"Bus reset is %s\n",
-> +		((retval == SUCCESS) ? "SUCCESS" : "FAILED"));
-
-again, () can be removed
-
+> +	sdev_printk(KERN_INFO, sdev,
+>   	    "Device(lun) Reset is issued to handle(0x%04x)\n", dev_handle);
+>   
+>   	ret = mpi3mr_issue_tm(mrioc,
+>   	    MPI3_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, dev_handle,
+>   	    sdev_priv_data->lun_id, MPI3MR_HOSTTAG_BLK_TMS,
+> -	    MPI3MR_RESETTM_TIMEOUT, &mrioc->host_tm_cmds, &resp_code, scmd);
+> +	    MPI3MR_RESETTM_TIMEOUT, &mrioc->host_tm_cmds, &resp_code, NULL);
+>   
+>   	if (ret)
+>   		goto out;
+>   
+>   	if (sdev_priv_data->pend_count) {
+> -		sdev_printk(KERN_INFO, scmd->device,
+> +		sdev_printk(KERN_INFO, sdev,
+>   		    "%s: device has %d pending commands, device(LUN) reset is failed\n",
+>   		    mrioc->name, sdev_priv_data->pend_count);
+>   		goto out;
+>   	}
+>   	retval = SUCCESS;
+>   out:
+> -	sdev_printk(KERN_INFO, scmd->device,
+> -	    "%s: device(LUN) reset is %s for scmd(%p)\n", mrioc->name,
+> -	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
+> +	sdev_printk(KERN_INFO, sdev,
+> +	    "%s: device(LUN) reset is %s\n", mrioc->name,
+> +	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"));
+>   
 >   	return retval;
 >   }
->   
-> diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
-> index 35869b4f9329..59efe064b304 100644
-> --- a/drivers/scsi/ncr53c8xx.c
-> +++ b/drivers/scsi/ncr53c8xx.c
-> @@ -7936,9 +7936,9 @@ static void ncr53c8xx_timeout(struct timer_list *t)
->   		ncr_flush_done_cmds(done_list);
->   }
->   
-> -static int ncr53c8xx_bus_reset(struct scsi_cmnd *cmd)
-> +static int ncr53c8xx_bus_reset(struct Scsi_Host *host, int channel)
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index c6dd00b034f4..530a043e40d2 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -3365,9 +3365,9 @@ scsih_abort(struct scsi_cmnd *scmd)
+>    * Return: SUCCESS if command aborted else FAILED
+>    */
+>   static int
+> -scsih_dev_reset(struct scsi_cmnd *scmd)
+> +scsih_dev_reset(struct scsi_device *sdev)
 >   {
-> -	struct ncb *np = ((struct host_data *) cmd->device->host->hostdata)->ncb;
-> +	struct ncb *np = ((struct host_data *) host->hostdata)->ncb;
->   	int sts;
->   	unsigned long flags;
->   	struct scsi_cmnd *done_list;
-> diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-> index 104647a6170e..c709bb955d05 100644
-> --- a/drivers/scsi/pcmcia/nsp_cs.c
-> +++ b/drivers/scsi/pcmcia/nsp_cs.c
-> @@ -1486,11 +1486,11 @@ static int nsp_bus_reset(nsp_hw_data *data)
->   	return SUCCESS;
->   }
+> -	struct MPT3SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
+> +	struct MPT3SAS_ADAPTER *ioc = shost_priv(sdev->host);
+>   	struct MPT3SAS_DEVICE *sas_device_priv_data;
+>   	struct _sas_device *sas_device = NULL;
+>   	struct _pcie_device *pcie_device = NULL;
+> @@ -3376,20 +3376,17 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+>   	u8	tr_timeout = 30;
+>   	int r;
 >   
-> -static int nsp_eh_bus_reset(struct scsi_cmnd *SCpnt)
-> +static int nsp_eh_bus_reset(struct Scsi_Host *host, int channel)
->   {
-> -	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
-> +	nsp_hw_data *data = (nsp_hw_data *)host->hostdata;
+> -	struct scsi_target *starget = scmd->device->sdev_target;
+> +	struct scsi_target *starget = sdev->sdev_target;
+>   	struct MPT3SAS_TARGET *target_priv_data = starget->hostdata;
 >   
-> -	nsp_dbg(NSP_DEBUG_BUSRESET, "SCpnt=0x%p", SCpnt);
-> +	nsp_dbg(NSP_DEBUG_BUSRESET, "channel=0x%d", channel);
-
-0x%x, and I am not sure that is even better than printing in decimal
-
+> -	sdev_printk(KERN_INFO, scmd->device,
+> -	    "attempting device reset! scmd(0x%p)\n", scmd);
+> -	_scsih_tm_display_info(ioc, scmd);
+> +	sdev_printk(KERN_INFO, sdev,
+> +	    "attempting device reset!\n");
 >   
->   	return nsp_bus_reset(data);
->   }
+> -	sas_device_priv_data = scmd->device->hostdata;
+> +	sas_device_priv_data = sdev->hostdata;
+>   	if (!sas_device_priv_data || !sas_device_priv_data->sas_target ||
+>   	    ioc->remove_host) {
+> -		sdev_printk(KERN_INFO, scmd->device,
+> -		    "device been deleted! scmd(0x%p)\n", scmd);
+> -		scmd->result = DID_NO_CONNECT << 16;
+> -		scsi_done(scmd);
+> +		sdev_printk(KERN_INFO, sdev,
+> +		    "device been deleted!\n");
+>   		r = SUCCESS;
+>   		goto out;
+>   	}
+> @@ -3406,7 +3403,6 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+>   		handle = sas_device_priv_data->sas_target->handle;
+>   
+>   	if (!handle) {
+> -		scmd->result = DID_RESET << 16;
+>   		r = FAILED;
+>   		goto out;
+>   	}
+> @@ -3420,16 +3416,16 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+>   	} else
+>   		tr_method = MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET;
+>   
+> -	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
+> -		scmd->device->id, scmd->device->lun,
+> +	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, sdev->channel,
+> +		sdev->id, sdev->lun,
+>   		MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 0,
+>   		tr_timeout, tr_method);
+>   	/* Check for busy commands after reset */
+> -	if (r == SUCCESS && scsi_device_busy(scmd->device))
+> +	if (r == SUCCESS && scsi_device_busy(sdev))
+>   		r = FAILED;
+>    out:
+> -	sdev_printk(KERN_INFO, scmd->device, "device reset: %s scmd(0x%p)\n",
+> -	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
+> +	sdev_printk(KERN_INFO, sdev, "device reset: %s\n",
+> +	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"));
+>   
+>   	if (sas_device)
+>   		sas_device_put(sas_device);
 > diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
-> index f532adb5f166..8636f0053c02 100644
+> index 8636f0053c02..c2b522a194fc 100644
 > --- a/drivers/scsi/pcmcia/nsp_cs.h
 > +++ b/drivers/scsi/pcmcia/nsp_cs.h
-> @@ -299,7 +299,7 @@ static int nsp_queuecommand(struct Scsi_Host *h, struct scsi_cmnd *SCpnt);
+> @@ -297,8 +297,6 @@ static        int        nsp_show_info  (struct seq_file *m,
+>   static int nsp_queuecommand(struct Scsi_Host *h, struct scsi_cmnd *SCpnt);
+>   
+>   /* Error handler */
+> -/*static int nsp_eh_abort       (struct scsi_cmnd *SCpnt);*/
+> -/*static int nsp_eh_device_reset(struct scsi_cmnd *SCpnt);*/
+>   static int nsp_eh_bus_reset    (struct Scsi_Host *host, int channel);
+>   static int nsp_eh_host_reset   (struct Scsi_Host *host);
+>   static int nsp_bus_reset       (nsp_hw_data *data);
+> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+> index d806576edb87..92ed0b86ad80 100644
+> --- a/drivers/scsi/pmcraid.c
+> +++ b/drivers/scsi/pmcraid.c
+> @@ -3014,11 +3014,11 @@ static int pmcraid_eh_abort_handler(struct scsi_cmnd *scsi_cmd)
+>    * Return value
+>    *	SUCCESS or FAILED
+>    */
+> -static int pmcraid_eh_device_reset_handler(struct scsi_cmnd *scmd)
+> +static int pmcraid_eh_device_reset_handler(struct scsi_device *sdev)
+>   {
+> -	scmd_printk(KERN_INFO, scmd,
+> +	sdev_printk(KERN_INFO, sdev,
+>   		    "resetting device due to an I/O command timeout.\n");
+> -	return pmcraid_reset_device(scmd->device,
+> +	return pmcraid_reset_device(sdev,
+>   				    PMCRAID_INTERNAL_TIMEOUT,
+>   				    RESET_DEVICE_LUN);
+>   }
+> diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+> index f6876307c304..bf169950834c 100644
+> --- a/drivers/scsi/qedf/qedf_main.c
+> +++ b/drivers/scsi/qedf/qedf_main.c
+> @@ -864,12 +864,12 @@ static int qedf_eh_target_reset(struct scsi_target *starget)
+>   	return qedf_initiate_tmf(rport, 0, FCP_TMF_TGT_RESET);
+>   }
+>   
+> -static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
+> +static int qedf_eh_device_reset(struct scsi_device *sdev)
+>   {
+> -	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+> +	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+>   
+>   	QEDF_ERR(NULL, "LUN RESET Issued...\n");
+> -	return qedf_initiate_tmf(rport, sc_cmd->device->lun, FCP_TMF_LUN_RESET);
+> +	return qedf_initiate_tmf(rport, sdev->lun, FCP_TMF_LUN_RESET);
+>   }
+>   
+>   bool qedf_wait_for_upload(struct qedf_ctx *qedf)
+> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+> index 1df3deb618e4..cb010aa271ce 100644
+> --- a/drivers/scsi/qla1280.c
+> +++ b/drivers/scsi/qla1280.c
+> @@ -963,13 +963,24 @@ qla1280_eh_abort(struct scsi_cmnd * cmd)
+>    *     Reset the specified SCSI device
+>    **************************************************************************/
+>   static int
+> -qla1280_eh_device_reset(struct scsi_cmnd *cmd)
+> +qla1280_eh_device_reset(struct scsi_device *sdev)
+>   {
+> -	int rc;
+> +	struct Scsi_Host *shost = sdev->host;
+> +	struct scsi_qla_host *ha = (struct scsi_qla_host *)shost->hostdata;
+> +	int rc = FAILED;
+>   
+> -	spin_lock_irq(cmd->device->host->host_lock);
+> -	rc = qla1280_error_action(cmd, DEVICE_RESET);
+> -	spin_unlock_irq(cmd->device->host->host_lock);
+> +	spin_lock_irq(shost->host_lock);
+> +	if (qla1280_verbose)
+> +		printk(KERN_INFO
+> +		       "scsi(%ld:%d:%d:%llu): Queueing device reset "
+> +		       "command.\n", ha->host_no, sdev->channel,
+> +		       sdev->id, sdev->lun);
+> +	if (qla1280_device_reset(ha, sdev->channel, sdev->id) == 0) {
+> +		/* issued device reset, set wait conditions */
+> +		rc = qla1280_wait_for_pending_commands(ha,
+> +			sdev->channel, sdev->id);
+> +	}
 
-...
+I am not sure why you are inlined what is done in qla1280_error_action().
+
+> +	spin_unlock_irq(shost->host_lock);
+>   
 >   	return rc;
 >   }
 > diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index bb0323d05640..a9d9d0a9abd7 100644
+> index 53bb73e07c3a..5c160f8ef013 100644
 > --- a/drivers/scsi/qla2xxx/qla_os.c
 > +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -1588,7 +1588,7 @@ qla2xxx_eh_target_reset(struct scsi_cmnd *cmd)
->   *    commands.
->   *
->   * Input:
-> -*    cmd = Linux SCSI command packet of the command that cause the
-> +*    host = Linux SCSI command packet of the command that cause the
->   *          bus reset.
-
-"Linux SCSI command packet " - really?
-
->   *
->   * Returns:
-> @@ -1596,12 +1596,10 @@ qla2xxx_eh_target_reset(struct scsi_cmnd *cmd)
->   *
->   **************************************************************************/
-...
-
->   
-> -	scmd_printk(KERN_INFO, cmd, "SCSI Bus reset\n");
-> +	shost_printk(KERN_INFO, host, "SCSI Bus reset\n");
-
-how about this the channel #?
-
->   
->   	/*
->   	 * We don't want to queue new requests for this bus after
-> diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
-> index 42134f9510d5..bc48152e74b8 100644
-> --- a/drivers/scsi/wd719x.c
-> +++ b/drivers/scsi/wd719x.c
-> @@ -484,11 +484,11 @@ static int wd719x_abort(struct scsi_cmnd *cmd)
->   	return SUCCESS;
->   }
-
-
-
->   /* Simulate a SCSI bus reset by resetting the device's USB port. */
-> -static int bus_reset(struct scsi_cmnd *srb)
-> +static int bus_reset(struct Scsi_Host *shost, int channel)
->   {
-> -	struct us_data *us = host_to_us(srb->device->host);
-> +	struct us_data *us = host_to_us(shost);
-
-Incidentally host_to_us() seems a copy of shost_priv()
-
->   	int result;
->   
->   	usb_stor_dbg(us, "%s called\n", __func__);
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 9e3ec411cdc6..32ef595db028 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -152,7 +152,7 @@ struct scsi_host_template {
->   	int (* eh_abort_handler)(struct scsi_cmnd *);
->   	int (* eh_device_reset_handler)(struct scsi_cmnd *);
->   	int (* eh_target_reset_handler)(struct scsi_cmnd *);
-> -	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
-> +	int (* eh_bus_reset_handler)(struct Scsi_Host *, int);
->   	int (* eh_host_reset_handler)(struct Scsi_Host *);
->   
->   	/*
+> @@ -1445,9 +1445,8 @@ static char *reset_errors[] = {
 
