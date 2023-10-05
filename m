@@ -2,82 +2,175 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A0EDE92702
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 13:56:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25142E92702
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 14:09:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230082AbjJENz6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Oct 2023 09:55:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42288 "EHLO
+        id S232887AbjJEOJV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:09:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243972AbjJENud (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 09:50:33 -0400
-X-Greylist: delayed 533 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 05 Oct 2023 02:34:49 PDT
-Received: from out-190.mta1.migadu.com (out-190.mta1.migadu.com [IPv6:2001:41d0:203:375::be])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C8C2A5FE
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 02:34:48 -0700 (PDT)
-Message-ID: <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1696497937;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=8/XbE8gP0R5n5VOgy0224cCsYOet41U373eOZr5Idw8=;
-        b=PRoEAk6RYEcN6+72/6ZuSklLwRz/qUwiSpgtJxplv8LhZFN//iHB1hi6qRoGlxpNdfsT3+
-        X/2YlXgOJrk9oX3a6nqMpLBJLkO/NQ0kf00CSKxr1FfIZ6xBEK/vm575ZKlRfGRiFp1jhp
-        U6wyvUBCjXNDSY+mDNhp7v+2OIXWUUc=
-Date:   Thu, 5 Oct 2023 17:25:29 +0800
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
-To:     Jason Gunthorpe <jgg@ziepe.ca>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Bob Pearson <rpearsonhpe@gmail.com>,
-        Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
-        linux-rdma@vger.kernel.org, matsuda-daisuke@fujitsu.com,
-        shinichiro.kawasaki@wdc.com, linux-scsi@vger.kernel.org,
-        Zhu Yanjun <yanjun.zhu@intel.com>
-References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
- <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
- <20230926140656.GM1642130@unreal>
- <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
- <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
- <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
- <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
- <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
- <20231004183824.GQ13795@ziepe.ca>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <20231004183824.GQ13795@ziepe.ca>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+        with ESMTP id S232724AbjJEOHU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 10:07:20 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9192726FC1
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 06:01:25 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-9b9ad5760b9so166120566b.3
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Oct 2023 06:01:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fairphone.com; s=fair; t=1696510884; x=1697115684; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JnG0sR/xGQYYsyFaEt/vfjkPa8+Rqti/iCkeoYG1xiY=;
+        b=OcVh4o85DKq0RIi0L2YWQQ5/omCian82i8NVwd2fWWeLZKuQ1S3xNvPbCrVIaL3aR+
+         gESPkq87ecsbi+XSqzcVrOljqPY2ZHcS7DrtNpiHvIHf/tnwHrdsiQy1dZKXbbnRMyNT
+         9BPqHbf6CWGd5u07MeLMIfGC94iRnS6rcswgG44g7cxCzaUpCr8Ex/1LQ3xxYqvPlI2P
+         b52JIv/Xj9s+cRDT9SJLmrC/nJxcw4M9jVo6/7afRd8SOaUU2174e/bSOWt2kYEkh/I3
+         wY0ioOOIqthdnAuksgtOKxLO5clVyUe2pAh03CfdIy1pwEGwCYszISFMxlSXj4qqKHVF
+         Fc2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696510884; x=1697115684;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=JnG0sR/xGQYYsyFaEt/vfjkPa8+Rqti/iCkeoYG1xiY=;
+        b=kO6pY8qKusc8UxQdMspUJTvbeOwq42gv3aKVYLbq2GWiTnLnD7OhRdm3VMnujZmesA
+         5fy4P444KBSOsONVemnDRlhPlur4pntqgkxJZSqPVC1dfjwW4J8DCGAzO91CXua9ko+h
+         0FAP8dFqBrkeEUE5elFkFpVnOm2ToGG0+BxSe6iaJihtgleOkinfZ/52wgbMrfYhEtJb
+         /wLkgBtrowZCAFMREhDPXx4O/5GQwkcMRL1J4O4WIEX0yKhE56JQY9vK6mWCVvx5Gqjt
+         JxLhExvwZ2ou7g9LFeoOHVKSv/buRHZzn4G2k5bZZGIgp/EOT43+x7zhpcqJKcbd2vFE
+         XypA==
+X-Gm-Message-State: AOJu0YzIK5mC4u/PZuSakgYZa6yH8dOdD41tXxvET0xm5Ku37XEzUpW0
+        agPZQX99ydxm/GDEH+ijYxAdCA==
+X-Google-Smtp-Source: AGHT+IFG8s+97gnXPNAdl7stS8nrro27q9Tek5RX5a8f1kLRhXzS+/P1ypSsYAbnG7kRBJjHdTyusg==
+X-Received: by 2002:a17:907:6c14:b0:9a5:cf6f:3efc with SMTP id rl20-20020a1709076c1400b009a5cf6f3efcmr3536424ejc.77.1696510883979;
+        Thu, 05 Oct 2023 06:01:23 -0700 (PDT)
+Received: from localhost (144-178-202-138.static.ef-service.nl. [144.178.202.138])
+        by smtp.gmail.com with ESMTPSA id o6-20020a17090611c600b009ad875d12d7sm1149455eja.210.2023.10.05.06.01.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Oct 2023 06:01:23 -0700 (PDT)
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date:   Thu, 05 Oct 2023 15:01:22 +0200
+Message-Id: <CW0IX09PNB86.36RDKF8LNWIBM@fairphone.com>
+Cc:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: Re: [PATCH V4 2/4] arm64: dts: qcom: sc7280: Add UFS nodes for
+ sc7280 soc
+From:   "Luca Weiss" <luca.weiss@fairphone.com>
+To:     "Nitin Rawat" <quic_nitirawa@quicinc.com>, <agross@kernel.org>,
+        <andersson@kernel.org>, <konrad.dybcio@linaro.org>,
+        <mani@kernel.org>, <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <robh+dt@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
+        <cros-qcom-dts-watchers@chromium.org>
+X-Mailer: aerc 0.15.2
+References: <20230929131936.29421-1-quic_nitirawa@quicinc.com>
+ <20230929131936.29421-3-quic_nitirawa@quicinc.com>
+In-Reply-To: <20230929131936.29421-3-quic_nitirawa@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-在 2023/10/5 2:38, Jason Gunthorpe 写道:
-> On Wed, Oct 04, 2023 at 10:43:20AM -0700, Bart Van Assche wrote:
-> 
->> Thank you for having reported this. I'm OK with integrating the
->> above change in my patch. However, code changes must be
->> motivated. Do you perhaps have an explanation of why WQ_HIGHPRI
->> makes the issue disappear that you observed?
-> 
-> I think it is clear there are locking bugs in all this, so it is not
-> surprising that changing the scheduling behavior can make locking bugs
-> hide
-> 
-> Jason
+On Fri Sep 29, 2023 at 3:19 PM CEST, Nitin Rawat wrote:
+> Add UFS host controller and PHY nodes for sc7280 soc.
 
-With the flag WQ_HIGHPRI, an ordered workqueue with high priority is 
-allocated. With this workqueue, to now, the test has run for several 
-days. And the problem did not appear. So to my test environment, this 
-problem seems fixed with the above commit.
+Hi Nitin,
 
-I doubt, without the flag WQ_HIGHPRI, the workqueue is allocated with 
-normal priority. The work item in this workqueue is more likely 
-preempted than high priority work queue.
+I left some comments for v3 that maybe you missed before sending v4:
+https://lore.kernel.org/linux-arm-msm/CVVA1OVF4W9E.380D6QC1K9GD6@otso/
 
-Best Regards,
-Zhu Yanjun
+At least the clock part should definitely be fixed, ICE we can do later.
+
+Regards
+Luca
+
+>
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> ---
+>  arch/arm64/boot/dts/qcom/sc7280.dtsi | 66 ++++++++++++++++++++++++++++
+>  1 file changed, 66 insertions(+)
+>
+> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/q=
+com/sc7280.dtsi
+> index 66f1eb83cca7..163e3df60966 100644
+> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+> @@ -3353,6 +3353,72 @@
+>  			};
+>  		};
+>
+> +		ufs_mem_hc: ufs@1d84000 {
+> +			compatible =3D "qcom,sc7280-ufshc", "qcom,ufshc",
+> +				     "jedec,ufs-2.0";
+> +			reg =3D <0x0 0x01d84000 0x0 0x3000>;
+> +			interrupts =3D <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+> +			phys =3D <&ufs_mem_phy>;
+> +			phy-names =3D "ufsphy";
+> +			lanes-per-direction =3D <2>;
+> +			#reset-cells =3D <1>;
+> +			resets =3D <&gcc GCC_UFS_PHY_BCR>;
+> +			reset-names =3D "rst";
+> +
+> +			power-domains =3D <&gcc GCC_UFS_PHY_GDSC>;
+> +			required-opps =3D <&rpmhpd_opp_nom>;
+> +
+> +			iommus =3D <&apps_smmu 0x80 0x0>;
+> +			dma-coherent;
+> +
+> +			interconnects =3D <&aggre1_noc MASTER_UFS_MEM 0 &mc_virt SLAVE_EBI1 0=
+>,
+> +					<&gem_noc MASTER_APPSS_PROC 0 &cnoc2 SLAVE_UFS_MEM_CFG 0>;
+> +
+> +			clocks =3D <&gcc GCC_UFS_PHY_AXI_CLK>,
+> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
+> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
+> +				 <&rpmhcc RPMH_CXO_CLK>,
+> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
+> +			clock-names =3D "core_clk",
+> +				      "bus_aggr_clk",
+> +				      "iface_clk",
+> +				      "core_clk_unipro",
+> +				      "ref_clk",
+> +				      "tx_lane0_sync_clk",
+> +				      "rx_lane0_sync_clk",
+> +				      "rx_lane1_sync_clk";
+> +			freq-table-hz =3D
+> +				<75000000 300000000>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<75000000 300000000>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<0 0>,
+> +				<0 0>;
+> +			status =3D "disabled";
+> +		};
+> +
+> +		ufs_mem_phy: phy@1d87000 {
+> +			compatible =3D "qcom,sc7280-qmp-ufs-phy";
+> +			reg =3D <0x0 0x01d87000 0x0 0xe00>;
+> +			clocks =3D <&rpmhcc RPMH_CXO_CLK>,
+> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
+> +				 <&gcc GCC_UFS_1_CLKREF_EN>;
+> +			clock-names =3D "ref", "ref_aux", "qref";
+> +
+> +			resets =3D <&ufs_mem_hc 0>;
+> +			reset-names =3D "ufsphy";
+> +
+> +			#clock-cells =3D <1>;
+> +			#phy-cells =3D <0>;
+> +
+> +			status =3D "disabled";
+> +		};
+> +
+>  		usb_1_hsphy: phy@88e3000 {
+>  			compatible =3D "qcom,sc7280-usb-hs-phy",
+>  				     "qcom,usb-snps-hs-7nm-phy";
+> --
+> 2.17.1
+
