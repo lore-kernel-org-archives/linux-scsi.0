@@ -2,121 +2,97 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34D1CE92719
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 15:53:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43466E92717
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 16:05:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232676AbjJEPw7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Oct 2023 11:52:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58160 "EHLO
+        id S232660AbjJEQEy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Oct 2023 12:04:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235622AbjJEPvM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 11:51:12 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E288778915
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 07:13:39 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20231005114715epoutp04009cf7884eb29e68335ce6d916a8c19a~LM51Sb-hH1210912109epoutp04P
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 11:47:15 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20231005114715epoutp04009cf7884eb29e68335ce6d916a8c19a~LM51Sb-hH1210912109epoutp04P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1696506435;
-        bh=Ur+4Je3z8bThcQehVDWdTpaEHCUcUOWQbzV4q7wIiCc=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=iKuYPA76nLE3s1kYHBv12H9KsYEg3qc/Y6U+dBMqeqOjaBj+f8YsB6MZ/kiMAjOCD
-         Lj3sNgJpF4PuwUajl6HbnmXIIIPkdbOkdvZ08WBg2dnr4mu4t1jqGJFpJTApLo5na5
-         IhFJzHAc+85S9UBK+DOsLthEDwjKvpsFQPj6U9cc=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20231005114714epcas2p4275fa98619da66da774a9e4da888acab~LM50qdik-2498724987epcas2p4E;
-        Thu,  5 Oct 2023 11:47:14 +0000 (GMT)
-Received: from epsmgec2p1.samsung.com (unknown [182.195.36.70]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4S1VCk2wKgz4x9Pv; Thu,  5 Oct
-        2023 11:47:14 +0000 (GMT)
-X-AuditID: b6c32a43-96bfd70000002187-f1-651ea242eab2
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmgec2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        C2.58.08583.242AE156; Thu,  5 Oct 2023 20:47:14 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: [PATCH 04/13] block: Restore write hint support
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Seokhwan Kim <sukka.kim@samsung.com>,
-        Yonggil Song <yonggil.song@samsung.com>,
-        Jorn Lee <lunar.lee@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20230920191442.3701673-5-bvanassche@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20231005114612epcms2p14efed0ed36c055344eec4b1f961ddf60@epcms2p1>
-Date:   Thu, 05 Oct 2023 20:46:12 +0900
-X-CMS-MailID: 20231005114612epcms2p14efed0ed36c055344eec4b1f961ddf60
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrAJsWRmVeSWpSXmKPExsWy7bCmha7TIrlUg30nRCxW3+1ns3h9+BOj
-        xbQPP5ktTk89y2Tx8pCmxaoH4RaXn/BZrFx9lMniyfpZzBZ7b2lb7Nl7ksWi+/oONouTK16w
-        WCw//o/JYlXHXEaL83+Ps1pMPX+EyUHQ4/IVb4/LZ0s9Nq3qZPPYfbOBzePj01ssHn1bVjF6
-        fN4k57HpyVumAI6obJuM1MSU1CKF1Lzk/JTMvHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUX
-        nwBdt8wcoA+UFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnFJbZKqQUpOQXmBXrFibnFpXnpenmp
-        JVaGBgZGpkCFCdkZ/esfsxa8ZKt4tXoZawPjWdYuRk4OCQETiV17lgDZXBxCAjsYJTqXdrB0
-        MXJw8AoISvzdIQxSIyxgI7Hl2VY2EFtIQEli/cVZ7BBxPYlbD9cwgthsAjoS00/cB4uLCLhJ
-        NFzdxQYyk1ngHYvEq7+7oZbxSsxof8oCYUtLbF++FayZU8BKYunFnewQcQ2JH8t6mSFsUYmb
-        q9+yw9jvj81nhLBFJFrvnYWqEZR48HM3VFxS4vbcTVD1+RL/ryyHsmskth2YB2XrS1zr2Ah2
-        A6+Ar8S/N29ZQf5lEVCVeDiVG6LERaJ35XKw8cwC8hLb385hBilhFtCUWL9LH8SUEFCWOHKL
-        BaKCT6Lj8F92mAcbNv7Gyt4x7wkThK0mse7neqYJjMqzEOE8C8muWQi7FjAyr2IUSy0ozk1P
-        TTYqMIRHbXJ+7iZGcFLWct7BeGX+P71DjEwcjIcYJTiYlUR40xtkUoV4UxIrq1KL8uOLSnNS
-        iw8xmgI9OZFZSjQ5H5gX8kriDU0sDUzMzAzNjUwNzJXEee+1zk0REkhPLEnNTk0tSC2C6WPi
-        4JRqYKr0Zr8rJ7pKNbPXyHhvbq2KS/Fzj/cv64SFevRFC6uWRybfXLvMwSejn5PvW21WCc8E
-        tzwj99pAFrM9h+N7db5Nbr1x4N0O9sJV3fFLniY9sq1js9pSr5gksilFconGq6ctr9bEaxbb
-        bsuqZdvy8N1Btj+XZQ/13cj3WtpTeSz8bXBTqfWKG6seHD970O33/jc3FnruWCpZtPj059q5
-        DPv2T78iu+XOzYBT5hItp97L+WX7hEz/airg3Pl8trC4tYvv8s0pwTuetG1617bwnor98UXO
-        QVOL/ye7RX3V1hdp3yee/y0iqeKXtaRyyj/Gg5P1XI1On6u98kqwLVLbhX3W1pn7uZe+LWBq
-        MT/xWomlOCPRUIu5qDgRAPbgHYxTBAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230920191556epcas2p39b150e6715248b625588a50b333e82e2
-References: <20230920191442.3701673-5-bvanassche@acm.org>
-        <20230920191442.3701673-1-bvanassche@acm.org>
-        <CGME20230920191556epcas2p39b150e6715248b625588a50b333e82e2@epcms2p1>
+        with ESMTP id S237503AbjJEQDR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 12:03:17 -0400
+Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 847327FF2D
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 08:56:23 -0700 (PDT)
+Received: by mail-qt1-x82f.google.com with SMTP id d75a77b69052e-41517088479so17987831cf.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Oct 2023 08:56:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1696521382; x=1697126182; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=uG4Ph64bewzJVU49JFBslaTgnXwJjaVRqO+mHvKsins=;
+        b=eRC9OuOnWgE+5IHji7P/SGFXu3/zgLv+Atumhq0U01RmN6egXpJ+BVP6jLMm9Lk6Gl
+         jYPQ470ltD0wuJrLWDC2wE1WKNlsdahmUjbHSggzwmCZW4vm5CjK/FBaXZTZPX8WGDzl
+         QJJrIp0OXFD3pO5sek6BH5Ge4PKkAeGqRIZm78FU1YRzHwNfymUPySUadOxjsHp4+Pdl
+         M3urN58FveKpLomrfDQLS5ryHM3DCcv3QruRoP6Ibb6mXJhHeh1JMj6C9oATkwA+qcjX
+         BBf4ry4GvLPPbwI6FI4TcIMkLHjk1j7IyuKKn+WHgS5cuQsr/RlVUbRbB/4GYorh55k2
+         mcZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696521382; x=1697126182;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uG4Ph64bewzJVU49JFBslaTgnXwJjaVRqO+mHvKsins=;
+        b=dQ5ApZKyEpJlv0UEahHBwdHlBF7AUZXlVCbHAu0eDvBSdjWbJNcy+hPS1FG5gU0NgE
+         HRTa/O2UJuwPWXM/HQFt8c9XzZrHJUC6cJr67kcLdnsplyMDkX/DmY6aQG8R6VqY4Z57
+         pynM148TJzszwLYLPAPewlo415HgSKNaT3plKYu6bIMBhnQCPOlMKrtT6U29HaPjczgK
+         1T1qEHU+MFnh6qekRH8WaFfYMS0FAufNaWsPGntWeCC9B7spb2vCf1IqqFaSx4BC3dGV
+         TBZntRk4MQYTn3c6Eu8LCnWadHNrpdhADDf1grSR7mlMTlmHz9sCvf4AHTg74Z1Mh2Fi
+         l+OA==
+X-Gm-Message-State: AOJu0YxGYK90bsiAqPhoVrvklRKZ4n+wm+B7pCKgxH48el6QvRZZ/ppG
+        PDGahXICnVJjtQrFs3i+uWcW28yyuqh1B6uAepY=
+X-Google-Smtp-Source: AGHT+IGWO/x3ytUeLf5AFCkVaB7RnAy+uiwHbX9L5BgFMBqhYq0K8pe3itPgQK5suUVO326lMXZwpg==
+X-Received: by 2002:a05:622a:14f:b0:417:fe21:b254 with SMTP id v15-20020a05622a014f00b00417fe21b254mr1562596qtw.18.1696521382422;
+        Thu, 05 Oct 2023 08:56:22 -0700 (PDT)
+Received: from ziepe.ca ([142.68.26.201])
+        by smtp.gmail.com with ESMTPSA id x24-20020ac87ed8000000b004181a3eeff4sm572363qtj.5.2023.10.05.08.56.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Oct 2023 08:56:21 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.95)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1qoQi0-0045ZW-1M;
+        Thu, 05 Oct 2023 12:56:16 -0300
+Date:   Thu, 5 Oct 2023 12:56:16 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Zhu Yanjun <yanjun.zhu@linux.dev>,
+        Bob Pearson <rpearsonhpe@gmail.com>,
+        Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
+        linux-rdma@vger.kernel.org, matsuda-daisuke@fujitsu.com,
+        shinichiro.kawasaki@wdc.com, linux-scsi@vger.kernel.org,
+        Zhu Yanjun <yanjun.zhu@intel.com>
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
+Message-ID: <20231005155616.GR13795@ziepe.ca>
+References: <20230926140656.GM1642130@unreal>
+ <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
+ <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
+ <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
+ <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
+ <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
+ <20231004183824.GQ13795@ziepe.ca>
+ <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
+ <20231005142148.GA970053@ziepe.ca>
+ <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-> This patch partially reverts commit c75e707fe1aa ("block: remove the
-> per-bio/request write hint"). The following aspects of that commit have
-> been reverted:
-> - Pass the struct kiocb write hint information to struct bio.
-> - Pass the struct bio write hint information to struct request.
-> - Do not merge requests with different write hints.
-> - Passing write hint information from the VFS layer to the block layer.
-> - In F2FS, initialization of bio.bi_write_hint.
+On Thu, Oct 05, 2023 at 07:50:28AM -0700, Bart Van Assche wrote:
+> On 10/5/23 07:21, Jason Gunthorpe wrote:
+> > Which is why it shows there are locking problems in this code.
 > 
-> The following aspects of that commit have been dropped:
-> - Debugfs support for retrieving and modifying write hints.
-> - md-raid, BTRFS, ext4, gfs2 and zonefs write hint support.
-> - The write_hints[] array in struct request_queue.
+> Hi Jason,
 > 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Since the locking problems have not yet been root-caused, do you
+> agree that it is safer to revert patch "RDMA/rxe: Add workqueue
+> support for rxe tasks" rather than trying to fix it?
 
-Reviewed-by: Daejun Park <daejun7.park@samsung.com>
+I don't think that makes the locking problems go away any more that
+using a single threaded work queue?
+
+Jason
