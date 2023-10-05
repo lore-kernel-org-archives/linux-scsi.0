@@ -2,175 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25142E92702
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 14:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF8EE92703
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Oct 2023 14:22:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232887AbjJEOJV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:09:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52696 "EHLO
+        id S232447AbjJEOWT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:22:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232724AbjJEOHU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 10:07:20 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9192726FC1
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 06:01:25 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-9b9ad5760b9so166120566b.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Oct 2023 06:01:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1696510884; x=1697115684; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JnG0sR/xGQYYsyFaEt/vfjkPa8+Rqti/iCkeoYG1xiY=;
-        b=OcVh4o85DKq0RIi0L2YWQQ5/omCian82i8NVwd2fWWeLZKuQ1S3xNvPbCrVIaL3aR+
-         gESPkq87ecsbi+XSqzcVrOljqPY2ZHcS7DrtNpiHvIHf/tnwHrdsiQy1dZKXbbnRMyNT
-         9BPqHbf6CWGd5u07MeLMIfGC94iRnS6rcswgG44g7cxCzaUpCr8Ex/1LQ3xxYqvPlI2P
-         b52JIv/Xj9s+cRDT9SJLmrC/nJxcw4M9jVo6/7afRd8SOaUU2174e/bSOWt2kYEkh/I3
-         wY0ioOOIqthdnAuksgtOKxLO5clVyUe2pAh03CfdIy1pwEGwCYszISFMxlSXj4qqKHVF
-         Fc2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696510884; x=1697115684;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=JnG0sR/xGQYYsyFaEt/vfjkPa8+Rqti/iCkeoYG1xiY=;
-        b=kO6pY8qKusc8UxQdMspUJTvbeOwq42gv3aKVYLbq2GWiTnLnD7OhRdm3VMnujZmesA
-         5fy4P444KBSOsONVemnDRlhPlur4pntqgkxJZSqPVC1dfjwW4J8DCGAzO91CXua9ko+h
-         0FAP8dFqBrkeEUE5elFkFpVnOm2ToGG0+BxSe6iaJihtgleOkinfZ/52wgbMrfYhEtJb
-         /wLkgBtrowZCAFMREhDPXx4O/5GQwkcMRL1J4O4WIEX0yKhE56JQY9vK6mWCVvx5Gqjt
-         JxLhExvwZ2ou7g9LFeoOHVKSv/buRHZzn4G2k5bZZGIgp/EOT43+x7zhpcqJKcbd2vFE
-         XypA==
-X-Gm-Message-State: AOJu0YzIK5mC4u/PZuSakgYZa6yH8dOdD41tXxvET0xm5Ku37XEzUpW0
-        agPZQX99ydxm/GDEH+ijYxAdCA==
-X-Google-Smtp-Source: AGHT+IFG8s+97gnXPNAdl7stS8nrro27q9Tek5RX5a8f1kLRhXzS+/P1ypSsYAbnG7kRBJjHdTyusg==
-X-Received: by 2002:a17:907:6c14:b0:9a5:cf6f:3efc with SMTP id rl20-20020a1709076c1400b009a5cf6f3efcmr3536424ejc.77.1696510883979;
-        Thu, 05 Oct 2023 06:01:23 -0700 (PDT)
-Received: from localhost (144-178-202-138.static.ef-service.nl. [144.178.202.138])
-        by smtp.gmail.com with ESMTPSA id o6-20020a17090611c600b009ad875d12d7sm1149455eja.210.2023.10.05.06.01.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Oct 2023 06:01:23 -0700 (PDT)
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date:   Thu, 05 Oct 2023 15:01:22 +0200
-Message-Id: <CW0IX09PNB86.36RDKF8LNWIBM@fairphone.com>
-Cc:     <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH V4 2/4] arm64: dts: qcom: sc7280: Add UFS nodes for
- sc7280 soc
-From:   "Luca Weiss" <luca.weiss@fairphone.com>
-To:     "Nitin Rawat" <quic_nitirawa@quicinc.com>, <agross@kernel.org>,
-        <andersson@kernel.org>, <konrad.dybcio@linaro.org>,
-        <mani@kernel.org>, <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <robh+dt@kernel.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
-        <cros-qcom-dts-watchers@chromium.org>
-X-Mailer: aerc 0.15.2
-References: <20230929131936.29421-1-quic_nitirawa@quicinc.com>
- <20230929131936.29421-3-quic_nitirawa@quicinc.com>
-In-Reply-To: <20230929131936.29421-3-quic_nitirawa@quicinc.com>
+        with ESMTP id S233651AbjJEOUS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 10:20:18 -0400
+Received: from JPN01-OS0-obe.outbound.protection.outlook.com (mail-os0jpn01olkn2081e.outbound.protection.outlook.com [IPv6:2a01:111:f403:700c::81e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7216D10F
+        for <linux-scsi@vger.kernel.org>; Wed,  4 Oct 2023 19:56:11 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=AcKqoZhSCt86xrfhL15KDnbOJT/l3kfIb79moeQ1HT2VAW91rAmPgQteRxwQByCh8KdBbSBASeeXdMH2Wmal1D/T0BN2CJHrl0dg+tdv/yunL2/6YuxVje6YbI/hSrurRV3Wr8cNg7o0iCBQxY1FFpnZ7MEWvyVaHmb6WWgX7COE8fyv5PBEFxO+cXy3Bq8g2627kYDVZyoPoPOBgmosGHnSpm2ZjxWyiiIK/BZvo0BTns81SRlJRgxDtm5Tewv4A5kdt0icGZnciYpfscL9VbrS03u+MwdbiX7oT+pmvhrUvVuYNrOnb5SqGtd0KVoQ2Tnq6RR1KmyJ5rxe0USYCQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=71ciRhf9qQ3wjDKsqGKqMsP7OuEHk/q4yhAjX7L/Qn4=;
+ b=PDWXaY1Iy/EcJgp6AWxh1bs6Eop2Lhy/j6WdaJBtLPqg+uQQEcJ0Mknc/QWvNHkA7gNg2WHNonr2a2FUbvhSh8+kHlkbss4d8gQiA3Zc6pHjiPyo7rmF04OBSzpwnixVoFB3m9WV+oWVHIkVA6v30Mj/nCKwYYffA3IwWzF2iPbwi96RQqwXehFSLvrJAqOMzHbU48eeo0Kd8ecbKkThyVq5Y86NLdBRr/08KxTQW5n4CIyPNN0skX9GZ4sLAaVTGYt5qYLuQHXonyZO056k8HqXALniLq0c8I4wrFwAXqKnnNfHdmwSojdsGmDhJxSTrMR3Fs3E5QxLJZ4Zxdla2Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=71ciRhf9qQ3wjDKsqGKqMsP7OuEHk/q4yhAjX7L/Qn4=;
+ b=AgWMLQYUq/Kt2gkOnNgWmfTZuMX9deP1Qt/6BAYlkcg6RcrHomwDhetrSnnA4wh/t3+VPmtc3VZwUA+FER0aEA5nH2qwJUcHthB+hMnL0kUgkIUOhal0+uwJfaH5uU2EZ6CNsrOpsasmOknKPkCip4sa7ywA9Cp4tgyJ/44bDQwapBhbOoKh/R/iqV4mPjRE5EWke/a81XvF5JGRjb3LUvYoddLHggHJ/2VnEbaHVEZhLLyFgwNpmdlVmsHjl+ahob3WDnA0JkPO9eVlgA+lAMvcSCPEmLzmXSF0Fr7eV3WpJyDsmQZgu8cG9d7NXDdmOhwkk+4GlmlpkjOXV8Q3QA==
+Received: from TYBP286MB0207.JPNP286.PROD.OUTLOOK.COM (2603:1096:404:802b::15)
+ by TYVP286MB3652.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:36d::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6863.26; Thu, 5 Oct
+ 2023 02:55:55 +0000
+Received: from TYBP286MB0207.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::376d:6ccf:bbf9:5f6c]) by TYBP286MB0207.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::376d:6ccf:bbf9:5f6c%4]) with mapi id 15.20.6863.024; Thu, 5 Oct 2023
+ 02:55:55 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+From:   hikingsale@outlook.com
+To:     linux-scsi@vger.kernel.org
+Subject: Re: Fiberglass Insect Screen/Pleated Screen Mesh
+Date:   Thu, 5 Oct 2023 02:55:54 +0000
+X-TMN:  [YHlpAoue0QFR/mfe8DXqODO4PtXc+gLb]
+X-ClientProxiedBy: TYAPR01CA0036.jpnprd01.prod.outlook.com
+ (2603:1096:404:28::24) To TYBP286MB0207.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:404:802b::15)
+Message-ID: <TYBP286MB02079B9256CD0FEE16E120A0CDCAA@TYBP286MB0207.JPNP286.PROD.OUTLOOK.COM>
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYBP286MB0207:EE_|TYVP286MB3652:EE_
+X-MS-Office365-Filtering-Correlation-Id: efef0a68-b912-40b3-741a-08dbc54e9817
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: bcLd9JimXjbQb4Qqr3fX+gspBZqDuj+1fhQ2QHb/PvxpW3QvhtSt8ZQWMvzo0twvLYyvGhSUukCEOjbSuXRCJTOUwNPkHOwDfx9WUR8X/QqCMAFcbIHD7SpjOiYuCy2kG1EvOHWns3ccUp6tFUuN6r/zMjgjaHljnPkCr6uqbsfeknRcU1ES3ds/jquG1IliYBsSfqDay+OAsr5cLeMtYSw7+swm7smeCh/WdowYTkK6FKBK7/wCcuFiKDAIA2D3pbZy+vV6TmOVFItl1P7XuGB41G4rUM0ad/QtWU3J5j30TyI5fAl0MpuM+B2XQ5eMI6p4ZgnRBf+2k0Hl45KNss3BnQF+y0UThe9V0wG6/X75jMrcO3uDZLlsGsBnRzSUIUG6TpKBLXdk0BxJKBjau5hXcGRL2Ix4UwA+BgJZMICyn6HKkeNFJkG8IDn8fmu9jEpwczr0Nezn6AxcMAF47PH4v6Dc5iAwHQsmK9CzsCOhBdZknHvtCLpOqt6xrhAOfnvaJ/F5fkUevbm/MWs2Hhkg2zc/4IyUhsrIs8eZ097MmlKxQcYsXRMPiy1OG7nW
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?SWRxaTU5dlpWaDJTV0k1ZFFGZTRscnBjSWR4ZjMxaHBoM25PYml1QnRxK0NB?=
+ =?utf-8?B?RW9FeklueHB4SjU2NWJRWnZ2OWpwaUx1YW9TWi8raTJGYW9vRnhCdytLYUpH?=
+ =?utf-8?B?bnp6Wi9FOGwzdkoyZmc0MW1uZW5RaWcwaGl3TFFKSld0SVVCOTh0SDVyaXkx?=
+ =?utf-8?B?cHhDWGNySURnUHV3NHN1cm9KT05DalRKRTNZSDVjYnBJSFByN29jOTdiekRl?=
+ =?utf-8?B?VWYyL2RCdEkzbEpLSVcwTWtwdHlHVG1sVDRyYW9QNXJOdTU4dWZPWjlTZklq?=
+ =?utf-8?B?NzRoaEtpK0pBOVM4UzA1eXpSQjAyc25XNG4yeW8xVGUwZEV5LzJIbkRpcWxk?=
+ =?utf-8?B?SU94b3NxdFRRMG1kOEE1bk02d082NGJ3SnI4KzJBRzBOM1Q1Mnk4YW5sNHp0?=
+ =?utf-8?B?MEkwVTZ4N2IwODVkL0p5a21oeDBTMVV4NnhJdDBnQ0orek9TZDVCdG1kdmZl?=
+ =?utf-8?B?aEdlOUwwVEd5bXg4eXdHcnlqbmlhcG9QWCtNM2wzKzJYUFdzSi9KUDJYMGZv?=
+ =?utf-8?B?a1RsVUl1VThJWktubDEyRmM4d3NTSzFNZndhNmxwVTZmQkJOeVB0QzBiSU10?=
+ =?utf-8?B?US85dUxvUUpZY0o5WnVlOUtYY0pReTk1WFU2Uk9CeW14Si92VmRTTkkreGFE?=
+ =?utf-8?B?SWNURE5hNm5CeDNBMUp6TmpPTUdaNXFmR1RJTERMeXpYaVIybnZkUkJlNTBC?=
+ =?utf-8?B?ZDZLUlUrYU1rd21vL1ZXK00vdG8vTU96MVdBUjhHNFhhUXB4dnBKckRvc212?=
+ =?utf-8?B?Vzkyeks1N05XTzA2VjR0ZENlSTZYa04xT28yL2NHNys2Nm1HVEdTMzNFSFoy?=
+ =?utf-8?B?STFMV21BYXh1dFJpNnFMeVZIY0hBNmZ3YXdJSGxnZ29keEFDTDFVTGtFcDJ0?=
+ =?utf-8?B?dWsvbWVzYmtPT1BETnNnbmlxMnp0ckdKaFgzK0tkaFJPOHFBcTVyMmljN2VO?=
+ =?utf-8?B?cHhXQUl3dkpsTkoxVEtrb1BQbDhhOXVGYzM0R2dvN2VBV0dGa2VQS2p3WjVU?=
+ =?utf-8?B?UjRLNzNvdFJIamF6Um81Z3d1TWpMZ29Td2oxSmE2WFZjalQzU0RGS2h6NTk5?=
+ =?utf-8?B?VUVMeEw1Y295b0piZThOZUdya0lTSnFtR25MSUx0NElHZHVpK1ZwWms4OVRG?=
+ =?utf-8?B?NmNNNzhQTkE1NXIrTnhaZkpmZThEWG1DMjFlN01CTFZlbVROaFF3TGp1WDFw?=
+ =?utf-8?B?T3ZpeFdlcW9EbjNFL2Fqa2oycFlpRGo3Wm83aUJWajVGdTVxeXpMYUw3Wk1S?=
+ =?utf-8?B?QWdZUTFxK0w0YUtoclFkelBxbTN0YzRSYSs2ZTNWeHY0RlRJM2tEemh5RkRj?=
+ =?utf-8?B?TmlFYmlBRzd6cDdCK3YzdkdMZkRvSlREa1FRUWFldWx5NVZkU2pEb0VTc0Zh?=
+ =?utf-8?B?aUs0V3FmUFBkbFlWM0FKNGlFUXB6VEsxUVhUZFcxVGh6R3VPd2NFNnZqT2pl?=
+ =?utf-8?B?MTJNZ1pXbkdHQUxYQlRScVVNVmdtRWJ2VTNuaGtHZlFVUWJaaHZGWFRXUDZV?=
+ =?utf-8?B?L0o4REd6QnpIc0dXdndqa2ZLZXQvTXlVbzZBUno1aGVYN2FqYTd5N2gxTVMr?=
+ =?utf-8?B?SXlzdUNwNk5XWFAyQUdGaHBIZEdOajNoYTVHalNPZVJFeXBNampaWkU2SEpG?=
+ =?utf-8?Q?1rLMihUPl96Z2qdEI+EuCmEvkhOP9yrk1+jplFgAN1qo=3D?=
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: efef0a68-b912-40b3-741a-08dbc54e9817
+X-MS-Exchange-CrossTenant-AuthSource: TYBP286MB0207.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2023 02:55:55.7017
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYVP286MB3652
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri Sep 29, 2023 at 3:19 PM CEST, Nitin Rawat wrote:
-> Add UFS host controller and PHY nodes for sc7280 soc.
-
-Hi Nitin,
-
-I left some comments for v3 that maybe you missed before sending v4:
-https://lore.kernel.org/linux-arm-msm/CVVA1OVF4W9E.380D6QC1K9GD6@otso/
-
-At least the clock part should definitely be fixed, ICE we can do later.
-
-Regards
-Luca
-
->
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
->  arch/arm64/boot/dts/qcom/sc7280.dtsi | 66 ++++++++++++++++++++++++++++
->  1 file changed, 66 insertions(+)
->
-> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/q=
-com/sc7280.dtsi
-> index 66f1eb83cca7..163e3df60966 100644
-> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> @@ -3353,6 +3353,72 @@
->  			};
->  		};
->
-> +		ufs_mem_hc: ufs@1d84000 {
-> +			compatible =3D "qcom,sc7280-ufshc", "qcom,ufshc",
-> +				     "jedec,ufs-2.0";
-> +			reg =3D <0x0 0x01d84000 0x0 0x3000>;
-> +			interrupts =3D <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-> +			phys =3D <&ufs_mem_phy>;
-> +			phy-names =3D "ufsphy";
-> +			lanes-per-direction =3D <2>;
-> +			#reset-cells =3D <1>;
-> +			resets =3D <&gcc GCC_UFS_PHY_BCR>;
-> +			reset-names =3D "rst";
-> +
-> +			power-domains =3D <&gcc GCC_UFS_PHY_GDSC>;
-> +			required-opps =3D <&rpmhpd_opp_nom>;
-> +
-> +			iommus =3D <&apps_smmu 0x80 0x0>;
-> +			dma-coherent;
-> +
-> +			interconnects =3D <&aggre1_noc MASTER_UFS_MEM 0 &mc_virt SLAVE_EBI1 0=
->,
-> +					<&gem_noc MASTER_APPSS_PROC 0 &cnoc2 SLAVE_UFS_MEM_CFG 0>;
-> +
-> +			clocks =3D <&gcc GCC_UFS_PHY_AXI_CLK>,
-> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-> +				 <&rpmhcc RPMH_CXO_CLK>,
-> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> +			clock-names =3D "core_clk",
-> +				      "bus_aggr_clk",
-> +				      "iface_clk",
-> +				      "core_clk_unipro",
-> +				      "ref_clk",
-> +				      "tx_lane0_sync_clk",
-> +				      "rx_lane0_sync_clk",
-> +				      "rx_lane1_sync_clk";
-> +			freq-table-hz =3D
-> +				<75000000 300000000>,
-> +				<0 0>,
-> +				<0 0>,
-> +				<75000000 300000000>,
-> +				<0 0>,
-> +				<0 0>,
-> +				<0 0>,
-> +				<0 0>;
-> +			status =3D "disabled";
-> +		};
-> +
-> +		ufs_mem_phy: phy@1d87000 {
-> +			compatible =3D "qcom,sc7280-qmp-ufs-phy";
-> +			reg =3D <0x0 0x01d87000 0x0 0xe00>;
-> +			clocks =3D <&rpmhcc RPMH_CXO_CLK>,
-> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
-> +				 <&gcc GCC_UFS_1_CLKREF_EN>;
-> +			clock-names =3D "ref", "ref_aux", "qref";
-> +
-> +			resets =3D <&ufs_mem_hc 0>;
-> +			reset-names =3D "ufsphy";
-> +
-> +			#clock-cells =3D <1>;
-> +			#phy-cells =3D <0>;
-> +
-> +			status =3D "disabled";
-> +		};
-> +
->  		usb_1_hsphy: phy@88e3000 {
->  			compatible =3D "qcom,sc7280-usb-hs-phy",
->  				     "qcom,usb-snps-hs-7nm-phy";
-> --
-> 2.17.1
-
+SGVsbG8gbWFuYWdlciwKCkdyZWV0aW5ncyBmcm9tIExpbmRhLCBhIENoaW5lc2UgbWFudWZhY3R1
+cmVyIG9mIG1vc3F1aXRvIG5ldHMgYW5kIHBsZWF0ZWQgbW9zcXVpdG8gbmV0cy4KCldlIGV4cG9y
+dCBsYXJnZSBxdWFudGl0aWVzIHRvIEV1cm9wZWFuIGNvdW50cmllcyBzdWNoIGFzIFNwYWluLCBQ
+b2xhbmQsIEdyZWVjZSwgSXRhbHkgZXRjLgpIZXJlIGFyZSBvdXIgc3RhbmRhcmQgc3BlY2lmaWNh
+dGlvbnM6CjEpIEZpYmVyZ2xhc3MgSW5zZWN0IFNjcmVlbjogZGVuc2l0eTogMTgqMTYvaW5jaCBv
+ciAxNyoxNS9pbmNoLCB3aWR0aDogMS4wLTMuMG0sIGxlbmd0aDogMzBtLTMwMG0vcm9sbDsKMikg
+UGxlYXRlZCBtb3NxdWl0byBuZXRzOiBkZW5zaXR5OiAyMCoxOS9pbmNoLCB3aWR0aDogMS4wLTMu
+MG0sIGxlbmd0aDogMzBtL3BjcywgZm9sZGluZyBoZWlnaHQ6IDE0LTIwbW07CgpQcmljZSBjYW4g
+YmUgb2ZmZXJlZCBpbW1lZGlhdGVseSBhZnRlciByZWNlaXZpbmcgeW91ciByZXBseS4KRG8geW91
+IG5lZWQgYW55IG9mIHRoZW0/CgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpMaW5k
+YSBaaGFvClByb2plY3QgTWFuYWdlcgpFeHBvcnRpbmcgRGVwYXJ0bWVudAoKQWRkcmVzczogQnVp
+bGRpbmcgMTgsIE5vLiA3LCBLYWlUdW8gUm9hZCwgSHVhbmdkYW8gRGlzdHJpY3QsIFFpbmdkYW8s
+IFNoYW5kb25nLCBDaGluYQpNb2JpbGUvV2hhdHNhcHA6ICs4NiAxNTc2MjI4MTA5NQo=
