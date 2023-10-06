@@ -2,173 +2,133 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E401AE92FF0
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Oct 2023 06:48:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54AA8E92FF9
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Oct 2023 08:20:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230207AbjJFGsQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Oct 2023 02:48:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50394 "EHLO
+        id S230487AbjJFIT7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Oct 2023 04:19:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229650AbjJFGsP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Oct 2023 02:48:15 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B061E4
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 23:48:13 -0700 (PDT)
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20231006064811epoutp048bbac44c732da9a6a06924c0e719771d~LceAUA9Fy1283812838epoutp04U
-        for <linux-scsi@vger.kernel.org>; Fri,  6 Oct 2023 06:48:11 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20231006064811epoutp048bbac44c732da9a6a06924c0e719771d~LceAUA9Fy1283812838epoutp04U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1696574891;
-        bh=lHeSy0kMNy+eo4mTTXgkKEpVNPhh5hMDPwFY0Be+WGw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=oWVzNqEzuknJUJvxHAktQMEPFhm3Y2SE5QnHt27jKt/R7Vn6uNWla5oiaepTkgPy/
-         Yk5LsaXhBeSKinDzhaE0xdToOLOKV3EAmvyF/82xBcZG0kNaoTK6Lm2xPYgqhEfJKW
-         x+zSHnDNm2ritWd8U8Rd6O33RHJa6xlhiDdHzvCM=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-        20231006064811epcas5p123f75791c543d6b97820b54153253fcb~Lcd-nswfc1001310013epcas5p1q;
-        Fri,  6 Oct 2023 06:48:11 +0000 (GMT)
-Received: from epsmges5p1new.samsung.com (unknown [182.195.38.181]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4S1zX94BsSz4x9QC; Fri,  6 Oct
-        2023 06:48:09 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        3B.0A.09949.9ADAF156; Fri,  6 Oct 2023 15:48:09 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20231006064809epcas5p1823281fe74f5911896ac8c43eeb74eb8~Lcd9rEgRX1001210012epcas5p1e;
-        Fri,  6 Oct 2023 06:48:09 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20231006064809epsmtrp2c6237955e7b5d046a7599ec51e8428f0~Lcd9qOn9U1910019100epsmtrp2A;
-        Fri,  6 Oct 2023 06:48:09 +0000 (GMT)
-X-AuditID: b6c32a49-98bff700000026dd-4a-651fada9ed87
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        E5.EB.08788.8ADAF156; Fri,  6 Oct 2023 15:48:08 +0900 (KST)
-Received: from green245 (unknown [107.99.41.245]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20231006064807epsmtip2d0d2e9401542abee429f86e8e2703f3a~Lcd72AdT-1068810688epsmtip2S;
-        Fri,  6 Oct 2023 06:48:06 +0000 (GMT)
-Date:   Fri, 6 Oct 2023 12:12:03 +0530
-From:   Kanchan Joshi <joshi.k@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        with ESMTP id S230445AbjJFIT6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Oct 2023 04:19:58 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1A2CE4;
+        Fri,  6 Oct 2023 01:19:56 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4011BC433C9;
+        Fri,  6 Oct 2023 08:19:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696580396;
+        bh=el4EO5rlsyDaQMavd+QMNqRtr1dlRDpo9KlRFmmRZJ4=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=qZd6LzWSz6uOiByQX5NS4YzdEpk7FxTzMejOLJnTY0ubev7ptvi/TCvxDcJA3UhlT
+         Uamu8zpwnRCUN0jAxLT5LK6aHlv8mCFfGblWaXTQl7i4oY6AxhZizrHhpilBgS54Gw
+         q42yIBTmH0ySUYgpYAuipBAOCo4S3/GBUKJx+gmjqpmR99y54+rTH+e6MAjmFh3feG
+         isnnLZsUx7EzMHlhbTBmzSrG+1zPg8Vc7TkkBUIALsim+PReK8JgwLsyaTRlCbFy6N
+         jOMEkO0uguJiaH61MekaXITkdx3B61SbkxY3o2a5zYgFXPR4mv7S5RzuEcmW7h7zEj
+         R0Cq0R6K11Fnw==
+Message-ID: <8aec03bb-4cef-9423-0ce4-c10d060afce4@kernel.org>
+Date:   Fri, 6 Oct 2023 17:19:52 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v2 03/15] block: Support data lifetime in the I/O priority
+ bitfield
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         Niklas Cassel <Niklas.Cassel@wdc.com>,
         Avri Altman <Avri.Altman@wdc.com>,
         Bean Huo <huobean@gmail.com>,
         Daejun Park <daejun7.park@samsung.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
         Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 03/15] block: Support data lifetime in the I/O
- priority bitfield
-Message-ID: <20231006064203.GC3862@green245>
-MIME-Version: 1.0
-In-Reply-To: <20231005194129.1882245-4-bvanassche@acm.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrHJsWRmVeSWpSXmKPExsWy7bCmlu7KtfKpBi8uSVu8/HmVzWL13X42
-        i2kffjJbrHoQbvFgv73FnkWTmCxWrj7KZDHnbAOTxd5b2hZ79p5ksei+voPNYvnxf0wWD/48
-        Znfg9bh8xdtj56y77B6Xz5Z6bFrVyeax+2YDm8fHp7dYPPq2rGL02Hy62uPzJjmP9gPdTAFc
-        Udk2GamJKalFCql5yfkpmXnptkrewfHO8aZmBoa6hpYW5koKeYm5qbZKLj4Bum6ZOUB3KymU
-        JeaUAoUCEouLlfTtbIryS0tSFTLyi0tslVILUnIKTAr0ihNzi0vz0vXyUkusDA0MjEyBChOy
-        M9rW3GcpOMdbcb39FmsD4w7uLkZODgkBE4m+xZ/Zuxi5OIQEdjNKTH+7kBnC+cQocb9lFROE
-        841R4seMW0wwLV2de1ghEnsZJZYd6YDqf8Yocfz7IlaQKhYBFYln964AJTg42AQ0JS5MLgUJ
-        iwhoSHx7sJwFpJ5ZYDWzROOtiywgNcICkRITdumC1PAK6Eicmb2bEcIWlDg58wkLiM0pYCUx
-        68dnsLiogLLEgW3Hwa6TEDjBIbFryQlGiOtcJO5Ov8EGYQtLvDq+hR3ClpL4/G4vVDxZ4tLM
-        c1DflEg83nMQyraXaD3VzwxyD7NAhsSUfaEgYWYBPone30+YQMISArwSHW1CENWKEvcmPWWF
-        sMUlHs5YAmV7SLxcsw4RPgtO32ObwCg3C8k7sxA2zALbYCXR+aGJFSIsLbH8HweEqSmxfpf+
-        AkbWVYySqQXFuempxaYFhnmp5fAoTs7P3cQITshanjsY7z74oHeIkYmD8RCjBAezkghveoNM
-        qhBvSmJlVWpRfnxRaU5q8SFGU2DkTGSWEk3OB+aEvJJ4QxNLAxMzMzMTS2MzQyVx3tetc1OE
-        BNITS1KzU1MLUotg+pg4OKUamCYczHW9w1x7YOMyudSeQxyv92uwHbj0QDzw/gG+g7pMTBvu
-        Zt3dIWlXrnX41P+Lt69rJlg0SD07VNreMo9lrrl62dPCLfPu/Vr19buWsvP5M+uvmdy2Vjre
-        c2/5Kn2Dx3vmbp/+fkbmzPknrlnIPLbgMb5VoZ2Q/mj+jcdemrfEDwmmrj3Kb/01nPFNpOoH
-        detfFwTlmz6ncUzuWehRkP3grHbik8t1PGLur7cctW10Yw3kTgy0zCuZYB6d5e8gJVc7TeXa
-        zsoqedXzKbUnEvZsPWsce/StoG31sbW1wo2FDPvquVq01HyfX38t2NG6ztpEsexg97KL/Gs3
-        SWTGK7XwLH3xuF2kfCWDv2XQRyWW4oxEQy3mouJEAOR/Rw9RBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupjkeLIzCtJLcpLzFFi42LZdlhJXnfFWvlUgxX9phYvf15ls1h9t5/N
-        YtqHn8wWqx6EWzzYb2+xZ9EkJouVq48yWcw528BksfeWtsWevSdZLLqv72CzWH78H5PFgz+P
-        2R14PS5f8fbYOesuu8fls6Uem1Z1snnsvtnA5vHx6S0Wj74tqxg9Np+u9vi8Sc6j/UA3UwBX
-        FJdNSmpOZllqkb5dAlfGsoUbmQsauCs+33rF2sDYwtnFyMkhIWAi0dW5h7WLkYtDSGA3o8SJ
-        pw9YIBLiEs3XfrBD2MISK/89Z4coesIosffcRlaQBIuAisSze1eAEhwcbAKaEhcml4KERQQ0
-        JL49WM4CUs8ssJ5Z4smDbiaQGmGBSIkJu3RBangFdCTOzN7NCDFzL6PE3DcbWCASghInZz4B
-        s5kFzCTmbX7IDNLLLCAtsfwfB0iYU8BKYtaPz4wgtqiAssSBbceZJjAKzkLSPQtJ9yyE7gWM
-        zKsYJVMLinPTc4sNC4zyUsv1ihNzi0vz0vWS83M3MYKjTEtrB+OeVR/0DjEycTAeYpTgYFYS
-        4U1vkEkV4k1JrKxKLcqPLyrNSS0+xCjNwaIkzvvtdW+KkEB6YklqdmpqQWoRTJaJg1Oqgalv
-        91SDz3VeO8t8XdSDTxzNOsTwtGr/68m3avPyLVMqCxxy+j9tljgQOm9qYDN72J60X+z/myU1
-        jpSWvnHvV9r7qvPvpIamJfJZewPNT8hUBYtceviZWV/t+cIFMYkZWxsL7/bON70Q//rqfSGF
-        zHU/mQU+Le2dfGljc0O4UrtvWIvVaU0/a2tJnnQxTumj+2+mdcccCey8Z1oo7M6X3+i/dxv7
-        PdXp1tXBr2wE42/kbp8Q9nm5i/sHqcVF09319+hpGrCufenbp9LuFmp4NOioyL2oLH3e/Y99
-        tntzG6wo8l2zQ2BNXokq/4cn71ZJ2174dqAxJHCe3KSugJbuheHLarm+1Ylz5jflrP2qxFKc
-        kWioxVxUnAgAMXia1yEDAAA=
-X-CMS-MailID: 20231006064809epcas5p1823281fe74f5911896ac8c43eeb74eb8
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-        boundary="----IKYw8rt4xsi0beZH_Imxy96mvZbFJ64oQ.XZqp2ZTk-1zWLz=_4711e_"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20231005194219epcas5p2fb71011f490cdbc2510787d508d29732
 References: <20231005194129.1882245-1-bvanassche@acm.org>
-        <CGME20231005194219epcas5p2fb71011f490cdbc2510787d508d29732@epcas5p2.samsung.com>
-        <20231005194129.1882245-4-bvanassche@acm.org>
+ <20231005194129.1882245-4-bvanassche@acm.org>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20231005194129.1882245-4-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-------IKYw8rt4xsi0beZH_Imxy96mvZbFJ64oQ.XZqp2ZTk-1zWLz=_4711e_
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-Content-Disposition: inline
+On 10/6/23 04:40, Bart Van Assche wrote:
+> The NVMe and SCSI standards define 64 different data lifetimes. Support
+> storing this information in the I/O priority bitfield.
+> 
+> The current allocation of the 16 bits in the I/O priority bitfield is as
+> follows:
+> * 15..13: I/O priority class
+> * 12..6: unused
+> * 5..3: I/O hint (CDL)
+> * 2..0: I/O priority level
+> 
+> This patch changes this into the following:
+> * 15..13: I/O priority class
+> * 12: unused
+> * 11..6: data lifetime
+> * 5..3: I/O hint (CDL)
+> * 2..0: I/O priority level
+> 
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Niklas Cassel <niklas.cassel@wdc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  include/uapi/linux/ioprio.h | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
+> index bee2bdb0eedb..efe9bc450872 100644
+> --- a/include/uapi/linux/ioprio.h
+> +++ b/include/uapi/linux/ioprio.h
+> @@ -71,7 +71,7 @@ enum {
+>   * class and level.
+>   */
+>  #define IOPRIO_HINT_SHIFT		IOPRIO_LEVEL_NR_BITS
+> -#define IOPRIO_HINT_NR_BITS		10
+> +#define IOPRIO_HINT_NR_BITS		3
+>  #define IOPRIO_NR_HINTS			(1 << IOPRIO_HINT_NR_BITS)
+>  #define IOPRIO_HINT_MASK		(IOPRIO_NR_HINTS - 1)
+>  #define IOPRIO_PRIO_HINT(ioprio)	\
+> @@ -102,6 +102,12 @@ enum {
+>  	IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
+>  };
+>  
+> +#define IOPRIO_LIFETIME_SHIFT		(IOPRIO_HINT_SHIFT + IOPRIO_HINT_NR_BITS)
+> +#define IOPRIO_LIFETIME_NR_BITS		6
+> +#define IOPRIO_LIFETIME_MASK		((1u << IOPRIO_LIFETIME_NR_BITS) - 1)
+> +#define IOPRIO_PRIO_LIFETIME(ioprio)					\
+> +	((ioprio >> IOPRIO_LIFETIME_SHIFT) & IOPRIO_LIFETIME_MASK)
+> +
+>  #define IOPRIO_BAD_VALUE(val, max) ((val) < 0 || (val) >= (max))
 
-On Thu, Oct 05, 2023 at 12:40:49PM -0700, Bart Van Assche wrote:
->The NVMe and SCSI standards define 64 different data lifetimes. Support
->storing this information in the I/O priority bitfield.
->
->The current allocation of the 16 bits in the I/O priority bitfield is as
->follows:
->* 15..13: I/O priority class
->* 12..6: unused
->* 5..3: I/O hint (CDL)
->* 2..0: I/O priority level
->
->This patch changes this into the following:
->* 15..13: I/O priority class
->* 12: unused
->* 11..6: data lifetime
->* 5..3: I/O hint (CDL)
->* 2..0: I/O priority level
->
->Cc: Damien Le Moal <dlemoal@kernel.org>
->Cc: Niklas Cassel <niklas.cassel@wdc.com>
->Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->---
-> include/uapi/linux/ioprio.h | 8 +++++++-
-> 1 file changed, 7 insertions(+), 1 deletion(-)
->
->diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
->index bee2bdb0eedb..efe9bc450872 100644
->--- a/include/uapi/linux/ioprio.h
->+++ b/include/uapi/linux/ioprio.h
->@@ -71,7 +71,7 @@ enum {
->  * class and level.
->  */
-> #define IOPRIO_HINT_SHIFT		IOPRIO_LEVEL_NR_BITS
->-#define IOPRIO_HINT_NR_BITS		10
->+#define IOPRIO_HINT_NR_BITS		3
+I am really not a fan of this. This essentially limits prio hints to CDL, while
+the initial intent was to define the hints as something generic that depend on
+the device features. With your change, we will not be able to support new
+features in the future.
 
-Should the comment[*] also be modified to reflect this change?
+Your change seem to assume that it makes sense to be able to combine CDL with
+lifetime hints. But does it really ? CDL is of dubious value for solid state
+media and as far as I know, UFS world has not expressed interest. Conversely,
+data lifetime hints do not make much sense for spin rust media where CDL is
+important. So I would say that the combination of CDL and lifetime hints is of
+dubious value.
 
-[*]
-/*
- * The 10 bits between the priority class and the priority level are used to
- * optionally define I/O hints for any combination of I/O priority class and
+Given this, why not simply define the 64 possible lifetime values as plain hint
+values (8 to 71, following 1 to 7 for CDL) ?
+
+The other question here if you really want to keep the bit separation approach
+is: do we really need up to 64 different lifetime hints ? While the scsi
+standard allows that much, does this many different lifetime make sense in
+practice ? Can we ever think of a usecase that needs more than say 8 different
+liftimes (3 bits) ? If you limit the number of possible lifetime hints to 8,
+then we can keep 4 bits unused in the hint field for future features.
 
 
-------IKYw8rt4xsi0beZH_Imxy96mvZbFJ64oQ.XZqp2ZTk-1zWLz=_4711e_
-Content-Type: text/plain; charset="utf-8"
+-- 
+Damien Le Moal
+Western Digital Research
 
-
-------IKYw8rt4xsi0beZH_Imxy96mvZbFJ64oQ.XZqp2ZTk-1zWLz=_4711e_--
