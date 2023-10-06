@@ -2,113 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A4FE92FCF
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Oct 2023 01:12:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD370E92FED
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Oct 2023 06:34:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229654AbjJFBMj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Oct 2023 21:12:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36976 "EHLO
+        id S230194AbjJFGen (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Oct 2023 02:34:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbjJFBMi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2023 21:12:38 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B6BBE7
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 18:12:36 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC64FC433C8;
-        Fri,  6 Oct 2023 01:12:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696554756;
-        bh=NPzJ3ETPNnfF/546JJBnrqTQrYfy1Govi5S5Ek1vnvE=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=A5nSB9oe/tAGPgnz4BP+gZI/BAjSJLIIb+t98FOVutEcictDv9GdbZAMgaJCM9Dt8
-         MHFDgDjlruVfYNog7dg0fVDO/atwt6xX027XU31htNA3ciiUiRb+FPr3SKmZjjakNB
-         TeMW5QgbPqwVvVdLMzH/6Pi221MtOKbofwKVpKxIM/faFPU+wlWwsBt41hWHks23+t
-         xt8aXQxeM4hkSA4QBCnqgNHJ3Msnpd2DwqVvosVHmtUP1/zP3ST8v8bvvaSfr06ijR
-         xXXPh76HBJNLHnlyZoFaMX/S707/tsupWEN/PCTgVizOoH3DktmXCi1H/afltaPKBf
-         W2XEQ6KL73sOg==
-Message-ID: <83ac5491-f73d-c446-e3e2-68641ce6347c@kernel.org>
-Date:   Fri, 6 Oct 2023 10:12:33 +0900
+        with ESMTP id S230163AbjJFGem (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Oct 2023 02:34:42 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EDD7E7
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Oct 2023 23:34:38 -0700 (PDT)
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20231006063435epoutp04eb739c1174eb3cffe816e2a5d17e173d~LcSH_ShYx3237732377epoutp04y
+        for <linux-scsi@vger.kernel.org>; Fri,  6 Oct 2023 06:34:35 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20231006063435epoutp04eb739c1174eb3cffe816e2a5d17e173d~LcSH_ShYx3237732377epoutp04y
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1696574075;
+        bh=9oSZ7fmA4mqWaKJ8Rdiwiyeth7cOhSmwwcOUHquZxKk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=KTdgoy4W1H8S1AnPNqlN8gegua9pmKaK+3+mNWK0kYtUgSRQuvlpYoNzS80b/cp3S
+         jkSIyNfRydOlZbiUjTxMagk2aGlnklLTogKp3oKw5GfL7FsBPyPFuFlrMkvfxjbcQn
+         54kLWfyN28P4aDwkTG/VttCFFDJPlWKeUBbsHz2I=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20231006063434epcas5p298987cdcd8dabcd0b52dfa490888723e~LcSHYkQpm0821308213epcas5p23;
+        Fri,  6 Oct 2023 06:34:34 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.179]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4S1zDT0Mkvz4x9Q9; Fri,  6 Oct
+        2023 06:34:33 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C3.FF.09635.87AAF156; Fri,  6 Oct 2023 15:34:32 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20231006063432epcas5p45ddbf3a433cab79ab3e4ccb10d4e64c1~LcSFTYsnu2828128281epcas5p4i;
+        Fri,  6 Oct 2023 06:34:32 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20231006063432epsmtrp2758b86b73f11723113f7137fa4c53068~LcSFQs-IW1168411684epsmtrp23;
+        Fri,  6 Oct 2023 06:34:32 +0000 (GMT)
+X-AuditID: b6c32a4b-2f5ff700000025a3-23-651faa788ee4
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C9.FA.08742.87AAF156; Fri,  6 Oct 2023 15:34:32 +0900 (KST)
+Received: from green245 (unknown [107.99.41.245]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20231006063430epsmtip102ac448f24463d34ee1dc91ba5d948aa~LcSDgu4433249532495epsmtip1f;
+        Fri,  6 Oct 2023 06:34:30 +0000 (GMT)
+Date:   Fri, 6 Oct 2023 11:58:23 +0530
+From:   Kanchan Joshi <joshi.k@samsung.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH v2 01/15] block: Make bio_set_ioprio() modify fewer
+ bio->bi_ioprio bits
+Message-ID: <20231006062813.GA3862@green245>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH v2 08/12] scsi: sd: Fix scsi_mode_sense caller's sshdr use
-To:     Mike Christie <michael.christie@oracle.com>, mwilck@suse.com,
-        john.g.garry@oracle.com, bvanassche@acm.org, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20231004210013.5601-1-michael.christie@oracle.com>
- <20231004210013.5601-9-michael.christie@oracle.com>
- <3e87f523-5e5e-dd67-26f3-8187b44b23b0@kernel.org>
- <c630ca48-7747-40a2-8c12-d1b212f07c07@oracle.com>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <c630ca48-7747-40a2-8c12-d1b212f07c07@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20231005194129.1882245-2-bvanassche@acm.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGJsWRmVeSWpSXmKPExsWy7bCmpm7FKvlUg6bv1hYvf15ls1h9t5/N
+        YtqHn8wWqx6EWzzYb2+xcvVRJos5ZxuYLPbe0rbYs/cki0X39R1sFsuP/2OyePDnMbsDj8fl
+        K94eO2fdZfe4fLbUY9OqTjaP3Tcb2Dw+Pr3F4tG3ZRWjx+dNch7tB7qZAjijsm0yUhNTUosU
+        UvOS81My89JtlbyD453jTc0MDHUNLS3MlRTyEnNTbZVcfAJ03TJzgM5VUihLzCkFCgUkFhcr
+        6dvZFOWXlqQqZOQXl9gqpRak5BSYFOgVJ+YWl+al6+WlllgZGhgYmQIVJmRnTHs9gblgE2vF
+        s6X7mRsYb7B0MXJySAiYSPw/2c7UxcjFISSwm1Fi8YPtbCAJIYFPjBKbp7pCJL4xSjyf94wN
+        pmNuzzRWiMReRoldK9axQDjPGCW2/LrHBFLFIqAicf7rB/YuRg4ONgFNiQuTS0HCIgIaEt8e
+        LAerZxboZpZ4OXkjWL2wQKzEwo9z2EFsXgEdia6lG1kgbEGJkzOfgNmcAlYSR/btZgSxRQWU
+        JQ5sOw52t4TADg6Jt+d3gi2TEHCRWLhZHeJSYYlXx7ewQ9hSEp/f7YX6IFni0sxzTBB2icTj
+        PQehbHuJ1lP9zCA2s0CGxLYjP5kgbD6J3t9PmCDG80p0tAlBlCtK3Jv0lBXCFpd4OGMJlO0h
+        sf3GQRZ4AD1Yd49lAqPcLCTvzEKyAsK2kuj80MQ6C2gFs4C0xPJ/HBCmpsT6XfoLGFlXMUqm
+        FhTnpqcWmxYY56WWw+M4OT93EyM4AWt572B89OCD3iFGJg7GQ4wSHMxKIrzpDTKpQrwpiZVV
+        qUX58UWlOanFhxhNgdEzkVlKNDkfmAPySuINTSwNTMzMzEwsjc0MlcR5X7fOTRESSE8sSc1O
+        TS1ILYLpY+LglGpg2n35fcRkjxNzbbSOy/7fw9jwTdHlwRt1mU6FXX8PVzxhPZ4+UfjawU/f
+        JqewX6gK0H5qmrsopOXWutKKuOv2LrzrX4bKWLk6t1h/DEx9UxfnIWzJ+K5x2cK5u948eGJ7
+        T/yE3av8Zvtdrc1l55s+McuvFe/bmnV4x367qyfvanXu+nI645XHvFVPFZxv988/oWyt2Nt5
+        8va286UHdl2pfjaxLsj9yqTtR7vuSC5fv4T/Aedj2c9lWm0tn3iEX7Jevvlq1W//jAQJpr3a
+        t0N+3L35wGMCz6o9LvG5P/fb2Hf5fdx89ZAt97XY6F3i6za1hJbLX252D2X74FrCO8euseK+
+        1pTu08HF2y7u2v7oebASS3FGoqEWc1FxIgC1RNUWSQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpjkeLIzCtJLcpLzFFi42LZdlhJTrdilXyqweIH0hYvf15ls1h9t5/N
+        YtqHn8wWqx6EWzzYb2+xcvVRJos5ZxuYLPbe0rbYs/cki0X39R1sFsuP/2OyePDnMbsDj8fl
+        K94eO2fdZfe4fLbUY9OqTjaP3Tcb2Dw+Pr3F4tG3ZRWjx+dNch7tB7qZAjijuGxSUnMyy1KL
+        9O0SuDI2zTjIUvCEqWLvpj2sDYxLmLoYOTkkBEwk5vZMY+1i5OIQEtjNKHHz42xGiIS4RPO1
+        H+wQtrDEyn/P2SGKnjBKtG74DpZgEVCROP/1A5DNwcEmoClxYXIpSFhEQEPi24PlLCD1zAL9
+        zBLtL4+DbRMWiJVY+HEOWC+vgI5E19KNLBBD9zJKTPszhxkiIShxcuYTFhCbWcBMYt7mh8wg
+        C5gFpCWW/+MACXMKWEkc2bcb7FBRAWWJA9uOM01gFJyFpHsWku5ZCN0LGJlXMUqmFhTnpucW
+        GxYY5qWW6xUn5haX5qXrJefnbmIER5WW5g7G7as+6B1iZOJgPMQowcGsJMKb3iCTKsSbklhZ
+        lVqUH19UmpNafIhRmoNFSZxX/EVvipBAemJJanZqakFqEUyWiYNTChiZbRUf84N+/ddmK/+9
+        7l3qCt+fChwCqz16je9YM74MfsafZjZzimV6du1Zb+mtL/WF/JLXxASUByU0yzj+NvNam8cn
+        cmmLbu8trWgF9nz/JsYf1+/cmWVcGLA5ZZf6mcXfXx8sa5TxiRdxWvdIrXCBrCjvAtbN+ZHX
+        opMiS1L2np3/ji3IN0Shm6uGV+HXois31x4VWpvekW59pbP5g9LjJi61oOdS9Rv5XAz7mS/Z
+        WO96dPN5xCfjy5XH6uwWe94zfM7xkF0p/V3c5u3BhkG//IVlWVY33ZObkRSYErB3qtNfqYaC
+        G60b3/JdZHg16+HE17LGH49Z2fYdfGb/XuoFx0adjmNPm9XtBP64K7EUZyQaajEXFScCABDk
+        1PcZAwAA
+X-CMS-MailID: 20231006063432epcas5p45ddbf3a433cab79ab3e4ccb10d4e64c1
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+        boundary="----Q05VG59npZNIcC9SezYoqUiUcYZ5r-Xh01bG8k0yiPfvookF=_470d8_"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20231005194156epcas5p14c65d7fbecc60f97624a9ef968bebf2e
+References: <20231005194129.1882245-1-bvanassche@acm.org>
+        <CGME20231005194156epcas5p14c65d7fbecc60f97624a9ef968bebf2e@epcas5p1.samsung.com>
+        <20231005194129.1882245-2-bvanassche@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/6/23 09:36, Mike Christie wrote:
-> On 10/4/23 5:37 PM, Damien Le Moal wrote:
->> On 10/5/23 06:00, Mike Christie wrote:
->>> The sshdr passed into scsi_execute_cmd is only initialized if
->>> scsi_execute_cmd returns >= 0, and scsi_mode_sense will convert all non
->>> good statuses like check conditions to -EIO. This has scsi_mode_sense
->>> callers that were possibly accessing an uninitialized sshdrs to only
->>> access it if we got -EIO.
->>>
->>> Signed-off-by: Mike Christie <michael.christie@oracle.com>
->>> Reviewed-by: Christoph Hellwig <hch@lst.de>
->>> Reviewed-by: Martin Wilck <mwilck@suse.com>
->>> ---
->>>  drivers/scsi/sd.c | 4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->>> index 6d4787ff6e96..538ebdf42c69 100644
->>> --- a/drivers/scsi/sd.c
->>> +++ b/drivers/scsi/sd.c
->>> @@ -2942,7 +2942,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
->>>  	}
->>>  
->>>  bad_sense:
->>> -	if (scsi_sense_valid(&sshdr) &&
->>> +	if (res == -EIO && scsi_sense_valid(&sshdr) &&
->>
->> 	if (ret < 0 && ...
->>
->> would be safer and avoid any issue if we ever change scsi_execute_cmd() to
->> return other error codes than -EIO, no ?
-> 
-> If we do that, then we will have the same problem we have today
-> where we can access the sshdr when it's not setup.
-> 
-> If scsi_execute_cmd returns < 0, then the sshdr is not setup, so
-> we shouldn't access it. The res value above is from scsi_mode_sense
-> which actually does the scsi_execute_cmd call, but it doesn't always
-> pass the return vale from scsi_execute_cmd directly to its callers.
-> 
-> If there is valid sense then scsi_mode_sense returns -EIO so above
-> that's why we check for that return code.
-> 
-> As far as future safety goes, this patch is not great. Right now
-> we assume scsi_execute_cmd and the functions it calls does not
-> return -EIO. To make it safer we could change scsi_mode_sense to
-> return 1 for the case there is sense or add another arg which
-> gets set when there is sense.
+------Q05VG59npZNIcC9SezYoqUiUcYZ5r-Xh01bG8k0yiPfvookF=_470d8_
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Disposition: inline
 
-Indeed, that would be better because scsi does not prevent a device from
-returning sense data for successfull commands as well (see device statistics or
-CDL as examples). So that would be a better solution than relying on -EIO for
-sense data validity.
+On Thu, Oct 05, 2023 at 12:40:47PM -0700, Bart Van Assche wrote:
+>A later patch will store the data lifetime in the bio->bi_ioprio member
+>before bio_set_ioprio() is called. Make sure that bio_set_ioprio()
+>doesn't clear more bits than necessary.
 
-> 
-> 
-> 
+Only lifetime bits need to be retained, but the patch retains the CDL
+bits too. Is that intentional?
 
--- 
-Damien Le Moal
-Western Digital Research
+------Q05VG59npZNIcC9SezYoqUiUcYZ5r-Xh01bG8k0yiPfvookF=_470d8_
+Content-Type: text/plain; charset="utf-8"
 
+
+------Q05VG59npZNIcC9SezYoqUiUcYZ5r-Xh01bG8k0yiPfvookF=_470d8_--
