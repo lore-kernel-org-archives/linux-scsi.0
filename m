@@ -2,283 +2,178 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A787E92FFC
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Oct 2023 09:53:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 285A3E81DF1
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Oct 2023 12:55:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231539AbjJFJxs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Oct 2023 05:53:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34812 "EHLO
+        id S232271AbjJFMy7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Oct 2023 08:54:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231478AbjJFJxq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Oct 2023 05:53:46 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 915E8D6;
-        Fri,  6 Oct 2023 02:53:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1696586024; x=1728122024;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=WRNKfhCjCvZNndYC0/UOCH5oYENPM5XyEQ0j5W8gceM=;
-  b=DaATIL/2lXlaIM2oc6pTTfSUiR+31nRH1xGGf7lbdzrweiGz+DsVVDtd
-   Su2aE2QGjjsb2DYSUWdmwLgoVFvkMhG/veKxsRTL/9RkVSwCSIv7ZtrKC
-   42ivZOKghvawpn2on1J3jvvXcw0AK71ZNqGj77BBcoS6+PLFQIrhQuLV1
-   dX4SkUHzD5haPX11rrqVsFh5O3T58GcnQs2S4VklX7BSTXsGWDHB+V6b8
-   xMdAst04iJYQBg5OYftCIK+II+26Ew5V1PJQMGPXo6e4yQ6aQx7kfr+RG
-   D/KeUopGhPx+XK39VB5KxjGG/4OfuhdM1JKCcOCnRqTv14AWwgkUtCFp2
-   w==;
-X-CSE-ConnectionGUID: EFFc/r/6R7CBdWvCuqjajQ==
-X-CSE-MsgGUID: PH4vZpUYQk+GOzEsyGMiUQ==
-X-IronPort-AV: E=Sophos;i="6.03,203,1694707200"; 
-   d="scan'208";a="351234065"
-Received: from mail-mw2nam12lp2048.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.48])
-  by ob1.hgst.iphmx.com with ESMTP; 06 Oct 2023 17:53:42 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lFdfoRxTe1bMieyEYDUrzRHuW7pnKsSPxw9rwan+RRDicfu79Xb6q5hzoQCUeW+5gWqs8JnkDdZy/1xFvpcYs7DZZVx5RsiMWABIjobfdfwuklBeExqKsJoA4JcAylaWnYej0R2QOs3az8EK8sZUGqHlq5otXWFJEXi66mFNvcTexfdMQeGzNWkRIlVmeWa/naBKAs3G/LYXu499p5+OU5vgR6UeUs4rVdvu8RBOl832ez3hoSLFjfB08Jmr6Ow1LaHKKT9SErx5bJctIH7IhiOkKImkyEx52UpfXnf27/pKmxDQRu1eLE6s+aojNdEBpEOlLl+okbZTiDYfVcxClQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2nXKXYcCju1hNd91ys3k8CgKrbMEQ2fx9uRAvo5n/YM=;
- b=mfZeHQvvfK7g59+JSp53RADgYpUpvk2L0lrnDJnCGNCdI9HkHHSbIgDLAG9B8FU84jaVmJNlDBIgqSFWQSU270lgezTfd/pph1bcGYrtUd3pYez2r3sUQGsE/GggrkP5cilKoEzHWXT19cZDGebvn/22nzrgRKiVx8pQU6DGneEa7+UyJJGgS5b7Jq5+I4KDzyXhcbv4JgxxHDMQW5MUBRvg0EeFGyDMncyS9Idl0ZqD0cDDpSIm1cxpypZ1xJdW72eHZKTuJ7Dg24J7GTXGv72cMTsZRttVtyCDCnVeRUXK5TNWf7tUcXt8CtZ6Bctmf2pB3HOhjMeM1P4JERsVag==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        with ESMTP id S232262AbjJFMy6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Oct 2023 08:54:58 -0400
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 509DCD6;
+        Fri,  6 Oct 2023 05:54:56 -0700 (PDT)
+Received: by mail-ej1-x62d.google.com with SMTP id a640c23a62f3a-9ad8a822508so402605666b.0;
+        Fri, 06 Oct 2023 05:54:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2nXKXYcCju1hNd91ys3k8CgKrbMEQ2fx9uRAvo5n/YM=;
- b=jI48I0lW5e8m3m9uSRaZZiR6wjJwNqPTOFH3bJHRIp6oo1ek6qpZNR5jdjLhDhhQrS/OBitlDPWuxRmXdFUGP9xU8vKQNIcHExuQhci+Tpez5+tOMOe4b2b6bbADAjF533wzVMhSmm2k3nGbmEcM6ywAj9CEvvqxWRBW15GgpQg=
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
- by CH2PR04MB7016.namprd04.prod.outlook.com (2603:10b6:610:9a::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6838.19; Fri, 6 Oct
- 2023 09:53:40 +0000
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::6fb5:ecb:1ea0:3b1d]) by MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::6fb5:ecb:1ea0:3b1d%6]) with mapi id 15.20.6838.016; Fri, 6 Oct 2023
- 09:53:39 +0000
-From:   Niklas Cassel <Niklas.Cassel@wdc.com>
-To:     Damien Le Moal <dlemoal@kernel.org>
-CC:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 03/15] block: Support data lifetime in the I/O priority
- bitfield
-Thread-Topic: [PATCH v2 03/15] block: Support data lifetime in the I/O
- priority bitfield
-Thread-Index: AQHZ98QEzxK1K1BQ10ix4dd17lPdvbA8bDoAgAAaL4A=
-Date:   Fri, 6 Oct 2023 09:53:39 +0000
-Message-ID: <ZR/ZH7hKcc56jg4L@x1-carbon>
-References: <20231005194129.1882245-1-bvanassche@acm.org>
- <20231005194129.1882245-4-bvanassche@acm.org>
- <8aec03bb-4cef-9423-0ce4-c10d060afce4@kernel.org>
-In-Reply-To: <8aec03bb-4cef-9423-0ce4-c10d060afce4@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|CH2PR04MB7016:EE_
-x-ms-office365-filtering-correlation-id: 25d02e20-66b2-4f70-cd35-08dbc6521e02
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: BBUhB1ZNBBtUJ1XEiwnplwQrd2U1n/0nBi5NQtzEMecxNesk1LqHPde1scRZsiQS6I5bNfua0zn1EKCpxLdhjUD8gQlXIKpA0UR7unhxQmLs3keBqNO2nXHbTPoGNceCBUSNxQQUcy8xN9zulCso4PHBRFE/DrEuP6CMSXFYMZJTFazmxNmFSgkTeH4PHXCxDigy93ttIXDIihoTFH22QTHYtXS1pewncwH5Tu8w0vP+VwDQMl93zYu1FK+r58CcePfimlIFGSGRNRlD2VLj9LpeILakb41dAphw8W+AqmZSkeFLftd6F/QJYPY9Fyqt91fUu5qudNbTaKqHr00k2IPQpP+xMyFv47bqEbRgdk26/iqmgKWx2OLgei/UuusZ/6AwXepIkPWMZVUld42Utm3sk98n6+pXMGn2qWxigo3OFuTsXS1wiKA2mR+DVDAym9U4TLroH0ds8FGS9P3WUMzKew3X+HCAuY/FAiYtmSzL88vAjd4i4gpH2+3JtfLj/Wxr4jqgiKk5qFaqOddRDJu1bEQA84vp+cYQOOk+IAXFScPkj+B2onxqRu5zcI4Tb3TVZl18JAzJ8hg5lp90NDHFIyv9v82VFFMKuQS7CNbabCtomt0as2RWrbBD8Isg
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(136003)(39860400002)(346002)(376002)(366004)(396003)(230922051799003)(64100799003)(451199024)(1800799009)(186009)(122000001)(83380400001)(38070700005)(71200400001)(26005)(38100700002)(6506007)(33716001)(2906002)(6512007)(7416002)(41300700001)(316002)(6486002)(9686003)(82960400001)(4326008)(6916009)(8676002)(8936002)(53546011)(478600001)(54906003)(86362001)(66476007)(64756008)(66446008)(91956017)(66556008)(76116006)(66946007)(5660300002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Cut1nmZsT1TI/lPEuQPQjMTssvyn6W7yP1L7YHSF5CrvtKjNrToJ8H52Afo2?=
- =?us-ascii?Q?gahuBWX3jnxOrUPN3osTS09NiKRJxlRQ1LtTbYoGG2rxbj02CJsXf1NtQwMf?=
- =?us-ascii?Q?dWGl9RwoXEZBNSjkJ+oTdnXwshHnVzWXegzpBwFZe+C/hh+kG8e81HUUpaau?=
- =?us-ascii?Q?E1LXhjUxeXJUahxptpM+JKmk43tGbiju7QIftctxp5C8lLuMEWeHpWiPixNM?=
- =?us-ascii?Q?D6JwNj+ABd4LRn4QRkjc1UQVbQICQIdgVUIC8rrNbuB6XN9yhrsQbHFAj6SG?=
- =?us-ascii?Q?wepVVOef/0Nb1ZbH83NuWD867otn3uLI4vAcC0xPrltJ/AgjDe4CPKLelPV/?=
- =?us-ascii?Q?l1mWgVsXRNiyQFFs/QXD4SgkeRBHvOy/LH0SJFqhiiiCPtj0USP+LLKH9V56?=
- =?us-ascii?Q?/MTA0Amz2SOizgNooHrxPt8dfbZqNLyqwbt/AC0Z/py59WdxwJZzie0+P9cx?=
- =?us-ascii?Q?MwS9Cjof1rrWVfw5trc0T/tQ8nzsm1xPOuSpIb6slLw2QeixTE6XIyeikJFV?=
- =?us-ascii?Q?+uDQVtWKV5Y3scggO4BafTppSVXsAh49+H5lyGarkLzF/XST+hfhprsdKBAO?=
- =?us-ascii?Q?3aj5dA+baLFbQcTsbYubMCwzszB1UlPlW4Luh56spVxjeCe3zFMs2buS1f3d?=
- =?us-ascii?Q?1JlKncEBYISEayDtTMEKJBxS3uqD8QsAZ1UGpXRBdWWc8Roqsm5EUUSqVVPt?=
- =?us-ascii?Q?1iokoMKXY229Dwq5r9neEkcWJ6Uxh6cw36HUO6dkGcW/FHkVs2LybDHiSiUO?=
- =?us-ascii?Q?OqaEt4dH9ddy9pBOuPSaUx3f8bjSPhJ7ul6uesej/2rcpbAIiP1fhyMhbnRp?=
- =?us-ascii?Q?MkyYiVpKbQRzvVWjFxUZzkYZpWxkjFPfq8HnF5beZnEPSybJrv/Y9PXixmGU?=
- =?us-ascii?Q?wk3/Zk3tLlMBNzkxLnUf7gEQUi75pTQnglTu+Qk9u0lLSolyEJFsutrkYLya?=
- =?us-ascii?Q?+HD5qM1tlE+MftECsuT84voNFCHCZMLKJlzY5RZ1CGA76LpWqn4/VWK3VDhq?=
- =?us-ascii?Q?g4Lz9KpKmi169p2ZfXuMAUY5OrmrwShmiWvbx5rQxpGnvC1OdbtF0G1uJRAp?=
- =?us-ascii?Q?y3m6p1wQ16nzcrTBhBjQTVcXANCDAqNuWIlVCrlJyXAGHWFSh+t/QhNqDS7X?=
- =?us-ascii?Q?j95wUk6bY7Y0OvjV6Um15Ji0S62aEhssrqv7elgz2XvyKXDPEVQ/rRplGG73?=
- =?us-ascii?Q?WQCp5SDQI4xVj0IW6RERWvTMUMg7uVEfQh6wvgHigKMApkZooqhYiaJAxiq0?=
- =?us-ascii?Q?Ici15XGJclEwNDLgKTWn5MGB7Yk1O0hCsv1+1kdpYwFM1dEkF8Ndexylwo4z?=
- =?us-ascii?Q?SkKsgJaXm93GanpYww8qsRn0Z6GMDVuLtg0YwsP+IOPZzqoUnIFL9iaTxImK?=
- =?us-ascii?Q?Q3cEUjJsvmnYZ5QucyRWdYc0sGZQP0csdgOCoxSzt4sOUVArub8E6qLXWE+k?=
- =?us-ascii?Q?aCnNqJzLKy+huy5ujvcZPEWtNZVMOLJXNfwm4px85Ej1TRgU1T6gl8anfzeA?=
- =?us-ascii?Q?6+0D+1D+UFoOeNg5lAMNHnccFFkiEmMx6PmkPInpKJdEEWq8MKzI4qZ4ddyg?=
- =?us-ascii?Q?B056myd2ut//U9ypPVm1AOSz0ac6Erip2+MftU9X0kJyzM5NRznNpQ/qlsZn?=
- =?us-ascii?Q?wA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <5BC814E5CCA27945AFD3A7FEF86D78A5@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        d=gmail.com; s=20230601; t=1696596895; x=1697201695; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=gecE+vOGFjARaQC/nlEr7rWoc3kbi1x64ECe3si5O9A=;
+        b=YUTNZV0ZDZFg5hj6nfvgxV9ta43IFBVQvNHZM2Pb3zk5KXWSgHv4gfylS6Qf6DbcWy
+         vk7Wl9sXQh/7mwxrGixlwA5g+ODP9MEQ0g31lj4nNOpo+k1sCNssJWBpLPVAgjyf048i
+         nL1RXBWRYYrQnWAGIoKbT1bWH08BTw4a/D4s0JV7NeRRhwaHddIsq5leX4fNjsUJgrXc
+         usDzGZ2i5aexRLf8XlVPhc3IaQ1GEC2ZxZmEGxVGVPTRCayjhzIPJE/mcofH/YzGX2Hv
+         1+SxmpgvH5xqNyn0WN0z+5npgW2snvJ86+nGzaaYsdIu7ivUbiuO+RTaC4wMExgnRfH1
+         Afwg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696596895; x=1697201695;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=gecE+vOGFjARaQC/nlEr7rWoc3kbi1x64ECe3si5O9A=;
+        b=ofXlhAqmVm0UySHyJPZJsJGUFMIiGFi0CO0bP1Th7xTkuc873LKqxDhKpIiryrD59B
+         GeuFiOrkQ3WRT7Q6KcdeqEHizTjECOTyYK9JL3FUahgiFdtO6ld5EiXOSIcb7716/v82
+         ClezAnacr3hdV8pt6+Dn2n7TnFuIkf3RcFFpuGnfVkG91yb5eHJ11hWopVlmAj5PRsk5
+         9dVlwf+vYweU47Xd5V/RgJEps5loKtw/4mYXUfzSsqcUdp5WbcT4+nlPBg4rdn/m7U2L
+         uE+uz9cmZNA3N+n/GeHUfTweWstOtihGaxgTqCBH31nYkKpOlhFDI03cyDWyk9GRpt9G
+         2g0Q==
+X-Gm-Message-State: AOJu0Yxjm46+L9bahak5SD4czhyuN/qqZzXp1dfsdhsvO31qXaTSAMGQ
+        ep45hhUu7jSrzGcuJhDCVZp5gMTL3gv+qg==
+X-Google-Smtp-Source: AGHT+IESjdKyA6s5OhJ7UTOKsi/fr9Zwv0a4+sM65k6PMfimI9UTYwlNKm7rSorMRoWRPGG+v7fOvA==
+X-Received: by 2002:a17:906:1da1:b0:9ba:65e:752b with SMTP id u1-20020a1709061da100b009ba065e752bmr368474ejh.39.1696596894512;
+        Fri, 06 Oct 2023 05:54:54 -0700 (PDT)
+Received: from sauvignon.fi.muni.cz (laomedon.fi.muni.cz. [147.251.42.107])
+        by smtp.gmail.com with ESMTPSA id p26-20020a1709060dda00b0099bc08862b6sm2894660eji.171.2023.10.06.05.54.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 06 Oct 2023 05:54:53 -0700 (PDT)
+From:   Milan Broz <gmazyland@gmail.com>
+To:     linux-usb@vger.kernel.org
+Cc:     usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, stern@rowland.harvard.edu,
+        oneukum@suse.com, jonathan.derrick@linux.dev,
+        Milan Broz <gmazyland@gmail.com>
+Subject: [RFC PATCH 0/6] usb-storage,uas,scsi: Support OPAL commands on USB attached devices.
+Date:   Fri,  6 Oct 2023 14:54:39 +0200
+Message-ID: <20231006125445.122380-1-gmazyland@gmail.com>
+X-Mailer: git-send-email 2.42.0
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?qaarbyE/sfeFkAnLKo/OZ4X7/JClavvUsulk4ssz3kqkN7+ylHOpVk5U+d2r?=
- =?us-ascii?Q?PrpMDEXqyoo+OaZN22O9SrdPYWtZ2VRwQv9f1jTFFOmWOO2+k7KT3gtQ6lXK?=
- =?us-ascii?Q?ISJksmuMbtyLfNqHP20bJrLXnzgdqkCdh3k3VAfZvBueqP+bXbrRcPdf4J4U?=
- =?us-ascii?Q?smq5ZZIly1N3x9OzcvbNKTqjXFPU9AR7MTNgHaAffFSeC3LPlDWB+7GWJNzB?=
- =?us-ascii?Q?8FGMaEeQ5AD38cE3/d0mx60IFv6mB0qjSUOfhjJYbvZtLN+nqnDBmwZ77DKW?=
- =?us-ascii?Q?VVYgSfmO0qGt2gawUwUUWBWcYfeatFvzNYOz12dIvPOSdn+uXUmx89x+Bhox?=
- =?us-ascii?Q?aLHGDH/jq1CH4PlSNd5U58uXFCP2G5oPAKN6h5FZtLsnz50/jXrqqTL09u47?=
- =?us-ascii?Q?tmhlZusLodmvvB1BPRPBxmWRH2SKhPkI4QYQc2GjXtyyosouJeGFbFNOLgtg?=
- =?us-ascii?Q?BzuduOH4rtTPdEWO2xMFHZ8i4HLLXMlELRJ3o06yKVstOyD75zV4E7On9muh?=
- =?us-ascii?Q?2XsdVW1i/dRum4ST2drJvuntlRN1YzS53gMr5wsU9r250fHhNThfD5Dr6Rwn?=
- =?us-ascii?Q?muRFpVZdDwGISzZmDnkgjXAgv5UL0bZioI4htEAS2tsYxw6iV5uQ8IOWFjeb?=
- =?us-ascii?Q?uQVVKxtOYUvAkuXfI4DjuXHhcfKOHe+BZbKXreuO3FzIEEj8cnE6mnMSROb3?=
- =?us-ascii?Q?IL7RWwkrtchLaQ5V0fR9WEsFBTnWMJ6ZUQFF+kt80UZRmUC1YtF75EL8wH+7?=
- =?us-ascii?Q?XMRU/V089NRZv0JyPR+GNmL/M9W27qw6P2MUZ40RynksEQ1WFRWZCUM3wpbi?=
- =?us-ascii?Q?cT1uA0VO2b36Kd+DnbEI1NnneDxRdkSsjtSgrQjooWreENUe3SuElciyBnQg?=
- =?us-ascii?Q?4jRN5LQqEY2L4RQmnLqNz09VnF6EEb/sfcoVm1+z1tsR92Ws0xBlqHyoLAWZ?=
- =?us-ascii?Q?NsnAaIBu7+UFKkzGYfxrwtDO9s5sZeI4QLweqk0Hp+I=3D?=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 25d02e20-66b2-4f70-cd35-08dbc6521e02
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Oct 2023 09:53:39.5948
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: eWNFZ3oaL3UzrEB/Kcg4Nqj4kUz8acebwH32DeaLX+e0M1W74DuN+QX9CcM3A9G39XlXhtYlQO67PKXrW25HFw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR04MB7016
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 06, 2023 at 05:19:52PM +0900, Damien Le Moal wrote:
-> On 10/6/23 04:40, Bart Van Assche wrote:
-> > The NVMe and SCSI standards define 64 different data lifetimes. Support
-> > storing this information in the I/O priority bitfield.
-> >=20
-> > The current allocation of the 16 bits in the I/O priority bitfield is a=
-s
-> > follows:
-> > * 15..13: I/O priority class
-> > * 12..6: unused
-> > * 5..3: I/O hint (CDL)
-> > * 2..0: I/O priority level
-> >=20
-> > This patch changes this into the following:
-> > * 15..13: I/O priority class
-> > * 12: unused
-> > * 11..6: data lifetime
-> > * 5..3: I/O hint (CDL)
-> > * 2..0: I/O priority level
-> >=20
-> > Cc: Damien Le Moal <dlemoal@kernel.org>
-> > Cc: Niklas Cassel <niklas.cassel@wdc.com>
-> > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> > ---
-> >  include/uapi/linux/ioprio.h | 8 +++++++-
-> >  1 file changed, 7 insertions(+), 1 deletion(-)
-> >=20
-> > diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
-> > index bee2bdb0eedb..efe9bc450872 100644
-> > --- a/include/uapi/linux/ioprio.h
-> > +++ b/include/uapi/linux/ioprio.h
-> > @@ -71,7 +71,7 @@ enum {
-> >   * class and level.
-> >   */
-> >  #define IOPRIO_HINT_SHIFT		IOPRIO_LEVEL_NR_BITS
-> > -#define IOPRIO_HINT_NR_BITS		10
-> > +#define IOPRIO_HINT_NR_BITS		3
+This patchset adds support for OPAL commands (self-encrypted drives)
+through USB-attached storage (usb-storage and UAS drivers).
 
-Can we really redefine this?
-This is defined to 10 in released kernels, e.g. kernel v6.5.
+1) Patches 1-4 only add support for 64-bit quirks for USB storage
+(unfortunately, USB device info can be 32-bit on 32-bit platforms,
+and we are out of space for flags now).
 
-Perhaps a better option would be to keep this defined to 10,
-and then add new macros that define "specific" IO prio hint "classes".
+2) Patches 5-6 enable OPAL commands on USB device and also adds
+an ATA-12 pass-thru wrapper to support OPAL even on devices that
+do not support SCSI SECURITY IN/OUT commands.
+ATA-12 is already used by sedutils directly; this patch makes
+internal kernel OPAL ioctl work with ATA-12 too.
 
-something like
-IOPRIO_HINT_NR_BITS                10
+As patch 6 introduced a new USB quirk that overflows 32-bit,
+I posted all patches together - but logically, these solve two
+separate issues.
 
-IOPRIO_HINT_CDL
-IOPRIO_HINT_CDL_NR_BITS
-IOPRIO_HINT_LIFETIME
-IOPRIO_HINT_LIFETIME_NR_BITS
+More info
 
-lifetime is really a hint, so I think it makes sense for it to be part of
-the "IOPRIO_HINT bits".
+1) 64bit USB storage quirk flags
 
+The quirks are transferred through the device info value, which
+is unsigned long (and as a part of USB infrastructure, it cannot
+be changed).
+After discussion on USB list, I used high bit as an indicator
+that the values need to be translated/unpacked to 64bit
+(while lower values are used directly).
 
-> >  #define IOPRIO_NR_HINTS			(1 << IOPRIO_HINT_NR_BITS)
-> >  #define IOPRIO_HINT_MASK		(IOPRIO_NR_HINTS - 1)
-> >  #define IOPRIO_PRIO_HINT(ioprio)	\
-> > @@ -102,6 +102,12 @@ enum {
-> >  	IOPRIO_HINT_DEV_DURATION_LIMIT_7 =3D 7,
-> >  };
-> > =20
-> > +#define IOPRIO_LIFETIME_SHIFT		(IOPRIO_HINT_SHIFT + IOPRIO_HINT_NR_BIT=
-S)
-> > +#define IOPRIO_LIFETIME_NR_BITS		6
-> > +#define IOPRIO_LIFETIME_MASK		((1u << IOPRIO_LIFETIME_NR_BITS) - 1)
-> > +#define IOPRIO_PRIO_LIFETIME(ioprio)					\
-> > +	((ioprio >> IOPRIO_LIFETIME_SHIFT) & IOPRIO_LIFETIME_MASK)
-> > +
-> >  #define IOPRIO_BAD_VALUE(val, max) ((val) < 0 || (val) >=3D (max))
->=20
-> I am really not a fan of this. This essentially limits prio hints to CDL,=
- while
-> the initial intent was to define the hints as something generic that depe=
-nd on
-> the device features. With your change, we will not be able to support new
-> features in the future.
->=20
-> Your change seem to assume that it makes sense to be able to combine CDL =
-with
-> lifetime hints. But does it really ? CDL is of dubious value for solid st=
-ate
-> media and as far as I know, UFS world has not expressed interest. Convers=
-ely,
-> data lifetime hints do not make much sense for spin rust media where CDL =
-is
-> important. So I would say that the combination of CDL and lifetime hints =
-is of
-> dubious value.
->=20
-> Given this, why not simply define the 64 possible lifetime values as plai=
-n hint
-> values (8 to 71, following 1 to 7 for CDL) ?
->=20
-> The other question here if you really want to keep the bit separation app=
-roach
-> is: do we really need up to 64 different lifetime hints ? While the scsi
-> standard allows that much, does this many different lifetime make sense i=
-n
-> practice ? Can we ever think of a usecase that needs more than say 8 diff=
-erent
-> liftimes (3 bits) ? If you limit the number of possible lifetime hints to=
- 8,
-> then we can keep 4 bits unused in the hint field for future features.
+This is implemented through a host-compiled program that
+generates device tables and translation function.
+As both usb-storage and UAS drivers share a lot of headers and
+definitions, we need to generate separate files for usb-storage,
+UAS and flags translation function.
 
-I think the question is: do we ever want to allow ioprio hints to be combin=
-ed
-or not?
+(I also tried to use a statically generated array for flags,
+but this increased the size of drivers significantly, and
+the code was quite ugly...)
 
-If the answer is no, then go ahead and add the life time hints as values
-8 to 71.
+2) Support for OPAL on USB attached storage.
 
-If the answer is yes, then life time hints need to use unique bits, even if=
- it
-might not make sense for CDL and life times to be combined.
+The main support for OPAL on USB-attached storage is
+straightforward. The patch 6
+ - enables SCSI security flag for USB mass storage and UAS device
+   by default.
+ - adds an optional wrapper to the SCSI layer for the ATA-12
+   pass-thru command as an alternative if SECURITY IN/OUT
+   is unavailable.
 
+During device detection, these steps are then done:
+  1) USB driver (mass-storage, UAS) enables security driver flag
+     by default if not disabled by quirk
+  2) SCSI device enumerates SECURITY IN/OUT support. If detected,
+     SECURITY ON/OUT wrapper is used (as in the current code).
+     If not, the new ATA12 pass-thru wrapper is used instead.
+  3) SED OPAL code tries OPAL discovery command for the device.
+     If it receives correct reply, OPAL is enabled for the device.
 
-Kind regards,
-Niklas=
+Enabling support may uncover many issues, as OPAL-locked devices often
+tend to generate errors on the locked range.
+
+Anyway, cryptsetup will soon support OPAL devices, and I think support
+for USB devices is a nice feature that enables users to unlock drives
+even if they are attached through USB adapters.
+
+But also, there are bugs in firmware, so I added a quirk flag that can
+disable security commands for particular devices.
+
+The last patch uses this quirk for Realtek 9210, which seems to support
+OPAL commands, but after configuring OPAL locking range, it also sets
+the write-protected flag for the whole device.
+This is perhaps a bug in firmware (all versions I tried), and I will
+report that later to Realtek.
+
+Milan Broz (6):
+  usb-storage: remove UNUSUAL_VENDOR_INTF macro
+  usb-storage: make internal quirks flags 64bit
+  usb-storage: use fflags index only in usb-storage driver
+  usb-storage,uas: use host helper to generate driver info
+  usb-storage,uas,scsi: allow to pass through security commands (OPAL)
+  usb-storage,uas: Disable security commands (OPAL) for RT9210 chip
+    family
+
+ drivers/scsi/sd.c                   |  33 ++++-
+ drivers/usb/storage/Makefile        |  25 ++++
+ drivers/usb/storage/alauda.c        |   2 +-
+ drivers/usb/storage/cypress_atacb.c |   2 +-
+ drivers/usb/storage/datafab.c       |   2 +-
+ drivers/usb/storage/ene_ub6250.c    |   2 +-
+ drivers/usb/storage/freecom.c       |   2 +-
+ drivers/usb/storage/isd200.c        |   2 +-
+ drivers/usb/storage/jumpshot.c      |   2 +-
+ drivers/usb/storage/karma.c         |   2 +-
+ drivers/usb/storage/mkflags.c       | 212 ++++++++++++++++++++++++++++
+ drivers/usb/storage/onetouch.c      |   2 +-
+ drivers/usb/storage/realtek_cr.c    |   2 +-
+ drivers/usb/storage/scsiglue.c      |   4 +
+ drivers/usb/storage/sddr09.c        |   2 +-
+ drivers/usb/storage/sddr55.c        |   2 +-
+ drivers/usb/storage/shuttle_usbat.c |   2 +-
+ drivers/usb/storage/uas-detect.h    |   4 +-
+ drivers/usb/storage/uas.c           |  26 ++--
+ drivers/usb/storage/unusual_devs.h  |  11 ++
+ drivers/usb/storage/unusual_uas.h   |  11 ++
+ drivers/usb/storage/usb.c           |  42 +++---
+ drivers/usb/storage/usb.h           |   7 +-
+ drivers/usb/storage/usual-tables.c  |  38 +----
+ include/linux/usb_usual.h           |   2 +
+ 25 files changed, 346 insertions(+), 95 deletions(-)
+ create mode 100644 drivers/usb/storage/mkflags.c
+
+-- 
+2.42.0
+
