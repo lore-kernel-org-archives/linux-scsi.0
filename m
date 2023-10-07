@@ -2,81 +2,70 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B84E5E95A60
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Oct 2023 09:46:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BF9E95A60
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Oct 2023 10:13:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234182AbjJGJqM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Oct 2023 05:46:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49298 "EHLO
+        id S1343776AbjJGKNH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Oct 2023 06:13:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234177AbjJGJqK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Oct 2023 05:46:10 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9485AC2;
-        Sat,  7 Oct 2023 02:46:08 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S2gLW6p4czNnyw;
-        Sat,  7 Oct 2023 17:42:11 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Sat, 7 Oct 2023 17:46:05 +0800
-Message-ID: <ac995e80-f71b-4b98-7264-56ce55e61cc3@huawei.com>
-Date:   Sat, 7 Oct 2023 17:46:04 +0800
+        with ESMTP id S234148AbjJGKNG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Oct 2023 06:13:06 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C26D692;
+        Sat,  7 Oct 2023 03:13:04 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D573C433C8;
+        Sat,  7 Oct 2023 10:13:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696673584;
+        bh=TcALwCWaWLYZlDiKumVC2gfmtJ9T07W/GvdNt5U2KyA=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=T7hfTrU4H1juHzNZFz/CWpkXvoNKR4ClQeaDw1eGuv66m6uCiiiXVCKLd/Yf+uG86
+         B604QMYHOW1nvt+qjjkwEYOkQht3+Rr4gLXZEkfQVTUl9RQfzZiMIXMv5ytnv6H2fD
+         fsFHvoYdLlL8t79lJsEmptPCFWQ5WurZNMcSHmPPJ663cVNXedajsxP7mRAEA+MXiv
+         80jn0ZkX3FLQpuQNFa8CALjMvPTItJXHwww1NNs0s4VKYxUWfDgkp/T6YN1mCQYKqI
+         0/8NYNxr60h+OV7nyY6NOeZj8kNrII4YdzobptcGLaQB/QYHnNbPTKiIP3vVq0On1k
+         +MKxxMeH40OGg==
+Message-ID: <e6eb5949-fb48-7210-8162-3630a08761d5@kernel.org>
+Date:   Sat, 7 Oct 2023 18:13:00 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH v2 0/4] SCSI: Fix issues between removing device and error
- handle
+ Thunderbird/102.15.0
+Subject: Re: [PATCH v5] scsi: support packing multi-segment in UNMAP command
 Content-Language: en-US
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>
-References: <20230928073543.3496394-1-haowenchao2@huawei.com>
-From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <20230928073543.3496394-1-haowenchao2@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230310123604.1820231-1-chao@kernel.org>
+ <b53321ab-679d-e007-6407-6bd00149948e@kernel.org>
+ <yq17ct0nijm.fsf@ca-mkp.ca.oracle.com>
+ <f93949dd-e90f-a9bf-33b3-4f31c4328c7d@kernel.org>
+ <yq1sfabni01.fsf@ca-mkp.ca.oracle.com>
+ <d3c1c2cb-9076-523b-da81-a1b632b4b0f5@kernel.org>
+ <yq1h6p9k4vk.fsf@ca-mkp.ca.oracle.com>
+From:   Chao Yu <chao@kernel.org>
+In-Reply-To: <yq1h6p9k4vk.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm000012.china.huawei.com (7.193.23.142)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/9/28 15:35, Wenchao Hao wrote:
-> I am testing SCSI error handle with my previous scsi_debug error
-> injection patches, and found some issues when removing device and
-> error handler happened together.
-> 
-> These issues are triggered because devices in removing would be skipped
-> when calling shost_for_each_device().
-> 
+Hi Martin,
 
-ping...
+Is it possible to commit this patch only to catch up 6.7-rc1, w/o other
+changes in 5.20/discovery? I don't feel there is any strong correlation
+between them, or am I missing something?
 
-> Three issues are found:
-> 1. statistic info printed at beginning of scsi_error_handler is wrong
-> 2. device reset is not triggered
-> 3. IO requeued to request_queue would be hang after error handle
-> 
-> V2:
->    - Fix IO hang by run all devices' queue after error handler
->    - Do not modify shost_for_each_device() directly but add a new
->      helper to iterate devices but do not skip devices in removing
-> 
-> Wenchao Hao (4):
->    scsi: core: Add new helper to iterate all devices of host
->    scsi: scsi_error: Fix wrong statistic when print error info
->    scsi: scsi_error: Fix device reset is not triggered
->    scsi: scsi_core:  Fix IO hang when device removing
-> 
->   drivers/scsi/scsi.c        | 43 +++++++++++++++++++++++++-------------
->   drivers/scsi/scsi_error.c  |  4 ++--
->   drivers/scsi/scsi_lib.c    |  2 +-
->   include/scsi/scsi_device.h | 25 +++++++++++++++++++---
->   4 files changed, 53 insertions(+), 21 deletions(-)
-> 
+Thanks,
 
+On 2023/8/8 22:04, Martin K. Petersen wrote:
+> 
+> Chao,
+> 
+>>>> Any progress on this patch?
+>>> I'll resubmit this series for 6.6.
+> 
+> Been working on this series to address the reported regressions. Spent
+> quite a bit of time on it last week.
+> 
