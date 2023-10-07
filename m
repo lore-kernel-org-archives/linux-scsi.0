@@ -2,70 +2,106 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BF9E95A60
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Oct 2023 10:13:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC70E95A66
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Oct 2023 14:01:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343776AbjJGKNH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Oct 2023 06:13:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54134 "EHLO
+        id S1343936AbjJGOBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Oct 2023 10:01:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234148AbjJGKNG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Oct 2023 06:13:06 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C26D692;
-        Sat,  7 Oct 2023 03:13:04 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D573C433C8;
-        Sat,  7 Oct 2023 10:13:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696673584;
-        bh=TcALwCWaWLYZlDiKumVC2gfmtJ9T07W/GvdNt5U2KyA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=T7hfTrU4H1juHzNZFz/CWpkXvoNKR4ClQeaDw1eGuv66m6uCiiiXVCKLd/Yf+uG86
-         B604QMYHOW1nvt+qjjkwEYOkQht3+Rr4gLXZEkfQVTUl9RQfzZiMIXMv5ytnv6H2fD
-         fsFHvoYdLlL8t79lJsEmptPCFWQ5WurZNMcSHmPPJ663cVNXedajsxP7mRAEA+MXiv
-         80jn0ZkX3FLQpuQNFa8CALjMvPTItJXHwww1NNs0s4VKYxUWfDgkp/T6YN1mCQYKqI
-         0/8NYNxr60h+OV7nyY6NOeZj8kNrII4YdzobptcGLaQB/QYHnNbPTKiIP3vVq0On1k
-         +MKxxMeH40OGg==
-Message-ID: <e6eb5949-fb48-7210-8162-3630a08761d5@kernel.org>
-Date:   Sat, 7 Oct 2023 18:13:00 +0800
+        with ESMTP id S1343627AbjJGOBB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Oct 2023 10:01:01 -0400
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 702DEB6;
+        Sat,  7 Oct 2023 07:01:00 -0700 (PDT)
+Received: by mail-wm1-x32f.google.com with SMTP id 5b1f17b1804b1-406650da82bso27725625e9.3;
+        Sat, 07 Oct 2023 07:01:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1696687258; x=1697292058; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=JA8pNS1sjO+SvOcd9f6aWXsYXEvGmALJgnPRfN+5ZZI=;
+        b=UDnIXIB++NvBHV9SoQCxqfjMq56DJVSBM5z50WqruSFt0D/CpePQzTycSdXcn56RY9
+         yb0Pda6b8xa8ocvBAyV2onRN+4BkIfHmQs8KC56PExjaSekwU5dqcShBBlBLhfPfsDbZ
+         KD2/tNFdxSlyYrtiC4tZ9zknfNalf8Q3Ju3DyAQNCmZOtvtGTq/rpxvS+vlAU9Wu1ulz
+         mu/dTgJ/KMV3ax1Yoce5WqItvlX1Cz1wIwPnAyDoOy7OnPNly/6J27fac88phZlj40hy
+         1BsAfFggVIx1adAsOnDRgOsn+atTXIVoaAlOsOL1N7aTnw3PV+SylLuvOEhYz0GUwdR/
+         YyyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696687258; x=1697292058;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=JA8pNS1sjO+SvOcd9f6aWXsYXEvGmALJgnPRfN+5ZZI=;
+        b=U4HMmMIdFacu88IWGUoxvISys3ipvr0/rIhG++8yoSnhLMFtuD8g2MVSiwtmFhM9Cf
+         yfI7Z/qvx7eqnqbdbaW22O0NpA7CS4nbDvJi+85FjAQw6i81AHQ7nNvNvGGGhlnvsQf9
+         e2R+YHTz1ORL523Ry+AAsKqJyiqFRdPzA3GvT7DwGqnbKmlDTKxLxc/aIAAvfHxS8xLU
+         +9wWE7AQZsaw6rDg4lNRww+siNIVdz7ZT6rgghcputP38D4bH8tODqTYkrYzbRTNA8q+
+         TnQBxgRAgc08nnuj8IzeAkhijomH9tkEak353pVg/ex/yTKxI/J53Hh7DYCFxZhCAxcq
+         sSfQ==
+X-Gm-Message-State: AOJu0Yx/8z8FXZR5jcMYAdTuCe2r1ECjBb8RzJlVbA/ryrn0ycWod5Pu
+        o6rYt/pB5AsjUO2Yb1ie4UM=
+X-Google-Smtp-Source: AGHT+IGw5xKTNOEryOEGkm2GmWpAQMQ7XWxlFiwFmem0T2DEt25XxN9BwEq7jE9+BmH9cReNhqOUuQ==
+X-Received: by 2002:a1c:4c09:0:b0:401:b204:3b97 with SMTP id z9-20020a1c4c09000000b00401b2043b97mr10662857wmf.4.1696687258088;
+        Sat, 07 Oct 2023 07:00:58 -0700 (PDT)
+Received: from david-ryuzu.fritz.box ([77.22.112.104])
+        by smtp.googlemail.com with ESMTPSA id q8-20020a05600000c800b0032415213a6fsm4332043wrx.87.2023.10.07.07.00.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 07 Oct 2023 07:00:57 -0700 (PDT)
+From:   David Wronek <davidwronek@gmail.com>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Joe Mason <buddyjojo06@outlook.com>
+Cc:     cros-qcom-dts-watchers@chromium.org, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+        hexdump0815@googlemail.com, ~postmarketos/upstreaming@lists.sr.ht,
+        phone-devel@vger.kernel.org, David Wronek <davidwronek@gmail.com>
+Subject: [PATCH 0/7] Add UFS support for SC7180/SM7125
+Date:   Sat,  7 Oct 2023 15:58:24 +0200
+Message-ID: <20231007140053.1731245-1-davidwronek@gmail.com>
+X-Mailer: git-send-email 2.42.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [PATCH v5] scsi: support packing multi-segment in UNMAP command
-Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230310123604.1820231-1-chao@kernel.org>
- <b53321ab-679d-e007-6407-6bd00149948e@kernel.org>
- <yq17ct0nijm.fsf@ca-mkp.ca.oracle.com>
- <f93949dd-e90f-a9bf-33b3-4f31c4328c7d@kernel.org>
- <yq1sfabni01.fsf@ca-mkp.ca.oracle.com>
- <d3c1c2cb-9076-523b-da81-a1b632b4b0f5@kernel.org>
- <yq1h6p9k4vk.fsf@ca-mkp.ca.oracle.com>
-From:   Chao Yu <chao@kernel.org>
-In-Reply-To: <yq1h6p9k4vk.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+This patchset introduces UFS storage support for SC7180 and SM7125, as
+well as support for the Xiaomi Redmi Note 9S.
 
-Is it possible to commit this patch only to catch up 6.7-rc1, w/o other
-changes in 5.20/discovery? I don't feel there is any strong correlation
-between them, or am I missing something?
+David Wronek (6):
+  dt-bindings: ufs: qcom: Add SC7180 compatible string
+  dt-bindings: phy: Add QMP UFS PHY compatible for SC7180
+  dt-bindings: arm: qcom: Add Xiaomi Redmi Note 9S
+  phy: qcom: qmp-ufs: Add SC7180 support
+  arm64: dts: qcom: sc7180: Add UFS nodes
+  arm64: dts: qcom: sm7125-xiaomi-common: Add UFS nodes
 
-Thanks,
+Joe Mason (1):
+  arm64: dts: qcom: Add support for Xiaomi Redmi Note 9S
 
-On 2023/8/8 22:04, Martin K. Petersen wrote:
-> 
-> Chao,
-> 
->>>> Any progress on this patch?
->>> I'll resubmit this series for 6.6.
-> 
-> Been working on this series to address the reported regressions. Spent
-> quite a bit of time on it last week.
-> 
+ .../devicetree/bindings/arm/qcom.yaml         |  1 +
+ .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        |  1 +
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     |  2 +
+ arch/arm64/boot/dts/qcom/Makefile             |  1 +
+ arch/arm64/boot/dts/qcom/sc7180.dtsi          | 70 +++++++++++++++++++
+ .../boot/dts/qcom/sm7125-xiaomi-common.dtsi   | 16 +++++
+ .../boot/dts/qcom/sm7125-xiaomi-curtana.dts   | 16 +++++
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       |  3 +
+ 8 files changed, 110 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/qcom/sm7125-xiaomi-curtana.dts
+
+-- 
+2.42.0
+
