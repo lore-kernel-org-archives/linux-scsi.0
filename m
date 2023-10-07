@@ -2,122 +2,71 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C575E9413C
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Oct 2023 00:35:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED3A2E95A60
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Oct 2023 09:45:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233864AbjJGAfX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Oct 2023 20:35:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52126 "EHLO
+        id S234176AbjJGJpi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Oct 2023 05:45:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233696AbjJGAfW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Oct 2023 20:35:22 -0400
-Received: from out-195.mta1.migadu.com (out-195.mta1.migadu.com [95.215.58.195])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34048BF
-        for <linux-scsi@vger.kernel.org>; Fri,  6 Oct 2023 17:35:20 -0700 (PDT)
-Message-ID: <ee0b7977-d063-fe58-f185-4f94a1d7a3be@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1696638918;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=I7EoxSVEJ+4nAFhC40ohlMd/5tFA0h9o6GJHu0CkfzY=;
-        b=ZRAziit/O59bcfCl4hoiABGiBGS047E5XyjLt65PxNYCs5vWbp1Z4+YtBOh/60ShyeqVWR
-        D7s0fOD05WKDlB+wwOT5mXLhFO814Wpy5PxGvbYSFDrV82qjV7SGVt+hY7N1xhZYv56Zh3
-        diEGJrIa3NIkyShtHZInqyAgcR5SKD8=
-Date:   Sat, 7 Oct 2023 08:35:10 +0800
+        with ESMTP id S232594AbjJGJph (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Oct 2023 05:45:37 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4B7FBC;
+        Sat,  7 Oct 2023 02:45:35 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4S2gMY6H80z1P7j2;
+        Sat,  7 Oct 2023 17:43:05 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Sat, 7 Oct 2023 17:45:33 +0800
+Message-ID: <fa567e0b-00ca-76ad-f9e7-a554714f813c@huawei.com>
+Date:   Sat, 7 Oct 2023 17:45:32 +0800
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
-To:     Bob Pearson <rpearsonhpe@gmail.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
-        linux-rdma@vger.kernel.org, matsuda-daisuke@fujitsu.com,
-        shinichiro.kawasaki@wdc.com, linux-scsi@vger.kernel.org,
-        Zhu Yanjun <yanjun.zhu@intel.com>
-References: <20230926140656.GM1642130@unreal>
- <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
- <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
- <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
- <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
- <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
- <20231004183824.GQ13795@ziepe.ca>
- <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
- <20231005142148.GA970053@ziepe.ca>
- <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
- <20231005155616.GR13795@ziepe.ca>
- <93c8ad67-f008-4352-8887-099723c2f4ec@gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <93c8ad67-f008-4352-8887-099723c2f4ec@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v5 08/10] scsi: scsi_debug: Add new error injection reset
+ lun failed
+Content-Language: en-US
+To:     <dgilbert@interlog.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>
+References: <20230922092906.2645265-1-haowenchao2@huawei.com>
+ <20230922092906.2645265-9-haowenchao2@huawei.com>
+ <fd68ba92-7736-4924-945e-4bb238a02860@interlog.com>
+From:   Wenchao Hao <haowenchao2@huawei.com>
+In-Reply-To: <fd68ba92-7736-4924-945e-4bb238a02860@interlog.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-在 2023/10/6 23:58, Bob Pearson 写道:
-> On 10/5/23 10:56, Jason Gunthorpe wrote:
->> On Thu, Oct 05, 2023 at 07:50:28AM -0700, Bart Van Assche wrote:
->>> On 10/5/23 07:21, Jason Gunthorpe wrote:
->>>> Which is why it shows there are locking problems in this code.
->>> Hi Jason,
->>>
->>> Since the locking problems have not yet been root-caused, do you
->>> agree that it is safer to revert patch "RDMA/rxe: Add workqueue
->>> support for rxe tasks" rather than trying to fix it?
->> I don't think that makes the locking problems go away any more that
->> using a single threaded work queue?
+On 2023/10/7 5:04, Douglas Gilbert wrote:
+> On 2023-09-22 05:29, Wenchao Hao wrote:
+>> Add error injection type 3 to make scsi_debug_device_reset() return FAILED.
+>> Fail abort command foramt:
+> 
+> s/foramt/format/
+> 
 >>
->> Jason
-> This is slightly off topic but may still be relevant.
-> If there are locking bugs they are between the two send side tasks
-> rxe_completer and rxe_requester which share the send queue and other
-> state. Bart attempts to fix this by setting max_active to 1 which
-> limits the ability of these two work queue tasks from interfering.
-> For completely different reasons we have looked at merging these
-> two tasks into a single task which it turns out improves performance,
-> especially in high scale situations where it reduces the number of
-> cpu cores needed to complete work. But even at low scale (1-2 QPs)
-> it helps because of improved caching. It turns out that if the work
-> is mostly sends and writes that there isn't much for the completer
-> to do while if it is mostly reads there isn't much for the requester
-> to do. So combining them doesn't hurt performance by having fewer cores
-> to do the work. But this also prevents the two tasks for a given QP
-> to run at the same time which should eliminate locking issues.
-> If no one hates the idea I can send in our patch that does this.
+>> Examples:
+>>      error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
+>>      echo "0 -10 0x12" > ${error}
+> 
+> These examples are misleading. Same with the one in patch 7/10 . The example
+> should be showing an invocation that exercises _this_ patch. So the first
+> byte of the echo should be 4 not the 0 shown above.
+> 
+> Doug Gilbert
+> 
 
-Hi, Bob
+Would update in next version. Would you continue reviewing patch 9/10 and 10/10?
 
-The blktest hang problem is not fixed now. I do not think that it is a 
-good time
-
-to introduce this new feature.
-
-IMHO, we should fix this blktest hang problem. And we also need some time to
-
-wait for the test results from the users. If this problem proves fixed. 
-Then we have a
-
-stable RXE version for the new feature from you.
-
-In short, we need a stable RXE version for use. Then based on the stable 
-RXE version,
-
-new features are welcomed.
-
-Please let me know your advice.
-
-Please Bart comment on this.
-
-Please Jason && Leon comment on this.
-
-Warm Regards,
-
-Zhu Yanjun
-
->
-> Bob
