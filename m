@@ -2,92 +2,77 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4592E95A82
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Oct 2023 17:09:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2FEE95A67
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Oct 2023 23:14:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344966AbjJHRJj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Oct 2023 13:09:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39642 "EHLO
+        id S1344921AbjJHXOH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Oct 2023 19:14:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344915AbjJHRJh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Oct 2023 13:09:37 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFEDBA6;
-        Sun,  8 Oct 2023 10:09:35 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDA73C433C7;
-        Sun,  8 Oct 2023 17:09:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696784975;
-        bh=hkXhovddX4SQVxh0eOgm5kAmQc92T1bvw+lkOeoZwn8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BNk2kZ0gCTIu5rEO9tjTZmePcAFqQLh7LpZ00CEMyAuO4Swl0SMPDe6ut82uXqbGn
-         eK/0D8VRg29wjhBygQvhjAMVYeU9Zk4TEAzKdUqGZ5bkHGr72XAGQ/x9GcyMVZxurl
-         42CosyKim4KKUOyB1SZ9lgNiFaMTwfKDWYjU4vAm0PgbRfuZd4kJO1XaIo2+lHlbZT
-         TKpxcSmyzQNE8VIgEKMJDffwpii79k7fd77XRtjFA6AbkmA85gW27NetE4Nkr+MBWi
-         EjNNLKhHG4zBMtlukvOT3laQ6bSmLsaJYSo+NOtLvRcHt+9uMtIpxU75UiBj+AHd3i
-         nhIFs5CZTanGg==
-Date:   Sun, 8 Oct 2023 20:09:30 +0300
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Zhu Yanjun <yanjun.zhu@linux.dev>, Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Bob Pearson <rpearsonhpe@gmail.com>, zyjzyj2000@gmail.com,
-        linux-rdma@vger.kernel.org, matsuda-daisuke@fujitsu.com,
-        shinichiro.kawasaki@wdc.com, linux-scsi@vger.kernel.org,
-        Zhu Yanjun <yanjun.zhu@intel.com>
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
-Message-ID: <20231008170930.GI51282@unreal>
-References: <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
- <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
- <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
- <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
- <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
- <20231004183824.GQ13795@ziepe.ca>
- <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
- <20231005142148.GA970053@ziepe.ca>
- <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
- <a8453889-3f5f-49ff-89f2-ec0ef929d915@linux.dev>
+        with ESMTP id S1344437AbjJHXOG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Oct 2023 19:14:06 -0400
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7638C9D;
+        Sun,  8 Oct 2023 16:14:05 -0700 (PDT)
+Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 95C7A765D3;
+        Sun,  8 Oct 2023 23:14:04 +0000 (UTC)
+Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
+        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 7F9296091F;
+        Sun,  8 Oct 2023 23:14:04 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
+        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
+        with ESMTP id vr5ko5C6duzg; Sun,  8 Oct 2023 23:14:03 +0000 (UTC)
+Received: from [192.168.48.17] (host-104-157-209-188.dyn.295.ca [104.157.209.188])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id 95C4B60455;
+        Sun,  8 Oct 2023 23:14:02 +0000 (UTC)
+Message-ID: <a517343d-cd37-4faa-8c26-c4e0c1217777@interlog.com>
+Date:   Sun, 8 Oct 2023 19:14:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <a8453889-3f5f-49ff-89f2-ec0ef929d915@linux.dev>
+User-Agent: Mozilla Thunderbird
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v5 09/10] scsi: scsi_debug: Add debugfs interface to fail
+ target reset
+Reply-To: dgilbert@interlog.com
+To:     Wenchao Hao <haowenchao2@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, louhongxiang@huawei.com,
+        kernel test robot <oliver.sang@intel.com>
+References: <20230922092906.2645265-1-haowenchao2@huawei.com>
+ <20230922092906.2645265-10-haowenchao2@huawei.com>
+Content-Language: en-CA
+In-Reply-To: <20230922092906.2645265-10-haowenchao2@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 09, 2023 at 12:01:37AM +0800, Zhu Yanjun wrote:
-> 在 2023/10/5 22:50, Bart Van Assche 写道:
-> > On 10/5/23 07:21, Jason Gunthorpe wrote:
-> > > Which is why it shows there are locking problems in this code.
-> > 
-> > Hi Jason,
-> > 
-> > Since the locking problems have not yet been root-caused, do you
-> > agree that it is safer to revert patch "RDMA/rxe: Add workqueue
-> > support for rxe tasks" rather than trying to fix it?
+On 2023-09-22 05:29, Wenchao Hao wrote:
+> The interface is found at
+> /sys/kernel/debug/scsi_debug/target<h:c:t>/fail_reset where <h:c:t>
+> identifies the target to inject errors on. It's a simple bool type
+> interface which would make this target's reset fail if set to 'Y'.
 > 
-> Hi, Jason && Leon
-> 
-> I spent a lot of time on this problem. It seems that it is a very difficult
-> problem.
-> 
-> So I agree with Bart. Can we revert patch "RDMA/rxe: Add workqueue
-> support for rxe tasks" rather than trying to fix it? Then Bob can apply his
-> new patch to a stable RXE?
+> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+> Reported-by: kernel test robot <oliver.sang@intel.com>
 
-Jason, I'm fine with reverting patch.
+Tested by setting 'echo 1 > /sys/bus/pseudo/drivers/scsi_debug/opts'
+and observing 'tail -f /var/log/syslog'. Looks good including that
+fail_reset is readable so its current state can be checked.
 
-Thanks
+Tested-by: Douglas Gilbert <dgilbert@interlog.com>
 
-> 
-> Any reply is appreciated.
-> Warm Regards,
-> 
-> Zhu Yanjun
-> 
-> > 
-> > Thanks,
-> > 
-> > Bart.
-> 
+<snip>
+
+
