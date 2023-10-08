@@ -2,89 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F8A3E95A67
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Oct 2023 13:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B6AE95A67
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Oct 2023 16:01:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344800AbjJHNPc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Oct 2023 09:15:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40114 "EHLO
+        id S1344912AbjJHQBz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Oct 2023 12:01:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344778AbjJHNPb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Oct 2023 09:15:31 -0400
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id D6E8DC6
-        for <linux-scsi@vger.kernel.org>; Sun,  8 Oct 2023 06:15:28 -0700 (PDT)
-Received: (qmail 109736 invoked by uid 1000); 8 Oct 2023 09:15:27 -0400
-Date:   Sun, 8 Oct 2023 09:15:27 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Milan Broz <gmazyland@gmail.com>
-Cc:     linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        oneukum@suse.com, jonathan.derrick@linux.dev
-Subject: Re: [RFC PATCH 4/6] usb-storage,uas: use host helper to generate
- driver info
-Message-ID: <a80f9bde-5969-498e-8dcf-9af9848d9c2a@rowland.harvard.edu>
-References: <20231006125445.122380-1-gmazyland@gmail.com>
- <20231006125445.122380-5-gmazyland@gmail.com>
- <65bd429f-6740-4aa6-af00-e72d27074115@rowland.harvard.edu>
- <e71d958f-8954-465e-a296-c09763d0e3a1@gmail.com>
+        with ESMTP id S234352AbjJHQBy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Oct 2023 12:01:54 -0400
+Received: from out-196.mta1.migadu.com (out-196.mta1.migadu.com [IPv6:2001:41d0:203:375::c4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6673DAB
+        for <linux-scsi@vger.kernel.org>; Sun,  8 Oct 2023 09:01:52 -0700 (PDT)
+Message-ID: <a8453889-3f5f-49ff-89f2-ec0ef929d915@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1696780910;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=zKcOyrJkVaJ/xvKnkD831klpEkDx4Y+SEx+7tM+0dR4=;
+        b=gWBsvWXU2F/Io3LrTAq9PjFmfQsfLB3K0FCTQkdDxSEqQoj3CSC98d3arD+X8E4mb8z0km
+        +/Z9uaY4m1v8KVucje5HJIDus0FaZmdSQUWlRug9nF1xEkQE8ATNC/yDC0Y5dtyY9iPhXk
+        i9RkpxVnDpHWCx6o53948u9FMZ8o8hs=
+Date:   Mon, 9 Oct 2023 00:01:37 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e71d958f-8954-465e-a296-c09763d0e3a1@gmail.com>
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Bob Pearson <rpearsonhpe@gmail.com>,
+        Leon Romanovsky <leon@kernel.org>, zyjzyj2000@gmail.com,
+        linux-rdma@vger.kernel.org, matsuda-daisuke@fujitsu.com,
+        shinichiro.kawasaki@wdc.com, linux-scsi@vger.kernel.org,
+        Zhu Yanjun <yanjun.zhu@intel.com>
+References: <20230922163231.2237811-1-yanjun.zhu@intel.com>
+ <169572143704.2702191.3921040309512111011.b4-ty@kernel.org>
+ <20230926140656.GM1642130@unreal>
+ <d3c05064-a88b-4719-a390-6bf9ae01fba5@acm.org>
+ <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
+ <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
+ <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
+ <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
+ <20231004183824.GQ13795@ziepe.ca>
+ <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
+ <20231005142148.GA970053@ziepe.ca>
+ <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Zhu Yanjun <yanjun.zhu@linux.dev>
+In-Reply-To: <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Oct 08, 2023 at 12:41:42PM +0200, Milan Broz wrote:
-> On 10/6/23 20:44, Alan Stern wrote:
-> > Okay, this one is a bit of a mess.  Unavoidably so, I'm afraid.
+在 2023/10/5 22:50, Bart Van Assche 写道:
+> On 10/5/23 07:21, Jason Gunthorpe wrote:
+>> Which is why it shows there are locking problems in this code.
 > 
-> yes. What I need to know if it is acceptable approach (I spent quite
-> a lot of time on it and still have no better idea...  At least with
-> a patch that is not too invasive).
-
-Yes, the basic idea is acceptable (subject to the comments in my 
-earlier email).  In fact, it's probably the best we can do, given the 
-constraints we face.
-
-> Here I compared generated tables with old pre-processor generated
-> and it looks the same. (Also I keep it on kernel.org branch, so
-> 0-day bot reports obvious mistakes.)
+> Hi Jason,
 > 
-> ...
+> Since the locking problems have not yet been root-caused, do you
+> agree that it is safer to revert patch "RDMA/rxe: Add workqueue
+> support for rxe tasks" rather than trying to fix it?
+
+Hi, Jason && Leon
+
+I spent a lot of time on this problem. It seems that it is a very 
+difficult problem.
+
+So I agree with Bart. Can we revert patch "RDMA/rxe: Add workqueue
+support for rxe tasks" rather than trying to fix it? Then Bob can apply 
+his new patch to a stable RXE?
+
+Any reply is appreciated.
+Warm Regards,
+
+Zhu Yanjun
+
 > 
-> > > This translation is unnecessary for a 64-bit system, but I keep it
-> > > in place for simplicity.
-> > > (Also, I did not find a reliable way a host-compiled program can detect
-> > > that the target platform has 32-bit unsigned long (usual macros do not
-> > > work here!).
-> > 
-> > How about testing CONFIG_64BIT?  Would that not do what you want?
+> Thanks,
 > 
-> Yes, that was my last idea too, but I am not sure if it correct (and I have
-> no longer access to more exotic platforms to check it).
+> Bart.
 
-I'm reasonably sure that it's the right thing to check.
-
-> Also using kernel config defines in host-compiled code is tricky, but
-> it should be possible.
-
-Yeah; I'm not certain about how to do it.  One possibility is simply to 
-parse the .config file directly at runtime, if the Kbuild system doesn't 
-provide the CONFIG_* macros when compiling a host program.
-
-> I will try to ask my former colleagues, though.
-> 
-> > However, I agree that it's better to keep things simple by using the
-> > same code base for 32-bit and 64-bit kernels.
-> 
-> Yes, that was my plan for now. So you want to keep it as it is?
-> 
-> We can add optimization for 64-bit with additional patch later, it should be
-> pretty easy once I know how to detect that target platform really has
-> 64-bit unsigned long so no translation is needed.
-
-Yes, I agree that this is the approach we should take.
-
-Alan Stern
