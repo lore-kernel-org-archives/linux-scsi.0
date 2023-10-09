@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B65AE95A8E
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 06:39:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 506CCE95A8D
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 06:39:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345251AbjJIGjB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Oct 2023 02:39:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43618 "EHLO
+        id S1345260AbjJIGj5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Oct 2023 02:39:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229551AbjJIGjA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 02:39:00 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7547EA3;
-        Sun,  8 Oct 2023 23:38:59 -0700 (PDT)
+        with ESMTP id S232623AbjJIGj4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 02:39:56 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3B4BA6;
+        Sun,  8 Oct 2023 23:39:54 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 388F41F38C;
-        Mon,  9 Oct 2023 06:38:58 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7082E2183A;
+        Mon,  9 Oct 2023 06:39:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1696833538; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1696833593; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=AESDE41+ANOM7UAgWQnSXCMFdnACyy9zeD9Xn0/+BwM=;
-        b=s+lYA2pi+i+r7zPq43RdUNhGzY+F/tGV0sXjXQpTq+j09rcKDYO3axKrulY+VbYMcjqXk/
-        YyOM19v8s0I/+33sbNwjQvpt0HYLfa/U0JuZ4coLITsHIXWozI5YD1r0YDgZtJMkYM/vaf
-        JKMgKQ8jM6Yi5cYY5lm9YVVjbl8iH0g=
+        bh=J2u6vYyS+812CkJSt5+jVbKml4me73ulgL4G0MCFLf4=;
+        b=lINKX74DKhQW6SCPgq20Fit9WwSI3hpV3S0PLXQpWQW9Ei2KhX6JSgLpx+hBQSO/KLr0PJ
+        xziZG3OdSEUb3NoxL5TQzVb7w9pMHyUNAn6FGAvPup6fkMh0xDTQ8GiDalePDZCr7N+LwB
+        Zn/MHHUg/5je7DHNWWQWCfmcH83xCRw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1696833538;
+        s=susede2_ed25519; t=1696833593;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=AESDE41+ANOM7UAgWQnSXCMFdnACyy9zeD9Xn0/+BwM=;
-        b=C4B6HKVSAYGcMyI6eSIH3VLYZN0JKb1rPitR0c/+POlmXp3xMWRsfIRla9zt2kQvDBo64m
-        B6wbIT71sldrciDg==
+        bh=J2u6vYyS+812CkJSt5+jVbKml4me73ulgL4G0MCFLf4=;
+        b=T86hnp2mWFI5QaKOexVWnij0nTY09vNPcg8sqvYh+O9Z9+qvr5SSy7efiE7ZPsZl9G8UVE
+        cDoJdfCxcEURWyDQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D044313586;
-        Mon,  9 Oct 2023 06:38:57 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1160213586;
+        Mon,  9 Oct 2023 06:39:53 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id SLbqIAGgI2UmCgAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 09 Oct 2023 06:38:57 +0000
-Message-ID: <900e549f-db0f-4c0a-9f67-b7f02294cd14@suse.de>
-Date:   Mon, 9 Oct 2023 08:38:57 +0200
+        id gDYfAjmgI2UmCgAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 09 Oct 2023 06:39:53 +0000
+Message-ID: <40943d68-f6ff-4456-97d6-e18139d39e9d@suse.de>
+Date:   Mon, 9 Oct 2023 08:39:52 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 02/10] scsi: libsas: Delete enum sas_class
+Subject: Re: [PATCH 03/10] scsi: libsas: Delete enum sas_phy_type
 Content-Language: en-US
 To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
         martin.petersen@oracle.com, chenxiang66@hisilicon.com,
@@ -61,9 +61,9 @@ To:     John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         dlemoal@kernel.org
 References: <20230814141022.36875-1-john.g.garry@oracle.com>
- <20230814141022.36875-3-john.g.garry@oracle.com>
+ <20230814141022.36875-4-john.g.garry@oracle.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230814141022.36875-3-john.g.garry@oracle.com>
+In-Reply-To: <20230814141022.36875-4-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -71,23 +71,18 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 8/14/23 16:10, John Garry wrote:
-> enum sas_class prob would have been useful if function sas_show_class() was
-> ever implemented, which it wasn't.
-> 
-> enum sas_class is used as asd_sas_port.class and asd_sas_phy.class, which
-> are only ever set, so delete these members and the enum.
+> enum sas_phy_type is used for asd_sas_phy.type, which is only ever set,
+> so delete this member and the enum.
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
 >   drivers/scsi/aic94xx/aic94xx_hwi.c    | 1 -
 >   drivers/scsi/hisi_sas/hisi_sas_main.c | 1 -
 >   drivers/scsi/isci/phy.c               | 1 -
->   drivers/scsi/libsas/sas_internal.h    | 1 -
->   drivers/scsi/libsas/sas_port.c        | 2 --
 >   drivers/scsi/mvsas/mv_init.c          | 1 -
 >   drivers/scsi/pm8001/pm8001_init.c     | 1 -
->   include/scsi/libsas.h                 | 7 -------
->   8 files changed, 15 deletions(-)
+>   include/scsi/libsas.h                 | 6 ------
+>   6 files changed, 11 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
