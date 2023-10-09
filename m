@@ -2,88 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8493E95A95
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 15:10:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44CC6E95A96
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 15:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376389AbjJIPKZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Oct 2023 11:10:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46536 "EHLO
+        id S1376478AbjJIPXn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Oct 2023 11:23:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346469AbjJIPKY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 11:10:24 -0400
-Received: from gw.red-soft.ru (red-soft.ru [188.246.186.2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 457F6B7;
-        Mon,  9 Oct 2023 08:10:22 -0700 (PDT)
-Received: from localhost.biz (unknown [10.81.81.211])
-        by gw.red-soft.ru (Postfix) with ESMTPA id 278B83E1B08;
-        Mon,  9 Oct 2023 18:10:20 +0300 (MSK)
-From:   Artem Chernyshev <artem.chernyshev@red-soft.ru>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>
-Cc:     Artem Chernyshev <artem.chernyshev@red-soft.ru>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org
-Subject: [PATCH] scsi: megaraid: megaraid_sas: Remove unnecessary checks
-Date:   Mon,  9 Oct 2023 18:10:16 +0300
-Message-Id: <20231009151016.154039-1-artem.chernyshev@red-soft.ru>
-X-Mailer: git-send-email 2.37.3
+        with ESMTP id S1376366AbjJIPXn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 11:23:43 -0400
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEB3E9E
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 08:23:41 -0700 (PDT)
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1c60778a3bfso38478425ad.1
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Oct 2023 08:23:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696865021; x=1697469821;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3/eCSJp1IWt+CyHzVPjWFCl13HvBGVBAfeRir3Nqqmc=;
+        b=Ig0w6OGgp6MoB6MILV3ds0eFLi1C+fhJ2d08LbuTTdpOjCRV0UiAhufLzLnK1qtgbi
+         CqXQQ1BHaU+F9QquZWQ+Xghk7YqGKai4c1EbxoTbJoOlQnwUiJKghPGxAFyJynUknNU0
+         UtzMG0Qd9C4BF1C24wyFCzH9+nMpXAqvmD3aFlPgMnIHkZpfLk5C1rW4d2vzMNbjiUvb
+         WoSYB1DyO+kxw1U4sAJINjBnm0OPtF/Gx0vNHUPlU8f63AYykLThM/nr7G1JBlvke5NS
+         PyLEiDlIYa7YBcI4THgJApW+Km1O/6zxytIP2VCT6D7QnMhqRCw1hgRPWPI477BPwnMy
+         TTNQ==
+X-Gm-Message-State: AOJu0YzHnqumi/ZkTk6ILReScXF5yMKwJTNFg/BZ/uSDdNVk3waIvhhK
+        CQ4I3cZaPDazRQskM2Iu9EGz5n7NxJqcnQ==
+X-Google-Smtp-Source: AGHT+IFsQ4SSE2bUMPO11pyblV3g4gJaEHJwgkZDTqqRo0bRDmOsgkbNVewqsFa2mU2QcPTtvVTlFQ==
+X-Received: by 2002:a17:902:e74d:b0:1c7:7c2c:f846 with SMTP id p13-20020a170902e74d00b001c77c2cf846mr19442257plf.67.1696865020882;
+        Mon, 09 Oct 2023 08:23:40 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id b14-20020a170903228e00b001c61acd5bd2sm9746353plh.112.2023.10.09.08.23.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 09 Oct 2023 08:23:40 -0700 (PDT)
+Message-ID: <5cb8acb9-5731-45d8-b96e-d6ee701d78cb@acm.org>
+Date:   Mon, 9 Oct 2023 08:23:39 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/7] scsi: Use Scsi_Host as argument for
+ eh_host_reset_handler
+Content-Language: en-US
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+References: <20231002155915.109359-1-hare@suse.de>
+ <20231002155915.109359-2-hare@suse.de>
+ <c7052e80-3602-469b-8095-ab0eb40e010a@acm.org>
+ <18e61efc-bb5f-47f7-91ca-ddce3c9d077c@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <18e61efc-bb5f-47f7-91ca-ddce3c9d077c@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-KLMS-Rule-ID: 1
-X-KLMS-Message-Action: clean
-X-KLMS-AntiSpam-Lua-Profiles: 180482 [Oct 09 2023]
-X-KLMS-AntiSpam-Version: 5.9.59.0
-X-KLMS-AntiSpam-Envelope-From: artem.chernyshev@red-soft.ru
-X-KLMS-AntiSpam-Rate: 0
-X-KLMS-AntiSpam-Status: not_detected
-X-KLMS-AntiSpam-Method: none
-X-KLMS-AntiSpam-Auth: dkim=none
-X-KLMS-AntiSpam-Info: LuaCore: 536 536 1ae19c7800f69da91432b5e67ed4a00b9ade0d03, {Tracking_from_domain_doesnt_match_to}, localhost.biz:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;red-soft.ru:7.1.1, FromAlignment: s
-X-MS-Exchange-Organization-SCL: -1
-X-KLMS-AntiSpam-Interceptor-Info: scan successful
-X-KLMS-AntiPhishing: Clean, bases: 2023/10/09 07:46:00
-X-KLMS-AntiVirus: Kaspersky Security for Linux Mail Server, version 8.0.3.30, bases: 2023/10/09 13:47:00 #22102018
-X-KLMS-AntiVirus-Status: Clean, skipped
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since divisor checked before function call this if-statement
-is never true
+On 10/9/23 07:05, Hannes Reinecke wrote:
+> On 10/3/23 19:33, Bart Van Assche wrote:
+>> On 10/2/23 08:59, Hannes Reinecke wrote:
+>>> +    if ((hd = shost_priv(sh)) == NULL){
+>>> +        printk(KERN_ERR MYNAM ": host reset: Can't locate host!\n");
+>>>           return FAILED;
+>>>       }
+>>
+>> In the above example and in multiple other cases formatting does not
+>> follow the kernel coding style. Please consider to run git clang-format
+>> HEAD^ on this patch. Otherwise this patch looks good to me.
+>>
+> That is correct, but I'm merely following the existing indentation
+> within that driver.
+> Reformatting the driver to align with current linux standards would be
+> a different patch.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+As you may know I'm against reformatting code that is not modified.
 
-Signed-off-by: Artem Chernyshev <artem.chernyshev@red-soft.ru>
----
- drivers/scsi/megaraid/megaraid_sas_fp.c | 5 -----
- 1 file changed, 5 deletions(-)
+What I proposed is to reformat only the lines that have been changed.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index b8b388a4e28f..4cfa98ce3923 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -72,8 +72,6 @@ u32 mega_mod64(u64 dividend, u32 divisor)
- 	u64 d;
- 	u32 remainder;
- 
--	if (!divisor)
--		printk(KERN_ERR "megasas : DIVISOR is zero, in div fn\n");
- 	d = dividend;
- 	remainder = do_div(d, divisor);
- 	return remainder;
-@@ -90,9 +88,6 @@ static u64 mega_div64_32(uint64_t dividend, uint32_t divisor)
- {
- 	u64 d = dividend;
- 
--	if (!divisor)
--		printk(KERN_ERR "megasas : DIVISOR is zero in mod fn\n");
--
- 	do_div(d, divisor);
- 
- 	return d;
--- 
-2.37.3
+Thanks,
+
+Bart.
 
