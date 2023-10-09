@@ -2,97 +2,100 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93FB0E95A8E
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 07:19:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D23AE95A91
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 07:52:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234367AbjJIHTb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Oct 2023 03:19:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58536 "EHLO
+        id S1345400AbjJIHwL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Oct 2023 03:52:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57220 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234360AbjJIHTa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 03:19:30 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D82CA4;
-        Mon,  9 Oct 2023 00:19:28 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.55])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4S3r1z3WFVz1M9Gb;
-        Mon,  9 Oct 2023 15:16:55 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Mon, 9 Oct 2023 15:19:25 +0800
-Message-ID: <89365bd3-b4b0-de2d-f863-afbaad118649@huawei.com>
-Date:   Mon, 9 Oct 2023 15:19:24 +0800
+        with ESMTP id S232666AbjJIHwK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 03:52:10 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88BCA94
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 00:52:06 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 4023C1F38C;
+        Mon,  9 Oct 2023 07:52:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1696837925; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=FF4F8qZkxKLKNyPsIaWe5vPPHHI4CCsUJG/iNcr5t6Y=;
+        b=IZTKMYk7smcsAMJmpF8MsqyVnX3lKgPs308TAGHBPjMFYuDUDKbSFuh2C33h2wqVJ+QqfR
+        hEGI0B+k7L31URzHlIupC0XilO0asqBME28mrcBINnxhuHBK3rXXV4MimOXzojSfC5TAyW
+        rtfEgqcLJXfISETYIsnidm9ISE12K6M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1696837925;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=FF4F8qZkxKLKNyPsIaWe5vPPHHI4CCsUJG/iNcr5t6Y=;
+        b=1KVCWDXxdopD7Epd9ENEJWXoriwZRIZ2jvPRJ0wPAawMEZ5KM70riwIdpn1FS3HPK4AVkT
+        8a3qJQp9ZlEoHnDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E8C5A13905;
+        Mon,  9 Oct 2023 07:52:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id pnA0NySxI2WzLQAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 09 Oct 2023 07:52:04 +0000
+Message-ID: <f2b29a56-c1ea-48ea-8aac-816497d18fe9@suse.de>
+Date:   Mon, 9 Oct 2023 09:52:04 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH v5 10/10] scsi: scsi_debug: Add param to control sdev's
- allow_restart
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 17/18] pmcraid: select device in
+ pmcraid_eh_target_reset_handler()
 Content-Language: en-US
-To:     <dgilbert@interlog.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <louhongxiang@huawei.com>
-References: <20230922092906.2645265-1-haowenchao2@huawei.com>
- <20230922092906.2645265-11-haowenchao2@huawei.com>
- <d61e88d3-e1b7-44e0-ba9b-f633be0b5b30@interlog.com>
-From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <d61e88d3-e1b7-44e0-ba9b-f633be0b5b30@interlog.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To:     John Garry <john.g.garry@oracle.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+References: <20231002154328.43718-1-hare@suse.de>
+ <20231002154328.43718-18-hare@suse.de>
+ <27bf95c8-ee43-e92d-d40d-3a7a2251a566@oracle.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <27bf95c8-ee43-e92d-d40d-3a7a2251a566@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemm000012.china.huawei.com (7.193.23.142)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/10/9 7:17, Douglas Gilbert wrote:
-> On 2023-09-22 05:29, Wenchao Hao wrote:
->> Add new module param "allow_restart" to control if setup
->> scsi_device's allow_restart flag. This is used to test scsi
->> command finished with sense_key 0x6, asc 0x4 and ascq 0x2
->>
->> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+On 10/5/23 14:26, John Garry wrote:
+> On 02/10/2023 16:43, Hannes Reinecke wrote:
+>>   static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
+>>   {
+>> -    scmd_printk(KERN_INFO, scmd,
+>> +    struct Scsi_Host *shost = scmd->device->host;
+>> +    struct scsi_device *scsi_dev = NULL, *tmp;
+>> +
+>> +    shost_for_each_device(tmp, shost) {
+>> +        if ((tmp->channel == scmd->device->channel) &&
+>> +            (tmp->id == scmd->device->id)) {
+>> +            scsi_dev = tmp;
+>> +            break;
 > 
-> Hi,
-> Looked at this and verified that the allow_restart flag of scsi_debug
-> devices (disks ?) is usually 0 and when the scsi_debug module is
-> started with allow_restart=1 then the allow_restart flag does indeed
-> change to 1. For example:
->     # cat /sys/class/scsi_disk/1\:0\:0\:0/allow_restart
->     1
+> If you break out of the loop, you must call scsi_device_put(sdev) - is 
+> that missing?
 > 
-> That ASC/ASCQ code means: "Logical unit not ready, initializing command
-> required" according to my library. Played around with sg_start but didn't
-> see any change in how it reacts. According to scsi_device.h that flag's
-> description is: "issue START_UNIT in error handler" which implies it
-> changes how the EH handler reacts.
-> 
-> Perhaps the 3 line patch description could say a little more about how
-> to use this new parameter...
+No, you are correct. Will be fixing it up.
 
-Sorry I did not write in detail. As you mentioned above, this is to
-determine if to trigger error. I would update the commit message to
-following lines:
+Cheers,
 
-Add new module param "allow_restart" to control if setup scsi_device's
-allow_restart flag, this flag determines if trigger EH after command
-finished with sense_key 0x6, asc 0x4 and ascq 0x2, EH would be triggered
-if allow_restart=1 in this condition.
-
-The new param can be used with error inject added in patch6 to test how
-commands finished with sense_key 0x6, asc 0x4 and ascq 0x2 are handled.
-
-> 
-> Tested-by: Douglas Gilbert <dgilbert@interlog.com>
-> 
-> <snip>
-> 
-> 
-> 
-> 
-> 
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
