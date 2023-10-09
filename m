@@ -2,30 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 380D2CD611B
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 17:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A64C8CD6114
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 17:30:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377910AbjJIR0F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Oct 2023 13:26:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53396 "EHLO
+        id S1377937AbjJIRa4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Oct 2023 13:30:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377529AbjJIR0C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 13:26:02 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21BD09D;
-        Mon,  9 Oct 2023 10:26:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0B86C433C8;
-        Mon,  9 Oct 2023 17:25:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1696872360;
-        bh=Xvq7hDU/coDuEsdrXCSvDDCeu4fDcSPbyB2v1f0haJw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LH/vqB4X1j5QvSSkBM6vklj2Pb9c2SspT6NgEyJDP9vbRIpWR6CQ+nJkcsCjQ4Vir
-         43qqnL24pp98K8WJjk6l/x23d5SHHpCaxfpNhOF9JsbcR9rYVEP68LmxblNqxA33nb
-         6ckKZ/2qQDECOCthGRjyk9BmKLlvlEvFYD03WIdc=
-Date:   Mon, 9 Oct 2023 19:25:57 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Max Kellermann <max.kellermann@ionos.com>
+        with ESMTP id S1377943AbjJIRak (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 13:30:40 -0400
+Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A348126
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 10:30:37 -0700 (PDT)
+Received: by mail-lj1-x22d.google.com with SMTP id 38308e7fff4ca-2c00e1d4c08so60662071fa.3
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Oct 2023 10:30:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1696872635; x=1697477435; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=HHSd56ONGtiYc/4iRkmyqmxuAngFJzU7FR00LimB0+s=;
+        b=grFtVCa9AE5vZnIqHY2K2bNP8Z6TwHUlqSnlQynYLfm5yY9bfW+Udn2tegWIbDpqZV
+         eIy68gqJd/Ry9v9XmIvfaKaBKzf/fJAMUDootzAKML2FCQG9tgQHF0skd2fI8KSZj4Zj
+         5laR0MFZ2upzjp7XVdBB/uX+wUaNSql2ew7bKicL1rvMh4AiP1yQa7jS/aHH4SPCv+h7
+         mJmiRaOLnWW7Fevap8tTGkZJxbnV/PQaBzkPAQA5vis85tB6Wt4vnGuO2FY3G3WXWPPQ
+         5TGZ66RGIVBojnHk2wmoPN+YgNuIJfFDQYYSHN5NHspuLbK0Eb2LJ9kod7O3tg0yOsLb
+         o0Ug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696872635; x=1697477435;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=HHSd56ONGtiYc/4iRkmyqmxuAngFJzU7FR00LimB0+s=;
+        b=Q2Ypu4qCRUZQBmOgPGo7zfCGecRzBefpWXDgDziNha5oeU2bQa6kNKdPEmahEl98A1
+         3E0VW3OywpEYXX7P8KADRSPuZYZpZhDi2eEXxXudD/KVyMiBsp11PpKwr4250HeWLPiO
+         NcMs5jCtDI8ZKUqUWnYwT0UpbW7FbB15fqvNo7cc7Vk425CAiOGcJk7++GatiUviw/e7
+         TQUWWgaKcwL2+dB0PW4CSGT6y5XOYZhZAGaMWC1u9+wikO3gFVR3wHJb4k6+IRGswLHA
+         pb//ygPwMQJVsiY7POgZJ/zEfwjnb2a6HVncbN5oVcfNdjKFtzOYn77MFHLFi72fCRsg
+         5W0A==
+X-Gm-Message-State: AOJu0YzIImvIfgI3pi1lZH1McHK7mvDGnRWI9+f+YfB+UjgKwil03WiY
+        X6C2moPPAT2P0wKxZCPza7HcCNZorZ2Yrfl/S/81QA==
+X-Google-Smtp-Source: AGHT+IHBRA959tJKQ7jnBDww7hLjflOoCbxbxU4OC4L9uyovk7KidWNus9mZc9b5/3C/KVDAr0hL4Kjy/lMZJqv9EF4=
+X-Received: by 2002:a2e:86d6:0:b0:2c2:9e5c:2c82 with SMTP id
+ n22-20020a2e86d6000000b002c29e5c2c82mr13644840ljj.46.1696872635192; Mon, 09
+ Oct 2023 10:30:35 -0700 (PDT)
+MIME-Version: 1.0
+References: <20231009165741.746184-1-max.kellermann@ionos.com>
+ <20231009165741.746184-6-max.kellermann@ionos.com> <2023100921-that-jasmine-2240@gregkh>
+In-Reply-To: <2023100921-that-jasmine-2240@gregkh>
+From:   Max Kellermann <max.kellermann@ionos.com>
+Date:   Mon, 9 Oct 2023 19:30:24 +0200
+Message-ID: <CAKPOu+8Tb2CopWgBN29hmJrmU9mjG63PyVoaewuY0FYj=aGTZA@mail.gmail.com>
+Subject: Re: [PATCH 6/7] fs/sysfs/group: make attribute_group pointers const
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Jens Axboe <axboe@kernel.dk>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Borislav Petkov <bp@alien8.de>,
@@ -82,37 +111,23 @@ Cc:     Jens Axboe <axboe@kernel.dk>,
         linux-perf-users@vger.kernel.org, linux-pm@vger.kernel.org,
         linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 6/7] fs/sysfs/group: make attribute_group pointers const
-Message-ID: <2023100921-that-jasmine-2240@gregkh>
-References: <20231009165741.746184-1-max.kellermann@ionos.com>
- <20231009165741.746184-6-max.kellermann@ionos.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231009165741.746184-6-max.kellermann@ionos.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 09, 2023 at 06:57:39PM +0200, Max Kellermann wrote:
-> This allows passing arrays of const pointers.  The goal is to make
-> lots of global variables "const" to allow them to live in the
-> ".rodata" section.
+On Mon, Oct 9, 2023 at 7:26=E2=80=AFPM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> I'm all for doing this type of work, but this is going to be rough.  You
+> sent patch 6/7 that hit almost all subsystems at once :(
 
-I'm all for doing this type of work, but this is going to be rough.  You
-sent patch 6/7 that hit almost all subsystems at once :(
+I wasn't sure whether splitting patches was desired. In the past, I
+was often asked to fold multiple patches into one. There are so many
+opinions :-) but I'll gladly change to whatever is asked.
 
-Also, the code:
+> "*const*groups"?   That's a parsing nightmare, really hard for humans to
+> read and understand.  Doesn't checkpatch complain about this?
 
-> -int driver_add_groups(struct device_driver *drv, const struct attribute_group **groups);
-> -void driver_remove_groups(struct device_driver *drv, const struct attribute_group **groups);
-> +int driver_add_groups(struct device_driver *drv, const struct attribute_group *const*groups);
-> +void driver_remove_groups(struct device_driver *drv, const struct attribute_group *const*groups);
->  void device_driver_detach(struct device *dev);
-
-"*const*groups"?   That's a parsing nightmare, really hard for humans to
-read and understand.  Doesn't checkpatch complain about this?
-
-thanks,
-
-greg k-h
+No. I'll change the coding style (and maybe take some time to fix checkpatc=
+h?)
