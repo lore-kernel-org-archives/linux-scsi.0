@@ -2,138 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3471AE95A97
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 08:45:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 650AEE95A91
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 14:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345534AbjJIIpW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Oct 2023 04:45:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50690 "EHLO
+        id S1346526AbjJIOFL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Oct 2023 10:05:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345555AbjJIIpP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 04:45:15 -0400
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FB3DDB
-        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 01:45:13 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id 2adb3069b0e04-504b84d59cbso5613834e87.3
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Oct 2023 01:45:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1696841109; x=1697445909; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=hio2Q7ruJtd9dJ3amfJnjZI8mttjUkWIdKdUR2giezU=;
-        b=SfjPT3Y1ixWMhbBnncpcMjnJxYXfJJFSOgN9RiMrsRwlSPaQEUl5dnzX8wEv3YGm0L
-         UQ/1SB1PdzWLnlu0wmWs2Z4agDd0/0YWrkGCEL6A5V7x9VFjjy9TZpgcLQxDh6MS8p4V
-         iepziTs/aKOb49a4fIYnwmyLVB5WRWX8Yk1Unv84ykU/GrxqQVJUwaHkMpFIeBjDo8a7
-         vkiq7ggmnpGj1MgdsUmXwUDj0ebVQMx7yBQjcWp2cJ1FTqoEoQuvHrqUnZHbi8waUSBK
-         lU++pszLgp6oZjGjR2cW+1qb3wiV+nLulzDLpRBj5PWE6GoQJgxOwjp2p8X/9BG3kd7v
-         bSqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696841109; x=1697445909;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hio2Q7ruJtd9dJ3amfJnjZI8mttjUkWIdKdUR2giezU=;
-        b=lKbPcOi9U9A6+okLU/k1TDEdoMCepBOuSr/VsgVpYKDPsh9vg0APm6RO/R0tgqDFBI
-         k2nA9QrBDBGonOevW48bvL3K322fKYMGBmCfEvuI3wy6tLXyhlnK58aI26Ca2XgN2sng
-         Jxw/cpL/S7kEuN1nJoDaAZy68cwxjVPpflDVPpJoQG/ro3gVCuo5yJQhlWQwiuOHWR5G
-         d+DpvOPqdiqkWz1uPRgYio9Bo18Q/KQ0h2LmAmsPL5MkM6e0Rjhd4qkpGFqvwU/6NCxv
-         a43RnXYQEdvkYJ1pC8AchdnXuNVdgAEFQTO4pR2RXTz4Pg3d3VATejUSVN1lEidSzMEh
-         vTAw==
-X-Gm-Message-State: AOJu0Yxc/H6zvGuy/NDOdeGgCMlf0H77UgaOvSQuFAk7pIIj/TU5QHdw
-        WZWL3FWE2TfC0Qzn11A/t/D4gg==
-X-Google-Smtp-Source: AGHT+IGLgimHmcENifu9G6bykshZbJeMrs+Zk+piIrvaWgi8lFY1p++C4bX64JPWZBt/0RCIjNtLHg==
-X-Received: by 2002:a05:6512:3488:b0:4fd:fd97:a77b with SMTP id v8-20020a056512348800b004fdfd97a77bmr10494729lfr.50.1696841109333;
-        Mon, 09 Oct 2023 01:45:09 -0700 (PDT)
-Received: from [192.168.1.197] (5-157-101-10.dyn.eolo.it. [5.157.101.10])
-        by smtp.gmail.com with ESMTPSA id f19-20020a1c6a13000000b00402d34ea099sm12740930wmc.29.2023.10.09.01.45.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Oct 2023 01:45:08 -0700 (PDT)
-Message-ID: <1483d2e0-b25b-401e-86ba-6fa8094db01f@linaro.org>
-Date:   Mon, 9 Oct 2023 10:45:06 +0200
+        with ESMTP id S1345013AbjJIOFK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 10:05:10 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCB6194
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 07:05:09 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 9EB601F390;
+        Mon,  9 Oct 2023 14:05:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1696860308; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cpdMMqNdAaqzHtjstvvfj0zsggT4vnBr/KShOyfrP4E=;
+        b=IzxNZFghVot02bDIXv/07mpv2BcG22HyDzEDNnBGOtR6PPQaVYmYe2h7FjstSVDx2VLZrL
+        ydfb/RWrSBnmcuZy0xRsw8tSsMedTr6XS+5FXm7BtxAWI5Klxl5tQxQ2yKk2T9YGcjwrvU
+        XZk9RPFLarsck5QKzWuVZ6MGzIGds+I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1696860308;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cpdMMqNdAaqzHtjstvvfj0zsggT4vnBr/KShOyfrP4E=;
+        b=No09r9W3gN6PFfGia3FZrHXjzlQr2P4M7gSfeH3pzjHQuqPQ9GcMfkF12d7RRhUxvIcI4s
+        Lf2skDQM7htga4CQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7DCD913586;
+        Mon,  9 Oct 2023 14:05:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id NomfHZQIJGWUAQAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 09 Oct 2023 14:05:08 +0000
+Message-ID: <18e61efc-bb5f-47f7-91ca-ddce3c9d077c@suse.de>
+Date:   Mon, 9 Oct 2023 16:05:08 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/7] dt-bindings: arm: qcom: Add Xiaomi Redmi Note 9S
+Subject: Re: [PATCH 1/7] scsi: Use Scsi_Host as argument for
+ eh_host_reset_handler
 Content-Language: en-US
-To:     David Wronek <davidwronek@gmail.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Joe Mason <buddyjojo06@outlook.com>
-Cc:     cros-qcom-dts-watchers@chromium.org, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        hexdump0815@googlemail.com, ~postmarketos/upstreaming@lists.sr.ht,
-        phone-devel@vger.kernel.org
-References: <20231007140053.1731245-1-davidwronek@gmail.com>
- <20231007140053.1731245-4-davidwronek@gmail.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzTRLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnp5c3p0b2Yua296bG93c2tpQGxpbmFyby5vcmc+wsGUBBMBCgA+FiEE
- m9B+DgxR+NWWd7dUG5NDfTtBYpsFAmI+BxMCGwMFCRRfreEFCwkIBwIGFQoJCAsCBBYCAwEC
- HgECF4AACgkQG5NDfTtBYptgbhAAjAGunRoOTduBeC7V6GGOQMYIT5n3OuDSzG1oZyM4kyvO
- XeodvvYv49/ng473E8ZFhXfrre+c1olbr1A8pnz9vKVQs9JGVa6wwr/6ddH7/yvcaCQnHRPK
- mnXyP2BViBlyDWQ71UC3N12YCoHE2cVmfrn4JeyK/gHCvcW3hUW4i5rMd5M5WZAeiJj3rvYh
- v8WMKDJOtZFXxwaYGbvFJNDdvdTHc2x2fGaWwmXMJn2xs1ZyFAeHQvrp49mS6PBQZzcx0XL5
- cU9ZjhzOZDn6Apv45/C/lUJvPc3lo/pr5cmlOvPq1AsP6/xRXsEFX/SdvdxJ8w9KtGaxdJuf
- rpzLQ8Ht+H0lY2On1duYhmro8WglOypHy+TusYrDEry2qDNlc/bApQKtd9uqyDZ+rx8bGxyY
- qBP6bvsQx5YACI4p8R0J43tSqWwJTP/R5oPRQW2O1Ye1DEcdeyzZfifrQz58aoZrVQq+innR
- aDwu8qDB5UgmMQ7cjDSeAQABdghq7pqrA4P8lkA7qTG+aw8Z21OoAyZdUNm8NWJoQy8m4nUP
- gmeeQPRc0vjp5JkYPgTqwf08cluqO6vQuYL2YmwVBIbO7cE7LNGkPDA3RYMu+zPY9UUi/ln5
- dcKuEStFZ5eqVyqVoZ9eu3RTCGIXAHe1NcfcMT9HT0DPp3+ieTxFx6RjY3kYTGLOwU0EVUNc
- NAEQAM2StBhJERQvgPcbCzjokShn0cRA4q2SvCOvOXD+0KapXMRFE+/PZeDyfv4dEKuCqeh0
- hihSHlaxTzg3TcqUu54w2xYskG8Fq5tg3gm4kh1Gvh1LijIXX99ABA8eHxOGmLPRIBkXHqJY
- oHtCvPc6sYKNM9xbp6I4yF56xVLmHGJ61KaWKf5KKWYgA9kfHufbja7qR0c6H79LIsiYqf92
- H1HNq1WlQpu/fh4/XAAaV1axHFt/dY/2kU05tLMj8GjeQDz1fHas7augL4argt4e+jum3Nwt
- yupodQBxncKAUbzwKcDrPqUFmfRbJ7ARw8491xQHZDsP82JRj4cOJX32sBg8nO2N5OsFJOcd
- 5IE9v6qfllkZDAh1Rb1h6DFYq9dcdPAHl4zOj9EHq99/CpyccOh7SrtWDNFFknCmLpowhct9
- 5ZnlavBrDbOV0W47gO33WkXMFI4il4y1+Bv89979rVYn8aBohEgET41SpyQz7fMkcaZU+ok/
- +HYjC/qfDxT7tjKXqBQEscVODaFicsUkjheOD4BfWEcVUqa+XdUEciwG/SgNyxBZepj41oVq
- FPSVE+Ni2tNrW/e16b8mgXNngHSnbsr6pAIXZH3qFW+4TKPMGZ2rZ6zITrMip+12jgw4mGjy
- 5y06JZvA02rZT2k9aa7i9dUUFggaanI09jNGbRA/ABEBAAHCwXwEGAEKACYCGwwWIQSb0H4O
- DFH41ZZ3t1Qbk0N9O0FimwUCYDzvagUJFF+UtgAKCRAbk0N9O0Fim9JzD/0auoGtUu4mgnna
- oEEpQEOjgT7l9TVuO3Qa/SeH+E0m55y5Fjpp6ZToc481za3xAcxK/BtIX5Wn1mQ6+szfrJQ6
- 59y2io437BeuWIRjQniSxHz1kgtFECiV30yHRgOoQlzUea7FgsnuWdstgfWi6LxstswEzxLZ
- Sj1EqpXYZE4uLjh6dW292sO+j4LEqPYr53hyV4I2LPmptPE9Rb9yCTAbSUlzgjiyyjuXhcwM
- qf3lzsm02y7Ooq+ERVKiJzlvLd9tSe4jRx6Z6LMXhB21fa5DGs/tHAcUF35hSJrvMJzPT/+u
- /oVmYDFZkbLlqs2XpWaVCo2jv8+iHxZZ9FL7F6AHFzqEFdqGnJQqmEApiRqH6b4jRBOgJ+cY
- qc+rJggwMQcJL9F+oDm3wX47nr6jIsEB5ZftdybIzpMZ5V9v45lUwmdnMrSzZVgC4jRGXzsU
- EViBQt2CopXtHtYfPAO5nAkIvKSNp3jmGxZw4aTc5xoAZBLo0OV+Ezo71pg3AYvq0a3/oGRG
- KQ06ztUMRrj8eVtpImjsWCd0bDWRaaR4vqhCHvAG9iWXZu4qh3ipie2Y0oSJygcZT7H3UZxq
- fyYKiqEmRuqsvv6dcbblD8ZLkz1EVZL6djImH5zc5x8qpVxlA0A0i23v5QvN00m6G9NFF0Le
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <20231007140053.1731245-4-davidwronek@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+References: <20231002155915.109359-1-hare@suse.de>
+ <20231002155915.109359-2-hare@suse.de>
+ <c7052e80-3602-469b-8095-ab0eb40e010a@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <c7052e80-3602-469b-8095-ab0eb40e010a@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 07/10/2023 15:58, David Wronek wrote:
-> Document the Xiaomi Redmi Note 9S (curtana) smartphone, which is based
-> on the Qualcomm SM7125 SoC.
+On 10/3/23 19:33, Bart Van Assche wrote:
+> On 10/2/23 08:59, Hannes Reinecke wrote:
+>> +    if ((hd = shost_priv(sh)) == NULL){
+>> +        printk(KERN_ERR MYNAM ": host reset: Can't locate host!\n");
+>>           return FAILED;
+>>       }
+> 
+> In the above example and in multiple other cases formatting does not
+> follow the kernel coding style. Please consider to run git clang-format
+> HEAD^ on this patch. Otherwise this patch looks good to me.
+> 
+That is correct, but I'm merely following the existing indentation
+within that driver.
+Reformatting the driver to align with current linux standards would be
+a different patch.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cheers,
 
-Best regards,
-Krzysztof
-
+Hannes
