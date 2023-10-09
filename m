@@ -2,100 +2,85 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D23AE95A91
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 07:52:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94982E95A8E
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Oct 2023 08:29:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345400AbjJIHwL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Oct 2023 03:52:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57220 "EHLO
+        id S234378AbjJII3w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Oct 2023 04:29:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232666AbjJIHwK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 03:52:10 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88BCA94
-        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 00:52:06 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 4023C1F38C;
-        Mon,  9 Oct 2023 07:52:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1696837925; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=FF4F8qZkxKLKNyPsIaWe5vPPHHI4CCsUJG/iNcr5t6Y=;
-        b=IZTKMYk7smcsAMJmpF8MsqyVnX3lKgPs308TAGHBPjMFYuDUDKbSFuh2C33h2wqVJ+QqfR
-        hEGI0B+k7L31URzHlIupC0XilO0asqBME28mrcBINnxhuHBK3rXXV4MimOXzojSfC5TAyW
-        rtfEgqcLJXfISETYIsnidm9ISE12K6M=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1696837925;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=FF4F8qZkxKLKNyPsIaWe5vPPHHI4CCsUJG/iNcr5t6Y=;
-        b=1KVCWDXxdopD7Epd9ENEJWXoriwZRIZ2jvPRJ0wPAawMEZ5KM70riwIdpn1FS3HPK4AVkT
-        8a3qJQp9ZlEoHnDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E8C5A13905;
-        Mon,  9 Oct 2023 07:52:04 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id pnA0NySxI2WzLQAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 09 Oct 2023 07:52:04 +0000
-Message-ID: <f2b29a56-c1ea-48ea-8aac-816497d18fe9@suse.de>
-Date:   Mon, 9 Oct 2023 09:52:04 +0200
+        with ESMTP id S234376AbjJII3v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 04:29:51 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 063788F
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 01:29:51 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 939BEC43397
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 08:29:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696840190;
+        bh=sJAkmWorVPGM5sqPhmmJT+gXQNbd16eVgjQPXCwo5Uc=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=SEtVRMysRCr08qK40Kw9CCXP5ZjPI4yE7AgMfjHMAfgKMFQwraoFLXR0MKiKlyZo4
+         sDHX/fGFh0ip1FBaGbxtx0/Uf0do/EkmF+B7eqhnFEWhTZcyLZNKY8emlCYXDdgNuU
+         k+HEggi+Y9fL1+YadMIVH1iaaAHc7B5wkSqP/J73Ce0lDCZaSoHMRjhvxO8ecCZSQU
+         mqJ5wPcxxcyLV70NPniAy8XTr3L0xGDhPVLdp5++NE9dLZWAYJuBoH+PkFpZzatYed
+         zcVUX+YqiZqGpVUA1+RRY8bzQIubcklpRjKoe3KInuA8ciL7cLU0mVTbg6R1FVecLb
+         WsS4vY08mE2HA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 84E2AC53BD0; Mon,  9 Oct 2023 08:29:50 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 209177] mpt2sas_cm0: failure at
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:10791/_scsih_probe()!
+Date:   Mon, 09 Oct 2023 08:29:50 +0000
+X-Bugzilla-Reason: CC
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: growthstarboard@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: drivers_other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-209177-11613-jTVcQ3wgIO@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-209177-11613@https.bugzilla.kernel.org/>
+References: <bug-209177-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 17/18] pmcraid: select device in
- pmcraid_eh_target_reset_handler()
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-References: <20231002154328.43718-1-hare@suse.de>
- <20231002154328.43718-18-hare@suse.de>
- <27bf95c8-ee43-e92d-d40d-3a7a2251a566@oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <27bf95c8-ee43-e92d-d40d-3a7a2251a566@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/5/23 14:26, John Garry wrote:
-> On 02/10/2023 16:43, Hannes Reinecke wrote:
->>   static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
->>   {
->> -    scmd_printk(KERN_INFO, scmd,
->> +    struct Scsi_Host *shost = scmd->device->host;
->> +    struct scsi_device *scsi_dev = NULL, *tmp;
->> +
->> +    shost_for_each_device(tmp, shost) {
->> +        if ((tmp->channel == scmd->device->channel) &&
->> +            (tmp->id == scmd->device->id)) {
->> +            scsi_dev = tmp;
->> +            break;
-> 
-> If you break out of the loop, you must call scsi_device_put(sdev) - is 
-> that missing?
-> 
-No, you are correct. Will be fixing it up.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D209177
 
-Cheers,
+Lynn Davenport (growthstarboard@gmail.com) changed:
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |growthstarboard@gmail.com
 
+--- Comment #7 from Lynn Davenport (growthstarboard@gmail.com) ---
+(In reply to Akemi Yagi from comment #5)
+> This bug has been reported for Fedora (kernel 5.8.6):
+>=20
+> https://bugzilla.redhat.com/show_bug.cgi?id=3D1878332
+> https://penaltykickonline.com
+
+I can attest that the value "mpt3sas.max_queue_depth=3D10000" was effective
+there, despite a few peculiar and maybe cosmetic issues that I'll transcribe
+once I have them in text form.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are on the CC list for the bug.=
