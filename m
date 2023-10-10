@@ -2,105 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3E4FCD8CA9
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 16:41:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17F4CCD8CB6
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 20:32:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233821AbjJJQlo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 12:41:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47142 "EHLO
+        id S229598AbjJJUcx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 16:32:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232825AbjJJQln (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 12:41:43 -0400
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D39908E
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:41:41 -0700 (PDT)
-Received: by mail-lj1-x232.google.com with SMTP id 38308e7fff4ca-2c189dabcc3so70236051fa.1
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:41:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1696956100; x=1697560900; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=7eXnEfxjvluj2ls7P91GLCGn8R1ORvibeOsisML1eFU=;
-        b=NjdDDmyBTCjygBZJAU+NRwRzl3ex6HJG9YfrfrTpOYoShqxdPuZtOqtlmxin+mbOJ3
-         u4fFmpaTvK8xF11J3mTcfcw133QmdBBryJoDVYRZ8G6P5DWiLLpYwfu+2wp/DuybIxiQ
-         YVLoGoQtW8eMQVJ4eTl/kizr1DnWqa9iLdWpwvQHw99Xxj2hOzFB+7H4C65pFmAS/4qo
-         KnzQYJe2EJsybQQ/Y7Fk2d/oQmL0mD1PhQdx+1p4EXCIVTpTL2JMlJeCiWrZkkHApHzY
-         sut2SG5fl20NC0Fg2fCHYZ9v1khyrylm95+ZifXftj3hYvddu5VIG4Dja0GyQfzribKb
-         DdWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696956100; x=1697560900;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7eXnEfxjvluj2ls7P91GLCGn8R1ORvibeOsisML1eFU=;
-        b=h9/pi845/en+GIhpJX9QCkUneWOmnx9Rxzjuxa9zHDz5G1RGMJxCXyeoEx+GqCugw8
-         njPhkPukyxxSvPOJDr3BzMIgQvFnyTBEiOLOskA2q5QP11Mv/+ruvFjwXnGFNED/pr4Z
-         LhD1p/Ijv9Bh0uRTZ93/P8i+BB2UaAoAhYiNz0s2y6Cs/P7iyIW0K/2+0Cvy5DM4F4Zz
-         IeaZezH4Wbb0/aEi3joD35ZwCA/EchYOyWlwxrcmGiKMztzbLANXFGeiD8d1TwlZPo9p
-         IefdHk0Fn+peFsRsAcWFfIWHbXpfuAcjZEQ0FNzOkcDQXf62UFelzfNblwowYB9mF4FV
-         DNxA==
-X-Gm-Message-State: AOJu0Yx1qUo+nnni4U+7gn+6vEOaj4m+yTrqZQq09J3E9hjt/QnrRZ4n
-        nRhS2NKztTw26URGTznphmec1A==
-X-Google-Smtp-Source: AGHT+IHOV7TgUKuKP3wlsPK+xePcD91eowpwyzmYcOf3UNIyI6vjz4PdeVrDSdYUNwTDPfkjwi7i9A==
-X-Received: by 2002:ac2:5dd0:0:b0:506:926c:9b0d with SMTP id x16-20020ac25dd0000000b00506926c9b0dmr7597643lfq.20.1696956100067;
-        Tue, 10 Oct 2023 09:41:40 -0700 (PDT)
-Received: from [172.30.204.182] (UNUSED.212-182-62-129.lubman.net.pl. [212.182.62.129])
-        by smtp.gmail.com with ESMTPSA id y10-20020ac2420a000000b004fe2a7a2ee2sm1866668lfh.160.2023.10.10.09.41.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Oct 2023 09:41:39 -0700 (PDT)
-Message-ID: <855e5504-0571-4f8c-9644-21ceb40e1132@linaro.org>
-Date:   Tue, 10 Oct 2023 18:41:38 +0200
+        with ESMTP id S229437AbjJJUcx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 16:32:53 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA42D8E
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 13:32:51 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1A8AC433C7;
+        Tue, 10 Oct 2023 20:32:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696969971;
+        bh=hq+lAC9aHGR9lwOmWbeBkHbds2JgCNJWhr+zVJ8l2Uw=;
+        h=From:Date:Subject:To:Cc:From;
+        b=u3BP37hgP/SnJDK5AnP14YulTGVK8usLMuN/mWe5jiJWNpA84BZVXG177VX/ArJD9
+         BlC7MdeLI5Jm555PinRzZpItd3/M6XZ9LzNYOmoqGGV/Yh9DYX/V8nC+pzdn54u3pK
+         25KGz7az//HjOr+An9sl5w/wBiKkz6y1E8EAjYcsUVg9cYE0musDBr5/dBPIlICfTQ
+         b5M+TTOSgHy55npJT6IjtS+HGfBIS7GH0Wr1Y4hkDICi5/Fkt2idTMdQJj0YN8FCa3
+         38aYYa8IDRbi0wnQTt4ezKCLaf4IlfZgqhu0oFbZ3rf0KBVwqzYTYmV+BnVvzUZH79
+         57QBRha6dRr4g==
+From:   Nathan Chancellor <nathan@kernel.org>
+Date:   Tue, 10 Oct 2023 13:32:37 -0700
+Subject: [PATCH] scsi: ibmvfc: Use 'unsigned int' for single-bit bitfields
+ in 'struct ibmvfc_host'
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 3/4] ufs: ufs-qcom: Add per-cpu PM QoS vote support for
- ufs
-Content-Language: en-US
-To:     Maramaina Naresh <quic_mnaresh@quicinc.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        quic_cang@quicinc.com, quic_nguyenb@quicinc.com
-References: <1696952947-18062-1-git-send-email-quic_mnaresh@quicinc.com>
- <1696952947-18062-4-git-send-email-quic_mnaresh@quicinc.com>
-From:   Konrad Dybcio <konrad.dybcio@linaro.org>
-In-Reply-To: <1696952947-18062-4-git-send-email-quic_mnaresh@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <20231010-ibmvfc-fix-bitfields-type-v1-1-37e95b5a60e5@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAOS0JWUC/x2MWwqAIBAArxL73YJWJHWV6ENtrYVeaEQh3j3pc
+ 2BmIgTyTAH6IoKnmwMfewZZFmAXvc+EPGWGSlS1FFIgm+12Fh0/aPhyTOsU8HpPwk5JLZRtG7I
+ t5P70lK3/PYwpfWHBbSRrAAAA
+To:     tyreld@linux.ibm.com, martin.petersen@oracle.com
+Cc:     jejb@linux.ibm.com, ndesaulniers@google.com, trix@redhat.com,
+        brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, llvm@lists.linux.dev,
+        patches@lists.linux.dev, Nathan Chancellor <nathan@kernel.org>
+X-Mailer: b4 0.13-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2012; i=nathan@kernel.org;
+ h=from:subject:message-id; bh=hq+lAC9aHGR9lwOmWbeBkHbds2JgCNJWhr+zVJ8l2Uw=;
+ b=owGbwMvMwCEmm602sfCA1DTG02pJDKmqWz6ZpPaX7+8KSv70iDvklOHB9wmO1lGmTe87p4THr
+ N+/aeK7jlIWBjEOBlkxRZbqx6rHDQ3nnGW8cWoSzBxWJpAhDFycAjCRiwsYGc5crNG58fq0+xPF
+ AyynVrAvEnRYtCg6S0Hn1sdS4aqJ//4xMvzrFDP/b2ankzzhhaK0VY9cwtU7Cw3MY1aF6PJX7Oq
+ u4QAA
+X-Developer-Key: i=nathan@kernel.org; a=openpgp;
+ fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Clang warns (or errors with CONFIG_WERROR=y) several times along the
+lines of:
 
+  drivers/scsi/ibmvscsi/ibmvfc.c:650:17: warning: implicit truncation from 'int' to a one-bit wide bit-field changes value from 1 to -1 [-Wsingle-bit-bitfield-constant-conversion]
+    650 |                 vhost->reinit = 1;
+        |                               ^ ~
 
-On 10/10/23 17:49, Maramaina Naresh wrote:
-> PM QoS per-cpu framework provides performance requirements for each cpu.
-> 
-> The per-cpu PM QoS framework will provide the corresponding interface to
-> collect the resume_latency request of the specified device and provide
-> it to the runtime PM. When suspending the device, it will consider this
-> requirement and decide whether to suspend the device.
-> 
-> Voting will follow below sequence.
-> 1. Vote for maximum latency S32_MAX in driver init.
-> 2. Schedule a vote of PERF when a transfer request is received.
-> 3. Update the vote to S32_MAX during clock gating.
-> 
-> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Maramaina Naresh <quic_mnaresh@quicinc.com>
-> ---
-Is this the same patch as 2/4?
+A single-bit signed integer bitfield only has possible values of -1 and
+0, not 0 and 1 like an unsigned one would. No context appears to check
+the actual value of these bitfields, just whether or not it is zero.
+However, it is easy enough to change the type of the fields to 'unsigned
+int', which keeps the same size in memory and resolves the warning.
 
-Konrad
+Fixes: 5144905884e2 ("scsi: ibmvfc: Use a bitfield for boolean flags")
+Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.h | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index 331ecf8254be..745ad5ac7251 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -892,15 +892,15 @@ struct ibmvfc_host {
+ 	int init_retries;
+ 	int discovery_threads;
+ 	int abort_threads;
+-	int client_migrated:1;
+-	int reinit:1;
+-	int delay_init:1;
+-	int logged_in:1;
+-	int mq_enabled:1;
+-	int using_channels:1;
+-	int do_enquiry:1;
+-	int aborting_passthru:1;
+-	int scan_complete:1;
++	unsigned int client_migrated:1;
++	unsigned int reinit:1;
++	unsigned int delay_init:1;
++	unsigned int logged_in:1;
++	unsigned int mq_enabled:1;
++	unsigned int using_channels:1;
++	unsigned int do_enquiry:1;
++	unsigned int aborting_passthru:1;
++	unsigned int scan_complete:1;
+ 	int scan_timeout;
+ 	int events_to_log;
+ #define IBMVFC_AE_LINKUP	0x0001
+
+---
+base-commit: b6f2e063017b92491976a40c32a0e4b3c13e7d2f
+change-id: 20231010-ibmvfc-fix-bitfields-type-971a07c64ec6
+
+Best regards,
+-- 
+Nathan Chancellor <nathan@kernel.org>
+
