@@ -2,58 +2,59 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64DD4CD8CA9
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 16:37:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3E4FCD8CA9
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 16:41:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233281AbjJJQhS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 12:37:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43724 "EHLO
+        id S233821AbjJJQlo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 12:41:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233576AbjJJQhR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 12:37:17 -0400
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8436BB7
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:37:15 -0700 (PDT)
-Received: by mail-wm1-x330.google.com with SMTP id 5b1f17b1804b1-406618d0992so57004805e9.0
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:37:15 -0700 (PDT)
+        with ESMTP id S232825AbjJJQln (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 12:41:43 -0400
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D39908E
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:41:41 -0700 (PDT)
+Received: by mail-lj1-x232.google.com with SMTP id 38308e7fff4ca-2c189dabcc3so70236051fa.1
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:41:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1696955834; x=1697560634; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1696956100; x=1697560900; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=b2+nmzantxOYY6snfxh3U/lP8Nv4ffuUeaORW4FhlFk=;
-        b=OtTVdiMNhurxGoo4voKaItx2tNCLzc0YY/xCpJA3I7CSLDQLb8SA1h8ruuD1/dxAHZ
-         0fApCT1YlIF1vWRcSoyQsJxnsIQkVbm9gJkdmb+7Pi8wdCpevBx4lq6Pa5lO4nhY8vN4
-         tQZxuPwOnesHQdAfngpS7gcAk1DUQv4Xexd56GCSCsekR4w4LRbt9tj5/TXdAfPxOodx
-         kTFJBxV14QW5G4ZOUe6ypAfDOQ9TmxWw4flxvQJISgYLAmbcYg0zheycFZP4h12gk8u0
-         ZCndYcFNNW+jPle334LcqjaUMfbLZRkkfrLZXc8NwHue2hgcJNYiUXqBZBRsflpWe8Gp
-         Ompw==
+        bh=7eXnEfxjvluj2ls7P91GLCGn8R1ORvibeOsisML1eFU=;
+        b=NjdDDmyBTCjygBZJAU+NRwRzl3ex6HJG9YfrfrTpOYoShqxdPuZtOqtlmxin+mbOJ3
+         u4fFmpaTvK8xF11J3mTcfcw133QmdBBryJoDVYRZ8G6P5DWiLLpYwfu+2wp/DuybIxiQ
+         YVLoGoQtW8eMQVJ4eTl/kizr1DnWqa9iLdWpwvQHw99Xxj2hOzFB+7H4C65pFmAS/4qo
+         KnzQYJe2EJsybQQ/Y7Fk2d/oQmL0mD1PhQdx+1p4EXCIVTpTL2JMlJeCiWrZkkHApHzY
+         sut2SG5fl20NC0Fg2fCHYZ9v1khyrylm95+ZifXftj3hYvddu5VIG4Dja0GyQfzribKb
+         DdWQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696955834; x=1697560634;
+        d=1e100.net; s=20230601; t=1696956100; x=1697560900;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=b2+nmzantxOYY6snfxh3U/lP8Nv4ffuUeaORW4FhlFk=;
-        b=fYCILX5BVc9vd19ozAIB9Aj5rz3r7iv7zGQ8kvp82tW4Rjru5aXMPt1ZAq9hC7dHAh
-         n9D5xPn7+3PWuZVo/uDgYTzIH8xrfosNJUtfVtEt7b1WyQlpeZtIPszLXAjZV+uASfWe
-         maHZsC5i+yg+Ugex6LoX4TcNLHyiUDOWuHHfRfo0tKnoHtOXN5SXalUq4/cooCXr6ayJ
-         IPHhmG6PR366JmnQLZe1EUV9eR5kYh4F3O18L2uaKPebctbpKiRceEMI40j7YlRtOEbe
-         GU6D59UbiOqUtAFhPpFRcSQ62ps/cxmXsbvS9uRCqrylGi1Jbb15E8m4JnR0O98Ak6bx
-         E2xg==
-X-Gm-Message-State: AOJu0YzEOSL2poZxa/8wILOrH677ERoDpL6Mc3NpkCIL2Rp9m2oNvUhK
-        qNVO0OGmiO1D4AoDySP2sdK3gw==
-X-Google-Smtp-Source: AGHT+IHuDBPm08d2IT/HViICAu+xRv2PqSFZdUqU3VVrNFhRl/7xmwE37yYJexiLv4EDQkrEGogpIg==
-X-Received: by 2002:a1c:7712:0:b0:401:c52c:5ed9 with SMTP id t18-20020a1c7712000000b00401c52c5ed9mr15859201wmi.32.1696955833906;
-        Tue, 10 Oct 2023 09:37:13 -0700 (PDT)
+        bh=7eXnEfxjvluj2ls7P91GLCGn8R1ORvibeOsisML1eFU=;
+        b=h9/pi845/en+GIhpJX9QCkUneWOmnx9Rxzjuxa9zHDz5G1RGMJxCXyeoEx+GqCugw8
+         njPhkPukyxxSvPOJDr3BzMIgQvFnyTBEiOLOskA2q5QP11Mv/+ruvFjwXnGFNED/pr4Z
+         LhD1p/Ijv9Bh0uRTZ93/P8i+BB2UaAoAhYiNz0s2y6Cs/P7iyIW0K/2+0Cvy5DM4F4Zz
+         IeaZezH4Wbb0/aEi3joD35ZwCA/EchYOyWlwxrcmGiKMztzbLANXFGeiD8d1TwlZPo9p
+         IefdHk0Fn+peFsRsAcWFfIWHbXpfuAcjZEQ0FNzOkcDQXf62UFelzfNblwowYB9mF4FV
+         DNxA==
+X-Gm-Message-State: AOJu0Yx1qUo+nnni4U+7gn+6vEOaj4m+yTrqZQq09J3E9hjt/QnrRZ4n
+        nRhS2NKztTw26URGTznphmec1A==
+X-Google-Smtp-Source: AGHT+IHOV7TgUKuKP3wlsPK+xePcD91eowpwyzmYcOf3UNIyI6vjz4PdeVrDSdYUNwTDPfkjwi7i9A==
+X-Received: by 2002:ac2:5dd0:0:b0:506:926c:9b0d with SMTP id x16-20020ac25dd0000000b00506926c9b0dmr7597643lfq.20.1696956100067;
+        Tue, 10 Oct 2023 09:41:40 -0700 (PDT)
 Received: from [172.30.204.182] (UNUSED.212-182-62-129.lubman.net.pl. [212.182.62.129])
-        by smtp.gmail.com with ESMTPSA id bg24-20020a05600c3c9800b004063c9f68f2sm11675343wmb.26.2023.10.10.09.37.12
+        by smtp.gmail.com with ESMTPSA id y10-20020ac2420a000000b004fe2a7a2ee2sm1866668lfh.160.2023.10.10.09.41.38
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Oct 2023 09:37:13 -0700 (PDT)
-Message-ID: <5458734c-b9ff-4351-9bcd-c3dd7538f135@linaro.org>
-Date:   Tue, 10 Oct 2023 18:37:11 +0200
+        Tue, 10 Oct 2023 09:41:39 -0700 (PDT)
+Message-ID: <855e5504-0571-4f8c-9644-21ceb40e1132@linaro.org>
+Date:   Tue, 10 Oct 2023 18:41:38 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 1/4] dt-bindings: ufs: qcom: Add qos property
+Subject: Re: [PATCH V1 3/4] ufs: ufs-qcom: Add per-cpu PM QoS vote support for
+ ufs
 Content-Language: en-US
 To:     Maramaina Naresh <quic_mnaresh@quicinc.com>,
         Andy Gross <agross@kernel.org>,
@@ -71,9 +72,9 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         quic_cang@quicinc.com, quic_nguyenb@quicinc.com
 References: <1696952947-18062-1-git-send-email-quic_mnaresh@quicinc.com>
- <1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com>
+ <1696952947-18062-4-git-send-email-quic_mnaresh@quicinc.com>
 From:   Konrad Dybcio <konrad.dybcio@linaro.org>
-In-Reply-To: <1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com>
+In-Reply-To: <1696952947-18062-4-git-send-email-quic_mnaresh@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -83,27 +84,23 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 On 10/10/23 17:49, Maramaina Naresh wrote:
-> Add bindings for per-cpu QoS for QCOM UFS. This improves random io
-> performance by 20% for QCOM UFS.
-The bindings addition improves performance? Cool :P
-
-Please explain your changes and provide the "why".
-
-[...]
-
-> @@ -318,5 +326,13 @@ examples:
->                               <0 0>,
->                               <0 0>;
->               qcom,ice = <&ice>;
-> +            qos0 {
-Looks like the indentation is off, also missing newline before subnodes.
-
-> +                cpumask = <0x0f>;This should be a CPU phandle array instead. Besides, can we not 
-determine this dynamically?
-
-> +                vote = <44>;
-> +            };
-> +            qos1 {
-Missing newline between subnodes.
+> PM QoS per-cpu framework provides performance requirements for each cpu.
+> 
+> The per-cpu PM QoS framework will provide the corresponding interface to
+> collect the resume_latency request of the specified device and provide
+> it to the runtime PM. When suspending the device, it will consider this
+> requirement and decide whether to suspend the device.
+> 
+> Voting will follow below sequence.
+> 1. Vote for maximum latency S32_MAX in driver init.
+> 2. Schedule a vote of PERF when a transfer request is received.
+> 3. Update the vote to S32_MAX during clock gating.
+> 
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+> Signed-off-by: Maramaina Naresh <quic_mnaresh@quicinc.com>
+> ---
+Is this the same patch as 2/4?
 
 Konrad
