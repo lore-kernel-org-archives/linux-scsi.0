@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1DB2CD6912
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D55CD690C
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229967AbjJJJVa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 05:21:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60190 "EHLO
+        id S230151AbjJJJVc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 05:21:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230047AbjJJJVZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:21:25 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CCEDA9;
+        with ESMTP id S230075AbjJJJV0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:21:26 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A50DA7;
         Tue, 10 Oct 2023 02:21:23 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S4Vh86wLGzrTHP;
-        Tue, 10 Oct 2023 17:18:48 +0800 (CST)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S4VfY434qzNp5d;
+        Tue, 10 Oct 2023 17:17:25 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Tue, 10 Oct 2023 17:21:21 +0800
+ 15.1.2507.31; Tue, 10 Oct 2023 17:21:20 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Douglas Gilbert <dgilbert@interlog.com>
 CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <louhongxiang@huawei.com>, Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v6 06/10] scsi: scsi_debug: set command's result and sense data if the error is injected
-Date:   Tue, 10 Oct 2023 17:20:47 +0800
-Message-ID: <20231010092051.608007-7-haowenchao2@huawei.com>
+Subject: [PATCH v6 05/10] scsi: scsi_debug: Return failed value if the error is injected
+Date:   Tue, 10 Oct 2023 17:20:46 +0800
+Message-ID: <20231010092051.608007-6-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20231010092051.608007-1-haowenchao2@huawei.com>
 References: <20231010092051.608007-1-haowenchao2@huawei.com>
@@ -44,120 +44,93 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If a fail command error is injected, set the command's status and sense
-data then finish this scsi command.
+If a fail queuecommand error is injected, return the failed value defined
+in the rule from queuecommand.
 
-Set SCSI command's status and sense data format:
+Make queuecommand return format:
   +--------+------+-------------------------------------------------------+
   | Column | Type | Description                                           |
   +--------+------+-------------------------------------------------------+
-  |   1    |  u8  | Error type, fixed to 0x2                              |
+  |   1    |  u8  | Error type, fixed to 0x1                              |
   +--------+------+-------------------------------------------------------+
-  |   2    |  s32 | Error Count                                           |
-  |        |      |  0: the rule will be ignored                          |
+  |   2    |  s32 | Error count                                           |
+  |        |      |  0: this rule will be ignored                         |
   |        |      |  positive: the rule will always take effect           |
   |        |      |  negative: the rule takes effect n times where -n is  |
   |        |      |            the value given. Ignored after n times     |
   +--------+------+-------------------------------------------------------+
   |   3    |  x8  | SCSI command opcode, 0xff for all commands            |
   +--------+------+-------------------------------------------------------+
-  |   4    |  x8  | Host byte in scsi_cmd::status                         |
-  |        |      | [scsi_cmd::status has 32 bits holding these 3 bytes]  |
+  |   4    |  x32 | The queuecommand() return value we want               |
   +--------+------+-------------------------------------------------------+
-  |   5    |  x8  | Driver byte in scsi_cmd::status                       |
-  +--------+------+-------------------------------------------------------+
-  |   6    |  x8  | SCSI Status byte in scsi_cmd::status                  |
-  +--------+------+-------------------------------------------------------+
-  |   7    |  x8  | SCSI Sense Key in scsi_cmnd                           |
-  +--------+------+-------------------------------------------------------+
-  |   8    |  x8  | SCSI ASC in scsi_cmnd                                 |
-  +--------+------+-------------------------------------------------------+
-  |   9    |  x8  | SCSI ASCQ in scsi_cmnd                                |
-  +--------+------+-------------------------------------------------------+
+
 Examples:
     error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
-    echo "2 -10 0x88 0 0 0x2 0x3 0x11 0x0" >${error}
-will make device's read command return with media error with additional
-sense of "Unrecovered read error" (UNC):
+    echo "1 1 0x12 0x1055" > ${error}
+will make each INQUIRY command sent to that device return
+0x1055 (SCSI_MLQUEUE_HOST_BUSY).
 
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 ---
- drivers/scsi/scsi_debug.c | 53 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+ drivers/scsi/scsi_debug.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index efdd63dd6d25..d15d007f1317 100644
+index 9081c9d22882..efdd63dd6d25 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -7797,6 +7797,48 @@ static int sdebug_fail_queue_cmd(struct scsi_cmnd *cmnd)
+@@ -7769,6 +7769,34 @@ static int sdebug_timeout_cmd(struct scsi_cmnd *cmnd)
  	return 0;
  }
  
-+static int sdebug_fail_cmd(struct scsi_cmnd *cmnd, int *retval,
-+			   struct sdebug_err_inject *info)
++static int sdebug_fail_queue_cmd(struct scsi_cmnd *cmnd)
 +{
 +	struct scsi_device *sdp = cmnd->device;
 +	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
 +	struct sdebug_err_inject *err;
 +	unsigned char *cmd = cmnd->cmnd;
 +	int ret = 0;
-+	int result;
 +
 +	if (devip == NULL)
 +		return 0;
 +
 +	rcu_read_lock();
 +	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
-+		if (err->type == ERR_FAIL_CMD &&
++		if (err->type == ERR_FAIL_QUEUE_CMD &&
 +		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
-+			if (!err->cnt) {
-+				rcu_read_unlock();
-+				return 0;
-+			}
++			ret = err->cnt ? err->queuecmd_ret : 0;
++			if (err->cnt < 0)
++				err->cnt++;
 +
-+			ret = !!err->cnt;
 +			rcu_read_unlock();
-+			goto out_handle;
++			return ret;
 +		}
 +	}
 +	rcu_read_unlock();
 +
 +	return 0;
-+
-+out_handle:
-+	if (err->cnt < 0)
-+		err->cnt++;
-+	mk_sense_buffer(cmnd, err->sense_key, err->asc, err->asq);
-+	result = err->status_byte | err->host_byte << 16 | err->driver_byte << 24;
-+	*info = *err;
-+	*retval = schedule_resp(cmnd, devip, result, NULL, 0, 0);
-+
-+	return ret;
 +}
 +
  static int scsi_debug_queuecommand(struct Scsi_Host *shost,
  				   struct scsi_cmnd *scp)
  {
-@@ -7817,6 +7859,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+@@ -7788,6 +7816,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 	u8 opcode = cmd[0];
  	bool has_wlun_rl;
  	bool inject_now;
- 	int ret = 0;
-+	struct sdebug_err_inject err;
++	int ret = 0;
  
  	scsi_set_resid(scp, 0);
  	if (sdebug_statistics) {
-@@ -7869,6 +7912,16 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 		return ret;
+@@ -7833,6 +7862,13 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		return 0;
  	}
  
-+	if (sdebug_fail_cmd(scp, &ret, &err)) {
-+		scmd_printk(KERN_INFO, scp,
-+			"fail command 0x%x with hostbyte=0x%x, "
-+			"driverbyte=0x%x, statusbyte=0x%x, "
-+			"sense_key=0x%x, asc=0x%x, asq=0x%x\n",
-+			opcode, err.host_byte, err.driver_byte,
-+			err.status_byte, err.sense_key, err.asc, err.asq);
++	ret = sdebug_fail_queue_cmd(scp);
++	if (ret) {
++		scmd_printk(KERN_INFO, scp, "fail queue command 0x%x with 0x%x\n",
++				opcode, ret);
 +		return ret;
 +	}
 +
