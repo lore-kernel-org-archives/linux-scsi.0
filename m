@@ -2,122 +2,97 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 830ACCD68E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 02:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C065CD68E3
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 02:09:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379391AbjJJCAB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Oct 2023 22:00:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39578 "EHLO
+        id S1441800AbjJJCJp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Oct 2023 22:09:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378945AbjJJCAB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 22:00:01 -0400
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EAA28F;
-        Mon,  9 Oct 2023 18:59:50 -0700 (PDT)
-X-UUID: 5f6a0846977943199b4452c4cbcdd13c-20231010
-X-CID-O-RULE: Release_Ham
-X-CID-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.32,REQID:3bee9790-88c2-4661-aca1-cf7c02a62ad7,IP:15,
-        URL:0,TC:0,Content:-25,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACT
-        ION:release,TS:-15
-X-CID-INFO: VERSION:1.1.32,REQID:3bee9790-88c2-4661-aca1-cf7c02a62ad7,IP:15,UR
-        L:0,TC:0,Content:-25,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:-15
-X-CID-META: VersionHash:5f78ec9,CLOUDID:773d9cf0-9a6e-4c39-b73e-f2bc08ca3dc5,B
-        ulkID:231010093340A5656J4H,BulkQuantity:1,Recheck:0,SF:24|17|19|44|102,TC:
-        nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,Bulk:40,QS:nil,BEC:nil,COL:0,OSI
-        :0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_FSI,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS
-X-UUID: 5f6a0846977943199b4452c4cbcdd13c-20231010
-X-User: yaolu@kylinos.cn
-Received: from localhost.localdomain [(116.128.244.169)] by mailgw
-        (envelope-from <yaolu@kylinos.cn>)
-        (Generic MTA)
-        with ESMTP id 399756980; Tue, 10 Oct 2023 09:59:38 +0800
-From:   Lu Yao <yaolu@kylinos.cn>
-To:     hare@suse.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lu Yao <yaolu@kylinos.cn>
-Subject: [PATCH] scsi: aic7xxx: Fix build 'aicasm' warning
-Date:   Tue, 10 Oct 2023 09:59:35 +0800
-Message-Id: <20231010015935.478006-1-yaolu@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S1379354AbjJJCJo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2023 22:09:44 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE50DA7
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 19:09:43 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 399Nwq0a004665;
+        Tue, 10 Oct 2023 02:09:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2023-03-30;
+ bh=RWlh4g+lfyRzcmMVDBfXBjYgKACljzz4N40er8FiAHs=;
+ b=ikXGDdVPIdNKTb5R+LxvnH+ZaN5/KiXzTPNnI0PwsmOX3yIlDF+LydhO2E4qu2GFnQj/
+ xkLyYl64McrnOOIGyrVKDcYbZbfcY1RF4uWdeBilpo50y50VQ02NnTa4Q0vNRaMJgDVe
+ 6d9y+hCRFSOJ6Z5KbnZPy+WF1zAOoeyKBORr6gubt7Dk0c1zgZefp1qQ5Dw6ULG8o9XK
+ lEAxrwk/mEFUPYyWZhCFKCXNTQb9KF4IHG0tEbokFDeNU8trrn7wbMdE88dJq/8xfeqX
+ K/iNu31m+A4gINZ4pWvhJantR9fKhChgwVY2DkrOCz9xxjhf02BdUUfvK8UOHh95cdAc Mw== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3tjx43m152-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 10 Oct 2023 02:09:41 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 39A1BKms015185;
+        Tue, 10 Oct 2023 02:09:40 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3tjws63mae-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 10 Oct 2023 02:09:40 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39A29dUI036611;
+        Tue, 10 Oct 2023 02:09:39 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3tjws63m9y-1;
+        Tue, 10 Oct 2023 02:09:39 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 0/4] UFS core patches
+Date:   Mon,  9 Oct 2023 22:09:32 -0400
+Message-Id: <169690017521.1410956.2552630185220721051.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230921192335.676924-1-bvanassche@acm.org>
+References: <20230921192335.676924-1-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-10_01,2023-10-09_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ bulkscore=0 phishscore=0 suspectscore=0 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
+ definitions=main-2310100013
+X-Proofpoint-ORIG-GUID: QHGJBfu1ccAZhFIKVUUlEYZVo8dWTQjm
+X-Proofpoint-GUID: QHGJBfu1ccAZhFIKVUUlEYZVo8dWTQjm
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When building with CONFIG_AIC7XXX_BUILD_FIRMWARE=y or
-CONFIG_AIC79XX_BUILD_FIRMWARE=y,  the warning message is as follow:
+On Thu, 21 Sep 2023 12:22:45 -0700, Bart Van Assche wrote:
 
-  aicasm_gram.tab.c:1722:16: warning: implicit declaration of function
-    ‘yylex’ [-Wimplicit-function-declaration]
+> Please consider these UFS core patches for the next merge window.
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> Changes compared to v1:
+> - In patch 1/4, instead of preserving the WARN_ONCE() statements, remove these.
+> - Added a reference to CDL in the description of patch 4/4.
+> 
+> [...]
 
-  aicasm_macro_gram.c:68:25: warning: implicit declaration of function
-    ‘mmlex’ [-Wimplicit-function-declaration]
+Applied to 6.7/scsi-queue, thanks!
 
-  aicasm_scan.l:417:6: warning: implicit declaration of function
-    ‘mm_switch_to_buffer’
+[1/4] scsi: ufs: Remove request tag range checks
+      https://git.kernel.org/mkp/scsi/c/cdaaff61d3bf
+[2/4] scsi: ufs: Move the 4K alignment code into the Exynos driver
+      https://git.kernel.org/mkp/scsi/c/858231bdb223
+[3/4] scsi: ufs: Simplify ufshcd_comp_scsi_upiu()
+      https://git.kernel.org/mkp/scsi/c/c788cf8a21cd
+[4/4] scsi: ufs: Set the Command Priority (CP) flag for RT requests
+      https://git.kernel.org/mkp/scsi/c/00d2fa28da0a
 
-  aicasm_scan.l:418:6: warning: implicit declaration of function
-    ‘mmparse’
-
-  aicasm_scan.l:421:6: warning: implicit declaration of function
-    ‘mm_delete_buffer’
-
-The solution is to add the corresponding function declaration to the
-corresponding file.
-
-Signed-off-by: Lu Yao <yaolu@kylinos.cn>
----
- drivers/scsi/aic7xxx/aicasm/aicasm_gram.y       | 1 +
- drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y | 1 +
- drivers/scsi/aic7xxx/aicasm/aicasm_scan.l       | 3 +++
- 3 files changed, 5 insertions(+)
-
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-index 65182ad9cdf8..b1c9ce477cbd 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-@@ -102,6 +102,7 @@ static void add_conditional(symbol_t *symbol);
- static void add_version(const char *verstring);
- static int  is_download_const(expression_t *immed);
- static int  is_location_address(symbol_t *symbol);
-+int yylex();
- void yyerror(const char *string);
- 
- #define SRAM_SYMNAME "SRAM_BASE"
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-index 8c0479865f04..5c7350eb5b5c 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-@@ -61,6 +61,7 @@
- static symbol_t *macro_symbol;
- 
- static void add_macro_arg(const char *argtext, int position);
-+int mmlex();
- void mmerror(const char *string);
- 
- %}
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-index c78d4f68eea5..fc7e6c58148d 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-@@ -64,6 +64,9 @@ static char *string_buf_ptr;
- static int  parren_count;
- static int  quote_count;
- static char buf[255];
-+void mm_switch_to_buffer(YY_BUFFER_STATE);
-+void mmparse();
-+void mm_delete_buffer(YY_BUFFER_STATE);
- %}
- 
- PATH		([/]*[-A-Za-z0-9_.])+
 -- 
-2.25.1
-
+Martin K. Petersen	Oracle Linux Engineering
