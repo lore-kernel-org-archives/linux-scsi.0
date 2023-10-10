@@ -2,249 +2,126 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDC4FCD68ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 05:42:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA8E7CD68F1
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 05:59:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379414AbjJJFmn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 01:42:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42646 "EHLO
+        id S1442202AbjJJF7Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 01:59:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378059AbjJJFml (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 01:42:41 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 634BEA7
-        for <linux-scsi@vger.kernel.org>; Mon,  9 Oct 2023 22:42:39 -0700 (PDT)
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20231010054237epoutp01de02a92fa6db23881207f46b4a73f4d8~MqJ5GEh2N2930229302epoutp01v
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 05:42:37 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20231010054237epoutp01de02a92fa6db23881207f46b4a73f4d8~MqJ5GEh2N2930229302epoutp01v
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1696916557;
-        bh=6pbBvyHbWsmg3Q8Sb+ife4UjdqWf9M2wjjcRPO+cR84=;
-        h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-        b=tMxjC471p5FTMFJ78dtuEScuQwrz7LforEr9aDE6IqPaeTMCtHRPn20BceIeAPvZ0
-         rZOgfvgeMFTZNwuooxAvIhJqlaDCMudu4+J3fTyZPQlaWfB5mbX6u1GHxwmoc7Y/jH
-         yXgcePU4khAwqxxwjHx+MHR9MI5S0MWYZf6lm/lc=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-        20231010054236epcas5p18da41d54dd761bd64f1aff7660f9b748~MqJ4reWeW1846918469epcas5p18;
-        Tue, 10 Oct 2023 05:42:36 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.179]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4S4Ptf0mnjz4x9Pv; Tue, 10 Oct
-        2023 05:42:34 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1B.B4.09635.844E4256; Tue, 10 Oct 2023 14:42:32 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-        20231010054232epcas5p403c57f2d1ea934e2f467a335c1a98a80~MqJ0jThGg3261432614epcas5p49;
-        Tue, 10 Oct 2023 05:42:32 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20231010054232epsmtrp19a530e7d09fc9311abc33722482699e8~MqJ0iXX_G1806218062epsmtrp1X;
-        Tue, 10 Oct 2023 05:42:32 +0000 (GMT)
-X-AuditID: b6c32a4b-563fd700000025a3-68-6524e448714f
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        21.18.08788.844E4256; Tue, 10 Oct 2023 14:42:32 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20231010054229epsmtip291997c51a435da8b8bfabd97dce755a4~MqJyPfxlg0159301593epsmtip2-;
-        Tue, 10 Oct 2023 05:42:29 +0000 (GMT)
-Message-ID: <d25ae351-5131-1b3e-4ae8-bacb674008de@samsung.com>
-Date:   Tue, 10 Oct 2023 11:12:29 +0530
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-        Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH v2 04/15] fs: Restore write hint support
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        with ESMTP id S1442179AbjJJF7O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 01:59:14 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B27EFC4;
+        Mon,  9 Oct 2023 22:59:11 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCCE0C433C8;
+        Tue, 10 Oct 2023 05:59:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1696917551;
+        bh=S2Vq73dxgI8Hax8ZDzPktuJJ9WTcUpUL+/KM/V79r44=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Kg+lbBI2WFWTfw1g2nP0OCMspsLaEmhAGl8iOsaj2cy/oJfzG7zS6LdyTH+rgqFJW
+         sxCvDQ6Jwy3j0Ae58keCkT9pNIKZqzy2q0BM7QcmVrgaG+duK+v7nL5BaVefquSsO4
+         loMdrlwL5KeekjdN5/LA2S/AHzLoLV9Rn2EfXKfI=
+Date:   Tue, 10 Oct 2023 07:59:07 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Max Kellermann <max.kellermann@ionos.com>
+Cc:     Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Borislav Petkov <bp@alien8.de>,
+        Tony Luck <tony.luck@intel.com>,
+        James Morse <james.morse@arm.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Robert Richter <rric@kernel.org>,
+        Jean Delvare <jdelvare@suse.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Keith Busch <kbusch@kernel.org>,
         Christoph Hellwig <hch@lst.de>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-From:   Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20231005194129.1882245-5-bvanassche@acm.org>
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDJsWRmVeSWpSXmKPExsWy7bCmlq7HE5VUg1PLDS1e/rzKZrH6bj+b
-        xevDnxgtpn34yWxxeupZJotVD8ItLj/hs1i5+iiTxZyzDUwWT9bPYrbYe0vbYs/ekywW3dd3
-        sFksP/6PyeLBn8fsFuf/Hmd1EPC4fMXbY+esu+wel8+Wemxa1cnmsftmA5vHx6e3WDz6tqxi
-        9Pi8Sc6j/UA3k8emJ2+ZAriism0yUhNTUosUUvOS81My89JtlbyD453jTc0MDHUNLS3MlRTy
-        EnNTbZVcfAJ03TJzgP5QUihLzCkFCgUkFhcr6dvZFOWXlqQqZOQXl9gqpRak5BSYFOgVJ+YW
-        l+al6+WlllgZGhgYmQIVJmRn9M3cxFSwWK3i9LmF7A2MT+S6GDk5JARMJD5tWMnaxcjFISSw
-        m1FizZeFUM4nRon9R84yQTjfGCWefNrNAtMyZ8tRqKq9jBIH33xhg3DeMkr8uLCfHaSKV8BO
-        YvqyhYwgNouAqsTjxb+g4oISJ2c+AZskKpAk8evqHLAaYQEbicvfb7KB2MwC4hK3nsxnArFF
-        BNwkGq7uAlvALNDEIvHt2V4gh4ODTUBT4sLkUpAaTgEriecbLzJC9MpLbH87hxni0jccEp+O
-        Qj3qItFwYBUjhC0s8er4FnYIW0riZX8blJ0scWnmOSYIu0Ti8Z6DULa9ROupfmaQtcxAa9fv
-        0odYxSfR+/sJE0hYQoBXoqNNCKJaUeLepKesELa4xMMZS6BsD4n919Yyw8NtU8MU1gmMCrOQ
-        QmUWku9nIflmFsLmBYwsqxglUwuKc9NTi00LjPNSy+ERnpyfu4kRnMy1vHcwPnrwQe8QIxMH
-        4yFGCQ5mJRHeR5kqqUK8KYmVValF+fFFpTmpxYcYTYHRM5FZSjQ5H5hP8kriDU0sDUzMzMxM
-        LI3NDJXEeV+3zk0REkhPLEnNTk0tSC2C6WPi4JRqYMrYVHiUMyog7foH31+WSmZJBuf6Moy1
-        D8oz9hz4IuC3tP5tUKHZj/02KfOuXHjPHym7qmfBzu6wajfX7atszsbXfJxdzTrD8vvauIb2
-        l1Kc9nqzhPls5nZ5X9oeJfvvjLhGhsJeHeUiH/3/UTl/RJmf5kd8y21sPnz5tUHi4TUt56ZP
-        /77jyRfRl+fXHHRt4OG+rGO2V3u26YmHk64FxQu/e/13xZojhbICnTP8Myxl02tlCs/48J5z
-        DBG+37LC5neFsF/K91VfnBImF+p2sIa/6U6cnThf3M3VSeOXkPC7I3ufZN0L/rpw4/Efr56+
-        aavT5zqcu1H6v0H7lQqLeQFulklPlpgp6pXvfqSUosRSnJFoqMVcVJwIAFcY2Y9vBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBIsWRmVeSWpSXmKPExsWy7bCSvK7HE5VUgzuPRC1e/rzKZrH6bj+b
-        xevDnxgtpn34yWxxeupZJotVD8ItLj/hs1i5+iiTxZyzDUwWT9bPYrbYe0vbYs/ekywW3dd3
-        sFksP/6PyeLBn8fsFuf/Hmd1EPC4fMXbY+esu+wel8+Wemxa1cnmsftmA5vHx6e3WDz6tqxi
-        9Pi8Sc6j/UA3k8emJ2+ZAriiuGxSUnMyy1KL9O0SuDL6Zm5iKlisVnH63EL2BsYncl2MnBwS
-        AiYSc7YcZe1i5OIQEtjNKDGreycLREJcovnaD3YIW1hi5b/n7BBFrxkl7h48ywiS4BWwk5i+
-        bCGYzSKgKvF48S92iLigxMmZT8AGiQokSey538gEYgsL2Ehc/n6TDcRmBlpw68l8sLiIgJtE
-        w9VdbCALmAVaWCTeH+0CKxIS2MsocfRVYhcjBwebgKbEhcmlIGFOASuJ5xsvMkLMMZPo2toF
-        ZctLbH87h3kCo9AsJGfMQrJuFpKWWUhaFjCyrGKUTC0ozk3PLTYsMMpLLdcrTswtLs1L10vO
-        z93ECI5cLa0djHtWfdA7xMjEwXiIUYKDWUmE91GmSqoQb0piZVVqUX58UWlOavEhRmkOFiVx
-        3m+ve1OEBNITS1KzU1MLUotgskwcnFINTLJTlFQa57BvE/3o4W/R/55lV1t6xsuHe5ZpdZxN
-        8tW1KWY0dz8sF8/yc9Lqa8rdoWqnjs+S3lU978gLZs+LXA8WMrutk92+wrrxrn5T6e0Ipz8d
-        q9LZ24qEtvi+nXA7s1lX9N4N06sX4rdyPrPuMamef1SEQ9CVrfREdaXM0XtHNux4rL28zvtg
-        dvX/iSlbWHLS7/rLt8z6JdBqyKIdJuBbk/+gq+VDg8eWq7Yx9/8EX005VGVSlte6rSxncbxl
-        n2uc3hnrD4d6vvP18H/c2ix+vYnx8vQjur/Ew9TWPXAorevbfY+rwbhNoWGyvvMUd8aOqh8F
-        J1jk9aTPccttifSfvEzq5haJf37fF/orsRRnJBpqMRcVJwIA4AiiPEsDAAA=
-X-CMS-MailID: 20231010054232epcas5p403c57f2d1ea934e2f467a335c1a98a80
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20231005194217epcas5p1538a3730290bbb38adca08f8c80f328e
-References: <20231005194129.1882245-1-bvanassche@acm.org>
-        <CGME20231005194217epcas5p1538a3730290bbb38adca08f8c80f328e@epcas5p1.samsung.com>
-        <20231005194129.1882245-5-bvanassche@acm.org>
+        Sagi Grimberg <sagi@grimberg.me>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        Mike Leach <mike.leach@linaro.org>,
+        James Clark <james.clark@arm.com>,
+        Leo Yan <leo.yan@linaro.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Pavel Machek <pavel@ucw.cz>, Lee Jones <lee@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Arnaldo Carvalho de Melo <acme@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Jiri Olsa <jolsa@kernel.org>,
+        Namhyung Kim <namhyung@kernel.org>,
+        Ian Rogers <irogers@google.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-hwmon@vger.kernel.org,
+        linux-rdma@vger.kernel.org, iommu@lists.linux.dev,
+        nvdimm@lists.linux.dev, linux-nvme@lists.infradead.org,
+        linux-rtc@vger.kernel.org, linux-serial@vger.kernel.org,
+        coresight@lists.linaro.org, linux-arm-kernel@lists.infradead.org,
+        linux-leds@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-perf-users@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 6/7] fs/sysfs/group: make attribute_group pointers const
+Message-ID: <2023101025-yogurt-masses-47da@gregkh>
+References: <20231009165741.746184-1-max.kellermann@ionos.com>
+ <20231009165741.746184-6-max.kellermann@ionos.com>
+ <264fa39d-aed6-4a54-a085-107997078f8d@roeck-us.net>
+ <CAKPOu+8k2x1CucWSzoouts0AfMJk+srJXWWf3iWVOeY+fWkOpQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAKPOu+8k2x1CucWSzoouts0AfMJk+srJXWWf3iWVOeY+fWkOpQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/6/2023 1:10 AM, Bart Van Assche wrote:
-> This patch reverts a small subset of commit c75e707fe1aa ("block: remove
-> the per-bio/request write hint"). The following functionality has been
-> restored:
-> - In F2FS, store data lifetime information in struct bio.
-> - In fs/iomap and fs/mpage.c, restore the code that sets the data
->    lifetime.
+On Mon, Oct 09, 2023 at 10:05:55PM +0200, Max Kellermann wrote:
+> On Mon, Oct 9, 2023 at 7:24 PM Guenter Roeck <linux@roeck-us.net> wrote:
+> > Also, I don't know why checkpatch is happy with all the
+> >
+> >         const struct attribute_group *const*groups;
+> >
+> > instead of
+> >
+> >         const struct attribute_group *const *groups;
 > 
-> A new header file is introduced for the new bio_[sg]et_data_lifetime()
-> functions because there is no other header file yet that includes both
-> <linux/fs.h> and <linux/ioprio.h>.
+> I found out that checkpatch has no check for this at all; it does
+> complain about such lines, but only for local variables. But that
+> warning is actually a bug, because this is a check for unary
+> operators: it thinks the asterisk is a dereference operator, not a
+> pointer declaration, and complains that the unary operator must be
+> preceded by a space. Thus warnings on local variable are only correct
+> by coincidence, not by design.
 > 
-> The value WRITE_LIFE_NONE is mapped onto the data lifetime 0. This is
-> consistent with NVMe TPAR4093a. From that TPAR: "A value of 1h specifies
-> the shortest Data Lifetime. A value of 3Fh specifies the longest Data
-> Lifetime." This is also consistent with the SCSI specifications. From
-> T10 document 23-024r3: "0h: no relative lifetime is applicable; 1h:
-> shortest relative lifetime; ...; 3fh: longest relative lifetime".
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   fs/f2fs/data.c              |  3 +++
->   fs/iomap/buffered-io.c      |  3 +++
->   fs/mpage.c                  |  2 ++
->   include/linux/fs-lifetime.h | 20 ++++++++++++++++++++
->   4 files changed, 28 insertions(+)
->   create mode 100644 include/linux/fs-lifetime.h
-> 
-> diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-> index 916e317ac925..2962cb335897 100644
-> --- a/fs/f2fs/data.c
-> +++ b/fs/f2fs/data.c
-> @@ -6,6 +6,7 @@
->    *             http://www.samsung.com/
->    */
->   #include <linux/fs.h>
-> +#include <linux/fs-lifetime.h>
->   #include <linux/f2fs_fs.h>
->   #include <linux/buffer_head.h>
->   #include <linux/sched/mm.h>
-> @@ -478,6 +479,8 @@ static struct bio *__bio_alloc(struct f2fs_io_info *fio, int npages)
->   	} else {
->   		bio->bi_end_io = f2fs_write_end_io;
->   		bio->bi_private = sbi;
-> +		bio_set_data_lifetime(bio,
-> +			f2fs_io_type_to_rw_hint(sbi, fio->type, fio->temp));
->   	}
->   	iostat_alloc_and_bind_ctx(sbi, bio, NULL);
->   
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 644479ccefbd..9bf05342ca65 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -6,6 +6,7 @@
->   #include <linux/module.h>
->   #include <linux/compiler.h>
->   #include <linux/fs.h>
-> +#include <linux/fs-lifetime.h>
->   #include <linux/iomap.h>
->   #include <linux/pagemap.h>
->   #include <linux/uio.h>
-> @@ -1660,6 +1661,7 @@ iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
->   			       REQ_OP_WRITE | wbc_to_write_flags(wbc),
->   			       GFP_NOFS, &iomap_ioend_bioset);
->   	bio->bi_iter.bi_sector = sector;
-> +	bio_set_data_lifetime(bio, inode->i_write_hint);
->   	wbc_init_bio(wbc, bio);
->   
->   	ioend = container_of(bio, struct iomap_ioend, io_inline_bio);
-> @@ -1690,6 +1692,7 @@ iomap_chain_bio(struct bio *prev)
->   	new = bio_alloc(prev->bi_bdev, BIO_MAX_VECS, prev->bi_opf, GFP_NOFS);
->   	bio_clone_blkg_association(new, prev);
->   	new->bi_iter.bi_sector = bio_end_sector(prev);
-> +	bio_set_data_lifetime(new, bio_get_data_lifetime(prev));
->   
->   	bio_chain(prev, new);
->   	bio_get(prev);		/* for iomap_finish_ioend */
-> diff --git a/fs/mpage.c b/fs/mpage.c
-> index 242e213ee064..888ca71c9ea7 100644
-> --- a/fs/mpage.c
-> +++ b/fs/mpage.c
-> @@ -20,6 +20,7 @@
->   #include <linux/gfp.h>
->   #include <linux/bio.h>
->   #include <linux/fs.h>
-> +#include <linux/fs-lifetime.h>
->   #include <linux/buffer_head.h>
->   #include <linux/blkdev.h>
->   #include <linux/highmem.h>
-> @@ -612,6 +613,7 @@ static int __mpage_writepage(struct folio *folio, struct writeback_control *wbc,
->   				GFP_NOFS);
->   		bio->bi_iter.bi_sector = blocks[0] << (blkbits - 9);
->   		wbc_init_bio(wbc, bio);
-> +		bio_set_data_lifetime(bio, inode->i_write_hint);
->   	}
->   
->   	/*
-> diff --git a/include/linux/fs-lifetime.h b/include/linux/fs-lifetime.h
-> new file mode 100644
-> index 000000000000..0e652e00cfab
-> --- /dev/null
-> +++ b/include/linux/fs-lifetime.h
-> @@ -0,0 +1,20 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#include <linux/bio.h>
-> +#include <linux/fs.h>
-> +#include <linux/ioprio.h>
-> +
-> +static inline enum rw_hint bio_get_data_lifetime(struct bio *bio)
-> +{
-> +	/* +1 to map 0 onto WRITE_LIFE_NONE. */
-> +	return IOPRIO_PRIO_LIFETIME(bio->bi_ioprio) + 1;
-> +}
-> +
-> +static inline void bio_set_data_lifetime(struct bio *bio, enum rw_hint lifetime)
-> +{
-> +	/* -1 to map WRITE_LIFE_NONE onto 0. */
-> +	if (lifetime != 0)
-> +		lifetime--;
+> Inside structs or parameters (where my coding style violations can be
+> found), it's a different context and thus checkpatch doesn't apply the
+> rules for unary operators.
 
-How the driver can figure when lifetime is not set, and when it is set 
-to WRITE_LIFE_NONE? If it uses IOPRIO_PRIO_LIFETIME (as patch 8 does), 
-it will see 0 in both cases.
-F2FS fs-based whint_mode seems to expect distinct streams for 
-WRITE_LIFE_NOT_SET and WRITE_LIFE_NONE.
+Ok, checkpatch support isn't always required, we can notice that changes
+like this obviously are not sane and shouldn't be allowed just by
+reading them :)
+
+thanks,
+
+greg k-h
