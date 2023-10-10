@@ -2,106 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE2A6CD68F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 07:46:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81599CD68E5
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:02:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1442530AbjJJHqd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 03:46:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43406 "EHLO
+        id S229614AbjJJJCa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 05:02:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1442419AbjJJHqc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 03:46:32 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C414792
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 00:46:30 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC682C433C8;
-        Tue, 10 Oct 2023 07:46:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696923990;
-        bh=aO2dpYnHthxUYLsWMVrb97x0PPqCczk/ax8qHUvYyUk=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=b4jGhLEYYNz9mnw3MBEI0SEEDFpKTm2G1TQ78v3Fv24r+2ohinCbpxRE5MbAvBMg1
-         IzsgEN7Ybjsy2wJAwQrDqbzCy0BoIjPKPXMlhsOuCCcpHRUStKJFVK2Wzop5gGq9ZP
-         Rk0TxN7FvDGFgHddOxp2rWIWV1nMpm7f6S2Simu2/w8IP6WMIyacwUgGYRd4vkf4hL
-         8g2i4mR7SJR2Yx/EJIO1WbTOBPHu6Q+VfNg5xyYnf2lw5hwLMa3aZIColgKxajCENb
-         +55n5my8+y3zPslbUaZew7cGcaWMDV01sSXMZgkVSOgbHCxcP5u2JrQdV0xqkC1r9f
-         mMNJ0RdfU+Abw==
-Message-ID: <7ac12bf0-7668-4387-94c4-67ff71b30c37@kernel.org>
-Date:   Tue, 10 Oct 2023 16:46:28 +0900
+        with ESMTP id S229531AbjJJJCa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:02:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA1959F
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 02:01:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1696928506;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WT+cRgvE6j4m6iIs9CQA2K/PgdEYLs2ZCdC3DU5bQN0=;
+        b=WGa7DsH98xuWOJ5KnNk/R9Wo5PkE0EiWTCKFztF1pns/2GYZaWbRQ2QLyE+WHs5QOJD55C
+        FWcrO6eiU/upERYZbLLcdcl8ufAiYj/13WXNinSaoUPq0Y3j4l7IP8cL+snFdE1X9iBDCz
+        UUEIsbLaTMp0DepdQceyUPxqjrdnnI8=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-121-3VNU6RXWOseYjgqDeHoCTg-1; Tue, 10 Oct 2023 05:01:45 -0400
+X-MC-Unique: 3VNU6RXWOseYjgqDeHoCTg-1
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-997c891a88dso183817066b.3
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 02:01:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696928503; x=1697533303;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=WT+cRgvE6j4m6iIs9CQA2K/PgdEYLs2ZCdC3DU5bQN0=;
+        b=kjJ+DTqrQ62S67zb5TnBFFQTsoaqWGZdZXlbWVDvLOxeotDCoWZht8LhKc330Phcfq
+         DiApMAq0ED60KHJ+Xlk+zarCENE0j+oRp30RZofRIT5dXTJ3mwXYMoN8t6iUUoTfYawI
+         9pQIaMmZg/xzxGxE6bwGcjLi8KnRQww+dhspQ4A+Ui8XKe6ApYyZS6oqVbennmqYsXeV
+         dhIy9pJjQIa3+cnWB3kvIZzv2MByIzKeU1Stwl2kgwCNFWJbfdYQqbo9Dao8hqi1/Ylm
+         Zw7Rz3un2DoyB8eQ0q8wbxK1WJJsJMkPyb852DXLSi0XQFlWsC9caAwyLHlkSge9GBKp
+         mOIQ==
+X-Gm-Message-State: AOJu0Yx8Wu0ey8FTz4d7/WHdJLTfuxd/KADN6XGMkyVqXbTbaYTZBPuu
+        9uvUjPTIhSCqU6XlIRkFAg3bHskkonlprWsPSvO1vkg/fKingZJ1FQ1iMndPTZN1XFK++kNW3qG
+        6Ghs0jDNc0zTxdd2W+hCpBhbyonhp4BHsXY8hSo/5x4cV+VP/o6yZqWv6xCbgJUl9ImpRs8+69c
+        xTDhc=
+X-Received: by 2002:a17:907:b0d:b0:9ae:37c2:11b2 with SMTP id h13-20020a1709070b0d00b009ae37c211b2mr14029100ejl.15.1696928503717;
+        Tue, 10 Oct 2023 02:01:43 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHeTgUspWwEL30w1fP2RqnSKNifpzHvFp/oP2hDm0CQnL2NFw5TIZ4rnC/IjEDtsU7ZFYig2A==
+X-Received: by 2002:a17:907:b0d:b0:9ae:37c2:11b2 with SMTP id h13-20020a1709070b0d00b009ae37c211b2mr14029081ejl.15.1696928503329;
+        Tue, 10 Oct 2023 02:01:43 -0700 (PDT)
+Received: from [192.168.0.107] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
+        by smtp.gmail.com with ESMTPSA id p26-20020a1709060dda00b0099bc08862b6sm8265793eji.171.2023.10.10.02.01.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Oct 2023 02:01:42 -0700 (PDT)
+Message-ID: <696c643d-cbe8-5ef4-c360-db86d0c1d357@redhat.com>
+Date:   Tue, 10 Oct 2023 11:01:42 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Feature Request: Device Manager Fake Trim / Zero Trim
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH] mpt3sas: suppress a warning in debug kernel
 Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>, charlesfdotz@tutanota.com,
-        Dm Devel <dm-devel@lists.linux.dev>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <NgGvkdW--3-9@tutanota.com>
- <6276b986-fe9a-4ac4-9662-a0abf7dc68b4@suse.de>
- <dc7c0122-8077-4aa5-87e6-87404f48a4ce@kernel.org>
- <a06b762d-32b9-448b-96cf-a2957ab1a425@suse.de>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <a06b762d-32b9-448b-96cf-a2957ab1a425@suse.de>
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     sreekanth.reddy@broadcom.com, ranjan.kumar@broadcom.com,
+        sathya.prakash@broadcom.com
+References: <20231009152730.14925-1-thenzl@redhat.com>
+In-Reply-To: <20231009152730.14925-1-thenzl@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/10/23 16:15, Hannes Reinecke wrote:
-> On 10/10/23 08:48, Damien Le Moal wrote:
->> On 10/9/23 15:15, Hannes Reinecke wrote:
->>> On 10/9/23 02:56, charlesfdotz@tutanota.com wrote:
->>>> Hello,
->>>>
->>>> I would like to request a new device manager layer be added that accepts
->>>> trim requests for sectors and instead writes zeros to those sectors.
->>>>
->>>> This would be useful to deal with SMR (shingled magnetic recording) drives
->>>> that do not support trim. Currently after an SMR drive has had enough data
->>>> written to it the performance drops dramatically because the disk must
->>>> shuffle around data as if it were full and without trim support there is no
->>>> way to inform the disk which sectors are no longer used. Currently there's
->>>> no way to "fix" or reset this without doing an ATA secure erase despite
->>>> many of these disk being sold without informing customers that they were
->>>> SMR drives (western digital was sued for selling SMR drives as NAS
->>>> drives).
->>>>
->>> Gosh, no, please don't. SMR drives have a write pointer, and if the zone
->>> needs to be reset you just reset the write pointer. Writing zeroes will
->>> result in the opposite; the zone continues to be full, and no writes can
->>> happen there.
->>
->> Yes. And zone reset *is* a trim also since after a zone reset, the sectors in
->> the zone cannot be read.
->>
-> On the same vein: why didn't we hook up 'wp reset' to trim/unmap?
-> The code says:
-> 
->          if (sd_is_zoned(sdkp)) {
->                  sd_config_discard(sdkp, SD_LBP_DISABLE);
->                  return count;
->          }
-> 
-> I distinctly remember to enable discards via 'wp reset' in the
-> original code; what happened to it?
+There might be an issue related to this patch, I shall post a modified V2.
 
-Hmmm... I do not recall exactly. I think it was all about being clear and to not
-overload trim/discard, or scsi unmap, which at the time was not the prettiest
-thing in scsi code (it got better though).
+Please drop this patch.
 
-But I do prefer having zone reset separate from trim/discard, to be clear about
-the fact that things are zone aligned. From the code perspective, there are only
-few places were overloading trim with zone reset would simplify a little the
-code. F2fs is probably the main one that comes to mind, but simplification would
-be minor. So not worth the confusion I think.
-
+On 10/9/23 17:27, Tomas Henzl wrote:
+> The mpt3sas_ctl_exit should be called after communication
+> with the controller stops but in the current place it may cause
+> false warnings about memory not released.
+> Fix it by moving the call right after mpt3sas_base_detach.
 > 
-> Cheers,
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> Hannes
-
--- 
-Damien Le Moal
-Western Digital Research
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index c3c1f466fe01..9af7a7e24474 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -11350,6 +11350,7 @@ static void scsih_remove(struct pci_dev *pdev)
+>  	}
+>  
+>  	mpt3sas_base_detach(ioc);
+> +	mpt3sas_ctl_exit(hbas_to_enumerate);
+>  	spin_lock(&gioc_lock);
+>  	list_del(&ioc->list);
+>  	spin_unlock(&gioc_lock);
+> @@ -12931,8 +12932,6 @@ _mpt3sas_exit(void)
+>  
+>  	pci_unregister_driver(&mpt3sas_driver);
+>  
+> -	mpt3sas_ctl_exit(hbas_to_enumerate);
+> -
+>  	scsih_exit();
+>  }
+>  
 
