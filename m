@@ -2,100 +2,204 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 648DCCD690C
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1ECFCD80B7
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 12:12:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230122AbjJJJVi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 05:21:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42724 "EHLO
+        id S231552AbjJJMMK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 08:12:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230097AbjJJJV1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:21:27 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D64B6B6;
-        Tue, 10 Oct 2023 02:21:25 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S4Vdr27gdztTMc;
-        Tue, 10 Oct 2023 17:16:48 +0800 (CST)
-Received: from build.huawei.com (10.175.101.6) by
+        with ESMTP id S231637AbjJJMMJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 08:12:09 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 584A2A4
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 05:12:07 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S4ZS36PLtzVlVP;
+        Tue, 10 Oct 2023 20:08:35 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Tue, 10 Oct 2023 17:21:23 +0800
-From:   Wenchao Hao <haowenchao2@huawei.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Douglas Gilbert <dgilbert@interlog.com>
-CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <louhongxiang@huawei.com>, Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v6 10/10] scsi: scsi_debug: Add param to control sdev's allow_restart
-Date:   Tue, 10 Oct 2023 17:20:51 +0800
-Message-ID: <20231010092051.608007-11-haowenchao2@huawei.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20231010092051.608007-1-haowenchao2@huawei.com>
-References: <20231010092051.608007-1-haowenchao2@huawei.com>
+ 15.1.2507.31; Tue, 10 Oct 2023 20:12:03 +0800
+Message-ID: <6e9f6626-5303-3d17-c807-67905f2d03e1@huawei.com>
+Date:   Tue, 10 Oct 2023 20:12:02 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 4/7] scsi: Use scsi_device as argument to
+ eh_device_reset_handler()
+Content-Language: en-US
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     James Bottomley <james.bottomley@hansenpartnership.com>,
+        <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+References: <20231002155915.109359-1-hare@suse.de>
+ <20231002155915.109359-5-hare@suse.de>
+From:   Wenchao Hao <haowenchao2@huawei.com>
+In-Reply-To: <20231002155915.109359-5-hare@suse.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
  kwepemm000012.china.huawei.com (7.193.23.142)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add new module param "allow_restart" to control if setup scsi_device's
-allow_restart flag, this flag determines if trigger EH after command
-finished with sense_key 0x6, asc 0x4 and ascq 0x2, EH would be triggered
-if allow_restart=1 in this condition.
+On 2023/10/2 23:59, Hannes Reinecke wrote:
+> The device reset function should only depend on the scsi device,
+> not the scsi command.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   Documentation/scsi/scsi_eh.rst          |  2 +-
+>   Documentation/scsi/scsi_mid_low_api.rst |  4 +--
+>   drivers/infiniband/ulp/srp/ib_srp.c     |  6 ++--
+>   drivers/message/fusion/mptfc.c          | 12 ++++----
+>   drivers/message/fusion/mptscsih.c       | 19 +++++-------
+>   drivers/message/fusion/mptscsih.h       |  2 +-
+>   drivers/s390/scsi/zfcp_scsi.c           |  4 +--
+>   drivers/scsi/a100u2w.c                  |  7 ++---
+>   drivers/scsi/aacraid/linit.c            |  9 +++---
+>   drivers/scsi/aha152x.c                  |  6 ++--
+>   drivers/scsi/aha1542.c                  |  8 ++---
+>   drivers/scsi/aic7xxx/aic79xx_osm.c      | 27 +++++++----------
+>   drivers/scsi/aic7xxx/aic7xxx_osm.c      |  4 +--
+>   drivers/scsi/arm/fas216.c               |  5 ++--
+>   drivers/scsi/arm/fas216.h               |  6 ++--
+>   drivers/scsi/be2iscsi/be_main.c         |  8 ++---
+>   drivers/scsi/bfa/bfad_im.c              |  3 +-
+>   drivers/scsi/bnx2fc/bnx2fc.h            |  2 +-
+>   drivers/scsi/bnx2fc/bnx2fc_io.c         |  6 ++--
+>   drivers/scsi/csiostor/csio_scsi.c       |  5 ++--
+>   drivers/scsi/cxlflash/main.c            |  5 ++--
+>   drivers/scsi/esas2r/esas2r.h            |  2 +-
+>   drivers/scsi/esas2r/esas2r_main.c       |  3 +-
+>   drivers/scsi/fnic/fnic.h                |  2 +-
+>   drivers/scsi/fnic/fnic_scsi.c           |  5 ++--
+>   drivers/scsi/hpsa.c                     | 14 ++++-----
+>   drivers/scsi/ibmvscsi/ibmvfc.c          |  8 ++---
+>   drivers/scsi/ibmvscsi/ibmvscsi.c        | 19 ++++++------
+>   drivers/scsi/ipr.c                      | 22 +++++++-------
+>   drivers/scsi/libfc/fc_fcp.c             | 13 ++++----
+>   drivers/scsi/libiscsi.c                 | 15 +++++-----
+>   drivers/scsi/libsas/sas_scsi_host.c     | 12 ++++----
+>   drivers/scsi/lpfc/lpfc_scsi.c           | 10 +++----
+>   drivers/scsi/mpi3mr/mpi3mr_os.c         | 40 +++++++++++--------------
+>   drivers/scsi/mpt3sas/mpt3sas_scsih.c    | 30 ++++++++-----------
+>   drivers/scsi/pcmcia/nsp_cs.h            |  2 --
+>   drivers/scsi/pmcraid.c                  |  6 ++--
+>   drivers/scsi/qedf/qedf_main.c           |  6 ++--
+>   drivers/scsi/qla1280.c                  | 21 +++++++++----
+>   drivers/scsi/qla2xxx/qla_os.c           | 24 +++++++--------
+>   drivers/scsi/qla4xxx/ql4_os.c           | 23 ++++++--------
+>   drivers/scsi/scsi_debug.c               |  3 +-
+>   drivers/scsi/scsi_error.c               | 35 +++++++++++++++-------
+>   drivers/scsi/smartpqi/smartpqi.h        |  1 -
+>   drivers/scsi/smartpqi/smartpqi_init.c   | 19 +++++-------
+>   drivers/scsi/snic/snic.h                |  2 +-
+>   drivers/scsi/snic/snic_scsi.c           |  4 +--
+>   drivers/scsi/virtio_scsi.c              | 12 ++++----
+>   drivers/scsi/vmw_pvscsi.c               | 10 +++----
+>   drivers/scsi/wd719x.c                   |  6 ++--
+>   drivers/scsi/xen-scsifront.c            |  6 ++--
+>   drivers/staging/rts5208/rtsx.c          |  6 +++-
+>   drivers/target/loopback/tcm_loop.c      |  8 ++---
+>   drivers/ufs/core/ufshcd.c               |  8 ++---
+>   drivers/usb/storage/scsiglue.c          |  4 +--
+>   drivers/usb/storage/uas.c               |  3 +-
+>   include/scsi/libfc.h                    |  2 +-
+>   include/scsi/libiscsi.h                 |  2 +-
+>   include/scsi/libsas.h                   |  2 +-
+>   include/scsi/scsi_host.h                |  2 +-
+>   60 files changed, 272 insertions(+), 290 deletions(-)
+> 
 
-The new param can be used with error inject added in patch6 to test how
-commands finished with sense_key 0x6, asc 0x4 and ascq 0x2 are handled.
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index df012977a25e..8e0696448590 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -5037,7 +5037,7 @@ static int ipr_device_reset(struct ipr_ioa_cfg *ioa_cfg,
+>   
+>   /**
+>    * __ipr_eh_dev_reset - Reset the device
+> - * @scsi_cmd:	scsi command struct
+> + * @scsi_dev:	scsi device struct
+>    *
+>    * This function issues a device reset to the affected device.
+>    * A LUN reset will be sent to the device first. If that does
+> @@ -5046,15 +5046,15 @@ static int ipr_device_reset(struct ipr_ioa_cfg *ioa_cfg,
+>    * Return value:
+>    *	SUCCESS / FAILED
+>    **/
+> -static int __ipr_eh_dev_reset(struct scsi_cmnd *scsi_cmd)
+> +static int __ipr_eh_dev_reset(struct scsi_device *scsi_dev)
+>   {
+>   	struct ipr_ioa_cfg *ioa_cfg;
+>   	struct ipr_resource_entry *res;
+>   	int rc = 0;
+>   
+>   	ENTER;
+> -	ioa_cfg = (struct ipr_ioa_cfg *) scsi_cmd->device->host->hostdata;
+> -	res = scsi_cmd->device->hostdata;
+> +	ioa_cfg = (struct ipr_ioa_cfg *) scsi_dev->host->hostdata;
+> +	res = scsi_dev->hostdata;
+>   
+>   	/*
+>   	 * If we are currently going through reset/reload, return failed. This will force the
+> @@ -5067,7 +5067,7 @@ static int __ipr_eh_dev_reset(struct scsi_cmnd *scsi_cmd)
+>   		return FAILED;
+>   
+>   	res->resetting_device = 1;
+> -	scmd_printk(KERN_ERR, scsi_cmd, "Resetting device\n");
+> +	sdev_printk(KERN_ERR, scsi_dev, "Resetting device\n");
+>   
+>   	rc = ipr_device_reset(ioa_cfg, res);
+>   	res->resetting_device = 0;
+> @@ -5077,21 +5077,21 @@ static int __ipr_eh_dev_reset(struct scsi_cmnd *scsi_cmd)
+>   	return rc ? FAILED : SUCCESS;
+>   }
+>   
+> -static int ipr_eh_dev_reset(struct scsi_cmnd *cmd)
+> +static int ipr_eh_dev_reset(struct scsi_device *sdev)
+>   {
+>   	int rc;
+>   	struct ipr_ioa_cfg *ioa_cfg;
+>   	struct ipr_resource_entry *res;
+>   
+> -	ioa_cfg = (struct ipr_ioa_cfg *) cmd->device->host->hostdata;
+> -	res = cmd->device->hostdata;
+> +	ioa_cfg = (struct ipr_ioa_cfg *) sdev->host->hostdata;
+> +	res = sdev->hostdata;
+>   
+>   	if (!res)
+>   		return FAILED;
+>   
+> -	spin_lock_irq(cmd->device->host->host_lock);
+> -	rc = __ipr_eh_dev_reset(cmd);
+> -	spin_unlock_irq(cmd->device->host->host_lock);
+> +	spin_lock_irq(sdev->host->host_lock);
+> +	rc = __ipr_eh_dev_reset(sdev);
+> +	spin_unlock_irq(sdev->host->host_lock);
+>   
+>   	if (rc == SUCCESS)
+>   		rc = ipr_wait_for_ops(ioa_cfg, cmd->device, ipr_match_lun);
 
-Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
-Tested-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi_debug.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+This line should also be updated:
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 2743eb36c58e..67922e2c4c19 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -843,6 +843,7 @@ static bool have_dif_prot;
- static bool write_since_sync;
- static bool sdebug_statistics = DEF_STATISTICS;
- static bool sdebug_wp;
-+static bool sdebug_allow_restart;
- /* Following enum: 0: no zbc, def; 1: host aware; 2: host managed */
- static enum blk_zoned_model sdeb_zbc_model = BLK_ZONED_NONE;
- static char *sdeb_zbc_model_s;
-@@ -5478,6 +5479,9 @@ static int scsi_debug_slave_configure(struct scsi_device *sdp)
- 		sdp->no_uld_attach = 1;
- 	config_cdb_len(sdp);
- 
-+	if (sdebug_allow_restart)
-+		sdp->allow_restart = 1;
-+
- 	devip->debugfs_entry = debugfs_create_dir(dev_name(&sdp->sdev_dev),
- 				sdebug_debugfs_root);
- 	if (IS_ERR_OR_NULL(devip->debugfs_entry))
-@@ -6202,6 +6206,7 @@ module_param_named(zone_cap_mb, sdeb_zbc_zone_cap_mb, int, S_IRUGO);
- module_param_named(zone_max_open, sdeb_zbc_max_open, int, S_IRUGO);
- module_param_named(zone_nr_conv, sdeb_zbc_nr_conv, int, S_IRUGO);
- module_param_named(zone_size_mb, sdeb_zbc_zone_size_mb, int, S_IRUGO);
-+module_param_named(allow_restart, sdebug_allow_restart, bool, S_IRUGO | S_IWUSR);
- 
- MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
- MODULE_DESCRIPTION("SCSI debug adapter driver");
-@@ -6274,6 +6279,7 @@ MODULE_PARM_DESC(zone_cap_mb, "Zone capacity in MiB (def=zone size)");
- MODULE_PARM_DESC(zone_max_open, "Maximum number of open zones; [0] for no limit (def=auto)");
- MODULE_PARM_DESC(zone_nr_conv, "Number of conventional zones (def=1)");
- MODULE_PARM_DESC(zone_size_mb, "Zone size in MiB (def=auto)");
-+MODULE_PARM_DESC(allow_restart, "Set scsi_device's allow_restart flag(def=0)");
- 
- #define SDEBUG_INFO_LEN 256
- static char sdebug_info[SDEBUG_INFO_LEN];
--- 
-2.32.0
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 8e0696448590..a94babec74eb 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -5094,7 +5094,7 @@ static int ipr_eh_dev_reset(struct scsi_device *sdev)
+         spin_unlock_irq(sdev->host->host_lock);
+  
+         if (rc == SUCCESS)
+-               rc = ipr_wait_for_ops(ioa_cfg, cmd->device, ipr_match_lun);
++               rc = ipr_wait_for_ops(ioa_cfg, sdev, ipr_match_lun);
+  
+         return rc;
+  }
+
 
