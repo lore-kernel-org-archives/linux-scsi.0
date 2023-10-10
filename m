@@ -2,35 +2,37 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABA4CD690C
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60872CD6913
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230006AbjJJJVX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 05:21:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60162 "EHLO
+        id S230010AbjJJJVY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 05:21:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229585AbjJJJVW (ORCPT
+        with ESMTP id S229830AbjJJJVW (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:21:22 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51D0B9F;
-        Tue, 10 Oct 2023 02:21:20 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4S4Vh60dQhz1M9Gb;
-        Tue, 10 Oct 2023 17:18:46 +0800 (CST)
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97AFEA7;
+        Tue, 10 Oct 2023 02:21:21 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S4Vdm0h4NztTJX;
+        Tue, 10 Oct 2023 17:16:44 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Tue, 10 Oct 2023 17:21:17 +0800
+ 15.1.2507.31; Tue, 10 Oct 2023 17:21:19 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Douglas Gilbert <dgilbert@interlog.com>
 CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <louhongxiang@huawei.com>, Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v6 00/10] scsi:scsi_debug: Add error injection for single device
-Date:   Tue, 10 Oct 2023 17:20:41 +0800
-Message-ID: <20231010092051.608007-1-haowenchao2@huawei.com>
+Subject: [PATCH v6 03/10] scsi: scsi_debug: Define grammar to remove added error injection
+Date:   Tue, 10 Oct 2023 17:20:44 +0800
+Message-ID: <20231010092051.608007-4-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20231010092051.608007-1-haowenchao2@huawei.com>
+References: <20231010092051.608007-1-haowenchao2@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -42,67 +44,72 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The original error injection mechanism was based on scsi_host which
-could not inject fault for a single SCSI device.
+The grammar to remove error injection is a line with fixed 3 columns
+separated by spaces.
 
-This patchset provides the ability to inject errors for a single
-SCSI device. Now we support inject timeout errors, queuecommand
-errors, and hostbyte, driverbyte, statusbyte, and sense data for
-specific SCSI Command. Two new error injection is defined to make
-abort command or reset LUN failed.
+First column is fixed to "-". It tells this is a removal operation.
+Second column is the error code to match.
+Third column is the scsi command to match.
 
-Besides error injection for single device, this patchset add a
-new interface to make reset target failed for each scsi_target.
+For example the following command would remove timeout injection of
+inquiry command.
+    echo "- 0 0x12" > /sys/kernel/debug/scsi_debug/0:0:0:1/error
 
-The first two patch add a debugfs interface to add and inquiry single
-device's error injection info; the third patch defined how to remove
-an injection which has been added. The following 5 patches use the
-injection info and generate the related error type. The last two just
-add a new interface to make reset target failed and control
-scsi_device's allow_restart flag.
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+---
+ drivers/scsi/scsi_debug.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-V6:
-  - Check return value of debugfs_create_xxx() and print error log
-    if debugfs_create_xxx() return error
-  - Fix typo in description of patch7 and patch8
-  - Update the description of patch10
-
-V5:
-  - Using rcu list to sync between error inject add, remove and check
-  - Add module parameter "allow_restart" to control scsi_device's
-    allow_restart flag
-
-V4:
-  - Fix BUG_ON triggered by schedule in atomic context when rmmod scsi_debug
-    Closes: https://lore.kernel.org/oe-lkp/202308031027.5941ce5f-oliver.sang@intel.com
-
-V3:
-  - Add two more error types to fail abort command and lun reset
-  - Fix memleak when rmmod scsi_debug without clearing errors injected
-  - Fix memkeak because did not implement release in sdebug_error_fops
-  - Fix possible NULL point access in scsi_debug_slave_destroy
-  - Move specific error type's description to each single patch which
-    implement this error type
-  - Add interface to make target reset fail
-
-V2:
-  - Using debugfs rather than sysfs attribute interface to manage error
-
-Wenchao Hao (10):
-  scsi: scsi_debug: create scsi_debug directory in the debugfs filesystem
-  scsi: scsi_debug: Add interface to manage single device's error inject
-  scsi: scsi_debug: Define grammar to remove added error injection
-  scsi: scsi_debug: timeout command if the error is injected
-  scsi: scsi_debug: Return failed value if the error is injected
-  scsi: scsi_debug: set command's result and sense data if the error is injected
-  scsi: scsi_debug: Add new error injection abort failed
-  scsi: scsi_debug: Add new error injection reset lun failed
-  scsi: scsi_debug: Add debugfs interface to fail target reset
-  scsi: scsi_debug: Add param to control sdev's allow_restart
-
- drivers/scsi/scsi_debug.c | 575 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 570 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 46f1ee647b15..0d5a179dbd97 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -930,6 +930,34 @@ static void sdebug_err_add(struct scsi_device *sdev, struct sdebug_err_inject *n
+ 	spin_unlock(&devip->list_lock);
+ }
+ 
++static int sdebug_err_remove(struct scsi_device *sdev, const char *buf, size_t count)
++{
++	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdev->hostdata;
++	struct sdebug_err_inject *err;
++	int type;
++	unsigned char cmd;
++
++	if (sscanf(buf, "- %d %hhx", &type, &cmd) != 2) {
++		kfree(buf);
++		return -EINVAL;
++	}
++
++	spin_lock(&devip->list_lock);
++	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
++		if (err->type == type && err->cmd == cmd) {
++			list_del_rcu(&err->list);
++			call_rcu(&err->rcu, sdebug_err_free);
++			spin_unlock(&devip->list_lock);
++			kfree(buf);
++			return count;
++		}
++	}
++	spin_unlock(&devip->list_lock);
++
++	kfree(buf);
++	return -EINVAL;
++}
++
+ static int sdebug_error_show(struct seq_file *m, void *p)
+ {
+ 	struct scsi_device *sdev = (struct scsi_device *)m->private;
+@@ -987,6 +1015,9 @@ static ssize_t sdebug_error_write(struct file *file, const char __user *ubuf,
+ 		return -EFAULT;
+ 	}
+ 
++	if (buf[0] == '-')
++		return sdebug_err_remove(sdev, buf, count);
++
+ 	if (sscanf(buf, "%d", &inject_type) != 1) {
+ 		kfree(buf);
+ 		return -EINVAL;
 -- 
 2.32.0
 
