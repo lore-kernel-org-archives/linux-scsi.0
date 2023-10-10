@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D55CD690C
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46560CD6911
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230151AbjJJJVc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 05:21:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42670 "EHLO
+        id S230171AbjJJJVd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 05:21:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230075AbjJJJV0 (ORCPT
+        with ESMTP id S230073AbjJJJV0 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:21:26 -0400
 Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A50DA7;
-        Tue, 10 Oct 2023 02:21:23 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S4VfY434qzNp5d;
-        Tue, 10 Oct 2023 17:17:25 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA77D9F;
+        Tue, 10 Oct 2023 02:21:24 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S4Vfb2WZRzNp6p;
+        Tue, 10 Oct 2023 17:17:27 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Tue, 10 Oct 2023 17:21:20 +0800
+ 15.1.2507.31; Tue, 10 Oct 2023 17:21:22 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Douglas Gilbert <dgilbert@interlog.com>
 CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <louhongxiang@huawei.com>, Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v6 05/10] scsi: scsi_debug: Return failed value if the error is injected
-Date:   Tue, 10 Oct 2023 17:20:46 +0800
-Message-ID: <20231010092051.608007-6-haowenchao2@huawei.com>
+Subject: [PATCH v6 08/10] scsi: scsi_debug: Add new error injection reset lun failed
+Date:   Tue, 10 Oct 2023 17:20:49 +0800
+Message-ID: <20231010092051.608007-9-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20231010092051.608007-1-haowenchao2@huawei.com>
 References: <20231010092051.608007-1-haowenchao2@huawei.com>
@@ -44,14 +44,13 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If a fail queuecommand error is injected, return the failed value defined
-in the rule from queuecommand.
+Add error injection type 4 to make scsi_debug_device_reset() return FAILED.
+Fail abort command format:
 
-Make queuecommand return format:
   +--------+------+-------------------------------------------------------+
   | Column | Type | Description                                           |
   +--------+------+-------------------------------------------------------+
-  |   1    |  u8  | Error type, fixed to 0x1                              |
+  |   1    |  u8  | Error type, fixed to 0x4                              |
   +--------+------+-------------------------------------------------------+
   |   2    |  s32 | Error count                                           |
   |        |      |  0: this rule will be ignored                         |
@@ -61,30 +60,59 @@ Make queuecommand return format:
   +--------+------+-------------------------------------------------------+
   |   3    |  x8  | SCSI command opcode, 0xff for all commands            |
   +--------+------+-------------------------------------------------------+
-  |   4    |  x32 | The queuecommand() return value we want               |
-  +--------+------+-------------------------------------------------------+
 
 Examples:
     error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
-    echo "1 1 0x12 0x1055" > ${error}
-will make each INQUIRY command sent to that device return
-0x1055 (SCSI_MLQUEUE_HOST_BUSY).
+    echo "4 -10 0x12" > ${error}
+will make the device return FAILED when try to reset lun with inquiry
+command 10 times.
+    error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
+    echo "4 -10 0xff" > ${error}
+will make the device return FAILED when try to reset lun 10 times.
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Usually we do not care about what command it is when trying to perform
+reset LUN, so 0xff could be applied.
+
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+Tested-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi_debug.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ drivers/scsi/scsi_debug.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 9081c9d22882..efdd63dd6d25 100644
+index 89f47ded1e23..e54ba0bfa0d6 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -7769,6 +7769,34 @@ static int sdebug_timeout_cmd(struct scsi_cmnd *cmnd)
- 	return 0;
+@@ -295,6 +295,8 @@ enum sdebug_err_type {
+ 					/* with errors set in scsi_cmnd */
+ 	ERR_ABORT_CMD_FAILED	= 3,	/* control return FAILED from */
+ 					/* scsi_debug_abort() */
++	ERR_LUN_RESET_FAILED	= 4,	/* control return FAILED from */
++					/* scsi_debug_device_reseLUN_RESET_FAILEDt() */
+ };
+ 
+ struct sdebug_err_inject {
+@@ -973,6 +975,7 @@ static int sdebug_error_show(struct seq_file *m, void *p)
+ 		switch (err->type) {
+ 		case ERR_TMOUT_CMD:
+ 		case ERR_ABORT_CMD_FAILED:
++		case ERR_LUN_RESET_FAILED:
+ 			seq_printf(m, "%d\t%d\t0x%x\n", err->type, err->cnt,
+ 				err->cmd);
+ 		break;
+@@ -1035,6 +1038,7 @@ static ssize_t sdebug_error_write(struct file *file, const char __user *ubuf,
+ 	switch (inject_type) {
+ 	case ERR_TMOUT_CMD:
+ 	case ERR_ABORT_CMD_FAILED:
++	case ERR_LUN_RESET_FAILED:
+ 		if (sscanf(buf, "%d %d %hhx", &inject->type, &inject->cnt,
+ 			   &inject->cmd) != 3)
+ 			goto out_error;
+@@ -5586,10 +5590,40 @@ static void scsi_debug_stop_all_queued(struct scsi_device *sdp)
+ 				scsi_debug_stop_all_queued_iter, sdp);
  }
  
-+static int sdebug_fail_queue_cmd(struct scsi_cmnd *cmnd)
++static int sdebug_fail_lun_reset(struct scsi_cmnd *cmnd)
 +{
 +	struct scsi_device *sdp = cmnd->device;
 +	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
@@ -97,9 +125,9 @@ index 9081c9d22882..efdd63dd6d25 100644
 +
 +	rcu_read_lock();
 +	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
-+		if (err->type == ERR_FAIL_QUEUE_CMD &&
++		if (err->type == ERR_LUN_RESET_FAILED &&
 +		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
-+			ret = err->cnt ? err->queuecmd_ret : 0;
++			ret = !!err->cnt;
 +			if (err->cnt < 0)
 +				err->cnt++;
 +
@@ -112,30 +140,26 @@ index 9081c9d22882..efdd63dd6d25 100644
 +	return 0;
 +}
 +
- static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 				   struct scsi_cmnd *scp)
+ static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
  {
-@@ -7788,6 +7816,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 	u8 opcode = cmd[0];
- 	bool has_wlun_rl;
- 	bool inject_now;
-+	int ret = 0;
+ 	struct scsi_device *sdp = SCpnt->device;
+ 	struct sdebug_dev_info *devip = sdp->hostdata;
++	u8 *cmd = SCpnt->cmnd;
++	u8 opcode = cmd[0];
  
- 	scsi_set_resid(scp, 0);
- 	if (sdebug_statistics) {
-@@ -7833,6 +7862,13 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 		return 0;
- 	}
+ 	++num_dev_resets;
  
-+	ret = sdebug_fail_queue_cmd(scp);
-+	if (ret) {
-+		scmd_printk(KERN_INFO, scp, "fail queue command 0x%x with 0x%x\n",
-+				opcode, ret);
-+		return ret;
+@@ -5600,6 +5634,11 @@ static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
+ 	if (devip)
+ 		set_bit(SDEBUG_UA_POR, devip->uas_bm);
+ 
++	if (sdebug_fail_lun_reset(SCpnt)) {
++		scmd_printk(KERN_INFO, SCpnt, "fail lun reset 0x%x\n", opcode);
++		return FAILED;
 +	}
 +
- 	if (unlikely(inject_now && !atomic_read(&sdeb_inject_pending)))
- 		atomic_set(&sdeb_inject_pending, 1);
+ 	return SUCCESS;
+ }
  
 -- 
 2.32.0
