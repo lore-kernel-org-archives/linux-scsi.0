@@ -2,125 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6058DCD8CA5
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 15:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97471CD8CA6
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 16:09:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233518AbjJJPxq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 11:53:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44910 "EHLO
+        id S233705AbjJJQJa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 12:09:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233493AbjJJPxo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 11:53:44 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DD78A7;
-        Tue, 10 Oct 2023 08:53:42 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39AEOI1c026900;
-        Tue, 10 Oct 2023 15:50:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=FzLL87SJ190U6pNr9AjGvg/r3hyVqbdFxXodkt/2MWo=;
- b=efxhgCPek/e791WTJG8tqEkmUcBoatDW7oiiJFYZR3/AfDWBxLjmYvFh/q8ek6a9PNID
- 9uZmQjXyOsS2q43PFg836eGVCSgjLXx5AfSAe7+bXHcVP8nL11qmAKOg8QdITSu5slEt
- QQ4UcY1C0GVbWy928N3WTFnxb33hIRUCRxI5tjW/1FRJzCIZsAIG960B743Cuu1qkCjQ
- OMoeasXeFdJWdXPZUxEEMapvQKLiXqF/Nh5U3KmmAQ8zGFT54R3dyIqAiDEEen+klBCP
- yfQUIp7iF3TP7OBy02iOYrz+7oG24+WYCVidSDboKRFCIkAIPckjHXWkjhESMTLw8Jqe Og== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tmw3j1g8h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 10 Oct 2023 15:50:01 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39AFntkM022702
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 10 Oct 2023 15:49:55 GMT
-Received: from hu-mnaresh-hyd.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.36; Tue, 10 Oct 2023 08:49:50 -0700
-From:   Maramaina Naresh <quic_mnaresh@quicinc.com>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        with ESMTP id S233866AbjJJQJZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 12:09:25 -0400
+Received: from mail-qk1-x735.google.com (mail-qk1-x735.google.com [IPv6:2607:f8b0:4864:20::735])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACA7412A
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:09:21 -0700 (PDT)
+Received: by mail-qk1-x735.google.com with SMTP id af79cd13be357-77574c6cab0so416652085a.3
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:09:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1696954161; x=1697558961; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=OiAlf9gBzYDPaYB8SATXz3ECA8Y+U3rkEiCG6k7hY7U=;
+        b=jL8TyecFk4adqqRlMWPaE/Vsl83Xh+2dy/xDYRDbtdSHxPJjbaG3/b7T+4rWONgWKu
+         VxPYpZSXqGqKvKikGyCqcEPlOguw8sIqWF8wU0KQoOAUOhNHcWCWRHhyHkzVDcvdRAZV
+         /Ed3T+xZfHKTZ9ojjCBA+qvQX4o+Ph8XzrZPibcN4oCBc+cQCTK3kwUBqZfeIrVBRlqa
+         CNBJXbV4nVli0kmt6i8Hy5lmm8mtaAnX1DmZ+G/1DyFhBWTLwcN68CGNowXic7XWPegf
+         yCPoQYRLa00Xmg/3fTzCvV41izJ8NTEIKUir2RTZLTUjsJnJxSx/A8bfGAN4dKWt1J38
+         h7yg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696954161; x=1697558961;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OiAlf9gBzYDPaYB8SATXz3ECA8Y+U3rkEiCG6k7hY7U=;
+        b=r4NyXq/DIBlclno7dcRB4WN/86D/trSdnLXFR2TFHVhYjSFd7yuUHyZfBW0uNtzvv2
+         bE16NZEqlDvCLqmzAB7eepw2DuFShhTnlvosJtVtjWxKZgYkPm0oUvdXSaLek2H+0Rvb
+         9/VCh0Hm5xQYIKkEYGdQ5O26A5vEzsXEosdGVEvwKCt4AYWtNXKa/CR5n5dSX5nUwLXS
+         /VkZlI6YUa+ykLUzfoGMVNrz/yDUgGss0SpIu00RjQPK932ZlPFxSSf1gy6wPMn5lqsh
+         HPdiDx4UHSbLeVB/0kQKvTiblSsGw8PQsnK/0PHq/8Q08525k1Bkj2H0NrfRtwE3K/SU
+         QCfA==
+X-Gm-Message-State: AOJu0Yy5ROc3PxmRCqQdCsSw9SZOIT2aD5Ao4SYrJxTpUOSz64NCkejz
+        A+1IIO1mYChybtkngk+tiaWNfw==
+X-Google-Smtp-Source: AGHT+IFVSKaZDkjJDOygGp52/9+gheHAN8uCUgBS17Ps6w+7G66L4F/nVSSofwIXb+gkE22yxNuEUA==
+X-Received: by 2002:a05:620a:b87:b0:774:13e4:1f7e with SMTP id k7-20020a05620a0b8700b0077413e41f7emr16870286qkh.38.1696954160783;
+        Tue, 10 Oct 2023 09:09:20 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-68-26-201.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.68.26.201])
+        by smtp.gmail.com with ESMTPSA id c2-20020a05620a134200b00767c961eb47sm4446339qkl.43.2023.10.10.09.09.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Oct 2023 09:09:19 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.95)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1qqFIN-000F7A-50;
+        Tue, 10 Oct 2023 13:09:19 -0300
+Date:   Tue, 10 Oct 2023 13:09:19 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>
+Cc:     'Zhu Yanjun' <yanjun.zhu@linux.dev>,
         Bart Van Assche <bvanassche@acm.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
-Subject: [PATCH V1 1/4] dt-bindings: ufs: qcom: Add qos property
-Date:   Tue, 10 Oct 2023 21:19:04 +0530
-Message-ID: <1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1696952947-18062-1-git-send-email-quic_mnaresh@quicinc.com>
-References: <1696952947-18062-1-git-send-email-quic_mnaresh@quicinc.com>
+        Bob Pearson <rpearsonhpe@gmail.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        "zyjzyj2000@gmail.com" <zyjzyj2000@gmail.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Zhu Yanjun <yanjun.zhu@intel.com>
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
+Message-ID: <20231010160919.GC55194@ziepe.ca>
+References: <b7b365e3-dd11-bc66-dace-05478766bf41@gmail.com>
+ <2d5e02d7-cf84-4170-b1a3-a65316ac84ee@acm.org>
+ <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
+ <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
+ <20231004183824.GQ13795@ziepe.ca>
+ <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
+ <20231005142148.GA970053@ziepe.ca>
+ <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
+ <a8453889-3f5f-49ff-89f2-ec0ef929d915@linux.dev>
+ <OS3PR01MB9865F9BEB1A90DDCAEEBFC8BE5CDA@OS3PR01MB9865.jpnprd01.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: wsINolfMNBSY-OKbdSKEqhkvk7UIVfUb
-X-Proofpoint-ORIG-GUID: wsINolfMNBSY-OKbdSKEqhkvk7UIVfUb
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-10_10,2023-10-10_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxlogscore=888
- malwarescore=0 adultscore=0 mlxscore=0 lowpriorityscore=0 bulkscore=0
- suspectscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2309180000 definitions=main-2310100117
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <OS3PR01MB9865F9BEB1A90DDCAEEBFC8BE5CDA@OS3PR01MB9865.jpnprd01.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add bindings for per-cpu QoS for QCOM UFS. This improves random io
-performance by 20% for QCOM UFS.
+On Tue, Oct 10, 2023 at 04:53:55AM +0000, Daisuke Matsuda (Fujitsu) wrote:
 
-Signed-off-by: Maramaina Naresh <quic_mnaresh@quicinc.com>
----
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+> Solution 1: Reverting "RDMA/rxe: Add workqueue support for rxe tasks"
+> I see this is supported by Zhu, Bart and approved by Leon.
+> 
+> Solution 2: Serializing execution of work items
+> > -       rxe_wq = alloc_workqueue("rxe_wq", WQ_UNBOUND, WQ_MAX_ACTIVE);
+> > +       rxe_wq = alloc_workqueue("rxe_wq", WQ_HIGHPRI | WQ_UNBOUND, 1);
+> 
+> Solution 3: Merging requester and completer (not yet submitted/tested)
+> https://lore.kernel.org/all/93c8ad67-f008-4352-8887-099723c2f4ec@gmail.com/
+> Not clear to me if we should call this a new feature or a fix.
+> If it can eliminate the hang issue, it could be an ultimate solution.
+> 
+> It is understandable some people do not want to wait for solution 3 to be submitted and verified.
+> Is there any problem if we adopt solution 2?
+> If so, then I agree to going with solution 1.
+> If not, solution 2 is better to me.
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index 462ead5..d8b807e 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -76,6 +76,14 @@ properties:
-     $ref: /schemas/types.yaml#/definitions/phandle
-     description: phandle to the Inline Crypto Engine node
- 
-+  qos:
-+    minItems: 2
-+    maxItems: 2
-+    cpumask:
-+     description: list of CPUs under CPU group
-+    vote:
-+     description: vote value for QoS CPU group
-+
-   reg:
-     minItems: 1
-     maxItems: 2
-@@ -318,5 +326,13 @@ examples:
-                             <0 0>,
-                             <0 0>;
-             qcom,ice = <&ice>;
-+            qos0 {
-+                cpumask = <0x0f>;
-+                vote = <44>;
-+            };
-+            qos1 {
-+                cpumask = <0xf0>;
-+                vote = <44>;
-+            };
-         };
-     };
--- 
-2.7.4
+I also do not want to go backwards, I don't believe the locking is
+magically correct under tasklets. 2 is painful enough to continue to
+motivate people to fix this while unbreaking block tests.
 
+I'm still puzzled why Bob can't reproduce the things Bart has seen.
+
+Jason
