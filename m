@@ -2,107 +2,108 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 858E2CD8CAB
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 16:27:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64DD4CD8CA9
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 16:37:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232866AbjJJQ1s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 12:27:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38784 "EHLO
+        id S233281AbjJJQhS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 12:37:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229998AbjJJQ1r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 12:27:47 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D69FA99;
-        Tue, 10 Oct 2023 09:27:44 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B793C433C7;
-        Tue, 10 Oct 2023 16:27:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696955264;
-        bh=uWXn+ySubgsLikSzKdVOCQoQctLYGPs6WUFA/M9wNbo=;
-        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-        b=ChpBcrZz6NosHeHHlQuDmUftzhWGCTXcX/+RJ1wUGSZ0jy6Lnos9nwoRZ3XpyoVQ4
-         DJScejQpFrbGdanfXgrcMWBZeH9pVwgoS4sMGcCYD1OKI3JpakLHtTrRlxGmIUtP+I
-         yThkpXhXPZ+zXmVqVU4Nlc2b/FAD3IduCzFmwU2Ga1K0iJQZ5CrNlQnHf2/AZrYPT0
-         fRgK0YAiDmMAJ7HUEujdE0ZMJ4g+PI2P/N6BG2LnMw7mp21EWop7HjURp9/HJOIIJm
-         JAcr36VtaypWggAN3Aufrc75svyinUT7QO/G3HbZvL8OatWoN6/iVTb19eVT5PjgAH
-         Aoi+lRBx65nZw==
-Received: (nullmailer pid 1012903 invoked by uid 1000);
-        Tue, 10 Oct 2023 16:27:41 -0000
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S233576AbjJJQhR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 12:37:17 -0400
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8436BB7
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:37:15 -0700 (PDT)
+Received: by mail-wm1-x330.google.com with SMTP id 5b1f17b1804b1-406618d0992so57004805e9.0
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 09:37:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1696955834; x=1697560634; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=b2+nmzantxOYY6snfxh3U/lP8Nv4ffuUeaORW4FhlFk=;
+        b=OtTVdiMNhurxGoo4voKaItx2tNCLzc0YY/xCpJA3I7CSLDQLb8SA1h8ruuD1/dxAHZ
+         0fApCT1YlIF1vWRcSoyQsJxnsIQkVbm9gJkdmb+7Pi8wdCpevBx4lq6Pa5lO4nhY8vN4
+         tQZxuPwOnesHQdAfngpS7gcAk1DUQv4Xexd56GCSCsekR4w4LRbt9tj5/TXdAfPxOodx
+         kTFJBxV14QW5G4ZOUe6ypAfDOQ9TmxWw4flxvQJISgYLAmbcYg0zheycFZP4h12gk8u0
+         ZCndYcFNNW+jPle334LcqjaUMfbLZRkkfrLZXc8NwHue2hgcJNYiUXqBZBRsflpWe8Gp
+         Ompw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696955834; x=1697560634;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=b2+nmzantxOYY6snfxh3U/lP8Nv4ffuUeaORW4FhlFk=;
+        b=fYCILX5BVc9vd19ozAIB9Aj5rz3r7iv7zGQ8kvp82tW4Rjru5aXMPt1ZAq9hC7dHAh
+         n9D5xPn7+3PWuZVo/uDgYTzIH8xrfosNJUtfVtEt7b1WyQlpeZtIPszLXAjZV+uASfWe
+         maHZsC5i+yg+Ugex6LoX4TcNLHyiUDOWuHHfRfo0tKnoHtOXN5SXalUq4/cooCXr6ayJ
+         IPHhmG6PR366JmnQLZe1EUV9eR5kYh4F3O18L2uaKPebctbpKiRceEMI40j7YlRtOEbe
+         GU6D59UbiOqUtAFhPpFRcSQ62ps/cxmXsbvS9uRCqrylGi1Jbb15E8m4JnR0O98Ak6bx
+         E2xg==
+X-Gm-Message-State: AOJu0YzEOSL2poZxa/8wILOrH677ERoDpL6Mc3NpkCIL2Rp9m2oNvUhK
+        qNVO0OGmiO1D4AoDySP2sdK3gw==
+X-Google-Smtp-Source: AGHT+IHuDBPm08d2IT/HViICAu+xRv2PqSFZdUqU3VVrNFhRl/7xmwE37yYJexiLv4EDQkrEGogpIg==
+X-Received: by 2002:a1c:7712:0:b0:401:c52c:5ed9 with SMTP id t18-20020a1c7712000000b00401c52c5ed9mr15859201wmi.32.1696955833906;
+        Tue, 10 Oct 2023 09:37:13 -0700 (PDT)
+Received: from [172.30.204.182] (UNUSED.212-182-62-129.lubman.net.pl. [212.182.62.129])
+        by smtp.gmail.com with ESMTPSA id bg24-20020a05600c3c9800b004063c9f68f2sm11675343wmb.26.2023.10.10.09.37.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Oct 2023 09:37:13 -0700 (PDT)
+Message-ID: <5458734c-b9ff-4351-9bcd-c3dd7538f135@linaro.org>
+Date:   Tue, 10 Oct 2023 18:37:11 +0200
 MIME-Version: 1.0
-From:   Rob Herring <robh@kernel.org>
-To:     Maramaina Naresh <quic_mnaresh@quicinc.com>
-Cc:     linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Conor Dooley <conor+dt@kernel.org>,
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V1 1/4] dt-bindings: ufs: qcom: Add qos property
+Content-Language: en-US
+To:     Maramaina Naresh <quic_mnaresh@quicinc.com>,
         Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
         Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-kernel@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        quic_nguyenb@quicinc.com, Manivannan Sadhasivam <mani@kernel.org>,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        quic_cang@quicinc.com
-In-Reply-To: <1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com>
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        quic_cang@quicinc.com, quic_nguyenb@quicinc.com
 References: <1696952947-18062-1-git-send-email-quic_mnaresh@quicinc.com>
  <1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com>
-Message-Id: <169695526157.1012881.14879634429567807944.robh@kernel.org>
-Subject: Re: [PATCH V1 1/4] dt-bindings: ufs: qcom: Add qos property
-Date:   Tue, 10 Oct 2023 11:27:41 -0500
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+In-Reply-To: <1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-On Tue, 10 Oct 2023 21:19:04 +0530, Maramaina Naresh wrote:
+
+On 10/10/23 17:49, Maramaina Naresh wrote:
 > Add bindings for per-cpu QoS for QCOM UFS. This improves random io
 > performance by 20% for QCOM UFS.
-> 
-> Signed-off-by: Maramaina Naresh <quic_mnaresh@quicinc.com>
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
+The bindings addition improves performance? Cool :P
 
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
+Please explain your changes and provide the "why".
 
-yamllint warnings/errors:
-./Documentation/devicetree/bindings/ufs/qcom,ufs.yaml:83:6: [warning] wrong indentation: expected 6 but found 5 (indentation)
-./Documentation/devicetree/bindings/ufs/qcom,ufs.yaml:85:6: [warning] wrong indentation: expected 6 but found 5 (indentation)
+[...]
 
-dtschema/dtc warnings/errors:
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml: properties:qos: 'anyOf' conditional failed, one must be fixed:
-	'cpumask' is not one of ['$ref', 'additionalItems', 'additionalProperties', 'allOf', 'anyOf', 'const', 'contains', 'default', 'dependencies', 'dependentRequired', 'dependentSchemas', 'deprecated', 'description', 'else', 'enum', 'exclusiveMaximum', 'exclusiveMinimum', 'items', 'if', 'minItems', 'minimum', 'maxItems', 'maximum', 'multipleOf', 'not', 'oneOf', 'pattern', 'patternProperties', 'properties', 'required', 'then', 'typeSize', 'unevaluatedProperties', 'uniqueItems']
-	'type' was expected
-	from schema $id: http://devicetree.org/meta-schemas/keywords.yaml#
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml: properties:qos: 'anyOf' conditional failed, one must be fixed:
-	'vote' is not one of ['$ref', 'additionalItems', 'additionalProperties', 'allOf', 'anyOf', 'const', 'contains', 'default', 'dependencies', 'dependentRequired', 'dependentSchemas', 'deprecated', 'description', 'else', 'enum', 'exclusiveMaximum', 'exclusiveMinimum', 'items', 'if', 'minItems', 'minimum', 'maxItems', 'maximum', 'multipleOf', 'not', 'oneOf', 'pattern', 'patternProperties', 'properties', 'required', 'then', 'typeSize', 'unevaluatedProperties', 'uniqueItems']
-	'type' was expected
-	from schema $id: http://devicetree.org/meta-schemas/keywords.yaml#
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml: qos: missing type definition
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/qcom,ufs.example.dtb: ufs@1d84000: Unevaluated properties are not allowed ('qos0', 'qos1' were unexpected)
-	from schema $id: http://devicetree.org/schemas/ufs/qcom,ufs.yaml#
+> @@ -318,5 +326,13 @@ examples:
+>                               <0 0>,
+>                               <0 0>;
+>               qcom,ice = <&ice>;
+> +            qos0 {
+Looks like the indentation is off, also missing newline before subnodes.
 
-doc reference errors (make refcheckdocs):
+> +                cpumask = <0x0f>;This should be a CPU phandle array instead. Besides, can we not 
+determine this dynamically?
 
-See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com
+> +                vote = <44>;
+> +            };
+> +            qos1 {
+Missing newline between subnodes.
 
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
-
+Konrad
