@@ -2,115 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3E50CD80DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 14:05:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DE4CCD8CA6
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 15:50:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232444AbjJJOFA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 10:05:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56484 "EHLO
+        id S232923AbjJJPuR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 11:50:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232043AbjJJOE7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 10:04:59 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9462E91;
-        Tue, 10 Oct 2023 07:04:58 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B5DBC433C8;
-        Tue, 10 Oct 2023 14:04:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696946698;
-        bh=zUhbdN9nVVfVsfr3rJHLzA5Y1RLueOJc008EuoPaLRk=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=B6AdMpukbK64fsP7Qhtkxg+1G4pr4K+lGrDzf/pR3Tm2ZLbHLF+yWzl7eWokZSZO7
-         pMQhPyWJgDAFFoj5RYu71WXSsKXmM5k+t+CEZwZtHBjkSFJwJGV1XjYPDWaLUmlQuK
-         1lKA82DDtm7UCEXnvTKFD651Hz+3BOeNNLmFHVISS0514USEhC5sNfU+51mvji5+5H
-         TwEWhRKRYjuWQsEceYyw8fQLkG4Qg2xXBZsAF9nWXkQ1jdWtLrZIlG4rW86+DFzqeZ
-         dhc/hEmlJQAu5Svrki9QGMI6IwYedrySUtuLMkrSEWYiVvZ1WfU9aJ/Mp48rV41+qT
-         sZt5yuGEFir4w==
-Message-ID: <c0b086ab-dcd5-4b7b-b931-4d407dd7ad47@kernel.org>
-Date:   Tue, 10 Oct 2023 23:04:55 +0900
+        with ESMTP id S232502AbjJJPuQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 11:50:16 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75582AC;
+        Tue, 10 Oct 2023 08:50:13 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39AEKSm1009846;
+        Tue, 10 Oct 2023 15:49:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=uDzM6PKK+KnpqEZrVwvTN0RCuoyw6wDOip0JbtQYE0Q=;
+ b=mOCVW13Ec97dZGrmOL1P1UZwVUT1LU/C82uwT88NSUR1K0vd+tmwEhuSNatPOCtMWwHN
+ yP96aXMkt9ckyOBAf2JLjo445mqZRw6kMvqUDS0jAk8RDmJNDcAPVCUo+DMGTvKt1soJ
+ YVmJneqeFbyhtPnpcWkGC+dg4XE4Rf6kt0FhqN9JgUdCmJohasp95Nb9UuHI8YqB9VDP
+ OHUquDycOUd9LyV3LPodC49X4M91BPOCbFDjbTgd9NerBDwnIebvg6dz5ooc3hJfKlxE
+ Hkg5FaKMNuLafdyTZxwbVWNbCT4mMorO6i5PdN6ZwyDjyKWnrfORi4vJI+tjX11yLRpq Nw== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tn3s18txq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 10 Oct 2023 15:49:59 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39AFnn2V025400
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 10 Oct 2023 15:49:52 GMT
+Received: from hu-mnaresh-hyd.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.36; Tue, 10 Oct 2023 08:49:44 -0700
+From:   Maramaina Naresh <quic_mnaresh@quicinc.com>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
+Subject: [PATCH V1 0/4] Add per-cpu PM QoS support for QCOM UFS
+Date:   Tue, 10 Oct 2023 21:19:03 +0530
+Message-ID: <1696952947-18062-1-git-send-email-quic_mnaresh@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-Content-Language: en-US
-To:     Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org> <874jiybp3s.fsf@vps.thesusis.net>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <874jiybp3s.fsf@vps.thesusis.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: ez6zKbQ3c6LUNUBZfgEZI2BaXGocufw7
+X-Proofpoint-GUID: ez6zKbQ3c6LUNUBZfgEZI2BaXGocufw7
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-10_11,2023-10-10_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 bulkscore=0 spamscore=0 impostorscore=0
+ lowpriorityscore=0 clxscore=1011 mlxlogscore=831 mlxscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2310100117
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/10/23 22:09, Phillip Susi wrote:
-> Damien Le Moal <dlemoal@kernel.org> writes:
-> 
->> system suspend/resume operations, the ATA port used to connect the
->> device will also be suspended and resumed, with the resume operation
->> requiring re-validating the device link and the device itself. In this
->> case, issuing a VERIFY command to spinup the disk must be done before
->> starting to revalidate the device, when the ata port is being resumed.
->> In such case, we must not allow the SCSI disk driver to issue START STOP
->> UNIT commands.
-> 
-> Why must a VERIFY be issued to spinup the disk before revalidating?
+Add per-cpu PM QoS support for ufs. This improves random io performance
+by 20% for ufs.
 
-We can most likely move that VERIFY to after revalidation. That should shorten
-delays on first access after resume as many drive do actually spinup with the
-reset done before revalidating (but note that the specs say that even a reset
-shall not take a drive out of standby mode, without specifying the reset type,
-so this is rather loosely defined).
+tiotest benchmark tool io performance results on sm8550 platform:
 
-> Before these patches, by default, manage_start_stop was on, and so sd
-> would cause a VERIFY in the system resume path.  That resume however (
-> sd and its issuing START UNIT ), would have happened AFTER the link was
-> resumed and the ATA device was revalidated, woudldn't it?  So at that
+1. Without PM QoS support
+	Type (Speed in)    | Average of 6 iterations
+	Random Write(IPOS) | 32201
+	Random Read(IPOS)  | 32201
 
-In theory, yes, that was the intent. In practice, the verify was issued from
-scsi PM resume context while the actual drive port reset + revalidation is done
-in libata EH context, triggered from ATA port resume context which itself was
-not synchronized/ordered with the scsi disk resume. So we ended up with the
-verify command execution sometimes being attempted with the drive not even
-revalidated yet, or with the port/link not even active sometimes (depending on
-timing). So problems all over and deadlocks due to scsi revalidate using the
-device lock, which PM use too.
+2. With PM QoS support
+	Type (Speed in)    | Average of 6 iterations
+	Random Write(IPOS) | 40833.5
+	Random Read(IPOS)  | 40833.5
+(Improvement % with PM QoS = ~20%).
 
-> point, the drive would already be spinning.  And if manage_start_stop
-> was disabled, then there would be no VERIFY at all, and this did not
-> seem to cause a problem before.
+Maramaina Naresh (4):
+  dt-bindings: ufs: qcom: Add qos property
+  ufs: ufs-qcom: Add per-cpu PM QoS support for ufs
+  ufs: ufs-qcom: Add per-cpu PM QoS vote support for ufs
+  arm64: dts: qcom: sm8550: Add per-cpu PM QoS support for ufs
 
-See above. With the switch to async PM ops in scsi in kernel 5.16, things broke
-badly due to the lack of synchronization that sync PM provided before that.
-
-> 
-> If this VERIFY were skipped, the next thing that would happen is for
-> ata_dev_revalidate() to issue IDENTIFY, which would wait for the drive
-> to spin up before returning wouldn't it? ( unless the drive has PuiS
-> enabled ).
-
-ACS defines that only media access commands can get a drive out of standby mode
-back into active mode. So an IDENTIFY command would not (normally) spinup a
-drive. Nor would READ LOG. Normally, IDENTIFY, READ LOG etc done in revalidate
-can be processed with the drive spun down (*but* I have seen drives that react
-badly to some of these commands when spun down). Hence why I put it first,
-before revalidate. Now that all the synchronization is in place and libata EH
-does its own manage_start_stop for system suspend/resume, I will see if moving
-the verify to the end of revalidate works.
-
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          |  16 +
+ arch/arm64/boot/dts/qcom/sm8550.dtsi               |   9 +
+ drivers/ufs/host/ufs-qcom.c                        | 340 ++++++++++++++++++++-
+ drivers/ufs/host/ufs-qcom.h                        |  37 +++
+ 4 files changed, 401 insertions(+), 1 deletion(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.7.4
 
