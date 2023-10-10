@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60872CD6913
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE40CD6910
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230010AbjJJJVY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 05:21:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60166 "EHLO
+        id S230055AbjJJJVZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 05:21:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229830AbjJJJVW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:21:22 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97AFEA7;
-        Tue, 10 Oct 2023 02:21:21 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S4Vdm0h4NztTJX;
-        Tue, 10 Oct 2023 17:16:44 +0800 (CST)
+        with ESMTP id S229999AbjJJJVX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:21:23 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DBA59F;
+        Tue, 10 Oct 2023 02:21:22 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4S4Vh83gXLz1M9Fk;
+        Tue, 10 Oct 2023 17:18:48 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Tue, 10 Oct 2023 17:21:19 +0800
+ 15.1.2507.31; Tue, 10 Oct 2023 17:21:20 +0800
 From:   Wenchao Hao <haowenchao2@huawei.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Douglas Gilbert <dgilbert@interlog.com>
 CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <louhongxiang@huawei.com>, Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v6 03/10] scsi: scsi_debug: Define grammar to remove added error injection
-Date:   Tue, 10 Oct 2023 17:20:44 +0800
-Message-ID: <20231010092051.608007-4-haowenchao2@huawei.com>
+Subject: [PATCH v6 04/10] scsi: scsi_debug: timeout command if the error is injected
+Date:   Tue, 10 Oct 2023 17:20:45 +0800
+Message-ID: <20231010092051.608007-5-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20231010092051.608007-1-haowenchao2@huawei.com>
 References: <20231010092051.608007-1-haowenchao2@huawei.com>
@@ -44,72 +44,89 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The grammar to remove error injection is a line with fixed 3 columns
-separated by spaces.
+If a timeout error is injected, return 0 from scsi_debug_queuecommand to
+make the command timeout.
 
-First column is fixed to "-". It tells this is a removal operation.
-Second column is the error code to match.
-Third column is the scsi command to match.
-
-For example the following command would remove timeout injection of
-inquiry command.
-    echo "- 0 0x12" > /sys/kernel/debug/scsi_debug/0:0:0:1/error
+Timeout SCSI command format:
+  +--------+------+-------------------------------------------------------+
+  | Column | Type | Description                                           |
+  +--------+------+-------------------------------------------------------+
+  |   1    |  u8  | Error type, fixed to 0x0                              |
+  +--------+------+-------------------------------------------------------+
+  |   2    |  s32 | Error count                                           |
+  |        |      |  0: this rule will be ignored                         |
+  |        |      |  positive: the rule will always take effect           |
+  |        |      |  negative: the rule takes effect n times where -n is  |
+  |        |      |            the value given. Ignored after n times     |
+  +--------+------+-------------------------------------------------------+
+  |   3    |  x8  | SCSI command opcode, 0xff for all commands            |
+  +--------+------+-------------------------------------------------------+
+Examples:
+    error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
+    echo "0 -10 0x12" > ${error}
+will make the device's inquiry command timeout 10 times.
+    echo "0 1 0x12" > ${error}
+will make the device's inquiry timeout each time it is invoked on this
+device.
 
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 ---
- drivers/scsi/scsi_debug.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ drivers/scsi/scsi_debug.c | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 46f1ee647b15..0d5a179dbd97 100644
+index 0d5a179dbd97..9081c9d22882 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -930,6 +930,34 @@ static void sdebug_err_add(struct scsi_device *sdev, struct sdebug_err_inject *n
- 	spin_unlock(&devip->list_lock);
+@@ -7741,6 +7741,34 @@ static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 	return num_entries;
  }
  
-+static int sdebug_err_remove(struct scsi_device *sdev, const char *buf, size_t count)
++static int sdebug_timeout_cmd(struct scsi_cmnd *cmnd)
 +{
-+	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdev->hostdata;
++	struct scsi_device *sdp = cmnd->device;
++	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
 +	struct sdebug_err_inject *err;
-+	int type;
-+	unsigned char cmd;
++	unsigned char *cmd = cmnd->cmnd;
++	int ret = 0;
 +
-+	if (sscanf(buf, "- %d %hhx", &type, &cmd) != 2) {
-+		kfree(buf);
-+		return -EINVAL;
-+	}
++	if (devip == NULL)
++		return 0;
 +
-+	spin_lock(&devip->list_lock);
++	rcu_read_lock();
 +	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
-+		if (err->type == type && err->cmd == cmd) {
-+			list_del_rcu(&err->list);
-+			call_rcu(&err->rcu, sdebug_err_free);
-+			spin_unlock(&devip->list_lock);
-+			kfree(buf);
-+			return count;
++		if (err->type == ERR_TMOUT_CMD &&
++		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
++			ret = !!err->cnt;
++			if (err->cnt < 0)
++				err->cnt++;
++
++			rcu_read_unlock();
++			return ret;
 +		}
 +	}
-+	spin_unlock(&devip->list_lock);
++	rcu_read_unlock();
 +
-+	kfree(buf);
-+	return -EINVAL;
++	return 0;
 +}
 +
- static int sdebug_error_show(struct seq_file *m, void *p)
+ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 				   struct scsi_cmnd *scp)
  {
- 	struct scsi_device *sdev = (struct scsi_device *)m->private;
-@@ -987,6 +1015,9 @@ static ssize_t sdebug_error_write(struct file *file, const char __user *ubuf,
- 		return -EFAULT;
+@@ -7799,6 +7827,12 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		if (NULL == devip)
+ 			goto err_out;
  	}
- 
-+	if (buf[0] == '-')
-+		return sdebug_err_remove(sdev, buf, count);
 +
- 	if (sscanf(buf, "%d", &inject_type) != 1) {
- 		kfree(buf);
- 		return -EINVAL;
++	if (sdebug_timeout_cmd(scp)) {
++		scmd_printk(KERN_INFO, scp, "timeout command 0x%x\n", opcode);
++		return 0;
++	}
++
+ 	if (unlikely(inject_now && !atomic_read(&sdeb_inject_pending)))
+ 		atomic_set(&sdeb_inject_pending, 1);
+ 
 -- 
 2.32.0
 
