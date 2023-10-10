@@ -2,21 +2,21 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F4C7CD6911
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1DB2CD6912
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 09:21:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230129AbjJJJV2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 05:21:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60192 "EHLO
+        id S229967AbjJJJVa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 05:21:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230053AbjJJJVZ (ORCPT
+        with ESMTP id S230047AbjJJJVZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 05:21:25 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1366393;
-        Tue, 10 Oct 2023 02:21:24 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S4Vh944P8zrSj2;
-        Tue, 10 Oct 2023 17:18:49 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CCEDA9;
+        Tue, 10 Oct 2023 02:21:23 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S4Vh86wLGzrTHP;
+        Tue, 10 Oct 2023 17:18:48 +0800 (CST)
 Received: from build.huawei.com (10.175.101.6) by
  kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -27,9 +27,9 @@ To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
 CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <louhongxiang@huawei.com>, Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH v6 07/10] scsi: scsi_debug: Add new error injection abort failed
-Date:   Tue, 10 Oct 2023 17:20:48 +0800
-Message-ID: <20231010092051.608007-8-haowenchao2@huawei.com>
+Subject: [PATCH v6 06/10] scsi: scsi_debug: set command's result and sense data if the error is injected
+Date:   Tue, 10 Oct 2023 17:20:47 +0800
+Message-ID: <20231010092051.608007-7-haowenchao2@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20231010092051.608007-1-haowenchao2@huawei.com>
 References: <20231010092051.608007-1-haowenchao2@huawei.com>
@@ -44,115 +44,125 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add error injection type 3 to make scsi_debug_abort() return FAILED.
-Fail abort command format:
+If a fail command error is injected, set the command's status and sense
+data then finish this scsi command.
 
+Set SCSI command's status and sense data format:
   +--------+------+-------------------------------------------------------+
   | Column | Type | Description                                           |
   +--------+------+-------------------------------------------------------+
-  |   1    |  u8  | Error type, fixed to 0x3                              |
+  |   1    |  u8  | Error type, fixed to 0x2                              |
   +--------+------+-------------------------------------------------------+
-  |   2    |  s32 | Error count                                           |
-  |        |      |  0: this rule will be ignored                         |
+  |   2    |  s32 | Error Count                                           |
+  |        |      |  0: the rule will be ignored                          |
   |        |      |  positive: the rule will always take effect           |
   |        |      |  negative: the rule takes effect n times where -n is  |
   |        |      |            the value given. Ignored after n times     |
   +--------+------+-------------------------------------------------------+
   |   3    |  x8  | SCSI command opcode, 0xff for all commands            |
   +--------+------+-------------------------------------------------------+
-
+  |   4    |  x8  | Host byte in scsi_cmd::status                         |
+  |        |      | [scsi_cmd::status has 32 bits holding these 3 bytes]  |
+  +--------+------+-------------------------------------------------------+
+  |   5    |  x8  | Driver byte in scsi_cmd::status                       |
+  +--------+------+-------------------------------------------------------+
+  |   6    |  x8  | SCSI Status byte in scsi_cmd::status                  |
+  +--------+------+-------------------------------------------------------+
+  |   7    |  x8  | SCSI Sense Key in scsi_cmnd                           |
+  +--------+------+-------------------------------------------------------+
+  |   8    |  x8  | SCSI ASC in scsi_cmnd                                 |
+  +--------+------+-------------------------------------------------------+
+  |   9    |  x8  | SCSI ASCQ in scsi_cmnd                                |
+  +--------+------+-------------------------------------------------------+
 Examples:
     error=/sys/kernel/debug/scsi_debug/0:0:0:1/error
-    echo "3 -10 0x12" > ${error}
-will make the device return FAILED when abort inquiry command 10 times.
+    echo "2 -10 0x88 0 0 0x2 0x3 0x11 0x0" >${error}
+will make device's read command return with media error with additional
+sense of "Unrecovered read error" (UNC):
 
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
-Tested-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi_debug.c | 40 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/scsi/scsi_debug.c | 53 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index d15d007f1317..89f47ded1e23 100644
+index efdd63dd6d25..d15d007f1317 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -293,6 +293,8 @@ enum sdebug_err_type {
- 	ERR_FAIL_CMD		= 2,	/* make specific scsi command's */
- 					/* queuecmd return succeed but */
- 					/* with errors set in scsi_cmnd */
-+	ERR_ABORT_CMD_FAILED	= 3,	/* control return FAILED from */
-+					/* scsi_debug_abort() */
- };
- 
- struct sdebug_err_inject {
-@@ -970,6 +972,7 @@ static int sdebug_error_show(struct seq_file *m, void *p)
- 	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
- 		switch (err->type) {
- 		case ERR_TMOUT_CMD:
-+		case ERR_ABORT_CMD_FAILED:
- 			seq_printf(m, "%d\t%d\t0x%x\n", err->type, err->cnt,
- 				err->cmd);
- 		break;
-@@ -1031,6 +1034,7 @@ static ssize_t sdebug_error_write(struct file *file, const char __user *ubuf,
- 
- 	switch (inject_type) {
- 	case ERR_TMOUT_CMD:
-+	case ERR_ABORT_CMD_FAILED:
- 		if (sscanf(buf, "%d %d %hhx", &inject->type, &inject->cnt,
- 			   &inject->cmd) != 3)
- 			goto out_error;
-@@ -5512,9 +5516,39 @@ static void stop_all_queued(void)
- 	mutex_unlock(&sdebug_host_list_mutex);
+@@ -7797,6 +7797,48 @@ static int sdebug_fail_queue_cmd(struct scsi_cmnd *cmnd)
+ 	return 0;
  }
  
-+static int sdebug_fail_abort(struct scsi_cmnd *cmnd)
++static int sdebug_fail_cmd(struct scsi_cmnd *cmnd, int *retval,
++			   struct sdebug_err_inject *info)
 +{
 +	struct scsi_device *sdp = cmnd->device;
 +	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
 +	struct sdebug_err_inject *err;
 +	unsigned char *cmd = cmnd->cmnd;
 +	int ret = 0;
++	int result;
 +
 +	if (devip == NULL)
 +		return 0;
 +
 +	rcu_read_lock();
 +	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
-+		if (err->type == ERR_ABORT_CMD_FAILED &&
++		if (err->type == ERR_FAIL_CMD &&
 +		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
-+			ret = !!err->cnt;
-+			if (err->cnt < 0)
-+				err->cnt++;
++			if (!err->cnt) {
++				rcu_read_unlock();
++				return 0;
++			}
 +
++			ret = !!err->cnt;
 +			rcu_read_unlock();
-+			return ret;
++			goto out_handle;
 +		}
 +	}
 +	rcu_read_unlock();
 +
 +	return 0;
++
++out_handle:
++	if (err->cnt < 0)
++		err->cnt++;
++	mk_sense_buffer(cmnd, err->sense_key, err->asc, err->asq);
++	result = err->status_byte | err->host_byte << 16 | err->driver_byte << 24;
++	*info = *err;
++	*retval = schedule_resp(cmnd, devip, result, NULL, 0, 0);
++
++	return ret;
 +}
 +
- static int scsi_debug_abort(struct scsi_cmnd *SCpnt)
+ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 				   struct scsi_cmnd *scp)
  {
- 	bool ok = scsi_debug_abort_cmnd(SCpnt);
-+	u8 *cmd = SCpnt->cmnd;
-+	u8 opcode = cmd[0];
+@@ -7817,6 +7859,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 	bool has_wlun_rl;
+ 	bool inject_now;
+ 	int ret = 0;
++	struct sdebug_err_inject err;
  
- 	++num_aborts;
+ 	scsi_set_resid(scp, 0);
+ 	if (sdebug_statistics) {
+@@ -7869,6 +7912,16 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		return ret;
+ 	}
  
-@@ -5523,6 +5557,12 @@ static int scsi_debug_abort(struct scsi_cmnd *SCpnt)
- 			    "%s: command%s found\n", __func__,
- 			    ok ? "" : " not");
- 
-+	if (sdebug_fail_abort(SCpnt)) {
-+		scmd_printk(KERN_INFO, SCpnt, "fail abort command 0x%x\n",
-+			    opcode);
-+		return FAILED;
++	if (sdebug_fail_cmd(scp, &ret, &err)) {
++		scmd_printk(KERN_INFO, scp,
++			"fail command 0x%x with hostbyte=0x%x, "
++			"driverbyte=0x%x, statusbyte=0x%x, "
++			"sense_key=0x%x, asc=0x%x, asq=0x%x\n",
++			opcode, err.host_byte, err.driver_byte,
++			err.status_byte, err.sense_key, err.asc, err.asq);
++		return ret;
 +	}
 +
- 	return SUCCESS;
- }
+ 	if (unlikely(inject_now && !atomic_read(&sdeb_inject_pending)))
+ 		atomic_set(&sdeb_inject_pending, 1);
  
 -- 
 2.32.0
