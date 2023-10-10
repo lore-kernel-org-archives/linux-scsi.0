@@ -2,71 +2,116 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FB21CD68ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 07:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FD1BCD68F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 07:15:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1442360AbjJJHBl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 03:01:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48924 "EHLO
+        id S1379443AbjJJHPx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 03:15:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1442267AbjJJHBk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 03:01:40 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B4CF99;
-        Tue, 10 Oct 2023 00:01:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=bI/vJl5ULJZr3ilKxFJWstI+fkyfacC5qyu4Nha56e8=; b=hZyC1bZ33GltcX7CCa2ZSkJWi+
-        Rv0Rtm4poGcty1nCCUjPMItWznXW9OAM/CRkuZ+AezB2KzLFqn5/eOTe2z3u+Vkq1eLfXq8AeG8JW
-        SjLCTQV0wQJMR/vVKeX7y1xzzIhS44Uu7XRey217WHgrnWpwiQhU/zCwTleY43Zvt1WVTYRbGZRzJ
-        49WpyDQFt9xFfEr1yzZ93JEk6i4j16SpnlX8tH6mZ6AkCRv8ROX9xKYDMBIrRg2CnY/Z4obgw/LWV
-        nJWZCHVUplR9m8EeA3JW/yT513gvgv05gUZGzDT1xUaUhrf9XLgcCMzGJCW7MCK8scc2OEI3bAe1B
-        spzshVVw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qq6kH-00Cf4m-1r;
-        Tue, 10 Oct 2023 07:01:33 +0000
-Date:   Tue, 10 Oct 2023 00:01:33 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs/178: don't fail when SCRATCH_DEV contains random
- xfs superblocks
-Message-ID: <ZST2zRvtMrU0KlkN@infradead.org>
-References: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
- <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
+        with ESMTP id S1379439AbjJJHPt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 03:15:49 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A904D3
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 00:15:48 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id EA6871F749;
+        Tue, 10 Oct 2023 07:15:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1696922146; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Kwu44p3NR8YFNGpTWdoY9ZO7KQu8C9cZhOrewu4r+x0=;
+        b=2WFYvjLztjGtK55WHfgE99XkFvnp3c34FAJ0FfizypHMl6CPfH9sNF0SUKQgfWd/Oy6HW/
+        iV0B9AS/fEOeitd9p/UkyYZHXAe6H0vnfHJS5iqKPmQlFejiFXpeJ73dYyo1BQusaRpPlb
+        uvcNVnCqRaGHknRnK+JHCOMZZdYIguI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1696922146;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Kwu44p3NR8YFNGpTWdoY9ZO7KQu8C9cZhOrewu4r+x0=;
+        b=M3z0zNYK35esMPdGyR6nZ82VjDcDdDUIip+AcQ20Bn5cJFTZipPoGld0s60Ufo7RzYDk2/
+        3nBabJp4fy2mjrCg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C81701358F;
+        Tue, 10 Oct 2023 07:15:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id W+GELyL6JGWUNAAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 10 Oct 2023 07:15:46 +0000
+Message-ID: <a06b762d-32b9-448b-96cf-a2957ab1a425@suse.de>
+Date:   Tue, 10 Oct 2023 09:15:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: Feature Request: Device Manager Fake Trim / Zero Trim
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, charlesfdotz@tutanota.com,
+        Dm Devel <dm-devel@lists.linux.dev>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <NgGvkdW--3-9@tutanota.com>
+ <6276b986-fe9a-4ac4-9662-a0abf7dc68b4@suse.de>
+ <dc7c0122-8077-4aa5-87e6-87404f48a4ce@kernel.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <dc7c0122-8077-4aa5-87e6-87404f48a4ce@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 09, 2023 at 11:18:33AM -0700, Darrick J. Wong wrote:
-> The storage advertises SCSI UNMAP support, but it is of the variety
-> where the UNMAP command returns immediately but takes its time to unmap
-> in the background.  Subsequent rereads are allowed to return stale
-> contents, per DISCARD semantics.
+On 10/10/23 08:48, Damien Le Moal wrote:
+> On 10/9/23 15:15, Hannes Reinecke wrote:
+>> On 10/9/23 02:56, charlesfdotz@tutanota.com wrote:
+>>> Hello,
+>>>
+>>> I would like to request a new device manager layer be added that accepts
+>>> trim requests for sectors and instead writes zeros to those sectors.
+>>>
+>>> This would be useful to deal with SMR (shingled magnetic recording) drives
+>>> that do not support trim. Currently after an SMR drive has had enough data
+>>> written to it the performance drops dramatically because the disk must
+>>> shuffle around data as if it were full and without trim support there is no
+>>> way to inform the disk which sectors are no longer used. Currently there's
+>>> no way to "fix" or reset this without doing an ATA secure erase despite
+>>> many of these disk being sold without informing customers that they were
+>>> SMR drives (western digital was sued for selling SMR drives as NAS
+>>> drives).
+>>>
+>> Gosh, no, please don't. SMR drives have a write pointer, and if the zone
+>> needs to be reset you just reset the write pointer. Writing zeroes will
+>> result in the opposite; the zone continues to be full, and no writes can
+>> happen there.
 > 
-> When the fstests cloud is not busy, the old contents disappear in a few
-> seconds.  However, at peak utilization, there are ~75 VMs running, and
-> the storage backend can take several minutes to commit these background
-> requests.
+> Yes. And zone reset *is* a trim also since after a zone reset, the sectors in
+> the zone cannot be read.
+> 
+On the same vein: why didn't we hook up 'wp reset' to trim/unmap?
+The code says:
 
-Umm, that is not valid behavior fo SCSI UNMAP or any other command
-that Linux discard maps to.  All of them can do one of the two options
-on a per-block basis:
+         if (sd_is_zoned(sdkp)) {
+                 sd_config_discard(sdkp, SD_LBP_DISABLE);
+                 return count;
+         }
 
- - return the unmap pattern (usually but not always 0) for any read
-   following the unmap/trim/discard
- - always return the previous pattern until it is overwritten or
-   discarded again
+I distinctly remember to enable discards via 'wp reset' in the
+original code; what happened to it?
 
-Changing the pattern some time after unmap is a grave bug, and we need
-to blacklist the device.
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
