@@ -2,31 +2,33 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA8E7CD68F1
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 05:59:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E54D4CD68ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 06:58:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1442202AbjJJF7Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 01:59:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57790 "EHLO
+        id S1442404AbjJJG6E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 02:58:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1442179AbjJJF7O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 01:59:14 -0400
+        with ESMTP id S1442363AbjJJG6B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 02:58:01 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B27EFC4;
-        Mon,  9 Oct 2023 22:59:11 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCCE0C433C8;
-        Tue, 10 Oct 2023 05:59:09 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 697D59F;
+        Mon,  9 Oct 2023 23:57:59 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C42CCC433C8;
+        Tue, 10 Oct 2023 06:57:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1696917551;
-        bh=S2Vq73dxgI8Hax8ZDzPktuJJ9WTcUpUL+/KM/V79r44=;
+        s=korg; t=1696921079;
+        bh=EYuUNIt6jJRwYBy0E3p0Vk5Y1cHFfh6ehg6kHTfAyUU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Kg+lbBI2WFWTfw1g2nP0OCMspsLaEmhAGl8iOsaj2cy/oJfzG7zS6LdyTH+rgqFJW
-         sxCvDQ6Jwy3j0Ae58keCkT9pNIKZqzy2q0BM7QcmVrgaG+duK+v7nL5BaVefquSsO4
-         loMdrlwL5KeekjdN5/LA2S/AHzLoLV9Rn2EfXKfI=
-Date:   Tue, 10 Oct 2023 07:59:07 +0200
+        b=zzQU1pwcQ/CneY+FW5FxMonJkZiI86OeSlFhEhdRj/hvvySkkTG2K8Sk51p8M1RuX
+         NA8xXufVqn3K4h0T1GP7rVOn7ryC3K4n6YeVOhjVhWQYEIJa6ayQXO2ZChu8j2BCF+
+         i7dawBqEH7KL0R9NbBls/UV6Yg3YejnrOELbQ5Mk=
+Date:   Tue, 10 Oct 2023 08:57:55 +0200
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Max Kellermann <max.kellermann@ionos.com>
-Cc:     Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+To:     Joe Perches <joe@perches.com>
+Cc:     Max Kellermann <max.kellermann@ionos.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jens Axboe <axboe@kernel.dk>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Borislav Petkov <bp@alien8.de>,
         Tony Luck <tony.luck@intel.com>,
@@ -82,46 +84,46 @@ Cc:     Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
         linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
         linux-scsi@vger.kernel.org
 Subject: Re: [PATCH 6/7] fs/sysfs/group: make attribute_group pointers const
-Message-ID: <2023101025-yogurt-masses-47da@gregkh>
+Message-ID: <2023101041-giggle-refried-5b8c@gregkh>
 References: <20231009165741.746184-1-max.kellermann@ionos.com>
  <20231009165741.746184-6-max.kellermann@ionos.com>
  <264fa39d-aed6-4a54-a085-107997078f8d@roeck-us.net>
  <CAKPOu+8k2x1CucWSzoouts0AfMJk+srJXWWf3iWVOeY+fWkOpQ@mail.gmail.com>
+ <f511170fe61d7e7214a3a062661cf4103980dad6.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKPOu+8k2x1CucWSzoouts0AfMJk+srJXWWf3iWVOeY+fWkOpQ@mail.gmail.com>
+In-Reply-To: <f511170fe61d7e7214a3a062661cf4103980dad6.camel@perches.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 09, 2023 at 10:05:55PM +0200, Max Kellermann wrote:
-> On Mon, Oct 9, 2023 at 7:24 PM Guenter Roeck <linux@roeck-us.net> wrote:
-> > Also, I don't know why checkpatch is happy with all the
-> >
-> >         const struct attribute_group *const*groups;
-> >
-> > instead of
-> >
-> >         const struct attribute_group *const *groups;
+On Mon, Oct 09, 2023 at 11:48:10PM -0700, Joe Perches wrote:
+> On Mon, 2023-10-09 at 22:05 +0200, Max Kellermann wrote:
+> > On Mon, Oct 9, 2023 at 7:24 PM Guenter Roeck <linux@roeck-us.net> wrote:
+> > > Also, I don't know why checkpatch is happy with all the
+> > > 
+> > >         const struct attribute_group *const*groups;
+> > > 
+> > > instead of
+> > > 
+> > >         const struct attribute_group *const *groups;
+> > 
+> > I found out that checkpatch has no check for this at all; it does
+> > complain about such lines, but only for local variables. But that
+> > warning is actually a bug, because this is a check for unary
+> > operators: it thinks the asterisk is a dereference operator, not a
+> > pointer declaration, and complains that the unary operator must be
+> > preceded by a space. Thus warnings on local variable are only correct
+> > by coincidence, not by design.
+> > 
+> > Inside structs or parameters (where my coding style violations can be
+> > found), it's a different context and thus checkpatch doesn't apply the
+> > rules for unary operators.
 > 
-> I found out that checkpatch has no check for this at all; it does
-> complain about such lines, but only for local variables. But that
-> warning is actually a bug, because this is a check for unary
-> operators: it thinks the asterisk is a dereference operator, not a
-> pointer declaration, and complains that the unary operator must be
-> preceded by a space. Thus warnings on local variable are only correct
-> by coincidence, not by design.
-> 
-> Inside structs or parameters (where my coding style violations can be
-> found), it's a different context and thus checkpatch doesn't apply the
-> rules for unary operators.
+> My opinion is that const use in the kernel should almost
+> always have whitespace before and after it except when
+> preceded by a open parenthesis or a newline.
 
-Ok, checkpatch support isn't always required, we can notice that changes
-like this obviously are not sane and shouldn't be allowed just by
-reading them :)
-
-thanks,
-
-greg k-h
+I totally agree.
