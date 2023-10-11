@@ -2,135 +2,147 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF329CD6E54
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 10:18:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C1FFCD6E5F
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 11:10:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231556AbjJKKSA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Oct 2023 06:18:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35584 "EHLO
+        id S234658AbjJKLKD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Oct 2023 07:10:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231468AbjJKKR7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 06:17:59 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2964592;
-        Wed, 11 Oct 2023 03:17:58 -0700 (PDT)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39B5pEVH012416;
-        Wed, 11 Oct 2023 10:17:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : to : from : subject : content-type :
- content-transfer-encoding; s=qcppdkim1;
- bh=7eNL33mKoqTiLtcr0W1Yjo3k+nMvanQo5/8WLcWHPJU=;
- b=KyWrKA7JFEcg/16ewmvd7joO6GQkx5y4BGhFvsqCh8RiMkQ64lpcDorpsbTd1bHmJHN/
- 2+7oz4JfUwiVin8kwsQvZyTmGDfcAZDA+Kv6nCEGZiES/NfpaIQU66sbiubMnslHoeK4
- Munz0bY/c4CCGeL0Ns8uAThfQBQXghpnKB7ggfBd4w9DAudaZDog3L5JJHexnF56OwbL
- TxhG+nTCVBZnZRgcEV5H3apxtPlhxEDIyQ+zClwNd5xY4pNHUSGzs/5fB+AxhxyDASNh
- kpuws5M2RlGxJds/RtquuwlbW7ShgQ41FVGr5MqZhfXHcx9EzArDRveGbrBhzt0h4O+U Xg== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tnkwngrg0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 11 Oct 2023 10:17:56 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39BAHtM2009457
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 11 Oct 2023 10:17:55 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 11 Oct
- 2023 03:17:54 -0700
-Message-ID: <fc4189f4-8907-8a08-d7be-ffcb2425940a@quicinc.com>
-Date:   Wed, 11 Oct 2023 18:17:51 +0800
+        with ESMTP id S234729AbjJKLJv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 07:09:51 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EFDB30EF;
+        Wed, 11 Oct 2023 04:07:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697022449; x=1728558449;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=ckRPG2JUL38SKDbKOkmm+WWH+26uhzkNuPJSIGu2OfI=;
+  b=lqcBP6lncMJm/+0NWtG8xJFua7MybbFIPUA7pTo1pTef664IZPekJvaz
+   Mw3kb1zjuf0k3q8wuDCB1dTAUimR1X0u75C76ypx7vCsg/el/b3S7OJ21
+   RorMVF0GelwpA1O1+bqPtCEDgjkJ7qLpYbmFS1cJ3OXjneiJhY+p8AWih
+   9PJYdRUNCgE+VApfIIlxJx5FTpTQGFdFi3gSGRMKL2X13Fu6jWtBt214I
+   VTpyRyXf6BGlyegA21Zkx7zTEFZi1yFt9/T3g92cTaMt2XgQa9j4kzmEt
+   xFdsoI4h56Ex8vRicATow4CqsPiMaHZr2WOD7qTfmeHgANFMf0YmxXe71
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="369698095"
+X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
+   d="scan'208";a="369698095"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 04:07:27 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="788961825"
+X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
+   d="scan'208";a="788961825"
+Received: from opipikin-mobl2.ger.corp.intel.com ([10.252.57.154])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 04:07:20 -0700
+Date:   Wed, 11 Oct 2023 14:07:18 +0300 (EEST)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>, 3chas3@gmail.com,
+        brking@us.ibm.com, dalias@libc.org, glaubitz@physik.fu-berlin.de,
+        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, kw@linux.com,
+        linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-atm-general@lists.sourceforge.net,
+        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
+        lpieralisi@kernel.org, martin.petersen@oracle.com,
+        mattst88@gmail.com, Netdev <netdev@vger.kernel.org>,
+        richard.henderson@linaro.org, toan@os.amperecomputing.com,
+        ysato@users.sourceforge.jp, Tadeusz Struk <tadeusz.struk@intel.com>
+Subject: Re: [PATCH v3 0/6] PCI/treewide: Cleanup/streamline PCI error code
+ handling
+In-Reply-To: <20231010223530.GA1005985@bhelgaas>
+Message-ID: <667e1068-20c3-938f-2d87-fb1d6c44a45e@linux.intel.com>
+References: <20231010223530.GA1005985@bhelgaas>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Content-Language: en-US
-To:     Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-Subject: Does the branch 6.1 6.2 6.3 and 6.4 still accept bug fix now
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: iBd6bSg0gdkRAYsSK0jQeYSJpmZMB-Xr
-X-Proofpoint-GUID: iBd6bSg0gdkRAYsSK0jQeYSJpmZMB-Xr
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-11_07,2023-10-11_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=729
- lowpriorityscore=0 bulkscore=0 mlxscore=0 suspectscore=0 phishscore=0
- priorityscore=1501 malwarescore=0 impostorscore=0 adultscore=0 spamscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2310110090
+Content-Type: multipart/mixed; BOUNDARY="8323329-1666151866-1697020845=:1977"
+Content-ID: <98898f16-3a16-7cb9-26e4-d9e9776916fe@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dear maintainers,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-on the branch before 6.5, There is race condition between UFS clock 
-scaling and ufshcd_ungate_work() would cause that host_self_block 
-mismatch to scsi_block_reqs_cnt.
+--8323329-1666151866-1697020845=:1977
+Content-Type: text/plain; CHARSET=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
+Content-ID: <64336ba8-d7c9-4fae-879-59b88302220@linux.intel.com>
 
-Case 1:
+On Tue, 10 Oct 2023, Bjorn Helgaas wrote:
 
-UFS driver didnâ€™t call ufshcd_hold() before calling 
-ufshcd_scsi_block_requests() from devfreq_monitor path:
+> [+cc Tadeusz; updates to quirk_intel_qat_vf_cap()]
+> 
+> On Mon, Sep 11, 2023 at 03:53:48PM +0300, Ilpo Järvinen wrote:
+> > As the first step towards converting PCI accessor function return codes
+> > into normal errnos this series cleans up related code paths which have
+> > complicated multi-line construct to handle the PCI error checking.
+> > 
+> > I'd prefer these (the remaining ones) to be routed through PCI tree due
+> > to PCI accessor function return code conversion being built on top of
+> > them.
+> > 
+> > v3:
+> > - Return pci_generic_config_read32()'s error code directly
+> > - Removed already accepted patches
+> > 
+> > v2:
+> > - Moved ret local var to the inner block (I2C: ali15x3)
+> > - Removed already accepted patches
+> > 
+> > 
+> > Ilpo Järvinen (6):
+> >   alpha: Streamline convoluted PCI error handling
+> >   sh: pci: Do PCI error check on own line
+> >   atm: iphase: Do PCI error checks on own line
+> >   PCI: Do error check on own line to split long if conditions
+> >   PCI: xgene: Do PCI error check on own line & keep return value
+> >   scsi: ipr: Do PCI error checks on own line
+> > 
+> >  arch/alpha/kernel/sys_miata.c      | 17 +++++++++--------
+> >  arch/sh/drivers/pci/common.c       |  7 ++++---
+> >  drivers/atm/iphase.c               | 20 +++++++++++---------
+> >  drivers/pci/controller/pci-xgene.c |  7 ++++---
+> >  drivers/pci/pci.c                  |  9 ++++++---
+> >  drivers/pci/probe.c                |  6 +++---
+> >  drivers/pci/quirks.c               |  6 +++---
+> >  drivers/scsi/ipr.c                 | 12 ++++++++----
+> >  8 files changed, 48 insertions(+), 36 deletions(-)
+> 
+> Applied all to pci/config-errs for v6.7, thanks!
+> 
+> I made the tweaks below; heads-up to John Paul and Tadeusz.
+> 
+> Oh, and weird experience applying these via b4, git am: the
+> Signed-off-by was corrupted on these patches:
+> 
+>   https://lore.kernel.org/r/20230911125354.25501-7-ilpo.jarvinen@linux.intel.com  https://lore.kernel.org/r/20230911125354.25501-6-ilpo.jarvinen@linux.intel.com  https://lore.kernel.org/r/20230911125354.25501-3-ilpo.jarvinen@linux.intel.com
+> 
+> It looked like this:
+> 
+>   Signed-off-by: Ilpo JÃ¤rvinen <ilpo.jarvinen@linux.intel.com>
+> 
+> Not sure why this happened; maybe one of the mailing lists screwed it
+> up and the order of arrival determines which one b4 uses?  The ones
+> from linux-alpha look like:
+> 
+>   Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> 
+> which I think corresponds to the bad rendering.  I think I fixed them
+> all.
 
---> Race condition happened between ufshcd_clock_scaling_prepare () and 
-ufshcd_ungate_work().
+Thanks for letting me know. It seems that copies of the same mail
 
---> host_self_blocked was not set to 1 after ufshcd_clock_scaling_prepare().
+https://lore.kernel.org/linux-alpha/...
+https://lore.kernel.org/linux-pci/...
 
---> Requests keep being dispatched to UFS driver and be sent out after 
-entering H8.
-
-
-
-Case 2:
-
-UFS driver has called  ufshcd_hold() before calling 
-ufshcd_scsi_block_requests() from ufs calkscal enable/disable sysfs path:
-
---> The  ufshcd_ungate_work()  was running and already set UIC link 
-status to ACTIVE before the ufshcd_hold() be invoked.
-
---> The ufshcd_hold() would not flush ufshcd_ungate_work() if  the link 
-status already been set to ACTIVE.
-
---> Race condition happened between ufshcd_clock_scaling_prepare () and 
-ufshcd_ungate_work().
-
---> host_self_blocked was not set to 1 after ufshcd_clock_scaling_prepare().
-
---> Requests keep being dispatched to UFS driver and be sent out after 
-entering H8.
+do indeed differ for some reason. I'll probably have to experiment to see 
+if I can reproduce problem with the linux-alpha list.
 
 
-Since branch 6.5 , we would not see this issue as the 
-ufshcd_scsi_block/unblock_requests() has been removed from ufshcd_hold() 
-and ufshcd_ungate_work due to below commit.
-
-So can we know if the branch 6.1 6.2 6.3 and 6.4 accept bug fix now?
-
-
-
-scsi: ufs: Ungate the clock synchronously
-
-Ungating the clock asynchronously causes ufshcd_queuecommand() to return
-SCSI_MLQUEUE_HOST_BUSY and hence causes commands to be requeued.  This is
-suboptimal. Allow ufshcd_queuecommand() to sleep such that clock ungating
-does not trigger command requeuing. Remove the ufshcd_scsi_block_requests()
-and ufshcd_scsi_unblock_requests() calls because these are no longer
-needed. The flush_work(&hba->clk_gating.ungate_work) call is sufficient to
-make the SCSI core wait for clock ungating to complete.
-
-
-
-Best Regards,
-Ziqi
+-- 
+ i.
+--8323329-1666151866-1697020845=:1977--
