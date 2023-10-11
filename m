@@ -2,147 +2,166 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C1FFCD6E5F
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 11:10:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2516DCD6E63
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 12:26:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234658AbjJKLKD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Oct 2023 07:10:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52702 "EHLO
+        id S234972AbjJKM0S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Oct 2023 08:26:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234729AbjJKLJv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 07:09:51 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EFDB30EF;
-        Wed, 11 Oct 2023 04:07:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697022449; x=1728558449;
-  h=date:from:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=ckRPG2JUL38SKDbKOkmm+WWH+26uhzkNuPJSIGu2OfI=;
-  b=lqcBP6lncMJm/+0NWtG8xJFua7MybbFIPUA7pTo1pTef664IZPekJvaz
-   Mw3kb1zjuf0k3q8wuDCB1dTAUimR1X0u75C76ypx7vCsg/el/b3S7OJ21
-   RorMVF0GelwpA1O1+bqPtCEDgjkJ7qLpYbmFS1cJ3OXjneiJhY+p8AWih
-   9PJYdRUNCgE+VApfIIlxJx5FTpTQGFdFi3gSGRMKL2X13Fu6jWtBt214I
-   VTpyRyXf6BGlyegA21Zkx7zTEFZi1yFt9/T3g92cTaMt2XgQa9j4kzmEt
-   xFdsoI4h56Ex8vRicATow4CqsPiMaHZr2WOD7qTfmeHgANFMf0YmxXe71
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="369698095"
-X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
-   d="scan'208";a="369698095"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 04:07:27 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="788961825"
-X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
-   d="scan'208";a="788961825"
-Received: from opipikin-mobl2.ger.corp.intel.com ([10.252.57.154])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 04:07:20 -0700
-Date:   Wed, 11 Oct 2023 14:07:18 +0300 (EEST)
-From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>, 3chas3@gmail.com,
-        brking@us.ibm.com, dalias@libc.org, glaubitz@physik.fu-berlin.de,
-        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, kw@linux.com,
-        linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-atm-general@lists.sourceforge.net,
-        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
-        lpieralisi@kernel.org, martin.petersen@oracle.com,
-        mattst88@gmail.com, Netdev <netdev@vger.kernel.org>,
-        richard.henderson@linaro.org, toan@os.amperecomputing.com,
-        ysato@users.sourceforge.jp, Tadeusz Struk <tadeusz.struk@intel.com>
-Subject: Re: [PATCH v3 0/6] PCI/treewide: Cleanup/streamline PCI error code
- handling
-In-Reply-To: <20231010223530.GA1005985@bhelgaas>
-Message-ID: <667e1068-20c3-938f-2d87-fb1d6c44a45e@linux.intel.com>
-References: <20231010223530.GA1005985@bhelgaas>
+        with ESMTP id S234955AbjJKM0H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 08:26:07 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31B3FEB
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2023 05:26:04 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-69fc829d7b1so3601135b3a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2023 05:26:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1697027163; x=1697631963; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=uv/rlRYitJnK0DrpOEwxamLSxws/97bJsaf1Cey2fBE=;
+        b=ypOpv9MTQSM/x9I87a53UyCxwB6tAdg1RxsJvh5M8Dd1Hi7sWLmIrJrpCv/YaFScXg
+         J/kwzjFtI+cPGnFaNP1TYRA/r8315yK4SfIAVxhrYP1oqXarshmmSpNcPFKYpm+0Mozz
+         1q12WiXOG5YxhL+H30kJWg1d8PXiXVjlIoAQFxALMWKKmc+t8ULLpBqHZlFUmVOd2TuA
+         FJvTUETUrzWwUddY/aLL7jOcGcvg7dEikmfkQv3W1GGFkB8i+LaBZd4O13O0Lb97ZvBk
+         CnKYgjfzQ6CQndPr59kdSs4U+34WxMuHrFUbx3TCHHZctcIWxbC6tiZskLfa0kXb1XrF
+         aqJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697027163; x=1697631963;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=uv/rlRYitJnK0DrpOEwxamLSxws/97bJsaf1Cey2fBE=;
+        b=GOb3ANV8D/V8I6bWnUr78CWe2Gq67EHrgyldBRbeDl7INUkYyD4SlRujPhuFKOC8Jx
+         1urGeARKBLjTeZIjHjIP6qQoAfmfMDvewPZds5sdVmLF89UYC8meO++/3+5YR5B0unRw
+         Zy7YGHSp5h1GnQfX0csyI0uS2angGc70KkDDquatgzmaL6+j/DFrlRcc/eyDC08+arfa
+         rHO7oMZOAR3z/zJm2NmxRCn+SglupX171Iw4h59C0DDrPi47uzhDqh1ceS9xfdDAHeJW
+         IjSfXhYe+m7ErKnGWS5OBfwa+uCcoi8pOTQYl9MexkDP2dwL2SK4J0ag+a8PaZKWlpC9
+         hXfg==
+X-Gm-Message-State: AOJu0YwL32nJ6Zn9BW4bfC/pYGgqVUAWs7EtNYGgxXG0td3PavwF6Jt+
+        or1s9nIQMTVES3rrFMNhyMoF
+X-Google-Smtp-Source: AGHT+IHMgFvyP/ZNlgH1hd7LaMJ22CwW7IVsks4SREGW/bKUOs8S5+Yani2sRPyVQFYaval6GFImcQ==
+X-Received: by 2002:a05:6a00:2d23:b0:690:c5cf:91f4 with SMTP id fa35-20020a056a002d2300b00690c5cf91f4mr23872761pfb.12.1697027163274;
+        Wed, 11 Oct 2023 05:26:03 -0700 (PDT)
+Received: from localhost.localdomain ([120.138.12.180])
+        by smtp.gmail.com with ESMTPSA id a19-20020aa78653000000b0068fb8080939sm9953620pfo.65.2023.10.11.05.25.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Oct 2023 05:26:02 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
+        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
+        cw00.choi@samsung.com, andersson@kernel.org,
+        konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v5 0/5] UFS: Add OPP support
+Date:   Wed, 11 Oct 2023 17:55:38 +0530
+Message-Id: <20231011122543.11922-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323329-1666151866-1697020845=:1977"
-Content-ID: <98898f16-3a16-7cb9-26e4-d9e9776916fe@linux.intel.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi,
 
---8323329-1666151866-1697020845=:1977
-Content-Type: text/plain; CHARSET=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
-Content-ID: <64336ba8-d7c9-4fae-879-59b88302220@linux.intel.com>
+This series adds OPP (Operating Points) support to UFSHCD driver.
 
-On Tue, 10 Oct 2023, Bjorn Helgaas wrote:
+Motivation behind adding OPP support is to scale both clocks as well as
+regulators/performance state dynamically. Currently, UFSHCD just scales
+clock frequency during runtime with the help of "freq-table-hz" property
+defined in devicetree. With the addition of OPP tables in devicetree (as
+done for Qcom SDM845 and SM8250 SoCs in this series) UFSHCD can now scale
+both clocks and performance state of power domain which helps in power
+saving.
 
-> [+cc Tadeusz; updates to quirk_intel_qat_vf_cap()]
-> 
-> On Mon, Sep 11, 2023 at 03:53:48PM +0300, Ilpo Järvinen wrote:
-> > As the first step towards converting PCI accessor function return codes
-> > into normal errnos this series cleans up related code paths which have
-> > complicated multi-line construct to handle the PCI error checking.
-> > 
-> > I'd prefer these (the remaining ones) to be routed through PCI tree due
-> > to PCI accessor function return code conversion being built on top of
-> > them.
-> > 
-> > v3:
-> > - Return pci_generic_config_read32()'s error code directly
-> > - Removed already accepted patches
-> > 
-> > v2:
-> > - Moved ret local var to the inner block (I2C: ali15x3)
-> > - Removed already accepted patches
-> > 
-> > 
-> > Ilpo Järvinen (6):
-> >   alpha: Streamline convoluted PCI error handling
-> >   sh: pci: Do PCI error check on own line
-> >   atm: iphase: Do PCI error checks on own line
-> >   PCI: Do error check on own line to split long if conditions
-> >   PCI: xgene: Do PCI error check on own line & keep return value
-> >   scsi: ipr: Do PCI error checks on own line
-> > 
-> >  arch/alpha/kernel/sys_miata.c      | 17 +++++++++--------
-> >  arch/sh/drivers/pci/common.c       |  7 ++++---
-> >  drivers/atm/iphase.c               | 20 +++++++++++---------
-> >  drivers/pci/controller/pci-xgene.c |  7 ++++---
-> >  drivers/pci/pci.c                  |  9 ++++++---
-> >  drivers/pci/probe.c                |  6 +++---
-> >  drivers/pci/quirks.c               |  6 +++---
-> >  drivers/scsi/ipr.c                 | 12 ++++++++----
-> >  8 files changed, 48 insertions(+), 36 deletions(-)
-> 
-> Applied all to pci/config-errs for v6.7, thanks!
-> 
-> I made the tweaks below; heads-up to John Paul and Tadeusz.
-> 
-> Oh, and weird experience applying these via b4, git am: the
-> Signed-off-by was corrupted on these patches:
-> 
->   https://lore.kernel.org/r/20230911125354.25501-7-ilpo.jarvinen@linux.intel.com  https://lore.kernel.org/r/20230911125354.25501-6-ilpo.jarvinen@linux.intel.com  https://lore.kernel.org/r/20230911125354.25501-3-ilpo.jarvinen@linux.intel.com
-> 
-> It looked like this:
-> 
->   Signed-off-by: Ilpo JÃ¤rvinen <ilpo.jarvinen@linux.intel.com>
-> 
-> Not sure why this happened; maybe one of the mailing lists screwed it
-> up and the order of arrival determines which one b4 uses?  The ones
-> from linux-alpha look like:
-> 
->   Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-> 
-> which I think corresponds to the bad rendering.  I think I fixed them
-> all.
+For the addition of OPP support to UFSHCD, there are changes required to
+the OPP framework and devfreq drivers. The OPP framework changes are already
+merged and the devfreq change is added in this series.
 
-Thanks for letting me know. It seems that copies of the same mail
+Credits
+=======
 
-https://lore.kernel.org/linux-alpha/...
-https://lore.kernel.org/linux-pci/...
+This series is a continuation of previous work by Krzysztof Kozlowski [1].
 
-do indeed differ for some reason. I'll probably have to experiment to see 
-if I can reproduce problem with the linux-alpha list.
+Testing
+=======
 
+This series is tested on 96Boards RB3 (SDM845 SoC) and RB5 (SM8250 SoC)
+development boards.
+
+Merging Strategy
+================
+
+Since the devfreq patch got an Ack from the maintainer, either it can be merged
+to scsi tree with rest of the patches or merged separately through devfreq tree.
+
+Thanks,
+Mani
+
+[1] https://lore.kernel.org/all/20220513061347.46480-1-krzysztof.kozlowski@linaro.org/
+
+Changes in v5:
+
+* Dropped the devfreq patch since it got applied
+* Fixed the bindings issue reported by DT bot
+* Rebased on top of mkp/scsi/for-next
+
+Changes in v4:
+
+* Rebased on top of v6.6-rc3
+
+Changes in v3:
+
+* Rebased on top of linux-next/master tag: next-20230731
+* Dropped the already applied patches (dts, opp binding and framework)
+* Moved the interconnect patches to a separate series:
+  https://lore.kernel.org/linux-scsi/20230731145020.41262-1-manivannan.sadhasivam@linaro.org/
+* Moved ufshcd_opp_config_clks() API to ufshcd.c to fix the build failure
+  reported by Kbuild bot: https://lore.kernel.org/all/202307210542.KoLHRbU6-lkp@intel.com/
+* Collected Acks
+* v2: https://lore.kernel.org/all/20230720054100.9940-1-manivannan.sadhasivam@linaro.org/
+
+Changes in v2:
+
+* Added more description to the bindings patch 2/15
+* Fixed dev_pm_opp_put() usage in patch 10/15
+* Added a new patch for adding enums for UFS lanes 14/15
+* Changed the icc variables to mem_bw and cfg_bw and used
+  the enums for gears and lanes in bw_table
+* Collected review tags
+* Added SCSI list and folks
+* Removed duplicate patches
+
+Krzysztof Kozlowski (2):
+  dt-bindings: ufs: common: add OPP table
+  arm64: dts: qcom: sdm845: Add OPP table support to UFSHC
+
+Manivannan Sadhasivam (3):
+  scsi: ufs: core: Add OPP support for scaling clocks and regulators
+  scsi: ufs: host: Add support for parsing OPP
+  arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
+
+ .../devicetree/bindings/ufs/ufs-common.yaml   |  35 +++-
+ arch/arm64/boot/dts/qcom/sdm845.dtsi          |  42 +++-
+ arch/arm64/boot/dts/qcom/sm8250.dtsi          |  39 +++-
+ drivers/ufs/core/ufshcd.c                     | 179 ++++++++++++++----
+ drivers/ufs/host/ufshcd-pltfrm.c              |  78 ++++++++
+ include/ufs/ufshcd.h                          |   7 +
+ 6 files changed, 325 insertions(+), 55 deletions(-)
 
 -- 
- i.
---8323329-1666151866-1697020845=:1977--
+2.25.1
+
