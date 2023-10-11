@@ -2,193 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6215FCDB476
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 18:32:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87704CDB47D
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 19:10:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347019AbjJKScv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Oct 2023 14:32:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33348 "EHLO
+        id S233215AbjJKTK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Oct 2023 15:10:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232983AbjJKScu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 14:32:50 -0400
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2930393
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2023 11:32:48 -0700 (PDT)
-Received: by mail-ej1-x635.google.com with SMTP id a640c23a62f3a-9b2cee40de8so17778766b.1
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2023 11:32:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1697049166; x=1697653966; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=pbI8FrvRKFZu6B2DbOdgldrjIGyQyHavEvB5fYDKWGc=;
-        b=oJ7CHRF7aR8YnBsR4YzaQZH/BNZTGkjHnKo6cGDo1z+9EFnXfq4tqFUbxnhk7IE9y+
-         uBBlE6pKM6TnlZuNslYJtKPhUvocRdSbHKidQ/tmkAm6AOoEblcqWOhsLox4c0FMkxVf
-         V6MlxZTYImLBuczg8tQgoBbRHR3L4XzP9yRb6rXQhKedhCFQ20qB3HJ+Sp1EoBRXH+J0
-         1GJw7MeiRZFAxuCVSr1OG6tyMnaCxUE0Ib1THUkbcfEwvm+wfDI1XXFrV3HJoj69hOVw
-         ds6PGa55YN+01ZQx1Vckrd+wiJgJweTWOynCCFbIP6DKAOetqd76sB9gHe8XKp44mIxC
-         0v5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697049166; x=1697653966;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=pbI8FrvRKFZu6B2DbOdgldrjIGyQyHavEvB5fYDKWGc=;
-        b=vzxPhV2T+qUYw4+TSGaPeaqEKsmjwzKxwp9mBMn6cNpNu19OLNoIqyPlx6Hkfrco9a
-         2Gptt9DBn8+rUpgNzvqPNKHtfxhErok8hvQtoYmkkby4HuQxe19P0rsqBozAV2p/Qn4C
-         czokHM0HBqMjBC2pNL+WeztUprP6cTFmYVTaboA1ZvwfF/cR3x156y1tJ41hw+3My6wJ
-         B+T7REm86Ei9Muxv+ouoHl991qNEMFto9k6EDul9FGJfLqfHCp18eG8UCJ7OWBDgxVpm
-         sWHU278iTOWjWBUxpBKU4sykCpHg6lEAcK2cugxwYVlcphzYyeWohg3a5lQ+aAgsF6+k
-         ldNQ==
-X-Gm-Message-State: AOJu0YzttMPJQkWHjr+VW07yslfAv3s0e3EU5Su3XCLDuBT7z2U4/Izt
-        02C5G2bdGLqb3/WXfgUGB28XIA==
-X-Google-Smtp-Source: AGHT+IEvKx/9opJD11I3yrmKNEw13sUWCZut4WzxFnQK6B1AxF0mQwdlkAO07i8hZ8p+0l/6MH4cSQ==
-X-Received: by 2002:a17:906:cc14:b0:9bb:a243:e6fb with SMTP id ml20-20020a170906cc1400b009bba243e6fbmr3947027ejb.3.1697049166581;
-        Wed, 11 Oct 2023 11:32:46 -0700 (PDT)
-Received: from [192.168.1.20] ([178.197.219.100])
-        by smtp.gmail.com with ESMTPSA id p16-20020a17090628d000b009b654ba498csm10114886ejd.90.2023.10.11.11.32.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Oct 2023 11:32:46 -0700 (PDT)
-Message-ID: <2a500b1a-93ad-4c65-bc61-48a019afd348@linaro.org>
-Date:   Wed, 11 Oct 2023 20:32:42 +0200
+        with ESMTP id S232224AbjJKTK1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 15:10:27 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D74BB91;
+        Wed, 11 Oct 2023 12:10:26 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59FB0C433C8;
+        Wed, 11 Oct 2023 19:10:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697051426;
+        bh=HhHPFkq4XUkEVYYA0d+VT2rvcvftna4sTAnQN7nnFJc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bS3R5tpJCHoxovxT4peBWdUh5wPu/bF0S7e66ISztNH+Hk6JxyQGEIx/9e6/z1DAm
+         Fq/b5BRUD5v8nPBJG2lqtQ5mDnJ2V2kznV7xti0GzK6FCBSv4Z278ix1KN9IzJOy3e
+         Q+ayV7+fKxyMGgDjxGGgXqGZ9QRZVLyRsBQpW+Dv5Lee/1c/PHA/t3duQZY9DOo70p
+         XSVVRLEaYSjWstU8FuNcXzWgb9EGHiHEDnO0TWqXhHX5jE0+E2jszv0Yapiz4iT2cg
+         STlSUPW7+MbPgLsgGiwKN0295wTU2EbXlTUEU+RsLinn7/vBb2cTEpn5OSAZvsYiro
+         gaHsimEA6Lijw==
+Date:   Wed, 11 Oct 2023 12:10:25 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs/178: don't fail when SCRATCH_DEV contains random
+ xfs superblocks
+Message-ID: <20231011191025.GX21298@frogsfrogsfrogs>
+References: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
+ <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
+ <ZST2zRvtMrU0KlkN@infradead.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/5] dt-bindings: ufs: common: add OPP table
-Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, linux-kernel@vger.kernel.org,
-        Rob Herring <robh@kernel.org>
-References: <20231011122543.11922-1-manivannan.sadhasivam@linaro.org>
- <20231011122543.11922-2-manivannan.sadhasivam@linaro.org>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- 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
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <20231011122543.11922-2-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZST2zRvtMrU0KlkN@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/10/2023 14:25, Manivannan Sadhasivam wrote:
-> From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+On Tue, Oct 10, 2023 at 12:01:33AM -0700, Christoph Hellwig wrote:
+> On Mon, Oct 09, 2023 at 11:18:33AM -0700, Darrick J. Wong wrote:
+> > The storage advertises SCSI UNMAP support, but it is of the variety
+> > where the UNMAP command returns immediately but takes its time to unmap
+> > in the background.  Subsequent rereads are allowed to return stale
+> > contents, per DISCARD semantics.
+> > 
+> > When the fstests cloud is not busy, the old contents disappear in a few
+> > seconds.  However, at peak utilization, there are ~75 VMs running, and
+> > the storage backend can take several minutes to commit these background
+> > requests.
 > 
-> Except scaling UFS and bus clocks, it's necessary to scale also the
-> voltages of regulators or power domain performance state levels.  Adding
-> Operating Performance Points table allows to adjust power domain
-> performance state, depending on the UFS clock speed.
+> Umm, that is not valid behavior fo SCSI UNMAP or any other command
+> that Linux discard maps to.  All of them can do one of the two options
+> on a per-block basis:
 > 
-> OPPv2 deprecates previous property limited to clock scaling:
-> freq-table-hz.
+>  - return the unmap pattern (usually but not always 0) for any read
+>    following the unmap/trim/discard
+>  - always return the previous pattern until it is overwritten or
+>    discarded again
 > 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> Reviewed-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  .../devicetree/bindings/ufs/ufs-common.yaml   | 35 +++++++++++++++++--
->  1 file changed, 32 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> index bbaee4f5f7b2..1cb022cdc349 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> @@ -6,6 +6,7 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  
->  title: Common properties for Universal Flash Storage (UFS) Host Controllers
->  
-> +
+> Changing the pattern some time after unmap is a grave bug, and we need
+> to blacklist the device.
 
-Drop blank line.
+Ok, I'll go pester them about fixing that, if they haven't already.
+Apparently discard support is somewhat new.
 
->  maintainers:
->    - Alim Akhtar <alim.akhtar@samsung.com>
->    - Avri Altman <avri.altman@wdc.com>
-> @@ -20,11 +21,24 @@ properties:
->        items:
->          - description: Minimum frequency for given clock in Hz
->          - description: Maximum frequency for given clock in Hz
-> +    deprecated: true
->      description: |
-> +      Preferred is operating-points-v2.
-> +
->        Array of <min max> operating frequencies in Hz stored in the same order
-> -      as the clocks property. If this property is not defined or a value in the
-> -      array is "0" then it is assumed that the frequency is set by the parent
-> -      clock or a fixed rate clock source.
-> +      as the clocks property. If either this property or operating-points-v2 is
-> +      not defined or a value in the array is "0" then it is assumed that the
-> +      frequency is set by the parent clock or a fixed rate clock source.
-> +
-> +  operating-points-v2:
-> +    description:
-> +      Preferred over freq-table-hz.
-> +      If present, each OPP must contain array of frequencies stored in the same
-> +      order for each clock.  If clock frequency in the array is "0" then it is
-> +      assumed that the frequency is set by the parent clock or a fixed rate
-> +      clock source.
-> +
-> +  opp-table: true
+I'm pretty sure I've seen some NVME SSDs where you can issue devicewide
+DISCARDs and slowly watch the namespace utilization go down over tens of
+minutes; and reads will only eventually start returning zeroes.
 
-opp-table:
-  type: object
+(Note that *writes* during the slow-discard period are persisted
+correctly.)
 
+However, that's orthogonal to this patch -- if the device doesn't
+support discard, _scratch_mkfs won't zero the entire disk to remove old
+dead superblocks that might have been written by previous tests.  After
+we shatter the primary super, the xfs_repair scanning code can still
+trip over those old supers and break the golden output.
 
-
-Best regards,
-Krzysztof
-
+--D
