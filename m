@@ -2,150 +2,88 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DC82CD98CD
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Oct 2023 22:35:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D00C3CD98D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 00:49:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234278AbjJJWfh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Oct 2023 18:35:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34604 "EHLO
+        id S1344450AbjJKAtq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Oct 2023 20:49:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231926AbjJJWfe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 18:35:34 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAC568F;
-        Tue, 10 Oct 2023 15:35:32 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5256CC433C8;
-        Tue, 10 Oct 2023 22:35:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696977332;
-        bh=ssq0zxln5LGIGMEn14IniQ5liilnaehkBxG//1dVx6Q=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=sqIUgpWHd7XBjB1O2AqFtnyDdA5pJd4VE+4oolqSLLoTlefiP3YHE+dikhcDtJO89
-         O4slDCwY6wOXHB75bgZR3J1syc4U2WGbfwWAU0sdY+7b7FsQ3KLWNQMChGyUYjRPm+
-         v5JtaKNlV/36V/Mr6EnXMoniAdQ2MOCETzLGF1I1ZDmplZx6zbEqoW3l9+u0PW+2dA
-         S+pvBlNx+Crz0kwQwxCSbH6mNn6jZKQzyE/cAM8iFlezlf5FFfjUv8d0tvm0XlzG6y
-         28ZJFKzYSj963s1mGgJvVw3/FgVLlQWJHh6eo4VCbFF2KQLde/aZYDQnLiTJ8/d4a3
-         OEQNOyQSatyzQ==
-Date:   Tue, 10 Oct 2023 17:35:30 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, 3chas3@gmail.com, brking@us.ibm.com,
-        dalias@libc.org, glaubitz@physik.fu-berlin.de,
-        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, kw@linux.com,
-        linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-atm-general@lists.sourceforge.net,
-        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
-        lpieralisi@kernel.org, martin.petersen@oracle.com,
-        mattst88@gmail.com, netdev@vger.kernel.org,
-        richard.henderson@linaro.org, toan@os.amperecomputing.com,
-        ysato@users.sourceforge.jp, Tadeusz Struk <tadeusz.struk@intel.com>
-Subject: Re: [PATCH v3 0/6] PCI/treewide: Cleanup/streamline PCI error code
- handling
-Message-ID: <20231010223530.GA1005985@bhelgaas>
+        with ESMTP id S1344367AbjJKAtp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Oct 2023 20:49:45 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA95492
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 17:49:44 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-690f7bf73ddso4428800b3a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2023 17:49:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1696985384; x=1697590184; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=KRRRoTo2wnsSX5xq5u8T59QWy7S3kko/dv8df4DFlb0=;
+        b=T9TC41alCgWEAl+Sv9w6QlzSI2YKErlX9EH5dDQypuuk5xJNA1iee+6SiQ5zXNY5rI
+         10t4K1Je26ycLIRMVPvDDnw8seA16x7xZ6p7dSeZxPQWzKnT9WzSMwsNQgtJbciQKwSP
+         JwqEnwFFU48eb4siOPmSLUYu7Ch63ToZGC238=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696985384; x=1697590184;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KRRRoTo2wnsSX5xq5u8T59QWy7S3kko/dv8df4DFlb0=;
+        b=Ot2vQm/faXG+GfySLdDFWWeJJctVZTBPfzSAU9Z52f5CP3pf+uV4HXn1UL+uHaScc3
+         WpldV41YxY8eib40T6WlARamHSCc34JU84sq1jLtyCZxikY9lsk/cUdrTSE25yE43QTr
+         EFaNTqP48xRPi1BY023YXMisy0uENym/XLV/lDsrluMEK0epgfBHtC/To8kHzQP+fQNU
+         J2/GK/YxA5CSXUJa4/kK1v0GxFPZtw1yJEievqFyrEl87rXByyHvehdKONsTa0raEvPw
+         Af3XThc1Yb/1IqjfrhTfkGIIykvWlVeVBR5EnKWkUgu/iaWsHOJ19D9Hxb/Pm2Fjhx36
+         ptrw==
+X-Gm-Message-State: AOJu0YzwwHwvpSMrBaqqfeoA9u/IwPdBGJR5OYQ7lR48ZT6hxi7cntsq
+        ZNHR8aVYhTCoFy02VoE7vuw8cA==
+X-Google-Smtp-Source: AGHT+IH2fFpFd4eP3vIi8kSEraLfKgo8XfCxhm6jKaFV+PkGlZw8qgOPt1QHhoorPyZIqBO+YaMYUg==
+X-Received: by 2002:a05:6a00:2da5:b0:68e:2d2d:56c1 with SMTP id fb37-20020a056a002da500b0068e2d2d56c1mr19330340pfb.9.1696985384264;
+        Tue, 10 Oct 2023 17:49:44 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id z24-20020a637e18000000b0057411f9a516sm10914474pgc.7.2023.10.10.17.49.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Oct 2023 17:49:43 -0700 (PDT)
+Date:   Tue, 10 Oct 2023 17:49:38 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     James Seo <james@equiv.tech>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/12] scsi: mpt3sas: Use flexible arrays and do a few
+ cleanups
+Message-ID: <202310101748.5E39C3A@keescook>
+References: <20230806170604.16143-1-james@equiv.tech>
+ <yq1edjr25ed.fsf@ca-mkp.ca.oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <yq1edjr25ed.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[+cc Tadeusz; updates to quirk_intel_qat_vf_cap()]
-
-On Mon, Sep 11, 2023 at 03:53:48PM +0300, Ilpo Järvinen wrote:
-> As the first step towards converting PCI accessor function return codes
-> into normal errnos this series cleans up related code paths which have
-> complicated multi-line construct to handle the PCI error checking.
+On Thu, Aug 24, 2023 at 11:00:57PM -0400, Martin K. Petersen wrote:
 > 
-> I'd prefer these (the remaining ones) to be routed through PCI tree due
-> to PCI accessor function return code conversion being built on top of
-> them.
+> > Commit df8fc4e934c1 ("kbuild: Enable -fstrict-flex-arrays=3") has
+> > resulted in the only arrays that UBSAN_BOUNDS considers unbounded
+> > being trailing arrays declared with [] as the last member of a struct.
+> > Unbounded trailing arrays declared with [1] are common in mpt3sas,
+> > which is causing spurious warnings to appear in some situations, e.g.
+> > when more than one physical disk is connected:
 > 
-> v3:
-> - Return pci_generic_config_read32()'s error code directly
-> - Removed already accepted patches
-> 
-> v2:
-> - Moved ret local var to the inner block (I2C: ali15x3)
-> - Removed already accepted patches
-> 
-> 
-> Ilpo Järvinen (6):
->   alpha: Streamline convoluted PCI error handling
->   sh: pci: Do PCI error check on own line
->   atm: iphase: Do PCI error checks on own line
->   PCI: Do error check on own line to split long if conditions
->   PCI: xgene: Do PCI error check on own line & keep return value
->   scsi: ipr: Do PCI error checks on own line
-> 
->  arch/alpha/kernel/sys_miata.c      | 17 +++++++++--------
->  arch/sh/drivers/pci/common.c       |  7 ++++---
->  drivers/atm/iphase.c               | 20 +++++++++++---------
->  drivers/pci/controller/pci-xgene.c |  7 ++++---
->  drivers/pci/pci.c                  |  9 ++++++---
->  drivers/pci/probe.c                |  6 +++---
->  drivers/pci/quirks.c               |  6 +++---
->  drivers/scsi/ipr.c                 | 12 ++++++++----
->  8 files changed, 48 insertions(+), 36 deletions(-)
+> Broadcom: Please review/test. Thanks!
 
-Applied all to pci/config-errs for v6.7, thanks!
+Another thread ping. Is anyone at broadcom around? I'd really like to
+see this series (or some form of it) land to avoid all these runtime
+warnings...
 
-I made the tweaks below; heads-up to John Paul and Tadeusz.
-
-Oh, and weird experience applying these via b4, git am: the
-Signed-off-by was corrupted on these patches:
-
-  https://lore.kernel.org/r/20230911125354.25501-7-ilpo.jarvinen@linux.intel.com  https://lore.kernel.org/r/20230911125354.25501-6-ilpo.jarvinen@linux.intel.com  https://lore.kernel.org/r/20230911125354.25501-3-ilpo.jarvinen@linux.intel.com
-
-It looked like this:
-
-  Signed-off-by: Ilpo JÃ¤rvinen <ilpo.jarvinen@linux.intel.com>
-
-Not sure why this happened; maybe one of the mailing lists screwed it
-up and the order of arrival determines which one b4 uses?  The ones
-from linux-alpha look like:
-
-  Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-
-which I think corresponds to the bad rendering.  I think I fixed them
-all.
-
-Bjorn
-
-diff --git a/arch/sh/drivers/pci/common.c b/arch/sh/drivers/pci/common.c
-index f59e5b9a6a80..ab9e791070b4 100644
---- a/arch/sh/drivers/pci/common.c
-+++ b/arch/sh/drivers/pci/common.c
-@@ -50,7 +50,7 @@ int __init pci_is_66mhz_capable(struct pci_channel *hose,
- 				int top_bus, int current_bus)
- {
- 	u32 pci_devfn;
--	unsigned short vid;
-+	u16 vid;
- 	int cap66 = -1;
- 	u16 stat;
- 	int ret;
-@@ -64,7 +64,7 @@ int __init pci_is_66mhz_capable(struct pci_channel *hose,
- 					     pci_devfn, PCI_VENDOR_ID, &vid);
- 		if (ret != PCIBIOS_SUCCESSFUL)
- 			continue;
--		if (vid == 0xffff)
-+		if (PCI_POSSIBLE_ERROR(vid))
- 			continue;
- 
- 		/* check 66MHz capability */
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 81f3da536a3c..f5fc92441194 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5430,7 +5430,7 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- 
- 		pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
- 		ret = pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status);
--		if ((ret != PCIBIOS_SUCCESSFUL) || (status == 0xffffffff))
-+		if ((ret != PCIBIOS_SUCCESSFUL) || (PCI_POSSIBLE_ERROR(status)))
- 			pdev->cfg_size = PCI_CFG_SPACE_SIZE;
- 
- 		if (pci_find_saved_cap(pdev, PCI_CAP_ID_EXP))
+-- 
+Kees Cook
