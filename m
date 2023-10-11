@@ -2,88 +2,129 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24CF6CDB482
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 20:14:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB6BCDB482
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 20:51:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233303AbjJKUOV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Oct 2023 16:14:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46732 "EHLO
+        id S233507AbjJKUvG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Oct 2023 16:51:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231226AbjJKUOU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 16:14:20 -0400
-Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B67C9E;
-        Wed, 11 Oct 2023 13:14:19 -0700 (PDT)
-Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-57bca5b9b0aso130393eaf.3;
-        Wed, 11 Oct 2023 13:14:19 -0700 (PDT)
+        with ESMTP id S231226AbjJKUvF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 16:51:05 -0400
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CACF9A9;
+        Wed, 11 Oct 2023 13:51:03 -0700 (PDT)
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-27d1f57bda7so36941a91.0;
+        Wed, 11 Oct 2023 13:51:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697055258; x=1697660058;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20230601; t=1697057463; x=1697662263;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UyrDKbQbQXjK5vQijZ8YmBb/LLkPFwbG1s6YyJYCsU4=;
-        b=ThPZmb8Y6bbwUyhWfV2168Df39yOh5Gd878zDzVXBcaz9e7LHYBMMiDnDcdMRFp+N2
-         mhlokFaUvOU/73ulBg7aIcH6GjSILeL+D5VAZdBboYqmYl19RCiMgu5bB0oTiCbQ7njc
-         wyccO5L1QhXrLKKLc5lM+g+Lu0Px9B8ds1bgg77mTVGO05jS2M+j7sGeIFsEAxemnMwq
-         wnMvNd4VuYhR0FkyM9jwnc1LwalX29XBLyszAx2xOm+HhmxfE5xdOYvuDHhOmiKRpJhh
-         S/+2jKF3zBA9BnQqRhsRjvj2PLs/kOWlYBZvSJOkBIuI+3I1lCpSfxMyOqVeUDu+bLjR
-         EEwA==
-X-Gm-Message-State: AOJu0YwQwltMNtk3XVUv/ZR7YTPe/gOD9aoVfMYroFalF11XZQjiQQXt
-        COS/O3kyaD/X8ttn4GzOTBo=
-X-Google-Smtp-Source: AGHT+IF+/54bkfGA6p2kLavPUsjZOJSTA4L5c3OacQSDXhxltp2wxOy6CaL1OHWFnt9YlpQt33obDg==
-X-Received: by 2002:a05:6358:880e:b0:143:8e40:917b with SMTP id hv14-20020a056358880e00b001438e40917bmr24041025rwb.9.1697055258483;
-        Wed, 11 Oct 2023 13:14:18 -0700 (PDT)
+        bh=nE+u+F1XkNDY5suKWhgfSDeZXY6238ysQJ12xui8faI=;
+        b=PodpIlA6kc9rcD3lUSetKU+2XcImBSaTEYr+ZZsVQ4mVBMNYLx3gVusdMM4u7JZqGK
+         6LTu48/SFjAu2kf44EapchCYl/Vz5QgMTzoyxrwZewNu2hC4js/vCs0dYwvv6yAgK8X0
+         aDr7wf/DE+XFS+NQT6B9qTJngiq04pi4bJoeAFzarLPnRuQ6jTS67qrGny6JgihUWjbh
+         6zm7S2V9YZkNOVTsNcNrgOmQLf1BSpw/leu6C3ak/IQaiG90HEzXYBDqzhoJjhvjFg3L
+         1V2v/OABqr9hwfWk5/x4tMnWxIV1OugUx+x6kdV7Qb0ZoAYT2SXHjtV3SPxGdzDoNBe5
+         90Hg==
+X-Gm-Message-State: AOJu0Yy7MfkbVfsd5n+2MYEjHvQw+XrXq7opvYV4ebX9/I87baametpX
+        2xvHf6wk72iK5AsNLnZMApc=
+X-Google-Smtp-Source: AGHT+IEQsrUikkl+B3X3A6GHGMJk0zCkNQCIcFx/RiY+mEqPpKHqXHGQJ3jBlTWnhgrGIBsfb7aJqA==
+X-Received: by 2002:a17:90a:b008:b0:273:cb91:c74f with SMTP id x8-20020a17090ab00800b00273cb91c74fmr22557041pjq.8.1697057462903;
+        Wed, 11 Oct 2023 13:51:02 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:19de:6b54:16fe:c022? ([2620:15c:211:201:19de:6b54:16fe:c022])
-        by smtp.gmail.com with ESMTPSA id t28-20020aa7939c000000b0068a46cd4120sm10470937pfe.199.2023.10.11.13.14.17
+        by smtp.gmail.com with ESMTPSA id sm6-20020a17090b2e4600b00273fc850342sm352450pjb.20.2023.10.11.13.51.01
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Oct 2023 13:14:18 -0700 (PDT)
-Message-ID: <70191324-018e-4cfe-9c1d-0bd3d17fb437@acm.org>
-Date:   Wed, 11 Oct 2023 13:14:16 -0700
+        Wed, 11 Oct 2023 13:51:02 -0700 (PDT)
+Message-ID: <b0b015bf-0a27-4e89-950a-597b9fed20fb@acm.org>
+Date:   Wed, 11 Oct 2023 13:51:00 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
+Subject: Re: [PATCH v2 03/15] block: Support data lifetime in the I/O priority
+ bitfield
 Content-Language: en-US
-To:     Jason Gunthorpe <jgg@ziepe.ca>, Bob Pearson <rpearsonhpe@gmail.com>
-Cc:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
-        'Zhu Yanjun' <yanjun.zhu@linux.dev>,
-        Leon Romanovsky <leon@kernel.org>,
-        "zyjzyj2000@gmail.com" <zyjzyj2000@gmail.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Zhu Yanjun <yanjun.zhu@intel.com>
-References: <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
- <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
- <20231004183824.GQ13795@ziepe.ca>
- <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
- <20231005142148.GA970053@ziepe.ca>
- <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
- <a8453889-3f5f-49ff-89f2-ec0ef929d915@linux.dev>
- <OS3PR01MB9865F9BEB1A90DDCAEEBFC8BE5CDA@OS3PR01MB9865.jpnprd01.prod.outlook.com>
- <20231010160919.GC55194@ziepe.ca>
- <a4808fa6-5bd5-4a64-a437-6a7e89ca7e9f@acm.org>
- <20231011155104.GF55194@ziepe.ca>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231011155104.GF55194@ziepe.ca>
+To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Hannes Reinecke <hare@suse.de>
+References: <20231005194129.1882245-1-bvanassche@acm.org>
+ <20231005194129.1882245-4-bvanassche@acm.org>
+ <8aec03bb-4cef-9423-0ce4-c10d060afce4@kernel.org>
+ <46c17c1b-29be-41a3-b799-79163851f972@acm.org>
+In-Reply-To: <46c17c1b-29be-41a3-b799-79163851f972@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/11/23 08:51, Jason Gunthorpe wrote:
-> If we revert it then rxe will probably just stop development
-> entirely. Daisuke's ODP work will be blocked and if Bob was able to
-> fix it he would have done so already. Which mean's Bobs ongoing work
-> is lost too.
+On 10/6/23 11:07, Bart Van Assche wrote:
+> On 10/6/23 01:19, Damien Le Moal wrote:
+>> Your change seem to assume that it makes sense to be able to combine 
+>> CDL with
+>> lifetime hints. But does it really ? CDL is of dubious value for solid 
+>> state
+>> media and as far as I know, UFS world has not expressed interest. 
+>> Conversely,
+>> data lifetime hints do not make much sense for spin rust media where 
+>> CDL is
+>> important. So I would say that the combination of CDL and lifetime 
+>> hints is of
+>> dubious value.
+>>
+>> Given this, why not simply define the 64 possible lifetime values as 
+>> plain hint
+>> values (8 to 71, following 1 to 7 for CDL) ?
+>>
+>> The other question here if you really want to keep the bit separation 
+>> approach
+>> is: do we really need up to 64 different lifetime hints ? While the scsi
+>> standard allows that much, does this many different lifetime make 
+>> sense in
+>> practice ? Can we ever think of a usecase that needs more than say 8 
+>> different
+>> liftimes (3 bits) ? If you limit the number of possible lifetime hints 
+>> to 8,
+>> then we can keep 4 bits unused in the hint field for future features.
+> 
+> Hi Damien,
+> 
+> Not supporting CDL for solid state media and supporting eight different
+> lifetime values sounds good to me. Is this perhaps what you had in mind?
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> --- a/include/uapi/linux/ioprio.h
+> +++ b/include/uapi/linux/ioprio.h
+> @@ -100,6 +100,14 @@ enum {
+>          IOPRIO_HINT_DEV_DURATION_LIMIT_5 = 5,
+>          IOPRIO_HINT_DEV_DURATION_LIMIT_6 = 6,
+>          IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
+> +       IOPRIO_HINT_DATA_LIFE_TIME_0 = 8,
+> +       IOPRIO_HINT_DATA_LIFE_TIME_1 = 9,
+> +       IOPRIO_HINT_DATA_LIFE_TIME_2 = 10,
+> +       IOPRIO_HINT_DATA_LIFE_TIME_3 = 11,
+> +       IOPRIO_HINT_DATA_LIFE_TIME_4 = 12,
+> +       IOPRIO_HINT_DATA_LIFE_TIME_5 = 13,
+> +       IOPRIO_HINT_DATA_LIFE_TIME_6 = 14,
+> +       IOPRIO_HINT_DATA_LIFE_TIME_7 = 15,
+>   };
 
-If Daisuke's work depends on the RXE changes then Daisuke may decide
-to help with the RXE changes.
+(replying to my own e-mail)
 
-Introducing regressions while refactoring code is not acceptable.
+Hi Damien,
 
-I don't have enough spare time to help with the RXE driver.
+Does the above look good to you?
 
 Thanks,
 
