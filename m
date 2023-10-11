@@ -2,149 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2746CCD6E64
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 12:27:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87326CD6E63
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 12:37:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346956AbjJKM1O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Oct 2023 08:27:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44118 "EHLO
+        id S234875AbjJKMhM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Oct 2023 08:37:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235035AbjJKM1D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 08:27:03 -0400
-Received: from mail-oo1-xc35.google.com (mail-oo1-xc35.google.com [IPv6:2607:f8b0:4864:20::c35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79DB7FF
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2023 05:26:46 -0700 (PDT)
-Received: by mail-oo1-xc35.google.com with SMTP id 006d021491bc7-57b635e3fd9so3342653eaf.3
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2023 05:26:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1697027205; x=1697632005; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tI6Pcdke+ZCMScqm6RYMcPg5JywhhOVA13YJD5+toLE=;
-        b=U7y0rXPqj0pUIQYQhukt9sG2Yghq/XD7wO+12S5VKZFk5VPHvj8TfOuBc/hKk05smy
-         s+cdXEIRBEUdkm2KXsaI0LJ/0I+KoS4T2FcIa16DoTNtqlgCFvNbvkHTpvQR1BH6+6nL
-         9RaenuGtef4pUVRJcZAqZWHJSvObRDRcquM2SvIEvQlFE8TCUOuRVAdFXRcphXBPa7cr
-         CPL3tg8EXpy9KMRUz8LNX+RAsMmMH0onwCTS/1lXgLzsPeCSq1JXF6CPG9BpJXcA4273
-         4Hf4o0pchMMu0jlwqcB1PGfzVsXy/iJfVOnR3PBXyBNitrWwyBQTBwXf8ccZep4Vb5s3
-         EQww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697027205; x=1697632005;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=tI6Pcdke+ZCMScqm6RYMcPg5JywhhOVA13YJD5+toLE=;
-        b=uAT5wPQATltrNs6BwrjHGJzvSGMw6qOYrp3eckty4sb8H6kbtuCL65j9jWqVgzx2xm
-         LHk4DRG582oXPWaIy2QSawpjic+kSf6rBGixq0IfroBI4UYX1gnsoLjn1HvDavokwfKY
-         qWvht6VFaFhYCoj0EsuhJZ9hj+4Z9CWv1DmxOAm7Q6bVQMF0j4wDx8U198hiNJ/Fe5H8
-         W6njgmVQgq7wzapyIghsBWKJe6/VYNoMQ25xNXLk+lylJvCA3phONKhqpQx0e3eitgLM
-         7ZE/gpkVRE5fvQiiTlHbNAzL21AfE0WcpsW4EM4ONcliH4p72dOSl57PL4wad4Z980v1
-         Z8vA==
-X-Gm-Message-State: AOJu0Yw9jb/i/PZFGYql7dznFRTcsb1ZnaHZnc+OmpHHs4Fbo2CMkto+
-        XwfrqWfUT4+MUPZri1F8mFD1
-X-Google-Smtp-Source: AGHT+IFzX2n92dmWtsRn4w44dCrNNn/zihF5BV5HsH403pLPK2+SDKSQw+T1dY3G2OYpb96IjZtv5A==
-X-Received: by 2002:a05:6358:42a6:b0:148:1a09:2469 with SMTP id s38-20020a05635842a600b001481a092469mr11954985rwc.25.1697027205702;
-        Wed, 11 Oct 2023 05:26:45 -0700 (PDT)
-Received: from localhost.localdomain ([120.138.12.180])
-        by smtp.gmail.com with ESMTPSA id a19-20020aa78653000000b0068fb8080939sm9953620pfo.65.2023.10.11.05.26.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Oct 2023 05:26:45 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v5 5/5] arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
-Date:   Wed, 11 Oct 2023 17:55:43 +0530
-Message-Id: <20231011122543.11922-6-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231011122543.11922-1-manivannan.sadhasivam@linaro.org>
-References: <20231011122543.11922-1-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S234852AbjJKMhJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 08:37:09 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E013493;
+        Wed, 11 Oct 2023 05:37:05 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S5Bxv69jdzLpZw;
+        Wed, 11 Oct 2023 20:33:07 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Wed, 11 Oct 2023 20:37:03 +0800
+Message-ID: <5ea16795-08c6-ef6b-b8cb-f1de2f5a0021@huawei.com>
+Date:   Wed, 11 Oct 2023 20:37:02 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 1/2] scsi: core: cleanup scsi_dev_queue_ready()
+Content-Language: en-US
+From:   Wenchao Hao <haowenchao2@huawei.com>
+To:     Damien Le Moal <dlemoal@kernel.org>
+CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <louhongxiang@huawei.com>
+References: <20230922093842.2646157-1-haowenchao2@huawei.com>
+ <20230922093842.2646157-2-haowenchao2@huawei.com>
+ <ea28de69-8b9d-8ff8-b7fc-eb780123f055@kernel.org>
+ <7a11374c-4e8e-b7f9-aca4-55686a6ec501@huawei.com>
+In-Reply-To: <7a11374c-4e8e-b7f9-aca4-55686a6ec501@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS host controller, when scaling gears, should choose appropriate
-performance state of RPMh power domain controller along with clock
-frequency. So let's add the OPP table support to specify both clock
-frequency and RPMh performance states replacing the old "freq-table-hz"
-property.
+On 2023/9/24 14:27, Wenchao Hao wrote:
+> On 2023/9/22 20:50, Damien Le Moal wrote:
+>> On 2023/09/22 2:38, Wenchao Hao wrote:
+>>> This is just a cleanup for scsi_dev_queue_ready() to avoid
+>>> redundant goto and if statement, it did not change the origin
+>>> logic.
+>>>
+>>> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+>>> ---
+>>>   drivers/scsi/scsi_lib.c | 35 ++++++++++++++++++-----------------
+>>>   1 file changed, 18 insertions(+), 17 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>>> index ca5eb058d5c7..f3e388127dbd 100644
+>>> --- a/drivers/scsi/scsi_lib.c
+>>> +++ b/drivers/scsi/scsi_lib.c
+>>> @@ -1254,28 +1254,29 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+>>>       int token;
+>>>       token = sbitmap_get(&sdev->budget_map);
+>>> -    if (atomic_read(&sdev->device_blocked)) {
+>>> -        if (token < 0)
+>>> -            goto out;
+>>> +    if (token < 0)
+>>> +        return -1;
+>>
+>> This is changing how this function works...
+>>
+> 
+> I don't think so...
+> The origin function flow:
+> 
+> static inline int scsi_dev_queue_ready(struct request_queue *q,
+>                    struct scsi_device *sdev)
+> {
+>      ...
+>      token = sbitmap_get(&sdev->budget_map);
+>      if (atomic_read(&sdev->device_blocked)) {
+>          if (token < 0)
+>              goto out;
+>      }
+>      return token;
+> out:
+>      return -1
+> }
+> 
+> If the token is less than 0, it would always return -1. So we can found
+> it's not necessary to check token after atomic_read().
+> 
+>>> -        if (scsi_device_busy(sdev) > 1)
+>>> -            goto out_dec;
+>>> +    /*
+>>> +     * device_blocked is not set at mostly time, so check it first
+>>> +     * and return token when it is not set.
+>>> +     */
+>>> +    if (!atomic_read(&sdev->device_blocked))
+>>> +        return token;
+>>
+>> ...because you reversed the tests order.
+> 
+> As explained in comment, the device_blocked is not set at mostly time,
+> so when it's not set, just return the token.
+> 
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- arch/arm64/boot/dts/qcom/sm8250.dtsi | 39 +++++++++++++++++++++-------
- 1 file changed, 30 insertions(+), 9 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-index a4e58ad731c3..33abd84aae53 100644
---- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-@@ -2198,21 +2198,42 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
--			freq-table-hz =
--				<37500000 300000000>,
--				<0 0>,
--				<0 0>,
--				<37500000 300000000>,
--				<0 0>,
--				<0 0>,
--				<0 0>,
--				<0 0>;
-+
-+			operating-points-v2 = <&ufs_opp_table>;
- 
- 			interconnects = <&aggre1_noc MASTER_UFS_MEM 0 &mc_virt SLAVE_EBI_CH0 0>,
- 					<&gem_noc MASTER_AMPSS_M0 0 &config_noc SLAVE_UFS_MEM_CFG 0>;
- 			interconnect-names = "ufs-ddr", "cpu-ufs";
- 
- 			status = "disabled";
-+
-+			ufs_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-37500000 {
-+					opp-hz = /bits/ 64 <37500000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <37500000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-300000000 {
-+					opp-hz = /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+				};
-+			};
- 		};
- 
- 		ufs_mem_phy: phy@1d87000 {
--- 
-2.25.1
+Friendly ping...
 
