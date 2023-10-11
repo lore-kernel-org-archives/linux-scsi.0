@@ -2,88 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87704CDB47D
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 19:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24CF6CDB482
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Oct 2023 20:14:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233215AbjJKTK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Oct 2023 15:10:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46272 "EHLO
+        id S233303AbjJKUOV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Oct 2023 16:14:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232224AbjJKTK1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 15:10:27 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D74BB91;
-        Wed, 11 Oct 2023 12:10:26 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59FB0C433C8;
-        Wed, 11 Oct 2023 19:10:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697051426;
-        bh=HhHPFkq4XUkEVYYA0d+VT2rvcvftna4sTAnQN7nnFJc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bS3R5tpJCHoxovxT4peBWdUh5wPu/bF0S7e66ISztNH+Hk6JxyQGEIx/9e6/z1DAm
-         Fq/b5BRUD5v8nPBJG2lqtQ5mDnJ2V2kznV7xti0GzK6FCBSv4Z278ix1KN9IzJOy3e
-         Q+ayV7+fKxyMGgDjxGGgXqGZ9QRZVLyRsBQpW+Dv5Lee/1c/PHA/t3duQZY9DOo70p
-         XSVVRLEaYSjWstU8FuNcXzWgb9EGHiHEDnO0TWqXhHX5jE0+E2jszv0Yapiz4iT2cg
-         STlSUPW7+MbPgLsgGiwKN0295wTU2EbXlTUEU+RsLinn7/vBb2cTEpn5OSAZvsYiro
-         gaHsimEA6Lijw==
-Date:   Wed, 11 Oct 2023 12:10:25 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs/178: don't fail when SCRATCH_DEV contains random
- xfs superblocks
-Message-ID: <20231011191025.GX21298@frogsfrogsfrogs>
-References: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
- <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
- <ZST2zRvtMrU0KlkN@infradead.org>
+        with ESMTP id S231226AbjJKUOU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Oct 2023 16:14:20 -0400
+Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B67C9E;
+        Wed, 11 Oct 2023 13:14:19 -0700 (PDT)
+Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-57bca5b9b0aso130393eaf.3;
+        Wed, 11 Oct 2023 13:14:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697055258; x=1697660058;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=UyrDKbQbQXjK5vQijZ8YmBb/LLkPFwbG1s6YyJYCsU4=;
+        b=ThPZmb8Y6bbwUyhWfV2168Df39yOh5Gd878zDzVXBcaz9e7LHYBMMiDnDcdMRFp+N2
+         mhlokFaUvOU/73ulBg7aIcH6GjSILeL+D5VAZdBboYqmYl19RCiMgu5bB0oTiCbQ7njc
+         wyccO5L1QhXrLKKLc5lM+g+Lu0Px9B8ds1bgg77mTVGO05jS2M+j7sGeIFsEAxemnMwq
+         wnMvNd4VuYhR0FkyM9jwnc1LwalX29XBLyszAx2xOm+HhmxfE5xdOYvuDHhOmiKRpJhh
+         S/+2jKF3zBA9BnQqRhsRjvj2PLs/kOWlYBZvSJOkBIuI+3I1lCpSfxMyOqVeUDu+bLjR
+         EEwA==
+X-Gm-Message-State: AOJu0YwQwltMNtk3XVUv/ZR7YTPe/gOD9aoVfMYroFalF11XZQjiQQXt
+        COS/O3kyaD/X8ttn4GzOTBo=
+X-Google-Smtp-Source: AGHT+IF+/54bkfGA6p2kLavPUsjZOJSTA4L5c3OacQSDXhxltp2wxOy6CaL1OHWFnt9YlpQt33obDg==
+X-Received: by 2002:a05:6358:880e:b0:143:8e40:917b with SMTP id hv14-20020a056358880e00b001438e40917bmr24041025rwb.9.1697055258483;
+        Wed, 11 Oct 2023 13:14:18 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:19de:6b54:16fe:c022? ([2620:15c:211:201:19de:6b54:16fe:c022])
+        by smtp.gmail.com with ESMTPSA id t28-20020aa7939c000000b0068a46cd4120sm10470937pfe.199.2023.10.11.13.14.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Oct 2023 13:14:18 -0700 (PDT)
+Message-ID: <70191324-018e-4cfe-9c1d-0bd3d17fb437@acm.org>
+Date:   Wed, 11 Oct 2023 13:14:16 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZST2zRvtMrU0KlkN@infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
+ tasks"
+Content-Language: en-US
+To:     Jason Gunthorpe <jgg@ziepe.ca>, Bob Pearson <rpearsonhpe@gmail.com>
+Cc:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
+        'Zhu Yanjun' <yanjun.zhu@linux.dev>,
+        Leon Romanovsky <leon@kernel.org>,
+        "zyjzyj2000@gmail.com" <zyjzyj2000@gmail.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Zhu Yanjun <yanjun.zhu@intel.com>
+References: <2fcef3c8-808e-8e6a-b23d-9f1b3f98c1f9@linux.dev>
+ <552f2342-e800-43bc-b859-d73297ce940f@acm.org>
+ <20231004183824.GQ13795@ziepe.ca>
+ <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
+ <20231005142148.GA970053@ziepe.ca>
+ <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
+ <a8453889-3f5f-49ff-89f2-ec0ef929d915@linux.dev>
+ <OS3PR01MB9865F9BEB1A90DDCAEEBFC8BE5CDA@OS3PR01MB9865.jpnprd01.prod.outlook.com>
+ <20231010160919.GC55194@ziepe.ca>
+ <a4808fa6-5bd5-4a64-a437-6a7e89ca7e9f@acm.org>
+ <20231011155104.GF55194@ziepe.ca>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231011155104.GF55194@ziepe.ca>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 10, 2023 at 12:01:33AM -0700, Christoph Hellwig wrote:
-> On Mon, Oct 09, 2023 at 11:18:33AM -0700, Darrick J. Wong wrote:
-> > The storage advertises SCSI UNMAP support, but it is of the variety
-> > where the UNMAP command returns immediately but takes its time to unmap
-> > in the background.  Subsequent rereads are allowed to return stale
-> > contents, per DISCARD semantics.
-> > 
-> > When the fstests cloud is not busy, the old contents disappear in a few
-> > seconds.  However, at peak utilization, there are ~75 VMs running, and
-> > the storage backend can take several minutes to commit these background
-> > requests.
-> 
-> Umm, that is not valid behavior fo SCSI UNMAP or any other command
-> that Linux discard maps to.  All of them can do one of the two options
-> on a per-block basis:
-> 
->  - return the unmap pattern (usually but not always 0) for any read
->    following the unmap/trim/discard
->  - always return the previous pattern until it is overwritten or
->    discarded again
-> 
-> Changing the pattern some time after unmap is a grave bug, and we need
-> to blacklist the device.
+On 10/11/23 08:51, Jason Gunthorpe wrote:
+> If we revert it then rxe will probably just stop development
+> entirely. Daisuke's ODP work will be blocked and if Bob was able to
+> fix it he would have done so already. Which mean's Bobs ongoing work
+> is lost too.
 
-Ok, I'll go pester them about fixing that, if they haven't already.
-Apparently discard support is somewhat new.
+If Daisuke's work depends on the RXE changes then Daisuke may decide
+to help with the RXE changes.
 
-I'm pretty sure I've seen some NVME SSDs where you can issue devicewide
-DISCARDs and slowly watch the namespace utilization go down over tens of
-minutes; and reads will only eventually start returning zeroes.
+Introducing regressions while refactoring code is not acceptable.
 
-(Note that *writes* during the slow-discard period are persisted
-correctly.)
+I don't have enough spare time to help with the RXE driver.
 
-However, that's orthogonal to this patch -- if the device doesn't
-support discard, _scratch_mkfs won't zero the entire disk to remove old
-dead superblocks that might have been written by previous tests.  After
-we shatter the primary super, the xfs_repair scanning code can still
-trip over those old supers and break the golden output.
+Thanks,
 
---D
+Bart.
+
