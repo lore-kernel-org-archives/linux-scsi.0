@@ -2,148 +2,238 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 431ECCDB46E
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 17:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E17A5CDB46E
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 17:53:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379549AbjJLRmO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Oct 2023 13:42:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49104 "EHLO
+        id S1441930AbjJLRxl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Oct 2023 13:53:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344076AbjJLRmN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 13:42:13 -0400
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0C27B8;
-        Thu, 12 Oct 2023 10:42:10 -0700 (PDT)
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-692779f583fso1006206b3a.0;
-        Thu, 12 Oct 2023 10:42:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697132530; x=1697737330;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2Ndqa30CQIymFuT6Sso7sr9ap3JdzBFoNx9/TN24OZA=;
-        b=p/D53b+TG6l29MdLDIjkTLLm3zSXwfCd7lnyRpR9Rj7TilQ++M9XsOTeWsGOIxBeHr
-         Vl9c0kE+3zqD2LGOYehuDCuMud0bhufieU0I8BbFKoybEHEQh0AFK8m1nQ4Z45XeBWwR
-         EY75QtA1KDp+pS7tnFJGjJc1Mwz+wdrMFh9odUCtVRdBHvNWNc7cEJ0ykPT7UD2tyLTj
-         MilA16G4qLNPlpNoKlNNBZSynJiCKrvn2rsXqI3oTSKIL4mnXKTM5Q6TkCtpp/FzfE44
-         NxoYv5R8rJ9I4vVjSSYvv1ar1jU7BIcCuPyJoBvPtMqirq+B/kMwOOxUqzk64Bg+0XYT
-         BvYw==
-X-Gm-Message-State: AOJu0YyaxCyVVZrfkopnOpvRMnT7cM+X9R6kq/VWbivRSv9ho6ik7Bin
-        Y2+jsIbViozGEdkrJiCvg8M=
-X-Google-Smtp-Source: AGHT+IGuSZ0jrtcDlQYNhibLnF4qw/wlJA70J2vp7mluVMdeCdB2FOOuxqQvednZKKWfpx5XDBNBoA==
-X-Received: by 2002:a05:6a20:12c6:b0:174:63a9:293 with SMTP id v6-20020a056a2012c600b0017463a90293mr4307565pzg.48.1697132529924;
-        Thu, 12 Oct 2023 10:42:09 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:414d:a1fb:8def:b3ee? ([2620:15c:211:201:414d:a1fb:8def:b3ee])
-        by smtp.gmail.com with ESMTPSA id jk22-20020a170903331600b001bfd92ec592sm2258829plb.292.2023.10.12.10.42.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Oct 2023 10:42:09 -0700 (PDT)
-Message-ID: <a490bc37-464e-4edc-b11a-91b11d24af6d@acm.org>
-Date:   Thu, 12 Oct 2023 10:42:07 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 01/15] block: Make bio_set_ioprio() modify fewer
- bio->bi_ioprio bits
-Content-Language: en-US
-To:     Kanchan Joshi <joshi.k@samsung.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Damien Le Moal <dlemoal@kernel.org>
-References: <20231005194129.1882245-1-bvanassche@acm.org>
- <CGME20231005194156epcas5p14c65d7fbecc60f97624a9ef968bebf2e@epcas5p1.samsung.com>
- <20231005194129.1882245-2-bvanassche@acm.org>
- <28f21f46-60f1-1651-e6a9-938fd2340ff5@samsung.com>
- <bfb7e2be-79f8-4f5e-b87e-3045d9c937b4@acm.org>
- <fdf765a0-54a0-a9e9-fffa-3e733c2535b0@samsung.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <fdf765a0-54a0-a9e9-fffa-3e733c2535b0@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        with ESMTP id S1441919AbjJLRxk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 13:53:40 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C2C8CA
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 10:53:38 -0700 (PDT)
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39CHjeRX002994;
+        Thu, 12 Oct 2023 17:53:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=LgQrTS/6rZAgjUr58FbY1TrZYXHrJFsnm1gUhWJ/CXo=;
+ b=p/jLiRAidr20W+3t1fT84twkMPOnMDA+oexVOttwrj4LNgmy7rmb4RjIQbYpimdYQ5OK
+ nnV9yqvEegaTv1xrJ/AvrRzYE7UkIFftHGJFLL3tHN8Wu8IVnxAeey5Bw2xOkoJn6e94
+ mQWzKe/dA9binsX72tWdQv8f5ha9+r+UpnZ++lh7jW0Oqguc4WDI2H1y41VJFLFEjpFK
+ 0c4SxEDP+oF/VOwwkrVRXXuTfdq0z36mQwSEJK8fZho6nhSwmcu+upCbYUTmuljYtl0r
+ NQqLEoXv7CFE/mk2LnAgx7hUP7V9471z+3PHgaO6eIDov2ALLJIVuPftbb2WF/jvlThX wA== 
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3tpnfsg2pd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 12 Oct 2023 17:53:29 +0000
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+        by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 39CHarhY026364;
+        Thu, 12 Oct 2023 17:49:12 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+        by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3tkjnnsamk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 12 Oct 2023 17:49:12 +0000
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 39CHn9th16712220
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Oct 2023 17:49:09 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 61EE020049;
+        Thu, 12 Oct 2023 17:49:09 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4055420040;
+        Thu, 12 Oct 2023 17:49:09 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.179.23.150])
+        by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Thu, 12 Oct 2023 17:49:09 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96.1)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1qqzo4-0047P1-2L;
+        Thu, 12 Oct 2023 19:49:08 +0200
+Date:   Thu, 12 Oct 2023 19:49:08 +0200
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Steffen Maier <maier@linux.ibm.com>
+Subject: Re: [PATCH 01/15] zfcp: do not wait for rports to become unblocked
+ after host reset
+Message-ID: <20231012174908.GC31157@p1gen4-pw042f0m.fritz.box>
+References: <20231002154927.68643-1-hare@suse.de>
+ <20231002154927.68643-2-hare@suse.de>
+ <20231012135452.GB31157@p1gen4-pw042f0m.fritz.box>
+ <58658f0c-c5e9-4321-8bd1-13223472eb1b@suse.de>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <58658f0c-c5e9-4321-8bd1-13223472eb1b@suse.de>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: LCA_fDcG8eY4CHGzSpey0RBXMRuKNL9Z
+X-Proofpoint-ORIG-GUID: LCA_fDcG8eY4CHGzSpey0RBXMRuKNL9Z
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-12_09,2023-10-12_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ priorityscore=1501 adultscore=0 bulkscore=0 suspectscore=0 phishscore=0
+ impostorscore=0 spamscore=0 malwarescore=0 mlxlogscore=999
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2310120148
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/12/23 01:49, Kanchan Joshi wrote:
-> Function does OR bio->bi_ioprio with whatever is the return of
-> get_current_ioprio().
+On Thu, Oct 12, 2023 at 04:23:47PM +0200, Hannes Reinecke wrote:
+> On 10/12/23 15:54, Benjamin Block wrote:
+> > On Mon, Oct 02, 2023 at 05:49:13PM +0200, Hannes Reinecke wrote:
+> >> zfcp_scsi_eh_host_reset_handler() would call fc_block_rport() to
+> >> wait for all rports to become unblocked after host reset.
+> >> But after host reset it might happen that the port is gone, hence
+> >> fc_block_rport() might fail due to a missing port.
+> >> But that's a perfectly legal operation; on FC remote ports might
+> >> come and go.
+> >> In the same vein FC HBAs are able to deal with ports being temporarily
+> >> blocked, so really there is not point in waiting for all ports
+> >> to become unblocked during host reset.
+> > 
+> > But in scsi_transport_fc.c we have this documented:
+> > 
+> >      * fc_block_scsi_eh - Block SCSI eh thread for blocked fc_rport
+> >      * @cmnd: SCSI command that scsi_eh is trying to recover
+> >      *
+> >      * This routine can be called from a FC LLD scsi_eh callback. It
+> >      * blocks the scsi_eh thread until the fc_rport leaves the
+> >      * FC_PORTSTATE_BLOCKED, or the fast_io_fail_tmo fires. This is
+> >      * necessary to avoid the scsi_eh failing recovery actions for blocked
+> >                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> >      * rports which would lead to offlined SCSI devices.
+> >        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> > 
+> > So I don't understand what the real expectation by the SCSI EH call back for
+> > host reset is then.
+> > 
+> > Is it that all objects (host/target ports/luns) are operational again once we
+> > return to the EH thread, or is it ok that some parts are still being
+> > recovered (as with our host reset handler, rports might still be blocked after
+> > `zfcp_erp_wait()` finishes, because of how this is organized internally).
+> > 
+> > If it's the later, I'd think this change is fine. But then I'd wonder why this
+> > function exists in the first place? Is it because in other EH steps it's more
+> > important that rports are ready after the step (e.g. because a TUR is send
+> > after, and if that fails, things get escalate unnecessarily)?
+> >
+>
+> Thing is, fc_block_scsi_eh() is assumed to be called from eh callbacks
+> _before_ any TMFs are to be sent.
+> Typically you would call them in eh_device_reset() or eh_target_reset()
+> to ensure that you can sent TMFs in the first place; no point in attempting
+> to send TMFs is the port is blocked.
 
-No, that's not what ioprio_set_class_and_level() does. It clears the 
-hint bits before it performs a logical OR.
+Ok. Interesting. We don't really care about the state of the rport when
+sending TMFs or Aborts, as those commands are sent outside the normal
+queuecommand flow (we just check "internal bits"), in case of Aborts we even
+hand this off to firmware. Consequently we don't really care about their state
+before trying to send either.
 
-> So if lifetime bits were set in get_current_ioprio(), you will end up
-> setting that in bio->bi_ioprio too.
-I'm not sure there are any use cases where it is useful to set the data
-lifetime for an entire process.
-
-Anyway, how about replacing this patch with the patch below? This will
-allow to set hint information for an entire process.
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index e2d11183f62e..3419ca4c1bf4 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2924,9 +2924,14 @@ static inline struct request 
-*blk_mq_get_cached_request(struct request_queue *q,
-
-  static void bio_set_ioprio(struct bio *bio)
-  {
-+	u16 cur_ioprio = get_current_ioprio();
-+
-  	/* Nobody set ioprio so far? Initialize it based on task's nice value */
-  	if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) == IOPRIO_CLASS_NONE)
--		bio->bi_ioprio = get_current_ioprio();
-+		bio->bi_ioprio |= cur_ioprio & IOPRIO_CLASS_LEVEL_MASK;
-+	if (IOPRIO_PRIO_HINT(bio->bi_ioprio) == 0)
-+		bio->bi_ioprio |= cur_ioprio &
-+			(IOPRIO_HINT_MASK << IOPRIO_HINT_SHIFT);
-  	blkcg_set_ioprio(bio);
-  }
-
-diff --git a/include/linux/ioprio.h b/include/linux/ioprio.h
-index 7578d4f6a969..5697832f35a3 100644
---- a/include/linux/ioprio.h
-+++ b/include/linux/ioprio.h
-@@ -71,4 +71,7 @@ static inline int ioprio_check_cap(int ioprio)
-  }
-  #endif /* CONFIG_BLOCK */
-
-+#define IOPRIO_CLASS_LEVEL_MASK ((IOPRIO_CLASS_MASK << 
-IOPRIO_CLASS_SHIFT) | \
-+				 (IOPRIO_LEVEL_MASK << 0))
-+
-  #endif
-
-
->> ioprio_set_class_and_level() preserves the hint bits set by F2FS.
->>
->>> And what is the user interface you have in mind. Is it ioprio based, or
->>> write-hint based or mix of both?
->>
->> Since the data lifetime is encoded in the hint bits, the hint bits need
->> to be set by user space to set a data lifetime.
+> Your particular case is arguably a mis-use of fc_block_scsi_eh() as
+> it is called _after_ host reset is initiated, essentially serving as
+> a completion point to ensure that all rports are back online.
 > 
-> I asked because more than one way seems to emerge here. Parts of this
-> series (Patch 4) are taking inode->i_write_hint (and not ioprio value)
-> and putting that into bio.
-> I wonder what to expect if application get to send one lifetime with
-> fcntl (write-hints) and different one with ioprio. Is that not racy?
+> However, for the FC transport implementation rport lifetimes are
+> decoupled from SCSI Host lifetimes; rports may (and do!) come and
+> go during the lifetime of a SCSI host.
 
-There is no race condition. F_SET_RW_HINT can be used to set 
-inode->i_write_hint. The filesystem may use the inode->i_write_hint 
-information. I think F2FS uses this information in its block allocator.
+Ye, Ack. We can't control Fabric events.
 
->> +            --prio=$((i<<6))
+> Consequently there is no
+> difference between a host with all rports blocked (eg during RSCN
+> processing) and a host just coming on-line after SCSI EH where rports
+> are still in the process of getting ready.
 > 
-> This will not work as prio can only take values between 0-7.
-> Perhaps you want to use "priohint" to send lifetime.
+> Hence the use of fc_block_scsi_eh() after host reset is not required,
+> and we can make our life easier by just dropping the call.
+> 
+> > Oh.. speaking of that, we do send a TUR after host reset as well
+> > (`scsi_eh_test_devices()`). So doesn't this break then if one or more rports
+> > are sill blocked after host reset returns?
+> >      At least `zfcp_scsi_queuecommand()` will bail very early if the rport is
+> > not ready (we call `fc_remote_port_chkready()` as more or less first thing),
+> > and so `scsi_send_eh_cmnd()` that is used for the TUR will fail; then it might
+> > be retried one time, but this is a tight loop without any delay, so I'd guess
+> > this has a good chance to fail as well.
+> >      And then we'd offline the whole host as further escalation, which would
+> > *REALLY* suck (with no automatic recovery no less).
+> > 
+> > My impression from look at the code that follows `scsi_try_host_reset()` in
+> > `scsi_error.c` really is, it rather expects things to be ready to be used
+> > after, right there and then (admittedly, this is probably already today
+> > problematic, as things might go back to not working concurrently because of
+> > some fabric event.. but anyway, we can life with that off-chance it seems).
+> > 
+> > Or do I miss something?
+> > 
+>
+> Ah, right. True, when the rports are not ready (ie still being blocked)
+> sending a TEST UNIT READY will fail, with probably unintended consequences.
+> 
+> But: if host reset would return FAST_IO_FAIL everything would be dandy
 
-Thanks for having mentioned the priohint option. The above works on my
-test setup since I modified fio locally to accept larger prio values. I
-will switch to the priohint option.
+Ok, so that would mean, we finish all commands left in the EH work_q with
+`scsi_eh_finish_cmd()`, and not populate the local `check_list` at all, which
+in turns means, we don't do anything in `scsi_eh_test_devices()` (no state
+checks, not TURs).
 
-Bart.
+> as then we would just check if the devices are online (by virtue of
+> scsi_eh_flush_done_q() in scsi_unjam_host()), which they really should
+> as no-one should have set them offline by then.
+
+When returning to `scsi_unjam_host()` directly after we return from
+`scsi_eh_host_reset()` we call into `scsi_eh_flush_done_q()` and go over all
+commands that are now in the done-queue (everything, if host reset returned
+FAST_IO_FAIL).
+
+In there we delete the commands from the EH list, and then check whether we
+ought to retry the command on the same SDEV or return it to some upper layer
+(i.e. hopefully dm-multipath for our installations).
+
+The former depends on whether the SDEV is online again. If everything is fine
+in the SAN (not cable pulled or something), I think this should be the case,
+but IFF we assume the rport is still blocked because the async registration
+(`zfcp_scsi_rport_work()`) hasn't finished yet (the original point for using
+`fc_block_scsi_eh()`), then the SDEV might still be in state
+SDEV_TRANSPORT_OFFLINE.
+    This can happen during adapter recovery (where we block, IOW call
+`fc_remote_port_delete()` on all rports) if fast-io-fail-tmo runs out, and
+`fc_terminate_rport_io()` is called.
+    That is undone when we call `fc_remote_port_add()` to 'unblock' the rport.
+This would then set all SDEVs into RUNNING again. And there we have the
+interaction with `fc_block_scsi_eh()` again.
+
+Hmm. I think I could life with both though. If someone drives I/O directly on
+the SDEV, and it fails after EH because of some unfortunate timing, that's bad
+luck, and something was actually wrong in the SAN if fast-io-fail-tmo runs out
+during recovery. They ought to use dm-multipath.
+    And if they do, the commands are re-issued from that layer. I think that
+should be fine.
+
+So I think we can work with returning FAST_IO_FAIL from
+`zfcp_scsi_eh_host_reset_handler()`, and removing the call to
+`fc_block_scsi_eh()`.
+    We (Steffen and/or I) might still want to look into some other solution
+for only returning from that when we know the async rport registrations have
+ran at least once after adapter recovery. But as far as your patchset goes, I
+don't think that is a gate.
+
+
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Gregor Pillen         /         Gesch�ftsf�hrung: David Faller
+Sitz der Ges.: B�blingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
