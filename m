@@ -2,125 +2,141 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 370E2C41513
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 07:40:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB680CDB46E
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 07:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377957AbjJLHkO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Oct 2023 03:40:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49614 "EHLO
+        id S1343700AbjJLHsU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Oct 2023 03:48:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235322AbjJLHkM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 03:40:12 -0400
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29E13C6
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 00:40:10 -0700 (PDT)
-Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-690f7bf73ddso530277b3a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 00:40:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1697096409; x=1697701209; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=t0g3CHLupMrDhHkMlK6gfozlJQHBhX7jZYJ+e0keXWk=;
-        b=HDtVHuCftKxdgE/BPt0LBE9bFa1rKgr8eVqNClDcuKPHzaslCm+Yt5KQSaicOIhuCx
-         eq38bVojnj8VO69LgmZHEtJOY1djbZjOc/q7bRtS+xfb/ZOTtplBA2EQFp6iaULa/vqJ
-         SFnEOajDtrMUMld4MOjWyDtnKwwK+NkOzxi5tpSzueiHA9/D17qJ6POm/bYbavYodpRt
-         ypx5ns3frbzKMY6F3SDi/mh25/xZdmKtUW12WdpzT93T+wLYNdVSJvP0RsndMnJmzbLi
-         mR5eJvSJ8CfCNZsHqZdNwZ9CRnv7PD8znJlUvBhOnPHvpqkvCvfDLJQB/X+mE6XvqqnI
-         EfVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697096409; x=1697701209;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=t0g3CHLupMrDhHkMlK6gfozlJQHBhX7jZYJ+e0keXWk=;
-        b=CBURkhsNsr9BjLaLNGGQZ9jP+OefZJKtFIxfLqyp0LD1JIduOPR7MFDD961JxOEkhP
-         T36pU1oZKlrRHTlm/A8CyKKMoJBGFjqJ3AlhPLEllyb6CdySOu4eYq0pmy1IxqZQbfv3
-         0q0hzRZDrykWQSm050cJKt6g9CbN27F8t3s7aOMVixdHBYxN1Bs6Opjm8Sba5P+2j7/2
-         TMqnvhnvhUtCIwMgHbU3vHt81jn5wuOe1wrC1b8uvgE5iMGH+SpZHCEe1op+BjkSwJ6K
-         NVDmmUOq2mSQjtRh6LffNv0hwD4tfMr+8Q6Wet7UE2BL+QfL4h07h3WtfcDoqETCC+bk
-         a31g==
-X-Gm-Message-State: AOJu0YzeOhTaN8QG4F6N+jIfz1UGc2GCOmF9FXrUWq6W43OJruujdWC4
-        qj+/kOFtskMe7YmfVYAZvTfF6TuBDtfKrgPjYg==
-X-Google-Smtp-Source: AGHT+IH0EXGX3kM6pYUNayPRavDSGKGosRNmNjQtofu1wwryxdfzHLf8UxV8MNlsKoohZ4oxr897Hg==
-X-Received: by 2002:aa7:88ca:0:b0:68e:2af1:b193 with SMTP id k10-20020aa788ca000000b0068e2af1b193mr24429012pff.28.1697096409579;
-        Thu, 12 Oct 2023 00:40:09 -0700 (PDT)
-Received: from thinkpad ([120.138.12.180])
-        by smtp.gmail.com with ESMTPSA id y12-20020a056a001c8c00b006a77343b0ccsm4896434pfw.89.2023.10.12.00.39.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Oct 2023 00:40:08 -0700 (PDT)
-Date:   Thu, 12 Oct 2023 13:09:55 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     "Alessandro Carminati (Red Hat)" <alessandro.carminati@gmail.com>
-Cc:     alim.akhtar@samsung.com, andersson@kernel.org, avri.altman@wdc.com,
-        bmasney@redhat.com, bvanassche@acm.org, conor+dt@kernel.org,
-        cw00.choi@samsung.com, devicetree@vger.kernel.org,
-        jejb@linux.ibm.com, konrad.dybcio@linaro.org,
-        krzysztof.kozlowski+dt@linaro.org, krzysztof.kozlowski@linaro.org,
-        kyungmin.park@samsung.com, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        myungjoo.ham@samsung.com, nm@ti.com, quic_asutoshd@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_cang@quicinc.com,
-        quic_narepall@quicinc.com, quic_nguyenb@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_richardp@quicinc.com,
-        quic_ziqichen@quicinc.com, robh+dt@kernel.org, sboyd@kernel.org,
-        vireshk@kernel.org
-Subject: Re: [PATCH] scsi: ufs: core: Fix build error: ufshcd_opp_config_clks
-Message-ID: <20231012073955.GA14957@thinkpad>
-References: <20231011122543.11922-4-manivannan.sadhasivam@linaro.org>
- <20231012072051.1517826-1-alessandro.carminati@gmail.com>
+        with ESMTP id S1343626AbjJLHsU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 03:48:20 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20E0190
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 00:48:18 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S5hTN5L37zvQ12;
+        Thu, 12 Oct 2023 15:43:36 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Thu, 12 Oct 2023 15:48:12 +0800
+Message-ID: <12f27bee-eb09-b51c-a844-45d6397e06f1@huawei.com>
+Date:   Thu, 12 Oct 2023 15:48:11 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231012072051.1517826-1-alessandro.carminati@gmail.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 7/7] scsi_error: streamline scsi_eh_bus_device_reset()
+Content-Language: en-US
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     James Bottomley <james.bottomley@hansenpartnership.com>,
+        <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+References: <20231002155915.109359-1-hare@suse.de>
+ <20231002155915.109359-8-hare@suse.de>
+From:   Wenchao Hao <haowenchao2@huawei.com>
+In-Reply-To: <20231002155915.109359-8-hare@suse.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 12, 2023 at 07:20:51AM +0000, Alessandro Carminati (Red Hat) wrote:
-> Building linux-6.6-rc3 with this patchset applied and the following
-> configuration:
+On 2023/10/2 23:59, Hannes Reinecke wrote:
+> Streamline to use a similar code flow as the other reset functions.
 > 
-> CONFIG_SCSI_UFSHCD=m
-> CONFIG_SCSI_UFS_BSG=y
-> 
-> I got:
-> 
->    scripts/mod/modpost -M -m -a      -o Module.symvers -T modules.order vmlinux.o
-> ERROR: modpost: "ufshcd_opp_config_clks" [drivers/ufs/host/ufshcd-pltfrm.ko] undefined!
-> make[2]: *** [scripts/Makefile.modpost:145: Module.symvers] Error 1
-> make[1]: *** [/home/alessandro/src/linux-6.6-rc3/Makefile:1865: modpost] Error 2
-> make: *** [Makefile:234: __sub-make] Error 2
-> 
-> I needed to add an export symbol to have the build complete
-> 
-> Signed-off-by: Alessandro Carminati (Red Hat) <alessandro.carminati@gmail.com>
-
-Thanks for the diff. I will squash it with the offending patch.
-
-- Mani
-
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/ufs/core/ufshcd.c | 1 +
->  1 file changed, 1 insertion(+)
+>   drivers/scsi/scsi_error.c | 26 +++++++++++---------------
+>   1 file changed, 11 insertions(+), 15 deletions(-)
 > 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index ccd7fcd18355..c0631c37c3d1 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -1098,6 +1098,7 @@ int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
->  
->  	return 0;
->  }
-> +EXPORT_SYMBOL_GPL(ufshcd_opp_config_clks);
->  
->  static int ufshcd_opp_set_rate(struct ufs_hba *hba, unsigned long freq)
->  {
-> -- 
-> 2.34.1
-> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 21d84940c9cb..81b38f5da3b6 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -1581,6 +1581,7 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+>   {
+>   	struct scsi_cmnd *scmd, *bdr_scmd, *next;
+>   	struct scsi_device *sdev;
+> +	LIST_HEAD(check_list);
+>   	enum scsi_disposition rtn;
+>   
+>   	shost_for_each_device(sdev, shost) {
+> @@ -1606,27 +1607,22 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+>   			sdev_printk(KERN_INFO, sdev,
+>   				     "%s: Sending BDR\n", current->comm));
+>   		rtn = scsi_try_bus_device_reset(sdev);
+> -		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+> -			if (!scsi_device_online(sdev) ||
+> -			    rtn == FAST_IO_FAIL ||
+> -			    !scsi_eh_tur(bdr_scmd)) {
+> -				list_for_each_entry_safe(scmd, next,
+> -							 work_q, eh_entry) {
+> -					if (scmd->device == sdev &&
+> -					    scsi_eh_action(scmd, rtn) != FAILED)
+> -						__scsi_eh_finish_cmd(scmd,
+> -								     done_q,
+> -								     DID_RESET);
+> -				}
+> -			}
+> -		} else {
+> +		if (rtn != SUCCESS && rtn != FAST_IO_FAIL)
+>   			SCSI_LOG_ERROR_RECOVERY(3,
+>   				sdev_printk(KERN_INFO, sdev,
+>   					    "%s: BDR failed\n", current->comm));
+> +		list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+> +			if (scmd->device != sdev)
+> +				continue;
+> +			if (rtn == SUCCESS)
+> +				list_move_tail(&scmd->eh_entry, &check_list);
+> +			else if (rtn == FAST_IO_FAIL)
+> +				__scsi_eh_finish_cmd(scmd, done_q,
+> +						     DID_TRANSPORT_DISRUPTED);
+>   		}
+>   	}
+>   
+> -	return list_empty(work_q);
+> +	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
+>   }
+>   
+>   /**
 
--- 
-மணிவண்ணன் சதாசிவம்
+I think the bdr_scmd related lines should also be removed like following:
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 81b38f5da3b6..e3b0ac270dd9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1579,7 +1579,7 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+                                     struct list_head *work_q,
+                                     struct list_head *done_q)
+  {
+-       struct scsi_cmnd *scmd, *bdr_scmd, *next;
++       struct scsi_cmnd *scmd, *next;
+         struct scsi_device *sdev;
+         LIST_HEAD(check_list);
+         enum scsi_disposition rtn;
+@@ -1593,15 +1593,6 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+                         scsi_device_put(sdev);
+                         break;
+                 }
+-               bdr_scmd = NULL;
+-               list_for_each_entry(scmd, work_q, eh_entry)
+-                       if (scmd->device == sdev) {
+-                               bdr_scmd = scmd;
+-                               break;
+-                       }
+-
+-               if (!bdr_scmd)
+-                       continue;
+  
+                 SCSI_LOG_ERROR_RECOVERY(3,
+                         sdev_printk(KERN_INFO, sdev,
+
+
+
+
