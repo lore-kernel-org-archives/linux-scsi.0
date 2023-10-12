@@ -2,90 +2,152 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE989CDB46E
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 11:55:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED334CDB46E
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 12:54:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347271AbjJLLzI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Oct 2023 07:55:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37170 "EHLO
+        id S1347197AbjJLMyN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Oct 2023 08:54:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347225AbjJLLxu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 07:53:50 -0400
-Received: from out-208.mta1.migadu.com (out-208.mta1.migadu.com [IPv6:2001:41d0:203:375::d0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBA3346BC
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 04:50:01 -0700 (PDT)
-Message-ID: <fe0fbdd9-93a2-4478-b1ef-9b2420c0d76e@linux.dev>
-Date:   Thu, 12 Oct 2023 19:49:35 +0800
+        with ESMTP id S1347182AbjJLMyM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 08:54:12 -0400
+Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C24D5D8
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 05:54:09 -0700 (PDT)
+Received: by mail-ed1-x52c.google.com with SMTP id 4fb4d7f45d1cf-53406799540so1722996a12.1
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 05:54:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1697115248; x=1697720048; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=pR+mwXlnV0Z4bNYvJ6fPmgF9e3yoJxNlTwlXOBZHHNE=;
+        b=ixcMVo578dJATVQ7S29h/6Qf1H2TijQL/m2RBvq9E7WQP4TQhsCPp66vSwP7qL0wnS
+         In+40id5L8J9dMc/1eRnGzXWkmvVLRewNZsexI9xPr7K5hAagmwT5ZGTK7UYviz+mUXn
+         +V6h6uS9SfrtklC79McePlsFXsXQQo3SZYndvKNDLt52M3jZK74OsJUqgX7+LM9IitZJ
+         5zatav5vRaFhxZ1vYtZjhtkhqGqY/744nVW9Im7hqjssW3mXU6/j/sJMRJr0uGmLGyNv
+         kPCB/ArM+ZCjYENZTjX2HMpyynueZFSgchfeyIwD5SvT28h2CmCSy3H+KtJI+p7Lg9Bz
+         vd9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697115248; x=1697720048;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=pR+mwXlnV0Z4bNYvJ6fPmgF9e3yoJxNlTwlXOBZHHNE=;
+        b=KgqRLFqZw5xMpozc74ymS3aBVVzPwMcgTYfqB65vbnmOr89H88fUy0UTXEvkBcSrEi
+         rsxpxH329YufPsoQb5rMl5oRL/jV1gFPE0VfKjG5NGTB88MPya4eJ47K60ZxJ1Y1lTsP
+         y9IXJcKt3Ll+h6cmOiy0MzJGXqN86i2ZFn1Fd/tFWXJMeBgAuFhZv52alrwtQ/8xVU8w
+         bTk38Ln+GqZcRjRxMP+ZkJITq6yurgHx+Tuq6ksqocscUeVwwLIKx01uhJRU91zRBx66
+         /Xnnr99vFgx9bvESdKXOOokkPy1ipFmJ5pgJ+3foMUBiWwEJxzoIchR73BpKxNtwAZry
+         cDJA==
+X-Gm-Message-State: AOJu0YyAf9urYIxcAqKm59U8R+NlrEQglfwcCBPhVZvrDCiYggMa+zjk
+        LOog+nxeeNHCE1SICQOrRihwgA==
+X-Google-Smtp-Source: AGHT+IHhxwKcA6rURKmdoDhGMbxgA872Oj7NJ//V/raGh+sSlFetQGXa6cW2a3WixE9rzNcPaiJI7g==
+X-Received: by 2002:aa7:d501:0:b0:52f:2bd3:6f4d with SMTP id y1-20020aa7d501000000b0052f2bd36f4dmr22451869edq.0.1697115248166;
+        Thu, 12 Oct 2023 05:54:08 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.219.100])
+        by smtp.gmail.com with ESMTPSA id f18-20020a056402069200b005389ebf00a2sm10126879edy.76.2023.10.12.05.54.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 Oct 2023 05:54:07 -0700 (PDT)
+Message-ID: <3bed0f5e-372c-45f3-8995-0e8e7cdf1690@linaro.org>
+Date:   Thu, 12 Oct 2023 14:54:04 +0200
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
-To:     Jason Gunthorpe <jgg@ziepe.ca>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Bob Pearson <rpearsonhpe@gmail.com>,
-        "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        "zyjzyj2000@gmail.com" <zyjzyj2000@gmail.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Zhu Yanjun <yanjun.zhu@intel.com>
-References: <20231004183824.GQ13795@ziepe.ca>
- <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
- <20231005142148.GA970053@ziepe.ca>
- <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
- <a8453889-3f5f-49ff-89f2-ec0ef929d915@linux.dev>
- <OS3PR01MB9865F9BEB1A90DDCAEEBFC8BE5CDA@OS3PR01MB9865.jpnprd01.prod.outlook.com>
- <20231010160919.GC55194@ziepe.ca>
- <a4808fa6-5bd5-4a64-a437-6a7e89ca7e9f@acm.org>
- <20231011155104.GF55194@ziepe.ca>
- <70191324-018e-4cfe-9c1d-0bd3d17fb437@acm.org>
- <20231011231201.GH55194@ziepe.ca>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <20231011231201.GH55194@ziepe.ca>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V1 1/4] dt-bindings: ufs: qcom: Add qos property
+Content-Language: en-US
+To:     Maramaina Naresh <quic_mnaresh@quicinc.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        quic_cang@quicinc.com, quic_nguyenb@quicinc.com
+References: <1696952947-18062-1-git-send-email-quic_mnaresh@quicinc.com>
+ <1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <1696952947-18062-2-git-send-email-quic_mnaresh@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-在 2023/10/12 7:12, Jason Gunthorpe 写道:
-> On Wed, Oct 11, 2023 at 01:14:16PM -0700, Bart Van Assche wrote:
->> On 10/11/23 08:51, Jason Gunthorpe wrote:
->>> If we revert it then rxe will probably just stop development
->>> entirely. Daisuke's ODP work will be blocked and if Bob was able to
->>> fix it he would have done so already. Which mean's Bobs ongoing work
->>> is lost too.
->>
->> If Daisuke's work depends on the RXE changes then Daisuke may decide
->> to help with the RXE changes.
->>
->> Introducing regressions while refactoring code is not acceptable.
+On 10/10/2023 17:49, Maramaina Naresh wrote:
+> Add bindings for per-cpu QoS for QCOM UFS. This improves random io
+> performance by 20% for QCOM UFS.
 > 
-> Generally, but I don't view rxe as a production part of the kernel so
-> I prefer to give time to resolve it.
+> Signed-off-by: Maramaina Naresh <quic_mnaresh@quicinc.com>
+> ---
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
->> I don't have enough spare time to help with the RXE driver.
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> index 462ead5..d8b807e 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> @@ -76,6 +76,14 @@ properties:
+>      $ref: /schemas/types.yaml#/definitions/phandle
+>      description: phandle to the Inline Crypto Engine node
+>  
+> +  qos:
+> +    minItems: 2
+> +    maxItems: 2
 
-commit 11ab7cc7ee32d6c3e16ac74c34c4bbdbf8f99292
-Author: Bart Van Assche <bvanassche@acm.org>
-Date:   Tue Aug 22 09:57:07 2023 -0700
+This was absolutely never tested.
 
-     Change the default RDMA driver from rdma_rxe to siw
-
-     Since the siw driver is more stable than the rdma_rxe driver, 
-change the
-     default into siw. See e.g.
- 
-https://lore.kernel.org/all/c3d1a966-b9b0-d015-38ec-86270b5045fc@acm.org/.
-
-     Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-     Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-
-
-> 
-> Nor I
-> 
-> Jason
+Best regards,
+Krzysztof
 
