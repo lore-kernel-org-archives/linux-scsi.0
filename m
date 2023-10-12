@@ -2,151 +2,148 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC7CCDB46E
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 17:24:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 431ECCDB46E
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 17:42:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379644AbjJLRYe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Oct 2023 13:24:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54444 "EHLO
+        id S1379549AbjJLRmO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Oct 2023 13:42:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1442051AbjJLRXt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 13:23:49 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 980E212F
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 10:22:23 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1c737d61a00so10710605ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 10:22:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1697131343; x=1697736143; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HMmysdE7+hFUIPmp9MMMe3xjxP9qrN7IYcx3e2tg+gE=;
-        b=gOB7i2M85ii23YGZtPxsNInGH8EMkqzyqiIxcLdvAAr574FIKDDdKK0Df02dlxfSqU
-         3MLpXuNgyNx2BJJXSafq5AASfdIDQ7E7ToS30ZiPFj7RfRZaY/oIE/QZmVCfdTEKe5e7
-         vimhSO5XT+Rmol2ZTeZ11MAU+w96YtUI0WvTGXQTW6BExtEOuops2bGF1wqP2lqC9Z3F
-         VZ2O0apAsAS8j4fhAneB2UD1wCkcUo0fx1QG2uGFEGTGcnfkSqgh8eHNoHTkjcz4x7kJ
-         RBxxo/YI+htpV+xNWjeymO6NeajCB3YOWJEyXxwrMcHzjCkk3Q2fmXZ6Non/3N4h8Gu/
-         EEnQ==
+        with ESMTP id S1344076AbjJLRmN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 13:42:13 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0C27B8;
+        Thu, 12 Oct 2023 10:42:10 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-692779f583fso1006206b3a.0;
+        Thu, 12 Oct 2023 10:42:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697131343; x=1697736143;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=HMmysdE7+hFUIPmp9MMMe3xjxP9qrN7IYcx3e2tg+gE=;
-        b=DRtO9ajSlKpU+x47wEt7QN6MvtiP3BDgLsqdKlrNTHLgb2cCA6AwL/wnKNyOnKIEj3
-         SnnHgoDCJNLUYQUa76JYyPiaovWGjmv3tGn1XalaIycpfbenOCW5czlyTuyur8iTjhOj
-         8utPpvjFGvqg3v2jcPGrUf+tsNz3XmDBTtL71PzQyrhjHWkg8TTPfpitrHRyIY+dKmx2
-         cH4iiCkzbHCN0pFzvAHhMxoHjVgDkK3eYcx5K3zmHTg7bid7YlmJb/n6F1CuxUICNEqY
-         wQ64eTtFD+mYQGtCoUg1Mr59HgWB6NwTjVMhp81mt37oCnbZuMuoeAOz84OkTOznRGJ4
-         Xpcw==
-X-Gm-Message-State: AOJu0YzevxRmiFdNKJ9FrJ8/5oAX0wAIJgJdwYlrNi3gmaiggQ/EoHVk
-        bK20tsYlubKMotM1K6wLGahy
-X-Google-Smtp-Source: AGHT+IEsgE6ZgEYuinnbucjd4chMH0VEihKg62mgofe7VrNz3RjzeB8emSofOhYBqOb/zVE2j1+PVw==
-X-Received: by 2002:a17:902:e749:b0:1b8:76ce:9d91 with SMTP id p9-20020a170902e74900b001b876ce9d91mr31392438plf.1.1697131343079;
-        Thu, 12 Oct 2023 10:22:23 -0700 (PDT)
-Received: from localhost.localdomain ([120.138.12.180])
-        by smtp.gmail.com with ESMTPSA id f9-20020a170902ce8900b001c75a07f62esm2242359plg.34.2023.10.12.10.22.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Oct 2023 10:22:22 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
-        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
-        cw00.choi@samsung.com, andersson@kernel.org,
-        konrad.dybcio@linaro.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
-        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
-        linux-kernel@vger.kernel.org, alessandro.carminati@gmail.com,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Subject: [PATCH v7 5/5] arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
-Date:   Thu, 12 Oct 2023 22:51:29 +0530
-Message-Id: <20231012172129.65172-6-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231012172129.65172-1-manivannan.sadhasivam@linaro.org>
-References: <20231012172129.65172-1-manivannan.sadhasivam@linaro.org>
+        d=1e100.net; s=20230601; t=1697132530; x=1697737330;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2Ndqa30CQIymFuT6Sso7sr9ap3JdzBFoNx9/TN24OZA=;
+        b=p/D53b+TG6l29MdLDIjkTLLm3zSXwfCd7lnyRpR9Rj7TilQ++M9XsOTeWsGOIxBeHr
+         Vl9c0kE+3zqD2LGOYehuDCuMud0bhufieU0I8BbFKoybEHEQh0AFK8m1nQ4Z45XeBWwR
+         EY75QtA1KDp+pS7tnFJGjJc1Mwz+wdrMFh9odUCtVRdBHvNWNc7cEJ0ykPT7UD2tyLTj
+         MilA16G4qLNPlpNoKlNNBZSynJiCKrvn2rsXqI3oTSKIL4mnXKTM5Q6TkCtpp/FzfE44
+         NxoYv5R8rJ9I4vVjSSYvv1ar1jU7BIcCuPyJoBvPtMqirq+B/kMwOOxUqzk64Bg+0XYT
+         BvYw==
+X-Gm-Message-State: AOJu0YyaxCyVVZrfkopnOpvRMnT7cM+X9R6kq/VWbivRSv9ho6ik7Bin
+        Y2+jsIbViozGEdkrJiCvg8M=
+X-Google-Smtp-Source: AGHT+IGuSZ0jrtcDlQYNhibLnF4qw/wlJA70J2vp7mluVMdeCdB2FOOuxqQvednZKKWfpx5XDBNBoA==
+X-Received: by 2002:a05:6a20:12c6:b0:174:63a9:293 with SMTP id v6-20020a056a2012c600b0017463a90293mr4307565pzg.48.1697132529924;
+        Thu, 12 Oct 2023 10:42:09 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:414d:a1fb:8def:b3ee? ([2620:15c:211:201:414d:a1fb:8def:b3ee])
+        by smtp.gmail.com with ESMTPSA id jk22-20020a170903331600b001bfd92ec592sm2258829plb.292.2023.10.12.10.42.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 Oct 2023 10:42:09 -0700 (PDT)
+Message-ID: <a490bc37-464e-4edc-b11a-91b11d24af6d@acm.org>
+Date:   Thu, 12 Oct 2023 10:42:07 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 01/15] block: Make bio_set_ioprio() modify fewer
+ bio->bi_ioprio bits
+Content-Language: en-US
+To:     Kanchan Joshi <joshi.k@samsung.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Damien Le Moal <dlemoal@kernel.org>
+References: <20231005194129.1882245-1-bvanassche@acm.org>
+ <CGME20231005194156epcas5p14c65d7fbecc60f97624a9ef968bebf2e@epcas5p1.samsung.com>
+ <20231005194129.1882245-2-bvanassche@acm.org>
+ <28f21f46-60f1-1651-e6a9-938fd2340ff5@samsung.com>
+ <bfb7e2be-79f8-4f5e-b87e-3045d9c937b4@acm.org>
+ <fdf765a0-54a0-a9e9-fffa-3e733c2535b0@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <fdf765a0-54a0-a9e9-fffa-3e733c2535b0@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS host controller, when scaling gears, should choose appropriate
-performance state of RPMh power domain controller along with clock
-frequency. So let's add the OPP table support to specify both clock
-frequency and RPMh performance states replacing the old "freq-table-hz"
-property.
+On 10/12/23 01:49, Kanchan Joshi wrote:
+> Function does OR bio->bi_ioprio with whatever is the return of
+> get_current_ioprio().
 
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- arch/arm64/boot/dts/qcom/sm8250.dtsi | 39 +++++++++++++++++++++-------
- 1 file changed, 30 insertions(+), 9 deletions(-)
+No, that's not what ioprio_set_class_and_level() does. It clears the 
+hint bits before it performs a logical OR.
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-index a4e58ad731c3..33abd84aae53 100644
---- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
-@@ -2198,21 +2198,42 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
--			freq-table-hz =
--				<37500000 300000000>,
--				<0 0>,
--				<0 0>,
--				<37500000 300000000>,
--				<0 0>,
--				<0 0>,
--				<0 0>,
--				<0 0>;
-+
-+			operating-points-v2 = <&ufs_opp_table>;
- 
- 			interconnects = <&aggre1_noc MASTER_UFS_MEM 0 &mc_virt SLAVE_EBI_CH0 0>,
- 					<&gem_noc MASTER_AMPSS_M0 0 &config_noc SLAVE_UFS_MEM_CFG 0>;
- 			interconnect-names = "ufs-ddr", "cpu-ufs";
- 
- 			status = "disabled";
-+
-+			ufs_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-37500000 {
-+					opp-hz = /bits/ 64 <37500000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <37500000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-300000000 {
-+					opp-hz = /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+				};
-+			};
- 		};
- 
- 		ufs_mem_phy: phy@1d87000 {
--- 
-2.25.1
+> So if lifetime bits were set in get_current_ioprio(), you will end up
+> setting that in bio->bi_ioprio too.
+I'm not sure there are any use cases where it is useful to set the data
+lifetime for an entire process.
 
+Anyway, how about replacing this patch with the patch below? This will
+allow to set hint information for an entire process.
+
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index e2d11183f62e..3419ca4c1bf4 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2924,9 +2924,14 @@ static inline struct request 
+*blk_mq_get_cached_request(struct request_queue *q,
+
+  static void bio_set_ioprio(struct bio *bio)
+  {
++	u16 cur_ioprio = get_current_ioprio();
++
+  	/* Nobody set ioprio so far? Initialize it based on task's nice value */
+  	if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) == IOPRIO_CLASS_NONE)
+-		bio->bi_ioprio = get_current_ioprio();
++		bio->bi_ioprio |= cur_ioprio & IOPRIO_CLASS_LEVEL_MASK;
++	if (IOPRIO_PRIO_HINT(bio->bi_ioprio) == 0)
++		bio->bi_ioprio |= cur_ioprio &
++			(IOPRIO_HINT_MASK << IOPRIO_HINT_SHIFT);
+  	blkcg_set_ioprio(bio);
+  }
+
+diff --git a/include/linux/ioprio.h b/include/linux/ioprio.h
+index 7578d4f6a969..5697832f35a3 100644
+--- a/include/linux/ioprio.h
++++ b/include/linux/ioprio.h
+@@ -71,4 +71,7 @@ static inline int ioprio_check_cap(int ioprio)
+  }
+  #endif /* CONFIG_BLOCK */
+
++#define IOPRIO_CLASS_LEVEL_MASK ((IOPRIO_CLASS_MASK << 
+IOPRIO_CLASS_SHIFT) | \
++				 (IOPRIO_LEVEL_MASK << 0))
++
+  #endif
+
+
+>> ioprio_set_class_and_level() preserves the hint bits set by F2FS.
+>>
+>>> And what is the user interface you have in mind. Is it ioprio based, or
+>>> write-hint based or mix of both?
+>>
+>> Since the data lifetime is encoded in the hint bits, the hint bits need
+>> to be set by user space to set a data lifetime.
+> 
+> I asked because more than one way seems to emerge here. Parts of this
+> series (Patch 4) are taking inode->i_write_hint (and not ioprio value)
+> and putting that into bio.
+> I wonder what to expect if application get to send one lifetime with
+> fcntl (write-hints) and different one with ioprio. Is that not racy?
+
+There is no race condition. F_SET_RW_HINT can be used to set 
+inode->i_write_hint. The filesystem may use the inode->i_write_hint 
+information. I think F2FS uses this information in its block allocator.
+
+>> +            --prio=$((i<<6))
+> 
+> This will not work as prio can only take values between 0-7.
+> Perhaps you want to use "priohint" to send lifetime.
+
+Thanks for having mentioned the priohint option. The above works on my
+test setup since I modified fio locally to accept larger prio values. I
+will switch to the priohint option.
+
+Bart.
