@@ -2,139 +2,210 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B275CDB46E
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 15:38:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A6EDCDB46E
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 16:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235737AbjJLPio (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Oct 2023 11:38:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40752 "EHLO
+        id S1347317AbjJLQKO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Oct 2023 12:10:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233879AbjJLPin (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 11:38:43 -0400
-Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DA4FC6;
-        Thu, 12 Oct 2023 08:38:42 -0700 (PDT)
-Received: by mail-ot1-x331.google.com with SMTP id 46e09a7af769-6c0b8f42409so722457a34.0;
-        Thu, 12 Oct 2023 08:38:42 -0700 (PDT)
+        with ESMTP id S1346441AbjJLQKM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 12:10:12 -0400
+Received: from mail-yw1-x1133.google.com (mail-yw1-x1133.google.com [IPv6:2607:f8b0:4864:20::1133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEF1DE0;
+        Thu, 12 Oct 2023 09:10:10 -0700 (PDT)
+Received: by mail-yw1-x1133.google.com with SMTP id 00721157ae682-5a7dafb659cso14280777b3.0;
+        Thu, 12 Oct 2023 09:10:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697125122; x=1697729922; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=fQsZLjycUl+urrXsHz/1jrROvxxrkNzW4ZQyWKE/Drs=;
-        b=ZaN5lXqo4OJBjQGTp7oLfXVXne+knZViDVdvm8uIkfu7sf25E9qaVDF2lwmAmgWY0s
-         JnFHx/o/VaTWzT7baQAx5xWWvpMyKDzlLLrL2MdbLeHXhuhLcIcxnS7vZplGabuvQqtV
-         +DcMUWvDg6tgklYus4EuMaOFVW34PaSyUHWO+RiUc23l8oaCxB4Bi6AWaE94VtxFH399
-         2izl8+dFvQVzwfoIgG0sihfwJTjitIytsvXIWcPpARgUa2Vo2+XRj6mv2At23KbLhvFp
-         W1oPCLY8qcspRiVrV6kG5pOT4NuoLS9esbktJH1B0cqeFVA72IbeXspgSv2xoILDLJEn
-         Ps7Q==
+        d=gmail.com; s=20230601; t=1697127010; x=1697731810; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=U31QQ6oqfrHvcyV3YWQPCvzsOcxSTb4eUUepzZ2A96k=;
+        b=XNEMfiTh9YzVpstt30BS3u3VUc6HzlF4WgSHLJlnUgDBGfGf1zInycWH9P1qlMZF8G
+         ZQ+cN2hlQ2sRFEPsLdXpPsx/3cHBjzT5zP3rM7NJSBYMxDy8jQMners0s4bwj0NB7BhY
+         m04JRDRd+hmBajSvzVdXWh3Xj1Z+hBsFLnuinVOuMyEe+1H0TLvrgRMD0MJ0bTW5ZXqb
+         K3uorux0flFCpD7cTbd5pezL4A0ELFqMThD/Q3KIc+FOVqoGbeuFVv0zZkAf4HqFGox7
+         Lyq2qMf+BFKqX7I+TSsHk0K+1bdpb9Kl8Unz78aONONNX3k8TUe6y9cM9PhsEvsfG+qP
+         CSCQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697125122; x=1697729922;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fQsZLjycUl+urrXsHz/1jrROvxxrkNzW4ZQyWKE/Drs=;
-        b=nrNw9l3Zz9q5JFtYUZ5IVQPacDSBhJNgGbzdtZUB5DpHQBF3Bu6nNzk/pCAZsujH4s
-         VtlP7OXk5eWp/EjT0IfISKio1ElCK79NTrA0IBn1uwpGIpvsU3FoJ0TqEIqxzDjssN/b
-         5agAuEV6Ygf6W5WO0aJD21OaLFxVzcbmILj3hzHIxhrQa+BfX+BrPuOcS5Fk9+dXyycg
-         nViuTXOkJIU3dV1LYBN4y+AWgx6MwtwEVBwIR5/6pJwEh0FDIp+mAcZAB6L1tiJGww3k
-         j0EKF4kyzAxkt9ulK2Qhk3gmlBy9FtZLT48KGhdvt5FKK94s3VMsnSqlWFjkSxiZHDnL
-         StHg==
-X-Gm-Message-State: AOJu0YxaMAUSCAOqavIwMiVdoHh1bP1r8fSlq7phuyPvEbSfHROkxe5z
-        +2Zl35Q2Nmf6MwU3BJglm28=
-X-Google-Smtp-Source: AGHT+IGoAOkLQsca0vD7Og6sKBQe//S6LKK5mmMD7ypyaH9Dlm/CmutTzYed/TTEp0MaxG0fRceFkQ==
-X-Received: by 2002:a05:6830:1b6e:b0:6b8:f730:7ab4 with SMTP id d14-20020a0568301b6e00b006b8f7307ab4mr26779263ote.0.1697125121850;
-        Thu, 12 Oct 2023 08:38:41 -0700 (PDT)
-Received: from ?IPV6:2603:8081:1405:679b:658d:e60e:7bda:b251? (2603-8081-1405-679b-658d-e60e-7bda-b251.res6.spectrum.com. [2603:8081:1405:679b:658d:e60e:7bda:b251])
-        by smtp.gmail.com with ESMTPSA id x21-20020a9d6d95000000b006c65f431799sm341934otp.23.2023.10.12.08.38.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Oct 2023 08:38:41 -0700 (PDT)
-Message-ID: <b3a8d1f8-512c-4520-8841-06d54f483f4f@gmail.com>
-Date:   Thu, 12 Oct 2023 10:38:39 -0500
+        d=1e100.net; s=20230601; t=1697127010; x=1697731810;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=U31QQ6oqfrHvcyV3YWQPCvzsOcxSTb4eUUepzZ2A96k=;
+        b=frCCJ/Gf/L6HYndJyYAoL7qwXdZsCNl54ORUIjjaLDvqK0RDxPiAIkZ0+j5LVDGOY6
+         ptSy3W/nkKdoU/Xrk3NiEes3lXPDTOKdaxq3gz0IDS9PRyTLM2zTk297XX5Ge1H0G6EP
+         j073DO8orqKt+tZ6mffTccPwAw0oomZGWtvrZGwx8eQyHGm6/i5OMMha+TKXPoTPIP6q
+         4ADj6KqymUbjN13ATDxqKtWAMxnk1I3Hh1VsD3tTK2NCTwzfWYlsWKkPnJ5bS2EvoI02
+         ZY8HsUjCt5OZP9SAg0rzISTng8Qk128Ub14GD/9ZjrR4ZqZh99rh2arlOOrs4fMG+z9U
+         wByg==
+X-Gm-Message-State: AOJu0Yw0wTEsV/bs2MtzeSxTc/KBTZGFEGYc5Wz0SioX/QsFFpCTHY2I
+        HtIB7+v8Y4X4oXN+pAcDqHLqrPrO9qLpm8FwZYk=
+X-Google-Smtp-Source: AGHT+IE0L/hF7LnAQaml3Iw2C9VkW1fPyeijXPuKjoUyrjpwCACfHA6QETuANv0s/FG/EtLLHn8taq5PT01Vg4Ur6Go=
+X-Received: by 2002:a25:d493:0:b0:d9a:ef4e:547b with SMTP id
+ m141-20020a25d493000000b00d9aef4e547bmr831371ybf.41.1697127009682; Thu, 12
+ Oct 2023 09:10:09 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] Revert "RDMA/rxe: Add workqueue support for rxe
- tasks"
-To:     Zhu Yanjun <yanjun.zhu@linux.dev>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        "zyjzyj2000@gmail.com" <zyjzyj2000@gmail.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Zhu Yanjun <yanjun.zhu@intel.com>
-References: <20231004183824.GQ13795@ziepe.ca>
- <c0665377-d2be-e4b6-3d25-727ef303d26e@linux.dev>
- <20231005142148.GA970053@ziepe.ca>
- <6a730dad-9d81-46d9-8adc-764d00745b01@acm.org>
- <a8453889-3f5f-49ff-89f2-ec0ef929d915@linux.dev>
- <OS3PR01MB9865F9BEB1A90DDCAEEBFC8BE5CDA@OS3PR01MB9865.jpnprd01.prod.outlook.com>
- <20231010160919.GC55194@ziepe.ca>
- <a4808fa6-5bd5-4a64-a437-6a7e89ca7e9f@acm.org>
- <20231011155104.GF55194@ziepe.ca>
- <70191324-018e-4cfe-9c1d-0bd3d17fb437@acm.org>
- <20231011231201.GH55194@ziepe.ca>
- <fe0fbdd9-93a2-4478-b1ef-9b2420c0d76e@linux.dev>
-Content-Language: en-US
-From:   Bob Pearson <rpearsonhpe@gmail.com>
-In-Reply-To: <fe0fbdd9-93a2-4478-b1ef-9b2420c0d76e@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <71e09bb4-ff0a-23fe-38b4-fe6425670efa@huawei.com>
+ <cd7bda98-2160-9271-9520-e98d1fe00ea5@linux.ibm.com> <331aafe1-df9b-cae4-c958-9cf1800e389a@huawei.com>
+ <64d5a997-a1bf-7747-072d-711a8248874d@suse.de> <c4baacf1-0e86-9660-45f7-50ebc853e6af@huawei.com>
+ <1dd69d03-b4f6-ab20-4923-0995b40f045d@suse.de> <d2f2c89f-c048-4f04-4d95-27958f0fa46a@huawei.com>
+ <78d41ec1-b30c-f6d2-811c-e0e4adbc8f01@oracle.com> <84b38f16-2a32-f361-43e5-34bce1012e71@oracle.com>
+ <769bcd36-4818-8470-2daa-49ac5c05b33a@suse.de> <e5f9e720-ddfd-ab8c-c8b9-18ba8ad266f0@huawei.com>
+ <6329d8a3-3863-4185-8b64-567b4cf8491a@suse.de>
+In-Reply-To: <6329d8a3-3863-4185-8b64-567b4cf8491a@suse.de>
+From:   Wenchao Hao <haowenchao22@gmail.com>
+Date:   Fri, 13 Oct 2023 00:09:57 +0800
+Message-ID: <CAOptpSNNUxiv+g+xsU_iL=5v21BGLvAiNVc8KZNt=jRqz4LfRw@mail.gmail.com>
+Subject: Re: [REQUEST DISCUSS]: speed up SCSI error handle for host with
+ massive devices
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Wenchao Hao <haowenchao@huawei.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        linux-scsi@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Lee Duncan <lduncan@suse.com>,
+        John Garry <john.garry@huawei.com>, Wu Bo <wubo40@huawei.com>,
+        Feilong Lin <linfeilong@huawei.com>, zhangjian013@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/12/23 06:49, Zhu Yanjun wrote:
-> 在 2023/10/12 7:12, Jason Gunthorpe 写道:
->> On Wed, Oct 11, 2023 at 01:14:16PM -0700, Bart Van Assche wrote:
->>> On 10/11/23 08:51, Jason Gunthorpe wrote:
->>>> If we revert it then rxe will probably just stop development
->>>> entirely. Daisuke's ODP work will be blocked and if Bob was able to
->>>> fix it he would have done so already. Which mean's Bobs ongoing work
->>>> is lost too.
->>>
->>> If Daisuke's work depends on the RXE changes then Daisuke may decide
->>> to help with the RXE changes.
->>>
->>> Introducing regressions while refactoring code is not acceptable.
->>
->> Generally, but I don't view rxe as a production part of the kernel so
->> I prefer to give time to resolve it.
->>
->>> I don't have enough spare time to help with the RXE driver.
-> 
-> commit 11ab7cc7ee32d6c3e16ac74c34c4bbdbf8f99292
-> Author: Bart Van Assche <bvanassche@acm.org>
-> Date:   Tue Aug 22 09:57:07 2023 -0700
-> 
->     Change the default RDMA driver from rdma_rxe to siw
-> 
->     Since the siw driver is more stable than the rdma_rxe driver, change the
->     default into siw. See e.g.
-> 
-> https://lore.kernel.org/all/c3d1a966-b9b0-d015-38ec-86270b5045fc@acm.org/.
-> 
->     Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->     Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> 
-> 
->>
->> Nor I
->>
->> Jason
-> 
-All,
+On Thu, Oct 12, 2023 at 10:51=E2=80=AFPM Hannes Reinecke <hare@suse.de> wro=
+te:
+>
+> On 4/6/22 11:40, Wenchao Hao wrote:
+> > On 2022/4/4 13:28, Hannes Reinecke wrote:
+> >> On 4/3/22 19:17, Mike Christie wrote:
+> >>> On 4/3/22 12:14 PM, Mike Christie wrote:
+> >>>> We could share code with scsi_ioctl_reset as well. Drivers that supp=
+ort
+> >>>> TMFs via that ioctl already expect queuecommand to be possibly in th=
+e
+> >>>> middle of a run and IO not yet timed out. For example, the code to
+> >>>> block a queue and reset the device could be used for the new EH and
+> >>>> SG_SCSI_RESET_DEVICE handling.
+> >>>>
+> >>>
+> >>> Hannes or others,
+> >>>
+> >>> How do parallel SCSI drivers support scsi_ioctl_reset? Is is not full=
+y
+> >>> supported and more only used for controlled testing?
+> >>
+> >> That's actually a problem in scsi_ioctl_reset(); it really should wait
+> >> for all I/O to quiesce. Currently it just sets the 'tmf' flag and call=
+s
+> >> into the various reset functions.
+> >>
+> >> But really, I'd rather get my EH rework in before we're start discussi=
+ng
+> >> modifying EH behaviour.
+> >> Let me repost it ...
+> >>
+> >
+> > Would you take fast EH(such as single LUN reset) into consideration, ma=
+ybe
+> > a second but lightweight EH? It means a lot.
+> >
+> > Or give a way drivers can branch out the general timeout and EH handle =
+logic?
+>
+> (Re-reading the thread:)
+>
+> If it's just about device reset I guess we can implement an asynchronous
+> version. Based on my EH rework we could / should do:
+>
+> Have a 'eh_cmd_q' list per 'struct scsi_device' and 'struct
+> scsi_target'. So Instead of always moving a failed command to the
+> 'eh_cmq_q' list of the host, move it onto the list of the next higher
+> level (eg a failed abort would move it to the eh_cmq_q of 'struct
+> scsi_device', a failed device reset would move it to the eh_cmq_q of
+> 'struct scsi_target' etc).
+> That would actually make the code in SCSI EH easier to read as we
+> could do away with constantly moving and splitting the per-host
+> eh_cmq_q list.
+>
+> And then, as a second step, implement a new eh callback for
+> asynchronous SCSI device aborts. That callback would need to
+> stop I/O to the device first, send the TMF, and either
+> restart the device upon successful completion or splice
+> the list of failed commands onto the target and call
+> the normal escalation with skipping eh_device_reset().
+>
 
-I have spent the past several weeks working on trying to resolve this issue. The one thing I can say
-for sure is that the failures or their rates are very sensitive to small timing changes. I totally agree
-Jason that the bug has always been there and most of the suggested changes are just masking or unmasking
-it. I have been running under all the kernel lock checking I can set and have not seen any warnings
-so I doubt the error is a deadlock. My suspicion remains that the root cause of the hang is loss of
-a completion or a timeout before a late completion leading to the transport state machine death. There
-are surely other bugs in the driver and they may show up in parallel with this hang. I see the hang
-consistently from 1-2% to 30-40% of the time when running srp/002 depending on various changes I have
-tried but I have not been able to reproduce the KASAN bug yet. Because the hang is easy to reproduce
-I have focused on that.
+Yes, the RFC patch I sent before is based on this idea, and the details
+of implementation may be different from what you described:
 
-Bob
+Here are how I did:
+
+Three key operations are abstracted for scsi_device and scsi_target:
+
+- mark device/target recovery: called in command dispatch path to stop I/O
+- adding error command: called after abort failed to add error command
+                                        to error list
+- waking up error handling : called in scsi_device_unbusy() to wake up
+                                            error handling work
+
+Add struct scsi_device_eh and scsi_target_eh that encapsulate 3
+callbacks for the above three key operations above, and invokes these 3
+callbacks in the process mentioned above.
+
+For details, please refer to the patch I posted before:
+https://lore.kernel.org/linux-scsi/20230901094127.2010873-2-haowenchao2@hua=
+wei.com/
+
+The following two patches implement each of the three previously defined
+callback functions, using kernel work to implement asynchrony handle.
+https://lore.kernel.org/linux-scsi/20230901094127.2010873-9-haowenchao2@hua=
+wei.com/
+https://lore.kernel.org/linux-scsi/20230901094127.2010873-12-haowenchao2@hu=
+awei.com/
+
+For example, define following struct for error handling of scsi_device:
+
+struct scsi_lun_eh {
+        spinlock_t eh_lock;
+        unsigned int eh_num;
+        struct list_head eh_cmd_q;
+        struct scsi_device *sdev;
+        struct work_struct eh_handle_work;
+        unsigned int fallback:1; /* If fallback to further */
+        /* recovery on failure  */
+};
+
+The processing logic after awakening is as follows:
+
+sdev_eh_work()
+{
+        try device reset
+        if device reset succeed(including TUR)
+                mark error command of this device handled
+        else if fallback flag is false
+                finish commands and mark this device offline
+        fallback to target/host recovery
+}
+
+A flag fallback is defined here to determine whether to continue the advanc=
+ed
+reset after the device reset failed, because some drivers actually only
+define the callback of the device reset, it is meaningless to continue
+advanced reset for such drivers.
+
+Note: the version I posted has bugs in adding commands which would be fixed
+in the next version.
+
+Looking for your response, thanks.
+
+> Hmm?
+>
+> Cheers,
+>
+> Hannes
+>
