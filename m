@@ -2,238 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E17A5CDB46E
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 17:53:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEAAFCDB46E
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 18:00:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1441930AbjJLRxl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Oct 2023 13:53:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58120 "EHLO
+        id S1379592AbjJLSAi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Oct 2023 14:00:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1441919AbjJLRxk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 13:53:40 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C2C8CA
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Oct 2023 10:53:38 -0700 (PDT)
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39CHjeRX002994;
-        Thu, 12 Oct 2023 17:53:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=LgQrTS/6rZAgjUr58FbY1TrZYXHrJFsnm1gUhWJ/CXo=;
- b=p/jLiRAidr20W+3t1fT84twkMPOnMDA+oexVOttwrj4LNgmy7rmb4RjIQbYpimdYQ5OK
- nnV9yqvEegaTv1xrJ/AvrRzYE7UkIFftHGJFLL3tHN8Wu8IVnxAeey5Bw2xOkoJn6e94
- mQWzKe/dA9binsX72tWdQv8f5ha9+r+UpnZ++lh7jW0Oqguc4WDI2H1y41VJFLFEjpFK
- 0c4SxEDP+oF/VOwwkrVRXXuTfdq0z36mQwSEJK8fZho6nhSwmcu+upCbYUTmuljYtl0r
- NQqLEoXv7CFE/mk2LnAgx7hUP7V9471z+3PHgaO6eIDov2ALLJIVuPftbb2WF/jvlThX wA== 
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3tpnfsg2pd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 12 Oct 2023 17:53:29 +0000
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-        by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 39CHarhY026364;
-        Thu, 12 Oct 2023 17:49:12 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-        by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3tkjnnsamk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 12 Oct 2023 17:49:12 +0000
-Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
-        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 39CHn9th16712220
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Oct 2023 17:49:09 GMT
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 61EE020049;
-        Thu, 12 Oct 2023 17:49:09 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 4055420040;
-        Thu, 12 Oct 2023 17:49:09 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.179.23.150])
-        by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Thu, 12 Oct 2023 17:49:09 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96.1)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1qqzo4-0047P1-2L;
-        Thu, 12 Oct 2023 19:49:08 +0200
-Date:   Thu, 12 Oct 2023 19:49:08 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Steffen Maier <maier@linux.ibm.com>
-Subject: Re: [PATCH 01/15] zfcp: do not wait for rports to become unblocked
- after host reset
-Message-ID: <20231012174908.GC31157@p1gen4-pw042f0m.fritz.box>
-References: <20231002154927.68643-1-hare@suse.de>
- <20231002154927.68643-2-hare@suse.de>
- <20231012135452.GB31157@p1gen4-pw042f0m.fritz.box>
- <58658f0c-c5e9-4321-8bd1-13223472eb1b@suse.de>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <58658f0c-c5e9-4321-8bd1-13223472eb1b@suse.de>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: LCA_fDcG8eY4CHGzSpey0RBXMRuKNL9Z
-X-Proofpoint-ORIG-GUID: LCA_fDcG8eY4CHGzSpey0RBXMRuKNL9Z
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S1347356AbjJLSAh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 14:00:37 -0400
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BBDBA9;
+        Thu, 12 Oct 2023 11:00:35 -0700 (PDT)
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1c8a6aa0cd1so10954265ad.0;
+        Thu, 12 Oct 2023 11:00:35 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697133635; x=1697738435;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=dKdTAQn3XzGpY+ZUQb5LPKQnf1Hcd0mnfJpRNv4Os8M=;
+        b=onV4ETD4N//+jrjlBwLysmkr9AXGC2f4m4RUUTQYBYoljHR0NEcHsquC0Nk4vxj6cU
+         SrR5hCYygWsIOWJq0Q4GyPk/YWYoaFNgx41DSZFPe2Hemu1+YeTApUFs0s/oygyTiZVn
+         VcZpzAtPV9u9Q1h6W6F3vG2k3UaSA2q/tMy6pwrc7IFiUj/uzo0SJOXxG5nfVP9vAIOI
+         0cEhrtZMt1H/AYvTjDFq4lPTQMYfDSfhpyVbLy6rUSLEQ8eR79ds6PqFHawap8mzXGUn
+         F5x1aw6f9x9NbODV0a22MivZH+FDY6A884mNktaJi1bHqcEWwBEYbimS4mVcd+DVVYmh
+         lspg==
+X-Gm-Message-State: AOJu0YyU7YvyffpfVUNl05DLZg8YWIBOq2Mu1kD7s+Ox6Za459jZtji1
+        ZE6hSJ+vRQI1zNPB4TyR+xwLa+zbjVU=
+X-Google-Smtp-Source: AGHT+IGyN4MZ/M2Jss6UPhOTXhh9Fgs9O3Po1iWNHBYd+0Kw+xv1jSQxnZ0byMtB9uGQJV/XAKRHDg==
+X-Received: by 2002:a17:902:e5cb:b0:1c8:78b5:2ceb with SMTP id u11-20020a170902e5cb00b001c878b52cebmr27711014plf.40.1697133634801;
+        Thu, 12 Oct 2023 11:00:34 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:414d:a1fb:8def:b3ee? ([2620:15c:211:201:414d:a1fb:8def:b3ee])
+        by smtp.gmail.com with ESMTPSA id h6-20020a170902680600b001c627413e87sm2315934plk.290.2023.10.12.11.00.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 Oct 2023 11:00:34 -0700 (PDT)
+Message-ID: <4fee2c56-7631-45d2-b709-2dadea057f52@acm.org>
+Date:   Thu, 12 Oct 2023 11:00:32 -0700
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-12_09,2023-10-12_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
- priorityscore=1501 adultscore=0 bulkscore=0 suspectscore=0 phishscore=0
- impostorscore=0 spamscore=0 malwarescore=0 mlxlogscore=999
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2310120148
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 03/15] block: Support data lifetime in the I/O priority
+ bitfield
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Hannes Reinecke <hare@suse.de>
+References: <20231005194129.1882245-1-bvanassche@acm.org>
+ <20231005194129.1882245-4-bvanassche@acm.org>
+ <8aec03bb-4cef-9423-0ce4-c10d060afce4@kernel.org>
+ <46c17c1b-29be-41a3-b799-79163851f972@acm.org>
+ <b0b015bf-0a27-4e89-950a-597b9fed20fb@acm.org>
+ <447f3095-66cb-417b-b48c-90005d37b5d3@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <447f3095-66cb-417b-b48c-90005d37b5d3@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 12, 2023 at 04:23:47PM +0200, Hannes Reinecke wrote:
-> On 10/12/23 15:54, Benjamin Block wrote:
-> > On Mon, Oct 02, 2023 at 05:49:13PM +0200, Hannes Reinecke wrote:
-> >> zfcp_scsi_eh_host_reset_handler() would call fc_block_rport() to
-> >> wait for all rports to become unblocked after host reset.
-> >> But after host reset it might happen that the port is gone, hence
-> >> fc_block_rport() might fail due to a missing port.
-> >> But that's a perfectly legal operation; on FC remote ports might
-> >> come and go.
-> >> In the same vein FC HBAs are able to deal with ports being temporarily
-> >> blocked, so really there is not point in waiting for all ports
-> >> to become unblocked during host reset.
-> > 
-> > But in scsi_transport_fc.c we have this documented:
-> > 
-> >      * fc_block_scsi_eh - Block SCSI eh thread for blocked fc_rport
-> >      * @cmnd: SCSI command that scsi_eh is trying to recover
-> >      *
-> >      * This routine can be called from a FC LLD scsi_eh callback. It
-> >      * blocks the scsi_eh thread until the fc_rport leaves the
-> >      * FC_PORTSTATE_BLOCKED, or the fast_io_fail_tmo fires. This is
-> >      * necessary to avoid the scsi_eh failing recovery actions for blocked
-> >                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >      * rports which would lead to offlined SCSI devices.
-> >        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > 
-> > So I don't understand what the real expectation by the SCSI EH call back for
-> > host reset is then.
-> > 
-> > Is it that all objects (host/target ports/luns) are operational again once we
-> > return to the EH thread, or is it ok that some parts are still being
-> > recovered (as with our host reset handler, rports might still be blocked after
-> > `zfcp_erp_wait()` finishes, because of how this is organized internally).
-> > 
-> > If it's the later, I'd think this change is fine. But then I'd wonder why this
-> > function exists in the first place? Is it because in other EH steps it's more
-> > important that rports are ready after the step (e.g. because a TUR is send
-> > after, and if that fails, things get escalate unnecessarily)?
-> >
->
-> Thing is, fc_block_scsi_eh() is assumed to be called from eh callbacks
-> _before_ any TMFs are to be sent.
-> Typically you would call them in eh_device_reset() or eh_target_reset()
-> to ensure that you can sent TMFs in the first place; no point in attempting
-> to send TMFs is the port is blocked.
+On 10/11/23 18:02, Damien Le Moal wrote:
+> Some have stated interest in CDL in NVMe-oF context, which could
+> imply that combining CDL and lifetime may be something useful to do
+> in that space...
 
-Ok. Interesting. We don't really care about the state of the rport when
-sending TMFs or Aborts, as those commands are sent outside the normal
-queuecommand flow (we just check "internal bits"), in case of Aborts we even
-hand this off to firmware. Consequently we don't really care about their state
-before trying to send either.
+We are having this discussion because bi_ioprio is sixteen bits wide and
+because we don't want to make struct bio larger. How about expanding the
+bi_ioprio field from 16 to 32 bits and to use separate bits for CDL
+information and data lifetimes?
 
-> Your particular case is arguably a mis-use of fc_block_scsi_eh() as
-> it is called _after_ host reset is initiated, essentially serving as
-> a completion point to ensure that all rports are back online.
-> 
-> However, for the FC transport implementation rport lifetimes are
-> decoupled from SCSI Host lifetimes; rports may (and do!) come and
-> go during the lifetime of a SCSI host.
+This patch does not make struct bio bigger because it changes a three
+byte hole with a one byte hole:
 
-Ye, Ack. We can't control Fabric events.
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -268,8 +268,8 @@ struct bio {
+                                                  * req_flags.
+                                                  */
+         unsigned short          bi_flags;       /* BIO_* below */
+-       unsigned short          bi_ioprio;
+         blk_status_t            bi_status;
++       u32                     bi_ioprio;
+         atomic_t                __bi_remaining;
 
-> Consequently there is no
-> difference between a host with all rports blocked (eg during RSCN
-> processing) and a host just coming on-line after SCSI EH where rports
-> are still in the process of getting ready.
-> 
-> Hence the use of fc_block_scsi_eh() after host reset is not required,
-> and we can make our life easier by just dropping the call.
-> 
-> > Oh.. speaking of that, we do send a TUR after host reset as well
-> > (`scsi_eh_test_devices()`). So doesn't this break then if one or more rports
-> > are sill blocked after host reset returns?
-> >      At least `zfcp_scsi_queuecommand()` will bail very early if the rport is
-> > not ready (we call `fc_remote_port_chkready()` as more or less first thing),
-> > and so `scsi_send_eh_cmnd()` that is used for the TUR will fail; then it might
-> > be retried one time, but this is a tight loop without any delay, so I'd guess
-> > this has a good chance to fail as well.
-> >      And then we'd offline the whole host as further escalation, which would
-> > *REALLY* suck (with no automatic recovery no less).
-> > 
-> > My impression from look at the code that follows `scsi_try_host_reset()` in
-> > `scsi_error.c` really is, it rather expects things to be ready to be used
-> > after, right there and then (admittedly, this is probably already today
-> > problematic, as things might go back to not working concurrently because of
-> > some fabric event.. but anyway, we can life with that off-chance it seems).
-> > 
-> > Or do I miss something?
-> > 
->
-> Ah, right. True, when the rports are not ready (ie still being blocked)
-> sending a TEST UNIT READY will fail, with probably unintended consequences.
-> 
-> But: if host reset would return FAST_IO_FAIL everything would be dandy
-
-Ok, so that would mean, we finish all commands left in the EH work_q with
-`scsi_eh_finish_cmd()`, and not populate the local `check_list` at all, which
-in turns means, we don't do anything in `scsi_eh_test_devices()` (no state
-checks, not TURs).
-
-> as then we would just check if the devices are online (by virtue of
-> scsi_eh_flush_done_q() in scsi_unjam_host()), which they really should
-> as no-one should have set them offline by then.
-
-When returning to `scsi_unjam_host()` directly after we return from
-`scsi_eh_host_reset()` we call into `scsi_eh_flush_done_q()` and go over all
-commands that are now in the done-queue (everything, if host reset returned
-FAST_IO_FAIL).
-
-In there we delete the commands from the EH list, and then check whether we
-ought to retry the command on the same SDEV or return it to some upper layer
-(i.e. hopefully dm-multipath for our installations).
-
-The former depends on whether the SDEV is online again. If everything is fine
-in the SAN (not cable pulled or something), I think this should be the case,
-but IFF we assume the rport is still blocked because the async registration
-(`zfcp_scsi_rport_work()`) hasn't finished yet (the original point for using
-`fc_block_scsi_eh()`), then the SDEV might still be in state
-SDEV_TRANSPORT_OFFLINE.
-    This can happen during adapter recovery (where we block, IOW call
-`fc_remote_port_delete()` on all rports) if fast-io-fail-tmo runs out, and
-`fc_terminate_rport_io()` is called.
-    That is undone when we call `fc_remote_port_add()` to 'unblock' the rport.
-This would then set all SDEVs into RUNNING again. And there we have the
-interaction with `fc_block_scsi_eh()` again.
-
-Hmm. I think I could life with both though. If someone drives I/O directly on
-the SDEV, and it fails after EH because of some unfortunate timing, that's bad
-luck, and something was actually wrong in the SAN if fast-io-fail-tmo runs out
-during recovery. They ought to use dm-multipath.
-    And if they do, the commands are re-issued from that layer. I think that
-should be fine.
-
-So I think we can work with returning FAST_IO_FAIL from
-`zfcp_scsi_eh_host_reset_handler()`, and removing the call to
-`fc_block_scsi_eh()`.
-    We (Steffen and/or I) might still want to look into some other solution
-for only returning from that when we know the async rport registrations have
-ran at least once after adapter recovery. But as far as your patchset goes, I
-don't think that is a gate.
+         struct bvec_iter        bi_iter;
 
 
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+ From the pahole output:
+
+struct bio {
+         struct bio *               bi_next;              /*     0     8 */
+         struct block_device *      bi_bdev;              /*     8     8 */
+         blk_opf_t                  bi_opf;               /*    16     4 */
+         short unsigned int         bi_flags;             /*    20     2 */
+         blk_status_t               bi_status;            /*    22     1 */
+
+         /* XXX 1 byte hole, try to pack */
+
+         u32                        bi_ioprio;            /*    24     4 */
+         atomic_t                   __bi_remaining;       /*    28     4 */
+         struct bvec_iter           bi_iter;              /*    32    20 */
+         blk_qc_t                   bi_cookie;            /*    52     4 */
+         bio_end_io_t *             bi_end_io;            /*    56     8 */
+         /* --- cacheline 1 boundary (64 bytes) --- */
+         void *                     bi_private;           /*    64     8 */
+         struct bio_crypt_ctx *     bi_crypt_context;     /*    72     8 */
+         union {
+                 struct bio_integrity_payload * bi_integrity; /*    80 
+   8 */
+         };                                               /*    80     8 */
+         short unsigned int         bi_vcnt;              /*    88     2 */
+         short unsigned int         bi_max_vecs;          /*    90     2 */
+         atomic_t                   __bi_cnt;             /*    92     4 */
+         struct bio_vec *           bi_io_vec;            /*    96     8 */
+         struct bio_set *           bi_pool;              /*   104     8 */
+         struct bio_vec             bi_inline_vecs[];     /*   112     0 */
+
+         /* size: 112, cachelines: 2, members: 19 */
+         /* sum members: 111, holes: 1, sum holes: 1 */
+         /* last cacheline: 48 bytes */
+};
+
+Thanks,
+
+Bart.
