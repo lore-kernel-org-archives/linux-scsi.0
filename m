@@ -2,78 +2,171 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCC63CDB47E
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 05:03:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1B8CCDB482
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Oct 2023 05:45:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377048AbjJLFDH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Oct 2023 01:03:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52558 "EHLO
+        id S1377163AbjJLFp3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Oct 2023 01:45:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233876AbjJLFDD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 01:03:03 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB52F90;
-        Wed, 11 Oct 2023 22:03:02 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B116C433C7;
-        Thu, 12 Oct 2023 05:03:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697086982;
-        bh=enaIyQuN9O9QyeA7mFd0Zm5bRkaXTlbjysu/4ev9O+o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=d2279sfv2+VCGh5tPTNPX2YYxwh3uewPwR7UeFXwv3VHEp50RSpXVUsCgdKl1Erez
-         4taagbP1tCKqxHgF7BtNEQQJ80BQjnsp0eFPWYIfy0gvwTdWHgzG32VA3F6DtrXSK7
-         8XXivhdCJqgym9YliPfnuceGOTYtME2JrKV4+EhXdGt7/rpTbBtO/MLHrAbf2DoTQc
-         PAWKIpNp/dOTOfnQcw6q2Vzdeka1vfCqycuvYxWDw6o4zoGlFIkLL5vjqQfSSQbfJM
-         kJEGSKXplAA8BG7z4SY93MUYZP+lpg8PnpNY7xlwnwXpJLOAHlbN/N+nP+rsDhjrwq
-         cYvhv9Aun5UHQ==
-Date:   Wed, 11 Oct 2023 22:03:01 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs/178: don't fail when SCRATCH_DEV contains random
- xfs superblocks
-Message-ID: <20231012050301.GG21283@frogsfrogsfrogs>
-References: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
- <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
- <ZST2zRvtMrU0KlkN@infradead.org>
- <20231011191025.GX21298@frogsfrogsfrogs>
- <ZSd1i6nRut0FedmA@infradead.org>
+        with ESMTP id S1376937AbjJLFp2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 01:45:28 -0400
+Received: from mail-oi1-x22a.google.com (mail-oi1-x22a.google.com [IPv6:2607:f8b0:4864:20::22a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE412BA
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2023 22:45:26 -0700 (PDT)
+Received: by mail-oi1-x22a.google.com with SMTP id 5614622812f47-3ae214a077cso396294b6e.0
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2023 22:45:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1697089526; x=1697694326; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=raoSzlBu377kKldWUANth43g0MsA6j2B790E+ofOJ/U=;
+        b=K0xbE6FefcE+vu+l8RaU2MEnrpvjE5hCqFluoCSO3N5IZV+qGpZ1rUm/0cy7Zefx6g
+         T7L0vxm5kIf24iteZECcy0T2/s0gN5+1eV5ylwrmScVWYmrQZ4NQ0FhJhkNsbVTt0omI
+         KEsFlYRA82BUG1aB4R2GKWCo7SrahAsRr9KuwD1qdfSFk3JXU0GWZfdaEVW0dC+Nims4
+         tMeOhHzqnd54BNOyWWOuI1i7G/oHdLbzON84gk0wCysvR/X3mGLmUijai3+c6I6Cc9h7
+         eCbBsctqITEVbJxUT/Fb2k01iMj8kcXTDSVwNjVwpxBxha6EhSBSdP4wYpJ/KtC+9gf0
+         ap2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697089526; x=1697694326;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=raoSzlBu377kKldWUANth43g0MsA6j2B790E+ofOJ/U=;
+        b=uRYDPYsx4OdSNCOcMA0WN2DLyD9JHtATzwZ3Tr1nNRA2KsZikvSrTSFz9+pt++0RUu
+         IQFWkJMkFfm9IpH4k1+Zkkqs6f/5otwyaAVo4tmSF8uHy49HbudubKy5cJylr863rdEq
+         u2St/n+aGNNi41moG1QqpBBipUPeP2Zb4Y3r6UPVPtU+wdM3kpIw3EbDKLntt9mTbB/p
+         QTdOl21Z5zeojg3KctiulhJwc6rWjfo9v0Ds4D5Z7c/34SjHG3SCUREVVmFqVqwxQzZK
+         4NZe7bwrQDkfBmH7Z6hHIgmEZLRgU90n0v+n8CHlEH92kJrgdK4wDbxN6G8nvnoQQIvK
+         bEGw==
+X-Gm-Message-State: AOJu0Yyl+VIa+SA3r4+gWVJJZO1JpMBMRC9UctDvVJrMWCWVv2r3XTO9
+        +juReuylKpJtRbf+5gWLZvkt
+X-Google-Smtp-Source: AGHT+IFVaISV/7UIfSrZc652ewcqW0S6kGKAv2RdH2i9tzTOlDpdz1KHLLqPcCZcgW0AF89218QNxg==
+X-Received: by 2002:aca:2808:0:b0:3a8:472b:febf with SMTP id 8-20020aca2808000000b003a8472bfebfmr23277086oix.21.1697089526137;
+        Wed, 11 Oct 2023 22:45:26 -0700 (PDT)
+Received: from localhost.localdomain ([120.138.12.180])
+        by smtp.gmail.com with ESMTPSA id c5-20020a633505000000b0057cb5a780ebsm812396pga.76.2023.10.11.22.45.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Oct 2023 22:45:25 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     vireshk@kernel.org, nm@ti.com, sboyd@kernel.org,
+        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
+        cw00.choi@samsung.com, andersson@kernel.org,
+        konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v6 0/5] UFS: Add OPP support
+Date:   Thu, 12 Oct 2023 11:15:07 +0530
+Message-Id: <20231012054512.10963-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZSd1i6nRut0FedmA@infradead.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 11, 2023 at 09:26:51PM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 11, 2023 at 12:10:25PM -0700, Darrick J. Wong wrote:
-> > I'm pretty sure I've seen some NVME SSDs where you can issue devicewide
-> > DISCARDs and slowly watch the namespace utilization go down over tens of
-> > minutes; and reads will only eventually start returning zeroes.
-> 
-> Well, the second part is broken.  The first part is fine, and I've briefly
-> consulted with a firmware team implementing such a feature.  It just needs
-> to make sure to return zeroes right after the return of the discard
-> even if the blocks aren't erased yet, including after a powerfail.
-> (anyone who knows the XFS truncate / hole punch code will have a vague
-> idea of how that could work).
-> 
-> > However, that's orthogonal to this patch -- if the device doesn't
-> > support discard, _scratch_mkfs won't zero the entire disk to remove old
-> > dead superblocks that might have been written by previous tests.  After
-> > we shatter the primary super, the xfs_repair scanning code can still
-> > trip over those old supers and break the golden output.
-> 
-> True.  I have to admit I stopped reading the patch after the unmap
-> description.  I'll take another look.
+Hi,
 
-<nod> I think I'll update the next version of this patch to substitute
-the paragraph that I wrote above for all the misleading ramblings about
-DISCARD.  Today's revisit of that clod block device doesn't show the
-weird stale reads that disappear behavior, so it's entirely possible
-that they've fixed it already.
+This series adds OPP (Operating Points) support to UFSHCD driver.
 
---D
+Motivation behind adding OPP support is to scale both clocks as well as
+regulators/performance state dynamically. Currently, UFSHCD just scales
+clock frequency during runtime with the help of "freq-table-hz" property
+defined in devicetree. With the addition of OPP tables in devicetree (as
+done for Qcom SDM845 and SM8250 SoCs in this series) UFSHCD can now scale
+both clocks and performance state of power domain which helps in power
+saving.
+
+For the addition of OPP support to UFSHCD, there are changes required to
+the OPP framework and devfreq drivers. The OPP framework changes are already
+merged and the devfreq change is added in this series.
+
+Credits
+=======
+
+This series is a continuation of previous work by Krzysztof Kozlowski [1].
+
+Testing
+=======
+
+This series is tested on 96Boards RB3 (SDM845 SoC) and RB5 (SM8250 SoC)
+development boards.
+
+Merging Strategy
+================
+
+Since the devfreq patch got an Ack from the maintainer, either it can be merged
+to scsi tree with rest of the patches or merged separately through devfreq tree.
+
+Thanks,
+Mani
+
+[1] https://lore.kernel.org/all/20220513061347.46480-1-krzysztof.kozlowski@linaro.org/
+
+Changes in v6:
+
+* Collected tags from Dmitry
+* Fixed bindings issues reported by Krzysztof
+
+Changes in v5:
+
+* Dropped the devfreq patch since it got applied
+* Fixed the bindings issue reported by DT bot
+* Rebased on top of mkp/scsi/for-next
+
+Changes in v4:
+
+* Rebased on top of v6.6-rc3
+
+Changes in v3:
+
+* Rebased on top of linux-next/master tag: next-20230731
+* Dropped the already applied patches (dts, opp binding and framework)
+* Moved the interconnect patches to a separate series:
+  https://lore.kernel.org/linux-scsi/20230731145020.41262-1-manivannan.sadhasivam@linaro.org/
+* Moved ufshcd_opp_config_clks() API to ufshcd.c to fix the build failure
+  reported by Kbuild bot: https://lore.kernel.org/all/202307210542.KoLHRbU6-lkp@intel.com/
+* Collected Acks
+* v2: https://lore.kernel.org/all/20230720054100.9940-1-manivannan.sadhasivam@linaro.org/
+
+Changes in v2:
+
+* Added more description to the bindings patch 2/15
+* Fixed dev_pm_opp_put() usage in patch 10/15
+* Added a new patch for adding enums for UFS lanes 14/15
+* Changed the icc variables to mem_bw and cfg_bw and used
+  the enums for gears and lanes in bw_table
+* Collected review tags
+* Added SCSI list and folks
+* Removed duplicate patches
+
+Krzysztof Kozlowski (2):
+  dt-bindings: ufs: common: add OPP table
+  arm64: dts: qcom: sdm845: Add OPP table support to UFSHC
+
+Manivannan Sadhasivam (3):
+  scsi: ufs: core: Add OPP support for scaling clocks and regulators
+  scsi: ufs: host: Add support for parsing OPP
+  arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
+
+ .../devicetree/bindings/ufs/ufs-common.yaml   |  35 +++-
+ arch/arm64/boot/dts/qcom/sdm845.dtsi          |  42 +++-
+ arch/arm64/boot/dts/qcom/sm8250.dtsi          |  39 +++-
+ drivers/ufs/core/ufshcd.c                     | 179 ++++++++++++++----
+ drivers/ufs/host/ufshcd-pltfrm.c              |  78 ++++++++
+ include/ufs/ufshcd.h                          |   7 +
+ 6 files changed, 325 insertions(+), 55 deletions(-)
+
+-- 
+2.25.1
+
