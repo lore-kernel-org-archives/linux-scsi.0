@@ -2,90 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCDC9CDB47E
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Oct 2023 21:04:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42B71CDB47E
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Oct 2023 21:20:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232312AbjJMVEN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Oct 2023 17:04:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35858 "EHLO
+        id S232103AbjJMVU2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Oct 2023 17:20:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232218AbjJMVEH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2023 17:04:07 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40681BE;
-        Fri, 13 Oct 2023 14:04:06 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39DKwxHp024337;
-        Fri, 13 Oct 2023 21:04:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=SL0h6z/vV7VfUut/S0ZVh8mKDOxERh3hMQRoIaPeuGM=;
- b=KHL1OLwDAMTVhBq9JBbc8MOU7S8UMBj0l9UaQdW3Vu6OU3xB5WhRBEB4nIsrLL/xYuZC
- Gjp8iBrfILbQQS1wGVvUxrK0HFk7HHPbHu0OpBTgUtuIPTuX6aRSTqMlgjbTTnZMCAPc
- O1S5MdIDir6E6guCmggmll48897R3A1dVDKGjkCMNLgqUbhbMX8+l9oE9/uLpJc3rX8j
- sA/GeBh0pwQp1rfzmIfPou9zkBc4sgtgzc5uVjlHXwh9E/2PrqqxlGJHfeTVTlGL1ZLd
- 6a4Z+4HL4ib25MXWCl0X0Z59rbZPlKDdwz01Y0bclvfCL/st6r2h1RtrCw0H1+D43Taw cg== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3tmh8a36xq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 13 Oct 2023 21:04:01 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 39DKhOo8036883;
-        Fri, 13 Oct 2023 21:03:57 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3tpt0uxn74-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 13 Oct 2023 21:03:57 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39DL1kdh003704;
-        Fri, 13 Oct 2023 21:03:57 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3tpt0uxn63-2;
-        Fri, 13 Oct 2023 21:03:56 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Manivannan Sadhasivam <mani@kernel.org>,
-        Dan Carpenter <dan.carpenter@linaro.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: qcom: remove unnecessary check
-Date:   Fri, 13 Oct 2023 17:03:50 -0400
-Message-Id: <169721547131.1657123.11625044048800486728.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <fe3b8fcd-64a7-4887-bddd-32239a88a6a3@moroto.mountain>
-References: <fe3b8fcd-64a7-4887-bddd-32239a88a6a3@moroto.mountain>
+        with ESMTP id S229958AbjJMVU1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2023 17:20:27 -0400
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D736595;
+        Fri, 13 Oct 2023 14:20:25 -0700 (PDT)
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1c9b1e3a809so19513475ad.2;
+        Fri, 13 Oct 2023 14:20:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697232025; x=1697836825;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=oVUFHAu/2sYouE1MxKgJ7Ed5BvhxAi40Dur2aHaRFxo=;
+        b=OruRU4Ex0fSwyHNSI/LDbobXFQklHAltlctNI6AJ8bk/9HlTNAp529+3t5gCV2byTu
+         1IDsbpMp2+evTLaw60gepJuIzI44BR755XKea8cg0qtD9vGh9JLvJJNdmGU4DMgGhw5Y
+         B8dvQSWwyvflRbukz58VoasmwpqFgEYYs4He1ZVIngYlweY1q4n6QDcAOrecXisSk3af
+         +riIDqdAFd6NJ0Jy4gceFBVyH6kf++j8bbBz/N4L6f01CSnHzJ2olR2RNyVlfvvg/+RS
+         PMkSl9y/xzApELhsbFe3P86DDhE3ATJur3rSkQRBnfvk19rv/7oFLOYJWYffXxPA9zsL
+         qfSw==
+X-Gm-Message-State: AOJu0YwK8rw6oSXDWnZUFgDwQNgyoltn8b7S8uPH4AT2rCfwi2aDUqNf
+        HqkCKEZz7/NL06XIdlxoSsE=
+X-Google-Smtp-Source: AGHT+IGMaA51IPk0x7pCW8F4JdKMyqzT3Q+dPbD1hFblj4gUedpX4Qp42cPYMap9ZuK83w6URwX6Ww==
+X-Received: by 2002:a17:902:e74b:b0:1bb:6875:5a73 with SMTP id p11-20020a170902e74b00b001bb68755a73mr32624279plf.2.1697232025201;
+        Fri, 13 Oct 2023 14:20:25 -0700 (PDT)
+Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
+        by smtp.gmail.com with ESMTPSA id e11-20020a170902b78b00b001c5b8087fe5sm4308085pls.94.2023.10.13.14.20.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 13 Oct 2023 14:20:24 -0700 (PDT)
+Message-ID: <2f092612-eed0-4c4b-940f-48793b97b068@acm.org>
+Date:   Fri, 13 Oct 2023 14:20:23 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-13_12,2023-10-12_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
- mlxlogscore=718 bulkscore=0 suspectscore=0 adultscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
- definitions=main-2310130183
-X-Proofpoint-GUID: ZBUGp6b0ICP-RIjqYNDJ1epwXUN3i8YB
-X-Proofpoint-ORIG-GUID: ZBUGp6b0ICP-RIjqYNDJ1epwXUN3i8YB
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 03/15] block: Support data lifetime in the I/O priority
+ bitfield
+Content-Language: en-US
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Damien Le Moal <dlemoal@kernel.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Hannes Reinecke <hare@suse.de>
+References: <20231005194129.1882245-1-bvanassche@acm.org>
+ <20231005194129.1882245-4-bvanassche@acm.org>
+ <8aec03bb-4cef-9423-0ce4-c10d060afce4@kernel.org>
+ <46c17c1b-29be-41a3-b799-79163851f972@acm.org>
+ <b0b015bf-0a27-4e89-950a-597b9fed20fb@acm.org>
+ <447f3095-66cb-417b-b48c-90005d37b5d3@kernel.org>
+ <4fee2c56-7631-45d2-b709-2dadea057f52@acm.org>
+ <2fa9ea51-c343-4cc2-b755-a5de024bb32f@kernel.org>
+ <ZSkO8J9pD+IVaGPf@x1-carbon>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ZSkO8J9pD+IVaGPf@x1-carbon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 02 Oct 2023 10:03:35 +0300, Dan Carpenter wrote:
-
-> The "attr" pointer points to an offset into the "host" struct so it
-> can't be NULL.  Delete the if statement and pull the code in a tab.
+On 10/13/23 02:33, Niklas Cassel wrote:
+> In commit c75e707fe1aa ("block: remove the per-bio/request write hint")
+> this line from fs/direct-io.c was removed:
+> -       bio->bi_write_hint = dio->iocb->ki_hint;
 > 
-> 
+> I'm not sure why this series does not readd a similar line to set the
+> lifetime (using bio_set_data_lifetime()) also for fs/direct-io.c.
 
-Applied to 6.7/scsi-queue, thanks!
+It depends on how we want the user to specify the data lifetime for
+direct I/O. This assignment is not modified by this patch series and
+copies the data lifetime information from the ioprio bitfield from user
+space into the bio:
 
-[1/1] scsi: ufs: qcom: remove unnecessary check
-      https://git.kernel.org/mkp/scsi/c/b6f2e063017b
+		bio->bi_ioprio = dio->iocb->ki_ioprio;
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> I still don't understand what happens if one uses io_uring to write
+> to a file on a f2fs filesystem using buffered-io, with both
+> inode->i_write_hint set using fcntl F_SET_RW_HINT, and bits belonging
+> to life time hints set in the io_uring SQE (sqe->ioprio).
+
+Is the documentation of the whint_mode mount option in patch 5/15 of this
+series sufficient to answer the above question?
+
+Thanks,
+
+Bart.
+
