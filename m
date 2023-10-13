@@ -2,98 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8470CCDB474
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Oct 2023 01:08:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE1FCC41513
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Oct 2023 05:51:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229457AbjJMBIf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Oct 2023 21:08:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40172 "EHLO
+        id S229721AbjJMFve (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Oct 2023 01:51:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjJMBIe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Oct 2023 21:08:34 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 854E283;
-        Thu, 12 Oct 2023 18:08:32 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD487C433C7;
-        Fri, 13 Oct 2023 01:08:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697159312;
-        bh=ML6uoRicNOmJrp5I03RV7bvjPAwz4gLYwFH/1sU6d/k=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=SLPqV+9dS+4ZYDfKHxXKnSMDdJ3x7CM3OUYMRRcbxBAZ8NcQcctB56VSfTO7qAFRy
-         9BKXGi+XHNoq8njqCA6YCfkjdSJn+XO97GxeF8OQzUIm5PqoyoTiLKfZmtVFLJy5M/
-         093uWig4kJAFijlFhg73S5qy6XCNVaLoNYT+ql4uPMe+yVKnduaRLTWJhhrNktJ88K
-         FM9E9nq7sNiOhMkzM4augt1Sk/7RyWMOXberY9rF4I/GWUcZJK6LnxZLBUt892AZ9I
-         AVvlawNibk8Wke9Ca51WrhCcsdr9QSMaWkje8SWL1cV4+IK92QF5l1bXbNkqaea3GB
-         +ymx2sZxc7hFQ==
-Message-ID: <2fa9ea51-c343-4cc2-b755-a5de024bb32f@kernel.org>
-Date:   Fri, 13 Oct 2023 10:08:29 +0900
+        with ESMTP id S229704AbjJMFvd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2023 01:51:33 -0400
+Received: from mail-vk1-xa31.google.com (mail-vk1-xa31.google.com [IPv6:2607:f8b0:4864:20::a31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82455B8;
+        Thu, 12 Oct 2023 22:51:32 -0700 (PDT)
+Received: by mail-vk1-xa31.google.com with SMTP id 71dfb90a1353d-49dd647a477so602500e0c.3;
+        Thu, 12 Oct 2023 22:51:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1697176291; x=1697781091; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=56kQkprx3TRWNeBVoMuQr5JwJ/QXZfiuioAFvvpFj4I=;
+        b=BMa4xP9F/FsjgBVjSfyJhppJMNcsirXevzMZp+tXTvJWvFAh686MRuDp0U3eiuENes
+         JDnMvYZyOK1xg141ZwLH444jTh9uRiF1Xh1opMSV8yvsPmsZPMTlSpzOrC8DVyqKN2tN
+         U6b4Ux2h9CBIXWvXw1YtPnsm1V6G0gi68M8hA1MkQQO2eU6uA2In0Q3DyinqaRBWra4s
+         KPNCcWgnv06syZCOXLRQnggH98KDE5ZSK6cV4xwKwNcJ35Kc3iDIZAksbj413yfEdWoT
+         fbK1buu0eo22XufKl9QGX6RrPI+ebAkaIFOBLwk7o7HeWXWXYW45AXfhSAMhKhm2s9Sc
+         EdMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697176291; x=1697781091;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=56kQkprx3TRWNeBVoMuQr5JwJ/QXZfiuioAFvvpFj4I=;
+        b=vOaZnmNOW1G4CHHTGcjjafAZdmh53FcvkwCtKxl2FsX6EqVy0LZbzY4bI93PmRimds
+         H8uwMgLWCvWVnDV6YtiAndmp6x94o80L69r+1WWMdcv0ye3Fqr6A7zxXL7bUVl5mNPId
+         QJVM/x7n5buTcEVNoMkEtzvnunvbc406hW0G1S4Jpwjg2H4qLGlhX/jn+BBslfekx3JF
+         PT3ceLFYjoit3t9aGT7eLiIJTku/yNd+gFBWlUnEAKC1ruvXncM5loWernoZZYYvDJKH
+         R+oacoCvwWMf9bGUJiMgFcz/NegGP7KPlKSU5jxJyXth9wJqdE3xvCqfDeXpUe20WRh3
+         widw==
+X-Gm-Message-State: AOJu0Yyl1MUJBgbMjLw5IgITmTAW84ir0fJ/d6Df4GIXFPB9rTGiOlSe
+        hdXukhL+SCYoGBszpMJouI2dYGt7ib5eHg==
+X-Google-Smtp-Source: AGHT+IEpuJ6CMnYCOoL/8cJVMPTxG4zVlqYPsSZcGsSOBygoUVhD7rbfvC9bMaz7R1+CcaSOiYJl/Q==
+X-Received: by 2002:a1f:ac4f:0:b0:4a4:1575:4e5f with SMTP id v76-20020a1fac4f000000b004a415754e5fmr2826424vke.6.1697176291398;
+        Thu, 12 Oct 2023 22:51:31 -0700 (PDT)
+Received: from dreambig.dreambig.corp ([58.27.187.115])
+        by smtp.gmail.com with ESMTPSA id fb15-20020a056a002d8f00b006932657075bsm10949829pfb.82.2023.10.12.22.51.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Oct 2023 22:51:31 -0700 (PDT)
+From:   Muhammad Muzammil <m.muzzammilashraf@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Muhammad Muzammil <m.muzzammilashraf@gmail.com>
+Subject: [PATCH] drivers: scsi: cxgbi: libcxgbi.c: Fixed 'generated' typo
+Date:   Fri, 13 Oct 2023 10:51:21 +0500
+Message-Id: <20231013055121.12310-1-m.muzzammilashraf@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 03/15] block: Support data lifetime in the I/O priority
- bitfield
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Hannes Reinecke <hare@suse.de>
-References: <20231005194129.1882245-1-bvanassche@acm.org>
- <20231005194129.1882245-4-bvanassche@acm.org>
- <8aec03bb-4cef-9423-0ce4-c10d060afce4@kernel.org>
- <46c17c1b-29be-41a3-b799-79163851f972@acm.org>
- <b0b015bf-0a27-4e89-950a-597b9fed20fb@acm.org>
- <447f3095-66cb-417b-b48c-90005d37b5d3@kernel.org>
- <4fee2c56-7631-45d2-b709-2dadea057f52@acm.org>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <4fee2c56-7631-45d2-b709-2dadea057f52@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/13/23 03:00, Bart Van Assche wrote:
-> On 10/11/23 18:02, Damien Le Moal wrote:
->> Some have stated interest in CDL in NVMe-oF context, which could
->> imply that combining CDL and lifetime may be something useful to do
->> in that space...
-> 
-> We are having this discussion because bi_ioprio is sixteen bits wide and
-> because we don't want to make struct bio larger. How about expanding the
-> bi_ioprio field from 16 to 32 bits and to use separate bits for CDL
-> information and data lifetimes?
+Fixed 'generated' typo
 
-I guess we could do that as well. User side aio_reqprio field of struct aiocb,
-which is used by io_uring and libaio, is an int, so 32-bits also. Changing
-bi_ioprio to match that should not cause regressions or break user space I
-think. Kernel uapi ioprio.h will need some massaging though.
+Signed-off-by: Muhammad Muzammil <m.muzzammilashraf@gmail.com>
+---
+ drivers/scsi/cxgbi/libcxgbi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> This patch does not make struct bio bigger because it changes a three
-> byte hole with a one byte hole:
-
-Yeah, but if the kernel is compiled with struct randomization, that does not
-really apply, doesn't it ?
-
-Reading Niklas's reply to Kanchan, I was reminded that using ioprio hint for
-the lifetime may have one drawback: that information will be propagated to the
-device only for direct IOs, no ? For buffered IOs, the information will be
-lost. The other potential disadvantage of the ioprio interface is that we
-cannot define ioprio+hint per file (or per inode really), unlike the old
-write_hint that you initially reintroduced. Are these points blockers for the
-user API you were thinking of ? How do you envision the user specifying
-lifetime ? Per file ? Or are you thinking of not relying on the user to specify
-that but rather the FS (e.g. f2fs) deciding on its own ? If it is the latter, I
-think ioprio+hint is fine (it is simple). But if it is the former, the ioprio
-API may not be the best suited for the job at hand.
-
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index abde60a50cf7..bf75940f2be1 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -1294,7 +1294,7 @@ static int cxgbi_ddp_reserve(struct cxgbi_conn *cconn,
+ 
+ 	/*
+ 	 * the ddp tag will be used for the itt in the outgoing pdu,
+-	 * the itt genrated by libiscsi is saved in the ppm and can be
++	 * the itt generated by libiscsi is saved in the ppm and can be
+ 	 * retrieved via the ddp tag
+ 	 */
+ 	err = cxgbi_ppm_ppods_reserve(ppm, ttinfo->nr_pages, 0, &ttinfo->idx,
 -- 
-Damien Le Moal
-Western Digital Research
+2.27.0
 
