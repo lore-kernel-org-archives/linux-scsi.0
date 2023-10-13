@@ -2,80 +2,61 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 232E2C41513
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Oct 2023 12:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C28CDB47E
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Oct 2023 15:41:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231750AbjJMMwB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Oct 2023 08:52:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54122 "EHLO
+        id S232410AbjJMPlq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Oct 2023 11:41:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230006AbjJMMwA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2023 08:52:00 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABDDF91;
-        Fri, 13 Oct 2023 05:51:56 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1qrHdz-0005GC-6y; Fri, 13 Oct 2023 14:51:55 +0200
-Message-ID: <f831fbbb-c750-4fba-9b37-d6e6ded9b451@leemhuis.info>
-Date:   Fri, 13 Oct 2023 14:51:53 +0200
+        with ESMTP id S232270AbjJMPlp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2023 11:41:45 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F877C9;
+        Fri, 13 Oct 2023 08:41:45 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E96F9C433C7;
+        Fri, 13 Oct 2023 15:41:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697211704;
+        bh=WtbPqvXD8Sp/dZdaV6c5+xedVuADZeNktkl6UocO2vQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OLrrFrOx70w9wRHUO2/WbfZRJDcD6ULGeBlcbzzq2Qvy/LgaudtfdpL/5WAfzLrmK
+         as0k8cc00B4vYeXBDj01em/D5j/kSmb9datCsxZqSI/wTI+bp1h6Yat69GLzEzZoRB
+         +EASbtsyAeW6QwKqlWDEgVWWVotHzJGIkrBeUqZpeEtQCTMwwHDGbYcTMTudvyEU67
+         ezLyTM3H1kGB5OHPoQlZH+U4/CUNmGIM+ONK1M351GpICPWDlks27Z+RMmNa8T9vRo
+         yDXZacPNJTm6yfQ4ygkzhz1PWQj08a7zqEKirFx9QhdZ3TOFi0uDgzXucFlCULImMT
+         xMeY2nNuQ/4AA==
+Date:   Fri, 13 Oct 2023 17:41:41 +0200
+From:   Simon Horman <horms@kernel.org>
+To:     Wenchao Hao <haowenchao2@huawei.com>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Richard Cochran <richardcochran@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, louhongxiang@huawei.com
+Subject: Re: [PATCH] scsi: libfc: Fix potential NULL pointer dereference in
+ fc_lport_ptp_setup
+Message-ID: <20231013154141.GO29570@kernel.org>
+References: <20231011130350.819571-1-haowenchao2@huawei.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [bug report] blktests srp/002 hang
-Content-Language: en-US, de-DE
-From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-To:     "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc:     Linux kernel regressions list <regressions@lists.linux.dev>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>,
-          Linux regressions mailing list 
-          <regressions@lists.linux.dev>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <e8b76fae-780a-470e-8ec4-c6b650793d10@leemhuis.info>
-In-Reply-To: <e8b76fae-780a-470e-8ec4-c6b650793d10@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1697201516;78bf7307;
-X-HE-SMSGID: 1qrHdz-0005GC-6y
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231011130350.819571-1-haowenchao2@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[TLDR: This mail in primarily relevant for Linux kernel regression
-tracking. See link in footer if these mails annoy you.]
-
-On 22.09.23 13:06, Linux regression tracking #adding (Thorsten Leemhuis)
-wrote:
-> On 21.08.23 08:46, Shinichiro Kawasaki wrote:
->> I observed a process hang at the blktests test case srp/002 occasionally, using
->> kernel v6.5-rcX. Kernel reported stall of many kworkers [1]. PID 2757 hanged at
->> inode_sleep_on_writeback(). Other kworkers hanged at __inode_wait_for_writeback.
->>
->> The hang is recreated in stable manner by repeating the test case srp/002 (from
->> 15 times to 30 times).
->>
->> I bisected and found the commit 9b4b7c1f9f54 ("RDMA/rxe: Add workqueue support
->> for rxe tasks") looks like the trigger commit. When I revert it from the kernel
->> v6.5-rc7, the hang symptom disappears. I'm not sure how the commit relates to
->> the hang. Comments will be welcomed.
->> […]
+On Wed, Oct 11, 2023 at 09:03:50PM +0800, Wenchao Hao wrote:
+> fc_lport_ptp_setup() did not check the return value of fc_rport_create()
+> which is possible to return NULL which would cause a NULL pointer
+> dereference. Address this issue by checking return value of
+> fc_rport_create() and log error message on fc_rport_create() failed.
 > 
-> Thanks for the report. To be sure the issue doesn't fall through the
-> cracks unnoticed, I'm adding it to regzbot, the Linux kernel regression
-> tracking bot:
-> 
-> #regzbot ^introduced 9b4b7c1f9f54
-> #regzbot title RDMA/rxe: occasionally pocess hang at the blktests test
-> case srp/002
-> #regzbot ignore-activity
+> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 
-#regzbot monitor:
-https://lore.kernel.org/all/20230922163231.2237811-1-yanjun.zhu@intel.com/
-#regzbot ignore-activity
+Thanks,
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-That page also explains what to do if mails like this annoy you.
+I verified that fc_lport_ptp_setup can return NULL (if kzalloc fails).
+
+Reviewed-by: Simon Horman <horms@kernel.org>
