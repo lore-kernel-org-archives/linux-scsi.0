@@ -2,129 +2,150 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5AACDB47E
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Oct 2023 20:18:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB20CDB483
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Oct 2023 20:53:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232005AbjJMUSf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Oct 2023 16:18:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48612 "EHLO
+        id S232035AbjJMUxo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Oct 2023 16:53:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44220 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231704AbjJMUSe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2023 16:18:34 -0400
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43DB4BB;
-        Fri, 13 Oct 2023 13:18:32 -0700 (PDT)
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-6b7f0170d7bso307617b3a.2;
-        Fri, 13 Oct 2023 13:18:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697228309; x=1697833109;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=biiMh+EC7I2O/QkjHEGy6sy8/18hylgh/BXPEq6Roxg=;
-        b=X1TJTlMI9Dco3JnOtOcaHEkEfhG74fVgEUnpnYffaZGOcLtuqvWYxlj/WD6Lvxxk3X
-         y0DsG/mIRie+hMhR+at6bXqxvUPGl2YVpa2De33WGI7SkB4bDLGyRyGehXTz+zq9bHJU
-         roaKLUptiJNc1BanhA+x11UWkAEWXUFnuKeejilHv0+joNEn/ACgOSIUuXPfd8Lc4Sxg
-         LBhaV360MKT+2ghXmG3sKAb5WoOZmz1MUQhO8MTkhXBW5oTgEbbEYYRXZhlo9iVkugV/
-         h2OG1evMKRG1fazR7du22ipbD4bjviga5W+O+ozbAkhyo0cX6gm5XPZKN4miKySSUGck
-         wnYA==
-X-Gm-Message-State: AOJu0YxMvjXbz9I2xGjZRv0EUU0vPYKr2a9sTKqFg0zsT5fetjQSzsSW
-        HRX2fjUFdRcv8W8uptBXE00=
-X-Google-Smtp-Source: AGHT+IHNN2CY+TU6dgppGECjZqTp8YJQF2VjVGAWtME6kR7o5TSV2NhqC/8Ht8VG21ZHOMt6mZR8/Q==
-X-Received: by 2002:a05:6a00:3992:b0:68a:49bc:e0af with SMTP id fi18-20020a056a00399200b0068a49bce0afmr30830853pfb.1.1697228308938;
-        Fri, 13 Oct 2023 13:18:28 -0700 (PDT)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id a9-20020aa780c9000000b0069266a66a6esm13810329pfn.139.2023.10.13.13.18.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 13 Oct 2023 13:18:28 -0700 (PDT)
-Message-ID: <94c58f6a-cdbf-4718-b60f-ba4082a040b5@acm.org>
-Date:   Fri, 13 Oct 2023 13:18:27 -0700
+        with ESMTP id S229891AbjJMUxk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2023 16:53:40 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3D0AB7
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Oct 2023 13:53:39 -0700 (PDT)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39DIEBop017421;
+        Fri, 13 Oct 2023 20:53:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=Mhltb2qobqGcuLoi77q4JdoTXPvxibgu45hnNIVn9dg=;
+ b=SVmX/INWrU/RoQ0JL+Wo6LqjwrD4fSdTg4B7YH6YGseWAb2Kbm51WbHW5HFUjSUo6a7W
+ 6Bl9B6Q4LVOnkYztvXMxCFA81WXhAfoNlReuVJeodg6pdrUAf7vX7nGD17oKqf9pJ/8Y
+ 9IyWDqyK6IbsiBrKTwDhNjxzqS4NqjPs0ixjhWA87Z4HuN/LhTspXxDZo8ZH4LtquVpm
+ qaoQO00Csbi6yPJHGn9omQpKHlmb/It6B3ASSG1ICGsC25x4zepFAimI5figA4ip0U1U
+ CNLESRHq2vXK5lqby+NziaVnIE74ZFe2WoUW+MdtjbeeUQLLt1TRMBp5WmevSb8uXSvx PQ== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3tjxxudvqr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 13 Oct 2023 20:53:38 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 39DKi3Si039137;
+        Fri, 13 Oct 2023 20:53:37 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2100.outbound.protection.outlook.com [104.47.70.100])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3tpt0uec0r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 13 Oct 2023 20:53:37 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=j8FbglhXyfYdlaxe4VLmrhAhkfb1/1hqoFjxoaQLn57vQFMFOBj55ckbmAXyWaTpoxN30okhygfs+VySns/1B3Qg8/jSaDlzGc0oF9OI+t2hcTAfaclRPccJh/6IcYwcWARIlE5MqaBSdisViB0bO+qYFU7s/8g6pvLyaSba2zGrkUP+fJ2SdomS7w49TIjvqOFgHMRyXVKxQ2IzgFuFkzS8ZW0Qrpe/SN2Q2snpoTsUZ+7sGCnNR1aHwDmyckot2Ya/QnD/KNe7hb4a6aVrYZwCPpLmExqD2s5M0gXHwxv6jR4PGFp+H8/EwSq0tY82QA2dC37DK3FI8he6zanvhw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Mhltb2qobqGcuLoi77q4JdoTXPvxibgu45hnNIVn9dg=;
+ b=FpbqA2F/GdydU73BDEKLX53ONxLmInb1VZn1M8xvxI5JS/da+JM7u/zeH/1oPfh/QobiIScknQ3mwhGCJAWbrPGNKI3ptT0SFvEvDIrGJnFKMhe6qsEaAM2Dq+/r0bhapi/JJ5+f2XpjsmpWslzTj1KqERQIFHFyo4OuFMXOCLTGuWWg2zSVYmSMji6OKkQ/2nvhYPxRdzt6TZ98qNqJ7Su3SZA/Fi16maXAWA8qpvr8EQz0kuNf8BoKES5HasurUg7fHS2c6R+1TRDPq1mhakdH5s4bm7DBEG6GSzJBblRDCZhGHSmtLdLB924k9Io/FDetZW8/SuGV0JY+hKY35w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Mhltb2qobqGcuLoi77q4JdoTXPvxibgu45hnNIVn9dg=;
+ b=XyUAlYVt3MSybHNa51+VdEv/XOi76RNNZbg+NvDXKwqVIBjznU77eT2iubUbtzfmVRU8dLtvDYt054fr5TvUHI6wlkBhx0HkiBoafSJ7wDI2oMHFfnC8eU49r+gJxlzZ22Y+zvlvTLTKHnFMHT7JiDRU27ptYktSiEo0AKXgBKY=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by BN0PR10MB4888.namprd10.prod.outlook.com (2603:10b6:408:115::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6863.45; Fri, 13 Oct
+ 2023 20:53:18 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::1ae3:44f0:f5b:2383]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::1ae3:44f0:f5b:2383%4]) with mapi id 15.20.6863.046; Fri, 13 Oct 2023
+ 20:53:18 +0000
+To:     Chandrakanth patil <chandrakanth.patil@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, sumit.saxena@broadcom.com
+Subject: Re: [PATCH 0/4] megaraid_sas: Driver version update to
+ 07.727.03.00-rc1
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1zg0mjlc9.fsf@ca-mkp.ca.oracle.com>
+References: <20231003110021.168862-1-chandrakanth.patil@broadcom.com>
+Date:   Fri, 13 Oct 2023 16:53:16 -0400
+In-Reply-To: <20231003110021.168862-1-chandrakanth.patil@broadcom.com>
+        (Chandrakanth patil's message of "Tue, 3 Oct 2023 16:30:17 +0530")
+Content-Type: text/plain
+X-ClientProxiedBy: MN2PR01CA0039.prod.exchangelabs.com (2603:10b6:208:23f::8)
+ To PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH v2 03/15] block: Support data lifetime in the I/O priority
- bitfield
-To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Hannes Reinecke <hare@suse.de>
-References: <20231005194129.1882245-1-bvanassche@acm.org>
- <20231005194129.1882245-4-bvanassche@acm.org>
- <8aec03bb-4cef-9423-0ce4-c10d060afce4@kernel.org>
- <46c17c1b-29be-41a3-b799-79163851f972@acm.org>
- <b0b015bf-0a27-4e89-950a-597b9fed20fb@acm.org>
- <447f3095-66cb-417b-b48c-90005d37b5d3@kernel.org>
- <4fee2c56-7631-45d2-b709-2dadea057f52@acm.org>
- <2fa9ea51-c343-4cc2-b755-a5de024bb32f@kernel.org>
-Content-Language: en-US
-In-Reply-To: <2fa9ea51-c343-4cc2-b755-a5de024bb32f@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|BN0PR10MB4888:EE_
+X-MS-Office365-Filtering-Correlation-Id: d0afec97-55f0-40b8-84ee-08dbcc2e6d6a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 4pSK1ZxRkx+LTuj+8imTQiMNXoWmKOvCY6hamjZk6qXYcHfDq/Em8OmrrSMfj0jtSLpeCJBWGSiARQOvtqUILHM6NwQKdRmP7RwpJf/ClSkjxhWJCGcTRnHieEav6gHyaFg98+WtOXDiLAtYXyDiLfglbjNVzmJnjWmnw9NQzHy6xl7uxs23Xz0F4zdaS2BKOKivr8Oz1UuberYvonsorQojK28JQz6n1ZwJoWWy34451FEHn86ObUsU6Q+0+UFXj+b/enNUKg42DCpm1nufK5sAjADnMPBx3Cz/VvAgw715yLy1OWoPbQRCReBJJL2CA+bdsap+6s0n5mQ22WcgDwITlhlvo4tCrgy3uqj/xMng6aDQBqWPkuA8qZ7cIiSsyo6Jnvd8gjIyvDFiXdWOkVufC4YdxGejWiVp0O34LupAAIpsfOw15S7b71ZNIDC5QsbyHDIb2494kX+Fe96JYQeuQPXmhk+cJ0jXtnGsidrKn/BVthqm0VU2Qk350YDKcThl0+QXt+kmUqoi3Er/141ANZvILAqlhbmftHURmHIzdsAr7k6YDzoUg1aFjddI
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(39860400002)(396003)(346002)(376002)(366004)(230922051799003)(451199024)(186009)(64100799003)(1800799009)(6916009)(83380400001)(316002)(8936002)(8676002)(38100700002)(86362001)(558084003)(4326008)(66476007)(66556008)(66946007)(36916002)(2906002)(6506007)(41300700001)(15650500001)(6512007)(6486002)(478600001)(26005)(5660300002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?i4LjQ3H25TwefXweCBPWSl7Jx9hmi4nFWtiGyk+ZWXMHvdKdxFYm/xun6NXV?=
+ =?us-ascii?Q?g1rLvDuX6xPbkMXxs5eVuoN5y9o+jN3fbLbQdTiegzxyAE8tMAgZzwCFJVNU?=
+ =?us-ascii?Q?UdebBbQVr0x+eBIsAm6APJRZw6U1u26H7aKD0sULf0JkKGW/10h/KLLmPsvx?=
+ =?us-ascii?Q?C9/cZSQoRGK0iMy7XOq8ZVf8GhC8aKHuhGFN2g6DqYplRgkKtT/DJTqfC9CR?=
+ =?us-ascii?Q?XcVcneo+kEc9m5XIY5bUKzv966ijEGJLS5P0GAX4ozIA8sU+QorYCSpTsyNb?=
+ =?us-ascii?Q?KoHHstZ8lffUYC23stQtGE6vjMVqPgIiLrPexIWK+YAoT1/XabkVGn63OEpp?=
+ =?us-ascii?Q?QGMo4hleYV6PboOqKbrnG52rZ77/DjsgGHGRHxDtZ+b4gpss8OJ0IaqYDizY?=
+ =?us-ascii?Q?1e9NNIwuEhAuY07xcPsUKdrUYwJSh9vSlIvrnuNwDq+nfHCCr+5KYM0YxCt/?=
+ =?us-ascii?Q?1KG+hGB7KiB1C2wJq/7zLW+nVUsFoTJTLiilVKeUBlfNXx57IoS5vXKw5t0X?=
+ =?us-ascii?Q?bufbA6oEtovbYVkIFXcDM1CF7ueTUCfNoHrvx1EoN+Cc95A2MZja8621lh5T?=
+ =?us-ascii?Q?J93ey58/Ovt9Sa+i2q2TMr7tAHPm9o3PXLuzy5S1huS/5VUq0RpiPe1SRetB?=
+ =?us-ascii?Q?e+ihI8vVzqFjsdg3KkL2SlDYliFnuVJD/3HDEldOQwvvwiDHguU6lAHXgEtp?=
+ =?us-ascii?Q?RE221ayc7QqEOc7ir/wE4ufVne2djKxvNsAvxVQ7QGbZNyY6NfEO3Drq7xpZ?=
+ =?us-ascii?Q?0w8WeGeTQi5LXXKWyQ0I6gmsrPhJ5ibduuOPMzFE/po1lsQcyu7kQDeGRsGf?=
+ =?us-ascii?Q?QDltHNQUo7hn6zXrftPcpr3lBAHDMBQ7FUqP+ochcCxPxS1pWFi/7lU3os2d?=
+ =?us-ascii?Q?XaLJkWz4MPFCQiL9u2/4PcheVwhx2yyLuB/ClfTtFWOt4HgvGi13EbjMC++T?=
+ =?us-ascii?Q?Cw60sMJR4tEwupl/irjke56EfBj3j23VbTLZBYsoBvyTmwXVkmMryI6sKeys?=
+ =?us-ascii?Q?M5TIrwCmyQt2xUn/KHBvWot46zMKzAGWhvwMbyZlmyxBTxHC550q4089Cr8o?=
+ =?us-ascii?Q?ixhglSGxZAv99G2htisqiLJTyE+9sEoS9BLDKVAtJiv2yRZo3NQ+O67BjJoj?=
+ =?us-ascii?Q?MYz+DP96sA0ImShYmz3roE92QY96Z4GQExLWD83zw1QYqhRhucOE2PXV8uD3?=
+ =?us-ascii?Q?nDq6CnDaQq6aic5Qkripvy9Q5Ut++fSs1uF/KE99oOt7GPQmGUOei8gLqQmf?=
+ =?us-ascii?Q?Eh6FD8x6O3O5XaSKkGBjcSbs1QDgPnLGzxXWDbt0c2/W4n913MGYPIB+IKao?=
+ =?us-ascii?Q?pRmSP6iGdtbbb8yGYA7us4c7jtkEFb9Go1UOq8cTSLFp98zmzbttpVf5vbK9?=
+ =?us-ascii?Q?pZbtSS0ofV9kWQlG4fOBd2CyNtaCDRfDEwZSgwYKB6lFAucJxX1RHQz14sOz?=
+ =?us-ascii?Q?A+T0wb2Ry39sUyrhKPOL7jn6sIeiituylab6+wvUhGHhxYwe4OpJVBWZqoJm?=
+ =?us-ascii?Q?SDxP4q18vF8c0e5VMCm3KQI2iVx/BpBPluFGqPeO3x1bKAI5DMyJfb0Qqqly?=
+ =?us-ascii?Q?OeX2EKW7EJx93xdpgir1zZ/i4/vmmjwOo2OzbPJe/NoB0ekQlLoOWlU/WqDE?=
+ =?us-ascii?Q?6A=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: BWnwP4nFwSDTNxOQomp2ey20XkvtUmVDuHuWpQnbM+0DIvGsKrHUvKHQbMi+8N+sWYEZZIW+yzyYTZM7mcj6Eyqh3hiqDjXv+1xthGw4vWuwerr1WpZDk7PC28q+RH+HRqobc3bNgRKtD04/OoEoiZb1680kvH1JFWMw3QyPeAIy9lSgnCRvl9E6Cl9RsgY4sIz+z5WxpVR/dbCYodC2QSvXZTMYrpXQkVShUZ3pcMjIpoqu3CCjF5b7JwvIHBpht2wXO/lV7hgVaxmSnhSxePe10O6DofwGtOoHh7POkR+mxs8/++0jzsQC48sbIkv54xu3RWuqS/ztDJzHiZvH91aAYezJrMK6eggYJyTtTyV6m28P9CzrUE9hVZFwsSKirVWozw6p+ac+wTAL+g1iD9QKaXJo9Bvr9OgSeCCUc7Cx64tgYFB0zlxWb3fMlH1Ksw6zNHFCe3eMtHTfAjWrIdcYVOk91mMMJTu91sSIu1EIQzj8fzQvbngCT2D1Dn42t2nX/OyzvG6uJjhs3kTUWYuUpMwS/pN+MrmWckClu+L5y2DnDbMUiNauelF6Pqnpaf5nXO+3WXEpGCHbem9Aw0RKR0mBcYO4v60MCFqONU3K7FSz06O602qpTcBYOFakGkLUl8EbsK6UAO5sxtL3hqpyfHaNDBmyrXV44Ydwvi3LPUbiKwfoTx5ZfW07umbuRmkN6Iv3KV5D8cI6hAJmz+2Coej+3q5fjOnagVT4aqWFwek8HGn7AddA6Brgh9PsmAtSE+z7a/r2DUN5xfxhfmv1n2s/tyn7HhGi8vJrigg=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d0afec97-55f0-40b8-84ee-08dbcc2e6d6a
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2023 20:53:18.0319
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: HRm7aAOuYvaeP0DegFdti4AbWcyWVaI8NPhYin+QxNJO7rUx9pSqPFzC3vuTevbJs/eZKw/U51xvkPJEGvH5VWuzevhtvyyVgZxUH9D1QUM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB4888
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-13_12,2023-10-12_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 mlxscore=0
+ spamscore=0 suspectscore=0 mlxlogscore=650 malwarescore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
+ definitions=main-2310130181
+X-Proofpoint-GUID: Qoxcvb13WDNJyxmR8CldiNVXlxQTEFQ-
+X-Proofpoint-ORIG-GUID: Qoxcvb13WDNJyxmR8CldiNVXlxQTEFQ-
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/12/23 18:08, Damien Le Moal wrote:
-> On 10/13/23 03:00, Bart Van Assche wrote:
->> We are having this discussion because bi_ioprio is sixteen bits wide and
->> because we don't want to make struct bio larger. How about expanding the
->> bi_ioprio field from 16 to 32 bits and to use separate bits for CDL
->> information and data lifetimes?
-> 
-> I guess we could do that as well. User side aio_reqprio field of struct aiocb,
-> which is used by io_uring and libaio, is an int, so 32-bits also. Changing
-> bi_ioprio to match that should not cause regressions or break user space I
-> think. Kernel uapi ioprio.h will need some massaging though.
 
-Hmm ... are we perhaps looking at different kernel versions? This is
-what I found:
+Chandrakanth,
 
-$ git grep -nHE 'ioprio;|reqprio;' include/uapi/linux/{io_uring,aio_abi}.h
-include/uapi/linux/aio_abi.h:89:	__s16	aio_reqprio;
-include/uapi/linux/io_uring.h:33:	__u16	ioprio;		/* ioprio for the 
-request */
+> This set of patches includes critical fixes, and updates to the
+> maintainer list.
 
-The struct iocb used for asynchronous I/O has a size of 64 bytes and
-does not have any holes. struct io_uring_sqe also has a size of 64 bytes
-and does not have any holes either. The ioprio_set() and ioprio_get()
-system calls use the data type int so these wouldn't need any changes to
-increase the number of ioprio bits.
+Applied to 6.7/scsi-staging, thanks!
 
-> Reading Niklas's reply to Kanchan, I was reminded that using ioprio hint for
-> the lifetime may have one drawback: that information will be propagated to the
-> device only for direct IOs, no ? For buffered IOs, the information will be
-> lost. The other potential disadvantage of the ioprio interface is that we
-> cannot define ioprio+hint per file (or per inode really), unlike the old
-> write_hint that you initially reintroduced. Are these points blockers for the
-> user API you were thinking of ? How do you envision the user specifying
-> lifetime ? Per file ? Or are you thinking of not relying on the user to specify
-> that but rather the FS (e.g. f2fs) deciding on its own ? If it is the latter, I
-> think ioprio+hint is fine (it is simple). But if it is the former, the ioprio
-> API may not be the best suited for the job at hand.
-
-The way I see it is that the primary purpose of the bits in the
-bi_ioprio member that are used for the data lifetime is to allow
-filesystems to provide data lifetime information to block drivers.
-
-Specifying data lifetime information for direct I/O is convenient when
-writing test scripts that verify whether data lifetime supports works
-correctly. There may be other use cases but this is not my primary
-focus.
-
-I think that applications that want to specify data lifetime information
-should use fcntl(fd, F_SET_RW_HINT, ...). It is up to the filesystem to
-make sure that this information ends up in the bi_ioprio field. The
-block layer is responsible for passing the information in the bi_ioprio
-member to block drivers. Filesystems can support multiple policies for
-combining the i_write_hint and other information into a data lifetime.
-See also the whint_mode restored by patch 05/15 in this series.
-
-Thanks,
-
-Bart.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
