@@ -2,136 +2,178 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0480CCDB482
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 11:54:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F01CDB465
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 12:15:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233440AbjJPLyd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Oct 2023 07:54:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37886 "EHLO
+        id S233643AbjJPMPz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Oct 2023 08:15:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233361AbjJPLyZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 07:54:25 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CE98FA;
-        Mon, 16 Oct 2023 04:54:22 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFA2AC433C9;
-        Mon, 16 Oct 2023 11:54:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697457261;
-        bh=jnp5P3en1vHeqqxQoLLXerxN+beV4PtZf2uhERTkodE=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=jLJagp3fzr8HayPnMfB4McmPT5Y4qCyvwpKKWNBF1z9hB3CmU5G8suoiHJEyRsU3B
-         bsQK+jwTpaoNODPUD/ngeY2DJ5dONQyL5KYt5/jUKZamoVrAj1PFg1yQYJMSAZUOiE
-         q3iasQ8DNNapVa2dk0tPZch2rWljfiu18a0Yhu0mSxadkcvhqjncKrdNSJhbIqsfve
-         Vch3Rl7oob+FkCu76xTSXNMidR94MiP9a71N0Fw/ZcFghyyXldoH+C7EvfOKUdCoXp
-         2ZcsqJAsX+468w96mlzebOJLIo9sDhRNbIkQ8av7FVcQMvXKPA8Wrk0/dYgAeeLQPG
-         kqCRP5xj7GMAw==
-Message-ID: <0c7f0599-40de-417a-842d-d0aba842d115@kernel.org>
-Date:   Mon, 16 Oct 2023 20:54:19 +0900
+        with ESMTP id S233099AbjJPMPy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 08:15:54 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEF40AC
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2023 05:15:50 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 700091FEB5;
+        Mon, 16 Oct 2023 12:15:49 +0000 (UTC)
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id 2170D2D153;
+        Mon, 16 Oct 2023 12:15:49 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id 34CF251EBDFC; Mon, 16 Oct 2023 14:15:49 +0200 (CEST)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 6/9] scsi_error: iterate over list of failed commands in scsi_eh_bus_reset()
+Date:   Mon, 16 Oct 2023 14:15:39 +0200
+Message-Id: <20231016121542.111501-7-hare@suse.de>
+X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20231016121542.111501-1-hare@suse.de>
+References: <20231016121542.111501-1-hare@suse.de>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: use ATA-12 pass-thru for OPAL as fallback
-To:     Milan Broz <gmazyland@gmail.com>, Christoph Hellwig <hch@lst.de>
-Cc:     linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-References: <20231016070211.39502-1-gmazyland@gmail.com>
- <20231016070531.GA28537@lst.de>
- <bf4d0580-62b1-4959-8fc4-a7ab86b7e980@gmail.com>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <bf4d0580-62b1-4959-8fc4-a7ab86b7e980@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Spamd-Bar: ++++++++++++++
+Authentication-Results: smtp-out2.suse.de;
+        dkim=none;
+        dmarc=none;
+        spf=softfail (smtp-out2.suse.de: 149.44.160.134 is neither permitted nor denied by domain of hare@suse.de) smtp.mailfrom=hare@suse.de
+X-Rspamd-Server: rspamd2
+X-Spamd-Result: default: False [14.49 / 50.00];
+         ARC_NA(0.00)[];
+         FROM_HAS_DN(0.00)[];
+         TO_DN_SOME(0.00)[];
+         R_MISSING_CHARSET(2.50)[];
+         NEURAL_SPAM_SHORT(2.00)[1.000];
+         MIME_GOOD(-0.10)[text/plain];
+         DMARC_NA(0.20)[suse.de];
+         BROKEN_CONTENT_TYPE(1.50)[];
+         R_SPF_SOFTFAIL(0.60)[~all:c];
+         RCPT_COUNT_FIVE(0.00)[5];
+         TO_MATCH_ENVRCPT_SOME(0.00)[];
+         VIOLATED_DIRECT_SPF(3.50)[];
+         MX_GOOD(-0.01)[];
+         NEURAL_SPAM_LONG(3.00)[1.000];
+         MID_CONTAINS_FROM(1.00)[];
+         RWL_MAILSPIKE_GOOD(0.00)[149.44.160.134:from];
+         RCVD_NO_TLS_LAST(0.10)[];
+         FROM_EQ_ENVFROM(0.00)[];
+         R_DKIM_NA(0.20)[];
+         MIME_TRACE(0.00)[0:+];
+         RCVD_COUNT_TWO(0.00)[2];
+         BAYES_HAM(-0.00)[13.12%]
+X-Rspamd-Queue-Id: 700091FEB5
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/16/23 16:24, Milan Broz wrote:
-> On 10/16/23 09:05, Christoph Hellwig wrote:
->> On Mon, Oct 16, 2023 at 09:02:11AM +0200, Milan Broz wrote:
->>> All common USB/SATA or USB/NVMe adapters I tested need this patch.
->>>
->>> In short, these steps are run for OPAL support check:
->>>    1) Storage driver enables security driver flag (security_supported).
->>>       USB-attached storage drivers will enable it in a separate patchset.
->>>       SCSI and NNVMe drivers do it already. If the flag is not enabled,
->>>       no following steps are run, and OPAL remains disabled.
->>>    2) SCSI device enumerates SECURITY IN/OUT command support. If detected,
->>>       SECURITY ON/OUT wrapper is used (as in the current code).
->>>       If not, new ATA-12 pass-thru wrapper is used instead.
->>>    3) SED OPAL code tries OPAL discovery command for the device.
->>>       If it receives a correct reply, OPAL is enabled for the device.
->>>       If SCSI SECURITY or ATA-12 command with discovery command is rejected,
->>>       OPAL remains disabled.
->>>
->>> Note, USB attached storage needs an additional patchset sent separately
->>> as requested by USB driver maintainers (it contains required changes
->>> related to USB quirk processing).
->>
->> This just feels wrong.  These adapters are broken if they can't
->> translated, and we should not put ATA command submission into
->> sd.c.
-> 
-> I think it is blocked in USB layer as not running command enumeration,
-> SCSI SECURITY will be never sent to the adapter through USB.
-> 
-> I understand the problem, but if you configure OPAL from userspace, ATA-12 is sent
-> to these devices already - so why kernel cannot use it too?
-> 
->>
->>> +	cdb[0] = ATA_12;
->>> +	cdb[1] = (send ? 5 /* ATA_PROTOCOL_PIO_DATA_IN */ : 4 /* ATA_PROTOCOL_PIO_DATA_OUT */) << 1;
->>> +	cdb[2] = 2 /* t_length */ | (1 << 2) /* byt_blok */ | ((send ?  0 : 1) << 3) /* t_dir */;
->>> +	cdb[3] = secp;
->>> +	put_unaligned_le16(len / 512, &cdb[4]);
->>> +	put_unaligned_le16(spsp, &cdb[6]);
->>> +	cdb[9] = send ? 0x5e /* ATA_CMD_TRUSTED_SND */: 0x5c /* ATA_CMD_TRUSTED_RCV */;
->>
->>
->> Also avoid all these crazy long lines, and please use the actual
->> constants.  Using a good old if/else is actually a very good way to
->> structure the code in a somewhat readable way.
-> 
-> Sure, I was trying to no add additional includes that will mess this up, I'll reformat it if needed.
-> 
-> Otherwise, this wrapper is exactly what is used is sedutils and also in our test utility
-> that tries to work with OPAL commands directly
-> https://github.com/mbroz/opal-toolset
-> 
->>
->>> +		if (sdkp->security)
->>> +		    sdkp->opal_dev = init_opal_dev(sdkp, &sd_sec_submit);
->>> +		else
->>> +		    sdkp->opal_dev = init_opal_dev(sdkp, &sd_ata12_submit);
->>
->> Messed up indentation here.
-> 
-> sorry, my bad, I hate such formatting myself and missed it here :-)
->   
->> besides the fact that the statement is fundamentally wrong and you'll
->> start sending ATA command to random devices.
-> 
-> So what do you suggest? As I said, this exactly happen if you configure it from userspace.
-> 
-> Can this be somehow limited? I did not find and way how to do it.
-The translation of SECURITY IN/OUT commands should go into usb uas.c, at the
-very least. And even having it there is not great in my opinion. If the adapter
-does not support Opal, don't use that feature, or use it only to lock/unlock the
-drive from user space with passthrough.
+Iterating over all possible bus number in scsi_eh_bus_reset() is
+inefficient as not all busses may be affected during SCSI EH.
+So rewrite the loop in scsi_eh_bus_reset() to match the loop
+in scsi_eh_target_reset() and only loop over failed commands.
 
-Note that nowhere in your patch do you test if you are talking to an ATA device.
-This can be done by testing for the existence of VPD page 89h. See
-scsi_cdl_enable() in drivers/scsi/scsi.c for an example where we had to check
-for that. But also note that we do not issue ATA commands based on that test. We
-keep issuing SCSI commands and libata takes care of the translation. uas does
-not use libata though, so if translation is needed, do it there.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_error.c | 62 ++++++++++++++++-----------------------
+ 1 file changed, 25 insertions(+), 37 deletions(-)
 
-But I have the same opinion as Christoph: working around USB adapters lack of
-support for a feature with passthrough commands issued from the kernel is really
-not ideal.
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index cdbad217d013..9f0ee01b319d 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1703,21 +1703,20 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
+ 			     struct list_head *work_q,
+ 			     struct list_head *done_q)
+ {
+-	struct scsi_cmnd *scmd, *chan_scmd, *next;
++	LIST_HEAD(tmp_list);
+ 	LIST_HEAD(check_list);
+-	unsigned int channel;
+-	enum scsi_disposition rtn;
+ 
+-	/*
+-	 * we really want to loop over the various channels, and do this on
+-	 * a channel by channel basis.  we should also check to see if any
+-	 * of the failed commands are on soft_reset devices, and if so, skip
+-	 * the reset.
+-	 */
++	list_splice_init(work_q, &tmp_list);
++
++	while (!list_empty(&tmp_list)) {
++		struct scsi_cmnd *next, *scmd;
++		enum scsi_disposition rtn;
++		unsigned int channel;
+ 
+-	for (channel = 0; channel <= shost->max_channel; channel++) {
+ 		if (scsi_host_eh_past_deadline(shost)) {
++			/* push back on work queue for further processing */
+ 			list_splice_init(&check_list, work_q);
++			list_splice_init(&tmp_list, work_q);
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				shost_printk(KERN_INFO, shost,
+ 					    "%s: skip BRST, past eh deadline\n",
+@@ -1725,43 +1724,32 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
+ 			return list_empty(work_q);
+ 		}
+ 
+-		chan_scmd = NULL;
+-		list_for_each_entry(scmd, work_q, eh_entry) {
+-			if (channel == scmd_channel(scmd)) {
+-				chan_scmd = scmd;
+-				break;
+-				/*
+-				 * FIXME add back in some support for
+-				 * soft_reset devices.
+-				 */
+-			}
+-		}
++		scmd = list_first_entry(&tmp_list, struct scsi_cmnd, eh_entry);
++		channel = scmd_channel(scmd);
+ 
+-		if (!chan_scmd)
+-			continue;
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+ 			shost_printk(KERN_INFO, shost,
+ 				     "%s: Sending BRST chan: %d\n",
+ 				     current->comm, channel));
+-		rtn = scsi_try_bus_reset(chan_scmd);
+-		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+-			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+-				if (channel == scmd_channel(scmd)) {
+-					if (rtn == FAST_IO_FAIL)
+-						__scsi_eh_finish_cmd(scmd,
+-								     done_q,
+-								     DID_TRANSPORT_DISRUPTED);
+-					else
+-						list_move_tail(&scmd->eh_entry,
+-							       &check_list);
+-				}
+-			}
+-		} else {
++		rtn = scsi_try_bus_reset(scmd);
++		if (rtn != SUCCESS && rtn != FAST_IO_FAIL) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				shost_printk(KERN_INFO, shost,
+ 					     "%s: BRST failed chan: %d\n",
+ 					     current->comm, channel));
+ 		}
++		list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
++			if (scmd_channel(scmd) != channel)
++				continue;
++
++			if (rtn == SUCCESS)
++				list_move_tail(&scmd->eh_entry, &check_list);
++			else if (rtn == FAST_IO_FAIL)
++				__scsi_eh_finish_cmd(scmd, done_q,
++						     DID_TRANSPORT_DISRUPTED);
++			else
++				list_move_tail(&scmd->eh_entry, work_q);
++		}
+ 	}
+ 	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
+ }
 -- 
-Damien Le Moal
-Western Digital Research
+2.35.3
 
