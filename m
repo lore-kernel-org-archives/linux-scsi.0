@@ -2,84 +2,156 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF60CCDB465
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 06:20:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EEE9CDB474
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 07:02:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229636AbjJPGUj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Oct 2023 02:20:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48598 "EHLO
+        id S231142AbjJPHCY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Oct 2023 03:02:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbjJPGUj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 02:20:39 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57CFA95;
-        Sun, 15 Oct 2023 23:20:37 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 31FF96732A; Mon, 16 Oct 2023 08:20:33 +0200 (CEST)
-Date:   Mon, 16 Oct 2023 08:20:32 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v2 04/15] fs: Restore write hint support
-Message-ID: <20231016062032.GB26670@lst.de>
-References: <20231005194129.1882245-1-bvanassche@acm.org> <20231005194129.1882245-5-bvanassche@acm.org>
+        with ESMTP id S229639AbjJPHCX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 03:02:23 -0400
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83975D9;
+        Mon, 16 Oct 2023 00:02:21 -0700 (PDT)
+Received: by mail-ej1-x629.google.com with SMTP id a640c23a62f3a-98377c5d53eso632127766b.0;
+        Mon, 16 Oct 2023 00:02:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1697439740; x=1698044540; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=JIhJBlbfwa6Zp2zLHD2ldrf9h2gYA0FwmEhnEtZ+bAA=;
+        b=MgXEtRK4mXbs+M0Z8vSkYzPI7bTAv+bs8lG8kNrSHR1IjueQH6IMrixUGB1y/eafF4
+         RlKBERIZmqCJ0bjOWpGY7PS0sZZojGX1BuWOn6Md+xUfOnhx2UhDk3fw+w1GmaLzdSze
+         NIdcPncMnFRrKGN4xS1QcTHBiJd3SIHJ8J/n0y6bCnJ0jb0d9iEBCCIObefpqdZowNMM
+         QPH+Mwn1uH7MygrXLHqT8jxJMzbSA230HQACXho8lCN/2hL6VBlV46wCkJuhMtbQGPKr
+         TFvLBNDKojtreGlRxv1I9Cqkx6AkAsgrevAGTIJJuyQpXB+LNE4ENqSF/8fJB9inJUrt
+         vuIQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697439740; x=1698044540;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=JIhJBlbfwa6Zp2zLHD2ldrf9h2gYA0FwmEhnEtZ+bAA=;
+        b=oAKV/2oWditLkt0jwtxEUjQvq2ATp2Y6KxL5CpjiqEDK4p4TndT5wbdgx9TqR85E9O
+         NY9Qva1nUdEqqKPrvlPM1dewFKoRlIHfB2UGW0RGEjAdDkDSZ5J+OvOrUwDFEjY33mup
+         vUWsQHPSFkR6Xql+RRWsfO/R1tZ+kfzHF3GgTCjbkdgT9CA8BtvVxhZaK1EovCxiBal9
+         X/GsxtqGufJw1/C4wFuuEvaUfAOaA0D1ZJxX4BtrOJiMq8H8EE/XJCzt0f0pFqEWNheq
+         x5L6kyg/BiJcjlNKgLI/2SauvLNX2V8URNA3asYD196A+lz5NVnTR3tm2BvEZx2yLshF
+         Vtag==
+X-Gm-Message-State: AOJu0Yw2+N1/uti18kZHVpwgGVGztCdcNWs4OKzy6Om5IoWWrLkcl9JM
+        vhCn5GZCP+sHuyN/0BoPuAJXTgku8NQ=
+X-Google-Smtp-Source: AGHT+IH28wgV2U9Nyc6iqsQnirqZTp1XcCXiz7OPfsAX1XjoVX6nEUujS5Hfl6zbDoMKfNKEp7yxww==
+X-Received: by 2002:a17:907:7804:b0:9ad:9225:ced2 with SMTP id la4-20020a170907780400b009ad9225ced2mr27086794ejc.62.1697439739572;
+        Mon, 16 Oct 2023 00:02:19 -0700 (PDT)
+Received: from sauvignon.fi.muni.cz ([2001:718:801:22c:bdcb:518:be8f:6a76])
+        by smtp.gmail.com with ESMTPSA id e16-20020a170906749000b0099bd0b5a2bcsm3447276ejl.101.2023.10.16.00.02.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Oct 2023 00:02:18 -0700 (PDT)
+From:   Milan Broz <gmazyland@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de,
+        linux-kernel@vger.kernel.org, Milan Broz <gmazyland@gmail.com>
+Subject: [PATCH] scsi: use ATA-12 pass-thru for OPAL as fallback
+Date:   Mon, 16 Oct 2023 09:02:11 +0200
+Message-ID: <20231016070211.39502-1-gmazyland@gmail.com>
+X-Mailer: git-send-email 2.42.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231005194129.1882245-5-bvanassche@acm.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 05, 2023 at 12:40:50PM -0700, Bart Van Assche wrote:
-> This patch reverts a small subset of commit c75e707fe1aa ("block: remove
-> the per-bio/request write hint"). The following functionality has been
-> restored:
+USB attached storage (handled by UAS or usb-storage driver) does not
+support SCSI SECURITY IN/OUT commands. (USB adapters usually do not
+support it, and USB drivers also turn off SCSI command enumeration).
 
-Please explain this in terms of what you add.  The fact that it restores
-something isn't more than a little footnote added at the end.
+The original sedutils (used to configure OPAL from userspace)
+always used the ATA-12 pass-through command.
 
-> --- /dev/null
-> +++ b/include/linux/fs-lifetime.h
+Internal kernel implementation for OPAL interface (sed-opal ioctls)
+currently supports only SCSI SECURITY IN/OUT command wrapper.
 
-The name seems a bit odd for something that primarily deals with bios.
-bio-lifetime.h would seem like a better fit.
+This patch adds an optional wrapper to the SCSI layer for the ATA-12
+pass-thru command as an alternative if SECURITY IN/OUT is unavailable.
+The wrapper has the same structure as tools that talk to OPAL drives
+through ioctl from userspace.
 
-> @@ -0,0 +1,20 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#include <linux/bio.h>
-> +#include <linux/fs.h>
-> +#include <linux/ioprio.h>
-> +
-> +static inline enum rw_hint bio_get_data_lifetime(struct bio *bio)
-> +{
-> +	/* +1 to map 0 onto WRITE_LIFE_NONE. */
-> +	return IOPRIO_PRIO_LIFETIME(bio->bi_ioprio) + 1;
+All common USB/SATA or USB/NVMe adapters I tested need this patch.
 
-This seems a little to magic.  Why not a lookup table?
+In short, these steps are run for OPAL support check:
+  1) Storage driver enables security driver flag (security_supported).
+     USB-attached storage drivers will enable it in a separate patchset.
+     SCSI and NNVMe drivers do it already. If the flag is not enabled,
+     no following steps are run, and OPAL remains disabled.
+  2) SCSI device enumerates SECURITY IN/OUT command support. If detected,
+     SECURITY ON/OUT wrapper is used (as in the current code).
+     If not, new ATA-12 pass-thru wrapper is used instead.
+  3) SED OPAL code tries OPAL discovery command for the device.
+     If it receives a correct reply, OPAL is enabled for the device.
+     If SCSI SECURITY or ATA-12 command with discovery command is rejected,
+     OPAL remains disabled.
 
-> +}
-> +
-> +static inline void bio_set_data_lifetime(struct bio *bio, enum rw_hint lifetime)
+Note, USB attached storage needs an additional patchset sent separately
+as requested by USB driver maintainers (it contains required changes
+related to USB quirk processing).
 
-Please avoid the overly long line.
+Signed-off-by: Milan Broz <gmazyland@gmail.com>
+---
+ drivers/scsi/sd.c | 33 +++++++++++++++++++++++++++++++--
+ 1 file changed, 31 insertions(+), 2 deletions(-)
 
-> +	/* -1 to map WRITE_LIFE_NONE onto 0. */
-> +	if (lifetime != 0)
-> +		lifetime--;
-> +	WARN_ON_ONCE(lifetime & ~IOPRIO_LIFETIME_MASK);
-
-I'd return here instead of propagating the bogus value.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 83b6a3f3863b..3782556cb461 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -686,6 +686,32 @@ static int sd_sec_submit(void *data, u16 spsp, u8 secp, void *buffer,
+ 			       &exec_args);
+ 	return ret <= 0 ? ret : -EIO;
+ }
++
++static int sd_ata12_submit(void *data, u16 spsp, u8 secp, void *buffer,
++		size_t len, bool send)
++{
++	struct scsi_disk *sdkp = data;
++	struct scsi_device *sdev = sdkp->device;
++	u8 cdb[12] = { 0, };
++	const struct scsi_exec_args exec_args = {
++		.req_flags = BLK_MQ_REQ_PM,
++	};
++	int ret;
++
++	cdb[0] = ATA_12;
++	cdb[1] = (send ? 5 /* ATA_PROTOCOL_PIO_DATA_IN */ : 4 /* ATA_PROTOCOL_PIO_DATA_OUT */) << 1;
++	cdb[2] = 2 /* t_length */ | (1 << 2) /* byt_blok */ | ((send ?  0 : 1) << 3) /* t_dir */;
++	cdb[3] = secp;
++	put_unaligned_le16(len / 512, &cdb[4]);
++	put_unaligned_le16(spsp, &cdb[6]);
++	cdb[9] = send ? 0x5e /* ATA_CMD_TRUSTED_SND */: 0x5c /* ATA_CMD_TRUSTED_RCV */;
++
++	ret = scsi_execute_cmd(sdev, cdb, send ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
++			       buffer, len, SD_TIMEOUT, sdkp->max_retries,
++			       &exec_args);
++	return ret <= 0 ? ret : -EIO;
++}
++
+ #endif /* CONFIG_BLK_SED_OPAL */
+ 
+ /*
+@@ -3699,8 +3725,11 @@ static int sd_probe(struct device *dev)
+ 		goto out;
+ 	}
+ 
+-	if (sdkp->security) {
+-		sdkp->opal_dev = init_opal_dev(sdkp, &sd_sec_submit);
++	if (sdp->security_supported) {
++		if (sdkp->security)
++		    sdkp->opal_dev = init_opal_dev(sdkp, &sd_sec_submit);
++		else
++		    sdkp->opal_dev = init_opal_dev(sdkp, &sd_ata12_submit);
+ 		if (sdkp->opal_dev)
+ 			sd_printk(KERN_NOTICE, sdkp, "supports TCG Opal\n");
+ 	}
+-- 
+2.42.0
 
