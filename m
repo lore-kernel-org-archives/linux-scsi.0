@@ -2,114 +2,190 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14088CDB47E
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 02:09:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53755CDB465
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 03:59:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231253AbjJPCJu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Oct 2023 22:09:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43288 "EHLO
+        id S231461AbjJPD7j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Oct 2023 23:59:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231135AbjJPCJt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Oct 2023 22:09:49 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88123AB;
-        Sun, 15 Oct 2023 19:09:47 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.55])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4S80qF33b0z15NRk;
-        Mon, 16 Oct 2023 10:07:05 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Mon, 16 Oct 2023 10:09:44 +0800
-Message-ID: <b1a236de-3ee5-b854-5e94-05bd09e00b9b@huawei.com>
-Date:   Mon, 16 Oct 2023 10:09:43 +0800
+        with ESMTP id S229503AbjJPD7i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Oct 2023 23:59:38 -0400
+Received: from mail-qk1-x731.google.com (mail-qk1-x731.google.com [IPv6:2607:f8b0:4864:20::731])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4CBBDC
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Oct 2023 20:59:32 -0700 (PDT)
+Received: by mail-qk1-x731.google.com with SMTP id af79cd13be357-774141bb415so244985785a.3
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Oct 2023 20:59:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1697428772; x=1698033572; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=7Fy2uXPSp00n0L9agixVGjkKRi+BAuNJikDZecg3kJc=;
+        b=ibHRZaM+573wshnrKRlSglHzlFVf3SIfxhaFEg2Pk/4CVfrHQq7GNpPKO7A3hv68eV
+         FxkcXewXz/L30qN+BEio7VYsTNUXJ50LUkuFBpMAskHrXLE1abXnMYUx4j0DuS8kvpGT
+         5QByUyDsUSdeeiOIEcKw3Ms9k/xaCEwiurB6mqz50zulWZUvgLEDI8/jA+gaqc0zPgfp
+         Zlmg4CAf3XkW6GhTqiPAPZ1MWgGuEiRlPhjVsFOMhy1wcAGuCI4oq3WSergoxaK5wFuO
+         URlCX8a5S7TyzJ4l6c6S+9w16EE1X3ck/0+xOFqnIrk4e7qTskqlDSqzkM7VsVBi5oJb
+         OsjQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697428772; x=1698033572;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7Fy2uXPSp00n0L9agixVGjkKRi+BAuNJikDZecg3kJc=;
+        b=aoGfrXDP/+AnZCAIW2CC+QGIWzZpCLp46NHb3MRddmIUKZNkop1bqQm6NPFSHOEgyG
+         erZMHkHVw83nKUsmshQguSfye1bq/i8Zt7UM+6XB48YvQpt6EO7J+fS0gEF0Yw1gW+al
+         pU1k+vSxuzIIUlYXuvzpTlnoXSNDIqgJsUrp1O6O5tLdgvTVJOxgybDP9KpBkpNYeapv
+         GeJPsylEMfezuEeav01fLFBvFlxUnEfXuDPaIP/whar1xtDo/qFVpQ9UqUNvfWmVPOto
+         z/P45Gb0ZQ/uILxoXP9fdkhV8fG/+IuE4u0kdtjGn7gVoepbgS3NLTB0YpdnkSD7Mn7u
+         D2/w==
+X-Gm-Message-State: AOJu0YyOZ5qLuhoAMvK0oWzmRKdA6Hxn2KIV1UnbyWDfuM3vZCqQS2PH
+        f4PxgmGiKqRJzdJu7hHiUEpY
+X-Google-Smtp-Source: AGHT+IGmaiHTpzlc1miv3/HBvOix8MsEgsaBm40HudFTD6vONeU9BVRe9umhScM/ElUfwEJHgYYTLQ==
+X-Received: by 2002:a05:620a:b5c:b0:775:7e16:2cdf with SMTP id x28-20020a05620a0b5c00b007757e162cdfmr29126942qkg.39.1697428771855;
+        Sun, 15 Oct 2023 20:59:31 -0700 (PDT)
+Received: from thinkpad ([59.92.103.190])
+        by smtp.gmail.com with ESMTPSA id w10-20020a0cc24a000000b0065b229ecb8dsm3101936qvh.3.2023.10.15.20.59.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 15 Oct 2023 20:59:31 -0700 (PDT)
+Date:   Mon, 16 Oct 2023 09:29:17 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        quic_nitirawa@quicinc.com, quic_narepall@quicinc.com,
+        quic_bhaskarv@quicinc.com, quic_richardp@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
+        bmasney@redhat.com, krzysztof.kozlowski@linaro.org,
+        linux-kernel@vger.kernel.org, nm@ti.com, sboyd@kernel.org,
+        myungjoo.ham@samsung.com, kyungmin.park@samsung.com,
+        cw00.choi@samsung.com, andersson@kernel.org,
+        konrad.dybcio@linaro.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jejb@linux.ibm.com
+Subject: Re: [PATCH v7 0/5] UFS: Add OPP support
+Message-ID: <20231016035917.GA39962@thinkpad>
+References: <20231012172129.65172-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH v6 00/10] scsi:scsi_debug: Add error injection for single
- device
-Content-Language: en-US
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Douglas Gilbert <dgilbert@interlog.com>
-CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <louhongxiang@huawei.com>
-References: <20231010092051.608007-1-haowenchao2@huawei.com>
-From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <20231010092051.608007-1-haowenchao2@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemm000012.china.huawei.com (7.193.23.142)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231012172129.65172-1-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/10/10 17:20, Wenchao Hao wrote:
-> The original error injection mechanism was based on scsi_host which
-> could not inject fault for a single SCSI device.
+On Thu, Oct 12, 2023 at 10:51:24PM +0530, Manivannan Sadhasivam wrote:
+> Hi,
 > 
-> This patchset provides the ability to inject errors for a single
-> SCSI device. Now we support inject timeout errors, queuecommand
-> errors, and hostbyte, driverbyte, statusbyte, and sense data for
-> specific SCSI Command. Two new error injection is defined to make
-> abort command or reset LUN failed.
+> This series adds OPP (Operating Points) support to UFSHCD driver.
 > 
-> Besides error injection for single device, this patchset add a
-> new interface to make reset target failed for each scsi_target.
+> Motivation behind adding OPP support is to scale both clocks as well as
+> regulators/performance state dynamically. Currently, UFSHCD just scales
+> clock frequency during runtime with the help of "freq-table-hz" property
+> defined in devicetree. With the addition of OPP tables in devicetree (as
+> done for Qcom SDM845 and SM8250 SoCs in this series) UFSHCD can now scale
+> both clocks and performance state of power domain which helps in power
+> saving.
 > 
-> The first two patch add a debugfs interface to add and inquiry single
-> device's error injection info; the third patch defined how to remove
-> an injection which has been added. The following 5 patches use the
-> injection info and generate the related error type. The last two just
-> add a new interface to make reset target failed and control
-> scsi_device's allow_restart flag.
+> For the addition of OPP support to UFSHCD, there are changes required to
+> the OPP framework and devfreq drivers. The OPP framework changes are already
+> merged and the devfreq change is added in this series.
 > 
-
-Friendly ping...
-
-> V6:
->    - Check return value of debugfs_create_xxx() and print error log
->      if debugfs_create_xxx() return error
->    - Fix typo in description of patch7 and patch8
->    - Update the description of patch10
+> Credits
+> =======
 > 
-> V5:
->    - Using rcu list to sync between error inject add, remove and check
->    - Add module parameter "allow_restart" to control scsi_device's
->      allow_restart flag
+> This series is a continuation of previous work by Krzysztof Kozlowski [1].
 > 
-> V4:
->    - Fix BUG_ON triggered by schedule in atomic context when rmmod scsi_debug
->      Closes: https://lore.kernel.org/oe-lkp/202308031027.5941ce5f-oliver.sang@intel.com
+> Testing
+> =======
 > 
-> V3:
->    - Add two more error types to fail abort command and lun reset
->    - Fix memleak when rmmod scsi_debug without clearing errors injected
->    - Fix memkeak because did not implement release in sdebug_error_fops
->    - Fix possible NULL point access in scsi_debug_slave_destroy
->    - Move specific error type's description to each single patch which
->      implement this error type
->    - Add interface to make target reset fail
+> This series is tested on 96Boards RB3 (SDM845 SoC) and RB5 (SM8250 SoC)
+> development boards.
 > 
-> V2:
->    - Using debugfs rather than sysfs attribute interface to manage error
+> Merging Strategy
+> ================
 > 
-> Wenchao Hao (10):
->    scsi: scsi_debug: create scsi_debug directory in the debugfs filesystem
->    scsi: scsi_debug: Add interface to manage single device's error inject
->    scsi: scsi_debug: Define grammar to remove added error injection
->    scsi: scsi_debug: timeout command if the error is injected
->    scsi: scsi_debug: Return failed value if the error is injected
->    scsi: scsi_debug: set command's result and sense data if the error is injected
->    scsi: scsi_debug: Add new error injection abort failed
->    scsi: scsi_debug: Add new error injection reset lun failed
->    scsi: scsi_debug: Add debugfs interface to fail target reset
->    scsi: scsi_debug: Add param to control sdev's allow_restart
-> 
->   drivers/scsi/scsi_debug.c | 575 +++++++++++++++++++++++++++++++++++++-
->   1 file changed, 570 insertions(+), 5 deletions(-)
+> Since the devfreq patch got an Ack from the maintainer, either it can be merged
+> to scsi tree with rest of the patches or merged separately through devfreq tree.
 > 
 
+Martin, can you please merge the ufs patches (drivers,bindings) for v6.7? Note
+that the devfreq patch already got merged and the above text is outdated (my
+bad).
+
+- Mani
+
+> Thanks,
+> Mani
+> 
+> [1] https://lore.kernel.org/all/20220513061347.46480-1-krzysztof.kozlowski@linaro.org/
+> 
+> Changes in v7:
+> 
+> * Added missing EXPORT_SYMBOL_GPL() for ufshcd_opp_config_clks() API as reported
+>   by Alessandro Carminati
+> 
+> Changes in v6:
+> 
+> * Collected tags from Dmitry
+> * Fixed bindings issues reported by Krzysztof
+> 
+> Changes in v5:
+> 
+> * Dropped the devfreq patch since it got applied
+> * Fixed the bindings issue reported by DT bot
+> * Rebased on top of mkp/scsi/for-next
+> 
+> Changes in v4:
+> 
+> * Rebased on top of v6.6-rc3
+> 
+> Changes in v3:
+> 
+> * Rebased on top of linux-next/master tag: next-20230731
+> * Dropped the already applied patches (dts, opp binding and framework)
+> * Moved the interconnect patches to a separate series:
+>   https://lore.kernel.org/linux-scsi/20230731145020.41262-1-manivannan.sadhasivam@linaro.org/
+> * Moved ufshcd_opp_config_clks() API to ufshcd.c to fix the build failure
+>   reported by Kbuild bot: https://lore.kernel.org/all/202307210542.KoLHRbU6-lkp@intel.com/
+> * Collected Acks
+> * v2: https://lore.kernel.org/all/20230720054100.9940-1-manivannan.sadhasivam@linaro.org/
+> 
+> Changes in v2:
+> 
+> * Added more description to the bindings patch 2/15
+> * Fixed dev_pm_opp_put() usage in patch 10/15
+> * Added a new patch for adding enums for UFS lanes 14/15
+> * Changed the icc variables to mem_bw and cfg_bw and used
+>   the enums for gears and lanes in bw_table
+> * Collected review tags
+> * Added SCSI list and folks
+> * Removed duplicate patches
+> 
+> Krzysztof Kozlowski (2):
+>   dt-bindings: ufs: common: add OPP table
+>   arm64: dts: qcom: sdm845: Add OPP table support to UFSHC
+> 
+> Manivannan Sadhasivam (3):
+>   scsi: ufs: core: Add OPP support for scaling clocks and regulators
+>   scsi: ufs: host: Add support for parsing OPP
+>   arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
+> 
+>  .../devicetree/bindings/ufs/ufs-common.yaml   |  35 +++-
+>  arch/arm64/boot/dts/qcom/sdm845.dtsi          |  42 +++-
+>  arch/arm64/boot/dts/qcom/sm8250.dtsi          |  39 +++-
+>  drivers/ufs/core/ufshcd.c                     | 180 ++++++++++++++----
+>  drivers/ufs/host/ufshcd-pltfrm.c              |  78 ++++++++
+>  include/ufs/ufshcd.h                          |   7 +
+>  6 files changed, 326 insertions(+), 55 deletions(-)
+> 
+> -- 
+> 2.25.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
