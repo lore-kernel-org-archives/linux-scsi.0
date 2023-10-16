@@ -2,180 +2,193 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3ACCDB465
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 07:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBA77CDB465
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 07:26:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229633AbjJPH0R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Oct 2023 03:26:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37008 "EHLO
+        id S232012AbjJPH0U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Oct 2023 03:26:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231974AbjJPH0Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 03:26:16 -0400
+        with ESMTP id S231139AbjJPH0R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 03:26:17 -0400
 Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B751DC;
-        Mon, 16 Oct 2023 00:26:14 -0700 (PDT)
-Received: by mail-ej1-x62f.google.com with SMTP id a640c23a62f3a-9b2cee40de8so852128866b.1;
-        Mon, 16 Oct 2023 00:26:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 277B1AD;
+        Mon, 16 Oct 2023 00:26:16 -0700 (PDT)
+Received: by mail-ej1-x62f.google.com with SMTP id a640c23a62f3a-99de884ad25so670917666b.3;
+        Mon, 16 Oct 2023 00:26:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697441173; x=1698045973; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1697441174; x=1698045974; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=jIF366p2fSWvwuEAKrDTEGDfvFAKQAfN3wG9+11Etbo=;
-        b=jJdIYDBOBsklVVLcgajtJGNsyFA+nzFZK6Tq+f/F6HFdCZ5rx7HAnjPOqjpKOfJyPx
-         9xk3zsgfi1UxA5LVaePQ9B4Lk2eg2DL7C/6Cec027KrEyVvqW2QFANDaaU/0TL5T/4co
-         KBBuOgoO3C7JlXc9DxsPvgK94/EbReB/BCacSgpLdCPshfT2MLtu5ne59G2zhXRMcqNz
-         6hSi5N3BvExd4OI6BmQpkBmsRBwKxtAaA1DtOUqhxtGj3cKBwIo6r6kVazeojSeXKuiA
-         JPy8P8jWTMbmM2efdZOfWmHpoCE9kYgIRVou09GgkNSMZa7i41/1V8QQq7SrGowl+uAn
-         KKYA==
+        bh=9yn0kwXr1RVgMWT0A2+tKxIpUEAvRZLOMuNavXtkYMc=;
+        b=nBr9a8roZ3rnMTd8GYjVANyeNO5sdgizuAM6x42mj0HnJ8yOYGNgiR0ybSEkcIa/xV
+         fvSp3X1fNFOdD51SL8E6ItTCNZOhxL/sutfI0IPJe0n6uKhzLqoH3cTNjPUQMRWzoE1r
+         qj1hvxP6DYT/BAOX/IeT5p9NFuDC9tiS/SqzE+MtYag9zufGanSJx6cf5N/Nuv73KUYw
+         EQah9AGYdyloioC8olphDvoaZVzv4BONoP5M/7xG5zw699kyZ45XWQcp9ry1l0/iSY+v
+         MknEQkcidZD7dfNpPvibP4XtmPti6vwQOtLt82A34iVgyMmEjlH4mpfu63Pdm37RxuLq
+         1Uag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697441173; x=1698045973;
+        d=1e100.net; s=20230601; t=1697441174; x=1698045974;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=jIF366p2fSWvwuEAKrDTEGDfvFAKQAfN3wG9+11Etbo=;
-        b=MUHheMQdyb4JY4u2OUEEzTYvHdMeYHRylzYLLAKBvNVxO1LnPR+TfkVFcP1BKYgi1h
-         KdulSbTlwEDiM2gtWj1Z1Hta2ks2MzUHG5X/68DBxyL5y0X/Georu4luryZaVLOAjXzo
-         0Mv5fJBbOEDEG10UOJQjvVw4/mLSkRbbU53ViZkDJ5GstCd4EBXoWIRbU81s4McaHG9k
-         G7oy97iuNm/EM14UIkUAZhYcc8HXsPZPqPTcK91EHb/Jnfe36KMnTMD/dYZnDt4fX0eR
-         tIqUES7dKabjty1/oDqknfJX+jUvE8vQWtUqCotItrzvxZXIBKTtFCv+KX6aWT87NcjV
-         HpmA==
-X-Gm-Message-State: AOJu0YwIHPXfew/SBki1jRcPqKKGmyH0vl13ysyfJF6aYQk+uDF44XZN
-        1cSH/rpMyNOz6+FYaubT2tmgADqXH9MOkw==
-X-Google-Smtp-Source: AGHT+IGve75sWFrhdh/ObqI+CeT6vriUkqD9+ABDF6ki+95UsIexy7TiBZGVskWLudzmRekYF+dFQQ==
-X-Received: by 2002:a17:907:3f12:b0:9ad:e3fd:d46c with SMTP id hq18-20020a1709073f1200b009ade3fdd46cmr7060305ejc.10.1697441172388;
-        Mon, 16 Oct 2023 00:26:12 -0700 (PDT)
+        bh=9yn0kwXr1RVgMWT0A2+tKxIpUEAvRZLOMuNavXtkYMc=;
+        b=eX5ISKpefxlqXErO9gHRIiDCCGW0eEK5Ub4671R7vU174R+yBrzZHgDVlINRn7c17I
+         55RfSUrRx1pRQ8sF/z5V1h+x+EhrTtT7uxqX0Wv4ZyzstIyC7G4o3tESn/sYrkro5Rff
+         8/2mRP02xkbLFCvf/jOflXTcKG1fp/eksA4swuRHWuRuSD5tssnoLYzB/2oqRbnNw2k2
+         PnvSidiQcTzCVkCfwAwmsUM9fy3wEzJ+bd6cMzr1WMhImH4X0AgTq/KXfXwzGcPkV+PI
+         H9RUvPDhtQffDwyZLPP1gTjQPHKyTctMpftCoohTg5b+Vq/WQaTrKyG0VNtc7j5DxhGK
+         zBCg==
+X-Gm-Message-State: AOJu0YyxVObHI/Bw+P7ysTceSpQ9Q8G5SxfIK2eGQG3KlnU4ziXvfOS1
+        yguS6dkdzOLJb3ZMw+9tdg2vX5KrqMNYiQ==
+X-Google-Smtp-Source: AGHT+IHIeXRmFlzDZVkQKaFpfF+F3X0Mii7YkIxxbIf/SjfUoqccK4V/i/hpsmqNcnXKU9YnjQOk+w==
+X-Received: by 2002:a17:907:7804:b0:9ae:5fe1:ef01 with SMTP id la4-20020a170907780400b009ae5fe1ef01mr28363422ejc.37.1697441174403;
+        Mon, 16 Oct 2023 00:26:14 -0700 (PDT)
 Received: from sauvignon.fi.muni.cz ([2001:718:801:22c:bdcb:518:be8f:6a76])
-        by smtp.gmail.com with ESMTPSA id n25-20020a17090673d900b0099297782aa9sm3399980ejl.49.2023.10.16.00.26.11
+        by smtp.gmail.com with ESMTPSA id n25-20020a17090673d900b0099297782aa9sm3399980ejl.49.2023.10.16.00.26.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Oct 2023 00:26:12 -0700 (PDT)
+        Mon, 16 Oct 2023 00:26:14 -0700 (PDT)
 From:   Milan Broz <gmazyland@gmail.com>
 To:     linux-usb@vger.kernel.org
 Cc:     usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org,
         stern@rowland.harvard.edu, gregkh@linuxfoundation.org,
         oneukum@suse.com, Milan Broz <gmazyland@gmail.com>
-Subject: [PATCH 0/7] usb-storage,uas: Support OPAL commands on USB attached devices.
-Date:   Mon, 16 Oct 2023 09:25:57 +0200
-Message-ID: <20231016072604.40179-1-gmazyland@gmail.com>
+Subject: [PATCH 2/7] usb-storage,uas: make internal quirks flags 64bit
+Date:   Mon, 16 Oct 2023 09:25:59 +0200
+Message-ID: <20231016072604.40179-3-gmazyland@gmail.com>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231006125445.122380-1-gmazyland@gmail.com>
+In-Reply-To: <20231016072604.40179-1-gmazyland@gmail.com>
 References: <20231006125445.122380-1-gmazyland@gmail.com>
+ <20231016072604.40179-1-gmazyland@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patchset adds support for OPAL commands (self-encrypted drives)
-through USB-attached storage (usb-storage and UAS drivers).
+Switch internal usb-storage quirk value to 64-bit as quirks currently
+use all 32 bits.
 
-The related SCSI change was sent in a separate patch
-https://lore.kernel.org/linux-scsi/20231016070211.39502-1-gmazyland@gmail.com/
+(Following patches are needed to use driver_info with a 64-bit
+value properly.)
 
-The first part (64-bit quirks) is generic and will be needed later anyway
-once new flags appear.
+Signed-off-by: Milan Broz <gmazyland@gmail.com>
+Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
+---
+ drivers/usb/storage/uas-detect.h   | 4 ++--
+ drivers/usb/storage/uas.c          | 4 ++--
+ drivers/usb/storage/usb.c          | 8 ++++----
+ drivers/usb/storage/usb.h          | 4 ++--
+ drivers/usb/storage/usual-tables.c | 2 +-
+ 5 files changed, 11 insertions(+), 11 deletions(-)
 
-1) Patches 1-5 only add support for 64-bit quirks for USB storage
-(unfortunately, USB device info can be 32-bit on 32-bit platforms,
-and we are out of space for flags now).
-
-2) Patches 6-7 enable OPAL commands on USB devices and adds
-IGNORE_OPAL quirk. The last patch uses the flag for Realtek 9210
-devices that do not behave correctly.
-
-More info
-
-1) 64bit USB storage quirk flags
-
-The quirks are transferred through the device info value, which
-is unsigned long (and as a part of USB infrastructure, it cannot
-be changed).
-After discussion on the USB list, I used high bit as an indicator
-that the values need to be translated/unpacked to 64bit
-(while lower values are used directly).
-
-This is implemented through a host-compiled program that
-generates device tables and uses a translation function.
-As both usb-storage and UAS drivers share a lot of headers and
-definitions, we need to generate separate files for usb-storage
-and UAS. Note that due to the linking of both UAS and mass-storage
-together, it must use separate names for translation tables.
-
-(I also tried to use a statically generated array for flags,
-but this increased the size of drivers significantly and
-the code was quite ugly...)
-
-2) Support for OPAL on USB attached storage.
-
-The main support for OPAL on USB-attached storage is
-straightforward (it depends on ATA-12 pass-thru support
-for security commands).
-Patch 6 enables the SCSI security flag for USB mass storage
-and UAS device by default.
-
-During device detection, the USB driver (mass-storage, UAS) enables
-the security driver flag to allow SED OPAL code to run OPAL discovery
-command for the device. If it receives a correct reply, OPAL is enabled
-for the device. If not (or if SCSI command is rejected), OPAL
-remains disabled.
-
-Enabling OPAL support may uncover many issues, as OPAL-locked devices
-often tend to generate errors on the locked range.
-
-Anyway, cryptsetup will soon support OPAL devices, and I think support
-for USB devices is a nice feature that enables users to unlock drives
-even if they are attached through USB adapters.
-
-There are also bugs in firmware implementations, so I added a quirk
-flag that can disable security commands for particular devices.
-
-The last patch uses this quirk for Realtek 9210, which seems to support
-OPAL commands, but after configuring OPAL locking range, it also sets
-the write-protected flag for the whole device.
-This is perhaps a bug in firmware (all versions I tried), and I will
-report that later to Realtek.
-
-
-Milan Broz (7):
-  usb-storage: remove UNUSUAL_VENDOR_INTF macro
-  usb-storage,uas: make internal quirks flags 64bit
-  usb-storage: use fflags index only in usb-storage driver
-  usb-storage,uas: use host helper to generate driver info
-  usb-storage,uas: do not convert device_info for 64-bit platforms
-  usb-storage,uas: enable security commands for USB-attached storage
-  usb-storage,uas: disable security commands (OPAL) for RT9210 chip
-    family
-
- .../admin-guide/kernel-parameters.txt         |   2 +
- drivers/usb/storage/Makefile                  |  28 +++
- drivers/usb/storage/alauda.c                  |   2 +-
- drivers/usb/storage/cypress_atacb.c           |   2 +-
- drivers/usb/storage/datafab.c                 |   2 +-
- drivers/usb/storage/ene_ub6250.c              |   2 +-
- drivers/usb/storage/freecom.c                 |   2 +-
- drivers/usb/storage/isd200.c                  |   2 +-
- drivers/usb/storage/jumpshot.c                |   2 +-
- drivers/usb/storage/karma.c                   |   2 +-
- drivers/usb/storage/mkflags.c                 | 235 ++++++++++++++++++
- drivers/usb/storage/onetouch.c                |   2 +-
- drivers/usb/storage/realtek_cr.c              |   2 +-
- drivers/usb/storage/scsiglue.c                |   4 +
- drivers/usb/storage/sddr09.c                  |   2 +-
- drivers/usb/storage/sddr55.c                  |   2 +-
- drivers/usb/storage/shuttle_usbat.c           |   2 +-
- drivers/usb/storage/uas-detect.h              |   6 +-
- drivers/usb/storage/uas.c                     |  29 +--
- drivers/usb/storage/unusual_devs.h            |  11 +
- drivers/usb/storage/unusual_uas.h             |  11 +
- drivers/usb/storage/usb-ids.h                 |  37 +++
- drivers/usb/storage/usb.c                     |  44 ++--
- drivers/usb/storage/usb.h                     |   7 +-
- drivers/usb/storage/usual-tables.c            |  38 +--
- include/linux/usb_usual.h                     |   2 +
- 26 files changed, 385 insertions(+), 95 deletions(-)
- create mode 100644 drivers/usb/storage/mkflags.c
- create mode 100644 drivers/usb/storage/usb-ids.h
-
+diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
+index d73282c0ec50..4d3b49e5b87a 100644
+--- a/drivers/usb/storage/uas-detect.h
++++ b/drivers/usb/storage/uas-detect.h
+@@ -54,12 +54,12 @@ static int uas_find_endpoints(struct usb_host_interface *alt,
+ 
+ static int uas_use_uas_driver(struct usb_interface *intf,
+ 			      const struct usb_device_id *id,
+-			      unsigned long *flags_ret)
++			      u64 *flags_ret)
+ {
+ 	struct usb_host_endpoint *eps[4] = { };
+ 	struct usb_device *udev = interface_to_usbdev(intf);
+ 	struct usb_hcd *hcd = bus_to_hcd(udev->bus);
+-	unsigned long flags = id->driver_info;
++	u64 flags = id->driver_info;
+ 	struct usb_host_interface *alt;
+ 	int r;
+ 
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 2583ee9815c5..696bb0b23599 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -37,7 +37,7 @@ struct uas_dev_info {
+ 	struct usb_anchor cmd_urbs;
+ 	struct usb_anchor sense_urbs;
+ 	struct usb_anchor data_urbs;
+-	unsigned long flags;
++	u64 flags;
+ 	int qdepth, resetting;
+ 	unsigned cmd_pipe, status_pipe, data_in_pipe, data_out_pipe;
+ 	unsigned use_streams:1;
+@@ -988,7 +988,7 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	struct Scsi_Host *shost = NULL;
+ 	struct uas_dev_info *devinfo;
+ 	struct usb_device *udev = interface_to_usbdev(intf);
+-	unsigned long dev_flags;
++	u64 dev_flags;
+ 
+ 	if (!uas_use_uas_driver(intf, id, &dev_flags))
+ 		return -ENODEV;
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index bb1fbeddc5aa..d1ad6a2509ab 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -460,13 +460,13 @@ static int associate_dev(struct us_data *us, struct usb_interface *intf)
+ #define TOLOWER(x) ((x) | 0x20)
+ 
+ /* Adjust device flags based on the "quirks=" module parameter */
+-void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
++void usb_stor_adjust_quirks(struct usb_device *udev, u64 *fflags)
+ {
+ 	char *p;
+ 	u16 vid = le16_to_cpu(udev->descriptor.idVendor);
+ 	u16 pid = le16_to_cpu(udev->descriptor.idProduct);
+-	unsigned f = 0;
+-	unsigned int mask = (US_FL_SANE_SENSE | US_FL_BAD_SENSE |
++	u64 f = 0;
++	u64 mask = (US_FL_SANE_SENSE | US_FL_BAD_SENSE |
+ 			US_FL_FIX_CAPACITY | US_FL_IGNORE_UAS |
+ 			US_FL_CAPACITY_HEURISTICS | US_FL_IGNORE_DEVICE |
+ 			US_FL_NOT_LOCKABLE | US_FL_MAX_SECTORS_64 |
+@@ -605,7 +605,7 @@ static int get_device_info(struct us_data *us, const struct usb_device_id *id,
+ 		us->fflags &= ~US_FL_GO_SLOW;
+ 
+ 	if (us->fflags)
+-		dev_info(pdev, "Quirks match for vid %04x pid %04x: %lx\n",
++		dev_info(pdev, "Quirks match for vid %04x pid %04x: %llx\n",
+ 				le16_to_cpu(dev->descriptor.idVendor),
+ 				le16_to_cpu(dev->descriptor.idProduct),
+ 				us->fflags);
+diff --git a/drivers/usb/storage/usb.h b/drivers/usb/storage/usb.h
+index fd3f32670873..97c6196d639b 100644
+--- a/drivers/usb/storage/usb.h
++++ b/drivers/usb/storage/usb.h
+@@ -95,7 +95,7 @@ struct us_data {
+ 	struct usb_interface	*pusb_intf;	 /* this interface */
+ 	const struct us_unusual_dev   *unusual_dev;
+ 						/* device-filter entry     */
+-	unsigned long		fflags;		 /* fixed flags from filter */
++	u64			fflags;		 /* fixed flags from filter */
+ 	unsigned long		dflags;		 /* dynamic atomic bitflags */
+ 	unsigned int		send_bulk_pipe;	 /* cached pipe values */
+ 	unsigned int		recv_bulk_pipe;
+@@ -192,7 +192,7 @@ extern int usb_stor_probe2(struct us_data *us);
+ extern void usb_stor_disconnect(struct usb_interface *intf);
+ 
+ extern void usb_stor_adjust_quirks(struct usb_device *dev,
+-		unsigned long *fflags);
++		u64 *fflags);
+ 
+ #define module_usb_stor_driver(__driver, __sht, __name) \
+ static int __init __driver##_init(void) \
+diff --git a/drivers/usb/storage/usual-tables.c b/drivers/usb/storage/usual-tables.c
+index b3c3ea04c11c..a26029e43dfd 100644
+--- a/drivers/usb/storage/usual-tables.c
++++ b/drivers/usb/storage/usual-tables.c
+@@ -19,7 +19,7 @@
+ 		    vendorName, productName, useProtocol, useTransport, \
+ 		    initFunction, flags) \
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+-  .driver_info = (flags) }
++  .driver_info = (kernel_ulong_t)(flags) }
+ 
+ #define COMPLIANT_DEV	UNUSUAL_DEV
+ 
 -- 
 2.42.0
 
