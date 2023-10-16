@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62F43CDB465
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 09:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16FB5CDB474
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 09:25:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232969AbjJPJZF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S232970AbjJPJZF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 16 Oct 2023 05:25:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47076 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232907AbjJPJYv (ORCPT
+        with ESMTP id S232849AbjJPJYv (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 05:24:51 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3BC2ED
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAEE8EA
         for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2023 02:24:49 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id AD8B221C47;
+        by smtp-out1.suse.de (Postfix) with ESMTP id ABE6621C45;
         Mon, 16 Oct 2023 09:24:44 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 190312CB4C;
+        by relay2.suse.de (Postfix) with ESMTP id 1D2542D10D;
         Mon, 16 Oct 2023 09:24:44 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id CF17E51EBDC9; Mon, 16 Oct 2023 11:24:43 +0200 (CEST)
+        id D5A0B51EBDCB; Mon, 16 Oct 2023 11:24:43 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/17] fas216: Rework device reset to not rely on SCSI command pointer
-Date:   Mon, 16 Oct 2023 11:24:19 +0200
-Message-Id: <20231016092430.55557-7-hare@suse.de>
+Subject: [PATCH 07/17] xen-scsifront: add scsi device as argument to scsifront_do_request()
+Date:   Mon, 16 Oct 2023 11:24:20 +0200
+Message-Id: <20231016092430.55557-8-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231016092430.55557-1-hare@suse.de>
 References: <20231016092430.55557-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: ++++++++
+X-Spamd-Bar: +++++++++++
 Authentication-Results: smtp-out1.suse.de;
         dkim=none;
         dmarc=none;
         spf=softfail (smtp-out1.suse.de: 149.44.160.134 is neither permitted nor denied by domain of hare@suse.de) smtp.mailfrom=hare@suse.de
 X-Rspamd-Server: rspamd2
-X-Spamd-Result: default: False [8.49 / 50.00];
+X-Spamd-Result: default: False [11.49 / 50.00];
          ARC_NA(0.00)[];
          FROM_HAS_DN(0.00)[];
          TO_DN_SOME(0.00)[];
@@ -63,119 +63,87 @@ X-Spamd-Result: default: False [8.49 / 50.00];
          R_DKIM_NA(0.20)[];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
-         BAYES_HAM(-3.00)[100.00%]
-X-Rspamd-Queue-Id: AD8B221C47
+         BAYES_HAM(-0.00)[12.26%]
+X-Rspamd-Queue-Id: ABE6621C45
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The device reset code should not rely on the SCSI command pointer;
-it will be going away with the device reset handler rework.
+Add scsi device as argument to scsifront_do_request() so that it
+will be possible to call it with a NULL command pointer.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/arm/fas216.c | 39 +++++++++++++++++++--------------------
- 1 file changed, 19 insertions(+), 20 deletions(-)
+ drivers/scsi/xen-scsifront.c | 31 ++++++++++++++++++++-----------
+ 1 file changed, 20 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 4ce0b2d73614..e6289c6af5ef 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -1985,7 +1985,6 @@ static void fas216_devicereset_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
- {
- 	fas216_log(info, LOG_ERROR, "fas216 device reset complete");
- 
--	info->rstSCpnt = NULL;
- 	info->rst_dev_status = 1;
- 	wake_up(&info->eh_wait);
+diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+index 9ec55ddc1204..a0c13200d53a 100644
+--- a/drivers/scsi/xen-scsifront.c
++++ b/drivers/scsi/xen-scsifront.c
+@@ -178,7 +178,8 @@ static void scsifront_put_rqid(struct vscsifrnt_info *info, uint32_t id)
+ 		scsifront_wake_up(info);
  }
-@@ -2143,12 +2142,12 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
  
- 	fas216_checkmagic(info);
- 
--	if (!info->SCpnt)
-+	if (!info->SCpnt && info->rst_dev_status)
- 		goto no_command;
- 
- 	SCpnt = info->SCpnt;
- 	info->SCpnt = NULL;
--    	info->scsi.phase = PHASE_IDLE;
-+	info->scsi.phase = PHASE_IDLE;
- 
- 	if (info->scsi.aborting) {
- 		fas216_log(info, 0, "uncaught abort - returning DID_ABORT");
-@@ -2160,7 +2159,7 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
- 	 * Sanity check the completion - if we have zero bytes left
- 	 * to transfer, we should not have a valid pointer.
- 	 */
--	if (info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
-+	if (SCpnt && info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
- 		scmd_printk(KERN_INFO, SCpnt,
- 			    "zero bytes left to transfer, but buffer pointer still valid: ptr=%p len=%08x\n",
- 			    info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
-@@ -2173,12 +2172,18 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
- 	 * the sense information, fas216_kick will re-assert the busy
- 	 * status.
- 	 */
--	info->device[SCpnt->device->id].parity_check = 0;
--	clear_bit(SCpnt->device->id * 8 +
--		  (u8)(SCpnt->device->lun & 0x7), info->busyluns);
--
--	fn = (void (*)(FAS216_Info *, struct scsi_cmnd *, unsigned int))SCpnt->host_scribble;
--	fn(info, SCpnt, result);
-+	if (SCpnt) {
-+		info->device[SCpnt->device->id].parity_check = 0;
-+		clear_bit(SCpnt->device->id * 8 +
-+			  (u8)(SCpnt->device->lun & 0x7), info->busyluns);
-+	}
-+	if (!info->rst_dev_status) {
-+		info->rst_dev_status = 1;
-+		wake_up(&info->eh_wait);
-+	} else {
-+		fn = (void (*)(FAS216_Info *, struct scsi_cmnd *, unsigned int))SCpnt->host_scribble;
-+		fn(info, SCpnt, result);
-+	}
- 
- 	if (info->scsi.irq) {
- 		spin_lock_irqsave(&info->host_lock, flags);
-@@ -2478,9 +2483,10 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
-  */
- int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
+-static int scsifront_do_request(struct vscsifrnt_info *info,
++static int scsifront_do_request(struct scsi_device *sdev,
++				struct vscsifrnt_info *info,
+ 				struct vscsifrnt_shadow *shadow)
  {
--	FAS216_Info *info = (FAS216_Info *)SCpnt->device->host->hostdata;
-+	struct scsi_device *sdev = SCpnt->device;
-+	FAS216_Info *info = (FAS216_Info *)sdev->host->hostdata;
- 	unsigned long flags;
--	int i, res = FAILED, target = SCpnt->device->id;
-+	int i, res = FAILED, target = sdev->id;
+ 	struct vscsiif_front_ring *ring = &(info->ring);
+@@ -205,17 +206,25 @@ static int scsifront_do_request(struct vscsifrnt_info *info,
+ 	ring_req->ref_rqid    = shadow->ref_rqid;
+ 	ring_req->nr_segments = shadow->nr_segments;
  
- 	fas216_log(info, LOG_ERROR, "device reset for target %d", target);
+-	ring_req->id      = sc->device->id;
+-	ring_req->lun     = sc->device->lun;
+-	ring_req->channel = sc->device->channel;
+-	ring_req->cmd_len = sc->cmd_len;
++	ring_req->id      = sdev->id;
++	ring_req->lun     = sdev->lun;
++	ring_req->channel = sdev->channel;
  
-@@ -2494,7 +2500,7 @@ int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
- 		 * and we need a bus reset.
- 		 */
- 		if (info->SCpnt && !info->scsi.disconnectable &&
--		    info->SCpnt->device->id == SCpnt->device->id)
-+		    info->SCpnt->device->id == sdev->id)
+-	BUG_ON(sc->cmd_len > VSCSIIF_MAX_COMMAND_SIZE);
++	if (sc) {
++		ring_req->cmd_len = sc->cmd_len;
+ 
+-	memcpy(ring_req->cmnd, sc->cmnd, sc->cmd_len);
++		BUG_ON(sc->cmd_len > VSCSIIF_MAX_COMMAND_SIZE);
+ 
+-	ring_req->sc_data_direction   = (uint8_t)sc->sc_data_direction;
+-	ring_req->timeout_per_command = scsi_cmd_to_rq(sc)->timeout / HZ;
++		memcpy(ring_req->cmnd, sc->cmnd, sc->cmd_len);
++
++		ring_req->sc_data_direction   = (uint8_t)sc->sc_data_direction;
++		ring_req->timeout_per_command =
++			scsi_cmd_to_rq(sc)->timeout / HZ;
++	} else {
++		ring_req->cmd_len = VSCSIIF_MAX_COMMAND_SIZE;
++		memset(ring_req->cmnd, 0, VSCSIIF_MAX_COMMAND_SIZE);
++		ring_req->sc_data_direction = DMA_NONE;
++	}
+ 
+ 	for (i = 0; i < (shadow->nr_segments & ~VSCSIIF_SG_GRANT); i++)
+ 		ring_req->seg[i] = shadow->seg[i];
+@@ -637,7 +646,7 @@ static int scsifront_queuecommand(struct Scsi_Host *shost,
+ 		return 0;
+ 	}
+ 
+-	if (scsifront_do_request(info, shadow)) {
++	if (scsifront_do_request(sc->device, info, shadow)) {
+ 		scsifront_gnttab_done(info, shadow);
+ 		goto busy;
+ 	}
+@@ -685,7 +694,7 @@ static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
+ 		if (scsifront_enter(info))
+ 			goto fail;
+ 
+-		if (!scsifront_do_request(info, shadow))
++		if (!scsifront_do_request(sc->device, info, shadow))
  			break;
  
- 		/*
-@@ -2512,14 +2518,7 @@ int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
- 		for (i = 0; i < 8; i++)
- 			clear_bit(target * 8 + i, info->busyluns);
- 
--		/*
--		 * Hijack this SCSI command structure to send
--		 * a bus device reset message to this device.
--		 */
--		SCpnt->host_scribble = (void *)fas216_devicereset_done;
--
- 		info->rst_dev_status = 0;
--		info->rstSCpnt = SCpnt;
- 
- 		if (info->scsi.phase == PHASE_IDLE)
- 			fas216_kick(info);
+ 		scsifront_return(info);
 -- 
 2.35.3
 
