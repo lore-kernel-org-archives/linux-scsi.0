@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB808CDB483
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 09:25:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62F43CDB465
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 09:25:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232912AbjJPJZE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Oct 2023 05:25:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47014 "EHLO
+        id S232969AbjJPJZF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Oct 2023 05:25:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232785AbjJPJYv (ORCPT
+        with ESMTP id S232907AbjJPJYv (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 05:24:51 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09A5EE8
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3BC2ED
         for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2023 02:24:49 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id B36A321C4A;
+        by smtp-out1.suse.de (Postfix) with ESMTP id AD8B221C47;
         Mon, 16 Oct 2023 09:24:44 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 23BC32D115;
+        by relay2.suse.de (Postfix) with ESMTP id 190312CB4C;
         Mon, 16 Oct 2023 09:24:44 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 05C9C51EBDDF; Mon, 16 Oct 2023 11:24:44 +0200 (CEST)
+        id CF17E51EBDC9; Mon, 16 Oct 2023 11:24:43 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 17/17] dc395x: Remove 'scmd' parameter from doing_srb_done()
-Date:   Mon, 16 Oct 2023 11:24:30 +0200
-Message-Id: <20231016092430.55557-18-hare@suse.de>
+Subject: [PATCH 06/17] fas216: Rework device reset to not rely on SCSI command pointer
+Date:   Mon, 16 Oct 2023 11:24:19 +0200
+Message-Id: <20231016092430.55557-7-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231016092430.55557-1-hare@suse.de>
 References: <20231016092430.55557-1-hare@suse.de>
@@ -64,81 +64,118 @@ X-Spamd-Result: default: False [8.49 / 50.00];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
          BAYES_HAM(-3.00)[100.00%]
-X-Rspamd-Queue-Id: B36A321C4A
+X-Rspamd-Queue-Id: AD8B221C47
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-doing_srb_done() has two passes, one for the 'going' list
-and one for the 'waiting' list. When aborting commands on these
-lists we should be calling scsi_done() for each command, and
-not only for the command which triggered the error.
+The device reset code should not rely on the SCSI command pointer;
+it will be going away with the device reset handler rework.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/dc395x.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/scsi/arm/fas216.c | 39 +++++++++++++++++++--------------------
+ 1 file changed, 19 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index c8e86f8a631e..822d21e7da14 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -367,8 +367,7 @@ static inline void enable_msgout_abort(struct AdapterCtlBlk *acb,
- 		struct ScsiReqBlk *srb);
- static void build_srb(struct scsi_cmnd *cmd, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb);
--static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_code,
--		struct scsi_cmnd *cmd, u8 force);
-+static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_code, u8 force);
- static void scsi_reset_detect(struct AdapterCtlBlk *acb);
- static void pci_unmap_srb(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb);
- static void pci_unmap_srb_sense(struct AdapterCtlBlk *acb,
-@@ -1182,7 +1181,7 @@ static int __dc395x_eh_bus_reset(struct scsi_cmnd *cmd)
- 	set_basic_config(acb);
- 
- 	reset_dev_param(acb);
--	doing_srb_done(acb, DID_RESET, cmd, 0);
-+	doing_srb_done(acb, DID_RESET, 0);
- 	acb->active_dcb = NULL;
- 	acb->acb_flag = 0;	/* RESET_DETECT, RESET_DONE ,RESET_DEV */
- 	waiting_process_next(acb);
-@@ -2896,7 +2895,7 @@ static void disconnect(struct AdapterCtlBlk *acb)
- 		dcb->flag &= ~ABORT_DEV_;
- 		acb->last_reset = jiffies + HZ / 2 + 1;
- 		dprintkl(KERN_ERR, "disconnect: SRB_ABORT_SENT\n");
--		doing_srb_done(acb, DID_ABORT, srb->cmd, 1);
-+		doing_srb_done(acb, DID_ABORT, 1);
- 		waiting_process_next(acb);
- 	} else {
- 		if ((srb->state & (SRB_START_ + SRB_MSGOUT))
-@@ -3337,8 +3336,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 
- 
- /* abort all cmds in our queues */
--static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
--		struct scsi_cmnd *cmd, u8 force)
-+static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag, u8 force)
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 4ce0b2d73614..e6289c6af5ef 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -1985,7 +1985,6 @@ static void fas216_devicereset_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
  {
- 	struct DeviceCtlBlk *dcb;
- 	dprintkl(KERN_INFO, "doing_srb_done: pids ");
-@@ -3389,7 +3387,7 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
- 			if (force) {
- 				/* For new EH, we normally don't need to give commands back,
- 				 * as they all complete or all time out */
--				scsi_done(cmd);
-+				scsi_done(p);
- 			}
- 		}
- 		if (!list_empty(&dcb->srb_waiting_list))
-@@ -3475,7 +3473,7 @@ static void scsi_reset_detect(struct AdapterCtlBlk *acb)
- 	} else {
- 		acb->acb_flag |= RESET_DETECT;
- 		reset_dev_param(acb);
--		doing_srb_done(acb, DID_RESET, NULL, 1);
-+		doing_srb_done(acb, DID_RESET, 1);
- 		/*DC395x_RecoverSRB( acb ); */
- 		acb->active_dcb = NULL;
- 		acb->acb_flag = 0;
+ 	fas216_log(info, LOG_ERROR, "fas216 device reset complete");
+ 
+-	info->rstSCpnt = NULL;
+ 	info->rst_dev_status = 1;
+ 	wake_up(&info->eh_wait);
+ }
+@@ -2143,12 +2142,12 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
+ 
+ 	fas216_checkmagic(info);
+ 
+-	if (!info->SCpnt)
++	if (!info->SCpnt && info->rst_dev_status)
+ 		goto no_command;
+ 
+ 	SCpnt = info->SCpnt;
+ 	info->SCpnt = NULL;
+-    	info->scsi.phase = PHASE_IDLE;
++	info->scsi.phase = PHASE_IDLE;
+ 
+ 	if (info->scsi.aborting) {
+ 		fas216_log(info, 0, "uncaught abort - returning DID_ABORT");
+@@ -2160,7 +2159,7 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
+ 	 * Sanity check the completion - if we have zero bytes left
+ 	 * to transfer, we should not have a valid pointer.
+ 	 */
+-	if (info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
++	if (SCpnt && info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
+ 		scmd_printk(KERN_INFO, SCpnt,
+ 			    "zero bytes left to transfer, but buffer pointer still valid: ptr=%p len=%08x\n",
+ 			    info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
+@@ -2173,12 +2172,18 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
+ 	 * the sense information, fas216_kick will re-assert the busy
+ 	 * status.
+ 	 */
+-	info->device[SCpnt->device->id].parity_check = 0;
+-	clear_bit(SCpnt->device->id * 8 +
+-		  (u8)(SCpnt->device->lun & 0x7), info->busyluns);
+-
+-	fn = (void (*)(FAS216_Info *, struct scsi_cmnd *, unsigned int))SCpnt->host_scribble;
+-	fn(info, SCpnt, result);
++	if (SCpnt) {
++		info->device[SCpnt->device->id].parity_check = 0;
++		clear_bit(SCpnt->device->id * 8 +
++			  (u8)(SCpnt->device->lun & 0x7), info->busyluns);
++	}
++	if (!info->rst_dev_status) {
++		info->rst_dev_status = 1;
++		wake_up(&info->eh_wait);
++	} else {
++		fn = (void (*)(FAS216_Info *, struct scsi_cmnd *, unsigned int))SCpnt->host_scribble;
++		fn(info, SCpnt, result);
++	}
+ 
+ 	if (info->scsi.irq) {
+ 		spin_lock_irqsave(&info->host_lock, flags);
+@@ -2478,9 +2483,10 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
+  */
+ int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
+ {
+-	FAS216_Info *info = (FAS216_Info *)SCpnt->device->host->hostdata;
++	struct scsi_device *sdev = SCpnt->device;
++	FAS216_Info *info = (FAS216_Info *)sdev->host->hostdata;
+ 	unsigned long flags;
+-	int i, res = FAILED, target = SCpnt->device->id;
++	int i, res = FAILED, target = sdev->id;
+ 
+ 	fas216_log(info, LOG_ERROR, "device reset for target %d", target);
+ 
+@@ -2494,7 +2500,7 @@ int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
+ 		 * and we need a bus reset.
+ 		 */
+ 		if (info->SCpnt && !info->scsi.disconnectable &&
+-		    info->SCpnt->device->id == SCpnt->device->id)
++		    info->SCpnt->device->id == sdev->id)
+ 			break;
+ 
+ 		/*
+@@ -2512,14 +2518,7 @@ int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
+ 		for (i = 0; i < 8; i++)
+ 			clear_bit(target * 8 + i, info->busyluns);
+ 
+-		/*
+-		 * Hijack this SCSI command structure to send
+-		 * a bus device reset message to this device.
+-		 */
+-		SCpnt->host_scribble = (void *)fas216_devicereset_done;
+-
+ 		info->rst_dev_status = 0;
+-		info->rstSCpnt = SCpnt;
+ 
+ 		if (info->scsi.phase == PHASE_IDLE)
+ 			fas216_kick(info);
 -- 
 2.35.3
 
