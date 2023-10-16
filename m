@@ -2,87 +2,68 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E48BCDB465
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 20:42:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22C64CDB465
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 20:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232345AbjJPUm0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Oct 2023 16:42:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47954 "EHLO
+        id S234165AbjJPUsv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Oct 2023 16:48:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229848AbjJPUmZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 16:42:25 -0400
-Received: from mail-qt1-x82d.google.com (mail-qt1-x82d.google.com [IPv6:2607:f8b0:4864:20::82d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 825E195
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2023 13:42:22 -0700 (PDT)
-Received: by mail-qt1-x82d.google.com with SMTP id d75a77b69052e-41995d42c3bso29368631cf.1
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2023 13:42:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1697488941; x=1698093741; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=dG6puU4CvEV7aF+U/Mag7WkzVmM3GpbFWar+GBiCglc=;
-        b=nvbQRF3t8YegiB+0SJGyM8G0tkCsCdwHErFqtRJEnemzQyc1dqhDEUT8LpcSNK+tv6
-         evc3eMD/KfGZzvc9gRHAqPMHXdXn8WnzN3xhd+hMhUqoz+brdktJelPHJWox6vddFhXe
-         ZBNwfL8QOpJBVbc7jLZKCXVVRm1LkPIMnH2jPV5YdGs9JzJeeNvuz5OQJlWyguAu3t7/
-         KZ3rtyb49PR0uzjsu6GoUIZuvUZenjR7XeEMvN3GU7r4xq/QEhxgk1juWAHfyQVFtTm4
-         MqLVA2VjcFNoRGuPTMovdGtkbNB5Vj9hllhoXVDw1hxN35gjsnefHUHVjFKvEbJBR2LX
-         fqWA==
+        with ESMTP id S233992AbjJPUsv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 16:48:51 -0400
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 433D5E1;
+        Mon, 16 Oct 2023 13:48:49 -0700 (PDT)
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1c434c33ec0so31592735ad.3;
+        Mon, 16 Oct 2023 13:48:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697488941; x=1698093741;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=dG6puU4CvEV7aF+U/Mag7WkzVmM3GpbFWar+GBiCglc=;
-        b=WFgLJnCrUEmKQu4RnTANzODhqakNwO8uSKz3NQKOe/DkRt9iAyjnTOkUy2c7FVlZTg
-         FpjFw2/caJu8pEKqzIyLSjzYaXyiOtVs3vSC1ujSf565eMU9Xt2JvlQ9qC+/zB7QjwtS
-         w7mqitaeX/T1xEOqSneHcAeI7/gVjbRm7SSoU3RRQWBB9fa3eeBLO5d8rAye49PANtqX
-         VCdjcQw4MF9aqysPaeATlmKXHjjvCiVw4SE3DU+0a/XYoSELJdm780jOCEpSdMDQcbAV
-         iJNRjWLkys7NZE/H3cJ24yK+BjbrINLgBY2WtFEX2givNThG700t2goRnNYgt2r6z0PO
-         RJTw==
-X-Gm-Message-State: AOJu0YxLTXc1JRAzpHJg11uIaUS8dkLv0IUBeGPDr9KO2kPgm1p298/0
-        JK6DcT85Hb58Kir/zgczZgvV5HKGfxGLBliMCG0czQ==
-X-Google-Smtp-Source: AGHT+IGF7iPg1Hiq6NhMvRzrdMr23M5AG/64g5y4mc0Q3T+MCjqAdXGcmSazqjBhQXhC3p0NqRfJsBe/KGDKnRMiVAA=
-X-Received: by 2002:a05:6214:508b:b0:66d:4db7:4b6d with SMTP id
- kk11-20020a056214508b00b0066d4db74b6dmr595558qvb.24.1697488941498; Mon, 16
- Oct 2023 13:42:21 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1697489329; x=1698094129;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=KV9prvHA0M7QZinlPb4BQohxb6H26VD1PfEbZdebscE=;
+        b=v4DyTWJr3pNB3KbHIypP7K96FMywZAOb8y+GXRGvvZE6Hr2zX8uqPpU9P4Q0j8zZ6Y
+         /itKtgScVFwa97JLiWm+XtlTNBpTXi8bzKHSDdSZla35PQY60HO4/VU7Q9tp8t3XHdQK
+         B9I4D3SQFL5s6uJnUHreylLu2qLyH0zMmnf7cEvIBDCJtZXEJSJtC+TdsuIxE/OmhR1L
+         HKdDN4A6qBPxMrxu0rHOsfaIVQhn2rCX1b6Q2U3w+ClALO9Y5B1pIb807QAWXFNkTbmU
+         7S7ubXya5O0ZDRLi4dIZr7Pf3ptgBJr+ILqlWs5LApnEq0//La1p59imV4oJQOlsfueC
+         G/Kw==
+X-Gm-Message-State: AOJu0YwjaLHA86TiDfzO3hW6BNgTT30bzOeQTKzQriEpJuOuWsXC/s3Z
+        6A+DYdOgxXaNhcwhVfg+vVV43t2YTyD/Eg==
+X-Google-Smtp-Source: AGHT+IFkvv/tv6RjlLyjM0ofju9bgKhWNmucCnhXIAxUZJd7JXif6CjF1EnK44LVsjoeQYMP3cL81Q==
+X-Received: by 2002:a17:903:1206:b0:1bb:6875:5a73 with SMTP id l6-20020a170903120600b001bb68755a73mr499453plh.2.1697489328546;
+        Mon, 16 Oct 2023 13:48:48 -0700 (PDT)
+Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
+        by smtp.gmail.com with ESMTPSA id e13-20020a17090301cd00b001c88f77a156sm51257plh.153.2023.10.16.13.48.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 16 Oct 2023 13:48:48 -0700 (PDT)
+Message-ID: <fb983fa3-bf4d-42aa-b5c3-4927504c32d9@acm.org>
+Date:   Mon, 16 Oct 2023 13:48:46 -0700
 MIME-Version: 1.0
-From:   enh <enh@google.com>
-Date:   Mon, 16 Oct 2023 13:42:06 -0700
-Message-ID: <CAJgzZorfiG26TCfwNBVYJkkkVBAQowJhRUtX4EzWSxwZbfNoyw@mail.gmail.com>
-Subject: [PATCH] scsi_status_is_good() uses __KERNEL__ constants.
-To:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi_status_is_good() uses __KERNEL__ constants.
+Content-Language: en-US
+To:     enh <enh@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+References: <CAJgzZorfiG26TCfwNBVYJkkkVBAQowJhRUtX4EzWSxwZbfNoyw@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAJgzZorfiG26TCfwNBVYJkkkVBAQowJhRUtX4EzWSxwZbfNoyw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Without this missing #ifdef, userspace code trying to use this header
-directly won't compile. glibc manually removes it, bionic removes it
-using a script. If we add this, the preprocessor can remove it instead.
+On 10/16/23 13:42, enh wrote:
+> Without this missing #ifdef, userspace code trying to use this header
+> directly won't compile. glibc manually removes it, bionic removes it
+> using a script. If we add this, the preprocessor can remove it instead.
 
-Signed-off-by: Elliott Hughes <enh@google.com>
----
- include/scsi/scsi.h | 2 ++
- 1 file changed, 2 insertions(+)
+Is that the right solution? Shouldn't these software projects be
+modified such that <scsi/scsi.h> is *not* included?
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index ec093594ba53..a585e2067373 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -186,6 +186,7 @@ enum scsi_disposition {
- /* Used to obtain the PCI location of a device */
- #define SCSI_IOCTL_GET_PCI 0x5387
+Thanks,
 
-+#ifdef __KERNEL__
- /** scsi_status_is_good - check the status return.
-  *
-  * @status: the status passed up from the driver (including host and
-@@ -216,5 +217,6 @@ static inline bool scsi_status_is_good(int status)
-  /* FIXME: this is obsolete in SAM-3 */
-  (status == SAM_STAT_COMMAND_TERMINATED));
- }
-+#endif /* __KERNEL__ */
+Bart.
 
- #endif /* _SCSI_SCSI_H */
--- 
-2.42.0.655.g421f12c284-goog
