@@ -2,182 +2,180 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D0E1CDB465
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 07:24:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3ACCDB465
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Oct 2023 07:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231838AbjJPHYW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Oct 2023 03:24:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33270 "EHLO
+        id S229633AbjJPH0R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Oct 2023 03:26:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229590AbjJPHYV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 03:24:21 -0400
-Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B23CBAD;
-        Mon, 16 Oct 2023 00:24:19 -0700 (PDT)
-Received: by mail-ed1-x52e.google.com with SMTP id 4fb4d7f45d1cf-53dd3f169d8so6962938a12.3;
-        Mon, 16 Oct 2023 00:24:19 -0700 (PDT)
+        with ESMTP id S231974AbjJPH0Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Oct 2023 03:26:16 -0400
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B751DC;
+        Mon, 16 Oct 2023 00:26:14 -0700 (PDT)
+Received: by mail-ej1-x62f.google.com with SMTP id a640c23a62f3a-9b2cee40de8so852128866b.1;
+        Mon, 16 Oct 2023 00:26:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697441058; x=1698045858; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=wSC7zHohO45xUvqiXG5UdWP7+MJE4ZAs27gchq8/dWs=;
-        b=BqCPm7peQAcvCNhiSP86dSk+6kWGR46/Zv+djxFT8hjXv6epSszeee5CttS6U6tIVQ
-         q+9ocP22/zFu3UbRD5daJptu9lNzWs2GbwRJ7JCODMzaTAwBW1r6ADIuJk77/bhoS8fo
-         Qw0YapQBLOhz9JKcsV/RVrYqLZN8G8y+e/SUT7vCkdPQ7qsn1rOgBvJyQL4pnFBY3MX4
-         rktGIeFI3W3sIQ+wgJROspNYOU/bn81ip7A7hl4Si1Be5k8+FpBy3XK/BwU5Ra2/X0Gv
-         5XriI2Lace4SWKTgEBNDowyjTJjFb+Dbd387ZkleQeSXFLMRhlAu/If84IrcWyoiRGJj
-         xyog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697441058; x=1698045858;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1697441173; x=1698045973; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=wSC7zHohO45xUvqiXG5UdWP7+MJE4ZAs27gchq8/dWs=;
-        b=bYPvzOZ+BrRs4V1W3iMUsVuGY2JKiDB83uRI3/nIRxIYU3Mnqx0rI//wOA3OqUgWBo
-         ZCeZyyspmOLLzAWHe0/yeGbOSxX91mYv8f1b8yM6PdwpnqVssoiOyJvcdUvIaY2x5ufd
-         Z3iweSNDLLFQPrrXqyHJhZvPzjclgyO3EB+8gqC+VoQa3z4RPev+yowzZImv7bXetyOE
-         YfMOz3DtxtOY3ua6lPgcKRdwDCZOHnQYPHvsj6353PSCg1oUfh5pYKQ/P7Fuk7lHaLQu
-         5zVuyMHFt94r0KOm9hzZIH5sQSD4K+gEDs4Z0S5X9oI+Wgivyaxz95zhd33uSbYnCw/M
-         5RFQ==
-X-Gm-Message-State: AOJu0YxpOyZ6vyHtJXybjPLX+aolv+SXU9+gb3c9DOHkWBsYmtcRYp3F
-        ncoYwQPdOI9L7Q5bIb3b0wc=
-X-Google-Smtp-Source: AGHT+IED8Uc7u9Q33Xz81tG2cG2G73FgkYddfWKAtR4yw2f/5FSQrcfJcCBNE+7KI+/dwjooz0qyFg==
-X-Received: by 2002:a17:907:1c9e:b0:9bd:f031:37b6 with SMTP id nb30-20020a1709071c9e00b009bdf03137b6mr6620155ejc.49.1697441057766;
-        Mon, 16 Oct 2023 00:24:17 -0700 (PDT)
-Received: from [147.251.42.107] (laomedon.fi.muni.cz. [147.251.42.107])
-        by smtp.gmail.com with ESMTPSA id 29-20020a170906209d00b0099bc038eb2bsm3399712ejq.58.2023.10.16.00.24.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 16 Oct 2023 00:24:17 -0700 (PDT)
-Message-ID: <bf4d0580-62b1-4959-8fc4-a7ab86b7e980@gmail.com>
-Date:   Mon, 16 Oct 2023 09:24:16 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: use ATA-12 pass-thru for OPAL as fallback
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-References: <20231016070211.39502-1-gmazyland@gmail.com>
- <20231016070531.GA28537@lst.de>
-Content-Language: en-US
+        bh=jIF366p2fSWvwuEAKrDTEGDfvFAKQAfN3wG9+11Etbo=;
+        b=jJdIYDBOBsklVVLcgajtJGNsyFA+nzFZK6Tq+f/F6HFdCZ5rx7HAnjPOqjpKOfJyPx
+         9xk3zsgfi1UxA5LVaePQ9B4Lk2eg2DL7C/6Cec027KrEyVvqW2QFANDaaU/0TL5T/4co
+         KBBuOgoO3C7JlXc9DxsPvgK94/EbReB/BCacSgpLdCPshfT2MLtu5ne59G2zhXRMcqNz
+         6hSi5N3BvExd4OI6BmQpkBmsRBwKxtAaA1DtOUqhxtGj3cKBwIo6r6kVazeojSeXKuiA
+         JPy8P8jWTMbmM2efdZOfWmHpoCE9kYgIRVou09GgkNSMZa7i41/1V8QQq7SrGowl+uAn
+         KKYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697441173; x=1698045973;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=jIF366p2fSWvwuEAKrDTEGDfvFAKQAfN3wG9+11Etbo=;
+        b=MUHheMQdyb4JY4u2OUEEzTYvHdMeYHRylzYLLAKBvNVxO1LnPR+TfkVFcP1BKYgi1h
+         KdulSbTlwEDiM2gtWj1Z1Hta2ks2MzUHG5X/68DBxyL5y0X/Georu4luryZaVLOAjXzo
+         0Mv5fJBbOEDEG10UOJQjvVw4/mLSkRbbU53ViZkDJ5GstCd4EBXoWIRbU81s4McaHG9k
+         G7oy97iuNm/EM14UIkUAZhYcc8HXsPZPqPTcK91EHb/Jnfe36KMnTMD/dYZnDt4fX0eR
+         tIqUES7dKabjty1/oDqknfJX+jUvE8vQWtUqCotItrzvxZXIBKTtFCv+KX6aWT87NcjV
+         HpmA==
+X-Gm-Message-State: AOJu0YwIHPXfew/SBki1jRcPqKKGmyH0vl13ysyfJF6aYQk+uDF44XZN
+        1cSH/rpMyNOz6+FYaubT2tmgADqXH9MOkw==
+X-Google-Smtp-Source: AGHT+IGve75sWFrhdh/ObqI+CeT6vriUkqD9+ABDF6ki+95UsIexy7TiBZGVskWLudzmRekYF+dFQQ==
+X-Received: by 2002:a17:907:3f12:b0:9ad:e3fd:d46c with SMTP id hq18-20020a1709073f1200b009ade3fdd46cmr7060305ejc.10.1697441172388;
+        Mon, 16 Oct 2023 00:26:12 -0700 (PDT)
+Received: from sauvignon.fi.muni.cz ([2001:718:801:22c:bdcb:518:be8f:6a76])
+        by smtp.gmail.com with ESMTPSA id n25-20020a17090673d900b0099297782aa9sm3399980ejl.49.2023.10.16.00.26.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Oct 2023 00:26:12 -0700 (PDT)
 From:   Milan Broz <gmazyland@gmail.com>
-Autocrypt: addr=gmazyland@gmail.com; keydata=
- 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
-In-Reply-To: <20231016070531.GA28537@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     linux-usb@vger.kernel.org
+Cc:     usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org,
+        stern@rowland.harvard.edu, gregkh@linuxfoundation.org,
+        oneukum@suse.com, Milan Broz <gmazyland@gmail.com>
+Subject: [PATCH 0/7] usb-storage,uas: Support OPAL commands on USB attached devices.
+Date:   Mon, 16 Oct 2023 09:25:57 +0200
+Message-ID: <20231016072604.40179-1-gmazyland@gmail.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231006125445.122380-1-gmazyland@gmail.com>
+References: <20231006125445.122380-1-gmazyland@gmail.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/16/23 09:05, Christoph Hellwig wrote:
-> On Mon, Oct 16, 2023 at 09:02:11AM +0200, Milan Broz wrote:
->> All common USB/SATA or USB/NVMe adapters I tested need this patch.
->>
->> In short, these steps are run for OPAL support check:
->>    1) Storage driver enables security driver flag (security_supported).
->>       USB-attached storage drivers will enable it in a separate patchset.
->>       SCSI and NNVMe drivers do it already. If the flag is not enabled,
->>       no following steps are run, and OPAL remains disabled.
->>    2) SCSI device enumerates SECURITY IN/OUT command support. If detected,
->>       SECURITY ON/OUT wrapper is used (as in the current code).
->>       If not, new ATA-12 pass-thru wrapper is used instead.
->>    3) SED OPAL code tries OPAL discovery command for the device.
->>       If it receives a correct reply, OPAL is enabled for the device.
->>       If SCSI SECURITY or ATA-12 command with discovery command is rejected,
->>       OPAL remains disabled.
->>
->> Note, USB attached storage needs an additional patchset sent separately
->> as requested by USB driver maintainers (it contains required changes
->> related to USB quirk processing).
-> 
-> This just feels wrong.  These adapters are broken if they can't
-> translated, and we should not put ATA command submission into
-> sd.c.
+This patchset adds support for OPAL commands (self-encrypted drives)
+through USB-attached storage (usb-storage and UAS drivers).
 
-I think it is blocked in USB layer as not running command enumeration,
-SCSI SECURITY will be never sent to the adapter through USB.
+The related SCSI change was sent in a separate patch
+https://lore.kernel.org/linux-scsi/20231016070211.39502-1-gmazyland@gmail.com/
 
-I understand the problem, but if you configure OPAL from userspace, ATA-12 is sent
-to these devices already - so why kernel cannot use it too?
+The first part (64-bit quirks) is generic and will be needed later anyway
+once new flags appear.
 
-> 
->> +	cdb[0] = ATA_12;
->> +	cdb[1] = (send ? 5 /* ATA_PROTOCOL_PIO_DATA_IN */ : 4 /* ATA_PROTOCOL_PIO_DATA_OUT */) << 1;
->> +	cdb[2] = 2 /* t_length */ | (1 << 2) /* byt_blok */ | ((send ?  0 : 1) << 3) /* t_dir */;
->> +	cdb[3] = secp;
->> +	put_unaligned_le16(len / 512, &cdb[4]);
->> +	put_unaligned_le16(spsp, &cdb[6]);
->> +	cdb[9] = send ? 0x5e /* ATA_CMD_TRUSTED_SND */: 0x5c /* ATA_CMD_TRUSTED_RCV */;
-> 
-> 
-> Also avoid all these crazy long lines, and please use the actual
-> constants.  Using a good old if/else is actually a very good way to
-> structure the code in a somewhat readable way.
+1) Patches 1-5 only add support for 64-bit quirks for USB storage
+(unfortunately, USB device info can be 32-bit on 32-bit platforms,
+and we are out of space for flags now).
 
-Sure, I was trying to no add additional includes that will mess this up, I'll reformat it if needed.
+2) Patches 6-7 enable OPAL commands on USB devices and adds
+IGNORE_OPAL quirk. The last patch uses the flag for Realtek 9210
+devices that do not behave correctly.
 
-Otherwise, this wrapper is exactly what is used is sedutils and also in our test utility
-that tries to work with OPAL commands directly
-https://github.com/mbroz/opal-toolset
+More info
 
-> 
->> +		if (sdkp->security)
->> +		    sdkp->opal_dev = init_opal_dev(sdkp, &sd_sec_submit);
->> +		else
->> +		    sdkp->opal_dev = init_opal_dev(sdkp, &sd_ata12_submit);
-> 
-> Messed up indentation here.
+1) 64bit USB storage quirk flags
 
-sorry, my bad, I hate such formatting myself and missed it here :-)
-  
-> besides the fact that the statement is fundamentally wrong and you'll
-> start sending ATA command to random devices.
+The quirks are transferred through the device info value, which
+is unsigned long (and as a part of USB infrastructure, it cannot
+be changed).
+After discussion on the USB list, I used high bit as an indicator
+that the values need to be translated/unpacked to 64bit
+(while lower values are used directly).
 
-So what do you suggest? As I said, this exactly happen if you configure it from userspace.
+This is implemented through a host-compiled program that
+generates device tables and uses a translation function.
+As both usb-storage and UAS drivers share a lot of headers and
+definitions, we need to generate separate files for usb-storage
+and UAS. Note that due to the linking of both UAS and mass-storage
+together, it must use separate names for translation tables.
 
-Can this be somehow limited? I did not find and way how to do it.
+(I also tried to use a statically generated array for flags,
+but this increased the size of drivers significantly and
+the code was quite ugly...)
 
-Milan
+2) Support for OPAL on USB attached storage.
+
+The main support for OPAL on USB-attached storage is
+straightforward (it depends on ATA-12 pass-thru support
+for security commands).
+Patch 6 enables the SCSI security flag for USB mass storage
+and UAS device by default.
+
+During device detection, the USB driver (mass-storage, UAS) enables
+the security driver flag to allow SED OPAL code to run OPAL discovery
+command for the device. If it receives a correct reply, OPAL is enabled
+for the device. If not (or if SCSI command is rejected), OPAL
+remains disabled.
+
+Enabling OPAL support may uncover many issues, as OPAL-locked devices
+often tend to generate errors on the locked range.
+
+Anyway, cryptsetup will soon support OPAL devices, and I think support
+for USB devices is a nice feature that enables users to unlock drives
+even if they are attached through USB adapters.
+
+There are also bugs in firmware implementations, so I added a quirk
+flag that can disable security commands for particular devices.
+
+The last patch uses this quirk for Realtek 9210, which seems to support
+OPAL commands, but after configuring OPAL locking range, it also sets
+the write-protected flag for the whole device.
+This is perhaps a bug in firmware (all versions I tried), and I will
+report that later to Realtek.
+
+
+Milan Broz (7):
+  usb-storage: remove UNUSUAL_VENDOR_INTF macro
+  usb-storage,uas: make internal quirks flags 64bit
+  usb-storage: use fflags index only in usb-storage driver
+  usb-storage,uas: use host helper to generate driver info
+  usb-storage,uas: do not convert device_info for 64-bit platforms
+  usb-storage,uas: enable security commands for USB-attached storage
+  usb-storage,uas: disable security commands (OPAL) for RT9210 chip
+    family
+
+ .../admin-guide/kernel-parameters.txt         |   2 +
+ drivers/usb/storage/Makefile                  |  28 +++
+ drivers/usb/storage/alauda.c                  |   2 +-
+ drivers/usb/storage/cypress_atacb.c           |   2 +-
+ drivers/usb/storage/datafab.c                 |   2 +-
+ drivers/usb/storage/ene_ub6250.c              |   2 +-
+ drivers/usb/storage/freecom.c                 |   2 +-
+ drivers/usb/storage/isd200.c                  |   2 +-
+ drivers/usb/storage/jumpshot.c                |   2 +-
+ drivers/usb/storage/karma.c                   |   2 +-
+ drivers/usb/storage/mkflags.c                 | 235 ++++++++++++++++++
+ drivers/usb/storage/onetouch.c                |   2 +-
+ drivers/usb/storage/realtek_cr.c              |   2 +-
+ drivers/usb/storage/scsiglue.c                |   4 +
+ drivers/usb/storage/sddr09.c                  |   2 +-
+ drivers/usb/storage/sddr55.c                  |   2 +-
+ drivers/usb/storage/shuttle_usbat.c           |   2 +-
+ drivers/usb/storage/uas-detect.h              |   6 +-
+ drivers/usb/storage/uas.c                     |  29 +--
+ drivers/usb/storage/unusual_devs.h            |  11 +
+ drivers/usb/storage/unusual_uas.h             |  11 +
+ drivers/usb/storage/usb-ids.h                 |  37 +++
+ drivers/usb/storage/usb.c                     |  44 ++--
+ drivers/usb/storage/usb.h                     |   7 +-
+ drivers/usb/storage/usual-tables.c            |  38 +--
+ include/linux/usb_usual.h                     |   2 +
+ 26 files changed, 385 insertions(+), 95 deletions(-)
+ create mode 100644 drivers/usb/storage/mkflags.c
+ create mode 100644 drivers/usb/storage/usb-ids.h
+
+-- 
+2.42.0
+
