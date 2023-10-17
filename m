@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DDB1CDB483
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 20:48:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E38DCDB483
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 20:48:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235005AbjJQUsZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 16:48:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37772 "EHLO
+        id S1344264AbjJQUsb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 16:48:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234920AbjJQUsW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 16:48:22 -0400
-Received: from mail-ot1-f46.google.com (mail-ot1-f46.google.com [209.85.210.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28C73F0;
-        Tue, 17 Oct 2023 13:48:20 -0700 (PDT)
-Received: by mail-ot1-f46.google.com with SMTP id 46e09a7af769-6bd04558784so4295711a34.3;
-        Tue, 17 Oct 2023 13:48:20 -0700 (PDT)
+        with ESMTP id S1343908AbjJQUsZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 16:48:25 -0400
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A56CC6;
+        Tue, 17 Oct 2023 13:48:23 -0700 (PDT)
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1ca74e77aecso20602815ad.1;
+        Tue, 17 Oct 2023 13:48:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697575699; x=1698180499;
+        d=1e100.net; s=20230601; t=1697575703; x=1698180503;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=0zKJwlNU37xBJ2eHozPULDjMADCdbgGWOVklVioEvRw=;
-        b=Gxlro9T61b1KesibqkjGemRoap/RNCyK/8Ee2ueiuBbn/a3JD2GtbtESncvg9wEgCP
-         snXF6aOXfo2/cwlBdWmc5qPXRdjDxokeB7+zqkYYJMC3/lGzfRyXaVmM+daR0bqJLnwV
-         uWpBSTZuQ+OYIPnNKgLGcKrv5yaoQ06TI/lO1sSdhZL5aoi1jlW1Z7HyODyWXA5bPiHP
-         vk/PEzDKHaWDMqxdohrtAvUKEMdU5CIIc4dSced8/EuqWcJ2BFIitSwa2H+VO/26ADok
-         C6P31FC24jakwi9xd/Xq+ltKRjzyqGF4dh4VxTEi/23CWsZcCCKKojTJhtabR7q5Go/c
-         jbwg==
-X-Gm-Message-State: AOJu0Yz8w6FtUUwwxK1cZCwEBPMl0uCBENN5j9wqoEB7QfSMTsQvXJ9a
-        qnJbo+navUeVtw6gI+DUHig=
-X-Google-Smtp-Source: AGHT+IEE6N0vYqYBGbaDDPav+vLSuM2Vwj8TQAV4LWIeBTn/WK/tEcpCesHGpwI+JsErwXCHOyTl/g==
-X-Received: by 2002:a9d:4811:0:b0:6c4:fc45:8681 with SMTP id c17-20020a9d4811000000b006c4fc458681mr3499731otf.25.1697575699367;
-        Tue, 17 Oct 2023 13:48:19 -0700 (PDT)
+        bh=m+VQXOryPBR0w8OfYGjgYJWwAn5XaqF9GFf/iAaLAsQ=;
+        b=OCZ3j4AOl9qNB9nFhw0cr57K8l8V670gFw9vK+O7jA+mCNn7i6Lt4Ahm4tWvDzm4BQ
+         d0GzEibgsAn4bDlMrEae7IJZi71UjV10aOnSGBUk0IGaxDZKlMCBn1oHnq6SNlY7RbTH
+         tRTVkciDiScRLcSjwymtYEQoq9n6/Wk8gGoupRUIKBmhHDAgWdvNF5TYm4q/uH95kTMj
+         TNLsIx0bSbSOwRLLiW5Ozcn1SOch3UujE7uXpa3GHhJi5oU2xx6+VWq+BLoWAEql/aRq
+         dP+lAbEem4PQCqGYH12CPJGOaodS8CkX/NzQZogn7XyX6IvyLS8G58IsJ4dFWd4fs2/r
+         LnxQ==
+X-Gm-Message-State: AOJu0YyUH5+xz9rgV5eMBgBZA1Yc3FKiYtxeCUzFLV48TpJiToI2rCRT
+        YUg36dhoePp7mRqE5hFyo5w=
+X-Google-Smtp-Source: AGHT+IGxj8k+Wf+TuS/3SI/H1kAqB/XVRY2YjyO9eAbl5kLOqsRSOSoUZXbQaHQDwAOj1fGmcP1PLQ==
+X-Received: by 2002:a17:903:2287:b0:1c9:dac0:fbc2 with SMTP id b7-20020a170903228700b001c9dac0fbc2mr4812720plh.13.1697575702834;
+        Tue, 17 Oct 2023 13:48:22 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:8f02:2919:9600:ac09])
-        by smtp.gmail.com with ESMTPSA id fa36-20020a056a002d2400b006b2e07a6235sm1874704pfb.136.2023.10.17.13.48.18
+        by smtp.gmail.com with ESMTPSA id fa36-20020a056a002d2400b006b2e07a6235sm1874704pfb.136.2023.10.17.13.48.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Oct 2023 13:48:19 -0700 (PDT)
+        Tue, 17 Oct 2023 13:48:22 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -48,10 +48,13 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Bean Huo <huobean@gmail.com>,
         Daejun Park <daejun7.park@samsung.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <dlemoal@kernel.org>
-Subject: [PATCH v3 02/14] block: Restore data lifetime support in struct bio and struct request
-Date:   Tue, 17 Oct 2023 13:47:10 -0700
-Message-ID: <20231017204739.3409052-3-bvanassche@acm.org>
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>
+Subject: [PATCH v3 04/14] fs/f2fs: Restore data lifetime support
+Date:   Tue, 17 Oct 2023 13:47:12 -0700
+Message-ID: <20231017204739.3409052-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.655.g421f12c284-goog
 In-Reply-To: <20231017204739.3409052-1-bvanassche@acm.org>
 References: <20231017204739.3409052-1-bvanassche@acm.org>
@@ -61,144 +64,348 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Provide a mechanism for filesystems to pass data lifetime information
-to block drivers. Data lifetime information can be used by block devices
-with append/erase storage technology (NAND flash) to reduce garbage
-collection activity.
-
-This patch restores a subset of the functionality that was removed by
+Restore support for the whint_mode mount option by reverting commit
+930e2607638d ("f2fs: remove obsolete whint_mode"). Additionally, restore
+the bio->bi_lifetime assignment in __bio_alloc() that was removed by
 commit c75e707fe1aa ("block: remove the per-bio/request write hint").
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: Bean Huo <beanhuo@micron.com>
+Cc: Daejun Park <daejun7.park@samsung.com>
+Cc: Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Chao Yu <chao@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/bio.c                 | 2 ++
- block/blk-crypto-fallback.c | 1 +
- block/blk-merge.c           | 6 ++++++
- block/blk-mq.c              | 1 +
- block/bounce.c              | 1 +
- include/linux/blk-mq.h      | 2 ++
- include/linux/blk_types.h   | 2 ++
- 7 files changed, 15 insertions(+)
+ Documentation/filesystems/f2fs.rst | 70 ++++++++++++++++++++++
+ fs/f2fs/data.c                     |  2 +
+ fs/f2fs/f2fs.h                     |  9 +++
+ fs/f2fs/segment.c                  | 95 ++++++++++++++++++++++++++++++
+ fs/f2fs/super.c                    | 32 +++++++++-
+ 5 files changed, 207 insertions(+), 1 deletion(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 816d412c06e9..1a3733635079 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -251,6 +251,7 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
- 	bio->bi_opf = opf;
- 	bio->bi_flags = 0;
- 	bio->bi_ioprio = 0;
-+	bio->bi_lifetime = 0;
- 	bio->bi_status = 0;
- 	bio->bi_iter.bi_sector = 0;
- 	bio->bi_iter.bi_size = 0;
-@@ -813,6 +814,7 @@ static int __bio_clone(struct bio *bio, struct bio *bio_src, gfp_t gfp)
- {
- 	bio_set_flag(bio, BIO_CLONED);
- 	bio->bi_ioprio = bio_src->bi_ioprio;
-+	bio->bi_lifetime = bio_src->bi_lifetime;
- 	bio->bi_iter = bio_src->bi_iter;
+diff --git a/Documentation/filesystems/f2fs.rst b/Documentation/filesystems/f2fs.rst
+index d32c6209685d..de412ddebcc8 100644
+--- a/Documentation/filesystems/f2fs.rst
++++ b/Documentation/filesystems/f2fs.rst
+@@ -242,6 +242,12 @@ offgrpjquota		 Turn off group journalled quota.
+ offprjjquota		 Turn off project journalled quota.
+ quota			 Enable plain user disk quota accounting.
+ noquota			 Disable all plain disk quota option.
++whint_mode=%s		 Control which write hints are passed down to block
++			 layer. This supports "off", "user-based", and
++			 "fs-based".  In "off" mode (default), f2fs does not pass
++			 down hints. In "user-based" mode, f2fs tries to pass
++			 down hints given by users. And in "fs-based" mode, f2fs
++			 passes down hints with its policy.
+ alloc_mode=%s		 Adjust block allocation policy, which supports "reuse"
+ 			 and "default".
+ fsync_mode=%s		 Control the policy of fsync. Currently supports "posix",
+@@ -776,6 +782,70 @@ In order to identify whether the data in the victim segment are valid or not,
+ F2FS manages a bitmap. Each bit represents the validity of a block, and the
+ bitmap is composed of a bit stream covering whole blocks in main area.
  
- 	if (bio->bi_bdev) {
-diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index e6468eab2681..e25a6d551594 100644
---- a/block/blk-crypto-fallback.c
-+++ b/block/blk-crypto-fallback.c
-@@ -172,6 +172,7 @@ static struct bio *blk_crypto_fallback_clone_bio(struct bio *bio_src)
- 	if (bio_flagged(bio_src, BIO_REMAPPED))
- 		bio_set_flag(bio, BIO_REMAPPED);
- 	bio->bi_ioprio		= bio_src->bi_ioprio;
-+	bio->bi_lifetime	= bio_src->bi_lifetime;
- 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
- 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
- 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 65e75efa9bd3..62718cc871bd 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -814,6 +814,9 @@ static struct request *attempt_merge(struct request_queue *q,
- 	if (rq_data_dir(req) != rq_data_dir(next))
- 		return NULL;
- 
-+	if (req->lifetime != next->lifetime)
-+		return NULL;
++Write-hint Policy
++-----------------
 +
- 	if (req->ioprio != next->ioprio)
- 		return NULL;
- 
-@@ -941,6 +944,9 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
- 	if (!bio_crypt_rq_ctx_compatible(rq, bio))
- 		return false;
- 
-+	if (rq->lifetime != bio->bi_lifetime)
-+		return NULL;
++1) whint_mode=off. F2FS only passes down WRITE_LIFE_NOT_SET.
 +
- 	if (rq->ioprio != bio_prio(bio))
- 		return false;
++2) whint_mode=user-based. F2FS tries to pass down hints given by
++users.
++
++===================== ======================== ===================
++User                  F2FS                     Block
++===================== ======================== ===================
++N/A                   META                     WRITE_LIFE_NOT_SET
++N/A                   HOT_NODE                 "
++N/A                   WARM_NODE                "
++N/A                   COLD_NODE                "
++ioctl(COLD)           COLD_DATA                WRITE_LIFE_EXTREME
++extension list        "                        "
++
++-- buffered io
++WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++WRITE_LIFE_NONE       "                        "
++WRITE_LIFE_MEDIUM     "                        "
++WRITE_LIFE_LONG       "                        "
++
++-- direct io
++WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++WRITE_LIFE_NONE       "                        WRITE_LIFE_NONE
++WRITE_LIFE_MEDIUM     "                        WRITE_LIFE_MEDIUM
++WRITE_LIFE_LONG       "                        WRITE_LIFE_LONG
++===================== ======================== ===================
++
++3) whint_mode=fs-based. F2FS passes down hints with its policy.
++
++===================== ======================== ===================
++User                  F2FS                     Block
++===================== ======================== ===================
++N/A                   META                     WRITE_LIFE_MEDIUM;
++N/A                   HOT_NODE                 WRITE_LIFE_NOT_SET
++N/A                   WARM_NODE                "
++N/A                   COLD_NODE                WRITE_LIFE_NONE
++ioctl(COLD)           COLD_DATA                WRITE_LIFE_EXTREME
++extension list        "                        "
++
++-- buffered io
++WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_LONG
++WRITE_LIFE_NONE       "                        "
++WRITE_LIFE_MEDIUM     "                        "
++WRITE_LIFE_LONG       "                        "
++
++-- direct io
++WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++WRITE_LIFE_NONE       "                        WRITE_LIFE_NONE
++WRITE_LIFE_MEDIUM     "                        WRITE_LIFE_MEDIUM
++WRITE_LIFE_LONG       "                        WRITE_LIFE_LONG
++===================== ======================== ===================
++
+ Fallocate(2) Policy
+ -------------------
  
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index a815403f375c..10540a3b3c49 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -3148,6 +3148,7 @@ int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
+diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+index 916e317ac925..4a5edb9a1a1e 100644
+--- a/fs/f2fs/data.c
++++ b/fs/f2fs/data.c
+@@ -478,6 +478,8 @@ static struct bio *__bio_alloc(struct f2fs_io_info *fio, int npages)
+ 	} else {
+ 		bio->bi_end_io = f2fs_write_end_io;
+ 		bio->bi_private = sbi;
++		bio->bi_lifetime = f2fs_io_type_to_rw_hint(sbi, fio->type,
++							   fio->temp);
  	}
- 	rq->nr_phys_segments = rq_src->nr_phys_segments;
- 	rq->ioprio = rq_src->ioprio;
-+	rq->lifetime = rq_src->lifetime;
+ 	iostat_alloc_and_bind_ctx(sbi, bio, NULL);
  
- 	if (rq->bio && blk_crypto_rq_bio_prep(rq, rq->bio, gfp_mask) < 0)
- 		goto free_and_out;
-diff --git a/block/bounce.c b/block/bounce.c
-index 7cfcb242f9a1..b03e4944ace8 100644
---- a/block/bounce.c
-+++ b/block/bounce.c
-@@ -169,6 +169,7 @@ static struct bio *bounce_clone_bio(struct bio *bio_src)
- 	if (bio_flagged(bio_src, BIO_REMAPPED))
- 		bio_set_flag(bio, BIO_REMAPPED);
- 	bio->bi_ioprio		= bio_src->bi_ioprio;
-+	bio->bi_lifetime	= bio_src->bi_lifetime;
- 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
- 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
- 
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 1ab3081c82ed..1afd731432fe 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -136,6 +136,7 @@ struct request {
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 56ee7fff55c7..8d408afb044b 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -158,6 +158,7 @@ struct f2fs_mount_info {
+ 	int s_jquota_fmt;			/* Format of quota to use */
  #endif
+ 	/* For which write hints are passed down to block layer */
++	int whint_mode;
+ 	int alloc_mode;			/* segment allocation policy */
+ 	int fsync_mode;			/* fsync policy */
+ 	int fs_mode;			/* fs mode: LFS or ADAPTIVE */
+@@ -1344,6 +1345,12 @@ enum {
+ 	FS_MODE_FRAGMENT_BLK,		/* block fragmentation mode */
+ };
  
- 	unsigned short ioprio;
-+	enum rw_hint lifetime;
- 
- 	enum mq_rq_state state;
- 	atomic_t ref;
-@@ -957,6 +958,7 @@ static inline void blk_rq_bio_prep(struct request *rq, struct bio *bio,
- 	rq->__data_len = bio->bi_iter.bi_size;
- 	rq->bio = rq->biotail = bio;
- 	rq->ioprio = bio_prio(bio);
-+	rq->lifetime = bio->bi_lifetime;
++enum {
++	WHINT_MODE_OFF,		/* not pass down write hints */
++	WHINT_MODE_USER,	/* try to pass down hints given by users */
++	WHINT_MODE_FS,		/* pass down hints with F2FS policy */
++};
++
+ enum {
+ 	ALLOC_MODE_DEFAULT,	/* stay default */
+ 	ALLOC_MODE_REUSE,	/* reuse segments as much as possible */
+@@ -3728,6 +3735,8 @@ void f2fs_destroy_segment_manager(struct f2fs_sb_info *sbi);
+ int __init f2fs_create_segment_manager_caches(void);
+ void f2fs_destroy_segment_manager_caches(void);
+ int f2fs_rw_hint_to_seg_type(enum rw_hint hint);
++enum rw_hint f2fs_io_type_to_rw_hint(struct f2fs_sb_info *sbi,
++			enum page_type type, enum temp_type temp);
+ unsigned int f2fs_usable_segs_in_sec(struct f2fs_sb_info *sbi,
+ 			unsigned int segno);
+ unsigned int f2fs_usable_blks_in_seg(struct f2fs_sb_info *sbi,
+diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
+index d05b41608fc0..38c0cb8d9571 100644
+--- a/fs/f2fs/segment.c
++++ b/fs/f2fs/segment.c
+@@ -3290,6 +3290,101 @@ int f2fs_rw_hint_to_seg_type(enum rw_hint hint)
+ 	}
  }
  
- void blk_mq_hctx_set_fq_lock_class(struct blk_mq_hw_ctx *hctx,
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index d5c5e59ddbd2..5e21f44141fb 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -10,6 +10,7 @@
- #include <linux/bvec.h>
- #include <linux/device.h>
- #include <linux/ktime.h>
-+#include <linux/rw_hint.h>
++/* This returns write hints for each segment type. This hints will be
++ * passed down to block layer. There are mapping tables which depend on
++ * the mount option 'whint_mode'.
++ *
++ * 1) whint_mode=off. F2FS only passes down WRITE_LIFE_NOT_SET.
++ *
++ * 2) whint_mode=user-based. F2FS tries to pass down hints given by users.
++ *
++ * User                  F2FS                     Block
++ * ----                  ----                     -----
++ *                       META                     WRITE_LIFE_NOT_SET
++ *                       HOT_NODE                 "
++ *                       WARM_NODE                "
++ *                       COLD_NODE                "
++ * ioctl(COLD)           COLD_DATA                WRITE_LIFE_EXTREME
++ * extension list        "                        "
++ *
++ * -- buffered io
++ * WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++ * WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++ * WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++ * WRITE_LIFE_NONE       "                        "
++ * WRITE_LIFE_MEDIUM     "                        "
++ * WRITE_LIFE_LONG       "                        "
++ *
++ * -- direct io
++ * WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++ * WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++ * WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++ * WRITE_LIFE_NONE       "                        WRITE_LIFE_NONE
++ * WRITE_LIFE_MEDIUM     "                        WRITE_LIFE_MEDIUM
++ * WRITE_LIFE_LONG       "                        WRITE_LIFE_LONG
++ *
++ * 3) whint_mode=fs-based. F2FS passes down hints with its policy.
++ *
++ * User                  F2FS                     Block
++ * ----                  ----                     -----
++ *                       META                     WRITE_LIFE_MEDIUM;
++ *                       HOT_NODE                 WRITE_LIFE_NOT_SET
++ *                       WARM_NODE                "
++ *                       COLD_NODE                WRITE_LIFE_NONE
++ * ioctl(COLD)           COLD_DATA                WRITE_LIFE_EXTREME
++ * extension list        "                        "
++ *
++ * -- buffered io
++ * WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++ * WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++ * WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_LONG
++ * WRITE_LIFE_NONE       "                        "
++ * WRITE_LIFE_MEDIUM     "                        "
++ * WRITE_LIFE_LONG       "                        "
++ *
++ * -- direct io
++ * WRITE_LIFE_EXTREME    COLD_DATA                WRITE_LIFE_EXTREME
++ * WRITE_LIFE_SHORT      HOT_DATA                 WRITE_LIFE_SHORT
++ * WRITE_LIFE_NOT_SET    WARM_DATA                WRITE_LIFE_NOT_SET
++ * WRITE_LIFE_NONE       "                        WRITE_LIFE_NONE
++ * WRITE_LIFE_MEDIUM     "                        WRITE_LIFE_MEDIUM
++ * WRITE_LIFE_LONG       "                        WRITE_LIFE_LONG
++ */
++
++enum rw_hint f2fs_io_type_to_rw_hint(struct f2fs_sb_info *sbi,
++				enum page_type type, enum temp_type temp)
++{
++	if (F2FS_OPTION(sbi).whint_mode == WHINT_MODE_USER) {
++		if (type == DATA) {
++			if (temp == WARM)
++				return WRITE_LIFE_NOT_SET;
++			else if (temp == HOT)
++				return WRITE_LIFE_SHORT;
++			else if (temp == COLD)
++				return WRITE_LIFE_EXTREME;
++		} else {
++			return WRITE_LIFE_NOT_SET;
++		}
++	} else if (F2FS_OPTION(sbi).whint_mode == WHINT_MODE_FS) {
++		if (type == DATA) {
++			if (temp == WARM)
++				return WRITE_LIFE_LONG;
++			else if (temp == HOT)
++				return WRITE_LIFE_SHORT;
++			else if (temp == COLD)
++				return WRITE_LIFE_EXTREME;
++		} else if (type == NODE) {
++			if (temp == WARM || temp == HOT)
++				return WRITE_LIFE_NOT_SET;
++			else if (temp == COLD)
++				return WRITE_LIFE_NONE;
++		} else if (type == META) {
++			return WRITE_LIFE_MEDIUM;
++		}
++	}
++	return WRITE_LIFE_NOT_SET;
++}
++
+ static int __get_segment_type_2(struct f2fs_io_info *fio)
+ {
+ 	if (fio->type == DATA)
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index a8c8232852bb..5bb062075acf 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -141,6 +141,7 @@ enum {
+ 	Opt_jqfmt_vfsold,
+ 	Opt_jqfmt_vfsv0,
+ 	Opt_jqfmt_vfsv1,
++	Opt_whint,
+ 	Opt_alloc,
+ 	Opt_fsync,
+ 	Opt_test_dummy_encryption,
+@@ -220,6 +221,7 @@ static match_table_t f2fs_tokens = {
+ 	{Opt_jqfmt_vfsold, "jqfmt=vfsold"},
+ 	{Opt_jqfmt_vfsv0, "jqfmt=vfsv0"},
+ 	{Opt_jqfmt_vfsv1, "jqfmt=vfsv1"},
++	{Opt_whint, "whint_mode=%s"},
+ 	{Opt_alloc, "alloc_mode=%s"},
+ 	{Opt_fsync, "fsync_mode=%s"},
+ 	{Opt_test_dummy_encryption, "test_dummy_encryption=%s"},
+@@ -988,6 +990,22 @@ static int parse_options(struct super_block *sb, char *options, bool is_remount)
+ 			f2fs_info(sbi, "quota operations not supported");
+ 			break;
+ #endif
++		case Opt_whint:
++			name = match_strdup(&args[0]);
++			if (!name)
++				return -ENOMEM;
++			if (!strcmp(name, "user-based")) {
++				F2FS_OPTION(sbi).whint_mode = WHINT_MODE_USER;
++			} else if (!strcmp(name, "off")) {
++				F2FS_OPTION(sbi).whint_mode = WHINT_MODE_OFF;
++			} else if (!strcmp(name, "fs-based")) {
++				F2FS_OPTION(sbi).whint_mode = WHINT_MODE_FS;
++			} else {
++				kfree(name);
++				return -EINVAL;
++			}
++			kfree(name);
++			break;
+ 		case Opt_alloc:
+ 			name = match_strdup(&args[0]);
+ 			if (!name)
+@@ -1389,6 +1407,12 @@ static int parse_options(struct super_block *sb, char *options, bool is_remount)
+ 		return -EINVAL;
+ 	}
  
- struct bio_set;
- struct bio;
-@@ -269,6 +270,7 @@ struct bio {
- 						 */
- 	unsigned short		bi_flags;	/* BIO_* below */
- 	unsigned short		bi_ioprio;
-+	enum rw_hint		bi_lifetime;	/* data lifetime */
- 	blk_status_t		bi_status;
- 	atomic_t		__bi_remaining;
++	/* Not pass down write hints if the number of active logs is lesser
++	 * than NR_CURSEG_PERSIST_TYPE.
++	 */
++	if (F2FS_OPTION(sbi).active_logs != NR_CURSEG_PERSIST_TYPE)
++		F2FS_OPTION(sbi).whint_mode = WHINT_MODE_OFF;
++
+ 	if (f2fs_sb_has_readonly(sbi) && !f2fs_readonly(sbi->sb)) {
+ 		f2fs_err(sbi, "Allow to mount readonly mode only");
+ 		return -EROFS;
+@@ -2060,6 +2084,10 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
+ 		seq_puts(seq, ",prjquota");
+ #endif
+ 	f2fs_show_quota_options(seq, sbi->sb);
++	if (F2FS_OPTION(sbi).whint_mode == WHINT_MODE_USER)
++		seq_printf(seq, ",whint_mode=%s", "user-based");
++	else if (F2FS_OPTION(sbi).whint_mode == WHINT_MODE_FS)
++		seq_printf(seq, ",whint_mode=%s", "fs-based");
  
+ 	fscrypt_show_test_dummy_encryption(seq, ',', sbi->sb);
+ 
+@@ -2129,6 +2157,7 @@ static void default_options(struct f2fs_sb_info *sbi, bool remount)
+ 		F2FS_OPTION(sbi).active_logs = NR_CURSEG_PERSIST_TYPE;
+ 
+ 	F2FS_OPTION(sbi).inline_xattr_size = DEFAULT_INLINE_XATTR_ADDRS;
++	F2FS_OPTION(sbi).whint_mode = WHINT_MODE_OFF;
+ 	if (le32_to_cpu(F2FS_RAW_SUPER(sbi)->segment_count_main) <=
+ 							SMALL_VOLUME_SEGMENTS)
+ 		F2FS_OPTION(sbi).alloc_mode = ALLOC_MODE_REUSE;
+@@ -2443,7 +2472,8 @@ static int f2fs_remount(struct super_block *sb, int *flags, char *data)
+ 		need_stop_gc = true;
+ 	}
+ 
+-	if (*flags & SB_RDONLY) {
++	if (*flags & SB_RDONLY ||
++	    F2FS_OPTION(sbi).whint_mode != org_mount_opt.whint_mode) {
+ 		sync_inodes_sb(sb);
+ 
+ 		set_sbi_flag(sbi, SBI_IS_DIRTY);
