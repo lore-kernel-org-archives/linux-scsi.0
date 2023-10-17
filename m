@@ -2,94 +2,87 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8367ACDB474
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 21:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F8E0CDB474
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 21:18:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232770AbjJQVPj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 17:15:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52230 "EHLO
+        id S232068AbjJQVSZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 17:18:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229848AbjJQVPi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 17:15:38 -0400
-Received: from mail-oa1-f51.google.com (mail-oa1-f51.google.com [209.85.160.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18A27ED;
-        Tue, 17 Oct 2023 14:15:37 -0700 (PDT)
-Received: by mail-oa1-f51.google.com with SMTP id 586e51a60fabf-1e5bc692721so3432826fac.0;
-        Tue, 17 Oct 2023 14:15:37 -0700 (PDT)
+        with ESMTP id S229459AbjJQVSY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 17:18:24 -0400
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D31CBC6;
+        Tue, 17 Oct 2023 14:18:22 -0700 (PDT)
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-578d0dcd4e1so3721605a12.2;
+        Tue, 17 Oct 2023 14:18:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697577336; x=1698182136;
+        d=1e100.net; s=20230601; t=1697577502; x=1698182302;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=9zUohBhM2mgKneqqIllIieESuwIKjaG+ILxik6Us3n8=;
-        b=A00og0sbOvj0CEFXjxaEM5V5jpFguxh5X4NA8+zRXeGujIzAiwvjcl8FXyIXC2t+Vg
-         ZewggWsZPdtfpxP9SVnfOa8VCyNI8egFJhrYywN4KeTz/UIwHVhZ7ko1adp3uwdTkZiA
-         Bgcw95X8uhAgwZiS4AOIitXRMK/flwVLv4FsyU1ME7tQsLwav0/pY+I5IR1I5skglAI8
-         mideW7P3nCLNRt2SFYDP73KlV2K38gEhA653dg3mYNMEck/ocsECQKYgHFOzYt7Us2Hp
-         e7knhcaUWGbOqV1CFYwEHb4zl3/8Obr1SsorUkx+r9V2cmOL282k8YaWqNq8GPfrabgE
-         VLFg==
-X-Gm-Message-State: AOJu0Yw6/Y7s3x6jxLZZCc8ccWHSOy28HrhF+/PP9pHgzV7sjDuFAYnB
-        H8eETyTtcb6NrbkY26mm7kc=
-X-Google-Smtp-Source: AGHT+IH5jdOBSm9n25THVbZv0ul9/hKI6l5alnVindOCYvHbgoC3R1XyDUkkjO4fDle0/WtyOuv6kQ==
-X-Received: by 2002:a05:6870:d188:b0:1e9:bb3a:9a89 with SMTP id a8-20020a056870d18800b001e9bb3a9a89mr4023070oac.47.1697577336272;
-        Tue, 17 Oct 2023 14:15:36 -0700 (PDT)
+        bh=bQ82Bm7evAjsL/13PLp78PKiqovnxu/zB5FMTkae+bI=;
+        b=iHO6d/wxOO0FFq0k53YVXJkoAnqG0rh7sHM8QWxAllLG9+ump3wn8e0ymfaOqTisQx
+         zgomsdn7THhCXyQhl0vBGYShddtUDhKSu7wXWHxjvpLy38TOuyLIM/InnGA5QipDfPDS
+         u5Xhd7Pbd5OyhrA7VXBlTuLXvT+GWzNSfjrcYs78j7DSqHKlzs2mchjBis89YEltkEdd
+         xwCOWJoexViVlvsdS5fe2kPn2zYLja6GTDGdVngdYX26dQcgyg993eHP/lvBAyvCPBpO
+         tBHS0ZaKsagpAqiqixoi0zCeXw6386oevAO5M3zF+wDMlnUoojw1NW1LL84Hi/LVksBD
+         TqVA==
+X-Gm-Message-State: AOJu0YxcqADVLijwTqO41X3I8lZhFz2LndoFERFIHX8iSoe3R9aswL/w
+        6RFd04JDhwFIzdxYLVdei0o=
+X-Google-Smtp-Source: AGHT+IH5qc+IN0AUHe2oW/f8CG3Kh/fBdM2mrxXk3FM/9FpSBtoVNEIqZAkV3tLp81qOKobkf7R+cA==
+X-Received: by 2002:a05:6a21:7906:b0:179:f858:784d with SMTP id bg6-20020a056a21790600b00179f858784dmr3249538pzc.21.1697577502130;
+        Tue, 17 Oct 2023 14:18:22 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:8f02:2919:9600:ac09? ([2620:15c:211:201:8f02:2919:9600:ac09])
-        by smtp.gmail.com with ESMTPSA id o9-20020a655209000000b005b46e691108sm282600pgp.68.2023.10.17.14.15.34
+        by smtp.gmail.com with ESMTPSA id jf22-20020a170903269600b001c71ec1866fsm2045225plb.258.2023.10.17.14.18.20
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Oct 2023 14:15:35 -0700 (PDT)
-Message-ID: <b3334a8c-fb48-4b98-8571-8d85cbd4ed1e@acm.org>
-Date:   Tue, 17 Oct 2023 14:15:34 -0700
+        Tue, 17 Oct 2023 14:18:21 -0700 (PDT)
+Message-ID: <02cd10fd-fd4a-4ad7-9b1d-6d37b070aacf@acm.org>
+Date:   Tue, 17 Oct 2023 14:18:20 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] scsi: core: cleanup scsi_dev_queue_ready()
+Subject: Re: [bug report] blktests srp/002 hang
 Content-Language: en-US
-To:     Wenchao Hao <haowenchao2@huawei.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, louhongxiang@huawei.com
-References: <20231016020847.1270258-1-haowenchao2@huawei.com>
- <20231016020847.1270258-2-haowenchao2@huawei.com>
+To:     Bob Pearson <rpearsonhpe@gmail.com>, Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
+        'Rain River' <rain.1986.08.12@gmail.com>,
+        Zhu Yanjun <yanjun.zhu@linux.dev>,
+        "leon@kernel.org" <leon@kernel.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        RDMA mailing list <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
+ <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
+ <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
+ <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
+ <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
+ <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org>
+ <OS7PR01MB118045AD711E93D223DCD6F17E5C3A@OS7PR01MB11804.jpnprd01.prod.outlook.com>
+ <a3be5e98-e783-4108-a690-acc8a5cc5981@gmail.com>
+ <20231017175821.GG282036@ziepe.ca>
+ <8801fc68-0e8e-4bb1-acaa-597bf72a567d@gmail.com>
+ <20231017185139.GA691768@ziepe.ca>
+ <c65f92b2-9821-4349-b1f5-7dc2a287946a@gmail.com>
+ <08a8d947-25b5-434c-9ba3-282d298b5bfd@acm.org>
+ <e3d91c4f-b124-4031-9f92-fcb61973a645@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231016020847.1270258-2-haowenchao2@huawei.com>
+In-Reply-To: <e3d91c4f-b124-4031-9f92-fcb61973a645@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/15/23 19:08, Wenchao Hao wrote:
-> +	/*
-> +	 * device_blocked is not set at mostly time, so check it first
-> +	 * and return token when it is not set.
-> +	 */
-> +	if (!atomic_read(&sdev->device_blocked))
-> +		return token;
 
-This patch looks like an improvement to me. But I don't think that the
-above comment is useful. I propose to move it into the patch
-description.
+On 10/17/23 14:14, Bob Pearson wrote:
+> All the active threads are just the same and are all waiting for
+> an io to complete from scsi. No threads are active in rxe, srp(t)
+> or scsi. All activity appears to be dead.
 
-> -		/*
-> -		 * unblock after device_blocked iterates to zero
-> -		 */
-> -		if (atomic_dec_return(&sdev->device_blocked) > 0)
-> -			goto out_dec;
-> -		SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
-> -				   "unblocking device at zero depth\n"));
-> +	/*
-> +	 * unblock after device_blocked iterates to zero
-> +	 */
- > +	if (scsi_device_busy(sdev) > 1 ||
- > +	    atomic_dec_return(&sdev->device_blocked) > 0) {
- > +		sbitmap_put(&sdev->budget_map, token);
- > +		return -1;
- >   	}
-
-Please make the above comment match the new code, e.g. by changing it
-into the following: "Only unblock if no other commands are pending and
-if device_blocked has decreased to zero".
-
-Thanks,
+Is this really a clue? I have seen such backtraces many times. All
+such a backtrace tells us is that something got stuck in a layer
+under the filesystem. It does not tell us which layer caused
+command processing to get stuck.
 
 Bart.
+
