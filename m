@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5C08CDB484
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 20:48:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49350CDB483
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 20:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344294AbjJQUsf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 16:48:35 -0400
+        id S235094AbjJQUsq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 16:48:46 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344205AbjJQUsb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 16:48:31 -0400
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BA90FD;
-        Tue, 17 Oct 2023 13:48:28 -0700 (PDT)
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-57b5ef5b947so4024827eaf.0;
-        Tue, 17 Oct 2023 13:48:28 -0700 (PDT)
+        with ESMTP id S1344186AbjJQUsd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 16:48:33 -0400
+Received: from mail-oo1-f47.google.com (mail-oo1-f47.google.com [209.85.161.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 459A592;
+        Tue, 17 Oct 2023 13:48:31 -0700 (PDT)
+Received: by mail-oo1-f47.google.com with SMTP id 006d021491bc7-57b68556d6dso3417587eaf.1;
+        Tue, 17 Oct 2023 13:48:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697575707; x=1698180507;
+        d=1e100.net; s=20230601; t=1697575710; x=1698180510;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=snz5ro7zX54Yit88zG0S8a/usk7R516A5R+TFp98aDM=;
-        b=v0maQpMcQRPOi40H8irFX6VoOvYw4Z1xHulfjL9te0PxH0qfDQh5eDYe5sW7TsZR/p
-         ZGy0MeO3mbm41AyRSpXZ11XmeVbFJWTrsUDBFxqXeNnaaGk+uLMLVFwkN75XIJUHQSH9
-         mdhz4K+lX5id7RQXEbi/bZmRinoRb9l7RIeIjBp0pPJW//hzbueJvpzCB1ZhjdMUHbwQ
-         gI2NXsGAW8SrVNOWTnqkM0yLKLQv0SARVpxZqs6YypZ+/dlAs+sv3KT2qYr3moTx4kKj
-         e8LK08x7wV8KVcaTfZg7gdkP5Z+qS/ureicyQDa8IBeftkWvzHVHkxlnYUQJ4Nd68oMz
-         zL0g==
-X-Gm-Message-State: AOJu0YzAUBhxsUPPGwsC3qpKfmhYeYlYwwCxBOrDVFyc2x7zF24XSon7
-        ryubZvWBfcpu4LVM5bx3nIikt6LQzSw=
-X-Google-Smtp-Source: AGHT+IGqMw4FcKIR3vh9qvpNp78dRVEeU+DeJBToSujv3opQZcEfJFFvFq2/3QOn4wmXZwWnNx2csA==
-X-Received: by 2002:a05:6359:6604:b0:166:a6e3:cba5 with SMTP id sm4-20020a056359660400b00166a6e3cba5mr3168984rwb.2.1697575707302;
-        Tue, 17 Oct 2023 13:48:27 -0700 (PDT)
+        bh=105xJtXU3kMI2hh6/g7PSS5FLkiZJWAuMxIKylxsIMA=;
+        b=e1EOyN+kQM8p1yAG3aLBBb6Y5abK6836jHXVGh+QEoc90djBXR6cXqLNMjaxbqlVjq
+         RPOU59K7vyow+dNk7rSbZ5TAzl9HOE/kCZ6Rw6yXbi2I77F5EBkQbyVka37e8Flq84Pf
+         sQZu7zwsOVUkrEKUTM1PJSn6sJVE6y/LiB2PNONB7kKB09hsAXbQ9HW+mn49AADOLMi+
+         8EjFvKkHKVwaYps8MbB4YbX6Q6Vac/sNfxVGOsMIrv85i+w25gtP4KQ3hV3phm+oKcva
+         m6pacgglbcB8/CvWDMvk3J9BUezLGl8EA59wlLJGx2EmN7VAmctYhpBN2DUBm4KQNqtF
+         47hw==
+X-Gm-Message-State: AOJu0YxEPE3WGCRTbtQMXl6YV061MjOZnKnM5g9X3+OKrtoOOjY4ZRQ6
+        wRjnQk+U1rSeiOE/lpbwxD0=
+X-Google-Smtp-Source: AGHT+IGKpwnJVusLdCOnbH4TMWpBVokmUp5EtTJw1dIbjz3QvVxicCOEifeVNO4gmLHRTIznDv/kXw==
+X-Received: by 2002:a05:6359:29c2:b0:13e:d853:cc22 with SMTP id qf2-20020a05635929c200b0013ed853cc22mr3093749rwb.4.1697575710260;
+        Tue, 17 Oct 2023 13:48:30 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:8f02:2919:9600:ac09])
-        by smtp.gmail.com with ESMTPSA id fa36-20020a056a002d2400b006b2e07a6235sm1874704pfb.136.2023.10.17.13.48.26
+        by smtp.gmail.com with ESMTPSA id fa36-20020a056a002d2400b006b2e07a6235sm1874704pfb.136.2023.10.17.13.48.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Oct 2023 13:48:26 -0700 (PDT)
+        Tue, 17 Oct 2023 13:48:29 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -48,11 +48,11 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Bean Huo <huobean@gmail.com>,
         Daejun Park <daejun7.park@samsung.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
+        Douglas Gilbert <dgilbert@interlog.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 07/14] sd: Translate data lifetime information
-Date:   Tue, 17 Oct 2023 13:47:15 -0700
-Message-ID: <20231017204739.3409052-8-bvanassche@acm.org>
+Subject: [PATCH v3 09/14] scsi_debug: Support the block limits extension VPD page
+Date:   Tue, 17 Oct 2023 13:47:17 -0700
+Message-ID: <20231017204739.3409052-10-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.655.g421f12c284-goog
 In-Reply-To: <20231017204739.3409052-1-bvanassche@acm.org>
 References: <20231017204739.3409052-1-bvanassche@acm.org>
@@ -62,189 +62,63 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Recently T10 standardized SBC constrained streams. This mechanism allows
-to pass data lifetime information to SCSI devices in the group number
-field. Add support for translating write hint information into a
-permanent stream number in the sd driver. Use WRITE(10) instead of
-WRITE(6) if data lifetime information is present because the WRITE(6)
-command does not have a GROUP NUMBER field.
+From SBC-5 r05:
+
+"Reduced stream control:
+a) reduces the maximum number of streams that the device server supports;
+   and
+b) increases the number of write commands that are able to specify a stream
+   to be written in any write command that contains the GROUP NUMBER field
+   in its CDB.
+
+If the RSCS bit (see 6.6.5) is set to one, then the device server shall:
+a) support per group stream identifier usage as described in 4.32.2;
+b) support the IO Advice Hints Grouping mode page (see 6.5.7); and
+c) set the MAXIMUM NUMBER OF STREAMS field (see 6.6.5) to a value that is
+   less than 64.
+
+Device servers that set the RSCS bit to one may support other features
+(e.g., permanent streams (see 4.32.4)).
+
+4.32.4 Permanent streams
+
+A permanent stream is a stream for which the device server does not allow
+closing or otherwise modifying the configuration of that stream. The PERM
+bit (see 5.9.2.3) indicates whether a stream is a permanent stream. If a
+STREAM CONTROL command (see 5.32) specifies the closing of a permanent
+stream, the device server terminates that command with CHECK CONDITION
+status instead of closing the specified stream. A permanent stream is always
+an open stream. Device severs should assign the lowest numbered stream
+identifiers to permanent streams."
+
+Report that reduced stream control is supported.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/sd.c | 98 +++++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/sd.h |  2 +
- 2 files changed, 97 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_debug.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 879edbc1a065..8b6e6e4d0f51 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -47,6 +47,7 @@
- #include <linux/blkpg.h>
- #include <linux/blk-pm.h>
- #include <linux/delay.h>
-+#include <linux/rw_hint.h>
- #include <linux/major.h>
- #include <linux/mutex.h>
- #include <linux/string_helpers.h>
-@@ -1001,12 +1002,38 @@ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
- 	return BLK_STS_OK;
- }
- 
-+/**
-+ * sd_group_number() - Compute the GROUP NUMBER field
-+ * @cmd: SCSI command for which to compute the value of the six-bit GROUP NUMBER
-+ *	field.
-+ *
-+ * From SBC-5 r05 (https://www.t10.org/cgi-bin/ac.pl?t=f&f=sbc5r05.pdf):
-+ * 0: no relative lifetime.
-+ * 1: shortest relative lifetime.
-+ * 2: second shortest relative lifetime.
-+ * 3 - 0x3d: intermediate relative lifetimes.
-+ * 0x3e: second longest relative lifetime.
-+ * 0x3f: longest relative lifetime.
-+ */
-+static u8 sd_group_number(struct scsi_cmnd *cmd)
-+{
-+	const struct request *rq = scsi_cmd_to_rq(cmd);
-+	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
-+
-+	if (!sdkp->rscs)
-+		return 0;
-+
-+	return min3((u32)rq->lifetime, (u32)sdkp->permanent_stream_count,
-+		    0x3fu);
-+}
-+
- static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
- 				       sector_t lba, unsigned int nr_blocks,
- 				       unsigned char flags, unsigned int dld)
- {
- 	cmd->cmd_len = SD_EXT_CDB_SIZE;
- 	cmd->cmnd[0]  = VARIABLE_LENGTH_CMD;
-+	cmd->cmnd[6]  = sd_group_number(cmd);
- 	cmd->cmnd[7]  = 0x18; /* Additional CDB len */
- 	cmd->cmnd[9]  = write ? WRITE_32 : READ_32;
- 	cmd->cmnd[10] = flags;
-@@ -1025,7 +1052,7 @@ static blk_status_t sd_setup_rw16_cmnd(struct scsi_cmnd *cmd, bool write,
- 	cmd->cmd_len  = 16;
- 	cmd->cmnd[0]  = write ? WRITE_16 : READ_16;
- 	cmd->cmnd[1]  = flags | ((dld >> 2) & 0x01);
--	cmd->cmnd[14] = (dld & 0x03) << 6;
-+	cmd->cmnd[14] = ((dld & 0x03) << 6) | sd_group_number(cmd);
- 	cmd->cmnd[15] = 0;
- 	put_unaligned_be64(lba, &cmd->cmnd[2]);
- 	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
-@@ -1040,7 +1067,7 @@ static blk_status_t sd_setup_rw10_cmnd(struct scsi_cmnd *cmd, bool write,
- 	cmd->cmd_len = 10;
- 	cmd->cmnd[0] = write ? WRITE_10 : READ_10;
- 	cmd->cmnd[1] = flags;
--	cmd->cmnd[6] = 0;
-+	cmd->cmnd[6] = sd_group_number(cmd);
- 	cmd->cmnd[9] = 0;
- 	put_unaligned_be32(lba, &cmd->cmnd[2]);
- 	put_unaligned_be16(nr_blocks, &cmd->cmnd[7]);
-@@ -1177,7 +1204,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- 		ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
- 					 protect | fua, dld);
- 	} else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
--		   sdp->use_10_for_rw || protect) {
-+		   sdp->use_10_for_rw || protect || rq->lifetime) {
- 		ret = sd_setup_rw10_cmnd(cmd, write, lba, nr_blocks,
- 					 protect | fua);
- 	} else {
-@@ -2912,6 +2939,70 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 	sdkp->DPOFUA = 0;
- }
- 
-+static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned stream_id)
-+{
-+	u8 cdb[16] = { SERVICE_ACTION_IN_16, SAI_GET_STREAM_STATUS };
-+	struct {
-+		struct scsi_stream_status_header h;
-+		struct scsi_stream_status s;
-+	} buf;
-+	struct scsi_device *sdev = sdkp->device;
-+	struct scsi_sense_hdr sshdr;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = &sshdr,
-+	};
-+	int res;
-+
-+	put_unaligned_be16(stream_id, &cdb[4]);
-+	put_unaligned_be32(sizeof(buf), &cdb[10]);
-+
-+	res = scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, &buf, sizeof(buf),
-+			       SD_TIMEOUT, sdkp->max_retries, &exec_args);
-+	if (res < 0)
-+		return false;
-+	if (scsi_status_is_check_condition(res) && scsi_sense_valid(&sshdr))
-+		sd_print_sense_hdr(sdkp, &sshdr);
-+	if (res)
-+		return false;
-+	if (get_unaligned_be32(&buf.h.len) < sizeof(struct scsi_stream_status))
-+		return false;
-+	return buf.h.stream_status[0].perm;
-+}
-+
-+static void sd_read_io_hints(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	const struct scsi_io_group_descriptor *desc, *start, *end;
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_mode_data data;
-+	int res;
-+
-+	res = scsi_mode_sense(sdp, /*dbd=*/0x8, /*modepage=*/0x0a,
-+			      /*subpage=*/0x05, buffer, SD_BUF_SIZE,
-+			      SD_TIMEOUT, sdkp->max_retries, &data, &sshdr);
-+	if (res < 0)
-+		return;
-+	start = (void *)buffer + data.header_length + 16;
-+	end = (void *)buffer + ALIGN_DOWN(data.header_length + data.length,
-+					  sizeof(*end));
-+	/*
-+	 * From "SBC-5 Constrained Streams with Data Lifetimes": Device severs
-+	 * should assign the lowest numbered stream identifiers to permanent
-+	 * streams.
-+	 */
-+	for (desc = start; desc < end; desc++)
-+		if (!desc->st_enble || !sd_is_perm_stream(sdkp, desc - start))
-+			break;
-+	sdkp->permanent_stream_count = desc - start;
-+	if (sdkp->rscs && sdkp->permanent_stream_count < 2)
-+		sd_printk(KERN_INFO, sdkp,
-+			  "Unexpected: RSCS has been set and the permanent stream count is %u\n",
-+			  sdkp->permanent_stream_count);
-+	else if (sdkp->permanent_stream_count)
-+		sd_printk(KERN_INFO, sdkp, "permanent stream count = %d\n",
-+			  sdkp->permanent_stream_count);
-+}
-+
- /*
-  * The ATO bit indicates whether the DIF application tag is available
-  * for use by the operating system.
-@@ -3395,6 +3486,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 
- 		sd_read_write_protect_flag(sdkp, buffer);
- 		sd_read_cache_type(sdkp, buffer);
-+		sd_read_io_hints(sdkp, buffer);
- 		sd_read_app_tag_own(sdkp, buffer);
- 		sd_read_write_same(sdkp, buffer);
- 		sd_read_security(sdkp, buffer);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 84685168b6e0..570d5a72749a 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -125,6 +125,8 @@ struct scsi_disk {
- 	unsigned int	physical_block_size;
- 	unsigned int	max_medium_access_timeouts;
- 	unsigned int	medium_access_timed_out;
-+			/* number of permanent streams */
-+	u16		permanent_stream_count;
- 	u8		media_present;
- 	u8		write_prot;
- 	u8		protection_type;/* Data Integrity Field */
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 46eaa2f9e63b..88cba9374166 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1627,6 +1627,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 					arr[n++] = 0xb2;  /* LB Provisioning */
+ 				if (is_zbc)
+ 					arr[n++] = 0xb6;  /* ZB dev. char. */
++				arr[n++] = 0xb7;  /* Block limits extension */
+ 			}
+ 			arr[3] = n - 4;	  /* number of supported VPD pages */
+ 		} else if (0x80 == cmd[2]) { /* unit serial number */
+@@ -1669,6 +1670,9 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 			arr[3] = inquiry_vpd_b2(&arr[4]);
+ 		} else if (is_zbc && cmd[2] == 0xb6) { /* ZB dev. charact. */
+ 			arr[3] = inquiry_vpd_b6(devip, &arr[4]);
++		} else if (cmd[2] == 0xb7) { /* block limits extension page */
++			arr[3] = 2; /* page length */
++			arr[5] = 1; /* Reduced stream control support (RSCS) */
+ 		} else {
+ 			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, -1);
+ 			kfree(arr);
