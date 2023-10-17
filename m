@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2004CDB484
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 10:07:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9B52CDB474
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 10:07:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234877AbjJQKHt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1343521AbjJQKHt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 17 Oct 2023 06:07:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45976 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234808AbjJQKHo (ORCPT
+        with ESMTP id S234883AbjJQKHo (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 06:07:44 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E399FF1
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9BA1F5
         for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 03:07:41 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 862CD1FF14;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 15D651FF10;
         Tue, 17 Oct 2023 10:07:40 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 0C9A72D3F5;
-        Tue, 17 Oct 2023 10:07:40 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id D61B62CC98;
+        Tue, 17 Oct 2023 10:07:39 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 37DC051EBE96; Tue, 17 Oct 2023 12:07:40 +0200 (CEST)
+        id F40EA51EBE88; Tue, 17 Oct 2023 12:07:39 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/16] snic: allocate device reset command
-Date:   Tue, 17 Oct 2023 12:07:24 +0200
-Message-Id: <20231017100729.123506-12-hare@suse.de>
+Subject: [PATCH 04/16] a1000u2w: do not rely on the command for inia100_device_reset()
+Date:   Tue, 17 Oct 2023 12:07:17 +0200
+Message-Id: <20231017100729.123506-5-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231017100729.123506-1-hare@suse.de>
 References: <20231017100729.123506-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: +++++
+X-Spamd-Bar: ++
 Authentication-Results: smtp-out2.suse.de;
         dkim=none;
         dmarc=none;
         spf=softfail (smtp-out2.suse.de: 149.44.160.134 is neither permitted nor denied by domain of hare@suse.de) smtp.mailfrom=hare@suse.de
 X-Rspamd-Server: rspamd2
-X-Spamd-Result: default: False [5.49 / 50.00];
+X-Spamd-Result: default: False [2.49 / 50.00];
          ARC_NA(0.00)[];
          FROM_HAS_DN(0.00)[];
          TO_DN_SOME(0.00)[];
@@ -63,135 +63,135 @@ X-Spamd-Result: default: False [5.49 / 50.00];
          R_DKIM_NA(0.20)[];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
-         BAYES_HAM(-0.00)[37.57%]
-X-Rspamd-Queue-Id: 862CD1FF14
+         BAYES_HAM(-3.00)[100.00%]
+X-Rspamd-Queue-Id: 15D651FF10
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Allocate a command to send a device reset instead of relying
-on using the command which triggered the device failure.
+Use the scsi device as argument to orc_device_reset() instead
+of relying on the passed in scsi command.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/snic/snic_scsi.c | 72 +++++++++++++++++++----------------
- 1 file changed, 40 insertions(+), 32 deletions(-)
+ drivers/scsi/a100u2w.c | 46 +++++++++++-------------------------------
+ 1 file changed, 12 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index f1ef781df837..1807f713504f 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -2091,70 +2091,78 @@ snic_unlink_and_release_req(struct snic *snic, struct scsi_cmnd *sc, int flag)
- int
- snic_device_reset(struct scsi_cmnd *sc)
- {
--	struct Scsi_Host *shost = sc->device->host;
-+	struct scsi_device *sdev = sc->device;
-+	struct Scsi_Host *shost = sdev->host;
- 	struct snic *snic = shost_priv(shost);
-+	struct request *req;
- 	struct snic_req_info *rqi = NULL;
--	int tag = snic_cmd_tag(sc);
- 	int start_time = jiffies;
- 	int ret = FAILED;
- 	int dr_supp = 0;
+diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
+index b95147fb18b0..ab57bb8f6850 100644
+--- a/drivers/scsi/a100u2w.c
++++ b/drivers/scsi/a100u2w.c
+@@ -585,46 +585,26 @@ static int orc_reset_scsi_bus(struct orc_host * host)
+ /**
+  *	orc_device_reset	-	device reset handler
+  *	@host: host to reset
+- *	@cmd: command causing the reset
+- *	@target: target device
++ *	@sdev: target device
+  *
+  *	Reset registers, reset a hanging bus and kill active and disconnected
+  *	commands for target w/o soft reset
+  */
  
--	SNIC_SCSI_DBG(shost, "dev_reset:sc %p :0x%x :req = %p :tag = %d\n",
--		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
--		      snic_cmd_tag(sc));
--	dr_supp = snic_dev_reset_supported(sc->device);
-+	SNIC_SCSI_DBG(shost, "dev_reset\n");
-+	dr_supp = snic_dev_reset_supported(sdev);
- 	if (!dr_supp) {
- 		/* device reset op is not supported */
- 		SNIC_HOST_INFO(shost, "LUN Reset Op not supported.\n");
--		snic_unlink_and_release_req(snic, sc, SNIC_DEV_RST_NOTSUP);
+-static int orc_device_reset(struct orc_host * host, struct scsi_cmnd *cmd, unsigned int target)
++static int orc_device_reset(struct orc_host * host, struct scsi_device *sdev)
+ {				/* I need Host Control Block Information */
+ 	struct orc_scb *scb;
+ 	struct orc_extended_scb *escb;
+-	struct orc_scb *host_scb;
+-	u8 i;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&(host->allocation_lock), flags);
+ 	scb = (struct orc_scb *) NULL;
+ 	escb = (struct orc_extended_scb *) NULL;
+ 
+-	/* setup scatter list address with one buffer */
+-	host_scb = host->scb_virt;
 -
--		goto dev_rst_end;
-+		return ret;
+ 	/* FIXME: is this safe if we then fail to issue the reset or race
+ 	   a completion ? */
+ 	init_alloc_map(host);
+ 
+-	/* Find the scb corresponding to the command */
+-	for (i = 0; i < ORC_MAXQUEUE; i++) {
+-		escb = host_scb->escb;
+-		if (host_scb->status && escb->srb == cmd)
+-			break;
+-		host_scb++;
+-	}
+-
+-	if (i == ORC_MAXQUEUE) {
+-		printk(KERN_ERR "Unable to Reset - No SCB Found\n");
+-		spin_unlock_irqrestore(&(host->allocation_lock), flags);
+-		return FAILED;
+-	}
+-
+ 	/* Allocate a new SCB for the reset command to the firmware */
+ 	if ((scb = __orc_alloc_scb(host)) == NULL) {
+ 		/* Can't happen.. */
+@@ -635,7 +615,7 @@ static int orc_device_reset(struct orc_host * host, struct scsi_cmnd *cmd, unsig
+ 	/* Reset device is handled by the firmware, we fill in an SCB and
+ 	   fire it at the controller, it does the rest */
+ 	scb->opcode = ORC_BUSDEVRST;
+-	scb->target = target;
++	scb->target = sdev->id;
+ 	scb->hastat = 0;
+ 	scb->tastat = 0;
+ 	scb->status = 0x0;
+@@ -645,8 +625,8 @@ static int orc_device_reset(struct orc_host * host, struct scsi_cmnd *cmd, unsig
+ 	scb->xferlen = cpu_to_le32(0);
+ 	scb->sg_len = cpu_to_le32(0);
+ 
++	escb = scb->escb;
+ 	escb->srb = NULL;
+-	escb->srb = cmd;
+ 	orc_exec_scb(host, scb);	/* Start execute SCB            */
+ 	spin_unlock_irqrestore(&host->allocation_lock, flags);
+ 	return SUCCESS;
+@@ -971,7 +951,7 @@ static int inia100_device_reset(struct scsi_cmnd * cmd)
+ {				/* I need Host Control Block Information */
+ 	struct orc_host *host;
+ 	host = (struct orc_host *) cmd->device->host->hostdata;
+-	return orc_device_reset(host, cmd, scmd_id(cmd));
++	return orc_device_reset(host, cmd->device);
+ 
+ }
+ 
+@@ -991,11 +971,7 @@ static void inia100_scb_handler(struct orc_host *host, struct orc_scb *scb)
+ 	struct orc_extended_scb *escb;
+ 
+ 	escb = scb->escb;
+-	if ((cmd = (struct scsi_cmnd *) escb->srb) == NULL) {
+-		printk(KERN_ERR "inia100_scb_handler: SRB pointer is empty\n");
+-		orc_release_scb(host, scb);	/* Release SCB for current channel */
+-		return;
+-	}
++	cmd = (struct scsi_cmnd *)escb->srb;
+ 	escb->srb = NULL;
+ 
+ 	switch (scb->hastat) {
+@@ -1033,13 +1009,15 @@ static void inia100_scb_handler(struct orc_host *host, struct orc_scb *scb)
+ 		break;
  	}
  
- 	if (unlikely(snic_get_state(snic) != SNIC_ONLINE)) {
--		snic_unlink_and_release_req(snic, sc, 0);
- 		SNIC_HOST_ERR(shost, "Devrst: Parent Devs are not online.\n");
- 
--		goto dev_rst_end;
-+		return ret;
+-	if (scb->tastat == 2) {	/* Check condition              */
++	if (cmd && scb->tastat == 2) {	/* Check condition              */
+ 		memcpy((unsigned char *) &cmd->sense_buffer[0],
+ 		   (unsigned char *) &escb->sglist[0], SENSE_SIZE);
  	}
+-	cmd->result = scb->tastat | (scb->hastat << 16);
+-	scsi_dma_unmap(cmd);
+-	scsi_done(cmd);		/* Notify system DONE           */
++	if (cmd) {
++		cmd->result = scb->tastat | (scb->hastat << 16);
++		scsi_dma_unmap(cmd);
++		scsi_done(cmd);		/* Notify system DONE           */
++	}
+ 	orc_release_scb(host, scb);	/* Release SCB for current channel */
+ }
  
--	/* There is no tag when lun reset is issue through ioctl. */
--	if (unlikely(tag <= SNIC_NO_TAG)) {
--		SNIC_HOST_INFO(snic->shost,
--			       "Devrst: LUN Reset Recvd thru IOCTL.\n");
--
--		rqi = snic_req_init(snic, 0);
--		if (!rqi)
--			goto dev_rst_end;
--
--		memset(scsi_cmd_priv(sc), 0,
--			sizeof(struct snic_internal_io_state));
--		CMD_SP(sc) = (char *)rqi;
--		CMD_FLAGS(sc) = SNIC_NO_FLAGS;
-+	rqi = snic_req_init(snic, 0);
-+	if (!rqi)
-+		return ret;
- 
--		/* Add special tag for dr coming from user spc */
--		rqi->tm_tag = SNIC_TAG_IOCTL_DEV_RST;
--		rqi->sc = sc;
-+	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
-+				 BLK_MQ_REQ_NOWAIT);
-+	if (!req) {
-+		/*
-+		 * Request allocation might fail, indicating that
-+		 * all tags are busy.
-+		 * But device reset will be called only from within
-+		 * SCSI EH, at which time all I/O is stopped. So the
-+		 * only active tags would be for failed I/O, but
-+		 * when all I/O is failed it'll be better to escalate
-+		 * to host reset anyway.
-+		 */
-+		SNIC_HOST_ERR(snic->shost,
-+			      "Devrst: TMF busy, escalate to host reset\n");
-+		goto dev_rst_end;
- 	}
-+	sc = blk_mq_rq_to_pdu(req);
-+	memset(scsi_cmd_priv(sc), 0,
-+	       sizeof(struct snic_internal_io_state));
-+	CMD_SP(sc) = (char *)rqi;
-+	CMD_FLAGS(sc) = SNIC_NO_FLAGS;
- 
-+	/* Add special tag for dr coming from user spc */
-+	rqi->tm_tag = SNIC_TAG_IOCTL_DEV_RST;
-+	rqi->sc = sc;
-+	WRITE_ONCE(req->state, MQ_RQ_IN_FLIGHT);
- 	ret = snic_send_dr_and_wait(snic, sc);
- 	if (ret) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "Devrst: IO w/ Tag %x Failed w/ err = %d\n",
--			      tag, ret);
--
-+			      snic_cmd_tag(sc), ret);
-+		blk_mq_set_request_complete(req);
- 		snic_unlink_and_release_req(snic, sc, 0);
- 
- 		goto dev_rst_end;
- 	}
--
-+	blk_mq_set_request_complete(req);
- 	ret = snic_dr_finish(snic, sc);
- 
- dev_rst_end:
--	SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
-+	SNIC_TRC(snic->shost->host_no, snic_cmd_tag(sc), (ulong) sc,
- 		 jiffies_to_msecs(jiffies - start_time),
- 		 0, SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
--
-+	if (req)
-+		blk_mq_free_request(req);
- 	SNIC_SCSI_DBG(snic->shost,
- 		      "Devrst: Returning from Device Reset : %s\n",
- 		      (ret == SUCCESS) ? "SUCCESS" : "FAILED");
 -- 
 2.35.3
 
