@@ -2,130 +2,174 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 487D0CDB474
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 08:14:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C35CDB474
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 08:16:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234622AbjJQIOX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 04:14:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40022 "EHLO
+        id S234469AbjJQIQ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 04:16:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234469AbjJQIOW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 04:14:22 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C9D993
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 01:14:21 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id BCF171FF08;
-        Tue, 17 Oct 2023 08:14:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1697530459; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=sYG+TBvPBFJM0XTLqbrxmyMb9VPXTCAaHUj/qFnI+gc=;
-        b=KCeTVy3mqnxqq/l3C/R0Sc5x3/zhWLvajch1MBR/fOXa04awE93adCm7E5YIUTKgGt+uE7
-        MvLSIrCANlMvnFDX0PSiTA5qMwDCX9fWTrQ7LdUBFQPVF80/4T7M2Nrv2u/AgxvyDC23jl
-        +1t296oc4Jc3/UhmKtsk+igwr5y1wek=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1697530459;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=sYG+TBvPBFJM0XTLqbrxmyMb9VPXTCAaHUj/qFnI+gc=;
-        b=Hmuz2RLg8eLZLexEsGiG2AuMgtKBjN3IXVi2MR5oIl1vl0U3lS1OROm7mHhoqOdPHVlrdX
-        RXbL+f6FoT1gdABw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AB06D13597;
-        Tue, 17 Oct 2023 08:14:19 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id okXdKFtCLmVvRgAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 17 Oct 2023 08:14:19 +0000
-Message-ID: <af6c6f63-aa40-4045-8079-0f8268d7314b@suse.de>
-Date:   Tue, 17 Oct 2023 10:14:19 +0200
+        with ESMTP id S232300AbjJQIQZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 04:16:25 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1763293
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 01:16:22 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S8msN2kFkzvPvd;
+        Tue, 17 Oct 2023 16:11:36 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Tue, 17 Oct 2023 16:16:19 +0800
+Message-ID: <0f7a0131-3f6a-1627-2bba-96dab1ad6d9d@huawei.com>
+Date:   Tue, 17 Oct 2023 16:16:18 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5/9] scsi: set host byte after EH completed
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+From:   Wenchao Hao <haowenchao2@huawei.com>
+Subject: Re: [PATCH 1/9] scsi: Use Scsi_Host as argument for
+ eh_host_reset_handler
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
+        <linux-scsi@vger.kernel.org>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
 References: <20231016121542.111501-1-hare@suse.de>
- <20231016121542.111501-6-hare@suse.de> <20231017072529.GA11484@lst.de>
+ <20231016121542.111501-2-hare@suse.de>
 Content-Language: en-US
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20231017072529.GA11484@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20231016121542.111501-2-hare@suse.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Authentication-Results: smtp-out2.suse.de;
-        none
-X-Spamd-Result: default: False [-4.43 / 50.00];
-         ARC_NA(0.00)[];
-         RCVD_VIA_SMTP_AUTH(0.00)[];
-         XM_UA_NO_VERSION(0.01)[];
-         FROM_HAS_DN(0.00)[];
-         RCPT_COUNT_THREE(0.00)[4];
-         TO_DN_SOME(0.00)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         MIME_GOOD(-0.10)[text/plain];
-         NEURAL_HAM_LONG(-3.00)[-1.000];
-         BAYES_HAM(-0.34)[76.29%];
-         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-         NEURAL_HAM_SHORT(-1.00)[-1.000];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         RCVD_COUNT_TWO(0.00)[2];
-         RCVD_TLS_ALL(0.00)[];
-         MID_RHS_MATCH_FROM(0.00)[]
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/17/23 09:25, Christoph Hellwig wrote:
-> On Mon, Oct 16, 2023 at 02:15:38PM +0200, Hannes Reinecke wrote:
->> When SCSI EH completes we should be setting the host byte to
->> DID_ABORT, DID_RESET, or DID_TRANSPORT_DISRUPTED to inform
->> the caller that some EH processing has happened.
+On 2023/10/16 20:15, Hannes Reinecke wrote:
+> Issuing a host reset should not rely on any commands.
+> So use Scsi_Host as argument for eh_host_reset_handler.
 > 
-> I have a hard time following this commit log.  Yes, we probably
-> should.  But so far we haven't, so why is this suddenly a problem?
-> 
->> -void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
->> +void __scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q,
->> +			int host_byte)
->>   {
->> +	if (host_byte)
->> +		set_host_byte(scmd, host_byte);
->>   	list_move_tail(&scmd->eh_entry, done_q);
-> 
-> What is the point of passing in the host_byte vs just setting it in
-> the caller?
-> 
-Hmm. Sure, could do.
 
-> In fat I'm not even quite sure what the point of the existing helper
-> is, as moving the command to the passed in queue doesn't provide
-> much of a useful abstraction.
-> 
-Share your sentiments.
-One could open-code it, but if I move the host_byte setting into the
-caller this function won't be touched at all.
-And it's time to clean up the entire list splice-and-dice game in
-SCSI EH once this rework is in; my plan is to move failed commands
-onto a per-entity list, and merge them onto the next higher entity
-list once an escalation fails.
+Some small points.
 
-So maybe shelf it for now, and just open-code the host_byte setting
-in the caller.
+> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+> index 9080a73b4ea6..caf045cfea0e 100644
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1955,15 +1955,15 @@ mptscsih_bus_reset(struct scsi_cmnd * SCpnt)
+>   
+>   /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+>   /**
+> - *	mptscsih_host_reset - Perform a SCSI host adapter RESET (new_eh variant)
+> - *	@SCpnt: Pointer to scsi_cmnd structure, IO which reset is due to
+> + *	mptscsih_host_reset - Perform a SCSI host adapter RESET
+> + *	@sh: Pointer to Scsi_Host structure, which is reset due to
+>    *
+>    *	(linux scsi_host_template.eh_host_reset_handler routine)
+>    *
+>    *	Returns SUCCESS or FAILED.
+>    */
+>   int
+> -mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+> +mptscsih_host_reset(struct Scsi_Host *sh)
+>   {
+>   	MPT_SCSI_HOST *  hd;
+>   	int              status = SUCCESS;
+> @@ -1971,9 +1971,8 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+>   	int		retval;
+>   
+>   	/*  If we can't locate the host to reset, then we failed. */
+> -	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
+> -		printk(KERN_ERR MYNAM ": host reset: "
+> -		    "Can't locate host! (sc=%p)\n", SCpnt);
+> +	if ((hd = shost_priv(sh)) == NULL){
+> +		printk(KERN_ERR MYNAM ": host reset: Can't locate host!\n");
+>   		return FAILED;
+>   	}
 
-Cheers,
+It looks better to use shost_printk(), same for following 2 printk.
 
-Hannes
+>   
+> @@ -1981,8 +1980,8 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+>   	mptscsih_flush_running_cmds(hd);
+>   
+>   	ioc = hd->ioc;
+> -	printk(MYIOC_s_INFO_FMT "attempting host reset! (sc=%p)\n",
+> -	    ioc->name, SCpnt);
+> +	printk(MYIOC_s_INFO_FMT "attempting host reset!\n",
+> +	    ioc->name);
+>  
+>   	/*  If our attempts to reset the host failed, then return a failed
+>   	 *  status.  The host will be taken off line by the SCSI mid-layer.
+> @@ -1993,8 +1992,8 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+>   	else
+>   		status = SUCCESS;
+>   
+> -	printk(MYIOC_s_INFO_FMT "host reset: %s (sc=%p)\n",
+> -	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
+> +	printk(MYIOC_s_INFO_FMT "host reset: %s\n",
+> +	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ));
+>   
+>   	return status;
+>   }
+
+> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+> index 72ceaf650b0d..9be45b7a2571 100644
+> --- a/drivers/scsi/BusLogic.c
+> +++ b/drivers/scsi/BusLogic.c
+> @@ -2852,21 +2852,14 @@ static bool blogic_write_outbox(struct blogic_adapter *adapter,
+>   
+>   /* Error Handling (EH) support */
+>   
+> -static int blogic_hostreset(struct scsi_cmnd *SCpnt)
+> +static int blogic_hostreset(struct Scsi_Host *shost)
+>   {
+> -	struct blogic_adapter *adapter =
+> -		(struct blogic_adapter *) SCpnt->device->host->hostdata;
+> -
+> -	unsigned int id = SCpnt->device->id;
+> -	struct blogic_tgt_stats *stats = &adapter->tgt_stats[id];
+> +	struct blogic_adapter *adapter = shost_priv(shost);
+>   	int rc;
+>   
+> -	spin_lock_irq(SCpnt->device->host->host_lock);
+> -
+> -	blogic_inc_count(&stats->adapter_reset_req);
+> -
+> +	spin_lock_irq(shost->host_lock);
+>   	rc = blogic_resetadapter(adapter, false);
+> -	spin_unlock_irq(SCpnt->device->host->host_lock);
+> +	spin_unlock_irq(shost->host_lock);
+>   	return rc;
+>   }
+
+Why remove line "blogic_inc_count(&stats->adapter_reset_req);" ?
+
+> diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+> index f5334ccbf2ca..b9e241b9bb54 100644
+> --- a/drivers/scsi/hptiop.c
+> +++ b/drivers/scsi/hptiop.c
+> @@ -1088,12 +1088,12 @@ static int hptiop_reset_hba(struct hptiop_hba *hba)
+>   	return 0;
+>   }
+>   
+> -static int hptiop_reset(struct scsi_cmnd *scp)
+> +static int hptiop_reset(struct Scsi_Host *host)
+>   {
+> -	struct hptiop_hba * hba = (struct hptiop_hba *)scp->device->host->hostdata;
+> +	struct hptiop_hba * hba = shost_priv(host);
+>   
+>   	printk(KERN_WARNING "hptiop_reset(%d/%d/%d)\n",
+> -	       scp->device->host->host_no, -1, -1);
+> +	       host->host_no, -1, -1);
+>   
+
+Also, it looks better to use shost_printk().
+
+>   	return hptiop_reset_hba(hba)? FAILED : SUCCESS;
+>   }
 
