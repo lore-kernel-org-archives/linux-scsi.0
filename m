@@ -2,193 +2,124 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B08CDB482
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 14:07:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F762CDB482
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 15:13:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344006AbjJQOHP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 10:07:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47010 "EHLO
+        id S235052AbjJQPNG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 11:13:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344009AbjJQOHN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 10:07:13 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B47BFA
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 07:07:10 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S8wfz40skzCrPP;
-        Tue, 17 Oct 2023 22:03:07 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Tue, 17 Oct 2023 22:07:06 +0800
-Message-ID: <dabbd6bb-cacb-eeb0-7647-b0ef459b1444@huawei.com>
-Date:   Tue, 17 Oct 2023 22:07:05 +0800
+        with ESMTP id S234808AbjJQPNF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 11:13:05 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F38E92
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 08:13:04 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id AC4481F88C;
+        Tue, 17 Oct 2023 15:13:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1697555582; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=XxPMFQcv1ubK5VbD9uIyT1StmlBky0xLsiobbxqCjZ0=;
+        b=tVImC0/z2c+ak60wTXlpxZuhaAKkZoc5j9oS2EXfLazsk2M/nXcY+NHHZODpcbN8MLUiv0
+        SJ9Ijye6Xae7c604V0xgev4gsrc+2yWWUzL7jlOHzD5lpSaXnW6DqdgdEKdys0e7+PLSeM
+        bdoTQWQswRvM+Fp3iNWRmR3xX3NOpkM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1697555582;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=XxPMFQcv1ubK5VbD9uIyT1StmlBky0xLsiobbxqCjZ0=;
+        b=I94rCA3DjZUuJLOe3mowQDzcN/M2AbS4XuNqpcasPOV8KRbGa8aSu1NbkjRDQGV4D2qayd
+        wgVSvSnx3h4RKKAA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8E5F413597;
+        Tue, 17 Oct 2023 15:13:02 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id hnoEIn6kLmWJMQAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 17 Oct 2023 15:13:02 +0000
+Message-ID: <d3fe813b-eec7-4ef9-8ca0-49e656e65a6c@suse.de>
+Date:   Tue, 17 Oct 2023 17:12:33 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 4/9] scsi: Use scsi_device as argument to
- eh_device_reset_handler()
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        <linux-scsi@vger.kernel.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-References: <20231016121542.111501-1-hare@suse.de>
- <20231016121542.111501-5-hare@suse.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [bug report] scsi: message: fusion: Open-code
+ mptfc_block_error_handler() for bus reset
+To:     Dan Carpenter <dan.carpenter@linaro.org>
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+References: <b684093c-7c05-49cc-b6f7-e3322fecbbfc@moroto.mountain>
 Content-Language: en-US
-From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <20231016121542.111501-5-hare@suse.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <b684093c-7c05-49cc-b6f7-e3322fecbbfc@moroto.mountain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm000012.china.huawei.com (7.193.23.142)
-X-CFilter-Loop: Reflected
+Authentication-Results: smtp-out2.suse.de;
+        none
+X-Spamd-Result: default: False [-6.91 / 50.00];
+         ARC_NA(0.00)[];
+         RCVD_VIA_SMTP_AUTH(0.00)[];
+         XM_UA_NO_VERSION(0.01)[];
+         FROM_HAS_DN(0.00)[];
+         RCPT_COUNT_THREE(0.00)[3];
+         TO_DN_SOME(0.00)[];
+         TO_MATCH_ENVRCPT_ALL(0.00)[];
+         MIME_GOOD(-0.10)[text/plain];
+         NEURAL_HAM_LONG(-3.00)[-1.000];
+         BAYES_HAM(-2.82)[99.24%];
+         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+         NEURAL_HAM_SHORT(-1.00)[-1.000];
+         FROM_EQ_ENVFROM(0.00)[];
+         MIME_TRACE(0.00)[0:+];
+         RCVD_COUNT_TWO(0.00)[2];
+         RCVD_TLS_ALL(0.00)[];
+         MID_RHS_MATCH_FROM(0.00)[]
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/10/16 20:15, Hannes Reinecke wrote:
-> The device reset function should only depend on the scsi device,
-> not the scsi command.
+On 10/17/23 15:18, Dan Carpenter wrote:
+> Hello Hannes Reinecke,
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> ---
->   Documentation/scsi/scsi_eh.rst          |  2 +-
->   Documentation/scsi/scsi_mid_low_api.rst |  4 +-
->   drivers/infiniband/ulp/srp/ib_srp.c     |  6 +--
->   drivers/message/fusion/mptfc.c          | 12 +++---
->   drivers/message/fusion/mptscsih.c       | 27 ++++---------
->   drivers/message/fusion/mptscsih.h       |  2 +-
->   drivers/s390/scsi/zfcp_scsi.c           |  4 +-
->   drivers/scsi/a100u2w.c                  |  7 ++--
->   drivers/scsi/aacraid/linit.c            |  9 ++---
->   drivers/scsi/aha152x.c                  |  6 +--
->   drivers/scsi/aha1542.c                  |  8 ++--
->   drivers/scsi/aic7xxx/aic79xx_osm.c      | 27 +++++--------
->   drivers/scsi/aic7xxx/aic7xxx_osm.c      |  4 +-
->   drivers/scsi/arm/fas216.c               |  5 +--
->   drivers/scsi/arm/fas216.h               |  6 +--
->   drivers/scsi/be2iscsi/be_main.c         |  8 ++--
->   drivers/scsi/bfa/bfad_im.c              |  3 +-
->   drivers/scsi/bnx2fc/bnx2fc.h            |  2 +-
->   drivers/scsi/bnx2fc/bnx2fc_io.c         |  6 +--
->   drivers/scsi/csiostor/csio_scsi.c       |  5 +--
->   drivers/scsi/cxlflash/main.c            |  5 +--
->   drivers/scsi/esas2r/esas2r.h            |  2 +-
->   drivers/scsi/esas2r/esas2r_main.c       |  3 +-
->   drivers/scsi/fnic/fnic.h                |  2 +-
->   drivers/scsi/fnic/fnic_scsi.c           |  5 +--
->   drivers/scsi/hpsa.c                     | 14 +++----
->   drivers/scsi/ibmvscsi/ibmvfc.c          |  8 ++--
->   drivers/scsi/ibmvscsi/ibmvscsi.c        | 19 ++++-----
->   drivers/scsi/ipr.c                      | 24 +++++------
->   drivers/scsi/libfc/fc_fcp.c             | 13 +++---
->   drivers/scsi/libiscsi.c                 | 15 ++++---
->   drivers/scsi/libsas/sas_scsi_host.c     | 12 +++---
->   drivers/scsi/lpfc/lpfc_scsi.c           | 12 +++---
->   drivers/scsi/mpi3mr/mpi3mr_os.c         | 40 ++++++++-----------
->   drivers/scsi/mpt3sas/mpt3sas_scsih.c    | 30 ++++++--------
->   drivers/scsi/pcmcia/nsp_cs.h            |  2 -
->   drivers/scsi/pmcraid.c                  |  8 ++--
->   drivers/scsi/qedf/qedf_main.c           |  6 +--
->   drivers/scsi/qla1280.c                  | 53 ++++++++-----------------
->   drivers/scsi/qla2xxx/qla_os.c           | 24 +++++------
->   drivers/scsi/qla4xxx/ql4_os.c           | 23 +++++------
->   drivers/scsi/scsi_debug.c               |  3 +-
->   drivers/scsi/scsi_error.c               |  2 +-
->   drivers/scsi/smartpqi/smartpqi.h        |  1 -
->   drivers/scsi/smartpqi/smartpqi_init.c   | 19 ++++-----
->   drivers/scsi/snic/snic.h                |  2 +-
->   drivers/scsi/snic/snic_scsi.c           |  4 +-
->   drivers/scsi/virtio_scsi.c              | 12 +++---
->   drivers/scsi/vmw_pvscsi.c               | 10 ++---
->   drivers/scsi/wd719x.c                   |  6 +--
->   drivers/scsi/xen-scsifront.c            |  6 +--
->   drivers/staging/rts5208/rtsx.c          |  6 ++-
->   drivers/target/loopback/tcm_loop.c      |  8 ++--
->   drivers/ufs/core/ufshcd.c               |  8 ++--
->   drivers/usb/storage/scsiglue.c          |  4 +-
->   drivers/usb/storage/uas.c               |  3 +-
->   include/scsi/libfc.h                    |  2 +-
->   include/scsi/libiscsi.h                 |  2 +-
->   include/scsi/libsas.h                   |  2 +-
->   include/scsi/scsi_host.h                |  2 +-
->   60 files changed, 253 insertions(+), 322 deletions(-)
+> The patch 17865dc2eccc: "scsi: message: fusion: Open-code
+> mptfc_block_error_handler() for bus reset" from Oct 2, 2023
+> (linux-next), leads to the following Smatch static checker warning:
 > 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index c247a3c7ae17..a2c3ffa2b5bd 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -5306,9 +5306,8 @@ static void scsi_debug_stop_all_queued(struct scsi_device *sdp)
->   				scsi_debug_stop_all_queued_iter, sdp);
->   }
->   
-> -static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
-> +static int scsi_debug_device_reset(struct scsi_device *sdp)
->   {
-> -	struct scsi_device *sdp = SCpnt->device;
->   	struct sdebug_dev_info *devip = sdp->hostdata;
->   
->   	++num_dev_resets;
+> 	drivers/message/fusion/mptfc.c:281 mptfc_bus_reset()
+> 	error: uninitialized symbol 'rtn'.
+> 
+> drivers/message/fusion/mptfc.c
+>      261 static int
+>      262 mptfc_bus_reset(struct scsi_cmnd *SCpnt)
+>      263 {
+>      264         struct Scsi_Host *shost = SCpnt->device->host;
+>      265         MPT_SCSI_HOST __maybe_unused *hd = shost_priv(shost);
+>      266         int channel = SCpnt->device->channel;
+>      267         struct mptfc_rport_info *ri;
+>      268         int rtn;
+>      269
+>      270         list_for_each_entry(ri, &hd->ioc->fc_rports, list) {
+>      271                 if (ri->flags & MPT_RPORT_INFO_FLAGS_REGISTERED) {
+>      272                         VirtTarget *vtarget = ri->starget->hostdata;
+>      273
+>      274                         if (!vtarget || vtarget->channel != channel)
+>      275                                 continue;
+>      276                         rtn = fc_block_rport(ri->rport);
+> 
+> Are we always going to hit this assignment?
+> 
+I _think_, but it'll be good to initialize anyway.
+Thanks for the report.
 
-The change of my scsi_debug error injection conflict with it, you can
-fix the conflict with following:
+Cheers,
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index a7c374b399a1..60070d12c949 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -5590,12 +5590,10 @@ static void scsi_debug_stop_all_queued(struct scsi_device *sdp)
-  				scsi_debug_stop_all_queued_iter, sdp);
-  }
-  
--static int sdebug_fail_lun_reset(struct scsi_cmnd *cmnd)
-+static int sdebug_fail_lun_reset(struct scsi_device *sdp)
-  {
--	struct scsi_device *sdp = cmnd->device;
-  	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
-  	struct sdebug_err_inject *err;
--	unsigned char *cmd = cmnd->cmnd;
-  	int ret = 0;
-  
-  	if (devip == NULL)
-@@ -5603,8 +5601,7 @@ static int sdebug_fail_lun_reset(struct scsi_cmnd *cmnd)
-  
-  	rcu_read_lock();
-  	list_for_each_entry_rcu(err, &devip->inject_err_list, list) {
--		if (err->type == ERR_LUN_RESET_FAILED &&
--		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
-+		if (err->type == ERR_LUN_RESET_FAILED) {
-  			ret = !!err->cnt;
-  			if (err->cnt < 0)
-  				err->cnt++;
-@@ -5618,12 +5615,9 @@ static int sdebug_fail_lun_reset(struct scsi_cmnd *cmnd)
-  	return 0;
-  }
-  
--static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
-+static int scsi_debug_device_reset(struct scsi_device *sdp)
-  {
--	struct scsi_device *sdp = SCpnt->device;
-  	struct sdebug_dev_info *devip = sdp->hostdata;
--	u8 *cmd = SCpnt->cmnd;
--	u8 opcode = cmd[0];
-  
-  	++num_dev_resets;
-  
-@@ -5634,8 +5628,8 @@ static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
-  	if (devip)
-  		set_bit(SDEBUG_UA_POR, devip->uas_bm);
-  
--	if (sdebug_fail_lun_reset(SCpnt)) {
--		scmd_printk(KERN_INFO, SCpnt, "fail lun reset 0x%x\n", opcode);
-+	if (sdebug_fail_lun_reset(sdp)) {
-+		sdev_printk(KERN_INFO, sdp, "fail lun reset\n");
-  		return FAILED;
-  	}
-  
-
+Hannes
 
