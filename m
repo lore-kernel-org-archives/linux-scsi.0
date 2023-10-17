@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7022ACDB482
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 10:07:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08618CDB474
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 10:08:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343582AbjJQKHz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 06:07:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46036 "EHLO
+        id S1343590AbjJQKH7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 06:07:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234922AbjJQKHp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 06:07:45 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 396D1FA
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 03:07:42 -0700 (PDT)
+        with ESMTP id S234928AbjJQKHq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 06:07:46 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCA71B0
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 03:07:44 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 81A9621D0F;
+        by smtp-out1.suse.de (Postfix) with ESMTP id A4C0221D15;
         Tue, 17 Oct 2023 10:07:40 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id DA28C2CD22;
-        Tue, 17 Oct 2023 10:07:39 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 2F19D2D3FA;
+        Tue, 17 Oct 2023 10:07:40 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 0799551EBE8A; Tue, 17 Oct 2023 12:07:40 +0200 (CEST)
+        id 5B00551EBE9E; Tue, 17 Oct 2023 12:07:40 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 05/16] fas216: Rework device reset to not rely on SCSI command pointer
-Date:   Tue, 17 Oct 2023 12:07:18 +0200
-Message-Id: <20231017100729.123506-6-hare@suse.de>
+Subject: [PATCH 15/16] csiostor: use separate TMF command
+Date:   Tue, 17 Oct 2023 12:07:28 +0200
+Message-Id: <20231017100729.123506-16-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231017100729.123506-1-hare@suse.de>
 References: <20231017100729.123506-1-hare@suse.de>
@@ -64,118 +64,213 @@ X-Spamd-Result: default: False [2.49 / 50.00];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
          BAYES_HAM(-3.00)[100.00%]
-X-Rspamd-Queue-Id: 81A9621D0F
+X-Rspamd-Queue-Id: A4C0221D15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The device reset code should not rely on the SCSI command pointer;
-it will be going away with the device reset handler rework.
+Set one command aside as a TMF command, and use this command to
+send the TMF. This avoids having to rely on the passed-in scsi
+command when resetting the device.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/arm/fas216.c | 39 +++++++++++++++++++--------------------
- 1 file changed, 19 insertions(+), 20 deletions(-)
+ drivers/scsi/csiostor/csio_scsi.c | 72 ++++++++++++++++++++-----------
+ 1 file changed, 48 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 4ce0b2d73614..e6289c6af5ef 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -1985,7 +1985,6 @@ static void fas216_devicereset_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
- {
- 	fas216_log(info, LOG_ERROR, "fas216 device reset complete");
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 05e1a63e00c3..08597de49b7f 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -1724,7 +1724,10 @@ csio_scsi_err_handler(struct csio_hw *hw, struct csio_ioreq *req)
+ 	}
  
--	info->rstSCpnt = NULL;
- 	info->rst_dev_status = 1;
- 	wake_up(&info->eh_wait);
+ 	cmnd->result = (((host_status) << 16) | scsi_status);
+-	scsi_done(cmnd);
++	if (csio_priv(cmnd)->fc_tm_flags == FCP_TMF_LUN_RESET)
++		blk_mq_set_request_complete(scsi_cmd_to_rq(cmnd));
++	else
++		scsi_done(cmnd);
+ 
+ 	/* Wake up waiting threads */
+ 	csio_scsi_cmnd(req) = NULL;
+@@ -1752,7 +1755,10 @@ csio_scsi_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
+ 		}
+ 
+ 		cmnd->result = (((host_status) << 16) | scsi_status);
+-		scsi_done(cmnd);
++		if (csio_priv(cmnd)->fc_tm_flags == FCP_TMF_LUN_RESET)
++			blk_mq_set_request_complete(scsi_cmd_to_rq(cmnd));
++		else
++			scsi_done(cmnd);
+ 		csio_scsi_cmnd(req) = NULL;
+ 		CSIO_INC_STATS(csio_hw_to_scsim(hw), n_tot_success);
+ 	} else {
+@@ -2056,17 +2062,21 @@ csio_tm_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
+ 
+ 	/* Wake up the TM handler thread */
+ 	csio_scsi_cmnd(req) = NULL;
++	cmnd->host_scribble = NULL;
  }
-@@ -2143,12 +2142,12 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
  
- 	fas216_checkmagic(info);
- 
--	if (!info->SCpnt)
-+	if (!info->SCpnt && info->rst_dev_status)
- 		goto no_command;
- 
- 	SCpnt = info->SCpnt;
- 	info->SCpnt = NULL;
--    	info->scsi.phase = PHASE_IDLE;
-+	info->scsi.phase = PHASE_IDLE;
- 
- 	if (info->scsi.aborting) {
- 		fas216_log(info, 0, "uncaught abort - returning DID_ABORT");
-@@ -2160,7 +2159,7 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
- 	 * Sanity check the completion - if we have zero bytes left
- 	 * to transfer, we should not have a valid pointer.
- 	 */
--	if (info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
-+	if (SCpnt && info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
- 		scmd_printk(KERN_INFO, SCpnt,
- 			    "zero bytes left to transfer, but buffer pointer still valid: ptr=%p len=%08x\n",
- 			    info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
-@@ -2173,12 +2172,18 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
- 	 * the sense information, fas216_kick will re-assert the busy
- 	 * status.
- 	 */
--	info->device[SCpnt->device->id].parity_check = 0;
--	clear_bit(SCpnt->device->id * 8 +
--		  (u8)(SCpnt->device->lun & 0x7), info->busyluns);
--
--	fn = (void (*)(FAS216_Info *, struct scsi_cmnd *, unsigned int))SCpnt->host_scribble;
--	fn(info, SCpnt, result);
-+	if (SCpnt) {
-+		info->device[SCpnt->device->id].parity_check = 0;
-+		clear_bit(SCpnt->device->id * 8 +
-+			  (u8)(SCpnt->device->lun & 0x7), info->busyluns);
-+	}
-+	if (!info->rst_dev_status) {
-+		info->rst_dev_status = 1;
-+		wake_up(&info->eh_wait);
-+	} else {
-+		fn = (void (*)(FAS216_Info *, struct scsi_cmnd *, unsigned int))SCpnt->host_scribble;
-+		fn(info, SCpnt, result);
-+	}
- 
- 	if (info->scsi.irq) {
- 		spin_lock_irqsave(&info->host_lock, flags);
-@@ -2478,9 +2483,10 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
-  */
- int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
+ static int
+ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
  {
--	FAS216_Info *info = (FAS216_Info *)SCpnt->device->host->hostdata;
-+	struct scsi_device *sdev = SCpnt->device;
-+	FAS216_Info *info = (FAS216_Info *)sdev->host->hostdata;
+-	struct csio_lnode *ln = shost_priv(cmnd->device->host);
++	struct scsi_device *sdev = cmnd->device;
++	struct csio_lnode *ln = shost_priv(sdev->host);
+ 	struct csio_hw *hw = csio_lnode_to_hw(ln);
+ 	struct csio_scsim *scsim = csio_hw_to_scsim(hw);
+-	struct csio_rnode *rn = (struct csio_rnode *)(cmnd->device->hostdata);
++	struct csio_rnode *rn = (struct csio_rnode *)(sdev->hostdata);
+ 	struct csio_ioreq *ioreq = NULL;
+ 	struct csio_scsi_qset *sqset;
++	struct scsi_cmnd *tmf_cmnd;
++	struct request *req;
  	unsigned long flags;
--	int i, res = FAILED, target = SCpnt->device->id;
-+	int i, res = FAILED, target = sdev->id;
+ 	int retval;
+ 	int count, ret;
+@@ -2074,17 +2084,17 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	struct csio_scsi_level_data sld;
  
- 	fas216_log(info, LOG_ERROR, "device reset for target %d", target);
+ 	if (!rn)
+-		goto fail;
++		return FAILED;
  
-@@ -2494,7 +2500,7 @@ int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
- 		 * and we need a bus reset.
- 		 */
- 		if (info->SCpnt && !info->scsi.disconnectable &&
--		    info->SCpnt->device->id == SCpnt->device->id)
-+		    info->SCpnt->device->id == sdev->id)
- 			break;
+ 	csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
+-		      cmnd->device->lun, rn->flowid, rn->scsi_id);
++		      sdev->lun, rn->flowid, rn->scsi_id);
  
- 		/*
-@@ -2512,14 +2518,7 @@ int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
- 		for (i = 0; i < 8; i++)
- 			clear_bit(target * 8 + i, info->busyluns);
+ 	if (!csio_is_lnode_ready(ln)) {
+ 		csio_err(hw,
+ 			 "LUN reset cannot be issued on non-ready"
+ 			 " local node vnpi:0x%x (LUN:%llu)\n",
+-			 ln->vnp_flowid, cmnd->device->lun);
+-		goto fail;
++			 ln->vnp_flowid, sdev->lun);
++		return FAILED;
+ 	}
  
--		/*
--		 * Hijack this SCSI command structure to send
--		 * a bus device reset message to this device.
--		 */
--		SCpnt->host_scribble = (void *)fas216_devicereset_done;
+ 	/* Lnode is ready, now wait on rport node readiness */
+@@ -2103,10 +2113,19 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 		csio_err(hw,
+ 			 "LUN reset cannot be issued on non-ready"
+ 			 " remote node ssni:0x%x (LUN:%llu)\n",
+-			 rn->flowid, cmnd->device->lun);
+-		goto fail;
++			 rn->flowid, sdev->lun);
++		return FAILED;
+ 	}
+ 
++	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
++				 BLK_MQ_REQ_NOWAIT);
++	if (!req) {
++		csio_err(hw,
++			 "LUN reset TMF already busy (LUN:%llu)\n",
++			 sdev->lun);
++		return FAILED;
++	}
++	tmf_cmnd = blk_mq_rq_to_pdu(req);
+ 	/* Get a free ioreq structure - SM is already set to uninit */
+ 	ioreq = csio_get_scsi_ioreq_lock(hw, scsim);
+ 
+@@ -2123,11 +2142,11 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	ioreq->iq_idx		= sqset->iq_idx;
+ 	ioreq->eq_idx		= sqset->eq_idx;
+ 
+-	csio_scsi_cmnd(ioreq)	= cmnd;
+-	cmnd->host_scribble	= (unsigned char *)ioreq;
+-	csio_priv(cmnd)->wr_status = 0;
++	csio_scsi_cmnd(ioreq)	= tmf_cmnd;
++	tmf_cmnd->host_scribble	= (unsigned char *)ioreq;
++	csio_priv(tmf_cmnd)->wr_status = 0;
+ 
+-	csio_priv(cmnd)->fc_tm_flags = FCP_TMF_LUN_RESET;
++	csio_priv(tmf_cmnd)->fc_tm_flags = FCP_TMF_LUN_RESET;
+ 	ioreq->tmo		= CSIO_SCSI_LUNRST_TMO_MS / 1000;
+ 
+ 	/*
+@@ -2144,30 +2163,33 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	sld.level = CSIO_LEV_LUN;
+ 	sld.lnode = ioreq->lnode;
+ 	sld.rnode = ioreq->rnode;
+-	sld.oslun = cmnd->device->lun;
++	sld.oslun = sdev->lun;
+ 
++	WRITE_ONCE(req->state, MQ_RQ_IN_FLIGHT);
+ 	spin_lock_irqsave(&hw->lock, flags);
+ 	/* Kick off TM SM on the ioreq */
+ 	retval = csio_scsi_start_tm(ioreq);
+ 	spin_unlock_irqrestore(&hw->lock, flags);
+ 
+ 	if (retval != 0) {
++		blk_mq_set_request_complete(req);
+ 		csio_err(hw, "Failed to issue LUN reset, req:%p, status:%d\n",
+ 			    ioreq, retval);
++		tmf_cmnd->host_scribble = NULL;
+ 		goto fail_ret_ioreq;
+ 	}
+ 
+ 	csio_dbg(hw, "Waiting max %d secs for LUN reset completion\n",
+ 		    count * (CSIO_SCSI_TM_POLL_MS / 1000));
+ 	/* Wait for completion */
+-	while ((((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd)
++	while ((((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == tmf_cmnd)
+ 								&& count--)
+ 		msleep(CSIO_SCSI_TM_POLL_MS);
+ 
+ 	/* LUN reset timed-out */
+-	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd) {
++	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == tmf_cmnd) {
+ 		csio_err(hw, "LUN reset (%d:%llu) timed out\n",
+-			 cmnd->device->id, cmnd->device->lun);
++			 sdev->id, sdev->lun);
+ 
+ 		spin_lock_irq(&hw->lock);
+ 		csio_scsi_drvcleanup(ioreq);
+@@ -2178,10 +2200,10 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	}
+ 
+ 	/* LUN reset returned, check cached status */
+-	if (csio_priv(cmnd)->wr_status != FW_SUCCESS) {
++	if (csio_priv(tmf_cmnd)->wr_status != FW_SUCCESS) {
+ 		csio_err(hw, "LUN reset failed (%d:%llu), status: %d\n",
+-			 cmnd->device->id, cmnd->device->lun,
+-			 csio_priv(cmnd)->wr_status);
++			 sdev->id, sdev->lun,
++			 csio_priv(tmf_cmnd)->wr_status);
+ 		goto fail;
+ 	}
+ 
+@@ -2201,7 +2223,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	if (retval != 0) {
+ 		csio_err(hw,
+ 			 "Attempt to abort I/Os during LUN reset of %llu"
+-			 " returned %d\n", cmnd->device->lun, retval);
++			 " returned %d\n", sdev->lun, retval);
+ 		/* Return I/Os back to active_q */
+ 		spin_lock_irq(&hw->lock);
+ 		list_splice_tail_init(&local_q, &scsim->active_q);
+@@ -2212,14 +2234,16 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ 	CSIO_INC_STATS(rn, n_lun_rst);
+ 
+ 	csio_info(hw, "LUN reset occurred (%d:%llu)\n",
+-		  cmnd->device->id, cmnd->device->lun);
 -
- 		info->rst_dev_status = 0;
--		info->rstSCpnt = SCpnt;
++		  sdev->id, sdev->lun);
++	blk_mq_free_request(req);
+ 	return SUCCESS;
  
- 		if (info->scsi.phase == PHASE_IDLE)
- 			fas216_kick(info);
+ fail_ret_ioreq:
+ 	csio_put_scsi_ioreq_lock(hw, scsim, ioreq);
+ fail:
+ 	CSIO_INC_STATS(rn, n_lun_rst_fail);
++	if (req)
++		blk_mq_free_request(req);
+ 	return FAILED;
+ }
+ 
 -- 
 2.35.3
 
