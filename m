@@ -2,89 +2,71 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 925DACDB482
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 17:34:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 636EECDB484
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 18:03:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233940AbjJQRel (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 13:34:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59344 "EHLO
+        id S234939AbjJQSDt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 14:03:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229848AbjJQRek (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 13:34:40 -0400
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2479C98;
-        Tue, 17 Oct 2023 10:34:39 -0700 (PDT)
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1ca6809fb8aso16579355ad.1;
-        Tue, 17 Oct 2023 10:34:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697564078; x=1698168878;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+po5fuuGVBm8yXagURHbcZax/69bpB9Mp2v3QQyGFaI=;
-        b=QkcMeeF0OJU7XrfC4PWypwKrNBgXP/RdWMeEmCpWVeWRqXt79yc/7t8epC8AfK8Cf4
-         RqoKV0kVuF4jIfoGsup86lsK+lsVF9dFqKtl70BzWj4aYqhpyaoBIgUqSXaV+FY8bFh2
-         QJAUt4lEF9Y27X7NSwFr1zCtZrJzrDjs4ADoVbPiRRmzmMNdzVa+6kzlXL0q84uTqaAu
-         ZdrFT+pdOI/Qo8ecdfSdHXiVcrA2NInAiNKJA3gfOCpEDVw+BcWkq7LA4RtjTLLs/b88
-         gO+iqdhFUpvcZgq85/Zu59vp/RUYJoK+XcrWuT9Yj4IPE3I2ubZJob2Zgdpn/gFiYAPz
-         sgtw==
-X-Gm-Message-State: AOJu0YyRnTQ+/b34T/DOug3JabROR3GesNPjNZpUKcZknp/iV8AZDreK
-        afQv6MDLnW/SmU2y1scMF7h83Rab+Ok=
-X-Google-Smtp-Source: AGHT+IFysUqKZxxLtjPFmjwtqLi8/yDXHDKrH9D5OkqUSrKoHJ46GpLagI5zHnvxRm4Ywbd3xcJrjw==
-X-Received: by 2002:a17:903:18e:b0:1c0:9d6f:9d28 with SMTP id z14-20020a170903018e00b001c09d6f9d28mr3354358plg.11.1697564078454;
-        Tue, 17 Oct 2023 10:34:38 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:8f02:2919:9600:ac09? ([2620:15c:211:201:8f02:2919:9600:ac09])
-        by smtp.gmail.com with ESMTPSA id b11-20020a170902bd4b00b001c55db80b14sm1843650plx.221.2023.10.17.10.34.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Oct 2023 10:34:38 -0700 (PDT)
-Message-ID: <ba3a69a2-4756-495d-a112-c143930bcbce@acm.org>
-Date:   Tue, 17 Oct 2023 10:34:36 -0700
+        with ESMTP id S233170AbjJQSDs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 14:03:48 -0400
+Received: from vps.thesusis.net (vps.thesusis.net [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A23C83;
+        Tue, 17 Oct 2023 11:03:44 -0700 (PDT)
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+        id 7B60F14517D; Tue, 17 Oct 2023 14:03:43 -0400 (EDT)
+From:   Phillip Susi <phill@thesusis.net>
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
+ start/stop management
+In-Reply-To: <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
+References: <20230927141828.90288-1-dlemoal@kernel.org>
+ <20230927141828.90288-5-dlemoal@kernel.org>
+ <87v8b73lsh.fsf@vps.thesusis.net>
+ <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
+ <87r0luspvx.fsf@vps.thesusis.net>
+ <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
+Date:   Tue, 17 Oct 2023 14:03:43 -0400
+Message-ID: <87y1g1unwg.fsf@vps.thesusis.net>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [bug report] blktests srp/002 hang
-Content-Language: en-US
-To:     Bob Pearson <rpearsonhpe@gmail.com>,
-        "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
-        'Rain River' <rain.1986.08.12@gmail.com>
-Cc:     Zhu Yanjun <yanjun.zhu@linux.dev>, Jason Gunthorpe <jgg@ziepe.ca>,
-        "leon@kernel.org" <leon@kernel.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        RDMA mailing list <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
- <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
- <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
- <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
- <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
- <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
- <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
- <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
- <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
- <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
- <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
- <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org>
- <OS7PR01MB118045AD711E93D223DCD6F17E5C3A@OS7PR01MB11804.jpnprd01.prod.outlook.com>
- <a3be5e98-e783-4108-a690-acc8a5cc5981@gmail.com>
- <fb4fae79-59a4-4fe2-93ab-24232ddbd784@acm.org>
- <11acd7e3-6a56-444d-827a-e06f00589b9c@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <11acd7e3-6a56-444d-827a-e06f00589b9c@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/17/23 10:19, Bob Pearson wrote:
-> Should have mentioned that the last set of tests in srp/002 have much longer
-> writes than the earlier ones which require a lot more processing and thus
-> time. My belief is that the completion logic in srp is faulty but works if
-> the underlying transport is fast but not if it is slow.
+Damien Le Moal <dlemoal@kernel.org> writes:
 
-There are no known issues in the SRP driver. If there would be any
-issues in that driver, I think these would also show up in tests with
-the siw (Soft-iWARP) driver.
+> That one should be fixable, though it I do not see an elegant method to do it.
+> It would be easy with ugly code, e.g. tweaking the scsi device runtime pm state
+> from libata... Not great.
 
-Bart.
+What would be not great about it?  libata already takes over the system
+suspend/resume from sd.  I'm currently testing having libata do just
+this right now.  I just got ahold of some jumpers today to put the
+drives back into PuiS and do some further testing tonight.
 
+> Never saw that in my tests when enabling runtime pm on the scsi disk only. Which
+> is the important point here: there is no propagation of the suspend state down
+> to the device parent it seems.
+
+Last night I again saw the port auto suspend when the scsi disk was
+runtime suspended.  Tonight I'll test with PuiS, as well as with system
+resume while runtime suspended.  Maybe I'll even try to get the whole
+AHCI controller to auto suspend.  It seems like it should once all of
+the ports do.
+
+> I am not sure of that, especially with cases of ATA ports with multiple disks
+> (e.g. pmp or IDE).
+
+Good point.  I have an eSATA dock with PMP.  I'll check tonight if the
+children are counted properly.
