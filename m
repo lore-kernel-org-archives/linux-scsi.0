@@ -2,174 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C35CDB474
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 08:16:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B33A8CDB474
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 10:07:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234469AbjJQIQ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 04:16:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43632 "EHLO
+        id S234911AbjJQKHo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 06:07:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232300AbjJQIQZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 04:16:25 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1763293
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 01:16:22 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S8msN2kFkzvPvd;
-        Tue, 17 Oct 2023 16:11:36 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Tue, 17 Oct 2023 16:16:19 +0800
-Message-ID: <0f7a0131-3f6a-1627-2bba-96dab1ad6d9d@huawei.com>
-Date:   Tue, 17 Oct 2023 16:16:18 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-From:   Wenchao Hao <haowenchao2@huawei.com>
-Subject: Re: [PATCH 1/9] scsi: Use Scsi_Host as argument for
- eh_host_reset_handler
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
+        with ESMTP id S234794AbjJQKHo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 06:07:44 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3152B0
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 03:07:41 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 814F721CEE;
+        Tue, 17 Oct 2023 10:07:40 +0000 (UTC)
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id DFE3B2D3F1;
+        Tue, 17 Oct 2023 10:07:39 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id 171BB51EBE8E; Tue, 17 Oct 2023 12:07:40 +0200 (CEST)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        <linux-scsi@vger.kernel.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-References: <20231016121542.111501-1-hare@suse.de>
- <20231016121542.111501-2-hare@suse.de>
-Content-Language: en-US
-In-Reply-To: <20231016121542.111501-2-hare@suse.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemm000012.china.huawei.com (7.193.23.142)
-X-CFilter-Loop: Reflected
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 07/16] xen-scsifront: rework scsifront_action_handler()
+Date:   Tue, 17 Oct 2023 12:07:20 +0200
+Message-Id: <20231017100729.123506-8-hare@suse.de>
+X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20231017100729.123506-1-hare@suse.de>
+References: <20231017100729.123506-1-hare@suse.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Spamd-Bar: +++++
+Authentication-Results: smtp-out1.suse.de;
+        dkim=none;
+        dmarc=none;
+        spf=softfail (smtp-out1.suse.de: 149.44.160.134 is neither permitted nor denied by domain of hare@suse.de) smtp.mailfrom=hare@suse.de
+X-Rspamd-Server: rspamd2
+X-Spamd-Result: default: False [5.47 / 50.00];
+         ARC_NA(0.00)[];
+         FROM_HAS_DN(0.00)[];
+         TO_DN_SOME(0.00)[];
+         R_MISSING_CHARSET(2.50)[];
+         NEURAL_HAM_LONG(-3.00)[-1.000];
+         MIME_GOOD(-0.10)[text/plain];
+         DMARC_NA(0.20)[suse.de];
+         BROKEN_CONTENT_TYPE(1.50)[];
+         R_SPF_SOFTFAIL(0.60)[~all:c];
+         RCPT_COUNT_FIVE(0.00)[5];
+         TO_MATCH_ENVRCPT_SOME(0.00)[];
+         VIOLATED_DIRECT_SPF(3.50)[];
+         MX_GOOD(-0.01)[];
+         NEURAL_HAM_SHORT(-1.00)[-1.000];
+         MID_CONTAINS_FROM(1.00)[];
+         RWL_MAILSPIKE_GOOD(0.00)[149.44.160.134:from];
+         RCVD_NO_TLS_LAST(0.10)[];
+         FROM_EQ_ENVFROM(0.00)[];
+         R_DKIM_NA(0.20)[];
+         MIME_TRACE(0.00)[0:+];
+         RCVD_COUNT_TWO(0.00)[2];
+         BAYES_HAM(-0.02)[54.89%]
+X-Rspamd-Queue-Id: 814F721CEE
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/10/16 20:15, Hannes Reinecke wrote:
-> Issuing a host reset should not rely on any commands.
-> So use Scsi_Host as argument for eh_host_reset_handler.
-> 
+Rework scsifront_action_handler() to add the SCSI device as the
+first argument, and select between abort and device reset by
+checking whether the scsi_cmnd argument is NULL.
 
-Some small points.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/xen-scsifront.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
-> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-> index 9080a73b4ea6..caf045cfea0e 100644
-> --- a/drivers/message/fusion/mptscsih.c
-> +++ b/drivers/message/fusion/mptscsih.c
-> @@ -1955,15 +1955,15 @@ mptscsih_bus_reset(struct scsi_cmnd * SCpnt)
->   
->   /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
->   /**
-> - *	mptscsih_host_reset - Perform a SCSI host adapter RESET (new_eh variant)
-> - *	@SCpnt: Pointer to scsi_cmnd structure, IO which reset is due to
-> + *	mptscsih_host_reset - Perform a SCSI host adapter RESET
-> + *	@sh: Pointer to Scsi_Host structure, which is reset due to
->    *
->    *	(linux scsi_host_template.eh_host_reset_handler routine)
->    *
->    *	Returns SUCCESS or FAILED.
->    */
->   int
-> -mptscsih_host_reset(struct scsi_cmnd *SCpnt)
-> +mptscsih_host_reset(struct Scsi_Host *sh)
->   {
->   	MPT_SCSI_HOST *  hd;
->   	int              status = SUCCESS;
-> @@ -1971,9 +1971,8 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
->   	int		retval;
->   
->   	/*  If we can't locate the host to reset, then we failed. */
-> -	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
-> -		printk(KERN_ERR MYNAM ": host reset: "
-> -		    "Can't locate host! (sc=%p)\n", SCpnt);
-> +	if ((hd = shost_priv(sh)) == NULL){
-> +		printk(KERN_ERR MYNAM ": host reset: Can't locate host!\n");
->   		return FAILED;
->   	}
-
-It looks better to use shost_printk(), same for following 2 printk.
-
->   
-> @@ -1981,8 +1980,8 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
->   	mptscsih_flush_running_cmds(hd);
->   
->   	ioc = hd->ioc;
-> -	printk(MYIOC_s_INFO_FMT "attempting host reset! (sc=%p)\n",
-> -	    ioc->name, SCpnt);
-> +	printk(MYIOC_s_INFO_FMT "attempting host reset!\n",
-> +	    ioc->name);
->  
->   	/*  If our attempts to reset the host failed, then return a failed
->   	 *  status.  The host will be taken off line by the SCSI mid-layer.
-> @@ -1993,8 +1992,8 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
->   	else
->   		status = SUCCESS;
->   
-> -	printk(MYIOC_s_INFO_FMT "host reset: %s (sc=%p)\n",
-> -	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
-> +	printk(MYIOC_s_INFO_FMT "host reset: %s\n",
-> +	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ));
->   
->   	return status;
->   }
-
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index 72ceaf650b0d..9be45b7a2571 100644
-> --- a/drivers/scsi/BusLogic.c
-> +++ b/drivers/scsi/BusLogic.c
-> @@ -2852,21 +2852,14 @@ static bool blogic_write_outbox(struct blogic_adapter *adapter,
->   
->   /* Error Handling (EH) support */
->   
-> -static int blogic_hostreset(struct scsi_cmnd *SCpnt)
-> +static int blogic_hostreset(struct Scsi_Host *shost)
->   {
-> -	struct blogic_adapter *adapter =
-> -		(struct blogic_adapter *) SCpnt->device->host->hostdata;
-> -
-> -	unsigned int id = SCpnt->device->id;
-> -	struct blogic_tgt_stats *stats = &adapter->tgt_stats[id];
-> +	struct blogic_adapter *adapter = shost_priv(shost);
->   	int rc;
->   
-> -	spin_lock_irq(SCpnt->device->host->host_lock);
-> -
-> -	blogic_inc_count(&stats->adapter_reset_req);
-> -
-> +	spin_lock_irq(shost->host_lock);
->   	rc = blogic_resetadapter(adapter, false);
-> -	spin_unlock_irq(SCpnt->device->host->host_lock);
-> +	spin_unlock_irq(shost->host_lock);
->   	return rc;
->   }
-
-Why remove line "blogic_inc_count(&stats->adapter_reset_req);" ?
-
-> diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-> index f5334ccbf2ca..b9e241b9bb54 100644
-> --- a/drivers/scsi/hptiop.c
-> +++ b/drivers/scsi/hptiop.c
-> @@ -1088,12 +1088,12 @@ static int hptiop_reset_hba(struct hptiop_hba *hba)
->   	return 0;
->   }
->   
-> -static int hptiop_reset(struct scsi_cmnd *scp)
-> +static int hptiop_reset(struct Scsi_Host *host)
->   {
-> -	struct hptiop_hba * hba = (struct hptiop_hba *)scp->device->host->hostdata;
-> +	struct hptiop_hba * hba = shost_priv(host);
->   
->   	printk(KERN_WARNING "hptiop_reset(%d/%d/%d)\n",
-> -	       scp->device->host->host_no, -1, -1);
-> +	       host->host_no, -1, -1);
->   
-
-Also, it looks better to use shost_printk().
-
->   	return hptiop_reset_hba(hba)? FAILED : SUCCESS;
->   }
+diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+index a0c13200d53a..5a6cb582e5eb 100644
+--- a/drivers/scsi/xen-scsifront.c
++++ b/drivers/scsi/xen-scsifront.c
+@@ -668,11 +668,12 @@ static int scsifront_queuecommand(struct Scsi_Host *shost,
+  * We have to wait until an answer is returned. This answer contains the
+  * result to be returned to the requestor.
+  */
+-static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
++static int scsifront_action_handler(struct scsi_device *sdev,
++				    struct scsi_cmnd *sc)
+ {
+-	struct Scsi_Host *host = sc->device->host;
++	struct Scsi_Host *host = sdev->host;
+ 	struct vscsifrnt_info *info = shost_priv(host);
+-	struct vscsifrnt_shadow *shadow, *s = scsi_cmd_priv(sc);
++	struct vscsifrnt_shadow *shadow;
+ 	int err = 0;
+ 
+ 	if (info->host_active == STATE_ERROR)
+@@ -682,10 +683,14 @@ static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
+ 	if (!shadow)
+ 		return FAILED;
+ 
+-	shadow->act = act;
++	shadow->act = sc ? VSCSIIF_ACT_SCSI_ABORT : VSCSIIF_ACT_SCSI_RESET;
+ 	shadow->rslt_reset = RSLT_RESET_WAITING;
+ 	shadow->sc = sc;
+-	shadow->ref_rqid = s->rqid;
++	if (sc) {
++		struct vscsifrnt_shadow *s = scsi_cmd_priv(sc);
++
++		shadow->ref_rqid = s->rqid;
++	}
+ 	init_waitqueue_head(&shadow->wq_reset);
+ 
+ 	spin_lock_irq(host->host_lock);
+@@ -735,13 +740,13 @@ static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
+ static int scsifront_eh_abort_handler(struct scsi_cmnd *sc)
+ {
+ 	pr_debug("%s\n", __func__);
+-	return scsifront_action_handler(sc, VSCSIIF_ACT_SCSI_ABORT);
++	return scsifront_action_handler(sc->device, sc);
+ }
+ 
+ static int scsifront_dev_reset_handler(struct scsi_cmnd *sc)
+ {
+ 	pr_debug("%s\n", __func__);
+-	return scsifront_action_handler(sc, VSCSIIF_ACT_SCSI_RESET);
++	return scsifront_action_handler(sc->device, NULL);
+ }
+ 
+ static int scsifront_sdev_configure(struct scsi_device *sdev)
+-- 
+2.35.3
 
