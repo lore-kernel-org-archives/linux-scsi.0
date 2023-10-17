@@ -2,236 +2,128 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42429CDB474
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 15:32:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB34CCDB474
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 15:32:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344404AbjJQPch (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 11:32:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33296 "EHLO
+        id S1344175AbjJQPdA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 11:33:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344402AbjJQPcg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 11:32:36 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93C5210D
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 08:32:33 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 3F8F81F88C;
-        Tue, 17 Oct 2023 15:32:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1697556752; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SuEpEYO/n91S8ReKzIqb093LMvok4UzKMVUOlbqTJis=;
-        b=lXsgYSkxv4c6VVg8WGHYRiFFXZz/pl53ye4CvQDb5BFRHrQZAANvhiHWd5vgOZA52vQdHX
-        DI64Fr/fq6Tr1RdJ3UN/os4QLi3npsBFvnDJL0wKUprtRxIfefehcZn5gTJTUkhVQElFG2
-        Gdl/4gvrnF+lzc0WtE47FuBtq94L0nE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1697556752;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SuEpEYO/n91S8ReKzIqb093LMvok4UzKMVUOlbqTJis=;
-        b=C8koSVlmEXLPcRWZ6iLgXiYGBl+VHekrHnDpBD3bhe3BdxFmmb1I0ux54/KmKT5bRBDc5z
-        722JghlNMrs5b1DA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2679013584;
-        Tue, 17 Oct 2023 15:32:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id /sciCBCpLmW8PAAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 17 Oct 2023 15:32:32 +0000
-Message-ID: <6cb9b294-1a43-4db3-95b8-99c7dc941768@suse.de>
-Date:   Tue, 17 Oct 2023 17:32:31 +0200
+        with ESMTP id S229459AbjJQPc7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 11:32:59 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CDCC92;
+        Tue, 17 Oct 2023 08:32:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697556775; x=1729092775;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=srDxnBNHRQaODgGyHHLg4Ca0cHzUY3CP2XKcDBmpcHc=;
+  b=OWvhNy53pT85u6JVSF17QosaXtyj5s028R+sR+qddlJdr14C1P4BKdsQ
+   XCzbOOpHnIrA5XtzLVqArgQgd8UWezWfBTu4td8XmikP7WR1MguCwcNzO
+   alAQXzVaJ5uu1Q+rSO2fS/B7zM+SpP4lvpcgDGGuAVSXBr7BnZEruTl2q
+   Of/9E0k50VzCJK3APcwZa6Kxtb0vIo56yEoouuPVof5YVY/CqER7wkr+J
+   nmH0jgO9Z3W8NS76RGIAUNfpc6iba/J4HSDCHzANywRj9iRXsf4cJ7JSz
+   FLbaWScmpksnA4gh/aYEzKrIsRfhhYxrxKL6swm4kuXcIH0MZFtTOuxYg
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="7367433"
+X-IronPort-AV: E=Sophos;i="6.03,232,1694761200"; 
+   d="scan'208";a="7367433"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 08:32:40 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="1003396513"
+X-IronPort-AV: E=Sophos;i="6.03,232,1694761200"; 
+   d="scan'208";a="1003396513"
+Received: from lkp-server02.sh.intel.com (HELO f64821696465) ([10.239.97.151])
+  by fmsmga006.fm.intel.com with ESMTP; 17 Oct 2023 08:32:37 -0700
+Received: from kbuild by f64821696465 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qsm3f-0009kB-1w;
+        Tue, 17 Oct 2023 15:32:35 +0000
+Date:   Tue, 17 Oct 2023 23:31:50 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Wenchao Hao <haowenchao2@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
+        louhongxiang@huawei.com, Wenchao Hao <haowenchao2@huawei.com>
+Subject: Re: [PATCH v3 1/4] scsi: core: Add new helper to iterate all devices
+ of host
+Message-ID: <202310172345.jViTGPKD-lkp@intel.com>
+References: <20231016020314.1269636-2-haowenchao2@huawei.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [bug report] scsi: aic79xx: Do not reference SCSI command when
- resetting device
-Content-Language: en-US
-To:     Dan Carpenter <dan.carpenter@linaro.org>
-Cc:     linux-scsi@vger.kernel.org
-References: <e0776fce-bf5b-415b-9e17-384b0ead8e32@moroto.mountain>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <e0776fce-bf5b-415b-9e17-384b0ead8e32@moroto.mountain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Authentication-Results: smtp-out2.suse.de;
-        none
-X-Spamd-Result: default: False [-4.97 / 50.00];
-         ARC_NA(0.00)[];
-         RCVD_VIA_SMTP_AUTH(0.00)[];
-         XM_UA_NO_VERSION(0.01)[];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         BAYES_HAM(-0.88)[85.76%];
-         MIME_GOOD(-0.10)[text/plain];
-         NEURAL_HAM_LONG(-3.00)[-1.000];
-         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-         NEURAL_HAM_SHORT(-1.00)[-1.000];
-         RCPT_COUNT_TWO(0.00)[2];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         RCVD_COUNT_TWO(0.00)[2];
-         RCVD_TLS_ALL(0.00)[];
-         MID_RHS_MATCH_FROM(0.00)[]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231016020314.1269636-2-haowenchao2@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/17/23 15:38, Dan Carpenter wrote:
-> Hello Hannes Reinecke,
-> 
-> The patch c67e63800446: "scsi: aic79xx: Do not reference SCSI command
-> when resetting device" from Oct 2, 2023 (linux-next), leads to the
-> following Smatch static checker warning:
-> 
-> 	drivers/scsi/aic7xxx/aic79xx_osm.c:1793 ahd_done()
-> 	error: we previously assumed 'cmd' could be null (see line 1774)
-> 
-> drivers/scsi/aic7xxx/aic79xx_osm.c
->      1758 void
->      1759 ahd_done(struct ahd_softc *ahd, struct scb *scb)
->      1760 {
->      1761         struct scsi_cmnd *cmd;
->      1762         struct          ahd_linux_device *dev;
->      1763
->      1764         if ((scb->flags & SCB_ACTIVE) == 0) {
->      1765                 printk("SCB %d done'd twice\n", SCB_GET_TAG(scb));
->      1766                 ahd_dump_card_state(ahd);
->      1767                 panic("Stopping for safety");
->      1768         }
->      1769         LIST_REMOVE(scb, pending_links);
->      1770         cmd = scb->io_ctx;
->      1771         dev = scb->platform_data->dev;
->      1772         dev->active--;
->      1773         dev->openings++;
->      1774         if (cmd) {
->                       ^^^
-> The patch adds this NULL check
-> 
->      1775                 if ((cmd->result & (CAM_DEV_QFRZN << 16)) != 0) {
->      1776                         cmd->result &= ~(CAM_DEV_QFRZN << 16);
->      1777                         dev->qfrozen--;
->      1778                 }
->      1779         } else if (scb->flags & SCB_DEVICE_RESET) {
->      1780                 if (ahd->platform_data->eh_done)
->      1781                         complete(ahd->platform_data->eh_done);
->      1782                 ahd_free_scb(ahd, scb);
->      1783                 return;
->      1784         }
->      1785         ahd_linux_unmap_scb(ahd, scb);
->      1786
->      1787         /*
->      1788          * Guard against stale sense data.
->      1789          * The Linux mid-layer assumes that sense
->      1790          * was retrieved anytime the first byte of
->      1791          * the sense buffer looks "sane".
->      1792          */
-> --> 1793         cmd->sense_buffer[0] = 0;
->                   ^^^^^^^^^^^^^^^^^
-> But if cmd is NULL we're going to crash anyway
-> 
-This has been fixed with the latest version.
+Hi Wenchao,
 
->      1794         if (ahd_get_transaction_status(scb) == CAM_REQ_INPROG) {
->      1795 #ifdef AHD_REPORT_UNDERFLOWS
->      1796                 uint32_t amount_xferred;
->      1797
->      1798                 amount_xferred =
->      1799                     ahd_get_transfer_length(scb) - ahd_get_residual(scb);
->      1800 #endif
->      1801                 if ((scb->flags & SCB_TRANSMISSION_ERROR) != 0) {
->      1802 #ifdef AHD_DEBUG
->      1803                         if ((ahd_debug & AHD_SHOW_MISC) != 0) {
->      1804                                 ahd_print_path(ahd, scb);
->      1805                                 printk("Set CAM_UNCOR_PARITY\n");
->      1806                         }
->      1807 #endif
->      1808                         ahd_set_transaction_status(scb, CAM_UNCOR_PARITY);
->      1809 #ifdef AHD_REPORT_UNDERFLOWS
->      1810                 /*
->      1811                  * This code is disabled by default as some
->      1812                  * clients of the SCSI system do not properly
->      1813                  * initialize the underflow parameter.  This
->      1814                  * results in spurious termination of commands
->      1815                  * that complete as expected (e.g. underflow is
->      1816                  * allowed as command can return variable amounts
->      1817                  * of data.
->      1818                  */
->      1819                 } else if (amount_xferred < scb->io_ctx->underflow) {
->      1820                         u_int i;
->      1821
->      1822                         ahd_print_path(ahd, scb);
->      1823                         printk("CDB:");
->      1824                         for (i = 0; i < scb->io_ctx->cmd_len; i++)
->      1825                                 printk(" 0x%x", scb->io_ctx->cmnd[i]);
->      1826                         printk("\n");
->      1827                         ahd_print_path(ahd, scb);
->      1828                         printk("Saw underflow (%ld of %ld bytes). "
->      1829                                "Treated as error\n",
->      1830                                 ahd_get_residual(scb),
->      1831                                 ahd_get_transfer_length(scb));
->      1832                         ahd_set_transaction_status(scb, CAM_DATA_RUN_ERR);
->      1833 #endif
->      1834                 } else {
->      1835                         ahd_set_transaction_status(scb, CAM_REQ_CMP);
->      1836                 }
->      1837         } else if (ahd_get_transaction_status(scb) == CAM_SCSI_STATUS_ERROR) {
->      1838                 ahd_linux_handle_scsi_status(ahd, cmd->device, scb);
-> 
-> No check here either
-> 
-Correct, needs to be fixed.
+kernel test robot noticed the following build warnings:
 
->      1839         }
->      1840
->      1841         if (dev->openings == 1
->      1842          && ahd_get_transaction_status(scb) == CAM_REQ_CMP
->      1843          && ahd_get_scsi_status(scb) != SAM_STAT_TASK_SET_FULL)
->      1844                 dev->tag_success_count++;
->      1845         /*
->      1846          * Some devices deal with temporary internal resource
->      1847          * shortages by returning queue full.  When the queue
->      1848          * full occurrs, we throttle back.  Slowly try to get
->      1849          * back to our previous queue depth.
->      1850          */
->      1851         if ((dev->openings + dev->active) < dev->maxtags
->      1852          && dev->tag_success_count > AHD_TAG_SUCCESS_INTERVAL) {
->      1853                 dev->tag_success_count = 0;
->      1854                 dev->openings++;
->      1855         }
->      1856
->      1857         if (dev->active == 0)
->      1858                 dev->commands_since_idle_or_otag = 0;
->      1859
->      1860         if ((scb->flags & SCB_RECOVERY_SCB) != 0) {
->      1861                 printk("Recovery SCB completes\n");
->      1862                 if (ahd_get_transaction_status(scb) == CAM_BDR_SENT
->      1863                  || ahd_get_transaction_status(scb) == CAM_REQ_ABORTED)
->      1864                         ahd_set_transaction_status(scb, CAM_CMD_TIMEOUT);
->      1865
->      1866                 if (ahd->platform_data->eh_done)
->      1867                         complete(ahd->platform_data->eh_done);
->      1868         }
->      1869
->      1870         ahd_free_scb(ahd, scb);
->      1871         ahd_linux_queue_cmd_complete(ahd, cmd);
-> 
-> Or here
-> 
-Needs to be fixed, too.
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next linus/master v6.6-rc6 next-20231017]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Will be sending a patch.
+url:    https://github.com/intel-lab-lkp/linux/commits/Wenchao-Hao/scsi-core-Add-new-helper-to-iterate-all-devices-of-host/20231017-140049
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20231016020314.1269636-2-haowenchao2%40huawei.com
+patch subject: [PATCH v3 1/4] scsi: core: Add new helper to iterate all devices of host
+config: m68k-allyesconfig (https://download.01.org/0day-ci/archive/20231017/202310172345.jViTGPKD-lkp@intel.com/config)
+compiler: m68k-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231017/202310172345.jViTGPKD-lkp@intel.com/reproduce)
 
-Cheers,
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202310172345.jViTGPKD-lkp@intel.com/
 
-Hannes
+All warnings (new ones prefixed by >>):
 
+>> drivers/scsi/scsi.c:767: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+    * helper for shost_for_each_device, see that for documentation
+
+
+vim +767 drivers/scsi/scsi.c
+
+   765	
+   766	/**
+ > 767	 * helper for shost_for_each_device, see that for documentation
+   768	 * @skip_deleted: if true, sdev in progress of removing would be skipped
+   769	 */
+   770	struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *shost,
+   771						   struct scsi_device *prev,
+   772						   bool skip_deleted)
+   773	{
+   774		struct list_head *list = (prev ? &prev->siblings : &shost->__devices);
+   775		struct scsi_device *next = NULL;
+   776		unsigned long flags;
+   777	
+   778		spin_lock_irqsave(shost->host_lock, flags);
+   779		while (list->next != &shost->__devices) {
+   780			next = list_entry(list->next, struct scsi_device, siblings);
+   781			/* skip devices that we can't get a reference to */
+   782			if (!__scsi_device_get(next, skip_deleted))
+   783				break;
+   784			next = NULL;
+   785			list = list->next;
+   786		}
+   787		spin_unlock_irqrestore(shost->host_lock, flags);
+   788	
+   789		if (prev)
+   790			scsi_device_put(prev);
+   791		return next;
+   792	}
+   793	EXPORT_SYMBOL(__scsi_iterate_devices);
+   794	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
