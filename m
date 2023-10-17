@@ -2,46 +2,47 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D4ABCDB474
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF396CDB483
 	for <linux-scsi@archiver.kernel.org>; Tue, 17 Oct 2023 10:08:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343614AbjJQKIQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Oct 2023 06:08:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40556 "EHLO
+        id S1343576AbjJQKIS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Oct 2023 06:08:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234930AbjJQKHq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 06:07:46 -0400
+        with ESMTP id S234933AbjJQKHr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Oct 2023 06:07:47 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6193F1
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 03:07:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AE41F9
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Oct 2023 03:07:45 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id B13D721D16;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 9753921D13;
         Tue, 17 Oct 2023 10:07:40 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 37F042D3FB;
+        by relay2.suse.de (Postfix) with ESMTP id 25FDD2D3F8;
         Tue, 17 Oct 2023 10:07:40 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 63CCF51EBEA0; Tue, 17 Oct 2023 12:07:40 +0200 (CEST)
+        id 5276951EBE9C; Tue, 17 Oct 2023 12:07:40 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/16] dc395x: Remove 'scmd' parameter from doing_srb_done()
-Date:   Tue, 17 Oct 2023 12:07:29 +0200
-Message-Id: <20231017100729.123506-17-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 14/16] fnic: use fc_block_rport() correctly
+Date:   Tue, 17 Oct 2023 12:07:27 +0200
+Message-Id: <20231017100729.123506-15-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231017100729.123506-1-hare@suse.de>
 References: <20231017100729.123506-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: ++
+X-Spamd-Bar: +++
 Authentication-Results: smtp-out1.suse.de;
         dkim=none;
         dmarc=none;
         spf=softfail (smtp-out1.suse.de: 149.44.160.134 is neither permitted nor denied by domain of hare@suse.de) smtp.mailfrom=hare@suse.de
 X-Rspamd-Server: rspamd2
-X-Spamd-Result: default: False [2.49 / 50.00];
+X-Spamd-Result: default: False [3.83 / 50.00];
          ARC_NA(0.00)[];
          FROM_HAS_DN(0.00)[];
          TO_DN_SOME(0.00)[];
@@ -51,7 +52,7 @@ X-Spamd-Result: default: False [2.49 / 50.00];
          DMARC_NA(0.20)[suse.de];
          BROKEN_CONTENT_TYPE(1.50)[];
          R_SPF_SOFTFAIL(0.60)[~all:c];
-         RCPT_COUNT_FIVE(0.00)[5];
+         RCPT_COUNT_FIVE(0.00)[6];
          TO_MATCH_ENVRCPT_SOME(0.00)[];
          VIOLATED_DIRECT_SPF(3.50)[];
          MX_GOOD(-0.01)[];
@@ -63,83 +64,48 @@ X-Spamd-Result: default: False [2.49 / 50.00];
          R_DKIM_NA(0.20)[];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
-         BAYES_HAM(-3.00)[100.00%]
-X-Rspamd-Queue-Id: B13D721D16
+         BAYES_HAM(-1.66)[92.86%]
+X-Rspamd-Queue-Id: 9753921D13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-doing_srb_done() has two passes, one for the 'going' list
-and one for the 'waiting' list. When aborting commands on these
-lists we should be calling scsi_done() for each command, and
-not only for the command which triggered the error.
+Use fc_block_rport() instead of fc_block_scsi_eh() and evaluate
+the return value to avoid issuing TMF commands when the port
+is still blocked.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/scsi/dc395x.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index c8e86f8a631e..822d21e7da14 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -367,8 +367,7 @@ static inline void enable_msgout_abort(struct AdapterCtlBlk *acb,
- 		struct ScsiReqBlk *srb);
- static void build_srb(struct scsi_cmnd *cmd, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb);
--static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_code,
--		struct scsi_cmnd *cmd, u8 force);
-+static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_code, u8 force);
- static void scsi_reset_detect(struct AdapterCtlBlk *acb);
- static void pci_unmap_srb(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb);
- static void pci_unmap_srb_sense(struct AdapterCtlBlk *acb,
-@@ -1182,7 +1181,7 @@ static int __dc395x_eh_bus_reset(struct scsi_cmnd *cmd)
- 	set_basic_config(acb);
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 7a8b6285a096..90f30944eab3 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -1719,9 +1719,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 	unsigned long abt_issued_time;
+ 	DECLARE_COMPLETION_ONSTACK(tm_done);
  
- 	reset_dev_param(acb);
--	doing_srb_done(acb, DID_RESET, cmd, 0);
-+	doing_srb_done(acb, DID_RESET, 0);
- 	acb->active_dcb = NULL;
- 	acb->acb_flag = 0;	/* RESET_DETECT, RESET_DONE ,RESET_DEV */
- 	waiting_process_next(acb);
-@@ -2896,7 +2895,7 @@ static void disconnect(struct AdapterCtlBlk *acb)
- 		dcb->flag &= ~ABORT_DEV_;
- 		acb->last_reset = jiffies + HZ / 2 + 1;
- 		dprintkl(KERN_ERR, "disconnect: SRB_ABORT_SENT\n");
--		doing_srb_done(acb, DID_ABORT, srb->cmd, 1);
-+		doing_srb_done(acb, DID_ABORT, 1);
- 		waiting_process_next(acb);
- 	} else {
- 		if ((srb->state & (SRB_START_ + SRB_MSGOUT))
-@@ -3337,8 +3336,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+-	/* Wait for rport to unblock */
+-	fc_block_scsi_eh(sc);
+-
+ 	/* Get local-port, check ready and link up */
+ 	lp = shost_priv(sc->device->host);
  
+@@ -1731,6 +1728,10 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 	term_stats = &fnic->fnic_stats.term_stats;
  
- /* abort all cmds in our queues */
--static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
--		struct scsi_cmnd *cmd, u8 force)
-+static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag, u8 force)
- {
- 	struct DeviceCtlBlk *dcb;
- 	dprintkl(KERN_INFO, "doing_srb_done: pids ");
-@@ -3389,7 +3387,7 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
- 			if (force) {
- 				/* For new EH, we normally don't need to give commands back,
- 				 * as they all complete or all time out */
--				scsi_done(cmd);
-+				scsi_done(p);
- 			}
- 		}
- 		if (!list_empty(&dcb->srb_waiting_list))
-@@ -3475,7 +3473,7 @@ static void scsi_reset_detect(struct AdapterCtlBlk *acb)
- 	} else {
- 		acb->acb_flag |= RESET_DETECT;
- 		reset_dev_param(acb);
--		doing_srb_done(acb, DID_RESET, NULL, 1);
-+		doing_srb_done(acb, DID_RESET, 1);
- 		/*DC395x_RecoverSRB( acb ); */
- 		acb->active_dcb = NULL;
- 		acb->acb_flag = 0;
+ 	rport = starget_to_rport(scsi_target(sc->device));
++	ret = fc_block_rport(rport);
++	if (ret)
++		return ret;
++
+ 	FNIC_SCSI_DBG(KERN_DEBUG,
+ 		fnic->lport->host,
+ 		"Abort Cmd called FCID 0x%x, LUN 0x%llx TAG %x flags %x\n",
 -- 
 2.35.3
 
