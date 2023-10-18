@@ -2,105 +2,136 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E4FC41513
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 06:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F31BCDB47E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 07:08:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229661AbjJRGQq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 02:16:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47026 "EHLO
+        id S229768AbjJRHI2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 03:08:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229650AbjJRGQp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 02:16:45 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E11DBEA;
-        Tue, 17 Oct 2023 23:16:42 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02590C433C8;
-        Wed, 18 Oct 2023 06:16:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697609802;
-        bh=VyCFMGnNO4dEej2M+2W9EIIrQCxbhF4GtjVh6dLwz+Y=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=qLmQKR+D5igbICtVZgbKnprjR/TZcsU51yvFJe5fuoEH7TjPkDEUiB7mxbJQYC9VX
-         6MtDYEl+aKds1ct7sPW7OR3VHHsmUXFzBKh5hndMeARbVVpEmVe6F4zh7U6M6kr7Lg
-         g+20iR6ZiktytkSL0AoL/5eAlYMoS8niRRnjRP1XrGgOJABtrALPJwkrzPftnHbIAh
-         wwzOxmX+w4eM0llF/T8A8F17jDz+40MJCJWHCOy5rY/0KIQwrm+lA5QBf06XrdQxb4
-         odePgcB1qJ6nDUEhjLkqlQeTsw8qOUtnasZ+eC7ZoK95u/29Wht9WLqDiYP8Ak9QbU
-         CX7eSL6v6/MHA==
-Message-ID: <e5a256fa-f1f6-4474-8e9e-b9f4bd6dced7@kernel.org>
-Date:   Wed, 18 Oct 2023 15:16:21 +0900
+        with ESMTP id S229657AbjJRHI1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 03:08:27 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0FEFB6;
+        Wed, 18 Oct 2023 00:08:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697612905; x=1729148905;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=KgSL2A1x9+stQg/irIw9FE4bT7SCFkpCNfVoXiyeoZg=;
+  b=KvEx3krSv7pq4NYglneUd/H2nOsJ/ShbCGRnPhPNC3c4JBr+wNSXk+C/
+   Is/7f/YnGdxGTHVhS/wm9Dornp6ubEQAnyVaCWhk9pqbiGC44i2aaegcs
+   yazcHglUWHo1NOlZpzyoVZo8vi64irSUEGH9bSxB0EWrf+yrclMjSsWZY
+   ItWhuYjqhtYeOGQaVtzv77bLEmPYxKi15+X/k37ZdrZWWjh+HrvqukxqD
+   xjNS3L+He3jfV0AmiyVymVyQP15yOBqQE1zCGZdTEcBStdkxE22TizDZZ
+   iFeFOiWxVR0oYbNPORoOeky+9a2pGq1OFRIs0fz1BG6KpKAyyuWo9Ryjd
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="452426789"
+X-IronPort-AV: E=Sophos;i="6.03,234,1694761200"; 
+   d="scan'208";a="452426789"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2023 00:08:25 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="872897877"
+X-IronPort-AV: E=Sophos;i="6.03,234,1694761200"; 
+   d="scan'208";a="872897877"
+Received: from lkp-server01.sh.intel.com (HELO 8917679a5d3e) ([10.239.97.150])
+  by fmsmga002.fm.intel.com with ESMTP; 18 Oct 2023 00:08:22 -0700
+Received: from kbuild by 8917679a5d3e with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qt0fD-00003E-2I;
+        Wed, 18 Oct 2023 07:08:19 +0000
+Date:   Wed, 18 Oct 2023 15:07:31 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     liuchang_125125@163.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     oe-kbuild-all@lists.linux.dev, mark.tao@bayhubtech.com,
+        shaper.liu@bayhubtech.com, thomas.hu@bayhubtech.com,
+        chevron.li@bayhubtech.com, charl.liu@bayhubtech.com,
+        Charl Liu <liuchang_125125@163.com>
+Subject: Re: [PATCH 3/9] scsi: bht: card: Add the source files related to
+ card initialization
+Message-ID: <202310181344.qYDD470Q-lkp@intel.com>
+References: <20231013083320.10279-1-liuchang_125125@163.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-Content-Language: en-US
-To:     Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org> <87v8b73lsh.fsf@vps.thesusis.net>
- <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
- <87r0luspvx.fsf@vps.thesusis.net>
- <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
- <87y1g1unwg.fsf@vps.thesusis.net>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <87y1g1unwg.fsf@vps.thesusis.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231013083320.10279-1-liuchang_125125@163.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/18/23 03:03, Phillip Susi wrote:
-> Damien Le Moal <dlemoal@kernel.org> writes:
-> 
->> That one should be fixable, though it I do not see an elegant method to do it.
->> It would be easy with ugly code, e.g. tweaking the scsi device runtime pm state
->> from libata... Not great.
-> 
-> What would be not great about it?  libata already takes over the system
-> suspend/resume from sd.  I'm currently testing having libata do just
-> this right now.  I just got ahold of some jumpers today to put the
-> drives back into PuiS and do some further testing tonight.
-> 
->> Never saw that in my tests when enabling runtime pm on the scsi disk only. Which
->> is the important point here: there is no propagation of the suspend state down
->> to the device parent it seems.
-> 
-> Last night I again saw the port auto suspend when the scsi disk was
-> runtime suspended.  Tonight I'll test with PuiS, as well as with system
-> resume while runtime suspended.  Maybe I'll even try to get the whole
-> AHCI controller to auto suspend.  It seems like it should once all of
-> the ports do.
-> 
->> I am not sure of that, especially with cases of ATA ports with multiple disks
->> (e.g. pmp or IDE).
-> 
-> Good point.  I have an eSATA dock with PMP.  I'll check tonight if the
-> children are counted properly.
+Hi,
 
-On my system, I see:
+kernel test robot noticed the following build warnings:
 
-cat /sys/class/ata_port/ata1/power/runtime_active_kids
-0
+[auto build test WARNING on 401644852d0b2a278811de38081be23f74b5bb04]
 
-and same for port 10 which is a PMP box with 3 drives. So it means that the
-children will be ignored, which is wrong. Note that the corresponding scsi_host
-device also shows 0. So to be safe with port runtime PM, we need to fix that
-first. Otherwise, the port may end up being runtime suspended with running
-drives still attached to it.
+url:    https://github.com/intel-lab-lkp/linux/commits/liuchang_125125-163-com/scsi-Update-Kconfig-and-Makefile-for-supporting-Bayhub-s-SD-MMC-Card-interface-driver/20231017-123349
+base:   401644852d0b2a278811de38081be23f74b5bb04
+patch link:    https://lore.kernel.org/r/20231013083320.10279-1-liuchang_125125%40163.com
+patch subject: [PATCH 3/9] scsi: bht: card: Add the source files related to card initialization
+config: sparc-allyesconfig (https://download.01.org/0day-ci/archive/20231018/202310181344.qYDD470Q-lkp@intel.com/config)
+compiler: sparc64-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231018/202310181344.qYDD470Q-lkp@intel.com/reproduce)
 
-/sys/class/ata_port/ata1/power/control is set to "auto" by default.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202310181344.qYDD470Q-lkp@intel.com/
 
+All warnings (new ones prefixed by >>):
+
+>> cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
+   drivers/scsi/bht/card/cardcommon.c:20:10: fatal error: ../include/basic.h: No such file or directory
+      20 | #include "../include/basic.h"
+         |          ^~~~~~~~~~~~~~~~~~~~
+   compilation terminated.
+--
+>> cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
+   drivers/scsi/bht/card/cardinterface.c:22:10: fatal error: ../include/basic.h: No such file or directory
+      22 | #include "../include/basic.h"
+         |          ^~~~~~~~~~~~~~~~~~~~
+   compilation terminated.
+--
+>> cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
+   drivers/scsi/bht/card/mmc.c:19:10: fatal error: ../include/basic.h: No such file or directory
+      19 | #include "../include/basic.h"
+         |          ^~~~~~~~~~~~~~~~~~~~
+   compilation terminated.
+--
+>> cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
+   drivers/scsi/bht/card/sd.c:19:10: fatal error: ../include/basic.h: No such file or directory
+      19 | #include "../include/basic.h"
+         |          ^~~~~~~~~~~~~~~~~~~~
+   compilation terminated.
+--
+>> cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
+   drivers/scsi/bht/card/thermal.c:20:10: fatal error: ../include/basic.h: No such file or directory
+      20 | #include "../include/basic.h"
+         |          ^~~~~~~~~~~~~~~~~~~~
+   compilation terminated.
+--
+>> cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
+   drivers/scsi/bht/card/uhs2.c:20:10: fatal error: ../include/basic.h: No such file or directory
+      20 | #include "../include/basic.h"
+         |          ^~~~~~~~~~~~~~~~~~~~
+   compilation terminated.
+--
+>> cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
+   drivers/scsi/bht/card/card_ddr200_support.c:20:10: fatal error: ../include/basic.h: No such file or directory
+      20 | #include "../include/basic.h"
+         |          ^~~~~~~~~~~~~~~~~~~~
+   compilation terminated.
+--
+>> cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
+   drivers/scsi/bht/card/output_tuning.c:22:10: fatal error: ../include/basic.h: No such file or directory
+      22 | #include "../include/basic.h"
+         |          ^~~~~~~~~~~~~~~~~~~~
+   compilation terminated.
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
