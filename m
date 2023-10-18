@@ -2,377 +2,134 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D002CDB47E
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 07:46:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 989D2CDB47E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 08:17:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229853AbjJRHqK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 03:46:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58402 "EHLO
+        id S230031AbjJRIRB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 04:17:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbjJRHqI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 03:46:08 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A89D9B6;
-        Wed, 18 Oct 2023 00:46:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697615165; x=1729151165;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=q758F4Gi/UU/qeaxET/FotQtuXbxWVHRjy+3ChV2Clk=;
-  b=Jx5x7TDPzkUcsQrayarnawgzI7gMMEMJ3So9BGiO3gGrWVeGPFJLR48a
-   llw21OXujRte1FiBDMKnfJFnKZjDkmjDgDSk4qDOHk6btt9eFG4usxk3X
-   VmW/Ifp+z7bXegtqTLtHnAIyLqbFq2/ErwaHBlHdI9iGMPpR9dicYgFd3
-   IsPHk7zkBgrHP//prLBF0AeEdx6gMejStxWeKuWEYMeKqRk8wxC+Fq7uz
-   M2C6q1qgu1ASkRgvxmm0GNmlULcwxLQlY6iBdle/3J24loU19S+ViRR9Y
-   3rHZE4MPtMRUdkN2nWJVLZcoCCOVxumLeGZjfcz7SjjfTtEfhFkitGqDs
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="388823706"
-X-IronPort-AV: E=Sophos;i="6.03,234,1694761200"; 
-   d="scan'208";a="388823706"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2023 00:46:05 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="785794057"
-X-IronPort-AV: E=Sophos;i="6.03,234,1694761200"; 
-   d="scan'208";a="785794057"
-Received: from lkp-server01.sh.intel.com (HELO 8917679a5d3e) ([10.239.97.150])
-  by orsmga008.jf.intel.com with ESMTP; 18 Oct 2023 00:45:23 -0700
-Received: from kbuild by 8917679a5d3e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qt1F2-00004q-1t;
-        Wed, 18 Oct 2023 07:45:20 +0000
-Date:   Wed, 18 Oct 2023 15:45:16 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     liuchang_125125@163.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     oe-kbuild-all@lists.linux.dev, mark.tao@bayhubtech.com,
-        shaper.liu@bayhubtech.com, thomas.hu@bayhubtech.com,
-        chevron.li@bayhubtech.com, charl.liu@bayhubtech.com,
-        Charl Liu <liuchang_125125@163.com>
-Subject: Re: [PATCH 7/9] scsi: bht: main: Add the source files related to
- driver setting management
-Message-ID: <202310181522.ndHXtUlU-lkp@intel.com>
-References: <20231013083429.10347-1-liuchang_125125@163.com>
+        with ESMTP id S230019AbjJRIRA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 04:17:00 -0400
+Received: from out-202.mta0.migadu.com (out-202.mta0.migadu.com [91.218.175.202])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB439B6
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2023 01:16:55 -0700 (PDT)
+Message-ID: <2a5e1fb6-6c73-4d25-b29a-4ccdbf2c5678@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1697617014;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3bQEjPXiHHLTebOYkrYW4EJTly3aDO83LJe8sSOMjPc=;
+        b=X1VMcJ7fputuUF9CLL7/Yf+ZsZbS/weac66CDri+8uH7kkSx5JY8Dw+/7NEdLjPDZ3Z8ZK
+        WQkA9pW6u3XXAxzANN6786COQzq2vGqZZFc3U9v/epGhLGCeIOEefPgDVasMlotUigjC1x
+        NOSwotrQS3KIzhZQYkEnlQY6Skm5Lto=
+Date:   Wed, 18 Oct 2023 16:16:45 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231013083429.10347-1-liuchang_125125@163.com>
+Subject: Re: [bug report] blktests srp/002 hang
+To:     Bob Pearson <rpearsonhpe@gmail.com>,
+        "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
+        'Bart Van Assche' <bvanassche@acm.org>,
+        'Rain River' <rain.1986.08.12@gmail.com>
+Cc:     Jason Gunthorpe <jgg@ziepe.ca>,
+        "leon@kernel.org" <leon@kernel.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        RDMA mailing list <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
+ <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
+ <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev>
+ <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
+ <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
+ <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
+ <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
+ <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
+ <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
+ <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
+ <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
+ <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
+ <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
+ <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
+ <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org>
+ <OS7PR01MB118045AD711E93D223DCD6F17E5C3A@OS7PR01MB11804.jpnprd01.prod.outlook.com>
+ <a3be5e98-e783-4108-a690-acc8a5cc5981@gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Zhu Yanjun <yanjun.zhu@linux.dev>
+In-Reply-To: <a3be5e98-e783-4108-a690-acc8a5cc5981@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
 
-kernel test robot noticed the following build warnings:
+在 2023/10/18 1:09, Bob Pearson 写道:
+> On 9/25/23 20:17, Daisuke Matsuda (Fujitsu) wrote:
+>> On Tue, Sep 26, 2023 12:01 AM Bart Van Assche:
+>>> On 9/24/23 21:47, Daisuke Matsuda (Fujitsu) wrote:
+>>>> As Bob wrote above, nobody has found any logical failure in rxe
+>>>> driver.
+>>> That's wrong. In case you would not yet have noticed my latest email in
+>>> this thread, please take a look at
+>>> https://lore.kernel.org/linux-rdma/e8b76fae-780a-470e-8ec4-c6b650793d10@leemhuis.info/T/#m0fd8ea8a4cbc27b37
+>>> b042ae4f8e9b024f1871a73.
+>>> I think the report in that email is a 100% proof that there is a
+>>> use-after-free issue in the rdma_rxe driver. Use-after-free issues have
+>>> security implications and also can cause data corruption. I propose to
+>>> revert the commit that introduced the rdma_rxe use-after-free unless
+>>> someone comes up with a fix for the rdma_rxe driver.
+>>>
+>>> Bart.
+>> Thank you for the clarification. I see your intention.
+>> I hope the hang issue will be resolved by addressing this.
+>>
+>> Thanks,
+>> Daisuke
+>>
+> I have made some progress in understanding the cause of the srp/002 etc. hang.
+>
+> The two attached files are traces of activity for two qp's qp#151 and qp#167. In my runs of srp/002
+> All the qp's pass before 167 and all fail after 167 which is the first to fail.
+>
+> It turns out that all the passing qp's call srp_post_send() some number of times and also call
+> srp_send_done() the same number of times. Starting at qp#167 the last call to srp_send_done() does
+> not take place leaving the srp driver waiting for the final completion and causing the hang I believe.
 
-[auto build test WARNING on 401644852d0b2a278811de38081be23f74b5bb04]
+Thanks, Bob
 
-url:    https://github.com/intel-lab-lkp/linux/commits/liuchang_125125-163-com/scsi-Update-Kconfig-and-Makefile-for-supporting-Bayhub-s-SD-MMC-Card-interface-driver/20231017-123349
-base:   401644852d0b2a278811de38081be23f74b5bb04
-patch link:    https://lore.kernel.org/r/20231013083429.10347-1-liuchang_125125%40163.com
-patch subject: [PATCH 7/9] scsi: bht: main: Add the source files related to driver setting management
-config: sparc-allyesconfig (https://download.01.org/0day-ci/archive/20231018/202310181522.ndHXtUlU-lkp@intel.com/config)
-compiler: sparc64-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231018/202310181522.ndHXtUlU-lkp@intel.com/reproduce)
+I will delve into your findings and the source code to find the root cause.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202310181522.ndHXtUlU-lkp@intel.com/
+BTW, what linux distribution are you using to find this? Ubuntu, Fedora 
+or Debian?
 
-All warnings (new ones prefixed by >>):
+ From the above, sometings this problem is difficult to reproduce on 
+Ubuntu. But it can be reproduced in Ubuntu and Debian.
 
-   cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
->> drivers/scsi/bht/main/autotimerfunc.c:57:6: warning: no previous prototype for 'func_timer_callback' [-Wmissing-prototypes]
-      57 | void func_timer_callback(bht_dev_ext_t *pdx)
-         |      ^~~~~~~~~~~~~~~~~~~
->> drivers/scsi/bht/main/autotimerfunc.c:158:6: warning: no previous prototype for 'func_autotimer_init' [-Wmissing-prototypes]
-     158 | void func_autotimer_init(bht_dev_ext_t *pdx)
-         |      ^~~~~~~~~~~~~~~~~~~
->> drivers/scsi/bht/main/autotimerfunc.c:209:6: warning: no previous prototype for 'func_timer_thread' [-Wmissing-prototypes]
-     209 | void func_timer_thread(bht_dev_ext_t *pdx)
-         |      ^~~~~~~~~~~~~~~~~
->> drivers/scsi/bht/main/autotimerfunc.c:303:6: warning: no previous prototype for 'func_autotimer_stop' [-Wmissing-prototypes]
-     303 | void func_autotimer_stop(bht_dev_ext_t *pdx)
-         |      ^~~~~~~~~~~~~~~~~~~
->> drivers/scsi/bht/main/autotimerfunc.c:315:6: warning: no previous prototype for 'func_autotimer_start' [-Wmissing-prototypes]
-     315 | void func_autotimer_start(bht_dev_ext_t *pdx)
-         |      ^~~~~~~~~~~~~~~~~~~~
->> drivers/scsi/bht/main/autotimerfunc.c:326:6: warning: no previous prototype for 'func_autotimer_cancel' [-Wmissing-prototypes]
-     326 | void func_autotimer_cancel(bht_dev_ext_t *pdx)
-         |      ^~~~~~~~~~~~~~~~~~~~~
---
-   cc1: warning: /drivers/scsi: No such file or directory [-Wmissing-include-dirs]
->> drivers/scsi/bht/main/pmfunc.c:29:6: warning: no previous prototype for 'pm_init' [-Wmissing-prototypes]
-      29 | void pm_init(bht_dev_ext_t *pdx)
-         |      ^~~~~~~
+So can you let me know what linux distribution you are using?
 
+Thanks
 
-vim +/func_timer_callback +57 drivers/scsi/bht/main/autotimerfunc.c
+Zhu Yanjun
 
-    43	
-    44	/*
-    45	 * Function Name: func_timer_callback
-    46	 * Abstract: This Function is used to calculate timer tick
-    47	 *
-    48	 * Input:
-    49	 *	bht_dev_ext_t *pdx
-    50	 *
-    51	 *
-    52	 * Notes:
-    53	 *
-    54	 *        so giving the routine another name requires you to modify the build tools.
-    55	 */
-    56	
-  > 57	void func_timer_callback(bht_dev_ext_t *pdx)
-    58	{
-    59		u32 cur_time, interval;
-    60		bool event = FALSE;
-    61	
-    62		DbgInfo(MODULE_AUTOTIMER, FEATURE_TIMER_TRACE, 0, "Enter %s\n",
-    63			__func__);
-    64		if (pdx->auto_timer.enable == FALSE || pdx->auto_timer.cancel)
-    65			goto exit;
-    66	
-    67		if (pdx->auto_timer.stop) {
-    68			autotimer_clear(pdx);
-    69			goto exit;
-    70		}
-    71	
-    72		/* If card not workable don't use timer */
-    73		if (pdx->card.card_present == FALSE)
-    74			goto exit;
-    75		if (pdx->card.card_type == CARD_NONE
-    76		    || pdx->card.card_type == CARD_ERROR)
-    77			goto exit;
-    78		if (pdx->card.state == CARD_STATE_POWEROFF)
-    79			goto exit;
-    80		/* If rtd3 entered not do below steps */
-    81		DbgInfo(MODULE_AUTOTIMER, FEATURE_TIMER_TRACE, 0,
-    82			"auto timer really work\n");
-    83	
-    84		/* calculate the real interval */
-    85		cur_time = os_get_cur_tick();
-    86		if (pdx->auto_timer.last_tick == 0) {
-    87			pdx->auto_timer.last_tick = cur_time;
-    88			interval = AUTO_TIMER_TICK;
-    89		} else {
-    90			interval = cur_time - pdx->auto_timer.last_tick;
-    91			pdx->auto_timer.last_tick = cur_time;
-    92		}
-    93	
-    94		/* update and check timeout for each tick */
-    95		if (pdx->auto_timer.auto_cmd12_enable && pdx->card.has_built_inf) {
-    96			pdx->auto_timer.auto_cmd12_tick += interval;
-    97			if (pdx->auto_timer.auto_cmd12_tick >=
-    98			    pdx->auto_timer.auto_cmd12_time)
-    99				event = TRUE;
-   100		}
-   101	
-   102		if (pdx->auto_timer.auto_dmt_enable && pdx->card.card_type == CARD_UHS2
-   103		    && pdx->card.state == CARD_STATE_WORKING) {
-   104			pdx->auto_timer.auto_dmt_tick += interval;
-   105			if (pdx->auto_timer.auto_dmt_tick >=
-   106			    pdx->auto_timer.auto_dmt_time)
-   107				event = TRUE;
-   108		}
-   109	
-   110		if (pdx->auto_timer.auto_led_off_enable && (pdx->host.led_on)) {
-   111			pdx->auto_timer.auto_led_off_tick += interval;
-   112			if (pdx->auto_timer.auto_led_off_tick >=
-   113			    pdx->auto_timer.auto_led_off_time)
-   114				event = TRUE;
-   115		}
-   116	
-   117		if (pdx->auto_timer.auto_poweroff_enable) {
-   118			pdx->auto_timer.auto_poweroff_tick += interval;
-   119			if (pdx->auto_timer.auto_poweroff_tick >=
-   120			    pdx->auto_timer.auto_poweroff_time)
-   121				event = TRUE;
-   122		}
-   123	
-   124		if (pdx->auto_timer.cancel || pdx->auto_timer.stop)
-   125			goto exit;
-   126	
-   127		if (event) {
-   128			DbgInfo(MODULE_AUTOTIMER, FEATURE_TIMER_TRACE, 0,
-   129				"auto timer set event\n");
-   130	
-   131	#if CFG_OS_LINUX
-   132			os_set_event(&pdx->os, EVENT_AUTO_TIMER);
-   133	#else
-   134			os_set_event(pdx, &pdx->os, EVENT_TASK_OCCUR, EVENT_AUTO_TIMER);
-   135	#endif
-   136	
-   137		}
-   138		os_start_timer(pdx, &pdx->os, TIMER_AUTO, AUTO_TIMER_TICK);
-   139	
-   140	exit:
-   141		DbgInfo(MODULE_AUTOTIMER, FEATURE_TIMER_TRACE, 0, "Exit %s\n",
-   142			__func__);
-   143	}
-   144	
-   145	/*
-   146	 * Function Name: func_autotimer_init
-   147	 * Abstract: This Function is used to init timer function variables
-   148	 *
-   149	 * Input:
-   150	 *	bht_dev_ext_t *pdx
-   151	 *
-   152	 *
-   153	 * Notes:
-   154	 *
-   155	 *        so giving the routine another name requires you to modify the build tools.
-   156	 */
-   157	
- > 158	void func_autotimer_init(bht_dev_ext_t *pdx)
-   159	{
-   160		cfg_item_t *cfg = pdx->cfg;
-   161	
-   162		os_memset(&pdx->auto_timer, 0, sizeof(pdx->auto_timer));
-   163	
-   164		pdx->auto_timer.auto_dmt_time =
-   165		    cfg->timer_item.auto_dormant_timer.time_ms;
-   166		pdx->auto_timer.auto_dmt_enable =
-   167		    (bool)cfg->timer_item.auto_dormant_timer.enable_dmt_func;
-   168		pdx->auto_timer.enable_hibernate =
-   169		    (bool)cfg->timer_item.auto_dormant_timer.enable_hbr;
-   170	
-   171		pdx->auto_timer.auto_poweroff_enable = FALSE;
-   172		pdx->auto_timer.auto_poweroff_time = 10 * 1000;
-   173	
-   174		pdx->auto_timer.auto_led_off_enable = pdx->host.feature.hw_led_fix;
-   175		/* led off set to 1s */
-   176		pdx->auto_timer.auto_led_off_time = 1000;
-   177	
-   178		pdx->auto_timer.enable = pdx->auto_timer.auto_cmd12_enable |
-   179		    pdx->auto_timer.auto_poweroff_enable |
-   180		    pdx->auto_timer.auto_dmt_enable |
-   181		    pdx->auto_timer.auto_led_off_enable;
-   182	
-   183		DbgInfo(MODULE_AUTOTIMER, FEATURE_DRIVER_INIT, NOT_TO_RAM,
-   184			"Autopower off enable=%d time=%dms\n",
-   185			pdx->auto_timer.auto_poweroff_enable,
-   186			pdx->auto_timer.auto_poweroff_time);
-   187		DbgInfo(MODULE_AUTOTIMER, FEATURE_DRIVER_INIT, NOT_TO_RAM,
-   188			"Autodmt=%d time=%dms bhrb=%d\n",
-   189			pdx->auto_timer.auto_dmt_enable, pdx->auto_timer.auto_dmt_time,
-   190			pdx->auto_timer.enable_hibernate);
-   191		DbgInfo(MODULE_AUTOTIMER, FEATURE_DRIVER_INIT, NOT_TO_RAM,
-   192			"AutoStopInf enable=%d time=%dms\n",
-   193			pdx->auto_timer.auto_cmd12_enable,
-   194			pdx->auto_timer.auto_cmd12_time);
-   195	}
-   196	
-   197	/*
-   198	 * Function Name: func_timer_thread
-   199	 * Abstract: This Function is used to calculate timer tick
-   200	 *
-   201	 * Input:
-   202	 *	bht_dev_ext_t *pdx
-   203	 *
-   204	 *
-   205	 * Notes:
-   206	 *
-   207	 *        This function is called by thread to do real job
-   208	 */
- > 209	void func_timer_thread(bht_dev_ext_t *pdx)
-   210	{
-   211		int busy = 0;
-   212	
-   213		DbgInfo(MODULE_AUTOTIMER, FEATURE_TIMER_TRACE, 0, "Enter %s\n",
-   214			__func__);
-   215	
-   216		if (pdx->auto_timer.enable == FALSE || pdx->auto_timer.cancel
-   217		    || pdx->auto_timer.stop)
-   218			goto clear;
-   219	
-   220		/* If card not workable don't use timer */
-   221		if (pdx->card.card_present == FALSE)
-   222			goto clear;
-   223		if (pdx->card.card_type == CARD_NONE
-   224		    || pdx->card.card_type == CARD_ERROR)
-   225			goto clear;
-   226		if (pdx->card.state == CARD_STATE_POWEROFF)
-   227			goto clear;
-   228	
-   229		/* If rtd3 entered not call below function */
-   230	
-   231		if (pdx->auto_timer.auto_poweroff_enable) {
-   232			if (pdx->auto_timer.auto_poweroff_tick >=
-   233			    pdx->auto_timer.auto_poweroff_time) {
-   234				DbgInfo(MODULE_AUTOTIMER, FEATURE_CARD_OPS, 0,
-   235					"auto poweroff\n");
-   236				if (busy == 0) {
-   237					os_set_dev_busy(pdx);
-   238					busy = 1;
-   239				}
-   240				card_power_off(&pdx->card, FALSE);
-   241				autotimer_clear(pdx);
-   242				goto next;
-   243			}
-   244		}
-   245	
-   246		if (pdx->auto_timer.auto_cmd12_enable && pdx->card.has_built_inf) {
-   247			if (pdx->auto_timer.auto_cmd12_tick >=
-   248			    pdx->auto_timer.auto_cmd12_time) {
-   249				if (busy == 0) {
-   250					os_set_dev_busy(pdx);
-   251					busy = 1;
-   252				}
-   253				pdx->auto_timer.auto_cmd12_tick = 0;
-   254				DbgInfo(MODULE_AUTOTIMER, FEATURE_CARD_OPS, 0,
-   255					"auto stop infinite\n");
-   256				card_stop_infinite(&pdx->card, TRUE, NULL);
-   257			}
-   258		}
-   259	
-   260		if (pdx->auto_timer.auto_dmt_enable && pdx->card.card_type == CARD_UHS2
-   261		    && pdx->card.state == CARD_STATE_WORKING) {
-   262			if (pdx->auto_timer.auto_dmt_tick >=
-   263			    pdx->auto_timer.auto_dmt_time) {
-   264				if (busy == 0) {
-   265					os_set_dev_busy(pdx);
-   266					busy = 1;
-   267				}
-   268				pdx->auto_timer.auto_dmt_tick = 0;
-   269				DbgInfo(MODULE_AUTOTIMER, FEATURE_CARD_OPS, 0,
-   270					"auto enter sleep\n");
-   271				card_enter_sleep(&pdx->card, TRUE,
-   272						 pdx->auto_timer.enable_hibernate);
-   273			}
-   274		}
-   275	
-   276		if (pdx->auto_timer.auto_led_off_enable && (pdx->host.led_on)) {
-   277			if (pdx->auto_timer.auto_led_off_tick >=
-   278			    pdx->auto_timer.auto_led_off_time) {
-   279				if (busy == 0) {
-   280					os_set_dev_busy(pdx);
-   281					busy = 1;
-   282				}
-   283				DbgInfo(MODULE_AUTOTIMER, FEATURE_CARD_OPS, 0,
-   284					"auto led off\n");
-   285				pdx->auto_timer.auto_led_off_tick = 0;
-   286				host_led_ctl(&pdx->host, FALSE);
-   287			}
-   288		}
-   289	
-   290	next:
-   291		if (busy)
-   292			os_set_dev_idle(pdx);
-   293		goto exit;
-   294	
-   295	clear:
-   296		autotimer_clear(pdx);
-   297	
-   298	exit:
-   299		DbgInfo(MODULE_AUTOTIMER, FEATURE_TIMER_TRACE, 0, "Exit %s\n",
-   300			__func__);
-   301	}
-   302	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+>
+> There are four cq's involved in each pair of qp's in the srp test. Two in ib_srp and two in ib_srpt
+> for the two qp's. Three of them execute completion processing in a soft irq context so the code in
+> core/cq.c gathers the completions and calls back to the srp drivers. The send side cq in srp uses
+> cq_direct which requires srp to call ib_process_direct() in order to collect the completions. This
+> happens in __srp_get_tx_iu() which is called in several places in the srp driver. But only as a side effect
+> since the purpose of this routine is to get an iu to start a new command.
+>
+> In the attached files for qp#151 the final call to srp_post_send is followed by the rxe requester and
+> completer work queues processing the send packet and the ack before a final call to __srp_get_rx_iu()
+> which gathers the final send side completion and success.
+>
+> For qp#167 the call to srp_post_send() is followed by the rxe driver processing the send operation and
+> generating a work completion which is posted to the send cq but there is never a following call to
+> __srp_get_rx_iu() so the cqe is not received by srp and failure.
+>
+> I don't yet understand the logic of the srp driver to fix this but the problem is not in the rxe driver
+> as far as I can tell.
+>
+> Bob
