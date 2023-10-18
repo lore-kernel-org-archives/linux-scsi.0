@@ -2,48 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A300CDB47E
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 19:49:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88C01CDB47E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 20:03:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231543AbjJRTiw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 15:38:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56500 "EHLO
+        id S231486AbjJRUDG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 16:03:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229695AbjJRTiq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 15:38:46 -0400
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24A6295;
-        Wed, 18 Oct 2023 12:38:45 -0700 (PDT)
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6b1e46ca282so5657027b3a.2;
-        Wed, 18 Oct 2023 12:38:45 -0700 (PDT)
+        with ESMTP id S229921AbjJRUDF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 16:03:05 -0400
+Received: from mail-oi1-x22b.google.com (mail-oi1-x22b.google.com [IPv6:2607:f8b0:4864:20::22b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5B1C95;
+        Wed, 18 Oct 2023 13:03:03 -0700 (PDT)
+Received: by mail-oi1-x22b.google.com with SMTP id 5614622812f47-3b2e72fe47fso751977b6e.1;
+        Wed, 18 Oct 2023 13:03:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1697659383; x=1698264183; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=br9XBNhfiOhalsuvWHd5IwOMisfrKyEyT6d87UzrWR0=;
+        b=QnMJ3XgqbY43u1wADx1yuRN01yrvs1ggX+gG8ovZnt26rRTZKel9w//merCCQj/51i
+         6U0mBbXn045a5SEpXGetsjcniBuThl9NHL9Trr0N/XU+s+J2Qvo+C5TV3qhPnxO+gx/v
+         7uDnn1AjAR6k0GHS47XIPIZXAdR6fCDEbrg3O25Evw3fom2aa2SSuxSbuMciTjXjYT3j
+         BK3mWMHZVe+AWw2U6SrzDaGgLCI2ning93yDegbLT6gz8qd32ij2T8ECYREX8sTPD4cX
+         5xiLwF1ThmFaTd3RaQpkzfm01IXqfDN6Ob3uylMLFutCmdEAcmXy9u/7Ex/nJs64wP1S
+         v3Ww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697657924; x=1698262724;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1697659383; x=1698264183;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=c2R09yB3AceP/zzmxTFxjhidmeTBiWOsqmVEWs/2t2s=;
-        b=qna8egyolOhHc8yIw3mMgZXuqxEXiVq133C+UA2ZAy4ItjTDx9gdrorkyMfMpRVEje
-         65QRcP02H0gRobodDTFQ65sWrMcmLH0/YddwxC6USEap0Gvf5F0cnEkOQTFtML9dRMwM
-         2/6rRWS4qgRjpRrlp6tEOJVv/9tr5J67EiAyGT4ZJ4E0jxCUq3yktFon9k1Q+rUefO/K
-         d59r7lVI60tzMlKpk7s662zNOSZARrpNdB0LoLxxpp1mY2UZrtpTwUCTBqkwRStAN09i
-         nHkIsV3YL2hS/UMLIFIcRrN9mB74iIycYcg70nJ+C2dP8PZhjWUlBwod98rnhAwrZMi4
-         6zJA==
-X-Gm-Message-State: AOJu0Ywa8zFveLH3hw5fV+PDv2QouShDRMt7Jgn+og13acdzI+/hHVzK
-        at0Xht2OsNn5EOAa4ldKdgo=
-X-Google-Smtp-Source: AGHT+IF/4hVopzL3eS8NlMWQ9n6U5qIfC1ZIKisL/gh/DQcxhaK4LHwMF9ikltpm/5q4Ko/Z05OVlw==
-X-Received: by 2002:a05:6a20:12c1:b0:12e:4d86:c017 with SMTP id v1-20020a056a2012c100b0012e4d86c017mr199853pzg.10.1697657924502;
-        Wed, 18 Oct 2023 12:38:44 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:66c1:dd00:1e1e:add3? ([2620:15c:211:201:66c1:dd00:1e1e:add3])
-        by smtp.gmail.com with ESMTPSA id 19-20020a170902c11300b001c9d235b3a0sm315037pli.7.2023.10.18.12.38.43
+        bh=br9XBNhfiOhalsuvWHd5IwOMisfrKyEyT6d87UzrWR0=;
+        b=LDA+SZsER9UzqctEBDfdx+lHiQo6V6Oh4MUUChmLjadRTNVg9WJce7ds2mLpVqy0tq
+         G2ERSh+G3jcFLbHTrJZEI0wb409ERcc/IdqXzki8NoxH49TMsKLiwojg+mFxZoRKQ1ck
+         6oOb5HEJzbD5BxccrTaezOy0n1J9t7ARn5B2RRlG6f6M0+Fq6nJrFI1oV1MMPskKfmG2
+         iX3Sk9aIOO8dC8sIek3HVsFMXKSze7hTN2Vji53MEJO481fFJPMRM/ICftg0GpCl45bi
+         /snKpb3L3iH/Oru+WUeZy0AzmqRxXTt981+ehEosIH2KbZ1x0UfeP5HyppgbAFltjC8U
+         y6Sw==
+X-Gm-Message-State: AOJu0Yy18xF/bdTZ+n3swjhtHS1JSLICGR2Jroqxg6GBpu2Ik1nLkuny
+        aqNmhPi8huV6tZlNwocZmKs=
+X-Google-Smtp-Source: AGHT+IEKQskGOYiICtNb9Vlmmjh9biGNLz15OmK+HsNWbjvygooO2Lp7QWEfaQULwMfZ2Ea/xEIkBA==
+X-Received: by 2002:aca:1110:0:b0:3af:8ed3:d7a3 with SMTP id 16-20020aca1110000000b003af8ed3d7a3mr189086oir.54.1697659383180;
+        Wed, 18 Oct 2023 13:03:03 -0700 (PDT)
+Received: from ?IPV6:2603:8081:1405:679b:65c5:47f5:fc42:655d? (2603-8081-1405-679b-65c5-47f5-fc42-655d.res6.spectrum.com. [2603:8081:1405:679b:65c5:47f5:fc42:655d])
+        by smtp.gmail.com with ESMTPSA id e25-20020a056808111900b003af6eeed9b6sm775816oih.27.2023.10.18.13.03.02
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Oct 2023 12:38:44 -0700 (PDT)
-Message-ID: <74e2e900-949e-41d8-967e-89057224958b@acm.org>
-Date:   Wed, 18 Oct 2023 12:38:42 -0700
+        Wed, 18 Oct 2023 13:03:02 -0700 (PDT)
+Message-ID: <643bc60c-bb30-440a-9aa9-6e400c275bbe@gmail.com>
+Date:   Wed, 18 Oct 2023 15:03:01 -0500
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [bug report] blktests srp/002 hang
-Content-Language: en-US
-To:     Bob Pearson <rpearsonhpe@gmail.com>, Jason Gunthorpe <jgg@ziepe.ca>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>
 Cc:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
         'Rain River' <rain.1986.08.12@gmail.com>,
         Zhu Yanjun <yanjun.zhu@linux.dev>,
@@ -51,16 +63,7 @@ Cc:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
         Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
         RDMA mailing list <linux-rdma@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
- <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
- <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
- <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
- <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org>
- <OS7PR01MB118045AD711E93D223DCD6F17E5C3A@OS7PR01MB11804.jpnprd01.prod.outlook.com>
- <a3be5e98-e783-4108-a690-acc8a5cc5981@gmail.com>
- <20231017175821.GG282036@ziepe.ca>
- <8801fc68-0e8e-4bb1-acaa-597bf72a567d@gmail.com>
- <20231017185139.GA691768@ziepe.ca>
+References: <20231017185139.GA691768@ziepe.ca>
  <c65f92b2-9821-4349-b1f5-7dc2a287946a@gmail.com>
  <08a8d947-25b5-434c-9ba3-282d298b5bfd@acm.org>
  <e3d91c4f-b124-4031-9f92-fcb61973a645@gmail.com>
@@ -70,22 +73,39 @@ References: <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
  <bf2705ff-716a-45b5-bcc4-8710ea0fb98e@gmail.com>
  <65b871ef-dd93-4bfb-bae9-c147a87c64d0@acm.org>
  <dbd9f019-693f-476c-aa4c-739746753d2b@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <dbd9f019-693f-476c-aa4c-739746753d2b@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <20231018191735.GC691768@ziepe.ca>
+ <8e7dbd64-856d-47cc-9d2f-73aa101afa11@acm.org>
+Content-Language: en-US
+From:   Bob Pearson <rpearsonhpe@gmail.com>
+In-Reply-To: <8e7dbd64-856d-47cc-9d2f-73aa101afa11@acm.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/18/23 11:29, Bob Pearson wrote:
-> I now find that siw also hangs solidly on srp/002. This is another
-> hint that we are seeing a timing issue.
-I can't reproduce the srp/002 hang with the siw driver - neither with a 
-production kernel nor with a debug kernel. Is anyone else able to 
-reproduce the srp/002 hang with the siw driver?
+On 10/18/23 14:48, Bart Van Assche wrote:
+> 
+> On 10/18/23 12:17, Jason Gunthorpe wrote:
+>> If siw hangs as well, I definitely comfortable continuing to debug and
+>> leaving the work queues in-tree for now.
+> 
+> Regarding the KASAN complaint that I shared about one month ago, can that complaint have any other root cause than the patch "RDMA/rxe: Add
+> workqueue support for rxe tasks"? That report shows a use-after-free by
+> rxe code with a pointer to memory that was owned by the rxe driver and
+> that was freed by the rxe driver. That memory is an skbuff. The rxe
+> driver manages skbuffs. The SRP driver doesn't even know about these
+> skbuff objects. See also https://lore.kernel.org/linux-rdma/8ee2869b-3f51-4195-9883-015cd30b4241@acm.org/
+> 
+> Thanks,
+> 
+> Bart.
+> 
+Bart,
 
-Thanks,
+I agree with you that that is a rxe issue. But, I haven't been able to reproduce it. However, I am able
+to generate hangs without the KASAN bug so it seems to me that they are unrelated. In addition to the
+kernel debugging I have added tracing to ib_srp and ib_srpt which may help delay things.
 
-Bart.
+Bob
 
