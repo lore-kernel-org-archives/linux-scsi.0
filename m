@@ -2,268 +2,169 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8347CDB47E
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 12:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF9B3CDB483
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 13:26:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230391AbjJRMrw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 08:47:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43878 "EHLO
+        id S231652AbjJRN0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 09:26:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230202AbjJRMrv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 08:47:51 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85B1EA3;
-        Wed, 18 Oct 2023 05:47:49 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-6b44befac59so3872898b3a.0;
-        Wed, 18 Oct 2023 05:47:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697633269; x=1698238069; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=9kzuTzxZVlGgh2f5mC3oIMplNBV8HnSfbYCkmlfvIO0=;
-        b=FghNIC/6Ky0TDrGA5L+6MIbYS4RZzOrcCQ/gvu+h3/36los+pKUA0A5Mhm1WOCz7IS
-         teerGv3bM5eUJ7csLv6Oi47uyim01+tB5nNTd17r+ulRBUqIIEscD39pnDRSTvAkatU3
-         2MqGzFLR7BMUVO75gqtjGdJbrEVEflCUNbNTEhqvw9lZDb8gDP3gyDfav/L9ohUExcgF
-         QAGAz2PMiEVU/trN9Ir0Zjc6sdqyYxcpsULMiTIJTM6V3SqgVi84m4q4veoBDCHsqKLv
-         eOG80aHVXHBIh/pYVzOeL37berqwA0Q6swHBd45EhS8x5DJvS5+0/1W02eewL1oLzo9j
-         lhMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697633269; x=1698238069;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=9kzuTzxZVlGgh2f5mC3oIMplNBV8HnSfbYCkmlfvIO0=;
-        b=u40rByz1CfXpIApXfdLszdtmZAeiTWPwdnAwpnqMV/IkHTJ4ZunJC4Wyj6zUwsY3F3
-         7XLkDKTcwfnYBik7+uHZh+MHgZVm2IDjxwBHWmcEQh7VcL9QY4A+ar2KIzydodEmswxj
-         F0DpVUPQlkGK7BMOD/QAGpWEup6eTthwUuUzPZkbCNxnvJHox660Ve23nzhsKjbWwbGe
-         VVUo8I43cVo7Wy8yQHzwmo/vp6U8In98fnF+yY9Vhqg4NR0TkznyjdHeSwiDAdN9SsSa
-         UkjX8Mf39Hhp7t1DQHZrrRmP77UdaBAf7KQ7UTwS05C2PgXW5X3+eM69dlhblbbuqGKS
-         eoAA==
-X-Gm-Message-State: AOJu0YwVYjZs3z9WpmfvA9UqbhMiXxVaniZtx+wjkSQ/6/0Ao3IlPfR7
-        sWpszR4URTRAbp43sVyKEd+ZBkkTI/0RbQ==
-X-Google-Smtp-Source: AGHT+IGXGeVHsVlXRGS2m6a7frgX1L1AYtgLEn9FwtI5ugKjMogKB6UXepsFeotAkt1UZrRjKys6fw==
-X-Received: by 2002:a05:6a20:7288:b0:15d:4cf1:212e with SMTP id o8-20020a056a20728800b0015d4cf1212emr6856294pzk.4.1697633268764;
-        Wed, 18 Oct 2023 05:47:48 -0700 (PDT)
-Received: from thinkpad ([117.202.186.25])
-        by smtp.gmail.com with ESMTPSA id i13-20020a65484d000000b00578afd8e012sm1389183pgs.92.2023.10.18.05.47.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Oct 2023 05:47:48 -0700 (PDT)
-Date:   Wed, 18 Oct 2023 18:17:41 +0530
-From:   Manivannan Sadhasivam <manivannanece23@gmail.com>
-To:     Manivannan Sadhasivam <mani@kernel.org>
-Cc:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        Can Guo <quic_cang@quicinc.com>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
- version detection
-Message-ID: <20231018124741.GA47321@thinkpad>
-References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
- <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
- <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
- <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
- <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org>
- <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
- <1413119B-8B9C-4DE4-A086-476B2BAA60AD@linaro.org>
- <20230919120829.GB4732@thinkpad>
- <CAA8EJppwjzNDsPHZqUdmgQy3fAbP+AFnOo4+FTDCdpBEZp5S_w@mail.gmail.com>
- <20230920102327.GH4732@thinkpad>
+        with ESMTP id S231614AbjJRN0A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 09:26:00 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A3A113;
+        Wed, 18 Oct 2023 06:25:58 -0700 (PDT)
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39IDA3xL002615;
+        Wed, 18 Oct 2023 13:24:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : from : subject : to : cc : content-type :
+ content-transfer-encoding; s=pp1;
+ bh=i3pHYtqA1EYBkCpSAhwtuUNXDm3rtYnLznI8d1up1b0=;
+ b=r0ojUtnLEJo7Vipyy+xl8OXohvmvDyu1PpN4mKcaOF/x+4gvx80NY717qP2SKtUqOxvN
+ GIJxTpXaodjcd8lXa5XOYDbPxLvMuvayWnuQ3z04SzabjkF7qItHDWEatu/pci/kUPEC
+ LWFfhb9jCAmFDn1CeXzqQ5j7iD1tU/ZIo4nMORse9Qi1rqAtL+XB/OhuHMlhAXojaS9L
+ qvto34CBqUSih0g7J//b9vGYmCLPIEXvfwQSy3BrzBB6JPdCOdPKjkJccT31iLVgKUsI
+ HgQIEeKnf26ZxfHsH1InZaGUMX3sL1tOede6GC96L6bH8wYeBh+O3+GPU9W04TGQB+YB rg== 
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ttg0pgjat-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 18 Oct 2023 13:24:43 +0000
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+        by ppma22.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 39ICSFQL012949;
+        Wed, 18 Oct 2023 13:21:24 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+        by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3tr5pygtnm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 18 Oct 2023 13:21:24 +0000
+Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
+        by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 39IDLNWJ28705484
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Oct 2023 13:21:24 GMT
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id ACC5758055;
+        Wed, 18 Oct 2023 13:21:23 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id ED2CD58043;
+        Wed, 18 Oct 2023 13:21:18 +0000 (GMT)
+Received: from [9.171.57.96] (unknown [9.171.57.96])
+        by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Wed, 18 Oct 2023 13:21:18 +0000 (GMT)
+Message-ID: <24a8559c-cd35-4828-9d1b-458d82e4f3ec@linux.vnet.ibm.com>
+Date:   Wed, 18 Oct 2023 18:51:17 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+From:   Tasmiya Nalatwad <tasmiya@linux.vnet.ibm.com>
+Subject: [Bisected] [efeda3bf912f] OOPS crash while performing Block device
+ module parameter test [qla2xxx / FC]
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org,
+        linux-next@vger.kernel.org
+Cc:     qutran@marvell.com, njavali@marvell.com,
+        himanshu.madhani@oracle.com, martin.petersen@oracle.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        abdhalee@linux.vnet.ibm.com, mputtash@linux.vnet.com,
+        sachinp@linux.vnet.com
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230920102327.GH4732@thinkpad>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 6KZW5X3-n2EYs9gdinBJ9K_PWKOk4oh8
+X-Proofpoint-ORIG-GUID: 6KZW5X3-n2EYs9gdinBJ9K_PWKOk4oh8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-18_12,2023-10-18_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ phishscore=0 suspectscore=0 mlxlogscore=999 spamscore=0 clxscore=1011
+ mlxscore=0 bulkscore=0 impostorscore=0 malwarescore=0 priorityscore=1501
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2310180111
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 20, 2023 at 12:23:27PM +0200, Manivannan Sadhasivam wrote:
-> On Wed, Sep 20, 2023 at 01:27:59AM +0300, Dmitry Baryshkov wrote:
-> > On Tue, 19 Sept 2023 at 15:08, Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > >
-> > > On Fri, Sep 15, 2023 at 05:31:45AM +0300, Dmitry Baryshkov wrote:
-> > > > On 11 September 2023 13:02:50 GMT+03:00, Can Guo <quic_cang@quicinc.com> wrote:
-> > > > >
-> > > > >On 9/11/2023 5:46 PM, Konrad Dybcio wrote:
-> > > > >> On 11.09.2023 11:42, Can Guo wrote:
-> > > > >>> Hi Konrad,
-> > > > >>>
-> > > > >>> On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
-> > > > >>>> On 11.09.2023 07:59, Can Guo wrote:
-> > > > >>>>> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-> > > > >>>>>
-> > > > >>>>> Retrieve UFS device version from UFS host controller's spare register
-> > > > >>>>> which is populated by bootloader, and use the UFS device version together
-> > > > >>>>> with host controller's HW version to decide the proper power modes which
-> > > > >>>>> should be used to configure the UFS PHY.
-> > > > >>>> That sounds a bit fishy.. is there no bootloader-independent
-> > > > >>>> solution to that? Can't we bring in the code that the bootloader
-> > > > >>>> uses to determine these values?
-> > > > >>>>
-> > > > >>>> Konrad
-> > > > >>>
-> > > > >>> Agree, it is.
-> > > > >>>
-> > > > >>>
-> > > > >>> All these complexities come from one request from PHY design team - power saving.
-> > > > >>>
-> > > > >>> And to achieve power saving, Qualcomm UFS developers are requested to use the
-> > > > >>>
-> > > > >>> lowest hanging PHY settings which can sustain the Max agreed HS Gear (btw host
-> > > > >>>
-> > > > >>> and UFS device) during UFS's lifecycle in High Level OS,  whereas the power saving
-> > > > >>>
-> > > > >>> request does not apply to bootloader, which works for only a few seconds during
-> > > > >>>
-> > > > >>> bootup. Hence, there is no such version detect code in bootloader -  it just uses the
-> > > > >>>
-> > > > >>> highest PHY settings to configure PHY, boot up UFS and put UFS device version in this
-> > > > >>>
-> > > > >>> register.
-> > > > >> First of all, your email client seems to be inserting 2 newlines
-> > > > >> instead of 1. If you're using thunderbird, you may want to edit:
-> > > > >>
-> > > > >> mail.identity.(default or your mail identity idx).default.compose_html
-> > > > >>
-> > > > >> to `false`
-> > > > >>
-> > > > >> and add that to your internal wiki page, as I see many @quic folks having
-> > > > >> this issue.
-> > > > >>
-> > > > >>
-> > > > >> Going back to the main topic, I don't think we understood each other.
-> > > > >> The commit message states:
-> > > > >>
-> > > > >>
-> > > > >> "Retrieve UFS device version from UFS host controller's spare register
-> > > > >> which is populated by bootloader"
-> > > > >>
-> > > > >>
-> > > > >> Which means the bootloader is able to somehow determine the value
-> > > > >> that's in the spare register and write it there.
-> > > > >>
-> > > > >> I'm asking whether we can take the logic behind this value and
-> > > > >> move it to Linux so that we don't depend on the bootloader to
-> > > > >> guarantee it (e.g. Chrome or some other devices with more exotic
-> > > > >> fw may not work this way).
-> > > > >>
-> > > > >>
-> > > > >> Konrad
-> > > > >
-> > > > >
-> > > > >There is no logic behind this value at all in bootloader, as I explained, after bootloader
-> > > > >
-> > > > >initializes UFS, bootloader simply reads UFS's device version (the value you are referring)
-> > > > >
-> > > > >and write it to the register. But in Linux kernel, we need (or want to know) this value
-> > > > >
-> > > > >BEFORE we initialize UFS host controller (and UFS device).
-> > > >
-> > > > Depending on the bootloader behaviour is not an option. For example the kernel might be started via kexec. Or via u-boot. Or grub. Or any other bootloader. So please duplicate the logic to read the UFS version instead.
-> > > >
-> > >
-> > > As Can said, there is no logic in the bootloader. What it does it, after doing
-> > > the UFS initialization, it writes the agreed gear (between host and the device)
-> > > to this register. And in linux, we use that value to initialize the device
-> > > (i.e., not doing init based on the min gear).
-> > >
-> > > But the important factor here is that, we use this gear value to program the PHY
-> > > init sequence. So if there is no hint from the bootloader, linux will program
-> > > the min phy sequence (G3/G4) and then once the gear scaling happens, it will
-> > > program the max phy sequence (G4/G5).
-> > >
-> > > Now on recent platforms, the init sequences are not compatible with each other
-> > > i.e., once the min seq. is programmed, then before programming max seq. the
-> > > registers not common to both seq. should be programmed to default value. In
-> > > other words, min seq. specific registers should be reset to the default value.
-> > > Otherwise, there will be stability issues in the PHY.
-> > 
-> > I see nothing wrong with adding 'default' register programming to the
-> > gear tables. If we have to reset them to the default values to switch
-> > the PHY settings, these writes must be a part of the corresponding
-> > tables.
-> > 
-> 
-> Yep, that's what I initially proposed. But Qcom wanted to avoid the cost of
-> programming the reset tables in the PHY driver.
-> 
-> Can, could you please check if programming the additional sequence doesn't cause
-> any power/performance effect?
-> 
+Greetings,
 
-I'd like to simplify this conversion as there has been some misunderstanding.
+OOPs Kernel crash while performing Block device module parameter test 
+[qla2xxx / FC] on linux-next 6.6.0-rc5-next-20231010
 
-First of all in linux, while probing the UFS device by the host controller, it
-needs to use _some_ gear. So far we were using HS_G2 as that gear and using the
-PHY init sequence of G3/G4 depending on the SoC. We do not need to use G2 init
-sequence because, there are only 2 init sequences available for any SoC and
-since the init sequences are backwards compatible, we mostly use the min init
-sequence, G3/G4. Even though this incurs slight power consumption during boot,
-the ufs host controller after probing the device will switch to max gear
-supported by both entities. If that max is G4/G5, then the respective init
-sequence will be programmed again.
+--- Traces ---
 
-Now the issue is, for the automotive usecases, switching the gears 2 times
-during boot is affecting the boot KPI (Key Performance Inidicator). So the UFS
-team came with the idea of populating a spare register in the bootloader with
-the max gear info that the bootloader has already found out and using the same
-in the linux for first time itself. This helps linux in using a single gear
-during probe time.
+[30876.431678] Kernel attempted to read user page (30) - exploit 
+attempt? (uid: 0)
+[30876.431687] BUG: Kernel NULL pointer dereference on read at 0x00000030
+[30876.431692] Faulting instruction address: 0xc0080000018e3180
+[30876.431697] Oops: Kernel access of bad area, sig: 11 [#1]
+[30876.431700] LE PAGE_SIZE=64K MMU=Radix SMP NR_CPUS=8192 NUMA pSeries
+[30876.431705] Modules linked in: qla2xxx(+) nvme_fc nvme_fabrics 
+nvme_core dm_round_robin dm_queue_length exfat vfat fat btrfs 
+blake2b_generic zstd_compress loop raid10 raid456 async_raid6_recov 
+async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 linear xfs 
+libcrc32c raid0 nvram rpadlpar_io rpaphp xsk_diag bonding tls rfkill 
+vmx_crypto pseries_rng binfmt_misc ext4 mbcache jbd2 dm_service_time 
+sd_mod sg ibmvfc ibmveth t10_pi crc64_rocksoft crc64 scsi_transport_fc 
+dm_multipath dm_mirror dm_region_hash dm_log dm_mod fuse [last unloaded: 
+nvme_core]
+[30876.431767] CPU: 0 PID: 1289400 Comm: kworker/0:2 Kdump: loaded Not 
+tainted 6.6.0-rc5-next-20231010-auto #1
+[30876.431773] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 
+0xf000006 of:IBM,FW1030.30 (NH1030_062) hv:phyp pSeries
+[30876.431779] Workqueue: events work_for_cpu_fn
+[30876.431788] NIP:  c0080000018e3180 LR: c0080000018e3128 CTR: 
+c000000000513f80
+[30876.431792] REGS: c000000062a8b930 TRAP: 0300   Not tainted 
+(6.6.0-rc5-next-20231010-auto)
+[30876.431797] MSR:  800000000280b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE>  
+CR: 28000482  XER: 2004000f
+[30876.431811] CFAR: c0080000018e3138 DAR: 0000000000000030 DSISR: 
+40000000 IRQMASK: 0
+[30876.431811] GPR00: c0080000018e3128 c000000062a8bbd0 c008000000eb8300 
+0000000000000000
+[30876.431811] GPR04: 0000000000000000 0000000000000000 0000000000000000 
+000000000017bbac
+[30876.431811] GPR08: 0000000000000000 0000000000000030 0000000000000000 
+c0080000019a6d68
+[30876.431811] GPR12: 0000000000000000 c000000002ff0000 c00000000019cb98 
+c000000082a97980
+[30876.431811] GPR16: 0000000000000000 0000000000000000 0000000000000000 
+c000000003071ab0
+[30876.431811] GPR20: c000000003491c0d c000000063bb9a00 c000000063bb30c0 
+c0000001d8b52928
+[30876.431811] GPR24: c008000000eb63a8 ffffffffffffffed c0000001d8b52000 
+0000000000000102
+[30876.431811] GPR28: c008000000ebaf00 c0000001d8b52890 0000000000000000 
+c0000001d8b58000
+[30876.431856] NIP [c0080000018e3180] qla2x00_mem_free+0x298/0x6b0 [qla2xxx]
+[30876.431876] LR [c0080000018e3128] qla2x00_mem_free+0x240/0x6b0 [qla2xxx]
+[30876.431895] Call Trace:
+[30876.431897] [c000000062a8bbd0] [c0080000018e2f1c] 
+qla2x00_mem_free+0x34/0x6b0 [qla2xxx] (unreliable)
+[30876.431917] [c000000062a8bc20] [c0080000018eed30] 
+qla2x00_probe_one+0x16d8/0x2640 [qla2xxx]
+[30876.431937] [c000000062a8bd90] [c0000000008c589c] 
+local_pci_probe+0x6c/0x110
+[30876.431943] [c000000062a8be10] [c000000000189ba8] 
+work_for_cpu_fn+0x38/0x60
+[30876.431948] [c000000062a8be40] [c00000000018d0d0] 
+process_scheduled_works+0x230/0x4f0
+[30876.431952] [c000000062a8bf10] [c00000000018fe14] 
+worker_thread+0x1e4/0x500
+[30876.431955] [c000000062a8bf90] [c00000000019ccc8] kthread+0x138/0x140
+[30876.431960] [c000000062a8bfe0] [c00000000000df98] 
+start_kernel_thread+0x14/0x18
+[30876.431965] Code: 4082000c a09f0198 78841b68 e8df0278 38e00000 
+480c3b8d e8410018 39200000 e91f0178 f93f0280 f93f0278 39280030 
+<e9480030> 7fa95040 419e00b8 ebc80030
+[30876.431977] ---[ end trace 0000000000000000 ]---
+[30876.480385] pstore: backend (nvram) writing error (-1)
 
-This is what this patch is doing. If for some reason, that register is not
-populated, then we default to the existing G2 gear and do init twice as the
-driver is doing currently.
 
-I hope this clarifies the intention of this patch.
-
-- Mani
-
-> - Mani
-> 
-> > >
-> > > So to avoid that, if we get the hint from bootloader (always the max supported
-> > > gear between host and device), then only one seq. will be programmed.
-> > >
-> > > Other way to solve this issue is to reset the non common registers in the init
-> > > seq. to default value. But that will be an additional overhead.
-> > >
-> > > But... if the bootloader doesn't populate this register (if the boot device is
-> > > not UFS, like in compute platforms), then this whole logic won't work. This
-> > > should also be taken into consideration.
-> > 
-> > Yep, that's the dependency on the bootloader. Which we should avoid.
-> > 
-> > >
-> > > - Mani
-> > >
-> > > >
-> > > > P.S. you have been asked to fix your email client. Please do so. Or, if you are inserting these linebreaks manually, please stop.
-> > > >
-> > > > >Thanks,
-> > > > >
-> > > > >Can Guo.
-> > > > >
-> > > >
-> > >
-> > > --
-> > > மணிவண்ணன் சதாசிவம்
-> > 
-> > 
-> > 
-> > -- 
-> > With best wishes
-> > Dmitry
-> 
-> -- 
-> மணிவண்ணன் சதாசிவம்
+Git bisect points to below commit. Reverting this commit fixes the problem.
+commit efeda3bf912f269bcae16816683f432f58d68075
+     scsi: qla2xxx: Move resource to allow code reuse
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Regards,
+Tasmiya Nalatwad
+IBM Linux Technology Center
+
