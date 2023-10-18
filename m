@@ -2,169 +2,170 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF9B3CDB483
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 13:26:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3283BCDB47E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 13:32:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231652AbjJRN0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 09:26:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41804 "EHLO
+        id S231681AbjJRNcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 09:32:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231614AbjJRN0A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 09:26:00 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A3A113;
-        Wed, 18 Oct 2023 06:25:58 -0700 (PDT)
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39IDA3xL002615;
-        Wed, 18 Oct 2023 13:24:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : from : subject : to : cc : content-type :
- content-transfer-encoding; s=pp1;
- bh=i3pHYtqA1EYBkCpSAhwtuUNXDm3rtYnLznI8d1up1b0=;
- b=r0ojUtnLEJo7Vipyy+xl8OXohvmvDyu1PpN4mKcaOF/x+4gvx80NY717qP2SKtUqOxvN
- GIJxTpXaodjcd8lXa5XOYDbPxLvMuvayWnuQ3z04SzabjkF7qItHDWEatu/pci/kUPEC
- LWFfhb9jCAmFDn1CeXzqQ5j7iD1tU/ZIo4nMORse9Qi1rqAtL+XB/OhuHMlhAXojaS9L
- qvto34CBqUSih0g7J//b9vGYmCLPIEXvfwQSy3BrzBB6JPdCOdPKjkJccT31iLVgKUsI
- HgQIEeKnf26ZxfHsH1InZaGUMX3sL1tOede6GC96L6bH8wYeBh+O3+GPU9W04TGQB+YB rg== 
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ttg0pgjat-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 18 Oct 2023 13:24:43 +0000
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-        by ppma22.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 39ICSFQL012949;
-        Wed, 18 Oct 2023 13:21:24 GMT
-Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
-        by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3tr5pygtnm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 18 Oct 2023 13:21:24 +0000
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-        by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 39IDLNWJ28705484
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Oct 2023 13:21:24 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id ACC5758055;
-        Wed, 18 Oct 2023 13:21:23 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id ED2CD58043;
-        Wed, 18 Oct 2023 13:21:18 +0000 (GMT)
-Received: from [9.171.57.96] (unknown [9.171.57.96])
-        by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
-        Wed, 18 Oct 2023 13:21:18 +0000 (GMT)
-Message-ID: <24a8559c-cd35-4828-9d1b-458d82e4f3ec@linux.vnet.ibm.com>
-Date:   Wed, 18 Oct 2023 18:51:17 +0530
+        with ESMTP id S231625AbjJRNcB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 09:32:01 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 666F6106
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2023 06:31:58 -0700 (PDT)
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20231018133152epoutp041fba28d95f6bafe72f3c04f6df277b06~PNt5O-hnz0689406894epoutp04P
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2023 13:31:52 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20231018133152epoutp041fba28d95f6bafe72f3c04f6df277b06~PNt5O-hnz0689406894epoutp04P
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1697635913;
+        bh=u3aqnbBtv3vyIec2Mlnu7VZjNoMVUqew8xlxNtYVuT0=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=ar6xkA8WBl8DA0SXsHcUVW75HU2NC5zijFCz8StrEtpWkgAFvxJxoiUkdTrbqG2y9
+         kgPzjsOUDvtGuJ9jGcdZBnry/lrAS/Wvvukv0pFZtjxUUtp/o5adSXHk78H6c7+rhD
+         ESb9LwyAHWcb+xFbPHmL/0g2YvO2tm7JqVe+KF1E=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20231018133151epcas5p32eee98f338fcffca106dc084b9405c3d~PNt3_9ePq1794217942epcas5p34;
+        Wed, 18 Oct 2023 13:31:51 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.179]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4S9WwP5y9Yz4x9Pt; Wed, 18 Oct
+        2023 13:31:49 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        1F.31.10009.54EDF256; Wed, 18 Oct 2023 22:31:49 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20231018101516epcas5p2ac132e21cc9f83edd819c7680a51487d~PLCPQwGhZ3226032260epcas5p2g;
+        Wed, 18 Oct 2023 10:15:16 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20231018101516epsmtrp23a828f342d83585a91c501a654146b0c~PLCPPbHfq1426614266epsmtrp2K;
+        Wed, 18 Oct 2023 10:15:16 +0000 (GMT)
+X-AuditID: b6c32a4a-ff1ff70000002719-05-652fde45eb1a
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        BA.0F.07368.430BF256; Wed, 18 Oct 2023 19:15:16 +0900 (KST)
+Received: from green245 (unknown [107.99.41.245]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20231018101513epsmtip27d59481a87c3dbfc474968108748ac3d~PLCMGR7Ek0062200622epsmtip2h;
+        Wed, 18 Oct 2023 10:15:13 +0000 (GMT)
+Date:   Wed, 18 Oct 2023 15:38:48 +0530
+From:   Nitesh Jagadeesh Shetty <nj.shetty@samsung.com>
+To:     Jinyoung Choi <j-young.choi@samsung.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "nitheshshetty@gmail.com" <nitheshshetty@gmail.com>,
+        "anuj1072538@gmail.com" <anuj1072538@gmail.com>,
+        SSDR Gost Dev <gost.dev@samsung.com>,
+        "mcgrof@kernel.org" <mcgrof@kernel.org>,
+        Vincent Kang Fu <vincent.fu@samsung.com>,
+        Anuj Gupta <anuj20.g@samsung.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH v16 04/12] block: add emulation for copy
+Message-ID: <20231018100848.i26yrkuufv4koluq@green245>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-From:   Tasmiya Nalatwad <tasmiya@linux.vnet.ibm.com>
-Subject: [Bisected] [efeda3bf912f] OOPS crash while performing Block device
- module parameter test [qla2xxx / FC]
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org,
-        linux-next@vger.kernel.org
-Cc:     qutran@marvell.com, njavali@marvell.com,
-        himanshu.madhani@oracle.com, martin.petersen@oracle.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        abdhalee@linux.vnet.ibm.com, mputtash@linux.vnet.com,
-        sachinp@linux.vnet.com
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 6KZW5X3-n2EYs9gdinBJ9K_PWKOk4oh8
-X-Proofpoint-ORIG-GUID: 6KZW5X3-n2EYs9gdinBJ9K_PWKOk4oh8
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-18_12,2023-10-18_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- phishscore=0 suspectscore=0 mlxlogscore=999 spamscore=0 clxscore=1011
- mlxscore=0 bulkscore=0 impostorscore=0 malwarescore=0 priorityscore=1501
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2310180111
+In-Reply-To: <20230926100718.wcptispc2zhfi5eh@green245>
+User-Agent: NeoMutt/20171215
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xTVxzHd+4tt4VRdgGZpzAeueAiyqMFWg7KY4mPXMeysZCwqTNY22vL
+        gLZry9zIkhUYQ94gzmARhYzxqFNGB6SIMASURxA3HTCIGMyAhIE8ZMgYAVdaWPzvc77n+z2/
+        c37nHA7uZGS7chIUWkatECdRhB2ruct3r/+RJ4EM32TyR/X993C0tLLOQulFGzi6Pl5IoNmu
+        5wBNdmQB1DZfZoNGO1owVHf9LobyC5sIdKFzGKCpIT2G2sb2o8pvq1jodlsfCz26dYVA16qn
+        2Ch3xESgmp5NDP1RNAWQaTINoJuzCyzUO+aG/sw9D9CDjR6bd3h0i36cTT940sCiH91PoY2G
+        bIL+ueprunVUR9DfF5TY0PkZ8wS9NDXGohfahwi6oNEA6GWjB22cfIbFcE8khssZsZRRezEK
+        iVKaoJBFUNGx8YfihSK+wF8QhkIpL4U4mYmgDr8X4380IcncBMrrc3FSilmKEWs0VGBkuFqZ
+        omW85EqNNoJiVNIkVYgqQCNO1qQoZAEKRntAwOcHCc3G04nymew1G9Ui+4vKqV8IHRgjcoAt
+        B5IhcH0gDc8BdhwnshXAjrtz24PnADavNrGtgxcA6pavgJ1Iw1Uje4udyDYASy6praZpAB8/
+        zGVtTbDIPTDrTprFRJBC2NqQYdY5nF2kH8w0eG/5cbKCA9tHblgWfY2MgsZ+oyXrTIbDpsLb
+        liyXFMHpBhNmZUfYd3nS4rElQ6Eu657F40K+BUt/WLFsG5KDtrD8t9+3d3oYZv9azbKyM/yr
+        p5FtZVe4PN+23YBzsO5iLWENfwOgfkS/HY6Cmf2F+BbjpBwO5OfZWHV3+F3/TcyqO8D89UnM
+        qnOh6eoOe8Mf6yu2C/Dg8GoasXV6SNIw46dT1m5VYXBwdQIvAl76Vw6nf6WclQ/A7MX0bfaE
+        GU1luN68FE66wZpNjhV9Yf2twApAGACPUWmSZYxGqApSMOf+fwkSZbIRWD7PvndN4OnEYkAn
+        wDigE0AOTu3iymL9GCeuVPxlKqNWxqtTkhhNJxCaL7EYd3WRKM2/T6GNF4SE8UNEIlFIWLBI
+        QO3mzmaWS51ImVjLJDKMilHv5DCOrasOa5laWXZ03njzUvJMsZQ9pLdrMcjlwXc8JLnKgdoC
+        j4y87lOp0qc580T3J3m5zgmrXdrQ3tOlyx6f7i+vj+tJVhilIxcPufMuO7e+Ye8+vKeDVBac
+        jIus8zn20W52qOiMr3PD4zVHF/5cJKUrXlup1B308+5rWOLVlt1IHeXOZDsMFklGHTy6B8U8
+        kUHf+LLINWoDr3N7djYxwFRCt77wO/lQnRIkG//KVjA8vkId7/KprssH8e1H++sXrh0fyDkh
+        4afdn4j+p5PnuRcznfn4yPvNH7z0HD//YWl61dtxQvvPfHphsOfrngejaoKoWIe/fc+6Rks0
+        m/Wr9tOc2WP/zjlSLI1cLNiHqzXi/wBk9K1gxQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SaUwTURSFeTPT6YBpHBb1YY0kNSrBUm1EfcQFTIyOxsSlJiSYKEUmBaVY
+        W+uWoIUGQRRpcMPWgAuC4MooylasFUFcaBBRQVCRVmOUpYhxgRalaOTfyTnnfvf+uBTup+NN
+        phKSdrLqJHmiiPQhbt8XBYWG3ZjNzhngJOj6ozocOb8NEijV4MLR5Y5sEn2+3w+Q3ZIOkLnH
+        xEOtlgoMFV9+gKGs7DIS5VhfAORoMWLI3DYLnTtYQKBqcwOBmivPkCi/0MFHh1+Wk6io3o2h
+        VwYHQOX2FICufe4l0MM2Ieo6nAGQzVXPiwxkKowdfMb2ppRgmp9qGa7kEMncLDjAVLXqSObC
+        0WM8JkvfQzJORxvB9Na0kMzRWyWA+cpNZTh7N7ZWEO2zKI5NTNjFqmcvifGJf91tw1QpvD3N
+        JzsJHcggMoE3BekwWJrH8TOBD+VHVwFY+PMDPhoEwkJX7V/tD4vdH/+W7ABWvr3rmSbo6TD9
+        Xgp/RJP0PFhVqv/jU1QALYZpJdNG+jh9iYLnzv/w9L3oCMg94jzan14Ey7KrPbMCej78UFqO
+        jS4owGBebgcxGvjChtN2j8b/lPJuduIjC3BaCIvc1KgdBPVlJs+h3vQCqEuv8zAn0FNg7sVv
+        uAH4G8eQjGNIxv8k4xjSWUCUgEBWpVEqlFukKmkSu1uikSs12iSFZMt2JQc8TxISXA7e5Lsl
+        VoBRwAoghYsCBAqZmPUTxMn37mPV2zertYmsxgqEFCGaJJDmmuL8aIV8J7uNZVWs+l+KUd6T
+        dZjY1/qra77a0m69ccX86WTkJi+Wy22ZOT0rojnra0JOjT5s8P3BdwEXVqTNdIq3hhv6uops
+        nZprQj3fvcB/boSsQDrQtzQ+eNgy6FUhe5+z7yU8lVl8orGxrzWgTUIlLwz7NW8Ha+7tcjqi
+        7cXcc/Ga46Zl+wVBK4VlMWlHaNOXd0OqvcdDmybW28PbU61NP7+4ur93nskZct1qGi87oOzZ
+        +EkoWq4YsCVrr9oal0JZYUjs4tMbtHwUFd4PY1Jj8uNEsZQlwxBtebI+9vGwb+hqX+3bYGXR
+        2XVRGZNqhwXjNsaLnXcsYHVy/pAh9Fj/s9r2SzXKqOeaVTOGU095R4oITbxcGoKrNfLfzLD+
+        a5MDAAA=
+X-CMS-MailID: 20231018101516epcas5p2ac132e21cc9f83edd819c7680a51487d
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+        boundary="----.DGRwfvtDKQaTon4q7jBZTz_rY-uYfv-SaOoriR32EfX1D_r=_12cae_"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230920081458epcas5p3a3e12d8b5661b5d6f4420316630b02e1
+References: <20230920080756.11919-5-nj.shetty@samsung.com>
+        <20230920080756.11919-1-nj.shetty@samsung.com>
+        <CGME20230920081458epcas5p3a3e12d8b5661b5d6f4420316630b02e1@epcms2p6>
+        <20230922130815epcms2p631fc5fc5ebe634cc948fef1992f83a38@epcms2p6>
+        <20230926100718.wcptispc2zhfi5eh@green245>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Greetings,
+------.DGRwfvtDKQaTon4q7jBZTz_rY-uYfv-SaOoriR32EfX1D_r=_12cae_
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline
 
-OOPs Kernel crash while performing Block device module parameter test 
-[qla2xxx / FC] on linux-next 6.6.0-rc5-next-20231010
+On 26/09/23 03:37PM, Nitesh Jagadeesh Shetty wrote:
+>>>+                write_bio->bi_iter.bi_size = chunk;
+>>>+                ret = submit_bio_wait(write_bio);
+>>>+                kfree(write_bio);
+>>
+>>blk_mq_map_bio_put(write_bio) ?
+>>or bio_uninit(write_bio); kfree(write_bio)?
+>>
+>>hmm...
+>>It continuously allocates and releases memory for bio,
+>>Why don't you just allocate and reuse bio outside the loop?
+>>
+>
+>Agree, we will update this in next version.
+>
+Reusing the bio won't work in cases where the bio gets split.
+So we decided to keep the previous design.
 
---- Traces ---
+Thank you,
+Nitesh Shetty
 
-[30876.431678] Kernel attempted to read user page (30) - exploit 
-attempt? (uid: 0)
-[30876.431687] BUG: Kernel NULL pointer dereference on read at 0x00000030
-[30876.431692] Faulting instruction address: 0xc0080000018e3180
-[30876.431697] Oops: Kernel access of bad area, sig: 11 [#1]
-[30876.431700] LE PAGE_SIZE=64K MMU=Radix SMP NR_CPUS=8192 NUMA pSeries
-[30876.431705] Modules linked in: qla2xxx(+) nvme_fc nvme_fabrics 
-nvme_core dm_round_robin dm_queue_length exfat vfat fat btrfs 
-blake2b_generic zstd_compress loop raid10 raid456 async_raid6_recov 
-async_memcpy async_pq async_xor async_tx xor raid6_pq raid1 linear xfs 
-libcrc32c raid0 nvram rpadlpar_io rpaphp xsk_diag bonding tls rfkill 
-vmx_crypto pseries_rng binfmt_misc ext4 mbcache jbd2 dm_service_time 
-sd_mod sg ibmvfc ibmveth t10_pi crc64_rocksoft crc64 scsi_transport_fc 
-dm_multipath dm_mirror dm_region_hash dm_log dm_mod fuse [last unloaded: 
-nvme_core]
-[30876.431767] CPU: 0 PID: 1289400 Comm: kworker/0:2 Kdump: loaded Not 
-tainted 6.6.0-rc5-next-20231010-auto #1
-[30876.431773] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 
-0xf000006 of:IBM,FW1030.30 (NH1030_062) hv:phyp pSeries
-[30876.431779] Workqueue: events work_for_cpu_fn
-[30876.431788] NIP:  c0080000018e3180 LR: c0080000018e3128 CTR: 
-c000000000513f80
-[30876.431792] REGS: c000000062a8b930 TRAP: 0300   Not tainted 
-(6.6.0-rc5-next-20231010-auto)
-[30876.431797] MSR:  800000000280b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE>  
-CR: 28000482  XER: 2004000f
-[30876.431811] CFAR: c0080000018e3138 DAR: 0000000000000030 DSISR: 
-40000000 IRQMASK: 0
-[30876.431811] GPR00: c0080000018e3128 c000000062a8bbd0 c008000000eb8300 
-0000000000000000
-[30876.431811] GPR04: 0000000000000000 0000000000000000 0000000000000000 
-000000000017bbac
-[30876.431811] GPR08: 0000000000000000 0000000000000030 0000000000000000 
-c0080000019a6d68
-[30876.431811] GPR12: 0000000000000000 c000000002ff0000 c00000000019cb98 
-c000000082a97980
-[30876.431811] GPR16: 0000000000000000 0000000000000000 0000000000000000 
-c000000003071ab0
-[30876.431811] GPR20: c000000003491c0d c000000063bb9a00 c000000063bb30c0 
-c0000001d8b52928
-[30876.431811] GPR24: c008000000eb63a8 ffffffffffffffed c0000001d8b52000 
-0000000000000102
-[30876.431811] GPR28: c008000000ebaf00 c0000001d8b52890 0000000000000000 
-c0000001d8b58000
-[30876.431856] NIP [c0080000018e3180] qla2x00_mem_free+0x298/0x6b0 [qla2xxx]
-[30876.431876] LR [c0080000018e3128] qla2x00_mem_free+0x240/0x6b0 [qla2xxx]
-[30876.431895] Call Trace:
-[30876.431897] [c000000062a8bbd0] [c0080000018e2f1c] 
-qla2x00_mem_free+0x34/0x6b0 [qla2xxx] (unreliable)
-[30876.431917] [c000000062a8bc20] [c0080000018eed30] 
-qla2x00_probe_one+0x16d8/0x2640 [qla2xxx]
-[30876.431937] [c000000062a8bd90] [c0000000008c589c] 
-local_pci_probe+0x6c/0x110
-[30876.431943] [c000000062a8be10] [c000000000189ba8] 
-work_for_cpu_fn+0x38/0x60
-[30876.431948] [c000000062a8be40] [c00000000018d0d0] 
-process_scheduled_works+0x230/0x4f0
-[30876.431952] [c000000062a8bf10] [c00000000018fe14] 
-worker_thread+0x1e4/0x500
-[30876.431955] [c000000062a8bf90] [c00000000019ccc8] kthread+0x138/0x140
-[30876.431960] [c000000062a8bfe0] [c00000000000df98] 
-start_kernel_thread+0x14/0x18
-[30876.431965] Code: 4082000c a09f0198 78841b68 e8df0278 38e00000 
-480c3b8d e8410018 39200000 e91f0178 f93f0280 f93f0278 39280030 
-<e9480030> 7fa95040 419e00b8 ebc80030
-[30876.431977] ---[ end trace 0000000000000000 ]---
-[30876.480385] pstore: backend (nvram) writing error (-1)
+------.DGRwfvtDKQaTon4q7jBZTz_rY-uYfv-SaOoriR32EfX1D_r=_12cae_
+Content-Type: text/plain; charset="utf-8"
 
 
-Git bisect points to below commit. Reverting this commit fixes the problem.
-commit efeda3bf912f269bcae16816683f432f58d68075
-     scsi: qla2xxx: Move resource to allow code reuse
-
--- 
-Regards,
-Tasmiya Nalatwad
-IBM Linux Technology Center
-
+------.DGRwfvtDKQaTon4q7jBZTz_rY-uYfv-SaOoriR32EfX1D_r=_12cae_--
