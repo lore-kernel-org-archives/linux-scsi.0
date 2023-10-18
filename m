@@ -2,134 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 989D2CDB47E
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 08:17:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF3B4C46CA1
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 11:38:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230031AbjJRIRB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 04:17:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48738 "EHLO
+        id S235172AbjJRLiZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 07:38:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230019AbjJRIRA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 04:17:00 -0400
-Received: from out-202.mta0.migadu.com (out-202.mta0.migadu.com [91.218.175.202])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB439B6
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2023 01:16:55 -0700 (PDT)
-Message-ID: <2a5e1fb6-6c73-4d25-b29a-4ccdbf2c5678@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1697617014;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3bQEjPXiHHLTebOYkrYW4EJTly3aDO83LJe8sSOMjPc=;
-        b=X1VMcJ7fputuUF9CLL7/Yf+ZsZbS/weac66CDri+8uH7kkSx5JY8Dw+/7NEdLjPDZ3Z8ZK
-        WQkA9pW6u3XXAxzANN6786COQzq2vGqZZFc3U9v/epGhLGCeIOEefPgDVasMlotUigjC1x
-        NOSwotrQS3KIzhZQYkEnlQY6Skm5Lto=
-Date:   Wed, 18 Oct 2023 16:16:45 +0800
+        with ESMTP id S235236AbjJRLiP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 07:38:15 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A67BED76;
+        Wed, 18 Oct 2023 04:38:03 -0700 (PDT)
+Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S9TJs0nwjzRt83;
+        Wed, 18 Oct 2023 19:34:21 +0800 (CST)
+Received: from build.huawei.com (10.175.101.6) by
+ kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Wed, 18 Oct 2023 19:38:00 +0800
+From:   Wenchao Hao <haowenchao2@huawei.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>
+CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <louhongxiang@huawei.com>, Wenchao Hao <haowenchao2@huawei.com>
+Subject: [PATCH v3 1/2] scsi: core: cleanup scsi_dev_queue_ready()
+Date:   Wed, 18 Oct 2023 19:37:45 +0800
+Message-ID: <20231018113746.1940197-2-haowenchao2@huawei.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20231018113746.1940197-1-haowenchao2@huawei.com>
+References: <20231018113746.1940197-1-haowenchao2@huawei.com>
 MIME-Version: 1.0
-Subject: Re: [bug report] blktests srp/002 hang
-To:     Bob Pearson <rpearsonhpe@gmail.com>,
-        "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
-        'Bart Van Assche' <bvanassche@acm.org>,
-        'Rain River' <rain.1986.08.12@gmail.com>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>,
-        "leon@kernel.org" <leon@kernel.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        RDMA mailing list <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <dsg6rd66tyiei32zaxs6ddv5ebefr5vtxjwz6d2ewqrcwisogl@ge7jzan7dg5u>
- <f50beb15-2cab-dfb9-3b58-ea66e7f114a6@gmail.com>
- <fe61fdc5-ca8f-2efc-975d-46b99d66c6f5@linux.dev>
- <afc98035-1bb8-f75c-451a-8e3e39fb74aa@gmail.com>
- <6fc3b524-af7d-43ce-aa05-5c44ec850b9b@acm.org>
- <b728f4db-bafa-dd0f-e288-7e3f56e6eae8@gmail.com>
- <02d7cbf2-b17b-488a-b6e9-ebb728b51c94@acm.org>
- <b80dae29-3a7c-f039-bc35-08c6e9f91197@gmail.com>
- <CAJr_XRAy4EHueAP-10=WSEa46j2aQBArdzYsq7OqSqR93Ue+ug@mail.gmail.com>
- <8aff9124-85c0-8e3b-dc35-1017b1540037@gmail.com>
- <3c84da83-cdbb-3326-b3f0-b2dee5f014e0@linux.dev>
- <4e7aac82-f006-aaa7-6769-d1c9691a0cec@gmail.com>
- <CAJr_XRCFuv_XO3Zk+pfq6C73CgDsnaJT4-G-jq1ds3bdg76iEA@mail.gmail.com>
- <OS7PR01MB1180450455E624D5CD977C461E5FCA@OS7PR01MB11804.jpnprd01.prod.outlook.com>
- <29c5de53-cc61-4efc-8e8d-690e27756a16@acm.org>
- <OS7PR01MB118045AD711E93D223DCD6F17E5C3A@OS7PR01MB11804.jpnprd01.prod.outlook.com>
- <a3be5e98-e783-4108-a690-acc8a5cc5981@gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <a3be5e98-e783-4108-a690-acc8a5cc5981@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemm000012.china.huawei.com (7.193.23.142)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This is just a cleanup for scsi_dev_queue_ready() to avoid
+redundant goto and if statement, it did not change the origin
+logic.
 
-在 2023/10/18 1:09, Bob Pearson 写道:
-> On 9/25/23 20:17, Daisuke Matsuda (Fujitsu) wrote:
->> On Tue, Sep 26, 2023 12:01 AM Bart Van Assche:
->>> On 9/24/23 21:47, Daisuke Matsuda (Fujitsu) wrote:
->>>> As Bob wrote above, nobody has found any logical failure in rxe
->>>> driver.
->>> That's wrong. In case you would not yet have noticed my latest email in
->>> this thread, please take a look at
->>> https://lore.kernel.org/linux-rdma/e8b76fae-780a-470e-8ec4-c6b650793d10@leemhuis.info/T/#m0fd8ea8a4cbc27b37
->>> b042ae4f8e9b024f1871a73.
->>> I think the report in that email is a 100% proof that there is a
->>> use-after-free issue in the rdma_rxe driver. Use-after-free issues have
->>> security implications and also can cause data corruption. I propose to
->>> revert the commit that introduced the rdma_rxe use-after-free unless
->>> someone comes up with a fix for the rdma_rxe driver.
->>>
->>> Bart.
->> Thank you for the clarification. I see your intention.
->> I hope the hang issue will be resolved by addressing this.
->>
->> Thanks,
->> Daisuke
->>
-> I have made some progress in understanding the cause of the srp/002 etc. hang.
->
-> The two attached files are traces of activity for two qp's qp#151 and qp#167. In my runs of srp/002
-> All the qp's pass before 167 and all fail after 167 which is the first to fail.
->
-> It turns out that all the passing qp's call srp_post_send() some number of times and also call
-> srp_send_done() the same number of times. Starting at qp#167 the last call to srp_send_done() does
-> not take place leaving the srp driver waiting for the final completion and causing the hang I believe.
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+---
+ drivers/scsi/scsi_lib.c | 32 +++++++++++++++-----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
 
-Thanks, Bob
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index aca57c3ab626..cf3864f72093 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1251,28 +1251,26 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ 	int token;
+ 
+ 	token = sbitmap_get(&sdev->budget_map);
+-	if (atomic_read(&sdev->device_blocked)) {
+-		if (token < 0)
+-			goto out;
++	if (token < 0)
++		return -1;
+ 
+-		if (scsi_device_busy(sdev) > 1)
+-			goto out_dec;
++	if (!atomic_read(&sdev->device_blocked))
++		return token;
+ 
+-		/*
+-		 * unblock after device_blocked iterates to zero
+-		 */
+-		if (atomic_dec_return(&sdev->device_blocked) > 0)
+-			goto out_dec;
+-		SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
+-				   "unblocking device at zero depth\n"));
++	/*
++	 * Only unblock if no other commands are pending and
++	 * if device_blocked has decreased to zero
++	 */
++	if (scsi_device_busy(sdev) > 1 ||
++	    atomic_dec_return(&sdev->device_blocked) > 0) {
++		sbitmap_put(&sdev->budget_map, token);
++		return -1;
+ 	}
+ 
++	SCSI_LOG_MLQUEUE(3, sdev_printk(KERN_INFO, sdev,
++			 "unblocking device at zero depth\n"));
++
+ 	return token;
+-out_dec:
+-	if (token >= 0)
+-		sbitmap_put(&sdev->budget_map, token);
+-out:
+-	return -1;
+ }
+ 
+ /*
+-- 
+2.32.0
 
-I will delve into your findings and the source code to find the root cause.
-
-BTW, what linux distribution are you using to find this? Ubuntu, Fedora 
-or Debian?
-
- From the above, sometings this problem is difficult to reproduce on 
-Ubuntu. But it can be reproduced in Ubuntu and Debian.
-
-So can you let me know what linux distribution you are using?
-
-Thanks
-
-Zhu Yanjun
-
->
-> There are four cq's involved in each pair of qp's in the srp test. Two in ib_srp and two in ib_srpt
-> for the two qp's. Three of them execute completion processing in a soft irq context so the code in
-> core/cq.c gathers the completions and calls back to the srp drivers. The send side cq in srp uses
-> cq_direct which requires srp to call ib_process_direct() in order to collect the completions. This
-> happens in __srp_get_tx_iu() which is called in several places in the srp driver. But only as a side effect
-> since the purpose of this routine is to get an iu to start a new command.
->
-> In the attached files for qp#151 the final call to srp_post_send is followed by the rxe requester and
-> completer work queues processing the send packet and the ack before a final call to __srp_get_rx_iu()
-> which gathers the final send side completion and success.
->
-> For qp#167 the call to srp_post_send() is followed by the rxe driver processing the send operation and
-> generating a work completion which is posted to the send cq but there is never a following call to
-> __srp_get_rx_iu() so the cqe is not received by srp and failure.
->
-> I don't yet understand the logic of the srp driver to fix this but the problem is not in the rxe driver
-> as far as I can tell.
->
-> Bob
