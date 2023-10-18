@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7671ECDB483
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 17:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9B98CDB47E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 17:58:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232740AbjJRR5x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 13:57:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42790 "EHLO
+        id S233085AbjJRR6E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 13:58:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232761AbjJRR5h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 13:57:37 -0400
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66766112;
-        Wed, 18 Oct 2023 10:57:32 -0700 (PDT)
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6b20577ef7bso4468925b3a.3;
-        Wed, 18 Oct 2023 10:57:32 -0700 (PDT)
+        with ESMTP id S1344716AbjJRR5r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 13:57:47 -0400
+Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D3C3D61;
+        Wed, 18 Oct 2023 10:57:40 -0700 (PDT)
+Received: by mail-ot1-f43.google.com with SMTP id 46e09a7af769-6cd0964a994so481996a34.0;
+        Wed, 18 Oct 2023 10:57:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697651851; x=1698256651;
+        d=1e100.net; s=20230601; t=1697651860; x=1698256660;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=SlC0BoedbyGdgzOhgrB/N96VnR6DBEr2m3fzKGpr6oQ=;
-        b=nkJAvDImWxkFw8cKf/gAE6/nqCYD6FLdNixVJySvsNBTLfP3PJKbyRQhaOqXJJqBNR
-         BX2gRTpkXf3YXHTjGxqNWFXsuYIGcamOLUR3kb3MhEu2NR6589WdVSGKYgFlVQwXa4dx
-         Eew7IdJRmpVBzNVS6t+n/gs422jwh/7OdXkoIZXJyz3It/ltKvJXv2hV+FIlB66E/W9I
-         hY94q5CXQle8cnUJJ+Eh27deODLEwKJlES8RhOqXMDF/PhF4u+LloLs/AE5mkdCD21rD
-         yAm9e83LSLYnhKqztwH9NPxU4lh9GqAVoKb8rqYyEp9aeh5qlK5XI2MNaFE+gmhRXmdf
-         QvNA==
-X-Gm-Message-State: AOJu0YzW2rGjQbcVrULeVyVP71UwDZ2Yx652mjPck4rxhzLzuoETaMzF
-        vvXdDfSIXTLpS6DoNj79uvM=
-X-Google-Smtp-Source: AGHT+IGjesUfB53pu6vQMcCxZ3Op2MJPL98hOFKojEeVsi6W5cAS+D3Shh022RYWcgilQwSAUsugoQ==
-X-Received: by 2002:a05:6a00:1891:b0:68e:43ed:d30b with SMTP id x17-20020a056a00189100b0068e43edd30bmr6578242pfh.21.1697651851342;
-        Wed, 18 Oct 2023 10:57:31 -0700 (PDT)
+        bh=BSMTtopnpnoVFRhHmUt+zlCmNcQ7/eLzIQS1hLfLLj0=;
+        b=Q/WDLEoayRxaPF+2+7p9H97FaITlZ1LQ/EdiUTNSYBeziOfKWonP8YR7DyYuVeHfLl
+         83ut7AmPl07O86OuSP3lmcpqLCpEZd5EUfSHWqmCj6xufgM65EV6+qgwoklhiczRFgri
+         P2v7wGr+LGMdo5AanisZ3jsDoEjavpL40KYql40zZ8vzy6B8GVZJXEN6oZgg7uZHqPjD
+         QZW3aoQuFLb5mO0DaphVqQZd+99PYKAIQY7nydrfF/M/ET7xFdE2vFGRM57LPTM9iSkO
+         4q5V66uWlBxDUNOwRGgrHb28rVmKbFOOy0WvII3SSzIz1si/nemnwT7Da2TrTumbS4Hq
+         0aew==
+X-Gm-Message-State: AOJu0YzaVUPhf6yTb0e3MCCXAH6DuVqIJUTql6ghwUJv47cJh+YlV/CS
+        hZa+y1pdf0sZE8aiK159N+I=
+X-Google-Smtp-Source: AGHT+IHs5W+Ov+53lF41ZQq4E0YEOZHaed5S3JFQx6klUUVo+9s2Do5fmUG/HZ2Dxn7ULE8mPFLwlw==
+X-Received: by 2002:a05:6830:2691:b0:6bf:2d48:f064 with SMTP id l17-20020a056830269100b006bf2d48f064mr7417403otu.13.1697651859925;
+        Wed, 18 Oct 2023 10:57:39 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:66c1:dd00:1e1e:add3])
-        by smtp.gmail.com with ESMTPSA id p15-20020aa7860f000000b00690cd981652sm3628612pfn.61.2023.10.18.10.57.30
+        by smtp.gmail.com with ESMTPSA id p15-20020aa7860f000000b00690cd981652sm3628612pfn.61.2023.10.18.10.57.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Oct 2023 10:57:31 -0700 (PDT)
+        Wed, 18 Oct 2023 10:57:39 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -45,23 +45,16 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
         "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
         Can Guo <quic_cang@quicinc.com>,
-        Peter Wang <peter.wang@mediatek.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <arthur.simchaev@wdc.com>,
-        Lu Hongfei <luhongfei@vivo.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Manivannan Sadhasivam <mani@kernel.org>,
         Asutosh Das <quic_asutoshd@quicinc.com>,
-        zhanghui <zhanghui31@xiaomi.com>,
-        Po-Wen Kao <powen.kao@mediatek.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Keoseong Park <keosung.park@samsung.com>
-Subject: [PATCH v13 15/18] scsi: ufs: Change the return type of ufshcd_auto_hibern8_update()
-Date:   Wed, 18 Oct 2023 10:54:37 -0700
-Message-ID: <20231018175602.2148415-16-bvanassche@acm.org>
+        Bean Huo <beanhuo@micron.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH v13 16/18] scsi: ufs: Simplify ufshcd_auto_hibern8_update()
+Date:   Wed, 18 Oct 2023 10:54:38 -0700
+Message-ID: <20231018175602.2148415-17-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.655.g421f12c284-goog
 In-Reply-To: <20231018175602.2148415-1-bvanassche@acm.org>
 References: <20231018175602.2148415-1-bvanassche@acm.org>
@@ -71,88 +64,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A later patch will introduce an error path in ufshcd_auto_hibern8_update().
-Change the return type of that function before introducing calls to that
-function in the host drivers such that the host drivers only have to be
-modified once.
+Calls to ufshcd_auto_hibern8_update() are already serialized: this
+function is either called if user space software is not running
+(preparing to suspend) or from a single sysfs store callback function.
+Kernfs serializes sysfs .store() callbacks.
+
+No functionality is changed. This patch makes the next patch in this
+series easier to read.
 
 Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 Reviewed-by: Can Guo <quic_cang@quicinc.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufs-sysfs.c   | 2 +-
- drivers/ufs/core/ufshcd-priv.h | 1 -
- drivers/ufs/core/ufshcd.c      | 6 ++++--
- include/ufs/ufshcd.h           | 2 +-
- 4 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/ufs/core/ufshcd.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index c95906443d5f..a1554eac9bbc 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -203,7 +203,7 @@ static ssize_t auto_hibern8_store(struct device *dev,
- 		goto out;
- 	}
- 
--	ufshcd_auto_hibern8_update(hba, ufshcd_us_to_ahit(timer));
-+	ret = ufshcd_auto_hibern8_update(hba, ufshcd_us_to_ahit(timer));
- 
- out:
- 	up(&hba->host_sem);
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index f42d99ce5bf1..de8e891da36a 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -60,7 +60,6 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
- 		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, u8 index, bool *flag_res);
--void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
- void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 			  struct cq_entry *cqe);
- int ufshcd_mcq_init(struct ufs_hba *hba);
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 38e79ce05545..d3718fbe51b9 100644
+index d3718fbe51b9..3fc33794ce1f 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -4313,13 +4313,13 @@ static void ufshcd_configure_auto_hibern8(struct ufs_hba *hba)
- 	ufshcd_writel(hba, hba->ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
- }
+@@ -4315,21 +4315,13 @@ static void ufshcd_configure_auto_hibern8(struct ufs_hba *hba)
  
--void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
-+int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
  {
- 	unsigned long flags;
- 	bool update = false;
+-	unsigned long flags;
+-	bool update = false;
++	const u32 cur_ahit = READ_ONCE(hba->ahit);
  
- 	if (!ufshcd_is_auto_hibern8_supported(hba))
--		return;
-+		return 0;
+-	if (!ufshcd_is_auto_hibern8_supported(hba))
++	if (!ufshcd_is_auto_hibern8_supported(hba) || cur_ahit == ahit)
+ 		return 0;
  
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	if (hba->ahit != ahit) {
-@@ -4336,6 +4336,8 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
- 		ufshcd_release(hba);
- 		ufshcd_rpm_put_sync(hba);
- 	}
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index fceef91d186e..8fd95a5d5538 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1356,7 +1356,7 @@ static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
- 	return ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
- }
- 
--void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
-+int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
- void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
- 			     const struct ufs_dev_quirk *fixups);
- #define SD_ASCII_STD true
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	if (hba->ahit != ahit) {
+-		hba->ahit = ahit;
+-		update = true;
+-	}
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-
+-	if (update &&
+-	    !pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
++	WRITE_ONCE(hba->ahit, ahit);
++	if (!pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
+ 		ufshcd_rpm_get_sync(hba);
+ 		ufshcd_hold(hba);
+ 		ufshcd_configure_auto_hibern8(hba);
