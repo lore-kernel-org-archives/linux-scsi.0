@@ -2,106 +2,130 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 236D9CDB483
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 19:10:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B42B7CDB47E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 19:17:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230132AbjJRTKC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 15:10:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42808 "EHLO
+        id S230391AbjJRTRn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 15:17:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230491AbjJRTKB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 15:10:01 -0400
-Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D9D7121
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2023 12:09:59 -0700 (PDT)
-Received: by mail-il1-x131.google.com with SMTP id e9e14a558f8ab-351610727adso4232435ab.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2023 12:09:59 -0700 (PDT)
+        with ESMTP id S229487AbjJRTRm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 15:17:42 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEFBEAB
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2023 12:17:39 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-6b201a93c9cso4814313b3a.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2023 12:17:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1697656198; x=1698260998; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=vb3IBU5yy7t8bMvrKZ3G2oxuWdruwAw/ttBvYUW8G1E=;
-        b=lg06KmteStZYWwttvtnpGTznIAYPN/NecBolfYZvwOswPsQrCHhYX4yI1NgbfUsKoI
-         zC8GWvxaNKAFiytcBXgB2vcMXBPSzoyYwHoTSURnckfw+u63Vjn8iF1tJDSuIPNAQIW4
-         zG6I9mIa0fjln7XnduvU6Ckc6Z4iF0VARIbe32+heJvJzWkJk5CiezJQ9wFWbinnAMi3
-         Zefn3G8ix8jlM/b+WqlZZDfYxRBnLscxCYiXmcH9BH+M5RJTZbw+bnHBMbv0Vq/dkOyq
-         GdGUkF18hFnM2tq4qUU3RXDJuBgVPHlXt7zChvJih0qdWRjmYq7Huz/6yM0XYmffpE3U
-         yw2g==
+        d=ziepe.ca; s=google; t=1697656659; x=1698261459; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=eCVCpbE6AjuOuFwgWOOlvJrVuUbiKbl64ibgg65WkNE=;
+        b=fy+UAGAnf9wlxkgI3GI9h3Ruq+WjkxCSn6ECr9QFM4mWuQ+Zu2WNsate/2Hpc1FFHd
+         dMBgkV497wndqdMgRy4zhve99j/lb9/tADeFfTAYpY92/yrRiooqUsjKrJEq5CQnJBL7
+         4s7N6GkILWI67SLpaB5BQtnDn9eL67HZshI+ZjoBafxWc5yJTv/QiPM4bmNuoehZJvZG
+         BEEgNxh1ZXxsmmP0FJIAlrrUUw/z2IIz3AavFdf7sZfPFUnHdJRsYibQRRqWrgdB5kIT
+         rC4yZb3svAVvzWLPrWXXFS0JwPeggPkMIyEMLjmxFaEjlYF6zahF5lmZN8zseFMxLPPx
+         /kuA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697656198; x=1698260998;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vb3IBU5yy7t8bMvrKZ3G2oxuWdruwAw/ttBvYUW8G1E=;
-        b=cezLT67QKuFpcTpG0VZoUdPct5+C6xYvTSC2e+SlZIabkQdH2oz7zeLF4bSMka63BY
-         K6JdQD11VTZ4buqorAQPRKM8TS8zjbrLz60Rl4tmITkxDj92ZzSX/bdHFeGJFA/n5LEG
-         sg6W0H0uNbAia1a9YJnnMM788fxMdWyj43mfPJv6zINvL8RsTpBYJGeawqyq8UGDHlTX
-         54z9L56wCmgsALBGaOXOp3qAuOt42iOJ6KFnw6vyT4j25xRhoraGmWnOBZHxY08dFL+S
-         9emGgBxvr1le0ZOIut3MilNLjJqLsd/4Hh0BT8yAHFjDN9JNJu4lu110DBaRJYSh0kKo
-         dTlg==
-X-Gm-Message-State: AOJu0YxJbKJ2Ks9GSi1yMZgVjn8hJjyJpFLODhHZUeGsGidd6RP3Y7vj
-        tYXcuuR5Puzc0Vl1yFlgsvHgDw==
-X-Google-Smtp-Source: AGHT+IH6CdQgC3rN9tmOifWLdhZDIEPtTG3N/Htttp7Zng29PPqIamxI33unHYKXoPIdm2O/qdo55Q==
-X-Received: by 2002:a05:6e02:3885:b0:34f:7ba2:50e8 with SMTP id cn5-20020a056e02388500b0034f7ba250e8mr303287ilb.2.1697656198581;
-        Wed, 18 Oct 2023 12:09:58 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id z15-20020a92da0f000000b003512c3e8809sm1292642ilm.71.2023.10.18.12.09.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Oct 2023 12:09:58 -0700 (PDT)
-Message-ID: <3f3c2289-3185-4895-92cb-0692e3ca9ebc@kernel.dk>
-Date:   Wed, 18 Oct 2023 13:09:57 -0600
+        d=1e100.net; s=20230601; t=1697656659; x=1698261459;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eCVCpbE6AjuOuFwgWOOlvJrVuUbiKbl64ibgg65WkNE=;
+        b=V6CrJB/0v0zNUp/1msLGhH0bs9Wr1KQaE+KogP+G5hhBhZqAUD19vcYOVSDYIeuwJJ
+         9ojM5LEQ0rOOOPX73Z+QxX4ddY8IIUHaqvor9kGl/EgAEVhEXyZBMHDp6b6cqwBPUP3T
+         qvNVsrG4Vx6jkVmoIegh11JcgNYKlPQlsPwZyEFR5OGVQxIra8cL7B+zFr8L66EFZe8D
+         0P25Vyyq0EJdrA0zTw1/hLWwm/aeO3WiWal0KKX+KTRrEhoYIa+vESfLlWaKBGuCMEIs
+         PL4p33GMPOW3udRKdMV1xIL3h8coM9klr0tlFXfPnUUebu8pxhTlcQ42nTIeaUWYLBg9
+         f5rg==
+X-Gm-Message-State: AOJu0YyNGN+4b68azMIQA2HlyVJk3jOhWnoQitzcZGuE39FFdmZZ0fQ7
+        LU1qPbErxuFU0vWGMtf8QhmRoJpB5wJCg2mtjBMS0Q==
+X-Google-Smtp-Source: AGHT+IGdLt0zytza8oSmlSUzt41XQsW5miK5tfUjcl01YyOtO3hnGG4/byaK2BXFgeWRUO+AeV2svg==
+X-Received: by 2002:a05:6a00:2345:b0:691:1eb:7dda with SMTP id j5-20020a056a00234500b0069101eb7ddamr19795pfj.7.1697656658809;
+        Wed, 18 Oct 2023 12:17:38 -0700 (PDT)
+Received: from ziepe.ca ([12.22.141.131])
+        by smtp.gmail.com with ESMTPSA id d7-20020aa797a7000000b0068fadc9226dsm3678120pfq.33.2023.10.18.12.17.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Oct 2023 12:17:37 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.95)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1qtC2x-0031hR-E1;
+        Wed, 18 Oct 2023 16:17:35 -0300
+Date:   Wed, 18 Oct 2023 16:17:35 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Bob Pearson <rpearsonhpe@gmail.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
+        'Rain River' <rain.1986.08.12@gmail.com>,
+        Zhu Yanjun <yanjun.zhu@linux.dev>,
+        "leon@kernel.org" <leon@kernel.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        RDMA mailing list <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [bug report] blktests srp/002 hang
+Message-ID: <20231018191735.GC691768@ziepe.ca>
+References: <20231017185139.GA691768@ziepe.ca>
+ <c65f92b2-9821-4349-b1f5-7dc2a287946a@gmail.com>
+ <08a8d947-25b5-434c-9ba3-282d298b5bfd@acm.org>
+ <e3d91c4f-b124-4031-9f92-fcb61973a645@gmail.com>
+ <02cd10fd-fd4a-4ad7-9b1d-6d37b070aacf@acm.org>
+ <5c6e69b3-f83b-461d-a08a-37bfbd82f995@gmail.com>
+ <cad2fee4-9359-4614-b36b-c2599dc12358@acm.org>
+ <bf2705ff-716a-45b5-bcc4-8710ea0fb98e@gmail.com>
+ <65b871ef-dd93-4bfb-bae9-c147a87c64d0@acm.org>
+ <dbd9f019-693f-476c-aa4c-739746753d2b@gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 00/14] Pass data temperature information to SCSI disk
- devices
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Daejun Park <daejun7.park@samsung.com>
-References: <20231017204739.3409052-1-bvanassche@acm.org>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20231017204739.3409052-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dbd9f019-693f-476c-aa4c-739746753d2b@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/17/23 2:47 PM, Bart Van Assche wrote:
-> Hi Jens,
+On Wed, Oct 18, 2023 at 01:29:16PM -0500, Bob Pearson wrote:
+> On 10/17/23 17:42, Bart Van Assche wrote:
+> > On 10/17/23 14:39, Bob Pearson wrote:
+> >> On 10/17/23 16:30, Bart Van Assche wrote:
+> >>>
+> >>> On 10/17/23 14:23, Bob Pearson wrote:
+> >>>> Not really, but stuck could mean it died (no threads active) or it is
+> >>>> in a loop or waiting to be scheduled. It looks dead. The lower layers are
+> >>>> waiting to get kicked into action by some event but it hasn't happened.
+> >>>> This is conjecture on my part though.
+> >>>
+> >>> This call stack means that I/O has been submitted by the block layer and
+> >>> that it did not get completed. Which I/O request got stuck can be
+> >>> verified by e.g. running the list-pending-block-requests script that I
+> >>> posted some time ago. See also
+> >>> https://lore.kernel.org/all/55c0fe61-a091-b351-11b4-fa7f668e49d7@acm.org/.
+> >>
+> >> Thanks. Would this run on the side of a hung blktests or would I need to
+> >> setup an srp-srpt file system?
+> > 
+> > I propose to analyze the source code of the component(s) that you
+> > suspect of causing the hang. The output of the list-pending-block-
+> > requests script is not sufficient to reveal which of the following
+> > drivers is causing the hang: ib_srp, rdma_rxe, ib_srpt, ...
+> > 
+> > Thanks,
+> > 
+> > Bart.
+> > 
 > 
-> UFS vendors need the data lifetime information to achieve good performance.
-> Without this information there is significantly higher write amplification due
-> to garbage collection. Hence this patch series that add support in F2FS and
-> also in the block layer for data lifetime information. The SCSI disk (sd)
-> driver is modified such that it passes write hint information to SCSI devices
-> via the GROUP NUMBER field.
+> Bart,
 > 
-> Please consider this patch series for the next merge window.
+> Another data point. I had seen (months ago) that both the rxe and
+> siw drivers could cause blktests srp hangs. More recently when I
+> configure my kernel to run lots of tests (lockdep, memory leaks,
+> kasan, ubsan, etc.), which definitely slows performance and adds
+> delays, the % of srp/002 runs which hang on the rxe driver has gone
+> from 10%+- to a solid 100%. This suggested retrying the siw driver
+> on the debug kernel since it has the reputation of always running
+> successfully. I now find that siw also hangs solidly on srp/002.
+> This is another hint that we are seeing a timing issue.
 
-My main hesitation with this is that there's a big gap between what
-makes theoretical sense and practical sense. When we previously tried
-this, turns out devices retained the data temperature on media, as
-expected, but tossed it out when data was GC'ed. That made it more of a
-benchmarking case than anything else. How do we know that things are
-better now? In previous postings I've seen you point at some papers, but
-I'm mostly concerned with practical use cases and devices. Are there any
-results, at all, from that? Or is this a case of vendors asking for
-something to check some marketing boxes or have value add?
+If siw hangs as well, I definitely comfortable continuing to debug and
+leaving the work queues in-tree for now.
 
-I can take a closer look once this is fully understood. Not adding
-something like this without proper justification.
-
-I'm also really against growing struct bio just for this. Why is patch 2
-not just using the ioprio field at least?
-
--- 
-Jens Axboe
-
+Jason
