@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4103CDB483
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 17:56:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BD5C41513
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Oct 2023 17:56:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232069AbjJRR4l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 13:56:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48808 "EHLO
+        id S232359AbjJRR4v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 13:56:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232144AbjJRR4c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 13:56:32 -0400
+        with ESMTP id S231864AbjJRR4q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 13:56:46 -0400
 Received: from mail-oo1-f52.google.com (mail-oo1-f52.google.com [209.85.161.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B0AC12D;
-        Wed, 18 Oct 2023 10:56:29 -0700 (PDT)
-Received: by mail-oo1-f52.google.com with SMTP id 006d021491bc7-57babef76deso3939596eaf.0;
-        Wed, 18 Oct 2023 10:56:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3845218F;
+        Wed, 18 Oct 2023 10:56:36 -0700 (PDT)
+Received: by mail-oo1-f52.google.com with SMTP id 006d021491bc7-57ad95c555eso4013366eaf.3;
+        Wed, 18 Oct 2023 10:56:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697651788; x=1698256588;
+        d=1e100.net; s=20230601; t=1697651795; x=1698256595;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=NrLWXaeR/EgbK40UM+EivZPIK4WgHuTtooGjxb8KUx4=;
-        b=B7zOlsJHBtT4Sv6dm+t4CzEyqfMRM11esxdgmu1NktVjNmCSy/9N8BxXvdq0yxOoZV
-         kywbNCWXR+zRYZ/qCIdR6CC+Bjdmy0emfnUDZSFjfpsgqY6HPwbGLspdM4C7JA8TErmi
-         OiFN1C3y5z1AW8PYCQGOrwPrKihE7fYeZq+bMQq5lqWxQ8grd9T+zZoVIii2l2AkaWvc
-         sM6G2OqG3qOm61CelkhD/5OivZ2YQlkAroCTe71biYXiNJQKK6U85fh6uVJBJx/NGIid
-         gwC8kFnLJPi7Qnkmb6kJ+t1zYAw20WV5ZjQqcAmqVHN6tvBASAnJMZxR1SgDVQUkrzoB
-         Lf9Q==
-X-Gm-Message-State: AOJu0YxVRWyMBYfLAMLeN37d09DatQZwfs6LQHF3bxxxs8G7wOYOP1VQ
-        UCgDi+pquyFfOuT3/HUNiWo=
-X-Google-Smtp-Source: AGHT+IFT9ksTs+qWdKnaoDns9RfCBRlMio7gHRw5ccFM4lLOWB36nCZmpkKtU9duJ2qpcnMo/Te+oA==
-X-Received: by 2002:a05:6358:44e:b0:14c:e2d3:fb2e with SMTP id 14-20020a056358044e00b0014ce2d3fb2emr5971591rwe.0.1697651788017;
-        Wed, 18 Oct 2023 10:56:28 -0700 (PDT)
+        bh=tgkcpMeB8iCIlRd5RqoUIvAC4F49icgyF9qAednPXIQ=;
+        b=dDTinihSb34rGKoULOp0I3BWM3nAq+hoJVQdH1cD/JwNtIY4pneKLwE2/+23k5oJFK
+         +eio9NTtLy84AZOarl5aTEf1UuyKZNAN+m0L2P18pkXeqv0cVJOOjFvI3FeJm8KTUqK3
+         RvUDuYmjTBZCh0xW2OgOC5AAdmzsnYEiZ+ZXR9M7McB6fy/hGIIGLe0izjOvS4GggJjE
+         5NYPPU4O/ZXy1S5LDWF5rEybbamMhrRSI1VjWFcEFfSFevvXwQ7c/6IPVt2Af46R2/gO
+         u37ShyFLszBu40dWYZwOqTRCONyk3TUfz9S2OQMCCGY8EKmmqwCDbtWMg3CEiV/Vm0dV
+         aouA==
+X-Gm-Message-State: AOJu0YzfmL7Y6TVzW+HNvLhaduek5P3GFH0z+nqLQ+QRyZDW4WWlqNfs
+        lNzEUZLLLc+IHEbSCsl+sWQ=
+X-Google-Smtp-Source: AGHT+IFartW3SZD3gzSDosUlH5fY5KYz+xtITfvMDuLKNeN1p+x00ehJDAuWiZsgdtTQtmTmum/Wsw==
+X-Received: by 2002:a05:6359:3119:b0:166:dc89:8c92 with SMTP id rh25-20020a056359311900b00166dc898c92mr5272939rwb.26.1697651795256;
+        Wed, 18 Oct 2023 10:56:35 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:66c1:dd00:1e1e:add3])
-        by smtp.gmail.com with ESMTPSA id p15-20020aa7860f000000b00690cd981652sm3628612pfn.61.2023.10.18.10.56.27
+        by smtp.gmail.com with ESMTPSA id p15-20020aa7860f000000b00690cd981652sm3628612pfn.61.2023.10.18.10.56.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Oct 2023 10:56:27 -0700 (PDT)
+        Wed, 18 Oct 2023 10:56:34 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -46,9 +46,9 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Damien Le Moal <dlemoal@kernel.org>,
         Ming Lei <ming.lei@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v13 07/18] scsi: sd: Sort commands by LBA before resubmitting
-Date:   Wed, 18 Oct 2023 10:54:29 -0700
-Message-ID: <20231018175602.2148415-8-bvanassche@acm.org>
+Subject: [PATCH v13 08/18] scsi: sd: Add a unit test for sd_cmp_sector()
+Date:   Wed, 18 Oct 2023 10:54:30 -0700
+Message-ID: <20231018175602.2148415-9-bvanassche@acm.org>
 X-Mailer: git-send-email 2.42.0.655.g421f12c284-goog
 In-Reply-To: <20231018175602.2148415-1-bvanassche@acm.org>
 References: <20231018175602.2148415-1-bvanassche@acm.org>
@@ -58,9 +58,8 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Sort SCSI commands by LBA before the SCSI error handler resubmits
-these commands. This is necessary when resubmitting zoned writes
-(REQ_OP_WRITE) if multiple writes have been queued for a single zone.
+Make it easier to test sd_cmp_sector() by adding a unit test for this
+function.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Damien Le Moal <dlemoal@kernel.org>
@@ -68,74 +67,166 @@ Cc: Christoph Hellwig <hch@lst.de>
 Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/sd.c | 43 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
+ drivers/scsi/Kconfig.kunit  |  5 ++
+ drivers/scsi/Makefile.kunit |  1 +
+ drivers/scsi/sd.c           |  7 ++-
+ drivers/scsi/sd.h           |  2 +
+ drivers/scsi/sd_test.c      | 91 +++++++++++++++++++++++++++++++++++++
+ 5 files changed, 104 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/scsi/sd_test.c
 
+diff --git a/drivers/scsi/Kconfig.kunit b/drivers/scsi/Kconfig.kunit
+index 90984a6ec7cc..907798967b6f 100644
+--- a/drivers/scsi/Kconfig.kunit
++++ b/drivers/scsi/Kconfig.kunit
+@@ -2,3 +2,8 @@ config SCSI_ERROR_TEST
+ 	tristate "scsi_error.c unit tests" if !KUNIT_ALL_TESTS
+ 	depends on SCSI && KUNIT
+ 	default KUNIT_ALL_TESTS
++
++config SD_TEST
++	tristate "sd.c unit tests" if !KUNIT_ALL_TESTS
++	depends on SCSI && BLK_DEV_SD && KUNIT
++	default KUNIT_ALL_TESTS
+diff --git a/drivers/scsi/Makefile.kunit b/drivers/scsi/Makefile.kunit
+index 3e98053b2709..dc0a21d7749f 100644
+--- a/drivers/scsi/Makefile.kunit
++++ b/drivers/scsi/Makefile.kunit
+@@ -1 +1,2 @@
+ obj-$(CONFIG_SCSI_ERROR_TEST) += scsi_error_test.o
++obj-$(CONFIG_SD_TEST) += sd_test.o
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c92a317ba547..6f26d6d6f50b 100644
+index 6f26d6d6f50b..c4a89300d3f9 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -47,6 +47,7 @@
- #include <linux/blkpg.h>
- #include <linux/blk-pm.h>
- #include <linux/delay.h>
-+#include <linux/list_sort.h>
- #include <linux/major.h>
- #include <linux/mutex.h>
- #include <linux/string_helpers.h>
-@@ -1979,6 +1980,46 @@ static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
- 	return eh_disp;
+@@ -1988,8 +1988,8 @@ static bool sd_needs_prepare_resubmit(struct scsi_cmnd *cmd)
+ 		blk_rq_is_seq_zoned_write(rq);
  }
  
-+static bool sd_needs_prepare_resubmit(struct scsi_cmnd *cmd)
-+{
-+	struct request *rq = scsi_cmd_to_rq(cmd);
-+
-+	return !rq->q->limits.use_zone_write_lock &&
-+		blk_rq_is_seq_zoned_write(rq);
-+}
-+
-+static int sd_cmp_sector(void *priv, const struct list_head *_a,
-+			 const struct list_head *_b)
-+{
-+	struct scsi_cmnd *a = list_entry(_a, typeof(*a), eh_entry);
-+	struct scsi_cmnd *b = list_entry(_b, typeof(*b), eh_entry);
-+	struct request *rq_a = scsi_cmd_to_rq(a);
-+	struct request *rq_b = scsi_cmd_to_rq(b);
-+	bool use_zwl_a = rq_a->q->limits.use_zone_write_lock;
-+	bool use_zwl_b = rq_b->q->limits.use_zone_write_lock;
-+
-+	/*
-+	 * Order the commands that need zone write locking after the commands
-+	 * that do not need zone write locking. Order the commands that do not
-+	 * need zone write locking by LBA. Do not reorder the commands that
-+	 * need zone write locking. See also the comment above the list_sort()
-+	 * definition.
-+	 */
-+	if (use_zwl_a || use_zwl_b)
-+		return use_zwl_a > use_zwl_b;
-+	return blk_rq_pos(rq_a) > blk_rq_pos(rq_b);
-+}
-+
-+static void sd_prepare_resubmit(struct list_head *cmd_list)
-+{
-+	/*
-+	 * Sort pending SCSI commands in starting sector order. This is
-+	 * important if one of the SCSI devices associated with @shost is a
-+	 * zoned block device for which zone write locking is disabled.
-+	 */
-+	list_sort(NULL, cmd_list, sd_cmp_sector);
-+}
-+
- static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+-static int sd_cmp_sector(void *priv, const struct list_head *_a,
+-			 const struct list_head *_b)
++int sd_cmp_sector(void *priv, const struct list_head *_a,
++		  const struct list_head *_b)
  {
- 	struct request *req = scsi_cmd_to_rq(scmd);
-@@ -3915,6 +3956,8 @@ static struct scsi_driver sd_template = {
- 	.done			= sd_done,
- 	.eh_action		= sd_eh_action,
- 	.eh_reset		= sd_eh_reset,
-+	.eh_needs_prepare_resubmit = sd_needs_prepare_resubmit,
-+	.eh_prepare_resubmit	= sd_prepare_resubmit,
- };
+ 	struct scsi_cmnd *a = list_entry(_a, typeof(*a), eh_entry);
+ 	struct scsi_cmnd *b = list_entry(_b, typeof(*b), eh_entry);
+@@ -2009,6 +2009,9 @@ static int sd_cmp_sector(void *priv, const struct list_head *_a,
+ 		return use_zwl_a > use_zwl_b;
+ 	return blk_rq_pos(rq_a) > blk_rq_pos(rq_b);
+ }
++#if IS_MODULE(CONFIG_SD_TEST)
++EXPORT_SYMBOL_GPL(scsi_call_prepare_resubmit);
++#endif
  
- /**
+ static void sd_prepare_resubmit(struct list_head *cmd_list)
+ {
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5eea762f84d1..35b7cdb7bf3b 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -292,6 +292,8 @@ static inline blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd,
+ 
+ #endif /* CONFIG_BLK_DEV_ZONED */
+ 
++int sd_cmp_sector(void *priv, const struct list_head *_a,
++		  const struct list_head *_b);
+ void sd_print_sense_hdr(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr);
+ void sd_print_result(const struct scsi_disk *sdkp, const char *msg, int result);
+ 
+diff --git a/drivers/scsi/sd_test.c b/drivers/scsi/sd_test.c
+new file mode 100644
+index 000000000000..0dc0f4c67b96
+--- /dev/null
++++ b/drivers/scsi/sd_test.c
+@@ -0,0 +1,91 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright 2023 Google LLC
++ */
++#include <kunit/test.h>
++#include <linux/cleanup.h>
++#include <linux/list_sort.h>
++#include <linux/slab.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_driver.h>
++#include "sd.h"
++
++#define ALLOC_Q(...)                                                \
++	({                                                          \
++		struct request_queue *q;                            \
++		q = kmalloc(sizeof(*q), GFP_KERNEL);                \
++		if (q)                                              \
++			*q = (struct request_queue){ __VA_ARGS__ }; \
++		q;                                                  \
++	})
++
++#define ALLOC_CMD(...)                                             \
++	({                                                         \
++		struct rq_and_cmd *cmd;                            \
++		cmd = kmalloc(sizeof(*cmd), GFP_KERNEL);           \
++		if (cmd)                                           \
++			*cmd = (struct rq_and_cmd){ __VA_ARGS__ }; \
++		cmd;                                               \
++	})
++
++struct rq_and_cmd {
++	struct request rq;
++	struct scsi_cmnd cmd;
++};
++
++/*
++ * Verify that sd_cmp_sector() does what it is expected to do.
++ */
++static void test_sd_cmp_sector(struct kunit *test)
++{
++	struct request_queue *q1 __free(kfree) =
++		ALLOC_Q(.limits.use_zone_write_lock = true);
++	struct request_queue *q2 __free(kfree) =
++		ALLOC_Q(.limits.use_zone_write_lock = false);
++	struct rq_and_cmd *cmd1 __free(kfree) = ALLOC_CMD(.rq = {
++								  .q = q1,
++								  .__sector = 7,
++							  });
++	struct rq_and_cmd *cmd2 __free(kfree) = ALLOC_CMD(.rq = {
++								  .q = q1,
++								  .__sector = 5,
++							  });
++	struct rq_and_cmd *cmd3 __free(kfree) = ALLOC_CMD(.rq = {
++								  .q = q2,
++								  .__sector = 7,
++							  });
++	struct rq_and_cmd *cmd4 __free(kfree) = ALLOC_CMD(.rq = {
++								  .q = q2,
++								  .__sector = 5,
++							  });
++	LIST_HEAD(cmd_list);
++
++	list_add_tail(&cmd1->cmd.eh_entry, &cmd_list);
++	list_add_tail(&cmd2->cmd.eh_entry, &cmd_list);
++	list_add_tail(&cmd3->cmd.eh_entry, &cmd_list);
++	list_add_tail(&cmd4->cmd.eh_entry, &cmd_list);
++	KUNIT_EXPECT_EQ(test, list_count_nodes(&cmd_list), 4);
++	list_sort(NULL, &cmd_list, sd_cmp_sector);
++	KUNIT_EXPECT_EQ(test, list_count_nodes(&cmd_list), 4);
++	KUNIT_EXPECT_PTR_EQ(test, cmd_list.next, &cmd4->cmd.eh_entry);
++	KUNIT_EXPECT_PTR_EQ(test, cmd_list.next->next, &cmd3->cmd.eh_entry);
++	KUNIT_EXPECT_PTR_EQ(test, cmd_list.next->next->next,
++			    &cmd1->cmd.eh_entry);
++	KUNIT_EXPECT_PTR_EQ(test, cmd_list.next->next->next->next,
++			    &cmd2->cmd.eh_entry);
++}
++
++static struct kunit_case sd_test_cases[] = {
++	KUNIT_CASE(test_sd_cmp_sector),
++	{}
++};
++
++static struct kunit_suite sd_test_suite = {
++	.name = "sd",
++	.test_cases = sd_test_cases,
++};
++kunit_test_suite(sd_test_suite);
++
++MODULE_DESCRIPTION("SCSI disk (sd) driver unit tests");
++MODULE_AUTHOR("Bart Van Assche");
++MODULE_LICENSE("GPL");
