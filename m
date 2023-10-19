@@ -2,126 +2,92 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8462CDB465
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 19:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5089CDB465
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 19:50:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345872AbjJSTRO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Oct 2023 15:17:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38178 "EHLO
+        id S1345159AbjJSTun (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Oct 2023 15:50:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232935AbjJSTRO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2023 15:17:14 -0400
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3194FBE;
-        Thu, 19 Oct 2023 12:17:12 -0700 (PDT)
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-6bd96cfb99cso69186b3a.2;
-        Thu, 19 Oct 2023 12:17:12 -0700 (PDT)
+        with ESMTP id S229598AbjJSTum (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2023 15:50:42 -0400
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0451CCA;
+        Thu, 19 Oct 2023 12:50:41 -0700 (PDT)
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1ca82f015e4so244575ad.1;
+        Thu, 19 Oct 2023 12:50:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697743031; x=1698347831;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20230601; t=1697745040; x=1698349840;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=axkcK7ju1lV/hILMbdVCsfPNH/jiJV0uBKZl7LAw0GA=;
-        b=A9fcwwAt8o/maZuVyzMK0qi3nS7s5tH3WxkFp6MTBKKYxSp0WDWB1wRGXk3eX2Mvpq
-         pVxGibIqnuuZnybjD+LfRovNkFntRDAuwndiASCZhZi/5pcWXno+PvNFXCLgUhRQ4ASq
-         IzNrknAaPDBoZherfTFCNBOj1nQxHqAVokcJBpveoqgIv2YSNjsM9BCpyeTOMuKTLn7Q
-         DTEsA+12QUr1nlL6LIIZXCycv0YuS81uECCoauvTCOuzB3vUQ30GN286AroOeB23DxMH
-         rfBQPrETMWg3dR2oaXm96qL3Tu3FuRG/i2BryQN3/DAjaJYqu8wV2ATgIfPAC5i0yF/7
-         +Z/A==
-X-Gm-Message-State: AOJu0YwZgWPWU4Ruwtb0+wJyT5tgUNUv6scp+IlqJ15VS+t/t8daagL+
-        V6Pclpu+KOTc4a3bh5wH/soan1jPd8o=
-X-Google-Smtp-Source: AGHT+IHLn+R5n7uBdyxIntDVNCoTj4q0zCMLeyI3LkCzzAifpLtp9EOiMyiSHn7uyQ67LCm4Z01kqQ==
-X-Received: by 2002:a05:6a00:2d1a:b0:68e:2d59:b1f3 with SMTP id fa26-20020a056a002d1a00b0068e2d59b1f3mr2803724pfb.13.1697743031470;
-        Thu, 19 Oct 2023 12:17:11 -0700 (PDT)
+        bh=2Gzq/gzso30UiG3pCarLGRQ/H1gh08CnkHPjn+a7Vcs=;
+        b=VimFSXloXRMhMfVMAmYClbmfWQrn+75mes/ZsjobvKe9jn4D6/c3sN/uNup9q+YKUJ
+         +Q0tfL9z2oeh9aprRk8T8a/k0Mrx144VCSdlXWcvxPfyVFgxWeQz3R6NrYvjT03rVi7n
+         N1Qv1nwrjetKVq/Zwx56un4tOxfjR4KvL32GlxJgXjbnWSsMwzpV2tLRZaWZZXSGQuHj
+         mnoXzSOtydQpDe+6i1PHo0vMO63DPCq9NfB1skL55TLtwnUyHESmZsTltS6cUQM70suF
+         bOMWMFwkf1FPmGfP1Hqe2a3bx+0fO/C44ZLjviLmYMK06oTluZtw65xDQIQI7zqt+mxb
+         9cTQ==
+X-Gm-Message-State: AOJu0YxyW3JKdyjXKP7EheXun6PkKR8Z9NgfTPODu0myxin6TWHQtyyQ
+        OgLXcU9NTGxc4qoHWS5FJ9o=
+X-Google-Smtp-Source: AGHT+IEGq4ylOKbMXm3HQeZJdlDYfnTjsFKDDOdK2kSQqQZ0d1MqTZdDuFWCKi2l+149xVejwZBS4w==
+X-Received: by 2002:a17:902:e214:b0:1ca:4681:eb37 with SMTP id u20-20020a170902e21400b001ca4681eb37mr2806194plb.14.1697745040301;
+        Thu, 19 Oct 2023 12:50:40 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:3306:3a7f:54e8:2149? ([2620:15c:211:201:3306:3a7f:54e8:2149])
-        by smtp.gmail.com with ESMTPSA id i14-20020a056a00004e00b0069102aa1918sm148959pfk.48.2023.10.19.12.17.10
+        by smtp.gmail.com with ESMTPSA id d4-20020a170902cec400b001c60d0a6d84sm83388plg.127.2023.10.19.12.50.39
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Oct 2023 12:17:10 -0700 (PDT)
-Message-ID: <5f8a5236-2a31-44b4-ae54-b723b229a7ed@acm.org>
-Date:   Thu, 19 Oct 2023 12:17:09 -0700
+        Thu, 19 Oct 2023 12:50:39 -0700 (PDT)
+Message-ID: <1e9f919e-ae05-4b15-bf3c-01849d122a5d@acm.org>
+Date:   Thu, 19 Oct 2023 12:50:38 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [bug report] blktests srp/002 hang
+Subject: Re: [PATCH v13 05/18] scsi: core: Introduce a mechanism for
+ reordering requests in the error handler
 Content-Language: en-US
-To:     Bob Pearson <rpearsonhpe@gmail.com>,
-        "Pearson, Robert B" <robert.pearson2@hpe.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
-        'Rain River' <rain.1986.08.12@gmail.com>,
-        Zhu Yanjun <yanjun.zhu@linux.dev>,
-        "leon@kernel.org" <leon@kernel.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        RDMA mailing list <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20231017185139.GA691768@ziepe.ca>
- <c65f92b2-9821-4349-b1f5-7dc2a287946a@gmail.com>
- <08a8d947-25b5-434c-9ba3-282d298b5bfd@acm.org>
- <e3d91c4f-b124-4031-9f92-fcb61973a645@gmail.com>
- <02cd10fd-fd4a-4ad7-9b1d-6d37b070aacf@acm.org>
- <5c6e69b3-f83b-461d-a08a-37bfbd82f995@gmail.com>
- <cad2fee4-9359-4614-b36b-c2599dc12358@acm.org>
- <bf2705ff-716a-45b5-bcc4-8710ea0fb98e@gmail.com>
- <65b871ef-dd93-4bfb-bae9-c147a87c64d0@acm.org>
- <dbd9f019-693f-476c-aa4c-739746753d2b@gmail.com>
- <20231018191735.GC691768@ziepe.ca>
- <8e7dbd64-856d-47cc-9d2f-73aa101afa11@acm.org>
- <fb5f6da5-5017-440d-9cb5-38796554366c@gmail.com>
- <6f5ed2dd-3809-4805-8d31-de24f3f14486@acm.org>
- <MW4PR84MB2307BE5EEC6DF51918FCCDF1BCD5A@MW4PR84MB2307.NAMPRD84.PROD.OUTLOOK.COM>
- <7ea5a4b0-26b8-4521-a53b-99cbdb02c594@acm.org>
- <eab9460f-d8ae-4479-ad42-ffdeb377c0d2@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <eab9460f-d8ae-4479-ad42-ffdeb377c0d2@gmail.com>
+To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20231018175602.2148415-1-bvanassche@acm.org>
+ <20231018175602.2148415-6-bvanassche@acm.org>
+ <9ee7edc0-5edb-4e17-abae-bb7ffcf0f147@kernel.org>
+ <47a5508c-cb80-4398-aa9c-e905be06ad1d@acm.org>
+In-Reply-To: <47a5508c-cb80-4398-aa9c-e905be06ad1d@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/18/23 14:52, Bob Pearson wrote:
-> results are slightly ambiguous but I ran the command here:
+On 10/19/23 10:53, Bart Van Assche wrote:
 > 
-> rpearson:blktests$ sudo use_siw=1 ./check srp/002
-> srp/002 (File I/O on top of multipath concurrently with logout and login (mq)) [failed]time  245.018s  ...
->      runtime  245.018s  ...  128.110s
->      --- tests/srp/002.out	2023-02-15 12:07:40.675530344 -0600
->      +++ /home/rpearson/src/blktests/results/nodev/srp/002.out.bad	2023-10-18 16:36:14.723323257 -0500
->      @@ -1,2 +1 @@
->       Configured SRP target driver
->      -Passed
-> rpearson:blktests$
-> 
-> And while it was hung I ran the following:
-> 
-> root@rpearson-X570-AORUS-PRO-WIFI: dmsetup ls | while read a b; do dmsetup message $a 0 fail_if_no_path; done
-> device-mapper: message ioctl on mpatha-part1  failed: Invalid argument
-> Command failed.
-> device-mapper: message ioctl on mpatha-part2  failed: Invalid argument
-> Command failed.
-> device-mapper: message ioctl on mpathb-part1  failed: Invalid argument
-> Command failed.
-> 
-> mpath[ab]-part[12] are multipath devices (dm-1,2,3) holding the Ubuntu system images and not the devices created
-> by blktests. When this command finished the srp/002 run came back life but did not succeed (see above)
-> 
-> The dmesg log is attached
+> On 10/18/23 17:24, Damien Le Moal wrote:
+>> On 10/19/23 02:54, Bart Van Assche wrote:
+>>> +void scsi_call_prepare_resubmit(struct list_head *done_q)
+>>> +{
+>>> +    struct scsi_cmnd *scmd, *next;
+>>> +
+>>> +    if (!scsi_needs_preparation(done_q))
+>>> +        return;
+>>
+>> This function will always go through the list of commands in done_q. 
+>> That could
+>> hurt performance for scsi hosts that do not need this prepare 
+>> resubmit, which I
+>> think is UFS only for now. So can't we just add a flag or something to 
+>> avoid that ?
+>
+> The SCSI error handler is only invoked after an RCU grace period has 
+> expired. The time spent in scsi_needs_preparation() is negligible
+> compared to an RCU grace period, especially if the
+> .eh_needs_prepare_resubmit pointers are NULL.
 
-Hi Bob,
+(replying to my own e-mail)
 
-Thank you for having shared these results. The 'dmsetup message' command
-should only be applied to multipath devices created by the srp/002
-script and not to the multipath devices created by Ubuntu but I'm not
-sure how to do that.
-
-If the above 'dmsetup message' command resolved the hang, that indicates
-that the root cause of the hang is probably in user space and not in the
-kernel. Did you use the Ubuntu version of multipathd or a self-built
-version of multipathd? I remember that last time I ran the SRP tests on
-an Ubuntu system that I had to replace Ubuntu's multipathd with a 
-self-built binary to make the tests pass.
-
-Thanks for having shared the dmesg output. I don't think it is possible 
-to derive the root cause from that output, which is unfortunate.
+Do you perhaps want me to drop the eh_needs_prepare_resubmit function
+pointer and introduce a flag instead? That sounds good to me.
 
 Thanks,
 
