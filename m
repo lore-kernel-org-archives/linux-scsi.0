@@ -2,86 +2,122 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EDA8CDB47E
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 00:26:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C125CDB47E
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 00:33:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231441AbjJSA0a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Oct 2023 20:26:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47874 "EHLO
+        id S229894AbjJSAd4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Oct 2023 20:33:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229632AbjJSA03 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 20:26:29 -0400
+        with ESMTP id S231341AbjJSAdx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2023 20:33:53 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B1B0FE;
-        Wed, 18 Oct 2023 17:26:28 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D029EC433C7;
-        Thu, 19 Oct 2023 00:26:26 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26283120;
+        Wed, 18 Oct 2023 17:33:49 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CCECC433C8;
+        Thu, 19 Oct 2023 00:33:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697675187;
-        bh=b/cBnj3VvbkNcjZuSy9SE3DQhh6HVRBaKXUB7BSALGo=;
+        s=k20201202; t=1697675628;
+        bh=ub2poWEDZ0m0k0zYhYsMeLfrRJ9CszztgPlp7gkyR6o=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=uRk+r1HfWgXZdboY7G8TnEotsro1aAjvFqx4Cezyj2Q5H0HvKkVmS9hXaF8ZRDqnM
-         ZooEPZWnQSCKE4joIlLtUH2slx89HsYHOf8tW1H+6AurUSFudTXQa8g3PN3i22O1nr
-         DsR/+1PFviSLOfgaEdB4TwW9eU2Tku0GymU21+tYIuE6uJIbqiWYk3YJWoEnzVS/T5
-         Zo6u6f3KKbphLDgpL7YG27jrqWAKuXrM5KKZYe2sK58xgYLC4ijYQ0yO0zVPyu70sL
-         VDAPu3d7Qnb9twWK1PEr19wMC3/CVvx0g/wyMgzk3HH4Fmc3YkqOLv3wQX6R/Z3KeK
-         U6AB8NRI4GR5w==
-Message-ID: <88133920-cb0c-43ea-a735-dee63267ffc8@kernel.org>
-Date:   Thu, 19 Oct 2023 09:26:25 +0900
+        b=VAoKYohHcNKvxXDF0IRZlFnNr5/U6M+ayq9rFQB8OmA3ZYwqlRYojwuRI5hYeLn6S
+         hbrTy7C/ExndfUg1OnXA4h74TmR7oZVbw1NfaLma/lfd2chkwK+DDCddrvfF0s3w7N
+         jzc61RtGLkjzN6r5g2gPAglp/CZlzLrtSGRCCnj0x7NkFPeGc5WDaR34WBKRAeEOIA
+         J+rTS2J1olJuj9UgoXD3cF/eCE6UQvfZtyP8eWm5p0FIjKfpDlNXuC+wqq4kM5HWMP
+         yWV/UL0RiL8AtHD7Q38NpzT9iMAikySnQgJ7axXLQl473Ax/aclHzIsYpB4KhqxvLX
+         wbWkV3PgQXgxw==
+Message-ID: <e2e56cdf-0cfe-4c5b-991f-ea6a80452891@kernel.org>
+Date:   Thu, 19 Oct 2023 09:33:46 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v13 10/18] scsi: sd_zbc: Only require an I/O scheduler if
- needed
+Subject: Re: [PATCH v3 00/14] Pass data temperature information to SCSI disk
+ devices
 Content-Language: en-US
 To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20231018175602.2148415-1-bvanassche@acm.org>
- <20231018175602.2148415-11-bvanassche@acm.org>
+        Christoph Hellwig <hch@lst.de>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>
+References: <20231017204739.3409052-1-bvanassche@acm.org>
+ <3f3c2289-3185-4895-92cb-0692e3ca9ebc@kernel.dk>
+ <e8b49fac-77ce-4b61-ac4d-e4ace58d8319@acm.org>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20231018175602.2148415-11-bvanassche@acm.org>
+In-Reply-To: <e8b49fac-77ce-4b61-ac4d-e4ace58d8319@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/19/23 02:54, Bart Van Assche wrote:
-> An I/O scheduler that serializes zoned writes is only needed if the SCSI
-> LLD does not preserve the write order. Hence only set
-> ELEVATOR_F_ZBD_SEQ_WRITE if the LLD does not preserve the write order.
+On 10/19/23 04:34, Bart Van Assche wrote:
 > 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/sd_zbc.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+> On 10/18/23 12:09, Jens Axboe wrote:
+>> My main hesitation with this is that there's a big gap between what
+>> makes theoretical sense and practical sense. When we previously tried
+>> this, turns out devices retained the data temperature on media, as
+>> expected, but tossed it out when data was GC'ed. That made it more of a
+>> benchmarking case than anything else. How do we know that things are
+>> better now? In previous postings I've seen you point at some papers, but
+>> I'm mostly concerned with practical use cases and devices. Are there any
+>> results, at all, from that? Or is this a case of vendors asking for
+>> something to check some marketing boxes or have value add?
 > 
-> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-> index a25215507668..718b31bed878 100644
-> --- a/drivers/scsi/sd_zbc.c
-> +++ b/drivers/scsi/sd_zbc.c
-> @@ -955,7 +955,9 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE])
->  
->  	/* The drive satisfies the kernel restrictions: set it up */
->  	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
-> -	blk_queue_required_elevator_features(q, ELEVATOR_F_ZBD_SEQ_WRITE);
-> +	if (!q->limits.driver_preserves_write_order)
+> Hi Jens,
+> 
+> Multiple UFS vendors made it clear to me that this feature is essential 
+> for their UFS devices to perform well. I will reach out to some of these
+> vendors off-list and will ask them to share performance numbers.
+> 
+> A note: persistent stream support is a feature that was only added
+> recently in the latest SCSI SBC-5 draft. This SCSI specification change
+> allows SCSI device vendors to interpret the GROUP NUMBER field as a data
+> lifetime. UFS device vendors interpret the GROUP NUMBER field as a data
+> lifetime since a long time - long before this was allowed by the SCSI
+> standards. See also the "ContextID" feature in the UFS specification.
+> That feature is mentioned in every version of the UFS specification I
+> have access to. The oldest version of the UFS specification I have
+> access to is version 2.2, published in 2016.
+> (https://www.jedec.org/system/files/docs/JESD220C-2_2.pdf). This
+> document is available free of charge after an account has been created 
+> on the JEDEC website.
+> 
+>> I'm also really against growing struct bio just for this. Why is patch 2
+>> not just using the ioprio field at least?
+> 
+> Hmm ... shouldn't the bits in the ioprio field in struct bio have the
+> same meaning as in the ioprio fields used in interfaces between user
+> space and the kernel? Damien Le Moal asked me not to use any of the
+> ioprio bits passing data lifetime information from user space to the kernel.
 
-Where is this limit introduced ? I do not see it anywhere in your patches. Did I
-miss something ?
+I said so in the context that if lifetime is a per-inode property, then ioprio
+is the wrong interface since the ioprio API is per process or per IO. There is a
+mismatch.
 
-> +		blk_queue_required_elevator_features(q,
-> +						     ELEVATOR_F_ZBD_SEQ_WRITE);
->  	if (sdkp->zones_max_open == U32_MAX)
->  		disk_set_max_open_zones(disk, 0);
->  	else
+One version of your patch series used fnctl() to set the lifetime per inoe,
+which is fine, and then used the BIO ioprio to pass the lifetime down to the
+device driver. That is in theory a nice trick, but that creates conflicts with
+the userspace ioprio API if the user uses that at the same time.
+
+So may be we should change bio ioprio from int to u16 and use the freedup u16
+for lifetime. With that, things are cleanly separated without growing struct bio.
+
+> 
+> Is it clear that the size of struct bio has not been changed because the
+> new bi_lifetime member fills a hole in struct bio?
+
+When the struct is randomized, holes move or disappear. Don't count on that...
+
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> 
 
 -- 
 Damien Le Moal
