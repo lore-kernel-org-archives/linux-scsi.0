@@ -2,154 +2,158 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D486CDB465
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 15:38:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 746C7CDB482
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 16:40:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346339AbjJSPiB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Oct 2023 11:38:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44836 "EHLO
+        id S1345017AbjJSQkg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Oct 2023 12:40:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346333AbjJSPiA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2023 11:38:00 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA037126
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2023 08:37:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697729832;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=52KErJhns9Z66A7jrZAJrnpbZYC1gr+sfVc9qg0RYTU=;
-        b=NtnRd8jc7sI8h4OeuKuiJWUpqbDseBF0LgY+XP5QU4VjmToVHh0ffbw1hhJwi6Z/voe8G7
-        b6WdaMXEx/p7tNfAJuZr3bvPVUO165fB2nY5PoO54fxNIB5Jfk8RPDMvaAKyX/Pv5Lp8RR
-        EjW/YV1m7CZFIDUVdjk5CZyUtEXY9DM=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-604-9bHrLPCMPcuDa7Bt2S-2EA-1; Thu, 19 Oct 2023 11:37:08 -0400
-X-MC-Unique: 9bHrLPCMPcuDa7Bt2S-2EA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4D7418C78C0;
-        Thu, 19 Oct 2023 15:37:08 +0000 (UTC)
-Received: from localhost.localdomain.com (unknown [10.45.224.9])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 981AA503B;
-        Thu, 19 Oct 2023 15:37:07 +0000 (UTC)
-From:   Tomas Henzl <thenzl@redhat.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     sreekanth.reddy@broadcom.com, ranjan.kumar@broadcom.com,
-        sathya.prakash@broadcom.com
-Subject: [PATCH v2] mpt3sas: suppress a warning in debug kernel
-Date:   Thu, 19 Oct 2023 17:37:06 +0200
-Message-ID: <20231019153706.7967-1-thenzl@redhat.com>
+        with ESMTP id S232326AbjJSQkf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2023 12:40:35 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6C84124;
+        Thu, 19 Oct 2023 09:40:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697733633; x=1729269633;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=B68lb5bc3nlqxKW2HoQvNAzdwFIr+BMgv0ZP+rlvfxo=;
+  b=LhvilC3Qg9AxwrA9+1Yqeoirpjyhe/Fmc27Ug9GaQZ41neAjF517lXPf
+   opcViqgh/0TXAyb+qJc/+cgnZPEHphDBPkGlEyrMNnWSJdP5QZ9tmqGmu
+   M8c4IVDGmqGdWnDx2D+I8rkwyyDXw1XfP8r+DFI0kt75BxSfiX8CuXPek
+   l9ibuUaYm8nFJjwtg6o2fml6dWszX4jz38LsjqI+sSuRv+RvftfeMX5pX
+   8tFeaiqoc/B835QueXDypu/2VMD0gis0A73JfG1fpO1zFMPlJ0z16Uewg
+   2BqwtB2OsmO9oBEw4PKxyJne2Pm750TKfqj1F/OgCkiNYDokUXkPE7PAi
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10868"; a="7864227"
+X-IronPort-AV: E=Sophos;i="6.03,237,1694761200"; 
+   d="scan'208";a="7864227"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2023 09:36:24 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10868"; a="706900365"
+X-IronPort-AV: E=Sophos;i="6.03,237,1694761200"; 
+   d="scan'208";a="706900365"
+Received: from lkp-server01.sh.intel.com (HELO 8917679a5d3e) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 19 Oct 2023 09:36:16 -0700
+Received: from kbuild by 8917679a5d3e with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qtW0L-0002GE-2M;
+        Thu, 19 Oct 2023 16:36:13 +0000
+Date:   Fri, 20 Oct 2023 00:35:56 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Nitesh Shetty <nj.shetty@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, dm-devel@lists.linux.dev,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>
+Cc:     oe-kbuild-all@lists.linux.dev, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, nitheshshetty@gmail.com,
+        anuj1072538@gmail.com, gost.dev@samsung.com, mcgrof@kernel.org,
+        Nitesh Shetty <nj.shetty@samsung.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Anuj Gupta <anuj20.g@samsung.com>,
+        Vincent Fu <vincent.fu@samsung.com>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v17 12/12] null_blk: add support for copy offload
+Message-ID: <202310200001.UU0bBx9w-lkp@intel.com>
+References: <20231019110147.31672-13-nj.shetty@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231019110147.31672-13-nj.shetty@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The mpt3sas_ctl_exit should be called after communication
-with the controller stops but in currently  it may cause
-false warnings about not released memory.
-Fix it by leaving mpt3sas_ctl_exit handle misc driver release
-per driver and release DMA in mpt3sas_ctl_release per ioc.
+Hi Nitesh,
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
-V2: separate handling of DMA release and misc driver deregistration
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on 213f891525c222e8ed145ce1ce7ae1f47921cb9c]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Introduce-queue-limits-and-sysfs-for-copy-offload-support/20231019-200658
+base:   213f891525c222e8ed145ce1ce7ae1f47921cb9c
+patch link:    https://lore.kernel.org/r/20231019110147.31672-13-nj.shetty%40samsung.com
+patch subject: [PATCH v17 12/12] null_blk: add support for copy offload
+config: parisc-allyesconfig (https://download.01.org/0day-ci/archive/20231020/202310200001.UU0bBx9w-lkp@intel.com/config)
+compiler: hppa-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231020/202310200001.UU0bBx9w-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202310200001.UU0bBx9w-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   In file included from include/trace/define_trace.h:102,
+                    from drivers/block/null_blk/trace.h:104,
+                    from drivers/block/null_blk/main.c:15:
+   drivers/block/null_blk/./trace.h: In function 'trace_raw_output_nullb_copy_op':
+>> drivers/block/null_blk/./trace.h:91:27: warning: format '%lu' expects argument of type 'long unsigned int', but argument 7 has type 'size_t' {aka 'unsigned int'} [-Wformat=]
+      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
+         |                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/trace/trace_events.h:203:34: note: in definition of macro 'DECLARE_EVENT_CLASS'
+     203 |         trace_event_printf(iter, print);                                \
+         |                                  ^~~~~
+   include/trace/trace_events.h:45:30: note: in expansion of macro 'PARAMS'
+      45 |                              PARAMS(print));                   \
+         |                              ^~~~~~
+   drivers/block/null_blk/./trace.h:73:1: note: in expansion of macro 'TRACE_EVENT'
+      73 | TRACE_EVENT(nullb_copy_op,
+         | ^~~~~~~~~~~
+   drivers/block/null_blk/./trace.h:91:17: note: in expansion of macro 'TP_printk'
+      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
+         |                 ^~~~~~~~~
+   In file included from include/trace/trace_events.h:237:
+   drivers/block/null_blk/./trace.h:91:68: note: format string is defined here
+      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
+         |                                                                  ~~^
+         |                                                                    |
+         |                                                                    long unsigned int
+         |                                                                  %u
 
 
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  1 +
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 42 ++++++++++++++++------------
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  1 +
- 3 files changed, 26 insertions(+), 18 deletions(-)
+vim +91 drivers/block/null_blk/./trace.h
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 1be0850ca17a..48ad17bd811d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1983,6 +1983,7 @@ extern const struct attribute_group *mpt3sas_host_groups[];
- extern const struct attribute_group *mpt3sas_dev_groups[];
- void mpt3sas_ctl_init(ushort hbas_to_enumerate);
- void mpt3sas_ctl_exit(ushort hbas_to_enumerate);
-+void mpt3sas_ctl_release(struct MPT3SAS_ADAPTER *ioc);
- u8 mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	u32 reply);
- void mpt3sas_ctl_pre_reset_handler(struct MPT3SAS_ADAPTER *ioc);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index efdb8178db32..147cb7088d55 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -4157,31 +4157,37 @@ mpt3sas_ctl_init(ushort hbas_to_enumerate)
- }
- 
- /**
-- * mpt3sas_ctl_exit - exit point for ctl
-- * @hbas_to_enumerate: ?
-+ * mpt3sas_ctl_release - release dma for ctl
-+ * @ioc: per adapter object
-  */
- void
--mpt3sas_ctl_exit(ushort hbas_to_enumerate)
-+mpt3sas_ctl_release(struct MPT3SAS_ADAPTER *ioc)
- {
--	struct MPT3SAS_ADAPTER *ioc;
- 	int i;
- 
--	list_for_each_entry(ioc, &mpt3sas_ioc_list, list) {
-+	/* free memory associated to diag buffers */
-+	for (i = 0; i < MPI2_DIAG_BUF_TYPE_COUNT; i++) {
-+		if (!ioc->diag_buffer[i])
-+			continue;
-+		dma_free_coherent(&ioc->pdev->dev,
-+				  ioc->diag_buffer_sz[i],
-+				  ioc->diag_buffer[i],
-+				  ioc->diag_buffer_dma[i]);
-+		ioc->diag_buffer[i] = NULL;
-+		ioc->diag_buffer_status[i] = 0;
-+	}
- 
--		/* free memory associated to diag buffers */
--		for (i = 0; i < MPI2_DIAG_BUF_TYPE_COUNT; i++) {
--			if (!ioc->diag_buffer[i])
--				continue;
--			dma_free_coherent(&ioc->pdev->dev,
--					  ioc->diag_buffer_sz[i],
--					  ioc->diag_buffer[i],
--					  ioc->diag_buffer_dma[i]);
--			ioc->diag_buffer[i] = NULL;
--			ioc->diag_buffer_status[i] = 0;
--		}
-+	kfree(ioc->event_log);
-+}
-+
-+/**
-+ * mpt3sas_ctl_exit - exit point for ctl
-+ * @hbas_to_enumerate: ?
-+ */
-+void
-+mpt3sas_ctl_exit(ushort hbas_to_enumerate)
-+{
- 
--		kfree(ioc->event_log);
--	}
- 	if (hbas_to_enumerate != 1)
- 		misc_deregister(&ctl_dev);
- 	if (hbas_to_enumerate != 2)
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 605013d3ee83..96dd2af5cd7d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -11350,6 +11350,7 @@ static void scsih_remove(struct pci_dev *pdev)
- 	}
- 
- 	mpt3sas_base_detach(ioc);
-+	mpt3sas_ctl_release(ioc);
- 	spin_lock(&gioc_lock);
- 	list_del(&ioc->list);
- 	spin_unlock(&gioc_lock);
+    72	
+    73	TRACE_EVENT(nullb_copy_op,
+    74			TP_PROTO(struct request *req,
+    75				 sector_t dst, sector_t src, size_t len),
+    76			TP_ARGS(req, dst, src, len),
+    77			TP_STRUCT__entry(
+    78					 __array(char, disk, DISK_NAME_LEN)
+    79					 __field(enum req_op, op)
+    80					 __field(sector_t, dst)
+    81					 __field(sector_t, src)
+    82					 __field(size_t, len)
+    83			),
+    84			TP_fast_assign(
+    85				       __entry->op = req_op(req);
+    86				       __assign_disk_name(__entry->disk, req->q->disk);
+    87				       __entry->dst = dst;
+    88				       __entry->src = src;
+    89				       __entry->len = len;
+    90			),
+  > 91			TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
+    92				  __print_disk_name(__entry->disk),
+    93				  blk_op_str(__entry->op),
+    94				  __entry->dst, __entry->src, __entry->len)
+    95	);
+    96	#endif /* _TRACE_NULLB_H */
+    97	
+
 -- 
-2.41.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
