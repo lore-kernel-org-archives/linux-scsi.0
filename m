@@ -2,84 +2,79 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1854CCDB483
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 17:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52EE4CDB465
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 18:20:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345405AbjJSRxk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Oct 2023 13:53:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45334 "EHLO
+        id S1346374AbjJSSUr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Oct 2023 14:20:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345222AbjJSRxj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2023 13:53:39 -0400
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A342F121;
-        Thu, 19 Oct 2023 10:53:37 -0700 (PDT)
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6be0277c05bso15683b3a.0;
-        Thu, 19 Oct 2023 10:53:37 -0700 (PDT)
+        with ESMTP id S1346352AbjJSSUq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2023 14:20:46 -0400
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98ECA11F;
+        Thu, 19 Oct 2023 11:20:44 -0700 (PDT)
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-27d23f1e3b8so29646a91.1;
+        Thu, 19 Oct 2023 11:20:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697738017; x=1698342817;
+        d=1e100.net; s=20230601; t=1697739644; x=1698344444;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4/pnmV4hicLXP/6Ru+XsMab+OgzjO0ZpY/C3JEID8Lk=;
-        b=a3BQf6tt925KQlo7fbzgOtqRCoNdxC9JW2gWo4E1V4fSuRGedTbIvurPDdN3lKyEFx
-         9i+VhGwppFplfPqFmT+EaMtktYLMeXOhqPyIhn/3FQEF6ik2+XruD8VuCRQGhwpSitIE
-         nYj1bpePhLW+IcrhFo1w8p4UGi87P3qHnQhAfGBS0Kp6adPVlnl43hhCiuhlScNtWIva
-         2DX4ZQUm/3O7ZEL3Ouj/NfZJiVzT2xAwSC/NltdHi2Ud7dV1ugTwxrNpxrYDWhU09Rdz
-         mFPcnhlOOdbhYU3MJvJGbnNBf4Bh/DcFFh5vlvuurZDp+8q0iiDwgwQeWvI8aBw1mQDW
-         ZNjQ==
-X-Gm-Message-State: AOJu0Yy8OBIadJW6JSU2V2Zl01JT6qUafluTUiVc2ABUS8eBKI6csgOJ
-        W8cCWkzJwwd8gDR7Wze9zqdFBYpZtpw=
-X-Google-Smtp-Source: AGHT+IGIK+dxGEmGcMusKWzi2UrUW8IZeSWou26+cjjL/7nV/t0KUb1wbvMvyfgsj+b+DBCQ1cjk5w==
-X-Received: by 2002:a05:6a20:918f:b0:15e:10e:2cc3 with SMTP id v15-20020a056a20918f00b0015e010e2cc3mr3066450pzd.60.1697738017008;
-        Thu, 19 Oct 2023 10:53:37 -0700 (PDT)
+        bh=u7vDvNz6BQO2aw2lrYmPjXprDOYt8FbI7nemZ3te0lQ=;
+        b=DhNn27RAPrOBMpkkXC8fgPivysbSL6LY5QidA0Jse/SPh5wR75y9DZAxELq0R5YyQ6
+         4hQvhdVhTPSyoC3F43ImrCqTlAJQvM98nhrSYonCzwX6kQnM/gnJyWt9BV3hLvrjg0/x
+         QBMN11wEdQrS/cErYoFSv7jUaye+jL3UWvypiSL1MKSScIfFD/vPmZJYxF0/OlGgghcj
+         J39dtmO5tAGKfUnG/WtWJacFxEyEeUkp0FR/RVaXVLM//PYZIUT4DIqk38IgJhHbl1T4
+         /zxxN1buqeHk4htIWVmPeCFpr+uYYCN99a7t8G1hY08/K47NmTMwl3x/ktWmIM8fiVnM
+         Kl1A==
+X-Gm-Message-State: AOJu0YwDgA4u+vvJKbVr38DqgrDYiBeE9JVwOn4QNMS/RFVvl+tKKqZW
+        Nkul9YZBlRxyqTLDE9jJu/Y=
+X-Google-Smtp-Source: AGHT+IHLvlmNMcFMWxSwriIsRlybnjbvrnsIbfuCI095aX/soipMtp1C6oFTKung7GTUB7phSX8R+w==
+X-Received: by 2002:a17:90a:df89:b0:27c:f48e:e245 with SMTP id p9-20020a17090adf8900b0027cf48ee245mr2886389pjv.24.1697739643885;
+        Thu, 19 Oct 2023 11:20:43 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:3306:3a7f:54e8:2149? ([2620:15c:211:201:3306:3a7f:54e8:2149])
-        by smtp.gmail.com with ESMTPSA id 63-20020a17090a09c500b00262eb0d141esm76566pjo.28.2023.10.19.10.53.36
+        by smtp.gmail.com with ESMTPSA id 4-20020a170902ee4400b001c877f27d1fsm17322plo.11.2023.10.19.11.20.42
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Oct 2023 10:53:36 -0700 (PDT)
-Message-ID: <47a5508c-cb80-4398-aa9c-e905be06ad1d@acm.org>
-Date:   Thu, 19 Oct 2023 10:53:35 -0700
+        Thu, 19 Oct 2023 11:20:43 -0700 (PDT)
+Message-ID: <ec1a2b51-6b46-441d-99e2-8e5bc48ba2d2@acm.org>
+Date:   Thu, 19 Oct 2023 11:20:41 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v13 05/18] scsi: core: Introduce a mechanism for
- reordering requests in the error handler
+Subject: Re: [PATCH v3 0/3] scsi: ufs: core: support WB buffer resize function
 Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20231018175602.2148415-1-bvanassche@acm.org>
- <20231018175602.2148415-6-bvanassche@acm.org>
- <9ee7edc0-5edb-4e17-abae-bb7ffcf0f147@kernel.org>
+To:     Lu Hongfei <luhongfei@vivo.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <quic_cang@quicinc.com>,
+        Arthur Simchaev <arthur.simchaev@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Po-Wen Kao <powen.kao@mediatek.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     opensource.kernel@vivo.com
+References: <20230911055810.879-1-luhongfei@vivo.com>
+ <86e5cc25-80f7-451b-9067-a220c7a2c39e@vivo.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <9ee7edc0-5edb-4e17-abae-bb7ffcf0f147@kernel.org>
+In-Reply-To: <86e5cc25-80f7-451b-9067-a220c7a2c39e@vivo.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 10/18/23 21:50, Lu Hongfei wrote:
+> Are there any new developments in this group of patches?
 
-On 10/18/23 17:24, Damien Le Moal wrote:
-> On 10/19/23 02:54, Bart Van Assche wrote:
->> +void scsi_call_prepare_resubmit(struct list_head *done_q)
->> +{
->> +	struct scsi_cmnd *scmd, *next;
->> +
->> +	if (!scsi_needs_preparation(done_q))
->> +		return;
-> 
-> This function will always go through the list of commands in done_q. That could
-> hurt performance for scsi hosts that do not need this prepare resubmit, which I
-> think is UFS only for now. So can't we just add a flag or something to avoid that ?
-
-Hi Damien,
-
-The SCSI error handler is only invoked after an RCU grace period has 
-expired. The time spent in scsi_needs_preparation() is negligible
-compared to an RCU grace period, especially if the
-.eh_needs_prepare_resubmit pointers are NULL.
+The JEDEC ballot about resizing the WriteBooster buffer has not yet been
+approved. Please wait with posting patches that implement support for a
+JEDEC feature until agreement has been reached in JEDEC.
 
 Thanks,
 
