@@ -2,158 +2,111 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 746C7CDB482
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 16:40:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC0E1CDB483
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Oct 2023 16:48:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345017AbjJSQkg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Oct 2023 12:40:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33154 "EHLO
+        id S235231AbjJSQtA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Oct 2023 12:49:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232326AbjJSQkf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2023 12:40:35 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6C84124;
-        Thu, 19 Oct 2023 09:40:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697733633; x=1729269633;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=B68lb5bc3nlqxKW2HoQvNAzdwFIr+BMgv0ZP+rlvfxo=;
-  b=LhvilC3Qg9AxwrA9+1Yqeoirpjyhe/Fmc27Ug9GaQZ41neAjF517lXPf
-   opcViqgh/0TXAyb+qJc/+cgnZPEHphDBPkGlEyrMNnWSJdP5QZ9tmqGmu
-   M8c4IVDGmqGdWnDx2D+I8rkwyyDXw1XfP8r+DFI0kt75BxSfiX8CuXPek
-   l9ibuUaYm8nFJjwtg6o2fml6dWszX4jz38LsjqI+sSuRv+RvftfeMX5pX
-   8tFeaiqoc/B835QueXDypu/2VMD0gis0A73JfG1fpO1zFMPlJ0z16Uewg
-   2BqwtB2OsmO9oBEw4PKxyJne2Pm750TKfqj1F/OgCkiNYDokUXkPE7PAi
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10868"; a="7864227"
-X-IronPort-AV: E=Sophos;i="6.03,237,1694761200"; 
-   d="scan'208";a="7864227"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2023 09:36:24 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10868"; a="706900365"
-X-IronPort-AV: E=Sophos;i="6.03,237,1694761200"; 
-   d="scan'208";a="706900365"
-Received: from lkp-server01.sh.intel.com (HELO 8917679a5d3e) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 19 Oct 2023 09:36:16 -0700
-Received: from kbuild by 8917679a5d3e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qtW0L-0002GE-2M;
-        Thu, 19 Oct 2023 16:36:13 +0000
-Date:   Fri, 20 Oct 2023 00:35:56 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Nitesh Shetty <nj.shetty@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@lists.linux.dev,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-Cc:     oe-kbuild-all@lists.linux.dev, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, nitheshshetty@gmail.com,
-        anuj1072538@gmail.com, gost.dev@samsung.com, mcgrof@kernel.org,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Anuj Gupta <anuj20.g@samsung.com>,
-        Vincent Fu <vincent.fu@samsung.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v17 12/12] null_blk: add support for copy offload
-Message-ID: <202310200001.UU0bBx9w-lkp@intel.com>
-References: <20231019110147.31672-13-nj.shetty@samsung.com>
+        with ESMTP id S231601AbjJSQs7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2023 12:48:59 -0400
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA6A511F;
+        Thu, 19 Oct 2023 09:48:57 -0700 (PDT)
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-6b709048d8eso4790951b3a.2;
+        Thu, 19 Oct 2023 09:48:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697734137; x=1698338937;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=6OQ/V/nmMT5goORuYpAJZd1eIlhxBW5C6vgEyeLZR4c=;
+        b=L1/DXn807zm/g/dH07Hcwzz33jtIlsDI+3q2cq3nbRozNeTaSQ4l1qItCkEftjke3Q
+         re1zyPW6Ewd7vclBAWfYjE0GFYsftjJDxieQ348D8X3J2p+oCBUOcGuzkqAPa+Wbid+W
+         PTN9Lw4cAT2mxeWCvGsSxgy2YwI9drPocws0WFbZoHIkN13twOGr3r9b6SVEb7orD8ol
+         dKIv5FlCFukm2O1IcBNb5D6uVqao4N4kQ3kCIvauozmxPk7pHUuUb6l6h7FSZjXKlWkh
+         h914PXkH7izqojQwP55R/Hsj8dRlWO6tgzzkDZJxkUmsQ6lNTMddBDE+RiejctoCr4bi
+         P+kA==
+X-Gm-Message-State: AOJu0YxGIM564eg8xsj75J57m9OlLO2vZojacMjNZn+cG6qDYY7fvkV3
+        Oq52p7/gkPWSNcCl1yHNQiw=
+X-Google-Smtp-Source: AGHT+IGSWSvk10pYjqYsDI8lv9W77YvQn0x4qX8bJ2rKwADb9C4yARLDafmx85viOsU9fxSPgWbHCg==
+X-Received: by 2002:a05:6a21:71c7:b0:157:609f:6057 with SMTP id ay7-20020a056a2171c700b00157609f6057mr2435162pzc.27.1697734137082;
+        Thu, 19 Oct 2023 09:48:57 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:3306:3a7f:54e8:2149? ([2620:15c:211:201:3306:3a7f:54e8:2149])
+        by smtp.gmail.com with ESMTPSA id f3-20020a6547c3000000b005b82611378bsm3196957pgs.52.2023.10.19.09.48.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Oct 2023 09:48:56 -0700 (PDT)
+Message-ID: <7908138a-3ae5-4ff5-9bda-4f41e81f2ef1@acm.org>
+Date:   Thu, 19 Oct 2023 09:48:54 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231019110147.31672-13-nj.shetty@samsung.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 00/14] Pass data temperature information to SCSI disk
+ devices
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>
+References: <20231017204739.3409052-1-bvanassche@acm.org>
+ <3f3c2289-3185-4895-92cb-0692e3ca9ebc@kernel.dk>
+ <e8b49fac-77ce-4b61-ac4d-e4ace58d8319@acm.org>
+ <e2e56cdf-0cfe-4c5b-991f-ea6a80452891@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <e2e56cdf-0cfe-4c5b-991f-ea6a80452891@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Nitesh,
+On 10/18/23 17:33, Damien Le Moal wrote:
+> On 10/19/23 04:34, Bart Van Assche wrote:
+ >> On 10/18/23 12:09, Jens Axboe wrote:
+>>> I'm also really against growing struct bio just for this. Why is patch 2
+>>> not just using the ioprio field at least?
+>>
+>> Hmm ... shouldn't the bits in the ioprio field in struct bio have the
+>> same meaning as in the ioprio fields used in interfaces between user
+>> space and the kernel? Damien Le Moal asked me not to use any of the
+>> ioprio bits passing data lifetime information from user space to the kernel.
+> 
+> I said so in the context that if lifetime is a per-inode property, then ioprio
+> is the wrong interface since the ioprio API is per process or per IO. There is a
+> mismatch.
+> 
+> One version of your patch series used fnctl() to set the lifetime per inode,
+> which is fine, and then used the BIO ioprio to pass the lifetime down to the
+> device driver. That is in theory a nice trick, but that creates conflicts with
+> the userspace ioprio API if the user uses that at the same time.
+> 
+> So may be we should change bio ioprio from int to u16 and use the freedup u16
+> for lifetime. With that, things are cleanly separated without growing struct bio.
 
-kernel test robot noticed the following build warnings:
+Hmm ... I think that bi_ioprio has been 16 bits wide since the 
+introduction of that data structure member in 2016?
 
-[auto build test WARNING on 213f891525c222e8ed145ce1ce7ae1f47921cb9c]
+>> Is it clear that the size of struct bio has not been changed because the
+>> new bi_lifetime member fills a hole in struct bio?
+> 
+> When the struct is randomized, holes move or disappear. Don't count on that...
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Introduce-queue-limits-and-sysfs-for-copy-offload-support/20231019-200658
-base:   213f891525c222e8ed145ce1ce7ae1f47921cb9c
-patch link:    https://lore.kernel.org/r/20231019110147.31672-13-nj.shetty%40samsung.com
-patch subject: [PATCH v17 12/12] null_blk: add support for copy offload
-config: parisc-allyesconfig (https://download.01.org/0day-ci/archive/20231020/202310200001.UU0bBx9w-lkp@intel.com/config)
-compiler: hppa-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231020/202310200001.UU0bBx9w-lkp@intel.com/reproduce)
+We should aim to maximize performance for users who do not use data 
+structure layout randomization.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202310200001.UU0bBx9w-lkp@intel.com/
+Additionally, I doubt that anyone is using full structure layout 
+randomization for SCSI devices. No SCSI driver has any 
+__no_randomize_layout / __randomize_layout annotations although I'm sure 
+there are plenty of data structures in SCSI drivers for which the layout 
+matters.
 
-All warnings (new ones prefixed by >>):
+Thanks,
 
-   In file included from include/trace/define_trace.h:102,
-                    from drivers/block/null_blk/trace.h:104,
-                    from drivers/block/null_blk/main.c:15:
-   drivers/block/null_blk/./trace.h: In function 'trace_raw_output_nullb_copy_op':
->> drivers/block/null_blk/./trace.h:91:27: warning: format '%lu' expects argument of type 'long unsigned int', but argument 7 has type 'size_t' {aka 'unsigned int'} [-Wformat=]
-      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
-         |                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/trace/trace_events.h:203:34: note: in definition of macro 'DECLARE_EVENT_CLASS'
-     203 |         trace_event_printf(iter, print);                                \
-         |                                  ^~~~~
-   include/trace/trace_events.h:45:30: note: in expansion of macro 'PARAMS'
-      45 |                              PARAMS(print));                   \
-         |                              ^~~~~~
-   drivers/block/null_blk/./trace.h:73:1: note: in expansion of macro 'TRACE_EVENT'
-      73 | TRACE_EVENT(nullb_copy_op,
-         | ^~~~~~~~~~~
-   drivers/block/null_blk/./trace.h:91:17: note: in expansion of macro 'TP_printk'
-      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
-         |                 ^~~~~~~~~
-   In file included from include/trace/trace_events.h:237:
-   drivers/block/null_blk/./trace.h:91:68: note: format string is defined here
-      91 |                 TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
-         |                                                                  ~~^
-         |                                                                    |
-         |                                                                    long unsigned int
-         |                                                                  %u
+Bart.
 
 
-vim +91 drivers/block/null_blk/./trace.h
-
-    72	
-    73	TRACE_EVENT(nullb_copy_op,
-    74			TP_PROTO(struct request *req,
-    75				 sector_t dst, sector_t src, size_t len),
-    76			TP_ARGS(req, dst, src, len),
-    77			TP_STRUCT__entry(
-    78					 __array(char, disk, DISK_NAME_LEN)
-    79					 __field(enum req_op, op)
-    80					 __field(sector_t, dst)
-    81					 __field(sector_t, src)
-    82					 __field(size_t, len)
-    83			),
-    84			TP_fast_assign(
-    85				       __entry->op = req_op(req);
-    86				       __assign_disk_name(__entry->disk, req->q->disk);
-    87				       __entry->dst = dst;
-    88				       __entry->src = src;
-    89				       __entry->len = len;
-    90			),
-  > 91			TP_printk("%s req=%-15s: dst=%llu, src=%llu, len=%lu",
-    92				  __print_disk_name(__entry->disk),
-    93				  blk_op_str(__entry->op),
-    94				  __entry->dst, __entry->src, __entry->len)
-    95	);
-    96	#endif /* _TRACE_NULLB_H */
-    97	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
