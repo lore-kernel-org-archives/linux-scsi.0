@@ -2,113 +2,64 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE88BC001DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 19:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E822DC001DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 20:27:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229776AbjJTTum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Oct 2023 15:50:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37838 "EHLO
+        id S231279AbjJTU1U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Oct 2023 16:27:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229554AbjJTTul (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 15:50:41 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4041D63;
-        Fri, 20 Oct 2023 12:50:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1697831439;
-        bh=dfBUDh2+NLuZET4aeDkcgmhLoPDIT0AK75Zd69ihX9A=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=RvR53+UVIQnZnBlSViZ91wypAhERtgDaRA0wbwIYm6A9fQF1oMX2YfISgpMhXbELT
-         wqE70CIICWMOwRmBHOJJf1He04IHMEC1UwA6d47seyZYxDtriGKmCgJ5Jr3ctj0A5l
-         wZ+AGXcTMHcUzEVfywjds+WoB9SIjQ/Sty41n7pU=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 560E71287297;
-        Fri, 20 Oct 2023 15:50:39 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id g51m-Gd8AxHp; Fri, 20 Oct 2023 15:50:39 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1697831439;
-        bh=dfBUDh2+NLuZET4aeDkcgmhLoPDIT0AK75Zd69ihX9A=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=RvR53+UVIQnZnBlSViZ91wypAhERtgDaRA0wbwIYm6A9fQF1oMX2YfISgpMhXbELT
-         wqE70CIICWMOwRmBHOJJf1He04IHMEC1UwA6d47seyZYxDtriGKmCgJ5Jr3ctj0A5l
-         wZ+AGXcTMHcUzEVfywjds+WoB9SIjQ/Sty41n7pU=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 918901287296;
-        Fri, 20 Oct 2023 15:50:38 -0400 (EDT)
-Message-ID: <6aaeacbf526de186b21b2061fcf3a4d777e8563f.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.6-rc6
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        with ESMTP id S230457AbjJTU1S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 16:27:18 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAC50D65;
+        Fri, 20 Oct 2023 13:27:16 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4E762C433C9;
+        Fri, 20 Oct 2023 20:27:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697833636;
+        bh=Aq7Xdpuzy1eqZ9xQaNvVfqPNBPBRPvcY2exwbCHeoKA=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=S+rUWgksoy7Sza6Udpvk1e7RixzQ+kiV+NQK2UrqwXTtpJSrLDP/1SC76VsPuekQj
+         LeD82s980GO62GoIgiFdEjk4hx1/bkwBIBS+ori3xpbv+S+AayycXjofRljeRURqV+
+         rXeV1Z6SGVrsKjtHcWmH6eKC+Y/2dJRTVxP6VjumKY5nv3RsjKaGLm9ZEAdzB51fIq
+         o4cV11gqCz723cqo3GvfIc6xQ1B2byeuPiLwlugYsJpomlBDdHuWEDeoifkqFRfTut
+         UrzM1rgur0d0/1alc3QnyidfkC0eXIyXBtQO4Of8WPaJkK562A0G3cGksRryp5E7h5
+         a+8VzGr+95gag==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 3CB94C595CB;
+        Fri, 20 Oct 2023 20:27:16 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.6-rc6
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <6aaeacbf526de186b21b2061fcf3a4d777e8563f.camel@HansenPartnership.com>
+References: <6aaeacbf526de186b21b2061fcf3a4d777e8563f.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <6aaeacbf526de186b21b2061fcf3a4d777e8563f.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 097c06394c835be0cf21e23f9bd13ff771601b63
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 75e167c2f63c45317f18170c1dee1df2167098c2
+Message-Id: <169783363624.7501.3395231278523830977.pr-tracker-bot@kernel.org>
+Date:   Fri, 20 Oct 2023 20:27:16 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 20 Oct 2023 15:50:37 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Two small fixes, both in drivers.  The mptsas one is really fixing an
-error path issue where it can leave the misc driver loaded even though
-the sas driver fails to initialize.
+The pull request you sent on Fri, 20 Oct 2023 15:50:37 -0400:
 
-The patch is available here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/75e167c2f63c45317f18170c1dee1df2167098c2
 
-Quinn Tran (1):
-      scsi: qla2xxx: Fix double free of dsd_list during driver load
+Thank you!
 
-Tomas Henzl (1):
-      scsi: mpt3sas: Fix in error path
-
-And the diffstat:
-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 +++-
- drivers/scsi/qla2xxx/qla_os.c        | 2 +-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-With full diff below
-
-James
-
----
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index c3c1f466fe01..605013d3ee83 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12913,8 +12913,10 @@ _mpt3sas_init(void)
- 	mpt3sas_ctl_init(hbas_to_enumerate);
- 
- 	error = pci_register_driver(&mpt3sas_driver);
--	if (error)
-+	if (error) {
-+		mpt3sas_ctl_exit(hbas_to_enumerate);
- 		scsih_exit();
-+	}
- 
- 	return error;
- }
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 50db08265c51..dcae09a37d49 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4953,7 +4953,7 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	ha->gid_list = NULL;
- 	ha->gid_list_dma = 0;
- 
--	if (!list_empty(&ha->base_qpair->dsd_list)) {
-+	if (ha->base_qpair && !list_empty(&ha->base_qpair->dsd_list)) {
- 		struct dsd_dma *dsd_ptr, *tdsd_ptr;
- 
- 		/* clean up allocated prev pool */
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
