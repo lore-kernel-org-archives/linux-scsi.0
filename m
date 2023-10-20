@@ -2,81 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D5C0CDB474
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 05:53:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E64FC001DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 05:55:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345092AbjJTFxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Oct 2023 01:53:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46194 "EHLO
+        id S1376326AbjJTFzP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Oct 2023 01:55:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235623AbjJTFxL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 01:53:11 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE2DCD4C
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2023 22:53:08 -0700 (PDT)
+        with ESMTP id S1346971AbjJTFzK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 01:55:10 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E6A010DD
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2023 22:55:05 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 279251F38C;
-        Fri, 20 Oct 2023 05:53:07 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id B242C1FD76;
+        Fri, 20 Oct 2023 05:55:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1697781187; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1697781302; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=IUYle1861HTuFVh+Z1grIi06dH6Xwi+ZO/awwpDr9HY=;
-        b=Mf5zGGRX6LKDlFjke4KTWuDQYXro8OQa6I22gkNeqSQTQ0f+6ykkKSqQOirfEhf/iHtvXf
-        NIORafinu+4Fj2z4RgMHUx/4xaB0KDaX3/yHrbOlp0fyxCZz/2y9EaGLuAN75HfR7bjo8D
-        A4eI1HfdKLsC26ZtJwDF1QhU7jHV6Gs=
+        bh=tdKPsEKS6ipak0vEqpYsymsWXZw4li8khMBkMGhp+3E=;
+        b=rMjsES+TD7NQB5ZRIekhgA+UR4aMetu2S1dyFQ3JpjJA5QDonZBkoRtTIzDj6Nw2GZJjsY
+        XaEsmUjr9Z7O0Fy/OyJ5IiOMxZlvCpuw72IMXPCZNevrb281Xx/jEBV5j0ymgmUNhkDvQA
+        2xkxe/wScs0zxJbOmt5thO2PWPNm510=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1697781187;
+        s=susede2_ed25519; t=1697781302;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=IUYle1861HTuFVh+Z1grIi06dH6Xwi+ZO/awwpDr9HY=;
-        b=fAmOJPR6xXb1rjJvTQVeri+5NM42hwAOOVDMBUaxuP0zPlh9PtPY8gdQ9CrnkW2xSqXPB9
-        za6KlMyZ2Y0wVADg==
+        bh=tdKPsEKS6ipak0vEqpYsymsWXZw4li8khMBkMGhp+3E=;
+        b=QYvw0xJ/fKn7bwUASXiy63IjoSTSijKof7mau3+12OWan0tnErwyrpPNoDb3vrExldv9Eb
+        m0JLlAwVS3NB56AQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EF5DC1348D;
-        Fri, 20 Oct 2023 05:53:06 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 71927138E2;
+        Fri, 20 Oct 2023 05:55:02 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id vlXaOMIVMmU1ZQAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 20 Oct 2023 05:53:06 +0000
-Message-ID: <06475025-fb65-4ea4-8ae3-54292b2360e4@suse.de>
-Date:   Fri, 20 Oct 2023 07:53:06 +0200
+        id 2dxZGjYWMmX2ZQAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 20 Oct 2023 05:55:02 +0000
+Message-ID: <7890ef89-669f-466b-a3e0-94f8beb01009@suse.de>
+Date:   Fri, 20 Oct 2023 07:55:01 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 09/17] libiscsi: use cls_session as argument for target
- and session reset
+Subject: Re: [PATCH 5/9] scsi: set host byte after EH completed
 Content-Language: en-US
 To:     Mike Christie <michael.christie@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org
-References: <20231016092430.55557-1-hare@suse.de>
- <20231016092430.55557-10-hare@suse.de>
- <00f10f98-46bc-4af2-a3f1-a1523c9f4e1f@oracle.com>
+References: <20231016121542.111501-1-hare@suse.de>
+ <20231016121542.111501-6-hare@suse.de>
+ <df55e6b2-8da1-4c20-8881-9792775ff392@oracle.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <00f10f98-46bc-4af2-a3f1-a1523c9f4e1f@oracle.com>
+In-Reply-To: <df55e6b2-8da1-4c20-8881-9792775ff392@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Authentication-Results: smtp-out2.suse.de;
         none
-X-Spamd-Result: default: False [-7.09 / 50.00];
+X-Spamd-Result: default: False [-5.57 / 50.00];
          ARC_NA(0.00)[];
          RCVD_VIA_SMTP_AUTH(0.00)[];
          XM_UA_NO_VERSION(0.01)[];
          FROM_HAS_DN(0.00)[];
          TO_DN_SOME(0.00)[];
          TO_MATCH_ENVRCPT_ALL(0.00)[];
-         BAYES_HAM(-3.00)[100.00%];
+         BAYES_HAM(-1.48)[91.58%];
          MIME_GOOD(-0.10)[text/plain];
          NEURAL_HAM_LONG(-3.00)[-1.000];
          RCPT_COUNT_FIVE(0.00)[5];
@@ -91,77 +90,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/19/23 22:02, Mike Christie wrote:
-> On 10/16/23 4:24 AM, Hannes Reinecke wrote:
->> iscsi_eh_target_reset() and iscsi_eh_session_reset() only depend
->> on the cls_session, so use that as an argument.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> ---
->>   drivers/scsi/be2iscsi/be_main.c | 10 +++++++++-
->>   drivers/scsi/libiscsi.c         | 21 +++++++++------------
->>   include/scsi/libiscsi.h         |  2 +-
->>   3 files changed, 19 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
->> index e48f14ad6dfd..441ad2ebc5d5 100644
->> --- a/drivers/scsi/be2iscsi/be_main.c
->> +++ b/drivers/scsi/be2iscsi/be_main.c
->> @@ -385,6 +385,14 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
->>   	return rc;
->>   }
->>   
->> +static int beiscsi_eh_session_reset(struct scsi_cmnd *sc)
->> +{
->> +	struct iscsi_cls_session *cls_session;
->> +
->> +	cls_session = starget_to_session(scsi_target(sc->device));
->> +	return iscsi_eh_session_reset(cls_session);
->> +}
->> +
->>   /*------------------- PCI Driver operations and data ----------------- */
->>   static const struct pci_device_id beiscsi_pci_id_table[] = {
->>   	{ PCI_DEVICE(BE_VENDOR_ID, BE_DEVICE_ID1) },
->> @@ -408,7 +416,7 @@ static const struct scsi_host_template beiscsi_sht = {
->>   	.eh_timed_out = iscsi_eh_cmd_timed_out,
->>   	.eh_abort_handler = beiscsi_eh_abort,
->>   	.eh_device_reset_handler = beiscsi_eh_device_reset,
->> -	.eh_target_reset_handler = iscsi_eh_session_reset,
->> +	.eh_target_reset_handler = beiscsi_eh_session_reset,
->>   	.shost_groups = beiscsi_groups,
->>   	.sg_tablesize = BEISCSI_SGLIST_ELEMENTS,
->>   	.can_queue = BE2_IO_DEPTH,
->> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
->> index 0fda8905eabd..a561eefabb50 100644
->> --- a/drivers/scsi/libiscsi.c
->> +++ b/drivers/scsi/libiscsi.c
->> @@ -2600,13 +2600,11 @@ EXPORT_SYMBOL_GPL(iscsi_session_recovery_timedout);
->>    * This function will wait for a relogin, session termination from
->>    * userspace, or a recovery/replacement timeout.
->>    */
->> -int iscsi_eh_session_reset(struct scsi_cmnd *sc)
->> +int iscsi_eh_session_reset(struct iscsi_cls_session *cls_session)
->>   {
+On 10/19/23 22:30, Mike Christie wrote:
+> On 10/16/23 7:15 AM, Hannes Reinecke wrote:
+>> @@ -1671,7 +1682,8 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
+>>   			if (rtn == SUCCESS)
+>>   				list_move_tail(&scmd->eh_entry, &check_list);
+>>   			else if (rtn == FAST_IO_FAIL)
+>> -				scsi_eh_finish_cmd(scmd, done_q);
+>> +				__scsi_eh_finish_cmd(scmd, done_q,
+>> +						     DID_TRANSPORT_DISRUPTED);
+>>   			else
+>>   				/* push back on work queue for further processing */
+>>   				list_move(&scmd->eh_entry, work_q);
+>> @@ -1736,8 +1748,9 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
+>>   			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+>>   				if (channel == scmd_channel(scmd)) {
+>>   					if (rtn == FAST_IO_FAIL)
+>> -						scsi_eh_finish_cmd(scmd,
+>> -								   done_q);
+>> +						__scsi_eh_finish_cmd(scmd,
+>> +								     done_q,
+>> +								     DID_TRANSPORT_DISRUPTED);
+>>   					else
+>>   						list_move_tail(&scmd->eh_entry,
+>>   							       &check_list);
+>> @@ -1780,9 +1793,9 @@ static int scsi_eh_host_reset(struct Scsi_Host *shost,
+>>   		if (rtn == SUCCESS) {
+>>   			list_splice_init(work_q, &check_list);
+>>   		} else if (rtn == FAST_IO_FAIL) {
+>> -			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+>> -					scsi_eh_finish_cmd(scmd, done_q);
+>> -			}
+>> +			list_for_each_entry_safe(scmd, next, work_q, eh_entry)
+>> +				__scsi_eh_finish_cmd(scmd, done_q,
+>> +						     DID_TRANSPORT_DISRUPTED);
+>>   		} else {
+>>   			SCSI_LOG_ERROR_RECOVERY(3,
+>>   				shost_printk(KERN_INFO, shost,
 > 
-> Patch looks ok to me.
+> For FAST_IO_FAIL I think you want to use DID_TRANSPORT_FAILFAST  because when
+> drivers return that, they normally have hit their fast io fail timer or have
+> hit a hard transport issue like the port is offline. For example for FC drivers
+> they do:
 > 
-> Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Ah, yes, you are right. Will be modifying that.
+
+> err = fc_block_rport(rport);
+> if (err)
+> 	return err;
+>   
+> where fc_block_rport does:
 > 
-> As an alternative to this approach though it might be easier to have
-> this function take a scsi_target. You won't need beiscsi_eh_session_reset
-> and for iscsi_eh_recover_target you can pass the scsi_target to
-> iscsi_eh_recover_target/iscsi_eh_session_reset.
+> if (rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT)
+> 	return FAST_IO_FAIL;
 > 
-> Either way is ok to me though since we have to convert from scsi_target
-> to cls_session somewhere.
+> and then for fc_remote_port_chkready we return DID_TRANSPORT_FAILFAST
+> when FC_RPORT_FAST_FAIL_TIMEDOUT is set.
 > 
-Yeah, one could do that. But the relationship between the target and
-the host is not fixed, but rather depends on the driver and/or transport 
-class. For simpler devices the host is the parent, for others there are 
-elements in between so the parent device is something else entirely.
-So for generic routines (like libiscsi) I prefer to use dedicated
-elements such that the relationship is known.
+> So using DID_TRANSPORT_FAILFAST would align the return values for that
+> state.
+> 
+> One question I had is why you added those checks for target and host
+> reset but not scsi_eh_bus_device_reset because drivers will do something
+> similar to above where they call fc_block_rport for that callout as
+> well.
+> 
+That's done in one of the later patches where I convert the loop in
+scsi_eh_bus_device_reset().
 
 Cheers,
 
