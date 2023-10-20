@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6311EC00A8F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 19:07:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0344CC004C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 19:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230286AbjJTTH0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Oct 2023 15:07:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53358 "EHLO
+        id S230174AbjJTTH2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Oct 2023 15:07:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230297AbjJTTHT (ORCPT
+        with ESMTP id S230371AbjJTTHT (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 15:07:19 -0400
-Received: from rcdn-iport-2.cisco.com (rcdn-iport-2.cisco.com [173.37.86.73])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B743CD7A;
-        Fri, 20 Oct 2023 12:07:12 -0700 (PDT)
+Received: from rcdn-iport-7.cisco.com (rcdn-iport-7.cisco.com [173.37.86.78])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C74C10E7;
+        Fri, 20 Oct 2023 12:07:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=3120; q=dns/txt; s=iport;
-  t=1697828833; x=1699038433;
+  d=cisco.com; i=@cisco.com; l=2334; q=dns/txt; s=iport;
+  t=1697828835; x=1699038435;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=sjJkSqdln9qea/n4Fpj7gGInKVCSDN0znydRXK9ldtE=;
-  b=CZXxTqKhayY1c+zfYKPwQa8YGh5R9HMOkbUBR/L8aBSnKg8nuIX3RpTT
-   rVTyob7q1G5P4V4AjaaMBgL23c8SNz/Cb4KoMPVBT21UKU517SUueoUop
-   2hHFKb4Gl/OK+zchDtGP9rJr3+/GHFOS+7EpHRSLFG0qRmu/dmZO3VcKx
-   s=;
-X-CSE-ConnectionGUID: cVOFaWG+TJGASHi4IPtMJg==
-X-CSE-MsgGUID: OweevoQdSeObhtMcX43nDQ==
+  bh=fv30yt0LjIxxDkJmPu1aq2CxwjmyWduwzcIDXyk48UI=;
+  b=WE7WbTRApBnG3u2KC99W6ZnMJfasi1zo0z0GgqBN1y3v0xOjFyndnpXF
+   +F+1HAVksHvZR0Gj2Gxg7mWVZW35mfLM4ub8bNGKlmkvwdv6Cs4a2gHmg
+   +o6/9C2+s3p5gOs2wfyvmC3aLfW5chQEhb318HHIOhmxtJ7I5+dkjTSRH
+   U=;
+X-CSE-ConnectionGUID: /f4vCI4+SCy2t33xxkI+0A==
+X-CSE-MsgGUID: Gj2Be+N3Qfa5FTHTijoMvA==
 X-IronPort-AV: E=Sophos;i="6.03,239,1694736000"; 
-   d="scan'208";a="127269668"
+   d="scan'208";a="126421357"
 Received: from rcdn-core-11.cisco.com ([173.37.93.147])
-  by rcdn-iport-2.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2023 19:07:11 +0000
+  by rcdn-iport-7.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2023 19:07:15 +0000
 Received: from localhost.cisco.com ([10.193.101.253])
         (authenticated bits=0)
-        by rcdn-core-11.cisco.com (8.15.2/8.15.2) with ESMTPSA id 39KJ6XPI026372
+        by rcdn-core-11.cisco.com (8.15.2/8.15.2) with ESMTPSA id 39KJ6XPK026372
         (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 20 Oct 2023 19:07:11 GMT
+        Fri, 20 Oct 2023 19:07:14 GMT
 From:   Karan Tilak Kumar <kartilak@cisco.com>
 To:     sebaddel@cisco.com
 Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
@@ -42,9 +42,9 @@ Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH 06/13] scsi: fnic: Refactor and redefine fnic.h for multiqueue
-Date:   Fri, 20 Oct 2023 12:06:22 -0700
-Message-Id: <20231020190629.338623-7-kartilak@cisco.com>
+Subject: [PATCH 08/13] scsi: fnic: Define stats to track multiqueue (MQ) IOs
+Date:   Fri, 20 Oct 2023 12:06:24 -0700
+Message-Id: <20231020190629.338623-9-kartilak@cisco.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20231020190629.338623-1-kartilak@cisco.com>
 References: <20231020190629.338623-1-kartilak@cisco.com>
@@ -57,112 +57,66 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Refactor and re-define values in fnic.h to implement
-multiqueue(MQ) functionality.
-
-VIC firmware allows fnic to create up to 64 copy
-workqueues. Update the copy workqueue max to 64.
-Modify the interrupt index to be in sync with the firmware
-to support MQ.
-Add irq number to the MSIX entry.
-Define a software workqueue table to track the status of
-io_reqs. Define a base for the copy workqueue.
+Define an array to track IOs for the different queues,
+print the IO stats in fnic get stats data.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
- drivers/scsi/fnic/fnic.h | 30 ++++++++++++++++++++++--------
- 1 file changed, 22 insertions(+), 8 deletions(-)
+ drivers/scsi/fnic/fnic_stats.h |  2 ++
+ drivers/scsi/fnic/fnic_trace.c | 11 +++++++++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 9fd01a867788..f4390fc96323 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -163,12 +163,21 @@ do {								\
- #define FNIC_MAIN_NOTE(kern_level, host, fmt, args...)          \
- 	shost_printk(kern_level, host, fmt, ##args)
+diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
+index 07d1556e3c32..9d7f98c452dd 100644
+--- a/drivers/scsi/fnic/fnic_stats.h
++++ b/drivers/scsi/fnic/fnic_stats.h
+@@ -2,6 +2,7 @@
+ /* Copyright 2013 Cisco Systems, Inc.  All rights reserved. */
+ #ifndef _FNIC_STATS_H_
+ #define _FNIC_STATS_H_
++#define FNIC_MQ_MAX_QUEUES 64
  
-+#define FNIC_WQ_COPY_MAX 64
-+#define FNIC_WQ_MAX 1
-+#define FNIC_RQ_MAX 1
-+#define FNIC_CQ_MAX (FNIC_WQ_COPY_MAX + FNIC_WQ_MAX + FNIC_RQ_MAX)
-+#define FNIC_DFLT_IO_COMPLETIONS 256
+ struct stats_timestamps {
+ 	struct timespec64 last_reset_time;
+@@ -26,6 +27,7 @@ struct io_path_stats {
+ 	atomic64_t io_btw_10000_to_30000_msec;
+ 	atomic64_t io_greater_than_30000_msec;
+ 	atomic64_t current_max_io_time;
++	atomic64_t ios[FNIC_MQ_MAX_QUEUES];
+ };
+ 
+ struct abort_stats {
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index be0d7c57b242..aaa4ea02fb7c 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -204,6 +204,7 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 	int len = 0;
+ 	int buf_size = debug->buf_size;
+ 	struct timespec64 val1, val2;
++	int i = 0;
+ 
+ 	ktime_get_real_ts64(&val1);
+ 	len = scnprintf(debug->debug_buffer + len, buf_size - len,
+@@ -266,6 +267,16 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 		  (u64)atomic64_read(&stats->io_stats.io_btw_10000_to_30000_msec),
+ 		  (u64)atomic64_read(&stats->io_stats.io_greater_than_30000_msec));
+ 
++	len += scnprintf(debug->debug_buffer + len, buf_size - len,
++			"------------------------------------------\n"
++			"\t\tIO Queues and cumulative IOs\n"
++			"------------------------------------------\n");
 +
-+#define FNIC_MQ_CQ_INDEX        2
++	for (i = 0; i < FNIC_MQ_MAX_QUEUES; i++) {
++		len += scnprintf(debug->debug_buffer + len, buf_size - len,
++				"Q:%d -> %lld\n", i, (u64)atomic64_read(&stats->io_stats.ios[i]));
++	}
 +
- extern const char *fnic_state_str[];
- 
- enum fnic_intx_intr_index {
- 	FNIC_INTX_WQ_RQ_COPYWQ,
--	FNIC_INTX_ERR,
-+	FNIC_INTX_DUMMY,
- 	FNIC_INTX_NOTIFY,
-+	FNIC_INTX_ERR,
- 	FNIC_INTX_INTR_MAX,
- };
- 
-@@ -176,7 +185,7 @@ enum fnic_msix_intr_index {
- 	FNIC_MSIX_RQ,
- 	FNIC_MSIX_WQ,
- 	FNIC_MSIX_WQ_COPY,
--	FNIC_MSIX_ERR_NOTIFY,
-+	FNIC_MSIX_ERR_NOTIFY = FNIC_MSIX_WQ_COPY + FNIC_WQ_COPY_MAX,
- 	FNIC_MSIX_INTR_MAX,
- };
- 
-@@ -185,6 +194,7 @@ struct fnic_msix_entry {
- 	char devname[IFNAMSIZ + 11];
- 	irqreturn_t (*isr)(int, void *);
- 	void *devid;
-+	int irq_num;
- };
- 
- enum fnic_state {
-@@ -194,12 +204,6 @@ enum fnic_state {
- 	FNIC_IN_ETH_TRANS_FC_MODE,
- };
- 
--#define FNIC_WQ_COPY_MAX 1
--#define FNIC_WQ_MAX 1
--#define FNIC_RQ_MAX 1
--#define FNIC_CQ_MAX (FNIC_WQ_COPY_MAX + FNIC_WQ_MAX + FNIC_RQ_MAX)
--#define FNIC_DFLT_IO_COMPLETIONS 256
--
- struct mempool;
- 
- enum fnic_evt {
-@@ -214,6 +218,13 @@ struct fnic_event {
- 	enum fnic_evt event;
- };
- 
-+struct fnic_cpy_wq {
-+	unsigned long hw_lock_flags;
-+	u16 active_ioreq_count;
-+	u16 ioreq_table_size;
-+	____cacheline_aligned struct fnic_io_req **io_req_table;
-+};
-+
- /* Per-instance private data structure */
- struct fnic {
- 	int fnic_num;
-@@ -283,6 +294,7 @@ struct fnic {
- 	mempool_t *io_sgl_pool[FNIC_SGL_NUM_CACHES];
- 	spinlock_t io_req_lock[FNIC_IO_LOCKS];	/* locks for scsi cmnds */
- 
-+	unsigned int cpy_wq_base;
- 	struct work_struct link_work;
- 	struct work_struct frame_work;
- 	struct sk_buff_head frame_queue;
-@@ -302,6 +314,8 @@ struct fnic {
- 
- 	/* copy work queue cache line section */
- 	____cacheline_aligned struct vnic_wq_copy hw_copy_wq[FNIC_WQ_COPY_MAX];
-+	____cacheline_aligned struct fnic_cpy_wq sw_copy_wq[FNIC_WQ_COPY_MAX];
-+
- 	/* completion queue cache line section */
- 	____cacheline_aligned struct vnic_cq cq[FNIC_CQ_MAX];
- 
+ 	len += scnprintf(debug->debug_buffer + len, buf_size - len,
+ 		  "\nCurrent Max IO time : %lld\n",
+ 		  (u64)atomic64_read(&stats->io_stats.current_max_io_time));
 -- 
 2.31.1
 
