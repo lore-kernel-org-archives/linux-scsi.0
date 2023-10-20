@@ -2,139 +2,97 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC5FBC001DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 17:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8278FC001DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 17:42:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377702AbjJTR3I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Oct 2023 13:29:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38694 "EHLO
+        id S1377932AbjJTRmA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Oct 2023 13:42:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229905AbjJTR3H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 13:29:07 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5650D7;
-        Fri, 20 Oct 2023 10:29:02 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6b5cac99cfdso987380b3a.2;
-        Fri, 20 Oct 2023 10:29:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697822942; x=1698427742; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NxB8vtzhJUprPLKYP1Ef80ZPGLv0Ykbm1oiksB9CNqo=;
-        b=i55LKdik00kaTmHcfGHC+4iW4DSxfbq08j46wehLxgakkMCgzwIJ58HQCDvkNJgei5
-         DIYBhbUc+YQcy1RegXCxPA4ENnnK9Hl1LgD1YwHZMb5j2Rf44yP43+Mk+L7OCVrbnY14
-         hI7hIryoBSqnyefEW21rAtb4kQHk+UmrrmrB1lDnA6RIO2ITcEw/3Z/JEs6z5vNmiToS
-         mxshMeD9cXDQg7co7SCaO3Ik/BFNB/tS+dloUqmJCJ3UnsbJLLPqznPK0XtOerZOWN0r
-         sw7uFoW6kQcxrfz9oT/Ewe2i2cRo1HayOWVZJR5N5pCtL1UwYR9qlJ6m3CgaEQF0DLQC
-         +ALw==
+        with ESMTP id S229909AbjJTRl7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 13:41:59 -0400
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38DF9A3;
+        Fri, 20 Oct 2023 10:41:58 -0700 (PDT)
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6b3c2607d9bso1010560b3a.1;
+        Fri, 20 Oct 2023 10:41:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697822942; x=1698427742;
+        d=1e100.net; s=20230601; t=1697823717; x=1698428517;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=NxB8vtzhJUprPLKYP1Ef80ZPGLv0Ykbm1oiksB9CNqo=;
-        b=bWTw+5CWXzWsp2uaC3cWG5PsnhE+HhgmCRgs/MHgEUOmfdWqtz7iV5lIbdMsnEi1MO
-         ZWMjUnLvB11aaSJdGcJmxNQ8Wg8gafxvZ2k72NcRf97XPKCd2gTsSvwlKEfSNdne5nJj
-         wLkAySpOgtIX4k0MJ//cebfCUMrP7zO0+IfTfyO5VdqaRUwKfDONDbCEKFZgVmjJWMD6
-         6zF4WiprY9o0+qbGxFKvWNk+egLIqqSvW8GT9/uvc5SEi6kN6ftVQRZFeUoRHOil1Iw5
-         DZy/ZSjYsgq40s04IU2jbzzR5cJdbeXtIFcXBNX8qJpUkIXaqKdR0z1ikiGcYr9ShjsD
-         8woA==
-X-Gm-Message-State: AOJu0YzFbt8NmJ/xV8hh8kr1wL6w5t2nAjOtfpaqOhciyV4pxByf3GBS
-        Sur+Fa/82LuAvES0op5U7pU5xOL5lKd8X/qE
-X-Google-Smtp-Source: AGHT+IEIO++MhDiW2A0cmoep73n/pDwBrHZus56cH9G+41Iy7TbfquNrCIf0vsHII6D2kTBcfJvZYQ==
-X-Received: by 2002:a05:6a20:4321:b0:14e:b4d5:782d with SMTP id h33-20020a056a20432100b0014eb4d5782dmr2601313pzk.2.1697822942105;
-        Fri, 20 Oct 2023 10:29:02 -0700 (PDT)
-Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
-        by smtp.gmail.com with ESMTPSA id u7-20020aa78487000000b00694fee1011asm1778804pfn.208.2023.10.20.10.28.57
+        bh=u/bmuWhpvn5f4m0roKqeGdetZ0Ya2dh5nl8fv3xeulA=;
+        b=i891JFQEMi2oPFDfGTnOTT+ppf4R60QG7CFiUrSHRIkycO5KUjIxdIpOK1oxgdpdHn
+         Ep0OrjDQwFDLMpz3RkMVVmRZk0TWhfL3Vpa18PBTHgQ82melMChHgLBeQ7CN6oNTUygW
+         db78EZXFbhJGjCNaHDMsz3TUC5RCQ85Gev4S3dY9oPPnRVDqzOoukd+vD3yw7r77EzXa
+         e+lZXjS4Xd4SfdZrJqIelwRxwvrZccAx9sPmnSso089XopEfiRV8DhFlEBvPxt7D4MRa
+         Rcsbx/0c+SZgjttjr44rI5ICT/PeprQOcoXKrEsugahE8xnq+cJbuXtjcIYxBJ9WZMs+
+         FOfg==
+X-Gm-Message-State: AOJu0YxbvvikGomRrgjpwCadtREqWliypTChqqUz07cur5knR1C0Zg3Q
+        AFqKWcwxfbj5qQ+IWkghT+U=
+X-Google-Smtp-Source: AGHT+IEij3r2ns5b+e53CAOyh/tJNiEhGDapxu+VLLVMsgPqlAiWtU730tuws36aDvZWL1ndfiX/4Q==
+X-Received: by 2002:a05:6a00:9398:b0:6b9:a3d3:772a with SMTP id ka24-20020a056a00939800b006b9a3d3772amr2424771pfb.14.1697823717556;
+        Fri, 20 Oct 2023 10:41:57 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:72ba:c99b:d191:901c? ([2620:15c:211:201:72ba:c99b:d191:901c])
+        by smtp.gmail.com with ESMTPSA id s66-20020a625e45000000b0068bc6a75848sm1873676pfb.156.2023.10.20.10.41.56
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 20 Oct 2023 10:29:01 -0700 (PDT)
-Message-ID: <d2cb55a9-6bc0-47a0-a812-418d187c2c00@gmail.com>
-Date:   Sat, 21 Oct 2023 01:28:50 +0800
+        Fri, 20 Oct 2023 10:41:57 -0700 (PDT)
+Message-ID: <8285a8c6-de4f-44dd-8bf2-7724f3a633ff@acm.org>
+Date:   Fri, 20 Oct 2023 10:41:55 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: scsi_debug: delete some bogus error checking
+Subject: Re: [bug report] blktests srp/002 hang
 Content-Language: en-US
-To:     Dan Carpenter <dan.carpenter@linaro.org>,
-        Wenchao Hao <haowenchao2@huawei.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <f96d6366-9271-4020-ab66-f75737a1e8bd@moroto.mountain>
-From:   Wenchao Hao <haowenchao22@gmail.com>
-In-Reply-To: <f96d6366-9271-4020-ab66-f75737a1e8bd@moroto.mountain>
-Content-Type: text/plain; charset=UTF-8
+To:     Bob Pearson <rpearsonhpe@gmail.com>,
+        "Pearson, Robert B" <robert.pearson2@hpe.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     "Daisuke Matsuda (Fujitsu)" <matsuda-daisuke@fujitsu.com>,
+        'Rain River' <rain.1986.08.12@gmail.com>,
+        Zhu Yanjun <yanjun.zhu@linux.dev>,
+        "leon@kernel.org" <leon@kernel.org>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        RDMA mailing list <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20231017185139.GA691768@ziepe.ca>
+ <c65f92b2-9821-4349-b1f5-7dc2a287946a@gmail.com>
+ <08a8d947-25b5-434c-9ba3-282d298b5bfd@acm.org>
+ <e3d91c4f-b124-4031-9f92-fcb61973a645@gmail.com>
+ <02cd10fd-fd4a-4ad7-9b1d-6d37b070aacf@acm.org>
+ <5c6e69b3-f83b-461d-a08a-37bfbd82f995@gmail.com>
+ <cad2fee4-9359-4614-b36b-c2599dc12358@acm.org>
+ <bf2705ff-716a-45b5-bcc4-8710ea0fb98e@gmail.com>
+ <65b871ef-dd93-4bfb-bae9-c147a87c64d0@acm.org>
+ <dbd9f019-693f-476c-aa4c-739746753d2b@gmail.com>
+ <20231018191735.GC691768@ziepe.ca>
+ <8e7dbd64-856d-47cc-9d2f-73aa101afa11@acm.org>
+ <fb5f6da5-5017-440d-9cb5-38796554366c@gmail.com>
+ <6f5ed2dd-3809-4805-8d31-de24f3f14486@acm.org>
+ <MW4PR84MB2307BE5EEC6DF51918FCCDF1BCD5A@MW4PR84MB2307.NAMPRD84.PROD.OUTLOOK.COM>
+ <7ea5a4b0-26b8-4521-a53b-99cbdb02c594@acm.org>
+ <eab9460f-d8ae-4479-ad42-ffdeb377c0d2@gmail.com>
+ <5f8a5236-2a31-44b4-ae54-b723b229a7ed@acm.org>
+ <0d8cfab5-f956-4758-858c-2cc16082e64b@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0d8cfab5-f956-4758-858c-2cc16082e64b@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/10/20 22:15, Dan Carpenter wrote:
-> Smatch complains that "dentry" is never initialized.  These days everyone
-> initializes all their stack variables to zero so this means that it will
-> trigger a warning every time this function is run.
-> 
-> Really debugfs functions are not supposed to be checked for errors so
-> this checking can just be deleted.
-> 
-> Fixes: f084fe52c640 ("scsi: scsi_debug: Add debugfs interface to fail target reset")
-> Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
-> ---
-> See my blog for more information on the history of debugfs error
-> checking:
-> 
-> https://staticthinking.wordpress.com/2023/07/24/debugfs-functions-are-not-supposed-to-be-checked/
-> ---
->  drivers/scsi/scsi_debug.c | 7 -------
->  1 file changed, 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 0a4e41d84df8..c0be9a53ac79 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -1127,7 +1127,6 @@ static const struct file_operations sdebug_target_reset_fail_fops = {
->  static int sdebug_target_alloc(struct scsi_target *starget)
->  {
->  	struct sdebug_target_info *targetip;
-> -	struct dentry *dentry;
->  
->  	targetip = kzalloc(sizeof(struct sdebug_target_info), GFP_KERNEL);
->  	if (!targetip)
-> @@ -1135,15 +1134,9 @@ static int sdebug_target_alloc(struct scsi_target *starget)
->  
->  	targetip->debugfs_entry = debugfs_create_dir(dev_name(&starget->dev),
->  				sdebug_debugfs_root);
-> -	if (IS_ERR_OR_NULL(targetip->debugfs_entry))
-> -		pr_info("%s: failed to create debugfs directory for target %s\n",
-> -			__func__, dev_name(&starget->dev));
->  
->  	debugfs_create_file("fail_reset", 0600, targetip->debugfs_entry, starget,
->  				&sdebug_target_reset_fail_fops);
-> -	if (IS_ERR_OR_NULL(dentry))
-> -		pr_info("%s: failed to create fail_reset file for target %s\n",
-> -			__func__, dev_name(&starget->dev));
->  
->  	starget->hostdata = targetip;
->  
+On 10/20/23 10:12, Bob Pearson wrote:
+> The results from yesterday are from Ubuntu 23.04 which has 
+> multipath-tools at version 0.8.8. Ubuntu 23.10 has version 0.9.4. 
+> Github has head of tree at 0.9.6. Do you recall which version made
+> it work when you were looking at this? It may be less risky for me
+> to upgrade to Ubuntu 23.10 than try and build multipath-tools from 
+> source.
 
+Hi Bob,
 
-Thank you for the fix, the check for debugfs_create_file() is added because 
-scsi_debug driver is often used to test abnormal situations, here just check
-and prompt a log, so maybe you should not remove it and fix the issue
-following changes:
+I haven't tested Ubuntu 23.10 yet but I think it's worth trying to
+upgrade to Ubuntu 23.10. I switched to openSUSE Tumbleweed for running
+blktests. Sorry but I do not remember the version number of the broken
+Ubuntu multipath-tools package.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 67922e2c4c19..d37437fa9eba 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1144,8 +1144,8 @@ static int sdebug_target_alloc(struct scsi_target *starget)
-                pr_info("%s: failed to create debugfs directory for target %s\n",
-                        __func__, dev_name(&starget->dev));
- 
--       debugfs_create_file("fail_reset", 0600, targetip->debugfs_entry, starget,
--                               &sdebug_target_reset_fail_fops);
-+       dentry = debugfs_create_file("fail_reset", 0600, targetip->debugfs_entry,
-+                                    starget, &sdebug_target_reset_fail_fops);
-        if (IS_ERR_OR_NULL(dentry))
-                pr_info("%s: failed to create fail_reset file for target %s\n",
-                        __func__, dev_name(&starget->dev));
+Bart.
