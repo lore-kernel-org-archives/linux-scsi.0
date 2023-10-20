@@ -2,109 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33D9BCDB474
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 06:46:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9647DCDB47E
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 06:50:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376317AbjJTGq1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Oct 2023 02:46:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53992 "EHLO
+        id S1376379AbjJTGus (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Oct 2023 02:50:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235622AbjJTGq0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 02:46:26 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2671598;
-        Thu, 19 Oct 2023 23:46:25 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39K5OJtP024300;
-        Fri, 20 Oct 2023 06:46:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : from : subject : to : cc : references : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=ehATourjSW2RB4zjc0CeHK506bFDAo3dFHe2K8h+9Es=;
- b=Gy9D9VWZeeLWc3gH97WqhufNxf0jfHgwYr4O+WuLGkM8ShWMXa248CPOgRsdjuNZAhpS
- o8T0ZGj5/gvinCTU/aQABT+btCbMF0PKkRnJydawG3S+s2xRnhzK744PQxS1Vq7Jtggt
- 0Uf50ttJ/JQ6cmNfEwvfe5YYENlqLJJNp3BBQFNe63G+LsKZx5gplTK6X1E/3aayq4/k
- mEOfYl0EAmiO941D8hZaTuh7JDl7KZA6wcJS0oBi5upaXOkS+dqh9sbQw5yR9/IKM66y
- cbOWCWiti0dz+yAQUDCMq24LLiWueSKFvrJhDEXM4WSjiE9q8KNJDhUzYk9pT9UxU1ab EQ== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tubwkh1sg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 20 Oct 2023 06:46:05 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39K6k43X006291
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 20 Oct 2023 06:46:04 GMT
-Received: from [10.216.18.86] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Thu, 19 Oct
- 2023 23:45:57 -0700
-Message-ID: <3bc7ed02-709a-4216-b077-82082f6729e5@quicinc.com>
-Date:   Fri, 20 Oct 2023 12:15:52 +0530
+        with ESMTP id S1376374AbjJTGuq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 02:50:46 -0400
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B2A9D55
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2023 23:50:45 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id ffacd0b85a97d-32d81864e3fso307951f8f.2
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Oct 2023 23:50:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1697784643; x=1698389443; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=tUWFtk2ND59A4SW0HP6A+busYNOlgufyXN1B/G4XDtA=;
+        b=Onr/U2J18s514Y+us3FZPav8+M5RSIfcETyyrS/muk7U4bloYBCrtptpqD970wCd9r
+         p6/0Q41Z+yxHE49+vhS8irnxyNvtNUiklS7UVWUsDvVFKB7fyoJzS1qovBXqxeLmW1GT
+         3+Zvv5DWVcYXlbRVcK+PGxFRNtXTwHiBgZf6PBWS44hSuplcf74sYProHfwbf2h4lNib
+         OqowF6Yui9Cmbtf5y3X7RlXyLEueif0MlXUEZs6pMujNDQyQgzz4HISZ8Tfx91Y2Yn83
+         rfTvllGlsaTQ3Rz1CwGfmwMMXWfEQN70Y+BPpaDHUX0q7x/x/C8BBdeHz62LbKlOcPgx
+         0btA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697784643; x=1698389443;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tUWFtk2ND59A4SW0HP6A+busYNOlgufyXN1B/G4XDtA=;
+        b=QYBp/kAWfFpKiUn5IRd/+kYLo3kvp/ivSCfmncnumKsNPTTa8EfSPE/HN6T5lZeWY0
+         N/8WzRo+jcrFQJbA3USzVCTxzxPWNwsl1bk2m3KE/AxdWJgdlQfQwhqfLOTdQ7Ugrn8Y
+         JyzaUeHVKK+6H3JFdhTf5p1IPn7+IwDKXCvzv2tvsUx+kNBOfyOK4zCYwpYL1Z5HwOp3
+         OE/PEl4ULNHSsWuULdHJq96z58NY8fW93LHG97kR4tLdy7A7LTu7lJLGoxpKswGtm1yj
+         kmlwG4/l5BGv0rJN1rERWnpqdqwBv3OJi69FUc07iduyJAKu/+enz8W1zWu4DEoXkK5N
+         7IgA==
+X-Gm-Message-State: AOJu0YxK8JudFjo+eQ0VjpReVeAg+mwcwKbeonVcFLqiBnqlA4CDthz+
+        HBWEbUNsU3Qk7w9lz/EK4bWOT3gN8dovmyi32cY=
+X-Google-Smtp-Source: AGHT+IHtu15emaNICwZ5IrrBDxMEyfGF2Enbr0cUK/OCqzAt3rwQ9/5ddPdZo73PCYsCe6CKshER0Q==
+X-Received: by 2002:adf:e80e:0:b0:32d:a476:527a with SMTP id o14-20020adfe80e000000b0032da476527amr592325wrm.50.1697784643512;
+        Thu, 19 Oct 2023 23:50:43 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id e16-20020adfe7d0000000b0032db8f7f378sm997906wrn.71.2023.10.19.23.50.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Oct 2023 23:50:43 -0700 (PDT)
+Date:   Fri, 20 Oct 2023 09:50:39 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     Su Hui <suhui@nfschina.com>
+Cc:     kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: snici: remove useless code in
+ snic_dr_clean_pending_req
+Message-ID: <8e1d29d7-092d-444e-bf89-23703b0bc278@kadam.mountain>
+References: <20231020023326.43898-1-suhui@nfschina.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From:   Maramaina Naresh <quic_mnaresh@quicinc.com>
-Subject: Re: [PATCH V1 0/4] Add per-cpu PM QoS support for QCOM UFS
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
-References: <1696952947-18062-1-git-send-email-quic_mnaresh@quicinc.com>
- <23c91551-9d94-4ec6-85eb-be1e2af20dc7@acm.org>
-Content-Language: en-US
-In-Reply-To: <23c91551-9d94-4ec6-85eb-be1e2af20dc7@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: UmNAVeBex0NdLO1uq4C4oY4VBxeS1BvJ
-X-Proofpoint-ORIG-GUID: UmNAVeBex0NdLO1uq4C4oY4VBxeS1BvJ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-20_05,2023-10-19_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
- adultscore=0 mlxlogscore=868 impostorscore=0 mlxscore=0 lowpriorityscore=0
- suspectscore=0 clxscore=1015 priorityscore=1501 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2310170001
- definitions=main-2310200057
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231020023326.43898-1-suhui@nfschina.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+On Fri, Oct 20, 2023 at 10:33:27AM +0800, Su Hui wrote:
+> return error code directly to save space and be more clear.
+> 
+> Signed-off-by: Su Hui <suhui@nfschina.com>
+> ---
 
-Thank you for reviewing the patch.  This is not specific to the Qualcomm 
-driver.
+Thanks!
 
-We will move this feature to core UFS.
+Reviewed-by: Dan Carpenter <dan.carpenter@linaro.org>
 
-Thanks,
+regards,
+dan carpenter
 
-Naresh.
-
-On 10/12/2023 2:26 AM, Bart Van Assche wrote:
-> On 10/10/23 08:49, Maramaina Naresh wrote:
->> Add per-cpu PM QoS support for ufs. This improves random io performance
->> by 20% for ufs.
->
-> What in this patch series (other than the DT-bindings) is specific to
-> the Qualcomm driver? If the answer is not much: please move this
-> functionality into the UFS driver core.
->
-> Thanks,
->
-> Bart.
->
