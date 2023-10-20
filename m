@@ -2,73 +2,156 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F346CC0032E
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 19:00:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C841FC001DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 19:06:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229646AbjJTTA1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Oct 2023 15:00:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34484 "EHLO
+        id S229839AbjJTTGp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Oct 2023 15:06:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjJTTA0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 15:00:26 -0400
-Received: from vps.thesusis.net (vps.thesusis.net [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2CA1114;
-        Fri, 20 Oct 2023 12:00:23 -0700 (PDT)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id C3506145852; Fri, 20 Oct 2023 15:00:22 -0400 (EDT)
-From:   Phillip Susi <phill@thesusis.net>
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-In-Reply-To: <26de72d5-02d3-489c-a789-b2b709ae073e@kernel.org>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org>
- <87v8b73lsh.fsf@vps.thesusis.net>
- <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
- <87r0luspvx.fsf@vps.thesusis.net>
- <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
- <87y1g1unwg.fsf@vps.thesusis.net>
- <26de72d5-02d3-489c-a789-b2b709ae073e@kernel.org>
-Date:   Fri, 20 Oct 2023 15:00:22 -0400
-Message-ID: <87edhpi0ft.fsf@vps.thesusis.net>
+        with ESMTP id S229816AbjJTTGo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 15:06:44 -0400
+Received: from rcdn-iport-3.cisco.com (rcdn-iport-3.cisco.com [173.37.86.74])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98D67D4C;
+        Fri, 20 Oct 2023 12:06:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=cisco.com; i=@cisco.com; l=4452; q=dns/txt; s=iport;
+  t=1697828802; x=1699038402;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=9l3dSsTvvZfV8JUBYN7y8Zw37fngkVNXc2D/Q3qS+g4=;
+  b=daPW+uIESRR7N3kDvpeDtr47pWq4N4B8YD/H0EJF9HzBSFtb/g1696Qj
+   L2uUez9vey8rNboQAM7QAPouGKu1XlcMRW2YrgJ6q1eS1W2RQshGF7Tcw
+   yHNRmrW5vcVZrBOZEmvtRfm/sNlB5W3eQXDkhGFF6cwTyrS+h6+Y4wE7r
+   c=;
+X-CSE-ConnectionGUID: GsJSq0vWRE+oyo7RfNDLcg==
+X-CSE-MsgGUID: 5qtjj0wzT8u/nxMHxjC7kg==
+X-IronPort-AV: E=Sophos;i="6.03,239,1694736000"; 
+   d="scan'208";a="127259641"
+Received: from rcdn-core-11.cisco.com ([173.37.93.147])
+  by rcdn-iport-3.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2023 19:06:41 +0000
+Received: from localhost.cisco.com ([10.193.101.253])
+        (authenticated bits=0)
+        by rcdn-core-11.cisco.com (8.15.2/8.15.2) with ESMTPSA id 39KJ6XPC026372
+        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Fri, 20 Oct 2023 19:06:40 GMT
+From:   Karan Tilak Kumar <kartilak@cisco.com>
+To:     sebaddel@cisco.com
+Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
+        mkai2@cisco.com, satishkh@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH 00/13] Introduce support for multiqueue (MQ) in 
+Date:   Fri, 20 Oct 2023 12:06:16 -0700
+Message-Id: <20231020190629.338623-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
+X-Outbound-Node: rcdn-core-11.cisco.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Damien Le Moal <dlemoal@kernel.org> writes:
+Hi Martin,
 
-> With the device links in place between port and scsi devices, we should be OK.
-> But still need to check that we do not need runtime_get/put calls added.
-> Ideally, we should have the chain:
->
-> scsi disk -> scsi target -> scsi host -> ata port
+This cover letter describes the feature: add support for multiqueue (MQ) 
+to fnic driver.
 
-It looks to me like there is an additional generic block device that
-sits on top and that is what actually has the idle timeout.  Or maybe
-that's the scsi disk, since it's name incldues the SCSI LUN, but in the
-structure, its called sdev_gendev.  But then there's also sdev_dev, and
-sdev_target.
+Background: The Virtual Interface Card (VIC) firmware exposes several 
+queues that can be configured for sending IOs and receiving IO 
+responses. Unified Computing System Manager (UCSM) and Intersight 
+Manager (IMM) allows users to configure the number of queues to be 
+used for IOs.
 
-> for runtime suspend, and the reverse for runtime resume. If there is a system
-> suspend/resume between runtime suspend/resume, the port should not be resumed if
-> it is runtime suspended.
+The number of IO queues to be used is stored in a configuration file 
+by the VIC firmware. The fNIC driver reads the configuration file and sets
+the number of queues to be used. Previously, the driver was hard-coded
+to use only one queue. With this set of changes, the fNIC driver will 
+configure itself to use multiple queues. This feature takes advantage of 
+the block multiqueue layer to parallelize IOs being sent out of the VIC
+card.
 
-I'm not sure about it.  The port has to be resumed so that we can
-attempt to revalidate the devices on it.  For disks that have spun up on
-their own, we should not leave then marked as runtime suspended, but
-really they are spinning.  I suppose we could put them to sleep, though
-I was leaning to just marking them as active, and leaving the runtime pm
-timer to put them to sleep later, which then could allow the port to
-suspend again.
+Here's a brief description of some of the salient patches:
+
+- vnic_scsi.h needs to be in sync with VIC firmware to be able to read 
+the number of queues from the firmware config file. A patch has been 
+created for this.
+- In an environment with many fnics (like we see in our customer 
+environments), it is hard to distinguish which fnic is printing logs. 
+Therefore, an fnic number has been included in the logs.
+- read the number of queues from the firmware config file.
+- include definitions in fnic.h to support multiqueue.
+- modify the interrupt service routines (ISRs) to read from the 
+correct registers. The numbers that are used here come from discussions 
+with the VIC firmware team.
+- track IO statistics for different queues.
+- remove usage of host_lock, and only use fnic_lock in the fnic driver.
+- use a hardware queue based spinlock to protect io_req.
+- replace the hard-coded zeroth queue with a hardware queue number. 
+This presents a bulk of the changes.
+- modify the definition of fnic_queuecommand to accept multiqueue tags.
+- improve log messages, and indicate fnic number and multiqueue tags for
+effective debugging.
+
+Even though the patches have been made into a series, some patches are 
+heavier than others.
+But, every effort has been made to keep the purpose of each patch as 
+a single-purpose, and to compile cleanly.
+
+This patchset has been tested as a whole. Therefore, the tested-by fields
+have been added only to the last two patches
+in the set. All the individual patches compile cleanly. However, 
+I've refrained from adding tested-by to
+most of the patches, so as to not mislead the reviewer/reader.
+
+A brief note on the unit tests:
+
+1. Increase number of queues to 64. Load driver. Run IOs via Medusa. 
+12+ hour run successful.
+2. Configure multipathing, and run link flaps on single link. 
+IOs drop briefly, but pick up as expected.
+3. Configure multipathing, and run link flaps on two links, with a 
+30 second delay in between. IOs drop briefly, but pick up as expected.
+
+Repeat the above tests with single queue. All tests were successful.
+
+Please consider this patch series for the next merge window.
+
+Thanks and regards,
+Karan
+
+Karan Tilak Kumar (13):
+  scsi: fnic: Modify definitions to sync with VIC firmware
+  scsi: fnic: Add and use fnic number
+  scsi: fnic: Add and improve log messages
+  scsi: fnic: Rename wq_copy to hw_copy_wq
+  scsi: fnic: Get copy workqueue count and interrupt mode from config
+  scsi: fnic: Refactor and redefine fnic.h for multiqueue
+  scsi: fnic: Modify ISRs to support multiqueue(MQ)
+  scsi: fnic: Define stats to track multiqueue (MQ) IOs
+  scsi: fnic: Remove usage of host_lock
+  scsi: fnic: Add support for multiqueue (MQ) in fnic_main.c
+  scsi: fnic: Use fnic_lock to protect fnic structures in queuecommand
+  scsi: fnic: Add support for multiqueue (MQ) in fnic driver
+  scsi: fnic: Improve logs and add support for multiqueue (MQ)
+
+ drivers/scsi/fnic/fnic.h         |  41 +-
+ drivers/scsi/fnic/fnic_debugfs.c |   2 +-
+ drivers/scsi/fnic/fnic_fcs.c     |  36 +-
+ drivers/scsi/fnic/fnic_io.h      |   2 +
+ drivers/scsi/fnic/fnic_isr.c     | 166 +++++--
+ drivers/scsi/fnic/fnic_main.c    | 156 ++++--
+ drivers/scsi/fnic/fnic_res.c     |  48 +-
+ drivers/scsi/fnic/fnic_scsi.c    | 797 ++++++++++++++++++-------------
+ drivers/scsi/fnic/fnic_stats.h   |   3 +
+ drivers/scsi/fnic/fnic_trace.c   |  11 +
+ drivers/scsi/fnic/vnic_dev.c     |   4 +
+ drivers/scsi/fnic/vnic_scsi.h    |  13 +-
+ 12 files changed, 835 insertions(+), 444 deletions(-)
+
+-- 
+2.31.1
 
