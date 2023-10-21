@@ -2,186 +2,768 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1821C0032E
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Oct 2023 21:23:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15ADDC0032E
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 Oct 2023 09:39:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231875AbjJTVXK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Oct 2023 17:23:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40286 "EHLO
+        id S229680AbjJUJjI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 Oct 2023 05:39:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231652AbjJTVXJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2023 17:23:09 -0400
-Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02EF8D70;
-        Fri, 20 Oct 2023 14:23:01 -0700 (PDT)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id CF9B6145963; Fri, 20 Oct 2023 17:23:00 -0400 (EDT)
-From:   Phillip Susi <phill@thesusis.net>
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-In-Reply-To: <e5a256fa-f1f6-4474-8e9e-b9f4bd6dced7@kernel.org>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org>
- <87v8b73lsh.fsf@vps.thesusis.net>
- <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
- <87r0luspvx.fsf@vps.thesusis.net>
- <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
- <87y1g1unwg.fsf@vps.thesusis.net>
- <e5a256fa-f1f6-4474-8e9e-b9f4bd6dced7@kernel.org>
-Date:   Fri, 20 Oct 2023 17:23:00 -0400
-Message-ID: <87lebxrnt7.fsf@vps.thesusis.net>
+        with ESMTP id S229472AbjJUJjH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Oct 2023 05:39:07 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 850C51A3
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Oct 2023 02:39:03 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0A6FFC433C8
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Oct 2023 09:39:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697881143;
+        bh=MJSWQg6dBA7nexNoHgwHKUYOu8O5aKdEyhNgOEqUpoc=;
+        h=From:To:Subject:Date:From;
+        b=Xk5RwnRyl+ww9ixD2ERlc5xsCP78DXwAwvlelGQeLq//C584VmE+JZK7SfhdKnEIg
+         Q/TCOCXZy+DDDSpsEcjMT9GABx7kO01OZ4Z4yPabd8PijRGXpiDuouEMdYLF77BtVk
+         +9cnZrHCbz4aYSJbIBGW1LXR0bTSFSm/QD+eCHXuqse8M37F037Qb2/d7RroyUxWL/
+         JgmbeKafCS634G6swmS/Ep/Zu7tW7UxaEGh7/74UIjhF+otuFjxkFzf4mymsj6IMQe
+         ouNNOMe9nQFxyGCR/aGTTwNtOoV3h7wlEM4NieXEOCCmHwXCQbHPgMDRMb+2Ybctyt
+         OArkFL+k2zOSA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id DC61FC53BCD; Sat, 21 Oct 2023 09:39:02 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 218030] New: Marvell 88SE6320 SAS controller (mvsas) cannot
+ survive ACPI S3 or ACPI S4
+Date:   Sat, 21 Oct 2023 09:39:02 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: nickosbarkas@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
+ op_sys bug_status bug_severity priority component assigned_to reporter
+ cf_regression
+Message-ID: <bug-218030-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Damien Le Moal <dlemoal@kernel.org> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D218030
 
-> On my system, I see:
->
-> cat /sys/class/ata_port/ata1/power/runtime_active_kids
-> 0
+            Bug ID: 218030
+           Summary: Marvell 88SE6320 SAS controller (mvsas) cannot survive
+                    ACPI S3 or ACPI S4
+           Product: IO/Storage
+           Version: 2.5
+          Hardware: All
+                OS: Linux
+            Status: NEW
+          Severity: normal
+          Priority: P3
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: nickosbarkas@gmail.com
+        Regression: No
 
-I see a 1 there, which is the single scsi_host.  The scsi_host has 2
-active kids; the two disks.  When I enabled runtime pm, only when the
-second disk was suspended did that allow the scsi_host to suspend, which
-then allowed the port to suspend.  Everything looked fine there so far.
-Then I tried:
+Hello guys,
 
-echo 1 > /sys/block/sdf/device/delete
+marvell sas driver fails to resume from suspend/hibernate properly and the
+disks disappear. The issue most likely affects all the chips supported by t=
+his
+driver.
 
-And the SCSI EH appears to have tried to wake up the disk, and hung in
-the process.
+For the first test, I booted the system with 2 ATA disks attached to the
+onboard SAS controller and did a suspend/resume cycle followed by a get hea=
+lth
+info cmd.
+For the second test, I booted the system with a SAS disk attached to the
+onboard SAS controller and did a hibernate/resume cycle followed by a gnome
+disks read cmd.
+The boot drive is not attached to the marvell sas controller.
 
-[  314.246282] sd 7:0:0:0: [sde] Synchronizing SCSI cache
-[  314.246445] sd 7:0:0:0: [sde] Stopping disk
+When I try to access the disks after resuming from suspend/hibernate the sy=
+stem
+becomes dead slow and the disks show no sign of life.
+The system cannot power off by itself at this stage, it needs a hard reset =
+or a
+power off by the psu switch.=20
 
-First disk suspends.
+The most important parts of the kernel log can be found below.
+I have provided mainly the mvsas messages and those that have to do with the
+suspend/resume.
 
-[  388.518295] sd 7:1:0:0: [sdf] Synchronizing SCSI cache
-[  388.518519] sd 7:1:0:0: [sdf] Stopping disk
+Suspend/resume with ata disks and then trying to get health info:
 
-Second disk suspends some time later.
+[    0.000000] Linux version 6.1.57-vanilla (turbo@dbn-003) (gcc (Debian
+12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #14 SMP
+PREEMPT_DYNAMIC Sat Oct 14 11:48:05 EEST 2023
+[    0.000000] Command line: BOOT_IMAGE=3D/vmlinuz-6.1.57-vanilla
+root=3D/dev/mapper/test-root ro quiet
 
-[  388.930428] ata8.00: Entering standby power mode
-[  389.330651] ata8.01: Entering standby power mode
+[    0.345919] pci 0000:06:00.0: [11ab:6440] type 00 class 0x010400
+[    0.345956] pci 0000:06:00.0: reg 0x18: [io  0xbc00-0xbc7f]
+[    0.345980] pci 0000:06:00.0: reg 0x20: [mem 0xfbaff000-0xfbafffff 64bit]
+[    0.345991] pci 0000:06:00.0: reg 0x30: [mem 0xfba80000-0xfbabffff pref]
+[    0.346048] pci 0000:06:00.0: supports D1
+[    0.346049] pci 0000:06:00.0: PME# supported from D0 D1 D3hot
+[    0.346078] pci 0000:06:00.0: 2.000 Gb/s available PCIe bandwidth, limit=
+ed
+by 2.5 GT/s PCIe x1 link at 0000:00:1c.4 (capable of 8.000 Gb/s with 2.5 GT=
+/s
+PCIe x4 link)
+[    0.346130] pci 0000:06:00.0: disabling ASPM on pre-1.1 PCIe device.  You
+can enable it with 'pcie_aspm=3Dforce'
 
-That allowed the port to suspend.  This is when I tried to detach the
-disk driver, which I think tried to resume the disk before detaching,
-which resumed the port.
+[    1.455071] mvsas 0000:06:00.0: mvsas: driver version 0.8.16
+[    1.455288] mvsas 0000:06:00.0: mvsas: PCI-E x1, Bandwidth Usage: 2.5 Gb=
+ps
 
-[  467.511878] ata8.15: SATA link down (SStatus 0 SControl 310)
-[  468.142726] ata8.15: failed to read PMP GSCR[0] (Emask=0x100)
-[  468.142741] ata8.15: PMP revalidation failed (errno=-5)
+[    4.295662] scsi host0: mvsas
+[    4.297425] sas: phy-0:0 added to port-0:0, phy_mask:0x1 (00000000000000=
+00)
+[    4.297575] sas: DOING DISCOVERY on port 0, pid:76
+[    4.297638] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+[    4.297683] sas: ata9: end_device-0:0: dev error handler
 
-I ran hdparm -C on the other disk at this point.  I just noticed that
-the ata8.15 that represents the PMP itself was NOT suspended along with
-the two drive links, and then maybe was not resumed before trying to
-revalidate the PMP?  And that's why it failed?
+[    4.458061] ata9.00: ATA-7: WDC WD740ADFD-00NLR4, 21.07QR4, max UDMA/133
+[    4.458068] ata9.00: 145226112 sectors, multi 0: LBA48 NCQ (depth 32)
+[    4.461181] ata9.00: configured for UDMA/133
+[    4.461304] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries=
+: 1
+[    4.471938] scsi 0:0:0:0: Direct-Access     ATA      WDC WD740ADFD-00 7Q=
+R4
+PQ: 0 ANSI: 5
+[    4.472713] sas: DONE DISCOVERY on port 0, pid:76, result:0
+[    4.472809] sas: phy-0:1 added to port-0:1, phy_mask:0x2 (01000000000000=
+00)
+[    4.472901] sas: DOING DISCOVERY on port 1, pid:76
+[    4.472959] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+[    4.472980] sas: ata9: end_device-0:0: dev error handler
+[    4.472996] sas: ata10: end_device-0:1: dev error handler
+[    4.601099] scsi 9:0:0:0: Direct-Access     Corsair  Flash Voyager    11=
+00
+PQ: 0 ANSI: 0 CCS
+[    4.640508] ata10.00: ATA-8: WDC WD5002ABYS-01B1B0, 02.03B03, max UDMA/1=
+33
+[    4.640515] ata10.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 32)
+[    4.641755] ata10.00: configured for UDMA/133
+[    4.641848] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries=
+: 1
+[    4.652603] scsi 0:0:1:0: Direct-Access     ATA      WDC WD5002ABYS-0 3B=
+03
+PQ: 0 ANSI: 5
+[    4.653764] sas: DONE DISCOVERY on port 1, pid:76, result:0
+[    4.654348] sd 0:0:0:0: [sdb] 145226112 512-byte logical blocks: (74.4
+GB/69.2 GiB)
+[    4.654398] sd 0:0:0:0: [sdb] Write Protect is off
+[    4.654403] sd 0:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[    4.654420] sd 0:0:1:0: [sdc] 976773168 512-byte logical blocks: (500 GB=
+/466
+GiB)
+[    4.654445] sd 0:0:1:0: [sdc] Write Protect is off
+[    4.654448] sd 0:0:1:0: [sdc] Mode Sense: 00 3a 00 00
+[    4.654454] sd 0:0:0:0: [sdb] Write cache: enabled, read cache: enabled,
+doesn't support DPO or FUA
+[    4.654484] sd 0:0:1:0: [sdc] Write cache: enabled, read cache: enabled,
+doesn't support DPO or FUA
+[    4.654506] sd 0:0:0:0: [sdb] Preferred minimum I/O size 512 bytes
+[    4.654582] sd 0:0:1:0: [sdc] Preferred minimum I/O size 512 bytes
+[    4.669569] sd 0:0:0:0: [sdb] Attached SCSI disk
+[    4.689648]  sdc: sdc1 sdc2 sdc3 sdc4 sdc5 sdc6 sdc7
+[    4.690245] sd 0:0:1:0: [sdc] Attached SCSI disk
 
-[  473.172792] ata8.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[  473.486860] ata8.00: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[  473.802139] ata8.01: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[   13.638335] sd 0:0:0:0: Attached scsi generic sg1 type 0
+[   13.638855] sd 0:0:1:0: Attached scsi generic sg2 type 0
 
-It seems like it ended up recovering here though?  And yet the scsi_eh
-remained hung, as did the hdparm -C:
+[   13.845300] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+[   13.845305] sas: ata9: end_device-0:0: cmd error handler
+[   13.853646] sas: ata9: end_device-0:0: dev error handler
+[   13.853649] sas: ata10: end_device-0:1: dev error handler
+[   13.853737] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries=
+: 1
+[   14.031723] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+[   14.031732] sas: ata10: end_device-0:1: cmd error handler
+[   14.031795] sas: ata9: end_device-0:0: dev error handler
+[   14.031813] sas: ata10: end_device-0:1: dev error handler
+[   14.031906] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries=
+: 1
 
-[  605.566814] INFO: task scsi_eh_7:173 blocked for more than 120 seconds.
-[  605.566829]       Not tainted 6.6.0-rc5+ #5
-[  605.566834] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  605.566838] task:scsi_eh_7       state:D stack:0     pid:173   ppid:2      flags:0x00004000
-[  605.566850] Call Trace:
-[  605.566853]  <TASK>
-[  605.566860]  __schedule+0x37c/0xb70
-[  605.566878]  schedule+0x61/0xd0
-[  605.566888]  rpm_resume+0x156/0x760
-[  605.566896]  ? sched_energy_aware_handler+0xb0/0xb0
-[  605.566907]  rpm_resume+0x255/0x760
-[  605.566915]  rpm_resume+0x255/0x760
-[  605.566923]  rpm_resume+0x255/0x760
-[  605.566931]  __pm_runtime_resume+0x4e/0x80
-[  605.566941]  ata_eh_recover+0x695/0x1060 [libata]
-[  605.567001]  ? ata_port_pm_suspend+0x50/0x50 [libata]
-[  605.567048]  ? ahci_do_softreset+0x2d0/0x2d0 [libahci]
-[  605.567067]  ? ata_host_release+0x80/0x80 [libata]
-[  605.567108]  ? ata_port_runtime_idle+0x110/0x110 [libata]
-[  605.567151]  ? sata_pmp_configure+0x72/0x210 [libata]
-[  605.567204]  sata_pmp_error_handler+0x357/0xac0 [libata]
-[  605.567249]  ? ata_port_pm_suspend+0x50/0x50 [libata]
-[  605.567291]  ? ahci_stop_engine+0xe0/0xe0 [libahci]
-[  605.567309]  ? ahci_do_hardreset+0x140/0x140 [libahci]
-[  605.567325]  ? ahci_do_softreset+0x2d0/0x2d0 [libahci]
-[  605.567344]  ? _raw_spin_unlock_irqrestore+0x27/0x40
-[  605.567355]  ahci_error_handler+0x36/0x60 [libahci]
-[  605.567373]  ata_scsi_port_error_handler+0x3de/0x8a0 [libata]
-[  605.567424]  ? scsi_eh_get_sense+0x250/0x250 [scsi_mod]
-[  605.567464]  ata_scsi_error+0x95/0xc0 [libata]
-[  605.567511]  scsi_error_handler+0xb9/0x580 [scsi_mod]
-[  605.567547]  ? preempt_count_add+0x6c/0xa0
-[  605.567556]  ? scsi_eh_get_sense+0x250/0x250 [scsi_mod]
-[  605.567587]  kthread+0xf2/0x120
-[  605.567594]  ? kthread_complete_and_exit+0x20/0x20
-[  605.567602]  ret_from_fork+0x31/0x50
-[  605.567611]  ? kthread_complete_and_exit+0x20/0x20
-[  605.567617]  ret_from_fork_asm+0x11/0x20
-[  605.567630]  </TASK>
-[  605.567663] INFO: task bash:1305 blocked for more than 120 seconds.
-[  605.567670]       Not tainted 6.6.0-rc5+ #5
-[  605.567675] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  605.567678] task:bash            state:D stack:0     pid:1305  ppid:1300   flags:0x00004004
-[  605.567687] Call Trace:
-[  605.567689]  <TASK>
-[  605.567693]  __schedule+0x37c/0xb70
-[  605.567703]  ? try_to_wake_up+0xb2/0x5e0
-[  605.567715]  schedule+0x61/0xd0
-[  605.567725]  ata_port_wait_eh+0x7c/0xf0 [libata]
-[  605.567776]  ? sched_energy_aware_handler+0xb0/0xb0
-[  605.567784]  ? ata_sas_port_resume+0x30/0x30 [libata]
-[  605.567829]  ata_port_runtime_resume+0x27/0x30 [libata]
-[  605.567870]  __rpm_callback+0x41/0x110
-[  605.567879]  ? ata_sas_port_resume+0x30/0x30 [libata]
-[  605.567917]  rpm_callback+0x35/0x70
-[  605.567925]  rpm_resume+0x513/0x760
-[  605.567931]  ? _raw_read_lock_irqsave+0x28/0x50
-[  605.567938]  ? _raw_read_unlock_irqrestore+0x2a/0x40
-[  605.567944]  ? ep_poll_callback+0x269/0x2d0
-[  605.567955]  rpm_resume+0x255/0x760
-[  605.567962]  ? __slab_free+0xc7/0x320
-[  605.567972]  rpm_resume+0x255/0x760
-[  605.567978]  ? kernfs_should_drain_open_files+0x38/0x50
-[  605.567989]  rpm_resume+0x255/0x760
-[  605.567994]  ? kernfs_should_drain_open_files+0x38/0x50
-[  605.568002]  ? kernfs_drain+0xec/0x120
-[  605.568010]  __pm_runtime_resume+0x4e/0x80
-[  605.568018]  device_release_driver_internal+0xa8/0x200
-[  605.568028]  bus_remove_device+0xc0/0x120
-[  605.568035]  device_del+0x158/0x3d0
-[  605.568045]  ? mutex_lock+0x12/0x30
-[  605.568051]  __scsi_remove_device+0x12b/0x180 [scsi_mod]
-[  605.568095]  sdev_store_delete+0x6a/0xd0 [scsi_mod]
-[  605.568132]  kernfs_fop_write_iter+0x129/0x1c0
-[  605.568141]  vfs_write+0x2d3/0x3f0
-[  605.568155]  ksys_write+0x63/0xe0
-[  605.568165]  do_syscall_64+0x5a/0xb0
-[  605.568173]  ? syscall_exit_to_user_mode+0x2b/0x40
-[  605.568178]  ? do_syscall_64+0x67/0xb0
-[  605.568184]  entry_SYSCALL_64_after_hwframe+0x46/0xb0
-[  605.568193] RIP: 0033:0x7f0c1e9b6473
-[  605.568200] RSP: 002b:00007ffe01b0bd28 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-[  605.568208] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f0c1e9b6473
-[  605.568213] RDX: 0000000000000002 RSI: 000056115e4b86f0 RDI: 0000000000000001
-[  605.568216] RBP: 000056115e4b86f0 R08: 000000000000000a R09: 00007f0c1ea5a0c0
-[  605.568220] R10: 00007f0c1ea59fc0 R11: 0000000000000246 R12: 0000000000000002
-[  605.568224] R13: 00007f0c1ea9a6a0 R14: 0000000000000002 R15: 00007f0c1ea95880
-[  605.568232]  </TASK>
+[   15.007725] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+[   15.007731] sas: ata10: end_device-0:1: cmd error handler
+[   15.007752] sas: ata9: end_device-0:0: dev error handler
+[   15.007762] sas: ata10: end_device-0:1: dev error handler
+[   15.007777] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries=
+: 1
+
+[  252.047782] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+[  252.047790] sas: ata9: end_device-0:0: cmd error handler
+[  252.047868] sas: ata9: end_device-0:0: dev error handler
+[  252.047892] sas: ata10: end_device-0:1: dev error handler
+[  252.047938] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries=
+: 1
+[  252.287724] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+[  252.287731] sas: ata9: end_device-0:0: cmd error handler
+[  252.287791] sas: ata9: end_device-0:0: dev error handler
+[  252.287812] sas: ata10: end_device-0:1: dev error handler
+[  252.287846] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries=
+: 1
+
+[  437.249448] PM: suspend entry (deep)
+[  437.255308] Filesystems sync: 0.005 seconds
+[  437.255570] Freezing user space processes
+[  437.257093] Freezing user space processes completed (elapsed 0.001 secon=
+ds)
+[  437.257097] OOM killer disabled.
+[  437.257098] Freezing remaining freezable tasks
+[  437.258226] Freezing remaining freezable tasks completed (elapsed 0.001
+seconds)
+[  437.258281] printk: Suspending console(s) (use no_console_suspend to deb=
+ug)
+[  437.291778] sd 0:0:0:0: [sdb] Synchronizing SCSI cache
+[  437.291825] sd 0:0:1:0: [sdc] Synchronizing SCSI cache
+[  437.292083] sd 0:0:0:0: [sdb] Stopping disk
+[  437.292083] sd 0:0:1:0: [sdc] Stopping disk
+[  438.363660] sd 1:0:0:0: [sda] Synchronizing SCSI cache
+[  438.363760] sd 1:0:0:0: [sda] Stopping disk
+[  440.904334] ACPI: PM: Preparing to enter system sleep state S3
+[  440.904747] ACPI: PM: Saving platform NVS memory
+[  440.905096] Disabling non-boot CPUs ...
+[  440.907196] smpboot: CPU 1 is now offline
+[  440.909798] smpboot: CPU 2 is now offline
+[  440.912577] smpboot: CPU 3 is now offline
+[  440.914657] smpboot: CPU 4 is now offline
+[  440.916752] smpboot: CPU 5 is now offline
+[  440.918814] smpboot: CPU 6 is now offline
+[  440.921256] smpboot: CPU 7 is now offline
+[  440.923173] smpboot: CPU 8 is now offline
+[  440.925090] smpboot: CPU 9 is now offline
+[  440.926963] smpboot: CPU 10 is now offline
+[  440.928796] smpboot: CPU 11 is now offline
+[  440.930412] ACPI: PM: Low-level resume complete
+[  440.930434] ACPI: PM: Restoring platform NVS memory
+[  440.930850] Enabling non-boot CPUs ...
+[  440.930895] x86: Booting SMP configuration:
+[  440.930896] smpboot: Booting Node 0 Processor 1 APIC 0x2
+[  440.934817] CPU1 is up
+[  440.934853] smpboot: Booting Node 0 Processor 2 APIC 0x4
+[  440.937922] CPU2 is up
+[  440.937956] smpboot: Booting Node 0 Processor 3 APIC 0x10
+[  440.941085] CPU3 is up
+[  440.941119] smpboot: Booting Node 0 Processor 4 APIC 0x12
+[  440.944217] CPU4 is up
+[  440.944249] smpboot: Booting Node 0 Processor 5 APIC 0x14
+[  440.947416] CPU5 is up
+[  440.947450] smpboot: Booting Node 0 Processor 6 APIC 0x1
+[  440.950671] CPU6 is up
+[  440.950702] smpboot: Booting Node 0 Processor 7 APIC 0x3
+[  440.953929] CPU7 is up
+[  440.953959] smpboot: Booting Node 0 Processor 8 APIC 0x5
+[  440.957246] CPU8 is up
+[  440.957289] smpboot: Booting Node 0 Processor 9 APIC 0x11
+[  440.960652] CPU9 is up
+[  440.960680] smpboot: Booting Node 0 Processor 10 APIC 0x13
+[  440.964037] CPU10 is up
+[  440.964065] smpboot: Booting Node 0 Processor 11 APIC 0x15
+[  440.967511] CPU11 is up
+[  440.980236] ACPI: PM: Waking up from system sleep state S3
+[  440.982206] usb usb1: root hub lost power or was reset
+[  440.982228] usb usb2: root hub lost power or was reset
+[  440.982256] usb usb3: root hub lost power or was reset
+[  440.982289] usb usb5: root hub lost power or was reset
+[  440.982356] usb usb7: root hub lost power or was reset
+[  440.982397] usb usb8: root hub lost power or was reset
+[  441.361544] OOM killer enabled.
+[  441.361546] Restarting tasks ...=20
+[  441.362985] done.
+[  441.362992] random: crng reseeded on system resumption
+[  441.362996] PM: suspend exit
+[  441.521348] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[  441.535235] ata1.00: configured for UDMA/133
+[  441.535456] ata1.00: Enabling discard_zeroes_data
+[  441.561306] firewire_core 0000:0b:04.0: rediscovered device fw0
+[  441.650468] RTL8211B Gigabit Ethernet r8169-0-800:00: attached PHY driver
+(mii_bus:phy_addr=3Dr8169-0-800:00, irq=3DMAC)
+[  441.715440] r8169 0000:08:00.0 enp8s0: Link is Down
+[  441.716682] RTL8211B Gigabit Ethernet r8169-0-900:00: attached PHY driver
+(mii_bus:phy_addr=3Dr8169-0-900:00, irq=3DMAC)
+[  441.780180] r8169 0000:09:00.0 enp9s0: Link is Down
+[  472.289330] usb 6-1: reset high-speed USB device number 2 using ehci-pci
+
+[  586.861381] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+[  586.861389] sas: trying to find task 0x00000000efe4484d
+[  586.861393] sas: sas_scsi_find_task: aborting task 0x00000000efe4484d
+[  586.861397] sas: sas_scsi_find_task: task 0x00000000efe4484d is aborted
+[  586.861399] sas: sas_eh_handle_sas_errors: task 0x00000000efe4484d is
+aborted
+[  586.861403] sas: ata10: end_device-0:1: cmd error handler
+[  586.861470] sas: ata9: end_device-0:0: dev error handler
+[  586.861486] sas: ata10: end_device-0:1: dev error handler
+[  589.081341] drivers/scsi/mvsas/mv_sas.c 1304:mvs_I_T_nexus_reset for
+device[1]:rc=3D 0
+[  610.481270] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
+[  610.481280] rcu:     11-...0: (0 ticks this GP)
+idle=3D4f84/1/0x4000000000000000 softirq=3D19873/19873 fqs=3D1159
+[  610.481292]  (detected by 5, t=3D5252 jiffies, g=3D53581, q=3D31630 ncpu=
+s=3D12)
+[  610.481299] Sending NMI from CPU 5 to CPUs 11:
+[  610.481309] NMI backtrace for cpu 11
+[  610.481312] CPU: 11 PID: 3152 Comm: kworker/u32:59 Tainted: G          I=
+=20=20=20=20
+   6.1.57-vanilla #14
+[  610.481318] Hardware name: System manufacturer System Product Name/P6T WS
+PRO, BIOS 1205    09/24/2010
+[  610.481321] Workqueue: events_unbound async_run_entry_fn
+[  610.481329] RIP: 0010:mvs_int_rx+0x81/0x150 [mvsas]
+[  610.481346] Code: 00 00 44 39 75 70 74 47 48 8b 45 60 45 89 e6 41 81 e6 =
+ff
+03 00 00 41 8d 56 01 8b 1c 90 49 89 d4 41 89 df 41 81 e7 00 00 08 00 <f7> c=
+3 00
+00 01 00 74 58 31 d2 89 de 48 89 ef e8 0b f9 ff ff 45 85
+[  610.481350] RSP: 0018:ffffb61f06acbb60 EFLAGS: 00000046
+[  610.481354] RAX: ffff9a7cc2658000 RBX: 0000000000010000 RCX:
+0000000000000000
+[  610.481358] RDX: 000000000000026e RSI: 0000000000010000 RDI:
+ffff9a7ce2660000
+[  610.481361] RBP: ffff9a7ce2660000 R08: ffff9a7ce2660f00 R09:
+ffff9a7ce2660000
+[  610.481364] R10: ffff9a7ce26600c8 R11: ffffffff884d4300 R12:
+000000000000026e
+[  610.481367] R13: 0000000000000000 R14: 000000000000026d R15:
+0000000000000000
+[  610.481371] FS:  0000000000000000(0000) GS:ffff9a7df7cc0000(0000)
+knlGS:0000000000000000
+[  610.481375] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  610.481378] CR2: 0000563633425300 CR3: 0000000077210006 CR4:
+00000000000206e0
+[  610.481382] Call Trace:
+[  610.481385]  <NMI>
+[  610.481389]  ? nmi_cpu_backtrace.cold+0x1b/0x76
+[  610.481398]  ? nmi_cpu_backtrace_handler+0xd/0x20
+[  610.481403]  ? nmi_handle+0x5d/0x120
+[  610.481410]  ? mvs_int_rx+0x81/0x150 [mvsas]
+[  610.481423]  ? default_do_nmi+0x69/0x170
+[  610.481428]  ? exc_nmi+0x13c/0x170
+[  610.481432]  ? end_repeat_nmi+0x16/0x67
+[  610.481443]  ? mvs_int_rx+0x81/0x150 [mvsas]
+[  610.481457]  ? mvs_int_rx+0x81/0x150 [mvsas]
+[  610.481470]  ? mvs_int_rx+0x81/0x150 [mvsas]
+[  610.481483]  </NMI>
+[  610.481484]  <TASK>
+[  610.481487]  mvs_do_release_task+0x3f/0x90 [mvsas]
+[  610.481501]  mvs_release_task+0x13e/0x1a0 [mvsas]
+[  610.481516]  mvs_I_T_nexus_reset+0xb2/0xd0 [mvsas]
+[  610.481530]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  610.481552]  sas_ata_hard_reset+0x48/0x80 [libsas]
+[  610.481575]  ata_eh_reset+0x2e5/0x1090 [libata]
+[  610.481631]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  610.481652]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  610.481676]  ata_eh_recover+0x2e6/0xe00 [libata]
+[  610.481728]  ? __wake_up_klogd.part.0+0x56/0x80
+[  610.481735]  ? vprintk_emit+0x207/0x290
+[  610.481739]  ? smp_ata_check_ready_type+0xb0/0xb0 [libsas]
+[  610.481760]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  610.481783]  ? smp_ata_check_ready_type+0xb0/0xb0 [libsas]
+[  610.481804]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  610.481824]  ata_do_eh+0x75/0xf0 [libata]
+[  610.481876]  ? del_timer_sync+0x6f/0xb0
+[  610.481884]  ata_scsi_port_error_handler+0x3a8/0x800 [libata]
+[  610.481938]  async_sas_ata_eh+0x44/0x7f [libsas]
+[  610.481960]  async_run_entry_fn+0x30/0x130
+[  610.481966]  process_one_work+0x1c7/0x380
+[  610.481974]  worker_thread+0x4d/0x380
+[  610.481981]  ? rescuer_thread+0x3a0/0x3a0
+[  610.481987]  kthread+0xe9/0x110
+[  610.481992]  ? kthread_complete_and_exit+0x20/0x20
+[  610.481999]  ret_from_fork+0x22/0x30
+[  610.482009]  </TASK>
+[  665.286198] NMI watchdog: Watchdog detected hard LOCKUP on cpu 11
+[  665.286200] Modules linked in: nls_ascii nls_cp437 vfat fat nvme_fabrics
+nvme_core snd_seq_dummy snd_hrtimer snd_seq snd_seq_device rfkill qrtr
+cpufreq_powersave cpufreq_ondemand cpufreq_conservative cpufreq_userspace
+binfmt_misc snd_hda_codec_analog snd_hda_codec_generic ledtrig_audio
+intel_powerclamp snd_hda_intel kvm_intel snd_intel_dspcfg snd_intel_sdw_acpi
+kvm snd_hda_codec snd_hda_core irqbypass snd_hwdep intel_cstate iTCO_wdt
+snd_pcm intel_pmc_bxt iTCO_vendor_support snd_timer intel_uncore serio_raw
+pcspkr watchdog snd soundcore i7core_edac i5500_temp sg asus_atk0110 evdev
+coretemp acpi_cpufreq hwmon_vid msr parport_pc ppdev lp parport fuse efi_ps=
+tore
+loop configfs ip_tables x_tables autofs4 ext4 crc32c_generic crc16 mbcache =
+jbd2
+dm_crypt dm_mod hid_logitech_hidpp hid_logitech_dj sd_mod t10_pi
+crc64_rocksoft_generic crc64_rocksoft hid_generic crc_t10dif uas ata_generic
+crct10dif_generic usbhid hid usb_storage crc64 pata_marvell nouveau
+crct10dif_pclmul crct10dif_common
+[  665.286238]  crc32_pclmul crc32c_intel ghash_clmulni_intel video
+sha512_ssse3 i2c_algo_bit sha512_generic drm_display_helper cec rc_core
+drm_ttm_helper mvsas ttm libsas ahci scsi_transport_sas drm_kms_helper r8169
+libahci ehci_pci uhci_hcd realtek firewire_ohci ehci_hcd mxm_wmi aesni_intel
+libata crypto_simd lpc_ich cryptd psmouse drm i2c_i801 mdio_devres scsi_mod
+usbcore i2c_smbus firewire_core libphy crc_itu_t scsi_common usb_common wmi
+button
+[  665.286257] CPU: 11 PID: 3152 Comm: kworker/u32:59 Tainted: G          I=
+=20=20=20=20
+   6.1.57-vanilla #14
+[  665.286259] Hardware name: System manufacturer System Product Name/P6T WS
+PRO, BIOS 1205    09/24/2010
+[  665.286260] Workqueue: events_unbound async_run_entry_fn
+[  665.286265] RIP: 0010:mvs_slot_complete+0x0/0x540 [mvsas]
+[  665.286273] Code: 3c 05 00 00 48 c7 c6 28 36 8f c0 48 c7 c7 ac 36 8f c0 =
+e8
+31 e4 af c6 89 d8 5b c3 cc cc cc cc 66 66 2e 0f 1f 84 00 00 00 00 00 <0f> 1=
+f 44
+00 00 41 57 41 56 41 55 41 89 f5 41 81 e5 ff 0f 00 00 41
+[  665.286275] RSP: 0018:ffffb61f06acbb58 EFLAGS: 00000046
+[  665.286276] RAX: ffff9a7cc2658000 RBX: 0000000000010006 RCX:
+0000000000000000
+[  665.286277] RDX: 0000000000000000 RSI: 0000000000010006 RDI:
+ffff9a7ce2660000
+[  665.286278] RBP: ffff9a7ce2660000 R08: ffff9a7ce2660f00 R09:
+ffff9a7ce2660160
+[  665.286279] R10: ffff9a7ce26600c8 R11: ffffffff884d4300 R12:
+00000000000001a4
+[  665.286280] R13: 0000000000000000 R14: 00000000000001a3 R15:
+0000000000000000
+[  665.286282] FS:  0000000000000000(0000) GS:ffff9a7df7cc0000(0000)
+knlGS:0000000000000000
+[  665.286283] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  665.286284] CR2: 0000563633425300 CR3: 0000000077210006 CR4:
+00000000000206e0
+[  665.286286] Call Trace:
+[  665.286288]  <NMI>
+[  665.286290]  ? watchdog_overflow_callback.cold+0x20/0x7e
+[  665.286295]  ? __perf_event_overflow+0xe5/0x2a0
+[  665.286299]  ? handle_pmi_common+0x185/0x3a0
+[  665.286306]  ? intel_pmu_handle_irq+0x124/0x480
+[  665.286309]  ? perf_event_nmi_handler+0x26/0x50
+[  665.286312]  ? mvs_query_task+0x60/0x60 [mvsas]
+[  665.286317]  ? nmi_handle+0x5d/0x120
+[  665.286320]  ? mvs_query_task+0x60/0x60 [mvsas]
+[  665.286324]  ? default_do_nmi+0x69/0x170
+[  665.286326]  ? exc_nmi+0x13c/0x170
+[  665.286328]  ? end_repeat_nmi+0x16/0x67
+[  665.286332]  ? mvs_query_task+0x60/0x60 [mvsas]
+[  665.286336]  ? mvs_query_task+0x60/0x60 [mvsas]
+[  665.286341]  ? mvs_query_task+0x60/0x60 [mvsas]
+[  665.286346]  </NMI>
+[  665.286346]  <TASK>
+[  665.286347]  mvs_int_rx+0x95/0x150 [mvsas]
+[  665.286352]  mvs_do_release_task+0x3f/0x90 [mvsas]
+[  665.286357]  mvs_release_task+0x13e/0x1a0 [mvsas]
+[  665.286362]  mvs_I_T_nexus_reset+0xb2/0xd0 [mvsas]
+[  665.286368]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  665.286377]  sas_ata_hard_reset+0x48/0x80 [libsas]
+[  665.286386]  ata_eh_reset+0x2e5/0x1090 [libata]
+[  665.286413]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  665.286421]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  665.286429]  ata_eh_recover+0x2e6/0xe00 [libata]
+[  665.286448]  ? __wake_up_klogd.part.0+0x56/0x80
+[  665.286452]  ? vprintk_emit+0x207/0x290
+[  665.286454]  ? smp_ata_check_ready_type+0xb0/0xb0 [libsas]
+[  665.286464]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  665.286474]  ? smp_ata_check_ready_type+0xb0/0xb0 [libsas]
+[  665.286484]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  665.286495]  ata_do_eh+0x75/0xf0 [libata]
+[  665.286516]  ? del_timer_sync+0x6f/0xb0
+[  665.286519]  ata_scsi_port_error_handler+0x3a8/0x800 [libata]
+[  665.286538]  async_sas_ata_eh+0x44/0x7f [libsas]
+[  665.286546]  async_run_entry_fn+0x30/0x130
+[  665.286549]  process_one_work+0x1c7/0x380
+[  665.286553]  worker_thread+0x4d/0x380
+[  665.286555]  ? rescuer_thread+0x3a0/0x3a0
+[  665.286557]  kthread+0xe9/0x110
+[  665.286559]  ? kthread_complete_and_exit+0x20/0x20
+[  665.286562]  ret_from_fork+0x22/0x30
+[  665.286565]  </TASK>
+[  673.501273] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
+[  673.501280] rcu:     11-...0: (0 ticks this GP)
+idle=3D4f84/1/0x4000000000000000 softirq=3D19873/19873 fqs=3D4311
+[  673.501286]  (detected by 0, t=3D21007 jiffies, g=3D53581, q=3D120696 nc=
+pus=3D12)
+[  673.501289] Sending NMI from CPU 0 to CPUs 11:
+[  673.501296] NMI backtrace for cpu 11
+[  673.501298] CPU: 11 PID: 3152 Comm: kworker/u32:59 Tainted: G          I=
+=20=20=20=20
+   6.1.57-vanilla #14
+[  673.501301] Hardware name: System manufacturer System Product Name/P6T WS
+PRO, BIOS 1205    09/24/2010
+[  673.501302] Workqueue: events_unbound async_run_entry_fn
+[  673.501306] RIP: 0010:mvs_slot_complete+0x28/0x540 [mvsas]
+[  673.501315] Code: 00 00 0f 1f 44 00 00 41 57 41 56 41 55 41 89 f5 41 81 =
+e5
+ff 0f 00 00 41 54 45 89 ec 55 4b 8d 04 a4 53 49 8d 04 44 48 c1 e0 03 <4c> 8=
+d 0c
+07 48 83 ec 20 49 8b 99 08 fd 00 00 89 54 24 08 4c 89 0c
+[  673.501316] RSP: 0018:ffffb61f06acbb28 EFLAGS: 00000046
+[  673.501318] RAX: 0000000000000000 RBX: 0000000000010000 RCX:
+0000000000000000
+[  673.501319] RDX: 0000000000000000 RSI: 0000000000010000 RDI:
+ffff9a7ce2660000
+[  673.501320] RBP: ffff9a7ce2660000 R08: ffff9a7ce2660f00 R09:
+ffff9a7ce2660058
+[  673.501321] R10: ffff9a7ce26600c8 R11: ffffffff884d4300 R12:
+0000000000000000
+[  673.501322] R13: 0000000000000000 R14: 0000000000000149 R15:
+0000000000000000
+[  673.501323] FS:  0000000000000000(0000) GS:ffff9a7df7cc0000(0000)
+knlGS:0000000000000000
+[  673.501324] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  673.501325] CR2: 0000563633425300 CR3: 0000000077210006 CR4:
+00000000000206e0
+[  673.501327] Call Trace:
+[  673.501329]  <NMI>
+[  673.501331]  ? nmi_cpu_backtrace.cold+0x1b/0x76
+[  673.501335]  ? nmi_cpu_backtrace_handler+0xd/0x20
+[  673.501337]  ? nmi_handle+0x5d/0x120
+[  673.501340]  ? mvs_slot_complete+0x28/0x540 [mvsas]
+[  673.501345]  ? default_do_nmi+0x69/0x170
+[  673.501347]  ? exc_nmi+0x13c/0x170
+[  673.501348]  ? end_repeat_nmi+0x16/0x67
+[  673.501353]  ? mvs_slot_complete+0x28/0x540 [mvsas]
+[  673.501358]  ? mvs_slot_complete+0x28/0x540 [mvsas]
+[  673.501362]  ? mvs_slot_complete+0x28/0x540 [mvsas]
+[  673.501367]  </NMI>
+[  673.501368]  <TASK>
+[  673.501369]  mvs_int_rx+0x95/0x150 [mvsas]
+[  673.501374]  mvs_do_release_task+0x3f/0x90 [mvsas]
+[  673.501379]  mvs_release_task+0x13e/0x1a0 [mvsas]
+[  673.501384]  mvs_I_T_nexus_reset+0xb2/0xd0 [mvsas]
+[  673.501389]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  673.501399]  sas_ata_hard_reset+0x48/0x80 [libsas]
+[  673.501407]  ata_eh_reset+0x2e5/0x1090 [libata]
+[  673.501433]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  673.501440]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  673.501449]  ata_eh_recover+0x2e6/0xe00 [libata]
+[  673.501467]  ? __wake_up_klogd.part.0+0x56/0x80
+[  673.501470]  ? vprintk_emit+0x207/0x290
+[  673.501471]  ? smp_ata_check_ready_type+0xb0/0xb0 [libsas]
+[  673.501479]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  673.501487]  ? smp_ata_check_ready_type+0xb0/0xb0 [libsas]
+[  673.501495]  ? sas_ata_wait_after_reset+0x80/0x80 [libsas]
+[  673.501502]  ata_do_eh+0x75/0xf0 [libata]
+[  673.501521]  ? del_timer_sync+0x6f/0xb0
+[  673.501523]  ata_scsi_port_error_handler+0x3a8/0x800 [libata]
+[  673.501542]  async_sas_ata_eh+0x44/0x7f [libsas]
+[  673.501551]  async_run_entry_fn+0x30/0x130
+[  673.501553]  process_one_work+0x1c7/0x380
+[  673.501556]  worker_thread+0x4d/0x380
+[  673.501558]  ? rescuer_thread+0x3a0/0x3a0
+[  673.501561]  kthread+0xe9/0x110
+[  673.501563]  ? kthread_complete_and_exit+0x20/0x20
+[  673.501565]  ret_from_fork+0x22/0x30
+[  673.501569]  </TASK>
+
+
+
+Hibernate/resume with a sas disk and then running gnome disks for a couple =
+of
+reads:
+
+[    0.000000] Linux version 6.1.57-vanilla (turbo@dbn-003) (gcc (Debian
+12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #14 SMP
+PREEMPT_DYNAMIC Sat Oct 14 11:48:05 EEST 2023
+[    0.000000] Command line: BOOT_IMAGE=3D/vmlinuz-6.1.57-vanilla
+root=3D/dev/mapper/test-root ro quiet
+
+    4.191667] scsi host0: mvsas
+[    4.202932] sas: phy-0:1 added to port-0:0, phy_mask:0x2 (2bad2bad2bad2b=
+ad)
+[    4.202935] drivers/scsi/mvsas/mv_sas.c 1099:set wide port phy map 2
+[    4.232802] sas: DOING DISCOVERY on port 0, pid:78
+[    4.234233] scsi 0:0:0:0: Direct-Access     WD       WD3001HKHG-02VUC SR=
+07
+PQ: 0 ANSI: 6
+[    4.234723] scsi 0:0:0:0: Power-on or device reset occurred
+[    4.243180] sas: DONE DISCOVERY on port 0, pid:78, result:0
+[    4.243958] sd 0:0:0:0: [sdb] 586072368 512-byte logical blocks: (300 GB=
+/279
+GiB)
+[    4.251366] sd 0:0:0:0: [sdb] Write Protect is off
+[    4.251372] sd 0:0:0:0: [sdb] Mode Sense: df 00 10 08
+[    4.256088] sd 0:0:0:0: [sdb] Write cache: disabled, read cache: enabled,
+supports DPO and FUA
+
+[  331.841349] PM: hibernation: hibernation entry
+[  331.846068] Filesystems sync: 0.004 seconds
+[  331.846251] Freezing user space processes
+[  331.847662] Freezing user space processes completed (elapsed 0.001 secon=
+ds)
+[  331.847665] OOM killer disabled.
+[  331.847752] PM: hibernation: Marking nosave pages: [mem
+0x00000000-0x00000fff]
+[  331.847754] PM: hibernation: Marking nosave pages: [mem
+0x0009c000-0x000fffff]
+[  331.847757] PM: hibernation: Marking nosave pages: [mem
+0xbf780000-0xffffffff]
+[  331.848818] PM: hibernation: Basic memory bitmaps created
+[  331.848868] PM: hibernation: Preallocating image memory
+[  332.320952] PM: hibernation: Allocated 468298 pages for snapshot
+[  332.320958] PM: hibernation: Allocated 1873192 kbytes in 0.47 seconds
+(3985.51 MB/s)
+[  332.320961] Freezing remaining freezable tasks
+[  332.322205] Freezing remaining freezable tasks completed (elapsed 0.001
+seconds)
+[  332.322378] printk: Suspending console(s) (use no_console_suspend to deb=
+ug)
+[  334.826522] ACPI: PM: Preparing to enter system sleep state S4
+[  334.826773] ACPI: PM: Saving platform NVS memory
+[  334.826979] Disabling non-boot CPUs ...
+[  334.829452] smpboot: CPU 1 is now offline
+[  334.831537] smpboot: CPU 2 is now offline
+[  334.833750] smpboot: CPU 3 is now offline
+[  334.835897] smpboot: CPU 4 is now offline
+[  334.838296] smpboot: CPU 5 is now offline
+[  334.840868] smpboot: CPU 6 is now offline
+[  334.842966] smpboot: CPU 7 is now offline
+[  334.845060] smpboot: CPU 8 is now offline
+[  334.847030] smpboot: CPU 9 is now offline
+[  334.848955] smpboot: CPU 10 is now offline
+[  334.850837] smpboot: CPU 11 is now offline
+[  334.851340] PM: hibernation: Creating image:
+[  335.133820] PM: hibernation: Need to copy 480821 pages
+[  335.133826] PM: hibernation: Normal pages needed: 480821 + 1024, availab=
+le
+pages: 1613904
+[  334.852388] ACPI: PM: Restoring platform NVS memory
+[  334.852777] Enabling non-boot CPUs ...
+[  334.852817] x86: Booting SMP configuration:
+[  334.852818] smpboot: Booting Node 0 Processor 1 APIC 0x2
+[  334.856338] CPU1 is up
+[  334.856369] smpboot: Booting Node 0 Processor 2 APIC 0x4
+[  334.859345] CPU2 is up
+[  334.859375] smpboot: Booting Node 0 Processor 3 APIC 0x10
+[  334.862383] CPU3 is up
+[  334.862412] smpboot: Booting Node 0 Processor 4 APIC 0x12
+[  334.865376] CPU4 is up
+[  334.865407] smpboot: Booting Node 0 Processor 5 APIC 0x14
+[  334.868395] CPU5 is up
+[  334.868423] smpboot: Booting Node 0 Processor 6 APIC 0x1
+[  334.871618] CPU6 is up
+[  334.871649] smpboot: Booting Node 0 Processor 7 APIC 0x3
+[  334.874844] CPU7 is up
+[  334.874878] smpboot: Booting Node 0 Processor 8 APIC 0x5
+[  334.878160] CPU8 is up
+[  334.878189] smpboot: Booting Node 0 Processor 9 APIC 0x11
+[  334.881557] CPU9 is up
+[  334.881586] smpboot: Booting Node 0 Processor 10 APIC 0x13
+[  334.884946] CPU10 is up
+[  334.884974] smpboot: Booting Node 0 Processor 11 APIC 0x15
+[  334.888415] CPU11 is up
+[  334.901008] ACPI: PM: Waking up from system sleep state S4
+[  335.001313] usb usb4: root hub lost power or was reset
+[  335.001314] usb usb2: root hub lost power or was reset
+[  335.001314] usb usb5: root hub lost power or was reset
+[  335.001365] usb usb1: root hub lost power or was reset
+[  335.001372] usb usb6: root hub lost power or was reset
+[  335.001375] usb usb7: root hub lost power or was reset
+[  335.001428] usb usb8: root hub lost power or was reset
+[  335.001449] usb usb3: root hub lost power or was reset
+[  335.297280] usb 3-4: reset high-speed USB device number 2 using ehci-pci
+[  335.537215] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[  335.549624] ata1.00: configured for UDMA/133
+[  335.549810] ata1.00: Enabling discard_zeroes_data
+[  335.769243] usb 3-4.3: reset full-speed USB device number 3 using ehci-p=
+ci
+[  335.957245] usb 3-4.4: reset full-speed USB device number 4 using ehci-p=
+ci
+[  336.385247] usb 3-4.4.1: reset full-speed USB device number 5 using ehci=
+-pci
+[  336.539864] PM: hibernation: Basic memory bitmaps freed
+[  336.540367] OOM killer enabled.
+[  336.540368] Restarting tasks ...=20
+[  336.541593] done.
+[  336.541600] PM: hibernation: hibernation exit
+[  336.636953] RTL8211B Gigabit Ethernet r8169-0-800:00: attached PHY driver
+(mii_bus:phy_addr=3Dr8169-0-800:00, irq=3DMAC)
+[  336.703336] r8169 0000:08:00.0 enp8s0: Link is Down
+[  336.704991] RTL8211B Gigabit Ethernet r8169-0-900:00: attached PHY driver
+(mii_bus:phy_addr=3Dr8169-0-900:00, irq=3DMAC)
+[  336.772497] r8169 0000:09:00.0 enp9s0: Link is Down
+
+[  463.977280] sas: Enter sas_scsi_recover_host busy: 3 failed: 3
+[  463.977288] sas: trying to find task 0x00000000f13c22cf
+[  463.977292] sas: sas_scsi_find_task: aborting task 0x00000000f13c22cf
+[  463.977416] sas: task done but aborted
+[  463.977422] sas: sas_scsi_find_task: task 0x00000000f13c22cf is done
+[  463.977425] sas: sas_eh_handle_sas_errors: task 0x00000000f13c22cf is do=
+ne
+[  463.977429] sas: trying to find task 0x0000000089d39e25
+[  463.977431] sas: sas_scsi_find_task: aborting task 0x0000000089d39e25
+[  472.026033] sas: task done but aborted
+[  472.026040] sas: sas_scsi_find_task: task 0x0000000089d39e25 is done
+[  472.026044] sas: sas_eh_handle_sas_errors: task 0x0000000089d39e25 is do=
+ne
+[  472.026048] sas: trying to find task 0x000000002d226601
+[  472.026050] sas: sas_scsi_find_task: aborting task 0x000000002d226601
+[  492.601193] sas: TMF task timeout for 2bad2bad2bad2bad and not done
+[  492.601204] drivers/scsi/mvsas/mv_sas.c 1410:mvs_abort_task:rc=3D 5
+[  492.601208] sas: sas_scsi_find_task: querying task 0x000000002d226601
+[  513.081228] sas: TMF task timeout for 2bad2bad2bad2bad and not done
+[  513.081241] drivers/scsi/mvsas/mv_sas.c 1340:mvs_query_task:rc=3D 5
+[  513.081247] sas: sas_scsi_find_task: task 0x000000002d226601 failed to a=
+bort
+[  513.081252] sas: task 0x000000002d226601 is not at LU: I_T recover
+[  513.081255] sas: I_T nexus reset for dev 2bad2bad2bad2bad
+[  513.577383] drivers/scsi/mvsas/mv_sas.c 1690:Release slot [5] tag[5], ta=
+sk
+[000000002d226601]:
+[  513.577396] sas: task done but aborted
+[  513.577398] drivers/scsi/mvsas/mv_sas.c 1690:Release slot [1] tag[1], ta=
+sk
+[00000000d0d28957]:
+[  515.321219] drivers/scsi/mvsas/mv_sas.c 1304:mvs_I_T_nexus_reset for
+device[0]:rc=3D 0
+[  515.321226] sas: I_T 2bad2bad2bad2bad recovered
+[  515.321243] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 3 tries=
+: 1
+[  515.337273] sd 0:0:0:0: [sdb] tag#8 FAILED Result: hostbyte=3DDID_NO_CON=
+NECT
+driverbyte=3DDRIVER_OK cmd_age=3D81s
+[  515.337281] sd 0:0:0:0: [sdb] tag#8 CDB: Read(10) 28 00 11 77 78 98 00 0=
+4 00
+00
+[  515.337283] I/O error, dev sdb, sector 293042328 op 0x0:(READ) flags 0x4=
+000
+phys_seg 8 prio class 2
+[  515.337299] sd 0:0:0:0: [sdb] tag#9 FAILED Result: hostbyte=3DDID_NO_CON=
+NECT
+driverbyte=3DDRIVER_OK cmd_age=3D81s
+[  515.337303] sd 0:0:0:0: [sdb] tag#9 CDB: Read(10) 28 00 11 77 7c 98 00 0=
+4 00
+00
+[  515.337305] I/O error, dev sdb, sector 293043352 op 0x0:(READ) flags 0x4=
+000
+phys_seg 8 prio class 2
+[  515.337315] sd 0:0:0:0: [sdb] tag#10 FAILED Result: hostbyte=3DDID_NO_CO=
+NNECT
+driverbyte=3DDRIVER_OK cmd_age=3D81s
+[  515.337318] sd 0:0:0:0: [sdb] tag#10 CDB: Read(10) 28 00 11 77 80 98 00 =
+04
+00 00
+[  515.337320] I/O error, dev sdb, sector 293044376 op 0x0:(READ) flags 0x4=
+000
+phys_seg 9 prio class 2
+[  515.710666] drivers/scsi/mvsas/mv_sas.c 1099:set wide port phy map 2
+[  515.710714] sas: sas_form_port: phy1 belongs to port0 already(1)!
+[  519.721300] drivers/scsi/mvsas/mv_sas.c 1690:Release slot [1] tag[1], ta=
+sk
+[00000000d0d28957]:
+[  521.822694] drivers/scsi/mvsas/mv_sas.c 1099:set wide port phy map 2
+[  521.822702] sas: sas_form_port: phy1 belongs to port0 already(1)!
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
