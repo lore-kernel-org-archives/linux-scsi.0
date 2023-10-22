@@ -2,144 +2,110 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E78BC0032E
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Oct 2023 11:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EEFEC001DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Oct 2023 12:43:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231481AbjJVLwF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 Oct 2023 07:52:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60884 "EHLO
+        id S230440AbjJVMnp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 Oct 2023 08:43:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229472AbjJVLwE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Oct 2023 07:52:04 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05234F3;
-        Sun, 22 Oct 2023 04:52:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697975522; x=1729511522;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=BdVZ+C8tN+qekt7Hl3QUHfu9nPna5/5VggjFolJCjy8=;
-  b=kMFSKVfIqRCQVBQXgkiQHG6THnJLYEi9RDT8vqb8kmPvk1pPdB1nLzlP
-   orKtFe152yfL/A6morEMIJV1KJSIdV2L+ZIN8p6w09fI/OCdLkyU7vfHz
-   qX/860Y/Oa+VCnU1JhNQn0g8gWeCAm43Dyt9tGS3PO8uvhOr+O7zLwYp5
-   jX7XCRqfzK0sVFQ3xl7GeSDAoH2xYjU4f+6v4kfdT5j3IDizNWqodIth3
-   uqYSBUAUyVKDoKPp0W8zqlSsyU/7mxS8QmAzNdHGWHqhmLEuWwdJ86VsI
-   mOsSdALT1ImP1E9cNaFm9YnJ+1Urg3UMrLH8DK+6z5GC1FGBWCO9CuNka
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10870"; a="385578979"
-X-IronPort-AV: E=Sophos;i="6.03,242,1694761200"; 
-   d="scan'208";a="385578979"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Oct 2023 04:52:01 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10870"; a="792851290"
-X-IronPort-AV: E=Sophos;i="6.03,242,1694761200"; 
-   d="scan'208";a="792851290"
-Received: from lkp-server01.sh.intel.com (HELO 8917679a5d3e) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 22 Oct 2023 04:51:54 -0700
-Received: from kbuild by 8917679a5d3e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1quWzo-0005vq-0d;
-        Sun, 22 Oct 2023 11:51:52 +0000
-Date:   Sun, 22 Oct 2023 19:51:16 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Nitesh Shetty <nj.shetty@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>, dm-devel@lists.linux.dev,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-Cc:     oe-kbuild-all@lists.linux.dev, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, nitheshshetty@gmail.com,
-        anuj1072538@gmail.com, gost.dev@samsung.com, mcgrof@kernel.org,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v17 08/12] nvmet: add copy command support for bdev and
- file ns
-Message-ID: <202310221915.PYH9XadG-lkp@intel.com>
-References: <20231019110147.31672-9-nj.shetty@samsung.com>
+        with ESMTP id S229500AbjJVMno (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Oct 2023 08:43:44 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63011E9
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Oct 2023 05:43:42 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BA25FC433C8
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Oct 2023 12:43:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697978621;
+        bh=kEtvXKeZWP6f2Bq9YoZeK5G0lkS1EZNUfdMDhepbfGM=;
+        h=From:To:Subject:Date:From;
+        b=U6T5caEyvKTRHixvksU81wxmTFtfyiy/weFrNsUBnYpcq/kRsskPB2ozyRY4+BO59
+         o9RCVAn1aBKkfQ09Kv3pKqzb+u5Gc8GY4VoYGgzD7Fj0k8M68KXxVRV0WyqGPNCPhr
+         5k5mN3ESw1U6pYySqvUaJCiGRJf8iSxEuWE6a1cf41D1I8nkJmKIWJKfZAY25TBOc6
+         Rwfaie1UaNqwTGBOyoFe4PtaVBpoU2nNnZCgYVn5I0Lb6yOcaHMw8uvNDpU3pTCE+O
+         tKjLaRpbn+thF389nW4o6aWLOQbBQIxeC2QKF+EkFyRiVoNbZJpYcDZuhEVM7XZqZ8
+         iwQJwAtrrQi9A==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 9F342C53BD0; Sun, 22 Oct 2023 12:43:41 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 218035] New: Adaptec 7805H (pm80xx) hangs even on light I/O
+ with some Seagate HDDs
+Date:   Sun, 22 Oct 2023 12:43:41 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: nickosbarkas@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
+ op_sys bug_status bug_severity priority component assigned_to reporter
+ cf_regression attachments.created
+Message-ID: <bug-218035-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231019110147.31672-9-nj.shetty@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Nitesh,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D218035
 
-kernel test robot noticed the following build warnings:
+            Bug ID: 218035
+           Summary: Adaptec 7805H (pm80xx) hangs even on light I/O with
+                    some Seagate HDDs
+           Product: IO/Storage
+           Version: 2.5
+          Hardware: All
+                OS: Linux
+            Status: NEW
+          Severity: high
+          Priority: P3
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: nickosbarkas@gmail.com
+        Regression: No
 
-[auto build test WARNING on 213f891525c222e8ed145ce1ce7ae1f47921cb9c]
+Created attachment 305277
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D305277&action=3Dedit
+pm80xx hangs with Exos 7E2
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Introduce-queue-limits-and-sysfs-for-copy-offload-support/20231019-200658
-base:   213f891525c222e8ed145ce1ce7ae1f47921cb9c
-patch link:    https://lore.kernel.org/r/20231019110147.31672-9-nj.shetty%40samsung.com
-patch subject: [PATCH v17 08/12] nvmet: add copy command support for bdev and file ns
-config: i386-randconfig-062-20231022 (https://download.01.org/0day-ci/archive/20231022/202310221915.PYH9XadG-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231022/202310221915.PYH9XadG-lkp@intel.com/reproduce)
+Hello guys,
+this is an old issue that happens when reading/writing data on specific
+ Seagate SAS HDDs on a pm80xx based adapter.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202310221915.PYH9XadG-lkp@intel.com/
+Affected models:
+ST2000NM0045 (Constellation ES.3)
+ST4000NM0023 (Enterprise Capacity v5 or Exos 7E2)
 
-sparse warnings: (new ones prefixed by >>)
->> drivers/nvme/target/io-cmd-bdev.c:498:30: sparse: sparse: restricted __le16 degrades to integer
+Please note that neither the disks nor the adapter are defective, they work
+fine. The disks have the latest available microcode installed, but the issue
+occurred with the factory microcode too.=20
 
-vim +498 drivers/nvme/target/io-cmd-bdev.c
+Even with very small sequential or random I/O, the driver enters into a not
+workable state.
 
-   478	
-   479	/*
-   480	 * At present we handle only one range entry, since copy offload is aligned with
-   481	 * copy_file_range, only one entry is passed from block layer.
-   482	 */
-   483	static void nvmet_bdev_execute_copy(struct nvmet_req *rq)
-   484	{
-   485		struct nvme_copy_range range;
-   486		struct nvme_command *cmd = rq->cmd;
-   487		ssize_t ret;
-   488		off_t dst, src;
-   489	
-   490		u16 status;
-   491	
-   492		status = nvmet_copy_from_sgl(rq, 0, &range, sizeof(range));
-   493		if (status)
-   494			goto err_rq_complete;
-   495	
-   496		dst = le64_to_cpu(cmd->copy.sdlba) << rq->ns->blksize_shift;
-   497		src = le64_to_cpu(range.slba) << rq->ns->blksize_shift;
- > 498		rq->copy_len = (range.nlb + 1) << rq->ns->blksize_shift;
-   499	
-   500		if (bdev_max_copy_sectors(rq->ns->bdev)) {
-   501			ret = blkdev_copy_offload(rq->ns->bdev, dst, src, rq->copy_len,
-   502						  nvmet_bdev_copy_endio,
-   503						  (void *)rq, GFP_KERNEL);
-   504		} else {
-   505			ret = blkdev_copy_emulation(rq->ns->bdev, dst,
-   506						    rq->ns->bdev, src, rq->copy_len,
-   507						    nvmet_bdev_copy_endio,
-   508						    (void *)rq, GFP_KERNEL);
-   509		}
-   510		if (ret == -EIOCBQUEUED)
-   511			return;
-   512	
-   513		rq->cqe->result.u32 = cpu_to_le32(0);
-   514		status = errno_to_nvme_status(rq, ret);
-   515	err_rq_complete:
-   516		nvmet_req_complete(rq, status);
-   517	}
-   518	
+linux-scsi thread for this issue:
+https://www.spinics.net/lists/linux-scsi/msg116653.html
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+
+I have uploaded a dmesg excerpt with debug logging that shows what happens =
+when
+I run a random i/o test with 128k block reads with 32 threads for 1 minute.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
