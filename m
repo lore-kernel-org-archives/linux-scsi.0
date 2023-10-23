@@ -2,133 +2,107 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C742CDB474
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 05:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A058C001E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 07:30:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229548AbjJWFwD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 01:52:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38094 "EHLO
+        id S229852AbjJWHaE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 03:30:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjJWFwC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 01:52:02 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C46CFC;
-        Sun, 22 Oct 2023 22:52:00 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06779C433C7;
-        Mon, 23 Oct 2023 05:51:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698040320;
-        bh=zU26l5J4agqJvwwA/4S/W9QnAw3QKdkb9hstkYclUEA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=JmFwY3qnGVJ/dtc/FLa3aMXdDE04SK7hRYFtZvhQd4AsNHklEzPLoesjXAln827ve
-         0wY57i4u6NX1QiC2kNucKioro6+czxJ+c35BF12/N6Rp+OMeJOci3yV8IwWWm4Syam
-         80IlNC6YkGs4Pg1KZaUlkM7Gcf8rKHhKIf8N3/WJjSrY/80WWp+HkvvZjxfHxuJhHH
-         UOw+1Jed+tYJnirKbvHRRiwvlo1WwO6XbTXlh2jXzlkOg/ntwSzrrajx6/VvAg9OAK
-         ah5ZfxN41nkymHBZZo+3oSLKv62xjsXyhYJDsOgkG6wFGF+nwLeTYQLZthpTVQLvWL
-         m53G6MQvY6ORg==
-Message-ID: <52f44651-ce94-468f-a43b-02d512294fe4@kernel.org>
-Date:   Mon, 23 Oct 2023 14:51:58 +0900
+        with ESMTP id S233475AbjJWHaD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 03:30:03 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77A389B
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 00:30:00 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 1733F21AA3;
+        Mon, 23 Oct 2023 07:29:59 +0000 (UTC)
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id CD10B2C79D;
+        Mon, 23 Oct 2023 07:29:58 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id EE36751EC30E; Mon, 23 Oct 2023 09:29:58 +0200 (CEST)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] pmcraid: add missing scsi_device_put() in pmcraid_eh_target_reset_handler()
+Date:   Mon, 23 Oct 2023 09:29:57 +0200
+Message-Id: <20231023072957.20191-1-hare@suse.de>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-Content-Language: en-US
-To:     Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org> <87v8b73lsh.fsf@vps.thesusis.net>
- <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
- <87r0luspvx.fsf@vps.thesusis.net>
- <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
- <87y1g1unwg.fsf@vps.thesusis.net>
- <e5a256fa-f1f6-4474-8e9e-b9f4bd6dced7@kernel.org>
- <87lebxrnt7.fsf@vps.thesusis.net>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <87lebxrnt7.fsf@vps.thesusis.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Spamd-Bar: +++++
+Authentication-Results: smtp-out1.suse.de;
+        dkim=none;
+        dmarc=none;
+        spf=softfail (smtp-out1.suse.de: 149.44.160.134 is neither permitted nor denied by domain of hare@suse.de) smtp.mailfrom=hare@suse.de
+X-Rspamd-Server: rspamd2
+X-Spamd-Result: default: False [5.49 / 50.00];
+         ARC_NA(0.00)[];
+         BAYES_SPAM(0.00)[11.59%];
+         FROM_HAS_DN(0.00)[];
+         TO_DN_SOME(0.00)[];
+         R_MISSING_CHARSET(2.50)[];
+         NEURAL_HAM_LONG(-3.00)[-1.000];
+         MIME_GOOD(-0.10)[text/plain];
+         DMARC_NA(0.20)[suse.de];
+         BROKEN_CONTENT_TYPE(1.50)[];
+         R_SPF_SOFTFAIL(0.60)[~all:c];
+         RCPT_COUNT_FIVE(0.00)[5];
+         TO_MATCH_ENVRCPT_SOME(0.00)[];
+         VIOLATED_DIRECT_SPF(3.50)[];
+         MX_GOOD(-0.01)[];
+         NEURAL_HAM_SHORT(-1.00)[-1.000];
+         MID_CONTAINS_FROM(1.00)[];
+         RWL_MAILSPIKE_GOOD(0.00)[149.44.160.134:from];
+         RCVD_NO_TLS_LAST(0.10)[];
+         FROM_EQ_ENVFROM(0.00)[];
+         R_DKIM_NA(0.20)[];
+         MIME_TRACE(0.00)[0:+];
+         RCVD_COUNT_TWO(0.00)[2]
+X-Rspamd-Queue-Id: 1733F21AA3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/21/23 06:23, Phillip Susi wrote:
-> Damien Le Moal <dlemoal@kernel.org> writes:
-> 
->> On my system, I see:
->>
->> cat /sys/class/ata_port/ata1/power/runtime_active_kids
->> 0
-> 
-> I see a 1 there, which is the single scsi_host.  The scsi_host has 2
-> active kids; the two disks.  When I enabled runtime pm, only when the
-> second disk was suspended did that allow the scsi_host to suspend, which
-> then allowed the port to suspend.  Everything looked fine there so far.
-> Then I tried:
-> 
-> echo 1 > /sys/block/sdf/device/delete
-> 
-> And the SCSI EH appears to have tried to wake up the disk, and hung in
-> the process.
-> 
-> [  314.246282] sd 7:0:0:0: [sde] Synchronizing SCSI cache
-> [  314.246445] sd 7:0:0:0: [sde] Stopping disk
-> 
-> First disk suspends.
-> 
-> [  388.518295] sd 7:1:0:0: [sdf] Synchronizing SCSI cache
-> [  388.518519] sd 7:1:0:0: [sdf] Stopping disk
-> 
-> Second disk suspends some time later.
-> 
-> [  388.930428] ata8.00: Entering standby power mode
-> [  389.330651] ata8.01: Entering standby power mode
-> 
-> That allowed the port to suspend.  This is when I tried to detach the
-> disk driver, which I think tried to resume the disk before detaching,
-> which resumed the port.
-> 
-> [  467.511878] ata8.15: SATA link down (SStatus 0 SControl 310)
-> [  468.142726] ata8.15: failed to read PMP GSCR[0] (Emask=0x100)
-> [  468.142741] ata8.15: PMP revalidation failed (errno=-5)
-> 
-> I ran hdparm -C on the other disk at this point.  I just noticed that
-> the ata8.15 that represents the PMP itself was NOT suspended along with
-> the two drive links, and then maybe was not resumed before trying to
-> revalidate the PMP?  And that's why it failed?
-> 
-> [  473.172792] ata8.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> [  473.486860] ata8.00: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> [  473.802139] ata8.01: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> 
-> It seems like it ended up recovering here though?  And yet the scsi_eh
-> remained hung, as did the hdparm -C:
-> 
-> [  605.566814] INFO: task scsi_eh_7:173 blocked for more than 120 seconds.
-> [  605.566829]       Not tainted 6.6.0-rc5+ #5
-> [  605.566834] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  605.566838] task:scsi_eh_7       state:D stack:0     pid:173   ppid:2      flags:0x00004000
-> [  605.566850] Call Trace:
-> [  605.566853]  <TASK>
-> [  605.566860]  __schedule+0x37c/0xb70
-> [  605.566878]  schedule+0x61/0xd0
-> [  605.566888]  rpm_resume+0x156/0x760
+When breaking out of a shost_for_each_device() loop one need to do
+an explicit scsi_device_put().
 
-Looks like a deadlock somewhere, likely with the device remove that you
-triggered with the "echo 1 > /sys/block/sdf/device/delete".
+Fixes: c2a14ab3b9b3 ("scsi: pmcraid: Select device in pmcraid_eh_target_reset_handler()")
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/pmcraid.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Can you send the exact list of commands & events you executed to get to that
-point ? Also please share your kernel config.
-
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index a831b34c08a4..cd19e452c9ee 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3066,6 +3066,7 @@ static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
+ {
+ 	struct Scsi_Host *shost = scmd->device->host;
+ 	struct scsi_device *scsi_dev = NULL, *tmp;
++	int ret;
+ 
+ 	shost_for_each_device(tmp, shost) {
+ 		if ((tmp->channel == scmd->device->channel) &&
+@@ -3078,9 +3079,11 @@ static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
+ 		return FAILED;
+ 	sdev_printk(KERN_INFO, scsi_dev,
+ 		    "Doing target reset due to an I/O command timeout.\n");
+-	return pmcraid_reset_device(scsi_dev,
+-				    PMCRAID_INTERNAL_TIMEOUT,
+-				    RESET_DEVICE_TARGET);
++	ret = pmcraid_reset_device(scsi_dev,
++				   PMCRAID_INTERNAL_TIMEOUT,
++				   RESET_DEVICE_TARGET);
++	scsi_device_put(scsi_dev);
++	return ret;
+ }
+ 
+ /**
 -- 
-Damien Le Moal
-Western Digital Research
+2.35.3
 
