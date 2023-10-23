@@ -2,35 +2,37 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03602CDB474
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 09:15:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EA16C25B41
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 09:15:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232716AbjJWJPT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 05:15:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48688 "EHLO
+        id S232763AbjJWJPV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 05:15:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229524AbjJWJPP (ORCPT
+        with ESMTP id S229606AbjJWJPP (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 05:15:15 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C33A398
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04499E9
         for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 02:15:12 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 3655E1FE0C;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 4FA9B1FE13;
         Mon, 23 Oct 2023 09:15:11 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id AF1D62C7D1;
-        Mon, 23 Oct 2023 09:15:10 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 039CF2CF50;
+        Mon, 23 Oct 2023 09:15:11 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id DA1AA51EC31F; Mon, 23 Oct 2023 11:15:10 +0200 (CEST)
+        id 2F43F51EC331; Mon, 23 Oct 2023 11:15:11 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv8 00/16] scsi: EH rework prep patches, part 2
-Date:   Mon, 23 Oct 2023 11:14:51 +0200
-Message-Id: <20231023091507.120828-1-hare@suse.de>
+Subject: [PATCH 09/16] scsi_transport_iscsi: use session as argument for iscsi_block_scsi_eh()
+Date:   Mon, 23 Oct 2023 11:15:00 +0200
+Message-Id: <20231023091507.120828-10-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20231023091507.120828-1-hare@suse.de>
+References: <20231023091507.120828-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Spamd-Bar: ++
@@ -62,105 +64,149 @@ X-Spamd-Result: default: False [2.49 / 50.00];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
          BAYES_HAM(-3.00)[100.00%]
-X-Rspamd-Queue-Id: 3655E1FE0C
+X-Rspamd-Queue-Id: 4FA9B1FE13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+We should be passing in the session directly instead of deriving it
+from the scsi command.
 
-(taking up an old thread:)
-here's the second batch of patches for my EH rework.
-It modifies the reset callbacks for SCSI drivers
-such that the final conversion to drop the 'struct scsi_cmnd'
-argument and use the entity in question (host, bus, target, device)
-as the argument to the SCSI EH callbacks becomes possible.
-The second part covers drivers which require a bit more love.
-In particular the fnic, snic, and csiostor drivers require a tag to
-send TMFs. So to handle that I've set aside a tag and used that directly
-(for snic host reset), or call scsi_alloc_request() with the NOWAIT flag.
-That will return a scsi command with a valid tag, which then can be used
-to send the reset. It might fail (eg when the tagset is full),
-but in these cases it might be better to fall back to host_reset anyway.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/qla4xxx/ql4_os.c       | 34 ++++++++++++++++++-----------
+ drivers/scsi/scsi_transport_iscsi.c |  6 ++---
+ include/scsi/scsi_transport_iscsi.h |  2 +-
+ 3 files changed, 24 insertions(+), 18 deletions(-)
 
-As usual, comments and reviews are welcome.
-
-Changes to v7:
-- Include reviews from Bart
-- Change return value to DID_TRANSPORT_FAILFAST
-
-Changes to v6:
-- Include reviews from Christoph
-- Add missing kerneldoc updates
-
-Changes to v5:
-- Modified zfcp host reset to return FAST_IO_FAIL
-- Rebased to 6.7/staging
-- Add fix for missing scsi_device_put() in pmcraid
-- Modify doing_srb_done() in dc395x to not use a scsi command
-
-Changes to v4:
-- rework snic to use a dedicated tag for host reset
-- rework snic to allocate TMFs on the fly
-- rework fnic to allocate TMFs on the fly
-- rework csiostor to allocat TMFs on the fly
-- drop fc_block_rport() from zfcp host_reset
-- Rebase to latest linus tree
-
-Changes to v3:
-- Move fnic and snic patches to the next patchset
-- Include reviews from Ewan Milne
-
-Changes to v2:
-- Include reviews from John Garry
-- move mpi3mr, zfcp, sym53c8xx_2, and qla1280 patches to the
-  next patchset
-
-Changes to the initial version:
-- Include reviews from Christoph
-- Fixup build robot issues
-
-Hannes Reinecke (16):
-  zfcp: do not wait for rports to become unblocked after host reset
-  bfa: Do not use scsi command to signal TMF status
-  aha152x: look for stuck command when resetting device
-  a1000u2w: do not rely on the command for inia100_device_reset()
-  fas216: Rework device reset to not rely on SCSI command pointer
-  xen-scsifront: add scsi device as argument to scsifront_do_request()
-  xen-scsifront: rework scsifront_action_handler()
-  libiscsi: use cls_session as argument for target and session reset
-  scsi_transport_iscsi: use session as argument for
-    iscsi_block_scsi_eh()
-  snic: reserve tag for TMF
-  snic: allocate device reset command
-  snic: Use scsi_host_busy_iter() to traverse commands
-  fnic: allocate device reset command on the fly
-  fnic: use fc_block_rport() correctly
-  csiostor: use separate TMF command
-  dc395x: Remove 'scmd' parameter from doing_srb_done()
-
- drivers/s390/scsi/zfcp_scsi.c       |   6 +-
- drivers/scsi/a100u2w.c              |  46 +---
- drivers/scsi/aha152x.c              |  26 ++-
- drivers/scsi/arm/fas216.c           |  39 ++--
- drivers/scsi/be2iscsi/be_main.c     |  10 +-
- drivers/scsi/bfa/bfad_im.c          | 112 +++++-----
- drivers/scsi/bfa/bfad_im.h          |   2 +
- drivers/scsi/csiostor/csio_scsi.c   |  72 ++++--
- drivers/scsi/dc395x.c               |  14 +-
- drivers/scsi/fnic/fnic.h            |   1 -
- drivers/scsi/fnic/fnic_scsi.c       | 120 +++++-----
- drivers/scsi/libiscsi.c             |  25 +--
- drivers/scsi/qla4xxx/ql4_os.c       |  34 +--
- drivers/scsi/scsi_transport_iscsi.c |   6 +-
- drivers/scsi/snic/snic.h            |   2 +-
- drivers/scsi/snic/snic_main.c       |   5 +-
- drivers/scsi/snic/snic_scsi.c       | 328 ++++++++++++----------------
- drivers/scsi/xen-scsifront.c        |  50 +++--
- include/scsi/libiscsi.h             |   2 +-
- include/scsi/scsi_transport_iscsi.h |   2 +-
- 20 files changed, 441 insertions(+), 461 deletions(-)
-
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 675332e49a7b..961fe65bbe65 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -9272,15 +9272,18 @@ static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
+  **/
+ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
+-	struct ddb_entry *ddb_entry = cmd->device->hostdata;
++	struct scsi_device *sdev = cmd->device;
++	struct scsi_qla_host *ha = to_qla_host(sdev->host);
++	struct iscsi_cls_session *session;
++	struct ddb_entry *ddb_entry = sdev->hostdata;
+ 	int ret = FAILED, stat;
+ 	int rval;
+ 
+ 	if (!ddb_entry)
+ 		return ret;
+ 
+-	ret = iscsi_block_scsi_eh(cmd);
++	session = starget_to_session(scsi_target(sdev));
++	ret = iscsi_block_scsi_eh(session);
+ 	if (ret)
+ 		return ret;
+ 	ret = FAILED;
+@@ -9341,19 +9344,25 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
+  **/
+ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
+-	struct ddb_entry *ddb_entry = cmd->device->hostdata;
++	struct scsi_target *starget = scsi_target(cmd->device);
++	struct iscsi_cls_session *cls_session = starget_to_session(starget);
++	struct iscsi_session *sess;
++	struct scsi_qla_host *ha;
++	struct ddb_entry *ddb_entry;
+ 	int stat, ret;
+ 	int rval;
+ 
++	sess = cls_session->dd_data;
++	ddb_entry = sess->dd_data;
+ 	if (!ddb_entry)
+ 		return FAILED;
++	ha = ddb_entry->ha;
+ 
+-	ret = iscsi_block_scsi_eh(cmd);
++	ret = iscsi_block_scsi_eh(cls_session);
+ 	if (ret)
+ 		return ret;
+ 
+-	starget_printk(KERN_INFO, scsi_target(cmd->device),
++	starget_printk(KERN_INFO, starget,
+ 		       "WARM TARGET RESET ISSUED.\n");
+ 
+ 	DEBUG2(printk(KERN_INFO
+@@ -9370,14 +9379,13 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ 
+ 	stat = qla4xxx_reset_target(ha, ddb_entry);
+ 	if (stat != QLA_SUCCESS) {
+-		starget_printk(KERN_INFO, scsi_target(cmd->device),
++		starget_printk(KERN_INFO, starget,
+ 			       "WARM TARGET RESET FAILED.\n");
+ 		return FAILED;
+ 	}
+ 
+-	if (qla4xxx_eh_wait_for_commands(ha, scsi_target(cmd->device),
+-					 NULL)) {
+-		starget_printk(KERN_INFO, scsi_target(cmd->device),
++	if (qla4xxx_eh_wait_for_commands(ha, starget, NULL)) {
++		starget_printk(KERN_INFO, starget,
+ 			       "WARM TARGET DEVICE RESET FAILED - "
+ 			       "waiting for commands.\n");
+ 		return FAILED;
+@@ -9386,13 +9394,13 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ 	/* Send marker. */
+ 	if (qla4xxx_send_marker_iocb(ha, ddb_entry, cmd->device->lun,
+ 		MM_TGT_WARM_RESET) != QLA_SUCCESS) {
+-		starget_printk(KERN_INFO, scsi_target(cmd->device),
++		starget_printk(KERN_INFO, starget,
+ 			       "WARM TARGET DEVICE RESET FAILED - "
+ 			       "marker iocb failed.\n");
+ 		return FAILED;
+ 	}
+ 
+-	starget_printk(KERN_INFO, scsi_target(cmd->device),
++	starget_printk(KERN_INFO, starget,
+ 		       "WARM TARGET RESET SUCCEEDED.\n");
+ 	return SUCCESS;
+ }
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 3075b2ddf7a6..4e81ef882a49 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1838,17 +1838,15 @@ static void iscsi_scan_session(struct work_struct *work)
+ 
+ /**
+  * iscsi_block_scsi_eh - block scsi eh until session state has transistioned
+- * @cmd: scsi cmd passed to scsi eh handler
++ * @session: iscsi session derived from scsi eh handler argument
+  *
+  * If the session is down this function will wait for the recovery
+  * timer to fire or for the session to be logged back in. If the
+  * recovery timer fires then FAST_IO_FAIL is returned. The caller
+  * should pass this error value to the scsi eh.
+  */
+-int iscsi_block_scsi_eh(struct scsi_cmnd *cmd)
++int iscsi_block_scsi_eh(struct iscsi_cls_session *session)
+ {
+-	struct iscsi_cls_session *session =
+-			starget_to_session(scsi_target(cmd->device));
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index fb3399e4cd29..8ec36de5d236 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -466,7 +466,7 @@ extern struct iscsi_endpoint *iscsi_create_endpoint(int dd_size);
+ extern void iscsi_destroy_endpoint(struct iscsi_endpoint *ep);
+ extern struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle);
+ extern void iscsi_put_endpoint(struct iscsi_endpoint *ep);
+-extern int iscsi_block_scsi_eh(struct scsi_cmnd *cmd);
++extern int iscsi_block_scsi_eh(struct iscsi_cls_session *session);
+ extern struct iscsi_iface *iscsi_create_iface(struct Scsi_Host *shost,
+ 					      struct iscsi_transport *t,
+ 					      uint32_t iface_type,
 -- 
 2.35.3
 
