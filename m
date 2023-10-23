@@ -2,34 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C67ACDB474
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 09:28:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A195DCDB474
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 09:29:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232424AbjJWJ2t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 05:28:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41420 "EHLO
+        id S232855AbjJWJ2w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 05:28:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229589AbjJWJ2r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 05:28:47 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C30FAB7
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 02:28:44 -0700 (PDT)
+        with ESMTP id S229865AbjJWJ2s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 05:28:48 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05F4AF7
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 02:28:45 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 2C5E821ACE;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 7C5F021ACF;
         Mon, 23 Oct 2023 09:28:43 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id D5DB02CF57;
+        by relay2.suse.de (Postfix) with ESMTP id D800C2CF5A;
         Mon, 23 Oct 2023 09:28:42 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 03BD051EC34E; Mon, 23 Oct 2023 11:28:43 +0200 (CEST)
+        id 14E3551EC354; Mon, 23 Oct 2023 11:28:43 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/10] scsi_error: iterate over list of failed commands in scsi_eh_bus_reset()
-Date:   Mon, 23 Oct 2023 11:28:33 +0200
-Message-Id: <20231023092837.33786-7-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Benjamin Block <bblock@linux.ibm.com>
+Subject: [PATCH 09/10] scsi_error: map FAST_IO_FAIL to -EAGAIN in SCSI EH
+Date:   Mon, 23 Oct 2023 11:28:36 +0200
+Message-Id: <20231023092837.33786-10-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231023092837.33786-1-hare@suse.de>
 References: <20231023092837.33786-1-hare@suse.de>
@@ -51,7 +52,7 @@ X-Spamd-Result: default: False [5.49 / 50.00];
          DMARC_NA(0.20)[suse.de];
          BROKEN_CONTENT_TYPE(1.50)[];
          R_SPF_SOFTFAIL(0.60)[~all:c];
-         RCPT_COUNT_FIVE(0.00)[5];
+         RCPT_COUNT_FIVE(0.00)[6];
          TO_MATCH_ENVRCPT_SOME(0.00)[];
          VIOLATED_DIRECT_SPF(3.50)[];
          MX_GOOD(-0.01)[];
@@ -63,118 +64,77 @@ X-Spamd-Result: default: False [5.49 / 50.00];
          R_DKIM_NA(0.20)[];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
-         BAYES_HAM(-0.00)[16.61%]
-X-Rspamd-Queue-Id: 2C5E821ACE
+         BAYES_HAM(-0.00)[11.35%]
+X-Rspamd-Queue-Id: 7C5F021ACF
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Iterating over all possible bus number in scsi_eh_bus_reset() is
-inefficient as not all busses may be affected during SCSI EH.
-So rewrite the loop in scsi_eh_bus_reset() to match the loop
-in scsi_eh_target_reset() and only loop over failed commands.
+Returning FAST_IO_FAIL from any of the SCSI EH functions is perfectly
+valid, and indicates that the request could not be executed due to
+the transport being busy.
+But that is not an I/O error, and we should return -EAGAIN from
+scsi_ioctl_reset() to correctly inform userspace.
 
+Suggested-by: Benjamin Block <bblock@linux.ibm.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_error.c | 62 ++++++++++++++++-----------------------
- 1 file changed, 25 insertions(+), 37 deletions(-)
+ drivers/scsi/scsi_error.c | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 42e12756d6f4..7c9c376affda 100644
+index 7c655d08a305..8e184d92abe9 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -1694,21 +1694,20 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 			     struct list_head *work_q,
- 			     struct list_head *done_q)
- {
--	struct scsi_cmnd *scmd, *chan_scmd, *next;
-+	LIST_HEAD(tmp_list);
- 	LIST_HEAD(check_list);
--	unsigned int channel;
--	enum scsi_disposition rtn;
- 
--	/*
--	 * we really want to loop over the various channels, and do this on
--	 * a channel by channel basis.  we should also check to see if any
--	 * of the failed commands are on soft_reset devices, and if so, skip
--	 * the reset.
--	 */
-+	list_splice_init(work_q, &tmp_list);
-+
-+	while (!list_empty(&tmp_list)) {
-+		struct scsi_cmnd *next, *scmd;
-+		enum scsi_disposition rtn;
-+		unsigned int channel;
- 
--	for (channel = 0; channel <= shost->max_channel; channel++) {
- 		if (scsi_host_eh_past_deadline(shost)) {
-+			/* push back on work queue for further processing */
- 			list_splice_init(&check_list, work_q);
-+			list_splice_init(&tmp_list, work_q);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
- 					    "%s: skip BRST, past eh deadline\n",
-@@ -1716,43 +1715,32 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 			return list_empty(work_q);
- 		}
- 
--		chan_scmd = NULL;
--		list_for_each_entry(scmd, work_q, eh_entry) {
--			if (channel == scmd_channel(scmd)) {
--				chan_scmd = scmd;
--				break;
--				/*
--				 * FIXME add back in some support for
--				 * soft_reset devices.
--				 */
--			}
--		}
-+		scmd = list_first_entry(&tmp_list, struct scsi_cmnd, eh_entry);
-+		channel = scmd_channel(scmd);
- 
--		if (!chan_scmd)
--			continue;
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			shost_printk(KERN_INFO, shost,
- 				     "%s: Sending BRST chan: %d\n",
- 				     current->comm, channel));
--		rtn = scsi_try_bus_reset(chan_scmd);
--		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
--			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
--				if (channel == scmd_channel(scmd)) {
--					if (rtn == FAST_IO_FAIL) {
--						set_host_byte(scmd,
--							DID_TRANSPORT_FAILFAST);
--						scsi_eh_finish_cmd(scmd, done_q);
--					} else
--						list_move_tail(&scmd->eh_entry,
--							       &check_list);
--				}
--			}
--		} else {
-+		rtn = scsi_try_bus_reset(scmd);
-+		if (rtn != SUCCESS && rtn != FAST_IO_FAIL) {
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
- 					     "%s: BRST failed chan: %d\n",
- 					     current->comm, channel));
- 		}
-+		list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
-+			if (scmd_channel(scmd) != channel)
-+				continue;
-+
-+			if (rtn == SUCCESS)
-+				list_move_tail(&scmd->eh_entry, &check_list);
-+			else if (rtn == FAST_IO_FAIL) {
-+				set_host_byte(scmd, DID_TRANSPORT_FAILFAST);
-+				scsi_eh_finish_cmd(scmd, done_q);
-+			} else
-+				list_move_tail(&scmd->eh_entry, work_q);
-+		}
+@@ -2453,22 +2453,25 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 		break;
+ 	case SG_SCSI_RESET_DEVICE:
+ 		rtn = scsi_try_bus_device_reset(dev);
+-		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
++		if (rtn == SUCCESS || rtn == FAST_IO_FAIL ||
++		    (val & SG_SCSI_RESET_NO_ESCALATE))
+ 			break;
+ 		fallthrough;
+ 	case SG_SCSI_RESET_TARGET:
+ 		rtn = scsi_try_target_reset(shost, starget);
+-		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
++		if (rtn == SUCCESS || rtn == FAST_IO_FAIL ||
++		    (val & SG_SCSI_RESET_NO_ESCALATE))
+ 			break;
+ 		fallthrough;
+ 	case SG_SCSI_RESET_BUS:
+ 		rtn = scsi_try_bus_reset(shost, dev->channel);
+-		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
++		if (rtn == SUCCESS || rtn == FAST_IO_FAIL ||
++		    (val & SG_SCSI_RESET_NO_ESCALATE))
+ 			break;
+ 		fallthrough;
+ 	case SG_SCSI_RESET_HOST:
+ 		rtn = scsi_try_host_reset(shost);
+-		if (rtn == SUCCESS)
++		if (rtn == SUCCESS || rtn == FAST_IO_FAIL)
+ 			break;
+ 		fallthrough;
+ 	default:
+@@ -2476,7 +2479,17 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 		break;
  	}
- 	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
- }
+ 
+-	error = (rtn == SUCCESS) ? 0 : -EIO;
++	switch (rtn) {
++	case SUCCESS:
++		error = 0;
++		break;
++	case FAST_IO_FAIL:
++		error = -EAGAIN;
++		break;
++	default:
++		error = -EIO;
++		break;
++	}
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	shost->tmf_in_progress = 0;
 -- 
 2.35.3
 
