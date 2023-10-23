@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ADBBCDB474
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 09:29:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C89B2C00A8F
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 09:29:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233005AbjJWJ3K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 05:29:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41526 "EHLO
+        id S233061AbjJWJ3M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 05:29:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232984AbjJWJ2x (ORCPT
+        with ESMTP id S232947AbjJWJ2x (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 05:28:53 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4579DF
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4126BC
         for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 02:28:44 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 15DFE1FE16;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 1599E1FE14;
         Mon, 23 Oct 2023 09:28:43 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id A30892CF51;
+        by relay2.suse.de (Postfix) with ESMTP id B5FA92CF54;
         Mon, 23 Oct 2023 09:28:42 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id CF27651EC344; Mon, 23 Oct 2023 11:28:42 +0200 (CEST)
+        id E2DE751EC348; Mon, 23 Oct 2023 11:28:42 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 01/10] scsi: Use Scsi_Host as argument for eh_host_reset_handler
-Date:   Mon, 23 Oct 2023 11:28:28 +0200
-Message-Id: <20231023092837.33786-2-hare@suse.de>
+Subject: [PATCH 03/10] scsi: Use scsi_target as argument for eh_target_reset_handler()
+Date:   Mon, 23 Oct 2023 11:28:30 +0200
+Message-Id: <20231023092837.33786-4-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231023092837.33786-1-hare@suse.de>
 References: <20231023092837.33786-1-hare@suse.de>
@@ -65,2146 +65,1260 @@ X-Spamd-Result: default: False [2.49 / 50.00];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
          BAYES_HAM(-3.00)[100.00%]
-X-Rspamd-Queue-Id: 15DFE1FE16
+X-Rspamd-Queue-Id: 1599E1FE14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Issuing a host reset should not rely on any commands.
-So use Scsi_Host as argument for eh_host_reset_handler.
+The target reset function should only depend on the scsi target,
+not the scsi command.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/scsi/scsi_eh.rst            |  2 +-
- Documentation/scsi/scsi_mid_low_api.rst   |  6 +--
- drivers/infiniband/ulp/srp/ib_srp.c       |  6 +--
- drivers/message/fusion/mptscsih.c         | 23 ++++--------
- drivers/message/fusion/mptscsih.h         |  2 +-
- drivers/s390/scsi/zfcp_scsi.c             |  5 +--
- drivers/scsi/3w-9xxx.c                    | 11 ++----
- drivers/scsi/3w-sas.c                     | 11 ++----
- drivers/scsi/3w-xxxx.c                    | 13 +++----
- drivers/scsi/53c700.c                     | 39 +++++++++----------
- drivers/scsi/BusLogic.c                   | 24 ++++++------
- drivers/scsi/NCR5380.c                    |  5 +--
- drivers/scsi/aacraid/linit.c              |  8 ++--
- drivers/scsi/advansys.c                   | 28 +++++++-------
- drivers/scsi/aha1542.c                    | 18 ++++-----
- drivers/scsi/arm/acornscsi.c              |  8 ++--
- drivers/scsi/arm/fas216.c                 | 10 ++---
- drivers/scsi/arm/fas216.h                 |  6 +--
- drivers/scsi/atari_scsi.c                 |  4 +-
- drivers/scsi/cxlflash/main.c              |  5 +--
- drivers/scsi/esas2r/esas2r.h              |  2 +-
- drivers/scsi/esas2r/esas2r_main.c         | 17 +++++----
- drivers/scsi/esp_scsi.c                   |  4 +-
- drivers/scsi/fdomain.c                    |  3 +-
- drivers/scsi/fnic/fnic.h                  |  2 +-
- drivers/scsi/fnic/fnic_scsi.c             |  3 +-
- drivers/scsi/hptiop.c                     |  6 +--
- drivers/scsi/ibmvscsi/ibmvfc.c            |  6 +--
- drivers/scsi/ibmvscsi/ibmvscsi.c          |  6 +--
- drivers/scsi/imm.c                        |  6 +--
- drivers/scsi/ipr.c                        |  5 +--
- drivers/scsi/ips.c                        | 30 ++++-----------
- drivers/scsi/libfc/fc_fcp.c               |  5 +--
- drivers/scsi/lpfc/lpfc_scsi.c             |  5 +--
- drivers/scsi/mac53c94.c                   |  8 ++--
- drivers/scsi/megaraid.c                   |  6 +--
- drivers/scsi/megaraid.h                   |  2 +-
- drivers/scsi/megaraid/megaraid_mbox.c     | 18 +++------
- drivers/scsi/megaraid/megaraid_sas_base.c | 46 ++++++++++-------------
- drivers/scsi/mesh.c                       | 12 +++---
- drivers/scsi/mpi3mr/mpi3mr_os.c           | 12 +++---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c      | 15 ++++----
- drivers/scsi/mvumi.c                      |  9 ++---
- drivers/scsi/myrb.c                       |  3 +-
- drivers/scsi/myrs.c                       |  3 +-
- drivers/scsi/nsp32.c                      | 14 +++----
- drivers/scsi/pcmcia/nsp_cs.c              |  4 +-
- drivers/scsi/pcmcia/nsp_cs.h              |  2 +-
- drivers/scsi/pcmcia/qlogic_stub.c         |  4 +-
- drivers/scsi/pcmcia/sym53c500_cs.c        |  8 ++--
- drivers/scsi/pmcraid.c                    |  7 ++--
- drivers/scsi/ppa.c                        |  6 +--
- drivers/scsi/qedf/qedf_main.c             |  4 +-
- drivers/scsi/qedi/qedi_iscsi.c            |  3 +-
- drivers/scsi/qla1280.c                    |  5 +--
- drivers/scsi/qla2xxx/qla_os.c             | 18 +++------
- drivers/scsi/qla4xxx/ql4_os.c             | 18 ++++-----
- drivers/scsi/qlogicfas408.c               | 10 ++---
- drivers/scsi/qlogicfas408.h               |  2 +-
- drivers/scsi/qlogicpti.c                  |  3 +-
- drivers/scsi/scsi_debug.c                 |  6 +--
- drivers/scsi/scsi_error.c                 |  2 +-
- drivers/scsi/snic/snic.h                  |  3 +-
- drivers/scsi/snic/snic_scsi.c             | 37 ++++--------------
- drivers/scsi/stex.c                       |  9 ++---
- drivers/scsi/storvsc_drv.c                |  4 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c       |  3 +-
- drivers/scsi/vmw_pvscsi.c                 |  5 +--
- drivers/scsi/wd33c93.c                    |  8 +---
- drivers/scsi/wd33c93.h                    |  2 +-
- drivers/scsi/wd719x.c                     |  4 +-
- drivers/ufs/core/ufshcd.c                 | 10 ++---
- drivers/usb/image/microtek.c              |  4 +-
- include/scsi/libfc.h                      |  2 +-
- include/scsi/scsi_host.h                  |  2 +-
- 75 files changed, 286 insertions(+), 391 deletions(-)
+ Documentation/scsi/scsi_eh.rst              |  9 ++++
+ Documentation/scsi/scsi_mid_low_api.rst     | 18 +++++++
+ drivers/message/fusion/mptsas.c             | 10 +++-
+ drivers/message/fusion/mptscsih.c           | 38 +++++---------
+ drivers/message/fusion/mptscsih.h           |  2 +-
+ drivers/message/fusion/mptspi.c             |  8 ++-
+ drivers/s390/scsi/zfcp_scsi.c               |  7 ++-
+ drivers/scsi/aacraid/linit.c                | 11 ++---
+ drivers/scsi/be2iscsi/be_main.c             |  4 +-
+ drivers/scsi/bfa/bfad_im.c                  |  5 +-
+ drivers/scsi/bnx2fc/bnx2fc.h                |  2 +-
+ drivers/scsi/bnx2fc/bnx2fc_io.c             |  6 +--
+ drivers/scsi/esas2r/esas2r.h                |  2 +-
+ drivers/scsi/esas2r/esas2r_main.c           | 39 ++++++++-------
+ drivers/scsi/ibmvscsi/ibmvfc.c              |  5 +-
+ drivers/scsi/libiscsi.c                     |  6 +--
+ drivers/scsi/libsas/sas_scsi_host.c         |  9 ++--
+ drivers/scsi/lpfc/lpfc_scsi.c               | 12 ++---
+ drivers/scsi/megaraid/megaraid_sas.h        |  3 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 14 +++---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 55 +++++++++++++--------
+ drivers/scsi/mpi3mr/mpi3mr_os.c             | 45 ++++++-----------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        | 35 ++++++-------
+ drivers/scsi/pmcraid.c                      |  8 +--
+ drivers/scsi/qedf/qedf_main.c               |  3 +-
+ drivers/scsi/qla2xxx/qla_os.c               | 24 +++++----
+ drivers/scsi/qla4xxx/ql4_os.c               | 15 +++---
+ drivers/scsi/scsi_debug.c                   | 23 ++++-----
+ drivers/scsi/scsi_error.c                   | 11 +++--
+ drivers/scsi/sym53c8xx_2/sym_glue.c         |  3 +-
+ drivers/target/loopback/tcm_loop.c          |  9 ++--
+ include/scsi/libiscsi.h                     |  2 +-
+ include/scsi/libsas.h                       |  2 +-
+ include/scsi/scsi_host.h                    |  2 +-
+ 34 files changed, 232 insertions(+), 215 deletions(-)
 
 diff --git a/Documentation/scsi/scsi_eh.rst b/Documentation/scsi/scsi_eh.rst
-index 104d09e9af09..da95971b4f44 100644
+index 553aff3062d5..cfaf841317ed 100644
 --- a/Documentation/scsi/scsi_eh.rst
 +++ b/Documentation/scsi/scsi_eh.rst
-@@ -217,7 +217,7 @@ considered to fail always.
+@@ -216,6 +216,7 @@ considered to fail always.
+ 
      int (* eh_abort_handler)(struct scsi_cmnd *);
      int (* eh_device_reset_handler)(struct scsi_cmnd *);
-     int (* eh_bus_reset_handler)(struct scsi_cmnd *);
--    int (* eh_host_reset_handler)(struct scsi_cmnd *);
-+    int (* eh_host_reset_handler)(struct Scsi_Host *);
++    int (* eh_target_reset_handler)(struct scsi_target *);
+     int (* eh_bus_reset_handler)(struct Scsi_Host *, unsigned int);
+     int (* eh_host_reset_handler)(struct Scsi_Host *);
  
- Higher-severity actions are taken only when lower-severity actions
- cannot recover some of failed scmds.  Also, note that failure of the
+@@ -411,6 +412,14 @@ scmd->allowed.
+ 	    resetting clears all scmds on the sdev, there is no need
+ 	    to choose error-completed scmds.
+ 
++	2. If !list_empty(&eh_work_q), invoke scsi_eh_target_reset().
++
++	``scsi_eh_target_reset``
++
++	    hostt->eh_target_reset_handler() is invoked for each target.
++	    If target reset succeeds, all failed scmds on all ready or
++	    offline sdevs on the target are EH-finished.
++
+ 	3. If !list_empty(&eh_work_q), invoke scsi_eh_bus_reset()
+ 
+ 	``scsi_eh_bus_reset``
 diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi/scsi_mid_low_api.rst
-index 022198c51350..96983bb1cc45 100644
+index 43083efc554b..8a075da5641b 100644
 --- a/Documentation/scsi/scsi_mid_low_api.rst
 +++ b/Documentation/scsi/scsi_mid_low_api.rst
-@@ -777,9 +777,9 @@ Details::
+@@ -758,6 +758,24 @@ Details::
+ 	int eh_bus_reset_handler(struct Scsi_Host * host, unsigned int channel)
  
+ 
++    /**
++    *      eh_target_reset_handler - issue SCSI target reset
++    *      @starget: identifies SCSI target to be reset
++    *
++    *      Returns SUCCESS if command aborted else FAILED
++    *
++    *      Locks: None held
++    *
++    *      Calling context: kernel thread
++    *
++    *      Notes: Invoked from scsi_eh thread. No other commands will be
++    *      queued on current host during eh.
++    *
++    *      Optionally defined in: LLD
++    **/
++	int eh_target_reset_handler(struct scsi_target * starget)
++
++
      /**
-     *      eh_host_reset_handler - reset host (host bus adapter)
--    *      @scp: SCSI host that contains this device should be reset
-+    *      @shp: SCSI host that should be reset
-     *
--    *      Returns SUCCESS if command aborted else FAILED
-+    *      Returns SUCCESS if host has been reset else FAILED
-     *
-     *      Locks: None held
-     *
-@@ -794,7 +794,7 @@ Details::
-     *
-     *      Optionally defined in: LLD
-     **/
--	int eh_host_reset_handler(struct scsi_cmnd * scp)
-+	int eh_host_reset_handler(struct Scsi_Host * shp)
- 
- 
-     /**
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 1574218764e0..07a61d238d6b 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -2831,11 +2831,11 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
- 	return SUCCESS;
+     *      eh_device_reset_handler - issue SCSI device reset
+     *      @scp: identifies SCSI device to be reset
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 300f8e955a53..a9d274cabb37 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1997,6 +1997,14 @@ static enum scsi_timeout_action mptsas_eh_timed_out(struct scsi_cmnd *sc)
  }
  
--static int srp_reset_host(struct scsi_cmnd *scmnd)
-+static int srp_reset_host(struct Scsi_Host *shost)
- {
--	struct srp_target_port *target = host_to_target(scmnd->device->host);
-+	struct srp_target_port *target = host_to_target(shost);
  
--	shost_printk(KERN_ERR, target->scsi_host, PFX "SRP reset_host called\n");
-+	shost_printk(KERN_ERR, shost, PFX "SRP reset_host called\n");
- 
- 	return srp_reconnect_rport(target->rport) == 0 ? SUCCESS : FAILED;
- }
++static int mptsas_eh_target_reset(struct scsi_target *starget)
++{
++	struct sas_rphy *rphy = dev_to_rphy(starget->dev.parent);
++	MPT_ADAPTER *ioc = rphy_to_ioc(rphy);
++
++	return mptscsih_target_reset(ioc->sh, starget);
++}
++
+ static const struct scsi_host_template mptsas_driver_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_name			= "mptsas",
+@@ -2012,7 +2020,7 @@ static const struct scsi_host_template mptsas_driver_template = {
+ 	.change_queue_depth 		= mptscsih_change_queue_depth,
+ 	.eh_timed_out			= mptsas_eh_timed_out,
+ 	.eh_abort_handler		= mptscsih_abort,
+-	.eh_device_reset_handler	= mptscsih_dev_reset,
++	.eh_target_reset_handler	= mptsas_eh_target_reset,
+ 	.eh_host_reset_handler		= mptscsih_host_reset,
+ 	.bios_param			= mptscsih_bios_param,
+ 	.can_queue			= MPT_SAS_CAN_QUEUE,
 diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 9080a73b4ea6..4f9729cf4098 100644
+index 20d582b01b59..ebab55162b54 100644
 --- a/drivers/message/fusion/mptscsih.c
 +++ b/drivers/message/fusion/mptscsih.c
-@@ -1955,34 +1955,27 @@ mptscsih_bus_reset(struct scsi_cmnd * SCpnt)
- 
+@@ -1846,55 +1846,43 @@ mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
  /**
-- *	mptscsih_host_reset - Perform a SCSI host adapter RESET (new_eh variant)
+  *	mptscsih_target_reset - Perform a SCSI TARGET_RESET!
 - *	@SCpnt: Pointer to scsi_cmnd structure, IO which reset is due to
-+ *	mptscsih_host_reset - Perform a SCSI host adapter RESET
-+ *	@sh: Pointer to Scsi_Host structure, which is reset due to
++ *	@shost: Pointer to scsi_host structure
++ *	@starget: Pointer to scsi_target structure which reset is due to
   *
-  *	(linux scsi_host_template.eh_host_reset_handler routine)
+  *	(linux scsi_host_template.eh_target_reset_handler routine)
   *
   *	Returns SUCCESS or FAILED.
-  */
+  **/
  int
--mptscsih_host_reset(struct scsi_cmnd *SCpnt)
-+mptscsih_host_reset(struct Scsi_Host *sh)
+-mptscsih_target_reset(struct scsi_cmnd * SCpnt)
++mptscsih_target_reset(struct Scsi_Host *shost, struct scsi_target * starget)
  {
--	MPT_SCSI_HOST *  hd;
-+	MPT_SCSI_HOST *  hd = shost_priv(sh);
- 	int              status = SUCCESS;
- 	MPT_ADAPTER	*ioc;
- 	int		retval;
- 
--	/*  If we can't locate the host to reset, then we failed. */
+-	MPT_SCSI_HOST	*hd;
++	MPT_SCSI_HOST	*hd = shost_priv(shost);
+ 	int		 retval;
+-	VirtDevice	 *vdevice;
+-	MPT_ADAPTER	*ioc;
+-
+-	/* If we can't locate our host adapter structure, return FAILED status.
+-	 */
 -	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
--		printk(KERN_ERR MYNAM ": host reset: "
--		    "Can't locate host! (sc=%p)\n", SCpnt);
+-		printk(KERN_ERR MYNAM ": target reset: "
+-		   "Can't locate host! (sc=%p)\n", SCpnt);
 -		return FAILED;
 -	}
 -
- 	/* make sure we have no outstanding commands at this stage */
- 	mptscsih_flush_running_cmds(hd);
+-	ioc = hd->ioc;
+-	printk(MYIOC_s_INFO_FMT "attempting target reset! (sc=%p)\n",
+-	       ioc->name, SCpnt);
+-	scsi_print_command(SCpnt);
++	VirtTarget	 *vtarget;
++	MPT_ADAPTER	*ioc = hd->ioc;
  
- 	ioc = hd->ioc;
--	printk(MYIOC_s_INFO_FMT "attempting host reset! (sc=%p)\n",
--	    ioc->name, SCpnt);
-+	printk(MYIOC_s_INFO_FMT "attempting host reset!\n",
-+	    ioc->name);
- 
- 	/*  If our attempts to reset the host failed, then return a failed
- 	 *  status.  The host will be taken off line by the SCSI mid-layer.
-@@ -1993,8 +1986,8 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
- 	else
- 		status = SUCCESS;
- 
--	printk(MYIOC_s_INFO_FMT "host reset: %s (sc=%p)\n",
--	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
-+	printk(MYIOC_s_INFO_FMT "host reset: %s\n",
-+	    ioc->name, (retval == 0 ? "SUCCESS" : "FAILED" ));
- 
- 	return status;
- }
-diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
-index e3d92c392673..0faefe9c7541 100644
---- a/drivers/message/fusion/mptscsih.h
-+++ b/drivers/message/fusion/mptscsih.h
-@@ -122,7 +122,7 @@ extern int mptscsih_abort(struct scsi_cmnd * SCpnt);
- extern int mptscsih_dev_reset(struct scsi_cmnd * SCpnt);
- extern int mptscsih_target_reset(struct scsi_cmnd * SCpnt);
- extern int mptscsih_bus_reset(struct scsi_cmnd * SCpnt);
--extern int mptscsih_host_reset(struct scsi_cmnd *SCpnt);
-+extern int mptscsih_host_reset(struct Scsi_Host *sh);
- extern int mptscsih_bios_param(struct scsi_device * sdev, struct block_device *bdev, sector_t capacity, int geom[]);
- extern int mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *r);
- extern int mptscsih_taskmgmt_complete(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *r);
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index b1df853e6f66..76c136d39bf1 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -371,10 +371,9 @@ static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
- 	return ret;
- }
- 
--static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
-+static int zfcp_scsi_eh_host_reset_handler(struct Scsi_Host *host)
- {
--	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
--	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
-+	struct zfcp_adapter *adapter = (struct zfcp_adapter *)host->hostdata[0];
- 	int ret = FAST_IO_FAIL;
- 
- 	if (!(adapter->connection_features & FSF_FEATURE_NPIV_MODE)) {
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index f925f8664c2c..6dbffb1bc293 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -1717,18 +1717,15 @@ static int twa_scsi_biosparam(struct scsi_device *sdev, struct block_device *bde
- } /* End twa_scsi_biosparam() */
- 
- /* This is the new scsi eh reset function */
--static int twa_scsi_eh_reset(struct scsi_cmnd *SCpnt)
-+static int twa_scsi_eh_reset(struct Scsi_Host *shost)
- {
--	TW_Device_Extension *tw_dev = NULL;
-+	TW_Device_Extension *tw_dev = shost_priv(shost);
- 	int retval = FAILED;
- 
--	tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
--
- 	tw_dev->num_resets++;
- 
--	sdev_printk(KERN_WARNING, SCpnt->device,
--		"WARNING: (0x%02X:0x%04X): Command (0x%x) timed out, resetting card.\n",
--		TW_DRIVER, 0x2c, SCpnt->cmnd[0]);
-+	shost_printk(KERN_WARNING, shost,
-+		     "WARNING: Command timed out, resetting card.");
- 
- 	/* Make sure we are not issuing an ioctl or resetting from ioctl */
- 	mutex_lock(&tw_dev->ioctl_lock);
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 55989eaa2d9f..c18a07591505 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -1423,18 +1423,15 @@ static int twl_scsi_biosparam(struct scsi_device *sdev, struct block_device *bde
- } /* End twl_scsi_biosparam() */
- 
- /* This is the new scsi eh reset function */
--static int twl_scsi_eh_reset(struct scsi_cmnd *SCpnt)
-+static int twl_scsi_eh_reset(struct Scsi_Host *shost)
- {
--	TW_Device_Extension *tw_dev = NULL;
-+	TW_Device_Extension *tw_dev = shost_priv(shost);
- 	int retval = FAILED;
- 
--	tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
--
- 	tw_dev->num_resets++;
- 
--	sdev_printk(KERN_WARNING, SCpnt->device,
--		"WARNING: (0x%02X:0x%04X): Command (0x%x) timed out, resetting card.\n",
--		TW_DRIVER, 0x2c, SCpnt->cmnd[0]);
-+	shost_printk(KERN_WARNING, shost,
-+		     "WARNING: Command timed out, resetting card.");
- 
- 	/* Make sure we are not issuing an ioctl or resetting from ioctl */
- 	mutex_lock(&tw_dev->ioctl_lock);
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index f39c9ec2e781..190597e6b3d2 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -1366,25 +1366,22 @@ static int tw_scsi_biosparam(struct scsi_device *sdev, struct block_device *bdev
- } /* End tw_scsi_biosparam() */
- 
- /* This is the new scsi eh reset function */
--static int tw_scsi_eh_reset(struct scsi_cmnd *SCpnt)
-+static int tw_scsi_eh_reset(struct Scsi_Host *shost)
- {
--	TW_Device_Extension *tw_dev=NULL;
-+	TW_Device_Extension *tw_dev = shost_priv(shost);
- 	int retval = FAILED;
- 
--	tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
--
- 	tw_dev->num_resets++;
- 
--	sdev_printk(KERN_WARNING, SCpnt->device,
--		"WARNING: Command (0x%x) timed out, resetting card.\n",
--		SCpnt->cmnd[0]);
-+	shost_printk(KERN_WARNING, shost,
-+		"WARNING: Command timed out, resetting card.");
- 
- 	/* Make sure we are not issuing an ioctl or resetting from ioctl */
- 	mutex_lock(&tw_dev->ioctl_lock);
- 
- 	/* Now reset the card and some of the device extension data */
- 	if (tw_reset_device_extension(tw_dev)) {
--		printk(KERN_WARNING "3w-xxxx: scsi%d: Reset failed.\n", tw_dev->host->host_no);
-+		shost_printk(KERN_WARNING, shost, "Reset failed.\n");
+-	vdevice = SCpnt->device->hostdata;
+-	if (!vdevice || !vdevice->vtarget) {
++	printk(MYIOC_s_INFO_FMT "attempting target reset!\n", ioc->name);
++	vtarget = starget->hostdata;
++	if (!vtarget) {
+ 		retval = 0;
  		goto out;
  	}
  
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 857be0f3ae5b..7cdea2f0f66a 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -155,7 +155,7 @@ MODULE_LICENSE("GPL");
- 
- STATIC int NCR_700_queuecommand(struct Scsi_Host *h, struct scsi_cmnd *);
- STATIC int NCR_700_abort(struct scsi_cmnd * SCpnt);
--STATIC int NCR_700_host_reset(struct scsi_cmnd * SCpnt);
-+STATIC int NCR_700_host_reset(struct Scsi_Host *host);
- STATIC void NCR_700_chip_setup(struct Scsi_Host *host);
- STATIC void NCR_700_chip_reset(struct Scsi_Host *host);
- STATIC int NCR_700_slave_alloc(struct scsi_device *SDpnt);
-@@ -1934,40 +1934,41 @@ NCR_700_abort(struct scsi_cmnd * SCp)
- }
- 
- STATIC int
--NCR_700_host_reset(struct scsi_cmnd * SCp)
-+NCR_700_host_reset(struct Scsi_Host * host)
- {
- 	DECLARE_COMPLETION_ONSTACK(complete);
--	struct NCR_700_Host_Parameters *hostdata = 
--		(struct NCR_700_Host_Parameters *)SCp->device->host->hostdata[0];
-+	struct NCR_700_Host_Parameters *hostdata =
-+		(struct NCR_700_Host_Parameters *)host->hostdata[0];
- 
--	scmd_printk(KERN_INFO, SCp,
--		"New error handler wants HOST reset, cmd %p\n\t", SCp);
--	scsi_print_command(SCp);
-+	shost_printk(KERN_INFO, host,
-+		"New error handler wants HOST reset\n");
- 
- 	/* In theory, eh_complete should always be null because the
- 	 * eh is single threaded, but just in case we're handling a
- 	 * reset via sg or something */
--	spin_lock_irq(SCp->device->host->host_lock);
-+	spin_lock_irq(host->host_lock);
- 	while (hostdata->eh_complete != NULL) {
--		spin_unlock_irq(SCp->device->host->host_lock);
-+		spin_unlock_irq(host->host_lock);
- 		msleep_interruptible(100);
--		spin_lock_irq(SCp->device->host->host_lock);
-+		spin_lock_irq(host->host_lock);
+ 	/* Target reset to hidden raid component is not supported
+ 	 */
+-	if (vdevice->vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT) {
++	if (vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT) {
+ 		retval = FAILED;
+ 		goto out;
  	}
  
- 	hostdata->eh_complete = &complete;
--	NCR_700_internal_bus_reset(SCp->device->host);
--	NCR_700_chip_reset(SCp->device->host);
-+	NCR_700_internal_bus_reset(host);
-+	NCR_700_chip_reset(host);
+ 	retval = mptscsih_IssueTaskMgmt(hd,
+ 				MPI_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
+-				vdevice->vtarget->channel,
+-				vdevice->vtarget->id, 0, 0,
++				vtarget->channel, vtarget->id, 0, 0,
+ 				mptscsih_get_tm_timeout(ioc));
  
--	spin_unlock_irq(SCp->device->host->host_lock);
-+	spin_unlock_irq(host->host_lock);
- 	wait_for_completion(&complete);
--	spin_lock_irq(SCp->device->host->host_lock);
-+	spin_lock_irq(host->host_lock);
+  out:
+-	printk (MYIOC_s_INFO_FMT "target reset: %s (sc=%p)\n",
+-	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
++	printk (MYIOC_s_INFO_FMT "target reset: %s\n",
++	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ));
  
- 	hostdata->eh_complete = NULL;
--	/* Revalidate the transport parameters of the failing device */
--	if(hostdata->fast)
--		spi_schedule_dv_device(SCp->device);
--
--	spin_unlock_irq(SCp->device->host->host_lock);
-+	/* Revalidate the transport parameters for attached devices */
-+	if(hostdata->fast) {
-+		struct scsi_device *sdev;
-+		__shost_for_each_device(sdev, host)
-+			spi_schedule_dv_device(sdev);
-+	}
-+	spin_unlock_irq(host->host_lock);
- 	return SUCCESS;
+ 	if (retval == 0)
+ 		return SUCCESS;
+diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
+index 4610fe6e64ef..d1887e3e8336 100644
+--- a/drivers/message/fusion/mptscsih.h
++++ b/drivers/message/fusion/mptscsih.h
+@@ -120,7 +120,7 @@ extern void mptscsih_slave_destroy(struct scsi_device *device);
+ extern int mptscsih_slave_configure(struct scsi_device *device);
+ extern int mptscsih_abort(struct scsi_cmnd * SCpnt);
+ extern int mptscsih_dev_reset(struct scsi_cmnd * SCpnt);
+-extern int mptscsih_target_reset(struct scsi_cmnd * SCpnt);
++extern int mptscsih_target_reset(struct Scsi_Host *, struct scsi_target *);
+ extern int mptscsih_bus_reset(struct Scsi_Host *, unsigned int);
+ extern int mptscsih_host_reset(struct Scsi_Host *sh);
+ extern int mptscsih_bios_param(struct scsi_device * sdev, struct block_device *bdev, sector_t capacity, int geom[]);
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index 6c5920db1e9d..d379dea7074c 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -820,6 +820,12 @@ static void mptspi_slave_destroy(struct scsi_device *sdev)
+ 	mptscsih_slave_destroy(sdev);
  }
  
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index 72ceaf650b0d..29a114411410 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -2852,21 +2852,21 @@ static bool blogic_write_outbox(struct blogic_adapter *adapter,
- 
- /* Error Handling (EH) support */
- 
--static int blogic_hostreset(struct scsi_cmnd *SCpnt)
-+static int blogic_hostreset(struct Scsi_Host *shost)
- {
--	struct blogic_adapter *adapter =
--		(struct blogic_adapter *) SCpnt->device->host->hostdata;
--
--	unsigned int id = SCpnt->device->id;
--	struct blogic_tgt_stats *stats = &adapter->tgt_stats[id];
--	int rc;
--
--	spin_lock_irq(SCpnt->device->host->host_lock);
--
--	blogic_inc_count(&stats->adapter_reset_req);
-+	struct blogic_adapter *adapter = shost_priv(shost);
-+	int tgt, rc;
- 
-+	spin_lock_irq(shost->host_lock);
-+	for (tgt = 0; tgt < adapter->maxdev; tgt++) {
-+		struct blogic_tgt_flags *tgt_flags = &adapter->tgt_flags[tgt];
-+		struct blogic_tgt_stats *tgt_stats = &adapter->tgt_stats[tgt];
-+		if (!tgt_flags->tgt_exists)
-+			continue;
-+		blogic_inc_count(&tgt_stats->adapter_reset_req);
-+	}
- 	rc = blogic_resetadapter(adapter, false);
--	spin_unlock_irq(SCpnt->device->host->host_lock);
-+	spin_unlock_irq(shost->host_lock);
- 	return rc;
++static int mptspi_eh_target_reset(struct scsi_target *starget)
++{
++	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
++	return mptscsih_target_reset(shost, starget);
++}
++
+ static const struct scsi_host_template mptspi_driver_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_name			= "mptspi",
+@@ -834,7 +840,7 @@ static const struct scsi_host_template mptspi_driver_template = {
+ 	.slave_destroy			= mptspi_slave_destroy,
+ 	.change_queue_depth 		= mptscsih_change_queue_depth,
+ 	.eh_abort_handler		= mptscsih_abort,
+-	.eh_device_reset_handler	= mptscsih_dev_reset,
++	.eh_target_reset_handler	= mptspi_eh_target_reset,
+ 	.eh_bus_reset_handler		= mptscsih_bus_reset,
+ 	.eh_host_reset_handler		= mptscsih_host_reset,
+ 	.bios_param			= mptscsih_bios_param,
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 76c136d39bf1..5c9a7c9f9a98 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -340,9 +340,12 @@ static int zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *scpnt)
+ 	return zfcp_scsi_task_mgmt_function(sdev, FCP_TMF_LUN_RESET);
  }
  
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index cea3a79d538e..084480d22261 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -2374,14 +2374,13 @@ static void bus_reset_cleanup(struct Scsi_Host *instance)
- 
- /**
-  * NCR5380_host_reset - reset the SCSI host
-- * @cmd: SCSI command undergoing EH
-+ * @instance: SCSI host undergoing EH
-  *
-  * Returns SUCCESS
-  */
- 
--static int NCR5380_host_reset(struct scsi_cmnd *cmd)
-+static int NCR5380_host_reset(struct Scsi_Host *instance)
+-static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
++/*
++ * Note: We need to select a LUN as the storage array doesn't
++ * necessarily supports LUN 0 and might refuse the target reset.
++ */
++static int zfcp_scsi_eh_target_reset_handler(struct scsi_target *starget)
  {
--	struct Scsi_Host *instance = cmd->device->host;
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned long flags;
- 	struct NCR5380_cmd *ncmd;
+-	struct scsi_target *starget = scsi_target(scpnt->device);
+ 	struct fc_rport *rport = starget_to_rport(starget);
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
+ 	struct scsi_device *sdev = NULL, *tmp_sdev;
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index c4a36c0be527..e05d80e1032b 100644
+index 22e431517389..b1b6aca54da6 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -1087,14 +1087,12 @@ static int aac_eh_bus_reset(struct scsi_cmnd* cmd)
+@@ -968,13 +968,12 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
  
  /*
-  *	aac_eh_host_reset	- Host reset command handling
+  *	aac_eh_target_reset	- Target reset command handling
 - *	@scsi_cmd:	SCSI command block causing the reset
-+ *	@host:	SCSI host to be reset
++ *	@starget:	SCSI target to be reset
   *
   */
--static int aac_eh_host_reset(struct scsi_cmnd *cmd)
-+static int aac_eh_host_reset(struct Scsi_Host *host)
+-static int aac_eh_target_reset(struct scsi_cmnd *cmd)
++static int aac_eh_target_reset(struct scsi_target *starget)
  {
 -	struct scsi_device * dev = cmd->device;
 -	struct Scsi_Host * host = dev->host;
--	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
-+	struct aac_dev * aac = shost_priv(host);
- 	int ret = FAILED;
- 	__le32 supported_options2 = 0;
- 	bool is_mu_reset;
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index ab066bb27a57..795bcf8fe0af 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -7010,15 +7010,14 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
- /*
-  * advansys_reset()
-  *
-- * Reset the host associated with the command 'scp'.
-+ * Reset the host.
-  *
-  * This function runs its own thread. Interrupts must be blocked but
-  * sleeping is allowed and no locking other than for host structures is
-  * required. Returns SUCCESS or FAILED.
-  */
--static int advansys_reset(struct scsi_cmnd *scp)
-+static int advansys_reset(struct Scsi_Host *shost)
- {
--	struct Scsi_Host *shost = scp->device->host;
- 	struct asc_board *boardp = shost_priv(shost);
- 	unsigned long flags;
++	struct Scsi_Host * host = dev_to_shost(&starget->dev);
+ 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
+ 	struct aac_hba_map_info *info;
+ 	int count;
+@@ -984,8 +983,8 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
  	int status;
-@@ -7028,7 +7027,7 @@ static int advansys_reset(struct scsi_cmnd *scp)
+ 	u8 command;
  
- 	ASC_STATS(shost, reset);
+-	bus = aac_logical_to_phys(scmd_channel(cmd));
+-	cid = scmd_id(cmd);
++	bus = aac_logical_to_phys(starget->channel);
++	cid = starget->id;
  
--	scmd_printk(KERN_INFO, scp, "SCSI host reset started...\n");
-+	shost_printk(KERN_INFO, shost, "SCSI host reset started...\n");
- 
- 	if (ASC_NARROW_BOARD(boardp)) {
- 		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
-@@ -7039,16 +7038,18 @@ static int advansys_reset(struct scsi_cmnd *scp)
- 
- 		/* Refer to ASC_IERR_* definitions for meaning of 'err_code'. */
- 		if (asc_dvc->err_code || !asc_dvc->overrun_dma) {
--			scmd_printk(KERN_INFO, scp, "SCSI host reset error: "
--				    "0x%x, status: 0x%x\n", asc_dvc->err_code,
-+			shost_printk(KERN_INFO, shost,
-+				     "SCSI host reset error: 0x%x, status: 0x%x\n",
-+				     asc_dvc->err_code,
- 				    status);
- 			ret = FAILED;
- 		} else if (status) {
--			scmd_printk(KERN_INFO, scp, "SCSI host reset warning: "
--				    "0x%x\n", status);
-+			shost_printk(KERN_INFO, shost,
-+				     "SCSI host reset warning: 0x%x\n",
-+				     status);
- 		} else {
--			scmd_printk(KERN_INFO, scp, "SCSI host reset "
--				    "successful\n");
-+			shost_printk(KERN_INFO, shost,
-+				     "SCSI host reset successful\n");
- 		}
- 
- 		ASC_DBG(1, "after AscInitAsc1000Driver()\n");
-@@ -7065,12 +7066,13 @@ static int advansys_reset(struct scsi_cmnd *scp)
- 		ASC_DBG(1, "before AdvResetChipAndSB()\n");
- 		switch (AdvResetChipAndSB(adv_dvc)) {
- 		case ASC_TRUE:
--			scmd_printk(KERN_INFO, scp, "SCSI host reset "
--				    "successful\n");
-+			shost_printk(KERN_INFO, shost,
-+				     "SCSI host reset successful\n");
- 			break;
- 		case ASC_FALSE:
- 		default:
--			scmd_printk(KERN_INFO, scp, "SCSI host reset error\n");
-+			shost_printk(KERN_INFO, shost,
-+				     "SCSI host reset error\n");
- 			ret = FAILED;
- 			break;
- 		}
-diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index 9503996c6325..ebd94cf0952a 100644
---- a/drivers/scsi/aha1542.c
-+++ b/drivers/scsi/aha1542.c
-@@ -920,9 +920,8 @@ static int aha1542_dev_reset(struct scsi_cmnd *cmd)
- 	return SUCCESS;
- }
- 
--static int aha1542_reset(struct scsi_cmnd *cmd, u8 reset_cmd)
-+static int aha1542_reset(struct Scsi_Host *sh, u8 reset_cmd)
- {
--	struct Scsi_Host *sh = cmd->device->host;
- 	struct aha1542_hostdata *aha1542 = shost_priv(sh);
- 	unsigned long flags;
- 	int i;
-@@ -934,9 +933,9 @@ static int aha1542_reset(struct scsi_cmnd *cmd, u8 reset_cmd)
- 	 * we do this?  Try this first, and we can add that later
- 	 * if it turns out to be useful.
- 	 */
--	outb(reset_cmd, CONTROL(cmd->device->host->io_port));
-+	outb(reset_cmd, CONTROL(sh->io_port));
- 
--	if (!wait_mask(STATUS(cmd->device->host->io_port),
-+	if (!wait_mask(STATUS(sh->io_port),
- 	     STATMASK, IDLE, STST | DIAGF | INVDCMD | DF | CDF, 0)) {
- 		spin_unlock_irqrestore(sh->host_lock, flags);
+ 	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS)
  		return FAILED;
-@@ -947,7 +946,7 @@ static int aha1542_reset(struct scsi_cmnd *cmd, u8 reset_cmd)
- 	 * us again after host reset.
- 	 */
- 	if (reset_cmd & HRST)
--		setup_mailboxes(cmd->device->host);
-+		setup_mailboxes(sh);
- 
- 	/*
- 	 * Now try to pick up the pieces.  For all pending commands,
-@@ -955,7 +954,8 @@ static int aha1542_reset(struct scsi_cmnd *cmd, u8 reset_cmd)
- 	 * out.  We do not try and restart any commands or anything -
- 	 * the strategy handler takes care of that crap.
- 	 */
--	shost_printk(KERN_WARNING, cmd->device->host, "Sent BUS RESET to scsi host %d\n", cmd->device->host->host_no);
-+	shost_printk(KERN_WARNING, sh, "Sent BUS RESET to scsi host %d\n",
-+		     sh->host_no);
- 
- 	for (i = 0; i < AHA1542_MAILBOXES; i++) {
- 		if (aha1542->int_cmds[i] != NULL) {
-@@ -983,12 +983,12 @@ static int aha1542_reset(struct scsi_cmnd *cmd, u8 reset_cmd)
- 
- static int aha1542_bus_reset(struct scsi_cmnd *cmd)
- {
--	return aha1542_reset(cmd, SCRST);
-+	return aha1542_reset(cmd->device->host, SCRST);
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 441ad2ebc5d5..399fbb452740 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -385,11 +385,11 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
+ 	return rc;
  }
  
--static int aha1542_host_reset(struct scsi_cmnd *cmd)
-+static int aha1542_host_reset(struct Scsi_Host *sh)
+-static int beiscsi_eh_session_reset(struct scsi_cmnd *sc)
++static int beiscsi_eh_session_reset(struct scsi_target *starget)
  {
--	return aha1542_reset(cmd, HRST | SCRST);
-+	return aha1542_reset(sh, HRST | SCRST);
+ 	struct iscsi_cls_session *cls_session;
+ 
+-	cls_session = starget_to_session(scsi_target(sc->device));
++	cls_session = starget_to_session(starget);
+ 	return iscsi_eh_session_reset(cls_session);
  }
  
- static int aha1542_biosparam(struct scsi_device *sdev,
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index 0b046e4b395c..29e88bc60aeb 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -2631,15 +2631,15 @@ int acornscsi_abort(struct scsi_cmnd *SCpnt)
- /*
-  * Prototype: int acornscsi_reset(struct scsi_cmnd *SCpnt)
-  * Purpose  : reset a command on this host/reset this host
-- * Params   : SCpnt  - command causing reset
-+ * Params   : shost  - host to be reset
-  * Returns  : one of SCSI_RESET_ macros
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index ef352fc59458..87603f9f79db 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -362,11 +362,10 @@ bfad_im_reset_lun_handler(struct scsi_cmnd *cmnd)
+  * Scsi_Host template entry, resets the target and abort all commands.
   */
--int acornscsi_host_reset(struct scsi_cmnd *SCpnt)
-+int acornscsi_host_reset(struct Scsi_Host *shost)
+ static int
+-bfad_im_reset_target_handler(struct scsi_cmnd *cmnd)
++bfad_im_reset_target_handler(struct scsi_target *starget)
  {
--	AS_Host *host = (AS_Host *)SCpnt->device->host->hostdata;
-+	AS_Host *host = shost_priv(shost);
- 	struct scsi_cmnd *SCptr;
-     
--    host->stats.resets += 1;
-+	host->stats.resets += 1;
- 
- #if (DEBUG & DEBUG_RESET)
-     {
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index e6289c6af5ef..efa6f2527428 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2649,16 +2649,16 @@ static void fas216_init_chip(FAS216_Info *info)
- }
- 
+-	struct Scsi_Host *shost = cmnd->device->host;
+-	struct scsi_target *starget = scsi_target(cmnd->device);
+ 	struct fc_rport *rport = starget_to_rport(starget);
++	struct Scsi_Host *shost = rport_to_shost(rport);
+ 	struct bfad_im_port_s *im_port =
+ 				(struct bfad_im_port_s *) shost->hostdata[0];
+ 	struct bfad_s *bfad = im_port->bfad;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 7e74f77da14f..b3ed22d97572 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -551,7 +551,7 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
+ void bnx2fc_add_2_sq(struct bnx2fc_rport *tgt, u16 xid);
+ void bnx2fc_ring_doorbell(struct bnx2fc_rport *tgt);
+ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd);
+-int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd);
++int bnx2fc_eh_target_reset(struct scsi_target *sc_tgt);
+ int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd);
+ void bnx2fc_rport_event_handler(struct fc_lport *lport,
+ 				struct fc_rport_priv *rport,
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 33057908f147..f07a667de37f 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1051,14 +1051,14 @@ int bnx2fc_initiate_cleanup(struct bnx2fc_cmd *io_req)
  /**
-- * fas216_eh_host_reset - Reset the host associated with this command
-- * @SCpnt: command specifing host to reset
-+ * fas216_eh_host_reset - Reset the host
-+ * @shost: host to reset
+  * bnx2fc_eh_target_reset: Reset a target
   *
-- * Reset the host associated with this command.
-+ * Reset the specified host.
-  * Returns: FAILED if unable to reset.
-  * Notes: io_request_lock is taken, and irqs are disabled
-  */
--int fas216_eh_host_reset(struct scsi_cmnd *SCpnt)
-+int fas216_eh_host_reset(struct Scsi_Host *shost)
- {
--	FAS216_Info *info = (FAS216_Info *)SCpnt->device->host->hostdata;
-+	FAS216_Info *info = shost_priv(shost);
- 
- 	spin_lock_irq(info->host->host_lock);
- 
-diff --git a/drivers/scsi/arm/fas216.h b/drivers/scsi/arm/fas216.h
-index 08113277a2a9..f17583f143b3 100644
---- a/drivers/scsi/arm/fas216.h
-+++ b/drivers/scsi/arm/fas216.h
-@@ -394,11 +394,11 @@ extern int fas216_eh_device_reset(struct scsi_cmnd *SCpnt);
-  */
- extern int fas216_eh_bus_reset(struct scsi_cmnd *SCpnt);
- 
--/* Function: int fas216_eh_host_reset(struct scsi_cmnd *SCpnt)
-+/* Function: int fas216_eh_host_reset(struct Scsi_Host *shost)
-  * Purpose : Reset the host associated with this command
-- * Params  : SCpnt - command specifing host to reset
-+ * Params  : shost - host to reset
-  * Returns : FAILED if unable to reset
-  */
--extern int fas216_eh_host_reset(struct scsi_cmnd *SCpnt);
-+extern int fas216_eh_host_reset(struct Scsi_Host *shost);
- 
- #endif /* FAS216_H */
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index d401cf27113a..d967141f366c 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -667,7 +667,7 @@ static void atari_scsi_falcon_reg_write(unsigned int reg, u8 value)
- 
- #include "NCR5380.c"
- 
--static int atari_scsi_host_reset(struct scsi_cmnd *cmd)
-+static int atari_scsi_host_reset(struct Scsi_Host *shost)
- {
- 	int rv;
- 	unsigned long flags;
-@@ -684,7 +684,7 @@ static int atari_scsi_host_reset(struct scsi_cmnd *cmd)
- 		atari_dma_orig_addr = NULL;
- 	}
- 
--	rv = NCR5380_host_reset(cmd);
-+	rv = NCR5380_host_reset(shost);
- 
- 	/* The 5380 raises its IRQ line while _RST is active but the ST DMA
- 	 * "lock" has been released so this interrupt may end up handled by
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index debd36974119..187757ae7c1f 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -2476,7 +2476,7 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
- 
- /**
-  * cxlflash_eh_host_reset_handler() - reset the host adapter
-- * @scp:	SCSI command from stack identifying host.
-+ * @host:	SCSI host adapter.
+- * @sc_cmd:	SCSI command
++ * @sc_tgt:	SCSI target
   *
-  * Following a reset, the state is evaluated again in case an EEH occurred
-  * during the reset. In such a scenario, the host reset will either yield
-@@ -2487,11 +2487,10 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
-  *	SUCCESS as defined in scsi/scsi.h
-  *	FAILED as defined in scsi/scsi.h
+  * Set from SCSI host template to send task mgmt command to the target
+  *	and wait for the response
   */
--static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
-+static int cxlflash_eh_host_reset_handler(struct Scsi_Host *host)
+-int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd)
++int bnx2fc_eh_target_reset(struct scsi_target *sc_tgt)
  {
- 	int rc = SUCCESS;
- 	int rcr = 0;
--	struct Scsi_Host *host = scp->device->host;
- 	struct cxlflash_cfg *cfg = shost_priv(host);
- 	struct device *dev = &cfg->dev->dev;
+-	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
++	struct fc_rport *rport = starget_to_rport(sc_tgt);
+ 	struct fc_lport *lport = shost_priv(rport_to_shost(rport));
  
+ 	return bnx2fc_initiate_tmf(lport, rport, 0, FCP_TMF_TGT_RESET);
 diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
-index ed63f7a9ea54..a104d1a3a9da 100644
+index 9293a69edc08..c834f2f27ac9 100644
 --- a/drivers/scsi/esas2r/esas2r.h
 +++ b/drivers/scsi/esas2r/esas2r.h
-@@ -976,7 +976,7 @@ long esas2r_proc_ioctl(struct file *fp, unsigned int cmd, unsigned long arg);
- /* SCSI error handler (eh) functions */
- int esas2r_eh_abort(struct scsi_cmnd *cmd);
+@@ -978,7 +978,7 @@ int esas2r_eh_abort(struct scsi_cmnd *cmd);
  int esas2r_device_reset(struct scsi_cmnd *cmd);
--int esas2r_host_reset(struct scsi_cmnd *cmd);
-+int esas2r_host_reset(struct Scsi_Host *shost);
- int esas2r_bus_reset(struct scsi_cmnd *cmd);
- int esas2r_target_reset(struct scsi_cmnd *cmd);
+ int esas2r_host_reset(struct Scsi_Host *shost);
+ int esas2r_bus_reset(struct Scsi_Host *shost, unsigned int channel);
+-int esas2r_target_reset(struct scsi_cmnd *cmd);
++int esas2r_target_reset(struct scsi_target *starget);
  
+ /* Internal functions */
+ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
 diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index f700a16cd885..9b29890bac29 100644
+index 6c436f75ff88..ef2e43c2803a 100644
 --- a/drivers/scsi/esas2r/esas2r_main.c
 +++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -1062,10 +1062,9 @@ int esas2r_eh_abort(struct scsi_cmnd *cmd)
- 	return SUCCESS;
+@@ -1103,10 +1103,10 @@ int esas2r_bus_reset(struct Scsi_Host *shost, unsigned int channel)
+ 	return esas2r_host_bus_reset(shost, false);
  }
  
--static int esas2r_host_bus_reset(struct scsi_cmnd *cmd, bool host_reset)
-+static int esas2r_host_bus_reset(struct Scsi_Host *shost, bool host_reset)
+-static int esas2r_dev_targ_reset(struct scsi_cmnd *cmd, bool target_reset)
++static int esas2r_dev_targ_reset(struct Scsi_Host *shost, int id, u64 lun,
++				 bool target_reset)
  {
 -	struct esas2r_adapter *a =
 -		(struct esas2r_adapter *)cmd->device->host->hostdata;
 +	struct esas2r_adapter *a = shost_priv(shost);
+ 	struct esas2r_request *rq;
+ 	u8 task_management_status = RS_PENDING;
+ 	bool completed;
+@@ -1120,34 +1120,30 @@ static int esas2r_dev_targ_reset(struct scsi_cmnd *cmd, bool target_reset)
+ 		if (target_reset) {
+ 			esas2r_log(ESAS2R_LOG_CRIT,
+ 				   "unable to allocate a request for a "
+-				   "target reset (%d)!",
+-				   cmd->device->id);
++				   "target reset (%d)!", id);
+ 		} else {
+ 			esas2r_log(ESAS2R_LOG_CRIT,
+ 				   "unable to allocate a request for a "
+-				   "device reset (%d:%llu)!",
+-				   cmd->device->id,
+-				   cmd->device->lun);
++				   "device reset (%d:%llu)!", id, lun);
+ 		}
  
- 	if (test_bit(AF_DEGRADED_MODE, &a->flags))
+ 
  		return FAILED;
-@@ -1090,18 +1089,20 @@ static int esas2r_host_bus_reset(struct scsi_cmnd *cmd, bool host_reset)
- 	return SUCCESS;
- }
+ 	}
  
--int esas2r_host_reset(struct scsi_cmnd *cmd)
-+int esas2r_host_reset(struct Scsi_Host *shost)
+-	rq->target_id = cmd->device->id;
+-	rq->vrq->scsi.flags |= cpu_to_le32(cmd->device->lun);
++	rq->target_id = id;
++	rq->vrq->scsi.flags |= cpu_to_le32(lun);
+ 	rq->req_stat = RS_PENDING;
+ 
+ 	rq->comp_cb = complete_task_management_request;
+ 	rq->task_management_status_ptr = &task_management_status;
+ 
+ 	if (target_reset) {
+-		esas2r_debug("issuing target reset (%p) to id %d", rq,
+-			     cmd->device->id);
++		esas2r_debug("issuing target reset (%p) to id %d", rq, id);
+ 		completed = esas2r_send_task_mgmt(a, rq, 0x20);
+ 	} else {
+-		esas2r_debug("issuing device reset (%p) to id %d lun %d", rq,
+-			     cmd->device->id, cmd->device->lun);
++		esas2r_debug("issuing device reset (%p) to id %d lun %llu", rq,
++			     id, lun);
+ 		completed = esas2r_send_task_mgmt(a, rq, 0x10);
+ 	}
+ 
+@@ -1181,17 +1177,22 @@ static int esas2r_dev_targ_reset(struct scsi_cmnd *cmd, bool target_reset)
+ 
+ int esas2r_device_reset(struct scsi_cmnd *cmd)
  {
--	esas2r_log(ESAS2R_LOG_INFO, "host_reset (%p)", cmd);
-+	esas2r_log(ESAS2R_LOG_INFO, "host_reset (%p)", shost);
- 
--	return esas2r_host_bus_reset(cmd, true);
-+	return esas2r_host_bus_reset(shost, true);
- }
- 
- int esas2r_bus_reset(struct scsi_cmnd *cmd)
- {
--	esas2r_log(ESAS2R_LOG_INFO, "bus_reset (%p)", cmd);
-+	struct Scsi_Host *shost = cmd->device->host;
+-	esas2r_log(ESAS2R_LOG_INFO, "device_reset (%p)", cmd);
++	struct scsi_device *sdev = cmd->device;
++	struct Scsi_Host *shost = sdev->host;
 +
-+	esas2r_log(ESAS2R_LOG_INFO, "bus_reset (%p)", shost);
++	esas2r_log(ESAS2R_LOG_INFO, "device_reset");
  
--	return esas2r_host_bus_reset(cmd, false);
-+	return esas2r_host_bus_reset(shost, false);
+-	return esas2r_dev_targ_reset(cmd, false);
++	return esas2r_dev_targ_reset(shost, sdev->id, sdev->lun, false);
+ 
  }
  
- static int esas2r_dev_targ_reset(struct scsi_cmnd *cmd, bool target_reset)
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 97816a0e6240..355fec046220 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -2640,9 +2640,9 @@ static int esp_eh_bus_reset_handler(struct scsi_cmnd *cmd)
- }
- 
- /* All bets are off, reset the entire device.  */
--static int esp_eh_host_reset_handler(struct scsi_cmnd *cmd)
-+static int esp_eh_host_reset_handler(struct Scsi_Host *shost)
+-int esas2r_target_reset(struct scsi_cmnd *cmd)
++int esas2r_target_reset(struct scsi_target *starget)
  {
--	struct esp *esp = shost_priv(cmd->device->host);
-+	struct esp *esp = shost_priv(shost);
- 	unsigned long flags;
+-	esas2r_log(ESAS2R_LOG_INFO, "target_reset (%p)", cmd);
++	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
++
++	esas2r_log(ESAS2R_LOG_INFO, "target_reset");
  
- 	spin_lock_irqsave(esp->host->host_lock, flags);
-diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
-index 504c4e0c5d17..347fb668bf29 100644
---- a/drivers/scsi/fdomain.c
-+++ b/drivers/scsi/fdomain.c
-@@ -456,9 +456,8 @@ static int fdomain_abort(struct scsi_cmnd *cmd)
- 	return SUCCESS;
+-	return esas2r_dev_targ_reset(cmd, true);
++	return esas2r_dev_targ_reset(shost, starget->id, 0, true);
  }
  
--static int fdomain_host_reset(struct scsi_cmnd *cmd)
-+static int fdomain_host_reset(struct Scsi_Host *sh)
- {
--	struct Scsi_Host *sh = cmd->device->host;
- 	struct fdomain *fd = shost_priv(sh);
- 	unsigned long flags;
- 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 8ffcafb4687f..2e2b49ba8cdf 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -347,7 +347,7 @@ void fnic_update_mac_locked(struct fnic *, u8 *new);
- int fnic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
- int fnic_abort_cmd(struct scsi_cmnd *);
- int fnic_device_reset(struct scsi_cmnd *);
--int fnic_host_reset(struct scsi_cmnd *);
-+int fnic_host_reset(struct Scsi_Host *);
- int fnic_reset(struct Scsi_Host *);
- void fnic_scsi_cleanup(struct fc_lport *);
- void fnic_scsi_abort_io(struct fc_lport *);
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 90f30944eab3..5dc8e6df5115 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -2457,11 +2457,10 @@ int fnic_reset(struct Scsi_Host *shost)
-  * host is offlined by SCSI.
-  *
-  */
--int fnic_host_reset(struct scsi_cmnd *sc)
-+int fnic_host_reset(struct Scsi_Host *shost)
- {
- 	int ret;
- 	unsigned long wait_host_tmo;
--	struct Scsi_Host *shost = sc->device->host;
- 	struct fc_lport *lp = shost_priv(shost);
- 	struct fnic *fnic = lport_priv(lp);
- 	unsigned long flags;
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index f5334ccbf2ca..b9e241b9bb54 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -1088,12 +1088,12 @@ static int hptiop_reset_hba(struct hptiop_hba *hba)
- 	return 0;
- }
- 
--static int hptiop_reset(struct scsi_cmnd *scp)
-+static int hptiop_reset(struct Scsi_Host *host)
- {
--	struct hptiop_hba * hba = (struct hptiop_hba *)scp->device->host->hostdata;
-+	struct hptiop_hba * hba = shost_priv(host);
- 
- 	printk(KERN_WARNING "hptiop_reset(%d/%d/%d)\n",
--	       scp->device->host->host_no, -1, -1);
-+	       host->host_no, -1, -1);
- 
- 	return hptiop_reset_hba(hba)? FAILED : SUCCESS;
- }
+ void esas2r_log_request_failure(struct esas2r_adapter *a,
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 92c440f2e3a7..048a0958766f 100644
+index 048a0958766f..cad1ea954fad 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3049,13 +3049,13 @@ static int ibmvfc_eh_target_reset_handler(struct scsi_cmnd *cmd)
+@@ -2997,14 +2997,13 @@ static void ibmvfc_dev_cancel_all_noreset(struct scsi_device *sdev, void *data)
  
  /**
-  * ibmvfc_eh_host_reset_handler - Reset the connection to the server
-- * @cmd:	struct scsi_cmnd having problems
-+ * @shost:	struct Scsi_Host having problems
+  * ibmvfc_eh_target_reset_handler - Reset the target
+- * @cmd:	scsi command struct
++ * @starget:	scsi target struct
   *
+  * Returns:
+  *	SUCCESS / FAST_IO_FAIL / FAILED
   **/
--static int ibmvfc_eh_host_reset_handler(struct scsi_cmnd *cmd)
-+static int ibmvfc_eh_host_reset_handler(struct Scsi_Host *shost)
+-static int ibmvfc_eh_target_reset_handler(struct scsi_cmnd *cmd)
++static int ibmvfc_eh_target_reset_handler(struct scsi_target *starget)
  {
- 	int rc;
--	struct ibmvfc_host *vhost = shost_priv(cmd->device->host);
-+	struct ibmvfc_host *vhost = shost_priv(shost);
- 
- 	dev_err(vhost->dev, "Resetting connection due to error recovery\n");
- 	rc = ibmvfc_issue_fc_host_lip(vhost->host);
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 59599299615d..83a189cd0df3 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1733,12 +1733,12 @@ static int ibmvscsi_eh_device_reset_handler(struct scsi_cmnd *cmd)
+-	struct scsi_target *starget = scsi_target(cmd->device);
+ 	struct fc_rport *rport = starget_to_rport(starget);
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
+ 	struct ibmvfc_host *vhost = shost_priv(shost);
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 3b9e1c35936e..3afa0cc067ce 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2738,17 +2738,17 @@ static int iscsi_eh_target_reset(struct iscsi_cls_session *cls_session)
  
  /**
-  * ibmvscsi_eh_host_reset_handler - Reset the connection to the server
-- * @cmd:	struct scsi_cmnd having problems
-+ * @shost:	struct Scsi_Host having problems
- */
--static int ibmvscsi_eh_host_reset_handler(struct scsi_cmnd *cmd)
-+static int ibmvscsi_eh_host_reset_handler(struct Scsi_Host *shost)
- {
- 	unsigned long wait_switch = 0;
--	struct ibmvscsi_host_data *hostdata = shost_priv(cmd->device->host);
-+	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
- 
- 	dev_err(hostdata->dev, "Resetting connection due to error recovery\n");
- 
-diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
-index 180a5ddedb2c..64fa8e98494c 100644
---- a/drivers/scsi/imm.c
-+++ b/drivers/scsi/imm.c
-@@ -998,11 +998,11 @@ static void imm_reset_pulse(unsigned int base)
- 	w_ctr(base, 0x04);
- }
- 
--static int imm_reset(struct scsi_cmnd *cmd)
-+static int imm_reset(struct Scsi_Host *host)
- {
--	imm_struct *dev = imm_dev(cmd->device->host);
-+	imm_struct *dev = imm_dev(host);
- 
--	if (imm_scsi_pointer(cmd)->phase)
-+	if (dev->cur_cmd && imm_scsi_pointer(dev->cur_cmd)->phase)
- 		imm_disconnect(dev);
- 	dev->cur_cmd = NULL;	/* Forget the problem */
- 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 4e13797b2a4a..9cafc2bb338b 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -4959,14 +4959,13 @@ static int ipr_wait_for_ops(struct ipr_ioa_cfg *ioa_cfg, void *device,
- 	return SUCCESS;
- }
- 
--static int ipr_eh_host_reset(struct scsi_cmnd *cmd)
-+static int ipr_eh_host_reset(struct Scsi_Host *shost)
- {
--	struct ipr_ioa_cfg *ioa_cfg;
-+	struct ipr_ioa_cfg *ioa_cfg = shost_priv(shost);
- 	unsigned long lock_flags = 0;
- 	int rc = SUCCESS;
- 
- 	ENTER;
--	ioa_cfg = (struct ipr_ioa_cfg *) cmd->device->host->hostdata;
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 
- 	if (!ioa_cfg->in_reset_reload && !ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead) {
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 10cf5775a939..1faf4566b884 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -229,7 +229,7 @@ module_param(ips, charp, 0);
-  * Function prototypes
+  * iscsi_eh_recover_target - reset target and possibly the session
+- * @sc: scsi command
++ * @starget: scsi target
+  *
+  * This will attempt to send a warm target reset. If that fails,
+  * we will escalate to ERL0 session recovery.
   */
- static int ips_eh_abort(struct scsi_cmnd *);
--static int ips_eh_reset(struct scsi_cmnd *);
-+static int ips_eh_reset(struct Scsi_Host *);
- static int ips_queue(struct Scsi_Host *, struct scsi_cmnd *);
- static const char *ips_info(struct Scsi_Host *);
- static irqreturn_t do_ipsintr(int, void *);
-@@ -829,11 +829,11 @@ int ips_eh_abort(struct scsi_cmnd *SC)
- /* NOTE: this routine is called under the io_request_lock spinlock          */
- /*                                                                          */
- /****************************************************************************/
--static int __ips_eh_reset(struct scsi_cmnd *SC)
-+static int __ips_eh_reset(struct Scsi_Host *shost)
+-int iscsi_eh_recover_target(struct scsi_cmnd *sc)
++int iscsi_eh_recover_target(struct scsi_target *starget)
  {
- 	int ret;
- 	int i;
--	ips_ha_t *ha;
-+	ips_ha_t *ha = shost_priv(shost);
- 	ips_scb_t *scb;
- 
- 	METHOD_TRACE("ips_eh_reset", 1);
-@@ -842,20 +842,6 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 	return (FAILED);
- #else
- 
--	if (!SC) {
--		DEBUG(1, "Reset called with NULL scsi command");
--
--		return (FAILED);
--	}
--
--	ha = (ips_ha_t *) SC->device->host->hostdata;
--
--	if (!ha) {
--		DEBUG(1, "Reset called with NULL ha struct");
--
--		return (FAILED);
--	}
--
- 	if (!ha->active)
- 		return (FAILED);
- 
-@@ -994,13 +980,13 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 
- }
- 
--static int ips_eh_reset(struct scsi_cmnd *SC)
-+static int ips_eh_reset(struct Scsi_Host *shost)
- {
+ 	struct iscsi_cls_session *cls_session;
  	int rc;
  
--	spin_lock_irq(SC->device->host->host_lock);
--	rc = __ips_eh_reset(SC);
--	spin_unlock_irq(SC->device->host->host_lock);
-+	spin_lock_irq(shost->host_lock);
-+	rc = __ips_eh_reset(shost);
-+	spin_unlock_irq(shost->host_lock);
- 
- 	return rc;
+-	cls_session = starget_to_session(scsi_target(sc->device));
++	cls_session = starget_to_session(starget);
+ 	rc = iscsi_eh_target_reset(cls_session);
+ 	if (rc == FAILED)
+ 		rc = iscsi_eh_session_reset(cls_session);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 9047cfcd1072..3fa0c55a2234 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -478,11 +478,12 @@ int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
  }
-@@ -1078,7 +1064,7 @@ static int ips_queue_lck(struct scsi_cmnd *SC)
- 				return (0);
- 			}
- 			ha->ioctl_reset = 1;	/* This reset request is from an IOCTL */
--			__ips_eh_reset(SC);
-+			__ips_eh_reset(SC->device->host);
- 			SC->result = DID_OK << 16;
- 			scsi_done(SC);
- 			return (0);
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 945adca5e72f..2ee697dd4ce3 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -2186,11 +2186,10 @@ EXPORT_SYMBOL(fc_eh_device_reset);
+ EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
  
- /**
-  * fc_eh_host_reset() - Reset a Scsi_Host.
-- * @sc_cmd: The SCSI command that identifies the SCSI host to be reset
-+ * @shost: The SCSI host to be reset
-  */
--int fc_eh_host_reset(struct scsi_cmnd *sc_cmd)
-+int fc_eh_host_reset(struct Scsi_Host *shost)
+-int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
++int sas_eh_target_reset_handler(struct scsi_target *starget)
  {
--	struct Scsi_Host *shost = sc_cmd->device->host;
- 	struct fc_lport *lport = shost_priv(shost);
- 	unsigned long wait_tmo;
+ 	int res;
+-	struct Scsi_Host *host = cmd->device->host;
+-	struct domain_device *dev = cmd_to_domain_dev(cmd);
++	struct domain_device *dev = starget_to_domain_dev(starget);
++	struct sas_rphy *rphy = dev->rphy;
++	struct Scsi_Host *host = dev_to_shost(rphy->dev.parent);
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
  
+ 	if (current != host->ehandler)
+@@ -515,7 +516,7 @@ static int try_to_reset_cmd_device(struct scsi_cmnd *cmd)
+ 
+ try_target_reset:
+ 	if (shost->hostt->eh_target_reset_handler)
+-		return shost->hostt->eh_target_reset_handler(cmd);
++		return shost->hostt->eh_target_reset_handler(scsi_target(cmd->device));
+ 
+ 	return FAILED;
+ }
 diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index d26941b131fd..98aa17a6448a 100644
+index 98aa17a6448a..244b7a6f8616 100644
 --- a/drivers/scsi/lpfc/lpfc_scsi.c
 +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -6160,7 +6160,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+@@ -6035,7 +6035,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
  
  /**
-  * lpfc_host_reset_handler - scsi_host_template eh_host_reset_handler entry pt
+  * lpfc_target_reset_handler - scsi_host_template eh_target_reset entry point
 - * @cmnd: Pointer to scsi_cmnd data structure.
-+ * @shost: Pointer to Scsi_Host data structure.
++ * @starget: Pointer to scsi_target data structure.
   *
-  * This routine does host reset to the adaptor port. It brings the HBA
-  * offline, performs a board restart, and then brings the board back online.
-@@ -6175,9 +6175,8 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+  * This routine does a target reset by sending a TARGET_RESET task management
+  * command.
+@@ -6045,15 +6045,15 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
   *  0x2002 - Success
   **/
  static int
--lpfc_host_reset_handler(struct scsi_cmnd *cmnd)
-+lpfc_host_reset_handler(struct Scsi_Host *shost)
+-lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
++lpfc_target_reset_handler(struct scsi_target *starget)
  {
--	struct Scsi_Host *shost = cmnd->device->host;
+-	struct Scsi_Host  *shost = cmnd->device->host;
+-	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
++	struct fc_rport *rport = starget_to_rport(starget);
++	struct Scsi_Host  *shost = rport_to_shost(rport);
  	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_hba *phba = vport->phba;
- 	int rc, ret = SUCCESS;
-diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
-index 6a019132109c..1f98254c0ed8 100644
---- a/drivers/scsi/mac53c94.c
-+++ b/drivers/scsi/mac53c94.c
-@@ -100,14 +100,14 @@ static int mac53c94_queue_lck(struct scsi_cmnd *cmd)
- 
- static DEF_SCSI_QCMD(mac53c94_queue)
- 
--static int mac53c94_host_reset(struct scsi_cmnd *cmd)
-+static int mac53c94_host_reset(struct Scsi_Host *shost)
- {
--	struct fsc_state *state = (struct fsc_state *) cmd->device->host->hostdata;
-+	struct fsc_state *state = shost_priv(shost);
- 	struct mac53c94_regs __iomem *regs = state->regs;
- 	struct dbdma_regs __iomem *dma = state->dma;
- 	unsigned long flags;
- 
--	spin_lock_irqsave(cmd->device->host->host_lock, flags);
-+	spin_lock_irqsave(shost->host_lock, flags);
- 
- 	writel((RUN|PAUSE|FLUSH|WAKE) << 16, &dma->control);
- 	writeb(CMD_SCSI_RESET, &regs->command);	/* assert RST */
-@@ -117,7 +117,7 @@ static int mac53c94_host_reset(struct scsi_cmnd *cmd)
- 	mac53c94_init(state);
- 	writeb(CMD_NOP, &regs->command);
- 
--	spin_unlock_irqrestore(cmd->device->host->host_lock, flags);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 	return SUCCESS;
- }
- 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index d59964ceef47..96429f5bd150 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -1876,14 +1876,12 @@ megaraid_abort(struct scsi_cmnd *cmd)
- 
- 
- static int
--megaraid_reset(struct scsi_cmnd *cmd)
-+megaraid_reset(struct Scsi_Host *shost)
- {
--	adapter_t	*adapter;
-+	adapter_t	*adapter = shost_priv(shost);
- 	megacmd_t	mc;
- 	int		rval;
- 
--	adapter = (adapter_t *)cmd->device->host->hostdata;
--
- #if MEGA_HAVE_CLUSTERING
- 	mc.cmd = MEGA_CLUSTER_CMD;
- 	mc.opcode = MEGA_RESET_RESERVATIONS;
-diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
-index 013fbfb911b9..43acad67d95f 100644
---- a/drivers/scsi/megaraid.h
-+++ b/drivers/scsi/megaraid.h
-@@ -973,7 +973,7 @@ static irqreturn_t megaraid_isr_iomapped(int, void *);
- static void mega_free_scb(adapter_t *, scb_t *);
- 
- static int megaraid_abort(struct scsi_cmnd *);
--static int megaraid_reset(struct scsi_cmnd *);
-+static int megaraid_reset(struct Scsi_Host *);
- static int megaraid_abort_and_reset(adapter_t *, struct scsi_cmnd *, int);
- static int megaraid_biosparam(struct scsi_device *, struct block_device *,
- 		sector_t, int []);
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index bc867da650b6..36aa4b0c335c 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -92,7 +92,7 @@ static int megaraid_sysfs_alloc_resources(adapter_t *);
- static void megaraid_sysfs_free_resources(adapter_t *);
- 
- static int megaraid_abort_handler(struct scsi_cmnd *);
--static int megaraid_reset_handler(struct scsi_cmnd *);
-+static int megaraid_reset_handler(struct Scsi_Host *);
- 
- static int mbox_post_sync_cmd(adapter_t *, uint8_t []);
- static int mbox_post_sync_cmd_fast(adapter_t *, uint8_t []);
-@@ -2502,8 +2502,8 @@ megaraid_abort_handler(struct scsi_cmnd *scp)
- }
- 
- /**
-- * megaraid_reset_handler - device reset handler for mailbox based driver
-- * @scp		: reference command
-+ * megaraid_reset_handler - host reset handler for mailbox based driver
-+ * @shost	: host to reset
-  *
-  * Reset handler for the mailbox based controller. First try to find out if
-  * the FW is still live, in which case the outstanding commands counter mut go
-@@ -2512,7 +2512,7 @@ megaraid_abort_handler(struct scsi_cmnd *scp)
-  * host.
-  **/
- static int
--megaraid_reset_handler(struct scsi_cmnd *scp)
-+megaraid_reset_handler(struct Scsi_Host *shost)
- {
- 	adapter_t	*adapter;
- 	scb_t		*scb;
-@@ -2525,7 +2525,7 @@ megaraid_reset_handler(struct scsi_cmnd *scp)
- 	int		i;
- 	uioc_t		*kioc;
- 
--	adapter		= SCP2ADAPTER(scp);
-+	adapter		= (adapter_t *)SCSIHOST2ADAP(shost);
- 	raid_dev	= ADAP2RAIDDEV(adapter);
- 
- 	// return failure if adapter is not responding
-@@ -2556,15 +2556,9 @@ megaraid_reset_handler(struct scsi_cmnd *scp)
- 
- 			megaraid_mbox_mm_done(adapter, scb);
- 		} else {
--			if (scb->scp == scp) {	// Found command
--				con_log(CL_ANN, (KERN_WARNING
--					"megaraid: %d[%d:%d], reset from pending list\n",
--					scb->sno, scb->dev_channel, scb->dev_target));
--			} else {
--				con_log(CL_ANN, (KERN_WARNING
-+			con_log(CL_ANN, (KERN_WARNING
- 				"megaraid: IO packet with %d[%d:%d] being reset\n",
- 				scb->sno, scb->dev_channel, scb->dev_target));
--			}
- 
- 			scb->scp->result = (DID_RESET << 16);
- 			scsi_done(scb->scp);
+ 	struct lpfc_rport_data *rdata;
+ 	struct lpfc_nodelist *pnode;
+-	unsigned tgt_id = cmnd->device->id;
+-	uint64_t lun_id = cmnd->device->lun;
++	unsigned tgt_id = starget->id;
++	uint64_t lun_id = 0;
+ 	struct lpfc_scsi_event_header scsi_event;
+ 	int status;
+ 	u32 logit = LOG_FCP;
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 56624cbf7fa5..29fc5f22af63 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2725,7 +2725,8 @@ void megasas_setup_jbod_map(struct megasas_instance *instance);
+ void megasas_update_sdev_properties(struct scsi_device *sdev);
+ int megasas_reset_fusion(struct Scsi_Host *shost, int reason);
+ int megasas_task_abort_fusion(struct scsi_cmnd *scmd);
+-int megasas_reset_target_fusion(struct scsi_cmnd *scmd);
++int megasas_reset_target_fusion(struct Scsi_Host *shost,
++				struct scsi_target *starget);
+ u32 mega_mod64(u64 dividend, u32 divisor);
+ int megasas_alloc_fusion_context(struct megasas_instance *instance);
+ void megasas_free_fusion_context(struct megasas_instance *instance);
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3d4f13da1ae8..cdd56144c841 100644
+index cdd56144c841..75de40af2521 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -2890,21 +2890,18 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
- 
+@@ -3104,19 +3104,19 @@ static int megasas_task_abort(struct scsi_cmnd *scmd)
  /**
-  * megasas_generic_reset -	Generic reset routine
-- * @scmd:			Mid-layer SCSI command
-+ * @shost:			Mid-layer SCSI host
-  *
-- * This routine implements a generic reset handler for device, bus and host
-- * reset requests. Device, bus and host specific reset handlers can use this
-+ * This routine implements a generic reset handler for host
-+ * reset requests. Host specific reset handlers can use this
-  * function after they do their specific tasks.
+  * megasas_reset_target:  Issues target reset request to firmware
+  *                        (supported only for fusion adapters)
+- * @scmd:                 SCSI command pointer
++ * @starget:              SCSI target
   */
--static int megasas_generic_reset(struct scsi_cmnd *scmd)
-+static int megasas_generic_reset(struct Scsi_Host *shost)
+-static int megasas_reset_target(struct scsi_cmnd *scmd)
++static int megasas_reset_target(struct scsi_target *starget)
  {
- 	int ret_val;
--	struct megasas_instance *instance;
--
--	instance = (struct megasas_instance *)scmd->device->host->hostdata;
-+	struct megasas_instance *instance = shost_priv(shost);
- 
--	scmd_printk(KERN_NOTICE, scmd, "megasas: RESET cmd=%x retries=%x\n",
--		 scmd->cmnd[0], scmd->retries);
-+	shost_printk(KERN_NOTICE, shost, "megasas: RESET\n");
- 
- 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
- 		dev_err(&instance->pdev->dev, "cannot recover from previous reset failures\n");
-@@ -3054,33 +3051,30 @@ megasas_dump_sys_regs(void __iomem *reg_set, char *buf)
- 
- /**
-  * megasas_reset_bus_host -	Bus & host reset handler entry point
-- * @scmd:			Mid-layer SCSI command
-+ * @shost:			Mid-layer SCSI host
-  */
--static int megasas_reset_bus_host(struct scsi_cmnd *scmd)
-+static int megasas_reset_bus_host(struct Scsi_Host *shost)
- {
++	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
  	int ret;
 -	struct megasas_instance *instance;
+-
+-	instance = (struct megasas_instance *)scmd->device->host->hostdata;
 +	struct megasas_instance *instance = shost_priv(shost);
  
--	instance = (struct megasas_instance *)scmd->device->host->hostdata;
--
--	scmd_printk(KERN_INFO, scmd,
-+	shost_printk(KERN_INFO, shost,
- 		"OCR is requested due to IO timeout!!\n");
+ 	if (instance->adapter_type != MFI_SERIES)
+-		ret = megasas_reset_target_fusion(scmd);
++		ret = megasas_reset_target_fusion(shost, starget);
+ 	else {
+-		sdev_printk(KERN_NOTICE, scmd->device, "TARGET RESET not supported\n");
++		starget_printk(KERN_NOTICE, starget,
++			       "TARGET RESET not supported\n");
+ 		ret = FAILED;
+ 	}
  
--	scmd_printk(KERN_INFO, scmd,
--		"SCSI host state: %d  SCSI host busy: %d  FW outstanding: %d\n",
--		scmd->device->host->shost_state,
--		scsi_host_busy(scmd->device->host),
-+	shost_printk(KERN_INFO, shost,
-+		"Controller reset is requested due to IO timeout\n"
-+		"SCSI host state: %d\t"
-+		" SCSI host busy: %d\t FW outstanding: %d\n",
-+		shost->shost_state,
-+		scsi_host_busy(shost),
- 		atomic_read(&instance->fw_outstanding));
- 	/*
- 	 * First wait for all commands to complete
- 	 */
--	if (instance->adapter_type == MFI_SERIES) {
--		ret = megasas_generic_reset(scmd);
--	} else {
--		megasas_dump_fusion_io(scmd);
--		ret = megasas_reset_fusion(scmd->device->host,
--				SCSIIO_TIMEOUT_OCR);
--	}
-+	if (instance->adapter_type == MFI_SERIES)
-+		ret = megasas_generic_reset(shost);
-+	else
-+		ret = megasas_reset_fusion(shost, SCSIIO_TIMEOUT_OCR);
- 
- 	return ret;
- }
-diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
-index e276583c590c..e1cdd55b5191 100644
---- a/drivers/scsi/mesh.c
-+++ b/drivers/scsi/mesh.c
-@@ -1695,13 +1695,13 @@ static int mesh_abort(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index c60014e07b44..bee950f11576 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -4804,21 +4804,25 @@ int megasas_task_abort_fusion(struct scsi_cmnd *scmd)
  
  /*
-  * Called by the midlayer with the lock held to reset the
-- * SCSI host and bus.
-+ * SCSI host.
-  * The midlayer will wait for devices to come back, we don't need
-  * to do that ourselves
+  * megasas_reset_target_fusion : target reset function for fusion adapters
+- * scmd: SCSI command pointer
++ * @shost: SCSI host pointer
++ * @starget: SCSI target pointer
+  *
+  * Returns SUCCESS if all commands associated with target aborted else FAILED
   */
--static int mesh_host_reset(struct scsi_cmnd *cmd)
-+static int mesh_host_reset(struct Scsi_Host *shost)
+ 
+-int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
++int megasas_reset_target_fusion(struct Scsi_Host *shost,
++				struct scsi_target *starget)
  {
--	struct mesh_state *ms = (struct mesh_state *) cmd->device->host->hostdata;
-+	struct mesh_state *ms = shost_priv(shost);
- 	volatile struct mesh_regs __iomem *mr = ms->mesh;
- 	volatile struct dbdma_regs __iomem *md = ms->dma;
- 	unsigned long flags;
-@@ -1718,7 +1718,7 @@ static int mesh_host_reset(struct scsi_cmnd *cmd)
- 	out_8(&mr->exception, 0xff);	/* clear all exception bits */
- 	out_8(&mr->error, 0xff);	/* clear all error bits */
- 	out_8(&mr->sequence, SEQ_RESETMESH);
--       	mesh_flush_io(mr);
-+	mesh_flush_io(mr);
- 	udelay(1);
- 	out_8(&mr->intr_mask, INT_ERROR | INT_EXCEPTION | INT_CMDDONE);
- 	out_8(&mr->source_id, ms->host->this_id);
-@@ -1727,13 +1727,13 @@ static int mesh_host_reset(struct scsi_cmnd *cmd)
  
- 	/* Reset the bus */
- 	out_8(&mr->bus_status1, BS1_RST);	/* assert RST */
--       	mesh_flush_io(mr);
-+	mesh_flush_io(mr);
- 	udelay(30);			/* leave it on for >= 25us */
- 	out_8(&mr->bus_status1, 0);	/* negate RST */
+ 	struct megasas_instance *instance;
++	struct scsi_device *sdev;
+ 	int ret = FAILED;
+-	u16 devhandle;
+-	struct MR_PRIV_DEVICE *mr_device_priv_data;
+-	mr_device_priv_data = scmd->device->hostdata;
++	u16 devhandle = USHRT_MAX;
++	struct MR_PRIV_DEVICE *mr_device_priv_data = NULL;
  
- 	/* Complete pending commands */
- 	handle_reset(ms);
--	
+-	instance = (struct megasas_instance *)scmd->device->host->hostdata;
++	instance = (struct megasas_instance *)shost->hostdata;
++	starget_printk(KERN_INFO, starget,
++		    "target reset called\n");
+ 
+ 	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+ 		dev_err(&instance->pdev->dev, "Controller is not OPERATIONAL,"
+@@ -4827,10 +4831,22 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
+ 		return ret;
+ 	}
+ 
++	shost_for_each_device(sdev, shost) {
++		if (!sdev->hostdata)
++			continue;
++		if (sdev->sdev_target != starget)
++			continue;
++		mr_device_priv_data = sdev->hostdata;
++		if (mr_device_priv_data->is_tm_capable) {
++			devhandle = megasas_get_tm_devhandle(sdev);
++			scsi_device_put(sdev);
++			break;
++		}
++	}
 +
- 	spin_unlock_irqrestore(ms->host->host_lock, flags);
- 	return SUCCESS;
+ 	if (!mr_device_priv_data) {
+-		sdev_printk(KERN_INFO, scmd->device,
+-			    "device been deleted! scmd: (0x%p)\n", scmd);
+-		scmd->result = DID_NO_CONNECT << 16;
++		starget_printk(KERN_INFO, starget,
++			    "all devices have been deleted\n");
+ 		ret = SUCCESS;
+ 		goto out;
+ 	}
+@@ -4841,30 +4857,27 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
+ 	}
+ 
+ 	mutex_lock(&instance->reset_mutex);
+-	devhandle = megasas_get_tm_devhandle(scmd->device);
+ 
+-	if (devhandle == (u16)ULONG_MAX) {
+-		ret = FAILED;
+-		sdev_printk(KERN_INFO, scmd->device,
++	if (devhandle == USHRT_MAX) {
++		starget_printk(KERN_INFO, starget,
+ 			"target reset issued for invalid devhandle\n");
+ 		mutex_unlock(&instance->reset_mutex);
+-		goto out;
++		return SUCCESS;
+ 	}
+ 
+-	sdev_printk(KERN_INFO, scmd->device,
+-		"attempting target reset! scmd(0x%p) tm_dev_handle: 0x%x\n",
+-		scmd, devhandle);
++	starget_printk(KERN_INFO, starget,
++		"attempting target reset! tm_dev_handle: 0x%x\n",
++		devhandle);
+ 	mr_device_priv_data->tm_busy = true;
+ 	ret = megasas_issue_tm(instance, devhandle,
+-			scmd->device->channel, scmd->device->id, 0,
++			starget->channel, starget->id, 0,
+ 			MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
+ 			mr_device_priv_data);
+ 	mr_device_priv_data->tm_busy = false;
+ 	mutex_unlock(&instance->reset_mutex);
+-	scmd_printk(KERN_NOTICE, scmd, "target reset %s!!\n",
+-		(ret == SUCCESS) ? "SUCCESS" : "FAILED");
+-
+ out:
++	starget_printk(KERN_NOTICE, starget, "target reset %s!!\n",
++		(ret == SUCCESS) ? "SUCCESS" : "FAILED");
+ 	return ret;
  }
+ 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 040031eb0c12..d52412870b54 100644
+index 381e07f2b718..63d95aa8a5f3 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -4010,15 +4010,15 @@ static inline void mpi3mr_setup_divert_ws(struct mpi3mr_ioc *mrioc,
+@@ -4082,7 +4082,7 @@ static int mpi3mr_eh_bus_reset(struct Scsi_Host *shost, unsigned int channel)
  
  /**
-  * mpi3mr_eh_host_reset - Host reset error handling callback
+  * mpi3mr_eh_target_reset - Target reset error handling callback
 - * @scmd: SCSI command reference
-+ * @shost: SCSI host reference
++ * @starget: SCSI target reference
   *
-  * Issue controller reset
-  *
-  * Return: SUCCESS of successful reset else FAILED
+  * Issue Target reset Task Management and verify the scmd is
+  * terminated successfully and return status accordingly.
+@@ -4090,54 +4090,41 @@ static int mpi3mr_eh_bus_reset(struct Scsi_Host *shost, unsigned int channel)
+  * Return: SUCCESS of successful termination of the scmd else
+  *         FAILED
   */
--static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
-+static int mpi3mr_eh_host_reset(struct Scsi_Host *shost)
+-static int mpi3mr_eh_target_reset(struct scsi_cmnd *scmd)
++static int mpi3mr_eh_target_reset(struct scsi_target *starget)
  {
 -	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
++	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
 +	struct mpi3mr_ioc *mrioc = shost_priv(shost);
- 	int retval = FAILED, ret;
+ 	struct mpi3mr_stgt_priv_data *stgt_priv_data;
+-	struct mpi3mr_sdev_priv_data *sdev_priv_data;
+ 	u16 dev_handle;
+ 	u8 resp_code = 0;
+ 	int retval = FAILED, ret = 0;
  
- 	ret = mpi3mr_soft_reset_handler(mrioc,
-@@ -4028,9 +4028,9 @@ static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
+-	sdev_printk(KERN_INFO, scmd->device,
+-	    "Attempting Target Reset! scmd(%p)\n", scmd);
+-	scsi_print_command(scmd);
+-
+-	sdev_priv_data = scmd->device->hostdata;
+-	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
+-		sdev_printk(KERN_INFO, scmd->device,
+-		    "SCSI device is not available\n");
+-		retval = SUCCESS;
+-		goto out;
+-	}
++	starget_printk(KERN_INFO, starget,
++	    "Attempting Target Reset!\n");
+ 
+-	stgt_priv_data = sdev_priv_data->tgt_priv_data;
++	stgt_priv_data = starget->hostdata;
+ 	dev_handle = stgt_priv_data->dev_handle;
+ 	if (stgt_priv_data->dev_removed) {
+-		struct scmd_priv *cmd_priv = scsi_cmd_priv(scmd);
+-		sdev_printk(KERN_INFO, scmd->device,
++		starget_printk(KERN_INFO, starget,
+ 		    "%s:target(handle = 0x%04x) is removed, target reset is not issued\n",
+ 		    mrioc->name, dev_handle);
+-		if (!cmd_priv->in_lld_scope || cmd_priv->host_tag == MPI3MR_HOSTTAG_INVALID)
+-			retval = SUCCESS;
+-		else
+-			retval = FAILED;
++		retval = FAILED;
+ 		goto out;
+ 	}
+-	sdev_printk(KERN_INFO, scmd->device,
++	starget_printk(KERN_INFO, starget,
+ 	    "Target Reset is issued to handle(0x%04x)\n",
+ 	    dev_handle);
+ 
+ 	ret = mpi3mr_issue_tm(mrioc,
+ 	    MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET, dev_handle,
+-	    sdev_priv_data->lun_id, MPI3MR_HOSTTAG_BLK_TMS,
+-	    MPI3MR_RESETTM_TIMEOUT, &mrioc->host_tm_cmds, &resp_code, scmd);
++	    /* lun */ 0, MPI3MR_HOSTTAG_BLK_TMS,
++	    MPI3MR_RESETTM_TIMEOUT, &mrioc->host_tm_cmds, &resp_code, NULL);
+ 
+ 	if (ret)
+ 		goto out;
+ 
+ 	if (stgt_priv_data->pend_count) {
+-		sdev_printk(KERN_INFO, scmd->device,
++		starget_printk(KERN_INFO, starget,
+ 		    "%s: target has %d pending commands, target reset is failed\n",
+ 		    mrioc->name, stgt_priv_data->pend_count);
+ 		goto out;
+@@ -4145,9 +4132,9 @@ static int mpi3mr_eh_target_reset(struct scsi_cmnd *scmd)
  
  	retval = SUCCESS;
  out:
 -	sdev_printk(KERN_INFO, scmd->device,
--	    "Host reset is %s for scmd(%p)\n",
+-	    "%s: target reset is %s for scmd(%p)\n", mrioc->name,
 -	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-+	shost_printk(KERN_INFO, shost,
-+	    "Host reset is %s\n",
++	starget_printk(KERN_INFO, starget,
++	    "%s: target reset is %s\n", mrioc->name,
 +	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"));
  
  	return retval;
  }
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index c3c1f466fe01..58ccf8e66445 100644
+index 58ccf8e66445..1f3ce2aafed6 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3520,18 +3520,17 @@ scsih_target_reset(struct scsi_cmnd *scmd)
+@@ -3441,52 +3441,45 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
  
  /**
-  * scsih_host_reset - eh threads main host reset routine
+  * scsih_target_reset - eh threads main target reset routine
 - * @scmd: pointer to scsi command object
-+ * @shost: pointer to scsi host object
++ * @starget: pointer to scsi target object
   *
 - * Return: SUCCESS if command aborted else FAILED
-+ * Return: SUCCESS if host reset succeeded else FAILED
++ * Return: SUCCESS if target reset suceeded else FAILED
   */
  static int
--scsih_host_reset(struct scsi_cmnd *scmd)
-+scsih_host_reset(struct Scsi_Host *shost)
+-scsih_target_reset(struct scsi_cmnd *scmd)
++scsih_target_reset(struct scsi_target *starget)
  {
 -	struct MPT3SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
+-	struct MPT3SAS_DEVICE *sas_device_priv_data;
++	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
 +	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
- 	int r, retval;
+ 	struct _sas_device *sas_device = NULL;
+ 	struct _pcie_device *pcie_device = NULL;
+ 	u16	handle;
+ 	u8	tr_method = 0;
+ 	u8	tr_timeout = 30;
+ 	int r;
+-	struct scsi_target *starget = scmd->device->sdev_target;
+ 	struct MPT3SAS_TARGET *target_priv_data = starget->hostdata;
  
--	ioc_info(ioc, "attempting host reset! scmd(0x%p)\n", scmd);
--	scsi_print_command(scmd);
-+	ioc_info(ioc, "attempting host reset\n");
+ 	starget_printk(KERN_INFO, starget,
+-	    "attempting target reset! scmd(0x%p)\n", scmd);
+-	_scsih_tm_display_info(ioc, scmd);
++	    "attempting target reset!\n");
  
- 	if (ioc->is_driver_loading || ioc->remove_host) {
- 		ioc_info(ioc, "Blocking the host reset\n");
-@@ -3542,8 +3541,8 @@ scsih_host_reset(struct scsi_cmnd *scmd)
- 	retval = mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
- 	r = (retval < 0) ? FAILED : SUCCESS;
- out:
--	ioc_info(ioc, "host reset: %s scmd(0x%p)\n",
--		 r == SUCCESS ? "SUCCESS" : "FAILED", scmd);
-+	ioc_info(ioc, "host reset: %s\n",
-+		 r == SUCCESS ? "SUCCESS" : "FAILED");
- 
- 	return r;
- }
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index d9d366ec17dc..becb7998e0a4 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -695,14 +695,11 @@ static int mvumi_reset_host_9143(struct mvumi_hba *mhba)
- 	return mvumi_wait_for_outstanding(mhba);
- }
- 
--static int mvumi_host_reset(struct scsi_cmnd *scmd)
-+static int mvumi_host_reset(struct Scsi_Host *shost)
- {
--	struct mvumi_hba *mhba;
--
--	mhba = (struct mvumi_hba *) scmd->device->host->hostdata;
-+	struct mvumi_hba *mhba = shost_priv(shost);
- 
--	scmd_printk(KERN_NOTICE, scmd, "RESET -%u cmd=%x retries=%x\n",
--			scsi_cmd_to_rq(scmd)->tag, scmd->cmnd[0], scmd->retries);
-+	shost_printk(KERN_NOTICE, shost, "RESET\n");
- 
- 	return mhba->instancet->reset_host(mhba);
- }
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index ca2e932dd9b7..2b81a39e910f 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -1252,9 +1252,8 @@ static void myrb_cleanup(struct myrb_hba *cb)
- 	scsi_host_put(cb->host);
- }
- 
--static int myrb_host_reset(struct scsi_cmnd *scmd)
-+static int myrb_host_reset(struct Scsi_Host *shost)
- {
--	struct Scsi_Host *shost = scmd->device->host;
- 	struct myrb_hba *cb = shost_priv(shost);
- 
- 	cb->reset(cb->io_base);
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index a1eec65a9713..2f2470fdfb86 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -1529,9 +1529,8 @@ ATTRIBUTE_GROUPS(myrs_shost);
- /*
-  * SCSI midlayer interface
-  */
--static int myrs_host_reset(struct scsi_cmnd *scmd)
-+static int myrs_host_reset(struct Scsi_Host *shost)
- {
--	struct Scsi_Host *shost = scmd->device->host;
- 	struct myrs_hba *cs = shost_priv(shost);
- 
- 	cs->reset(cs->io_base);
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index b7987019686e..81e1f440286b 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -191,7 +191,7 @@ static int	   nsp32_release     (struct Scsi_Host *);
- 
- /* SCSI error handler */
- static int	   nsp32_eh_abort     (struct scsi_cmnd *);
--static int	   nsp32_eh_host_reset(struct scsi_cmnd *);
-+static int	   nsp32_eh_host_reset(struct Scsi_Host *);
- 
- /* generate SCSI message */
- static void nsp32_build_identify(struct scsi_cmnd *);
-@@ -2876,23 +2876,21 @@ static void nsp32_do_bus_reset(nsp32_hw_data *data)
- 	data->CurrentSC = NULL;
- }
- 
--static int nsp32_eh_host_reset(struct scsi_cmnd *SCpnt)
-+static int nsp32_eh_host_reset(struct Scsi_Host *host)
- {
--	struct Scsi_Host *host = SCpnt->device->host;
--	unsigned int      base = SCpnt->device->host->io_port;
--	nsp32_hw_data    *data = (nsp32_hw_data *)host->hostdata;
-+	unsigned int      base = host->io_port;
-+	nsp32_hw_data    *data = shost_priv(host);
- 
- 	nsp32_msg(KERN_INFO, "Host Reset");
--	nsp32_dbg(NSP32_DEBUG_BUSRESET, "SCpnt=0x%x", SCpnt);
- 
--	spin_lock_irq(SCpnt->device->host->host_lock);
-+	spin_lock_irq(host->host_lock);
- 
- 	nsp32hw_init(data);
- 	nsp32_write2(base, IRQ_CONTROL, IRQ_CONTROL_ALL_IRQ_MASK);
- 	nsp32_do_bus_reset(data);
- 	nsp32_write2(base, IRQ_CONTROL, 0);
- 
--	spin_unlock_irq(SCpnt->device->host->host_lock);
-+	spin_unlock_irq(host->host_lock);
- 	return SUCCESS;	/* Host reset is succeeded at any time. */
- }
- 
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index a5a1406a2bde..6e0059f5c189 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1495,9 +1495,9 @@ static int nsp_eh_bus_reset(struct scsi_cmnd *SCpnt)
- 	return nsp_bus_reset(data);
- }
- 
--static int nsp_eh_host_reset(struct scsi_cmnd *SCpnt)
-+static int nsp_eh_host_reset(struct Scsi_Host *host)
- {
--	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
-+	nsp_hw_data *data = shost_priv(host);
- 
- 	nsp_dbg(NSP_DEBUG_BUSRESET, "in");
- 
-diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
-index e1ee8ef90ad3..f532adb5f166 100644
---- a/drivers/scsi/pcmcia/nsp_cs.h
-+++ b/drivers/scsi/pcmcia/nsp_cs.h
-@@ -300,7 +300,7 @@ static int nsp_queuecommand(struct Scsi_Host *h, struct scsi_cmnd *SCpnt);
- /*static int nsp_eh_abort       (struct scsi_cmnd *SCpnt);*/
- /*static int nsp_eh_device_reset(struct scsi_cmnd *SCpnt);*/
- static int nsp_eh_bus_reset    (struct scsi_cmnd *SCpnt);
--static int nsp_eh_host_reset   (struct scsi_cmnd *SCpnt);
-+static int nsp_eh_host_reset   (struct Scsi_Host *host);
- static int nsp_bus_reset       (nsp_hw_data *data);
- 
- /* */
-diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
-index 310d0b6586a6..59893db166c9 100644
---- a/drivers/scsi/pcmcia/qlogic_stub.c
-+++ b/drivers/scsi/pcmcia/qlogic_stub.c
-@@ -270,8 +270,8 @@ static int qlogic_resume(struct pcmcia_device *link)
- 		outb(0x24, link->resource[0]->start + 0x9);
- 		outb(0x04, link->resource[0]->start + 0xd);
+-	sas_device_priv_data = scmd->device->hostdata;
+-	if (!sas_device_priv_data || !sas_device_priv_data->sas_target ||
+-	    ioc->remove_host) {
++	if (!target_priv_data || ioc->remove_host) {
+ 		starget_printk(KERN_INFO, starget,
+-		    "target been deleted! scmd(0x%p)\n", scmd);
+-		scmd->result = DID_NO_CONNECT << 16;
+-		scsi_done(scmd);
++		    "target been deleted!\n");
+ 		r = SUCCESS;
+ 		goto out;
  	}
--	/* Ugggglllyyyy!!! */
--	qlogicfas408_host_reset(NULL);
-+
-+	qlogicfas408_host_reset(info->host);
  
- 	return 0;
- }
-diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
-index 278c78d066c4..1c5415ede9b2 100644
---- a/drivers/scsi/pcmcia/sym53c500_cs.c
-+++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-@@ -583,14 +583,14 @@ static int SYM53C500_queue_lck(struct scsi_cmnd *SCpnt)
- static DEF_SCSI_QCMD(SYM53C500_queue)
+ 	/* for hidden raid components obtain the volume_handle */
+ 	handle = 0;
+-	if (sas_device_priv_data->sas_target->flags &
++	if (target_priv_data->flags &
+ 	    MPT_TARGET_FLAGS_RAID_COMPONENT) {
+ 		sas_device = mpt3sas_get_sdev_from_target(ioc,
+ 				target_priv_data);
+ 		if (sas_device)
+ 			handle = sas_device->volume_handle;
+ 	} else
+-		handle = sas_device_priv_data->sas_target->handle;
++		handle = target_priv_data->handle;
  
- static int 
--SYM53C500_host_reset(struct scsi_cmnd *SCpnt)
-+SYM53C500_host_reset(struct Scsi_Host *shost)
- {
--	int port_base = SCpnt->device->host->io_port;
-+	int port_base = shost->io_port;
+ 	if (!handle) {
+-		scmd->result = DID_RESET << 16;
+ 		r = FAILED;
+ 		goto out;
+ 	}
+@@ -3499,16 +3492,16 @@ scsih_target_reset(struct scsi_cmnd *scmd)
+ 		tr_method = MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE;
+ 	} else
+ 		tr_method = MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET;
+-	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
+-		scmd->device->id, 0,
++	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, starget->channel,
++		starget->id, 0,
+ 		MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 0,
+ 	    tr_timeout, tr_method);
+ 	/* Check for busy commands after reset */
+ 	if (r == SUCCESS && atomic_read(&starget->target_busy))
+ 		r = FAILED;
+  out:
+-	starget_printk(KERN_INFO, starget, "target reset: %s scmd(0x%p)\n",
+-	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
++	starget_printk(KERN_INFO, starget, "target reset: %s\n",
++	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"));
  
- 	DEB(printk("SYM53C500_host_reset called\n"));
--	spin_lock_irq(SCpnt->device->host->host_lock);
-+	spin_lock_irq(shost->host_lock);
- 	SYM53C500_int_host_reset(port_base);
--	spin_unlock_irq(SCpnt->device->host->host_lock);
-+	spin_unlock_irq(shost->host_lock);
- 
- 	return SUCCESS;
- }
+ 	if (sas_device)
+ 		sas_device_put(sas_device);
 diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index cd19e452c9ee..a1cc39cd6dfd 100644
+index 84fcec476ef1..61fcd0420029 100644
 --- a/drivers/scsi/pmcraid.c
 +++ b/drivers/scsi/pmcraid.c
-@@ -3089,19 +3089,18 @@ static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
- /**
-  * pmcraid_eh_host_reset_handler - adapter reset handler callback
-  *
-- * @scmd: pointer to scsi_cmd that was sent to a resource of adapter
-+ * @shost: pointer to scsi_host
-  *
-  * Initiates adapter reset to bring it up to operational state
-  *
-  * Return value
-  *	SUCCESS or FAILED
-  */
--static int pmcraid_eh_host_reset_handler(struct scsi_cmnd *scmd)
-+static int pmcraid_eh_host_reset_handler(struct Scsi_Host *shost)
- {
- 	unsigned long interval = 10000; /* 10 seconds interval */
- 	int waits = jiffies_to_msecs(PMCRAID_RESET_HOST_TIMEOUT) / interval;
--	struct pmcraid_instance *pinstance =
--		(struct pmcraid_instance *)(scmd->device->host->hostdata);
-+	struct pmcraid_instance *pinstance = shost_priv(shost);
- 
- 
- 	/* wait for an additional 150 seconds just in case firmware could come
-diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
-index d592ee9170c1..eba08b0697c7 100644
---- a/drivers/scsi/ppa.c
-+++ b/drivers/scsi/ppa.c
-@@ -887,11 +887,11 @@ static void ppa_reset_pulse(unsigned int base)
- 	w_ctr(base, 0xc);
+@@ -3061,15 +3061,15 @@ static int pmcraid_eh_bus_reset_handler(struct Scsi_Host *host,
+ 				    RESET_DEVICE_BUS);
  }
  
--static int ppa_reset(struct scsi_cmnd *cmd)
-+static int ppa_reset(struct Scsi_Host *host)
+-static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
++static int pmcraid_eh_target_reset_handler(struct scsi_target *starget)
  {
--	ppa_struct *dev = ppa_dev(cmd->device->host);
-+	ppa_struct *dev = ppa_dev(host);
+-	struct Scsi_Host *shost = scmd->device->host;
++	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
+ 	struct scsi_device *scsi_dev = NULL, *tmp;
+ 	int ret;
  
--	if (ppa_scsi_pointer(cmd)->phase)
-+	if (dev->cur_cmd && ppa_scsi_pointer(dev->cur_cmd)->phase)
- 		ppa_disconnect(dev);
- 	dev->cur_cmd = NULL;	/* Forget the problem */
- 
+ 	shost_for_each_device(tmp, shost) {
+-		if ((tmp->channel == scmd->device->channel) &&
+-		    (tmp->id == scmd->device->id)) {
++		if ((tmp->channel == starget->channel) &&
++		    (tmp->id == starget->id)) {
+ 			scsi_dev = tmp;
+ 			break;
+ 		}
 diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index a58353b7b4e8..0e5f9f20e5fc 100644
+index 0e5f9f20e5fc..2a7eab4fb1b9 100644
 --- a/drivers/scsi/qedf/qedf_main.c
 +++ b/drivers/scsi/qedf/qedf_main.c
-@@ -953,12 +953,12 @@ void qedf_ctx_soft_reset(struct fc_lport *lport)
+@@ -856,9 +856,8 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
+ 	return rc;
  }
  
- /* Reset the host by gracefully logging out and then logging back in */
--static int qedf_eh_host_reset(struct scsi_cmnd *sc_cmd)
-+static int qedf_eh_host_reset(struct Scsi_Host *shost)
+-static int qedf_eh_target_reset(struct scsi_cmnd *sc_cmd)
++static int qedf_eh_target_reset(struct scsi_target *starget)
  {
- 	struct fc_lport *lport;
- 	struct qedf_ctx *qedf;
+-	struct scsi_target *starget = scsi_target(sc_cmd->device);
+ 	struct fc_rport *rport = starget_to_rport(starget);
  
--	lport = shost_priv(sc_cmd->device->host);
-+	lport = shost_priv(shost);
- 	qedf = lport_priv(lport);
- 
- 	if (atomic_read(&qedf->link_state) == QEDF_LINK_DOWN ||
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 6ed8ef97642c..4b3df87cafdf 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -30,9 +30,8 @@ int qedi_recover_all_conns(struct qedi_ctx *qedi)
- 	return SUCCESS;
- }
- 
--static int qedi_eh_host_reset(struct scsi_cmnd *cmd)
-+static int qedi_eh_host_reset(struct Scsi_Host *shost)
- {
--	struct Scsi_Host *shost = cmd->device->host;
- 	struct qedi_ctx *qedi;
- 
- 	qedi = iscsi_host_priv(shost);
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 27bce80262c2..59decb9cc8af 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -995,11 +995,10 @@ qla1280_eh_bus_reset(struct scsi_cmnd *cmd)
-  *     Reset the specified adapter (both channels)
-  **************************************************************************/
- static int
--qla1280_eh_adapter_reset(struct scsi_cmnd *cmd)
-+qla1280_eh_adapter_reset(struct Scsi_Host *shost)
- {
- 	int rc = SUCCESS;
--	struct Scsi_Host *shost = cmd->device->host;
--	struct scsi_qla_host *ha = (struct scsi_qla_host *)shost->hostdata;
-+	struct scsi_qla_host *ha = shost_priv(shost);
- 
- 	spin_lock_irq(shost->host_lock);
- 	if (qla1280_verbose) {
+ 	QEDF_ERR(NULL, "TARGET RESET Issued...");
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 7e103d711825..94a4bd5d2841 100644
+index 1803baa00600..fd273f65c69e 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1656,8 +1656,7 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- *    The reset function will reset the Adapter.
- *
- * Input:
--*      cmd = Linux SCSI command packet of the command that cause the
--*            adapter reset.
-+*      shost = Linux SCSI host to be reset
- *
- * Returns:
- *      Either SUCCESS or FAILED.
-@@ -1665,13 +1664,11 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- * Note:
- **************************************************************************/
- static int
--qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
-+qla2xxx_eh_host_reset(struct Scsi_Host *shost)
- {
--	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
-+	scsi_qla_host_t *vha = shost_priv(shost);
- 	struct qla_hw_data *ha = vha->hw;
- 	int ret = FAILED;
--	unsigned int id;
--	uint64_t lun;
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+@@ -1515,10 +1515,9 @@ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ }
  
- 	if (qla2x00_isp_reg_stat(ha)) {
-@@ -1681,11 +1678,8 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
- 		return SUCCESS;
+ static int
+-qla2xxx_eh_target_reset(struct scsi_cmnd *cmd)
++qla2xxx_eh_target_reset(struct scsi_target *starget)
+ {
+-	struct scsi_device *sdev = cmd->device;
+-	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
++	struct fc_rport *rport = starget_to_rport(starget);
+ 	scsi_qla_host_t *vha = shost_priv(rport_to_shost(rport));
+ 	struct qla_hw_data *ha = vha->hw;
+ 	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
+@@ -1543,40 +1542,39 @@ qla2xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ 		return FAILED;
+ 
+ 	ql_log(ql_log_info, vha, 0x8009,
+-	    "TARGET RESET ISSUED nexus=%ld:%d cmd=%p.\n", vha->host_no,
+-	    sdev->id, cmd);
++	    "TARGET RESET ISSUED nexus=%ld:%d.\n", vha->host_no,
++	    starget->id);
+ 
+ 	err = 0;
+ 	if (qla2x00_wait_for_hba_online(vha) != QLA_SUCCESS) {
+ 		ql_log(ql_log_warn, vha, 0x800a,
+-		    "Wait for hba online failed for cmd=%p.\n", cmd);
++		    "Wait for hba online failed.\n");
+ 		goto eh_reset_failed;
+ 	}
+ 	err = 2;
+ 	if (ha->isp_ops->target_reset(fcport, 0, 0) != QLA_SUCCESS) {
+ 		ql_log(ql_log_warn, vha, 0x800c,
+-		    "target_reset failed for cmd=%p.\n", cmd);
++		    "target_reset failed.\n");
+ 		goto eh_reset_failed;
+ 	}
+ 	err = 3;
+ 	if (qla2x00_eh_wait_for_pending_commands(vha, fcport->d_id.b24, 0,
+ 						 WAIT_TARGET) != QLA_SUCCESS) {
+ 		ql_log(ql_log_warn, vha, 0x800d,
+-		    "wait for pending cmds failed for cmd=%p.\n", cmd);
++		    "wait for pending cmds failed.\n");
+ 		goto eh_reset_failed;
  	}
  
--	id = cmd->device->id;
--	lun = cmd->device->lun;
--
- 	ql_log(ql_log_info, vha, 0x8018,
--	    "ADAPTER RESET ISSUED nexus=%ld:%d:%llu.\n", vha->host_no, id, lun);
-+	    "ADAPTER RESET ISSUED host=%ld.\n", vha->host_no);
+ 	ql_log(ql_log_info, vha, 0x800e,
+-	    "TARGET RESET SUCCEEDED nexus:%ld:%d cmd=%p.\n",
+-	    vha->host_no, sdev->id, cmd);
++	    "TARGET RESET SUCCEEDED nexus:%ld:%d.\n",
++	    vha->host_no, starget->id);
  
- 	/*
- 	 * No point in issuing another reset if one is active.  Also do not
-@@ -1731,8 +1725,8 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ 	return SUCCESS;
  
- eh_host_reset_lock:
- 	ql_log(ql_log_info, vha, 0x8017,
--	    "ADAPTER RESET %s nexus=%ld:%d:%llu.\n",
--	    (ret == FAILED) ? "FAILED" : "SUCCEEDED", vha->host_no, id, lun);
-+	    "ADAPTER RESET %s host=%ld.\n",
-+	    (ret == FAILED) ? "FAILED" : "SUCCEEDED", vha->host_no);
- 
- 	return ret;
+ eh_reset_failed:
+ 	ql_log(ql_log_info, vha, 0x800f,
+-	    "TARGET RESET FAILED: %s nexus=%ld:%d:%llu cmd=%p.\n",
+-	    reset_errors[err], vha->host_no, cmd->device->id, cmd->device->lun,
+-	    cmd);
++	    "TARGET RESET FAILED: %s nexus=%ld:%d.\n",
++	    reset_errors[err], vha->host_no, starget->id);
+ 	vha->reset_cmd_err_cnt++;
+ 	return FAILED;
  }
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 961fe65bbe65..70757ef5b4fd 100644
+index 70757ef5b4fd..7a725066551b 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -159,7 +159,7 @@ static int qla4xxx_queuecommand(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+@@ -158,7 +158,7 @@ static int qla4xxx_get_host_stats(struct Scsi_Host *shost, char *buf, int len);
+ static int qla4xxx_queuecommand(struct Scsi_Host *h, struct scsi_cmnd *cmd);
  static int qla4xxx_eh_abort(struct scsi_cmnd *cmd);
  static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd);
- static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd);
--static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd);
-+static int qla4xxx_eh_host_reset(struct Scsi_Host *shost);
+-static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd);
++static int qla4xxx_eh_target_reset(struct scsi_target *starget);
+ static int qla4xxx_eh_host_reset(struct Scsi_Host *shost);
  static int qla4xxx_slave_alloc(struct scsi_device *device);
  static umode_t qla4_attr_is_visible(int param_type, int param);
- static int qla4xxx_host_reset(struct Scsi_Host *shost, int reset_type);
-@@ -9421,18 +9421,18 @@ static int qla4xxx_is_eh_active(struct Scsi_Host *shost)
+@@ -9338,13 +9338,12 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
  
  /**
-  * qla4xxx_eh_host_reset - kernel callback
+  * qla4xxx_eh_target_reset - callback for target reset.
 - * @cmd: Pointer to Linux's SCSI command structure
-+ * @host: Pointer to Linux's SCSI host structure
++ * @starget: Pointer to Linux's SCSI target structure
   *
-  * This routine is invoked by the Linux kernel to perform fatal error
-  * recovery on the specified adapter.
+  * This routine is called by the Linux OS to reset the target.
   **/
--static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd)
-+static int qla4xxx_eh_host_reset(struct Scsi_Host *host)
+-static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
++static int qla4xxx_eh_target_reset(struct scsi_target *starget)
  {
- 	int return_status = FAILED;
+-	struct scsi_target *starget = scsi_target(cmd->device);
+ 	struct iscsi_cls_session *cls_session = starget_to_session(starget);
+ 	struct iscsi_session *sess;
  	struct scsi_qla_host *ha;
- 	int rval;
+@@ -9366,10 +9365,8 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ 		       "WARM TARGET RESET ISSUED.\n");
  
--	ha = to_qla_host(cmd->device->host);
-+	ha = to_qla_host(host);
+ 	DEBUG2(printk(KERN_INFO
+-		      "scsi%ld: TARGET_DEVICE_RESET cmd=%p jiffies = 0x%lx, "
+-		      "to=%x,dpc_flags=%lx, status=%x allowed=%d\n",
+-		      ha->host_no, cmd, jiffies, scsi_cmd_to_rq(cmd)->timeout / HZ,
+-		      ha->dpc_flags, cmd->result, cmd->allowed));
++		      "scsi%ld: TARGET_DEVICE_RESET dpc_flags=%lx\n",
++		      ha->host_no, ha->dpc_flags));
  
  	rval = qla4xxx_isp_check_reg(ha);
  	if (rval != QLA_SUCCESS) {
-@@ -9454,20 +9454,18 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd)
- 		     ha->host_no, __func__));
- 
- 		/* Clear outstanding srb in queues */
--		if (qla4xxx_is_eh_active(cmd->device->host))
-+		if (qla4xxx_is_eh_active(host))
- 			qla4xxx_abort_active_cmds(ha, DID_ABORT << 16);
- 
- 		return FAILED;
+@@ -9392,7 +9389,7 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
  	}
  
- 	ql4_printk(KERN_INFO, ha,
--		   "scsi(%ld:%d:%d:%llu): HOST RESET ISSUED.\n", ha->host_no,
--		   cmd->device->channel, cmd->device->id, cmd->device->lun);
-+		   "scsi%ld: HOST RESET ISSUED.\n", ha->host_no);
- 
- 	if (qla4xxx_wait_for_hba_online(ha) != QLA_SUCCESS) {
--		DEBUG2(printk("scsi%ld:%d: %s: Unable to reset host.  Adapter "
--			      "DEAD.\n", ha->host_no, cmd->device->channel,
--			      __func__));
-+		DEBUG2(printk("scsi%ld: %s: Unable to reset host.  Adapter "
-+			      "DEAD.\n", ha->host_no, __func__));
- 
- 		return FAILED;
- 	}
-diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
-index 3e065d5fc80c..008e908e3aff 100644
---- a/drivers/scsi/qlogicfas408.c
-+++ b/drivers/scsi/qlogicfas408.c
-@@ -525,20 +525,18 @@ int qlogicfas408_abort(struct scsi_cmnd *cmd)
- 
- /*
-  *	Reset SCSI bus
-- *	FIXME: This function is invoked with cmd = NULL directly by
-- *	the PCMCIA qlogic_stub code. This wants fixing
-  */
- 
--int qlogicfas408_host_reset(struct scsi_cmnd *cmd)
-+int qlogicfas408_host_reset(struct Scsi_Host *host)
- {
--	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
-+	struct qlogicfas408_priv *priv = get_priv_by_host(host);
- 	unsigned long flags;
- 
- 	priv->qabort = 2;
- 
--	spin_lock_irqsave(cmd->device->host->host_lock, flags);
-+	spin_lock_irqsave(host->host_lock, flags);
- 	ql_zap(priv);
--	spin_unlock_irqrestore(cmd->device->host->host_lock, flags);
-+	spin_unlock_irqrestore(host->host_lock, flags);
- 
- 	return SUCCESS;
- }
-diff --git a/drivers/scsi/qlogicfas408.h b/drivers/scsi/qlogicfas408.h
-index a971db11d293..c1b6e9fea9ce 100644
---- a/drivers/scsi/qlogicfas408.h
-+++ b/drivers/scsi/qlogicfas408.h
-@@ -109,7 +109,7 @@ int qlogicfas408_biosparam(struct scsi_device * disk,
- 			   struct block_device *dev,
- 			   sector_t capacity, int ip[]);
- int qlogicfas408_abort(struct scsi_cmnd * cmd);
--extern int qlogicfas408_host_reset(struct scsi_cmnd *cmd);
-+extern int qlogicfas408_host_reset(struct Scsi_Host *host);
- const char *qlogicfas408_info(struct Scsi_Host *host);
- int qlogicfas408_get_chip_type(int qbase, int int_type);
- void qlogicfas408_setup(int qbase, int id, int int_type);
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 3b95f7a6216f..b7c16bd49f23 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -1261,10 +1261,9 @@ static int qlogicpti_abort(struct scsi_cmnd *Cmnd)
- 	return return_status;
- }
- 
--static int qlogicpti_reset(struct scsi_cmnd *Cmnd)
-+static int qlogicpti_reset(struct Scsi_Host *host)
- {
- 	u_short param[6];
--	struct Scsi_Host *host = Cmnd->device->host;
- 	struct qlogicpti *qpti = (struct qlogicpti *) host->hostdata;
- 	int return_status = SUCCESS;
- 
+ 	/* Send marker. */
+-	if (qla4xxx_send_marker_iocb(ha, ddb_entry, cmd->device->lun,
++	if (qla4xxx_send_marker_iocb(ha, ddb_entry, 0,
+ 		MM_TGT_WARM_RESET) != QLA_SUCCESS) {
+ 		starget_printk(KERN_INFO, starget,
+ 			       "WARM TARGET DEVICE RESET FAILED - "
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 67922e2c4c19..0706eb94cf49 100644
+index a2b66cf0549c..641045adee37 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -5805,7 +5805,7 @@ static int scsi_debug_bus_reset(struct scsi_cmnd *SCpnt)
+@@ -5737,9 +5737,8 @@ static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
  	return SUCCESS;
  }
  
--static int scsi_debug_host_reset(struct scsi_cmnd *SCpnt)
-+static int scsi_debug_host_reset(struct Scsi_Host *shost)
+-static int sdebug_fail_target_reset(struct scsi_cmnd *cmnd)
++static int sdebug_fail_target_reset(struct scsi_target *starget)
  {
- 	struct sdebug_host_info *sdbg_host;
- 	struct sdebug_dev_info *devip;
-@@ -5813,7 +5813,7 @@ static int scsi_debug_host_reset(struct scsi_cmnd *SCpnt)
+-	struct scsi_target *starget = scsi_target(cmnd->device);
+ 	struct sdebug_target_info *targetip =
+ 		(struct sdebug_target_info *)starget->hostdata;
  
- 	++num_host_resets;
- 	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
--		sdev_printk(KERN_INFO, SCpnt->device, "%s\n", __func__);
-+		shost_printk(KERN_INFO, shost, "%s\n", __func__);
- 	mutex_lock(&sdebug_host_list_mutex);
- 	list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
- 		list_for_each_entry(devip, &sdbg_host->dev_info_list,
-@@ -5825,7 +5825,7 @@ static int scsi_debug_host_reset(struct scsi_cmnd *SCpnt)
- 	mutex_unlock(&sdebug_host_list_mutex);
- 	stop_all_queued();
- 	if (SDEBUG_OPT_RESET_NOISE & sdebug_opts)
--		sdev_printk(KERN_INFO, SCpnt->device,
-+		shost_printk(KERN_INFO, shost,
- 			    "%s: %d device(s) found\n", __func__, k);
- 	return SUCCESS;
- }
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index c67cdcdc3ba8..f022bb1c3e4a 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -881,7 +881,7 @@ static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
- 	if (!hostt->eh_host_reset_handler)
- 		return FAILED;
- 
--	rtn = hostt->eh_host_reset_handler(scmd);
-+	rtn = hostt->eh_host_reset_handler(host);
- 
- 	if (rtn == SUCCESS) {
- 		if (!hostt->skip_settle_delay)
-diff --git a/drivers/scsi/snic/snic.h b/drivers/scsi/snic/snic.h
-index 0b7411624bcf..27acc50bd1a5 100644
---- a/drivers/scsi/snic/snic.h
-+++ b/drivers/scsi/snic/snic.h
-@@ -365,8 +365,7 @@ extern const struct attribute_group *snic_host_groups[];
- int snic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
- int snic_abort_cmd(struct scsi_cmnd *);
- int snic_device_reset(struct scsi_cmnd *);
--int snic_host_reset(struct scsi_cmnd *);
--int snic_reset(struct Scsi_Host *);
-+int snic_host_reset(struct Scsi_Host *);
- void snic_shutdown_scsi_cleanup(struct snic *);
- 
- 
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index c38f648da3d7..36298dbadb14 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -2259,8 +2259,15 @@ snic_issue_hba_reset(struct snic *snic)
- 	return ret;
- } /* end of snic_issue_hba_reset */
- 
-+/*
-+ * SCSI Error handling calls driver's eh_host_reset if all prior
-+ * error handling levels return FAILED.
-+ *
-+ * Host Reset is the highest level of error recovery. If this fails, then
-+ * host is offlined by SCSI.
-+ */
- int
--snic_reset(struct Scsi_Host *shost)
-+snic_host_reset(struct Scsi_Host *shost)
- {
- 	struct snic *snic = shost_priv(shost);
- 	enum snic_state sv_state;
-@@ -2306,34 +2313,6 @@ snic_reset(struct Scsi_Host *shost)
- 	ret = SUCCESS;
- 
- reset_end:
--	return ret;
--} /* end of snic_reset */
--
--/*
-- * SCSI Error handling calls driver's eh_host_reset if all prior
-- * error handling levels return FAILED.
-- *
-- * Host Reset is the highest level of error recovery. If this fails, then
-- * host is offlined by SCSI.
-- */
--int
--snic_host_reset(struct scsi_cmnd *sc)
--{
--	struct Scsi_Host *shost = sc->device->host;
--	u32 start_time  = jiffies;
--	int ret;
--
--	SNIC_SCSI_DBG(shost,
--		      "host reset:sc %p sc_cmd 0x%x req %p tag %d flags 0x%llx\n",
--		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
--		      snic_cmd_tag(sc), CMD_FLAGS(sc));
--
--	ret = snic_reset(shost);
--
--	SNIC_TRC(shost->host_no, snic_cmd_tag(sc), (ulong) sc,
--		 jiffies_to_msecs(jiffies - start_time),
--		 0, SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
--
- 	return ret;
- } /* end of snic_host_reset */
- 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 8ffb75be99bc..acd5a6a98d30 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -1438,14 +1438,11 @@ static int stex_do_reset(struct st_hba *hba)
- 	return -1;
- }
- 
--static int stex_reset(struct scsi_cmnd *cmd)
-+static int stex_reset(struct Scsi_Host *shost)
- {
--	struct st_hba *hba;
--
--	hba = (struct st_hba *) &cmd->device->host->hostdata[0];
-+	struct st_hba *hba = shost_priv(shost);
- 
--	shost_printk(KERN_INFO, cmd->device->host,
--		     "resetting host\n");
-+	shost_printk(KERN_INFO, shost, "resetting host\n");
- 
- 	return stex_do_reset(hba) ? FAILED : SUCCESS;
- }
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index a95936b18f69..7a71d0526f6d 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1624,9 +1624,9 @@ static int storvsc_get_chs(struct scsi_device *sdev, struct block_device * bdev,
+@@ -5749,33 +5748,29 @@ static int sdebug_fail_target_reset(struct scsi_cmnd *cmnd)
  	return 0;
  }
  
--static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
-+static int storvsc_host_reset_handler(struct Scsi_Host *shost)
+-static int scsi_debug_target_reset(struct scsi_cmnd *SCpnt)
++static int scsi_debug_target_reset(struct scsi_target *starget)
  {
--	struct hv_host_device *host_dev = shost_priv(scmnd->device->host);
-+	struct hv_host_device *host_dev = shost_priv(shost);
- 	struct hv_device *device = host_dev->dev;
+-	struct scsi_device *sdp = SCpnt->device;
+-	struct sdebug_host_info *sdbg_host = shost_to_sdebug_host(sdp->host);
++	struct Scsi_Host *hp = dev_to_shost(&starget->dev);
++	struct sdebug_host_info *sdbg_host = shost_to_sdebug_host(hp);
+ 	struct sdebug_dev_info *devip;
+-	u8 *cmd = SCpnt->cmnd;
+-	u8 opcode = cmd[0];
+ 	int k = 0;
  
- 	struct storvsc_device *stor_device;
+ 	++num_target_resets;
+ 	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
+-		sdev_printk(KERN_INFO, sdp, "%s\n", __func__);
+-
++		starget_printk(KERN_INFO, starget, "%s\n", __func__);
+ 	list_for_each_entry(devip, &sdbg_host->dev_info_list, dev_list) {
+-		if (devip->target == sdp->id) {
++		if (devip->target == starget->id) {
+ 			set_bit(SDEBUG_UA_BUS_RESET, devip->uas_bm);
+ 			++k;
+ 		}
+ 	}
+ 
+ 	if (SDEBUG_OPT_RESET_NOISE & sdebug_opts)
+-		sdev_printk(KERN_INFO, sdp,
++		starget_printk(KERN_INFO, starget,
+ 			    "%s: %d device(s) found in target\n", __func__, k);
+ 
+-	if (sdebug_fail_target_reset(SCpnt)) {
+-		scmd_printk(KERN_INFO, SCpnt, "fail target reset 0x%x\n",
+-			    opcode);
++	if (sdebug_fail_target_reset(starget)) {
++		starget_printk(KERN_INFO, starget, "fail target reset\n");
+ 		return FAILED;
+ 	}
+ 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index f82551783feb..fc0510cd367c 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -946,14 +946,15 @@ static enum scsi_disposition scsi_try_target_reset(struct scsi_cmnd *scmd)
+ 	enum scsi_disposition rtn;
+ 	struct Scsi_Host *host = scmd->device->host;
+ 	const struct scsi_host_template *hostt = host->hostt;
++	struct scsi_target *starget = scsi_target(scmd->device);
+ 
+ 	if (!hostt->eh_target_reset_handler)
+ 		return FAILED;
+ 
+-	rtn = hostt->eh_target_reset_handler(scmd);
++	rtn = hostt->eh_target_reset_handler(starget);
+ 	if (rtn == SUCCESS) {
+ 		spin_lock_irqsave(host->host_lock, flags);
+-		__starget_for_each_device(scsi_target(scmd->device), NULL,
++		__starget_for_each_device(starget, NULL,
+ 					  __scsi_report_device_reset);
+ 		spin_unlock_irqrestore(host->host_lock, flags);
+ 	}
+@@ -1634,7 +1635,7 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
+ 	while (!list_empty(&tmp_list)) {
+ 		struct scsi_cmnd *next, *scmd;
+ 		enum scsi_disposition rtn;
+-		unsigned int id;
++		unsigned int channel, id;
+ 
+ 		if (scsi_host_eh_past_deadline(shost)) {
+ 			/* push back on work queue for further processing */
+@@ -1648,6 +1649,7 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
+ 		}
+ 
+ 		scmd = list_entry(tmp_list.next, struct scsi_cmnd, eh_entry);
++		channel = scmd_channel(scmd);
+ 		id = scmd_id(scmd);
+ 
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+@@ -1662,7 +1664,8 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
+ 					     " target: %d\n",
+ 					     current->comm, id));
+ 		list_for_each_entry_safe(scmd, next, &tmp_list, eh_entry) {
+-			if (scmd_id(scmd) != id)
++			if (scmd_channel(scmd) != channel ||
++			    scmd_id(scmd) != id)
+ 				continue;
+ 
+ 			if (rtn == SUCCESS)
 diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index a2560cc807d3..2ecc0ed60084 100644
+index 18be7391314e..56fd40d40f67 100644
 --- a/drivers/scsi/sym53c8xx_2/sym_glue.c
 +++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -693,9 +693,8 @@ static int sym53c8xx_eh_bus_reset_handler(struct scsi_cmnd *cmd)
- 	return SCSI_SUCCESS;
+@@ -619,9 +619,8 @@ static int sym53c8xx_eh_abort_handler(struct scsi_cmnd *cmd)
+ 	return sts ? SCSI_FAILED : SCSI_SUCCESS;
  }
  
--static int sym53c8xx_eh_host_reset_handler(struct scsi_cmnd *cmd)
-+static int sym53c8xx_eh_host_reset_handler(struct Scsi_Host *shost)
+-static int sym53c8xx_eh_target_reset_handler(struct scsi_cmnd *cmd)
++static int sym53c8xx_eh_target_reset_handler(struct scsi_target *starget)
  {
--	struct Scsi_Host *shost = cmd->device->host;
+-	struct scsi_target *starget = scsi_target(cmd->device);
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
  	struct sym_data *sym_data = shost_priv(shost);
  	struct pci_dev *pdev = sym_data->pdev;
- 	struct sym_hcb *np = sym_data->ncb;
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index f88ecdb93a8a..ddf1837babc0 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -894,14 +894,13 @@ static void pvscsi_reset_all(struct pvscsi_adapter *adapter)
- 	}
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 8e4035ff3674..3655ff2a9865 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -267,23 +267,24 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
+ 	return (ret == TMR_FUNCTION_COMPLETE) ? SUCCESS : FAILED;
  }
  
--static int pvscsi_host_reset(struct scsi_cmnd *cmd)
-+static int pvscsi_host_reset(struct Scsi_Host *host)
+-static int tcm_loop_target_reset(struct scsi_cmnd *sc)
++static int tcm_loop_target_reset(struct scsi_target *starget)
  {
--	struct Scsi_Host *host = cmd->device->host;
- 	struct pvscsi_adapter *adapter = shost_priv(host);
- 	unsigned long flags;
- 	bool use_msg;
- 
--	scmd_printk(KERN_INFO, cmd, "SCSI Host reset\n");
-+	shost_printk(KERN_INFO, host, "SCSI Host reset\n");
- 
- 	spin_lock_irqsave(&adapter->hw_lock, flags);
- 
-diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
-index e4fafc77bd20..56f82c2719aa 100644
---- a/drivers/scsi/wd33c93.c
-+++ b/drivers/scsi/wd33c93.c
-@@ -1508,15 +1508,12 @@ reset_wd33c93(struct Scsi_Host *instance)
- }
- 
- int
--wd33c93_host_reset(struct scsi_cmnd * SCpnt)
-+wd33c93_host_reset(struct Scsi_Host * instance)
- {
--	struct Scsi_Host *instance;
--	struct WD33C93_hostdata *hostdata;
-+	struct WD33C93_hostdata *hostdata = shost_priv(instance);
- 	int i;
- 
--	instance = SCpnt->device->host;
- 	spin_lock_irq(instance->host_lock);
--	hostdata = (struct WD33C93_hostdata *) instance->hostdata;
- 
- 	printk("scsi%d: reset. ", instance->host_no);
- 	disable_irq(instance->irq);
-@@ -1539,7 +1536,6 @@ wd33c93_host_reset(struct scsi_cmnd * SCpnt)
- 	hostdata->outgoing_len = 0;
- 
- 	reset_wd33c93(instance);
--	SCpnt->result = DID_RESET << 16;
- 	enable_irq(instance->irq);
- 	spin_unlock_irq(instance->host_lock);
- 	return SUCCESS;
-diff --git a/drivers/scsi/wd33c93.h b/drivers/scsi/wd33c93.h
-index e5e4254b1477..e3c2d3850f74 100644
---- a/drivers/scsi/wd33c93.h
-+++ b/drivers/scsi/wd33c93.h
-@@ -336,6 +336,6 @@ int wd33c93_queuecommand (struct Scsi_Host *h, struct scsi_cmnd *cmd);
- void wd33c93_intr (struct Scsi_Host *instance);
- int wd33c93_show_info(struct seq_file *, struct Scsi_Host *);
- int wd33c93_write_info(struct Scsi_Host *, char *, int);
--int wd33c93_host_reset (struct scsi_cmnd *);
-+int wd33c93_host_reset (struct Scsi_Host *);
- 
- #endif /* WD33C93_H */
-diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
-index 5a380eecfc75..42134f9510d5 100644
---- a/drivers/scsi/wd719x.c
-+++ b/drivers/scsi/wd719x.c
-@@ -520,9 +520,9 @@ static int wd719x_bus_reset(struct scsi_cmnd *cmd)
- 	return wd719x_reset(cmd, WD719X_CMD_BUSRESET, 0);
- }
- 
--static int wd719x_host_reset(struct scsi_cmnd *cmd)
-+static int wd719x_host_reset(struct Scsi_Host *host)
- {
--	struct wd719x *wd = shost_priv(cmd->device->host);
-+	struct wd719x *wd = shost_priv(host);
- 	struct wd719x_scb *scb, *tmp;
- 	unsigned long flags;
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 5c4f2643dde6..0bc20433225f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -266,7 +266,7 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
- static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba);
- static void ufshcd_async_scan(void *data, async_cookie_t cookie);
- static int ufshcd_reset_and_restore(struct ufs_hba *hba);
--static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
-+static int ufshcd_eh_host_reset_handler(struct Scsi_Host *shost);
- static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
- static void ufshcd_hba_exit(struct ufs_hba *hba);
- static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params);
-@@ -7797,17 +7797,15 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
- 
- /**
-  * ufshcd_eh_host_reset_handler - host reset handler registered to scsi layer
-- * @cmd: SCSI command pointer
-+ * @shost: SCSI Host
-  *
-  * Return: SUCCESS or FAILED.
-  */
--static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
-+static int ufshcd_eh_host_reset_handler(struct Scsi_Host *shost)
- {
- 	int err = SUCCESS;
- 	unsigned long flags;
--	struct ufs_hba *hba;
--
--	hba = shost_priv(cmd->device->host);
-+	struct ufs_hba *hba = shost_priv(shost);
+ 	struct tcm_loop_hba *tl_hba;
+ 	struct tcm_loop_tpg *tl_tpg;
++	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
  
  	/*
- 	 * If runtime PM sent SSU and got a timeout, scsi_error_handler is
-diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
-index 8c8fa71c69c4..c51bb6b0ef43 100644
---- a/drivers/usb/image/microtek.c
-+++ b/drivers/usb/image/microtek.c
-@@ -345,9 +345,9 @@ static int mts_scsi_abort(struct scsi_cmnd *srb)
- 	return FAILED;
- }
+ 	 * Locate the tcm_loop_hba_t pointer
+ 	 */
+-	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
++	tl_hba = *(struct tcm_loop_hba **)shost_priv(shost);
+ 	if (!tl_hba) {
+ 		pr_err("Unable to perform device reset without active I_T Nexus\n");
+ 		return FAILED;
+ 	}
+ 	/*
+-	 * Locate the tl_tpg pointer from TargetID in sc->device->id
++	 * Locate the tl_tpg pointer from TargetID in starget->id
+ 	 */
+-	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
++	tl_tpg = &tl_hba->tl_hba_tpgs[starget->id];
+ 	if (tl_tpg) {
+ 		tl_tpg->tl_transport_status = TCM_TRANSPORT_ONLINE;
+ 		return SUCCESS;
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 7dddf785edd0..73d3c79f86c3 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -389,7 +389,7 @@ struct iscsi_host {
+  * scsi host template
+  */
+ extern int iscsi_eh_abort(struct scsi_cmnd *sc);
+-extern int iscsi_eh_recover_target(struct scsi_cmnd *sc);
++extern int iscsi_eh_recover_target(struct scsi_target *starget);
+ extern int iscsi_eh_session_reset(struct iscsi_cls_session *cls_session);
+ extern int iscsi_eh_device_reset(struct scsi_cmnd *sc);
+ extern int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index f5257103fdb6..5d9a7439ee14 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -699,7 +699,7 @@ extern struct device_attribute dev_attr_phy_event_threshold;
+ void sas_task_abort(struct sas_task *);
+ int sas_eh_abort_handler(struct scsi_cmnd *cmd);
+ int sas_eh_device_reset_handler(struct scsi_cmnd *cmd);
+-int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
++int sas_eh_target_reset_handler(struct scsi_target *starget);
  
--static int mts_scsi_host_reset(struct scsi_cmnd *srb)
-+static int mts_scsi_host_reset(struct Scsi_Host *shost)
- {
--	struct mts_desc* desc = (struct mts_desc*)(srb->device->host->hostdata[0]);
-+	struct mts_desc* desc = shost_priv(shost);
- 	int result;
- 
- 	MTS_DEBUG_GOT_HERE();
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index eca6fd42d7f7..dd71e198b360 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -950,7 +950,7 @@ void fc_fcp_destroy(struct fc_lport *);
- int fc_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
- int fc_eh_abort(struct scsi_cmnd *);
- int fc_eh_device_reset(struct scsi_cmnd *);
--int fc_eh_host_reset(struct scsi_cmnd *);
-+int fc_eh_host_reset(struct Scsi_Host *);
- int fc_slave_alloc(struct scsi_device *);
- 
- /*
+ extern void sas_target_destroy(struct scsi_target *);
+ extern int sas_slave_alloc(struct scsi_device *);
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 49f768d0ff37..9e3ec411cdc6 100644
+index 8feb2e8e312e..44ccca4b401d 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -153,7 +153,7 @@ struct scsi_host_template {
+@@ -151,7 +151,7 @@ struct scsi_host_template {
+ 	 */
+ 	int (* eh_abort_handler)(struct scsi_cmnd *);
  	int (* eh_device_reset_handler)(struct scsi_cmnd *);
- 	int (* eh_target_reset_handler)(struct scsi_cmnd *);
- 	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
--	int (* eh_host_reset_handler)(struct scsi_cmnd *);
-+	int (* eh_host_reset_handler)(struct Scsi_Host *);
+-	int (* eh_target_reset_handler)(struct scsi_cmnd *);
++	int (* eh_target_reset_handler)(struct scsi_target *);
+ 	int (* eh_bus_reset_handler)(struct Scsi_Host *, unsigned int);
+ 	int (* eh_host_reset_handler)(struct Scsi_Host *);
  
- 	/*
- 	 * Before the mid layer attempts to scan for a new device where none
 -- 
 2.35.3
 
