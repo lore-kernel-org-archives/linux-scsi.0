@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EA16C25B41
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 09:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3152CDB474
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 09:15:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232763AbjJWJPV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 05:15:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48696 "EHLO
+        id S232773AbjJWJPW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 05:15:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229606AbjJWJPP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 05:15:15 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04499E9
+        with ESMTP id S229689AbjJWJPQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 05:15:16 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E70A3E5
         for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 02:15:12 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 4FA9B1FE13;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 364F021AC6;
         Mon, 23 Oct 2023 09:15:11 +0000 (UTC)
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 039CF2CF50;
-        Mon, 23 Oct 2023 09:15:11 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id C3AA32CF4E;
+        Mon, 23 Oct 2023 09:15:10 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 2F43F51EC331; Mon, 23 Oct 2023 11:15:11 +0200 (CEST)
+        id F144551EC325; Mon, 23 Oct 2023 11:15:10 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/16] scsi_transport_iscsi: use session as argument for iscsi_block_scsi_eh()
-Date:   Mon, 23 Oct 2023 11:15:00 +0200
-Message-Id: <20231023091507.120828-10-hare@suse.de>
+Subject: [PATCH 03/16] aha152x: look for stuck command when resetting device
+Date:   Mon, 23 Oct 2023 11:14:54 +0200
+Message-Id: <20231023091507.120828-4-hare@suse.de>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20231023091507.120828-1-hare@suse.de>
 References: <20231023091507.120828-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: ++
-Authentication-Results: smtp-out2.suse.de;
+X-Spamd-Bar: ++++
+Authentication-Results: smtp-out1.suse.de;
         dkim=none;
         dmarc=none;
-        spf=softfail (smtp-out2.suse.de: 149.44.160.134 is neither permitted nor denied by domain of hare@suse.de) smtp.mailfrom=hare@suse.de
+        spf=softfail (smtp-out1.suse.de: 149.44.160.134 is neither permitted nor denied by domain of hare@suse.de) smtp.mailfrom=hare@suse.de
 X-Rspamd-Server: rspamd2
-X-Spamd-Result: default: False [2.49 / 50.00];
+X-Spamd-Result: default: False [4.18 / 50.00];
          ARC_NA(0.00)[];
          FROM_HAS_DN(0.00)[];
          TO_DN_SOME(0.00)[];
@@ -63,150 +63,65 @@ X-Spamd-Result: default: False [2.49 / 50.00];
          R_DKIM_NA(0.20)[];
          MIME_TRACE(0.00)[0:+];
          RCVD_COUNT_TWO(0.00)[2];
-         BAYES_HAM(-3.00)[100.00%]
-X-Rspamd-Queue-Id: 4FA9B1FE13
+         BAYES_HAM(-1.31)[90.16%]
+X-Rspamd-Queue-Id: 364F021AC6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We should be passing in the session directly instead of deriving it
-from the scsi command.
+The LLDD needs a command to send the reset with, so look at the
+list of outstanding commands to get one.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/qla4xxx/ql4_os.c       | 34 ++++++++++++++++++-----------
- drivers/scsi/scsi_transport_iscsi.c |  6 ++---
- include/scsi/scsi_transport_iscsi.h |  2 +-
- 3 files changed, 24 insertions(+), 18 deletions(-)
+ drivers/scsi/aha152x.c | 26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 675332e49a7b..961fe65bbe65 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -9272,15 +9272,18 @@ static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
-  **/
- static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
- {
--	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
--	struct ddb_entry *ddb_entry = cmd->device->hostdata;
-+	struct scsi_device *sdev = cmd->device;
-+	struct scsi_qla_host *ha = to_qla_host(sdev->host);
-+	struct iscsi_cls_session *session;
-+	struct ddb_entry *ddb_entry = sdev->hostdata;
- 	int ret = FAILED, stat;
- 	int rval;
- 
- 	if (!ddb_entry)
- 		return ret;
- 
--	ret = iscsi_block_scsi_eh(cmd);
-+	session = starget_to_session(scsi_target(sdev));
-+	ret = iscsi_block_scsi_eh(session);
- 	if (ret)
- 		return ret;
- 	ret = FAILED;
-@@ -9341,19 +9344,25 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
-  **/
- static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
- {
--	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
--	struct ddb_entry *ddb_entry = cmd->device->hostdata;
-+	struct scsi_target *starget = scsi_target(cmd->device);
-+	struct iscsi_cls_session *cls_session = starget_to_session(starget);
-+	struct iscsi_session *sess;
-+	struct scsi_qla_host *ha;
-+	struct ddb_entry *ddb_entry;
- 	int stat, ret;
- 	int rval;
- 
-+	sess = cls_session->dd_data;
-+	ddb_entry = sess->dd_data;
- 	if (!ddb_entry)
- 		return FAILED;
-+	ha = ddb_entry->ha;
- 
--	ret = iscsi_block_scsi_eh(cmd);
-+	ret = iscsi_block_scsi_eh(cls_session);
- 	if (ret)
- 		return ret;
- 
--	starget_printk(KERN_INFO, scsi_target(cmd->device),
-+	starget_printk(KERN_INFO, starget,
- 		       "WARM TARGET RESET ISSUED.\n");
- 
- 	DEBUG2(printk(KERN_INFO
-@@ -9370,14 +9379,13 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
- 
- 	stat = qla4xxx_reset_target(ha, ddb_entry);
- 	if (stat != QLA_SUCCESS) {
--		starget_printk(KERN_INFO, scsi_target(cmd->device),
-+		starget_printk(KERN_INFO, starget,
- 			       "WARM TARGET RESET FAILED.\n");
- 		return FAILED;
- 	}
- 
--	if (qla4xxx_eh_wait_for_commands(ha, scsi_target(cmd->device),
--					 NULL)) {
--		starget_printk(KERN_INFO, scsi_target(cmd->device),
-+	if (qla4xxx_eh_wait_for_commands(ha, starget, NULL)) {
-+		starget_printk(KERN_INFO, starget,
- 			       "WARM TARGET DEVICE RESET FAILED - "
- 			       "waiting for commands.\n");
- 		return FAILED;
-@@ -9386,13 +9394,13 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
- 	/* Send marker. */
- 	if (qla4xxx_send_marker_iocb(ha, ddb_entry, cmd->device->lun,
- 		MM_TGT_WARM_RESET) != QLA_SUCCESS) {
--		starget_printk(KERN_INFO, scsi_target(cmd->device),
-+		starget_printk(KERN_INFO, starget,
- 			       "WARM TARGET DEVICE RESET FAILED - "
- 			       "marker iocb failed.\n");
- 		return FAILED;
- 	}
- 
--	starget_printk(KERN_INFO, scsi_target(cmd->device),
-+	starget_printk(KERN_INFO, starget,
- 		       "WARM TARGET RESET SUCCEEDED.\n");
- 	return SUCCESS;
- }
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 3075b2ddf7a6..4e81ef882a49 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1838,17 +1838,15 @@ static void iscsi_scan_session(struct work_struct *work)
- 
- /**
-  * iscsi_block_scsi_eh - block scsi eh until session state has transistioned
-- * @cmd: scsi cmd passed to scsi eh handler
-+ * @session: iscsi session derived from scsi eh handler argument
-  *
-  * If the session is down this function will wait for the recovery
-  * timer to fire or for the session to be logged back in. If the
-  * recovery timer fires then FAST_IO_FAIL is returned. The caller
-  * should pass this error value to the scsi eh.
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index 055adb349b0e..936c9f5c6f23 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -1070,24 +1070,28 @@ static int aha152x_abort(struct scsi_cmnd *SCpnt)
   */
--int iscsi_block_scsi_eh(struct scsi_cmnd *cmd)
-+int iscsi_block_scsi_eh(struct iscsi_cls_session *session)
+ static int aha152x_device_reset(struct scsi_cmnd * SCpnt)
  {
--	struct iscsi_cls_session *session =
--			starget_to_session(scsi_target(cmd->device));
+-	struct Scsi_Host *shpnt = SCpnt->device->host;
++	struct scsi_device *sdev = SCpnt->device;
++	struct Scsi_Host *shpnt = sdev->host;
+ 	DECLARE_COMPLETION(done);
+ 	int ret, issued, disconnected;
+-	unsigned char old_cmd_len = SCpnt->cmd_len;
++	unsigned char old_cmd_len;
  	unsigned long flags;
- 	int ret = 0;
+ 	unsigned long timeleft;
  
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index fb3399e4cd29..8ec36de5d236 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -466,7 +466,7 @@ extern struct iscsi_endpoint *iscsi_create_endpoint(int dd_size);
- extern void iscsi_destroy_endpoint(struct iscsi_endpoint *ep);
- extern struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle);
- extern void iscsi_put_endpoint(struct iscsi_endpoint *ep);
--extern int iscsi_block_scsi_eh(struct scsi_cmnd *cmd);
-+extern int iscsi_block_scsi_eh(struct iscsi_cls_session *session);
- extern struct iscsi_iface *iscsi_create_iface(struct Scsi_Host *shost,
- 					      struct iscsi_transport *t,
- 					      uint32_t iface_type,
+-	if(CURRENT_SC==SCpnt) {
+-		scmd_printk(KERN_ERR, SCpnt, "cannot reset current device\n");
+-		return FAILED;
+-	}
+-
+ 	DO_LOCK(flags);
+-	issued       = remove_SC(&ISSUE_SC, SCpnt) == NULL;
+-	disconnected = issued && remove_SC(&DISCONNECTED_SC, SCpnt);
++	/* Look for the stuck command */
++	SCpnt = remove_lun_SC(&ISSUE_SC, sdev->id, sdev->lun);
++	if (SCpnt)
++		issued = 1;
++	else
++		SCpnt = remove_lun_SC(&DISCONNECTED_SC, sdev->id, sdev->lun);
++	if (!issued && SCpnt)
++		disconnected = 1;
+ 	DO_UNLOCK(flags);
+-
+-	SCpnt->cmd_len         = 0;
++	if (!SCpnt)
++		return FAILED;
++	old_cmd_len = SCpnt->cmd_len;
++	SCpnt->cmd_len = 0;
+ 
+ 	aha152x_internal_queue(SCpnt, &done, resetting);
+ 
 -- 
 2.35.3
 
