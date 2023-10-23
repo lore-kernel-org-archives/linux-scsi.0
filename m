@@ -2,63 +2,65 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19344C25B45
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 19:51:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A30C25B46
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 20:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229557AbjJWTvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 15:51:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45844 "EHLO
+        id S229923AbjJWUM1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 16:12:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbjJWTvB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 15:51:01 -0400
-Received: from mail-ot1-x349.google.com (mail-ot1-x349.google.com [IPv6:2607:f8b0:4864:20::349])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FB06127
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 12:50:59 -0700 (PDT)
-Received: by mail-ot1-x349.google.com with SMTP id 46e09a7af769-6ce27d7b003so6181877a34.3
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 12:50:59 -0700 (PDT)
+        with ESMTP id S229498AbjJWUM0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 16:12:26 -0400
+Received: from mail-yw1-x1149.google.com (mail-yw1-x1149.google.com [IPv6:2607:f8b0:4864:20::1149])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EF841A4
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 13:12:24 -0700 (PDT)
+Received: by mail-yw1-x1149.google.com with SMTP id 00721157ae682-5a7cc433782so46406637b3.3
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 13:12:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698090658; x=1698695458; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1698091943; x=1698696743; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=bF7T0d28n9cL6YgeW2rqKNnAbndsOrdsoITtJXsJhco=;
-        b=VV3XnTVniOZXoCAAMyXAJgZvS8v42+VNeI5Jy5p7T5SzwXqUdBY8rQY3MaH/S4Uk/G
-         ekNsTdpE7mdmR+9VU2l++lBxbAPF/u6wwxxHv3jvijT6Kh/a1y4QCOAM5SFaqzi6SGGU
-         pDrgPmSWzFxbnPSRqt460d5QHzXrXDSAsGXIpYkEL4+d662ygpOuEB6hW6oShoNzU2zs
-         Rw/15fWa0uewaEnEX2WL15o+vhJMce8CEZ85emXq14bIOs/X0owBoVnHj5/kGAEzMFa7
-         pmtyNQbyR59uld+6jpJNtti+V2pTlWT9URS7rYyAjgcmI3myuq+YH4Mk81nYYqrdJzY/
-         WrEQ==
+        bh=TaYzqiDcDWKgPy4uGsQmrLXLk2sBD/yDm1Jxt8SJs8M=;
+        b=LnZYaIDMWg7IVK3lRjrc4+EjjUnh2MqiMWJr6ZhH+lryJnEi0uAS0ExJiY2S3qaiRi
+         lvj1k9OzrDh7YRMoSDet2GGQdOYCAMqcFl+nfTNqWfnDZ+6t7SHF0y+4TF9ia4VY/gNk
+         k8UEY9gH1DYd/HaaLsTbimpBvZhz0TIl/RUyHJZJgMEi9O4E+d80sGONz8ibFO6V7VtE
+         U7IlvLtoUcRY/PNfMLM/EIM1mdlKrRfkWM5Dj8X1DTnwaNV7HyCWzvjipyTL9aYR82c9
+         +R4yo0XTvm7pGEz0RLLzwJRdH4N5Q/aDpRMeuO3Jz5MhVDQxcPZZKubPPp9h75GJGZH8
+         XfGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698090658; x=1698695458;
+        d=1e100.net; s=20230601; t=1698091943; x=1698696743;
         h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=bF7T0d28n9cL6YgeW2rqKNnAbndsOrdsoITtJXsJhco=;
-        b=L/q2olziV/OpNcy2LBATClHtbdsnRyR6ORQF+AMwzRfIlBMFuEEvTsv6WUy3mqZm3k
-         pkHy55VqI9BcPgEFayQI9rJA/EVnIV8QPdPFfHEYiLULwK/dXdB/eTrBN9Lien05ua5P
-         pgrtu4ia4yix0ROZNpV9jhN112I4YL499e9RBsFqQ2ZqgGFHyeJYxnsQx9SS/BsiZX64
-         L8/5A4QGPlOc9P/kCjeys+TSHPQwIXxnHkoFgR5PS6d7PFGo09ye+rxbNTlI9mQFKQ2D
-         h1j8q7GYA7iA7LDYgSD9GD1LUdgi/77Ssy/Rni7K/Z7uSDjp0Zib4dIRm61ntzaa57dV
-         klTA==
-X-Gm-Message-State: AOJu0Yx1ll8fEfobzSOk6jEp8LwEBISr6vM0xvGEI06c736abim7eMtp
-        55KuefZLbhxruA7y3Q9ztDRK7VQpRjYevyjEmA==
-X-Google-Smtp-Source: AGHT+IF0h+/xrakdb44PmJlTv4OdJIpOxbtE1q6VwuBoxBcow2sL1DM3RGqW5GixyjHX+YFxDwu9WN9g/oFlYuuWcQ==
+        bh=TaYzqiDcDWKgPy4uGsQmrLXLk2sBD/yDm1Jxt8SJs8M=;
+        b=fxDsfgoPd3vAOKsB0mDG2qolPRE+W89Ayuhlk0ZSRcE2eOGwpL91+o9+72kDNI3HNB
+         W4hQVRDwFKcJfasGQzQU0j7tjc4xagXj/j8tmyjHs5Lc18/KEUNIEL6wRvrEir7jM/Jd
+         Ly+FAWT4vLujokDxH3w5JSpih+pwFsKKIuwAMB2aNyUr8ysRvmmsV7b/LRPYlpoD+Drs
+         ob6xJzl+tIRYgC3qyM3NXa4GZu0N6B/BUcgqZtxIzFrjlmoTjDf/cMZmytfGcoj7oLVo
+         c41ATTJNrui0Bsaf7oDLayLp6fWooWo02GLoiQWb7psKpd0mgkNBDp6nl+842i9nqWuB
+         EYKg==
+X-Gm-Message-State: AOJu0Yw0F4hMoBw121qkQL0HC2ulW3wgNsHJmh7r4KilyTxRqshV587p
+        FPvMVn57CAm94j16RdPN5yE7Fks/toHCmdOIvQ==
+X-Google-Smtp-Source: AGHT+IHDcQhZF3S6ev46PsP31VJ143R9m5nA9+25vhWXz518arOoV43l0DM3lCYGWdXUSli8kfuj4DTuRkUgpAueEw==
 X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a05:6830:9:b0:6bc:f328:696a with SMTP
- id c9-20020a056830000900b006bcf328696amr2714868otp.0.1698090658533; Mon, 23
- Oct 2023 12:50:58 -0700 (PDT)
-Date:   Mon, 23 Oct 2023 19:50:57 +0000
+ (user=justinstitt job=sendgmr) by 2002:a25:8485:0:b0:da0:394d:7e19 with SMTP
+ id v5-20020a258485000000b00da0394d7e19mr3980ybk.12.1698091943613; Mon, 23 Oct
+ 2023 13:12:23 -0700 (PDT)
+Date:   Mon, 23 Oct 2023 20:12:22 +0000
 Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAKDONmUC/x3MMQqDQBBG4avI1BlQV5B4FbHQ2TGZZiPzi1Fk7
- 54lxSu+5t0EdVPQUN3kehjskwqaR0XyntNL2WIxtXUbmhJj9yTbxdHtUAdDYBy+jBksLL1IHfr YLfKk8thcVzv//3HK+QePuh6hbwAAAA==
+X-B4-Tracking: v=1; b=H4sIAKXTNmUC/y2NQQqDQAxFryJZN6AzjpRepRSxMaPZjJIUUWTu3
+ kFcPD5v898Jxips8KpOUN7EZElFmkcFNA9pYpSxOLja+aaA9tNE64GjysZqaGSC37S7SPf0kRZ Gwuha78Oz7dgHKH+rcpT9ar0/Of8B91Q6OnsAAAA=
 X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1698090657; l=2555;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1698091942; l=3749;
  i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=7GBzrHxBfUi4U3AvyTYICsD2FUILDgUdjKwKv0QmnCY=; b=XgVC/DXR0DzmOmUA/pGXj7Oim73+vtl9EM47VYRbVwNnvy3QrTsTEi4sHRs+WdbEqHS0hunvB
- atsZa3YYQWACsuUDJze3QJQSkCf0yxVXO1e09sFqUyHmC9pCx30v7rk
+ bh=nllTzTiPjRT5s2K8r25wvqMnTGFjjYXsOSJyrZ516eA=; b=Cfv7kTFGU3by66ZpqIYT0fT+2TqTsEGOn7q86guhmaK5u4xcxkPzCD4nMiXOHBYWA55tKtuJG
+ u/PgjCIgPA1AJ7eSIxsqoVNfvWZeb5i6SozixjafFpQAGDMsEsAhjTE
 X-Mailer: b4 0.12.3
-Message-ID: <20231023-strncpy-drivers-scsi-3w-sas-c-v1-1-4c40a1e99dfc@google.com>
-Subject: [PATCH] scsi: 3w-sas: replace deprecated strncpy with strscpy
+Message-ID: <20231023-strncpy-drivers-scsi-bnx2fc-bnx2fc_fcoe-c-v1-1-a3736943cde2@google.com>
+Subject: [PATCH] scsi: bnx2fc: replace deprecated strncpy with strscpy
 From:   Justin Stitt <justinstitt@google.com>
-To:     Adam Radford <aradford@gmail.com>,
+To:     Saurav Kashyap <skashyap@marvell.com>,
+        Javed Hasan <jhasan@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -73,30 +75,28 @@ strncpy() is deprecated for use on NUL-terminated destination strings
 [1] and as such we should prefer more robust and less ambiguous string
 interfaces.
 
-This pattern of strncpy(dest, src, strlen(src)) is extremely bug-prone.
-This pattern basically never results in NUL-terminated destination
-strings unless `dest` was zero-initialized. The current implementation
-may be accidentally correct as tw_dev is zero-allocated via:
+We expect hba->chip_num to be NUL-terminated based on its usage with
+format strings:
 
-	host = scsi_host_alloc(&driver_template, sizeof(TW_Device_Extension));
-        ...
-	tw_dev = shost_priv(host);
+	snprintf(fc_host_symbolic_name(lport->host), 256,
+		 "%s (QLogic %s) v%s over %s",
+		BNX2FC_NAME, hba->chip_num, BNX2FC_VERSION,
+		interface->netdev->name);
 
-... wherein scsi_host_alloc zero-allocates host:
+Moreover, NUL-padding is not required as hba is zero-allocated from its
+callsite:
 
-        shost = kzalloc(sizeof(struct Scsi_Host) + privsize, GFP_KERNEL);
-
-Also, further suggesting this change is worthwhile is another strscpy()
-usage in 32-9xxx.c:
-
-	strscpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
-		sizeof(tw_dev->tw_compat_info.driver_version));
+	hba = kzalloc(sizeof(*hba), GFP_KERNEL);
 
 Considering the above, a suitable replacement is `strscpy` [2] due to
 the fact that it guarantees NUL-termination on the destination buffer
 without unnecessarily NUL-padding.
 
-Let's not be accidentally correct, let's be definitely correct.
+Regarding stats_addr->version, I've opted to also use strscpy() instead
+of strscpy_pad() as I typically see these XYZ_get_strings() pass
+zero-allocated data. I couldn't track all of where
+bnx2fc_ulp_get_stats() is used and if required, we could opt for
+strscpy_pad().
 
 Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
 Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
@@ -108,27 +108,65 @@ Note: build-tested only.
 
 Found with: $ rg "strncpy\("
 ---
- drivers/scsi/3w-sas.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 55989eaa2d9f..9bdb75dfdcd7 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -1326,7 +1326,8 @@ static int twl_reset_sequence(TW_Device_Extension *tw_dev, int soft_reset)
- 		}
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 05ddbb9bb7d8..3ebfb09329ad 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1737,32 +1737,32 @@ static int bnx2fc_bind_pcidev(struct bnx2fc_hba *hba)
  
- 		/* Load rest of compatibility struct */
--		strncpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION, strlen(TW_DRIVER_VERSION));
-+		strscpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
-+			sizeof(tw_dev->tw_compat_info.driver_version));
- 		tw_dev->tw_compat_info.driver_srl_high = TW_CURRENT_DRIVER_SRL;
- 		tw_dev->tw_compat_info.driver_branch_high = TW_CURRENT_DRIVER_BRANCH;
- 		tw_dev->tw_compat_info.driver_build_high = TW_CURRENT_DRIVER_BUILD;
+ 	switch (pdev->device) {
+ 	case PCI_DEVICE_ID_NX2_57710:
+-		strncpy(hba->chip_num, "BCM57710", BCM_CHIP_LEN);
++		strscpy(hba->chip_num, "BCM57710", sizeof(hba->chip_num));
+ 		break;
+ 	case PCI_DEVICE_ID_NX2_57711:
+-		strncpy(hba->chip_num, "BCM57711", BCM_CHIP_LEN);
++		strscpy(hba->chip_num, "BCM57711", sizeof(hba->chip_num));
+ 		break;
+ 	case PCI_DEVICE_ID_NX2_57712:
+ 	case PCI_DEVICE_ID_NX2_57712_MF:
+ 	case PCI_DEVICE_ID_NX2_57712_VF:
+-		strncpy(hba->chip_num, "BCM57712", BCM_CHIP_LEN);
++		strscpy(hba->chip_num, "BCM57712", sizeof(hba->chip_num));
+ 		break;
+ 	case PCI_DEVICE_ID_NX2_57800:
+ 	case PCI_DEVICE_ID_NX2_57800_MF:
+ 	case PCI_DEVICE_ID_NX2_57800_VF:
+-		strncpy(hba->chip_num, "BCM57800", BCM_CHIP_LEN);
++		strscpy(hba->chip_num, "BCM57800", sizeof(hba->chip_num));
+ 		break;
+ 	case PCI_DEVICE_ID_NX2_57810:
+ 	case PCI_DEVICE_ID_NX2_57810_MF:
+ 	case PCI_DEVICE_ID_NX2_57810_VF:
+-		strncpy(hba->chip_num, "BCM57810", BCM_CHIP_LEN);
++		strscpy(hba->chip_num, "BCM57810", sizeof(hba->chip_num));
+ 		break;
+ 	case PCI_DEVICE_ID_NX2_57840:
+ 	case PCI_DEVICE_ID_NX2_57840_MF:
+ 	case PCI_DEVICE_ID_NX2_57840_VF:
+ 	case PCI_DEVICE_ID_NX2_57840_2_20:
+ 	case PCI_DEVICE_ID_NX2_57840_4_10:
+-		strncpy(hba->chip_num, "BCM57840", BCM_CHIP_LEN);
++		strscpy(hba->chip_num, "BCM57840", sizeof(hba->chip_num));
+ 		break;
+ 	default:
+ 		pr_err(PFX "Unknown device id 0x%x\n", pdev->device);
+@@ -1800,7 +1800,7 @@ static int bnx2fc_ulp_get_stats(void *handle)
+ 	if (!stats_addr)
+ 		return -EINVAL;
+ 
+-	strncpy(stats_addr->version, BNX2FC_VERSION,
++	strscpy(stats_addr->version, BNX2FC_VERSION,
+ 		sizeof(stats_addr->version));
+ 	stats_addr->txq_size = BNX2FC_SQ_WQES_MAX;
+ 	stats_addr->rxq_size = BNX2FC_CQ_WQES_MAX;
 
 ---
 base-commit: 9c5d00cb7b6bbc5a7965d9ab7d223b5402d1f02c
-change-id: 20231023-strncpy-drivers-scsi-3w-sas-c-c7cc037d4bc9
+change-id: 20231023-strncpy-drivers-scsi-bnx2fc-bnx2fc_fcoe-c-f24335846e35
 
 Best regards,
 --
