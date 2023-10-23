@@ -2,158 +2,89 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91557C001E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 13:39:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EB28CDB474
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 13:56:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230516AbjJWNjt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 09:39:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36348 "EHLO
+        id S229987AbjJWN4j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 09:56:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229986AbjJWNjs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 09:39:48 -0400
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB844E5
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 06:39:45 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-40837ebba42so24427555e9.0
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 06:39:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1698068384; x=1698673184; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Oex7vPSNi+K4wyo+SJFiOJvbKKmAeNdDpD4hzG0BrPE=;
-        b=wTRt2dLgXtTfcjgSlKJO0BnIf+1ysYNsl4AdW0SZkomG13IfUZe9CRa3e5DiDg7I50
-         Rx1eiBSMa8NsXgBT81Pl1DKvbQYloJYuK9H9MeTdoTtQh00Dz9MlSQ2eTJNJ8ahMGnDL
-         edVRUy68rSES3jW5+ZQALZZtjk/DqpBKZonV/RyHPCzJlbDd3hGQwZX9pKxi/u9NwnV7
-         VzvEVXM5yuHWqiRrnNIe07rByVhaVz/21wDjUKrXk9fB50EE9l1x06hmZOA9ZyODjMH/
-         fG1IXyDPZxHkTPYLVYoMg94IS7tPtZzerESYErw5cDR1rZfchcAlw8ZaSEg9jxpidspo
-         hYjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698068384; x=1698673184;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Oex7vPSNi+K4wyo+SJFiOJvbKKmAeNdDpD4hzG0BrPE=;
-        b=bMZJoX+/c9g8mzXoqgBSzQzbrlSGkN/7lvDIBSRgfYzwwITNkg4r6wJXL9ZZp2cDlN
-         ROnx+x7r2DtafS2VfqYDT7zKoSx+gFBoZOoHaPvgspNCm1oGJCBZDpBchiP87m/qy3N2
-         LqJ7zhrfF5H1UbGN1qdRbc9XhumlBKA6qs5hJCJgG0GTCvVovJ1+FPcCb7ZzVX4DNg5+
-         5Ezf4TyJhhEbEkt1YolqlSkTPdn2gnqFZXInRmQaj/XslTKL6R4rWExbb35fV4iBpx+s
-         sS4mESxaSbwfjtxicW2gCJwAvJiQDIYiTVsEFRp7X6P59NZGuAqwogZSjbTgAu0KGmP0
-         5sSA==
-X-Gm-Message-State: AOJu0Yzjt5QbcWVghxEMtrWxP0iM5F992KAChH7aZL8pGbqKEmJreR0c
-        EEVfJozvDeQYZFEdLaKs2cSTHxReyhcbA7CsvXY=
-X-Google-Smtp-Source: AGHT+IH5kAoRyKQpRMqONNTgp7G1lcXCc8F0IYiMMwvgYRXd2AetNAdDkKS9m4vRbjni1lH7htGnSQ==
-X-Received: by 2002:a5d:62c7:0:b0:32d:9d0e:7841 with SMTP id o7-20020a5d62c7000000b0032d9d0e7841mr6827228wrv.6.1698068384382;
-        Mon, 23 Oct 2023 06:39:44 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id c17-20020a5d4151000000b0032d87b13240sm7885952wrq.73.2023.10.23.06.39.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Oct 2023 06:39:44 -0700 (PDT)
-Date:   Mon, 23 Oct 2023 16:39:40 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     Wenchao Hao <haowenchao22@gmail.com>
-Cc:     Wenchao Hao <haowenchao2@huawei.com>,
-        Eugeniy Paltsev <Eugeniy.Paltsev@synopsys.com>,
-        Vinod Koul <vkoul@kernel.org>,
+        with ESMTP id S229476AbjJWN4i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 09:56:38 -0400
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 027FB100
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 06:56:36 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 218C040E0187;
+        Mon, 23 Oct 2023 13:56:34 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+        header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+        by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id LZWpBHGh31YH; Mon, 23 Oct 2023 13:56:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+        t=1698069391; bh=/jf3Aw+157DSj+x3WYZ3ioN1WhAyTdxmgpy2sIv6h6k=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OOIDemZPb6NMkwsKCM3In1ymwC+hKji5NJzgrbTqjg5XeAr360MilDX6jGEz/Y7Tr
+         ooycWRer+nuL0A0lNAXRoTUIYTsEan/2UJTozlQTagVOa+YXm88pFcM8cBAtJL6YGV
+         GWI9wvD6a/lTv6Zm2+5aVft3ZmotKsC/uuD3GoOX+PPexYfUZBjSmPt4ZNsinQwkyX
+         JwGFHTvYU54VXuTHMcn3ReBJKNHsPAvU3tnKoELGJv55Y/PeDC3GLIQVbW8uCnX8xd
+         n8aguekyJ5t4SAGdTV+WhqO8Sg/qnkPyYOrva9lKd3PfRTbDNzXtz9MBjvXESuE8Zi
+         +xKwmq08e2fMqsxBI0E9Md/g3v6hr7fpWFFMa4NlKmMjLW9O1ZN8SHf7jMp+ao43UR
+         dGsmE+BIHBXo7TZfpZcBtd6iMm07I6ZeaGOoOyC4wP2pP+BmTT2fINh4dN3yJra3jR
+         9J6HYfapMfPMcfe25c+UfdjycAUfthskeXvSUHlt9Rf+7//GzGr+HKMrAd8gDAuKf/
+         A+PdZ+qVR+OsvCB9TCgz3JFbWwX7WAHNfplA8Z3Wln7TO2sW29UmqSUaIamB0+NMQB
+         Yh+SostJE2u1mFp8cDYqLvUGJlxuS0rXsDspMDdGwC70TKpQ1v12jEL2N/Qyo4eB+I
+         PBWmCWCsnRf61JgmwYv4tR90=
+Received: from zn.tnic (pd95304da.dip0.t-ipconnect.de [217.83.4.218])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+        (No client certificate requested)
+        by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 3309640E0196;
+        Mon, 23 Oct 2023 13:56:21 +0000 (UTC)
+Date:   Mon, 23 Oct 2023 15:56:15 +0200
+From:   Borislav Petkov <bp@alien8.de>
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        dmaengine@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 1/2] scsi: scsi_debug: fix some bugs in
- sdebug_error_write()
-Message-ID: <44b0eca3-57c1-4edd-ab35-c389dc976273@kadam.mountain>
-References: <96d50cf7-afec-46af-9d98-08099f8dc76e@moroto.mountain>
- <CAOptpSMTgGwyFkn8o6qAEnUKXh+_mOr8dQKAZUWfM_4QEnxzxw@mail.gmail.com>
+        Kees Cook <keescook@chromium.org>, James Seo <james@equiv.tech>
+Subject: Re: mpt3sas ubsan issues
+Message-ID: <20231023135615.GBZTZ7fwRh48euq3ew@fat_crate.local>
+References: <20231023082958.GAZTYvBlIB2UPUCUyA@fat_crate.local>
+ <ZTZEw0NwY28foZPP@x1-carbon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOptpSMTgGwyFkn8o6qAEnUKXh+_mOr8dQKAZUWfM_4QEnxzxw@mail.gmail.com>
+In-Reply-To: <ZTZEw0NwY28foZPP@x1-carbon>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Oct 21, 2023 at 06:10:44PM +0800, Wenchao Hao wrote:
-> On Fri, Oct 20, 2023 at 10:15 PM Dan Carpenter <dan.carpenter@linaro.org> wrote:
-> >
-> > There are two bug in this code:
+Hi,
+
+On Mon, Oct 23, 2023 at 10:02:45AM +0000, Niklas Cassel wrote:
+> I think this series might solve your issues:
 > 
-> Thanks for your fix, some different points of view as follows.
+> https://lore.kernel.org/linux-scsi/202310101748.5E39C3A@keescook/T/#t
 > 
-> > 1) If count is zero, then it will lead to a NULL dereference.  The
-> > kmalloc() will successfully allocate zero bytes and the test for
-> > "if (buf[0] == '-')" will read beyond the end of the zero size buffer
-> > and Oops.
-> 
-> This sysfs interface is usually used by cmdline, mostly, "echo" is used
-> to write it and "echo" always writes with '\n' terminated, which would
-> not cause a write with count=0.
-> 
+> However, the series hasn't been merged yet.
+> (Apparently because the mpt3sas maintainers haven't yet acked the series.)
 
-You are saying "sysfs" but this is debugfs.  Sysfs is completely
-different.  Also saying that 'and "echo" always writes with '\n'
-terminated' is not true either even in sysfs...
+Yap, with them ontop of -rc7 it looks good.
 
-> While in terms of security, we should add a check for count==0
-> condition and return EINVAL.
+Tested-by: Borislav Petkov (AMD) <bp@alien8.de>
 
-Checking for zero is a valid approach.  I considered that but my way
-was cleaner.
+Thx.
 
-> 
-> > 2) The code does not ensure that the user's string is properly NUL
-> > terminated which could lead to a read overflow.
-> >
-> 
-> I don't think so, the copy_from_user() would limit the accessed length
-> to count, so no read overflow would happen.
-> 
-> Userspace's write would allocate a buffer larger than it actually
-> needed(usually 4K), but the buffer would not be cleared, so some
-> dirty data would be passed to the kernel space.
-> 
-> We might have following pairs of parameters for sdebug_error_write:
-> 
-> ubuf: "0 -10 0x12\n0 0 0x2 0x6 0x4 0x2"
-> count=11
-> 
-> the valid data in ubuf is "0 -10 -x12\n", others are dirty data.
-> strndup_user() would return EINVAL for this pair which caused
-> a correct write to fail.
-> 
-> You can recurrent the above error with my script attached.
+-- 
+Regards/Gruss,
+    Boris.
 
-You're looking for the buffer overflow in the wrong place.
-
-drivers/scsi/scsi_debug.c
-  1026          if (copy_from_user(buf, ubuf, count)) {
-                                   ^^^
-We copy data from the user but it is not NUL terminated.
-
-  1027                  kfree(buf);
-  1028                  return -EFAULT;
-  1029          }
-  1030  
-  1031          if (buf[0] == '-')
-  1032                  return sdebug_err_remove(sdev, buf, count);
-  1033  
-  1034          if (sscanf(buf, "%d", &inject_type) != 1) {
-                           ^^^
-This will read beyond the end of the buffer.  sscanf() relies on a NUL
-terminator to know when then end of the string is.
-
-  1035                  kfree(buf);
-  1036                  return -EINVAL;
-  1037          }
-
-Obviously the user in this situation is like a hacker who wants to do
-something bad, not a normal users.  For a normal user this code is fine
-as you say.
-
-You will need to test this with .c code instead of shell if you want to
-see the bug.
-
-regards,
-dan carpenter
-
+https://people.kernel.org/tglx/notes-about-netiquette
