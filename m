@@ -2,120 +2,94 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF332C25B45
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 20:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F0F1C25B46
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 20:36:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230228AbjJWU0R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 16:26:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52904 "EHLO
+        id S229794AbjJWUgv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 16:36:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbjJWU0Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 16:26:16 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FB2DB3
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 13:26:14 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-d99ec34829aso4408409276.1
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 13:26:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698092773; x=1698697573; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=zChXjQ3rQBurGe38Uhj4e52WCZU0FHmenFv/zcC5OdI=;
-        b=jwTYd0Ape6rySoWfd1fHI0Em5aEYQw9tCTUF4AVFVuR8O/d6J2aVcGJGeAfwyg45Az
-         D+alhVFzNBRtmRb6eOCKi0Ux+9z5gfaGXFaWIBAIcwykjElb5EQ2zbSOrpjAttadl7eM
-         otbpme40/zZo8df22ZAa1naKMAbHSnDM3XIFbksvteHwT1T+n3kXo+eu3xBojUhg33/K
-         +cG5FiGeq1TbNMwiQKjUVD5eBgyxoQxl0tQ1j2uG628Ou+WbKRGWQR1rjAVaIFcL5pfZ
-         GktMnCK/36xDteISi2hp+UCwQO52FV7z3bclk73mEyrRUk2CxrLQlQQ7qR94a8jJXch4
-         EOVg==
+        with ESMTP id S229512AbjJWUgu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 16:36:50 -0400
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18E83D78;
+        Mon, 23 Oct 2023 13:36:49 -0700 (PDT)
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6b9af7d41d2so3098718b3a.0;
+        Mon, 23 Oct 2023 13:36:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698092773; x=1698697573;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=zChXjQ3rQBurGe38Uhj4e52WCZU0FHmenFv/zcC5OdI=;
-        b=Ek0VZZ/u6kBEmCGzQ/WEaUuhMpwCG4W/Esx4sftvf02UclxmohwzhLjIPNYReAHUxU
-         CXatsy1uPIWcG4rE1iXfnN5hhSeGZLlTE7AbPIluri1JEVS3/RYhQvKBQW0W7+U2+7uG
-         20CxawovI45l+jMD/OjKKZvH3I1Hp7gJsr58rnpagejJm9lrlfya8VV7dnNX+9hA6ORq
-         k3gAa/8WSMSgDYfdiQaxQzaO6gA4oEH06I8J4hOWgQZin00D1FEymkEZHeaThpumZPPN
-         19r83l97Ro8ZF91PmDzFzvezJZbEhzuTwAszwsKTsmfaGTr1TfpDmRxGoQCYa8erqber
-         TyXA==
-X-Gm-Message-State: AOJu0YwdSaATVGU2LaqIC/X+NC/oHpyaqfLKjn/fSLLL4X+AUx+94deI
-        a88ip5ZV8CvmkmySh3KWDPpkrvhjpR+cbyulgg==
-X-Google-Smtp-Source: AGHT+IEqsrafJ1DZvc3t+zuOQLWw0wftv/ONfKaFgntqNqbR85CvuDoX26tXKyK297RDA0g61HMRGeJRcQbacAry3g==
-X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a05:6902:1083:b0:d9a:c3b8:4274 with
- SMTP id v3-20020a056902108300b00d9ac3b84274mr268500ybu.7.1698092773711; Mon,
- 23 Oct 2023 13:26:13 -0700 (PDT)
-Date:   Mon, 23 Oct 2023 20:26:13 +0000
-Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAOTWNmUC/x2NQQqDQAxFryJZN6ApVPQqpRQbo2YzI8kginj3B
- hcP/tu8f4KLqTj01Qkmm7rmFNI8KuBlSLOgjuFANT2bAL1Y4vXA0XQTc3R2xSB7yXaPryYtyNh x9/rR1LZCBNFbTSbd76/357r+EuzluXsAAAA=
-X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1698092772; l=1745;
- i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=9bXDO1Umav441y/UcVZ3FP7PbPbnlidPGSE+wWdxjYc=; b=0hpqJJX/0z59X4fF/5gjjPvrMId7qhNRePYyCg2rX7J3aRjqSyWQF9CJg1UwrVXM1VQK7V1pl
- H5Qhc4QPiCtDCj1FITDJRFf+qZcap66an0jIs/i/0vGGS0ptpwTvmt1
-X-Mailer: b4 0.12.3
-Message-ID: <20231023-strncpy-drivers-scsi-csiostor-csio_init-c-v1-1-5ea445b56864@google.com>
-Subject: [PATCH] scsi: csiostor: replace deprecated strncpy with strscpy
-From:   Justin Stitt <justinstitt@google.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org,
-        Justin Stitt <justinstitt@google.com>
-Content-Type: text/plain; charset="utf-8"
+        d=1e100.net; s=20230601; t=1698093408; x=1698698208;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=FgLrUB7eiLnDutwZM1YOsEZDerSDuOWUKcD279kgNF0=;
+        b=pzGGn7TqUy12Etfng4/3hOdlZ/eZjqrLB72qauuvbWtpfrPXBJdQHCkM9hixODWB7Y
+         0mefzTh7Xdab0Goki1+cILvoAltIReS8vLkmVGa40ue5QYIG0iRFFB8RYhSwl5+i36UN
+         3HvoGd1LVNpcwY3mzh1XqwcQqtpLAKpWPu3dSL9rvvYkHEQt5IxkqdJp78yVmMwgXaXp
+         hrN8rM+w/lXDDODhDdHzv5Db3mc9qay6A4LLE+30eO3WO5YPyGUMNqmKD78lCmM1+qBQ
+         n4OgoEs47pMdW41ouWtuntRNV7+sjU7aeEBOAZNATpTME1YVtBxngBUqrrCeHCox+FNv
+         bH9A==
+X-Gm-Message-State: AOJu0YxRLj9ZwubolRvpLv7wz8Dtv27+P43zf0qZc5Ma83BjXOOV5cIy
+        t2k1o5addvGGj1ooUbaee3aVe7hHdog=
+X-Google-Smtp-Source: AGHT+IHt8LvvDoMVIDXFMH6DbcJHj7LDxCyk8v+2tpGULBPum6YGItQPa7JoU4xU7k1k3JVk12VlsQ==
+X-Received: by 2002:a05:6a00:b47:b0:68f:f650:3035 with SMTP id p7-20020a056a000b4700b0068ff6503035mr9434293pfo.12.1698093408344;
+        Mon, 23 Oct 2023 13:36:48 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:14f9:170e:9304:1c4e])
+        by smtp.gmail.com with ESMTPSA id g29-20020aa79ddd000000b0068be4ce33easm5776025pfq.96.2023.10.23.13.36.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Oct 2023 13:36:47 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v4 0/3] Support disabling fair tag sharing
+Date:   Mon, 23 Oct 2023 13:36:32 -0700
+Message-ID: <20231023203643.3209592-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.42.0.758.gaed0368e0e-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-strncpy() is deprecated for use on NUL-terminated destination strings
-[1] and as such we should prefer more robust and less ambiguous string
-interfaces.
+Hi Jens,
 
-`hw` is kzalloc'd just before this string assignment:
-|       hw = kzalloc(sizeof(struct csio_hw), GFP_KERNEL);
+Performance of UFS devices is reduced significantly by the fair tag sharing
+algorithm. This is because UFS devices have multiple logical units and a
+limited queue depth (32 for UFS 3.1 devices) and also because it takes time to
+give tags back after activity on a request queue has stopped. This patch series
+addresses this issue by introducing a flag that allows block drivers to
+disable fair sharing.
 
-... which means any NUL-padding is redundant.
+Please consider this patch series for the next merge window.
 
-Since  CSIO_DRV_VERSION is a small string literal (smaller than
-sizeof(dest)):
+Thanks,
 
-... there is functionally no change in this swap from strncpy() to
-strscpy(). Nonetheless, let's make the change for robustness' sake -- as
-it will ensure that drv_version is _always_ NUL-terminated.
+Bart.
 
-Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-Link: https://github.com/KSPP/linux/issues/90
-Cc: linux-hardening@vger.kernel.org
-Signed-off-by: Justin Stitt <justinstitt@google.com>
----
-Note: build-tested only.
+Changes compared to v3:
+ - Instead of disabling fair tag sharing for all block drivers, introduce a flag
+   for disabling it conditionally.
 
-Found with: $ rg "strncpy\("
----
- drivers/scsi/csiostor/csio_init.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Changes between v2 and v3:
+ - Rebased on top of the latest kernel.
 
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index 0c32faefad7c..d649b7a2a879 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -521,7 +521,8 @@ static struct csio_hw *csio_hw_alloc(struct pci_dev *pdev)
- 		goto err;
- 
- 	hw->pdev = pdev;
--	strncpy(hw->drv_version, CSIO_DRV_VERSION, 32);
-+	strscpy(hw->drv_version, CSIO_DRV_VERSION,
-+		sizeof(hw->drv_version));
- 
- 	/* memory pool/DMA pool allocation */
- 	if (csio_resource_alloc(hw))
+Changes between v1 and v2:
+ - Restored the tags->active_queues variable and thereby fixed the
+   "uninitialized variable" warning reported by the kernel test robot.
 
----
-base-commit: 9c5d00cb7b6bbc5a7965d9ab7d223b5402d1f02c
-change-id: 20231023-strncpy-drivers-scsi-csiostor-csio_init-c-9c96b2f77e22
+Bart Van Assche (3):
+  block: Introduce flag BLK_MQ_F_DISABLE_FAIR_TAG_SHARING
+  scsi: core: Support disabling fair tag sharing
+  scsi: ufs: Disable fair tag sharing
 
-Best regards,
---
-Justin Stitt <justinstitt@google.com>
+ block/blk-mq-debugfs.c    | 1 +
+ block/blk-mq.h            | 3 ++-
+ drivers/scsi/hosts.c      | 1 +
+ drivers/scsi/scsi_lib.c   | 2 ++
+ drivers/ufs/core/ufshcd.c | 1 +
+ include/linux/blk-mq.h    | 1 +
+ include/scsi/scsi_host.h  | 6 ++++++
+ 7 files changed, 14 insertions(+), 1 deletion(-)
 
