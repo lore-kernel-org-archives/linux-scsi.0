@@ -2,172 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D5E2C25B42
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 21:58:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 957E2C00A8F
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Oct 2023 21:58:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233632AbjJWV6d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 17:58:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45090 "EHLO
+        id S233678AbjJWV6j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 17:58:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233692AbjJWV6b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 17:58:31 -0400
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 664C910C6;
-        Mon, 23 Oct 2023 14:58:28 -0700 (PDT)
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-517ab9a4a13so3011823a12.1;
-        Mon, 23 Oct 2023 14:58:28 -0700 (PDT)
+        with ESMTP id S233717AbjJWV6i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 17:58:38 -0400
+Received: from mail-yw1-x1149.google.com (mail-yw1-x1149.google.com [IPv6:2607:f8b0:4864:20::1149])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C73B910C6
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 14:58:33 -0700 (PDT)
+Received: by mail-yw1-x1149.google.com with SMTP id 00721157ae682-5a7d1816bccso51570227b3.1
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 14:58:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1698098313; x=1698703113; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=lplfIxKbwXfc4j0px8yADDJAew/JRR45TLtG3ONcRNY=;
+        b=zsEk+K9LK51vLhoScELCPAHscZxaV/QIVvVRl3uUREKyCWbWMxLfi7UEHFaq/TNqot
+         kc2InySeSLAmxbzFfXoD4VaTXEHz3lxVQVWhXiRs0ZJENU1DosZURBGKrivvNrWMYfzf
+         QjUFtbbpe4gx7x7H3TSKT8+slg91pTvi36yZ6w7MQkD2VFqk2uBbIZxCTDAWpTBb/dt3
+         1lV/m5OLgvSqsnAz1v5W5i3BgjOCyG1AslO2NpP6VG7hXKdUFm3HqWCpKg2f1+WEAGBe
+         sz9mIb/w9qstcklDlkbRKHINhwg5oczgf740n02rE6hVWXAbsB2lpngxoo5XQiIhVuvu
+         lo5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698098308; x=1698703108;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YsXvsUP6WawReslwRCafRl6AOWpeYrdiWv3tFFFP33k=;
-        b=MEKVRMFeNqcvDjOSZBOhkDJG0qwniK6ncDeFoO624F2tTfaGma7nZ1OlUSDCmJhBMv
-         10bYHW94uSI5KUz2rDvgCOPpA0vKUoOcQbYMHVCxZ8EW2F66EugcQnbpT3fpjRL6pm89
-         mZZmqRbvvnqn/ezOkorKzQAwobNTMVDi+q+TLLf7KuYk+Cy8curvEnoYBvogZe3EK7wb
-         0+husbdjiVeku8BEJOQcvMB8alY9fcyp46Yo7kYvJzbRJqKJDDb7jI7M5E08tMl69o60
-         afwn8+FniNCrleWSjQT/6DnR2BJ7xy/XwGDDdy/OiwkdcQCayeKV1QM6J1Zbc1VRXZx7
-         79bg==
-X-Gm-Message-State: AOJu0YzBCMM+oFELOidMsXlsBqomHpFBXMPgbmQAuI071yAUbs2B6+ig
-        Qaon/0mkoBrEW3YIYLUcqQM=
-X-Google-Smtp-Source: AGHT+IHRjexGvQ64Igt3h4gHO28cHfA5bsfbOzqov3eh55WYCfHhuxGIpbTfMM2wlVZf1gZU+hYLrg==
-X-Received: by 2002:a17:90a:a38d:b0:27d:3a34:2194 with SMTP id x13-20020a17090aa38d00b0027d3a342194mr9964102pjp.14.1698098307673;
-        Mon, 23 Oct 2023 14:58:27 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:14f9:170e:9304:1c4e])
-        by smtp.gmail.com with ESMTPSA id b12-20020a17090acc0c00b0027d12b1e29dsm7851029pju.25.2023.10.23.14.58.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Oct 2023 14:58:27 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        d=1e100.net; s=20230601; t=1698098313; x=1698703113;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=lplfIxKbwXfc4j0px8yADDJAew/JRR45TLtG3ONcRNY=;
+        b=VmAza1UuzMJ45E+/qsn4lHmK2afTlxXGFg4SpCEmVIt+qgyx6v2vs3UlX42PNxbatd
+         T3EoCPjuQc6SHlvTuNJkK4LRkN5eNVZTudLcuSRKmZ7EWsPn8hmN+MPwAfKYSDynZH2Z
+         uURvPoQevcZEixnr7LKM19hqZKsAFslihl11SF92/Xg3spAiZxGiixt0pQCuUSMDyVUq
+         3T9JJ1183iTySlWpWCnVsPEyqMFl2MfbJcb6fol1GsPBTifd0+bxJvzXB+7/lqjnvWTS
+         hx3D4n49Zh7GPBLvv5V6IzgIasi7sI1vPmGCusOSztnkA7+raLzppUz/48DGwIOEHVRe
+         pcOQ==
+X-Gm-Message-State: AOJu0YzNu8KjxOkDSTJSZa9NWT2nPRX5eix3WueAgRbDn0ITK2JBWmLj
+        6SwoSxFtZluPYwIJJTFA/mZT/J8+GifrGs8dow==
+X-Google-Smtp-Source: AGHT+IH1VCJqGKWhTPwiG58AhWDntEk6e0Cr9Wama7S56Trg79QrVRiNWQssQZcjxWzt43q0MaRWKT+ffEii88qtBg==
+X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
+ (user=justinstitt job=sendgmr) by 2002:a0d:dd02:0:b0:579:f832:74b with SMTP
+ id g2-20020a0ddd02000000b00579f832074bmr247586ywe.10.1698098313044; Mon, 23
+ Oct 2023 14:58:33 -0700 (PDT)
+Date:   Mon, 23 Oct 2023 21:58:32 +0000
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAIfsNmUC/x2NQQqDQAwAvyI5N9BVZKlfkVK62awGZJWkiEX8e
+ 0MPc5jLzAnGKmwwNCco72KyVpdwa4Dmd50YJbtDe2+74KB9tNL2xayysxoamSAvBy6SuBA6r7p mxhkppRL7LjxiiuDBTbnI8Z+Nz+v6AXD8Le58AAAA
+X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1698098312; l=2186;
+ i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
+ bh=hqkcQUr/WEsQ9djykeodKpHEXayH5DyAwwnmmf9qdpA=; b=SagiCpSLtykvm17v/plCsQA3GNG2yh2JnJbu/1dbbizqlrX1TDrPn0NwucSKvOETDBvbBkuR8
+ zoejEP8XQ5HATTtFw7HIQW0WisLKWtvKaqJs6GR2DhqV+cm7zv/GNb9
+X-Mailer: b4 0.12.3
+Message-ID: <20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-v1-1-8b66878b6796@google.com>
+Subject: [PATCH] scsi: elx: libefc: replace deprecated strncpy with strscpy
+From:   Justin Stitt <justinstitt@google.com>
+To:     James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH v14 19/19] scsi: ufs: Inform the block layer about write ordering
-Date:   Mon, 23 Oct 2023 14:54:10 -0700
-Message-ID: <20231023215638.3405959-20-bvanassche@acm.org>
-X-Mailer: git-send-email 2.42.0.758.gaed0368e0e-goog
-In-Reply-To: <20231023215638.3405959-1-bvanassche@acm.org>
-References: <20231023215638.3405959-1-bvanassche@acm.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+        Justin Stitt <justinstitt@google.com>
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From the UFSHCI 4.0 specification, about the legacy (single queue) mode:
-"The host controller always process transfer requests in-order according
-to the order submitted to the list. In case of multiple commands with
-single doorbell register ringing (batch mode), The dispatch order for
-these transfer requests by host controller will base on their index in
-the List. A transfer request with lower index value will be executed
-before a transfer request with higher index value."
+strncpy() is deprecated for use on NUL-terminated destination strings
+[1] and as such we should prefer more robust and less ambiguous string
+interfaces.
 
-From the UFSHCI 4.0 specification, about the MCQ mode:
-"Command Submission
-1. Host SW writes an Entry to SQ
-2. Host SW updates SQ doorbell tail pointer
+A suitable replacement is `strscpy` [2] due to the fact that it
+guarantees NUL-termination on the destination buffer without
+unnecessarily NUL-padding.
 
-Command Processing
-3. After fetching the Entry, Host Controller updates SQ doorbell head
-   pointer
-4. Host controller sends COMMAND UPIU to UFS device"
+There seems to not be any uses of `current_state_name` other than in
+these assignments. Judging from context surrounding these assignments,
+especially considering the string literal "invalid" being assigned, we
+want both current_state_name and prev_state_name to be NUL-terminated
+strings.
 
-In other words, for both legacy and MCQ mode, UFS controllers are
-required to forward commands to the UFS device in the order these
-commands have been received from the host.
-
-Notes:
-- For legacy mode this is only correct if the host submits one
-  command at a time. The UFS driver does this.
-- Also in legacy mode, the command order is not preserved if
-  auto-hibernation is enabled in the UFS controller. Hence, enable
-  zone write locking if auto-hibernation is enabled.
-
-This patch improves performance as follows on my test setup:
-- With the mq-deadline scheduler: 2.5x more IOPS for small writes.
-- When not using an I/O scheduler compared to using mq-deadline with
-  zone locking: 4x more IOPS for small writes.
-
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+Link: https://github.com/KSPP/linux/issues/90
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Justin Stitt <justinstitt@google.com>
 ---
- drivers/ufs/core/ufshcd.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+Note: build-tested only.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0a21ea9d7576..70bf62ed414c 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4325,6 +4325,20 @@ static int ufshcd_update_preserves_write_order(struct ufs_hba *hba,
- 				return -EPERM;
- 		}
+Found with: $ rg "strncpy\("
+---
+ drivers/scsi/elx/libefc/efc_node.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/elx/libefc/efc_node.h b/drivers/scsi/elx/libefc/efc_node.h
+index e9c600ac45d5..3a16703d0f97 100644
+--- a/drivers/scsi/elx/libefc/efc_node.h
++++ b/drivers/scsi/elx/libefc/efc_node.h
+@@ -26,12 +26,12 @@ efc_node_evt_set(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
+ 	struct efc_node *node = ctx->app;
+ 
+ 	if (evt == EFC_EVT_ENTER) {
+-		strncpy(node->current_state_name, handler,
++		strscpy(node->current_state_name, handler,
+ 			sizeof(node->current_state_name));
+ 	} else if (evt == EFC_EVT_EXIT) {
+-		strncpy(node->prev_state_name, node->current_state_name,
++		strscpy(node->prev_state_name, node->current_state_name,
+ 			sizeof(node->prev_state_name));
+-		strncpy(node->current_state_name, "invalid",
++		strscpy(node->current_state_name, "invalid",
+ 			sizeof(node->current_state_name));
  	}
-+	shost_for_each_device(sdev, hba->host)
-+		blk_freeze_queue_start(sdev->request_queue);
-+	shost_for_each_device(sdev, hba->host) {
-+		struct request_queue *q = sdev->request_queue;
-+
-+		blk_mq_freeze_queue_wait(q);
-+		q->limits.driver_preserves_write_order = preserves_write_order;
-+		blk_queue_required_elevator_features(q,
-+			!preserves_write_order && blk_queue_is_zoned(q) ?
-+			ELEVATOR_F_ZBD_SEQ_WRITE : 0);
-+		if (q->disk)
-+			disk_set_zoned(q->disk, q->limits.zoned);
-+		blk_mq_unfreeze_queue(q);
-+	}
- 
- 	return 0;
- }
-@@ -4367,7 +4381,8 @@ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
- 
- 	if (!is_mcq_enabled(hba) && !prev_state && new_state) {
- 		/*
--		 * Auto-hibernation will be enabled for legacy UFSHCI mode.
-+		 * Auto-hibernation will be enabled for legacy UFSHCI mode. Tell
-+		 * the block layer that write requests may be reordered.
- 		 */
- 		ret = ufshcd_update_preserves_write_order(hba, false);
- 		if (ret)
-@@ -4383,7 +4398,8 @@ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
- 	}
- 	if (!is_mcq_enabled(hba) && prev_state && !new_state) {
- 		/*
--		 * Auto-hibernation has been disabled.
-+		 * Auto-hibernation has been disabled. Tell the block layer that
-+		 * the order of write requests is preserved.
- 		 */
- 		ret = ufshcd_update_preserves_write_order(hba, true);
- 		WARN_ON_ONCE(ret);
-@@ -5151,6 +5167,10 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
- 	struct ufs_hba *hba = shost_priv(sdev->host);
- 	struct request_queue *q = sdev->request_queue;
- 
-+	q->limits.driver_preserves_write_order =
-+		!ufshcd_is_auto_hibern8_supported(hba) ||
-+		FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) == 0;
-+
- 	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
- 	if (hba->quirks & UFSHCD_QUIRK_4KB_DMA_ALIGNMENT)
- 		blk_queue_update_dma_alignment(q, SZ_4K - 1);
-@@ -8919,6 +8939,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
- 	.max_host_blocked	= 1,
- 	.track_queue_depth	= 1,
- 	.skip_settle_delay	= 1,
-+	.needs_prepare_resubmit	= 1,
- 	.sdev_groups		= ufshcd_driver_groups,
- 	.rpm_autosuspend_delay	= RPM_AUTOSUSPEND_DELAY_MS,
- };
+ 	node->prev_evt = node->current_evt;
+
+---
+base-commit: 9c5d00cb7b6bbc5a7965d9ab7d223b5402d1f02c
+change-id: 20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-cbbf753197b7
+
+Best regards,
+--
+Justin Stitt <justinstitt@google.com>
+
