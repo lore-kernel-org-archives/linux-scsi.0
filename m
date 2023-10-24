@@ -2,46 +2,49 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E11CFC25B67
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 00:13:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC90C25B67
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 00:14:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230477AbjJXANl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 20:13:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41618 "EHLO
+        id S231172AbjJXAOB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 20:14:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229552AbjJXANk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 20:13:40 -0400
+        with ESMTP id S229552AbjJXAOB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 20:14:01 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B68210D;
-        Mon, 23 Oct 2023 17:13:38 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1636CC433C7;
-        Tue, 24 Oct 2023 00:13:36 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D19D10C;
+        Mon, 23 Oct 2023 17:13:59 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D91E0C433C8;
+        Tue, 24 Oct 2023 00:13:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698106418;
-        bh=QWzmZM2pZFi/m3lyTCNyxOJKR/TbL40gKGd7h1qWV+0=;
+        s=k20201202; t=1698106439;
+        bh=ATPML55R7+fiiOOFxhRtqd0G4bkZYOEyzEHjP0fnRuI=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=a+nG3m7FdJ7qXCP4Zvlfbs/I0kqrZVQHKMbpdV3lliVJtyr7Jsou+K0/hmPpI3EDT
-         1oHmGPeZAsVZiriP9zOaDrCob/rC9uWSNSOBBKe0gBpvs4GapDyote0xpxX7QISQu4
-         kEbMiGApSLGJ0BZJvNbguf26N9cSGPd4akU7wS4v3LGSTaiObT+RdC1J4CEGaJCjj0
-         LjeexyV2ADgOFuWnhyED1PNxPhHV++nEJWf+BDP6SeGPP3Lvp17C+vISnz0NjL9UJZ
-         5rrFD9nDwuToAYGtgqoU5ExidSZ1Njb3OYh/mYiNJWDZ24mzihbt2Ahjktvj/VuSQe
-         Igijouoq6VOPA==
-Message-ID: <249db38e-43c0-46d7-9e61-7788ee710f42@kernel.org>
-Date:   Tue, 24 Oct 2023 09:13:36 +0900
+        b=LX00oD6Ogif2k+OO7cnFuIbQGVKoZx/tdTJmevwNOgKml4fuJqSEvlugmzb60+fT5
+         QchB9SMRjkpJpHPpq1Po+KBDy1QMuJHyyFH1vZ56Je5vddSKSuNpG0dXPLboyU+gat
+         QSi7FxHEdQBt3iNPFcz35nHKU38Q0YX3vxuYCSIJ2JOYKxl7d4QZXAEA26uCbWVAfk
+         8xYGdcd18CWrRnXAtsNctLkR9R+3hIO8skNSL874/sS1PZzpWhF7utVIiHcAfsLWpQ
+         dMYVYomFZBH/dT/kie+dgEE07kcpopetT3n8VMLC5eNRvw1AE/RkvAxb5qEzzWcvYe
+         kcZvDWDXHkWaw==
+Message-ID: <b65486b6-c1de-43e3-ba45-d9a4034c48d5@kernel.org>
+Date:   Tue, 24 Oct 2023 09:13:57 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v14 10/19] scsi: core: Retry unaligned zoned writes
-Content-Language: en-US
+Subject: Re: [PATCH v14 12/19] scsi: scsi_debug: Add the preserves_write_order
+ module parameter
 To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Ming Lei <ming.lei@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
 References: <20231023215638.3405959-1-bvanassche@acm.org>
- <20231023215638.3405959-11-bvanassche@acm.org>
+ <20231023215638.3405959-13-bvanassche@acm.org>
+Content-Language: en-US
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20231023215638.3405959-11-bvanassche@acm.org>
+In-Reply-To: <20231023215638.3405959-13-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -49,104 +52,74 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/24/23 06:54, Bart Van Assche wrote:
-> If zoned writes (REQ_OP_WRITE) for a sequential write required zone have
-> a starting LBA that differs from the write pointer, e.g. because zoned
-> writes have been reordered, then the storage device will respond with an
-> UNALIGNED WRITE COMMAND error. Send commands that failed with an
-> unaligned write error to the SCSI error handler if zone write locking is
-> disabled. The SCSI error handler will sort SCSI commands per LBA before
-> resubmitting these.
+> Zone write locking is not used for zoned devices if the block driver
+> reports that it preserves the order of write commands. Make it easier to
+> test not using zone write locking by adding support for setting the
+> driver_preserves_write_order flag.
 > 
-> If zone write locking is disabled, increase the number of retries for
-> write commands sent to a sequential zone to the maximum number of
-> outstanding commands because in the worst case the number of times
-> reordered zoned writes have to be retried is (number of outstanding
-> writes per sequential zone) - 1.
-> 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 > Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Damien Le Moal <dlemoal@kernel.org>
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: Ming Lei <ming.lei@redhat.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/scsi/scsi_error.c | 16 ++++++++++++++++
->  drivers/scsi/scsi_lib.c   |  1 +
->  drivers/scsi/sd.c         |  6 ++++++
->  include/scsi/scsi.h       |  1 +
->  4 files changed, 24 insertions(+)
+>  drivers/scsi/scsi_debug.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 8b1eb637ffa8..9a54856fa03b 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -699,6 +699,22 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->  		fallthrough;
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 9c0af50501f9..1ea4925d2c2f 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -832,6 +832,7 @@ static int dix_reads;
+>  static int dif_errors;
 >  
->  	case ILLEGAL_REQUEST:
-> +		/*
-> +		 * Unaligned write command. This may indicate that zoned writes
-> +		 * have been received by the device in the wrong order. If zone
-> +		 * write locking is disabled, retry after all pending commands
-> +		 * have completed.
-> +		 */
-> +		if (sshdr.asc == 0x21 && sshdr.ascq == 0x04 &&
-> +		    !req->q->limits.use_zone_write_lock &&
-> +		    blk_rq_is_seq_zoned_write(req) &&
-> +		    scmd->retries <= scmd->allowed) {
-> +			sdev_printk(KERN_INFO, scmd->device,
-> +				    "Retrying unaligned write at LBA %#llx.\n",
-> +				    scsi_get_lba(scmd));
-
-KERN_INFO ? Did you perhaps mean KERN_DEBUG ? An info message for this will be
-way too noisy.
-
-> +			return NEEDS_DELAYED_RETRY;
-> +		}
+>  /* ZBC global data */
+> +static bool sdeb_preserves_write_order;
+>  static bool sdeb_zbc_in_use;	/* true for host-aware and host-managed disks */
+>  static int sdeb_zbc_zone_cap_mb;
+>  static int sdeb_zbc_zone_size_mb;
+> @@ -5138,9 +5139,13 @@ static struct sdebug_dev_info *find_build_dev_info(struct scsi_device *sdev)
+>  
+>  static int scsi_debug_slave_alloc(struct scsi_device *sdp)
+>  {
+> +	struct request_queue *q = sdp->request_queue;
 > +
->  		if (sshdr.asc == 0x20 || /* Invalid command operation code */
->  		    sshdr.asc == 0x21 || /* Logical block address out of range */
->  		    sshdr.asc == 0x22 || /* Invalid function */
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index c2f647a7c1b0..33a34693c8a2 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1443,6 +1443,7 @@ static void scsi_complete(struct request *rq)
->  	case ADD_TO_MLQUEUE:
->  		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
->  		break;
-> +	case NEEDS_DELAYED_RETRY:
->  	default:
->  		scsi_eh_scmd_add(cmd);
->  		break;
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 82abc721b543..4e6b77f5854f 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1197,6 +1197,12 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
->  	cmd->transfersize = sdp->sector_size;
->  	cmd->underflow = nr_blocks << 9;
->  	cmd->allowed = sdkp->max_retries;
-> +	/*
-> +	 * Increase the number of allowed retries for zoned writes if zone
-> +	 * write locking is disabled.
-> +	 */
-> +	if (!rq->q->limits.use_zone_write_lock && blk_rq_is_seq_zoned_write(rq))
-> +		cmd->allowed += rq->q->nr_requests;
->  	cmd->sdb.length = nr_blocks * sdp->sector_size;
+>  	if (sdebug_verbose)
+>  		pr_info("slave_alloc <%u %u %u %llu>\n",
+>  		       sdp->host->host_no, sdp->channel, sdp->id, sdp->lun);
+> +	if (sdeb_preserves_write_order)
+> +		q->limits.driver_preserves_write_order = true;
+
+Nit: this could simply be:
+
+	q->limits.driver_preserves_write_order = sdeb_preserves_write_order;
+
+>  	return 0;
+>  }
 >  
->  	SCSI_LOG_HLQUEUE(1,
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index ec093594ba53..6600db046227 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -93,6 +93,7 @@ static inline int scsi_status_is_check_condition(int status)
->   * Internal return values.
->   */
->  enum scsi_disposition {
-> +	NEEDS_DELAYED_RETRY	= 0x2000,
->  	NEEDS_RETRY		= 0x2001,
->  	SUCCESS			= 0x2002,
->  	FAILED			= 0x2003,
+> @@ -5755,6 +5760,8 @@ module_param_named(statistics, sdebug_statistics, bool, S_IRUGO | S_IWUSR);
+>  module_param_named(strict, sdebug_strict, bool, S_IRUGO | S_IWUSR);
+>  module_param_named(submit_queues, submit_queues, int, S_IRUGO);
+>  module_param_named(poll_queues, poll_queues, int, S_IRUGO);
+> +module_param_named(preserves_write_order, sdeb_preserves_write_order, bool,
+> +		   S_IRUGO);
+>  module_param_named(tur_ms_to_ready, sdeb_tur_ms_to_ready, int, S_IRUGO);
+>  module_param_named(unmap_alignment, sdebug_unmap_alignment, int, S_IRUGO);
+>  module_param_named(unmap_granularity, sdebug_unmap_granularity, int, S_IRUGO);
+> @@ -5812,6 +5819,8 @@ MODULE_PARM_DESC(ndelay, "response delay in nanoseconds (def=0 -> ignore)");
+>  MODULE_PARM_DESC(no_lun_0, "no LU number 0 (def=0 -> have lun 0)");
+>  MODULE_PARM_DESC(no_rwlock, "don't protect user data reads+writes (def=0)");
+>  MODULE_PARM_DESC(no_uld, "stop ULD (e.g. sd driver) attaching (def=0))");
+> +MODULE_PARM_DESC(preserves_write_order,
+> +		 "Whether or not to inform the block layer that this driver preserves the order of WRITE commands (def=0)");
+>  MODULE_PARM_DESC(num_parts, "number of partitions(def=0)");
+>  MODULE_PARM_DESC(num_tgts, "number of targets per host to simulate(def=1)");
+>  MODULE_PARM_DESC(opt_blks, "optimal transfer length in blocks (def=1024)");
+
+Otherwise, looks OK to me.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
