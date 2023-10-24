@@ -2,147 +2,356 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44236C00A8F
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 06:51:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B062C00A8F
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 06:54:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232666AbjJXGvv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 02:51:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53034 "EHLO
+        id S232627AbjJXGye (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 02:54:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232627AbjJXGvu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 02:51:50 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A19399;
-        Mon, 23 Oct 2023 23:51:46 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id F21091FE62;
-        Tue, 24 Oct 2023 06:51:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1698130304; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Pau3+0/NlGfzN9CKQqjt2HZnTXnCBU9sg9VtB1cLmgk=;
-        b=IzyLFtugKO/iNGNt92HdpOTQnrsAC8YBcdKV4hr55PD+vm5QPZg9y2bDyqnTwxNdmMRcWV
-        mf0ku1vBhTHWShPn8AOZ1jswFDaaklt9Ibhvv1ODz7zflIZuMIF3gEdLCfVwB0xI/TPbox
-        PAz9U3PywIZ9LKBjv+MnVSGwSjWC3I0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1698130304;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Pau3+0/NlGfzN9CKQqjt2HZnTXnCBU9sg9VtB1cLmgk=;
-        b=FoIPCbxl1AfgJMZUJD6LHheQsYUwgsaWl1S1VWp6B3+jtXHcCqYhLJ50MxJjIAk8yF4VCE
-        uBgcwPIFSItmkJBg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id BC4BE1391C;
-        Tue, 24 Oct 2023 06:51:43 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id PEnWLH9pN2UvLwAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 24 Oct 2023 06:51:43 +0000
-Message-ID: <bc532b70-e286-4fa0-848b-bd837abc73a5@suse.de>
-Date:   Tue, 24 Oct 2023 08:51:43 +0200
+        with ESMTP id S232566AbjJXGyd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 02:54:33 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFC5D92
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 23:54:30 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 6B1E76732D; Tue, 24 Oct 2023 08:54:27 +0200 (CEST)
+Date:   Tue, 24 Oct 2023 08:54:27 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Karan Tilak Kumar <kartilak@cisco.com>,
+        djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
+        satishkh@cisco.com
+Subject: Re: [PATCH 13/16] fnic: allocate device reset command on the fly
+Message-ID: <20231024065427.GD9847@lst.de>
+References: <20231023091507.120828-1-hare@suse.de> <20231023091507.120828-14-hare@suse.de>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: blktests: running nvme and srp tests with real RDMA hardware
-Content-Language: en-US
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc:     Daniel Wagner <dwagner@suse.de>, Sagi Grimberg <sagi@grimberg.me>,
-        Bart Van Assche <bvanassche@acm.org>
-References: <vaijnbobhxyz4nkk2csv3nfhnpeupbudakcn3qgmo7o6vii4x5@rfnfdll6iloo>
- <ce187671-ea90-4d97-b323-70f275c09649@suse.de>
- <4bdf4031-5f14-4cb1-92d3-7ae106a4a73f@nvidia.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <4bdf4031-5f14-4cb1-92d3-7ae106a4a73f@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Authentication-Results: smtp-out2.suse.de;
-        none
-X-Spamd-Result: default: False [-7.09 / 50.00];
-         ARC_NA(0.00)[];
-         TO_DN_EQ_ADDR_SOME(0.00)[];
-         XM_UA_NO_VERSION(0.01)[];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         BAYES_HAM(-3.00)[100.00%];
-         MIME_GOOD(-0.10)[text/plain];
-         RCVD_VIA_SMTP_AUTH(0.00)[];
-         NEURAL_HAM_LONG(-3.00)[-1.000];
-         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-         NEURAL_HAM_SHORT(-1.00)[-1.000];
-         RCPT_COUNT_SEVEN(0.00)[8];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         RCVD_COUNT_TWO(0.00)[2];
-         RCVD_TLS_ALL(0.00)[];
-         MID_RHS_MATCH_FROM(0.00)[]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231023091507.120828-14-hare@suse.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/24/23 07:55, Chaitanya Kulkarni wrote:
-> On 10/23/23 22:43, Hannes Reinecke wrote:
->> On 10/24/23 04:59, Shinichiro Kawasaki wrote:
->>> Hello blktests users,
->>>
->>> As of today, software RDMA driver "siw" or "rdma_rxe" is used to run
->>> "nvme"
->>> group with nvme_trtype=rdma or "srp" (scsi rdma protocol) group. Now
->>> it is
->>> suggested to run the test groups with real RDMA hardware to run tests in
->>> more realistic conditions. A GitHub pull request is under review to
->>> support
->>> it [1]. If you are interested in, please take a look and comment.
->>>
->>> [1] https://github.com/osandov/blktests/pull/86
->>
->> Just commented on it. What we really need is the functionality to run
->> against pre-configured controllers (ie specify the controller NQN and
->> NSID and do not call into nvmetcli); when running on real HW we
->> typically cannot control the target, so we need to be able to specify
->> a preconfigured namespace.
->>
->> Cheers,
->>
->> Hannes
+Adding the fnic maintainers as they are probably most qualified to
+review and test this.
+
+On Mon, Oct 23, 2023 at 11:15:04AM +0200, Hannes Reinecke wrote:
+> Allocate a reset command on the fly instead of relying
+> on using the command which triggered the device failure.
+> This might fail if all available tags are busy, but in
+> that case it'll be safer to fall back to host reset anyway.
 > 
-> What format you think use to accept the pre configured namespace ?
-> thinking out loudly Can relay and we use nvmetcli config file somehow
-> for local loop back setup ?
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/fnic/fnic.h      |   1 -
+>  drivers/scsi/fnic/fnic_scsi.c | 113 ++++++++++++++++------------------
+>  drivers/scsi/snic/snic_scsi.c |   5 +-
+>  3 files changed, 55 insertions(+), 64 deletions(-)
 > 
-Ideally I would hide it behind the call to '_setup_nvmet' / 
-'_nvmet_target_setup' / '_nvmet_target_cleanup'.
-We already have 'def_subsysnqn', which should be set to the
-pre-provisioned NQN. We clearly need a 'def_nsid', but that
-should be easily done.
-
-Biggest problem here will be the 'out' files. Most of them record the
-default NQN, so if we allow to change that the tests will break.
-How can we abstract away from that?
-
-Maybe it's a good exercise even with the current codebase; just
-set 'def_subsysnqn' to something else and watch what breaks ...
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+> diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+> index 93c68931a593..8ffcafb4687f 100644
+> --- a/drivers/scsi/fnic/fnic.h
+> +++ b/drivers/scsi/fnic/fnic.h
+> @@ -236,7 +236,6 @@ struct fnic {
+>  	unsigned int wq_count;
+>  	unsigned int cq_count;
+>  
+> -	struct mutex sgreset_mutex;
+>  	struct dentry *fnic_stats_debugfs_host;
+>  	struct dentry *fnic_stats_debugfs_file;
+>  	struct dentry *fnic_reset_debugfs_file;
+> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+> index 9761b2c9db48..7a8b6285a096 100644
+> --- a/drivers/scsi/fnic/fnic_scsi.c
+> +++ b/drivers/scsi/fnic/fnic_scsi.c
+> @@ -1984,7 +1984,6 @@ static inline int fnic_queue_dr_io_req(struct fnic *fnic,
+>  
+>  struct fnic_pending_aborts_iter_data {
+>  	struct fnic *fnic;
+> -	struct scsi_cmnd *lr_sc;
+>  	struct scsi_device *lun_dev;
+>  	int ret;
+>  };
+> @@ -2002,7 +2001,7 @@ static bool fnic_pending_aborts_iter(struct scsi_cmnd *sc, void *data)
+>  	DECLARE_COMPLETION_ONSTACK(tm_done);
+>  	enum fnic_ioreq_state old_ioreq_state;
+>  
+> -	if (sc == iter_data->lr_sc || sc->device != lun_dev)
+> +	if (sc->device != lun_dev)
+>  		return true;
+>  
+>  	io_lock = fnic_io_lock_tag(fnic, abt_tag);
+> @@ -2105,17 +2104,11 @@ static bool fnic_pending_aborts_iter(struct scsi_cmnd *sc, void *data)
+>  		return false;
+>  	}
+>  	fnic_priv(sc)->state = FNIC_IOREQ_ABTS_COMPLETE;
+> -
+> -	/* original sc used for lr is handled by dev reset code */
+> -	if (sc != iter_data->lr_sc)
+> -		fnic_priv(sc)->io_req = NULL;
+> +	fnic_priv(sc)->io_req = NULL;
+>  	spin_unlock_irqrestore(io_lock, flags);
+>  
+> -	/* original sc used for lr is handled by dev reset code */
+> -	if (sc != iter_data->lr_sc) {
+> -		fnic_release_ioreq_buf(fnic, io_req, sc);
+> -		mempool_free(io_req, fnic->io_req_pool);
+> -	}
+> +	fnic_release_ioreq_buf(fnic, io_req, sc);
+> +	mempool_free(io_req, fnic->io_req_pool);
+>  
+>  	/*
+>  	 * Any IO is returned during reset, it needs to call scsi_done
+> @@ -2135,8 +2128,7 @@ static bool fnic_pending_aborts_iter(struct scsi_cmnd *sc, void *data)
+>   * successfully aborted, 1 otherwise
+>   */
+>  static int fnic_clean_pending_aborts(struct fnic *fnic,
+> -				     struct scsi_cmnd *lr_sc,
+> -				     bool new_sc)
+> +				     struct scsi_cmnd *lr_sc)
+>  
+>  {
+>  	int ret = 0;
+> @@ -2146,9 +2138,6 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
+>  		.ret = SUCCESS,
+>  	};
+>  
+> -	if (new_sc)
+> -		iter_data.lr_sc = lr_sc;
+> -
+>  	scsi_host_busy_iter(fnic->lport->host,
+>  			    fnic_pending_aborts_iter, &iter_data);
+>  	if (iter_data.ret == FAILED) {
+> @@ -2174,7 +2163,8 @@ static int fnic_clean_pending_aborts(struct fnic *fnic,
+>   */
+>  int fnic_device_reset(struct scsi_cmnd *sc)
+>  {
+> -	struct request *rq = scsi_cmd_to_rq(sc);
+> +	struct scsi_device *sdev = sc->device;
+> +	struct request *req;
+>  	struct fc_lport *lp;
+>  	struct fnic *fnic;
+>  	struct fnic_io_req *io_req = NULL;
+> @@ -2187,15 +2177,17 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+>  	struct scsi_lun fc_lun;
+>  	struct fnic_stats *fnic_stats;
+>  	struct reset_stats *reset_stats;
+> -	int tag = rq->tag;
+> +	int tag;
+>  	DECLARE_COMPLETION_ONSTACK(tm_done);
+> -	bool new_sc = 0;
+>  
+>  	/* Wait for rport to unblock */
+> -	fc_block_scsi_eh(sc);
+> +	rport = starget_to_rport(scsi_target(sdev));
+> +	ret = fc_block_rport(rport);
+> +	if (ret)
+> +		return ret;
+>  
+>  	/* Get local-port, check ready and link up */
+> -	lp = shost_priv(sc->device->host);
+> +	lp = shost_priv(sdev->host);
+>  
+>  	fnic = lport_priv(lp);
+>  	fnic_stats = &fnic->fnic_stats;
+> @@ -2203,53 +2195,55 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+>  
+>  	atomic64_inc(&reset_stats->device_resets);
+>  
+> -	rport = starget_to_rport(scsi_target(sc->device));
+>  	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+> -		      "Device reset called FCID 0x%x, LUN 0x%llx sc 0x%p\n",
+> -		      rport->port_id, sc->device->lun, sc);
+> +		      "Device reset called FCID 0x%x, LUN 0x%llx\n",
+> +		      rport->port_id, sdev->lun);
+>  
+>  	if (lp->state != LPORT_ST_READY || !(lp->link_up))
+> -		goto fnic_device_reset_end;
+> +		return ret;
+>  
+>  	/* Check if remote port up */
+>  	if (fc_remote_port_chkready(rport)) {
+>  		atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
+> -		goto fnic_device_reset_end;
+> +		return ret;
+>  	}
+>  
+> -	fnic_priv(sc)->flags = FNIC_DEVICE_RESET;
+> -
+> -	if (unlikely(tag < 0)) {
+> +	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
+> +				 BLK_MQ_REQ_NOWAIT);
+> +	if (!req) {
+>  		/*
+> -		 * For device reset issued through sg3utils, we let
+> -		 * only one LUN_RESET to go through and use a special
+> -		 * tag equal to max_tag_id so that we don't have to allocate
+> -		 * or free it. It won't interact with tags
+> -		 * allocated by mid layer.
+> +		 * Request allocation might fail, indicating that
+> +		 * all tags are busy.
+> +		 * But device reset will be called only from within
+> +		 * SCSI EH, at which time all I/O is stopped. So the
+> +		 * only active tags would be for failed I/O, but
+> +		 * when all I/O is failed it'll be better to escalate
+> +		 * to host reset anyway.
+>  		 */
+> -		mutex_lock(&fnic->sgreset_mutex);
+> -		tag = fnic->fnic_max_tag_id;
+> -		new_sc = 1;
+> +		FNIC_SCSI_DBG(KERN_ERR, fnic->lport->host,
+> +			      "Device reset allocation failed, all tags busy\n");
+> +		return ret;
+>  	}
+> +	sc = blk_mq_rq_to_pdu(req);
+> +
+> +	tag = req->tag;
+>  	io_lock = fnic_io_lock_hash(fnic, sc);
+>  	spin_lock_irqsave(io_lock, flags);
+>  	io_req = fnic_priv(sc)->io_req;
+> +	if (io_req)
+> +		goto fnic_device_reset_end;
+>  
+> -	/*
+> -	 * If there is a io_req attached to this command, then use it,
+> -	 * else allocate a new one.
+> -	 */
+> +	io_req = mempool_alloc(fnic->io_req_pool, GFP_ATOMIC);
+>  	if (!io_req) {
+> -		io_req = mempool_alloc(fnic->io_req_pool, GFP_ATOMIC);
+> -		if (!io_req) {
+> -			spin_unlock_irqrestore(io_lock, flags);
+> -			goto fnic_device_reset_end;
+> -		}
+> -		memset(io_req, 0, sizeof(*io_req));
+> -		io_req->port_id = rport->port_id;
+> -		fnic_priv(sc)->io_req = io_req;
+> +		spin_unlock_irqrestore(io_lock, flags);
+> +		goto fnic_device_reset_end;
+>  	}
+> +	memset(io_req, 0, sizeof(*io_req));
+> +	io_req->port_id = rport->port_id;
+> +	fnic_priv(sc)->io_req = io_req;
+> +
+>  	io_req->dr_done = &tm_done;
+> +	fnic_priv(sc)->flags = FNIC_DEVICE_RESET;
+>  	fnic_priv(sc)->state = FNIC_IOREQ_CMD_PENDING;
+>  	fnic_priv(sc)->lr_status = FCPIO_INVALID_CODE;
+>  	spin_unlock_irqrestore(io_lock, flags);
+> @@ -2260,11 +2254,13 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+>  	 * issue the device reset, if enqueue failed, clean up the ioreq
+>  	 * and break assoc with scsi cmd
+>  	 */
+> +	WRITE_ONCE(req->state, MQ_RQ_IN_FLIGHT);
+>  	if (fnic_queue_dr_io_req(fnic, sc, io_req)) {
+>  		spin_lock_irqsave(io_lock, flags);
+>  		io_req = fnic_priv(sc)->io_req;
+>  		if (io_req)
+>  			io_req->dr_done = NULL;
+> +		WRITE_ONCE(req->state, MQ_RQ_IDLE);
+>  		goto fnic_device_reset_clean;
+>  	}
+>  	spin_lock_irqsave(io_lock, flags);
+> @@ -2279,11 +2275,12 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+>  				    msecs_to_jiffies(FNIC_LUN_RESET_TIMEOUT));
+>  
+>  	spin_lock_irqsave(io_lock, flags);
+> +	WRITE_ONCE(req->state, MQ_RQ_IDLE);
+>  	io_req = fnic_priv(sc)->io_req;
+>  	if (!io_req) {
+>  		spin_unlock_irqrestore(io_lock, flags);
+>  		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+> -				"io_req is null tag 0x%x sc 0x%p\n", tag, sc);
+> +				"io_req is null tag 0x%x\n", tag);
+>  		goto fnic_device_reset_end;
+>  	}
+>  	io_req->dr_done = NULL;
+> @@ -2326,7 +2323,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+>  				spin_unlock_irqrestore(io_lock, flags);
+>  				FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+>  				"Abort and terminate issued on Device reset "
+> -				"tag 0x%x sc 0x%p\n", tag, sc);
+> +				"tag 0x%x\n", tag);
+>  				break;
+>  			}
+>  		}
+> @@ -2364,7 +2361,7 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+>  	 * the lun reset cmd. If all cmds get cleaned, the lun reset
+>  	 * succeeds
+>  	 */
+> -	if (fnic_clean_pending_aborts(fnic, sc, new_sc)) {
+> +	if (fnic_clean_pending_aborts(fnic, sc)) {
+>  		spin_lock_irqsave(io_lock, flags);
+>  		io_req = fnic_priv(sc)->io_req;
+>  		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+> @@ -2393,15 +2390,15 @@ int fnic_device_reset(struct scsi_cmnd *sc)
+>  	}
+>  
+>  fnic_device_reset_end:
+> -	FNIC_TRACE(fnic_device_reset, sc->device->host->host_no, rq->tag, sc,
+> +	FNIC_TRACE(fnic_device_reset, sc->device->host->host_no,
+> +		  scsi_cmd_to_rq(sc)->tag, sc,
+>  		  jiffies_to_msecs(jiffies - start_time),
+>  		  0, ((u64)sc->cmnd[0] << 32 |
+>  		  (u64)sc->cmnd[2] << 24 | (u64)sc->cmnd[3] << 16 |
+>  		  (u64)sc->cmnd[4] << 8 | sc->cmnd[5]),
+>  		  fnic_flags_and_state(sc));
+>  
+> -	if (new_sc)
+> -		mutex_unlock(&fnic->sgreset_mutex);
+> +	blk_mq_free_request(req);
+>  
+>  	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+>  		      "Returning from device reset %s\n",
+> @@ -2633,8 +2630,6 @@ static bool fnic_abts_pending_iter(struct scsi_cmnd *sc, void *data)
+>  	 * ignore this lun reset cmd or cmds that do not belong to
+>  	 * this lun
+>  	 */
+> -	if (iter_data->lr_sc && sc == iter_data->lr_sc)
+> -		return true;
+>  	if (iter_data->lun_dev && sc->device != iter_data->lun_dev)
+>  		return true;
+>  
+> @@ -2677,10 +2672,8 @@ int fnic_is_abts_pending(struct fnic *fnic, struct scsi_cmnd *lr_sc)
+>  		.ret = 0,
+>  	};
+>  
+> -	if (lr_sc) {
+> +	if (lr_sc)
+>  		iter_data.lun_dev = lr_sc->device;
+> -		iter_data.lr_sc = lr_sc;
+> -	}
+>  
+>  	/* walk again to check, if IOs are still pending in fw */
+>  	scsi_host_busy_iter(fnic->lport->host,
+> diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+> index f123531e7dd1..c38f648da3d7 100644
+> --- a/drivers/scsi/snic/snic_scsi.c
+> +++ b/drivers/scsi/snic/snic_scsi.c
+> @@ -2367,7 +2367,7 @@ snic_cmpl_pending_tmreq(struct snic *snic, struct scsi_cmnd *sc)
+>  }
+>  
+>  static bool
+> -snic_scsi_cleanup_iter(struct scsi_cmnd *sc, void *data, bool reserved)
+> +snic_scsi_cleanup_iter(struct scsi_cmnd *sc, void *data)
+>  {
+>  	struct snic *snic = data;
+>  	struct snic_req_info *rqi = NULL;
+> @@ -2541,8 +2541,7 @@ struct snic_tgt_scsi_abort_io_data {
+>  	int abt_cnt;
+>  };
+>  
+> -static bool snic_tgt_scsi_abort_io_iter(struct scsi_cmnd *sc, void *data,
+> -					bool reserved)
+> +static bool snic_tgt_scsi_abort_io_iter(struct scsi_cmnd *sc, void *data)
+>  {
+>  	struct snic_tgt_scsi_abort_io_data *iter_data = data;
+>  	struct snic *snic = iter_data->snic;
+> -- 
+> 2.35.3
+---end quoted text---
