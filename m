@@ -2,122 +2,84 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8749C00A8F
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 11:11:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50CB4C07545
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 13:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229666AbjJXLLC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 07:11:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59908 "EHLO
+        id S234590AbjJXN6S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 09:58:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229583AbjJXLLB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 07:11:01 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 924A112C;
-        Tue, 24 Oct 2023 04:10:59 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39OAt7ex002437;
-        Tue, 24 Oct 2023 11:10:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=RKHcsUwcj/5VoPnr1a/q9B/c3g3rMYfwfHimA7AV0TU=;
- b=iIyNnwZwuSuO1rZcsbUFcDlgKaXoY0Zz3id476HMsRmPfqW1ZaXujpUyIoCC0epjl+Yq
- STSeSJahQu/LcWg8ZbZtU49njGpVtwXtNUH/QF2zaj/cLqvLwAhip4N7fUgriJiSUast
- WB288vOmCebGINfWWcRvEbhQHIzxjtEr0zy6hCwQH1smGZduJlTAUvc5LKM0SbUlMs3o
- 6DaR5oPrLQfihHiGNY6FruY3nqICLTJ9xFQIlFMZcktfg/JAw++Q2ocp4mOm4jqYX5NJ
- 3CZaF8KlmXwP6bYErDASiZidoYypmxly40RfLqNQvSFIFTkfCSu7xcnBWINjmQq9Tq9m vw== 
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3twsnntf6k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 24 Oct 2023 11:10:24 +0000
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-        by APTAIPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 39OBAMnu017209;
-        Tue, 24 Oct 2023 11:10:22 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 3tv7qkedch-1;
-        Tue, 24 Oct 2023 11:10:22 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39OBAMcQ017204;
-        Tue, 24 Oct 2023 11:10:22 GMT
-Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-        by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 39OBALoG017203;
-        Tue, 24 Oct 2023 11:10:22 +0000
-Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
-        id D6F6E533A; Tue, 24 Oct 2023 19:10:20 +0800 (CST)
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-To:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
-        avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com, quic_ziqichen@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
-        quic_rampraka@quicinc.com
-Cc:     linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] scsi: ufs: qcom: move ufs_qcom_host_reset() to ufs_qcom_device_reset()
-Date:   Tue, 24 Oct 2023 19:10:15 +0800
-Message-Id: <1698145815-17396-1-git-send-email-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: EoyL9d-JVNstofh06Y_xquhU9LlSo8ih
-X-Proofpoint-GUID: EoyL9d-JVNstofh06Y_xquhU9LlSo8ih
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-24_11,2023-10-24_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
- malwarescore=0 adultscore=0 clxscore=1011 suspectscore=0
- priorityscore=1501 mlxlogscore=999 impostorscore=0 lowpriorityscore=0
- phishscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2310170001 definitions=main-2310240094
+        with ESMTP id S234899AbjJXN6J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 09:58:09 -0400
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E894170A;
+        Tue, 24 Oct 2023 06:57:54 -0700 (PDT)
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6ba172c5f3dso3740580b3a.0;
+        Tue, 24 Oct 2023 06:57:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698155873; x=1698760673;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qHLUl2rviwOEYzkUoWMIc0UMrw0kyEP+QEE0nMFVMXY=;
+        b=D23svdP9Ltx6TLLf0VP9RFdZKbfwpd8SdTZ/wHVttGghuE5v6fqZzLRUpo6B8SpuIa
+         opjxnshJFzGM9JE4r2tMbCE8gJy/oo8sbmeBUXf+xI7ba5/XAk4izGjBU1WA3mUyok3D
+         u+LraRzq/NWbPrf2TJOD5xtPCtrPYsmy/UPhbzr6Mgvy4KBm8N1pu28d5mGeQPqXMPzP
+         Zt9AfGw5RX+92q3pWlj8l4xfF9N2AO2vwBWd5cb5NpmjJvYQ0lvjjTc3pMBiHphp8oHR
+         0uS9+b1UOXwvHNO+fOrTEScvK7JToj23Qk+a4b3s49d5/IfyTXzZF8bc+5l5QBBbNXLd
+         LTgQ==
+X-Gm-Message-State: AOJu0Yw8LFACtYPdwI/2c72tF2I7uatQfJlp3OgoB6FxI4pNCeeZ3cco
+        d9IbNBEQiGJPlDh3k1pHljk=
+X-Google-Smtp-Source: AGHT+IE5qx6HN3EzbKUIwvWTv+TC582ScGTYgsPVwjueuwXYih+yxExY/typ39RJ86V4tTyBd6Kg8w==
+X-Received: by 2002:a05:6a20:bf19:b0:17b:cd83:6555 with SMTP id gc25-20020a056a20bf1900b0017bcd836555mr2103715pzb.23.1698155873483;
+        Tue, 24 Oct 2023 06:57:53 -0700 (PDT)
+Received: from ?IPV6:2601:642:4c01:f978:8cc6:940d:123f:6f04? ([2601:642:4c01:f978:8cc6:940d:123f:6f04])
+        by smtp.gmail.com with ESMTPSA id 23-20020a630f57000000b0059cc2f1b7basm7070593pgp.11.2023.10.24.06.57.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Oct 2023 06:57:53 -0700 (PDT)
+Message-ID: <aa259295-1ec9-41e1-9527-409f3799e8df@acm.org>
+Date:   Tue, 24 Oct 2023 06:57:51 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: blktests: running nvme and srp tests with real RDMA hardware
+Content-Language: en-US
+To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc:     Daniel Wagner <dwagner@suse.de>, Sagi Grimberg <sagi@grimberg.me>,
+        Hannes Reinecke <hare@suse.de>
+References: <vaijnbobhxyz4nkk2csv3nfhnpeupbudakcn3qgmo7o6vii4x5@rfnfdll6iloo>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <vaijnbobhxyz4nkk2csv3nfhnpeupbudakcn3qgmo7o6vii4x5@rfnfdll6iloo>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During PISI test, we found the issue that host Tx still bursting after
-H/W reset. Move ufs_qcom_host_reset() to ufs_qcom_device_reset() and
-reset host before device reset to stop tx burst.
+On 10/23/23 19:59, Shinichiro Kawasaki wrote:
+> Hello blktests users,
+> 
+> As of today, software RDMA driver "siw" or "rdma_rxe" is used to run "nvme"
+> group with nvme_trtype=rdma or "srp" (scsi rdma protocol) group. Now it is
+> suggested to run the test groups with real RDMA hardware to run tests in
+> more realistic conditions. A GitHub pull request is under review to support
+> it [1]. If you are interested in, please take a look and comment.
+> 
+> [1] https://github.com/osandov/blktests/pull/86
 
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
----
- drivers/ufs/host/ufs-qcom.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+When I wrote the SRP tests, my goal was to test the SRP initiator
+driver, SRP target driver and dm-multipath drivers and also to allow
+users who do not have RDMA hardware to run these tests. Running these
+tests against a real RDMA adapter tests other functionality than block
+layer code. I see this as a use case that falls outside the original
+scope of the blktests test suite. Running NVMe tests against a real
+storage array also falls outside the scope of testing block driver
+functionality. I'm fine with adding this functionality but I hope that
+it does not become a burden for blktests contributors who are not
+interested in maintaining functionality that falls outside the original
+scope of blktests.
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 96cb8b5..43163d3 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -445,12 +445,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 	struct phy *phy = host->generic_phy;
- 	int ret;
- 
--	/* Reset UFS Host Controller and PHY */
--	ret = ufs_qcom_host_reset(hba);
--	if (ret)
--		dev_warn(hba->dev, "%s: host reset returned %d\n",
--				  __func__, ret);
--
- 	/* phy initialization - calibrate the phy */
- 	ret = phy_init(phy);
- 	if (ret) {
-@@ -1709,6 +1703,13 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
- static int ufs_qcom_device_reset(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	int ret = 0;
-+
-+	/* Reset UFS Host Controller and PHY */
-+	ret = ufs_qcom_host_reset(hba);
-+	if (ret)
-+		dev_warn(hba->dev, "%s: host reset returned %d\n",
-+				  __func__, ret);
- 
- 	/* reset gpio is optional */
- 	if (!host->device_reset)
--- 
-2.7.4
+Bart.
 
