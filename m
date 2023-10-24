@@ -2,37 +2,36 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96641C07545
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 07:56:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0075C07545
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 08:15:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233746AbjJXH4L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 03:56:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56202 "EHLO
+        id S233835AbjJXIPo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 04:15:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232544AbjJXH4K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 03:56:10 -0400
-Received: from mail.venturelinkbiz.com (mail.venturelinkbiz.com [51.195.119.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD11CEE
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 00:56:05 -0700 (PDT)
-Received: by mail.venturelinkbiz.com (Postfix, from userid 1002)
-        id 72BB346B78; Tue, 24 Oct 2023 07:55:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=venturelinkbiz.com;
-        s=mail; t=1698134163;
-        bh=XJs7d1oOesLTWK1tCT5ZRN/D6Zrl/UejHZ/WB1pZoTo=;
+        with ESMTP id S233807AbjJXIPm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 04:15:42 -0400
+Received: from mail.citycodes.pl (mail.citycodes.pl [158.255.215.195])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB35D9F
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 01:15:40 -0700 (PDT)
+Received: by mail.citycodes.pl (Postfix, from userid 1001)
+        id B30A821B73; Tue, 24 Oct 2023 10:15:36 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=citycodes.pl; s=mail;
+        t=1698135339; bh=fClkhHu/p6gIm8tbpvFwCqGX3kXIMdqjiuDdSiYGEkk=;
         h=Date:From:To:Subject:From;
-        b=JR9/P/WBrmUt3b/xlObmGmcOyRg1GVkoHvPFGU5Qw0gWWqBucpbnAWrI39XeV+UH0
-         ywN/d42XY3rjJmn3YHiZXhpXrW7xfZ2b6I/FwTZatQGh/AiUyMZ8zb+IIcDG2mWxz4
-         Lyx+fP2o+FvCGW7yoJcMTn8k0t+jaBMlGlTy1vpGNfYJDaFuxbSxh0Kp0Byjh1FK6v
-         I7Eoxdoks+qFq3WHQXxO4C0410IrI4/YrWQmBVN7+b+UWLaxWnajN6KzRHqW9mLUf1
-         8THvnUuzHU8JWVC1oa2bxnrMqiUALvl5WxzySwzkRo9twrhqpmLOS3RD7QrHdq60DU
-         xNubxUOj024AA==
-Received: by mail.venturelinkbiz.com for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 07:55:55 GMT
-Message-ID: <20231024064500-0.1.37.8tcu.0.i016k10s1d@venturelinkbiz.com>
-Date:   Tue, 24 Oct 2023 07:55:55 GMT
-From:   "Michal Rmoutil" <michal.rmoutil@venturelinkbiz.com>
+        b=Ug00zPN+81YKyms7MC3VuIQVyhS1LZVhPJOURiH9OiWG88k6kOCZgeS4tR9WEsrwc
+         udc8S4BYhwpa2sVvJkaIME6ns9RUGbUhSCihc6GFaKhd0zwmk4b+DpCgfqw5NZOZH4
+         6bujaAX1HSR9Ucidrks2INc9WaKcPa8Y7YycwhoTDu+rx9K2cOpUPk4nWka+97ev6I
+         ikYPCG6eoahqu7M5Q/2diMBzIGbkJskIeUK9bnqUoDcjIqRyUUgqvDyXXgpxxIdbL8
+         qnAjYiYMbfO0pKEzonuS9VwM+hw9BsIl5W9higZRxvj4yW74QQwqDarouzrBo0scqR
+         PAJ025xTGJW7w==
+Received: by mail.citycodes.pl for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 08:15:29 GMT
+Message-ID: <20231024084500-0.1.8a.l8rp.0.a2a3nuhgyr@citycodes.pl>
+Date:   Tue, 24 Oct 2023 08:15:29 GMT
+From:   "Kamil Lasek" <kamil.lasek@citycodes.pl>
 To:     <linux-scsi@vger.kernel.org>
-Subject: =?UTF-8?Q?Bezplatn=C3=A1_60denn=C3=AD_zku=C5=A1ebn=C3=AD_verze:_Vylep=C5=A1ete_sv=C3=A9_v=C3=BDrobn=C3=AD_procesy?=
-X-Mailer: mail.venturelinkbiz.com
+Subject: Wycena paneli fotowoltaicznych
+X-Mailer: mail.citycodes.pl
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
@@ -40,21 +39,17 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Ahoj,
+Dzie=C5=84 dobry,
 
-jste se sezn=C3=A1mili s n=C3=A1strojem, kter=C3=BD dohl=C3=AD=C5=BE=C3=AD=
- na v=C3=BDrobn=C3=AD proces na ka=C5=BEd=C3=A9m stupni a generuje stabil=
-n=C3=AD zisky?
+dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
+irm=C4=85.
 
-D=C3=ADky rychl=C3=A9mu mont=C3=A1=C5=BEi a snadno pou=C5=BEiteln=C3=A9mu=
- =C5=99e=C5=A1en=C3=AD zam=C4=9Bstnanci zvy=C5=A1uj=C3=AD produktivitu a=C5=
-=BE o 10% - 20% d=C3=ADky schopnosti okam=C5=BEit=C4=9B reagovat na vznik=
-aj=C3=ADc=C3=AD probl=C3=A9my a symptomy.
+=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
+ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej.
 
-Kompletn=C3=AD syst=C3=A9m (tabule + skener) si m=C5=AF=C5=BEete v na=C5=A1=
-em z=C3=A1vod=C4=9B vyzkou=C5=A1et po dobu 60 dn=C5=AF. Jste zainteresov=C3=
-=A1ni v=C3=BDsledky?
+Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
+ropozycji?
 
 
-Pozdravy
-Michal Rmoutil
+Pozdrawiam,
+Kamil Lasek
