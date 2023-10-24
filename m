@@ -2,138 +2,86 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 062DDC00A8F
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 19:52:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 819C5C07545
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 20:01:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344237AbjJXTwc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 15:52:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59898 "EHLO
+        id S1344181AbjJXUB5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 16:01:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234912AbjJXTwb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 15:52:31 -0400
-Received: from mail-oa1-x49.google.com (mail-oa1-x49.google.com [IPv6:2001:4860:4864:20::49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66F799F
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 12:52:29 -0700 (PDT)
-Received: by mail-oa1-x49.google.com with SMTP id 586e51a60fabf-1d5f4d5d848so6793041fac.0
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 12:52:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698177148; x=1698781948; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=e8aQgWjy+g6rrzKEDI21tp5NK7yplRQyyhfNiiPxWK0=;
-        b=mo5et0EQNBbjn0YYf02+tHNMi5Qt8QpTnjDmOuLVZYB0UbKp9TfDe3btq2w2wPliL7
-         EeraHHLcoG/hLzSbFfqh6+y3OTE9FdUbjn6LaKGcLSYK5JR5aYI+DrmWvoOXiPoF1d1a
-         KpnlQggqhHvgEHG1SFukRaZGxughB1L1oCYupjw94amlcVhwA/waaUw/kPL7SpdIeUnF
-         jb1RRcnzItOmxt2sTAiYNcdAdFQV7/HtHJOLgV3Zssx5M4LEryZ3edxorQMK+cr+ab5r
-         +laiovkXixdEMnEv02VlmDnBq1JHhxHrdyrvVOjR1VqN65fPfCpwsQviQQBCzzy2OcsC
-         qWVw==
+        with ESMTP id S1343922AbjJXUB4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 16:01:56 -0400
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4497A2;
+        Tue, 24 Oct 2023 13:01:54 -0700 (PDT)
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-27d11401516so3349969a91.2;
+        Tue, 24 Oct 2023 13:01:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698177148; x=1698781948;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=e8aQgWjy+g6rrzKEDI21tp5NK7yplRQyyhfNiiPxWK0=;
-        b=v5MhLlDdXegu3UkDOCO7By4N2vP3br1wyUqsb5mrjuyT7IvGfgagte02q9FVoPW1JD
-         j6oFc+OprkqqIjR7UH+JAzRzRux6+9eQ2KakOfNqMIk3/iwZPSTK6d48wVaibYYmgM33
-         RAv9NzUlFYxhFbn9jbRWAAk8l4QTHYONV+8tlUZ5rPynoF5dWBVVhnJePmcy2+Bchke/
-         OgMV7RjDwq4B67QLcvoNuq38gDTsW9UciH5CsXJm5VW9aLtX8KwrckYjouxZ/KqWTZbW
-         bhh2e042nVg4pgTw/hmRO7TXggk26/4J6kT71gIL4/Ra5brOEHX2dnLC8XW4scQT88Q2
-         W8rg==
-X-Gm-Message-State: AOJu0YzeZxveAP1r965DtdqCUlF/IVaABjCNuu6tC27zzNT4iAxDlM2l
-        DvWTeOXIDARx60F8ci2fQSgTsY/a3jd07BKK5g==
-X-Google-Smtp-Source: AGHT+IGGhfv6HHv8vXiL6PZflYVg3AGRykgoK0m9EB5iPd5E7rZQ1ga5+DHB0xzvTTrUTEMzpkPIvFiJFLGLMgeCwg==
-X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a05:6870:148d:b0:1d6:5e45:3bc7 with
- SMTP id k13-20020a056870148d00b001d65e453bc7mr6259319oab.5.1698177148786;
- Tue, 24 Oct 2023 12:52:28 -0700 (PDT)
-Date:   Tue, 24 Oct 2023 19:52:27 +0000
-Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAHogOGUC/x2NwQqDMBAFf0X23IUkrSD+SilFkt26lyj7ilTEf
- 2/wMjCXmYMgbgIau4NcNoMttUm8dZTnqX6ErTSnFNI9hvRgfL3mdefitomDkWGseZELb+xQcOY gsajKkIa+pxZbXdR+1+j5Os8/ZQjSqngAAAA=
-X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1698177147; l=2135;
- i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=x4lXZ/M2v+LVXy5eVUWTnpdEr6YXqOCKy8sodhN2WbQ=; b=kNvSxaD6+DzKoEiD6sLJnAjh94iZPbZ1UevGx+Ev4FErVJiOdmvYoPiz8xLD17iSe3bcC4IOa
- Hd8masltLb4DdvVMlYaADHPOuC3Dpr7PWEcQ4FlU+zfiGwohD+QaLT2
-X-Mailer: b4 0.12.3
-Message-ID: <20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-1e0026ee032d@google.com>
-Subject: [PATCH] scsi: fcoe: replace deprecated strncpy with strscpy
-From:   Justin Stitt <justinstitt@google.com>
-To:     Hannes Reinecke <hare@suse.de>,
+        d=1e100.net; s=20230601; t=1698177714; x=1698782514;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3q89EnJ4jUP8Y3YaLMAS6E9w1gTCD+SiGGP7gCXLM2c=;
+        b=W1ztffIHzAXrwPAVPxT/Hp1gpZELftOrADiAsaVolOAx9K5DG3ADLkF6iMKrVoRukp
+         aMS8d0U1KaQqrVDL0mATNGkBGo35zCJq2i2DKbqmGWGf3QaaKPn5LMmL3szbIyKRgNx3
+         8PXy4BcD6BL/6Or3H0lIO1Gsx9Yey4fSzinXi4Fy9SuYlJHZXOyPL6m3kD5DWlIizs+j
+         omdcjYf6qbb8xnIF3hDLavww5S7UM0X+QJkuJo8zwL1gu7kDe2FpvZo4CQOYY28C93tK
+         JDR1c8ewso1scBhE3/a2tpulddDE44o2tuFrZyJpaZgbTeR9MqGZjacLPqLfaMq4baz9
+         aC8Q==
+X-Gm-Message-State: AOJu0YyvAFPIeB6dbpJXGxV+f6bgcA+9yhfytGBOmldGgC8zbck5MLkf
+        7ds2lI+5AUYX6i7MBjNwdlk=
+X-Google-Smtp-Source: AGHT+IHbDFImznTQkMF0msiilCf1sjhqSC1U4BOtN17QPIniAZ01YJbmuU3MPTqsfHhbKeft3ZxtMQ==
+X-Received: by 2002:a17:90a:194e:b0:27d:b488:92ee with SMTP id 14-20020a17090a194e00b0027db48892eemr10229357pjh.2.1698177714177;
+        Tue, 24 Oct 2023 13:01:54 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:30e1:c9d3:6b41:493d? ([2620:15c:211:201:30e1:c9d3:6b41:493d])
+        by smtp.gmail.com with ESMTPSA id rm10-20020a17090b3eca00b0027476c68cc3sm7264364pjb.22.2023.10.24.13.01.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Oct 2023 13:01:53 -0700 (PDT)
+Message-ID: <9f38f4aa-c6b5-4786-a641-d02d8bd92f7f@acm.org>
+Date:   Tue, 24 Oct 2023 13:01:51 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: fcoe: replace deprecated strncpy with strscpy
+Content-Language: en-US
+To:     Justin Stitt <justinstitt@google.com>,
+        Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org,
-        Justin Stitt <justinstitt@google.com>
-Content-Type: text/plain; charset="utf-8"
+        linux-hardening@vger.kernel.org
+References: <20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-1e0026ee032d@google.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-1e0026ee032d@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-strncpy() is deprecated for use on NUL-terminated destination strings
-[1] and as such we should prefer more robust and less ambiguous string
-interfaces.
+On 10/24/23 12:52, Justin Stitt wrote:
+> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+> index e17957f8085c..7a3ca6cd3030 100644
+> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
+> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+> @@ -279,12 +279,10 @@ static ssize_t store_ctlr_mode(struct device *dev,
+>   	if (count > FCOE_MAX_MODENAME_LEN)
+>   		return -EINVAL;
+>   
+> -	strncpy(mode, buf, count);
+> +	strscpy(mode, buf, count);
+>   
+>   	if (mode[count - 1] == '\n')
+>   		mode[count - 1] = '\0';
+> -	else
+> -		mode[count] = '\0';
+>   
+>   	switch (ctlr->enabled) {
+>   	case FCOE_CTLR_ENABLED:
 
-We expect `mode` to be NUL-terminated based on its usage with
-strcasecmp():
+Please consider to remove the code for copying the sysfs string and to
+use sysfs_match_string() instead.
 
-|       ctlr->mode = fcoe_parse_mode(mode);
-...
-|       static enum fip_conn_type fcoe_parse_mode(const char *buf)
-|       {
-|       	int i;
-|
-|       	for (i = 0; i < ARRAY_SIZE(fip_conn_type_names); i++) {
-|       		if (strcasecmp(buf, fip_conn_type_names[i]) == 0)
-|       			return i;
-|       	}
-|
-|       	return FIP_CONN_TYPE_UNKNOWN;
-|       }
+Thanks,
 
-Considering the above, a suitable replacement is `strscpy` [2] due to
-the fact that it guarantees NUL-termination on the destination buffer
-without unnecessarily NUL-padding.
-
-We can drop the manual NUL-byte assignment but should keep the newline
-removal so newlines don't creep into the string.
-
-Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-Link: https://github.com/KSPP/linux/issues/90
-Cc: linux-hardening@vger.kernel.org
-Signed-off-by: Justin Stitt <justinstitt@google.com>
----
-Note: build-tested only.
-
-Found with: $ rg "strncpy\("
----
- drivers/scsi/fcoe/fcoe_sysfs.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index e17957f8085c..7a3ca6cd3030 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -279,12 +279,10 @@ static ssize_t store_ctlr_mode(struct device *dev,
- 	if (count > FCOE_MAX_MODENAME_LEN)
- 		return -EINVAL;
- 
--	strncpy(mode, buf, count);
-+	strscpy(mode, buf, count);
- 
- 	if (mode[count - 1] == '\n')
- 		mode[count - 1] = '\0';
--	else
--		mode[count] = '\0';
- 
- 	switch (ctlr->enabled) {
- 	case FCOE_CTLR_ENABLED:
-
----
-base-commit: d88520ad73b79e71e3ddf08de335b8520ae41c5c
-change-id: 20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-0e1dffe82855
-
-Best regards,
---
-Justin Stitt <justinstitt@google.com>
+Bart.
 
