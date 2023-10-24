@@ -2,73 +2,138 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B36EC07545
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 19:03:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 062DDC00A8F
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 19:52:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344208AbjJXTDn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 15:03:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47510 "EHLO
+        id S1344237AbjJXTwc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 15:52:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344194AbjJXTDm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 15:03:42 -0400
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A84C10D3;
-        Tue, 24 Oct 2023 12:03:40 -0700 (PDT)
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6bee11456baso3921709b3a.1;
-        Tue, 24 Oct 2023 12:03:40 -0700 (PDT)
+        with ESMTP id S234912AbjJXTwb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 15:52:31 -0400
+Received: from mail-oa1-x49.google.com (mail-oa1-x49.google.com [IPv6:2001:4860:4864:20::49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66F799F
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 12:52:29 -0700 (PDT)
+Received: by mail-oa1-x49.google.com with SMTP id 586e51a60fabf-1d5f4d5d848so6793041fac.0
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 12:52:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1698177148; x=1698781948; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=e8aQgWjy+g6rrzKEDI21tp5NK7yplRQyyhfNiiPxWK0=;
+        b=mo5et0EQNBbjn0YYf02+tHNMi5Qt8QpTnjDmOuLVZYB0UbKp9TfDe3btq2w2wPliL7
+         EeraHHLcoG/hLzSbFfqh6+y3OTE9FdUbjn6LaKGcLSYK5JR5aYI+DrmWvoOXiPoF1d1a
+         KpnlQggqhHvgEHG1SFukRaZGxughB1L1oCYupjw94amlcVhwA/waaUw/kPL7SpdIeUnF
+         jb1RRcnzItOmxt2sTAiYNcdAdFQV7/HtHJOLgV3Zssx5M4LEryZ3edxorQMK+cr+ab5r
+         +laiovkXixdEMnEv02VlmDnBq1JHhxHrdyrvVOjR1VqN65fPfCpwsQviQQBCzzy2OcsC
+         qWVw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698174220; x=1698779020;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GrekS4CoNdEIxbVvO8w8TUPqsoqaiQBuxBSUtv98lU4=;
-        b=KZ9VnlEx/aaPPNhxMCn6QA3Aq4g7JqlJMgiYbIW5rfNx2OeBIgyV5+uK0iOPwvAhVx
-         4vLgMDkQTUN8yVhSNka0d9PIooHzCX+efz0uPGYUM//V205lNZ4uxwlyvbj89nfEjxjd
-         rvBGLjWw8jj4pc6EoZPeyMZg+nxc7xNQMkODov5HF5wVOBpfufW7OaIQtG8eOtRAXOzc
-         dRUgv6r4HoNilwc3bLoDewzX9z6djHvS9p4FreuUnOfXaESiMCREtmeoGCExg6fPlgTW
-         J/0ZQqilMvMt6oWF17F5uZ3lLhmXCQ/WlX0iBrz3shPS6t1TMZ6JdTpu0nIHu/G94vnx
-         FX8Q==
-X-Gm-Message-State: AOJu0YyapflGvuBYa4+aS+aZijPL7ZNgKDoe36JDFSy/xy5ISSMDA0Dc
-        wHN1ZPpbiHRmpm+zWtCUa8DszTkF93y9sQ==
-X-Google-Smtp-Source: AGHT+IH5kFgcgjymvrgMAh6NmnXeArwK9PGAN0hZmCJkG0hP0WCvZr46x7oM3882L5K4YXbNXJzVcQ==
-X-Received: by 2002:a05:6a21:35c8:b0:17d:f676:40b3 with SMTP id ba8-20020a056a2135c800b0017df67640b3mr3420676pzc.19.1698174219596;
-        Tue, 24 Oct 2023 12:03:39 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:30e1:c9d3:6b41:493d? ([2620:15c:211:201:30e1:c9d3:6b41:493d])
-        by smtp.gmail.com with ESMTPSA id q4-20020aa78424000000b006be2927ca7esm7922835pfn.85.2023.10.24.12.03.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Oct 2023 12:03:39 -0700 (PDT)
-Message-ID: <7f9fa4eb-01fb-4581-badf-535f634d0152@acm.org>
-Date:   Tue, 24 Oct 2023 12:03:36 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: message: fusion: Fix a possible data race in
- mpt_ioc_reset()
-Content-Language: en-US
-To:     Tuo Li <islituo@gmail.com>, sathya.prakash@broadcom.com,
-        sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, baijiaju1990@outlook.com,
-        BassCheck <bass@buaa.edu.cn>
-References: <20231024072729.455713-1-islituo@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231024072729.455713-1-islituo@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        d=1e100.net; s=20230601; t=1698177148; x=1698781948;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=e8aQgWjy+g6rrzKEDI21tp5NK7yplRQyyhfNiiPxWK0=;
+        b=v5MhLlDdXegu3UkDOCO7By4N2vP3br1wyUqsb5mrjuyT7IvGfgagte02q9FVoPW1JD
+         j6oFc+OprkqqIjR7UH+JAzRzRux6+9eQ2KakOfNqMIk3/iwZPSTK6d48wVaibYYmgM33
+         RAv9NzUlFYxhFbn9jbRWAAk8l4QTHYONV+8tlUZ5rPynoF5dWBVVhnJePmcy2+Bchke/
+         OgMV7RjDwq4B67QLcvoNuq38gDTsW9UciH5CsXJm5VW9aLtX8KwrckYjouxZ/KqWTZbW
+         bhh2e042nVg4pgTw/hmRO7TXggk26/4J6kT71gIL4/Ra5brOEHX2dnLC8XW4scQT88Q2
+         W8rg==
+X-Gm-Message-State: AOJu0YzeZxveAP1r965DtdqCUlF/IVaABjCNuu6tC27zzNT4iAxDlM2l
+        DvWTeOXIDARx60F8ci2fQSgTsY/a3jd07BKK5g==
+X-Google-Smtp-Source: AGHT+IGGhfv6HHv8vXiL6PZflYVg3AGRykgoK0m9EB5iPd5E7rZQ1ga5+DHB0xzvTTrUTEMzpkPIvFiJFLGLMgeCwg==
+X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
+ (user=justinstitt job=sendgmr) by 2002:a05:6870:148d:b0:1d6:5e45:3bc7 with
+ SMTP id k13-20020a056870148d00b001d65e453bc7mr6259319oab.5.1698177148786;
+ Tue, 24 Oct 2023 12:52:28 -0700 (PDT)
+Date:   Tue, 24 Oct 2023 19:52:27 +0000
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAHogOGUC/x2NwQqDMBAFf0X23IUkrSD+SilFkt26lyj7ilTEf
+ 2/wMjCXmYMgbgIau4NcNoMttUm8dZTnqX6ErTSnFNI9hvRgfL3mdefitomDkWGseZELb+xQcOY gsajKkIa+pxZbXdR+1+j5Os8/ZQjSqngAAAA=
+X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1698177147; l=2135;
+ i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
+ bh=x4lXZ/M2v+LVXy5eVUWTnpdEr6YXqOCKy8sodhN2WbQ=; b=kNvSxaD6+DzKoEiD6sLJnAjh94iZPbZ1UevGx+Ev4FErVJiOdmvYoPiz8xLD17iSe3bcC4IOa
+ Hd8masltLb4DdvVMlYaADHPOuC3Dpr7PWEcQ4FlU+zfiGwohD+QaLT2
+X-Mailer: b4 0.12.3
+Message-ID: <20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-1e0026ee032d@google.com>
+Subject: [PATCH] scsi: fcoe: replace deprecated strncpy with strscpy
+From:   Justin Stitt <justinstitt@google.com>
+To:     Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
+        Justin Stitt <justinstitt@google.com>
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/24/23 00:27, Tuo Li wrote:
-> In my opinion, this may be a harmful race, because the value of
-> ioc->taskmgmt_quiesce_io can be rewritten by mpt_ioc_reset() when
-> another thread is accessing it.
+strncpy() is deprecated for use on NUL-terminated destination strings
+[1] and as such we should prefer more robust and less ambiguous string
+interfaces.
 
-It is a common pattern in the Linux kernel that a variable is set from
-one thread without using locking and is read by another thread that is
-holding a lock. It should be sufficient here to use WRITE_ONCE(). I
-don't think that acquiring and releasing the spin lock is required.
+We expect `mode` to be NUL-terminated based on its usage with
+strcasecmp():
 
-Thanks,
+|       ctlr->mode = fcoe_parse_mode(mode);
+...
+|       static enum fip_conn_type fcoe_parse_mode(const char *buf)
+|       {
+|       	int i;
+|
+|       	for (i = 0; i < ARRAY_SIZE(fip_conn_type_names); i++) {
+|       		if (strcasecmp(buf, fip_conn_type_names[i]) == 0)
+|       			return i;
+|       	}
+|
+|       	return FIP_CONN_TYPE_UNKNOWN;
+|       }
 
-Bart.
+Considering the above, a suitable replacement is `strscpy` [2] due to
+the fact that it guarantees NUL-termination on the destination buffer
+without unnecessarily NUL-padding.
+
+We can drop the manual NUL-byte assignment but should keep the newline
+removal so newlines don't creep into the string.
+
+Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+Link: https://github.com/KSPP/linux/issues/90
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Justin Stitt <justinstitt@google.com>
+---
+Note: build-tested only.
+
+Found with: $ rg "strncpy\("
+---
+ drivers/scsi/fcoe/fcoe_sysfs.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index e17957f8085c..7a3ca6cd3030 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -279,12 +279,10 @@ static ssize_t store_ctlr_mode(struct device *dev,
+ 	if (count > FCOE_MAX_MODENAME_LEN)
+ 		return -EINVAL;
+ 
+-	strncpy(mode, buf, count);
++	strscpy(mode, buf, count);
+ 
+ 	if (mode[count - 1] == '\n')
+ 		mode[count - 1] = '\0';
+-	else
+-		mode[count] = '\0';
+ 
+ 	switch (ctlr->enabled) {
+ 	case FCOE_CTLR_ENABLED:
+
+---
+base-commit: d88520ad73b79e71e3ddf08de335b8520ae41c5c
+change-id: 20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-0e1dffe82855
+
+Best regards,
+--
+Justin Stitt <justinstitt@google.com>
 
