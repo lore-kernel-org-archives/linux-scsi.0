@@ -2,171 +2,182 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D5F9C25B47
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 17:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39875C25B47
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 17:10:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233065AbjJXRFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 13:05:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58314 "EHLO
+        id S1343807AbjJXRKC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 13:10:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344023AbjJXQuK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 12:50:10 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB63BDA;
-        Tue, 24 Oct 2023 09:50:04 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1caa371dcd8so30780595ad.0;
-        Tue, 24 Oct 2023 09:50:04 -0700 (PDT)
+        with ESMTP id S230262AbjJXRKB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 13:10:01 -0400
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34D19123;
+        Tue, 24 Oct 2023 10:09:59 -0700 (PDT)
+Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1ca72f8ff3aso32495995ad.0;
+        Tue, 24 Oct 2023 10:09:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1698166204; x=1698771004; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=gmail.com; s=20230601; t=1698167398; x=1698772198; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=7OWsY7SJu8Gcvebw6x0jzvB0rtdPPzgdRgH26lmxO24=;
-        b=GatAlJKtbEMsG4VGtBOo21eD5FG5iY2cb1u9Pp65kI/GtscB7Bdot8Wo2eCAMk1G85
-         sjACzUXY9ITc461zBi5RaM3/Rbl/Dux62tdufn0Hp6N9GBgN/iUNWfSk84ATTorjTv1v
-         Qh2MnVLsga91iFDgZU8HUYTO0axK6LUbhB03nK1m73ofqWAZMRWFgTp1KS+BKerycqPU
-         ypXVM9T4skmeUo44zB0FUboYbnSY7Wb5UWse3Byc/y8ZZkBVoZxRcKQv44M4AsdoZ/Gf
-         tkR5c+G4OM37Aa2pWjUH/t11e/VssYlRq7JR5JlUrJDLcGwIi7Z9unPIRuWPG4PkZU/e
-         ZvKQ==
+        bh=Yraf/r3LgDKdGU7IC1yuKox4vPTdXOKCfqDIp0Hoc9U=;
+        b=msv7jzFiXNlvpJq0dwB94dNzYFPVLDM5N2J4eAKC8w0/v1rjRor6PTCB+B0SqumpG8
+         51aT8klFWazz6CJFoWG7MTYTaavrlQilQp7S3zuMUk7uTqLzpmOwBoDYEpWVlVC4gTCT
+         pGIaoPWph6vgUvv3QojMx2QaHD2I/CWfcKa+i02bdew13wwfnAhcV6ZKfGXJwrVm4uEF
+         ny6DYQgkbALBrxFgZ7mKY8RiDJbrjMBt5XlWROhJOiojq2Q1JcXvFvt8QEtf+WAxtF46
+         HUmVKWdushVC3TsK3m/v1Qx586eKOWxvd8btcKd+xrz5I6IwdfPRxsG3LtX02qSiWPvV
+         A7dA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698166204; x=1698771004;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1698167399; x=1698772199;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7OWsY7SJu8Gcvebw6x0jzvB0rtdPPzgdRgH26lmxO24=;
-        b=xVK1Uj8xo9zkK0c6g7IkYe5gxhJTtvGpqsR1+D8UyUKyfWQCIqBfEuELDgqaDjt1yV
-         SDOf7etCL5EUiik45/9owqXkuGA3CA7DRjEchi1/qLNhj7XCItH37BmmI5kz2nuSleck
-         ZcSES28zWpO6T3HWmDARNt3r1wxzc1UM0ormYXj582ng+zQmVo2hqfvaTpzq2toczyXn
-         EYEWjPJuLRWg4ce+JNIrLFXchZWmWGFmjVZ7gl48+HH0V4Tyio1baQwqQjcdTtmdzWwK
-         E1vJZ7Ou4gDQXo3pMdNzei9aDiyzGpoLJ+gOPjRmD1AKZGb6gxosP7hgqL115KLBZJoH
-         sCCw==
-X-Gm-Message-State: AOJu0Yy/L1wR1c95LQlmghlXAiIeUj9/P2BzQWAWYNokOAn/0amgmpQt
-        qefM5ipBeNBP4gEH3xvW+5w=
-X-Google-Smtp-Source: AGHT+IEXDosIVFqRUC5d6Eu+w9C11XUamGFEmaHuZlAJYQoFh9KHdrCMuKcoVbR/s64kV7W2ri7xkg==
-X-Received: by 2002:a17:902:cec6:b0:1c5:cbfb:c16f with SMTP id d6-20020a170902cec600b001c5cbfbc16fmr11682593plg.25.1698166204037;
-        Tue, 24 Oct 2023 09:50:04 -0700 (PDT)
+        bh=Yraf/r3LgDKdGU7IC1yuKox4vPTdXOKCfqDIp0Hoc9U=;
+        b=qmVbED7F5X2AmBupkKMmetGCQWqiM6Y05BrzSpmpiCSasGm2l05qez8tRcIFBnS2hp
+         wN0c4yqA/edrz1G3bHbLSGosfYYSlDieL2o3dawSSIZKFyTfbjReeMuPlcdU1xQeBK9E
+         l8pmdvjLeTomdCVYzxrrPIdgwvxn2REiKwQH2bunKnUfSLeYcGOHTe7COm3ygZVW5Iyn
+         n4D822RUVT44LOL1W19HVtP2y4rMg2qDfInnE5ttzTgBJViKPFHEiYzusX1t6iKKsiwB
+         Qjh3EJsjjqcyfPcwX2o+3QePCCTki113ROJYUAR/1mSDukmcb1jGSi+9l1H+OxkGsZpC
+         t2qA==
+X-Gm-Message-State: AOJu0Yzjtr5V463JMRwDiCSTOXT6JSufLe4t+hY5VMJjoY1O8+EeKPWd
+        jNsd++VAxVyylzFZfCUbjJ0=
+X-Google-Smtp-Source: AGHT+IFyPec7EkH/coBE09bGlow88NxS7rRVAeU6Ib9G7osqptxCOIliV/Q8kkLiE5rAFNr1JXhC4Q==
+X-Received: by 2002:a17:903:280b:b0:1ca:86b:7ed3 with SMTP id kp11-20020a170903280b00b001ca086b7ed3mr8839119plb.40.1698167398559;
+        Tue, 24 Oct 2023 10:09:58 -0700 (PDT)
 Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
-        by smtp.gmail.com with ESMTPSA id u15-20020a170902e80f00b001c9bc811d4dsm7659875plg.295.2023.10.24.09.49.58
+        by smtp.gmail.com with ESMTPSA id f11-20020a170902ce8b00b001c5076ae6absm7643471plg.126.2023.10.24.10.09.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Oct 2023 09:50:03 -0700 (PDT)
-Message-ID: <f882e8ba-c563-4c9a-99ab-50b20fe7b1b0@gmail.com>
-Date:   Wed, 25 Oct 2023 00:49:48 +0800
+        Tue, 24 Oct 2023 10:09:57 -0700 (PDT)
+Message-ID: <cbe14e3a-11c7-4da5-b125-5801244e27f2@gmail.com>
+Date:   Wed, 25 Oct 2023 01:09:34 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: scsi_debug: delete some bogus error checking
+Subject: Re: [PATCH 1/2] scsi: scsi_debug: fix some bugs in
+ sdebug_error_write()
+Content-Language: en-US
 To:     Dan Carpenter <dan.carpenter@linaro.org>
 Cc:     Wenchao Hao <haowenchao2@huawei.com>,
+        Eugeniy Paltsev <Eugeniy.Paltsev@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <f96d6366-9271-4020-ab66-f75737a1e8bd@moroto.mountain>
- <d2cb55a9-6bc0-47a0-a812-418d187c2c00@gmail.com>
- <d8ec82e6-5ba5-4945-825c-0e622c62f5b6@kadam.mountain>
-Content-Language: en-US
+        Douglas Gilbert <dgilbert@interlog.com>,
+        dmaengine@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+References: <96d50cf7-afec-46af-9d98-08099f8dc76e@moroto.mountain>
+ <CAOptpSMTgGwyFkn8o6qAEnUKXh+_mOr8dQKAZUWfM_4QEnxzxw@mail.gmail.com>
+ <44b0eca3-57c1-4edd-ab35-c389dc976273@kadam.mountain>
 From:   Wenchao Hao <haowenchao22@gmail.com>
-In-Reply-To: <d8ec82e6-5ba5-4945-825c-0e622c62f5b6@kadam.mountain>
+In-Reply-To: <44b0eca3-57c1-4edd-ab35-c389dc976273@kadam.mountain>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/23/23 1:06 PM, Dan Carpenter wrote:
-> On Sat, Oct 21, 2023 at 01:28:50AM +0800, Wenchao Hao wrote:
->> On 2023/10/20 22:15, Dan Carpenter wrote:
->>> Smatch complains that "dentry" is never initialized.  These days everyone
->>> initializes all their stack variables to zero so this means that it will
->>> trigger a warning every time this function is run.
+On 10/23/23 9:39 PM, Dan Carpenter wrote:
+> On Sat, Oct 21, 2023 at 06:10:44PM +0800, Wenchao Hao wrote:
+>> On Fri, Oct 20, 2023 at 10:15 PM Dan Carpenter <dan.carpenter@linaro.org> wrote:
 >>>
->>> Really debugfs functions are not supposed to be checked for errors so
->>> this checking can just be deleted.
->>>
->>> Fixes: f084fe52c640 ("scsi: scsi_debug: Add debugfs interface to fail target reset")
->>> Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
->>> ---
->>> See my blog for more information on the history of debugfs error
->>> checking:
->>>
->>> https://staticthinking.wordpress.com/2023/07/24/debugfs-functions-are-not-supposed-to-be-checked/
->>> ---
->>>  drivers/scsi/scsi_debug.c | 7 -------
->>>  1 file changed, 7 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
->>> index 0a4e41d84df8..c0be9a53ac79 100644
->>> --- a/drivers/scsi/scsi_debug.c
->>> +++ b/drivers/scsi/scsi_debug.c
->>> @@ -1127,7 +1127,6 @@ static const struct file_operations sdebug_target_reset_fail_fops = {
->>>  static int sdebug_target_alloc(struct scsi_target *starget)
->>>  {
->>>  	struct sdebug_target_info *targetip;
->>> -	struct dentry *dentry;
->>>  
->>>  	targetip = kzalloc(sizeof(struct sdebug_target_info), GFP_KERNEL);
->>>  	if (!targetip)
->>> @@ -1135,15 +1134,9 @@ static int sdebug_target_alloc(struct scsi_target *starget)
->>>  
->>>  	targetip->debugfs_entry = debugfs_create_dir(dev_name(&starget->dev),
->>>  				sdebug_debugfs_root);
->>> -	if (IS_ERR_OR_NULL(targetip->debugfs_entry))
->>> -		pr_info("%s: failed to create debugfs directory for target %s\n",
->>> -			__func__, dev_name(&starget->dev));
->>>  
->>>  	debugfs_create_file("fail_reset", 0600, targetip->debugfs_entry, starget,
->>>  				&sdebug_target_reset_fail_fops);
->>> -	if (IS_ERR_OR_NULL(dentry))
->>> -		pr_info("%s: failed to create fail_reset file for target %s\n",
->>> -			__func__, dev_name(&starget->dev));
->>>  
->>>  	starget->hostdata = targetip;
->>>  
+>>> There are two bug in this code:
 >>
+>> Thanks for your fix, some different points of view as follows.
 >>
->> Thank you for the fix, the check for debugfs_create_file() is added because 
->> scsi_debug driver is often used to test abnormal situations, here just check
->> and prompt a log, so maybe you should not remove it and fix the issue
->> following changes:
+>>> 1) If count is zero, then it will lead to a NULL dereference.  The
+>>> kmalloc() will successfully allocate zero bytes and the test for
+>>> "if (buf[0] == '-')" will read beyond the end of the zero size buffer
+>>> and Oops.
+>>
+>> This sysfs interface is usually used by cmdline, mostly, "echo" is used
+>> to write it and "echo" always writes with '\n' terminated, which would
+>> not cause a write with count=0.
 >>
 > 
-> No, the correct thing is to remove it.  This is explained in my blog
-> article linked to earlier.
+> You are saying "sysfs" but this is debugfs.  Sysfs is completely
+> different.  Also saying that 'and "echo" always writes with '\n'
+> terminated' is not true either even in sysfs...
 > 
-> https://staticthinking.wordpress.com/2023/07/24/debugfs-functions-are-not-supposed-to-be-checked/
+>> While in terms of security, we should add a check for count==0
+>> condition and return EINVAL.
 > 
-
-There are other places in scsi_debug which check return value
-of debugfs functions added by my previous patches, would you
-remove them?
-
-Thanks
-
-
-> commit ff9fb72bc07705c00795ca48631f7fffe24d2c6b
-> Author: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Date:   Wed Jan 23 11:28:14 2019 +0100
+> Checking for zero is a valid approach.  I considered that but my way
+> was cleaner.
 > 
->     debugfs: return error values, not NULL
->     
->     When an error happens, debugfs should return an error pointer value, not
->     NULL.  This will prevent the totally theoretical error where a debugfs
->     call fails due to lack of memory, returning NULL, and that dentry value
->     is then passed to another debugfs call, which would end up succeeding,
->     creating a file at the root of the debugfs tree, but would then be
->     impossible to remove (because you can not remove the directory NULL).
->     
->     So, to make everyone happy, always return errors, this makes the users
->     of debugfs much simpler (they do not have to ever check the return
->     value), and everyone can rest easy.
+>>
+>>> 2) The code does not ensure that the user's string is properly NUL
+>>> terminated which could lead to a read overflow.
+>>>
+>>
+>> I don't think so, the copy_from_user() would limit the accessed length
+>> to count, so no read overflow would happen.
+>>
+>> Userspace's write would allocate a buffer larger than it actually
+>> needed(usually 4K), but the buffer would not be cleared, so some
+>> dirty data would be passed to the kernel space.
+>>
+>> We might have following pairs of parameters for sdebug_error_write:
+>>
+>> ubuf: "0 -10 0x12\n0 0 0x2 0x6 0x4 0x2"
+>> count=11
+>>
+>> the valid data in ubuf is "0 -10 -x12\n", others are dirty data.
+>> strndup_user() would return EINVAL for this pair which caused
+>> a correct write to fail.
+>>
+>> You can recurrent the above error with my script attached.
 > 
-> In your code, if there is an error the debugfs code will print an error and
-> your code will print an info.  The info adds nothing.  Also if debugfs fails
-> to load you are already screwed so the info adds nothing.
+> You're looking for the buffer overflow in the wrong place.
 > 
-> In your code if the user disables CONFIG_DEBUGFS then printing "failed to create
-> fail_reset file for target" is wrong.  The user did that deliberately.  No need
-> to complain about the user's deliberate choices.  If it's really necessary to
-> have CONFIG_DEBUGFS then enforce that with Kconfig.
+> drivers/scsi/scsi_debug.c
+>   1026          if (copy_from_user(buf, ubuf, count)) {
+>                                    ^^^
+> We copy data from the user but it is not NUL terminated.
+> 
+>   1027                  kfree(buf);
+>   1028                  return -EFAULT;
+>   1029          }
+>   1030  
+>   1031          if (buf[0] == '-')
+>   1032                  return sdebug_err_remove(sdev, buf, count);
+>   1033  
+>   1034          if (sscanf(buf, "%d", &inject_type) != 1) {
+>                            ^^^
+> This will read beyond the end of the buffer.  sscanf() relies on a NUL
+> terminator to know when then end of the string is.
+> 
+>   1035                  kfree(buf);
+>   1036                  return -EINVAL;
+>   1037          }
+> 
+> Obviously the user in this situation is like a hacker who wants to do
+> something bad, not a normal users.  For a normal user this code is fine
+> as you say.
+> 
+> You will need to test this with .c code instead of shell if you want to
+> see the bug.
 > 
 > regards,
 > dan carpenter
+> 
 
+Yes, there is bug here if write with .c code. Because your change to use
+strndup_user() would make write with dirty data appended to "ubuf" failed,
+can we fix it with following change:
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 67922e2c4c19..0e8ct724463f 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1019,7 +1019,7 @@ static seize_t sdebug_error_write(struct file *file, const char __user *ubuf,
+        struct sdebug_err_inject *inject;
+        struct scsi_device *sdev = (struct scsi_device *)file->f_inode->i_private;
+ 
+-       buf = kmalloc(count, GFP_KERNEL);
++       buf = kzalloc(count + 1, GFP_KERNEL);
+        if (!buf)
+                return -ENOMEM;
+
+Or is there other kernel lib function which can address this issue?
+
+Thanks.
