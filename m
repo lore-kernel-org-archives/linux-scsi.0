@@ -2,116 +2,171 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC335C25B47
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 16:41:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D5F9C25B47
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 17:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234835AbjJXQl5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 12:41:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50092 "EHLO
+        id S233065AbjJXRFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 13:05:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232214AbjJXQl4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 12:41:56 -0400
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC097133;
-        Tue, 24 Oct 2023 09:41:53 -0700 (PDT)
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1c8a1541232so40129225ad.0;
-        Tue, 24 Oct 2023 09:41:53 -0700 (PDT)
+        with ESMTP id S1344023AbjJXQuK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 12:50:10 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB63BDA;
+        Tue, 24 Oct 2023 09:50:04 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1caa371dcd8so30780595ad.0;
+        Tue, 24 Oct 2023 09:50:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1698166204; x=1698771004; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=7OWsY7SJu8Gcvebw6x0jzvB0rtdPPzgdRgH26lmxO24=;
+        b=GatAlJKtbEMsG4VGtBOo21eD5FG5iY2cb1u9Pp65kI/GtscB7Bdot8Wo2eCAMk1G85
+         sjACzUXY9ITc461zBi5RaM3/Rbl/Dux62tdufn0Hp6N9GBgN/iUNWfSk84ATTorjTv1v
+         Qh2MnVLsga91iFDgZU8HUYTO0axK6LUbhB03nK1m73ofqWAZMRWFgTp1KS+BKerycqPU
+         ypXVM9T4skmeUo44zB0FUboYbnSY7Wb5UWse3Byc/y8ZZkBVoZxRcKQv44M4AsdoZ/Gf
+         tkR5c+G4OM37Aa2pWjUH/t11e/VssYlRq7JR5JlUrJDLcGwIi7Z9unPIRuWPG4PkZU/e
+         ZvKQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698165713; x=1698770513;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1698166204; x=1698771004;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=9h8QESnesfI/2xgkBEeyIn3zqQHGqYc+uKKPeuOMZZM=;
-        b=J2J5lAOW3eFdtQuoczjyWyxF+cGloiHjHKpeYxQARW58l36GHbS1RIAdE/Ey1ZKLqr
-         taDLb5GVdm6lPVgrITzePKnDK0YdSeVKH3Y5yPLUclM4AcsVvLc/Ee6bvFQ1V2O0+3ZV
-         fDv4ay2bKhdbDV1XC8U5OSTxRI21rDFv+mIxDb04kxb31E6gQ5YRcVg9lV7uQWq/we6t
-         6AUY/HkG6nDbmYeAmEy1usnx5Mv6fg1Is5YT3+fhNVR1d72wvnLF/KcK2MUknMjbFLI8
-         e5QdkbTWa2ImIR/LcErVIcQwG0um0OBEmEkZ978gIlYf4xPN3nJ5MA2vIw2gm2uR4ZEB
-         sE/w==
-X-Gm-Message-State: AOJu0YyFdL2eYAUISfc9nTLpCkNHYsTK9LsX7F31/0S9//fQe5agFTs2
-        pmb1n4nKTXMSghubdvnkWOs=
-X-Google-Smtp-Source: AGHT+IGjQQ10KwiGQKdPeA+wWZdBAWgsecQcomGIIcdR7osP18H1W0cl6lDwOWCkNdKevmD0hXHCKg==
-X-Received: by 2002:a17:902:d2cd:b0:1ca:3fa6:4aef with SMTP id n13-20020a170902d2cd00b001ca3fa64aefmr15587645plc.66.1698165713001;
-        Tue, 24 Oct 2023 09:41:53 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:b089:b200:3b6d:bf8? ([2620:15c:211:201:b089:b200:3b6d:bf8])
-        by smtp.gmail.com with ESMTPSA id i17-20020a17090332d100b001c32fd9e412sm7591284plr.58.2023.10.24.09.41.51
+        bh=7OWsY7SJu8Gcvebw6x0jzvB0rtdPPzgdRgH26lmxO24=;
+        b=xVK1Uj8xo9zkK0c6g7IkYe5gxhJTtvGpqsR1+D8UyUKyfWQCIqBfEuELDgqaDjt1yV
+         SDOf7etCL5EUiik45/9owqXkuGA3CA7DRjEchi1/qLNhj7XCItH37BmmI5kz2nuSleck
+         ZcSES28zWpO6T3HWmDARNt3r1wxzc1UM0ormYXj582ng+zQmVo2hqfvaTpzq2toczyXn
+         EYEWjPJuLRWg4ce+JNIrLFXchZWmWGFmjVZ7gl48+HH0V4Tyio1baQwqQjcdTtmdzWwK
+         E1vJZ7Ou4gDQXo3pMdNzei9aDiyzGpoLJ+gOPjRmD1AKZGb6gxosP7hgqL115KLBZJoH
+         sCCw==
+X-Gm-Message-State: AOJu0Yy/L1wR1c95LQlmghlXAiIeUj9/P2BzQWAWYNokOAn/0amgmpQt
+        qefM5ipBeNBP4gEH3xvW+5w=
+X-Google-Smtp-Source: AGHT+IEXDosIVFqRUC5d6Eu+w9C11XUamGFEmaHuZlAJYQoFh9KHdrCMuKcoVbR/s64kV7W2ri7xkg==
+X-Received: by 2002:a17:902:cec6:b0:1c5:cbfb:c16f with SMTP id d6-20020a170902cec600b001c5cbfbc16fmr11682593plg.25.1698166204037;
+        Tue, 24 Oct 2023 09:50:04 -0700 (PDT)
+Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
+        by smtp.gmail.com with ESMTPSA id u15-20020a170902e80f00b001c9bc811d4dsm7659875plg.295.2023.10.24.09.49.58
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Oct 2023 09:41:52 -0700 (PDT)
-Message-ID: <5d37f5ed-130a-4e75-b9a7-f77aeb4c7c89@acm.org>
-Date:   Tue, 24 Oct 2023 09:41:50 -0700
+        Tue, 24 Oct 2023 09:50:03 -0700 (PDT)
+Message-ID: <f882e8ba-c563-4c9a-99ab-50b20fe7b1b0@gmail.com>
+Date:   Wed, 25 Oct 2023 00:49:48 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/3] Support disabling fair tag sharing
+Subject: Re: [PATCH 2/2] scsi: scsi_debug: delete some bogus error checking
+To:     Dan Carpenter <dan.carpenter@linaro.org>
+Cc:     Wenchao Hao <haowenchao2@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <f96d6366-9271-4020-ab66-f75737a1e8bd@moroto.mountain>
+ <d2cb55a9-6bc0-47a0-a812-418d187c2c00@gmail.com>
+ <d8ec82e6-5ba5-4945-825c-0e622c62f5b6@kadam.mountain>
 Content-Language: en-US
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20231023203643.3209592-1-bvanassche@acm.org>
- <ZTcr3AHr9l4sHRO2@fedora>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZTcr3AHr9l4sHRO2@fedora>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From:   Wenchao Hao <haowenchao22@gmail.com>
+In-Reply-To: <d8ec82e6-5ba5-4945-825c-0e622c62f5b6@kadam.mountain>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/23/23 19:28, Ming Lei wrote:
-> On Mon, Oct 23, 2023 at 01:36:32PM -0700, Bart Van Assche wrote:
->> Performance of UFS devices is reduced significantly by the fair tag sharing
->> algorithm. This is because UFS devices have multiple logical units and a
->> limited queue depth (32 for UFS 3.1 devices) and also because it takes time to
->> give tags back after activity on a request queue has stopped. This patch series
->> addresses this issue by introducing a flag that allows block drivers to
->> disable fair sharing.
+On 10/23/23 1:06 PM, Dan Carpenter wrote:
+> On Sat, Oct 21, 2023 at 01:28:50AM +0800, Wenchao Hao wrote:
+>> On 2023/10/20 22:15, Dan Carpenter wrote:
+>>> Smatch complains that "dentry" is never initialized.  These days everyone
+>>> initializes all their stack variables to zero so this means that it will
+>>> trigger a warning every time this function is run.
+>>>
+>>> Really debugfs functions are not supposed to be checked for errors so
+>>> this checking can just be deleted.
+>>>
+>>> Fixes: f084fe52c640 ("scsi: scsi_debug: Add debugfs interface to fail target reset")
+>>> Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+>>> ---
+>>> See my blog for more information on the history of debugfs error
+>>> checking:
+>>>
+>>> https://staticthinking.wordpress.com/2023/07/24/debugfs-functions-are-not-supposed-to-be-checked/
+>>> ---
+>>>  drivers/scsi/scsi_debug.c | 7 -------
+>>>  1 file changed, 7 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+>>> index 0a4e41d84df8..c0be9a53ac79 100644
+>>> --- a/drivers/scsi/scsi_debug.c
+>>> +++ b/drivers/scsi/scsi_debug.c
+>>> @@ -1127,7 +1127,6 @@ static const struct file_operations sdebug_target_reset_fail_fops = {
+>>>  static int sdebug_target_alloc(struct scsi_target *starget)
+>>>  {
+>>>  	struct sdebug_target_info *targetip;
+>>> -	struct dentry *dentry;
+>>>  
+>>>  	targetip = kzalloc(sizeof(struct sdebug_target_info), GFP_KERNEL);
+>>>  	if (!targetip)
+>>> @@ -1135,15 +1134,9 @@ static int sdebug_target_alloc(struct scsi_target *starget)
+>>>  
+>>>  	targetip->debugfs_entry = debugfs_create_dir(dev_name(&starget->dev),
+>>>  				sdebug_debugfs_root);
+>>> -	if (IS_ERR_OR_NULL(targetip->debugfs_entry))
+>>> -		pr_info("%s: failed to create debugfs directory for target %s\n",
+>>> -			__func__, dev_name(&starget->dev));
+>>>  
+>>>  	debugfs_create_file("fail_reset", 0600, targetip->debugfs_entry, starget,
+>>>  				&sdebug_target_reset_fail_fops);
+>>> -	if (IS_ERR_OR_NULL(dentry))
+>>> -		pr_info("%s: failed to create fail_reset file for target %s\n",
+>>> -			__func__, dev_name(&starget->dev));
+>>>  
+>>>  	starget->hostdata = targetip;
+>>>  
 >>
->> Please consider this patch series for the next merge window.
+>>
+>> Thank you for the fix, the check for debugfs_create_file() is added because 
+>> scsi_debug driver is often used to test abnormal situations, here just check
+>> and prompt a log, so maybe you should not remove it and fix the issue
+>> following changes:
+>>
 > 
-> In previous post[1], you mentioned that the issue is caused by non-IO
-> queue of WLUN, but in this version, looks there isn't such story any more.
+> No, the correct thing is to remove it.  This is explained in my blog
+> article linked to earlier.
 > 
-> IMO, it isn't reasonable to account non-IO LUN for tag fairness, so
-> solution could be to not take non-IO queue into account for fair tag
-> sharing. But disabling fair tag sharing for this whole tagset could be
-> too over-kill.
+> https://staticthinking.wordpress.com/2023/07/24/debugfs-functions-are-not-supposed-to-be-checked/
 > 
-> And if you mean normal IO LUNs, can you share more details about the
-> performance drop? such as the test case, how many IO LUNs, and how to
-> observe performance drop, cause it isn't simple any more since multiple
-> LUN's perf has to be considered.
+
+There are other places in scsi_debug which check return value
+of debugfs functions added by my previous patches, would you
+remove them?
+
+Thanks
+
+
+> commit ff9fb72bc07705c00795ca48631f7fffe24d2c6b
+> Author: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Date:   Wed Jan 23 11:28:14 2019 +0100
 > 
-> [1] https://lore.kernel.org/linux-block/20231018180056.2151711-1-bvanassche@acm.org/
+>     debugfs: return error values, not NULL
+>     
+>     When an error happens, debugfs should return an error pointer value, not
+>     NULL.  This will prevent the totally theoretical error where a debugfs
+>     call fails due to lack of memory, returning NULL, and that dentry value
+>     is then passed to another debugfs call, which would end up succeeding,
+>     creating a file at the root of the debugfs tree, but would then be
+>     impossible to remove (because you can not remove the directory NULL).
+>     
+>     So, to make everyone happy, always return errors, this makes the users
+>     of debugfs much simpler (they do not have to ever check the return
+>     value), and everyone can rest easy.
+> 
+> In your code, if there is an error the debugfs code will print an error and
+> your code will print an info.  The info adds nothing.  Also if debugfs fails
+> to load you are already screwed so the info adds nothing.
+> 
+> In your code if the user disables CONFIG_DEBUGFS then printing "failed to create
+> fail_reset file for target" is wrong.  The user did that deliberately.  No need
+> to complain about the user's deliberate choices.  If it's really necessary to
+> have CONFIG_DEBUGFS then enforce that with Kconfig.
+> 
+> regards,
+> dan carpenter
 
-Hi Ming,
-
-Submitting I/O to a WLUN is only one example of a use case that
-activates the fair sharing algorithm for UFS devices. Another use
-case is simultaneous activity for multiple data LUNs. Conventional
-UFS devices typically have four data LUNs and zoned UFS devices
-typically have five data LUNs. From an Android device with a zoned UFS
-device:
-
-$ adb shell ls /sys/class/scsi_device
-0:0:0:0
-0:0:0:1
-0:0:0:2
-0:0:0:3
-0:0:0:4
-0:0:0:49456
-0:0:0:49476
-0:0:0:49488
-
-The first five are data logical units. The last three are WLUNs.
-
-For a block size of 4 KiB, I see 144 K IOPS for queue depth 31 and
-107 K IOPS for queue depth 15 (queue depth is reduced from 31 to 15
-if I/O is being submitted to two LUNs simultaneously). In other words,
-disabling fair sharing results in up to 35% higher IOPS for small reads
-and in case two logical units are active simultaneously. I think that's
-a very significant performance difference.
-
-Thanks,
-
-Bart.
