@@ -2,94 +2,84 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAC9BC07545
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 18:34:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 499D7C07545
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 18:59:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343918AbjJXSeQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 14:34:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50852 "EHLO
+        id S1344164AbjJXS7o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 14:59:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231553AbjJXSeO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 14:34:14 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA49B9F;
-        Tue, 24 Oct 2023 11:34:12 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id 98e67ed59e1d1-27d17f5457fso54636a91.0;
-        Tue, 24 Oct 2023 11:34:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1698172452; x=1698777252; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=eInzOmV9CI5bvKZsQcE1o+qh/nZEiz4SXYl0oOFUVx8=;
-        b=KoHLe3mEcIszexE7BQOHOietAwA7IgBuZR5a088f+TEqfqLyAjbmoGaSsYOb3SxOfX
-         8WxO/07819+H1bcCnXbBaoSi9TdJzlX7CTqaf3fklgvLmzlcqIEi9ZsuejACKZlkILvo
-         WmyiqJ2P7HRIYMVppfuzxkg/eOsiCBP26EFQac7YRjpMc3loKeD7b42QzpGgF73Wp0hm
-         Mnh5TGlgbawXdCPU5yG8U6A4O8D21AJA3IHtbmGCduYM7rx0HNHKBEO/MPfIaYGNnHqN
-         JLjHDt5IeLGwXDEzsCqGGhc9pA6i2h581iKwZ785JPLqy9QexmsRZR9I40PsZoRdPKyl
-         6N4g==
+        with ESMTP id S1343856AbjJXS7n (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 14:59:43 -0400
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD8C710C3;
+        Tue, 24 Oct 2023 11:59:39 -0700 (PDT)
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5ac88d2cfaaso3777552a12.2;
+        Tue, 24 Oct 2023 11:59:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698172452; x=1698777252;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=eInzOmV9CI5bvKZsQcE1o+qh/nZEiz4SXYl0oOFUVx8=;
-        b=pN/dBjpV3LOVOBmW1t++WMEHG3fUij3zNMmdXlXDdvEjlSqrI9Y/W8vLoM/jhJ0z6H
-         /4NzhN0ZbfEYCyx4Pfs8bTCjfDnKja2i7UnqLveq8mdNE3OfQV/q/nxqi+nsNmwPCgmJ
-         6jCYWMkk+zxROjH1TMOuJMLQkkLkQijZR7rEIDLy/Ug1ISA0nLjD8aNxkyJ1OMMy80Yb
-         Z3rz6R5UdxHKVhxtDoyjIQASbrmcTx4U1Nh1UAyj40ihVvFYl1CRkoUWo/4O3TlfoV9/
-         XdoxAAoho/r99AWuHg5mV9VhyQZ0yKnDtUiLHpcWD0M2zC+ba5ccFF6j+ZRHQk7LIL8Z
-         HSPQ==
-X-Gm-Message-State: AOJu0YxbpSVSOwweGJqvrQ5uL2Ea9KH3GggvkhqIALrR1DxRSPwq3W6/
-        sT0xiJ2FazrgyZeKY+qg7kg=
-X-Google-Smtp-Source: AGHT+IF4B61LYgmB49ohAKA6Ab4qdJgSoPOKtvhEF36Uzskljg76AFvZn6JVPokXIAcmZCWGFM0fSw==
-X-Received: by 2002:a17:90a:9a6:b0:27c:fa8f:4e91 with SMTP id 35-20020a17090a09a600b0027cfa8f4e91mr22597340pjo.23.1698172452246;
-        Tue, 24 Oct 2023 11:34:12 -0700 (PDT)
-Received: from brag-vm.. ([117.243.121.127])
-        by smtp.gmail.com with ESMTPSA id rm10-20020a17090b3eca00b0027476c68cc3sm7202125pjb.22.2023.10.24.11.34.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Oct 2023 11:34:12 -0700 (PDT)
-From:   Bragatheswaran Manickavel <bragathemanick0908@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        stanley.chu@mediatek.com, mani@kernel.org, quic_cang@quicinc.com,
-        quic_asutoshd@quicinc.com, peter.wang@mediatek.com,
-        beanhuo@micron.com, quic_nguyenb@quicinc.com,
-        Arthur.Simchaev@wdc.com
-Cc:     Bragatheswaran Manickavel <bragathemanick0908@gmail.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ufs/core: ufshcd: Conversion to bool not necessary
-Date:   Wed, 25 Oct 2023 00:04:01 +0530
-Message-Id: <20231024183401.48888-1-bragathemanick0908@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        d=1e100.net; s=20230601; t=1698173979; x=1698778779;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MqdTgJU7OJSh2UIoWNVVxddyfkvt/XLDbL6ku1eOseU=;
+        b=kwYcU3rEeZD21aWf3yocgmRprNXfsUDfjCplZfkxvWlrJOrpR4pBq8boDtFW+CBtkH
+         IV0OBO+tYDJNhd7+FBIzZ8b8zKQCSYpuwXK/djGCba5sxZaOncxqxTaemVKG4kZjndCu
+         JZ0uXx7Tv0f0QyrXVUBteAIi+2++Rhmb18wGyIIJ1CEvxf9VZlGfQ3nHTpC+kjf1OjME
+         P+NoRZ+Dki85kxAagHUclepYDQQBhpZO95Msjrlun7M2KeGmUaLAFo6GP3rZAgk8pBmq
+         FOsTuLljmHNPZ1l/ije9pOy1DnAZXugQcdvL/UfQi1DgluSioDyB6TZBq59NgnpSszll
+         ECDA==
+X-Gm-Message-State: AOJu0YxbhoVWDWBeYrLl8pZG4vWi0CnkLYfKEcMz4uAbWv/F8NvpOBRg
+        vH3xZN9QEXvH/Z2Lv8ovA08=
+X-Google-Smtp-Source: AGHT+IEdoPWiqS42glVljjUXLVDmycd2pUC+/P3hGE/zwYhUPRXebdv5SQoqHLjEwi0Rrg5FBc0PLg==
+X-Received: by 2002:a17:90a:1993:b0:279:354b:50f1 with SMTP id 19-20020a17090a199300b00279354b50f1mr11617386pji.3.1698173979146;
+        Tue, 24 Oct 2023 11:59:39 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:30e1:c9d3:6b41:493d? ([2620:15c:211:201:30e1:c9d3:6b41:493d])
+        by smtp.gmail.com with ESMTPSA id az7-20020a17090b028700b0027d157e686asm7177565pjb.49.2023.10.24.11.59.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Oct 2023 11:59:38 -0700 (PDT)
+Message-ID: <64aededf-7879-4246-8c1c-bc38ea47e05c@acm.org>
+Date:   Tue, 24 Oct 2023 11:59:35 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ufs/core: ufshcd: Conversion to bool not necessary
+Content-Language: en-US
+To:     Bragatheswaran Manickavel <bragathemanick0908@gmail.com>,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+        peter.wang@mediatek.com, beanhuo@micron.com,
+        quic_nguyenb@quicinc.com, Arthur.Simchaev@wdc.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20231024183401.48888-1-bragathemanick0908@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231024183401.48888-1-bragathemanick0908@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A logical evaluation already results in bool. There is no need for using
-a ternary operator based evaluation and bool conversion of the outcome.
+On 10/24/23 11:34, Bragatheswaran Manickavel wrote:
+> A logical evaluation already results in bool. There is no need for using
+> a ternary operator based evaluation and bool conversion of the outcome.
+> 
+> Issue identified using boolconv.cocci Coccinelle semantic patch.
+> 
+> Signed-off-by: Bragatheswaran Manickavel <bragathemanick0908@gmail.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 406885671665..bbd8e83be6c6 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2406,7 +2406,7 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+>   	int ret = read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
+>   				    500, UIC_CMD_TIMEOUT * 1000, false, hba,
+>   				    REG_CONTROLLER_STATUS);
+> -	return ret == 0 ? true : false;
+> +	return ret == 0;
+>   }
 
-Issue identified using boolconv.cocci Coccinelle semantic patch.
-
-Signed-off-by: Bragatheswaran Manickavel <bragathemanick0908@gmail.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 406885671665..bbd8e83be6c6 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2406,7 +2406,7 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
- 	int ret = read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
- 				    500, UIC_CMD_TIMEOUT * 1000, false, hba,
- 				    REG_CONTROLLER_STATUS);
--	return ret == 0 ? true : false;
-+	return ret == 0;
- }
- 
- /**
--- 
-2.34.1
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
