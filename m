@@ -2,126 +2,90 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC90C25B67
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 00:14:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AFEDC25B67
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Oct 2023 02:29:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231172AbjJXAOB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Oct 2023 20:14:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41372 "EHLO
+        id S231924AbjJXC3x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Oct 2023 22:29:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229552AbjJXAOB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 20:14:01 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D19D10C;
-        Mon, 23 Oct 2023 17:13:59 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D91E0C433C8;
-        Tue, 24 Oct 2023 00:13:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698106439;
-        bh=ATPML55R7+fiiOOFxhRtqd0G4bkZYOEyzEHjP0fnRuI=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=LX00oD6Ogif2k+OO7cnFuIbQGVKoZx/tdTJmevwNOgKml4fuJqSEvlugmzb60+fT5
-         QchB9SMRjkpJpHPpq1Po+KBDy1QMuJHyyFH1vZ56Je5vddSKSuNpG0dXPLboyU+gat
-         QSi7FxHEdQBt3iNPFcz35nHKU38Q0YX3vxuYCSIJ2JOYKxl7d4QZXAEA26uCbWVAfk
-         8xYGdcd18CWrRnXAtsNctLkR9R+3hIO8skNSL874/sS1PZzpWhF7utVIiHcAfsLWpQ
-         dMYVYomFZBH/dT/kie+dgEE07kcpopetT3n8VMLC5eNRvw1AE/RkvAxb5qEzzWcvYe
-         kcZvDWDXHkWaw==
-Message-ID: <b65486b6-c1de-43e3-ba45-d9a4034c48d5@kernel.org>
-Date:   Tue, 24 Oct 2023 09:13:57 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v14 12/19] scsi: scsi_debug: Add the preserves_write_order
- module parameter
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        with ESMTP id S229510AbjJXC3w (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2023 22:29:52 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61728CC
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Oct 2023 19:29:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1698114544;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ljunzYankt+Y8DsOwYK9IuDt9vyB/XfCBQ409TGpc7Q=;
+        b=KY6yY2whRReXF71zLI60SnkMIFl0xIAR/OakfQpd9sjiYvaie0hQ2bcsU7nRSgNq6bu2/8
+        v50ArGozyM7aIcANl8caNZqasj7nuoiMgGfv91oh4BEvUoM+0jmg+sHTWsjoaNNrdIbMup
+        q7JSmZmhtzH949CuyXMV96nqELlsHoI=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-209-nOcrXpvNNY2jYihqGF8djg-1; Mon, 23 Oct 2023 22:28:54 -0400
+X-MC-Unique: nOcrXpvNNY2jYihqGF8djg-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 53E5E101A52D;
+        Tue, 24 Oct 2023 02:28:53 +0000 (UTC)
+Received: from fedora (unknown [10.72.120.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 446F6492BD9;
+        Tue, 24 Oct 2023 02:28:48 +0000 (UTC)
+Date:   Tue, 24 Oct 2023 10:28:44 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20231023215638.3405959-1-bvanassche@acm.org>
- <20231023215638.3405959-13-bvanassche@acm.org>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20231023215638.3405959-13-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        Christoph Hellwig <hch@lst.de>, ming.lei@redhat.com
+Subject: Re: [PATCH v4 0/3] Support disabling fair tag sharing
+Message-ID: <ZTcr3AHr9l4sHRO2@fedora>
+References: <20231023203643.3209592-1-bvanassche@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231023203643.3209592-1-bvanassche@acm.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/24/23 06:54, Bart Van Assche wrote:
-> Zone write locking is not used for zoned devices if the block driver
-> reports that it preserves the order of write commands. Make it easier to
-> test not using zone write locking by adding support for setting the
-> driver_preserves_write_order flag.
+Hi Bart,
+
+On Mon, Oct 23, 2023 at 01:36:32PM -0700, Bart Van Assche wrote:
+> Hi Jens,
 > 
-> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/scsi_debug.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
+> Performance of UFS devices is reduced significantly by the fair tag sharing
+> algorithm. This is because UFS devices have multiple logical units and a
+> limited queue depth (32 for UFS 3.1 devices) and also because it takes time to
+> give tags back after activity on a request queue has stopped. This patch series
+> addresses this issue by introducing a flag that allows block drivers to
+> disable fair sharing.
 > 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 9c0af50501f9..1ea4925d2c2f 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -832,6 +832,7 @@ static int dix_reads;
->  static int dif_errors;
->  
->  /* ZBC global data */
-> +static bool sdeb_preserves_write_order;
->  static bool sdeb_zbc_in_use;	/* true for host-aware and host-managed disks */
->  static int sdeb_zbc_zone_cap_mb;
->  static int sdeb_zbc_zone_size_mb;
-> @@ -5138,9 +5139,13 @@ static struct sdebug_dev_info *find_build_dev_info(struct scsi_device *sdev)
->  
->  static int scsi_debug_slave_alloc(struct scsi_device *sdp)
->  {
-> +	struct request_queue *q = sdp->request_queue;
-> +
->  	if (sdebug_verbose)
->  		pr_info("slave_alloc <%u %u %u %llu>\n",
->  		       sdp->host->host_no, sdp->channel, sdp->id, sdp->lun);
-> +	if (sdeb_preserves_write_order)
-> +		q->limits.driver_preserves_write_order = true;
+> Please consider this patch series for the next merge window.
 
-Nit: this could simply be:
+In previous post[1], you mentioned that the issue is caused by non-IO
+queue of WLUN, but in this version, looks there isn't such story any more.
 
-	q->limits.driver_preserves_write_order = sdeb_preserves_write_order;
+IMO, it isn't reasonable to account non-IO LUN for tag fairness, so
+solution could be to not take non-IO queue into account for fair tag
+sharing. But disabling fair tag sharing for this whole tagset could be
+too over-kill.
 
->  	return 0;
->  }
->  
-> @@ -5755,6 +5760,8 @@ module_param_named(statistics, sdebug_statistics, bool, S_IRUGO | S_IWUSR);
->  module_param_named(strict, sdebug_strict, bool, S_IRUGO | S_IWUSR);
->  module_param_named(submit_queues, submit_queues, int, S_IRUGO);
->  module_param_named(poll_queues, poll_queues, int, S_IRUGO);
-> +module_param_named(preserves_write_order, sdeb_preserves_write_order, bool,
-> +		   S_IRUGO);
->  module_param_named(tur_ms_to_ready, sdeb_tur_ms_to_ready, int, S_IRUGO);
->  module_param_named(unmap_alignment, sdebug_unmap_alignment, int, S_IRUGO);
->  module_param_named(unmap_granularity, sdebug_unmap_granularity, int, S_IRUGO);
-> @@ -5812,6 +5819,8 @@ MODULE_PARM_DESC(ndelay, "response delay in nanoseconds (def=0 -> ignore)");
->  MODULE_PARM_DESC(no_lun_0, "no LU number 0 (def=0 -> have lun 0)");
->  MODULE_PARM_DESC(no_rwlock, "don't protect user data reads+writes (def=0)");
->  MODULE_PARM_DESC(no_uld, "stop ULD (e.g. sd driver) attaching (def=0))");
-> +MODULE_PARM_DESC(preserves_write_order,
-> +		 "Whether or not to inform the block layer that this driver preserves the order of WRITE commands (def=0)");
->  MODULE_PARM_DESC(num_parts, "number of partitions(def=0)");
->  MODULE_PARM_DESC(num_tgts, "number of targets per host to simulate(def=1)");
->  MODULE_PARM_DESC(opt_blks, "optimal transfer length in blocks (def=1024)");
+And if you mean normal IO LUNs, can you share more details about the
+performance drop? such as the test case, how many IO LUNs, and how to
+observe performance drop, cause it isn't simple any more since multiple
+LUN's perf has to be considered.
 
-Otherwise, looks OK to me.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+[1] https://lore.kernel.org/linux-block/20231018180056.2151711-1-bvanassche@acm.org/
 
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+Ming
 
