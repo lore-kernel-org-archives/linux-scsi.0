@@ -2,111 +2,91 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73E39C25B48
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 02:20:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FBECC25B6E
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 02:20:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229548AbjJYCUI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 22:20:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34942 "EHLO
+        id S231732AbjJYCUQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 22:20:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbjJYCUH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 22:20:07 -0400
+        with ESMTP id S231466AbjJYCUL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 22:20:11 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F02F69C;
-        Tue, 24 Oct 2023 19:20:05 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39OLUNN6004153;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71DEA9C
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 19:20:09 -0700 (PDT)
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39OLUVYp015146;
         Wed, 25 Oct 2023 02:19:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=BoJr5H11P3Mxq3RdCvbv/K4oFLgQ2TVLlaOWrcTCKVA=;
- b=pTQdANJyioC3m+r9ve023Kg9iRG3ds0R+WfQ3nYga1KW8Or9zRCLbGuo1dxZNrXuFwDN
- dQSBjKHRLOIYJOdg1mb9X+EuqNOfQdB7tnoNjSpDf7CP44WRBdx59SVT/7ja4oVN3a2/
- UM0Oo/gdI6fSy2iqZBd0Bi6sZ3rxJsiAExyhUwQQjhx6oHtRDEDWdeQEkgXou3O/rF/j
- 2RiBY4JQiG0ffNICsPccmwPfIMN7hBfbTrsyhrWmtJERNbR7zEzPKPcXc0xnH/30JzBd
- ZPImBvmA9cbLQXUOQkvczoIXkcIvuIDwAWOyg82EzdAMBzcoiBF/qeoVf7/Bss4Kqh0I vA== 
+ bh=ZDR2MQqDyKfrhY9VnTo0ZcIe6B70l3UEfwI/PWn3uC0=;
+ b=FbvOWyyioD05ajEo7pYZ+PyKmORJzSE7T50gSNQGHst23NJDVjw72eTuTNE3rjU5D6GI
+ yuzjH4w8R+7FpeohBNVXiT9UTRNNzfAcuJZi/ARPOUWc251Fl/0akYx3QobB9AVk3MRr
+ x/bZw4oUSUUTI/nnb6c2hQOrnsInjIgHdZVZKEo2KckSxsG/GXWzYSRI3slHgGG5nVDn
+ mVuPzlWG6u3EnBkypeY0mJltdLf6clnzVechiMmT/47kHlKQTM2Z5AgdIBxgpV4VTYSd
+ H3y0hE8VNfFeEvNSL26NY26z5rbgJFftQsi9hjNV66CfA/fUWSa6ySs5GahKF9vjSMnk 9Q== 
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3tv581pr9u-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3tv5jberms-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Oct 2023 02:19:53 +0000
+        Wed, 25 Oct 2023 02:19:52 +0000
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 39P0LjbR015130;
-        Wed, 25 Oct 2023 02:19:53 GMT
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 39P0ixvZ015230;
+        Wed, 25 Oct 2023 02:19:51 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3tv53621a5-1
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3tv536219t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Oct 2023 02:19:52 +0000
+        Wed, 25 Oct 2023 02:19:51 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39P2JpFK000926;
-        Wed, 25 Oct 2023 02:19:52 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39P2JpFI000926;
+        Wed, 25 Oct 2023 02:19:51 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3tv5362196-2;
-        Wed, 25 Oct 2023 02:19:52 +0000
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3tv5362196-1;
+        Wed, 25 Oct 2023 02:19:51 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Douglas Gilbert <dgilbert@interlog.com>,
-        Wenchao Hao <haowenchao2@huawei.com>
+To:     linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        louhongxiang@huawei.com
-Subject: Re: [PATCH v6 00/10] scsi:scsi_debug: Add error injection for single device
-Date:   Tue, 24 Oct 2023 22:19:44 -0400
-Message-Id: <169819964272.2667926.6343411701212225977.b4-ty@oracle.com>
+        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org
+Subject: Re: [PATCH] scsi: depopulation and restoration in progress
+Date:   Tue, 24 Oct 2023 22:19:43 -0400
+Message-Id: <169819964291.2667926.15035236582239451241.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231010092051.608007-1-haowenchao2@huawei.com>
-References: <20231010092051.608007-1-haowenchao2@huawei.com>
+In-Reply-To: <20231015050650.131145-1-dgilbert@interlog.com>
+References: <20231015050650.131145-1-dgilbert@interlog.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-10-25_01,2023-10-24_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=985
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=964
  bulkscore=0 mlxscore=0 spamscore=0 malwarescore=0 suspectscore=0
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2310170001 definitions=main-2310250018
-X-Proofpoint-GUID: l5JbVltxVkkgXdqC-5QwO4vc7xS5ppie
-X-Proofpoint-ORIG-GUID: l5JbVltxVkkgXdqC-5QwO4vc7xS5ppie
+X-Proofpoint-GUID: Zg8GmjoTomyylMe_3fsuOFWtQmGItZT7
+X-Proofpoint-ORIG-GUID: Zg8GmjoTomyylMe_3fsuOFWtQmGItZT7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 10 Oct 2023 17:20:41 +0800, Wenchao Hao wrote:
+On Sun, 15 Oct 2023 01:06:50 -0400, Douglas Gilbert wrote:
 
-> The original error injection mechanism was based on scsi_host which
-> could not inject fault for a single SCSI device.
-> 
-> This patchset provides the ability to inject errors for a single
-> SCSI device. Now we support inject timeout errors, queuecommand
-> errors, and hostbyte, driverbyte, statusbyte, and sense data for
-> specific SCSI Command. Two new error injection is defined to make
-> abort command or reset LUN failed.
+> The default handling of the NOT READY sense key is to wait
+> for the device to become ready. The "wait" is assumed to
+> be relatively short. However there is a sub-class of NOT
+> READY that have the "... in progress" phrase in their
+> additional sense code and these can take much longer.
+> Following on from commit 505aa4b6a8834 we now have element
+> depopulation and restoration that can take a long time.
+> For example, over 24 hours for a 20 TB, 7200 rpm hard
+> disk to depopulate 1 of its 20 elements.
 > 
 > [...]
 
 Applied to 6.7/scsi-queue, thanks!
 
-[01/10] scsi: scsi_debug: create scsi_debug directory in the debugfs filesystem
-        https://git.kernel.org/mkp/scsi/c/6e2d15f59b1c
-[02/10] scsi: scsi_debug: Add interface to manage single device's error inject
-        https://git.kernel.org/mkp/scsi/c/a9996d722b11
-[03/10] scsi: scsi_debug: Define grammar to remove added error injection
-        https://git.kernel.org/mkp/scsi/c/962d77cd4c85
-[04/10] scsi: scsi_debug: timeout command if the error is injected
-        https://git.kernel.org/mkp/scsi/c/32be8b6e22eb
-[05/10] scsi: scsi_debug: Return failed value if the error is injected
-        https://git.kernel.org/mkp/scsi/c/33bccf55c20b
-[06/10] scsi: scsi_debug: set command's result and sense data if the error is injected
-        https://git.kernel.org/mkp/scsi/c/33592274321e
-[07/10] scsi: scsi_debug: Add new error injection abort failed
-        https://git.kernel.org/mkp/scsi/c/5551ce928805
-[08/10] scsi: scsi_debug: Add new error injection reset lun failed
-        https://git.kernel.org/mkp/scsi/c/0267811625e1
-[09/10] scsi: scsi_debug: Add debugfs interface to fail target reset
-        https://git.kernel.org/mkp/scsi/c/f084fe52c640
-[10/10] scsi: scsi_debug: Add param to control sdev's allow_restart
-        https://git.kernel.org/mkp/scsi/c/573c2d066eb9
+[1/1] scsi: depopulation and restoration in progress
+      https://git.kernel.org/mkp/scsi/c/2bbeb8d12404
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
