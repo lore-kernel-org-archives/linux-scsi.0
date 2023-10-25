@@ -2,205 +2,495 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0406DC07545
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 11:36:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7559DC07545
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 11:46:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233761AbjJYLg4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Oct 2023 07:36:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43166 "EHLO
+        id S234125AbjJYLqa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Oct 2023 07:46:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230217AbjJYLgz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 07:36:55 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C8FC129;
-        Wed, 25 Oct 2023 04:36:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1698233813; x=1729769813;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=J6zG2lSVqoaHxrGpsVRoNeVQ1/qHg86lX71ATrG+N4M=;
-  b=jnpix59GFEeW/gP0UHn4jCJ/4k8Sa7CQsytUunYn1Qt28HHw8gl2nNTC
-   WV9qZrH55XqzpUUQ/xzOpzmKQ+WNPmvmsZ/jffQHDBIn0ShK4NvIH4ClH
-   BVVy631tb3Pqfkkyzq+v5f2Jiu6kGFmHbmmDoMmCxq3g37sXpjIL5gDoA
-   EcJ73pfvl4hnp1nQXYeS9qa4a+zqayaKDQPEipDfAsvxu5UzyJngGsrR3
-   uFRQgdrrMz37lOenYwozk/6DffiPyyqM7F8NqVWmgxVMYe3XGwkavnJK6
-   izZ2CJg1412JQOTpbPZrYcTtfI6jRAjMHpH7AnBE+Ch0im2qfwUgmpUlm
-   w==;
-X-CSE-ConnectionGUID: IQAjWkBaTh284bivVlgSxw==
-X-CSE-MsgGUID: zUIIYKcWQnSSWnttTqJegw==
-X-IronPort-AV: E=Sophos;i="6.03,250,1694707200"; 
-   d="scan'208";a="589839"
-Received: from mail-bn1nam02lp2041.outbound.protection.outlook.com (HELO NAM02-BN1-obe.outbound.protection.outlook.com) ([104.47.51.41])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Oct 2023 19:36:49 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=N0mNoErJVWjX7BPDkClLAgjVQUiaY/lKfUltHWtQc1f7otQvk9Wvzu7LFxVQwCtL2myJoGnWQrgOuE3N1V19sGIBntfmIeiasQ4u+/UuohrifiEELYNdktUaghOFUQpllftsmzqrVtHLl7D4MAGAzVfBjUheWHrvm1QmcVTXtYXiZSEguR8BEhWganvgEaefNv/t7GtRK9cLzz877BR6ew2DIgxVf1xXwfrkd0qrqqXas0uouBA6hm1k7sVpUcVtskp6tjBVLQdefOhjAxbnxhgm/H6gE/0UZopg3ETnuYSqH3BIJI+nJSkypH5IBUXfUjjljvZZXYZq5k3lOPkp5Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xt6TshVJx3Kf+hTnnANr5mZJZ8+7xW2Pe8yxi3IQDKY=;
- b=DZaEPVocVMQHRmzGPvfu5i5Pvh8Bsa2dv8F4J/s3UtuU8RgXrn+orvg5wadip/dDahIl+Uu0OzLFrIu/cNGG76TVRXXNHKoEUzJRJbuvZk3qzvRGpbcyKdw+vXyccFZXzZJSkwSdRRkHMQX6abcPu7EPyococDvtw72FGzRLNB/QNSPM+CaKt1dfxjIx7IMvBc6GYnsYnP+22iaV96Q2tBrTWiHB1jloNLNo8h+is0MkTRq+kRrHpRJjGhYQqFNBlMh4IyAY0VIlVBS7LfMjBPr/d8cG+4GbRbW/rN++oGBqyLwbTu8NKRO/ryVKNEeW5apm+FTctC5tPwUKUXAlDQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xt6TshVJx3Kf+hTnnANr5mZJZ8+7xW2Pe8yxi3IQDKY=;
- b=dsGA2tFuUeuQe0wpW9vSdKjfFxuiFhlmcXMnnVhwRfSaUkgHIBF7dnDl9Njk5yY3glKfcElh+SByeT65BUvQB2h5i8MhUvSMABwMobzhkMLtzijTvTu4fJPxHsrII8reG+rOlNZrumiU3HUN8oi3Pz0FAjrhWER2ZSLsjiMJSKQ=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- SA0PR04MB7354.namprd04.prod.outlook.com (2603:10b6:806:e9::12) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6907.33; Wed, 25 Oct 2023 11:36:46 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::83bc:d5e1:c29:88dd]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::83bc:d5e1:c29:88dd%5]) with mapi id 15.20.6933.019; Wed, 25 Oct 2023
- 11:36:46 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Chun-Hung Wu <chun-hung.wu@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
-        Yang Li <yang.lee@linux.alibaba.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-CC:     "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>,
-        "casper.li@mediatek.com" <casper.li@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
-        "alice.chao@mediatek.com" <alice.chao@mediatek.com>,
-        "naomi.chu@mediatek.com" <naomi.chu@mediatek.com>,
-        "cc.chou@mediatek.com" <cc.chou@mediatek.com>,
-        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
-        "jiajie.hao@mediatek.com" <jiajie.hao@mediatek.com>,
-        "tun-yu.yu@mediatek.com" <tun-yu.yu@mediatek.com>,
-        "lin.gui@mediatek.com" <lin.gui@mediatek.com>,
-        "eddie.huang@mediatek.com" <eddie.huang@mediatek.com>,
-        "qilin.tan@mediatek.com" <qilin.tan@mediatek.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "kernel-team@android.com" <kernel-team@android.com>
-Subject: RE: [PATCH v1 0/1] ufs: core: Add host quirk
- QUIRK_MCQ_EXPAND_QUEUE_SLOT
-Thread-Topic: [PATCH v1 0/1] ufs: core: Add host quirk
- QUIRK_MCQ_EXPAND_QUEUE_SLOT
-Thread-Index: AQHaByFSoPyKu9dDZUqQ/R3gM7mu+LBaYHlw
-Date:   Wed, 25 Oct 2023 11:36:46 +0000
-Message-ID: <DM6PR04MB65755C1E01075441D815DE68FCDEA@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20231025085656.10848-1-chun-hung.wu@mediatek.com>
-In-Reply-To: <20231025085656.10848-1-chun-hung.wu@mediatek.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|SA0PR04MB7354:EE_
-x-ms-office365-filtering-correlation-id: 430e0431-3348-40af-28dd-08dbd54eab9d
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: YPcF23KFnA4mTg/16RrduZ6GV+O5AG+EMuxKGcN9ocruKTNJW9DNA3tx8sn43d4Wm/H60zGX+OZXo+MicWcWvwkdoF6qAQlRhi2AjSBm1rFOdhhFJKov6VH/k+4eFrsw2HzzakZ/m/0sieBi6Ai1OLtxtZUJZN5QPV6O8vpl2woQFUeSkUiAeq2m8TJtWaUHBW99tjsrZq4U/67v8OMhsX9s+H5uTDXmDr1OMMYBtx1DgVtiluSRJpLhZEj1d0I8KsF0eqmrB7dNUKr2kbp80tyTZm6hntoZU+/HXM8mSQpmfDWKotS/fekcKOOjRSMNeTG2PXAJhaz8JliucAF/VnAoe5ncnTgVBZL9l0vVXc/+TZfe/Da+Cl8pnqBhOgiJLPQeHMBQ0nmk8Qe1WELmaI0N6IZtHvlfngYesLQAxplhEvHnr6d54AF/yoz3E65wtL0hRzygu6cy3ncDgE5ozHDHzsrZ/F1zKxkiFDpOc6gKKLAaKb2V1xszffQZR6nji4KVDlAR7S0uvfv5HJLa6NsMv9J5A8sL8Y+4gZ5lXiyWI6fN0PMwE94NvH3gXixW7ayW5yX9VFKskrW36xclRQhXvko7gE46sjfNGchnQqXuO1GhWxFT0T2i496eN8CEj+dRCY8PzVRpVATNhrK1ww==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(136003)(396003)(376002)(346002)(39860400002)(230922051799003)(64100799003)(451199024)(186009)(1800799009)(26005)(38070700009)(921008)(86362001)(55016003)(41300700001)(38100700002)(2906002)(4744005)(7406005)(52536014)(5660300002)(8676002)(7416002)(4326008)(8936002)(33656002)(7696005)(82960400001)(6506007)(478600001)(110136005)(76116006)(122000001)(66446008)(6636002)(66556008)(66946007)(64756008)(54906003)(66476007)(71200400001)(316002)(83380400001)(9686003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?VPjvlvAWUEQ9xqMWJzDw9ZVy8HbgJFbwMFtu39nsi1hfFb3gUnDnB982HxPH?=
- =?us-ascii?Q?LpBMoDBqoMBE+bbXiskJYmvF7BoB4Uw+NU/vdi+TUMKSoZgpzJbPfBvF8wDu?=
- =?us-ascii?Q?NTMvynN3Lvxt+1Ag2ZTJNioKCuXuxgB801XEeTlHdLzPYu3kY4CurCRF3wB9?=
- =?us-ascii?Q?f1e7tD9GQxO02FB4B5oxH/bxACRoIW0x/cWdFvUknrC5ZJkErc0LEefszBir?=
- =?us-ascii?Q?lqBR9ND3TeYA8xA/mbfF/8xlXFswg+GNN+C3HdEMhdrXfQIInewfQS7omiby?=
- =?us-ascii?Q?nkNEuQGDX2s5P81z6739GapVWKO5znIygvhuPVmn7ID44PP0tSN+nwKcDNxF?=
- =?us-ascii?Q?nIzRQtCqroYsUI1aEUpWkx7nxAhC9+f8ChJUgJw3An9qQ3aaWBpKncyFMXbJ?=
- =?us-ascii?Q?baZ11JZTVceL7fKBB850KvllvNio1GMLlfcUB6y9CZ2qgQapks5ZEvRIPYbi?=
- =?us-ascii?Q?7gBgHrHb25rE0r4W1dIjAk0ugIXxKHeuEctlJrGsD8bTXMh6BJG0lu7Pbf5q?=
- =?us-ascii?Q?rpnUrQG2E2MNglxFpW9DaPPuxK+TiDbOvG9LX3dnHXEJd0IUaqK4jDxD0BZ/?=
- =?us-ascii?Q?EbhCWdugtLq0RsNMV3vbRmAHFM9L7hBXxT3k5J8RAxRMw7vzhE7fbtdPBX2R?=
- =?us-ascii?Q?Ika4TVwMNnfkeW3vD1EnCBwQuuoAStlcU5kjL24XoQCAaYbsNQFufjUqg1Bo?=
- =?us-ascii?Q?IDVOnNJfun5W/4KCI8pddfRzn208aFHih7zUI6K2k2Q3ONulFzKsV8UmKav2?=
- =?us-ascii?Q?uy+6ABXGivGZ/eITJgonIsFYgCzgTJw/y05t1FCd1s2K1XVV2JFOC226iJhk?=
- =?us-ascii?Q?Jy9MB3AXhqZV51ie/IO0nx0VzIWm/D3B4NlhgE2zt0BYjA0Zbjq5cMTsl7BM?=
- =?us-ascii?Q?as2O46pCFmZbyMiqu82aPQhsaKUpeCVmw/a2S85BU/E+2RDWkaV4Hv3BKWiX?=
- =?us-ascii?Q?riCPbuabPq00EwhrPpjl7HwS/7LQ/KTF4EKGA6uam4BRACBaUdaPuHaUZDug?=
- =?us-ascii?Q?UMKlnHgZQlg5lijVeAjVGUv2gqFf+krosQpy0jQ+0+54k1c/0ZOSLtIwFMvS?=
- =?us-ascii?Q?T3PZ979KXmj4PUtuAd3I3qDF3OwnnuNqORo4SOK/mEqn9Z62yChjRyscBIwM?=
- =?us-ascii?Q?KeGLyM41qJyeK8c3//wPMXdyFlfO/v7EMy1Gim/EWxLNCHbAwuQVo+yh9UlJ?=
- =?us-ascii?Q?RnZz623TwXOfjs3VzuIMwDv0SHmpCJqEPW/JGF0rp7M2FvL5y5WlkINgI5oG?=
- =?us-ascii?Q?3YNAirL0Qf6XvWOzBqnHqd7W19YTer4G83uQutUvCOkmMUSIjeywWAKgvkbq?=
- =?us-ascii?Q?srElJdRwNjCvthfVxkWRsYDuVSMSRkOP8JiOw3JiT+8eM2Sj5oOgmXF8GUhr?=
- =?us-ascii?Q?nBwxOJgt4FDD2n6pF8C/ASoXsBgZ8/ewQzCNyfWeDB9iYUsEEw6eXr1cvoEE?=
- =?us-ascii?Q?k2Dexmxf8PdW1yTYZYe0lj6yGR/U05fRuRmtVHqZy6Pt41r88eO6CtHnkmmL?=
- =?us-ascii?Q?fd218Og73EXRJlcNfozZTN+OAPFRGcd/YW9UycGhyjEo8QbU18Ea1K8BPrAR?=
- =?us-ascii?Q?BSV5CkR2k172NWUv6NE/xbrHuKC03xdbknCBN7QT?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S233862AbjJYLq3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 07:46:29 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EEBA129
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 04:46:27 -0700 (PDT)
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39PBgqfo008716;
+        Wed, 25 Oct 2023 11:45:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=2yjDB4HyQPgP6AnDUNr7IlMLMN19vpWT8K66gjdxHuQ=;
+ b=r1WiLSAiJGMuj14r110o1aFCwM6/c8i6p7z1xeHbIiAR0ih+q+JQJ3a/DyDweXJjcu2O
+ gkAUVSbxVamO+25awhqq+KhWWIU3VDoTRk5z0JZA9BeyueaUJgoaFIBLR3DyqEylubcJ
+ jU/DXdAH4ELKwgxvtc4iPZnsPcpxzNaH+vRqJ79An3Th+sOXLfYn3NC25OsfItiSt5er
+ /CPdH7Eo3pQpZAaIzpvYBtA52RRXwZeyZw+BZ7lWfTOyKp0Rf5Oxqsvc9J94RUET6kE7
+ 2xpGsYm6ocY9dBQq3mRqUy7CbWDtiuH0oxaMbAN1dBsmDI8GGOBTwOtFQXbIaVfffZW/ +Q== 
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ty1yw0prb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 25 Oct 2023 11:45:25 +0000
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+        by ppma23.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 39PBaf5o004991;
+        Wed, 25 Oct 2023 11:40:25 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+        by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3tvtfkp178-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 25 Oct 2023 11:40:24 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+        by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 39PBeMhY22807130
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Oct 2023 11:40:23 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id D31D420043;
+        Wed, 25 Oct 2023 11:40:22 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id AE2B420040;
+        Wed, 25 Oct 2023 11:40:22 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.171.40.191])
+        by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Wed, 25 Oct 2023 11:40:22 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96.1)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1qvcFK-00APId-0Q;
+        Wed, 25 Oct 2023 13:40:22 +0200
+Date:   Wed, 25 Oct 2023 13:40:22 +0200
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: Re: [PATCH 01/10] scsi: Use Scsi_Host as argument for
+ eh_host_reset_handler
+Message-ID: <20231025114022.GD1917450@p1gen4-pw042f0m.boeblingen.de.ibm.com>
+References: <20231023092837.33786-1-hare@suse.de>
+ <20231023092837.33786-2-hare@suse.de>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20231023092837.33786-2-hare@suse.de>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: TFEJx0I8UEKBbTQ_MI6vrJssT5vEsRzx
+X-Proofpoint-GUID: TFEJx0I8UEKBbTQ_MI6vrJssT5vEsRzx
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?qVaW9hH70Kl+evxmk5cdRFu4h7k9XtDERdF8dpZf7wNIU5l+i5eDAZuqc+RY?=
- =?us-ascii?Q?A7DeHQQxKpBVmbxXNGDZQgaYMdnuGixScDCPXbqCrSJRjMD9pcp9ssHrxAPJ?=
- =?us-ascii?Q?KihnbfZqR6NlRaISC4gJkC0wPE18rGpnk0qW4ynAySAWGFUh2wwd9NXwKhS0?=
- =?us-ascii?Q?lKvyK0tDnrjpBnKELuTgOLIk40jbFCrauKz3PH8PXdMVi24RfV5AUeN2z7g3?=
- =?us-ascii?Q?pfeMWDWPCMm4SEFQheZWC76HSmKxrX7t+gmJX6O1A22fnhLXdH/SAXcXaO7C?=
- =?us-ascii?Q?FZ2qQwn3dvRGH0MTg9gjdo9lzg8Vmbr85f//Q8OJtJ/v3ls4swC6eAq1ZmK4?=
- =?us-ascii?Q?vFeNEvVDTUUctNRIv/5NZAo8pJZLYuaZSq6S8B+8F1EH/F8W1PK6bkk/NGsJ?=
- =?us-ascii?Q?rvSe9DNq6A4Jivc700iBxVu+kym4NpCr9ytLLDUCp1wbcSCsvl3pLlq6Qw9p?=
- =?us-ascii?Q?33UhqFHH9PabeTLgSqOnPqJDiWTgEdTicYpml10XiYV+HFOsuHHvIBYhmN8J?=
- =?us-ascii?Q?kNMHh7mM/7S1PmBGvJc/qq7zKeXWOI02+rYgm6m/4xvhR7ABgCDDNhecqTZd?=
- =?us-ascii?Q?jnZWtHMImab+GHWBwBTeZqtqhruGxKpecm/p5/TMUnr/kgaDoU49cxj9dk3z?=
- =?us-ascii?Q?rofsI8FbOM++KVLEv7nO1WnakziYlEuVUyjPicc4TzRLz8wZViQEZr8gTPSH?=
- =?us-ascii?Q?OrK+JuSl5Ldv7ByenaXCUoZOa89+355urXH/lLMtrQFjDvAnN3Eqx/q4nITe?=
- =?us-ascii?Q?KEGAdZtWlU5Xa9CdAmejyFQbASBGpWyoKKzhC104hosfoktN7+WRur6/jQmK?=
- =?us-ascii?Q?VUgmDzTETJj6W1aJelbN/s0KrPXoKtJBAAZQcbDi0sNVzcyTU+/6PF956cGG?=
- =?us-ascii?Q?VAH/PRxb4C/li79JfYPjPEw8kGwau/RG3zShkAApPC6S+EU7xKzaC0pIEvD6?=
- =?us-ascii?Q?/FtSJJD7bw1d0+S/dcroiTmc/DGT02FHf+vxX2fvB6AI7NszBSEafvYipEbr?=
- =?us-ascii?Q?ux7v7tEODceDb9IETffABYTwSRo6ShUChD2RgMb9bDc3yghQ52rvtaiI3m5C?=
- =?us-ascii?Q?ZWUFwgCVeYr7jdF0nR3atIg4ZUq6a5a/QEjntAKf9nx3TEyTLLj1goZb8+Fq?=
- =?us-ascii?Q?bawxfRsY61nTNCSo3VunhE17St/Oe9tK/Tb1LbdJCw94QxZOHflqdYmfQS2t?=
- =?us-ascii?Q?n+1g9eZhNj6LyDBBowIyd6QJCS9JKoow+eZ/WsgmtM4G3ZVJRvr85vCDKKs?=
- =?us-ascii?Q?=3D?=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 430e0431-3348-40af-28dd-08dbd54eab9d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Oct 2023 11:36:46.5994
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 6pVjVtZxQYbax5snEVV5QhqUBPLyJKNw4tdZRc1bUMbpvUvr4OdUe5aI/H75CzXAc7/FypbzunRCCLSnnL+/wQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR04MB7354
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-25_01,2023-10-25_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
+ phishscore=0 suspectscore=0 spamscore=0 mlxscore=0 adultscore=0
+ mlxlogscore=999 impostorscore=0 priorityscore=1501 lowpriorityscore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2310170001 definitions=main-2310250101
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Support quirk for host controller not able to distinguish queue full or e=
-mpty.
->=20
-> Alice Chao (1):
->   ufs: core: Add host quirk QUIRK_MCQ_EXPAND_QUEUE_SLOT
-As part of introducing the quirk, you need to set it on for someone.
+Hello Hannes,
 
-Thanks,
-Avri
+On Mon, Oct 23, 2023 at 11:28:28AM +0200, Hannes Reinecke wrote:
+> diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi/scsi_mid_low_api.rst
+> index 022198c51350..96983bb1cc45 100644
+> --- a/Documentation/scsi/scsi_mid_low_api.rst
+> +++ b/Documentation/scsi/scsi_mid_low_api.rst
+> @@ -777,9 +777,9 @@ Details::
+>  
+>      /**
+>      *      eh_host_reset_handler - reset host (host bus adapter)
+> -    *      @scp: SCSI host that contains this device should be reset
+> +    *      @shp: SCSI host that should be reset
+>      *
+> -    *      Returns SUCCESS if command aborted else FAILED
+> +    *      Returns SUCCESS if host has been reset else FAILED
 
->=20
->  drivers/ufs/core/ufs-mcq.c |  5 ++++-
->  include/ufs/ufshcd.h       | 11 +++++++++++
->  2 files changed, 15 insertions(+), 1 deletion(-)
->=20
-> --
-> 2.18.0
+This should also mention FAST_IO_FAIL now that we touch this documentation
+anyway. Same for the other callbacks that you change later in the patchset.
 
+>      *
+>      *      Locks: None held
+>      *
+> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+> index 9080a73b4ea6..4f9729cf4098 100644
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1955,34 +1955,27 @@ mptscsih_bus_reset(struct scsi_cmnd * SCpnt)
+>  
+>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+>  /**
+> - *	mptscsih_host_reset - Perform a SCSI host adapter RESET (new_eh variant)
+> - *	@SCpnt: Pointer to scsi_cmnd structure, IO which reset is due to
+> + *	mptscsih_host_reset - Perform a SCSI host adapter RESET
+> + *	@sh: Pointer to Scsi_Host structure, which is reset due to
+>   *
+>   *	(linux scsi_host_template.eh_host_reset_handler routine)
+>   *
+>   *	Returns SUCCESS or FAILED.
+>   */
+>  int
+> -mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+> +mptscsih_host_reset(struct Scsi_Host *sh)
+>  {
+> -	MPT_SCSI_HOST *  hd;
+> +	MPT_SCSI_HOST *  hd = shost_priv(sh);
+>  	int              status = SUCCESS;
+>  	MPT_ADAPTER	*ioc;
+>  	int		retval;
+>  
+> -	/*  If we can't locate the host to reset, then we failed. */
+> -	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
+> -		printk(KERN_ERR MYNAM ": host reset: "
+> -		    "Can't locate host! (sc=%p)\n", SCpnt);
+> -		return FAILED;
+> -	}
+> -
+>  	/* make sure we have no outstanding commands at this stage */
+>  	mptscsih_flush_running_cmds(hd);
+>  
+>  	ioc = hd->ioc;
+> -	printk(MYIOC_s_INFO_FMT "attempting host reset! (sc=%p)\n",
+> -	    ioc->name, SCpnt);
+> +	printk(MYIOC_s_INFO_FMT "attempting host reset!\n",
+> +	    ioc->name);
+
+Nitpick: you could remove the line-break here now.
+
+>  
+>  	/*  If our attempts to reset the host failed, then return a failed
+>  	 *  status.  The host will be taken off line by the SCSI mid-layer.
+> @@ -1993,8 +1986,8 @@ mptscsih_host_reset(struct scsi_cmnd *SCpnt)
+>  	else
+>  		status = SUCCESS;
+>  
+> -	printk(MYIOC_s_INFO_FMT "host reset: %s (sc=%p)\n",
+> -	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
+> +	printk(MYIOC_s_INFO_FMT "host reset: %s\n",
+> +	    ioc->name, (retval == 0 ? "SUCCESS" : "FAILED" ));
+                                                          ^
+Nitpick: IFF you remove the line-break above, maybe also remove the Plenk
+         here.
+
+>  
+>  	return status;
+>  }
+> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+> index f925f8664c2c..6dbffb1bc293 100644
+> --- a/drivers/scsi/3w-9xxx.c
+> +++ b/drivers/scsi/3w-9xxx.c
+> @@ -1717,18 +1717,15 @@ static int twa_scsi_biosparam(struct scsi_device *sdev, struct block_device *bde
+>  } /* End twa_scsi_biosparam() */
+>  
+>  /* This is the new scsi eh reset function */
+> -static int twa_scsi_eh_reset(struct scsi_cmnd *SCpnt)
+> +static int twa_scsi_eh_reset(struct Scsi_Host *shost)
+>  {
+> -	TW_Device_Extension *tw_dev = NULL;
+> +	TW_Device_Extension *tw_dev = shost_priv(shost);
+>  	int retval = FAILED;
+>  
+> -	tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
+> -
+>  	tw_dev->num_resets++;
+>  
+> -	sdev_printk(KERN_WARNING, SCpnt->device,
+> -		"WARNING: (0x%02X:0x%04X): Command (0x%x) timed out, resetting card.\n",
+> -		TW_DRIVER, 0x2c, SCpnt->cmnd[0]);
+> +	shost_printk(KERN_WARNING, shost,
+> +		     "WARNING: Command timed out, resetting card.");
+
+Why remove the end-of-line `\n`? IIRC `printk()` generally doesn't append one
+automatically.
+
+>  
+>  	/* Make sure we are not issuing an ioctl or resetting from ioctl */
+>  	mutex_lock(&tw_dev->ioctl_lock);
+> diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+> index 55989eaa2d9f..c18a07591505 100644
+> --- a/drivers/scsi/3w-sas.c
+> +++ b/drivers/scsi/3w-sas.c
+> @@ -1423,18 +1423,15 @@ static int twl_scsi_biosparam(struct scsi_device *sdev, struct block_device *bde
+>  } /* End twl_scsi_biosparam() */
+>  
+>  /* This is the new scsi eh reset function */
+> -static int twl_scsi_eh_reset(struct scsi_cmnd *SCpnt)
+> +static int twl_scsi_eh_reset(struct Scsi_Host *shost)
+>  {
+> -	TW_Device_Extension *tw_dev = NULL;
+> +	TW_Device_Extension *tw_dev = shost_priv(shost);
+>  	int retval = FAILED;
+>  
+> -	tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
+> -
+>  	tw_dev->num_resets++;
+>  
+> -	sdev_printk(KERN_WARNING, SCpnt->device,
+> -		"WARNING: (0x%02X:0x%04X): Command (0x%x) timed out, resetting card.\n",
+> -		TW_DRIVER, 0x2c, SCpnt->cmnd[0]);
+> +	shost_printk(KERN_WARNING, shost,
+> +		     "WARNING: Command timed out, resetting card.");
+
+...
+
+>  
+>  	/* Make sure we are not issuing an ioctl or resetting from ioctl */
+>  	mutex_lock(&tw_dev->ioctl_lock);
+> diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+> index f39c9ec2e781..190597e6b3d2 100644
+> --- a/drivers/scsi/3w-xxxx.c
+> +++ b/drivers/scsi/3w-xxxx.c
+> @@ -1366,25 +1366,22 @@ static int tw_scsi_biosparam(struct scsi_device *sdev, struct block_device *bdev
+>  } /* End tw_scsi_biosparam() */
+>  
+>  /* This is the new scsi eh reset function */
+> -static int tw_scsi_eh_reset(struct scsi_cmnd *SCpnt)
+> +static int tw_scsi_eh_reset(struct Scsi_Host *shost)
+>  {
+> -	TW_Device_Extension *tw_dev=NULL;
+> +	TW_Device_Extension *tw_dev = shost_priv(shost);
+>  	int retval = FAILED;
+>  
+> -	tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
+> -
+>  	tw_dev->num_resets++;
+>  
+> -	sdev_printk(KERN_WARNING, SCpnt->device,
+> -		"WARNING: Command (0x%x) timed out, resetting card.\n",
+> -		SCpnt->cmnd[0]);
+> +	shost_printk(KERN_WARNING, shost,
+> +		"WARNING: Command timed out, resetting card.");
+
+...
+
+>  
+>  	/* Make sure we are not issuing an ioctl or resetting from ioctl */
+>  	mutex_lock(&tw_dev->ioctl_lock);
+>  
+>  	/* Now reset the card and some of the device extension data */
+>  	if (tw_reset_device_extension(tw_dev)) {
+> -		printk(KERN_WARNING "3w-xxxx: scsi%d: Reset failed.\n", tw_dev->host->host_no);
+> +		shost_printk(KERN_WARNING, shost, "Reset failed.\n");
+>  		goto out;
+>  	}
+>  
+> diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+> index e6289c6af5ef..efa6f2527428 100644
+> --- a/drivers/scsi/arm/fas216.c
+> +++ b/drivers/scsi/arm/fas216.c
+> @@ -2649,16 +2649,16 @@ static void fas216_init_chip(FAS216_Info *info)
+>  }
+>  
+>  /**
+> - * fas216_eh_host_reset - Reset the host associated with this command
+> - * @SCpnt: command specifing host to reset
+> + * fas216_eh_host_reset - Reset the host
+
+Nitpick:
+
+I think kdoc style wants the function to have `()` appended (now that you
+change that line anyway).
+
+    * fas216_eh_host_reset() - Reset the host.
+
+> + * @shost: host to reset
+>   *
+> - * Reset the host associated with this command.
+> + * Reset the specified host.
+>   * Returns: FAILED if unable to reset.
+>   * Notes: io_request_lock is taken, and irqs are disabled
+>   */
+> -int fas216_eh_host_reset(struct scsi_cmnd *SCpnt)
+> +int fas216_eh_host_reset(struct Scsi_Host *shost)
+>  {
+> -	FAS216_Info *info = (FAS216_Info *)SCpnt->device->host->hostdata;
+> +	FAS216_Info *info = shost_priv(shost);
+>  
+>  	spin_lock_irq(info->host->host_lock);
+>  
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index 10cf5775a939..1faf4566b884 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -829,11 +829,11 @@ int ips_eh_abort(struct scsi_cmnd *SC)
+>  /* NOTE: this routine is called under the io_request_lock spinlock          */
+>  /*                                                                          */
+>  /****************************************************************************/
+> -static int __ips_eh_reset(struct scsi_cmnd *SC)
+> +static int __ips_eh_reset(struct Scsi_Host *shost)
+>  {
+>  	int ret;
+>  	int i;
+> -	ips_ha_t *ha;
+> +	ips_ha_t *ha = shost_priv(shost);
+>  	ips_scb_t *scb;
+>  
+>  	METHOD_TRACE("ips_eh_reset", 1);
+> @@ -842,20 +842,6 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+>  	return (FAILED);
+>  #else
+>  
+> -	if (!SC) {
+> -		DEBUG(1, "Reset called with NULL scsi command");
+> -
+> -		return (FAILED);
+> -	}
+> -
+> -	ha = (ips_ha_t *) SC->device->host->hostdata;
+> -
+> -	if (!ha) {
+
+I wonder whether we really know `ha` is always set here? At least from the
+changeset it doesn't appear obvious to me. We get `ha` via the provided
+`shost` and `shost_priv()`, but that doesn't necessarily mean the pointer is
+not NULL.
+
+> -		DEBUG(1, "Reset called with NULL ha struct");
+> -
+> -		return (FAILED);
+> -	}
+> -
+>  	if (!ha->active)
+>  		return (FAILED);
+>  
+> diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
+> index 013fbfb911b9..43acad67d95f 100644
+> --- a/drivers/scsi/megaraid.h
+> +++ b/drivers/scsi/megaraid.h
+> @@ -2502,8 +2502,8 @@ megaraid_abort_handler(struct scsi_cmnd *scp)
+>  }
+>  
+>  /**
+> - * megaraid_reset_handler - device reset handler for mailbox based driver
+
+...
+
+> - * @scp		: reference command
+> + * megaraid_reset_handler - host reset handler for mailbox based driver
+> + * @shost	: host to reset
+>   *
+>   * Reset handler for the mailbox based controller. First try to find out if
+>   * the FW is still live, in which case the outstanding commands counter mut go
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 3d4f13da1ae8..cdd56144c841 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -2890,21 +2890,18 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+>  
+>  /**
+>   * megasas_generic_reset -	Generic reset routine
+> - * @scmd:			Mid-layer SCSI command
+> + * @shost:			Mid-layer SCSI host
+>   *
+> - * This routine implements a generic reset handler for device, bus and host
+> - * reset requests. Device, bus and host specific reset handlers can use this
+> + * This routine implements a generic reset handler for host
+> + * reset requests. Host specific reset handlers can use this
+>   * function after they do their specific tasks.
+
+Nitpick: this comment really does sound sorta strange now, especially since
+         this function is only called from one place.
+
+>   */
+> -static int megasas_generic_reset(struct scsi_cmnd *scmd)
+> +static int megasas_generic_reset(struct Scsi_Host *shost)
+>  {
+>  	int ret_val;
+> -	struct megasas_instance *instance;
+> -
+> -	instance = (struct megasas_instance *)scmd->device->host->hostdata;
+> +	struct megasas_instance *instance = shost_priv(shost);
+>  
+> -	scmd_printk(KERN_NOTICE, scmd, "megasas: RESET cmd=%x retries=%x\n",
+> -		 scmd->cmnd[0], scmd->retries);
+> +	shost_printk(KERN_NOTICE, shost, "megasas: RESET\n");
+>  
+>  	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
+>  		dev_err(&instance->pdev->dev, "cannot recover from previous reset failures\n");
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> index 040031eb0c12..d52412870b54 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -4028,9 +4028,9 @@ static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
+>  
+>  	retval = SUCCESS;
+>  out:
+> -	sdev_printk(KERN_INFO, scmd->device,
+> -	    "Host reset is %s for scmd(%p)\n",
+> -	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
+> +	shost_printk(KERN_INFO, shost,
+> +	    "Host reset is %s\n",
+> +	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"));
+
+Nitpick: superfluous parentheses.
+
+>  
+>  	return retval;
+>  }
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 7e103d711825..94a4bd5d2841 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -1731,8 +1725,8 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+>  
+>  eh_host_reset_lock:
+>  	ql_log(ql_log_info, vha, 0x8017,
+> -	    "ADAPTER RESET %s nexus=%ld:%d:%llu.\n",
+> -	    (ret == FAILED) ? "FAILED" : "SUCCEEDED", vha->host_no, id, lun);
+> +	    "ADAPTER RESET %s host=%ld.\n",
+> +	    (ret == FAILED) ? "FAILED" : "SUCCEEDED", vha->host_no);
+
+...
+
+>  
+>  	return ret;
+>  }
+> diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+> index c38f648da3d7..36298dbadb14 100644
+> --- a/drivers/scsi/snic/snic_scsi.c
+> +++ b/drivers/scsi/snic/snic_scsi.c
+> @@ -2306,34 +2313,6 @@ snic_reset(struct Scsi_Host *shost)
+>  	ret = SUCCESS;
+>  
+>  reset_end:
+> -	return ret;
+> -} /* end of snic_reset */
+> -
+> -/*
+> - * SCSI Error handling calls driver's eh_host_reset if all prior
+> - * error handling levels return FAILED.
+> - *
+> - * Host Reset is the highest level of error recovery. If this fails, then
+> - * host is offlined by SCSI.
+> - */
+> -int
+> -snic_host_reset(struct scsi_cmnd *sc)
+> -{
+> -	struct Scsi_Host *shost = sc->device->host;
+> -	u32 start_time  = jiffies;
+> -	int ret;
+> -
+> -	SNIC_SCSI_DBG(shost,
+> -		      "host reset:sc %p sc_cmd 0x%x req %p tag %d flags 0x%llx\n",
+> -		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
+> -		      snic_cmd_tag(sc), CMD_FLAGS(sc));
+> -
+> -	ret = snic_reset(shost);
+> -
+> -	SNIC_TRC(shost->host_no, snic_cmd_tag(sc), (ulong) sc,
+> -		 jiffies_to_msecs(jiffies - start_time),
+> -		 0, SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
+
+Is it ok to loose those twp debug/logging statements? They seem to have some
+information about timing.
+
+> -
+>  	return ret;
+>  } /* end of snic_host_reset */
+>  
+
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
