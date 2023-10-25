@@ -2,107 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD17C0032E
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 06:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFDCC25B6B
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 07:01:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231637AbjJYGKt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Oct 2023 02:10:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38966 "EHLO
+        id S232082AbjJYHBZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Oct 2023 03:01:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229688AbjJYGKs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 02:10:48 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8E58A6;
-        Tue, 24 Oct 2023 23:10:45 -0700 (PDT)
-Received: from kwepemm000012.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4SFdjm5TFjzVlKJ;
-        Wed, 25 Oct 2023 14:06:52 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm000012.china.huawei.com (7.193.23.142) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Wed, 25 Oct 2023 14:10:42 +0800
-Message-ID: <afe1eca8-cdf8-612b-867e-4fef50ad423f@huawei.com>
-Date:   Wed, 25 Oct 2023 14:10:41 +0800
+        with ESMTP id S229498AbjJYHBX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 03:01:23 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06039E5;
+        Wed, 25 Oct 2023 00:01:19 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA710C433C7;
+        Wed, 25 Oct 2023 07:01:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698217279;
+        bh=OODyHkkGXKWL1r/C0vYVi24gXpxLo7+GLWxa7CSn0Vg=;
+        h=From:To:Subject:Date:From;
+        b=sfFFSYodLtDpYQT6FnsrZTMybqz4YAfrRfQeXF1Kac5P4YhrYZlX2SDWUEGlO6aVs
+         8ZQbbEis+DbGnZuJEv6UASaz++xtdxGY68DD6Ut60BTc0af6vwnCHEY7vfphk/uU9A
+         nLIH5ixPDhdnfkL1FkTU48IsmkX3vnmhkV/orjzj8JPR7bgvDJXvT8oWqYArt1Ho85
+         OgwhlnTzh3zoZnmoLHg5m2pdDWMdafeZ2AnvscRKeLrftPtbrc8rdbokG/3wCJUjj7
+         dsTnYwKjxM2tu3zgB1RSBoK2jn/7UA5HynDyRRwJRavrDOWLJbKRY3IhPBMuxzWKo5
+         P9aeYvx1jyDiA==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH] scsi: sd: Introduce manage_shutdown device flag
+Date:   Wed, 25 Oct 2023 16:01:17 +0900
+Message-ID: <20231025070117.464903-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 1/2] scsi: scsi_debug: fix some bugs in
- sdebug_error_write()
-To:     Dan Carpenter <dan.carpenter@linaro.org>,
-        Wenchao Hao <haowenchao22@gmail.com>
-CC:     Eugeniy Paltsev <Eugeniy.Paltsev@synopsys.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        <dmaengine@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-References: <96d50cf7-afec-46af-9d98-08099f8dc76e@moroto.mountain>
- <CAOptpSMTgGwyFkn8o6qAEnUKXh+_mOr8dQKAZUWfM_4QEnxzxw@mail.gmail.com>
- <44b0eca3-57c1-4edd-ab35-c389dc976273@kadam.mountain>
- <cbe14e3a-11c7-4da5-b125-5801244e27f2@gmail.com>
- <9767953c-480d-4ad9-a553-a45ae80c572b@kadam.mountain>
-Content-Language: en-US
-From:   Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <9767953c-480d-4ad9-a553-a45ae80c572b@kadam.mountain>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemm000012.china.huawei.com (7.193.23.142)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2023/10/25 12:11, Dan Carpenter wrote:
-> On Wed, Oct 25, 2023 at 01:09:34AM +0800, Wenchao Hao wrote:
->> Yes, there is bug here if write with .c code. Because your change to use
->> strndup_user() would make write with dirty data appended to "ubuf" failed,
-> 
-> I don't understand this sentence.  What is "dirty" data in this context?
-> 
+Commit aa3998dbeb3a ("ata: libata-scsi: Disable scsi device
+manage_system_start_stop") change setting the manage_system_start_stop
+flag to false for libata managed disks to enable libata internal
+management of disk suspend/resume. However, a side effect of this change
+is that on system shutdown, disks are no longer being stopped (set to
+standby mode with the heads unloaded). While this is not a critical
+issue, this unclean shutdown is not recommended and shows up with
+increased smart counters (e.g. the unexpected power loss counter
+"Unexpect_Power_Loss_Ct").
 
-This is what I posted in previous reply:
+Instead of defining a shutdown driver method for all ATA adapter
+drivers (not all of them define that operation), this patch resolves
+this issue by further refining the sd driver start/stop control of disks
+using the new flag manage_shutdown. If set to true, the function
+sd_shutdown() will issue a START STOP UNIT command with the start
+argument set to 0 when a disk is shutdown on system power off
+(system_state == SYSTEM_POWER_OFF).
 
-We might have following pairs of parameters for sdebug_error_write:
+Fixes: aa3998dbeb3a ("ata: libata-scsi: Disable scsi device manage_system_start_stop")
+Cc: stable@vger.kernel.org
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218038
+Link: https://lore.kernel.org/all/cd397c88-bf53-4768-9ab8-9d107df9e613@gmail.com/
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-scsi.c  | 5 +++--
+ drivers/firewire/sbp2.c    | 1 +
+ drivers/scsi/sd.c          | 6 ++++--
+ include/scsi/scsi_device.h | 1 +
+ 4 files changed, 9 insertions(+), 4 deletions(-)
 
-ubuf: "0 -10 0x12\n0 0 0x2 0x6 0x4 0x2"
-count=11
-
-the valid data in ubuf is "0 -10 -x12\n", others are dirty data.
-strndup_user() would return EINVAL for this pair which caused
-a correct write to fail.
-
->> can we fix it with following change:
->>
->> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
->> index 67922e2c4c19..0e8ct724463f 100644
->> --- a/drivers/scsi/scsi_debug.c
->> +++ b/drivers/scsi/scsi_debug.c
->> @@ -1019,7 +1019,7 @@ static seize_t sdebug_error_write(struct file *file, const char __user *ubuf,
->>          struct sdebug_err_inject *inject;
->>          struct scsi_device *sdev = (struct scsi_device *)file->f_inode->i_private;
->>   
->> -       buf = kmalloc(count, GFP_KERNEL);
->> +       buf = kzalloc(count + 1, GFP_KERNEL);
-> 
-> That would also fix the bug.
-> 
->>          if (!buf)
->>                  return -ENOMEM;
->>
->> Or is there other kernel lib function which can address this issue?
-> 
-> I don't understand the issue.
-> 
-
-I mean the bug you mentioned.
-
-Thanks.
-
-> regards,
-> dan carpenter
-> 
-> 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a371b497035e..3a957c4da409 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1053,10 +1053,11 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+ 
+ 		/*
+ 		 * Ask the sd driver to issue START STOP UNIT on runtime suspend
+-		 * and resume only. For system level suspend/resume, devices
+-		 * power state is handled directly by libata EH.
++		 * and resume and shutdown only. For system level suspend/resume,
++		 * devices power state is handled directly by libata EH.
+ 		 */
+ 		sdev->manage_runtime_start_stop = true;
++		sdev->manage_shutdown = true;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
+index 749868b9e80d..7edf2c95282f 100644
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -1521,6 +1521,7 @@ static int sbp2_scsi_slave_configure(struct scsi_device *sdev)
+ 	if (sbp2_param_exclusive_login) {
+ 		sdev->manage_system_start_stop = true;
+ 		sdev->manage_runtime_start_stop = true;
++		sdev->manage_shutdown = true;
+ 	}
+ 
+ 	if (sdev->type == TYPE_ROM)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 83b6a3f3863b..52fa266d976f 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3819,8 +3819,10 @@ static void sd_shutdown(struct device *dev)
+ 		sd_sync_cache(sdkp, NULL);
+ 	}
+ 
+-	if (system_state != SYSTEM_RESTART &&
+-	    sdkp->device->manage_system_start_stop) {
++	if ((system_state != SYSTEM_RESTART &&
++	     sdkp->device->manage_system_start_stop) ||
++	    (system_state == SYSTEM_POWER_OFF &&
++	     sdkp->device->manage_shutdown)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index fd41fdac0a8e..7edefb73bf69 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -164,6 +164,7 @@ struct scsi_device {
+ 
+ 	bool manage_system_start_stop; /* Let HLD (sd) manage system start/stop */
+ 	bool manage_runtime_start_stop; /* Let HLD (sd) manage runtime start/stop */
++	bool manage_shutdown;	/* Let HLD (sd) manage shutdown */
+ 
+ 	unsigned removable:1;
+ 	unsigned changed:1;	/* Data invalid due to media change */
+-- 
+2.41.0
 
