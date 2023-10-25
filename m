@@ -2,65 +2,62 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF30C25B6B
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 08:20:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6EB6C25B6E
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 08:23:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234077AbjJYIUc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Oct 2023 04:20:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44234 "EHLO
+        id S233954AbjJYIXc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Oct 2023 04:23:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233821AbjJYIU1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 04:20:27 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01577184
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 01:20:23 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id ffacd0b85a97d-32ded3eb835so2927762f8f.0
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 01:20:22 -0700 (PDT)
+        with ESMTP id S233939AbjJYIXa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 04:23:30 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B57912A
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 01:23:28 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id 4fb4d7f45d1cf-53e70b0a218so8166323a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 01:23:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1698222021; x=1698826821; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=NMqBSE89bG7+p2J3O4yzh6qx9zhFrZcOPoHe2cYMZhc=;
-        b=qXxda0K3EqY22wqYGJpu6zDSqpf1XjzzQ9M13h51dOx9ZUJbsiXW0hpFtRAsQM6vpV
-         /ut8hGtXBzfX3IG4xbNIKuoXcMWtqxPlr3V8c/OvDg4LOKEKvsmQYg14jZcMFXqmDWBI
-         0PmaPcq/i3GCn5lstFFBvfeLV9v61AhJmBWgkXVNLKSs5raaXw37As3wovvZSfYwTT76
-         e7yyDlCpNpUPewtAtFbcL3+ld9tF4dMDBu9uCR9aVjLDkAyr0PGiZMQ2jl1x8MmdaaMd
-         qzW4ijB9ng8c9zyEgp0vg4VRxKZqrcJnyY+lxstSqratVdr+RYL0r/X4jjW95BdqUnVO
-         MNvA==
+        d=linaro.org; s=google; t=1698222207; x=1698827007; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=IKUaUnFCHJKZ2+fLe9tgZCUK+CShx0dwhys1hQCqazs=;
+        b=agcAT8WmlcG9dzHYOfB6U7h6AbuMSGJ1Jg/FZQmPXzybTkfqK66D3JgHf6FeIkF0iP
+         gvmMij/M+qVv5bQdJPlUCSP5MU1CoAN1HyrXsohuSEq2ltnAHq+9nu+wRygUs0GscYL/
+         SHgt6MEwxwiHm/TvFT9YQK9E0K9RWFdg8DwjtxMK4hlv/Zte9tQtRzAU0wq0X1MI6NDM
+         mzCk9h9Nwp/edSOyaG/9RjPMUAZdqFDEhc//4TLQmGNilRbvTwfhQVqLCL+9Y876qF5t
+         lX9fLL4BH/rjsKfTS1IV75twsw8q1lzWTFOhFQIAqrun7pRYPMwD6AQI6zg8b8tJEnpU
+         FvjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698222021; x=1698826821;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=NMqBSE89bG7+p2J3O4yzh6qx9zhFrZcOPoHe2cYMZhc=;
-        b=g2s5HEbtbKckTDElxU6vDXs2BCMbEfrYuPx4FsDbXc/h+h04SUhPx5RNC1RYTwHuzQ
-         3Om+wn7zOUKQW3caGU8hJJirTPwD15DwONNFI8pbU0f5N8DoYDTpzhxaMnL96lXVsgPV
-         2o7P2ZvMZ05keComJ+K31SGWzvrbE9cEviiEO/0lRHwctJLEE16ffPY9SD6GqhT/KfUu
-         cYmpF8H3UqX+ihmta33K/DhRy+Z+t6/fKt7Uuya8r8DaexC6o44sc+C51WiZpfFrQa02
-         pbNSmf0EkMMWqfxO2T8jao3IGTafaBm4H8y4wikzo1K3Z/af68N7sLZdhAn0UEzUvGhg
-         jq2Q==
-X-Gm-Message-State: AOJu0Yxy2Y5rC2IOw9yvJNiy8xPdiiUEDQAGBcKWy4hxvNVMe0A+tJn8
-        281xxP2SaFjS5p+i8jNTwIwjgg==
-X-Google-Smtp-Source: AGHT+IH/5NSpgBbdHJEqyZWParnMDYlqB8D76j6xi5DHlI/S7MAQ3sm+65z/7jX3R1j8V0rJTWviIA==
-X-Received: by 2002:a5d:5592:0:b0:32d:b06c:80b2 with SMTP id i18-20020a5d5592000000b0032db06c80b2mr9493121wrv.0.1698222021010;
-        Wed, 25 Oct 2023 01:20:21 -0700 (PDT)
-Received: from arrakeen.starnux.net ([2a01:e0a:982:cbb0:8261:5fff:fe11:bdda])
-        by smtp.gmail.com with ESMTPSA id g7-20020a5d6987000000b003232380ffd7sm11556557wru.102.2023.10.25.01.20.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Oct 2023 01:20:20 -0700 (PDT)
-From:   Neil Armstrong <neil.armstrong@linaro.org>
-Date:   Wed, 25 Oct 2023 10:20:18 +0200
-Subject: [PATCH v2] dt-bindings: ufs: qcom-ufs: document the SM8650 UFS
- Controller
+        d=1e100.net; s=20230601; t=1698222207; x=1698827007;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=IKUaUnFCHJKZ2+fLe9tgZCUK+CShx0dwhys1hQCqazs=;
+        b=N/pHNjl6dwh2pzloR/URFeOeCVpc2cz+pjQJRJZ7Gg1wKXTMcOsjmGkADQw7tLzu4S
+         vbPMNUQTbO5ZpBac8tvL7ZT+eZJqSBwdlxKUqahBSPYFqS5CkYRCRf3QHTfJnPfJkc+B
+         syA0k5iWuEAIltj2+jfV4bOA29flJATvo5NXo6xRpRjOTuc/VfYAtnPABr1cvYRcjV9p
+         knMW6KFANCoXUV91xepDlIpKzs3l/lS8EuO8aN6RXHOvUvnsMaHdmZQcANFqPz9mPLkP
+         ymhH0YY/44M90dbgcvxDfTaIvuFM1s1Tv+Y0EPdLlf1UuIKB0zAdp1hgKdlkDqZT1l7R
+         mxzA==
+X-Gm-Message-State: AOJu0Yznh7bia6rMW22bDK3rK0Bw1EYoN7ZLd+bBjrAegB0/JseUnhUT
+        adKkQbdZkI4S07BGs6fu41QSBw==
+X-Google-Smtp-Source: AGHT+IEQJDimnmyNVzb1TM9v5Ti4EbqZzjo8KvxbWqX7rOJe7xHOHkdjRTwJbDbtFnkBgc5gBvFsBQ==
+X-Received: by 2002:a17:907:3183:b0:9bd:7f40:caa5 with SMTP id xe3-20020a170907318300b009bd7f40caa5mr9324301ejb.77.1698222206769;
+        Wed, 25 Oct 2023 01:23:26 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.218.126])
+        by smtp.gmail.com with ESMTPSA id ga23-20020a170906b85700b009b65b2be80bsm9401920ejb.76.2023.10.25.01.23.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Oct 2023 01:23:26 -0700 (PDT)
+Message-ID: <040ea92a-bdeb-424e-b93a-9148b76d786c@linaro.org>
+Date:   Wed, 25 Oct 2023 10:23:24 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20231025-topic-sm8650-upstream-bindings-ufs-v2-1-040ad1c44b46@linaro.org>
-X-B4-Tracking: v=1; b=H4sIAMHPOGUC/42NTQ6CMBBGr2K6dkx/MmhceQ/DotICk0hLZoBoC
- He3Eg/g4lu8b/HeqiQyRVHXw6o4LiSUUwF7PKim96mLQKGwsto6o00FUx6pARkuFWqYR5k4+gE
- elAKlTmBuBYJ2TYs24DmgKqKRY0uvPXKvC/ckU+b33lzM9/3pLf6jXwwY8A4xllXozO1JyXM+Z
- e5UvW3bB3PNuG7VAAAA
-To:     Andy Gross <agross@kernel.org>,
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] dt-bindings: ufs: qcom-ufs: document the SM8650 UFS
+ Controller
+Content-Language: en-US
+To:     Neil Armstrong <neil.armstrong@linaro.org>,
+        Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Manivannan Sadhasivam <mani@kernel.org>,
@@ -71,66 +68,70 @@ To:     Andy Gross <agross@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Conor Dooley <conor+dt@kernel.org>
 Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>
-X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1424;
- i=neil.armstrong@linaro.org; h=from:subject:message-id;
- bh=bfiy79+1AeTC3eD2gpu/e3v7nDKR1WuR2ncD0BX0P+o=;
- b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBlOM/DCZpXl4w2Il7wAsAz/R6xDcyRAo+cdAitixPB
- 6vcmSYCJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCZTjPwwAKCRB33NvayMhJ0RXgD/
- 9cFQZrZRPh/FK7pb6g5pCNy8HUtPKGbJ3dZ3ZgJQXtaqbQm1yIcoTB6c9bfr3odNC1hqu3HNmggNDX
- 3h6quEF3md13Vsd6WfBMzPhuViWrm5DkaHNEZvcFWb4HKvss/hokr5s1ojj4aw2V6tSA3BbfIn4dDk
- Kc0RJEIX+jxLG3Wf6alSanBlwHHGCSNYWOFpMfKtQ3xh5WJYgZZgGH2J3Gza1/VVi2JZvONbWqsPgu
- vYW7WDEFL+30Maq7oy3iJriY/vKqP7iz44vHJNFEIP+23IrRlmpInjiP6CvEcQ/2qYKdnNl5eyp3IB
- 3XRwT3JvNUpI4vy7TYqRzS4eBt1tj13exnMVgOA10ORxz7kEFmyz5ewxVKHzrYDOBjh6LzTJpwBXux
- nFioL0cJl2/S1E7Ta4JDg2gcYMS18TWDLym4bE9MOguRNr0+1lPdzJ1/cdPZe679cBLsdPMM751HX2
- 0IG14UyDO5Hgh+au7sOA/Xh9JnxB9kmeAEffWa6oTG4z8bQveiYXsUvfyCyb4993ORQ37anPhevxfJ
- LluSS1tJ99/cLyY2QujFAVPhL49c7ldYZhKXe1UcZ4EXdUKcgo5gNkCEt1wrnCurtu/BSwS7ZUwrL4
- 0NOKv6ah7UEvwDCd2N1qZXT6mf4rRDm9zz8rkF6g9XBkdXsz74nzipp82H3g==
-X-Developer-Key: i=neil.armstrong@linaro.org; a=openpgp;
- fpr=89EC3D058446217450F22848169AB7B1A4CFF8AE
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20231025-topic-sm8650-upstream-bindings-ufs-v2-1-040ad1c44b46@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <20231025-topic-sm8650-upstream-bindings-ufs-v2-1-040ad1c44b46@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Document the UFS Controller on the SM8650 Platform.
+On 25/10/2023 10:20, Neil Armstrong wrote:
+> Document the UFS Controller on the SM8650 Platform.
+> 
+> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+> ---
 
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
----
-For convenience, a regularly refreshed linux-next based git tree containing
-all the SM8650 related work is available at:
-https://git.codelinaro.org/neil.armstrong/linux/-/tree/topic/sm85650/upstream/integ
----
-Changes in v2:
-- Fixed subject
-- Collected review tags
-- Link to v1: https://lore.kernel.org/r/20231025-topic-sm8650-upstream-bindings-ufs-v1-1-a355e3556531@linaro.org
----
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index 462ead5a1cec..0d136c047b8b 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -36,6 +36,7 @@ properties:
-           - qcom,sm8350-ufshc
-           - qcom,sm8450-ufshc
-           - qcom,sm8550-ufshc
-+          - qcom,sm8650-ufshc
-       - const: qcom,ufshc
-       - const: jedec,ufs-2.0
- 
-
----
-base-commit: fe1998aa935b44ef873193c0772c43bce74f17dc
-change-id: 20231016-topic-sm8650-upstream-bindings-ufs-d03cf52d57d5
+You need entry in allOf:if:then.
 
 Best regards,
--- 
-Neil Armstrong <neil.armstrong@linaro.org>
+Krzysztof
 
