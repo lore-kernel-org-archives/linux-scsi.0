@@ -2,136 +2,96 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A82C07545
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 15:49:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A8FC0032E
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 18:11:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343986AbjJYPt3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Oct 2023 11:49:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51178 "EHLO
+        id S233980AbjJYSLG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Oct 2023 14:11:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234524AbjJYPt2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 11:49:28 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B374E12F
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 08:49:26 -0700 (PDT)
-Received: from pps.filterd (m0353728.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39PFh456012666;
-        Wed, 25 Oct 2023 15:49:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=YB+rf1jQOlW59tGx2poNHV7VQlQ4dAgxaD1vXEo7FiA=;
- b=KCOTEVeQc4EZKMrMWOtQe+c+AWHgosKHq6Hcmc6yNlkXeVoFRWV9vgNQefg4Mp7Z+ICp
- HKHbraaevCdFSm0b8alOLxi+hf42AufRaI/gSO/QHERID5Qo0Vs8Ejfov4vPlVDIy/hM
- t+JRed756vR7uv9f89KnY/MvJOdwEqwmZ2RWPgvwvR0Y9hKthROlfc2FsnqIsKxkZ3cJ
- h83g+a69IBhABhLfLX7egoz2PASwpNlhzeHvOeMzO+vKpRAJ6uZt2TK8CEqzkaq5TDQ7
- IVKkWKvuOdrIP4uQ2jwFx0hU0UXXxTHZphPcb8Ym/e2x398vJmM0bdShk0VRpUswPRm6 4w== 
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ty5p48wup-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 25 Oct 2023 15:49:16 +0000
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-        by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 39PFIBjx023782;
-        Wed, 25 Oct 2023 15:49:14 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-        by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3tvryt7vvu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 25 Oct 2023 15:49:14 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 39PFnDoA10814048
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Oct 2023 15:49:13 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id EA3032004B;
-        Wed, 25 Oct 2023 15:49:12 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D449C20043;
-        Wed, 25 Oct 2023 15:49:12 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.171.40.191])
-        by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Wed, 25 Oct 2023 15:49:12 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96.1)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1qvg88-00AXNk-1P;
-        Wed, 25 Oct 2023 17:49:12 +0200
-Date:   Wed, 25 Oct 2023 17:49:12 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Hannes Reinecke <hare@suse.de>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: Re: [PATCH 03/10] scsi: Use scsi_target as argument for
- eh_target_reset_handler()
-Message-ID: <20231025154912.GH1917450@p1gen4-pw042f0m.boeblingen.de.ibm.com>
-References: <20231023092837.33786-1-hare@suse.de>
- <20231023092837.33786-4-hare@suse.de>
- <20231025151111.GF1917450@p1gen4-pw042f0m.boeblingen.de.ibm.com>
- <c8eda29e-05ad-4292-b694-8349fb8cb995@suse.de>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <c8eda29e-05ad-4292-b694-8349fb8cb995@suse.de>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: gaUQcUe2FYUpyLVoSuQn_FrZTXA2c8tR
-X-Proofpoint-ORIG-GUID: gaUQcUe2FYUpyLVoSuQn_FrZTXA2c8tR
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S229826AbjJYSLF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 14:11:05 -0400
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37610128;
+        Wed, 25 Oct 2023 11:11:03 -0700 (PDT)
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1ca215cc713so40362875ad.3;
+        Wed, 25 Oct 2023 11:11:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698257462; x=1698862262;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2iMDVchob+o0oV/0w+uz7B6gj0y4M0k4PlyjKILH9gA=;
+        b=kakwnop5YKW5A/1QduLU5CmgOPA9hmCBGJYyrgVHkixLlQVxiDigm/oWJnnp1E8bTi
+         UCbY5e/OHx2DEzr9xsq+9ZTGiDj/PeFHhO797dz2KaWGST7HvrUd51u/K4XQRt4DyMPW
+         WxJbAVVHtfp37o3JI0VO2yGc2k3wfdl/ySh31WL5t6+v0Hmm2oiOi2ys/DQNqZnxllmf
+         k7RAdQtHIFIkbvtUxRn/PDKSPB3MjkybPIWOyR7rgm8K5oselq3Yz+9hDqUXDXwiAG1L
+         lRqXrnkpSQUJlYWEM0gS/QB5vZyc0/fPZPcmaLuZw64plUR9HIwZVebJFk6j2NGfGQZi
+         +8Qw==
+X-Gm-Message-State: AOJu0Yxt0kGoSyZjzkVbBwjOk1TiP1zla2saBstxfgnhtPy3c7A+KHOv
+        43JrJTcXrcm6UhKU9A49C8o=
+X-Google-Smtp-Source: AGHT+IGtLL78u4rxM6Ezz9EpLFh9pOezvZDqe0pqsvnGikICyGsJSHiluvDfQH+FuAEE/xdAf7UhSA==
+X-Received: by 2002:a17:902:c404:b0:1c7:8345:f377 with SMTP id k4-20020a170902c40400b001c78345f377mr17227158plk.29.1698257462403;
+        Wed, 25 Oct 2023 11:11:02 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:4dcf:e974:e319:6ce8? ([2620:15c:211:201:4dcf:e974:e319:6ce8])
+        by smtp.gmail.com with ESMTPSA id jw15-20020a170903278f00b001bb99e188fcsm9560717plb.194.2023.10.25.11.11.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Oct 2023 11:11:02 -0700 (PDT)
+Message-ID: <3056c6d8-1e54-4954-9141-e0760a0d935a@acm.org>
+Date:   Wed, 25 Oct 2023 11:10:59 -0700
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-25_05,2023-10-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
- clxscore=1011 malwarescore=0 bulkscore=0 lowpriorityscore=0 adultscore=0
- impostorscore=0 phishscore=0 mlxscore=0 priorityscore=1501 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2310170001
- definitions=main-2310250137
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 1/1] ufs: core: Add host quirk
+ QUIRK_MCQ_EXPAND_QUEUE_SLOT
+Content-Language: en-US
+To:     Chun-Hung Wu <chun-hung.wu@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        Can Guo <quic_cang@quicinc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
+        Yang Li <yang.lee@linux.alibaba.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Cc:     wsd_upstream@mediatek.com, casper.li@mediatek.com,
+        peter.wang@mediatek.com, powen.kao@mediatek.com,
+        alice.chao@mediatek.com, naomi.chu@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, tun-yu.yu@mediatek.com,
+        lin.gui@mediatek.com, eddie.huang@mediatek.com,
+        qilin.tan@mediatek.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, kernel-team@android.com
+References: <20231025085656.10848-1-chun-hung.wu@mediatek.com>
+ <20231025085656.10848-2-chun-hung.wu@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231025085656.10848-2-chun-hung.wu@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 25, 2023 at 05:35:53PM +0200, Hannes Reinecke wrote:
-> On 10/25/23 17:11, Benjamin Block wrote:
-> > On Mon, Oct 23, 2023 at 11:28:30AM +0200, Hannes Reinecke wrote:
-> >> -	unsigned tgt_id = cmnd->device->id;
-> >> -	uint64_t lun_id = cmnd->device->lun;
-> >> +	unsigned tgt_id = starget->id;
-> >> +	uint64_t lun_id = 0;
-> > 
-> > Well, hopefully storage targets for LPFC can deal with LUN 0 :)
->
-> Sad to say, but it's only with zfcp where I've seen the 'WLUN' thingie 
-> being deployed. But alright, I'll check if I can grab a valid LUN ID.
+On 10/25/23 01:56, Chun-Hung Wu wrote:
+> This quirk needs to be enabled if the host controller cannot 
+> distinguish queue full or empty.
 
-I mean, I don't actually know whether this is a problem in practice; sending a
-TMF to LUN 0. If this works for the LPFC folks, I don't mind.
+ From the UFSHCI 4.0 specification: "When the head and tail doorbells are
+equal, the queue is empty. [ ... ] When the head and tail doorbells are
+not equal, the queue contains queue entries."
 
-> >> -		retval = SUCCESS;
-> >> -		goto out;
-> >> -	}
-> >> +	starget_printk(KERN_INFO, starget,
-> >> +	    "Attempting Target Reset!\n");
-> > 
-> > Nitpick: you can remove the line-break.
-> > 
-> Yes, and no. I had been debating with me whether I really wanted
-> to do that. Linebreaks are in nearly all of the debugging messages
+How is it possible that a host controller cannot distinguish queue full
+or queue empty? Which (head - tail) values cause trouble? More
+information is needed.
 
-I meant the line-break in the source-code, not message :)
+Thanks,
 
-    starget_printk(KERN_INFO, starget, "Attempting Target Reset!\n");
+Bart.
 
-> in this driver, so once I start removing them here questions will
-> be asked why I removed it _just_ here, or, why I removed it at all.
-> 
-> I'd prefer doing that in a separate patch.
-> 
-
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
