@@ -2,97 +2,85 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3FB4C25B48
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 00:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B3DC25B48
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 00:30:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344759AbjJYA2g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 20:28:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51390 "EHLO
+        id S1344763AbjJYAaQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 20:30:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344753AbjJYA2g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 20:28:36 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62E3C10CE
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:28:34 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1ca6809fb8aso35966655ad.1
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:28:34 -0700 (PDT)
+        with ESMTP id S1344743AbjJYAaP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 20:30:15 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACDD810E2
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:30:12 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6b77ab73c6fso260314b3a.1
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:30:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1698193714; x=1698798514; darn=vger.kernel.org;
+        d=chromium.org; s=google; t=1698193812; x=1698798612; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=f1VOdbNwXAH3NHxdn8pigR7QBmM0uZMTBZfW6F7KshE=;
-        b=IZJJbnUsk2yQA2mU78DmBH83qZOWJWvpY0RxMEMSP/3Zh56Bag65bTpA+yVudag0OQ
-         lDxJxtX+ixpEUySmJ6PMUeyB7U1pZDgeJEBlsfSmiQ/0xC1idBb/2r9Bckw3vixdisPW
-         LjEDTztFrBZ6FjabGApG4DI3++YQG5RTj22/s=
+        bh=yiGBchuBAWV4UdaNqAqp/OW8eIkIliqczAGndCUHeX4=;
+        b=hK2ejIUogxY6Q2SKGHpszonmJ4/xeAL1NuLO7rDGYGawrCu+xGkvb/XkpUwhQb4Y64
+         cSzHmWVH05RXdgySQLdvSTvNTIIKkc5F9MVx0iTYCPnn9WftWULHEo7RBJmGXijXfhRR
+         qeswt4Jy3pI+eR2oG9avHJcyhfCRCSmYuQF6k=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698193714; x=1698798514;
+        d=1e100.net; s=20230601; t=1698193812; x=1698798612;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=f1VOdbNwXAH3NHxdn8pigR7QBmM0uZMTBZfW6F7KshE=;
-        b=QJ6+xjbF60uo/XpWior3HIGtAHyyUxyGctcE0IUP3hYue7qr54Ixro67IeEKMHkS49
-         CQ6I+qcTjOrmes2DfDxZOXEbgOFgLfK9Ne9Lva2RctcYtt5mKZdzqWh5ogNdH0xZqlBf
-         eWjm3dC38mhG3svBwU8CN7yduNp1QRj6CHJPvzQFFU+9KJi5iZOFI3DIyUSyoRsrgm/X
-         d6FsURrGFAco3cHZO6eFY92v86yJk6PW1ttuzg/SU7GjXs0MS5uI5QRPuzuYTJ0lUfap
-         JkykPM+EAhUfaQCvk7/cIJwMOUF9rYNodbN8YbmGCuaqXhezSBQoAWjecpfhY95KVV/j
-         p0nw==
-X-Gm-Message-State: AOJu0Yx6j2qfBLts3yFif1RhYQ8LejB12WpKn6KZ6R9sdmZWGxkZmTU/
-        tlYlCv1YkacQ05Ru84LAA91p4t7KgdlyRQILly0=
-X-Google-Smtp-Source: AGHT+IEnXLVJRa3cR/YMGF26nXSPNxl2kYEhL044D3Dodeq+sGspMNV1yT079dieG/mr4U+ldjBmZA==
-X-Received: by 2002:a17:903:6d0:b0:1ca:de41:753f with SMTP id kj16-20020a17090306d000b001cade41753fmr6488394plb.15.1698193713899;
-        Tue, 24 Oct 2023 17:28:33 -0700 (PDT)
+        bh=yiGBchuBAWV4UdaNqAqp/OW8eIkIliqczAGndCUHeX4=;
+        b=E2gz8+hefSe6vefjO5G7nGqrk/+vG3voYa6KhLDFlQbkppGG12PVLzOwvTNyvMwH0p
+         vxRDt11Viiqvk8Qsz27NjPGVlxtSxlS1U2AD4fwXoAg3pN+GwK1Czxaqc/7JRTeQ2HCu
+         k7CBowknPdG2UDEdEDPnY0SwD+08RhHTTzL535a/tqJEWjNW4Qk+FYFhTYEP7eF+Gly8
+         1GT3QTFtlE5SLC/7rjxPjTnYOgagIlQNAaZey+jm+AEQ6Xf2wlV8/96R4wQrwsk2q3MI
+         3lYN2dua9z4HVyEpF+3yibm4EeSiTg1G5WijhtgLhKotICf02uQ+FqPHv+9a+rnOVEd1
+         iqvA==
+X-Gm-Message-State: AOJu0Yxg8NxTHGGe0B/yhYxXtPtUIuUcypA6yEnJwOwWTyngUXHaav8f
+        4fDrgoRsUgtcN4LA+ANY2lY+OA==
+X-Google-Smtp-Source: AGHT+IFxp+JzhxcUoVKHvslrPps8Dw4oEec667yj2IQDPVIScvroTp5bGUX0pzhx54mNHPlMRJFIAA==
+X-Received: by 2002:aa7:900b:0:b0:692:6417:728a with SMTP id m11-20020aa7900b000000b006926417728amr20734036pfo.14.1698193812121;
+        Tue, 24 Oct 2023 17:30:12 -0700 (PDT)
 Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id z20-20020a170902ee1400b001c724732058sm7964995plb.235.2023.10.24.17.28.33
+        by smtp.gmail.com with ESMTPSA id z21-20020aa79f95000000b0069323619f69sm8400317pfr.143.2023.10.24.17.30.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Oct 2023 17:28:33 -0700 (PDT)
-Date:   Tue, 24 Oct 2023 17:28:32 -0700
+        Tue, 24 Oct 2023 17:30:11 -0700 (PDT)
+Date:   Tue, 24 Oct 2023 17:30:11 -0700
 From:   Kees Cook <keescook@chromium.org>
 To:     Justin Stitt <justinstitt@google.com>
-Cc:     Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] scsi: bnx2fc: replace deprecated strncpy with strscpy
-Message-ID: <202310241728.6CEDB92754@keescook>
-References: <20231023-strncpy-drivers-scsi-bnx2fc-bnx2fc_fcoe-c-v1-1-a3736943cde2@google.com>
+Subject: Re: [PATCH] scsi: ch: replace deprecated strncpy with strscpy
+Message-ID: <202310241729.1740ED4F@keescook>
+References: <20231023-strncpy-drivers-scsi-ch-c-v1-1-dc67ba8075a3@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231023-strncpy-drivers-scsi-bnx2fc-bnx2fc_fcoe-c-v1-1-a3736943cde2@google.com>
+In-Reply-To: <20231023-strncpy-drivers-scsi-ch-c-v1-1-dc67ba8075a3@google.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 23, 2023 at 08:12:22PM +0000, Justin Stitt wrote:
+On Mon, Oct 23, 2023 at 08:20:14PM +0000, Justin Stitt wrote:
 > strncpy() is deprecated for use on NUL-terminated destination strings
 > [1] and as such we should prefer more robust and less ambiguous string
 > interfaces.
 > 
-> We expect hba->chip_num to be NUL-terminated based on its usage with
-> format strings:
+> These labels get copied out to the user so lets make sure they are
+> NUL-terminated and NUL-padded.
 > 
-> 	snprintf(fc_host_symbolic_name(lport->host), 256,
-> 		 "%s (QLogic %s) v%s over %s",
-> 		BNX2FC_NAME, hba->chip_num, BNX2FC_VERSION,
-> 		interface->netdev->name);
-> 
-> Moreover, NUL-padding is not required as hba is zero-allocated from its
-> callsite:
-> 
-> 	hba = kzalloc(sizeof(*hba), GFP_KERNEL);
+> vparams is already memset to 0 so we don't need to do any NUL-padding
+> (like what strncpy() is doing).
 > 
 > Considering the above, a suitable replacement is `strscpy` [2] due to
 > the fact that it guarantees NUL-termination on the destination buffer
 > without unnecessarily NUL-padding.
 > 
-> Regarding stats_addr->version, I've opted to also use strscpy() instead
-> of strscpy_pad() as I typically see these XYZ_get_strings() pass
-> zero-allocated data. I couldn't track all of where
-> bnx2fc_ulp_get_stats() is used and if required, we could opt for
-> strscpy_pad().
+> Let's also opt to use the more idiomatic strscpy() usage of:
+> (dest, src, sizeof(dest)) as this more closely ties the destination
+> buffer to the length.
 > 
 > Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
 > Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
@@ -100,9 +88,63 @@ On Mon, Oct 23, 2023 at 08:12:22PM +0000, Justin Stitt wrote:
 > Cc: linux-hardening@vger.kernel.org
 > Signed-off-by: Justin Stitt <justinstitt@google.com>
 
-This all looks correct to me.
+Yup, these all look correct. I can confirm the open-coded "16" matches
+the now-used sizeof().
 
 Reviewed-by: Kees Cook <keescook@chromium.org>
+
+-Kees
+
+> ---
+> Note: build-tested only.
+> 
+> Found with: $ rg "strncpy\("
+> ---
+>  drivers/scsi/ch.c | 12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+> index cb0a399be1cc..2b864061e073 100644
+> --- a/drivers/scsi/ch.c
+> +++ b/drivers/scsi/ch.c
+> @@ -659,19 +659,23 @@ static long ch_ioctl(struct file *file,
+>  		memset(&vparams,0,sizeof(vparams));
+>  		if (ch->counts[CHET_V1]) {
+>  			vparams.cvp_n1  = ch->counts[CHET_V1];
+> -			strncpy(vparams.cvp_label1,vendor_labels[0],16);
+> +			strscpy(vparams.cvp_label1, vendor_labels[0],
+> +				sizeof(vparams.cvp_label1));
+>  		}
+>  		if (ch->counts[CHET_V2]) {
+>  			vparams.cvp_n2  = ch->counts[CHET_V2];
+> -			strncpy(vparams.cvp_label2,vendor_labels[1],16);
+> +			strscpy(vparams.cvp_label2, vendor_labels[1],
+> +				sizeof(vparams.cvp_label2));
+>  		}
+>  		if (ch->counts[CHET_V3]) {
+>  			vparams.cvp_n3  = ch->counts[CHET_V3];
+> -			strncpy(vparams.cvp_label3,vendor_labels[2],16);
+> +			strscpy(vparams.cvp_label3, vendor_labels[2],
+> +				sizeof(vparams.cvp_label3));
+>  		}
+>  		if (ch->counts[CHET_V4]) {
+>  			vparams.cvp_n4  = ch->counts[CHET_V4];
+> -			strncpy(vparams.cvp_label4,vendor_labels[3],16);
+> +			strscpy(vparams.cvp_label4, vendor_labels[3],
+> +				sizeof(vparams.cvp_label4));
+>  		}
+>  		if (copy_to_user(argp, &vparams, sizeof(vparams)))
+>  			return -EFAULT;
+> 
+> ---
+> base-commit: 9c5d00cb7b6bbc5a7965d9ab7d223b5402d1f02c
+> change-id: 20231023-strncpy-drivers-scsi-ch-c-23b1cdac43cc
+> 
+> Best regards,
+> --
+> Justin Stitt <justinstitt@google.com>
+> 
+> 
 
 -- 
 Kees Cook
