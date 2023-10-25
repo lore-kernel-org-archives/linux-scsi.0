@@ -2,92 +2,153 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BF5CC25B48
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 00:30:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73AFBC25B6D
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 00:42:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344718AbjJYAa6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 20:30:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48514 "EHLO
+        id S232011AbjJYAmQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 20:42:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344762AbjJYAa4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 20:30:56 -0400
-Received: from mail-ot1-x333.google.com (mail-ot1-x333.google.com [IPv6:2607:f8b0:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 439DE10CE
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:30:53 -0700 (PDT)
-Received: by mail-ot1-x333.google.com with SMTP id 46e09a7af769-6ce37683cf6so3216114a34.3
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:30:53 -0700 (PDT)
+        with ESMTP id S230018AbjJYAmQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 20:42:16 -0400
+Received: from mail-oo1-xc32.google.com (mail-oo1-xc32.google.com [IPv6:2607:f8b0:4864:20::c32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 182249F
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:42:13 -0700 (PDT)
+Received: by mail-oo1-xc32.google.com with SMTP id 006d021491bc7-581de3e691dso2944026eaf.3
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:42:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1698193852; x=1698798652; darn=vger.kernel.org;
+        d=chromium.org; s=google; t=1698194532; x=1698799332; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=n87sUffC3jIAj0OzBWNWPGKXdWXX/v+Z+ob+S6qU1cI=;
-        b=gudDxT+cXy6mPPgK/JaxC2ja7o1tqiFTSOrZ0XCCODP+5xdE+GmsWHthqvk5JgLtam
-         WPyLScPVm3WtFPmtzf8U5e7K+Z+hXQPXRvwHfXV4AqmAwUythEAhdQnUNHMP4VpfuvMo
-         bT8yPwpYiC6c7XdEXDJzEv2yViJMt6JIfOP2A=
+        bh=2FnAEcz0Pm6rwXLiqbg9EQq+SejnOHmDm7vB765x6ZI=;
+        b=AMCwj95qtRLVPgrnexb179RQhCdCz2o0cpZGwf6rcclMjCYntjUf6Fw9UsDUmMo6jJ
+         bMdxVfrtPCPKTSLovlrDgYfjBJf7BkUe7E/B9O4RkqvcklIlmPUxkFHLNbum+YBzyvG4
+         eO7T7K6k9Oyzw0+PKxYqngKtJTzlbuLWU/zCE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698193852; x=1698798652;
+        d=1e100.net; s=20230601; t=1698194532; x=1698799332;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=n87sUffC3jIAj0OzBWNWPGKXdWXX/v+Z+ob+S6qU1cI=;
-        b=TnBDPB/ONaJDq2kPW78Idi3ZEEFxw0GUi8k3zuske0G8f0Acz+BxR6w6tu1w5cEwps
-         EpEThT8jrIwCECCP88WuwqbnvpF+vLvHHwcsHX7/VWCPINt458V1PFQpbRopyU83Xc3R
-         vEr9N9UInoEWEs3r2VakQg74U9HxXx3EMttv5hjLCnqgdP/6rkBJE1/Cj1vagIcGz3RQ
-         N5x3T/TzrZHe3sAJe3tjPezdGcBn4XwnF9iiMtXdrwULCP1G6iHolNqCr8pov/G1PsVe
-         1Mc38gGDVEnD6xsH+NyNGsXeETO4qRsMo0WIzQ9deJmm/X+2XJfqO6FeVvT2mCr2UFj6
-         bPhw==
-X-Gm-Message-State: AOJu0Yzpfc8y/yf+ZJmxi7qZri8X8V2Bcdsj90Wq0mTj39qBsrRfuK1u
-        Vjn5sECWcUFpZ9f5Hc0cBWsxHQ==
-X-Google-Smtp-Source: AGHT+IHMIcGzMvlGzYich5XJqb+MzqzGw+o2xZJVqCap7MFd+7g+sf/Oe43NAa3axzWaxPoppkLzdA==
-X-Received: by 2002:a05:6870:a99a:b0:1d5:40df:8fb1 with SMTP id ep26-20020a056870a99a00b001d540df8fb1mr16097059oab.19.1698193852500;
-        Tue, 24 Oct 2023 17:30:52 -0700 (PDT)
+        bh=2FnAEcz0Pm6rwXLiqbg9EQq+SejnOHmDm7vB765x6ZI=;
+        b=B37ko4CR6Xl4TmKpvN42exBJdr6xs/Xh3QJiM/O0wSmq8B/caLt4GFmFnwegWwiO9+
+         cWQM7DpNAA7sNga0t8q6T0mKL1sdZ2zE1jNGpAYNIjRpZvT5oOBu+CcmES83VEdun8oK
+         1aDMbfO2E9teRpI+R5BDnw685uPIbX8yxX4DKKThvxbcZRqtkJHTDfAkOpjyIcB6fVNw
+         o4Jz3W/NtNCkS8EMng8L2vRU3+SaaHxMtPyoIM95qir0bIYQqIvNvMMDY0B/58oOWLYS
+         lO553SKujlXM1VqUC7hNgOe1gVvyvTZ0gOogs+RuYeroHQqlmLElpEbOg7/5YgMHyMNp
+         92SA==
+X-Gm-Message-State: AOJu0YyhwEToYZ6EQwfwui866q0DgcQZevn0M/7OtT17QHmhdeiEDU/e
+        jMAp60mTvgtVW9G2PydZaaYDvQ==
+X-Google-Smtp-Source: AGHT+IGH5gFCLNw5hepkhxKvaGvJWtvDDKqCFVy++lU1SJUYvicyfPYz5myLthfyacybbSPx7R9KDg==
+X-Received: by 2002:a05:6358:c323:b0:168:d382:1446 with SMTP id fk35-20020a056358c32300b00168d3821446mr7219249rwb.11.1698194532346;
+        Tue, 24 Oct 2023 17:42:12 -0700 (PDT)
 Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id n3-20020a632703000000b005ae776b8616sm1343461pgn.19.2023.10.24.17.30.51
+        by smtp.gmail.com with ESMTPSA id by2-20020a056a02058200b0058c1383fa8bsm6750257pgb.0.2023.10.24.17.42.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Oct 2023 17:30:51 -0700 (PDT)
-Date:   Tue, 24 Oct 2023 17:30:51 -0700
+        Tue, 24 Oct 2023 17:42:11 -0700 (PDT)
+Date:   Tue, 24 Oct 2023 17:42:10 -0700
 From:   Kees Cook <keescook@chromium.org>
 To:     Justin Stitt <justinstitt@google.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+Cc:     James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] scsi: csiostor: replace deprecated strncpy with strscpy
-Message-ID: <202310241730.7AA375902@keescook>
-References: <20231023-strncpy-drivers-scsi-csiostor-csio_init-c-v1-1-5ea445b56864@google.com>
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: elx: libefc: replace deprecated strncpy with
+ strscpy
+Message-ID: <202310241733.9CBC2251@keescook>
+References: <20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-v1-1-8b66878b6796@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231023-strncpy-drivers-scsi-csiostor-csio_init-c-v1-1-5ea445b56864@google.com>
+In-Reply-To: <20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-v1-1-8b66878b6796@google.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 23, 2023 at 08:26:13PM +0000, Justin Stitt wrote:
+On Mon, Oct 23, 2023 at 09:58:32PM +0000, Justin Stitt wrote:
 > strncpy() is deprecated for use on NUL-terminated destination strings
 > [1] and as such we should prefer more robust and less ambiguous string
 > interfaces.
 > 
-> `hw` is kzalloc'd just before this string assignment:
-> |       hw = kzalloc(sizeof(struct csio_hw), GFP_KERNEL);
+> A suitable replacement is `strscpy` [2] due to the fact that it
+> guarantees NUL-termination on the destination buffer without
+> unnecessarily NUL-padding.
 > 
-> ... which means any NUL-padding is redundant.
-> 
-> Since  CSIO_DRV_VERSION is a small string literal (smaller than
-> sizeof(dest)):
-> 
-> ... there is functionally no change in this swap from strncpy() to
-> strscpy(). Nonetheless, let's make the change for robustness' sake -- as
-> it will ensure that drv_version is _always_ NUL-terminated.
+> There seems to not be any uses of `current_state_name` other than in
+> these assignments. Judging from context surrounding these assignments,
+> especially considering the string literal "invalid" being assigned, we
+> want both current_state_name and prev_state_name to be NUL-terminated
+> strings.
+
+I'm nervous that "node" may be either passed over the link or in
+IO memory, so the behavior change of not %NUL-padding these may trip
+something at run-time. Unless someone says otherwise, let's stay on the
+safe side and use strscpy_pad() for "invalid" and handler, and memcpy()
+for the swap.
+
+Looking at "handler", it's always less than 64, so we don't need to
+worry about early truncation -- it's always __func__, and none of them
+are very long:
+
+$ git grep efc_node_evt_set | grep -v __func__
+drivers/scsi/elx/libefc/efc_node.h:efc_node_evt_set(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
+
+$ git grep efc_node_evt_set | grep __func__ | cut -d: -f1 | sort -u
+drivers/scsi/elx/libefc/efc_device.c
+drivers/scsi/elx/libefc/efc_fabric.c
+drivers/scsi/elx/libefc/efc_node.c
+
+$ grep -E '^_?_?efc' drivers/scsi/elx/libefc/efc_{fabric,device,node}.c \
+  | cut -d'(' -f1 | cut -d: -f2 | wc -L
+37
+
+-Kees
+
 > 
 > Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
 > Link: https://github.com/KSPP/linux/issues/90
 > Cc: linux-hardening@vger.kernel.org
 > Signed-off-by: Justin Stitt <justinstitt@google.com>
-
-Another direct replacement.
-
-Reviewed-by: Kees Cook <keescook@chromium.org>
+> ---
+> Note: build-tested only.
+> 
+> Found with: $ rg "strncpy\("
+> ---
+>  drivers/scsi/elx/libefc/efc_node.h | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/elx/libefc/efc_node.h b/drivers/scsi/elx/libefc/efc_node.h
+> index e9c600ac45d5..3a16703d0f97 100644
+> --- a/drivers/scsi/elx/libefc/efc_node.h
+> +++ b/drivers/scsi/elx/libefc/efc_node.h
+> @@ -26,12 +26,12 @@ efc_node_evt_set(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
+>  	struct efc_node *node = ctx->app;
+>  
+>  	if (evt == EFC_EVT_ENTER) {
+> -		strncpy(node->current_state_name, handler,
+> +		strscpy(node->current_state_name, handler,
+>  			sizeof(node->current_state_name));
+>  	} else if (evt == EFC_EVT_EXIT) {
+> -		strncpy(node->prev_state_name, node->current_state_name,
+> +		strscpy(node->prev_state_name, node->current_state_name,
+>  			sizeof(node->prev_state_name));
+> -		strncpy(node->current_state_name, "invalid",
+> +		strscpy(node->current_state_name, "invalid",
+>  			sizeof(node->current_state_name));
+>  	}
+>  	node->prev_evt = node->current_evt;
+> 
+> ---
+> base-commit: 9c5d00cb7b6bbc5a7965d9ab7d223b5402d1f02c
+> change-id: 20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-cbbf753197b7
+> 
+> Best regards,
+> --
+> Justin Stitt <justinstitt@google.com>
+> 
+> 
 
 -- 
 Kees Cook
