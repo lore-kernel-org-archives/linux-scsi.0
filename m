@@ -2,136 +2,79 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6EB6C25B6E
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 08:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7883EC25B6E
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 08:31:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233954AbjJYIXc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Oct 2023 04:23:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47654 "EHLO
+        id S232807AbjJYIbU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Oct 2023 04:31:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233939AbjJYIXa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 04:23:30 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B57912A
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 01:23:28 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id 4fb4d7f45d1cf-53e70b0a218so8166323a12.2
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 01:23:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1698222207; x=1698827007; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=IKUaUnFCHJKZ2+fLe9tgZCUK+CShx0dwhys1hQCqazs=;
-        b=agcAT8WmlcG9dzHYOfB6U7h6AbuMSGJ1Jg/FZQmPXzybTkfqK66D3JgHf6FeIkF0iP
-         gvmMij/M+qVv5bQdJPlUCSP5MU1CoAN1HyrXsohuSEq2ltnAHq+9nu+wRygUs0GscYL/
-         SHgt6MEwxwiHm/TvFT9YQK9E0K9RWFdg8DwjtxMK4hlv/Zte9tQtRzAU0wq0X1MI6NDM
-         mzCk9h9Nwp/edSOyaG/9RjPMUAZdqFDEhc//4TLQmGNilRbvTwfhQVqLCL+9Y876qF5t
-         lX9fLL4BH/rjsKfTS1IV75twsw8q1lzWTFOhFQIAqrun7pRYPMwD6AQI6zg8b8tJEnpU
-         FvjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698222207; x=1698827007;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IKUaUnFCHJKZ2+fLe9tgZCUK+CShx0dwhys1hQCqazs=;
-        b=N/pHNjl6dwh2pzloR/URFeOeCVpc2cz+pjQJRJZ7Gg1wKXTMcOsjmGkADQw7tLzu4S
-         vbPMNUQTbO5ZpBac8tvL7ZT+eZJqSBwdlxKUqahBSPYFqS5CkYRCRf3QHTfJnPfJkc+B
-         syA0k5iWuEAIltj2+jfV4bOA29flJATvo5NXo6xRpRjOTuc/VfYAtnPABr1cvYRcjV9p
-         knMW6KFANCoXUV91xepDlIpKzs3l/lS8EuO8aN6RXHOvUvnsMaHdmZQcANFqPz9mPLkP
-         ymhH0YY/44M90dbgcvxDfTaIvuFM1s1Tv+Y0EPdLlf1UuIKB0zAdp1hgKdlkDqZT1l7R
-         mxzA==
-X-Gm-Message-State: AOJu0Yznh7bia6rMW22bDK3rK0Bw1EYoN7ZLd+bBjrAegB0/JseUnhUT
-        adKkQbdZkI4S07BGs6fu41QSBw==
-X-Google-Smtp-Source: AGHT+IEQJDimnmyNVzb1TM9v5Ti4EbqZzjo8KvxbWqX7rOJe7xHOHkdjRTwJbDbtFnkBgc5gBvFsBQ==
-X-Received: by 2002:a17:907:3183:b0:9bd:7f40:caa5 with SMTP id xe3-20020a170907318300b009bd7f40caa5mr9324301ejb.77.1698222206769;
-        Wed, 25 Oct 2023 01:23:26 -0700 (PDT)
-Received: from [192.168.1.20] ([178.197.218.126])
-        by smtp.gmail.com with ESMTPSA id ga23-20020a170906b85700b009b65b2be80bsm9401920ejb.76.2023.10.25.01.23.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 25 Oct 2023 01:23:26 -0700 (PDT)
-Message-ID: <040ea92a-bdeb-424e-b93a-9148b76d786c@linaro.org>
-Date:   Wed, 25 Oct 2023 10:23:24 +0200
+        with ESMTP id S232654AbjJYIbJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 04:31:09 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48623116;
+        Wed, 25 Oct 2023 01:31:06 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DFBBC433C7;
+        Wed, 25 Oct 2023 08:31:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1698222665;
+        bh=CyIWhy0pHycfYVtak8DO+r/Jaf/wzo6fskC25Qh8mM8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mtKwMQgXxz4nmRPPvo7RQzo4wbcZjarceOGyS6h4jsFYfF7HjcaqxcBIGnKa6KPz7
+         ND9qLf6evNK/0C2G0r1B8b2KQSswHuWAVLsjy+7skYyK/nXKBpdsjd+KZGd6MYHw0M
+         TkylYjWTw3/l/BHOLSYwgvhQlsi0Nolvx7Ly0biw=
+Date:   Wed, 25 Oct 2023 10:31:02 +0200
+From:   "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+To:     Alice Chao =?utf-8?B?KOi2meePruWdhyk=?= <Alice.Chao@mediatek.com>
+Cc:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        Peter Wang =?utf-8?B?KOeOi+S/oeWPiyk=?= 
+        <peter.wang@mediatek.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        CC Chou =?utf-8?B?KOWRqOW/l+adsCk=?= <cc.chou@mediatek.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        wsd_upstream <wsd_upstream@mediatek.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        Casper Li =?utf-8?B?KOadjuS4reamrik=?= <casper.li@mediatek.com>,
+        Tun-yu Yu =?utf-8?B?KOa4uOaVpuiBvyk=?= <Tun-yu.Yu@mediatek.com>,
+        Chun-Hung Wu =?utf-8?B?KOW3q+mnv+Wujyk=?= 
+        <Chun-hung.Wu@mediatek.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Powen Kao =?utf-8?B?KOmrmOS8r+aWhyk=?= <Powen.Kao@mediatek.com>,
+        Naomi Chu =?utf-8?B?KOacseipoOeUsCk=?= <Naomi.Chu@mediatek.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        Stanley Chu =?utf-8?B?KOacseWOn+mZnik=?= 
+        <stanley.chu@mediatek.com>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "angelogioacchino.delregno@collabora.com" 
+        <angelogioacchino.delregno@collabora.com>
+Subject: Re: [PATCH 1/1] core: ufs: fix racing issue between force complete
+ and isr
+Message-ID: <2023102547-cornfield-pedometer-89e9@gregkh>
+References: <20231024084324.12197-1-alice.chao@mediatek.com>
+ <yq1y1frctgw.fsf@ca-mkp.ca.oracle.com>
+ <dd57ef80bcf451e2daab2b08b8f6a6e11b4e4003.camel@mediatek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] dt-bindings: ufs: qcom-ufs: document the SM8650 UFS
- Controller
-Content-Language: en-US
-To:     Neil Armstrong <neil.armstrong@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20231025-topic-sm8650-upstream-bindings-ufs-v2-1-040ad1c44b46@linaro.org>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- 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
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <20231025-topic-sm8650-upstream-bindings-ufs-v2-1-040ad1c44b46@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <dd57ef80bcf451e2daab2b08b8f6a6e11b4e4003.camel@mediatek.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 25/10/2023 10:20, Neil Armstrong wrote:
-> Document the UFS Controller on the SM8650 Platform.
-> 
-> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
-> ---
+On Wed, Oct 25, 2023 at 07:20:53AM +0000, Alice Chao (趙珮均) wrote:
+> Can we take it to the LTS version(6.1)?
 
-You need entry in allOf:if:then.
+<formletter>
 
-Best regards,
-Krzysztof
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read:
+    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
+for how to do this properly.
 
+</formletter>
