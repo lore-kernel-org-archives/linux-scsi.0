@@ -2,153 +2,132 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73AFBC25B6D
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 00:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA746C25B48
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 01:34:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232011AbjJYAmQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Oct 2023 20:42:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52196 "EHLO
+        id S229548AbjJYBen (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Oct 2023 21:34:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230018AbjJYAmQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 20:42:16 -0400
-Received: from mail-oo1-xc32.google.com (mail-oo1-xc32.google.com [IPv6:2607:f8b0:4864:20::c32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 182249F
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:42:13 -0700 (PDT)
-Received: by mail-oo1-xc32.google.com with SMTP id 006d021491bc7-581de3e691dso2944026eaf.3
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 17:42:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1698194532; x=1698799332; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=2FnAEcz0Pm6rwXLiqbg9EQq+SejnOHmDm7vB765x6ZI=;
-        b=AMCwj95qtRLVPgrnexb179RQhCdCz2o0cpZGwf6rcclMjCYntjUf6Fw9UsDUmMo6jJ
-         bMdxVfrtPCPKTSLovlrDgYfjBJf7BkUe7E/B9O4RkqvcklIlmPUxkFHLNbum+YBzyvG4
-         eO7T7K6k9Oyzw0+PKxYqngKtJTzlbuLWU/zCE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698194532; x=1698799332;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2FnAEcz0Pm6rwXLiqbg9EQq+SejnOHmDm7vB765x6ZI=;
-        b=B37ko4CR6Xl4TmKpvN42exBJdr6xs/Xh3QJiM/O0wSmq8B/caLt4GFmFnwegWwiO9+
-         cWQM7DpNAA7sNga0t8q6T0mKL1sdZ2zE1jNGpAYNIjRpZvT5oOBu+CcmES83VEdun8oK
-         1aDMbfO2E9teRpI+R5BDnw685uPIbX8yxX4DKKThvxbcZRqtkJHTDfAkOpjyIcB6fVNw
-         o4Jz3W/NtNCkS8EMng8L2vRU3+SaaHxMtPyoIM95qir0bIYQqIvNvMMDY0B/58oOWLYS
-         lO553SKujlXM1VqUC7hNgOe1gVvyvTZ0gOogs+RuYeroHQqlmLElpEbOg7/5YgMHyMNp
-         92SA==
-X-Gm-Message-State: AOJu0YyhwEToYZ6EQwfwui866q0DgcQZevn0M/7OtT17QHmhdeiEDU/e
-        jMAp60mTvgtVW9G2PydZaaYDvQ==
-X-Google-Smtp-Source: AGHT+IGH5gFCLNw5hepkhxKvaGvJWtvDDKqCFVy++lU1SJUYvicyfPYz5myLthfyacybbSPx7R9KDg==
-X-Received: by 2002:a05:6358:c323:b0:168:d382:1446 with SMTP id fk35-20020a056358c32300b00168d3821446mr7219249rwb.11.1698194532346;
-        Tue, 24 Oct 2023 17:42:12 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id by2-20020a056a02058200b0058c1383fa8bsm6750257pgb.0.2023.10.24.17.42.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Oct 2023 17:42:11 -0700 (PDT)
-Date:   Tue, 24 Oct 2023 17:42:10 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Justin Stitt <justinstitt@google.com>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] scsi: elx: libefc: replace deprecated strncpy with
- strscpy
-Message-ID: <202310241733.9CBC2251@keescook>
-References: <20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-v1-1-8b66878b6796@google.com>
+        with ESMTP id S229441AbjJYBem (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Oct 2023 21:34:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2423D186
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Oct 2023 18:33:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1698197633;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=A3TQsqkRGlPNiZ+JZLFomByYV2iT/ADb69ZCQ3/IL3g=;
+        b=fnQ/gbyAG7iZnkAbjhZ5ECvrrUsCuKVrCNKVJMayntml3E8vb2hS4Jl/x2UdGKJ4si9cgA
+        VtoJdatIW6zCZqopYYS85zAcmgV/rUO7rrvhUijeFnu3puCTuEhbIojr2h3LWdSIvx/x0B
+        eKAe5mYQSZzS/bAkk4ijuM5heBEmIBQ=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-204-0L4aYGwuPNyTVHZIvoQeWg-1; Tue, 24 Oct 2023 21:33:49 -0400
+X-MC-Unique: 0L4aYGwuPNyTVHZIvoQeWg-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 89CC0828AC3;
+        Wed, 25 Oct 2023 01:33:48 +0000 (UTC)
+Received: from fedora (unknown [10.72.120.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9457E492BD9;
+        Wed, 25 Oct 2023 01:33:44 +0000 (UTC)
+Date:   Wed, 25 Oct 2023 09:33:40 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, ming.lei@redhat.com
+Subject: Re: [PATCH v4 0/3] Support disabling fair tag sharing
+Message-ID: <ZThwdPaeAFmhp58L@fedora>
+References: <20231023203643.3209592-1-bvanassche@acm.org>
+ <ZTcr3AHr9l4sHRO2@fedora>
+ <5d37f5ed-130a-4e75-b9a7-f77aeb4c7c89@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-v1-1-8b66878b6796@google.com>
+In-Reply-To: <5d37f5ed-130a-4e75-b9a7-f77aeb4c7c89@acm.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 23, 2023 at 09:58:32PM +0000, Justin Stitt wrote:
-> strncpy() is deprecated for use on NUL-terminated destination strings
-> [1] and as such we should prefer more robust and less ambiguous string
-> interfaces.
+On Tue, Oct 24, 2023 at 09:41:50AM -0700, Bart Van Assche wrote:
+> On 10/23/23 19:28, Ming Lei wrote:
+> > On Mon, Oct 23, 2023 at 01:36:32PM -0700, Bart Van Assche wrote:
+> > > Performance of UFS devices is reduced significantly by the fair tag sharing
+> > > algorithm. This is because UFS devices have multiple logical units and a
+> > > limited queue depth (32 for UFS 3.1 devices) and also because it takes time to
+> > > give tags back after activity on a request queue has stopped. This patch series
+> > > addresses this issue by introducing a flag that allows block drivers to
+> > > disable fair sharing.
+> > > 
+> > > Please consider this patch series for the next merge window.
+> > 
+> > In previous post[1], you mentioned that the issue is caused by non-IO
+> > queue of WLUN, but in this version, looks there isn't such story any more.
+> > 
+> > IMO, it isn't reasonable to account non-IO LUN for tag fairness, so
+> > solution could be to not take non-IO queue into account for fair tag
+> > sharing. But disabling fair tag sharing for this whole tagset could be
+> > too over-kill.
+> > 
+> > And if you mean normal IO LUNs, can you share more details about the
+> > performance drop? such as the test case, how many IO LUNs, and how to
+> > observe performance drop, cause it isn't simple any more since multiple
+> > LUN's perf has to be considered.
+> > 
+> > [1] https://lore.kernel.org/linux-block/20231018180056.2151711-1-bvanassche@acm.org/
 > 
-> A suitable replacement is `strscpy` [2] due to the fact that it
-> guarantees NUL-termination on the destination buffer without
-> unnecessarily NUL-padding.
+> Hi Ming,
 > 
-> There seems to not be any uses of `current_state_name` other than in
-> these assignments. Judging from context surrounding these assignments,
-> especially considering the string literal "invalid" being assigned, we
-> want both current_state_name and prev_state_name to be NUL-terminated
-> strings.
+> Submitting I/O to a WLUN is only one example of a use case that
+> activates the fair sharing algorithm for UFS devices. Another use
+> case is simultaneous activity for multiple data LUNs. Conventional
+> UFS devices typically have four data LUNs and zoned UFS devices
+> typically have five data LUNs. From an Android device with a zoned UFS
+> device:
+> 
+> $ adb shell ls /sys/class/scsi_device
+> 0:0:0:0
+> 0:0:0:1
+> 0:0:0:2
+> 0:0:0:3
+> 0:0:0:4
+> 0:0:0:49456
+> 0:0:0:49476
+> 0:0:0:49488
+> 
+> The first five are data logical units. The last three are WLUNs.
+> 
+> For a block size of 4 KiB, I see 144 K IOPS for queue depth 31 and
+> 107 K IOPS for queue depth 15 (queue depth is reduced from 31 to 15
+> if I/O is being submitted to two LUNs simultaneously). In other words,
+> disabling fair sharing results in up to 35% higher IOPS for small reads
+> and in case two logical units are active simultaneously. I think that's
+> a very significant performance difference.
 
-I'm nervous that "node" may be either passed over the link or in
-IO memory, so the behavior change of not %NUL-padding these may trip
-something at run-time. Unless someone says otherwise, let's stay on the
-safe side and use strscpy_pad() for "invalid" and handler, and memcpy()
-for the swap.
+Yeah, performance does drop when queue depth is cut to half if queue
+depth is low enough.
 
-Looking at "handler", it's always less than 64, so we don't need to
-worry about early truncation -- it's always __func__, and none of them
-are very long:
+However, it isn't enough to just test perf over one LUN, what is the
+perf effect when running IOs over the 2 or 5 data LUNs concurrently?
 
-$ git grep efc_node_evt_set | grep -v __func__
-drivers/scsi/elx/libefc/efc_node.h:efc_node_evt_set(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
+SATA should have similar issue too, and I think the improvement may be
+more generic to bypass fair tag sharing in case of low queue depth
+(such as < 32) if turns out the fair tag sharing doesn't work well
+in case low queue depth.
 
-$ git grep efc_node_evt_set | grep __func__ | cut -d: -f1 | sort -u
-drivers/scsi/elx/libefc/efc_device.c
-drivers/scsi/elx/libefc/efc_fabric.c
-drivers/scsi/elx/libefc/efc_node.c
+Also the 'fairness' could be enhanced dynamically by scsi LUN's queue depth,
+which can be adjusted dynamically.
 
-$ grep -E '^_?_?efc' drivers/scsi/elx/libefc/efc_{fabric,device,node}.c \
-  | cut -d'(' -f1 | cut -d: -f2 | wc -L
-37
 
--Kees
+Thanks, 
+Ming
 
-> 
-> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
-> Signed-off-by: Justin Stitt <justinstitt@google.com>
-> ---
-> Note: build-tested only.
-> 
-> Found with: $ rg "strncpy\("
-> ---
->  drivers/scsi/elx/libefc/efc_node.h | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/elx/libefc/efc_node.h b/drivers/scsi/elx/libefc/efc_node.h
-> index e9c600ac45d5..3a16703d0f97 100644
-> --- a/drivers/scsi/elx/libefc/efc_node.h
-> +++ b/drivers/scsi/elx/libefc/efc_node.h
-> @@ -26,12 +26,12 @@ efc_node_evt_set(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
->  	struct efc_node *node = ctx->app;
->  
->  	if (evt == EFC_EVT_ENTER) {
-> -		strncpy(node->current_state_name, handler,
-> +		strscpy(node->current_state_name, handler,
->  			sizeof(node->current_state_name));
->  	} else if (evt == EFC_EVT_EXIT) {
-> -		strncpy(node->prev_state_name, node->current_state_name,
-> +		strscpy(node->prev_state_name, node->current_state_name,
->  			sizeof(node->prev_state_name));
-> -		strncpy(node->current_state_name, "invalid",
-> +		strscpy(node->current_state_name, "invalid",
->  			sizeof(node->current_state_name));
->  	}
->  	node->prev_evt = node->current_evt;
-> 
-> ---
-> base-commit: 9c5d00cb7b6bbc5a7965d9ab7d223b5402d1f02c
-> change-id: 20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-cbbf753197b7
-> 
-> Best regards,
-> --
-> Justin Stitt <justinstitt@google.com>
-> 
-> 
-
--- 
-Kees Cook
