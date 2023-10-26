@@ -2,109 +2,87 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC01C25B67
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 14:12:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4D8C25B48
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 16:29:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345183AbjJZOMl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Oct 2023 10:12:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57230 "EHLO
+        id S231253AbjJZQ3I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Oct 2023 12:29:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345177AbjJZOMj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Oct 2023 10:12:39 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D89F31A2
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Oct 2023 07:12:37 -0700 (PDT)
-Received: from pps.filterd (m0353722.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39QE5hK4019199;
-        Thu, 26 Oct 2023 14:12:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=tYqLyt7jfo3U0Pjn65pWUc2kM/L0KjEDPynw5wSrKMg=;
- b=LcWMZ5QEqz/dTxxm8tdVXrS3dwmWyA18pbgs9s0pQSKeVsTAycuv94t8fcTpB1klr6pw
- CHdOJ8qcM7tp+aUbgxabjOoE9NCLvQl4A/kX7xsFu3LFjptbaBFAdCe7HsIHa4OlLMAa
- G2j5KV8KPRMv7Qhb9OnZLN72nda+9QvwviRKu5VB5V8PWCcf7Tq91YiV1I6xOmfWKHHs
- s7dpUdSGAz+mGg1b2/UCdlBy9sOIZ40uKDo0DkjCzuF/YCxUyzsYiWINvtO309AIdec9
- b87t+ZIYVYeabD4sjSNtUJl2j6jaMRUExM7Wiermnar9tiQnYPK6UAxpmUYuIiraM7nl dw== 
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3tysjt8bk5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 26 Oct 2023 14:12:28 +0000
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-        by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 39QDqGiB023804;
-        Thu, 26 Oct 2023 14:12:18 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-        by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3tvryteu8q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 26 Oct 2023 14:12:18 +0000
-Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
-        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 39QECG3647448526
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Oct 2023 14:12:16 GMT
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7DD8C20065;
-        Thu, 26 Oct 2023 14:12:16 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 781F22005A;
-        Thu, 26 Oct 2023 14:12:16 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.152.212.253])
-        by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-        Thu, 26 Oct 2023 14:12:16 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96.1)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1qw15s-00Arve-0o;
-        Thu, 26 Oct 2023 16:12:16 +0200
-Date:   Thu, 26 Oct 2023 16:12:16 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: Re: [PATCH 10/10] scsi: remove SUBMITTED_BY_SCSI_RESET_IOCTL
-Message-ID: <20231026141216.GP1917450@p1gen4-pw042f0m.boeblingen.de.ibm.com>
-References: <20231023092837.33786-1-hare@suse.de>
- <20231023092837.33786-11-hare@suse.de>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20231023092837.33786-11-hare@suse.de>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: wRdR7GGu3IUffYTDzl3ZcKfGnXP10XgB
-X-Proofpoint-GUID: wRdR7GGu3IUffYTDzl3ZcKfGnXP10XgB
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S229815AbjJZQ3H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Oct 2023 12:29:07 -0400
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 480DF183;
+        Thu, 26 Oct 2023 09:29:06 -0700 (PDT)
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1caa7597af9so8624105ad.1;
+        Thu, 26 Oct 2023 09:29:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698337746; x=1698942546;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Lly9OjyG1WuwJev02hSJMW7JdqQD0L2vXqMu6PleNA0=;
+        b=PhRxdCn6HmGQSpOWusHoJcq8KlJz5QYiAqunPPBje3Hz1SC4NPl56ch/vGiTgelY8X
+         KldYz/YULbMv8Z0qRmO5Y5+Eb0/iXQjXKCv40QdAP5V+GLJLp7iJgc+xYi7uCYVPacYy
+         QwrzwtHKvY036CrWf6BvGqmZicvVvkg+XavSAZV+fcWUXh7tGU2D2k9XYxciyQBFe2vi
+         lO6nyfZORiql02eEW8acEaE3aXtL/W/yL9r48UENl04X/eKRdMac7AIHS/arCgxow70o
+         gui4oIYIpriZJoF2+WqAxwwCJX8s11gIAHjWnrU7Nlyg4LHifrydmRspcpAgEBOA9DEi
+         lRpQ==
+X-Gm-Message-State: AOJu0YyHzhjoj3daJa/tWG0sSo6tbwi0R/mdEy/9mJ7rfqL6admLC/sX
+        KL2jtkMU0Otlb8Sh+00tmJs=
+X-Google-Smtp-Source: AGHT+IHVqWMDZ3Mm9hErO84KSp5efXY6apySMlcwBTmyLWa5ZpGeEpGqSZyL6vojKBaM2ftWF626NQ==
+X-Received: by 2002:a17:902:c153:b0:1c9:fb8e:2c33 with SMTP id 19-20020a170902c15300b001c9fb8e2c33mr3712plj.7.1698337745550;
+        Thu, 26 Oct 2023 09:29:05 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:4dcf:e974:e319:6ce8? ([2620:15c:211:201:4dcf:e974:e319:6ce8])
+        by smtp.gmail.com with ESMTPSA id h17-20020a170902f7d100b001c0bf60ba5csm11299874plw.272.2023.10.26.09.29.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 Oct 2023 09:29:04 -0700 (PDT)
+Message-ID: <1e53e562-bec2-4261-a704-88d2a64111d3@acm.org>
+Date:   Thu, 26 Oct 2023 09:29:03 -0700
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-26_12,2023-10-26_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 adultscore=0
- clxscore=1015 phishscore=0 spamscore=0 impostorscore=0 suspectscore=0
- priorityscore=1501 mlxscore=0 mlxlogscore=864 malwarescore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2310170001 definitions=main-2310260122
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 0/3] Support disabling fair tag sharing
+Content-Language: en-US
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20231023203643.3209592-1-bvanassche@acm.org>
+ <ZTcr3AHr9l4sHRO2@fedora> <5d37f5ed-130a-4e75-b9a7-f77aeb4c7c89@acm.org>
+ <ZThwdPaeAFmhp58L@fedora> <faf6f9e4-e1fe-4934-8fdf-84383f51e740@acm.org>
+ <ZTmm0kNdN2Eka6V6@fedora>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ZTmm0kNdN2Eka6V6@fedora>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 23, 2023 at 11:28:37AM +0200, Hannes Reinecke wrote:
-> Unused now.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/scsi_lib.c  | 2 --
->  include/scsi/scsi_cmnd.h | 1 -
->  2 files changed, 3 deletions(-)
-> 
+On 10/25/23 16:37, Ming Lei wrote:
+> You are talking about multi-lun case, and your change does affect 
+> multi-lun code path, but your test result doesn't cover multi-lun, is
+> it enough?
+I think that the results I shared are sufficient because these show the
+worst possible performance impact of fair tag sharing. If there are two
+active logical units and much more I/O is sent to one logical unit than
+to the other, then the aggregate performance will be very close to what
+I shared in a previous email.
 
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+> At least your patch shouldn't cause performance regression on
+> multi-lun IO workloads, right?
+If blk_mq_get_tag() can't allocate a tag, and if multiple threads are
+waiting for a tag, the thread that called blk_mq_get_tag() first is
+granted the first tag that is released. I think this guarantees fairness
+if all requests have a similar latency. There will be some unfairness if
+there are significant differences in latency per logical unit, e.g.
+because all requests sent to one logical unit are small and because all
+requests sent to another logical unit are large. Whether or not this
+matters depends on the use case.
 
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+Thanks,
+
+Bart.
+
+
