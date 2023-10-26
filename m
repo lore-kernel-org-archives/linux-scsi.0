@@ -2,90 +2,233 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01423C25B67
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 17:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEFAC25B6E
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 19:31:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231811AbjJZRpd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Oct 2023 13:45:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38830 "EHLO
+        id S231701AbjJZTbm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Oct 2023 15:31:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230456AbjJZRpc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Oct 2023 13:45:32 -0400
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B7C710E
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Oct 2023 10:45:30 -0700 (PDT)
-Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-6bee11456baso1138282b3a.1
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Oct 2023 10:45:30 -0700 (PDT)
+        with ESMTP id S229991AbjJZTbl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Oct 2023 15:31:41 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 699B7196
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Oct 2023 12:31:38 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-507ac66a969so1579887e87.3
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Oct 2023 12:31:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1698342329; x=1698947129; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=lAfQHwAPGilY5JFUvY07Iu65/aCmQBkbdIAGwWe4Mw4=;
-        b=OOokzr/xpQa586UCRy1xcsAo2JXtjXKK1A4AH0Mi0GigDWK5n5q4u1PR/MPf7y4mZx
-         6lfsYsgMkX3AgdzCDUoaVBEAyZ6mKBXXMfIbGM7AQzKUgVkEUaMNlphLER8SP3XX3QRD
-         RJOB3ss9gxH8pBplRtLEDGjf1MqM7kQSLI8uA=
+        d=linaro.org; s=google; t=1698348696; x=1698953496; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Ywy6fWVLvmJZckMh0b8tqYAFdaL2mApdB/loN0g2f0E=;
+        b=jy3P1kNY8nvwnGdsS33FAuuv9IH6Phd6MVXSvNePNuZonbZOVIfG5XECi7VFkiNgVl
+         qtf8tnEIuETTGTG6QQU1mYDLg1Y+M8QYF4T5FsyO+xFGs/8yS4oJQujREnK4CP7KDUuR
+         ifSGc8NIVC6mLZdNeGBLsp6VCHXYdL5hbFQD4XeDgSDkIkN/0P+GSU210Rb5tjBZfBEy
+         bUrDczpNRAKfBptS8E/1/c6ygUsBeKh1r5GkC8HD6mDk2k3v9DZcruB5NT1z8usZwzB6
+         bXrSL9Z4nEW8mEucO6kJpAhwPeKaaIr4UPc4Iq8WHVjAznFrCnulCIeSSx1mjuY1yDtn
+         hG9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698342329; x=1698947129;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lAfQHwAPGilY5JFUvY07Iu65/aCmQBkbdIAGwWe4Mw4=;
-        b=SdSpnjYdDSD0jswgRufSTKZeDCOG+JdCi5MEfN1/uEs8wULwYJmRUCS6S+86r2Gg5M
-         jLLk1ulBtVc/VgZUL9t6PPAMnnRq/KP6lkHA+WxIjj6Jf9WOMbS0oF67A9GnEk2lmWyt
-         Qn+MimBITWwgAfkpQ/bohiHvruS2gAU0k+Xb4jtOzv2LR4W2vXxZGnt7y8JsCDsd2yYE
-         /+AV2H5axSIlPB0mBf0io8O3ELoXyXm9xv29HM+cAtLvGWQlO/j+KtSsjzkNKcLj3CTL
-         m3yrzA55P09pFInKRBXVaZxmk805GOvj6Bg+gAi9AhdOjnyOb1DO9uth48gOXHmb0UdO
-         j1XQ==
-X-Gm-Message-State: AOJu0Yyj5Dd1W1J/XFRLiseevbPhmyTNk6/pB37Z3yMDHtrUvewcp7FP
-        CkRfz05+0aoUje6AbirWtjv3eJRo6I75g765ZZA=
-X-Google-Smtp-Source: AGHT+IFBdjZbnbEQ859p1Brndxt1jXVT1XtY8KlXeTsIfFnjlV9Z2Y1YMFdXHByJlyYQdj3BFcCO5w==
-X-Received: by 2002:a05:6a00:114c:b0:6bd:b7c5:f777 with SMTP id b12-20020a056a00114c00b006bdb7c5f777mr188412pfm.16.1698342329654;
-        Thu, 26 Oct 2023 10:45:29 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id i3-20020aa787c3000000b006be047268d5sm11822297pfo.174.2023.10.26.10.45.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Oct 2023 10:45:29 -0700 (PDT)
-Date:   Thu, 26 Oct 2023 10:45:28 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Justin Stitt <justinstitt@google.com>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: elx: libefc: replace deprecated strncpy with
- strscpy_pad/memcpy
-Message-ID: <202310261045.5D815BE@keescook>
-References: <20231026-strncpy-drivers-scsi-elx-libefc-efc_node-h-v2-1-5c083d0c13f4@google.com>
+        d=1e100.net; s=20230601; t=1698348696; x=1698953496;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ywy6fWVLvmJZckMh0b8tqYAFdaL2mApdB/loN0g2f0E=;
+        b=QoJY3k9tjkaCra37W+4Eir/GQWIqCcs5ZfIQfQ9rWjuBb2F+0CLD2V4D8xaEEHVfUK
+         0rwt0QSxVtg+63Ged7gZriFCCW/MfvNNFhh3WHUXAqCrlZu21dpBoZddO6uCEdw/Nof7
+         03KsuZfpGY77n2bFytGXkGOb1wkyoaSxPYZX12QiG7/fgFwsfbc9H79evum/+yljU4vu
+         lGroSo+DcTHth9CzAFbUyODIy4ICxAs3G8jw3ZvYSedSj4B7g5UUT5+wK2dWo0ep50lM
+         CnCthNUucDxYjmScFHcwg0ksgtZ6zu/lSKYUHpUsfeUt7lko3p+bHf4PWbADHfJg0m8G
+         6i8g==
+X-Gm-Message-State: AOJu0Ywq+6V3goIzRQN23HAJu3m06pgavUpPeDRMaOubpKmPGQKQ3f6/
+        ihqjezhNgFObdq2AGu4k+OAW3w==
+X-Google-Smtp-Source: AGHT+IFWDZS34rvspUgwbDHXK7kc9utTg6aVksJEARy6vQoLFoqbqsEj13cqR6sg0rLi/wgb+XBc2A==
+X-Received: by 2002:ac2:52b0:0:b0:507:a86d:89bb with SMTP id r16-20020ac252b0000000b00507a86d89bbmr226981lfm.23.1698348696571;
+        Thu, 26 Oct 2023 12:31:36 -0700 (PDT)
+Received: from [172.30.204.84] (UNUSED.212-182-62-129.lubman.net.pl. [212.182.62.129])
+        by smtp.gmail.com with ESMTPSA id j19-20020a056512345300b0050336e38735sm3107145lfr.92.2023.10.26.12.31.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 Oct 2023 12:31:36 -0700 (PDT)
+Message-ID: <3109efe2-120b-447b-ae7d-16f03e3dc3a6@linaro.org>
+Date:   Thu, 26 Oct 2023 21:31:31 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231026-strncpy-drivers-scsi-elx-libefc-efc_node-h-v2-1-5c083d0c13f4@google.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
+To:     Manivannan Sadhasivam <manivannanece23@gmail.com>,
+        Manivannan Sadhasivam <mani@kernel.org>
+Cc:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Can Guo <quic_cang@quicinc.com>, quic_nguyenb@quicinc.com,
+        quic_nitirawa@quicinc.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-3-git-send-email-quic_cang@quicinc.com>
+ <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+ <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
+ <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org>
+ <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
+ <1413119B-8B9C-4DE4-A086-476B2BAA60AD@linaro.org>
+ <20230919120829.GB4732@thinkpad>
+ <CAA8EJppwjzNDsPHZqUdmgQy3fAbP+AFnOo4+FTDCdpBEZp5S_w@mail.gmail.com>
+ <20230920102327.GH4732@thinkpad> <20231018124741.GA47321@thinkpad>
+Content-Language: en-US
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+In-Reply-To: <20231018124741.GA47321@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 26, 2023 at 01:53:13AM +0000, Justin Stitt wrote:
-> strncpy() is deprecated for use on NUL-terminated destination strings
-> [1] and as such we should prefer more robust and less ambiguous string
-> interfaces.
-> 
-> To keep node->current_state_name and node->prev_state_name NUL-padded
-> and NUL-terminated let's use strscpy_pad() as this implicitly provides
-> both.
-> 
-> For the swap between the two, a simple memcpy will suffice.
-> 
-> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
-> Signed-off-by: Justin Stitt <justinstitt@google.com>
 
-Thanks! I think this looks good now.
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+On 10/18/23 14:47, Manivannan Sadhasivam wrote:
+> On Wed, Sep 20, 2023 at 12:23:27PM +0200, Manivannan Sadhasivam wrote:
+>> On Wed, Sep 20, 2023 at 01:27:59AM +0300, Dmitry Baryshkov wrote:
+>>> On Tue, 19 Sept 2023 at 15:08, Manivannan Sadhasivam <mani@kernel.org> wrote:
+>>>>
+>>>> On Fri, Sep 15, 2023 at 05:31:45AM +0300, Dmitry Baryshkov wrote:
+>>>>> On 11 September 2023 13:02:50 GMT+03:00, Can Guo <quic_cang@quicinc.com> wrote:
+>>>>>>
+>>>>>> On 9/11/2023 5:46 PM, Konrad Dybcio wrote:
+>>>>>>> On 11.09.2023 11:42, Can Guo wrote:
+>>>>>>>> Hi Konrad,
+>>>>>>>>
+>>>>>>>> On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
+>>>>>>>>> On 11.09.2023 07:59, Can Guo wrote:
+>>>>>>>>>> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+>>>>>>>>>>
+>>>>>>>>>> Retrieve UFS device version from UFS host controller's spare register
+>>>>>>>>>> which is populated by bootloader, and use the UFS device version together
+>>>>>>>>>> with host controller's HW version to decide the proper power modes which
+>>>>>>>>>> should be used to configure the UFS PHY.
+>>>>>>>>> That sounds a bit fishy.. is there no bootloader-independent
+>>>>>>>>> solution to that? Can't we bring in the code that the bootloader
+>>>>>>>>> uses to determine these values?
+>>>>>>>>>
+>>>>>>>>> Konrad
+>>>>>>>>
+>>>>>>>> Agree, it is.
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> All these complexities come from one request from PHY design team - power saving.
+>>>>>>>>
+>>>>>>>> And to achieve power saving, Qualcomm UFS developers are requested to use the
+>>>>>>>>
+>>>>>>>> lowest hanging PHY settings which can sustain the Max agreed HS Gear (btw host
+>>>>>>>>
+>>>>>>>> and UFS device) during UFS's lifecycle in High Level OS,  whereas the power saving
+>>>>>>>>
+>>>>>>>> request does not apply to bootloader, which works for only a few seconds during
+>>>>>>>>
+>>>>>>>> bootup. Hence, there is no such version detect code in bootloader -  it just uses the
+>>>>>>>>
+>>>>>>>> highest PHY settings to configure PHY, boot up UFS and put UFS device version in this
+>>>>>>>>
+>>>>>>>> register.
+>>>>>>> First of all, your email client seems to be inserting 2 newlines
+>>>>>>> instead of 1. If you're using thunderbird, you may want to edit:
+>>>>>>>
+>>>>>>> mail.identity.(default or your mail identity idx).default.compose_html
+>>>>>>>
+>>>>>>> to `false`
+>>>>>>>
+>>>>>>> and add that to your internal wiki page, as I see many @quic folks having
+>>>>>>> this issue.
+>>>>>>>
+>>>>>>>
+>>>>>>> Going back to the main topic, I don't think we understood each other.
+>>>>>>> The commit message states:
+>>>>>>>
+>>>>>>>
+>>>>>>> "Retrieve UFS device version from UFS host controller's spare register
+>>>>>>> which is populated by bootloader"
+>>>>>>>
+>>>>>>>
+>>>>>>> Which means the bootloader is able to somehow determine the value
+>>>>>>> that's in the spare register and write it there.
+>>>>>>>
+>>>>>>> I'm asking whether we can take the logic behind this value and
+>>>>>>> move it to Linux so that we don't depend on the bootloader to
+>>>>>>> guarantee it (e.g. Chrome or some other devices with more exotic
+>>>>>>> fw may not work this way).
+>>>>>>>
+>>>>>>>
+>>>>>>> Konrad
+>>>>>>
+>>>>>>
+>>>>>> There is no logic behind this value at all in bootloader, as I explained, after bootloader
+>>>>>>
+>>>>>> initializes UFS, bootloader simply reads UFS's device version (the value you are referring)
+>>>>>>
+>>>>>> and write it to the register. But in Linux kernel, we need (or want to know) this value
+>>>>>>
+>>>>>> BEFORE we initialize UFS host controller (and UFS device).
+>>>>>
+>>>>> Depending on the bootloader behaviour is not an option. For example the kernel might be started via kexec. Or via u-boot. Or grub. Or any other bootloader. So please duplicate the logic to read the UFS version instead.
+>>>>>
+>>>>
+>>>> As Can said, there is no logic in the bootloader. What it does it, after doing
+>>>> the UFS initialization, it writes the agreed gear (between host and the device)
+>>>> to this register. And in linux, we use that value to initialize the device
+>>>> (i.e., not doing init based on the min gear).
+>>>>
+>>>> But the important factor here is that, we use this gear value to program the PHY
+>>>> init sequence. So if there is no hint from the bootloader, linux will program
+>>>> the min phy sequence (G3/G4) and then once the gear scaling happens, it will
+>>>> program the max phy sequence (G4/G5).
+>>>>
+>>>> Now on recent platforms, the init sequences are not compatible with each other
+>>>> i.e., once the min seq. is programmed, then before programming max seq. the
+>>>> registers not common to both seq. should be programmed to default value. In
+>>>> other words, min seq. specific registers should be reset to the default value.
+>>>> Otherwise, there will be stability issues in the PHY.
+>>>
+>>> I see nothing wrong with adding 'default' register programming to the
+>>> gear tables. If we have to reset them to the default values to switch
+>>> the PHY settings, these writes must be a part of the corresponding
+>>> tables.
+>>>
+>>
+>> Yep, that's what I initially proposed. But Qcom wanted to avoid the cost of
+>> programming the reset tables in the PHY driver.
+>>
+>> Can, could you please check if programming the additional sequence doesn't cause
+>> any power/performance effect?
+>>
+> 
+> I'd like to simplify this conversion as there has been some misunderstanding.
+> 
+> First of all in linux, while probing the UFS device by the host controller, it
+> needs to use _some_ gear. So far we were using HS_G2 as that gear and using the
+> PHY init sequence of G3/G4 depending on the SoC. We do not need to use G2 init
+> sequence because, there are only 2 init sequences available for any SoC and
+> since the init sequences are backwards compatible, we mostly use the min init
+> sequence, G3/G4. Even though this incurs slight power consumption during boot,
+> the ufs host controller after probing the device will switch to max gear
+> supported by both entities. If that max is G4/G5, then the respective init
+> sequence will be programmed again.
+> 
+> Now the issue is, for the automotive usecases, switching the gears 2 times
+> during boot is affecting the boot KPI (Key Performance Inidicator). So the UFS
+> team came with the idea of populating a spare register in the bootloader with
+> the max gear info that the bootloader has already found out and using the same
+> in the linux for first time itself. This helps linux in using a single gear
+> during probe time.
+> 
+> This is what this patch is doing. If for some reason, that register is not
+> populated, then we default to the existing G2 gear and do init twice as the
+> driver is doing currently.
+> 
+> I hope this clarifies the intention of this patch.
+Yes I understand this, but I am not sure if such tricks should make
+it upstream.. They depend on specific firmware (unrelated to the hw
+block itself) and only exist to improve boot times. If the firmware
+requirement was not at play, I would have no issues with this.
 
--- 
-Kees Cook
+Konrad
