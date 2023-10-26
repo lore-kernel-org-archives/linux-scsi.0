@@ -2,123 +2,214 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D3BFC25B6B
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Oct 2023 23:38:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C50C25B6B
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 01:39:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230190AbjJYXiw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Oct 2023 19:38:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53658 "EHLO
+        id S229816AbjJZBjO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Oct 2023 21:39:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229583AbjJYXiv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 19:38:51 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE160182
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 16:38:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1698277087;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/1ECK+sIckpLTVB9XtwPHYGwhamrPlJsgObLvY+fw0s=;
-        b=eWlXaPfv+TuEq0uzmTDLqXDFBGTTi4BU5O0cLbaQ4aSD38YyOR0/AzjH3Jew5Z2ehOhBQH
-        jmQugMIs6XdRMckeq+LXGxTr2XWsh9rRZmXrXC0HTQ7xz7Moxe47Kdmp+eJXx8eNyS6SL8
-        T5UENWOlBwMs4vamvvHVrEwuQJ18zKY=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-202-pOtxNkDCPvyuVogSIQ3s8Q-1; Wed, 25 Oct 2023 19:38:03 -0400
-X-MC-Unique: pOtxNkDCPvyuVogSIQ3s8Q-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 5A291811E91;
-        Wed, 25 Oct 2023 23:38:03 +0000 (UTC)
-Received: from fedora (unknown [10.72.120.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3FFE5492BFA;
-        Wed, 25 Oct 2023 23:37:58 +0000 (UTC)
-Date:   Thu, 26 Oct 2023 07:37:54 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, ming.lei@redhat.com
-Subject: Re: [PATCH v4 0/3] Support disabling fair tag sharing
-Message-ID: <ZTmm0kNdN2Eka6V6@fedora>
-References: <20231023203643.3209592-1-bvanassche@acm.org>
- <ZTcr3AHr9l4sHRO2@fedora>
- <5d37f5ed-130a-4e75-b9a7-f77aeb4c7c89@acm.org>
- <ZThwdPaeAFmhp58L@fedora>
- <faf6f9e4-e1fe-4934-8fdf-84383f51e740@acm.org>
+        with ESMTP id S229596AbjJZBjO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 21:39:14 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BAB2BD;
+        Wed, 25 Oct 2023 18:39:12 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 213C6C433C7;
+        Thu, 26 Oct 2023 01:39:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698284351;
+        bh=uRlTykSi/1BEEYywEW5OsMVw9Et9v40jXQ7HMGWKDCM=;
+        h=From:To:Subject:Date:From;
+        b=LLaOexctWvHsRXG95LttoIW3KYjc7WpDTA0zgTiOzF4b5+CUJVbZcGyPg2Ai44zJ8
+         LtiIdF++QgljOOCLp3YYDujSD5nqOJ+1NNDB/dSDYfnUarH3XFE0/6Gj3b4z8ohhKB
+         xJ8Ng6OJOfaD7IRCjViB6b1Y62i1oQ3SSB98ITXhndk4pMt8xYVb+76Gbc7aDBqQSx
+         aEcn4+Nplp02zrQsKzahhEJ3iJ6Wqb0WU7yquHx7QRt0UPiQ9WX+xLPV9RC+88gXgR
+         jk4Kibg9DeTPjkDpG0xfwSYINM9d17LDkomN3suv6zy8vnUOYZMTa9ESMI0ji1pvBh
+         Q2Jnp8GHhYO3Q==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH v2] scsi: sd: Introduce manage_shutdown device flag
+Date:   Thu, 26 Oct 2023 10:39:09 +0900
+Message-ID: <20231026013909.24301-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <faf6f9e4-e1fe-4934-8fdf-84383f51e740@acm.org>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.10
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 25, 2023 at 12:01:33PM -0700, Bart Van Assche wrote:
-> 
-> On 10/24/23 18:33, Ming Lei wrote:
-> > Yeah, performance does drop when queue depth is cut to half if queue
-> > depth is low enough.
-> > 
-> > However, it isn't enough to just test perf over one LUN, what is the
-> > perf effect when running IOs over the 2 or 5 data LUNs
-> > concurrently?
-> 
-> I think that the results I shared are sufficient because these show the
-> worst possible performance impact of fair tag sharing (two active
-> logical units and much more activity on one logical unit than on the
-> other).
+Commit aa3998dbeb3a ("ata: libata-scsi: Disable scsi device
+manage_system_start_stop") change setting the manage_system_start_stop
+flag to false for libata managed disks to enable libata internal
+management of disk suspend/resume. However, a side effect of this change
+is that on system shutdown, disks are no longer being stopped (set to
+standby mode with the heads unloaded). While this is not a critical
+issue, this unclean shutdown is not recommended and shows up with
+increased smart counters (e.g. the unexpected power loss counter
+"Unexpect_Power_Loss_Ct").
 
-You are talking about multi-lun case, and your change does affect
-multi-lun code path, but your test result doesn't cover multi-lun,
-is it enough?
+Instead of defining a shutdown driver method for all ATA adapter
+drivers (not all of them define that operation), this patch resolves
+this issue by further refining the sd driver start/stop control of disks
+using the new flag manage_shutdown. If this new flag is set to true by
+a low level driver, the function sd_shutdown() will issue a
+START STOP UNIT command with the start argument set to 0 when a disk
+needs to be powered off (suspended) on system power off, that is, when
+system_state is equal to SYSTEM_POWER_OFF.
 
-At least your patch shouldn't cause performance regression on multi-lun IO
-workloads, right?
+Similarly to the other manage_xxx flags, the new manage_shutdown flag is
+exposed through sysfs as a read-write device attribute.
 
-> 
-> > SATA should have similar issue too, and I think the improvement may be
-> > more generic to bypass fair tag sharing in case of low queue depth
-> > (such as < 32) if turns out the fair tag sharing doesn't work well in
-> > case low queue depth.
-> > 
-> > Also the 'fairness' could be enhanced dynamically by scsi LUN's
-> > queue depth, which can be adjusted dynamically.
-> 
-> Most SATA devices are hard disks. Hard disk IOPS are constrained by the
-> speed with which the head of a hard disk can move. That speed hasn't
-> changed much during the past 40 years. I'm not sure that hard disks are
-> impacted as much as SSD devices by fair tag sharing.
+To avoid any confusion between manage_shutdown and
+manage_system_start_stop, the comments describing these flags in
+include/scsi/scsi.h are also improved.
 
-What I meant is that SATA's queue depth is often 32 or 31, and still have
-multi-lun cases.
+Fixes: aa3998dbeb3a ("ata: libata-scsi: Disable scsi device manage_system_start_stop")
+Cc: stable@vger.kernel.org
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218038
+Link: https://lore.kernel.org/all/cd397c88-bf53-4768-9ab8-9d107df9e613@gmail.com/
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-scsi.c  |  5 +++--
+ drivers/firewire/sbp2.c    |  1 +
+ drivers/scsi/sd.c          | 39 +++++++++++++++++++++++++++++++++++---
+ include/scsi/scsi_device.h | 20 +++++++++++++++++--
+ 4 files changed, 58 insertions(+), 7 deletions(-)
 
-At least from what you shared, the fair tag sharing doesn't work well
-just because of low queue depth, nothing is actually related with UFS.
-
-That is why I am wondering that why not force to disable fairing sharing
-in case of low queue depth.
-
-> 
-> Any algorithm that is more complicated than what I posted probably would
-> have a negative performance impact on storage devices that use NAND
-> technology, e.g. UFS devices. So I prefer to proceed with this patch
-> series and solve any issues with ATA devices separately. Once this patch
-> series has been merged, it could be used as a basis for a solution for
-> ATA devices. A solution for ATA devices does not have to be implemented
-> in the block layer core - it could e.g. be implemented in the ATA subsystem.
-
-I don't object to take the disabling fair sharing first, and I meant that
-the fairness may be brought back by adjusting scsi_device's queue depth in
-future.
-
-
-Thanks,
-Ming
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a371b497035e..3a957c4da409 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1053,10 +1053,11 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+ 
+ 		/*
+ 		 * Ask the sd driver to issue START STOP UNIT on runtime suspend
+-		 * and resume only. For system level suspend/resume, devices
+-		 * power state is handled directly by libata EH.
++		 * and resume and shutdown only. For system level suspend/resume,
++		 * devices power state is handled directly by libata EH.
+ 		 */
+ 		sdev->manage_runtime_start_stop = true;
++		sdev->manage_shutdown = true;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
+index 749868b9e80d..7edf2c95282f 100644
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -1521,6 +1521,7 @@ static int sbp2_scsi_slave_configure(struct scsi_device *sdev)
+ 	if (sbp2_param_exclusive_login) {
+ 		sdev->manage_system_start_stop = true;
+ 		sdev->manage_runtime_start_stop = true;
++		sdev->manage_shutdown = true;
+ 	}
+ 
+ 	if (sdev->type == TYPE_ROM)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 83b6a3f3863b..6effa13039f3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -209,7 +209,8 @@ manage_start_stop_show(struct device *dev,
+ 
+ 	return sysfs_emit(buf, "%u\n",
+ 			  sdp->manage_system_start_stop &&
+-			  sdp->manage_runtime_start_stop);
++			  sdp->manage_runtime_start_stop &&
++			  sdp->manage_shutdown);
+ }
+ static DEVICE_ATTR_RO(manage_start_stop);
+ 
+@@ -275,6 +276,35 @@ manage_runtime_start_stop_store(struct device *dev,
+ }
+ static DEVICE_ATTR_RW(manage_runtime_start_stop);
+ 
++static ssize_t manage_shutdown_show(struct device *dev,
++				    struct device_attribute *attr, char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++
++	return sysfs_emit(buf, "%u\n", sdp->manage_shutdown);
++}
++
++static ssize_t manage_shutdown_store(struct device *dev,
++				     struct device_attribute *attr,
++				     const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++	bool v;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	if (kstrtobool(buf, &v))
++		return -EINVAL;
++
++	sdp->manage_shutdown = v;
++
++	return count;
++}
++static DEVICE_ATTR_RW(manage_shutdown);
++
+ static ssize_t
+ allow_restart_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+@@ -607,6 +637,7 @@ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_manage_start_stop.attr,
+ 	&dev_attr_manage_system_start_stop.attr,
+ 	&dev_attr_manage_runtime_start_stop.attr,
++	&dev_attr_manage_shutdown.attr,
+ 	&dev_attr_protection_type.attr,
+ 	&dev_attr_protection_mode.attr,
+ 	&dev_attr_app_tag_own.attr,
+@@ -3819,8 +3850,10 @@ static void sd_shutdown(struct device *dev)
+ 		sd_sync_cache(sdkp, NULL);
+ 	}
+ 
+-	if (system_state != SYSTEM_RESTART &&
+-	    sdkp->device->manage_system_start_stop) {
++	if ((system_state != SYSTEM_RESTART &&
++	     sdkp->device->manage_system_start_stop) ||
++	    (system_state == SYSTEM_POWER_OFF &&
++	     sdkp->device->manage_shutdown)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index fd41fdac0a8e..d87bc57da8bf 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -162,8 +162,24 @@ struct scsi_device {
+ 				 * core. */
+ 	unsigned int eh_timeout; /* Error handling timeout */
+ 
+-	bool manage_system_start_stop; /* Let HLD (sd) manage system start/stop */
+-	bool manage_runtime_start_stop; /* Let HLD (sd) manage runtime start/stop */
++	/*
++	 * If true, let the high-level device driver (sd) manage the device
++	 * power state for system suspend/resume (suspend to RAM and
++	 * hybernation) operations.
++	 */
++	bool manage_system_start_stop;
++
++	/*
++	 * If true, let the high-level device driver (sd) manage the device
++	 * power state for runtime device suspand and resume operations.
++	 */
++	bool manage_runtime_start_stop;
++
++	/*
++	 * If true, let the high-level device driver (sd) manage the device
++	 * power state for system shutdown (power off) operations.
++	 */
++	bool manage_shutdown;
+ 
+ 	unsigned removable:1;
+ 	unsigned changed:1;	/* Data invalid due to media change */
+-- 
+2.41.0
 
