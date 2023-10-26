@@ -2,68 +2,69 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 532E4C0032E
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 01:47:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 720BEC25B6B
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 01:53:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229954AbjJZBrh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Oct 2023 21:47:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54348 "EHLO
+        id S230467AbjJZBxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Oct 2023 21:53:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbjJZBrg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 21:47:36 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8834010E
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 18:47:34 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id 3f1490d57ef6-da04776a869so324699276.0
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 18:47:34 -0700 (PDT)
+        with ESMTP id S229705AbjJZBxQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Oct 2023 21:53:16 -0400
+Received: from mail-oi1-x24a.google.com (mail-oi1-x24a.google.com [IPv6:2607:f8b0:4864:20::24a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 847D4BD
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 18:53:14 -0700 (PDT)
+Received: by mail-oi1-x24a.google.com with SMTP id 5614622812f47-3b3ebbbdbf9so535031b6e.0
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2023 18:53:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698284854; x=1698889654; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1698285194; x=1698889994; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=Js4XprMdTI6hSlDAn2ukBGBbLII8ZoL1rfyHAKO62Tw=;
-        b=gMbUAE6VJ9LRevEU2cEMY9Ai+3kRndvKKTV7f9LaPUUaeoLQ+Fei03yU1jF4uGxN9m
-         F7bHh0R32hd81V4x5X+OuvqqPhZ2LF3f6ehaCeXGYaxa/J28zYwgtW2IxTE28l7P59CC
-         JJUINJT+5pMm9vtlst6uay5/xog+9ovwNObg7+BW6u9dnD8KOYzspK0BiUvgD3k3oWog
-         ueW7RwJYUI28ExiGVHqXqXEyTlP5+n/v8QU0zWKrxj1/wMUkURRfe/ek+Kr4DdqN77fu
-         zMePyouhQluf50aQKODKpVwp8M96MQin7OYq95JV7CTbln2xouuZ0ad6pJXaaJpRloDY
-         cRxg==
+        bh=Pjp8stIHwO7L4r2Xgqzk9PeiKrAFnh4U0H3mDy43hbM=;
+        b=FU7kMCetNBRUX2ViP60iRRv7EMg/QKvhCXlqlcSGbZQwahaxG7jXoOPTjLDdB9MlV1
+         gHghRUCtdqcKVTHlOUCPZFg0sFGk4HIWwxuydgvkDVept8v6vm99PolMiJnqdzA6dSkh
+         /hT2c3tBtEuxMyAcBtyYnLe5TjuJZpe9+/uBDbQA44StYMgq9HvhS+lmJhnngbEr/igT
+         AOIh/f8k6Kcl+0jCpSYqHTTe48NN9C69KVM5iqD3N16zbN0CFK4nLU/RBBfCD91PrFbt
+         KRmidBf+P4K9hEJC6aS8HB5aSdOxDUMlBWT24SOvI/vH8K6DYE6wfUQZHxh1I6OHjyOJ
+         8+Lg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698284854; x=1698889654;
+        d=1e100.net; s=20230601; t=1698285194; x=1698889994;
         h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=Js4XprMdTI6hSlDAn2ukBGBbLII8ZoL1rfyHAKO62Tw=;
-        b=fRPVi568HNGlsl1wQtP/G3BXt1hkHrjV5uy3twimQxJTWKLtwVaqEiVSMAphWg167t
-         McCYZq3M88yzZg70EfG3Lj5+7Cuper9fqkLwBcx8ZwqfiWHi6EAPUmCwuwFI3pLsR/XT
-         uaAs0KbUafi//8/ZBw1Ihp00lsdemf6tsPja9JoLyyYDdDt94RJXbI1vLzUbryp485vR
-         vnxBgYfNtfmPVE4DqNIi2suILqVUBePEDJFoW1uKM26Rs8r71GTs3X+YGWxGaAtfmYWi
-         CZxt07sdPG5rEunc8uk0wExR6Z7sznbTFHcS5wDjVLKb+Md08F8xhqCZJnHd+obl1cuX
-         4oOA==
-X-Gm-Message-State: AOJu0YxzK6IQuMdMBJ0l9u+xAEElu0HPGBb3TD6g5N25EO5ve49RjVVq
-        aQcgO7cdREoZ1au2dTrPulps4irqXjFAqcaSVw==
-X-Google-Smtp-Source: AGHT+IH/jjucq3mK5/RG1QvlV2wevNMUr5W6d0xM2J/lYpgC6Ebxs2KJJbuAVcz7lyjK9pygZZGjxa04MoN07qHUqQ==
+        bh=Pjp8stIHwO7L4r2Xgqzk9PeiKrAFnh4U0H3mDy43hbM=;
+        b=DxAOKaQiLjTeH+Xv8CvdqQiKJiMe+86IItjyinQNUcUocCKWk5wVA9zb6JwxZsPA2t
+         RvVW6+DGcuBKhivc34KFhFqVgL0EjSW0ExHGOVXN5GTFTOi7YVK5IDEYGV4pxKKBMMOV
+         CrlAm+xJvg2IrqIOJwoCLtd5XE0W7eSzMnJehsP8+h2s3adep23BEoo/Qn05rATNxspr
+         dApQB7s7i8Xd7b6psydBXWicOG/UweGgtAXCYzgJ/JTYM5WW+nSIcm+Kor51j2vPogYH
+         gpHdAsEW9bBO0mccyYC7g7ES//2pjBEEQ+7IjYujk36kNp8BW028uG7Cl6622wp5nOnY
+         krMg==
+X-Gm-Message-State: AOJu0YxbfZeM5+VwnoKuamD03Fuv8GF3t/yhIRkHDhRyqT+dR4zwjKR/
+        aAmHTskxyyUDf5vFxx4Uq51uIJBYvCG/qMt3nA==
+X-Google-Smtp-Source: AGHT+IFR8bdTL15YcnhEGV4KArX2GQqck0DFHJVoxlAoubcCaDkQCxdYWrb57IiYGlWJBc9htP5vldakHxwGrWPN5Q==
 X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a25:243:0:b0:d9a:5e8f:1562 with SMTP
- id 64-20020a250243000000b00d9a5e8f1562mr316938ybc.6.1698284853737; Wed, 25
- Oct 2023 18:47:33 -0700 (PDT)
-Date:   Thu, 26 Oct 2023 01:47:32 +0000
+ (user=justinstitt job=sendgmr) by 2002:a05:6808:182a:b0:3ae:1691:c59f with
+ SMTP id bh42-20020a056808182a00b003ae1691c59fmr7079317oib.1.1698285193848;
+ Wed, 25 Oct 2023 18:53:13 -0700 (PDT)
+Date:   Thu, 26 Oct 2023 01:53:13 +0000
 Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIADTFOWUC/x3MQQqEMAwAwK9Izga0ysr6FfHQpnHNpZZERBH/b
- tnjXOYGYxU2GKsblA8x2VJBW1dAq08/RonF4BrXtY37oO2aKF8YVQ5WQyMTXLN5JOwpDCH2/A3 DAmXIyouc/32an+cFmqrP/20AAAA=
+X-B4-Tracking: v=1; b=H4sIAIjGOWUC/52NQQqDMBBFryKz7pRGqdGuvEeR0sRRB2wiGQmKe
+ PemHqGL/+H9xX87CAUmgUe2Q6DIwt4lyC8Z2PHtBkLuEkN+ywuVgrIEZ+cNu8CRgqBYYaRpxYk
+ N9RZTXs53hCNaY3p9L1StjYZ0OAfqeT1lzzbxyLL4sJ3uqH7rX5qoUGFlyrLSqXVdNoP3w0RX6 z/QHsfxBYPjGdzlAAAA
 X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1698284852; l=5190;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1698285193; l=2296;
  i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=AKejiU2rH/fybS/397SBwIybgBTb+KL0HploXuRamMk=; b=tA3DghjZOpNWy8m2pqqzyD5dpHovEGZXzhUoYwF0HmXrNd6rndmettjevOZlgbejRYFU2U60l
- m/ukhhYipVaAbeMBjkysS1X1e+HWqFD14bCU1Jhm3unSKXjRn5hhdpT
+ bh=WD63y2GNp2EK1VTsmPzRbEGCPxluZOXKFCe7l0K3vCw=; b=/x030tgpsz2o7BLKx2T1XvytucXzMZiEPEPMDSyVAqw/VZ8hj5twcwH9avRjfmp3Bb6jWTx/j
+ o6vcxZN394aBBS+mMtBem2lDMBgTTeqfzkGfYlPyS5SzrfDpS+TFexB
 X-Mailer: b4 0.12.3
-Message-ID: <20231026-strncpy-drivers-scsi-hpsa-c-v1-1-75519d7a191b@google.com>
-Subject: [PATCH] scsi: hpsa: replace deprecated strncpy with strscpy/kmemdup_nul
+Message-ID: <20231026-strncpy-drivers-scsi-elx-libefc-efc_node-h-v2-1-5c083d0c13f4@google.com>
+Subject: [PATCH v2] scsi: elx: libefc: replace deprecated strncpy with strscpy_pad/memcpy
 From:   Justin Stitt <justinstitt@google.com>
-To:     Don Brace <don.brace@microchip.com>,
+To:     James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     storagedev@microchip.com, linux-scsi@vger.kernel.org,
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
-        Kees Cook <keescook@chromium.org>,
         Justin Stitt <justinstitt@google.com>
 Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
@@ -74,140 +75,57 @@ strncpy() is deprecated for use on NUL-terminated destination strings
 [1] and as such we should prefer more robust and less ambiguous string
 interfaces.
 
-This whole process of 1) determining smaller length so we don't overread
-the buffer and 2) manually NUL-terminating our buffer so we can use in
-string APIs is handled implicitly by strscpy().
+To keep node->current_state_name and node->prev_state_name NUL-padded
+and NUL-terminated let's use strscpy_pad() as this implicitly provides
+both.
 
-Therefore, a suitable replacement is `strscpy` [2] due to the fact that
-it guarantees NUL-termination on the destination buffer without
-unnecessarily NUL-padding.
-
-For the last two strncpy() use cases in init_driver_version(), we can
-actually drop this function entirely.
-
-Firstly, we are kmalloc()'ing driver_version. Then, we are calling
-init_driver_version() which memset's it to 0 followed by a strncpy().
-This pattern of 1) allocating memory for a string, 2) setting all bytes
-to NUL, 3) copy bytes from another string + ensure NUL-padded
-destination is just an open-coded kmemdup_nul().
-
-The last case involves swapping kmalloc_array() for kcalloc() to give us
-a zero-filled two-element array for both old_driver_version and
-driver_version without needing the memset from init_driver_version().
-
-Now this code is easier to read and less fragile (no more ... - 1's) or
-min length checks and now we have guaranteed NUL-termination everywhere!
-
-Although perhaps there should be a macro for:
+For the swap between the two, a simple memcpy will suffice.
 
 Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
 Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
 Link: https://github.com/KSPP/linux/issues/90
 Cc: linux-hardening@vger.kernel.org
-Cc: Kees Cook <keescook@chromium.org>
 Signed-off-by: Justin Stitt <justinstitt@google.com>
+---
+Changes in v2:
+- use strscpy_pad (thanks Kees)
+- Link to v1: https://lore.kernel.org/r/20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-v1-1-8b66878b6796@google.com
 ---
 Note: build-tested only.
 
 Found with: $ rg "strncpy\("
 ---
- drivers/scsi/hpsa.c | 29 +++++++++++------------------
- 1 file changed, 11 insertions(+), 18 deletions(-)
+ drivers/scsi/elx/libefc/efc_node.h | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index af18d20f3079..3376d4614fe5 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -452,16 +452,15 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
- 					 struct device_attribute *attr,
- 					 const char *buf, size_t count)
- {
--	int status, len;
-+	int status;
- 	struct ctlr_info *h;
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	char tmpbuf[10];
+diff --git a/drivers/scsi/elx/libefc/efc_node.h b/drivers/scsi/elx/libefc/efc_node.h
+index e9c600ac45d5..e57579988ba4 100644
+--- a/drivers/scsi/elx/libefc/efc_node.h
++++ b/drivers/scsi/elx/libefc/efc_node.h
+@@ -26,13 +26,13 @@ efc_node_evt_set(struct efc_sm_ctx *ctx, enum efc_sm_event evt,
+ 	struct efc_node *node = ctx->app;
  
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 		return -EACCES;
--	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
--	strncpy(tmpbuf, buf, len);
--	tmpbuf[len] = '\0';
-+	strscpy(tmpbuf, buf, count);
-+
- 	if (sscanf(tmpbuf, "%d", &status) != 1)
- 		return -EINVAL;
- 	h = shost_to_hba(shost);
-@@ -476,16 +475,15 @@ static ssize_t host_store_raid_offload_debug(struct device *dev,
- 					 struct device_attribute *attr,
- 					 const char *buf, size_t count)
- {
--	int debug_level, len;
-+	int debug_level;
- 	struct ctlr_info *h;
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	char tmpbuf[10];
- 
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 		return -EACCES;
--	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
--	strncpy(tmpbuf, buf, len);
--	tmpbuf[len] = '\0';
-+	strscpy(tmpbuf, buf, count);
-+
- 	if (sscanf(tmpbuf, "%d", &debug_level) != 1)
- 		return -EINVAL;
- 	if (debug_level < 0)
-@@ -7234,24 +7232,19 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- 	return 0;
- }
- 
--static void init_driver_version(char *driver_version, int len)
--{
--	memset(driver_version, 0, len);
--	strncpy(driver_version, HPSA " " HPSA_DRIVER_VERSION, len - 1);
--}
--
- static int write_driver_ver_to_cfgtable(struct CfgTable __iomem *cfgtable)
- {
- 	char *driver_version;
- 	int i, size = sizeof(cfgtable->driver_version);
- 
--	driver_version = kmalloc(size, GFP_KERNEL);
-+	driver_version = kmemdup_nul(HPSA " " HPSA_DRIVER_VERSION, size,
-+				     GFP_KERNEL);
- 	if (!driver_version)
- 		return -ENOMEM;
- 
--	init_driver_version(driver_version, size);
- 	for (i = 0; i < size; i++)
- 		writeb(driver_version[i], &cfgtable->driver_version[i]);
-+
- 	kfree(driver_version);
- 	return 0;
- }
-@@ -7271,7 +7264,7 @@ static int controller_reset_failed(struct CfgTable __iomem *cfgtable)
- 	char *driver_ver, *old_driver_ver;
- 	int rc, size = sizeof(cfgtable->driver_version);
- 
--	old_driver_ver = kmalloc_array(2, size, GFP_KERNEL);
-+	old_driver_ver = kcalloc(2, size, GFP_KERNEL);
- 	if (!old_driver_ver)
- 		return -ENOMEM;
- 	driver_ver = old_driver_ver + size;
-@@ -7279,7 +7272,7 @@ static int controller_reset_failed(struct CfgTable __iomem *cfgtable)
- 	/* After a reset, the 32 bytes of "driver version" in the cfgtable
- 	 * should have been changed, otherwise we know the reset failed.
- 	 */
--	init_driver_version(old_driver_ver, size);
-+	strscpy(old_driver_ver, HPSA " " HPSA_DRIVER_VERSION, size);
- 	read_driver_ver_from_cfgtable(cfgtable, driver_ver);
- 	rc = !memcmp(driver_ver, old_driver_ver, size);
- 	kfree(old_driver_ver);
+ 	if (evt == EFC_EVT_ENTER) {
+-		strncpy(node->current_state_name, handler,
+-			sizeof(node->current_state_name));
++		strscpy_pad(node->current_state_name, handler,
++			    sizeof(node->current_state_name));
+ 	} else if (evt == EFC_EVT_EXIT) {
+-		strncpy(node->prev_state_name, node->current_state_name,
+-			sizeof(node->prev_state_name));
+-		strncpy(node->current_state_name, "invalid",
+-			sizeof(node->current_state_name));
++		memcpy(node->prev_state_name, node->current_state_name,
++		       sizeof(node->prev_state_name));
++		strscpy_pad(node->current_state_name, "invalid",
++			    sizeof(node->current_state_name));
+ 	}
+ 	node->prev_evt = node->current_evt;
+ 	node->current_evt = evt;
 
 ---
-base-commit: d88520ad73b79e71e3ddf08de335b8520ae41c5c
-change-id: 20231026-strncpy-drivers-scsi-hpsa-c-4cb7bd4e9b7f
+base-commit: 9c5d00cb7b6bbc5a7965d9ab7d223b5402d1f02c
+change-id: 20231023-strncpy-drivers-scsi-elx-libefc-efc_node-h-cbbf753197b7
 
 Best regards,
 --
