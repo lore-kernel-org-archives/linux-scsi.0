@@ -2,68 +2,68 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 674D2C25B6F
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 10:24:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A00E4C25B48
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Oct 2023 10:27:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235000AbjJZKY7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Oct 2023 06:24:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41972 "EHLO
+        id S231239AbjJZK17 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Oct 2023 06:27:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234980AbjJZKY6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Oct 2023 06:24:58 -0400
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32D151A2;
-        Thu, 26 Oct 2023 03:24:55 -0700 (PDT)
-Received: by mail-ed1-x52d.google.com with SMTP id 4fb4d7f45d1cf-53ebf429b4fso1108770a12.1;
-        Thu, 26 Oct 2023 03:24:55 -0700 (PDT)
+        with ESMTP id S229611AbjJZK16 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Oct 2023 06:27:58 -0400
+Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0434C1;
+        Thu, 26 Oct 2023 03:27:55 -0700 (PDT)
+Received: by mail-ej1-x633.google.com with SMTP id a640c23a62f3a-9be3b66f254so106429066b.3;
+        Thu, 26 Oct 2023 03:27:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1698315893; x=1698920693; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1698316074; x=1698920874; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=PtHyqsL08UNBkbgkozrmEZVvg2QPUfXMgyS74tdsVq4=;
-        b=mvLGL+avgJMs++L6TyaRRm3G7SgLuYDdgKqUHS5Q4zL3XYlQcpm4E4jFmhQBEyJWqc
-         IwK7POsHBOC5EhekzapxTolKfiphFPpV5w3Q2gndkZJ+NR/S2RVx0bMo+o+jBZ6RXAHM
-         p8GFuJ8naGaTGYFV+hWNWc/JcvaZpjle6GywCegtaoYux9Ilgr4Nqhb1I3DC2yrWbE8R
-         OIv4XwA/if5/TsdsP8b7b81sp0j4B/cEnlQSD1n9QmunRFUP+t1z2DF5EYcO8GUDdHpL
-         GRa8A1nVru4aeqskZ8nLFCD2qVPZNS2ZOmSlfqyhXbHTBwIxQUIicc5jF+6aXJIhDLqP
-         +NWw==
+        bh=+aq475Tqa0avFYdG2VH8bfPJXGlpgBKdf2u1n93YWuk=;
+        b=ZyVFeL9OJprwuLCzrvNaW0FF/ExGJx3aBlw1cGeo36hbSRXqFcXCakx1/oOLIYESmc
+         8m85lHQQVhQAXhhNcRaK89qAv4C6620pHQuQJbuMRtBikSt80SEkEA+wSdEOMQdr6ZLj
+         4nN/NY+FLVyHeGHV3UbXWQtPGlNJwD4ATaUbNzx4C4/uQxGtHY0Z1R1uPsUq8ag6U+WP
+         IrkntIARuvhGj/1igFLirPo+mEzmfDv97q+zVJWIdRWrne1hAjpTBhT6JP/faMQUvpz6
+         PI6iZtSv7zA981CIcCKQHsVO7ssmjsCl9cDg6XRciCvCZvbBCpShLUv/k2FCJiem1qqw
+         nH1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698315893; x=1698920693;
+        d=1e100.net; s=20230601; t=1698316074; x=1698920874;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PtHyqsL08UNBkbgkozrmEZVvg2QPUfXMgyS74tdsVq4=;
-        b=sAtLKZMm5Jk59fQ/gbGByGKxiCTwh4YzyWTrskSYVEqO0ygVFXxS92Irp1fiABw+GX
-         xN1hvAjmNARsGNGbI/otRJiuN8MSkuW82wdhxGdkKLR98Vvm6W2z4/FtV5zua5+YqkYx
-         FSai3SEBz80AcjMl5m6zC14ZK4BDBxXBlngoqDBFM8LUTpHYL8YMtE8Pw5D3BPOCvmcq
-         On1qS52/WNY4/RbUJkJZTju78lYQL0PNi8F8Ic5gCZB9STEIAhPAC9Jv7shl6Le1bZ8q
-         1SifuTNYqyEjK/vADSdu9bQd5f8u851xdhYvl5gjhvt4Xbb1uxe86Dy8LGnmiKLqxHr4
-         pygQ==
-X-Gm-Message-State: AOJu0YxSmokREDzBmxWXo3pCCAB/V1on7tvKOVjn07trBndL4fdmKsJ/
-        8TxlCA013RrcXFNG51T4PWaZYPQZ2qI=
-X-Google-Smtp-Source: AGHT+IF0Jfa56mk0wVnQY35EuNE7zOHqei+lUS+PK5VBYMEhzJItF8dHnuMdlls4kgXAacu19t9yMA==
-X-Received: by 2002:a05:6402:3484:b0:53f:25c4:357f with SMTP id v4-20020a056402348400b0053f25c4357fmr13292314edc.34.1698315893442;
-        Thu, 26 Oct 2023 03:24:53 -0700 (PDT)
+        bh=+aq475Tqa0avFYdG2VH8bfPJXGlpgBKdf2u1n93YWuk=;
+        b=UaUAFDamBqXiheN86CDdWpfb8+LFpyOulXos4DRio/Rrifqu4LE4jB/p6WMHRbqIx/
+         +0b5jz+ptd3oNQYvuYfNOnAM5nBA5GRvP/Xr3dCMfgNasqjFqzRc6l/JY2iW9iwk25Gt
+         LtGMSZQB9zOsbKBDYoHSl+C7dXOYF1KlXFNpl3CbtrQ4anPe0p7mhwTgseaLSYrCX2D6
+         Y+UaDvtMYBHGp7GzLKHYVObI3OcTZxeZ4ytyzgPwJk+0hEXvd7kxbYqojFZtUy7miioz
+         +5F2gvcrkZBuyxQJJUz9EppLV7AKJAJguzFImDYKht3Y7UGJpxHBt5ZUCm5wu5TXSkZL
+         yMug==
+X-Gm-Message-State: AOJu0YwSdLh47Dp1IoF2D7WX2F8b5qrjHWwaKbIaxb1ufzlABJil8P5O
+        7w0sisVVUYRaxsyeV67elX0=
+X-Google-Smtp-Source: AGHT+IH6LxP/CuKk+NV1H42pWFH95toe8us/PXwxQ8jTADNrnVBFLNW1vSVJPiQurJCGfj5kS+QwTg==
+X-Received: by 2002:a17:907:3e11:b0:9be:6bf0:2f95 with SMTP id hp17-20020a1709073e1100b009be6bf02f95mr13954717ejc.20.1698316073776;
+        Thu, 26 Oct 2023 03:27:53 -0700 (PDT)
 Received: from [147.251.42.107] (laomedon.fi.muni.cz. [147.251.42.107])
-        by smtp.gmail.com with ESMTPSA id v30-20020a50a45e000000b0053da3a9847csm11361733edb.42.2023.10.26.03.24.52
+        by smtp.gmail.com with ESMTPSA id a20-20020a1709066d5400b0099bd5d28dc4sm11427937ejt.195.2023.10.26.03.27.52
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 26 Oct 2023 03:24:53 -0700 (PDT)
-Message-ID: <5a7e8f2f-6893-4b00-972d-e995b395f67c@gmail.com>
-Date:   Thu, 26 Oct 2023 12:24:53 +0200
+        Thu, 26 Oct 2023 03:27:52 -0700 (PDT)
+Message-ID: <ec993b61-5e68-4e63-8ffb-e30503ea5080@gmail.com>
+Date:   Thu, 26 Oct 2023 12:27:53 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/7] usb-storage,uas: use host helper to generate driver
- info
+Subject: Re: [PATCH 3/7] usb-storage: use fflags index only in usb-storage
+ driver
 Content-Language: en-US
-To:     Alan Stern <stern@rowland.harvard.edu>
+To:     Greg KH <gregkh@linuxfoundation.org>
 Cc:     linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-        linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org,
+        linux-scsi@vger.kernel.org, stern@rowland.harvard.edu,
         oneukum@suse.com
 References: <20231006125445.122380-1-gmazyland@gmail.com>
  <20231016072604.40179-1-gmazyland@gmail.com>
- <20231016072604.40179-5-gmazyland@gmail.com>
- <787eea9f-240b-493b-a719-bcec972589e4@rowland.harvard.edu>
+ <20231016072604.40179-4-gmazyland@gmail.com>
+ <2023102125-lived-clause-66ad@gregkh>
 From:   Milan Broz <gmazyland@gmail.com>
 Autocrypt: addr=gmazyland@gmail.com; keydata=
  xsFNBE94p38BEADZRET8y1gVxlfDk44/XwBbFjC7eM6EanyCuivUPMmPwYDo9qRey0JdOGhW
@@ -108,79 +108,36 @@ Autocrypt: addr=gmazyland@gmail.com; keydata=
  vlB+GpT+iFRLvhCBe5kAERREfRfmWJq1bHod/ulrp/VLGAaZlOBTgsCzufWF5SOLbZkmV2b5
  xy2F/AU3oQUZncCvFMTWpBC+gO/o3kZCyyGCaQdQe4jS/FUJqR1suVwNMzcOJOP/LMQwujE/
  Ch7XLM35VICo9qqhih4OvLHUAWzC5dNSipL+rSGHvWBdfXDhbezJIl6sp7/1rJfS8qPs
-In-Reply-To: <787eea9f-240b-493b-a719-bcec972589e4@rowland.harvard.edu>
+In-Reply-To: <2023102125-lived-clause-66ad@gregkh>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On 10/16/23 20:49, Alan Stern wrote:
-> On Mon, Oct 16, 2023 at 09:26:01AM +0200, Milan Broz wrote:
->> The USB mass storage quirks flags can be stored in driver_info in
->> a 32-bit integer (unsigned long on 32-bit platforms).
->> As this attribute cannot be enlarged, we need to use some form
->> of translation of 64-bit quirk bits.
+On 10/21/23 12:21, Greg KH wrote:
+> On Mon, Oct 16, 2023 at 09:26:00AM +0200, Milan Broz wrote:
+>> This patch adds a parameter to use driver_info translation function
+>> (which will be defined in the following patch).
 >>
->> This problem was discussed on the USB list
->> https://lore.kernel.org/linux-usb/f9e8acb5-32d5-4a30-859f-d4336a86b31a@gmail.com/
->>
->> The initial solution to use a static array extensively increased the size
->> of the kernel module, so I decided to try the second suggested solution:
->> generate a table by host-compiled program and use bit 31 to indicate
->> that the value is an index, not the actual value.
->>
->> This patch adds a host-compiled program that processes unusual_devs.h
->> (and unusual_uas.h) and generates files usb-ids.c and usb-ids-uas.c
->> (for pre-processed USB device table with 32-bit device info).
->> These files also contain a generated translation table for device_info
->> to 64-bit values.
->>
->> The translation function is used only in usb-storage and uas modules; all
->> other USB storage modules store flags directly, using only 32-bit integers.
->>
->> This translation is unnecessary for a 64-bit system, but I keep it
->> in place for simplicity in this patch.
->>
->> Signed-off-by: Milan Broz <gmazyland@gmail.com>
->> ---
->>   drivers/usb/storage/Makefile       |  25 ++++
->>   drivers/usb/storage/mkflags.c      | 226 +++++++++++++++++++++++++++++
->>   drivers/usb/storage/uas-detect.h   |   4 +-
->>   drivers/usb/storage/uas.c          |  20 +--
->>   drivers/usb/storage/usb-ids.h      |  33 +++++
->>   drivers/usb/storage/usb.c          |  10 +-
->>   drivers/usb/storage/usual-tables.c |  23 +--
->>   7 files changed, 301 insertions(+), 40 deletions(-)
->>   create mode 100644 drivers/usb/storage/mkflags.c
->>   create mode 100644 drivers/usb/storage/usb-ids.h
->>
->> diff --git a/drivers/usb/storage/Makefile b/drivers/usb/storage/Makefile
->> index 46635fa4a340..612678f108d0 100644
->> --- a/drivers/usb/storage/Makefile
->> +++ b/drivers/usb/storage/Makefile
->> @@ -45,3 +45,28 @@ ums-realtek-y		:= realtek_cr.o
->>   ums-sddr09-y		:= sddr09.o
->>   ums-sddr55-y		:= sddr55.o
->>   ums-usbat-y		:= shuttle_usbat.o
->> +
->> +# The mkflags host-compiled generator produces usb-ids.c (usb-storage)
->> +# and usb-ids-uas.c (uas) with USB device tables.
->> +# These tables include pre-computed 32-bit flags as USB driver device_info
+>> Only USB storage driver will use it, as other drivers do not need
+>> more than 32-bit quirk flags.
 > 
-> s/flags as/flags, as/
+> Then this really should be renamed to be something else.
 > 
-> Otherwise this seems to say that the 32-bit flags are converted to USB
-> driver device_info values -- an incorrect parsing that makes no sense
-> and will confuse readers.  (It confused me at first.)
+> Having a parameter be "0" means we have to go and look up the function
+> and see what it does and why everyone is passing 0 to it.
 > 
-> Also, don't you really mean "driver_info" rather than "driver
-> device_info"?  That's the name of the field in struct usb_device_id.
+> Make a "wrapper" function, and rename it to be something sane that does
+> not need the extra option, and then for the one place you do need it,
+> use a different function name and then both call the real function.
+> 
+> Does that makes sense?
 
-Yes, not sure why I mixed these. Fixed in v3 patch (and now only one
-patch is needed as 2 previous are merged in usb-next).
+Yes, fixed in v3 - and as it really simplified the patch to just few lines,
+I merged in to one patch (as we touch these lines there anyway, it is
+IMO more readable to have it in one patch).
 
-I hope I fixed all other comments too, thanks!
+Thanks!
 
 Milan
