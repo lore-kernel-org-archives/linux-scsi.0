@@ -2,237 +2,126 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6550CC25B47
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 20:00:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09455C25B48
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 20:55:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232831AbjJ0UAp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Oct 2023 16:00:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48496 "EHLO
+        id S1346489AbjJ0Uza (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Oct 2023 16:55:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232515AbjJ0UAo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 16:00:44 -0400
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2AD81B1
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2023 13:00:38 -0700 (PDT)
-Received: by mail-ej1-x62e.google.com with SMTP id a640c23a62f3a-9936b3d0286so383655766b.0
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2023 13:00:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698436837; x=1699041637; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yobZYiTROnZbnWt97aXOIqRoozVbekmuSyrI2D0DmEQ=;
-        b=21cD94GlI92fGvgrGKcZWzvwaqs7PFcDB/jLm5qg3U87N6CWwVlL2jA1+CWwv6VkEo
-         fu7zZizsT/KJQUjYKGR3IQsGs3/VNDmYx/BzRIWinePzsG08t4DeJOIduR62HQyccEeb
-         mmlziFc44tTQgjXOxXpmTSxmVf74fMnQdbm1APu+LqCB77ZYgbECTNdNnnx2eR3CybU1
-         wtv8iOtQMD+aZqjfWE5eXxtmom3JMkEoXZnEGsRFFpSEy7UPIl6E5vtRQ5nutrUBC8IN
-         RhlspDw8v5pTpzCHoSzxCLZxLYgq1rHYwZBrMNwkD5iFaP+N2QNxlXFVGt+BccjG+Yv5
-         YZ/A==
+        with ESMTP id S235052AbjJ0Uz3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 16:55:29 -0400
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D38591BD;
+        Fri, 27 Oct 2023 13:55:25 -0700 (PDT)
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1cbf47fa563so21857335ad.2;
+        Fri, 27 Oct 2023 13:55:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698436837; x=1699041637;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yobZYiTROnZbnWt97aXOIqRoozVbekmuSyrI2D0DmEQ=;
-        b=AEhczl8UWftCEEUHEaLeb+30Qa49z43BtQRz2eYvJoicKu5Ie0iI0zw8hk+o2u3T/1
-         ZDDHFDLSAwZL2gmfy4TwhMMAA7PsBcNrZOoFeciLu48yWVpS9Nu7RNzWA1RcLzCb/TgX
-         hQQqHsGcxKZHTSro4BVgUONdPtOO1GA7p3MkhIDx2sG6Ibow+IqzrJUbXgMVaqEzrxSD
-         aFbokiAXVcva4TzMPeKqqsbdPBlb7gPxNg63nXPbQ246AVR4z4Ktb+M94PQ7Y42IAYot
-         FQWmCH9jRZwcdkE+dyRw1UFQzpPBCVoVtFvm6g5Bkhfik+xHllDMPR2ezWOeRSkXnLvM
-         8Ayw==
-X-Gm-Message-State: AOJu0YwS7HJ8zIVV66W+MOEwemgovT02s4893vqO8DaJ1DSBZNlxluDW
-        ocRV2GIachDe8SE0D9Bk3W/Kdr2P3OMem17FIiPaUw==
-X-Google-Smtp-Source: AGHT+IEECTHllrJmzv5sahl44qlCGaWHzkN+S8KPH5915KPk6hOjL1gjxgKo6qnIhYlrpIN54Jh1oJ+0er/1gULQ1H4=
-X-Received: by 2002:a17:907:26c9:b0:9c7:6fa7:586e with SMTP id
- bp9-20020a17090726c900b009c76fa7586emr3499260ejc.1.1698436837160; Fri, 27 Oct
- 2023 13:00:37 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1698440125; x=1699044925;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2YiqrRPa09XwcSO6dmunATjOVHB3FZKY8V49FUoXNpc=;
+        b=wIlhq3RWFhfWgOduwrJNS1mC3ptMuJxZfyhP7FDZY2sZEGA6VjBlX23mkvPTeAdqUy
+         lepjhAYXcbrI85+0fMJN7NZjh4qO6YV78CqSiIqkHx/NgLWIGIw6x+iVv1rDgnsGqJzP
+         FBpBd38aXSMLBOjMk8UN1UhiI6u3F4UVxkfGe81D7E0SWKJa5JGgkK7Q6nw21pls95eN
+         /ZLyB5zBliagmW8zbAEA0V2VDHGb7QsKUvuOPAvDutC64mkxtG/NZ42yFBF2F8tdRJWw
+         VnTltxERWAb4dc9Fx03yDRVgb5jjPFVZ3h+siFcprEpeuiQwqTEoP0rBgRtW2vVdZBpA
+         SBCw==
+X-Gm-Message-State: AOJu0YyXhSMSQDxQ8cA1viniWuvv3Qzto0rO3EIMG+tZSkznyJMY3hu2
+        DjqQAWHpd/Nvjqd/6DBrnzE=
+X-Google-Smtp-Source: AGHT+IFNnAI4aHBm8o7jUz2CjwqbUusBVaJvM6IjEzdEXUT4v8V/PYR/KGKCPVaC1ihakvXkyE1mxg==
+X-Received: by 2002:a17:90a:1954:b0:27d:98f3:21a5 with SMTP id 20-20020a17090a195400b0027d98f321a5mr3469818pjh.24.1698440124610;
+        Fri, 27 Oct 2023 13:55:24 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id 30-20020a17090a01de00b002794fe14cabsm4068946pjd.12.2023.10.27.13.55.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 27 Oct 2023 13:55:23 -0700 (PDT)
+Message-ID: <a16dc8ba-ca3b-4dd6-a8b5-dbb3ac7a49a5@acm.org>
+Date:   Fri, 27 Oct 2023 13:55:20 -0700
 MIME-Version: 1.0
-References: <20231026-strncpy-drivers-scsi-hpsa-c-v2-1-2fe2d05122fd@google.com>
- <202310270901.B49F63CD5@keescook>
-In-Reply-To: <202310270901.B49F63CD5@keescook>
-From:   Justin Stitt <justinstitt@google.com>
-Date:   Fri, 27 Oct 2023 13:00:25 -0700
-Message-ID: <CAFhGd8ooYaPBXyWLTKD94-jiR0Na4qnyRT602R1tzjdF9W3BWg@mail.gmail.com>
-Subject: Re: [PATCH v2] scsi: hpsa: replace deprecated strncpy
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Don Brace <don.brace@microchip.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 1/1] ufs: core: Add host quirk
+ QUIRK_MCQ_EXPAND_QUEUE_SLOT
+Content-Language: en-US
+To:     =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= 
+        <Chun-hung.Wu@mediatek.com>,
+        "ebiggers@google.com" <ebiggers@google.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "Arthur.Simchaev@wdc.com" <Arthur.Simchaev@wdc.com>,
+        "keosung.park@samsung.com" <keosung.park@samsung.com>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "angelogioacchino.delregno@collabora.com" 
+        <angelogioacchino.delregno@collabora.com>,
+        "yang.lee@linux.alibaba.com" <yang.lee@linux.alibaba.com>
+Cc:     =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= 
+        <peter.wang@mediatek.com>,
+        =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= 
+        <eddie.huang@mediatek.com>,
+        =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= 
+        <jiajie.hao@mediatek.com>,
+        =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= 
+        <Alice.Chao@mediatek.com>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        wsd_upstream <wsd_upstream@mediatek.com>,
+        =?UTF-8?B?Q2FzcGVyIExpICjmnY7kuK3mpq4p?= <casper.li@mediatek.com>,
+        =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        =?UTF-8?B?TGluIEd1aSAo5qGC5p6XKQ==?= <Lin.Gui@mediatek.com>,
+        =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?= 
+        <Chaotian.Jing@mediatek.com>,
+        =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
+        =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        =?UTF-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?= <Qilin.Tan@mediatek.com>,
+        "kernel-team@android.com" <kernel-team@android.com>
+References: <20231025085656.10848-1-chun-hung.wu@mediatek.com>
+ <20231025085656.10848-2-chun-hung.wu@mediatek.com>
+ <3056c6d8-1e54-4954-9141-e0760a0d935a@acm.org>
+ <53d7d12bc12237e5f86522faf09876ab08ef7592.camel@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <53d7d12bc12237e5f86522faf09876ab08ef7592.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 27, 2023 at 9:04=E2=80=AFAM Kees Cook <keescook@chromium.org> w=
-rote:
->
-> On Thu, Oct 26, 2023 at 11:13:41PM +0000, Justin Stitt wrote:
-> > strncpy() is deprecated for use on NUL-terminated destination strings
-> > [1] and as such we should prefer more robust and less ambiguous string
-> > interfaces.
-> >
-> > Instances of strncpy()'ing a string into a buffer and manually
-> > NUL-terminating followed by sccanf with just "%d" as the format
-> > specifier can be accomplished by strscpy() and kstrtoint().
-> >
-> > strscpy() guarantees NUL-termination on the destination buffer and
-> > kstrtoint is better way of getting strings turned into ints.
-> >
-> > For the last two strncpy() use cases in init_driver_version(), we can
-> > actually drop this function entirely.
-> >
-> > Firstly, we are kmalloc()'ing driver_version. Then, we are calling
-> > init_driver_version() which memset's it to 0 followed by a strncpy().
-> > The pattern is 1) allocating memory for a string, 2) setting all bytes
-> > to NUL, 3) copy bytes from another string + ensure NUL-padded.
-> >
-> > For these, we can just stack allocate driver_version and
-> > old_driver_version. This simplifies the code greatly as we don't have
-> > any malloc/free or strncpy's.
-> >
-> > Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#st=
-rncpy-on-nul-terminated-strings [1]
-> > Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en=
-.html [2]
-> > Link: https://github.com/KSPP/linux/issues/90
-> > Cc: linux-hardening@vger.kernel.org
-> > Cc: Kees Cook <keescook@chromium.org>
-> > Signed-off-by: Justin Stitt <justinstitt@google.com>
-> > ---
-> > Changes in v2:
-> > - use stack for buffers (thanks Kees)
-> > - use kstrtoint (thanks Kees)
-> > - Link to v1: https://lore.kernel.org/r/20231026-strncpy-drivers-scsi-h=
-psa-c-v1-1-75519d7a191b@google.com
-> > ---
-> > Note: build-tested only.
-> >
-> > Found with: $ rg "strncpy\("
-> > ---
-> >  drivers/scsi/hpsa.c | 53 ++++++++++++++++++++-------------------------=
---------
-> >  1 file changed, 20 insertions(+), 33 deletions(-)
-> >
-> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > index af18d20f3079..4d42fbb071cf 100644
-> > --- a/drivers/scsi/hpsa.c
-> > +++ b/drivers/scsi/hpsa.c
-> > @@ -452,18 +452,18 @@ static ssize_t host_store_hp_ssd_smart_path_statu=
-s(struct device *dev,
-> >                                        struct device_attribute *attr,
-> >                                        const char *buf, size_t count)
-> >  {
-> > -     int status, len;
-> > +     int status;
-> >       struct ctlr_info *h;
-> >       struct Scsi_Host *shost =3D class_to_shost(dev);
-> >       char tmpbuf[10];
-> >
-> >       if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-> >               return -EACCES;
-> > -     len =3D count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
-> > -     strncpy(tmpbuf, buf, len);
-> > -     tmpbuf[len] =3D '\0';
-> > -     if (sscanf(tmpbuf, "%d", &status) !=3D 1)
-> > +
-> > +     strscpy(tmpbuf, buf, sizeof(tmpbuf));
-> > +     if (kstrtoint(tmpbuf, 0, &status))
->
-> I actually meant:
->
->         if (kstrtoint(buf, 0, &status))
+On 10/26/23 20:27, Chun-Hung Wu (巫駿宏) wrote:
+> From UFSHCI 4.0 spec "When the head and tail doorbells are equal, the
+> queue is empty. *Nothe that this definition means there will always be
+> one empty queue entry"
+> One of our platform does not keep one empty queue
+> entry for CQ full
+> case, that's  why we need this patch to fix this corner case.
 
-How do we know `buf` is NUL-terminated as kstrtoint() demands:
+The UFSHCI driver should make sure that there is always one empty queue
+entry. Does "platform" in the above text refer to the SoC that includes
+the UFSHCI controller?
 
-/**
- * kstrtoint - convert a string to an int
- * @s: The start of the string. The string must be null-terminated, and may=
- also
- *  include a single newline before its terminating null. The first charact=
-er
- *  may also be a plus sign or a minus sign.
-...
+What is totally unclear to me is why the following code depends on the
+UFSHCI controller type:
 
->
-> I don't see any reason for "tmpbuf" at all.
->
-> > @@ -7234,25 +7234,15 @@ static int hpsa_controller_hard_reset(struct pc=
-i_dev *pdev,
-> >       return 0;
-> >  }
-> >
-> > -static void init_driver_version(char *driver_version, int len)
-> > -{
-> > -     memset(driver_version, 0, len);
-> > -     strncpy(driver_version, HPSA " " HPSA_DRIVER_VERSION, len - 1);
-> > -}
-> > -
-> >  static int write_driver_ver_to_cfgtable(struct CfgTable __iomem *cfgta=
-ble)
-> >  {
-> > -     char *driver_version;
-> >       int i, size =3D sizeof(cfgtable->driver_version);
-> > +     char driver_version[sizeof(cfgtable->driver_version)] =3D
-> > +                                             HPSA " " HPSA_DRIVER_VERS=
-ION;
-> >
-> > -     driver_version =3D kmalloc(size, GFP_KERNEL);
-> > -     if (!driver_version)
-> > -             return -ENOMEM;
-> > -
-> > -     init_driver_version(driver_version, size);
-> >       for (i =3D 0; i < size; i++)
-> >               writeb(driver_version[i], &cfgtable->driver_version[i]);
-> > -     kfree(driver_version);
-> > +
-> >       return 0;
-> >  }
-> >
-> > @@ -7268,21 +7258,18 @@ static void read_driver_ver_from_cfgtable(struc=
-t CfgTable __iomem *cfgtable,
-> >  static int controller_reset_failed(struct CfgTable __iomem *cfgtable)
-> >  {
-> >
-> > -     char *driver_ver, *old_driver_ver;
-> > -     int rc, size =3D sizeof(cfgtable->driver_version);
-> > -
-> > -     old_driver_ver =3D kmalloc_array(2, size, GFP_KERNEL);
-> > -     if (!old_driver_ver)
-> > -             return -ENOMEM;
-> > -     driver_ver =3D old_driver_ver + size;
-> > +     char driver_ver[sizeof(cfgtable->driver_version)] =3D "";
-> > +     char old_driver_ver[sizeof(cfgtable->driver_version)] =3D
-> > +                                             HPSA " " HPSA_DRIVER_VERS=
-ION;
-> > +     int rc;
-> >
-> >       /* After a reset, the 32 bytes of "driver version" in the cfgtabl=
-e
-> >        * should have been changed, otherwise we know the reset failed.
-> >        */
-> > -     init_driver_version(old_driver_ver, size);
-> >       read_driver_ver_from_cfgtable(cfgtable, driver_ver);
-> > -     rc =3D !memcmp(driver_ver, old_driver_ver, size);
-> > -     kfree(old_driver_ver);
-> > +     rc =3D !memcmp(driver_ver, old_driver_ver,
-> > +                  sizeof(cfgtable->driver_version));
-> > +
-> >       return rc;
-> >  }
-> >  /* This does a hard reset of the controller using PCI power management
->
-> These two look good now; thanks!
++		if (ufshcd_is_mcq_expand_queue_slot(hba))
++			hwq->max_entries = hba->nutrs + 1;
++		else
++			hwq->max_entries = hba->nutrs;
 
-Woot!
+Shouldn't hwq->max_entries = hba->nutrs + 1 be used for all UFSHCI 4.0
+controllers?
 
->
-> -Kees
->
-> --
-> Kees Cook
+Thanks,
 
-Thanks
-Justin
+Bart.
+
