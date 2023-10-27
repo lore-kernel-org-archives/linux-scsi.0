@@ -2,199 +2,251 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0DF2C25B67
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 12:04:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD14DC25B47
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 12:22:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345735AbjJ0MEI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Oct 2023 08:04:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58198 "EHLO
+        id S1345789AbjJ0MWV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Oct 2023 08:22:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345539AbjJ0MEH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 08:04:07 -0400
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 090D8C9
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2023 05:04:05 -0700 (PDT)
-Received: by mail-wm1-x330.google.com with SMTP id 5b1f17b1804b1-40836ea8cbaso15110225e9.0
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2023 05:04:04 -0700 (PDT)
+        with ESMTP id S1345420AbjJ0MWU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 08:22:20 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CADB1FA;
+        Fri, 27 Oct 2023 05:22:17 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1bf55a81eeaso16510785ad.0;
+        Fri, 27 Oct 2023 05:22:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1698408243; x=1699013043; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=grKXx3+Si1QWec4pqFQzl1xi7UnMm3nGTDQzvPDZFCc=;
-        b=QLs10CY7zswLLzG0rT7YiTeSSo9oOHm2bbv6E3WS/5Hf59VXgb7Sum5QlbMEnYfZ1i
-         BemLJ0vdV8osWJpwP4d0I6LAJ2NJOVX8BRG/kYHTbyJuPZp3/M5375hS2hK+6zyeG6YE
-         SdIDvf0RypoqEv8HP2AdwZsinYTLujseqA2Q9GPRTYtp4VHQgIDnnMZrci+pWAyep8Ok
-         AzQBDo16gyh/c/UDRUlTw5/KLIrRlZUwz77V3wgVxqB+Zfcfa0VwykVPYGF+4kRJlzAc
-         D0E7AKUGVBkMpJZdx9NxhneAn/sDaFCQdFnTm6HbOyicr1VdYFB8xVuceAG3HHGyp+Si
-         BnJQ==
+        d=gmail.com; s=20230601; t=1698409337; x=1699014137; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=nLCjmd0TJQr4quQ30wtU8+0Tv/gGwL6XgMTgPOt2Zow=;
+        b=KTA7CCxh4vzkcl+LcUM0kLrRaLw7NzSUCT2HWPY03b45/Cc3qxlF8f556Pu90C4vp3
+         yx6O3kQx1XcQMfPZ467PDHaKUgx9t863bD5TSpCMhu1aqqamggD9HP3EfgNMJFnxVrQa
+         ZMlgOrSB+Fwmy/s/u9HQuWbrbcf9gMVwRDRlFYZ6q419NPNrFeCin3cXbC+umIi6AksW
+         rwTePu5SvQ1aOKedo0uTxUiiGzdkJganbk8ZrG3+r4In+xZ0sqEjYQGhe1+kqFjD7U83
+         1FPmxsjPLZulRgXSoEu1bFsjHLUK1xdpZyRxb1AWTmXB7Sc9cyGLUEzUWWJ+KZ7vX5hm
+         YFeA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698408243; x=1699013043;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+        d=1e100.net; s=20230601; t=1698409337; x=1699014137;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=grKXx3+Si1QWec4pqFQzl1xi7UnMm3nGTDQzvPDZFCc=;
-        b=iW/qrYnI6eW5m4K6VQOo+7iFonor/rM6gpa8ji32eAUDnfG8rtIchj1EhCRC66jvFJ
-         vJtwZXwJGNONjSw7re5qm1hfkfuj94uV3K+sCg5rCKP7cfPzVGvFX9ErBVmzDQcNs7oQ
-         hFoSQrTWp52eEsyKXYpwVvw2SZynDbdFhBBql8o/K5La9Ib1rbWfxQoGK7QjICk+ar7i
-         TokjDq4UaCtZdtkn3gcLHUy6SVMXj4/nwTebEFP9yJmEqIxdx94hjx2WC8JHLVK/I2Af
-         yJt8dAj6cSytLYmqbblL4VINfRyw5+9x3kMh+tpzbxGgoR6v6waBnSIVrNTTWGzMB/7n
-         C8jw==
-X-Gm-Message-State: AOJu0YyhZNJqLWg4b3AOpCrFbiqI6mrLKKxZcHwNX/V7tYTtE52MxbAF
-        6wYUmAfu5AYRMqXGGOpy7a1RXFoE7V3q7ZMU8rw=
-X-Google-Smtp-Source: AGHT+IGi6s6rUlt0qAPEm4ICHhW+qjjTKLNGHmD6HF2SFM/5l2kOCCcazef+CacZZZQMXZuAeHdowA==
-X-Received: by 2002:adf:f08f:0:b0:32d:8872:aac8 with SMTP id n15-20020adff08f000000b0032d8872aac8mr2127161wro.31.1698408243245;
-        Fri, 27 Oct 2023 05:04:03 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id m3-20020adffe43000000b003196b1bb528sm1628978wrs.64.2023.10.27.05.04.02
+        bh=nLCjmd0TJQr4quQ30wtU8+0Tv/gGwL6XgMTgPOt2Zow=;
+        b=W+eImAkUE2miwc9RgGhGvhbv0v5KBnji70+0nYXZpAC8a4NlO/PCa+bQhXxhjbYGDv
+         IrufNOFR2r440QpElDawXXA1gcMsAx/JmaslOQIOynhqVMG2ErBmcWqu5PFeI7IG0eSp
+         E+TomaUFuMmd77V0aVcB2E6rNBCDmAwZ6Klg8JAFD0xsX574ygn/dVBCarWjQLkAXzuv
+         q2lOu0qAGNjbPPItBtWf9wh7aVudjsT0fOpVCL8KGi8ZyOOBn9xzkDHd6yLqpTuHGq/x
+         vIM8q9OHCBHYtmjbnTo2SVHg/GttI7a1icMVbCeigSdH0tVOGqpMqcDekbJvLyMppTed
+         TGAA==
+X-Gm-Message-State: AOJu0YxvYcm3bpiP0xt7+ZsOJRdiDOLrxxELgyAYmJCqywSWXSzHejv/
+        9JjqddxvDaZc/CEyZglXonc=
+X-Google-Smtp-Source: AGHT+IF5Tgm8TTDzNeSeqWaq3V4HS/X6J0nkUbBAkqSLvtalFyNhc/zkMR8VwRoUiBDzUFdFJEvqEg==
+X-Received: by 2002:a17:902:e850:b0:1c9:dd73:dc9e with SMTP id t16-20020a170902e85000b001c9dd73dc9emr2890723plg.44.1698409336972;
+        Fri, 27 Oct 2023 05:22:16 -0700 (PDT)
+Received: from thinkpad ([120.138.12.43])
+        by smtp.gmail.com with ESMTPSA id 5-20020a170902c24500b001c5d09e9437sm1434277plg.25.2023.10.27.05.22.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Oct 2023 05:04:02 -0700 (PDT)
-Date:   Fri, 27 Oct 2023 15:03:58 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     hare@suse.de
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: aic79xx: Fix up NULL command in ahd_done()
-Message-ID: <147c0591-f870-49f0-a6a9-8e68fb3f9ad5@moroto.mountain>
+        Fri, 27 Oct 2023 05:22:16 -0700 (PDT)
+Date:   Fri, 27 Oct 2023 17:52:09 +0530
+From:   Manivannan Sadhasivam <manivannanece23@gmail.com>
+To:     Konrad Dybcio <konrad.dybcio@linaro.org>
+Cc:     Manivannan Sadhasivam <manivannanece23@gmail.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Can Guo <quic_cang@quicinc.com>, quic_nguyenb@quicinc.com,
+        quic_nitirawa@quicinc.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
+        <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/6] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
+Message-ID: <20231027122209.GA17527@thinkpad>
+References: <6055cd57-4de7-4b7e-a4f3-68a7de1aef28@linaro.org>
+ <6225a132-4b7f-bbb4-e863-4e62b99dd79d@quicinc.com>
+ <31823dc4-6f50-435b-9a20-66471209ec31@linaro.org>
+ <d34242f8-6e21-1549-b87d-3db2e825b7d5@quicinc.com>
+ <1413119B-8B9C-4DE4-A086-476B2BAA60AD@linaro.org>
+ <20230919120829.GB4732@thinkpad>
+ <CAA8EJppwjzNDsPHZqUdmgQy3fAbP+AFnOo4+FTDCdpBEZp5S_w@mail.gmail.com>
+ <20230920102327.GH4732@thinkpad>
+ <20231018124741.GA47321@thinkpad>
+ <3109efe2-120b-447b-ae7d-16f03e3dc3a6@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3109efe2-120b-447b-ae7d-16f03e3dc3a6@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[ Sorry Hannes, I should have reviewed this one better -dan ]
+On Thu, Oct 26, 2023 at 09:31:31PM +0200, Konrad Dybcio wrote:
+> 
+> 
+> On 10/18/23 14:47, Manivannan Sadhasivam wrote:
+> > On Wed, Sep 20, 2023 at 12:23:27PM +0200, Manivannan Sadhasivam wrote:
+> > > On Wed, Sep 20, 2023 at 01:27:59AM +0300, Dmitry Baryshkov wrote:
+> > > > On Tue, 19 Sept 2023 at 15:08, Manivannan Sadhasivam <mani@kernel.org> wrote:
+> > > > > 
+> > > > > On Fri, Sep 15, 2023 at 05:31:45AM +0300, Dmitry Baryshkov wrote:
+> > > > > > On 11 September 2023 13:02:50 GMT+03:00, Can Guo <quic_cang@quicinc.com> wrote:
+> > > > > > > 
+> > > > > > > On 9/11/2023 5:46 PM, Konrad Dybcio wrote:
+> > > > > > > > On 11.09.2023 11:42, Can Guo wrote:
+> > > > > > > > > Hi Konrad,
+> > > > > > > > > 
+> > > > > > > > > On 9/11/2023 5:17 PM, Konrad Dybcio wrote:
+> > > > > > > > > > On 11.09.2023 07:59, Can Guo wrote:
+> > > > > > > > > > > From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+> > > > > > > > > > > 
+> > > > > > > > > > > Retrieve UFS device version from UFS host controller's spare register
+> > > > > > > > > > > which is populated by bootloader, and use the UFS device version together
+> > > > > > > > > > > with host controller's HW version to decide the proper power modes which
+> > > > > > > > > > > should be used to configure the UFS PHY.
+> > > > > > > > > > That sounds a bit fishy.. is there no bootloader-independent
+> > > > > > > > > > solution to that? Can't we bring in the code that the bootloader
+> > > > > > > > > > uses to determine these values?
+> > > > > > > > > > 
+> > > > > > > > > > Konrad
+> > > > > > > > > 
+> > > > > > > > > Agree, it is.
+> > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > All these complexities come from one request from PHY design team - power saving.
+> > > > > > > > > 
+> > > > > > > > > And to achieve power saving, Qualcomm UFS developers are requested to use the
+> > > > > > > > > 
+> > > > > > > > > lowest hanging PHY settings which can sustain the Max agreed HS Gear (btw host
+> > > > > > > > > 
+> > > > > > > > > and UFS device) during UFS's lifecycle in High Level OS,  whereas the power saving
+> > > > > > > > > 
+> > > > > > > > > request does not apply to bootloader, which works for only a few seconds during
+> > > > > > > > > 
+> > > > > > > > > bootup. Hence, there is no such version detect code in bootloader -  it just uses the
+> > > > > > > > > 
+> > > > > > > > > highest PHY settings to configure PHY, boot up UFS and put UFS device version in this
+> > > > > > > > > 
+> > > > > > > > > register.
+> > > > > > > > First of all, your email client seems to be inserting 2 newlines
+> > > > > > > > instead of 1. If you're using thunderbird, you may want to edit:
+> > > > > > > > 
+> > > > > > > > mail.identity.(default or your mail identity idx).default.compose_html
+> > > > > > > > 
+> > > > > > > > to `false`
+> > > > > > > > 
+> > > > > > > > and add that to your internal wiki page, as I see many @quic folks having
+> > > > > > > > this issue.
+> > > > > > > > 
+> > > > > > > > 
+> > > > > > > > Going back to the main topic, I don't think we understood each other.
+> > > > > > > > The commit message states:
+> > > > > > > > 
+> > > > > > > > 
+> > > > > > > > "Retrieve UFS device version from UFS host controller's spare register
+> > > > > > > > which is populated by bootloader"
+> > > > > > > > 
+> > > > > > > > 
+> > > > > > > > Which means the bootloader is able to somehow determine the value
+> > > > > > > > that's in the spare register and write it there.
+> > > > > > > > 
+> > > > > > > > I'm asking whether we can take the logic behind this value and
+> > > > > > > > move it to Linux so that we don't depend on the bootloader to
+> > > > > > > > guarantee it (e.g. Chrome or some other devices with more exotic
+> > > > > > > > fw may not work this way).
+> > > > > > > > 
+> > > > > > > > 
+> > > > > > > > Konrad
+> > > > > > > 
+> > > > > > > 
+> > > > > > > There is no logic behind this value at all in bootloader, as I explained, after bootloader
+> > > > > > > 
+> > > > > > > initializes UFS, bootloader simply reads UFS's device version (the value you are referring)
+> > > > > > > 
+> > > > > > > and write it to the register. But in Linux kernel, we need (or want to know) this value
+> > > > > > > 
+> > > > > > > BEFORE we initialize UFS host controller (and UFS device).
+> > > > > > 
+> > > > > > Depending on the bootloader behaviour is not an option. For example the kernel might be started via kexec. Or via u-boot. Or grub. Or any other bootloader. So please duplicate the logic to read the UFS version instead.
+> > > > > > 
+> > > > > 
+> > > > > As Can said, there is no logic in the bootloader. What it does it, after doing
+> > > > > the UFS initialization, it writes the agreed gear (between host and the device)
+> > > > > to this register. And in linux, we use that value to initialize the device
+> > > > > (i.e., not doing init based on the min gear).
+> > > > > 
+> > > > > But the important factor here is that, we use this gear value to program the PHY
+> > > > > init sequence. So if there is no hint from the bootloader, linux will program
+> > > > > the min phy sequence (G3/G4) and then once the gear scaling happens, it will
+> > > > > program the max phy sequence (G4/G5).
+> > > > > 
+> > > > > Now on recent platforms, the init sequences are not compatible with each other
+> > > > > i.e., once the min seq. is programmed, then before programming max seq. the
+> > > > > registers not common to both seq. should be programmed to default value. In
+> > > > > other words, min seq. specific registers should be reset to the default value.
+> > > > > Otherwise, there will be stability issues in the PHY.
+> > > > 
+> > > > I see nothing wrong with adding 'default' register programming to the
+> > > > gear tables. If we have to reset them to the default values to switch
+> > > > the PHY settings, these writes must be a part of the corresponding
+> > > > tables.
+> > > > 
+> > > 
+> > > Yep, that's what I initially proposed. But Qcom wanted to avoid the cost of
+> > > programming the reset tables in the PHY driver.
+> > > 
+> > > Can, could you please check if programming the additional sequence doesn't cause
+> > > any power/performance effect?
+> > > 
+> > 
+> > I'd like to simplify this conversion as there has been some misunderstanding.
+> > 
+> > First of all in linux, while probing the UFS device by the host controller, it
+> > needs to use _some_ gear. So far we were using HS_G2 as that gear and using the
+> > PHY init sequence of G3/G4 depending on the SoC. We do not need to use G2 init
+> > sequence because, there are only 2 init sequences available for any SoC and
+> > since the init sequences are backwards compatible, we mostly use the min init
+> > sequence, G3/G4. Even though this incurs slight power consumption during boot,
+> > the ufs host controller after probing the device will switch to max gear
+> > supported by both entities. If that max is G4/G5, then the respective init
+> > sequence will be programmed again.
+> > 
+> > Now the issue is, for the automotive usecases, switching the gears 2 times
+> > during boot is affecting the boot KPI (Key Performance Inidicator). So the UFS
+> > team came with the idea of populating a spare register in the bootloader with
+> > the max gear info that the bootloader has already found out and using the same
+> > in the linux for first time itself. This helps linux in using a single gear
+> > during probe time.
+> > 
+> > This is what this patch is doing. If for some reason, that register is not
+> > populated, then we default to the existing G2 gear and do init twice as the
+> > driver is doing currently.
+> > 
+> > I hope this clarifies the intention of this patch.
+> Yes I understand this, but I am not sure if such tricks should make
+> it upstream.. They depend on specific firmware (unrelated to the hw
+> block itself) and only exist to improve boot times. If the firmware
+> requirement was not at play, I would have no issues with this.
+> 
 
-Hello Hannes Reinecke,
+I do not see any issue with depending on firmware writes to spare registers. As
+I said, if that is not available, the patch will use the existing semantics.
 
-The patch c7f4c5dec651: "scsi: aic79xx: Fix up NULL command in
-ahd_done()" from Oct 23, 2023 (linux-next), leads to the following
-Smatch static checker warning:
+There is no rule that says that the driver should _only_ depend on register
+values populated by the hw. There are drivers in kernel that rely on firmware
+configuration of registers.
 
-	drivers/scsi/aic7xxx/aic79xx_osm.c:1837 ahd_done()
-	warn: variable dereferenced before check 'cmd' (see line 1793)
+For instance, BIOS may write to any PCIe config space registers and PCI core
+will happily honor them. I do not see any difference between that and what this
+patch does.
 
-drivers/scsi/aic7xxx/aic79xx_osm.c
-    1758 void
-    1759 ahd_done(struct ahd_softc *ahd, struct scb *scb)
-    1760 {
-    1761         struct scsi_cmnd *cmd;
-    1762         struct          ahd_linux_device *dev;
-    1763 
-    1764         if ((scb->flags & SCB_ACTIVE) == 0) {
-    1765                 printk("SCB %d done'd twice\n", SCB_GET_TAG(scb));
-    1766                 ahd_dump_card_state(ahd);
-    1767                 panic("Stopping for safety");
-    1768         }
-    1769         LIST_REMOVE(scb, pending_links);
-    1770         cmd = scb->io_ctx;
-    1771         dev = scb->platform_data->dev;
-    1772         dev->active--;
-    1773         dev->openings++;
-    1774         if (cmd) {
+- Mani
 
-The rest of the function checks for NULL
+> Konrad
 
-    1775                 if ((cmd->result & (CAM_DEV_QFRZN << 16)) != 0) {
-    1776                         cmd->result &= ~(CAM_DEV_QFRZN << 16);
-    1777                         dev->qfrozen--;
-    1778                 }
-    1779         } else if (scb->flags & SCB_DEVICE_RESET) {
-    1780                 if (ahd->platform_data->eh_done)
-    1781                         complete(ahd->platform_data->eh_done);
-    1782                 ahd_free_scb(ahd, scb);
-    1783                 return;
-    1784         }
-    1785         ahd_linux_unmap_scb(ahd, scb);
-    1786 
-    1787         /*
-    1788          * Guard against stale sense data.
-    1789          * The Linux mid-layer assumes that sense
-    1790          * was retrieved anytime the first byte of
-    1791          * the sense buffer looks "sane".
-    1792          */
-    1793         cmd->sense_buffer[0] = 0;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^
-There is an unchecked dereference here
-
-    1794         if (ahd_get_transaction_status(scb) == CAM_REQ_INPROG) {
-    1795 #ifdef AHD_REPORT_UNDERFLOWS
-    1796                 uint32_t amount_xferred;
-    1797 
-    1798                 amount_xferred =
-    1799                     ahd_get_transfer_length(scb) - ahd_get_residual(scb);
-    1800 #endif
-    1801                 if ((scb->flags & SCB_TRANSMISSION_ERROR) != 0) {
-    1802 #ifdef AHD_DEBUG
-    1803                         if ((ahd_debug & AHD_SHOW_MISC) != 0) {
-    1804                                 ahd_print_path(ahd, scb);
-    1805                                 printk("Set CAM_UNCOR_PARITY\n");
-    1806                         }
-    1807 #endif
-    1808                         ahd_set_transaction_status(scb, CAM_UNCOR_PARITY);
-    1809 #ifdef AHD_REPORT_UNDERFLOWS
-    1810                 /*
-    1811                  * This code is disabled by default as some
-    1812                  * clients of the SCSI system do not properly
-    1813                  * initialize the underflow parameter.  This
-    1814                  * results in spurious termination of commands
-    1815                  * that complete as expected (e.g. underflow is
-    1816                  * allowed as command can return variable amounts
-    1817                  * of data.
-    1818                  */
-    1819                 } else if (amount_xferred < scb->io_ctx->underflow) {
-    1820                         u_int i;
-    1821 
-    1822                         ahd_print_path(ahd, scb);
-    1823                         printk("CDB:");
-    1824                         for (i = 0; i < scb->io_ctx->cmd_len; i++)
-    1825                                 printk(" 0x%x", scb->io_ctx->cmnd[i]);
-    1826                         printk("\n");
-    1827                         ahd_print_path(ahd, scb);
-    1828                         printk("Saw underflow (%ld of %ld bytes). "
-    1829                                "Treated as error\n",
-    1830                                 ahd_get_residual(scb),
-    1831                                 ahd_get_transfer_length(scb));
-    1832                         ahd_set_transaction_status(scb, CAM_DATA_RUN_ERR);
-    1833 #endif
-    1834                 } else {
-    1835                         ahd_set_transaction_status(scb, CAM_REQ_CMP);
-    1836                 }
---> 1837         } else if (cmd &&
-    1838                    ahd_get_transaction_status(scb) == CAM_SCSI_STATUS_ERROR) {
-    1839                 ahd_linux_handle_scsi_status(ahd, cmd->device, scb);
-    1840         }
-    1841 
-    1842         if (dev->openings == 1
-    1843          && ahd_get_transaction_status(scb) == CAM_REQ_CMP
-    1844          && ahd_get_scsi_status(scb) != SAM_STAT_TASK_SET_FULL)
-    1845                 dev->tag_success_count++;
-    1846         /*
-    1847          * Some devices deal with temporary internal resource
-    1848          * shortages by returning queue full.  When the queue
-    1849          * full occurrs, we throttle back.  Slowly try to get
-    1850          * back to our previous queue depth.
-    1851          */
-    1852         if ((dev->openings + dev->active) < dev->maxtags
-    1853          && dev->tag_success_count > AHD_TAG_SUCCESS_INTERVAL) {
-    1854                 dev->tag_success_count = 0;
-    1855                 dev->openings++;
-    1856         }
-    1857 
-    1858         if (dev->active == 0)
-    1859                 dev->commands_since_idle_or_otag = 0;
-    1860 
-    1861         if ((scb->flags & SCB_RECOVERY_SCB) != 0) {
-    1862                 printk("Recovery SCB completes\n");
-    1863                 if (ahd_get_transaction_status(scb) == CAM_BDR_SENT
-    1864                  || ahd_get_transaction_status(scb) == CAM_REQ_ABORTED)
-    1865                         ahd_set_transaction_status(scb, CAM_CMD_TIMEOUT);
-    1866 
-    1867                 if (ahd->platform_data->eh_done)
-    1868                         complete(ahd->platform_data->eh_done);
-    1869         }
-    1870 
-    1871         ahd_free_scb(ahd, scb);
-    1872         if (cmd)
-    1873                 ahd_linux_queue_cmd_complete(ahd, cmd);
-    1874 }
-
-regards,
-dan carpenter
+-- 
+மணிவண்ணன் சதாசிவம்
