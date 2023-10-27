@@ -2,158 +2,237 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0198C25B48
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 18:18:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6550CC25B47
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 20:00:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345827AbjJ0SSD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Oct 2023 14:18:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41054 "EHLO
+        id S232831AbjJ0UAp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Oct 2023 16:00:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346402AbjJ0SDy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 14:03:54 -0400
-Received: from alln-iport-5.cisco.com (alln-iport-5.cisco.com [173.37.142.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D72E410CB;
-        Fri, 27 Oct 2023 11:03:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=4125; q=dns/txt; s=iport;
-  t=1698429824; x=1699639424;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=VppeFccfO0i91O9QTT2hurPRL41mnAm70iNys3yfLpY=;
-  b=giDgUK4ZSPXjxFHm9CcyKTRx3aUgMG8cc8ItYRRAmq5WN6ZQ2WXJZMCp
-   nslb7ByOJfeoR57WNqMFQYd94YAdSA8jrRN4M7gOYLdDoGOxrHg8bekDZ
-   Tu8WSNomAsW/aH7m64CtHDmX0OflUzsDhV9Lgw8CnJ80rTBdkC7PDUlmx
-   s=;
-X-CSE-ConnectionGUID: Fy5bi/lrRAaz7ea+GTFIKw==
-X-CSE-MsgGUID: preRAL7jRfCBTnnS4OzMDw==
-X-IronPort-AV: E=Sophos;i="6.03,256,1694736000"; 
-   d="scan'208";a="181772299"
-Received: from rcdn-core-11.cisco.com ([173.37.93.147])
-  by alln-iport-5.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2023 18:03:33 +0000
-Received: from localhost.cisco.com ([10.193.101.253])
-        (authenticated bits=0)
-        by rcdn-core-11.cisco.com (8.15.2/8.15.2) with ESMTPSA id 39RI39Oh029226
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 27 Oct 2023 18:03:33 GMT
-From:   Karan Tilak Kumar <kartilak@cisco.com>
-To:     sebaddel@cisco.com
-Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
-        mkai2@cisco.com, satishkh@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v2 05/13] scsi: fnic: Get copy workqueue count and interrupt mode from config
-Date:   Fri, 27 Oct 2023 11:02:54 -0700
-Message-Id: <20231027180302.418676-6-kartilak@cisco.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20231027180302.418676-1-kartilak@cisco.com>
-References: <20231027180302.418676-1-kartilak@cisco.com>
+        with ESMTP id S232515AbjJ0UAo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 16:00:44 -0400
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2AD81B1
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2023 13:00:38 -0700 (PDT)
+Received: by mail-ej1-x62e.google.com with SMTP id a640c23a62f3a-9936b3d0286so383655766b.0
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2023 13:00:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1698436837; x=1699041637; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yobZYiTROnZbnWt97aXOIqRoozVbekmuSyrI2D0DmEQ=;
+        b=21cD94GlI92fGvgrGKcZWzvwaqs7PFcDB/jLm5qg3U87N6CWwVlL2jA1+CWwv6VkEo
+         fu7zZizsT/KJQUjYKGR3IQsGs3/VNDmYx/BzRIWinePzsG08t4DeJOIduR62HQyccEeb
+         mmlziFc44tTQgjXOxXpmTSxmVf74fMnQdbm1APu+LqCB77ZYgbECTNdNnnx2eR3CybU1
+         wtv8iOtQMD+aZqjfWE5eXxtmom3JMkEoXZnEGsRFFpSEy7UPIl6E5vtRQ5nutrUBC8IN
+         RhlspDw8v5pTpzCHoSzxCLZxLYgq1rHYwZBrMNwkD5iFaP+N2QNxlXFVGt+BccjG+Yv5
+         YZ/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698436837; x=1699041637;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=yobZYiTROnZbnWt97aXOIqRoozVbekmuSyrI2D0DmEQ=;
+        b=AEhczl8UWftCEEUHEaLeb+30Qa49z43BtQRz2eYvJoicKu5Ie0iI0zw8hk+o2u3T/1
+         ZDDHFDLSAwZL2gmfy4TwhMMAA7PsBcNrZOoFeciLu48yWVpS9Nu7RNzWA1RcLzCb/TgX
+         hQQqHsGcxKZHTSro4BVgUONdPtOO1GA7p3MkhIDx2sG6Ibow+IqzrJUbXgMVaqEzrxSD
+         aFbokiAXVcva4TzMPeKqqsbdPBlb7gPxNg63nXPbQ246AVR4z4Ktb+M94PQ7Y42IAYot
+         FQWmCH9jRZwcdkE+dyRw1UFQzpPBCVoVtFvm6g5Bkhfik+xHllDMPR2ezWOeRSkXnLvM
+         8Ayw==
+X-Gm-Message-State: AOJu0YwS7HJ8zIVV66W+MOEwemgovT02s4893vqO8DaJ1DSBZNlxluDW
+        ocRV2GIachDe8SE0D9Bk3W/Kdr2P3OMem17FIiPaUw==
+X-Google-Smtp-Source: AGHT+IEECTHllrJmzv5sahl44qlCGaWHzkN+S8KPH5915KPk6hOjL1gjxgKo6qnIhYlrpIN54Jh1oJ+0er/1gULQ1H4=
+X-Received: by 2002:a17:907:26c9:b0:9c7:6fa7:586e with SMTP id
+ bp9-20020a17090726c900b009c76fa7586emr3499260ejc.1.1698436837160; Fri, 27 Oct
+ 2023 13:00:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
-X-Outbound-Node: rcdn-core-11.cisco.com
+References: <20231026-strncpy-drivers-scsi-hpsa-c-v2-1-2fe2d05122fd@google.com>
+ <202310270901.B49F63CD5@keescook>
+In-Reply-To: <202310270901.B49F63CD5@keescook>
+From:   Justin Stitt <justinstitt@google.com>
+Date:   Fri, 27 Oct 2023 13:00:25 -0700
+Message-ID: <CAFhGd8ooYaPBXyWLTKD94-jiR0Na4qnyRT602R1tzjdF9W3BWg@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: hpsa: replace deprecated strncpy
+To:     Kees Cook <keescook@chromium.org>
+Cc:     Don Brace <don.brace@microchip.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        storagedev@microchip.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Get the copy workqueue count and interrupt mode from
-the configuration. The config can be changed via UCSM.
-Add logs to print the interrupt mode and copy workqueue count.
-Add logs to print the vNIC resources.
+On Fri, Oct 27, 2023 at 9:04=E2=80=AFAM Kees Cook <keescook@chromium.org> w=
+rote:
+>
+> On Thu, Oct 26, 2023 at 11:13:41PM +0000, Justin Stitt wrote:
+> > strncpy() is deprecated for use on NUL-terminated destination strings
+> > [1] and as such we should prefer more robust and less ambiguous string
+> > interfaces.
+> >
+> > Instances of strncpy()'ing a string into a buffer and manually
+> > NUL-terminating followed by sccanf with just "%d" as the format
+> > specifier can be accomplished by strscpy() and kstrtoint().
+> >
+> > strscpy() guarantees NUL-termination on the destination buffer and
+> > kstrtoint is better way of getting strings turned into ints.
+> >
+> > For the last two strncpy() use cases in init_driver_version(), we can
+> > actually drop this function entirely.
+> >
+> > Firstly, we are kmalloc()'ing driver_version. Then, we are calling
+> > init_driver_version() which memset's it to 0 followed by a strncpy().
+> > The pattern is 1) allocating memory for a string, 2) setting all bytes
+> > to NUL, 3) copy bytes from another string + ensure NUL-padded.
+> >
+> > For these, we can just stack allocate driver_version and
+> > old_driver_version. This simplifies the code greatly as we don't have
+> > any malloc/free or strncpy's.
+> >
+> > Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#st=
+rncpy-on-nul-terminated-strings [1]
+> > Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en=
+.html [2]
+> > Link: https://github.com/KSPP/linux/issues/90
+> > Cc: linux-hardening@vger.kernel.org
+> > Cc: Kees Cook <keescook@chromium.org>
+> > Signed-off-by: Justin Stitt <justinstitt@google.com>
+> > ---
+> > Changes in v2:
+> > - use stack for buffers (thanks Kees)
+> > - use kstrtoint (thanks Kees)
+> > - Link to v1: https://lore.kernel.org/r/20231026-strncpy-drivers-scsi-h=
+psa-c-v1-1-75519d7a191b@google.com
+> > ---
+> > Note: build-tested only.
+> >
+> > Found with: $ rg "strncpy\("
+> > ---
+> >  drivers/scsi/hpsa.c | 53 ++++++++++++++++++++-------------------------=
+--------
+> >  1 file changed, 20 insertions(+), 33 deletions(-)
+> >
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index af18d20f3079..4d42fbb071cf 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -452,18 +452,18 @@ static ssize_t host_store_hp_ssd_smart_path_statu=
+s(struct device *dev,
+> >                                        struct device_attribute *attr,
+> >                                        const char *buf, size_t count)
+> >  {
+> > -     int status, len;
+> > +     int status;
+> >       struct ctlr_info *h;
+> >       struct Scsi_Host *shost =3D class_to_shost(dev);
+> >       char tmpbuf[10];
+> >
+> >       if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+> >               return -EACCES;
+> > -     len =3D count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
+> > -     strncpy(tmpbuf, buf, len);
+> > -     tmpbuf[len] =3D '\0';
+> > -     if (sscanf(tmpbuf, "%d", &status) !=3D 1)
+> > +
+> > +     strscpy(tmpbuf, buf, sizeof(tmpbuf));
+> > +     if (kstrtoint(tmpbuf, 0, &status))
+>
+> I actually meant:
+>
+>         if (kstrtoint(buf, 0, &status))
 
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
----
- drivers/scsi/fnic/fnic_res.c | 42 ++++++++++++++++++++++++++++++------
- 1 file changed, 36 insertions(+), 6 deletions(-)
+How do we know `buf` is NUL-terminated as kstrtoint() demands:
 
-diff --git a/drivers/scsi/fnic/fnic_res.c b/drivers/scsi/fnic/fnic_res.c
-index 109316cc4ad9..33dd27f6f24e 100644
---- a/drivers/scsi/fnic/fnic_res.c
-+++ b/drivers/scsi/fnic/fnic_res.c
-@@ -57,6 +57,8 @@ int fnic_get_vnic_config(struct fnic *fnic)
- 	GET_CONFIG(port_down_timeout);
- 	GET_CONFIG(port_down_io_retries);
- 	GET_CONFIG(luns_per_tgt);
-+	GET_CONFIG(intr_mode);
-+	GET_CONFIG(wq_copy_count);
- 
- 	c->wq_enet_desc_count =
- 		min_t(u32, VNIC_FNIC_WQ_DESCS_MAX,
-@@ -131,6 +133,12 @@ int fnic_get_vnic_config(struct fnic *fnic)
- 	c->intr_timer = min_t(u16, VNIC_INTR_TIMER_MAX, c->intr_timer);
- 	c->intr_timer_type = c->intr_timer_type;
- 
-+	/* for older firmware, GET_CONFIG will not return anything */
-+	if (c->wq_copy_count == 0)
-+		c->wq_copy_count = 1;
-+
-+	c->wq_copy_count = min_t(u16, FNIC_WQ_COPY_MAX, c->wq_copy_count);
-+
- 	shost_printk(KERN_INFO, fnic->lport->host,
- 		     "vNIC MAC addr %pM "
- 		     "wq/wq_copy/rq %d/%d/%d\n",
-@@ -161,6 +169,10 @@ int fnic_get_vnic_config(struct fnic *fnic)
- 	shost_printk(KERN_INFO, fnic->lport->host,
- 		     "vNIC port dn io retries %d port dn timeout %d\n",
- 		     c->port_down_io_retries, c->port_down_timeout);
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+			"vNIC wq_copy_count: %d\n", c->wq_copy_count);
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+			"vNIC intr mode: %d\n", c->intr_mode);
- 
- 	return 0;
- }
-@@ -187,12 +199,25 @@ int fnic_set_nic_config(struct fnic *fnic, u8 rss_default_cpu,
- void fnic_get_res_counts(struct fnic *fnic)
- {
- 	fnic->wq_count = vnic_dev_get_res_count(fnic->vdev, RES_TYPE_WQ);
--	fnic->raw_wq_count = fnic->wq_count - 1;
--	fnic->wq_copy_count = fnic->wq_count - fnic->raw_wq_count;
-+	fnic->raw_wq_count = 1;
-+	fnic->wq_copy_count = fnic->config.wq_copy_count;
- 	fnic->rq_count = vnic_dev_get_res_count(fnic->vdev, RES_TYPE_RQ);
- 	fnic->cq_count = vnic_dev_get_res_count(fnic->vdev, RES_TYPE_CQ);
- 	fnic->intr_count = vnic_dev_get_res_count(fnic->vdev,
- 		RES_TYPE_INTR_CTRL);
-+
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+		"vNIC fw resources wq_count: %d\n", fnic->wq_count);
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+		"vNIC fw resources raw_wq_count: %d\n", fnic->raw_wq_count);
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+		"vNIC fw resources wq_copy_count: %d\n", fnic->wq_copy_count);
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+		"vNIC fw resources rq_count: %d\n", fnic->rq_count);
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+		"vNIC fw resources cq_count: %d\n", fnic->cq_count);
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+		"vNIC fw resources intr_count: %d\n", fnic->intr_count);
- }
- 
- void fnic_free_vnic_resources(struct fnic *fnic)
-@@ -234,10 +259,15 @@ int fnic_alloc_vnic_resources(struct fnic *fnic)
- 		     intr_mode == VNIC_DEV_INTR_MODE_MSIX ?
- 		     "MSI-X" : "unknown");
- 
--	shost_printk(KERN_INFO, fnic->lport->host, "vNIC resources avail: "
--		     "wq %d cp_wq %d raw_wq %d rq %d cq %d intr %d\n",
--		     fnic->wq_count, fnic->wq_copy_count, fnic->raw_wq_count,
--		     fnic->rq_count, fnic->cq_count, fnic->intr_count);
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+			"vNIC resources avail: wq %d cp_wq %d raw_wq %d rq %d",
-+			fnic->wq_count, fnic->wq_copy_count,
-+			fnic->raw_wq_count, fnic->rq_count);
-+
-+	shost_printk(KERN_INFO, fnic->lport->host,
-+			"vNIC resources avail: cq %d intr %d cpy-wq desc count %d\n",
-+			fnic->cq_count, fnic->intr_count,
-+			fnic->config.wq_copy_desc_count);
- 
- 	/* Allocate Raw WQ used for FCS frames */
- 	for (i = 0; i < fnic->raw_wq_count; i++) {
--- 
-2.31.1
+/**
+ * kstrtoint - convert a string to an int
+ * @s: The start of the string. The string must be null-terminated, and may=
+ also
+ *  include a single newline before its terminating null. The first charact=
+er
+ *  may also be a plus sign or a minus sign.
+...
 
+>
+> I don't see any reason for "tmpbuf" at all.
+>
+> > @@ -7234,25 +7234,15 @@ static int hpsa_controller_hard_reset(struct pc=
+i_dev *pdev,
+> >       return 0;
+> >  }
+> >
+> > -static void init_driver_version(char *driver_version, int len)
+> > -{
+> > -     memset(driver_version, 0, len);
+> > -     strncpy(driver_version, HPSA " " HPSA_DRIVER_VERSION, len - 1);
+> > -}
+> > -
+> >  static int write_driver_ver_to_cfgtable(struct CfgTable __iomem *cfgta=
+ble)
+> >  {
+> > -     char *driver_version;
+> >       int i, size =3D sizeof(cfgtable->driver_version);
+> > +     char driver_version[sizeof(cfgtable->driver_version)] =3D
+> > +                                             HPSA " " HPSA_DRIVER_VERS=
+ION;
+> >
+> > -     driver_version =3D kmalloc(size, GFP_KERNEL);
+> > -     if (!driver_version)
+> > -             return -ENOMEM;
+> > -
+> > -     init_driver_version(driver_version, size);
+> >       for (i =3D 0; i < size; i++)
+> >               writeb(driver_version[i], &cfgtable->driver_version[i]);
+> > -     kfree(driver_version);
+> > +
+> >       return 0;
+> >  }
+> >
+> > @@ -7268,21 +7258,18 @@ static void read_driver_ver_from_cfgtable(struc=
+t CfgTable __iomem *cfgtable,
+> >  static int controller_reset_failed(struct CfgTable __iomem *cfgtable)
+> >  {
+> >
+> > -     char *driver_ver, *old_driver_ver;
+> > -     int rc, size =3D sizeof(cfgtable->driver_version);
+> > -
+> > -     old_driver_ver =3D kmalloc_array(2, size, GFP_KERNEL);
+> > -     if (!old_driver_ver)
+> > -             return -ENOMEM;
+> > -     driver_ver =3D old_driver_ver + size;
+> > +     char driver_ver[sizeof(cfgtable->driver_version)] =3D "";
+> > +     char old_driver_ver[sizeof(cfgtable->driver_version)] =3D
+> > +                                             HPSA " " HPSA_DRIVER_VERS=
+ION;
+> > +     int rc;
+> >
+> >       /* After a reset, the 32 bytes of "driver version" in the cfgtabl=
+e
+> >        * should have been changed, otherwise we know the reset failed.
+> >        */
+> > -     init_driver_version(old_driver_ver, size);
+> >       read_driver_ver_from_cfgtable(cfgtable, driver_ver);
+> > -     rc =3D !memcmp(driver_ver, old_driver_ver, size);
+> > -     kfree(old_driver_ver);
+> > +     rc =3D !memcmp(driver_ver, old_driver_ver,
+> > +                  sizeof(cfgtable->driver_version));
+> > +
+> >       return rc;
+> >  }
+> >  /* This does a hard reset of the controller using PCI power management
+>
+> These two look good now; thanks!
+
+Woot!
+
+>
+> -Kees
+>
+> --
+> Kees Cook
+
+Thanks
+Justin
