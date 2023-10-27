@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CB66C25B47
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 18:03:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD9C9C25B6F
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 18:03:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346310AbjJ0SDn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Oct 2023 14:03:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59776 "EHLO
+        id S1346313AbjJ0SDq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Oct 2023 14:03:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346187AbjJ0SDe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 14:03:34 -0400
-Received: from alln-iport-6.cisco.com (alln-iport-6.cisco.com [173.37.142.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2079210A;
-        Fri, 27 Oct 2023 11:03:31 -0700 (PDT)
+        with ESMTP id S1346295AbjJ0SDn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 14:03:43 -0400
+Received: from alln-iport-1.cisco.com (alln-iport-1.cisco.com [173.37.142.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DE5E1B1;
+        Fri, 27 Oct 2023 11:03:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=4997; q=dns/txt; s=iport;
-  t=1698429811; x=1699639411;
+  d=cisco.com; i=@cisco.com; l=3120; q=dns/txt; s=iport;
+  t=1698429816; x=1699639416;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=2D8EExdDVIfSV/dUPsyrfX2rTUTRqFnK6MF55T7m9M0=;
-  b=DPCfEcLnNLN7oAm1AiFQ/s8y3yK94K5TPeJCJiIc6nMjiwte2f9jEUfq
-   HyR17VkkEqTUHGxKG04RTYy6I47jDuTF2e2NVefsQvvQdWHIUIznCnrzF
-   jw417UJPxXHzgP1X54eg4ci9OaoMOg4th5vugQq2gkZmXBu293zpLMNwO
-   s=;
-X-CSE-ConnectionGUID: WwlYRarCQWavrRowIrT1gQ==
-X-CSE-MsgGUID: e+3bR+okT2aRuFURn0necw==
+  bh=sjJkSqdln9qea/n4Fpj7gGInKVCSDN0znydRXK9ldtE=;
+  b=MoP5bTR/OWxx4V/nBr7ZXHiW5cvGYD/Eps3uafaZ8HRTlhUQM9G9eOtT
+   R3XQxQhlwaxtTaDlxQT4TMxbJvdipwOnoWgVhNYzP99SzB9fn/3g7wmVo
+   h3k3EWot+pN+IXh71fgkBU0QLXzAzBkRomVDwGCxvOvkqbODU2PaKygma
+   k=;
+X-CSE-ConnectionGUID: J92Bq2ndQJujJBbWj40KIA==
+X-CSE-MsgGUID: LsCRYOVBSN2FgKssoDhITw==
 X-IronPort-AV: E=Sophos;i="6.03,256,1694736000"; 
-   d="scan'208";a="180792371"
+   d="scan'208";a="187094422"
 Received: from rcdn-core-11.cisco.com ([173.37.93.147])
-  by alln-iport-6.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2023 18:03:30 +0000
+  by alln-iport-1.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2023 18:03:35 +0000
 Received: from localhost.cisco.com ([10.193.101.253])
         (authenticated bits=0)
-        by rcdn-core-11.cisco.com (8.15.2/8.15.2) with ESMTPSA id 39RI39Of029226
+        by rcdn-core-11.cisco.com (8.15.2/8.15.2) with ESMTPSA id 39RI39Oi029226
         (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 27 Oct 2023 18:03:29 GMT
+        Fri, 27 Oct 2023 18:03:34 GMT
 From:   Karan Tilak Kumar <kartilak@cisco.com>
 To:     sebaddel@cisco.com
 Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
@@ -42,9 +42,9 @@ Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v2 03/13] scsi: fnic: Add and improve log messages
-Date:   Fri, 27 Oct 2023 11:02:52 -0700
-Message-Id: <20231027180302.418676-4-kartilak@cisco.com>
+Subject: [PATCH v2 06/13] scsi: fnic: Refactor and redefine fnic.h for multiqueue
+Date:   Fri, 27 Oct 2023 11:02:55 -0700
+Message-Id: <20231027180302.418676-7-kartilak@cisco.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20231027180302.418676-1-kartilak@cisco.com>
 References: <20231027180302.418676-1-kartilak@cisco.com>
@@ -57,128 +57,111 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add link related log messages in fnic_fcs.c,
-Improve log message in fnic_fcs.c,
-Add log message in vnic_dev.c.
+Refactor and re-define values in fnic.h to implement
+multiqueue(MQ) functionality.
+
+VIC firmware allows fnic to create up to 64 copy
+workqueues. Update the copy workqueue max to 64.
+Modify the interrupt index to be in sync with the firmware
+to support MQ.
+Add irq number to the MSIX entry.
+Define a software workqueue table to track the status of
+io_reqs. Define a base for the copy workqueue.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
- drivers/scsi/fnic/fnic_fcs.c | 36 ++++++++++++++++++++++++------------
- drivers/scsi/fnic/vnic_dev.c |  4 ++++
- 2 files changed, 28 insertions(+), 12 deletions(-)
+ drivers/scsi/fnic/fnic.h | 30 ++++++++++++++++++++++--------
+ 1 file changed, 22 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 55632c67a8f2..203ffec625a4 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -64,8 +64,8 @@ void fnic_handle_link(struct work_struct *work)
- 			new_port_speed);
- 	if (old_port_speed != new_port_speed)
- 		FNIC_MAIN_DBG(KERN_INFO, fnic->lport->host,
--				"Current vnic speed set to :  %llu\n",
--				new_port_speed);
-+				"fnic<%d>: %s: %d: Current vnic speed set to: %llu\n",
-+				fnic->fnic_num, __func__, __LINE__, new_port_speed);
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 9fd01a867788..f4390fc96323 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -163,12 +163,21 @@ do {								\
+ #define FNIC_MAIN_NOTE(kern_level, host, fmt, args...)          \
+ 	shost_printk(kern_level, host, fmt, ##args)
  
- 	switch (vnic_dev_port_speed(fnic->vdev)) {
- 	case DCEM_PORTSPEED_10G:
-@@ -102,6 +102,9 @@ void fnic_handle_link(struct work_struct *work)
- 			fnic_fc_trace_set_data(fnic->lport->host->host_no,
- 				FNIC_FC_LE, "Link Status: DOWN->DOWN",
- 				strlen("Link Status: DOWN->DOWN"));
-+			FNIC_MAIN_DBG(KERN_INFO, fnic->lport->host,
-+					"fnic<%d>: %s: %d: down->down\n",
-+					fnic->fnic_num, __func__, __LINE__);
- 		} else {
- 			if (old_link_down_cnt != fnic->link_down_cnt) {
- 				/* UP -> DOWN -> UP */
-@@ -128,8 +131,9 @@ void fnic_handle_link(struct work_struct *work)
- 					fnic_fcoe_send_vlan_req(fnic);
- 					return;
- 				}
--				FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
--					     "link up\n");
-+				FNIC_MAIN_DBG(KERN_INFO, fnic->lport->host,
-+						"fnic<%d>: %s: %d: up->down->up: Link up\n",
-+						fnic->fnic_num, __func__, __LINE__);
- 				fcoe_ctlr_link_up(&fnic->ctlr);
- 			} else {
- 				/* UP -> UP */
-@@ -138,6 +142,9 @@ void fnic_handle_link(struct work_struct *work)
- 					fnic->lport->host->host_no, FNIC_FC_LE,
- 					"Link Status: UP_UP",
- 					strlen("Link Status: UP_UP"));
-+				FNIC_MAIN_DBG(KERN_INFO, fnic->lport->host,
-+						"fnic<%d>: %s: %d: up->up\n",
-+						fnic->fnic_num, __func__, __LINE__);
- 			}
- 		}
- 	} else if (fnic->link_status) {
-@@ -153,7 +160,9 @@ void fnic_handle_link(struct work_struct *work)
- 			return;
- 		}
- 
--		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, "link up\n");
-+		FNIC_MAIN_DBG(KERN_INFO, fnic->lport->host,
-+				"fnic<%d>: %s: %d: down->up: Link up\n",
-+				fnic->fnic_num, __func__, __LINE__);
- 		fnic_fc_trace_set_data(fnic->lport->host->host_no, FNIC_FC_LE,
- 				       "Link Status: DOWN_UP", strlen("Link Status: DOWN_UP"));
- 		fcoe_ctlr_link_up(&fnic->ctlr);
-@@ -161,7 +170,9 @@ void fnic_handle_link(struct work_struct *work)
- 		/* UP -> DOWN */
- 		fnic->lport->host_stats.link_failure_count++;
- 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, "link down\n");
-+		FNIC_MAIN_DBG(KERN_INFO, fnic->lport->host,
-+				"fnic<%d>: %s: %d: up->down: Link down\n",
-+				fnic->fnic_num, __func__, __LINE__);
- 		fnic_fc_trace_set_data(
- 			fnic->lport->host->host_no, FNIC_FC_LE,
- 			"Link Status: UP_DOWN",
-@@ -763,8 +774,9 @@ void fnic_set_port_id(struct fc_lport *lport, u32 port_id, struct fc_frame *fp)
- 	u8 *mac;
- 	int ret;
- 
--	FNIC_FCS_DBG(KERN_DEBUG, lport->host, "set port_id %x fp %p\n",
--		     port_id, fp);
-+	FNIC_FCS_DBG(KERN_DEBUG, lport->host,
-+			"fnic<%d>: %s: %d: set port_id 0x%x fp 0x%p\n",
-+			fnic->fnic_num, __func__, __LINE__, port_id, fp);
- 
- 	/*
- 	 * If we're clearing the FC_ID, change to use the ctl_src_addr.
-@@ -790,10 +802,10 @@ void fnic_set_port_id(struct fc_lport *lport, u32 port_id, struct fc_frame *fp)
- 	if (fnic->state == FNIC_IN_ETH_MODE || fnic->state == FNIC_IN_FC_MODE)
- 		fnic->state = FNIC_IN_ETH_TRANS_FC_MODE;
- 	else {
--		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
--			     "Unexpected fnic state %s while"
--			     " processing flogi resp\n",
--			     fnic_state_to_str(fnic->state));
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host,
-+			     "fnic<%d>: %s: %d: Unexpected fnic state: %s processing FLOGI response",
-+			     fnic->fnic_num, __func__, __LINE__,
-+				 fnic_state_to_str(fnic->state));
- 		spin_unlock_irq(&fnic->fnic_lock);
- 		return;
- 	}
-diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
-index 3e5b437c0492..e0b173cc9d5f 100644
---- a/drivers/scsi/fnic/vnic_dev.c
-+++ b/drivers/scsi/fnic/vnic_dev.c
-@@ -143,6 +143,10 @@ static int vnic_dev_discover_res(struct vnic_dev *vdev,
- 		vdev->res[type].vaddr = (char __iomem *)bar->vaddr + bar_offset;
- 	}
- 
-+	pr_info("res_type_wq: %d res_type_rq: %d res_type_cq: %d res_type_intr_ctrl: %d\n",
-+		vdev->res[RES_TYPE_WQ].count, vdev->res[RES_TYPE_RQ].count,
-+		vdev->res[RES_TYPE_CQ].count, vdev->res[RES_TYPE_INTR_CTRL].count);
++#define FNIC_WQ_COPY_MAX 64
++#define FNIC_WQ_MAX 1
++#define FNIC_RQ_MAX 1
++#define FNIC_CQ_MAX (FNIC_WQ_COPY_MAX + FNIC_WQ_MAX + FNIC_RQ_MAX)
++#define FNIC_DFLT_IO_COMPLETIONS 256
 +
- 	return 0;
- }
++#define FNIC_MQ_CQ_INDEX        2
++
+ extern const char *fnic_state_str[];
+ 
+ enum fnic_intx_intr_index {
+ 	FNIC_INTX_WQ_RQ_COPYWQ,
+-	FNIC_INTX_ERR,
++	FNIC_INTX_DUMMY,
+ 	FNIC_INTX_NOTIFY,
++	FNIC_INTX_ERR,
+ 	FNIC_INTX_INTR_MAX,
+ };
+ 
+@@ -176,7 +185,7 @@ enum fnic_msix_intr_index {
+ 	FNIC_MSIX_RQ,
+ 	FNIC_MSIX_WQ,
+ 	FNIC_MSIX_WQ_COPY,
+-	FNIC_MSIX_ERR_NOTIFY,
++	FNIC_MSIX_ERR_NOTIFY = FNIC_MSIX_WQ_COPY + FNIC_WQ_COPY_MAX,
+ 	FNIC_MSIX_INTR_MAX,
+ };
+ 
+@@ -185,6 +194,7 @@ struct fnic_msix_entry {
+ 	char devname[IFNAMSIZ + 11];
+ 	irqreturn_t (*isr)(int, void *);
+ 	void *devid;
++	int irq_num;
+ };
+ 
+ enum fnic_state {
+@@ -194,12 +204,6 @@ enum fnic_state {
+ 	FNIC_IN_ETH_TRANS_FC_MODE,
+ };
+ 
+-#define FNIC_WQ_COPY_MAX 1
+-#define FNIC_WQ_MAX 1
+-#define FNIC_RQ_MAX 1
+-#define FNIC_CQ_MAX (FNIC_WQ_COPY_MAX + FNIC_WQ_MAX + FNIC_RQ_MAX)
+-#define FNIC_DFLT_IO_COMPLETIONS 256
+-
+ struct mempool;
+ 
+ enum fnic_evt {
+@@ -214,6 +218,13 @@ struct fnic_event {
+ 	enum fnic_evt event;
+ };
+ 
++struct fnic_cpy_wq {
++	unsigned long hw_lock_flags;
++	u16 active_ioreq_count;
++	u16 ioreq_table_size;
++	____cacheline_aligned struct fnic_io_req **io_req_table;
++};
++
+ /* Per-instance private data structure */
+ struct fnic {
+ 	int fnic_num;
+@@ -283,6 +294,7 @@ struct fnic {
+ 	mempool_t *io_sgl_pool[FNIC_SGL_NUM_CACHES];
+ 	spinlock_t io_req_lock[FNIC_IO_LOCKS];	/* locks for scsi cmnds */
+ 
++	unsigned int cpy_wq_base;
+ 	struct work_struct link_work;
+ 	struct work_struct frame_work;
+ 	struct sk_buff_head frame_queue;
+@@ -302,6 +314,8 @@ struct fnic {
+ 
+ 	/* copy work queue cache line section */
+ 	____cacheline_aligned struct vnic_wq_copy hw_copy_wq[FNIC_WQ_COPY_MAX];
++	____cacheline_aligned struct fnic_cpy_wq sw_copy_wq[FNIC_WQ_COPY_MAX];
++
+ 	/* completion queue cache line section */
+ 	____cacheline_aligned struct vnic_cq cq[FNIC_CQ_MAX];
  
 -- 
 2.31.1
