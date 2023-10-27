@@ -2,139 +2,118 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F9A3C25B47
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 05:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FEC9C25B47
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 08:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345123AbjJ0FF7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Oct 2023 01:05:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43700 "EHLO
+        id S1345710AbjJ0IyS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Oct 2023 04:54:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345118AbjJ0FF5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 01:05:57 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0ED71BE
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Oct 2023 22:05:54 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 526C521AD8;
-        Fri, 27 Oct 2023 05:05:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1698383153; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TH9xj8js/C8M9fvcfUBMnV9xMDihw9+YlXtBXYw6I0o=;
-        b=rZmVSVw5P3KakJylzc8Gn0VXrfP+ZZt3uB52wBG7aXbNPm3Chu9H6Kzhdr5nk2JQmnIFSD
-        xtzCyQmBzjdb04WndK4mbQ7COc1rFbtLHXWyPHCU2QRjbCMOW+spTTyNkCArB2LiSuDQIL
-        KwRvF63VAvXAyuAlEX/f24PCZrkAw24=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1698383153;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TH9xj8js/C8M9fvcfUBMnV9xMDihw9+YlXtBXYw6I0o=;
-        b=fyc+DjoJhpBYXcKjE6ArdawT8hyJtrN0o4qJt4DK6q74F/UOZ8519Z1G3l72u5LIwIPycO
-        uDoB0c3XpEBCvPDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1D1DE13524;
-        Fri, 27 Oct 2023 05:05:53 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 8LdeBTFFO2VoUgAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 27 Oct 2023 05:05:53 +0000
-Message-ID: <cc883518-1c57-4272-aa4d-389203501dc1@suse.de>
-Date:   Fri, 27 Oct 2023 07:05:52 +0200
+        with ESMTP id S235220AbjJ0IyH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 04:54:07 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F420D56
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2023 01:43:41 -0700 (PDT)
+X-UUID: e9a6cf9674a411eea33bb35ae8d461a2-20231027
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=VcyzQ2NeYWUVU838NXIO17JVGw61EnQMWdi7e/381zA=;
+        b=PlSNIqIyH+uOTmuhN3OfBEjheZtn5ANtrQOjCymKJj4pE3dtzBeAn3PhCmg9YgiTdYjIJYNmJsyy7fikQLilVziVAnKGSBJ7E+uIqUI/M37wfolOu5JjUtgbFudxH9mJ7hE2i+gY8CNTNcsg97GOZBiRvtXFJLSngtxBijSNUdM=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.32,REQID:7a3c05e8-a345-4c8d-9f08-03ffd2d1aa5f,IP:0,U
+        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:-5
+X-CID-META: VersionHash:5f78ec9,CLOUDID:0135f771-1bd3-4f48-b671-ada88705968c,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:
+        NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: e9a6cf9674a411eea33bb35ae8d461a2-20231027
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 360201609; Fri, 27 Oct 2023 16:43:33 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Fri, 27 Oct 2023 16:43:32 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Fri, 27 Oct 2023 16:43:32 +0800
+From:   <peter.wang@mediatek.com>
+To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>, <tun-yu.yu@mediatek.com>,
+        <eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>
+Subject: [PATCH v1] ufs: core: fix racing issue between ufshcd_mcq_abort and ISR
+Date:   Fri, 27 Oct 2023 16:43:29 +0800
+Message-ID: <20231027084329.4067-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 09/10] scsi_error: map FAST_IO_FAIL to -EAGAIN in SCSI EH
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>
-References: <20231023092837.33786-1-hare@suse.de>
- <20231023092837.33786-10-hare@suse.de>
- <6ba0093c-9c0f-4669-b1fd-ec2baa1738e2@oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <6ba0093c-9c0f-4669-b1fd-ec2baa1738e2@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Authentication-Results: smtp-out1.suse.de;
-        none
-X-Spamd-Result: default: False [-7.09 / 50.00];
-         ARC_NA(0.00)[];
-         RCVD_VIA_SMTP_AUTH(0.00)[];
-         XM_UA_NO_VERSION(0.01)[];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         BAYES_HAM(-3.00)[100.00%];
-         MIME_GOOD(-0.10)[text/plain];
-         NEURAL_HAM_LONG(-3.00)[-1.000];
-         RCPT_COUNT_FIVE(0.00)[6];
-         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-         NEURAL_HAM_SHORT(-1.00)[-1.000];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         RCVD_COUNT_TWO(0.00)[2];
-         RCVD_TLS_ALL(0.00)[];
-         MID_RHS_MATCH_FROM(0.00)[]
+Content-Type: text/plain
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--7.853700-8.000000
+X-TMASE-MatchedRID: sBypFcuOxUYMQLXc2MGSbBuZoNKc6pl+WPJn4UmMuVJ0cpXNtrVD/RFG
+        4EGBR4d4nFnqwstPnWZOTRDyBol0uXAvdl/gU+kWydRN/Yyg4pid2Wz0X3OaLd9RlPzeVuQQ8rM
+        P48ANS13i8zVgXoAltsIJ+4gwXrEtwrbXMGDYqV94uFxKD13nMe+qZbkhrKAvDcHRGkNOD0huqx
+        mYCr02+2o6x355ikkS
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--7.853700-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: 6956C7A927BB23CF71FBC2478C5F13C21FD7890C25E3F5B2D56A548C830530692000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/26/23 18:50, Mike Christie wrote:
-> On 10/23/23 4:28 AM, Hannes Reinecke wrote:
->> Returning FAST_IO_FAIL from any of the SCSI EH functions is perfectly
->> valid, and indicates that the request could not be executed due to
->> the transport being busy.
-> 
-> I'm not sure if that's completely correct or maybe we have a different
-> view of what it means to be busy.
-> 
-> FC, iSCSI and SRP normally return it when the transport is marked as
-> offline/lost, so for normal IO we fail it upwards and userspace gets
-> an error.
-> 
-> What drivers use it as temp busy error code? Is it the lpfc one
-> or a snic one?
-> 
-This patch is primarily for sg_reset(), which would return -EIO whenever
-one of the EH functions would return FAST_IO_FAIL.
-It got triggered by my patch to zfcp, which now returns FAST_IO_FAIL
-from host reset as remote port login is happening from a worker thread,
-and the devices are not (yet) available.
+From: Peter Wang <peter.wang@mediatek.com>
 
->> But that is not an I/O error, and we should return -EAGAIN from
->> scsi_ioctl_reset() to correctly inform userspace.
-> For the sg_reset example, if you tried to run sg_reset again it would
-> fail. When sg_reset tries to open the device the open function will
-> return failure in the open call because the device is in the
-> transport-offline state for FC/iSCSI/SRP.
-> 
-> If you are going to change the return value why not sync it with
-> what we return for normal IO and return BLK_STS_TRANSPORT/-ENOLINK?
+If command timeout happen and cq complete irq raise at the same time,
+ufshcd_mcq_abort null the lprb->cmd and NULL poiner KE in ISR.
+Below is error log.
 
-Good point.
-The alternative would be to map FAST_IO_FAIL back to SUCCESS as after
-all the host reset completed successfully, and blocked ports are not
-really an error.
-Lemme check.
+ufshcd_abort: Device abort task at tag 18
+Unable to handle kernel NULL pointer dereference at virtual address
+0000000000000108
+pc : [0xffffffe27ef867ac] scsi_dma_unmap+0xc/0x44
+lr : [0xffffffe27f1b898c] ufshcd_release_scsi_cmd+0x24/0x114
 
-Cheers,
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+---
+ drivers/ufs/core/ufs-mcq.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Hannes
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 2ba8ec254dce..6ea96406f2bf 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -630,6 +630,7 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
+ 	int tag = scsi_cmd_to_rq(cmd)->tag;
+ 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+ 	struct ufs_hw_queue *hwq;
++	unsigned long flags;
+ 	int err = FAILED;
+ 
+ 	if (!ufshcd_cmd_inflight(lrbp->cmd)) {
+@@ -670,8 +671,10 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
+ 	}
+ 
+ 	err = SUCCESS;
++	spin_lock_irqsave(&hwq->cq_lock, flags);
+ 	if (ufshcd_cmd_inflight(lrbp->cmd))
+ 		ufshcd_release_scsi_cmd(hba, lrbp);
++	spin_unlock_irqrestore(&hwq->cq_lock, flags);
+ 
+ out:
+ 	return err;
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+2.18.0
 
