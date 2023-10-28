@@ -2,126 +2,199 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09455C25B48
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Oct 2023 20:55:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EFE3C25B70
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Oct 2023 02:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346489AbjJ0Uza (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Oct 2023 16:55:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39206 "EHLO
+        id S229623AbjJ1Crw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Oct 2023 22:47:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235052AbjJ0Uz3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 16:55:29 -0400
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D38591BD;
-        Fri, 27 Oct 2023 13:55:25 -0700 (PDT)
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1cbf47fa563so21857335ad.2;
-        Fri, 27 Oct 2023 13:55:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698440125; x=1699044925;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2YiqrRPa09XwcSO6dmunATjOVHB3FZKY8V49FUoXNpc=;
-        b=wIlhq3RWFhfWgOduwrJNS1mC3ptMuJxZfyhP7FDZY2sZEGA6VjBlX23mkvPTeAdqUy
-         lepjhAYXcbrI85+0fMJN7NZjh4qO6YV78CqSiIqkHx/NgLWIGIw6x+iVv1rDgnsGqJzP
-         FBpBd38aXSMLBOjMk8UN1UhiI6u3F4UVxkfGe81D7E0SWKJa5JGgkK7Q6nw21pls95eN
-         /ZLyB5zBliagmW8zbAEA0V2VDHGb7QsKUvuOPAvDutC64mkxtG/NZ42yFBF2F8tdRJWw
-         VnTltxERWAb4dc9Fx03yDRVgb5jjPFVZ3h+siFcprEpeuiQwqTEoP0rBgRtW2vVdZBpA
-         SBCw==
-X-Gm-Message-State: AOJu0YyXhSMSQDxQ8cA1viniWuvv3Qzto0rO3EIMG+tZSkznyJMY3hu2
-        DjqQAWHpd/Nvjqd/6DBrnzE=
-X-Google-Smtp-Source: AGHT+IFNnAI4aHBm8o7jUz2CjwqbUusBVaJvM6IjEzdEXUT4v8V/PYR/KGKCPVaC1ihakvXkyE1mxg==
-X-Received: by 2002:a17:90a:1954:b0:27d:98f3:21a5 with SMTP id 20-20020a17090a195400b0027d98f321a5mr3469818pjh.24.1698440124610;
-        Fri, 27 Oct 2023 13:55:24 -0700 (PDT)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id 30-20020a17090a01de00b002794fe14cabsm4068946pjd.12.2023.10.27.13.55.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 27 Oct 2023 13:55:23 -0700 (PDT)
-Message-ID: <a16dc8ba-ca3b-4dd6-a8b5-dbb3ac7a49a5@acm.org>
-Date:   Fri, 27 Oct 2023 13:55:20 -0700
+        with ESMTP id S229446AbjJ1Crw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Oct 2023 22:47:52 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90724E1;
+        Fri, 27 Oct 2023 19:47:48 -0700 (PDT)
+Received: from dggpemm500012.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4SHP5G4Mqcz1L9G5;
+        Sat, 28 Oct 2023 10:44:50 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Sat, 28 Oct 2023 10:47:45 +0800
+Message-ID: <7591fe2b-f337-ad78-08b1-cfbe7254f578@huawei.com>
+Date:   Sat, 28 Oct 2023 10:47:45 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 1/1] ufs: core: Add host quirk
- QUIRK_MCQ_EXPAND_QUEUE_SLOT
-Content-Language: en-US
-To:     =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= 
-        <Chun-hung.Wu@mediatek.com>,
-        "ebiggers@google.com" <ebiggers@google.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "Arthur.Simchaev@wdc.com" <Arthur.Simchaev@wdc.com>,
-        "keosung.park@samsung.com" <keosung.park@samsung.com>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "angelogioacchino.delregno@collabora.com" 
-        <angelogioacchino.delregno@collabora.com>,
-        "yang.lee@linux.alibaba.com" <yang.lee@linux.alibaba.com>
-Cc:     =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= 
-        <peter.wang@mediatek.com>,
-        =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= 
-        <eddie.huang@mediatek.com>,
-        =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= 
-        <jiajie.hao@mediatek.com>,
-        =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= 
-        <Alice.Chao@mediatek.com>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        wsd_upstream <wsd_upstream@mediatek.com>,
-        =?UTF-8?B?Q2FzcGVyIExpICjmnY7kuK3mpq4p?= <casper.li@mediatek.com>,
-        =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        =?UTF-8?B?TGluIEd1aSAo5qGC5p6XKQ==?= <Lin.Gui@mediatek.com>,
-        =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?= 
-        <Chaotian.Jing@mediatek.com>,
-        =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
-        =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        =?UTF-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?= <Qilin.Tan@mediatek.com>,
-        "kernel-team@android.com" <kernel-team@android.com>
-References: <20231025085656.10848-1-chun-hung.wu@mediatek.com>
- <20231025085656.10848-2-chun-hung.wu@mediatek.com>
- <3056c6d8-1e54-4954-9141-e0760a0d935a@acm.org>
- <53d7d12bc12237e5f86522faf09876ab08ef7592.camel@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <53d7d12bc12237e5f86522faf09876ab08ef7592.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH] scsi: libsas: fix set zero-address when device-type !=
+ NO_DEVICE
+Content-Language: en-CA
+To:     Jason Yan <yanaijie@huawei.com>, <john.g.garry@oracle.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+        <kangfenglong@huawei.com>, <xiabing12@h-partners.com>
+References: <20231020024240.7708-1-yangxingui@huawei.com>
+ <31524a87-9e02-5e43-5d71-5747c2e6e6b0@huawei.com>
+From:   yangxingui <yangxingui@huawei.com>
+In-Reply-To: <31524a87-9e02-5e43-5d71-5747c2e6e6b0@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.67.120.108]
+X-ClientProxiedBy: dggpemm100024.china.huawei.com (7.185.36.234) To
+ dggpemm500012.china.huawei.com (7.185.36.89)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/26/23 20:27, Chun-Hung Wu (巫駿宏) wrote:
-> From UFSHCI 4.0 spec "When the head and tail doorbells are equal, the
-> queue is empty. *Nothe that this definition means there will always be
-> one empty queue entry"
-> One of our platform does not keep one empty queue
-> entry for CQ full
-> case, that's  why we need this patch to fix this corner case.
 
-The UFSHCI driver should make sure that there is always one empty queue
-entry. Does "platform" in the above text refer to the SoC that includes
-the UFSHCI controller?
 
-What is totally unclear to me is why the following code depends on the
-UFSHCI controller type:
+On 2023/10/20 11:24, Jason Yan wrote:
+> On 2023/10/20 10:42, Xingui Yang wrote:
+>> phy->attached_sas_addr will be set to a zero-address when
+>> phy->linkrate < SAS_LINK_RATE_1_5_GBPS but device-type != NO_DEVICE,
+>> and it may trigger BUG() as follows when do revalidate with zero-address:
+> 
+> Hi  Xingui,
+> 
+> Why is this zero-addressed PHY added to another port? A zero-addressed 
+> PHY should not belong to any port.
+Hi Jason,
 
-+		if (ufshcd_is_mcq_expand_queue_slot(hba))
-+			hwq->max_entries = hba->nutrs + 1;
-+		else
-+			hwq->max_entries = hba->nutrs;
+[562240.062536] sas: ex 500e004aaaaaaa1f phy0 new device attached
+[562240.062616] sas: ex 500e004aaaaaaa1f phy00:U:5 attached: 
+0000000000000000 (stp)
+port-7:7:0: trying to add phy phy-7:7:19 fails: it's already part of 
+another port
 
-Shouldn't hwq->max_entries = hba->nutrs + 1 be used for all UFSHCI 4.0
-controllers?
+we get phy0's data info:
+crash> struct ex_phy 0xffff8020cead3000
+struct ex_phy {
+   phy_id = 0,
+   phy_state = PHY_EMPTY,
+   attached_dev_type = SAS_END_DEVICE,
+   linkrate = SAS_PHY_RESET_IN_PROGRESS,
+   attached_sata_host = 0 '\000',
+   attached_sata_dev = 1 '\001',
+   attached_sata_ps = 0 '\000',
+   attached_tproto = SAS_PROTOCOL_NONE,
+   attached_iproto = SAS_PROTOCOL_NONE,
+   attached_sas_addr = "\000\000\000\000\000\000\000",
+   attached_phy_id = 0 '\000',
+   phy_change_count = 152,
+   routing_attr = TABLE_ROUTING,
+   virtual = 0 '\000',
+   last_da_index = -1,
+   phy = 0xffff8020ceac5000,
+   port = 0xffffa0300c6f8800
+}
+
+When a new device is attached, if the address is 0 and the device type 
+is not null, but stp or ssp, the device still creates a port in 
+sas_ex_discover_end_dev() and add all other expander phys with the same 
+sas_address 0 to this port in sas_ex_get_linkrate().
+
+All of the phys is zero-address belongs to port-7:7:0 as follows:
+
+crash> list sas_phy.port_siblings -s sas_phy.dev.kobj.name -s 
+sas_phy.identify.sas_address  -h ffff8020ceac5000
+ffff8020ceac5000
+   dev.kobj.name = 0xffff803017878b00 "phy-7:7:0",
+   identify.sas_address = 0,
+ffff8020ceacb000
+   dev.kobj.name = 0xffff803017871980 "phy-7:7:1",
+   identify.sas_address = 0,
+ffff8020ceade000
+   dev.kobj.name = 0xffff80301787f580 "phy-7:7:2",
+   identify.sas_address = 0,
+ffff8020cead4000
+   dev.kobj.name = 0xffff80301787d980 "phy-7:7:3",
+   identify.sas_address = 0,
+ffff8020ceacc800
+   dev.kobj.name = 0xffff80301787a480 "phy-7:7:4",
+   identify.sas_address = 0,
+ffff8020ceac6000
+   dev.kobj.name = 0xffff803017872500 "phy-7:7:5",
+   identify.sas_address = 0,
+ffff8020ceacd000
+   dev.kobj.name = 0xffff803041e62100 "phy-7:7:12",
+   identify.sas_address = 0,
+ffff8020ceadb000
+   dev.kobj.name = 0xffff803041e61980 "phy-7:7:13",
+   identify.sas_address = 0,
+ffff8020ceac8800
+   dev.kobj.name = 0xffff803041e61a00 "phy-7:7:14",
+   identify.sas_address = 0,
+ffff8020cead1800
+   dev.kobj.name = 0xffff803041e69980 "phy-7:7:15",
+   identify.sas_address = 0,
+
 
 Thanks,
+Xingui
 
-Bart.
-
+> 
+> Thanks,
+> Jason
+> 
+>>
+>> [562240.062536] sas: ex 500e004aaaaaaa1f phy0 new device attached
+>> [562240.062616] sas: ex 500e004aaaaaaa1f phy00:U:5 attached: 
+>> 0000000000000000 (stp)
+>> [562240.062680]  port-7:7:0: trying to add phy phy-7:7:19 fails: it's 
+>> already part of another port
+>> [562240.085064] ------------[ cut here ]------------
+>> [562240.096612] kernel BUG at drivers/scsi/scsi_transport_sas.c:1083!
+>> [562240.109611] Internal error: Oops - BUG: 0 [#1] SMP
+>> [562240.343518] Process kworker/u256:3 (pid: 435909, stack limit = 
+>> 0x0000000003bcbebf)
+>> [562240.421714] Workqueue: 0000:b4:02.0_disco_q sas_revalidate_domain 
+>> [libsas]
+>> [562240.437173] pstate: 40c00009 (nZcv daif +PAN +UAO)
+>> [562240.450478] pc : sas_port_add_phy+0x13c/0x168 [scsi_transport_sas]
+>> [562240.465283] lr : sas_port_add_phy+0x13c/0x168 [scsi_transport_sas]
+>> [562240.479751] sp : ffff0000300cfa70
+>> [562240.674822] Call trace:
+>> [562240.682709]  sas_port_add_phy+0x13c/0x168 [scsi_transport_sas]
+>> [562240.694013]  sas_ex_get_linkrate.isra.5+0xcc/0x128 [libsas]
+>> [562240.704957]  sas_ex_discover_end_dev+0xfc/0x538 [libsas]
+>> [562240.715508]  sas_ex_discover_dev+0x3cc/0x4b8 [libsas]
+>> [562240.725634]  sas_ex_discover_devices+0x9c/0x1a8 [libsas]
+>> [562240.735855]  sas_ex_revalidate_domain+0x2f0/0x450 [libsas]
+>> [562240.746123]  sas_revalidate_domain+0x158/0x160 [libsas]
+>> [562240.756014]  process_one_work+0x1b4/0x448
+>> [562240.764548]  worker_thread+0x54/0x468
+>> [562240.772562]  kthread+0x134/0x138
+>> [562240.779989]  ret_from_fork+0x10/0x18
+>>
+>> So set a zero-address for phy->attached_sas_addr only when
+>> phy->attached_dev_type == NO_DEVICE.
+>>
+>> Fixes: 7d1d86518118 ("[SCSI] libsas: fix false positive 'device 
+>> attached' conditions")
+>>
+>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>> ---
+>>   drivers/scsi/libsas/sas_expander.c | 3 +--
+>>   1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_expander.c 
+>> b/drivers/scsi/libsas/sas_expander.c
+>> index a2204674b680..5a81754d3768 100644
+>> --- a/drivers/scsi/libsas/sas_expander.c
+>> +++ b/drivers/scsi/libsas/sas_expander.c
+>> @@ -239,8 +239,7 @@ static void sas_set_ex_phy(struct domain_device 
+>> *dev, int phy_id,
+>>       /* help some expanders that fail to zero sas_address in the 'no
+>>        * device' case
+>>        */
+>> -    if (phy->attached_dev_type == SAS_PHY_UNUSED ||
+>> -        phy->linkrate < SAS_LINK_RATE_1_5_GBPS)
+>> +    if (phy->attached_dev_type == SAS_PHY_UNUSED)
+>>           memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
+>>       else
+>>           memcpy(phy->attached_sas_addr, dr->attached_sas_addr, 
+>> SAS_ADDR_SIZE);
+>>
+> .
