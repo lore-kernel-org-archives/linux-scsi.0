@@ -2,79 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 561FFC4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Oct 2023 19:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D64E7C4332F
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Oct 2023 17:21:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbjJ1TiH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Oct 2023 15:38:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43382 "EHLO
+        id S230242AbjJ2RVG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Oct 2023 13:21:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbjJ1TiD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Oct 2023 15:38:03 -0400
-X-Greylist: delayed 301 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 28 Oct 2023 12:38:00 PDT
-Received: from rs227.mailgun.us (rs227.mailgun.us [209.61.151.227])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F3A5E0
-        for <linux-scsi@vger.kernel.org>; Sat, 28 Oct 2023 12:37:59 -0700 (PDT)
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=equiv.tech; q=dns/txt;
- s=mx; t=1698521879; x=1698529079; h=In-Reply-To: Content-Type: MIME-Version:
- References: Message-ID: Subject: Subject: Cc: To: To: From: From: Date:
- Sender: Sender; bh=QpCO1QyuJaAC5PC83erH8OzlntE7Ib+SBP/9JsGIOdU=;
- b=RyRi1L8YV4voHNNvygx8lmSvTKneaJX/AUti4fYE0W/yb8SuI2kqWMfXgsamLjsghm67T9Gupwbcqw+K/HMBy/sd4143+zaA730bbt2AcnvcVzc4IHHtK9H4zX2AzlL83Rwv4cYRdvcMxeGfwFnxlMRx09mNWzmJCcbPPaYYWFh/xf6PEECKPejSXxD1uI11DBNPCIaXd/SnM6F+ilUP1c0FajNHuuyeHUlV3JYK21cZMfps2nRpWKhxzIlrvtydBfhJViQLIJ74eRr1J94VwZ7Wa8YYLqwPknaM0SBzfVHvRY8IUjS9SZcDaNdKKwT+OQdSiIyo/HSGRALJ12wEYg==
-X-Mailgun-Sending-Ip: 209.61.151.227
-X-Mailgun-Sid: WyI0OWM5MyIsImxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnIiwiOTNkNWFiIl0=
-Received: from mail.equiv.tech (equiv.tech [142.93.28.83]) by 60615d1b0698 with SMTP id
- 653d61ea0459d77ac9eb68a1 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 28 Oct 2023 19:32:58 GMT
-Sender: james@equiv.tech
-Date:   Sat, 28 Oct 2023 12:32:57 -0700
-From:   James Seo <james@equiv.tech>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Ranjan Kumar <ranjan.kumar@broadcom.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 00/12] scsi: mpt3sas: Use flexible arrays and do a few
- cleanups
-Message-ID: <ZT1h6UIi2y2UwpdJ@equiv.tech>
-References: <20230806170604.16143-1-james@equiv.tech>
- <yq1edjr25ed.fsf@ca-mkp.ca.oracle.com>
- <202310101748.5E39C3A@keescook>
+        with ESMTP id S229512AbjJ2RVF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Oct 2023 13:21:05 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59B1CBE;
+        Sun, 29 Oct 2023 10:21:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1698600063; x=1730136063;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=YF32p0Gyd66CJXltDpmuCaqjZuN06ROB/FQ2Q2ybwNA=;
+  b=G9xtoC2PKfPf6Ot8F948JlPCP8cmIY7K8jQRkG8ndMEstm/q/KiUwLb8
+   LNLzP2spn8p6dMMew0wuu9cqgpGyL87+4B4vGrSixO0gS47dtd3Ui6S3S
+   /98gqRHUDlFqjgg6ZXLNzwQSUHUYm8RXUpeai92zcPg66nFRtaV1wSDEb
+   IXDrxF7KbYsltQ7OY5s8JpVjk1SfuxkEUpI99PcBPQ8bJjeB1ovsf82p6
+   rN0zovf1KB4OGnUpg7NO2LPSsZNtECcpS+M88S4k4gb5nAxEQ/rUNM4Oe
+   dASX9GdwZryvQO6kbkc212Ylclv9QDb2TlejnvY62ga2CpepBWleGhRvv
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10878"; a="9505664"
+X-IronPort-AV: E=Sophos;i="6.03,261,1694761200"; 
+   d="scan'208";a="9505664"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2023 10:21:03 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10878"; a="933578459"
+X-IronPort-AV: E=Sophos;i="6.03,261,1694761200"; 
+   d="scan'208";a="933578459"
+Received: from lkp-server01.sh.intel.com (HELO 8917679a5d3e) ([10.239.97.150])
+  by orsmga005.jf.intel.com with ESMTP; 29 Oct 2023 10:20:59 -0700
+Received: from kbuild by 8917679a5d3e with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qx9T7-000Cih-2O;
+        Sun, 29 Oct 2023 17:20:57 +0000
+Date:   Mon, 30 Oct 2023 01:20:32 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
+Cc:     oe-kbuild-all@lists.linux.dev, arulponn@cisco.com,
+        djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
+        satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: Re: [PATCH v2 12/13] scsi: fnic: Add support for multiqueue (MQ) in
+ fnic driver
+Message-ID: <202310300032.2awCqkfn-lkp@intel.com>
+References: <20231027180302.418676-13-kartilak@cisco.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202310101748.5E39C3A@keescook>
+In-Reply-To: <20231027180302.418676-13-kartilak@cisco.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 10, 2023 at 05:49:38PM -0700, Kees Cook wrote:
-> On Thu, Aug 24, 2023 at 11:00:57PM -0400, Martin K. Petersen wrote:
->> 
->>> Commit df8fc4e934c1 ("kbuild: Enable -fstrict-flex-arrays=3") has
->>> resulted in the only arrays that UBSAN_BOUNDS considers unbounded
->>> being trailing arrays declared with [] as the last member of a struct.
->>> Unbounded trailing arrays declared with [1] are common in mpt3sas,
->>> which is causing spurious warnings to appear in some situations, e.g.
->>> when more than one physical disk is connected:
->> 
->> Broadcom: Please review/test. Thanks!
-> 
-> Another thread ping. Is anyone at broadcom around? I'd really like to
-> see this series (or some form of it) land to avoid all these runtime
-> warnings...
-> 
-> -- 
-> Kees Cook
+Hi Karan,
 
-Looks like this series was accepted for -rc1. Thanks!
+kernel test robot noticed the following build warnings:
 
-One last thread ping for the Broadcom folks, just in case.
+[auto build test WARNING on mkp-scsi/for-next]
+[cannot apply to jejb-scsi/for-next linus/master v6.6-rc7 next-20231027]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
--James Seo
+url:    https://github.com/intel-lab-lkp/linux/commits/Karan-Tilak-Kumar/scsi-fnic-Modify-definitions-to-sync-with-VIC-firmware/20231028-060626
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20231027180302.418676-13-kartilak%40cisco.com
+patch subject: [PATCH v2 12/13] scsi: fnic: Add support for multiqueue (MQ) in fnic driver
+config: x86_64-randconfig-001-20231029 (https://download.01.org/0day-ci/archive/20231030/202310300032.2awCqkfn-lkp@intel.com/config)
+compiler: gcc-7 (Ubuntu 7.5.0-6ubuntu2) 7.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231030/202310300032.2awCqkfn-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202310300032.2awCqkfn-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_queuecommand':
+>> drivers/scsi/fnic/fnic_scsi.c:606:6: warning: variable 'tag' set but not used [-Wunused-but-set-variable]
+     int tag = 0;
+         ^~~
+
+
+vim +/tag +606 drivers/scsi/fnic/fnic_scsi.c
+
+   601	
+   602	int fnic_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc)
+   603	{
+   604		struct request *const rq = scsi_cmd_to_rq(sc);
+   605		uint32_t mqtag = 0;
+ > 606		int tag = 0;
+   607		uint16_t hwq = 0;
+   608	
+   609		mqtag = blk_mq_unique_tag(rq);
+   610		hwq = blk_mq_unique_tag_to_hwq(mqtag);
+   611		tag = blk_mq_unique_tag_to_tag(mqtag);
+   612	
+   613		return fnic_queuecommand_int(sc, mqtag, hwq);
+   614	}
+   615	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
