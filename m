@@ -2,115 +2,84 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D64E7C4332F
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Oct 2023 17:21:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9D6AC4167B
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Oct 2023 22:57:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230242AbjJ2RVG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Oct 2023 13:21:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41874 "EHLO
+        id S230512AbjJ2W5n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Oct 2023 18:57:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbjJ2RVF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Oct 2023 13:21:05 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59B1CBE;
-        Sun, 29 Oct 2023 10:21:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1698600063; x=1730136063;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=YF32p0Gyd66CJXltDpmuCaqjZuN06ROB/FQ2Q2ybwNA=;
-  b=G9xtoC2PKfPf6Ot8F948JlPCP8cmIY7K8jQRkG8ndMEstm/q/KiUwLb8
-   LNLzP2spn8p6dMMew0wuu9cqgpGyL87+4B4vGrSixO0gS47dtd3Ui6S3S
-   /98gqRHUDlFqjgg6ZXLNzwQSUHUYm8RXUpeai92zcPg66nFRtaV1wSDEb
-   IXDrxF7KbYsltQ7OY5s8JpVjk1SfuxkEUpI99PcBPQ8bJjeB1ovsf82p6
-   rN0zovf1KB4OGnUpg7NO2LPSsZNtECcpS+M88S4k4gb5nAxEQ/rUNM4Oe
-   dASX9GdwZryvQO6kbkc212Ylclv9QDb2TlejnvY62ga2CpepBWleGhRvv
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10878"; a="9505664"
-X-IronPort-AV: E=Sophos;i="6.03,261,1694761200"; 
-   d="scan'208";a="9505664"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2023 10:21:03 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10878"; a="933578459"
-X-IronPort-AV: E=Sophos;i="6.03,261,1694761200"; 
-   d="scan'208";a="933578459"
-Received: from lkp-server01.sh.intel.com (HELO 8917679a5d3e) ([10.239.97.150])
-  by orsmga005.jf.intel.com with ESMTP; 29 Oct 2023 10:20:59 -0700
-Received: from kbuild by 8917679a5d3e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qx9T7-000Cih-2O;
-        Sun, 29 Oct 2023 17:20:57 +0000
-Date:   Mon, 30 Oct 2023 01:20:32 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
-Cc:     oe-kbuild-all@lists.linux.dev, arulponn@cisco.com,
-        djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
-        satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Karan Tilak Kumar <kartilak@cisco.com>
-Subject: Re: [PATCH v2 12/13] scsi: fnic: Add support for multiqueue (MQ) in
- fnic driver
-Message-ID: <202310300032.2awCqkfn-lkp@intel.com>
-References: <20231027180302.418676-13-kartilak@cisco.com>
+        with ESMTP id S231317AbjJ2W5g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Oct 2023 18:57:36 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEC482D66;
+        Sun, 29 Oct 2023 15:56:08 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 273E1C433C7;
+        Sun, 29 Oct 2023 22:56:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698620167;
+        bh=SmAfp3kOohRIg6+CIK84XG6g7rBs2b58xhlju/dX6cs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ur6nmGZ9YhxZ28k3wm8sLPGSQ/P/OBE8SIzHTiO1g4KYo/Tkcnqm1Q6/77Nrr1pDT
+         kc+J1AxlRBjOFdKgjYQfahsenCknO2g2Xr8yXRRvAxd2EAPBh17TgI2ADV5RNieQFq
+         h6TPXKMW9yj2Br70ANxpcxQeKGApaaTWOwS5yxtOcH7JcAasdNbRqnCJFnICfBWIzY
+         bBKxRzWBEcHaRp9P+BwYveP7g0w64fB0SvlcUfH91NuCkSqiHdoRMOtIOZnSqU/a7a
+         E0D1v83kV638AtXe2inXuYB9yj9Uz3/hZPr4cgqSQZu3DSUFwXdmYxG1B6bUShrDq6
+         1yn0Q2IokPn2A==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Tomas Henzl <thenzl@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
+        sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 36/52] scsi: mpt3sas: Fix in error path
+Date:   Sun, 29 Oct 2023 18:53:23 -0400
+Message-ID: <20231029225441.789781-36-sashal@kernel.org>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231029225441.789781-1-sashal@kernel.org>
+References: <20231029225441.789781-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231027180302.418676-13-kartilak@cisco.com>
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.5.9
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Karan,
+From: Tomas Henzl <thenzl@redhat.com>
 
-kernel test robot noticed the following build warnings:
+[ Upstream commit e40c04ade0e2f3916b78211d747317843b11ce10 ]
 
-[auto build test WARNING on mkp-scsi/for-next]
-[cannot apply to jejb-scsi/for-next linus/master v6.6-rc7 next-20231027]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+The driver should be deregistered as misc driver after PCI registration
+failure.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Karan-Tilak-Kumar/scsi-fnic-Modify-definitions-to-sync-with-VIC-firmware/20231028-060626
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20231027180302.418676-13-kartilak%40cisco.com
-patch subject: [PATCH v2 12/13] scsi: fnic: Add support for multiqueue (MQ) in fnic driver
-config: x86_64-randconfig-001-20231029 (https://download.01.org/0day-ci/archive/20231030/202310300032.2awCqkfn-lkp@intel.com/config)
-compiler: gcc-7 (Ubuntu 7.5.0-6ubuntu2) 7.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231030/202310300032.2awCqkfn-lkp@intel.com/reproduce)
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Link: https://lore.kernel.org/r/20231015114529.10725-1-thenzl@redhat.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202310300032.2awCqkfn-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   drivers/scsi/fnic/fnic_scsi.c: In function 'fnic_queuecommand':
->> drivers/scsi/fnic/fnic_scsi.c:606:6: warning: variable 'tag' set but not used [-Wunused-but-set-variable]
-     int tag = 0;
-         ^~~
-
-
-vim +/tag +606 drivers/scsi/fnic/fnic_scsi.c
-
-   601	
-   602	int fnic_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc)
-   603	{
-   604		struct request *const rq = scsi_cmd_to_rq(sc);
-   605		uint32_t mqtag = 0;
- > 606		int tag = 0;
-   607		uint16_t hwq = 0;
-   608	
-   609		mqtag = blk_mq_unique_tag(rq);
-   610		hwq = blk_mq_unique_tag_to_hwq(mqtag);
-   611		tag = blk_mq_unique_tag_to_tag(mqtag);
-   612	
-   613		return fnic_queuecommand_int(sc, mqtag, hwq);
-   614	}
-   615	
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index c3c1f466fe01d..605013d3ee83a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -12913,8 +12913,10 @@ _mpt3sas_init(void)
+ 	mpt3sas_ctl_init(hbas_to_enumerate);
+ 
+ 	error = pci_register_driver(&mpt3sas_driver);
+-	if (error)
++	if (error) {
++		mpt3sas_ctl_exit(hbas_to_enumerate);
+ 		scsih_exit();
++	}
+ 
+ 	return error;
+ }
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.42.0
+
