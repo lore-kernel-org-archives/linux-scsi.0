@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7B99C4167B
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Oct 2023 23:23:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2AD4C4167D
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Oct 2023 23:28:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231723AbjJ2XXb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Oct 2023 19:23:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60112 "EHLO
+        id S232536AbjJ2X2c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Oct 2023 19:28:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231640AbjJ2XXU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Oct 2023 19:23:20 -0400
+        with ESMTP id S232190AbjJ2X2X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Oct 2023 19:28:23 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7220EA5D8;
-        Sun, 29 Oct 2023 16:03:25 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3249C4167E;
-        Sun, 29 Oct 2023 23:01:56 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 305394C35;
+        Sun, 29 Oct 2023 15:59:54 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8F8BC433CA;
+        Sun, 29 Oct 2023 22:59:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698620517;
-        bh=qRIgjQfLbsV9Qh3eHJRvU8mHqGFe89XtdJc16BPBs5I=;
+        s=k20201202; t=1698620394;
+        bh=mQGaD8SdnRGpdqijaVnOL7A5AJg4D28G3aoLsMYbEts=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UVdCcZcQoAN+33bxMnm85KBLpl1oJsLlCUZZLofc+AJbmF7DnUhAg+IehuUdAq2RL
-         9zo6r3hAbYlbVRqR9rQPsj33V5byyjGe/hNQGYSnBm2AS25mqbiFcTrNy7JPjoQ8Nk
-         28nhQjgygU4/lr/jU5uTr8MPr24d5Xw4DPgfZdy89CbuFETp2MZApYw3JwvUYTtW08
-         nH3kKtTdbFL302r0G3hhzs/cyUAdcxu9fYxSyxInBIp+IGWf6P8gbl5KuIkAzWXqAA
-         bsUBtbsa95AvdTfWlXoaO1ITA3Fi8NNFpWzMQ3tXg28fwc5FhcvXhKu9fRCIQSvegg
-         asktI0a0Q5SCg==
+        b=RNhKdzTzqaJ2UbCwlkCfxZBA0Tjx3u3bzWY+DmAO8Nhh8ZWMBIPWCAbjw7M8jFV7x
+         zzhStULtruS/xTbXfZqCIy6ytMrI5Z0ROf7CEJvVtY2iUr0fgjLRxpi964xjhNHEXp
+         cZMn8Y1cG6ElEoRpc213adqfaTQ2s4zb46wDCI2Gyv9dK0d+3jes/MoyBiOMeXz1xi
+         h3VXBSlq6z7jnDZfywg7wqbBhRB711Pf7CHDN5O2SJrMApvtX4qmrMw7vGv9CEotJp
+         3jQu752Fn2XsUo3HIAZOwa1uiLRDvUKBtZsimYIe3ozVEte3I87fiKXr0xxXZwCiFh
+         4ZDeuUGTCSZ0g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tomas Henzl <thenzl@redhat.com>,
@@ -34,16 +34,16 @@ Cc:     Tomas Henzl <thenzl@redhat.com>,
         sreekanth.reddy@broadcom.com,
         suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com,
         MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 10/12] scsi: mpt3sas: Fix in error path
-Date:   Sun, 29 Oct 2023 19:01:23 -0400
-Message-ID: <20231029230135.793281-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 23/28] scsi: mpt3sas: Fix in error path
+Date:   Sun, 29 Oct 2023 18:58:58 -0400
+Message-ID: <20231029225916.791798-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231029230135.793281-1-sashal@kernel.org>
-References: <20231029230135.793281-1-sashal@kernel.org>
+In-Reply-To: <20231029225916.791798-1-sashal@kernel.org>
+References: <20231029225916.791798-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.297
+X-stable-base: Linux 5.15.137
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -65,10 +65,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index c8d97dc2ca63d..bf659bc466dcc 100644
+index 9eb3d0b4891dd..c9f85605349bf 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -11182,8 +11182,10 @@ _mpt3sas_init(void)
+@@ -12899,8 +12899,10 @@ _mpt3sas_init(void)
  	mpt3sas_ctl_init(hbas_to_enumerate);
  
  	error = pci_register_driver(&mpt3sas_driver);
