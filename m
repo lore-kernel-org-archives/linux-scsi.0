@@ -2,101 +2,101 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03FD0C4167D
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Oct 2023 21:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF791C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Oct 2023 22:37:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232031AbjJ3Vne (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Oct 2023 17:43:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58182 "EHLO
+        id S229944AbjJ3WhB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Oct 2023 18:37:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232022AbjJ3Vnc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2023 17:43:32 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64469FC
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2023 14:43:29 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id 3f1490d57ef6-da03c5ae220so5459306276.1
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2023 14:43:29 -0700 (PDT)
+        with ESMTP id S229672AbjJ3WhA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2023 18:37:00 -0400
+Received: from mail-ot1-x34a.google.com (mail-ot1-x34a.google.com [IPv6:2607:f8b0:4864:20::34a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91608DD
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2023 15:36:58 -0700 (PDT)
+Received: by mail-ot1-x34a.google.com with SMTP id 46e09a7af769-6ce28132979so7342505a34.1
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2023 15:36:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698702208; x=1699307008; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1698705418; x=1699310218; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=e0/kVkiQLU+xIRwt52fqnoXoD0xR1x3vYThaNEUFKi4=;
-        b=fUFX6S1FHiL4JEaW/hEsZKmn6RQRRxqm29qviKpUAA9k7GTUgJ1a0/v2rwnhqKaOph
-         wfTsjdrhFNK5yTofrEIyb8YInqbIHYWCc11ykvkIi9dgvmATf4xiqdsruBoSTF0E1UIv
-         Guxmt97LV/78/CdsuRxH3B9Jn2T2umjDV7ildiux+tzlWSXdNqHGs3goMHLEValVZsrU
-         eVk1syHgeEIm4tTRCuQH8x7yOx3dlPanhd6cYya182BSZd1ixaVbXtfAdvzc7gvAiFtb
-         uLHXvloSKqP3B95fOW2Du8vCTgtVTdWRnPqI1QH8o3DibQz93biK3WooGjwS80R8DtHI
-         nzOA==
+        bh=lq5TwK+3n6zGzzimtcAIoXXorjYRH73jd8dtvn3Ft6I=;
+        b=RdGbf/NoSiOuyh5onpF3BZoHSI1vl0NLpmmOHSolZPmMOyhBJMYsa/7V1/FJsFBM6a
+         lql4DnFNZwfUde9/4v3VWLSNAD3XIoUGjibURqVKFM2u+EKn2t4ZvISAK6ZZ1r4gHP10
+         3ICQNxrFUryjHIRXZGo3qDdGf8cMXl3nPlp7uHtf4UUebbtkb+b+DWHaE47lPKJ+Tzlf
+         5RK//2wmpeoRc27RQI/9CWni5Z6P7dB5DZc+GKN3kTlenRIujv+AVn6SqZPwYAsZ1mZj
+         ZlivGFvUawiPOr/J1EYYTNrXJaH/cirIkhLvS1HynALB3m8Qt2Y5cIYA8UnMhJYdYafK
+         q8PA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698702208; x=1699307008;
+        d=1e100.net; s=20230601; t=1698705418; x=1699310218;
         h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=e0/kVkiQLU+xIRwt52fqnoXoD0xR1x3vYThaNEUFKi4=;
-        b=npY/WLjbrooHjMbCCNL+2W3OroSVMbVDxssZYG15pkfulrd5U16MoZlLabRuT73QW+
-         qoh6/lAa5D+FCW/9fPoeDPnDTithnFGMvC6nf7hvis/2hl2YTx7zKGVNcCyMIpsw72Ou
-         QDS+xVXFd7MbgDXWtyqtGhFIa4QySzA4NX25iQQMqzoOsgdYdXjhu7Y236/duYDXD8xM
-         gBLeu0EJjRttLq0RnXGHsZv1VxnJKYwmV4kOpUMKKyshs/dclzKZvZ3dqbFA0Ld8RrPP
-         0M1Tdqx4QubbzclLDqrKd1Qv9SLNEf5xtwUW0EmPiShVfnGLXUzI3l9FrIwG5eqU25u8
-         Bp6w==
-X-Gm-Message-State: AOJu0YzD3l+Q8Xusgd6Q7XF6lLM7QAChTgzcjXJxyio7wh3Xp1IykT+E
-        XHSKOKtSP9toifMKr/JcUe1UJ1raIiW8hVguRg==
-X-Google-Smtp-Source: AGHT+IEXUXlPzoW8LU7PFVYlU3cL9csxmvgRBQ/QbNnZhZiLmayN6jB8H6VklsO7nx8Pl+1pBBHGDfMzZVfBBEi4PQ==
+        bh=lq5TwK+3n6zGzzimtcAIoXXorjYRH73jd8dtvn3Ft6I=;
+        b=UxcZlaqUVRessMX+rEJGf6g3ZkVb4wAY9eEQG83esKiPpAZV9qd+twmvixGM7iP4fY
+         nbxDjY6vJIBXIrc6uOsXgEOCjAXMlDvDRz5ntI9Y9+Qf7XAzAYEMdrgVT9li63IdouG+
+         0sKpvIFtUmF0L1eW3E5aLWnU3HOS7+tqF7YYzAGGczT76PzGia5QUV8rrpq4DNSwoNXw
+         ZDiizSoTpBIEyhP8nLTJoT1oZ/E/1AtSfF23n+rYyNr0/3721+UHAv7Uf1E/HxP4r6pj
+         jvSNgfkroAjGgku8+niVIR/1TeaEZbog7O+xhd5Egh8z0F6DVchP0r2EkRBSHFadtV9E
+         DnRQ==
+X-Gm-Message-State: AOJu0YwXxRv4rp8nx/DvP1KaYgp0zzZFeLO2bryYPdkMRoVgkycWlqtD
+        1m45aOrHnozRUnoVpD8v2EykCDlZJWtkSOFvVA==
+X-Google-Smtp-Source: AGHT+IH0vqfhJIEFVH7u9qgat5Uv0tRMPr607yPkkrPPdp+PXylCMaIkv+dU9D55BKCkNOTHg1rl2OPhrOkPq1RLGA==
 X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a25:a526:0:b0:da0:c924:4fdc with SMTP
- id h35-20020a25a526000000b00da0c9244fdcmr19773ybi.6.1698702208605; Mon, 30
- Oct 2023 14:43:28 -0700 (PDT)
-Date:   Mon, 30 Oct 2023 21:43:20 +0000
+ (user=justinstitt job=sendgmr) by 2002:a05:6830:4502:b0:6c4:58bd:290d with
+ SMTP id i2-20020a056830450200b006c458bd290dmr222233otv.3.1698705417918; Mon,
+ 30 Oct 2023 15:36:57 -0700 (PDT)
+Date:   Mon, 30 Oct 2023 22:36:57 +0000
 Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAHcjQGUC/1XNQQ6CMBCF4auQWTNJAW2EqxBiSjviLChkpmk0h
- Ltb3bl73+b9BygJk8JQHSCUWXmLBU1dgX+6uBByKIbWtF1jOoOaJPr9jUE4kyiqV0ae1/wd97S kf3i8uX4Ohq4Xay2U213owa9fcpzO8wNyWWNnggAAAA==
+X-B4-Tracking: v=1; b=H4sIAAgwQGUC/x3NQQqDQAxA0atI1g2MIxX0KiLFJhkNyCiJSIt49
+ w5dvs3/F7iYikNfXWByquuWC+pHBbRMeRZULoYYYlOHJqAflmn/IpueYo5OrrjqOxEmekmmjQU XfE7cxi61LB1Bie0mST//0TDe9w/THRIxeAAAAA==
 X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1698702207; l=3953;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1698705417; l=3578;
  i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=kOlkCIhi5msaDl4tWCdp680vEgZukUJWPpGc5Vel+XE=; b=Vh/XP+Dr4/JhN7ikIfweMhlTgzvJG5U7crnDcmM2QYApm4PKVv1/jXqzKmK5mqk409uzLD1Wg
- qe8yhsqwFwAAyBXiU35NozThSakmhUB28vdSQY/kuqTvIo/g0b8V3UV
+ bh=ZF9U9vNqxuweLPAWDBaMtDMKK84GlPUqwF7Byf2+S7s=; b=F1b2huUJ/pDsyqCT80uhn3Zf7p1L3WobUXybolIxFi5AJ2jvthi3HulpjB6iOjb1ZfU9kv111
+ QIVZJMEINgNAVdeMOm48S4aw+a0kgwvm8A0d34cYpiKqJhOyUf5Kp3i
 X-Mailer: b4 0.12.3
-Message-ID: <20231030-strncpy-drivers-scsi-ibmvscsi_tgt-ibmvscsi_tgt-c-v1-1-859b5ce257fd@google.com>
-Subject: [PATCH] scsi: ibmvscsi_tgt: replace deprecated strncpy with strscpy
+Message-ID: <20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa@google.com>
+Subject: [PATCH] scsi: libfc: replace deprecated strncpy with memcpy
 From:   Justin Stitt <justinstitt@google.com>
-To:     Michael Cyr <mikecyr@linux.ibm.com>,
+To:     Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
         Justin Stitt <justinstitt@google.com>
 Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-strncpy() is deprecated for use on NUL-terminated destination strings
-[1] and as such we should prefer more robust and less ambiguous string
-interfaces.
+strncpy() is deprecated [1] and as such we should use different apis to
+copy string data.
 
-We don't need the NUL-padding behavior that strncpy() provides as vscsi
-is NUL-allocated in ibmvscsis_probe() which proceeds to call
-ibmvscsis_adapter_info():
-|       vscsi = kzalloc(sizeof(*vscsi), GFP_KERNEL);
+We can see that ct is NUL-initialized with fc_ct_hdr_fill:
+|       ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn) + len,
+...
 
-ibmvscsis_probe() -> ibmvscsis_handle_crq() -> ibmvscsis_parse_command()
--> ibmvscsis_mad() -> ibmvscsis_process_mad() -> ibmvscsis_adapter_info()
+In fc_ct_hdr_fill():
+|       memset(ct, 0, ct_plen);
 
-Following the same idea, `partition_name` is defiend as:
-|       static char partition_name[PARTITION_NAMELEN] = "UNKNOWN";
+We also calculate the length of the source string:
+|       len = strnlen(fc_host_symbolic_name(lport->host), 255);
 
-... which is NUL-padded already, meaning strscpy() is the best option.
+then this argument is used in strncpy(), which is bad because the
+pattern of (dest, src, strlen(src)) usually leaves the destination
+buffer without NUL-termination. However, this seems to be correct in
+this instance since fr_name is part of a seq_buf-like structure
+monitoring the length:
+|       struct fc_ns_rspn {
+|       	struct fc_ns_fid fr_fid;	/* port ID object */
+|       	__u8		fr_name_len;
+|       	char		fr_name[];
+|       } __attribute__((__packed__));
 
-Considering the above, a suitable replacement is `strscpy` [2] due to
-the fact that it guarantees NUL-termination on the destination buffer
-without unnecessarily NUL-padding.
-
-However, for cap->name let's use strscpy_pad as cap is allocated via
-dma_alloc_coherent():
-|       cap = dma_alloc_coherent(&vscsi->dma_dev->dev, olen, &token,
-|                                GFP_ATOMIC);
+So, this is really just a byte copy into a length-bounded string. Let's
+use memcpy() and mark the buffers as __nonstring.
 
 Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
 Link: https://github.com/KSPP/linux/issues/90
 Cc: linux-hardening@vger.kernel.org
 Signed-off-by: Justin Stitt <justinstitt@google.com>
@@ -105,59 +105,71 @@ Note: build-tested only.
 
 Found with: $ rg "strncpy\("
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/libfc/fc_encode.h | 8 ++++----
+ include/uapi/scsi/fc/fc_ns.h   | 6 +++---
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 385f812b8793..cd223ef696e5 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -1551,17 +1551,17 @@ static long ibmvscsis_adapter_info(struct scsi_info *vscsi,
- 	if (vscsi->client_data.partition_number == 0)
- 		vscsi->client_data.partition_number =
- 			be32_to_cpu(info->partition_number);
--	strncpy(vscsi->client_data.srp_version, info->srp_version,
-+	strscpy(vscsi->client_data.srp_version, info->srp_version,
- 		sizeof(vscsi->client_data.srp_version));
--	strncpy(vscsi->client_data.partition_name, info->partition_name,
-+	strscpy(vscsi->client_data.partition_name, info->partition_name,
- 		sizeof(vscsi->client_data.partition_name));
- 	vscsi->client_data.mad_version = be32_to_cpu(info->mad_version);
- 	vscsi->client_data.os_type = be32_to_cpu(info->os_type);
+diff --git a/drivers/scsi/libfc/fc_encode.h b/drivers/scsi/libfc/fc_encode.h
+index 7dcac3b6baa7..ba8cc4ee650c 100644
+--- a/drivers/scsi/libfc/fc_encode.h
++++ b/drivers/scsi/libfc/fc_encode.h
+@@ -140,8 +140,8 @@ static inline int fc_ct_ns_fill(struct fc_lport *lport,
+ 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn) + len,
+ 				    FC_FST_DIR, FC_NS_SUBTYPE);
+ 		hton24(ct->payload.spn.fr_fid.fp_fid, lport->port_id);
+-		strncpy(ct->payload.spn.fr_name,
+-			fc_host_symbolic_name(lport->host), len);
++		memcpy(ct->payload.spn.fr_name,
++		       fc_host_symbolic_name(lport->host), len);
+ 		ct->payload.spn.fr_name_len = len;
+ 		break;
  
- 	/* Copy our info */
--	strncpy(info->srp_version, SRP_VERSION,
-+	strscpy(info->srp_version, SRP_VERSION,
- 		sizeof(info->srp_version));
--	strncpy(info->partition_name, vscsi->dds.partition_name,
-+	strscpy(info->partition_name, vscsi->dds.partition_name,
- 		sizeof(info->partition_name));
- 	info->partition_number = cpu_to_be32(vscsi->dds.partition_num);
- 	info->mad_version = cpu_to_be32(MAD_VERSION_1);
-@@ -1645,8 +1645,8 @@ static int ibmvscsis_cap_mad(struct scsi_info *vscsi, struct iu_entry *iue)
- 			 be64_to_cpu(mad->buffer),
- 			 vscsi->dds.window[LOCAL].liobn, token);
- 	if (rc == H_SUCCESS) {
--		strncpy(cap->name, dev_name(&vscsi->dma_dev->dev),
--			SRP_MAX_LOC_LEN);
-+		strscpy_pad(cap->name, dev_name(&vscsi->dma_dev->dev),
-+			sizeof(cap->name));
+@@ -150,8 +150,8 @@ static inline int fc_ct_ns_fill(struct fc_lport *lport,
+ 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rsnn) + len,
+ 				    FC_FST_DIR, FC_NS_SUBTYPE);
+ 		put_unaligned_be64(lport->wwnn, &ct->payload.snn.fr_wwn);
+-		strncpy(ct->payload.snn.fr_name,
+-			fc_host_symbolic_name(lport->host), len);
++		memcpy(ct->payload.snn.fr_name,
++		       fc_host_symbolic_name(lport->host), len);
+ 		ct->payload.snn.fr_name_len = len;
+ 		break;
  
- 		len = olen - min_len;
- 		status = VIOSRP_MAD_SUCCESS;
-@@ -3650,7 +3650,7 @@ static int ibmvscsis_get_system_info(void)
+diff --git a/include/uapi/scsi/fc/fc_ns.h b/include/uapi/scsi/fc/fc_ns.h
+index 4cf0a40a099a..8a6f6c6b5213 100644
+--- a/include/uapi/scsi/fc/fc_ns.h
++++ b/include/uapi/scsi/fc/fc_ns.h
+@@ -145,7 +145,7 @@ struct fc_gid_pn_resp {
+  */
+ struct fc_gspn_resp {
+ 	__u8	fp_name_len;
+-	char	fp_name[];
++	char	fp_name[] __nonstring;
+ };
  
- 	name = of_get_property(rootdn, "ibm,partition-name", NULL);
- 	if (name)
--		strncpy(partition_name, name, sizeof(partition_name));
-+		strscpy(partition_name, name, sizeof(partition_name));
+ /*
+@@ -171,7 +171,7 @@ struct fc_ns_rn_id {
+ struct fc_ns_rsnn {
+ 	__be64		fr_wwn;		/* node name */
+ 	__u8		fr_name_len;
+-	char		fr_name[];
++	char		fr_name[] __nonstring;
+ } __attribute__((__packed__));
  
- 	num = of_get_property(rootdn, "ibm,partition-no", NULL);
- 	if (num)
+ /*
+@@ -180,7 +180,7 @@ struct fc_ns_rsnn {
+ struct fc_ns_rspn {
+ 	struct fc_ns_fid fr_fid;	/* port ID object */
+ 	__u8		fr_name_len;
+-	char		fr_name[];
++	char		fr_name[] __nonstring;
+ } __attribute__((__packed__));
+ 
+ /*
 
 ---
 base-commit: ffc253263a1375a65fa6c9f62a893e9767fbebfa
-change-id: 20231030-strncpy-drivers-scsi-ibmvscsi_tgt-ibmvscsi_tgt-c-8a9bd0e54666
+change-id: 20231030-strncpy-drivers-scsi-libfc-fc_encode-h-5ad629f6de9c
 
 Best regards,
 --
