@@ -2,86 +2,105 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BF92C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Oct 2023 15:39:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B3F1C4167D
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Oct 2023 16:10:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233640AbjJ3Pj1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Oct 2023 11:39:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39086 "EHLO
+        id S233796AbjJ3QKK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Oct 2023 12:10:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233016AbjJ3PjZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2023 11:39:25 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39664C9;
-        Mon, 30 Oct 2023 08:39:21 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39UDcOfQ029600;
-        Mon, 30 Oct 2023 15:35:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-03-30;
- bh=cbJsm6eXFARNAA8yOhcMaHvGvkPuRyOWad3dmiNECC8=;
- b=z++n8SLfk6OqtmeVgMayLk4vCOBrUgIy2PsZC1lPdB89s0MR3LiNICAtrJMTF5iCyirq
- ZskZhQNwJ+3vgapSoJvXmWY6fM/CxL0k3RLelxt9nI0k9FwIza91LXJwE4YehMwc9nxQ
- fhl7dXF002qKtg2FNZ4JQcmucrxLZE9pYMh+/v7SA9hj1F/RQMU9JDXCMrUDPKnf2QjJ
- Pr/dICpjVZtxgZ4EfKD9yu9TERFwdVKaXD9EXXxpRiQIXgilrZMC127xY7zgpkbUNlej
- oH9ODA0UDvreYjQ8at9fUwogZpURmXwP3vKVPim4IJlSlp3UhnqcGfmNq2iTTXSEtq0I zg== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3u0rqdu3md-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 30 Oct 2023 15:35:02 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 39UE3vOp038030;
-        Mon, 30 Oct 2023 15:35:02 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3u0rran8yj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 30 Oct 2023 15:35:02 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39UFVkmO023458;
-        Mon, 30 Oct 2023 15:35:01 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3u0rran8wc-8;
-        Mon, 30 Oct 2023 15:35:01 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, Yang Li <yang.lee@linux.alibaba.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: Re: [PATCH -next] scsi: pmcraid: Fix some kernel-doc comments
-Date:   Mon, 30 Oct 2023 11:34:52 -0400
-Message-Id: <169868005482.2933713.3189661563408433659.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231017025853.67562-1-yang.lee@linux.alibaba.com>
-References: <20231017025853.67562-1-yang.lee@linux.alibaba.com>
+        with ESMTP id S233819AbjJ3QKJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2023 12:10:09 -0400
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8CFC107;
+        Mon, 30 Oct 2023 09:10:05 -0700 (PDT)
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-565334377d0so3624316a12.2;
+        Mon, 30 Oct 2023 09:10:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698682205; x=1699287005;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=IpkKpncMF7S21legcE/MGbAj6ldQwiGQZNkAtlSsPNA=;
+        b=DMv9d93rqapiGxTt856UH0bI8jWlfsqWQk44ADn6Dr+EYg/9g08oL7WKo3YF9yUbOh
+         59PfSfZ8IogTxThfMGTP+OPMWoWa1lypnYBozEPfsW6oyKOsUy1Xym+J1JDxW3eOzQrh
+         EfW1fvb3JxZnqfgkq5zs6Y0wRumbUchD5HixPIZfQjczUrLgikdnS6vlUbm2A4G73wKY
+         WbEb372Z3k+3OQti1Kb8AbJ1uVeTCljJQsVhEpHvnS0Plcy8Wn1H0Vo/rejutYC+Gr7g
+         z7RL9WlhEjrTMbfcWUAjK+53nRMT/534tG9hmKH74TMmQ0ck+8li9cwO0gtrqxwsVBFV
+         +/DA==
+X-Gm-Message-State: AOJu0YzQqy8LwSDa+2+6bhnQz8FwoTBAFPbKTychUb7h20JdkX79rdiQ
+        l4zwihXSWyEzAnBpPASYMSI=
+X-Google-Smtp-Source: AGHT+IFzpB4GKHPmFrqewL+GTf38pwW8k5daaR1FoMvl9JxQcyI5bmalJkU2VEzqFhxQp0WZk7BStg==
+X-Received: by 2002:a05:6a20:8f18:b0:162:ee29:d3c0 with SMTP id b24-20020a056a208f1800b00162ee29d3c0mr14057683pzk.42.1698682204916;
+        Mon, 30 Oct 2023 09:10:04 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:e9c6:ed35:71cd:afbd? ([2620:15c:211:201:e9c6:ed35:71cd:afbd])
+        by smtp.gmail.com with ESMTPSA id x17-20020aa79571000000b0068bbe3073b6sm6016125pfq.181.2023.10.30.09.10.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 Oct 2023 09:10:04 -0700 (PDT)
+Message-ID: <9b0990ec-a3c9-48c0-b312-8c07c727e326@acm.org>
+Date:   Mon, 30 Oct 2023 09:10:00 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-30_10,2023-10-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 bulkscore=0
- mlxscore=0 adultscore=0 mlxlogscore=999 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2310240000
- definitions=main-2310300120
-X-Proofpoint-ORIG-GUID: Urx5EDdlwMUyAD1xvws2jw78_xRSpWWv
-X-Proofpoint-GUID: Urx5EDdlwMUyAD1xvws2jw78_xRSpWWv
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 01/14] fs: Move enum rw_hint into a new header file
+Content-Language: en-US
+To:     Kanchan Joshi <joshi.k@samsung.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Jan Kara <jack@suse.cz>,
+        Christian Brauner <brauner@kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Jeff Layton <jlayton@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>
+References: <20231017204739.3409052-1-bvanassche@acm.org>
+ <CGME20231017204823epcas5p2798d17757d381aaf7ad4dd235f3f0da3@epcas5p2.samsung.com>
+ <20231017204739.3409052-2-bvanassche@acm.org>
+ <b3058ce6-e297-b4c3-71d4-4b76f76439ba@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <b3058ce6-e297-b4c3-71d4-4b76f76439ba@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 17 Oct 2023 10:58:53 +0800, Yang Li wrote:
-
-> Fix some kernel-doc comments to silence the warnings:
-> drivers/scsi/pmcraid.c:2697: warning: Excess function parameter 'scsi_cmd' description in 'pmcraid_reset_device'
-> drivers/scsi/pmcraid.c:2697: warning: Function parameter or member 'scsi_dev' not described in 'pmcraid_reset_device'
+On 10/30/23 04:11, Kanchan Joshi wrote:
+> On 10/18/2023 2:17 AM, Bart Van Assche wrote:
+>> +/* Block storage write lifetime hint values. */
+>> +enum rw_hint {
+>> +	WRITE_LIFE_NOT_SET	= 0, /* RWH_WRITE_LIFE_NOT_SET */
+>> +	WRITE_LIFE_NONE		= 1, /* RWH_WRITE_LIFE_NONE */
+>> +	WRITE_LIFE_SHORT	= 2, /* RWH_WRITE_LIFE_SHORT */
+>> +	WRITE_LIFE_MEDIUM	= 3, /* RWH_WRITE_LIFE_MEDIUM */
+>> +	WRITE_LIFE_LONG		= 4, /* RWH_WRITE_LIFE_LONG */
+>> +	WRITE_LIFE_EXTREME	= 5, /* RWH_WRITE_LIFE_EXTREME */
+>> +} __packed;
+>> +
+>> +static_assert(sizeof(enum rw_hint) == 1);
 > 
+> Does it make sense to do away with these, and have temperature-neutral
+> names instead e.g., WRITE_LIFE_1, WRITE_LIFE_2?
 > 
+> With the current choice:
+> - If the count goes up (beyond 5 hints), infra can scale fine but these
+> names do not. Imagine ULTRA_EXTREME after EXTREME.
+> - Applications or in-kernel users can specify LONG hint with data that
+> actually has a SHORT lifetime. Nothing really ensures that LONG is
+> really LONG.
+> 
+> Temperature-neutral names seem more generic/scalable and do not present
+> the unnecessary need to be accurate with relative temperatures.
 
-Applied to 6.7/scsi-queue, thanks!
+Thanks for having taken a look at this patch series. Jens asked for data
+that shows that this patch series improves performance. Is this
+something Samsung can help with?
 
-[1/1] scsi: pmcraid: Fix some kernel-doc comments
-      https://git.kernel.org/mkp/scsi/c/9e1c911ecbbc
+Thanks,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
