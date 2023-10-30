@@ -2,128 +2,113 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3512C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Oct 2023 06:50:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3697EC4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Oct 2023 08:14:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231637AbjJ3GuD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Oct 2023 02:50:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35256 "EHLO
+        id S232021AbjJ3IOM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Oct 2023 04:14:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231719AbjJ3GuC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2023 02:50:02 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C95CC0
-        for <linux-scsi@vger.kernel.org>; Sun, 29 Oct 2023 23:49:53 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39TKgRlu031497
-        for <linux-scsi@vger.kernel.org>; Sun, 29 Oct 2023 23:49:52 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding :
- content-type; s=pfpt0220; bh=LV2gpbmb2sVMLHy0vSeWEooGsaWhfyHiEHcDCzh2/c8=;
- b=HNQ8uGPsBCkAWNl5CpD15ZTrv8MNZxIEJcFR7odKoojpL6DLxUziJuINq2YDbDEhdpm6
- rF8gd+FXRXo8r24RtOnbXUOQZhbf5WXh7xfziicib8WzdSZ5q+EFtVDTyXS0PBrKhStY
- dZDLfFqeyjJpzgDbGZWx5HmG15VvJIb4u4mg4K04ORvVrb8CvQ4QcogYz3gUNCR7ap/U
- O0AQAMoyejLkTMLNWCaK6Lkh9If20FyCAmiSIzddrcImfdfL3+ZAZ2zZRx1SYWPWosq3
- NLHVhBx9xK9YMdbHSxQEsQ43tv4GZ3mnySVdGP3mPT3RhainkeNGfonUQdWtDI6N722Q 3w== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3u11tp4u1d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Sun, 29 Oct 2023 23:49:51 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Sun, 29 Oct
- 2023 23:49:31 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
- Transport; Sun, 29 Oct 2023 23:49:31 -0700
-Received: from localhost.marvell.com (unknown [10.30.46.195])
-        by maili.marvell.com (Postfix) with ESMTP id C048A3F703F;
-        Sun, 29 Oct 2023 23:49:29 -0700 (PDT)
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>
-Subject: [PATCH] qla2xxx: fix system crash due to bad pointer access
-Date:   Mon, 30 Oct 2023 12:19:12 +0530
-Message-ID: <20231030064912.37912-1-njavali@marvell.com>
-X-Mailer: git-send-email 2.23.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-GUID: qS1udEtW86WN98UhR6MzxH8UfFON2vTw
-X-Proofpoint-ORIG-GUID: qS1udEtW86WN98UhR6MzxH8UfFON2vTw
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-30_05,2023-10-27_01,2023-05-22_02
+        with ESMTP id S231945AbjJ3IOK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2023 04:14:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89CADA7
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2023 01:13:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1698653603;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=GkiKj1jauf9zRbsX1Urm2T9lRA/sSi8T6WmKDRj6T9Y=;
+        b=frA2A93WpYxmFp7bNb0kzHmCDC4x3i+d34UHaK7mwiBA/N39n+Vv8NtjfWGDt7ReKmVVUw
+        jSkpRSDRzFlSfIHXRPXtFAvBsY1reKepCjQTTelZXDIDShPdq1kutUSrOJSDtFYnmm2U/h
+        9gEhvzstNcXpsRDj3mugapIcSbjIGTU=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-77-6G5eZKNjONSJZCj5N7AtEg-1; Mon, 30 Oct 2023 04:13:22 -0400
+X-MC-Unique: 6G5eZKNjONSJZCj5N7AtEg-1
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-5b84087a514so3054607a12.1
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2023 01:13:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698653601; x=1699258401;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:from
+         :subject:cc:to:message-id:date:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=GkiKj1jauf9zRbsX1Urm2T9lRA/sSi8T6WmKDRj6T9Y=;
+        b=Fb/YjVhxkTeRcU1HeTlrA/rVDekhptT+xiQossZgBNayqybfZgQXBj+kkeVFMqn6hx
+         seWdUlDhKvbm6xoRB7/j1JPZHhUl/2+JQD7QgNE74VBSn6jAvwiQz5vSaeR+rycPR4wW
+         YdFwGIzmi+ZLJNJ9zwWApXGSRLKGTNXhmAi/pJ+xQbTLujZH8fcs/JIjUpPQAK7s6tN6
+         VkH81xbNsfpXoOKqw7g8dUwCBv9I9eNG/JDuIAGbpUIfPU04JOmyKE/56QPxINlefR7b
+         625yjpmZWiKf50O49xNJQiPatsRMmsV+Okj9xqQL1aEEJWsQInoxmTWRqqEpsNDcLFi5
+         GVkQ==
+X-Gm-Message-State: AOJu0YwPNHvssjo9dKIgdpi3LRnmR1O6BtZ76Xbu2nk2KaP4WeRhohzx
+        b0pmzj4DHOWxFPnb0na04iy5p0Rj7J+FIenRjHSFH7zF08cUHBfwYA+CC19jjswyav2ng3cuW/a
+        uvV9HK2Ixx3z4MYVSr4eDzw==
+X-Received: by 2002:a17:90a:f0c2:b0:280:299d:4b7e with SMTP id fa2-20020a17090af0c200b00280299d4b7emr6575315pjb.19.1698653600957;
+        Mon, 30 Oct 2023 01:13:20 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEqce2/5NZQf6iAi2Uf6f0oJTQ/TXEEysV28rfkITtohtcF5KBqwdmCQ0aXHPJiiXnKVMO50Q==
+X-Received: by 2002:a17:90a:f0c2:b0:280:299d:4b7e with SMTP id fa2-20020a17090af0c200b00280299d4b7emr6575304pjb.19.1698653600651;
+        Mon, 30 Oct 2023 01:13:20 -0700 (PDT)
+Received: from localhost ([240d:1a:c0d:9f00:91ec:2f0b:ae2b:204a])
+        by smtp.gmail.com with ESMTPSA id s31-20020a17090a2f2200b0028017a2a8fasm4552505pjd.3.2023.10.30.01.13.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Oct 2023 01:13:20 -0700 (PDT)
+Date:   Mon, 30 Oct 2023 17:13:17 +0900 (JST)
+Message-Id: <20231030.171317.1096475355592607869.syoshida@redhat.com>
+To:     bvanassche@acm.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: sr: Fix a potential uninit-value in
+ sr_get_events()
+From:   Shigeru Yoshida <syoshida@redhat.com>
+In-Reply-To: <c459dd2c-a281-7fc4-90cf-36a71e9548bc@acm.org>
+References: <20230531164346.118438-1-syoshida@redhat.com>
+        <c459dd2c-a281-7fc4-90cf-36a71e9548bc@acm.org>
+X-Mailer: Mew version 6.9 on Emacs 28.3
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+On Wed, 31 May 2023 15:44:17 -0700, Bart Van Assche wrote:
+> On 5/31/23 09:43, Shigeru Yoshida wrote:
+>> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+>> index 12869e6d4ebd..86b43c069a44 100644
+>> --- a/drivers/scsi/sr.c
+>> +++ b/drivers/scsi/sr.c
+>> @@ -177,10 +177,13 @@ static unsigned int sr_get_events(struct
+>> scsi_device *sdev)
+>>     	result = scsi_execute_cmd(sdev, cmd, REQ_OP_DRV_IN, buf, sizeof(buf),
+>>   				  SR_TIMEOUT, MAX_RETRIES, &exec_args);
+>> +	if (result)
+>> +		return 0;
+>> +
+>>   	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == UNIT_ATTENTION)
+>>   		return DISK_EVENT_MEDIA_CHANGE;
+>>   -	if (result || be16_to_cpu(eh->data_len) < sizeof(*med))
+>> +	if (be16_to_cpu(eh->data_len) < sizeof(*med))
+>>   		return 0;
+> 
+> I think this change is wrong because it introduces an unintended
+> behavior
+> change. A better solution is probably to zero-initialize sshdr before
+> scsi_execute_cmd() is called.
 
-User experience system crash when running AER error injection.
-The perturbation cause the abort all IO path to trigger. The driver
-assume all IO in this path are FCP only. Instead, there
-are both NVME & FCP IO's. Due to the false assumption, system
-crash is the result. Add additional check to see if IO is
-FCP or not before access.
+Hi Bart,
 
-PID: 999019  TASK: ff35d769f24722c0  CPU: 53  COMMAND: "kworker/53:1"
- 0 [ff3f78b964847b58] machine_kexec at ffffffffae86973d
- 1 [ff3f78b964847ba8] __crash_kexec at ffffffffae9be29d
- 2 [ff3f78b964847c70] crash_kexec at ffffffffae9bf528
- 3 [ff3f78b964847c78] oops_end at ffffffffae8282ab
- 4 [ff3f78b964847c98] exc_page_fault at ffffffffaf2da502
- 5 [ff3f78b964847cc0] asm_exc_page_fault at ffffffffaf400b62
-   [exception RIP: qla2x00_abort_srb+444]
-   RIP: ffffffffc07b5f8c  RSP: ff3f78b964847d78  RFLAGS: 00010046
-   RAX: 0000000000000282  RBX: ff35d74a0195a200  RCX: ff35d76886fd03a0
-   RDX: 0000000000000001  RSI: ffffffffc07c5ec8  RDI: ff35d74a0195a200
-   RBP: ff35d76913d22080   R8: ff35d7694d103200   R9: ff35d7694d103200
-   R10: 0000000100000000  R11: ffffffffb05d6630  R12: 0000000000010000
-   R13: ff3f78b964847df8  R14: ff35d768d8754000  R15: ff35d768877248e0
-   ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
- 6 [ff3f78b964847d70] qla2x00_abort_srb at ffffffffc07b5f84 [qla2xxx]
- 7 [ff3f78b964847de0] __qla2x00_abort_all_cmds at ffffffffc07b6238 [qla2xxx]
- 8 [ff3f78b964847e38] qla2x00_abort_all_cmds at ffffffffc07ba635 [qla2xxx]
- 9 [ff3f78b964847e58] qla2x00_terminate_rport_io at ffffffffc08145eb [qla2xxx]
-10 [ff3f78b964847e70] fc_terminate_rport_io at ffffffffc045987e [scsi_transport_fc]
-11 [ff3f78b964847e88] process_one_work at ffffffffae914f15
-12 [ff3f78b964847ed0] worker_thread at ffffffffae9154c0
-13 [ff3f78b964847f10] kthread at ffffffffae91c456
-14 [ff3f78b964847f50] ret_from_fork at ffffffffae8036ef
+I'm very sorry for the very late response, and thank you so much for
+your feedback. I'll prepare the v2 patch as you suggested.
 
-Cc: stable@vger.kernel.org
-Fixes: f45bca8c5052 ("scsi: qla2xxx: Fix double scsi_done for abort path")
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+Thanks,
+Shigeru
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 7e103d711825..d24410944f7d 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1837,8 +1837,16 @@ static void qla2x00_abort_srb(struct qla_qpair *qp, srb_t *sp, const int res,
- 		}
- 
- 		spin_lock_irqsave(qp->qp_lock_ptr, *flags);
--		if (ret_cmd && blk_mq_request_started(scsi_cmd_to_rq(cmd)))
--			sp->done(sp, res);
-+		switch (sp->type) {
-+		case SRB_SCSI_CMD:
-+			if (ret_cmd && blk_mq_request_started(scsi_cmd_to_rq(cmd)))
-+				sp->done(sp, res);
-+			break;
-+		default:
-+			if (ret_cmd)
-+				sp->done(sp, res);
-+			break;
-+		}
- 	} else {
- 		sp->done(sp, res);
- 	}
--- 
-2.23.1
+> 
+> Thanks,
+> 
+> Bart.
+> 
 
