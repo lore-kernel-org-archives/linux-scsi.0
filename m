@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00A72C4167D
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Oct 2023 18:59:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 037C1C4167D
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Oct 2023 18:59:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234152AbjJaS7V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Oct 2023 14:59:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57104 "EHLO
+        id S234263AbjJaS70 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Oct 2023 14:59:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234077AbjJaS7U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2023 14:59:20 -0400
+        with ESMTP id S234077AbjJaS7W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2023 14:59:22 -0400
 Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E707F1
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2023 11:59:18 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1cc28719cb0so7299975ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2023 11:59:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E19D3E8
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2023 11:59:19 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1cc4d306fe9so5150075ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2023 11:59:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1698778757; x=1699383557; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1698778759; x=1699383559; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=bH5B+NVEOli7E5i13owgmpNxf+GKiAEfSKEwOkOdDIA=;
-        b=UQaAAEacoSkoh8fFYJWoWDznWTfTkjtlXUeGc/4sfVoiPcEiOsYlBG7meJZM5IRzkS
-         Mt+euOmxVSOvxOzInZBMQKW04YDhmPqp7GFFD0qM0i54t94ZnxTDL0bUbG9+TcbNLPl1
-         nl9Tx46kj45R2LUvAr8arjfFlbjXkrmzRhoDfBt+M/yItG0QDn97LlULvM+NGkZDAQz/
-         x/vkWNM+IXO17LQf9MBM15N5ZJe9tVTgl+wLXY47qwwmDI8qQKw+DNeY15q76LcsLgjD
-         2qSVEugt/4fL1H99TrkVeV5L6jXGcvYBKGBzgnSmYmXFIj6loQNk2vU/mzo8Qyy6MLCF
-         Fekw==
+        bh=6QBK5fLy0U3b6zmeHz4k+VvgXfMeYUN84qpqw5Ya2Ow=;
+        b=QezSF7nfutNTxZCH/3VQP2fRX2IUKrubiLiIzjx+IBjKGZhKJwqQODrwQIN4F+0+KO
+         CTO4hDaUvjLMSGMqNfcAVYcSfNxj+FzPDV5AJ/waCXuWrLKuBMFEKVHsqYe7E8whf7/c
+         /t7Msjd6gMuMkl6OvgHBu2oV7yATo5qeAZSKMMub01rBqyJS/4MuhCytXx3KiqtRVX0D
+         fzFoyW7amU4qY+Vfslpdo8bKeHKp6qKJjT8iXASvo6HGbpXuDV7KU7tni9FLty8fuujJ
+         gksyPjKoTCPxczH87ZAFk/n+JE8relvI+gluu19kOXEB1riJn+PldtnKV3KGpFPC8sY+
+         nrIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698778757; x=1699383557;
+        d=1e100.net; s=20230601; t=1698778759; x=1699383559;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=bH5B+NVEOli7E5i13owgmpNxf+GKiAEfSKEwOkOdDIA=;
-        b=EzPSbKD1xbIc5LIWIC3+hh+8U/uVwzQdPODoziFyYQ6O0AmbsMbJinpoVQs4EqTtoS
-         hIzHtd1lUL783MNAwm8wxhcz50zUWHlNAt3V5pX3g5rYfTd7X5wmmMIzDcAvtuUvEHKk
-         4RS/5IFKHCuluynBiw+SnKUMmwqviLnkyreau0yrm3Z/oiGByNwATq1/cZwEclDioPoO
-         AyP2vmW+zTdtHI2x8FElltnJ9IO3eHM2O8ATbIl2AbMyhvLJaiJJANuaMvYLNpXlI1AY
-         Y49VnDfpWj3MVsQlAGOkjJ6mAuKumB2LLb/XqjPK11QTS7RmD4lcWIZci7Nz/azQFYdu
-         4Aow==
-X-Gm-Message-State: AOJu0YzRqbIH4cmoWP0mjn0THYrCFx2UU+DVHeWlcqZI8bSWJZN+Cbqf
-        LOIhfmtYj/7xai5YVWuaXFj6WcVtdbE=
-X-Google-Smtp-Source: AGHT+IEOBnDbJ6CEDZT2hdtNKn6Dn9FGthHfJ27mhRPHK2WOuumW+AK8uSA/qn5qj4wasPUNmDyBPg==
-X-Received: by 2002:a17:902:f214:b0:1cc:27fa:1fb7 with SMTP id m20-20020a170902f21400b001cc27fa1fb7mr11602930plc.5.1698778757360;
-        Tue, 31 Oct 2023 11:59:17 -0700 (PDT)
+        bh=6QBK5fLy0U3b6zmeHz4k+VvgXfMeYUN84qpqw5Ya2Ow=;
+        b=RsUFeQstflwyBgQPtUkokrNKCbIsEpjPTC8ZJv9mLbX/d6gKj7jOjjIs4p5Z4SeD9p
+         T0TZ3LsyIzuPFQ54R9z4Xu6qjeuHw0s87DzznR1yjgr0qNgMwcEZX3tiRpuGRuY8bfdy
+         rBV+QqlKIQ5XU12JaxI5HiFWl76JOFC+MUklKXoj2S+Q2k4X6UEkTJqRQ2Fr2DHc9UaY
+         zXUu2pu1w1o5oicgyG/5Q3B1MU5qMyZH1LDz6XZJ6i54XjJNvktxoXAhYPWnHdtx0EBm
+         j9Z4O0hNf2Lx/PI5SJICkDx0pPTYNJmE+IbGjNGiNnBZAsgIDtZLZVuegLv5cwd+fAX7
+         4znw==
+X-Gm-Message-State: AOJu0YzUDP5Y/jasHxK/iZrRGQ6d58psj1yRWQ9VjJAekkV7BspytlY6
+        OWB26bxMx/HgDTBvpuHwRa5y/Vu/s6k=
+X-Google-Smtp-Source: AGHT+IF9RSB0xlB1wLQdWgZInb0xoV0ZJ0VPlMXX1+awIRpSS+daZfnDL0lJimQ3KsvppwdYszuVVQ==
+X-Received: by 2002:a17:902:c70b:b0:1c3:a4f2:7c99 with SMTP id p11-20020a170902c70b00b001c3a4f27c99mr13121945plp.4.1698778759244;
+        Tue, 31 Oct 2023 11:59:19 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id bh6-20020a170902a98600b001c9d6923e7dsm1628657plb.222.2023.10.31.11.59.16
+        by smtp.gmail.com with ESMTPSA id bh6-20020a170902a98600b001c9d6923e7dsm1628657plb.222.2023.10.31.11.59.18
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 31 Oct 2023 11:59:17 -0700 (PDT)
+        Tue, 31 Oct 2023 11:59:18 -0700 (PDT)
 From:   Justin Tee <justintee8345@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, justin.tee@broadcom.com,
         Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 6/9] lpfc: Refactor and clean up mailbox command memory free
-Date:   Tue, 31 Oct 2023 12:12:21 -0700
-Message-Id: <20231031191224.150862-7-justintee8345@gmail.com>
+Subject: [PATCH 7/9] lpfc: Enhance driver logging for selected discovery events
+Date:   Tue, 31 Oct 2023 12:12:22 -0700
+Message-Id: <20231031191224.150862-8-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20231031191224.150862-1-justintee8345@gmail.com>
 References: <20231031191224.150862-1-justintee8345@gmail.com>
@@ -65,150 +65,185 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A lot of repeated clean up code exists when freeing mailbox commands in
-lpfc_mem_free_all.
+Typically, debugging discovery issues requires the ndlp reference count,
+nlp flags, transport flags, and the io tag for root cause analysis.
 
-Introduce a lpfc_mem_free_sli_mbox helper routine to refactor the
-copy-paste code.  Additionally, reinitialize the mailbox command structure
-context pointers to NULL in lpfc_sli4_mbox_cmd_free.
+Modify important discovery log messages to include one or more of these
+attributes to aid in debugging and support.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_mbox.c |  4 +++-
- drivers/scsi/lpfc/lpfc_mem.c  | 45 ++++++++++++++++++++---------------
- drivers/scsi/lpfc/lpfc_sli.c  |  6 +++++
- drivers/scsi/lpfc/lpfc_sli.h  |  8 ++++---
- 4 files changed, 40 insertions(+), 23 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 49 +++++++++++++++++++++++-------------
+ drivers/scsi/lpfc/lpfc_sli.c | 11 +++++---
+ 2 files changed, 38 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index 0dfdc0c4c08c..b5ab44234f20 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -1814,7 +1814,9 @@ lpfc_sli4_mbox_cmd_free(struct lpfc_hba *phba, struct lpfcMboxq *mbox)
- 		dma_free_coherent(&phba->pcidev->dev, SLI4_PAGE_SIZE,
- 				  mbox->sge_array->addr[sgentry], phyaddr);
- 	}
--	/* Free the sge address array memory */
-+	/* Reinitialize the context pointers to avoid stale usage. */
-+	mbox->ctx_buf = NULL;
-+	mbox->context3 = NULL;
- 	kfree(mbox->sge_array);
- 	/* Finally, free the mailbox command itself */
- 	mempool_free(mbox, phba->mbox_mem_pool);
-diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
-index 89cbeba06aea..ef6e5256a35e 100644
---- a/drivers/scsi/lpfc/lpfc_mem.c
-+++ b/drivers/scsi/lpfc/lpfc_mem.c
-@@ -48,6 +48,29 @@
- #define LPFC_RRQ_POOL_SIZE	256	/* max elements in non-DMA  pool */
- #define LPFC_MBX_POOL_SIZE	256	/* max elements in MBX non-DMA pool */
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 0829fe6ddff8..f04326db8c19 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2062,8 +2062,9 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* PLOGI completes to NPort <nlp_DID> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0102 PLOGI completes to NPort x%06x "
+-			 "Data: x%x x%x x%x x%x x%x\n",
+-			 ndlp->nlp_DID, ndlp->nlp_fc4_type,
++			 "IoTag x%x Data: x%x x%x x%x x%x x%x\n",
++			 ndlp->nlp_DID, iotag,
++			 ndlp->nlp_fc4_type,
+ 			 ulp_status, ulp_word4,
+ 			 disc, vport->num_disc_nodes);
  
-+/* lpfc_mbox_free_sli_mbox
-+ *
-+ * @phba: HBA to free memory for
-+ * @mbox: mailbox command to free
-+ *
-+ * This routine detects the mbox type and calls the correct
-+ * free routine to fully release all associated memory.
-+ */
-+static void
-+lpfc_mem_free_sli_mbox(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
-+{
-+	/* Detect if the caller's mbox is an SLI4_CONFIG type.  If so, this
-+	 * mailbox type requires a different cleanup routine.  Otherwise, the
-+	 * mailbox is just an mbuf and mem_pool release.
-+	 */
-+	if (phba->sli_rev == LPFC_SLI_REV4 &&
-+	    bf_get(lpfc_mqe_command, &mbox->u.mqe) == MBX_SLI4_CONFIG) {
-+		lpfc_sli4_mbox_cmd_free(phba, mbox);
-+	} else {
-+		lpfc_mbox_rsrc_cleanup(phba, mbox, MBOX_THD_UNLOCKED);
-+	}
-+}
+@@ -2362,9 +2363,10 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* PRLI completes to NPort <nlp_DID> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0103 PRLI completes to NPort x%06x "
+-			 "Data: x%x x%x x%x x%x\n",
++			 "Data: x%x x%x x%x x%x x%x\n",
+ 			 ndlp->nlp_DID, ulp_status, ulp_word4,
+-			 vport->num_disc_nodes, ndlp->fc4_prli_sent);
++			 vport->num_disc_nodes, ndlp->fc4_prli_sent,
++			 ndlp->fc4_xpt_flags);
+ 
+ 	/* Check to see if link went down during discovery */
+ 	if (lpfc_els_chk_latt(vport))
+@@ -2805,7 +2807,7 @@ lpfc_cmpl_els_adisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	IOCB_t *irsp;
+ 	struct lpfc_nodelist *ndlp;
+ 	int  disc;
+-	u32 ulp_status, ulp_word4, tmo;
++	u32 ulp_status, ulp_word4, tmo, iotag;
+ 	bool release_node = false;
+ 
+ 	/* we pass cmdiocb to state machine which needs rspiocb as well */
+@@ -2818,9 +2820,11 @@ lpfc_cmpl_els_adisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+ 		tmo = get_wqe_tmo(cmdiocb);
++		iotag = get_wqe_reqtag(cmdiocb);
+ 	} else {
+ 		irsp = &rspiocb->iocb;
+ 		tmo = irsp->ulpTimeout;
++		iotag = irsp->ulpIoTag;
+ 	}
+ 
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+@@ -2838,9 +2842,11 @@ lpfc_cmpl_els_adisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* ADISC completes to NPort <nlp_DID> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0104 ADISC completes to NPort x%x "
+-			 "Data: x%x x%x x%x x%x x%x\n",
+-			 ndlp->nlp_DID, ulp_status, ulp_word4,
++			 "IoTag x%x Data: x%x x%x x%x x%x x%x\n",
++			 ndlp->nlp_DID, iotag,
++			 ulp_status, ulp_word4,
+ 			 tmo, disc, vport->num_disc_nodes);
 +
- int
- lpfc_mem_alloc_active_rrq_pool_s4(struct lpfc_hba *phba) {
- 	size_t bytes;
-@@ -288,27 +311,16 @@ lpfc_mem_free_all(struct lpfc_hba *phba)
- {
- 	struct lpfc_sli *psli = &phba->sli;
- 	LPFC_MBOXQ_t *mbox, *next_mbox;
--	struct lpfc_dmabuf   *mp;
+ 	/* Check to see if link went down during discovery */
+ 	if (lpfc_els_chk_latt(vport)) {
+ 		spin_lock_irq(&ndlp->lock);
+@@ -3001,7 +3007,7 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	int wake_up_waiter = 0;
+ 	u32 ulp_status;
+ 	u32 ulp_word4;
+-	u32 tmo;
++	u32 tmo, iotag;
  
- 	/* Free memory used in mailbox queue back to mailbox memory pool */
- 	list_for_each_entry_safe(mbox, next_mbox, &psli->mboxq, list) {
--		mp = (struct lpfc_dmabuf *)(mbox->ctx_buf);
--		if (mp) {
--			lpfc_mbuf_free(phba, mp->virt, mp->phys);
--			kfree(mp);
--		}
- 		list_del(&mbox->list);
--		mempool_free(mbox, phba->mbox_mem_pool);
-+		lpfc_mem_free_sli_mbox(phba, mbox);
- 	}
- 	/* Free memory used in mailbox cmpl list back to mailbox memory pool */
- 	list_for_each_entry_safe(mbox, next_mbox, &psli->mboxq_cmpl, list) {
--		mp = (struct lpfc_dmabuf *)(mbox->ctx_buf);
--		if (mp) {
--			lpfc_mbuf_free(phba, mp->virt, mp->phys);
--			kfree(mp);
--		}
- 		list_del(&mbox->list);
--		mempool_free(mbox, phba->mbox_mem_pool);
-+		lpfc_mem_free_sli_mbox(phba, mbox);
- 	}
- 	/* Free the active mailbox command back to the mailbox memory pool */
- 	spin_lock_irq(&phba->hbalock);
-@@ -316,12 +328,7 @@ lpfc_mem_free_all(struct lpfc_hba *phba)
- 	spin_unlock_irq(&phba->hbalock);
- 	if (psli->mbox_active) {
- 		mbox = psli->mbox_active;
--		mp = (struct lpfc_dmabuf *)(mbox->ctx_buf);
--		if (mp) {
--			lpfc_mbuf_free(phba, mp->virt, mp->phys);
--			kfree(mp);
--		}
--		mempool_free(mbox, phba->mbox_mem_pool);
-+		lpfc_mem_free_sli_mbox(phba, mbox);
- 		psli->mbox_active = NULL;
+ 	/* we pass cmdiocb to state machine which needs rspiocb as well */
+ 	cmdiocb->rsp_iocb = rspiocb;
+@@ -3011,9 +3017,11 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+ 		tmo = get_wqe_tmo(cmdiocb);
++		iotag = get_wqe_reqtag(cmdiocb);
+ 	} else {
+ 		irsp = &rspiocb->iocb;
+ 		tmo = irsp->ulpTimeout;
++		iotag = irsp->ulpIoTag;
  	}
  
+ 	spin_lock_irq(&ndlp->lock);
+@@ -3032,9 +3040,11 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* LOGO completes to NPort <nlp_DID> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0105 LOGO completes to NPort x%x "
+-			 "refcnt %d nflags x%x Data: x%x x%x x%x x%x\n",
+-			 ndlp->nlp_DID, kref_read(&ndlp->kref), ndlp->nlp_flag,
+-			 ulp_status, ulp_word4,
++			 "IoTag x%x refcnt %d nflags x%x xflags x%x "
++			 "Data: x%x x%x x%x x%x\n",
++			 ndlp->nlp_DID, iotag,
++			 kref_read(&ndlp->kref), ndlp->nlp_flag,
++			 ndlp->fc4_xpt_flags, ulp_status, ulp_word4,
+ 			 tmo, vport->num_disc_nodes);
+ 
+ 	if (lpfc_els_chk_latt(vport)) {
+@@ -5075,16 +5085,19 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	if (logerr) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
+ 			 "0137 No retry ELS command x%x to remote "
+-			 "NPORT x%x: Out of Resources: Error:x%x/%x\n",
+-			 cmd, did, ulp_status,
+-			 ulp_word4);
++			 "NPORT x%x: Out of Resources: Error:x%x/%x "
++			 "IoTag x%x\n",
++			 cmd, did, ulp_status, ulp_word4,
++			 cmdiocb->iotag);
+ 	}
+ 	else {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+-			 "0108 No retry ELS command x%x to remote "
+-			 "NPORT x%x Retried:%d Error:x%x/%x\n",
+-			 cmd, did, cmdiocb->retry, ulp_status,
+-			 ulp_word4);
++				 "0108 No retry ELS command x%x to remote "
++				 "NPORT x%x Retried:%d Error:x%x/%x "
++				 "IoTag x%x nflags x%x\n",
++				 cmd, did, cmdiocb->retry, ulp_status,
++				 ulp_word4, cmdiocb->iotag,
++				 (ndlp ? ndlp->nlp_flag : 0));
+ 	}
+ 	return 0;
+ }
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 2cb327efd57d..bfbc23248692 100644
+index bfbc23248692..46e6f807d1ca 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -22170,6 +22170,12 @@ struct lpfc_io_buf *lpfc_get_io_buf(struct lpfc_hba *phba,
-  * The data will be truncated if datasz is not large enough.
-  * Version 1 is not supported with Embedded mbox cmd, so we must use version 0.
-  * Returns the actual bytes read from the object.
-+ *
-+ * This routine is hard coded to use a poll completion.  Unlike other
-+ * sli4_config mailboxes, it uses lpfc_mbuf memory which is not
-+ * cleaned up in lpfc_sli4_cmd_mbox_free.  If this routine is modified
-+ * to use interrupt-based completions, code is needed to fully cleanup
-+ * the memory.
-  */
- int
- lpfc_read_object(struct lpfc_hba *phba, char *rdobject, uint32_t *datap,
-diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
-index cd33dfec758c..14b8b5a3addf 100644
---- a/drivers/scsi/lpfc/lpfc_sli.h
-+++ b/drivers/scsi/lpfc/lpfc_sli.h
-@@ -182,9 +182,11 @@ typedef struct lpfcMboxq {
- 		struct lpfc_mqe mqe;
- 	} u;
- 	struct lpfc_vport *vport; /* virtual port pointer */
--	void *ctx_ndlp;		  /* caller ndlp information */
--	void *ctx_buf;		  /* caller buffer information */
--	void *context3;
-+	void *ctx_ndlp;		  /* an lpfc_nodelist pointer */
-+	void *ctx_buf;		  /* an lpfc_dmabuf pointer */
-+	void *context3;           /* a generic pointer.  Code must
-+				   * accommodate the actual datatype.
-+				   */
- 
- 	void (*mbox_cmpl) (struct lpfc_hba *, struct lpfcMboxq *);
- 	uint8_t mbox_flag;
+@@ -2995,8 +2995,9 @@ lpfc_sli4_unreg_rpi_cmpl_clr(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 		     LPFC_SLI_INTF_IF_TYPE_2)) {
+ 			if (ndlp) {
+ 				lpfc_printf_vlog(
+-					 vport, KERN_INFO, LOG_MBOX | LOG_SLI,
+-					 "0010 UNREG_LOGIN vpi:%x "
++					 vport, KERN_INFO,
++					 LOG_MBOX | LOG_SLI | LOG_NODE,
++					 "0010 UNREG_LOGIN vpi:x%x "
+ 					 "rpi:%x DID:%x defer x%x flg x%x "
+ 					 "x%px\n",
+ 					 vport->vpi, ndlp->nlp_rpi,
+@@ -3012,7 +3013,8 @@ lpfc_sli4_unreg_rpi_cmpl_clr(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 				    (ndlp->nlp_defer_did !=
+ 				    NLP_EVT_NOTHING_PENDING)) {
+ 					lpfc_printf_vlog(
+-						vport, KERN_INFO, LOG_DISCOVERY,
++						vport, KERN_INFO,
++						LOG_MBOX | LOG_SLI | LOG_NODE,
+ 						"4111 UNREG cmpl deferred "
+ 						"clr x%x on "
+ 						"NPort x%x Data: x%x x%px\n",
+@@ -10144,11 +10146,12 @@ lpfc_sli_issue_mbox_s4(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
+ 	spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
+ 			"(%d):0354 Mbox cmd issue - Enqueue Data: "
+-			"x%x (x%x/x%x) x%x x%x x%x\n",
++			"x%x (x%x/x%x) x%x x%x x%x x%x\n",
+ 			mboxq->vport ? mboxq->vport->vpi : 0xffffff,
+ 			bf_get(lpfc_mqe_command, &mboxq->u.mqe),
+ 			lpfc_sli_config_mbox_subsys_get(phba, mboxq),
+ 			lpfc_sli_config_mbox_opcode_get(phba, mboxq),
++			mboxq->u.mb.un.varUnregLogin.rpi,
+ 			phba->pport->port_state,
+ 			psli->sli_flag, MBX_NOWAIT);
+ 	/* Wake up worker thread to transport mailbox command from head */
 -- 
 2.38.0
 
