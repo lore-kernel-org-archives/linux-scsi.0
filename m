@@ -2,109 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5E2AC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Oct 2023 02:02:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E375BC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Oct 2023 04:47:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229688AbjJaCCF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Oct 2023 22:02:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52842 "EHLO
+        id S235985AbjJaErD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Oct 2023 00:47:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbjJaCCE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2023 22:02:04 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1874DD;
-        Mon, 30 Oct 2023 19:02:01 -0700 (PDT)
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SKD0M5Zjrz4f3mWP;
-        Tue, 31 Oct 2023 10:01:55 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-        by mail.maildlp.com (Postfix) with ESMTP id D51831A0173;
-        Tue, 31 Oct 2023 10:01:57 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgAnt9YUYEBldjmoEQ--.61295S3;
-        Tue, 31 Oct 2023 10:01:57 +0800 (CST)
-Subject: Re: [PATCH v4 0/3] Support disabling fair tag sharing
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20231023203643.3209592-1-bvanassche@acm.org>
- <ZTcr3AHr9l4sHRO2@fedora> <5d37f5ed-130a-4e75-b9a7-f77aeb4c7c89@acm.org>
- <ZThwdPaeAFmhp58L@fedora> <faf6f9e4-e1fe-4934-8fdf-84383f51e740@acm.org>
- <ZTmm0kNdN2Eka6V6@fedora> <1e53e562-bec2-4261-a704-88d2a64111d3@acm.org>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <a6575723-4903-d098-6be0-722635db1339@huaweicloud.com>
-Date:   Tue, 31 Oct 2023 10:01:55 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S231201AbjJaErC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2023 00:47:02 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF92498;
+        Mon, 30 Oct 2023 21:46:59 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39V4jhvA026493;
+        Tue, 31 Oct 2023 04:46:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=hkr+7VY4tvVw+B1r5/YvNQcDTOdHdbaYXqeI/KPxxKo=;
+ b=mVO8ywNgHZbxGXuH+UwzIceRsqvfY+lLKvJTN1lbZkcEUhwiQpYxHmuH7J+iQjeIBzxJ
+ N+WRZgIKC0+2AoXF0p+wTul8TFesw0ly7JWvGNX6tmFMvzgIRj4zG7bppJa0qls61OKk
+ yDaj5GJ6dWC/dbNF4OSOZAhoFN1IzD7DUR6LZ7ZqSpGLDP7xdcODZ+y1F5eA6IPkJQZ0
+ xpekESj6nz9VbNfpBD894Qzm8b+bCZMrUQtntbvrBxrdRh6K961zbccHf/9jaq8+DiNo
+ 5eqqQfRCXKBcCJ51BSuiWZs4SjnQJaF6yfeOhRjl9lVV4NIJfwhTPwKbjdFzUX/BEh2P 6Q== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u280jtgud-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 31 Oct 2023 04:46:39 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39V4kcBH005362
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 31 Oct 2023 04:46:38 GMT
+Received: from [10.253.74.76] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Mon, 30 Oct
+ 2023 21:46:35 -0700
+Message-ID: <555470f0-91ec-ea8c-fd1d-3fb5d7059c26@quicinc.com>
+Date:   Tue, 31 Oct 2023 12:46:33 +0800
 MIME-Version: 1.0
-In-Reply-To: <1e53e562-bec2-4261-a704-88d2a64111d3@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgAnt9YUYEBldjmoEQ--.61295S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kw4rZF43WryrGF4DJrWrKrg_yoW8XrW8pr
-        W7WF4DKan5ZanFkw4vy3y7XryrJ3yrG3y7Jryftryj9ws8G3ySyr4jqan09FWYkrs5Aw1q
-        v3W8Jw1Dur4qvFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0E
-        wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
-        80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0
-        I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
-        k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
-        1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUrR6zUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH 5/6] scsi: ufs: ufs-sysfs: Expose UFS power info
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, <mani@kernel.org>,
+        <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Arthur Simchaev <arthur.simchaev@wdc.com>,
+        "Lu Hongfei" <luhongfei@vivo.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
+ <1694411968-14413-6-git-send-email-quic_cang@quicinc.com>
+ <78ad6b62-e197-417c-8f68-332d25c48879@acm.org>
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <78ad6b62-e197-417c-8f68-332d25c48879@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 7n7pC_6-2MgVgILmW9dxE1BfqyYJwJrM
+X-Proofpoint-ORIG-GUID: 7n7pC_6-2MgVgILmW9dxE1BfqyYJwJrM
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-30_13,2023-10-31_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ lowpriorityscore=0 priorityscore=1501 phishscore=0 mlxlogscore=552
+ adultscore=0 spamscore=0 bulkscore=0 impostorscore=0 clxscore=1011
+ mlxscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2310240000 definitions=main-2310310035
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Hi Bart,
 
-在 2023/10/27 0:29, Bart Van Assche 写道:
-> If blk_mq_get_tag() can't allocate a tag, and if multiple threads are
-> waiting for a tag, the thread that called blk_mq_get_tag() first is
-> granted the first tag that is released. I think this guarantees fairness
-> if all requests have a similar latency. There will be some unfairness if
-> there are significant differences in latency per logical unit, e.g.
-> because all requests sent to one logical unit are small and because all
-> requests sent to another logical unit are large. Whether or not this
-> matters depends on the use case.
-
-I'm afraid that is not correct, fairness can't be guranteed at all, not
-even with just one scsi disk. This is because there are 8 wait queues in
-sbitmap, and threads are waiting in roundrobin mode, and each time
-wake_batch tags are released, wake_batch threads of one wait queue will
-be woke up, regardless that some threads can't grab tag after woken up,
-what's worse, thoese thread will be added to the tail of waitqueue
-again.
-
-In the case that high io pressure under a slow disk, this behaviour will
-cause that io tail latency will be quite bad compared to sq from old
-kernel.
-
-AFAIC, disable tag sharing will definitely case some regresion, for
-example, one disk will high io pressure, and another disk only issure
-one IO at a time, disable tag sharing can improve brandwith of fist
-disk, however, for the latter disk, IO latency will definitely be much
-worse.
-
-Thanks,
-Kuai
-
-> 
-> Thanks,
-> 
+On 10/27/2023 3:53 AM, Bart Van Assche wrote:
+> On 9/10/23 22:59, Can Guo wrote:
+>> Having UFS power info available in sysfs makes it easier to tell the 
+>> state
+>> of the link during runtime considering we have a bounch of power saving
+>> features and various combinations for backward compatiblity.
+>
+> Since this patch introduces new sysfs attributes, it should include an
+> update for Documentation/ABI/testing/sysfs-driver-ufs.
+>
 > Bart.
-> 
-> 
-> 
-> .
-> 
+
+Yes, changes to Documentation/ABI/testing/sysfs-driver-ufs. is in below 
+patch.
+
+https://patchwork.kernel.org/project/linux-scsi/patch/1694411968-14413-7-git-send-email-quic_cang@quicinc.com/
+
+I will address your comments and combine them two in one change and 
+re-submit.
+
+Thanks for your review.
+
+
+Best Regards,
+
+Can Guo.
 
