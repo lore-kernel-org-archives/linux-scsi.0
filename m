@@ -2,179 +2,84 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D588C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Oct 2023 14:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56638C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Oct 2023 16:23:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229659AbjJaOGB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Oct 2023 10:06:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33950 "EHLO
+        id S1345050AbjJaQXn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Oct 2023 12:23:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344503AbjJaNOg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2023 09:14:36 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB4B4F4;
-        Tue, 31 Oct 2023 06:14:30 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39VA9Qnh028229;
-        Tue, 31 Oct 2023 13:10:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=QZDiUQ6Gd5tCZvX8du+TNXmzhX9TFsug2LQGOoCKTUs=;
- b=j7N9op6P/rBREnEuVkZb90tTrccWL+efPxZ49RcqzLe3Ntb2KpHrWSc5kqY3hmdp/AcV
- zgOqNctzsq8PNpSFvYZoV+YlinZs7lwLSgBmJuZ2Ra0Xj4Gs7wdEf6UpBJylrkEJ01iN
- qQoQamlYXVQNUY5xtVYQl/YwHgT3t1pWT9MVayvDv66zx+gQk8D0hJLMsTeOAKl+GM6K
- 3C/nUHsqMUG3ySnzuDFYqRpdEI43Wyb0jc7M24kI1F2IiI3cxdED4h3Dj4A8rex2nwu2
- ur/vhkr+4FaJeglmNiJC9gxd5o1qkCszx9WdMZy3wfZzWu1+ynpHF1SdlkigKNsWrqkD 2A== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u2mcyhwun-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 31 Oct 2023 13:10:07 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39VDA6j4013727
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 31 Oct 2023 13:10:06 GMT
-Received: from [10.253.76.255] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Tue, 31 Oct
- 2023 06:10:02 -0700
-Message-ID: <09c030d5-05b7-5f92-94e3-5ea5afbbed40@quicinc.com>
-Date:   Tue, 31 Oct 2023 21:09:59 +0800
+        with ESMTP id S1344836AbjJaQXm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Oct 2023 12:23:42 -0400
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49522A6;
+        Tue, 31 Oct 2023 09:23:40 -0700 (PDT)
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5bcf83a8f6cso20792a12.2;
+        Tue, 31 Oct 2023 09:23:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698769420; x=1699374220;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=CBWUu0tjqfzQQcXAkjZScnGhPDhYF0A6SWvhtDvbljg=;
+        b=e5/0B01YuUwb7dshMbzA+LN1JbglN6ZXHnSln0m/7bciiMynhBR+4CFUghL3B/4AcP
+         IdLxaDWkZsvzYO1q2taB3AUQ8rw1epZcYrtcfPzUENkhBRD7Ov+YFiIGjbhotaZ1u2ii
+         039/rNleRCkIdCxcmtLf3slTpdlVkkatuq0uZjpuLTWbPAfwpIKwnHWhHHopDa408hrK
+         3i3PR5OKi7F+O2NT5lRYhgE0YRq5HI38elxvTISd8LU2/hukHhOUElJTXDi4KhSWzLur
+         hIRWpbbxYS1JsXoortwrphx7V6iaDOHAA3TQzOd0DNSrHeCDNDWkfM7HN0rjZ7TuLYIy
+         7OKg==
+X-Gm-Message-State: AOJu0YxEIqeFnDRCe5g6jVvsczEhwTNwrBqAiNPh2axgEmHdjbwsgLdw
+        njBcZr3ky25RPcK/f/zO3yr07DyWjyg=
+X-Google-Smtp-Source: AGHT+IEiqyEA5Jo7RoN3JI58BhuOtNEOxzgSgsyGJ3lhVwY14vx0QWk1I5bxtuTa8wFF2fi+BzbNVQ==
+X-Received: by 2002:a17:902:f68f:b0:1cc:25b7:e30d with SMTP id l15-20020a170902f68f00b001cc25b7e30dmr10024790plg.60.1698769419503;
+        Tue, 31 Oct 2023 09:23:39 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:3a79:8603:fbab:a9fd? ([2620:15c:211:201:3a79:8603:fbab:a9fd])
+        by smtp.gmail.com with ESMTPSA id ik22-20020a170902ab1600b001c5eb2c4d8csm1560142plb.160.2023.10.31.09.23.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 31 Oct 2023 09:23:38 -0700 (PDT)
+Message-ID: <fe022e5f-e7da-480b-9d1c-ce2a6388d768@acm.org>
+Date:   Tue, 31 Oct 2023 09:23:37 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [PATCH 1/6] scsi: ufs: ufs-qcom: Setup host power mode during
- init
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: ufs: ufs-sysfs: Expose UFS power info
 Content-Language: en-US
-To:     Manivannan Sadhasivam <mani@kernel.org>
-CC:     <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
+To:     Can Guo <quic_cang@quicinc.com>, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-arm-msm@vger.kernel.org>,
+        Lu Hongfei <luhongfei@vivo.com>,
         open list <linux-kernel@vger.kernel.org>
-References: <1694411968-14413-1-git-send-email-quic_cang@quicinc.com>
- <1694411968-14413-2-git-send-email-quic_cang@quicinc.com>
- <20230919103607.GA4732@thinkpad>
-From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20230919103607.GA4732@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+References: <1698745992-5699-1-git-send-email-quic_cang@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1698745992-5699-1-git-send-email-quic_cang@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: YJ31Ri0TDqdbyv77AAjQt6sc-MgtZ-dS
-X-Proofpoint-ORIG-GUID: YJ31Ri0TDqdbyv77AAjQt6sc-MgtZ-dS
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-31_01,2023-10-31_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
- priorityscore=1501 mlxscore=0 impostorscore=0 mlxlogscore=999 phishscore=0
- suspectscore=0 malwarescore=0 spamscore=0 lowpriorityscore=0 clxscore=1015
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2310240000 definitions=main-2310310104
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Mani,
+On 10/31/23 02:53, Can Guo wrote:
+> +What:		/sys/bus/platform/drivers/ufshcd/*/power_info/mode
+> +What:		/sys/bus/platform/devices/*.ufs/power_info/mode
+> +Date:		September 2023
+> +Contact:	Can Guo <quic_cang@quicinc.com>
+> +Description:	This file shows the UniPro power mode of UFS link:
+> +		==  ====================================================
+> +		1   FAST_MODE
+> +		2   SLOW_MODE
+> +		4   FASTAUTO_MODE
+> +		5   SLOWAUTO_MODE
+> +		==  ====================================================
+> +
+> +		The file is read only.
 
-On 9/19/2023 6:36 PM, Manivannan Sadhasivam wrote:
-> On Sun, Sep 10, 2023 at 10:59:22PM -0700, Can Guo wrote:
->> Setup host power mode and its limitations during UFS host driver init to
->> avoid repetitive work during every power mode change.
->>
->> Co-developed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
->> ---
->>   drivers/ufs/host/ufs-qcom.c | 27 ++++++++++++++++++---------
->>   drivers/ufs/host/ufs-qcom.h |  1 +
->>   2 files changed, 19 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->> index c3215d3..710f079 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -443,7 +443,11 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba)
->>   static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->>   {
->>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> +	struct ufs_dev_params *host_pwr_cap = &host->host_pwr_cap;
->>   	struct phy *phy = host->generic_phy;
->> +	enum phy_mode mode = host_pwr_cap->hs_rate == PA_HS_MODE_B ?
->> +							PHY_MODE_UFS_HS_B :
->> +							PHY_MODE_UFS_HS_A;
-> I do not see anyone passing PA_HS_MODE_A in this patch, so this change is not
-> required now. If you are doing this as a preparatory work, please do it in a
-> separate patch.
-Sure.
->
->>   	int ret;
->>   
->>   	/* Reset UFS Host Controller and PHY */
->> @@ -460,7 +464,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->>   		return ret;
->>   	}
->>   
->> -	phy_set_mode_ext(phy, PHY_MODE_UFS_HS_B, host->phy_gear);
->> +	phy_set_mode_ext(phy, mode, host->phy_gear);
-> Same as above.
-Sure.
->
->>   
->>   	/* power on phy - start serdes and phy's power and clocks */
->>   	ret = phy_power_on(phy);
->> @@ -884,7 +888,6 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
->>   				struct ufs_pa_layer_attr *dev_req_params)
->>   {
->>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> -	struct ufs_dev_params ufs_qcom_cap;
->>   	int ret = 0;
->>   
->>   	if (!dev_req_params) {
->> @@ -894,13 +897,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
->>   
->>   	switch (status) {
->>   	case PRE_CHANGE:
->> -		ufshcd_init_pwr_dev_param(&ufs_qcom_cap);
->> -		ufs_qcom_cap.hs_rate = UFS_QCOM_LIMIT_HS_RATE;
->> -
->> -		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
->> -		ufs_qcom_cap.hs_tx_gear = ufs_qcom_cap.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
->> -
->> -		ret = ufshcd_get_pwr_dev_param(&ufs_qcom_cap,
->> +		ret = ufshcd_get_pwr_dev_param(&host->host_pwr_cap,
->>   					       dev_max_params,
->>   					       dev_req_params);
->>   		if (ret) {
->> @@ -1037,6 +1034,17 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
->>   		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
->>   }
->>   
->> +static void ufs_qcom_set_pwr_mode_limits(struct ufs_hba *hba)
-> It's good that you are moving the setting to init() as they are static, but I'm
-> worried about the different naming conventions used all over the place.
->
-> The intention here is to set host parameters and then get the agreed one between
-> host and the device. But different names are being used. The structure itself is
-> named as "ufs_dev_params" even though it targets host and the vendor drivers are
-> naming it as "ufs_<vendor>_cap" or "host_cap". And now you've given a new name,
-> "host_pwr_cap", which makes things even worse.
->
-> So we should rename the struct itself as "ufs_host_params" and all the vendor
-> drivers should stick to "host_params".
-
-I like the name 'ufs_host_params', will unify the declaration of it in 
-all vendor drivers in next version.
-
+For this attribute and the attributes below, shouldn't these be exported
+as text instead of as numbers? Shell scripts that read and use these
+attributes will be much easier to read if these attributes are changed
+from numeric into a textual.
 
 Thanks,
 
-Can Guo.
-
+Bart.
