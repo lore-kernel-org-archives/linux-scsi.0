@@ -2,170 +2,123 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B558C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Nov 2023 08:43:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB37DC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Nov 2023 10:33:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232599AbjKAInB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Nov 2023 04:43:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37076 "EHLO
+        id S232427AbjKAKdR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Nov 2023 06:33:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234109AbjKAIm6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2023 04:42:58 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7A1B121
-        for <linux-scsi@vger.kernel.org>; Wed,  1 Nov 2023 01:42:51 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20231101084248epoutp0153da001b6c836e30b1207ba8b6529425~Tczf4T3iG1090310903epoutp01p
-        for <linux-scsi@vger.kernel.org>; Wed,  1 Nov 2023 08:42:48 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20231101084248epoutp0153da001b6c836e30b1207ba8b6529425~Tczf4T3iG1090310903epoutp01p
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1698828168;
-        bh=Ueeq4gnoEMe7xuekvlOF7idWvlky879rxssZHhVOM/8=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=HY07nAUQDZHGWWAKeFA/vUcQCWMAhpWG/EOlNUkKlMrBxh9KS73ijuJ7CSq6OtaMx
-         8xCrO3zqORG+hPGpbiiTz1jRnXl/AvT2e1err8Qx2oZjP4zfWhWB64QexgrUQVGKMm
-         JpIcP7pYLNRaBbQeH71NkBfatD5stIoI+aQuPidg=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20231101084247epcas2p2129462642c0fa24c56898cea2d244538~Tcze5H8Pb1183311833epcas2p2B;
-        Wed,  1 Nov 2023 08:42:47 +0000 (GMT)
-Received: from epsmgec2p1-new.samsung.com (unknown [182.195.36.100]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4SL0rQ5Sxfz4x9Pw; Wed,  1 Nov
-        2023 08:42:46 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmgec2p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        21.91.18994.68F02456; Wed,  1 Nov 2023 17:42:46 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20231101084246epcas2p32ae15219878d1c31e7d8a14c22489519~TczdoeD_I3146031460epcas2p3o;
-        Wed,  1 Nov 2023 08:42:46 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20231101084246epsmtrp158e8cd269db0d28b000847452d7fb6df~TczdnmD-42468024680epsmtrp1n;
-        Wed,  1 Nov 2023 08:42:46 +0000 (GMT)
-X-AuditID: b6c32a4d-9f7ff70000004a32-57-65420f8613a6
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        46.3C.07368.68F02456; Wed,  1 Nov 2023 17:42:46 +0900 (KST)
-Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20231101084245epsmtip21d55f2f4788dcdc8c75e98354b95ff9c~TczdW-MP92863528635epsmtip2i;
-        Wed,  1 Nov 2023 08:42:45 +0000 (GMT)
-From:   SEO HOYOUNG <hy50.seo@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-        kwangwon.min@samsung.com, kwmad.kim@samsung.com,
-        sh425.lee@samsung.com, sc.suh@samsung.com,
-        quic_nguyenb@quicinc.com, cpgs@samsung.com
-Cc:     SEO HOYOUNG <hy50.seo@samsung.com>
-Subject: [PATCH v1] scsi: ufs: core: Process abort completed command in MCQ
- mode
-Date:   Wed,  1 Nov 2023 17:45:04 +0900
-Message-Id: <20231101084504.79087-1-hy50.seo@samsung.com>
-X-Mailer: git-send-email 2.26.0
+        with ESMTP id S229518AbjKAKdQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2023 06:33:16 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 667E4DE;
+        Wed,  1 Nov 2023 03:33:10 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 2078A1F750;
+        Wed,  1 Nov 2023 10:33:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1698834789; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4LND6pygnTiRuGktVfN0qPhX33LLpGay79d++fXYO8g=;
+        b=qRa/2X7F0+04i75mZxJSYU/ccJu7yvxsYkToFOd9mxFkxJgQ/q5Z69oe4wU3zHHDWE192n
+        2E8b5KB1t+atv+4IrnV4hbkqlj3Kx6oKvwMy8Y2M89Grhukdzi+qY8yuxOsKH+cA/DtnpW
+        RQMISgXB4dXtZ8kKfESP2TSxbou6ap8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1698834789;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4LND6pygnTiRuGktVfN0qPhX33LLpGay79d++fXYO8g=;
+        b=fSCPunYTrUVc4h4OaOPu3mLpuu0hXreTUQhcHxQ9XgDGAxw6bbsD2QJ1onZF7MMvSV81pg
+        /5hpAK3oIb+tKyAw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DC33D1348D;
+        Wed,  1 Nov 2023 10:33:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 76X5M2QpQmUdIwAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 01 Nov 2023 10:33:08 +0000
+Message-ID: <d1d179ea-ae0f-497a-a2af-f1c60cf90362@suse.de>
+Date:   Wed, 1 Nov 2023 11:33:08 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: blktests failures with v6.6
+Content-Language: en-US
+To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <6qycihftrxsdvuvpsvmkbe2swy5u2isrtu6jiyf3khzusdzilc@34kda7iutwdq>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <6qycihftrxsdvuvpsvmkbe2swy5u2isrtu6jiyf3khzusdzilc@34kda7iutwdq>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmqW4bv1OqwenpWhYP5m1js3j58yqb
-        xcGHnSwW0z78ZLZ4eUjTYvXiBywWi25sY7LYemMni8XNLUdZLC7vmsNm0X19B5vF8uP/mCym
-        vjjObtF19wajxdJ/b1kc+D0uX/H2mLDoAKPH9/UdbB4fn95i8Zi4p86jb8sqRo/Pm+Q82g90
-        MwVwRGXbZKQmpqQWKaTmJeenZOal2yp5B8c7x5uaGRjqGlpamCsp5CXmptoqufgE6Lpl5gCd
-        rqRQlphTChQKSCwuVtK3synKLy1JVcjILy6xVUotSMkpMC/QK07MLS7NS9fLSy2xMjQwMDIF
-        KkzIzljxeylLwTneihVvnrM1MP7k6mLk5JAQMJGYeOsyYxcjF4eQwB5GiafbtrNAOJ8YJVae
-        +sYG4XxjlDi5bSUbTMuurb+gWvYySsyZNQ+q6gejxM9dp1hAqtgENCTWHDvEBJIQEbjEJNF6
-        by07SIJZQE3i891lYEXCAkESTcfOgdksAqoSq1btYwKxeQUsJT6+bmeGWCcvsajhN1RcUOLk
-        zCcsEHPkJZq3zmYGWSAhMJND4uKH71ANLhK/r3UzQtjCEq+Ob2GHsKUkXva3QdnZEo171kLZ
-        FRJzN0+GqjeWmPWsHcjmAFqgKbF+lz6IKSGgLHHkFtRaPomOw3+hOnklGjb+Zoco4ZXoaBOC
-        CCtJnJl7GyosIXFwdg5E2ENiz7c54DAUEoiVeNW6iG0Co8IsJH/NQvLXLIQTFjAyr2KUSi0o
-        zk1PTTYqMNTNSy2HR3Jyfu4mRnBq1vLdwfh6/V+9Q4xMHIyHGCU4mJVEeA+bOqQK8aYkVlal
-        FuXHF5XmpBYfYjQFhvZEZinR5HxgdsgriTc0sTQwMTMzNDcyNTBXEue91zo3RUggPbEkNTs1
-        tSC1CKaPiYNTqoEpyWGhb23MiavVT+KFyup+dLPyz5Vc+S5K2zn//Vp2mcCvrlsu+n2ITvOr
-        CGD6XPFym6qYMYOcNdPDRW/UH7c3Lzvx5+zkfY4PPnIXcHrvuRE1tYZNwTascd6Xr/Y9asqF
-        e5dl7BYsa71wRi/KWr2Of4XaAmtNnZzDrSt+3Z+1h3+tKkf2o5dTPmzN4z4fxfrho91Rv/0i
-        mpNK3/a8rZnwpbZH+XFmOZvCybITCzZvMJTbvE+vbmoWZ9mJW8qlkiut7ogGT4tptWZZKZs/
-        IaBeQ62l9dtKjbRP7KfMOLPYLm9drRFldt9m68SE7g+u0/f3vG41eTTTPEPlXKLV5O/cV7yf
-        cKZFtzc9ltnx6r0SS3FGoqEWc1FxIgATzG1RVgQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrELMWRmVeSWpSXmKPExsWy7bCSvG4bv1OqweFLbBYP5m1js3j58yqb
-        xcGHnSwW0z78ZLZ4eUjTYvXiBywWi25sY7LYemMni8XNLUdZLC7vmsNm0X19B5vF8uP/mCym
-        vjjObtF19wajxdJ/b1kc+D0uX/H2mLDoAKPH9/UdbB4fn95i8Zi4p86jb8sqRo/Pm+Q82g90
-        MwVwRHHZpKTmZJalFunbJXBlrPi9lKXgHG/FijfP2RoYf3J1MXJySAiYSOza+ouxi5GLQ0hg
-        N6NE05epzBAJCYn/i5uYIGxhifstR1hBbCGBb4wSbyaVg9hsAhoSa44dAqsREXjCJDGx2RPE
-        ZhZQk/h8dxkLiC0sECCxbM0hsF4WAVWJVav2gdXzClhKfHzdDrVLXmJRw2+ouKDEyZlPWCDm
-        yEs0b53NPIGRbxaS1CwkqQWMTKsYJVMLinPTc5MNCwzzUsv1ihNzi0vz0vWS83M3MYKjQUtj
-        B+O9+f/0DjEycTAeYpTgYFYS4T1s6pAqxJuSWFmVWpQfX1Sak1p8iFGag0VJnNdwxuwUIYH0
-        xJLU7NTUgtQimCwTB6dUA9Oqsyo8puKKvDULwjs8XDpdL2RfVb1j8PvNmxl3mWOLDm7s3/d8
-        5YG7KgnZu79JrupsFN8eXMmzdOoWqeJXez42sQp7xjzq/3vzcd/2jSs49vzTfqDRPePa8Ysv
-        8msTNaKjLPf57+uec4KFR/yHY0+s3NFfV76/tfkTMPtDTN7Cl7mqgnFzOD7t+Vr3bHLkR0HF
-        A//fbFl5c+GxNRIvre/faN/NcElfbf23YH2H09lf/JdMmf3/REUvc0SoiseyBMFXyyxTZ2zR
-        mWP4ortllkfoYZsHyZLJyjfYrhW++bDilsYz072H66ZbnVvzhNfqRug0MXZ9P42D73xserqN
-        sz8muDdq9vrv6kx3vvck3LVMiaU4I9FQi7moOBEAg+SBdvUCAAA=
-X-CMS-MailID: 20231101084246epcas2p32ae15219878d1c31e7d8a14c22489519
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20231101084246epcas2p32ae15219878d1c31e7d8a14c22489519
-References: <CGME20231101084246epcas2p32ae15219878d1c31e7d8a14c22489519@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In MCQ mode, the case where OCS is updated to aborted is as follows
- 1. when abort processing is completed
- 2. When a duplicate command occurs
+On 11/1/23 05:09, Shinichiro Kawasaki wrote:
+> Hi all,
+> 
+> I ran the latest blktests (git hash: 3f75e6241f6b) with v6.6 kernel, and obseved
+> four failures below. They are all known for months.
+> 
+> As for the two other failures observed with v6.6-rc1 kernel [1], they are no
+> longer observed with v6.6 kernel. Good.
+> 
+> [1] https://lore.kernel.org/linux-block/u4g3jh6dnowouthos3tdex2pflzo3hat55e5dc4j6pul3a3uov@y2axtbiura2q/
+> 
+> List of failures
+> ================
+> #1: block/011
+> #2: nvme/003 (fabrics transport)
+> #3: nvme/* (fc transport)
+> #4: srp/002, 011 (rdma_rxe driver)
+> 
+> Failure description
+> ===================
+> 
+> #1: block/011
+> 
+>     The test case fails with NVME devices due to lockdep WARNING "possible
+>     circular locking dependency detected". Reported in Sep/2022 [2]. In LSF
+>     2023, it was noted that this failure should be fixed.
+> 
+>     Also, it was found recently that this test case still causes failure of
+>     following tests. Fix work is ongoing [3].
+> 
+>     [2] https://lore.kernel.org/linux-block/20220930001943.zdbvolc3gkekfmcv@shindev/
+>     [3] https://github.com/kawasaki/blktests/commit/f540cbb0eeb66e2c76a88efbe65a2b59d55630fd
+> 
+> #2: nvme/003 (fabrics transport)
+> 
+>     When nvme test group is run with trtype=rdma or tcp, the test case fails
+>     due to lockdep WARNING "possible circular locking dependency detected".
+>     Reported in May/2023. Fix discussions were held [4][5].
+> 
+>     [4] https://lore.kernel.org/linux-nvme/20230511150321.103172-1-bvanassche@acm.org/
+>     [5] https://lore.kernel.org/linux-nvme/5cb63b10-72ab-4b7c-7574-48583ea8ffd1@grimberg.me/
+> 
+Just send a patchset which should resolve these issues.
+Can you test with them?
 
-In case of 1 situation, cmd should be re-request.
-So in the case of cmd whose abort processing is completed in MCQ mode,
-the ufs driver needs to update to scsi with DID_REQUEUE.
+Cheers,
 
-Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 9 ++++++++-
- include/ufs/ufshci.h      | 1 +
- 2 files changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 68d7da02944f..234b7d7ec037 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5307,6 +5307,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 	enum utp_ocs ocs;
- 	u8 upiu_flags;
- 	u32 resid;
-+	u8 eec;
- 
- 	upiu_flags = lrbp->ucd_rsp_ptr->header.flags;
- 	resid = be32_to_cpu(lrbp->ucd_rsp_ptr->sr.residual_transfer_count);
-@@ -5371,7 +5372,13 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 		}
- 		break;
- 	case OCS_ABORTED:
--		result |= DID_ABORT << 16;
-+		if (cqe)
-+			eec = le32_to_cpu(cqe->status) & MASK_EEC;
-+
-+		if (is_mcq_enabled(hba) && !eec)
-+			result |= DID_REQUEUE << 16;
-+		else
-+			result |= DID_ABORT << 16;
- 		break;
- 	case OCS_INVALID_COMMAND_STATUS:
- 		result |= DID_REQUEUE << 16;
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index d5accacae6bc..9aefc7e6d0fc 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -465,6 +465,7 @@ enum utp_ocs {
- 
- enum {
- 	MASK_OCS			= 0x0F,
-+	MASK_EEC			= 0xF0,
- };
- 
- /* The maximum length of the data byte count field in the PRDT is 256KB */
+Hannes
 -- 
-2.26.0
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
