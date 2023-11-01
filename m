@@ -2,83 +2,73 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A05C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Nov 2023 16:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 128DEC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Nov 2023 17:07:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344349AbjKAQ46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Nov 2023 12:56:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56456 "EHLO
+        id S1344391AbjKARHh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Nov 2023 13:07:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344304AbjKAQ45 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2023 12:56:57 -0400
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C674710E;
-        Wed,  1 Nov 2023 09:56:51 -0700 (PDT)
-Received: by mail-wr1-x435.google.com with SMTP id ffacd0b85a97d-32d80ae19f8so4645837f8f.2;
-        Wed, 01 Nov 2023 09:56:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1698857810; x=1699462610; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=S0+VnMXLjP+kwaicD3UwKOa7X0FEZgTGR/DFhzdFdfw=;
-        b=e9R1CJI5IQOzya+hPiq+4UvkMcZlaAxrsvYl/xle/OiUhExKIA0BnPkvUHE6ysnfRz
-         WRoAhhWH0pjvj9VsEGlvomj44jCMR++zevjfeqmSKdlUIk2OCiXoM87uggb6brSfOkxL
-         B1+fW36/HgLCeKI6cEvEGpy66yrbh5fGW7LgBgm/EmkXfzZX1tCKwS8prSe70mBb0K8I
-         NEdC120+XYTWuSYsVQpL701vWKQ47TAGXVokK4BVLLCVxjlv5AcOO0R89yCSa+AZI2Pa
-         tv2Fc/6tK660f6G8JpJpXDUSRVGvKyC/8YfHVHghuSiEKKwJHMcSCeENSFriEKRJopPP
-         C1iw==
+        with ESMTP id S231974AbjKARHg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2023 13:07:36 -0400
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AD27A6;
+        Wed,  1 Nov 2023 10:07:34 -0700 (PDT)
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1c434c33ec0so56528565ad.3;
+        Wed, 01 Nov 2023 10:07:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698857810; x=1699462610;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=S0+VnMXLjP+kwaicD3UwKOa7X0FEZgTGR/DFhzdFdfw=;
-        b=DwpENkpvfZ+oSM2mDGUfRgNbNQd3+7aF/RWlEFTD8A+oxEbi+eCnYB97gLlQSivV0k
-         CyoVJ6Wz7Xk4Wvvf7/2bgNKijD+3depBlJjvfLp0lU4FbPGMMcnNawViBnRyv7vyRGlx
-         AHxqk/BLWBRqglrVxzmwZXNcj1KwurOJ+LS8EsVrT8EKgIDlMeSdAALjAOO1TEgdizXB
-         ZsOpNFD+rB95voRSalahPFKPyyL5+QlqT2aM1jSAF5T6REvH6f1l/Mzapmcsgbixxcc0
-         BI4pyUGglvEf8lGTw0cYCmRCC6BwP4U+zP2jHGZqZP/arkOeJcUCMV+NXiJZ+qtAfIRO
-         6LZg==
-X-Gm-Message-State: AOJu0YxGqp4mrsAZ5a8eCBLJ3XDiN/V4rAHS/OOIwmuOsuZmAqHn+9iU
-        0c0UoRwp+eQGiigrKQUjHspYffPJq9VpOxa8
-X-Google-Smtp-Source: AGHT+IHF2o+XLo7Bp4Da1VvTAEL3ByKPXqpsG2E0CpQPMblrgGQu9/SAX5ghd4j0uprkKYS0Q6FaCA==
-X-Received: by 2002:a5d:4b88:0:b0:32d:8872:aacb with SMTP id b8-20020a5d4b88000000b0032d8872aacbmr12772549wrt.53.1698857809842;
-        Wed, 01 Nov 2023 09:56:49 -0700 (PDT)
-Received: from [172.23.12.176] ([85.119.46.9])
-        by smtp.gmail.com with ESMTPSA id b11-20020a5d4d8b000000b0032d8354fb43sm252616wru.76.2023.11.01.09.56.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Nov 2023 09:56:49 -0700 (PDT)
-Message-ID: <85ec355fdaf9d4362f34bdf2e1aded9a9bea9850.camel@gmail.com>
+        d=1e100.net; s=20230601; t=1698858454; x=1699463254;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=M+sNYo+81K509h19TdC0judu7XiMCvCmL9yTeAeh1N0=;
+        b=ty3nUvPBVEthjThwugAOIgg59HqNOinNwZvm2LMNaavOJhk629QgikgTe/LUYr+W3h
+         M4h/c206i1lPIXse6BG5Yoo/n0ZbNyWco4nkhhA0lAzT1n3V1XT4PGbYkKJOb76oX7qx
+         wAP1FsDKk6kWES7dCyWD3zkLCfNTzhtH9tUOyk7JQ+3chT1HpA6BSshI340HbY30LvRs
+         4Azp6x9v1IkgmLQV6VkL0yQP4ctFSQ5JvkJr4TdqIft0OdcoZKXsMWKugAo71bYlMalq
+         M1w5VdzcOPgZni1+1wl7AwO4sB+1rmtPShMYETlvuexXQvaGIkXI6xnTWGjIkay1/PI1
+         cGcw==
+X-Gm-Message-State: AOJu0YyLxfj1LCwvPtM7reTsOD1gtMoCAqTBX746KZBDGXYIMOOQtz4r
+        pOe1g7aMyxVt3yM5puLkgvc=
+X-Google-Smtp-Source: AGHT+IEp2rWzcRRdXU+9soFccrPleoTrHw9s7osQ0AjFyBaST6N7rIyat/KkLI7XLa6rNWWyxUrwXQ==
+X-Received: by 2002:a17:903:294b:b0:1cc:641a:9bf1 with SMTP id li11-20020a170903294b00b001cc641a9bf1mr5042840plb.5.1698858453773;
+        Wed, 01 Nov 2023 10:07:33 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:2312:f48f:8e12:6623? ([2620:15c:211:201:2312:f48f:8e12:6623])
+        by smtp.gmail.com with ESMTPSA id iz15-20020a170902ef8f00b001bbb7af4963sm1573118plb.68.2023.11.01.10.07.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 01 Nov 2023 10:07:33 -0700 (PDT)
+Message-ID: <ebdbb2eb-0339-40a7-9697-6148fcda81a2@acm.org>
+Date:   Wed, 1 Nov 2023 10:07:31 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v3] scsi: ufs: ufs-sysfs: Expose UFS power info
-From:   Bean Huo <huobean@gmail.com>
-To:     Can Guo <quic_cang@quicinc.com>, bvanassche@acm.org,
-        mani@kernel.org, stanley.chu@mediatek.com, adrian.hunter@intel.com,
+Content-Language: en-US
+To:     Can Guo <quic_cang@quicinc.com>, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
         beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
         martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Lu Hongfei <luhongfei@vivo.com>,
         open list <linux-kernel@vger.kernel.org>
-Date:   Wed, 01 Nov 2023 17:56:46 +0100
-In-Reply-To: <1698811243-5024-1-git-send-email-quic_cang@quicinc.com>
 References: <1698811243-5024-1-git-send-email-quic_cang@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
-MIME-Version: 1.0
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1698811243-5024-1-git-send-email-quic_cang@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2023-10-31 at 21:00 -0700, Can Guo wrote:
-> Having UFS power info available in sysfs makes it easier to tell the
-> state
-> of the link during runtime considering we have a bunch of power
-> saving
-> features and various combinations for backward compatibility.
->=20
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+On 10/31/23 21:00, Can Guo wrote:
+> +	return sysfs_emit(buf, "%s\n", hba->pwr_info.hs_rate ?
+> +				       ufshcd_ufs_hs_gear_to_string(hba->pwr_info.gear_rx) :
+> +				       ufshcd_ufs_pwm_gear_to_string(hba->pwr_info.gear_rx));
+> +}
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+A nit: this is not how kernel code should be indented. I think that
+"ufshcd_..." should be aligned with "buf,".
 
+Anyway:
+
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
