@@ -2,111 +2,83 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A56C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Nov 2023 16:45:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A05C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Nov 2023 16:56:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232095AbjKAQp5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Nov 2023 12:45:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36996 "EHLO
+        id S1344349AbjKAQ46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Nov 2023 12:56:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231233AbjKAQp4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2023 12:45:56 -0400
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E765110C;
-        Wed,  1 Nov 2023 09:45:53 -0700 (PDT)
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-6b709048f32so51007b3a.0;
-        Wed, 01 Nov 2023 09:45:53 -0700 (PDT)
+        with ESMTP id S1344304AbjKAQ45 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2023 12:56:57 -0400
+Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C674710E;
+        Wed,  1 Nov 2023 09:56:51 -0700 (PDT)
+Received: by mail-wr1-x435.google.com with SMTP id ffacd0b85a97d-32d80ae19f8so4645837f8f.2;
+        Wed, 01 Nov 2023 09:56:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1698857810; x=1699462610; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=S0+VnMXLjP+kwaicD3UwKOa7X0FEZgTGR/DFhzdFdfw=;
+        b=e9R1CJI5IQOzya+hPiq+4UvkMcZlaAxrsvYl/xle/OiUhExKIA0BnPkvUHE6ysnfRz
+         WRoAhhWH0pjvj9VsEGlvomj44jCMR++zevjfeqmSKdlUIk2OCiXoM87uggb6brSfOkxL
+         B1+fW36/HgLCeKI6cEvEGpy66yrbh5fGW7LgBgm/EmkXfzZX1tCKwS8prSe70mBb0K8I
+         NEdC120+XYTWuSYsVQpL701vWKQ47TAGXVokK4BVLLCVxjlv5AcOO0R89yCSa+AZI2Pa
+         tv2Fc/6tK660f6G8JpJpXDUSRVGvKyC/8YfHVHghuSiEKKwJHMcSCeENSFriEKRJopPP
+         C1iw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698857153; x=1699461953;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=HShWGtQKfpCm3R1g2YQJwks+runHVlSK4U2xQP7+rJw=;
-        b=CyMgr99UDmCjxc57wsi7Kho1KUL1nMkhtYk/FuNZnNyBAW2txrnJuXuWOmzLt5afIW
-         MC/K1am0PDUDPkOJEAGNVr/vbC1RLA6b9bYbSZHidguqRZ/CP0S7Bni3ZMB/PQApUHgQ
-         qmNU6JG10D4zu4wBKOMaPC5QRfqQTJDNkdQKYQN+aYeHWr7M8IIbE0ePC1id61a/rNhS
-         oNcHPdmFQ7u7WONZSsjiR46u+gsEEtkGTYZmbZn4OmKoqkDPC4HP6r9gtYcZ8EkOXUhv
-         1b6PWgJFaHPdW/3APAFQide9YVgnnaU+5t2EzbrsD9yUJLq0HMf4qw9JizWViOCND7xR
-         cK+w==
-X-Gm-Message-State: AOJu0YyGXxs71QXZxJ4vK1wJL1dfpRxnJBPzJDaup3kWGXFxOkSUWsf0
-        uZWXFVmVweyICPkNM+FSXHk=
-X-Google-Smtp-Source: AGHT+IEvWUmiw62j9GKtgIQhaMTq2wosTr2Yb141pNyQ3mQMR8cKVHrMgBkkuosP22aFkuyRN3ZYpg==
-X-Received: by 2002:a05:6a20:1614:b0:17b:62ae:a8aa with SMTP id l20-20020a056a20161400b0017b62aea8aamr15776276pzj.6.1698857153253;
-        Wed, 01 Nov 2023 09:45:53 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:2312:f48f:8e12:6623? ([2620:15c:211:201:2312:f48f:8e12:6623])
-        by smtp.gmail.com with ESMTPSA id c9-20020a639609000000b005891f3af36asm108341pge.87.2023.11.01.09.45.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 01 Nov 2023 09:45:52 -0700 (PDT)
-Message-ID: <c06b2624-b05b-48d4-840d-beb208aa33dc@acm.org>
-Date:   Wed, 1 Nov 2023 09:45:46 -0700
+        d=1e100.net; s=20230601; t=1698857810; x=1699462610;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=S0+VnMXLjP+kwaicD3UwKOa7X0FEZgTGR/DFhzdFdfw=;
+        b=DwpENkpvfZ+oSM2mDGUfRgNbNQd3+7aF/RWlEFTD8A+oxEbi+eCnYB97gLlQSivV0k
+         CyoVJ6Wz7Xk4Wvvf7/2bgNKijD+3depBlJjvfLp0lU4FbPGMMcnNawViBnRyv7vyRGlx
+         AHxqk/BLWBRqglrVxzmwZXNcj1KwurOJ+LS8EsVrT8EKgIDlMeSdAALjAOO1TEgdizXB
+         ZsOpNFD+rB95voRSalahPFKPyyL5+QlqT2aM1jSAF5T6REvH6f1l/Mzapmcsgbixxcc0
+         BI4pyUGglvEf8lGTw0cYCmRCC6BwP4U+zP2jHGZqZP/arkOeJcUCMV+NXiJZ+qtAfIRO
+         6LZg==
+X-Gm-Message-State: AOJu0YxGqp4mrsAZ5a8eCBLJ3XDiN/V4rAHS/OOIwmuOsuZmAqHn+9iU
+        0c0UoRwp+eQGiigrKQUjHspYffPJq9VpOxa8
+X-Google-Smtp-Source: AGHT+IHF2o+XLo7Bp4Da1VvTAEL3ByKPXqpsG2E0CpQPMblrgGQu9/SAX5ghd4j0uprkKYS0Q6FaCA==
+X-Received: by 2002:a5d:4b88:0:b0:32d:8872:aacb with SMTP id b8-20020a5d4b88000000b0032d8872aacbmr12772549wrt.53.1698857809842;
+        Wed, 01 Nov 2023 09:56:49 -0700 (PDT)
+Received: from [172.23.12.176] ([85.119.46.9])
+        by smtp.gmail.com with ESMTPSA id b11-20020a5d4d8b000000b0032d8354fb43sm252616wru.76.2023.11.01.09.56.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Nov 2023 09:56:49 -0700 (PDT)
+Message-ID: <85ec355fdaf9d4362f34bdf2e1aded9a9bea9850.camel@gmail.com>
+Subject: Re: [PATCH v3] scsi: ufs: ufs-sysfs: Expose UFS power info
+From:   Bean Huo <huobean@gmail.com>
+To:     Can Guo <quic_cang@quicinc.com>, bvanassche@acm.org,
+        mani@kernel.org, stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Lu Hongfei <luhongfei@vivo.com>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Wed, 01 Nov 2023 17:56:46 +0100
+In-Reply-To: <1698811243-5024-1-git-send-email-quic_cang@quicinc.com>
+References: <1698811243-5024-1-git-send-email-quic_cang@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: (2) [PATCH v3 01/14] fs: Move enum rw_hint into a new header file
-Content-Language: en-US
-To:     daejun7.park@samsung.com, KANCHAN JOSHI <joshi.k@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>, Jan Kara <jack@suse.cz>,
-        Christian Brauner <brauner@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Jeff Layton <jlayton@kernel.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Seonghun Kim <seonghun-sui.kim@samsung.com>,
-        Jorn Lee <lunar.lee@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Hyunji Jeon <hyunji.jeon@samsung.com>,
-        Dongwoo Kim <dongwoo7565.kim@samsung.com>,
-        Seongcheol Hong <sc01.hong@samsung.com>,
-        Jaeheon Lee <jaeheon7.lee@samsung.com>,
-        Wonjong Song <wj3.song@samsung.com>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        Yonggil Song <yonggil.song@samsung.com>,
-        Soonyoung Kim <overmars.kim@samsung.com>,
-        Shinwoo Park <sw_kr.park@samsung.com>,
-        Seokhwan Kim <sukka.kim@samsung.com>
-References: <9b0990ec-a3c9-48c0-b312-8c07c727e326@acm.org>
- <20231017204739.3409052-1-bvanassche@acm.org>
- <20231017204739.3409052-2-bvanassche@acm.org>
- <b3058ce6-e297-b4c3-71d4-4b76f76439ba@samsung.com>
- <CGME20231017204823epcas5p2798d17757d381aaf7ad4dd235f3f0da3@epcms2p1>
- <20231101063910epcms2p18f991db15958f246fa1654f2d412e176@epcms2p1>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231101063910epcms2p18f991db15958f246fa1654f2d412e176@epcms2p1>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/31/23 23:39, Daejun Park wrote:
->> On 10/30/23 04:11, Kanchan Joshi wrote:
->>> On 10/18/2023 2:17 AM, Bart Van Assche wrote:
->> Thanks for having taken a look at this patch series. Jens asked for data
->> that shows that this patch series improves performance. Is this
->> something Samsung can help with?
-> 
-> We analyzed the NAND block erase counter with and without stream separation
-> through a long-term workload in F2FS.
-> The analysis showed that the erase counter is reduced by approximately 40%
-> with stream seperation.
-> Long-term workload is a scenario where erase and write are repeated by
-> stream after performing precondition fill for each temperature of F2FS.
+On Tue, 2023-10-31 at 21:00 -0700, Can Guo wrote:
+> Having UFS power info available in sysfs makes it easier to tell the
+> state
+> of the link during runtime considering we have a bunch of power
+> saving
+> features and various combinations for backward compatibility.
+>=20
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 
-Hi Daejun,
-
-Thank you for having shared this data. This is very helpful. Since I'm
-not familiar with the erase counter: does the above data perhaps mean
-that write amplification is reduced by 40% in the workload that has been
-examined?
-
-Thanks,
-
-Bart.
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
