@@ -2,97 +2,149 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4E10C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 13:24:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE0DEC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 15:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347433AbjKBNYK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Nov 2023 09:24:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50904 "EHLO
+        id S232332AbjKBPEL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Nov 2023 11:04:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229571AbjKBNYK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 09:24:10 -0400
-Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FFC5D7;
-        Thu,  2 Nov 2023 06:24:07 -0700 (PDT)
-Received: by mail-lj1-x231.google.com with SMTP id 38308e7fff4ca-2c50906f941so13041831fa.2;
-        Thu, 02 Nov 2023 06:24:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1698931446; x=1699536246; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PVyozoiaeEmN1Mqspc/fEt9AeFWqakfpxz9o248h/pM=;
-        b=UML5CullAlYhiUYRshJaR+HWM22zcYguZHjyQSQhjxF2gm4NqXVRddxeP2O8sm1RQR
-         PoXCNQFM+NNW1npnXU1QwDJjySWY8sobkEll8rf5UJ1jndDJgHZlScBQAK6dFpV4BDlP
-         tpdhmIqL1DcxB+nQ/W1+DrJdcs6Ea3QuTh4m2zLY+8UImcQ6kIdjX8QIM4UugL1kDcbL
-         BhfumCVp7YDl12gvGdh9DHAcQaYnHd5cFUBXiTsHwJbhggK8P98lxG5x/NRwRR1dpLGk
-         VlQuqhOHfDrn5N/qOwDURyiYtXBZSHe6bf4aeUfrNiULy6rPIMphAcW0sCqPmds38BLJ
-         zzUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698931446; x=1699536246;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PVyozoiaeEmN1Mqspc/fEt9AeFWqakfpxz9o248h/pM=;
-        b=sy4ybIQFacRJmCwlGApPw0NueXPHeTtEGmkGubo1cesUubXvdynKY5jNqJrzhym+vv
-         i2Q703d987rXU65LHlu5K0M7pL0cRq7xwvXuT9PVk7BWG4vF/Jj7ShTKkw4zwL7cTBvl
-         +K9VjEVpCiJAWFK15s2xY7Uas73PJjyOeulsva1WP9g4Lu8uKJKCFNztt+sJsssCn682
-         bNHpHP7IYYjIIFu46BHTcT4Z20ZxN2etS42jfjFBlufDtXFp1jIZ0OQ3VpYIDSNkRUcM
-         84OelOW/an3GzE2DG18gXdECqc2wSAqn8ootHizllktF+FDIqhZxbLlLIHP/x8yriRPI
-         plew==
-X-Gm-Message-State: AOJu0Yxxe7AAn2/JxkuP1x0Xbf46y2B25NbqdQiJplDVQIiJ8b8Datvg
-        BnwG/zmek2G1jlVxlaQWrTHVKVFKLWc/LUAcyQ==
-X-Google-Smtp-Source: AGHT+IFw8HNGzdISsA+wihixwdCY6OGHchatKKYXsaUOf/XMUPEES0QyeTbJFs3CMlJoKYUCvmxw0QjnLeqQO6kPsOM=
-X-Received: by 2002:a2e:bc29:0:b0:2c5:b583:f167 with SMTP id
- b41-20020a2ebc29000000b002c5b583f167mr17564967ljf.34.1698931445262; Thu, 02
- Nov 2023 06:24:05 -0700 (PDT)
-MIME-Version: 1.0
-References: <20231102052426.12006-1-naomi.chu@mediatek.com> <20231102052426.12006-2-naomi.chu@mediatek.com>
-In-Reply-To: <20231102052426.12006-2-naomi.chu@mediatek.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Thu, 2 Nov 2023 22:23:53 +0900
-Message-ID: <CAGaU9a8Vn20Bx71mtUPYJgSgO11FXv4bNzScso7Dn2n36etaFw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/1] ufs: core: Expand MCQ queue slot to
- DeviceQueueDepth + 1
-To:     naomi.chu@mediatek.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+        with ESMTP id S232145AbjKBPEK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 11:04:10 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46D99181;
+        Thu,  2 Nov 2023 08:04:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1698937444; x=1730473444;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Cg9fqJR9fIKmGvrVxCoifHnJ6DMc/BhIrxzOVZ087yA=;
+  b=YpPHOmi+bxNPNZEyNUugMzLT9EpEGtSo5a63N1CYDgUAc85Cf+Yqzuks
+   HDKhGZIPm1OSq//733R2UuWgebH1jzifpwYFJOS1PTPosCGzyNflH4BJx
+   MnH8Xi23D/RaTwirj8zjdJckIcZqi/ZGU6ML1jWKAkkdwzdj8yU987cCC
+   /pGs/TLI7UxxxjTXjn5EyuOglN8/UrVxdwKCU90WlZy56Q+WaZnciBCk7
+   hl0NKhzYk2v7NhoQHVp8B51xQ2NNo3WFlP8/x+qAl0M362o0Vig2HcCbA
+   oaCXlU4euvIVz3OdASpYjE/6a1YPuqww2n89lbmBRs/iluihmqVwm1yKY
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10882"; a="373770355"
+X-IronPort-AV: E=Sophos;i="6.03,271,1694761200"; 
+   d="scan'208";a="373770355"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2023 08:03:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10882"; a="711170460"
+X-IronPort-AV: E=Sophos;i="6.03,271,1694761200"; 
+   d="scan'208";a="711170460"
+Received: from lkp-server01.sh.intel.com (HELO 17d9e85e5079) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 02 Nov 2023 08:03:46 -0700
+Received: from kbuild by 17d9e85e5079 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qyZEW-0001Xq-21;
+        Thu, 02 Nov 2023 15:03:44 +0000
+Date:   Thu, 2 Nov 2023 23:03:40 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Justin Stitt <justinstitt@google.com>,
+        Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Can Guo <quic_cang@quicinc.com>, wsd_upstream@mediatek.com,
-        peter.wang@mediatek.com, casper.li@mediatek.com,
-        powen.kao@mediatek.com, alice.chao@mediatek.com,
-        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
-        eddie.huang@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+        Justin Stitt <justinstitt@google.com>
+Subject: Re: [PATCH] scsi: libfc: replace deprecated strncpy with memcpy
+Message-ID: <202311022256.mWiYJshd-lkp@intel.com>
+References: <20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa@google.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 2, 2023 at 2:26=E2=80=AFPM <naomi.chu@mediatek.com> wrote:
->
-> From: Naomi Chu <naomi.chu@mediatek.com>
->
-> The UFSHCI 4.0 specification mandates that there should always be at
-> least one empty slot in each queue for distinguishing between full and
-> empty states. Enlarge the `hwq->max_entries` to `DeviceQueueDepth +1`
-> to allow UFSHCI 4.0 controllers to fully utilize MCQ queue slots.
->
-> Fixes: 4682abfae2eb ("scsi: ufs: core: mcq: Allocate memory for MCQ mode"=
-)
-> Signed-off-by: Naomi Chu <naomi.chu@mediatek.com>
-> ---
->  drivers/ufs/core/ufs-mcq.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Justin,
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on ffc253263a1375a65fa6c9f62a893e9767fbebfa]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Justin-Stitt/scsi-libfc-replace-deprecated-strncpy-with-memcpy/20231031-063815
+base:   ffc253263a1375a65fa6c9f62a893e9767fbebfa
+patch link:    https://lore.kernel.org/r/20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa%40google.com
+patch subject: [PATCH] scsi: libfc: replace deprecated strncpy with memcpy
+config: s390-defconfig (https://download.01.org/0day-ci/archive/20231102/202311022256.mWiYJshd-lkp@intel.com/config)
+compiler: s390-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231102/202311022256.mWiYJshd-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202311022256.mWiYJshd-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   In function 'zfcp_fc_gspn',
+       inlined from 'zfcp_fc_sym_name_update' at drivers/s390/scsi/zfcp_fc.c:951:8:
+>> drivers/s390/scsi/zfcp_fc.c:877:15: warning: 'strstr' argument 1 declared attribute 'nonstring' [-Wstringop-overread]
+     877 |             !(strstr(gspn_rsp->gspn.fp_name, devno)))
+         |              ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   In file included from include/scsi/libfc.h:21,
+                    from drivers/s390/scsi/zfcp_fc.c:19:
+   include/uapi/scsi/fc/fc_ns.h: In function 'zfcp_fc_sym_name_update':
+   include/uapi/scsi/fc/fc_ns.h:148:17: note: argument 'fp_name' declared here
+     148 |         char    fp_name[] __nonstring;
+         |                 ^~~~~~~
+
+
+vim +877 drivers/s390/scsi/zfcp_fc.c
+
+cc8c282963bd25 Swen Schillig    2008-06-10  844  
+038d9446a9e601 Christof Schmitt 2011-02-22  845  static int zfcp_fc_gspn(struct zfcp_adapter *adapter,
+038d9446a9e601 Christof Schmitt 2011-02-22  846  			struct zfcp_fc_req *fc_req)
+038d9446a9e601 Christof Schmitt 2011-02-22  847  {
+038d9446a9e601 Christof Schmitt 2011-02-22  848  	DECLARE_COMPLETION_ONSTACK(completion);
+038d9446a9e601 Christof Schmitt 2011-02-22  849  	char devno[] = "DEVNO:";
+038d9446a9e601 Christof Schmitt 2011-02-22  850  	struct zfcp_fsf_ct_els *ct_els = &fc_req->ct_els;
+038d9446a9e601 Christof Schmitt 2011-02-22  851  	struct zfcp_fc_gspn_req *gspn_req = &fc_req->u.gspn.req;
+038d9446a9e601 Christof Schmitt 2011-02-22  852  	struct zfcp_fc_gspn_rsp *gspn_rsp = &fc_req->u.gspn.rsp;
+038d9446a9e601 Christof Schmitt 2011-02-22  853  	int ret;
+038d9446a9e601 Christof Schmitt 2011-02-22  854  
+038d9446a9e601 Christof Schmitt 2011-02-22  855  	zfcp_fc_ct_ns_init(&gspn_req->ct_hdr, FC_NS_GSPN_ID,
+038d9446a9e601 Christof Schmitt 2011-02-22  856  			   FC_SYMBOLIC_NAME_SIZE);
+038d9446a9e601 Christof Schmitt 2011-02-22  857  	hton24(gspn_req->gspn.fp_fid, fc_host_port_id(adapter->scsi_host));
+038d9446a9e601 Christof Schmitt 2011-02-22  858  
+038d9446a9e601 Christof Schmitt 2011-02-22  859  	sg_init_one(&fc_req->sg_req, gspn_req, sizeof(*gspn_req));
+038d9446a9e601 Christof Schmitt 2011-02-22  860  	sg_init_one(&fc_req->sg_rsp, gspn_rsp, sizeof(*gspn_rsp));
+038d9446a9e601 Christof Schmitt 2011-02-22  861  
+038d9446a9e601 Christof Schmitt 2011-02-22  862  	ct_els->handler = zfcp_fc_complete;
+038d9446a9e601 Christof Schmitt 2011-02-22  863  	ct_els->handler_data = &completion;
+038d9446a9e601 Christof Schmitt 2011-02-22  864  	ct_els->req = &fc_req->sg_req;
+038d9446a9e601 Christof Schmitt 2011-02-22  865  	ct_els->resp = &fc_req->sg_rsp;
+038d9446a9e601 Christof Schmitt 2011-02-22  866  
+038d9446a9e601 Christof Schmitt 2011-02-22  867  	ret = zfcp_fsf_send_ct(&adapter->gs->ds, ct_els, NULL,
+038d9446a9e601 Christof Schmitt 2011-02-22  868  			       ZFCP_FC_CTELS_TMO);
+038d9446a9e601 Christof Schmitt 2011-02-22  869  	if (ret)
+038d9446a9e601 Christof Schmitt 2011-02-22  870  		return ret;
+038d9446a9e601 Christof Schmitt 2011-02-22  871  
+038d9446a9e601 Christof Schmitt 2011-02-22  872  	wait_for_completion(&completion);
+038d9446a9e601 Christof Schmitt 2011-02-22  873  	if (ct_els->status)
+038d9446a9e601 Christof Schmitt 2011-02-22  874  		return ct_els->status;
+038d9446a9e601 Christof Schmitt 2011-02-22  875  
+038d9446a9e601 Christof Schmitt 2011-02-22  876  	if (fc_host_port_type(adapter->scsi_host) == FC_PORTTYPE_NPIV &&
+038d9446a9e601 Christof Schmitt 2011-02-22 @877  	    !(strstr(gspn_rsp->gspn.fp_name, devno)))
+038d9446a9e601 Christof Schmitt 2011-02-22  878  		snprintf(fc_host_symbolic_name(adapter->scsi_host),
+038d9446a9e601 Christof Schmitt 2011-02-22  879  			 FC_SYMBOLIC_NAME_SIZE, "%s%s %s NAME: %s",
+038d9446a9e601 Christof Schmitt 2011-02-22  880  			 gspn_rsp->gspn.fp_name, devno,
+038d9446a9e601 Christof Schmitt 2011-02-22  881  			 dev_name(&adapter->ccw_device->dev),
+038d9446a9e601 Christof Schmitt 2011-02-22  882  			 init_utsname()->nodename);
+038d9446a9e601 Christof Schmitt 2011-02-22  883  	else
+820109fb11f24b Wolfram Sang     2022-08-18  884  		strscpy(fc_host_symbolic_name(adapter->scsi_host),
+038d9446a9e601 Christof Schmitt 2011-02-22  885  			gspn_rsp->gspn.fp_name, FC_SYMBOLIC_NAME_SIZE);
+038d9446a9e601 Christof Schmitt 2011-02-22  886  
+038d9446a9e601 Christof Schmitt 2011-02-22  887  	return 0;
+038d9446a9e601 Christof Schmitt 2011-02-22  888  }
+038d9446a9e601 Christof Schmitt 2011-02-22  889  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
