@@ -2,114 +2,115 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F5EC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 07:59:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 112B1C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 08:00:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234386AbjKBH7Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Nov 2023 03:59:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42188 "EHLO
+        id S1344540AbjKBIAQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Nov 2023 04:00:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229481AbjKBH7W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 03:59:22 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 066B5E7;
-        Thu,  2 Nov 2023 00:59:17 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id AC9E71F853;
-        Thu,  2 Nov 2023 07:59:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1698911955; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ybwwKa/cgRGGfYQ6tN6QVFtmPhHlMVKZso5z0IiB8j8=;
-        b=IsWsPOBANibPS82/8K46HjZWKfdFG7xw1YKrc+2zJWscCaHfZyPv9v0cU5SahaMOvaXgW0
-        kUPa6MXDhLbiqkOEmiv5JQsyC3H7fWb0nKaQOrbeDQnsEGWqQLVUID0NDa1+kkYeNXVH/t
-        fHGA6Y5VdLUpbDCenzFUi1UdBoBb7Hs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1698911955;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ybwwKa/cgRGGfYQ6tN6QVFtmPhHlMVKZso5z0IiB8j8=;
-        b=ZIcHeyL0u7tHWUxOfnr6exfRhCTAJQ9HDpdwnU6zx2IQ+da0XXHyKUw0Op3bPbzJdKB0wH
-        nfSfO57XHtkPMKDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B65D613584;
-        Thu,  2 Nov 2023 07:59:14 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id gFhNKtJWQ2W1PQAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 02 Nov 2023 07:59:14 +0000
-Message-ID: <2e7c1749-428b-4c88-8e0e-df6ed4d8def5@suse.de>
-Date:   Thu, 2 Nov 2023 08:59:14 +0100
+        with ESMTP id S234393AbjKBIAP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 04:00:15 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B80E128
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Nov 2023 01:00:12 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id a640c23a62f3a-9be02fcf268so89188166b.3
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Nov 2023 01:00:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1698912010; x=1699516810; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ehYt5zOxZrv3k+kn+bhN3ghAtclwBRikXVBpysq1NME=;
+        b=PpiNj1ua13XK8IFZuclX58oevIigwuwErfdoJEZzhxi+UpCnhqhMwsDGoqSu/9drSh
+         suQ3AC8iIQ9SJS/f5lIKnKOFxAAZBrXIe7w3X7tGPfoXMh/TI10Dc+toXzOYYkJBwHoX
+         Iqg16cVNM527RE5btdbgYlgz+ZHpZYF6nTQbvj63n7YfxlTy2uwpLrtpJF8XU1aZEH15
+         KSUrO0aufslP6NZVynUEm8OT0aDSRHw2YVhwq/utgH8Py6PiRSDk7ArWtA11N/d1Np/J
+         iNclf0fcnCecpgoVXdmCyDQ2KE7AUNMgXR/8LwXO3WmesNDHZfsZpBh2DzOnOIDzKNzW
+         Y31w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698912010; x=1699516810;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ehYt5zOxZrv3k+kn+bhN3ghAtclwBRikXVBpysq1NME=;
+        b=FXqkOgH7V18A2r+/EgHIw5cOjnTrFoA05X0OZj/Ht/M92x8Ic3175j2BkbjL+H9WCW
+         wJZ5hD82f1TZDXjRi/g8XCP5hqMtwTrJaEu3m9bXOZoUkZofRiUynjekycudGhUQc/TG
+         oWnWILEk0Vk6QLOkCpOo6fu+bQ9i2b9bfdbqm4ifda81TiHk2TZniTfM3ampDG79qP0D
+         gGALV26rNQuYADk8c7JKeTLNMguF7rnehI7SpTcQw/bHjCS3auT/OzUxQtwJBooZK7Sx
+         gUqS3s2v/MOVXaMoWmkHpApbhr5Ey/g4Fz8AMs7HT1EpeTkqV4U1+XUeBKo4qvyVzozP
+         6W5Q==
+X-Gm-Message-State: AOJu0YyitsFlx5XUBvp/rIKBz7hHSPYT6DcnArqw2M+eJn9U1ZQ4mb9L
+        3zQzf6JUkog/fDTJDZMz/Mxwce08MIxxYIcfmYM=
+X-Google-Smtp-Source: AGHT+IHWjWRRO6Mcn8tKtfOTZYkv54mevq8WGPj/g92aR20aSMgum+zjiZTka20pgTfwdBXPxYhY8ozzfGOcgkmFW3k=
+X-Received: by 2002:a17:907:c0b:b0:9ae:59c9:b831 with SMTP id
+ ga11-20020a1709070c0b00b009ae59c9b831mr4607396ejc.49.1698912010407; Thu, 02
+ Nov 2023 01:00:10 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 13/13] scsi: fnic: Improve logs and add support for
- multiqueue (MQ)
-Content-Language: en-US
-To:     Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
-Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
-        mkai2@cisco.com, satishkh@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20231027180302.418676-1-kartilak@cisco.com>
- <20231027180302.418676-14-kartilak@cisco.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20231027180302.418676-14-kartilak@cisco.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20231101071420.29238-1-zhe.wang1@unisoc.com> <f1be8bb5-7fac-45b3-a428-d5ba9b1ec260@acm.org>
+In-Reply-To: <f1be8bb5-7fac-45b3-a428-d5ba9b1ec260@acm.org>
+From:   Zhe Wang <zhewang116@gmail.com>
+Date:   Thu, 2 Nov 2023 15:59:58 +0800
+Message-ID: <CAJxzgGrcFYhrTr29_jS-LQ3qya9JkTxCp-286gkMY_HGhkuu5g@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Add compl_time_stamp_local_clock assignment
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Zhe Wang <zhe.wang1@unisoc.com>, martin.petersen@oracle.com,
+        jejb@linux.ibm.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        quic_asutoshd@quicinc.com, linux-scsi@vger.kernel.org,
+        orsonzhai@gmail.com, yuelin.tang@unisoc.com,
+        zhenxiong.lai@unisoc.com, zhang.lyra@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/27/23 20:03, Karan Tilak Kumar wrote:
-> Improve existing logs by adding fnic number, hardware queue,
-> tag, and mqtag in the prints.
-> Add logs with the above elements for effective debugging.
-> 
-> Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-> Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-> Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
-> Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
-> ---
->   drivers/scsi/fnic/fnic.h      |   2 +-
->   drivers/scsi/fnic/fnic_scsi.c | 127 ++++++++++++++++++++--------------
->   2 files changed, 77 insertions(+), 52 deletions(-)
-> 
-> diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-> index 87dab09a426d..0f1581c1fb4a 100644
-> --- a/drivers/scsi/fnic/fnic.h
-> +++ b/drivers/scsi/fnic/fnic.h
-> @@ -27,7 +27,7 @@
->   
->   #define DRV_NAME		"fnic"
->   #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
-> -#define DRV_VERSION		"1.6.0.56"
-> +#define DRV_VERSION		"1.6.0.58"
->   #define PFX			DRV_NAME ": "
->   #define DFX                     DRV_NAME "%d: "
->   
-Please move this change to the last patch.
-And I would wager that this change is more intrusive than a simple
-patch, so an update to 1.7 or even 2.0 is warranted.
+Hi Bart
 
-Otherwise:
+On Thu, Nov 2, 2023 at 12:43=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+>
+>
+> On 11/1/23 00:14, Zhe Wang wrote:
+> > The compl_time_stamp_local_clock assignment seems to have been
+> > accidentally deleted in the previous patch, so it needs to be added
+> > again for debugging needs.
+> >
+> > Fixes: c30d8d010b5e ("scsi: ufs: core: Prepare for completion in MCQ")
+> > Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
+> > ---
+> >   drivers/ufs/core/ufshcd.c | 1 +
+> >   1 file changed, 1 insertion(+)
+> >
+> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> > index 8382e8cfa414..b35977fa931f 100644
+> > --- a/drivers/ufs/core/ufshcd.c
+> > +++ b/drivers/ufs/core/ufshcd.c
+> > @@ -5388,6 +5388,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, in=
+t task_tag,
+> >
+> >       lrbp =3D &hba->lrb[task_tag];
+> >       lrbp->compl_time_stamp =3D ktime_get();
+> > +     lrbp->compl_time_stamp_local_clock =3D local_clock();
+> >       cmd =3D lrbp->cmd;
+> >       if (cmd) {
+> >               if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+>
+> Is anyone using the data tracked in compl_time_stamp /
+> compl_time_stamp_local_clock? I'm wondering whether the code for
+> tracking command duration can be removed. Otherwise the above patch
+> looks fine to me.
+>
+> Thanks,
+>
+> Bart.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+'compl_time_stamp_local_clock' can correspond to the timestamp of
+dmesg entries or other timestamps used by the UFS driver, such as
+'tstamp' in 'struct ufs_event_hist'. The timestamp that can be
+correlated with each other can be easily combined to record the
+sequence of command execution for analyzing problem scenarios, so I
+think it is quite useful.
 
-
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+Thanks,
+Zhe.
