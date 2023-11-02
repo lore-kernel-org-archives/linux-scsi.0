@@ -2,39 +2,54 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD06DC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 16:37:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A438AC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 19:15:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377020AbjKBQhu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Nov 2023 12:37:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39778 "EHLO
+        id S233257AbjKBTPj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Nov 2023 15:15:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbjKBQht (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 12:37:49 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AEAE19D;
-        Thu,  2 Nov 2023 09:37:46 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5709EC433C8;
-        Thu,  2 Nov 2023 16:37:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698943065;
-        bh=qvOVCM5IgQflaA5f7AYT2wFzjqGywSPcCDJvjeJKZc0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Yc/gvEa51TgPuaboK/BESRlcaeX+G5Fis1TYjltmRS7skKUXyn5SCDo8BgeVcpqH3
-         5e7QJkrrsJ72bnBHvB/7ljY/GSojYQ4korVtZkD4UW3eQ4mKsHhflkPZNgmHGJsV9T
-         qQMihW/BnXwyS5KPz6Y76NR49VItwH8Ulz0rhgcsepOSZlGkYMONGIO1m6oa9Qeakj
-         jCAGUyr+5l+t4YqP/5SppicQEHvFoj47dzkDmFN3F0a6DaMJEnTVeWvAKG3Ag+iAxE
-         hx/ikWexecIQL6g32a/tofRoTt6F1pi2OuiLrO1/qaAIJHaFn+CscP6/Xdvvc2GLhg
-         YfqyBqVr8pykA==
-Date:   Thu, 2 Nov 2023 22:07:28 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     naomi.chu@mediatek.com
+        with ESMTP id S229703AbjKBTPi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 15:15:38 -0400
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A53C0184;
+        Thu,  2 Nov 2023 12:15:36 -0700 (PDT)
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1cc938f9612so5437115ad.1;
+        Thu, 02 Nov 2023 12:15:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698952533; x=1699557333;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=U+32vB581hzmFY06dbkkG5Ku+sXQfolP2uRxPBBpw/0=;
+        b=GWkIOfB/vSmCGVbqi34tiA/A8gqxhEFHD6cWWEQSrASKuJq4XtnMKLe9UA4zoUbaXX
+         OwYxopRMcXtUY7+q53rrHKNmCeiEch09rbJW3bDSGzIhWbDNH7qPslok5Yo7R5wuDLg4
+         20swDRUYbZs70Y3ZIYj1KZj9yXMiGgwmn53zdH9/w4z8MNHdwX3Fs8kq0fJoShmKyHOo
+         +PdAYGQ9MyNCAVWny5Xm4q0YvUmq5Iif8JDJmyhTavrAoNGH33nikekoWF8/78qvVrHp
+         NqS3LQKMGAZe/LzTId7B9vjA1wgDgnW6YRnEzILg/uipnsy3BG2ZRM4ayprpV2YsKATP
+         R5JA==
+X-Gm-Message-State: AOJu0Yz71J/+uxA1ugB3sf586mMXWHJv1brV4d9VAr9yYtOMxvpn00RR
+        hQM0YU+pdXxdxh/8qbRXYesl8ug4TyA=
+X-Google-Smtp-Source: AGHT+IFyB05wi+a/eG/YQ1Na65WBGYrjXb0/KwBD8cobt8pwQS6rMJJxY+nlRQqkNhMEnWdm3gsKhQ==
+X-Received: by 2002:a17:902:ea01:b0:1cc:47a6:12b8 with SMTP id s1-20020a170902ea0100b001cc47a612b8mr14760705plg.46.1698952533338;
+        Thu, 02 Nov 2023 12:15:33 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:87f7:9784:4475:1cd4? ([2620:15c:211:201:87f7:9784:4475:1cd4])
+        by smtp.gmail.com with ESMTPSA id e5-20020a170902744500b001c60ba709b7sm80157plt.125.2023.11.02.12.15.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 02 Nov 2023 12:15:32 -0700 (PDT)
+Message-ID: <64a6315d-76df-49c8-aa57-a0576c53b6ef@acm.org>
+Date:   Thu, 2 Nov 2023 12:15:30 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/1] ufs: core: Expand MCQ queue slot to
+ DeviceQueueDepth + 1
+Content-Language: en-US
+To:     Manivannan Sadhasivam <mani@kernel.org>, naomi.chu@mediatek.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
@@ -46,55 +61,22 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         powen.kao@mediatek.com, alice.chao@mediatek.com,
         chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
         eddie.huang@mediatek.com
-Subject: Re: [PATCH v3 1/1] ufs: core: Expand MCQ queue slot to
- DeviceQueueDepth + 1
-Message-ID: <20231102163728.GB20943@thinkpad>
 References: <20231102052426.12006-1-naomi.chu@mediatek.com>
  <20231102052426.12006-2-naomi.chu@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231102052426.12006-2-naomi.chu@mediatek.com>
+ <20231102163728.GB20943@thinkpad>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231102163728.GB20943@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 02, 2023 at 01:24:24PM +0800, naomi.chu@mediatek.com wrote:
-> From: Naomi Chu <naomi.chu@mediatek.com>
-> 
-> The UFSHCI 4.0 specification mandates that there should always be at
-> least one empty slot in each queue for distinguishing between full and
-> empty states. Enlarge the `hwq->max_entries` to `DeviceQueueDepth +1`
-> to allow UFSHCI 4.0 controllers to fully utilize MCQ queue slots.
-> 
-> Fixes: 4682abfae2eb ("scsi: ufs: core: mcq: Allocate memory for MCQ mode")
-> Signed-off-by: Naomi Chu <naomi.chu@mediatek.com>
-> ---
+On 11/2/23 09:37, Manivannan Sadhasivam wrote:
+> Where is the changelog?
 
-Where is the changelog?
+I think it's here: 
+https://lore.kernel.org/linux-scsi/20231102052426.12006-1-naomi.chu@mediatek.com/
 
-- Mani
+Bart.
 
->  drivers/ufs/core/ufs-mcq.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 2ba8ec254dce..5c75ab9d6bb5 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -436,7 +436,7 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
->  
->  	for (i = 0; i < hba->nr_hw_queues; i++) {
->  		hwq = &hba->uhq[i];
-> -		hwq->max_entries = hba->nutrs;
-> +		hwq->max_entries = hba->nutrs + 1;
->  		spin_lock_init(&hwq->sq_lock);
->  		spin_lock_init(&hwq->cq_lock);
->  		mutex_init(&hwq->sq_mutex);
-> -- 
-> 2.18.0
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
