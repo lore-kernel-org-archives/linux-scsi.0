@@ -2,117 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB02C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 19:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C87EC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 23:11:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233257AbjKBTgw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Nov 2023 15:36:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54210 "EHLO
+        id S234422AbjKBXLL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Nov 2023 19:11:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbjKBTgu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 15:36:50 -0400
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26F89E7;
-        Thu,  2 Nov 2023 12:36:45 -0700 (PDT)
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1cc3542e328so10481785ad.1;
-        Thu, 02 Nov 2023 12:36:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698953804; x=1699558604;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UQJRwVGrqkbOP2rQwY3hByNiVCWEO2BBjk5kXR5X//4=;
-        b=LqLR0rJ/SJ3xBOwmJn72SnZ7URVGlhRYkKjiAr7XuXxCIiwTWsKx3e5ZV8uROgNahP
-         u8K5yBpsSI7awQYkTH5apY2MfcTYupfjKpk9hPb6+MXSJXskag6RzYvRWUbFiqKa42XZ
-         iwCDlqQl+8QrBRR+JA3iS5T+FLeIs6ryxJBM+pID1tQx8CRZb5LzpvEbE5EHrxLpkpXn
-         XnMF/73fM+0gFaLGDHmqQlFNoxND4JalCsvtmWOltlMxrPol6HqIPF7xYUpD5CZCU9Ex
-         PwBpc/zgmEaCkaxN76SenhmZ/YqIQ66BLS0btXcjzTxWeIQOJqibp053AHl2wBNCxvaO
-         b3xw==
-X-Gm-Message-State: AOJu0YzcFJuFqrds17jmpAvcgZ/ZWecOvGNepK0+ucImsP4f9zbUBYDe
-        mBHbEp5lqPi1RauPGGm1H2s=
-X-Google-Smtp-Source: AGHT+IGjt64blOz6dYkFcgNGT6Gy9r9Ym92d/0DHW94dRcRKZ52hcLIAnVsSmS3Ndc+1YjqmClwLTw==
-X-Received: by 2002:a17:902:8216:b0:1cc:15ec:3f53 with SMTP id x22-20020a170902821600b001cc15ec3f53mr15484618pln.36.1698953804483;
-        Thu, 02 Nov 2023 12:36:44 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:87f7:9784:4475:1cd4? ([2620:15c:211:201:87f7:9784:4475:1cd4])
-        by smtp.gmail.com with ESMTPSA id x11-20020a170902ea8b00b001c5fa48b9a0sm102827plb.33.2023.11.02.12.36.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Nov 2023 12:36:43 -0700 (PDT)
-Message-ID: <633b3970-ddd4-4dc6-b586-96ecc5b86456@acm.org>
-Date:   Thu, 2 Nov 2023 12:36:41 -0700
+        with ESMTP id S229628AbjKBXLJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 19:11:09 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BEE4133;
+        Thu,  2 Nov 2023 16:11:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1698966663; x=1730502663;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=t2dJVdoJc7fyWxD/M51aRldCu7biUnkgqQJ2sLnr7E4=;
+  b=geAlUZ81sC56p7Ui5sSDpAm+AwC8TSR95sNFOkK9gb/WS510X2gFM0Vh
+   Oqs/PgPLuzHv8yFVqDvra4eFVhntYKPb2jDKAvM7mUeX0LTkzFwhFW3EQ
+   V6BCHURdaJ/jK+r9diiNBT7BiCRRp2KC6HzCDYqUpYFPJ4HklCkoZU9So
+   U3VpjktNtQH/HqjQwDwcgvPBVIse0KAQkawS0A4+lJT/748n98/kLgY4m
+   7DYtykZB8fEaP83vQ1N3tWbqV2pMw3Q2jWLJdJit5kxIDtWSvRi0VcMRA
+   0imisFaZwzuruNkioNLRe1QS6jQWMkEG0xHJ3fDAo09Nm3WxBPIQ8NeCc
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10882"; a="373881135"
+X-IronPort-AV: E=Sophos;i="6.03,272,1694761200"; 
+   d="scan'208";a="373881135"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2023 16:11:02 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10882"; a="905151514"
+X-IronPort-AV: E=Sophos;i="6.03,272,1694761200"; 
+   d="scan'208";a="905151514"
+Received: from lkp-server01.sh.intel.com (HELO 17d9e85e5079) ([10.239.97.150])
+  by fmsmga001.fm.intel.com with ESMTP; 02 Nov 2023 16:11:00 -0700
+Received: from kbuild by 17d9e85e5079 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qygq1-0001zE-21;
+        Thu, 02 Nov 2023 23:10:57 +0000
+Date:   Fri, 3 Nov 2023 07:10:12 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Justin Stitt <justinstitt@google.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+        Justin Stitt <justinstitt@google.com>
+Subject: Re: [PATCH] scsi: libfc: replace deprecated strncpy with memcpy
+Message-ID: <202311030603.XIHsNBru-lkp@intel.com>
+References: <20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa@google.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] scsi: ufs: core: Process abort completed command in
- MCQ mode
-Content-Language: en-US
-To:     hoyoung seo <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        kwangwon.min@samsung.com, kwmad.kim@samsung.com,
-        sh425.lee@samsung.com, sc.suh@samsung.com,
-        quic_nguyenb@quicinc.com, cpgs@samsung.com
-References: <CGME20231101084246epcas2p32ae15219878d1c31e7d8a14c22489519@epcas2p3.samsung.com>
- <20231101084504.79087-1-hy50.seo@samsung.com>
- <e1ed8776-d8ad-49f2-bf8f-2759256e33e9@acm.org>
- <000001da0d42$1a1c8410$4e558c30$@samsung.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <000001da0d42$1a1c8410$4e558c30$@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa@google.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Justin,
 
-On 11/1/23 21:07, hoyoung seo wrote:
-> when the ufs host receives any error, the ufs driver executes the error-hander.
-> If the error-hendler attempts re-init, it must abort and organize unprocessed
->   requests.
-> The above operation is the same for both MCQ/legacy mode.
-> However, in the MCQ mode, if b or c is included in the following specs,
-> the OCS is updated to aborted, which is different from the legacy mode.
-> 
-> B. If the command is in the Submission Queue and not issued to the device yet,
-> the host controller will mark the command to be skipped in the Submission Queue.
-> The host controller will post to the Completion Queue to update the OCS field
-> with ‘ABORTED’.
-> C. If the command is issued to the device already but there is no response yet
-> from the device, the host software driver issue the Abort task management function
->   to the device for that command.
-> Then the host driver set SQRTCy.ICU as ‘1’ to initiate the clean up the hardware
-> resources. The host controller will post to the Completion Queue to update the OCS
->   field with ‘ABORTED’.
-> 
-> Unlike legacy mode, this phenomenon causes unintended behavior. (As shown in the log below)
-> 
-> [1:  kworker/u20:2:23157] ufshcd_try_to_abort_task: cmd pending in the device. tag = 9
-> [3:  kworker/u20:2:23157] Aborting tag 9 / CDB 0x2a succeeded
-> [4:      swapper/4:    0] sd 0:0:0:0: [sda] tag#9 UNKNOWN(0x2003) Result: hostbyte=0x05 driverbyte=DRIVER_OK cmd_age=0s // DID_ABORT
-> [4:      swapper/4:    0] sd 0:0:0:0: [sda] tag#9 CDB: opcode=0x2a 2a 00 00 d3 02 00 00 01 00 00
-> [4:      swapper/4:    0] I/O error, dev sda, sector 110628864 op 0x1:(WRITE) flags 0x800 phys_seg 256 prio class 2
-> 
-> 
-> For commands that have completed the abort operation in MCQ mode,
-> since OCS has been updated to aborted, it seems that it will be retransmitted only
->   when it is made to REQUEUE.
+kernel test robot noticed the following build errors:
 
-Hi Hoyoung,
+[auto build test ERROR on ffc253263a1375a65fa6c9f62a893e9767fbebfa]
 
-Thank you for having provided this clarification - this really helps.
+url:    https://github.com/intel-lab-lkp/linux/commits/Justin-Stitt/scsi-libfc-replace-deprecated-strncpy-with-memcpy/20231031-063815
+base:   ffc253263a1375a65fa6c9f62a893e9767fbebfa
+patch link:    https://lore.kernel.org/r/20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa%40google.com
+patch subject: [PATCH] scsi: libfc: replace deprecated strncpy with memcpy
+config: i386-randconfig-141-20231102 (https://download.01.org/0day-ci/archive/20231103/202311030603.XIHsNBru-lkp@intel.com/config)
+compiler: gcc-7 (Ubuntu 7.5.0-6ubuntu2) 7.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231103/202311030603.XIHsNBru-lkp@intel.com/reproduce)
 
-Regarding (B): I would appreciate it if this patch would be reworked
-such that no new 'if (is_mcq_enabled(hba))' statements are introduced.
-Has it been considered to modify ufshcd_mcq_sqe_search() such that it
-sets the SCSI result to DID_REQUEUE << 16 instead of modifying
-ufshcd_transfer_rsp_status()?
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202311030603.XIHsNBru-lkp@intel.com/
 
-Regarding (C): SQRTCy.ICU is only set by ufshcd_mcq_sq_cleanup() and the 
-only caller of that function is ufshcd_clear_cmd().
-There is only one function that calls ufshcd_clear_cmd() for SCSI
-commands, namely ufshcd_eh_device_reset_handler(). The latter function
-should not set the SCSI result code. All it should do is to abort all
-pending commands. The SCSI error handler will resubmit all aborted commands.
+All errors (new ones prefixed by >>):
 
-Thanks,
+   In file included from <command-line>:32:0:
+>> ./usr/include/scsi/fc/fc_ns.h:148:17: error: expected ':', ',', ';', '}' or '__attribute__' before '__nonstring'
+     char fp_name[] __nonstring;
+                    ^~~~~~~~~~~
+   ./usr/include/scsi/fc/fc_ns.h:174:18: error: expected ':', ',', ';', '}' or '__attribute__' before '__nonstring'
+     char  fr_name[] __nonstring;
+                     ^~~~~~~~~~~
+   ./usr/include/scsi/fc/fc_ns.h:183:18: error: expected ':', ',', ';', '}' or '__attribute__' before '__nonstring'
+     char  fr_name[] __nonstring;
+                     ^~~~~~~~~~~
 
-Bart.
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
