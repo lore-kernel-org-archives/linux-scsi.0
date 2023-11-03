@@ -2,98 +2,64 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C87EC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Nov 2023 23:11:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09417C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Nov 2023 01:26:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234422AbjKBXLL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Nov 2023 19:11:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57778 "EHLO
+        id S1377799AbjKCB0Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Nov 2023 21:26:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229628AbjKBXLJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 19:11:09 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BEE4133;
-        Thu,  2 Nov 2023 16:11:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1698966663; x=1730502663;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=t2dJVdoJc7fyWxD/M51aRldCu7biUnkgqQJ2sLnr7E4=;
-  b=geAlUZ81sC56p7Ui5sSDpAm+AwC8TSR95sNFOkK9gb/WS510X2gFM0Vh
-   Oqs/PgPLuzHv8yFVqDvra4eFVhntYKPb2jDKAvM7mUeX0LTkzFwhFW3EQ
-   V6BCHURdaJ/jK+r9diiNBT7BiCRRp2KC6HzCDYqUpYFPJ4HklCkoZU9So
-   U3VpjktNtQH/HqjQwDwcgvPBVIse0KAQkawS0A4+lJT/748n98/kLgY4m
-   7DYtykZB8fEaP83vQ1N3tWbqV2pMw3Q2jWLJdJit5kxIDtWSvRi0VcMRA
-   0imisFaZwzuruNkioNLRe1QS6jQWMkEG0xHJ3fDAo09Nm3WxBPIQ8NeCc
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10882"; a="373881135"
-X-IronPort-AV: E=Sophos;i="6.03,272,1694761200"; 
-   d="scan'208";a="373881135"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2023 16:11:02 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10882"; a="905151514"
-X-IronPort-AV: E=Sophos;i="6.03,272,1694761200"; 
-   d="scan'208";a="905151514"
-Received: from lkp-server01.sh.intel.com (HELO 17d9e85e5079) ([10.239.97.150])
-  by fmsmga001.fm.intel.com with ESMTP; 02 Nov 2023 16:11:00 -0700
-Received: from kbuild by 17d9e85e5079 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qygq1-0001zE-21;
-        Thu, 02 Nov 2023 23:10:57 +0000
-Date:   Fri, 3 Nov 2023 07:10:12 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Justin Stitt <justinstitt@google.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
-        Justin Stitt <justinstitt@google.com>
-Subject: Re: [PATCH] scsi: libfc: replace deprecated strncpy with memcpy
-Message-ID: <202311030603.XIHsNBru-lkp@intel.com>
-References: <20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa@google.com>
+        with ESMTP id S1377644AbjKCB0P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2023 21:26:15 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DEEA187;
+        Thu,  2 Nov 2023 18:26:12 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 45F0FC433C7;
+        Fri,  3 Nov 2023 01:26:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698974772;
+        bh=//5GHmxZWE+RdGR7IAxAjoJOrEPnrQndbNswNuG5uDQ=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=a0kn0bjMaoVRUCqfW9MmLvgratp2FEQhJKhPvG1zCdDlE5+06m4Ja/AesJ74wXKny
+         qbbEBVDNQ7G60/HnwWUUczeqq9oADnuU/3I9hOmKtM3WVumMEhUmBJcH/tz21KILqI
+         1v9GLX0/GMXXHJm/tuIlY/yx3ApcqqYGM5gMjwLKu+hUOGQBxuFVTwvbKxYCD6cIYB
+         cncK6xT972Hmfg8MOG7+Ok1me1O95nokYe1+xSDmKTNiQuAY4Xh6Q30QI09FNofGWy
+         GhB0LmxmDy/QdvOHh2r1hI8UugAB6MjM4ZpSy3t2WCxI20gck97VA+s8NJg5rCt6/X
+         IYcFFjGXg8Bzg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 3110EC395FC;
+        Fri,  3 Nov 2023 01:26:12 +0000 (UTC)
+Subject: Re: [GIT PULL] first round of SCSI updates for the 6.4+ merge window
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <4e8e9b1fd477b46139a77cb57323df5a7476b1b9.camel@HansenPartnership.com>
+References: <4e8e9b1fd477b46139a77cb57323df5a7476b1b9.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <4e8e9b1fd477b46139a77cb57323df5a7476b1b9.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+X-PR-Tracked-Commit-Id: a75a16c62a2540f11eeae4f2b50e95deefb652ea
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 6ed92e559a2ea572ae2bac5cbeddd1dc8cb667b6
+Message-Id: <169897477219.31710.8207407080323640161.pr-tracker-bot@kernel.org>
+Date:   Fri, 03 Nov 2023 01:26:12 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Justin,
+The pull request you sent on Thu, 02 Nov 2023 08:28:10 -0400:
 
-kernel test robot noticed the following build errors:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-[auto build test ERROR on ffc253263a1375a65fa6c9f62a893e9767fbebfa]
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/6ed92e559a2ea572ae2bac5cbeddd1dc8cb667b6
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Justin-Stitt/scsi-libfc-replace-deprecated-strncpy-with-memcpy/20231031-063815
-base:   ffc253263a1375a65fa6c9f62a893e9767fbebfa
-patch link:    https://lore.kernel.org/r/20231030-strncpy-drivers-scsi-libfc-fc_encode-h-v1-1-c08c2be6befa%40google.com
-patch subject: [PATCH] scsi: libfc: replace deprecated strncpy with memcpy
-config: i386-randconfig-141-20231102 (https://download.01.org/0day-ci/archive/20231103/202311030603.XIHsNBru-lkp@intel.com/config)
-compiler: gcc-7 (Ubuntu 7.5.0-6ubuntu2) 7.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231103/202311030603.XIHsNBru-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202311030603.XIHsNBru-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from <command-line>:32:0:
->> ./usr/include/scsi/fc/fc_ns.h:148:17: error: expected ':', ',', ';', '}' or '__attribute__' before '__nonstring'
-     char fp_name[] __nonstring;
-                    ^~~~~~~~~~~
-   ./usr/include/scsi/fc/fc_ns.h:174:18: error: expected ':', ',', ';', '}' or '__attribute__' before '__nonstring'
-     char  fr_name[] __nonstring;
-                     ^~~~~~~~~~~
-   ./usr/include/scsi/fc/fc_ns.h:183:18: error: expected ':', ',', ';', '}' or '__attribute__' before '__nonstring'
-     char  fr_name[] __nonstring;
-                     ^~~~~~~~~~~
+Thank you!
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
