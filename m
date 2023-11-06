@@ -2,49 +2,51 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D72ACC4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Nov 2023 14:48:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72A24C4167D
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Nov 2023 17:56:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231699AbjKFOsh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Nov 2023 09:48:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56992 "EHLO
+        id S231915AbjKFR4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Nov 2023 12:56:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231604AbjKFOsg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2023 09:48:36 -0500
-Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C41AB6;
-        Mon,  6 Nov 2023 06:48:34 -0800 (PST)
-Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-6ce2add34c9so2670860a34.1;
-        Mon, 06 Nov 2023 06:48:34 -0800 (PST)
+        with ESMTP id S229567AbjKFR4b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2023 12:56:31 -0500
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7670D99;
+        Mon,  6 Nov 2023 09:56:29 -0800 (PST)
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1cc3c51f830so35102795ad.1;
+        Mon, 06 Nov 2023 09:56:29 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699282113; x=1699886913;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pXUwQRgKYin84qt/NzMuWPYKQwAgJAzQ8CP9C3QMnWk=;
-        b=vvnLp1dgP1f73NpMVittH9GfaRp+k6pV7teZGfkB+9VCSjyhmF7LTLphqMlsP4WIz0
-         pIGru6LsYhcmVCxFqctIavqEdc1VbLUrIH2CmlNdYtKiN90JjaBDiJ2lVOnomH54dvGM
-         6YB2WiDKOUFnKtv8RYJUy6bVlA4/3TwhLrBPj7FkznUtS4PRCJwEPpeeTMiGtoopADSW
-         onTgd+J0l8FI0yV72y6Nz3pc2xhEUS6bZYySM0asJvRBn+kEBmN4ULqn1AKDqyCN/hEE
-         QqNVvMai6ZzCSwl46vIKMvHgLPez2Rgrfb5dNscD4M+6VOzkBuOW1XThSiB+zGWvXzUM
-         wddQ==
-X-Gm-Message-State: AOJu0YyXxMfEdwjf2a3k4pucVLBMtbEurlkBjvlPwic0rCua6f4RXqhY
-        O42p+zQ9+5zsNbSdo6Cyiw==
-X-Google-Smtp-Source: AGHT+IEUkOSozraK2toTye88mFjUT63PkKYjXw5R8snconc3gVvDkuHgI4cJmHvVc/G6yXILft5QbQ==
-X-Received: by 2002:a05:6870:af4a:b0:1ea:7f54:77af with SMTP id uy10-20020a056870af4a00b001ea7f5477afmr31023062oab.10.1699282113677;
-        Mon, 06 Nov 2023 06:48:33 -0800 (PST)
-Received: from herring.priv (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id m2-20020a9d7e82000000b006d32010d5a9sm1272976otp.71.2023.11.06.06.48.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Nov 2023 06:48:33 -0800 (PST)
-Received: (nullmailer pid 321808 invoked by uid 1000);
-        Mon, 06 Nov 2023 14:48:31 -0000
-Date:   Mon, 6 Nov 2023 08:48:31 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Ziqi Chen <quic_ziqichen@quicinc.com>
-Cc:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
-        avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        d=1e100.net; s=20230601; t=1699293388; x=1699898188;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=m2JiLGU3s2KC5CtuIF/v5v0hrQFMexnAPPTq2XcVAbU=;
+        b=faceN5SnOQATyVbwfLk+WX4wCVXmjFqxhsuoCIKkyxI+9ZM9ZGKZUffecTM5GvH4At
+         L7uhDBYoTKOsdlKUG+mU7GK+JXpj5FAk4BmhyiTrrHbBxaOOAldA+SkXHg71ysownnNf
+         RSjid2286FWOrTV1LSE9nYQMPW0Ezipgf2nBvokOxDbwbrj+rtFHuRdRboiR25Vc5gcR
+         SOsdyX/GauTADPjIaMGOYOwrrsxfKTCwyV8STqKy4Dp9+7Z+m60Bh1M6OKX442tazWll
+         45tfv/sB309XpxhP3xBOtAZNrEZELA1rdEYCcVBE28FcDrF7jcqQa2ce8bMHhanJVllF
+         or8w==
+X-Gm-Message-State: AOJu0Ywe+uI6HT0OOvtJcxLHY7T+6xvDsu3ph6IYtInQCnV2ShCDbJD2
+        p346ebcoeXAGahAHmwIrzPVUO+goQpA=
+X-Google-Smtp-Source: AGHT+IFIwKD7s3sm65uE7HT8rxOzB6AZxTRmE3vQkBIYawoH5/ytsoH4xg0bWJUM7sJt3cSmSdVFAQ==
+X-Received: by 2002:a17:902:6803:b0:1c9:ca02:645c with SMTP id h3-20020a170902680300b001c9ca02645cmr20888180plk.36.1699293388064;
+        Mon, 06 Nov 2023 09:56:28 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:ac50:9303:758b:edb9? ([2620:0:1000:8411:ac50:9303:758b:edb9])
+        by smtp.gmail.com with ESMTPSA id jj19-20020a170903049300b001b86dd825e7sm6191205plb.108.2023.11.06.09.56.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Nov 2023 09:56:27 -0800 (PST)
+Message-ID: <5850d5ac-e735-4358-866d-f410b00ba39d@acm.org>
+Date:   Mon, 6 Nov 2023 09:56:23 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] dt-bindings: ufs: Add msi-parent for UFS MCQ
+Content-Language: en-US
+To:     Rob Herring <robh@kernel.org>,
+        Ziqi Chen <quic_ziqichen@quicinc.com>
+Cc:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com, mani@kernel.org,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
         martin.petersen@oracle.com, quic_nguyenb@quicinc.com,
         quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com,
         linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
@@ -58,48 +60,30 @@ Cc:     quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
         "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
         <devicetree@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] dt-bindings: ufs: Add msi-parent for UFS MCQ
-Message-ID: <20231106144831.GA317907-robh@kernel.org>
 References: <1698835699-28550-1-git-send-email-quic_ziqichen@quicinc.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1698835699-28550-1-git-send-email-quic_ziqichen@quicinc.com>
+ <20231106144831.GA317907-robh@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231106144831.GA317907-robh@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 01, 2023 at 06:48:13PM +0800, Ziqi Chen wrote:
-> The Message Signaled Interrupts (MSI) has been introduced
-> to UFS driver since the MCQ be enabled.
+On 11/6/23 06:48, Rob Herring wrote:
+> On Wed, Nov 01, 2023 at 06:48:13PM +0800, Ziqi Chen wrote:
+>> The Message Signaled Interrupts (MSI) has been introduced
+>> to UFS driver since the MCQ be enabled.
+> 
+> Not really relevant when a driver supported MSI, but the when the h/w
+> did. Has UFS always supported MSI? It was added in some version of the
+> spec?
 
-Not really relevant when a driver supported MSI, but the when the h/w 
-did. Has UFS always supported MSI? It was added in some version of the 
-spec?
+MSI support has been introduced in UFSHCI version 4.0 and I think that
+the controller vendor can decide whether or not to implement MSI. Does
+this mean that the patch needs to be improved?
 
-> Hence in UFS DT
-> node we need to give the msi-parent property that point
-> to the hardware entity which serves as the MSI controller
-> for this UFS controller.
-> 
-> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> ---
->  Documentation/devicetree/bindings/ufs/ufs-common.yaml | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> index bbaee4f5..42309bb 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> @@ -73,6 +73,8 @@ properties:
->      description:
->        Specifies max. load that can be drawn from VCCQ2 supply.
->  
-> +  msi-parent: true
-> +
->  dependencies:
->    freq-table-hz: [ clocks ]
->  
-> -- 
-> 2.7.4
-> 
+Thanks,
+
+Bart.
+
