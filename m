@@ -2,216 +2,200 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C26C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Nov 2023 04:57:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ED47C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Nov 2023 07:37:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230216AbjKFE5F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 5 Nov 2023 23:57:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58152 "EHLO
+        id S231230AbjKFHhh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Nov 2023 02:37:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbjKFE5D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Nov 2023 23:57:03 -0500
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20554E1
-        for <linux-scsi@vger.kernel.org>; Sun,  5 Nov 2023 20:56:59 -0800 (PST)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20231106045656epoutp042a1bcaf544c945a8d51f6b2fc44fdda9~U78uEoYMn0072700727epoutp045
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Nov 2023 04:56:56 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20231106045656epoutp042a1bcaf544c945a8d51f6b2fc44fdda9~U78uEoYMn0072700727epoutp045
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1699246616;
-        bh=U6dPunAvDzVzWi+zjo0PCpXXGdDnO7ZKG0lsfwYdOes=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=CDRqZkm+vtEy+Dx69rx0PJsUE8esHPWV1Ea8rYxOiy5DdI+QLXbdzAEC+vSzel4Om
-         sGIcn6pi/WccrI42DmAxQ6c/ToPU53I9VztpmAgKgdZ05wnADbU6SFUWk0AuIBfOw7
-         8q+DXaev7Ezm2bOjWswHjpzV6KF0ypCAURiiyUXQ=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20231106045656epcas2p29f138f0ce57a4c06f0bd3c9fa73943e8~U78tgk2lz1969019690epcas2p2G;
-        Mon,  6 Nov 2023 04:56:56 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.90]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4SNzbW2jjqz4x9Pw; Mon,  6 Nov
-        2023 04:56:55 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        8B.93.09607.71278456; Mon,  6 Nov 2023 13:56:55 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20231106045654epcas2p34971ed3410694e727c35d820bd9817b5~U78sORkPj2690626906epcas2p3J;
-        Mon,  6 Nov 2023 04:56:54 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20231106045654epsmtrp146b139409a50a27fd7b45bbca963ce44~U78sNdRnu3251632516epsmtrp1S;
-        Mon,  6 Nov 2023 04:56:54 +0000 (GMT)
-X-AuditID: b6c32a48-bcdfd70000002587-99-654872179d15
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D4.70.08817.61278456; Mon,  6 Nov 2023 13:56:54 +0900 (KST)
-Received: from KORCO118546 (unknown [10.229.38.108]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20231106045654epsmtip2d4fdad3f7ba3b45ff35315ac7860b26c~U78sArych1106411064epsmtip2q;
-        Mon,  6 Nov 2023 04:56:54 +0000 (GMT)
-From:   "hoyoung seo" <hy50.seo@samsung.com>
-To:     "'Bart Van Assche'" <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <beanhuo@micron.com>, <kwangwon.min@samsung.com>,
-        <kwmad.kim@samsung.com>, <sh425.lee@samsung.com>,
-        <sc.suh@samsung.com>, <quic_nguyenb@quicinc.com>,
-        <cpgs@samsung.com>
-In-Reply-To: <633b3970-ddd4-4dc6-b586-96ecc5b86456@acm.org>
-Subject: RE: [PATCH v1] scsi: ufs: core: Process abort completed command in
- MCQ mode
-Date:   Mon, 6 Nov 2023 13:56:54 +0900
-Message-ID: <028001da106d$a9ac9330$fd05b990$@samsung.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQI/NadRec19V/jm3RVDFrtg0RqXhwIoHnBGAuFKLQkCpak+jQLnFFpSr0kiZdA=
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA01TfUwTdxj21zvLgZbcahk/m4U1p9kCFWiRwsFg6FbNBRhhOnUu2cqNXgr2
-        69Irhm2Z1oUClkU+zFwsY5kkw404cBWRASZYGQwKWuOIDJDgNgjlawVjlw4xo7Ru/Pe8z/u8
-        eZ/n94Ehwl6+GCs2mBmTgdYR/Ai0/XYsGR9tohiZ3x5JTn3dzic9/hE+eevRWZS84PUjpMcZ
-        SzaOtvPI66M/oeRvbT+j5P3Or/hk1YMOPnm5/xmP/GK2P4y0PRwF5LfPFtF9kdT9X3OomsYe
-        QP3dWsmnlqfHUKq2+xR1rq0ZUI8dMVRFTxUvH3tPm1HE0GrGJGEMhUZ1sUGTSeQcVr2pUqTI
-        5PHyNDKVkBhoPZNJKHPz4w8W69ZdE5KTtK5kncqnOY5IfD3DZCwxM5IiI2fOJBhWrWNT2QSO
-        1nMlBk2CgTGny2WyJMW6sEBbdObqp+xoQmnj46dhFvCX1AbCMYgnw6aRLxEbiMCEeAeA1pG7
-        W4PFCoADHRVosPABuNA1hT4fWXIthFQ3ARy5eCOk8gD46KkfBFR8PA5WL7bxAw0RXobAuam2
-        sEAjHH8Nrv6zhgTwDvwonPT38WwAw1B8N2xxHQrQAjwN/u68CoL4BThw8c+NzQguhU2X5pGg
-        Cwn0TzdtDWARngedcxYQ1Ihg/dnyjUAQd2Nw1novNKCEfS3WEN4B5/qDfiAuhp7q8hDWwjPd
-        P4RwKWy4dh4E8V5on6kAAZ8IHgtbOxMDEOK7YO9YyFokrLy9FpoUQMuPq2FBiQBWlguDNAGH
-        GsZDNIS36nU1gLBvymjflNG+KYv9/7XfALQZvMiwnF7DcEls8n9XXWjUO8DGc46jOkD9ojfB
-        CXgYcAKIIYRIsJZFMUKBmv7oY8ZkVJlKdAznBIr1Q69FxFGFxvX/YDCr5MlpsuSUFHlqkkKW
-        SkQLJq0NaiGuoc2MlmFYxvR8joeFiy28Kkv0wBPPO3f1bPm4O0Nf8+6RY/Pam5NlbLpPnpfx
-        veSBe9qbvcUrpyuUlzwOZatQDSLqZGzBYeU1d+TQuezlJ129H3oP1cmYldxOX9R1xWDpVBfu
-        3rJ0px0Z9tkNJwqZVxzbVD3jZK3sdJ5rouHluivLD49OjEmThdLtnyzsLKo8vse9X1slsb+1
-        dnwy59V7g0v7brRkDe4f1sy4Vj6b0LzRXHbh5Afv/2I44HPGLObtWVVUc/jbu9GZqEHxQMfB
-        O+kF0bWOXdaXhh0HmmynFNkpfUOfD+SMbVMUd2s0q6L8Y7mnE/tjXJP9f8xerhbPfdeuy9qp
-        237FJj1xZF60l0C5Iloeh5g4+l+Bo7MrVwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrOIsWRmVeSWpSXmKPExsWy7bCSvK5YkUeqwZQDOhYP5m1js3j58yqb
-        xcGHnSwW0z78ZLZ4eUjTYtGNbUwWW2/sZLG4ueUoi8XlXXPYLLqv72CzWH78H5PF1BfH2S26
-        7t5gtFj67y2LA5/H5SveHhMWHWD0+L6+g83j49NbLB4T99R59G1ZxejxeZOcR/uBbqYAjigu
-        m5TUnMyy1CJ9uwSujLv35rAVNCpX3F66nrmB8at0FyMnh4SAicS7029Yuxi5OIQEdjNKrOtc
-        wA6RkJD4v7iJCcIWlrjfcgSq6DmjxJW5t1hBEmwCWhL9b7ewgSREBKYwS3xYuJ4Zomo6k0Tj
-        pR1sIFWcAtYSv3/9ZQaxhQVCJLY2rgIay8HBIqAise50EEiYV8BS4tGhDYwQtqDEyZlPWEBs
-        ZgFtiac3n8LZyxa+Zoa4SEHi59NlYEeICPhJHHrVwAhRIyIxu7ONeQKj0Cwko2YhGTULyahZ
-        SFoWMLKsYpRMLSjOTc8tNiwwykst1ytOzC0uzUvXS87P3cQIjkstrR2Me1Z90DvEyMTBeIhR
-        goNZSYT3r71HqhBvSmJlVWpRfnxRaU5q8SFGaQ4WJXHeb697U4QE0hNLUrNTUwtSi2CyTByc
-        Ug1M2csz3rTsbju8m+HQjHNXJ7CenJ4cPz/3as/iCdFPu2XmS2ftCOGdvV/MP/q4B2OCUvqT
-        Az4rzsR1Wi7w8v6isnlFTeUfpt1CdcLrtwXeD9isfaB55dbXvUm5+pKz4lnTRPLUjRKub5q0
-        vWF3lmK/l8ysK68CE2ablhv+CZZVMf766F1+qonAsp0VN3XSMrQNrqvNtO0/ef60U95sju7o
-        Pa28E8W4alh7NGbu116exjN98pf5bA9iH85l6VC471Q+d1f8tb58/gybn1tl9yYcOFsq3llS
-        9uPstz09ykXFsmJbYyKnFu1LUZslyna8YFOs4LnouZflFVxv6WxOXKJmJNjyxl9/xURNqUkR
-        U9iUWIozEg21mIuKEwFLPJLSOgMAAA==
-X-CMS-MailID: 20231106045654epcas2p34971ed3410694e727c35d820bd9817b5
-X-Msg-Generator: CA
+        with ESMTP id S231194AbjKFHhd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2023 02:37:33 -0500
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D764AD76
+        for <linux-scsi@vger.kernel.org>; Sun,  5 Nov 2023 23:37:26 -0800 (PST)
+X-UUID: 51ded4267c7711ee8051498923ad61e6-20231106
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=QyyIqW1lizISfkX1JMAzIm2VtsioUuJStnwrw0pfCbU=;
+        b=VygxTdqJXgvLT9t9r1lt2c2zS2z6J8XAFI06Ft6ChzAIJDn5WUnM/DGARfFp+F/2EWj9jqc0K/BW88EmnPXjFMLhdt3vzVoS7QqvfQtz7isVHHRMT1a2eUwuFg38mTWmwHovFzC8COBCGgfw4mWc+P2blB5YDPR/vqQZdUdIjc0=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.33,REQID:21a80652-4d0f-465e-a695-f40010b8b078,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:364b77b,CLOUDID:2b250f95-10ce-4e4b-85c2-c9b5229ff92b,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:
+        NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: 51ded4267c7711ee8051498923ad61e6-20231106
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 660273532; Mon, 06 Nov 2023 15:37:21 +0800
+Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Mon, 6 Nov 2023 15:37:20 +0800
+Received: from APC01-PSA-obe.outbound.protection.outlook.com (172.21.101.237)
+ by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Mon, 6 Nov 2023 15:37:19 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hO/V0LwE/3MBYITX33HRgvqDuVRhNosAelMc9uA7n7zLcJHCWYLO3emwFxVJkQ67Lst2LWyiUEhOqyYqqaPaVhvb9DENlW/ixGiwlNW/RiOsMmaxSUzkBG+yjgSuNcD6zTZDbB8N4c8YS+6ZcWiGf81Yk6JSbjLIkOc5tE1LymnIH3abD6wTyBx1P8uB6+fXZht3usfYxk8XLq3XS8V9xVuKQI85KEp35Z9XCLH5sDYUBTVzhqRZPNMZ9YOh4g/Y8AIjB6FoHOmu8EpKi6Az6o0R64H7uLE7swONmIWdGrIBdgGZ+jW0n8D/JlE2fUeANqRLJlROYa2FkpWuEenU8A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=QyyIqW1lizISfkX1JMAzIm2VtsioUuJStnwrw0pfCbU=;
+ b=KR5gRseP1Q3apiUwVICE3BviC7iumuRYC90V0ZABo8ToKghh9bxzQjFyJws5cFJe7EClf6Ie/MUzIPI1lBxKdY18A09+fsKhvoLLgaXLFI6LlVJgCJ8fow/bf+SsdwhavlhVCp24hOgzi24dYEtw8Bqjj18VP8O+CL4mSwzuRJUl0Sa+T+pMTorXRKq8D8CTi8F2s9DTvc+OkBBXH8QLWF8bitDZGeFLE+b5ThcXSMp0h2HKLz0dgXdch8tHIvA+PS4yEn88wwba4q436/2NTBpLXDG9qMfNkhFOwC4wQbA6doJHZLL+l1SaD6asB64Rk1pk/k+sbgpC4IakOt1rsw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
+ dkim=pass header.d=mediatek.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QyyIqW1lizISfkX1JMAzIm2VtsioUuJStnwrw0pfCbU=;
+ b=sOrFG2YR0yTsRX1JCBH6mR7TSlAPuL4ogXAgVGY+zG06ABrcUgLKpY9FRoB7QTsKSyoeUonT7J+fttpdRd1qKQSyttb4zyz2ObKZCBHPiVeZ+1fJO/xo6GpUi5DG2baFmZ6GX7aCSRsKA9LOzo8lacrb4D3cN03vo8l8Y3p7wmM=
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
+ by KL1PR03MB7079.apcprd03.prod.outlook.com (2603:1096:820:d5::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6954.27; Mon, 6 Nov
+ 2023 07:34:15 +0000
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::fe9d:2778:cc48:6b1d]) by PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::fe9d:2778:cc48:6b1d%3]) with mapi id 15.20.6954.027; Mon, 6 Nov 2023
+ 07:34:15 +0000
+From:   =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= 
+        <peter.wang@mediatek.com>
+To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        =?utf-8?B?U3RhbmxleSBDaHUgKOacseWOn+mZnik=?= 
+        <stanley.chu@mediatek.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+CC:     "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        =?utf-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= 
+        <jiajie.hao@mediatek.com>,
+        =?utf-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
+        =?utf-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= 
+        <eddie.huang@mediatek.com>,
+        =?utf-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= 
+        <Alice.Chao@mediatek.com>,
+        wsd_upstream <wsd_upstream@mediatek.com>,
+        =?utf-8?B?TGluIEd1aSAo5qGC5p6XKQ==?= <Lin.Gui@mediatek.com>,
+        =?utf-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= 
+        <Chun-hung.Wu@mediatek.com>,
+        =?utf-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>,
+        =?utf-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?= 
+        <Chaotian.Jing@mediatek.com>,
+        =?utf-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
+        =?utf-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
+        =?utf-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?= <Qilin.Tan@mediatek.com>
+Subject: Re: [PATCH v1] ufs: core: fix racing issue between ufshcd_mcq_abort
+ and ISR
+Thread-Topic: [PATCH v1] ufs: core: fix racing issue between ufshcd_mcq_abort
+ and ISR
+Thread-Index: AQHaCLGs15USPRn4k0iVCY5EmXuIgrBourMAgAQ7MQA=
+Date:   Mon, 6 Nov 2023 07:34:14 +0000
+Message-ID: <6a46d72866b5fb7fc299ac7af6b5055bf454fd78.camel@mediatek.com>
+References: <20231027084329.4067-1-peter.wang@mediatek.com>
+         <a017262a-b367-4500-90a9-bc099fe08a5d@acm.org>
+In-Reply-To: <a017262a-b367-4500-90a9-bc099fe08a5d@acm.org>
+Accept-Language: zh-TW, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=mediatek.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|KL1PR03MB7079:EE_
+x-ms-office365-filtering-correlation-id: 57f3e9ac-1c58-441f-7b81-08dbde9ac729
+x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: +87u0AY8RiOSj2WivRWEIV+iiHrk+SMMH65ipj4NvXrbRBzuv0L02u6VOAPPOGKjmszsMb2JOOgMk8D7PB2ogObJNdVBf/kZy2U0JAwohMel9LmpGMLEcUAA4LbaWmsJGR57c/I3q4+9aZOnNyhoDCxvbCdKgd+Y3UVBTGhjgINaB2B0Oj87rL930+UMfnQLjGzgAOv3feZq2abEZU6ZDNF46WWcNZBaLhGEvwsEzqdJHppSCvnQJ87VmHwutCzNG6543rKXysVuPljNrcuPpgQSENH+Tnrpe0AoLI6OmTb7WSBRVS8/qJ9UMUvphEtZdpgDnlRb4i2gsD2O3NOORNVZz1HKA0wAjZbETxYR6bLUz96vIUvAmF/QLM3kHW/pPyrRBGG9YnSOmoWPy2Ez/TpcVdTWruXm4+DGh6cPmk6lE1NOkgLETn+nf2fEvrJ83STJ5Cj6mm7MOLVNotouJi4KJZOPCjtamQqEr2+xfR73AqhKMiVzpNtLof6KRo4HSHiUaIkx4EPkpC1AzutKcM8H0TgxUgfU+YV+s5/PRuY3LOO0tpkOPjPaGnztNYh03Ob9AURwWyTmASgG5CHCYyiGYx0BEIkEdB6qsJNPXTANM9E++RW8Mf8Yd+O3OjL4O/wQyPGvMf2yTmtuUCjlZbBQGRNmcGqkRqxVFI+6W+WjQPQntumNyxRtByQskqN3p83JCYoh2OMgA1bBp1gI8J2OCQS1uxx8L8onEfFmwX8=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376002)(136003)(396003)(39860400002)(346002)(366004)(230273577357003)(230173577357003)(230922051799003)(1800799009)(451199024)(64100799003)(186009)(38070700009)(122000001)(6486002)(64756008)(53546011)(6512007)(66556008)(478600001)(6506007)(76116006)(110136005)(66446008)(66946007)(66476007)(91956017)(85182001)(36756003)(86362001)(107886003)(71200400001)(26005)(2616005)(38100700002)(4744005)(83380400001)(8676002)(2906002)(41300700001)(54906003)(5660300002)(4326008)(316002)(8936002)(99106002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?d1N1NmREelBrTm0wQmxnalpYMWNCYzRjZlJFRDltTVhIcTROZmhFaHhlc0dl?=
+ =?utf-8?B?RE1rVWdKNlRTYy8xQW95SUI3Wnp5T1d6RWZHdjF1ZmtwclJjSWhWQU5oMGVi?=
+ =?utf-8?B?OGFXSTQvSi84YjdORU9zUFFCTXpBYVdWcFl1N1hFck8wVTdXeHRKeVdqYkE0?=
+ =?utf-8?B?L3huKy9EaHh4Um1YeDlUYms1VDNZdGJJSGlKQTJEd0h4OVYvamFCTkxZRXd0?=
+ =?utf-8?B?ZWIyV2E2TUtERUpSK2o0U2V4b3JsSHRpSXUrY0FKdzNqakdKT0d4eDNRNUJ4?=
+ =?utf-8?B?c0M4WEF5ekIyZGsvN0ZhRlV0U2lUZm96bWlhYVYwMWR4MStIajdoOVZ2WTZM?=
+ =?utf-8?B?cHJ2bU1FVmtsb1Z6bTZhK2IrNytidi9DTG5iSzNNdHd0MDFhZTlvbHNlbGMx?=
+ =?utf-8?B?dDVBaWZIU2c4NG5RZWFZMUpENlNNcTdlcVd5RTRUcUNGVGVMTFJUWGpXakRk?=
+ =?utf-8?B?NzRQVDh3cnVxN0wwSWxxNFYyb1JCRDFyWFRldWtWRlN2c1pmR3A2Mkp1MWlY?=
+ =?utf-8?B?ZmpJeTN3SU81ZkpsV2gvWTVyVHNSdllTSDZFQzFhUXR0THFCK2s1WmtCd1Rm?=
+ =?utf-8?B?SytUc2JSZUVrVmxOSVFXaHJVais3UnRBR2pabUNlS0xhbEVjb2J2MnVNdnNU?=
+ =?utf-8?B?dXRFSGNGa1VMRGJsZEFXYS9ST1RtTFhvNS9Qd0V3WWhsOGppbU9zelJYTnJY?=
+ =?utf-8?B?TzEyVUx5dDllREZrSDlVNzRiMnpqKy9VYy9Tci9NYWdOcHNqdkUreGk0MGx1?=
+ =?utf-8?B?anJiRXhiWlRQVGUvUlhSK0lpMFJ4WjNHY3hTc29DSG5pZWNHVzZHb3IrQVpY?=
+ =?utf-8?B?K2xLOVRtWFlUY3VLTGZxb3lzZHh2alpraXY1N0JYME93RWRrVm5WS3l4cHlP?=
+ =?utf-8?B?UVJVODl2OGNDQWx0amJqNkNKMVhuRGJCME9zVzlCaWpuTU9CZm5oeHpraEIv?=
+ =?utf-8?B?UFZDZ1d2c3EybDFEOHd2SVVOOE00cTkwWnZKa3pFaHNxeTQrc3ZRK0dCeDVX?=
+ =?utf-8?B?SnJyaUxtU2NyT3hFc0hIVVB1Mjg5S0ZDVGNUSGNoMjlQZWdENkwzTTN4M0FU?=
+ =?utf-8?B?cEUzS29tMnZybTNwbjlZZzlhdnJJUzVZZ2xPVW1RZ1JGdDhQWlVIalV2Rllt?=
+ =?utf-8?B?dXpubTg1QzZVcFdKR0loZ1VxZ2VkdXFob002Um9pMnFwQ2ZDcis3NXNyWGhx?=
+ =?utf-8?B?Yk43VEQwcGZhQ1hqa0NrcnA5eURpY1VFN3d4MGg0MmhvdFo0eGlmakI2TDJi?=
+ =?utf-8?B?K3lRNWdOU3NNRmFhNzRHNDQ0b1hFRFVhR2ZjVm1BS2E2Z2VnUXppekMyY3E0?=
+ =?utf-8?B?c3ltY1ZWR2x4eWtjQTZXT2JZOFRDenNWd0dxNDdHbU10S1RtajlBeVgzOVBo?=
+ =?utf-8?B?bmp6bWxLcXVLQ2NZQUVudGVoclRPSVpYazVmcmhuOHpycmYwL3NZWnlMeFkz?=
+ =?utf-8?B?NkRzdEF0YlVveEg3QXZvMUhuVmRuV1BtVGRBVGRYQlJIVXNCRnJqVnY3Uk8x?=
+ =?utf-8?B?dHgvRFhnZktleDJFOVJFdTNBZmtEaVF1MmZ2aHh1bjRXWGZrT3o0NlRpbVZE?=
+ =?utf-8?B?ZTBWZ2NaYmxQUFVobjFubUhpNjRwWjdOVjZMU2dpbkJ3cFM0TU5RV3BERW1q?=
+ =?utf-8?B?azB1MWFHbTRJYnlUV1FIWlpPSFBUWFljNHRhN3AyeUlXYkdUVHd2UUNTYXBr?=
+ =?utf-8?B?UlNFSUZiMWVxcks0OHBSU0dqT1BxVkdSdUFFd3RFaWxMT25ZWEdsZStIWERR?=
+ =?utf-8?B?eWFGMTdjMzFneFFFNGkzYWNmU0grZ000MWloNzZUZEQxVnRLbitjMFRRTlZo?=
+ =?utf-8?B?OEx0YXhYM1M0UndEeVptS1ZCcm9NYk03WVpRYTdxWnBSSU9Mc0hVczhEWEFC?=
+ =?utf-8?B?TEwrb1R4dXliZG9LZnJuc3NnRVk2bnFBVExHWVRkNGg5WEkvYWxzNUlEekR3?=
+ =?utf-8?B?VmZCTnZkcU94YkhWTVM0V080YVB6VTh1K3JoaGFiL3MzRU9PZTBLSEEwbXhw?=
+ =?utf-8?B?TG83azNXRFNjeFRxQlFMNm9RWExYQkFIOFRkOExrb3E1amZSbldvbExyZXJt?=
+ =?utf-8?B?aFlxQTlkdjZ3eGxJbUM0T2w3dFZuUTR0cTR1cFp5a3hMNTdzTUd5UmtrWHI4?=
+ =?utf-8?B?YnF4RExIb0hwcVZCMG5oeWMyb0p4UjZoanhQUUcwNld2MWpoM3pYRUdNSTZ3?=
+ =?utf-8?B?WVE9PQ==?=
 Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20231101084246epcas2p32ae15219878d1c31e7d8a14c22489519
-References: <CGME20231101084246epcas2p32ae15219878d1c31e7d8a14c22489519@epcas2p3.samsung.com>
-        <20231101084504.79087-1-hy50.seo@samsung.com>
-        <e1ed8776-d8ad-49f2-bf8f-2759256e33e9@acm.org>
-        <000001da0d42$1a1c8410$4e558c30$@samsung.com>
-        <633b3970-ddd4-4dc6-b586-96ecc5b86456@acm.org>
+Content-ID: <C6ABF682A2E4FC40B53BC02E2A40A1BE@apcprd03.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 57f3e9ac-1c58-441f-7b81-08dbde9ac729
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2023 07:34:15.0706
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: wfYhuo3YgIFOVuzGQt+2+/Ba/Q4tMPgXlqZBLfSMCz7gtI0b2nEC2PBdD0ldwWLZnvtCUfhzDxL+vQBFJCCcNg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR03MB7079
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--21.188200-8.000000
+X-TMASE-MatchedRID: ge9e+QLSeazUL3YCMmnG4qCGZWnaP2nJjLOy13Cgb4/n0eNPmPPe5KWz
+        WoIRiV9DM/Se/q/gEyf5MiS7M8c1eGmXMi7Ntyo2h6L+ZkJhXC75VvfCjIxlu5722hDqHosTF5m
+        VOro0mqbZOwGrsd3Jn9jTtjpvVy0grRlLslggfyrmAId+2bAQwsDyPNek9e/amyiLZetSf8n5kv
+        mj69FXvAOkBnb8H8GWd2QOzJPxag5q8/xv2Um1avoLR4+zsDTtAqYBE3k9Mpw=
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--21.188200-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: 0266FBBE0FE2C6A207516F51AC9EB326BDCD7C7E84840B5ADB49262D068792D32000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Bart Van Assche <bvanassche=40acm.org>
-> Sent: Friday, November 3, 2023 4:37 AM
-> To: hoyoung seo <hy50.seo=40samsung.com>; linux-scsi=40vger.kernel.org; l=
-inux-
-> kernel=40vger.kernel.org; alim.akhtar=40samsung.com; avri.altman=40wdc.co=
-m;
-> jejb=40linux.ibm.com; martin.petersen=40oracle.com; beanhuo=40micron.com;
-> kwangwon.min=40samsung.com; kwmad.kim=40samsung.com; sh425.lee=40samsung.=
-com;
-> sc.suh=40samsung.com; quic_nguyenb=40quicinc.com; cpgs=40samsung.com
-> Subject: Re: =5BPATCH v1=5D scsi: ufs: core: Process abort completed comm=
-and
-> in MCQ mode
->=20
->=20
-> On 11/1/23 21:07, hoyoung seo wrote:
-> > when the ufs host receives any error, the ufs driver executes the error=
--
-> hander.
-> > If the error-hendler attempts re-init, it must abort and organize
-> unprocessed
-> >   requests.
-> > The above operation is the same for both MCQ/legacy mode.
-> > However, in the MCQ mode, if b or c is included in the following
-> > specs, the OCS is updated to aborted, which is different from the legac=
-y
-> mode.
-> >
-> > B. If the command is in the Submission Queue and not issued to the
-> > device yet, the host controller will mark the command to be skipped in
-> the Submission Queue.
-> > The host controller will post to the Completion Queue to update the
-> > OCS field with =E2=80=98ABORTED=E2=80=99.=0D=0A>=20>=20C.=20If=20the=20=
-command=20is=20issued=20to=20the=20device=20already=20but=20there=20is=20no=
-=0D=0A>=20>=20response=20yet=20from=20the=20device,=20the=20host=20software=
-=20driver=20issue=20the=20Abort=0D=0A>=20task=20management=20function=0D=0A=
->=20>=20=20=20to=20the=20device=20for=20that=20command.=0D=0A>=20>=20Then=
-=20the=20host=20driver=20set=20SQRTCy.ICU=20as=20=E2=80=981=E2=80=99=20to=
-=20initiate=20the=20clean=20up=0D=0A>=20>=20the=20hardware=20resources.=20T=
-he=20host=20controller=20will=20post=20to=20the=20Completion=0D=0A>=20Queue=
-=20to=20update=20the=20OCS=0D=0A>=20>=20=20=20field=20with=20=E2=80=98ABORT=
-ED=E2=80=99.=0D=0A>=20>=0D=0A>=20>=20Unlike=20legacy=20mode,=20this=20pheno=
-menon=20causes=20unintended=20behavior.=20(As=0D=0A>=20>=20shown=20in=20the=
-=20log=20below)=0D=0A>=20>=0D=0A>=20>=20=5B1:=20=20kworker/u20:2:23157=5D=
-=20ufshcd_try_to_abort_task:=20cmd=20pending=20in=20the=0D=0A>=20>=20device=
-.=20tag=20=3D=209=0D=0A>=20>=20=5B3:=20=20kworker/u20:2:23157=5D=20Aborting=
-=20tag=209=20/=20CDB=200x2a=20succeeded=0D=0A>=20>=20=5B4:=20=20=20=20=20=
-=20swapper/4:=20=20=20=200=5D=20sd=200:0:0:0:=20=5Bsda=5D=20tag=239=20UNKNO=
-WN(0x2003)=20Result:=0D=0A>=20hostbyte=3D0x05=20driverbyte=3DDRIVER_OK=20cm=
-d_age=3D0s=20//=20DID_ABORT=0D=0A>=20>=20=5B4:=20=20=20=20=20=20swapper/4:=
-=20=20=20=200=5D=20sd=200:0:0:0:=20=5Bsda=5D=20tag=239=20CDB:=20opcode=3D0x=
-2a=202a=2000=0D=0A>=2000=20d3=2002=2000=2000=2001=2000=2000=0D=0A>=20>=20=
-=5B4:=20=20=20=20=20=20swapper/4:=20=20=20=200=5D=20I/O=20error,=20dev=20sd=
-a,=20sector=20110628864=20op=0D=0A>=200x1:(WRITE)=20flags=200x800=20phys_se=
-g=20256=20prio=20class=202=0D=0A>=20>=0D=0A>=20>=0D=0A>=20>=20For=20command=
-s=20that=20have=20completed=20the=20abort=20operation=20in=20MCQ=20mode,=0D=
-=0A>=20>=20since=20OCS=20has=20been=20updated=20to=20aborted,=20it=20seems=
-=20that=20it=20will=20be=0D=0A>=20retransmitted=20only=0D=0A>=20>=20=20=20w=
-hen=20it=20is=20made=20to=20REQUEUE.=0D=0A>=20=0D=0A>=20Hi=20Hoyoung,=0D=0A=
->=20=0D=0A>=20Thank=20you=20for=20having=20provided=20this=20clarification=
-=20-=20this=20really=20helps.=0D=0A>=20=0D=0A>=20Regarding=20(B):=20I=20wou=
-ld=20appreciate=20it=20if=20this=20patch=20would=20be=20reworked=20such=0D=
-=0A>=20that=20no=20new=20'if=20(is_mcq_enabled(hba))'=20statements=20are=20=
-introduced.=0D=0A>=20Has=20it=20been=20considered=20to=20modify=20ufshcd_mc=
-q_sqe_search()=20such=20that=20it=20sets=0D=0A>=20the=20SCSI=20result=20to=
-=20DID_REQUEUE=20<<=2016=20instead=20of=20modifying=0D=0A>=20ufshcd_transfe=
-r_rsp_status()?=0D=0A>=20=0D=0A>=20Regarding=20(C):=20SQRTCy.ICU=20is=20onl=
-y=20set=20by=20ufshcd_mcq_sq_cleanup()=20and=20the=0D=0A>=20only=20caller=
-=20of=20that=20function=20is=20ufshcd_clear_cmd().=0D=0A>=20There=20is=20on=
-ly=20one=20function=20that=20calls=20ufshcd_clear_cmd()=20for=20SCSI=20comm=
-ands,=0D=0A>=20namely=20ufshcd_eh_device_reset_handler().=20The=20latter=20=
-function=20should=20not=0D=0A>=20set=20the=20SCSI=20result=20code.=20All=20=
-it=20should=20do=20is=20to=20abort=20all=20pending=0D=0A>=20commands.=20The=
-=20SCSI=20error=20handler=20will=20resubmit=20all=20aborted=20commands.=0D=
-=0A>=20=0D=0A>=20Thanks,=0D=0A>=20=0D=0A>=20Bart.=0D=0A=0D=0AHi,=0D=0A=0D=
-=0AI=20do=20not=20understand=20what=20do=20you=20want.=0D=0A=0D=0ARegarding=
-=20(B)->=20In=20the=20ufshcd_mcq_sqe_search(),=20just=20find=20desc_addr=20=
-of=20the=20tag=20=0D=0Afor=20setting=20nullify=20in=20SQD.=20=0D=0AAfter=20=
-that=20the=20host=20h/w=20checks=20the=20nullify=20during=20processes=20the=
-=20SQD,=20=20=0D=0Aand=20sets=20the=20OCS=20to=20'aborted'.=0D=0A=0D=0ARega=
-rding=20(C)->=20Also,=20when=20the=20ufs=20driver=20sets=20the=20SQRTCy.ICU=
-=20to=201,=20=0D=0Athe=20host=20h/w=20updates=20the=20OCS=20to=20the=20Abor=
-ted.=0D=0A=0D=0ASo=20the=20ufs=20driver=20s/w=20can't=20do=20anything=20unt=
-il=20the=20OCS=20update.=0D=0Athe=20host=20h/w=20must=20update=20the=20OCS=
-=20and=20then=20process=20the=20Aborted.=0D=0A=0D=0AWhat=20you=20want=20is=
-=20not=20to=20arbitrarily=20modify=20the=20results=20for=20OCS?=0D=0ATheref=
-ore,=20if=20we=20use=20the=20current=20MCQ,=20we=20will=20do=20something=20=
-that=20=0D=0Awe=20do=20not=20intend=20to=20do.=0D=0ATherefore,=20the=20OCS=
-=20processing=20code=20for=20mcq=20and=20legacy=20mode=20needs=20=0D=0Ato=
-=20be=20disadvantageous.=0D=0A=0D=0AIf=20you=20do=20not=20want=20to=20use=
-=20'if=20(is_mcq_enabled=20(hba)',=20=0D=0AI=20will=20upload=20the=20patch=
-=20again=0D=0A=0D=0AThanks.=0D=0A=0D=0ABRs=20SEO.=0D=0A=0D=0A
+T24gRnJpLCAyMDIzLTExLTAzIGF0IDA3OjU3IC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+ICAJIA0KPiBFeHRlcm5hbCBlbWFpbCA6IFBsZWFzZSBkbyBub3QgY2xpY2sgbGlua3Mgb3Ig
+b3BlbiBhdHRhY2htZW50cyB1bnRpbA0KPiB5b3UgaGF2ZSB2ZXJpZmllZCB0aGUgc2VuZGVyIG9y
+IHRoZSBjb250ZW50Lg0KPiAgT24gMTAvMjcvMjMgMDE6NDMsIHBldGVyLndhbmdAbWVkaWF0ZWsu
+Y29tIHdyb3RlOg0KPiA+IElmIGNvbW1hbmQgdGltZW91dCBoYXBwZW4gYW5kIGNxIGNvbXBsZXRl
+IGlycSByYWlzZSBhdCB0aGUgc2FtZQ0KPiB0aW1lLA0KPiA+IHVmc2hjZF9tY3FfYWJvcnQgbnVs
+bCB0aGUgbHByYi0+Y21kIGFuZCBOVUxMIHBvaW5lciBLRSBpbiBJU1IuDQo+IA0KPiBQbGVhc2Ug
+YWRkIGEgRml4ZXM6IHRhZy4gT3RoZXJ3aXNlIHRoaXMgcGF0Y2ggbG9va3MgZ29vZCB0byBtZS4N
+Cj4gDQo+IFRoYW5rcywNCj4gDQo+IEJhcnQuDQoNCkhpIEJhcnQsDQoNClRoYW5rIHlvdSBmb3Ig
+cmV2aWV3LCB3aWxsIGFkZCBmaXhlcyB0YWcgbmV4dCB2ZXJzaW9uLg0KDQpUaGFua3MuDQpQZXRl
+cg0KDQo=
