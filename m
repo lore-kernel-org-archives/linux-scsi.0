@@ -2,165 +2,154 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED180C4167B
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Nov 2023 15:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C4F6C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Nov 2023 15:47:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235475AbjKGP0I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Nov 2023 10:26:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60884 "EHLO
+        id S235578AbjKGPrr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Nov 2023 10:47:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343976AbjKGPZz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2023 10:25:55 -0500
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2B6A1BD7
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Nov 2023 07:19:32 -0800 (PST)
-Received: by mail-ej1-x62b.google.com with SMTP id a640c23a62f3a-9db6cf8309cso852927166b.0
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Nov 2023 07:19:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1699370371; x=1699975171; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=qh0AEKO3JvgveIOYdbqx1DoIjIGYMQAi1JtMmos8/ww=;
-        b=vaTgJulnIOn7zhYFITs3yk/5fjjraj+e0YyLSq2T0uNaShmbfd10te/AgzUu1gjHCW
-         xxly48bNuFZXyD4ueOzWPuUmtlWgyJEc3cK2qONWEEUIcMzxNyqQJE/TG/fVtMddJUD0
-         mcM2u6QIFQbTdHC+4LQdcwgMzrDPMlg3XyCxYvtePdwUSxjrTmLSid0ur9bdhPTtI2M9
-         XgRrV8ApsfbbBkcAg0igj60Qo/jkc1txWS1zq8NwcKHGyNPleyRDGJFw2P0CqlRvcJBc
-         7NQ8Um788dghtSeU2PzdbFBUBRNufQxWFgwszzQ/2J3jhi/SGwjlhrDdu6666p2uK/BF
-         6+aA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699370371; x=1699975171;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qh0AEKO3JvgveIOYdbqx1DoIjIGYMQAi1JtMmos8/ww=;
-        b=O3Cyhz6DlACxgmCi0UAMHiCXm+MrLL6EH5/3KspWrHVcnM9oyRQXDBx3ywGbWMVh2q
-         pi0U8Xu59eK/m2YeZx4uG8BClm6N50/leDxmY+eUx257DZYfPRqR79+1Rrr2RDl4oHM7
-         LaH0WEFdVt0QhNIvIVQ5O//dkvyLEP4LXj3fGkFxbasLsHhv4BpfsgV6BU5dOKOCd0Wv
-         nTLhLFonQESYkT1VsIVSlofckbbOw31y1w3JXsvb6mVh9CGwjSl2boUqNdXwPPjh5jxY
-         DVcuv01FC/Q0lqEtndBCNaVzjO4dHvPwk+dZmBDIqM/5WGZz9R+mMi8q3TKLCKAfNbPC
-         r7qA==
-X-Gm-Message-State: AOJu0Yz+3ji+qPjj9N8Z+FEYpaNVGzvWTZalhkTniaVxoz4NDJkcXk2N
-        jyzF0ytsk867D6UaeWbH7+sVww==
-X-Google-Smtp-Source: AGHT+IFhJnnlFQHIFnxd6jP38QmnwfJl2yvlWUedii/ogZgIPLfM/Y4DljPVGeU9Ac5fk0HWqAwTWA==
-X-Received: by 2002:a17:906:c141:b0:9dd:7db7:a0af with SMTP id dp1-20020a170906c14100b009dd7db7a0afmr10420985ejc.56.1699370371453;
-        Tue, 07 Nov 2023 07:19:31 -0800 (PST)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id h20-20020a170906111400b009dda94509casm1150471eja.102.2023.11.07.07.19.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Nov 2023 07:19:31 -0800 (PST)
-Date:   Tue, 7 Nov 2023 18:19:27 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     jsmart2021@gmail.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: lpfc: Add EDC ELS support
-Message-ID: <d3e2ffd8-3ebe-4e28-8509-c76f2b991ca3@moroto.mountain>
+        with ESMTP id S1344165AbjKGPrf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2023 10:47:35 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50EB410DF;
+        Tue,  7 Nov 2023 07:47:18 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E799AC433CA;
+        Tue,  7 Nov 2023 15:47:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699372038;
+        bh=JTCtqg7zZWrySGDehkf6dFBWRiZMtuokH55BSZ8yltc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=pOaWH9U+N5qEvMx2NCni+xE7Ct6PFbEhnpxwdYPxQhn2OSVTsB4tGEMfZVezkBIqn
+         Lk4xGQiLY1xAKzh5nBufCnYeAFLEXr5eig0tSco6X/8INpr1ZzAAlaHTT3O/XlhqXh
+         vp/Qi1tdJSjw5xu77X7kgjNW82+eYz84WeQv5+PcmRAt6neCqrQFO7Am3dbzLK/FPr
+         6ugGFIj87Jq9BFDcCpQJqvVUo87DkDzBfd7Q+la7QxVYzUbQSP4ErPv5scAkTXFLNz
+         1BICBdbvqg/NFd8zHSrKjLf6QRT+c8R8UM1EoXUoGjU7CIzO8HbpCd/7CYfpMR4wSL
+         4cwoNb+vKzxuA==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Yihang Li <liyihang9@huawei.com>,
+        Xingui Yang <yangxingui@huawei.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.6 10/36] scsi: hisi_sas: Set debugfs_dir pointer to NULL after removing debugfs
+Date:   Tue,  7 Nov 2023 10:45:52 -0500
+Message-ID: <20231107154654.3765336-10-sashal@kernel.org>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231107154654.3765336-1-sashal@kernel.org>
+References: <20231107154654.3765336-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.6
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello James Smart,
+From: Yihang Li <liyihang9@huawei.com>
 
-The patch 9064aeb2df8e: "scsi: lpfc: Add EDC ELS support" from Aug
-16, 2021 (linux-next), leads to the following Smatch static checker
-warning:
+[ Upstream commit 6de426f9276c448e2db7238911c97fb157cb23be ]
 
-	drivers/scsi/lpfc/lpfc_els.c:4353 lpfc_issue_els_edc()
-	warn: missing unwind goto?
+If init debugfs failed during device registration due to memory allocation
+failure, debugfs_remove_recursive() is called, after which debugfs_dir is
+not set to NULL. debugfs_remove_recursive() will be called again during
+device removal. As a result, illegal pointer is accessed.
 
-drivers/scsi/lpfc/lpfc_els.c
-    4290 int
-    4291 lpfc_issue_els_edc(struct lpfc_vport *vport, uint8_t retry)
-    4292 {
-    4293         struct lpfc_hba  *phba = vport->phba;
-    4294         struct lpfc_iocbq *elsiocb;
-    4295         struct fc_els_edc *edc_req;
-    4296         struct fc_tlv_desc *tlv;
-    4297         u16 cmdsize;
-    4298         struct lpfc_nodelist *ndlp;
-    4299         u8 *pcmd = NULL;
-    4300         u32 cgn_desc_size, lft_desc_size;
-    4301         int rc;
-    4302 
-    4303         if (vport->port_type == LPFC_NPIV_PORT)
-    4304                 return -EACCES;
-    4305 
-    4306         ndlp = lpfc_findnode_did(vport, Fabric_DID);
-    4307         if (!ndlp || ndlp->nlp_state != NLP_STE_UNMAPPED_NODE)
-    4308                 return -ENODEV;
-    4309 
-    4310         cgn_desc_size = (phba->cgn_init_reg_signal) ?
-    4311                                 sizeof(struct fc_diag_cg_sig_desc) : 0;
-    4312         lft_desc_size = (lpfc_link_is_lds_capable(phba)) ?
-    4313                                 sizeof(struct fc_diag_lnkflt_desc) : 0;
-    4314         cmdsize = cgn_desc_size + lft_desc_size;
-    4315 
-    4316         /* Skip EDC if no applicable descriptors */
-    4317         if (!cmdsize)
-    4318                 goto try_rdf;
-    4319 
-    4320         cmdsize += sizeof(struct fc_els_edc);
-    4321         elsiocb = lpfc_prep_els_iocb(vport, 1, cmdsize, retry, ndlp,
-    4322                                      ndlp->nlp_DID, ELS_CMD_EDC);
-    4323         if (!elsiocb)
-    4324                 goto try_rdf;
-    4325 
-    4326         /* Configure the payload for the supported Diagnostics capabilities. */
-    4327         pcmd = (u8 *)elsiocb->cmd_dmabuf->virt;
-    4328         memset(pcmd, 0, cmdsize);
-    4329         edc_req = (struct fc_els_edc *)pcmd;
-    4330         edc_req->desc_len = cpu_to_be32(cgn_desc_size + lft_desc_size);
-    4331         edc_req->edc_cmd = ELS_EDC;
-    4332         tlv = edc_req->desc;
-    4333 
-    4334         if (cgn_desc_size) {
-    4335                 lpfc_format_edc_cgn_desc(phba, tlv);
-    4336                 phba->cgn_sig_freq = lpfc_fabric_cgn_frequency;
-    4337                 tlv = fc_tlv_next_desc(tlv);
-    4338         }
-    4339 
-    4340         if (lft_desc_size)
-    4341                 lpfc_format_edc_lft_desc(phba, tlv);
-    4342 
-    4343         lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_CGN_MGMT,
-    4344                          "4623 Xmit EDC to remote "
-    4345                          "NPORT x%x reg_sig x%x reg_fpin:x%x\n",
-    4346                          ndlp->nlp_DID, phba->cgn_reg_signal,
-    4347                          phba->cgn_reg_fpin);
-    4348 
-    4349         elsiocb->cmd_cmpl = lpfc_cmpl_els_disc_cmd;
-    4350         elsiocb->ndlp = lpfc_nlp_get(ndlp);
-    4351         if (!elsiocb->ndlp) {
-    4352                 lpfc_els_free_iocb(phba, elsiocb);
---> 4353                 return -EIO;
+[ 1665.467244] hisi_sas_v3_hw 0000:b4:02.0: failed to init debugfs!
+...
+[ 1669.836708] Unable to handle kernel NULL pointer dereference at virtual address 00000000000000a0
+[ 1669.872669] pc : down_write+0x24/0x70
+[ 1669.876315] lr : down_write+0x1c/0x70
+[ 1669.879961] sp : ffff000036f53a30
+[ 1669.883260] x29: ffff000036f53a30 x28: ffffa027c31549f8
+[ 1669.888547] x27: ffffa027c3140000 x26: 0000000000000000
+[ 1669.893834] x25: ffffa027bf37c270 x24: ffffa027bf37c270
+[ 1669.899122] x23: ffff0000095406b8 x22: ffff0000095406a8
+[ 1669.904408] x21: 0000000000000000 x20: ffffa027bf37c310
+[ 1669.909695] x19: 00000000000000a0 x18: ffff8027dcd86f10
+[ 1669.914982] x17: 0000000000000000 x16: 0000000000000000
+[ 1669.920268] x15: 0000000000000000 x14: ffffa0274014f870
+[ 1669.925555] x13: 0000000000000040 x12: 0000000000000228
+[ 1669.930842] x11: 0000000000000020 x10: 0000000000000bb0
+[ 1669.936129] x9 : ffff000036f537f0 x8 : ffff80273088ca10
+[ 1669.941416] x7 : 000000000000001d x6 : 00000000ffffffff
+[ 1669.946702] x5 : ffff000008a36310 x4 : ffff80273088be00
+[ 1669.951989] x3 : ffff000009513e90 x2 : 0000000000000000
+[ 1669.957276] x1 : 00000000000000a0 x0 : ffffffff00000001
+[ 1669.962563] Call trace:
+[ 1669.965000]  down_write+0x24/0x70
+[ 1669.968301]  debugfs_remove_recursive+0x5c/0x1b0
+[ 1669.972905]  hisi_sas_debugfs_exit+0x24/0x30 [hisi_sas_main]
+[ 1669.978541]  hisi_sas_v3_remove+0x130/0x150 [hisi_sas_v3_hw]
+[ 1669.984175]  pci_device_remove+0x48/0xd8
+[ 1669.988082]  device_release_driver_internal+0x1b4/0x250
+[ 1669.993282]  device_release_driver+0x28/0x38
+[ 1669.997534]  pci_stop_bus_device+0x84/0xb8
+[ 1670.001611]  pci_stop_and_remove_bus_device_locked+0x24/0x40
+[ 1670.007244]  remove_store+0xfc/0x140
+[ 1670.010802]  dev_attr_store+0x44/0x60
+[ 1670.014448]  sysfs_kf_write+0x58/0x80
+[ 1670.018095]  kernfs_fop_write+0xe8/0x1f0
+[ 1670.022000]  __vfs_write+0x60/0x190
+[ 1670.025472]  vfs_write+0xac/0x1c0
+[ 1670.028771]  ksys_write+0x6c/0xd8
+[ 1670.032071]  __arm64_sys_write+0x24/0x30
+[ 1670.035977]  el0_svc_common+0x78/0x130
+[ 1670.039710]  el0_svc_handler+0x38/0x78
+[ 1670.043442]  el0_svc+0x8/0xc
 
-This is a couple years old but apparently, but I've never reported it
-before.  Smatch wanted a goto try_rdf; here.  Not sure if Smatch is
-correct.  If not just ignore this it.  These are one time emails.
+To fix this, set debugfs_dir to NULL after debugfs_remove_recursive().
 
-    4354         }
-    4355 
-    4356         lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
-    4357                               "Issue EDC:     did:x%x refcnt %d",
-    4358                               ndlp->nlp_DID, kref_read(&ndlp->kref), 0);
-    4359         rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
-    4360         if (rc == IOCB_ERROR) {
-    4361                 /* The additional lpfc_nlp_put will cause the following
-    4362                  * lpfc_els_free_iocb routine to trigger the rlease of
-    4363                  * the node.
-    4364                  */
-    4365                 lpfc_els_free_iocb(phba, elsiocb);
-    4366                 lpfc_nlp_put(ndlp);
-    4367                 goto try_rdf;
-    4368         }
-    4369         return 0;
-    4370 try_rdf:
-    4371         phba->cgn_reg_fpin = LPFC_CGN_FPIN_WARN | LPFC_CGN_FPIN_ALARM;
-    4372         phba->cgn_reg_signal = EDC_CG_SIG_NOTSUPPORTED;
-    4373         rc = lpfc_issue_els_rdf(vport, 0);
-    4374         return rc;
-    4375 }
+Signed-off-by: Yihang Li <liyihang9@huawei.com>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Link: https://lore.kernel.org/r/1694571327-78697-2-git-send-email-chenxiang66@hisilicon.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index bbb64ee6afd7c..089186fe17915 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -4865,6 +4865,12 @@ static void debugfs_bist_init_v3_hw(struct hisi_hba *hisi_hba)
+ 	hisi_hba->debugfs_bist_linkrate = SAS_LINK_RATE_1_5_GBPS;
+ }
+ 
++static void debugfs_exit_v3_hw(struct hisi_hba *hisi_hba)
++{
++	debugfs_remove_recursive(hisi_hba->debugfs_dir);
++	hisi_hba->debugfs_dir = NULL;
++}
++
+ static void debugfs_init_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = hisi_hba->dev;
+@@ -4888,18 +4894,13 @@ static void debugfs_init_v3_hw(struct hisi_hba *hisi_hba)
+ 
+ 	for (i = 0; i < hisi_sas_debugfs_dump_count; i++) {
+ 		if (debugfs_alloc_v3_hw(hisi_hba, i)) {
+-			debugfs_remove_recursive(hisi_hba->debugfs_dir);
++			debugfs_exit_v3_hw(hisi_hba);
+ 			dev_dbg(dev, "failed to init debugfs!\n");
+ 			break;
+ 		}
+ 	}
+ }
+ 
+-static void debugfs_exit_v3_hw(struct hisi_hba *hisi_hba)
+-{
+-	debugfs_remove_recursive(hisi_hba->debugfs_dir);
+-}
+-
+ static int
+ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+-- 
+2.42.0
+
