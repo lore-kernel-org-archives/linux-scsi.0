@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAF1BC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Nov 2023 15:58:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B651C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Nov 2023 16:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235378AbjKGP6V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Nov 2023 10:58:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56012 "EHLO
+        id S235082AbjKGQA1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Nov 2023 11:00:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344076AbjKGP5n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2023 10:57:43 -0500
+        with ESMTP id S1344706AbjKGP7b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2023 10:59:31 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5035C1FF9;
-        Tue,  7 Nov 2023 07:51:14 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9F81C433C7;
-        Tue,  7 Nov 2023 15:51:12 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 107C91BCB;
+        Tue,  7 Nov 2023 07:52:25 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BDA8C433C8;
+        Tue,  7 Nov 2023 15:52:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372274;
-        bh=zelHw0MvsgMhJEF3TCNNAeS+IjZM0jqwzwLJAQ/4FE4=;
+        s=k20201202; t=1699372344;
+        bh=Y+8mRrkWRM7PClGF+WGyXe3kK3zrXr/PDvE40lBrRKQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=H41/10qpP0BhL+FXevapZspjYjUHdoefCKWi8SiUJUlt317XfQP1jsAPkcZhSzi7O
-         B5iDfOWSyxC86xNlCEECnpB9lDruhve8kjgPNoECGYjBe2bQs+Qrj0j75petzcVe7D
-         G6i1iMUX5F1OUnV8vFUXIEzTLDC2T76euOIlMshqeQ5FEeQ5pFsyReQR3EeadN6t64
-         APYATsNV+OsRHZ/BsjU9kT3nx7gCu/TMlk18cls70eQ6qm1uFFrIIw+mJXGSNC+3SI
-         HUaUhqowesBn3ZQwxRIt6FgWVbPrW5gioF/Ym8KU5YgfcMpHqxpv2nuLzO2e9eJf//
-         d7mKbXqMifvew==
+        b=O3T73U15aXv3FRmr/wtVAgyINEVMM+JgaHGSNOySW7xNQ4mNYnX+LPDXZPZAaG3KW
+         olyrsrQp28ZOSMaROqw/8nbqGbx5qsfecO4msbf7o3FgN5htW8rVk7P17f2mDZjOiJ
+         w0+cuQcS5wbSboVJVqfx3zHRsZ6idIvuD02nsWqEjeFClHWRLbpM+zlQ1bceJn+6IS
+         oglKJwnvoN2hcYvcqIr3bcexXWzO0NmNou18g948ykDrKzp5l5wP0SIGWd4lwHyxaa
+         GyBdDIcTtGvis2XExiMtxaXwryGIBfkeE+pThZsMr6WfDyQVADbN1oufTPpeHbRPxr
+         Ynae0sATdjqCQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Wenchao Hao <haowenchao2@huawei.com>,
@@ -34,16 +34,16 @@ Cc:     Wenchao Hao <haowenchao2@huawei.com>,
         Sasha Levin <sashal@kernel.org>, hare@suse.de,
         jejb@linux.ibm.com, richardcochran@gmail.com,
         linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 20/30] scsi: libfc: Fix potential NULL pointer dereference in fc_lport_ptp_setup()
-Date:   Tue,  7 Nov 2023 10:49:54 -0500
-Message-ID: <20231107155024.3766950-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 15/22] scsi: libfc: Fix potential NULL pointer dereference in fc_lport_ptp_setup()
+Date:   Tue,  7 Nov 2023 10:51:24 -0500
+Message-ID: <20231107155146.3767610-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231107155024.3766950-1-sashal@kernel.org>
-References: <20231107155024.3766950-1-sashal@kernel.org>
+In-Reply-To: <20231107155146.3767610-1-sashal@kernel.org>
+References: <20231107155146.3767610-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.61
+X-stable-base: Linux 5.15.137
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -68,7 +68,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 9c02c9523c4d4..ab06e9aeb613e 100644
+index 19cd4a95d354d..d158c5eff059b 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
 @@ -241,6 +241,12 @@ static void fc_lport_ptp_setup(struct fc_lport *lport,
