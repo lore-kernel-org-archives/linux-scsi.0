@@ -2,57 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94DAFC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Nov 2023 07:21:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 155A9C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Nov 2023 07:27:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233439AbjKGHVC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Nov 2023 02:21:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40496 "EHLO
+        id S233549AbjKGH1N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Nov 2023 02:27:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230089AbjKGHVB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2023 02:21:01 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEFC0C6;
-        Mon,  6 Nov 2023 23:20:58 -0800 (PST)
+        with ESMTP id S231893AbjKGH1M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2023 02:27:12 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 692F7FC;
+        Mon,  6 Nov 2023 23:27:09 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 6B3AF20709;
-        Tue,  7 Nov 2023 07:20:57 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 0F96522A3F;
+        Tue,  7 Nov 2023 07:27:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1699341657; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1699342027; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=J1kH32KdMcwEqd9YWjZ6gV9dvz/fjH5OMah+VhfN184=;
-        b=cNI35Fm+9DgfnIym2tEgAETrVrA0cIft3WFj0ocV3g/W4lCGt4xUCtad8WLzrmHpyq/qGE
-        HhMlCgIk6mWSu0jjdzoZ8oDxMD0fA72DJL7Unpg0gxMT7KoNJYfwU4vh2xoAnZxOmIY6bz
-        oquOANuvDpvtEMfsVeVxwt6EkK7uG1E=
+        bh=vFRTIA1XBvmMiUidKYSuEiUc8xMwmaYerkhSx7+oP38=;
+        b=vHc6HQAXNF6NbgOAjPUsYDNEoH/wtICzTEQkyiUivatOlUEF4GEeOB4trY2OrSzESg/h1Z
+        ftLgcfYywfQbL9iG4Zj4ISNIUERSB+mU1fjoUt7XOGkP/K0UBhGCVVApoG9tkxIZS96bpc
+        nm5ySxx6RAaJYkS0Uz9KzJNHGMUL3R8=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1699341657;
+        s=susede2_ed25519; t=1699342027;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=J1kH32KdMcwEqd9YWjZ6gV9dvz/fjH5OMah+VhfN184=;
-        b=nPB4/7/a2ZGPu/nn5uYXPg4KRiTb+kOE7+RGKbvFJIyNjVrMYspTdLTQkQ6ONRrRZ0Mge4
-        t/cJDWAeSTozpKDw==
+        bh=vFRTIA1XBvmMiUidKYSuEiUc8xMwmaYerkhSx7+oP38=;
+        b=JwWzSw9nIqSgdBAvM0Nx/6SIZi2VMmzaMdtGV/9UoP9Px0lU9UvCsd/xfgTZKEIPfqq06M
+        5SFz0kvC9HbFWbDw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C130F132FD;
-        Tue,  7 Nov 2023 07:20:56 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 50A18132FD;
+        Tue,  7 Nov 2023 07:27:06 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id gqnEK1jlSWU2MAAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 07 Nov 2023 07:20:56 +0000
-Message-ID: <32be196b-4742-4411-adc5-bb0220470662@suse.de>
-Date:   Tue, 7 Nov 2023 08:20:55 +0100
+        id kEEdEcrmSWVpMgAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 07 Nov 2023 07:27:06 +0000
+Message-ID: <a2853642-b79a-4860-abd6-3e218171e491@suse.de>
+Date:   Tue, 7 Nov 2023 08:27:06 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 03/13] scsi: fnic: Add and improve log messages
+Subject: Re: [PATCH v2 13/13] scsi: fnic: Improve logs and add support for
+ multiqueue (MQ)
 Content-Language: en-US
 To:     "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>,
         "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
@@ -66,62 +67,28 @@ Cc:     "Arulprabhu Ponnusamy (arulponn)" <arulponn@cisco.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 References: <20231027180302.418676-1-kartilak@cisco.com>
- <20231027180302.418676-4-kartilak@cisco.com>
- <41c2fd4c-f6b3-450f-87b3-d059d52ba2f0@suse.de>
- <SJ0PR11MB58960545FE72C28A91D3585AC3AAA@SJ0PR11MB5896.namprd11.prod.outlook.com>
+ <20231027180302.418676-14-kartilak@cisco.com>
+ <2e7c1749-428b-4c88-8e0e-df6ed4d8def5@suse.de>
+ <SJ0PR11MB5896E9241A26DACE35684E12C3AAA@SJ0PR11MB5896.namprd11.prod.outlook.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <SJ0PR11MB58960545FE72C28A91D3585AC3AAA@SJ0PR11MB5896.namprd11.prod.outlook.com>
+In-Reply-To: <SJ0PR11MB5896E9241A26DACE35684E12C3AAA@SJ0PR11MB5896.namprd11.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/6/23 20:55, Karan Tilak Kumar (kartilak) wrote:
-> On Thursday, November 2, 2023 12:28 AM, Hannes Reinecke <hare@suse.de> wrote:
+On 11/6/23 21:44, Karan Tilak Kumar (kartilak) wrote:
+> On Thursday, November 2, 2023 12:59 AM, Hannes Reinecke <hare@suse.de> wrote:
+>> Please move this change to the last patch.
+>> And I would wager that this change is more intrusive than a simple patch, so an update to 1.7 or even 2.0 is warranted.
 >>
->> On 10/27/23 20:02, Karan Tilak Kumar wrote:
->>> Add link related log messages in fnic_fcs.c, Improve log message in
->>> fnic_fcs.c, Add log message in vnic_dev.c.
->>>
->>> Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
->>> Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
->>> Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
->>> ---
->>>    drivers/scsi/fnic/fnic_fcs.c | 36 ++++++++++++++++++++++++------------
->>>    drivers/scsi/fnic/vnic_dev.c |  4 ++++
->>>    2 files changed, 28 insertions(+), 12 deletions(-)
->>>
->>> diff --git a/drivers/scsi/fnic/fnic_fcs.c
->>> b/drivers/scsi/fnic/fnic_fcs.c index 55632c67a8f2..203ffec625a4 100644
->>> --- a/drivers/scsi/fnic/fnic_fcs.c
->>> +++ b/drivers/scsi/fnic/fnic_fcs.c
->>> @@ -64,8 +64,8 @@ void fnic_handle_link(struct work_struct *work)
->>>                      new_port_speed);
->>>      if (old_port_speed != new_port_speed)
->>>              FNIC_MAIN_DBG(KERN_INFO, fnic->lport->host,
->>> -                           "Current vnic speed set to :  %llu\n",
->>> -                           new_port_speed);
->>> +                           "fnic<%d>: %s: %d: Current vnic speed set to: %llu\n",
->>> +                           fnic->fnic_num, __func__, __LINE__, new_port_speed);
->>>
->> Please update FNIC_MAIN_DBG() to use the 'fnic' structure as an argument, then you don't have to prefix all messages with 'fnic<%d>'.
->>
->> Cheers,
->>
->> Hannes
 > 
-> Thanks for the review comments, Hannes. I'll make suitable changes in v3.
-> Please advise whether I'll need to supersede v2 with a "git send-email --in-reply-to" so that your
-> "Reviewed-by" tag for other patches gets preserved.
-> I'm not exactly sure how the process works. The goal is to reduce the number of re-reviews of patches, if possible.
-> Any pointers with respect to this will help.
+> The version change is in the last patch of the patchset.
+> Do you mean that I need to make a separate patch to increment the version number?
+> In v3, I'll update it to 1.7.0.0.
 > 
-Please add the 'Reviewed-by' tags for the next submission; that will 
-indicated to reviewers which of these patches already have been reviewed
-and which need further attention.
-Hint: there is the 'b4' tool, which will scrape the patches from the 
-mailing list _and_ add the 'Reviewed-by' tags. Maybe give it a go.
+Yes, please. And make this the last patch of the patch series.
 
 Cheers,
 
