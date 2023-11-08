@@ -2,56 +2,56 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC530C4167D
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Nov 2023 07:45:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBDEBC4167D
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Nov 2023 07:49:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230004AbjKHHpu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Nov 2023 02:45:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45356 "EHLO
+        id S231397AbjKHHtp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Nov 2023 02:49:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229566AbjKHHps (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 02:45:48 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C15411706;
-        Tue,  7 Nov 2023 23:45:46 -0800 (PST)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A86Gk58009326;
-        Wed, 8 Nov 2023 07:44:58 GMT
+        with ESMTP id S230004AbjKHHtn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 02:49:43 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCEB4113;
+        Tue,  7 Nov 2023 23:49:41 -0800 (PST)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A84RObF008885;
+        Wed, 8 Nov 2023 07:49:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
  mime-version : subject : to : cc : references : from : in-reply-to :
  content-type : content-transfer-encoding; s=qcppdkim1;
- bh=oGKLdo3NPJ5cRCFZ+eE7FWQBivkD2Wt2J//M4dNAs/s=;
- b=kz3HEavag4zn6s677HTpkQTx00RiNurPkmS/Q1ACbgPCk1FnlVj9X9DVVP1RQNlG/KUO
- xxqtQsbkQ4I7u4Lkg03kzGO6q6TQSj3ssMpUCsGIFV3u0kTNZqqetqDp/OAoRe8tTl2F
- DVe8rbIUO3swkT4+W1pwDkeyobbROnoQLPaCUItY3dVQXuev6aycBQuoy8/OI190/Tmb
- 47GNJY/E2Jkf+Ne4A8/LdgqJLLhRN7xpf1mL9lwtBzY4amROdcxE9JDkTHIk3GmNuIyM
- f6T0TH/EmXGyf7vOjYS0SYZHZwwAX/kxsj6iivIi5oCKuy5CyDEBaN8dH14580tdWEVG Yw== 
+ bh=D/dxczvvsYMr70g43cKzL3igpf+UjlHp4+Ee7UJnllU=;
+ b=l+uk7QZDvNc8jP1YMs5hPUuXUatbQFZxc0Rys3VgEHl8rzwI8KF0PU+oycOY8jxtpyR8
+ NqvuxITx9crlasRm+qW1haxRKcwQ4iH+bn2NecyNiI5YygArdlSIZFnv8iysZ0j/ce6L
+ rqwrbVyBgxfFghipmpWIXC8jWpENbe82Sc49Pl+PDOG2dk/vI1PAfjUGGkcKQ5HzBjc9
+ BbHsPiokz+XbitrcG1BInnwXDqqZfbCKorVEO0cdn99Z5B5RZWBKNNzzDT/790Lh4kfG
+ ZyzwmhLP51p/BIfoEZDZnYAMaJRr2WM8DQXuwn3YHugkM2xK4tuBrTNDYj3Bbr9q9oH0 7A== 
 Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u7xyu0sex-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u7w2ch0t0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 08 Nov 2023 07:44:58 +0000
+        Wed, 08 Nov 2023 07:49:08 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3A87ivZs002711
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3A87mjiA007746
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 8 Nov 2023 07:44:57 GMT
+        Wed, 8 Nov 2023 07:48:45 GMT
 Received: from [10.253.34.202] (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Tue, 7 Nov
- 2023 23:44:51 -0800
-Message-ID: <cbe26ea4-07b9-9922-07f5-d4b96f910b56@quicinc.com>
-Date:   Wed, 8 Nov 2023 15:44:49 +0800
+ 2023 23:48:40 -0800
+Message-ID: <351a7a54-1aeb-f226-855b-30291e9edd80@quicinc.com>
+Date:   Wed, 8 Nov 2023 15:48:38 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.15.1
 Subject: Re: [PATCH v2 1/7] scsi: ufs: host: Rename structure ufs_dev_params
  to ufs_host_params
-To:     Andrew Halaney <ahalaney@redhat.com>,
-        Can Guo <cang@qti.qualcomm.com>
-CC:     <bvanassche@acm.org>, <mani@kernel.org>,
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@qti.qualcomm.com>, <mani@kernel.org>,
         <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
         <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
@@ -74,107 +74,57 @@ CC:     <bvanassche@acm.org>, <mani@kernel.org>,
         <linux-arm-msm@vger.kernel.org>
 References: <1699332374-9324-1-git-send-email-cang@qti.qualcomm.com>
  <1699332374-9324-2-git-send-email-cang@qti.qualcomm.com>
- <fcovysoo6vxvqdrypfbnfyclrmifibio46rne5zhiqnmqhzd7k@5ltemasdhfxp>
-Content-Language: en-US
+ <74f98f63-3200-4485-bbf0-819800837ee9@acm.org>
 From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <fcovysoo6vxvqdrypfbnfyclrmifibio46rne5zhiqnmqhzd7k@5ltemasdhfxp>
+In-Reply-To: <74f98f63-3200-4485-bbf0-819800837ee9@acm.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.80.80.8]
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Zg3DmZ3qNhekEerDGSpqD2-ivhjgznXo
-X-Proofpoint-GUID: Zg3DmZ3qNhekEerDGSpqD2-ivhjgznXo
+X-Proofpoint-GUID: UYbZiAHeFoDrEtDh_Tq4xe_sc4f_RE9k
+X-Proofpoint-ORIG-GUID: UYbZiAHeFoDrEtDh_Tq4xe_sc4f_RE9k
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-11-08_01,2023-11-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxscore=0
- impostorscore=0 priorityscore=1501 mlxlogscore=999 adultscore=0
- suspectscore=0 clxscore=1011 malwarescore=0 phishscore=0 spamscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311080062
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ lowpriorityscore=0 spamscore=0 clxscore=1015 malwarescore=0 phishscore=0
+ bulkscore=0 mlxlogscore=999 suspectscore=0 adultscore=0 priorityscore=1501
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311080064
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Andrew,
+Hi Bart,
 
-On 11/8/2023 3:36 AM, Andrew Halaney wrote:
-> On Mon, Nov 06, 2023 at 08:46:07PM -0800, Can Guo wrote:
->> From: Can Guo <quic_cang@quicinc.com>
->>
->> Structure ufs_dev_params is actually used in UFS host vendor drivers to
->> declare host specific power mode parameters, like ufs_<vendor>_params or
->> host_cap, which makes the code not very straightforward to read. Rename the
->> structure ufs_dev_params to ufs_host_params and unify the declarations in
->> all vendor drivers to host_params.
->>
->> In addition, rename the two functions ufshcd_init_dev_pwr_param() and
-> nit: s/ufshcd_init_dev_pwr_param/ufshcd_init_pwr_dev_param/
-sure
->
->> ufshcd_get_dev_pwr_param() which work based on the ufs_host_params to
-> nit: s/ufshcd_get_dev_pwr_param/ufshcd_get_pwr_dev_param/
-sure
->
->> ufshcd_init_host_param() and ufshcd_negotiate_pwr_param() respectively to
->> avoid confusions.
->>
->> This change does not change any functionalities or logic.
->>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> ---
->>   drivers/ufs/host/ufs-exynos.c    |  7 +++---
->>   drivers/ufs/host/ufs-hisi.c      | 11 ++++-----
->>   drivers/ufs/host/ufs-mediatek.c  | 12 ++++------
->>   drivers/ufs/host/ufs-qcom.c      | 12 ++++------
->>   drivers/ufs/host/ufshcd-pltfrm.c | 49 ++++++++++++++++++++--------------------
->>   drivers/ufs/host/ufshcd-pltfrm.h | 10 ++++----
->>   6 files changed, 47 insertions(+), 54 deletions(-)
->>
-> <snip>
->
->> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
->> index da2558e..6e65b61 100644
->> --- a/drivers/ufs/host/ufshcd-pltfrm.c
->> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
->> @@ -285,17 +285,17 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
->>   }
->>   
->>   /**
+On 11/8/2023 4:56 AM, Bart Van Assche wrote:
+> On 11/6/23 20:46, Can Guo wrote:
+>>   /**
 >> - * ufshcd_get_pwr_dev_param - get finally agreed attributes for
 >> + * ufshcd_negotiate_pwr_param - get finally agreed attributes for
->>    *                            power mode change
+>>    *                            power mode change
+>
+> Since you are renaming the function, please also change the description
+> of the function into something more meaningful, e.g. "find power mode
+> settings that are supported by both the controller and the device".
+Sure, will do.
+>
 >> - * @pltfrm_param: pointer to platform parameters
 >> + * @host_param: pointer to platform parameters
->>    * @dev_max: pointer to device attributes
->>    * @agreed_pwr: returned agreed attributes
->>    *
->>    * Return: 0 on success, non-zero value on failure.
->>    */
->> -int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *pltfrm_param,
->> -			     const struct ufs_pa_layer_attr *dev_max,
->> -			     struct ufs_pa_layer_attr *agreed_pwr)
->> +int ufshcd_negotiate_pwr_param(const struct ufs_host_params *host_param,
->> +			       const struct ufs_pa_layer_attr *dev_max,
->> +			       struct ufs_pa_layer_attr *agreed_pwr)
->>   {
->>   	int min_pltfrm_gear;
-> If you're going to change pltfrm -> host, maybe do so for
-> min_pltfrm_gear too? I think this all reads nicer with the functions
-> changed as is, but the consistency would be nice in my opinion.
-
-Sure, will address in next version.
-
 >
-> Outside of those nits, I think this reads nicer now as well.
+> Please make sure that the argument name and argument description are in
+> sync.
+Sure.
 >
-> Acked-by: Andrew Halaney <ahalaney@redhat.com>
+> Thanks,
+>
+> Bart.
 
 
 Thanks,
 
-Can Guo
+Can Guo.
 
