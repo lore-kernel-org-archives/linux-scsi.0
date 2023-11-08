@@ -2,98 +2,147 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2662CC4167B
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Nov 2023 20:56:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E0C3C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Nov 2023 05:07:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235215AbjKGU4I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Nov 2023 15:56:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48068 "EHLO
+        id S229610AbjKHFHo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Nov 2023 00:07:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234864AbjKGU4H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2023 15:56:07 -0500
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FEB510CC;
-        Tue,  7 Nov 2023 12:56:05 -0800 (PST)
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-3b565722c0eso3665886b6e.2;
-        Tue, 07 Nov 2023 12:56:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699390564; x=1699995364;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/6Rou90ZC/YyyJYxVbEOGHfj5WMXYWOx1f+Ff7XOa1I=;
-        b=kJFUmv/ZA9/G2P+0wIHxM+Rr5zXCIwmeWWtk/GffoM23Msp2zpDT0tu0rlBKWtNgIB
-         6dPxp3fagbPuJbB4gl3JBlodnRO98WxhWFJlnq7VIB3GKxDFMlZ2Y8drUGF3AqT2xrAv
-         cwKGLrlTFctN8aEiUUY8U2QnoEpdRtLW9IEGlAbWYb4ch10co96Jj3J98XtBEPVynPWa
-         GOz8yYf82HD7YKospHyej3BA4tHylLblAQcwoxWRzXj5RpJ9kbHXKVI/vSJURTBa0Yxz
-         AvzldFDcWmKnSclWLPz2sHGLU1x4x3C1kogyXx9E/cPJXQTKmjrMW8x//Vm7msijQTFG
-         vhyQ==
-X-Gm-Message-State: AOJu0YyPlKBLRmE/m7vm8VJVODatOl7rZl9X0/54Er3Q+5NNXxCbyRIK
-        Apti5hnRdeVdA1mIvu7fj5s=
-X-Google-Smtp-Source: AGHT+IHaVgJsDpMhGNCp2vy1e2k6VSsMSNXCGuVJSbryRe2BREjphu4QS4E0vpDG6xSv+mpyajdD2g==
-X-Received: by 2002:a05:6808:3993:b0:3b5:ae0d:b208 with SMTP id gq19-20020a056808399300b003b5ae0db208mr213931oib.6.1699390564172;
-        Tue, 07 Nov 2023 12:56:04 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:403c:7209:147d:958d? ([2620:0:1000:8411:403c:7209:147d:958d])
-        by smtp.gmail.com with ESMTPSA id x11-20020aa784cb000000b006b225011ee5sm7644220pfn.6.2023.11.07.12.56.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Nov 2023 12:56:03 -0800 (PST)
-Message-ID: <74f98f63-3200-4485-bbf0-819800837ee9@acm.org>
-Date:   Tue, 7 Nov 2023 12:56:00 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/7] scsi: ufs: host: Rename structure ufs_dev_params
- to ufs_host_params
-Content-Language: en-US
-To:     Can Guo <cang@qti.qualcomm.com>, quic_cang@quicinc.com,
-        mani@kernel.org, stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        with ESMTP id S229449AbjKHFHn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 00:07:43 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FF71198;
+        Tue,  7 Nov 2023 21:07:41 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18490C433C8;
+        Wed,  8 Nov 2023 05:07:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699420060;
+        bh=T+5cW3D4tAaO3IaJl4GhQCISyR4UsA5zyjkxg/vQH7M=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=h2CSg6RNo/JMuR+m1JQnR+ZejSHnnUD6p4h0omBhAUR8tNHWukDqLuvuwSDjhCsCQ
+         I17EzBWg4lsbjYBO+YLMX8TB70jYTmetb7B8ZowEBmEJDww2NZpdXyv5uKQbxH3B1e
+         CXD9Zvk2IW8g9HspjIUO8wSQcIRg9O244L8TshZEnemV134RJ/PALESuJFF2eWeQHf
+         zDl5jmt+H+4UOeeyr6AGpD534duauloqsToct/yElq/mkSvJkiasQUxNQn5YdMdcp8
+         8KCY0bbCEEbwfd4LSBYw0gVMjkqTVNsxstxt6xDpiSJj7dH6rAXZbVlIvZlJXG5lB0
+         nIMF9lY3Iq4Cg==
+Date:   Wed, 8 Nov 2023 10:37:29 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Can Guo <cang@qti.qualcomm.com>
+Cc:     quic_cang@quicinc.com, bvanassche@acm.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
         beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
         Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
-        Brian Masney <bmasney@redhat.com>,
-        "moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES" 
-        <linux-samsung-soc@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-mediatek@lists.infradead.org>,
-        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." 
-        <linux-arm-msm@vger.kernel.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 2/7] scsi: ufs: ufs-qcom: Setup host power mode during
+ init
+Message-ID: <20231108050729.GA3296@thinkpad>
 References: <1699332374-9324-1-git-send-email-cang@qti.qualcomm.com>
- <1699332374-9324-2-git-send-email-cang@qti.qualcomm.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1699332374-9324-2-git-send-email-cang@qti.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ <1699332374-9324-3-git-send-email-cang@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1699332374-9324-3-git-send-email-cang@qti.qualcomm.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/6/23 20:46, Can Guo wrote:
->   /**
-> - * ufshcd_get_pwr_dev_param - get finally agreed attributes for
-> + * ufshcd_negotiate_pwr_param - get finally agreed attributes for
->    *                            power mode change
+On Mon, Nov 06, 2023 at 08:46:08PM -0800, Can Guo wrote:
+> From: Can Guo <quic_cang@quicinc.com>
+> 
+> Setup host power mode and its limitations during UFS host driver init to
+> avoid repetitive work during every power mode change.
+> 
+> Co-developed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 22 ++++++++++++++--------
+>  drivers/ufs/host/ufs-qcom.h |  1 +
+>  2 files changed, 15 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index aee66a3..cc0eb37 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -898,7 +898,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+>  				struct ufs_pa_layer_attr *dev_req_params)
+>  {
+>  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> -	struct ufs_host_params host_params;
+> +	struct ufs_host_params *host_params = &host->host_params;
+>  	int ret = 0;
+>  
+>  	if (!dev_req_params) {
+> @@ -908,13 +908,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+>  
+>  	switch (status) {
+>  	case PRE_CHANGE:
+> -		ufshcd_init_host_param(&host_params);
+> -		host_params.hs_rate = UFS_QCOM_LIMIT_HS_RATE;
 
-Since you are renaming the function, please also change the description
-of the function into something more meaningful, e.g. "find power mode
-settings that are supported by both the controller and the device".
+As Andrew spotted, this gets removed without explanation. So, I'd also suggest
+doing it in a separate patch.
 
-> - * @pltfrm_param: pointer to platform parameters
-> + * @host_param: pointer to platform parameters
+- Mani
 
-Please make sure that the argument name and argument description are in
-sync.
+> -
+> -		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
+> -		host_params.hs_tx_gear = host_params.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
+> -
+> -		ret = ufshcd_negotiate_pwr_param(&host_params, dev_max_params, dev_req_params);
+> +		ret = ufshcd_negotiate_pwr_param(host_params, dev_max_params, dev_req_params);
+>  		if (ret) {
+>  			dev_err(hba->dev, "%s: failed to determine capabilities\n",
+>  					__func__);
+> @@ -1049,6 +1043,17 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+>  		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+>  }
+>  
+> +static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+> +{
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> +	struct ufs_host_params *host_params = &host->host_params;
+> +
+> +	ufshcd_init_host_param(host_params);
+> +
+> +	/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
+> +	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
+> +}
+> +
+>  static void ufs_qcom_set_caps(struct ufs_hba *hba)
+>  {
+>  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> @@ -1273,6 +1278,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  
+>  	ufs_qcom_set_caps(hba);
+>  	ufs_qcom_advertise_quirks(hba);
+> +	ufs_qcom_set_host_params(hba);
+>  
+>  	err = ufs_qcom_ice_init(host);
+>  	if (err)
+> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> index 9950a00..ab94c54 100644
+> --- a/drivers/ufs/host/ufs-qcom.h
+> +++ b/drivers/ufs/host/ufs-qcom.h
+> @@ -240,6 +240,7 @@ struct ufs_qcom_host {
+>  
+>  	struct gpio_desc *device_reset;
+>  
+> +	struct ufs_host_params host_params;
+>  	u32 phy_gear;
+>  
+>  	bool esi_enabled;
+> -- 
+> 2.7.4
+> 
 
-Thanks,
-
-Bart.
+-- 
+மணிவண்ணன் சதாசிவம்
