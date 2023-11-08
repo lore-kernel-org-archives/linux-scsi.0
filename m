@@ -2,144 +2,112 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E0C3C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Nov 2023 05:07:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15262C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Nov 2023 05:12:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229610AbjKHFHo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Nov 2023 00:07:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54934 "EHLO
+        id S229696AbjKHFMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Nov 2023 00:12:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjKHFHn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 00:07:43 -0500
+        with ESMTP id S229449AbjKHFML (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 00:12:11 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FF71198;
-        Tue,  7 Nov 2023 21:07:41 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18490C433C8;
-        Wed,  8 Nov 2023 05:07:34 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A217B1A2;
+        Tue,  7 Nov 2023 21:12:09 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B04AC433C8;
+        Wed,  8 Nov 2023 05:12:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699420060;
-        bh=T+5cW3D4tAaO3IaJl4GhQCISyR4UsA5zyjkxg/vQH7M=;
+        s=k20201202; t=1699420329;
+        bh=K+zY1vd1AzBR15/wm5/FSyF+NoBWbzgaQbhnrvCfoLU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=h2CSg6RNo/JMuR+m1JQnR+ZejSHnnUD6p4h0omBhAUR8tNHWukDqLuvuwSDjhCsCQ
-         I17EzBWg4lsbjYBO+YLMX8TB70jYTmetb7B8ZowEBmEJDww2NZpdXyv5uKQbxH3B1e
-         CXD9Zvk2IW8g9HspjIUO8wSQcIRg9O244L8TshZEnemV134RJ/PALESuJFF2eWeQHf
-         zDl5jmt+H+4UOeeyr6AGpD534duauloqsToct/yElq/mkSvJkiasQUxNQn5YdMdcp8
-         8KCY0bbCEEbwfd4LSBYw0gVMjkqTVNsxstxt6xDpiSJj7dH6rAXZbVlIvZlJXG5lB0
-         nIMF9lY3Iq4Cg==
-Date:   Wed, 8 Nov 2023 10:37:29 +0530
+        b=Z3o2DN0FT6oReDKlnXQHft1tS9hlS2i6wraxS3Ci/99sPljKNxq34lz0+OSVDqLVk
+         wSDFq2YvuzZWCVfh61kXWeuK3eC72BVjJxTelEF9zZrwh7+RJGk+zU1jM2P8uKrXHm
+         qgNvoivRkZbcPg0SKuh32B6ayrIRPY6wQfW1fMfGdFtIa3Upo9HiAeMUDF4Zupshfw
+         REvGWYC22S5V9pGRs3zlYgwATd06FEaR4gdu/zgOfIBlTz7FRtLtAX3DBG9/79VbCg
+         QiVrFvTBORa75F38YpfzjfDpu8wHPRjcU7SWzMHOlISFPKNZS2f3OGl8+4WUOq+6+2
+         y7pwNGdhtJ2Wg==
+Date:   Wed, 8 Nov 2023 10:41:56 +0530
 From:   Manivannan Sadhasivam <mani@kernel.org>
 To:     Can Guo <cang@qti.qualcomm.com>
 Cc:     quic_cang@quicinc.com, bvanassche@acm.org,
         stanley.chu@mediatek.com, adrian.hunter@intel.com,
         beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 2/7] scsi: ufs: ufs-qcom: Setup host power mode during
- init
-Message-ID: <20231108050729.GA3296@thinkpad>
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        "open list:ARM/Mediatek SoC support" <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v2 0/7] Enable HS-G5 support on SM8550
+Message-ID: <20231108051156.GB3296@thinkpad>
 References: <1699332374-9324-1-git-send-email-cang@qti.qualcomm.com>
- <1699332374-9324-3-git-send-email-cang@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1699332374-9324-3-git-send-email-cang@qti.qualcomm.com>
+In-Reply-To: <1699332374-9324-1-git-send-email-cang@qti.qualcomm.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 06, 2023 at 08:46:08PM -0800, Can Guo wrote:
-> From: Can Guo <quic_cang@quicinc.com>
+On Mon, Nov 06, 2023 at 08:46:06PM -0800, Can Guo wrote:
+> This series enables HS-G5 support on SM8550.
 > 
-> Setup host power mode and its limitations during UFS host driver init to
-> avoid repetitive work during every power mode change.
+> This series is rebased on below changes from Mani -
+> https://patchwork.kernel.org/project/linux-scsi/patch/20230908145329.154024-1-manivannan.sadhasivam@linaro.org/
+> https://patchwork.kernel.org/project/linux-scsi/patch/20230908145329.154024-2-manivannan.sadhasivam@linaro.org/
 > 
-> Co-developed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 22 ++++++++++++++--------
->  drivers/ufs/host/ufs-qcom.h |  1 +
->  2 files changed, 15 insertions(+), 8 deletions(-)
+> This series is tested on below HW combinations -
+> SM8550 MTP + UFS4.0
+> SM8550 QRD + UFS3.1
+> SM8450 MTP + UFS3.1 (for regression test)
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index aee66a3..cc0eb37 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -898,7 +898,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
->  				struct ufs_pa_layer_attr *dev_req_params)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> -	struct ufs_host_params host_params;
-> +	struct ufs_host_params *host_params = &host->host_params;
->  	int ret = 0;
->  
->  	if (!dev_req_params) {
-> @@ -908,13 +908,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
->  
->  	switch (status) {
->  	case PRE_CHANGE:
-> -		ufshcd_init_host_param(&host_params);
-> -		host_params.hs_rate = UFS_QCOM_LIMIT_HS_RATE;
 
-As Andrew spotted, this gets removed without explanation. So, I'd also suggest
-doing it in a separate patch.
+You are sending the patches from QTI email and that's not supposed to happen I
+believe.
 
 - Mani
 
-> -
-> -		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
-> -		host_params.hs_tx_gear = host_params.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
-> -
-> -		ret = ufshcd_negotiate_pwr_param(&host_params, dev_max_params, dev_req_params);
-> +		ret = ufshcd_negotiate_pwr_param(host_params, dev_max_params, dev_req_params);
->  		if (ret) {
->  			dev_err(hba->dev, "%s: failed to determine capabilities\n",
->  					__func__);
-> @@ -1049,6 +1043,17 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
->  		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
->  }
->  
-> +static void ufs_qcom_set_host_params(struct ufs_hba *hba)
-> +{
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	struct ufs_host_params *host_params = &host->host_params;
-> +
-> +	ufshcd_init_host_param(host_params);
-> +
-> +	/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
-> +	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
-> +}
-> +
->  static void ufs_qcom_set_caps(struct ufs_hba *hba)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> @@ -1273,6 +1278,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  
->  	ufs_qcom_set_caps(hba);
->  	ufs_qcom_advertise_quirks(hba);
-> +	ufs_qcom_set_host_params(hba);
->  
->  	err = ufs_qcom_ice_init(host);
->  	if (err)
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index 9950a00..ab94c54 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -240,6 +240,7 @@ struct ufs_qcom_host {
->  
->  	struct gpio_desc *device_reset;
->  
-> +	struct ufs_host_params host_params;
->  	u32 phy_gear;
->  
->  	bool esi_enabled;
+> v1 -> v2:
+> 1. Removed 2 changes which were exposing power info in sysfs
+> 2. Removed 1 change which was moving data structs to phy-qcom-qmp-ufs.h
+> 3. Added one new change (the 1st one) to clean up usage of ufs_dev_params based on comments from Mani
+> 4. Adjusted the logic of UFS device version detection according to comments from Mani:
+> 	4.1 For HW version < 0x5, go through dual init
+>  	4.2 For HW version >= 0x5
+> 		a. If UFS device version is populated, one init is required
+> 		b. If UFS device version is not populated, go through dual init
+> 
+> Bao D. Nguyen (1):
+>   scsi: ufs: ufs-qcom: Add support for UFS device version detection
+> 
+> Can Guo (6):
+>   scsi: ufs: host: Rename structure ufs_dev_params to ufs_host_params
+>   scsi: ufs: ufs-qcom: Setup host power mode during init
+>   scsi: ufs: ufs-qcom: Allow the first init start with the maximum
+>     supported gear
+>   scsi: ufs: ufs-qcom: Limit HS-G5 Rate-A to hosts with HW version 5
+>   scsi: ufs: ufs-qcom: Set initial PHY gear to max HS gear for HW ver 5
+>     and newer
+>   phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed Gear 5 support for
+>     SM8550
+> 
+>  drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h     |   2 +
+>  drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h |   2 +
+>  .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |  12 +++
+>  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 112 ++++++++++++++++++---
+>  drivers/ufs/host/ufs-exynos.c                      |   7 +-
+>  drivers/ufs/host/ufs-hisi.c                        |  11 +-
+>  drivers/ufs/host/ufs-mediatek.c                    |  12 +--
+>  drivers/ufs/host/ufs-qcom.c                        |  78 ++++++++++----
+>  drivers/ufs/host/ufs-qcom.h                        |   3 +
+>  drivers/ufs/host/ufshcd-pltfrm.c                   |  49 +++++----
+>  drivers/ufs/host/ufshcd-pltfrm.h                   |  10 +-
+>  11 files changed, 217 insertions(+), 81 deletions(-)
+> 
 > -- 
 > 2.7.4
 > 
