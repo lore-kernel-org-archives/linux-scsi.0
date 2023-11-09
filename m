@@ -2,266 +2,306 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44356C4167B
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 15:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC32C4167D
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 16:04:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234424AbjKIPLD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Nov 2023 10:11:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48612 "EHLO
+        id S234620AbjKIQEw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Nov 2023 11:04:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234536AbjKIPK6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2023 10:10:58 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE15135AC;
-        Thu,  9 Nov 2023 07:10:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1699542655; x=1731078655;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=yXqmrlqpdVkJAcJCMDYxXTPl03/oSvegATmXzCvqbuk=;
-  b=qX59q8LfRN5ed/jN+S8Pw96EUSaATHrHDNpa1vVBKc+iHPF+Hlsr4PnV
-   a7FBtnE5OYUZrtkSha5V67g6DOFNz9iDnfS9oYn0gr7ilKfWpD+ouO+Ah
-   yqFEFVXtUxw6fE1LVWo53DTlrYEYEwWTIEHaT79rs2ZMNMQIP7rhCrWss
-   o8yuvpsczQ8GCHyDAfXbZf29B+4an7tSZJ5gZuy9oCNdw9b5dLLEF8Msl
-   /F0e+RquR6hfaivsUl15K275fBR1zz5M6zK3cbjxjU4dManMmHwYdGO3N
-   zFGlYolgjZoibGa7X0X7WGDzT3wNTywFby/ODJ3FB1WZCaXsHr2BUHxSW
-   w==;
-X-CSE-ConnectionGUID: pYGeFLexRsud6PtmPH39bA==
-X-CSE-MsgGUID: hLEvUvGMRMinSfBjNQqugw==
-X-IronPort-AV: E=Sophos;i="6.03,289,1694707200"; 
-   d="scan'208";a="1843131"
-Received: from mail-dm6nam10lp2101.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.101])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Nov 2023 23:10:53 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dSrWbAOJuQ/hniRFwQSBrjs2+OQVXfZ8mySydm4+LnvHjjYurVjkx+IBub6A+HqFEbwex6yJqqJ/L/Sl41SbWVJoOLVFJSQQoAsjaNg+KVfFtMKD9VNHm9F91FWSydV0L7OUa4QbStm7uHc/U/6rrBhxIgX1Q1tQ0SudQR0qQODN1HwQNg4d9DUiYRwiaLkEGdIczjh/CbsSTJBMqSR71xbMMhbFL3licto1k2Ct7+btMejuzylAsvfS6IKWOVBj0sJ1y6vZS2SOZ9fkeOsK5oLHu2rpV7dIjqFZnX6Eb2ath39jE7VAYF4+mch4xq5Erqo2ZzQ8ebJ6A+1luYBf1Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0idEQVQsVCA6K+IpfPH3hSen7IdX4268c64tdgksOuo=;
- b=lyikfAMuTix9s+yfeAYA4tjTCBBaHwzFXdX6D9ESZkZxtxYTPZ1H6YYotxPzzgnxVPBRbbOyDZXQ6bE6R5nzLRMg767yHf191xSLMXwtyzeK0UMVUPxVj0h1UWPr7fgy65/ffcnG/Tq8HwZX98uDbplFEAlJyZlmExpfJQ6eA6Ju3Qnu+zvR77f7fNR0juOEzkBEh4JorYtKgR1FvV4NLoFFoj/6cKR0hx1vl/RStF+jI7mkVMf+6S7mwJVNVwTwJ+6iPL8VRswLQXLhH0ASTHjYoYAkD3v6aFYuWmY1p3ff8prX4WCqZ1P7s79DE6gZno+a27G+4lRQfx9sILRB2A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0idEQVQsVCA6K+IpfPH3hSen7IdX4268c64tdgksOuo=;
- b=DiM1zlJe40vwDL5vKmj8dzyA0D9bxQ6pgivQ2P1H8eaJavFjLBqvwPJ1ruPFC/I3BZVL5r+UL8d1TULfIhq0Au5uCz+IaInhmW06fR6VQHCD92x+t9PgvW9tPp4103kUa/xQ67MBhPhYF8LG8k72iU8RYEMLzkl1/GayVVxgXvQ=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- CO6PR04MB8346.namprd04.prod.outlook.com (2603:10b6:303:135::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6954.29; Thu, 9 Nov
- 2023 15:10:51 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::2975:deb1:a373:b88]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::2975:deb1:a373:b88%3]) with mapi id 15.20.6977.018; Thu, 9 Nov 2023
- 15:10:51 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bean Huo <beanhuo@iokpp.de>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mikebi@micron.com" <mikebi@micron.com>,
-        "lporzio@micron.com" <lporzio@micron.com>
-Subject: RE: [PATCH v1 2/2] scsi: ufs: core: Add sysfs node for UFS RTC update
-Thread-Topic: [PATCH v1 2/2] scsi: ufs: core: Add sysfs node for UFS RTC
- update
-Thread-Index: AQHaEwu4Mh5K15HH00ihOyQoiVZi4rByF6IA
-Date:   Thu, 9 Nov 2023 15:10:51 +0000
-Message-ID: <DM6PR04MB6575A20FDBB306B8416C86C5FCAFA@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20231109125217.185462-1-beanhuo@iokpp.de>
- <20231109125217.185462-3-beanhuo@iokpp.de>
-In-Reply-To: <20231109125217.185462-3-beanhuo@iokpp.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|CO6PR04MB8346:EE_
-x-ms-office365-filtering-correlation-id: 1f8654af-5c90-47a3-6be8-08dbe1360ffd
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Q83r8MRWofAg+6CBi61f38j7j7NJ+I5PbstLv6IBIoowtdvusEquttkZYiNkDR7e90AcwRTbUWvWpkAR4gBu8s1mBlz4702KyZ02USgJa4/zHTKe6wGsSEj5yXTiyrizdw++Bt061siJH9Z1J9868TX1Yq6ktEGLsfu+dmCn529C+7HO9n6/cDQxJYm2ifAkf8tcc5FfmojqLYMDi8MB0O4ASpzKt2O4qRjW+D6gyariZYnn8eBY11YwV/3AX0mQO4kEVzkjZlFPr2OixtP3yQEZjH2OS3Sws05MxF/Utin1k+7zL0FtwdpWigKc9tip0MOyPoU2dhtQCVSIj0KhKzvxlqQUjb+e/3qMl+1TnY7nDoTOB77qlqk2uAM9eBQQupilvcXfTTMdt8/Mhhax3cLeygaZWDb8JEchSN58BEOirpqWdCRzcUGCAh4udEn8DFcGVCuwMDNp2IxtoekPoB2kp4L6rEtV5xVL1MJmyZ8F93H4qiw2dY3852TW3mH1wMUZQGUyoZlA7JJMd8wVw2RUviB6L7A/pGEXOBrzalg8ebHzjyAxIXbNk9RkboYPjGt3T4yK1WtGbThAADy+6I0SQK3/FglvzYS2gOaHkMqPOnxyNf+02Xw8sof2et/dMtYM6S0NS6X/40yxk5IvLQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(396003)(366004)(376002)(39860400002)(136003)(230922051799003)(186009)(451199024)(1800799009)(64100799003)(26005)(71200400001)(9686003)(478600001)(5660300002)(7416002)(86362001)(7696005)(6506007)(55016003)(316002)(76116006)(66476007)(110136005)(66446008)(66946007)(41300700001)(54906003)(64756008)(33656002)(66556008)(8676002)(122000001)(38100700002)(82960400001)(4326008)(921008)(8936002)(52536014)(15650500001)(2906002)(38070700009)(83380400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?qK+Sw26XDGEv/rcHWL+HNjHlFAuyLo6IsBatApe/NxADLALYrjL1t28SdXhw?=
- =?us-ascii?Q?O/dByuVoDYGiuvqnriB0ULVEKfIpiSiFv6Es24RVuA6OFdrhNAW5EoelntgU?=
- =?us-ascii?Q?i1iG9qhUkNebT3wPQWWOgDUIXodsfysIjhbx4wBEANlUE+ZmlE8LqkvE1gF7?=
- =?us-ascii?Q?wLGAxGvdBaVSJkQqTHguniGosjrWTZ5shu5qL35e16iqVctJG8q0XUdWXIMx?=
- =?us-ascii?Q?ON6VxbHfRYEqJn6VP0oBaNtUNwAAIadmUqcnDySCEWlOnB18EHYpg11YiLkm?=
- =?us-ascii?Q?l06y016OEseuf4Gn2LdEbb4IwsWxQXFqFpp9dEtJZbyy+e/tPosBFCylXci9?=
- =?us-ascii?Q?zddlvyeUgZKRszFnwXot9mdPqc/gFKUyMYvObwTWBGLNiOOVdrDYtjY8utrG?=
- =?us-ascii?Q?SQrvyGmMWiU+MTzB52XraG4rj7i6Xa5n/CspK8g0LAWr15EzvyIFiqslGMmG?=
- =?us-ascii?Q?AW38a5bsAlksYzrtoRJ40ppKx4PgpXIhyFvDqvPwPGo2sraa5BKL25Jta6az?=
- =?us-ascii?Q?tDRY89qkp85sYn9Plb2bLPi2gwmpsPwuNDcTWeN6h+CrHR4pQ3htLUeitKml?=
- =?us-ascii?Q?NJ1BEZK0aMvalZBqlmCPgEe1YwEbtZ6xuMHzGLrTrhvcwK+lGPR2TxCkpnxI?=
- =?us-ascii?Q?LsBYJd8KbRNCr1738ZsYUVMA/0bPU75xeO/etFWAs5gL0cvEaT3VcuuaLnHq?=
- =?us-ascii?Q?2qMCGiMVnUpzOqoJDUqYHmKgn05mxsgnjBuUHfJQrtu2t51Hqs6N2JyMHqLQ?=
- =?us-ascii?Q?c9IEsTjJRYyb1Ch2JNo1HHqE/i63Tgf9ISh98pqNDpFa5BeXfW2zCE3d6mWQ?=
- =?us-ascii?Q?lorquQbbgIQsXnbnT8vA3tGFnttjRdV5HwUCi3mfMB3k/GuUKU4n30C2O7gi?=
- =?us-ascii?Q?NOgEXCCY2LzIBhrtxd0lN5whh5P2xdhHPKMaXIu8ofgLaoNlao/3a752/f9B?=
- =?us-ascii?Q?TGK7Esxukkao6y3fcTOKR6iIM13bS1TmQA0n2qpQB/XTUw561seMH4JNwgBm?=
- =?us-ascii?Q?YCsngfRpaD38DC1vhB4VZsf/LwJ8Pwio2TnBj8GG9wUHY6DCej/F/yCP1wl/?=
- =?us-ascii?Q?2E04cV4P0adFWGqHzPKNTiEfdvlgPru+qY+jcbo5/GaxpjvK3T98BAJ6mZr2?=
- =?us-ascii?Q?cSeQB5rODzwSUtsj3nBPMsJLMs19v8o8jDRSNKcLp3A+u+7Tzlax5aZMsHOd?=
- =?us-ascii?Q?69SUVsFBpufBxV9X9zoQ60sZPzjT2Gfi/cfZwV42dyTh1gH3xfx406dGSVvr?=
- =?us-ascii?Q?aoHC75QFUzGBKF35TkKMgm5ZzhFcphTx11jiZ92ACoPEEzI7jXAw1eGQ9Pif?=
- =?us-ascii?Q?902ZOnrLyiKbXdzzaeb6NlITVP69ekYcSG1POOi2Olh1CUsubU1yYjFeZ2M8?=
- =?us-ascii?Q?4WtQuKR1VAz1a/MaJbcN4OML7JP4m6gwj7Nx1ykh0sjIdXVwNTGZkDXr3QGh?=
- =?us-ascii?Q?lVjOuElIGLJBG32EDyPJ4WhWVM77uGc2IpQgp8Yd80445rG4eGocyO89IchQ?=
- =?us-ascii?Q?24BXbt8x1O+vJyE9iBEA6FwwpdBJlVbN1oErSHNUCtXd4380ydgyWWOOiKYs?=
- =?us-ascii?Q?1SVEO7VCxvB05Zss9+44Bb+kYFux9bISjXUbHPMa?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S234611AbjKIQEu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2023 11:04:50 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ECD7325A;
+        Thu,  9 Nov 2023 08:04:48 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A82B0C433C8;
+        Thu,  9 Nov 2023 16:04:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699545888;
+        bh=enF5PJ0C6D94+7dqyTXFG4uwlbAazkT9obcsAkvPt1Y=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=m+6ShalMJcbyV2I6IHzZdJPTfLuB1CwVQXjvT5EZRIZso/YIcolRdUJB4/vtsvZI7
+         58wHHlqBS8iPNouBV8wll8EJxgzEc9oM4dZBka9Q2iJPUm5/tR26uxuvw2jBDJrEGA
+         k3nqlqO722CBM5TeJKx4Znm1Z+s/OrAfaxa8U81XNT6uQxvXzLUyErikzymgWPmcBQ
+         nds8VDlJLgYja+HUoUUuF5trdG4pAqdRoPPj9o9Kb7BY1pnfXuCF74sIpgOJ2ixe+a
+         8KWgYIuOvZue75FEaVRbMsa6/vZoLCT/fPRHj2STVyZYdcn0Imc/7R3VjaCzkQFIYZ
+         ZA0Mqi847THGA==
+Date:   Thu, 9 Nov 2023 21:34:30 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Can Guo <cang@qti.qualcomm.com>, quic_cang@quicinc.com,
+        bvanassche@acm.org, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 6/7] phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed
+ Gear 5 support for SM8550
+Message-ID: <20231109160430.GG3752@thinkpad>
+References: <1699332374-9324-1-git-send-email-cang@qti.qualcomm.com>
+ <1699332374-9324-7-git-send-email-cang@qti.qualcomm.com>
+ <CAA8EJpqEkkEoQ9vncNJU1t=mKbvBXKk1FUxnmGTE0Q++sf=oXA@mail.gmail.com>
+ <20231108054942.GF3296@thinkpad>
+ <CAA8EJpoCZChHDQLF0QHN0PkRUWV20thXMQvK-sH2fpYaC1zcvg@mail.gmail.com>
+ <20231109032418.GA3752@thinkpad>
+ <CAA8EJpoZUf9Ku5meH5VAcSkCbna__5LdPi8rgnN0tyBc-UzzWw@mail.gmail.com>
+ <20231109104250.GF3752@thinkpad>
+ <CAA8EJpp+wfe5wUj0FAMY2g3J8v7F8DVf8Bi3BwrAuCp-n=PFJg@mail.gmail.com>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?5dcZWaVS/orJdLMt+RjUrur+P72BqyzP4ebFJJvglXYrMs/avqhqVyLYInvB?=
- =?us-ascii?Q?WnFbvTxMEvWxhXscwIgLutZQf19u0+roDVe9ru7oPig2gvjCYVY8FUU2UKq3?=
- =?us-ascii?Q?CfiU7DNNlMt+Ut2sTOayFfLVIZ3+uyXINkK8QN+UrHn/4s3mwWr6NC0sq3gT?=
- =?us-ascii?Q?fz5AXUT6tPrOoP3QVKjjjrwVmlf++JZxS4ZWaEu4ag4FtMsRuQklzKpkEaIJ?=
- =?us-ascii?Q?MK1ridkEf+5SOZKdnurzraMhH36xhfFH3LtszDJMiUAlnSF/MGkVAHPH8tuW?=
- =?us-ascii?Q?g0CgbCdCup41tF9OCRjhZ1bdNG1KMDRtKsatUYu87LTQKO0ouDWLM5INwoWC?=
- =?us-ascii?Q?2RUjPlUQaCQQAGolts5TicU618TzsSC4Z5ElAQBKATlPcM52NjtKl4wrZyO0?=
- =?us-ascii?Q?qsvheQTnNwwy6QVkonFPNS0CqLs4kg6sPjlASrmVxWIy/0C0IhkyeDcRqC1p?=
- =?us-ascii?Q?rWAomndDHVVExHzjuzzj+8UbW9BfEtXblF/o5hcFrhTBQfwOwwjZmnNWfaPH?=
- =?us-ascii?Q?kSbjGqCmca1aXaKOnkwGdtNrZTpK1s9qAtLpJ5kFYhf+PTbIUz0cVLOoP/GS?=
- =?us-ascii?Q?W8FKLZzEB0NmPTby0IDIBaBsLoPL5XtFN5j26/HQkqJyoZUf6pqFfc+kWayz?=
- =?us-ascii?Q?YUDAJvi45KmgdGhKIEsnQY9YZYjW8feVRYBM7oXxvc/DUfwiANHH9AYh3aa9?=
- =?us-ascii?Q?6l2nNmq6LaGKR/SoUteJ+DxGZRgpRhFBsKx07h9Ec4RrpqExRRsD8kr0xIU0?=
- =?us-ascii?Q?5wSs/BmMVo4vvVacRnN+PyoaEcB3F2Pu3YW04LiAiqMDv5jM3Xx0J556vsxQ?=
- =?us-ascii?Q?wRdnm8jJTglSXz9I4ZaEZ4lxIfv8xgN+bTsLX/2v3qkfPHhjOe4cZyRuTpbA?=
- =?us-ascii?Q?3vjqfIDkRGUm5xJwCE24IWcXYJDIS4dUOxgUgXBlbdbPAaAXh1yvKATjz9eP?=
- =?us-ascii?Q?3i30MFc/obkoGyXNQIiVGc7x7bh0dNkF72Mp+HFvGNYo7kpQBZziD1ROOGOb?=
- =?us-ascii?Q?t/57AfpoXzXvXeTr7WWFW2JLkFyP4JFod43oHVDdo4zG1pY=3D?=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1f8654af-5c90-47a3-6be8-08dbe1360ffd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2023 15:10:51.5280
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kVl/Bi8g2jzwbpVx8z2bUJlx6YRQXpKJ7TiDGeaB8M1+KVGomfqnpci6hKyCOi2DhPcF4X2VWmtkd29qVE+Pbw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR04MB8346
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAA8EJpp+wfe5wUj0FAMY2g3J8v7F8DVf8Bi3BwrAuCp-n=PFJg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> From: Bean Huo <beanhuo@micron.com>
->=20
-> This patch introduces a sysfs node named 'rtc_update_ms' within the kerne=
-l,
-> enabling users to adjust the RTC periodic update frequency to suit the
-> specific requirements of the system and UFS. Also, this patch allows the =
-user
-> to disable periodic update RTC  in the UFS idle time.
->=20
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-Forgot to add doc?
+On Thu, Nov 09, 2023 at 01:00:51PM +0200, Dmitry Baryshkov wrote:
+> On Thu, 9 Nov 2023 at 12:43, Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> > On Thu, Nov 09, 2023 at 11:40:51AM +0200, Dmitry Baryshkov wrote:
+> > > On Thu, 9 Nov 2023 at 05:24, Manivannan Sadhasivam <mani@kernel.org> wrote:
+> > > >
+> > > > On Wed, Nov 08, 2023 at 08:56:16AM +0200, Dmitry Baryshkov wrote:
+> > > > > On Wed, 8 Nov 2023 at 07:49, Manivannan Sadhasivam <mani@kernel.org> wrote:
+> > > > > >
+> > > > > > On Tue, Nov 07, 2023 at 03:18:09PM +0200, Dmitry Baryshkov wrote:
+> > > > > > > On Tue, 7 Nov 2023 at 06:47, Can Guo <cang@qti.qualcomm.com> wrote:
+> > > > > > > >
+> > > > > > > > From: Can Guo <quic_cang@quicinc.com>
+> > > > > > > >
+> > > > > > > > On SM8550, two sets of UFS PHY settings are provided, one set is to support
+> > > > > > > > HS-G5, another set is to support HS-G4 and lower gears. The two sets of PHY
+> > > > > > > > settings are programming different values to different registers, mixing
+> > > > > > > > the two sets and/or overwriting one set with another set is definitely not
+> > > > > > > > blessed by UFS PHY designers. In order to add HS-G5 support for SM8550, we
+> > > > > > > > need to split the two sets into their dedicated tables, and leave only the
+> > > > > > > > common settings in the .tlbs. To have the PHY programmed with the correct
+> > > > > > > > set of PHY settings, the submode passed to PHY driver must be either HS-G4
+> > > > > > > > or HS-G5.
+> > > > > > > >
+> > > > > >
+> > > > > > You should also mention that this issue is also present in G4 supported targets.
+> > > > > > And a note that it will get fixed later.
+> > > > > >
+> > > > > > > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> > > > > > > > ---
+> > > > > > > >  drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h     |   2 +
+> > > > > > > >  drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h |   2 +
+> > > > > > > >  .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |  12 +++
+> > > > > > > >  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 112 ++++++++++++++++++---
+> > > > > > > >  4 files changed, 115 insertions(+), 13 deletions(-)
+> > > > > > > >
+> > > > > > > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
+> > > > > > > > index c23d5e4..e563af5 100644
+> > > > > > > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
+> > > > > > > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
+> > > > > > > > @@ -18,6 +18,7 @@
+> > > > > > > >  #define QPHY_V6_PCS_UFS_BIST_FIXED_PAT_CTRL            0x060
+> > > > > > > >  #define QPHY_V6_PCS_UFS_TX_HSGEAR_CAPABILITY           0x074
+> > > > > > > >  #define QPHY_V6_PCS_UFS_RX_HSGEAR_CAPABILITY           0x0bc
+> > > > > > > > +#define QPHY_V6_PCS_UFS_RX_HS_G5_SYNC_LENGTH_CAPABILITY        0x12c
+> > > > > > > >  #define QPHY_V6_PCS_UFS_DEBUG_BUS_CLKSEL               0x158
+> > > > > > > >  #define QPHY_V6_PCS_UFS_LINECFG_DISABLE                        0x17c
+> > > > > > > >  #define QPHY_V6_PCS_UFS_RX_MIN_HIBERN8_TIME            0x184
+> > > > > > > > @@ -27,5 +28,6 @@
+> > > > > > > >  #define QPHY_V6_PCS_UFS_READY_STATUS                   0x1a8
+> > > > > > > >  #define QPHY_V6_PCS_UFS_TX_MID_TERM_CTRL1              0x1f4
+> > > > > > > >  #define QPHY_V6_PCS_UFS_MULTI_LANE_CTRL1               0x1fc
+> > > > > > > > +#define QPHY_V6_PCS_UFS_RX_HSG5_SYNC_WAIT_TIME         0x220
+> > > > > > > >
+> > > > > > > >  #endif
+> > > > > > > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
+> > > > > > > > index f420f8f..ef392ce 100644
+> > > > > > > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
+> > > > > > > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
+> > > > > > > > @@ -56,6 +56,8 @@
+> > > > > > > >  #define QSERDES_V6_COM_SYS_CLK_CTRL                            0xe4
+> > > > > > > >  #define QSERDES_V6_COM_SYSCLK_BUF_ENABLE                       0xe8
+> > > > > > > >  #define QSERDES_V6_COM_PLL_IVCO                                        0xf4
+> > > > > > > > +#define QSERDES_V6_COM_CMN_IETRIM                              0xfc
+> > > > > > > > +#define QSERDES_V6_COM_CMN_IPTRIM                              0x100
+> > > > > > > >  #define QSERDES_V6_COM_SYSCLK_EN_SEL                           0x110
+> > > > > > > >  #define QSERDES_V6_COM_RESETSM_CNTRL                           0x118
+> > > > > > > >  #define QSERDES_V6_COM_LOCK_CMP_EN                             0x120
+> > > > > > > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
+> > > > > > > > index 15bcb4b..48f31c8 100644
+> > > > > > > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
+> > > > > > > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
+> > > > > > > > @@ -10,10 +10,20 @@
+> > > > > > > >  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_RX                     0x2c
+> > > > > > > >  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX              0x30
+> > > > > > > >  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_RX              0x34
+> > > > > > > > +#define QSERDES_UFS_V6_TX_LANE_MODE_1                          0x7c
+> > > > > > > > +#define QSERDES_UFS_V6_TX_FR_DCC_CTRL                          0x108
+> > > > > > > >
+> > > > > > > >  #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2          0x08
+> > > > > > > >  #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4          0x10
+> > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_SO_GAIN_RATE4          0x24
+> > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_COUNT_HIGH_RATE4       0x54
+> > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2                   0xd4
+> > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE4                   0xdc
+> > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_SO_GAIN_RATE4                   0xf0
+> > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_PI_CONTROLS                     0xf4
+> > > > > > > >  #define QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL                      0x178
+> > > > > > > > +#define QSERDES_UFS_V6_RX_EQ_OFFSET_ADAPTOR_CNTRL1             0x1bc
+> > > > > > > > +#define QSERDES_UFS_V6_RX_OFFSET_ADAPTOR_CNTRL3                        0x1c4
+> > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0                     0x208
+> > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B1                     0x20c
+> > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B3                     0x214
+> > > > > > > > @@ -25,6 +35,8 @@
+> > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE3_B5                                0x264
+> > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE3_B8                                0x270
+> > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE4_B3                                0x280
+> > > > > > > > +#define QSERDES_UFS_V6_RX_MODE_RATE4_B4                                0x284
+> > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE4_B6                                0x28c
+> > > > > > > > +#define QSERDES_UFS_V6_RX_DLL0_FTUNE_CTRL                      0x2f8
+> > > > > > > >
+> > > > > > > >  #endif
+> > > > > > > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> > > > > > > > index 3927eba..e0a01497 100644
+> > > > > > > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> > > > > > > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> > > > > > > > @@ -649,32 +649,51 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_serdes[] = {
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_HSCLK_SEL_1, 0x11),
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_HSCLK_HS_SWITCH_SEL_1, 0x00),
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP_EN, 0x01),
+> > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x04),
+> > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_IVCO, 0x0f),
+> > > > > > > > +
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_INITVAL2, 0x00),
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x41),
+> > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x7f),
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x06),
+> > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x4c),
+> > > > > > > > +};
+> > > > > > > > +
+> > > > > > > > +static const struct qmp_phy_init_tbl sm8550_ufsphy_hs_b_serdes[] = {
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x44),
+> > > > > > > > +};
+> > > > > > > > +
+> > > > > > > > +static const struct qmp_phy_init_tbl sm8550_ufsphy_g4_serdes[] = {
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x04),
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_IVCO, 0x0f),
+> > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
+> > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
+> > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
+> > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x99),
+> > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x07),
+> > > > > > >
+> > > > > > > Aside from moving these registers to the HS_G4 table, you are also
+> > > > > > > changing these registers. It makes me think that there was an error in
+> > > > > > > the original programming sequence.
+> > > > > > > If that is correct, could you please split the patch into two pieces:
+> > > > > > > - Fix programming sequence (add proper Fixes tags)
+> > > > > > > - Split G4 and G5 tables.
+> > > > > >
+> > > > > > Ack
+> > > > > >
+> > > > > > >
+> > > > > > > > +
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE1, 0x4c),
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE1, 0x0a),
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE1, 0x18),
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE1, 0x14),
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE1, 0x99),
+> > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE1, 0x07),
+> > > > > > >
+> > > > > > > I see all the MODE1 registers being only present in G4 and G5 tables.
+> > > > > > > Should they be programmed for the modes lower than G4?
+> > > > > > >
+> > > > > >
+> > > > > > We use G4 table for all the modes <= G4.
+> > > > >
+> > > > > Could you please point me how it's handled?
+> > > > > In the patch I see just:
+> > > > >
+> > > > >        if (qmp->submode == UFS_HS_G4)
+> > > > >                qmp_ufs_serdes_init(qmp, &cfg->tbls_hs_g4);
+> > > > >        else if (qmp->submode == UFS_HS_G5)
+> > > > >                qmp_ufs_serdes_init(qmp, &cfg->tbls_hs_g5);
+> > > > >
+> > > > > Which looks like two special cases (HS_G4 and HS_G5) and nothing for
+> > > > > anything else.
+> > > > >
+> > > >
+> > > > Yes, and the UFS driver passes only G4/G5. For all the gears <=G4, G4 init
+> > > > sequence will be used and for G5, G5 sequence will be used.
+> > > >
+> > >
+> > > That's what I could not find in the UFS driver. I see a call to
+> > > `phy_set_mode_ext(phy, PHY_MODE_UFS_HS_B, host->phy_gear);` and
+> > > host->phy_gear is initialised to UFS_HS_G2.
+> > >
+> >
+> > You need to check the UFS driver changes in this series to get the complete
+> > picture as the logic is getting changed.
+> >
+> > It is common to get confused because of the way the UFS driver (qcom mostly)
+> > handles the PHY init sequence programming. We used to have only one init
+> > sequence for older targets and life was easy. But when I wanted to add G4
+> > support for SM8250, I learned that there are 2 separate init sequences. One for
+> > non-G4 and other for G4. So I used the phy_sub_mode property to pass the
+> > relevant mode from the UFS driver to the PHY driver and programmed the sequence
+> > accordingly. This got extended to non-G5 and G5 now.
+> >
+> > Now, the UFS driver will start probing from a low gear for older targets (G2)
+> > and G4/G5 for newer ones then scale up based on the device and host capability.
+> > For older targets, the common table (tbls) will be used if the submode doesn't
+> > match G4/G5. But for newer targets, the UFS driver will _only_ pass G4 or G5 as
+> > the phy_gear, so those specific sequence will only be used.
+> >
+> > Hope I'm clear.
+> 
+> Yes, it is now clear, thank you!
+> 
+> Would it be possible / feasible / logical to maintain this idea even
+> for newer platforms (leaving the HS_A  / HS_B aside)?
+> 
+> tbls - works for HS_G2
+> tbls + tbls_g4 - works for HS_G4
+> tbls + tbls_g5 - works for HS_G5
+> 
 
-Thanks,
-Avri
+No. The PHY team only gives 2 init sequences for any SoC now.
 
-> ---
->  drivers/ufs/core/ufs-sysfs.c | 31 +++++++++++++++++++++++++++++++
->  drivers/ufs/core/ufshcd.c    |  4 ++--
->  2 files changed, 33 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c =
-index
-> c95906443d5f..d42846316a86 100644
-> --- a/drivers/ufs/core/ufs-sysfs.c
-> +++ b/drivers/ufs/core/ufs-sysfs.c
-> @@ -255,6 +255,35 @@ static ssize_t wb_on_store(struct device *dev,
-> struct device_attribute *attr,
->         return res < 0 ? res : count;
->  }
->=20
-> +static ssize_t rtc_update_ms_show(struct device *dev, struct
-> device_attribute *attr,
-> +                         char *buf)
-> +{
-> +       struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> +
-> +       return sysfs_emit(buf, "%d\n", hba->dev_info.rtc_update_period);
-> +}
-> +
-> +static ssize_t rtc_update_ms_store(struct device *dev, struct
-> device_attribute *attr,
-> +                          const char *buf, size_t count) {
-> +       struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> +       unsigned int ms;
-> +       bool resume_period_update;
-> +
-> +       if (kstrtouint(buf, 0, &ms))
-> +               return -EINVAL;
-> +
-> +       if (!hba->dev_info.rtc_update_period && ms > 0)
-> +               resume_period_update =3D  true;
-> +       /* Minimum and maximum update frequency should be synchronized
-> with all UFS vendors */
-> +       hba->dev_info.rtc_update_period =3D ms;
-> +
-> +       if (resume_period_update)
-> +               schedule_delayed_work(&hba->ufs_rtc_delayed_work,
-> +                                               msecs_to_jiffies(hba-
-> >dev_info.rtc_update_period));
-> +       return count;
-> +}
-> +
->  static ssize_t enable_wb_buf_flush_show(struct device *dev,
->                                     struct device_attribute *attr,
->                                     char *buf) @@ -339,6 +368,7 @@ static
-> DEVICE_ATTR_RW(auto_hibern8);  static DEVICE_ATTR_RW(wb_on);  static
-> DEVICE_ATTR_RW(enable_wb_buf_flush);
->  static DEVICE_ATTR_RW(wb_flush_threshold);
-> +static DEVICE_ATTR_RW(rtc_update_ms);
->=20
->  static struct attribute *ufs_sysfs_ufshcd_attrs[] =3D {
->         &dev_attr_rpm_lvl.attr,
-> @@ -351,6 +381,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] =3D=
- {
->         &dev_attr_wb_on.attr,
->         &dev_attr_enable_wb_buf_flush.attr,
->         &dev_attr_wb_flush_threshold.attr,
-> +       &dev_attr_rtc_update_ms.attr,
->         NULL
->  };
->=20
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
-> f0e3dd3dd280..ae9b60619fd3 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8234,9 +8234,9 @@ static void ufshcd_rtc_work(struct work_struct
-> *work)
->=20
->         ufshcd_update_rtc(hba);
->  out:
-> -       if (ufshcd_is_ufs_dev_active(hba))
-> +       if (ufshcd_is_ufs_dev_active(hba) &&
-> + hba->dev_info.rtc_update_period)
->                 schedule_delayed_work(&hba->ufs_rtc_delayed_work,
-> -
-> msecs_to_jiffies(UFS_RTC_UPDATE_EVERY_MS));
-> +
-> + msecs_to_jiffies(hba->dev_info.rtc_update_period));
->         return;
->  }
->=20
+- Mani
+
+> I mean here that the PHY driver should not depend on the knowledge
+> that the UFS driver will not be setting HS_G2 for some particular
+> platform and ideally it should continue working if at some point we
+> change the UFS driver to set HS_G2.
+> 
+> 
+> >
+> > - Mani
+> >
+> > > Maybe we should change the condition here (in the PHY driver) to:
+> > >
+> > > if (qmp->submode <= UFS_HS_G4)
+> > >
+> > > ?
+> > > --
+> > > With best wishes
+> > > Dmitry
+> >
+> > --
+> > மணிவண்ணன் சதாசிவம்
+> 
+> 
+> 
 > --
-> 2.34.1
+> With best wishes
+> Dmitry
 
+-- 
+மணிவண்ணன் சதாசிவம்
