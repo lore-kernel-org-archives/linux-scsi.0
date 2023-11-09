@@ -2,74 +2,80 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1A9BC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 12:52:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A73AC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 12:55:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232777AbjKIMwj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Nov 2023 07:52:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44652 "EHLO
+        id S230110AbjKIMzc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Nov 2023 07:55:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230218AbjKIMwi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2023 07:52:38 -0500
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1F592D74;
-        Thu,  9 Nov 2023 04:52:35 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1699534346; cv=none;
+        with ESMTP id S230006AbjKIMzb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2023 07:55:31 -0500
+X-Greylist: delayed 174 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 09 Nov 2023 04:55:29 PST
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47C042D78
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Nov 2023 04:55:28 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1699534347; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=gkXhb4EAeN/8TB+P9e8EOU6kTSEni/p9SgHPiwIba8zSgXOavDS4udc2o8Fm+ZW0x4
-    45mZWa2VAwztVxCHUqhhd5EgQWO4YtUpw8LDwShkZe0plP9wZ+jIUmaPT4tU4NtEHGod
-    uf8Xxp4BI+OrjnJRn2rCBvtQt6rY194xajds0dqWhNJvVAUWN+EgbKb4pKaUsuecaUtJ
-    pMvK5JqLIPdQ21At7H3usKv19sMAhskwoI5Qj9XmmkVo1Wz9942dXLT+OZs6ZkvcURFb
-    jPL7tk87VPqKncf/Ib8NHTEEZ3hpxMc3u0LfeXyBHSFHC7ybGSrrLp6ft9BeC+LvpRxD
-    FmnA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1699534346;
+    b=HvxOaHSRlZbk1XmVvFWCzCAS/poMD2oKLLszE7IAbyjw0a5FUUeZlV269UkD5H/8NF
+    xxWF4mnLyvGK5+MEvnCFGO7E85ZW8bMVL7XASELEENcw8x0MmQKYePxzvIfuDn/QxHcv
+    jv5Q7TWTiBUV9b+jjWVlIb0quMwJ4UGPv1WDarfE4IGHgc4YuvKlaX55IqhKO30Y2sLb
+    xYebZRJH7SdTMVG0KDf1fbTRINg4HLrdKTXmUHWXeQcurR4O8aY5nfRT+fmyvntzBYA5
+    smAMWtjDyQQ0fCoJ4g63plcmhzKRZvTUBS0bDZq3NqMxftCVoOu52+vSBAZ4JLRPyXM0
+    qxRw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1699534347;
     s=strato-dkim-0002; d=strato.com;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=EwkKdMTXCxt30OJjQRKdnjrNwC6JgXG5wvnseqvKzpk=;
-    b=kFri3/L/VvKjFBdepWFUGYMXUn5v+b1Ltre/O+x5f0u3NVJF/8+4XDkMIUhtbsp/5U
-    hULjh8RBRUS7utLM96dhzayn0ChxdEeTjMYSeK7OXYVh57jxHKL7ye+4W0JQXEweVuJJ
-    t3PawKfNBrLZ8g383OxhMyQiF00E3coUta8qkuX1ymYwmbU3PnhJvjN6nlW6P/ddN+hi
-    +lMr3aM7kCMBs7giGTeDl34opIWYooGo32xGbSA4kORj0QDf5/2rHo3ErdzzRsOBA4dN
-    rszK4hOIxNbn8L3sf8rEvlXmEQK6dYxXnMf4GQyP6gm3O3NetYdW0xV6bDwxdNdCAMyG
-    L9jg==
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=v4SoIWsZxnHJorNVgiNnDjS/thMt0XzDKT8bGo5VjDA=;
+    b=mkCld7oj7u3aYWklGDg0QTy+fwgiy9Ys4Z03Xq8zBVPtXfpg4FK+GxgRgqZyICL5/5
+    4gtUmlPPSZ4dWpAwOeR7osIUOmFWegpaVsnw07ONlzj0R20+nr0DEMnorIBbz6Sogjt1
+    QR8Mm5Oa3KbuKiqmYOgRODAZ6wt826Z+Ah02kPPuGodRXzk+0Hk2G4XV8NPW1PtEXZ3I
+    9yfFf2mR8VyVPa60Ut/8+ibt2gGMQQLMJ3YpRxpgTboD7EgqcoMy1v8Zc82Mgpb2nF5b
+    vDMg1G0tCB3EHepvg0s2uO7G+PQkFXf5w6srBxqKRU8Cyk0IeAwfr2tdq34WWH/h1lU4
+    hvKA==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1699534346;
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1699534347;
     s=strato-dkim-0002; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=EwkKdMTXCxt30OJjQRKdnjrNwC6JgXG5wvnseqvKzpk=;
-    b=kizJ7ps0K5Z3sO37joGNtFt1KGEioSp7R1QriOEPGjiaBJnMY9DCgdaHRgZ6wlERZN
-    No8EARKWyWDVZ/8Fckm48G+SfI/y80MmVawA2qqmZopW9uFF6Llx897Hi22zUnJIcYJd
-    r/FPCvP+kZg7xnK1cuKjwx7svf/dry3Wm/FHnv7Y1eOMsHdexPe57cj5KuLg3v+8BFrC
-    wIb2p04S+U6BiaQgQI6byVLGf3xZizyWWPxJAdDOSWdI/SKu/4wk//f7jSLH1KlyrIol
-    EldylsCOd019f3qtYV7QWeH/OzEjyMNB+wo4cGDMKjrd8iSM/hMY1plLo2ecW5LjiwyO
-    FGcg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1699534346;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=v4SoIWsZxnHJorNVgiNnDjS/thMt0XzDKT8bGo5VjDA=;
+    b=hI+HM+a7Yhwu+qO5vV1G5Oq5clKjkNb7IuOmaRD7FhM2LUu0zVabY/6tXhD1ARUvC/
+    vzATzvfA7O4QiFfd3iAEJ23mMqAc+kYw1brCWEiNRTQPGBlplunZjvmTUVybL4RqvgZa
+    jWdNFaMbVLuk5/MBH4kaFZN6MGbnBfaa/jmpBv5DUhEFe2dmOaNGe5Zc1p0Gb5njXA4G
+    CmTqi6nBFM/XmqIWz/LZF6b3aMstGfbnZz0nJViAIXgEIS4iBriIJF70PIQ0dKLnoyIH
+    mo+B7r2wa/qZnXFi0YqYGVfriGvQaE/dtN0cIXW6jIz5SKDgM2Xa2ZzsK4taClVrvzMk
+    GTLA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1699534347;
     s=strato-dkim-0003; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=EwkKdMTXCxt30OJjQRKdnjrNwC6JgXG5wvnseqvKzpk=;
-    b=hnpFd1PFSoTgLU1Naz7N3Z/MVX2Kn58WY6RaY43YtgCNRyOCSjQi0xs+A1ZQhP3aeQ
-    +RF4E6q0Hpb6xzlexNAA==
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=v4SoIWsZxnHJorNVgiNnDjS/thMt0XzDKT8bGo5VjDA=;
+    b=oHvFJVZB2InfVpbMs/RvesrWQUjAxaDssXgPHKGtFaZqGWP1aMkZC4UvztwrYunlid
+    /IyLjDa9v0OK/MxRTzAQ==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD2QzemV2tdlNlNRZBXiUw="
 Received: from Munilab01-lab.micron.com
     by smtp.strato.de (RZmta 49.9.1 AUTH)
-    with ESMTPSA id zd0181zA9CqPvYm
+    with ESMTPSA id zd0181zA9CqRvYp
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Thu, 9 Nov 2023 13:52:25 +0100 (CET)
+    Thu, 9 Nov 2023 13:52:27 +0100 (CET)
 From:   Bean Huo <beanhuo@iokpp.de>
 To:     avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com,
         jejb@linux.ibm.com, martin.petersen@oracle.com,
         stanley.chu@mediatek.com, mani@kernel.org, quic_cang@quicinc.com,
         quic_asutoshd@quicinc.com, beanhuo@micron.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mikebi@micron.com, lporzio@micron.com, Bean Huo <beanhuo@iokpp.de>
-Subject: [PATCH v1 0/2] Add UFS RTC support
-Date:   Thu,  9 Nov 2023 13:52:15 +0100
-Message-Id: <20231109125217.185462-1-beanhuo@iokpp.de>
+        mikebi@micron.com, lporzio@micron.com
+Subject: [PATCH v1 2/2] scsi: ufs: core: Add sysfs node for UFS RTC update
+Date:   Thu,  9 Nov 2023 13:52:17 +0100
+Message-Id: <20231109125217.185462-3-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231109125217.185462-1-beanhuo@iokpp.de>
+References: <20231109125217.185462-1-beanhuo@iokpp.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain; charset="us-ascii"
@@ -77,18 +83,90 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-*** BLURB HERE ***
+From: Bean Huo <beanhuo@micron.com>
 
-Bean Huo (2):
-  scsi: ufs: core: Add UFS RTC support
-  scsi: ufs: core: Add sysfs node for UFS RTC update
+This patch introduces a sysfs node named 'rtc_update_ms' within the kernel, enabling users to
+adjust the RTC periodic update frequency to suit the specific requirements of the system and
+UFS. Also, this patch allows the user to disable periodic update RTC  in the UFS idle time.
 
- drivers/ufs/core/ufs-sysfs.c | 31 ++++++++++++
- drivers/ufs/core/ufshcd.c    | 92 ++++++++++++++++++++++++++++++++++++
- include/ufs/ufs.h            | 20 ++++++++
- include/ufs/ufshcd.h         |  2 +
- 4 files changed, 145 insertions(+)
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/ufs/core/ufs-sysfs.c | 31 +++++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd.c    |  4 ++--
+ 2 files changed, 33 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index c95906443d5f..d42846316a86 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -255,6 +255,35 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+ 	return res < 0 ? res : count;
+ }
+ 
++static ssize_t rtc_update_ms_show(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", hba->dev_info.rtc_update_period);
++}
++
++static ssize_t rtc_update_ms_store(struct device *dev, struct device_attribute *attr,
++			   const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned int ms;
++	bool resume_period_update;
++
++	if (kstrtouint(buf, 0, &ms))
++		return -EINVAL;
++
++	if (!hba->dev_info.rtc_update_period && ms > 0)
++		resume_period_update =  true;
++	/* Minimum and maximum update frequency should be synchronized with all UFS vendors */
++	hba->dev_info.rtc_update_period = ms;
++
++	if (resume_period_update)
++		schedule_delayed_work(&hba->ufs_rtc_delayed_work,
++						msecs_to_jiffies(hba->dev_info.rtc_update_period));
++	return count;
++}
++
+ static ssize_t enable_wb_buf_flush_show(struct device *dev,
+ 				    struct device_attribute *attr,
+ 				    char *buf)
+@@ -339,6 +368,7 @@ static DEVICE_ATTR_RW(auto_hibern8);
+ static DEVICE_ATTR_RW(wb_on);
+ static DEVICE_ATTR_RW(enable_wb_buf_flush);
+ static DEVICE_ATTR_RW(wb_flush_threshold);
++static DEVICE_ATTR_RW(rtc_update_ms);
+ 
+ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_rpm_lvl.attr,
+@@ -351,6 +381,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_wb_on.attr,
+ 	&dev_attr_enable_wb_buf_flush.attr,
+ 	&dev_attr_wb_flush_threshold.attr,
++	&dev_attr_rtc_update_ms.attr,
+ 	NULL
+ };
+ 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index f0e3dd3dd280..ae9b60619fd3 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8234,9 +8234,9 @@ static void ufshcd_rtc_work(struct work_struct *work)
+ 
+ 	ufshcd_update_rtc(hba);
+ out:
+-	if (ufshcd_is_ufs_dev_active(hba))
++	if (ufshcd_is_ufs_dev_active(hba) && hba->dev_info.rtc_update_period)
+ 		schedule_delayed_work(&hba->ufs_rtc_delayed_work,
+-							msecs_to_jiffies(UFS_RTC_UPDATE_EVERY_MS));
++						msecs_to_jiffies(hba->dev_info.rtc_update_period));
+ 	return;
+ }
+ 
 -- 
 2.34.1
 
