@@ -2,426 +2,531 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D31C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Nov 2023 17:48:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9846C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 01:35:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232025AbjKHRsd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Nov 2023 12:48:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34764 "EHLO
+        id S231444AbjKIBfX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Nov 2023 20:35:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232035AbjKHRsc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 12:48:32 -0500
-Received: from mail-il1-x135.google.com (mail-il1-x135.google.com [IPv6:2607:f8b0:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CFD71FFF
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Nov 2023 09:48:30 -0800 (PST)
-Received: by mail-il1-x135.google.com with SMTP id e9e14a558f8ab-35937f2fadeso28013465ab.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Nov 2023 09:48:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1699465710; x=1700070510; darn=vger.kernel.org;
-        h=to:subject:message-id:date:mime-version:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=iQKMstxxrELZmV1RmroJEV23t3GywHHakqFB4w4a5GA=;
-        b=jmeAxXWM1dVbESdPsN+ivKIwQoorFcChnDs+24iCBjojAe1cASLT03Sd/0T3WOX75K
-         EIuZ1Aw0Ca4sTM56xMog8ClZi+ETWheOjJoD4ofWkjbnMRORHMhOiFgOuOBxQFZ8e/VR
-         wwUYo4xKO45v0H3bFFU7HY50U1ZxRmemzzPS4+sVIWu18xXiluSqYmxqgSHtbjZIiawj
-         ohxB8GY9y/OmWXCkr76qP83P7fO/jT9ZyiJQzhCdQFAqYjdqkXQBXXZnpdfgJfCy5JQX
-         uxoC/H89fT6BsGQw5uqTHpwGKnnF1OEBa9u9vKX1exiPniv4fXpYkytI7MezksNOv1B7
-         BUiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699465710; x=1700070510;
-        h=to:subject:message-id:date:mime-version:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=iQKMstxxrELZmV1RmroJEV23t3GywHHakqFB4w4a5GA=;
-        b=iYdQA68ecWqbq1Qb9cSeLsgwtZ8gP8A6+/ieXmGMakN6JRv9poFmAIXp2OGQqNl21u
-         U6nw5sCy68BGJS2fXORZ7deh1LuQwiVk0b4hMFhteS9xUwKFept6kOcxpsIVOB09i5GN
-         J7Sa/jJKuD+W7haodtrshSpcT0HnZDloH7Q8LPzgsjbjIR4lVqWaoUk15C5Tev8SwjDY
-         atndWU118XnYQ6PFfBPddPhMM2TSctH1kAvFp6jyRFeg5WIslP6D8UJHDG6aFip4O8Sr
-         kAyVQCr9zLF5x0ab+9qsNpMOAYL1KK4ogVL2OZ6Sjcr31aNzV/m6xZ2Am0j3AFfhfZid
-         U1NA==
-X-Gm-Message-State: AOJu0YxBwDwz1Sbv4hDkpxrbiCVgMVusu+cGXXCbIEx/qyjtwH1d+K3V
-        LESKnofc6+DADg38spON/Iumgwd4eLkGYyYZQy3kQAyEAoe3GiSU
-X-Google-Smtp-Source: AGHT+IFUixLLDFD6Et7bSJhFpChPFFXP/adTg9qOi1uAZfs4OZn2nDNgqlTCmjyicyFd+p5tGF7UoAPEZoSFVvicnI8=
-X-Received: by 2002:a05:6e02:20c9:b0:351:47fd:e9d4 with SMTP id
- 9-20020a056e0220c900b0035147fde9d4mr3066715ilq.20.1699465709784; Wed, 08 Nov
- 2023 09:48:29 -0800 (PST)
-Received: from 636185307265 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 8 Nov 2023 09:48:27 -0800
-From:   CHECK INV DETAILS <fdghyjuhgytfrd@gmail.com>
+        with ESMTP id S229697AbjKIBfW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 20:35:22 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF4E8D5A;
+        Wed,  8 Nov 2023 17:35:20 -0800 (PST)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A8NiSaF007152;
+        Thu, 9 Nov 2023 01:35:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=i4I6Sqlpc5bhpTdnGlmCRfb0IsrAbeAZCXM+6dzFB8k=;
+ b=eHZWIf1N8nKKDGedaoy/adNcHCN7t1qWL9Id4TboSB8bkUCDaW2mZmYzdxmHwf2UBGvZ
+ 2QrodLKanSfKTwT+3tgIej4bjKYKmwbuzlomZmw+zZUkfDlC6PcEmL1SyrCaQGYxeAhM
+ kYiQx6k4VEHtkbFSHP45U6D3aWtNy5B5opRBjCvs4JLfR5UL+dV18UFA6ICIQRlCGXQs
+ XcqPHEVugVlR4n+vEeOuVrTbs8R6k/MqQGFniFJ9O33fZqXfLazq9RjGLAK/c8rzO3pm
+ 9QGMbdZuCjntE7EODf2f53y0CuGPH1K4jGTCU1JXU0aY+e2KUueHZHWfK2J0nMKa6n5o RQ== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u7w2dub3t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Nov 2023 01:35:13 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3A91ZCSt024961
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 9 Nov 2023 01:35:12 GMT
+Received: from [10.253.34.202] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Wed, 8 Nov
+ 2023 17:35:09 -0800
+Message-ID: <00870a26-baa2-7b11-8d1b-7866d5b5ef3d@quicinc.com>
+Date:   Thu, 9 Nov 2023 09:35:06 +0800
 MIME-Version: 1.0
-Date:   Wed, 8 Nov 2023 09:48:27 -0800
-Message-ID: <CAPd0oVMYc=7zGO9-3imyBhQQ=8q+heGWa5aZFX+wKX+khZarRg@mail.gmail.com>
-Subject: Order#84697
-To:     linux-scsi@vger.kernel.org
-Content-Type: multipart/mixed; boundary="000000000000f0cbcd0609a7b199"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH V8 2/5] scsi: ufs: qcom: Add multiple frequency support
+ for MAX_CORE_CLK_1US_CYCLES
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+CC:     <mani@kernel.org>, <agross@kernel.org>, <andersson@kernel.org>,
+        <konrad.dybcio@linaro.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>,
+        Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+References: <20230905052400.13935-1-quic_nitirawa@quicinc.com>
+ <20230905052400.13935-3-quic_nitirawa@quicinc.com>
+ <CAA8EJpr1RE5wDxM939vec8c7aaFYozXc1SxU-tT2dg4Gx4PqEg@mail.gmail.com>
+Content-Language: en-US
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <CAA8EJpr1RE5wDxM939vec8c7aaFYozXc1SxU-tT2dg4Gx4PqEg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: dzq14Mc5VMIBWbZrIFnTLJRJuuUVBGYz
+X-Proofpoint-ORIG-GUID: dzq14Mc5VMIBWbZrIFnTLJRJuuUVBGYz
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-09_01,2023-11-08_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
+ lowpriorityscore=0 priorityscore=1501 impostorscore=0 adultscore=0
+ clxscore=1015 mlxlogscore=999 mlxscore=0 suspectscore=0 bulkscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311090011
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000f0cbcd0609a7b199
-Content-Type: text/plain; charset="UTF-8"
 
-Order placed successfully Registered Delivered Quality control check
-Succesful purchase
 
---000000000000f0cbcd0609a7b199
-Content-Type: application/octet-stream; name="Invoice84697.pdf"
-Content-Disposition: attachment; filename="Invoice84697.pdf"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: a8be299bff8b8abe_0.1
+On 11/9/2023 12:30 AM, Dmitry Baryshkov wrote:
+> On Tue, 5 Sept 2023 at 19:20, Nitin Rawat <quic_nitirawa@quicinc.com> wrote:
+>>
+>> Qualcomm UFS Controller V4 and above supports multiple unipro frequencies
+>> like 403MHz, 300MHz, 202MHz, 150 MHz, 75Mhz, 37.5 MHz. Current code
+>> supports only 150MHz and 75MHz which have performance impact due to low
+>> UFS controller frequencies.
+>>
+>> For targets which supports frequencies other than 150 MHz and 75 Mhz,
+>> needs an update of MAX_CORE_CLK_1US_CYCLES to match the configured
+>> frequency to avoid functionality issues. Add multiple frequency support
+>> for MAX_CORE_CLK_1US_CYCLES based on the frequency configured.
+>>
+>> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+>> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> 
+> This patch breaks UFS support on the APQ8096. Now the boot process
+> breaks with the following messages.
+> 
+> 
+> [    4.885592] ufshcd-qcom 624000.ufshc: uic cmd 0x16 with arg3 0x0
+> completion timeout
+> [    4.890996] ufshcd-qcom 624000.ufshc: ufs_qcom_host_reset: reset
+> control not set
+> [    5.424864] ufshcd-qcom 624000.ufshc: uic cmd 0x16 with arg3 0x0
+> completion timeout
+> [    5.425020] ufshcd-qcom 624000.ufshc: ufs_qcom_host_reset: reset
+> control not set
+> [    5.936918] ufshcd-qcom 624000.ufshc: uic cmd 0x16 with arg3 0x0
+> completion timeout
+> [    5.937136] ufshcd-qcom 624000.ufshc: link startup failed -110
+> [    5.943584] ufshcd-qcom 624000.ufshc: UFS Host state=0
+> [    5.949463] ufshcd-qcom 624000.ufshc: outstanding reqs=0x0 tasks=0x0
+> [    5.954594] ufshcd-qcom 624000.ufshc: saved_err=0x0, saved_uic_err=0x0
+> [    5.961106] ufshcd-qcom 624000.ufshc: Device power mode=1, UIC link state=0
+> [    5.967479] ufshcd-qcom 624000.ufshc: PM in progress=0, sys. suspended=0
+> [    5.974310] ufshcd-qcom 624000.ufshc: Auto BKOPS=0, Host self-block=0
+> [    5.981271] ufshcd-qcom 624000.ufshc: Clk gate=1
+> [    5.987541] ufshcd-qcom 624000.ufshc: last_hibern8_exit_tstamp at 0
+> us, hibern8_exit_cnt=0
+> [    5.992330] ufshcd-qcom 624000.ufshc: last intr at 5432791 us, last
+> intr status=0x400
+Just chiming in, looks like the cmd 0x16 completion IRQ comes a bit 
+late, but it indeed comes.
 
-JVBERi0xLjQKMSAwIG9iago8PAovVGl0bGUgKP7/AE4AbwByAHQAbwBuACAAQQBuAHQAaQAtAFYA
-aQByAHUAcykKL0NyZWF0b3IgKP7/AHcAawBoAHQAbQBsAHQAbwBwAGQAZgAgADAALgAxADIALgA2
-KQovUHJvZHVjZXIgKP7/AFEAdAAgADQALgA4AC4ANykKL0NyZWF0aW9uRGF0ZSAoRDoyMDIzMTEw
-ODE3NDgyN1opCj4+CmVuZG9iagozIDAgb2JqCjw8Ci9UeXBlIC9FeHRHU3RhdGUKL1NBIHRydWUK
-L1NNIDAuMDIKL2NhIDEuMAovQ0EgMS4wCi9BSVMgZmFsc2UKL1NNYXNrIC9Ob25lPj4KZW5kb2Jq
-CjQgMCBvYmoKWy9QYXR0ZXJuIC9EZXZpY2VSR0JdCmVuZG9iago4IDAgb2JqCjw8Ci9UeXBlIC9D
-YXRhbG9nCi9QYWdlcyAyIDAgUgo+PgplbmRvYmoKNSAwIG9iago8PAovVHlwZSAvUGFnZQovUGFy
-ZW50IDIgMCBSCi9Db250ZW50cyA5IDAgUgovUmVzb3VyY2VzIDExIDAgUgovQW5ub3RzIDEyIDAg
-UgovTWVkaWFCb3ggWzAgMCA1OTUgODQyXQo+PgplbmRvYmoKMTEgMCBvYmoKPDwKL0NvbG9yU3Bh
-Y2UgPDwKL1BDU3AgNCAwIFIKL0NTcCAvRGV2aWNlUkdCCi9DU3BnIC9EZXZpY2VHcmF5Cj4+Ci9F
-eHRHU3RhdGUgPDwKL0dTYSAzIDAgUgo+PgovUGF0dGVybiA8PAo+PgovRm9udCA8PAovRjYgNiAw
-IFIKL0Y3IDcgMCBSCj4+Ci9YT2JqZWN0IDw8Cj4+Cj4+CmVuZG9iagoxMiAwIG9iagpbIF0KZW5k
-b2JqCjkgMCBvYmoKPDwKL0xlbmd0aCAxMCAwIFIKL0ZpbHRlciAvRmxhdGVEZWNvZGUKPj4Kc3Ry
-ZWFtCnic7VxLb9w2EL7vr9C5wMrkUHwIKArYa7tADwUML9BD0EPhNC2COGiaQ/9+qZV2RfEjxbGw
-2jhIvIitHfAxz2+GD+Xq58c/qr8+V1e7x3+qp+Hv7nEjaqtF/1N1n21IIFcPz5WTaniunp43n6pP
-m4fNg/99/Nv1fd5YaeuujdT+64fwqxSNqU0rW+fpIv7aNf5789sP1Uc/4JFFURuhWpLauOzz56eP
-m6tetI2pGyGt005XJEXdaGdF65ma0GVN2rVKddyJtratE8JEdN9Zt46oDcf5kBm/Y/xdwLMfo//J
-Poc825oECdEKF/IQ8Uy10K0XN+YtRw9lSY4f87yCnkPeMjxM6GvrOWnr5yn9pXoOeMv5UsizPHxC
-rnzY1L4PkSIlD+EXf/exZk33IMlVja7+/dMP6COO13Wc2Ue1kK0R1jX+WVihnSOlJ9zkWz3ufvVB
-+l9F1S/+3/vqze9+/LdBqPImuNlvru5NJ8b+XdUzue3/7Hsxt8pU+7fVjx1k/FTt32+80OJIoZ7S
-jBR1oBywZqA0PUXN9dIHyt3eK3H0Ju0GV4+fLemm9ZJNBOG0L+rspZMO2vOipLTX6mpr9FFGA3ro
-pZYU68qOBHsgBNp0cYsWhoU+vU0Cs13DxDcJAxw+ExUfKGUlQsdZNRmPNVspT6zseuYC77jtKXKk
-3MUi3scSSXGgmJEgGePexBRJQIGBVWSSoUXkzWP4TZ+dIdto0brIm8vtGd78sknnvZkoNJNsQOO6
-rCoTq8pCH8egtDMaf32ac6KZaO4a5EG324FrxoGPTRKKQvXeXiLQlUjqwT+f4FDexUA2xGcAUwO0
-BTIPYd6OlHgYEvEwJAPnWAXBvGAkTRZnCDAEcR6giA0zYwtSZfujG2HUAgU6URM3wbkTbfQlDNHI
-qWsESQLyLRkQlSA1xumUUKll6yVyPcy0wOTZAJ+HBUSg3QVMo8RJhS6OY0aOT+gdVEgAGRzbgKNA
-BYXWgxKKQKlYqwHOJ2SCNuiAfRMSM35MO+AYNRzXhXQbuxciV3mUhLIYxo2nTgQisHsRp6V8AZ/w
-NuQaa+1y2Y/Qfgdzo2nATxhF8bdRu8rGhpZUgoGaQEmkOIiXXGm3ar1lK1I577VReQUBFhBUTBgy
-+IgzAksDA21gmFwRMk9pywNfQxMOxzcxKudqbQ7szenzrtznHviFTkNEhm1AAnUuIMy5EmkzcSbU
-KtoCKRzZ0OxlP2VoHu2HIqAxzmJjjh764AzKIfTAjNExWas57mAUhkTlSBzSSDh12Y7DDsK4ThoW
-HkEygowLfUCghEsxIAqdAfkHSmIqXEzZmGHQ3WDqOW5QbEaYcCCVIzf6b25DBmJ0RUTqklvbRHkX
-SqrQWqDDJX6RsNZKqHbcFNJ5CcC5yt7GSsYMNaCIZSDheHoZJRL+WI46VAwD7DFnMOqChGaQYUas
-lguOYc0ejALgzjHBV1uTNHaCAa+sJuEgK6OoXGSMYe1yeaBIsILlBJbb4DuovEWx+G0C2ZdJxo10
-L0jGnKTDMTluf4KWz4K1X7IQSNQpqE8OKoDrLJIbZ8IQRxUzluEAJoyid93kNRvfF08ua6bSbnkf
-RHC59EQmGQU3w37o67jYYCyWGTMhdDBWjhyZkBsUirH0WLZjgRy353KemU3yxtAwHW5UJzbAYSMf
-bKFk3Cmx340nJYxTVM4tkHg7nrHXjmdIeKaf2Xxf0TR+9q0+3d/CA9HyMTSt7j4HHo2MHHi1Q5a1
-JXH5ewAJ7eL5M/u0eWVBjDyahHP2pIDCOYldchKmFGPceBSEk8TR8f1F1HqKxlemVrylyUDB2XuE
-6yixETrENIFRVj44RtzDPqBDvDbwtVzoXNMQJ+BedqaKd40YZ6q0et7sZRuhvHyzMRHN9iJcjjid
-8MfcSnzO8xeVTAo9H5x29fzb62MEWMGABuBbxVdUy9HHweT1s4svw+14xzQu9UAszAAI74w6C4dh
-VO6Jsuc8N+jKeQ6hE03FuN+HZRpDJMZ9HNTVEgkSKyOYmhMLi1ZYGEDAMOPaHorNqOnKzLHKpzMt
-TxdUYRzvhIt9ialBAjR/+YojzrTEXTlTc9yVkcqW+Ga5WFzkiRkRV4Z/pbO6AY/g+CteV0UoR7As
-l7yLqm10CdjOwGA5z6YR5+YxI9wXaQ8Vwdn9KDoxBz2XvGWVCPfzvGV1ltBl+UP5AnaiCWOxjADL
-KDRo9c2eDjjciYHvL9+9zgvM3ct3o5m+v3zH1hx1L98FmnstL98d/6eG2aB+qB42/wOBVivuCmVu
-ZHN0cmVhbQplbmRvYmoKMTAgMCBvYmoKMTcwMwplbmRvYmoKMTMgMCBvYmoKPDwgL1R5cGUgL0Zv
-bnREZXNjcmlwdG9yCi9Gb250TmFtZSAvUU5BQUFBK0FyaWFsQm9sZAovRmxhZ3MgNCAKL0ZvbnRC
-Qm94IFstNTYyLjAxMTcxOCAtMzM2LjkxNDA2MiAxNzkwLjAzOTA2IDk0NC44MjQyMTggXQovSXRh
-bGljQW5nbGUgMCAKL0FzY2VudCA2NTEuMzY3MTg3IAovRGVzY2VudCAtMTg4LjQ3NjU2MiAKL0Nh
-cEhlaWdodCAwIAovU3RlbVYgOTMuNzUwMDAwMCAKL0ZvbnRGaWxlMiAxNCAwIFIKPj4KZW5kb2Jq
-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
-+fo3MQ37WuuxlvJ8qw094hxxi7hRrBXXiReKF4ubxZ3i+ljsa65brvlbVXS2k8zgSoBj16OznbQO
-e8GiniswIvNYij5g8qDjxKxH5ozCKcR6hb/Ds/8HFe2a3AplbmRzdHJlYW0KZW5kb2JqCjE3IDAg
-b2JqCjgyMjQKZW5kb2JqCjE1IDAgb2JqCjw8IC9UeXBlIC9Gb250Ci9TdWJ0eXBlIC9DSURGb250
-VHlwZTIKL0Jhc2VGb250IC9BcmlhbEJvbGQKL0NJRFN5c3RlbUluZm8gPDwgL1JlZ2lzdHJ5IChB
-ZG9iZSkgL09yZGVyaW5nIChJZGVudGl0eSkgL1N1cHBsZW1lbnQgMCA+PgovRm9udERlc2NyaXB0
-b3IgMTMgMCBSCi9DSURUb0dJRE1hcCAvSWRlbnRpdHkKL1cgWzAgWzY2NiA2NDEgNTQzIDM0NSAy
-OTUgNTQzIDY0MSAyNDcgMjk1IDU5MiA1NDMgNDk0IDY0MSA0OTQgMjQ3IDU0MyAyNDcgNjQxIDQ5
-NCAyOTUgNTE4IDQ5NCAyOTUgNDk0IDQ5NCAyOTUgNDk0IDQ5NCA0OTQgNDk0IDI0NyA2OTEgNjQx
-IDU5MiA0OTQgNDk0IDQ5NCA0OTQgNDk0IDQ5NCA4MzggNzkwIDQ5NCA4NjYgNTQzIDI0NyA1OTIg
-NTQzIDQ5NCA1NDMgNDk0IDc0MCA1OTIgNTQzIDI5NSBdCl0KPj4KZW5kb2JqCjE2IDAgb2JqCjw8
-IC9MZW5ndGggNzQyID4+CnN0cmVhbQovQ0lESW5pdCAvUHJvY1NldCBmaW5kcmVzb3VyY2UgYmVn
-aW4KMTIgZGljdCBiZWdpbgpiZWdpbmNtYXAKL0NJRFN5c3RlbUluZm8gPDwgL1JlZ2lzdHJ5IChB
-ZG9iZSkgL09yZGVyaW5nIChVQ1MpIC9TdXBwbGVtZW50IDAgPj4gZGVmCi9DTWFwTmFtZSAvQWRv
-YmUtSWRlbnRpdHktVUNTIGRlZgovQ01hcFR5cGUgMiBkZWYKMSBiZWdpbmNvZGVzcGFjZXJhbmdl
-CjwwMDAwPiA8RkZGRj4KZW5kY29kZXNwYWNlcmFuZ2UKMiBiZWdpbmJmcmFuZ2UKPDAwMDA+IDww
-MDAwPiA8MDAwMD4KPDAwMDE+IDwwMDM2PiBbPDAwNEU+IDwwMDZGPiA8MDA3Mj4gPDAwNzQ+IDww
-MDZFPiA8MDA0MT4gPDAwNjk+IDwwMDJEPiA8MDA1Nj4gPDAwNzU+IDwwMDczPiA8MDA0OD4gPDAw
-NjU+IDwwMDZDPiA8MDA3MD4gPDAwMjA+IDwwMDQ0PiA8MDA2Qj4gPDAwM0E+IDwwMDJCPiA8MDAz
-MT4gPDAwMjg+IDwwMDM4PiA8MDAzNj4gPDAwMjk+IDwwMDM5PiA8MDAzNT4gPDAwMzc+IDwwMDM0
-PiA8MDA0OT4gPDAwNEY+IDwwMDQzPiA8MDA0NT4gPDAwNjE+IDwwMDMwPiA8MDAzMj4gPDAwMzM+
-IDwwMDc2PiA8MDA2Mz4gPDAwNTc+IDwwMDZEPiA8MDA3OD4gPDAwNDA+IDwwMDY3PiA8MDAyRT4g
-PDAwNTA+IDwwMDY0PiA8MDAyND4gPDAwNjg+IDwwMDc5PiA8MDA0RD4gPDAwNTM+IDwwMDYyPiA8
-MDA2Nj4gXQplbmRiZnJhbmdlCmVuZGNtYXAKQ01hcE5hbWUgY3VycmVudGRpY3QgL0NNYXAgZGVm
-aW5lcmVzb3VyY2UgcG9wCmVuZAplbmQKCmVuZHN0cmVhbQplbmRvYmoKNiAwIG9iago8PCAvVHlw
-ZSAvRm9udAovU3VidHlwZSAvVHlwZTAKL0Jhc2VGb250IC9BcmlhbEJvbGQKL0VuY29kaW5nIC9J
-ZGVudGl0eS1ICi9EZXNjZW5kYW50Rm9udHMgWzE1IDAgUl0KL1RvVW5pY29kZSAxNiAwIFI+Pgpl
-bmRvYmoKMTggMCBvYmoKPDwgL1R5cGUgL0ZvbnREZXNjcmlwdG9yCi9Gb250TmFtZSAvUVNBQUFB
-K0FyaWFsUmVndWxhcgovRmxhZ3MgNCAKL0ZvbnRCQm94IFstNTk0LjcyNjU2MiAtMjkwLjUyNzM0
-MyAxNzkwLjAzOTA2IDkzMC4xNzU3ODEgXQovSXRhbGljQW5nbGUgMCAKL0FzY2VudCA2NTEuMzY3
-MTg3IAovRGVzY2VudCAtMTg4LjQ3NjU2MiAKL0NhcEhlaWdodCAwIAovU3RlbVYgNjUuNDI5Njg3
-NSAKL0ZvbnRGaWxlMiAxOSAwIFIKPj4KZW5kb2JqCjE5IDAgb2JqCjw8Ci9MZW5ndGgxIDE1MDQw
-IAovTGVuZ3RoIDIyIDAgUgovRmlsdGVyIC9GbGF0ZURlY29kZQo+PgpzdHJlYW0KeJztWXlwG9d5
-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
-AbvNCbJ8/HAucwvc4yj4e0nEX2pTJEUL4JfHLPxy+Wf81aRf82m/c4L42yQoPCm8KPyp8F14vyq8
-Jnzjf/nZ1AZ833o+9bv3fOq392zo1hOZW09kbj2R+b9/IqP25ltPZX43n8qo0bv1ZObWk5lbT2Zu
-PZlZ281vPZ1Z/XRGR+fWE5pbT2huPaH5f/aEJudvGyLOCH39j7DK/buHtOqvG/j3jVXX4U7FuMvY
-bhwxHjYegM/9qyRF4Lwb+E7jPbzay0L023RJINhb+W/fGP4S5zrIfwPnMgTVCmVuZHN0cmVhbQpl
-bmRvYmoKMjIgMCBvYmoKNTY5NwplbmRvYmoKMjAgMCBvYmoKPDwgL1R5cGUgL0ZvbnQKL1N1YnR5
-cGUgL0NJREZvbnRUeXBlMgovQmFzZUZvbnQgL0FyaWFsUmVndWxhcgovQ0lEU3lzdGVtSW5mbyA8
-PCAvUmVnaXN0cnkgKEFkb2JlKSAvT3JkZXJpbmcgKElkZW50aXR5KSAvU3VwcGxlbWVudCAwID4+
-Ci9Gb250RGVzY3JpcHRvciAxOCAwIFIKL0NJRFRvR0lETWFwIC9JZGVudGl0eQovVyBbMCBbNjY2
-IDI0NyAyNDcgMjQ3IDQ5NCA0OTQgNDQ0IDQ5NCA0OTQgNDk0IDQ0NCAyOTUgNDk0IDQ5NCA0OTQg
-NDQ0IDQ5NCA0NDQgNjQxIDU5MiAxOTcgMjk1IDU5MiAxOTcgNzQwIDI0NyA1NDMgNjQxIDI0NyAx
-NzAgNDk0IF0KXQo+PgplbmRvYmoKMjEgMCBvYmoKPDwgL0xlbmd0aCA1NzQgPj4Kc3RyZWFtCi9D
-SURJbml0IC9Qcm9jU2V0IGZpbmRyZXNvdXJjZSBiZWdpbgoxMiBkaWN0IGJlZ2luCmJlZ2luY21h
-cAovQ0lEU3lzdGVtSW5mbyA8PCAvUmVnaXN0cnkgKEFkb2JlKSAvT3JkZXJpbmcgKFVDUykgL1N1
-cHBsZW1lbnQgMCA+PiBkZWYKL0NNYXBOYW1lIC9BZG9iZS1JZGVudGl0eS1VQ1MgZGVmCi9DTWFw
-VHlwZSAyIGRlZgoxIGJlZ2luY29kZXNwYWNlcmFuZ2UKPDAwMDA+IDxGRkZGPgplbmRjb2Rlc3Bh
-Y2VyYW5nZQoyIGJlZ2luYmZyYW5nZQo8MDAwMD4gPDAwMDA+IDwwMDAwPgo8MDAwMT4gPDAwMUU+
-IFs8MDA0OT4gPDAwNzQ+IDwwMDIwPiA8MDA2OD4gPDAwNjE+IDwwMDczPiA8MDA2Mj4gPDAwNjU+
-IDwwMDZFPiA8MDA2Mz4gPDAwNzI+IDwwMDY3PiA8MDA2ND4gPDAwNkY+IDwwMDc5PiA8MDA3NT4g
-PDAwNzY+IDwwMDRFPiA8MDA0MT4gPDAwNjk+IDwwMDJEPiA8MDA1Nj4gPDAwNkM+IDwwMDZEPiA8
-MDAyRT4gPDAwNTQ+IDwwMDc3PiA8MDA2Nj4gPDAwMjc+IDwwMDcwPiBdCmVuZGJmcmFuZ2UKZW5k
-Y21hcApDTWFwTmFtZSBjdXJyZW50ZGljdCAvQ01hcCBkZWZpbmVyZXNvdXJjZSBwb3AKZW5kCmVu
-ZAoKZW5kc3RyZWFtCmVuZG9iago3IDAgb2JqCjw8IC9UeXBlIC9Gb250Ci9TdWJ0eXBlIC9UeXBl
-MAovQmFzZUZvbnQgL0FyaWFsUmVndWxhcgovRW5jb2RpbmcgL0lkZW50aXR5LUgKL0Rlc2NlbmRh
-bnRGb250cyBbMjAgMCBSXQovVG9Vbmljb2RlIDIxIDAgUj4+CmVuZG9iagoyIDAgb2JqCjw8Ci9U
-eXBlIC9QYWdlcwovS2lkcyAKWwo1IDAgUgpdCi9Db3VudCAxCi9Qcm9jU2V0IFsvUERGIC9UZXh0
-IC9JbWFnZUIgL0ltYWdlQ10KPj4KZW5kb2JqCnhyZWYKMCAyMwowMDAwMDAwMDAwIDY1NTM1IGYg
-CjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAxOTU5NSAwMDAwMCBuIAowMDAwMDAwMTkxIDAwMDAw
-IG4gCjAwMDAwMDAyODYgMDAwMDAgbiAKMDAwMDAwMDM3MiAwMDAwMCBuIAowMDAwMDEyMjk3IDAw
-MDAwIG4gCjAwMDAwMTk0NTcgMDAwMDAgbiAKMDAwMDAwMDMyMyAwMDAwMCBuIAowMDAwMDAwNjg4
-IDAwMDAwIG4gCjAwMDAwMDI0NjYgMDAwMDAgbiAKMDAwMDAwMDQ5MiAwMDAwMCBuIAowMDAwMDAw
-NjY4IDAwMDAwIG4gCjAwMDAwMDI0ODcgMDAwMDAgbiAKMDAwMDAwMjczNyAwMDAwMCBuIAowMDAw
-MDExMDc0IDAwMDAwIG4gCjAwMDAwMTE1MDMgMDAwMDAgbiAKMDAwMDAxMTA1MyAwMDAwMCBuIAow
-MDAwMDEyNDMyIDAwMDAwIG4gCjAwMDAwMTI2ODUgMDAwMDAgbiAKMDAwMDAxODQ5NSAwMDAwMCBu
-IAowMDAwMDE4ODMxIDAwMDAwIG4gCjAwMDAwMTg0NzQgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6
-ZSAyMwovSW5mbyAxIDAgUgovUm9vdCA4IDAgUgo+PgpzdGFydHhyZWYKMTk2OTMKJSVFT0YK
---000000000000f0cbcd0609a7b199--
+Thanks,
+Can Guo.
+> [    6.000300] ufshcd-qcom 624000.ufshc: error handling flags=0x0,
+> req. abort count=0
+> [    6.008236] ufshcd-qcom 624000.ufshc: hba->ufs_version=0x200, Host
+> capabilities=0x107001f, caps=0x12cf
+> [    6.015804] ufshcd-qcom 624000.ufshc: quirks=0x20, dev. quirks=0x0
+> [    6.024942] ufshcd-qcom 624000.ufshc: clk: core_clk_src, rate: 200000000
+> [    6.031064] ufshcd-qcom 624000.ufshc: clk: core_clk_unipro_src,
+> rate: 300000000
+> [    6.037960] host_regs: 00000000: 0107001f 00000000 00010100 00000000
+> [    6.044956] host_regs: 00000010: 01000000 00010217 00000000 00000000
+> [    6.051547] host_regs: 00000020: 00000000 00000470 00000000 00000000
+> [    6.057899] host_regs: 00000030: 00000000 00000001 00000000 00000000
+> [    6.064277] host_regs: 00000040: 00000000 00000000 00000000 00000000
+> [    6.070673] host_regs: 00000050: 00000000 00000000 00000000 00000000
+> [    6.076894] host_regs: 00000060: 00000000 00000000 00000000 00000000
+> [    6.083237] host_regs: 00000070: 00000000 00000000 00000000 00000000
+> [    6.089586] host_regs: 00000080: 00000000 00000000 00000000 00000000
+> [    6.095906] host_regs: 00000090: 00000016 00000000 00000000 00000000
+> [    6.102258] ufshcd-qcom 624000.ufshc: No record of pa_err
+> [    6.108571] ufshcd-qcom 624000.ufshc: No record of dl_err
+> [    6.113865] ufshcd-qcom 624000.ufshc: No record of nl_err
+> [    6.119246] ufshcd-qcom 624000.ufshc: No record of tl_err
+> [    6.124627] ufshcd-qcom 624000.ufshc: No record of dme_err
+> [    6.130010] ufshcd-qcom 624000.ufshc: No record of auto_hibern8_err
+> [    6.135396] ufshcd-qcom 624000.ufshc: No record of fatal_err
+> [    6.141558] ufshcd-qcom 624000.ufshc: link_startup_fail[0] =
+> 0xffffff92 at 5937130 us
+> [    6.147473] ufshcd-qcom 624000.ufshc: link_startup_fail: total cnt=1
+> [    6.155187] ufshcd-qcom 624000.ufshc: No record of resume_fail
+> [    6.161608] ufshcd-qcom 624000.ufshc: No record of suspend_fail
+> [    6.167252] ufshcd-qcom 624000.ufshc: No record of wlun resume_fail
+> [    6.173070] ufshcd-qcom 624000.ufshc: No record of wlun suspend_fail
+> [    6.179322] ufshcd-qcom 624000.ufshc: No record of dev_reset
+> [    6.185915] ufshcd-qcom 624000.ufshc: No record of host_reset
+> [    6.191557] ufshcd-qcom 624000.ufshc: No record of task_abort
+> [    6.197222] HCI Vendor Specific Registers 00000000: 000000c8
+> 00000000 00000000 00000000
+> [    6.202944] HCI Vendor Specific Registers 00000010: 00000000
+> 00000000 00000000 5c5c052c
+> [    6.210755] HCI Vendor Specific Registers 00000020: 3f0113ff
+> 20020000 00000007 00000000
+> [    6.218743] HCI Vendor Specific Registers 00000030: 00000000
+> 00000000 02500000 00000000
+> [    6.226748] UFS_UFS_DBG_RD_REG_OCSC 00000000: 00000000 00000000
+> 00000000 00000000
+> [    6.234712] UFS_UFS_DBG_RD_REG_OCSC 00000010: 00000000 00000000
+> 00000000 00000000
+> [    6.242349] UFS_UFS_DBG_RD_REG_OCSC 00000020: 00000000 00000000
+> 00000000 00000000
+> [    6.249815] UFS_UFS_DBG_RD_REG_OCSC 00000030: 00000000 00000000
+> 00000000 00000000
+> [    6.257282] UFS_UFS_DBG_RD_REG_OCSC 00000040: 00000000 00000000
+> 00000000 00000000
+> [    6.264746] UFS_UFS_DBG_RD_REG_OCSC 00000050: 00000000 00000000
+> 00000000 00000000
+> [    6.272228] UFS_UFS_DBG_RD_REG_OCSC 00000060: 00000000 00000000
+> 00000000 00000000
+> [    6.279675] UFS_UFS_DBG_RD_REG_OCSC 00000070: 00000000 00000000
+> 00000000 00000000
+> [    6.287141] UFS_UFS_DBG_RD_REG_OCSC 00000080: 00000000 00000000
+> 00000000 00000000
+> [    6.294608] UFS_UFS_DBG_RD_REG_OCSC 00000090: 00000000 00000000
+> 00000000 00000000
+> [    6.302069] UFS_UFS_DBG_RD_REG_OCSC 000000a0: 00000000 00000000
+> 00000000 00000000
+> [    6.309557] UFS_UFS_DBG_RD_EDTL_RAM 00000000: 00000000 a4491e48
+> fcf4caf8 46ff663f
+> [    6.317002] UFS_UFS_DBG_RD_EDTL_RAM 00000010: 3495a3c2 7be92e99
+> 2334e629 a9f5cf7a
+> [    6.324478] UFS_UFS_DBG_RD_EDTL_RAM 00000020: e0edb246 e551c5b7
+> d060df83 c84da5e6
+> [    6.331935] UFS_UFS_DBG_RD_EDTL_RAM 00000030: 59e307b2 f6855da2
+> 3d0484ee 33b4d9d9
+> [    6.339410] UFS_UFS_DBG_RD_EDTL_RAM 00000040: 4de326b3 5ba15f50
+> 50c13d42 ca1e97e5
+> [    6.346863] UFS_UFS_DBG_RD_EDTL_RAM 00000050: 4cf00e3d b54c986e
+> 0755044b e235db57
+> [    6.354346] UFS_UFS_DBG_RD_EDTL_RAM 00000060: b92c1aeb 281dc88f
+> 76ff1877 3307093a
+> [    6.361795] UFS_UFS_DBG_RD_EDTL_RAM 00000070: f8193d0a 222e4061
+> d2cc6207 1fa596f9
+> [    6.369341] UFS_UFS_DBG_RD_DESC_RAM 00000000: 00000fff 000245b9
+> 40000fff 000245d7
+> [    6.376725] UFS_UFS_DBG_RD_DESC_RAM 00000010: ad10cc60 00368847
+> 151c412f 0038a520
+> [    6.384223] UFS_UFS_DBG_RD_DESC_RAM 00000020: 0c0d244a 0036774c
+> 027721d1 00145503
+> [    6.391659] UFS_UFS_DBG_RD_DESC_RAM 00000030: ec11c082 00357203
+> 74e1d006 000d8511
+> [    6.399122] UFS_UFS_DBG_RD_DESC_RAM 00000040: c54067b1 0029bc16
+> e7e164f6 00053070
+> [    6.406588] UFS_UFS_DBG_RD_DESC_RAM 00000050: a0c0bff6 002a0367
+> 4a35b6ca 0021a240
+> [    6.414051] UFS_UFS_DBG_RD_DESC_RAM 00000060: 085b1f23 002c64ef
+> 73820a12 0010ef31
+> [    6.421515] UFS_UFS_DBG_RD_DESC_RAM 00000070: 69029047 00190510
+> 6046fb03 0026f328
+> [    6.428981] UFS_UFS_DBG_RD_DESC_RAM 00000080: 329031b4 0010e6fa
+> 17914504 00109484
+> [    6.436447] UFS_UFS_DBG_RD_DESC_RAM 00000090: 26d10045 001c14dc
+> 5503fb3d 00040c95
+> [    6.443913] UFS_UFS_DBG_RD_DESC_RAM 000000a0: 90445642 003122f0
+> f74a51e5 002c0765
+> [    6.451384] UFS_UFS_DBG_RD_DESC_RAM 000000b0: c1581085 00124fc2
+> 79137305 0024c227
+> [    6.458844] UFS_UFS_DBG_RD_DESC_RAM 000000c0: 65b22114 003b9a58
+> 61d01770 000ab182
+> [    6.466308] UFS_UFS_DBG_RD_DESC_RAM 000000d0: d4096375 00169e4c
+> 1a0477b6 00064615
+> [    6.473773] UFS_UFS_DBG_RD_DESC_RAM 000000e0: 232840aa 001c5490
+> 14cd840d 000a2944
+> [    6.481240] UFS_UFS_DBG_RD_DESC_RAM 000000f0: 8a228d09 00041b11
+> d0241490 00064e1b
+> [    6.488704] UFS_UFS_DBG_RD_DESC_RAM 00000100: 1a0f6846 000282d1
+> 06118e46 00102644
+> [    6.496169] UFS_UFS_DBG_RD_DESC_RAM 00000110: b6669e01 00052b38
+> 1720792c 000c3156
+> [    6.503634] UFS_UFS_DBG_RD_DESC_RAM 00000120: 0641cf61 000997fd
+> 7c900815 0004ad50
+> [    6.511099] UFS_UFS_DBG_RD_DESC_RAM 00000130: 1ef37280 00244c4d
+> 3bb119d0 00286f65
+> [    6.518565] UFS_UFS_DBG_RD_DESC_RAM 00000140: db9c09e5 0028c2e7
+> 5b5d1df6 0031d8dd
+> [    6.526029] UFS_UFS_DBG_RD_DESC_RAM 00000150: ca1d1166 00036152
+> d8641112 001ac503
+> [    6.533494] UFS_UFS_DBG_RD_DESC_RAM 00000160: 8d429104 0038dc61
+> cb6e324b 00311563
+> [    6.540960] UFS_UFS_DBG_RD_DESC_RAM 00000170: 4438455a 003d4061
+> 68596183 001749bf
+> [    6.548426] UFS_UFS_DBG_RD_DESC_RAM 00000180: 781e7129 00249c1f
+> 10192822 0002c85c
+> [    6.555891] UFS_UFS_DBG_RD_DESC_RAM 00000190: 16c0c0fb 000296c5
+> 3126c8d6 00345830
+> [    6.563357] UFS_UFS_DBG_RD_DESC_RAM 000001a0: 1461e741 00384181
+> 46a04712 00113eee
+> [    6.570822] UFS_UFS_DBG_RD_DESC_RAM 000001b0: 2b8332c4 00070e4e
+> 3c00b95f 002afa6c
+> [    6.578296] UFS_UFS_DBG_RD_DESC_RAM 000001c0: bc8c71c9 002b0d96
+> 0d1b0097 00061d0c
+> [    6.585752] UFS_UFS_DBG_RD_DESC_RAM 000001d0: 5da4850f 002aa5dd
+> 7cea0d59 0000bf25
+> [    6.593218] UFS_UFS_DBG_RD_DESC_RAM 000001e0: 400040a0 00080408
+> 66249825 002106cb
+> [    6.600682] UFS_UFS_DBG_RD_DESC_RAM 000001f0: e6831b0d 0010a590
+> 646e0397 00042a16
+> [    6.608198] UFS_UFS_DBG_RD_PRDT_RAM 00000000: b6500000 0000916c
+> cd401d62 00043550
+> [    6.615614] UFS_UFS_DBG_RD_PRDT_RAM 00000010: 3037914c 0005a31f
+> f5469fe9 00093259
+> [    6.623079] UFS_UFS_DBG_RD_PRDT_RAM 00000020: 00040000 00000010
+> 49470e15 000c2784
+> [    6.630543] UFS_UFS_DBG_RD_PRDT_RAM 00000030: 3e63f4c4 000c5d99
+> ff34178f 0009ebef
+> [    6.638020] UFS_UFS_DBG_RD_PRDT_RAM 00000040: e6c207f6 0002ad55
+> 58618cab 00049e17
+> [    6.645473] UFS_UFS_DBG_RD_PRDT_RAM 00000050: e175022b 000cfcfb
+> d98e1281 000dc9b2
+> [    6.652941] UFS_UFS_DBG_RD_PRDT_RAM 00000060: 10000001 00000000
+> 711494d2 000fe80b
+> [    6.660405] UFS_UFS_DBG_RD_PRDT_RAM 00000070: 4814b1d8 000a0ca1
+> 6dc32ecd 00000e54
+> [    6.667870] UFS_UFS_DBG_RD_PRDT_RAM 00000080: 00000041 00000004
+> e910c009 00018567
+> [    6.675336] UFS_UFS_DBG_RD_PRDT_RAM 00000090: 62508d4d 0004eaa8
+> 892dfb22 000cd259
+> [    6.682803] UFS_UFS_DBG_RD_PRDT_RAM 000000a0: cd20c8e2 000a55a0
+> 01816101 000f88ef
+> [    6.690267] UFS_UFS_DBG_RD_PRDT_RAM 000000b0: c811a2b7 00050746
+> 73310333 000b5b59
+> [    6.697732] UFS_UFS_DBG_RD_PRDT_RAM 000000c0: 2c4841ec 000a3517
+> b55c4bdf 00008308
+> [    6.705205] UFS_UFS_DBG_RD_PRDT_RAM 000000d0: f16cc22f 0006193d
+> f810d7ef 0005a2ef
+> [    6.712662] UFS_UFS_DBG_RD_PRDT_RAM 000000e0: 48140178 0005912e
+> 713db144 0000925e
+> [    6.720128] UFS_UFS_DBG_RD_PRDT_RAM 000000f0: 1cd0a405 000ac1a0
+> 60518a6b 000d3a4c
+> [    6.727598] UFS_DBG_RD_REG_UAWM 00000000: 00000000 00000062 00000000 0001fec0
+> [    6.735060] UFS_DBG_RD_REG_UARM 00000000: 00000000 00000001 00000011 00000001
+> [    6.742196] UFS_DBG_RD_REG_TXUC 00000000: 00000000 00000000 00000000 00000000
+> [    6.749291] UFS_DBG_RD_REG_TXUC 00000010: 00000000 00000000 00000000 00000000
+> [    6.756410] UFS_DBG_RD_REG_TXUC 00000020: 00000000 00000000 00000000 00000000
+> [    6.763527] UFS_DBG_RD_REG_TXUC 00000030: 00000000 00000000 00000000 00000000
+> [    6.770644] UFS_DBG_RD_REG_TXUC 00000040: 00000000 00000000 00000000 00000000
+> [    6.777762] UFS_DBG_RD_REG_TXUC 00000050: 00000000 00000000 00000000 00000000
+> [    6.784880] UFS_DBG_RD_REG_TXUC 00000060: 00000000 00000000 00000000 00000000
+> [    6.791998] UFS_DBG_RD_REG_TXUC 00000070: 00000000 00000000 00000000 00000000
+> [    6.799117] UFS_DBG_RD_REG_TXUC 00000080: 00000000 00000000 00000000 00000000
+> [    6.806234] UFS_DBG_RD_REG_TXUC 00000090: 00000000 00000000 00000000 00000000
+> [    6.813353] UFS_DBG_RD_REG_TXUC 000000a0: 00000000 00000000 00000000 00000000
+> [    6.820471] UFS_DBG_RD_REG_TXUC 000000b0: 00000001 00000040 00000000 00000004
+> [    6.827604] UFS_DBG_RD_REG_RXUC 00000000: 00000000 00000001 00000000 00000004
+> [    6.834716] UFS_DBG_RD_REG_RXUC 00000010: 00000000 00000000 00000000 00000000
+> [    6.841825] UFS_DBG_RD_REG_RXUC 00000020: 00000000 00000000 00000000 00000000
+> [    6.848943] UFS_DBG_RD_REG_RXUC 00000030: 00000000 00000000 00000000 00000000
+> [    6.856060] UFS_DBG_RD_REG_RXUC 00000040: 00000000 00000000 00000000 00000000
+> [    6.863178] UFS_DBG_RD_REG_RXUC 00000050: 00000000 00000000 00000000 00000001
+> [    6.870347] UFS_DBG_RD_REG_RXUC 00000060: 00000040 00000000 00000004
+> [    6.877424] UFS_DBG_RD_REG_DFC 00000000: 00000000 00000000 00000000 00000000
+> [    6.883838] UFS_DBG_RD_REG_DFC 00000010: 00000000 00000000 00000000 00000000
+> [    6.890869] UFS_DBG_RD_REG_DFC 00000020: 00000000 00000000 00000000 00000000
+> [    6.897921] UFS_DBG_RD_REG_DFC 00000030: 00000000 00000000 00000000 00000000
+> [    6.904934] UFS_DBG_RD_REG_DFC 00000040: ffffffff 00000000 00000000
+> [    6.911978] UFS_DBG_RD_REG_TRLUT 00000000: 00000000 00000001
+> 00000000 00000000
+> [    6.917955] UFS_DBG_RD_REG_TRLUT 00000010: 00000000 00000000
+> 00000000 00000000
+> [    6.925246] UFS_DBG_RD_REG_TRLUT 00000020: 00000000 00000000
+> 00000000 00000000
+> [    6.932454] UFS_DBG_RD_REG_TRLUT 00000030: 00000000 00000000
+> 00000000 00000000
+> [    6.939668] UFS_DBG_RD_REG_TRLUT 00000040: 00000000 00000000
+> 00000000 00000000
+> [    6.946861] UFS_DBG_RD_REG_TRLUT 00000050: 00000000 00000000
+> 00000000 00000000
+> [    6.954067] UFS_DBG_RD_REG_TRLUT 00000060: 00000000 00000000
+> 00000000 00000000
+> [    6.961280] UFS_DBG_RD_REG_TRLUT 00000070: 00000000 00000000
+> 00000000 00000000
+> [    6.968477] UFS_DBG_RD_REG_TRLUT 00000080: 00000000 00000000
+> [    6.975678] UFS_DBG_RD_REG_TMRLUT 00000000: 00000000 00000001
+> 00000000 00000000
+> [    6.981497] UFS_DBG_RD_REG_TMRLUT 00000010: 00000000 00000000
+> 00000000 00000000
+> [    6.988527] UFS_DBG_RD_REG_TMRLUT 00000020: 00000000
+> [    7.003383] ------------[ cut here ]------------
+> [    7.003439] gcc_ufs_axi_clk status stuck at 'off'
+> [    7.003466] WARNING: CPU: 3 PID: 60 at
+> drivers/clk/qcom/clk-branch.c:86 clk_branch_wait+0x140/0x158
+> [    7.011712] Modules linked in:
+> [    7.020537] CPU: 3 PID: 60 Comm: kworker/u11:0 Tainted: G     U
+>          6.6.0-rc1-00002-gb4e13e1ae95e #1257
+> [    7.023703] Hardware name: Qualcomm Technologies, Inc. DB820c (DT)
+> [    7.033652] Workqueue: ufs_clk_gating_0 ufshcd_ungate_work
+> [    7.039898] pstate: 600000c5 (nZCv daIF -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+> [    7.045371] pc : clk_branch_wait+0x140/0x158
+> [    7.052223] lr : clk_branch_wait+0x140/0x158
+> [    7.056738] sp : ffff8000833f3c30
+> [    7.060984] x29: ffff8000833f3c30 x28: ffff800081d0b200 x27: 0000000000000000
+> [    7.064218] x26: 0000000000000001 x25: ffff000081b318e8 x24: 000000019c366bfc
+> [    7.071337] x23: ffff800081611c10 x22: 0000000000000001 x21: ffff800080624180
+> [    7.078455] x20: 0000000000000000 x19: ffff800081e49738 x18: fffffffffffed120
+> [    7.085572] x17: 3030303030203030 x16: 3030303030302030 x15: 0000000000000030
+> [    7.092691] x14: 0000000000000000 x13: ffff800081d2b9f8 x12: 00000000000008e8
+> [    7.099809] x11: 00000000000002f8 x10: ffff800081d88138 x9 : ffff800081d2b9f8
+> [    7.106928] x8 : 00000000ffffefff x7 : ffff800081d839f8 x6 : 00000000000002f8
+> [    7.114046] x5 : 000000000000bff4 x4 : 40000000fffff2f8 x3 : 0000000000000000
+> [    7.121163] x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff000080db3200
+> [    7.128282] Call trace:
+> [    7.135372]  clk_branch_wait+0x140/0x158
+> [    7.137637]  clk_branch2_enable+0x30/0x40
+> [    7.141806]  clk_core_enable+0xd0/0x264
+> [    7.145709]  clk_enable+0x2c/0x4c
+> [    7.149353]  ufshcd_setup_clocks+0x248/0x3cc
+> [    7.152832]  ufshcd_ungate_work+0xc0/0x134
+> [    7.157170]  process_one_work+0x1ec/0x51c
+> [    7.161075]  worker_thread+0x1ec/0x3e4
+> [    7.165154]  kthread+0x120/0x124
+> [    7.168797]  ret_from_fork+0x10/0x20
+> [    7.172186] irq event stamp: 1144
+> [    7.175742] hardirqs last  enabled at (1143): [<ffff800080fa05c0>]
+> _raw_spin_unlock_irq+0x30/0x64
+> [    7.178987] hardirqs last disabled at (1144): [<ffff800080f96e08>]
+> __schedule+0x7b0/0xc00
+> [    7.187837] softirqs last  enabled at (1138): [<ffff800080090630>]
+> __do_softirq+0x430/0x4e4
+> [    7.195999] softirqs last disabled at (1133): [<ffff800080096154>]
+> ____do_softirq+0x10/0x1c
+> [    7.204158] ---[ end trace 0000000000000000 ]---
+> [    7.212642] ufshcd-qcom 624000.ufshc: ufshcd_setup_clocks: core_clk
+> prepare enable failed, -16
+> 
+> 
+>> ---
+>>   drivers/ufs/host/ufs-qcom.c | 51 ++++++++++++++++++++++---------------
+>>   drivers/ufs/host/ufs-qcom.h |  1 +
+>>   2 files changed, 31 insertions(+), 21 deletions(-)
+>>
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>> index d846e68a5734..b2be9ff272a4 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -93,8 +93,7 @@ static const struct __ufs_qcom_bw_table {
+>>   static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
+>>
+>>   static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+>> -static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+>> -                                                      u32 clk_cycles);
+>> +static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up);
+>>
+>>   static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
+>>   {
+>> @@ -685,14 +684,11 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+>>                          return -EINVAL;
+>>                  }
+>>
+>> -               if (ufs_qcom_cap_qunipro(host))
+>> -                       /*
+>> -                        * set unipro core clock cycles to 150 & clear clock
+>> -                        * divider
+>> -                        */
+>> -                       err = ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba,
+>> -                                                                         150);
+>> -
+>> +               if (ufs_qcom_cap_qunipro(host)) {
+>> +                       err = ufs_qcom_set_core_clk_ctrl(hba, true);
+>> +                       if (err)
+>> +                               dev_err(hba->dev, "cfg core clk ctrl failed\n");
+>> +               }
+>>                  /*
+>>                   * Some UFS devices (and may be host) have issues if LCC is
+>>                   * enabled. So we are setting PA_Local_TX_LCC_Enable to 0
+>> @@ -1296,12 +1292,25 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
+>>          phy_exit(host->generic_phy);
+>>   }
+>>
+>> -static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+>> -                                                      u32 clk_cycles)
+>> +static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up)
+>>   {
+>>          struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>> -       int err;
+>> +       struct list_head *head = &hba->clk_list_head;
+>> +       struct ufs_clk_info *clki;
+>> +       u32 cycles_in_1us;
+>>          u32 core_clk_ctrl_reg;
+>> +       int err;
+>> +
+>> +       list_for_each_entry(clki, head, list) {
+>> +               if (!IS_ERR_OR_NULL(clki->clk) &&
+>> +                       !strcmp(clki->name, "core_clk_unipro")) {
+>> +                       if (is_scale_up)
+>> +                               cycles_in_1us = ceil(clki->max_freq, (1000 * 1000));
+>> +                       else
+>> +                               cycles_in_1us = ceil(clk_get_rate(clki->clk), (1000 * 1000));
+>> +                       break;
+>> +               }
+>> +       }
+>>
+>>          err = ufshcd_dme_get(hba,
+>>                              UIC_ARG_MIB(DME_VS_CORE_CLK_CTRL),
+>> @@ -1311,15 +1320,15 @@ static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+>>
+>>          /* Bit mask is different for UFS host controller V4.0.0 onwards */
+>>          if (host->hw_ver.major >= 4) {
+>> -               if (!FIELD_FIT(CLK_1US_CYCLES_MASK_V4, clk_cycles))
+>> +               if (!FIELD_FIT(CLK_1US_CYCLES_MASK_V4, cycles_in_1us))
+>>                          return -ERANGE;
+>>                  core_clk_ctrl_reg &= ~CLK_1US_CYCLES_MASK_V4;
+>> -               core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK_V4, clk_cycles);
+>> +               core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK_V4, cycles_in_1us);
+>>          } else {
+>> -               if (!FIELD_FIT(CLK_1US_CYCLES_MASK, clk_cycles))
+>> +               if (!FIELD_FIT(CLK_1US_CYCLES_MASK, cycles_in_1us))
+>>                          return -ERANGE;
+>>                  core_clk_ctrl_reg &= ~CLK_1US_CYCLES_MASK;
+>> -               core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK, clk_cycles);
+>> +               core_clk_ctrl_reg |= FIELD_PREP(CLK_1US_CYCLES_MASK, cycles_in_1us);
+>>          }
+>>
+>>          /* Clear CORE_CLK_DIV_EN */
+>> @@ -1343,8 +1352,8 @@ static int ufs_qcom_clk_scale_up_post_change(struct ufs_hba *hba)
+>>          if (!ufs_qcom_cap_qunipro(host))
+>>                  return 0;
+>>
+>> -       /* set unipro core clock cycles to 150 and clear clock divider */
+>> -       return ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba, 150);
+>> +       /* set unipro core clock attributes and clear clock divider */
+>> +       return ufs_qcom_set_core_clk_ctrl(hba, true);
+>>   }
+>>
+>>   static int ufs_qcom_clk_scale_down_pre_change(struct ufs_hba *hba)
+>> @@ -1379,8 +1388,8 @@ static int ufs_qcom_clk_scale_down_post_change(struct ufs_hba *hba)
+>>          if (!ufs_qcom_cap_qunipro(host))
+>>                  return 0;
+>>
+>> -       /* set unipro core clock cycles to 75 and clear clock divider */
+>> -       return ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(hba, 75);
+>> +       /* set unipro core clock attributes and clear clock divider */
+>> +       return ufs_qcom_set_core_clk_ctrl(hba, false);
+>>   }
+>>
+>>   static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+>> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+>> index 8a9d3dbec297..3c6ef1259af3 100644
+>> --- a/drivers/ufs/host/ufs-qcom.h
+>> +++ b/drivers/ufs/host/ufs-qcom.h
+>> @@ -245,6 +245,7 @@ ufs_qcom_get_debug_reg_offset(struct ufs_qcom_host *host, u32 reg)
+>>   #define ufs_qcom_is_link_off(hba) ufshcd_is_link_off(hba)
+>>   #define ufs_qcom_is_link_active(hba) ufshcd_is_link_active(hba)
+>>   #define ufs_qcom_is_link_hibern8(hba) ufshcd_is_link_hibern8(hba)
+>> +#define ceil(freq, div) ((freq) % (div) == 0 ? ((freq)/(div)) : ((freq)/(div) + 1))
+>>
+>>   int ufs_qcom_testbus_config(struct ufs_qcom_host *host);
+>>
+>> --
+>> 2.17.1
+>>
+> 
+> 
