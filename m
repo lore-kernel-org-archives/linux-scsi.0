@@ -2,71 +2,91 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93EE3C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 18:07:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE1EC4167D
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 21:51:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344960AbjKISHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Nov 2023 13:07:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34748 "EHLO
+        id S230150AbjKIVvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Nov 2023 16:51:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344973AbjKISHm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2023 13:07:42 -0500
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ED063ABC;
-        Thu,  9 Nov 2023 10:07:40 -0800 (PST)
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-6b87c1edfd5so1052390b3a.1;
-        Thu, 09 Nov 2023 10:07:40 -0800 (PST)
+        with ESMTP id S229600AbjKIVvG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2023 16:51:06 -0500
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A27714211;
+        Thu,  9 Nov 2023 13:51:04 -0800 (PST)
+Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-6bf20d466cdso302825b3a.1;
+        Thu, 09 Nov 2023 13:51:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1699566664; x=1700171464; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=L3szXkniAOBIgjKGY87jgy200/6D2pD1Gf60eUObSNU=;
+        b=R/1x9TKREASXWBrZ0+4yiOltp39bQrPiW/U6kloZSu7EXAz/0CQe+W6G2jUyQhwRcw
+         iMGurfBiF0SE1nOjZ1YobbeMX+r4qxHVTXMFFA5GWXlfGRUm0fuiY94hSaE6DirgcphN
+         qY04nv1f81l7cXE/rpijAGg+nepi4h+Dc/yrbQhysSl74Lr7yMT+CtDRqAowO2bMbRQU
+         YOXncvf4KQdOfX0FpcqGB4Ox4QKKAHaDiVdrc8aaiTAe88uRTOaz4SSKbPltqjLW03td
+         WXmbmxOPZ6/1KHCLlEUaOVFRIeUvOvmABVOvB/ZdE3sSXABCDbEEIS3yiAyO7Mhlk2m2
+         c6xQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699553260; x=1700158060;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eStIukLDwVRs0NdOG0eWSihEj+JWFkSPCspPqDFsx18=;
-        b=DplFm5+5ffiWL62aJVWRp5bLW/c3H4Y/irif+3kpUa3LAPXociw5ci4B38X8Yk+iup
-         2y2gu44ChuwCoccQl1FBM9feswWwUgCz/GeqNTRBgzhhJI/rdkIAeJrXHztTRn9pOqP8
-         0BmAyN0Vb/IHdzKd4ReitGdN+FoeA0wAS+9SZFkGz/UQSZBzxyNA9cWjh9b4dyrqvc4g
-         dLyE5doiL75hg8TegwGJKIZHpF+tlE5u7ugWXmekpYTOpIuPCXzqUdQU2oC25eXUsOq/
-         KeeNA8+LyjyUwaFE1PbnGANCAg/JegruF/6Wol4LSCRRFtWo7xYWeFQ4/2pLHJDJjr0o
-         k4Eg==
-X-Gm-Message-State: AOJu0Yy5RTPxzknk9j4GPvWsZIqL++TSB+i98RAEXYUuxNDiTf8CVfXh
-        Vs2rKACglHzZeoOfHBAde70=
-X-Google-Smtp-Source: AGHT+IHJzmjo7TzUvLHaJncTi1tfd8YCCm59JcgLS86tixJvspnrYOmUNA8LuwVhBsbF2heWBzl8ZQ==
-X-Received: by 2002:a05:6a20:ddaf:b0:17d:d70f:a2c4 with SMTP id kw47-20020a056a20ddaf00b0017dd70fa2c4mr4704622pzb.26.1699553259798;
-        Thu, 09 Nov 2023 10:07:39 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:3dcd:f87f:1890:c48e? ([2620:0:1000:8411:3dcd:f87f:1890:c48e])
-        by smtp.gmail.com with ESMTPSA id ff24-20020a056a002f5800b0069337938be8sm10932129pfb.110.2023.11.09.10.07.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Nov 2023 10:07:39 -0800 (PST)
-Message-ID: <fb80565a-9b91-4125-ac50-f8469f27c3b8@acm.org>
-Date:   Thu, 9 Nov 2023 10:07:38 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 2/2] scsi: ufs: core: Add sysfs node for UFS RTC update
-Content-Language: en-US
-To:     Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
-        beanhuo@micron.com
+        d=1e100.net; s=20230601; t=1699566664; x=1700171464;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=L3szXkniAOBIgjKGY87jgy200/6D2pD1Gf60eUObSNU=;
+        b=C2ea5tYzoZAqGm6su2ckNxFhBqrQNIfFjODQbmFLpGnxHE5t3ncQ1SewlSF4Q3Ir6w
+         M6fHYjCGm9KRaGHTFXNrmfMsPqhafsnWczchA9deVxipHCz9SvKfIkDNgMeqI/JVEd1l
+         Celw6OgHGTq8e7s/NkQMVjvDFirl30zMlL89fbx1ItRrfrH4DJ/a2NKdsK/b5bud/Tsh
+         E0W/osoUbUq9JAbhIeCgacuzB6C0DEl6O8M/4udYcy1vYpVz++6R+1hmHFQOovc3K06f
+         rUe4wP917YjWWKQuMmT65AAlluyhoty3Pvf28b0XbCGI82ZtD4F+DvibLvo46wqvnNWu
+         wtIg==
+X-Gm-Message-State: AOJu0YylyIAOELUAmayOVjutAWhIWn9Kb63nxXPjwdpVmjHXSikXQE7d
+        l3NZm6mX8LCxO152UHzi/3Y=
+X-Google-Smtp-Source: AGHT+IEd0buHmeHhN+KsS1tLtsAX++VUah6xMKe0RHbXybUhB6qDxOkFThOVGQgMY3hx2V0ze4Bgpw==
+X-Received: by 2002:a05:6a21:7892:b0:163:57ba:2ad4 with SMTP id bf18-20020a056a21789200b0016357ba2ad4mr7216517pzc.2.1699566664076;
+        Thu, 09 Nov 2023 13:51:04 -0800 (PST)
+Received: from abhinav.. ([2402:3a80:196c:ea3:dae1:648f:ab89:4dd0])
+        by smtp.gmail.com with ESMTPSA id x20-20020aa784d4000000b006bb5ff51177sm11214827pfn.194.2023.11.09.13.50.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Nov 2023 13:51:03 -0800 (PST)
+From:   Abhinav Singh <singhabhinav9051571833@gmail.com>
+To:     oliver@neukum.org, aliakc@web.de, lenehan@twibble.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mikebi@micron.com, lporzio@micron.com
-References: <20231109125217.185462-1-beanhuo@iokpp.de>
- <20231109125217.185462-3-beanhuo@iokpp.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231109125217.185462-3-beanhuo@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        Abhinav Singh <singhabhinav9051571833@gmail.com>
+Subject: [PATCH] driver: scsi: Fix warning using plain integer as NULL
+Date:   Fri, 10 Nov 2023 03:20:49 +0530
+Message-Id: <20231109215049.1466431-1-singhabhinav9051571833@gmail.com>
+X-Mailer: git-send-email 2.39.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/9/23 04:52, Bean Huo wrote:
-> This patch introduces a sysfs node named 'rtc_update_ms' within the kernel, enabling users to
-> adjust the RTC periodic update frequency to suit the specific requirements of the system and
-> UFS. Also, this patch allows the user to disable periodic update RTC  in the UFS idle time.
+Sparse static analysis tools generate a warning with this message
+"Using plain integer as NULL pointer". In this case this warning is
+being shown because we are trying to initialize  pointer to NULL using
+integer value 0.
 
-Why is this behavior enabled by default instead of disabled by default?
+Signed-off-by: Abhinav Singh <singhabhinav9051571833@gmail.com>
+---
+ drivers/scsi/dc395x.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index c8e86f8a631e..d108a86e196e 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -1366,7 +1366,7 @@ static u8 start_scsi(struct AdapterCtlBlk* acb, struct DeviceCtlBlk* dcb,
+ 			"command while another command (0x%p) is active.",
+ 			srb->cmd,
+ 			acb->active_dcb->active_srb ?
+-			    acb->active_dcb->active_srb->cmd : 0);
++			    acb->active_dcb->active_srb->cmd : NULL);
+ 		return 1;
+ 	}
+ 	if (DC395x_read16(acb, TRM_S1040_SCSI_STATUS) & SCSIINTERRUPT) {
+-- 
+2.39.2
 
-Bart.
