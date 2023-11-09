@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2450AC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 03:27:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AE4AC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 03:47:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232149AbjKID1V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Nov 2023 22:27:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45574 "EHLO
+        id S230451AbjKIDrg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Nov 2023 22:47:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229923AbjKID1U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 22:27:20 -0500
+        with ESMTP id S229473AbjKIDrf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2023 22:47:35 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A44DC1B6;
-        Wed,  8 Nov 2023 19:27:18 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9ABB7C433C8;
-        Thu,  9 Nov 2023 03:27:12 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0F4626AB;
+        Wed,  8 Nov 2023 19:47:33 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9FD2C433C7;
+        Thu,  9 Nov 2023 03:47:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699500438;
-        bh=8l3Y3uc+DtLheJHzFBiWnmoBSiDiQ5S3umInMPR7G6Q=;
+        s=k20201202; t=1699501653;
+        bh=SWhjJ7hhv9wUwqxTduJwGa1UjeUMqMhHmLc00yZI2UE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BXjCzmlQaH1wqB6FK3BCldzyLMdyPaCbMrrMeJb2mpz099CS1s0YY7IGctM9M2aRj
-         xZaNF3IWZmml6PhRG+LAMxqkNS/IYpDM8yz7TtDvSTCCn7msvRh5tItl5c1Np/iuSU
-         Cp+arfYi910kgCPjIr227bQK5YCJTE77ElHI8EZnsQ0r6PJir0/98AVqQw0JnoOduI
-         W7nsu0jVHtRtqUU4scgBgzwqSpUgYhBIOoWkHdkUoZpnfPwLTeUdsdsZdOMe3VIhSc
-         G+y2HMhb40gtDjlUJVi2Naj/VwF9tIk0ZNm7+2MFeGcW6L5lnYH9CR6DJbGfzFBKr8
-         m4LUF9PCwVddA==
-Date:   Thu, 9 Nov 2023 08:57:03 +0530
+        b=tEdF27pk6HCPeWqdWutrT2VL5TCOV1t1BGdbD03A2hdCz2ryxX2P+n0jr4dwRj61G
+         6jo5Ks8YERqKV3//Can0w7/eJQy8oEIPdBrpWdmNnZvIgJFC5Mj0S28fDo1UYDUi/c
+         x4ve6uGVTxP+vDCHqGb50asCoCbEvDYZ7qsj1Vf/HychKLNraKqpJar8G5CCDo7KpJ
+         +xAHyXO3u20eT12Re+GdQJyr9hsqavj7vSNTNFB/YZFEI1f4Wa7xzftR7F09Nu6BeV
+         6iUW7Lp4/bZJF9VRJ2KcDj3gSqqh42XV6TkEhnaIKK3UBPa9CA1AO4n4pAAr9VyQzO
+         JRopHU2ZPbZ5Q==
+Date:   Thu, 9 Nov 2023 09:17:17 +0530
 From:   Manivannan Sadhasivam <mani@kernel.org>
 To:     Can Guo <quic_cang@quicinc.com>
 Cc:     Can Guo <cang@qti.qualcomm.com>, bvanassche@acm.org,
@@ -39,63 +39,79 @@ Cc:     Can Guo <cang@qti.qualcomm.com>, bvanassche@acm.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/7] scsi: ufs: ufs-qcom: Limit HS-G5 Rate-A to hosts
- with HW version 5
-Message-ID: <20231109032703.GC3752@thinkpad>
+Subject: Re: [PATCH v2 3/7] scsi: ufs: ufs-qcom: Allow the first init start
+ with the maximum supported gear
+Message-ID: <20231109034717.GD3752@thinkpad>
 References: <1699332374-9324-1-git-send-email-cang@qti.qualcomm.com>
- <1699332374-9324-5-git-send-email-cang@qti.qualcomm.com>
- <20231108052555.GD3296@thinkpad>
- <59f83fcd-6c2d-6b8a-55e6-0db07bfb5744@quicinc.com>
+ <1699332374-9324-4-git-send-email-cang@qti.qualcomm.com>
+ <20231108052310.GC3296@thinkpad>
+ <49b331dc-37eb-6e26-f701-c83187a30788@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <59f83fcd-6c2d-6b8a-55e6-0db07bfb5744@quicinc.com>
+In-Reply-To: <49b331dc-37eb-6e26-f701-c83187a30788@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 08, 2023 at 04:42:42PM +0800, Can Guo wrote:
+On Wed, Nov 08, 2023 at 04:21:52PM +0800, Can Guo wrote:
 > Hi Mani,
 > 
-> On 11/8/2023 1:25 PM, Manivannan Sadhasivam wrote:
-> > On Mon, Nov 06, 2023 at 08:46:10PM -0800, Can Guo wrote:
+> On 11/8/2023 1:23 PM, Manivannan Sadhasivam wrote:
+> > On Mon, Nov 06, 2023 at 08:46:09PM -0800, Can Guo wrote:
 > > > From: Can Guo <quic_cang@quicinc.com>
 > > > 
-> > > Qcom UFS hosts, with HW ver 5, can only support up to HS-G5 Rate-A due to
-> > > HW limitations. If the HS-G5 PHY gear is used, update host_params->hs_rate
-> > > to Rate-A, so that the subsequent power mode changes shall stick to Rate-A.
+> > > During host driver init, the phy_gear is set to the minimum supported gear
+> > > (HS_G2). Then, during the first power mode change, the negotiated gear, say
+> > > HS-G4, is updated to the phy_gear variable so that in the second init the
+> > > updated phy_gear can be used to program the PHY.
 > > > 
-> > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> > > ---
-> > >   drivers/ufs/host/ufs-qcom.c | 18 +++++++++++++++++-
-> > >   1 file changed, 17 insertions(+), 1 deletion(-)
+> > > But the current code only allows update the phy_gear to a higher value. If
+> > > one wants to start the first init with the maximum support gear, say HS-G4,
+> > > the phy_gear is not updated to HS-G3 if the device only supports HS-G3.
 > > > 
-> > > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> > > index 60b35ca..55ee31d 100644
-> > > --- a/drivers/ufs/host/ufs-qcom.c
-> > > +++ b/drivers/ufs/host/ufs-qcom.c
-> > > @@ -442,9 +442,25 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba)
-> > >   static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
-> > >   {
-> > >   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> > > +	struct ufs_host_params *host_params = &host->host_params;
-> > >   	struct phy *phy = host->generic_phy;
-> > > +	enum phy_mode mode;
-> > >   	int ret;
-> > > +	/*
-> > > +	 * HW ver 5 can only support up to HS-G5 Rate-A due to HW limitations.
 > > 
-> > Does this limitation apply to future targets as well or just to SM8550? If
-> > it's the latter, then we need to use a flag.
+> > Can you elaborate when this can happen? AFAICS, there are 3 possibilities of
+> > initial phy gear with this series:
 > > 
-> > - ManiUFS host controller HW ver (major) 5 IPs (they may have different
-> minor/step verions) can be used by many QCOM chipsets, so it applies to
-> several available targets and future targets which are going to have HW ver
-> 5 UFS host controller. This limitation goes away since HW ver 6.
+> > 1. If ufshc is < 5.0, then G2 will be used.
+> > 2. If ufshc is >= 5.0 and if the version is populated in register, then that
+> > gear will be used. Most likely that gear can be G4/G5 depending on the device
+> > connected.
+> > 3. If ufshc is >=5.0 and version is not populated, then G4 will be used.
+> > 
+> > In all the above cases, I do not see any necessity to switch the phy gear
+> > setting to lower one while scaling. Since the gears are backwards compatible,
+> > we always use one phy gear sequence. Moreover, we only have 2 init sequences.
+> > 
+> > Please correct me if I'm missing anything.
+> > 
+> > - Mani
+> In the next patch, I am setting the initial PHY gear to max HS gear read
+> from UFS host cap register, so that we don't need to keep updating the
+> initial value for host->phy_gear for different HW versions in future. FYI,
+> for HW ver 5 and 6, it is HS-G5. In future, the max gear might become HS-G6
+> or higher on newer HW verions.
+> 
+> I the case #3, if HS-G5 is set to host->phy_gear, the first init uses HS-G5,
+> then after negotiation if the agreed gear is HS-G4, we need to update
+> host->phy_gear to HS-G4 (a lower value) such that we use a power saving PHY
+> gear settings during the 2nd init.
+> 
+> If the commit message is making you confused, I can update it in next
+> version. Please let me if I made any mistakes here.
 > 
 
-Okay, thanks for clarifying.
+I see redundancy while setting the phy_gear and it is leading to confusion.
+In ufs_qcom_set_host_params(), first you are setting phy_gear based on
+ufs_qcom_get_hs_gear(), then changing it again with the version check for v5.
+
+I don't see a necessity for "host->phy_gear = host_params->hs_tx_gear", since in
+the later check, you are covering both version <5 and >=5.
+
+Btw, it would be better to move this logic to a separate function like
+ufs_qcom_get_phy_gear() to align with ufs_qcom_get_hs_gear().
 
 - Mani
 
