@@ -2,92 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39B40C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 16:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21D69C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Nov 2023 18:06:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234424AbjKIQRR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Nov 2023 11:17:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59666 "EHLO
+        id S1344921AbjKISGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Nov 2023 13:06:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234508AbjKIQRQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2023 11:17:16 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88FD935A9;
-        Thu,  9 Nov 2023 08:17:14 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 424CFC433BA;
-        Thu,  9 Nov 2023 16:17:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699546634;
-        bh=MHoWuekJf7fZq+eCzFMo8ejeVfJQEuG6O0L8sRZ3zdw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DqAcvwh7gcbigIUgyDm0Ck7aJoA4cCqzACaIpsw3g6pDS3duLYNexl9TunWAd0Yvk
-         PjAyS+/TfSLFabNdbHPo4F9JO6hKZP9jsn0xeAciukKn/Y00maYsvLoegWa0vfkWpG
-         JW/TOSvV1FpH7yx6m1s97E720GZEvIJNVd+wtiNwr6rSL6RNUpL5ZrVwmyTlwkN7cy
-         AYbVC5PeVt043B5OA9if0qFzxRCQNccX75V9/dAcwgGOmjrNYof17yHvc6YpdHpLtn
-         fDO/j8cwBHfluPB5JYQxy9D6UlltFK9P66LmSwo03Ia0oYL9e8x96yxB4+Jda+tWlJ
-         Qte/CugKciSww==
-Date:   Thu, 9 Nov 2023 21:46:56 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Ziqi Chen <quic_ziqichen@quicinc.com>,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com, quic_nguyenb@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com,
-        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Wolfram Sang <wsa@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Mark Brown <broonie@kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] dt-bindings: ufs: Add msi-parent for UFS MCQ
-Message-ID: <20231109161656.GH3752@thinkpad>
-References: <1698835699-28550-1-git-send-email-quic_ziqichen@quicinc.com>
- <20231106144831.GA317907-robh@kernel.org>
- <5850d5ac-e735-4358-866d-f410b00ba39d@acm.org>
- <CAL_Jsq+XB5p_K3C+rc5XetQ-Xfxu4umNFzcF0idB2hhZvS7HLA@mail.gmail.com>
+        with ESMTP id S1344811AbjKISGH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2023 13:06:07 -0500
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71E4C3A92;
+        Thu,  9 Nov 2023 10:06:05 -0800 (PST)
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-6b1d1099a84so1222813b3a.1;
+        Thu, 09 Nov 2023 10:06:05 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699553165; x=1700157965;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fcU3cqWmeYEc8M7LFBLc/ovxLDKr3wrjLBH6khDlR80=;
+        b=ppgkg8p3lM4trJQgE7ygUJ5hH4qYke4/GX5MsjYuu2aD47Cx7tl9R4oOB5CX+dySDK
+         cgvUnXY6RLnHhBuKgDrGYhHJ0f2b6INEQm/r6VGVJabfnpWTQdedkhpa/tT6w3YY4m48
+         GicUblmABnAnx3QajR3ngVupp/1PMypaMbZBqwuvwBsEh6uqWFz6rNeIrT/W7amNSFae
+         9i3WKP22QsLyBUyYwCgGZzU4gLUeqQki3HoCySSjCmp2NhSqDYwmtxvOn9Ez/wq1VKhM
+         P3Wx9X3UTxNZDxOhR9bmXaNinuhv2T2G2Eb1hwABUhbtfJOg/JGR3KXqE1+SsqkI6msQ
+         oTfQ==
+X-Gm-Message-State: AOJu0Yw1j7Rt6icsr75/x2WeFzoil2KnYgc9Ugv78JMwhiwDSi9i4pjq
+        cpjqQiI3D48CqCUPAjnYR5TphkfhBCY=
+X-Google-Smtp-Source: AGHT+IEp/GRnR0EqiboCHXyJC9BVAybeW22IUjOUYtV8AGykHa9A1xMf+HwtdNCtPfmVWkAGjnPaZg==
+X-Received: by 2002:a05:6a20:8f13:b0:15e:d84:1c5e with SMTP id b19-20020a056a208f1300b0015e0d841c5emr6868531pzk.38.1699553164679;
+        Thu, 09 Nov 2023 10:06:04 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:3dcd:f87f:1890:c48e? ([2620:0:1000:8411:3dcd:f87f:1890:c48e])
+        by smtp.gmail.com with ESMTPSA id ff24-20020a056a002f5800b0069337938be8sm10932129pfb.110.2023.11.09.10.06.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Nov 2023 10:06:04 -0800 (PST)
+Message-ID: <e1ac57a7-920f-44c4-92d3-960811edede9@acm.org>
+Date:   Thu, 9 Nov 2023 10:06:02 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAL_Jsq+XB5p_K3C+rc5XetQ-Xfxu4umNFzcF0idB2hhZvS7HLA@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 1/2] scsi: ufs: core: Add UFS RTC support
+Content-Language: en-US
+To:     Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+        beanhuo@micron.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mikebi@micron.com, lporzio@micron.com
+References: <20231109125217.185462-1-beanhuo@iokpp.de>
+ <20231109125217.185462-2-beanhuo@iokpp.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231109125217.185462-2-beanhuo@iokpp.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 09, 2023 at 07:55:14AM -0600, Rob Herring wrote:
-> On Mon, Nov 6, 2023 at 11:56 AM Bart Van Assche <bvanassche@acm.org> wrote:
-> >
-> > On 11/6/23 06:48, Rob Herring wrote:
-> > > On Wed, Nov 01, 2023 at 06:48:13PM +0800, Ziqi Chen wrote:
-> > >> The Message Signaled Interrupts (MSI) has been introduced
-> > >> to UFS driver since the MCQ be enabled.
-> > >
-> > > Not really relevant when a driver supported MSI, but the when the h/w
-> > > did. Has UFS always supported MSI? It was added in some version of the
-> > > spec?
-> >
-> > MSI support has been introduced in UFSHCI version 4.0 and I think that
-> > the controller vendor can decide whether or not to implement MSI. Does
-> > this mean that the patch needs to be improved?
-> 
-> Yes, this information is what should be in the commit msg rather than
-> driver details.
-> 
+On 11/9/23 04:52, Bean Huo wrote:
+> The objective of this patch is to incorporate Real Time Clock (RTC) support in Universal
+> Flash Storage (UFS) device. This enhancement is crucial for the internal maintenance
+> operations of the UFS device.
 
-Yes, agreed. Ziqi, please update the commit message to incorporate the hw
-details about when MCQ/MSI got introduced. Devicetree binding should describe
-the hw, not the driver.
+That sounds vague. Please explain why a UFS device should know the real
+time since other storage devices don't need to know the real time.
 
-- Mani
+> +		dev_info->rtc_time_baseline = mktime64(2010, 1, 1, 0, 0, 0) -
+> +								mktime64(1970, 1, 1, 0, 0, 0);
 
-> Rob
+The formatting of the above code is not compliant with the kernel coding
+style. Please consider reformatting this patch with e.g.
+git clang-format HEAD^.
 
--- 
-மணிவண்ணன் சதாசிவம்
+> +	schedule_delayed_work(&hba->ufs_rtc_delayed_work,
+> +							msecs_to_jiffies(UFS_RTC_UPDATE_EVERY_MS));
+
+The formatting of the above code is not compliant with the style guide
+either.
+
+> @@ -9746,6 +9834,8 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>   	ret = ufshcd_vops_suspend(hba, pm_op, POST_CHANGE);
+>   	if (ret)
+>   		goto set_link_active;
+> +
+> +	cancel_delayed_work(&hba->ufs_rtc_delayed_work);
+
+Why cancel_delayed_work() instead of cancel_delayed_work_sync()?
+
+> @@ -9840,6 +9930,8 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>   		if (ret)
+>   			goto set_old_link_state;
+>   		ufshcd_set_timestamp_attr(hba);
+> +		schedule_delayed_work(&hba->ufs_rtc_delayed_work,
+> +							msecs_to_jiffies(UFS_RTC_UPDATE_EVERY_MS));
+
+The name of the constant "UFS_RTC_UPDATE_EVERY_MS" suggests that the
+real-time clock is updated 1000 times per second while the comment above
+the UFS_RTC_UPDATE_EVERY_MS constant says that it is updated once every
+ten seconds. Please choose a better name for UFS_RTC_UPDATE_EVERY_MS,
+e.g. UFS_RTC_UPDATE_INTERVAL_MS.
+
+> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+> index e77ab1786856..18b39c6b3a97 100644
+> --- a/include/ufs/ufs.h
+> +++ b/include/ufs/ufs.h
+> @@ -14,6 +14,7 @@
+>   #include <linux/bitops.h>
+>   #include <linux/types.h>
+>   #include <uapi/scsi/scsi_bsg_ufs.h>
+> +#include <linux/rtc.h>
+
+The include/ufs/ufs.h header file does not depend on anything declared
+in <linux/rtc.h> so please move the above include directive into a .c
+file.
+
+> +	struct delayed_work ufs_rtc_delayed_work;
+
+Please change the name of this structure member into
+ufs_rtc_update_work.
+
+Thanks,
+
+Bart.
+
