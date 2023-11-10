@@ -2,334 +2,158 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78662C4167D
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Nov 2023 18:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE8DC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Nov 2023 19:40:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344458AbjKJSeX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:34:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49150 "EHLO
+        id S1346409AbjKJTkV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Nov 2023 14:40:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345662AbjKJSdG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Nov 2023 13:33:06 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E285CA7506;
-        Fri, 10 Nov 2023 05:18:14 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 113A2C433C8;
-        Fri, 10 Nov 2023 13:18:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699622294;
-        bh=CZTQjLyXB772MUzACEDykLM1EWWVojjYAEQmPWXrtVE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ESo/FtqpFvL5RJX1bYw98hPf7xCY2zpitJww7hvi6c6LQhi7codrf26oj/tjbpmM/
-         XCdlBAyoSfC6Sgqd9X7xgb7lvpelg2cdgFqQMMGs3IEhBTy81tNDXCOfbtvrww1O2C
-         Bzav/4dQ9nlzJP7YQjtMbh4J8ux8IYEp3XvwInnPSTfezN7oQt1fOp4OOIOmf81oVT
-         EACUymKGsOqYtybumFin5Z4RIQgTXt0jNUfe9a9DS52RyMBN9Y8A6fFCZsB7ytpxvG
-         rquDzWYhy9YxPon0X99cGJoI9iiosHVUF2lcVWvJOZHJ9Zgk6kGZhgYbMNiKhBu4Q5
-         SyG3WgYlYWf9A==
-Date:   Fri, 10 Nov 2023 18:48:03 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc:     Manivannan Sadhasivam <mani@kernel.org>,
-        Can Guo <cang@qti.qualcomm.com>, quic_cang@quicinc.com,
-        bvanassche@acm.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
+        with ESMTP id S236251AbjKJTjp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Nov 2023 14:39:45 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9C182449C;
+        Fri, 10 Nov 2023 01:32:37 -0800 (PST)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA7gVJO023963;
+        Fri, 10 Nov 2023 09:32:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=J8CUOcVNtXMG+Wdf+AgFdvrZxjQP6WHf4jYZkMvKEJo=;
+ b=dIIYD+yc6YgAoOeHmHE6IvO8hiHFTijJRqXz9B3u0o5mrL91GcALQYnxpt1uE0+k51/e
+ 6A62aAhYyhdoU2q0nekhpV8rdcbekfEIV0pLKdujiTj9xtgXfZDqdfQGxUUfbR7d2v4n
+ knfuxS5ZiPG45mPaXEUnwZGOFcgxV9FaA3i4T4anRGBXkHfhO2J0hPcGqpy5aNneX4C+
+ sAljy3ODnH4B6GAIOD73DPfCEAotYu2J/YS+47GIx3CjCs9PHDEiN7WT0A82h6pfq9OO
+ QoNLI/GCyne6LZEyVyDKgarmG0yGWnIEHHepKHfDq7xAspKQ9LUERsL93UuXzKJ4Fg// 3Q== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u8u2tuam2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Nov 2023 09:32:20 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AA9WIam010698
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Nov 2023 09:32:18 GMT
+Received: from [10.253.32.19] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Fri, 10 Nov
+ 2023 01:32:13 -0800
+Message-ID: <44554283-8436-2208-ab75-3e61d89dc96b@quicinc.com>
+Date:   Fri, 10 Nov 2023 17:32:11 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v2 6/7] phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed
+ Gear 5 support for SM8550
+To:     <neil.armstrong@linaro.org>, Can Guo <cang@qti.qualcomm.com>,
+        <bvanassche@acm.org>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        "Bjorn Andersson" <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Vinod Koul <vkoul@kernel.org>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
         "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
         "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 6/7] phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed
- Gear 5 support for SM8550
-Message-ID: <20231110131803.GA5025@thinkpad>
-References: <1699332374-9324-7-git-send-email-cang@qti.qualcomm.com>
- <CAA8EJpqEkkEoQ9vncNJU1t=mKbvBXKk1FUxnmGTE0Q++sf=oXA@mail.gmail.com>
- <20231108054942.GF3296@thinkpad>
- <CAA8EJpoCZChHDQLF0QHN0PkRUWV20thXMQvK-sH2fpYaC1zcvg@mail.gmail.com>
- <20231109032418.GA3752@thinkpad>
- <CAA8EJpoZUf9Ku5meH5VAcSkCbna__5LdPi8rgnN0tyBc-UzzWw@mail.gmail.com>
- <20231109104250.GF3752@thinkpad>
- <CAA8EJpp+wfe5wUj0FAMY2g3J8v7F8DVf8Bi3BwrAuCp-n=PFJg@mail.gmail.com>
- <20231109160430.GG3752@thinkpad>
- <CAA8EJpq+R4QsQSn1_sf1_dkh8mOmWLtBm7SSa953s8jRQR-pAg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAA8EJpq+R4QsQSn1_sf1_dkh8mOmWLtBm7SSa953s8jRQR-pAg@mail.gmail.com>
+References: <1699332374-9324-1-git-send-email-cang@qti.qualcomm.com>
+ <1699332374-9324-7-git-send-email-cang@qti.qualcomm.com>
+ <e4bafeaf-bbeb-4990-b6f2-497159995910@linaro.org>
+ <c3fb1fa1-4ba6-613f-a545-79e0e4b2658f@quicinc.com>
+ <10cbb859-bdbf-4763-9887-fa13003b58cd@linaro.org>
+Content-Language: en-US
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <10cbb859-bdbf-4763-9887-fa13003b58cd@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: pXi8uldaBjguBnCF2HeH4Bcf9NAS3uqM
+X-Proofpoint-GUID: pXi8uldaBjguBnCF2HeH4Bcf9NAS3uqM
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-10_06,2023-11-09_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ impostorscore=0 lowpriorityscore=0 mlxscore=0 priorityscore=1501
+ mlxlogscore=849 bulkscore=0 adultscore=0 clxscore=1015 spamscore=0
+ phishscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2311060000 definitions=main-2311100077
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 10, 2023 at 12:11:46AM +0200, Dmitry Baryshkov wrote:
-> On Thu, 9 Nov 2023 at 18:04, Manivannan Sadhasivam <mani@kernel.org> wrote:
-> >
-> > On Thu, Nov 09, 2023 at 01:00:51PM +0200, Dmitry Baryshkov wrote:
-> > > On Thu, 9 Nov 2023 at 12:43, Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > >
-> > > > On Thu, Nov 09, 2023 at 11:40:51AM +0200, Dmitry Baryshkov wrote:
-> > > > > On Thu, 9 Nov 2023 at 05:24, Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > > > >
-> > > > > > On Wed, Nov 08, 2023 at 08:56:16AM +0200, Dmitry Baryshkov wrote:
-> > > > > > > On Wed, 8 Nov 2023 at 07:49, Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > > > > > >
-> > > > > > > > On Tue, Nov 07, 2023 at 03:18:09PM +0200, Dmitry Baryshkov wrote:
-> > > > > > > > > On Tue, 7 Nov 2023 at 06:47, Can Guo <cang@qti.qualcomm.com> wrote:
-> > > > > > > > > >
-> > > > > > > > > > From: Can Guo <quic_cang@quicinc.com>
-> > > > > > > > > >
-> > > > > > > > > > On SM8550, two sets of UFS PHY settings are provided, one set is to support
-> > > > > > > > > > HS-G5, another set is to support HS-G4 and lower gears. The two sets of PHY
-> > > > > > > > > > settings are programming different values to different registers, mixing
-> > > > > > > > > > the two sets and/or overwriting one set with another set is definitely not
-> > > > > > > > > > blessed by UFS PHY designers. In order to add HS-G5 support for SM8550, we
-> > > > > > > > > > need to split the two sets into their dedicated tables, and leave only the
-> > > > > > > > > > common settings in the .tlbs. To have the PHY programmed with the correct
-> > > > > > > > > > set of PHY settings, the submode passed to PHY driver must be either HS-G4
-> > > > > > > > > > or HS-G5.
-> > > > > > > > > >
-> > > > > > > >
-> > > > > > > > You should also mention that this issue is also present in G4 supported targets.
-> > > > > > > > And a note that it will get fixed later.
-> > > > > > > >
-> > > > > > > > > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> > > > > > > > > > ---
-> > > > > > > > > >  drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h     |   2 +
-> > > > > > > > > >  drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h |   2 +
-> > > > > > > > > >  .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |  12 +++
-> > > > > > > > > >  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 112 ++++++++++++++++++---
-> > > > > > > > > >  4 files changed, 115 insertions(+), 13 deletions(-)
-> > > > > > > > > >
-> > > > > > > > > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
-> > > > > > > > > > index c23d5e4..e563af5 100644
-> > > > > > > > > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
-> > > > > > > > > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
-> > > > > > > > > > @@ -18,6 +18,7 @@
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_BIST_FIXED_PAT_CTRL            0x060
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_TX_HSGEAR_CAPABILITY           0x074
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_RX_HSGEAR_CAPABILITY           0x0bc
-> > > > > > > > > > +#define QPHY_V6_PCS_UFS_RX_HS_G5_SYNC_LENGTH_CAPABILITY        0x12c
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_DEBUG_BUS_CLKSEL               0x158
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_LINECFG_DISABLE                        0x17c
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_RX_MIN_HIBERN8_TIME            0x184
-> > > > > > > > > > @@ -27,5 +28,6 @@
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_READY_STATUS                   0x1a8
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_TX_MID_TERM_CTRL1              0x1f4
-> > > > > > > > > >  #define QPHY_V6_PCS_UFS_MULTI_LANE_CTRL1               0x1fc
-> > > > > > > > > > +#define QPHY_V6_PCS_UFS_RX_HSG5_SYNC_WAIT_TIME         0x220
-> > > > > > > > > >
-> > > > > > > > > >  #endif
-> > > > > > > > > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
-> > > > > > > > > > index f420f8f..ef392ce 100644
-> > > > > > > > > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
-> > > > > > > > > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
-> > > > > > > > > > @@ -56,6 +56,8 @@
-> > > > > > > > > >  #define QSERDES_V6_COM_SYS_CLK_CTRL                            0xe4
-> > > > > > > > > >  #define QSERDES_V6_COM_SYSCLK_BUF_ENABLE                       0xe8
-> > > > > > > > > >  #define QSERDES_V6_COM_PLL_IVCO                                        0xf4
-> > > > > > > > > > +#define QSERDES_V6_COM_CMN_IETRIM                              0xfc
-> > > > > > > > > > +#define QSERDES_V6_COM_CMN_IPTRIM                              0x100
-> > > > > > > > > >  #define QSERDES_V6_COM_SYSCLK_EN_SEL                           0x110
-> > > > > > > > > >  #define QSERDES_V6_COM_RESETSM_CNTRL                           0x118
-> > > > > > > > > >  #define QSERDES_V6_COM_LOCK_CMP_EN                             0x120
-> > > > > > > > > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-> > > > > > > > > > index 15bcb4b..48f31c8 100644
-> > > > > > > > > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-> > > > > > > > > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-> > > > > > > > > > @@ -10,10 +10,20 @@
-> > > > > > > > > >  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_RX                     0x2c
-> > > > > > > > > >  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX              0x30
-> > > > > > > > > >  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_RX              0x34
-> > > > > > > > > > +#define QSERDES_UFS_V6_TX_LANE_MODE_1                          0x7c
-> > > > > > > > > > +#define QSERDES_UFS_V6_TX_FR_DCC_CTRL                          0x108
-> > > > > > > > > >
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2          0x08
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4          0x10
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_SO_GAIN_RATE4          0x24
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_COUNT_HIGH_RATE4       0x54
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2                   0xd4
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE4                   0xdc
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_SO_GAIN_RATE4                   0xf0
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_UCDR_PI_CONTROLS                     0xf4
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL                      0x178
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_EQ_OFFSET_ADAPTOR_CNTRL1             0x1bc
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_OFFSET_ADAPTOR_CNTRL3                        0x1c4
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0                     0x208
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B1                     0x20c
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B3                     0x214
-> > > > > > > > > > @@ -25,6 +35,8 @@
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE3_B5                                0x264
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE3_B8                                0x270
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE4_B3                                0x280
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_MODE_RATE4_B4                                0x284
-> > > > > > > > > >  #define QSERDES_UFS_V6_RX_MODE_RATE4_B6                                0x28c
-> > > > > > > > > > +#define QSERDES_UFS_V6_RX_DLL0_FTUNE_CTRL                      0x2f8
-> > > > > > > > > >
-> > > > > > > > > >  #endif
-> > > > > > > > > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> > > > > > > > > > index 3927eba..e0a01497 100644
-> > > > > > > > > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> > > > > > > > > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> > > > > > > > > > @@ -649,32 +649,51 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_serdes[] = {
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_HSCLK_SEL_1, 0x11),
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_HSCLK_HS_SWITCH_SEL_1, 0x00),
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP_EN, 0x01),
-> > > > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x04),
-> > > > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_IVCO, 0x0f),
-> > > > > > > > > > +
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_INITVAL2, 0x00),
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x41),
-> > > > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x7f),
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x06),
-> > > > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x4c),
-> > > > > > > > > > +};
-> > > > > > > > > > +
-> > > > > > > > > > +static const struct qmp_phy_init_tbl sm8550_ufsphy_hs_b_serdes[] = {
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x44),
-> > > > > > > > > > +};
-> > > > > > > > > > +
-> > > > > > > > > > +static const struct qmp_phy_init_tbl sm8550_ufsphy_g4_serdes[] = {
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x04),
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_IVCO, 0x0f),
-> > > > > > > > > >         QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
-> > > > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
-> > > > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
-> > > > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x99),
-> > > > > > > > > > -       QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x07),
-> > > > > > > > >
-> > > > > > > > > Aside from moving these registers to the HS_G4 table, you are also
-> > > > > > > > > changing these registers. It makes me think that there was an error in
-> > > > > > > > > the original programming sequence.
-> > > > > > > > > If that is correct, could you please split the patch into two pieces:
-> > > > > > > > > - Fix programming sequence (add proper Fixes tags)
-> > > > > > > > > - Split G4 and G5 tables.
-> > > > > > > >
-> > > > > > > > Ack
-> > > > > > > >
-> > > > > > > > >
-> > > > > > > > > > +
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE1, 0x4c),
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE1, 0x0a),
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE1, 0x18),
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE1, 0x14),
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE1, 0x99),
-> > > > > > > > > > +       QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE1, 0x07),
-> > > > > > > > >
-> > > > > > > > > I see all the MODE1 registers being only present in G4 and G5 tables.
-> > > > > > > > > Should they be programmed for the modes lower than G4?
-> > > > > > > > >
-> > > > > > > >
-> > > > > > > > We use G4 table for all the modes <= G4.
-> > > > > > >
-> > > > > > > Could you please point me how it's handled?
-> > > > > > > In the patch I see just:
-> > > > > > >
-> > > > > > >        if (qmp->submode == UFS_HS_G4)
-> > > > > > >                qmp_ufs_serdes_init(qmp, &cfg->tbls_hs_g4);
-> > > > > > >        else if (qmp->submode == UFS_HS_G5)
-> > > > > > >                qmp_ufs_serdes_init(qmp, &cfg->tbls_hs_g5);
-> > > > > > >
-> > > > > > > Which looks like two special cases (HS_G4 and HS_G5) and nothing for
-> > > > > > > anything else.
-> > > > > > >
-> > > > > >
-> > > > > > Yes, and the UFS driver passes only G4/G5. For all the gears <=G4, G4 init
-> > > > > > sequence will be used and for G5, G5 sequence will be used.
-> > > > > >
-> > > > >
-> > > > > That's what I could not find in the UFS driver. I see a call to
-> > > > > `phy_set_mode_ext(phy, PHY_MODE_UFS_HS_B, host->phy_gear);` and
-> > > > > host->phy_gear is initialised to UFS_HS_G2.
-> > > > >
-> > > >
-> > > > You need to check the UFS driver changes in this series to get the complete
-> > > > picture as the logic is getting changed.
-> > > >
-> > > > It is common to get confused because of the way the UFS driver (qcom mostly)
-> > > > handles the PHY init sequence programming. We used to have only one init
-> > > > sequence for older targets and life was easy. But when I wanted to add G4
-> > > > support for SM8250, I learned that there are 2 separate init sequences. One for
-> > > > non-G4 and other for G4. So I used the phy_sub_mode property to pass the
-> > > > relevant mode from the UFS driver to the PHY driver and programmed the sequence
-> > > > accordingly. This got extended to non-G5 and G5 now.
-> > > >
-> > > > Now, the UFS driver will start probing from a low gear for older targets (G2)
-> > > > and G4/G5 for newer ones then scale up based on the device and host capability.
-> > > > For older targets, the common table (tbls) will be used if the submode doesn't
-> > > > match G4/G5. But for newer targets, the UFS driver will _only_ pass G4 or G5 as
-> > > > the phy_gear, so those specific sequence will only be used.
-> > > >
-> > > > Hope I'm clear.
-> > >
-> > > Yes, it is now clear, thank you!
-> > >
-> > > Would it be possible / feasible / logical to maintain this idea even
-> > > for newer platforms (leaving the HS_A  / HS_B aside)?
-> > >
-> > > tbls - works for HS_G2
-> > > tbls + tbls_g4 - works for HS_G4
-> > > tbls + tbls_g5 - works for HS_G5
-> > >
-> >
-> > No. The PHY team only gives 2 init sequences for any SoC now.
-> 
-> Ack. Then the code should become
-> if (HS_G5)
->    program(tbls_hs_g5)
-> else
->    program(tbls_hs_g4);
-> 
+Hi Neil,
 
-This should work. Even if we have to accomodate G6 in the future, we can use
-"else if" for that and keep G4 as the "else" condition. This logic can also be
-optimized in the future.
-
-- Mani
-
-> >
-> > - Mani
-> >
-> > > I mean here that the PHY driver should not depend on the knowledge
-> > > that the UFS driver will not be setting HS_G2 for some particular
-> > > platform and ideally it should continue working if at some point we
-> > > change the UFS driver to set HS_G2.
-> > >
-> > >
-> > > >
-> > > > - Mani
-> > > >
-> > > > > Maybe we should change the condition here (in the PHY driver) to:
-> > > > >
-> > > > > if (qmp->submode <= UFS_HS_G4)
-> > > > >
-> > > > > ?
-> > > > > --
-> > > > > With best wishes
-> > > > > Dmitry
-> > > >
-> > > > --
-> > > > மணிவண்ணன் சதாசிவம்
-> > >
-> > >
-> > >
-> > > --
-> > > With best wishes
-> > > Dmitry
-> >
-> > --
-> > மணிவண்ணன் சதாசிவம்
+On 11/10/2023 5:17 PM, neil.armstrong@linaro.org wrote:
+> Hi,
 > 
+> On 10/11/2023 10:03, Can Guo wrote:
+>> Hi Neil,
+>>
+>> On 11/10/2023 4:47 PM, neil.armstrong@linaro.org wrote:
+>>> Hi,
+>>>
+>>> On 07/11/2023 05:46, Can Guo wrote:
+>>>> From: Can Guo <quic_cang@quicinc.com>
+>>>>
+>>>> On SM8550, two sets of UFS PHY settings are provided, one set is to 
+>>>> support
+>>>> HS-G5, another set is to support HS-G4 and lower gears. The two sets 
+>>>> of PHY
+>>>> settings are programming different values to different registers, 
+>>>> mixing
+>>>> the two sets and/or overwriting one set with another set is 
+>>>> definitely not
+>>>> blessed by UFS PHY designers. In order to add HS-G5 support for 
+>>>> SM8550, we
+>>>> need to split the two sets into their dedicated tables, and leave 
+>>>> only the
+>>>> common settings in the .tlbs. To have the PHY programmed with the 
+>>>> correct
+>>>> set of PHY settings, the submode passed to PHY driver must be either 
+>>>> HS-G4
+>>>> or HS-G5.
+>>>
+>>> I guess I'll need to rebase my SM8650 UFS PHY driver to support both 
+>>> G4 and G5 modes
+>>> at some point ?
+>>
+>>
+>> Thank for reaching out. Yes, please.
+>>
+>> I can help review the PHY settings.
 > 
+> Ok I'll try rebasing on this serie and add G5 support.
 > 
-> -- 
-> With best wishes
-> Dmitry
+>>
+>> BTW, are you enabling MCQ (by adding MCQ related DT) at the same time?
+> 
+> I tested MCQ but it triggers the same issues we have with suspend/resume 
+> on SM8550 & SM8650,
+> and the bindings are not present of the UFS qcom node.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Are you talking about suspend/resume fail with rpm/spm_lvl == 5? If yes, 
+then Nitin and Naveen are working on fixing it.
+
+If you have plan to enable UFS MCQ on SM8650 later, please let me know, 
+I have some BUG fixes for it, we can co-work.
+
+Thanks,
+Can Guo
+
+> 
+> Neil
+> 
+>>
+>> Thanks,
+>> Can Guo.
+>>
+>>>
+>>> Neil
+>>>
+> 
