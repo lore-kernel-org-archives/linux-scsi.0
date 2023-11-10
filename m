@@ -2,128 +2,127 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A1BC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Nov 2023 18:15:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B3CC4167B
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Nov 2023 18:19:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345082AbjKJSP2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:15:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49734 "EHLO
+        id S1345806AbjKJST2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Nov 2023 13:19:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235782AbjKJSOi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Nov 2023 13:14:38 -0500
+        with ESMTP id S1345094AbjKJSRX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Nov 2023 13:17:23 -0500
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88AED7A9D;
-        Thu,  9 Nov 2023 22:40:57 -0800 (PST)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA5UT4Z003312;
-        Fri, 10 Nov 2023 05:50:21 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD557AD27;
+        Fri, 10 Nov 2023 01:03:52 -0800 (PST)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA7fuxo010154;
+        Fri, 10 Nov 2023 09:03:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
  mime-version : subject : to : cc : references : from : in-reply-to :
  content-type : content-transfer-encoding; s=qcppdkim1;
- bh=1qeJzEU9+q9du+S9Sx8kYO/KTx5lYz7McRllLoryFDM=;
- b=Cj5fkE9Yf5Z1HlPdZe/aaaFHUJI7/w0+XK6IcZFTXFnuDXJUn5WQNoLXKefCgm+kt9DM
- HBetWEpz7NyaJoVRUiRUwmFL6PrC2K98RuXa6YRZYKvwAHu/1hiGl7qw/c3GMBniniOk
- df3z3LP4mcfumzh1aBN8jDA728XVj/JZfSoIkejnz13BRylReQ/sI9k7uRqGLag1cxXH
- 3ubnXtpjHrT+MDUOA8QwWQFExJs6fScZeehO/E/hSpeTdeq9JwZgvKxAGR0roVba049E
- Fz8iAUM6O8WGcnxFUYyN9zAIP9LFGHH3RKgnpIwEcPNAJEFbGycJet3SxhZGKxCF21LM zQ== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u93tq9a5r-1
+ bh=TBYV7bv97Iu3cs83mPkPNVVr/7Yfp0fRAEk0WhPDGqU=;
+ b=KhLozCSUhfP0QuefC1NOXPz/eNiAQAl+FZaW7B3JnXC1RkSjPLTTz2sn8mmVUXyuwo0r
+ C66FbTfPoFRw2WtkeE7WmX2Z7P4kM0Kl7EfUQunZi6c/ImzTq7zk5QhAnF4l0YO0s8wo
+ gm9RCNA1un/SFZ2ghQmYtd4ovZDipgxyV1+ij+eql1fGJprDYVZYI2bChvAps6LVGMYk
+ Twa1fR8r2VyhvAjQdbt/uCbvLXuBi1g1u5rY+MRXdAx7cLXGzoBo3OwkfYDjSSw/NFeD
+ UAwg+KS8bgzTZBm7POj5K32KKV43twWPkW19cnxO/bLpoC6CLUucUA8mQ1vk776Cvnob Cw== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u93qy9qs9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 05:50:21 +0000
-Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AA5oKOV019464
+        Fri, 10 Nov 2023 09:03:33 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AA93WT7006279
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 05:50:20 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
- (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Thu, 9 Nov
- 2023 21:50:15 -0800
-Message-ID: <c77d3b96-cec0-b13f-2fd8-df59e29bb889@quicinc.com>
-Date:   Fri, 10 Nov 2023 13:50:13 +0800
+        Fri, 10 Nov 2023 09:03:32 GMT
+Received: from [10.253.32.19] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Fri, 10 Nov
+ 2023 01:03:28 -0800
+Message-ID: <c3fb1fa1-4ba6-613f-a545-79e0e4b2658f@quicinc.com>
+Date:   Fri, 10 Nov 2023 17:03:26 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH] dt-bindings: ufs: Add msi-parent for UFS MCQ
-Content-Language: en-US
-To:     Manivannan Sadhasivam <mani@kernel.org>,
-        Rob Herring <robh@kernel.org>
-CC:     Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
-        <quic_cang@quicinc.com>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
-        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
-        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
-        <linux-scsi@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        "Ulf Hansson" <ulf.hansson@linaro.org>,
-        Wolfram Sang <wsa@kernel.org>,
-        "Guenter Roeck" <linux@roeck-us.net>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        "Mark Brown" <broonie@kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v2 6/7] phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed
+ Gear 5 support for SM8550
+To:     <neil.armstrong@linaro.org>, Can Guo <cang@qti.qualcomm.com>,
+        <bvanassche@acm.org>, <mani@kernel.org>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        "Bjorn Andersson" <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>,
         open list <linux-kernel@vger.kernel.org>
-References: <1698835699-28550-1-git-send-email-quic_ziqichen@quicinc.com>
- <20231106144831.GA317907-robh@kernel.org>
- <5850d5ac-e735-4358-866d-f410b00ba39d@acm.org>
- <CAL_Jsq+XB5p_K3C+rc5XetQ-Xfxu4umNFzcF0idB2hhZvS7HLA@mail.gmail.com>
- <20231109161656.GH3752@thinkpad>
-From:   Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <20231109161656.GH3752@thinkpad>
+References: <1699332374-9324-1-git-send-email-cang@qti.qualcomm.com>
+ <1699332374-9324-7-git-send-email-cang@qti.qualcomm.com>
+ <e4bafeaf-bbeb-4990-b6f2-497159995910@linaro.org>
+Content-Language: en-US
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <e4bafeaf-bbeb-4990-b6f2-497159995910@linaro.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.80.80.8]
 X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01b.na.qualcomm.com (10.46.141.250)
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: jJeOAbnbHovkp2p0lBuzujKZ7WRIQexM
-X-Proofpoint-ORIG-GUID: jJeOAbnbHovkp2p0lBuzujKZ7WRIQexM
+X-Proofpoint-ORIG-GUID: Bs_mWBVUYlb-vmwGMPmlFCrTOWmKgGG2
+X-Proofpoint-GUID: Bs_mWBVUYlb-vmwGMPmlFCrTOWmKgGG2
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-10_02,2023-11-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0 mlxscore=0
- suspectscore=0 clxscore=1015 priorityscore=1501 mlxlogscore=999
- spamscore=0 phishscore=0 impostorscore=0 bulkscore=0 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311100047
+ definitions=2023-11-10_05,2023-11-09_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
+ spamscore=0 clxscore=1015 malwarescore=0 priorityscore=1501 suspectscore=0
+ mlxscore=0 lowpriorityscore=0 mlxlogscore=767 impostorscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
+ definitions=main-2311100074
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Neil,
 
-
-On 11/10/2023 12:16 AM, Manivannan Sadhasivam wrote:
-> On Thu, Nov 09, 2023 at 07:55:14AM -0600, Rob Herring wrote:
->> On Mon, Nov 6, 2023 at 11:56 AM Bart Van Assche <bvanassche@acm.org> wrote:
->>>
->>> On 11/6/23 06:48, Rob Herring wrote:
->>>> On Wed, Nov 01, 2023 at 06:48:13PM +0800, Ziqi Chen wrote:
->>>>> The Message Signaled Interrupts (MSI) has been introduced
->>>>> to UFS driver since the MCQ be enabled.
->>>>
->>>> Not really relevant when a driver supported MSI, but the when the h/w
->>>> did. Has UFS always supported MSI? It was added in some version of the
->>>> spec?
->>>
->>> MSI support has been introduced in UFSHCI version 4.0 and I think that
->>> the controller vendor can decide whether or not to implement MSI. Does
->>> this mean that the patch needs to be improved?
+On 11/10/2023 4:47 PM, neil.armstrong@linaro.org wrote:
+> Hi,
+> 
+> On 07/11/2023 05:46, Can Guo wrote:
+>> From: Can Guo <quic_cang@quicinc.com>
 >>
->> Yes, this information is what should be in the commit msg rather than
->> driver details.
->>
+>> On SM8550, two sets of UFS PHY settings are provided, one set is to 
+>> support
+>> HS-G5, another set is to support HS-G4 and lower gears. The two sets 
+>> of PHY
+>> settings are programming different values to different registers, mixing
+>> the two sets and/or overwriting one set with another set is definitely 
+>> not
+>> blessed by UFS PHY designers. In order to add HS-G5 support for 
+>> SM8550, we
+>> need to split the two sets into their dedicated tables, and leave only 
+>> the
+>> common settings in the .tlbs. To have the PHY programmed with the correct
+>> set of PHY settings, the submode passed to PHY driver must be either 
+>> HS-G4
+>> or HS-G5.
 > 
-> Yes, agreed. Ziqi, please update the commit message to incorporate the hw
-> details about when MCQ/MSI got introduced. Devicetree binding should describe
-> the hw, not the driver.
-> 
-Thank you all, I will update the commit message in next version.
+> I guess I'll need to rebase my SM8650 UFS PHY driver to support both G4 
+> and G5 modes
+> at some point ?
 
-- Ziqi
 
-> - Mani
+Thank for reaching out. Yes, please.
+
+I can help review the PHY settings.
+
+BTW, are you enabling MCQ (by adding MCQ related DT) at the same time?
+
+Thanks,
+Can Guo.
+
 > 
->> Rob
-> 
+> Neil
+>
