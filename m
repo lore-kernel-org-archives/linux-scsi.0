@@ -2,127 +2,143 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B98C2C4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Nov 2023 06:43:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2882CC4332F
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Nov 2023 02:02:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229897AbjKKGnz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Nov 2023 01:43:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60966 "EHLO
+        id S229601AbjKLCCz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Nov 2023 21:02:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229584AbjKKGnz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Nov 2023 01:43:55 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 571D93C07
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Nov 2023 22:43:52 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id ABDDEC433CC
-        for <linux-scsi@vger.kernel.org>; Sat, 11 Nov 2023 06:43:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699685031;
-        bh=4H0iN8mFUjuGKpXQvs+bBD0og+tnFkgwwqfjSTgWiBQ=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=ClPhInPNEijM46VWFXwHzqHzQW8NcLsPLy3PowHtH0aru1g8PPE4DByj3WLLBI3Fn
-         nCibKbZ92W8aMK5xTpLLHgo4793ESd41QCt73xl93ks8AO1p0s9H3mu6DAX9VHd2GW
-         2qZv58CkxrS0zKqFvmJtHLnQNNOHV5SxWMm+WXVRXgjlmRkVYLKVQKbeKCh46SSCQa
-         xsFKhpPiO1Cboi4sM/wsCTuxlGOk24OTKpoT1cGE47xuQ07ldfoubRAWY25lKpi+wP
-         gXYOTrABvN3A2dNs7OJDX5biU1T3Biq/GSj734Tsn1Q9p4GYFnXVAIlNUWNnvm/q+v
-         aWHPbQcqtNW5A==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 97F17C53BD5; Sat, 11 Nov 2023 06:43:51 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date:   Sat, 11 Nov 2023 06:43:51 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: bobinium@thoughtsfactory.net
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-217599-11613-jCcHNjtbZX@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229436AbjKLCCy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Nov 2023 21:02:54 -0500
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB12930C5;
+        Sat, 11 Nov 2023 18:02:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1699754571; x=1731290571;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=zYgV3EeWTUWInSYElFdO19myYIuDelV579co8Zr1cYA=;
+  b=XT3LN90VGamPb72MSKbOdTlrHdkvSSH+CDsR3VpqkZud2w3fMuWckz4/
+   uyO0TmT5Tk6txc5I4CFNZuGQMv43zsBpuOTWcxoOJuK5Kv1KQ9OH4dHcV
+   X6ErRlafKvxvHl5o7fTKSF1Vv6i6EKNj8kTgmuzJ9TWn4r7ni9qkQ3Jz5
+   YCUZokUshSV5TqDJ7YDyHPAbgeI35utqIp5kzfn2cwaviNo/DisAwbbL4
+   vs3Ggq5ssuhwiGHhcNxK/03O+0qDxOB3yGabNz0LJpjRmhFTKTQtwzar7
+   0vBu8CQx6o5qQywFr/TD7kS/EzbKngH+9rpE/MTu9Mod+ZjBNP2FChpqQ
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10891"; a="11857525"
+X-IronPort-AV: E=Sophos;i="6.03,296,1694761200"; 
+   d="scan'208";a="11857525"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2023 18:02:51 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.03,296,1694761200"; 
+   d="scan'208";a="11761982"
+Received: from lkp-server01.sh.intel.com (HELO 17d9e85e5079) ([10.239.97.150])
+  by orviesa001.jf.intel.com with ESMTP; 11 Nov 2023 18:02:47 -0800
+Received: from kbuild by 17d9e85e5079 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1r1zoC-000AsW-2c;
+        Sun, 12 Nov 2023 02:02:44 +0000
+Date:   Sun, 12 Nov 2023 10:02:36 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com,
+        bvanassche@acm.org, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+        beanhuo@micron.com
+Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mikebi@micron.com, lporzio@micron.com
+Subject: Re: [PATCH v1 2/2] scsi: ufs: core: Add sysfs node for UFS RTC update
+Message-ID: <202311120923.S1Zbpb0s-lkp@intel.com>
+References: <20231109125217.185462-3-beanhuo@iokpp.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231109125217.185462-3-beanhuo@iokpp.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+Hi Bean,
 
---- Comment #25 from Robert Langlois (bobinium@thoughtsfactory.net) ---
-Created attachment 305397
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D305397&action=3Dedit
-Patch for aacraid FC38 6.3.12-200 vs 6.4.4-200
+kernel test robot noticed the following build warnings:
 
-I have the same issue on two servers running Fedora 38 with different Adapt=
-ec
-coontrollers.
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next linus/master v6.6 next-20231110]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-=3D=3D=3D Server 1:
+url:    https://github.com/intel-lab-lkp/linux/commits/Bean-Huo/scsi-ufs-core-Add-UFS-RTC-support/20231110-051048
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20231109125217.185462-3-beanhuo%40iokpp.de
+patch subject: [PATCH v1 2/2] scsi: ufs: core: Add sysfs node for UFS RTC update
+config: arm64-allmodconfig (https://download.01.org/0day-ci/archive/20231112/202311120923.S1Zbpb0s-lkp@intel.com/config)
+compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project.git 4a5ac14ee968ff0ad5d2cc1ffa0299048db4c88a)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231112/202311120923.S1Zbpb0s-lkp@intel.com/reproduce)
 
-# arcconf getconfig 1 AD | grep 'Model'
-   Controller Model                         : Adaptec ASR72405
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202311120923.S1Zbpb0s-lkp@intel.com/
 
-# arcconf getversion 1
-Controllers found: 1
-Controller #1
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Firmware                               : 7.5-0 (32118)
-Staged Firmware                        : 7.5-0 (32118)
-BIOS                                   : 7.5-0 (32118)
-Driver                                 : 1.2-1 (50983)
-Boot Flash                             : 7.5-0 (32118)
-CPLD (Load version/ Flash version)     : 8/ 10
-SEEPROM (Load version/ Flash version)  : 1/ 1
+All warnings (new ones prefixed by >>):
 
-=3D=3D=3D Server 2:
+>> drivers/ufs/core/ufs-sysfs.c:276:6: warning: variable 'resume_period_update' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+     276 |         if (!hba->dev_info.rtc_update_period && ms > 0)
+         |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/ufs/core/ufs-sysfs.c:281:6: note: uninitialized use occurs here
+     281 |         if (resume_period_update)
+         |             ^~~~~~~~~~~~~~~~~~~~
+   drivers/ufs/core/ufs-sysfs.c:276:2: note: remove the 'if' if its condition is always true
+     276 |         if (!hba->dev_info.rtc_update_period && ms > 0)
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     277 |                 resume_period_update =  true;
+         | ~~~~~~~~~~~~~~~~
+>> drivers/ufs/core/ufs-sysfs.c:276:6: warning: variable 'resume_period_update' is used uninitialized whenever '&&' condition is false [-Wsometimes-uninitialized]
+     276 |         if (!hba->dev_info.rtc_update_period && ms > 0)
+         |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/ufs/core/ufs-sysfs.c:281:6: note: uninitialized use occurs here
+     281 |         if (resume_period_update)
+         |             ^~~~~~~~~~~~~~~~~~~~
+   drivers/ufs/core/ufs-sysfs.c:276:6: note: remove the '&&' if its condition is always true
+     276 |         if (!hba->dev_info.rtc_update_period && ms > 0)
+         |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/ufs/core/ufs-sysfs.c:271:27: note: initialize the variable 'resume_period_update' to silence this warning
+     271 |         bool resume_period_update;
+         |                                  ^
+         |                                   = 0
+   2 warnings generated.
 
-# arcconf getconfig 1 AD | grep 'Model'
-   Controller Model                           : Adaptec ASR71685
 
-# arcconf getversion 1
-Controllers found: 1
-Controller #1
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Firmware                               : 7.5-0 (32118)
-Staged Firmware                        : 7.5-0 (32118)
-BIOS                                   : 7.5-0 (32118)
-Driver                                 : 1.2-1 (50983)
-Boot Flash                             : 7.5-0 (32118)
-CPLD (Load version/ Flash version)     : 7/ 10
-SEEPROM (Load version/ Flash version)  : 0/ 1
+vim +276 drivers/ufs/core/ufs-sysfs.c
 
-Both controllers have latest firmware.
+   265	
+   266	static ssize_t rtc_update_ms_store(struct device *dev, struct device_attribute *attr,
+   267				   const char *buf, size_t count)
+   268	{
+   269		struct ufs_hba *hba = dev_get_drvdata(dev);
+   270		unsigned int ms;
+   271		bool resume_period_update;
+   272	
+   273		if (kstrtouint(buf, 0, &ms))
+   274			return -EINVAL;
+   275	
+ > 276		if (!hba->dev_info.rtc_update_period && ms > 0)
+   277			resume_period_update =  true;
+   278		/* Minimum and maximum update frequency should be synchronized with all UFS vendors */
+   279		hba->dev_info.rtc_update_period = ms;
+   280	
+   281		if (resume_period_update)
+   282			schedule_delayed_work(&hba->ufs_rtc_delayed_work,
+   283							msecs_to_jiffies(hba->dev_info.rtc_update_period));
+   284		return count;
+   285	}
+   286	
 
-Last known working kernel: 6.3.12-200<br>
-First known non-working kernel: 6.4.4-200
-
-Patch from Comment #22 did not work for me, still getting errors.
-
-Submitted patch was done between two kernels above on 'drivers/scsi/aacraid=
-'.
-Applied and working on the folling Fedora kernels:
-
-6.5.9-200.fc38
-6.5.10-200.fc38
-6.5.10-300.fc39
-6.5.11-300.fc39
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
