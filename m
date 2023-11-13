@@ -2,204 +2,109 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15342C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Nov 2023 15:38:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECD0C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Nov 2023 16:00:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230034AbjKMPiE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Nov 2023 10:38:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39852 "EHLO
+        id S230355AbjKMQAw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Nov 2023 11:00:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229584AbjKMPiD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Nov 2023 10:38:03 -0500
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D75601706;
-        Mon, 13 Nov 2023 07:37:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1699889879; x=1731425879;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=w8TTSWY7bGFFxI17jKTubI0A2ir8yt0Laypod+M+uRk=;
-  b=DfzJdJWH0ltoGeTA5F+oF+HY7nDXX/Z92q+PyzDB+xo9mNZoLfYgwMRz
-   1/o+IZEAkqDBncfQoTn1Dzz9UaDcnbqS7b9tR0OdVsjCjAPqvGHqZfVuO
-   zyyslGZYLOgG5YxGQui8HAhSVFYT5lDsejGDEjnC2TcNc49mmlj3URo//
-   vFtjwNOGBt84nvOlsbRpgdJ2fFBfYK/FQ0AXFmpCJYqYKYt7+2MuFKr7O
-   1Zv/2pMWEOM+ULXeStrfR39blAOfoagiRskZ6Uxc6u4zYLl1oFr/d8KHR
-   LAyKCuXv3wn+QNzC0ObPx+PRREdbK57GcJcYnJiYYbMJQkpV2SP6LD0xi
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10893"; a="375481341"
-X-IronPort-AV: E=Sophos;i="6.03,299,1694761200"; 
-   d="scan'208";a="375481341"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2023 07:37:59 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10893"; a="1011571200"
-X-IronPort-AV: E=Sophos;i="6.03,299,1694761200"; 
-   d="scan'208";a="1011571200"
-Received: from lkp-server01.sh.intel.com (HELO 17d9e85e5079) ([10.239.97.150])
-  by fmsmga006.fm.intel.com with ESMTP; 13 Nov 2023 07:37:55 -0800
-Received: from kbuild by 17d9e85e5079 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1r2Z0a-000CE6-2m;
-        Mon, 13 Nov 2023 15:37:52 +0000
-Date:   Mon, 13 Nov 2023 23:37:12 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-        kwangwon.min@samsung.com, kwmad.kim@samsung.com,
-        sh425.lee@samsung.com, sc.suh@samsung.com,
-        quic_nguyenb@quicinc.com, cpgs@samsung.com, grant.jung@samsung.com,
-        junwoo80.lee@samsung.com
-Cc:     oe-kbuild-all@lists.linux.dev, SEO HOYOUNG <hy50.seo@samsung.com>
-Subject: Re: [PATCH v1] scsi: ufs: core: fix racing issue during
- ufshcd_mcq_abort
-Message-ID: <202311132304.bqVcJ27s-lkp@intel.com>
-References: <20231113112935.16343-1-hy50.seo@samsung.com>
+        with ESMTP id S229556AbjKMQAv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Nov 2023 11:00:51 -0500
+Received: from mail-oa1-x2e.google.com (mail-oa1-x2e.google.com [IPv6:2001:4860:4864:20::2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87DD710EA;
+        Mon, 13 Nov 2023 08:00:48 -0800 (PST)
+Received: by mail-oa1-x2e.google.com with SMTP id 586e51a60fabf-1f03db0a410so2712070fac.1;
+        Mon, 13 Nov 2023 08:00:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1699891248; x=1700496048; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=YCI3L64udzOVkgrvNBBuRjNKAjsQ4eF01P+K65TkA5w=;
+        b=RFSyHFH6XvoyfWOo/ITvLF/POfuQH3Srb7MtMR7jga6WOEDAriy/kOZBXw7cepgABn
+         dBUmkpAjR14pm7xbU0TBSnW062nW7Kp44fwbji1vaty5SR0+2JbGfEoJSjZPOKOLsmNy
+         LRSNt8qUcBRgEDe9xMnfsNTjseGniKstpHwPhdvjHZmoI+iXFXnTTTYgqcb1YYHLdQVs
+         doeX4qsMjfChp1bMMtpxsPBUtf1Yr/Y24U8qU3To/So93zYqno9EHmgw4jnkTH74HinD
+         3wiNcRxyfDBaJeCtjO7uaXRy7QbNwuozP89Pb1UmQ+WAPIbEQT0z+A4FkstXEX0zvq6M
+         2/gw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699891248; x=1700496048;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=YCI3L64udzOVkgrvNBBuRjNKAjsQ4eF01P+K65TkA5w=;
+        b=TfpOoydVMYW3TqEljlD/q/10ZFrMZo9PoXR2s63z8VffUdGxZO9Dv0vfqsv71xsMk6
+         pTwL4TgFjcX0ecKaocn5yJX0T2/1yjSWxi9aaXjfx4scPPkgrSHCfcv5by2eH5MgkXns
+         g0rID1hsGLpPwSy321huFedDpDfj+xy7wAEr/esvGGLbivViW5TdUyzlnebaeGIOxZ7Y
+         96kfN6l9yalsMyeEPmCoe9Bblyl4M9apeb9X++V7pFKH1eNyX0543R4mCo+z9iZ34fZr
+         2nRKpCQNuxBAOHjrLri6GPdOIWrSsXxZTLZ27ygD5Dve42aiBTxyuentjHvrZlHeljqB
+         m1UA==
+X-Gm-Message-State: AOJu0YzvKId4UsfqYjj1JKEHXVborRJkN8hQq4ztMhfdosY+bGi1SAxV
+        bDxuna7HS2eziUSTFCKGZDU=
+X-Google-Smtp-Source: AGHT+IH86Lvw+64cQ2bSyDXafINYo5kfidT2s9w5HvzhHpRJmHju1T6JxeDyWMwovvWP9+KLbWvwuA==
+X-Received: by 2002:a05:6870:f815:b0:1e9:b0be:d004 with SMTP id fr21-20020a056870f81500b001e9b0bed004mr8685638oab.47.1699891247803;
+        Mon, 13 Nov 2023 08:00:47 -0800 (PST)
+Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
+        by smtp.gmail.com with ESMTPSA id b187-20020a6334c4000000b0056b27af8715sm4213931pga.43.2023.11.13.08.00.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Nov 2023 08:00:47 -0800 (PST)
+Message-ID: <fdcc6a76-f724-422f-904a-eb980c4b458a@gmail.com>
+Date:   Tue, 14 Nov 2023 00:00:31 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231113112935.16343-1-hy50.seo@samsung.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 0/4] SCSI: Fix issues between removing device and error
+ handle
+To:     Wenchao Hao <haowenchao2@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, louhongxiang@huawei.com
+References: <20231016020314.1269636-1-haowenchao2@huawei.com>
+Content-Language: en-US
+From:   Wenchao Hao <haowenchao22@gmail.com>
+In-Reply-To: <20231016020314.1269636-1-haowenchao2@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi SEO,
+On 10/16/23 10:03 AM, Wenchao Hao wrote:
+> I am testing SCSI error handle with my previous scsi_debug error
+> injection patches, and found some issues when removing device and
+> error handler happened together.
+> 
+> These issues are triggered because devices in removing would be skipped
+> when calling shost_for_each_device().
+> 
 
-kernel test robot noticed the following build errors:
+Friendly ping...
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.7-rc1 next-20231113]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> Three issues are found:
+> 1. statistic info printed at beginning of scsi_error_handler is wrong
+> 2. device reset is not triggered
+> 3. IO requeued to request_queue would be hang after error handle
+> 
+> V3:
+>   - Update patch description
+>   - Update comments of functions added
+> 
+> V2:
+>   - Fix IO hang by run all devices' queue after error handler
+>   - Do not modify shost_for_each_device() directly but add a new
+>     helper to iterate devices but do not skip devices in removing
+> 
+> Wenchao Hao (4):
+>   scsi: core: Add new helper to iterate all devices of host
+>   scsi: scsi_error: Fix wrong statistic when print error info
+>   scsi: scsi_error: Fix device reset is not triggered
+>   scsi: scsi_core: Fix IO hang when device removing
+> 
+>  drivers/scsi/scsi.c        | 46 ++++++++++++++++++++++++++------------
+>  drivers/scsi/scsi_error.c  |  4 ++--
+>  drivers/scsi/scsi_lib.c    |  2 +-
+>  include/scsi/scsi_device.h | 25 ++++++++++++++++++---
+>  4 files changed, 57 insertions(+), 20 deletions(-)
+> 
 
-url:    https://github.com/intel-lab-lkp/linux/commits/SEO-HOYOUNG/scsi-ufs-core-fix-racing-issue-during-ufshcd_mcq_abort/20231113-194433
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20231113112935.16343-1-hy50.seo%40samsung.com
-patch subject: [PATCH v1] scsi: ufs: core: fix racing issue during ufshcd_mcq_abort
-config: arc-randconfig-001-20231113 (https://download.01.org/0day-ci/archive/20231113/202311132304.bqVcJ27s-lkp@intel.com/config)
-compiler: arceb-elf-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231113/202311132304.bqVcJ27s-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202311132304.bqVcJ27s-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   drivers/ufs/core/ufshcd.c: In function 'ufshcd_try_to_abort_task':
->> drivers/ufs/core/ufshcd.c:7571:34: error: 'cmd' undeclared (first use in this function)
-    7571 |         if (!ufshcd_cmd_inflight(cmd) ||
-         |                                  ^~~
-   drivers/ufs/core/ufshcd.c:7571:34: note: each undeclared identifier is reported only once for each function it appears in
-
-
-vim +/cmd +7571 drivers/ufs/core/ufshcd.c
-
-  7484	
-  7485	/**
-  7486	 * ufshcd_try_to_abort_task - abort a specific task
-  7487	 * @hba: Pointer to adapter instance
-  7488	 * @tag: Task tag/index to be aborted
-  7489	 *
-  7490	 * Abort the pending command in device by sending UFS_ABORT_TASK task management
-  7491	 * command, and in host controller by clearing the door-bell register. There can
-  7492	 * be race between controller sending the command to the device while abort is
-  7493	 * issued. To avoid that, first issue UFS_QUERY_TASK to check if the command is
-  7494	 * really issued and then try to abort it.
-  7495	 *
-  7496	 * Return: zero on success, non-zero on failure.
-  7497	 */
-  7498	int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
-  7499	{
-  7500		struct ufshcd_lrb *lrbp = &hba->lrb[tag];
-  7501		int err = 0;
-  7502		int poll_cnt;
-  7503		u8 resp = 0xF;
-  7504		u32 reg;
-  7505	
-  7506		for (poll_cnt = 100; poll_cnt; poll_cnt--) {
-  7507			err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
-  7508					UFS_QUERY_TASK, &resp);
-  7509			if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED) {
-  7510				/* cmd pending in the device */
-  7511				dev_err(hba->dev, "%s: cmd pending in the device. tag = %d\n",
-  7512					__func__, tag);
-  7513				break;
-  7514			} else if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-  7515				/*
-  7516				 * cmd not pending in the device, check if it is
-  7517				 * in transition.
-  7518				 */
-  7519				dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
-  7520					__func__, tag);
-  7521				if (is_mcq_enabled(hba)) {
-  7522					/* MCQ mode */
-  7523					if (ufshcd_cmd_inflight(lrbp->cmd)) {
-  7524						/* sleep for max. 200us same delay as in SDB mode */
-  7525						usleep_range(100, 200);
-  7526						continue;
-  7527					}
-  7528					/* command completed already */
-  7529					dev_err(hba->dev, "%s: cmd at tag=%d is cleared.\n",
-  7530						__func__, tag);
-  7531					goto out;
-  7532				}
-  7533	
-  7534				/* Single Doorbell Mode */
-  7535				reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-  7536				if (reg & (1 << tag)) {
-  7537					/* sleep for max. 200us to stabilize */
-  7538					usleep_range(100, 200);
-  7539					continue;
-  7540				}
-  7541				/* command completed already */
-  7542				dev_err(hba->dev, "%s: cmd at tag %d successfully cleared from DB.\n",
-  7543					__func__, tag);
-  7544				goto out;
-  7545			} else {
-  7546				dev_err(hba->dev,
-  7547					"%s: no response from device. tag = %d, err %d\n",
-  7548					__func__, tag, err);
-  7549				if (!err)
-  7550					err = resp; /* service response error */
-  7551				goto out;
-  7552			}
-  7553		}
-  7554	
-  7555		if (!poll_cnt) {
-  7556			err = -EBUSY;
-  7557			goto out;
-  7558		}
-  7559	
-  7560		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
-  7561				UFS_ABORT_TASK, &resp);
-  7562		if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-  7563			if (!err) {
-  7564				err = resp; /* service response error */
-  7565				dev_err(hba->dev, "%s: issued. tag = %d, err %d\n",
-  7566					__func__, tag, err);
-  7567			}
-  7568			goto out;
-  7569		}
-  7570	
-> 7571		if (!ufshcd_cmd_inflight(cmd) ||
-  7572		    test_bit(SCMD_STATE_COMPLETE, &cmd->state))
-  7573			goto out;
-  7574	
-  7575		err = ufshcd_clear_cmd(hba, tag);
-  7576		if (err)
-  7577			dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
-  7578				__func__, tag, err);
-  7579	
-  7580	out:
-  7581		return err;
-  7582	}
-  7583	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
