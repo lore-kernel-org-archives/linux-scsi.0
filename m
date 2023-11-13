@@ -2,96 +2,99 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92847C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Nov 2023 18:28:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21745C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Nov 2023 18:52:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229989AbjKMS2D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Nov 2023 13:28:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42512 "EHLO
+        id S229454AbjKMSwX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Nov 2023 13:52:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229974AbjKMS2C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Nov 2023 13:28:02 -0500
-Received: from mail-yw1-x1129.google.com (mail-yw1-x1129.google.com [IPv6:2607:f8b0:4864:20::1129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4923F10EC
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Nov 2023 10:27:59 -0800 (PST)
-Received: by mail-yw1-x1129.google.com with SMTP id 00721157ae682-5a7c08b7744so54976647b3.3
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Nov 2023 10:27:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1699900078; x=1700504878; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=mFbfcfYyHInn/qNJkcTbKME0wjom9QQT5atHoVOHFN0=;
-        b=JV+p9XTP37VCe0fZIH1liyTZkQFUKS3hT1igXfHqizjdHFgUJ8DCli/sEMNZx4mtB9
-         6YVyeTiiF1K21WzH76pAEXO2asgkmdrXLCG7vQLtgQE3+nzpbrmEkn3CnRe7YFBZksRE
-         Hi03dqGevXsRucOc1Cb/9d9ZroUgzzFu+qI3wkfIJS+kWKdrETRXNPHjr65PWJ6D68PM
-         FSfdTemqIsOoEwaXw+cvr21r/mgZ/ix24usDow9RrdaobGPqDx5qSV3MR1Cf4BfT6jqD
-         NXFS71uBMba0Zrv6Ea2s2sJnkz6HSX+clyx27aFifapcP45dbzBMACYrLmptwjSt50Xk
-         oEQw==
+        with ESMTP id S230041AbjKMSwW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Nov 2023 13:52:22 -0500
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B1A310F4
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Nov 2023 10:52:19 -0800 (PST)
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1cc37fb1310so35008005ad.1
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Nov 2023 10:52:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699900078; x=1700504878;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=mFbfcfYyHInn/qNJkcTbKME0wjom9QQT5atHoVOHFN0=;
-        b=w+S7m2cNxCS49+rN/zRHM0BoYM9qCt6oMPClRB92ktYHJ4rM10UmTeNRz4eYrSDCG4
-         VDn/VQQB7AJEJobbtnrxeAf0Faysaa6J2cS9lz6JtAFJo0wk66u8m2aWPMJKKbJGQSuX
-         ZNiVJsmsPod7eYXlsdYWZKZxu+STkguvuvalyXRmVt2BZ+fIWqAPJDb2O6JQUd2Aw9b2
-         3mVBZXz+nM7cW1uqFjO0tD2U9dyfq4wbvEWBin5/bqtEhdKMCzt4LvfYiPG8/mjEs9nd
-         GPvMs+66VreJe6ziPQgO+I3wCzZU8eaV4l+nGKwFMXkXT24QfEgkZgBGOli42e+2wOwd
-         yCXw==
-X-Gm-Message-State: AOJu0YzB5d8IIL9yQsgdEVeR/+sfkMej9ygYALl8Nnhmfq2apzu1XqGB
-        q3izFRj9xRUeG+zDeNnCuJTWl9fAHMWA2cbWT/g/qE19GOw=
-X-Google-Smtp-Source: AGHT+IEYWompQvZoZ/UdCSM8PjX4vDhL4miXqEs1rfYSkiqze23yu8wCGyVue7QJKsIqQ7iKCycGJTyT2PlZ5AtZiKI=
-X-Received: by 2002:a81:7387:0:b0:5a7:b682:7929 with SMTP id
- o129-20020a817387000000b005a7b6827929mr6691722ywc.17.1699900077377; Mon, 13
- Nov 2023 10:27:57 -0800 (PST)
+        d=1e100.net; s=20230601; t=1699901538; x=1700506338;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EB+GHaPUiNYr7wZHS7gcy/pnCWVG1PC7BTiM8N4ahZc=;
+        b=milY4X6NGOP0T64R3o3hzBxN4Qp/iTTVoWfBelg08q25c9NgshznabaLkv7d/JUQbT
+         1+SeR8blA6T3mK+ZgECpw6UDgBeUwxpxShFJzjAjNxtzYzYY8Uz5WWx8paFuirrvQZuQ
+         AOYmiBRITO9S/C+QCmMVPthyy5hTnDg2xx/1oa1nCT0bGxPuw10PeMKLoq01drZsdOPy
+         wscRJfyMYHCHlhiV7EM0vYPUG6WuqKyb52bInh+NG4hPJp7nPa3GrnuuArYnzrqUWZ7j
+         7Xjd77ntYxw6ZzwQpG7XcVq1ucHvsWIouA9YlrwuAtwC/PQv7oyHGdj5CfREPTysHjye
+         7tfw==
+X-Gm-Message-State: AOJu0YzO6ll3hOrMpuqowJ9+AKzns6J0w6Tcb7oYebWbtGNkJQnb1vaK
+        eqntrWs6U8Zz1YitxDj+rQs=
+X-Google-Smtp-Source: AGHT+IHdSLtltL1NodaqD3gGr1uy6PRjBsZ0aKvxdxdLhgopv+zOPFEhoxqJhAVD9Y09QFQzo9MzEg==
+X-Received: by 2002:a17:902:cec1:b0:1cc:3357:2ee8 with SMTP id d1-20020a170902cec100b001cc33572ee8mr81805plg.25.1699901538375;
+        Mon, 13 Nov 2023 10:52:18 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:7575:f839:a613:3f5b? ([2620:0:1000:8411:7575:f839:a613:3f5b])
+        by smtp.gmail.com with ESMTPSA id w12-20020a170902d3cc00b001c74df14e6fsm4316660plb.284.2023.11.13.10.52.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Nov 2023 10:52:17 -0800 (PST)
+Message-ID: <5268cb26-227a-46fa-8200-563da3b02cc3@acm.org>
+Date:   Mon, 13 Nov 2023 10:52:14 -0800
 MIME-Version: 1.0
-References: <CAGnHSE=pipa-zi-kxWyPoow0wU04-N_eUopOaZWFftTsfLjEQQ@mail.gmail.com>
-In-Reply-To: <CAGnHSE=pipa-zi-kxWyPoow0wU04-N_eUopOaZWFftTsfLjEQQ@mail.gmail.com>
-From:   Tom Yan <tom.ty89@gmail.com>
-Date:   Tue, 14 Nov 2023 02:27:46 +0800
-Message-ID: <CAGnHSEk3bARZ=ed4D62mv=n-nQRoiPteCLZPdMhrW_O5ntzfCA@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
 Subject: Re: [BUG] write_cache sysfs file broken for WCE setting
-To:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Content-Language: en-US
+To:     Tom Yan <tom.ty89@gmail.com>, linux-scsi@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
 Cc:     axboe@kernel.dk
-Content-Type: text/plain; charset="UTF-8"
+References: <CAGnHSE=pipa-zi-kxWyPoow0wU04-N_eUopOaZWFftTsfLjEQQ@mail.gmail.com>
+ <CAGnHSEk3bARZ=ed4D62mv=n-nQRoiPteCLZPdMhrW_O5ntzfCA@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAGnHSEk3bARZ=ed4D62mv=n-nQRoiPteCLZPdMhrW_O5ntzfCA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christoph,
+On 11/13/23 10:27, Tom Yan wrote:
+> So I realized that I mixed up the queue write_cache and the sd
+> cache_type sysfs files. cache_type is working fine.
+> 
+> But then I noticed that in commit
+> 43c9835b144c7ce29efe142d662529662a9eb376, you define QUEUE_FLAG_HW_WC
+> as 18, which is also the value of QUEUE_FLAG_FUA. Was it intentional?
+> If so, what's the reason behind it?
 
-So I realized that I mixed up the queue write_cache and the sd
-cache_type sysfs files. cache_type is working fine.
+Does the untested patch below help?
 
-But then I noticed that in commit
-43c9835b144c7ce29efe142d662529662a9eb376, you define QUEUE_FLAG_HW_WC
-as 18, which is also the value of QUEUE_FLAG_FUA. Was it intentional?
-If so, what's the reason behind it?
+Thanks,
 
-Regards,
-Tom
+Bart.
 
-On Sun, 12 Nov 2023 at 17:42, Tom Yan <tom.ty89@gmail.com> wrote:
->
-> Hi,
->
-> So I notice that the write_cache sysfs file seems to be broken for WCE
-> (SBC) setting.
->
-> First of all, "write back" gets rejected as "Invalid argument".
->
-> On the other hand, while "write through" can be written to the file,
-> it does not seem to actually change the WCE bit (as per sdparm
-> reports). There's no new cache setting reporting kernel log either.
-> However, reading the file after the write does give "write through".
->
-> Nevertheless, the file does change accordingly when I set WCE to 0 or
-> 1 with sdparm.
->
-> I am reproducing this on 6.6.1. It seems that it at least affects the
-> 6.1.x LTS branch as well though. (I can't tell for sure since for the
-> latter I am using the raspberrypi tree.)
->
-> Regards,
-> Tom
+[PATCH] block: Make sure that all queue flags have a different value
+
+Queue flags QUEUE_FLAG_HW_WC has the same numerical value as
+QUEUE_FLAG_FUA. Fix this by changing the QUEUE_FLAG_HW_WC definition.
+
+Cc: Christoph Hellwig <hch@lst.de>
+Reported-by: Tom Yan <tom.ty89@gmail.com>
+Fixes: 43c9835b144c ("block: don't allow enabling a cache on devices that don't support it")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+  include/linux/blkdev.h | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index eef450f25982..f59fcd5b499a 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -538,7 +538,7 @@ struct request_queue {
+  #define QUEUE_FLAG_ADD_RANDOM	10	/* Contributes to random pool */
+  #define QUEUE_FLAG_SYNCHRONOUS	11	/* always completes in submit context */
+  #define QUEUE_FLAG_SAME_FORCE	12	/* force complete on same CPU */
+-#define QUEUE_FLAG_HW_WC	18	/* Write back caching supported */
++#define QUEUE_FLAG_HW_WC	13	/* Write back caching supported */
+  #define QUEUE_FLAG_INIT_DONE	14	/* queue is initialized */
+  #define QUEUE_FLAG_STABLE_WRITES 15	/* don't modify blks until WB is done */
+  #define QUEUE_FLAG_POLL		16	/* IO polling enabled if set */
+
