@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 374EFC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 21:41:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6250C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 21:42:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234072AbjKNVly (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Nov 2023 16:41:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43378 "EHLO
+        id S234093AbjKNVmN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Nov 2023 16:42:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234049AbjKNVlv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 16:41:51 -0500
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABCEAD2;
-        Tue, 14 Nov 2023 13:41:48 -0800 (PST)
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1cc3542e328so46247045ad.1;
-        Tue, 14 Nov 2023 13:41:48 -0800 (PST)
+        with ESMTP id S234084AbjKNVmM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 16:42:12 -0500
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D6A1D6;
+        Tue, 14 Nov 2023 13:42:07 -0800 (PST)
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1cc34c3420bso48061205ad.3;
+        Tue, 14 Nov 2023 13:42:07 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699998108; x=1700602908;
+        d=1e100.net; s=20230601; t=1699998126; x=1700602926;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=/FFQa2e9BQic5MUNwTejV3XIteTNLmmrUor8s5RN+Kc=;
-        b=PJ9A/xw9E84o2t+UDM/OB/dRbe0IM/G8S44VaAcVUlVXRsSI8TWA6vL8WLhRhQS6l5
-         A1kkESu4F3DVmzQYk0zRGnW58wrs6j6ZRc6ZoyBe/M2sRfUAMmcqLv4cc5VOwRmAKbRW
-         oUj4gZ0xNM3GXAjsGyEQq92Bd63MEvcixlKUKMPGmoi3sFsjVHWRLmM+TuM/0URQ+Lkx
-         t/B3vJYev9dqv9SSSB0lNtW5j2Lsx66OIUDVfYTUYhjjUniYw7YRQjJnia2bZlEEUAYT
-         CJlSHHEaXzFuPZyBAx8s2y/0fOQ7bXW1CnSJ2sL2svnWHQfYem3tVf2WxV4eLOmoEYeM
-         4Lzw==
-X-Gm-Message-State: AOJu0Yz4K8MZw66aKV/zc0CL9dDJ0wHVHoUpRQPuEHwEet1PvxZEKuxh
-        yf+qOVKo1AzyVf7GplBN++w=
-X-Google-Smtp-Source: AGHT+IER3ePTg/BeDrmersjmPt4kOAzVkMa6+a3RMV7Ao3IF71rzyhh2UkAIoi7BlrCvPobT9XK4pA==
-X-Received: by 2002:a17:902:7241:b0:1cc:76c4:5144 with SMTP id c1-20020a170902724100b001cc76c45144mr3184479pll.12.1699998108060;
-        Tue, 14 Nov 2023 13:41:48 -0800 (PST)
+        bh=0zKJwlNU37xBJ2eHozPULDjMADCdbgGWOVklVioEvRw=;
+        b=XIwRWPdxScx8za+3JjGFIVQBLSoFpP/zEZOYdV5la19yK4h9FC9mCpxeJH6L9/7TS5
+         tVBBFOsHQEJM/puzSz+fedASXCOM5zGSi1OwH9m6SbmUaaViZ1DkfKRB+SlYSI4lWK9A
+         BbVuMkIt5bC+ZeDXExzW+ubbWLbC2EnwF2RFfB1ccOAaqGeR10jjjyNvmKFTXYhPkxJ8
+         whuL34YrrDA5bLVYUB5UPMw5VIGcQ4rrxrv8d9bPfqERi6C4S0VxSiUsmFVv8rLdTrAF
+         YAG+KidFcp/55HLx3FvAylKg2b4cHCatlPIBTd5bEeUi+j0ajWKpWHnwWQdR/M4BzJRp
+         /3+Q==
+X-Gm-Message-State: AOJu0Yxlf16JosGKHkyMwa7Oyxw44rMhZ3u9vw+iGwurcXAXLwpwSy7r
+        kte4bYTPhJUKQ8UcqwcmZvo=
+X-Google-Smtp-Source: AGHT+IH6rizr6jRAtVoQLL5iUZbC62CB0GXCab5dtLe57kKVDjwQDE4tkYks8Vi2ockeBxftj+Fz8g==
+X-Received: by 2002:a17:902:c943:b0:1cc:23ea:47b2 with SMTP id i3-20020a170902c94300b001cc23ea47b2mr3777929pla.37.1699998126395;
+        Tue, 14 Nov 2023 13:42:06 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:2278:ad72:cefb:4d49])
-        by smtp.gmail.com with ESMTPSA id o16-20020a170902d4d000b001c3267ae317sm6133926plg.165.2023.11.14.13.41.45
+        by smtp.gmail.com with ESMTPSA id o16-20020a170902d4d000b001c3267ae317sm6133926plg.165.2023.11.14.13.42.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Nov 2023 13:41:46 -0800 (PST)
+        Tue, 14 Nov 2023 13:42:05 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
@@ -45,13 +45,10 @@ Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         Daejun Park <daejun7.park@samsung.com>,
         Kanchan Joshi <joshi.k@samsung.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Jan Kara <jack@suse.cz>,
-        Christian Brauner <brauner@kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>
-Subject: [PATCH v4 01/15] fs: Rename the kernel-internal data lifetime constants
-Date:   Tue, 14 Nov 2023 13:40:56 -0800
-Message-ID: <20231114214132.1486867-2-bvanassche@acm.org>
+        Damien Le Moal <dlemoal@kernel.org>
+Subject: [PATCH v4 03/15] block: Restore data lifetime support in struct bio and struct request
+Date:   Tue, 14 Nov 2023 13:40:58 -0800
+Message-ID: <20231114214132.1486867-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.43.0.rc0.421.g78406f8d94-goog
 In-Reply-To: <20231114214132.1486867-1-bvanassche@acm.org>
 References: <20231114214132.1486867-1-bvanassche@acm.org>
@@ -61,70 +58,144 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prepare for supporting more data lifetimes by changing data lifetime
-names into numeric constants.
+Provide a mechanism for filesystems to pass data lifetime information
+to block drivers. Data lifetime information can be used by block devices
+with append/erase storage technology (NAND flash) to reduce garbage
+collection activity.
 
-Cc: Kanchan Joshi <joshi.k@samsung.com>
-Cc: Jan Kara <jack@suse.cz>
+This patch restores a subset of the functionality that was removed by
+commit c75e707fe1aa ("block: remove the per-bio/request write hint").
+
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>
-Suggested-by: Kanchan Joshi <joshi.k@samsung.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- fs/f2fs/segment.c  |  4 ++--
- fs/inode.c         |  2 +-
- include/linux/fs.h | 12 ++++++------
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ block/bio.c                 | 2 ++
+ block/blk-crypto-fallback.c | 1 +
+ block/blk-merge.c           | 6 ++++++
+ block/blk-mq.c              | 1 +
+ block/bounce.c              | 1 +
+ include/linux/blk-mq.h      | 2 ++
+ include/linux/blk_types.h   | 2 ++
+ 7 files changed, 15 insertions(+)
 
-diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
-index 727d016318f9..098a574d8d84 100644
---- a/fs/f2fs/segment.c
-+++ b/fs/f2fs/segment.c
-@@ -3281,9 +3281,9 @@ int f2fs_trim_fs(struct f2fs_sb_info *sbi, struct fstrim_range *range)
- int f2fs_rw_hint_to_seg_type(enum rw_hint hint)
+diff --git a/block/bio.c b/block/bio.c
+index 816d412c06e9..1a3733635079 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -251,6 +251,7 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
+ 	bio->bi_opf = opf;
+ 	bio->bi_flags = 0;
+ 	bio->bi_ioprio = 0;
++	bio->bi_lifetime = 0;
+ 	bio->bi_status = 0;
+ 	bio->bi_iter.bi_sector = 0;
+ 	bio->bi_iter.bi_size = 0;
+@@ -813,6 +814,7 @@ static int __bio_clone(struct bio *bio, struct bio *bio_src, gfp_t gfp)
  {
- 	switch (hint) {
--	case WRITE_LIFE_SHORT:
-+	case WRITE_LIFE_2:
- 		return CURSEG_HOT_DATA;
--	case WRITE_LIFE_EXTREME:
-+	case WRITE_LIFE_5:
- 		return CURSEG_COLD_DATA;
- 	default:
- 		return CURSEG_WARM_DATA;
-diff --git a/fs/inode.c b/fs/inode.c
-index edcd8a61975f..7965d5e07012 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -175,7 +175,7 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
- 	i_gid_write(inode, 0);
- 	atomic_set(&inode->i_writecount, 0);
- 	inode->i_size = 0;
--	inode->i_write_hint = WRITE_LIFE_NOT_SET;
-+	inode->i_write_hint = WRITE_LIFE_0;
- 	inode->i_blocks = 0;
- 	inode->i_bytes = 0;
- 	inode->i_generation = 0;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 98b7a7a8c42e..59f9de9df0fe 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -314,12 +314,12 @@ struct readahead_control;
-  * Stored in struct inode as u8.
-  */
- enum rw_hint {
--	WRITE_LIFE_NOT_SET	= 0,
--	WRITE_LIFE_NONE		= RWH_WRITE_LIFE_NONE,
--	WRITE_LIFE_SHORT	= RWH_WRITE_LIFE_SHORT,
--	WRITE_LIFE_MEDIUM	= RWH_WRITE_LIFE_MEDIUM,
--	WRITE_LIFE_LONG		= RWH_WRITE_LIFE_LONG,
--	WRITE_LIFE_EXTREME	= RWH_WRITE_LIFE_EXTREME,
-+	WRITE_LIFE_0	= 0,
-+	WRITE_LIFE_1	= RWH_WRITE_LIFE_NONE,
-+	WRITE_LIFE_2	= RWH_WRITE_LIFE_SHORT,
-+	WRITE_LIFE_3	= RWH_WRITE_LIFE_MEDIUM,
-+	WRITE_LIFE_4	= RWH_WRITE_LIFE_LONG,
-+	WRITE_LIFE_5	= RWH_WRITE_LIFE_EXTREME,
- };
+ 	bio_set_flag(bio, BIO_CLONED);
+ 	bio->bi_ioprio = bio_src->bi_ioprio;
++	bio->bi_lifetime = bio_src->bi_lifetime;
+ 	bio->bi_iter = bio_src->bi_iter;
  
- /* Match RWF_* bits to IOCB bits */
+ 	if (bio->bi_bdev) {
+diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
+index e6468eab2681..e25a6d551594 100644
+--- a/block/blk-crypto-fallback.c
++++ b/block/blk-crypto-fallback.c
+@@ -172,6 +172,7 @@ static struct bio *blk_crypto_fallback_clone_bio(struct bio *bio_src)
+ 	if (bio_flagged(bio_src, BIO_REMAPPED))
+ 		bio_set_flag(bio, BIO_REMAPPED);
+ 	bio->bi_ioprio		= bio_src->bi_ioprio;
++	bio->bi_lifetime	= bio_src->bi_lifetime;
+ 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
+ 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
+ 
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 65e75efa9bd3..62718cc871bd 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -814,6 +814,9 @@ static struct request *attempt_merge(struct request_queue *q,
+ 	if (rq_data_dir(req) != rq_data_dir(next))
+ 		return NULL;
+ 
++	if (req->lifetime != next->lifetime)
++		return NULL;
++
+ 	if (req->ioprio != next->ioprio)
+ 		return NULL;
+ 
+@@ -941,6 +944,9 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ 	if (!bio_crypt_rq_ctx_compatible(rq, bio))
+ 		return false;
+ 
++	if (rq->lifetime != bio->bi_lifetime)
++		return NULL;
++
+ 	if (rq->ioprio != bio_prio(bio))
+ 		return false;
+ 
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index a815403f375c..10540a3b3c49 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -3148,6 +3148,7 @@ int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
+ 	}
+ 	rq->nr_phys_segments = rq_src->nr_phys_segments;
+ 	rq->ioprio = rq_src->ioprio;
++	rq->lifetime = rq_src->lifetime;
+ 
+ 	if (rq->bio && blk_crypto_rq_bio_prep(rq, rq->bio, gfp_mask) < 0)
+ 		goto free_and_out;
+diff --git a/block/bounce.c b/block/bounce.c
+index 7cfcb242f9a1..b03e4944ace8 100644
+--- a/block/bounce.c
++++ b/block/bounce.c
+@@ -169,6 +169,7 @@ static struct bio *bounce_clone_bio(struct bio *bio_src)
+ 	if (bio_flagged(bio_src, BIO_REMAPPED))
+ 		bio_set_flag(bio, BIO_REMAPPED);
+ 	bio->bi_ioprio		= bio_src->bi_ioprio;
++	bio->bi_lifetime	= bio_src->bi_lifetime;
+ 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
+ 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
+ 
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 1ab3081c82ed..1afd731432fe 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -136,6 +136,7 @@ struct request {
+ #endif
+ 
+ 	unsigned short ioprio;
++	enum rw_hint lifetime;
+ 
+ 	enum mq_rq_state state;
+ 	atomic_t ref;
+@@ -957,6 +958,7 @@ static inline void blk_rq_bio_prep(struct request *rq, struct bio *bio,
+ 	rq->__data_len = bio->bi_iter.bi_size;
+ 	rq->bio = rq->biotail = bio;
+ 	rq->ioprio = bio_prio(bio);
++	rq->lifetime = bio->bi_lifetime;
+ }
+ 
+ void blk_mq_hctx_set_fq_lock_class(struct blk_mq_hw_ctx *hctx,
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index d5c5e59ddbd2..5e21f44141fb 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -10,6 +10,7 @@
+ #include <linux/bvec.h>
+ #include <linux/device.h>
+ #include <linux/ktime.h>
++#include <linux/rw_hint.h>
+ 
+ struct bio_set;
+ struct bio;
+@@ -269,6 +270,7 @@ struct bio {
+ 						 */
+ 	unsigned short		bi_flags;	/* BIO_* below */
+ 	unsigned short		bi_ioprio;
++	enum rw_hint		bi_lifetime;	/* data lifetime */
+ 	blk_status_t		bi_status;
+ 	atomic_t		__bi_remaining;
+ 
