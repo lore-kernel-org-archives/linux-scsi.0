@@ -2,102 +2,168 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30E9DC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 18:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F831C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 18:27:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233893AbjKNSFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Nov 2023 13:05:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50982 "EHLO
+        id S233922AbjKNS1z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Nov 2023 13:27:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233966AbjKNSEt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 13:04:49 -0500
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F68BD5E;
-        Tue, 14 Nov 2023 10:04:45 -0800 (PST)
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1cc1ee2d8dfso53011595ad.3;
-        Tue, 14 Nov 2023 10:04:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699985084; x=1700589884;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VWHGrQLU71IG94aXxynwdk2LkNtFMni7Y7JI8/Qdscc=;
-        b=pxMOYClZl5yVs/x8KQ7MZOUiA/f7vljtQnE0HRmqTxKu6qF5nPUvP84Buao9FR/sYr
-         ZvWzAOUSeezUQasWX8F1kFDMCR6g21bM2yN8BQoaja8+sOzTgw0w7yFF4Ya3qlArjLdx
-         CTEhJSYc+9YNJO/hyE6ae88P3zmfw6izkO9TJOZIRe6/43fPfnMoHOwACKxzYDcw1Biq
-         8mGZl6GsahciR0RggS8s58qM/Eexc56MGneZNsNHiQlQr5GKgGKSQcKhDHfRJ224MNoD
-         znbM/Su2bvTatezy431+E+xxUJViCRQLA0GYHbh2/NPWOEOIYwPDMAFL47wDlt+t3bKb
-         +pLg==
-X-Gm-Message-State: AOJu0YzWXgxZ6oMCeW0DiHiAOjxKCcRvoHoy/HFmdLn1oliWlwRzrLLN
-        Lm4EQVo85QQmJL4l7IaWUso=
-X-Google-Smtp-Source: AGHT+IFrCIOVP+0mYEK72xr4IxarBqmedllQHRz7fEQJ+NsEZxA3JuktK5Hn9fhlhlBxTHog/yfeJA==
-X-Received: by 2002:a17:902:7d87:b0:1c9:e508:ad54 with SMTP id a7-20020a1709027d8700b001c9e508ad54mr2332638plm.13.1699985084067;
-        Tue, 14 Nov 2023 10:04:44 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:2278:ad72:cefb:4d49])
-        by smtp.gmail.com with ESMTPSA id bq4-20020a056a02044400b0059d6f5196fasm5101937pgb.78.2023.11.14.10.04.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Nov 2023 10:04:43 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>,
-        Ed Tsai <ed.tsai@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH v5 3/3] scsi: ufs: Disable fair tag sharing
-Date:   Tue, 14 Nov 2023 10:04:17 -0800
-Message-ID: <20231114180426.1184601-4-bvanassche@acm.org>
-X-Mailer: git-send-email 2.42.0.869.gea05f2083d-goog
-In-Reply-To: <20231114180426.1184601-1-bvanassche@acm.org>
-References: <20231114180426.1184601-1-bvanassche@acm.org>
+        with ESMTP id S233859AbjKNS1y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 13:27:54 -0500
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E43E3B8;
+        Tue, 14 Nov 2023 10:27:50 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1699986459; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=mzUaepfHhzXgDeJKxkzqqhgWKiGR4TxvBnIvqh865ge4WBNYl0BfIyEGcc1qfCfMnW
+    T9rhaaM/bbxo2KCknbLFiCXrRA5FghIEo9bA7idXpXiqFKb8g6aVCqz76604Rjkzgg/M
+    hLLqZ/uPf+AqfDzjnH4vmmibtYl3ukDfVQShiOcHhf2XpwPu8tIMra2f4yHkj4O2c6P+
+    9vTEwqcM4eW6mCT9mjfKv5D8A9oLI1ryWGc/pvpt0eFwUs68+bVuius7Ob/omSy4fU/N
+    w8XQdWGlV9kc8fyGIt8ZAENZtsG7ipzkmqmR5rZPZ68eROlLpYr/CLS+jgPkwGAH1e3w
+    Cs2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1699986459;
+    s=strato-dkim-0002; d=strato.com;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=4Fhd9W6J/FtHQb3eqvYxGekeP1iAWCQi63b2vIat1w0=;
+    b=qhX8OGKxnwgIOdWmhxCU6UegTVHzZCpXdKJjJEyXgR0aQts78FRI8hDwQzy+R4qB6o
+    nZ16JIBA94xKMyiSc3DOX0JFPmEI+8WgzU98PqtzF9+bbafQU6UnQMwj2CJiPY4ttQ4l
+    ma/ra9rr8bg6igz2TDMSXwfmO3u1sq9960Z5VQTko+ossgTo2oZHxy7YBxVLTbEXHJQY
+    gfIVp1zt/iIehJ3KNh3QXIMlgI0zQzXky1VexowvOZrm0l9nErts7Dczzh2rwu+jnk8a
+    +SAwIeO4olDiOfKAdIYxxfa2hRiTgBh4Yzn54FSZg8DjODSEBaFSdpg6BuHmROIYwEh+
+    7P+g==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1699986459;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=4Fhd9W6J/FtHQb3eqvYxGekeP1iAWCQi63b2vIat1w0=;
+    b=ovAo1WP0thWJyLYpyf0ZOtDxDlSoneEG4XXdY/FM1OJOFzGT+LMyqwMexwmPvEymb2
+    KgTLaSz1iQsVXCt5M8GtzzIp+4Oc2KFNUJeTeeanIZh3x9MoPkjpSM/mJngLxCoThcFp
+    BYw6rINitFfKJSs2TxTXwCdFLr13wyyXd81BA6F9k/vtrQdD0APp50zuigT8luesryOf
+    AH8KFr84+Yx4FDM3RsuvtvOhQfe1PC30ALjVbSi79q/t7s/sEqW/YBSSuBYz/K7gWc1x
+    Gk+uQFbAMosziq1ySjRBn3bMGkpxJxPwHgUmj+PtVWsi4f6ct8WxWyOBNO7F/Y2Xdp07
+    FRnw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1699986459;
+    s=strato-dkim-0003; d=iokpp.de;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=4Fhd9W6J/FtHQb3eqvYxGekeP1iAWCQi63b2vIat1w0=;
+    b=G783veHrx+NScB8fyeyZgWUR5XBAVMv3j6BTLYsbDIPykBlPXu+M5eFGK45aH6jPf9
+    MjsOA/eDOuCg/WoVdbCg==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
+Received: from [10.176.235.177]
+    by smtp.strato.de (RZmta 49.9.1 AUTH)
+    with ESMTPSA id z758a5zAEIRcV7n
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+        (Client did not present a certificate);
+    Tue, 14 Nov 2023 19:27:38 +0100 (CET)
+Message-ID: <e408ce14d322223c1412efa46e8e4d30f44fa98c.camel@iokpp.de>
+Subject: Re: [PATCH v1 1/2] scsi: ufs: core: Add UFS RTC support
+From:   Bean Huo <beanhuo@iokpp.de>
+To:     Thomas =?ISO-8859-1?Q?Wei=DFschuh?= <thomas@t-8ch.de>
+Cc:     avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        stanley.chu@mediatek.com, mani@kernel.org, quic_cang@quicinc.com,
+        quic_asutoshd@quicinc.com, beanhuo@micron.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mikebi@micron.com, lporzio@micron.com
+Date:   Tue, 14 Nov 2023 19:27:37 +0100
+In-Reply-To: <e2e77da5-c344-4913-a321-4cfdcc4a3915@t-8ch.de>
+References: <20231109125217.185462-1-beanhuo@iokpp.de>
+         <20231109125217.185462-2-beanhuo@iokpp.de>
+         <e2e77da5-c344-4913-a321-4cfdcc4a3915@t-8ch.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Disable the block layer fair tag sharing algorithm because it
-significantly reduces performance of UFS devices with a maximum queue
-depth of 32.
+Hi Thomas,
 
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Keith Busch <kbusch@kernel.org>
-Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Ed Tsai <ed.tsai@mediatek.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+Thank you for your review. I will resolve the highlighted issue in the
+upcoming version.=C2=A0Two separate questions that require individual
+answers as below:=20
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 8b1031fb0a44..a2219cbb9720 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8973,6 +8973,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
- 	.max_host_blocked	= 1,
- 	.track_queue_depth	= 1,
- 	.skip_settle_delay	= 1,
-+	.disable_fair_tag_sharing = 1,
- 	.sdev_groups		= ufshcd_driver_groups,
- 	.rpm_autosuspend_delay	= RPM_AUTOSUSPEND_DELAY_MS,
- };
+
+On Thu, 2023-11-09 at 15:05 +0100, Thomas Wei=C3=9Fschuh wrote:
+> > =C2=A0 static int ufs_get_device_desc(struct ufs_hba *hba)
+> > =C2=A0 {
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0int err;
+> > @@ -8237,6 +8321,8 @@ static int ufs_get_device_desc(struct ufs_hba
+> > *hba)
+> > =C2=A0=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_temp_notif_probe=
+(hba, desc_buf);
+> > =C2=A0=20
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ufs_init_rtc(hba, desc_buf);
+> > +
+>=20
+> As somebody with no idea and no access to the specs:
+>=20
+> Is this available for all devices and all protocol versions?
+>=20
+> >=20
+I would like to mention that while I cannot confirm that RTC works on
+all protocol versions, it has been consistently functional on all
+devices in the market since the introduction of UFS 2.0, which also
+introduced RTC. I am not aware of any UFS version lower than 2.0
+currently available on the market. In the event that a vendor has a
+product with a lower UFS version, we can consider implementing a
+version check.
+
+> >=20
+> >=20
+
+> >=20
+>=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0goto out;
+> > =C2=A0=20
+> > =C2=A0 set_link_active:
+> > @@ -9840,6 +9930,8 @@ static int __ufshcd_wl_resume(struct ufs_hba
+> > *hba, enum ufs_pm_op pm_op)
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0if (ret)
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+goto set_old_link_state;
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_set_timestamp_attr(hba);
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0schedule_delayed_work(&hba->ufs_rtc_delayed_work,
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0msecs_to_ji
+> > ffies(UFS_RTC_UPDATE_EVERY_MS));
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
+> > =C2=A0=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (ufshcd_keep_autobko=
+ps_enabled_except_suspend(hba))
+> > diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+> > index e77ab1786856..18b39c6b3a97 100644
+> > --- a/include/ufs/ufs.h
+> > +++ b/include/ufs/ufs.h
+> > @@ -14,6 +14,7 @@
+> > =C2=A0 #include <linux/bitops.h>
+> > =C2=A0 #include <linux/types.h>
+> > =C2=A0 #include <uapi/scsi/scsi_bsg_ufs.h>
+> > +#include <linux/rtc.h>
+>=20
+> Seems unnecessary.
+
+seems it's needed, otherwise, I will get:
+./include/ufs/ufs.h:599:9: error: unknown type name =E2=80=98time64_t=E2=80=
+=99
+
+
+Kind regards,
+Bean
+
