@@ -2,86 +2,98 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB2EC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 17:55:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD8FC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 18:04:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233738AbjKNRzE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Nov 2023 12:55:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50180 "EHLO
+        id S233814AbjKNSE6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Nov 2023 13:04:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229566AbjKNRzD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 12:55:03 -0500
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B952D103;
-        Tue, 14 Nov 2023 09:55:00 -0800 (PST)
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6b44befac59so26726b3a.0;
-        Tue, 14 Nov 2023 09:55:00 -0800 (PST)
+        with ESMTP id S233964AbjKNSEr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 13:04:47 -0500
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7E49D48;
+        Tue, 14 Nov 2023 10:04:31 -0800 (PST)
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6be1bc5aa1cso6085172b3a.3;
+        Tue, 14 Nov 2023 10:04:31 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699984500; x=1700589300;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mHtHFpyOlSff+x/gFsJmwpSkAzwrVZgPUm4CH8QQRsQ=;
-        b=lKPHlwj0Vr6i4+dQxnotGIzN4zB/A6A1vV6i3dSHkHWz9c4ROK564H4aJRCvfGOciD
-         aBm/8vDsEgeiWyKIESmcDalb5htWiVcPhCHzYIfzo02fp4aXat0oKaTLxWrdwI9tjHHM
-         6rnccAr91XPyH6CKoU53I0rZkKl1InaeJcQSxuhnG9uWvUb7cyRjX7U5s68AkcLbspfR
-         rUkv8SW9MW8p2YhPkKjTgesTYjc7Nmp8NgkTw6RHTVciy298tXgCkDcXk7KIjlpmpTgc
-         Uw6ncp9hxhMlfRNKoTFXjcy8gZtk7RyF0YM7mezBPw2/PK5SnCmdBVqmVwqchWwcSC8P
-         /lug==
-X-Gm-Message-State: AOJu0YzorVpqRxqtYzNo3scKDRjZ/NOvtyFPO0nxZxEznjlKOztN6i6Y
-        jfbvKklorTDc58On+lnZbRE=
-X-Google-Smtp-Source: AGHT+IFWIPTn5fXrUIohnW/KGmKbKA32E+TBbo8K0h5owubh18xMM2TmsvnP3pHHVg11J+B7tWcvIQ==
-X-Received: by 2002:a05:6a00:8f0b:b0:6c3:415a:5c05 with SMTP id ji11-20020a056a008f0b00b006c3415a5c05mr4873174pfb.14.1699984499954;
-        Tue, 14 Nov 2023 09:54:59 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:2278:ad72:cefb:4d49? ([2620:0:1000:8411:2278:ad72:cefb:4d49])
-        by smtp.gmail.com with ESMTPSA id fn18-20020a056a002fd200b006926e3dc2besm1448536pfb.108.2023.11.14.09.54.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Nov 2023 09:54:58 -0800 (PST)
-Message-ID: <dca06fd3-d4ad-4e41-a0a3-61d52c85ef9c@acm.org>
-Date:   Tue, 14 Nov 2023 09:54:55 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: ufs: core: fix racing issue during
- ufshcd_mcq_abort
-Content-Language: en-US
-To:     SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        kwangwon.min@samsung.com, kwmad.kim@samsung.com,
-        sh425.lee@samsung.com, sc.suh@samsung.com,
-        quic_nguyenb@quicinc.com, cpgs@samsung.com, grant.jung@samsung.com,
-        junwoo80.lee@samsung.com
-References: <CGME20231114043431epcas2p4a8d452e18fff192c03fb6066e81514ea@epcas2p4.samsung.com>
- <20231114043704.52525-1-hy50.seo@samsung.com>
+        d=1e100.net; s=20230601; t=1699985071; x=1700589871;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=AIXVjXYmWbE5Oq8DTLEiU/nvcYwV1DvaW/F8iST2qnw=;
+        b=lUKNCKb+L7vUZSLTrm7GXdS+jLmWpE29TTrkdHpJ3+iAWJ8lYP34po4L55VbW+YJEJ
+         r34TsxY/Jlh1WQB5T/7+lDNgEZpuCsSXDQqND/KplTM4YXT5JEiMvkM3g5maM6nKXVyt
+         1r6IpMbip3iLn6neqMukxrQ2ma/WRtxpfeYJj9uQfyMNuwwxifhIglif4mbLEV1eim3k
+         p1Lh/bJjwnoDk+hwlbGDnXUs3xte4hB9xoNrHC3Z4BtzsV3uHx84MJ2anRFDA6arJHDy
+         +BPjLaucDOXNkDSxgcoXC9KyO/cLfmXNVnEvIOVpbnQdY4aStr9YpxLDmLnfLqFAT3Ak
+         Of8g==
+X-Gm-Message-State: AOJu0Yz3/TbRUGRB4WlqtBG14mubh8i8n3zAQdeZ2L6E4X139zREKiU0
+        KcVmhSdX+QfL0gx/tCD14CM=
+X-Google-Smtp-Source: AGHT+IHjEvMpHXj3YjldQjUmzT1yck7YpnXRueZuYYJGj3Y46WqRSbjUVjjSZcfujBTMo3jxYp9tfg==
+X-Received: by 2002:a05:6a21:6d9c:b0:181:98d6:6b01 with SMTP id wl28-20020a056a216d9c00b0018198d66b01mr12241292pzb.5.1699985071167;
+        Tue, 14 Nov 2023 10:04:31 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:2278:ad72:cefb:4d49])
+        by smtp.gmail.com with ESMTPSA id bq4-20020a056a02044400b0059d6f5196fasm5101937pgb.78.2023.11.14.10.04.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Nov 2023 10:04:30 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231114043704.52525-1-hy50.seo@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v5 0/3] Disable fair tag sharing for UFS devices
+Date:   Tue, 14 Nov 2023 10:04:14 -0800
+Message-ID: <20231114180426.1184601-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.42.0.869.gea05f2083d-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/13/23 20:37, SEO HOYOUNG wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 9a730a794b66..55f4c0eeda7b 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7574,6 +7574,10 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
->   		goto out;
->   	}
->   
-> +	if (!ufshcd_cmd_inflight(lrbp->cmd) ||
-> +	    test_bit(SCMD_STATE_COMPLETE, &lrbp->cmd->state))
-> +		goto out;
-> +
->   	err = ufshcd_clear_cmd(hba, tag);
->   	if (err)
->   		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
+Hi Jens,
 
-The UFS driver must not set SCMD_STATE_COMPLETE itself. Only the SCSI core is
-allowed to set that bit.
+The fair tag sharing algorithm reduces performance for UFS devices
+significantly. This is because UFS devices have multiple logical units, a
+limited queue depth (32 for UFS 3.1 devices), because it happens often that
+multiple logical units are accessed and also because it takes time to
+give tags back after activity on a request queue has stopped. This patch series
+restores UFS device performance to that of the legacy block layer by disabling
+fair tag sharing for UFS devices.
+
+Please consider this patch series for the next merge window.
 
 Thanks,
 
 Bart.
+
+Changes compared to v4:
+ - Rebased on top of kernel v6.7-rc1.
+
+Changes compared to v3:
+ - Instead of disabling fair tag sharing for all block drivers, introduce a
+   flag for disabling it conditionally.
+
+Changes between v2 and v3:
+ - Rebased on top of the latest kernel.
+
+Changes between v1 and v2:
+ - Restored the tags->active_queues variable and thereby fixed the
+   "uninitialized variable" warning reported by the kernel test robot.
+
+Bart Van Assche (3):
+  block: Introduce flag BLK_MQ_F_DISABLE_FAIR_TAG_SHARING
+  scsi: core: Support disabling fair tag sharing
+  scsi: ufs: Disable fair tag sharing
+
+ block/blk-mq-debugfs.c    | 1 +
+ block/blk-mq.h            | 3 ++-
+ drivers/scsi/hosts.c      | 1 +
+ drivers/scsi/scsi_lib.c   | 2 ++
+ drivers/ufs/core/ufshcd.c | 1 +
+ include/linux/blk-mq.h    | 1 +
+ include/scsi/scsi_host.h  | 6 ++++++
+ 7 files changed, 14 insertions(+), 1 deletion(-)
+
