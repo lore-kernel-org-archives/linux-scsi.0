@@ -2,172 +2,225 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80B4CC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 21:20:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF56C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 21:23:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234064AbjKNVUM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Nov 2023 16:20:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56648 "EHLO
+        id S234061AbjKNVXq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Nov 2023 16:23:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229569AbjKNVUL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 16:20:11 -0500
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34F909D;
-        Tue, 14 Nov 2023 13:20:08 -0800 (PST)
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1cc5916d578so54661325ad.2;
-        Tue, 14 Nov 2023 13:20:08 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699996807; x=1700601607;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=q5+QxzV8SEnrspkTplBx7X3m9ppb+56nGOToDTc83Nw=;
-        b=PGIIVRz7KDltcDI449tLOSbaMaBPAnLSzcp9PWhWWrfgyXaZ1QBZUAZCTAUXPK2Vhu
-         R9bmmEWDcXbEci4LN7FnUG+gofOGJX+eA8Xvk1hn2n8lYBf03LUwdgqdYBxB0Jd4ngg4
-         SPb8SJoBIXg4YzZ5X39LnhRh0v5IUzXQinJvEKDH0IOrNGoR+a7cfePD17A6uHbKcAPF
-         hWHDGrlinkHnqQwhN5GmBvy8isQcYQjqU9G0BT/FUfGu6gD5HqZ23tmiIFj4JzWt6FZd
-         R+t4dTlnjrpgFnK5c47XmLZIGWqkmQOfK4ukNd9BvwkufOphWpfD0AG/KYfucWJI+q32
-         Vm5w==
-X-Gm-Message-State: AOJu0YwGyT/TpPUClbWR3gcHnkaBO4dK9uVafz7jyNi4JKO7QtMQlyJT
-        XP34si5wXUWSRhNkvpub+0o=
-X-Google-Smtp-Source: AGHT+IFReN0liBceDtxwgA5scU2N9cZo0WgKLj2FWzWIjJvMPyLc1N+99GQMmlSiZXsbWjKffdybMA==
-X-Received: by 2002:a17:903:1108:b0:1c3:c687:478c with SMTP id n8-20020a170903110800b001c3c687478cmr4691366plh.8.1699996807528;
-        Tue, 14 Nov 2023 13:20:07 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:2278:ad72:cefb:4d49])
-        by smtp.gmail.com with ESMTPSA id ix7-20020a170902f80700b001c71ec1866fsm6169288plb.258.2023.11.14.13.20.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Nov 2023 13:20:07 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH v15 19/19] scsi: ufs: Inform the block layer about write ordering
-Date:   Tue, 14 Nov 2023 13:16:27 -0800
-Message-ID: <20231114211804.1449162-20-bvanassche@acm.org>
-X-Mailer: git-send-email 2.43.0.rc0.421.g78406f8d94-goog
-In-Reply-To: <20231114211804.1449162-1-bvanassche@acm.org>
-References: <20231114211804.1449162-1-bvanassche@acm.org>
+        with ESMTP id S229569AbjKNVXp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 16:23:45 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0691C4;
+        Tue, 14 Nov 2023 13:23:42 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AEKidO3005288;
+        Tue, 14 Nov 2023 21:23:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-03-30;
+ bh=2vK93/k9j6okU7S2tyHJh35JNzcg+Y0SOdgbqUbwJI8=;
+ b=RrBJESL6cXbKm0rqyQT8BwCkoCYDXJ23bTmbKrtKtjdEq35bb7Voaly0TBju3Iam8h7X
+ 1AIoa06r92JKZsPybHvwWDHte/eM2BGKK1vSPHYPa0bdMbyQ49Km6RW5Elh89NvS8MRx
+ UFT5GiKza5hC+f9o+CRyFaHliMl0aAF4MNblbYuQl9JmdVLlh0+QhgpDw6KcVRrxd6ND
+ hlOPXCP96/gGIE0hxlCzB31wa0OYLEZPQIe7+B0tyV7vheskYmCvfgIciY5tdbso/J1L
+ RwBxwEYtiQcqIJIGsx1lzlK8rc4mKLUe5yDc4T35TX6EfwYc5u1d3J/STsyyc5snEbHe Qw== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ua2m2eq71-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Nov 2023 21:23:31 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3AEKJT8S006905;
+        Tue, 14 Nov 2023 21:23:30 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2100.outbound.protection.outlook.com [104.47.58.100])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3uaxh1yn7r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Nov 2023 21:23:30 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=D9oT2kurDsU8cFCPdw1vuxVORcZR1oq4h+Xyk+vhvriGyxmQQBxQ0AFTe6u7xX/QPxKDI73w2/Q14a4tr8QNn6cJdnHko3w7178zvnGlVMpwyW1mgL7hTHRk9SzJyzsai16+swGyOalAiVXO5672xQOLJ9tPfN20SU/MVqxBmyFy4DHug7sV3AmYAKtXnDskBMLnnd3cdTmrVwAcBatZkDEDZ85UYVrCOvCJg97ldeLI1KajhFRCSBA+840Q2QoJdBf8pTDNzRLu6bYBJJtlsNbbzQRVbt/So/d3OdoUKMFHrEyrw/3oQDi8cySJdgxCewkRttOWg0C/4FIA0x/67g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2vK93/k9j6okU7S2tyHJh35JNzcg+Y0SOdgbqUbwJI8=;
+ b=l9pye/iZPZsJZB4mitjHhchYI6LTttyHhk96395ITl6mxEp+I/7Cy92NT+cIOIzFl4b0kJ9Fzu3hFl9dt7aMtzimHj4/1TfLoZJ36Pn7ZsrWg0yLr2XCAVM06MgMlnNgWFyX90nDlb6P8R6wJAvkSqwsHQ/tj80kwqBW2bbu10pS/TPYiaBFPYow2fP9FHUOBjEgwGoB1z3oXGjkEyzFPX2n52Ynyzq/tr5klhTnyZvwtbxoMVMKLegEo5J98W46W+Dweuo1ZMpqiQkYdzV+DKEwQBNC5UFjF1FI/+1veCWxnpjWHyVTzXTi+Az5yZS/Rv+oBPZwO4YbToKFl4fq6w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2vK93/k9j6okU7S2tyHJh35JNzcg+Y0SOdgbqUbwJI8=;
+ b=IJifzn4U6n4Bu2Yk9Vuuej2IAEb3vgSftDkRIzm+W37ngcqLjZmc/j5SKjaNV2slvYm+w29g/Jx0WBpEVjZF0sx2jrcKE168SXlrauFAy6cTIjUk4hz/nLdXZAyCtpP4mPgnI7Pir5Y/2/m4jAILr8o5TbH/FxJgIyLoonpXu/c=
+Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
+ by IA1PR10MB7144.namprd10.prod.outlook.com (2603:10b6:208:3f0::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.31; Tue, 14 Nov
+ 2023 21:23:28 +0000
+Received: from CY8PR10MB7243.namprd10.prod.outlook.com
+ ([fe80::449f:4fd9:2d3e]) by CY8PR10MB7243.namprd10.prod.outlook.com
+ ([fe80::449f:4fd9:2d3e%4]) with mapi id 15.20.6977.029; Tue, 14 Nov 2023
+ 21:23:28 +0000
+Message-ID: <b95cf250-9a58-4a9f-8b55-4b6d00a6a6c2@oracle.com>
+Date:   Tue, 14 Nov 2023 15:23:27 -0600
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 4/4] scsi: scsi_core: Fix IO hang when device removing
+Content-Language: en-US
+To:     Wenchao Hao <haowenchao2@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, louhongxiang@huawei.com
+References: <20231016020314.1269636-1-haowenchao2@huawei.com>
+ <20231016020314.1269636-5-haowenchao2@huawei.com>
+From:   Mike Christie <michael.christie@oracle.com>
+In-Reply-To: <20231016020314.1269636-5-haowenchao2@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DM6PR12CA0025.namprd12.prod.outlook.com
+ (2603:10b6:5:1c0::38) To CY8PR10MB7243.namprd10.prod.outlook.com
+ (2603:10b6:930:7c::10)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|IA1PR10MB7144:EE_
+X-MS-Office365-Filtering-Correlation-Id: 83be8e17-4c5a-4076-339c-08dbe557f1d4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: WGGqxnGQFyMpOmKL+tFDTdQ4tvtwBJY0akzQxoU2UDUpRPizfvj5UgPpvR2C6GAb+y3ZdA7FhJZE526zj6XN4vHR31wZbo8HiMTffaJ20pLzR/CHsIUe/hFfzQuuv2CvLBxUpOLZk4O3xjHnKiTQ/xdpCbjYYf63sYvyfZ8Uo3wxKDqomLqDqnloLefrxgwy09Mywc1wVbREzB1jO5fUlCQgbxJKDF/EAkpcBkCGM7QxvAyoxeBfIU/8AIR5A4jDvj7go7lQ5gI2PxFYH1whhY+w0NvV/hnHrKxwOckwUS6JzYmk82XNmVWkBwZMeKrPSyh12cjPeo3VhMu4rcfH8qBr/8HPidLqNBmV/sA55XUIq1BTN9hwmDLvkxhIWjyuDnILhqlEN5U3xgC1GpMOLGSK68CUgbiF54G0fK00mTUSMnc2nRgA8ipgNxVSfxa78wmq5PjKqK2bKvIE1X8hPRtQeoGCzuCwyRVgfT0wzBIlwvv20D0rhByT1dVurpcqbtEyohbCg2u0psk4oD40k/fcn7BDAbyktXGK30zIPDRBdkPgHfw5fzXurPdue+QBFEjCjEU5ds2WTMkEs9n5pS3tPyWqXS2RImxSjatHpXj1IblahGr2oar9ofM1kAC8T89VHuyf0qwHKzOTgku2nw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(136003)(376002)(366004)(396003)(39860400002)(230922051799003)(451199024)(1800799009)(186009)(64100799003)(53546011)(6506007)(2616005)(6512007)(83380400001)(8676002)(5660300002)(4326008)(41300700001)(8936002)(478600001)(2906002)(6486002)(110136005)(66476007)(316002)(66946007)(66556008)(31696002)(36756003)(86362001)(38100700002)(26005)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?TjcwU0czQXhtVmYrSHMyb2V0b2tzdmNpRWFOVFNmbGV2Zk9qYkJYaG1pallV?=
+ =?utf-8?B?YjFuOG9EVlA0V0ROWEVMbHBsUUV2YnVtdGFnUkRJclFlNlpPQmF3djErL3Fj?=
+ =?utf-8?B?MFR2c3lDUG44RmR3TGgrRVVhL1JvOXFoUFc2cUVsN1NqWkhaK2Q3T3ZkSW4x?=
+ =?utf-8?B?Z2dVMmQ3K0MyRHNOc0w0ZW5mMis3S29xclYxMVlOWFZlUndvdEFtOXdxRWFl?=
+ =?utf-8?B?TmQ3TmJFa3hSUHZNWC8xb1QvU1lHdEdEZGVuR0hrbDByM3VYcTlOeGw3V0xx?=
+ =?utf-8?B?UzA5R1V4NlpmS0N3WGJTV3pqVVFkWnNNTWZTekxnbEZxbVExV1VZYm0vYXNy?=
+ =?utf-8?B?NWJFU2hUeEE5ZTE1dktDd1M1ZHBJeEFhTHpFS0Y5Y3Q5cC9SQW5vNTIyOGRQ?=
+ =?utf-8?B?cm9xeXBveDVzclFKY3oxdXlmWjdLQk1iVy9nLzFueG5kVVBaMlBJcmxpMy94?=
+ =?utf-8?B?MXNJN2ViRDYzWDdBb1BMc2Y0RTBXa3p3TGs1YVMyMkdqQXpDREd0eXFKODg3?=
+ =?utf-8?B?U0NtWVY4dFpzY3hVbVdCRUZHK1lUME5NNk9FRXcvRVJzcHdhYjlUNG11RzhK?=
+ =?utf-8?B?UFFZM0VtK0cwVlZGQXFBYUgxRFkvRzYvQ2ZRM2RYSFJKOExuVFJ4V3dZTDVO?=
+ =?utf-8?B?NHgwK2txRHlOTGQ3dThDcFlCZmZWTU11OHlPcGVpb0Z1eG5EVlB1SjJINGFU?=
+ =?utf-8?B?WDZTWGpJNW9nV3dnd1ZTSWlqa3IxMytDZlVMSEV5MDlsYWwzZk0zT3JVNjRv?=
+ =?utf-8?B?amVZb3JpMmxGYjhXQmhTRlZXR0VjMHFOSmZQZmRPZytGUmZIL3d1SzkrSFVz?=
+ =?utf-8?B?TEhROFVCQk1SM0Y1VUhoVytYY3BQdXQ1WnZQTE5VSFFHMlVqRGQwc1ZNKzZ5?=
+ =?utf-8?B?a3IvZ3JoeUxqRy93aG8xZnVTUkFxSWhJS1dOdmtOc3EydDJXQzEvRUl2Q3lO?=
+ =?utf-8?B?dk83QVJueUJLWnRETXJaenlxR2g5UGpXTXdlVlBNUXJFNTJoN2plclZJNGM3?=
+ =?utf-8?B?MWVMa2hHK3ZOYlp5S1lCYWx4WTV3eE03aTMzanZyakhaRmRtMElvc043RVhl?=
+ =?utf-8?B?YUF5RjQzTDlaNjlVUmRIajdXTWdWVnFzc1RUcWZUQThtb2lMS2ZYbjV3VmVE?=
+ =?utf-8?B?bzh0VGFaZXBkMUpGOXN6MlgrK1hNOUZrZ0JrYjhiWCt4Umo0ZmRUQWdXQlF5?=
+ =?utf-8?B?dVhsZEMvQ2NYOGtWZUZBU0NvdjBxZXlyR2NBa1NEN0hRb3hkMHllMXRqTzhw?=
+ =?utf-8?B?UENTZXQ1c1BFbUJVU3BQeUVtT3BiMU85eUl5RnljckJscTBWQmVYS2lsL1Vh?=
+ =?utf-8?B?ajlDazlWWC9wcjZQcmJIay9BdWY1YmdHQm9VTFZTTjZjck5yZW5HQUh6ZXNI?=
+ =?utf-8?B?SWdhMGs1TGcwTVNGbGJBZndlZTdILzZmZUIySWdZKzBBNFY1QWlEU3pGVlFu?=
+ =?utf-8?B?MGJvYnBrcEtuNzF1MEl1QWEwa3kzdzJiQzBMVWg1cXVGa1hGQzlWWTJkMXZj?=
+ =?utf-8?B?Z3J6ZDh3cjdxTHJTM24xY2hTdDhBS29MQmN0a2JSa2Flb3d1R052TnVCZEsz?=
+ =?utf-8?B?OGdNdVJ5ZGNrOEF4b2lWeDVjZHNSZTVIOFJLTEZJQW5TTlFNWGhseUkzbGxu?=
+ =?utf-8?B?MTJyYUhpWkduZ0FxSDd4ZzdNWGxDOGZvMXF3OFY1Vk40WHBubkRzd2dZMG5D?=
+ =?utf-8?B?VE16Vy9BNHpJdmJVZ0R6TTNBQUVhTkZnaHhPUGRodCtWQU15ZG52ZkJuV2M2?=
+ =?utf-8?B?d2R5NGY1c3diQkZVNVg4Ny84SUVNMWQzM1BDUnRRMjlvejN3QlZHOExxNGFV?=
+ =?utf-8?B?YUl2QzV5SmJIdjNGbXNqNSt4U1NlSURwdndoaEFBTUxad29yTC93K256VjFX?=
+ =?utf-8?B?V0MzdHJ1ZjN2TmY1TjN4a05DbXA3QkdpOEdlUEdtNG1GTnI2SjFJRzduL0Ey?=
+ =?utf-8?B?ZXVEcmpsRmU1R2FSKy8vZ3JQQ1ozNmRFTWFpNTkxTDNVb1p2US96cXBTRWtK?=
+ =?utf-8?B?L2txRjBGbzB1eSt0VmE0eGtWei9uK2Zud25rTTdlUG1BNnBCL0Jlc3M5aDBj?=
+ =?utf-8?B?UzJjK3JIUFBQQUhlamhoSEh1Q2VmbnM2a0pheW14NVdxTGgrZVN4NG9UcC9K?=
+ =?utf-8?B?eE5mcWhtU2JMNzhsRHFQbU1HbmloNWw0NXZEV2JaR2hBKythMVNmUGRRYi9J?=
+ =?utf-8?B?RVE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: sibRJn74Wt+J3ATh0tgv53RegOiHAEhXmsOA/EqbwxVjFUBqJPeKS5nqsmZHnIVyiblYhOizcUgKoMj0CedF57ZeueZF9QCqfjoGS8yHBqywT1BvjCJGwUu05dHkhBgDkzZJ7Lvk5UURGOYxUSLYI4ey38XB0HF636kDf8llTtCFFrl6lEaGwhf6YhKGwQI/YO5FXamuIZDf9BB8znH0spxMwGtICIT64UqfpeVO8OPln1IcnhgJjzVJhnfOfakoCGmGOehBAIvw8fDSE4JPGRANRQuotqfa4KPt2rGIKif0Q6YNQGaAZ6L59KtF+3LQ8ZwR+znrFY10J+Lf+AE/gXCjE4mPwQUX/Guy5tbTJXNFTe8XJEhtangh3mFSDduY74UmR9yS9/zt9LyR9xADNHuVBWDJCskDoZro/18FPIdFUhQ+U/AIE9bqThVo4/Tbh6Otw5q8G85HJZYWiwZghh7fNt3eR7Ck8EPsLmZ+Sc6zCQElGPfcdJe87xZ0Q9hr48cH7eOO/xsbCutabV88AsfcJr5KUHuDaicKL4dl8afk9Xz7ckDipJ03qlv37Njnqqdhuq8j2KDjLdypx0IaCMz94P6AOpfbkkSNKR8qIqBxTqgv8P7GItXYxO5rvB3RWARC13szuqG/jTyNep7rnHGFgAUvxLtoxBYoJPSRUpM4GgGpkZ2LHOpZ3mYO0Z2hncRyU4U6udAGIceOZNbjyZ+KRiAG+35yroPTtnYF7qghBxC15mZvzXuUubF//bwE3QJbSE9qJKnuiUyfone9XNOvGo4SmID5X0qISpQ9WmcxrUJrD5SprG3Oh29CfN/kh18GALURSYDMso0gxc/zNg==
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 83be8e17-4c5a-4076-339c-08dbe557f1d4
+X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Nov 2023 21:23:28.6396
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: MQetpapWj98oM98FNL7WfgzXqfyEbX4595LF7gOYlfY+JZ2bQJy9I42JBpVZYVS8FvDCDa4z9NBO/1jvtzlx1qeYO/dGFA/mR1Lbeh474Rc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB7144
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-14_22,2023-11-14_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ malwarescore=0 phishscore=0 mlxlogscore=999 adultscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311140157
+X-Proofpoint-GUID: UhRE_8uydd_1cnvJNAU-363n02IitvgF
+X-Proofpoint-ORIG-GUID: UhRE_8uydd_1cnvJNAU-363n02IitvgF
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From the UFSHCI 4.0 specification, about the legacy (single queue) mode:
-"The host controller always process transfer requests in-order according
-to the order submitted to the list. In case of multiple commands with
-single doorbell register ringing (batch mode), The dispatch order for
-these transfer requests by host controller will base on their index in
-the List. A transfer request with lower index value will be executed
-before a transfer request with higher index value."
+On 10/15/23 9:03 PM, Wenchao Hao wrote:
+> shost_for_each_device() would skip devices which is in progress of
+> removing, so scsi_run_queue() for these devices would be skipped in
+> scsi_run_host_queues() after blocking hosts' IO.
+> 
+> IO hang would be caused if return true when state is SDEV_CANCEL with
+> following order:
+> 
+> T1:					    T2:scsi_error_handler
+> __scsi_remove_device()
+>   scsi_device_set_state(sdev, SDEV_CANCEL)
+>   ...
+>   sd_remove()
+>   del_gendisk()
+>   blk_mq_freeze_queue_wait()
+>   					    scsi_eh_flush_done_q()
+> 					      scsi_queue_insert(scmd,...)
+> 
+> scsi_queue_insert() would not kick device's queue since commit
+> 8b566edbdbfb ("scsi: core: Only kick the requeue list if necessary")
+> 
+> After scsi_unjam_host(), the scsi error handler would call
+> scsi_run_host_queues() to trigger run queue for devices, while it
+> would not run queue for devices which is in progress of removing
+> because shost_for_each_device() would skip them.
+> 
+> So the requests added to these queues would not be handled any more,
+> and the removing device process would hang too.
+> 
+> Fix this issue by using shost_for_each_device_include_deleted() in
+> scsi_run_host_queues() to trigger a run queue for devices in removing.
+> 
+> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+> ---
+>  drivers/scsi/scsi_lib.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 195ca80667d0..40f407ffd26f 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -466,7 +466,7 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
+>  {
+>  	struct scsi_device *sdev;
+>  
+> -	shost_for_each_device(sdev, shost)
+> +	shost_for_each_device_include_deleted(sdev, shost)
+>  		scsi_run_queue(sdev->request_queue);
 
-From the UFSHCI 4.0 specification, about the MCQ mode:
-"Command Submission
-1. Host SW writes an Entry to SQ
-2. Host SW updates SQ doorbell tail pointer
+What happens if there were no commands for the device that
+was destroyed and we race with this code and device deletion?
 
-Command Processing
-3. After fetching the Entry, Host Controller updates SQ doorbell head
-   pointer
-4. Host controller sends COMMAND UPIU to UFS device"
+So thread1 has set the device state tp SDEV_DEL and has finished
+blk_mq_destroy_queue because there were no commands running.
 
-In other words, for both legacy and MCQ mode, UFS controllers are
-required to forward commands to the UFS device in the order these
-commands have been received from the host.
+The above eh thread, then is calling:
 
-Notes:
-- For legacy mode this is only correct if the host submits one
-  command at a time. The UFS driver does this.
-- Also in legacy mode, the command order is not preserved if
-  auto-hibernation is enabled in the UFS controller. Hence, enable
-  zone write locking if auto-hibernation is enabled.
+scsi_run_queue -> blk_mq_kick_requeue_list
 
-This patch improves performance as follows on my test setup:
-- With the mq-deadline scheduler: 2.5x more IOPS for small writes.
-- When not using an I/O scheduler compared to using mq-deadline with
-  zone locking: 4x more IOPS for small writes.
+and that queues the requeue work.
 
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+blk_mq_destroy_queue had done blk_mq_cancel_work_sync but
+blk_mq_kick_requeue_list just added it back on the kblockd_workqueue.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 732509289165..e78954cda3ae 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4421,6 +4421,20 @@ static int ufshcd_update_preserves_write_order(struct ufs_hba *hba,
- 				return -EPERM;
- 		}
- 	}
-+	shost_for_each_device(sdev, hba->host)
-+		blk_freeze_queue_start(sdev->request_queue);
-+	shost_for_each_device(sdev, hba->host) {
-+		struct request_queue *q = sdev->request_queue;
-+
-+		blk_mq_freeze_queue_wait(q);
-+		q->limits.driver_preserves_write_order = preserves_write_order;
-+		blk_queue_required_elevator_features(q,
-+			!preserves_write_order && blk_queue_is_zoned(q) ?
-+			ELEVATOR_F_ZBD_SEQ_WRITE : 0);
-+		if (q->disk)
-+			disk_set_zoned(q->disk, q->limits.zoned);
-+		blk_mq_unfreeze_queue(q);
-+	}
- 
- 	return 0;
- }
-@@ -4463,7 +4477,8 @@ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
- 
- 	if (!is_mcq_enabled(hba) && !prev_state && new_state) {
- 		/*
--		 * Auto-hibernation will be enabled for legacy UFSHCI mode.
-+		 * Auto-hibernation will be enabled for legacy UFSHCI mode. Tell
-+		 * the block layer that write requests may be reordered.
- 		 */
- 		ret = ufshcd_update_preserves_write_order(hba, false);
- 		if (ret)
-@@ -4479,7 +4494,8 @@ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
- 	}
- 	if (!is_mcq_enabled(hba) && prev_state && !new_state) {
- 		/*
--		 * Auto-hibernation has been disabled.
-+		 * Auto-hibernation has been disabled. Tell the block layer that
-+		 * the order of write requests is preserved.
- 		 */
- 		ret = ufshcd_update_preserves_write_order(hba, true);
- 		WARN_ON_ONCE(ret);
-@@ -5247,6 +5263,10 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
- 	struct ufs_hba *hba = shost_priv(sdev->host);
- 	struct request_queue *q = sdev->request_queue;
- 
-+	q->limits.driver_preserves_write_order =
-+		!ufshcd_is_auto_hibern8_supported(hba) ||
-+		FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) == 0;
-+
- 	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
- 
- 	/*
-@@ -9026,6 +9046,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
- 	.max_host_blocked	= 1,
- 	.track_queue_depth	= 1,
- 	.skip_settle_delay	= 1,
-+	.needs_prepare_resubmit	= 1,
- 	.sdev_groups		= ufshcd_driver_groups,
- 	.rpm_autosuspend_delay	= RPM_AUTOSUSPEND_DELAY_MS,
- };
+When __scsi_iterate_devices does scsi_device_put it would call
+scsi_device_dev_release and call blk_put_queue which frees the
+request_queue while it's requeue work might still be queued on
+kblockd_workqueue.
+
+
+
