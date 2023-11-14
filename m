@@ -2,88 +2,82 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A08AC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 18:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62F1AC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 18:46:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233894AbjKNSnE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Nov 2023 13:43:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59202 "EHLO
+        id S233928AbjKNSqm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Nov 2023 13:46:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229770AbjKNSnD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 13:43:03 -0500
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 926B1DF;
-        Tue, 14 Nov 2023 10:43:00 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1699987372; cv=none;
+        with ESMTP id S229607AbjKNSql (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 13:46:41 -0500
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1CD1CC;
+        Tue, 14 Nov 2023 10:46:37 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1699987588; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=AbXOG1RS3ZeB+EpjcvAmsmx9Eya5muSKWivMhKXVIvrK2boFdosVQoFvgp+Vlu7dkM
-    L8/u7iCIruiM8gYc9988HiFSUpI5zHORM3qomLfaqdWZMR+wvrz31u+CJWqrmgf9kEHa
-    nU0cwq9latwWZH7WxvhhLf1TH6+nEwFTZcpBPolDkjAcTSfV/UFG3Gvktl6s4lKERpu/
-    0LgpUH2Jl2edP0R27R6F32VKZ6q/Wkp6GkUnf8aggw64kVyXSYvFh+RC+ALbGk/F2Z5Z
-    sXZCZYXaSsKIdPf78JsIMXGqZjC5a8zqJSCWdZT8omIdG9jNYd399ho77sxfq94s280d
-    MHdQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1699987372;
+    b=nHAJqL7WD+8lCNtg+k61CXehK3efDai2PcvuJ2t/hgIAk6hewdCdBqr2maMNdnGCEc
+    EyrwzkdPRgGPJgRoO+sBoUHRBgyCPgDp0lTxiJ3apXlQgCkWqcpM2g3pBmCNr+MYk0zq
+    P2YquTmeIAKEfbN+kYbXH9SeDJtGksq2sTqzLTp0s2pRc93kAHRE5xi2OoA+nJ0AQRYu
+    Sbi9Ea+1Pz59Tpza3RJFG739shnys6h3k23nfCteFY7y0AsFEbhrZoTNcb2i2439FK0D
+    iUNv1sUUI/qeSuAcEBz/gQ3PNxnYWmo+zF+zw9PD54HORIGxWMSGy12UwDVycce0giS3
+    mp9g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1699987588;
     s=strato-dkim-0002; d=strato.com;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=gf0ZqEVn7Tk4Q4eh2Whf+l4ARyu6ttahR+IkDoV/Oz0=;
-    b=fqc+wD9gZ96vr50tL2W80qZ+E/tPbTnrcuii6307x9EcrYsH9+Ut4SHHYWgy/WxygX
-    m+e5bXYUeszOV1wO6djwg9ybbzqoWzWUvOoWcdMHDvZD/AYhPPi8M+X2NnpOUFKvhqQr
-    rC23+ezkZ2fGA5UStnTuIfQ1Sj3ASo0k8Ifb4sbURUWvQ7+LrD0JNAdQoi9ipnuCSblo
-    v36Mgq83u24j+d1CZZY/p6AKbSUzhNz7iqWuVWL3n9A5DFuIkKmKzxcvQnNSzfFEenbf
-    ts7cpZsN/f/1Lqf4dfeg3cLnXOBLUI3Lo2XLHRaTwzZ2wSOQu3mJMqZvT7bV4YcaZJ+f
-    e46g==
+    bh=N/iIv0hHUw7EhLX30XqC2yE+1gKSJVpe6lZNznP65uE=;
+    b=pXsJxBKpAem4Y4fqhV/FCRb6rAS3omXfUjjEH46WplJO704wmcP++W+2SlGHOOyAs1
+    DIf/MyHlFyZASqWMxTZDPkHQpp31hdHz/S5dPfVgpU6CL1oQCkiT23hwt95zUbNNRM3T
+    QVXrje8sAeWcb8cXG7uWGF0D5ofXKj4RyOrTUL+sRKyZUO4RYKU5aGehxU5k5rLEENLF
+    m5G/cIlLDIJjj9m6GkhdmFRn75C/ccoyflzY52z3l4PRQ8pJmXkR1B8Eti+Vwk4/TqHj
+    1Dfn+xiZZgjCWCNBIcVy4TXz7FoURl3Ksi4GVoS1s6fRPe6hL1Q7yx8jLduJkEtfVlZv
+    VDtQ==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
 X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1699987372;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1699987588;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=gf0ZqEVn7Tk4Q4eh2Whf+l4ARyu6ttahR+IkDoV/Oz0=;
-    b=khmsg+AfF/G+VfmTvsiy8zweqvJA8h0kLJvV2CnXuBgrf3ur13Y5NOUq/0JSfQydcv
-    N0I8ue9tRRVkAEA9nAD1QZaXJp4bQNQsU4EcvVNkYsgYN/Y8G/3C27hOTpbV9LBG0n2i
-    cJRcahPkleMri2pETQFQP/1ms8Fq3g3L1wHJng464xC+7YX12vFQFUKzglN+tZWfk7ga
-    70bSrFuA6sek0tpp9SbsDvnsxgjQA5Z632QeAkU5GE9tLrSowYQ4WtZ+N2Ktdkhbk5ud
-    tRHLDmja+2JOSnQJ6CZ10pqUloR451fBJcvcMhQ6pY05WHLgOlcxMuKZPKIVUR6tCljh
-    llag==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1699987372;
+    bh=N/iIv0hHUw7EhLX30XqC2yE+1gKSJVpe6lZNznP65uE=;
+    b=oqDeLYYx20rgL1QG1nsScfL0KBrRVKCcGuO0R6itJRXd2dVYK/3YFBiKbu9CJd7KqD
+    dF4G3w8AmgViK72F55Rr01Vzp0A+G6+0jqPGsx2p6tQAKqQX2Ghu0JDuAaK7HdGLcSsW
+    hps8x+5Ru/esVkKDf9mLDPKWX5Yv30KEn7sk0KLw0aUvx/PLMw4FXG8UmnFIe4YKTZiQ
+    bQn0lZcu6nBaakVZl7mLY+WjrWITw3WXCF74b6L5fvJzzFvgthQ4Vx9l1m7xXa3w+q3Z
+    bmaz5Jz0I3cHz2pyP79/yU3WK2LK7GB+5q4sRL1wLrie2LDqA0BRFKpO2FxqlnLGPkGN
+    M+rw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1699987588;
     s=strato-dkim-0003; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=gf0ZqEVn7Tk4Q4eh2Whf+l4ARyu6ttahR+IkDoV/Oz0=;
-    b=4KXDFf0AXYfu6lnsxbNl1xu+i+mn2h474bUd8gzVFPoAmpKxuyDgKDyNoFhIjvzjI+
-    vJIu3MDZTns1AW62FPCA==
+    bh=N/iIv0hHUw7EhLX30XqC2yE+1gKSJVpe6lZNznP65uE=;
+    b=zOjmcymcbOg9HOG8EaooPUHUZLBVIrl+XmylgNxgJ8lbPiIu+TLQ1ZS/g4sv8zhzva
+    iZ3atkuezCwkvIMkADDw==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
 Received: from [10.176.235.177]
     by smtp.strato.de (RZmta 49.9.1 AUTH)
-    with ESMTPSA id z758a5zAEIgqV96
+    with ESMTPSA id z758a5zAEIkRV9W
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Tue, 14 Nov 2023 19:42:52 +0100 (CET)
-Message-ID: <1fab375b0c30851767613582a6f89f872c82aaa3.camel@iokpp.de>
-Subject: Re: [PATCH v1 1/2] scsi: ufs: core: Add UFS RTC support
+    Tue, 14 Nov 2023 19:46:27 +0100 (CET)
+Message-ID: <e946d56d5f9fd8458043b579ab47e4d9f8e88b04.camel@iokpp.de>
+Subject: Re: [PATCH v1 2/2] scsi: ufs: core: Add sysfs node for UFS RTC
+ update
 From:   Bean Huo <beanhuo@iokpp.de>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mikebi@micron.com" <mikebi@micron.com>,
-        "lporzio@micron.com" <lporzio@micron.com>
-Date:   Tue, 14 Nov 2023 19:42:51 +0100
-In-Reply-To: <DM6PR04MB6575E82B66D090CDD495BF69FCAFA@DM6PR04MB6575.namprd04.prod.outlook.com>
+To:     Bart Van Assche <bvanassche@acm.org>, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+        beanhuo@micron.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mikebi@micron.com, lporzio@micron.com
+Date:   Tue, 14 Nov 2023 19:46:27 +0100
+In-Reply-To: <fb80565a-9b91-4125-ac50-f8469f27c3b8@acm.org>
 References: <20231109125217.185462-1-beanhuo@iokpp.de>
-         <20231109125217.185462-2-beanhuo@iokpp.de>
-         <DM6PR04MB6575E82B66D090CDD495BF69FCAFA@DM6PR04MB6575.namprd04.prod.outlook.com>
+         <20231109125217.185462-3-beanhuo@iokpp.de>
+         <fb80565a-9b91-4125-ac50-f8469f27c3b8@acm.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2 
@@ -92,27 +86,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Avri,=20
+Hi Bart,
 
 
-On Thu, 2023-11-09 at 15:09 +0000, Avri Altman wrote:
-> > The objective of this patch is to incorporate Real Time Clock (RTC)
-> > support in
-> > Universal Flash Storage (UFS) device. This enhancement is crucial
-> > for the
-> > internal maintenance operations of the UFS device. The patch
-> > enables the
-> > device to handle both absolute and relative time information.
-> > Furthermore, it
-> > includes periodic task to update the RTC in accordance with the UFS
-> > specification, ensuring the accuracy of RTC information for the
-> > device's
-> > internal processes.
-> Maybe add some reference to qTimestamp and explain why RTC in seconds
-> is still needed,
-> when RTC in nanoseconds is already implemented?
+On Thu, 2023-11-09 at 10:07 -0800, Bart Van Assche wrote:
+> On 11/9/23 04:52, Bean Huo wrote:
+> > This patch introduces a sysfs node named 'rtc_update_ms' within the
+> > kernel, enabling users to
+> > adjust the RTC periodic update frequency to suit the specific
+> > requirements of the system and
+> > UFS. Also, this patch allows the user to disable periodic update
+> > RTC=C2=A0 in the UFS idle time.
+>=20
+> Why is this behavior enabled by default instead of disabled by
+> default?
 
-Yes, I will add an explanation in the next version.
+No problem, I will disable it by default in the next version and let
+customers choose on a case-by-case basis.
 
 Kind regards,
 Bean
