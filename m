@@ -2,113 +2,128 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DBDDC4167D
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 22:32:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EECFBC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 22:32:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234105AbjKNWcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Nov 2023 17:32:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58582 "EHLO
+        id S234133AbjKNWcf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Nov 2023 17:32:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234112AbjKNWcC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 17:32:02 -0500
-Received: from rcdn-iport-9.cisco.com (rcdn-iport-9.cisco.com [173.37.86.80])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 521A3DB;
-        Tue, 14 Nov 2023 14:31:59 -0800 (PST)
+        with ESMTP id S234112AbjKNWcf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 17:32:35 -0500
+Received: from rcdn-iport-1.cisco.com (rcdn-iport-1.cisco.com [173.37.86.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 312CDC1;
+        Tue, 14 Nov 2023 14:32:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=1974; q=dns/txt; s=iport;
-  t=1700001119; x=1701210719;
+  d=cisco.com; i=@cisco.com; l=2502; q=dns/txt; s=iport;
+  t=1700001152; x=1701210752;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=cAUkkq9AKnGLq+kxdOrbr7ZaaBIeDQKT3XyG1iC0jTE=;
-  b=VUqDF1Qya1TuDsYY99g39wFvuByvpcAkCy/fLWiH2yBFcbjEzjtjtj4P
-   /AC4x6dv/lghTr9CqMAMABFnwT8wCB3oBncyHCRdDW2vo/MF5YjLv6y5E
-   nPFo2TmUkYl3ic5pg1SllOTuQslWbj96GnyriQYMfRlSCvZ/bl5nraWSI
+  bh=slFAmSPvNAgschnNw3qQmhrZbli7ashLCnTbqYkfOek=;
+  b=aqfDCjQotxitWhRpSeubt4Qtv6BDJMuqtBLEX1n9tp+IMQhVwXQRjcp9
+   DTr6CI2JPCmUhVXWQQV7fuo8W2HcX7P3u4SQ7xI2pSuqOTgpMHB56EOu0
+   F5dInmLk48b0Uk7a51jgjgjaSj8gLb9xheF9JBISd5DXMR6sDO+YAY2SY
    w=;
-X-CSE-ConnectionGUID: bl05Q2I6TGuhFkNknoN57A==
-X-CSE-MsgGUID: I2u/PwrmSIOqOwXZZSPlXQ==
+X-CSE-ConnectionGUID: k7q/d/YARROrfkENkvbo5A==
+X-CSE-MsgGUID: OmkiRmonSQyRNR7uV8Y0uw==
 X-IronPort-AV: E=Sophos;i="6.03,303,1694736000"; 
-   d="scan'208";a="138077491"
-Received: from rcdn-core-12.cisco.com ([173.37.93.148])
-  by rcdn-iport-9.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2023 22:31:58 +0000
+   d="scan'208";a="138480103"
+Received: from rcdn-core-3.cisco.com ([173.37.93.154])
+  by rcdn-iport-1.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2023 22:32:31 +0000
 Received: from localhost.cisco.com ([10.193.101.253])
         (authenticated bits=0)
-        by rcdn-core-12.cisco.com (8.15.2/8.15.2) with ESMTPSA id 3AEMVh1Z001762
+        by rcdn-core-3.cisco.com (8.15.2/8.15.2) with ESMTPSA id 3AEMWNTY004130
         (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Tue, 14 Nov 2023 22:31:57 GMT
+        Tue, 14 Nov 2023 22:32:30 GMT
 From:   Karan Tilak Kumar <kartilak@cisco.com>
 To:     sebaddel@cisco.com
 Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
         mkai2@cisco.com, satishkh@cisco.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v3 01/13] scsi: fnic: Modify definitions to sync with VIC firmware
-Date:   Tue, 14 Nov 2023 14:31:41 -0800
-Message-Id: <20231114223141.633658-1-kartilak@cisco.com>
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH v3 02/13] scsi: fnic: Add and use fnic number
+Date:   Tue, 14 Nov 2023 14:32:21 -0800
+Message-Id: <20231114223221.633719-1-kartilak@cisco.com>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Authenticated-User: kartilak@cisco.com
 X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
-X-Outbound-Node: rcdn-core-12.cisco.com
+X-Outbound-Node: rcdn-core-3.cisco.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-VIC firmware has updated definitions.
-Modify structure and definitions to sync with the latest VIC firmware.
+Add fnic_num in fnic.h to identify fnic in a multi-fnic environment.
+Increment and set the fnic number during driver load in fnic_probe.
+Replace the host number with fnic number in debugfs.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
- drivers/scsi/fnic/vnic_scsi.h | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/scsi/fnic/fnic.h         | 1 +
+ drivers/scsi/fnic/fnic_debugfs.c | 2 +-
+ drivers/scsi/fnic/fnic_main.c    | 6 +++++-
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fnic/vnic_scsi.h b/drivers/scsi/fnic/vnic_scsi.h
-index 4e12f7b32d9d..f715f7942bfe 100644
---- a/drivers/scsi/fnic/vnic_scsi.h
-+++ b/drivers/scsi/fnic/vnic_scsi.h
-@@ -26,7 +26,7 @@
- #define VNIC_FNIC_RATOV_MAX                 255000
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 93c68931a593..c6c549c633b1 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -216,6 +216,7 @@ struct fnic_event {
  
- #define VNIC_FNIC_MAXDATAFIELDSIZE_MIN      256
--#define VNIC_FNIC_MAXDATAFIELDSIZE_MAX      2112
-+#define VNIC_FNIC_MAXDATAFIELDSIZE_MAX      2048
+ /* Per-instance private data structure */
+ struct fnic {
++	int fnic_num;
+ 	struct fc_lport *lport;
+ 	struct fcoe_ctlr ctlr;		/* FIP FCoE controller structure */
+ 	struct vnic_dev_bar bar0;
+diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
+index c4d9ed0d7d75..fac617672868 100644
+--- a/drivers/scsi/fnic/fnic_debugfs.c
++++ b/drivers/scsi/fnic/fnic_debugfs.c
+@@ -676,7 +676,7 @@ void fnic_stats_debugfs_init(struct fnic *fnic)
+ {
+ 	char name[16];
  
- #define VNIC_FNIC_FLOGI_RETRIES_MIN         0
- #define VNIC_FNIC_FLOGI_RETRIES_MAX         0xffffffff
-@@ -55,7 +55,7 @@
- #define VNIC_FNIC_PORT_DOWN_IO_RETRIES_MAX  255
+-	snprintf(name, sizeof(name), "host%d", fnic->lport->host->host_no);
++	snprintf(name, sizeof(name), "fnic%d", fnic->fnic_num);
  
- #define VNIC_FNIC_LUNS_PER_TARGET_MIN       1
--#define VNIC_FNIC_LUNS_PER_TARGET_MAX       1024
-+#define VNIC_FNIC_LUNS_PER_TARGET_MAX       4096
- 
- /* Device-specific region: scsi configuration */
- struct vnic_fc_config {
-@@ -79,10 +79,19 @@ struct vnic_fc_config {
- 	u16 ra_tov;
- 	u16 intr_timer;
- 	u8 intr_timer_type;
-+	u8 intr_mode;
-+	u8 lun_queue_depth;
-+	u8 io_timeout_retry;
-+	u16 wq_copy_count;
+ 	fnic->fnic_stats_debugfs_host = debugfs_create_dir(name,
+ 						fnic_stats_debugfs_root);
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 984bc5fc55e2..ea7b1ba27ac7 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -84,6 +84,9 @@ static struct libfc_function_template fnic_transport_template = {
+ 	.exch_mgr_reset = fnic_exch_mgr_reset
  };
  
- #define VFCF_FCP_SEQ_LVL_ERR	0x1	/* Enable FCP-2 Error Recovery */
- #define VFCF_PERBI		0x2	/* persistent binding info available */
- #define VFCF_FIP_CAPABLE	0x4	/* firmware can handle FIP */
- 
-+#define VFCF_FC_INITIATOR         0x20    /* FC Initiator Mode */
-+#define VFCF_FC_TARGET            0x40    /* FC Target Mode */
-+#define VFCF_FC_NVME_INITIATOR    0x80    /* FC-NVMe Initiator Mode */
-+#define VFCF_FC_NVME_TARGET       0x100   /* FC-NVMe Target Mode */
 +
- #endif /* _VNIC_SCSI_H_ */
++atomic_t fnic_num;
++
+ static int fnic_slave_alloc(struct scsi_device *sdev)
+ {
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+@@ -587,6 +590,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	int i;
+ 	unsigned long flags;
+ 
++	atomic_inc(&fnic_num);
+ 	/*
+ 	 * Allocate SCSI Host and set up association between host,
+ 	 * local port, and fnic
+@@ -608,7 +612,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		 host->host_no);
+ 
+ 	host->transportt = fnic_fc_transport;
+-
++	fnic->fnic_num = atomic_read(&fnic_num);
+ 	fnic_stats_debugfs_init(fnic);
+ 
+ 	/* Setup PCI resources */
 -- 
 2.31.1
 
