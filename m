@@ -2,250 +2,181 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E87D2C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 02:55:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D152FC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 04:34:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229580AbjKNCz6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Nov 2023 21:55:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38786 "EHLO
+        id S232076AbjKNEet (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Nov 2023 23:34:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbjKNCz5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Nov 2023 21:55:57 -0500
-Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01olkn2012.outbound.protection.outlook.com [40.92.107.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62A5C12D
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Nov 2023 18:55:53 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hpu1AeijMSulQNldXgcOpDuZnBHyeHIBUHLPDsHxTa7cS0FNGAt/sDMs2bY6a9rOMqNxg0XoSrmRTAt6844bcS4nWOZIddefJnR9O/z74tZvwfuWVtsSPweDWsBkzpdcKqJ5m+PFaOilAGgHoZUxq7pjP7r7Bj5l5WbSyYHvRSkKo4GRXemWf/cgZbKNg36hdphhh1XrekjvpvvlY1CbvtZ3sphzKS87TsREVVfvoeiESnsAJ3+H1VWoi9Q9I+La76Jqp9/Bw8aOzDGjqUNLEN9/NWc8ywhLekZebIpA1ZbM0IZG9eVnQqqOdy1ZiSe00xbfEzwcujtWz/1jVjMGnw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3RnnzC6YYAtPnbWwIeEUVDSMjCuV9IIsrGT31xU9wWo=;
- b=UkQVvVaLUyhfa/ofm7uXsb8u6kwOmwEJFDrxSlQMMjKPBbEwBJZ3aKfCchX2aa2MZDl48f/4lktnu7vrtvtoNhuDxvB5MX41b7vXoS4NJBdzkZaPhLJsCrnfJA/WsLqtp3c8819X8MlHzuBiFi/knbCV7zWBnSoi4cCUVavWsAzo24i5lhGMb+QfJtQdXjCKcVcIVtQZ6AZTtPFrKji5o/wyEcB4M0K2S8EIPMp5wCJTuvnDeFhXjqM7SOTsmZX8G5sbhDquQ7FTnoPszScAN82OqaUDYIowPxNCOtfQMdZBttDD/gdGLaYATGr1KyqQy3XJ+fsVeROqJdu92DGNuw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3RnnzC6YYAtPnbWwIeEUVDSMjCuV9IIsrGT31xU9wWo=;
- b=dj0rEa9liiwvybo11ZLrFt/UqNX4ogw394TjFqPPSOQbGM6eAhv5+yceuNViYeqL2P9ONMxxeVoaalKFDI1CuP88n8AtCE/2lgoHX+aU1frh4hmh63Z7XKUAXjjSecw1qGx6tZ7sjgXRGsIxzVEpolrg3JxsWI4Ingq0yAfPynbXfi8LBHfLCaMvYqhCifYsk0s38qf0Zovd+5OZj+sqDMHnfBV7+5OnWUU3jGFBKBjJBljHBke9QNNCjnG57HBaJ4pb9RVjbvEzpdQEDbunrRwaA426Z/qSdw0UyiCx2fYb9NfewHQmyIvYL4HQnmO0Yr98yEToDoK7qFjDx8GsHg==
-Received: from SEYPR03MB6507.apcprd03.prod.outlook.com (2603:1096:101:54::8)
- by TYZPR03MB7027.apcprd03.prod.outlook.com (2603:1096:400:331::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.31; Tue, 14 Nov
- 2023 02:55:49 +0000
-Received: from SEYPR03MB6507.apcprd03.prod.outlook.com
- ([fe80::41f9:52ea:4587:2b80]) by SEYPR03MB6507.apcprd03.prod.outlook.com
- ([fe80::41f9:52ea:4587:2b80%3]) with mapi id 15.20.6977.029; Tue, 14 Nov 2023
- 02:55:49 +0000
-From:   zilong zhang <NeoPerceval@outlook.com>
-To:     martin.petersen@oracle.com, jejb@linux.ibm.com
-Cc:     linux-scsi@vger.kernel.org, trivial@kernel.org,
-        zilong zhang <NeoPerceval@outlook.com>
-Subject: [PATCH] drivers: fix typo in drivers/scsi/st.c
-Date:   Mon, 13 Nov 2023 22:33:59 +0800
-Message-ID: <SEYPR03MB6507111C9AF0BBE744EA7841A2B2A@SEYPR03MB6507.apcprd03.prod.outlook.com>
-X-Mailer: git-send-email 2.34.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-TMN:  [awhTHTnLClHkhsGQJFeXGQeVEyLzyAp7]
-X-ClientProxiedBy: TYCP286CA0004.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:26c::13) To SEYPR03MB6507.apcprd03.prod.outlook.com
- (2603:1096:101:54::8)
-X-Microsoft-Original-Message-ID: <20231113143359.11653-1-NeoPerceval@outlook.com>
+        with ESMTP id S232050AbjKNEep (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Nov 2023 23:34:45 -0500
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65246D42
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Nov 2023 20:34:37 -0800 (PST)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20231114043433epoutp024238117c908a4d5590b380945ad5ab13~XYzc71spN1178611786epoutp02j
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Nov 2023 04:34:33 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20231114043433epoutp024238117c908a4d5590b380945ad5ab13~XYzc71spN1178611786epoutp02j
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1699936473;
+        bh=RIC7YkwBl2NC41T0dxI39QTyveUYqtvDqehJ7FnOOFs=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=NZTBzGgoOVG6hebG9UQ6xx9fLLHHfAh8QmJv4HyU7MERsPBM1w+TbgI/jrcoo3YpD
+         Mh449cXlAGsvOLKe3hQaPVEvdhvP6okRzK69pXetS1i2z9/jxfpVj0om7/sy1G1T0U
+         hI+0FvXJyNE07Dxg7vttH83ZrVtxk/IhE6T1ZyHY=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20231114043432epcas2p32ae4aa7e0e8c3a5ff39886719567fb94~XYzce87360064800648epcas2p3U;
+        Tue, 14 Nov 2023 04:34:32 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.90]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4STtk00TyWz4x9QC; Tue, 14 Nov
+        2023 04:34:32 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        60.0F.09607.7D8F2556; Tue, 14 Nov 2023 13:34:31 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20231114043431epcas2p4a8d452e18fff192c03fb6066e81514ea~XYzbStkKp2631626316epcas2p4X;
+        Tue, 14 Nov 2023 04:34:31 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20231114043431epsmtrp140ee62eba0a9185ec95371dd20cc306b~XYzbRwS8a0312303123epsmtrp1B;
+        Tue, 14 Nov 2023 04:34:31 +0000 (GMT)
+X-AuditID: b6c32a48-1d26ea8000002587-d2-6552f8d73c13
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        FD.06.08817.7D8F2556; Tue, 14 Nov 2023 13:34:31 +0900 (KST)
+Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20231114043431epsmtip259eb9cf00d84b20dcdd351af9a2a4391~XYzbFknSk0798907989epsmtip2M;
+        Tue, 14 Nov 2023 04:34:31 +0000 (GMT)
+From:   SEO HOYOUNG <hy50.seo@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
+        kwangwon.min@samsung.com, kwmad.kim@samsung.com,
+        sh425.lee@samsung.com, sc.suh@samsung.com,
+        quic_nguyenb@quicinc.com, cpgs@samsung.com, grant.jung@samsung.com,
+        junwoo80.lee@samsung.com
+Cc:     SEO HOYOUNG <hy50.seo@samsung.com>
+Subject: [PATCH v2] scsi: ufs: core: fix racing issue during
+ ufshcd_mcq_abort
+Date:   Tue, 14 Nov 2023 13:37:04 +0900
+Message-Id: <20231114043704.52525-1-hy50.seo@samsung.com>
+X-Mailer: git-send-email 2.26.0
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SEYPR03MB6507:EE_|TYZPR03MB7027:EE_
-X-MS-Office365-Filtering-Correlation-Id: 41d70d2d-4a61-4816-04a6-08dbe4bd34fe
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: c1FKsIbD1auD5zIn/YIBKdhUigInhR3M62gH4Tz2g0GTFDrKq3e5EcLYo3r4uY21cJj9U+3rV1S5RXowV3m8Z3zryJSRiPXHLJkWXqDpDxoWIvJhdrNIiIMsXkSmtiFKIquZUxZnf/I9PqCGm6msq8fcMyswqKY5Wc57BZa824a5oY229LfwZmmBvxII+LM+WHJIRuaYfxxLI8CezDwfQPi3/hFPYoI1Wb0IKSu4BtjSWG7Skw636Dnpd7lyRQDE4wIjJjY668uIOWyelGkIYNQbER00bQrT0ILDatFyEg7B/54Deiklkih9f74fGr1cyNmNRGeX/N3gejvnFWS56jaHkvjJtg3taX8MQkOYOm5842bYlrKNCTKMfTqZqnYW9HDwf0y9k7igN5eABOMXi4C+ybNUJc7bFG5kgiZfm+uVFgXw3yh1+9v6PCD5+C0uSbbFrQnaTXexVGCsMJfn5t65Zi6+h6Fyn9lTws2kzkYnmS9Ffl3c+IDEw0qcqTG9KAsmpD9DkGAbA4GyvPUoMvit23Mw9FVOWiJKBI23TAVOnIMoly/FM0rls5J6k1UGVVAhBnB7Cp1GKfme5JvCKRjKgolydf2QY1kfIOcBP14rgwrG/+OsCi0erc9grGPO
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?rWtsUHS+OGDYPhnIhkjZ8UWdIygVxZ7oV9B+LvQ2f2tZrWmX84I8ITDIlab8?=
- =?us-ascii?Q?qwZGNg2+8E73fX65Q+hFwT4Bg03Msb+rg1JdeQoNI8GWDtcIxU1/hbitouHl?=
- =?us-ascii?Q?QwLRz1gtJ5l/rnb4vrdPs3OuS9xP3pob/BxApIdZR96JNNioTXiFMUJirnIO?=
- =?us-ascii?Q?hAVZdQm3jqxgYbxd2gf9ZwC4DzghLjSGUy9Px/EwWprXdwajtsfgtoVf/aui?=
- =?us-ascii?Q?l2rPloiugchZzdF9Y15rVnhakWCrYu4blxXmps5KVHejWNVlCRxlHcBIrdQu?=
- =?us-ascii?Q?p1aT81+zOwng1tjoxxT14gXMpthcFLu4qJ3/CQQiEaqqOeyhnp4zo0qYu79e?=
- =?us-ascii?Q?VEjuPcXV7K8mqqsQyOgMo3T2a9RnC8AoWGYEYYOaY53HtnWIFVSBxPGzGScM?=
- =?us-ascii?Q?e2AS0VzQlWJQlXDH7QE5+VEuVcipvbfK1vD25VzDIB1PUpcrrSd7ttP08JK7?=
- =?us-ascii?Q?mTgj8SaQeshJd5btZdilqdRQFtP7prR2e4PqLlGkUb+ZshSaHYyUIFdCQRUH?=
- =?us-ascii?Q?PScLQoCf7/AFjMMHWYMfFVeJgKtwgZxtZwp6htxmGuuXTlfa+j5J7oAWsEFe?=
- =?us-ascii?Q?6a9bq7Eq6jgDTRHc8mus5rfX/HK874yQvfEM7SqsAF+gIIGhgt90DeZCsoDm?=
- =?us-ascii?Q?G3F69JT4bC3PbXILOPHN2jv4Cg9BuIbekn8fN667cTXghsLGG6StVrclWZFu?=
- =?us-ascii?Q?Lnghdwq5i89gByvriCq4Zhj/bKsrwfuvlXA/mdzhuyAGyPrmvqQz62Pq3CMW?=
- =?us-ascii?Q?vrnhcXWDFecd9/JkW8mLMCojhRzp2mzNtmojxEiqIeovtvonslxNu2McOQzZ?=
- =?us-ascii?Q?zrtkCCn3MAXQgtk3oDZ4Pj4D6Go0TWfMT7hzkOZ/vbvBhrbIip6YgV69wjQx?=
- =?us-ascii?Q?5Vvv3XEecPhvIzUSoGMbymrVoKMmjoVXt1zj9Cc0nZIXk0RrBtcXLqnATZE9?=
- =?us-ascii?Q?KXyj2jEn0tylTW5/MZtcRgGfQj9WJ7E2PFOX+9RHTzJQmTo6JMfl1AMT/Zd0?=
- =?us-ascii?Q?7qJC1uJCh2StSR0dy386O0FXEb2kHPve+ZxmKAtD/SdIjaeuxBbXT91Und2B?=
- =?us-ascii?Q?u29uV4RCYtuVgvrANzt8YRpjfx2FVxgU3p4wqkfE7L0z7L3wdkyHWkIlVQLw?=
- =?us-ascii?Q?/rHNYX6fTIkAjsgotG9iWY9ThVPes6I8iEroqT2LrUnovfMHw0+DGw9/U8A8?=
- =?us-ascii?Q?9J2VYKYLEbQ2Yp6exdfjIS/wPm0VowHMCCSQpZMfq4JWKVp4dXp0578T07w?=
- =?us-ascii?Q?=3D?=
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 41d70d2d-4a61-4816-04a6-08dbe4bd34fe
-X-MS-Exchange-CrossTenant-AuthSource: SEYPR03MB6507.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Nov 2023 02:55:49.6696
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR03MB7027
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGJsWRmVeSWpSXmKPExsWy7bCmme71H0GpBpfXW1s8mLeNzeLlz6ts
+        FgcfdrJYTPvwk9ni5SFNi19/17NbrF78gMVi0Y1tTBa7/jYzWWy9sZPF4uaWoywWl3fNYbPo
+        vr6DzWL58X9MFlNfHGe36Lp7g9Fi6b+3LA6CHpeveHtMWHSA0eP7+g42j49Pb7F4TNxT59G3
+        ZRWjx+dNch7tB7qZAjiism0yUhNTUosUUvOS81My89JtlbyD453jTc0MDHUNLS3MlRTyEnNT
+        bZVcfAJ03TJzgJ5QUihLzCkFCgUkFhcr6dvZFOWXlqQqZOQXl9gqpRak5BSYF+gVJ+YWl+al
+        6+WlllgZGhgYmQIVJmRnLOg8z1bwXrCieZVAA2MrfxcjJ4eEgInE5nsNjCC2kMAORolT90S7
+        GLmA7E+MEj0NE9kgnG+MEq82/2WF6Xj74QsjRGIvo8SziWtZIJwfjBJnp/WAzWIT0JBYc+wQ
+        E0hCRKCNWWLln8tsIAlmATWJz3eXAXVwcAgL+Eus/w92B4uAqsSD6Y1gG3gFLCWeLNzEDrFN
+        XmJRw28miLigxMmZT1ggxshLNG+dzQwyX0JgJYfEyZdnGSEaXCSeTtgAZQtLvDq+BWqQlMTL
+        /jYoO1uicc9aKLtCYu7myVD1xhKznrUzgtzGLKApsX6XPogpIaAsceQW1Fo+iY7Df6E6eSUa
+        Nv5mhyjhlehoE4IIK0mcmXsbKiwhcXB2DkTYQ+Lx37fMkICOlbj3rId5AqPCLCR/zULy1yyE
+        ExYwMq9iFEstKM5NTy02KjCBx25yfu4mRnCC1vLYwTj77Qe9Q4xMHIyHGCU4mJVEePM0A1KF
+        eFMSK6tSi/Lji0pzUosPMZoCQ3ois5Rocj4wR+SVxBuaWBqYmJkZmhuZGpgrifPea52bIiSQ
+        nliSmp2aWpBaBNPHxMEp1cAk+v/89w8faz9aOfM1M5Tbv+ErPvBsx11773P5O89snGKQFvp9
+        +szK1ZmLjB9aXVUOX8Z95LFY1tHaU+kRax593nGu5O/l9M16q1hm+mx+sOd2zrOEKRPN3YTk
+        VDvNZKtzJd9GrLpfl1jxtz2Pz2ly5RV1xusKBhc/T7mx67xD9bbFn6Qe101RmKe2V68t+7tC
+        iWLp9VwrJsFak1OrRR0PCGyKXGSu42C/N+Wp+5W7F42vfj5kvb3u2+Yp1TOWxRmuPH4xZrHP
+        ZKZ38abJNt49C4U2Tl+bVRnhWmevYpR1j/Ff/j3OBpPNR9qsuCKXzZRm5Vd9c40hyYdtl+oD
+        boYk/3fCu8qefq9T2VxwS11SiaU4I9FQi7moOBEA8/b98lkEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrDLMWRmVeSWpSXmKPExsWy7bCSvO71H0GpBof3iVs8mLeNzeLlz6ts
+        FgcfdrJYTPvwk9ni5SFNi19/17NbrF78gMVi0Y1tTBa7/jYzWWy9sZPF4uaWoywWl3fNYbPo
+        vr6DzWL58X9MFlNfHGe36Lp7g9Fi6b+3LA6CHpeveHtMWHSA0eP7+g42j49Pb7F4TNxT59G3
+        ZRWjx+dNch7tB7qZAjiiuGxSUnMyy1KL9O0SuDIWdJ5nK3gvWNG8SqCBsZW/i5GTQ0LAROLt
+        hy+MXYxcHEICuxklpq37xQqRkJD4v7iJCcIWlrjfcoQVougbo8SZc3/AEmwCGhJrjh1iAkmI
+        CMxillhy6w8bSIJZQE3i891lLF2MHBzCAr4Se6Y7g4RZBFQlHkxvBFvAK2Ap8WThJnaIBfIS
+        ixp+M0HEBSVOznzCAjFGXqJ562zmCYx8s5CkZiFJLWBkWsUomVpQnJueW2xYYJSXWq5XnJhb
+        XJqXrpecn7uJERwhWlo7GPes+qB3iJGJg/EQowQHs5IIb55mQKoQb0piZVVqUX58UWlOavEh
+        RmkOFiVx3m+ve1OEBNITS1KzU1MLUotgskwcnFINTHXc+/2evNl5qV24V0T/9dJW3ROVtk6L
+        bx88ceMjW6y86JvVfmmpljrqmRuWS52cp5O5PSIieVXunU/bco+sNTl05vLihwELX+Ys2ch6
+        jDf+w7YKZ8OZ06/eOPKj1jrd/qdnQs/yYzdmcf2X0uyIFxDdlcZrW5pT1JOz+4Zv1su8hp9e
+        nlcyRLJiFvvl6gcxz0pOkJeVTH1hk335Pc/ueMZGnjsVPc/05WwSDubuXHDqlO6lWQdfWlz7
+        51ndsMm/js/rk9CCm4kdoRHVrKf4/S+orQl/0H7F/k2xo47SSecjlU0PLuwNiFK8+e2SwVLD
+        xZMeepbWMG61yVc0/MQQ/NHpZ8W/+c09SwV+ZSR/UmIpzkg01GIuKk4EACsPldD/AgAA
+X-CMS-MailID: 20231114043431epcas2p4a8d452e18fff192c03fb6066e81514ea
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20231114043431epcas2p4a8d452e18fff192c03fb6066e81514ea
+References: <CGME20231114043431epcas2p4a8d452e18fff192c03fb6066e81514ea@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace invisible character with a space.
-The diff looks like this on my terminal:
+If cq complete irq raise during abort processing,
+the command has already been complete.
+So could not get utag to erase cmd like below log.
+Because the cmd that was handling abort has already been completed
 
--^L
-+
+ufshcd_try_to_abort_task: cmd pending in the device. tag = 25
+Unable to handle kernel NULL pointer dereference at virtual address
+0000000000000194
+Mem abort info:
+ESR = 0x0000000096000006
+EC = 0x25: DABT (current EL), IL = 32 bits
+SET = 0, FnV = 0
+EA = 0, S1PTW = 0
+FSC = 0x06: level 2 translation fault
+Data abort info:
+ISV = 0, ISS = 0x00000006
+CM = 0, WnR = 0
 
-Signed-off-by: zilong zhang <NeoPerceval@outlook.com>
+pc : blk_mq_unique_tag+0x8/0x14
+lr : ufshcd_mcq_sq_cleanup+0x6c/0x1b8
+sp : ffffffc03e3b3b10
+x29: ffffffc03e3b3b10 x28: 0000000000000001 x27: ffffff8830b34f68
+x26: ffffff8830b34f6c x25: ffffff8830b34040 x24: 0000000000000000
+x23: 0000000000000f18 x22: ffffffc03e3b3bb8 x21: 0000000000000019
+x20: 0000000000000019 x19: ffffff8830b309b0 x18: ffffffc00a1b5380
+x17: 00000000529c6ef0 x16: 00000000529c6ef0 x15: 0000000000000000
+x14: 0000000000000010 x13: 0000000000000032 x12: 0000001169e8a5bc
+x11: 0000000000000001 x10: ffffff885dfc1588 x9 : 0000000000000019
+x8 : 0000000000000000 x7 : 0000000000000001 x6 : fffffffdef706f28
+x5 : 000000000000283d x4 : 0000000000000001 x3 : 0000000000000000
+x2 : 0000000000000003 x1 : 0000000000000019 x0 : ffffff8855781200
+Call trace:
+blk_mq_unique_tag+0x8/0x14
+ufshcd_clear_cmd+0x34/0x118
+ufshcd_try_to_abort_task+0x1c4/0x4b0
+ufshcd_err_handler+0x8d0/0xd24
+process_one_work+0x1e4/0x43c
+worker_thread+0x25c/0x430
+kthread+0x104/0x1d4
+ret_from_fork+0x10/0x20
+
+v1 -> v2: fix build error
+
+Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
 ---
- drivers/scsi/st.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/ufs/core/ufshcd.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 338aa8c42968..19d86257036d 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -230,7 +230,7 @@ static DEFINE_SPINLOCK(st_use_lock);
- static DEFINE_IDR(st_index_idr);
- 
- 
--
-+
- #ifndef SIGS_FROM_OSST
- #define SIGS_FROM_OSST \
- 	{"OnStream", "SC-", "", "osst"}, \
-@@ -308,7 +308,7 @@ static char * st_incompatible(struct scsi_device* SDp)
- 		}
- 	return NULL;
- }
--
-+
- 
- #define st_printk(prefix, t, fmt, a...) \
- 	sdev_prefix_printk(prefix, (t)->device, (t)->name, fmt, ##a)
-@@ -880,7 +880,7 @@ static int flush_buffer(struct scsi_tape *STp, int seek_next)
- 	return result;
- 
- }
--
-+
- /* Set the mode parameters */
- static int set_mode_densblk(struct scsi_tape * STp, struct st_modedef * STm)
- {
-@@ -955,7 +955,7 @@ static void reset_state(struct scsi_tape *STp)
- 		STp->new_partition = STp->partition;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9a730a794b66..55f4c0eeda7b 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -7574,6 +7574,10 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+ 		goto out;
  	}
- }
--
+ 
++	if (!ufshcd_cmd_inflight(lrbp->cmd) ||
++	    test_bit(SCMD_STATE_COMPLETE, &lrbp->cmd->state))
++		goto out;
 +
- /* Test if the drive is ready. Returns either one of the codes below or a negative system
-    error code. */
- #define CHKRES_READY       0
-@@ -1244,7 +1244,7 @@ static int check_tape(struct scsi_tape *STp, struct file *filp)
- }
- 
- 
--/* Open the device. Needs to take the BKL only because of incrementing the SCSI host
-+/* Open the device. Needs to take the BKL only because of incrementing the SCSI host
-    module count. */
- static int st_open(struct inode *inode, struct file *filp)
- {
-@@ -1337,7 +1337,7 @@ static int st_open(struct inode *inode, struct file *filp)
- 	return retval;
- 
- }
--
-+
- 
- /* Flush the tape buffer before close */
- static int st_flush(struct file *filp, fl_owner_t id)
-@@ -1891,7 +1891,7 @@ st_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 
- 	return retval;
- }
--
-+
- /* Read data from the tape. Returns zero in the normal case, one if the
-    eof status has changed, and the negative error code in case of a
-    fatal error. Otherwise updates the buffer and the eof state.
-@@ -2090,7 +2090,7 @@ static long read_tape(struct scsi_tape *STp, long count,
- 	}
- 	return retval;
- }
--
-+
- 
- /* Read command */
- static ssize_t
-@@ -2238,7 +2238,7 @@ st_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 
- 	return retval;
- }
--
-+
- 
- 
- DEB(
-@@ -2452,7 +2452,7 @@ static int st_set_options(struct scsi_tape *STp, long options)
- 
- 	return 0;
- }
--
-+
- #define MODE_HEADER_LENGTH  4
- 
- /* Mode header and page byte offsets */
-@@ -2670,7 +2670,7 @@ static int do_load_unload(struct scsi_tape *STp, struct file *filp, int load_cod
- 
- 	return retval;
- }
--
-+
- #if DEBUG
- #define ST_DEB_FORWARD  0
- #define ST_DEB_BACKWARD 1
-@@ -3096,7 +3096,7 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 
- 	return ioctl_result;
- }
--
-+
- 
- /* Get the tape position. If bt == 2, arg points into a kernel space mt_loc
-    structure. */
-@@ -3288,7 +3288,7 @@ static int switch_partition(struct scsi_tape *STp)
- 		STps->last_block_visited = 0;
- 	return set_location(STp, STps->last_block_visited, STp->new_partition, 1);
- }
--
-+
- /* Functions for reading and writing the medium partition mode page. */
- 
- #define PART_PAGE   0x11
-@@ -3496,7 +3496,7 @@ static int partition_tape(struct scsi_tape *STp, int size)
- out:
- 	return result;
- }
--
-+
- 
- 
- /* The ioctl command */
-@@ -3864,7 +3864,7 @@ static long st_compat_ioctl(struct file *file, unsigned int cmd_in, unsigned lon
- }
- #endif
- 
--
-+
- 
- /* Try to allocate a new tape buffer. Calling function must not hold
-    dev_arr_lock. */
+ 	err = ufshcd_clear_cmd(hba, tag);
+ 	if (err)
+ 		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
 -- 
-2.34.1
+2.26.0
 
