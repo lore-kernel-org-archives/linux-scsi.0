@@ -2,164 +2,245 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0F72C2BB3F
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Nov 2023 16:13:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4304C072A2
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Nov 2023 16:25:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232315AbjKOQNE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Nov 2023 11:13:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60134 "EHLO
+        id S231872AbjKOQZO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Nov 2023 11:25:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231745AbjKOQND (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2023 11:13:03 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 636BBC2;
-        Wed, 15 Nov 2023 08:13:00 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AFG1wmW017446;
-        Wed, 15 Nov 2023 16:12:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2023-03-30;
- bh=EvMqOw3WBKC6enPj70/lAFSGGI91IAwvZnPmWM1l5NY=;
- b=dmVVUR717LfyRiRMesBz9qzW7migwmFbzQ8Pss1f+xSN2rzjccS3drSe5JixzPFAUXLz
- BePtan3ABA5i/rwVzvIg3RF5Wr/2E7nQbdxuv67mcsiFjdS9uqD6vymAwSKMEN8JEBQ+
- +n21AIIVoexsAOiljmNy0tZivCFB67aK1bDy4N9y5FlqO6lWb8MuFvLvsM9CsNHPn+jx
- jhohn4HTQRJ+TbmmC+W1T/9OBhCqjOEq7XC0i3XjJ3rC6lBUIqcZUhGfFVJo69UZNP6M
- 8JXbwqDPoujWykQKUCY0k0/g28X2ZORR7Y/W3HVdQ5joEOs5TTbXDI91YHEEqhZKJpr+ xw== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ua2na1081-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Nov 2023 16:12:58 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3AFF9qot003972;
-        Wed, 15 Nov 2023 16:12:58 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2100.outbound.protection.outlook.com [104.47.55.100])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3uaxj43jck-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Nov 2023 16:12:58 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dwa2DqNSz0nfJRisvzUDF2sXaUmOycr+OR6I3spSMmcMP3gA9CZoz3NtV/QZOTEpcdbIdGmII4nJ3su76A3to9RUOQ9zrtmbJmg9VKEc5eCh8uCQU/D2mU8KMvSO9QvZnEo2Q3pyHKOQ1T6PYqhg9X3OghEIUAwWC9SFjbflMlFCI/ULJ5cSGp6JSQvS67j5Fj9Bype63y+HJnOvJ+f5aHpwY6vKnCgsaOJ4VCTLvUJDS4zU1G58kVHTGJpS76BzxRc/p3P9qTjqYIBKMdAV080yzPoUN0zX//1QcwacfgIMdifbSuYTn8hFxlqMGfqBZmeumgriF3fhGr1RDGvAHw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EvMqOw3WBKC6enPj70/lAFSGGI91IAwvZnPmWM1l5NY=;
- b=NNsfJozglWT40+HtOydleavHvuPTkm1vToYXz8KhIGw3/3OKqJftVI/54+eeuO0lvc430JVzTEfZ+sgdwWLbjR31d4tcxOO4RVsC8997LVPZABg5qCMNZS/OFhVlN6b+vltV3Qi1zyw9rUxG6gjiLWvBsBw+QFlpdu8bSKnMAN1kzdmh971pxrxGTOdXNuGv+bHpdi+PUMWEqhsQwVuJTaYcOJ1OYOm7WgszR6qYSJxJKMzjRbvOCl0xkEMlIdKa6xShVAZWZ6qHJ34kjTIJiW4ZEkgpqqo2K1pAUYf7hjr9tuetE+I9SzWG9ZX8beBMFI+pwfjl0+G28Y5SeyhFQw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S231702AbjKOQZN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2023 11:25:13 -0500
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 795D183;
+        Wed, 15 Nov 2023 08:25:08 -0800 (PST)
+Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1cc5916d578so62053395ad.2;
+        Wed, 15 Nov 2023 08:25:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EvMqOw3WBKC6enPj70/lAFSGGI91IAwvZnPmWM1l5NY=;
- b=IMWoOI/P198rJqtgF3AcHp5ESUd85R29fWW5vVkz8lBbfDi/ediiw0O+zcJINTzzshQ2E7ZsMXgokjYkFRkOiowtEptL1trFTr51ftlJpUrc0WVJy1+PdLDQYlnWzAPwjp6+qlUsYNkf97D9BWgbRgBNFvrQeMDd+gDvkZpg38A=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by SN7PR10MB7032.namprd10.prod.outlook.com (2603:10b6:806:345::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.26; Wed, 15 Nov
- 2023 16:12:55 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::abe0:e274:435c:5660]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::abe0:e274:435c:5660%4]) with mapi id 15.20.6977.018; Wed, 15 Nov 2023
- 16:12:55 +0000
-To:     Muhammad Muzammil <m.muzzammilashraf@gmail.com>
-Cc:     martin.petersen@oracle.com, bostroesser@gmail.com,
-        michael.christie@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: target: Fixed multiple typos in multiple files
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq17cmj10bl.fsf@ca-mkp.ca.oracle.com>
-References: <20231023105915.29482-1-m.muzzammilashraf@gmail.com>
-Date:   Wed, 15 Nov 2023 11:12:53 -0500
-In-Reply-To: <20231023105915.29482-1-m.muzzammilashraf@gmail.com> (Muhammad
-        Muzammil's message of "Mon, 23 Oct 2023 15:59:15 +0500")
-Content-Type: text/plain
-X-ClientProxiedBy: MN2PR05CA0062.namprd05.prod.outlook.com
- (2603:10b6:208:236::31) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=gmail.com; s=20230601; t=1700065508; x=1700670308; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=hqfdN49Q+vOScFGNTJSUGSerhaeKJX/vdLTTz0PDYuU=;
+        b=fjis3OveIoXcKOHxsrR7F3RlAuvKCv2ZfU9lo819/m7F2kpDoTPb4ImNPkJ3W8yWwl
+         p/8R0Pegt6g6BdjzqlFA4ElNd5oBHLJJ55Koh+IHrhFwMb2hDUkK9L38dSKd5NciA8LG
+         ZVdwKIVo4yKYQ+vD9GmlR7C9P7KdPPV20O6T17pNNGSj79Ml3vOvLdU2az4QfY16Mrv2
+         NgiO8sTLhCHe7E2VkArfq/IhtQX+i1jhIYozfnQPzov24Hdwekkmf+g0VA4y7WxaLIHe
+         WsGvBYNuKDO14VrQVMON4UfcqNZPNkxe1WpBOD5Bl261jYokTHymPosUSkXBpOPMltc3
+         Ytcg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700065508; x=1700670308;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hqfdN49Q+vOScFGNTJSUGSerhaeKJX/vdLTTz0PDYuU=;
+        b=Gh6OV+9Ue7Rfj0i0b6iqZtljw8nqfjJK8Q1kXIdY5r6/xsOWp3auNsLftW3XJLwbxq
+         PsjGufGnDwRHDEGf/JD94fOuFbKa2HgqC/45Nk4/vyVdBgsbIQObMYDDbGmvS+TF0G9N
+         5KEduVcKcQ6FPPvzLl4EHGehXi3x9GaL6RUbK9iWSv9O9aZkbR/jmYoKExeosIU3dQJK
+         ghmtzvF1SoC8bRkJth3TOnutyFxBLW3B4RN/I9czK2Lbx7qBXFKfHhDd1NDP25TMeU+p
+         M0nnACOBAbkwLNjkpolhmZsG5H3bB9CFKEzqnwJm/+6+UUIurr2BonBRzgBqOM68PO2Y
+         wTxQ==
+X-Gm-Message-State: AOJu0YwPzyfYuJpy527T4XSo9sVCHNpHUdG30M+gyXlsw4qT61hrTovf
+        rzXgbp4Rsa8kyriJ0swSiuw=
+X-Google-Smtp-Source: AGHT+IHQ/tvJpqXZWs1nlPIw6VrlreayZv2+4UE0N9kL/rrHXfNZPlKybny0RXOnaam5n306lM33oA==
+X-Received: by 2002:a17:903:1108:b0:1c3:c687:478c with SMTP id n8-20020a170903110800b001c3c687478cmr7739795plh.8.1700065507795;
+        Wed, 15 Nov 2023 08:25:07 -0800 (PST)
+Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
+        by smtp.gmail.com with ESMTPSA id y12-20020a170902ed4c00b001c9ba6c7287sm7576200plb.143.2023.11.15.08.25.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Nov 2023 08:25:07 -0800 (PST)
+Message-ID: <b33a6052-572e-4e4b-b521-dd407c8b32b6@gmail.com>
+Date:   Thu, 16 Nov 2023 00:24:54 +0800
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|SN7PR10MB7032:EE_
-X-MS-Office365-Filtering-Correlation-Id: e62e0b2d-d9ef-49f9-63c9-08dbe5f5ba2b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tRxK+p6Ih4TZG3/eedbnPR2dFVixI4V/8T9Yq5DXoEIrtAJ2wOVJOQVzKvlCFeCZHuzr2KytAk7+jxXLrpISeRvtjVEYMj7K4cOiDzpqhqz644bvEcYUPa5v/luwfaBnSOsRLZu0ONZJa1w0Ep3kX87ry93xLGyCb+y2mE759Cl4KHBYwrhJ+FT/aBbOfUoxcAW4yNFjzTfHv5evAu5awUzAnUHvJ1c+w1AhB2aw5L2E045dvC1hoUiDp/f40annB5ns6jdvUEElvWLo0GNRFq1s0iJKYuvmkIttvJn+/7A+PAfwz/YVvm7/KXw+++z3t/JCRTJUkqrNsr6lzzHcKfWEXbIyjgbJLX1bJoyw5QLbhsHkD//httKzCO+iXtMNpcuFgZB1pzgWJG3fw/NqRnerO0+hPQpp08PPYAHNWp5RqWtN7cnmA+NtpJd+g25lz4mRtvEElTaDkDis2cPWWmpl4n3Jg6EJSFf+js06WtYVWO3GS9ev3N/cZAWrNdIeSay2iYaRSye+xzqXKnHbiUu6QtTr0kDQqEjUsx1jKlesUNDUlc5P9itq/XpWzJGW
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(376002)(366004)(136003)(346002)(39860400002)(230922051799003)(64100799003)(451199024)(186009)(1800799009)(8936002)(316002)(66946007)(4326008)(8676002)(6916009)(66476007)(66556008)(2906002)(41300700001)(4744005)(5660300002)(86362001)(83380400001)(26005)(38100700002)(478600001)(6486002)(6512007)(6506007)(36916002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?fiGVDOlILerFDnIhJPLBNdJUv2lJVBAtZVyKc9FhESrBH64efaHUsdv6OV9V?=
- =?us-ascii?Q?NoX24ZaFXgMXRnHNKJokxitnRZtTjpZ70xx3F+Uw9JVCCsBTIM4LEXVU0L4I?=
- =?us-ascii?Q?NdzJlf5C+jiKAdH78UOOdHVFdswookqDx3jrkQfHG2F8BORmEnLlvuzrtvqj?=
- =?us-ascii?Q?/66He0KnN5vKJBduNhC1KCTJIfV6wqwzT5iXxUs/RfFot0CIL1anIvraKANu?=
- =?us-ascii?Q?PrvPVD7LkbnHoYIbTmTrmmWz6EkKGQ68mSIrhFTTDNoBeqhSxOog0ftYTJar?=
- =?us-ascii?Q?NO7k/8DXHsrydtuhaRguTsQM+WaqqXGaLxAKw188XP2I81xNxlns/Mg/s42E?=
- =?us-ascii?Q?PlQFRIrC9GnCP9zkVG/NZ+nL7BS5kHmEQcu5q+tMMFQAJlTK7yzHYBL5eiqf?=
- =?us-ascii?Q?cBKzPRXmJvP4QBYSmroFOgx/xjdemy499rtf3PwFRVnSjBnILytqZNKmqp99?=
- =?us-ascii?Q?M/5LvWq6ovTkCghM6nr3ERNDy7AKtRv6D2U6wepQjSPM8+gZRrwfR4HMV73T?=
- =?us-ascii?Q?7U5Z2Dq8mWWdzBZKWdlBXSkl1YhXJ3NRx3Yroq3DGN7RjhdvZJnjCvPI0XpS?=
- =?us-ascii?Q?DyYk4dAlycVBlaWs3HhyeZOWb2kzpRF8QhdLUCSklLUStnAa3iV96LdUZ0/p?=
- =?us-ascii?Q?Xy73VW8QC2L74L7AvAYj59AS3+qSDWjCyxZk9a3vAyk5wLZhMhBC6rF+OBlP?=
- =?us-ascii?Q?L5BI2DEuPAr9/qGIO6Atgsfu/l+Kg+G0y1N4L4EwRniVRehZgF4UGEAvYeWM?=
- =?us-ascii?Q?E68ynFqPmzqoGL9WpKMaTHb6nx/9lrd0I9ei3ON4Lc9x6QvkBbTYMoBGcSAG?=
- =?us-ascii?Q?zBch08Msz30eVNJf8EjjFGDo8v3z+FLsLj4LlZpA014Ef6JZcYAjgwMp+4Dp?=
- =?us-ascii?Q?gz7zfBmEommqxJOVbL8lSRi09JelKr91sPNOqkdHcqao/Vo16K7fmJgPiKMJ?=
- =?us-ascii?Q?uhe2P03a7qSNv89BlLg8CvJ9R5ZObgADG1fXgxhzQTUxoOJoyZpUyE85BkKe?=
- =?us-ascii?Q?gOwr/exAndQLRtDk1uFBFXbxl5HxNAUkprWtE66DpSGNAF7iXyT7iZMZCu8V?=
- =?us-ascii?Q?N+AMQoVf6mKHvN2VQNdfL57JEwPw+Q/J0K8U0UyOoFjNHoeV/+CVaYWtFUDX?=
- =?us-ascii?Q?npmIcmPGRKAitxnTGEB0sz2163FIQUcNjieBB/3vs29gcdBTRJBQGnPX9gL6?=
- =?us-ascii?Q?2bwIw2GRfmST98HCChbyytH0Pd5Fp/CZ78HUwzuiEsUrvnILrS8r8oHJ/LfW?=
- =?us-ascii?Q?IrS9Yl0UgDzn+JdPr06USk02CY1SMtInpKjneU7oMlJZV9N2sTsc0iy+Hb5E?=
- =?us-ascii?Q?9ToDl0gCEJTM/d10mR/qSTxss/GeGhM/y+sToFpQOsY7nczDSPKorQZAaeDe?=
- =?us-ascii?Q?2IXEzgDN2NF1cdtizT22RbdHFN0FQQBA2RdEGUsPBXsGyUXxcvY2M+bIZsz6?=
- =?us-ascii?Q?BOhbXQd3/iPU3WGoXB0SJoYBb1nKKx34LaUfl4xthbQ64ywVtyFQ2fNCyLfz?=
- =?us-ascii?Q?qGJo0Y0Hnb3xk2bubZJEX4rIRPqtdHK/s/kP5cP4NGtR+UqcJnfaIA2hEjIQ?=
- =?us-ascii?Q?XAPtg6A/opS8Wb5UN3NjU4EgzP4ZU30L6sz+53k/FmtzkrF42fdEw7kpLqCA?=
- =?us-ascii?Q?0A=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: BK9ZBfZhs6NtrGtK9y+ZSDCI5eUks1MTXFEZpA2B9v+dUAsZXMnMPYE0Wao/MZztsAmy7KvpbeeF6VPeSuNm5sSHgAereNS0m4TdNrUJ5+OcfPpkcspYVhLfbfiDQ+KSphX7MrslZ+ELi6fwZe7O3lDs2XF6mJoA4A2YB9GAtYkZ+Ut2+poXffe0Xv1cTET6SC1mWT4aZzklWQ6q/yrZ/VICwOoOSSRm5mDxOFH/d6W4+MTayipPIGNCvPNI+NN0kmqkcnzzrrN+wCqDzt3+V0M08ylP884i9mVMhqnyqPJOJRY+BNwPW7sVYRKbliW61Dg1/Y2GMnboMnVzOTZLI8FEGAAC8RYEBZUiMDNkULmdfkYt+p1DcNyTWXyMavKHhLPEr3TWwTMD/r6jMgDgkX8zHLGhOAWJFkFOIkybKM2jc/MYydjhfR5jKuEwITYP4pxKCwToL3xS2Lfz44GXeVIIBCQ24jecVavJm7BYJG4sNePWEYdq8bCkh9cY4vBr44wkW5A9av8gQsEUwMlNp4x2Vj9EfIVIbTvZJiIq96UyxnoKC+3J5b5iNnDDgomF8Aa27HZKiuEfgrLrtXnNWneHWGbYjv7En08idlvrGfRILlZheXTGNcVpUug0OPW4kZx6UdSwN9o+iE4lbO4ixxaqNC+bWySvOD7UrxPkKAdoiN4srpZrfZuOj52iBgOBkSpt4pgPefTzuESl9I/6PFzX2EwENqxERaHf1QvESjxzXp6pwB8fVPpGlPpGgE40oHXtDc1jupFq5ZY60Wx+1OswDF852MYXz7FoltA2XMk=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e62e0b2d-d9ef-49f9-63c9-08dbe5f5ba2b
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Nov 2023 16:12:55.7335
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: olpvtDb2DTuebEPRP6kzXJ+zJaWIAjndvrxJFH8sB94XuyF8VPdtOLtbb3l6kH9B3LrUdvcBxAtx539DweFNxHbae7TjNCNUXbJNgfCBPfc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR10MB7032
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-15_15,2023-11-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
- mlxlogscore=971 mlxscore=0 malwarescore=0 phishscore=0 suspectscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311150123
-X-Proofpoint-GUID: DnyxKST1U-GjnwVSmApql0qoO1Pa5o4c
-X-Proofpoint-ORIG-GUID: DnyxKST1U-GjnwVSmApql0qoO1Pa5o4c
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 4/4] scsi: scsi_core: Fix IO hang when device removing
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        Wenchao Hao <haowenchao2@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org
+References: <20231016020314.1269636-1-haowenchao2@huawei.com>
+ <20231016020314.1269636-5-haowenchao2@huawei.com>
+ <b95cf250-9a58-4a9f-8b55-4b6d00a6a6c2@oracle.com>
+ <b00a9920-f16f-4187-9a7c-6083c5d98fb8@oracle.com>
+From:   Wenchao Hao <haowenchao22@gmail.com>
+In-Reply-To: <b00a9920-f16f-4187-9a7c-6083c5d98fb8@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 11/15/23 5:47 AM, Mike Christie wrote:
+> On 11/14/23 3:23 PM, Mike Christie wrote:
+>> On 10/15/23 9:03 PM, Wenchao Hao wrote:
+>>> shost_for_each_device() would skip devices which is in progress of
+>>> removing, so scsi_run_queue() for these devices would be skipped in
+>>> scsi_run_host_queues() after blocking hosts' IO.
+>>>
+>>> IO hang would be caused if return true when state is SDEV_CANCEL with
+>>> following order:
+>>>
+>>> T1:					    T2:scsi_error_handler
+>>> __scsi_remove_device()
+>>>   scsi_device_set_state(sdev, SDEV_CANCEL)
+>>>   ...
+>>>   sd_remove()
+>>>   del_gendisk()
+>>>   blk_mq_freeze_queue_wait()
+>>>   					    scsi_eh_flush_done_q()
+>>> 					      scsi_queue_insert(scmd,...)
+>>>
+>>> scsi_queue_insert() would not kick device's queue since commit
+>>> 8b566edbdbfb ("scsi: core: Only kick the requeue list if necessary")
+>>>
+>>> After scsi_unjam_host(), the scsi error handler would call
+>>> scsi_run_host_queues() to trigger run queue for devices, while it
+>>> would not run queue for devices which is in progress of removing
+>>> because shost_for_each_device() would skip them.
+>>>
+>>> So the requests added to these queues would not be handled any more,
+>>> and the removing device process would hang too.
+>>>
+>>> Fix this issue by using shost_for_each_device_include_deleted() in
+>>> scsi_run_host_queues() to trigger a run queue for devices in removing.
+>>>
+>>> Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+>>> ---
+>>>  drivers/scsi/scsi_lib.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>>> index 195ca80667d0..40f407ffd26f 100644
+>>> --- a/drivers/scsi/scsi_lib.c
+>>> +++ b/drivers/scsi/scsi_lib.c
+>>> @@ -466,7 +466,7 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
+>>>  {
+>>>  	struct scsi_device *sdev;
+>>>  
+>>> -	shost_for_each_device(sdev, shost)
+>>> +	shost_for_each_device_include_deleted(sdev, shost)
+>>>  		scsi_run_queue(sdev->request_queue);
+>>
+>> What happens if there were no commands for the device that
+>> was destroyed and we race with this code and device deletion?
+>>
+>> So thread1 has set the device state tp SDEV_DEL and has finished
+>> blk_mq_destroy_queue because there were no commands running.
+>>
+>> The above eh thread, then is calling:
+>>
+>> scsi_run_queue -> blk_mq_kick_requeue_list
+>>
+>> and that queues the requeue work.
+>>
+>> blk_mq_destroy_queue had done blk_mq_cancel_work_sync but
+>> blk_mq_kick_requeue_list just added it back on the kblockd_workqueue.
+>>
+>> When __scsi_iterate_devices does scsi_device_put it would call
+>> scsi_device_dev_release and call blk_put_queue which frees the
+>> request_queue while it's requeue work might still be queued on
+>> kblockd_workqueue.
+>>
 
-Hi Muhammad,
+Hi Mike, thank you for the review.
 
-> -	 * CID we do connection reinstatement.  Currently we dont not
-> +	 * CID we do connection reinstatement.  Currently we don't not
+Sorry I did not take the above flow into consideration and it's a bug
+should be fixed in next version.
 
-"Currently we don't not" does not parse. Fixing misspelled words in
-isolation is not necessarily an improvement. The criteria should be
-whether the entire sentence or comment becomes easier to read.
+> 
+> Oh yeah, for your other lun/target reset patches were you trying to
+> do something where you have a list for each scsi_device or a list of
+> scsi_devices that needed error handler work? If so, maybe break that
+> part out and use it here first.
+> 
 
-> -		 * status, with the sense key set to ILLEGAL REQUEST,and the additonal
-> +		 * status, with the sense key set to ILLEGAL REQUEST,and the additional
+The lun/target reset changes are not general for all drivers in my
+design, so it should not work here.
 
-There's a space missing after "ILLEGAL REQUEST,".
+> You can then just loop over the list of devices that needed work and
+> start those above.
 
-> - * Called thru fc_lport_iterate().
-> + * Called through fc_lport_iterate().
+What about introduce a new flag "recovery" for each scsi_device to mark
+if there is error command happened on it, the new flag is set in
+scsi_eh_scmd_add() and cleared after error handle finished. 
 
-"thru" is perfectly valid and the author's choice.
+Since clear is always after scsi_error_handle() is waked up and no more
+scsi_eh_scmd_add() would be called after scsi_error_handle() is waked
+up, we do not need lock between set and clear this flag.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+This change can help me to fix the issue you described above too.
+
+Here is a brief changes:
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c67cdcdc3ba8..36af294c2cef 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -310,6 +310,8 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+ 	if (shost->eh_deadline != -1 && !shost->last_reset)
+ 		shost->last_reset = jiffies;
+
++	scmd->device->recovery = 1;
++
+ 	scsi_eh_reset(scmd);
+ 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+@@ -2149,7 +2151,7 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
+ 	 * now that error recovery is done, we will need to ensure that these
+ 	 * requests are started.
+ 	 */
+-	scsi_run_host_queues(shost);
++	scsi_run_host_recovery_queues(shost);
+
+ 	/*
+ 	 * if eh is active and host_eh_scheduled is pending we need to re-run
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index cf3864f72093..0bf4423b6b9a 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -470,6 +470,17 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
+ 		scsi_run_queue(sdev->request_queue);
+ }
+
++void scsi_run_host_recovery_queues(struct Scsi_Host *shost)
++{
++	struct scsi_device *sdev;
++
++	shost_for_each_device_include_deleted(sdev, shost)
++		if (sdev->recovery) {
++			scsi_run_queue(sdev->request_queue);
++			sdev->recovery = 0;
++		}
++}
++
+ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
+ {
+ 	if (!blk_rq_is_passthrough(scsi_cmd_to_rq(cmd))) {
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 3f0dfb97db6b..3aba8ddd0101 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -107,6 +107,7 @@ extern void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd);
+ extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
+ extern void scsi_run_host_queues(struct Scsi_Host *shost);
++extern void scsi_run_host_recovery_queues(struct Scsi_Host *shost);
+ extern void scsi_requeue_run_queue(struct work_struct *work);
+ extern void scsi_start_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 10480eb582b2..b730ceab9996 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -239,6 +239,7 @@ struct scsi_device {
+
+ 	unsigned cdl_supported:1;	/* Command duration limits supported */
+ 	unsigned cdl_enable:1;		/* Enable/disable Command duration limits */
++	unsigned recovery;		/* Mark it error command happened */
+
+ 	unsigned int queue_stopped;	/* request queue is quiesced */
+
+
