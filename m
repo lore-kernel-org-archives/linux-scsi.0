@@ -2,84 +2,170 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72DC7C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Nov 2023 22:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0ECAC07548
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Nov 2023 05:27:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231784AbjKNWlO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Nov 2023 17:41:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46472 "EHLO
+        id S234506AbjKOF1N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Nov 2023 00:27:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234154AbjKNWlM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Nov 2023 17:41:12 -0500
-Received: from rcdn-iport-2.cisco.com (rcdn-iport-2.cisco.com [173.37.86.73])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3C90C1;
-        Tue, 14 Nov 2023 14:41:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=877; q=dns/txt; s=iport;
-  t=1700001670; x=1701211270;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=XEQ4NSFM5Uqzyo57IeSl2o8heX6pLC+We2PwToQ+IVw=;
-  b=EtshSuHz/aP2YYjwQ/+YGFnipdBw5IvSx1d5Rj0MEDWi5bfvITZReZka
-   sICx8XX6JvchOAsVsQsXF3xo6Ql7u40gPkmXnGQ4WhSAN+GsPzS80wdXG
-   UceGm0LdPJ22URWaKNFDn/Jj4ajP+ZfmSt5VK014R4VkRkEFl6eJXCIGs
-   w=;
-X-CSE-ConnectionGUID: V26Ykc5QQm64vchQGHderA==
-X-CSE-MsgGUID: s0ZtDmJ/Q7alYmPeIPY7YQ==
-X-IronPort-AV: E=Sophos;i="6.03,303,1694736000"; 
-   d="scan'208";a="139043012"
-Received: from rcdn-core-2.cisco.com ([173.37.93.153])
-  by rcdn-iport-2.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2023 22:41:09 +0000
-Received: from localhost.cisco.com ([10.193.101.253])
-        (authenticated bits=0)
-        by rcdn-core-2.cisco.com (8.15.2/8.15.2) with ESMTPSA id 3AEMf213027712
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Tue, 14 Nov 2023 22:41:08 GMT
-From:   Karan Tilak Kumar <kartilak@cisco.com>
-To:     sebaddel@cisco.com
-Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
-        mkai2@cisco.com, satishkh@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v3 13/13] scsi: fnic: Increment driver version
-Date:   Tue, 14 Nov 2023 14:41:00 -0800
-Message-Id: <20231114224100.634381-1-kartilak@cisco.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S234501AbjKOF1L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2023 00:27:11 -0500
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB6FBDB
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Nov 2023 21:27:06 -0800 (PST)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20231115052703epoutp034692e263e083746c011e5282f0027681~XtKlYguD60972609726epoutp03n
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Nov 2023 05:27:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20231115052703epoutp034692e263e083746c011e5282f0027681~XtKlYguD60972609726epoutp03n
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1700026023;
+        bh=D0EqNZ4QvmTiqp+zm9gUip9+1CE4m/Mr3OtYi4fnK84=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=Ald55MmamXookYk9bNvZJYivhK6D9WzjrqF/Z4MKvUqNi6AE/65g4USPq+VbR7Nnc
+         5Y6aXNAV1Vv0ZMrip9tc2vzuFJ/P61d+xpLiocOVcWiOU+Wp2dRhi0ovFlj8CJxMp9
+         gFDUpyQwU7fIlzvkpdE9BnL+lS3ggXexOngAppnw=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20231115052702epcas2p4bf1ed0b3b92810f0966e742e4553af6f~XtKkn6zhR0725207252epcas2p43;
+        Wed, 15 Nov 2023 05:27:02 +0000 (GMT)
+Received: from epsmgec2p1.samsung.com (unknown [182.195.36.92]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4SVWr61JVLz4x9Q9; Wed, 15 Nov
+        2023 05:27:02 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmgec2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        90.81.08648.5A654556; Wed, 15 Nov 2023 14:27:02 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20231115052701epcas2p4d1106372cfc6e274fbf51ce14d5c4924~XtKjItrl-1897718977epcas2p4Q;
+        Wed, 15 Nov 2023 05:27:01 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20231115052701epsmtrp1474112faf7522eb10d691ca34ae2e501~XtKjH3mQz0354103541epsmtrp1i;
+        Wed, 15 Nov 2023 05:27:01 +0000 (GMT)
+X-AuditID: b6c32a43-4b3ff700000021c8-05-655456a5efc7
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        3F.7E.08817.5A654556; Wed, 15 Nov 2023 14:27:01 +0900 (KST)
+Received: from KORCO118546 (unknown [10.229.38.108]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20231115052701epsmtip18ad6a5c866000d16411b218042404755~XtKi6RgAz1106911069epsmtip1D;
+        Wed, 15 Nov 2023 05:27:01 +0000 (GMT)
+From:   "hoyoung seo" <hy50.seo@samsung.com>
+To:     "'Bart Van Assche'" <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <kwangwon.min@samsung.com>,
+        <kwmad.kim@samsung.com>, <sh425.lee@samsung.com>,
+        <sc.suh@samsung.com>, <quic_nguyenb@quicinc.com>,
+        <cpgs@samsung.com>, <grant.jung@samsung.com>,
+        <junwoo80.lee@samsung.com>
+In-Reply-To: <dca06fd3-d4ad-4e41-a0a3-61d52c85ef9c@acm.org>
+Subject: RE: [PATCH v2] scsi: ufs: core: fix racing issue during
+ ufshcd_mcq_abort
+Date:   Wed, 15 Nov 2023 14:27:00 +0900
+Message-ID: <000001da1784$5c2520f0$146f62d0$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
-X-Outbound-Node: rcdn-core-2.cisco.com
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQLYbO3h/Z18bVSq8KBPFnY/ewa5qgDl2w4PAbQq5PquaVzhQA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLJsWRmVeSWpSXmKPExsWy7bCmqe6ysJBUg8mvmC0ezNvGZvHy51U2
+        i4MPO1kspn34yWzx8pCmxa+/69ktFt3YxmSx628zk8XWGztZLG5uOcpicXnXHDaL7us72CyW
+        H//HZDH1xXF2i667Nxgtlv57y+Ig4HH5irfHhEUHGD2+r+9g8/j49BaLx8Q9dR59W1Yxenze
+        JOfRfqCbKYAjKtsmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA
+        1y0zB+h+JYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6BeYFecWJucWleul5eaomV
+        oYGBkSlQYUJ2xruvsxgL7vNUHOx6zNbAeIiri5GDQ0LARGL3FJ8uRi4OIYEdjBK39jSxQzif
+        GCV6Fv5lhHC+MUq8u7yPpYuRE6zj0+QTbCC2kMBeRonZlzwgil4ySnTP3MMOkmAT0JLof7uF
+        DSQhIrCLWWLjveVg3ZwC1hL3u2aCdQsLBEvc2XKGDeQOFgFViYbz0SBhXgFLiZuXzzBB2IIS
+        J2c+AWtlFpCX2P52DjPEEQoSP58uYwWxRQScJBZ3nGKHqBGRmN3ZxgyyV0LgAYfE9Z0P2CAa
+        XCTO33zNBGELS7w6voUdwpaSeNnfBmVnSzTuWQtlV0jM3TyZEcI2lpj1rJ0R5E5mAU2J9bv0
+        IUGnLHHkFtRpfBIdh/9CdfJKNGz8zQ5RwivR0SYEEVaSODP3NlRYQuLg7JwJjEqzkPw4C8mP
+        s5D8Mgth7QJGllWMYqkFxbnpqclGBYbwmE7Oz93ECE7XWs47GK/M/6d3iJGJg/EQowQHs5II
+        r7lcSKoQb0piZVVqUX58UWlOavEhRlNgoE9klhJNzgdmjLySeEMTSwMTMzNDcyNTA3Mlcd57
+        rXNThATSE0tSs1NTC1KLYPqYODilGpi2dc4yZHZn6e+VWKB/aIay7r3mBctk80MXzgud2X5k
+        CffHcp1wzsY/92zdV+UyNM6cuvnZjE8nZk00SJGbz7XoYNBEntiZ4o7FtTs09vtOffdeUKRI
+        MSNX+3/UU7F+75Uqi6Z/buX4MFni6M+YiWYBwveWXzdeyL93iae0uEYB97dOh9LNOW3TeV6L
+        r5gab93maLMt1qpbPb77xPFjj5XvfKg6ecPS8NFdtzlR2zyPO7P+1ogW3a55cmtHb8baEzuX
+        RaQdXfbLdEIee+sHoUTDf5zn5K6eEvVvUU0Wam7jnOU1115Tg+EKT09YWsmuLZbJ2k/fxEeX
+        2HVYOU8332mV2swx8ZpI3dGby86vW6PEUpyRaKjFXFScCACS6dTlYAQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrAIsWRmVeSWpSXmKPExsWy7bCSnO7SsJBUg/23BCwezNvGZvHy51U2
+        i4MPO1kspn34yWzx8pCmxa+/69ktFt3YxmSx628zk8XWGztZLG5uOcpicXnXHDaL7us72CyW
+        H//HZDH1xXF2i667Nxgtlv57y+Ig4HH5irfHhEUHGD2+r+9g8/j49BaLx8Q9dR59W1Yxenze
+        JOfRfqCbKYAjissmJTUnsyy1SN8ugSvj3ddZjAX3eSoOdj1ma2A8xNXFyMkhIWAi8WnyCTYQ
+        W0hgN6NE0wUniLiExP/FTUwQtrDE/ZYjrF2MXEA1zxkl5i7YAdbAJqAl0f92CxtIQkTgHLPE
+        yY0vWCCqdjFKfGv7CVbFKWAtcb9rJpgtLBAosebMdMYuRg4OFgFViYbz0SBhXgFLiZuXzzBB
+        2IISJ2c+YQGxmQW0JZ7efAply0tsfzuHGeIiBYmfT5exgtgiAk4SiztOsUPUiEjM7mxjnsAo
+        NAvJqFlIRs1CMmoWkpYFjCyrGCVTC4pz03OLDQuM8lLL9YoTc4tL89L1kvNzNzGCI1VLawfj
+        nlUf9A4xMnEwHmKU4GBWEuE1lwtJFeJNSaysSi3Kjy8qzUktPsQozcGiJM777XVvipBAemJJ
+        anZqakFqEUyWiYNTqoEprMnw+E3bWqNLy/muKnKWleh6PrukWuMypyxMIoOXaYprxiyeaBW5
+        HX63Dl0+O501SOKPptiGE23maVcVT05dteDP/AT1j8K6C/0Xx954kWwX1n3CZ43ZNzWV4oN/
+        MmyiT39VuC++h5/dZXduodpT12/TVzxfOPdFqo/o1jdrfx36/7J6vbTBv2n2LhK6HLOvRpZq
+        Nv969+7IbtED06f0BkjbrjJ8+fSW70rZJZ3Wr1qdjv+epvdaevNkmZ22j0RNHty8JWlsvXPR
+        9s6tsW8juVwvngxM2r1x5hPr4+cThC7wbH4smrdedULZ9llpK9OVls5pCDxYYCLvWvXnjJzE
+        D9OLF1Z8+BjMJdf/WN/jhhJLcUaioRZzUXEiAPxfK/xDAwAA
+X-CMS-MailID: 20231115052701epcas2p4d1106372cfc6e274fbf51ce14d5c4924
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20231114043431epcas2p4a8d452e18fff192c03fb6066e81514ea
+References: <CGME20231114043431epcas2p4a8d452e18fff192c03fb6066e81514ea@epcas2p4.samsung.com>
+        <20231114043704.52525-1-hy50.seo@samsung.com>
+        <dca06fd3-d4ad-4e41-a0a3-61d52c85ef9c@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Changes between v2 and v3:
-    Incorporate the following review comments from Hannes:
-	Create a separate patch to increment driver version.
-	Increment driver version number to 1.7.0.0.
+> -----Original Message-----
+> From: Bart Van Assche <bvanassche@acm.org>
+> Sent: Wednesday, November 15, 2023 2:55 AM
+> To: SEO HOYOUNG <hy50.seo@samsung.com>; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; alim.akhtar@samsung.com; avri.altman@wdc.com;
+> jejb@linux.ibm.com; martin.petersen@oracle.com; beanhuo@micron.com;
+> kwangwon.min@samsung.com; kwmad.kim@samsung.com; sh425.lee@samsung.com;
+> sc.suh@samsung.com; quic_nguyenb@quicinc.com; cpgs@samsung.com;
+> grant.jung@samsung.com; junwoo80.lee@samsung.com
+> Subject: Re: [PATCH v2] scsi: ufs: core: fix racing issue during
+> ufshcd_mcq_abort
+> 
+> On 11/13/23 20:37, SEO HOYOUNG wrote:
+> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> > index 9a730a794b66..55f4c0eeda7b 100644
+> > --- a/drivers/ufs/core/ufshcd.c
+> > +++ b/drivers/ufs/core/ufshcd.c
+> > @@ -7574,6 +7574,10 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba,
+> int tag)
+> >   		goto out;
+> >   	}
+> >
+> > +	if (!ufshcd_cmd_inflight(lrbp->cmd) ||
+> > +	    test_bit(SCMD_STATE_COMPLETE, &lrbp->cmd->state))
+> > +		goto out;
+> > +
+> >   	err = ufshcd_clear_cmd(hba, tag);
+> >   	if (err)
+> >   		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d,
+> err %d\n",
+> 
+> The UFS driver must not set SCMD_STATE_COMPLETE itself. Only the SCSI core
+> is allowed to set that bit.
+> 
+> Thanks,
+> 
+> Bart.
 
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
----
- drivers/scsi/fnic/fnic.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi,
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index c4edbd7dfc25..7241aebf79d6 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -27,7 +27,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.56"
-+#define DRV_VERSION		"1.7.0.0"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
--- 
-2.31.1
+The test_bit() function just check SCMD_STATE_COMPLETE bit state.
+Do not set SCMD_STATE_COMPLETE field. 
+This function is also used in ufshcd_mcq_compl_pending_transfer() 
+to check the status of cmd.
+
+Thanks.
+BRs SEO.
 
