@@ -2,88 +2,79 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AEE6C2BB3F
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Nov 2023 18:19:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA79C072A2
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Nov 2023 18:22:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229768AbjKOSTw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Nov 2023 13:19:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37500 "EHLO
+        id S231374AbjKOSWT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Nov 2023 13:22:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229635AbjKOSTw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2023 13:19:52 -0500
+        with ESMTP id S229689AbjKOSWS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Nov 2023 13:22:18 -0500
 Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EDA392;
-        Wed, 15 Nov 2023 10:19:49 -0800 (PST)
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1cc3bb32b5dso63044415ad.3;
-        Wed, 15 Nov 2023 10:19:49 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C63C9C1;
+        Wed, 15 Nov 2023 10:22:15 -0800 (PST)
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1cc3542e328so54182905ad.1;
+        Wed, 15 Nov 2023 10:22:15 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700072389; x=1700677189;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20230601; t=1700072535; x=1700677335;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xu9O9Nln1wU6y4juhkOBPBC3HRW1CFO00oTOdXu/JNQ=;
-        b=LmsiijdW8TGu0r+Ie6+VsGnmbHOWYEsp4gW3rRFlftRY1QuuUfZMCRCUC/QxdmiAvw
-         I+Y4OkIqbRQEwexT0/Q3UmhyJH5hR/Dyl2xtmjBuNvyE1BKHqQICPkM7sATc+iFj2if5
-         4dvaa7PyeTTpj/QFny0rJ1c62bqsD49UdhBNMwCphkQDdQQT7plBSceJ1jQgK7v3EyWU
-         1G1qRgxocquq/nh2TFlGP+EvvzFEYlnN1D7z30XN/S5O3d9vrZKmSiHQ2r6mHQEJ8M5Q
-         KFtD4OpBDroJt0dfixpN5DRfhNft04i9pl19pvDqp8NYmooBuFzjhuskfNTtGU1iT3BD
-         NiYA==
-X-Gm-Message-State: AOJu0YwUs2TFF8Z9fueb1rl7Q/jSz5McBmuCrr0F+dFOLf+CaFp3O/OX
-        ZAZDLS4Im7rGOagnzThIAls=
-X-Google-Smtp-Source: AGHT+IGs8YzooTgz6hrSHIo9UVMZhw1YJkPM3x3d7opMUtrNVmXLibid4Z/xmGE5xsQc/J7oKJJ0/Q==
-X-Received: by 2002:a17:902:f707:b0:1cc:6e8f:c14e with SMTP id h7-20020a170902f70700b001cc6e8fc14emr7892380plo.15.1700072388660;
-        Wed, 15 Nov 2023 10:19:48 -0800 (PST)
+        bh=asa7PA3ApN9uKyqznyP4okj+yLhWrazAhQHPOuL+PeQ=;
+        b=NyRVSUnMk4p6uWw3PszDvJNH0+pEBf3eRRDQVgNYCGiDm4EzsetnuyYk3L4iisWhvu
+         UxXQHm4MQ2aOOzuScG7gY9ooGjbx1ft5wdn8i/ug/4wawhQKynE4RR8qcWURZ0XrcJVR
+         tFZ+is6iJFgZi6keveOIkHsvCPO7wYoeB/e2BHSoWqqR+u8uYi9g/h0ygA2wexchrV2l
+         3Fpt+JOxomHb1tA6qY1QPCJaxRVosQfXQHG/l1bWskZkMXK/Ns2K55W589SbhsKN3RBn
+         kt9mCGd5fqkRSSUqzStCQWa51c4gJOjQTXpQ9TLNp7b00sWnA4ToQyA6m64LATIpgyVO
+         wZCQ==
+X-Gm-Message-State: AOJu0YypSPWuNSKnWAkv7YyAKDbtBxumlsX11AwTqTaBr6y9GC0f8Of5
+        K7fa/C9Xxe3S1Ifyo6j6+ML+SFKY1V0=
+X-Google-Smtp-Source: AGHT+IHRWHNyhIkrOem91wb5cbPbYteKdllocRyCHrmLcTH8T/L/Io2tEWq7DC7GMCPrGbGHtHssgw==
+X-Received: by 2002:a17:902:e892:b0:1c6:21b4:30bb with SMTP id w18-20020a170902e89200b001c621b430bbmr7417690plg.15.1700072535188;
+        Wed, 15 Nov 2023 10:22:15 -0800 (PST)
 Received: from ?IPV6:2620:0:1000:8411:56f1:2160:3a2a:2645? ([2620:0:1000:8411:56f1:2160:3a2a:2645])
-        by smtp.gmail.com with ESMTPSA id ju10-20020a170903428a00b001c59f23a3fesm7509476plb.251.2023.11.15.10.19.46
+        by smtp.gmail.com with ESMTPSA id a22-20020a170902b59600b001c9ab91d3d7sm7613787pls.37.2023.11.15.10.22.13
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Nov 2023 10:19:47 -0800 (PST)
-Message-ID: <d706f265-f991-45c0-a551-34ecdee55f7c@acm.org>
-Date:   Wed, 15 Nov 2023 10:19:45 -0800
+        Wed, 15 Nov 2023 10:22:14 -0800 (PST)
+Message-ID: <e9745815-afc0-46c6-828b-c969a2d352eb@acm.org>
+Date:   Wed, 15 Nov 2023 10:22:12 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] scsi: core: Support disabling fair tag sharing
+Subject: Re: [PATCH v2] scsi: ufs: core: fix racing issue during
+ ufshcd_mcq_abort
 Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Ed Tsai <ed.tsai@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20231114180426.1184601-1-bvanassche@acm.org>
- <20231114180426.1184601-3-bvanassche@acm.org>
- <80dee412-2fda-6a23-0b62-08f87bd7e607@huaweicloud.com>
+To:     hoyoung seo <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        kwangwon.min@samsung.com, kwmad.kim@samsung.com,
+        sh425.lee@samsung.com, sc.suh@samsung.com,
+        quic_nguyenb@quicinc.com, cpgs@samsung.com, grant.jung@samsung.com,
+        junwoo80.lee@samsung.com
+References: <CGME20231114043431epcas2p4a8d452e18fff192c03fb6066e81514ea@epcas2p4.samsung.com>
+ <20231114043704.52525-1-hy50.seo@samsung.com>
+ <dca06fd3-d4ad-4e41-a0a3-61d52c85ef9c@acm.org>
+ <000001da1784$5c2520f0$146f62d0$@samsung.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <80dee412-2fda-6a23-0b62-08f87bd7e607@huaweicloud.com>
+In-Reply-To: <000001da1784$5c2520f0$146f62d0$@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/14/23 23:24, Yu Kuai wrote:
-> 在 2023/11/15 2:04, Bart Van Assche 写道:
->> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
->> index d7f51b84f3c7..872f87001374 100644
->> --- a/drivers/scsi/hosts.c
->> +++ b/drivers/scsi/hosts.c
->> @@ -442,6 +442,7 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
->>       shost->no_write_same = sht->no_write_same;
->>       shost->host_tagset = sht->host_tagset;
->>       shost->queuecommand_may_block = sht->queuecommand_may_block;
->> +    shost->disable_fair_tag_sharing = sht->disable_fair_tag_sharing;
-> 
-> Can we also consider to disable fair tag sharing by default for the
-> driver that total driver tags is less than a threshold?
-I don't want to do this because such a change could disable fair tag
-sharing for drivers that support both SSDs and hard disks being associated
-with a single SCSI host.
+On 11/14/23 21:27, hoyoung seo wrote:
+> The test_bit() function just check SCMD_STATE_COMPLETE bit state.
+> Do not set SCMD_STATE_COMPLETE field.
+> This function is also used in ufshcd_mcq_compl_pending_transfer()
+> to check the status of cmd.
+
+Right, I misread your patch. Can you please take a look at the following
+patch and verify whether it perhaps addresses the same issue that you want
+to address: https://lore.kernel.org/linux-scsi/20231115131024.15829-1-peter.wang@mediatek.com/
 
 Thanks,
 
 Bart.
+
