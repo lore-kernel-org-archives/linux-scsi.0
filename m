@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E431EC5AE5E
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Nov 2023 20:17:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7CDBC5AD4C
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Nov 2023 20:17:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346273AbjKQUR6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Nov 2023 15:17:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54292 "EHLO
+        id S1346279AbjKQUSA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Nov 2023 15:18:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232705AbjKQURv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Nov 2023 15:17:51 -0500
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13C1410C6;
-        Fri, 17 Nov 2023 12:17:48 -0800 (PST)
-Received: by mail-ej1-x635.google.com with SMTP id a640c23a62f3a-9fa2714e828so10482666b.1;
-        Fri, 17 Nov 2023 12:17:48 -0800 (PST)
+        with ESMTP id S235737AbjKQURx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Nov 2023 15:17:53 -0500
+Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADD1B171A;
+        Fri, 17 Nov 2023 12:17:50 -0800 (PST)
+Received: by mail-ed1-x534.google.com with SMTP id 4fb4d7f45d1cf-53f9af41444so3447357a12.1;
+        Fri, 17 Nov 2023 12:17:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1700252266; x=1700857066; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1700252269; x=1700857069; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=NZYYp8sqWaLNty8urA3uerAre51wEq7E/gQTN6mMDro=;
-        b=ToEhWS/fste4xrE43OQbwuByxURrLzD/gMd5CiHGP/OUR7GUlpxSng4cB05GBPjcJF
-         2TV1gpBHS8kKxAIsadvdCOo3gSKcKs7TkPcFWnOg9eLvgFNv12IVkYgfOCtRLO6iV/Pb
-         CIz/BBxk0dcZNo3Wdyr2C0JGUipJsjz7SjHEN5vPOR3f3x/XCb/qW0UR/ts4v0pDzuDN
-         VjLhiViQIjJonmTQ11i/rj2C/JSHtzpB3xPycVRJtPSt5iKvvf1TyvZAzzdvd+CDwwpo
-         GxTgW4dcGCp8l4s4dHPCxSVKfnDLXOhvR2MnHQGriFAsxQS2FNIto3UN1pU9gQWTQw+h
-         4HOw==
+        bh=vC+himnz38l/KoIV2K7+BOXv6I9H6nNXMdtkGXbKeCU=;
+        b=UcneZDwRmtlmn5yaZCjLOotQ7CXLlHCK5Cfw1RM7PXElF3pN0V6Ff83mx5oSCgRTCG
+         nqIcm1LJql6ncOvYteoxVLnqvBeCi9zJOqd+aYhGBrNpsc/Yt3XZn6x4bvUvwFrYpQAg
+         izrKa7dFPeiCOJUm7JR7XHvPeHyQE1jl7qtaDo6daS3hNKRaTI2gno+zcK5gvEAHC2aS
+         lkHKiMWp1Pecsp5MUesMdbc5hZwHbJxBVt1BX4Ys1m8dbsFCHhrO6CTL3VCZObTcFIZp
+         c4mN9h6RCqC4cuDiItQ1jhEBvhLEzFeWxhXIsYM7ZuaGxBZ0gI8CCBLyx8/fJF0dw1AR
+         z88w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700252266; x=1700857066;
+        d=1e100.net; s=20230601; t=1700252269; x=1700857069;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=NZYYp8sqWaLNty8urA3uerAre51wEq7E/gQTN6mMDro=;
-        b=of6AOmgEdWkuAB/XMZSAQV0gZQAb+2Bz2Dj0tu6ysPMBV2DcsxY2ghMBu4vpcOLV0s
-         DEM/y2URZYRpBK239A8vKLk23YeJCxheGPXlo7rJOps210hSadpUV6cAd0APwIop4zd5
-         Og08veJvyx3MK0M4G0NX5vcEbglS/4l4sWipidwl1h32TPMNvk6LNaAoPvExBmjmqVgU
-         JMyZbAi8urdRGYyVs0WEUchOwsYw49BVAAXopJXIMoXg3Q3rEFKHk6TAtNl6CXXLH9xx
-         17mmeXOSeuZ1jSELH7gv/oQHPFBFUM4lEPPtDZdANIrsbniQ67YT0MmlcCAY9+weu4db
-         vN4w==
-X-Gm-Message-State: AOJu0Yw32Po8YN69IGdJWxbmls1r6SffbITbRHStHhcQXsvFIzlKB2G3
-        XG1mE/2YCuGNzUnvrVMtjWY=
-X-Google-Smtp-Source: AGHT+IGzBxBxaX/rKgTXuDrD70JQ9fLlZQLIzhnmFHwIXcrrsmoRyWzD863wAesmDaitoEZ2vFQ0Og==
-X-Received: by 2002:a17:906:10cc:b0:9c3:e66e:2006 with SMTP id v12-20020a17090610cc00b009c3e66e2006mr108527ejv.9.1700252266540;
-        Fri, 17 Nov 2023 12:17:46 -0800 (PST)
+        bh=vC+himnz38l/KoIV2K7+BOXv6I9H6nNXMdtkGXbKeCU=;
+        b=smGfsIDe4HIn6KPImr8Lg9GeO3UAiF20G8OpnNvBomBMnNcy8aot02Uy63ol6ut8Al
+         ypIdH5LEFDG9BMxWfoCLhy5w9MWaYgK/Y13XPmD38Q17jAbOgHbkYjjvRmFp6B+1C3b2
+         ll5SrDW5psq56wuTiWlMrBZClXaiuvibxhSfcuIAUUpyqLKrm2pTkovD05f+brkgGB3s
+         ajypX0oTQWqqfBaZCCYwrjOJNdxn45ywHaiCXMeDg55GodZ9/BFOlN6VZxgho+4j10Yp
+         PLDaMr9d2AcsfnnSSZYyQ5G/mct6LbG0jah6RsTDY0uoeuMqlhzy8PfapA7If/oAe2DM
+         2Rug==
+X-Gm-Message-State: AOJu0Yw+Yyoi6nuxnZTFrNXT3sFAFcOCxN3BfDkgmC0uvWjDa2e212dy
+        PMIwLx6jjRAqu/+cT4dUCGg=
+X-Google-Smtp-Source: AGHT+IGCNBi4gWuvRE++iwdLWuYcOU7PqdFx0Dwq+NJsFkMmZzQ+CsPzHq5WwKF5sfxu4plbJLWyHA==
+X-Received: by 2002:a17:907:9056:b0:9f8:f6bd:2952 with SMTP id az22-20020a170907905600b009f8f6bd2952mr134480ejc.32.1700252268786;
+        Fri, 17 Nov 2023 12:17:48 -0800 (PST)
 Received: from david-ryuzu.fritz.box ([188.195.169.6])
-        by smtp.googlemail.com with ESMTPSA id e7-20020a1709062c0700b0099d804da2e9sm1130630ejh.225.2023.11.17.12.17.45
+        by smtp.googlemail.com with ESMTPSA id e7-20020a1709062c0700b0099d804da2e9sm1130630ejh.225.2023.11.17.12.17.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Nov 2023 12:17:46 -0800 (PST)
+        Fri, 17 Nov 2023 12:17:48 -0800 (PST)
 From:   David Wronek <davidwronek@gmail.com>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
@@ -70,9 +70,9 @@ Cc:     cros-qcom-dts-watchers@chromium.org, linux-arm-msm@vger.kernel.org,
         linux-crypto@vger.kernel.org, linux-phy@lists.infradead.org,
         linux-scsi@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
         phone-devel@vger.kernel.org, David Wronek <davidwronek@gmail.com>
-Subject: [PATCH v2 6/8] arm64: dts: qcom: sc7180: Add UFS nodes
-Date:   Fri, 17 Nov 2023 21:08:38 +0100
-Message-ID: <20231117201720.298422-7-davidwronek@gmail.com>
+Subject: [PATCH v2 8/8] arm64: dts: qcom: Add support for Xiaomi Redmi Note 9S
+Date:   Fri, 17 Nov 2023 21:08:40 +0100
+Message-ID: <20231117201720.298422-9-davidwronek@gmail.com>
 X-Mailer: git-send-email 2.42.1
 In-Reply-To: <20231117201720.298422-1-davidwronek@gmail.com>
 References: <20231117201720.298422-1-davidwronek@gmail.com>
@@ -82,93 +82,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add the UFS, QMP PHY and ICE nodes for the Qualcomm SC7180 SoC.
+From: Joe Mason <buddyjojo06@outlook.com>
 
+Add a device tree for the Xiaomi Redmi Note 9S (curtana) phone, based on
+sm7125-xiaomi-common.dtsi.
+
+Signed-off-by: Joe Mason <buddyjojo06@outlook.com>
 Signed-off-by: David Wronek <davidwronek@gmail.com>
 ---
- arch/arm64/boot/dts/qcom/sc7180.dtsi | 69 ++++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+ arch/arm64/boot/dts/qcom/Makefile                |  1 +
+ .../boot/dts/qcom/sm7125-xiaomi-curtana.dts      | 16 ++++++++++++++++
+ 2 files changed, 17 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/qcom/sm7125-xiaomi-curtana.dts
 
-diff --git a/arch/arm64/boot/dts/qcom/sc7180.dtsi b/arch/arm64/boot/dts/qcom/sc7180.dtsi
-index 11f353d416b4..daa9c63b85bd 100644
---- a/arch/arm64/boot/dts/qcom/sc7180.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc7180.dtsi
-@@ -1532,6 +1532,75 @@ mmss_noc: interconnect@1740000 {
- 			qcom,bcm-voters = <&apps_bcm_voter>;
- 		};
- 
-+		ufs_mem_hc: ufshc@1d84000 {
-+			compatible = "qcom,sc7180-ufshc", "qcom,ufshc",
-+				     "jedec,ufs-2.0";
-+			reg = <0 0x01d84000 0 0x3000>;
-+			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-+			phys = <&ufs_mem_phy>;
-+			phy-names = "ufsphy";
-+			lanes-per-direction = <1>;
-+			#reset-cells = <1>;
-+			resets = <&gcc GCC_UFS_PHY_BCR>;
-+			reset-names = "rst";
+diff --git a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
+index d6cb840b7050..57974fb0c580 100644
+--- a/arch/arm64/boot/dts/qcom/Makefile
++++ b/arch/arm64/boot/dts/qcom/Makefile
+@@ -207,6 +207,7 @@ dtb-$(CONFIG_ARCH_QCOM)	+= sm6125-sony-xperia-seine-pdx201.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm6125-xiaomi-laurel-sprout.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm6350-sony-xperia-lena-pdx213.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm6375-sony-xperia-murray-pdx225.dtb
++dtb-$(CONFIG_ARCH_QCOM)	+= sm7125-xiaomi-curtana.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm7125-xiaomi-joyeuse.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm7225-fairphone-fp4.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm8150-hdk.dtb
+diff --git a/arch/arm64/boot/dts/qcom/sm7125-xiaomi-curtana.dts b/arch/arm64/boot/dts/qcom/sm7125-xiaomi-curtana.dts
+new file mode 100644
+index 000000000000..12f517a8492c
+--- /dev/null
++++ b/arch/arm64/boot/dts/qcom/sm7125-xiaomi-curtana.dts
+@@ -0,0 +1,16 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2023, Joe Mason <buddyjojo06@outlook.com>
++ */
 +
-+			power-domains = <&gcc UFS_PHY_GDSC>;
++/dts-v1/;
 +
-+			iommus = <&apps_smmu 0xa0 0x0>;
++#include "sm7125-xiaomi-common.dtsi"
 +
-+			clock-names = "core_clk",
-+				      "bus_aggr_clk",
-+				      "iface_clk",
-+				      "core_clk_unipro",
-+				      "ref_clk",
-+				      "tx_lane0_sync_clk",
-+				      "rx_lane0_sync_clk";
-+			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-+				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-+				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-+				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-+				 <&rpmhcc RPMH_CXO_CLK>,
-+				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>;
-+			freq-table-hz = <50000000 200000000>,
-+					<0 0>,
-+					<0 0>,
-+					<37500000 150000000>,
-+					<0 0>,
-+					<0 0>,
-+					<0 0>;
++/ {
++	model = "Xiaomi Redmi Note 9S";
++	compatible = "xiaomi,curtana", "qcom,sm7125";
 +
-+			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-+					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
-+			interconnect-names = "ufs-ddr", "cpu-ufs";
-+
-+			qcom,ice = <&ice>;
-+
-+			status = "disabled";
-+		};
-+
-+		ufs_mem_phy: phy@1d87000 {
-+			compatible = "qcom,sc7180-qmp-ufs-phy";
-+			reg = <0 0x01d87000 0 0x1000>;
-+			clocks = <&gcc GCC_UFS_MEM_CLKREF_CLK>,
-+				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>;
-+			clock-names = "ref", "ref_aux";
-+			power-domains = <&gcc UFS_PHY_GDSC>;
-+			resets = <&ufs_mem_hc 0>;
-+			reset-names = "ufsphy";
-+			#phy-cells = <0>;
-+			status = "disabled";
-+		};
-+
-+		ice: crypto@1d90000 {
-+			compatible = "qcom,sc7180-inline-crypto-engine",
-+				     "qcom,inline-crypto-engine";
-+			reg = <0x0 0x01d90000 0x0 0x8000>;
-+			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+		};
-+
- 		ipa: ipa@1e40000 {
- 			compatible = "qcom,sc7180-ipa";
- 
++	/* required for bootloader to select correct board */
++	qcom,board-id = <0x20022 1>;
++};
 -- 
 2.42.1
 
