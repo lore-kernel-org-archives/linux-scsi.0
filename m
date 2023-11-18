@@ -2,122 +2,58 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3C91C5B562
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Nov 2023 16:23:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ACD1C5ACB3
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Nov 2023 16:31:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230157AbjKRQXj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Nov 2023 11:23:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35854 "EHLO
+        id S229650AbjKRQbD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Nov 2023 11:31:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229662AbjKRQXg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Nov 2023 11:23:36 -0500
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1F46C5;
-        Sat, 18 Nov 2023 08:23:32 -0800 (PST)
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1cf52e5e07eso2356725ad.0;
-        Sat, 18 Nov 2023 08:23:32 -0800 (PST)
+        with ESMTP id S229463AbjKRQbD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Nov 2023 11:31:03 -0500
+Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDFBEC5;
+        Sat, 18 Nov 2023 08:30:59 -0800 (PST)
+Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-6d67d32adc2so1775138a34.2;
+        Sat, 18 Nov 2023 08:30:59 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700324612; x=1700929412;
+        d=1e100.net; s=20230601; t=1700325059; x=1700929859;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2erzZFOyxOrSdjM/KpGdx3oacnKwVcss5FA960Pxu5w=;
-        b=fYqqCdMKOD5hcFS+Pcb3HrknnLjiaxbOO5e4YVeP4FvvFzmD68K0T/fVY5rqvkB/z1
-         8K0Ez2Sap8pkqkVUaJhQkP4xz1r4DGnwtXtmM5hVyUI02rapghbUrXG3HdWrVXk3VQNg
-         vN9dcZycZJACeTuGiw9LY/RN74GwRadhRZGRX+feZunbiVY06owKpBy0NDpqh1cvH3sX
-         +dybOGVGL++XVvQ4LS3GPJMBHWbN/Bqi0GjqSZ22idjdggvGVqIsFQPt5k93I2HbTqJR
-         u7lLYaTbIohcO9sSRcALX6J7CTIYxnWZ/QI5zVmJU99Kji/Q4/EHzh3yijGQVY9oiQev
-         WYPQ==
-X-Gm-Message-State: AOJu0YxqrpdyoiEsZK64HSkNuYVjWMly5Z6GlC6YjejWvfM9OnqKsy+l
-        Ca/aK/JyHgxk/FKsDuHdxBY=
-X-Google-Smtp-Source: AGHT+IFxNCOe1hV/UN7ql6AF5ylF4cLl3KjxD1pwBtnSiRvXE7Ae8L1R6+CdLXdA7EoHYLiLeUL3Gw==
-X-Received: by 2002:a17:902:6844:b0:1cf:5197:25ac with SMTP id f4-20020a170902684400b001cf519725acmr2006009pln.12.1700324611982;
-        Sat, 18 Nov 2023 08:23:31 -0800 (PST)
+        bh=3WKmew4n4drM5xE4ws+Oy36GEAlyWdGud1pb+cjqvMM=;
+        b=DHLvStcWwtFEc0gzM44nQoja06rN8zcZ6uHoV2mn+Ug60dZ6D2Uqsd0qgJIHnNMIdH
+         F+zb0yPzbSIz8QLQyc/vD660PfZ8Oxql0S6jqnuL4mjfTI7tKSVs6aj+/Dm8MnJDoipd
+         6sJxJQGYxl+ZGMqWqyWQzedGqBSlHooWAfsD6nQkybrdimgY4Z26FR5RXeniAySDv1P7
+         E/OW9Uy9+aAXo8xou5BEK4pVUgmC2IxUCFA/0uOwpPNsXSqPCgi8/vVksxI61ke4LZMs
+         FTQz7pV/I5Xca4qZC7E2eIsR80BNtL+OznTPOMFjOe9X16ePztuZ9ZReczSLpqpBxD/e
+         X3gw==
+X-Gm-Message-State: AOJu0YwnErcsmwDcm1qjMZnL4orS4UpLIudB8UhQN077DBvTd2Bua+GC
+        4OMmWUnubEgfgacri2VdqXs=
+X-Google-Smtp-Source: AGHT+IH5VUZsYo3rViv237HGZ/bVSXqAI8aLO5LUHz7Qi+fbje5OGNg6aphDq2VuZfrT9dqiWunCtQ==
+X-Received: by 2002:a05:6830:2099:b0:6b9:a6ef:2709 with SMTP id y25-20020a056830209900b006b9a6ef2709mr2866226otq.8.1700325059037;
+        Sat, 18 Nov 2023 08:30:59 -0800 (PST)
 Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
-        by smtp.gmail.com with ESMTPSA id u18-20020a170902e81200b001ce64bdfa19sm2051042plg.45.2023.11.18.08.23.22
+        by smtp.gmail.com with ESMTPSA id j24-20020a63e758000000b005742092c211sm3121805pgk.64.2023.11.18.08.30.56
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 18 Nov 2023 08:23:31 -0800 (PST)
-Message-ID: <91a32cd2-903a-43df-8067-510c6c431ec7@acm.org>
-Date:   Sat, 18 Nov 2023 08:23:20 -0800
+        Sat, 18 Nov 2023 08:30:58 -0800 (PST)
+Message-ID: <edfb3eb5-e738-47ed-92c9-2b08511d68d5@acm.org>
+Date:   Sat, 18 Nov 2023 08:30:56 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/34] lib/find: add atomic find_bit() primitives
+Subject: Re: [PATCH 15/34] scsi: use atomic find_bit() API where appropriate
 Content-Language: en-US
 To:     Yury Norov <yury.norov@gmail.com>, linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Akinobu Mita <akinobu.mita@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Borislav Petkov <bp@alien8.de>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        David Disseldorp <ddiss@suse.de>,
-        Edward Cree <ecree.xilinx@gmail.com>,
-        Eric Dumazet <edumazet@google.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Hans Verkuil <hverkuil@xs4all.nl>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Kalle Valo <kvalo@kernel.org>,
-        Karsten Graul <kgraul@linux.ibm.com>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Kees Cook <keescook@chromium.org>,
-        Leon Romanovsky <leon@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Martin Habets <habetsm.xilinx@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michal Simek <monstr@monstr.eu>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Oliver Neukum <oneukum@suse.com>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Rich Felker <dalias@libc.org>, Rob Herring <robh@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
         Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Sean Christopherson <seanjc@google.com>,
-        Shuai Xue <xueshuai@linux.alibaba.com>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Valentin Schneider <vschneid@redhat.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        Wenjia Zhang <wenjia@linux.ibm.com>,
-        Will Deacon <will@kernel.org>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         GR-QLogic-Storage-Upstream@marvell.com,
-        alsa-devel@alsa-project.org, ath10k@lists.infradead.org,
-        dmaengine@vger.kernel.org, iommu@lists.linux.dev,
-        kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-media@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-net-drivers@amd.com,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-serial@vger.kernel.org, linux-sh@vger.kernel.org,
-        linux-sound@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        mpi3mr-linuxdrv.pdl@broadcom.com, netdev@vger.kernel.org,
-        sparclinux@vger.kernel.org, x86@kernel.org
+        mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
 Cc:     Jan Kara <jack@suse.cz>,
         Mirsad Todorovac <mirsad.todorovac@alu.unizg.hr>,
         Matthew Wilcox <willy@infradead.org>,
@@ -126,9 +62,9 @@ Cc:     Jan Kara <jack@suse.cz>,
         Maxim Kuvyrkov <maxim.kuvyrkov@linaro.org>,
         Alexey Klimov <klimov.linux@gmail.com>
 References: <20231118155105.25678-1-yury.norov@gmail.com>
- <20231118155105.25678-2-yury.norov@gmail.com>
+ <20231118155105.25678-16-yury.norov@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231118155105.25678-2-yury.norov@gmail.com>
+In-Reply-To: <20231118155105.25678-16-yury.norov@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -136,10 +72,31 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/18/23 07:50, Yury Norov wrote:
-> Add helpers around test_and_{set,clear}_bit() that allow to search for
-> clear or set bits and flip them atomically.
+>   drivers/scsi/mpi3mr/mpi3mr_os.c | 21 ++++++---------------
+>   drivers/scsi/qedi/qedi_main.c   |  9 +--------
+>   drivers/scsi/scsi_lib.c         |  5 ++---
+>   3 files changed, 9 insertions(+), 26 deletions(-)
 
-Has it been considered to add kunit tests for the new functions?
+One patch for each of the above source files please. mpi3mr and qedi are
+both SCSI drivers. scsi_lib.c is a source file from the SCSI core.
+
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index cf3864f72093..4460a37f4864 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2499,9 +2499,8 @@ void scsi_evt_thread(struct work_struct *work)
+>   
+>   	sdev = container_of(work, struct scsi_device, event_work);
+>   
+> -	for (evt_type = SDEV_EVT_FIRST; evt_type <= SDEV_EVT_LAST; evt_type++)
+> -		if (test_and_clear_bit(evt_type, sdev->pending_events))
+> -			sdev_evt_send_simple(sdev, evt_type, GFP_KERNEL);
+> +	for_each_test_and_clear_bit(evt_type, sdev->pending_events, SDEV_EVT_LAST)
+> +		sdev_evt_send_simple(sdev, evt_type, GFP_KERNEL);
+
+Hmm ... the original code iterates over the range 1 .. SDEV_EVT_LAST
+while the new code iterates over the range 0 .. SDEV_EVT_LAST - 1. 
+Please fix this.
 
 Thanks,
 
