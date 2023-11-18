@@ -2,213 +2,211 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7DB4C2BB3F
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Nov 2023 12:45:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB2D1C5ACB3
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Nov 2023 14:23:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229526AbjKRMpR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Nov 2023 07:45:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34130 "EHLO
+        id S229662AbjKROXo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Nov 2023 09:23:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbjKRMpQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Nov 2023 07:45:16 -0500
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA773A2
-        for <linux-scsi@vger.kernel.org>; Sat, 18 Nov 2023 04:45:13 -0800 (PST)
-Received: by mail-pg1-x52f.google.com with SMTP id 41be03b00d2f7-5c21e185df5so484010a12.1
-        for <linux-scsi@vger.kernel.org>; Sat, 18 Nov 2023 04:45:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1700311512; x=1700916312; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=LrY/xWbZ4wDVA1RqRlXMTeM7jlISNFM7jazUkWj8LsI=;
-        b=QXlOKMzV/09ZmNdArZiSQ3QU0+aiw8tJS8E4VH9nJq99unbimcai1bHp9VNdd8hI8Q
-         WMptcNrpRFZ9+uSjj9XqhYMej5IYNb3/OXp9X0Bk5npOk2PGzyko5PI7jOtyQQok3G/l
-         sAAmq7D8GY2OvhtchwmOvahO9BDyEbCFDpHOMBJnU3o5hZTpcEwkqRHWNnR2dzyhwnDI
-         EWvJywdKunK5qkDH2HF11iIrxyxAd6Gi8nhdjJkltl6JyWwR5GXC2g1jwaIT5Ma6CLP8
-         B1k0f4kS1GwrAV1ewqJVLLLJnJi37L1He5IkIAogaN5BfsbMS/yzWfI9C/pbcALl7/db
-         Bc0w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700311512; x=1700916312;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=LrY/xWbZ4wDVA1RqRlXMTeM7jlISNFM7jazUkWj8LsI=;
-        b=Aw9GTgkzsEAAvLQ7aY0QRhclkvZVaOvm36disyphqrxCaP7CUeAlYKGkFj4Guzh7NS
-         zz/Dsq45TMi5fuHjVB0mdnfWgmN8HOf771RvfEMWL76mx2CJjjcGroiWTQXue2GO6ZTV
-         qN96tjcOnIdFELoORdaA7CBYRZZCXiXtGjRxVdJj+4ojh13DzIX9jkg31E9txWLaQN1X
-         VnsXred+5did18wNluNmDehcYEYqxriDVflFkNVjsc46W4BmbHYh3dQnOkZLDd0a9txO
-         C6jOy2enfP8J49H2UhiIBXaCBbsWlWeGwJNG8ALnKy9jlk8PLA3ERasMJYSs/NqF/GSC
-         WOJQ==
-X-Gm-Message-State: AOJu0Ywv0Z586J43q4IWOz3iDe7YoQ4ODIAmjVDHTuuR0M2IneIwFiaF
-        ywKAUbPTVXF8mckEuz/KYSQ1105G6DQ=
-X-Google-Smtp-Source: AGHT+IHaJrQkdCGc6Cxp9KDBtTRWtuF9GBzxjvHrpAiCuyFmIGESd3qwgpqgockMeMhNs8BIvqkvZQ==
-X-Received: by 2002:a05:6a20:1584:b0:188:290f:3da6 with SMTP id h4-20020a056a20158400b00188290f3da6mr2499893pzj.41.1700311511869;
-        Sat, 18 Nov 2023 04:45:11 -0800 (PST)
-Received: from localhost.localdomain ([240f:34:212d:1:65f5:5dbb:9d18:499c])
-        by smtp.gmail.com with ESMTPSA id o23-20020a634e57000000b005c215baacc1sm1665511pgl.70.2023.11.18.04.45.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Nov 2023 04:45:10 -0800 (PST)
-From:   Akinobu Mita <akinobu.mita@gmail.com>
+        with ESMTP id S229469AbjKROXn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Nov 2023 09:23:43 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7670D126
+        for <linux-scsi@vger.kernel.org>; Sat, 18 Nov 2023 06:23:39 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 02AB5C433C9
+        for <linux-scsi@vger.kernel.org>; Sat, 18 Nov 2023 14:23:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1700317419;
+        bh=j5MT2VDulfigmPgmxLxRdcczmS12fpbxF9q9596MrgA=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=RmDmzYQ9TS7YdFvLbSDo7qi7ZNtpcUSvOZLHhNCCk7QTvpoO8u5QG+E9ZORH0kSQ5
+         RURbhsuMdnFPMeAgMtPkRbtS2Ci4H2DeBw0g9zd2YOyMgWL6PdvpurPnSVCPOLZXGJ
+         jIh2z+zCszkIIPOuHOzzw5WhAoT0UhwiSwDcaCSstBGGodOrAyDVI16JtZQwIHTEpS
+         1Hup5zNKlKOM83ESoCJMcQcmdDJkbFxx6Egv8aOAihMJeLivSi7WKbEZGKlPmvaaVu
+         Zk7ghtNkElkiV3cDb67IYFIsm3+ornVk05VWgygyrTvsVeyTCJ+8ZXYmrfI8OzZysY
+         UOxaW7ggX+nYA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id E5A34C53BD6; Sat, 18 Nov 2023 14:23:38 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
 To:     linux-scsi@vger.kernel.org
-Cc:     akinobu.mita@gmail.com, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Subject: [PATCH] scsi: ufs: core: make fault-injection dynamically configurable per HBA
-Date:   Sat, 18 Nov 2023 21:44:43 +0900
-Message-Id: <20231118124443.1007116-1-akinobu.mita@gmail.com>
-X-Mailer: git-send-email 2.34.1
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date:   Sat, 18 Nov 2023 14:23:38 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: leyyyyy@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-217599-11613-0MLhFTvPty@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The UFS driver has two driver-specific fault injection mechanisms.
-(trigger_eh and timeout)
-Each fault injection configuration can only be specified by a module
-parameter and cannot be reconfigured without reloading the driver.
-Also, each configuration is common to all HBAs.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-This change adds the following subdirectories for each UFS HBA when
-debugfs is enabled.
+Maxim (leyyyyy@gmail.com) changed:
 
-/sys/kernel/debug/ufshcd/<HBA>/timeout_inject
-/sys/kernel/debug/ufshcd/<HBA>/trigger_eh_inject
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |leyyyyy@gmail.com
 
-Each fault injection attribute can be dynamically set per HBA by a
-corresponding file in these directories.
+--- Comment #27 from Maxim (leyyyyy@gmail.com) ---
+I have the same issue with openSUSE and Fedora new kernels.
+When I installed Leap 15.5 with 5.14 kernel or COPR for Fedora with kernel =
+5.15
+all works fine.
 
-This is tested with QEMU UFS devices.
+First time I got the issue with kernel 5.19 on Fedora and ASR-72405 control=
+ler
+with connected NetApp DS.
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
----
- drivers/ufs/core/ufs-fault-injection.c | 19 +++++++++++++++----
- drivers/ufs/core/ufs-fault-injection.h | 13 +++++++++----
- drivers/ufs/core/ufshcd.c              |  5 +++--
- include/ufs/ufshcd.h                   |  5 +++++
- 4 files changed, 32 insertions(+), 10 deletions(-)
+openUSE 6.6.1 dmesg log:
+```
+[ 7427.739081] aacraid: Host bus reset request. SCSI hang ?
+[ 7427.739101] aacraid 0000:08:00.0: outstanding cmd: midlevel-0
+[ 7427.739105] aacraid 0000:08:00.0: outstanding cmd: lowlevel-0
+[ 7427.739107] aacraid 0000:08:00.0: outstanding cmd: error handler-0
+[ 7427.739109] aacraid 0000:08:00.0: outstanding cmd: firmware-48
+[ 7427.739111] aacraid 0000:08:00.0: outstanding cmd: kernel-0
+[ 7427.765640] aacraid 0000:08:00.0: Controller reset type is 3
+[ 7427.765652] aacraid 0000:08:00.0: Issuing IOP reset
+[ 7469.875692] aacraid 0000:08:00.0: IOP reset succeeded
+[ 7469.936116] aacraid: Comm Interface type2 enabled
+[ 7483.472661] aacraid 0000:08:00.0: Scheduling bus rescan
+[ 7496.491585] sd 0:0:0:0: [sda] Very big device. Trying to use READ
+CAPACITY(16).
+[ 7496.491764] sd 0:0:1:0: [sdb] Very big device. Trying to use READ
+CAPACITY(16).
+[ 7553.768632] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.768644] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.768650] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.768655] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.768660] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.768664] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.768669] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.818630] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835297] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835306] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835312] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835317] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835322] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835326] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835331] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835335] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835340] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835344] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835348] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835353] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7553.835357] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355616] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355631] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355637] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355642] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355647] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355652] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355657] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355661] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.355666] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7598.382419] aacraid: Host bus reset request. SCSI hang ?
+[ 7598.382439] aacraid 0000:08:00.0: outstanding cmd: midlevel-0
+[ 7598.382443] aacraid 0000:08:00.0: outstanding cmd: lowlevel-0
+[ 7598.382445] aacraid 0000:08:00.0: outstanding cmd: error handler-0
+[ 7598.382447] aacraid 0000:08:00.0: outstanding cmd: firmware-30
+[ 7598.382449] aacraid 0000:08:00.0: outstanding cmd: kernel-0
+[ 7598.402360] aacraid 0000:08:00.0: Controller reset type is 3
+[ 7598.402371] aacraid 0000:08:00.0: Issuing IOP reset
+[ 7640.363459] aacraid 0000:08:00.0: IOP reset succeeded
+[ 7640.422724] aacraid: Comm Interface type2 enabled
+[ 7653.650105] aacraid 0000:08:00.0: Scheduling bus rescan
+[ 7666.688374] sd 0:0:0:0: [sda] Very big device. Trying to use READ
+CAPACITY(16).
+[ 7666.688467] sd 0:0:1:0: [sdb] Very big device. Trying to use READ
+CAPACITY(16).
+[ 7814.462297] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.462308] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.462313] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.462318] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.462322] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.462326] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.462330] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.462334] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.462338] aacraid: Host adapter abort request.
+               aacraid: Outstanding commands on (0,0,1,0):
+[ 7814.478923] aacraid: Host bus reset request. SCSI hang ?
+[ 7814.478936] aacraid 0000:08:00.0: outstanding cmd: midlevel-0
+[ 7814.478938] aacraid 0000:08:00.0: outstanding cmd: lowlevel-0
+[ 7814.478940] aacraid 0000:08:00.0: outstanding cmd: error handler-0
+[ 7814.478942] aacraid 0000:08:00.0: outstanding cmd: firmware-9
+[ 7814.478943] aacraid 0000:08:00.0: outstanding cmd: kernel-0
+[ 7814.495578] aacraid 0000:08:00.0: Controller reset type is 3
+[ 7814.495587] aacraid 0000:08:00.0: Issuing IOP reset
+[ 7856.730598] aacraid 0000:08:00.0: IOP reset succeeded
+[ 7856.779371] aacraid: Comm Interface type2 enabled
+[ 7869.946607] aacraid 0000:08:00.0: Scheduling bus rescan
+[ 7882.985564] sd 0:0:0:0: [sda] Very big device. Trying to use READ
+CAPACITY(16).
+[ 7882.985661] sd 0:0:1:0: [sdb] Very big device. Trying to use READ
+CAPACITY(16).
+```
 
-diff --git a/drivers/ufs/core/ufs-fault-injection.c b/drivers/ufs/core/ufs-fault-injection.c
-index 5b1184aac585..169540417079 100644
---- a/drivers/ufs/core/ufs-fault-injection.c
-+++ b/drivers/ufs/core/ufs-fault-injection.c
-@@ -4,6 +4,7 @@
- #include <linux/types.h>
- #include <linux/fault-inject.h>
- #include <linux/module.h>
-+#include <ufs/ufshcd.h>
- #include "ufs-fault-injection.h"
- 
- static int ufs_fault_get(char *buffer, const struct kernel_param *kp);
-@@ -59,12 +60,22 @@ static int ufs_fault_set(const char *val, const struct kernel_param *kp)
- 	return 0;
- }
- 
--bool ufs_trigger_eh(void)
-+void ufs_fault_inject_hba_init(struct ufs_hba *hba)
- {
--	return should_fail(&ufs_trigger_eh_attr, 1);
-+	hba->trigger_eh_attr = ufs_trigger_eh_attr;
-+	hba->timeout_attr = ufs_timeout_attr;
-+#ifdef CONFIG_FAULT_INJECTION_DEBUG_FS
-+	fault_create_debugfs_attr("trigger_eh_inject", hba->debugfs_root, &hba->trigger_eh_attr);
-+	fault_create_debugfs_attr("timeout_inject", hba->debugfs_root, &hba->timeout_attr);
-+#endif
- }
- 
--bool ufs_fail_completion(void)
-+bool ufs_trigger_eh(struct ufs_hba *hba)
- {
--	return should_fail(&ufs_timeout_attr, 1);
-+	return should_fail(&hba->trigger_eh_attr, 1);
-+}
-+
-+bool ufs_fail_completion(struct ufs_hba *hba)
-+{
-+	return should_fail(&hba->timeout_attr, 1);
- }
-diff --git a/drivers/ufs/core/ufs-fault-injection.h b/drivers/ufs/core/ufs-fault-injection.h
-index 6d0cd8e10c87..996a35769781 100644
---- a/drivers/ufs/core/ufs-fault-injection.h
-+++ b/drivers/ufs/core/ufs-fault-injection.h
-@@ -7,15 +7,20 @@
- #include <linux/types.h>
- 
- #ifdef CONFIG_SCSI_UFS_FAULT_INJECTION
--bool ufs_trigger_eh(void);
--bool ufs_fail_completion(void);
-+void ufs_fault_inject_hba_init(struct ufs_hba *hba);
-+bool ufs_trigger_eh(struct ufs_hba *hba);
-+bool ufs_fail_completion(struct ufs_hba *hba);
- #else
--static inline bool ufs_trigger_eh(void)
-+static inline void ufs_fault_inject_hba_init(struct ufs_hba *hba)
-+{
-+}
-+
-+static inline bool ufs_trigger_eh(struct ufs_hba *hba)
- {
- 	return false;
- }
- 
--static inline bool ufs_fail_completion(void)
-+static inline bool ufs_fail_completion(struct ufs_hba *hba)
- {
- 	return false;
- }
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 8b1031fb0a44..63f0ee117399 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2992,7 +2992,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	ufshcd_send_command(hba, tag, hwq);
- 
- out:
--	if (ufs_trigger_eh()) {
-+	if (ufs_trigger_eh(hba)) {
- 		unsigned long flags;
- 
- 		spin_lock_irqsave(hba->host->host_lock, flags);
-@@ -5649,7 +5649,7 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	    !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
- 		ufshcd_reset_intr_aggr(hba);
- 
--	if (ufs_fail_completion())
-+	if (ufs_fail_completion(hba))
- 		return IRQ_HANDLED;
- 
- 	/*
-@@ -9348,6 +9348,7 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
- 		goto out_disable_vreg;
- 
- 	ufs_debugfs_hba_init(hba);
-+	ufs_fault_inject_hba_init(hba);
- 
- 	hba->is_powered = true;
- 	goto out;
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 7f0b2c5599cd..d862c8ddce03 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -16,6 +16,7 @@
- #include <linux/blk-crypto-profile.h>
- #include <linux/blk-mq.h>
- #include <linux/devfreq.h>
-+#include <linux/fault-inject.h>
- #include <linux/msi.h>
- #include <linux/pm_runtime.h>
- #include <linux/dma-direction.h>
-@@ -1057,6 +1058,10 @@ struct ufs_hba {
- 	struct dentry *debugfs_root;
- 	struct delayed_work debugfs_ee_work;
- 	u32 debugfs_ee_rate_limit_ms;
-+#endif
-+#ifdef CONFIG_SCSI_UFS_FAULT_INJECTION
-+	struct fault_attr trigger_eh_attr;
-+	struct fault_attr timeout_attr;
- #endif
- 	u32 luns_avail;
- 	unsigned int nr_hw_queues;
--- 
-2.34.1
+--=20
+You may reply to this email to add a comment.
 
+You are receiving this mail because:
+You are watching the assignee of the bug.=
