@@ -2,76 +2,89 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C37CC072A2
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Nov 2023 13:42:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20C91C072A2
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Nov 2023 16:12:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbjKSNmj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Nov 2023 08:42:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39188 "EHLO
+        id S231417AbjKSQMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Nov 2023 11:12:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231260AbjKSNkn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Nov 2023 08:40:43 -0500
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E479E6;
-        Sun, 19 Nov 2023 05:40:37 -0800 (PST)
-X-UUID: acb510e49d924fe2a26b7b2e735369e7-20231119
-X-CID-O-RULE: Release_Ham
-X-CID-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.32,REQID:818b19ef-3f45-4b5d-9838-c3dd21cdabbd,IP:15,
-        URL:0,TC:0,Content:-5,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,AC
-        TION:release,TS:20
-X-CID-INFO: VERSION:1.1.32,REQID:818b19ef-3f45-4b5d-9838-c3dd21cdabbd,IP:15,UR
-        L:0,TC:0,Content:-5,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-        ON:release,TS:20
-X-CID-META: VersionHash:5f78ec9,CLOUDID:25298f95-10ce-4e4b-85c2-c9b5229ff92b,B
-        ulkID:231119214015QRM3A46K,BulkQuantity:0,Recheck:0,SF:44|66|38|24|17|19|1
-        02,TC:nil,Content:0,EDM:5,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL
-        :0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_FSI,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS
-X-UUID: acb510e49d924fe2a26b7b2e735369e7-20231119
-X-User: chentao@kylinos.cn
-Received: from vt.. [(116.128.244.169)] by mailgw
-        (envelope-from <chentao@kylinos.cn>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 141419594; Sun, 19 Nov 2023 21:40:13 +0800
-From:   Kunwu Chan <chentao@kylinos.cn>
-To:     njavali@marvell.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     kunwu.chan@hotmail.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kunwu Chan <chentao@kylinos.cn>
-Subject: [PATCH] scsi: qedi: Fix warning of restricted __le32 degrades to integer in qedi_main.c
-Date:   Sun, 19 Nov 2023 21:40:09 +0800
-Message-Id: <20231119134009.8015-1-chentao@kylinos.cn>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S231372AbjKSQMK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Nov 2023 11:12:10 -0500
+Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2ADA126;
+        Sun, 19 Nov 2023 08:12:06 -0800 (PST)
+Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-6d3260385b5so1840376a34.0;
+        Sun, 19 Nov 2023 08:12:06 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700410326; x=1701015126;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xEu0nuOXzWy7wH5tn0mHCily9PWBQhKrF+Z00A3ebI8=;
+        b=Rjw3yeOJH3eN8J+vBbSzkSHvaVbOQInmZ8jeR764JCByCVe9jRR6q/5eU3lQ9l9qqE
+         2JWoc+JmpI9wRL0WplPd03gOMSjIdDvGAvkkCqJsbMiXoLQnNgLwxWq1LsyXG5s2l2Wa
+         EAXWOE55KQAwxkbDpN2ymg1wBhjrj96nFZHo8ETGmzcxkXjupaPa1wd5EHYGIWn9+lvk
+         9J7MaPO5srhrVo6eMP9o3TVvzXPQ+MfotYAQF5EGTZfieQf/j0GR+XpDMRc0zworwY7D
+         V30EJznw5pBYelSdIfsQrsR+rIbuPDBA+lZSgDULbUPzoIfky9ZbNYcnYhrbshn+4cS+
+         l6dg==
+X-Gm-Message-State: AOJu0YyRb6GdAVu7gSZVN6poCQybysf3cOiANDkJBv4zwXt2XBeENugz
+        DM+3laVrI72d4fRJtBbi8Q==
+X-Google-Smtp-Source: AGHT+IHGGM8ZAa1lSr23KAzSyTH5dGZQdtx5KG4w1Okx17TDG9eIKkTbs2icl7eKgrEN3ubKijy84A==
+X-Received: by 2002:a9d:628b:0:b0:6cd:9f4:e088 with SMTP id x11-20020a9d628b000000b006cd09f4e088mr5199714otk.5.1700410326260;
+        Sun, 19 Nov 2023 08:12:06 -0800 (PST)
+Received: from herring.priv ([2607:fb90:45e3:889f:15b4:1348:6d64:224b])
+        by smtp.gmail.com with ESMTPSA id c3-20020a9d67c3000000b006ce28044207sm893035otn.58.2023.11.19.08.11.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 19 Nov 2023 08:12:01 -0800 (PST)
+Received: (nullmailer pid 276187 invoked by uid 1000);
+        Sun, 19 Nov 2023 16:11:56 -0000
+Date:   Sun, 19 Nov 2023 10:11:56 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     David Wronek <davidwronek@gmail.com>
+Cc:     Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-crypto@vger.kernel.org,
+        Bjorn Andersson <andersson@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        linux-phy@lists.infradead.org,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>, linux-scsi@vger.kernel.org,
+        hexdump0815@googlemail.com, linux-kernel@vger.kernel.org,
+        ~postmarketos/upstreaming@lists.sr.ht,
+        linux-arm-msm@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
+        Joe Mason <buddyjojo06@outlook.com>,
+        cros-qcom-dts-watchers@chromium.org,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        devicetree@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>,
+        phone-devel@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>
+Subject: Re: [PATCH v2 1/8] dt-bindings: crypto: ice: Document SC7180 inline
+ crypto engine
+Message-ID: <170041031632.276154.11804659126094035319.robh@kernel.org>
+References: <20231117201720.298422-1-davidwronek@gmail.com>
+ <20231117201720.298422-2-davidwronek@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231117201720.298422-2-davidwronek@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-drivers/scsi/qedi/qedi_main.c:1867:37: warning: restricted __le32 degrades to integer
 
-Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
----
- drivers/scsi/qedi/qedi_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Fri, 17 Nov 2023 21:08:33 +0100, David Wronek wrote:
+> Document the compatible used for the inline crypto engine found on
+> SC7180.
+> 
+> Signed-off-by: David Wronek <davidwronek@gmail.com>
+> ---
+>  .../devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml    | 1 +
+>  1 file changed, 1 insertion(+)
+> 
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index cd0180b1f5b9..3f5b148347d2 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1864,7 +1864,7 @@ void qedi_get_task_tid(struct qedi_ctx *qedi, u32 itt, s16 *tid)
- 	u16 i;
- 
- 	for (i = 0; i < MAX_ISCSI_TASK_ENTRIES; i++) {
--		if (qedi->itt_map[i].itt == itt) {
-+		if (le32_to_cpu(qedi->itt_map[i].itt) == itt) {
- 			*tid = i;
- 			QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_CONN,
- 				  "Ref itt=0x%x, found at tid=0x%x\n",
--- 
-2.34.1
+Acked-by: Rob Herring <robh@kernel.org>
 
