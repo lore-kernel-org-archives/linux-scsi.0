@@ -2,64 +2,76 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3D77C2BB3F
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Nov 2023 23:35:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C37CC072A2
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Nov 2023 13:42:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230086AbjKRXfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Nov 2023 18:35:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34846 "EHLO
+        id S229549AbjKSNmj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Nov 2023 08:42:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230194AbjKRXfL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Nov 2023 18:35:11 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8AF6194;
-        Sat, 18 Nov 2023 15:35:07 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8DC31C433C8;
-        Sat, 18 Nov 2023 23:35:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700350507;
-        bh=d8dOHKWXgHJrPE9rdJ31lYjRneEtnZd10jjBLEr4Bkg=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=GXfhbbhMDvrT8lc1Huz7/0hj5Y/VvRZDozi6dJfhwOwi1HDfoaHPaqRnPAY7YhbUe
-         lHS66EozJdDldufhlL44Ppai2UOiz6UpyAV0w/GQA9S/OLAy34adboFLwL88rzXfsS
-         HKJRmyO9FEk8MFAxX2NkcJMV53K1M+504Kf7irxS0TaZmq80lNNrRZr+ypRy7qkJW4
-         h2Lbrv8bMV7Noh62cWziFfUDs10HBVBTpAY3QQPi2r8XL5faQEyRiHDxxzkxmNq1qH
-         d+J6VikDAv1DQdF+m4P1i+ZkPVjVqcxao9sC1O2IZuqj27Xsc0o6YDfY1zzo5zQhGP
-         1qeXv18E2wDdw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7BA22EA6303;
-        Sat, 18 Nov 2023 23:35:07 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.7-rc1
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <040ce44df0bf702e4968a903d9ed06b82907a235.camel@HansenPartnership.com>
-References: <040ce44df0bf702e4968a903d9ed06b82907a235.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <040ce44df0bf702e4968a903d9ed06b82907a235.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 2a0508d9d08f0c3e354044d4f48466ee0d225041
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 037266a5f7239ead1530266f7d7af153d2a867fa
-Message-Id: <170035050750.24051.5205364847492596543.pr-tracker-bot@kernel.org>
-Date:   Sat, 18 Nov 2023 23:35:07 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S231260AbjKSNkn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Nov 2023 08:40:43 -0500
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E479E6;
+        Sun, 19 Nov 2023 05:40:37 -0800 (PST)
+X-UUID: acb510e49d924fe2a26b7b2e735369e7-20231119
+X-CID-O-RULE: Release_Ham
+X-CID-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.32,REQID:818b19ef-3f45-4b5d-9838-c3dd21cdabbd,IP:15,
+        URL:0,TC:0,Content:-5,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,AC
+        TION:release,TS:20
+X-CID-INFO: VERSION:1.1.32,REQID:818b19ef-3f45-4b5d-9838-c3dd21cdabbd,IP:15,UR
+        L:0,TC:0,Content:-5,EDM:25,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+        ON:release,TS:20
+X-CID-META: VersionHash:5f78ec9,CLOUDID:25298f95-10ce-4e4b-85c2-c9b5229ff92b,B
+        ulkID:231119214015QRM3A46K,BulkQuantity:0,Recheck:0,SF:44|66|38|24|17|19|1
+        02,TC:nil,Content:0,EDM:5,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL
+        :0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_FSI,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS
+X-UUID: acb510e49d924fe2a26b7b2e735369e7-20231119
+X-User: chentao@kylinos.cn
+Received: from vt.. [(116.128.244.169)] by mailgw
+        (envelope-from <chentao@kylinos.cn>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 141419594; Sun, 19 Nov 2023 21:40:13 +0800
+From:   Kunwu Chan <chentao@kylinos.cn>
+To:     njavali@marvell.com, mrangankar@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     kunwu.chan@hotmail.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Kunwu Chan <chentao@kylinos.cn>
+Subject: [PATCH] scsi: qedi: Fix warning of restricted __le32 degrades to integer in qedi_main.c
+Date:   Sun, 19 Nov 2023 21:40:09 +0800
+Message-Id: <20231119134009.8015-1-chentao@kylinos.cn>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 18 Nov 2023 17:38:19 -0500:
+drivers/scsi/qedi/qedi_main.c:1867:37: warning: restricted __le32 degrades to integer
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Signed-off-by: Kunwu Chan <chentao@kylinos.cn>
+---
+ drivers/scsi/qedi/qedi_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/037266a5f7239ead1530266f7d7af153d2a867fa
-
-Thank you!
-
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index cd0180b1f5b9..3f5b148347d2 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -1864,7 +1864,7 @@ void qedi_get_task_tid(struct qedi_ctx *qedi, u32 itt, s16 *tid)
+ 	u16 i;
+ 
+ 	for (i = 0; i < MAX_ISCSI_TASK_ENTRIES; i++) {
+-		if (qedi->itt_map[i].itt == itt) {
++		if (le32_to_cpu(qedi->itt_map[i].itt) == itt) {
+ 			*tid = i;
+ 			QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_CONN,
+ 				  "Ref itt=0x%x, found at tid=0x%x\n",
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.34.1
+
