@@ -1,20 +1,20 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EEolKGlx"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rkfyg/wy"
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3FE1C1
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2023 14:56:34 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4392C433C8;
-	Mon, 20 Nov 2023 22:56:32 +0000 (UTC)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2735DCD
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2023 14:56:36 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F208C433C9;
+	Mon, 20 Nov 2023 22:56:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700520994;
-	bh=XxKriClw7kJNhV8djvf+9DEMraeQlomplnQwhouqjt4=;
-	h=From:To:Cc:Subject:Date:From;
-	b=EEolKGlxkhOlX3zBpSPbvgUusVNBriD3sVV4gigg+0a9huZsfHg8SEr4EVeK13cho
-	 4qQiR8h9qSnXsmN1NGcA437xcyZQB4a2Bf5qbZPfWKviDol6wYLIvllUzOA+1MyPo2
-	 AEiIAbublEG6xOamKc6tMxjRyl3to/QVIlmC0r8nDdNUg8ozdTDwX/X10wbFgUmQyn
-	 OQnlVYf7Sm7YLHUKZIeSO1QBL6hRagGpbSnIcolorguDsIVuFjNh4oHDR+wphGIFoL
-	 dxT3phxH/p7cNSaGlTAXMIioAuOFtSNqKacdt+Xecrhv5phLiF034UQ7R4an+WcOTl
-	 gDDgQH0mYKPoQ==
+	s=k20201202; t=1700520995;
+	bh=EQX3/86Vv7wsbEi0uJlh+x4Ip/sHKdTdinG04g68vnc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=rkfyg/wyLENosjZG6e4dT0yxD9G4uwn/1cuiY6WkFO9I79jQkW3DrkZuRB55qyxFV
+	 RNiYOxBYaDnu2WrZrT9oMatqTdZJXWV154GRK1vpkSiJxxXn/ZMB+VAlzCadblqVrN
+	 T79ED7whGitaAI0/hVMJqaZ4QKdxLDpuh2IxpO+r1Mx1h2ExBUKJSrJEU2pBisvqY1
+	 LHzDQACidkeh069N7xGPwS4dAC3fiU61UwhzClt6Bt2HE3mgLZM2JOOulPHiDkK2n9
+	 VDN1lgE7QSkg8THR37L/i0c66Ok+Enw+QklHHmEikfnnn7sH6lyG52hcJG8ghFvJIn
+	 V2kbxMcZoFBxg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	James Bottomley <James.Bottomley@HansenPartnership.com>,
@@ -22,10 +22,12 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-ide@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>,
 	Phillip Susi <phill@thesusis.net>
-Subject: [PATCH v2 0/2] Fix runtime suspended device resume
-Date: Tue, 21 Nov 2023 07:56:29 +0900
-Message-ID: <20231120225631.37938-1-dlemoal@kernel.org>
+Subject: [PATCH v2 1/2] scsi: Change scsi device boolean fields to single bit flags
+Date: Tue, 21 Nov 2023 07:56:30 +0900
+Message-ID: <20231120225631.37938-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231120225631.37938-1-dlemoal@kernel.org>
+References: <20231120225631.37938-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -34,28 +36,88 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The first patch changes the use of the bool type back to the regular
-unsigned:1 for the manage_xxx scsi device flags. This is marked as a fix
-and CC-stable to avoid issues with later eventual fixes in this area.
+Commit 3cc2ffe5c16d ("scsi: sd: Differentiate system and runtime
+start/stop management") changed the single bit manage_start_stop flag
+into 2 boolean fields of the SCSI device structure. Commit 24eca2dce0f8
+("scsi: sd: Introduce manage_shutdown device flag") introduced the
+manage_shutdown boolean field for the same structure. Together, these 2
+commits increase the size of struct scsi_device by 8 bytes by using
+booleans instead of defining the manage_xxx fields as single bit flags,
+similarly to other flags of this structure.
 
-The second patch addresses an issue with system resume with devices that
-were runtime suspended. For ATA devices, this leads to a disk still
-being reported as suspended while it is in fact spun up due to how ATA
-resume is done (port reset).
+Avoid this unnecessary structure size increase and be consistent with
+the definition of other flags by reverting the definitions of the
+manage_xxx fields as single bit flags.
 
-Changes from v1:
- - Fixed typos in patch 2 commit message.
+Fixes: 3cc2ffe5c16d ("scsi: sd: Differentiate system and runtime start/stop management")
+Fixes: 24eca2dce0f8 ("scsi: sd: Introduce manage_shutdown device flag")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-scsi.c  | 4 ++--
+ drivers/firewire/sbp2.c    | 6 +++---
+ include/scsi/scsi_device.h | 6 +++---
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-Damien Le Moal (2):
-  scsi: Change scsi device boolean fields to single bit flags
-  scsi: sd: fix system start for ATA devices
-
- drivers/ata/libata-scsi.c  |  9 +++++++--
- drivers/firewire/sbp2.c    |  6 +++---
- drivers/scsi/sd.c          |  9 ++++++++-
- include/scsi/scsi_device.h | 12 +++++++++---
- 4 files changed, 27 insertions(+), 9 deletions(-)
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index c10ff8985203..63317449f6ea 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1056,8 +1056,8 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+ 		 * and resume and shutdown only. For system level suspend/resume,
+ 		 * devices power state is handled directly by libata EH.
+ 		 */
+-		sdev->manage_runtime_start_stop = true;
+-		sdev->manage_shutdown = true;
++		sdev->manage_runtime_start_stop = 1;
++		sdev->manage_shutdown = 1;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
+index 7edf2c95282f..e779d866022b 100644
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -1519,9 +1519,9 @@ static int sbp2_scsi_slave_configure(struct scsi_device *sdev)
+ 	sdev->use_10_for_rw = 1;
+ 
+ 	if (sbp2_param_exclusive_login) {
+-		sdev->manage_system_start_stop = true;
+-		sdev->manage_runtime_start_stop = true;
+-		sdev->manage_shutdown = true;
++		sdev->manage_system_start_stop = 1;
++		sdev->manage_runtime_start_stop = 1;
++		sdev->manage_shutdown = 1;
+ 	}
+ 
+ 	if (sdev->type == TYPE_ROM)
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 10480eb582b2..1fb460dfca0c 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -167,19 +167,19 @@ struct scsi_device {
+ 	 * power state for system suspend/resume (suspend to RAM and
+ 	 * hibernation) operations.
+ 	 */
+-	bool manage_system_start_stop;
++	unsigned manage_system_start_stop:1;
+ 
+ 	/*
+ 	 * If true, let the high-level device driver (sd) manage the device
+ 	 * power state for runtime device suspand and resume operations.
+ 	 */
+-	bool manage_runtime_start_stop;
++	unsigned manage_runtime_start_stop:1;
+ 
+ 	/*
+ 	 * If true, let the high-level device driver (sd) manage the device
+ 	 * power state for system shutdown (power off) operations.
+ 	 */
+-	bool manage_shutdown;
++	unsigned manage_shutdown:1;
+ 
+ 	unsigned removable:1;
+ 	unsigned changed:1;	/* Data invalid due to media change */
 -- 
 2.42.0
 
