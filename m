@@ -2,87 +2,190 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D21EC54E76
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Nov 2023 09:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8853C197A0
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Nov 2023 12:41:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232138AbjKTJAQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Nov 2023 04:00:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60896 "EHLO
+        id S233668AbjKTMlC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Nov 2023 07:41:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232128AbjKTJAO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2023 04:00:14 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 102D6A4
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2023 01:00:11 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC57DC433C8;
-        Mon, 20 Nov 2023 09:00:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700470810;
-        bh=Mx5Y79L5QcR1k5/A/ihZN1xv6Z1ScPaP1y96PUl/7Do=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=XDqpwHp0UG9CGLc5FiJAdKSBptKXlMg8aOATpJPtgKeiU/NL5e/Mm8GySZj8AJwVG
-         Mcjxn78ZlmQzmEH3gxlp/VcRxOKKYGy1lZw1rtfe8ss0oMK6qVmRFaip+QAqq3Gop4
-         k5qu+a/HjUcSxKGcD8j51LaiEck+59UOVxPSlUF6WfPaByhsXKMmtfDmnzq6iVvZ8z
-         khpWedDxtMW+IgDsP57SqyoxgziNrADFOJCdRKCyS9lNhjoYBtQ/W01vtcx8m5+EPg
-         sKGCE2nz4eMMq6t2EoMHISFZWj1CvOA7c2hg4iMzSlp4zwoLEXOM+GprUT+6fykb/c
-         VhmR3jSq580DA==
-Message-ID: <27500ebc-1ba5-4171-b93a-227f1391d63e@kernel.org>
-Date:   Mon, 20 Nov 2023 18:00:08 +0900
+        with ESMTP id S233013AbjKTMlB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2023 07:41:01 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 917F3F2;
+        Mon, 20 Nov 2023 04:40:57 -0800 (PST)
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AKCRTA6020937;
+        Mon, 20 Nov 2023 12:40:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=1+HhEt9+VzVP+gvV72c+hoGVjZxonRZpoYZ9ixdDD0U=;
+ b=AiOXUd3mLfsZOSEnNSYR7x0nXcghVBEWCg+ufk+sUdP/eHCDYTfkdU8VNwyqUqPxkx2Z
+ w62rPJcvIn9F5Znz/8n3irBFETgElLeL9/1zkgRvOAw/BqyV8173JBEXQ436mDyD2QJ+
+ Z0wJ/1jYz+Fj8mIeZVIcC38SVfc+fSdDPbge5zdwXqK/+MrID6TIZA+RVneQvGTIwK7/
+ 9lWNFmYpwgePwSE5z2QJNMv8xOuXTUMX3icHfT65PT5bgYGd/Wr3X7MhkL1SHN11UDzR
+ vUQWkxmNZfnqd9dlEK40VAhG8GdKbRXqTdr6lGBLStJm2ccIRpikNFmm/PvSaUViF4sW YQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ug7fkgcv3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 12:40:55 +0000
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AKCShnj027175;
+        Mon, 20 Nov 2023 12:40:55 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ug7fkgcug-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 12:40:55 +0000
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+        by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3AKAPmLN010137;
+        Mon, 20 Nov 2023 12:40:54 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+        by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3uf8knh42x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 12:40:54 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+        by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3AKCepRG28181092
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 20 Nov 2023 12:40:51 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0BE4120043;
+        Mon, 20 Nov 2023 12:40:51 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id DFA8520040;
+        Mon, 20 Nov 2023 12:40:50 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.171.78.204])
+        by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+        Mon, 20 Nov 2023 12:40:50 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96.2)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1r53a5-000IhD-3D;
+        Mon, 20 Nov 2023 13:40:50 +0100
+Date:   Mon, 20 Nov 2023 13:40:49 +0100
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Kees Cook <keescook@chromium.org>,
+        Steffen Maier <maier@linux.ibm.com>
+Cc:     Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Azeem Shaikh <azeemshaikh38@gmail.com>,
+        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
+        Mailing List linux-scsi <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] scsi: zfcp: Replace strlcpy() with strscpy()
+Message-ID: <20231120124049.GB18672@p1gen4-pw042f0m.fritz.box>
+References: <20231116191435.work.581-kees@kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20231116191435.work.581-kees@kernel.org>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: xEpWiVxcG4O-iU7h3w1PBw3O7Bse4y4g
+X-Proofpoint-GUID: nqq-clRy7zOMtGGo6E33j85YGlVLG0Ep
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: sd: fix system start for ATA devices
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Phillip Susi <phill@thesusis.net>
-References: <20231120073522.34180-1-dlemoal@kernel.org>
- <20231120073522.34180-3-dlemoal@kernel.org>
- <a3008d49-32db-51cc-f9aa-ca9ec91ec14d@omp.ru>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <a3008d49-32db-51cc-f9aa-ca9ec91ec14d@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-20_11,2023-11-20_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
+ malwarescore=0 priorityscore=1501 clxscore=1011 impostorscore=0 mlxscore=0
+ mlxlogscore=999 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
+ definitions=main-2311200087
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/20/23 17:50, Sergey Shtylyov wrote:
-> On 11/20/23 10:35 AM, Damien Le Moal wrote:
-> 
->> Ti is not always possible to keep a device in the runtime suspended
-> 
->    s/Ti/It? :-)
+Hey Kees,
 
-Arg. Yes.
+thanks for the patch.
 
+can you please send this patch to linux-scsi and CC the SCSI Maintainers
+(Martin and James) instead (having linux-s390 on CC is fine)? zFCP doesn't go
+via s390, being a SCSI driver.
+
+On Thu, Nov 16, 2023 at 11:14:35AM -0800, Kees Cook wrote:
+> strlcpy() reads the entire source buffer first. This read may exceed
+> the destination size limit. This is both inefficient and can lead
+> to linear read overflows if a source string is not NUL-terminated[1].
+> Additionally, it returns the size of the source string, not the
+> resulting size of the destination string. In an effort to remove strlcpy()
+> completely[2], replace strlcpy() here with strscpy().
 > 
->> state when a system level suspend/resume cycle is executed. E.g. for ATA
->> devices connected to AHCI  adapters, system resume resets the ATA ports,
->> which causes connected devices to spin up. In such case, a runtime
->> suspended disk will incorrectly be seen with a suspended runtime state
->> because the device is not resumed by sd_resume_system(). The power state
->> seen by the user is different than the actual device physical power
->> state.
->>
->> Fix this issue by introducing the struct scsi_device flag
->> force_runtime_start_on_system_start. When set, this flag causes
->> sd_resume_system() to request a runtime resume operation for runtime
->> suspended devices. This results in the user seeing the device
->> runtime_state as active after a system resume, thus correctly reflecting
->> the device physical power state.
->>
->> Fixes: 9131bff6a9f1 ("scsi: core: pm: Only runtime resume if necessary")
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> [...]
+> Be explicitly robust in the face of truncation, which should be an
+> impossible state.
 > 
-> MBR, Sergey
+> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy [1]
+> Link: https://github.com/KSPP/linux/issues/89 [2]
+> Cc: Steffen Maier <maier@linux.ibm.com>
+> Cc: Benjamin Block <bblock@linux.ibm.com>
+> Cc: Heiko Carstens <hca@linux.ibm.com>
+> Cc: Vasily Gorbik <gor@linux.ibm.com>
+> Cc: Alexander Gordeev <agordeev@linux.ibm.com>
+> Cc: Christian Borntraeger <borntraeger@linux.ibm.com>
+> Cc: Sven Schnelle <svens@linux.ibm.com>
+> Cc: Azeem Shaikh <azeemshaikh38@gmail.com>
+> Cc: linux-s390@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/s390/scsi/zfcp_fc.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
+> index 4f0d0e55f0d4..1a29f10767fc 100644
+> --- a/drivers/s390/scsi/zfcp_fc.c
+> +++ b/drivers/s390/scsi/zfcp_fc.c
+> @@ -900,8 +900,15 @@ static void zfcp_fc_rspn(struct zfcp_adapter *adapter,
+>	zfcp_fc_ct_ns_init(&rspn_req->ct_hdr, FC_NS_RSPN_ID,
+>			   FC_SYMBOLIC_NAME_SIZE);
+>	hton24(rspn_req->rspn.fr_fid.fp_fid, fc_host_port_id(shost));
+> -	len = strlcpy(rspn_req->rspn.fr_name, fc_host_symbolic_name(shost),
+> -		      FC_SYMBOLIC_NAME_SIZE);
+> +	len = strscpy(rspn_req->name, fc_host_symbolic_name(shost),
+> +		      sizeof(rspn_req->name));
+
+This is corrct.
+
+> +	/*
+> +	 * It should be impossible for this to truncate, as
+> +	 * sizeof(rspn_req->name) is equal to max size of
+> +	 * fc_host_symbolic_name(shost), but check anyway.
+> +	 */
+> +	if (len < 0)
+> +		len = sizeof(rspn_req->name) - 1;
+
+I'd rather have a compile-time check, whether the array sizes of
+`rspn_req->name` and `fc_host_symbolic_name(shost)` run out of sync, or
+against our expectations.
+
+Something like:
+
+	len = strscpy(rspn_req->name, fc_host_symbolic_name(shost),
+		      sizeof(rspn_req->name));
+	BUILD_BUG_ON(sizeof(rspn_req->name) !=
+			     sizeof(fc_host_symbolic_name(shost)) ||
+		     sizeof(rspn_req->name) !=
+			     1 << sizeof(rspn_req->rspn.fr_name_len) * 8);
+	rspn_req->rspn.fr_name_len = len;
+
+Then the last assignment should also be correct; and if something changes -
+unexpectedly, because this follows a FC standard - we need to adapt the code
+anyway I'd think.
+
+Or am I missing something?
+
+>	rspn_req->rspn.fr_name_len = len;
+>  
+>	sg_init_one(&fc_req->sg_req, rspn_req, sizeof(*rspn_req));
+> -- 
+> 2.34.1
+> 
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
