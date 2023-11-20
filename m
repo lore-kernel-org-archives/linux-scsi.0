@@ -2,125 +2,257 @@ Return-Path: <linux-scsi-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C97CC197A0
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Nov 2023 07:37:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C89E3C54FB9
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Nov 2023 07:50:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231961AbjKTHhM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Nov 2023 02:37:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38770 "EHLO
+        id S230364AbjKTHuf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Nov 2023 02:50:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229483AbjKTHhK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2023 02:37:10 -0500
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94AA9B7
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Nov 2023 23:37:05 -0800 (PST)
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20231120073703epoutp0235e7e27a39fbd9747f04da2643530201~ZRKg6y7YB2905529055epoutp023
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2023 07:37:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20231120073703epoutp0235e7e27a39fbd9747f04da2643530201~ZRKg6y7YB2905529055epoutp023
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1700465823;
-        bh=kf6A6gxsjK4BnYZeEdWs1d41PoIm5/kxJrnoBK73RyU=;
-        h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-        b=Vl6AE+JpcI+RF+D2M3O7GolQhGXfwFcDGaP9UobE8QRU5pZgRkZCyXe6uWFXn8FT7
-         Iks0LKuKfUIwGaGVdGKtDgDPluDAh54JRMy3OtfK6PzU3kmRHm8nwQRSXBIEj7z1pm
-         WVBP1Ygtg9BuekmSOeo9H3SDYv63UO9AO7CJSH4c=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20231120073703epcas5p2f64a5e0dd7f3605a0bb265352de0e358~ZRKggHp_m1114011140epcas5p2B;
-        Mon, 20 Nov 2023 07:37:03 +0000 (GMT)
-Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.177]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4SYfTn2Y4Tz4x9Q5; Mon, 20 Nov
-        2023 07:37:01 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-        epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        26.98.19369.B9C0B556; Mon, 20 Nov 2023 16:36:59 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20231120073659epcas5p169986d215d40a3cbe1620cb3b192629e~ZRKdJcyBF1056810568epcas5p1z;
-        Mon, 20 Nov 2023 07:36:59 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20231120073659epsmtrp2a03ee795da059d1fb74f46e08b1100d4~ZRKdIYR-52627226272epsmtrp25;
-        Mon, 20 Nov 2023 07:36:59 +0000 (GMT)
-X-AuditID: b6c32a50-2ae3ca8000004ba9-36-655b0c9b7315
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        44.54.08817.B9C0B556; Mon, 20 Nov 2023 16:36:59 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20231120073657epsmtip1a4e36c86d071fecbf4818d69dfe19384~ZRKbP3OS93017030170epsmtip1N;
-        Mon, 20 Nov 2023 07:36:57 +0000 (GMT)
-Message-ID: <da181fff-59af-b9fd-dd18-781b5ec13cd7@samsung.com>
-Date:   Mon, 20 Nov 2023 13:06:56 +0530
+        with ESMTP id S229483AbjKTHue (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2023 02:50:34 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60987B7
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Nov 2023 23:50:30 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 02413210DF;
+        Mon, 20 Nov 2023 07:50:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1700466628; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=V2eudvebb+7utA8Wkv8FE2IXQHheAlYTqCfPLx9CTn4=;
+        b=r0Bv5X9xlyQz0NE/48IIcxTgkZ1xpQxSwdpyujs6uy0Gs8kSjzO92u1xPiYDsXMWFYAy+I
+        buXJJopW9z3Hay4/saugzsIyIhmkn5Jt5mR19KbuUQcNzW2dHLr3DtFngoDzq7pt/NAVAE
+        4kjYUiBn5uDZrsjFEcteHO9GTDASKFg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1700466628;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=V2eudvebb+7utA8Wkv8FE2IXQHheAlYTqCfPLx9CTn4=;
+        b=hSz+raFqahXuvq6lFSjWFGT3HkmOcngUgdbnDA18cz4d+QjGiBwMLZdmNw4V+5U8JFv21q
+        fjsoJyC0O+fYx/CA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 98BA4134AD;
+        Mon, 20 Nov 2023 07:50:28 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 7bn9I8QPW2XAOgAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 20 Nov 2023 07:50:28 +0000
+Content-Type: multipart/mixed; boundary="------------q0eVtnbWYVdRycE3BBezP00b"
+Message-ID: <2d5071d6-daab-4585-823f-5f2e9dde8f79@suse.de>
+Date:   Mon, 20 Nov 2023 08:50:28 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-        Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH v4 05/15] fs/f2fs: Restore data lifetime support
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 13/16] fnic: allocate device reset command on the fly
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@lst.de>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>, Chao Yu <chao@kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>
-From:   Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20231114214132.1486867-6-bvanassche@acm.org>
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrEJsWRmVeSWpSXmKPExsWy7bCmpu5snuhUg9dLLCxe/rzKZrH6bj+b
-        xbQPP5ktTk89y2Tx5EA7o8WqB+EWK1cfBfLWz2K22HtL22LP3pMsFt3Xd7BZLD/+j8mBx+Py
-        FW+Py2dLPTat6mTz2H2zgc1jcd9kVo+PT2+xePRtWcXo8XmTnEf7gW6mAM6obJuM1MSU1CKF
-        1Lzk/JTMvHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wcoHuVFMoSc0qBQgGJxcVK
-        +nY2RfmlJakKGfnFJbZKqQUpOQUmBXrFibnFpXnpenmpJVaGBgZGpkCFCdkZHc8b2AueMlZM
-        njyTrYFxG2MXIyeHhICJxJmZ91hAbCGBPYwSD3tlIexPjBIfblZ2MXIB2d8YJQ5+WMYG03C+
-        5yUzRGIvo8StT8dZIZy3jBL3LsxiAqniFbCTeHdwH9gKFgFViQ/7XkLFBSVOznwCtk5UIEni
-        19U5QDUcHMICLhK79xuDhJkFxCVuPZkPVi4iECfROusVI8h8ZoFTTBK3JmwDq2cT0JS4MLkU
-        xOQUsJJ4+EMColVeYvvbOWC3SQic4JBYdvcd1NEuEm/fHGKCsIUlXh3fwg5hS0l8frcXqiZZ
-        4tLMc1A1JRKP9xyEsu0lWk/1M4PsYgZau36XPsQuPone30+YQMISArwSHW1CENWKEvcmPWWF
-        sMUlHs5YAmV7SJw42McID7ZTP5axTWBUmIUUKLOQfD8LyTuzEDYvYGRZxSiVWlCcm56abFpg
-        qJuXWg6P7uT83E2M4MSsFbCDcfWGv3qHGJk4GA8xSnAwK4nwfhOKSBXiTUmsrEotyo8vKs1J
-        LT7EaAqMnonMUqLJ+cDckFcSb2hiaWBiZmZmYmlsZqgkzvu6dW6KkEB6YklqdmpqQWoRTB8T
-        B6dUA5Nk5O/j2Ycajs6t/B9yLU00erZB+9fpE18eUpX+u7I7XENg6bmqNNFu3nqDN9IBL38F
-        SfL8LSltPvZQdNXdrI3Fjku75FzabYyO/Xy71+LQzMUM9vwmjsu+/PzdK3Lhonaim5nY+ju/
-        D5VynJr/wf/TMtnfyyL9Ui6xX3iSrnw2+FSuXNKifdMup4r5LzQL+vpG2olZIlahktmRwTL0
-        aFDeatN9uzr21dyzFP6wV2qn+y/zfQ/kjk1KMKt/bRmR6KdltGqVE0MpyxyOZKOJr+UfL61Z
-        GV+/Wuthtobcj5c1PVmTdISsAhSuckwXvtrfN/tz5cXEMIur6+v+t4fPEb9+znfhojOXNmR8
-        CMlimqnEUpyRaKjFXFScCADcKTKXVQQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPIsWRmVeSWpSXmKPExsWy7bCSnO5snuhUg3nPZCxe/rzKZrH6bj+b
-        xbQPP5ktTk89y2Tx5EA7o8WqB+EWK1cfBfLWz2K22HtL22LP3pMsFt3Xd7BZLD/+j8mBx+Py
-        FW+Py2dLPTat6mTz2H2zgc1jcd9kVo+PT2+xePRtWcXo8XmTnEf7gW6mAM4oLpuU1JzMstQi
-        fbsEroyO5w3sBU8ZKyZPnsnWwLiNsYuRk0NCwETifM9L5i5GLg4hgd2MErefvWeHSIhLNF/7
-        AWULS6z895wdoug1o8SyDy/ZQBK8AnYS7w7uA5vEIqAq8WHfSyaIuKDEyZlPWEBsUYEkiT33
-        G4HiHBzCAi4Su/cbg4SZgebfejIfrFxEIE7i8P4bYPOZBU4xScy6NZUVYtleRonlxx6zgzSz
-        CWhKXJhcCmJyClhJPPwhATHHTKJraxcjhC0vsf3tHOYJjEKzkFwxC8m6WUhaZiFpWcDIsopR
-        MrWgODc9t9iwwCgvtVyvODG3uDQvXS85P3cTIzgOtbR2MO5Z9UHvECMTB+MhRgkOZiUR3m9C
-        EalCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeb+97k0REkhPLEnNTk0tSC2CyTJxcEo1MK1v6vM/
-        7+TocO7D6uRs/74PjKdW/9kcx39k9ocn/V3bjO4b5sm29WkGqdtkPXGIYf74c/2Jh/WvGKSD
-        mNhV2m8VvC3e4bf0tGzolef327ONn01nuyDz5tlRZa9Ek++3G7xd3EsfZ2QnS5x9ZLzJz61A
-        UkJLRvWemyBnge2aD0d+ZPks/+PxT+y6dUtwUMjdy48UNDrZtmju/jpNUG1WTN3+7QtcvuWs
-        eXvDXvrGrEc7PS+GP5pUHHFi39raBb6RnzZz8Sv+Vmp5abQ7f8HJfT5TxC6fv73l3B6HRF67
-        2g8C+qsMngd1PY56rKQs+nhXftIM9k1Hb1nFO4bXrk3jvna22Oxb31+eK6JFByM3+imxFGck
-        GmoxFxUnAgDYMigaMgMAAA==
-X-CMS-MailID: 20231120073659epcas5p169986d215d40a3cbe1620cb3b192629e
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20231114214215epcas5p43476e8ccba9bfccc87dac59bcb5a5e62
-References: <20231114214132.1486867-1-bvanassche@acm.org>
-        <CGME20231114214215epcas5p43476e8ccba9bfccc87dac59bcb5a5e62@epcas5p4.samsung.com>
-        <20231114214132.1486867-6-bvanassche@acm.org>
+To:     "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Dhanraj Jhawar (djhawar)" <djhawar@cisco.com>,
+        "Gian Carlo Boffa (gcboffa)" <gcboffa@cisco.com>,
+        "Masa Kai (mkai2)" <mkai2@cisco.com>,
+        "Satish Kharat (satishkh)" <satishkh@cisco.com>,
+        "Arulprabhu Ponnusamy (arulponn)" <arulponn@cisco.com>,
+        "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
+References: <20231023091507.120828-1-hare@suse.de>
+ <20231023091507.120828-14-hare@suse.de> <20231024065427.GD9847@lst.de>
+ <SJ0PR11MB589682551110734A017D19C3C3AAA@SJ0PR11MB5896.namprd11.prod.outlook.com>
+ <SJ0PR11MB58960463A1A9D634BE8D2A62C3B2A@SJ0PR11MB5896.namprd11.prod.outlook.com>
+ <a5df8cc9-34c4-4448-817f-0f61f4a493de@suse.de>
+ <SJ0PR11MB5896E596C922936ABDDE0567C3B0A@SJ0PR11MB5896.namprd11.prod.outlook.com>
+ <SJ0PR11MB58961DC466F1FC2DAD8825F6C3B7A@SJ0PR11MB5896.namprd11.prod.outlook.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <SJ0PR11MB58961DC466F1FC2DAD8825F6C3B7A@SJ0PR11MB5896.namprd11.prod.outlook.com>
+Authentication-Results: smtp-out1.suse.de;
+        none
+X-Spamd-Result: default: False [4.50 / 50.00];
+         ARC_NA(0.00)[];
+         TO_DN_EQ_ADDR_SOME(0.00)[];
+         XM_UA_NO_VERSION(0.01)[];
+         FROM_HAS_DN(0.00)[];
+         TO_DN_SOME(0.00)[];
+         TO_MATCH_ENVRCPT_ALL(0.00)[];
+         BAYES_HAM(-3.00)[100.00%];
+         MIME_GOOD(-0.10)[multipart/mixed,text/plain,text/x-patch];
+         HAS_ATTACHMENT(0.00)[];
+         RCVD_VIA_SMTP_AUTH(0.00)[];
+         MIME_BASE64_TEXT_BOGUS(1.00)[];
+         NEURAL_SPAM_SHORT(2.99)[0.998];
+         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+         MIME_BASE64_TEXT(0.10)[];
+         RCPT_COUNT_SEVEN(0.00)[11];
+         NEURAL_SPAM_LONG(3.50)[1.000];
+         FUZZY_BLOCKED(0.00)[rspamd.com];
+         FROM_EQ_ENVFROM(0.00)[];
+         MIME_TRACE(0.00)[0:+,1:+,2:+];
+         RCVD_COUNT_TWO(0.00)[2];
+         RCVD_TLS_ALL(0.00)[];
+         MID_RHS_MATCH_FROM(0.00)[]
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/15/2023 3:11 AM, Bart Van Assche wrote:
-> +2) whint_mode=user-based. F2FS tries to pass down hints given by
-> +users.
+This is a multi-part message in MIME format.
+--------------q0eVtnbWYVdRycE3BBezP00b
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-It does not pass down fcntl/inode based hints.
-So I wonder how users give the hints in this case?
+On 11/18/23 00:31, Karan Tilak Kumar (kartilak) wrote:
+> On Wednesday, November 15, 2023 4:22 PM, Karan Tilak Kumar (kartilak) wrote:
+>>
+>> On Tuesday, November 14, 2023 12:02 AM, Hannes Reinecke <hare@suse.de> wrote:
+>>>> I integrated your patch set using "b4 shazam" and built all the changes to do some dev testing.
+>>>> I instrumented the code to do the following:
+>>>>
+>>>> - After one million IOs, drop one IO response.
+>>>> - This will trigger an abort. Drop that abort response.
+>>>> - This will trigger a device reset. I'm seeing that the tag here is 0xFFFFFFFF (SCSI_NO_TAG).
+>>>>
+>>>> This tag fails the out-of-range tag check and escalates to host reset.
+>>>> I've been able to repro this three times with the same result.
+>>>>
+>>>> The expectation with this test case is that the device reset should go through successfully without escalating to host reset.
+>>>>
+>>> Thanks for the report.
+>>> Certainly not what was intended with the patch. Can you try with this patch on top:
+>>
+>> I applied this patch on top of the previous one and performed the unit tests that I had mentioned before.
+>>
+>>>
+>>> (The first hunk is actually a bugfix, and will be included with the next submission anyway.) Please enable fnic debug during testing and send me the logs.
+>>> It _might_ be that this is actually by design, as we will be failing if all tags are busy (ie if the error is EWOULDBLOCK).
+>>> But if we get EAGAIN it means that the queue is blocked and we'll need to investigate.
+>>
+>> There were two attempts at reproduction. One of them resulted in a crash. I have enabled fnic debug and captured the log.
+>> I've pasted the excerpt here for reference.
+>>
+>> Repro 1:
+>>
+[ .. ]
+>>
+>> =============
+>> Repro 2:
+>>
+[ .. ]
+>>
+>>
+>> Regards,
+>> Karan
+>>
+> 
+> Repro 3:
+> 
+> Nov 17 15:27:00 rhel-c4s5 kernel: fnic<7>: UT: fnic_fcpio_icmnd_cmpl_handler: 847: tag: 0x52 sc: 00000000fab117f4 CDB Opcode: 0x28 Dropping icmnd completion
+> Nov 17 15:27:30 rhel-c4s5 kernel: scsi host7: Abort Cmd called FCID 0x5205f2, LUN 0x2 TAG 52 flags 3
+> Nov 17 15:27:30 rhel-c4s5 kernel: scsi host7: CBD Opcode: 28 Abort issued time: 30067 msec
+> Nov 17 15:27:30 rhel-c4s5 kernel: scsi host7: fnic<7>: UT: fnic_fcpio_itmf_cmpl_handler: 1113: tag: 0x52 sc: 00 status: FCPIO_IO_NOT_FOUND Dropping abort completion
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: Returning from abort cmd type 2 FAILED
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: Device reset called FCID 0x5205f2, LUN 0x2 sc: 00000000fab117f4
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: Device reset allocation failed with -11
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_reset called
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0xfffffc
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0x52061b
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0x5205f2
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0x5205cb
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0x5205ca
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: update_mac 00:25:b5:cc:aa:00
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: Issued fw reset
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: set port_id 0 fp 0000000000000000
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: Returning from fnic reset SUCCESS
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0xfffffc
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_cleanup_io: tag:0x52 : sc:0x00000000fab117f4 duration = 52450 DID_TRANSPORT_DISRUPTED
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: Calling done for IO not issued to fw: tag:0x52 sc:0x00000000fab117f4
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: reset cmpl success
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0x52061b
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0x5205f2
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0x5205cb
+> Nov 17 15:27:52 rhel-c4s5 kernel: scsi host7: fnic_rport_exch_reset called portid 0x5205ca
+> Nov 17 15:27:54 rhel-c4s5 kernel: host7: Assigned Port ID 0d0880
+> Nov 17 15:27:54 rhel-c4s5 kernel: scsi host7: set port_id d0880 fp 0000000067a66565
+> Nov 17 15:27:54 rhel-c4s5 kernel: scsi host7: update_mac 0e:fc:00:0d:08:80
+> Nov 17 15:27:54 rhel-c4s5 kernel: scsi host7: FLOGI reg issued fcid d0880 map 0 dest 8c:60:4f:95:ea:a4
+> Nov 17 15:27:54 rhel-c4s5 kernel: scsi host7: flog reg succeeded
+> Nov 17 15:28:06 rhel-c4s5 kernel: sd 7:0:3:2: Power-on or device reset occurred
+> 
+Seems that 'blk_queue_enter()' called from scsi_alloc_request() is 
+failing, presumably as the queue is frozen/quiesced.
+Can you try with the attached patch instead of the previous debug patch?
+
+On, and incidentally: there's an unlock missing:
+
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 0278c4a207f3..47bcc6bd7376 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -2233,8 +2233,10 @@ int fnic_device_reset(struct scsi_device *sdev)
+         io_lock = fnic_io_lock_hash(fnic, sc);
+         spin_lock_irqsave(io_lock, flags);
+         io_req = fnic_priv(sc)->io_req;
+-       if (io_req)
++       if (io_req) {
++               spin_unlock_irqrestore(io_lock, flags);
+                 goto fnic_device_reset_end;
++       }
+
+         io_req = mempool_alloc(fnic->io_req_pool, GFP_ATOMIC);
+         if (!io_req) {
+
+Maybe fold it in with your patchset (if it's not already merged).
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Ivo Totev, Andrew McDonald,
+Werner Knoblich
+
+--------------q0eVtnbWYVdRycE3BBezP00b
+Content-Type: text/x-patch; charset=UTF-8;
+ name="0001-fnic-debug-device-reset-command-allocation-failures.patch"
+Content-Disposition: attachment;
+ filename*0="0001-fnic-debug-device-reset-command-allocation-failures.pat";
+ filename*1="ch"
+Content-Transfer-Encoding: base64
+
+RnJvbSBmN2ViYTczZjA2NTRlYmQyMDYwYjkyYWIwOGM5NDU4MjQzYTljOTE0IE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4K
+RGF0ZTogTW9uLCAyMCBOb3YgMjAyMyAwODo0MToxNiArMDEwMApTdWJqZWN0OiBbUEFUQ0hd
+IGZuaWM6IGRlYnVnIGRldmljZSByZXNldCBjb21tYW5kIGFsbG9jYXRpb24gZmFpbHVyZXMK
+CkFkZCBjb2RlIHRvIGRlYnVnIHdoeSBkZXZpY2UgcmVzZXQgY29tbWFuZCBhbGxvY2F0aW9u
+IGZhaWxzLgoKU2lnbmVkLW9mZi1ieTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuZGU+
+Ci0tLQogZHJpdmVycy9zY3NpL2ZuaWMvZm5pY19zY3NpLmMgfCA5ICsrKysrKy0tLQogMSBm
+aWxlIGNoYW5nZWQsIDYgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkKCmRpZmYgLS1n
+aXQgYS9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX3Njc2kuYyBiL2RyaXZlcnMvc2NzaS9mbmlj
+L2ZuaWNfc2NzaS5jCmluZGV4IDg5MDljZjA5Y2Y5ZS4uMDI3OGM0YTIwN2YzIDEwMDY0NAot
+LS0gYS9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX3Njc2kuYworKysgYi9kcml2ZXJzL3Njc2kv
+Zm5pYy9mbmljX3Njc2kuYwpAQCAtMjIwOSw4ICsyMjA5LDggQEAgaW50IGZuaWNfZGV2aWNl
+X3Jlc2V0KHN0cnVjdCBzY3NpX2RldmljZSAqc2RldikKIAl9CiAKIAlyZXEgPSBzY3NpX2Fs
+bG9jX3JlcXVlc3Qoc2Rldi0+cmVxdWVzdF9xdWV1ZSwgUkVRX09QX0RSVl9JTiwKLQkJCQkg
+QkxLX01RX1JFUV9OT1dBSVQpOwotCWlmICghcmVxKSB7CisJCQkJIEJMS19NUV9SRVFfTk9X
+QUlUIHwgQkxLX01RX1JFUV9QTSk7CisJaWYgKElTX0VSUihyZXEpKSB7CiAJCS8qCiAJCSAq
+IFJlcXVlc3QgYWxsb2NhdGlvbiBtaWdodCBmYWlsLCBpbmRpY2F0aW5nIHRoYXQKIAkJICog
+YWxsIHRhZ3MgYXJlIGJ1c3kuCkBAIC0yMjIxLDcgKzIyMjEsMTAgQEAgaW50IGZuaWNfZGV2
+aWNlX3Jlc2V0KHN0cnVjdCBzY3NpX2RldmljZSAqc2RldikKIAkJICogdG8gaG9zdCByZXNl
+dCBhbnl3YXkuCiAJCSAqLwogCQlGTklDX1NDU0lfREJHKEtFUk5fRVJSLCBmbmljLT5scG9y
+dC0+aG9zdCwKLQkJCSAgICAgICJEZXZpY2UgcmVzZXQgYWxsb2NhdGlvbiBmYWlsZWQsIGFs
+bCB0YWdzIGJ1c3lcbiIpOworCQkJICAgICAgIkRldmljZSByZXNldCBhbGxvY2F0aW9uIGZh
+aWxlZCAoZXJyb3IgJWxkJXMlcylcbiIsCisJCQkgICAgICBQVFJfRVJSKHJlcSksCisJCQkg
+ICAgICBzZGV2LT5yZXF1ZXN0X3F1ZXVlLT5tcV9mcmVlemVfZGVwdGggPyAiLGZyb3plbiIg
+OiAiIiwKKwkJCSAgICAgIHNkZXYtPnF1aWVzY2VkX2J5ID8gIixxdWllc2NlZCIgOiAiIik7
+CiAJCXJldHVybiByZXQ7CiAJfQogCXNjID0gYmxrX21xX3JxX3RvX3BkdShyZXEpOwotLSAK
+Mi4zNS4zCgo=
+
+--------------q0eVtnbWYVdRycE3BBezP00b--
