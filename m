@@ -1,22 +1,32 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kko+Iv5h"
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BD1FC1
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2023 15:02:35 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC345C433C9;
-	Mon, 20 Nov 2023 23:02:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700521354;
-	bh=FrDMoJdlxK52/94+zVyE2hI7unP1VqBVCXrEm9LXIWs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=kko+Iv5hW5ipjxGCXB91bSuqb3p77WbMww/J7ibq0UuFBP95NgW+VvnocPiimNirN
-	 axtOMLVVh+MD55m7bEoFvQPj7IYO/bY50weo3FCs7U7fTo8k8Ua01iPwvdDP6FNItH
-	 mHZCJRo7+cGjkDXBqNT0KSzn2etb9VgeMORrBQBXQRatxLr+BtP07s3MbA5epiugjS
-	 d43VbL0YKQYVr1XKG27y/p2UIWs3mTEF/aXzakPSdKHcCZ3qx5IWdLchBmwJYzB090
-	 fF+ONRayaii1rzbsDf8cyW02Sk6h9E/Ax7ytS9rm4OjYVPl1EMJv/YYjlCNbIss3pP
-	 a5OCARCHEpFig==
-Message-ID: <c789e381-f0c4-4c61-bbc7-069a834841c9@kernel.org>
-Date: Tue, 21 Nov 2023 08:02:32 +0900
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24A339F;
+	Mon, 20 Nov 2023 15:03:22 -0800 (PST)
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1cf63ca9b1bso9743855ad.3;
+        Mon, 20 Nov 2023 15:03:22 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700521401; x=1701126201;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=z2UEv7U1fibB8ztmSv2Lpzw4U6RFbfvK3CU9E2inLvA=;
+        b=B3d5NWgbkKil32OGXwabZeH2pNGMlamvHebphrhq1lz9AGqV8lqSY/e6juMm7TYlSK
+         6JUCGZ9Qjh/Ykj/96nXmYusoCf5UpwDkTgmUoBeAJv3aCTNy+cz6uEU6tBY+ZCXHXEe+
+         mWBux3PjEjyr59xzaQnftTbIZnq4CRpGI7zQZ8sfdmlfWwLoq52Ap44w8WvrbHowzAM9
+         KEiOuEfTZg/EA8Caft9BG7KiHO+RqtG/c/KxNRk1xFxXKTLq8KAb9INAnuysHPAD6qtf
+         rv2zM9oO6bi/s66RnIH8zGQ7kR32XHO80ka2J5GoVX1rfO4cVJ4r5qZbjkFyWKcjg78w
+         mWOA==
+X-Gm-Message-State: AOJu0YwWORSl4B6CrRPmZ1RN8S+6iGjlnVPF1eK9Mnlf2G7V4umPY2GR
+	1BZpbCvrUD+IDX1HCPEO3yw=
+X-Google-Smtp-Source: AGHT+IFcsnhoTXXi1l5jEFe7/aCmqjVk0UlNVYt7D1hvxXXvLyuzKeX5Sj6xkF8ODb4koO5J4vDcWQ==
+X-Received: by 2002:a17:902:e74c:b0:1cc:2f70:4865 with SMTP id p12-20020a170902e74c00b001cc2f704865mr2455928plf.26.1700521401404;
+        Mon, 20 Nov 2023 15:03:21 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:bb61:2ac8:4d61:2b3d? ([2620:0:1000:8411:bb61:2ac8:4d61:2b3d])
+        by smtp.gmail.com with ESMTPSA id i2-20020a17090332c200b001c9bc811d4dsm6562430plr.295.2023.11.20.15.03.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 20 Nov 2023 15:03:20 -0800 (PST)
+Message-ID: <ef7de6b5-2ed3-469e-bb01-4eacda62cd6a@acm.org>
+Date: Mon, 20 Nov 2023 15:03:19 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -24,110 +34,207 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 01/19] block: Introduce more member variables related
- to zone write locking
+Subject: Re: [PATCH v5 2/3] scsi: core: Support disabling fair tag sharing
 Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
- Hannes Reinecke <hare@suse.de>, Nitesh Shetty <nj.shetty@samsung.com>,
- Ming Lei <ming.lei@redhat.com>
-References: <20231114211804.1449162-1-bvanassche@acm.org>
- <20231114211804.1449162-2-bvanassche@acm.org>
- <3d8d04d5-80d8-4eee-9899-d9fe197dd203@kernel.org>
- <0d60bde5-018d-4850-8870-092b472463a6@acm.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <0d60bde5-018d-4850-8870-092b472463a6@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+ Keith Busch <kbusch@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Ed Tsai <ed.tsai@mediatek.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231114180426.1184601-1-bvanassche@acm.org>
+ <20231114180426.1184601-3-bvanassche@acm.org>
+ <80dee412-2fda-6a23-0b62-08f87bd7e607@huaweicloud.com>
+ <d706f265-f991-45c0-a551-34ecdee55f7c@acm.org>
+ <d1e94a08-f28e-ddd9-5bda-7fee28b87f31@huaweicloud.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <d1e94a08-f28e-ddd9-5bda-7fee28b87f31@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 11/21/23 05:44, Bart Van Assche wrote:
-> On 11/19/23 15:29, Damien Le Moal wrote:
->> On 11/15/23 06:16, Bart Van Assche wrote:
->>> @@ -82,6 +84,8 @@ void blk_set_stacking_limits(struct queue_limits *lim)
->>>   	lim->max_dev_sectors = UINT_MAX;
->>>   	lim->max_write_zeroes_sectors = UINT_MAX;
->>>   	lim->max_zone_append_sectors = UINT_MAX;
->>> +	/* Request-based stacking drivers do not reorder requests. */
->>
->> Rereading this patch, I do not think this statement is correct. I seriously
->> doubt that multipath will preserve write command order in all cases...
->>
->>> +	lim->driver_preserves_write_order = true;
->>
->> ... so it is likely much safer to set the default to "false" as that is the
->> default for all requests in general.
+On 11/15/23 17:08, Yu Kuai wrote:
+> Hi,
 > 
-> How about applying this (untested) patch on top of this patch series?
+> 在 2023/11/16 2:19, Bart Van Assche 写道:
+>> On 11/14/23 23:24, Yu Kuai wrote:
+>>> 在 2023/11/15 2:04, Bart Van Assche 写道:
+>>>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>>>> index d7f51b84f3c7..872f87001374 100644
+>>>> --- a/drivers/scsi/hosts.c
+>>>> +++ b/drivers/scsi/hosts.c
+>>>> @@ -442,6 +442,7 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
+>>>>       shost->no_write_same = sht->no_write_same;
+>>>>       shost->host_tagset = sht->host_tagset;
+>>>>       shost->queuecommand_may_block = sht->queuecommand_may_block;
+>>>> +    shost->disable_fair_tag_sharing = sht->disable_fair_tag_sharing;
+>>>
+>>> Can we also consider to disable fair tag sharing by default for the
+>>> driver that total driver tags is less than a threshold?
+>> I don't want to do this because such a change could disable fair tag
+>> sharing for drivers that support both SSDs and hard disks being associated
+>> with a single SCSI host.
 > 
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index 4c776c08f190..aba1972e9767 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -84,8 +84,6 @@ void blk_set_stacking_limits(struct queue_limits *lim)
->   	lim->max_dev_sectors = UINT_MAX;
->   	lim->max_write_zeroes_sectors = UINT_MAX;
->   	lim->max_zone_append_sectors = UINT_MAX;
-> -	/* Request-based stacking drivers do not reorder requests. */
-> -	lim->driver_preserves_write_order = true;
->   }
->   EXPORT_SYMBOL(blk_set_stacking_limits);
-> 
-> diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
-> index 2d3e186ca87e..cb9abe4bd065 100644
-> --- a/drivers/md/dm-linear.c
-> +++ b/drivers/md/dm-linear.c
-> @@ -147,6 +147,11 @@ static int linear_report_zones(struct dm_target *ti,
->   #define linear_report_zones NULL
->   #endif
-> 
-> +static void linear_io_hints(struct dm_target *ti, struct queue_limits *limits)
-> +{
-> +	limits->driver_preserves_write_order = true;
-> +}
+> Ok, then is this possible to add a sysfs entry to disable/enable fair
+> tag sharing manually?
 
-Hmm, but does dm-linear preserve write order ? I am not convinced. And what
-about dm-flakey, dm-error and dm-crypt ? All of these also support zoned
-devices. I do not think that we can say that any of these preserve write order.
+How about replacing patch 1/3 from this series with the patch below?
 
-> +
->   static int linear_iterate_devices(struct dm_target *ti,
->   				  iterate_devices_callout_fn fn, void *data)
->   {
-> @@ -208,6 +213,7 @@ static struct target_type linear_target = {
->   	.map    = linear_map,
->   	.status = linear_status,
->   	.prepare_ioctl = linear_prepare_ioctl,
-> +	.io_hints = linear_io_hints,
->   	.iterate_devices = linear_iterate_devices,
->   	.direct_access = linear_dax_direct_access,
->   	.dax_zero_page_range = linear_dax_zero_page_range,
-> 
->>> @@ -685,6 +689,10 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
->>>   						   b->max_secure_erase_sectors);
->>>   	t->zone_write_granularity = max(t->zone_write_granularity,
->>>   					b->zone_write_granularity);
->>> +	t->driver_preserves_write_order = t->driver_preserves_write_order &&
->>> +		b->driver_preserves_write_order;
->>> +	t->use_zone_write_lock = t->use_zone_write_lock ||
->>> +		b->use_zone_write_lock;
->>
->> Very minor nit: splitting the line after the equal would make this more readable.
-> 
-> Hmm ... I have often seen other reviewers asking to maximize the use of each
-> source code line as much as reasonably possible.
+Thanks,
 
-As I said, very minor nit :) Feel free to ignore.
+Bart.
 
-> 
-> Thanks,
-> 
-> Bart.
-> 
 
--- 
-Damien Le Moal
-Western Digital Research
+     block: Make fair tag sharing configurable
+
+     The fair sharing algorithm has a negative performance impact for storage
+     devices for which the full queue depth is required to reach peak
+     performance, e.g. UFS devices. This is because it takes long after a
+     request queue became inactive until tags are reassigned to the active
+     request queue(s). Since making tag sharing fair is not needed if the
+     request processing latency is similar for all request queues, introduce
+     a sysfs attribute for controlling the fair tag sharing algorithm.
+     Increase BLK_MQ_F_ALLOC_POLICY_START_BIT to prevent that the fair tag
+     sharing flag overlaps with the tag allocation policy.
+
+     Cc: Christoph Hellwig <hch@lst.de>
+     Cc: Martin K. Petersen <martin.petersen@oracle.com>
+     Cc: Ming Lei <ming.lei@redhat.com>
+     Cc: Keith Busch <kbusch@kernel.org>
+     Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+     Cc: Yu Kuai <yukuai1@huaweicloud.com>
+     Cc: Ed Tsai <ed.tsai@mediatek.com>
+     Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+
+diff --git a/Documentation/ABI/stable/sysfs-block b/Documentation/ABI/stable/sysfs-block
+index 1fe9a553c37b..7b66eb938882 100644
+--- a/Documentation/ABI/stable/sysfs-block
++++ b/Documentation/ABI/stable/sysfs-block
+@@ -269,6 +269,19 @@ Description:
+  		specific passthrough mechanisms.
+
+
++What:		/sys/block/<disk>/queue/fair_sharing
++Date:		November 2023
++Contact:	linux-block@vger.kernel.org
++Description:
++		[RW] If hardware queues are shared across request queues, by
++		default the request tags are distributed evenly across the
++		active request queues. If the total number of tags is low and
++		if the workload differs per request queue this approach may
++		reduce throughput. This sysfs attribute controls whether or not
++		the fair tag sharing algorithm is enabled. 1 means enabled
++		while 0 means disabled.
++
++
+  What:		/sys/block/<disk>/queue/fua
+  Date:		May 2018
+  Contact:	linux-block@vger.kernel.org
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index 5cbeb9344f2f..f41408103106 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -198,6 +198,7 @@ static const char *const hctx_flag_name[] = {
+  	HCTX_FLAG_NAME(NO_SCHED),
+  	HCTX_FLAG_NAME(STACKING),
+  	HCTX_FLAG_NAME(TAG_HCTX_SHARED),
++	HCTX_FLAG_NAME(DISABLE_FAIR_TAG_SHARING),
+  };
+  #undef HCTX_FLAG_NAME
+
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index f75a9ecfebde..eda6bd0611ea 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -416,7 +416,8 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
+  {
+  	unsigned int depth, users;
+
+-	if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED))
++	if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED) ||
++	    (hctx->flags & BLK_MQ_F_DISABLE_FAIR_TAG_SHARING))
+  		return true;
+
+  	/*
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 63e481262336..f044bbe57509 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -473,6 +473,43 @@ static ssize_t queue_dax_show(struct request_queue *q, char *page)
+  	return queue_var_show(blk_queue_dax(q), page);
+  }
+
++static ssize_t queue_fair_sharing_show(struct request_queue *q, char *page)
++{
++	struct blk_mq_hw_ctx *hctx;
++	unsigned long i;
++	bool fair_sharing = true;
++
++	/* q->sysfs_lock serializes against blk_mq_realloc_hw_ctxs() */
++	queue_for_each_hw_ctx(q, hctx, i)
++		if (hctx->flags & BLK_MQ_F_DISABLE_FAIR_TAG_SHARING)
++			fair_sharing = false;
++
++	return sysfs_emit(page, "%u\n", fair_sharing);
++}
++
++static ssize_t queue_fair_sharing_store(struct request_queue *q,
++					const char *page, size_t count)
++{
++	struct blk_mq_hw_ctx *hctx;
++	unsigned long i;
++	int res, val;
++
++	res = kstrtoint(page, 0, &val);
++	if (res < 0)
++		return res;
++
++	/* q->sysfs_lock serializes against blk_mq_realloc_hw_ctxs() */
++	if (val) {
++		queue_for_each_hw_ctx(q, hctx, i)
++			hctx->flags &= ~BLK_MQ_F_DISABLE_FAIR_TAG_SHARING;
++	} else {
++		queue_for_each_hw_ctx(q, hctx, i)
++			hctx->flags |= BLK_MQ_F_DISABLE_FAIR_TAG_SHARING;
++	}
++
++	return count;
++}
++
+  #define QUEUE_RO_ENTRY(_prefix, _name)			\
+  static struct queue_sysfs_entry _prefix##_entry = {	\
+  	.attr	= { .name = _name, .mode = 0444 },	\
+@@ -542,6 +579,7 @@ QUEUE_RW_ENTRY(queue_nonrot, "rotational");
+  QUEUE_RW_ENTRY(queue_iostats, "iostats");
+  QUEUE_RW_ENTRY(queue_random, "add_random");
+  QUEUE_RW_ENTRY(queue_stable_writes, "stable_writes");
++QUEUE_RW_ENTRY(queue_fair_sharing, "fair_sharing");
+
+  #ifdef CONFIG_BLK_WBT
+  static ssize_t queue_var_store64(s64 *var, const char *page)
+@@ -664,6 +702,7 @@ static struct attribute *blk_mq_queue_attrs[] = {
+  	&elv_iosched_entry.attr,
+  	&queue_rq_affinity_entry.attr,
+  	&queue_io_timeout_entry.attr,
++	&queue_fair_sharing_entry.attr,
+  #ifdef CONFIG_BLK_WBT
+  	&queue_wb_lat_entry.attr,
+  #endif
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 1ab3081c82ed..fd5a51e8b628 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -662,7 +662,8 @@ enum {
+  	 * or shared hwqs instead of 'mq-deadline'.
+  	 */
+  	BLK_MQ_F_NO_SCHED_BY_DEFAULT	= 1 << 7,
+-	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
++	BLK_MQ_F_DISABLE_FAIR_TAG_SHARING = 1 << 8,
++	BLK_MQ_F_ALLOC_POLICY_START_BIT = 16,
+  	BLK_MQ_F_ALLOC_POLICY_BITS = 1,
+
+  	BLK_MQ_S_STOPPED	= 0,
 
