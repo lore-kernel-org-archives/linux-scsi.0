@@ -1,102 +1,61 @@
-Return-Path: <linux-scsi-owner@vger.kernel.org>
-X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
-	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB359C197A0
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Nov 2023 22:53:52 +0000 (UTC)
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229719AbjKTWxy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Nov 2023 17:53:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33886 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbjKTWxy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Nov 2023 17:53:54 -0500
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EEolKGlx"
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0775A2
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2023 14:53:50 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89101C433C8;
-        Mon, 20 Nov 2023 22:53:49 +0000 (UTC)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3FE1C1
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2023 14:56:34 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4392C433C8;
+	Mon, 20 Nov 2023 22:56:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700520830;
-        bh=aW9oiZ3o4UGPxFMSHXh5t1d8o/tBWYebBgReCYTpbkk=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=mxh9lEhJ3xJlLKVaB60eVEkz0Dnf3NlNEQeQNJzKBhoosaKucxdmLfI3hyINl/Y72
-         RGrCzzaceqz0yU8iZ/K4XZmnWhuSMhcMHu5Ikx6XbeUJrsF45pQ1UqUEuZHWmUPJRf
-         lhPzTh919DXomilLCQhe54ocWRgpUu7rp2HhodpIx9djRRpCo4WhPA9Nf9oW8NK4Qd
-         I1kv12hmxeZ6E5QbLlLH+pzDt/vCX/4Nb7iAYNxW6Hdn3x/KJEzxX18HxxePqNOHuz
-         XwRxJBZ4pAJQgOdZcjK9Ru2/3ctqY7Ta3sGgopNKaGojK3x4pGFS5pDxOxCUAGWDmK
-         l3TdKeKhqERDw==
-Message-ID: <8b9d4663-dca5-496a-a173-feb5d7bf01bc@kernel.org>
-Date:   Tue, 21 Nov 2023 07:53:48 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: Change scsi device boolean fields to single bit
- flags
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Cc:     Phillip Susi <phill@thesusis.net>
-References: <20231120073522.34180-1-dlemoal@kernel.org>
- <20231120073522.34180-2-dlemoal@kernel.org>
- <6e72b067-15a3-47e2-98c3-fdeed054dfba@acm.org>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <6e72b067-15a3-47e2-98c3-fdeed054dfba@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+	s=k20201202; t=1700520994;
+	bh=XxKriClw7kJNhV8djvf+9DEMraeQlomplnQwhouqjt4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=EEolKGlxkhOlX3zBpSPbvgUusVNBriD3sVV4gigg+0a9huZsfHg8SEr4EVeK13cho
+	 4qQiR8h9qSnXsmN1NGcA437xcyZQB4a2Bf5qbZPfWKviDol6wYLIvllUzOA+1MyPo2
+	 AEiIAbublEG6xOamKc6tMxjRyl3to/QVIlmC0r8nDdNUg8ozdTDwX/X10wbFgUmQyn
+	 OQnlVYf7Sm7YLHUKZIeSO1QBL6hRagGpbSnIcolorguDsIVuFjNh4oHDR+wphGIFoL
+	 dxT3phxH/p7cNSaGlTAXMIioAuOFtSNqKacdt+Xecrhv5phLiF034UQ7R4an+WcOTl
+	 gDDgQH0mYKPoQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	James Bottomley <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Phillip Susi <phill@thesusis.net>
+Subject: [PATCH v2 0/2] Fix runtime suspended device resume
+Date: Tue, 21 Nov 2023 07:56:29 +0900
+Message-ID: <20231120225631.37938-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
-List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
+List-Id: <linux-scsi.vger.kernel.org>
+List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On 11/21/23 01:06, Bart Van Assche wrote:
-> On 11/19/23 23:35, Damien Le Moal wrote:
->> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->> index 10480eb582b2..1fb460dfca0c 100644
->> --- a/include/scsi/scsi_device.h
->> +++ b/include/scsi/scsi_device.h
->> @@ -167,19 +167,19 @@ struct scsi_device {
->>   	 * power state for system suspend/resume (suspend to RAM and
->>   	 * hibernation) operations.
->>   	 */
->> -	bool manage_system_start_stop;
->> +	unsigned manage_system_start_stop:1;
->>   
->>   	/*
->>   	 * If true, let the high-level device driver (sd) manage the device
->>   	 * power state for runtime device suspand and resume operations.
->>   	 */
->> -	bool manage_runtime_start_stop;
->> +	unsigned manage_runtime_start_stop:1;
->>   
->>   	/*
->>   	 * If true, let the high-level device driver (sd) manage the device
->>   	 * power state for system shutdown (power off) operations.
->>   	 */
->> -	bool manage_shutdown;
->> +	unsigned manage_shutdown:1;
->>   
->>   	unsigned removable:1;
->>   	unsigned changed:1;	/* Data invalid due to media change */
-> 
-> Is there any code that modifies the above flags from different
-> threads simultaneously? I'm wondering whether this patch introduces
-> one or more race conditions related to changing these flags.
+The first patch changes the use of the bool type back to the regular
+unsigned:1 for the manage_xxx scsi device flags. This is marked as a fix
+and CC-stable to avoid issues with later eventual fixes in this area.
 
-These are set once when the LLD probes and initialize the scsi device and never
-changed again by the LLD. The manage_xxx_start_stop flags can be changed through
-sysfs though, but doing so would be a mistake as things would stop working as
-expected... I do think that we should change these flags to be RO in sysfs.
+The second patch addresses an issue with system resume with devices that
+were runtime suspended. For ATA devices, this leads to a disk still
+being reported as suspended while it is in fact spun up due to how ATA
+resume is done (port reset).
 
-Note that only libata and the firewire/sbp2 driver use these flags.
+Changes from v1:
+ - Fixed typos in patch 2 commit message.
 
-> 
-> Thanks,
-> 
-> Bart.
+Damien Le Moal (2):
+  scsi: Change scsi device boolean fields to single bit flags
+  scsi: sd: fix system start for ATA devices
+
+ drivers/ata/libata-scsi.c  |  9 +++++++--
+ drivers/firewire/sbp2.c    |  6 +++---
+ drivers/scsi/sd.c          |  9 ++++++++-
+ include/scsi/scsi_device.h | 12 +++++++++---
+ 4 files changed, 27 insertions(+), 9 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.42.0
 
