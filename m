@@ -1,90 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2809F4643D
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 13:30:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvVXRDSS"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id EC95BC433CC
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 13:30:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700573415;
-	bh=i7N+Y+xTcNH9EPzBCP+UPhcL5NsDps1FQiJMk6yHLyg=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=LvVXRDSSRP9cfzF+E2JY2awnUNsnvJNX9q1hEk+ZBxQhGLkuSATQU3AROnkJN/9yh
-	 iCkYAZSQqv20eVgR2wynHq65M99E/XOQvUTIZ0J7JgJF5JzEcTXLAd89DiViock2qq
-	 8e3cSVGnn3eAYRRBn336sX9pHswCb+rEguoDIFMRO3QOc/hsjo4fZlpl1++1vZQ30Q
-	 HArivbiNfv8Z0ce9W01m6Euzn8okgmDnk21rGRZXRjHWWW+33/KIDcpfKzeporq1gm
-	 FlDNt2Cg6gdqXsx7iTADLVMc82QN0JZYHEt6vlt254EcZeGTKzgpcHRluvHKv67gMl
-	 fcff5jNzLHfnQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id DD178C4332E; Tue, 21 Nov 2023 13:30:14 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Tue, 21 Nov 2023 13:30:14 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: joop.boonen@netapp.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-217599-11613-eoNDW1iChH@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="tifmBJA9";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="tifmBJA9"
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A1F2D4B;
+	Tue, 21 Nov 2023 05:31:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1700573514;
+	bh=i0wLYaOPYdVNi/v8GJrh3T7Dl41RZhrj0CgcZP50xAU=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=tifmBJA9e2vKpjaPCnsvZmYUlQXcc4X3MAtoLBLFfhMVUCNfwERzt2iy5Aju1UAVT
+	 /5/hflHF8goV30slXpz+FHTI+F57II+L/RNI4uw2S9HmLsxh9ByQwY8PwhftmBOVth
+	 Xj31fgSUjmrQjynKsIfaUZS43flEESPZQ1xxz0ho=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id EFCF11286B89;
+	Tue, 21 Nov 2023 08:31:54 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id us5JTmT0cmzc; Tue, 21 Nov 2023 08:31:54 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1700573514;
+	bh=i0wLYaOPYdVNi/v8GJrh3T7Dl41RZhrj0CgcZP50xAU=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=tifmBJA9e2vKpjaPCnsvZmYUlQXcc4X3MAtoLBLFfhMVUCNfwERzt2iy5Aju1UAVT
+	 /5/hflHF8goV30slXpz+FHTI+F57II+L/RNI4uw2S9HmLsxh9ByQwY8PwhftmBOVth
+	 Xj31fgSUjmrQjynKsIfaUZS43flEESPZQ1xxz0ho=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 524AC1286B29;
+	Tue, 21 Nov 2023 08:31:53 -0500 (EST)
+Message-ID: <c4342441ddd27d587af3805dd9de882ee0b5cfd0.camel@HansenPartnership.com>
+Subject: Re: scsi regression that after months is still not addressed and
+ now bothering 6.1.y users, too
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Linux regressions mailing list <regressions@lists.linux.dev>, John Garry
+ <john.g.garry@oracle.com>, Greg KH <gregkh@linuxfoundation.org>, Sagar
+ Biradar <sagar.biradar@microchip.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>,  Adaptec OEM Raid Solutions
+ <aacraid@microsemi.com>
+Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>, Sasha Levin
+ <sashal@kernel.org>, Hannes Reinecke <hare@suse.de>, scsi
+ <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Gilbert
+ Wu <gilbert.wu@microchip.com>
+Date: Tue, 21 Nov 2023 08:31:48 -0500
+In-Reply-To: <fe89fd29-562c-46c0-9a15-e3a5c43da9a1@leemhuis.info>
+References: <c6ff53dc-a001-48ee-8559-b69be8e4db81@leemhuis.info>
+	 <47e8fd80-3f87-4b87-a875-035e69961392@oracle.com>
+	 <a3ddbd03-7a94-4b6a-9be1-b268ce883551@leemhuis.info>
+	 <18b3745d3e5de2ffd9b74f9cc826c2c3235dc6ca.camel@HansenPartnership.com>
+	 <fe89fd29-562c-46c0-9a15-e3a5c43da9a1@leemhuis.info>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+On Tue, 2023-11-21 at 14:24 +0100, Linux regression tracking (Thorsten
+Leemhuis) wrote:
+> On 21.11.23 14:05, James Bottomley wrote:
+> > On Tue, 2023-11-21 at 13:24 +0100, Linux regression tracking
+> > (Thorsten
+> > Leemhuis) wrote:
+> > > On 21.11.23 12:30, John Garry wrote:
+> > [...]
+> > > > Is there a full kernel log for this hanging system?
+> > > > I can only see snippets in the ticket.
+> > > > And what does /sys/class/scsi_host/host*/nr_hw_queues show?
+> > > 
+> > > Sorry, I'm just the man-in-the-middle: you need to ask in the
+> > > ticket, as  the privacy policy for bugzilla.kernel.org does not
+> > > allow to CC the reporters from the ticket here without their
+> > > consent.
+> > 
+> > How did you arrive at that conclusion?
+> 
+> To quote https://bugzilla.kernel.org/createaccount.cgi:
+> """
+> Note that your email address will never be displayed to logged out
+> users. Only registered users will be able to see it.
+> """
 
---- Comment #31 from Joop Boonen (joop.boonen@netapp.com) ---
-Created attachment 305451
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D305451&action=3Dedit
-The kernel.log file wenn the system is hanging.
+OK, so someone needs to update that to reflect reality.
 
-The kernel log wenn including when the system hung.
+> Not sure since when it's there. Maybe it was added due to EU GDPR?
+> Konstantin should know. But for me that's enough to not CC people. I
+> even heard from one well known kernel developer that his company got
+> a
+> GDPR complaint because he had mentioning the reporters name and email
+> address in a Reported-by: tag.
+> 
+> Side note: bugbot afaics can solve the initial problem (e.g. interact
+> with reporters in bugzilla by mail without exposing their email
+> address). But to use bugbot one *afaik* still has to reassign a
+> ticket to a specific product and component in bugzilla. Some
+> subsystem maintainers don't want that, as that issues then does not
+> show up in the usual queries.
 
-The output of: cat /sys/class/scsi_host/host*/nr_hw_queues
+I'm not sure we need to solve a problem that doesn't exist. Switching
+to email is a standard maintainer response:
 
-root@ganeti-node2:~# cat /sys/class/scsi_host/host*/nr_hw_queues
-32
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-root@ganeti-node2:~#
+https://lore.kernel.org/all/20230324133646.16101dfa666f253c4715d965@linux-foundation.org/
+https://lore.kernel.org/all/20230314144145.07a3e680362eb77061fe6d0e@linux-foundation.org/
+...
 
---=20
-You may reply to this email to add a comment.
+James
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
