@@ -1,181 +1,130 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="MriSAoWS"
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FFDDC8
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Nov 2023 23:08:56 -0800 (PST)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20231121070853epoutp0351ac3763a4e7d5d3d9bdc99cb0c3c69d~ZkbNJ2D4e1689316893epoutp03K
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 07:08:53 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20231121070853epoutp0351ac3763a4e7d5d3d9bdc99cb0c3c69d~ZkbNJ2D4e1689316893epoutp03K
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1700550533;
-	bh=lBjdn6WWcT1XANKqVORRZYdex80nzvC7N8zEsyJf6Uc=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=MriSAoWSMv8o6qsTLKYl8vXpprQgAITO+vCOcv2r7M7vDWEnFiMTlzHqfmFwRKqMa
-	 PAjLunenJdYl+BCUoFMSPf8YuiU567mgTZirMs0qYdmUOuuArocex6mKMuMTZVYVQR
-	 4WkvUxbhZQSvrQmwFncmLxrEFDYq8Q7E1nw+WhBg=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-	20231121070852epcas2p373496f57296f392bab8982f8cef423a7~ZkbMkEoUQ1994119941epcas2p3p;
-	Tue, 21 Nov 2023 07:08:52 +0000 (GMT)
-Received: from epsmgec2p1.samsung.com (unknown [182.195.36.102]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4SZFpr0lfWz4x9QF; Tue, 21 Nov
-	2023 07:08:52 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-	epsmgec2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	BA.60.08648.3875C556; Tue, 21 Nov 2023 16:08:52 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-	20231121070851epcas2p2ba11977edde23d3dcb87581e410806c8~ZkbLVSrDL2441824418epcas2p2G;
-	Tue, 21 Nov 2023 07:08:51 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20231121070851epsmtrp272dcc865251bb4d0db158deb0b0d4358~ZkbLTBCH_1371513715epsmtrp2r;
-	Tue, 21 Nov 2023 07:08:51 +0000 (GMT)
-X-AuditID: b6c32a43-721fd700000021c8-fa-655c578335df
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	AF.A4.08755.3875C556; Tue, 21 Nov 2023 16:08:51 +0900 (KST)
-Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20231121070851epsmtip292335baadde9a40ebd123e2e92ac0bc0~ZkbLE5_sG2915529155epsmtip2U;
-	Tue, 21 Nov 2023 07:08:51 +0000 (GMT)
-From: SEO HOYOUNG <hy50.seo@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-	kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
-	sc.suh@samsung.com, quic_nguyenb@quicinc.com, cpgs@samsung.com,
-	grant.jung@samsung.com, junwoo80.lee@samsung.com
-Cc: SEO HOYOUNG <hy50.seo@samsung.com>
-Subject: [PATCH v3] scsi: ufs: core: fix racing issue during
- ufshcd_mcq_abort
-Date: Tue, 21 Nov 2023 16:11:28 +0900
-Message-Id: <20231121071128.7743-1-hy50.seo@samsung.com>
-X-Mailer: git-send-email 2.26.0
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="K//eqpSq"
+Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37D88D75
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 01:26:51 -0800 (PST)
+Received: by mail-wm1-x331.google.com with SMTP id 5b1f17b1804b1-40b2a8c7ca9so2081015e9.2
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 01:26:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1700558809; x=1701163609; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=2P1hVnqBp1TjBXIHmThUbTKwInHmtvShon2AXquEKYA=;
+        b=K//eqpSq2no8ChUPCr3BHAWO6qLG3xPmJ5ZTbKOp7s7VVBy76G0iW8ahMMJES9Jgwe
+         Uw8g03UUkAnrLHQZj6JfsnC1obpAigU4balTzGQLZ3aKjuv5iEgDJ5TTu5NlUEJPxtlc
+         QSQTm2k2LiZrjOhn2bQoK+k6nNfxnlFOgYKH+SEUVTqcPO8fORgYyyqDDD/EQOOiKYKT
+         nYkzGaB6QkUFGjdZ1Sq/2/1MPFeVFr1qIdZ90uPK/1q9MUSWXjPAzQS7yFTVognxoTA2
+         wojJG7MOqHU4Y274GWi/43V53G8V2AgTXojJ53/YCJrOAOh/rxY/+geQsOoTm4RPjm+D
+         yz9g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700558809; x=1701163609;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2P1hVnqBp1TjBXIHmThUbTKwInHmtvShon2AXquEKYA=;
+        b=B6EHx8d/jG2x4WJFRZwWgYxsM8yvhy4K3U4HfM1gOsvrayUSP3YnczreghGs3Bs9Tp
+         s9eUk8H1mD4XooYZtaFWAejxqWXJGebSE5WoiaSCAJ6/xOy/ivlviYRAHffM5Gmk2l2u
+         YyNI/UeXpZXYKtXpe8PE4A+yzMpo5FYPgpXMHsM5RXdhYnZVMpYPeYQW/4XjhfIiP/RL
+         ImVW0zHLjYcOHLayyY8JeulVgIkVPAAzi45wVPrGy+H/nznut5MsuzMV5F6suH4HZH7X
+         xbCytI/tdBZJDht/5HqQ1cWHMeQFdC3iKnIY8wsO1VCafyHRJqFMSNTZW+FDkDpOOWFj
+         E0EQ==
+X-Gm-Message-State: AOJu0YyClMo/B5f4ul3qZrcxrTTXNq+QECNez2IAkGGWbI5Cj0kIHiIL
+	nfRXp9wZWcw/bPPn/EfjRPxtCr/P3VKNHmxQ1XU=
+X-Google-Smtp-Source: AGHT+IHaU330+oVFaUhIxh07h37bartWziJHfO5GgF6+GyGC/fwu6DvN/nv5aJLYydx48MKUYngHNQ==
+X-Received: by 2002:a1c:7207:0:b0:40a:48af:4821 with SMTP id n7-20020a1c7207000000b0040a48af4821mr7525392wmc.31.1700558809556;
+        Tue, 21 Nov 2023 01:26:49 -0800 (PST)
+Received: from [192.168.1.20] ([178.197.222.11])
+        by smtp.gmail.com with ESMTPSA id m7-20020a7bcb87000000b004063d8b43e7sm20153291wmi.48.2023.11.21.01.26.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 21 Nov 2023 01:26:49 -0800 (PST)
+Message-ID: <fa89086b-dd42-43b6-bca5-70df00750dab@linaro.org>
+Date: Tue, 21 Nov 2023 10:26:46 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrOJsWRmVeSWpSXmKPExsWy7bCmqW5LeEyqwaf9TBYP5m1js3j58yqb
-	xcGHnSwW0z78ZLZ4eUjT4tff9ewWqxc/YLFYdGMbk8Wuv81MFltv7GSxuLnlKIvF5V1z2Cy6
-	r+9gs1h+/B+TxdQXx9ktuu7eYLRY+u8ti4Ogx+Ur3h4TFh1g9Pi+voPN4+PTWyweE/fUefRt
-	WcXo8XmTnEf7gW6mAI6obJuM1MSU1CKF1Lzk/JTMvHRbJe/geOd4UzMDQ11DSwtzJYW8xNxU
-	WyUXnwBdt8wcoCeUFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnFJbZKqQUpOQXmBXrFibnFpXnp
-	enmpJVaGBgZGpkCFCdkZh44+Zi9YLlrR1XOCsYHxm2AXIyeHhICJxIv7G5i6GLk4hAR2MEpM
-	/D4FyvnEKDHt4EF2COcbo8SGhY8ZYVqajj6ASuxllLje+J0NwvnBKPF5Okg/JwebgIbEmmOH
-	wGaJCLQxS6z8c5kNJMEsoCbx+e4yli5GDg5hAX+J1fvLQEwWAVWJGY21IBW8AhYSnT9XskEs
-	k5dY1PCbCSIuKHFy5hMWiCnyEs1bZzODjJcQWMkhsXHZI1aIBheJ5Td2M0PYwhKvjm9hh7Cl
-	JD6/2ws1NFuicc9aqHiFxNzNk6E+M5aY9aydEeQeZgFNifW79EFMCQFliSO3oNbySXQc/gvV
-	ySvRsPE3O0QJr0RHmxBEWEnizNzbUGEJiYOzcyDCHhKNc16BPSIkECtxeOYulgmMCrOQ/DUL
-	yV+zEE5YwMi8ilEstaA4Nz012ajAEB69yfm5mxjBKVrLeQfjlfn/9A4xMnEwHmKU4GBWEuHd
-	wh6TKsSbklhZlVqUH19UmpNafIjRFBjQE5mlRJPzgVkiryTe0MTSwMTMzNDcyNTAXEmc917r
-	3BQhgfTEktTs1NSC1CKYPiYOTqkGJssPU47c/1+0Z775owVvJm//JSr230rG9tLTjGdr+E5K
-	mM17eSzlRGZ88jzJNVJre8qlXrDtOrdT97Nl0NPFQucN1Q9ei6p6nVtxLslI6dXU2oebTkZL
-	zdNt5Fzx45zWzcM3L9u/L/7m6Lpjw2eZ4oQDKzkPSgl7qM6p/bKYtffforgzkvz5v3X93hvf
-	DO/S6Nkt7Wy8s7TVKe6e3AS3axtZrBm0Odn0wlT099sH/FWaOLc4eqNHaqtA0v54mxPdxg/M
-	P76cWbKoLXHOoSdaYnrf5DVDq1s9m/cKWZc+5GQ8eG+pvNiFK8pp+c63bFU23OJdaHkl+nrY
-	RhsN9oTWzZKyZutXRtwvbl1hUdIbqMRSnJFoqMVcVJwIAB74KIRaBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrLLMWRmVeSWpSXmKPExsWy7bCSvG5zeEyqwYdj0hYP5m1js3j58yqb
-	xcGHnSwW0z78ZLZ4eUjT4tff9ewWqxc/YLFYdGMbk8Wuv81MFltv7GSxuLnlKIvF5V1z2Cy6
-	r+9gs1h+/B+TxdQXx9ktuu7eYLRY+u8ti4Ogx+Ur3h4TFh1g9Pi+voPN4+PTWyweE/fUefRt
-	WcXo8XmTnEf7gW6mAI4oLpuU1JzMstQifbsEroxDRx+zFywXrejqOcHYwPhNsIuRk0NCwESi
-	6egD9i5GLg4hgd2MEndPPGOCSEhI/F/cBGULS9xvOcIKUfSNUeLdzXuMIAk2AQ2JNccOMYEk
-	RARmMUssufWHDSTBLKAm8fnuMhYQW1jAV2Jq8zYgm4ODRUBVYkZjLUiYV8BCovPnSjaIBfIS
-	ixp+M0HEBSVOznzCAjFGXqJ562zmCYx8s5CkZiFJLWBkWsUomVpQnJueW2xYYJiXWq5XnJhb
-	XJqXrpecn7uJERwjWpo7GLev+qB3iJGJg/EQowQHs5II7xb2mFQh3pTEyqrUovz4otKc1OJD
-	jNIcLErivOIvelOEBNITS1KzU1MLUotgskwcnFINTHEGfKqf1n1tusLN9KBEf5ewbFxicZNh
-	xp71mSsnMaT+//Jt7usXP1f4F7+XPbHtbE+G8p1Apt4t84rSzmr2X4opOHd2Ne/nA4942XwY
-	u6fzHO2ZLltS/c29WdrndGe8fb189KStXC9qFknt6nrev3PpiYkt2S/ytmrHa30Qmu6t9l5P
-	5MBGgZ+715Z+4jioG2YjP53f77pO56zSbXozzR2l9RR9TVRFuS5aftsUbnAhWPi53mlRxtPl
-	y8VmxvW+szh7xam/5Ofzw7osqq9qljwtnJ4Ytmvi/tl2bwolenuk9U8GnP45lUeBoeJ3mP5s
-	0d+zq5RaD7RubHjd6r64vfRf4WNu97q62fFaPySMlViKMxINtZiLihMBYZrBiQADAAA=
-X-CMS-MailID: 20231121070851epcas2p2ba11977edde23d3dcb87581e410806c8
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20231121070851epcas2p2ba11977edde23d3dcb87581e410806c8
-References: <CGME20231121070851epcas2p2ba11977edde23d3dcb87581e410806c8@epcas2p2.samsung.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] dt-bindings: ufs: Add msi-parent for UFS MCQ
+Content-Language: en-US
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
+ quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+ beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+ martin.petersen@oracle.com, quic_nguyenb@quicinc.com,
+ quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+ Rob Herring <robh+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+ Conor Dooley <conor+dt@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
+ Wolfram Sang <wsa@kernel.org>, Guenter Roeck <linux@roeck-us.net>,
+ Miquel Raynal <miquel.raynal@bootlin.com>, Mark Brown <broonie@kernel.org>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+References: <1698835699-28550-1-git-send-email-quic_ziqichen@quicinc.com>
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <1698835699-28550-1-git-send-email-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-If cq complete irq raise during abort processing,
-the command has already been complete.
-So could not get utag to erase cmd like below log.
-Because the cmd that was handling abort has already been completed
+On 01/11/2023 11:48, Ziqi Chen wrote:
+> The Message Signaled Interrupts (MSI) has been introduced
+> to UFS driver since the MCQ be enabled. Hence in UFS DT
+> node we need to give the msi-parent property that point
+> to the hardware entity which serves as the MSI controller
+> for this UFS controller.
+> 
+> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 
-ufshcd_try_to_abort_task: cmd pending in the device. tag = 25
-Unable to handle kernel NULL pointer dereference at virtual address
-0000000000000194
-Mem abort info:
-ESR = 0x0000000096000006
-EC = 0x25: DABT (current EL), IL = 32 bits
-SET = 0, FnV = 0
-EA = 0, S1PTW = 0
-FSC = 0x06: level 2 translation fault
-Data abort info:
-ISV = 0, ISS = 0x00000006
-CM = 0, WnR = 0
+Which tree or next did you use as base for this patch? It does not
+apply, neither on October's next nor on current. It does not apply on
+v6.7-rc1 either...
 
-pc : blk_mq_unique_tag+0x8/0x14
-lr : ufshcd_mcq_sq_cleanup+0x6c/0x1b8
-sp : ffffffc03e3b3b10
-x29: ffffffc03e3b3b10 x28: 0000000000000001 x27: ffffff8830b34f68
-x26: ffffff8830b34f6c x25: ffffff8830b34040 x24: 0000000000000000
-x23: 0000000000000f18 x22: ffffffc03e3b3bb8 x21: 0000000000000019
-x20: 0000000000000019 x19: ffffff8830b309b0 x18: ffffffc00a1b5380
-x17: 00000000529c6ef0 x16: 00000000529c6ef0 x15: 0000000000000000
-x14: 0000000000000010 x13: 0000000000000032 x12: 0000001169e8a5bc
-x11: 0000000000000001 x10: ffffff885dfc1588 x9 : 0000000000000019
-x8 : 0000000000000000 x7 : 0000000000000001 x6 : fffffffdef706f28
-x5 : 000000000000283d x4 : 0000000000000001 x3 : 0000000000000000
-x2 : 0000000000000003 x1 : 0000000000000019 x0 : ffffff8855781200
-Call trace:
-blk_mq_unique_tag+0x8/0x14
-ufshcd_clear_cmd+0x34/0x118
-ufshcd_try_to_abort_task+0x1c4/0x4b0
-ufshcd_err_handler+0x8d0/0xd24
-process_one_work+0x1e4/0x43c
-worker_thread+0x25c/0x430
-kthread+0x104/0x1d4
-ret_from_fork+0x10/0x20
-
-v1 -> v2: fix build error
-
-v2 -> v3: move to ufshcd_mcq_sq_cleanup() function
-
-Bart said that lrbp->cmd could be changed before ufshcd_clear_cmd() was
-called, so lrbp->cmd check was moved to ufshcd_clear_cmd().
-In the case of legacy mode, spin_lock is used to protect before clear cmd,
-but spin_lock cannot be used due to mcq mode, so it is necessary to check
-the status of lrbp->cmd.
-
-Change-Id: Id8412190e60286d00a30820591566835cefbf47e
-Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
----
- drivers/ufs/core/ufs-mcq.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 2ba8ec254dce..deb6dac724c8 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -507,6 +507,10 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
- 	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
- 		return -ETIMEDOUT;
- 
-+	if (!ufshcd_cmd_inflight(cmd) ||
-+	    test_bit(SCMD_STATE_COMPLETE, &cmd->state))
-+		return 0;
-+
- 	if (task_tag != hba->nutrs - UFSHCD_NUM_RESERVED) {
- 		if (!cmd)
- 			return -EINVAL;
--- 
-2.26.0
+Best regards,
+Krzysztof
 
