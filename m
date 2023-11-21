@@ -1,77 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F0B81BB;
-	Tue, 21 Nov 2023 05:24:58 -0800 (PST)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	id 1r5QkG-0006kS-5Y; Tue, 21 Nov 2023 14:24:52 +0100
-Message-ID: <fe89fd29-562c-46c0-9a15-e3a5c43da9a1@leemhuis.info>
-Date: Tue, 21 Nov 2023 14:24:50 +0100
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2809F4643D
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 13:30:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvVXRDSS"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id EC95BC433CC
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 13:30:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1700573415;
+	bh=i7N+Y+xTcNH9EPzBCP+UPhcL5NsDps1FQiJMk6yHLyg=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=LvVXRDSSRP9cfzF+E2JY2awnUNsnvJNX9q1hEk+ZBxQhGLkuSATQU3AROnkJN/9yh
+	 iCkYAZSQqv20eVgR2wynHq65M99E/XOQvUTIZ0J7JgJF5JzEcTXLAd89DiViock2qq
+	 8e3cSVGnn3eAYRRBn336sX9pHswCb+rEguoDIFMRO3QOc/hsjo4fZlpl1++1vZQ30Q
+	 HArivbiNfv8Z0ce9W01m6Euzn8okgmDnk21rGRZXRjHWWW+33/KIDcpfKzeporq1gm
+	 FlDNt2Cg6gdqXsx7iTADLVMc82QN0JZYHEt6vlt254EcZeGTKzgpcHRluvHKv67gMl
+	 fcff5jNzLHfnQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id DD178C4332E; Tue, 21 Nov 2023 13:30:14 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date: Tue, 21 Nov 2023 13:30:14 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: joop.boonen@netapp.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: attachments.created
+Message-ID: <bug-217599-11613-eoNDW1iChH@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: scsi regression that after months is still not addressed and now
- bothering 6.1.y users, too
-Content-Language: en-US, de-DE
-To: James Bottomley <James.Bottomley@HansenPartnership.com>,
- Linux regressions mailing list <regressions@lists.linux.dev>,
- John Garry <john.g.garry@oracle.com>, Greg KH <gregkh@linuxfoundation.org>,
- Sagar Biradar <sagar.biradar@microchip.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>,
- Sasha Levin <sashal@kernel.org>, Hannes Reinecke <hare@suse.de>,
- scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
- Gilbert Wu <gilbert.wu@microchip.com>
-References: <c6ff53dc-a001-48ee-8559-b69be8e4db81@leemhuis.info>
- <47e8fd80-3f87-4b87-a875-035e69961392@oracle.com>
- <a3ddbd03-7a94-4b6a-9be1-b268ce883551@leemhuis.info>
- <18b3745d3e5de2ffd9b74f9cc826c2c3235dc6ca.camel@HansenPartnership.com>
-From: "Linux regression tracking (Thorsten Leemhuis)"
- <regressions@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <18b3745d3e5de2ffd9b74f9cc826c2c3235dc6ca.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1700573098;7592b915;
-X-HE-SMSGID: 1r5QkG-0006kS-5Y
 
-On 21.11.23 14:05, James Bottomley wrote:
-> On Tue, 2023-11-21 at 13:24 +0100, Linux regression tracking (Thorsten
-> Leemhuis) wrote:
->> On 21.11.23 12:30, John Garry wrote:
-> [...]
->>> Is there a full kernel log for this hanging system?
->>> I can only see snippets in the ticket.
->>> And what does /sys/class/scsi_host/host*/nr_hw_queues show?
->>
->> Sorry, I'm just the man-in-the-middle: you need to ask in the ticket,
->> as  the privacy policy for bugzilla.kernel.org does not allow to CC
->> the reporters from the ticket here without their consent.
-> 
-> How did you arrive at that conclusion?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-To quote https://bugzilla.kernel.org/createaccount.cgi:
-"""
-Note that your email address will never be displayed to logged out
-users. Only registered users will be able to see it.
-"""
+--- Comment #31 from Joop Boonen (joop.boonen@netapp.com) ---
+Created attachment 305451
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D305451&action=3Dedit
+The kernel.log file wenn the system is hanging.
 
-Not sure since when it's there. Maybe it was added due to EU GDPR?
-Konstantin should know. But for me that's enough to not CC people. I
-even heard from one well known kernel developer that his company got a
-GDPR complaint because he had mentioning the reporters name and email
-address in a Reported-by: tag.
+The kernel log wenn including when the system hung.
 
-Side note: bugbot afaics can solve the initial problem (e.g. interact
-with reporters in bugzilla by mail without exposing their email
-address). But to use bugbot one *afaik* still has to reassign a ticket
-to a specific product and component in bugzilla. Some subsystem
-maintainers don't want that, as that issues then does not show up in the
-usual queries.
+The output of: cat /sys/class/scsi_host/host*/nr_hw_queues
 
-Ciao, Thorsten
+root@ganeti-node2:~# cat /sys/class/scsi_host/host*/nr_hw_queues
+32
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+root@ganeti-node2:~#
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
