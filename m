@@ -1,78 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407D958101
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 15:27:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t5bdDnIe"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id AF5E4C43395
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 15:27:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700580436;
-	bh=96KMETF6N+cfuHNSaFkNT6AZN4xvf87WsaEbKhn1W6g=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=t5bdDnIeXy6iNPRiOcxP6e1y40RZebDthlNfE7tBoxjPPwM5+RlEfBZ1TceSepr0w
-	 6VT2QniUZh5tnHkIPqsQC4MI+nL8im5zqwbA2LztIvtHWG5Y4KZgOZO+t763J10Ilk
-	 5n8K/wvFmLvwODnC9+kjhnqirNIH/gTXrZgZGB6UTQpNdGzrLa932Qcen4Ecd8551C
-	 w1D6kM7VJfG5RqBA5ew0Pg6IVWFWcP6DOOq/RGoMJYydXy3cbCNNoRJ8FLjHNuQY3h
-	 C5hcVBxGQGoPqj1G5Cu3N3v/ubteXo8deIIHGg4RV3YPFKD/MDGn1BMtmPudeAIheK
-	 QWd3b4HCnJs4w==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 9D973C53BC6; Tue, 21 Nov 2023 15:27:16 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Tue, 21 Nov 2023 15:27:15 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: john.g.garry@oracle.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-217599-11613-UrfRGVHYSV@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AFEA12A;
+	Tue, 21 Nov 2023 09:57:35 -0800 (PST)
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1cf50cc2f85so28106835ad.1;
+        Tue, 21 Nov 2023 09:57:35 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700589455; x=1701194255;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=VerxGTg54Ge3nIcqcHewvtLdmH0svTb7Qyi+B5TIC1g=;
+        b=XO6y+bVREZHIaIHbG5qXiDUNpA8GRvp+fyoEY2i4DunsAxUVme+qcsmzTCAUdLbJc4
+         UobPidw446fratRMY0aqzXJhDliaGM0EZtO+xR0ssVVmJFpJOuHUCxviPKQjmmE0YUb8
+         jKZIku4VuO0GnZ3Fy0fCBBJB0OZyzzLaNw8nSmCARXQ3mI8/NyKiRSg1CGf33QIL4iTP
+         PXN3W2pIrquk92029XeWOZXPxNFQWUR9dnH3ije3rhDuDzAEQk25jw6/zHe1QA6mWubY
+         MmHcClbgORuSkV/hvypDkany/xkWQSw+hl79oX7Ser0Tb8kR135UqjW6El1ECJRPe7GE
+         57+Q==
+X-Gm-Message-State: AOJu0YwILfsyIdYme8ODCrpIDt/LzNawQIU1E1Bi4tUqLFDmNPAnZkqS
+	h6qBZO/I52Ew4jE/AwO99Fo=
+X-Google-Smtp-Source: AGHT+IEAbu3suP8whz3NCQkEIS3yeBbVQrCHGkbzk9iiZV7XkmXqQ4Xh0p0IUyJOAuxCQlTSej9ScQ==
+X-Received: by 2002:a17:902:e5ca:b0:1cf:6373:b8a5 with SMTP id u10-20020a170902e5ca00b001cf6373b8a5mr6481837plf.25.1700589454616;
+        Tue, 21 Nov 2023 09:57:34 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:bb61:2ac8:4d61:2b3d? ([2620:0:1000:8411:bb61:2ac8:4d61:2b3d])
+        by smtp.gmail.com with ESMTPSA id c12-20020a170902d48c00b001b7cbc5871csm8230146plg.53.2023.11.21.09.57.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 21 Nov 2023 09:57:34 -0800 (PST)
+Message-ID: <f92655ec-96ab-4f3d-8f5b-a5b9780adc5a@acm.org>
+Date: Tue, 21 Nov 2023 09:57:29 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] scsi: ufs: core: fix racing issue during
+ ufshcd_mcq_abort
+Content-Language: en-US
+To: SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+ kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
+ sc.suh@samsung.com, quic_nguyenb@quicinc.com, cpgs@samsung.com,
+ grant.jung@samsung.com, junwoo80.lee@samsung.com
+References: <CGME20231121070851epcas2p2ba11977edde23d3dcb87581e410806c8@epcas2p2.samsung.com>
+ <20231121071128.7743-1-hy50.seo@samsung.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231121071128.7743-1-hy50.seo@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+On 11/20/23 23:11, SEO HOYOUNG wrote:
+> Bart said that lrbp->cmd could be changed before ufshcd_clear_cmd() was
+> called, so lrbp->cmd check was moved to ufshcd_clear_cmd().
+> In the case of legacy mode, spin_lock is used to protect before clear cmd,
+> but spin_lock cannot be used due to mcq mode, so it is necessary to check
+> the status of lrbp->cmd.
 
-John Garry (john.g.garry@oracle.com) changed:
+Does this mean that the race that I mentioned has not been addressed at all?
+ufshcd_mcq_sq_cleanup() is called by ufshcd_clear_cmd(). No locks are held by
+ufshcd_eh_device_reset_handler() when it calls ufshcd_clear_cmd(). So I think
+there is still a race between the code added by this patch and the completion
+interrupt.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |john.g.garry@oracle.com
+Thanks,
 
---- Comment #33 from John Garry (john.g.garry@oracle.com) ---
-Hannes' patch was to revert to using hw queue #0 always for internal comman=
-ds,
-and it didn't help.
+Bart.
 
-@Sagar, Could there be any issue in using hw queue #0 for regular SCSI
-commands? AFAICS, that's a significant change in "scsi: aacraid: Reply queue
-mapping to CPUs based on IRQ affinity" patch. Previously we would use
-fib->vector_no to decide the queue, which was in range (0, dev->max_msix).
+> Change-Id: Id8412190e60286d00a30820591566835cefbf47e
 
---=20
-You may reply to this email to add a comment.
+No Change-Ids in patches that are posted on upstream mailing lists please.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 2ba8ec254dce..deb6dac724c8 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -507,6 +507,10 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
+>   	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
+>   		return -ETIMEDOUT;
+>   
+> +	if (!ufshcd_cmd_inflight(cmd) ||
+> +	    test_bit(SCMD_STATE_COMPLETE, &cmd->state))
+> +		return 0;
+> +
+>   	if (task_tag != hba->nutrs - UFSHCD_NUM_RESERVED) {
+>   		if (!cmd)
+>   			return -EINVAL;
+
+Thanks,
+
+Bart.
