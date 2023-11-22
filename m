@@ -1,22 +1,22 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F358F55792
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Nov 2023 15:32:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11A914CDE1
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Nov 2023 15:33:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="se6rW82k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CD26C433C8;
-	Wed, 22 Nov 2023 15:32:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A3OjznV2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA49FC433C9;
+	Wed, 22 Nov 2023 15:33:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700667140;
-	bh=wkCvBo8jEkVfRTkbglYo4Y8OHDg05/CV6/9Vs8YdR8g=;
+	s=k20201202; t=1700667226;
+	bh=5+/e5tq5KuWJ/VkW+PPP52Ao4aisjEYJ37b4EpqEbyw=;
 	h=From:To:Cc:Subject:Date:From;
-	b=se6rW82kVocMdGPK4qlRzBGluXE4h2xOM+5IM4DNM/SZuKhc12aoeCC9ZnIjH2NKk
-	 4EZ6tb7r+IPal0h//+fZpmr3hIdurkjsGRf3DSWPrvwrLUzdi6znEeySKbhnlPlnhH
-	 KTHrvQr5jekdTbDfsIW2UyE0lYvDQwRv51XV98i+PAdjfIhg9Ea2z3PMEKCccrZCtJ
-	 nSYR+4qg7hm/sXzvgMbbTRAw647A6BrOCPhPzdfrfxrA/8N4SFzYrgs67ZzbKErj3o
-	 P2RWhv9dowUX6pD0UWpvRqOEKPxR9zfPFUDXxB5euSPIre0ZBOy2B5G0fzBCMhxZNn
-	 Pzqh7ocbdvrHQ==
+	b=A3OjznV2ZAh9ekPo1xiC5goL4k3YDjbRQj7XjTKaR1hqg/bHqOE57vnBqlSGewe7o
+	 /sKD8PlyFE9Wpd3hexh90WaJqb+GxhfpsYIncQKt5MuLY9gjwBJW7SPQR7y/+ik3E3
+	 GhTNWNK/fLljgzbHe2tnUyWXKdxxQEfnRjQBYFaAklzscjlJ6x9J67hi/2/LPYcQol
+	 fgvBlBxKB70au+IVm4EkjhQfmGQJlZxZWs9dBxYSVNfXbQGqGjb14RRae1OQfvZn2n
+	 QgM5e4V+WGsHzwiAxp6XZN8Uc+KQjMv4zja3He3r2vkg7adoPuUyFilMSxmsGNRJQ3
+	 SUvzfx4+FD76w==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -28,9 +28,9 @@ Cc: Mike Christie <michael.christie@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 01/17] scsi: sd: Fix sshdr use in sd_suspend_common()
-Date: Wed, 22 Nov 2023 10:31:30 -0500
-Message-ID: <20231122153212.852040-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.5 01/15] scsi: sd: Fix sshdr use in sd_suspend_common()
+Date: Wed, 22 Nov 2023 10:33:03 -0500
+Message-ID: <20231122153340.852434-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.2
+X-stable-base: Linux 6.5.12
 Content-Transfer-Encoding: 8bit
 
 From: Mike Christie <michael.christie@oracle.com>
@@ -73,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 23 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 6effa13039f39..ac5e917f7abd6 100644
+index c4babb16dac73..1b7de2daf64a2 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1642,24 +1642,21 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+@@ -1681,24 +1681,21 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
  	return disk_changed ? DISK_EVENT_MEDIA_CHANGE : 0;
  }
  
@@ -104,7 +104,7 @@ index 6effa13039f39..ac5e917f7abd6 100644
  	for (retries = 3; retries > 0; --retries) {
  		unsigned char cmd[16] = { 0 };
  
-@@ -1684,15 +1681,23 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
+@@ -1723,15 +1720,23 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
  			return res;
  
  		if (scsi_status_is_check_condition(res) &&
@@ -133,7 +133,7 @@ index 6effa13039f39..ac5e917f7abd6 100644
  		}
  
  		switch (host_byte(res)) {
-@@ -3847,7 +3852,7 @@ static void sd_shutdown(struct device *dev)
+@@ -3886,7 +3891,7 @@ static void sd_shutdown(struct device *dev)
  
  	if (sdkp->WCE && sdkp->media_present) {
  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
@@ -142,7 +142,7 @@ index 6effa13039f39..ac5e917f7abd6 100644
  	}
  
  	if ((system_state != SYSTEM_RESTART &&
-@@ -3868,7 +3873,6 @@ static inline bool sd_do_start_stop(struct scsi_device *sdev, bool runtime)
+@@ -3907,7 +3912,6 @@ static inline bool sd_do_start_stop(struct scsi_device *sdev, bool runtime)
  static int sd_suspend_common(struct device *dev, bool runtime)
  {
  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
@@ -150,7 +150,7 @@ index 6effa13039f39..ac5e917f7abd6 100644
  	int ret = 0;
  
  	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
-@@ -3877,24 +3881,13 @@ static int sd_suspend_common(struct device *dev, bool runtime)
+@@ -3916,24 +3920,13 @@ static int sd_suspend_common(struct device *dev, bool runtime)
  	if (sdkp->WCE && sdkp->media_present) {
  		if (!sdkp->device->silence_suspend)
  			sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
