@@ -1,157 +1,152 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="MZj8FJuV"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB8A9D40;
-	Tue, 21 Nov 2023 22:15:31 -0800 (PST)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AM5kqSV001503;
-	Wed, 22 Nov 2023 06:15:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=wYDNyT+fybxznp+VAFlr6au6RMMN4XBDNwkEIag44Yg=;
- b=MZj8FJuVK33KmlSs43xfH2C+BWqAB5QwHv3nqlC7VUmQSSiOn2TvUhaGXz2CrzmcW5uq
- kiA+wTdSO73Kjvn0ChaRipGYQfRo7oxoHONoAPdznOvY0UdoKnOLLQMUKechuR+VDJCK
- QYQspCXVrggbaUtQw+Sfg5/RDepnDz44e2B0iwBoubAoj9Uq0Ew6tEHCyggdxYrhp3sv
- Yk9plrdTwXbajsK8H/bgU4xLwklx6ln86jpO5c5ULuExFfD7+L82sV44+C6Ln4+C12cV
- 4bafqSbzasEntFgWnwykbEcv34lKACSz25U+UTAVOWlj0xy6B0n8fNQMO44UWcL00HQD 0A== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uh477gvvk-1
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="m1o0SJtb"
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0314F1AA;
+	Tue, 21 Nov 2023 23:11:27 -0800 (PST)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AM4u8vM016527;
+	Wed, 22 Nov 2023 07:11:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=Bo886srp5MIVH1wCxiVYC/PHqeZIjQZkwCjvvESOKhI=;
+ b=m1o0SJtbfSaBIfymAP+XBDcS/KH+4/ejPr6oz1vy2plynrVNBweN9UguKSbRvP9YoBhX
+ mJw+iKS8XSESKHh4IfpvH+mLmF4kbwDn36tRl7iI4vzbyW9vSWtSdxHcxQt3hqQmnOtv
+ BqAc2VFIBgHPPalOM1j+IXk4iibT5cGGtqNZ5SVodjDahhxjV0V/jtXMWMibSsANBm2D
+ i4PuX4DGLu2rcIcgeyHlPPPK0JX7Ce3U/ztHBOTawruTnbRqOjyp6+nfEPlUC4RBcTYK
+ xiw7fjjyavcC7kibG1QbmM0t0cXkqMRkr9GzhqDmSyzml2OrfNhc9e4uS9B99bZpOB4X GA== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ugr85uah1-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Nov 2023 06:15:05 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AM6F5Hl028121
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Nov 2023 06:15:05 GMT
-Received: from [10.253.15.194] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Tue, 21 Nov
- 2023 22:15:00 -0800
-Message-ID: <85d7a1ef-92c4-49ae-afe0-727c1b446f55@quicinc.com>
-Date: Wed, 22 Nov 2023 14:14:57 +0800
+	Wed, 22 Nov 2023 07:11:05 +0000
+Received: from pps.filterd (NASANPPMTA05.qualcomm.com [127.0.0.1])
+	by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3AM71nw6012999;
+	Wed, 22 Nov 2023 07:11:04 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3uhcusg3y4-1;
+	Wed, 22 Nov 2023 07:11:04 +0000
+Received: from NASANPPMTA05.qualcomm.com (NASANPPMTA05.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AM75bsG019002;
+	Wed, 22 Nov 2023 07:11:03 GMT
+Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
+	by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3AM7B3va027624;
+	Wed, 22 Nov 2023 07:11:03 +0000
+Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
+	id 06F0820A65; Tue, 21 Nov 2023 23:11:01 -0800 (PST)
+From: Can Guo <quic_cang@quicinc.com>
+To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com, beanhuo@micron.com,
+        avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com
+Cc: "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
+        Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-arm-msm@vger.kernel.org (open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...),
+        linux-scsi@vger.kernel.org (open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3 03/11] scsi: ufs: ufs-qcom: Setup host power mode during init
+Date: Tue, 21 Nov 2023 23:10:34 -0800
+Message-Id: <1700637042-11104-4-git-send-email-quic_cang@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1700637042-11104-1-git-send-email-quic_cang@quicinc.com>
+References: <1700637042-11104-1-git-send-email-quic_cang@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: rXay6qRCkP64GWd54eDRqsgUstZIJzLb
+X-Proofpoint-ORIG-GUID: rXay6qRCkP64GWd54eDRqsgUstZIJzLb
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-22_04,2023-11-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 impostorscore=0
+ phishscore=0 suspectscore=0 adultscore=0 malwarescore=0 bulkscore=0
+ priorityscore=1501 lowpriorityscore=0 mlxscore=0 clxscore=1015
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311220050
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: qcom: move ufs_qcom_host_reset() to
- ufs_qcom_device_reset()
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Ziqi Chen
-	<quic_ziqichen@quicinc.com>
-CC: <quic_asutoshd@quicinc.com>, <bvanassche@acm.org>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
-        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
-        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
-        <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson
-	<andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J.
- Bottomley" <jejb@linux.ibm.com>,
-        "open list:ARM/QUALCOMM SUPPORT"
-	<linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1698145815-17396-1-git-send-email-quic_ziqichen@quicinc.com>
- <20231025074128.GA3648@thinkpad>
-Content-Language: en-US
-From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20231025074128.GA3648@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: RLh3YGxEGWi-AlI53KP2pIPZ0pez9c9i
-X-Proofpoint-GUID: RLh3YGxEGWi-AlI53KP2pIPZ0pez9c9i
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-22_03,2023-11-21_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 phishscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015
- suspectscore=0 spamscore=0 bulkscore=0 mlxscore=0 priorityscore=1501
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311220043
 
+Setup host power mode and its limitations during UFS host driver init to
+avoid repetitive work during every power mode change.
 
+Acked-by: Andrew Halaney <ahalaney@redhat.com>
+Co-developed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 21 ++++++++++++++-------
+ drivers/ufs/host/ufs-qcom.h |  1 +
+ 2 files changed, 15 insertions(+), 7 deletions(-)
 
-On 10/25/2023 3:41 PM, Manivannan Sadhasivam wrote:
-> On Tue, Oct 24, 2023 at 07:10:15PM +0800, Ziqi Chen wrote:
->> During PISI test, we found the issue that host Tx still bursting after
-> 
-> What is PISI test?
-> 
->> H/W reset. Move ufs_qcom_host_reset() to ufs_qcom_device_reset() and
->> reset host before device reset to stop tx burst.
->>
-> 
-> device_reset() callback is supposed to reset only the device and not the host.
-> So NACK for this patch.
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index cc30ad9..cc0eb37 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -898,7 +898,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-	struct ufs_host_params host_params;
++	struct ufs_host_params *host_params = &host->host_params;
+ 	int ret = 0;
+ 
+ 	if (!dev_req_params) {
+@@ -908,12 +908,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		ufshcd_init_host_param(&host_params);
+-
+-		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
+-		host_params.hs_tx_gear = host_params.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
+-
+-		ret = ufshcd_negotiate_pwr_param(&host_params, dev_max_params, dev_req_params);
++		ret = ufshcd_negotiate_pwr_param(host_params, dev_max_params, dev_req_params);
+ 		if (ret) {
+ 			dev_err(hba->dev, "%s: failed to determine capabilities\n",
+ 					__func__);
+@@ -1048,6 +1043,17 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+ 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+ }
+ 
++static void ufs_qcom_set_host_params(struct ufs_hba *hba)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++	struct ufs_host_params *host_params = &host->host_params;
++
++	ufshcd_init_host_param(host_params);
++
++	/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
++	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
++}
++
+ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+@@ -1272,6 +1278,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 
+ 	ufs_qcom_set_caps(hba);
+ 	ufs_qcom_advertise_quirks(hba);
++	ufs_qcom_set_host_params(hba);
+ 
+ 	err = ufs_qcom_ice_init(host);
+ 	if (err)
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index 82cd143..11419eb 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -238,6 +238,7 @@ struct ufs_qcom_host {
+ 
+ 	struct gpio_desc *device_reset;
+ 
++	struct ufs_host_params host_params;
+ 	u32 phy_gear;
+ 
+ 	bool esi_enabled;
+-- 
+2.7.4
 
-Agree, the change should come in a more reasonable way.
-
-Actually, similar code is already there in ufs_mtk_device_reset() in 
-ufs-mediatek.c, I guess here is trying to mimic that fashion.
-
-This change, from its functionality point of view, we do need it, 
-because I occasionally (2 out of 10) hit PHY error on lane 0 during 
-reboot test (in my case, I tried SM8350, SM8450 and SM8550， all same).
-
-[    1.911188] [DEBUG]ufshcd_update_uic_error: UECPA:0x80000002
-[    1.922843] [DEBUG]ufshcd_update_uic_error: UECDL:0x80004000
-[    1.934473] [DEBUG]ufshcd_update_uic_error: UECN:0x0
-[    1.944688] [DEBUG]ufshcd_update_uic_error: UECT:0x0
-[    1.954901] [DEBUG]ufshcd_update_uic_error: UECDME:0x0
-
-I found out that the PHY error pops out right after UFS device gets 
-reset in the 2nd init. After having this change in place, the PA/DL 
-errors are gone.
-
-Thanks,
-Can Guo.
-> 
-> - Mani
-> 
->> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->> ---
->>   drivers/ufs/host/ufs-qcom.c | 13 +++++++------
->>   1 file changed, 7 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->> index 96cb8b5..43163d3 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -445,12 +445,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->>   	struct phy *phy = host->generic_phy;
->>   	int ret;
->>   
->> -	/* Reset UFS Host Controller and PHY */
->> -	ret = ufs_qcom_host_reset(hba);
->> -	if (ret)
->> -		dev_warn(hba->dev, "%s: host reset returned %d\n",
->> -				  __func__, ret);
->> -
->>   	/* phy initialization - calibrate the phy */
->>   	ret = phy_init(phy);
->>   	if (ret) {
->> @@ -1709,6 +1703,13 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
->>   static int ufs_qcom_device_reset(struct ufs_hba *hba)
->>   {
->>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> +	int ret = 0;
->> +
->> +	/* Reset UFS Host Controller and PHY */
->> +	ret = ufs_qcom_host_reset(hba);
->> +	if (ret)
->> +		dev_warn(hba->dev, "%s: host reset returned %d\n",
->> +				  __func__, ret);
->>   
->>   	/* reset gpio is optional */
->>   	if (!host->device_reset)
->> -- 
->> 2.7.4
->>
-> 
