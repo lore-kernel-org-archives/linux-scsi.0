@@ -1,131 +1,123 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yTZNoA8t"
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27CC1D6F
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 23:39:10 -0800 (PST)
-Received: by mail-wm1-x32d.google.com with SMTP id 5b1f17b1804b1-40a4848c6e1so28014445e9.1
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2023 23:39:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hMFYIX/p"
+Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 028D69D
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Nov 2023 01:23:17 -0800 (PST)
+Received: by mail-lj1-x22e.google.com with SMTP id 38308e7fff4ca-2c887d1fb8fso30518691fa.0
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Nov 2023 01:23:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1700638749; x=1701243549; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=MBetON7LmVmV+dFyLn9yaZBr84tIkDPKg9QMpcVkFFY=;
-        b=yTZNoA8tyCTBvtcr/Wr7lMCqMWZNORLBIeKGpsuO+XqXko78z1zqh1hc3azBp8YEgF
-         Csz7CgSAWJbHQ1VuQRBR6P6h0AmVCatMLpr0z4JGKE9yIY/G8BsxZksO6avZYgdmguUh
-         qmkzF4KYoe5YcZePtdFqGh4rPKB1oj8XQAxvX0KLEJofgNnSi6fx92vtCPpPC+/twH7J
-         dEbynY9gvXBjxHeMp6Xl9xYSK0ajIwa4PPZdJzMY3+XiHamDoEeBWRH51gS0y4omEljb
-         wIipDbjekml820/qfqqronMfhF8Ap0HeQpDSvbzaIlhngMygZ+Yxp/Ho5LWC9SMpdqk9
-         xOyw==
+        d=linaro.org; s=google; t=1700644995; x=1701249795; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=rhC1asTv/RX7QF9kMol6kJpFTRWUtwkcm7USZ02jYEQ=;
+        b=hMFYIX/pMxKBRELz+4Cz7CHnF0Epx2S3JLcDnvr2tEYlI25mVOp4prfsvLcbPtYiNE
+         MsSk6UeLp0J3g/BGxt8a1JiYoP+6WrBrR+n3XAwVZZSfezfRq6ekVAeStYcmCIaFBeLA
+         kMGRxSodQTGeQJ9o4fy/6M+Cvil+azj8006kr/6GB+KpYAqgc/byxiY0Wk6Y66+zRU4Q
+         0k8kDtoaGUWhTkRd6iY3KVtTRoC/lCFmWM+4qWaHb7HiNrH8UYg6dwKqGhB4V6ve4Ege
+         01anrwtlc07Ggr5FqnoWDpOxFFU37FcRzYbi3H2FGw/xVLgZzW+OPp1CqQlYTSwHM22m
+         hY2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700638749; x=1701243549;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MBetON7LmVmV+dFyLn9yaZBr84tIkDPKg9QMpcVkFFY=;
-        b=QaGuiy/vX5vnemd5V7hC4d0k+AG3GGjKk+X854cl3OSSJa11PlnY2i0OcUvtNwqTrm
-         8SyZM2PL+fDanday9UA0InsUeTd0Vch+o0p02h3U3uXCjiduur8E+Se8zTtNP8UZoMZh
-         CcJAJaGNolDaEf3h6qwluHcmftx73IGvWSzaZ8f790+ZgnIcU2QSJzf1MOxPi0rDi5gH
-         pSRWCcqJUlYNzJimK3Nwa+nK0Y/S9igQZxE8QBrkUQ2BAOIOyytT+rRPVh1JWrVtLrWr
-         Aoj74E8M1oEqbjX7sUSmkHz+Z/Lx6lSwuQyu3/fakMSvefSlihXzT6B+oSjMMQas/Ls1
-         CLrg==
-X-Gm-Message-State: AOJu0YwKrTt6Tr+QCCdMkV+k+9uj5xLfk7CQjtA8eDqjMxD6FzPQcWtq
-	momZ5RZKd8sLQsVvdVVy4EgFKQ==
-X-Google-Smtp-Source: AGHT+IHE+FWVdKuzvDqfGiWF3sTwN9+QgCPCFmpg+kym1BB8RcyIyzqp7R/zVjIB/Lyx9uPBGjBgCA==
-X-Received: by 2002:a7b:c015:0:b0:40a:5c71:2c3e with SMTP id c21-20020a7bc015000000b0040a5c712c3emr1185090wmb.19.1700638749363;
-        Tue, 21 Nov 2023 23:39:09 -0800 (PST)
-Received: from [192.168.1.20] ([178.197.218.100])
-        by smtp.gmail.com with ESMTPSA id o2-20020a5d4a82000000b003196b1bb528sm16347474wrq.64.2023.11.21.23.39.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Nov 2023 23:39:08 -0800 (PST)
-Message-ID: <ae2f2dc9-4c08-4db8-bfae-80608723d8c3@linaro.org>
-Date: Wed, 22 Nov 2023 08:39:07 +0100
+        d=1e100.net; s=20230601; t=1700644995; x=1701249795;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rhC1asTv/RX7QF9kMol6kJpFTRWUtwkcm7USZ02jYEQ=;
+        b=Gg0X8WWppcRQcf+GPc3I0cO42lg2jYNKlfpkTvRxnz1fTER2jeh3FhIUMbtfBATE2c
+         WNgFcbci8jlfiVl46lvxhmkjqyQN3aoTd6+xrbO1+SRFnZZneyGAYGaBP1CcZxUoOyjI
+         bJ26rKQEhxSDr+Tk5C6SaHTe5IkDcKt4K4X4VFm7jDabqbmyx8dXrebZfMqcrvXxIGhQ
+         vIexicogUvEjBSxH8FeVDp7JQdYz/gERdwqKRcC3rDe90wu+9ATQFKX6G7KtIzZ5+lD7
+         6BZOUk1JprC4kxrdEM3IWqjDk8kmJJj5Y+TWHJds2qm1CYCLubkSQ1E6d9hiTt0oMhhE
+         Kr0A==
+X-Gm-Message-State: AOJu0YydjAeVHbSm2Zb5qrg9GwHUDLDe5TtZzoQU4xBW6ljOG+JbxaVT
+	SnFzXqAIcmMu3GChetw174u6KA==
+X-Google-Smtp-Source: AGHT+IFC9A4xkbgVPJSLpWSTZPDF0VLLciqEZwb/ASpE58NNXzwVw56OuwAKDW2H2DK7/NKV8m71bQ==
+X-Received: by 2002:a05:651c:50c:b0:2c5:19ab:7270 with SMTP id o12-20020a05651c050c00b002c519ab7270mr1295603ljp.35.1700644995201;
+        Wed, 22 Nov 2023 01:23:15 -0800 (PST)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id u9-20020a05600c19c900b0040a4751efaasm1518204wmq.17.2023.11.22.01.23.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Nov 2023 01:23:14 -0800 (PST)
+From: Dan Carpenter <dan.carpenter@linaro.org>
+X-Google-Original-From: Dan Carpenter <dan.carpenter@oracle.com>
+Date: Wed, 22 Nov 2023 04:23:11 -0500
+To: oe-kbuild@lists.linux.dev, SEO HOYOUNG <hy50.seo@samsung.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
+	kwangwon.min@samsung.com, kwmad.kim@samsung.com,
+	sh425.lee@samsung.com, sc.suh@samsung.com, quic_nguyenb@quicinc.com,
+	cpgs@samsung.com, grant.jung@samsung.com, junwoo80.lee@samsung.com
+Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev,
+	SEO HOYOUNG <hy50.seo@samsung.com>
+Subject: Re: [PATCH v3] scsi: ufs: core: fix racing issue during
+ ufshcd_mcq_abort
+Message-ID: <5cd4171c-d992-4e3c-96c7-91bb0ae9feb6@suswa.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] dt-bindings: ufs: Add msi-parent for UFS MCQ
-Content-Language: en-US
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com,
- quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
- stanley.chu@mediatek.com, adrian.hunter@intel.com, beanhuo@micron.com,
- avri.altman@wdc.com, junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
- Rob Herring <robh+dt@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, Guenter Roeck <linux@roeck-us.net>,
- Wolfram Sang <wsa@kernel.org>, Mark Brown <broonie@kernel.org>,
- "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-References: <1700629624-23571-1-git-send-email-quic_ziqichen@quicinc.com>
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- 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
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <1700629624-23571-1-git-send-email-quic_ziqichen@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231121071128.7743-1-hy50.seo@samsung.com>
 
-On 22/11/2023 06:06, Ziqi Chen wrote:
-> The Message Signaled Interrupts (MSI) support has been
-> introduced in UFSHCI version 4.0 (JESD223E). The MSI is
-> the recommended interrupt approach for MCQ. If choose to
-> use MSI, In UFS DT, we need to provide msi-parent property
-> that point to the hardware entity which serves as the MSI
-> controller for this UFS controller.
+Hi SEO,
 
-Please wrap commit message according to Linux coding style / submission
-process (neither too early nor over the limit):
-https://elixir.bootlin.com/linux/v6.4-rc1/source/Documentation/process/submitting-patches.rst#L597
+kernel test robot noticed the following build warnings:
 
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+url:    https://github.com/intel-lab-lkp/linux/commits/SEO-HOYOUNG/scsi-ufs-core-fix-racing-issue-during-ufshcd_mcq_abort/20231121-151923
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20231121071128.7743-1-hy50.seo%40samsung.com
+patch subject: [PATCH v3] scsi: ufs: core: fix racing issue during ufshcd_mcq_abort
+config: powerpc-randconfig-r071-20231122 (https://download.01.org/0day-ci/archive/20231122/202311220618.OnEhSic6-lkp@intel.com/config)
+compiler: powerpc-linux-gcc (GCC) 13.2.0
+reproduce: (https://download.01.org/0day-ci/archive/20231122/202311220618.OnEhSic6-lkp@intel.com/reproduce)
 
-Best regards,
-Krzysztof
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <error27@gmail.com>
+| Closes: https://lore.kernel.org/r/202311220618.OnEhSic6-lkp@intel.com/
+
+smatch warnings:
+drivers/ufs/core/ufs-mcq.c:515 ufshcd_mcq_sq_cleanup() warn: variable dereferenced before check 'cmd' (see line 511)
+
+vim +/cmd +515 drivers/ufs/core/ufs-mcq.c
+
+8d7290348992f2 Bao D. Nguyen   2023-05-29  498  int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
+8d7290348992f2 Bao D. Nguyen   2023-05-29  499  {
+8d7290348992f2 Bao D. Nguyen   2023-05-29  500  	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
+8d7290348992f2 Bao D. Nguyen   2023-05-29  501  	struct scsi_cmnd *cmd = lrbp->cmd;
+8d7290348992f2 Bao D. Nguyen   2023-05-29  502  	struct ufs_hw_queue *hwq;
+8d7290348992f2 Bao D. Nguyen   2023-05-29  503  	void __iomem *reg, *opr_sqd_base;
+8d7290348992f2 Bao D. Nguyen   2023-05-29  504  	u32 nexus, id, val;
+8d7290348992f2 Bao D. Nguyen   2023-05-29  505  	int err;
+8d7290348992f2 Bao D. Nguyen   2023-05-29  506  
+aa9d5d0015a8b7 Po-Wen Kao      2023-06-12  507  	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
+aa9d5d0015a8b7 Po-Wen Kao      2023-06-12  508  		return -ETIMEDOUT;
+aa9d5d0015a8b7 Po-Wen Kao      2023-06-12  509  
+5363c9d813101c SEO HOYOUNG     2023-11-21  510  	if (!ufshcd_cmd_inflight(cmd) ||
+5363c9d813101c SEO HOYOUNG     2023-11-21 @511  	    test_bit(SCMD_STATE_COMPLETE, &cmd->state))
+                                                                                          ^^^^^^^^^^^
+The patch adds a new unchecked dereference
+
+5363c9d813101c SEO HOYOUNG     2023-11-21  512  		return 0;
+5363c9d813101c SEO HOYOUNG     2023-11-21  513  
+8d7290348992f2 Bao D. Nguyen   2023-05-29  514  	if (task_tag != hba->nutrs - UFSHCD_NUM_RESERVED) {
+8d7290348992f2 Bao D. Nguyen   2023-05-29 @515  		if (!cmd)
+                                                                     ^^^
+But the old code assumed "cmd" could be NULL
+
+8d7290348992f2 Bao D. Nguyen   2023-05-29  516  			return -EINVAL;
+8d7290348992f2 Bao D. Nguyen   2023-05-29  517  		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+8d7290348992f2 Bao D. Nguyen   2023-05-29  518  	} else {
+8d7290348992f2 Bao D. Nguyen   2023-05-29  519  		hwq = hba->dev_cmd_queue;
+8d7290348992f2 Bao D. Nguyen   2023-05-29  520  	}
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
 
