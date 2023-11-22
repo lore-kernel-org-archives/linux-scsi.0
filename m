@@ -1,83 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="oez6Ptxm"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBC60D42;
-	Wed, 22 Nov 2023 09:43:57 -0800 (PST)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AMHfJYh026759;
-	Wed, 22 Nov 2023 17:43:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=ZaNRIg3lKd62YeBy/yihCk/EXDyr33s6vGch1Rp/wgU=;
- b=oez6PtxmupPpXCeqY/gdkqMTddKW4u/Dzc1c+u2sMtXIBqpYf0shkhI7KJZDjbd/dKeU
- JYIlITDtQ0dAPDTkbybzheHmKdkqO9UaqMeqxyi5ViimcePZWUUh3H6O2TK+/22qrCfw
- Fd5KSaORXEdffdgDIHElGYaAAIP09yYoGO5GrD3bEpEPdwVZzwCD5q3BgyDr4cgO4aq4
- XHdPrKhxvgnvCZIWsMIpUtlhZVEnoQavbluwVfQMZmFvUKkGkhs32N+ZJ6uKMx+50XNB
- XjOeK5WPIXUKtnbBxb2nMf9yg9u4yq+KPLiSzEhkgmFjWNQiIPq5lpw81WbGlsexy+wU 7Q== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uhgajrytt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Nov 2023 17:43:54 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AMHhrYU017931
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Nov 2023 17:43:53 GMT
-Received: from [10.110.98.138] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Wed, 22 Nov
- 2023 09:43:49 -0800
-Message-ID: <edf9399c-f272-cf2b-15dd-385002fc4fcb@quicinc.com>
-Date: Wed, 22 Nov 2023 09:43:37 -0800
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B0EE10CB;
+	Wed, 22 Nov 2023 09:51:31 -0800 (PST)
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1ce627400f6so44625ad.2;
+        Wed, 22 Nov 2023 09:51:31 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700675490; x=1701280290;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Cnb1eQygLiPupCdQ+B3C7i5AAJxIHJuBeS7g4lwHVHs=;
+        b=PQWFg5swe7MV6/aSo4TOk0acI8ggkc7ChLnj8PpHkjhiVpG90yqEbz1M3efcslm2/6
+         bbcKS8cS6IDgvkQac4Uiybsd7sJna7RM6wlY7fl8pz093C7FE941wbmhi7+MKbApO9gG
+         OJUAjj/8gi4OwA3H/6ddsja37vPtAyXTSVWcQ0RzY05mpJk9Sx2MM1TA6n+EvsTo8EOT
+         yabUsE3BxHxDA9l/5Y9B5GG1LWVYdy2SThVkuF/YJx+ZFcyxRk+JAz7PGUE09Uf0/JiA
+         HnGiQhgAMzgSbr6DochjkfIHh1WaPo7bxR6UFfbp9Wm6ZKLZaeIKmiZL9JkNbBPEscqd
+         7Paw==
+X-Gm-Message-State: AOJu0YzglGxr9n5yYhko19+swVqq6xo1shM88JAanA06holpJIGyuqC1
+	TXau9CQubL1NNK9Dcp1Lx3Y=
+X-Google-Smtp-Source: AGHT+IFy7SY86uCLGlmPSFf6NOxrm6oFa4KHKpx+UZkBnOz0qPS87nWSJ0dpDE2svf8pG2yO0e2AGg==
+X-Received: by 2002:a17:902:f7c1:b0:1cc:5f51:b1ed with SMTP id h1-20020a170902f7c100b001cc5f51b1edmr2546273plw.47.1700675490304;
+        Wed, 22 Nov 2023 09:51:30 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:9d34:90db:9557:9413? ([2620:0:1000:8411:9d34:90db:9557:9413])
+        by smtp.gmail.com with ESMTPSA id j8-20020a170902690800b001c76fcccee8sm9989507plk.156.2023.11.22.09.51.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Nov 2023 09:51:29 -0800 (PST)
+Message-ID: <fbc51bf1-3c4f-4575-a148-65fcfee1a8fe@acm.org>
+Date: Wed, 22 Nov 2023 09:51:27 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v3 02/12] qcom_scm: scm call for deriving a software
- secret
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/3] scsi: ufs: core: Add UFS RTC support
 Content-Language: en-US
-To: Gaurav Kashyap <quic_gaurkash@quicinc.com>, <linux-scsi@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <ebiggers@google.com>,
-        <neil.armstrong@linaro.org>, <srinivas.kandagatla@linaro.org>
-CC: <linux-mmc@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        <linux-fscrypt@vger.kernel.org>, <omprsing@qti.qualcomm.com>,
-        <quic_psodagud@quicinc.com>, <abel.vesa@linaro.org>,
-        <quic_spuppala@quicinc.com>, <kernel@quicinc.com>
-References: <20231122053817.3401748-1-quic_gaurkash@quicinc.com>
- <20231122053817.3401748-3-quic_gaurkash@quicinc.com>
-From: Trilok Soni <quic_tsoni@quicinc.com>
-In-Reply-To: <20231122053817.3401748-3-quic_gaurkash@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com,
+ alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+ mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+ beanhuo@micron.com, thomas@t-8ch.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ mikebi@micron.com, lporzio@micron.com
+References: <20231122172512.103748-1-beanhuo@iokpp.de>
+ <20231122172512.103748-3-beanhuo@iokpp.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231122172512.103748-3-beanhuo@iokpp.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: UzMkdLUar2xqfmpaebXBe5jOF_EyfTf3
-X-Proofpoint-ORIG-GUID: UzMkdLUar2xqfmpaebXBe5jOF_EyfTf3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-22_12,2023-11-22_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=384
- priorityscore=1501 lowpriorityscore=0 spamscore=0 bulkscore=0
- clxscore=1011 impostorscore=0 malwarescore=0 mlxscore=0 adultscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311220129
 
-On 11/21/2023 9:38 PM, Gaurav Kashyap wrote:
-> +
-> +	dma_free_coherent(__scm->dev, wkey_size, wkey_buf, wkey_phys);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(qcom_scm_derive_sw_secret);
+On 11/22/23 09:25, Bean Huo wrote:
+> Given that the RTC has been a standard feature since UFS Spec 2.0, and qTimestamp was introduced
+> in UFS Spec 4.0, the majority of UFS devices currently on the market rely on RTC. Therefore, it
+> is advisable to continue supporting RTC in the Linux kernel. This ensures compatibility with the
+> prevailing UFS device implementations and facilitates seamless integration with existing hardware.
+> By maintaining support for RTC, we ensure broad compatibility and avoid potential issues arising
+> from deviations in device specifications across different UFS versions.
 
-GPL please. 
+Patch descriptions should be 75 characters wide. See also
+Documentation/process/submitting-patches.rst.
 
--- 
----Trilok Soni
+Thanks,
+
+Bart.
 
