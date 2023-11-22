@@ -1,114 +1,186 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5D95B216;
-	Wed, 22 Nov 2023 09:55:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F358F55792
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Nov 2023 15:32:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NSVtC1aS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40808C433C8;
-	Wed, 22 Nov 2023 09:55:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="se6rW82k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CD26C433C8;
+	Wed, 22 Nov 2023 15:32:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700646948;
-	bh=xQ2l0OO8hQnRjP0JrxXmCo6kVTd11TmtxonALnUORfU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=NSVtC1aS7RdZ1PpWbty75WnMOZe2xEvCjVjdeZc+k9bvItpIvzZ0Dpdrub8Fo/Rv2
-	 TJ1Itnjm4dR6qXcaY1s1wrXmsXiNKh25Bdkur6Yclg8DG+r0L+omUndG0qCJmzKBNd
-	 wyNvkeT2C+Q/AHIK0+ukhsxtbnQYL6flMyYF+fqLPS1WgnnDwASUVXOq7WwR1b1YDM
-	 OSZyfTVf+jo33Ucq4VWN0jjq9KF+4eenH6dpUgY08FVY1PZfZj1PPCUs2Tb9FFce01
-	 xmaKxpVh12f1aTdu+fr1/Nqkzi+Xxs9M2Ct4qvjNYcFMO3HGrY+bxqK16xIaKGW5Fm
-	 FHzPqVbuqiHbg==
-Message-ID: <808e5f24-0366-4071-bf97-93611d4ced08@kernel.org>
-Date: Wed, 22 Nov 2023 10:55:40 +0100
+	s=k20201202; t=1700667140;
+	bh=wkCvBo8jEkVfRTkbglYo4Y8OHDg05/CV6/9Vs8YdR8g=;
+	h=From:To:Cc:Subject:Date:From;
+	b=se6rW82kVocMdGPK4qlRzBGluXE4h2xOM+5IM4DNM/SZuKhc12aoeCC9ZnIjH2NKk
+	 4EZ6tb7r+IPal0h//+fZpmr3hIdurkjsGRf3DSWPrvwrLUzdi6znEeySKbhnlPlnhH
+	 KTHrvQr5jekdTbDfsIW2UyE0lYvDQwRv51XV98i+PAdjfIhg9Ea2z3PMEKCccrZCtJ
+	 nSYR+4qg7hm/sXzvgMbbTRAw647A6BrOCPhPzdfrfxrA/8N4SFzYrgs67ZzbKErj3o
+	 P2RWhv9dowUX6pD0UWpvRqOEKPxR9zfPFUDXxB5euSPIre0ZBOy2B5G0fzBCMhxZNn
+	 Pzqh7ocbdvrHQ==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Mike Christie <michael.christie@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Martin Wilck <mwilck@suse.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	jejb@linux.ibm.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.6 01/17] scsi: sd: Fix sshdr use in sd_suspend_common()
+Date: Wed, 22 Nov 2023 10:31:30 -0500
+Message-ID: <20231122153212.852040-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 00/12] Hardware wrapped key support for qcom ice and
- ufs
-Content-Language: en-US
-To: Gaurav Kashyap <quic_gaurkash@quicinc.com>, linux-scsi@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, ebiggers@google.com,
- neil.armstrong@linaro.org, srinivas.kandagatla@linaro.org
-Cc: linux-mmc@vger.kernel.org, linux-block@vger.kernel.org,
- linux-fscrypt@vger.kernel.org, omprsing@qti.qualcomm.com,
- quic_psodagud@quicinc.com, abel.vesa@linaro.org, quic_spuppala@quicinc.com,
- kernel@quicinc.com
-References: <20231122053817.3401748-1-quic_gaurkash@quicinc.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <20231122053817.3401748-1-quic_gaurkash@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.6.2
+Content-Transfer-Encoding: 8bit
 
-On 22/11/2023 06:38, Gaurav Kashyap wrote:
->   ice, ufs, mmc: use blk_crypto_key for program_key
->   qcom_scm: scm call for deriving a software secret
->   soc: qcom: ice: add hwkm support in ice
->   soc: qcom: ice: support for hardware wrapped keys
->   ufs: core: support wrapped keys in ufs core
->   ufs: host: wrapped keys support in ufs qcom
->   qcom_scm: scm call for create, prepare and import keys
->   ufs: core: add support for generate, import and prepare keys
->   soc: qcom: support for generate, import and prepare key
->   ufs: host: support for generate, import and prepare key
->   arm64: dts: qcom: sm8650: add hwkm support to ufs ice
+From: Mike Christie <michael.christie@oracle.com>
 
-This is close to a spaghetti patchset. ICE, UFS, MMC, then followed up
-by SoC patches, then UFS, then firmware, then UFS, then again SoC and we
-are back at UFS.
+[ Upstream commit 3b83486399a6a9feb9c681b74c21a227d48d7020 ]
 
-Crazy dependencies... or you collected unrelated patches into one
-patchset making the merge strategy tricky.
+If scsi_execute_cmd() returns < 0, it doesn't initialize the sshdr, so we
+shouldn't access the sshdr. If it returns 0, then the cmd executed
+successfully, so there is no need to check the sshdr. sd_sync_cache() will
+only access the sshdr if it's been setup because it calls
+scsi_status_is_check_condition() before accessing it. However, the
+sd_sync_cache() caller, sd_suspend_common(), does not check.
 
->   dt-bindings: crypto: ice: document the hwkm property
+sd_suspend_common() is only checking for ILLEGAL_REQUEST which it's using
+to determine if the command is supported. If it's not it just ignores the
+error. So to fix its sshdr use this patch just moves that check to
+sd_sync_cache() where it converts ILLEGAL_REQUEST to success/0.
+sd_suspend_common() was ignoring that error and sd_shutdown() doesn't check
+for errors so there will be no behavior changes.
 
-Bindings come before users.
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/20231106231304.5694-2-michael.christie@oracle.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin Wilck <mwilck@suse.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/sd.c | 53 ++++++++++++++++++++---------------------------
+ 1 file changed, 23 insertions(+), 30 deletions(-)
 
-Best regards,
-Krzysztof
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 6effa13039f39..ac5e917f7abd6 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1642,24 +1642,21 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+ 	return disk_changed ? DISK_EVENT_MEDIA_CHANGE : 0;
+ }
+ 
+-static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
++static int sd_sync_cache(struct scsi_disk *sdkp)
+ {
+ 	int retries, res;
+ 	struct scsi_device *sdp = sdkp->device;
+ 	const int timeout = sdp->request_queue->rq_timeout
+ 		* SD_FLUSH_TIMEOUT_MULTIPLIER;
+-	struct scsi_sense_hdr my_sshdr;
++	struct scsi_sense_hdr sshdr;
+ 	const struct scsi_exec_args exec_args = {
+ 		.req_flags = BLK_MQ_REQ_PM,
+-		/* caller might not be interested in sense, but we need it */
+-		.sshdr = sshdr ? : &my_sshdr,
++		.sshdr = &sshdr,
+ 	};
+ 
+ 	if (!scsi_device_online(sdp))
+ 		return -ENODEV;
+ 
+-	sshdr = exec_args.sshdr;
+-
+ 	for (retries = 3; retries > 0; --retries) {
+ 		unsigned char cmd[16] = { 0 };
+ 
+@@ -1684,15 +1681,23 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
+ 			return res;
+ 
+ 		if (scsi_status_is_check_condition(res) &&
+-		    scsi_sense_valid(sshdr)) {
+-			sd_print_sense_hdr(sdkp, sshdr);
++		    scsi_sense_valid(&sshdr)) {
++			sd_print_sense_hdr(sdkp, &sshdr);
+ 
+ 			/* we need to evaluate the error return  */
+-			if (sshdr->asc == 0x3a ||	/* medium not present */
+-			    sshdr->asc == 0x20 ||	/* invalid command */
+-			    (sshdr->asc == 0x74 && sshdr->ascq == 0x71))	/* drive is password locked */
++			if (sshdr.asc == 0x3a ||	/* medium not present */
++			    sshdr.asc == 0x20 ||	/* invalid command */
++			    (sshdr.asc == 0x74 && sshdr.ascq == 0x71))	/* drive is password locked */
+ 				/* this is no error here */
+ 				return 0;
++			/*
++			 * This drive doesn't support sync and there's not much
++			 * we can do because this is called during shutdown
++			 * or suspend so just return success so those operations
++			 * can proceed.
++			 */
++			if (sshdr.sense_key == ILLEGAL_REQUEST)
++				return 0;
+ 		}
+ 
+ 		switch (host_byte(res)) {
+@@ -3847,7 +3852,7 @@ static void sd_shutdown(struct device *dev)
+ 
+ 	if (sdkp->WCE && sdkp->media_present) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+-		sd_sync_cache(sdkp, NULL);
++		sd_sync_cache(sdkp);
+ 	}
+ 
+ 	if ((system_state != SYSTEM_RESTART &&
+@@ -3868,7 +3873,6 @@ static inline bool sd_do_start_stop(struct scsi_device *sdev, bool runtime)
+ static int sd_suspend_common(struct device *dev, bool runtime)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+-	struct scsi_sense_hdr sshdr;
+ 	int ret = 0;
+ 
+ 	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
+@@ -3877,24 +3881,13 @@ static int sd_suspend_common(struct device *dev, bool runtime)
+ 	if (sdkp->WCE && sdkp->media_present) {
+ 		if (!sdkp->device->silence_suspend)
+ 			sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+-		ret = sd_sync_cache(sdkp, &sshdr);
+-
+-		if (ret) {
+-			/* ignore OFFLINE device */
+-			if (ret == -ENODEV)
+-				return 0;
+-
+-			if (!scsi_sense_valid(&sshdr) ||
+-			    sshdr.sense_key != ILLEGAL_REQUEST)
+-				return ret;
++		ret = sd_sync_cache(sdkp);
++		/* ignore OFFLINE device */
++		if (ret == -ENODEV)
++			return 0;
+ 
+-			/*
+-			 * sshdr.sense_key == ILLEGAL_REQUEST means this drive
+-			 * doesn't support sync. There's not much to do and
+-			 * suspend shouldn't fail.
+-			 */
+-			ret = 0;
+-		}
++		if (ret)
++			return ret;
+ 	}
+ 
+ 	if (sd_do_start_stop(sdkp->device, runtime)) {
+-- 
+2.42.0
 
