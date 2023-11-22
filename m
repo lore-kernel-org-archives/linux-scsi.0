@@ -1,81 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD7641A8;
-	Wed, 22 Nov 2023 09:43:23 -0800 (PST)
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-27ff7fe7fbcso56362a91.1;
-        Wed, 22 Nov 2023 09:43:23 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700675003; x=1701279803;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=d4noLHZHP8DG8f0jSc42YW/UY/J1Cld0V7RgDGdZcuY=;
-        b=trUNQ0aJw69ZQBqeX6Vc61/xB3b/qpfdpPyXFTAq41icDgIUVWnlLGEDKofe7l2E6a
-         PDAgsroyNU1MdNGhA0VKZBxg+T0SSDQ2D2sAUtkX9nlqYLdKX/ozEzf0ID8eapEF/G3M
-         Yqp7UQBqH6+zmeF3qtAev6nH/HvTf5hyY5arIghmke271YuStAYNTY69bCs1wj3fGu0v
-         D6pLSBabdca35P6C4x2bth3WBRLhJSTsBTkIGLOxUTyyXq5KHO4ZzGiW6hSxHEInv/Y4
-         ppf8UvVHRtdykcUt7YEFZ+FQzUcqPdHI56MxqgyGU7CRuwKW9EAohFwqUfgE0Ads/aUD
-         ZpXA==
-X-Gm-Message-State: AOJu0Yw1LGUWBjpC7fr0vQt8kYnszMSmMG+bUlMfXGoH7EgFSecsvfFK
-	F00ZRlFT9U6EB0pYsZi3cuo=
-X-Google-Smtp-Source: AGHT+IEYALxEwgV/PmnICD40M/m8KypQNqE+vaQx1j7micwYtbwYb7z7RqgfBXspMU3TVLOMFCKFew==
-X-Received: by 2002:a17:90b:1c8a:b0:27d:b87b:a9d4 with SMTP id oo10-20020a17090b1c8a00b0027db87ba9d4mr3796607pjb.7.1700675002575;
-        Wed, 22 Nov 2023 09:43:22 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:9d34:90db:9557:9413? ([2620:0:1000:8411:9d34:90db:9557:9413])
-        by smtp.gmail.com with ESMTPSA id u24-20020a17090abb1800b002802a080d1dsm15392pjr.16.2023.11.22.09.43.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Nov 2023 09:43:21 -0800 (PST)
-Message-ID: <b10de3fb-b6b9-4d8f-a940-93723adbd321@acm.org>
-Date: Wed, 22 Nov 2023 09:43:19 -0800
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="oez6Ptxm"
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBC60D42;
+	Wed, 22 Nov 2023 09:43:57 -0800 (PST)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AMHfJYh026759;
+	Wed, 22 Nov 2023 17:43:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=ZaNRIg3lKd62YeBy/yihCk/EXDyr33s6vGch1Rp/wgU=;
+ b=oez6PtxmupPpXCeqY/gdkqMTddKW4u/Dzc1c+u2sMtXIBqpYf0shkhI7KJZDjbd/dKeU
+ JYIlITDtQ0dAPDTkbybzheHmKdkqO9UaqMeqxyi5ViimcePZWUUh3H6O2TK+/22qrCfw
+ Fd5KSaORXEdffdgDIHElGYaAAIP09yYoGO5GrD3bEpEPdwVZzwCD5q3BgyDr4cgO4aq4
+ XHdPrKhxvgnvCZIWsMIpUtlhZVEnoQavbluwVfQMZmFvUKkGkhs32N+ZJ6uKMx+50XNB
+ XjOeK5WPIXUKtnbBxb2nMf9yg9u4yq+KPLiSzEhkgmFjWNQiIPq5lpw81WbGlsexy+wU 7Q== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uhgajrytt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 22 Nov 2023 17:43:54 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AMHhrYU017931
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 22 Nov 2023 17:43:53 GMT
+Received: from [10.110.98.138] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Wed, 22 Nov
+ 2023 09:43:49 -0800
+Message-ID: <edf9399c-f272-cf2b-15dd-385002fc4fcb@quicinc.com>
+Date: Wed, 22 Nov 2023 09:43:37 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] scsi: ufs: core: Add ufshcd_is_ufs_dev_busy()
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v3 02/12] qcom_scm: scm call for deriving a software
+ secret
 Content-Language: en-US
-To: Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com,
- alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
- mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
- beanhuo@micron.com, thomas@t-8ch.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- mikebi@micron.com, lporzio@micron.com
-References: <20231122172512.103748-1-beanhuo@iokpp.de>
- <20231122172512.103748-2-beanhuo@iokpp.de>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231122172512.103748-2-beanhuo@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Gaurav Kashyap <quic_gaurkash@quicinc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, <ebiggers@google.com>,
+        <neil.armstrong@linaro.org>, <srinivas.kandagatla@linaro.org>
+CC: <linux-mmc@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <linux-fscrypt@vger.kernel.org>, <omprsing@qti.qualcomm.com>,
+        <quic_psodagud@quicinc.com>, <abel.vesa@linaro.org>,
+        <quic_spuppala@quicinc.com>, <kernel@quicinc.com>
+References: <20231122053817.3401748-1-quic_gaurkash@quicinc.com>
+ <20231122053817.3401748-3-quic_gaurkash@quicinc.com>
+From: Trilok Soni <quic_tsoni@quicinc.com>
+In-Reply-To: <20231122053817.3401748-3-quic_gaurkash@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: UzMkdLUar2xqfmpaebXBe5jOF_EyfTf3
+X-Proofpoint-ORIG-GUID: UzMkdLUar2xqfmpaebXBe5jOF_EyfTf3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-22_12,2023-11-22_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=384
+ priorityscore=1501 lowpriorityscore=0 spamscore=0 bulkscore=0
+ clxscore=1011 impostorscore=0 malwarescore=0 mlxscore=0 adultscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311220129
 
-On 11/22/23 09:25, Bean Huo wrote:
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -126,7 +126,6 @@ enum uic_link_state {
->   	((h)->curr_dev_pwr_mode == UFS_POWERDOWN_PWR_MODE)
->   #define ufshcd_is_ufs_dev_deepsleep(h) \
->   	((h)->curr_dev_pwr_mode == UFS_DEEPSLEEP_PWR_MODE)
-> -
->   /*
->    * UFS Power management levels.
->    * Each level is in increasing order of power savings, except DeepSleep
-> @@ -1408,6 +1407,13 @@ static inline int ufshcd_vops_phy_initialization(struct ufs_hba *hba)
->   	return 0;
->   }
->   
-> +static inline bool ufshcd_is_ufs_dev_busy(struct ufs_hba *hba)
-> +{
-> +	return (hba->clk_gating.active_reqs || hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL ||
-> +		hba->outstanding_reqs || hba->outstanding_tasks || hba->active_uic_cmd ||
-> +		hba->uic_async_done);
+On 11/21/2023 9:38 PM, Gaurav Kashyap wrote:
+> +
+> +	dma_free_coherent(__scm->dev, wkey_size, wkey_buf, wkey_phys);
+> +
+> +	return ret;
 > +}
+> +EXPORT_SYMBOL(qcom_scm_derive_sw_secret);
 
-Since the above function is only used in drivers/ufs/core/ufshcd.c,
-please move it back to that source file. The public header file
-include/ufs/ufshcd.h is for definitions and declarations used by both
-the UFS driver core and the UFS driver host files.
+GPL please. 
 
-Thanks,
+-- 
+---Trilok Soni
 
-Bart.
