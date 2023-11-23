@@ -1,38 +1,38 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hkPFbEMM"
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D691E10D7
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 07:49:35 -0800 (PST)
-Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-6b1d1099a84so993362b3a.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 07:49:35 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="R1V307qZ"
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E32C10C4
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 07:49:39 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6cbe716b511so562780b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 07:49:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1700754575; x=1701359375; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1700754579; x=1701359379; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=JFW3s5KLWzK2NxYOpwtTOflxcKAmvcWEkzA9TTJugQk=;
-        b=hkPFbEMM89CgJXf+uNWdjLwZajYh9EycBdGPRJtoc8bL9qPQdojzH3lHblwlUhKoem
-         ALeKghz/KzzV5yd7SM7kFWp1J/j/4cQL++nf+ygsqz0Ws5FBjCpceTVb9o5jsmQ28JY9
-         phbU90Blr2CGnYfjD9y46rELpaXRG18rHXyVg=
+        bh=7q3doDZkbRt+Geoe7jEu+ki1UGPiFfjiq+uSgFfyMas=;
+        b=R1V307qZrsic4DPKC3o6zRSJhS20eyXlnBVssKF31EAzGyj+mv4+dcAOgg1AEIfuTD
+         H0ZvQrrEVF0xa2in4i6MlWdk39D+MCfoNaZ7zXxzv2+bikhlDna1Vu1K5yRUPtCphCoS
+         IRS+cv/9c5T9KOS/s7zncal7Le65330mHkreo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700754575; x=1701359375;
+        d=1e100.net; s=20230601; t=1700754579; x=1701359379;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JFW3s5KLWzK2NxYOpwtTOflxcKAmvcWEkzA9TTJugQk=;
-        b=feZCdvqYsaoRePVgNsj6cDjrYzMZ3SSLqgFDBU5W/jfFT19x4OiLzzwCet5/pAeDoG
-         q8e/WM8O2gg8Scj1vteivIAEdya+Y0q4swmdHrK/Brmwj1GpUhNW31Dj03hm/sVCwOfW
-         oIN1+sCVkU8iBZiRMGQ95hDwbW1D4BypbTinXS/2/MJUV3TJ9bCEmobA9D8Z50fmejZW
-         XTf0ijHHzTVyP28czW8s2SMvZ15x9HxjxPOXK5DRKfXJSzBuGGUDod5wsb6VCLdDGiCE
-         i4IMwmeeGnp/sTwT8IPxEHn66D/kKvgVxxomojvCbunSS5G1TiEqMqrbAHI7NNn88E3N
-         MZyA==
-X-Gm-Message-State: AOJu0YypcyNW2fxgQc8eKg7S9g4Zk9tZkwWVNBfzezQiVEtAfJKeHSAu
-	EE5sG/mEdTZynDXi+ZMNoH9Aug==
-X-Google-Smtp-Source: AGHT+IHPXiCpwcmi9m5k4zLsS6rgMoYdMhDGY0ssV1fu8F8mHNndapEggVZvXWfgobkLgFxMeaVuJg==
-X-Received: by 2002:a05:6a20:244b:b0:187:1c5c:49e4 with SMTP id t11-20020a056a20244b00b001871c5c49e4mr6212693pzc.46.1700754575273;
-        Thu, 23 Nov 2023 07:49:35 -0800 (PST)
+        bh=7q3doDZkbRt+Geoe7jEu+ki1UGPiFfjiq+uSgFfyMas=;
+        b=S4MGDlS1I7+G7imK6pYU1tfBwBDiooqPRXj+9t9GFaPNyqn18jv0uOC2xS6n2BW0tc
+         Yo3/9eJzBWwj9a6+A0KlSHcg64Iw3g8U1CFmPGnTERsnwiyAlO7bCRowxuEFjkidwxM6
+         ceVZ4j9vBTdgbQ0JCeNA9tGJhenrJ8drlzzbp9vGuM6f0M0h1qpLttXXJqahkhCKIHPq
+         8koRSZHAlqFGSrh9LuiCm/S9XnmRqOVRJv++cCGHreBOGOe9iYVpzSZp8EoqsT2YMHCq
+         Hw3F15RW3VIzSjRlRZxiyXtufZL6YzxNRENm3S4R44d38nDZH1KX2Mm37xKpXjLwXEMX
+         hL0A==
+X-Gm-Message-State: AOJu0Yy89VrAYVdQH/CKMtZlmBngeRG1dzFq9KyAtlH4oP0u56/+eLzy
+	OGnuqpCTnN8HeOxa/Jm/QlA53A==
+X-Google-Smtp-Source: AGHT+IE3sVQjB3/TRZ+xFhC3XarIBx7azD+5bOCj47C6Nk7LYMMM9OHh+v4yVLmfcf9trVizd8rRhw==
+X-Received: by 2002:a05:6a00:cd2:b0:690:c887:8cd8 with SMTP id b18-20020a056a000cd200b00690c8878cd8mr5961495pfv.32.1700754578676;
+        Thu, 23 Nov 2023 07:49:38 -0800 (PST)
 Received: from dhcp-10-123-20-95.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id k11-20020a056a00134b00b006cb98040658sm1368686pfu.34.2023.11.23.07.49.32
+        by smtp.gmail.com with ESMTPSA id k11-20020a056a00134b00b006cb98040658sm1368686pfu.34.2023.11.23.07.49.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Nov 2023 07:49:34 -0800 (PST)
+        Thu, 23 Nov 2023 07:49:37 -0800 (PST)
 From: Sumit Saxena <sumit.saxena@broadcom.com>
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org,
@@ -40,126 +40,61 @@ Cc: linux-scsi@vger.kernel.org,
 	chandrakanth.patil@broadcom.com,
 	ranjan.kumar@broadcom.com,
 	Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 3/5] mpi3mr: Increase maximum number of PHYs to 64 from 32
-Date: Thu, 23 Nov 2023 21:31:30 +0530
-Message-Id: <20231123160132.4155-4-sumit.saxena@broadcom.com>
+Subject: [PATCH 4/5] mpi3mr: Add support for status reply descriptor
+Date: Thu, 23 Nov 2023 21:31:31 +0530
+Message-Id: <20231123160132.4155-5-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20231123160132.4155-1-sumit.saxena@broadcom.com>
 References: <20231123160132.4155-1-sumit.saxena@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="00000000000054abc9060ad3c87a"
+	boundary="000000000000882259060ad3c858"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
---00000000000054abc9060ad3c87a
+--000000000000882259060ad3c858
 
-SAS5116 controllers supports maximum 48 physical PHYs.
-Driver is modified to accommodate up to 64 PHYs(though
-current need is to support 48 PHYs).
+Inform controller firmware that driver supports status reply descriptor.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h           |  2 +-
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 16 ++++++++--------
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h | 1 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c     | 3 +++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index ae98d15c30b1..7658e8aaadbe 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -506,7 +506,7 @@ struct mpi3mr_sas_port {
- 	u8 num_phys;
- 	u8 marked_responding;
- 	int lowest_phy;
--	u32 phy_mask;
-+	u64 phy_mask;
- 	struct mpi3mr_hba_port *hba_port;
- 	struct sas_identify remote_identify;
- 	struct sas_rphy *rphy;
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index 82b55e955730..c0c8ab586957 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -1587,7 +1587,7 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
-  */
- struct host_port {
- 	u64	sas_address;
--	u32	phy_mask;
-+	u64	phy_mask;
- 	u16	handle;
- 	u8	iounit_port_id;
- 	u8	used;
-@@ -1611,7 +1611,7 @@ mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc, struct host_port *h_port,
- 	struct mpi3mr_sas_port *mr_sas_port)
- {
- 	struct mpi3mr_sas_phy *mr_sas_phy;
--	u32 phy_mask_xor;
-+	u64 phy_mask_xor;
- 	u64 phys_to_be_added, phys_to_be_removed;
- 	int i;
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
+index 1e4a60fc655f..0cb24fc03620 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
+@@ -28,6 +28,7 @@ struct mpi3_ioc_init_request {
+ 	__le64                   driver_information_address;
+ };
  
-@@ -1619,7 +1619,7 @@ mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc, struct host_port *h_port,
- 	mr_sas_port->marked_responding = 1;
++#define MPI3_IOCINIT_MSGFLAGS_SCSIIOSTATUSREPLY_SUPPORTED	(0x04)
+ #define MPI3_IOCINIT_MSGFLAGS_HOSTMETADATA_MASK          (0x03)
+ #define MPI3_IOCINIT_MSGFLAGS_HOSTMETADATA_NOT_USED      (0x00)
+ #define MPI3_IOCINIT_MSGFLAGS_HOSTMETADATA_SEPARATED     (0x01)
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 0d148c39ebcc..1ad2f88e0528 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -3194,6 +3194,9 @@ static int mpi3mr_issue_iocinit(struct mpi3mr_ioc *mrioc)
+ 	current_time = ktime_get_real();
+ 	iocinit_req.time_stamp = cpu_to_le64(ktime_to_ms(current_time));
  
- 	dev_info(&mr_sas_port->port->dev,
--	    "sas_address(0x%016llx), old: port_id %d phy_mask 0x%x, new: port_id %d phy_mask:0x%x\n",
-+	    "sas_address(0x%016llx), old: port_id %d phy_mask 0x%llx, new: port_id %d phy_mask:0x%llx\n",
- 	    mr_sas_port->remote_identify.sas_address,
- 	    mr_sas_port->hba_port->port_id, mr_sas_port->phy_mask,
- 	    h_port->iounit_port_id, h_port->phy_mask);
-@@ -1637,7 +1637,7 @@ mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc, struct host_port *h_port,
- 	 * if these phys are previously registered with another port
- 	 * then delete these phys from that port first.
- 	 */
--	for_each_set_bit(i, (ulong *) &phys_to_be_added, BITS_PER_TYPE(u32)) {
-+	for_each_set_bit(i, (ulong *) &phys_to_be_added, BITS_PER_TYPE(u64)) {
- 		mr_sas_phy = &mrioc->sas_hba.phy[i];
- 		if (mr_sas_phy->phy_belongs_to_port)
- 			mpi3mr_del_phy_from_an_existing_port(mrioc,
-@@ -1649,7 +1649,7 @@ mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc, struct host_port *h_port,
- 	}
- 
- 	/* Delete the phys which are not part of current mr_sas_port's port. */
--	for_each_set_bit(i, (ulong *) &phys_to_be_removed, BITS_PER_TYPE(u32)) {
-+	for_each_set_bit(i, (ulong *) &phys_to_be_removed, BITS_PER_TYPE(u64)) {
- 		mr_sas_phy = &mrioc->sas_hba.phy[i];
- 		if (mr_sas_phy->phy_belongs_to_port)
- 			mpi3mr_del_phy_from_an_existing_port(mrioc,
-@@ -1671,7 +1671,7 @@ mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc, struct host_port *h_port,
- void
- mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
- {
--	struct host_port h_port[32];
-+	struct host_port h_port[64];
- 	int i, j, found, host_port_count = 0, port_idx;
- 	u16 sz, attached_handle, ioc_status;
- 	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0 = NULL;
-@@ -1742,7 +1742,7 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
- 		list_for_each_entry(mr_sas_port, &mrioc->sas_hba.sas_port_list,
- 		    port_list) {
- 			ioc_info(mrioc,
--			    "port_id:%d, sas_address:(0x%016llx), phy_mask:(0x%x), lowest phy id:%d\n",
-+			    "port_id:%d, sas_address:(0x%016llx), phy_mask:(0x%llx), lowest phy id:%d\n",
- 			    mr_sas_port->hba_port->port_id,
- 			    mr_sas_port->remote_identify.sas_address,
- 			    mr_sas_port->phy_mask, mr_sas_port->lowest_phy);
-@@ -1751,7 +1751,7 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
- 		ioc_info(mrioc, "Host port details after reset\n");
- 		for (i = 0; i < host_port_count; i++) {
- 			ioc_info(mrioc,
--			    "port_id:%d, sas_address:(0x%016llx), phy_mask:(0x%x), lowest phy id:%d\n",
-+			    "port_id:%d, sas_address:(0x%016llx), phy_mask:(0x%llx), lowest phy id:%d\n",
- 			    h_port[i].iounit_port_id, h_port[i].sas_address,
- 			    h_port[i].phy_mask, h_port[i].lowest_phy);
- 		}
++	iocinit_req.msg_flags |=
++	    MPI3_IOCINIT_MSGFLAGS_SCSIIOSTATUSREPLY_SUPPORTED;
++
+ 	init_completion(&mrioc->init_cmds.done);
+ 	retval = mpi3mr_admin_request_post(mrioc, &iocinit_req,
+ 	    sizeof(iocinit_req), 1);
 -- 
 2.18.1
 
 
---00000000000054abc9060ad3c87a
+--000000000000882259060ad3c858
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -230,13 +165,13 @@ nERsqENeyGfUTJLcDSURb49qpFqqWweJ7ifC64Iak8wCK2CxCe8lHfTyEgC9MuEa586NMQJDguvw
 jlC7kxrgwf4sZ/9Wj/GS2HLzZPkxWCcQIrgNJm2wceHQwPBpM0ZoqL1D2tsFgOA8BvYxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwdgevXLIdo6fbCNI8w
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHpPP1CNeJfxXJAywOpfhuEQlNGuhuQh
-dCtbAFUm/YvpMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTEy
-MzE1NDkzNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBCJGGfhfE9OEMvry79Ii5ZLFueyCz1o
+E8JqRiuXe2kLMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTEy
+MzE1NDkzOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBH4Wl13bUDw5x+vvQD9c9VoaQPujG2F/GphBZYPFaSf/jTQWD8
-wbzw46eNEzBbgzaJgI16V9OWtt4LbSAxFXKR5LvH/nn+9/qLA1HKfxkpcF4Icfx+v4Qp3mbZBfeD
-6Kb1liSK9/F8fIDR2xERLG2dzvuYzy2j0u5LoNv8ntEFTo8E3euC0T9olQefYRnZ3CCQGaPQgby+
-7sDbR9rFXJyyubvQQMXUaJJFqdY6EemaxFzJl11/OP7CtBpD0x3NF5BPioo1jIi6uHJaZtu9dtKi
-7bebZFf/cPWLTMBpIHSdsU686KFj3gSFFPXiytQnUflPKSDBTXVTl/ku8le9QZaP
---00000000000054abc9060ad3c87a--
+ATANBgkqhkiG9w0BAQEFAASCAQBpkhcvZpS4Qrh6ivyokcyNL8E6jArAypfCzPpOWmKOWHZPyzk7
+JKj2eCLc8IW2vy2VCIpiZIW0A5g59ySUE6xYNDhlU/TXNYRZVS+rTcvcxb4Pwhe7KO4WjZk5ncbU
+Yzta6o/t6w23FX1AhSoO0YHnyS8bQahGpY8/3i3ELElga8WL75Y6DwGt/yyBU4qUOE3mzEDVbOmL
+5PMHPdGQA+1XfxqB7kh+eGHKENkOeCT4chU+2TExRy0BuUp59CNMsEueXd55SZhFxDwgQM8dxI9o
+pnvK6kHYU96LeMYVjZLEyxQ18b+aGv0jYoADLTcBBvwGvbFJ3tU08HKQtbnTZbnA
+--000000000000882259060ad3c858--
