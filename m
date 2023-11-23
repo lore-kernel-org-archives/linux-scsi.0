@@ -1,108 +1,136 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="k4tZR+tM"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CF56A3;
-	Thu, 23 Nov 2023 00:56:10 -0800 (PST)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AN6JD3K015853;
-	Thu, 23 Nov 2023 08:47:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=mP3Zh3ghe1QobYCFwkdhcpkOdhL0iT2Q9aPGVoVes/U=;
- b=k4tZR+tMtlstqkBrgmETuO33SOlNJohMaUUZ0TdHEH8dqkb+6Ymh+sH2sOiGTvqBsf28
- H5rBltfC2U+zbthuX6u2BBsvbFXztlvj2AIvcA1QHo8vmvsRnm0rJeQ3zwa12WKxeukQ
- EZ1DPYoX00yVsKZBPSe4fo8y0eF2xVxx6ZLIv8CIOtXdb+zJXE1qHnhb4qXlEFjcwImI
- YGFWJ8iIxASFtOSN5LuK9YGf6AQke7v/jjebnjvvYS7EfX7g8npioGkdx+CWzz3x73j/
- HTArXLU3KnI8K7wryrBF7Kg0Vm22+xk68swqUUUhDEycNuTN+AdMnn1hEmnc3wtoqvgE Cg== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uhwme8v49-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 Nov 2023 08:47:03 +0000
-Received: from pps.filterd (NASANPPMTA05.qualcomm.com [127.0.0.1])
-	by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3AN8VFWN001797;
-	Thu, 23 Nov 2023 08:47:03 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3uhcusvt7e-1;
-	Thu, 23 Nov 2023 08:47:03 +0000
-Received: from NASANPPMTA05.qualcomm.com (NASANPPMTA05.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AN8UVqs000883;
-	Thu, 23 Nov 2023 08:47:02 GMT
-Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
-	by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3AN8l2K3022937;
-	Thu, 23 Nov 2023 08:47:02 +0000
-Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
-	id CFB9D20A68; Thu, 23 Nov 2023 00:47:01 -0800 (PST)
-From: Can Guo <quic_cang@quicinc.com>
-To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v5 02/10] scsi: ufs: ufs-qcom: No need to set hs_rate after ufshcd_init_host_param()
-Date: Thu, 23 Nov 2023 00:46:22 -0800
-Message-Id: <1700729190-17268-3-git-send-email-quic_cang@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
-References: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ld5psP53TjFfSqKqOc215_i6Ck2Rsu6n
-X-Proofpoint-ORIG-GUID: ld5psP53TjFfSqKqOc215_i6Ck2Rsu6n
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-23_06,2023-11-22_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 clxscore=1015
- priorityscore=1501 malwarescore=0 mlxlogscore=999 lowpriorityscore=0
- impostorscore=0 mlxscore=0 adultscore=0 bulkscore=0 spamscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311230062
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BKqERmlc"
+Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E29F71AE;
+	Thu, 23 Nov 2023 01:20:11 -0800 (PST)
+Received: by mail-wm1-x334.google.com with SMTP id 5b1f17b1804b1-4094301d505so3746615e9.2;
+        Thu, 23 Nov 2023 01:20:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1700731210; x=1701336010; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=agWSrKHOHYuZjNUZSTGfhGdN53IKkDI5ATnREaAaw0E=;
+        b=BKqERmlcT/e/kUtq4+VGfNxG4rVteZyxvLM+2RFXpHfRvvCcJmUJl3EKNshqU8Eekx
+         O51iK2kpfwiBYr/lwJvIh7ScT3YRP2zHD6+Nv+uPCN5UirTH6m0nGRw2uiGqdYJIrs41
+         G8RwpbC03gJ2iCaQafxQRkHca5jjkszLaRfdawNsXBmATfarTZp+/41CbVbbd//9e1De
+         50Hck6lp30kP/PmWxXfpPdTPG7sbElaPDFCnxqmHo7FfCYdQdT7uQWUd8kE74GP7Cv6E
+         TFUqeZbm1qaNAeunp9nGSep8K+sg4X36hRWAX2Q+eyOYP7qTR9fbNLA8SFctDxOuMxzg
+         UQvQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700731210; x=1701336010;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=agWSrKHOHYuZjNUZSTGfhGdN53IKkDI5ATnREaAaw0E=;
+        b=dvSckkugIXlZpqUhOBNdTc0F3HqFt3obXfIEU7q4s87ZxXGEmYD8NVAY7sfot+CMot
+         Vngg/zDApbrZP82MPI6XLOl9JSdvCdOXcAHvB2zl6YVZVU0hNckVhZQXZOpqE0MvJI78
+         OYnWxYrIC1hVGPJIKzAk1NlVg71LpTqKC0BV9rw+vT/2TUnyuWVvvpG/RVhicExt67zJ
+         jAbYZoQKsnzei6B0QZ423XTGpAeVflawaAPd0BctAEdMCqOKkceo0n00AnYCibZBUPQO
+         Xgvo5ixCiSqL70MyQfqXyZwYB7AI7jsgOl1F2bFa3vlHv6bIpZD6iJt1M/g4RnJuWykl
+         fpYA==
+X-Gm-Message-State: AOJu0YxtbOUoZpXySIHCJQVfxobatGG16JQgY6nk+bK4UYHmMxQAvM9s
+	3IEfyxiMCnAOiv3AMnf39P7MnkPofBI=
+X-Google-Smtp-Source: AGHT+IFCzqERQRf3kI6frXxEB17qyukCZx9xxj2dvuRXtr7+/PbpuiA3nV5Olnycm/GRCR4ZJI+Tzw==
+X-Received: by 2002:a05:600c:4514:b0:409:787b:5ab5 with SMTP id t20-20020a05600c451400b00409787b5ab5mr3682862wmo.23.1700731210011;
+        Thu, 23 Nov 2023 01:20:10 -0800 (PST)
+Received: from amir-ThinkPad-T480.lan ([5.29.249.86])
+        by smtp.gmail.com with ESMTPSA id x12-20020adff64c000000b0032dcb08bf94sm1094868wrp.60.2023.11.23.01.20.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Nov 2023 01:20:09 -0800 (PST)
+From: Amir Goldstein <amir73il@gmail.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Jan Kara <jack@suse.cz>,
+	Josef Bacik <josef@toxicpanda.com>,
+	David Howells <dhowells@redhat.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-fsdevel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: target: core: add missing file_{start,end}_write()
+Date: Thu, 23 Nov 2023 11:20:00 +0200
+Message-Id: <20231123092000.2665902-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-In ufs_qcom_pwr_change_notify(), host_params.hs_rate has been set to
-PA_HS_MODE_B by ufshcd_init_host_param(), hence remove the duplicated line
-of work. Meanwhile, removed the macro UFS_QCOM_LIMIT_HS_RATE as it is only
-used here.
+The callers of vfs_iter_write() are required to hold file_start_write().
+file_start_write() is a no-op for the S_ISBLK() case, but it is really
+needed when the backing file is a regular file.
 
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
+We are going to move file_{start,end}_write() into vfs_iter_write(), but
+we need to fix this first, so that the fix could be backported to stable
+kernels.
+
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Link: https://lore.kernel.org/r/ZV8ETIpM+wZa33B5@infradead.org/
+Cc: stable@vger.kernel.org
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 1 -
- drivers/ufs/host/ufs-qcom.h | 2 --
- 2 files changed, 3 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index aee66a3..cc30ad9 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -909,7 +909,6 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 	switch (status) {
- 	case PRE_CHANGE:
- 		ufshcd_init_host_param(&host_params);
--		host_params.hs_rate = UFS_QCOM_LIMIT_HS_RATE;
+Hi Martin,
+
+This bug is already fixed by commit "fs: move file_start_write() into
+vfs_iter_write()" on the vfs.rw branch in Christian's vfs tree, but
+Christoph suggested that I post a separate backportable fix for the scsi
+target code.
+
+You may decide if this is worth expediting to v6.7-rc or not.
+If not, then I think it would be best if Christian insert this patch
+at the bottom of the vfs.rw branch and revert in the later aformentioned
+commit.
+
+If you prefer to expedite it to v6.7-rc, then it's probably best to
+rebase vfs.rw branch after the fix hits master.
+
+Please let us know how you prefer to handle this patch.
+
+Thanks,
+Amir.
+
+ drivers/target/target_core_file.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 4d447520bab8..4e4cf6c34a77 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -332,11 +332,13 @@ static int fd_do_rw(struct se_cmd *cmd, struct file *fd,
+ 	}
  
- 		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
- 		host_params.hs_tx_gear = host_params.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index 9950a00..82cd143 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -27,8 +27,6 @@
- #define SLOW 1
- #define FAST 2
- 
--#define UFS_QCOM_LIMIT_HS_RATE		PA_HS_MODE_B
+ 	iov_iter_bvec(&iter, is_write, bvec, sgl_nents, len);
+-	if (is_write)
++	if (is_write) {
++		file_start_write(fd);
+ 		ret = vfs_iter_write(fd, &iter, &pos, 0);
+-	else
++		file_end_write(fd);
++	} else {
+ 		ret = vfs_iter_read(fd, &iter, &pos, 0);
 -
- /* QCOM UFS host controller vendor specific registers */
- enum {
- 	REG_UFS_SYS1CLK_1US                 = 0xC0,
++	}
+ 	if (is_write) {
+ 		if (ret < 0 || ret != data_length) {
+ 			pr_err("%s() write returned %d\n", __func__, ret);
+@@ -467,7 +469,9 @@ fd_execute_write_same(struct se_cmd *cmd)
+ 	}
+ 
+ 	iov_iter_bvec(&iter, ITER_SOURCE, bvec, nolb, len);
++	file_start_write(fd_dev->fd_file);
+ 	ret = vfs_iter_write(fd_dev->fd_file, &iter, &pos, 0);
++	file_end_write(fd_dev->fd_file);
+ 
+ 	kfree(bvec);
+ 	if (ret < 0 || ret != len) {
 -- 
-2.7.4
+2.34.1
 
