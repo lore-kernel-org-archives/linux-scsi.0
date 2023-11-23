@@ -1,38 +1,38 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Pw2K0Njb"
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61AF1D4A
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 07:44:33 -0800 (PST)
-Received: by mail-pg1-x531.google.com with SMTP id 41be03b00d2f7-5bd099e3d3cso638611a12.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 07:44:33 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HVdVLwHW"
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33A97D6E
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 07:44:37 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id 98e67ed59e1d1-2802e5ae23bso852076a91.2
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 07:44:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1700754273; x=1701359073; darn=vger.kernel.org;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=drAyFUVhEm8AWK3jb2ps7akSte0svyRdnPTiNHgrV7E=;
-        b=Pw2K0NjbZhi2EfR1KjJS2mWgc32Zp9xACDhIyUjYdH2np6sNb80lpn7HfcfVe7b7hU
-         u3aGjhOiT++CWbl5wHH2a1wH1wA2yBlQlKWKaYf/sCDIkrWt7H020QbpuAmyKDD+n1Iu
-         mvir6i5H3W5J7sDg7gpJkhh3QTCavw/gbcKbc=
+        d=broadcom.com; s=google; t=1700754276; x=1701359076; darn=vger.kernel.org;
+        h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=yLkirGELytr/p6pekQlv9cXhbr5Y9Z7BTJhul93q9ls=;
+        b=HVdVLwHW8oZ9Q7ALH3yWAh8JWjI2C3W/v2nRVEhs1sCxtY6MVtX8Pq9zqUzWDThTa7
+         ZhRjdKHlKlSlE/7/sVSnatZ5haRoPNiLheKXauuNl/AnWUy9ezhxuxtfPK+iOxHKPTCL
+         su9WcULESybsBOGZtcnlFyqoNAVEoek80bJ8M=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700754273; x=1701359073;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=drAyFUVhEm8AWK3jb2ps7akSte0svyRdnPTiNHgrV7E=;
-        b=QGK/W3NEj1rtnIy6GHqTLMe/CJHLBIT1A93gAFLDfAsj2aEFtXSvisUVz6wS3mGQK1
-         mlD7qpL3F1lpw3/Z0S1AYSarQp8F88JKpaiv7VbeIKaT1dGTFSpIgV4BF8uEYnTaLoCT
-         eRZaNYOxksZR84QDIy3P8+RYWpu2AKRsq1AFTbZTvmSKUd+jrmdvVkOB93U/CwUtJ2TE
-         9haxgtCyBvKeM+58d5ad/pYRxp53Ih6rGqHiYaFNaWx861I2kGip6POGLCy3DqFL0VrJ
-         O2xPdVBxckEQCDA9sHHDBKbm0co3kOA6N1QjOeE/c98lyOuyrI1MrLaygBZ8CXbcqsa9
-         1neg==
-X-Gm-Message-State: AOJu0Yz63UYOgMcGBeem3gE6Iqvbyujqh/NdmETK8F/zQT0FX+xCMsCo
-	7DAHznKo+IAOUAACDQIFguX6acT24/u0yFF5lDI=
-X-Google-Smtp-Source: AGHT+IFAGxB/bAUwrjcmy+lC0ZPdHJEaUba7zuBhC3DVQQe6RGGUb+yZRxQBp2c8xyMznu72rdp0uQ==
-X-Received: by 2002:a17:90b:3ec2:b0:281:da1:4b96 with SMTP id rm2-20020a17090b3ec200b002810da14b96mr5637822pjb.22.1700754272209;
-        Thu, 23 Nov 2023 07:44:32 -0800 (PST)
+        d=1e100.net; s=20230601; t=1700754276; x=1701359076;
+        h=references:in-reply-to:message-id:date:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=yLkirGELytr/p6pekQlv9cXhbr5Y9Z7BTJhul93q9ls=;
+        b=cKiJnYg+imo6slsLAzC1mSGEfhhMoLvzMcyhy86x1SEYe2IU80LQQO8o/Sl8XeCguI
+         MJFBvfj82nc01wCQZfaiedwBzWEx4WAyI5QC/lk7/zI0MldgBCTG6Bj2UxIbII8CH1Ly
+         sX0P0MJATO6MFqh33QzQ2kzh7F0m+RcGhtUTKYEdWaDEIgAFs8gTdLR1+R9rTtpTnkbW
+         Dz0xojjHUHMRwg+agzb2z82I6Fv7hGqbJ0kL4Qmmq91AryRGZds2uqKHms4feuHVbbTO
+         olYVhJS8l512kOn8WKE/aiLVkxCyog42J8D3PdOFmmQG26clrWWwmi3TgOQykyyxo1pd
+         HR4Q==
+X-Gm-Message-State: AOJu0YywwqgYM8YU7Ffs/8rKM1trDBsvbmG3iXYdTr7sFU45pE263ix6
+	srQJA7pAMaa8A7mVYlDnK1QQhw==
+X-Google-Smtp-Source: AGHT+IGUeHY+QaN7dS3MUcwn0YaKgYGToh8MRwEBIdZIzPkWW+8n2l4voK+v7ZLpIQWIdoPA9MPHNA==
+X-Received: by 2002:a17:90b:1b11:b0:279:2dac:80b3 with SMTP id nu17-20020a17090b1b1100b002792dac80b3mr6147076pjb.44.1700754276437;
+        Thu, 23 Nov 2023 07:44:36 -0800 (PST)
 Received: from dhcp-10-123-20-95.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id y13-20020a17090a390d00b0028558e3f507sm1882347pjb.12.2023.11.23.07.44.28
+        by smtp.gmail.com with ESMTPSA id y13-20020a17090a390d00b0028558e3f507sm1882347pjb.12.2023.11.23.07.44.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Nov 2023 07:44:30 -0800 (PST)
+        Thu, 23 Nov 2023 07:44:34 -0800 (PST)
 From: Sumit Saxena <sumit.saxena@broadcom.com>
 To: martin.petersen@broadcom.com
 Cc: linux-scsi@vger.kernel.org,
@@ -40,42 +40,53 @@ Cc: linux-scsi@vger.kernel.org,
 	chandrakanth.patil@broadcom.com,
 	ranjan.kumar@broadcom.com,
 	Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 0/5] mpi3mr: Add support for Broadcom SAS5116 IO/RAID controllers
-Date: Thu, 23 Nov 2023 21:25:59 +0530
-Message-Id: <20231123155604.1615-1-sumit.saxena@broadcom.com>
+Subject: [PATCH 1/5] mpi3mr: Add support for SAS5116 PCI IDs
+Date: Thu, 23 Nov 2023 21:26:00 +0530
+Message-Id: <20231123155604.1615-2-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.18.1
+In-Reply-To: <20231123155604.1615-1-sumit.saxena@broadcom.com>
+References: <20231123155604.1615-1-sumit.saxena@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000004d4d12060ad3b632"
+	boundary="0000000000008728cc060ad3b61b"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
---0000000000004d4d12060ad3b632
+--0000000000008728cc060ad3b61b
 
-These patches add support for Broadcom's SAS5116 IO/RAID controllers
-in mpi3mr driver. 
+Add support for Broadcom's SAS5116 IO/RAID controllers PCI IDs.
 
-Sumit Saxena (5):
-  mpi3mr: Add support for SAS5116 PCI IDs
-  mpi3mr: Add PCI checks where SAS5116 diverges from SAS4116
-  mpi3mr: Increase maximum number of PHYs to 64 from 32
-  mpi3mr: Add support for status reply descriptor
-  mpi3mr: driver version upgrade to 8.5.0.0.50
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h    |  1 +
- drivers/scsi/mpi3mr/mpi3mr.h           |  6 +++---
- drivers/scsi/mpi3mr/mpi3mr_fw.c        |  6 +++++-
- drivers/scsi/mpi3mr/mpi3mr_os.c        | 13 ++++++++++++-
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 16 ++++++++--------
- 5 files changed, 29 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 040031eb0c12..a8d7dbf0159a 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5430,6 +5430,14 @@ static const struct pci_device_id mpi3mr_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
+ 		    MPI3_MFGPAGE_DEVID_SAS4116, PCI_ANY_ID, PCI_ANY_ID)
+ 	},
++	{
++		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
++		    MPI3_MFGPAGE_DEVID_SAS5116_MPI, PCI_ANY_ID, PCI_ANY_ID)
++	},
++	{
++		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
++		    MPI3_MFGPAGE_DEVID_SAS5116_MPI_MGMT, PCI_ANY_ID, PCI_ANY_ID)
++	},
+ 	{ 0 }
+ };
+ MODULE_DEVICE_TABLE(pci, mpi3mr_pci_id_table);
 -- 
 2.18.1
 
 
---0000000000004d4d12060ad3b632
+--0000000000008728cc060ad3b61b
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -146,13 +157,13 @@ nERsqENeyGfUTJLcDSURb49qpFqqWweJ7ifC64Iak8wCK2CxCe8lHfTyEgC9MuEa586NMQJDguvw
 jlC7kxrgwf4sZ/9Wj/GS2HLzZPkxWCcQIrgNJm2wceHQwPBpM0ZoqL1D2tsFgOA8BvYxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwdgevXLIdo6fbCNI8w
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDzaeCM/xAv5gzvvu2pNWUYF6PoAF4h7
-mp3eKu/e7FTMMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTEy
-MzE1NDQzM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIApBbCdeBQb7rStWsCY9DK3gf/tmxd52
+MYFYpbivMYesMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTEy
+MzE1NDQzNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBws8g/k3a54ysc8IFkntjp5gCjuQRXoNuvJPyXf/zraZp53ErZ
-DX/oJG+kebbeMZwqaaIwnQ/LLIbLe+sijBa/SU/NJW6psJ7Y9e8kXCtf537ZlpFhWBnfCzj2W201
-Pl9C74Ua7sZ/IV4uNT/NHyqGVS5fj3f3kVACPPcxSeL3KL9r836UcrYeXi0CXxYQ5gLOGJxz6hIX
-Tzk8ZzDixXj1FuczSlyekFg3jDRLm0V1kzQTzNqqEi4kPa4xF/DmYN5zE5TEkTtz1+5OKr1Kb9HT
-gOeqfEgbcyooP6rEZzwqWd7fFg2gTehKE65bxwskMu1oQTHfWHGpW7dtVJyz2VJp
---0000000000004d4d12060ad3b632--
+ATANBgkqhkiG9w0BAQEFAASCAQCpuwXDtVKmWmtXacsbU0OXNlx4i4l2NC3kienI6Ox5Zg5CX0AI
+RA/mJo0kUr18XxK8UTl/iQHoryelV7CWYJaF6bjsFfujWryx3s0nvNvDtMc+eCu3iwZ8WQKsV0Ee
+3Zq9ngTbo09mcausWWY+Y14UfzUDD1M7KharwlAa084P8snTRTlqJR3/G6kQlr6LSS+D+YPSUrY2
+eidH9J1JzmWZ7T1L93UmWJb0nSi+bZWLD5FDPWQVpV2twIff/FEKH0EjG4x75Y6G00faJwKrRyBe
+jkCwuVc2i+h8cHD3JNhcRbzBNiY0SMYUcjXnQt16/pwYfRYnqr8Tiw3kRWMlW6Al
+--0000000000008728cc060ad3b61b--
