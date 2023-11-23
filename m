@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ZIj1khat"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OpIA9zbx"
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F698A3;
-	Thu, 23 Nov 2023 00:40:53 -0800 (PST)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AN6DB8f001009;
-	Thu, 23 Nov 2023 08:36:37 GMT
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE6BCD56;
+	Thu, 23 Nov 2023 00:41:11 -0800 (PST)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AN5uFG9020347;
+	Thu, 23 Nov 2023 08:36:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=IwN62VLEShy+VSKK0jRx0klroKj4fpZ9T+/MVP2hILs=;
- b=ZIj1khat/JPKmX9rCPVVOHmSpN7SPvjNn/2s721LNcrqv82J/kb/sqcHkdv07t4JC8Tg
- RQYD6Cz/WGYKhH0wKaH3nfPKlfWzQ/4/D9jkRTSzl8VU+ifCWqdaC5QlFU0sjTnpFK0J
- Br6wvt85fmcv8gIbUEHMYDg86m5uZ1b9bNocw7+32twSxTRt3m3G6+7ptFW+JUYYrwX9
- +BHAfsBJYjKJaZ/mf4uc29uIAkfs2UeN9Jk+lpT6akcfHf6UUGRAPslYTxI/lPWnnKyq
- rzYwlX1oCfd685gtj7yQLI7Yj4NkudEsK1PYnyGjqCNJPbSMbGEQ5O8SUY1eSnNTG/bZ yQ== 
+ bh=DFF6SBown3zJI3vv5koqMtjckFgbW+mpaijN5lmrUrY=;
+ b=OpIA9zbxNYBAFNRyegAJN0ZYE0fVwHTkkoybSVka+t4dGPDLnQ1ANWKQPVmPJmSPFn/n
+ EqtZYFYeTklHBP1CVRvugmHUlB3oecQ0UbbH7GIUscniuApWLZLvT09W9xkCr5Lha8f7
+ CEtH+sc4UKqqZHk1LsFo7VL7n6wQlugVZVJ3Yw22t92/t6+aTlMBCIHG9pWYAsPUBP3j
+ VNlAQh12t6iyfvfqkna78MkFe4JXhL5GOAgJoHI9UvkEz0AqSESlhapuFx2ZuOIwZ0me
+ 8krMNiFblYLtz4sRk1nuycYzpe6gW50lZQouQnyADcq+xvvU251hb4KXADL70zw7diAS Ag== 
 Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uhf66au4r-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uhf6ktt5g-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 Nov 2023 08:36:36 +0000
+	Thu, 23 Nov 2023 08:36:40 +0000
 Received: from pps.filterd (NASANPPMTA04.qualcomm.com [127.0.0.1])
-	by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3AN8aZGX025548;
-	Thu, 23 Nov 2023 08:36:35 GMT
+	by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3AN8Woqr021515;
+	Thu, 23 Nov 2023 08:36:39 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3uhpmqphef-1;
-	Thu, 23 Nov 2023 08:36:35 +0000
+	by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3uhpmqphf1-1;
+	Thu, 23 Nov 2023 08:36:39 +0000
 Received: from NASANPPMTA04.qualcomm.com (NASANPPMTA04.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AN8YmAr023558;
-	Thu, 23 Nov 2023 08:36:35 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AN8YmAt023558;
+	Thu, 23 Nov 2023 08:36:39 GMT
 Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
-	by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3AN8aZ7u025534;
-	Thu, 23 Nov 2023 08:36:35 +0000
+	by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3AN8adNT025579;
+	Thu, 23 Nov 2023 08:36:39 +0000
 Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
-	id 452C120A68; Thu, 23 Nov 2023 00:36:35 -0800 (PST)
+	id 1F5CC20A68; Thu, 23 Nov 2023 00:36:39 -0800 (PST)
 From: Can Guo <quic_cang@quicinc.com>
 To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
         junwoo80.lee@samsung.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
+Cc: linux-scsi@vger.kernel.org, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-arm-msm@vger.kernel.org (open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...),
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 07/10] scsi: ufs: ufs-qcom: Set initial PHY gear to max HS gear for HW ver 5 and newer
-Date: Thu, 23 Nov 2023 00:36:13 -0800
-Message-Id: <1700728577-14729-8-git-send-email-quic_cang@quicinc.com>
+Subject: [PATCH v4 10/10] scsi: ufs: ufs-qcom: Add support for UFS device version detection
+Date: Thu, 23 Nov 2023 00:36:16 -0800
+Message-Id: <1700728577-14729-11-git-send-email-quic_cang@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1700728577-14729-1-git-send-email-quic_cang@quicinc.com>
 References: <1700728577-14729-1-git-send-email-quic_cang@quicinc.com>
@@ -52,78 +52,93 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: X2WBRtBmHRMnqfs2V28XRdC830qnZElC
-X-Proofpoint-GUID: X2WBRtBmHRMnqfs2V28XRdC830qnZElC
+X-Proofpoint-GUID: sarxo_8PsrxAcwn7jT4nyfLh0nNpcGjK
+X-Proofpoint-ORIG-GUID: sarxo_8PsrxAcwn7jT4nyfLh0nNpcGjK
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-11-23_06,2023-11-22_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 lowpriorityscore=0
- priorityscore=1501 malwarescore=0 spamscore=0 suspectscore=0
- impostorscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2311060000 definitions=main-2311230060
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
+ bulkscore=0 phishscore=0 priorityscore=1501 clxscore=1015 adultscore=0
+ mlxlogscore=999 spamscore=0 suspectscore=0 impostorscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
+ definitions=main-2311230060
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Set the initial PHY gear to max HS gear for hosts with HW ver 5 and newer.
+From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 
-This patch is not changing any functionalities or logic but only a
-preparation patch for the next patch in this series.
+A spare register in UFS host controller is used to indicate the UFS device
+version. The spare register is populated by bootloader for now, but in
+future it will be populated by HW automatically during link startup with
+its best efforts in any boot stages prior to Linux.
 
+During host driver init, read the spare register, if it is not populated
+with a UFS device version, go ahead with the dual init mechanism. If a UFS
+device version is in there, use the UFS device version together with host
+controller's HW version to decide the proper PHY gear which should be used
+to configure the UFS PHY without going through the second init.
+
+Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 23 ++++++++++++++++++-----
+ drivers/ufs/host/ufs-qcom.h |  2 ++
+ 2 files changed, 20 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 6756f8d..7bbccf4 100644
+index 7bbccf4..70bedd9 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1067,6 +1067,20 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
- 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
- }
- 
-+static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
-+{
-+	struct ufs_host_params *host_params = &host->host_params;
-+
-+	host->phy_gear = host_params->hs_tx_gear;
-+
-+	/*
-+	 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
-+	 * Switching to max gear will be performed during reinit if supported.
-+	 */
-+	if (host->hw_ver.major < 0x5)
-+		host->phy_gear = UFS_HS_G2;
-+}
-+
- static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+@@ -1070,15 +1070,28 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+ static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
  {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-@@ -1303,6 +1317,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 	ufs_qcom_set_caps(hba);
- 	ufs_qcom_advertise_quirks(hba);
- 	ufs_qcom_set_host_params(hba);
-+	ufs_qcom_set_phy_gear(host);
+ 	struct ufs_host_params *host_params = &host->host_params;
++	u32 val, dev_major = 0;
  
- 	err = ufs_qcom_ice_init(host);
- 	if (err)
-@@ -1320,12 +1335,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 		dev_warn(dev, "%s: failed to configure the testbus %d\n",
- 				__func__, err);
+ 	host->phy_gear = host_params->hs_tx_gear;
  
 -	/*
 -	 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
 -	 * Switching to max gear will be performed during reinit if supported.
 -	 */
--	host->phy_gear = UFS_HS_G2;
--
- 	return 0;
+-	if (host->hw_ver.major < 0x5)
++	if (host->hw_ver.major < 0x5) {
++		/*
++		 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
++		 * Switching to max gear will be performed during reinit if supported.
++		 */
+ 		host->phy_gear = UFS_HS_G2;
++	} else {
++		val = ufshcd_readl(host->hba, REG_UFS_DEBUG_SPARE_CFG);
++		dev_major = FIELD_GET(GENMASK(7, 4), val);
++
++		/* UFS device version populated, no need to do init twice */
++		if (dev_major != 0)
++			host->hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
++
++		/* For UFS 3.1 and older, apply HS-G4 PHY gear to save power */
++		if (dev_major < 0x4 && dev_major > 0)
++			host->phy_gear = UFS_HS_G4;
++	}
+ }
  
- out_variant_clear:
+ static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index 11419eb..d12fc5a 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -54,6 +54,8 @@ enum {
+ 	UFS_AH8_CFG				= 0xFC,
+ 
+ 	REG_UFS_CFG3				= 0x271C,
++
++	REG_UFS_DEBUG_SPARE_CFG			= 0x284C,
+ };
+ 
+ /* QCOM UFS host controller vendor specific debug registers */
 -- 
 2.7.4
 
