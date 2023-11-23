@@ -1,78 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C685818C04
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 08:02:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="naWPjrC8"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 51BD9C43397
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Nov 2023 08:02:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700726553;
-	bh=00X2wuz3ZRptYTMmcB61p4uQh732BpXQ16bbMHHnu1w=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=naWPjrC8uae9cFwq1e4eH8zjxC/XRSh8pAoZ4PxqsM3Kzr+tWlHb4RkwR3yjXr+GH
-	 3EUWyhh/7EvmTzr0jSLXyPsOYA4ghsahWfKJrNgVXqHip8PeEvgC5LfplmGVmpRBk3
-	 KrVwAEfiOKLq0Pt9foDkv5zROJNpb2aQog9CJNe1FqngP14s9+mQTFXoFuzcfO9Gf9
-	 JMWH2UI9QZ/bd3m5N53MLjiyLP/TJXfwpnVK9yrh2z9FGiOX7MJiSccTUAzpJdV2BD
-	 BjnSGrld/ZS/8Xvx4NFWVOBc2oLUpiO545qkG3nr9hEMSw79sfbVAYKqdlxkhrU3gb
-	 4W+I9k7c4+CJw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 4076DC53BD0; Thu, 23 Nov 2023 08:02:33 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Thu, 23 Nov 2023 08:02:32 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: regressions@leemhuis.info
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-psYIC6y5Zk@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from zg8tndyumtaxlji0oc4xnzya.icoremail.net (zg8tndyumtaxlji0oc4xnzya.icoremail.net [46.101.248.176])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5C45ED41;
+	Thu, 23 Nov 2023 00:27:17 -0800 (PST)
+Received: from localhost.localdomain (unknown [10.190.64.46])
+	by mail-app4 (Coremail) with SMTP id cS_KCgDXT7M5C19lzvWbAQ--.16338S4;
+	Thu, 23 Nov 2023 16:20:17 +0800 (CST)
+From: Dinghao Liu <dinghao.liu@zju.edu.cn>
+To: dinghao.liu@zju.edu.cn
+Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	John Soni Jose <sony.john-n@emulex.com>,
+	Jayamohan Kallickal <jayamohank@gmail.com>,
+	James Bottomley <JBottomley@Parallels.com>,
+	Mike Christie <michaelc@cs.wisc.edu>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: be2iscsi: fix a memleak in beiscsi_init_wrb_handle
+Date: Thu, 23 Nov 2023 16:19:41 +0800
+Message-Id: <20231123081941.24854-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID:cS_KCgDXT7M5C19lzvWbAQ--.16338S4
+X-Coremail-Antispam: 1UD129KBjvdXoWrZr13AF4UZr1fJr47tw18Xwb_yoWfGFc_u3
+	4aqw47CryFyr4fA34IqF9xJFZF9FW5Xwn3Cr1Sg34rZa15Z3sxJFn2qrn3Zr4UW3W7ZFn8
+	Ja1DWr10yw4kAjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbskFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
+	wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
+	vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4UJVW0owA2z4x0Y4vEx4A2
+	jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52
+	x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWU
+	GwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI4
+	8JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2xKxwCF04k20xvY
+	0x0EwIxGrwCF04k20xvE74AGY7Cv6cx26r4fKr1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
+	1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
+	14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
+	IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E
+	87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73Uj
+	IFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgkMBmVKSCoDUABfsA
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+When an error occurs in the for loop of beiscsi_init_wrb_handle(),
+we should free phwi_ctxt->be_wrbq before returning an error code
+to prevent potential memleak.
 
---- Comment #35 from The Linux kernel's regression tracker (Thorsten Leemhu=
-is) (regressions@leemhuis.info) ---
-Would be really great if more people could do what James asked for in
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599#c30 (e.g. check someth=
-ing
-and if possible try a revert).
+Fixes: a7909b396ba7 ("[SCSI] be2iscsi: Fix dynamic CID allocation Mechanism in driver")
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
+ drivers/scsi/be2iscsi/be_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-(In reply to Randy from comment #34)
-> Probably of little help
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index e48f14ad6dfd..06acb5ff609e 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -2710,6 +2710,7 @@ static int beiscsi_init_wrb_handle(struct beiscsi_hba *phba)
+ 		kfree(pwrb_context->pwrb_handle_base);
+ 		kfree(pwrb_context->pwrb_handle_basestd);
+ 	}
++	kfree(phwi_ctxt->be_wrbq);
+ 	return -ENOMEM;
+ }
+ 
+-- 
+2.17.1
 
-FWIW, as it was not mentioned here yet. As stated in
-https://lore.kernel.org/regressions/c6ff53dc-a001-48ee-8559-b69be8e4db81@le=
-emhuis.info/
-it's known that the culprit was picked up for 6.1.53, so earlier versions
-should be fine.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
