@@ -1,65 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8AB0441A
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Nov 2023 06:58:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H2FFIYY5"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 59810C43397
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Nov 2023 06:58:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700809100;
-	bh=HCgUMQoywohbWiGHw51GNave1etNA9Oy/d7h6TaH278=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=H2FFIYY5OoZ5+T+wLHxv1VN42m46chBCwrXflscwNxSvGbWv43h9Syf0f5dqpgQyQ
-	 qhC10NYoG0PRkridfOLAnX2Q8vop8pB6cJoCoH2VjMReIfOtuLScAOkzHAt92nQcJo
-	 42gniCgXTfbTfGVYIXtzWoUns0kaw6vxNW4OZzRGEtZfaDvxc6bDBxsYqHeFOB60EK
-	 7JeCesrnP+e8kis61N8atTI+tGrUZI9+EWrUu39C9aAk5W6p3kcHFmVFZIJUUYe7Wq
-	 KBIEmyuDWMaqfycvmaPExcRCMoNU2KfVAIoLp7xreqKeZat51cdeAqwJDfldaTTkow
-	 cVOFTvXMzx6pA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 498DAC53BD1; Fri, 24 Nov 2023 06:58:20 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Fri, 24 Nov 2023 06:58:19 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: hare@suse.de
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-RtZOz58dkr@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WpwpC3HI"
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2974AD4E;
+	Thu, 23 Nov 2023 23:55:04 -0800 (PST)
+Received: by mail-lf1-x12b.google.com with SMTP id 2adb3069b0e04-507ad511315so2230489e87.0;
+        Thu, 23 Nov 2023 23:55:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1700812502; x=1701417302; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=b4jORUPKlG5Lg5RiyFdtM4lta/tN53OQFgxLh8ewmug=;
+        b=WpwpC3HItRN00GSnFFertDy3eMD7mQpfiPGGfl87+MF1O8qw8IwlzsD2bVE8I6vw/u
+         U6O68xwAA6LOWoMidEPg08UWkq2+jDV2PVjTGf+E9flmSfvbC95jxcatkososQeRysx6
+         +rgGZX0gTOKqC5ccVSPVVLPDIxbhBi+VOY0ZcnntICjZ5vPixzDbcGuqyDiInvFq3JEZ
+         qC8xqVCQBDwqyxP88UQJHhLNZMyV6CoQdyFnMkZXr/6ijB7WdY84AY5rHDQFnmJh1Iqy
+         X7T+aHbkal8TXIhgJVo8tE6o/4znNqllTD/6GLexf1zTuN7alR8yMad67ZlzauVrc7X9
+         2QYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700812502; x=1701417302;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=b4jORUPKlG5Lg5RiyFdtM4lta/tN53OQFgxLh8ewmug=;
+        b=qF3CPMRM0UAm2TtyUEwVehKpiNytZQkouDIwkP5yTIslsQIeWm7sSbXNyL22VUpGJ+
+         odwKqi3elOmf7K1bejGVO8yycsIJe5onFkJv8gRyT9M7sRSGZKa0qMcb1fWWLOxEEAFz
+         OI23AdbO0lsrUa59GQSCDPbn5oTYcQP5v5FjcXVhDhwbUoTToF07ZsbRC6s+CL5h19I+
+         w4HSLDktoQXPdBEMptLrGDV3jigtbkNF7J0R2S8YJyCMMk9YAw6BRPTzs0RfR56FX1jz
+         dU88pY+M0YH4DzSlb0QisWWOA00Y7l/5uROnyowZHE9/0p1YjB35Ir+0i1H+A+r5v2Xp
+         eONQ==
+X-Gm-Message-State: AOJu0YywlRVBNSWieGkuCIPA368uxw1TdPOaJxlTWjAMwb1qc3fu1wfZ
+	0RmXxpk+ReO0xyet57F/R++7U0eD+LzQdmF0PIQ=
+X-Google-Smtp-Source: AGHT+IFASJjXHvRnqICP3Bh8n3rkz4PXrvXjjTh8KwOhFDznlaHld1JNwaQhFcG0m+NV7YV5i6N6b0Cdfn9sKb1NY4k=
+X-Received: by 2002:a19:7514:0:b0:4fb:9168:1fce with SMTP id
+ y20-20020a197514000000b004fb91681fcemr1017725lfe.59.1700812502095; Thu, 23
+ Nov 2023 23:55:02 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20231123092000.2665902-1-amir73il@gmail.com> <2f3bf38b-a803-43e5-a9b9-54a88f837125@kernel.dk>
+In-Reply-To: <2f3bf38b-a803-43e5-a9b9-54a88f837125@kernel.dk>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 24 Nov 2023 09:54:49 +0200
+Message-ID: <CAOQ4uxj6BBSgGKWQn=2ocsL_rd-PbjPAiK2w9rsqnxpNamxr9g@mail.gmail.com>
+Subject: Re: [PATCH] scsi: target: core: add missing file_{start,end}_write()
+To: Christian Brauner <brauner@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, 
+	Josef Bacik <josef@toxicpanda.com>, David Howells <dhowells@redhat.com>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Al Viro <viro@zeniv.linux.org.uk>, 
+	linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, stable@vger.kernel.org, 
+	Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+On Thu, Nov 23, 2023 at 10:04=E2=80=AFPM Jens Axboe <axboe@kernel.dk> wrote=
+:
+>
+> On 11/23/23 2:20 AM, Amir Goldstein wrote:
+> > The callers of vfs_iter_write() are required to hold file_start_write()=
+.
+> > file_start_write() is a no-op for the S_ISBLK() case, but it is really
+> > needed when the backing file is a regular file.
+> >
+> > We are going to move file_{start,end}_write() into vfs_iter_write(), bu=
+t
+> > we need to fix this first, so that the fix could be backported to stabl=
+e
+> > kernels.
+>
+> Reviewed-by: Jens Axboe <axboe@kernel.dk>
+>
 
---- Comment #40 from Hannes Reinecke (hare@suse.de) ---
-Next idea; can you try with the above patch?
+Christian,
 
---=20
-You may reply to this email to add a comment.
+Shall we just stash this at the bottom of vfs.rw and fixup
+"move file_{start,end}_write() into vfs_iter_write()" patch?
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+I see no strong reason to expedite a fix for something rare
+that has been broken for a long time.
+
+If Martin decides to expedite it, we can alway rebase vfs.rw
+once the fix is merged to master.
+
+Thanks,
+Amir.
