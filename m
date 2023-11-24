@@ -1,79 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 740249471;
-	Fri, 24 Nov 2023 08:24:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EPGk9fnQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1BA6C433C7;
-	Fri, 24 Nov 2023 08:24:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700814281;
-	bh=pLRUlHYGVhu8BUklUaIDxuuBipDIZz/0vTGfjdNnKY4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=EPGk9fnQWWWRuEpyadDVK4qAcVhv/V38KizImZG/s36KWYsaNDoov9umKYVz9DD9h
-	 YrvwomQIlxnAlkv5Srf5v+SuUrIlyyeMM/bMDiQuI/lLc2rFHFXJ2dwFVU/gNXdBqp
-	 +ElGRS8CX4k5mBYCIs+sfFLbd9RrsFmA4Eq7E/odbkYQ3Bdyr+2u+sFp4OlFTE5GGc
-	 6WD4TdUnwjFRjWX9vT2RtwG+N9e0wQZXZoDB2F+UxmV//f7hMRQq4wr0xv18fI7SuX
-	 ac0O4/9k1ubvOR7EHwi7D2bEcevZ3c2LUDMU76xGFie80pF6BPp9b+ZA1YL9iTP/Xu
-	 clMAQx+ySSAjg==
-Date: Fri, 24 Nov 2023 09:24:35 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
-	Josef Bacik <josef@toxicpanda.com>,
-	David Howells <dhowells@redhat.com>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org,
-	linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-	stable@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] scsi: target: core: add missing file_{start,end}_write()
-Message-ID: <20231124-zanken-ammoniak-0d5a19006645@brauner>
-References: <20231123092000.2665902-1-amir73il@gmail.com>
- <2f3bf38b-a803-43e5-a9b9-54a88f837125@kernel.dk>
- <CAOQ4uxj6BBSgGKWQn=2ocsL_rd-PbjPAiK2w9rsqnxpNamxr9g@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mFFtnsM5"
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72AC9D5A;
+	Fri, 24 Nov 2023 01:09:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1700816995; x=1732352995;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=QYDq6Z5tWNEhZ/J5NePC3bRbFwseCQaqr4/k79zRT+I=;
+  b=mFFtnsM5WrosV8S5HFysiMce0CybzIRKWfVqR+R1EaJ8RLYPv57i1vPq
+   Tk1iknXmx0PqOPk4ZBYxLQPeU6bjmi/CKKAE1FaKAbsHs7+SOSMtvyGTm
+   S35YzVGCtbAn2H+NgR/JY1ZxTtAyBQUBpJRyJJin+n0FXLn5y/MZGEQKW
+   3+i3dDLACIDEH1GJyYPaVL6Eh7xKN4beZnP0EXU5tLsH9g5p9LntvNY3V
+   iYjpY3h/vbJ9IwxH5CjbWT8qHBLAtVzGVdduvxl+sbEtgjfKMXjzmGq6K
+   T9RxboqHsPGo5PGKBUsMz0eOYQyeKE3Ipz1PALXVhkJchmyG/hAM/96co
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10902"; a="478603449"
+X-IronPort-AV: E=Sophos;i="6.04,223,1695711600"; 
+   d="scan'208";a="478603449"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2023 01:09:54 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.04,223,1695711600"; 
+   d="scan'208";a="15911569"
+Received: from mvlasov-mobl1.ger.corp.intel.com (HELO localhost) ([10.251.220.89])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2023 01:09:52 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 4/6] scsi: lpfc: Use PCI_HEADER_TYPE_MFD instead of literal
+Date: Fri, 24 Nov 2023 11:09:16 +0200
+Message-Id: <20231124090919.23687-4-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20231124090919.23687-1-ilpo.jarvinen@linux.intel.com>
+References: <20231124090919.23687-1-ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxj6BBSgGKWQn=2ocsL_rd-PbjPAiK2w9rsqnxpNamxr9g@mail.gmail.com>
 
-On Fri, Nov 24, 2023 at 09:54:49AM +0200, Amir Goldstein wrote:
-> On Thu, Nov 23, 2023 at 10:04 PM Jens Axboe <axboe@kernel.dk> wrote:
-> >
-> > On 11/23/23 2:20 AM, Amir Goldstein wrote:
-> > > The callers of vfs_iter_write() are required to hold file_start_write().
-> > > file_start_write() is a no-op for the S_ISBLK() case, but it is really
-> > > needed when the backing file is a regular file.
-> > >
-> > > We are going to move file_{start,end}_write() into vfs_iter_write(), but
-> > > we need to fix this first, so that the fix could be backported to stable
-> > > kernels.
-> >
-> > Reviewed-by: Jens Axboe <axboe@kernel.dk>
-> >
-> 
-> Christian,
-> 
-> Shall we just stash this at the bottom of vfs.rw and fixup
-> "move file_{start,end}_write() into vfs_iter_write()" patch?
+Replace literal 0x80 with PCI_HEADER_TYPE_MFD.
 
-Ok.
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> I see no strong reason to expedite a fix for something rare
-> that has been broken for a long time.
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 9386e7b44750..4ac6afd3c2fe 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4875,7 +4875,7 @@ void lpfc_reset_barrier(struct lpfc_hba *phba)
+ 	lockdep_assert_held(&phba->hbalock);
+ 
+ 	pci_read_config_byte(phba->pcidev, PCI_HEADER_TYPE, &hdrtype);
+-	if (hdrtype != 0x80 ||
++	if (hdrtype != PCI_HEADER_TYPE_MFD ||
+ 	    (FC_JEDEC_ID(phba->vpd.rev.biuRev) != HELIOS_JEDEC_ID &&
+ 	     FC_JEDEC_ID(phba->vpd.rev.biuRev) != THOR_JEDEC_ID))
+ 		return;
+-- 
+2.30.2
 
-Agreed.
-
-> 
-> If Martin decides to expedite it, we can alway rebase vfs.rw
-> once the fix is merged to master.
-
-It's now the first commit on that branch. Let me know if I should drop it.
