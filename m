@@ -1,48 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YDRQYaYm"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MTgZIX7V"
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA6DE19A6
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Nov 2023 18:54:35 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AP1Zn04015880;
-	Sat, 25 Nov 2023 02:54:32 GMT
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D615819A3;
+	Fri, 24 Nov 2023 18:54:34 -0800 (PST)
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AP27C70001998;
+	Sat, 25 Nov 2023 02:54:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=h9f3o5jrgKLLjPQdmghts344TU4HJfntHIfBtXgpOec=;
- b=YDRQYaYmr6RiN8crGt17APIWz6tvHOmBHt3IxGrlJ8C7bsY3aKkDEerPezGgPo5JsMoY
- f9fxjEO74GWUDDPS74extJyj2guxho1W9aEX2T34mtsSdcv3FpOE3S/lSSKkEOu/qwON
- 1ybGu69vIhyOWpajoCPQvanfpKx8WVIEKNTZQRl7tqZLABxkYro5r6GlQBI7mjNWJ8xA
- Ob6sQn/VBc0T5AqHg++KLmOqXIRxcahS7Z3Pv2VfIAaLE3J5d7TMaHHA55r77/XBZ+cJ
- SQ06JKGGFCzsXHcRYrhZYeYOvYNSvJc0k6508oGQLLrEpOy4DplunKUIgYCd9aMWHPqj EQ== 
+ bh=kQn8x6bLmDO7gCoPY5/hW3tUTK9kDp5O45WlyduHfHY=;
+ b=MTgZIX7Vr3jZCg0Ji7/pOD5rlBY7MoSNRoZ3YOtcmgfmGSn9bi4PypeUwdB5Hgc9WBX7
+ n4ChkvEtM2jDgPIDaSFr2xel8h2dLYPKQEJ6w6upox0zFQ4oA7G2LZx373gBCtONWNMN
+ Yz5+WVpWT/TfE0i8qcE0b9ujdtCNtwBQtiKCAZPH8E0ytsrKyCnXHUSBJwCbIJ+XUpUo
+ cJ2QxRfsTV/fviR4p9mn9kQmWFhQMwrKH8zXlm/q8TAMCQv7bVLYx5DnsvLH6WTRhlia
+ r2Q0iE7U9k8tcvCJpD+wWbizyWd7l02BaSsD1XF5dpGufisfJ+16ZRs2ziYIobKMFBWv LQ== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uentvm17d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 25 Nov 2023 02:54:32 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3AP1Xm0e026991;
-	Sat, 25 Nov 2023 02:54:31 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3uk7c99f6q-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uk7ucg12c-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Sat, 25 Nov 2023 02:54:31 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AP2sRT5011828;
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3AP1XuVx027070;
 	Sat, 25 Nov 2023 02:54:30 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3uk7c99f5h-9;
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3uk7c99f6c-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Sat, 25 Nov 2023 02:54:30 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AP2sRSx011828;
+	Sat, 25 Nov 2023 02:54:29 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3uk7c99f5h-6;
+	Sat, 25 Nov 2023 02:54:29 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, Tomas Henzl <thenzl@redhat.com>
+To: James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Justin Stitt <justinstitt@google.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        sreekanth.reddy@broadcom.com, ranjan.kumar@broadcom.com,
-        sathya.prakash@broadcom.com
-Subject: Re: [PATCH v2] mpt3sas: suppress a warning in debug kernel
-Date: Fri, 24 Nov 2023 21:54:21 -0500
-Message-ID: <170087016635.1036733.5703735671985019205.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: elx: libefc: replace deprecated strncpy with strscpy_pad/memcpy
+Date: Fri, 24 Nov 2023 21:54:18 -0500
+Message-ID: <170087016627.1036733.4443783771400286080.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.42.1
-In-Reply-To: <20231019153706.7967-1-thenzl@redhat.com>
-References: <20231019153706.7967-1-thenzl@redhat.com>
+In-Reply-To: <20231026-strncpy-drivers-scsi-elx-libefc-efc_node-h-v2-1-5c083d0c13f4@google.com>
+References: <20231026-strncpy-drivers-scsi-elx-libefc-efc_node-h-v2-1-5c083d0c13f4@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,27 +58,28 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-11-25_01,2023-11-22_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- suspectscore=0 spamscore=0 mlxlogscore=884 mlxscore=0 phishscore=0
+ suspectscore=0 spamscore=0 mlxlogscore=770 mlxscore=0 phishscore=0
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2311060000 definitions=main-2311250020
-X-Proofpoint-ORIG-GUID: heUScldVCmlzcxQjxbVmJ0XeV7mPQqQb
-X-Proofpoint-GUID: heUScldVCmlzcxQjxbVmJ0XeV7mPQqQb
+X-Proofpoint-GUID: -PHVGXN59J63RBStTidkzNOaeNlhKRXV
+X-Proofpoint-ORIG-GUID: -PHVGXN59J63RBStTidkzNOaeNlhKRXV
 
-On Thu, 19 Oct 2023 17:37:06 +0200, Tomas Henzl wrote:
+On Thu, 26 Oct 2023 01:53:13 +0000, Justin Stitt wrote:
 
-> The mpt3sas_ctl_exit should be called after communication
-> with the controller stops but in currently  it may cause
-> false warnings about not released memory.
-> Fix it by leaving mpt3sas_ctl_exit handle misc driver release
-> per driver and release DMA in mpt3sas_ctl_release per ioc.
+> strncpy() is deprecated for use on NUL-terminated destination strings
+> [1] and as such we should prefer more robust and less ambiguous string
+> interfaces.
 > 
+> To keep node->current_state_name and node->prev_state_name NUL-padded
+> and NUL-terminated let's use strscpy_pad() as this implicitly provides
+> both.
 > 
 > [...]
 
 Applied to 6.8/scsi-queue, thanks!
 
-[1/1] mpt3sas: suppress a warning in debug kernel
-      https://git.kernel.org/mkp/scsi/c/6a965ee1892a
+[1/1] scsi: elx: libefc: replace deprecated strncpy with strscpy_pad/memcpy
+      https://git.kernel.org/mkp/scsi/c/1057f44137c5
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
