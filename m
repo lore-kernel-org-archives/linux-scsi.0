@@ -1,81 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="F4Zp5Mbm"
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94F9E1FF6;
-	Fri, 24 Nov 2023 18:54:49 -0800 (PST)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AP1b0EV028524;
-	Sat, 25 Nov 2023 02:54:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=t2XmwvFjukFwuTz/SUSXk2rks2dH+lU6ckR4eeevBEM=;
- b=F4Zp5Mbmz1spMonx1UsuxNkjC5caMxpgppgjzG7Sf91Ghr0hyrLjXU71ShgK4lTxi/LS
- LWiOxy0n7utxzT//2SjH7K8gPOpEW3dentnw1NOkLh8dB02H4GEmabU63WTgLNNdUh9j
- caoEnkkEbkNXDFfS7DtewrctcypNapffgLet1+WEqMJXQXIMRprXUKkzQz5npGYKRpN7
- T6+fCHg/Ktlzihzo6svcJctAa0IIM7/ajVvZzB72zdyOb+LdmAtItYi1k60LTXatYZyJ
- piJDfWof7afdTOhQwGyPdpNXUvwBWTnsqhAudiUIfsTKsWtMjyL2pxmEP2LA4A4uby57 Fg== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uen5bkxgv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 25 Nov 2023 02:54:32 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3AP1Xo5k027021;
-	Sat, 25 Nov 2023 02:54:30 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3uk7c99f6n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 25 Nov 2023 02:54:30 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AP2sRT3011828;
-	Sat, 25 Nov 2023 02:54:30 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3uk7c99f5h-8;
-	Sat, 25 Nov 2023 02:54:30 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: bvanassche@acm.org, mani@kernel.org, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, Can Guo <quic_cang@quicinc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Lu Hongfei <luhongfei@vivo.com>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4] scsi: ufs: ufs-sysfs: Expose UFS power info
-Date: Fri, 24 Nov 2023 21:54:20 -0500
-Message-ID: <170087016633.1036733.5693164654454165304.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.42.1
-In-Reply-To: <1698890324-7374-1-git-send-email-quic_cang@quicinc.com>
-References: <1698890324-7374-1-git-send-email-quic_cang@quicinc.com>
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03111D60;
+	Fri, 24 Nov 2023 23:10:40 -0800 (PST)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	id 1r6moG-000216-3U; Sat, 25 Nov 2023 08:10:36 +0100
+Message-ID: <34c5b291-b69e-4592-bc9f-fc1b2ef5c5d7@leemhuis.info>
+Date: Sat, 25 Nov 2023 08:10:35 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-25_01,2023-11-22_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- suspectscore=0 spamscore=0 mlxlogscore=675 mlxscore=0 phishscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311250020
-X-Proofpoint-GUID: Ldr8gfnmatpIUNHuunYSXil8Ml5AwVDc
-X-Proofpoint-ORIG-GUID: Ldr8gfnmatpIUNHuunYSXil8Ml5AwVDc
+User-Agent: Mozilla Thunderbird
+Subject: Re: scsi regression that after months is still not addressed and now
+ bothering 6.1.y users, too
+Content-Language: en-US, de-DE
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Sagar Biradar <sagar.biradar@microchip.com>,
+ James Bottomley <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+ "stable@vger.kernel.org" <stable@vger.kernel.org>,
+ Sasha Levin <sashal@kernel.org>,
+ Linux kernel regressions list <regressions@lists.linux.dev>,
+ Hannes Reinecke <hare@suse.de>, scsi <linux-scsi@vger.kernel.org>,
+ LKML <linux-kernel@vger.kernel.org>, Gilbert Wu <gilbert.wu@microchip.com>,
+ John Garry <john.g.garry@oracle.com>
+References: <c6ff53dc-a001-48ee-8559-b69be8e4db81@leemhuis.info>
+ <2023112456-disinfect-undoing-b5ef@gregkh>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+In-Reply-To: <2023112456-disinfect-undoing-b5ef@gregkh>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1700896240;f15d9d50;
+X-HE-SMSGID: 1r6moG-000216-3U
 
-On Wed, 01 Nov 2023 18:58:36 -0700, Can Guo wrote:
+On 24.11.23 17:25, Greg KH wrote:
+> On Tue, Nov 21, 2023 at 10:50:57AM +0100, Thorsten Leemhuis wrote:
+>> * @SCSI maintainers: could you please look into below please?
+>>
+>> * @Stable team: you might want to take a look as well and consider a
+>> revert in 6.1.y (yes, I know, those are normally avoided, but here it
+>> might make sense).
+>>
+>> Hi everyone!
+>>
+>> TLDR: I noticed a regression (Adaptec 71605z with aacraid sometimes
+>> hangs for a while) that was reported months ago already but is still not
+>> fixed. Not only that, it apparently more and more users run into this
+>> recently, as the culprit was recently integrated into 6.1.y; I wonder if
+>> it would be best to revert it there, unless a fix for mainline comes
+>> into reach soon.
+>>
+>> Details:
+>>
+>> Quite a few machines with Adaptec controllers seems to hang for a few
+>> tens of seconds to a few minutes before things start to work normally
+>> again for a while:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=217599
+>>
+>> That problem is apparently caused by 9dc704dcc09eae ("scsi: aacraid:
+>> Reply queue mapping to CPUs based on IRQ affinity") [v6.4-rc7]. That
+>> commit despite a warning of mine to Sasha recently made it into 6.1.53
+>> -- and that way apparently recently reached more users recently, as
+>> quite a few joined that ticket.
+>[...]
+> I am loath to revert a stable patch that has been there for so long as
+> any upgrade will just cause the same bug to show back up. Why can't we
+> just revert it in Linus's tree now and I'll take that revert in the
+> stable trees as well?
 
-> Having UFS power info available in sysfs makes it easier to tell the state
-> of the link during runtime considering we have a bunch of power saving
-> features and various combinations for backward compatibility.
-> 
-> 
+FWIW, I know and in general agree with that strategy, that's why I
+normally wouldn't have brought a stable-only revert up for
+consideration. But this issue to me looked somewhat special and urgent
+for two and a half reasons: (1) that backport apparently made a lot more
+people suddenly hit the issue (2) there was also this data corruption
+aspect one of the reporters mentioned (not sure if that is real and/or
+if this might be just a 6.1.y thing). Furthermore for 6.1.y it was
+recently confirmed that reverting the change fixes things, while we iirc
+had no such confirmation for recent mainline kernels at that point. So
+it looked like it would take a while to get this sorted out in mainline.
+But it seems we finally might get closer to that now, so yeah, maybe
+it's not worth a stable revert.
 
-Applied to 6.8/scsi-queue, thanks!
-
-[1/1] scsi: ufs: ufs-sysfs: Expose UFS power info
-      https://git.kernel.org/mkp/scsi/c/4f6dd2a4bf37
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Ciao, Thorsten
