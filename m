@@ -1,40 +1,40 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VJO1jbvM"
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57510DC
-	for <linux-scsi@vger.kernel.org>; Sat, 25 Nov 2023 21:30:59 -0800 (PST)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1cf6373ce31so22197945ad.0
-        for <linux-scsi@vger.kernel.org>; Sat, 25 Nov 2023 21:30:59 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g4zpum5Z"
+Received: from mail-yw1-x1130.google.com (mail-yw1-x1130.google.com [IPv6:2607:f8b0:4864:20::1130])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AFECDC
+	for <linux-scsi@vger.kernel.org>; Sat, 25 Nov 2023 21:31:05 -0800 (PST)
+Received: by mail-yw1-x1130.google.com with SMTP id 00721157ae682-5c85e8fdd2dso29249577b3.2
+        for <linux-scsi@vger.kernel.org>; Sat, 25 Nov 2023 21:31:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1700976658; x=1701581458; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1700976664; x=1701581464; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=RvemdwUFmCFCnLzzopaaVN6/GYHBEgJkBSAkUJl17Zg=;
-        b=VJO1jbvMViPV+shdurhp93tccXD80CGjVroNZ2xQTmOSGPcFEGUhF3H4i3E0oX6EdW
-         +eP9zhMPK60kq4SclES3pNPEeNCAtb2y5K1go19GW8gzTLfesoL5rEys5f9K6VUA2sIZ
-         gjpx+4zji9Mt0uBgydC8fvq9Nomz7L2HVmGNg=
+        bh=Pplkkx3QSqkMXfA3cR/+JosWlTFrJrbmsz6cfxprViQ=;
+        b=g4zpum5ZAEJvoEtawfEuKIEOBcaikaMlU//NHLfzXcGb9ilvyYx64qo91OdPGWaWxn
+         phLLVO2jGe7nkHSWBy5MF+PFRic5F6wmIfavM2GvDL7el2tsXh/PxWcGhtr9VGYL9+YM
+         Yj6dJB+vRiyKqMPcdXxRgqTU0lRhKZESFcyqM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700976658; x=1701581458;
+        d=1e100.net; s=20230601; t=1700976664; x=1701581464;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RvemdwUFmCFCnLzzopaaVN6/GYHBEgJkBSAkUJl17Zg=;
-        b=gMHQriLZ4DSbDuVNF6Z7uqwYl8ncmIA46mX62DTGrCXZk8QYj7h3Mc9UT+910Yed6X
-         NOm9kalGcoopxBoeq5yzD4xj9uqUP1xES+qdeBJiaszp9dD82E8mXZ5CB6k12eg8m6YQ
-         4Eiuwd7mVC84c8QkPVjEWGyNukBR7xo0XGVoFxieq6NQrB2oVLZl5mtzkccBinIWw5v6
-         TdBO+Fy+BbS16AVpbg5bCSIrUfq8htaqH0MsM6w/3+wHBs35S2YpE7BybM05KzAOp53E
-         5M+g4opozL3RODhqVznX/6naeQ20DkJ0CCZUDbnu7EX+FV4OUJi2PD2w1YApqyJB4SkF
-         QNjQ==
-X-Gm-Message-State: AOJu0Yw7B06gbrclXSS82/mItqsxXDHP14ZFiDWBPNGglFdcGaaE8tTq
-	gp52BzS4WmL9lj/3Qrn5Z1j90/RwBkZI2jvyRwU0yKzA27C9ttS2BWIK3hvBXCSdDuD4KeWFXwo
-	mTd4AyqZQ3kCOCU6hEb1kmyJUbwoXtsI5bcdSV+b2HAsl0DokgVOhFWE6cYjHSdak/dpQwuPvFH
-	HN5R73aMgwsyxBfxKalA==
-X-Google-Smtp-Source: AGHT+IGyOiWf22D1TEpY7OaO+LStl+lbNbWTU2Ke0ZqA8WP8TOrE7Jqv0EDrc+LwG6TZ4frBQhIkmQ==
-X-Received: by 2002:a17:902:e812:b0:1cc:5671:8d9 with SMTP id u18-20020a170902e81200b001cc567108d9mr15391431plg.27.1700976658244;
-        Sat, 25 Nov 2023 21:30:58 -0800 (PST)
+        bh=Pplkkx3QSqkMXfA3cR/+JosWlTFrJrbmsz6cfxprViQ=;
+        b=QmiSMP/ZPIPXU6RUGaDE7RTNW5O+cIP+Yc/wTxQiNR6As0rBI7umJsAQHLnND0GzrC
+         eUX+rAyzL5cUwzE4kcAhuaZrG5CyNCO1cKsdfY3I7ZW11e1nuCbRnLaJM/d8Mwt+TAl4
+         H7Ee+yR0QwC0i1R84ib/jfVvdr/hj0vFBlSP9Gv2h7K3FkPw/bxXrPjfO9aV6IC27Uh+
+         lZRbcKAZzE0hpykrhnbQbz1gZN5PYjybZXRyz0lMCzR1/X/CbGS8rOdR+SqN+HWuV+Oa
+         Y85ZhCEg20iUuOPLRF0nXsbxUpOjNkztGYLJ6WMfbet/gH+hGNVz6su2iwKHq5aydFxK
+         YxuQ==
+X-Gm-Message-State: AOJu0YzMRhpkrOj4KTCUnNd7xCd0HT7r9vXUHzGxzAAJvNjo/7VLPFcT
+	2EaRvfpjL9Ph2Cn0/CDEAYAUjBOOJZIGxjsujEouWSY3bOrfbCPeHcoiC0BJ5GCTplb5rBtAiad
+	g7Egqjg8cWGeXDFzoQ42Po8sDrHcDzdiCcYd6bj+H0JU2L14OE0Gy+9N1jCcmdN4wB0SAVhPbtP
+	/99fErNlsiPciN/Bhs/A==
+X-Google-Smtp-Source: AGHT+IE6yl2vfJyeaX1ogQweJkK2DJdS+QjzQvP43bpLT2g4XC8OUI0jQS03nFttip2jU4Ow7fOHsg==
+X-Received: by 2002:a81:9190:0:b0:5a8:e6f4:4b6c with SMTP id i138-20020a819190000000b005a8e6f44b6cmr8512052ywg.25.1700976663763;
+        Sat, 25 Nov 2023 21:31:03 -0800 (PST)
 Received: from dhcp-10-123-20-35.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id s78-20020a632c51000000b00578b8fab907sm5516166pgs.73.2023.11.25.21.30.55
+        by smtp.gmail.com with ESMTPSA id s78-20020a632c51000000b00578b8fab907sm5516166pgs.73.2023.11.25.21.31.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Nov 2023 21:30:57 -0800 (PST)
+        Sat, 25 Nov 2023 21:31:03 -0800 (PST)
 From: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	sathya.prakash@broadcom.com,
@@ -43,9 +43,9 @@ To: linux-scsi@vger.kernel.org,
 	prayas.patel@broadcom.com
 Cc: Chandrakanth patil <chandrakanth.patil@broadcom.com>,
 	stable@vger.kernel.org
-Subject: [PATCH 2/4] mpi3mr: Cleanup block devices post controller reset
-Date: Sun, 26 Nov 2023 11:01:32 +0530
-Message-Id: <20231126053134.10133-3-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 3/4] mpi3mr: Block PEL Enable Command on Controller Reset and Unrecoverable State
+Date: Sun, 26 Nov 2023 11:01:33 +0530
+Message-Id: <20231126053134.10133-4-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.39.3
 In-Reply-To: <20231126053134.10133-1-chandrakanth.patil@broadcom.com>
 References: <20231126053134.10133-1-chandrakanth.patil@broadcom.com>
@@ -56,53 +56,54 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="00000000000083e1aa060b077d55"
+	boundary="000000000000d76068060b077ddf"
 
---00000000000083e1aa060b077d55
+--000000000000d76068060b077ddf
 Content-Transfer-Encoding: 8bit
 
-After a controller reset, if the firmware changes the state of devices
-to "hide," then remove those devices from the OS.
+If a controller reset is underway or the controller is in an unrecoverable
+state, the PEL enable management command will be returned as EAGAIN or
+EFAULT.
 
-Cc: <stable@vger.kernel.org> # v6.6+
+Cc: <stable@vger.kernel.org> # v6.1+
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 Signed-off-by: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 561fe0857bc0..872d4b809d08 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -1047,8 +1047,9 @@ void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc)
- 	list_for_each_entry_safe(tgtdev, tgtdev_next, &mrioc->tgtdev_list,
- 	    list) {
- 		if ((tgtdev->dev_handle == MPI3MR_INVALID_DEV_HANDLE) &&
--		    tgtdev->host_exposed && tgtdev->starget &&
--		    tgtdev->starget->hostdata) {
-+		     tgtdev->is_hidden &&
-+		     tgtdev->host_exposed && tgtdev->starget &&
-+		     tgtdev->starget->hostdata) {
- 			tgt_priv = tgtdev->starget->hostdata;
- 			tgt_priv->dev_removed = 1;
- 			atomic_set(&tgt_priv->block_io, 0);
-@@ -1064,6 +1065,10 @@ void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc)
- 				mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
- 			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev, true);
- 			mpi3mr_tgtdev_put(tgtdev);
-+		} else if (tgtdev->is_hidden & tgtdev->host_exposed) {
-+			dprint_reset(mrioc, "hiding target device with perst_id(%d)\n",
-+				     tgtdev->perst_id);
-+			mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
- 		}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 08645a99ad6b..9dacbb8570c9 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -223,6 +223,22 @@ static long mpi3mr_bsg_pel_enable(struct mpi3mr_ioc *mrioc,
+ 		return rval;
  	}
  
++	if (mrioc->unrecoverable) {
++		dprint_bsg_err(mrioc, "%s: unrecoverable controller\n",
++			       __func__);
++		return -EFAULT;
++	}
++
++	if (mrioc->reset_in_progress) {
++		dprint_bsg_err(mrioc, "%s: reset in progress\n", __func__);
++		return -EAGAIN;
++	}
++
++	if (mrioc->stop_bsgs) {
++		dprint_bsg_err(mrioc, "%s: bsgs are blocked\n", __func__);
++		return -EAGAIN;
++	}
++
+ 	sg_copy_to_buffer(job->request_payload.sg_list,
+ 			  job->request_payload.sg_cnt,
+ 			  &pel_enable, sizeof(pel_enable));
 -- 
 2.39.3
 
 
---00000000000083e1aa060b077d55
+--000000000000d76068060b077ddf
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -173,14 +174,14 @@ W2v5XKnfV6+4iODhAb65bwLbcNq6dxzr1Yy/fGnIBfoR2qrX9UBDDxjZRpxJGdt7i0CcvsX7p2ia
 SgP+hUBq9GTgLiFqCGyh/gCm2DTB/TyYel0QsIP29qWC1F5mG+GOoSjagi/2SxnNI6LzK+4xfgvc
 80IlL0UapzuyZFExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIC6NIu+5
-qyTFw+gtxlnl0Opi2ii72gM/qMlZMe5UPrLtMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMTEyNjA1MzA1OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKj07fkN
+1DaAfgWK8ZIV8D0rDZZJAcyZjICrf2CplVU/MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMTEyNjA1MzEwNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAACkyh21OEcptfRYZ7cH7R8l0i
-HAjPgW/u3mCNQMNPoi0LnKnvT8a1EWIZMZWa/JzUXp7JE0fNwxs6ePt7C+qNIY3lgjGDNu8+GuSg
-SxL8Lq5xbNWe/u9aaAzpNyUyP8ywyetbyMGNoNxzYn98eYTBRJtUQnT76MQYCspt9yGc0LbB2nbq
-Io2VJ2LzbAQBpkxyftQ5fk6KY6BWartF7x2wAirgwGynWWRmvRzMyWpcDXxX6qccMtEN/CPMUTaf
-1E0E2gCBuK/vHz0ZbE4ce2Qi6mGQUWWxijD4KSw79lK83ZyCyBAmetcZjbARFwZ8G8R7Pw99FDUm
-vz3s27P/R4lt
---00000000000083e1aa060b077d55--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC2epo2HhFhCUclkDWLJE/q8imU
+Ag84J+idUPimmf4UI0XGI+gmYo3p0IC45iPTF33la0W4X/Vm3R+JhRMBWmi+YH5IxXoE6E3XC94e
+ygMRk+ZsdcNRzSX9hF3ENLKbvnkQAPIRf+32v7gIpXMv7dr5amtpflTPn59XquQj6crGN8gfH4Xn
+SOOeGN+tjmHGlWZj5fsERySeMOww1v5wUL8aQO5H88kxblr9NMiuyICUvYih/c9q7krVIy+sMf5X
+a72qEIer2+gvngNjm0y2ryNY5CR/jTZSk+6H6EyNfEq24QrqsnR3qP0vAFL0nfoWzWZByo7nh2x8
+jrYjCP3q1VEl
+--000000000000d76068060b077ddf--
