@@ -1,51 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g4zpum5Z"
-Received: from mail-yw1-x1130.google.com (mail-yw1-x1130.google.com [IPv6:2607:f8b0:4864:20::1130])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AFECDC
-	for <linux-scsi@vger.kernel.org>; Sat, 25 Nov 2023 21:31:05 -0800 (PST)
-Received: by mail-yw1-x1130.google.com with SMTP id 00721157ae682-5c85e8fdd2dso29249577b3.2
-        for <linux-scsi@vger.kernel.org>; Sat, 25 Nov 2023 21:31:05 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="XWSs8GQc"
+Received: from mail-oo1-xc29.google.com (mail-oo1-xc29.google.com [IPv6:2607:f8b0:4864:20::c29])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ED28118
+	for <linux-scsi@vger.kernel.org>; Sat, 25 Nov 2023 21:31:10 -0800 (PST)
+Received: by mail-oo1-xc29.google.com with SMTP id 006d021491bc7-58d6bf7575fso296655eaf.0
+        for <linux-scsi@vger.kernel.org>; Sat, 25 Nov 2023 21:31:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1700976664; x=1701581464; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1700976669; x=1701581469; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Pplkkx3QSqkMXfA3cR/+JosWlTFrJrbmsz6cfxprViQ=;
-        b=g4zpum5ZAEJvoEtawfEuKIEOBcaikaMlU//NHLfzXcGb9ilvyYx64qo91OdPGWaWxn
-         phLLVO2jGe7nkHSWBy5MF+PFRic5F6wmIfavM2GvDL7el2tsXh/PxWcGhtr9VGYL9+YM
-         Yj6dJB+vRiyKqMPcdXxRgqTU0lRhKZESFcyqM=
+        bh=ZeXEUGf0lc6W0GZaHjIEsyeAlkqvwkWbIClFV1EMDUk=;
+        b=XWSs8GQcJSBqaUts4jYnO13aZ6X3xnGxR+xziZDghUI4MZiPFPOatPjlJfykh03HTB
+         LpGbPbSMpjn/gjxp6QD6DEXqRU5bBFQ8pBLnTXqQ9mZ4NvtRDmv7nbRjkTY0eayB6dRg
+         UF2fRNAx70icPtv19yv8FEhJ0kYFc2u9f7GZM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700976664; x=1701581464;
+        d=1e100.net; s=20230601; t=1700976669; x=1701581469;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Pplkkx3QSqkMXfA3cR/+JosWlTFrJrbmsz6cfxprViQ=;
-        b=QmiSMP/ZPIPXU6RUGaDE7RTNW5O+cIP+Yc/wTxQiNR6As0rBI7umJsAQHLnND0GzrC
-         eUX+rAyzL5cUwzE4kcAhuaZrG5CyNCO1cKsdfY3I7ZW11e1nuCbRnLaJM/d8Mwt+TAl4
-         H7Ee+yR0QwC0i1R84ib/jfVvdr/hj0vFBlSP9Gv2h7K3FkPw/bxXrPjfO9aV6IC27Uh+
-         lZRbcKAZzE0hpykrhnbQbz1gZN5PYjybZXRyz0lMCzR1/X/CbGS8rOdR+SqN+HWuV+Oa
-         Y85ZhCEg20iUuOPLRF0nXsbxUpOjNkztGYLJ6WMfbet/gH+hGNVz6su2iwKHq5aydFxK
-         YxuQ==
-X-Gm-Message-State: AOJu0YzMRhpkrOj4KTCUnNd7xCd0HT7r9vXUHzGxzAAJvNjo/7VLPFcT
-	2EaRvfpjL9Ph2Cn0/CDEAYAUjBOOJZIGxjsujEouWSY3bOrfbCPeHcoiC0BJ5GCTplb5rBtAiad
-	g7Egqjg8cWGeXDFzoQ42Po8sDrHcDzdiCcYd6bj+H0JU2L14OE0Gy+9N1jCcmdN4wB0SAVhPbtP
-	/99fErNlsiPciN/Bhs/A==
-X-Google-Smtp-Source: AGHT+IE6yl2vfJyeaX1ogQweJkK2DJdS+QjzQvP43bpLT2g4XC8OUI0jQS03nFttip2jU4Ow7fOHsg==
-X-Received: by 2002:a81:9190:0:b0:5a8:e6f4:4b6c with SMTP id i138-20020a819190000000b005a8e6f44b6cmr8512052ywg.25.1700976663763;
-        Sat, 25 Nov 2023 21:31:03 -0800 (PST)
+        bh=ZeXEUGf0lc6W0GZaHjIEsyeAlkqvwkWbIClFV1EMDUk=;
+        b=gmGAiyT9LDmPcqfO6etZ5UbxJvzbZQy7LUU5C0F0wsh0zBdoIHf+oR8SIzfE4jaXnz
+         l84rvz4Qf1U0bzVsk2UX273zI2dGwoccSt4KxK0zJT3CqrO1Kq8H5V9/SI/YvrEFarSD
+         jAFA4h80bZ2y/Zxnnb48Kf9k6Yh771HYiatWyI0rzJF/LS7QfDqbLBv0tp0wiKitqdaL
+         IkvCHD2rV+J+/ErTz75M4tqt4LD119AcvIvpquHm6LCnICtAlCdYSeaNO6DYttxOC9eJ
+         7bcdwY1cJshQRm+nG+p8fiuYZpVYWcRklaqZLAgHNZzzQ8NQOCz7PEQDyFT2zDsllX3x
+         kI/w==
+X-Gm-Message-State: AOJu0YxNjWk0+qzmVxYceV2BlwYmX0bApgndwCpwmkiMRQTdAWLbMZT9
+	xyshNcayU1sfdDvGQFDS2r0yrBmWu3WLTs7D2sbPFRS9+eH0M52yTgof0/uPxz84Mt+GWPqgMMy
+	iO0Xw+gIbPlp8cMSoRuJvP9Q7oLnRdFDflDYVmltFdgTliGJaX17e2pMlvjMbzI6Xlg17st5aP8
+	2E/W173vaf3kNSsEnZRg==
+X-Google-Smtp-Source: AGHT+IFqNLOzRcvk7sbqwV4x0KTKjBJ/GfZZ61NVDeAmVEgb1M7awuiVV1M9vrY0L6acPeca41N7xQ==
+X-Received: by 2002:a05:6358:5926:b0:16b:f954:5f2 with SMTP id g38-20020a056358592600b0016bf95405f2mr6307703rwf.13.1700976669045;
+        Sat, 25 Nov 2023 21:31:09 -0800 (PST)
 Received: from dhcp-10-123-20-35.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id s78-20020a632c51000000b00578b8fab907sm5516166pgs.73.2023.11.25.21.31.01
+        by smtp.gmail.com with ESMTPSA id s78-20020a632c51000000b00578b8fab907sm5516166pgs.73.2023.11.25.21.31.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Nov 2023 21:31:03 -0800 (PST)
+        Sat, 25 Nov 2023 21:31:08 -0800 (PST)
 From: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	sathya.prakash@broadcom.com,
 	sumit.saxena@broadcom.com,
 	ranjan.kumar@broadcom.com,
 	prayas.patel@broadcom.com
-Cc: Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	stable@vger.kernel.org
-Subject: [PATCH 3/4] mpi3mr: Block PEL Enable Command on Controller Reset and Unrecoverable State
-Date: Sun, 26 Nov 2023 11:01:33 +0530
-Message-Id: <20231126053134.10133-4-chandrakanth.patil@broadcom.com>
+Cc: Chandrakanth patil <chandrakanth.patil@broadcom.com>
+Subject: [PATCH 4/4] mpi3mr: Fetch correct device dev handle for status reply descriptor
+Date: Sun, 26 Nov 2023 11:01:34 +0530
+Message-Id: <20231126053134.10133-5-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.39.3
 In-Reply-To: <20231126053134.10133-1-chandrakanth.patil@broadcom.com>
 References: <20231126053134.10133-1-chandrakanth.patil@broadcom.com>
@@ -56,54 +55,37 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000d76068060b077ddf"
+	boundary="00000000000027f0e3060b077eb1"
 
---000000000000d76068060b077ddf
+--00000000000027f0e3060b077eb1
 Content-Transfer-Encoding: 8bit
 
-If a controller reset is underway or the controller is in an unrecoverable
-state, the PEL enable management command will be returned as EAGAIN or
-EFAULT.
+The current dev handle for the status reply is 0xFFFF, which is invalid.
+So fetch the correct value.
 
-Cc: <stable@vger.kernel.org> # v6.1+
-Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_app.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 08645a99ad6b..9dacbb8570c9 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -223,6 +223,22 @@ static long mpi3mr_bsg_pel_enable(struct mpi3mr_ioc *mrioc,
- 		return rval;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 872d4b809d08..1bffd629c124 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -3205,6 +3205,7 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 			tg = stgt_priv_data->throttle_group;
+ 			throttle_enabled_dev =
+ 			    stgt_priv_data->io_throttle_enabled;
++			dev_handle = stgt_priv_data->dev_handle;
+ 		}
  	}
- 
-+	if (mrioc->unrecoverable) {
-+		dprint_bsg_err(mrioc, "%s: unrecoverable controller\n",
-+			       __func__);
-+		return -EFAULT;
-+	}
-+
-+	if (mrioc->reset_in_progress) {
-+		dprint_bsg_err(mrioc, "%s: reset in progress\n", __func__);
-+		return -EAGAIN;
-+	}
-+
-+	if (mrioc->stop_bsgs) {
-+		dprint_bsg_err(mrioc, "%s: bsgs are blocked\n", __func__);
-+		return -EAGAIN;
-+	}
-+
- 	sg_copy_to_buffer(job->request_payload.sg_list,
- 			  job->request_payload.sg_cnt,
- 			  &pel_enable, sizeof(pel_enable));
+ 	if (unlikely((data_len_blks >= mrioc->io_throttle_data_length) &&
 -- 
 2.39.3
 
 
---000000000000d76068060b077ddf
+--00000000000027f0e3060b077eb1
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -174,14 +156,14 @@ W2v5XKnfV6+4iODhAb65bwLbcNq6dxzr1Yy/fGnIBfoR2qrX9UBDDxjZRpxJGdt7i0CcvsX7p2ia
 SgP+hUBq9GTgLiFqCGyh/gCm2DTB/TyYel0QsIP29qWC1F5mG+GOoSjagi/2SxnNI6LzK+4xfgvc
 80IlL0UapzuyZFExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKj07fkN
-1DaAfgWK8ZIV8D0rDZZJAcyZjICrf2CplVU/MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMTEyNjA1MzEwNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIB5D8cbC
+dfygN1j1oRquWWkH5F7MfjsNtXv9GxeblUv1MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMTEyNjA1MzEwOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC2epo2HhFhCUclkDWLJE/q8imU
-Ag84J+idUPimmf4UI0XGI+gmYo3p0IC45iPTF33la0W4X/Vm3R+JhRMBWmi+YH5IxXoE6E3XC94e
-ygMRk+ZsdcNRzSX9hF3ENLKbvnkQAPIRf+32v7gIpXMv7dr5amtpflTPn59XquQj6crGN8gfH4Xn
-SOOeGN+tjmHGlWZj5fsERySeMOww1v5wUL8aQO5H88kxblr9NMiuyICUvYih/c9q7krVIy+sMf5X
-a72qEIer2+gvngNjm0y2ryNY5CR/jTZSk+6H6EyNfEq24QrqsnR3qP0vAFL0nfoWzWZByo7nh2x8
-jrYjCP3q1VEl
---000000000000d76068060b077ddf--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAaCeNdKE2ljmhPdQNluGekUv5I
+6DkIq1kavp1v64kCYS17h4GQZAc59qSMpwbaoZCjtECrdsDZV3Kzqslv+c81wbeplqV50UcWi8uF
+yzONkg76PITb0I5zVYEdk9qKaXf1vc8AeEFuBsI4qIpjY9t4dIPfq6SAYl7LxkdxNq6IjVlPmfYm
+NuhQdso0P39HjmHUEleSPrKmVm0GMIvoP5loIzEEc1JPFiT+mcLE1gQn5hmi6Xoum8HxZM009u3r
+22Ykg0Z4OcE2LDCmiYfuOTJl5Zbm0gcHHdvestQHWgDx4TLfMKv7yMEReKMbHszWa1pmksGbeFC5
+aBRSdTrNQS42
+--00000000000027f0e3060b077eb1--
