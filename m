@@ -1,152 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8083882D;
-	Mon, 27 Nov 2023 11:07:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="USEmMTkU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CAB8C433C8;
-	Mon, 27 Nov 2023 11:07:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701083254;
-	bh=Dw10XYMUkFAfrrpRKBAxCtpIpBU0J1LKx9Ba6WeTt9k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=USEmMTkU19UZvpcqjMaru6fo9yzOqTWivweY0uGhSl7JMzqXcxavaPXbdjObmAspY
-	 UJ67HtNTKU+TpLz7n8D0zLLuIWyFZSQuhYKUMMzz3l+dVZ7n7HVkjir5Y+s/0h/WZt
-	 9wpONPXol8Md2fv7HWjtPNzvtknHjLWlIEub323UtkKp3oKF/796Z5tXL4C4h79kQQ
-	 +QhcvEZuJq2Sz6xMB+q67idgnrE4yLhXYgvUF7N+i+9wxSgP89ejG0cx0HwZnyMyvp
-	 HVj6hptgywrtSBdxPakEDSOd2B9So9zzafLQJM5SBULjbgteY6NBAGRO2LDBT6Ajz7
-	 qofYYLMZRW1nQ==
-Date: Mon, 27 Nov 2023 16:37:28 +0530
-From: Vinod Koul <vkoul@kernel.org>
-To: Can Guo <quic_cang@quicinc.com>
-Cc: bvanassche@acm.org, mani@kernel.org, adrian.hunter@intel.com,
-	beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, Andy Gross <agross@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Abel Vesa <abel.vesa@linaro.org>,
-	"open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5 08/10] phy: qualcomm: phy-qcom-qmp-ufs: Rectify SM8550
- UFS HS-G4 PHY Settings
-Message-ID: <ZWR4cN0sJNcVHPrL@matsya>
-References: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
- <1700729190-17268-9-git-send-email-quic_cang@quicinc.com>
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="KxiLisXT"
+Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF21C18F;
+	Mon, 27 Nov 2023 03:17:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+	s=201909; t=1701083870;
+	bh=GnVT0hiyn7TRSDmZz7FBYTKjVoHrPlsa0H3dZCecCEo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=KxiLisXTDDkTUgkB74pMzkUlMMDLgbdJGDw/XcZNf8xCXCLuTBKYa67cdJO+ny2gH
+	 kZLXVhrOz4bR5NahPmu3IDjZgYB/GgBs3SRqe8b18g+YPX6xgY4yvkfc1A5z4A4uNK
+	 e2fzf7FMV/c37pGWbYjNpAqxIuHEXBKll+IdEVdoJ93gJ1zqrTIH06Y+Ruy9XdUUje
+	 xG8m1oVL650hAqYh0Zq/uj9WjtUva3Y4kMfPrH7Od/iU+N4vqEczldwJuu6drr2A1k
+	 HgjxXucbct4JovVvW6sAwoGLOkDzIotaF+H0Y+4JcIv5Bz8DYGl4hLhih4ySXcjWio
+	 WbGWoXeTgv7sw==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Sf33L3JxHz4wd2;
+	Mon, 27 Nov 2023 22:17:50 +1100 (AEDT)
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: brking@us.ibm.com
+Cc: jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	<linuxppc-dev@lists.ozlabs.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH] scsi: ipr: Remove obsolete check for old CPUs
+Date: Mon, 27 Nov 2023 22:17:40 +1100
+Message-ID: <20231127111740.1288463-1-mpe@ellerman.id.au>
+X-Mailer: git-send-email 2.41.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1700729190-17268-9-git-send-email-quic_cang@quicinc.com>
+Content-Transfer-Encoding: 8bit
 
-On 23-11-23, 00:46, Can Guo wrote:
-> The registers, which are being touched in current SM8550 UFS PHY settings,
-> and the values being programmed are mainly the ones working for HS-G4 mode,
-> meanwhile, there are also a few ones somehow taken from HS-G5 PHY settings.
-> However, even consider HS-G4 mode only, some of them are incorrect and some
-> are missing. Rectify the HS-G4 PHY settings by strictly aligning with the
-> SM8550 UFS PHY Hardware Programming Guide suggested HS-G4 PHY settings.
+The IPR driver has a routine to check whether it's running on certain
+CPU versions and if so whether the adapter is supported on that CPU.
 
-can you copy on cover so that we know the context of the series, I just
-got hit with two patches out of the blue with this
+But none of the CPUs it checks for are supported by Linux anymore.
 
-> 
-> Fixes: 1679bfef906f ("phy: qcom-qmp-ufs: Add SM8550 support")
-> Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-> Reviewed-by: Abel Vesa <abel.vesa@linaro.org>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> ---
->  .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |  3 +++
->  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 28 +++++++++++++++-------
->  2 files changed, 22 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-> index 15bcb4b..674f158 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-> @@ -10,9 +10,12 @@
->  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_RX			0x2c
->  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX		0x30
->  #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_RX		0x34
-> +#define QSERDES_UFS_V6_TX_LANE_MODE_1				0x7c
-> +#define QSERDES_UFS_V6_TX_FR_DCC_CTRL				0x108
->  
->  #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2		0x08
->  #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4		0x10
-> +#define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2			0xd4
->  #define QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL			0x178
->  #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0			0x208
->  #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B1			0x20c
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> index 3927eba..ad91f92 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> @@ -658,22 +658,26 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_serdes[] = {
->  	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
->  	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x7f),
->  	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x06),
-> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x4c),
-> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
-> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
-> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
-> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x99),
-> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x07),
-> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE1, 0x4c),
-> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE1, 0x0a),
-> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE1, 0x18),
-> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE1, 0x14),
-> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE1, 0x99),
-> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE1, 0x07),
-> +};
-> +
-> +static const struct qmp_phy_init_tbl sm8550_ufsphy_hs_b_serdes[] = {
-> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x44),
->  };
->  
->  static const struct qmp_phy_init_tbl sm8550_ufsphy_tx[] = {
-> -	QMP_PHY_INIT_CFG(QSERDES_V6_TX_LANE_MODE_1, 0x05),
-> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_LANE_MODE_1, 0x05),
->  	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX, 0x07),
-> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_FR_DCC_CTRL, 0x4c),
->  };
->  
->  static const struct qmp_phy_init_tbl sm8550_ufsphy_rx[] = {
-> -	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2, 0x0c),
-> -	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4, 0x0f),
-> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2, 0x0c),
->  	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL, 0x0e),
->  
->  	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0, 0xc2),
-> @@ -696,6 +700,8 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_pcs[] = {
->  	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_MID_TERM_CTRL1, 0x43),
->  	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_PLL_CNTL, 0x2b),
->  	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_MULTI_LANE_CTRL1, 0x02),
-> +	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_HSGEAR_CAPABILITY, 0x04),
-> +	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_RX_HSGEAR_CAPABILITY, 0x04),
->  };
->  
->  struct qmp_ufs_offsets {
-> @@ -1157,6 +1163,10 @@ static const struct qmp_phy_cfg sm8550_ufsphy_cfg = {
->  		.pcs		= sm8550_ufsphy_pcs,
->  		.pcs_num	= ARRAY_SIZE(sm8550_ufsphy_pcs),
->  	},
-> +	.tbls_hs_b = {
-> +		.serdes		= sm8550_ufsphy_hs_b_serdes,
-> +		.serdes_num	= ARRAY_SIZE(sm8550_ufsphy_hs_b_serdes),
-> +	},
->  	.clk_list		= sdm845_ufs_phy_clk_l,
->  	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
->  	.vreg_list		= qmp_phy_vreg_l,
-> -- 
-> 2.7.4
+The most recent CPU it checks for is Power4+ which was removed in commit
+471d7ff8b51b ("powerpc/64s: Remove POWER4 support").
 
+So drop the check. That makes the "testmode" module paramter unused, so
+remove it as well.
+
+Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+---
+ drivers/scsi/ipr.c | 55 ----------------------------------------------
+ 1 file changed, 55 deletions(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 81e3d464d1f6..3819f7c42788 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -77,7 +77,6 @@
+ static LIST_HEAD(ipr_ioa_head);
+ static unsigned int ipr_log_level = IPR_DEFAULT_LOG_LEVEL;
+ static unsigned int ipr_max_speed = 1;
+-static int ipr_testmode = 0;
+ static unsigned int ipr_fastfail = 0;
+ static unsigned int ipr_transop_timeout = 0;
+ static unsigned int ipr_debug = 0;
+@@ -193,8 +192,6 @@ module_param_named(max_speed, ipr_max_speed, uint, 0);
+ MODULE_PARM_DESC(max_speed, "Maximum bus speed (0-2). Default: 1=U160. Speeds: 0=80 MB/s, 1=U160, 2=U320");
+ module_param_named(log_level, ipr_log_level, uint, 0);
+ MODULE_PARM_DESC(log_level, "Set to 0 - 4 for increasing verbosity of device driver");
+-module_param_named(testmode, ipr_testmode, int, 0);
+-MODULE_PARM_DESC(testmode, "DANGEROUS!!! Allows unsupported configurations");
+ module_param_named(fastfail, ipr_fastfail, int, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(fastfail, "Reduce timeouts and retries");
+ module_param_named(transop_timeout, ipr_transop_timeout, int, 0);
+@@ -6416,45 +6413,6 @@ static const struct scsi_host_template driver_template = {
+ 	.proc_name = IPR_NAME,
+ };
+ 
+-#ifdef CONFIG_PPC_PSERIES
+-static const u16 ipr_blocked_processors[] = {
+-	PVR_NORTHSTAR,
+-	PVR_PULSAR,
+-	PVR_POWER4,
+-	PVR_ICESTAR,
+-	PVR_SSTAR,
+-	PVR_POWER4p,
+-	PVR_630,
+-	PVR_630p
+-};
+-
+-/**
+- * ipr_invalid_adapter - Determine if this adapter is supported on this hardware
+- * @ioa_cfg:	ioa cfg struct
+- *
+- * Adapters that use Gemstone revision < 3.1 do not work reliably on
+- * certain pSeries hardware. This function determines if the given
+- * adapter is in one of these confgurations or not.
+- *
+- * Return value:
+- * 	1 if adapter is not supported / 0 if adapter is supported
+- **/
+-static int ipr_invalid_adapter(struct ipr_ioa_cfg *ioa_cfg)
+-{
+-	int i;
+-
+-	if ((ioa_cfg->type == 0x5702) && (ioa_cfg->pdev->revision < 4)) {
+-		for (i = 0; i < ARRAY_SIZE(ipr_blocked_processors); i++) {
+-			if (pvr_version_is(ipr_blocked_processors[i]))
+-				return 1;
+-		}
+-	}
+-	return 0;
+-}
+-#else
+-#define ipr_invalid_adapter(ioa_cfg) 0
+-#endif
+-
+ /**
+  * ipr_ioa_bringdown_done - IOA bring down completion.
+  * @ipr_cmd:	ipr command struct
+@@ -7385,19 +7343,6 @@ static int ipr_ioafp_page0_inquiry(struct ipr_cmnd *ipr_cmd)
+ 	type[4] = '\0';
+ 	ioa_cfg->type = simple_strtoul((char *)type, NULL, 16);
+ 
+-	if (ipr_invalid_adapter(ioa_cfg)) {
+-		dev_err(&ioa_cfg->pdev->dev,
+-			"Adapter not supported in this hardware configuration.\n");
+-
+-		if (!ipr_testmode) {
+-			ioa_cfg->reset_retries += IPR_NUM_RESET_RELOAD_RETRIES;
+-			ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
+-			list_add_tail(&ipr_cmd->queue,
+-					&ioa_cfg->hrrq->hrrq_free_q);
+-			return IPR_RC_JOB_RETURN;
+-		}
+-	}
+-
+ 	ipr_cmd->job_step = ipr_ioafp_page3_inquiry;
+ 
+ 	ipr_ioafp_inquiry(ipr_cmd, 1, 0,
 -- 
-~Vinod
+2.41.0
+
