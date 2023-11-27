@@ -1,16 +1,16 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D23E136;
-	Sun, 26 Nov 2023 22:23:34 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4SdwWj58Zpz4f3kFw;
-	Mon, 27 Nov 2023 14:23:29 +0800 (CST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 378291BD;
+	Sun, 26 Nov 2023 22:23:42 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4SdwWs5771z4f3khb;
+	Mon, 27 Nov 2023 14:23:37 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 7F7DB1A072F;
-	Mon, 27 Nov 2023 14:23:31 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 81E5F1A112A;
+	Mon, 27 Nov 2023 14:23:39 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBXWhDeNWRlxeA8CA--.60190S5;
-	Mon, 27 Nov 2023 14:23:30 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBXWhDeNWRlxeA8CA--.60190S9;
+	Mon, 27 Nov 2023 14:23:38 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@infradead.org,
 	ming.lei@redhat.com,
@@ -68,9 +68,9 @@ Cc: linux-block@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH block/for-next v2 11/16] ext4: use new helper to get inode from block_device
-Date: Mon, 27 Nov 2023 14:22:47 +0800
-Message-Id: <20231127062252.2367645-2-yukuai1@huaweicloud.com>
+Subject: [PATCH block/for-next v2 15/16] buffer: use new helper to get inode from block_device
+Date: Mon, 27 Nov 2023 14:22:51 +0800
+Message-Id: <20231127062252.2367645-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231127062252.2367645-1-yukuai1@huaweicloud.com>
 References: <20231127062252.2367645-1-yukuai1@huaweicloud.com>
@@ -81,24 +81,24 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXWhDeNWRlxeA8CA--.60190S5
-X-Coremail-Antispam: 1UD129KBjvJXoWxZr1xKFy7JrWUXF18AF47Jwb_yoW5ZF4xpF
-	y3AFyrAr4UZFyj9a92krZFq3W29w1IkFWxWryfuw1a9rWaqw1SqFykKF12yFyFvrW8Jry2
-	qF1jkrW8Cr4rKrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6rxdM2
-	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-	vE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
-	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
-	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWrXVW8Jr1lIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Cr1j6rxdMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJw
-	CI42IY6I8E87Iv6xkF7I0E14v26F4UJVW0obIYCTnIWIevJa73UjIFyTuYvjfUFT5lUUUU
-	U
+X-CM-TRANSID:cCh0CgBXWhDeNWRlxeA8CA--.60190S9
+X-Coremail-Antispam: 1UD129KBjvJXoWxJF13Xry3Zr4rKw1xKryxGrg_yoW5XFWxpF
+	9IkFW3G3ykWryFgay0yws0qr9Ig3W2gay8u3yxJ3sxArW0gF92qF10kr12vFWayrW0yrWj
+	qF42krWrury2gFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_GcCE3s
+	1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
+	e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
+	8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
+	jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0x
+	kIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
+	xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26rWY6r4UJwCIc4
+	0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r4j6ryUMIIF0xvE2Ix0cI8IcVCY1x0267AK
+	xVWxJr0_GcWlIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F
+	4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Cr1j6rxdYxBIdaVFxhVjvjDU0xZFpf9x0JUArcfU
+	UUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
@@ -108,77 +108,72 @@ Which is more efficiency, and also prepare to remove the field
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- fs/ext4/dir.c       | 2 +-
- fs/ext4/ext4_jbd2.c | 2 +-
- fs/ext4/super.c     | 8 ++++----
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ fs/buffer.c                 | 8 ++++----
+ include/linux/buffer_head.h | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/ext4/dir.c b/fs/ext4/dir.c
-index 3985f8c33f95..6e9fe408642b 100644
---- a/fs/ext4/dir.c
-+++ b/fs/ext4/dir.c
-@@ -192,7 +192,7 @@ static int ext4_readdir(struct file *file, struct dir_context *ctx)
- 					(PAGE_SHIFT - inode->i_blkbits);
- 			if (!ra_has_index(&file->f_ra, index))
- 				page_cache_sync_readahead(
--					sb->s_bdev->bd_inode->i_mapping,
-+					bdev_inode(sb->s_bdev)->i_mapping,
- 					&file->f_ra, file,
- 					index, 1);
- 			file->f_ra.prev_pos = (loff_t)index << PAGE_SHIFT;
-diff --git a/fs/ext4/ext4_jbd2.c b/fs/ext4/ext4_jbd2.c
-index d1a2e6624401..e0e7f71d022d 100644
---- a/fs/ext4/ext4_jbd2.c
-+++ b/fs/ext4/ext4_jbd2.c
-@@ -206,7 +206,7 @@ static void ext4_journal_abort_handle(const char *caller, unsigned int line,
- 
- static void ext4_check_bdev_write_error(struct super_block *sb)
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 967f34b70aa8..bf993198f881 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -189,7 +189,7 @@ EXPORT_SYMBOL(end_buffer_write_sync);
+ static struct buffer_head *
+ __find_get_block_slow(struct block_device *bdev, sector_t block)
  {
--	struct address_space *mapping = sb->s_bdev->bd_inode->i_mapping;
-+	struct address_space *mapping = bdev_inode(sb->s_bdev)->i_mapping;
- 	struct ext4_sb_info *sbi = EXT4_SB(sb);
- 	int err;
- 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index c5fcf377ab1f..da6af2205e55 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -244,7 +244,7 @@ static struct buffer_head *__ext4_sb_bread_gfp(struct super_block *sb,
- struct buffer_head *ext4_sb_bread(struct super_block *sb, sector_t block,
- 				   blk_opf_t op_flags)
+-	struct inode *bd_inode = bdev->bd_inode;
++	struct inode *bd_inode = bdev_inode(bdev);
+ 	struct address_space *bd_mapping = bd_inode->i_mapping;
+ 	struct buffer_head *ret = NULL;
+ 	pgoff_t index;
+@@ -1032,7 +1032,7 @@ static int
+ grow_dev_page(struct block_device *bdev, sector_t block,
+ 	      pgoff_t index, int size, int sizebits, gfp_t gfp)
  {
--	gfp_t gfp = mapping_gfp_constraint(sb->s_bdev->bd_inode->i_mapping,
-+	gfp_t gfp = mapping_gfp_constraint(bdev_inode(sb->s_bdev)->i_mapping,
- 			~__GFP_FS) | __GFP_MOVABLE;
- 
- 	return __ext4_sb_bread_gfp(sb, block, op_flags, gfp);
-@@ -253,7 +253,7 @@ struct buffer_head *ext4_sb_bread(struct super_block *sb, sector_t block,
- struct buffer_head *ext4_sb_bread_unmovable(struct super_block *sb,
- 					    sector_t block)
+-	struct inode *inode = bdev->bd_inode;
++	struct inode *inode = bdev_inode(bdev);
+ 	struct folio *folio;
+ 	struct buffer_head *bh;
+ 	sector_t end_block;
+@@ -1463,7 +1463,7 @@ __bread_gfp(struct block_device *bdev, sector_t block,
  {
--	gfp_t gfp = mapping_gfp_constraint(sb->s_bdev->bd_inode->i_mapping,
-+	gfp_t gfp = mapping_gfp_constraint(bdev_inode(sb->s_bdev)->i_mapping,
- 			~__GFP_FS);
+ 	struct buffer_head *bh;
  
- 	return __ext4_sb_bread_gfp(sb, block, 0, gfp);
-@@ -502,7 +502,7 @@ static void ext4_maybe_update_superblock(struct super_block *sb)
+-	gfp |= mapping_gfp_constraint(bdev->bd_inode->i_mapping, ~__GFP_FS);
++	gfp |= mapping_gfp_constraint(bdev_inode(bdev)->i_mapping, ~__GFP_FS);
+ 
+ 	/*
+ 	 * Prefer looping in the allocator rather than here, at least that
+@@ -1696,7 +1696,7 @@ EXPORT_SYMBOL(create_empty_buffers);
   */
- static int block_device_ejected(struct super_block *sb)
+ void clean_bdev_aliases(struct block_device *bdev, sector_t block, sector_t len)
  {
--	struct inode *bd_inode = sb->s_bdev->bd_inode;
-+	struct inode *bd_inode = bdev_inode(sb->s_bdev);
- 	struct backing_dev_info *bdi = inode_to_bdi(bd_inode);
+-	struct inode *bd_inode = bdev->bd_inode;
++	struct inode *bd_inode = bdev_inode(bdev);
+ 	struct address_space *bd_mapping = bd_inode->i_mapping;
+ 	struct folio_batch fbatch;
+ 	pgoff_t index = block >> (PAGE_SHIFT - bd_inode->i_blkbits);
+diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+index 5f23ee599889..da9ee62e3aa9 100644
+--- a/include/linux/buffer_head.h
++++ b/include/linux/buffer_head.h
+@@ -341,7 +341,7 @@ static inline struct buffer_head *getblk_unmovable(struct block_device *bdev,
+ {
+ 	gfp_t gfp;
  
- 	return bdi->dev == NULL;
-@@ -5585,7 +5585,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
- 	 * used to detect the metadata async write error.
- 	 */
- 	spin_lock_init(&sbi->s_bdev_wb_lock);
--	errseq_check_and_advance(&sb->s_bdev->bd_inode->i_mapping->wb_err,
-+	errseq_check_and_advance(&bdev_inode(sb->s_bdev)->i_mapping->wb_err,
- 				 &sbi->s_bdev_wb_err);
- 	EXT4_SB(sb)->s_mount_state |= EXT4_ORPHAN_FS;
- 	ext4_orphan_cleanup(sb, es);
+-	gfp = mapping_gfp_constraint(bdev->bd_inode->i_mapping, ~__GFP_FS);
++	gfp = mapping_gfp_constraint(bdev_inode(bdev)->i_mapping, ~__GFP_FS);
+ 	gfp |= __GFP_NOFAIL;
+ 
+ 	return bdev_getblk(bdev, block, size, gfp);
+@@ -352,7 +352,7 @@ static inline struct buffer_head *__getblk(struct block_device *bdev,
+ {
+ 	gfp_t gfp;
+ 
+-	gfp = mapping_gfp_constraint(bdev->bd_inode->i_mapping, ~__GFP_FS);
++	gfp = mapping_gfp_constraint(bdev_inode(bdev)->i_mapping, ~__GFP_FS);
+ 	gfp |= __GFP_MOVABLE | __GFP_NOFAIL;
+ 
+ 	return bdev_getblk(bdev, block, size, gfp);
 -- 
 2.39.2
 
