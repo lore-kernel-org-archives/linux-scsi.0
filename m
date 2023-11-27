@@ -1,171 +1,109 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D424AE8;
-	Sun, 26 Nov 2023 17:13:52 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SdnfL40kBz4f3k6S;
-	Mon, 27 Nov 2023 09:13:46 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 54F621A0C6B;
-	Mon, 27 Nov 2023 09:13:49 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgDX2hBD7WNlrI8oCA--.40143S3;
-	Mon, 27 Nov 2023 09:13:42 +0800 (CST)
-Subject: Re: [PATCH -next] block: remove field 'bd_inode' from block_device
-To: Greg KH <gregkh@linuxfoundation.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: hch@infradead.org, ming.lei@redhat.com, axboe@kernel.dk,
- roger.pau@citrix.com, colyli@suse.de, kent.overstreet@gmail.com,
- joern@lazybastard.org, miquel.raynal@bootlin.com, richard@nod.at,
- vigneshr@ti.com, sth@linux.ibm.com, hoeppner@linux.ibm.com,
- hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com,
- jejb@linux.ibm.com, martin.petersen@oracle.com, clm@fb.com,
- josef@toxicpanda.com, dsterba@suse.com, viro@zeniv.linux.org.uk,
- brauner@kernel.org, nico@fluxnic.net, xiang@kernel.org, chao@kernel.org,
- tytso@mit.edu, adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
- konishi.ryusuke@gmail.com, dchinner@redhat.com, linux@weissschuh.net,
- min15.li@samsung.com, dlemoal@kernel.org, willy@infradead.org,
- akpm@linux-foundation.org, p.raghav@samsung.com, hare@suse.de,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
- linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
- gfs2@lists.linux.dev, linux-nilfs@vger.kernel.org, yi.zhang@huawei.com,
- yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20231125093912.141486-1-yukuai1@huaweicloud.com>
- <2023112544-subpanel-national-58e5@gregkh>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <6ef798a6-8c0c-16b0-9991-b461258eb7d4@huaweicloud.com>
-Date: Mon, 27 Nov 2023 09:13:39 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EzbQH/0V"
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0476C5;
+	Sun, 26 Nov 2023 18:37:54 -0800 (PST)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AR25aZZ001610;
+	Mon, 27 Nov 2023 02:37:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=EUx2kznvF55x6TcJFKC10LOA6TIMz5Dd7BoGMsvEIWA=;
+ b=EzbQH/0VQZl5LF3KJrNYtLz4ZO1B5g/kySLWjRzWZYwCnS5v2TPNGbU09LYT/KEML+IE
+ Jx1XKXxOCyIiq3CGzxcl5pNKMhA0CRtrTZnVJavsF3Bgj9xvjO2/v6ASSA2H27yyEuQi
+ 35DnD5t9VkqTrJFoE3SW9hw0M2c1x81f3kFiew7L65WnnXLgaw3NxagUMJfXIEkDDjQh
+ oyen/oqfMuAfx476oakBeRCAr3KNaqIjqFxa79rIGQPLp9j6fREmwO29QJ0R7Gy+GnpO
+ NUl3kYhOiAV4EchTt9ogPUoCLdHqU6qX6nf14u6gxngxMgOfkYEJL3/zvK8VJxqoOd8q lA== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uk912k24c-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 27 Nov 2023 02:37:11 +0000
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AR2bA05007540
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 27 Nov 2023 02:37:10 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Sun, 26 Nov
+ 2023 18:37:06 -0800
+Message-ID: <62770dc8-097e-9583-39fd-1a18ba2a8d13@quicinc.com>
+Date: Mon, 27 Nov 2023 10:36:52 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <2023112544-subpanel-national-58e5@gregkh>
-Content-Type: text/plain; charset=gbk; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v2] dt-bindings: ufs: Add msi-parent for UFS MCQ
+Content-Language: en-US
+To: Bart Van Assche <bvanassche@acm.org>, <quic_asutoshd@quicinc.com>,
+        <quic_cang@quicinc.com>, <mani@kernel.org>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>,
+        <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>
+CC: <linux-scsi@vger.kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>,
+        "Rob
+ Herring" <robh+dt@kernel.org>,
+        Krzysztof Kozlowski
+	<krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>, Guenter Roeck <linux@roeck-us.net>,
+        Wolfram Sang <wsa@kernel.org>, Mark Brown
+	<broonie@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE
+ BINDINGS" <devicetree@vger.kernel.org>,
+        open list
+	<linux-kernel@vger.kernel.org>
+References: <1700629624-23571-1-git-send-email-quic_ziqichen@quicinc.com>
+ <f9640827-4100-4ebf-8281-46f2d656540a@acm.org>
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <f9640827-4100-4ebf-8281-46f2d656540a@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDX2hBD7WNlrI8oCA--.40143S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCw48Jw4DZF43tw18tFWrKrg_yoW5ZFW8pr
-	W3GFZ5AFyq9ry7uF4IqF1xXryrJ3Wku3y3JrySyw10vrWYvF12gryvyr93uFy8ZrZ7tr4j
-	qF1aq34vkr18CrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9214x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4U
-	JVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVWrXVW8Jr1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j
-	6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x0JUd8n5UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: tD-mE2HJJtcgPXMzDPYrw-1jwI2kxQFg
+X-Proofpoint-ORIG-GUID: tD-mE2HJJtcgPXMzDPYrw-1jwI2kxQFg
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-26_25,2023-11-22_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ clxscore=1015 lowpriorityscore=0 bulkscore=0 suspectscore=0
+ mlxlogscore=999 phishscore=0 spamscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311270018
 
-Hi,
 
-�� 2023/11/25 22:32, Greg KH д��:
-> On Sat, Nov 25, 2023 at 05:39:12PM +0800, Yu Kuai wrote:
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> block_devcie is allocated from bdev_alloc() by bdev_alloc_inode(), and
->> currently block_device contains a pointer that point to the address of
->> inode, while such inode is allocated together:
->>
->> bdev_alloc
->>   inode = new_inode()
->>    // inode is &bdev_inode->vfs_inode
->>   bdev = I_BDEV(inode)
->>    // bdev is &bdev_inode->bdev
->>   bdev->inode = inode
->>
->> Add a new helper to get address of inode from bdev by add operation
->> instead of memory access, which is more efficiency. Also prepare to
->> add a new field 'bd_flags' in the first cacheline(64 bytes).
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   block/bdev.c                       | 39 +++++++++++++++++-------------
->>   block/blk-zoned.c                  |  4 +--
->>   block/fops.c                       |  4 +--
->>   block/genhd.c                      |  8 +++---
->>   block/ioctl.c                      |  8 +++---
->>   block/partitions/core.c            |  9 ++++---
->>   drivers/block/xen-blkback/xenbus.c |  2 +-
->>   drivers/md/bcache/super.c          |  2 +-
->>   drivers/mtd/devices/block2mtd.c    | 12 ++++-----
->>   drivers/s390/block/dasd_ioctl.c    |  2 +-
->>   drivers/scsi/scsicam.c             |  2 +-
->>   fs/bcachefs/util.h                 |  2 +-
->>   fs/btrfs/disk-io.c                 |  6 ++---
->>   fs/btrfs/volumes.c                 |  4 +--
->>   fs/btrfs/zoned.c                   |  2 +-
->>   fs/buffer.c                        |  8 +++---
->>   fs/cramfs/inode.c                  |  2 +-
->>   fs/erofs/data.c                    |  2 +-
->>   fs/ext4/dir.c                      |  2 +-
->>   fs/ext4/ext4_jbd2.c                |  2 +-
->>   fs/ext4/super.c                    |  8 +++---
->>   fs/gfs2/glock.c                    |  2 +-
->>   fs/gfs2/ops_fstype.c               |  2 +-
->>   fs/jbd2/journal.c                  |  3 ++-
->>   fs/jbd2/recovery.c                 |  2 +-
->>   fs/nilfs2/segment.c                |  2 +-
->>   include/linux/blk_types.h          | 10 ++++++--
->>   include/linux/blkdev.h             |  4 +--
->>   include/linux/buffer_head.h        |  4 +--
->>   29 files changed, 86 insertions(+), 73 deletions(-)
+
+On 11/23/2023 1:53 AM, Bart Van Assche wrote:
+> On 11/21/23 21:06, Ziqi Chen wrote:
+>> diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml 
+>> b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+>> index 985ea8f..31fe7f3 100644
+>> --- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+>> +++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+>> @@ -87,6 +87,8 @@ properties:
+>>       description:
+>>         Specifies max. load that can be drawn from VCCQ2 supply.
+>> +  msi-parent: true
+>> +
+>>   dependencies:
+>>     freq-table-hz: [ clocks ]
+>>     operating-points-v2: [ clocks, clock-names ]
 > 
-> You should do this as a patch series, add the helper function that does
-> nothing, convert all the different portions of the kernel as different
-> patches, and _then_ change the implementation of the block layer to
-> handle the change in the structure.
-> 
-> Otherwise this is going to be hard to get accepted.
+> Does this patch break support for UFSHCI 4.0 controllers that do not 
+> support MSI?
 
-Okay, thanks for the adivce, I'll do that in v2.
+No, the controllers that do not support MSI would NOT be impacted by 
+this patch.
 
-By the way, I was thinking that this patch is quite simple, and doesn't
-worth spliting into 10+ patches,
-> 
-> Also, one note:
-> 
->> @@ -85,6 +84,13 @@ struct block_device {
->>   #define bdev_kobj(_bdev) \
->>   	(&((_bdev)->bd_device.kobj))
->>   
->> +static inline struct inode *bdev_inode(struct block_device *bdev)
->> +{
->> +	void *inode = bdev + 1;
-> 
-> That's crazy, if something changes, this will keep working yet the
-> kernel will break and no one will know why.
-> 
-> Please use container_of(), that's what it is there for, this exact type
-> of thing.  Or if not, are you just assuming that the memory location
-> right after bdev is the inode?  That's a tough assumption, how are you
-> going to assure it really stays there?
-
-Struct bdev_inode never changes since commit 8fbd544cbca5 ("[PATCH]
-bdev: add I_BDEV()") from 2004, and I think it won't change unless
-there is a different way to manage lifetime of block_device.
-
-And the 'bdev + 1' is copied from blk_mq_rq_to_pdu(), however, I aggre
-that use container_of() is better and I will use it in v2.
-
-Thanks,
-Kuai
+-Ziqi
 
 > 
-> thanks,
+> Thanks,
 > 
-> greg k-h
-> .
-> 
-
+> Bart.
