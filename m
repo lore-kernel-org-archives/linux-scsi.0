@@ -1,93 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 372F61C292;
-	Mon, 27 Nov 2023 17:42:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iBlp5pNz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBBD9C433C8;
-	Mon, 27 Nov 2023 17:42:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701106952;
-	bh=qglVjzsLYuACzu0+FICh+JqZnBV8rbxXDMwLeP40ut0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iBlp5pNzxJcEub77PR2l8jiM8+nBXcyFTFG+sdb6uSknyRgw6PxlMtj3So8f3B6iO
-	 SCpLjfMMfh/+3P6OUIbjujtaqcQfQXmPE8Had+x9WqOam+upB96QuVm4Ddwiz8PwLy
-	 Sm9PZ+0nHmjDQ+hIXSMzR1JBXUQS2fzpOhQwpR2+wbwyn31+QNxxa25x4btjZhNQOd
-	 zLLlrFV3FloXQQTIKHwZ3s2MO70Z6fIL1ptzrBOmcTtGsS8zCV/w/r7iyKCs7CXkuh
-	 3ubammimbnOUHTFxHgfm2AhXkDbAQ5GUemYVNwGC9bxvkWyeSYiyk7DoJVBSWhhAPF
-	 G7el3IP1yZHsg==
-Date: Mon, 27 Nov 2023 17:42:25 +0000
-From: Conor Dooley <conor@kernel.org>
-To: Ziqi Chen <quic_ziqichen@quicinc.com>
-Cc: quic_asutoshd@quicinc.com, quic_cang@quicinc.com, bvanassche@acm.org,
-	mani@kernel.org, stanley.chu@mediatek.com, adrian.hunter@intel.com,
-	beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-	martin.petersen@oracle.com, quic_nguyenb@quicinc.com,
-	quic_nitirawa@quicinc.com, linux-scsi@vger.kernel.org,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Wolfram Sang <wsa@kernel.org>,
-	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] dt-bindings: ufs: Add msi-parent for UFS MCQ
-Message-ID: <20231127-opposite-haste-4c9049cecf91@spud>
-References: <1701063365-82582-1-git-send-email-quic_ziqichen@quicinc.com>
- <20231127-glimpse-demotion-6adae40eee30@spud>
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C13E8D5D;
+	Mon, 27 Nov 2023 11:00:29 -0800 (PST)
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-5be30d543c4so3235804a12.2;
+        Mon, 27 Nov 2023 11:00:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701111629; x=1701716429;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=eF2GAnwCh5Wl+Gbs8aDczVuuiH/00RAFmCz4QwFQh9Q=;
+        b=AmNzsn3H1Zu9ZWWEW0TCY1TDJAhsIpaaP4NKzSQuZtb+0mY51le+qWDMPYb1AgnY3v
+         gCQ63q0fCkBQu9cglCXiUqzbMGSPvQpOcfsar9LVbF0qTRhE+96TR8yWMpMf0wSmSBTT
+         Tu/1SyndsMG+SbshNcb+AlmSZNkuX5eFRh2hc1+oW4lh6FH4ZbggWqJ+2mwfMx0u9ZQn
+         MKPqNDD9ixzU5g+jP08efljeTTJ1qRVZvTZ5Y4hPMmajBtqKaLRXUQcYfDOyOWV8a3G8
+         dGDqQOT/rZGr8qmS6M+QMzHYun8pJ+HlTcT7ejNOsg0OU9G4dVltL8CkdQlNypxNQlQ0
+         m+Kw==
+X-Gm-Message-State: AOJu0Yx7JoUQNG0C50FctRpl2QYGudhLnKE3AgDchlenxjI/QinoKjFE
+	WYWMajBkj2LwTyDcqwra5Mg=
+X-Google-Smtp-Source: AGHT+IFKgEY8d51UqToBG4tJWu9dmlT0UGoTXo4O4PcHe/ONPOxFBj02ypg61y1wM7FhoDCaZPDbBQ==
+X-Received: by 2002:a05:6a20:a129:b0:18c:ba47:74e7 with SMTP id q41-20020a056a20a12900b0018cba4774e7mr2389404pzk.52.1701111628967;
+        Mon, 27 Nov 2023 11:00:28 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:c7c5:cabf:7030:2d30? ([2620:0:1000:8411:c7c5:cabf:7030:2d30])
+        by smtp.gmail.com with ESMTPSA id s1-20020a62e701000000b006c1221bc58bsm7442392pfh.115.2023.11.27.11.00.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Nov 2023 11:00:28 -0800 (PST)
+Message-ID: <eadc84c5-5f73-499a-8c3e-eb5bfbc67ed1@acm.org>
+Date: Mon, 27 Nov 2023 11:00:26 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="sDDXzRYQ9u2VJHe4"
-Content-Disposition: inline
-In-Reply-To: <20231127-glimpse-demotion-6adae40eee30@spud>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 01/15] fs: Rename the kernel-internal data lifetime
+ constants
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ Daejun Park <daejun7.park@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>,
+ Jan Kara <jack@suse.cz>, Christian Brauner <brauner@kernel.org>,
+ Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>
+References: <20231114214132.1486867-1-bvanassche@acm.org>
+ <20231114214132.1486867-2-bvanassche@acm.org> <20231127070830.GA27870@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231127070830.GA27870@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 11/26/23 23:08, Christoph Hellwig wrote:
+> More importantly these constant have been around forever, so we'd better
+> have a really good argument for changing them.
 
---sDDXzRYQ9u2VJHe4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Christoph,
 
-On Mon, Nov 27, 2023 at 05:40:45PM +0000, Conor Dooley wrote:
-> On Mon, Nov 27, 2023 at 01:36:02PM +0800, Ziqi Chen wrote:
-> > The Message Signaled Interrupts (MSI) support has been introduced in
-> > UFSHCI version 4.0 (JESD223E). The MSI is the recommended interrupt
-> > approach for MCQ. If choose to use MSI, In UFS DT, we need to provide
-> > msi-parent property that point to the hardware entity which serves as
-> > the MSI controller for this UFS controller.
-> >=20
-> > Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> >=20
->=20
-> > V2 -> V3: Wrap commit message to meet Linux coding style.
-> > V1 -> V2: Rebased on Linux 6.7-rc1 and updated the commit message to
-> >           incorporate the details about when MCQ/MSI got introduced.
->=20
-> This should be below the --- line FYI. With that fixed,
-> Acked-by: Conor Dooley <conor.dooley@microchip.com>
+I will drop this patch.
 
-Also, you omitted an ack from Krzysztof in
-<ae2f2dc9-4c08-4db8-bfae-80608723d8c3@linaro.org>
+As you know the NVMe and SCSI specifications use the numeric range 0..63 for
+the data lifetime so there is a gap between the values supported by the
+F_[GS]ET_RW_HINT fcntls and the data lifetime values accepted by widely used
+storage devices. Do you think that it should be possible for user space
+applications to specify the full range (0..63)?
 
-Cheers,
-Conor.
+Thanks,
 
---sDDXzRYQ9u2VJHe4
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZWTVAQAKCRB4tDGHoIJi
-0qcCAP9bHZ49nXmURZnHmlf2EEcInhjXjeZ63oj1Q/CL79VJfQD9GIlDKTFTdnti
-UyGxMfITQWLXzCi2g64ZneSu6p1HEgE=
-=OQCh
------END PGP SIGNATURE-----
-
---sDDXzRYQ9u2VJHe4--
+Bart.
