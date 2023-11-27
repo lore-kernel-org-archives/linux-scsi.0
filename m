@@ -1,88 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3w8bJekj"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80128D4B;
-	Mon, 27 Nov 2023 08:33:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=N2zDXv8N842SdWeP1QfvmzEvIcEsyQplx8msSV1RBzc=; b=3w8bJekjauD14xkhiSXsSeP1yp
-	9N3b2DKZZPdBt27xj1DIEE7RXLXZrvHxDKR2sRYD21pNAAIJ3vl1ZCKZ4NFvv5G6xjzqey6N1n0KK
-	ZrI0nakNUBsMEbW2Q4e4j1NRh5OeO1tyxIFUhlV8EaqwcQbah9MgH17+QPadh0DqL/pm4sqZ5f/vV
-	IH1EMWIP6up9ybGx4dw0MvcLdLRClPIEOMfWizJpOcO8WEMAVnlOuY5kgUVe2HK2Xt75AhDq2qkmf
-	jzAFQBFfr3qP/5tAASIdgOPBH9JmPj2A8s0x9fJ50RYVccYl2K4OsZZ71u82sMqjEZ1B5f5BIa6y8
-	Lia9qiAg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1r7eXO-0030D4-22;
-	Mon, 27 Nov 2023 16:32:46 +0000
-Date: Mon, 27 Nov 2023 08:32:46 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Christoph Hellwig <hch@infradead.org>, ming.lei@redhat.com,
-	axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
-	kent.overstreet@gmail.com, joern@lazybastard.org,
-	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
-	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
-	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
-	dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
-	adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
-	konishi.ryusuke@gmail.com, dchinner@redhat.com,
-	linux@weissschuh.net, min15.li@samsung.com, dlemoal@kernel.org,
-	willy@infradead.org, akpm@linux-foundation.org, hare@suse.de,
-	p.raghav@samsung.com, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
-	linux-nilfs@vger.kernel.org, yi.zhang@huawei.com,
-	yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH block/for-next v2 01/16] block: add a new helper to get
- inode from block_device
-Message-ID: <ZWTErvnMf7HiO1Wj@infradead.org>
-References: <20231127062116.2355129-1-yukuai1@huaweicloud.com>
- <20231127062116.2355129-2-yukuai1@huaweicloud.com>
- <ZWRDeQ4K8BiYnV+X@infradead.org>
- <6acdeece-7163-3219-95e2-827e54eadd0c@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b64jRfps"
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C2C8189
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Nov 2023 08:51:05 -0800 (PST)
+Received: by mail-wm1-x330.google.com with SMTP id 5b1f17b1804b1-4079ed65471so35345195e9.1
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Nov 2023 08:51:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1701103863; x=1701708663; darn=vger.kernel.org;
+        h=content-transfer-encoding:subject:to:from:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=8AgEC5hl9xTiJhztF4t3qyhaDyaWPbhPKGmUnOdojk8=;
+        b=b64jRfpspDx+k5AZHg0wwZrr9G/rsZD7Mx+uiYItgQRVUjZS+RsiMmz853Oc0jUsm2
+         S0aS7+wtWShTNPpCw45PzejQyx2FXV0FF2/xbE2QdL62Bc6eDK3uMbXAlYV1XJ1NCb8w
+         42/TVD42lDUprHz4aHyWU0nqZV39mF3J56dBnz90LmYvRcMo/mMxA2JjC3ogN2RdZyXt
+         SK3np+FkoCv7dQBTP8ECdAMSZsLolXvx0dBRzHPAyfEibn+xNmVYZmfCjZwtp37A6o7z
+         lUY7q6Fc6krTNm1LJ18YlIzcVpEVm1hPCm43OcHjZqg+45GQf/V2aM2LFax6eCyMuOpK
+         aDbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701103863; x=1701708663;
+        h=content-transfer-encoding:subject:to:from:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8AgEC5hl9xTiJhztF4t3qyhaDyaWPbhPKGmUnOdojk8=;
+        b=GKYC4CIvY3aJ2w7RwWte+MuCRcoTfJZMsMkUZ9zamEeUIvL142FRCrYNQ0/C9sPjsS
+         EdG2Z/PzZtfu3RhmVJfbWtCVTFYmcddlXqHTvs6X4uzYSnecY0wuZRh2X9ThX9+n3J/x
+         Xzp+gb5b6rqPjFlP3ozKi9Fmj2mhvOqELH8cdU5lRPOVaKnSM+nrjrdhhNavNUoAFgSG
+         siP6UsIhI7PhNd9lYEXLQxY1ciGU/CGs9/Vwt12SCvVEamjOCbBCJF9kT+YOxiOn2Owh
+         W5WPb0xhMHLQjaM2L3JHimYOb92KM7ULqnNLnkrvrOuRT6xn65jm6GHTA63f2/VZP/4V
+         0mWA==
+X-Gm-Message-State: AOJu0Yyf6Pqh3mHkOGhT72HIRA/hnSbce5kFy8mnGDohMxaZSYWnFzLX
+	pA/mGfoPsdrnxuMH98WkWi0lGJAlrxU=
+X-Google-Smtp-Source: AGHT+IFYk35zw3KKu1a/6nM9SgAsvjl7gWP3PFiyyfEXjVPC7R/bEkpvnl6Na8qzZtbleyTCwmf7gg==
+X-Received: by 2002:a05:600c:4451:b0:405:3e9a:f1e3 with SMTP id v17-20020a05600c445100b004053e9af1e3mr9145291wmn.11.1701103863254;
+        Mon, 27 Nov 2023 08:51:03 -0800 (PST)
+Received: from DESKTOP-6F6Q0LF (static-host119-30-85-97.link.net.pk. [119.30.85.97])
+        by smtp.gmail.com with ESMTPSA id k10-20020a05600c1c8a00b004042dbb8925sm15183297wms.38.2023.11.27.08.51.02
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1 cipher=ECDHE-ECDSA-AES128-SHA bits=128/128);
+        Mon, 27 Nov 2023 08:51:02 -0800 (PST)
+Message-ID: <6564c8f6.050a0220.adf1c.1929@mx.google.com>
+Date: Mon, 27 Nov 2023 08:51:02 -0800 (PST)
+X-Google-Original-Date: 27 Nov 2023 11:51:01 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+From: callahanbryson63@gmail.com
+To: linux-scsi@vger.kernel.org
+Subject: Building Estimates
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6acdeece-7163-3219-95e2-827e54eadd0c@huaweicloud.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: quoted-printable
+X-Spam-Level: **
 
-On Mon, Nov 27, 2023 at 09:07:22PM +0800, Yu Kuai wrote:
-> 1) Is't okay to add a new helper to pass in bdev for following apis?
-
-
-For some we already have them (e.g. bdev_nr_bytes to read the bdev)
-size, for some we need to add them.  The big thing that seems to
-stick out is page cache API, and I think that is where we need to
-define maintainable APIs for file systems and others to use the
-block device page cache.  Probably only in folio versions and not
-pages once if we're touching the code anyay
-
-> 2) For the file fs/buffer.c, there are some special usage like
-> following that I don't think it's good to add a helper:
-> 
-> spin_lock(&bd_inode->i_mapping->private_lock);
-> 
-> Is't okay to move following apis from fs/buffer.c directly to
-> block/bdev.c?
-> 
-> __find_get_block
-> bdev_getblk
-
-I'm not sure moving is a good idea, but we might end up the
-some kind of low-level access from buffer.c, be that special
-helpers, a separate header or something else.  Let's sort out
-the rest of the kernel first.
+Hi,=0D=0A=0D=0AWe provide estimation & quantities takeoff service=
+s. We are providing 98-100 accuracy in our estimates and take-off=
+s. Please tell us if you need any estimating services regarding y=
+our projects.=0D=0A=0D=0ASend over the plans and mention the exac=
+t scope of work and shortly we will get back with a proposal on w=
+hich our charges and turnaround time will be mentioned=0D=0A=0D=0A=
+You may ask for sample estimates and take-offs. Thanks.=0D=0A=0D=0A=
+Kind Regards=0D=0ACallahan Bryson		=0D=0ADreamland Estimation, LL=
+C
 
