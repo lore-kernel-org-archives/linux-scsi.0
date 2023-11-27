@@ -1,222 +1,206 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="F6LPakEZ";
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="XYa7fipN"
-Received: from rcdn-iport-7.cisco.com (rcdn-iport-7.cisco.com [173.37.86.78])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 423F7D59;
-	Mon, 27 Nov 2023 12:17:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=1008; q=dns/txt; s=iport;
-  t=1701116277; x=1702325877;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=+lNvIz+meuYk6HCIJ8l7VTRWgv6XS0XUOaRLmxgJ7Dg=;
-  b=F6LPakEZ5gMZTDRlsnAmkxyu4/sxs2lHGjWtXWxbSSY0WDGFb1lwfcz5
-   QJL9fLHRClOZPO1brf5yQXDkBVVSvdckuN7NclIniIobJHsTzts4YtUCX
-   mDFglp5zkapLWuGfJOgAB2l+LpvmY2VbrfhzI2+Klk2YC+tTjniMC6guC
-   M=;
-X-CSE-ConnectionGUID: TclkbVP1SGKzI/+99WxEiA==
-X-CSE-MsgGUID: u8OeA/r7R/aCo/FLrJg09g==
-X-IPAS-Result: =?us-ascii?q?A0AfAgC5+GRlmJtdJa1QCh4BAQsSDEAlgR8LgWdSeFs8S?=
- =?us-ascii?q?IgeA4UtiGMDnX6BJQNWDwEBAQ0BAUQEAQGFBgKHKQImNAkOAQICAgEBAQEDA?=
- =?us-ascii?q?gMBAQEBAQEBAgEBBQEBAQIBBwQUAQEBAQEBAQEeGQUOECeFaA0Ihj0BAQEBA?=
- =?us-ascii?q?xIoBgEBNwEPAgEIGB4QMiUCBA4FCBqCXoJfAwGfPwGBQAKKKHiBNIEBggkBA?=
- =?us-ascii?q?QYEBbJuCYFIiA0Big4nG4INgVeCaD6CYQKBMy+EEoIvg2yFNgcygiODUY59f?=
- =?us-ascii?q?0dwGwMHA38PKwcELRsHBgkULSMGUQQoIQkTEj4EgWGBUQp/Pw8OEYI9IgIHN?=
- =?us-ascii?q?jYZSIJbFQw0SnYQKgQUF4ESBGoFFhMeNxESFw0DCHQdAhEjPAMFAwQzChINC?=
- =?us-ascii?q?yEFFEIDRQZJCwMCGgUDAwSBMwUNHgIQGgYMJwMDEk0CEBQDOwMDBgMLMQMwV?=
- =?us-ascii?q?UQMTwNuHzYJPA8MHwIbHg0nJQIyQgMRBRICFgMkFgQ2EQkLKwMvBjgCEwwGB?=
- =?us-ascii?q?gk9A0QdQAMLbT01FBsFBGRZBaIYYXxfZYEOlkqtT4EuCoQNoUAXhAGMc5kRm?=
- =?us-ascii?q?ECoKwIEAgQFAg4BAQaBYzqBW3AVgyJSGQ+OIBmDX495djsCBwsBAQMJimEBA?=
- =?us-ascii?q?Q?=
-IronPort-PHdr: A9a23:FVs+aRzSEEqsdoLXCzMRngc9DxPP8539OgoTr50/hK0LK+Ko/o/pO
- wrU4vA+xFPKXICO8/tfkKKWqKHvX2Uc/IyM+G4Pap1CVhIJyI0WkgUsDdTDCBjTJ//xZCt8F
- 8NHBxd+53/uCUFOA47lYkHK5Hi77DocABL6YAl8PPj0HofRp8+2zOu1vZbUZlYAiD+0e7gnN
- Byttk2RrpwPnIJ4I6Atyx3E6ndJYLFQwmVlZBqfyh39/cy3upVk9kxt
-IronPort-Data: A9a23:ur43lalH5XwuRO5UGF5yJp3o5gyhJkRdPkR7XQ2eYbSJt1+Wr1Gzt
- xJOXzuGM6mKN2vyfdolPY3g9U8AuZSAyNZmSVY//nwzFltH+JHPbTi7wugcHM8zwunrFh8PA
- xA2M4GYRCwMZiaB4E/rav649SUUOZigHtLUEPTDNj16WThqQSIgjQMLs+Mii+aEu/Dha++2k
- Y20+5G31GONgWYuaTtNsf3b8nuDgdyr0N8mlg1mDRx0lAe2e0k9VPo3Oay3Jn3kdYhYdsbSq
- zHrlezREsvxpn/BO/v9+lrJWhRiro36YWBivkFrt52K2XCukMCdPpETb5LwYW8P49mAcksYJ
- N9l7fRcQi9xVkHAdXh0vxRwS0lD0aN6FLDvHXO7ssat9xT9XFj+4rItXRAJLaAZ07MiaY1O3
- aRwxDEldBuPgae9x6i2D7UqjcU4J86tN4Qa0p1i5WiGVrB9HtaSGOOTuIIwMDQY3qiiGd7db
- tAFaD5mbzzLYgZEPREcD5dWcOKA3yWhI20E9grNzUYxy3WD6wFYl6KyCp3cUdvNa+FPvEnA9
- 22TqgwVBTlBaYTAkmDamp62vcfLnCXmSMcRGae++/pCnlKe3CoQBQcQWF/9puO24ma6WtRCO
- wkP8TEvhbY9+VbtTdTnWRC85nmesXYht8F4CeY27kSGzbDZplrfDWkfRTkHY9sj3CMredA0/
- mOCm9DjOwQ2i5K2W1PatebFkiOfOAFAeAfuehQ4ZQcC5tDipqQ6gRTOUstvHcaJYjvdR2mYL
- 9ei8nBWulkDsfPnwZlX6rwuvt5BjoLCQghw7QLNUyf5qAh4f4WiIYev7DA3DMqszq7HEjFtX
- 1Bdx6ByCdzi67nRzERhp81RRdmUCw6tamG0vLKWN8BJG86R03CiZ5tMxzp1OV1kNM0JERewP
- xeK4FsAtMANYyb6BUOSX25XI5pzpUQHPYq8Ps04kvIXOvCdiSfepX4xOxbIt4wTuBJ9wf9X1
- WinnTaEVitCVv89k1Jats8W0KQgwWgl1HjPSJXghxWh2vz2WZJmYeltDbd6VchgtPnsiFyMq
- 753bpLWoz0BC7eWSneMruYuwaUicCJT6Wbe8ZIHL4Zu42NORQkcNhMm6eh7KtY1xfsPyL+gE
- 7PUchYw9WcTTEbvcG2iQntic7joG514qBoG0eYEZD5EB1BLjV6T0Zoi
-IronPort-HdrOrdr: A9a23:z/ZKIKAiuzrUI6LlHejpsseALOsnbusQ8zAXPh9KOH9om52j9/
- xGws576fatskdhZJhBo7y90KnpewKkyXcH2/hgAV7EZniphILIFvAs0WKG+UyDJ8SQzJ8h6U
- 4NSdkYNDS0NykFsS+Y2nj4Lz9D+qj6zEnAv463pBkdKHAPV0gj1XYHNu/xKDwPeOAyP+tCKH
- Pq3Ls9m9PPQwVwUu2LQlM+c6zoodrNmJj6YRgAKSIGxWC15w+A2frRKTTd+g0RfQ9u7N4ZnF
- QtlTaX2oyT99WAjjPM3W7a6Jpb3PH7zMFYOcCKgs8Jbh3xlweBfu1aKv6/lQFwhNvqxEchkd
- HKrRtlFd908Wntcma8pgao8xX80Qwp92TpxTaj8DneSI3CNXcH4vh69MVkmyjimgwdVRZHof
- t2Nleixt5q5NX77XzADpbzJkpXfwGP0AkfeKYo/g5iuM0lGf9sRUh1xjIJLH/GdxiKsrwPAa
- 1gCtrR6+1Rdk7fZ3fFvnN3yNjpRXgrGAyaK3Jy8PB9/gIm1EyR9XFoj/A3jzMF7tYwWpNE7+
- PLPuBhk6xPVNYfaeZ4CP0aScW6B2TRSVaUWVjibWjPBeUCITbAupT36LI66KWjf4EJ1oI7nN
- DEXElDvWA/dkryAYmF3YFN8BrKXGKhNA6dh/129tx8oPnxVbDrOSqMRBQnlNahuewWBonBV/
- O6KPttcrbexKvVaPB0NiHFKu5vwCMlIbgoU/4AKiaznv4=
-X-Talos-CUID: =?us-ascii?q?9a23=3AARRjkGm9pKLybHr6jSIsr0r3wPPXOUHWyHTaHXf?=
- =?us-ascii?q?hMklKWpzSCg7Bx7NJkuM7zg=3D=3D?=
-X-Talos-MUID: =?us-ascii?q?9a23=3AELQarw+5PEbibxu/4DXVyu6Qf9o4xKmHT1pSq9I?=
- =?us-ascii?q?PkM7DGwhqGTjF3TviFw=3D=3D?=
-X-IronPort-Anti-Spam-Filtered: true
-Received: from rcdn-core-4.cisco.com ([173.37.93.155])
-  by rcdn-iport-7.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Nov 2023 20:17:56 +0000
-Received: from alln-opgw-1.cisco.com (alln-opgw-1.cisco.com [173.37.147.229])
-	by rcdn-core-4.cisco.com (8.15.2/8.15.2) with ESMTPS id 3ARKHtja013234
-	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 27 Nov 2023 20:17:56 GMT
-X-CSE-ConnectionGUID: rz+XjJL3ToOM5/ldpvqqPQ==
-X-CSE-MsgGUID: bsKdfTgZRYia1R1GF1NZCg==
-Authentication-Results: alln-opgw-1.cisco.com; dkim=pass (signature verified) header.i=@cisco.com; spf=Pass smtp.mailfrom=kartilak@cisco.com; dmarc=pass (p=quarantine dis=none) d=cisco.com
-X-IronPort-AV: E=Sophos;i="6.04,231,1695686400"; 
-   d="scan'208";a="10183236"
-Received: from mail-co1nam11lp2168.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.168])
-  by alln-opgw-1.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Nov 2023 20:17:55 +0000
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="ib/69eGa"
+Received: from EUR04-HE1-obe.outbound.protection.outlook.com (mail-he1eur04on2055.outbound.protection.outlook.com [40.107.7.55])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33FB8BD;
+	Mon, 27 Nov 2023 12:23:40 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eTytADp//ZwG5axSg+FQSJ5ZTr6lm5kfXXRB/NdI0cD329QRu9QSCoDUrZ7a+NpYTkkqHltU1z+xojuFitlqlL+dOcQUsy+oJ0ZgSz28NjKH5yecgC8NQzsKA5edZH5TpuabqjIShcqOdBw9yrTxw5ZADk/2kLBlCN2pYwKPzY3a1lZc5VRmzwVouiorp1HjdlPdWbB0JWCDPvmMSsQwHKBxev6ZXSoe8Uk5zwmHUDbr/EUqCZKiLxCis8mhrW3wmU9P5XXev3eppkY69vinMHwBV0QwMfSwYkr1109rp4BkDTLMd6iiKQl4U9+Cksl2TSO8CE3c4hVzH8+GK9zjug==
+ b=RayQxzhjSNWbPQ99nk00zgVxPnizArfIXe1LqbwVcDU/0kRY127WSCB6LeEfp8BWpBcMKZxc/3XTEODbMQPvUa5YVelEZCh0czQhQ9GqdcpzbOp0wo766iadI+dkP5BlSl/a9tDtiEMfeasBwsCBc23EUhNvAPETPoPoxdxxuqajuoOBCqHBKAof3LBXe9t6ezfoR3ava75Lf3gYZZmV0lW3GFVgxUZge5Tultc8NII6buaGkRM9jGiWrwzv42I6x/80Svi+EHz75SoEiIkDlbw16X4+JKiPtd6PsT5mvfdoXFJXGXPgZ17TKB7Qx3EMEiFTBHaB2DHjcTqFdX4wdA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+lNvIz+meuYk6HCIJ8l7VTRWgv6XS0XUOaRLmxgJ7Dg=;
- b=aIhDigU8ndibMIPWaSZHCCmhZJoznpkDqKkzziPYOP+3BhBZKTjdOMdu6Ih8QtbS2VmznvlVa+4g7aZNymiWv0R0veGeg53axvc1vWviEBDJmc0I6nvn8H9hakv0BONxoDkjKDjLx3QkcHTjU1pm9HmnkhO7ZmcsJb31UNOmFTIFWSABipd9TxokisjmcG+eB8pjj1dc/tCFoZok9+FB6UePe9880BwmiH9UnGh8gVsaDreg/3KiTeL/HYIdf4+0rxtA4GfAnXWN8b5u8WTpQLHfGjB947BBLBHo5NiXCJq4JH8IMy6mJfB/B3Kyph3go2GXoGYURHA5ENM1X5yMnQ==
+ bh=req+AudgninvIhaIGjTPR9Dp7ACwIcEvxWnDimpDxOI=;
+ b=DO0DF5BoDyK0DmIP6sKT+5E3rlZXkF74BW0za6MBZMskixiHsRnZUdsb3l14bx2F3G+8DMNTuui9N3oBy/bUDpmyO53pAn8XTVV+711Vuw17znwKOGJKAZ35oH7UZj1SLlQoXaZQ57WzBePQkxfWCYRJEyvwEpQrqPjVVLYocsvGsc2uZGO+KpfAzXPjS594IeGL1ZAZKQ4y1qc9Bq1nGE9Kt0KQ9HwEtwlKRerzpgLjaIW2Mwmw0POSCI2UXftnpTH8chNcnoUIZPfJ6QCjZFr14ICnsEfKSdZQRqYR3FpQP1wRWp8glyXqiwAkhjw5YP7SE0idRGCRnOtwLjjxTg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cisco.com; dmarc=pass action=none header.from=cisco.com;
- dkim=pass header.d=cisco.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cisco.com;
- s=selector1;
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+lNvIz+meuYk6HCIJ8l7VTRWgv6XS0XUOaRLmxgJ7Dg=;
- b=XYa7fipN7s4J1ImDKia8vxRx3b4hcX8eInYNkAcd7njtRHEyMBF7UuPc5jN2BxKJbZzjNyfDQzwCQKb7j7ljSTJQHgjB10os51sj+VX8HhZR00TEZpTNDjFHzFexy7NBFElL5z7h9xJ6OCbhnCc9T6gQYFznkiE4Zvi+lWRMkmI=
-Received: from SJ0PR11MB5896.namprd11.prod.outlook.com (2603:10b6:a03:42c::19)
- by SA2PR11MB4876.namprd11.prod.outlook.com (2603:10b6:806:119::13) with
+ bh=req+AudgninvIhaIGjTPR9Dp7ACwIcEvxWnDimpDxOI=;
+ b=ib/69eGa+tw+ucu+DqGExRJDfgQ5aMX9YuciGQ0uk569Yp7f83zbumW11inW2lmn8uZOMszpY+pEUwGfeNAuZHnmyRROnXy0F9hvlAUg/XwZ7RYKaim3BQ1ycboCuModhDi/cT6b5Zuuh5l4zNs5wv9soXgK7372I4GR3wZE3SIuO1ooE5vhKg970/tpwVSpfaV3ZvwmSVPiYuiQEn+ujkxNpP4544CwwgoCMm+TCEOJq3Qv/O/0OmvM/h9S0iFZOUI8hVdTw2B/d9H2G08K9Ckq8JF23fSuVvr5ArBK5Rbecxsi9wPg+/HC6w5uvbkVJzFu64rpSDVw6sJORgnLzg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by DB9PR04MB8124.eurprd04.prod.outlook.com (2603:10a6:10:246::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7025.29; Mon, 27 Nov
- 2023 20:17:53 +0000
-Received: from SJ0PR11MB5896.namprd11.prod.outlook.com
- ([fe80::24ee:3bbf:e40:6022]) by SJ0PR11MB5896.namprd11.prod.outlook.com
- ([fe80::24ee:3bbf:e40:6022%7]) with mapi id 15.20.7025.022; Mon, 27 Nov 2023
- 20:17:53 +0000
-From: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-CC: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>,
-        "Arulprabhu Ponnusamy
- (arulponn)" <arulponn@cisco.com>,
-        "Dhanraj Jhawar (djhawar)"
-	<djhawar@cisco.com>,
-        "Gian Carlo Boffa (gcboffa)" <gcboffa@cisco.com>,
-        "Masa
- Kai (mkai2)" <mkai2@cisco.com>,
-        "Satish Kharat (satishkh)"
-	<satishkh@cisco.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 02/13] scsi: fnic: Add and use fnic number
-Thread-Topic: [PATCH v3 02/13] scsi: fnic: Add and use fnic number
-Thread-Index: AQHaF0p6uXPGn2t9xE+tpp//qiyWn7CKTRQzgARhDUA=
-Date: Mon, 27 Nov 2023 20:17:53 +0000
-Message-ID:
- <SJ0PR11MB58960721DF0510FC1CED01F8C3BDA@SJ0PR11MB5896.namprd11.prod.outlook.com>
-References: <20231114223221.633719-1-kartilak@cisco.com>
- <yq1y1emtzok.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1y1emtzok.fsf@ca-mkp.ca.oracle.com>
-Accept-Language: en-US
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7046.21; Mon, 27 Nov
+ 2023 20:23:37 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::3378:bd8c:6ef3:8ee]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::3378:bd8c:6ef3:8ee%4]) with mapi id 15.20.7046.015; Mon, 27 Nov 2023
+ 20:23:37 +0000
+Message-ID: <8eaf4277-04cf-4c01-a96b-760c8fedd5e5@suse.com>
+Date: Mon, 27 Nov 2023 12:23:31 -0800
+User-Agent: Mozilla Thunderbird
+Subject: Re: Possible Bug? LIO does not support SCSI commands with Immediate
+ Bit Set?
 Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SJ0PR11MB5896:EE_|SA2PR11MB4876:EE_
-x-ms-office365-filtering-correlation-id: c9a9d9de-29fb-4720-c5a4-08dbef85ef81
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info:
- i1lP+L8d33N90mbTnsN/3UNcrB4KLjRUjTW6wQCcMXbZ1EFEcWnl240Y+IifiNyoAcxB+XkIXniXg0V/Y/iIF0FclxKVg1saMQ1LPjkCpBIvJqkempj9T8YXSUyxEs4lTTwbJNjezRY5UZQX2TC7KOtZnnftWbRPDaf9aOwjRp48IN+NrEU/St+YPDwRkW4kt8+kNtrJJ2rSQFMp9bUa+5dPBa+ilR/T+LcVT3YSvxpeqhm9vaemqsjRVUFAB4PGMbGtsxBdxncWADbiXL3MA7dBJ6hVSV5psh15eLiYIlkr2JaPy9j7pyUBq2FjdqX5Rn9hvYcK8zZpkSeKrcOpG5q9b349o+cwwbqrGf1jgmCnh6+KsswA6QfJ8HHnF4rf0of+HXQ42AX/BjdpAh84+uvqCpOf/YfVjEQbh4443MnUedLqVQxqzsD5N+6V3qcj9ST6L4MSTj+cOH7HODIeqOavMeKHVSORn7FWH2JujO0HnnswV2dOmZeUFZbLiyJvip0Coy3hi8KFsUv/Ru5dM8NuGFj528nVhbmq5rMft1r1rynvBejNFp/UCAiEDybLnNcO7z8B+vtX1RoCMtShd2HLuSzL9HS+uzE90skuYhleaKIkfY+cDjMRqn3m8V5E
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB5896.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376002)(366004)(396003)(39860400002)(346002)(136003)(230922051799003)(1800799012)(64100799003)(451199024)(186009)(83380400001)(38100700002)(122000001)(4326008)(8936002)(8676002)(9686003)(7696005)(6506007)(71200400001)(55016003)(66476007)(66446008)(66556008)(316002)(6916009)(64756008)(54906003)(66946007)(76116006)(53546011)(5660300002)(52536014)(86362001)(478600001)(4744005)(2906002)(41300700001)(33656002)(38070700009);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?WCBhNHAWNCyUJ+tP4wSWAR3QB+4w+uv3ZL9iNmHZ4nsyryIY3o/GssqI19aW?=
- =?us-ascii?Q?Le60u/9f5boViU5kcJc2ziresrMIV8sqK6tQfxxa8IiqFJh9fDMMTNsy3i66?=
- =?us-ascii?Q?uYtb2gD0Z+KvogEUVJ5cx1FzcnDvBdunwUK9J8lcGY+Po99Y9OhcVNPofGHz?=
- =?us-ascii?Q?PHtBq+reNBQtz80SCxaGUO0ocgapQOry1kFTHBcUkg97ZPvw/xVLo8HeoGw9?=
- =?us-ascii?Q?QyPxsgUiyTwLuQd6Uemv9WC5Q8DRgszzeT12gXXTdkl71dcJCp3rhtNaYFqx?=
- =?us-ascii?Q?O7KdgzYROR7cL1uTvtEv1NVRGZCdt8cVjuzyWB5LFtuCirj/7FrAW+5NwU8J?=
- =?us-ascii?Q?zK9Frwutg655ccfpwnVcZZit/YKVSSz7HtPbXF3Vhl8sZe23ety/27N3BHN6?=
- =?us-ascii?Q?S57s1QyoguBZEzuQxU6GDMxMrTh3MLqeIoVCdSVWpiSizDR8AZpR4ARmJ4nh?=
- =?us-ascii?Q?BGP3WW9nmyPc2Rw7QMNhtY55Et/ruyLZPxH97HjZD/JPyLdo8AKeal9u5Bw7?=
- =?us-ascii?Q?iRBfNJp0dblXnj2Z64ifu8c+Jg0Pd9WY4KrVeeas/AZjlJr9zfO4EYODsEPV?=
- =?us-ascii?Q?63gEX3MWAoICjqhhDrrEHVI0hyJdF3lA1aV/Z0rICiTJi/GSj5jrYkVOTMSU?=
- =?us-ascii?Q?UxpJzip13LNAsSuU/nvxvyc8CTisPuVU6sjD5YF7gIc2CxBFcuw0xxy8RERs?=
- =?us-ascii?Q?i4oYJ3i06kCfGNXCoSBn8UDw7Rp9AG1r1ubFqT9c3fBwCtFWRpL71zwx7ipz?=
- =?us-ascii?Q?7nEgC7AlY7dHpuHf1GKpnofJAtZg6tkwgFpcydRQB9G5E4ni3X4AITrin4CM?=
- =?us-ascii?Q?9KYoqSyAvI7PFzCED5fsgfc52q5+rgqQADpSrLaPDyT5F309hprEPoiDPn1t?=
- =?us-ascii?Q?nuj/crpm4rNHiaFArdYaTq78+cyQqaj2ESrxUoR3mzZobFjH731OWdEVo7Uw?=
- =?us-ascii?Q?TEhCfNCWM/EC1WR+KlvWNGoHTd30Ylu+FY6m5Gr4CoHDYaEHDOXtyQwpUqoi?=
- =?us-ascii?Q?bqoc7mT+Yljv309fZbc2Y/ZyHU9Dw+h4V4/47/LohGHfGmDdJ6BAMw6hnnge?=
- =?us-ascii?Q?7TjvtNKLEGal+jnZgcpfSx/hE83hgw+b/wvSfd2iDzPWRqqFkQTDG8tDltIE?=
- =?us-ascii?Q?MTj6+ByLCjR2uZ1dgQxY5E3NIopw2zBARi2niaGu+mw2Ppi0W6HgkFjvHHUx?=
- =?us-ascii?Q?3bXBDAKdgnv03wJXp/vYxN8ka+RWesrlfFZDh18WYnRaK8brCSO8gZfzSrmL?=
- =?us-ascii?Q?SPC8ANFxA091aMGwkr7JcYextyx5BaQ/mu86KOhwrp6YhgXFZ2Makv9Y2sHh?=
- =?us-ascii?Q?XBsvPJmSla7Dbfg6CY1JgICUfSRyvXJ5wW6UrO3Nl2JWUidS4fguB+/QqkNe?=
- =?us-ascii?Q?SVEe1i0b2Ck3IG8MPp16uyJ8xHNc+wAcke0eAefqqti/WpmOU+zDG3nUsC2u?=
- =?us-ascii?Q?D+Bn2o3Jv+sUNySJXTY2qJBxUbjx/EktI5+oxjfC6O4XY74p1H56XqTODjXJ?=
- =?us-ascii?Q?VFIymZCAPSb7F2JaQqPIsJKRSGSBHi46feEFl411P76A720JAwQE/jwQ5tPb?=
- =?us-ascii?Q?wMdPUYC1JtjWTbWC6OlsPSs8Xgww5eSYhCp120KvOo3c0eYEQJjJ/ZZoPpLy?=
- =?us-ascii?Q?h+9SHpX3RqClCDRerCl8VZ8=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+To: Mike Christie <michael.christie@oracle.com>,
+ Hannes Reinecke <hare@suse.de>, target-devel <target-devel@vger.kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi <linux-scsi@vger.kernel.org>, Chris Leech <cleech@redhat.com>
+References: <31851279-0884-48ba-8c4b-7d6147e59508@suse.com>
+ <00eb0928-5691-4e85-a923-de9c4934856c@suse.de>
+ <5301e42d-7fad-49e1-8ebd-7db569416974@oracle.com>
+From: Lee Duncan <lduncan@suse.com>
+In-Reply-To: <5301e42d-7fad-49e1-8ebd-7db569416974@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: FR4P281CA0224.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:e4::14) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: cisco.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM5PR04MB3089:EE_|DB9PR04MB8124:EE_
+X-MS-Office365-Filtering-Correlation-Id: f7c269c3-5931-493a-d0f6-08dbef86bc84
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	3m85shM06/xKcL/O5nnmM/Q1cDuJrA/E3Ut9GtFg2xivc4Hmz2fVU5u9JsVQOiKT6U8/pK95OAfXluSLDRkOTTIuWEtwuxOqb2YcOrs+Y3tvBkEHd1+d3usFDCwRGCQs02igBABiUFkDcJFyY/tQQPRc1ARRqhLXjLojP5hrYl6Jxjscg+JqjKfXoalMHI9y3cD3jihw+Reduk+lgL2PYDx7gbRaF7jXDcECPVxIOIHmRItLgeTy6+ansBr//7b+bQwPijxeNO6Sys+ldQN+FjICcmjNvnlU6n5NmqMAknFrwi0b+jukfKsOKr93cQW2RL1lJ2gbLJwpbeIdrds02ZlJxduT2tXq8Cb4OKYk9wBIgAhodNoaTPsEQP3UByIqztsCYGPnTHBhwXkcv6xHjDVhdCsJwsIihczKmI82L38OyVzg7ktBW0LNtkUl8AJibw55zFanT4doPaw5VL032uB2VVBEwkkyOL8WzyzHMAXFP9N7jkxpZ5e0mjU+FA5HlO20+clJEB2aS2mbQko9a7YzCQLMjAgsxureFL4MB76Mf2QDAQNGbDrno+9A+4y2xvJTKY7Y5kwrw/bv4QRDm3mTU9uM4vO2v+5W7h2EBy//zfTNR4PSNu13ygh2m0/ZD7sbVAIL9dWMje+4brzXuBYP7xRdHXq4L1JHfQHHjHI=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(39860400002)(376002)(396003)(346002)(136003)(230922051799003)(186009)(1800799012)(64100799003)(451199024)(2906002)(31686004)(41300700001)(66946007)(110136005)(53546011)(6512007)(8676002)(54906003)(316002)(8936002)(66476007)(66556008)(6486002)(4326008)(6506007)(6666004)(478600001)(5660300002)(2616005)(26005)(83380400001)(38100700002)(86362001)(31696002)(14773004)(36756003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?OFBkYVdjd0YxTVhRaTljTU95cE9Ja1ovSGFmbExwTEdHajlxTy9FL3IrZkZF?=
+ =?utf-8?B?bEViMkswdDFoQ29sUzBOZUx1cFVLN3Ftd2diU3dpUUd0eWFXS01nSHNrYzhS?=
+ =?utf-8?B?TlZtTk5na3g5Y0RORklmVEJtMkdlYUhyL25TNTdSQVp1dkhnb3JxcHA5V2NJ?=
+ =?utf-8?B?ckc0dG9vQ3ZnN3VETDRnWFhkVjU0eVAwWnNEK2FvSkZEa0pEeFloNUdCY0hn?=
+ =?utf-8?B?QmZrYitZakpxZHN4aWVpdXRDalhIZWV4V2pUTFJjdm84Zmd0Uk5OVHVXOFRj?=
+ =?utf-8?B?QjNOakkzSzJFVjFHaDRrQlNicmdOeldNMkoyNEdDeDFDWmg0V0duMGtqdDN6?=
+ =?utf-8?B?T0VBaEJRaWZjcGVYY1M3ajR2QkNWVE9XeE9hNllCcmYyTkF4RWMxTHhqN2Rj?=
+ =?utf-8?B?MW1LM0VJV0c4eGpDWjNJNTFaNi8xTEYveGdVU2RHV1RMczFkSFlvYkd5WEtB?=
+ =?utf-8?B?eG9BZ1grK1NzOERGR2tmMkprUlJydXJ2RGJHY25yTGFzWXhHTHl6eWQvZEw1?=
+ =?utf-8?B?eER1eUhGTUg3MGxpSlBwc3pNQk9aOStEdDdMWFhaT3gxTld2YlJWWkxoSjBz?=
+ =?utf-8?B?TmJBR1pvNUVUVWovaExBZWk0a1pjVzhyemdYTDgvQVJpYU9uK2lmYmV0TUZ4?=
+ =?utf-8?B?dS8rNjE2UjdwbVAzckJwbEh5RHByR1Y3YTQ0U3A0TitsamRWT0h6TGxJK09E?=
+ =?utf-8?B?a3BGY2Ewd3RpaWhJKzhwa3RCNGcxNGNsMFNsN3ZKcTZWaWc4bC8rY2lkam1m?=
+ =?utf-8?B?c1BZK3NPMHlsdVc4eFRmTjFCZjEyRGpsWTI1NDdXbjNwM0cwbFJBYml6WVg4?=
+ =?utf-8?B?cVg5bzNrVlhkdVRhMlVLR2RpaGxDOG5kQU5lMDZkN0VLZ1RKMml3Z0o0THRk?=
+ =?utf-8?B?ZHoxSTdpTGhvTUZyU0JjK2FpdDJoNVFhaHVWTC9iMzZRNU50TW14ZUtDdWlX?=
+ =?utf-8?B?WUg1MHozVGJYNnFGRlNPZ1lsTHVVZEFrUmR6c25Qd09SQVp5SllTMHVYV2pl?=
+ =?utf-8?B?MERrQkNneG5xeDJZVXdxTUNLcTJLalJlcmc2SjN4YitoaXlWb2I5ZkpYS2xl?=
+ =?utf-8?B?K0RmY1lvdnNnVHgwRUgzQ25sUDl6enUxd1MvZ3hRTm1HYTJNZjdiMjlrWmNG?=
+ =?utf-8?B?bWU5dW51dFRTZHUvSno0NUdKVFBhMWFUL091V0pRSkcyNW51MWFDS1pxM3VT?=
+ =?utf-8?B?VUVFSEtvUmRsdmJFdlNQbWVwYk5WNktTSFFKZjdWMDJVaHlQVHJpc0hVS2pt?=
+ =?utf-8?B?a3JqaGpEbmxaNXMzNFRqMk52bWk4ZTltdTJhV2ZrWmJTbUVrcjZDRjJLc2FR?=
+ =?utf-8?B?UkNBVnArTVpaU2JlYWN3eFlkY2RGM0xEWlB5ay9rM0xzeTN6N3h4Q1h5UXF2?=
+ =?utf-8?B?SklQYUNhZ1QxUEFlbDA4a0NnRndPU3d0N05sSHRMSDlYREZzMnRkYWFiSDQ0?=
+ =?utf-8?B?SEl6SGVmUXZtRkwwcHBDNjdoQWF5M3FRQ1ZRb0hYWU5PRFZ4TzFwWVMzZXZT?=
+ =?utf-8?B?ZUZXaVNTSjlhbWVham5GTVh5TUpacjVNYy92N0R4Wms5NWk2YXpLQUJKNkFP?=
+ =?utf-8?B?N1Vka3J2aVp5VUU3Um9QVGZSNkorbG96RitJaTZMWmhtM09MRFpqNVFzSmNm?=
+ =?utf-8?B?WU1OTkVpZDZNcnB0Vy9GblRSU0xOT2VOK0ovbFRpQ3RtemE3bE5PTVZpTHN4?=
+ =?utf-8?B?bmYvY0tWa05xRzlrdnk0VWp2OFAxejhLNnFVNWVHM29sbXh0ODBBSXppakFV?=
+ =?utf-8?B?NXF1UGs5c0lOT0VvU2t1clNwMmJUVXhyd2VTaUkrczlsRFVEbEQ2bVpYVk9B?=
+ =?utf-8?B?UmtEWkROOHJNTU1udG9heUdoeS9uOEp0YUQxakpuMHJVS2I0UVlFaG1qV3hJ?=
+ =?utf-8?B?UU5Gb0Q0RGR5eWZhcmhmVGE2dE1TVUlySzhzbWkrRzRlL2N4V0dDZ2F0a0dN?=
+ =?utf-8?B?YWNrMEpHanZSdGo2K3lWOGY1a3h4Lys4QmU3UlRkVnFkUk9EMkQ4NFkzbG1Q?=
+ =?utf-8?B?WnB5VGRBbUJnYXF4SVB5RXhULzJKWk1Mbk4rcFlOako0SHVtTVVQajZFSnNM?=
+ =?utf-8?B?U0VDMVRTa3hhV1ZWamZPUS9ZRUdKYW52YXkwd05JeHBnbkRSL1Jaa0xyZnpy?=
+ =?utf-8?Q?xJDKcGThFoQfocg7cQtZulLBL?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f7c269c3-5931-493a-d0f6-08dbef86bc84
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB5896.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c9a9d9de-29fb-4720-c5a4-08dbef85ef81
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Nov 2023 20:17:53.0662
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Nov 2023 20:23:37.1550
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5ae1af62-9505-4097-a69a-c1553ef7840e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: YnKOn1SvthNabVIsXsgg0GKLLkjWDH8ejAmevO0EdWFMhUWM+SlSBkKdleIxUMaqeTrmapm4nj0zmI2MlJe8Nw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB4876
-X-Outbound-SMTP-Client: 173.37.147.229, alln-opgw-1.cisco.com
-X-Outbound-Node: rcdn-core-4.cisco.com
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Zx3T5uYVuCGj3R4wDUswO4bFbe0Nnf9rRCyUKKvsSO2reyPl8haku0pLFjOyWDEllZqDabr8mnkEaxine/q/ww==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB8124
 
-On Friday, November 24, 2023 5:22 PM, Martin K. Petersen <martin.petersen@o=
-racle.com> wrote:
->
->
-> Hi Karan,
->
-> > Add fnic_num in fnic.h to identify fnic in a multi-fnic environment.
-> > Increment and set the fnic number during driver load in fnic_probe.
-> > Replace the host number with fnic number in debugfs.
->
-> I agree with Hannes. Everything else in the stack will be using the host =
-number. Your change will make it harder to correlate a SCSI error message t=
-o an fnic driver instance.
->
-> If you absolutely need an instance number I suggest you add it as an orth=
-ogonal value instead replacing the host. Also, we typically use an idr for =
-enumerating things like this.
->
+On 11/26/23 16:39, Mike Christie wrote:
+> On 11/26/23 6:01 AM, Hannes Reinecke wrote:
+>> On 11/25/23 19:28, Lee Duncan wrote:
+>>> Hi Martin/list:
+>>>
+>>> I am trying to track down an issue I am seeing when trying to boot using iSCSI root using the fastlinq qedi converged network adapter initiator and an LIO target.
+>>>
+>>> In this configuration, but using a non-LIO (hardware) iSCSI target, everything "just works". But when I switch to using an LIO software target, I get this error when booting:
+>>>
+>>>> 2023-09-20T14:10:32.835358-0500 worker5 kernel: Illegally set Immediate Bit in iSCSI Initiator Scsi Command PDU.
+>>>> ... > 2023-09-20T14:10:32.835422-0500 worker5 kernel: Got unknown iSCSI
+>>> OpCode: 0x52
+>>>
+>>> It looks like the fastlinq adapter is sending a SCSI write (0x12) with the Immediate bit set (0x40).
+>>>
+>>> The code in iscsi_target.c:iscsit_setup_scsi_cmd(): looks like this:
+>>>
+>>>>      if (hdr->opcode & ISCSI_OP_IMMEDIATE) {
+>>>>          pr_err("Illegally set Immediate Bit in iSCSI Initiator"
+>>>>                  " Scsi Command PDU.\n");
+>>>>          return iscsit_add_reject_cmd(cmd,
+>>>>                           ISCSI_REASON_BOOKMARK_INVALID, buf);
+>>>>      }
+>>>>
+>>>
+>>> But I looked at rfc3720, and it looks like SCSI PDUs can have the Immediate Bit set:
+>>>
+>>>> 10.3.  SCSI Command
+>>>>     The format of the SCSI Command PDU is:
+>>>>     Byte/     0       |       1       |       2       |       3       |
+>>>>        /              |               |               |               |
+>>>>       |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+>>>>       +---------------+---------------+---------------+---------------+
+>>>>      0|.|I| 0x01      |F|R|W|. .|ATTR | Reserved                      |
+>>>>       +---------------+---------------+---------------+---------------+
+>>>>      4|TotalAHSLength | DataSegmentLength                             |
+>>>>       +---------------+---------------+---------------+---------------+
+>>>>      8| Logical Unit Number (LUN)                                     |
+>>>>       +                                                               +
+>>>>     12|                                                               |
+>>>>       +---------------+---------------+---------------+---------------+
+>>>> ...
+>>>
+>>> Where "I" is the immediate bit.
+>>>
+>>> Frankly, I'm never sure I read the SPEC correctly, so I'm not sure if I'm mistaken here, but it looks like LIO does not allow the Immediate bit (and hence Immediate data), even though the SPEC does allow it. But it also looks like, during negotiation phase, LIO negotiates ImmediateData like any other parameter, allowing "YES".
+>>>
+>>> In our testing, if we set ImmediateData=No in the target, then our problem goes away, i.e. we can now boot from an LIO target. This is because Immediate Data is negotiated off, of course.
+>>>
+>>> Is this a bug, or is this adapter doing something wrong? I would appreciate other viewpoints.
+>>>
+>>> Thank you.
+>>
+>> Sounds like a bug.
+>> Can you check if this helps?
+>>
+>> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+>> index b516c2893420..ad68706ad9f7 100644
+>> --- a/drivers/target/iscsi/iscsi_target.c
+>> +++ b/drivers/target/iscsi/iscsi_target.c
+>> @@ -1060,7 +1060,8 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+>>
+>> ISCSI_REASON_BOOKMARK_INVALID, buf);
+>>          }
+>>
+>> -       if (hdr->opcode & ISCSI_OP_IMMEDIATE) {
+>> +       if ((hdr->opcode & ISCSI_OP_IMMEDIATE) &&
+>> +           !conn->sess->sess_ops->ImmediateData) {
+>>                  pr_err("Illegally set Immediate Bit in iSCSI Initiator"
+>>                                  " Scsi Command PDU.\n");
+>>                  return iscsit_add_reject_cmd(cmd,
+>>
+> 
+> 
+> These are different things.
+> 
+> Immediate data means you can have data after the header in the PDU.
+> 
+> The immediate bit on the header has CmdSN rules which allows you to
+> send commands without having to increment the CmdSN. It's used for
+> things like TMFs because at that time, the window might be closed due
+> to SCSI commands having filled it.
+> 
 
-Thanks for your review and comments, Martin.
+Mike: it sounds like that implies that setting the immediate bit in the 
+header is actually not allowed for regular SCSI PDUs (like Read, Write), 
+correct?
 
-I understand the issue. I'll take your suggestion about adding the fnic ins=
-tance number as an orthogonal value instead of replacing the host number.
-Could you please help me understand what is meant by "idr"? How can I use i=
-t?
-
-Regards,
-Karan
+-- 
+Lee
