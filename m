@@ -1,90 +1,177 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F3DC1B4;
-	Mon, 27 Nov 2023 11:35:51 -0800 (PST)
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6cbe6d514cdso3676523b3a.1;
-        Mon, 27 Nov 2023 11:35:51 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701113750; x=1701718550;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=l65xiZa5Zlgpg9GJQ4HILx5uG5sfJyEkxP1hRRGfpG8=;
-        b=r5RtZ8vWkhheNrAqc93Y5ialR/WV4Ea7nyddQ+hrpX+aKbdvnnDLYKEEIlr7JuyY75
-         KQ2+nuWC9lAb2ioV6US4v3C1di3+oyGWjuBnymBr2Hnl+aJrJu3GeumyYzBKlDtsqKRv
-         LpsCYMWWrFcSnkyNfVJx8PCOp9lpkLAaCEk+0rCNjfJ9iYpPav2xvCk5tWFealK+kvWS
-         IRjow5zc8qQQMnDzYb1HgOrPXqBZQynZzsJjTlflWmaPFqDU+kJ8Q37ZlErjKpyPK7MC
-         ZgfI3DCMYXduj/XOVmfaVSN1C7sWNIHMSw+cp3Kjc0IpZHzbtowrA/fytEiVvLA6LoKg
-         5cPg==
-X-Gm-Message-State: AOJu0YyxqqS49JkD4c1Anpm6qXBX/y/dnBD+4vTYONYGr1Q38/jw5w4u
-	4Gv7A5kmjshPKwPVTCQOBeQ=
-X-Google-Smtp-Source: AGHT+IFbSHyTUNE0OorjeJLsHDvy1ugTcNLJdJ/t+hAQimdgdh4kOi+s550JvIZtxMrc/SHoxZZoRA==
-X-Received: by 2002:a05:6a00:3988:b0:68e:2f6e:b4c0 with SMTP id fi8-20020a056a00398800b0068e2f6eb4c0mr13409383pfb.28.1701113750302;
-        Mon, 27 Nov 2023 11:35:50 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:c7c5:cabf:7030:2d30? ([2620:0:1000:8411:c7c5:cabf:7030:2d30])
-        by smtp.gmail.com with ESMTPSA id fh20-20020a056a00391400b006bb5ff51177sm7540123pfb.194.2023.11.27.11.35.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Nov 2023 11:35:49 -0800 (PST)
-Message-ID: <a9748872-0608-4ab9-8986-a82eff17ca9f@acm.org>
-Date: Mon, 27 Nov 2023 11:35:48 -0800
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="X7+3syIm"
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33E01B8;
+	Mon, 27 Nov 2023 11:45:57 -0800 (PST)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3ARGbiZS003734;
+	Mon, 27 Nov 2023 19:41:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=EaIoIEqK046xrMwErk4Ckbwbd3NmBlrraNfZlHWUlAA=;
+ b=X7+3syImP2B2I6CIg+VZtncwrhMS/C36LuUy/eyEshE0FUScJcy6IRvkwzZ8dVwpDCqL
+ vHA7cK/NxuecXdfFQai65ejXCsyK2li7FUVT/UnEQuTc8bpAv9CDn9x7IYUNFZfqvJ3P
+ TcvN/YzHnAFqulwTM4P1qdBEibsiPc5ORbHpEFZPR86M+eai1vtjo9qVuqlY0BLmkqNj
+ n6S4BQjzKXlSk7xIdinU9FWEcdYn7+t+V0HDe2WzpRR3T6O2hi/SgNqHepLgMqRzQK9p
+ j5R/lJvvBQQxjrU7N1n9ONVos1pUlVuxHrTLgc2TSf/h3XBvlM9lQXjBl6LX7ZlpfI+3 Kg== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3umrqq1kbr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 27 Nov 2023 19:41:05 +0000
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3ARJf4c1026517
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 27 Nov 2023 19:41:04 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 27 Nov
+ 2023 11:41:00 -0800
+Message-ID: <c6a72c38-aa63-79b8-c784-d753749f7272@quicinc.com>
+Date: Tue, 28 Nov 2023 03:40:57 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 00/19] Improve write performance for zoned UFS devices
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH] scsi: ufs: qcom: move ufs_qcom_host_reset() to
+ ufs_qcom_device_reset()
 Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>
-References: <20231114211804.1449162-1-bvanassche@acm.org>
- <20231127070939.GB27870@lst.de>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231127070939.GB27870@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Can Guo <quic_cang@quicinc.com>, Manivannan Sadhasivam <mani@kernel.org>
+CC: <quic_asutoshd@quicinc.com>, <bvanassche@acm.org>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
+        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
+        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson
+	<andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        "James E.J.
+ Bottomley" <jejb@linux.ibm.com>,
+        "open list:ARM/QUALCOMM SUPPORT"
+	<linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1698145815-17396-1-git-send-email-quic_ziqichen@quicinc.com>
+ <20231025074128.GA3648@thinkpad>
+ <85d7a1ef-92c4-49ae-afe0-727c1b446f55@quicinc.com>
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <85d7a1ef-92c4-49ae-afe0-727c1b446f55@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: kXOZ0pAZNqg7YjH4R0nJZIrZROTf-Uiy
+X-Proofpoint-GUID: kXOZ0pAZNqg7YjH4R0nJZIrZROTf-Uiy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-27_18,2023-11-27_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ lowpriorityscore=0 mlxscore=0 adultscore=0 phishscore=0 bulkscore=0
+ suspectscore=0 mlxlogscore=999 spamscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2311060000
+ definitions=main-2311270136
 
-On 11/26/23 23:09, Christoph Hellwig wrote:
-> I still think it is a very bad idea to add this amount of complexity to
-> the SCSI code, for a model that can't work for the general case and
-> diverges from the established NVMe model.
 
-Hi Christoph,
 
-Here is some additional background information:
-* UFS vendors prefer the SCSI command set because they combine it with the
-   M-PHY transport layer. This combination is more power efficient than NVMe
-   over PCIe. According to the information I have available power consumption
-   in the M-PHY hibernation state is lower than in the PCIe L2 state. I have
-   not yet heard about any attempts to combine the NVMe command set with the
-   M-PHY transport layer. Even if this would be possible, it would fragment
-   the mobile storage market. This would increase the price of mobile storage
-   devices which is undesirable.
-* I think that the "established NVMe model" in your email refers to the NVMe
-   zone append command. As you know there is no zone append in the SCSI ZBC
-   standard.
-* Using the software implementation of REQ_OP_ZONE_APPEND in drivers/scsi/sd_zbc.c
-   is not an option. REQ_OP_ZONE_APPEND commands are serialized by that
-   implementation. This serialization is unavoidable because a SCSI device
-   may respond with a unit attention condition to any SCSI command. Hence,
-   even if REQ_OP_ZONE_APPEND commands are submitted in order, these may be
-   executed out-of-order. We do not want any serialization of SCSI commands
-   because this has a significant negative performance impact on IOPS for UFS
-   devices. The latest UFS devices support more than 300 K IOPS.
-* Serialization in the I/O scheduler of zoned writes also reduces IOPS more
-   than what is acceptable.
+On 11/22/2023 2:14 PM, Can Guo wrote:
+> 
+> 
+> On 10/25/2023 3:41 PM, Manivannan Sadhasivam wrote:
+>> On Tue, Oct 24, 2023 at 07:10:15PM +0800, Ziqi Chen wrote:
+>>> During PISI test, we found the issue that host Tx still bursting after
+>>
+>> What is PISI test?
 
-Hence the approach of this patch series to support pipelining of zoned writes
-even if no I/O scheduler has been configured.
+SI measurement.
 
-I think the amount of complexity introduced by this patch series in the SCSI
-core is reasonable. No new states are introduced in the SCSI core. A single
-call to a function that reorders pending SCSI commands is introduced in the
-SCSI error handler (scsi_call_prepare_resubmit()).
+>>
+>>> H/W reset. Move ufs_qcom_host_reset() to ufs_qcom_device_reset() and
+>>> reset host before device reset to stop tx burst.
+>>>
+>>
+>> device_reset() callback is supposed to reset only the device and not 
+>> the host.
+>> So NACK for this patch.
+> 
+> Agree, the change should come in a more reasonable way.
+> 
+> Actually, similar code is already there in ufs_mtk_device_reset() in 
+> ufs-mediatek.c, I guess here is trying to mimic that fashion.
+> 
+> This change, from its functionality point of view, we do need it, 
+> because I occasionally (2 out of 10) hit PHY error on lane 0 during 
+> reboot test (in my case, I tried SM8350, SM8450 and SM8550， all same).
+> 
+> [    1.911188] [DEBUG]ufshcd_update_uic_error: UECPA:0x80000002
+> [    1.922843] [DEBUG]ufshcd_update_uic_error: UECDL:0x80004000
+> [    1.934473] [DEBUG]ufshcd_update_uic_error: UECN:0x0
+> [    1.944688] [DEBUG]ufshcd_update_uic_error: UECT:0x0
+> [    1.954901] [DEBUG]ufshcd_update_uic_error: UECDME:0x0
+> 
+> I found out that the PHY error pops out right after UFS device gets 
+> reset in the 2nd init. After having this change in place, the PA/DL 
+> errors are gone.
 
-Thanks,
+Hi Mani,
 
-Bart.
+There is another way that adding a new vops that call XXX_host_reset() 
+from soc vendor driver. in this way, we can call this vops in core layer 
+without the dependency of device reset.
+due to we already observed such error and received many same reports 
+from different OEMs, we need to fix it in some way.
+if you think above way is available, I will update new patch in soon. Or 
+could you give us other suggestion?
+
+-Ziqi
+
+> 
+> Thanks,
+> Can Guo.
+>>
+>> - Mani
+>>
+>>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+>>> ---
+>>>   drivers/ufs/host/ufs-qcom.c | 13 +++++++------
+>>>   1 file changed, 7 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>>> index 96cb8b5..43163d3 100644
+>>> --- a/drivers/ufs/host/ufs-qcom.c
+>>> +++ b/drivers/ufs/host/ufs-qcom.c
+>>> @@ -445,12 +445,6 @@ static int ufs_qcom_power_up_sequence(struct 
+>>> ufs_hba *hba)
+>>>       struct phy *phy = host->generic_phy;
+>>>       int ret;
+>>> -    /* Reset UFS Host Controller and PHY */
+>>> -    ret = ufs_qcom_host_reset(hba);
+>>> -    if (ret)
+>>> -        dev_warn(hba->dev, "%s: host reset returned %d\n",
+>>> -                  __func__, ret);
+>>> -
+>>>       /* phy initialization - calibrate the phy */
+>>>       ret = phy_init(phy);
+>>>       if (ret) {
+>>> @@ -1709,6 +1703,13 @@ static void ufs_qcom_dump_dbg_regs(struct 
+>>> ufs_hba *hba)
+>>>   static int ufs_qcom_device_reset(struct ufs_hba *hba)
+>>>   {
+>>>       struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>>> +    int ret = 0;
+>>> +
+>>> +    /* Reset UFS Host Controller and PHY */
+>>> +    ret = ufs_qcom_host_reset(hba);
+>>> +    if (ret)
+>>> +        dev_warn(hba->dev, "%s: host reset returned %d\n",
+>>> +                  __func__, ret);
+>>>       /* reset gpio is optional */
+>>>       if (!host->device_reset)
+>>> -- 
+>>> 2.7.4
+>>>
+>>
