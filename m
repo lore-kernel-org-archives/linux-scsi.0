@@ -1,16 +1,16 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
 Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0457219B;
-	Sun, 26 Nov 2023 22:23:32 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B90D137;
+	Sun, 26 Nov 2023 22:23:38 -0800 (PST)
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SdwWd0PRcz4f3m7Z;
-	Mon, 27 Nov 2023 14:23:25 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SdwWl30T2z4f3mHW;
+	Mon, 27 Nov 2023 14:23:31 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 6B4161A0A5F;
-	Mon, 27 Nov 2023 14:23:29 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id C4ADB1A0E87;
+	Mon, 27 Nov 2023 14:23:35 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgBXWhDeNWRlxeA8CA--.60190S4;
-	Mon, 27 Nov 2023 14:23:28 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBXWhDeNWRlxeA8CA--.60190S7;
+	Mon, 27 Nov 2023 14:23:34 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@infradead.org,
 	ming.lei@redhat.com,
@@ -68,10 +68,12 @@ Cc: linux-block@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH block/for-next v2 10/16] erofs: use new helper to get inode from block_device
-Date: Mon, 27 Nov 2023 14:22:46 +0800
-Message-Id: <20231127062252.2367645-1-yukuai1@huaweicloud.com>
+Subject: [PATCH block/for-next v2 13/16] jbd2: use new helper to get inode from block_device
+Date: Mon, 27 Nov 2023 14:22:49 +0800
+Message-Id: <20231127062252.2367645-4-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231127062252.2367645-1-yukuai1@huaweicloud.com>
+References: <20231127062252.2367645-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -79,23 +81,24 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBXWhDeNWRlxeA8CA--.60190S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrKw1rtr4DGw4UtFy3tr4DCFg_yoW3XFg_ZF
-	yxArW8W3y3J34fta95C3WrZr1vga1F9F409FWUJrZ8WFyUJrZ5ZrZrJ3WxJrs7WwsrKFZ8
-	AFsxWF47tryrXjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbxkFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j
-	6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxa
-	n2IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
-	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWrXVW8Jr1l
-	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxV
-	AFwI0_Cr1j6rxdMIIF0xvE42xK8VAvwI8IcIk0rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_
-	Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVWxJr0_GcJvcSsGvfC2KfnxnUUI43ZEXa7VU1
-	VOJ5UUUUU==
+X-CM-TRANSID:cCh0CgBXWhDeNWRlxeA8CA--.60190S7
+X-Coremail-Antispam: 1UD129KBjvJXoW7KFWUJF45XF1kJF1UAF1UWrg_yoW8Gr1xpr
+	y7GF98Ca98Zry8tFn7GF4vqrWjqa4I9FWUCr1kuwnYywsxJr12vw18KrnxGa4YyFWvqayF
+	qr1jv3y8G3yYgrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr1j6rxdM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+	vE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWrXVW8Jr1lIxkGc2
+	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+	Cr1j6rxdMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJw
+	CI42IY6I8E87Iv6xkF7I0E14v26F4UJVW0obIYCTnIWIevJa73UjIFyTuYvjfUFfHUDUUU
+	U
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
@@ -105,22 +108,37 @@ Which is more efficiency, and also prepare to remove the field
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- fs/erofs/data.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/jbd2/journal.c  | 3 ++-
+ fs/jbd2/recovery.c | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/erofs/data.c b/fs/erofs/data.c
-index 029c761670bf..85d490b3b53d 100644
---- a/fs/erofs/data.c
-+++ b/fs/erofs/data.c
-@@ -70,7 +70,7 @@ void erofs_init_metabuf(struct erofs_buf *buf, struct super_block *sb)
- 	if (erofs_is_fscache_mode(sb))
- 		buf->inode = EROFS_SB(sb)->s_fscache->inode;
- 	else
--		buf->inode = sb->s_bdev->bd_inode;
-+		buf->inode = bdev_inode(sb->s_bdev);
- }
+diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
+index ed53188472f9..e2d034cc9dc0 100644
+--- a/fs/jbd2/journal.c
++++ b/fs/jbd2/journal.c
+@@ -2003,7 +2003,8 @@ static int __jbd2_journal_erase(journal_t *journal, unsigned int flags)
+ 		byte_count = (block_stop - block_start + 1) *
+ 				journal->j_blocksize;
  
- void *erofs_read_metabuf(struct erofs_buf *buf, struct super_block *sb,
+-		truncate_inode_pages_range(journal->j_dev->bd_inode->i_mapping,
++		truncate_inode_pages_range(
++				bdev_inode(journal->j_dev)->i_mapping,
+ 				byte_start, byte_stop);
+ 
+ 		if (flags & JBD2_JOURNAL_FLUSH_DISCARD) {
+diff --git a/fs/jbd2/recovery.c b/fs/jbd2/recovery.c
+index 01f744cb97a4..7774efe872e8 100644
+--- a/fs/jbd2/recovery.c
++++ b/fs/jbd2/recovery.c
+@@ -309,7 +309,7 @@ int jbd2_journal_recover(journal_t *journal)
+ 	}
+ 
+ 	wb_err = 0;
+-	mapping = journal->j_fs_dev->bd_inode->i_mapping;
++	mapping = bdev_inode(journal->j_fs_dev)->i_mapping;
+ 	errseq_check_and_advance(&mapping->wb_err, &wb_err);
+ 	err = do_one_pass(journal, &info, PASS_SCAN);
+ 	if (!err)
 -- 
 2.39.2
 
