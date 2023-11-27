@@ -1,71 +1,163 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C13E8D5D;
-	Mon, 27 Nov 2023 11:00:29 -0800 (PST)
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-5be30d543c4so3235804a12.2;
-        Mon, 27 Nov 2023 11:00:29 -0800 (PST)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JjWOEbJh"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D3EAD5F
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Nov 2023 11:01:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1701111704;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gO0T4YIb/aiZyC/La5KMLP70bNSf/D+FzfSC/oD3+pQ=;
+	b=JjWOEbJhV61l1v31ko/DF0CppwT4Zz9P1J74f0bjBexisnzHsh6TRQhDk/inb91dECl/Bq
+	ju5ZVgd3ek9IliIiIZGqroi3HYsMQkClzidNNdu8Uf1gpkhZKlG2/QAseDFEs5DnXfTfFc
+	cRxsdQ/zHetWVXkXfmJOJVqgoIMvdpI=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-154-jarMgjwLO3qUvZfDKbeD8g-1; Mon, 27 Nov 2023 14:01:41 -0500
+X-MC-Unique: jarMgjwLO3qUvZfDKbeD8g-1
+Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-67a1d6648d9so37009256d6.3
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Nov 2023 11:01:40 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701111629; x=1701716429;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eF2GAnwCh5Wl+Gbs8aDczVuuiH/00RAFmCz4QwFQh9Q=;
-        b=AmNzsn3H1Zu9ZWWEW0TCY1TDJAhsIpaaP4NKzSQuZtb+0mY51le+qWDMPYb1AgnY3v
-         gCQ63q0fCkBQu9cglCXiUqzbMGSPvQpOcfsar9LVbF0qTRhE+96TR8yWMpMf0wSmSBTT
-         Tu/1SyndsMG+SbshNcb+AlmSZNkuX5eFRh2hc1+oW4lh6FH4ZbggWqJ+2mwfMx0u9ZQn
-         MKPqNDD9ixzU5g+jP08efljeTTJ1qRVZvTZ5Y4hPMmajBtqKaLRXUQcYfDOyOWV8a3G8
-         dGDqQOT/rZGr8qmS6M+QMzHYun8pJ+HlTcT7ejNOsg0OU9G4dVltL8CkdQlNypxNQlQ0
-         m+Kw==
-X-Gm-Message-State: AOJu0Yx7JoUQNG0C50FctRpl2QYGudhLnKE3AgDchlenxjI/QinoKjFE
-	WYWMajBkj2LwTyDcqwra5Mg=
-X-Google-Smtp-Source: AGHT+IFKgEY8d51UqToBG4tJWu9dmlT0UGoTXo4O4PcHe/ONPOxFBj02ypg61y1wM7FhoDCaZPDbBQ==
-X-Received: by 2002:a05:6a20:a129:b0:18c:ba47:74e7 with SMTP id q41-20020a056a20a12900b0018cba4774e7mr2389404pzk.52.1701111628967;
-        Mon, 27 Nov 2023 11:00:28 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:c7c5:cabf:7030:2d30? ([2620:0:1000:8411:c7c5:cabf:7030:2d30])
-        by smtp.gmail.com with ESMTPSA id s1-20020a62e701000000b006c1221bc58bsm7442392pfh.115.2023.11.27.11.00.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Nov 2023 11:00:28 -0800 (PST)
-Message-ID: <eadc84c5-5f73-499a-8c3e-eb5bfbc67ed1@acm.org>
-Date: Mon, 27 Nov 2023 11:00:26 -0800
+        d=1e100.net; s=20230601; t=1701111700; x=1701716500;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gO0T4YIb/aiZyC/La5KMLP70bNSf/D+FzfSC/oD3+pQ=;
+        b=rOta3Rc6evZJC2bVqhcEvH0yY8y9//UhxOKQ3XXz86zYLL3kQM3aMWME/rApaRi0kI
+         AsTEgE8nbA6zS0mErfJANNzdCRKh0TFzx45vXIk8YOrNLF/Jwq7Bo8o2PhavSWjbdHBA
+         uLC94Cka4SF5GH7eTHNhmAUpac8/DRxyewIfaCeU5VDe0kUlcK92lXb0mhv+ZGJqYFsW
+         awQbaL9CgwJhAr+IQbQBwBp50IG/4Q9GdbeRfuW8FlWmlcd6jRMTOfqBz+z825S7YuOZ
+         7Tz+4DUePunw5v4O3bnQQPcRQxqt/TgCHL8SmGpB1dvBm0XIS1D8aZZwWBHM72oG7jU0
+         wjgQ==
+X-Gm-Message-State: AOJu0YxNmGQsMZKPNnjZ7cnIYzUyzl4ODrrJZz/opOZogSPHhco/eZg4
+	iWJAAkQ4e2QWYnOTzXqqbZ8bhVhndR6b2yZn4QKWRaMtstgOc5hDZwChfbcGByGGcZQlYjXwRRw
+	WEuwsfF1NXHvuPD3SidrySQ==
+X-Received: by 2002:a05:6214:892:b0:67a:3efb:df5f with SMTP id cz18-20020a056214089200b0067a3efbdf5fmr5563794qvb.0.1701111700212;
+        Mon, 27 Nov 2023 11:01:40 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGHLH4rgLgsmN5tGO2pWmQzu52awRS6bcFCJWOeTNESTpDcYEl0kKZtZ7+GtPWGiFENKGDLkA==
+X-Received: by 2002:a05:6214:892:b0:67a:3efb:df5f with SMTP id cz18-20020a056214089200b0067a3efbdf5fmr5563756qvb.0.1701111699880;
+        Mon, 27 Nov 2023 11:01:39 -0800 (PST)
+Received: from ?IPv6:2600:6c64:4e7f:603b:7f10:16a0:5672:9abf? ([2600:6c64:4e7f:603b:7f10:16a0:5672:9abf])
+        by smtp.gmail.com with ESMTPSA id 10-20020ad45baa000000b0067a21a7397bsm2997914qvq.12.2023.11.27.11.01.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Nov 2023 11:01:39 -0800 (PST)
+Message-ID: <c15d1412826033922009a4475587b028a67f9abc.camel@redhat.com>
+Subject: Re: Possible Bug? LIO does not support SCSI commands with Immediate
+ Bit Set?
+From: Laurence Oberman <loberman@redhat.com>
+To: Mike Christie <michael.christie@oracle.com>, Hannes Reinecke
+ <hare@suse.de>,  Lee Duncan <lduncan@suse.com>, target-devel
+ <target-devel@vger.kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi
+	 <linux-scsi@vger.kernel.org>, Chris Leech <cleech@redhat.com>
+Date: Mon, 27 Nov 2023 14:01:38 -0500
+In-Reply-To: <5301e42d-7fad-49e1-8ebd-7db569416974@oracle.com>
+References: <31851279-0884-48ba-8c4b-7d6147e59508@suse.com>
+	 <00eb0928-5691-4e85-a923-de9c4934856c@suse.de>
+	 <5301e42d-7fad-49e1-8ebd-7db569416974@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 01/15] fs: Rename the kernel-internal data lifetime
- constants
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- Daejun Park <daejun7.park@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>,
- Jan Kara <jack@suse.cz>, Christian Brauner <brauner@kernel.org>,
- Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
- Alexander Viro <viro@zeniv.linux.org.uk>
-References: <20231114214132.1486867-1-bvanassche@acm.org>
- <20231114214132.1486867-2-bvanassche@acm.org> <20231127070830.GA27870@lst.de>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231127070830.GA27870@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 11/26/23 23:08, Christoph Hellwig wrote:
-> More importantly these constant have been around forever, so we'd better
-> have a really good argument for changing them.
+T24gU3VuLCAyMDIzLTExLTI2IGF0IDE4OjM5IC0wNjAwLCBNaWtlIENocmlzdGllIHdyb3RlOgo+
+IE9uIDExLzI2LzIzIDY6MDEgQU0sIEhhbm5lcyBSZWluZWNrZSB3cm90ZToKPiA+IE9uIDExLzI1
+LzIzIDE5OjI4LCBMZWUgRHVuY2FuIHdyb3RlOgo+ID4gPiBIaSBNYXJ0aW4vbGlzdDoKPiA+ID4g
+Cj4gPiA+IEkgYW0gdHJ5aW5nIHRvIHRyYWNrIGRvd24gYW4gaXNzdWUgSSBhbSBzZWVpbmcgd2hl
+biB0cnlpbmcgdG8KPiA+ID4gYm9vdCB1c2luZyBpU0NTSSByb290IHVzaW5nIHRoZSBmYXN0bGlu
+cSBxZWRpIGNvbnZlcmdlZCBuZXR3b3JrCj4gPiA+IGFkYXB0ZXIgaW5pdGlhdG9yIGFuZCBhbiBM
+SU8gdGFyZ2V0Lgo+ID4gPiAKPiA+ID4gSW4gdGhpcyBjb25maWd1cmF0aW9uLCBidXQgdXNpbmcg
+YSBub24tTElPIChoYXJkd2FyZSkgaVNDU0kKPiA+ID4gdGFyZ2V0LCBldmVyeXRoaW5nICJqdXN0
+IHdvcmtzIi4gQnV0IHdoZW4gSSBzd2l0Y2ggdG8gdXNpbmcgYW4KPiA+ID4gTElPIHNvZnR3YXJl
+IHRhcmdldCwgSSBnZXQgdGhpcyBlcnJvciB3aGVuIGJvb3Rpbmc6Cj4gPiA+IAo+ID4gPiA+IDIw
+MjMtMDktMjBUMTQ6MTA6MzIuODM1MzU4LTA1MDAgd29ya2VyNSBrZXJuZWw6IElsbGVnYWxseSBz
+ZXQKPiA+ID4gPiBJbW1lZGlhdGUgQml0IGluIGlTQ1NJIEluaXRpYXRvciBTY3NpIENvbW1hbmQg
+UERVLgo+ID4gPiA+IC4uLiA+IDIwMjMtMDktMjBUMTQ6MTA6MzIuODM1NDIyLTA1MDAgd29ya2Vy
+NSBrZXJuZWw6IEdvdAo+ID4gPiA+IHVua25vd24gaVNDU0kgCj4gPiA+IE9wQ29kZTogMHg1Mgo+
+ID4gPiAKPiA+ID4gSXQgbG9va3MgbGlrZSB0aGUgZmFzdGxpbnEgYWRhcHRlciBpcyBzZW5kaW5n
+IGEgU0NTSSB3cml0ZSAoMHgxMikKPiA+ID4gd2l0aCB0aGUgSW1tZWRpYXRlIGJpdCBzZXQgKDB4
+NDApLgo+ID4gPiAKPiA+ID4gVGhlIGNvZGUgaW4gaXNjc2lfdGFyZ2V0LmM6aXNjc2l0X3NldHVw
+X3Njc2lfY21kKCk6IGxvb2tzIGxpa2UKPiA+ID4gdGhpczoKPiA+ID4gCj4gPiA+ID4gwqDCoMKg
+wqBpZiAoaGRyLT5vcGNvZGUgJiBJU0NTSV9PUF9JTU1FRElBVEUpIHsKPiA+ID4gPiDCoMKgwqDC
+oMKgwqDCoCBwcl9lcnIoIklsbGVnYWxseSBzZXQgSW1tZWRpYXRlIEJpdCBpbiBpU0NTSSBJbml0
+aWF0b3IiCj4gPiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgICIgU2NzaSBDb21t
+YW5kIFBEVS5cbiIpOwo+ID4gPiA+IMKgwqDCoMKgwqDCoMKgIHJldHVybiBpc2NzaXRfYWRkX3Jl
+amVjdF9jbWQoY21kLAo+ID4gPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoCBJU0NTSV9SRUFTT05fQk9PS01BUktfSU5WQUxJRCwgYnVmKTsKPiA+ID4g
+PiDCoMKgwqDCoH0KPiA+ID4gPiAKPiA+ID4gCj4gPiA+IEJ1dCBJIGxvb2tlZCBhdCByZmMzNzIw
+LCBhbmQgaXQgbG9va3MgbGlrZSBTQ1NJIFBEVXMgY2FuIGhhdmUgdGhlCj4gPiA+IEltbWVkaWF0
+ZSBCaXQgc2V0Ogo+ID4gPiAKPiA+ID4gPiAxMC4zLsKgIFNDU0kgQ29tbWFuZAo+ID4gPiA+IMKg
+wqAgVGhlIGZvcm1hdCBvZiB0aGUgU0NTSSBDb21tYW5kIFBEVSBpczoKPiA+ID4gPiDCoMKgIEJ5
+dGUvwqDCoMKgwqAgMMKgwqDCoMKgwqDCoCB8wqDCoMKgwqDCoMKgIDHCoMKgwqDCoMKgwqAgfMKg
+wqDCoMKgwqDCoCAywqDCoMKgwqDCoMKgIHzCoMKgwqDCoMKgwqAKPiA+ID4gPiAzwqDCoMKgwqDC
+oMKgIHwKPiA+ID4gPiDCoMKgwqDCoMKgIC/CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB8wqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB8wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoAo+
+ID4gPiA+IHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHwKPiA+ID4gPiDCoMKgwqDCoCB8
+MCAxIDIgMyA0IDUgNiA3fDAgMSAyIDMgNCA1IDYgN3wwIDEgMiAzIDQgNSA2IDd8MCAxIDIgMyA0
+Cj4gPiA+ID4gNSA2IDd8Cj4gPiA+ID4gwqDCoMKgwqAgKy0tLS0tLS0tLS0tLS0tLSstLS0tLS0t
+LS0tLS0tLS0rLS0tLS0tLS0tLS0tLS0tKy0tLS0tLS0tLQo+ID4gPiA+IC0tLS0tLSsKPiA+ID4g
+PiDCoMKgwqAgMHwufEl8IDB4MDHCoMKgwqDCoMKgIHxGfFJ8V3wuIC58QVRUUiB8Cj4gPiA+ID4g
+UmVzZXJ2ZWTCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgfAo+ID4g
+PiA+IMKgwqDCoMKgICstLS0tLS0tLS0tLS0tLS0rLS0tLS0tLS0tLS0tLS0tKy0tLS0tLS0tLS0t
+LS0tLSstLS0tLS0tLS0KPiA+ID4gPiAtLS0tLS0rCj4gPiA+ID4gwqDCoMKgIDR8VG90YWxBSFNM
+ZW5ndGggfAo+ID4gPiA+IERhdGFTZWdtZW50TGVuZ3RowqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgfAo+ID4gPiA+IMKgwqDCoMKgICstLS0t
+LS0tLS0tLS0tLS0rLS0tLS0tLS0tLS0tLS0tKy0tLS0tLS0tLS0tLS0tLSstLS0tLS0tLS0KPiA+
+ID4gPiAtLS0tLS0rCj4gPiA+ID4gwqDCoMKgIDh8IExvZ2ljYWwgVW5pdCBOdW1iZXIKPiA+ID4g
+PiAoTFVOKcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB8Cj4gPiA+ID4gwqDCoMKgwqAKPiA+ID4gPiArwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoAo+ID4gPiA+ICsKPiA+ID4gPiDCoMKgCj4gPiA+ID4gMTJ8wqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgCj4gPiA+ID4gwqDC
+oCB8Cj4gPiA+ID4gwqDCoMKgwqAgKy0tLS0tLS0tLS0tLS0tLSstLS0tLS0tLS0tLS0tLS0rLS0t
+LS0tLS0tLS0tLS0tKy0tLS0tLS0tLQo+ID4gPiA+IC0tLS0tLSsKPiA+ID4gPiAuLi4KPiA+ID4g
+Cj4gPiA+IFdoZXJlICJJIiBpcyB0aGUgaW1tZWRpYXRlIGJpdC4KPiA+ID4gCj4gPiA+IEZyYW5r
+bHksIEknbSBuZXZlciBzdXJlIEkgcmVhZCB0aGUgU1BFQyBjb3JyZWN0bHksIHNvIEknbSBub3QK
+PiA+ID4gc3VyZSBpZiBJJ20gbWlzdGFrZW4gaGVyZSwgYnV0IGl0IGxvb2tzIGxpa2UgTElPIGRv
+ZXMgbm90IGFsbG93Cj4gPiA+IHRoZSBJbW1lZGlhdGUgYml0IChhbmQgaGVuY2UgSW1tZWRpYXRl
+IGRhdGEpLCBldmVuIHRob3VnaCB0aGUKPiA+ID4gU1BFQyBkb2VzIGFsbG93IGl0LiBCdXQgaXQg
+YWxzbyBsb29rcyBsaWtlLCBkdXJpbmcgbmVnb3RpYXRpb24KPiA+ID4gcGhhc2UsIExJTyBuZWdv
+dGlhdGVzIEltbWVkaWF0ZURhdGEgbGlrZSBhbnkgb3RoZXIgcGFyYW1ldGVyLAo+ID4gPiBhbGxv
+d2luZyAiWUVTIi4KPiA+ID4gCj4gPiA+IEluIG91ciB0ZXN0aW5nLCBpZiB3ZSBzZXQgSW1tZWRp
+YXRlRGF0YT1ObyBpbiB0aGUgdGFyZ2V0LCB0aGVuCj4gPiA+IG91ciBwcm9ibGVtIGdvZXMgYXdh
+eSwgaS5lLiB3ZSBjYW4gbm93IGJvb3QgZnJvbSBhbiBMSU8gdGFyZ2V0Lgo+ID4gPiBUaGlzIGlz
+IGJlY2F1c2UgSW1tZWRpYXRlIERhdGEgaXMgbmVnb3RpYXRlZCBvZmYsIG9mIGNvdXJzZS4KPiA+
+ID4gCj4gPiA+IElzIHRoaXMgYSBidWcsIG9yIGlzIHRoaXMgYWRhcHRlciBkb2luZyBzb21ldGhp
+bmcgd3Jvbmc/IEkgd291bGQKPiA+ID4gYXBwcmVjaWF0ZSBvdGhlciB2aWV3cG9pbnRzLgo+ID4g
+PiAKPiA+ID4gVGhhbmsgeW91Lgo+ID4gCj4gPiBTb3VuZHMgbGlrZSBhIGJ1Zy4KPiA+IENhbiB5
+b3UgY2hlY2sgaWYgdGhpcyBoZWxwcz8KPiA+IAo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvdGFy
+Z2V0L2lzY3NpL2lzY3NpX3RhcmdldC5jCj4gPiBiL2RyaXZlcnMvdGFyZ2V0L2lzY3NpL2lzY3Np
+X3RhcmdldC5jCj4gPiBpbmRleCBiNTE2YzI4OTM0MjAuLmFkNjg3MDZhZDlmNyAxMDA2NDQKPiA+
+IC0tLSBhL2RyaXZlcnMvdGFyZ2V0L2lzY3NpL2lzY3NpX3RhcmdldC5jCj4gPiArKysgYi9kcml2
+ZXJzL3RhcmdldC9pc2NzaS9pc2NzaV90YXJnZXQuYwo+ID4gQEAgLTEwNjAsNyArMTA2MCw4IEBA
+IGludCBpc2NzaXRfc2V0dXBfc2NzaV9jbWQoc3RydWN0IGlzY3NpdF9jb25uCj4gPiAqY29ubiwg
+c3RydWN0IGlzY3NpdF9jbWQgKmNtZCwKPiA+IAo+ID4gSVNDU0lfUkVBU09OX0JPT0tNQVJLX0lO
+VkFMSUQsIGJ1Zik7Cj4gPiDCoMKgwqDCoMKgwqDCoCB9Cj4gPiAKPiA+IC3CoMKgwqDCoMKgwqAg
+aWYgKGhkci0+b3Bjb2RlICYgSVNDU0lfT1BfSU1NRURJQVRFKSB7Cj4gPiArwqDCoMKgwqDCoMKg
+IGlmICgoaGRyLT5vcGNvZGUgJiBJU0NTSV9PUF9JTU1FRElBVEUpICYmCj4gPiArwqDCoMKgwqDC
+oMKgwqDCoMKgwqAgIWNvbm4tPnNlc3MtPnNlc3Nfb3BzLT5JbW1lZGlhdGVEYXRhKSB7Cj4gPiDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgcHJfZXJyKCJJbGxlZ2FsbHkgc2V0IEltbWVk
+aWF0ZSBCaXQgaW4gaVNDU0kKPiA+IEluaXRpYXRvciIKPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgICIgU2NzaSBDb21tYW5k
+IFBEVS5cbiIpOwo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHJldHVybiBpc2Nz
+aXRfYWRkX3JlamVjdF9jbWQoY21kLAo+ID4gCj4gCj4gCj4gVGhlc2UgYXJlIGRpZmZlcmVudCB0
+aGluZ3MuCj4gCj4gSW1tZWRpYXRlIGRhdGEgbWVhbnMgeW91IGNhbiBoYXZlIGRhdGEgYWZ0ZXIg
+dGhlIGhlYWRlciBpbiB0aGUgUERVLgo+IAo+IFRoZSBpbW1lZGlhdGUgYml0IG9uIHRoZSBoZWFk
+ZXIgaGFzIENtZFNOIHJ1bGVzIHdoaWNoIGFsbG93cyB5b3UgdG8KPiBzZW5kIGNvbW1hbmRzIHdp
+dGhvdXQgaGF2aW5nIHRvIGluY3JlbWVudCB0aGUgQ21kU04uIEl0J3MgdXNlZCBmb3IKPiB0aGlu
+Z3MgbGlrZSBUTUZzIGJlY2F1c2UgYXQgdGhhdCB0aW1lLCB0aGUgd2luZG93IG1pZ2h0IGJlIGNs
+b3NlZCBkdWUKPiB0byBTQ1NJIGNvbW1hbmRzIGhhdmluZyBmaWxsZWQgaXQuCj4gCj4gCgpJIGhh
+dmUgaXNjc2kgYm9vdGVkIGZvciB5ZWFycyB3aXRoIExJTyBhcyB0aGUgdGFyZ2V0IGJ1dCBuZXZl
+ciB3aXRoCnFlZGkgYXMgdGhlIGJhc2UgSVNDU0kgZHJpdmVyLiBJIHdpbGwgc2VlIGlmIEkgc2Vl
+IHRoZSBzYW1lIGJlaGF2aW9yIGFzCkxlZSB3aXRoIHRoZSBxZWRpIGludm9sdmVkLgoKCgo=
 
-Hi Christoph,
-
-I will drop this patch.
-
-As you know the NVMe and SCSI specifications use the numeric range 0..63 for
-the data lifetime so there is a gap between the values supported by the
-F_[GS]ET_RW_HINT fcntls and the data lifetime values accepted by widely used
-storage devices. Do you think that it should be possible for user space
-applications to specify the full range (0..63)?
-
-Thanks,
-
-Bart.
