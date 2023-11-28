@@ -1,164 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6536A4F5F4;
-	Tue, 28 Nov 2023 11:27:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AQ9fog7f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8835C433C7;
-	Tue, 28 Nov 2023 11:27:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701170861;
-	bh=B/yIJwxLaAT5R+A6b54U5ynQZIauIfWW6wfH2GeGYOQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AQ9fog7fgQPvyo6YamBdjTQIaFyIbBgPOndM0nhoIRfGIiMmC8WrLEhQvhnCS0QN2
-	 QSm3tH0BUAoZ/L99xiBkw4FurCM3Hzqa7BmV8TvAbgVUBa0Co10LGM8UrQ7sRGH9NK
-	 W6pszD10ZSyu3bmUx06Lm7rRLpd43MxyYFttVQ+mKq7EtBa4pxDTrXQkVJiYTO9EfN
-	 XgIoEBd7Ih0And8QXM4ursYTyw0wENYnqw0JwgXOZjv7La5tnJ/B4G6ZKWgy7gPLvW
-	 a2fO87YUdYPYAH18baKyMhpmdPhzrQJE0y4O/ldjFDHfvHdFoXsGlYkyUvyAOFeJ6N
-	 pWJgn0s4iP15w==
-Date: Tue, 28 Nov 2023 16:57:31 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Ziqi Chen <quic_ziqichen@quicinc.com>
-Cc: Can Guo <quic_cang@quicinc.com>, quic_asutoshd@quicinc.com,
-	bvanassche@acm.org, beanhuo@micron.com, avri.altman@wdc.com,
-	junwoo80.lee@samsung.com, martin.petersen@oracle.com,
-	quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
-	quic_rampraka@quicinc.com, linux-scsi@vger.kernel.org,
-	Andy Gross <agross@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] scsi: ufs: qcom: move ufs_qcom_host_reset() to
- ufs_qcom_device_reset()
-Message-ID: <20231128112731.GV3088@thinkpad>
-References: <1698145815-17396-1-git-send-email-quic_ziqichen@quicinc.com>
- <20231025074128.GA3648@thinkpad>
- <85d7a1ef-92c4-49ae-afe0-727c1b446f55@quicinc.com>
- <c6a72c38-aa63-79b8-c784-d753749f7272@quicinc.com>
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from gw.red-soft.ru (red-soft.ru [188.246.186.2])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9B09E182;
+	Tue, 28 Nov 2023 04:12:06 -0800 (PST)
+Received: from localhost.biz (unknown [10.81.81.211])
+	by gw.red-soft.ru (Postfix) with ESMTPA id 66B1E3E1AF3;
+	Tue, 28 Nov 2023 15:12:04 +0300 (MSK)
+From: Artem Chernyshev <artem.chernyshev@red-soft.ru>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: Artem Chernyshev <artem.chernyshev@red-soft.ru>,
+	"James E . J . Bottomley" <jejb@linux.ibm.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH]  scsi: isci: Remove redundant check in isci_task_request_build()
+Date: Tue, 28 Nov 2023 15:11:59 +0300
+Message-Id: <20231128121159.2373975-1-artem.chernyshev@red-soft.ru>
+X-Mailer: git-send-email 2.37.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <c6a72c38-aa63-79b8-c784-d753749f7272@quicinc.com>
+X-KLMS-Rule-ID: 1
+X-KLMS-Message-Action: clean
+X-KLMS-AntiSpam-Lua-Profiles: 181653 [Nov 28 2023]
+X-KLMS-AntiSpam-Version: 6.0.0.2
+X-KLMS-AntiSpam-Envelope-From: artem.chernyshev@red-soft.ru
+X-KLMS-AntiSpam-Rate: 0
+X-KLMS-AntiSpam-Status: not_detected
+X-KLMS-AntiSpam-Method: none
+X-KLMS-AntiSpam-Auth: dkim=none
+X-KLMS-AntiSpam-Info: LuaCore: 5 0.3.5 98d108ddd984cca1d7e65e595eac546a62b0144b, {Tracking_from_domain_doesnt_match_to}, 127.0.0.199:7.1.2;localhost.biz:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;red-soft.ru:7.1.1, FromAlignment: s
+X-MS-Exchange-Organization-SCL: -1
+X-KLMS-AntiSpam-Interceptor-Info: scan successful
+X-KLMS-AntiPhishing: Clean, bases: 2023/11/28 09:02:00
+X-KLMS-AntiVirus: Kaspersky Security for Linux Mail Server, version 8.0.3.30, bases: 2023/11/28 07:11:00 #22560184
+X-KLMS-AntiVirus-Status: Clean, skipped
 
-On Tue, Nov 28, 2023 at 03:40:57AM +0800, Ziqi Chen wrote:
-> 
-> 
-> On 11/22/2023 2:14 PM, Can Guo wrote:
-> > 
-> > 
-> > On 10/25/2023 3:41 PM, Manivannan Sadhasivam wrote:
-> > > On Tue, Oct 24, 2023 at 07:10:15PM +0800, Ziqi Chen wrote:
-> > > > During PISI test, we found the issue that host Tx still bursting after
-> > > 
-> > > What is PISI test?
-> 
-> SI measurement.
-> 
+ sci_task_request_construct_ssp() have invariant return. Change
+ this function to void and get rid of unnecessary checks.
 
-Please expand it in the patch description.
+ Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-> > > 
-> > > > H/W reset. Move ufs_qcom_host_reset() to ufs_qcom_device_reset() and
-> > > > reset host before device reset to stop tx burst.
-> > > > 
-> > > 
-> > > device_reset() callback is supposed to reset only the device and not
-> > > the host.
-> > > So NACK for this patch.
-> > 
-> > Agree, the change should come in a more reasonable way.
-> > 
-> > Actually, similar code is already there in ufs_mtk_device_reset() in
-> > ufs-mediatek.c, I guess here is trying to mimic that fashion.
-> > 
-> > This change, from its functionality point of view, we do need it,
-> > because I occasionally (2 out of 10) hit PHY error on lane 0 during
-> > reboot test (in my case, I tried SM8350, SM8450 and SM8550， all same).
-> > 
-> > [    1.911188] [DEBUG]ufshcd_update_uic_error: UECPA:0x80000002
-> > [    1.922843] [DEBUG]ufshcd_update_uic_error: UECDL:0x80004000
-> > [    1.934473] [DEBUG]ufshcd_update_uic_error: UECN:0x0
-> > [    1.944688] [DEBUG]ufshcd_update_uic_error: UECT:0x0
-> > [    1.954901] [DEBUG]ufshcd_update_uic_error: UECDME:0x0
-> > 
-> > I found out that the PHY error pops out right after UFS device gets
-> > reset in the 2nd init. After having this change in place, the PA/DL
-> > errors are gone.
-> 
-> Hi Mani,
-> 
-> There is another way that adding a new vops that call XXX_host_reset() from
-> soc vendor driver. in this way, we can call this vops in core layer without
-> the dependency of device reset.
-> due to we already observed such error and received many same reports from
-> different OEMs, we need to fix it in some way.
-> if you think above way is available, I will update new patch in soon. Or
-> could you give us other suggestion?
-> 
+Signed-off-by: Artem Chernyshev <artem.chernyshev@red-soft.ru>
+---
+ drivers/scsi/isci/request.c | 5 +----
+ drivers/scsi/isci/request.h | 2 +-
+ drivers/scsi/isci/task.c    | 4 +---
+ 3 files changed, 3 insertions(+), 8 deletions(-)
 
-First, please describe the issue in detail. How the issue is getting triggered
-and then justify your change. I do not have access to the bug reports that you
-received.
-
-- Mani
-
-> -Ziqi
-> 
-> > 
-> > Thanks,
-> > Can Guo.
-> > > 
-> > > - Mani
-> > > 
-> > > > Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> > > > ---
-> > > >   drivers/ufs/host/ufs-qcom.c | 13 +++++++------
-> > > >   1 file changed, 7 insertions(+), 6 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> > > > index 96cb8b5..43163d3 100644
-> > > > --- a/drivers/ufs/host/ufs-qcom.c
-> > > > +++ b/drivers/ufs/host/ufs-qcom.c
-> > > > @@ -445,12 +445,6 @@ static int
-> > > > ufs_qcom_power_up_sequence(struct ufs_hba *hba)
-> > > >       struct phy *phy = host->generic_phy;
-> > > >       int ret;
-> > > > -    /* Reset UFS Host Controller and PHY */
-> > > > -    ret = ufs_qcom_host_reset(hba);
-> > > > -    if (ret)
-> > > > -        dev_warn(hba->dev, "%s: host reset returned %d\n",
-> > > > -                  __func__, ret);
-> > > > -
-> > > >       /* phy initialization - calibrate the phy */
-> > > >       ret = phy_init(phy);
-> > > >       if (ret) {
-> > > > @@ -1709,6 +1703,13 @@ static void ufs_qcom_dump_dbg_regs(struct
-> > > > ufs_hba *hba)
-> > > >   static int ufs_qcom_device_reset(struct ufs_hba *hba)
-> > > >   {
-> > > >       struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> > > > +    int ret = 0;
-> > > > +
-> > > > +    /* Reset UFS Host Controller and PHY */
-> > > > +    ret = ufs_qcom_host_reset(hba);
-> > > > +    if (ret)
-> > > > +        dev_warn(hba->dev, "%s: host reset returned %d\n",
-> > > > +                  __func__, ret);
-> > > >       /* reset gpio is optional */
-> > > >       if (!host->device_reset)
-> > > > -- 
-> > > > 2.7.4
-> > > > 
-> > > 
-
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index a7b3243b471d..71f711cb0628 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -738,8 +738,7 @@ static enum sci_status sci_io_request_construct_basic_ssp(struct isci_request *i
+ 	return SCI_SUCCESS;
+ }
+ 
+-enum sci_status sci_task_request_construct_ssp(
+-	struct isci_request *ireq)
++void sci_task_request_construct_ssp(struct isci_request *ireq)
+ {
+ 	/* Construct the SSP Task SCU Task Context */
+ 	scu_ssp_task_request_construct_task_context(ireq);
+@@ -748,8 +747,6 @@ enum sci_status sci_task_request_construct_ssp(
+ 	sci_task_request_build_ssp_task_iu(ireq);
+ 
+ 	sci_change_state(&ireq->sm, SCI_REQ_CONSTRUCTED);
+-
+-	return SCI_SUCCESS;
+ }
+ 
+ static enum sci_status sci_io_request_construct_basic_sata(struct isci_request *ireq)
+diff --git a/drivers/scsi/isci/request.h b/drivers/scsi/isci/request.h
+index 20b141739e4d..79ddfffbf73c 100644
+--- a/drivers/scsi/isci/request.h
++++ b/drivers/scsi/isci/request.h
+@@ -300,7 +300,7 @@ sci_task_request_construct(struct isci_host *ihost,
+ 			    struct isci_remote_device *idev,
+ 			    u16 io_tag,
+ 			    struct isci_request *ireq);
+-enum sci_status sci_task_request_construct_ssp(struct isci_request *ireq);
++void sci_task_request_construct_ssp(struct isci_request *ireq);
+ void sci_smp_request_copy_response(struct isci_request *ireq);
+ 
+ static inline int isci_task_is_ncq_recovery(struct sas_task *task)
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index c514b20293b2..3a25b1a2c52d 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -243,9 +243,7 @@ static struct isci_request *isci_task_request_build(struct isci_host *ihost,
+ 	/* XXX convert to get this from task->tproto like other drivers */
+ 	if (dev->dev_type == SAS_END_DEVICE) {
+ 		isci_tmf->proto = SAS_PROTOCOL_SSP;
+-		status = sci_task_request_construct_ssp(ireq);
+-		if (status != SCI_SUCCESS)
+-			return NULL;
++		sci_task_request_construct_ssp(ireq);
+ 	}
+ 
+ 	return ireq;
 -- 
-மணிவண்ணன் சதாசிவம்
+2.37.3
+
