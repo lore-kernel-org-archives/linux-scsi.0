@@ -1,34 +1,34 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="kb6mi/gg"
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C8E6138;
-	Mon, 27 Nov 2023 17:45:43 -0800 (PST)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AS0LvBj022987;
-	Tue, 28 Nov 2023 01:45:23 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Ws+75g1I"
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78F541B6;
+	Mon, 27 Nov 2023 17:50:54 -0800 (PST)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AS1h8Fk020602;
+	Tue, 28 Nov 2023 01:50:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
  mime-version : subject : to : cc : references : from : in-reply-to :
  content-type : content-transfer-encoding; s=qcppdkim1;
- bh=C2Wl7JccyRML31I3nvG8w7R3JFTxcqsSNH4FDHN2a7k=;
- b=kb6mi/ggt4rvFblpBVMl6Lc7ZUR1kFRnvLCnDP/NU4Q+CuZpuwW0RU/Y3qf1smVinj+v
- mDKwbVHac+fxA1TecISO2LP/nkD3jCnpwNs+QBUrnCFI1T2h+rXdfI5jgsTpZ2vihNQ9
- it4M2Wm6FsNECoj+Han6bGcDgQ8k35BFAJ10CVqnN+UlArOLPbO6RhhU7ivfhmCDxSJx
- YCOCJbpJOl0yGTulOmh5uW5kWmMo/VBACXA9Gg27nCi8qP3tc0okZGhmtrBlhvvsyHpt
- Hrv+L8cD3oz2DG/Wk7niHMGlY9Z3S97BvT+9/mFFq54t1/GTmO5PWGq8r6N5vCu9ef0M tw== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3un586r5du-1
+ bh=Ys4/6FFfW1SAvUPGmv86XCxA3FNAIi1MkHLRZxoOcBk=;
+ b=Ws+75g1I1vgcxIlPy11nIbrzpMccCg84bcAj7cwlR2KzeoFwOtqcR+5zhw/UEA7QG33f
+ f9ruaVWd9Arpe7v53ImQgBPgKMNmZsNCfKfoscRsTBaU9Im8TsDxIjZLHgrQyo8CVzcq
+ Gq/S1dES9kPKMOwnWOJATq5Dkvwh5VhLrg41tn+Fb3lW1mgOCJA6Y/0xDNekPK/AGNpe
+ dMZnNFom8BJwNm0E33WHhjsIi8uBfEuyeyc7Ub8g7hhTtQRDDMDLQX1coA1QkMJQkkvn
+ UZzejRXGo6eT4DidiaQdna3hQXj9soNrNZnKL5dblIRvtMPD8CKzmSBK24uX2enDhgP4 1Q== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3umqxh29as-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Nov 2023 01:45:23 +0000
+	Tue, 28 Nov 2023 01:50:37 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AS1jMtr030650
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AS1oaHN004445
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Nov 2023 01:45:22 GMT
+	Tue, 28 Nov 2023 01:50:36 GMT
 Received: from [10.253.11.37] (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 27 Nov
- 2023 17:45:18 -0800
-Message-ID: <ea3b4046-2fe8-4fac-b170-9298f2266cda@quicinc.com>
-Date: Tue, 28 Nov 2023 09:45:16 +0800
+ 2023 17:50:32 -0800
+Message-ID: <a690f5c1-50e7-4d37-9e12-fff574917aba@quicinc.com>
+Date: Tue, 28 Nov 2023 09:50:28 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,181 +36,159 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 19/19] scsi: ufs: Inform the block layer about write
- ordering
-To: Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        Jens Axboe
-	<axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        "Bao D . Nguyen"
-	<quic_nguyenb@quicinc.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J.
- Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Asutosh Das
-	<quic_asutoshd@quicinc.com>,
-        Peter Wang <peter.wang@mediatek.com>, Bean Huo
-	<beanhuo@micron.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-References: <20231114211804.1449162-1-bvanassche@acm.org>
- <20231114211804.1449162-20-bvanassche@acm.org>
+Subject: Re: [PATCH v5 08/10] phy: qualcomm: phy-qcom-qmp-ufs: Rectify SM8550
+ UFS HS-G4 PHY Settings
 Content-Language: en-US
+To: Vinod Koul <vkoul@kernel.org>
+CC: <bvanassche@acm.org>, <mani@kernel.org>, <adrian.hunter@intel.com>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn
+ Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Dmitry Baryshkov
+	<dmitry.baryshkov@linaro.org>,
+        Johan Hovold <johan+linaro@kernel.org>,
+        Abel
+ Vesa <abel.vesa@linaro.org>,
+        "open list:GENERIC PHY FRAMEWORK"
+	<linux-phy@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
+ <1700729190-17268-9-git-send-email-quic_cang@quicinc.com>
+ <ZWR4cN0sJNcVHPrL@matsya>
 From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20231114211804.1449162-20-bvanassche@acm.org>
+In-Reply-To: <ZWR4cN0sJNcVHPrL@matsya>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: fPzRfwNYfEVkMHkYpROV8cTdW4DV5TjY
-X-Proofpoint-GUID: fPzRfwNYfEVkMHkYpROV8cTdW4DV5TjY
+X-Proofpoint-GUID: jE2rucx1THA52q9EfdMqES3Sf4T1tPmF
+X-Proofpoint-ORIG-GUID: jE2rucx1THA52q9EfdMqES3Sf4T1tPmF
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-11-28_01,2023-11-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=999 priorityscore=1501 spamscore=0 impostorscore=0
- adultscore=0 mlxscore=0 phishscore=0 suspectscore=0 clxscore=1011
- bulkscore=0 lowpriorityscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2311060000 definitions=main-2311280011
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
+ clxscore=1015 phishscore=0 mlxlogscore=999 spamscore=0 bulkscore=0
+ priorityscore=1501 adultscore=0 lowpriorityscore=0 impostorscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311280013
 
-Hi Bart,
+Hi Vinod,
 
-On 11/15/2023 5:16 AM, Bart Van Assche wrote:
->  From the UFSHCI 4.0 specification, about the legacy (single queue) mode:
-> "The host controller always process transfer requests in-order according
-> to the order submitted to the list. In case of multiple commands with
-> single doorbell register ringing (batch mode), The dispatch order for
-> these transfer requests by host controller will base on their index in
-> the List. A transfer request with lower index value will be executed
-> before a transfer request with higher index value."
+On 11/27/2023 7:07 PM, Vinod Koul wrote:
+> On 23-11-23, 00:46, Can Guo wrote:
+>> The registers, which are being touched in current SM8550 UFS PHY settings,
+>> and the values being programmed are mainly the ones working for HS-G4 mode,
+>> meanwhile, there are also a few ones somehow taken from HS-G5 PHY settings.
+>> However, even consider HS-G4 mode only, some of them are incorrect and some
+>> are missing. Rectify the HS-G4 PHY settings by strictly aligning with the
+>> SM8550 UFS PHY Hardware Programming Guide suggested HS-G4 PHY settings.
 > 
->  From the UFSHCI 4.0 specification, about the MCQ mode:
-> "Command Submission
-> 1. Host SW writes an Entry to SQ
-> 2. Host SW updates SQ doorbell tail pointer
+> can you copy on cover so that we know the context of the series, I just
+> got hit with two patches out of the blue with this
 > 
-> Command Processing
-> 3. After fetching the Entry, Host Controller updates SQ doorbell head
->     pointer
-> 4. Host controller sends COMMAND UPIU to UFS device"
-> 
-> In other words, for both legacy and MCQ mode, UFS controllers are
-> required to forward commands to the UFS device in the order these
-> commands have been received from the host.
-> 
-> Notes:
-> - For legacy mode this is only correct if the host submits one
->    command at a time. The UFS driver does this.
-> - Also in legacy mode, the command order is not preserved if
->    auto-hibernation is enabled in the UFS controller. Hence, enable
->    zone write locking if auto-hibernation is enabled.
-> 
-> This patch improves performance as follows on my test setup:
-> - With the mq-deadline scheduler: 2.5x more IOPS for small writes.
-> - When not using an I/O scheduler compared to using mq-deadline with
->    zone locking: 4x more IOPS for small writes.
-> 
-> Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-> Reviewed-by: Can Guo <quic_cang@quicinc.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Avri Altman <avri.altman@wdc.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/ufs/core/ufshcd.c | 25 +++++++++++++++++++++++--
->   1 file changed, 23 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 732509289165..e78954cda3ae 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -4421,6 +4421,20 @@ static int ufshcd_update_preserves_write_order(struct ufs_hba *hba,
->   				return -EPERM;
->   		}
->   	}
-> +	shost_for_each_device(sdev, hba->host)
-> +		blk_freeze_queue_start(sdev->request_queue);
-> +	shost_for_each_device(sdev, hba->host) {
-> +		struct request_queue *q = sdev->request_queue;
-> +
-> +		blk_mq_freeze_queue_wait(q);
-> +		q->limits.driver_preserves_write_order = preserves_write_order;
-> +		blk_queue_required_elevator_features(q,
-> +			!preserves_write_order && blk_queue_is_zoned(q) ?
-> +			ELEVATOR_F_ZBD_SEQ_WRITE : 0);
-> +		if (q->disk)
-> +			disk_set_zoned(q->disk, q->limits.zoned);
-> +		blk_mq_unfreeze_queue(q);
-> +	}
->   
->   	return 0;
->   }
-> @@ -4463,7 +4477,8 @@ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
->   
->   	if (!is_mcq_enabled(hba) && !prev_state && new_state) {
->   		/*
-> -		 * Auto-hibernation will be enabled for legacy UFSHCI mode.
-> +		 * Auto-hibernation will be enabled for legacy UFSHCI mode. Tell
-> +		 * the block layer that write requests may be reordered.
->   		 */
->   		ret = ufshcd_update_preserves_write_order(hba, false);
->   		if (ret)
-> @@ -4479,7 +4494,8 @@ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
->   	}
->   	if (!is_mcq_enabled(hba) && prev_state && !new_state) {
->   		/*
-> -		 * Auto-hibernation has been disabled.
-> +		 * Auto-hibernation has been disabled. Tell the block layer that
-> +		 * the order of write requests is preserved.
->   		 */
->   		ret = ufshcd_update_preserves_write_order(hba, true);
->   		WARN_ON_ONCE(ret);
-> @@ -5247,6 +5263,10 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
->   	struct ufs_hba *hba = shost_priv(sdev->host);
->   	struct request_queue *q = sdev->request_queue;
->   
-> +	q->limits.driver_preserves_write_order =
-> +		!ufshcd_is_auto_hibern8_supported(hba) ||
-> +		FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) == 0;
-> +
 
-I got some time testing these changes on SM8650 with MCQ enabled. I 
-found that with these changes in place (with AH8 disabled). Even we can 
-make sure UFS driver does not re-order requests in MCQ mode, the reorder 
-is still happening while running FIO and can be seen from ftrace logs. I 
-think it is related with below logic in blk-mq-sched.c, please correct 
-me if I am wrong.
-
-static int __blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
-{
-...
-	} else if (multi_hctxs) {
-		/*
-		 * Requests from different hctx may be dequeued from some
-		 * schedulers, such as bfq and deadline.
-		 *
-		 * Sort the requests in the list according to their hctx,
-		 * dispatch batching requests from same hctx at a time.
-		 */
-		list_sort(NULL, &rq_list, sched_rq_cmp);
-...
-}
+Will add you to the --to list in next version. The whole series is to 
+enable HS-G5 support on SM8550. FYI, the two changes to UFS PHY driver, 
+which you mentioned above, in the series are to 1. Rectify existing 
+HS-G4 PHY setting for SM8550 and 2. Add HS-G5 PHY settings for SM8550.
 
 Thanks,
 Can Guo.
 
->   	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
->   
->   	/*
-> @@ -9026,6 +9046,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
->   	.max_host_blocked	= 1,
->   	.track_queue_depth	= 1,
->   	.skip_settle_delay	= 1,
-> +	.needs_prepare_resubmit	= 1,
->   	.sdev_groups		= ufshcd_driver_groups,
->   	.rpm_autosuspend_delay	= RPM_AUTOSUSPEND_DELAY_MS,
->   };
+>>
+>> Fixes: 1679bfef906f ("phy: qcom-qmp-ufs: Add SM8550 support")
+>> Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+>> Reviewed-by: Abel Vesa <abel.vesa@linaro.org>
+>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+>> ---
+>>   .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |  3 +++
+>>   drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 28 +++++++++++++++-------
+>>   2 files changed, 22 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
+>> index 15bcb4b..674f158 100644
+>> --- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
+>> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
+>> @@ -10,9 +10,12 @@
+>>   #define QSERDES_UFS_V6_TX_RES_CODE_LANE_RX			0x2c
+>>   #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX		0x30
+>>   #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_RX		0x34
+>> +#define QSERDES_UFS_V6_TX_LANE_MODE_1				0x7c
+>> +#define QSERDES_UFS_V6_TX_FR_DCC_CTRL				0x108
+>>   
+>>   #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2		0x08
+>>   #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4		0x10
+>> +#define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2			0xd4
+>>   #define QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL			0x178
+>>   #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0			0x208
+>>   #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B1			0x20c
+>> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+>> index 3927eba..ad91f92 100644
+>> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+>> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+>> @@ -658,22 +658,26 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_serdes[] = {
+>>   	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
+>>   	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x7f),
+>>   	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x06),
+>> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x4c),
+>> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
+>> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
+>> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
+>> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x99),
+>> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x07),
+>> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE1, 0x4c),
+>> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE1, 0x0a),
+>> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE1, 0x18),
+>> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE1, 0x14),
+>> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE1, 0x99),
+>> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE1, 0x07),
+>> +};
+>> +
+>> +static const struct qmp_phy_init_tbl sm8550_ufsphy_hs_b_serdes[] = {
+>> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x44),
+>>   };
+>>   
+>>   static const struct qmp_phy_init_tbl sm8550_ufsphy_tx[] = {
+>> -	QMP_PHY_INIT_CFG(QSERDES_V6_TX_LANE_MODE_1, 0x05),
+>> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_LANE_MODE_1, 0x05),
+>>   	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX, 0x07),
+>> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_FR_DCC_CTRL, 0x4c),
+>>   };
+>>   
+>>   static const struct qmp_phy_init_tbl sm8550_ufsphy_rx[] = {
+>> -	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2, 0x0c),
+>> -	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4, 0x0f),
+>> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2, 0x0c),
+>>   	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL, 0x0e),
+>>   
+>>   	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0, 0xc2),
+>> @@ -696,6 +700,8 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_pcs[] = {
+>>   	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_MID_TERM_CTRL1, 0x43),
+>>   	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_PLL_CNTL, 0x2b),
+>>   	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_MULTI_LANE_CTRL1, 0x02),
+>> +	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_HSGEAR_CAPABILITY, 0x04),
+>> +	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_RX_HSGEAR_CAPABILITY, 0x04),
+>>   };
+>>   
+>>   struct qmp_ufs_offsets {
+>> @@ -1157,6 +1163,10 @@ static const struct qmp_phy_cfg sm8550_ufsphy_cfg = {
+>>   		.pcs		= sm8550_ufsphy_pcs,
+>>   		.pcs_num	= ARRAY_SIZE(sm8550_ufsphy_pcs),
+>>   	},
+>> +	.tbls_hs_b = {
+>> +		.serdes		= sm8550_ufsphy_hs_b_serdes,
+>> +		.serdes_num	= ARRAY_SIZE(sm8550_ufsphy_hs_b_serdes),
+>> +	},
+>>   	.clk_list		= sdm845_ufs_phy_clk_l,
+>>   	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
+>>   	.vreg_list		= qmp_phy_vreg_l,
+>> -- 
+>> 2.7.4
+> 
