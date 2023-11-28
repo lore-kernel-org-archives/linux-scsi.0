@@ -1,136 +1,98 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA6DA15AEA
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 08:24:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="PLDc5ReB"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBC6B1FD5;
-	Tue, 28 Nov 2023 00:06:29 -0800 (PST)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AS7ibwI013058;
-	Tue, 28 Nov 2023 08:06:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=ysSBKASiNKE1BvdUCJ9h9w1i1MdW/iJR9wLlDzUJrds=;
- b=PLDc5ReBQhoENnEvMhYJ/JwVUK9tPwBjrcXMagIWq1rdddlcb46pFaYvysxFhCwoP0yZ
- Yz50fqz9H6r7x1FAXWmlqUSOCHXVSMM3dGtAgJiuAVNnBjDTLMnC5iS/ZmKj0ROPA9a5
- iVo7iAe19yNn33gci6j6P1yY0aELSA46ho/VzOoQswEDZmhjN6RpBKKZt3W21xyEonO+
- QEJ0WoGoinQS1kY+mJ6Ry7Fvg81wDll3wkq3ZQcOb3rQMKHy+vpcYsZ2wijhFH+grE29
- XMMSTaL+JF348Y8oYZXImH+dSi7z7/x4C67rDscSkiHFvnWqvZ7bOjZ8PGpAb9qdSBKB iw== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3umrqq2xd5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Nov 2023 08:06:05 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AS864ON019551
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Nov 2023 08:06:05 GMT
-Received: from [10.253.11.37] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Tue, 28 Nov
- 2023 00:06:01 -0800
-Message-ID: <bc69d9ef-6ddc-4389-8bf0-9405385a494b@quicinc.com>
-Date: Tue, 28 Nov 2023 16:05:59 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LlqwAr55"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 400E3C433C7
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 08:24:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701159842;
+	bh=2yMYjPRIu172Hqx1XGhVCnzKLEAzVgJH4ALP3OSQLrs=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=LlqwAr551QEkFZ2n2nCm+CQqsIxRHeZFG8P0iznzvHB2mqW7hfWtlvlaOmPN4nSzV
+	 2HUn6heUvvpIx84MeaQ/1D+8AHnbl4E11h7zu6XF5BpXhWj7B7ZKdWzKU9ZqezwngH
+	 sXtH7azALYq2z7Hhz7dcNoNJ97TNN5QlLfnHxsX/2CL2vYYoTt7rBLjwmI1s8zp+BA
+	 KryCilVI4y2CppA8acW5AAJH0PMlLa85rcNT4jwWMTjy7+/r87Lg/J1ZXVoapNc+A5
+	 NMBrXSzN8BqZA7AFwMO95I2Rk3hR6af5S1DiWZEpar8KveFKQ7mAmZz0lubXNanXlp
+	 pB5fSoLUJUr0w==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 2C609C53BCD; Tue, 28 Nov 2023 08:24:02 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 218198] Suspend/Resume Regression with attached ATA devices
+Date: Tue, 28 Nov 2023 08:24:01 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: dmummenschanz@web.de
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-218198-11613-NAsEdarpyZ@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-218198-11613@https.bugzilla.kernel.org/>
+References: <bug-218198-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 04/10] scsi: ufs: ufs-qcom: Limit negotiated gear to
- selected PHY gear
-Content-Language: en-US
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: <bvanassche@acm.org>, <adrian.hunter@intel.com>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, Andy Gross <agross@kernel.org>,
-        Bjorn
- Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list
-	<linux-kernel@vger.kernel.org>
-References: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
- <1700729190-17268-5-git-send-email-quic_cang@quicinc.com>
- <20231128054522.GF3088@thinkpad>
-From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20231128054522.GF3088@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Mh9l-FmpGSrfzMVQtMeWvjI4A7QtHx9C
-X-Proofpoint-GUID: Mh9l-FmpGSrfzMVQtMeWvjI4A7QtHx9C
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-28_07,2023-11-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- malwarescore=0 clxscore=1015 lowpriorityscore=0 mlxscore=0
- priorityscore=1501 adultscore=0 phishscore=0 bulkscore=0 suspectscore=0
- spamscore=0 mlxlogscore=999 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2311060000 definitions=main-2311280062
 
-Hi Mani,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D218198
 
-On 11/28/2023 1:45 PM, Manivannan Sadhasivam wrote:
-> On Thu, Nov 23, 2023 at 12:46:24AM -0800, Can Guo wrote:
->> In the dual init scenario, the initial PHY gear is set to HS-G2, and the
->> first Power Mode Change (PMC) is meant to find the best matching PHY gear
->> for the 2nd init. However, for the first PMC, if the negotiated gear (say
->> HS-G4) is higher than the initial PHY gear, we cannot go ahead let PMC to
->> the negotiated gear happen, because the programmed UFS PHY settings may not
->> support the negotiated gear. Fix it by overwriting the negotiated gear with
->> the PHY gear.
->>
-> 
-> I don't quite understand this patch. If the phy_gear is G2 initially and the
-> negotiated gear is G4, then as per this change,
-> 
-> phy_gear = G4;
-> negotiated gear = G2;
-> 
-> Could you please explain how this make sense?
+--- Comment #2 from Dieter Mummenschanz (dmummenschanz@web.de) ---
+Thanks for the swift reply.
 
-phy_gear was G2 (in the beginning) and just now changed to G4, but the 
-PHY settings programmed in the beginning can only support no-G4 (not 
-G4). Without this change, as the negotiated gear is G4, the power mode 
-change is going to put UFS at HS-G4 mode, but the PHY settings 
-programmed is no-G4. This change is to limit the negotiated gear to 
-HS-G2 for the 1st init. In the 2nd init, as the new PHY gear is G4, G4 
-PHY settings would be programmed, it'd be safe to put the UFS at HS-G4 mode.
+I've applied your patch. Booted up my machine and waited until it transitio=
+ns
+into lower package states (pc8 at the lowest). After that I closed the lapt=
+op
+LID and let the machine suspend to RAM (S3). After that I reopened the LID =
+and
+gave the machine 1-3 minutes time to transition to lower package states whi=
+ch
+it now does.
+I've attached the dmesg part including your patch when the machine enters
+suspend. One thing is odd though:
 
-Thanks,
-Can Guo.
-> 
-> - Mani
-> 
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> ---
->>   drivers/ufs/host/ufs-qcom.c | 7 ++++++-
->>   1 file changed, 6 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->> index cc0eb37..d4edf58 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -920,8 +920,13 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
->>   		 * because, the PHY gear settings are backwards compatible and we only need to
->>   		 * change the PHY gear settings while scaling to higher gears.
->>   		 */
->> -		if (dev_req_params->gear_tx > host->phy_gear)
->> +		if (dev_req_params->gear_tx > host->phy_gear) {
->> +			u32 old_phy_gear = host->phy_gear;
->> +
->>   			host->phy_gear = dev_req_params->gear_tx;
->> +			dev_req_params->gear_tx = old_phy_gear;
->> +			dev_req_params->gear_rx = old_phy_gear;
->> +		}
->>   
->>   		/* enable the device ref clock before changing to HS mode */
->>   		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
->> -- 
->> 2.7.4
->>
-> 
+[  109.424369] ata5.00: qc timeout after 5000 msecs (cmd 0xe0)
+[  109.424397] ata5.00: STANDBY IMMEDIATE failed (err_mask=3D0x4)
+
+this shouldn't be there, right?
+
+Regarding automatic transitioning I'm not sure how this works. However even
+though I've set CONFIG_SATA_MOBILE_LPM_POLICY=3D3 in the kernel config, I h=
+ave to
+call an init script explicitly forcing the scsi host to use low power when
+idle:
+
+for foo in /sys/class/scsi_host/host*/link_power_management_policy;
+  do echo med_power_with_dipm > $foo;
+done
+
+Otherwise the machine is stuck at PC2 state always.
+
+So we have a fix I guess?
+
+Anyway if there is anything alse I can try or provide you with more debug
+output please let me know.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
