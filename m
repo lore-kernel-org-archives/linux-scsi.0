@@ -1,107 +1,121 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8D37BC;
-	Mon, 27 Nov 2023 15:05:05 -0800 (PST)
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1cf856663a4so33145305ad.3;
-        Mon, 27 Nov 2023 15:05:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701126305; x=1701731105;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QZQYFviZ0NjJMmOQCkwljhOK1QMILYnuXSQ9cUUqnio=;
-        b=Tehz8kcJaKAZY/wILOFhZeEixKnOLVGss0bzfGkdS5EenAX91Ot7r6vVeyfGewWjVM
-         LnHESd5n0IqWUT8GImi4ZLGGxIHBSFbf+oJXwokWbhNzYbbXTJm/3MKhGx9BOtZkT5xx
-         EexVvkCAaXaP3QgnTfklJTsnwDEP+bzCDepViYrtDrx9tfWrU64b2PH2Y04eGIrFjZ3p
-         9R7yQxdu8ob4Zj6o9mRCbA+WlEZQbSSgxTuXhatheO87gBiLBhUG57TUZDsy/AlGmsDZ
-         MT1pVTBZakkIn7MgUkHhu0gN8bzk4HaHOBgh3+h1fIaz8qAdZGVsl5D6FjSyaxMS/C0G
-         h9Jw==
-X-Gm-Message-State: AOJu0YwPdvlfOWTetND/EPfCNQAfkt1WanHgeF7AheCc9AOUjzCOLgfS
-	rJsWTNUhfyr2BPFAL7g1GrQ=
-X-Google-Smtp-Source: AGHT+IG6nyxa/ygS3f7POO8Ki4nl96QbcWd1qBCupU+VPfqkGaOoaCgHB/aUl1wzRbi7EkhCEs4ioA==
-X-Received: by 2002:a17:902:a411:b0:1cf:959d:8cf with SMTP id p17-20020a170902a41100b001cf959d08cfmr13580999plq.8.1701126304996;
-        Mon, 27 Nov 2023 15:05:04 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:81f2:7dda:474a:ba23? ([2620:0:1000:8411:81f2:7dda:474a:ba23])
-        by smtp.gmail.com with ESMTPSA id u16-20020a170902e81000b001c9c5a1b477sm8839283plg.169.2023.11.27.15.05.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Nov 2023 15:05:04 -0800 (PST)
-Message-ID: <0a522249-2b27-49a9-bf39-8d8c37b120f4@acm.org>
-Date: Mon, 27 Nov 2023 15:05:02 -0800
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D5231B8;
+	Mon, 27 Nov 2023 17:36:04 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SfQ5T4M2kz4f3k64;
+	Tue, 28 Nov 2023 09:35:57 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 671EC1A0AA3;
+	Tue, 28 Nov 2023 09:36:00 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgDn6hD8Q2VlfLiHCA--.59632S3;
+	Tue, 28 Nov 2023 09:35:59 +0800 (CST)
+Subject: Re: [PATCH block/for-next v2 01/16] block: add a new helper to get
+ inode from block_device
+To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: ming.lei@redhat.com, axboe@kernel.dk, roger.pau@citrix.com,
+ colyli@suse.de, kent.overstreet@gmail.com, joern@lazybastard.org,
+ miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
+ sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
+ gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
+ martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
+ dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
+ nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
+ adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
+ konishi.ryusuke@gmail.com, dchinner@redhat.com, linux@weissschuh.net,
+ min15.li@samsung.com, dlemoal@kernel.org, willy@infradead.org,
+ akpm@linux-foundation.org, hare@suse.de, p.raghav@samsung.com,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+ linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+ gfs2@lists.linux.dev, linux-nilfs@vger.kernel.org, yi.zhang@huawei.com,
+ yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20231127062116.2355129-1-yukuai1@huaweicloud.com>
+ <20231127062116.2355129-2-yukuai1@huaweicloud.com>
+ <ZWRDeQ4K8BiYnV+X@infradead.org>
+ <6acdeece-7163-3219-95e2-827e54eadd0c@huaweicloud.com>
+ <ZWTErvnMf7HiO1Wj@infradead.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <bc64da80-e9bd-84cb-f173-876623303131@huaweicloud.com>
+Date: Tue, 28 Nov 2023 09:35:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] scsi: core: Support disabling fair tag sharing
-Content-Language: en-US
-To: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
- Keith Busch <kbusch@kernel.org>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>,
- Ed Tsai <ed.tsai@mediatek.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20231114180426.1184601-1-bvanassche@acm.org>
- <20231114180426.1184601-3-bvanassche@acm.org>
- <80dee412-2fda-6a23-0b62-08f87bd7e607@huaweicloud.com>
- <d706f265-f991-45c0-a551-34ecdee55f7c@acm.org>
- <d1e94a08-f28e-ddd9-5bda-7fee28b87f31@huaweicloud.com>
- <ef7de6b5-2ed3-469e-bb01-4eacda62cd6a@acm.org>
- <e5e8e995-c38b-7b23-a0a9-5b2f285164c8@huaweicloud.com>
- <5dd7b7f7-bcae-4769-b6c8-ac0da8e69c93@acm.org>
- <1b380cbf-40e9-6ba6-62da-d3aad94809d0@huaweicloud.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1b380cbf-40e9-6ba6-62da-d3aad94809d0@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <ZWTErvnMf7HiO1Wj@infradead.org>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDn6hD8Q2VlfLiHCA--.59632S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7KF1rGFWkXF1DXFy3WF45ZFb_yoW8Wry7pF
+	Wjkan8GF1DAFnrur4kWa1xK3yFy3sFkrW7GFy8CryxA3y5WF9FgFyfKw4UJFyDGr4DJr4q
+	qa10vFy3Xa48WaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9I14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Wrv_Gr1UMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_WFyU
+	JVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
+	IYCTnIWIevJa73UjIFyTuYvjfUojjgUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 11/22/23 22:29, Yu Kuai wrote:
-> 在 2023/11/22 3:32, Bart Van Assche 写道:
->> +static ssize_t queue_fair_sharing_store(struct request_queue *q,
->> +                    const char *page, size_t count)
->> +{
->> +    const unsigned int DFTS_BIT = ilog2(BLK_MQ_F_DISABLE_FAIR_TAG_SHARING);
->> +    struct blk_mq_tag_set *set = q->tag_set;
->> +    struct blk_mq_hw_ctx *hctx;
->> +    unsigned long i;
->> +    int res;
->> +    bool val;
->> +
->> +    res = kstrtobool(page, &val);
->> +    if (res < 0)
->> +        return res;
->> +
->> +    mutex_lock(&set->tag_list_lock);
->> +    clear_bit(DFTS_BIT, &set->flags);
->> +    list_for_each_entry(q, &set->tag_list, tag_set_list) {
->> +        /* Serialize against blk_mq_realloc_hw_ctxs() */
+Hi,
+
+�� 2023/11/28 0:32, Christoph Hellwig д��:
+> On Mon, Nov 27, 2023 at 09:07:22PM +0800, Yu Kuai wrote:
+>> 1) Is't okay to add a new helper to pass in bdev for following apis?
 > 
-> If set/clear bit concurrent with test bit from io path, will there be
-> problem? Why don't freeze these queues?
-
-If that happens the changes applied through this sysfs attribute may only take
-effect after a short delay (depending on how fast changes are propagated from
-one CPU to another). I don't think that this is an issue?
-  >> +#define QUEUE_RW_ENTRY_NO_SYSFS_MUTEX(_prefix, _name)       \
->> +    static struct queue_sysfs_entry _prefix##_entry = { \
->> +        .attr = { .name = _name, .mode = 0644 },    \
->> +        .show = _prefix##_show,                     \
->> +        .store = _prefix##_store,                   \
->> +        .no_sysfs_mutex = true,                     \
->> +    };
->> +
 > 
-> This actually change all the queues from the same tagset, can we add
-> this new entry to /sys/class/scsi_host/hostx/xxx ?
+> For some we already have them (e.g. bdev_nr_bytes to read the bdev)
+> size, for some we need to add them.  The big thing that seems to
+> stick out is page cache API, and I think that is where we need to
+> define maintainable APIs for file systems and others to use the
+> block device page cache.  Probably only in folio versions and not
+> pages once if we're touching the code anyay
 
-That would make it impossible to disable fair tag sharing for block drivers
-that are not based on the SCSI core. Are you sure that's what you want?
+Thanks for the advice! In case I'm understanding correctly, do you mean
+that all other fs/drivers that is using pages versions can safely switch
+to folio versions now?
+
+By the way, my orginal idea was trying to add a new field 'bd_flags'
+in block_devcie, and then add a new bit so that bio_check_ro() will
+only warn once for each partition. Now that this patchset will be quite
+complex, I'll add a new bool field 'bd_ro_warned' to fix the above
+problem first, and then add 'bd_flags' once this patchset is done.
 
 Thanks,
+Kuai
 
-Bart.
+> 
+>> 2) For the file fs/buffer.c, there are some special usage like
+>> following that I don't think it's good to add a helper:
+>>
+>> spin_lock(&bd_inode->i_mapping->private_lock);
+>>
+>> Is't okay to move following apis from fs/buffer.c directly to
+>> block/bdev.c?
+>>
+>> __find_get_block
+>> bdev_getblk
+> 
+> I'm not sure moving is a good idea, but we might end up the
+> some kind of low-level access from buffer.c, be that special
+> helpers, a separate header or something else.  Let's sort out
+> the rest of the kernel first.
+> 
+> .
+> 
+
