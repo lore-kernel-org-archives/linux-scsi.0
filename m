@@ -1,89 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bell-sw-com.20230601.gappssmtp.com header.i=@bell-sw-com.20230601.gappssmtp.com header.b="wiVFfJWb"
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B55312C
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 09:14:46 -0800 (PST)
-Received: by mail-lf1-x12a.google.com with SMTP id 2adb3069b0e04-50bb92811c0so1000866e87.1
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 09:14:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bell-sw-com.20230601.gappssmtp.com; s=20230601; t=1701191684; x=1701796484; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QCcwI5Fsx/m7FQ+379CJxqfI5J6SA+TgM6DUnwjy9a0=;
-        b=wiVFfJWbQ4AK3bFS8hdLapk30fV2W/h7qgokd9mfZ+eJHQlMx0sdzXtReG2KbFy0sf
-         TK/NdCvWfskOySZthgVQVIBamSSR+VxUywzE67NsevDUgFsx5Fpl4zTt+2Ra1FYnLH72
-         r7B0BCbsfj/rMWFs1XNJXV7phmZGZ5ylkaAtbrgP05Ye45wfGFqurrYrG2F1qXXg7+Q7
-         zXL7E4vJ1m591NSYOu5JEI0LNxo0VKXSmQTaivMJI3Yv0fSEcmQ8zPoC5UQCOdRgSEFj
-         CeXppCJSd3XKcKRCqCJqfcVl0KwFTc5XwmFfzd5+MR4zMyd1CY54BJvtTWuUgNuy5aR+
-         PiYQ==
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68C6618E;
+	Tue, 28 Nov 2023 09:36:53 -0800 (PST)
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1cfc9c4acb6so21389975ad.0;
+        Tue, 28 Nov 2023 09:36:53 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701191684; x=1701796484;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=QCcwI5Fsx/m7FQ+379CJxqfI5J6SA+TgM6DUnwjy9a0=;
-        b=gJxrEVKH8GYdWdcCvyysU0fsjY/6M1Icf8+fuOCCs8uXUd9LphA5JxBsAeJfUp8HFe
-         rILzMJRdfoWhzOtw7NccmQTa3OH7GAHqW0vtjbj25e2k5lL5T1VzTZFt7hAK8vlTAgnM
-         qaSRu1y8to68Kjyb+QGq2mp41snR0SmHDCXypjmCnIZglzLAtUWzra+y6VnLSx80br0a
-         FTEqDmtktZw/uqItYGK7oaeLfsKkwD2KRfdSsrGEuff5hBXlNVq/szwIHBnzycKIlVMH
-         j0wCKQ6L9j1qkswnEnZvxSdOLwUT3iZ8AAPsUU4kXQBtA5nVbfMm8MX0HJarM0slSpOo
-         UZGA==
-X-Gm-Message-State: AOJu0YwA/fthNv1ESNDJM/6ON0EKbztyhV8ffCP+jWHzX5ljoFkJBBZY
-	c1Bp8bAt5Ac7Ain98VpiW2fYIOEeIyRzhhES1g==
-X-Google-Smtp-Source: AGHT+IEGglxL3q0PVkQI9U1+znrjwhbUm//7kav22xDv/c/n6AOVx5OgUDK66Xxps5lCZyoQy1Ighg==
-X-Received: by 2002:ac2:5596:0:b0:50b:c230:2bff with SMTP id v22-20020ac25596000000b0050bc2302bffmr198177lfg.19.1701191684423;
-        Tue, 28 Nov 2023 09:14:44 -0800 (PST)
-Received: from belltron.int.bell-sw.com ([95.161.223.113])
-        by smtp.gmail.com with ESMTPSA id m25-20020a197119000000b005042ae2baf8sm1870333lfc.258.2023.11.28.09.14.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Nov 2023 09:14:44 -0800 (PST)
-From: Alexey Kodanev <aleksei.kodanev@bell-sw.com>
-To: linux-scsi@vger.kernel.org
-Cc: Alexey Kodanev <aleksei.kodanev@bell-sw.com>
-Subject: [PATCH 2/2] scsi: fnic: drop unnecessary NULL check in is_fnic_fip_flogi_reject()
-Date: Tue, 28 Nov 2023 17:13:52 +0000
-Message-Id: <20231128171352.221822-2-aleksei.kodanev@bell-sw.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231128171352.221822-1-aleksei.kodanev@bell-sw.com>
-References: <20231128171352.221822-1-aleksei.kodanev@bell-sw.com>
+        d=1e100.net; s=20230601; t=1701193013; x=1701797813;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qQVzoA6KB8WWZeZA91BhoJD6+IG8LppaJH07D3mUsOU=;
+        b=i7fEQn5Mtk4pCNuLFF6JM+SVrLzw/LMiy41POibLRW+M7vogks/qGZ6tZ6jBljXXBa
+         VjATiROwAYjpQO/jFhGPANqDy++xjd52HAIgESh0L56udjVMSItt0dh4Tpuq7ybvk2M1
+         iA+NVz8GdJJgLtiCa+A9pxXywNcG01M1nFFpk6/SDMSSXWoVOuXLhHcgM0J5LQ/DHlS1
+         Uu4VuJiYuaPA/4Y8FRXOc4TlO+fadw8qwdsmyui3E5w/hUCN7K2qBR5iNSr7PvQAtX+T
+         ZpqYE8Ypbj7JTwDtDyYTUa7tUFyjR3KImLLIqOH5/rZ1X/rYk6YETntto1THvO1WYtN7
+         UROA==
+X-Gm-Message-State: AOJu0YwzaAhcsluPk0hFKWNZWzVpkeSBZTNyVXnUTFhi7HR+FDqbAC/V
+	Y8rgNOUp2/eGLc2iY+awN5U=
+X-Google-Smtp-Source: AGHT+IHJ8Zcb57hVsFkWr7NeyCpUP5cJFsatU7AGCSaKVooiglAQrpzT62jm1Aug08/zw1+qGuGcHQ==
+X-Received: by 2002:a17:902:ab47:b0:1cf:cbf4:6f7e with SMTP id ij7-20020a170902ab4700b001cfcbf46f7emr8293088plb.14.1701193012679;
+        Tue, 28 Nov 2023 09:36:52 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:81f2:7dda:474a:ba23? ([2620:0:1000:8411:81f2:7dda:474a:ba23])
+        by smtp.gmail.com with ESMTPSA id v3-20020a170902b7c300b001cfc9ad74a3sm4702377plz.15.2023.11.28.09.36.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 28 Nov 2023 09:36:52 -0800 (PST)
+Message-ID: <9f522b19-82a0-4362-956b-fac10c99b1ad@acm.org>
+Date: Tue, 28 Nov 2023 09:36:51 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v15 00/19] Improve write performance for zoned UFS devices
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>
+References: <20231114211804.1449162-1-bvanassche@acm.org>
+ <20231127070939.GB27870@lst.de>
+ <a9748872-0608-4ab9-8986-a82eff17ca9f@acm.org> <20231128125355.GA7613@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231128125355.GA7613@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-    if (desc->fip_dtype == FIP_DT_FLOGI) {
-        ...
-        els = (struct fip_encaps *)desc;
-        fh = (struct fc_frame_header *)(els + 1);
+On 11/28/23 04:53, Christoph Hellwig wrote:
+> I know the background.  I also know that JEDEC did all this aginst
+> better judgement and knowing the situation.  We should not give them
+> their carrot after they haven't even been interested in engaging.
 
-'fh' cannot be NULL here after shifting a valid pointer 'desc'.
+That statement is overly negative. The JEDEC Zoned Storage for UFS
+standard has been published last week [1]. It can be downloaded by
+anyone for free after having created a JEDEC account, which is also
+free. As one can see in this standard, nothing excludes using a zone
+append command. Once T10 standardizes a zone append command, it can
+be implemented by UFS vendors. However, I do not know whether T10
+plans to standardize a zone append command.
 
-Detected using the static analysis tool - Svace.
+Bart.
 
-Fixes: d3c995f1dcf9 ("[SCSI] fnic: FIP VLAN Discovery Feature Support")
-Signed-off-by: Alexey Kodanev <aleksei.kodanev@bell-sw.com>
----
- drivers/scsi/fnic/fnic_fcs.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 55632c67a8f2..ca4214db72f5 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -338,9 +338,6 @@ static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
- 		els = (struct fip_encaps *)desc;
- 		fh = (struct fc_frame_header *)(els + 1);
- 
--		if (!fh)
--			return 0;
--
- 		/*
- 		 * ELS command code, reason and explanation should be = Reject,
- 		 * unsupported command and insufficient resource
--- 
-2.25.1
+[1] https://www.jedec.org/system/files/docs/JESD220-5.pdf
 
