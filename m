@@ -1,76 +1,150 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-X-Greylist: delayed 567 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 28 Nov 2023 03:19:48 PST
-Received: from gw.red-soft.ru (red-soft.ru [188.246.186.2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id CF8DD194;
-	Tue, 28 Nov 2023 03:19:48 -0800 (PST)
-Received: from localhost.biz (unknown [10.81.81.211])
-	by gw.red-soft.ru (Postfix) with ESMTPA id 9643E3E1A83;
-	Tue, 28 Nov 2023 14:10:18 +0300 (MSK)
-From: Artem Chernyshev <artem.chernyshev@red-soft.ru>
-To: Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>
-Cc: Artem Chernyshev <artem.chernyshev@red-soft.ru>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	"James E . J . Bottomley" <jejb@linux.ibm.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org
-Subject: [PATCH] scsi: fnic: return error if vmalloc failed
-Date: Tue, 28 Nov 2023 14:10:08 +0300
-Message-Id: <20231128111008.2280507-1-artem.chernyshev@red-soft.ru>
-X-Mailer: git-send-email 2.37.3
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2799B4652D;
+	Tue, 28 Nov 2023 11:21:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eant+qr0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EACEAC433C8;
+	Tue, 28 Nov 2023 11:21:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701170490;
+	bh=i2DI2lTZRH7Axef8lpr2fdCRAi/tsvwjQbIBNg6ppKI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Eant+qr0P1HZHabKslZIjVVItph5/CbW2XVL0AUtY1QEuN3EMW2onX27lKXKbg3Bn
+	 Bvg+MNrC+kdHf7IsAST0EXCJmRnuOtRXzCZ3xdStk/ONmQm+SC9IjpT4CfIIKgeiNf
+	 74SwjhX8le2hIUSdIeCmo88ZD46XPYdvzSiS8s0XUF2TZeSwUiN069wok99T5xGiUJ
+	 f9cH/mTvAxGSu0r21mQ7FWOh6lo9RVwUjp/sUZctQpG1qnPSoG+rud1D0BE97nlEGj
+	 gyYU1J6eiHzqFETUht0MTuMMe9vpnSWhLqVbQjyL6o+MtE66YijZ5V8xy1dAMUHXSr
+	 RcN4Twvwxh9Tw==
+Date: Tue, 28 Nov 2023 16:50:59 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Can Guo <quic_cang@quicinc.com>
+Cc: bvanassche@acm.org, adrian.hunter@intel.com, beanhuo@micron.com,
+	avri.altman@wdc.com, junwoo80.lee@samsung.com,
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, Andy Gross <agross@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 04/10] scsi: ufs: ufs-qcom: Limit negotiated gear to
+ selected PHY gear
+Message-ID: <20231128112059.GS3088@thinkpad>
+References: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
+ <1700729190-17268-5-git-send-email-quic_cang@quicinc.com>
+ <20231128054522.GF3088@thinkpad>
+ <bc69d9ef-6ddc-4389-8bf0-9405385a494b@quicinc.com>
+ <20231128105237.GN3088@thinkpad>
+ <238a3df1-5631-4922-b268-83d3dfb80c6a@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-KLMS-Rule-ID: 1
-X-KLMS-Message-Action: clean
-X-KLMS-AntiSpam-Lua-Profiles: 181650 [Nov 28 2023]
-X-KLMS-AntiSpam-Version: 6.0.0.2
-X-KLMS-AntiSpam-Envelope-From: artem.chernyshev@red-soft.ru
-X-KLMS-AntiSpam-Rate: 0
-X-KLMS-AntiSpam-Status: not_detected
-X-KLMS-AntiSpam-Method: none
-X-KLMS-AntiSpam-Auth: dkim=none
-X-KLMS-AntiSpam-Info: LuaCore: 5 0.3.5 98d108ddd984cca1d7e65e595eac546a62b0144b, {Tracking_from_domain_doesnt_match_to}, localhost.biz:7.1.1;127.0.0.199:7.1.2;red-soft.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1, FromAlignment: s
-X-MS-Exchange-Organization-SCL: -1
-X-KLMS-AntiSpam-Interceptor-Info: scan successful
-X-KLMS-AntiPhishing: Clean, bases: 2023/11/28 09:02:00
-X-KLMS-AntiVirus: Kaspersky Security for Linux Mail Server, version 8.0.3.30, bases: 2023/11/28 07:11:00 #22560184
-X-KLMS-AntiVirus-Status: Clean, skipped
+In-Reply-To: <238a3df1-5631-4922-b268-83d3dfb80c6a@quicinc.com>
 
-In fnic_init_module() exists redundant check for return value
-from fnic_debugfs_init(), because at moment it only can
-return zero. It make sense to process theoretical vmalloc failure.
+On Tue, Nov 28, 2023 at 07:03:41PM +0800, Can Guo wrote:
+> 
+> 
+> On 11/28/2023 6:52 PM, Manivannan Sadhasivam wrote:
+> > On Tue, Nov 28, 2023 at 04:05:59PM +0800, Can Guo wrote:
+> > > Hi Mani,
+> > > 
+> > > On 11/28/2023 1:45 PM, Manivannan Sadhasivam wrote:
+> > > > On Thu, Nov 23, 2023 at 12:46:24AM -0800, Can Guo wrote:
+> > > > > In the dual init scenario, the initial PHY gear is set to HS-G2, and the
+> > > > > first Power Mode Change (PMC) is meant to find the best matching PHY gear
+> > > > > for the 2nd init. However, for the first PMC, if the negotiated gear (say
+> > > > > HS-G4) is higher than the initial PHY gear, we cannot go ahead let PMC to
+> > > > > the negotiated gear happen, because the programmed UFS PHY settings may not
+> > > > > support the negotiated gear. Fix it by overwriting the negotiated gear with
+> > > > > the PHY gear.
+> > > > > 
+> > > > 
+> > > > I don't quite understand this patch. If the phy_gear is G2 initially and the
+> > > > negotiated gear is G4, then as per this change,
+> > > > 
+> > > > phy_gear = G4;
+> > > > negotiated gear = G2;
+> > > > 
+> > > > Could you please explain how this make sense?
+> > > 
+> > > phy_gear was G2 (in the beginning) and just now changed to G4, but the PHY
+> > > settings programmed in the beginning can only support no-G4 (not G4).
+> > > Without this change, as the negotiated gear is G4, the power mode change is
+> > > going to put UFS at HS-G4 mode, but the PHY settings programmed is no-G4.
+> > 
+> > But we are going to reinit the PHY anyway, isn't it?
+> 
+> We are power mode changing to HS-G4 with no-G4 PHY settings programmed, the
+> power mode change operation, in the 1st init, may immediately cause UIC
+> errors and lead to probe fail. We are not seeing issues as of now, maybe
+> because the amount of HW used for testing is not large enough.
+> 
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+I'm not sure what you are saying is what happening. Because, if we use the
+incompatible gear setting, we should immediately see the UIC error.
 
-Fixes: 9730ddfb123d ("scsi: fnic: remove redundant assignment of variable rc")
-Signed-off-by: Artem Chernyshev <artem.chernyshev@red-soft.ru>
----
- drivers/scsi/fnic/fnic_debugfs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> This change is not really related to this specific series, I can remove it
+> in next version.
+> 
 
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
-index c4d9ed0d7d75..cf2601bf170a 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -52,9 +52,10 @@ int fnic_debugfs_init(void)
- 		fc_trc_flag->fnic_trace = 2;
- 		fc_trc_flag->fc_trace = 3;
- 		fc_trc_flag->fc_clear = 4;
-+		return 0;
- 	}
- 
--	return 0;
-+	return -ENOMEM;
- }
- 
- /*
+Please do so. This needs to be reviewed separately.
+
+- Mani
+
+> Thanks,
+> Can Guo.
+> 
+> > 
+> > > This change is to limit the negotiated gear to HS-G2 for the 1st init. In
+> > > the 2nd init, as the new PHY gear is G4, G4 PHY settings would be
+> > > programmed, it'd be safe to put the UFS at HS-G4 mode.
+> > > 
+> > 
+> > Why do we need to limit it since we already have the logic in place to set
+> > whatever gear mode applicable for 1st init?
+> > 
+> > - Mani
+> > 
+> > > Thanks,
+> > > Can Guo.
+> > > > 
+> > > > - Mani
+> > > > 
+> > > > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> > > > > ---
+> > > > >    drivers/ufs/host/ufs-qcom.c | 7 ++++++-
+> > > > >    1 file changed, 6 insertions(+), 1 deletion(-)
+> > > > > 
+> > > > > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > > > > index cc0eb37..d4edf58 100644
+> > > > > --- a/drivers/ufs/host/ufs-qcom.c
+> > > > > +++ b/drivers/ufs/host/ufs-qcom.c
+> > > > > @@ -920,8 +920,13 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+> > > > >    		 * because, the PHY gear settings are backwards compatible and we only need to
+> > > > >    		 * change the PHY gear settings while scaling to higher gears.
+> > > > >    		 */
+> > > > > -		if (dev_req_params->gear_tx > host->phy_gear)
+> > > > > +		if (dev_req_params->gear_tx > host->phy_gear) {
+> > > > > +			u32 old_phy_gear = host->phy_gear;
+> > > > > +
+> > > > >    			host->phy_gear = dev_req_params->gear_tx;
+> > > > > +			dev_req_params->gear_tx = old_phy_gear;
+> > > > > +			dev_req_params->gear_rx = old_phy_gear;
+> > > > > +		}
+> > > > >    		/* enable the device ref clock before changing to HS mode */
+> > > > >    		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
+> > > > > -- 
+> > > > > 2.7.4
+> > > > > 
+> > > > 
+> > 
+
 -- 
-2.37.3
-
+மணிவண்ணன் சதாசிவம்
