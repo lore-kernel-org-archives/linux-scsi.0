@@ -1,82 +1,112 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95EAA10967;
+	Tue, 28 Nov 2023 05:55:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zxF6+s0S"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D249C4;
-	Mon, 27 Nov 2023 21:48:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=piX6sU8uUfRdM3HI4C5o5RtKyEk7LebUsWmX5nAnS9s=; b=zxF6+s0SCn2mTM1F5sDGatwdiD
-	r+J5EdNg/JbVc8/TEwBGrSiUOrPltOv0SB5DHqEzye3x5UYQ3y43F+9CYP+YH9zZju4MAnIxN7jLr
-	52H6aTiRg9m6ogsTbJ455qxXjn6rKf3EheShZA+8TlQ0nbft+l3Lre4a0bU7FkEs+H18O/xb4HfZ2
-	DcIkdp3IB1Vc74yjq/SGmA7ZBc/H0ChYb2skCnNlw+1loprwzCvOOZXqJXWMJW983aVx/FvifwWE8
-	GXy6mVkavESjy4cQk0Ees741WqX1/u5t1i6oo5VnA69qG8fgQUNZnB/k4V2ZDGbJGb/SxQnB+AlVf
-	iSo+n9HA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1r7qxI-004BPZ-2N;
-	Tue, 28 Nov 2023 05:48:20 +0000
-Date: Mon, 27 Nov 2023 21:48:20 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Christoph Hellwig <hch@infradead.org>, ming.lei@redhat.com,
-	axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
-	kent.overstreet@gmail.com, joern@lazybastard.org,
-	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
-	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
-	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
-	dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
-	adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
-	konishi.ryusuke@gmail.com, dchinner@redhat.com,
-	linux@weissschuh.net, min15.li@samsung.com, dlemoal@kernel.org,
-	willy@infradead.org, akpm@linux-foundation.org, hare@suse.de,
-	p.raghav@samsung.com, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
-	linux-nilfs@vger.kernel.org, yi.zhang@huawei.com,
-	yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH block/for-next v2 01/16] block: add a new helper to get
- inode from block_device
-Message-ID: <ZWV/JBxrrGXzY0gr@infradead.org>
-References: <20231127062116.2355129-1-yukuai1@huaweicloud.com>
- <20231127062116.2355129-2-yukuai1@huaweicloud.com>
- <ZWRDeQ4K8BiYnV+X@infradead.org>
- <6acdeece-7163-3219-95e2-827e54eadd0c@huaweicloud.com>
- <ZWTErvnMf7HiO1Wj@infradead.org>
- <bc64da80-e9bd-84cb-f173-876623303131@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gn1ehWoe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37205C433C7;
+	Tue, 28 Nov 2023 05:55:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701150936;
+	bh=PpSPC0i09cHtjnQAsG5mVOmu+DNSXaW6HtY35gGeIfA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Gn1ehWoed/7O6HrcD+PwXoxBUFjoqenSCYWbctGrrABKhCJNRWNqdjxERDb00dpd0
+	 aieTbP3E9+QhIQ4HARG6jv4uD8ymtz4dbmWS3dmllBSLdBLNUsPKip9eJq7OXPkpTz
+	 WWTBL4ovN6k3zCAtg7sfXAG5m9VKHM2pExOJXhcKKbsvpct9AIGPz6kDen/qqTj4IX
+	 3dXee8Mj3nxxWtpYmWG40HEwpPEUE3cI9zhonTDbE/KvW3KkLIvGSqZWLVfYKo8iHe
+	 NijjYZULu6YF9UZ9qZXswH0wXZypk7/BvbqZXyuvedbV0iRKaMk5qzrL6Nlj0lvlEF
+	 +Rs9Y6F/b74BA==
+Date: Tue, 28 Nov 2023 11:25:20 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Can Guo <quic_cang@quicinc.com>
+Cc: bvanassche@acm.org, adrian.hunter@intel.com, beanhuo@micron.com,
+	avri.altman@wdc.com, junwoo80.lee@samsung.com,
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, Andy Gross <agross@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 06/10] scsi: ufs: ufs-qcom: Limit HS-G5 Rate-A to
+ hosts with HW version 5
+Message-ID: <20231128055520.GG3088@thinkpad>
+References: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
+ <1700729190-17268-7-git-send-email-quic_cang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <bc64da80-e9bd-84cb-f173-876623303131@huaweicloud.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1700729190-17268-7-git-send-email-quic_cang@quicinc.com>
 
-On Tue, Nov 28, 2023 at 09:35:56AM +0800, Yu Kuai wrote:
-> Thanks for the advice! In case I'm understanding correctly, do you mean
-> that all other fs/drivers that is using pages versions can safely switch
-> to folio versions now?
+On Thu, Nov 23, 2023 at 12:46:26AM -0800, Can Guo wrote:
+> Qcom UFS hosts, with HW ver 5, can only support up to HS-G5 Rate-A due to
+> HW limitations. If the HS-G5 PHY gear is used, update host_params->hs_rate
+> to Rate-A, so that the subsequent power mode changes shall stick to Rate-A.
+> 
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 
-If you never allocate a high-order folio pages are identical to folios.
-So yes, we can do folio based interfaces only, and also use that as
-an opportunity to convert over the callers.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-> By the way, my orginal idea was trying to add a new field 'bd_flags'
-> in block_devcie, and then add a new bit so that bio_check_ro() will
-> only warn once for each partition. Now that this patchset will be quite
-> complex, I'll add a new bool field 'bd_ro_warned' to fix the above
-> problem first, and then add 'bd_flags' once this patchset is done.
+One question below...
 
-Yes, please do a minimal version if you can find space where the
-rmw cycles don't cause damage to neighbouring fields.  Or just leave
-the current set of warnings in if it's too hard.
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 18 +++++++++++++++++-
+>  1 file changed, 17 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 9613ad9..6756f8d 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -442,9 +442,25 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba)
+>  static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>  {
+>  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> +	struct ufs_host_params *host_params = &host->host_params;
+>  	struct phy *phy = host->generic_phy;
+> +	enum phy_mode mode;
+>  	int ret;
+>  
+> +	/*
+> +	 * HW ver 5 can only support up to HS-G5 Rate-A due to HW limitations.
+> +	 * If the HS-G5 PHY gear is used, update host_params->hs_rate to Rate-A,
+> +	 * so that the subsequent power mode change shall stick to Rate-A.
+> +	 */
+> +	if (host->hw_ver.major == 0x5) {
+> +		if (host->phy_gear == UFS_HS_G5)
+> +			host_params->hs_rate = PA_HS_MODE_A;
+> +		else
+> +			host_params->hs_rate = PA_HS_MODE_B;
 
+Is this 'else' part really needed? Since there wouldn't be any 2nd init, I think
+we can skip that.
+
+- Mani
+
+> +	}
+> +
+> +	mode = host_params->hs_rate == PA_HS_MODE_B ? PHY_MODE_UFS_HS_B : PHY_MODE_UFS_HS_A;
+> +
+>  	/* Reset UFS Host Controller and PHY */
+>  	ret = ufs_qcom_host_reset(hba);
+>  	if (ret)
+> @@ -459,7 +475,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>  		return ret;
+>  	}
+>  
+> -	phy_set_mode_ext(phy, PHY_MODE_UFS_HS_B, host->phy_gear);
+> +	phy_set_mode_ext(phy, mode, host->phy_gear);
+>  
+>  	/* power on phy - start serdes and phy's power and clocks */
+>  	ret = phy_power_on(phy);
+> -- 
+> 2.7.4
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
