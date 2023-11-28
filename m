@@ -1,121 +1,216 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D5231B8;
-	Mon, 27 Nov 2023 17:36:04 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SfQ5T4M2kz4f3k64;
-	Tue, 28 Nov 2023 09:35:57 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 671EC1A0AA3;
-	Tue, 28 Nov 2023 09:36:00 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgDn6hD8Q2VlfLiHCA--.59632S3;
-	Tue, 28 Nov 2023 09:35:59 +0800 (CST)
-Subject: Re: [PATCH block/for-next v2 01/16] block: add a new helper to get
- inode from block_device
-To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: ming.lei@redhat.com, axboe@kernel.dk, roger.pau@citrix.com,
- colyli@suse.de, kent.overstreet@gmail.com, joern@lazybastard.org,
- miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
- sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
- gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
- martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
- dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
- nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
- adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
- konishi.ryusuke@gmail.com, dchinner@redhat.com, linux@weissschuh.net,
- min15.li@samsung.com, dlemoal@kernel.org, willy@infradead.org,
- akpm@linux-foundation.org, hare@suse.de, p.raghav@samsung.com,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
- linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
- gfs2@lists.linux.dev, linux-nilfs@vger.kernel.org, yi.zhang@huawei.com,
- yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20231127062116.2355129-1-yukuai1@huaweicloud.com>
- <20231127062116.2355129-2-yukuai1@huaweicloud.com>
- <ZWRDeQ4K8BiYnV+X@infradead.org>
- <6acdeece-7163-3219-95e2-827e54eadd0c@huaweicloud.com>
- <ZWTErvnMf7HiO1Wj@infradead.org>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <bc64da80-e9bd-84cb-f173-876623303131@huaweicloud.com>
-Date: Tue, 28 Nov 2023 09:35:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="kb6mi/gg"
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C8E6138;
+	Mon, 27 Nov 2023 17:45:43 -0800 (PST)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AS0LvBj022987;
+	Tue, 28 Nov 2023 01:45:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=C2Wl7JccyRML31I3nvG8w7R3JFTxcqsSNH4FDHN2a7k=;
+ b=kb6mi/ggt4rvFblpBVMl6Lc7ZUR1kFRnvLCnDP/NU4Q+CuZpuwW0RU/Y3qf1smVinj+v
+ mDKwbVHac+fxA1TecISO2LP/nkD3jCnpwNs+QBUrnCFI1T2h+rXdfI5jgsTpZ2vihNQ9
+ it4M2Wm6FsNECoj+Han6bGcDgQ8k35BFAJ10CVqnN+UlArOLPbO6RhhU7ivfhmCDxSJx
+ YCOCJbpJOl0yGTulOmh5uW5kWmMo/VBACXA9Gg27nCi8qP3tc0okZGhmtrBlhvvsyHpt
+ Hrv+L8cD3oz2DG/Wk7niHMGlY9Z3S97BvT+9/mFFq54t1/GTmO5PWGq8r6N5vCu9ef0M tw== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3un586r5du-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 28 Nov 2023 01:45:23 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AS1jMtr030650
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 28 Nov 2023 01:45:22 GMT
+Received: from [10.253.11.37] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 27 Nov
+ 2023 17:45:18 -0800
+Message-ID: <ea3b4046-2fe8-4fac-b170-9298f2266cda@quicinc.com>
+Date: Tue, 28 Nov 2023 09:45:16 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ZWTErvnMf7HiO1Wj@infradead.org>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDn6hD8Q2VlfLiHCA--.59632S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KF1rGFWkXF1DXFy3WF45ZFb_yoW8Wry7pF
-	Wjkan8GF1DAFnrur4kWa1xK3yFy3sFkrW7GFy8CryxA3y5WF9FgFyfKw4UJFyDGr4DJr4q
-	qa10vFy3Xa48WaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9I14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_Wrv_Gr1UMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_WFyU
-	JVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
-	IYCTnIWIevJa73UjIFyTuYvjfUojjgUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v15 19/19] scsi: ufs: Inform the block layer about write
+ ordering
+To: Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen"
+	<martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        Jens Axboe
+	<axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        "Bao D . Nguyen"
+	<quic_nguyenb@quicinc.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J.
+ Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Asutosh Das
+	<quic_asutoshd@quicinc.com>,
+        Peter Wang <peter.wang@mediatek.com>, Bean Huo
+	<beanhuo@micron.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+References: <20231114211804.1449162-1-bvanassche@acm.org>
+ <20231114211804.1449162-20-bvanassche@acm.org>
+Content-Language: en-US
+From: Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <20231114211804.1449162-20-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: fPzRfwNYfEVkMHkYpROV8cTdW4DV5TjY
+X-Proofpoint-GUID: fPzRfwNYfEVkMHkYpROV8cTdW4DV5TjY
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-28_01,2023-11-27_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ mlxlogscore=999 priorityscore=1501 spamscore=0 impostorscore=0
+ adultscore=0 mlxscore=0 phishscore=0 suspectscore=0 clxscore=1011
+ bulkscore=0 lowpriorityscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2311060000 definitions=main-2311280011
 
-Hi,
+Hi Bart,
 
-ÔÚ 2023/11/28 0:32, Christoph Hellwig Ð´µÀ:
-> On Mon, Nov 27, 2023 at 09:07:22PM +0800, Yu Kuai wrote:
->> 1) Is't okay to add a new helper to pass in bdev for following apis?
+On 11/15/2023 5:16 AM, Bart Van Assche wrote:
+>  From the UFSHCI 4.0 specification, about the legacy (single queue) mode:
+> "The host controller always process transfer requests in-order according
+> to the order submitted to the list. In case of multiple commands with
+> single doorbell register ringing (batch mode), The dispatch order for
+> these transfer requests by host controller will base on their index in
+> the List. A transfer request with lower index value will be executed
+> before a transfer request with higher index value."
 > 
+>  From the UFSHCI 4.0 specification, about the MCQ mode:
+> "Command Submission
+> 1. Host SW writes an Entry to SQ
+> 2. Host SW updates SQ doorbell tail pointer
 > 
-> For some we already have them (e.g. bdev_nr_bytes to read the bdev)
-> size, for some we need to add them.  The big thing that seems to
-> stick out is page cache API, and I think that is where we need to
-> define maintainable APIs for file systems and others to use the
-> block device page cache.  Probably only in folio versions and not
-> pages once if we're touching the code anyay
+> Command Processing
+> 3. After fetching the Entry, Host Controller updates SQ doorbell head
+>     pointer
+> 4. Host controller sends COMMAND UPIU to UFS device"
+> 
+> In other words, for both legacy and MCQ mode, UFS controllers are
+> required to forward commands to the UFS device in the order these
+> commands have been received from the host.
+> 
+> Notes:
+> - For legacy mode this is only correct if the host submits one
+>    command at a time. The UFS driver does this.
+> - Also in legacy mode, the command order is not preserved if
+>    auto-hibernation is enabled in the UFS controller. Hence, enable
+>    zone write locking if auto-hibernation is enabled.
+> 
+> This patch improves performance as follows on my test setup:
+> - With the mq-deadline scheduler: 2.5x more IOPS for small writes.
+> - When not using an I/O scheduler compared to using mq-deadline with
+>    zone locking: 4x more IOPS for small writes.
+> 
+> Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> Reviewed-by: Can Guo <quic_cang@quicinc.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/ufs/core/ufshcd.c | 25 +++++++++++++++++++++++--
+>   1 file changed, 23 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 732509289165..e78954cda3ae 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -4421,6 +4421,20 @@ static int ufshcd_update_preserves_write_order(struct ufs_hba *hba,
+>   				return -EPERM;
+>   		}
+>   	}
+> +	shost_for_each_device(sdev, hba->host)
+> +		blk_freeze_queue_start(sdev->request_queue);
+> +	shost_for_each_device(sdev, hba->host) {
+> +		struct request_queue *q = sdev->request_queue;
+> +
+> +		blk_mq_freeze_queue_wait(q);
+> +		q->limits.driver_preserves_write_order = preserves_write_order;
+> +		blk_queue_required_elevator_features(q,
+> +			!preserves_write_order && blk_queue_is_zoned(q) ?
+> +			ELEVATOR_F_ZBD_SEQ_WRITE : 0);
+> +		if (q->disk)
+> +			disk_set_zoned(q->disk, q->limits.zoned);
+> +		blk_mq_unfreeze_queue(q);
+> +	}
+>   
+>   	return 0;
+>   }
+> @@ -4463,7 +4477,8 @@ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+>   
+>   	if (!is_mcq_enabled(hba) && !prev_state && new_state) {
+>   		/*
+> -		 * Auto-hibernation will be enabled for legacy UFSHCI mode.
+> +		 * Auto-hibernation will be enabled for legacy UFSHCI mode. Tell
+> +		 * the block layer that write requests may be reordered.
+>   		 */
+>   		ret = ufshcd_update_preserves_write_order(hba, false);
+>   		if (ret)
+> @@ -4479,7 +4494,8 @@ int ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+>   	}
+>   	if (!is_mcq_enabled(hba) && prev_state && !new_state) {
+>   		/*
+> -		 * Auto-hibernation has been disabled.
+> +		 * Auto-hibernation has been disabled. Tell the block layer that
+> +		 * the order of write requests is preserved.
+>   		 */
+>   		ret = ufshcd_update_preserves_write_order(hba, true);
+>   		WARN_ON_ONCE(ret);
+> @@ -5247,6 +5263,10 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+>   	struct ufs_hba *hba = shost_priv(sdev->host);
+>   	struct request_queue *q = sdev->request_queue;
+>   
+> +	q->limits.driver_preserves_write_order =
+> +		!ufshcd_is_auto_hibern8_supported(hba) ||
+> +		FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) == 0;
+> +
 
-Thanks for the advice! In case I'm understanding correctly, do you mean
-that all other fs/drivers that is using pages versions can safely switch
-to folio versions now?
+I got some time testing these changes on SM8650 with MCQ enabled. I 
+found that with these changes in place (with AH8 disabled). Even we can 
+make sure UFS driver does not re-order requests in MCQ mode, the reorder 
+is still happening while running FIO and can be seen from ftrace logs. I 
+think it is related with below logic in blk-mq-sched.c, please correct 
+me if I am wrong.
 
-By the way, my orginal idea was trying to add a new field 'bd_flags'
-in block_devcie, and then add a new bit so that bio_check_ro() will
-only warn once for each partition. Now that this patchset will be quite
-complex, I'll add a new bool field 'bd_ro_warned' to fix the above
-problem first, and then add 'bd_flags' once this patchset is done.
+static int __blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+{
+...
+	} else if (multi_hctxs) {
+		/*
+		 * Requests from different hctx may be dequeued from some
+		 * schedulers, such as bfq and deadline.
+		 *
+		 * Sort the requests in the list according to their hctx,
+		 * dispatch batching requests from same hctx at a time.
+		 */
+		list_sort(NULL, &rq_list, sched_rq_cmp);
+...
+}
 
 Thanks,
-Kuai
+Can Guo.
 
-> 
->> 2) For the file fs/buffer.c, there are some special usage like
->> following that I don't think it's good to add a helper:
->>
->> spin_lock(&bd_inode->i_mapping->private_lock);
->>
->> Is't okay to move following apis from fs/buffer.c directly to
->> block/bdev.c?
->>
->> __find_get_block
->> bdev_getblk
-> 
-> I'm not sure moving is a good idea, but we might end up the
-> some kind of low-level access from buffer.c, be that special
-> helpers, a separate header or something else.  Let's sort out
-> the rest of the kernel first.
-> 
-> .
-> 
-
+>   	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
+>   
+>   	/*
+> @@ -9026,6 +9046,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
+>   	.max_host_blocked	= 1,
+>   	.track_queue_depth	= 1,
+>   	.skip_settle_delay	= 1,
+> +	.needs_prepare_resubmit	= 1,
+>   	.sdev_groups		= ufshcd_driver_groups,
+>   	.rpm_autosuspend_delay	= RPM_AUTOSUSPEND_DELAY_MS,
+>   };
