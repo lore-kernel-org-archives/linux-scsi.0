@@ -1,126 +1,88 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="YpUkbCE7"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96C2BDD;
-	Tue, 28 Nov 2023 02:04:30 -0800 (PST)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AS9CPVK030785;
-	Tue, 28 Nov 2023 10:04:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=vpTPxQ+fdoF6wnOYXP6scd3ZnbO2OTplcLMU91k9FQU=;
- b=YpUkbCE7GYXiSeRSEKzhX2LjR+WXvN7VczVySWwSJdU3V6YPUxB8LuAhzkgNDH0d8QwH
- Yo3dWhG8hDbDUKcZusTly7QAtUew4q25x4bCQZwaJT5lyLBhfHwpTfeyyHFSYRmmz8mG
- sTaa3IYcKpS0ZxN+aJdNM9WSUW8ZkCCogS/UEPhgHQuHPGqTp6JV/NUFlAWgMZHbm3gC
- vsPm8hWSO8RNOUuLVEThzbZyuB/SFHT5y+zhJlIMuLN0lR1hbAs/oS4fVWOd1xiiiXnB
- dBdM+SV6iu2zQ7fnf40i0HOQIH/a6pG+s8wbgCHt4CqhOJB3hrQi9YO+eUOJdK59Cbwj +w== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3undc583hw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Nov 2023 10:04:16 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3ASA3t15024268
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Nov 2023 10:03:55 GMT
-Received: from [10.253.11.37] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Tue, 28 Nov
- 2023 02:03:51 -0800
-Message-ID: <4038b408-838d-4804-8866-cc8471749daa@quicinc.com>
-Date: Tue, 28 Nov 2023 18:03:49 +0800
+	dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b="ajmIPgE3"
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EF021A1
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 02:05:33 -0800 (PST)
+Received: by mail-wr1-x431.google.com with SMTP id ffacd0b85a97d-32f737deedfso3246041f8f.3
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 02:05:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=citrix.com; s=google; t=1701165931; x=1701770731; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ZKJsy/O9sQNKnNFyRJVuTOt01SElG6aFkPQ2+Lfq3iI=;
+        b=ajmIPgE3cf4/VQcKecwZurNFwBZ7fhShFWpQSsfDV0gtymPBLKvL5H3127D9k1L6dp
+         hX+TAPJ6uHosbFCDtux+M7ll0rT1Bey3JLg8DNYEpumCySiJ7nd6xroxIcltB8532kPn
+         gu41KkYYBNQIm56IEzzrBy+Y2oWQCUj/A3o20=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701165931; x=1701770731;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZKJsy/O9sQNKnNFyRJVuTOt01SElG6aFkPQ2+Lfq3iI=;
+        b=SQ4p+fjGCZwabbF4SRpw+5RirHxAkT2yKx/BRbe3eVoZ7BHYqNwRqKDiCfny0KSiUS
+         12Xt625dscoWyQRTp4arI6osDO8fWE9VmJ49No84YiY+fXNeiMW+ki28YhG4Lhc6asLF
+         gNwotZ2wb+tM4/ne5ZAIRtmSUe43sy7J8KRR4Sjfi5z4l3h0/AUVnKaAcl9YgjUfJQ7l
+         hclfsrUtoIXf2rzObkYT8wH8FLIw/FldqiWqfmnSDUJOStsxK4uMdn416hrwJ1r+eQc5
+         c4cKd/+/XLuv7WzB8j4/Gmv+77Ypp/JgrCmaTvfKEjvIBXN4xxiUJ1/5eU0UuabYrTz9
+         xpOA==
+X-Gm-Message-State: AOJu0Yz9EKNvVPInSa4sYNuFCqCbg9Z97rEw4hZbx0Wap3UaokiC8JBa
+	WboOP42T5tlq4Xhv3qKCLfW0Tw==
+X-Google-Smtp-Source: AGHT+IHso67qiRejATVe+y4q8GA8WkjBME6ZXNG2nx2AvipjQBf9Fe7u/GIhGV/RuBTAoKaGDDxyQg==
+X-Received: by 2002:a5d:4bcf:0:b0:332:f81d:8dac with SMTP id l15-20020a5d4bcf000000b00332f81d8dacmr6833150wrt.67.1701165931581;
+        Tue, 28 Nov 2023 02:05:31 -0800 (PST)
+Received: from localhost ([213.195.113.99])
+        by smtp.gmail.com with ESMTPSA id l10-20020a5d674a000000b00332eef1ca7asm9779426wrw.80.2023.11.28.02.05.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Nov 2023 02:05:31 -0800 (PST)
+Date: Tue, 28 Nov 2023 11:05:30 +0100
+From: Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, ming.lei@redhat.com, axboe@kernel.dk, colyli@suse.de,
+	kent.overstreet@gmail.com, joern@lazybastard.org,
+	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
+	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
+	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
+	dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
+	adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
+	konishi.ryusuke@gmail.com, dchinner@redhat.com,
+	linux@weissschuh.net, min15.li@samsung.com, yukuai3@huawei.com,
+	dlemoal@kernel.org, willy@infradead.org, akpm@linux-foundation.org,
+	hare@suse.de, p.raghav@samsung.com, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+	linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
+	linux-nilfs@vger.kernel.org, yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: Re: [PATCH block/for-next v2 02/16] xen/blkback: use new helper to
+ get inode from block_device
+Message-ID: <ZWW7ag6vIhc_Skh5@macbook>
+References: <20231127062116.2355129-1-yukuai1@huaweicloud.com>
+ <20231127062116.2355129-3-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 09/10] phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed
- Gear 5 support for SM8550
-Content-Language: en-US
-To: <neil.armstrong@linaro.org>, <bvanassche@acm.org>, <mani@kernel.org>,
-        <adrian.hunter@intel.com>, <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        Andy Gross
-	<agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio
-	<konrad.dybcio@linaro.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay
- Abraham I <kishon@kernel.org>,
-        "open list:GENERIC PHY FRAMEWORK"
-	<linux-phy@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
- <1700729190-17268-10-git-send-email-quic_cang@quicinc.com>
- <0d8fe915-4d53-414b-b145-231fe913474d@linaro.org>
-From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <0d8fe915-4d53-414b-b145-231fe913474d@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: v4UaJZUiA_8JVfm66l1wLIT-EEmzcPj7
-X-Proofpoint-ORIG-GUID: v4UaJZUiA_8JVfm66l1wLIT-EEmzcPj7
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-28_09,2023-11-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 adultscore=0
- impostorscore=0 lowpriorityscore=0 malwarescore=0 bulkscore=0 spamscore=0
- priorityscore=1501 mlxlogscore=999 mlxscore=0 suspectscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
- definitions=main-2311280079
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231127062116.2355129-3-yukuai1@huaweicloud.com>
 
-Hi Neil,
+On Mon, Nov 27, 2023 at 02:21:02PM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Which is more efficiency, and also prepare to remove the field
+> 'bd_inode' from block_device.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-On 11/28/2023 5:59 PM, neil.armstrong@linaro.org wrote:
-> Hi,
-> 
-> On 23/11/2023 09:46, Can Guo wrote:
->> On SM8550, two sets of UFS PHY settings are provided, one set is to 
->> support
->> HS-G5, another set is to support HS-G4 and lower gears. The two sets 
->> of PHY
->> settings are programming different values to different registers, mixing
->> the two sets and/or overwriting one set with another set is definitely 
->> not
->> blessed by UFS PHY designers.
->>
->> To add HS-G5 support for SM8550, split the two sets of PHY settings into
->> their dedicated overlay tables, only the common parts of the two sets of
->> PHY settings are left in the .tbls.
->>
->> Consider we are going to add even higher gear support in future, to avoid
->> adding more tables with different names, rename the .tbls_hs_g4 and 
->> make it
->> an array, a size of 2 is enough as of now.
->>
->> In this case, .tbls alone is not a complete set of PHY settings, so 
->> either
->> tbls_hs_overlay[0] or tbls_hs_overlay[1] must be applied on top of the
->> .tbls to become a complete set of PHY settings.
->>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> 
-> Since Vinod has already merged SM8650 UFS PHY support, I'm afraid this
-> serie will break UFS if the SM8650 UFS tables aren't updated aswell.
-> 
-> Could you confirm if this will be the case ?
+Acked-by: Roger Pau Monné <roger.pau@citrix.com>
 
-Because this change modifies data struct, it would be caught during 
-compiliation stage even if this change applies cleanly, hence it won't 
-break UFS.
-
-Thanks,
-Can Guo.
-
-> 
-> Thanks,
-> Neil
-> 
-> 
+Thanks, Roger.
