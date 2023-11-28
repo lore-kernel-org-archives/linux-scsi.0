@@ -1,194 +1,139 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Ws+75g1I"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78F541B6;
-	Mon, 27 Nov 2023 17:50:54 -0800 (PST)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AS1h8Fk020602;
-	Tue, 28 Nov 2023 01:50:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=Ys4/6FFfW1SAvUPGmv86XCxA3FNAIi1MkHLRZxoOcBk=;
- b=Ws+75g1I1vgcxIlPy11nIbrzpMccCg84bcAj7cwlR2KzeoFwOtqcR+5zhw/UEA7QG33f
- f9ruaVWd9Arpe7v53ImQgBPgKMNmZsNCfKfoscRsTBaU9Im8TsDxIjZLHgrQyo8CVzcq
- Gq/S1dES9kPKMOwnWOJATq5Dkvwh5VhLrg41tn+Fb3lW1mgOCJA6Y/0xDNekPK/AGNpe
- dMZnNFom8BJwNm0E33WHhjsIi8uBfEuyeyc7Ub8g7hhTtQRDDMDLQX1coA1QkMJQkkvn
- UZzejRXGo6eT4DidiaQdna3hQXj9soNrNZnKL5dblIRvtMPD8CKzmSBK24uX2enDhgP4 1Q== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3umqxh29as-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Nov 2023 01:50:37 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AS1oaHN004445
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Nov 2023 01:50:36 GMT
-Received: from [10.253.11.37] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 27 Nov
- 2023 17:50:32 -0800
-Message-ID: <a690f5c1-50e7-4d37-9e12-fff574917aba@quicinc.com>
-Date: Tue, 28 Nov 2023 09:50:28 +0800
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17D0AC3;
+	Mon, 27 Nov 2023 18:03:40 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SfQjL16wRz4f3jqw;
+	Tue, 28 Nov 2023 10:03:34 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 020CC1A08A4;
+	Tue, 28 Nov 2023 10:03:37 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgDX2xF2SmVlaY6JCA--.5037S3;
+	Tue, 28 Nov 2023 10:03:36 +0800 (CST)
+Subject: Re: [PATCH v5 2/3] scsi: core: Support disabling fair tag sharing
+To: Bart Van Assche <bvanassche@acm.org>, Yu Kuai <yukuai1@huaweicloud.com>,
+ Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+ Keith Busch <kbusch@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Ed Tsai <ed.tsai@mediatek.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231114180426.1184601-1-bvanassche@acm.org>
+ <20231114180426.1184601-3-bvanassche@acm.org>
+ <80dee412-2fda-6a23-0b62-08f87bd7e607@huaweicloud.com>
+ <d706f265-f991-45c0-a551-34ecdee55f7c@acm.org>
+ <d1e94a08-f28e-ddd9-5bda-7fee28b87f31@huaweicloud.com>
+ <ef7de6b5-2ed3-469e-bb01-4eacda62cd6a@acm.org>
+ <e5e8e995-c38b-7b23-a0a9-5b2f285164c8@huaweicloud.com>
+ <5dd7b7f7-bcae-4769-b6c8-ac0da8e69c93@acm.org>
+ <1b380cbf-40e9-6ba6-62da-d3aad94809d0@huaweicloud.com>
+ <0a522249-2b27-49a9-bf39-8d8c37b120f4@acm.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <613332b7-098e-3160-f946-764873b9e71f@huaweicloud.com>
+Date: Tue, 28 Nov 2023 10:03:34 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 08/10] phy: qualcomm: phy-qcom-qmp-ufs: Rectify SM8550
- UFS HS-G4 PHY Settings
-Content-Language: en-US
-To: Vinod Koul <vkoul@kernel.org>
-CC: <bvanassche@acm.org>, <mani@kernel.org>, <adrian.hunter@intel.com>,
-        <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn
- Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Dmitry Baryshkov
-	<dmitry.baryshkov@linaro.org>,
-        Johan Hovold <johan+linaro@kernel.org>,
-        Abel
- Vesa <abel.vesa@linaro.org>,
-        "open list:GENERIC PHY FRAMEWORK"
-	<linux-phy@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1700729190-17268-1-git-send-email-quic_cang@quicinc.com>
- <1700729190-17268-9-git-send-email-quic_cang@quicinc.com>
- <ZWR4cN0sJNcVHPrL@matsya>
-From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <ZWR4cN0sJNcVHPrL@matsya>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: jE2rucx1THA52q9EfdMqES3Sf4T1tPmF
-X-Proofpoint-ORIG-GUID: jE2rucx1THA52q9EfdMqES3Sf4T1tPmF
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-28_01,2023-11-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
- clxscore=1015 phishscore=0 mlxlogscore=999 spamscore=0 bulkscore=0
- priorityscore=1501 adultscore=0 lowpriorityscore=0 impostorscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311280013
+In-Reply-To: <0a522249-2b27-49a9-bf39-8d8c37b120f4@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDX2xF2SmVlaY6JCA--.5037S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJFWkJw4fWryUCF4ftry3CFg_yoW5XF45pF
+	s5tFWUtrWUJrn5Gr1jg3W7GFyrAr4UJw1DJr1xW3W5Jr43JrW2qr18Wr1vgFnrJr4kGr17
+	JF45XrZrZrn8XrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWr
+	Zr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi Vinod,
+Hi,
 
-On 11/27/2023 7:07 PM, Vinod Koul wrote:
-> On 23-11-23, 00:46, Can Guo wrote:
->> The registers, which are being touched in current SM8550 UFS PHY settings,
->> and the values being programmed are mainly the ones working for HS-G4 mode,
->> meanwhile, there are also a few ones somehow taken from HS-G5 PHY settings.
->> However, even consider HS-G4 mode only, some of them are incorrect and some
->> are missing. Rectify the HS-G4 PHY settings by strictly aligning with the
->> SM8550 UFS PHY Hardware Programming Guide suggested HS-G4 PHY settings.
+在 2023/11/28 7:05, Bart Van Assche 写道:
+> On 11/22/23 22:29, Yu Kuai wrote:
+>> 在 2023/11/22 3:32, Bart Van Assche 写道:
+>>> +static ssize_t queue_fair_sharing_store(struct request_queue *q,
+>>> +                    const char *page, size_t count)
+>>> +{
+>>> +    const unsigned int DFTS_BIT = 
+>>> ilog2(BLK_MQ_F_DISABLE_FAIR_TAG_SHARING);
+>>> +    struct blk_mq_tag_set *set = q->tag_set;
+>>> +    struct blk_mq_hw_ctx *hctx;
+>>> +    unsigned long i;
+>>> +    int res;
+>>> +    bool val;
+>>> +
+>>> +    res = kstrtobool(page, &val);
+>>> +    if (res < 0)
+>>> +        return res;
+>>> +
+>>> +    mutex_lock(&set->tag_list_lock);
+>>> +    clear_bit(DFTS_BIT, &set->flags);
+>>> +    list_for_each_entry(q, &set->tag_list, tag_set_list) {
+>>> +        /* Serialize against blk_mq_realloc_hw_ctxs() */
+>>
+>> If set/clear bit concurrent with test bit from io path, will there be
+>> problem? Why don't freeze these queues?
 > 
-> can you copy on cover so that we know the context of the series, I just
-> got hit with two patches out of the blue with this
-> 
+> If that happens the changes applied through this sysfs attribute may 
+> only take
+> effect after a short delay (depending on how fast changes are propagated 
+> from
+> one CPU to another). I don't think that this is an issue?
 
-Will add you to the --to list in next version. The whole series is to 
-enable HS-G5 support on SM8550. FYI, the two changes to UFS PHY driver, 
-which you mentioned above, in the series are to 1. Rectify existing 
-HS-G4 PHY setting for SM8550 and 2. Add HS-G5 PHY settings for SM8550.
+Because wake_batch is not updated, hence actually wait/wakeup is still
+the same before tag sharing is disabled.
+
+I was worried that there might be missing wakeups, why not using
+blk_mq_update_tag_set_shared() directly to disable tag sharing? And for
+new disks, change blk_mq_add_queue_tag_set() to not set
+BLK_MQ_F_TAG_QUEUE_SHARED as well. This way we only need a new flag for
+tag_set, that's why I want to add the new sysfs entry for scsi_host,
+since there are no entry represent tag_set for now...
+
+>   >> +#define QUEUE_RW_ENTRY_NO_SYSFS_MUTEX(_prefix, _name)       \
+>>> +    static struct queue_sysfs_entry _prefix##_entry = { \
+>>> +        .attr = { .name = _name, .mode = 0644 },    \
+>>> +        .show = _prefix##_show,                     \
+>>> +        .store = _prefix##_store,                   \
+>>> +        .no_sysfs_mutex = true,                     \
+>>> +    };
+>>> +
+>>
+>> This actually change all the queues from the same tagset, can we add
+>> this new entry to /sys/class/scsi_host/hostx/xxx ?
+> 
+> That would make it impossible to disable fair tag sharing for block drivers
+> that are not based on the SCSI core. Are you sure that's what you want?
+
+Yes, if there are other drivers that are sharing driver tags, this is
+not good, can you give some examples?
 
 Thanks,
-Can Guo.
-
->>
->> Fixes: 1679bfef906f ("phy: qcom-qmp-ufs: Add SM8550 support")
->> Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
->> Reviewed-by: Abel Vesa <abel.vesa@linaro.org>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> ---
->>   .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |  3 +++
->>   drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 28 +++++++++++++++-------
->>   2 files changed, 22 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
->> index 15bcb4b..674f158 100644
->> --- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
->> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
->> @@ -10,9 +10,12 @@
->>   #define QSERDES_UFS_V6_TX_RES_CODE_LANE_RX			0x2c
->>   #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX		0x30
->>   #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_RX		0x34
->> +#define QSERDES_UFS_V6_TX_LANE_MODE_1				0x7c
->> +#define QSERDES_UFS_V6_TX_FR_DCC_CTRL				0x108
->>   
->>   #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2		0x08
->>   #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4		0x10
->> +#define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2			0xd4
->>   #define QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL			0x178
->>   #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0			0x208
->>   #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B1			0x20c
->> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->> index 3927eba..ad91f92 100644
->> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->> @@ -658,22 +658,26 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_serdes[] = {
->>   	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
->>   	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x7f),
->>   	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x06),
->> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x4c),
->> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
->> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
->> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
->> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x99),
->> -	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x07),
->> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE1, 0x4c),
->> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE1, 0x0a),
->> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE1, 0x18),
->> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE1, 0x14),
->> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE1, 0x99),
->> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE1, 0x07),
->> +};
->> +
->> +static const struct qmp_phy_init_tbl sm8550_ufsphy_hs_b_serdes[] = {
->> +	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x44),
->>   };
->>   
->>   static const struct qmp_phy_init_tbl sm8550_ufsphy_tx[] = {
->> -	QMP_PHY_INIT_CFG(QSERDES_V6_TX_LANE_MODE_1, 0x05),
->> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_LANE_MODE_1, 0x05),
->>   	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX, 0x07),
->> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_FR_DCC_CTRL, 0x4c),
->>   };
->>   
->>   static const struct qmp_phy_init_tbl sm8550_ufsphy_rx[] = {
->> -	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2, 0x0c),
->> -	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4, 0x0f),
->> +	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2, 0x0c),
->>   	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL, 0x0e),
->>   
->>   	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0, 0xc2),
->> @@ -696,6 +700,8 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_pcs[] = {
->>   	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_MID_TERM_CTRL1, 0x43),
->>   	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_PLL_CNTL, 0x2b),
->>   	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_MULTI_LANE_CTRL1, 0x02),
->> +	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_HSGEAR_CAPABILITY, 0x04),
->> +	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_RX_HSGEAR_CAPABILITY, 0x04),
->>   };
->>   
->>   struct qmp_ufs_offsets {
->> @@ -1157,6 +1163,10 @@ static const struct qmp_phy_cfg sm8550_ufsphy_cfg = {
->>   		.pcs		= sm8550_ufsphy_pcs,
->>   		.pcs_num	= ARRAY_SIZE(sm8550_ufsphy_pcs),
->>   	},
->> +	.tbls_hs_b = {
->> +		.serdes		= sm8550_ufsphy_hs_b_serdes,
->> +		.serdes_num	= ARRAY_SIZE(sm8550_ufsphy_hs_b_serdes),
->> +	},
->>   	.clk_list		= sdm845_ufs_phy_clk_l,
->>   	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
->>   	.vreg_list		= qmp_phy_vreg_l,
->> -- 
->> 2.7.4
+Kuai
 > 
+> Thanks,
+> 
+> Bart.
+> .
+> 
+
