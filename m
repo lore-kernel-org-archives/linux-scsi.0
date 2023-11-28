@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA6DA15AEA
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 08:24:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A24B815AEA
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 08:24:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LlqwAr55"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 400E3C433C7
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 08:24:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y5J8jBSq"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3733CC433C8
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2023 08:24:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701159842;
-	bh=2yMYjPRIu172Hqx1XGhVCnzKLEAzVgJH4ALP3OSQLrs=;
+	s=k20201202; t=1701159875;
+	bh=oLnWLt3eHO9oSvLWSmaQ7xi56fdg1WdFuXSPHJxp2ow=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=LlqwAr551QEkFZ2n2nCm+CQqsIxRHeZFG8P0iznzvHB2mqW7hfWtlvlaOmPN4nSzV
-	 2HUn6heUvvpIx84MeaQ/1D+8AHnbl4E11h7zu6XF5BpXhWj7B7ZKdWzKU9ZqezwngH
-	 sXtH7azALYq2z7Hhz7dcNoNJ97TNN5QlLfnHxsX/2CL2vYYoTt7rBLjwmI1s8zp+BA
-	 KryCilVI4y2CppA8acW5AAJH0PMlLa85rcNT4jwWMTjy7+/r87Lg/J1ZXVoapNc+A5
-	 NMBrXSzN8BqZA7AFwMO95I2Rk3hR6af5S1DiWZEpar8KveFKQ7mAmZz0lubXNanXlp
-	 pB5fSoLUJUr0w==
+	b=Y5J8jBSqK2nu0LDKdVcwk7qMUmJuyZ5YGgOl9Sp8gQGA/5fwZsRS3pK9u8ZQPNNGE
+	 MByV0KlaDcb097eFBWyfc8qsEY+Y3Lfm8cFa7YKrhcbbUuwJhwhsBmGWOwr/VgckhR
+	 U5ugLgpU5b140A4QaDPq5go0BciQWLafHzpYwFAsNAVC+fJj3cjo+fug2b+yUmV25c
+	 sugui3jCyzlfJmesAviZB2tTY4NQmIEDNLCBE84Y4VuE7DngRcwXSMJiTmIz+HyBDL
+	 O7tPWdmvQqca7T7l9WaoOjW9iMgZ8EZd1s8kNdBBzmNlgp1iIwi4ICbyxFHsRe4vqw
+	 rf8ceL9VbmFlw==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 2C609C53BCD; Tue, 28 Nov 2023 08:24:02 +0000 (UTC)
+	id 273D7C53BCD; Tue, 28 Nov 2023 08:24:35 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 218198] Suspend/Resume Regression with attached ATA devices
-Date: Tue, 28 Nov 2023 08:24:01 +0000
+Date: Tue, 28 Nov 2023 08:24:34 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
@@ -37,8 +37,8 @@ X-Bugzilla-Resolution:
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-218198-11613-NAsEdarpyZ@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: attachments.created
+Message-ID: <bug-218198-11613-Yp6xKA30wT@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-218198-11613@https.bugzilla.kernel.org/>
 References: <bug-218198-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -54,42 +54,10 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D218198
 
---- Comment #2 from Dieter Mummenschanz (dmummenschanz@web.de) ---
-Thanks for the swift reply.
-
-I've applied your patch. Booted up my machine and waited until it transitio=
-ns
-into lower package states (pc8 at the lowest). After that I closed the lapt=
-op
-LID and let the machine suspend to RAM (S3). After that I reopened the LID =
-and
-gave the machine 1-3 minutes time to transition to lower package states whi=
-ch
-it now does.
-I've attached the dmesg part including your patch when the machine enters
-suspend. One thing is odd though:
-
-[  109.424369] ata5.00: qc timeout after 5000 msecs (cmd 0xe0)
-[  109.424397] ata5.00: STANDBY IMMEDIATE failed (err_mask=3D0x4)
-
-this shouldn't be there, right?
-
-Regarding automatic transitioning I'm not sure how this works. However even
-though I've set CONFIG_SATA_MOBILE_LPM_POLICY=3D3 in the kernel config, I h=
-ave to
-call an init script explicitly forcing the scsi host to use low power when
-idle:
-
-for foo in /sys/class/scsi_host/host*/link_power_management_policy;
-  do echo med_power_with_dipm > $foo;
-done
-
-Otherwise the machine is stuck at PC2 state always.
-
-So we have a fix I guess?
-
-Anyway if there is anything alse I can try or provide you with more debug
-output please let me know.
+--- Comment #3 from Dieter Mummenschanz (dmummenschanz@web.de) ---
+Created attachment 305490
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D305490&action=3Dedit
+dmesg partial log
 
 --=20
 You may reply to this email to add a comment.
