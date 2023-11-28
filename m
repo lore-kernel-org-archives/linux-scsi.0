@@ -1,32 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68C6618E;
-	Tue, 28 Nov 2023 09:36:53 -0800 (PST)
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1cfc9c4acb6so21389975ad.0;
-        Tue, 28 Nov 2023 09:36:53 -0800 (PST)
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B520A325F;
+	Tue, 28 Nov 2023 10:17:49 -0800 (PST)
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1cfb83211b9so27525785ad.3;
+        Tue, 28 Nov 2023 10:17:49 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701193013; x=1701797813;
+        d=1e100.net; s=20230601; t=1701195469; x=1701800269;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qQVzoA6KB8WWZeZA91BhoJD6+IG8LppaJH07D3mUsOU=;
-        b=i7fEQn5Mtk4pCNuLFF6JM+SVrLzw/LMiy41POibLRW+M7vogks/qGZ6tZ6jBljXXBa
-         VjATiROwAYjpQO/jFhGPANqDy++xjd52HAIgESh0L56udjVMSItt0dh4Tpuq7ybvk2M1
-         iA+NVz8GdJJgLtiCa+A9pxXywNcG01M1nFFpk6/SDMSSXWoVOuXLhHcgM0J5LQ/DHlS1
-         Uu4VuJiYuaPA/4Y8FRXOc4TlO+fadw8qwdsmyui3E5w/hUCN7K2qBR5iNSr7PvQAtX+T
-         ZpqYE8Ypbj7JTwDtDyYTUa7tUFyjR3KImLLIqOH5/rZ1X/rYk6YETntto1THvO1WYtN7
-         UROA==
-X-Gm-Message-State: AOJu0YwzaAhcsluPk0hFKWNZWzVpkeSBZTNyVXnUTFhi7HR+FDqbAC/V
-	Y8rgNOUp2/eGLc2iY+awN5U=
-X-Google-Smtp-Source: AGHT+IHJ8Zcb57hVsFkWr7NeyCpUP5cJFsatU7AGCSaKVooiglAQrpzT62jm1Aug08/zw1+qGuGcHQ==
-X-Received: by 2002:a17:902:ab47:b0:1cf:cbf4:6f7e with SMTP id ij7-20020a170902ab4700b001cfcbf46f7emr8293088plb.14.1701193012679;
-        Tue, 28 Nov 2023 09:36:52 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:81f2:7dda:474a:ba23? ([2620:0:1000:8411:81f2:7dda:474a:ba23])
-        by smtp.gmail.com with ESMTPSA id v3-20020a170902b7c300b001cfc9ad74a3sm4702377plz.15.2023.11.28.09.36.51
+        bh=9ykM5pit3tyCABr+4dJQjDb2iWqO7SOgIz8BSLb3MOs=;
+        b=QtJdPL0jf69oNqoeklyXvo6PHb1XMjNmETDGImi5eIqNxMplC4emvCkYr1KXx3q20+
+         pf4mIbLH5cAUQoYGWmvyfMbCKlLr3F8SxNQWurxeRjs9ajSEmpR5alXxKFu+vMFT+lIQ
+         S6lNfqO9CVVwBgdHAt1WbAo128qjUO2kYnCDeWrLcZ8nBCl55r8UrAqq2Xztj2TvLcjM
+         4jLXb2wuIOYfrglQKQDeYbWR8iYqWrShfpOrUB9+zqKjVyNmekr0b64fUBAVf5sQf/8o
+         hNF3FKutkNsZTfugOZnfPa9lLczU1tcFLdRtRZnOV1sYjeNLeWJUT5V9VGqtOdnO0T/n
+         vdtQ==
+X-Gm-Message-State: AOJu0YytcIWtUaqkKJs3+5PVfGflA+T0o6lfADzF86tJ5s1Zj5KcjGZx
+	fwvzp1wO3/HnQZ2HIluuvZ8=
+X-Google-Smtp-Source: AGHT+IHs+oXyYAtwsVir6xw1/94NRGZMskfl0HmGEXN1jhy21qSMwYODVE+W/cVCrfzynou372pZIg==
+X-Received: by 2002:a17:902:ea84:b0:1cc:3b87:8997 with SMTP id x4-20020a170902ea8400b001cc3b878997mr12942376plb.57.1701195468776;
+        Tue, 28 Nov 2023 10:17:48 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:1f8e:127f:6051:78b3? ([2620:0:1000:8411:1f8e:127f:6051:78b3])
+        by smtp.gmail.com with ESMTPSA id l13-20020a170902d34d00b001cc29b5a2aesm10597690plk.254.2023.11.28.10.17.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Nov 2023 09:36:52 -0800 (PST)
-Message-ID: <9f522b19-82a0-4362-956b-fac10c99b1ad@acm.org>
-Date: Tue, 28 Nov 2023 09:36:51 -0800
+        Tue, 28 Nov 2023 10:17:48 -0800 (PST)
+Message-ID: <b1e346f9-19d9-47b8-9c74-6a406c5474b9@acm.org>
+Date: Tue, 28 Nov 2023 10:17:46 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -34,34 +34,65 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v15 00/19] Improve write performance for zoned UFS devices
+Subject: Re: [PATCH v5 2/3] scsi: core: Support disabling fair tag sharing
 Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>
-References: <20231114211804.1449162-1-bvanassche@acm.org>
- <20231127070939.GB27870@lst.de>
- <a9748872-0608-4ab9-8986-a82eff17ca9f@acm.org> <20231128125355.GA7613@lst.de>
+To: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+ Keith Busch <kbusch@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Ed Tsai <ed.tsai@mediatek.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231114180426.1184601-1-bvanassche@acm.org>
+ <20231114180426.1184601-3-bvanassche@acm.org>
+ <80dee412-2fda-6a23-0b62-08f87bd7e607@huaweicloud.com>
+ <d706f265-f991-45c0-a551-34ecdee55f7c@acm.org>
+ <d1e94a08-f28e-ddd9-5bda-7fee28b87f31@huaweicloud.com>
+ <ef7de6b5-2ed3-469e-bb01-4eacda62cd6a@acm.org>
+ <e5e8e995-c38b-7b23-a0a9-5b2f285164c8@huaweicloud.com>
+ <5dd7b7f7-bcae-4769-b6c8-ac0da8e69c93@acm.org>
+ <1b380cbf-40e9-6ba6-62da-d3aad94809d0@huaweicloud.com>
+ <0a522249-2b27-49a9-bf39-8d8c37b120f4@acm.org>
+ <613332b7-098e-3160-f946-764873b9e71f@huaweicloud.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231128125355.GA7613@lst.de>
+In-Reply-To: <613332b7-098e-3160-f946-764873b9e71f@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 11/28/23 04:53, Christoph Hellwig wrote:
-> I know the background.  I also know that JEDEC did all this aginst
-> better judgement and knowing the situation.  We should not give them
-> their carrot after they haven't even been interested in engaging.
+On 11/27/23 18:03, Yu Kuai wrote:
+> I was worried that there might be missing wakeups, why not using
+> blk_mq_update_tag_set_shared() directly to disable tag sharing?
 
-That statement is overly negative. The JEDEC Zoned Storage for UFS
-standard has been published last week [1]. It can be downloaded by
-anyone for free after having created a JEDEC account, which is also
-free. As one can see in this standard, nothing excludes using a zone
-append command. Once T10 standardizes a zone append command, it can
-be implemented by UFS vendors. However, I do not know whether T10
-plans to standardize a zone append command.
+I think that calling blk_mq_update_tag_set_shared() to disable tag sharing
+would be wrong because BLK_MQ_F_TAG_QUEUE_SHARED is also used for other
+purposes than fair tag sharing. See e.g. blk_mq_mark_tag_wait().
+
+>>   >> +#define QUEUE_RW_ENTRY_NO_SYSFS_MUTEX(_prefix, _name)       \
+>>>> +    static struct queue_sysfs_entry _prefix##_entry = { \
+>>>> +        .attr = { .name = _name, .mode = 0644 },    \
+>>>> +        .show = _prefix##_show,                     \
+>>>> +        .store = _prefix##_store,                   \
+>>>> +        .no_sysfs_mutex = true,                     \
+>>>> +    };
+>>>> +
+>>>
+>>> This actually change all the queues from the same tagset, can we add
+>>> this new entry to /sys/class/scsi_host/hostx/xxx ?
+>>
+>> That would make it impossible to disable fair tag sharing for block drivers
+>> that are not based on the SCSI core. Are you sure that's what you want?
+> 
+> Yes, if there are other drivers that are sharing driver tags, this is
+> not good, can you give some examples?
+
+There is one tag set for all NVMe namespaces associated with the same
+controller. Anyway, I will move this sysfs attribute to the SCSI host and
+will organize the code such that a similar sysfs attribute can be added
+easily to other block drivers than the SCSI core if that would be considered
+useful.
 
 Bart.
-
-[1] https://www.jedec.org/system/files/docs/JESD220-5.pdf
 
