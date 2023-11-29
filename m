@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DB213ADC
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2023 18:10:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B454F5C3D6
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2023 18:11:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wyuhl2FN"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6F14AC433C9
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2023 18:10:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UuldPKxj"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 86FEDC433C7
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2023 18:11:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701281450;
-	bh=TDVV0YwLYo//DogMr7p52/2Sa2PgbHSzAJjLQplDSfk=;
+	s=k20201202; t=1701281473;
+	bh=SkwUbDrk1Z/UgqyNHyxJOIsfiwg4BJ4n9CStrtcDoko=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=Wyuhl2FNe0Iqw0S/mHKgjGmfcnpCP3kMP0/wn/m3Yf5/q7B39w1I+Lslt2qhQ9Tlk
-	 DKVcIsVl6eO/2qRM6vSKU6EKFuVMlrB22brBZXveXDizqqJmnHCmEC1LP8cz99tqeR
-	 buMXhFrOAGQHlYMuTK1vNu15ahinQfvQaqsedcodPUp8WGCMGWUOE5oVmvfYVYYO1p
-	 AiQdOwby0Z0SBUi2kNKOU0r3q/Nm2W3xG+I3mpb7wA+RKGsMuT+vrjrF3KsW+8P+ei
-	 HsZW2ypeKr7Mkki5fRgSXEhB09/cVKAZXe0mtgOEKGpF8BrVHxaIJOT0VQ2QxUopiB
-	 C6c0QF2WBpZSQ==
+	b=UuldPKxjuUNOEx6IM5W/736Vn9Ouf+FzvR7VGbuupI1qt4Qs9wvQQdhRF7UCh4fvD
+	 c0GJiKVdn75oel8q+Ir9bMUqMlheGqOjPo2ybajudpehPoFUUye1cGodK+56IBJeZS
+	 DcC33gQ9giMOSTyeoKvVp1E+ucqT5V6G8vg9i73mzF3vOp98fbiaMEdVs/2CzwYIjs
+	 BSghxaEhGjHmyQJcyBgZ2GPcpC5oLlfrduveBwqsHN7bL9shLPp9qQ3jeCZXPoEOAZ
+	 deURrcg8sQZ4tbrgzvzjJhIkEf7NeW8r40vRV1pX8NXGx2hTth3D9B/5MmbifdHG+x
+	 IpdZu9TcxK3yg==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 5FFDCC53BCD; Wed, 29 Nov 2023 18:10:50 +0000 (UTC)
+	id 757BAC53BC6; Wed, 29 Nov 2023 18:11:13 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 218198] Suspend/Resume Regression with attached ATA devices
-Date: Wed, 29 Nov 2023 18:10:50 +0000
+Date: Wed, 29 Nov 2023 18:11:13 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
@@ -38,7 +38,7 @@ X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-218198-11613-Hrz9hmsxjL@https.bugzilla.kernel.org/>
+Message-ID: <bug-218198-11613-rm8i2QTU2z@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-218198-11613@https.bugzilla.kernel.org/>
 References: <bug-218198-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -54,10 +54,10 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D218198
 
---- Comment #8 from Dieter Mummenschanz (dmummenschanz@web.de) ---
-Created attachment 305512
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D305512&action=3Dedit
-dmesg 6.7-rc3 with device info debug
+--- Comment #9 from Dieter Mummenschanz (dmummenschanz@web.de) ---
+Created attachment 305513
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D305513&action=3Dedit
+logs from kernel 6.6
 
 --=20
 You may reply to this email to add a comment.
