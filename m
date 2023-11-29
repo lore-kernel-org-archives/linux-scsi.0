@@ -1,81 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="meQcnt+x"
-Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.215])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id D3C7EBE;
-	Wed, 29 Nov 2023 07:12:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id; bh=feMp/yQdhv1cPkfaZT
-	swMPfvGgf29QwDsfVs7q/7umg=; b=meQcnt+xpXwd4m9WQE94rE3uXOU9rxyby3
-	nCUuPH1Jmj8w+ncT1y6F9uYoaN806rnOYheXjvJnj1241XXTv79QDufXln9BrUDG
-	/3jJ+Q0te7YPGdQVn7IH1DOGXjpffx6uMc5mxKGsH1c8T1qC8pgIm29BMNWFNN1V
-	6zShKMRU0=
-Received: from localhost.localdomain (unknown [39.144.190.126])
-	by zwqz-smtp-mta-g4-4 (Coremail) with SMTP id _____wC3njG5VGdlx_XzEA--.39554S2;
-	Wed, 29 Nov 2023 23:11:55 +0800 (CST)
-From: Haoran Liu <liuhaoran14@163.com>
-To: jejb@linux.ibm.com
-Cc: martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Haoran Liu <liuhaoran14@163.com>
-Subject: [PATCH] [scsi] sni_53c710: Add error handling in snirm710_probe
-Date: Wed, 29 Nov 2023 07:11:52 -0800
-Message-Id: <20231129151152.34829-1-liuhaoran14@163.com>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID:_____wC3njG5VGdlx_XzEA--.39554S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Kry7ur4fKF18JryDCrW3Wrg_yoW8Wr45p3
-	9xGw45Ca97GF1xA343Xa18u3Z0yaySkrZrK3W7W3sI9a1rJFyYqr4SyFyagFW8GrWktF4U
-	Xr1UtFWI93WDCa7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRa9akUUUUU=
-X-CM-SenderInfo: xolxxtxrud0iqu6rljoofrz/1tbiZRo3gl8ZaQ-qYQAFsk
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J9uovXUc"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86774D67
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2023 08:14:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1701274439;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=FfHwnk3dAJr64E5NmsccUYWsX/gl4ZBhTuLyU5XnOhM=;
+	b=J9uovXUcTeuxlJHlZ/GwEouHjay7XRGZ35aKZUajcmvdHdAFx8SnaBRrmaSgma2MQ/UPx6
+	bf7RMu/GYV+CBA62Uc4QJQ3xdJNRue85Kp7jv8OZxdvaJWprSmAbRCEoR/1XDn/7wSww8K
+	A3G9YNy3GytS64QTcV8ChyKnOluRykM=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-411-YsLBblRTP5i1TMiIGcCOnA-1; Wed,
+ 29 Nov 2023 11:13:56 -0500
+X-MC-Unique: YsLBblRTP5i1TMiIGcCOnA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B6328280D475;
+	Wed, 29 Nov 2023 16:13:55 +0000 (UTC)
+Received: from bcodding.csb.redhat.com (unknown [10.22.48.10])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 527631121309;
+	Wed, 29 Nov 2023 16:13:55 +0000 (UTC)
+From: Benjamin Coddington <bcodding@redhat.com>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org
+Subject: [PATCH] scsi: target: enable READ CAPACITY for PR EARO
+Date: Wed, 29 Nov 2023 11:13:54 -0500
+Message-ID: <ad095388dbc550c5b199a1dfa71bcbfc575a7abe.1701272679.git.bcodding@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
 
-The patch adds checks for the return values of dma_set_mask and ioremap.
-Previously, the function did not handle potential failures of these calls,
-which could lead to improper device initialization and unpredictable
-behavior.
+SBC-4, Table 13 allows READ CAPACITY for all PR types.
 
-Although the error addressed by this patch may not occur in the current
-environment, I still suggest implementing these error handling routines
-if the function is not highly time-sensitive. As the environment evolves
-or the code gets reused in different contexts, there's a possibility that
-these errors might occur. Addressing them now can prevent potential
-debugging efforts in the future, which could be quite resource-intensive.
-
-Signed-off-by: Haoran Liu <liuhaoran14@163.com>
+Signed-off-by: Benjamin Coddington <bcodding@redhat.com>
 ---
- drivers/scsi/sni_53c710.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/target/target_core_pr.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/sni_53c710.c b/drivers/scsi/sni_53c710.c
-index 678651b9b4dd..41414d0c64f8 100644
---- a/drivers/scsi/sni_53c710.c
-+++ b/drivers/scsi/sni_53c710.c
-@@ -69,8 +69,19 @@ static int snirm710_probe(struct platform_device *dev)
- 		return -ENOMEM;
- 
- 	hostdata->dev = &dev->dev;
--	dma_set_mask(&dev->dev, DMA_BIT_MASK(32));
-+	rc = dma_set_mask(&dev->dev, DMA_BIT_MASK(32));
-+	if (rc) {
-+		printk(KERN_ERR "snirm710: dma_set_mask failed!\n");
-+		goto out_kfree;
-+	}
-+
- 	hostdata->base = ioremap(base, 0x100);
-+	if (!hostdata->base) {
-+		printk(KERN_ERR "snirm710: ioremap failed!\n");
-+		rc = -ENOMEM;
-+		goto out_kfree;
-+	}
-+
- 	hostdata->differential = 0;
- 
- 	hostdata->clock = SNIRM710_CLOCK;
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 49d9167bb263..80b7d85030d0 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -470,6 +470,7 @@ static int core_scsi3_pr_seq_non_holder(struct se_cmd *cmd, u32 pr_reg_type,
+ 	case INQUIRY:
+ 	case LOG_SENSE:
+ 	case SERVICE_ACTION_IN_12:
++	case READ_CAPACITY:
+ 	case REPORT_LUNS:
+ 	case REQUEST_SENSE:
+ 	case PERSISTENT_RESERVE_IN:
 -- 
-2.17.1
+2.41.0
 
