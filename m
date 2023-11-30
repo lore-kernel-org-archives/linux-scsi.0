@@ -1,143 +1,172 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="KqArQt8j"
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C640010E6
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Nov 2023 12:41:03 -0800 (PST)
-Received: by mail-pj1-x102e.google.com with SMTP id 98e67ed59e1d1-2856437b584so1237810a91.3
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Nov 2023 12:41:03 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ZxjbbZ7v"
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEAC410E5
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Nov 2023 13:12:49 -0800 (PST)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1cff3a03dfaso13087895ad.3
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Nov 2023 13:12:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1701376863; x=1701981663; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=HToncW+LE9zv/92mmvcSPtZdBZoVOlwPwlFSkGOjsOE=;
-        b=KqArQt8j49LztbJuDs5bQg1WD9YUnXMeVk0KOYid8RZIg6X6p4jcsEchBBTG3QAesG
-         z9y4vA9ABXoM+z9dKcvvUanSKAmaYBffW6Draer049LSacHsXbv/fPim+AeoAaiFYMYI
-         XSd44EzQlb1ImNNqD+MLm0i78ErsbWDZiSL+0=
+        d=chromium.org; s=google; t=1701378769; x=1701983569; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=oMtD4zdAr6X+H2Qpe4emJrdJbxSyHd1ONAvar3QH9oM=;
+        b=ZxjbbZ7v3ERljlXrOCR6AGCmGn3s2F6tauVzLoYjiY0soTCy1vwYq32XAVwpWoNXuQ
+         ayN+Hxaag9GIbyNfTLpN6FG8FNmJcfpDgp5OVjn74F58oaaEdnQsoD8T2vQmGPE7tA+r
+         KfQ9L/DHX8gJi8oTPVlyb0SLAuSrjJrd2TB04=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701376863; x=1701981663;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=HToncW+LE9zv/92mmvcSPtZdBZoVOlwPwlFSkGOjsOE=;
-        b=kbWAWxrmkNJXiX45YTEEiyZcFvNuu+wnI+WX631YLZ1yjnzYnS+zIlGJ02Opu0pcya
-         Bcruvudmirm8kayJaGdSClLTSBlZTT2bNLrOpWJ2Bo1Ghgc+M1Ge8BJm5XU1sPYaxahH
-         KYDOZB1nrzyi/8WAWcgmM7JfVjZEFeerUn4QrA2FF0AhoUfrNcXnEMmp8t6EXrM6P967
-         0vgmb45wTZWWsOE1hj/DMhKW35OZnj3GnmDzoAKvx1rD57lm3HDlZcbXjiq9QaP40spV
-         a7IRHGqbF1aizT5zjH3cnl2n0RC5yI1+EBKSFqzoRwfTGQPLQX+A5lVftnefjkkqTbOe
-         D4Fg==
-X-Gm-Message-State: AOJu0Yycp7LRxameNXI46OLgpTV9lEyaf7j/pNGqkMbt2dNKif/BVAo3
-	ZyxOKI3TbTqtyKgQTeDHLSPyYA==
-X-Google-Smtp-Source: AGHT+IHT8r+vIHM19r9/cmghSmd07BQmXDud2a0ZuvaCvL7MyTKzM4U/BnENyZhul9YQdIGyG7UUiA==
-X-Received: by 2002:a17:90a:357:b0:280:11e2:12d6 with SMTP id 23-20020a17090a035700b0028011e212d6mr23564604pjf.45.1701376862994;
-        Thu, 30 Nov 2023 12:41:02 -0800 (PST)
+        d=1e100.net; s=20230601; t=1701378769; x=1701983569;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=oMtD4zdAr6X+H2Qpe4emJrdJbxSyHd1ONAvar3QH9oM=;
+        b=rgOxAzDFQxaWpPpFCdEPDbHyZ328OHTQbQkYYLviXNGA9plCfo4FgesHQWqCTes7bW
+         2AGFB5XAoA83VaubR86cF2iGrPYuglwSgFODkeRyE3QaR9LjgM1c57sztX2C15tSw6dA
+         zph8NaiH8UnMQ1gaY+POAsZaTAbPs9qFmUFLo5kbY09gq434ejTidpHyFzHeEEGw+7Yl
+         0pL/vjhFDe6pU66Ai/EK1yi9sBxaxeBjHclzRMqwxvkQ1aljEQhPDLm5jy4Sjk/emdEi
+         uTiUZE/H2soEwmO6+lUfAxtBe3amGm9b8VYt4jXHN+WQYdE13nqdouFMm9ogggSHwmbE
+         LC6w==
+X-Gm-Message-State: AOJu0YzXt/xlXl/dXLf5XDmwBWzH024wzIU1eRDlXXVHdxGL5S4v4aKm
+	6Tl1ZSQgPnbmQ5+2AfvR30HJtw==
+X-Google-Smtp-Source: AGHT+IHMg694k+Ua8hT0yYfpkQVJFEGdgYslaiV8JFgLgJF7PWf5jrslfVimHv+aZAMpIBLCJYRxCQ==
+X-Received: by 2002:a17:902:7409:b0:1cf:a2e7:f851 with SMTP id g9-20020a170902740900b001cfa2e7f851mr23180716pll.32.1701378769265;
+        Thu, 30 Nov 2023 13:12:49 -0800 (PST)
 Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id y1-20020a17090ad70100b002802d9d4e96sm3643102pju.54.2023.11.30.12.41.02
+        by smtp.gmail.com with ESMTPSA id y9-20020a170902b48900b001bf044dc1a6sm1867755plr.39.2023.11.30.13.12.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Nov 2023 12:41:02 -0800 (PST)
+        Thu, 30 Nov 2023 13:12:48 -0800 (PST)
+Date: Thu, 30 Nov 2023 13:12:48 -0800
 From: Kees Cook <keescook@chromium.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Kees Cook <keescook@chromium.org>,
+To: Justin Stitt <justinstitt@google.com>
+Cc: Tyrel Datwyler <tyreld@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Steffen Maier <maier@linux.ibm.com>,
-	Benjamin Block <bblock@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Azeem Shaikh <azeemshaikh38@gmail.com>,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: [PATCH v2] scsi: zfcp: Replace strlcpy() with strscpy()
-Date: Thu, 30 Nov 2023 12:41:00 -0800
-Message-Id: <20231130204056.it.978-kees@kernel.org>
-X-Mailer: git-send-email 2.34.1
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: ibmvfc: replace deprecated strncpy with strscpy
+Message-ID: <202311301311.717549FB@keescook>
+References: <20231030-strncpy-drivers-scsi-ibmvscsi-ibmvfc-c-v1-1-5a4909688435@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2619; i=keescook@chromium.org;
- h=from:subject:message-id; bh=4T81lpDgaAOBeJi0R1mIeRgW4gBp3WUx30Gv6j9ztlg=;
- b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBlaPNc3DGEDg6n6R2jxBMkNqrOja1osTULCasaX
- UZxQBioA02JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZWjzXAAKCRCJcvTf3G3A
- Jt5HD/9yXU4FXoT7iWh3EJhfuA3Y8HjktI8X29ZdPW0aN9g75IBIIy3FgqByl/7RW4rsCf5IHqJ
- 1aRTj37ijdQRxNQujB1di6Z5d4ENubNma2Mxr5wzCo8z/hpZT2jIPljlx3QkPgzrXLDYh2wMkqQ
- g69yTCJNXDdqug8Fva4Kd43e0vKoS/hYP7ZwpD5KLe8TjFTpvsO5mtx/6BmfOPjnT3hwE+j4yPt
- eaqmeLip+SqCsS2/8GAACN4LnGN80Nf5qBo2IxfcyqVb1GqVV7RJUUXH3O2XYzztawyWNwa9fbP
- lZ29Kv/CohmuVG0IJ16NnPQpampEdGS+3pruhhAN5bLYDDXoMKLyOKCzPvr+yi+KkvNQ8b2cnLy
- hHr55lbbbJzexMLk3qSUwrPXoZz3tXqJfKuU+QjiAbepT4atZ2iNNuJlpU+yEKy0joztLRe7siI
- AigbbIEwoO0HFTZ5XxhuSnjD3l0KUvs4a/MzQX6bPW/hlSDlgWgWPwASipbPWg4FsABC8skhV0d
- ytiReTa8uhR3GObcq6FbtR4lPUFRnrQAGEO5n+cFP7GQoCiDIXzCMbLC5llgbhie36UiI2pAyaD
- 4FYFS6Gdgpz9+oTBiO9wC+OZczjqPLM6wDULZbIrqimHDLDi4wzoTfXXWj+IgukvhJRQYRIfY1A
- 12tH4Xb UQs6sKKg==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231030-strncpy-drivers-scsi-ibmvscsi-ibmvfc-c-v1-1-5a4909688435@google.com>
 
-strlcpy() reads the entire source buffer first. This read may exceed
-the destination size limit. This is both inefficient and can lead
-to linear read overflows if a source string is not NUL-terminated[1].
-Additionally, it returns the size of the source string, not the
-resulting size of the destination string. In an effort to remove strlcpy()
-completely[2], replace strlcpy() here with strscpy().
+On Mon, Oct 30, 2023 at 07:04:33PM +0000, Justin Stitt wrote:
+> strncpy() is deprecated for use on NUL-terminated destination strings
+> [1] and as such we should prefer more robust and less ambiguous string
+> interfaces.
+> 
+> We expect these fields to be NUL-terminated as the property names from
+> which they are derived are also NUL-terminated.
+> 
+> Moreover, NUL-padding is not required as our destination buffers are
+> already NUL-allocated and any future NUL-byte assignments are redundant
+> (like the ones that strncpy() does).
+> ibmvfc_probe() ->
+> |       struct ibmvfc_host *vhost;
+> |       struct Scsi_Host *shost;
+> ...
+> | 	shost = scsi_host_alloc(&driver_template, sizeof(*vhost));
+> ... **side note: is this a bug? Looks like a type to me   ^^^^^**
 
-Overflow should be impossible here, but actually check for buffer sizes
-being identical with BUILD_BUG_ON(), and include a run-time check as
-well.
+I think this is the "privsize", so *vhost is correct, IIUC.
 
-Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy [1]
-Link: https://github.com/KSPP/linux/issues/89 [2]
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: Steffen Maier <maier@linux.ibm.com>
-Cc: Benjamin Block <bblock@linux.ibm.com>
-Cc: Heiko Carstens <hca@linux.ibm.com>
-Cc: Vasily Gorbik <gor@linux.ibm.com>
-Cc: Alexander Gordeev <agordeev@linux.ibm.com>
-Cc: Christian Borntraeger <borntraeger@linux.ibm.com>
-Cc: Sven Schnelle <svens@linux.ibm.com>
-Cc: Azeem Shaikh <azeemshaikh38@gmail.com>
-Cc: linux-s390@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- v2:
- - add BUILD_BUG_ON (bblock)
- - CC SCSI maintainers (bblock)
- v1: https://lore.kernel.org/all/20231116191435.work.581-kees@kernel.org/
----
- drivers/s390/scsi/zfcp_fc.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+> ...
+> |	vhost = shost_priv(shost);
 
-diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
-index 4f0d0e55f0d4..d6516ab00437 100644
---- a/drivers/s390/scsi/zfcp_fc.c
-+++ b/drivers/s390/scsi/zfcp_fc.c
-@@ -900,8 +900,19 @@ static void zfcp_fc_rspn(struct zfcp_adapter *adapter,
- 	zfcp_fc_ct_ns_init(&rspn_req->ct_hdr, FC_NS_RSPN_ID,
- 			   FC_SYMBOLIC_NAME_SIZE);
- 	hton24(rspn_req->rspn.fr_fid.fp_fid, fc_host_port_id(shost));
--	len = strlcpy(rspn_req->rspn.fr_name, fc_host_symbolic_name(shost),
--		      FC_SYMBOLIC_NAME_SIZE);
-+
-+	BUILD_BUG_ON(sizeof(rspn_req->name) !=
-+			sizeof(fc_host_symbolic_name(shost)));
-+	BUILD_BUG_ON(sizeof(rspn_req->name) !=
-+			type_max(typeof(rspn_req->rspn.fr_name_len)) + 1);
-+	len = strscpy(rspn_req->name, fc_host_symbolic_name(shost),
-+		      sizeof(rspn_req->name));
-+	/*
-+	 * It should be impossible for this to truncate (see BUILD_BUG_ON()
-+	 * above), but be robust anyway.
-+	 */
-+	if (WARN_ON(len < 0))
-+		len = sizeof(rspn_req->name) - 1;
- 	rspn_req->rspn.fr_name_len = len;
- 
- 	sg_init_one(&fc_req->sg_req, rspn_req, sizeof(*rspn_req));
+I.e. vhost is a part of the shost allocation
+
+> 
+> ... where shost_priv() is:
+> |       static inline void *shost_priv(struct Scsi_Host *shost)
+> |       {
+> |       	return (void *)shost->hostdata;
+> |       }
+> 
+> .. and:
+> scsi_host_alloc() ->
+> | 	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, GFP_KERNEL);
+
+As seen here. :)
+
+> 
+> And for login_info->..., NUL-padding is also not required as it is
+> explicitly memset to 0:
+> |	memset(login_info, 0, sizeof(*login_info));
+> 
+> Considering the above, a suitable replacement is `strscpy` [2] due to
+> the fact that it guarantees NUL-termination on the destination buffer
+> without unnecessarily NUL-padding.
+> 
+> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+> Link: https://github.com/KSPP/linux/issues/90
+> Cc: linux-hardening@vger.kernel.org
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
+
+Yeah, this conversion looks correct to me too.
+
+Reviewed-by: Kees Cook <keescook@chromium.org>
+
+-Kees
+
+> ---
+> Note: build-tested only.
+> 
+> Found with: $ rg "strncpy\("
+> ---
+>  drivers/scsi/ibmvscsi/ibmvfc.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index ce9eb00e2ca0..e73a39b1c832 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -1455,7 +1455,7 @@ static void ibmvfc_gather_partition_info(struct ibmvfc_host *vhost)
+>  
+>  	name = of_get_property(rootdn, "ibm,partition-name", NULL);
+>  	if (name)
+> -		strncpy(vhost->partition_name, name, sizeof(vhost->partition_name));
+> +		strscpy(vhost->partition_name, name, sizeof(vhost->partition_name));
+>  	num = of_get_property(rootdn, "ibm,partition-no", NULL);
+>  	if (num)
+>  		vhost->partition_number = *num;
+> @@ -1498,13 +1498,15 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+>  	login_info->async.va = cpu_to_be64(vhost->async_crq.msg_token);
+>  	login_info->async.len = cpu_to_be32(async_crq->size *
+>  					    sizeof(*async_crq->msgs.async));
+> -	strncpy(login_info->partition_name, vhost->partition_name, IBMVFC_MAX_NAME);
+> -	strncpy(login_info->device_name,
+> -		dev_name(&vhost->host->shost_gendev), IBMVFC_MAX_NAME);
+> +	strscpy(login_info->partition_name, vhost->partition_name,
+> +		sizeof(login_info->partition_name));
+> +
+> +	strscpy(login_info->device_name,
+> +		dev_name(&vhost->host->shost_gendev), sizeof(login_info->device_name));
+>  
+>  	location = of_get_property(of_node, "ibm,loc-code", NULL);
+>  	location = location ? location : dev_name(vhost->dev);
+> -	strncpy(login_info->drc_name, location, IBMVFC_MAX_NAME);
+> +	strscpy(login_info->drc_name, location, sizeof(login_info->drc_name));
+>  }
+>  
+>  /**
+> 
+> ---
+> base-commit: ffc253263a1375a65fa6c9f62a893e9767fbebfa
+> change-id: 20231030-strncpy-drivers-scsi-ibmvscsi-ibmvfc-c-ccfce3255d58
+> 
+> Best regards,
+> --
+> Justin Stitt <justinstitt@google.com>
+> 
+
 -- 
-2.34.1
-
+Kees Cook
