@@ -1,30 +1,30 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C62595;
-	Wed, 29 Nov 2023 17:33:49 -0800 (PST)
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-2859c011cb0so500623a91.1;
-        Wed, 29 Nov 2023 17:33:49 -0800 (PST)
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2048E10CB;
+	Wed, 29 Nov 2023 17:33:45 -0800 (PST)
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6cb66f23eddso407249b3a.0;
+        Wed, 29 Nov 2023 17:33:45 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701308028; x=1701912828;
+        d=1e100.net; s=20230601; t=1701308024; x=1701912824;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=RASKjKm4nLxb/R40dTTJuuHVAsjKJQJdoYQIctJ4Wj4=;
-        b=oayq+asoylAjeX3c5F9nW9t1pvhG+WejX8cyDAXjzSi5uDBdT9qC2zBn8alaEcUEl+
-         z0PzHOmSlbihEm8Iv/EJS9GHR6/2G0k2vCBB3wPuN27hQ/wMvl5n1Kph2DxWw8MjlxgT
-         zRaH3A46sx+DJQUi/SDStfPMd9rCMHJayy1VeQgo8VF533SmDPk4F4xKbOPeefHElMAr
-         F6ZH0l90kmk+vUWiO45baTpPaKxNH+mL332iaPlgGTuNIRs/dXBHaCLu9sXqOVA5hZSO
-         2oqWYUz1FSxMNE0f7GFjlVVjR0R1KCed0tmVGdYTI3r3Qbw8h0Hlo5rvDtGBfJBSOhtp
-         YjOg==
-X-Gm-Message-State: AOJu0YwWBJ9YmLda7lyGbzWL3S5dMt6ft66LjiiUJzLqZNRYqpkZZ1fI
-	Yt1+OBKcZTxFdAfWqhZfwOk=
-X-Google-Smtp-Source: AGHT+IFV53GmxLlglVBYipVMkQZDesvI4yBeBlOte1fzdPaxS6MjVeo8sQ1sQD7JoIOPwfh11GfPDg==
-X-Received: by 2002:a17:90a:356:b0:285:83c8:b19d with SMTP id 22-20020a17090a035600b0028583c8b19dmr22546459pjf.16.1701308028395;
-        Wed, 29 Nov 2023 17:33:48 -0800 (PST)
+        bh=Ee8ZoQFzJ48wBQpKH+6gf/IhCz7eOYBcKiKU4gv/83Y=;
+        b=tFREZ9KqUpcxy1XvTSgnvA1bPBh/elK8RyFYKVOqA+x/aHTKNNyaQ01gAM+Y+G5Fxk
+         00+RpK4/3UKuTVA7H+UnLRIyIbE3O44T5h0YUy2c2PDIMOm1JIqlwHspnXiQGAW+Rz/G
+         AlU9ivokFtd5qd7DdNS4opzJTJiDNiTGSXMm3IJEn/8YMoH8tHwp9bZo+dzjjVw7gB2t
+         jM7YtJDPUrLj2g1Zqmp3Z2pDOOseGZBAT5MXIlRjVP40pTu8+sV2M14c4sXxNWKBCeyf
+         cx7vosSp2cgshb7cknoK/OQqE+JMiEP12MBncbFYG09LiID4s7kbNjVecNOppKz2avga
+         Nfqg==
+X-Gm-Message-State: AOJu0YwB7Ewhbxtikf9aAo3PgJNoeBPaDhnF2FOiMipZ5b5Mcr8xZb3t
+	gJ2G0n1tigxTkb1KBIl1s88=
+X-Google-Smtp-Source: AGHT+IFyloKDPrAd8TZoXbkaSVvhwS5DcwHRFFIpFqqlwH4eXE2IHaQPlv/G2Bycl2PAksgQTRoz4A==
+X-Received: by 2002:a05:6a20:8e16:b0:18d:1321:c294 with SMTP id y22-20020a056a208e1600b0018d1321c294mr3903428pzj.20.1701308024455;
+        Wed, 29 Nov 2023 17:33:44 -0800 (PST)
 Received: from bvanassche-glaptop2.roam.corp.google.com (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id g4-20020a17090ace8400b00277560ecd5dsm2021936pju.46.2023.11.29.17.33.47
+        by smtp.gmail.com with ESMTPSA id g4-20020a17090ace8400b00277560ecd5dsm2021936pju.46.2023.11.29.17.33.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Nov 2023 17:33:47 -0800 (PST)
+        Wed, 29 Nov 2023 17:33:44 -0800 (PST)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -35,10 +35,10 @@ Cc: linux-scsi@vger.kernel.org,
 	Daejun Park <daejun7.park@samsung.com>,
 	Kanchan Joshi <joshi.k@samsung.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH v5 13/17] scsi_debug: Rework page code error handling
-Date: Wed, 29 Nov 2023 17:33:18 -0800
-Message-ID: <20231130013322.175290-14-bvanassche@acm.org>
+	Damien Le Moal <dlemoal@kernel.org>
+Subject: [PATCH v5 10/17] sd: Translate data lifetime information
+Date: Wed, 29 Nov 2023 17:33:15 -0800
+Message-ID: <20231130013322.175290-11-bvanassche@acm.org>
 X-Mailer: git-send-email 2.43.0.rc2.451.g8631bc7472-goog
 In-Reply-To: <20231130013322.175290-1-bvanassche@acm.org>
 References: <20231130013322.175290-1-bvanassche@acm.org>
@@ -50,81 +50,189 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Instead of tracking whether or not the page code is valid in a boolean
-variable, jump to error handling code if an unsupported page code is
-encountered.
+Recently T10 standardized SBC constrained streams. This mechanism allows
+to pass data lifetime information to SCSI devices in the group number
+field. Add support for translating write hint information into a
+permanent stream number in the sd driver. Use WRITE(10) instead of
+WRITE(6) if data lifetime information is present because the WRITE(6)
+command does not have a GROUP NUMBER field.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_debug.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/scsi/sd.c | 98 +++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/sd.h |  2 +
+ 2 files changed, 97 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index b9a39829a012..a2d25177f0f3 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2631,7 +2631,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 	unsigned char *ap;
- 	unsigned char arr[SDEBUG_MAX_MSENSE_SZ];
- 	unsigned char *cmd = scp->cmnd;
--	bool dbd, llbaa, msense_6, is_disk, is_zbc, bad_pcode;
-+	bool dbd, llbaa, msense_6, is_disk, is_zbc;
- 
- 	dbd = !!(cmd[1] & 0x8);		/* disable block descriptors */
- 	pcontrol = (cmd[2] & 0xc0) >> 6;
-@@ -2695,7 +2695,6 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 3, -1);
- 		return check_condition_result;
- 	}
--	bad_pcode = false;
- 
- 	switch (pcode) {
- 	case 0x1:	/* Read-Write error recovery page, direct access */
-@@ -2710,15 +2709,17 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 		if (is_disk) {
- 			len = resp_format_pg(ap, pcontrol, target);
- 			offset += len;
--		} else
--			bad_pcode = true;
-+		} else {
-+			goto bad_pcode;
-+		}
- 		break;
- 	case 0x8:	/* Caching page, direct access */
- 		if (is_disk || is_zbc) {
- 			len = resp_caching_pg(ap, pcontrol, target);
- 			offset += len;
--		} else
--			bad_pcode = true;
-+		} else {
-+			goto bad_pcode;
-+		}
- 		break;
- 	case 0xa:	/* Control Mode page, all devices */
- 		len = resp_ctrl_m_pg(ap, pcontrol, target);
-@@ -2771,18 +2772,17 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 		}
- 		break;
- 	default:
--		bad_pcode = true;
--		break;
--	}
--	if (bad_pcode) {
--		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, 5);
--		return check_condition_result;
-+		goto bad_pcode;
- 	}
- 	if (msense_6)
- 		arr[0] = offset - 1;
- 	else
- 		put_unaligned_be16((offset - 2), arr + 0);
- 	return fill_from_dev_buffer(scp, arr, min_t(u32, alloc_len, offset));
-+
-+bad_pcode:
-+	mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, 5);
-+	return check_condition_result;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3988d6eabfdf..84720d2663d4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -47,6 +47,7 @@
+ #include <linux/blkpg.h>
+ #include <linux/blk-pm.h>
+ #include <linux/delay.h>
++#include <linux/rw_hint.h>
+ #include <linux/major.h>
+ #include <linux/mutex.h>
+ #include <linux/string_helpers.h>
+@@ -1080,12 +1081,38 @@ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+ 	return BLK_STS_OK;
  }
  
- #define SDEBUG_MAX_MSELECT_SZ 512
++/**
++ * sd_group_number() - Compute the GROUP NUMBER field
++ * @cmd: SCSI command for which to compute the value of the six-bit GROUP NUMBER
++ *	field.
++ *
++ * From SBC-5 r05 (https://www.t10.org/cgi-bin/ac.pl?t=f&f=sbc5r05.pdf):
++ * 0: no relative lifetime.
++ * 1: shortest relative lifetime.
++ * 2: second shortest relative lifetime.
++ * 3 - 0x3d: intermediate relative lifetimes.
++ * 0x3e: second longest relative lifetime.
++ * 0x3f: longest relative lifetime.
++ */
++static u8 sd_group_number(struct scsi_cmnd *cmd)
++{
++	const struct request *rq = scsi_cmd_to_rq(cmd);
++	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
++
++	if (!sdkp->rscs)
++		return 0;
++
++	return min3((u32)rq->write_hint, (u32)sdkp->permanent_stream_count,
++		    0x3fu);
++}
++
+ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
+ 				       sector_t lba, unsigned int nr_blocks,
+ 				       unsigned char flags, unsigned int dld)
+ {
+ 	cmd->cmd_len = SD_EXT_CDB_SIZE;
+ 	cmd->cmnd[0]  = VARIABLE_LENGTH_CMD;
++	cmd->cmnd[6]  = sd_group_number(cmd);
+ 	cmd->cmnd[7]  = 0x18; /* Additional CDB len */
+ 	cmd->cmnd[9]  = write ? WRITE_32 : READ_32;
+ 	cmd->cmnd[10] = flags;
+@@ -1104,7 +1131,7 @@ static blk_status_t sd_setup_rw16_cmnd(struct scsi_cmnd *cmd, bool write,
+ 	cmd->cmd_len  = 16;
+ 	cmd->cmnd[0]  = write ? WRITE_16 : READ_16;
+ 	cmd->cmnd[1]  = flags | ((dld >> 2) & 0x01);
+-	cmd->cmnd[14] = (dld & 0x03) << 6;
++	cmd->cmnd[14] = ((dld & 0x03) << 6) | sd_group_number(cmd);
+ 	cmd->cmnd[15] = 0;
+ 	put_unaligned_be64(lba, &cmd->cmnd[2]);
+ 	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
+@@ -1119,7 +1146,7 @@ static blk_status_t sd_setup_rw10_cmnd(struct scsi_cmnd *cmd, bool write,
+ 	cmd->cmd_len = 10;
+ 	cmd->cmnd[0] = write ? WRITE_10 : READ_10;
+ 	cmd->cmnd[1] = flags;
+-	cmd->cmnd[6] = 0;
++	cmd->cmnd[6] = sd_group_number(cmd);
+ 	cmd->cmnd[9] = 0;
+ 	put_unaligned_be32(lba, &cmd->cmnd[2]);
+ 	put_unaligned_be16(nr_blocks, &cmd->cmnd[7]);
+@@ -1256,7 +1283,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 		ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
+ 					 protect | fua, dld);
+ 	} else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
+-		   sdp->use_10_for_rw || protect) {
++		   sdp->use_10_for_rw || protect || rq->write_hint) {
+ 		ret = sd_setup_rw10_cmnd(cmd, write, lba, nr_blocks,
+ 					 protect | fua);
+ 	} else {
+@@ -3001,6 +3028,70 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	sdkp->DPOFUA = 0;
+ }
+ 
++static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
++{
++	u8 cdb[16] = { SERVICE_ACTION_IN_16, SAI_GET_STREAM_STATUS };
++	struct {
++		struct scsi_stream_status_header h;
++		struct scsi_stream_status s;
++	} buf;
++	struct scsi_device *sdev = sdkp->device;
++	struct scsi_sense_hdr sshdr;
++	const struct scsi_exec_args exec_args = {
++		.sshdr = &sshdr,
++	};
++	int res;
++
++	put_unaligned_be16(stream_id, &cdb[4]);
++	put_unaligned_be32(sizeof(buf), &cdb[10]);
++
++	res = scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, &buf, sizeof(buf),
++			       SD_TIMEOUT, sdkp->max_retries, &exec_args);
++	if (res < 0)
++		return false;
++	if (scsi_status_is_check_condition(res) && scsi_sense_valid(&sshdr))
++		sd_print_sense_hdr(sdkp, &sshdr);
++	if (res)
++		return false;
++	if (get_unaligned_be32(&buf.h.len) < sizeof(struct scsi_stream_status))
++		return false;
++	return buf.h.stream_status[0].perm;
++}
++
++static void sd_read_io_hints(struct scsi_disk *sdkp, unsigned char *buffer)
++{
++	struct scsi_device *sdp = sdkp->device;
++	const struct scsi_io_group_descriptor *desc, *start, *end;
++	struct scsi_sense_hdr sshdr;
++	struct scsi_mode_data data;
++	int res;
++
++	res = scsi_mode_sense(sdp, /*dbd=*/0x8, /*modepage=*/0x0a,
++			      /*subpage=*/0x05, buffer, SD_BUF_SIZE,
++			      SD_TIMEOUT, sdkp->max_retries, &data, &sshdr);
++	if (res < 0)
++		return;
++	start = (void *)buffer + data.header_length + 16;
++	end = (void *)buffer + ALIGN_DOWN(data.header_length + data.length,
++					  sizeof(*end));
++	/*
++	 * From "SBC-5 Constrained Streams with Data Lifetimes": Device severs
++	 * should assign the lowest numbered stream identifiers to permanent
++	 * streams.
++	 */
++	for (desc = start; desc < end; desc++)
++		if (!desc->st_enble || !sd_is_perm_stream(sdkp, desc - start))
++			break;
++	sdkp->permanent_stream_count = desc - start;
++	if (sdkp->rscs && sdkp->permanent_stream_count < 2)
++		sd_printk(KERN_INFO, sdkp,
++			  "Unexpected: RSCS has been set and the permanent stream count is %u\n",
++			  sdkp->permanent_stream_count);
++	else if (sdkp->permanent_stream_count)
++		sd_printk(KERN_INFO, sdkp, "permanent stream count = %d\n",
++			  sdkp->permanent_stream_count);
++}
++
+ /*
+  * The ATO bit indicates whether the DIF application tag is available
+  * for use by the operating system.
+@@ -3484,6 +3575,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
++		sd_read_io_hints(sdkp, buffer);
+ 		sd_read_app_tag_own(sdkp, buffer);
+ 		sd_read_write_same(sdkp, buffer);
+ 		sd_read_security(sdkp, buffer);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index e4539122f2a2..16cf7c543ccf 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -125,6 +125,8 @@ struct scsi_disk {
+ 	unsigned int	physical_block_size;
+ 	unsigned int	max_medium_access_timeouts;
+ 	unsigned int	medium_access_timed_out;
++			/* number of permanent streams */
++	u16		permanent_stream_count;
+ 	u8		media_present;
+ 	u8		write_prot;
+ 	u8		protection_type;/* Data Integrity Field */
