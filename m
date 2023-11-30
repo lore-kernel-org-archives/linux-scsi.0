@@ -1,206 +1,97 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-m118208.qiye.163.com (mail-m118208.qiye.163.com [115.236.118.208])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94C811B4;
-	Thu, 30 Nov 2023 06:38:06 -0800 (PST)
-Received: from localhost.localdomain (unknown [IPV6:240e:3b7:3271:7f20:45e9:2b16:3419:6e5b])
-	by mail-m12773.qiye.163.com (Hmail) with ESMTPA id A0A592C04E9;
-	Thu, 30 Nov 2023 22:28:57 +0800 (CST)
-From: Ding Hui <dinghui@sangfor.com.cn>
-To: jejb@linux.ibm.com,
-	martin.petersen@oracle.com
-Cc: zhuwei@sangfor.com.cn,
-	thenzl@redhat.com,
+Received: from mail-il1-f181.google.com (mail-il1-f181.google.com [209.85.166.181])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5C15D40;
+	Thu, 30 Nov 2023 11:31:44 -0800 (PST)
+Received: by mail-il1-f181.google.com with SMTP id e9e14a558f8ab-35b2144232bso4110165ab.3;
+        Thu, 30 Nov 2023 11:31:44 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701372704; x=1701977504;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mxLJlTok82d/1zMcS65wo+jr8X5sUKOoa4cY3ZrLgTM=;
+        b=GvSBdYHiQGkPR3leO8FQneIGwPMk8+d6N3bwXEOk9YtbR09s+zjxJTYhgab7bJ5Bz6
+         FlT/1Sxitd7KH1l093UoQGOfOCubu4zF09B3TzkP+HdH/j0DgiwrTKbY8Dgjxropp7hh
+         bGI91SZP4z/zwEZgjlGBZdcRJ986DPTjOB0YzHj/owkmN16XaH81Tz+B7v3zVA+E8zVG
+         lc6Ni57niboxRJ52JZAQlZrdOWHdx0UH+MYzoCkzE8CttfoSAS4KZdBe/f1D6Js+HZ4R
+         nhWA8lDDVC5QdT7KqM181AQsUqPx8s98IQgC278ovwmGRWmLufqBj8xmBoh5por7SRbp
+         jq4A==
+X-Gm-Message-State: AOJu0YzEJuSnlRDbT6tvC6OyHRRQ3Qr7SC3/OwKvbGd/udcg5wgIyGZj
+	ETeaMRf45xvpC3S5UDqp0Gk=
+X-Google-Smtp-Source: AGHT+IHi0pafDk3YLVDOVMoWHPJlxf7kXDrWskKCWttJPITM/9LQOQgLGQr7MAD8igkiIMj98SUieQ==
+X-Received: by 2002:a92:c566:0:b0:35c:e8ee:f7b7 with SMTP id b6-20020a92c566000000b0035ce8eef7b7mr14465458ilj.27.1701372703889;
+        Thu, 30 Nov 2023 11:31:43 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:8572:6fe3:eaf0:3b9d])
+        by smtp.gmail.com with ESMTPSA id m127-20020a632685000000b005c606b44405sm1635365pgm.67.2023.11.30.11.31.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Nov 2023 11:31:43 -0800 (PST)
+From: Bart Van Assche <bvanassche@acm.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ding Hui <dinghui@sangfor.com.cn>
-Subject: [PATCH 2/2] scsi: ses: increase default init_alloc_size
-Date: Thu, 30 Nov 2023 22:28:35 +0800
-Message-Id: <20231130142835.18041-3-dinghui@sangfor.com.cn>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20231130142835.18041-1-dinghui@sangfor.com.cn>
-References: <20231130142835.18041-1-dinghui@sangfor.com.cn>
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkZGksfVkNDTEkaS0hCGEMaQlUTARMWGhIXJBQOD1
-	lXWRgSC1lBWUlPSx5BSBlMQUhJTEpBTB1JS0FPTh5CQUkZSk1BSE9KQkFNHk4ZWVdZFhoPEhUdFF
-	lBWU9LSFVKTU9JTklVSktLVUpCWQY+
-X-HM-Tid: 0a8c20a20383b249kuuua0a592c04e9
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Ni46LRw4LTw#SxcBIzgRLzgY
-	Fh4KCQlVSlVKTEtKSE5PTkhDTUJNVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
-	QVlJT0seQUgZTEFISUxKQUwdSUtBT04eQkFJGUpNQUhPSkJBTR5OGVlXWQgBWUFMSE9KNwY+
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v6 0/6] Disable fair tag sharing for UFS devices
+Date: Thu, 30 Nov 2023 11:31:27 -0800
+Message-ID: <20231130193139.880955-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.43.0.rc2.451.g8631bc7472-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-In 2020, I sent a patch [1] to address crash due to zero component count,
-at that time, I did not dig why the ses driver got 0 but sg_ses tool got
-the right component count. Now we have the answer.
+Hi Jens,
 
-In ses, when we prepare to receive a full diagnostic page{1,2,7,10},
-we first detect the page length by a RECEIVE_DIAGNOSTIC request
-with INIT_ALLOC_SIZE buffer len, we expect to get the correct page
-length regardless of detecting request buffer len.
+The fair tag sharing algorithm reduces performance for UFS devices
+significantly. This is because UFS devices have multiple logical units, a
+limited queue depth (32 for UFS 3.1 devices), because it happens often that
+multiple logical units are accessed and also because it takes time to
+give tags back after activity on a request queue has stopped. This patch series
+restores UFS device performance to that of the legacy block layer by disabling
+fair tag sharing for UFS devices.
 
-But for some storage device (e.g. vendor:DELL product:MD32xxi rev:0784),
-its behavior is different. It replies the page length indicating that
-it actually filled the buffer size in the response, rather that the
-original page length it should be.
+Please consider this patch series for the next merge window.
 
-In this situation, the device reply hdr_buf[3]=28 since our detecting
-request buffer is 32, we will allocate small buffer and save partial diag
-page content, when we parse the page content, multiple types OOB reading
-could be triggered. This is also the root cause of the OOB handled by
-Zhu Wei in the previous patch.
+Thanks,
 
-The sg_ses directly invoke SG_IO ioctl with dxfer_len=65535, so it
-always can report the right elements and descriptors.
+Bart.
 
-To work well with this kind of devices, I increase the default
-init_alloc_size to a relative large enough length for most devices,
-and convert it to a module param in case some one need even larger
-who warned by the log "Suspicious pageX len Y, try larger
-init_alloc_size".
+Changes compared to v5:
+ - Request queues are frozen before fair tag sharing is changed.
+ - Added a sysfs attribute to SCSI hosts for configuring fair tag sharing.
 
-[1]: https://patchwork.kernel.org/patch/11938277
+Changes compared to v4:
+ - Rebased on top of kernel v6.7-rc1.
 
-Cc: Zhu Wei <zhuwei@sangfor.com.cn>
-Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
----
- drivers/scsi/ses.c | 51 ++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 43 insertions(+), 8 deletions(-)
+Changes compared to v3:
+ - Instead of disabling fair tag sharing for all block drivers, introduce a
+   flag for disabling it conditionally.
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 2a404e51b6db..40069a4b51a8 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -35,6 +35,29 @@ struct ses_component {
- 	u64 addr;
- };
- 
-+#define INIT_ALLOC_SIZE_DEF 4096
-+#define INIT_ALLOC_SIZE_MIN 32
-+#define INIT_ALLOC_SIZE_MAX 65535
-+
-+static uint init_alloc_size = INIT_ALLOC_SIZE_DEF;
-+
-+static int param_set_init_alloc_size(const char *val, const struct kernel_param *kp)
-+{
-+	uint size;
-+	int ret = kstrtouint(val, 0, &size);
-+
-+	if (ret)
-+		return ret;
-+
-+	init_alloc_size = clamp_t(uint, size, INIT_ALLOC_SIZE_MIN, INIT_ALLOC_SIZE_MAX);
-+	return 0;
-+}
-+
-+module_param_call(init_alloc_size, param_set_init_alloc_size, param_get_uint,
-+		  &init_alloc_size, 0644);
-+MODULE_PARM_DESC(init_alloc_size, "Buffer size for detecting diagnostic pages length. "
-+		 "[Default=" __stringify(INIT_ALLOC_SIZE_DEF) "]");
-+
- static bool ses_page2_supported(struct enclosure_device *edev)
- {
- 	struct ses_device *ses_dev = edev->scratch;
-@@ -525,8 +548,6 @@ static int ses_enclosure_find_by_addr(struct enclosure_device *edev,
- 	return 0;
- }
- 
--#define INIT_ALLOC_SIZE 32
--
- static void ses_enclosure_data_process(struct enclosure_device *edev,
- 				       struct scsi_device *sdev,
- 				       int create)
-@@ -536,7 +557,8 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 	int i, j, page7_len, len, components;
- 	struct ses_device *ses_dev = edev->scratch;
- 	int types = ses_dev->page1_num_types;
--	unsigned char *hdr_buf = kzalloc(INIT_ALLOC_SIZE, GFP_KERNEL);
-+	int hdr_buf_len = init_alloc_size;
-+	unsigned char *hdr_buf = kzalloc(hdr_buf_len, GFP_KERNEL);
- 
- 	if (!hdr_buf)
- 		goto simple_populate;
-@@ -545,11 +567,14 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 	if (ses_dev->page10)
- 		ses_recv_diag(sdev, 10, ses_dev->page10, ses_dev->page10_len);
- 	/* Page 7 for the descriptors is optional */
--	result = ses_recv_diag(sdev, 7, hdr_buf, INIT_ALLOC_SIZE);
-+	result = ses_recv_diag(sdev, 7, hdr_buf, hdr_buf_len);
- 	if (result)
- 		goto simple_populate;
- 
- 	page7_len = len = (hdr_buf[2] << 8) + hdr_buf[3] + 4;
-+	if (page7_len == hdr_buf_len)
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "Suspicious page7 len %d, try larger init_alloc_size\n", page7_len);
- 	/* add 1 for trailing '\0' we'll use */
- 	buf = kzalloc(len + 1, GFP_KERNEL);
- 	if (!buf)
-@@ -678,6 +703,7 @@ static int ses_intf_add(struct device *cdev)
- 	int num_enclosures;
- 	struct enclosure_device *edev;
- 	struct ses_component *scomp = NULL;
-+	int hdr_buf_len = init_alloc_size;
- 
- 	if (!scsi_device_enclosure(sdev)) {
- 		/* not an enclosure, but might be in one */
-@@ -695,16 +721,19 @@ static int ses_intf_add(struct device *cdev)
- 		sdev_printk(KERN_NOTICE, sdev, "Embedded Enclosure Device\n");
- 
- 	ses_dev = kzalloc(sizeof(*ses_dev), GFP_KERNEL);
--	hdr_buf = kzalloc(INIT_ALLOC_SIZE, GFP_KERNEL);
-+	hdr_buf = kzalloc(hdr_buf_len, GFP_KERNEL);
- 	if (!hdr_buf || !ses_dev)
- 		goto err_init_free;
- 
- 	page = 1;
--	result = ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
-+	result = ses_recv_diag(sdev, page, hdr_buf, hdr_buf_len);
- 	if (result)
- 		goto recv_failed;
- 
- 	len = (hdr_buf[2] << 8) + hdr_buf[3] + 4;
-+	if (len == hdr_buf_len)
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "Suspicious page1 len %d, try larger init_alloc_size\n", len);
- 	buf = kzalloc(len, GFP_KERNEL);
- 	if (!buf)
- 		goto err_free;
-@@ -741,11 +770,14 @@ static int ses_intf_add(struct device *cdev)
- 	buf = NULL;
- 
- 	page = 2;
--	result = ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
-+	result = ses_recv_diag(sdev, page, hdr_buf, hdr_buf_len);
- 	if (result)
- 		goto page2_not_supported;
- 
- 	len = (hdr_buf[2] << 8) + hdr_buf[3] + 4;
-+	if (len == hdr_buf_len)
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "Suspicious page2 len %d, try larger init_alloc_size\n", len);
- 	buf = kzalloc(len, GFP_KERNEL);
- 	if (!buf)
- 		goto err_free;
-@@ -761,10 +793,13 @@ static int ses_intf_add(struct device *cdev)
- 	/* The additional information page --- allows us
- 	 * to match up the devices */
- 	page = 10;
--	result = ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
-+	result = ses_recv_diag(sdev, page, hdr_buf, hdr_buf_len);
- 	if (!result) {
- 
- 		len = (hdr_buf[2] << 8) + hdr_buf[3] + 4;
-+		if (len == hdr_buf_len)
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "Suspicious page10 len %d, try larger init_alloc_size\n", len);
- 		buf = kzalloc(len, GFP_KERNEL);
- 		if (!buf)
- 			goto err_free;
--- 
-2.17.1
+Changes between v2 and v3:
+ - Rebased on top of the latest kernel.
+
+Changes between v1 and v2:
+ - Restored the tags->active_queues variable and thereby fixed the
+   "uninitialized variable" warning reported by the kernel test robot.
+
+Bart Van Assche (4):
+  block: Make fair tag sharing configurable
+  scsi: core: Make fair tag sharing configurable in the host template
+  scsi: core: Make fair tag sharing configurable via sysfs
+  scsi: ufs: Disable fair tag sharing
+
+ block/blk-mq-debugfs.c    |  1 +
+ block/blk-mq.c            | 28 ++++++++++++++++++++++++++++
+ block/blk-mq.h            |  3 ++-
+ drivers/scsi/hosts.c      |  1 +
+ drivers/scsi/scsi_lib.c   |  2 ++
+ drivers/scsi/scsi_sysfs.c | 30 ++++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd.c |  1 +
+ include/linux/blk-mq.h    |  6 ++++--
+ include/scsi/scsi_host.h  |  6 ++++++
+ 9 files changed, 75 insertions(+), 3 deletions(-)
 
