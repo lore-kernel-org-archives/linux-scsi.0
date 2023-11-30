@@ -1,30 +1,30 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AC6F10DB;
-	Wed, 29 Nov 2023 17:33:42 -0800 (PST)
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1cc9b626a96so4580305ad.2;
-        Wed, 29 Nov 2023 17:33:42 -0800 (PST)
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93E0A10C3;
+	Wed, 29 Nov 2023 17:33:46 -0800 (PST)
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1cfb4d28c43so4504315ad.1;
+        Wed, 29 Nov 2023 17:33:46 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701308022; x=1701912822;
+        d=1e100.net; s=20230601; t=1701308026; x=1701912826;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=BioESp0U3wSL1WtmNxsPZMO9DGPsFuUUACDGuSqC3RA=;
-        b=uaMrF32VaEyybxQ5SV1UutRFzdYKgzQlIYGju0qObPM6dLLDS2WedlQyCk8B7ayjiz
-         H95MyEeF3TFw5gc+X+V6o1VkUaPNh/Mu50cvwFLfvaPojWRhSZ4ewQkM7Fobj1DDHVqq
-         iEBeEUlGVXbkiELpJ/72dGPmDoq84jO7+JJVwSM/QpLKoBHjSD4tDYtjBrt5CHhLSp7d
-         8jtD4nCbvAHwCNUXnFaI2qVedlqx48cI3RcP8CbQd+CBYMrmIw1TNcJFmKcJbz4Jm6sA
-         HahlbvhbKndLtsQYFGT4Twpww2J+g/1sP9EvJ9qZ7vBV5gr9GJkK53O5qWd2GplzWZ6P
-         +/vg==
-X-Gm-Message-State: AOJu0YzpsBYNhhhpPOdBXVgzHM5/iorjnv4aOG2Gd4hSS+opl/RThSRp
-	2orjWFvRhn/nqaNnBJN9gBA=
-X-Google-Smtp-Source: AGHT+IEwhg4mF5M93zDP7mpQ+xY6ty/oNL4drC/WYp7D+KFHeqRRhTQkMgGtupOjdMCRWj3YzJnIpw==
-X-Received: by 2002:a17:90b:164b:b0:280:99ca:1611 with SMTP id il11-20020a17090b164b00b0028099ca1611mr19275423pjb.20.1701308021904;
-        Wed, 29 Nov 2023 17:33:41 -0800 (PST)
+        bh=BkSfUcpnh8PvnHDsfNZNkdUSjQw/qQT17pFxq0lAy8s=;
+        b=VHDBGKLRMaE4JwcOahMN3NLc9k27TTDGv45XwP5tqTWQGGkYjeIH8MTtbAGHRF8U4Z
+         jgj6tRGqpg/m410x2SsA6Oh9nKMHdyGoSRtMLlAxEWJDaDG9m1Rx4O5lPBzIMpNXlDEU
+         coBNW6tA8qdTaw0pgrrReBb+ZRLw5juf5TcjLeDAA1NHrjmxxon2JQb12/0s2xFWImKq
+         QWOAzCt8oDng08hHw9VN6ltxJTKMdbJ89BUdU048hesJuTHplKQr7peP/lf4y77hu2JJ
+         yWEubuZXTsiVUaEqS5a/zkPdSZzVM2nH/0WRlnsySOr/eRGnIB/E5QV8bx06wEZX8/ij
+         xAiw==
+X-Gm-Message-State: AOJu0Yw9lzCmhELsCdMt+aPMnALpDyStUhWUAA7KbBYjM9W6+99SuUdy
+	S7MxhllqlWjjMX1PiB+xtuo=
+X-Google-Smtp-Source: AGHT+IH0eJWutgnl5hcSr4uJjTgEtVZ1VWHTo0dVtYBH9KTCcEJ79QbZLReo2NxsZM4xuK9byKO6nw==
+X-Received: by 2002:a17:90a:1947:b0:281:5860:12f3 with SMTP id 7-20020a17090a194700b00281586012f3mr17384164pjh.3.1701308025837;
+        Wed, 29 Nov 2023 17:33:45 -0800 (PST)
 Received: from bvanassche-glaptop2.roam.corp.google.com (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id g4-20020a17090ace8400b00277560ecd5dsm2021936pju.46.2023.11.29.17.33.40
+        by smtp.gmail.com with ESMTPSA id g4-20020a17090ace8400b00277560ecd5dsm2021936pju.46.2023.11.29.17.33.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Nov 2023 17:33:41 -0800 (PST)
+        Wed, 29 Nov 2023 17:33:45 -0800 (PST)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -35,10 +35,11 @@ Cc: linux-scsi@vger.kernel.org,
 	Daejun Park <daejun7.park@samsung.com>,
 	Kanchan Joshi <joshi.k@samsung.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v5 08/17] scsi: core: Query the Block Limits Extension VPD page
-Date: Wed, 29 Nov 2023 17:33:13 -0800
-Message-ID: <20231130013322.175290-9-bvanassche@acm.org>
+	Avri Altman <avri.altman@wdc.com>,
+	Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH v5 11/17] scsi_debug: Reduce code duplication
+Date: Wed, 29 Nov 2023 17:33:16 -0800
+Message-ID: <20231130013322.175290-12-bvanassche@acm.org>
 X-Mailer: git-send-email 2.43.0.rc2.451.g8631bc7472-goog
 In-Reply-To: <20231130013322.175290-1-bvanassche@acm.org>
 References: <20231130013322.175290-1-bvanassche@acm.org>
@@ -50,143 +51,91 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Parse the Reduced Stream Control Supported (RSCS) bit from the block
-limits extension VPD page. The RSCS bit is defined in SBC-5 r05
-(https://www.t10.org/cgi-bin/ac.pl?t=f&f=sbc5r05.pdf).
+All VPD pages have the page code in byte one. Reduce code duplication by
+storing the VPD page code once.
 
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Daejun Park <daejun7.park@samsung.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi.c        |  2 ++
- drivers/scsi/scsi_sysfs.c  | 10 ++++++++++
- drivers/scsi/sd.c          | 13 +++++++++++++
- drivers/scsi/sd.h          |  1 +
- include/scsi/scsi_device.h |  1 +
- 5 files changed, 27 insertions(+)
+ drivers/scsi/scsi_debug.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 76d369343c7a..74cc3369dd8d 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -499,6 +499,8 @@ void scsi_attach_vpd(struct scsi_device *sdev)
- 			scsi_update_vpd_page(sdev, 0xb1, &sdev->vpd_pgb1);
- 		if (vpd_buf->data[i] == 0xb2)
- 			scsi_update_vpd_page(sdev, 0xb2, &sdev->vpd_pgb2);
-+		if (vpd_buf->data[i] == 0xb7)
-+			scsi_update_vpd_page(sdev, 0xb7, &sdev->vpd_pgb7);
- 	}
- 	kfree(vpd_buf);
- }
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 24f6eefb6803..93652a786a46 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -449,6 +449,7 @@ static void scsi_device_dev_release(struct device *dev)
- 	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
- 	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
- 	struct scsi_vpd *vpd_pgb0 = NULL, *vpd_pgb1 = NULL, *vpd_pgb2 = NULL;
-+	struct scsi_vpd *vpd_pgb7 = NULL;
- 	unsigned long flags;
- 
- 	might_sleep();
-@@ -494,6 +495,8 @@ static void scsi_device_dev_release(struct device *dev)
- 				       lockdep_is_held(&sdev->inquiry_mutex));
- 	vpd_pgb2 = rcu_replace_pointer(sdev->vpd_pgb2, vpd_pgb2,
- 				       lockdep_is_held(&sdev->inquiry_mutex));
-+	vpd_pgb7 = rcu_replace_pointer(sdev->vpd_pgb7, vpd_pgb7,
-+				       lockdep_is_held(&sdev->inquiry_mutex));
- 	mutex_unlock(&sdev->inquiry_mutex);
- 
- 	if (vpd_pg0)
-@@ -510,6 +513,8 @@ static void scsi_device_dev_release(struct device *dev)
- 		kfree_rcu(vpd_pgb1, rcu);
- 	if (vpd_pgb2)
- 		kfree_rcu(vpd_pgb2, rcu);
-+	if (vpd_pgb7)
-+		kfree_rcu(vpd_pgb7, rcu);
- 	kfree(sdev->inquiry);
- 	kfree(sdev);
- 
-@@ -921,6 +926,7 @@ sdev_vpd_pg_attr(pg89);
- sdev_vpd_pg_attr(pgb0);
- sdev_vpd_pg_attr(pgb1);
- sdev_vpd_pg_attr(pgb2);
-+sdev_vpd_pg_attr(pgb7);
- sdev_vpd_pg_attr(pg0);
- 
- static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
-@@ -1295,6 +1301,9 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
- 	if (attr == &dev_attr_vpd_pgb2 && !sdev->vpd_pgb2)
- 		return 0;
- 
-+	if (attr == &dev_attr_vpd_pgb7 && !sdev->vpd_pgb7)
-+		return 0;
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 6d8218a44122..f6261ad76c09 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1902,7 +1902,8 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		u32 len;
+ 		char lu_id_str[6];
+ 		int host_no = devip->sdbg_host->shost->host_no;
+-		
 +
- 	return S_IRUGO;
- }
- 
-@@ -1347,6 +1356,7 @@ static struct bin_attribute *scsi_sdev_bin_attrs[] = {
- 	&dev_attr_vpd_pgb0,
- 	&dev_attr_vpd_pgb1,
- 	&dev_attr_vpd_pgb2,
-+	&dev_attr_vpd_pgb7,
- 	&dev_attr_inquiry,
- 	NULL
- };
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fa00dd503cbf..3988d6eabfdf 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3108,6 +3108,18 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 	rcu_read_unlock();
- }
- 
-+/* Parse the Block Limits Extension VPD page (0xb7) */
-+static void sd_read_block_limits_ext(struct scsi_disk *sdkp)
-+{
-+	struct scsi_vpd *vpd;
-+
-+	rcu_read_lock();
-+	vpd = rcu_dereference(sdkp->device->vpd_pgb7);
-+	if (vpd && vpd->len >= 2)
-+		sdkp->rscs = vpd->data[5] & 1;
-+	rcu_read_unlock();
-+}
-+
- /**
-  * sd_read_block_characteristics - Query block dev. characteristics
-  * @sdkp: disk to query
-@@ -3462,6 +3474,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		if (scsi_device_supports_vpd(sdp)) {
- 			sd_read_block_provisioning(sdkp);
- 			sd_read_block_limits(sdkp);
-+			sd_read_block_limits_ext(sdkp);
- 			sd_read_block_characteristics(sdkp);
- 			sd_zbc_read_zones(sdkp, buffer);
- 			sd_read_cpr(sdkp);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 409dda5350d1..e4539122f2a2 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -151,6 +151,7 @@ struct scsi_disk {
- 	unsigned	urswrz : 1;
- 	unsigned	security : 1;
- 	unsigned	ignore_medium_access_errors : 1;
-+	bool		rscs : 1; /* reduced stream control support */
- };
- #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 10480eb582b2..a1588f3965f9 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -153,6 +153,7 @@ struct scsi_device {
- 	struct scsi_vpd __rcu *vpd_pgb0;
- 	struct scsi_vpd __rcu *vpd_pgb1;
- 	struct scsi_vpd __rcu *vpd_pgb2;
-+	struct scsi_vpd __rcu *vpd_pgb7;
- 
- 	struct scsi_target      *sdev_target;
- 
++		arr[1] = cmd[2];
+ 		port_group_id = (((host_no + 1) & 0x7f) << 8) +
+ 		    (devip->channel & 0x7f);
+ 		if (sdebug_vpd_use_hostno == 0)
+@@ -1913,7 +1914,6 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 				 (devip->target * 1000) - 3;
+ 		len = scnprintf(lu_id_str, 6, "%d", lu_id_num);
+ 		if (0 == cmd[2]) { /* supported vital product data pages */
+-			arr[1] = cmd[2];	/*sanity */
+ 			n = 4;
+ 			arr[n++] = 0x0;   /* this page */
+ 			arr[n++] = 0x80;  /* unit serial number */
+@@ -1934,23 +1934,18 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 			}
+ 			arr[3] = n - 4;	  /* number of supported VPD pages */
+ 		} else if (0x80 == cmd[2]) { /* unit serial number */
+-			arr[1] = cmd[2];	/*sanity */
+ 			arr[3] = len;
+ 			memcpy(&arr[4], lu_id_str, len);
+ 		} else if (0x83 == cmd[2]) { /* device identification */
+-			arr[1] = cmd[2];	/*sanity */
+ 			arr[3] = inquiry_vpd_83(&arr[4], port_group_id,
+ 						target_dev_id, lu_id_num,
+ 						lu_id_str, len,
+ 						&devip->lu_name);
+ 		} else if (0x84 == cmd[2]) { /* Software interface ident. */
+-			arr[1] = cmd[2];	/*sanity */
+ 			arr[3] = inquiry_vpd_84(&arr[4]);
+ 		} else if (0x85 == cmd[2]) { /* Management network addresses */
+-			arr[1] = cmd[2];	/*sanity */
+ 			arr[3] = inquiry_vpd_85(&arr[4]);
+ 		} else if (0x86 == cmd[2]) { /* extended inquiry */
+-			arr[1] = cmd[2];	/*sanity */
+ 			arr[3] = 0x3c;	/* number of following entries */
+ 			if (sdebug_dif == T10_PI_TYPE3_PROTECTION)
+ 				arr[4] = 0x4;	/* SPT: GRD_CHK:1 */
+@@ -1960,30 +1955,23 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 				arr[4] = 0x0;   /* no protection stuff */
+ 			arr[5] = 0x7;   /* head of q, ordered + simple q's */
+ 		} else if (0x87 == cmd[2]) { /* mode page policy */
+-			arr[1] = cmd[2];	/*sanity */
+ 			arr[3] = 0x8;	/* number of following entries */
+ 			arr[4] = 0x2;	/* disconnect-reconnect mp */
+ 			arr[6] = 0x80;	/* mlus, shared */
+ 			arr[8] = 0x18;	 /* protocol specific lu */
+ 			arr[10] = 0x82;	 /* mlus, per initiator port */
+ 		} else if (0x88 == cmd[2]) { /* SCSI Ports */
+-			arr[1] = cmd[2];	/*sanity */
+ 			arr[3] = inquiry_vpd_88(&arr[4], target_dev_id);
+ 		} else if (is_disk_zbc && 0x89 == cmd[2]) { /* ATA info */
+-			arr[1] = cmd[2];        /*sanity */
+ 			n = inquiry_vpd_89(&arr[4]);
+ 			put_unaligned_be16(n, arr + 2);
+ 		} else if (is_disk_zbc && 0xb0 == cmd[2]) { /* Block limits */
+-			arr[1] = cmd[2];        /*sanity */
+ 			arr[3] = inquiry_vpd_b0(&arr[4]);
+ 		} else if (is_disk_zbc && 0xb1 == cmd[2]) { /* Block char. */
+-			arr[1] = cmd[2];        /*sanity */
+ 			arr[3] = inquiry_vpd_b1(devip, &arr[4]);
+ 		} else if (is_disk && 0xb2 == cmd[2]) { /* LB Prov. */
+-			arr[1] = cmd[2];        /*sanity */
+ 			arr[3] = inquiry_vpd_b2(&arr[4]);
+ 		} else if (is_zbc && cmd[2] == 0xb6) { /* ZB dev. charact. */
+-			arr[1] = cmd[2];        /*sanity */
+ 			arr[3] = inquiry_vpd_b6(devip, &arr[4]);
+ 		} else {
+ 			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, -1);
