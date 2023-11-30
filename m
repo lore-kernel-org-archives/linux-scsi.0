@@ -1,197 +1,135 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 078A6D66;
-	Wed, 29 Nov 2023 19:53:06 -0800 (PST)
-Received: from dggpemd100001.china.huawei.com (unknown [172.30.72.54])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Sgj1t5QzSzWhqd;
-	Thu, 30 Nov 2023 11:52:18 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.1258.28; Thu, 30 Nov 2023 11:53:03 +0800
-Message-ID: <d6b20d8f-7653-6806-d7c8-0adc54f1333b@huawei.com>
-Date: Thu, 30 Nov 2023 11:53:03 +0800
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="T8449V5a"
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40BEDD66;
+	Wed, 29 Nov 2023 21:53:09 -0800 (PST)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AU5Dcc3009566;
+	Thu, 30 Nov 2023 05:52:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=VTf+Odf4uwv7DcH0svA0NNpwMVuLtuZJUMEGbWOSwBs=;
+ b=T8449V5amdq2KLKignwDgYR+dLlJQbMEe+1kM6gJMdXTsSm+l58LUjwcpYaHW3Odj480
+ kCBAdDMRS6WI0s53ej8H1oG6HdpcT4toXiwwsre8UPyOCrHEFwBqyEIzs71+Sm4GWQnA
+ Vfwin+ndEfw2h0CpBg6R732HNkf3CzKqI3QDIR4CDhkYTa0aB0bYq2MS6LXjzgC2fn+4
+ gP5UYxIkdfRFKrJmhe2a7hLB9Tirk8XpJUZ/hjhpvU3F3haRtd/giRCmlNrWZZUMrMP8
+ seAgfMl0qvcphC5iic17Q55rNVMXnOszY8BNkiMUBc7g4RizHbAohZ1o41SsmnmgyLZZ 6A== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3up4cfae08-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Nov 2023 05:52:54 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AU5qr9g019608
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Nov 2023 05:52:53 GMT
+Received: from [10.50.17.88] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Wed, 29 Nov
+ 2023 21:52:48 -0800
+Message-ID: <db1e6532-efc6-d78c-2cf5-166a6c371076@quicinc.com>
+Date: Thu, 30 Nov 2023 11:22:45 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v4] scsi: libsas: Fix the failure of adding phy with
- zero-address to port
-Content-Language: en-CA
-To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
-	<chenxiang66@hisilicon.com>
-References: <20231117090001.35840-1-yangxingui@huawei.com>
- <32c42e1e-0399-4af4-a5ed-6a257e300fe8@oracle.com>
- <307d251f-ff49-5d8f-1f8e-aed314256732@huawei.com>
- <a13f0419-c4ef-4b8b-9757-7cf7cea32458@oracle.com>
- <baacad33-f568-6151-75a2-dfc09caf2a81@huawei.com>
- <cf98eb9f-ac42-4d9b-9cf3-3085f6fc0cda@oracle.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <cf98eb9f-ac42-4d9b-9cf3-3085f6fc0cda@oracle.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: [PATCH v6 06/10] scsi: ufs: ufs-qcom: Set initial PHY gear to max
+ HS gear for HW ver 4 and newer
+Content-Language: en-US
+To: Can Guo <quic_cang@quicinc.com>, <bvanassche@acm.org>, <mani@kernel.org>,
+        <adrian.hunter@intel.com>, <cmd4@qualcomm.com>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
+        <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        Andy Gross
+	<agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio
+	<konrad.dybcio@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list" <linux-kernel@vger.kernel.org>
+References: <1701246516-11626-1-git-send-email-quic_cang@quicinc.com>
+ <1701246516-11626-7-git-send-email-quic_cang@quicinc.com>
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <1701246516-11626-7-git-send-email-quic_cang@quicinc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggpemm500017.china.huawei.com (7.185.36.178) To
- dggpemd100001.china.huawei.com (7.185.36.94)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ZyZ9H8e31KsPs7S9A1woJm_-Xzu7mhiC
+X-Proofpoint-ORIG-GUID: ZyZ9H8e31KsPs7S9A1woJm_-Xzu7mhiC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-30_02,2023-11-29_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
+ malwarescore=0 impostorscore=0 bulkscore=0 suspectscore=0 mlxlogscore=999
+ clxscore=1015 phishscore=0 priorityscore=1501 spamscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
+ definitions=main-2311300043
 
-Hi, John
 
-On 2023/11/29 20:54, John Garry wrote:
-> On 28/11/2023 03:45, yangxingui wrote:
->>
->> On 2023/11/28 3:28, John Garry wrote:
->>> On 24/11/2023 02:27, yangxingui wrote:
->>>>> We already do this in sas_ex_join_wide_port(), right?
->>>> No, If the addr of ex_phy matches dev->parent, 
->>>> sas_ex_join_wide_port() will not be called, but 
->>>> sas_add_parent_port() will be called  as follows:
->>>> static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
->>>> {
->>>>          struct expander_device *ex = &dev->ex_dev;
->>>>          struct ex_phy *ex_phy = &ex->ex_phy[phy_id];
->>>>          struct domain_device *child = NULL;
->>>>          int res = 0;
->>>>
->>>>      <...>
->>>>          /* Parent and domain coherency */
->>>>          if (!dev->parent && sas_phy_match_port_addr(dev->port, 
->>>> ex_phy)) {
->>>>                  sas_add_parent_port(dev, phy_id);
->>>>                  return 0;
->>>>          }
->>>>          if (dev->parent && sas_phy_match_dev_addr(dev->parent, 
->>>> ex_phy)) {
->>>>                  sas_add_parent_port(dev, phy_id);
->>>>                  if (ex_phy->routing_attr == TABLE_ROUTING)
->>>>                          sas_configure_phy(dev, phy_id, 
->>>> dev->port->sas_addr, 1);
->>>>                  return 0;
->>>>          }
->>>>      <...>
->>>> }
->>>>
->>>>>
->>>>> I am not saying that what we do now does not have a problem - I am 
->>>>> just trying to understand what currently happens
->>>>
->>>> ok, because ex_phy->port is not set when calling 
->>>> sas_add_parent_port(), when deleting phy from the parent wide port, 
->>>> it is not removed from the phy_list of the parent wide port as follows:
->>>> static void sas_unregister_devs_sas_addr(struct domain_device *parent,
->>>>                                           int phy_id, bool last)
->>>> {
->>>>      <...>
->>>>      // Since ex_phy->port is not set, this branch will not be enter
->>>
->>> But then how does this ever work? It is because we follow path 
->>> sas_rediscover_dev() -> sas_discover_new() -> 
->>> sas_ex_discover_devices() -> sas_ex_discover_dev() -> 
->>> sas_add_parent_port(), and not sas_rediscover_dev() -> 
->>> sas_discover_new() -> sas_ex_join_wide_port()? If so, is that because 
->>> ephy->sas_attached_phy == 0 in sas_discover_new() -> 
->>> sas_ex_join_wide_port() and it fails?
->>>
->>> BTW, about something mentioned earlier - adding the phy19 with SAS_ADDR 
->>
->> Yes,
->> For phy19, when the phy is attached and added to the parent wide port, 
->> the path is:
->> sas_rediscover()
->>      ->sas_discover_new()
->>          ->sas_ex_discover_devices()
->>              ->sas_ex_discover_dev()
->>                  -> sas_add_parent_port().
+
+On 11/29/2023 1:58 PM, Can Guo wrote:
+> Since HW ver 4, max HS gear can be get from UFS host controller's register,
+> use the max HS gear as the initial PHY gear instead of UFS_HS_G2, so that
+> we don't need to update the hard code for newer targets in future.
 > 
-> ok, so then the change to set ex_phy->port = ex->parent_port looks ok. 
-> Maybe we can put this in a helper with the sas_port_add_phy() call, as 
-> it is duplicated in sas_ex_join_wide_port()
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> ---
+>   drivers/ufs/host/ufs-qcom.c | 21 +++++++++++++++------
+>   1 file changed, 15 insertions(+), 6 deletions(-)
 > 
-> Do we also need to set ex_phy->phy_state (like sas_ex_join_wide_port())?
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index aca6199..30f4ca6 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1060,6 +1060,20 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+>   		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+>   }
+>   
+> +static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
+> +{
+> +	struct ufs_host_params *host_params = &host->host_params;
+> +
+> +	host->phy_gear = host_params->hs_tx_gear;
+> +
+> +	/*
+> +	 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
+> +	 * Switching to max gear will be performed during reinit if supported.
+> +	 */
+> +	if (host->hw_ver.major < 0x4)
+> +		host->phy_gear = UFS_HS_G2;
+> +}
+> +
+>   static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+>   {
+>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> @@ -1296,6 +1310,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>   	ufs_qcom_set_caps(hba);
+>   	ufs_qcom_advertise_quirks(hba);
+>   	ufs_qcom_set_host_params(hba);
+> +	ufs_qcom_set_phy_gear(host);
+>   
+>   	err = ufs_qcom_ice_init(host);
+>   	if (err)
+> @@ -1313,12 +1328,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>   		dev_warn(dev, "%s: failed to configure the testbus %d\n",
+>   				__func__, err);
+>   
+> -	/*
+> -	 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
+> -	 * Switching to max gear will be performed during reinit if supported.
+> -	 */
+> -	host->phy_gear = UFS_HS_G2;
+> -
+>   	return 0;
+>   
+>   out_variant_clear:
 
-Well, okay, as follows?
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -856,9 +856,7 @@ static bool sas_ex_join_wide_port(struct 
-domain_device *parent, int phy_id)
-
-                 if (!memcmp(phy->attached_sas_addr, 
-ephy->attached_sas_addr,
-                             SAS_ADDR_SIZE) && ephy->port) {
--                       sas_port_add_phy(ephy->port, phy->phy);
--                       phy->port = ephy->port;
--                       phy->phy_state = PHY_DEVICE_DISCOVERED;
-+                       sas_port_add_ex_phy(ephy->port, phy);
-                         return true;
-                 }
-         }
-diff --git a/drivers/scsi/libsas/sas_internal.h 
-b/drivers/scsi/libsas/sas_internal.h
-index e860d5b19880..39ffa60a9a01 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -189,6 +189,13 @@ static inline void sas_phy_set_target(struct 
-asd_sas_phy *p, struct domain_devic
-         }
-  }
-
-+static inline void sas_port_add_ex_phy(struct sas_port *port, struct 
-ex_phy *ex_phy)
-+{
-+       sas_port_add_phy(port, ex_phy->phy);
-+       ex_phy->port = port;
-+       ex_phy->phy_state = PHY_DEVICE_DISCOVERED;
-+}
-+
-  static inline void sas_add_parent_port(struct domain_device *dev, int 
-phy_id)
-  {
-         struct expander_device *ex = &dev->ex_dev;
-@@ -201,8 +208,7 @@ static inline void sas_add_parent_port(struct 
-domain_device *dev, int phy_id)
-                 BUG_ON(sas_port_add(ex->parent_port));
-                 sas_port_mark_backlink(ex->parent_port);
-         }
--       sas_port_add_phy(ex->parent_port, ex_phy->phy);
-+       sas_port_add_ex_phy(ex->parent_port, ex_phy);
-  }
-
-> 
->> And the path called when it is removed from parent wide port is:
->> sas_rediscover()
->>      ->sas_unregister_devs_sas_addr() // The sas address of phy19 
->> becomes 0. Since ex_phy->port is NULL, phy19 is not removed from the 
->> parent wide port's phy_list.
->>
->> For phy0, it is connected to a new sata device.
->> sas_rediscover()
->>      ->sas_discover_new()->sas_ex_phy_discover()
->>                              ->sas_ex_phy_discover_helper()
->>                                  ->sas_set_ex_phy() // The device type 
->> is stp. Since the linkrate is 5 and less than 1.5G, sas_address is set 
->> to 0.
-> 
-> Then when we get the proper linkrate later, will we then rediscover and 
-> set the proper SAS address? I am just wondering if this change is really 
-> required?
-Yes, but in fact it has not reached that stage yet. After setting the 
-address to 0, it will continue to create a new port and try to add other 
-phys with the same address as it to this new port.
-
-> 
-> BTW, Even with the change to set ex_phy->port = ex->parent_port, are we 
-> still joining the host-attached expander phy (19) to a port with SAS 
-> address == 0?
-Yes, in order to avoid this situation, in the current patch, we will not 
-force the SAS address to be set to 0 when the device type is not NULL, 
-but will still use the address obtained after requesting the expander.
-
-
-Thanks,
-Xingui
+Reviewed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
