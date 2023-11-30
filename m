@@ -1,30 +1,30 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5C8710FC;
-	Wed, 29 Nov 2023 17:33:40 -0800 (PST)
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-280351c32afso499621a91.1;
-        Wed, 29 Nov 2023 17:33:40 -0800 (PST)
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E502F10CE;
+	Wed, 29 Nov 2023 17:33:43 -0800 (PST)
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1cf856663a4so4288645ad.3;
+        Wed, 29 Nov 2023 17:33:43 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701308020; x=1701912820;
+        d=1e100.net; s=20230601; t=1701308023; x=1701912823;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=oQ0Y5DEB77duFzOKmjn9q9926HaqEbL9/2e2TBYhn54=;
-        b=gcX9I634/6RK5tMuoui63xEFgbvCNRepuRDxdAWRgl1sla8s2kxpKOPwpbx5CalVgK
-         LlimbqLbJOblVrIFGRFYwm3kBP4DD8w2CsWusgDVshSePQc6L41A/edrZSP0PYyrU5+J
-         frS3Vizmv/rP99Z9G8G4kaq3g9jiF2sB80oY0hMq/kKGycNG0krrhFiZ23H3g15dVrH6
-         AZqQ8QdHX5JcVpCYyBNBzFoH9DbIvVGAA1qB0v4zBUAYIQWPnP/MoldEyiqlkXYkFZNS
-         +vBRERKET0QYX6NdU4wXZ/EZc82VRfhrCGnYgYFGf/3PQJ4cki8loaRYztreMH5s7/JI
-         GvUA==
-X-Gm-Message-State: AOJu0YxZIGcqlJNkbvPwj+hk5A21TkKmB9K4BM+ir84LhvX74ph4y6jP
-	h7p5yNEIWmvkiF/tXiomeNKxA80qtqr3Jw==
-X-Google-Smtp-Source: AGHT+IGlwp4WpXmDVhR/v7cKqKeUxGQVl0aNs1hJ/50UmlFEGNOIPfTYsTYTCF+sQ8af2vAFXRdWEA==
-X-Received: by 2002:a17:90a:d98b:b0:27d:2663:c5f4 with SMTP id d11-20020a17090ad98b00b0027d2663c5f4mr26916039pjv.47.1701308019149;
-        Wed, 29 Nov 2023 17:33:39 -0800 (PST)
+        bh=T4k+JDqEcQkKs3J5VRs0ivCwgTJsm0PTpYm6Nj592ys=;
+        b=DorxnFWLz895arSQJhewr0C8Y6sFPCmuJbn1DaUSfVNP5PKWnNmkeX3UiyqEP1E69X
+         qwNXZhEOx5A48e3Fyt6Pw7T8VWAE22svj/VajoRa6JiAkkiyxGUNpcZiWL0Zul7vw6fN
+         haDAoG6GZVFf6faRWSX8df76OoUoFqBiRBN0LPAZ53WSdTYvfEQUN1F4jocdemDqrN+O
+         I+9OdkMOJLlKKwNZ1K7gmpujt6eAY5p1/YsYWc6zt5nQjszK+t+HfJngOwqTF7VHLYmj
+         z27NGjIY7zyleeEiDOKn4Q3izxOMB6IxKgphHpPh06N4jTaAR/D5uUQtPSX2RZ4WBFBL
+         koiw==
+X-Gm-Message-State: AOJu0Yyls5I323iauom17POOW50kZA8M5pwsPdBAvnZaT/aTgaPLkQlG
+	fl7AsW97URltyuXdadZobmQ=
+X-Google-Smtp-Source: AGHT+IFA3giPx27JFIy/7/BwyL4QyHN2lWe5oOrxFmzyYz6uNlepuhsKoe00eT78/v24HM+C7CHEcw==
+X-Received: by 2002:a17:90b:80b:b0:285:866f:ca0d with SMTP id bk11-20020a17090b080b00b00285866fca0dmr19099099pjb.46.1701308023257;
+        Wed, 29 Nov 2023 17:33:43 -0800 (PST)
 Received: from bvanassche-glaptop2.roam.corp.google.com (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id g4-20020a17090ace8400b00277560ecd5dsm2021936pju.46.2023.11.29.17.33.37
+        by smtp.gmail.com with ESMTPSA id g4-20020a17090ace8400b00277560ecd5dsm2021936pju.46.2023.11.29.17.33.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Nov 2023 17:33:38 -0800 (PST)
+        Wed, 29 Nov 2023 17:33:42 -0800 (PST)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Daejun Park <daejun7.park@samsung.com>,
 	Kanchan Joshi <joshi.k@samsung.com>,
 	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v5 06/17] block: Restore the per-bio/request data lifetime fields
-Date: Wed, 29 Nov 2023 17:33:11 -0800
-Message-ID: <20231130013322.175290-7-bvanassche@acm.org>
+Subject: [PATCH v5 09/17] scsi_proto: Add structures and constants related to I/O groups and streams
+Date: Wed, 29 Nov 2023 17:33:14 -0800
+Message-ID: <20231130013322.175290-10-bvanassche@acm.org>
 X-Mailer: git-send-email 2.43.0.rc2.451.g8631bc7472-goog
 In-Reply-To: <20231130013322.175290-1-bvanassche@acm.org>
 References: <20231130013322.175290-1-bvanassche@acm.org>
@@ -49,314 +49,112 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Restore support for passing data lifetime information from filesystems to
-block drivers. This patch reverts commit b179c98f7697 ("block: Remove
-request.write_hint") and commit c75e707fe1aa ("block: remove the
-per-bio/request write hint").
+Prepare for adding code that will query the I/O advice hints group
+descriptors and for adding code that will retrieve the stream status.
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/bio.c                 |  2 ++
- block/blk-crypto-fallback.c |  1 +
- block/blk-merge.c           |  8 ++++++++
- block/blk-mq.c              |  2 ++
- block/bounce.c              |  1 +
- block/fops.c                |  3 +++
- fs/buffer.c                 | 12 ++++++++----
- fs/direct-io.c              |  2 ++
- fs/f2fs/data.c              |  2 ++
- fs/iomap/buffered-io.c      |  2 ++
- fs/iomap/direct-io.c        |  1 +
- fs/mpage.c                  |  1 +
- include/linux/blk-mq.h      |  2 ++
- include/linux/blk_types.h   |  2 ++
- 14 files changed, 37 insertions(+), 4 deletions(-)
+ include/scsi/scsi_proto.h | 75 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 75 insertions(+)
 
-diff --git a/block/bio.c b/block/bio.c
-index 816d412c06e9..755fcde5cb66 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -251,6 +251,7 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
- 	bio->bi_opf = opf;
- 	bio->bi_flags = 0;
- 	bio->bi_ioprio = 0;
-+	bio->bi_write_hint = 0;
- 	bio->bi_status = 0;
- 	bio->bi_iter.bi_sector = 0;
- 	bio->bi_iter.bi_size = 0;
-@@ -813,6 +814,7 @@ static int __bio_clone(struct bio *bio, struct bio *bio_src, gfp_t gfp)
- {
- 	bio_set_flag(bio, BIO_CLONED);
- 	bio->bi_ioprio = bio_src->bi_ioprio;
-+	bio->bi_write_hint = bio_src->bi_write_hint;
- 	bio->bi_iter = bio_src->bi_iter;
- 
- 	if (bio->bi_bdev) {
-diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index e6468eab2681..b1e7415f8439 100644
---- a/block/blk-crypto-fallback.c
-+++ b/block/blk-crypto-fallback.c
-@@ -172,6 +172,7 @@ static struct bio *blk_crypto_fallback_clone_bio(struct bio *bio_src)
- 	if (bio_flagged(bio_src, BIO_REMAPPED))
- 		bio_set_flag(bio, BIO_REMAPPED);
- 	bio->bi_ioprio		= bio_src->bi_ioprio;
-+	bio->bi_write_hint	= bio_src->bi_write_hint;
- 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
- 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
- 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 65e75efa9bd3..65bbbf6cf1fe 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -814,6 +814,10 @@ static struct request *attempt_merge(struct request_queue *q,
- 	if (rq_data_dir(req) != rq_data_dir(next))
- 		return NULL;
- 
-+	/* Don't merge requests with different write hints. */
-+	if (req->write_hint != next->write_hint)
-+		return NULL;
-+
- 	if (req->ioprio != next->ioprio)
- 		return NULL;
- 
-@@ -941,6 +945,10 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
- 	if (!bio_crypt_rq_ctx_compatible(rq, bio))
- 		return false;
- 
-+	/* Don't merge requests with different write hints. */
-+	if (rq->write_hint != bio->bi_write_hint)
-+		return false;
-+
- 	if (rq->ioprio != bio_prio(bio))
- 		return false;
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 900c1be1fee1..50a3867bec4a 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2551,6 +2551,7 @@ static void blk_mq_bio_to_request(struct request *rq, struct bio *bio,
- 		rq->cmd_flags |= REQ_FAILFAST_MASK;
- 
- 	rq->__sector = bio->bi_iter.bi_sector;
-+	rq->write_hint = bio->bi_write_hint;
- 	blk_rq_bio_prep(rq, bio, nr_segs);
- 
- 	/* This can't fail, since GFP_NOIO includes __GFP_DIRECT_RECLAIM. */
-@@ -3144,6 +3145,7 @@ int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
- 	}
- 	rq->nr_phys_segments = rq_src->nr_phys_segments;
- 	rq->ioprio = rq_src->ioprio;
-+	rq->write_hint = rq_src->write_hint;
- 
- 	if (rq->bio && blk_crypto_rq_bio_prep(rq, rq->bio, gfp_mask) < 0)
- 		goto free_and_out;
-diff --git a/block/bounce.c b/block/bounce.c
-index 7cfcb242f9a1..d6a5219f29dd 100644
---- a/block/bounce.c
-+++ b/block/bounce.c
-@@ -169,6 +169,7 @@ static struct bio *bounce_clone_bio(struct bio *bio_src)
- 	if (bio_flagged(bio_src, BIO_REMAPPED))
- 		bio_set_flag(bio, BIO_REMAPPED);
- 	bio->bi_ioprio		= bio_src->bi_ioprio;
-+	bio->bi_write_hint	= bio_src->bi_write_hint;
- 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
- 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
- 
-diff --git a/block/fops.c b/block/fops.c
-index 0abaac705daf..2de61d81f8ec 100644
---- a/block/fops.c
-+++ b/block/fops.c
-@@ -73,6 +73,7 @@ static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,
- 		bio_init(&bio, bdev, vecs, nr_pages, dio_bio_write_op(iocb));
- 	}
- 	bio.bi_iter.bi_sector = pos >> SECTOR_SHIFT;
-+	bio.bi_write_hint = iocb->ki_hint;
- 	bio.bi_ioprio = iocb->ki_ioprio;
- 
- 	ret = bio_iov_iter_get_pages(&bio, iter);
-@@ -203,6 +204,7 @@ static ssize_t __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
- 
- 	for (;;) {
- 		bio->bi_iter.bi_sector = pos >> SECTOR_SHIFT;
-+		bio->bi_write_hint = iocb->ki_hint;
- 		bio->bi_private = dio;
- 		bio->bi_end_io = blkdev_bio_end_io;
- 		bio->bi_ioprio = iocb->ki_ioprio;
-@@ -321,6 +323,7 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
- 	dio->flags = 0;
- 	dio->iocb = iocb;
- 	bio->bi_iter.bi_sector = pos >> SECTOR_SHIFT;
-+	bio->bi_write_hint = iocb->ki_hint;
- 	bio->bi_end_io = blkdev_bio_end_io_async;
- 	bio->bi_ioprio = iocb->ki_ioprio;
- 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 967f34b70aa8..15271cd964af 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -55,7 +55,7 @@
- 
- static int fsync_buffers_list(spinlock_t *lock, struct list_head *list);
- static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
--			  struct writeback_control *wbc);
-+			  enum rw_hint hint, struct writeback_control *wbc);
- 
- #define BH_ENTRY(list) list_entry((list), struct buffer_head, b_assoc_buffers)
- 
-@@ -1903,7 +1903,8 @@ int __block_write_full_folio(struct inode *inode, struct folio *folio,
- 	do {
- 		struct buffer_head *next = bh->b_this_page;
- 		if (buffer_async_write(bh)) {
--			submit_bh_wbc(REQ_OP_WRITE | write_flags, bh, wbc);
-+			submit_bh_wbc(REQ_OP_WRITE | write_flags, bh,
-+				      inode->i_write_hint, wbc);
- 			nr_underway++;
- 		}
- 		bh = next;
-@@ -1957,7 +1958,8 @@ int __block_write_full_folio(struct inode *inode, struct folio *folio,
- 		struct buffer_head *next = bh->b_this_page;
- 		if (buffer_async_write(bh)) {
- 			clear_buffer_dirty(bh);
--			submit_bh_wbc(REQ_OP_WRITE | write_flags, bh, wbc);
-+			submit_bh_wbc(REQ_OP_WRITE | write_flags, bh,
-+				      inode->i_write_hint, wbc);
- 			nr_underway++;
- 		}
- 		bh = next;
-@@ -2777,6 +2779,7 @@ static void end_bio_bh_io_sync(struct bio *bio)
- }
- 
- static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
-+			  enum rw_hint write_hint,
- 			  struct writeback_control *wbc)
- {
- 	const enum req_op op = opf & REQ_OP_MASK;
-@@ -2804,6 +2807,7 @@ static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
- 	fscrypt_set_bio_crypt_ctx_bh(bio, bh, GFP_NOIO);
- 
- 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
-+	bio->bi_write_hint = write_hint;
- 
- 	__bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
- 
-@@ -2823,7 +2827,7 @@ static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
- 
- void submit_bh(blk_opf_t opf, struct buffer_head *bh)
- {
--	submit_bh_wbc(opf, bh, NULL);
-+	submit_bh_wbc(opf, bh, 0, NULL);
- }
- EXPORT_SYMBOL(submit_bh);
- 
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index 20533266ade6..191f799691f4 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -410,6 +410,8 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
- 		bio->bi_end_io = dio_bio_end_io;
- 	if (dio->is_pinned)
- 		bio_set_flag(bio, BIO_PAGE_PINNED);
-+	bio->bi_write_hint = dio->iocb->ki_hint;
-+
- 	sdio->bio = bio;
- 	sdio->logical_offset_in_bio = sdio->cur_page_fs_offset;
- }
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index 4e42b5f24deb..12ad311a22f6 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -478,6 +478,8 @@ static struct bio *__bio_alloc(struct f2fs_io_info *fio, int npages)
- 	} else {
- 		bio->bi_end_io = f2fs_write_end_io;
- 		bio->bi_private = sbi;
-+		bio->bi_write_hint = f2fs_io_type_to_rw_hint(sbi,
-+						fio->type, fio->temp);
- 	}
- 	iostat_alloc_and_bind_ctx(sbi, bio, NULL);
- 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index f72df2babe56..191eb575485e 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1677,6 +1677,7 @@ iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
- 			       REQ_OP_WRITE | wbc_to_write_flags(wbc),
- 			       GFP_NOFS, &iomap_ioend_bioset);
- 	bio->bi_iter.bi_sector = sector;
-+	bio->bi_write_hint = inode->i_write_hint;
- 	wbc_init_bio(wbc, bio);
- 
- 	ioend = container_of(bio, struct iomap_ioend, io_inline_bio);
-@@ -1707,6 +1708,7 @@ iomap_chain_bio(struct bio *prev)
- 	new = bio_alloc(prev->bi_bdev, BIO_MAX_VECS, prev->bi_opf, GFP_NOFS);
- 	bio_clone_blkg_association(new, prev);
- 	new->bi_iter.bi_sector = bio_end_sector(prev);
-+	new->bi_write_hint = prev->bi_write_hint;
- 
- 	bio_chain(prev, new);
- 	bio_get(prev);		/* for iomap_finish_ioend */
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index bcd3f8cf5ea4..afb704f98a97 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -380,6 +380,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 		fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
- 					  GFP_KERNEL);
- 		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
-+		bio->bi_write_hint = dio->iocb->ki_hint;
- 		bio->bi_ioprio = dio->iocb->ki_ioprio;
- 		bio->bi_private = dio;
- 		bio->bi_end_io = iomap_dio_bio_end_io;
-diff --git a/fs/mpage.c b/fs/mpage.c
-index ffb064ed9d04..268785f2bb53 100644
---- a/fs/mpage.c
-+++ b/fs/mpage.c
-@@ -611,6 +611,7 @@ static int __mpage_writepage(struct folio *folio, struct writeback_control *wbc,
- 				GFP_NOFS);
- 		bio->bi_iter.bi_sector = blocks[0] << (blkbits - 9);
- 		wbc_init_bio(wbc, bio);
-+		bio->bi_write_hint = inode->i_write_hint;
- 	}
- 
- 	/*
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 1ab3081c82ed..479f26af76bd 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -8,6 +8,7 @@
- #include <linux/scatterlist.h>
- #include <linux/prefetch.h>
- #include <linux/srcu.h>
-+#include <linux/rw_hint.h>
- 
- struct blk_mq_tags;
- struct blk_flush_queue;
-@@ -135,6 +136,7 @@ struct request {
- 	struct blk_crypto_keyslot *crypt_keyslot;
- #endif
- 
-+	enum rw_hint write_hint;
- 	unsigned short ioprio;
- 
- 	enum mq_rq_state state;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index d5c5e59ddbd2..8410957f4313 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index 07d65c1f59db..9ee4983c23b4 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
 @@ -10,6 +10,7 @@
- #include <linux/bvec.h>
- #include <linux/device.h>
- #include <linux/ktime.h>
-+#include <linux/rw_hint.h>
+ #ifndef _SCSI_PROTO_H_
+ #define _SCSI_PROTO_H_
  
- struct bio_set;
- struct bio;
-@@ -269,6 +270,7 @@ struct bio {
- 						 */
- 	unsigned short		bi_flags;	/* BIO_* below */
- 	unsigned short		bi_ioprio;
-+	enum rw_hint		bi_write_hint;
- 	blk_status_t		bi_status;
- 	atomic_t		__bi_remaining;
++#include <linux/build_bug.h>
+ #include <linux/types.h>
  
+ /*
+@@ -126,6 +127,7 @@
+ #define	SAI_READ_CAPACITY_16  0x10
+ #define SAI_GET_LBA_STATUS    0x12
+ #define SAI_REPORT_REFERRALS  0x13
++#define SAI_GET_STREAM_STATUS 0x16
+ /* values for maintenance in */
+ #define MI_REPORT_IDENTIFYING_INFORMATION 0x05
+ #define MI_REPORT_TARGET_PGS  0x0a
+@@ -275,6 +277,79 @@ struct scsi_lun {
+ 	__u8 scsi_lun[8];
+ };
+ 
++/* SBC-5 IO advice hints group descriptor */
++struct scsi_io_group_descriptor {
++#if defined(__BIG_ENDIAN)
++	u8 io_advice_hints_mode: 2;
++	u8 reserved1: 3;
++	u8 st_enble: 1;
++	u8 cs_enble: 1;
++	u8 ic_enable: 1;
++#elif defined(__LITTLE_ENDIAN)
++	u8 ic_enable: 1;
++	u8 cs_enble: 1;
++	u8 st_enble: 1;
++	u8 reserved1: 3;
++	u8 io_advice_hints_mode: 2;
++#else
++#error
++#endif
++	u8 reserved2[3];
++	/* Logical block markup descriptor */
++#if defined(__BIG_ENDIAN)
++	u8 acdlu: 1;
++	u8 reserved3: 1;
++	u8 rlbsr: 2;
++	u8 lbm_descriptor_type: 4;
++#elif defined(__LITTLE_ENDIAN)
++	u8 lbm_descriptor_type: 4;
++	u8 rlbsr: 2;
++	u8 reserved3: 1;
++	u8 acdlu: 1;
++#else
++#error
++#endif
++	u8 params[2];
++	u8 reserved4;
++	u8 reserved5[8];
++};
++
++static_assert(sizeof(struct scsi_io_group_descriptor) == 16);
++
++struct scsi_stream_status {
++#if defined(__BIG_ENDIAN)
++	u16 perm: 1;
++	u16 reserved1: 15;
++#elif defined(__LITTLE_ENDIAN)
++	u16 reserved1: 15;
++	u16 perm: 1;
++#else
++#error
++#endif
++	__be16 stream_identifier;
++#if defined(__BIG_ENDIAN)
++	u8 reserved2: 2;
++	u8 rel_lifetime: 6;
++#elif defined(__LITTLE_ENDIAN)
++	u8 rel_lifetime: 6;
++	u8 reserved2: 2;
++#else
++#error
++#endif
++	u8 reserved3[3];
++};
++
++static_assert(sizeof(struct scsi_stream_status) == 8);
++
++struct scsi_stream_status_header {
++	__be32 len;	/* length in bytes of stream_status[] array. */
++	u16 reserved;
++	u16 number_of_open_streams;
++	DECLARE_FLEX_ARRAY(struct scsi_stream_status, stream_status);
++};
++
++static_assert(sizeof(struct scsi_stream_status_header) == 8);
++
+ /* SPC asymmetric access states */
+ #define SCSI_ACCESS_STATE_OPTIMAL     0x00
+ #define SCSI_ACCESS_STATE_ACTIVE      0x01
