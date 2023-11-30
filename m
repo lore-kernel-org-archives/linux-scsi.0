@@ -1,131 +1,148 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1E85134BC;
+	Thu, 30 Nov 2023 07:25:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XpUqFFLb"
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D86E31B3
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2023 23:22:04 -0800 (PST)
-Received: by mail-wm1-x32e.google.com with SMTP id 5b1f17b1804b1-40b4f6006d5so5015735e9.1
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Nov 2023 23:22:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701328923; x=1701933723; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jCVSepYz7QF9MkiDMTMU+npZtNxv/TqmAOPsBI5HcaE=;
-        b=XpUqFFLbWcJI13JzV0bcvRjzavuddvPtImPEKdEDknRSfyP/U+zlS/HUjd/nMx92mX
-         O3DlCrECN1/MtXVWTxtGntIyXvuqS2KcchVAXyda8vvJ6fayqfbiAkIbt3vmcoRiZdkw
-         fV6PGgonzZydIdWox/20MRIFU2N64YSMns4pk/RGGZctHTOHqMXPmFRAJxg70Ihjaxzu
-         Yetm5QUfeEp2rTeQiBnM3oqw7Xs0N4mdG20YplJb+s2kTxtjWhkQWuVM6Edbt/g51nG0
-         mv8jo5MdVJeT+u78p0yFu8YfyXUUlOhIufuf9Pa2rcA4Q5NPkdJXK19U9m8/T/It/4uc
-         E6ag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701328923; x=1701933723;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jCVSepYz7QF9MkiDMTMU+npZtNxv/TqmAOPsBI5HcaE=;
-        b=LCZ4xGedCGD279Fy/x473p3OXCR6q0XbvLNYFqIpATIorR/pZXj1ETC3ylSGHeK9s2
-         Y/Iqhwpe0E28bFu0JNbGYZFcM16dMhDMPTbFY5O5lvsqjc5WC6WE6oFzmk0eaFNboiuM
-         K7E4A7nbWO+z5dNekEh/tJoxCcr6/yGHDFB2/FBpwfLLnPbo4RgxKAXQvpRtS2QrSDcI
-         ZDequmJ2G1fTVDmthGr1B5uSnfsUMbTXE03LGcVaggbec1XwYZAaHDBTh9oSix9SmfsY
-         DqLBvdOXUwuqDzFq70NpWHY+Po4XbzG/EH/SvvFrgHtOFl7BGgADweNLMZOtvtAoQqvu
-         zDhA==
-X-Gm-Message-State: AOJu0YxQPs5SciphFfgc66Ur/1h8I23I20NK2qXuGxu5wcj9y5SZUPjo
-	oboztf5k0JW9n+/G8g8yhNYSj8Gt1GsrtNJif1w=
-X-Google-Smtp-Source: AGHT+IGk+rDb1h//M4tTiPZElnq6JRAnVxjdPzWt+ekkbJ/hZroQB7tWT5yRNSimPEY6tv4vRTbjbQ==
-X-Received: by 2002:a05:600c:1c0a:b0:405:39b4:3145 with SMTP id j10-20020a05600c1c0a00b0040539b43145mr11833891wms.2.1701328923224;
-        Wed, 29 Nov 2023 23:22:03 -0800 (PST)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id r16-20020a05600c459000b00406408dc788sm4580559wmo.44.2023.11.29.23.22.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Nov 2023 23:22:02 -0800 (PST)
-Date: Thu, 30 Nov 2023 10:21:59 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Su Hui <suhui@nfschina.com>
-Cc: hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] scsi: aic7xxx: fix some problem of return value
-Message-ID: <1784b008-6eb2-4dc8-ae21-b0b2c18760bf@suswa.mountain>
-References: <20231130024122.1193324-1-suhui@nfschina.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f1sVFBfc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A39BC433C7;
+	Thu, 30 Nov 2023 07:25:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701329139;
+	bh=3YX4RL0/1V4O8MWlDUyKMhHKGcnFeVIea0/CNFViUCk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=f1sVFBfc0P4R779c5VQ1VtL0BojnbpMZLeHp+EMcbfSo/5axvWqP9OchECsJevnWf
+	 dC2+VxCffos5IEZydk6/Y1WWSV4ej8uksP8dK1ZCqMnApDUS98ooeFu6KRh5klJXiL
+	 SuKhEC6BCMRtbrfqNxeSl97TmkPaQhPtBCBHOA4QFJLsyORdx4wi3ouV2iKh6y4TPi
+	 v+BCQuXZrA5DGjsFAl2jf+qdoA0cY/j5Ii+S7+zF6xY+DZUXhvxUwbVzhdmxCula/r
+	 lfis4EGaQ7ud0acwtauCW9iQL2ZV8SD/eJvn9oVQ5biWmzL/F24r8OPio9f9lc+nxt
+	 zdONEVv9XcfjQ==
+Date: Thu, 30 Nov 2023 12:55:29 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Can Guo <quic_cang@quicinc.com>
+Cc: bvanassche@acm.org, adrian.hunter@intel.com, cmd4@qualcomm.com,
+	beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	Andy Gross <agross@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 10/10] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
+Message-ID: <20231130072529.GI3043@thinkpad>
+References: <1701246516-11626-1-git-send-email-quic_cang@quicinc.com>
+ <1701246516-11626-11-git-send-email-quic_cang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20231130024122.1193324-1-suhui@nfschina.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1701246516-11626-11-git-send-email-quic_cang@quicinc.com>
 
-On Thu, Nov 30, 2023 at 10:41:23AM +0800, Su Hui wrote:
->  	ahc = ahc_alloc(&aic7xxx_driver_template, name);
->  	if (ahc == NULL)
-> -		return (ENOMEM);
-> +		return -ENOMEM;
->  	ahc->dev = dev;
->  	error = aic7770_config(ahc, aic7770_ident_table + edev->id.driver_data,
->  			       eisaBase);
->  	if (error != 0) {
->  		ahc->bsh.ioport = 0;
->  		ahc_free(ahc);
-> -		return (error);
-> +		return -error;
+On Wed, Nov 29, 2023 at 12:28:35AM -0800, Can Guo wrote:
+> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+> 
+> A spare register in UFS host controller is used to indicate the UFS device
+> version. The spare register is populated by bootloader for now, but in
+> future it will be populated by HW automatically during link startup with
+> its best efforts in any boot stages prior to Linux.
+> 
+> During host driver init, read the spare register, if it is not populated
+> with a UFS device version, go ahead with the dual init mechanism. If a UFS
+> device version is in there, use the UFS device version together with host
+> controller's HW version to decide the proper PHY gear which should be used
+> to configure the UFS PHY without going through the second init.
+> 
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 23 ++++++++++++++++++-----
+>  drivers/ufs/host/ufs-qcom.h |  2 ++
+>  2 files changed, 20 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 9c0ebbc..e94dea2 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1068,15 +1068,28 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+>  static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
+>  {
+>  	struct ufs_host_params *host_params = &host->host_params;
+> +	u32 val, dev_major = 0;
 
-aic7770_config() mostly returns positive error codes but I see it also
-return -1 from ahc_reset().  So you'd want to do something like:
+No need to initialize dev_major.
 
-	return error < 0 ? error : -error;
-
-
-
->  	}
 >  
->   	dev_set_drvdata(dev, ahc);
+>  	host->phy_gear = host_params->hs_tx_gear;
 >  
->  	error = ahc_linux_register_host(ahc, &aic7xxx_driver_template);
-> -	return (error);
-> +	return -error;
+> -	/*
+> -	 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
+> -	 * Switching to max gear will be performed during reinit if supported.
+> -	 */
+> -	if (host->hw_ver.major < 0x4)
+> +	if (host->hw_ver.major < 0x4) {
+> +		/*
+> +		 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
+> +		 * Switching to max gear will be performed during reinit if supported.
+> +		 */
+>  		host->phy_gear = UFS_HS_G2;
+> +	} else {
+
+Can you please add a comment here to describe what is happening?
+
+> +		val = ufshcd_readl(host->hba, REG_UFS_DEBUG_SPARE_CFG);
+> +		dev_major = FIELD_GET(GENMASK(7, 4), val);
+
+It'd be good to add a macro for GENMASK().
+
+> +
+> +		/* UFS device version populated, no need to do init twice */
+
+"Since the UFS device version is populated, let's remove the REINIT quirk as the
+negotiated gear won't change during boot. So there is no need to do reinit."
+
+> +		if (dev_major != 0)
+
+0x0
+
+> +			host->hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+> +
+> +		/* For UFS 3.1 and older, apply HS-G4 PHY gear to save power */
+> +		if (dev_major < 0x4 && dev_major > 0)
+
+if (dev_major > 0x0 && dev_major < 0x4)
+
+- Mani
+
+> +			host->phy_gear = UFS_HS_G4;
+> +	}
 >  }
 >  
->  static int
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> index 4ae0a1c4d374..158aaeca8941 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> @@ -1117,7 +1117,7 @@ ahc_linux_register_host(struct ahc_softc *ahc, struct scsi_host_template *templa
->  	if (retval) {
->  		printk(KERN_WARNING "aic7xxx: scsi_add_host failed\n");
->  		scsi_host_put(host);
-> -		return retval;
-> +		return -retval;
-
-Originally ahc_linux_register_host() returned a mix of positive and
-negative error codes.  You have converted it to return only positive
-error codes.  That's good for consistency in a way, but it's a step
-backwards from the big picture point of view.
-
-
->  	}
+>  static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> index 11419eb..d12fc5a 100644
+> --- a/drivers/ufs/host/ufs-qcom.h
+> +++ b/drivers/ufs/host/ufs-qcom.h
+> @@ -54,6 +54,8 @@ enum {
+>  	UFS_AH8_CFG				= 0xFC,
 >  
->  	scsi_scan_host(host);
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-> index a07e94fac673..e17eb8df12c4 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-> @@ -241,8 +241,8 @@ ahc_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  		ahc_linux_pci_inherit_flags(ahc);
+>  	REG_UFS_CFG3				= 0x271C,
+> +
+> +	REG_UFS_DEBUG_SPARE_CFG			= 0x284C,
+>  };
 >  
->  	pci_set_drvdata(pdev, ahc);
-> -	ahc_linux_register_host(ahc, &aic7xxx_driver_template);
-> -	return (0);
-> +	error = ahc_linux_register_host(ahc, &aic7xxx_driver_template);
-> +	return -error;
+>  /* QCOM UFS host controller vendor specific debug registers */
+> -- 
+> 2.7.4
+> 
+> 
 
-This should be done in a separate patch.
-
-patch 1: return negative error codes in ahc_linux_register_host()
-patch 2: return negative error codes in aic7770_probe()
-patch 3: add a check for errors in ahc_linux_pci_dev_probe()
-
-regards,
-dan carpenter
-
+-- 
+மணிவண்ணன் சதாசிவம்
