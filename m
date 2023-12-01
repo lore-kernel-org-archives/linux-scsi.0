@@ -1,118 +1,122 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E7DD99;
-	Fri,  1 Dec 2023 14:14:53 -0800 (PST)
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1d069b1d127so4224935ad.0;
-        Fri, 01 Dec 2023 14:14:53 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701468893; x=1702073693;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QQqLfuL0yzwBHh3YArsTFlBmIfIaZRtpkmMP/b6bF+E=;
-        b=u49vD6DbiNq8gVccT1s4ajAZFRsHE511YTFTlO4PSyogR3BGAD/sB2vwJcv1ougF51
-         cHDMWXN8NbEi4fJ+QAkSN0LwD3Ji4GPVTUI5RiFuBW0qfL0MJNv5WbuiCsFWJJWRUY7S
-         BHhlEzlladOzcA7TtVIP0vlhfVWQyBkiE6YQw1Ru9BEPYsDNkCgL1HialZv9+slWD4Ys
-         lw7IeOeEMxIytfuj+tfD/ld1UdeoPSpB80Ks5cwWJa3HdoHI+M21/B0iYBDlAjD1vasJ
-         tSNInwluNRk1QQn/iWcLXFZFDsr2sT5be+brDPdEp6z7dsshyFEJDpxP8q/RmY+7Dvc7
-         NU8g==
-X-Gm-Message-State: AOJu0YzQsJlecqDSIA4YrYP+hvhEqxC1BmIgkq1w1VO20HY+7H3ZpeR3
-	deXMEdKJ+7lIqhGr0zgLGe4OkdFs6mI7EA==
-X-Google-Smtp-Source: AGHT+IHPmgHat07EwFnXbdWuHASQXDxVzsIvbOPDwMTc36CSanYp8dGaLqv8KkouleS3pxjDnaPU5Q==
-X-Received: by 2002:a17:902:f54a:b0:1d0:6ffd:f1f3 with SMTP id h10-20020a170902f54a00b001d06ffdf1f3mr147712plf.73.1701468892853;
-        Fri, 01 Dec 2023 14:14:52 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id l7-20020a170902f68700b001cc2ebd2c2csm1112660plg.256.2023.12.01.14.14.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Dec 2023 14:14:51 -0800 (PST)
-Message-ID: <22a70cc4-2150-4296-84d5-f0bf6617613a@acm.org>
-Date: Fri, 1 Dec 2023 14:14:49 -0800
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F828619D4;
+	Fri,  1 Dec 2023 22:56:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZlTyL5Na"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32A08C433C8;
+	Fri,  1 Dec 2023 22:56:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701471371;
+	bh=GVeXptVzISkp+LH6rP7ABvt7j/9kuofhAXSzf6mU7l8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=ZlTyL5Navjtt+nMUpk0afajOVeVQDR77Pt7SGMWB4Q7v/stMRvKg3qER0HZe0B/tB
+	 SOc6ksiIaqIceMMqt2hyLiNeFTVS4WRQ3p6fUsddPqqsV5Bh0BeNEoKk9OKPGDaMlf
+	 Wuu/Guum7yPnLVyDB3umrP6cNa74sdsmvkBuxIXV8c9f4XyuMby/fN5k0ejxocAJ/9
+	 bGSWcZEPs0mAZucGyrGTFJxwRtOoRXK2dy8JGsNNXP5tQcE59nU3vgWcvPx+tuPqe3
+	 SCsPX4Z13RNDe+WXBEL70a7MB7WnSEc7eNxEq/3d9IAffSRPCTblWTd57tl+pLeO78
+	 uYLdLsWN9Nviw==
+Date: Fri, 1 Dec 2023 16:56:09 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	linuxppc-dev@lists.ozlabs.org,
+	James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/6] x86: Use PCI_HEADER_TYPE_* instead of literals
+Message-ID: <20231201225609.GA534714@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
-Content-Language: en-US
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
- Jens Axboe <axboe@kernel.dk>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
- Keith Busch <kbusch@kernel.org>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>,
- Yu Kuai <yukuai1@huaweicloud.com>, Ed Tsai <ed.tsai@mediatek.com>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-References: <20231130193139.880955-1-bvanassche@acm.org>
- <20231130193139.880955-2-bvanassche@acm.org>
- <e728ac4b-bce4-4c2e-88bb-8874c73f0c8e@wdc.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <e728ac4b-bce4-4c2e-88bb-8874c73f0c8e@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231201204447.GA527927@bhelgaas>
 
-On 12/1/23 04:52, Johannes Thumshirn wrote:
-> On 30.11.23 20:31, Bart Van Assche wrote:
->> +void blk_mq_update_fair_sharing(struct blk_mq_tag_set *set, bool enable)
->> +{
->> +	const unsigned int DFTS_BIT = ilog2(BLK_MQ_F_DISABLE_FAIR_TAG_SHARING);
->> +	struct blk_mq_hw_ctx *hctx;
->> +	struct request_queue *q;
->> +	unsigned long i;
->> +
->> +	/*
->> +	 * Serialize against blk_mq_update_nr_hw_queues() and
->> +	 * blk_mq_realloc_hw_ctxs().
->> +	 */
->> +	mutex_lock(&set->tag_list_lock);
->> +	list_for_each_entry(q, &set->tag_list, tag_set_list)
->> +		blk_mq_freeze_queue(q);
->> +	assign_bit(DFTS_BIT, &set->flags, !enable);
->> +	list_for_each_entry(q, &set->tag_list, tag_set_list)
->> +		queue_for_each_hw_ctx(q, hctx, i)
->> +			assign_bit(DFTS_BIT, &hctx->flags, !enable);
->> +	list_for_each_entry(q, &set->tag_list, tag_set_list)
->> +		blk_mq_unfreeze_queue(q);
->> +	mutex_unlock(&set->tag_list_lock);
-> 
-> Hi Bart,
-> 
-> The above code adds a 3rd user (at least) of the following pattern to
-> the kernel:
-> 
-> 	list_for_each_entry(q, &set->tag_list, tag_set_list)
-> 		blk_mq_freeze_queue(q);
-> 
-> 	/* do stuff */
-> 
-> 	list_for_each_entry(q, &set->tag_list, tag_set_list)
-> 		blk_mq_unfreeze_queue(q);
-> 
-> Would it maybe be beneficial if we'd introduce functions for this, like:
-> 
-> static inline void blk_mq_freeze_tag_set(struct blk_mq_tag_set *set)
-> {
-> 	lockdep_assert_held(&set->tag_list_lock);
-> 
-> 	list_for_each_entry(q, &set->tag_list, tag_set_list)
-> 		blk_mq_freeze_queue(q);
-> }
-> 
-> static inline void blk_mq_unfreeze_tag_set(struct blk_mq_tag_set *set)
-> {
-> 	lockdep_assert_held(&set->tag_list_lock);
-> 
-> 	list_for_each_entry(q, &set->tag_list, tag_set_list)
-> 		blk_mq_unfreeze_queue(q);
-> }
+[+cc scsi, powerpc folks]
 
-Hi Johannes,
+On Fri, Dec 01, 2023 at 02:44:47PM -0600, Bjorn Helgaas wrote:
+> On Fri, Nov 24, 2023 at 11:09:13AM +0200, Ilpo Järvinen wrote:
+> > Replace 0x7f and 0x80 literals with PCI_HEADER_TYPE_* defines.
+> > 
+> > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> 
+> Applied entire series on the PCI "enumeration" branch for v6.8,
+> thanks!
+> 
+> If anybody wants to take pieces separately, let me know and I'll drop
+> from PCI.
 
-That sounds like a good idea to me. I will make this change.
+OK, b4 picked up the entire series but I was only cc'd on this first
+patch, so I missed the responses about EDAC, xtensa, bcma already
+being applied elsewhere.
 
-Thanks,
+So I kept these in the PCI tree:
 
-Bart.
+  420ac76610d7 ("scsi: lpfc: Use PCI_HEADER_TYPE_MFD instead of literal")
+  3773343dd890 ("powerpc/fsl-pci: Use PCI_HEADER_TYPE_MASK instead of literal")
+  197e0da1f1a3 ("x86/pci: Use PCI_HEADER_TYPE_* instead of literals")
+
+and dropped the others.
+
+x86, SCSI, powerpc folks, if you want to take these instead, let me
+know and I'll drop them.
+
+> > ---
+> >  arch/x86/kernel/aperture_64.c  | 3 +--
+> >  arch/x86/kernel/early-quirks.c | 4 ++--
+> >  2 files changed, 3 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
+> > index 4feaa670d578..89c0c8a3fc7e 100644
+> > --- a/arch/x86/kernel/aperture_64.c
+> > +++ b/arch/x86/kernel/aperture_64.c
+> > @@ -259,10 +259,9 @@ static u32 __init search_agp_bridge(u32 *order, int *valid_agp)
+> >  							order);
+> >  				}
+> >  
+> > -				/* No multi-function device? */
+> >  				type = read_pci_config_byte(bus, slot, func,
+> >  							       PCI_HEADER_TYPE);
+> > -				if (!(type & 0x80))
+> > +				if (!(type & PCI_HEADER_TYPE_MFD))
+> >  					break;
+> >  			}
+> >  		}
+> > diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+> > index a6c1867fc7aa..59f4aefc6bc1 100644
+> > --- a/arch/x86/kernel/early-quirks.c
+> > +++ b/arch/x86/kernel/early-quirks.c
+> > @@ -779,13 +779,13 @@ static int __init check_dev_quirk(int num, int slot, int func)
+> >  	type = read_pci_config_byte(num, slot, func,
+> >  				    PCI_HEADER_TYPE);
+> >  
+> > -	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
+> > +	if ((type & PCI_HEADER_TYPE_MASK) == PCI_HEADER_TYPE_BRIDGE) {
+> >  		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
+> >  		if (sec > num)
+> >  			early_pci_scan_bus(sec);
+> >  	}
+> >  
+> > -	if (!(type & 0x80))
+> > +	if (!(type & PCI_HEADER_TYPE_MFD))
+> >  		return -1;
+> >  
+> >  	return 0;
+> > -- 
+> > 2.30.2
+> > 
