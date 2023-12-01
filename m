@@ -1,43 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="OqYs0GmF"
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28456171C
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 07:14:59 -0800 (PST)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6cde4aeea29so1897299b3a.2
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 07:14:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Fjo9L6Jc"
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B35A81725
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 07:15:02 -0800 (PST)
+Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-6cdd9c53270so1923393b3a.1
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 07:15:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701443698; x=1702048498; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1701443702; x=1702048502; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=S5u5mj8ueK+oc2yv8mZg26TvQm1X83rBh8cXq05A5b8=;
-        b=OqYs0GmF8HFxp5IsgzqAulfJFTwog24rf3mni9vKI2/sxOm9JPq3BaymnyA3lIYbDq
-         lGSX+JeE8BOmoWcJ/af2/C8Z+yk8j73ivOFvKMKt3z7hSLpuZBIN2rheDuC1e24em4Hu
-         eNpbL5BMEQjQQjMX5piE943Zp5ANR/GLCN2tG1JtzFsrpDZtQ2cLI9EoNr/QiQVAtCf3
-         Q5i7E6PPHlYSfWrNvjBgtCYiSeCGGs9H4Kz412qih8tCbREub2ythCx2gF1NU65jOOKh
-         GW78sJammyY7wBmDChniak6rErGEUS+maCY9+Pzuo4QwbzbFoy6qqG1nfNpQCAR/9fWz
-         DMig==
+        bh=63N0jK5ZcBeJuBTrtXzoyRGZDNopQVJCv+vFWIRCiEI=;
+        b=Fjo9L6Jc+XW3mkryMOXpBapHySvMEDBSGGCVBO8lKPjx7PdZLuWUaLsxYvzM/zTFbn
+         4ELY1d/1mbI2mv6Fc2GfQZ+WiWX6jtLmyhZJIze7wkAIcN+3BQQr+tHhd9n+DP048NB4
+         XseAf8A8MyPaH/SxxUxVuJ/OxSGM7FTYwaafsbEoIwBG8tVzOem6LWxZhepU8ru5LFQo
+         JxAF4oWgM8154LI6XfpShBUPEntXLajZRlDIjE/MSLb1kIV/UDEkau5s/8tyzykTtvL3
+         IpskeAyOYgH7I6YtD2v9Pg15b9C3SNioexQinroYbUk1vXzbPtjfyrbHZN05WXqmBBHU
+         LZ+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701443698; x=1702048498;
+        d=1e100.net; s=20230601; t=1701443702; x=1702048502;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=S5u5mj8ueK+oc2yv8mZg26TvQm1X83rBh8cXq05A5b8=;
-        b=ROc9+1N7Lvp1KUZ2Wpvz0kPTRmuJb+6PXfV4/pLRapn48yVghq1wDNYCB34Q762/ME
-         qoTDuIaJ7d2HoVetv7QUXfQDf/rpQWAebthNL7N44dx+SAaXw+FuAdCIXtuhjokzGtYc
-         w9IY4zRSKG5wXsMI4ZNtp6DrYG/FlnySmBCR1pZ9AdlqPmc3jbQZtxf4sfgtCBig3gvj
-         lkGD3JulmS2JZIjWKLUe8E/6PaqKKlGMcBK8/6ssdJE8IDL/TXbiKs/eFcBq2Dj0oTJV
-         5ZrAsuMjeQMQfYCtLG2O5lTORPoLa7evmEIN4VnbS0+OYgb9D1/wK9/w0z6eYPsX0020
-         8JSQ==
-X-Gm-Message-State: AOJu0Yy8fQ9B9I2w5WiNMUqBbpURwT7OjWOAgo+6Bye7jXX1pDLP/zYZ
-	XXIeBPfFNKkgIMbU9g/SA721
-X-Google-Smtp-Source: AGHT+IEjBAHxDNnswReyTsQ/wgyRVee0zz+RTPON/r87o5NDp9vCjrHC67XAbwc0Yi+6bHfU1R4nag==
-X-Received: by 2002:a05:6a20:548e:b0:18c:8d0f:a794 with SMTP id i14-20020a056a20548e00b0018c8d0fa794mr19592802pzk.19.1701443698551;
-        Fri, 01 Dec 2023 07:14:58 -0800 (PST)
+        bh=63N0jK5ZcBeJuBTrtXzoyRGZDNopQVJCv+vFWIRCiEI=;
+        b=CYupNpQxnFZh85zKpfGe/cpsJISuFJLsxHGfHEpNno3rkynOhE/pjId1fLmrDDkm7S
+         VYxhaLhtk/8o8Epm+A74zZDF7cEqJRaIq91mIn9VwUE1drd+qORuUNgZ/oFE921jngQz
+         6LKZL62N22UFTrOdBJVWEeD5qRZAeq85gD+5mgSZVtHTwQ8LDLFJIhF1qLdpAs+5BKPv
+         +SV9tv9NyFFpKT0+hn5AHCokAn99uiTsxCN6jF3NfzFjwAhmUj0MGqdDH5K/m19LTyNR
+         1v/19n2rJD306O42qhQjETGcNA+ozweN8pJ+S1I313Td2jkARgHbSMTdCwDcua7eGZKN
+         AKOg==
+X-Gm-Message-State: AOJu0YzIPOuqdmw55abE2WcXKuKHs0EtQN7ikLVFHunexXBPUElWpA15
+	A3SpyiUZRdvAk3EXi6frpvju
+X-Google-Smtp-Source: AGHT+IETQ1stSQmwhPIzf25NLke8Nu64YavF9AVB6RzSBdjnw47xK9+jZxC9s0vLs8BKJXMe1U27ug==
+X-Received: by 2002:a05:6a20:9150:b0:18b:9682:59e9 with SMTP id x16-20020a056a20915000b0018b968259e9mr26138765pzc.21.1701443701963;
+        Fri, 01 Dec 2023 07:15:01 -0800 (PST)
 Received: from localhost.localdomain ([117.213.98.226])
-        by smtp.gmail.com with ESMTPSA id s14-20020a65644e000000b00578afd8e012sm2765824pgv.92.2023.12.01.07.14.54
+        by smtp.gmail.com with ESMTPSA id s14-20020a65644e000000b00578afd8e012sm2765824pgv.92.2023.12.01.07.14.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Dec 2023 07:14:58 -0800 (PST)
+        Fri, 01 Dec 2023 07:15:01 -0800 (PST)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: martin.petersen@oracle.com,
 	jejb@linux.ibm.com
@@ -48,9 +48,9 @@ Cc: andersson@kernel.org,
 	linux-kernel@vger.kernel.org,
 	quic_cang@quicinc.com,
 	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 07/13] scsi: ufs: qcom: Fail ufs_qcom_power_up_sequence() when core_reset fails
-Date: Fri,  1 Dec 2023 20:44:11 +0530
-Message-Id: <20231201151417.65500-8-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 08/13] scsi: ufs: qcom: Check the return value of ufs_qcom_power_up_sequence()
+Date: Fri,  1 Dec 2023 20:44:12 +0530
+Message-Id: <20231201151417.65500-9-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
 References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
@@ -62,31 +62,31 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Even though core_reset is optional, a failure during assert/deassert should
-be considered fatal, if core_reset is available. So fail
-ufs_qcom_power_up_sequence() if an error happens during reset and also get
-rid of the redundant warning as the ufs_qcom_host_reset() function itself
-prints error messages.
+If ufs_qcom_power_up_sequence() fails, then it makes no sense to enable
+the lane clocks and continue ufshcd_hba_enable(). So let's check the return
+value of ufs_qcom_power_up_sequence().
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 604273a22afd..4948dd732aae 100644
+index 4948dd732aae..e4dd3777a4d4 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -359,8 +359,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 	/* Reset UFS Host Controller and PHY */
- 	ret = ufs_qcom_host_reset(hba);
- 	if (ret)
--		dev_warn(hba->dev, "%s: host reset returned %d\n",
--				  __func__, ret);
-+		return ret;
+@@ -415,7 +415,10 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
  
- 	/* phy initialization - calibrate the phy */
- 	ret = phy_init(phy);
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		ufs_qcom_power_up_sequence(hba);
++		err = ufs_qcom_power_up_sequence(hba);
++		if (err)
++			return err;
++
+ 		/*
+ 		 * The PHY PLL output is the source of tx/rx lane symbol
+ 		 * clocks, hence, enable the lane clocks only after PHY
 -- 
 2.25.1
 
