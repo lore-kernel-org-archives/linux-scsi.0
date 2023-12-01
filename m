@@ -1,37 +1,37 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="BNTwbhdT"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="RlmP2o/b"
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBE8D1981;
-	Thu, 30 Nov 2023 21:04:47 -0800 (PST)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B14aULo007790;
-	Fri, 1 Dec 2023 05:04:06 GMT
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B696A1985;
+	Thu, 30 Nov 2023 21:04:48 -0800 (PST)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B14QH52008731;
+	Fri, 1 Dec 2023 05:04:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=8lNJtIxq4QyUwpN4j9OKeu7nOMsXjWl2NhGsEwxko3w=;
- b=BNTwbhdTNq/t8pIX8CREfsrAFMWg6ciDcNzNsW8KYh+mJ/YzaG8mek3ofHNqifKVknjY
- WNiU301kymXZA/uLQHMO8qpS5awDa/mU7r+ICNDb76EqeV3SkXjShw6XlkpZNyp1n6jV
- YUEW4evN8c9yaFAZ0t/kJBMIj3jdbnGm/GGDsIqOEmboekTSRh/q8bAvd7kzZNnRQNt6
- Qgw2TBBwEV4TUBWPMC4KuQRXIeww6s4/tVPfRBeXFxtLLTTNv/2pB2bRyPhbsIybxCuV
- CnYiarfxN8GyeKPzk6z5O1ySE+dSP39LeYHfxtYpWgJ7LFqDHUmI8nK+SLuS6x2gfcqA sw== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3upv481we9-1
+ bh=5Oh0PL/lcPtBT82P0nr2cMa3kSGu7EMhX1ovjYwLea8=;
+ b=RlmP2o/brW/tUfvethyxUHN/u3ezH7LF6G1NUU4/sOE3JP7AdGG+O9MyVVg0+EZAuZTA
+ BR5vDlknoBptrXR4pU7pp+J1mtFy28x05rl6joMjjvmynUZCGJuyPN1MksUWISV9BeuS
+ DoJhcA8DXzoPr+tnH3O+e1jPs1zx+X195G2r5IUp/Y/M87F6WNFOSWwUIRXW6FnuXCww
+ C3mpkIsVoa7i1kpRh8bfkDdSjJwD6GJqgtmbgSX68pFzgVgTMnrU/mHSy8g12rniW35P
+ CRcgq8ldXjdj3BkHnSfYZnUALIrzseKZ8+7WuWXt3YJ1GVMMes8WbD1bZWSBuYHbrJZS Yg== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3upgfd3pks-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 01 Dec 2023 05:04:05 +0000
-Received: from pps.filterd (NASANPPMTA03.qualcomm.com [127.0.0.1])
-	by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3B14k6oh028224;
-	Fri, 1 Dec 2023 05:04:04 GMT
+	Fri, 01 Dec 2023 05:04:09 +0000
+Received: from pps.filterd (NASANPPMTA02.qualcomm.com [127.0.0.1])
+	by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3B14uxJw010173;
+	Fri, 1 Dec 2023 05:04:08 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by NASANPPMTA03.qualcomm.com (PPS) with ESMTP id 3unmevu33h-1;
-	Fri, 01 Dec 2023 05:04:04 +0000
-Received: from NASANPPMTA03.qualcomm.com (NASANPPMTA03.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B1515R4015861;
-	Fri, 1 Dec 2023 05:04:04 GMT
+	by NASANPPMTA02.qualcomm.com (PPS) with ESMTP id 3unmewbg50-1;
+	Fri, 01 Dec 2023 05:04:08 +0000
+Received: from NASANPPMTA02.qualcomm.com (NASANPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B1507kR015873;
+	Fri, 1 Dec 2023 05:04:07 GMT
 Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
-	by NASANPPMTA03.qualcomm.com (PPS) with ESMTP id 3B1544lI019708;
-	Fri, 01 Dec 2023 05:04:04 +0000
+	by NASANPPMTA02.qualcomm.com (PPS) with ESMTP id 3B1547ck021417;
+	Fri, 01 Dec 2023 05:04:07 +0000
 Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
-	id C4E1B20A77; Thu, 30 Nov 2023 21:04:03 -0800 (PST)
+	id 16CDD20A69; Thu, 30 Nov 2023 21:04:07 -0800 (PST)
 From: Can Guo <quic_cang@quicinc.com>
 To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         adrian.hunter@intel.com, vkoul@kernel.org, beanhuo@micron.com,
@@ -40,11 +40,15 @@ To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
 Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Johan Hovold <johan+linaro@kernel.org>,
+        Abel Vesa <abel.vesa@linaro.org>,
+        linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v7 06/10] scsi: ufs: ufs-qcom: Set initial PHY gear to max HS gear for HW ver 4 and newer
-Date: Thu, 30 Nov 2023 21:03:16 -0800
-Message-Id: <1701407001-471-7-git-send-email-quic_cang@quicinc.com>
+Subject: [PATCH v7 09/10] phy: qualcomm: phy-qcom-qmp-ufs: Rectify SM8550 UFS HS-G4 PHY Settings
+Date: Thu, 30 Nov 2023 21:03:19 -0800
+Message-Id: <1701407001-471-10-git-send-email-quic_cang@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1701407001-471-1-git-send-email-quic_cang@quicinc.com>
 References: <1701407001-471-1-git-send-email-quic_cang@quicinc.com>
@@ -52,81 +56,111 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: V-oNqm89EKq5t-WCWKa3Fn1PM4pvzgPa
-X-Proofpoint-ORIG-GUID: V-oNqm89EKq5t-WCWKa3Fn1PM4pvzgPa
+X-Proofpoint-ORIG-GUID: MgOzsaNUUVfzlPdjmYVYWJCdy5hGK1-c
+X-Proofpoint-GUID: MgOzsaNUUVfzlPdjmYVYWJCdy5hGK1-c
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-01_02,2023-11-30_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
- spamscore=0 clxscore=1015 impostorscore=0 lowpriorityscore=0 mlxscore=0
- phishscore=0 suspectscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
- definitions=main-2312010028
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ lowpriorityscore=0 spamscore=0 malwarescore=0 impostorscore=0
+ priorityscore=1501 bulkscore=0 clxscore=1015 mlxscore=0 adultscore=0
+ phishscore=0 mlxlogscore=792 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2311060000 definitions=main-2312010028
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Since HW ver 4, max HS gear can be get from UFS host controller's register,
-use the max HS gear as the initial PHY gear instead of UFS_HS_G2, so that
-we don't need to update the hard code for newer targets in future.
+The registers, which are being touched in current SM8550 UFS PHY settings,
+and the values being programmed are mainly the ones working for HS-G4 mode,
+meanwhile, there are also a few ones somehow taken from HS-G5 PHY settings.
+However, even consider HS-G4 mode only, some of them are incorrect and some
+are missing. Rectify the HS-G4 PHY settings by strictly aligning with the
+SM8550 UFS PHY Hardware Programming Guide suggested HS-G4 PHY settings.
 
-Reviewed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Fixes: 1679bfef906f ("phy: qcom-qmp-ufs: Add SM8550 support")
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Reviewed-by: Abel Vesa <abel.vesa@linaro.org>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 23 +++++++++++++++++------
- 1 file changed, 17 insertions(+), 6 deletions(-)
+ .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |  1 +
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 28 +++++++++++++++-------
+ 2 files changed, 20 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index aca6199..543939c 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1060,6 +1060,22 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
- 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
- }
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
+index ae220fd..35d497f 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
+@@ -11,6 +11,7 @@
+ #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX		0x30
+ #define QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_RX		0x34
+ #define QSERDES_UFS_V6_TX_LANE_MODE_1				0x7c
++#define QSERDES_UFS_V6_TX_FR_DCC_CTRL				0x108
  
-+static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
-+{
-+	struct ufs_host_params *host_params = &host->host_params;
+ #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2		0x08
+ #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4		0x10
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+index 5f79d18..3c2e625 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+@@ -763,22 +763,26 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_serdes[] = {
+ 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
+ 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x7f),
+ 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x06),
+-	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x4c),
+-	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
+-	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
+-	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
+-	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x99),
+-	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x07),
++	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE1, 0x4c),
++	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE1, 0x0a),
++	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE1, 0x18),
++	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE1, 0x14),
++	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE1, 0x99),
++	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE1, 0x07),
++};
 +
-+	host->phy_gear = host_params->hs_tx_gear;
-+
-+	/*
-+	 * For controllers whose major HW version is < 4, power up the PHY using
-+	 * minimum supported gear (UFS_HS_G2). Switching to max gear will be
-+	 * performed during reinit if supported. For newer controllers, whose
-+	 * major HW version is >= 4, power up the PHY using max supported gear.
-+	 */
-+	if (host->hw_ver.major < 0x4)
-+		host->phy_gear = UFS_HS_G2;
-+}
-+
- static void ufs_qcom_set_host_params(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-@@ -1296,6 +1312,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 	ufs_qcom_set_caps(hba);
- 	ufs_qcom_advertise_quirks(hba);
- 	ufs_qcom_set_host_params(hba);
-+	ufs_qcom_set_phy_gear(host);
++static const struct qmp_phy_init_tbl sm8550_ufsphy_hs_b_serdes[] = {
++	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x44),
+ };
  
- 	err = ufs_qcom_ice_init(host);
- 	if (err)
-@@ -1313,12 +1330,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 		dev_warn(dev, "%s: failed to configure the testbus %d\n",
- 				__func__, err);
+ static const struct qmp_phy_init_tbl sm8550_ufsphy_tx[] = {
+-	QMP_PHY_INIT_CFG(QSERDES_V6_TX_LANE_MODE_1, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_LANE_MODE_1, 0x05),
+ 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX, 0x07),
++	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_FR_DCC_CTRL, 0x4c),
+ };
  
--	/*
--	 * Power up the PHY using the minimum supported gear (UFS_HS_G2).
--	 * Switching to max gear will be performed during reinit if supported.
--	 */
--	host->phy_gear = UFS_HS_G2;
--
- 	return 0;
+ static const struct qmp_phy_init_tbl sm8550_ufsphy_rx[] = {
+-	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2, 0x0c),
+-	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4, 0x0f),
++	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2, 0x0c),
+ 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL, 0x0e),
  
- out_variant_clear:
+ 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0, 0xc2),
+@@ -801,6 +805,8 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_pcs[] = {
+ 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_MID_TERM_CTRL1, 0x43),
+ 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_PLL_CNTL, 0x2b),
+ 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_MULTI_LANE_CTRL1, 0x02),
++	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_HSGEAR_CAPABILITY, 0x04),
++	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_RX_HSGEAR_CAPABILITY, 0x04),
+ };
+ 
+ static const struct qmp_phy_init_tbl sm8650_ufsphy_serdes[] = {
+@@ -1357,6 +1363,10 @@ static const struct qmp_phy_cfg sm8550_ufsphy_cfg = {
+ 		.pcs		= sm8550_ufsphy_pcs,
+ 		.pcs_num	= ARRAY_SIZE(sm8550_ufsphy_pcs),
+ 	},
++	.tbls_hs_b = {
++		.serdes		= sm8550_ufsphy_hs_b_serdes,
++		.serdes_num	= ARRAY_SIZE(sm8550_ufsphy_hs_b_serdes),
++	},
+ 	.clk_list		= sdm845_ufs_phy_clk_l,
+ 	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
+ 	.vreg_list		= qmp_phy_vreg_l,
 -- 
 2.7.4
 
