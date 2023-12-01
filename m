@@ -1,57 +1,55 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CB6BDD;
-	Fri,  1 Dec 2023 12:27:51 -0800 (PST)
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1cfcc9b3b5cso8607295ad.0;
-        Fri, 01 Dec 2023 12:27:51 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701462471; x=1702067271;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1TFPInV3Tc8ZFH5rwZRwPYcB8wwI/zl+CFu8s3Ie1xU=;
-        b=hhfbuBFnoT9UuZff9clCk5x+1Fv105MjcMJNnWTtQdbeHLXsXAjPQ10tPkSECoHreM
-         oUZulqeyXaEp0xdX7H4ooeRzlGCdUptAi8c6r898R7D8ZbcubB4BtN407TmEtV6uHVTb
-         3VO7azcQYt2tOUeocIXEEXuYLP8rP55sRd2vuLe3akR8KvsIPk8d28NYZHPcI3uJYpKz
-         94t8fuH8WXEPswkDbqz49KgKHH7pk7mqgRFrMweNguk24dTIT7D+Rj5TUIYOZo96Tnny
-         IFrXyWFwMVMH0rKSA9rrs67ZsBifMgO4yOHz9+Bw3lpMFv0LO+55dC3BUdJOWFTjtu8R
-         25Ig==
-X-Gm-Message-State: AOJu0YwlIyDqt835xeX/mFUEZHy/7IonP33YFcCrbrogiuV8Br+SBWie
-	pqCyqD0m5CiuThvgu0bPv14=
-X-Google-Smtp-Source: AGHT+IEPDjVtIn3LAftvRhiMx0r4y+ay+rjlITtJ30wwSBgS3pfnXWGK/B1TcLukDKXmQ8nLyPPJrQ==
-X-Received: by 2002:a17:903:22c1:b0:1d0:1c45:fca6 with SMTP id y1-20020a17090322c100b001d01c45fca6mr105449plg.55.1701462470485;
-        Fri, 01 Dec 2023 12:27:50 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id s2-20020a170902ea0200b001c9d011581dsm797614plg.164.2023.12.01.12.27.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Dec 2023 12:27:50 -0800 (PST)
-Message-ID: <ac563d4a-29dc-4985-bdbf-f6e77ba74a82@acm.org>
-Date: Fri, 1 Dec 2023 12:27:48 -0800
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11B2859B40
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 21:49:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lsmFbN92"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 87028C433C7;
+	Fri,  1 Dec 2023 21:49:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701467392;
+	bh=qmbsoxcxIJIlk3h1E7uwFaBTfx8Io3d31jXx4Y/j29w=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=lsmFbN92YOkwTYmuEds0N23azn4FYyF6+BY7ClrM/4sGX+6InebqT1zFiaT/5VWig
+	 JRP9NOQRKwcGr0rQwL9DlnD4K6RcCsonmpP1kS8D6w7Oz40+Mb8IFuJMG2xsVKeBkP
+	 N4vV89Mvt16qnNX6PLrWzA7i+WW2hrTsLjFE0psIGCQHiejDf4B1BBpXoA5Avb+O9o
+	 E5gaacUiNyxNcy12q4XaRvezd6c+pQ/e1vgpipt6W7KjeO8Z/k81IdYYZApEL2yyU9
+	 Ww+PmpSvLMEsIKeEcdcqyV1LCufLazgsP6/4nsXR041LI0vi8oEatpVy6d1gIU2mz2
+	 +Nfd/suHZIJQA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 71FC6C395DC;
+	Fri,  1 Dec 2023 21:49:52 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.7-rc3
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <ba9a6adb96ce110b1a74c6161fa58415049d5ef6.camel@HansenPartnership.com>
+References: <ba9a6adb96ce110b1a74c6161fa58415049d5ef6.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <ba9a6adb96ce110b1a74c6161fa58415049d5ef6.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: b09d7f8fd50f6e93cbadd8d27fde178f745b42a1
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: ff4a9f49054a9cc5ae733155398d2aff2ef90836
+Message-Id: <170146739246.2332.1556898783145456659.pr-tracker-bot@kernel.org>
+Date: Fri, 01 Dec 2023 21:49:52 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 06/13] scsi: ufs: qcom: Export ufshcd_{enable/disable}_irq
- helpers and make use of them
-Content-Language: en-US
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- martin.petersen@oracle.com, jejb@linux.ibm.com
-Cc: andersson@kernel.org, konrad.dybcio@linaro.org,
- linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, quic_cang@quicinc.com
-References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
- <20231201151417.65500-7-manivannan.sadhasivam@linaro.org>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231201151417.65500-7-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 12/1/23 07:14, Manivannan Sadhasivam wrote:
-> Instead of duplicating the enable/disable IRQ part, let's export the
-> helpers available in ufshcd driver and make use of them. This also fixes
-> the possible redundant IRQ disable before asserting reset (when IRQ was
-> already disabled).
+The pull request you sent on Thu, 30 Nov 2023 15:28:27 -0500:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/ff4a9f49054a9cc5ae733155398d2aff2ef90836
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
