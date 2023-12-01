@@ -1,47 +1,34 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vzxTFGcZ"
-Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54C3CDC
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 02:09:49 -0800 (PST)
-Received: by mail-wm1-x329.google.com with SMTP id 5b1f17b1804b1-40b4a8db331so18234455e9.3
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 02:09:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701425388; x=1702030188; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :references:cc:to:content-language:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=zKEaUiZTxlPwx3QPN7jIyXfy5Uw4NLWZUGDodKGb1pE=;
-        b=vzxTFGcZ5eHxP4mZxAvtZxY18WSBWLIgSnCp+HQTkBKNq7lCrpdTyoCL4dMSkqU9f8
-         uhcikQIAup6Gyc92VXI45IHO7ag9AmTO9U4ObjdesnO5TS+azqm3RL7xKDWNr52Yu5JU
-         mSDpnw3rbAg+rYwd3PoH7EU1ppKZ2/K1Q1aaP+JYPfMymFipAhTgRk3ogLsu/HHRaCzZ
-         PgFEZbItj8S6EZaulFzpUNJuGSKMzR+84JvMxJzu0MZA+28w/SjVByqm6DxeFRT0uvPA
-         hG00NtXqIvt03eK6NJZg6IIYXrMJL1Sjp85dpARlOH2u/MPWgGQ0iuzjDUqv/TvNJhGf
-         bI1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701425388; x=1702030188;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :references:cc:to:content-language:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=zKEaUiZTxlPwx3QPN7jIyXfy5Uw4NLWZUGDodKGb1pE=;
-        b=qcLLfaryl66ZnoWr1sbwQtD97T1y0DJVatYLXNgGqpkSih0FIgQ5jpjj4Lp6uXQDf4
-         7tVKDGJH7/z9GKytSxu5kBOqyPYjL3tbVE08eqmycfnfiJF0SfTpJpJijRTFnlMl2RlY
-         FZSqqaGfVu+IRmQEJFP6fj5TFpBsqWN0FLJN5zK1J/thT1zCzr5vWxuKPNGFoKzCAgid
-         EHCj2rkv8Jlwd00ABG/ytv186RCsrPSTeVLE6vQYrFv6WOJB3JzBYIB6TcLEiRUp0mcd
-         0JIPi0NogG6bPU0JSI3U4mn5Mdzo9i/oz8GJR7Mu5u1QgtqTWxFpTXTLB1KLi6XzRGpk
-         1ibQ==
-X-Gm-Message-State: AOJu0Yy92dqOvSbEr2CiELM4clrZYu/VTY6hpkoktqTlmb9X4ZUUm6J7
-	HhhcR7iPBjCG4JxUPFSh2WTPoA==
-X-Google-Smtp-Source: AGHT+IENK1vb/UdBtKtDFUa1ipTkO6wrV04e1mWEkYa/5zZ5tqtZqhUqsoK8aEleU+NVAlPqjr8ZMg==
-X-Received: by 2002:a1c:4b14:0:b0:40b:5e59:c56d with SMTP id y20-20020a1c4b14000000b0040b5e59c56dmr298559wma.151.1701425386905;
-        Fri, 01 Dec 2023 02:09:46 -0800 (PST)
-Received: from ?IPV6:2a01:e0a:982:cbb0:46dc:1c67:6d66:e21? ([2a01:e0a:982:cbb0:46dc:1c67:6d66:e21])
-        by smtp.gmail.com with ESMTPSA id t10-20020a5d534a000000b0033326a5b01csm3125805wrv.59.2023.12.01.02.09.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Dec 2023 02:09:46 -0800 (PST)
-Message-ID: <a6651f9f-b060-4195-b83a-b23aa2091a98@linaro.org>
-Date: Fri, 1 Dec 2023 11:09:44 +0100
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="iJ4HA6si"
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49938103;
+	Fri,  1 Dec 2023 04:14:00 -0800 (PST)
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B17cSvb008154;
+	Fri, 1 Dec 2023 12:13:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=ey6b8Nb6xUzGGHzqYHcKuMYjKqbqWw261ABK6acpxl0=;
+ b=iJ4HA6siTYMXD4qMJyIJa4FVcJEmN7JycdGrj6BqnAJijttXY2Tz1P5Xi/beXmnypGJ6
+ MuT7TOej2UJNLfeaEk1YmbQQ4rV0a/MCAzgIDfmcEsFOocrYZuiOyh4862rjz73zewmj
+ Cn8m2ybVfv544LB8E4h2w5y+8hiR+UZVoyOkAQ7CYGthDiF3HAJQ/6dQgAc1ETNiYLE/
+ cmVrrN+fdeu1rV0rGpWOv2xYPyd2iiB1yRjsZ4VyQHcyZFqc3lRHG3E98mNM/CRqPZpG
+ g7n+OxIfhytshpFb4XIbh33TQUsMkiQhfxiYR1kHbXS/dk4mzquuC3fiYJxEWel1fiWe eg== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uq3f7sgeq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 01 Dec 2023 12:13:37 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B1CDaC8007541
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 1 Dec 2023 12:13:36 GMT
+Received: from [10.253.11.15] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 1 Dec
+ 2023 04:13:31 -0800
+Message-ID: <50818674-e5b7-415f-a023-40611ea10850@quicinc.com>
+Date: Fri, 1 Dec 2023 20:13:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,145 +36,231 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: neil.armstrong@linaro.org
-Reply-To: neil.armstrong@linaro.org
-Subject: Re: [PATCH v7 00/10] Enable HS-G5 support on SM8550
-Content-Language: en-US, fr
-To: Can Guo <quic_cang@quicinc.com>, bvanassche@acm.org, mani@kernel.org,
- adrian.hunter@intel.com, vkoul@kernel.org, beanhuo@micron.com,
- avri.altman@wdc.com, junwoo80.lee@samsung.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "open list:ARM/Mediatek SoC support:Keyword:mediatek"
- <linux-kernel@vger.kernel.org>,
- "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
- <linux-arm-kernel@lists.infradead.org>,
- "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
- <linux-mediatek@lists.infradead.org>
-References: <1701407001-471-1-git-send-email-quic_cang@quicinc.com>
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro Developer Services
-In-Reply-To: <1701407001-471-1-git-send-email-quic_cang@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] scsi: ufs: qcom: move ufs_qcom_host_reset() to
+ ufs_qcom_device_reset()
+Content-Language: en-US
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Ziqi Chen
+	<quic_ziqichen@quicinc.com>
+CC: <quic_asutoshd@quicinc.com>, <bvanassche@acm.org>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
+        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
+        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <linux-scsi@vger.kernel.org>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson
+	<andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        "James E.J.
+ Bottomley" <jejb@linux.ibm.com>,
+        "open list:ARM/QUALCOMM SUPPORT"
+	<linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1698145815-17396-1-git-send-email-quic_ziqichen@quicinc.com>
+ <20231025074128.GA3648@thinkpad>
+ <85d7a1ef-92c4-49ae-afe0-727c1b446f55@quicinc.com>
+ <c6a72c38-aa63-79b8-c784-d753749f7272@quicinc.com>
+ <20231128112731.GV3088@thinkpad>
+ <ed81bb9e-a9cd-4d32-bfa0-2f0d28742026@quicinc.com>
+ <20231201051800.GA4009@thinkpad>
+From: Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <20231201051800.GA4009@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: F7grcWgsbEM9qf_ZPO2mclnFNXKptlYx
+X-Proofpoint-GUID: F7grcWgsbEM9qf_ZPO2mclnFNXKptlYx
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-01_09,2023-11-30_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
+ spamscore=0 impostorscore=0 lowpriorityscore=0 phishscore=0
+ priorityscore=1501 mlxlogscore=999 bulkscore=0 clxscore=1015 mlxscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2312010081
 
-On 01/12/2023 06:03, Can Guo wrote:
-> This series enables HS-G5 support on SM8550.
-> 
-> This series is rebased on below changes from Mani -
-> https://patchwork.kernel.org/project/linux-scsi/patch/20230908145329.154024-1-manivannan.sadhasivam@linaro.org/
-> https://patchwork.kernel.org/project/linux-scsi/patch/20230908145329.154024-2-manivannan.sadhasivam@linaro.org/
-> 
-> This series is tested on below HW combinations -
-> SM8550 MTP + UFS4.0
-> SM8550 QRD + UFS3.1
-> SM8450 MTP + UFS3.1 (for regression test)
-> SM8350 MTP + UFS3.1 (for regression test)
-> 
-> Note that during reboot test on above platforms, I occasinally hit PA (PHY)
-> error during the 2nd init, this is not related with this series. A fix for
-> this is mentioned in below patchwork -
-> 
-> https://patchwork.kernel.org/project/linux-scsi/patch/1698145815-17396-1-git-send-email-quic_ziqichen@quicinc.com/
-> 
-> Also note that on platforms, which have two sets of UFS PHY settings are
-> provided (say G4 and no-G4, G5 and no-G5). The two sets of PHY settings are
-> basically programming different values to different registers, mixing the
-> two sets and/or overwriting one set with another set is definitely not
-> blessed by UFS PHY designers. For SM8550, this series will make sure we
-> honor the rule. However, for old targets Mani and I will fix them in
-> another series in future.
-> 
-> v6 -> v7:
-> 1. Rebased on linux-next, based SM8650 PHY settings are merged there, no changes to patches for UFS driver
-> 2. Addressed comments from Mani
-> 
-> v5 -> v6:
-> 1. Rebased on scsi-queue-6.8
-> 2. Addressed comments from Dmitry and Mani in patches to phy-qcom-qmp-ufs.c
-> 
-> v4 -> v5:
-> Removed two useless debug prints in patch #9
-> 
-> v3 -> v4:
-> Used .tbls_hs_overlay array instead of adding more tables with different names like .tbls_hs_g5
-> 
-> v2 -> v3:
-> 1. Addressed comments from Andrew, Mani and Bart in patch #1
-> 2. Added patch #2 as per request from Andrew and Mani
-> 3. Added patch #4 to fix a common issue on old targets, it is not necessary
->     for this series, but put in this series only because it would be easier
->     to maintain and no need to rebase
-> 4. Addressed comments from Dmitry and Mani in patches to phy-qcom-qmp-ufs.c
-> 
-> v1 -> v2:
-> 1. Removed 2 changes which were exposing power info in sysfs
-> 2. Removed 1 change which was moving data structs to phy-qcom-qmp-ufs.h
-> 3. Added one new change (the 1st one) to clean up usage of ufs_dev_params based on comments from Mani
-> 4. Adjusted the logic of UFS device version detection according to comments from Mani:
-> 	4.1 For HW version < 0x5, go through dual init
->   	4.2 For HW version >= 0x5
-> 		a. If UFS device version is populated, one init is required
-> 		b. If UFS device version is not populated, go through dual init
-> 
-> Bao D. Nguyen (1):
->    scsi: ufs: ufs-qcom: Add support for UFS device version detection
-> 
-> Can Guo (9):
->    scsi: ufs: host: Rename structure ufs_dev_params to ufs_host_params
->    scsi: ufs: ufs-qcom: No need to set hs_rate after
->      ufshcd_init_host_param()
->    scsi: ufs: ufs-qcom: Setup host power mode during init
->    scsi: ufs: ufs-qcom: Allow the first init start with the maximum
->      supported gear
->    scsi: ufs: ufs-qcom: Limit HS-G5 Rate-A to hosts with HW version 5
->    scsi: ufs: ufs-qcom: Set initial PHY gear to max HS gear for HW ver 4
->      and newer
->    scsi: ufs: ufs-qcom: Check return value of phy_set_mode_ext()
->    phy: qualcomm: phy-qcom-qmp-ufs: Rectify SM8550 UFS HS-G4 PHY Settings
->    phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed Gear 5 support for
->      SM8550
-> 
->   drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h     |   2 +
->   drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h |   2 +
->   .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |   9 +
->   drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 191 ++++++++++++++++++---
->   drivers/ufs/host/ufs-exynos.c                      |   7 +-
->   drivers/ufs/host/ufs-hisi.c                        |  11 +-
->   drivers/ufs/host/ufs-mediatek.c                    |  12 +-
->   drivers/ufs/host/ufs-qcom.c                        |  97 ++++++++---
->   drivers/ufs/host/ufs-qcom.h                        |   7 +-
->   drivers/ufs/host/ufshcd-pltfrm.c                   |  69 ++++----
->   drivers/ufs/host/ufshcd-pltfrm.h                   |  10 +-
->   11 files changed, 309 insertions(+), 108 deletions(-)
-> 
+Hi Mani,
 
-Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8550-QRD
-Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-QRD
+On 12/1/2023 1:18 PM, Manivannan Sadhasivam wrote:
+> On Wed, Nov 29, 2023 at 08:10:57PM +0800, Ziqi Chen wrote:
+>>
+>>
+>> On 11/28/2023 7:27 PM, Manivannan Sadhasivam wrote:
+>>> On Tue, Nov 28, 2023 at 03:40:57AM +0800, Ziqi Chen wrote:
+>>>>
+>>>>
+>>>> On 11/22/2023 2:14 PM, Can Guo wrote:
+>>>>>
+>>>>>
+>>>>> On 10/25/2023 3:41 PM, Manivannan Sadhasivam wrote:
+>>>>>> On Tue, Oct 24, 2023 at 07:10:15PM +0800, Ziqi Chen wrote:
+>>>>>>> During PISI test, we found the issue that host Tx still bursting after
+>>>>>>
+>>>>>> What is PISI test?
+>>>>
+>>>> SI measurement.
+>>>>
+>>>
+>>> Please expand it in the patch description.
+>>
+>> Sure, I will update in next patch version.
+>>
+>>>
+>>>>>>
+>>>>>>> H/W reset. Move ufs_qcom_host_reset() to ufs_qcom_device_reset() and
+>>>>>>> reset host before device reset to stop tx burst.
+>>>>>>>
+>>>>>>
+>>>>>> device_reset() callback is supposed to reset only the device and not
+>>>>>> the host.
+>>>>>> So NACK for this patch.
+>>>>>
+>>>>> Agree, the change should come in a more reasonable way.
+>>>>>
+>>>>> Actually, similar code is already there in ufs_mtk_device_reset() in
+>>>>> ufs-mediatek.c, I guess here is trying to mimic that fashion.
+>>>>>
+>>>>> This change, from its functionality point of view, we do need it,
+>>>>> because I occasionally (2 out of 10) hit PHY error on lane 0 during
+>>>>> reboot test (in my case, I tried SM8350, SM8450 and SM8550， all same).
+>>>>>
+>>>>> [    1.911188] [DEBUG]ufshcd_update_uic_error: UECPA:0x80000002
+>>>>> [    1.922843] [DEBUG]ufshcd_update_uic_error: UECDL:0x80004000
+>>>>> [    1.934473] [DEBUG]ufshcd_update_uic_error: UECN:0x0
+>>>>> [    1.944688] [DEBUG]ufshcd_update_uic_error: UECT:0x0
+>>>>> [    1.954901] [DEBUG]ufshcd_update_uic_error: UECDME:0x0
+>>>>>
+>>>>> I found out that the PHY error pops out right after UFS device gets
+>>>>> reset in the 2nd init. After having this change in place, the PA/DL
+>>>>> errors are gone.
+>>>>
+>>>> Hi Mani,
+>>>>
+>>>> There is another way that adding a new vops that call XXX_host_reset() from
+>>>> soc vendor driver. in this way, we can call this vops in core layer without
+>>>> the dependency of device reset.
+>>>> due to we already observed such error and received many same reports from
+>>>> different OEMs, we need to fix it in some way.
+>>>> if you think above way is available, I will update new patch in soon. Or
+>>>> could you give us other suggestion?
+>>>>
+>>>
+>>> First, please describe the issue in detail. How the issue is getting triggered
+>>> and then justify your change. I do not have access to the bug reports that you
+>>> received.
+>>
+>>  From the waveform measured by Samsung , we can see at the end of 2nd Link
+>> Startup, host still keep bursting after H/W reset. This abnormal timing
+>> would cause the PA/DL error mentioned by Can.
+>>
+>> On the other hand, at the end of 1st Link start up, Host ends bursting at
+>> first and then sends H/W reset to device. So Samsung suggested to do host
+>> reset before every time device reset to fix this issue. That's what you saw
+>> in this patch.  This patch has been verified by OEMs.
+>>
+> 
+> Thanks for the detail. This info should have been part of the patch description.
+> 
+>> So do you think if we can keep this change with details update in commit
+>> message. or need to do other improvement?
+>>
+> 
+> For sure we should not do host reset within device_reset callback. I'd like to
+> know at what point of time we are seeing the host burst after device reset. I
+> mean can you point me to the code in the ufshcd driver that when calling
+> device_reset you are seeing the issue? Then we can do a host_reset before that
+> _specific_ device_reset with the help of the new vops you suggested.
+
+Actually, anytime when we are about to reset the device, we need to 
+reset host before that, because, as Ziqi mentioned, if host is still 
+bursting after device is reset, it may lead to PA/DL errors. It might be 
+a bit confusing, because host can be bursting some flow control frames 
+and/or dummy frames even when SW thinks it is in idle state.
+
+The reason why the PHY error cannot be easily observed is because that 
+PHY error is non-fatal, it does not trigger error handling, and there is 
+no logs or prints in serial console, meaning it is silent. However, we 
+have error history, in which PHY error can be recorded. Although PHY 
+error is non-fatal, we don't like to see any of it, because our PHY team 
+and customers are requesting zero tolerance to PHY error.
+
+Currently, there are 3 scenarios where host reset should go before 
+device reset -
+
+1. When Linux boots up, in ufshcd_hba_init(), we reset the device. In 
+this case, we need to reset the host before reset the device, because 
+the previous boot stage usually leave the device and host both active 
+before jumping to Linux. This is the first case which this change was 
+made for at the beginning.
+
+2. When the 2nd init kicks start in ufshcd_probe_hba(), we reset the 
+device. In this case, we need to reset the host before reset the device. 
+This is the case which I mentioned in my previous reply.
+
+3. In UFS error handler, we reset the device. In this case, we need to 
+reset the host before reset the device.
 
 Thanks,
-Neil
+Can Guo.
+
+> 
+> - Mani
+> 
+>>
+>> -Ziqi
+>>
+>>>
+>>> - Mani
+>>>
+>>>> -Ziqi
+>>>>
+>>>>>
+>>>>> Thanks,
+>>>>> Can Guo.
+>>>>>>
+>>>>>> - Mani
+>>>>>>
+>>>>>>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+>>>>>>> ---
+>>>>>>>     drivers/ufs/host/ufs-qcom.c | 13 +++++++------
+>>>>>>>     1 file changed, 7 insertions(+), 6 deletions(-)
+>>>>>>>
+>>>>>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>>>>>>> index 96cb8b5..43163d3 100644
+>>>>>>> --- a/drivers/ufs/host/ufs-qcom.c
+>>>>>>> +++ b/drivers/ufs/host/ufs-qcom.c
+>>>>>>> @@ -445,12 +445,6 @@ static int
+>>>>>>> ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>>>>>>>         struct phy *phy = host->generic_phy;
+>>>>>>>         int ret;
+>>>>>>> -    /* Reset UFS Host Controller and PHY */
+>>>>>>> -    ret = ufs_qcom_host_reset(hba);
+>>>>>>> -    if (ret)
+>>>>>>> -        dev_warn(hba->dev, "%s: host reset returned %d\n",
+>>>>>>> -                  __func__, ret);
+>>>>>>> -
+>>>>>>>         /* phy initialization - calibrate the phy */
+>>>>>>>         ret = phy_init(phy);
+>>>>>>>         if (ret) {
+>>>>>>> @@ -1709,6 +1703,13 @@ static void ufs_qcom_dump_dbg_regs(struct
+>>>>>>> ufs_hba *hba)
+>>>>>>>     static int ufs_qcom_device_reset(struct ufs_hba *hba)
+>>>>>>>     {
+>>>>>>>         struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>>>>>>> +    int ret = 0;
+>>>>>>> +
+>>>>>>> +    /* Reset UFS Host Controller and PHY */
+>>>>>>> +    ret = ufs_qcom_host_reset(hba);
+>>>>>>> +    if (ret)
+>>>>>>> +        dev_warn(hba->dev, "%s: host reset returned %d\n",
+>>>>>>> +                  __func__, ret);
+>>>>>>>         /* reset gpio is optional */
+>>>>>>>         if (!host->device_reset)
+>>>>>>> -- 
+>>>>>>> 2.7.4
+>>>>>>>
+>>>>>>
+>>>
+> 
