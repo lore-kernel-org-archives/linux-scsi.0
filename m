@@ -1,43 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="NqcaiHbD"
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC6C1173E
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 07:15:09 -0800 (PST)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6cde14ff73bso1831339b3a.0
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 07:15:09 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="civyD6qH"
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E244619A1
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 07:15:12 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-6cdfb721824so888015b3a.3
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 07:15:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701443709; x=1702048509; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1701443712; x=1702048512; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=64ppbjLuXnC3sRRee6xAp4YeL9+LAF3VOykBfQp43DQ=;
-        b=NqcaiHbD9GEc1QdsywbH+1UAg6UVzN8fpEYFb9BqCPy8/OjnHyfEE/WF58C8a4gTkx
-         wLcbXFvyQTq9BWcDY7/nuEgaV5OuKl9+L4xbhxUdFNU/KhlDvbNpcvpbgDzXl9NW6C8I
-         3Zwg72HTkUQJgwNRYUnnNrzwsBgj3KJUeyzy5JU/ikEYk1kseUj4TkcngNmSa7+VAHHE
-         4CD7wcv4fmktMwc/aWiqdm5UWfvfeTQnQ7laJkyUugKJTAQXxT7gK5Jikk23GhffpnZp
-         5hMuCRI94o1tvBCms84+ZqzCn5nR3TXnc8TwyNHp6p1ztZV6XB8dSSwraKG+b+Hf7xSv
-         sK7w==
+        bh=RbyUrAaftLH0a6pAoGx1Rl9IDQRbi9vKE/mvsuJjc8A=;
+        b=civyD6qH10xgCdwlR5Oza3I6Aj2gy3qnQUJ9hL/6XcV5kOwyBNzfgfkEe/rH07/1m6
+         MFcwdNVNHLk8GTXrR/4xLPULHMnQlHp1kWfHlq1iKNUCHkNtMdPIavZOogvaFJ9PsFG7
+         8EXiO143NHCzdEGEnsH8vxnl88bSdQhErJfpvEwhOL60Nb9hqLmDatULZEqCgLRI4dtm
+         qspGlc3059J9XcGhduZ8xcX3onfKyElk8R+n1pweNJ8U74OjRXJTzRLVNxaBLKYKgeqf
+         aOrJSMo9NjbduC87IZkZp6OMwen+cdtU8PuaVZ1uQjAiPd/sIls0yz7RFI9ewPux/TZI
+         ZjGA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701443709; x=1702048509;
+        d=1e100.net; s=20230601; t=1701443712; x=1702048512;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=64ppbjLuXnC3sRRee6xAp4YeL9+LAF3VOykBfQp43DQ=;
-        b=VOD6UwRK6cTRaBhZWhLfHGNJkBDXYeT6n9etb3fVtP8NQb6SJB8l9F9aALvTotUSu8
-         gDGqDFMMblC4t7n7vrIxQhKefl8y9BZHFT7Wz7QRlcScQsBKIqnNhNWi7EhkC+P/7T5G
-         lymWuUfCR0ayG1K90s6FHS+N0i+xYJJ9Mf4LrcmfI0GMOlFhaHmVQK/2w9hnMXwF333r
-         DyBcC5xUHAPWpXYxEwgCix6YqMrZ8+V7aN7q+fxh4xEUcDVlSulDVmXLx2dwWgR6WtoG
-         QnZh0xfMqtTwiBH9ZGoxOrhosJd+odCERy5asdkXeGzM6OgCCDal9hJLXBkN7Bz7RW/7
-         CQFA==
-X-Gm-Message-State: AOJu0YzXV5+LVDHuMeknmXu6o+TnoAUZ4zteTHemYALYO++SfX22DvaT
-	u2215pssMUIwucVJLpeEwGid
-X-Google-Smtp-Source: AGHT+IGFEwYFndW1mgX6h47/MbvGBKo00XuXVuSHUaCz6PgUzV+fkCdc8GeBdLKLTyRZDfjr7WGuGA==
-X-Received: by 2002:a05:6a20:918b:b0:15d:4cf1:212e with SMTP id v11-20020a056a20918b00b0015d4cf1212emr38989386pzd.4.1701443708902;
-        Fri, 01 Dec 2023 07:15:08 -0800 (PST)
+        bh=RbyUrAaftLH0a6pAoGx1Rl9IDQRbi9vKE/mvsuJjc8A=;
+        b=vq90dHNYea/gCUWYZ0kOBMG1dz9sD0lsEEHQ2iQ6FO+t0r9hQMTGfm9zx9SHr9rBS2
+         X+9xu7OO2BkjRQ2ONz6NK4LeiYPnwOBhDOmQV3n9d12nhbtgqNoTGmWGjkRTM5CM9PrG
+         k+KhNmJKVNNz6pcGKxdN3eVwxnnUMMLAamP7spAW9StNsi+7fdovDxojZYMvwZZfcIZn
+         eNdEGouP7ytVCqU63LnoH0j/mW431l8uZpyzBySqlg5N+fbMy3u8mLCqRA5n4F+y4+cS
+         qAIlAYo2I1XBmegE1puYsitgtPDpnx1/8wouohPPiOpqejd88wOGl3mhDCLjpE4GAEqU
+         c/Ww==
+X-Gm-Message-State: AOJu0YxpUlCb0o2x3A27Q/pTYTcoNjWkL0bZeTJLQvFURxhfiAqMcTtv
+	liqtJRFH7FNMoK5s+L0tTNMi
+X-Google-Smtp-Source: AGHT+IFuCo2HXUNTDZ89i3ZUB/xN8N1lk9JFjN5kV2JC6maA9HXjbyuOLP1pqtskP+HahJYnCrsHJw==
+X-Received: by 2002:a05:6a21:7891:b0:18b:950d:de3b with SMTP id bf17-20020a056a21789100b0018b950dde3bmr31394907pzc.38.1701443712159;
+        Fri, 01 Dec 2023 07:15:12 -0800 (PST)
 Received: from localhost.localdomain ([117.213.98.226])
-        by smtp.gmail.com with ESMTPSA id s14-20020a65644e000000b00578afd8e012sm2765824pgv.92.2023.12.01.07.15.05
+        by smtp.gmail.com with ESMTPSA id s14-20020a65644e000000b00578afd8e012sm2765824pgv.92.2023.12.01.07.15.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Dec 2023 07:15:08 -0800 (PST)
+        Fri, 01 Dec 2023 07:15:11 -0800 (PST)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: martin.petersen@oracle.com,
 	jejb@linux.ibm.com
@@ -48,9 +48,9 @@ Cc: andersson@kernel.org,
 	linux-kernel@vger.kernel.org,
 	quic_cang@quicinc.com,
 	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 10/13] scsi: ufs: qcom: Use dev_err_probe() to simplify error handling of devm_gpiod_get_optional()
-Date: Fri,  1 Dec 2023 20:44:14 +0530
-Message-Id: <20231201151417.65500-11-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 11/13] scsi: ufs: qcom: Remove unused ufs_qcom_hosts struct array
+Date: Fri,  1 Dec 2023 20:44:15 +0530
+Message-Id: <20231201151417.65500-12-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
 References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
@@ -62,34 +62,37 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-As done in other places, let's use dev_err_probe() to simplify the error
-handling while acquiring the device reset gpio using
-devm_gpiod_get_optional().
-
-While at it, let's reword the error message to make it clear that the
-failure is due to acquiring "device reset gpio".
+ufs_qcom_hosts array is assigned, but not used anywhere. So let's remove
+it.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 218d22e1efce..a86f6620abc8 100644
+index a86f6620abc8..824c006be093 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1146,9 +1146,8 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 	host->device_reset = devm_gpiod_get_optional(dev, "reset",
- 						     GPIOD_OUT_HIGH);
- 	if (IS_ERR(host->device_reset)) {
--		err = PTR_ERR(host->device_reset);
--		if (err != -EPROBE_DEFER)
--			dev_err(dev, "failed to acquire reset gpio: %d\n", err);
-+		err = dev_err_probe(dev, PTR_ERR(host->device_reset),
-+				    "Failed to acquire device reset gpio\n");
- 		goto out_variant_clear;
- 	}
+@@ -90,8 +90,6 @@ static const struct __ufs_qcom_bw_table {
+ 	[MODE_MAX][0][0]		    = { 7643136,	307200 },
+ };
  
+-static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
+-
+ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+ static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up);
+ 
+@@ -1192,9 +1190,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 
+ 	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
+ 
+-	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
+-		ufs_qcom_hosts[hba->dev->id] = host;
+-
+ 	ufs_qcom_get_default_testbus_cfg(host);
+ 	err = ufs_qcom_testbus_config(host);
+ 	if (err)
 -- 
 2.25.1
 
