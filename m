@@ -1,9 +1,9 @@
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-	by lindbergh.monkeyblade.net (Postfix) with SMTP id 0F9CE1722;
-	Thu, 30 Nov 2023 19:00:23 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with SMTP id 1AA52171D;
+	Thu, 30 Nov 2023 19:00:27 -0800 (PST)
 Received: from localhost.localdomain (unknown [180.167.10.98])
-	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id 6E5CF60105E65;
-	Fri,  1 Dec 2023 11:00:21 +0800 (CST)
+	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id 3B42560105E64;
+	Fri,  1 Dec 2023 11:00:16 +0800 (CST)
 X-MD-Sfrom: suhui@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From: Su Hui <suhui@nfschina.com>
@@ -15,11 +15,10 @@ Cc: Su Hui <suhui@nfschina.com>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	kernel-janitors@vger.kernel.org
-Subject: [PATCH v2 3/3] scsi: aic7xxx: return negative error codes in aic7770_probe()
-Date: Fri,  1 Dec 2023 10:59:56 +0800
-Message-Id: <20231201025955.1584260-4-suhui@nfschina.com>
+Subject: [PATCH v2 0/3] scsi: aic7xxx: fix some problem of return value
+Date: Fri,  1 Dec 2023 10:59:53 +0800
+Message-Id: <20231201025955.1584260-1-suhui@nfschina.com>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20231201025955.1584260-1-suhui@nfschina.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -28,42 +27,25 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-aic7770_config() returns both negative and positive error code.
-it's better to make aic7770_probe() only return negative error codes.
+v2:
+ - fix some problems and split v1 patch into this patch set.(Thanks to
+   Dan)
 
-And the previous patch made ahc_linux_register_host() return negative error
-codes, which makes sure aic7770_probe() returns negative error codes.
+v1:
+ - https://lore.kernel.org/all/20231130024122.1193324-1-suhui@nfschina.com/
 
-Signed-off-by: Su Hui <suhui@nfschina.com>
----
- drivers/scsi/aic7xxx/aic7770_osm.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Su Hui (3):
+  scsi: aic7xxx: return negative error codes in
+    ahc_linux_register_host()
+  scsi: aic7xxx: return ahc_linux_register_host()'s value rather than
+    zero
+  scsi: aic7xxx: return negative error codes in aic7770_probe()
 
-diff --git a/drivers/scsi/aic7xxx/aic7770_osm.c b/drivers/scsi/aic7xxx/aic7770_osm.c
-index bdd177e3d762..a19cdd87c453 100644
---- a/drivers/scsi/aic7xxx/aic7770_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7770_osm.c
-@@ -87,17 +87,17 @@ aic7770_probe(struct device *dev)
- 	sprintf(buf, "ahc_eisa:%d", eisaBase >> 12);
- 	name = kstrdup(buf, GFP_ATOMIC);
- 	if (name == NULL)
--		return (ENOMEM);
-+		return -ENOMEM;
- 	ahc = ahc_alloc(&aic7xxx_driver_template, name);
- 	if (ahc == NULL)
--		return (ENOMEM);
-+		return -ENOMEM;
- 	ahc->dev = dev;
- 	error = aic7770_config(ahc, aic7770_ident_table + edev->id.driver_data,
- 			       eisaBase);
- 	if (error != 0) {
- 		ahc->bsh.ioport = 0;
- 		ahc_free(ahc);
--		return (error);
-+		return error < 0 ? error : -error;
- 	}
- 
-  	dev_set_drvdata(dev, ahc);
+ drivers/scsi/aic7xxx/aic7770_osm.c     | 6 +++---
+ drivers/scsi/aic7xxx/aic7xxx_osm.c     | 2 +-
+ drivers/scsi/aic7xxx/aic7xxx_osm_pci.c | 3 +--
+ 3 files changed, 5 insertions(+), 6 deletions(-)
+
 -- 
 2.30.2
 
