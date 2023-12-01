@@ -1,43 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="civyD6qH"
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E244619A1
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 07:15:12 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-6cdfb721824so888015b3a.3
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 07:15:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GtWJ/wzc"
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45D7B1BD3
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 07:15:16 -0800 (PST)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6cde11fb647so2217998b3a.1
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 07:15:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701443712; x=1702048512; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1701443715; x=1702048515; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=RbyUrAaftLH0a6pAoGx1Rl9IDQRbi9vKE/mvsuJjc8A=;
-        b=civyD6qH10xgCdwlR5Oza3I6Aj2gy3qnQUJ9hL/6XcV5kOwyBNzfgfkEe/rH07/1m6
-         MFcwdNVNHLk8GTXrR/4xLPULHMnQlHp1kWfHlq1iKNUCHkNtMdPIavZOogvaFJ9PsFG7
-         8EXiO143NHCzdEGEnsH8vxnl88bSdQhErJfpvEwhOL60Nb9hqLmDatULZEqCgLRI4dtm
-         qspGlc3059J9XcGhduZ8xcX3onfKyElk8R+n1pweNJ8U74OjRXJTzRLVNxaBLKYKgeqf
-         aOrJSMo9NjbduC87IZkZp6OMwen+cdtU8PuaVZ1uQjAiPd/sIls0yz7RFI9ewPux/TZI
-         ZjGA==
+        bh=HRvflStZ/vTcP5B8zVnsU2ULybvGH2B1eMnhOvB9jfI=;
+        b=GtWJ/wzcoOW5Jc3UDjFMV81ANMdOg5e0pedMcEQBThMVaiJvZeoMKfs8uaoECnZFNx
+         orK42lnrM+sIthwFggaw6nUl7gpytq02A5vlbNO/t13babiolophin53U7p4xwymiWfm
+         GRbi0RbNy3Z6WeFd4UL9nN6YjqzSNE92cxJ/hcXdRHTifM7L/oYTE/qs8JhEGvv4INbi
+         F/XiVrm7fcCwWr2+HkEpY4FdYE0IZKzQAdna0U5OTkSCrbAxdBbhi3Llq42NvstM1JXj
+         MgSYEbSGzSpj3RGkBuH4jqSqc7m4ZCie7zJfamt2BQU5JiB0EU0JnYgCXXNtqL0vFxZZ
+         CNDQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701443712; x=1702048512;
+        d=1e100.net; s=20230601; t=1701443715; x=1702048515;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=RbyUrAaftLH0a6pAoGx1Rl9IDQRbi9vKE/mvsuJjc8A=;
-        b=vq90dHNYea/gCUWYZ0kOBMG1dz9sD0lsEEHQ2iQ6FO+t0r9hQMTGfm9zx9SHr9rBS2
-         X+9xu7OO2BkjRQ2ONz6NK4LeiYPnwOBhDOmQV3n9d12nhbtgqNoTGmWGjkRTM5CM9PrG
-         k+KhNmJKVNNz6pcGKxdN3eVwxnnUMMLAamP7spAW9StNsi+7fdovDxojZYMvwZZfcIZn
-         eNdEGouP7ytVCqU63LnoH0j/mW431l8uZpyzBySqlg5N+fbMy3u8mLCqRA5n4F+y4+cS
-         qAIlAYo2I1XBmegE1puYsitgtPDpnx1/8wouohPPiOpqejd88wOGl3mhDCLjpE4GAEqU
-         c/Ww==
-X-Gm-Message-State: AOJu0YxpUlCb0o2x3A27Q/pTYTcoNjWkL0bZeTJLQvFURxhfiAqMcTtv
-	liqtJRFH7FNMoK5s+L0tTNMi
-X-Google-Smtp-Source: AGHT+IFuCo2HXUNTDZ89i3ZUB/xN8N1lk9JFjN5kV2JC6maA9HXjbyuOLP1pqtskP+HahJYnCrsHJw==
-X-Received: by 2002:a05:6a21:7891:b0:18b:950d:de3b with SMTP id bf17-20020a056a21789100b0018b950dde3bmr31394907pzc.38.1701443712159;
-        Fri, 01 Dec 2023 07:15:12 -0800 (PST)
+        bh=HRvflStZ/vTcP5B8zVnsU2ULybvGH2B1eMnhOvB9jfI=;
+        b=G84tPegDdXW0co9lwhYtfSNQr6QdC7qWuYbqQU4WydsGMYiuTV+g9bgV36n0EONwVq
+         9yr7PQpuIJ5QfuNAxsSARvRxXeJZtYStS1tZOkcUlrv4YJSbusyGsRL4C/eymQtAJ/5x
+         IPcFMHLShWALME8GtxqujW+/Dq8/UzJemq+diNjiEcr4kf0X1pUvk2+laX1EEHpMfod7
+         ZIkL+EeNLBaPvirK+ASd20DZ5NIGvOVTcyjMA9qfBtwNajxraiTfbMDN9MeETGa9EGOj
+         OyAIW3Woh43EUSOEKs7qG2KOuagcW/rHJ9wRrjQpCQtz8KNuPJqjlExNj8rQmNDYF/Eg
+         darg==
+X-Gm-Message-State: AOJu0YwGtNfqYOT3Kd3vva83ou1VwFdxtVOhNp/tJmhTr7A/v5VNWNxv
+	GhT+PoELYgCVaO1+oUqkV1k6
+X-Google-Smtp-Source: AGHT+IFL+VdkT8Jx4gdpedUqkKxN/i8MfrhTGRszx2lMQkD1Yq8i2V0FL16deBTMgMSjHw0oq7LBQQ==
+X-Received: by 2002:a05:6a00:1401:b0:68a:5cf8:dac5 with SMTP id l1-20020a056a00140100b0068a5cf8dac5mr29042906pfu.22.1701443715471;
+        Fri, 01 Dec 2023 07:15:15 -0800 (PST)
 Received: from localhost.localdomain ([117.213.98.226])
-        by smtp.gmail.com with ESMTPSA id s14-20020a65644e000000b00578afd8e012sm2765824pgv.92.2023.12.01.07.15.09
+        by smtp.gmail.com with ESMTPSA id s14-20020a65644e000000b00578afd8e012sm2765824pgv.92.2023.12.01.07.15.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Dec 2023 07:15:11 -0800 (PST)
+        Fri, 01 Dec 2023 07:15:15 -0800 (PST)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: martin.petersen@oracle.com,
 	jejb@linux.ibm.com
@@ -48,9 +48,9 @@ Cc: andersson@kernel.org,
 	linux-kernel@vger.kernel.org,
 	quic_cang@quicinc.com,
 	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 11/13] scsi: ufs: qcom: Remove unused ufs_qcom_hosts struct array
-Date: Fri,  1 Dec 2023 20:44:15 +0530
-Message-Id: <20231201151417.65500-12-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 12/13] scsi: ufs: qcom: Sort includes alphabetically
+Date: Fri,  1 Dec 2023 20:44:16 +0530
+Message-Id: <20231201151417.65500-13-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
 References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
@@ -62,37 +62,51 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ufs_qcom_hosts array is assigned, but not used anywhere. So let's remove
-it.
+Sort includes alphabetically.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index a86f6620abc8..824c006be093 100644
+index 824c006be093..590a2c67cf7d 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -90,8 +90,6 @@ static const struct __ufs_qcom_bw_table {
- 	[MODE_MAX][0][0]		    = { 7643136,	307200 },
- };
+@@ -4,26 +4,26 @@
+  */
  
--static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
--
- static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
- static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up);
+ #include <linux/acpi.h>
+-#include <linux/time.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
++#include <linux/devfreq.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/interconnect.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+-#include <linux/platform_device.h>
+ #include <linux/phy/phy.h>
+-#include <linux/gpio/consumer.h>
++#include <linux/platform_device.h>
+ #include <linux/reset-controller.h>
+-#include <linux/devfreq.h>
++#include <linux/time.h>
  
-@@ -1192,9 +1190,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ #include <soc/qcom/ice.h>
  
- 	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
+ #include <ufs/ufshcd.h>
+-#include "ufshcd-pltfrm.h"
+-#include <ufs/unipro.h>
+-#include "ufs-qcom.h"
+ #include <ufs/ufshci.h>
+ #include <ufs/ufs_quirks.h>
++#include <ufs/unipro.h>
++#include "ufshcd-pltfrm.h"
++#include "ufs-qcom.h"
  
--	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
--		ufs_qcom_hosts[hba->dev->id] = host;
--
- 	ufs_qcom_get_default_testbus_cfg(host);
- 	err = ufs_qcom_testbus_config(host);
- 	if (err)
+ #define MCQ_QCFGPTR_MASK	GENMASK(7, 0)
+ #define MCQ_QCFGPTR_UNIT	0x200
 -- 
 2.25.1
 
