@@ -1,111 +1,67 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88B5FD5C;
-	Thu, 30 Nov 2023 17:46:39 -0800 (PST)
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1cfcc9b3b5cso530525ad.0;
-        Thu, 30 Nov 2023 17:46:39 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701395199; x=1701999999;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=y5c41QMpOuncUjmqfedNCVrAjDlB3HJLJPB7WrpfBAI=;
-        b=MYPuhvbU+X2hIRyJ5gxRJc1C1faFsiza44mkYXJrqDG9mm/3pUw8wgaSluwsPG+le4
-         07Gn0aGxNgJ5+jFhE3kbOcoo4EqL0xAhDIP7FNgaLaGae32hkVURPfMcoGPS6kfUiJvd
-         AmIGD6dsQfxiChsvPXDoHzNXlFV9RWHQo+RHaGfib4Enjtp520sfifG8gd0C844aIw7H
-         o5+u66rlm6o79yiROAfglqFu4Zu8AlgWG1RWZ+gKpyfCpm5rE8vht4baK+RDSfxYzU8T
-         5zhxg01K2zEM/HceOY4OefXgD3o6VWZPWALocxvbEqXKgnQJLaX70Ubospq9y4VIaZbm
-         gkcQ==
-X-Gm-Message-State: AOJu0YwfnzI/gXrmkBQqoX6SvzSuKbTyegqbMwJCscsv9pKxCND2WCZm
-	66gyW6xSYL2olAmh+z8RWII=
-X-Google-Smtp-Source: AGHT+IGM4qesWNbhDxKcV91xYXAhnvSBMMXbrT2KmmZvLK+u7Lw/S7xaenFCQ05C29xtExDybsW67Q==
-X-Received: by 2002:a17:902:b713:b0:1cf:a509:ab6b with SMTP id d19-20020a170902b71300b001cfa509ab6bmr24822604pls.67.1701395198702;
-        Thu, 30 Nov 2023 17:46:38 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id b1-20020a170902d50100b001cfad034756sm2058131plg.138.2023.11.30.17.46.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 30 Nov 2023 17:46:37 -0800 (PST)
-Message-ID: <7764d824-4b47-486b-9da0-cb779779739a@acm.org>
-Date: Thu, 30 Nov 2023 17:46:35 -0800
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F2121711;
+	Thu, 30 Nov 2023 18:59:59 -0800 (PST)
+Received: from dggpemd100001.china.huawei.com (unknown [172.30.72.57])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4ShHp650blzWj2q;
+	Fri,  1 Dec 2023 10:59:10 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.1258.28; Fri, 1 Dec 2023 10:59:57 +0800
+Message-ID: <2bc81cf1-5d94-c108-a107-a746daadb64d@huawei.com>
+Date: Fri, 1 Dec 2023 10:59:56 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 09/17] scsi_proto: Add structures and constants related
- to I/O groups and streams
-Content-Language: en-US
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
- Daejun Park <daejun7.park@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>
-References: <20231130013322.175290-1-bvanassche@acm.org>
- <20231130013322.175290-10-bvanassche@acm.org>
- <35f9ad75-785c-4724-b28e-a093212bc480@wdc.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <35f9ad75-785c-4724-b28e-a093212bc480@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH] scsi: libsas: Put the disk offline if all recovery
+ actions fail
+Content-Language: en-CA
+From: yangxingui <yangxingui@huawei.com>
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
+	<damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<wubo40@huawei.com>, <kangfenglong@huawei.com>
+References: <20231130130118.14367-1-yangxingui@huawei.com>
+In-Reply-To: <20231130130118.14367-1-yangxingui@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggpemm100004.china.huawei.com (7.185.36.189) To
+ dggpemd100001.china.huawei.com (7.185.36.94)
+X-CFilter-Loop: Reflected
 
-On 11/30/23 05:19, Johannes Thumshirn wrote:
-> On 30.11.23 02:34, Bart Van Assche wrote:
->> +/* SBC-5 IO advice hints group descriptor */
->> +struct scsi_io_group_descriptor {
->> +#if defined(__BIG_ENDIAN)
->> +	u8 io_advice_hints_mode: 2;
->> +	u8 reserved1: 3;
->> +	u8 st_enble: 1;
->> +	u8 cs_enble: 1;
->> +	u8 ic_enable: 1;
->> +#elif defined(__LITTLE_ENDIAN)
->> +	u8 ic_enable: 1;
->> +	u8 cs_enble: 1;
->> +	u8 st_enble: 1;
->> +	u8 reserved1: 3;
->> +	u8 io_advice_hints_mode: 2;
->> +#else
->> +#error
->> +#endif
->> +	u8 reserved2[3];
->> +	/* Logical block markup descriptor */
->> +#if defined(__BIG_ENDIAN)
->> +	u8 acdlu: 1;
->> +	u8 reserved3: 1;
->> +	u8 rlbsr: 2;
->> +	u8 lbm_descriptor_type: 4;
->> +#elif defined(__LITTLE_ENDIAN)
->> +	u8 lbm_descriptor_type: 4;
->> +	u8 rlbsr: 2;
->> +	u8 reserved3: 1;
->> +	u8 acdlu: 1;
->> +#else
->> +#error
->> +#endif
->> +	u8 params[2];
->> +	u8 reserved4;
->> +	u8 reserved5[8];
->> +};
->> +
->> +static_assert(sizeof(struct scsi_io_group_descriptor) == 16);
+Sorry, please ignore this email, I need to update a new version, Thanks.
+
+On 2023/11/30 21:01, Xingui Yang wrote:
+> Currently, after all recovery actions in sas_eh_handle_sas_errors() fail
+> for sas disk, we just clear all IO, but the disk is still online. Perhaps
+> we should continue the subsequent recovery process for IO that cannot be
+> processed. If it still fails, the disk will be offline in
+> scsi_eh_ready_devs().
 > 
-> Have you considered using GENMASK() and FILED_GET() for this? All the
-> ifdefs make the header rather ugly.
-Hi Johannes,
-
-When using bitfields, there are #ifdefs in the data structure
-definitions but it is easy to write code that accesses the bitfields.
-When using FIELD_GET(), the data structure definitions have no ifdefs
-but the code that reads bitfields becomes harder to verify. The code
-for setting bitfield values would have to use FIELD_PREP() and hence
-would become more complex. An example of code that sets bitfields is
-the definition of the gr_m_pg data structure in patch 15/17 of this
-series. It would become more complicated if FIELD_PREP() would have to
-be used in the definition of that data structure.
-
-Thanks,
-
-Bart.
+> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+> Signed-off-by: Bo Wu <wubo40@huawei.com>
+> ---
+>   drivers/scsi/libsas/sas_scsi_host.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+> index 9047cfcd1072..3f9b99fa1769 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -637,8 +637,8 @@ static void sas_eh_handle_sas_errors(struct Scsi_Host *shost, struct list_head *
+>   			       SAS_ADDR(task->dev->sas_addr),
+>   			       cmd->device->lun);
+>   
+> -			sas_eh_finish_cmd(cmd);
+> -			goto clear_q;
+> +			list_move_tail(&cmd->eh_entry, work_q);
+> +			goto out;
+>   		}
+>   	}
+>    out:
+> 
