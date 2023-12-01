@@ -1,43 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="S5v2iuq0"
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25DCFD4A
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 07:14:55 -0800 (PST)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1cc9b626a96so5658465ad.2
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 07:14:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="OqYs0GmF"
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28456171C
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Dec 2023 07:14:59 -0800 (PST)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6cde4aeea29so1897299b3a.2
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2023 07:14:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701443694; x=1702048494; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1701443698; x=1702048498; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=4tM3mSD6N99toh6Lxpzp3nqitrKgi3AWBJMN4NKcxwY=;
-        b=S5v2iuq0paRROYnATkxyszRbyl0qI37bsf/seHcLz5zg9lO+DWKzcwdqldmYuc71wQ
-         BOv5x9pwng6/+OsY3Cp+a5HBJj0FjQC8GsPq0kTZ8mPPKrfm/BkZl5B1BxCM/4etf67d
-         u4qR+Ae0hnVqWT13DQN8Ryb3YbN3j4F+xv5hF5357iFOOIXf3K7g+87B6lc+RY+4wXAv
-         BSQGLin7IZuA3LHk81ya2zJFOTtG1yk2LIYu0yQe+QICCkwAEWQ9qCzJwczl+D1bZafP
-         H6hulE1eHrQV01DouYNqqXNG8mQoYwIHaZ2l+0yIf6SGOaWXBzf3R3To05P9PCeWeDYb
-         oHtA==
+        bh=S5u5mj8ueK+oc2yv8mZg26TvQm1X83rBh8cXq05A5b8=;
+        b=OqYs0GmF8HFxp5IsgzqAulfJFTwog24rf3mni9vKI2/sxOm9JPq3BaymnyA3lIYbDq
+         lGSX+JeE8BOmoWcJ/af2/C8Z+yk8j73ivOFvKMKt3z7hSLpuZBIN2rheDuC1e24em4Hu
+         eNpbL5BMEQjQQjMX5piE943Zp5ANR/GLCN2tG1JtzFsrpDZtQ2cLI9EoNr/QiQVAtCf3
+         Q5i7E6PPHlYSfWrNvjBgtCYiSeCGGs9H4Kz412qih8tCbREub2ythCx2gF1NU65jOOKh
+         GW78sJammyY7wBmDChniak6rErGEUS+maCY9+Pzuo4QwbzbFoy6qqG1nfNpQCAR/9fWz
+         DMig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701443694; x=1702048494;
+        d=1e100.net; s=20230601; t=1701443698; x=1702048498;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=4tM3mSD6N99toh6Lxpzp3nqitrKgi3AWBJMN4NKcxwY=;
-        b=mHBaGzDd7kTbsTHALEwRrILdRzpYST5e5u39jccv5bTOnRISycM18U7OIEl9P4cI/J
-         ZeAzyMXL4CZ2dhq4Q8VR1ikHBoIPIteMp3hkIrp9gbLyLWIcmADSJq+G4SWJT8wbapNa
-         U3NDiLmcpRq/pa6dsi3QO6FheWfSzFpQHD9p1WeEqfDVKIGZ9+Lch6ZK3xD/F+c349qq
-         5sNEX/M4UJxF05nlbyAWUgwkIfs+3MOtGEEslDXJx5Tix+C+FhOxSHXuhq6OO2rrXJ5d
-         DYIV+IaVT32hgBtb2WI6X9rmQNF97RQPBFZpzkk3bRWdgmtJHDSnhv1vEKISb/g9OFqj
-         dm4Q==
-X-Gm-Message-State: AOJu0YxHdPM8Ch72BIXQngqNiiL458NXDN5vpIHOck2LrKDbCI8i4A5S
-	Vfb1PbZmUY8ALDaUfNTtDIEd
-X-Google-Smtp-Source: AGHT+IEvcSupiS55i7LRMCM1TM6DpAdYYQdvO+GsxJKs6TfD6+W1c+TV0iEwXWd6korXj6X6YAwZkQ==
-X-Received: by 2002:a17:903:11c4:b0:1cc:4072:22c6 with SMTP id q4-20020a17090311c400b001cc407222c6mr29718775plh.24.1701443694468;
-        Fri, 01 Dec 2023 07:14:54 -0800 (PST)
+        bh=S5u5mj8ueK+oc2yv8mZg26TvQm1X83rBh8cXq05A5b8=;
+        b=ROc9+1N7Lvp1KUZ2Wpvz0kPTRmuJb+6PXfV4/pLRapn48yVghq1wDNYCB34Q762/ME
+         qoTDuIaJ7d2HoVetv7QUXfQDf/rpQWAebthNL7N44dx+SAaXw+FuAdCIXtuhjokzGtYc
+         w9IY4zRSKG5wXsMI4ZNtp6DrYG/FlnySmBCR1pZ9AdlqPmc3jbQZtxf4sfgtCBig3gvj
+         lkGD3JulmS2JZIjWKLUe8E/6PaqKKlGMcBK8/6ssdJE8IDL/TXbiKs/eFcBq2Dj0oTJV
+         5ZrAsuMjeQMQfYCtLG2O5lTORPoLa7evmEIN4VnbS0+OYgb9D1/wK9/w0z6eYPsX0020
+         8JSQ==
+X-Gm-Message-State: AOJu0Yy8fQ9B9I2w5WiNMUqBbpURwT7OjWOAgo+6Bye7jXX1pDLP/zYZ
+	XXIeBPfFNKkgIMbU9g/SA721
+X-Google-Smtp-Source: AGHT+IEjBAHxDNnswReyTsQ/wgyRVee0zz+RTPON/r87o5NDp9vCjrHC67XAbwc0Yi+6bHfU1R4nag==
+X-Received: by 2002:a05:6a20:548e:b0:18c:8d0f:a794 with SMTP id i14-20020a056a20548e00b0018c8d0fa794mr19592802pzk.19.1701443698551;
+        Fri, 01 Dec 2023 07:14:58 -0800 (PST)
 Received: from localhost.localdomain ([117.213.98.226])
-        by smtp.gmail.com with ESMTPSA id s14-20020a65644e000000b00578afd8e012sm2765824pgv.92.2023.12.01.07.14.49
+        by smtp.gmail.com with ESMTPSA id s14-20020a65644e000000b00578afd8e012sm2765824pgv.92.2023.12.01.07.14.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Dec 2023 07:14:52 -0800 (PST)
+        Fri, 01 Dec 2023 07:14:58 -0800 (PST)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: martin.petersen@oracle.com,
 	jejb@linux.ibm.com
@@ -48,9 +48,9 @@ Cc: andersson@kernel.org,
 	linux-kernel@vger.kernel.org,
 	quic_cang@quicinc.com,
 	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 06/13] scsi: ufs: qcom: Export ufshcd_{enable/disable}_irq helpers and make use of them
-Date: Fri,  1 Dec 2023 20:44:10 +0530
-Message-Id: <20231201151417.65500-7-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 07/13] scsi: ufs: qcom: Fail ufs_qcom_power_up_sequence() when core_reset fails
+Date: Fri,  1 Dec 2023 20:44:11 +0530
+Message-Id: <20231201151417.65500-8-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
 References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
@@ -62,89 +62,31 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Instead of duplicating the enable/disable IRQ part, let's export the
-helpers available in ufshcd driver and make use of them. This also fixes
-the possible redundant IRQ disable before asserting reset (when IRQ was
-already disabled).
+Even though core_reset is optional, a failure during assert/deassert should
+be considered fatal, if core_reset is available. So fail
+ufs_qcom_power_up_sequence() if an error happens during reset and also get
+rid of the redundant warning as the ufs_qcom_host_reset() function itself
+prints error messages.
 
-Fixes: 4a791574a0cc ("scsi: ufs: ufs-qcom: Disable interrupt in reset path")
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/ufs/core/ufshcd.c   | 6 ++++--
- drivers/ufs/host/ufs-qcom.c | 9 +++------
- include/ufs/ufshcd.h        | 2 ++
- 3 files changed, 9 insertions(+), 8 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 8b1031fb0a44..671facc73921 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -289,21 +289,23 @@ static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
- static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
- 
--static inline void ufshcd_enable_irq(struct ufs_hba *hba)
-+void ufshcd_enable_irq(struct ufs_hba *hba)
- {
- 	if (!hba->is_irq_enabled) {
- 		enable_irq(hba->irq);
- 		hba->is_irq_enabled = true;
- 	}
- }
-+EXPORT_SYMBOL_GPL(ufshcd_enable_irq);
- 
--static inline void ufshcd_disable_irq(struct ufs_hba *hba)
-+void ufshcd_disable_irq(struct ufs_hba *hba)
- {
- 	if (hba->is_irq_enabled) {
- 		disable_irq(hba->irq);
- 		hba->is_irq_enabled = false;
- 	}
- }
-+EXPORT_SYMBOL_GPL(ufshcd_disable_irq);
- 
- static void ufshcd_configure_wb(struct ufs_hba *hba)
- {
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index d474de0739e4..604273a22afd 100644
+index 604273a22afd..4948dd732aae 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -300,8 +300,7 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
- 		return 0;
+@@ -359,8 +359,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ 	/* Reset UFS Host Controller and PHY */
+ 	ret = ufs_qcom_host_reset(hba);
+ 	if (ret)
+-		dev_warn(hba->dev, "%s: host reset returned %d\n",
+-				  __func__, ret);
++		return ret;
  
- 	reenable_intr = hba->is_irq_enabled;
--	disable_irq(hba->irq);
--	hba->is_irq_enabled = false;
-+	ufshcd_disable_irq(hba);
- 
- 	ret = reset_control_assert(host->core_reset);
- 	if (ret) {
-@@ -324,10 +323,8 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
- 
- 	usleep_range(1000, 1100);
- 
--	if (reenable_intr) {
--		enable_irq(hba->irq);
--		hba->is_irq_enabled = true;
--	}
-+	if (reenable_intr)
-+		ufshcd_enable_irq(hba);
- 
- 	return 0;
- }
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 7f0b2c5599cd..f1fc16ac6af2 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1231,6 +1231,8 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
- 	ufshcd_writel(hba, tmp, reg);
- }
- 
-+void ufshcd_enable_irq(struct ufs_hba *hba);
-+void ufshcd_disable_irq(struct ufs_hba *hba);
- int ufshcd_alloc_host(struct device *, struct ufs_hba **);
- void ufshcd_dealloc_host(struct ufs_hba *);
- int ufshcd_hba_enable(struct ufs_hba *hba);
+ 	/* phy initialization - calibrate the phy */
+ 	ret = phy_init(phy);
 -- 
 2.25.1
 
