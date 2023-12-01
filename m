@@ -1,82 +1,111 @@
-Received: from mail.nfschina.com (unknown [42.101.60.195])
-	by lindbergh.monkeyblade.net (Postfix) with SMTP id 8960A10E2;
-	Thu, 30 Nov 2023 17:27:04 -0800 (PST)
-Received: from [172.30.11.106] (unknown [180.167.10.98])
-	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id 04889605E83EA;
-	Fri,  1 Dec 2023 09:26:44 +0800 (CST)
-Message-ID: <0247c807-333a-0e8c-d7ca-60e142ab6279@nfschina.com>
-Date: Fri, 1 Dec 2023 09:26:44 +0800
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88B5FD5C;
+	Thu, 30 Nov 2023 17:46:39 -0800 (PST)
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1cfcc9b3b5cso530525ad.0;
+        Thu, 30 Nov 2023 17:46:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701395199; x=1701999999;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=y5c41QMpOuncUjmqfedNCVrAjDlB3HJLJPB7WrpfBAI=;
+        b=MYPuhvbU+X2hIRyJ5gxRJc1C1faFsiza44mkYXJrqDG9mm/3pUw8wgaSluwsPG+le4
+         07Gn0aGxNgJ5+jFhE3kbOcoo4EqL0xAhDIP7FNgaLaGae32hkVURPfMcoGPS6kfUiJvd
+         AmIGD6dsQfxiChsvPXDoHzNXlFV9RWHQo+RHaGfib4Enjtp520sfifG8gd0C844aIw7H
+         o5+u66rlm6o79yiROAfglqFu4Zu8AlgWG1RWZ+gKpyfCpm5rE8vht4baK+RDSfxYzU8T
+         5zhxg01K2zEM/HceOY4OefXgD3o6VWZPWALocxvbEqXKgnQJLaX70Ubospq9y4VIaZbm
+         gkcQ==
+X-Gm-Message-State: AOJu0YwfnzI/gXrmkBQqoX6SvzSuKbTyegqbMwJCscsv9pKxCND2WCZm
+	66gyW6xSYL2olAmh+z8RWII=
+X-Google-Smtp-Source: AGHT+IGM4qesWNbhDxKcV91xYXAhnvSBMMXbrT2KmmZvLK+u7Lw/S7xaenFCQ05C29xtExDybsW67Q==
+X-Received: by 2002:a17:902:b713:b0:1cf:a509:ab6b with SMTP id d19-20020a170902b71300b001cfa509ab6bmr24822604pls.67.1701395198702;
+        Thu, 30 Nov 2023 17:46:38 -0800 (PST)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id b1-20020a170902d50100b001cfad034756sm2058131plg.138.2023.11.30.17.46.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 30 Nov 2023 17:46:37 -0800 (PST)
+Message-ID: <7764d824-4b47-486b-9da0-cb779779739a@acm.org>
+Date: Thu, 30 Nov 2023 17:46:35 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH] scsi: aic7xxx: fix some problem of return value
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 09/17] scsi_proto: Add structures and constants related
+ to I/O groups and streams
 Content-Language: en-US
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- kernel-janitors@vger.kernel.org
-X-MD-Sfrom: suhui@nfschina.com
-X-MD-SrcIP: 180.167.10.98
-From: Su Hui <suhui@nfschina.com>
-In-Reply-To: <1784b008-6eb2-4dc8-ae21-b0b2c18760bf@suswa.mountain>
+To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+ Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+ Daejun Park <daejun7.park@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>
+References: <20231130013322.175290-1-bvanassche@acm.org>
+ <20231130013322.175290-10-bvanassche@acm.org>
+ <35f9ad75-785c-4724-b28e-a093212bc480@wdc.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <35f9ad75-785c-4724-b28e-a093212bc480@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
+On 11/30/23 05:19, Johannes Thumshirn wrote:
+> On 30.11.23 02:34, Bart Van Assche wrote:
+>> +/* SBC-5 IO advice hints group descriptor */
+>> +struct scsi_io_group_descriptor {
+>> +#if defined(__BIG_ENDIAN)
+>> +	u8 io_advice_hints_mode: 2;
+>> +	u8 reserved1: 3;
+>> +	u8 st_enble: 1;
+>> +	u8 cs_enble: 1;
+>> +	u8 ic_enable: 1;
+>> +#elif defined(__LITTLE_ENDIAN)
+>> +	u8 ic_enable: 1;
+>> +	u8 cs_enble: 1;
+>> +	u8 st_enble: 1;
+>> +	u8 reserved1: 3;
+>> +	u8 io_advice_hints_mode: 2;
+>> +#else
+>> +#error
+>> +#endif
+>> +	u8 reserved2[3];
+>> +	/* Logical block markup descriptor */
+>> +#if defined(__BIG_ENDIAN)
+>> +	u8 acdlu: 1;
+>> +	u8 reserved3: 1;
+>> +	u8 rlbsr: 2;
+>> +	u8 lbm_descriptor_type: 4;
+>> +#elif defined(__LITTLE_ENDIAN)
+>> +	u8 lbm_descriptor_type: 4;
+>> +	u8 rlbsr: 2;
+>> +	u8 reserved3: 1;
+>> +	u8 acdlu: 1;
+>> +#else
+>> +#error
+>> +#endif
+>> +	u8 params[2];
+>> +	u8 reserved4;
+>> +	u8 reserved5[8];
+>> +};
+>> +
+>> +static_assert(sizeof(struct scsi_io_group_descriptor) == 16);
+> 
+> Have you considered using GENMASK() and FILED_GET() for this? All the
+> ifdefs make the header rather ugly.
+Hi Johannes,
 
-On 2023/11/30 15:21, Dan Carpenter wrote:
-> On Thu, Nov 30, 2023 at 10:41:23AM +0800, Su Hui wrote:
->>   	error = aic7770_config(ahc, aic7770_ident_table + edev->id.driver_data,
->>   			       eisaBase);
->>   	if (error != 0) {
->>   		ahc->bsh.ioport = 0;
->>   		ahc_free(ahc);
->> -		return (error);
->> +		return -error;
-> aic7770_config() mostly returns positive error codes but I see it also
-> return -1 from ahc_reset().  So you'd want to do something like:
->
-> 	return error < 0 ? error : -error;
-Oh, I missed this one. Thanks for pointing out this mistake!
->> @@ -1117,7 +1117,7 @@ ahc_linux_register_host(struct ahc_softc *ahc, struct scsi_host_template *templa
->>   	if (retval) {
->>   		printk(KERN_WARNING "aic7xxx: scsi_add_host failed\n");
->>   		scsi_host_put(host);
->> -		return retval;
->> +		return -retval;
-> Originally ahc_linux_register_host() returned a mix of positive and
-> negative error codes.  You have converted it to return only positive
-> error codes.  That's good for consistency in a way, but it's a step
-> backwards from the big picture point of view.
-Agreed, it's better to let ahc_linux_register_host() only return 
-negative error codes.
->>   	}
->>   
->>   	scsi_scan_host(host);
->> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
->> index a07e94fac673..e17eb8df12c4 100644
->> --- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
->> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
->> @@ -241,8 +241,8 @@ ahc_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->>   		ahc_linux_pci_inherit_flags(ahc);
->>   
->>   	pci_set_drvdata(pdev, ahc);
->> -	ahc_linux_register_host(ahc, &aic7xxx_driver_template);
->> -	return (0);
->> +	error = ahc_linux_register_host(ahc, &aic7xxx_driver_template);
->> +	return -error;
-> This should be done in a separate patch.
->
-> patch 1: return negative error codes in ahc_linux_register_host()
-> patch 2: return negative error codes in aic7770_probe()
-> patch 3: add a check for errors in ahc_linux_pci_dev_probe()
+When using bitfields, there are #ifdefs in the data structure
+definitions but it is easy to write code that accesses the bitfields.
+When using FIELD_GET(), the data structure definitions have no ifdefs
+but the code that reads bitfields becomes harder to verify. The code
+for setting bitfield values would have to use FIELD_PREP() and hence
+would become more complex. An example of code that sets bitfields is
+the definition of the gr_m_pg data structure in patch 15/17 of this
+series. It would become more complicated if FIELD_PREP() would have to
+be used in the definition of that data structure.
 
-Got it, I will send v2 patch set soon.
-Really thanks for your suggestions!
+Thanks,
 
-Su Hui
-
+Bart.
