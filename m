@@ -1,51 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Mup3/G6F"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="pQKS4XaQ"
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49AC81725;
-	Sat,  2 Dec 2023 04:37:22 -0800 (PST)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B2CasMK030172;
-	Sat, 2 Dec 2023 12:36:54 GMT
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D024A10C2;
+	Sat,  2 Dec 2023 04:37:29 -0800 (PST)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B2CaeYh009522;
+	Sat, 2 Dec 2023 12:36:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=Bw5vApMqZHBOE4TbP3Du/Yd/ugk2Z52ewdZ7j9Lo+dc=;
- b=Mup3/G6FdRdWhBtkav87vKzyFtzMJTEVv97azjuq2+WykgoLGzl2TBViEktjQzUsTx2o
- +tGVTC78JzqD2BkzhqtDdam/fFF8xvMff66Ou4qaNq5UqcNIgefNXBWgbW9ezvMLeoMk
- Lbf7Ml9RsHckUK2uCNGx/bq2yyNwT0DbZ3giq0Ct5zh6lt6UN/d2xQITW9670ZMC0kKk
- a67xmjc/AVqE3DmkghuLjo92xlnQ7yP+4SIvRfqZeWkCQykQlJu3bmsnprDCHWebapxm
- D8DrxnAKxmwLRBvycria7cbaBSz73cDXUfSTA84AKUNizNP31tkS2jodq++iKzZ7Pvwg Sg== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uquwt0ms4-1
+ bh=CvdWa6K9CXgXFHOytyGULvAoyyhKGAcpMZLQsXKRMdo=;
+ b=pQKS4XaQYg4PsAacoglyhB2xfHDpVgGKwTv+e0sZSJnpuG33EKe3/3Du8mcp99h755VJ
+ RH2Hv+KQ9PpAbQoe3ftk9ipL8x1zguk3/B2UytZt0WKF4ppJaQkkTrtYIM/4iYLwgSew
+ kNFELEhHVveBj3p2BuCZDxSsISkn85bmV1ldayI/c4Uo7+LLpWMlmq7yoo0kZ3Y1GSYE
+ +vFBCDYqQagrBXN7gh0P7bT/jCD6+T8qMq4X6QCp62NiA6Z5cCmeJluwGseGBh7T9Own
+ xFMsuT/WehMtr2r/DxOYqv/39ijN3raQFerbWymTvC+ndHtyueSi+d/Ooi52Cu5xtmVO JQ== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uqvp10jhs-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 02 Dec 2023 12:36:54 +0000
-Received: from pps.filterd (NASANPPMTA05.qualcomm.com [127.0.0.1])
-	by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3B2Cafnx011398;
-	Sat, 2 Dec 2023 12:36:53 GMT
+	Sat, 02 Dec 2023 12:36:39 +0000
+Received: from pps.filterd (NASANPPMTA02.qualcomm.com [127.0.0.1])
+	by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3B2CaciW018649;
+	Sat, 2 Dec 2023 12:36:38 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3uqwnkbdcg-1;
-	Sat, 02 Dec 2023 12:36:53 +0000
-Received: from NASANPPMTA05.qualcomm.com (NASANPPMTA05.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B2CZhes009891;
-	Sat, 2 Dec 2023 12:36:53 GMT
+	by NASANPPMTA02.qualcomm.com (PPS) with ESMTP id 3uqwnkka7x-1;
+	Sat, 02 Dec 2023 12:36:38 +0000
+Received: from NASANPPMTA02.qualcomm.com (NASANPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B2CacKt018644;
+	Sat, 2 Dec 2023 12:36:38 GMT
 Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
-	by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3B2CaqLI011493;
-	Sat, 02 Dec 2023 12:36:53 +0000
+	by NASANPPMTA02.qualcomm.com (PPS) with ESMTP id 3B2Cac6d018643;
+	Sat, 02 Dec 2023 12:36:38 +0000
 Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
-	id 12FFD20A90; Sat,  2 Dec 2023 04:36:52 -0800 (PST)
+	id 61D3920A90; Sat,  2 Dec 2023 04:36:37 -0800 (PST)
 From: Can Guo <quic_cang@quicinc.com>
 To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         adrian.hunter@intel.com, vkoul@kernel.org, beanhuo@micron.com,
         avri.altman@wdc.com, junwoo80.lee@samsung.com,
         martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Stanley Jhu <chu.stanley@gmail.com>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v8 10/10] phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed Gear 5 support for SM8550
-Date: Sat,  2 Dec 2023 04:36:16 -0800
-Message-Id: <1701520577-31163-11-git-send-email-quic_cang@quicinc.com>
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>,
+        Brian Masney <bmasney@redhat.com>,
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES),
+        linux-samsung-soc@vger.kernel.org (open list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES),
+        linux-kernel@vger.kernel.org (open list),
+        linux-mediatek@lists.infradead.org (moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...)
+Subject: [PATCH v8 01/10] scsi: ufs: host: Rename structure ufs_dev_params to ufs_host_params
+Date: Sat,  2 Dec 2023 04:36:07 -0800
+Message-Id: <1701520577-31163-2-git-send-email-quic_cang@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
 References: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
@@ -53,15 +65,15 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: kFlBiPnNY5DSC8KZOFlmmSWb0z6GwHUT
-X-Proofpoint-ORIG-GUID: kFlBiPnNY5DSC8KZOFlmmSWb0z6GwHUT
+X-Proofpoint-GUID: bP0Rh2JFwXNhrqRFvp6QD-b9n_jhu5KE
+X-Proofpoint-ORIG-GUID: bP0Rh2JFwXNhrqRFvp6QD-b9n_jhu5KE
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-02_10,2023-11-30_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
- clxscore=1015 impostorscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
- priorityscore=1501 malwarescore=0 lowpriorityscore=0 spamscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 impostorscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 spamscore=0 clxscore=1015
+ priorityscore=1501 adultscore=0 mlxscore=0 lowpriorityscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2311060000 definitions=main-2312020094
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -69,551 +81,328 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-On SM8550, two sets of UFS PHY settings are provided, one set is to support
-HS-G5, another set is to support HS-G4 and lower gears. The two sets of PHY
-settings are programming different values to different registers, mixing
-the two sets and/or overwriting one set with another set is definitely not
-blessed by UFS PHY designers.
+Structure ufs_dev_params is actually used in UFS host vendor drivers to
+declare host specific power mode parameters, like ufs_<vendor>_params or
+host_cap, which makes the code not very straightforward to read. Rename the
+structure ufs_dev_params to ufs_host_params and unify the declarations in
+all vendor drivers to host_params.
 
-To add HS-G5 support for SM8550, split the two sets of PHY settings into
-their dedicated overlay tables, only the common parts of the two sets of
-PHY settings are left in the .tbls.
+In addition, rename the two functions ufshcd_init_pwr_dev_param() and
+ufshcd_get_pwr_dev_param() which work based on the ufs_host_params to
+ufshcd_init_host_params() and ufshcd_negotiate_pwr_params() respectively to
+avoid confusions.
 
-Consider we are going to add even higher gear support in future, to avoid
-adding more tables with different names, rename the .tbls_hs_g4 and make it
-an array, a size of 2 is enough as of now.
+This change does not change any functionalities or logic.
 
-In this case, .tbls alone is not a complete set of PHY settings, so either
-tbls_hs_overlay[0] or tbls_hs_overlay[1] must be applied on top of the
-.tbls to become a complete set of PHY settings.
-
+Acked-by: Andrew Halaney <ahalaney@redhat.com>
+Reviewed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h     |   2 +
- drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h |   2 +
- .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |   8 +
- drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 169 ++++++++++++++++++---
- 4 files changed, 159 insertions(+), 22 deletions(-)
+ drivers/ufs/host/ufs-exynos.c    |  7 ++--
+ drivers/ufs/host/ufs-hisi.c      | 11 +++----
+ drivers/ufs/host/ufs-mediatek.c  | 12 +++----
+ drivers/ufs/host/ufs-qcom.c      | 12 +++----
+ drivers/ufs/host/ufshcd-pltfrm.c | 69 ++++++++++++++++++++--------------------
+ drivers/ufs/host/ufshcd-pltfrm.h | 10 +++---
+ 6 files changed, 57 insertions(+), 64 deletions(-)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
-index fe6c450..970cc06 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h
-@@ -19,6 +19,7 @@
- #define QPHY_V6_PCS_UFS_BIST_FIXED_PAT_CTRL		0x060
- #define QPHY_V6_PCS_UFS_TX_HSGEAR_CAPABILITY		0x074
- #define QPHY_V6_PCS_UFS_RX_HSGEAR_CAPABILITY		0x0bc
-+#define QPHY_V6_PCS_UFS_RX_HS_G5_SYNC_LENGTH_CAPABILITY	0x12c
- #define QPHY_V6_PCS_UFS_DEBUG_BUS_CLKSEL		0x158
- #define QPHY_V6_PCS_UFS_LINECFG_DISABLE			0x17c
- #define QPHY_V6_PCS_UFS_RX_MIN_HIBERN8_TIME		0x184
-@@ -28,5 +29,6 @@
- #define QPHY_V6_PCS_UFS_READY_STATUS			0x1a8
- #define QPHY_V6_PCS_UFS_TX_MID_TERM_CTRL1		0x1f4
- #define QPHY_V6_PCS_UFS_MULTI_LANE_CTRL1		0x1fc
-+#define QPHY_V6_PCS_UFS_RX_HSG5_SYNC_WAIT_TIME		0x220
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 71bd6db..734d40f 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -765,7 +765,7 @@ static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hba,
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 	struct phy *generic_phy = ufs->phy;
+-	struct ufs_dev_params ufs_exynos_cap;
++	struct ufs_host_params host_params;
+ 	int ret;
  
- #endif
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
-index f420f8f..ef392ce 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h
-@@ -56,6 +56,8 @@
- #define QSERDES_V6_COM_SYS_CLK_CTRL				0xe4
- #define QSERDES_V6_COM_SYSCLK_BUF_ENABLE			0xe8
- #define QSERDES_V6_COM_PLL_IVCO					0xf4
-+#define QSERDES_V6_COM_CMN_IETRIM				0xfc
-+#define QSERDES_V6_COM_CMN_IPTRIM				0x100
- #define QSERDES_V6_COM_SYSCLK_EN_SEL				0x110
- #define QSERDES_V6_COM_RESETSM_CNTRL				0x118
- #define QSERDES_V6_COM_LOCK_CMP_EN				0x120
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-index 35d497f..d9a87bd 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h
-@@ -15,13 +15,19 @@
+ 	if (!dev_req_params) {
+@@ -774,10 +774,9 @@ static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hba,
+ 		goto out;
+ 	}
  
- #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE2		0x08
- #define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4		0x10
-+#define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_SO_GAIN_RATE4		0x24
- #define QSERDES_UFS_V6_RX_UCDR_SO_SATURATION			0x28
-+#define QSERDES_UFS_V6_RX_UCDR_FASTLOCK_COUNT_HIGH_RATE4	0x54
- #define QSERDES_UFS_V6_RX_UCDR_PI_CTRL1				0x58
- #define QSERDES_UFS_V6_RX_RX_TERM_BW_CTRL0			0xc4
- #define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2			0xd4
- #define QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE4			0xdc
-+#define QSERDES_UFS_V6_RX_UCDR_SO_GAIN_RATE4			0xf0
-+#define QSERDES_UFS_V6_RX_UCDR_PI_CONTROLS			0xf4
- #define QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL			0x178
-+#define QSERDES_UFS_V6_RX_EQ_OFFSET_ADAPTOR_CNTRL1		0x1bc
- #define QSERDES_UFS_V6_RX_INTERFACE_MODE			0x1e0
-+#define QSERDES_UFS_V6_RX_OFFSET_ADAPTOR_CNTRL3			0x1c4
- #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0			0x208
- #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B1			0x20c
- #define QSERDES_UFS_V6_RX_MODE_RATE_0_1_B3			0x214
-@@ -33,6 +39,8 @@
- #define QSERDES_UFS_V6_RX_MODE_RATE3_B5				0x264
- #define QSERDES_UFS_V6_RX_MODE_RATE3_B8				0x270
- #define QSERDES_UFS_V6_RX_MODE_RATE4_B3				0x280
-+#define QSERDES_UFS_V6_RX_MODE_RATE4_B4				0x284
- #define QSERDES_UFS_V6_RX_MODE_RATE4_B6				0x28c
-+#define QSERDES_UFS_V6_RX_DLL0_FTUNE_CTRL			0x2f8
+-	ufshcd_init_pwr_dev_param(&ufs_exynos_cap);
++	ufshcd_init_host_params(&host_params);
  
- #endif
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-index 3c2e625..11cea34 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-@@ -41,6 +41,8 @@
- 
- #define PHY_INIT_COMPLETE_TIMEOUT		10000
- 
-+#define NUM_OVERLAY				2
-+
- struct qmp_phy_init_tbl {
- 	unsigned int offset;
- 	unsigned int val;
-@@ -754,15 +756,22 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_serdes[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_HSCLK_SEL_1, 0x11),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_HSCLK_HS_SWITCH_SEL_1, 0x00),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP_EN, 0x01),
--	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x04),
--	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_IVCO, 0x0f),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_INITVAL2, 0x00),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE0, 0x41),
--	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE0, 0x18),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_CCTRL_MODE0, 0x14),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP1_MODE0, 0x7f),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE0, 0x06),
-+};
-+
-+static const struct qmp_phy_init_tbl sm8550_ufsphy_hs_b_serdes[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x44),
-+};
-+
-+static const struct qmp_phy_init_tbl sm8550_ufsphy_g4_serdes[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x04),
-+	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_IVCO, 0x0f),
-+	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x0a),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_DEC_START_MODE1, 0x4c),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE1, 0x0a),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_RCTRL_MODE1, 0x18),
-@@ -771,19 +780,24 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_serdes[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_LOCK_CMP2_MODE1, 0x07),
- };
- 
--static const struct qmp_phy_init_tbl sm8550_ufsphy_hs_b_serdes[] = {
--	QMP_PHY_INIT_CFG(QSERDES_V6_COM_VCO_TUNE_MAP, 0x44),
-+static const struct qmp_phy_init_tbl sm8550_ufsphy_g5_serdes[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_V6_COM_PLL_IVCO, 0x1f),
-+	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CMN_IETRIM, 0x1b),
-+	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CMN_IPTRIM, 0x1c),
-+	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CP_CTRL_MODE0, 0x06),
- };
- 
- static const struct qmp_phy_init_tbl sm8550_ufsphy_tx[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_LANE_MODE_1, 0x05),
- 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_RES_CODE_LANE_OFFSET_TX, 0x07),
-+};
-+
-+static const struct qmp_phy_init_tbl sm8550_ufsphy_g4_tx[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_TX_FR_DCC_CTRL, 0x4c),
- };
- 
- static const struct qmp_phy_init_tbl sm8550_ufsphy_rx[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE2, 0x0c),
--	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL, 0x0e),
- 
- 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE_0_1_B0, 0xc2),
- 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE_0_1_B1, 0xc2),
-@@ -799,16 +813,45 @@ static const struct qmp_phy_init_tbl sm8550_ufsphy_rx[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE3_B8, 0x02),
- };
- 
-+static const struct qmp_phy_init_tbl sm8550_ufsphy_g4_rx[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL, 0x0e),
-+};
-+
-+static const struct qmp_phy_init_tbl sm8550_ufsphy_g5_rx[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FO_GAIN_RATE4, 0x0c),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_SO_GAIN_RATE4, 0x04),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_EQ_OFFSET_ADAPTOR_CNTRL1, 0x14),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_PI_CONTROLS, 0x07),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_OFFSET_ADAPTOR_CNTRL3, 0x0e),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_COUNT_HIGH_RATE4, 0x02),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_FO_GAIN_RATE4, 0x1c),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_UCDR_FASTLOCK_SO_GAIN_RATE4, 0x06),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_VGA_CAL_MAN_VAL, 0x08),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE4_B3, 0xb9),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE4_B4, 0x4f),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_MODE_RATE4_B6, 0xff),
-+	QMP_PHY_INIT_CFG(QSERDES_UFS_V6_RX_DLL0_FTUNE_CTRL, 0x30),
-+};
-+
- static const struct qmp_phy_init_tbl sm8550_ufsphy_pcs[] = {
- 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_RX_SIGDET_CTRL2, 0x69),
- 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_LARGE_AMP_DRV_LVL, 0x0f),
- 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_MID_TERM_CTRL1, 0x43),
--	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_PLL_CNTL, 0x2b),
- 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_MULTI_LANE_CTRL1, 0x02),
-+};
-+
-+static const struct qmp_phy_init_tbl sm8550_ufsphy_g4_pcs[] = {
-+	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_PLL_CNTL, 0x2b),
- 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_TX_HSGEAR_CAPABILITY, 0x04),
- 	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_RX_HSGEAR_CAPABILITY, 0x04),
- };
- 
-+static const struct qmp_phy_init_tbl sm8550_ufsphy_g5_pcs[] = {
-+	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_PLL_CNTL, 0x33),
-+	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_RX_HS_G5_SYNC_LENGTH_CAPABILITY, 0x4f),
-+	QMP_PHY_INIT_CFG(QPHY_V6_PCS_UFS_RX_HSG5_SYNC_WAIT_TIME, 0x9e),
-+};
-+
- static const struct qmp_phy_init_tbl sm8650_ufsphy_serdes[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_SYSCLK_EN_SEL, 0xd9),
- 	QMP_PHY_INIT_CFG(QSERDES_V6_COM_CMN_CONFIG_1, 0x16),
-@@ -889,6 +932,8 @@ struct qmp_phy_cfg_tbls {
- 	int rx_num;
- 	const struct qmp_phy_init_tbl *pcs;
- 	int pcs_num;
-+	/* Maximum supported Gear of this tbls */
-+	u32 max_gear;
- };
- 
- /* struct qmp_phy_cfg - per-PHY initialization config */
-@@ -896,13 +941,15 @@ struct qmp_phy_cfg {
- 	int lanes;
- 
- 	const struct qmp_ufs_offsets *offsets;
-+	/* Maximum supported Gear of this config */
-+	u32 max_supported_gear;
- 
- 	/* Main init sequence for PHY blocks - serdes, tx, rx, pcs */
- 	const struct qmp_phy_cfg_tbls tbls;
- 	/* Additional sequence for HS Series B */
- 	const struct qmp_phy_cfg_tbls tbls_hs_b;
--	/* Additional sequence for HS G4 */
--	const struct qmp_phy_cfg_tbls tbls_hs_g4;
-+	/* Additional sequence for different HS Gears */
-+	const struct qmp_phy_cfg_tbls tbls_hs_overlay[NUM_OVERLAY];
- 
- 	/* clock ids to be requested */
- 	const char * const *clk_list;
-@@ -1005,6 +1052,7 @@ static const struct qmp_phy_cfg msm8996_ufsphy_cfg = {
- 	.lanes			= 1,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G3,
- 
- 	.tbls = {
- 		.serdes		= msm8996_ufsphy_serdes,
-@@ -1030,6 +1078,7 @@ static const struct qmp_phy_cfg sa8775p_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G4,
- 
- 	.tbls = {
- 		.serdes		= sm8350_ufsphy_serdes,
-@@ -1045,13 +1094,14 @@ static const struct qmp_phy_cfg sa8775p_ufsphy_cfg = {
- 		.serdes		= sm8350_ufsphy_hs_b_serdes,
- 		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_hs_b_serdes),
- 	},
--	.tbls_hs_g4 = {
-+	.tbls_hs_overlay[0] = {
- 		.tx		= sm8350_ufsphy_g4_tx,
- 		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_tx),
- 		.rx		= sm8350_ufsphy_g4_rx,
- 		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_rx),
- 		.pcs		= sm8350_ufsphy_g4_pcs,
- 		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_g4_pcs),
-+		.max_gear	= UFS_HS_G4,
- 	},
- 	.clk_list		= sm8450_ufs_phy_clk_l,
- 	.num_clks		= ARRAY_SIZE(sm8450_ufs_phy_clk_l),
-@@ -1064,6 +1114,7 @@ static const struct qmp_phy_cfg sc7280_ufsphy_cfg = {
- 	.lanes                  = 2,
- 
- 	.offsets                = &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G4,
- 
- 	.tbls = {
- 		.serdes         = sm8150_ufsphy_serdes,
-@@ -1079,13 +1130,14 @@ static const struct qmp_phy_cfg sc7280_ufsphy_cfg = {
- 		.serdes         = sm8150_ufsphy_hs_b_serdes,
- 		.serdes_num     = ARRAY_SIZE(sm8150_ufsphy_hs_b_serdes),
- 	},
--	.tbls_hs_g4 = {
-+	.tbls_hs_overlay[0] = {
- 		.tx             = sm8250_ufsphy_hs_g4_tx,
- 		.tx_num         = ARRAY_SIZE(sm8250_ufsphy_hs_g4_tx),
- 		.rx             = sc7280_ufsphy_hs_g4_rx,
- 		.rx_num         = ARRAY_SIZE(sc7280_ufsphy_hs_g4_rx),
- 		.pcs            = sm8150_ufsphy_hs_g4_pcs,
- 		.pcs_num        = ARRAY_SIZE(sm8150_ufsphy_hs_g4_pcs),
-+		.max_gear	= UFS_HS_G4,
- 	},
- 	.clk_list               = sm8450_ufs_phy_clk_l,
- 	.num_clks               = ARRAY_SIZE(sm8450_ufs_phy_clk_l),
-@@ -1098,6 +1150,7 @@ static const struct qmp_phy_cfg sc8280xp_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G4,
- 
- 	.tbls = {
- 		.serdes		= sm8350_ufsphy_serdes,
-@@ -1113,13 +1166,14 @@ static const struct qmp_phy_cfg sc8280xp_ufsphy_cfg = {
- 		.serdes		= sm8350_ufsphy_hs_b_serdes,
- 		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_hs_b_serdes),
- 	},
--	.tbls_hs_g4 = {
-+	.tbls_hs_overlay[0] = {
- 		.tx		= sm8350_ufsphy_g4_tx,
- 		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_tx),
- 		.rx		= sm8350_ufsphy_g4_rx,
- 		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_rx),
- 		.pcs		= sm8350_ufsphy_g4_pcs,
- 		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_g4_pcs),
-+		.max_gear	= UFS_HS_G4,
- 	},
- 	.clk_list		= sdm845_ufs_phy_clk_l,
- 	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
-@@ -1132,6 +1186,7 @@ static const struct qmp_phy_cfg sdm845_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G3,
- 
- 	.tbls = {
- 		.serdes		= sdm845_ufsphy_serdes,
-@@ -1160,6 +1215,7 @@ static const struct qmp_phy_cfg sm6115_ufsphy_cfg = {
- 	.lanes			= 1,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G3,
- 
- 	.tbls = {
- 		.serdes		= sm6115_ufsphy_serdes,
-@@ -1188,6 +1244,7 @@ static const struct qmp_phy_cfg sm7150_ufsphy_cfg = {
- 	.lanes			= 1,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G3,
- 
- 	.tbls = {
- 		.serdes		= sdm845_ufsphy_serdes,
-@@ -1216,6 +1273,7 @@ static const struct qmp_phy_cfg sm8150_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G4,
- 
- 	.tbls = {
- 		.serdes		= sm8150_ufsphy_serdes,
-@@ -1231,13 +1289,14 @@ static const struct qmp_phy_cfg sm8150_ufsphy_cfg = {
- 		.serdes		= sm8150_ufsphy_hs_b_serdes,
- 		.serdes_num	= ARRAY_SIZE(sm8150_ufsphy_hs_b_serdes),
- 	},
--	.tbls_hs_g4 = {
-+	.tbls_hs_overlay[0] = {
- 		.tx		= sm8150_ufsphy_hs_g4_tx,
- 		.tx_num		= ARRAY_SIZE(sm8150_ufsphy_hs_g4_tx),
- 		.rx		= sm8150_ufsphy_hs_g4_rx,
- 		.rx_num		= ARRAY_SIZE(sm8150_ufsphy_hs_g4_rx),
- 		.pcs		= sm8150_ufsphy_hs_g4_pcs,
- 		.pcs_num	= ARRAY_SIZE(sm8150_ufsphy_hs_g4_pcs),
-+		.max_gear	= UFS_HS_G4,
- 	},
- 	.clk_list		= sdm845_ufs_phy_clk_l,
- 	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
-@@ -1250,6 +1309,7 @@ static const struct qmp_phy_cfg sm8250_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G4,
- 
- 	.tbls = {
- 		.serdes		= sm8150_ufsphy_serdes,
-@@ -1265,13 +1325,14 @@ static const struct qmp_phy_cfg sm8250_ufsphy_cfg = {
- 		.serdes		= sm8150_ufsphy_hs_b_serdes,
- 		.serdes_num	= ARRAY_SIZE(sm8150_ufsphy_hs_b_serdes),
- 	},
--	.tbls_hs_g4 = {
-+	.tbls_hs_overlay[0] = {
- 		.tx		= sm8250_ufsphy_hs_g4_tx,
- 		.tx_num		= ARRAY_SIZE(sm8250_ufsphy_hs_g4_tx),
- 		.rx		= sm8250_ufsphy_hs_g4_rx,
- 		.rx_num		= ARRAY_SIZE(sm8250_ufsphy_hs_g4_rx),
- 		.pcs		= sm8150_ufsphy_hs_g4_pcs,
- 		.pcs_num	= ARRAY_SIZE(sm8150_ufsphy_hs_g4_pcs),
-+		.max_gear	= UFS_HS_G4,
- 	},
- 	.clk_list		= sdm845_ufs_phy_clk_l,
- 	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
-@@ -1284,6 +1345,7 @@ static const struct qmp_phy_cfg sm8350_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G4,
- 
- 	.tbls = {
- 		.serdes		= sm8350_ufsphy_serdes,
-@@ -1299,13 +1361,14 @@ static const struct qmp_phy_cfg sm8350_ufsphy_cfg = {
- 		.serdes		= sm8350_ufsphy_hs_b_serdes,
- 		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_hs_b_serdes),
- 	},
--	.tbls_hs_g4 = {
-+	.tbls_hs_overlay[0] = {
- 		.tx		= sm8350_ufsphy_g4_tx,
- 		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_tx),
- 		.rx		= sm8350_ufsphy_g4_rx,
- 		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_rx),
- 		.pcs		= sm8350_ufsphy_g4_pcs,
- 		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_g4_pcs),
-+		.max_gear	= UFS_HS_G4,
- 	},
- 	.clk_list		= sdm845_ufs_phy_clk_l,
- 	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
-@@ -1318,6 +1381,7 @@ static const struct qmp_phy_cfg sm8450_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets,
-+	.max_supported_gear	= UFS_HS_G4,
- 
- 	.tbls = {
- 		.serdes		= sm8350_ufsphy_serdes,
-@@ -1333,13 +1397,14 @@ static const struct qmp_phy_cfg sm8450_ufsphy_cfg = {
- 		.serdes		= sm8350_ufsphy_hs_b_serdes,
- 		.serdes_num	= ARRAY_SIZE(sm8350_ufsphy_hs_b_serdes),
- 	},
--	.tbls_hs_g4 = {
-+	.tbls_hs_overlay[0] = {
- 		.tx		= sm8350_ufsphy_g4_tx,
- 		.tx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_tx),
- 		.rx		= sm8350_ufsphy_g4_rx,
- 		.rx_num		= ARRAY_SIZE(sm8350_ufsphy_g4_rx),
- 		.pcs		= sm8350_ufsphy_g4_pcs,
- 		.pcs_num	= ARRAY_SIZE(sm8350_ufsphy_g4_pcs),
-+		.max_gear	= UFS_HS_G4,
- 	},
- 	.clk_list		= sm8450_ufs_phy_clk_l,
- 	.num_clks		= ARRAY_SIZE(sm8450_ufs_phy_clk_l),
-@@ -1352,6 +1417,7 @@ static const struct qmp_phy_cfg sm8550_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets_v6,
-+	.max_supported_gear	= UFS_HS_G5,
- 
- 	.tbls = {
- 		.serdes		= sm8550_ufsphy_serdes,
-@@ -1367,6 +1433,26 @@ static const struct qmp_phy_cfg sm8550_ufsphy_cfg = {
- 		.serdes		= sm8550_ufsphy_hs_b_serdes,
- 		.serdes_num	= ARRAY_SIZE(sm8550_ufsphy_hs_b_serdes),
- 	},
-+	.tbls_hs_overlay[0] = {
-+		.serdes		= sm8550_ufsphy_g4_serdes,
-+		.serdes_num	= ARRAY_SIZE(sm8550_ufsphy_g4_serdes),
-+		.tx		= sm8550_ufsphy_g4_tx,
-+		.tx_num		= ARRAY_SIZE(sm8550_ufsphy_g4_tx),
-+		.rx		= sm8550_ufsphy_g4_rx,
-+		.rx_num		= ARRAY_SIZE(sm8550_ufsphy_g4_rx),
-+		.pcs		= sm8550_ufsphy_g4_pcs,
-+		.pcs_num	= ARRAY_SIZE(sm8550_ufsphy_g4_pcs),
-+		.max_gear	= UFS_HS_G4,
-+	},
-+	.tbls_hs_overlay[1] = {
-+		.serdes		= sm8550_ufsphy_g5_serdes,
-+		.serdes_num	= ARRAY_SIZE(sm8550_ufsphy_g5_serdes),
-+		.rx		= sm8550_ufsphy_g5_rx,
-+		.rx_num		= ARRAY_SIZE(sm8550_ufsphy_g5_rx),
-+		.pcs		= sm8550_ufsphy_g5_pcs,
-+		.pcs_num	= ARRAY_SIZE(sm8550_ufsphy_g5_pcs),
-+		.max_gear	= UFS_HS_G5,
-+	},
- 	.clk_list		= sdm845_ufs_phy_clk_l,
- 	.num_clks		= ARRAY_SIZE(sdm845_ufs_phy_clk_l),
- 	.vreg_list		= qmp_phy_vreg_l,
-@@ -1378,6 +1464,7 @@ static const struct qmp_phy_cfg sm8650_ufsphy_cfg = {
- 	.lanes			= 2,
- 
- 	.offsets		= &qmp_ufs_offsets_v6,
-+	.max_supported_gear	= UFS_HS_G5,
- 
- 	.tbls = {
- 		.serdes		= sm8650_ufsphy_serdes,
-@@ -1451,17 +1538,49 @@ static void qmp_ufs_pcs_init(struct qmp_ufs *qmp, const struct qmp_phy_cfg_tbls
- 	qmp_ufs_configure(pcs, tbls->pcs, tbls->pcs_num);
+-	ret = ufshcd_get_pwr_dev_param(&ufs_exynos_cap,
+-				       dev_max_params, dev_req_params);
++	ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
+ 	if (ret) {
+ 		pr_err("%s: failed to determine capabilities\n", __func__);
+ 		goto out;
+diff --git a/drivers/ufs/host/ufs-hisi.c b/drivers/ufs/host/ufs-hisi.c
+index 0229ac0..5ee73ff 100644
+--- a/drivers/ufs/host/ufs-hisi.c
++++ b/drivers/ufs/host/ufs-hisi.c
+@@ -293,9 +293,9 @@ static int ufs_hisi_link_startup_notify(struct ufs_hba *hba,
+ 	return err;
  }
  
-+static int qmp_ufs_get_gear_overlay(struct qmp_ufs *qmp, const struct qmp_phy_cfg *cfg)
-+{
-+	u32 max_gear, floor_max_gear = cfg->max_supported_gear;
-+	int idx, ret = -EINVAL;
-+
-+	for (idx = NUM_OVERLAY - 1; idx >= 0; idx--) {
-+		max_gear = cfg->tbls_hs_overlay[idx].max_gear;
-+
-+		/* Skip if the table is not available */
-+		if (max_gear == 0)
-+			continue;
-+
-+		/* Direct matching, bail */
-+		if (qmp->submode == max_gear)
-+			return idx;
-+
-+		/* If no direct matching, the lowest gear is the best matching */
-+		if (max_gear < floor_max_gear) {
-+			ret = idx;
-+			floor_max_gear = max_gear;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
- static void qmp_ufs_init_registers(struct qmp_ufs *qmp, const struct qmp_phy_cfg *cfg)
+-static void ufs_hisi_set_dev_cap(struct ufs_dev_params *hisi_param)
++static void ufs_hisi_set_dev_cap(struct ufs_host_params *host_params)
  {
-+	int i;
-+
- 	qmp_ufs_serdes_init(qmp, &cfg->tbls);
--	if (qmp->mode == PHY_MODE_UFS_HS_B)
--		qmp_ufs_serdes_init(qmp, &cfg->tbls_hs_b);
- 	qmp_ufs_lanes_init(qmp, &cfg->tbls);
--	if (qmp->submode == UFS_HS_G4)
--		qmp_ufs_lanes_init(qmp, &cfg->tbls_hs_g4);
- 	qmp_ufs_pcs_init(qmp, &cfg->tbls);
--	if (qmp->submode == UFS_HS_G4)
--		qmp_ufs_pcs_init(qmp, &cfg->tbls_hs_g4);
-+
-+	i = qmp_ufs_get_gear_overlay(qmp, cfg);
-+	if (i >= 0) {
-+		qmp_ufs_serdes_init(qmp, &cfg->tbls_hs_overlay[i]);
-+		qmp_ufs_lanes_init(qmp, &cfg->tbls_hs_overlay[i]);
-+		qmp_ufs_pcs_init(qmp, &cfg->tbls_hs_overlay[i]);
-+	}
-+
-+	if (qmp->mode == PHY_MODE_UFS_HS_B)
-+		qmp_ufs_serdes_init(qmp, &cfg->tbls_hs_b);
+-	ufshcd_init_pwr_dev_param(hisi_param);
++	ufshcd_init_host_params(host_params);
  }
  
- static int qmp_ufs_com_init(struct qmp_ufs *qmp)
-@@ -1633,6 +1752,12 @@ static int qmp_ufs_disable(struct phy *phy)
- static int qmp_ufs_set_mode(struct phy *phy, enum phy_mode mode, int submode)
+ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+@@ -365,7 +365,7 @@ static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
+ 				       struct ufs_pa_layer_attr *dev_max_params,
+ 				       struct ufs_pa_layer_attr *dev_req_params)
  {
- 	struct qmp_ufs *qmp = phy_get_drvdata(phy);
-+	const struct qmp_phy_cfg *cfg = qmp->cfg;
-+
-+	if (submode > cfg->max_supported_gear || submode == 0) {
-+		dev_err(qmp->dev, "Invalid PHY submode %d\n", submode);
-+		return -EINVAL;
-+	}
+-	struct ufs_dev_params ufs_hisi_cap;
++	struct ufs_host_params host_params;
+ 	int ret = 0;
  
- 	qmp->mode = mode;
- 	qmp->submode = submode;
+ 	if (!dev_req_params) {
+@@ -377,9 +377,8 @@ static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
+ 
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		ufs_hisi_set_dev_cap(&ufs_hisi_cap);
+-		ret = ufshcd_get_pwr_dev_param(&ufs_hisi_cap,
+-					       dev_max_params, dev_req_params);
++		ufs_hisi_set_dev_cap(&host_params);
++		ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
+ 		if (ret) {
+ 			dev_err(hba->dev,
+ 			    "%s: failed to determine capabilities\n", __func__);
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index fc61790..776bca4 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -996,16 +996,14 @@ static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
+ 				  struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+-	struct ufs_dev_params host_cap;
++	struct ufs_host_params host_params;
+ 	int ret;
+ 
+-	ufshcd_init_pwr_dev_param(&host_cap);
+-	host_cap.hs_rx_gear = UFS_HS_G5;
+-	host_cap.hs_tx_gear = UFS_HS_G5;
++	ufshcd_init_host_params(&host_params);
++	host_params.hs_rx_gear = UFS_HS_G5;
++	host_params.hs_tx_gear = UFS_HS_G5;
+ 
+-	ret = ufshcd_get_pwr_dev_param(&host_cap,
+-				       dev_max_params,
+-				       dev_req_params);
++	ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
+ 	if (ret) {
+ 		pr_info("%s: failed to determine capabilities\n",
+ 			__func__);
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 96cb8b5..197c5a5 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -898,7 +898,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-	struct ufs_dev_params ufs_qcom_cap;
++	struct ufs_host_params host_params;
+ 	int ret = 0;
+ 
+ 	if (!dev_req_params) {
+@@ -908,15 +908,13 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		ufshcd_init_pwr_dev_param(&ufs_qcom_cap);
+-		ufs_qcom_cap.hs_rate = UFS_QCOM_LIMIT_HS_RATE;
++		ufshcd_init_host_params(&host_params);
++		host_params.hs_rate = UFS_QCOM_LIMIT_HS_RATE;
+ 
+ 		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
+-		ufs_qcom_cap.hs_tx_gear = ufs_qcom_cap.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
++		host_params.hs_tx_gear = host_params.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
+ 
+-		ret = ufshcd_get_pwr_dev_param(&ufs_qcom_cap,
+-					       dev_max_params,
+-					       dev_req_params);
++		ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
+ 		if (ret) {
+ 			dev_err(hba->dev, "%s: failed to determine capabilities\n",
+ 					__func__);
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index da2558e..1633edc 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -285,61 +285,60 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
+ }
+ 
+ /**
+- * ufshcd_get_pwr_dev_param - get finally agreed attributes for
+- *                            power mode change
+- * @pltfrm_param: pointer to platform parameters
++ * ufshcd_negotiate_pwr_params - find power mode settings that are supported by
++				both the controller and the device
++ * @host_params: pointer to host parameters
+  * @dev_max: pointer to device attributes
+  * @agreed_pwr: returned agreed attributes
+  *
+  * Return: 0 on success, non-zero value on failure.
+  */
+-int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *pltfrm_param,
+-			     const struct ufs_pa_layer_attr *dev_max,
+-			     struct ufs_pa_layer_attr *agreed_pwr)
++int ufshcd_negotiate_pwr_params(const struct ufs_host_params *host_params,
++				const struct ufs_pa_layer_attr *dev_max,
++				struct ufs_pa_layer_attr *agreed_pwr)
+ {
+-	int min_pltfrm_gear;
++	int min_host_gear;
+ 	int min_dev_gear;
+ 	bool is_dev_sup_hs = false;
+-	bool is_pltfrm_max_hs = false;
++	bool is_host_max_hs = false;
+ 
+ 	if (dev_max->pwr_rx == FAST_MODE)
+ 		is_dev_sup_hs = true;
+ 
+-	if (pltfrm_param->desired_working_mode == UFS_HS_MODE) {
+-		is_pltfrm_max_hs = true;
+-		min_pltfrm_gear = min_t(u32, pltfrm_param->hs_rx_gear,
+-					pltfrm_param->hs_tx_gear);
++	if (host_params->desired_working_mode == UFS_HS_MODE) {
++		is_host_max_hs = true;
++		min_host_gear = min_t(u32, host_params->hs_rx_gear,
++					host_params->hs_tx_gear);
+ 	} else {
+-		min_pltfrm_gear = min_t(u32, pltfrm_param->pwm_rx_gear,
+-					pltfrm_param->pwm_tx_gear);
++		min_host_gear = min_t(u32, host_params->pwm_rx_gear,
++					host_params->pwm_tx_gear);
+ 	}
+ 
+ 	/*
+-	 * device doesn't support HS but
+-	 * pltfrm_param->desired_working_mode is HS,
+-	 * thus device and pltfrm_param don't agree
++	 * device doesn't support HS but host_params->desired_working_mode is HS,
++	 * thus device and host_params don't agree
+ 	 */
+-	if (!is_dev_sup_hs && is_pltfrm_max_hs) {
++	if (!is_dev_sup_hs && is_host_max_hs) {
+ 		pr_info("%s: device doesn't support HS\n",
+ 			__func__);
+ 		return -ENOTSUPP;
+-	} else if (is_dev_sup_hs && is_pltfrm_max_hs) {
++	} else if (is_dev_sup_hs && is_host_max_hs) {
+ 		/*
+ 		 * since device supports HS, it supports FAST_MODE.
+-		 * since pltfrm_param->desired_working_mode is also HS
++		 * since host_params->desired_working_mode is also HS
+ 		 * then final decision (FAST/FASTAUTO) is done according
+ 		 * to pltfrm_params as it is the restricting factor
+ 		 */
+-		agreed_pwr->pwr_rx = pltfrm_param->rx_pwr_hs;
++		agreed_pwr->pwr_rx = host_params->rx_pwr_hs;
+ 		agreed_pwr->pwr_tx = agreed_pwr->pwr_rx;
+ 	} else {
+ 		/*
+-		 * here pltfrm_param->desired_working_mode is PWM.
++		 * here host_params->desired_working_mode is PWM.
+ 		 * it doesn't matter whether device supports HS or PWM,
+-		 * in both cases pltfrm_param->desired_working_mode will
++		 * in both cases host_params->desired_working_mode will
+ 		 * determine the mode
+ 		 */
+-		agreed_pwr->pwr_rx = pltfrm_param->rx_pwr_pwm;
++		agreed_pwr->pwr_rx = host_params->rx_pwr_pwm;
+ 		agreed_pwr->pwr_tx = agreed_pwr->pwr_rx;
+ 	}
+ 
+@@ -349,9 +348,9 @@ int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *pltfrm_param,
+ 	 * the same decision will be made for rx
+ 	 */
+ 	agreed_pwr->lane_tx = min_t(u32, dev_max->lane_tx,
+-				    pltfrm_param->tx_lanes);
++				    host_params->tx_lanes);
+ 	agreed_pwr->lane_rx = min_t(u32, dev_max->lane_rx,
+-				    pltfrm_param->rx_lanes);
++				    host_params->rx_lanes);
+ 
+ 	/* device maximum gear is the minimum between device rx and tx gears */
+ 	min_dev_gear = min_t(u32, dev_max->gear_rx, dev_max->gear_tx);
+@@ -364,26 +363,26 @@ int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *pltfrm_param,
+ 	 * what is the gear, as it is the one that also decided previously what
+ 	 * pwr the device will be configured to.
+ 	 */
+-	if ((is_dev_sup_hs && is_pltfrm_max_hs) ||
+-	    (!is_dev_sup_hs && !is_pltfrm_max_hs)) {
++	if ((is_dev_sup_hs && is_host_max_hs) ||
++	    (!is_dev_sup_hs && !is_host_max_hs)) {
+ 		agreed_pwr->gear_rx =
+-			min_t(u32, min_dev_gear, min_pltfrm_gear);
++			min_t(u32, min_dev_gear, min_host_gear);
+ 	} else if (!is_dev_sup_hs) {
+ 		agreed_pwr->gear_rx = min_dev_gear;
+ 	} else {
+-		agreed_pwr->gear_rx = min_pltfrm_gear;
++		agreed_pwr->gear_rx = min_host_gear;
+ 	}
+ 	agreed_pwr->gear_tx = agreed_pwr->gear_rx;
+ 
+-	agreed_pwr->hs_rate = pltfrm_param->hs_rate;
++	agreed_pwr->hs_rate = host_params->hs_rate;
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(ufshcd_get_pwr_dev_param);
++EXPORT_SYMBOL_GPL(ufshcd_negotiate_pwr_params);
+ 
+-void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param)
++void ufshcd_init_host_params(struct ufs_host_params *host_params)
+ {
+-	*dev_param = (struct ufs_dev_params){
++	*host_params = (struct ufs_host_params){
+ 		.tx_lanes = UFS_LANE_2,
+ 		.rx_lanes = UFS_LANE_2,
+ 		.hs_rx_gear = UFS_HS_G3,
+@@ -398,7 +397,7 @@ void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param)
+ 		.desired_working_mode = UFS_HS_MODE,
+ 	};
+ }
+-EXPORT_SYMBOL_GPL(ufshcd_init_pwr_dev_param);
++EXPORT_SYMBOL_GPL(ufshcd_init_host_params);
+ 
+ /**
+  * ufshcd_pltfrm_init - probe routine of the driver
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.h b/drivers/ufs/host/ufshcd-pltfrm.h
+index a86a3ad..df387be 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.h
++++ b/drivers/ufs/host/ufshcd-pltfrm.h
+@@ -10,7 +10,7 @@
+ #define UFS_PWM_MODE 1
+ #define UFS_HS_MODE  2
+ 
+-struct ufs_dev_params {
++struct ufs_host_params {
+ 	u32 pwm_rx_gear;        /* pwm rx gear to work in */
+ 	u32 pwm_tx_gear;        /* pwm tx gear to work in */
+ 	u32 hs_rx_gear;         /* hs rx gear to work in */
+@@ -25,10 +25,10 @@ struct ufs_dev_params {
+ 	u32 desired_working_mode;
+ };
+ 
+-int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *dev_param,
+-			     const struct ufs_pa_layer_attr *dev_max,
+-			     struct ufs_pa_layer_attr *agreed_pwr);
+-void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param);
++int ufshcd_negotiate_pwr_params(const struct ufs_host_params *host_params,
++				const struct ufs_pa_layer_attr *dev_max,
++				struct ufs_pa_layer_attr *agreed_pwr);
++void ufshcd_init_host_params(struct ufs_host_params *host_params);
+ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 		       const struct ufs_hba_variant_ops *vops);
+ int ufshcd_populate_vreg(struct device *dev, const char *name,
 -- 
 2.7.4
 
