@@ -1,153 +1,126 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="SDa1fCyF"
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E41612D;
-	Sat,  2 Dec 2023 04:40:35 -0800 (PST)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B2CaaIH026043;
-	Sat, 2 Dec 2023 12:36:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=B1stBXweFHGLo0FZ562PYkOASJIgvjARx2einm+rVNQ=;
- b=SDa1fCyFzo+BusDl8U1oLOFlNYy7QCB2aefq4GIO5sL/IBSgXYZNqx7AaoTVfcnIrb/e
- syHEiCz+1MRJT/GQ66l4dFjviJ4wVo6AFM+i5jyLxXW+s01oBqsAyjmICoLmhBh0YxI4
- ySZXJNGjZDahEG/SWap5phhIQ7YOnLE/eFG6xpfhXFyXlH6B2bD8aGUWRsjEHygCvD03
- mfO7BrhPt7NuTzs9TM+6OSik1xYl3r2Vf5XhvlaCHERgptyT5UWQvRuArZ/y8u/PuKLW
- FNyrjrhzsRuzc2YZTOR7yX7lZ1I+NrNSOxDX03z+0KZXI9a3OjTHdlPDANnbbzp9g1sw kg== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uqvyerhqb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 02 Dec 2023 12:36:42 +0000
-Received: from pps.filterd (NASANPPMTA05.qualcomm.com [127.0.0.1])
-	by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3B2CZ2Rl009437;
-	Sat, 2 Dec 2023 12:36:41 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3uqwnkbday-1;
-	Sat, 02 Dec 2023 12:36:41 +0000
-Received: from NASANPPMTA05.qualcomm.com (NASANPPMTA05.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B2CYMF1008672;
-	Sat, 2 Dec 2023 12:36:41 GMT
-Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
-	by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3B2CaevB011393;
-	Sat, 02 Dec 2023 12:36:41 +0000
-Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
-	id 3894A20A90; Sat,  2 Dec 2023 04:36:40 -0800 (PST)
-From: Can Guo <quic_cang@quicinc.com>
-To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        adrian.hunter@intel.com, vkoul@kernel.org, beanhuo@micron.com,
-        avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
-        Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v8 03/10] scsi: ufs: ufs-qcom: Setup host power mode during init
-Date: Sat,  2 Dec 2023 04:36:09 -0800
-Message-Id: <1701520577-31163-4-git-send-email-quic_cang@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
-References: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: YQZt9hEqzivYMlf3Wfo_3125r59Q23pj
-X-Proofpoint-GUID: YQZt9hEqzivYMlf3Wfo_3125r59Q23pj
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-02_10,2023-11-30_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 impostorscore=0
- mlxlogscore=999 bulkscore=0 suspectscore=0 clxscore=1015 spamscore=0
- mlxscore=0 malwarescore=0 lowpriorityscore=0 priorityscore=1501
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2312020094
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="kIEB1/L9";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Fua0gh6y"
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.84])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7418E188;
+	Sat,  2 Dec 2023 08:02:46 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1701532957; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=e866lOBbMx7/D+3JinX3TdM2Bb9lw13zradFKP8vQJTxGkSdW8hwniumWm5PT2ASDR
+    4+RcZdGEfj4saAqQugRnowDhQvzaI1xZgR3xr87ZhdFYqPUeHhvjrIsGWSpCwzeLlVse
+    HsuM5flwcu1qTq53ZJJqy/2qPuP4C+RXwU+pR5zEkkpSGtobfnsnaIMsyF5Zxp0q65Gj
+    NlvPuRlf8vXO17whOHL6OSM6m1ptyccNaRvwd3gUjdCbbzLRbwO8sPURHksxMCMKF8HY
+    S8aHUc7WLFx4EzTE0aQA8qVhYDC2j8hZtfAsXpDazIK9+FXEmbmL+C7j20/sZGr0U+Aq
+    1JkA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1701532957;
+    s=strato-dkim-0002; d=strato.com;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=Tnpp+igY4DbZNs0oTu7nbRDD42wohiyLate59qDod5Q=;
+    b=gL7ViZ0LmlTlbr9hHjr+XoeAv6IKxjw3mCcfFN4Ec5vrVnN4x5qCoywmJQBNV0zN3i
+    eFOo/N7OA8/JtfvXBG4Q3krLdGgndRHH2kM/7Duat38thSXo8PVe2kkikTUnkIWtTsB1
+    n+prwPZXHOokSPU7Zju4ylIj/saGyUwUfcqAQIwiHcco+PBEvKe7MWdDToMatqP2iQgQ
+    L6A5guP2VhMIirrzRaGYKgXo9EhAv4n83ep2a0FjYkhb4PiUExD+wEg4neyfL6Ro2GfA
+    oTEG32tqgzn+A3IbhdNiruFRiqx+7sciiFiySWRwX7NbBrYlnLyFZxZMNTzN4bsN8vWe
+    Vp1A==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1701532957;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=Tnpp+igY4DbZNs0oTu7nbRDD42wohiyLate59qDod5Q=;
+    b=kIEB1/L9NCvJ5RUo8J7gpCBoY4QmE9ZM3JJppLYsAL617Ex5kFM+nje8GjTT04OM/s
+    Q3zI/aZi+oB76tNPap1DIRdIZdnS6Im2t0D2Fle5gQa/4+l8ek0ZbTJlSyTavWPgWBJU
+    WLy9JXDfEqqy/lKk3iIBo6zc0DaRWwOvxDRZyQ130EcL8ACdohYfh+LVh2Nva/IqqAx5
+    f3zqW5Ff0vvj7UjuHRUswpbLDIdB2+Kvkomd5JflAhzHMAxePBoCnLxrn172ye6tb4Sj
+    U+B/1fMkLi80kVoMlIN/+DMvUZK342i6bAHnX2S5sfKrvvQaD7ZD6KznnUmn9MqkT6XM
+    ylyA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1701532957;
+    s=strato-dkim-0003; d=iokpp.de;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=Tnpp+igY4DbZNs0oTu7nbRDD42wohiyLate59qDod5Q=;
+    b=Fua0gh6yCT8HXHdEI/IRJqJnK2BT8GqYfmODKfiqEVluIKXLNNEpnJbTYrlsSFU+BS
+    br0Y2ExM0Ef5DiMt45Ag==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U0BfWsYLe+bQusZClHgu6POSIuOZDSGI3MA01fA=="
+Received: from Munilab01-lab.speedport.ip
+    by smtp.strato.de (RZmta 49.9.7 AUTH)
+    with ESMTPSA id z8d451zB2G2b5CJ
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Sat, 2 Dec 2023 17:02:37 +0100 (CET)
+From: Bean Huo <beanhuo@iokpp.de>
+To: avri.altman@wdc.com,
+	bvanassche@acm.org,
+	alim.akhtar@samsung.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	mani@kernel.org,
+	quic_cang@quicinc.com,
+	quic_asutoshd@quicinc.com,
+	beanhuo@micron.com,
+	thomas@t-8ch.de
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mikebi@micron.com,
+	lporzio@micron.com
+Subject: [PATCH v3 1/3] scsi: ufs: core: Add ufshcd_is_ufs_dev_busy()
+Date: Sat,  2 Dec 2023 17:02:25 +0100
+Message-Id: <20231202160227.766529-2-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231202160227.766529-1-beanhuo@iokpp.de>
+References: <20231202160227.766529-1-beanhuo@iokpp.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 
-Setup host power mode and its limitations during UFS host driver init to
-avoid repetitive work during every power mode change.
+From: Bean Huo <beanhuo@micron.com>
 
-Acked-by: Andrew Halaney <ahalaney@redhat.com>
-Reviewed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Co-developed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
+Add helper inline for retrieving whether UFS device is busy or not.
+
+Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 21 ++++++++++++++-------
- drivers/ufs/host/ufs-qcom.h |  1 +
- 2 files changed, 15 insertions(+), 7 deletions(-)
+ drivers/ufs/core/ufshcd.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index c21ff2c..9a90019 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -898,7 +898,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
--	struct ufs_host_params host_params;
-+	struct ufs_host_params *host_params = &host->host_params;
- 	int ret = 0;
- 
- 	if (!dev_req_params) {
-@@ -908,12 +908,7 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 
- 	switch (status) {
- 	case PRE_CHANGE:
--		ufshcd_init_host_params(&host_params);
--
--		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
--		host_params.hs_tx_gear = host_params.hs_rx_gear = ufs_qcom_get_hs_gear(hba);
--
--		ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
-+		ret = ufshcd_negotiate_pwr_params(host_params, dev_max_params, dev_req_params);
- 		if (ret) {
- 			dev_err(hba->dev, "%s: failed to determine capabilities\n",
- 					__func__);
-@@ -1048,6 +1043,17 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
- 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 68d7da02944f..f88f20f27f93 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -235,6 +235,13 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
+ 	return UFS_PM_LVL_0;
  }
  
-+static void ufs_qcom_set_host_params(struct ufs_hba *hba)
++static inline bool ufshcd_is_ufs_dev_busy(struct ufs_hba *hba)
 +{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	struct ufs_host_params *host_params = &host->host_params;
-+
-+	ufshcd_init_host_params(host_params);
-+
-+	/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
-+	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
++	return (hba->clk_gating.active_reqs || hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL ||
++		hba->outstanding_reqs || hba->outstanding_tasks || hba->active_uic_cmd ||
++		hba->uic_async_done);
 +}
 +
- static void ufs_qcom_set_caps(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-@@ -1272,6 +1278,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ static const struct ufs_dev_quirk ufs_fixups[] = {
+ 	/* UFS cards deviations table */
+ 	{ .wmanufacturerid = UFS_VENDOR_MICRON,
+@@ -1917,10 +1924,7 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 		goto rel_lock;
+ 	}
  
- 	ufs_qcom_set_caps(hba);
- 	ufs_qcom_advertise_quirks(hba);
-+	ufs_qcom_set_host_params(hba);
+-	if (hba->clk_gating.active_reqs
+-		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
+-		|| hba->outstanding_reqs || hba->outstanding_tasks
+-		|| hba->active_uic_cmd || hba->uic_async_done)
++	if (ufshcd_is_ufs_dev_busy(hba))
+ 		goto rel_lock;
  
- 	err = ufs_qcom_ice_init(host);
- 	if (err)
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index 82cd143..11419eb 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -238,6 +238,7 @@ struct ufs_qcom_host {
- 
- 	struct gpio_desc *device_reset;
- 
-+	struct ufs_host_params host_params;
- 	u32 phy_gear;
- 
- 	bool esi_enabled;
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
 -- 
-2.7.4
+2.34.1
 
