@@ -1,115 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OqLCWkkb"
-Received: from mail-oo1-xc34.google.com (mail-oo1-xc34.google.com [IPv6:2607:f8b0:4864:20::c34])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF81219B1;
-	Sun,  3 Dec 2023 11:33:41 -0800 (PST)
-Received: by mail-oo1-xc34.google.com with SMTP id 006d021491bc7-58cf894544cso2560004eaf.3;
-        Sun, 03 Dec 2023 11:33:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701632019; x=1702236819; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lnwy3GO4+/YbY9nFTKfS8ajWGLQcgGqwGxrShqVNeOY=;
-        b=OqLCWkkb00xnke8A9/etKTCZq7lksueTG0SCAHawADaCGtJHokZeCh5nP0amOM6nhA
-         LoqUxjn4oc31kKeRjqprft3kgwosCHyQ/naqMoWTHNMbWi/p5iCtzJ8zU0YwXs8n7J++
-         glArqXq/y360jm8UNHxsIPf7RrPhxlwldKs5iwQGTvLOOAAMwUN15kpmn4PvuPtVjS/C
-         Re+44Qq940lQDP0+/RZvBv3WF+oLhDWLL0gI2q7D8uU6q+sfyCO787WRkIZUWyYoOfDW
-         hoPAgI5FGcMIOUvh5+fKZYmr30vYUnqxCH2fHWWWGQF7aR23/FD+cRPmmg4Do4S6botZ
-         LheQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701632019; x=1702236819;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=lnwy3GO4+/YbY9nFTKfS8ajWGLQcgGqwGxrShqVNeOY=;
-        b=U6xEgKqvJfMk7HaTDb6zz0zAsvb3XEFWaWg9kyvdowQNB70CMjBLac+hmGcpZUn+ww
-         xoxv9MNM0hFflFsKG/ZD2iY0tF8DVoUEqG29JERbqHQ5hyvDNcD66K/QazxJQocqgqTp
-         JBFbrVhW1O7zIuTnzsQzZd51benyWUCyLoxpHpQHZBcS9F5EnoBub96jAs+TBs7v88N1
-         YB8355SyGNI9o4aMDXRmz3kBRQaajynMdJgkf6HWvMcBoaJIroUgsK5C7doI36xHnGcl
-         YTs3pFFG0MKT8mQCGaSBV0QZTCMM5knrzXZwT41ISkn1adEKWN/mrb1s6MEOQ08zQxPl
-         1NvA==
-X-Gm-Message-State: AOJu0YyNX4KFypGnvbu5zwFIgJlhsxUWRNxL6v4gjYCuIZqRINL8D3k3
-	nmhADEYruRnWiTAbZdPSQQgtO8STNOofdA==
-X-Google-Smtp-Source: AGHT+IG+zD+BwFv03qVPmOUC8fU4F1e5Ipa6yHLGUdW2WuHA49paY/NKCSuKloULnbcWmRCF9+TUWg==
-X-Received: by 2002:a05:6808:286:b0:3b8:9906:c267 with SMTP id z6-20020a056808028600b003b89906c267mr2304900oic.56.1701632018850;
-        Sun, 03 Dec 2023 11:33:38 -0800 (PST)
-Received: from localhost ([2601:344:8301:57f0:cb98:c3e:57c:8191])
-        by smtp.gmail.com with ESMTPSA id 6-20020a250506000000b00d7745e2bb19sm1807611ybf.29.2023.12.03.11.33.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Dec 2023 11:33:37 -0800 (PST)
-From: Yury Norov <yury.norov@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org
-Cc: Yury Norov <yury.norov@gmail.com>,
-	Jan Kara <jack@suse.cz>,
-	Mirsad Todorovac <mirsad.todorovac@alu.unizg.hr>,
-	Matthew Wilcox <willy@infradead.org>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Maxim Kuvyrkov <maxim.kuvyrkov@linaro.org>,
-	Alexey Klimov <klimov.linux@gmail.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH v2 17/35] scsi: qedi: rework qedi_get_task_idx()
-Date: Sun,  3 Dec 2023 11:32:49 -0800
-Message-Id: <20231203193307.542794-16-yury.norov@gmail.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231203193307.542794-1-yury.norov@gmail.com>
-References: <20231203192422.539300-1-yury.norov@gmail.com>
- <20231203193307.542794-1-yury.norov@gmail.com>
+Received: from vps.thesusis.net (vps.thesusis.net [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13763A0
+	for <linux-scsi@vger.kernel.org>; Sun,  3 Dec 2023 11:50:38 -0800 (PST)
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+	id 5E58314BB90; Sun,  3 Dec 2023 14:50:37 -0500 (EST)
+From: Phillip Susi <phill@thesusis.net>
+To: bugzilla-daemon@kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [Bug 218198] Suspend/Resume Regression with attached ATA devices
+In-Reply-To: <bug-218198-11613-IZUsDxnbCF@https.bugzilla.kernel.org/>
+References: <bug-218198-11613@https.bugzilla.kernel.org/>
+ <bug-218198-11613-IZUsDxnbCF@https.bugzilla.kernel.org/>
+Date: Sun, 03 Dec 2023 14:50:37 -0500
+Message-ID: <87y1ebawvm.fsf@vps.thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-Simplify the function by using a dedicated find_and_set_bit().
+bugzilla-daemon@kernel.org writes:
 
-CC: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Yury Norov <yury.norov@gmail.com>
----
- drivers/scsi/qedi/qedi_main.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+> I guess you need to ask Intel.
+>
+> I assume that their firmware simply requires the DEVSLP signal to be
+> asserted in order to enter lower CPU power states.
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index cd0180b1f5b9..2f940c6898ef 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1824,20 +1824,13 @@ int qedi_get_task_idx(struct qedi_ctx *qedi)
- {
- 	s16 tmp_idx;
- 
--again:
--	tmp_idx = find_first_zero_bit(qedi->task_idx_map,
--				      MAX_ISCSI_TASK_ENTRIES);
-+	tmp_idx = find_and_set_bit(qedi->task_idx_map, MAX_ISCSI_TASK_ENTRIES);
- 
- 	if (tmp_idx >= MAX_ISCSI_TASK_ENTRIES) {
- 		QEDI_ERR(&qedi->dbg_ctx, "FW task context pool is full.\n");
- 		tmp_idx = -1;
--		goto err_idx;
- 	}
- 
--	if (test_and_set_bit(tmp_idx, qedi->task_idx_map))
--		goto again;
--
--err_idx:
- 	return tmp_idx;
- }
- 
--- 
-2.40.1
+I would say it's the hardware that requires the ata link to be powered
+down, not the firmware.  They seem to have decided that the way to get
+the hardware to power down was to add a new state to ALPM instead of
+using runtime pm to actually disable the port.  I would love to hear
+from Intel why they went this route.
 
+> If you just send a command to the device, if it not easy for HW logic
+> to determine which state is in. It would need to read some registers
+> or similar. Sounds way more complex than just having a logic gate.
+
+I'm not quite sure what you are getting at here.  The point of the ATA
+SLEEP command is to inform the device that it should power down
+everything, including the SATA PHY, and only keep a simple logic gate
+active that can detect the big and obvious RESET signal from the host.
+It seems to accomplish the same goal as DEVSLP without requiring hacking
+in another logic line somewhere that wasn't meant for that purpose.
