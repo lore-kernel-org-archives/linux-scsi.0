@@ -1,94 +1,91 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF15153B3;
+	Sun,  3 Dec 2023 04:52:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vLrCoNhe"
-Received: from mail-yw1-x112b.google.com (mail-yw1-x112b.google.com [IPv6:2607:f8b0:4864:20::112b])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66EAAA8
-	for <linux-scsi@vger.kernel.org>; Sat,  2 Dec 2023 12:27:56 -0800 (PST)
-Received: by mail-yw1-x112b.google.com with SMTP id 00721157ae682-5d3d5b10197so23639107b3.2
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Dec 2023 12:27:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701548875; x=1702153675; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=uvT4z76Po6/5Y4/ji/3Hekn4vEQQ+QLQOwThlnNRg+s=;
-        b=vLrCoNhe+1S0XvXo1nUrtCyOaPBRCZBwWcIyvUZRmJVTIXL8WwYrwrR7iGKGCDvBag
-         JYAy9WdA+ALqs7WLN9QWrz4n4zLtztt+njb6dzbU2/roF+3EKRBic9syQtPs5Ob+1Bzs
-         b0j21k3TCpYg07b2BRJsiTAkqjFijEU+DGkUHWWItNRH4o3tDuRnz+FPXXMRrmSb4Gw9
-         DI61khc4pcAJ+eItTz5FxuEzMWmFLsSszpk9LbL1Y0OvQWXohXSx8JC09QJtnJDbv6oa
-         031Oy1vMJ4MOXLwQ88JcCKEWAmZoA3DGPluYXTzv2Cx4Xiw2BdtKPEkhBPVIV3WpQ7tr
-         GeFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701548875; x=1702153675;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=uvT4z76Po6/5Y4/ji/3Hekn4vEQQ+QLQOwThlnNRg+s=;
-        b=VNjNpr2LBARKUhxguihnGrEWKXh14zpBjbd64qm2hLMwaTKc1L9bcrcMBuvWO7Dwvb
-         ulmZmrytUSXiDDQGkDAvTadTfFxhMRFpmFX9DZYPIFxWwWOEZ31TTOY5DIRQXtUuUzLY
-         rNqiu7p1l+LztIu3pAkQr8ByrFftrd0LDuqehfVVlmvEu5qNjgVePEQanWq+PV7U8NOG
-         fXZJonKgKV12GF0hy2NZZ+AM0SKAkPOl9nCT48fEU7J1XHx3o+fK586F4ksElQ4AbS9P
-         SZ64NQHiJVCwJywsmqaiSDlgYIAqOuwxynawFlTvGwDVaaZEoyCicBCxoGstaZH2VB4w
-         Cy6A==
-X-Gm-Message-State: AOJu0YykjpVe95134qSehuRwyK/M5mZitbw/Z/YOcnmlF/XP01KqLLGN
-	1+oTi85XaNeIQwfgevcCV0dq+CNjHFIqycQzBi5DuAM0C0O4Ino+
-X-Google-Smtp-Source: AGHT+IH1Bi46zI+abA7XowSzg7eAQSNdMduiBzR2eJj0NkSKqxmlcaCcQ8HWp9J2PVu1uH7bwYUGeeRqo5iERm/gCtk=
-X-Received: by 2002:a81:7904:0:b0:5d7:1941:ac0 with SMTP id
- u4-20020a817904000000b005d719410ac0mr1384290ywc.91.1701548875589; Sat, 02 Dec
- 2023 12:27:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dmupR+rs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52632C433D9;
+	Sun,  3 Dec 2023 04:51:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701579120;
+	bh=+8e4OFe3EdKH9blpRAMonn88ZGbTlQ39Lhkc8fVoJI8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=dmupR+rswIhDNwX/r0GAt9uEm9pAUUKLFhV0BNzQTpsPZnvCrjLleG5tHRZEb8uhD
+	 KU0Ha7FwM2r8c9y/f6xaFPHeeTGxlTywOmoywo70vRXsdpEWQquM8tc9SZ2zH8NQr4
+	 0gMY8h5jlYvn7EjkZLHwOXEgsqPg7+PmMWCeX9x7YsvqX3hIF/7EHS3RpfCIe6CNrR
+	 8MuPW4JGYcMPRHtMC83m/rGEJWM26wY4ig4KQV2TxvV1zrK3w5iKcOO7coESP2wiH8
+	 vZ/iqwQHOucrFu8CXHl5IxKeMtZpYYMb8yURwZfNizzRgHMfoJvEf9I+81i7lzwLtP
+	 IWiAEqXhpnJHw==
+From: Bjorn Andersson <andersson@kernel.org>
+To: vireshk@kernel.org,
+	nm@ti.com,
+	sboyd@kernel.org,
+	myungjoo.ham@samsung.com,
+	kyungmin.park@samsung.com,
+	cw00.choi@samsung.com,
+	konrad.dybcio@linaro.org,
+	robh+dt@kernel.org,
+	krzysztof.kozlowski+dt@linaro.org,
+	conor+dt@kernel.org,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	Manivannan Sadhasivam <mani@kernel.org>
+Cc: alim.akhtar@samsung.com,
+	avri.altman@wdc.com,
+	bvanassche@acm.org,
+	linux-scsi@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	quic_asutoshd@quicinc.com,
+	quic_cang@quicinc.com,
+	quic_nitirawa@quicinc.com,
+	quic_narepall@quicinc.com,
+	quic_bhaskarv@quicinc.com,
+	quic_richardp@quicinc.com,
+	quic_nguyenb@quicinc.com,
+	quic_ziqichen@quicinc.com,
+	bmasney@redhat.com,
+	krzysztof.kozlowski@linaro.org,
+	linux-kernel@vger.kernel.org,
+	alessandro.carminati@gmail.com
+Subject: Re: (subset) [PATCH v7 0/5] UFS: Add OPP support
+Date: Sat,  2 Dec 2023 20:54:46 -0800
+Message-ID: <170157925807.1717511.5041129304704724408.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231012172129.65172-1-manivannan.sadhasivam@linaro.org>
+References: <20231012172129.65172-1-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com> <1701520577-31163-11-git-send-email-quic_cang@quicinc.com>
-In-Reply-To: <1701520577-31163-11-git-send-email-quic_cang@quicinc.com>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date: Sat, 2 Dec 2023 22:27:44 +0200
-Message-ID: <CAA8EJpqp3=wnShnjnLgeWt+TuVjEVOWW7QcACjZq2JD3AcoYGQ@mail.gmail.com>
-Subject: Re: [PATCH v8 10/10] phy: qualcomm: phy-qcom-qmp-ufs: Add High Speed
- Gear 5 support for SM8550
-To: Can Guo <quic_cang@quicinc.com>
-Cc: bvanassche@acm.org, mani@kernel.org, adrian.hunter@intel.com, 
-	vkoul@kernel.org, beanhuo@micron.com, avri.altman@wdc.com, 
-	junwoo80.lee@samsung.com, martin.petersen@oracle.com, 
-	linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konrad.dybcio@linaro.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	"open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-On Sat, 2 Dec 2023 at 14:37, Can Guo <quic_cang@quicinc.com> wrote:
->
-> On SM8550, two sets of UFS PHY settings are provided, one set is to support
-> HS-G5, another set is to support HS-G4 and lower gears. The two sets of PHY
-> settings are programming different values to different registers, mixing
-> the two sets and/or overwriting one set with another set is definitely not
-> blessed by UFS PHY designers.
->
-> To add HS-G5 support for SM8550, split the two sets of PHY settings into
-> their dedicated overlay tables, only the common parts of the two sets of
-> PHY settings are left in the .tbls.
->
-> Consider we are going to add even higher gear support in future, to avoid
-> adding more tables with different names, rename the .tbls_hs_g4 and make it
-> an array, a size of 2 is enough as of now.
->
-> In this case, .tbls alone is not a complete set of PHY settings, so either
-> tbls_hs_overlay[0] or tbls_hs_overlay[1] must be applied on top of the
-> .tbls to become a complete set of PHY settings.
->
-> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+On Thu, 12 Oct 2023 22:51:24 +0530, Manivannan Sadhasivam wrote:
+> This series adds OPP (Operating Points) support to UFSHCD driver.
+> 
+> Motivation behind adding OPP support is to scale both clocks as well as
+> regulators/performance state dynamically. Currently, UFSHCD just scales
+> clock frequency during runtime with the help of "freq-table-hz" property
+> defined in devicetree. With the addition of OPP tables in devicetree (as
+> done for Qcom SDM845 and SM8250 SoCs in this series) UFSHCD can now scale
+> both clocks and performance state of power domain which helps in power
+> saving.
+> 
+> [...]
 
-> ---
->  drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h     |   2 +
->  drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h |   2 +
->  .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h    |   8 +
->  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 169 ++++++++++++++++++---
->  4 files changed, 159 insertions(+), 22 deletions(-)
+Applied, thanks!
 
+[4/5] arm64: dts: qcom: sdm845: Add OPP table support to UFSHC
+      commit: ec987b5efd59fdea4178d824d8ec4bbdf3019bdf
+[5/5] arm64: dts: qcom: sm8250: Add OPP table support to UFSHC
+      commit: 725be1d6318e4ea7e3947fd4242a14cf589cfebf
+
+Best regards,
 -- 
-With best wishes
-Dmitry
+Bjorn Andersson <andersson@kernel.org>
