@@ -1,95 +1,75 @@
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83923FD
-	for <linux-scsi@vger.kernel.org>; Sun,  3 Dec 2023 08:06:21 -0800 (PST)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <ukl@pengutronix.de>)
-	id 1r9oz2-0005ls-IY; Sun, 03 Dec 2023 17:06:16 +0100
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <ukl@pengutronix.de>)
-	id 1r9oz1-00DKAK-Ui; Sun, 03 Dec 2023 17:06:15 +0100
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
-	(envelope-from <ukl@pengutronix.de>)
-	id 1r9oz1-00DPpG-LP; Sun, 03 Dec 2023 17:06:15 +0100
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Finn Thain <fthain@linux-m68k.org>,
-	Michael Schmitz <schmitzmic@gmail.com>,
+Received: from zg8tmtyylji0my4xnjqumte4.icoremail.net (zg8tmtyylji0my4xnjqumte4.icoremail.net [162.243.164.118])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5467FE7;
+	Sun,  3 Dec 2023 10:14:07 -0800 (PST)
+Received: from luzhipeng.223.5.5.5 (unknown [60.186.191.128])
+	by mail-app4 (Coremail) with SMTP id cS_KCgCHjTVnxWxlastEAA--.50948S2;
+	Mon, 04 Dec 2023 02:14:00 +0800 (CST)
+From: Zhipeng Lu <alexious@zju.edu.cn>
+To: alexious@zju.edu.cn
+Cc: Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Giridhar Malavali <gmalavali@marvell.com>,
+	Himanshu Madhani <hmadhani@marvell.com>,
 	linux-scsi@vger.kernel.org,
-	kernel@pengutronix.de
-Subject: [PATCH 12/14] scsi: sun3: Convert to platform remove callback returning void
-Date: Sun,  3 Dec 2023 17:05:57 +0100
-Message-ID:  <84239a68fe06143d1d6fed6c9aaae6a4680ead71.1701619134.git.u.kleine-koenig@pengutronix.de>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <cover.1701619134.git.u.kleine-koenig@pengutronix.de>
-References: <cover.1701619134.git.u.kleine-koenig@pengutronix.de>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: fix a memleak in qla2x00_mem_alloc
+Date: Mon,  4 Dec 2023 02:13:42 +0800
+Message-Id: <20231203181342.3289136-1-alexious@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1917; i=u.kleine-koenig@pengutronix.de; h=from:subject:message-id; bh=JxRaNdilv9wvaUsCr4lgqeV+yMYMfHAPsBdpJ9bTVOk=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlbKdlhUMm9dIKHm13J92ZKJCu52q00nxNUvIM1 ofoEXi5ogGJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZWynZQAKCRCPgPtYfRL+ TiAnB/9f9WKlQf4syNLkJGUOKlCN9UjqaE73S+sZxJJzjIeIIn8QC+zjUu3TISOmkefICx/Mun1 1RevZwOG6GEUCzpU3cxITeBfd0vTFkZ/tX+ytc51SHJYtY0vQRN6W3JLVfHVesPBUdiasemvlgM 2FACPGaYmIhSLvnUTmGPCHQvuICU5+MIG5xukjpFupisYZqfJ8Xx3ZcokPalI5gAaDzWRe9QxOB MOinsLiMzhBb2WNV3k4gycI3yHw/tUarTsf00Vv5tR6a6rNelmNH65ikrsG+gulKjg1juQJkwMk zcgqIo2pE4SEGNbX7tZW4GqTGtFUpSQpGEBNQOhDB0jJAiNK
-X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+X-CM-TRANSID:cS_KCgCHjTVnxWxlastEAA--.50948S2
+X-Coremail-Antispam: 1UD129KBjvdXoWrZF1kCry5XF1xGrW7Jr1DWrg_yoWkWrg_ua
+	1UXFyxuw1qgr4xJw18JrySy39Fv3Wqqr1vkFsYqry3JrW5uw18Wr15XayrZa1fXw4ayFZ8
+	uw47XrW5ZryUtjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbzxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
+	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAK
+	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
+	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xII
+	jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
+	0EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
+	67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: qrsrjiarszq6lmxovvfxof0/
 
-The .remove() callback for a platform driver returns an int which makes
-many driver authors wrongly assume it's possible to do error handling by
-returning an error code. However the value returned is ignored (apart
-from emitting a warning) and this typically results in resource leaks.
+When the dsd allocated in the for loop by kzalloc fails, it should gc
+all the resources allocated before, instead of just return a -ENOMEM.
 
-To improve here there is a quest to make the remove callback return
-void. In the first step of this quest all drivers are converted to
-.remove_new(), which already returns void. Eventually after all drivers
-are converted, .remove_new() will be renamed to .remove().
+According to the error-handling behavior of ha->dif_bundl_pool, the
+dsd's failure should free every resources after fail_dif_bundl_dma_pool,
+together with ha->dif_bundl_pool itself. So the error-handling should
+goes to label fail_dma_pool.
 
-In the error path emit an error message replacing the (less useful)
-message by the core. Apart from the improved error message there is no
-change in behaviour.
-
-Trivially convert this driver from always returning zero in the remove
-callback to the void returning variant.
-
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+Fixes: 50b812755e97 ("scsi: qla2xxx: Fix DMA error when the DIF sg buffer crosses 4GB boundary")
+Signed-off-by: Zhipeng Lu <alexious@zju.edu.cn>
 ---
- drivers/scsi/sun3_scsi.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
-index abf229b847a1..4a8cc2e8238e 100644
---- a/drivers/scsi/sun3_scsi.c
-+++ b/drivers/scsi/sun3_scsi.c
-@@ -641,7 +641,7 @@ static int __init sun3_scsi_probe(struct platform_device *pdev)
- 	return error;
- }
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 50db08265c51..bdd66f9e8850 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4252,7 +4252,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
+ 					ql_dbg_pci(ql_dbg_init, ha->pdev,
+ 					    0xe0ee, "%s: failed alloc dsd\n",
+ 					    __func__);
+-					return -ENOMEM;
++					goto fail_dma_pool;
+ 				}
+ 				ha->dif_bundle_kallocs++;
  
--static int __exit sun3_scsi_remove(struct platform_device *pdev)
-+static void __exit sun3_scsi_remove(struct platform_device *pdev)
- {
- 	struct Scsi_Host *instance = platform_get_drvdata(pdev);
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-@@ -654,11 +654,10 @@ static int __exit sun3_scsi_remove(struct platform_device *pdev)
- 	if (udc_regs)
- 		dvma_free(udc_regs);
- 	iounmap(ioaddr);
--	return 0;
- }
- 
- static struct platform_driver sun3_scsi_driver = {
--	.remove = __exit_p(sun3_scsi_remove),
-+	.remove_new = __exit_p(sun3_scsi_remove),
- 	.driver = {
- 		.name	= DRV_MODULE_NAME,
- 	},
 -- 
-2.42.0
+2.34.1
 
