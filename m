@@ -1,105 +1,80 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="SwqzDwrM"
-Received: from smtp.smtpout.orange.fr (smtp-22.smtpout.orange.fr [80.12.242.22])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD7F2F2
-	for <linux-scsi@vger.kernel.org>; Sun,  3 Dec 2023 02:36:01 -0800 (PST)
-Received: from [192.168.1.18] ([92.140.202.140])
-	by smtp.orange.fr with ESMTPA
-	id 9jnnrzqJl1Jmd9jpQrQmqS; Sun, 03 Dec 2023 11:36:00 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1701599760;
-	bh=7/7K3QF/l4pTTPUL+W/tS/1zgsUPdfiCIZI4+ljPaaU=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To;
-	b=SwqzDwrMZsvjAF7VbnrUrv+EpGe2clYQRaJ/mJ0dI8OWVyZED+Ok9/h7ps7nCsxrL
-	 Cz+xhL48AdOoDn+Pe3Yrj1JuBoOFbCK/r1tDClbBpmYZvJEOfoJpvY7Pr9luQ4FDgI
-	 KKUVKmbxwbAg47Qmwh4JQYNZuSYF6XNicEov0YjSXJ+/g0qi6gH4n9ULrt6xV+uqwz
-	 xaC5QSgXeFzxxqKJOAkOHFmdthKMayfgo1bVFYbiEISGknPKAs6SBNuEd+n3kGW2DH
-	 aoRb4ZrCnlBBQ1afRaGzAvHN3Yrh8h3CAh78SzgYm0JBECkrXcDVnK1m0x0o7P2RQk
-	 WLo9hO32IE0fg==
-X-ME-Helo: [192.168.1.18]
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Sun, 03 Dec 2023 11:36:00 +0100
-X-ME-IP: 92.140.202.140
-Message-ID: <eb13fc84-d1e8-4121-8569-cf405a35e721@wanadoo.fr>
-Date: Sun, 3 Dec 2023 11:36:00 +0100
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="TXgQzPbf"
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A367AFC;
+	Sun,  3 Dec 2023 07:51:21 -0800 (PST)
+Received: from localhost.localdomain (unknown [46.242.8.170])
+	by mail.ispras.ru (Postfix) with ESMTPSA id 3E8F140F1DE6;
+	Sun,  3 Dec 2023 15:51:17 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 3E8F140F1DE6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+	s=default; t=1701618677;
+	bh=OzqlpYzBI15i6FXYFGVQXHLoruvKle2z9Cu7A+AYusY=;
+	h=From:To:Cc:Subject:Date:From;
+	b=TXgQzPbfxSrdpYYw84oDK20OZfkSeQdWdzqyfZOwnJMGcYsbwkX1D27IEo/QQ2F8F
+	 nn6+wULBdJn0Hz87drvzHz3Rj+/WG0VhY5x8uqGqgBG7YV2bYKjbd8LGroyWhns4gz
+	 q7IDTPju6sD5xZhcREAO5OXY+BKTeKm1dmwVZJfg=
+From: Fedor Pchelkin <pchelkin@ispras.ru>
+To: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	megaraidlinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	lvc-project@linuxtesting.org
+Subject: [PATCH] scsi: megaraid_mm: do not access uninit kioc_list members
+Date: Sun,  3 Dec 2023 18:50:57 +0300
+Message-ID: <20231203155058.24293-1-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] scsi: aic7xxx: return negative error codes in
- aic7770_probe()
-Content-Language: fr
-From: Marion & Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: Su Hui <suhui@nfschina.com>, dan.carpenter@linaro.org, hare@suse.com,
- jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- kernel-janitors@vger.kernel.org
-References: <20231201025955.1584260-1-suhui@nfschina.com>
- <20231201025955.1584260-4-suhui@nfschina.com>
- <87d394e4-e290-41a6-aaf2-92cf6b5ad919@wanadoo.fr>
-In-Reply-To: <87d394e4-e290-41a6-aaf2-92cf6b5ad919@wanadoo.fr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
+adapter->kioc_list is allocated using kmalloc_array() so its values are
+left uninitialized. In a rare OOM case when dma_pool_alloc() fails in
+mraid_mm_register_adp(), we should free the already allocated DMA pools
+but comparing kioc->pthru32 with NULL doesn't guard from accessing uninit
+memory.
 
+Properly roll back in error case: free array members with lower indices.
 
-Le 03/12/2023 à 11:34, Christophe JAILLET a écrit :
-> Le 01/12/2023 à 03:59, Su Hui a écrit :
->> aic7770_config() returns both negative and positive error code.
->> it's better to make aic7770_probe() only return negative error codes.
->>
->> And the previous patch made ahc_linux_register_host() return negative 
->> error
->> codes, which makes sure aic7770_probe() returns negative error codes.
->>
->> Signed-off-by: Su Hui <suhui@nfschina.com>
->> ---
->>   drivers/scsi/aic7xxx/aic7770_osm.c | 6 +++---
->>   1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/aic7xxx/aic7770_osm.c 
->> b/drivers/scsi/aic7xxx/aic7770_osm.c
->> index bdd177e3d762..a19cdd87c453 100644
->> --- a/drivers/scsi/aic7xxx/aic7770_osm.c
->> +++ b/drivers/scsi/aic7xxx/aic7770_osm.c
->> @@ -87,17 +87,17 @@ aic7770_probe(struct device *dev)
->>       sprintf(buf, "ahc_eisa:%d", eisaBase >> 12);
->>       name = kstrdup(buf, GFP_ATOMIC);
->>       if (name == NULL)
->> -        return (ENOMEM);
->> +        return -ENOMEM;
->>       ahc = ahc_alloc(&aic7xxx_driver_template, name);
->>       if (ahc == NULL)
-> 
-> Unrelated to your fix, but 'name' is leaking here.
+Found by Linux Verification Center (linuxtesting.org).
 
-Oups, no, ahc_alloc() handles it.
-Really strange API!
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+---
+ drivers/scsi/megaraid/megaraid_mm.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-CJ
+diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+index c509440bd161..701eb5ee2a69 100644
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -1001,12 +1001,10 @@ mraid_mm_register_adp(mraid_mmadp_t *lld_adp)
+ 
+ pthru_dma_pool_error:
+ 
+-	for (i = 0; i < lld_adp->max_kioc; i++) {
++	while (--i >= 0) {
+ 		kioc = adapter->kioc_list + i;
+-		if (kioc->pthru32) {
+-			dma_pool_free(adapter->pthru_dma_pool, kioc->pthru32,
+-				kioc->pthru32_h);
+-		}
++		dma_pool_free(adapter->pthru_dma_pool, kioc->pthru32,
++			kioc->pthru32_h);
+ 	}
+ 
+ memalloc_error:
+-- 
+2.43.0
 
-> 
-> Also, kasprintf() could be used to avoid buf+sprintf()+kstrdup()
-> 
-> The GFP_ATOMIC in the allocation could certainly also be just a GFP_KERNEL.
-> 
-> CJ
-> 
->> -        return (ENOMEM);
->> +        return -ENOMEM;
->>       ahc->dev = dev;
->>       error = aic7770_config(ahc, aic7770_ident_table + 
->> edev->id.driver_data,
->>                      eisaBase);
->>       if (error != 0) {
->>           ahc->bsh.ioport = 0;
->>           ahc_free(ahc);
->> -        return (error);
->> +        return error < 0 ? error : -error;
->>       }
->>        dev_set_drvdata(dev, ahc);
-> 
-> 
