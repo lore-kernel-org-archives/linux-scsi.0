@@ -1,27 +1,27 @@
 Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6F8B106
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6712102
 	for <linux-scsi@vger.kernel.org>; Sun,  3 Dec 2023 08:06:19 -0800 (PST)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
 	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <ukl@pengutronix.de>)
-	id 1r9oz0-0005hW-Ts; Sun, 03 Dec 2023 17:06:14 +0100
+	id 1r9oz1-0005iF-T1; Sun, 03 Dec 2023 17:06:15 +0100
 Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
 	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.94.2)
 	(envelope-from <ukl@pengutronix.de>)
-	id 1r9oz0-00DK9t-HP; Sun, 03 Dec 2023 17:06:14 +0100
+	id 1r9oz1-00DKAD-G0; Sun, 03 Dec 2023 17:06:15 +0100
 Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
 	(envelope-from <ukl@pengutronix.de>)
-	id 1r9oz0-00DPos-7z; Sun, 03 Dec 2023 17:06:14 +0100
+	id 1r9oz1-00DPp8-6x; Sun, 03 Dec 2023 17:06:15 +0100
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
 To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	kernel@pengutronix.de
-Subject: [PATCH 06/14] scsi: mac_esp: Convert to platform remove callback returning void
-Date: Sun,  3 Dec 2023 17:05:51 +0100
-Message-ID:  <9013c84059b8ccd6a5c8305aa35cfdfa314ba74c.1701619134.git.u.kleine-koenig@pengutronix.de>
+Subject: [PATCH 10/14] scsi: sgiwd93: Convert to platform remove callback returning void
+Date: Sun,  3 Dec 2023 17:05:55 +0100
+Message-ID:  <92114604fd1274073915e515cae15003ff07aa4a.1701619134.git.u.kleine-koenig@pengutronix.de>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <cover.1701619134.git.u.kleine-koenig@pengutronix.de>
 References: <cover.1701619134.git.u.kleine-koenig@pengutronix.de>
@@ -32,7 +32,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1844; i=u.kleine-koenig@pengutronix.de; h=from:subject:message-id; bh=eq33+WGghO/SVL/B/pYvTYvDw2vusngjGxzoUEKQznU=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlbKdfLZ0A/rjpy9pmNHFB+dqZFK4ehkn4BgppL ryV9cx9o2mJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZWynXwAKCRCPgPtYfRL+ TjJXB/41IUjR2sHCMUoNtVMo0PNWFhOLbwYU12SN32jSCIVotYD47+sBW+aDBvHu6auXf9CjUIW AEATbCOaNugGAus4luz5I/jmw2Nvbr8CH5GltmcpA0RU/zzDpGXnt4qNqjahxa7V05aewvX5id1 biEbgRG99Mwz0tHdaI9x7PL3Z+MNgx4oH5Y22QT6tPyuI/Kqh+HliyoIquxYsbZGfIMYDIz1kdJ DSzzHd2aRxW3b7j+tnCHUfdH28qFNM33vEVZ9AKEAgH2w2A+mdgN08nsxjh10HRZr7G8mrhA1U9 rvU5jLqqlEzP9dVmbN1YZdgWlKR04Du2RMBvPbsWHct4Z0vx
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1932; i=u.kleine-koenig@pengutronix.de; h=from:subject:message-id; bh=DW3LG7aglWlZOVUC2OH9y5ea5FON/xeAQBAEDC/idiM=; b=owGbwMvMwMXY3/A7olbonx/jabUkhtSc5ckb3lg4dbtsvjD38jwDg7PyVYE9DewKLEYnY9ck5 e0zaEjsZDRmYWDkYpAVU2Sxb1yTaVUlF9m59t9lmEGsTCBTGLg4BWAirx+y/y/clGXxekUg96r/ DL9aGbgqZhXN5Gx2vV/oVPgtKdyzu3RbmxDv+YmMudOk3Hp5Pl/qNaou6j9+dIGIY/oF9pO3Fsz tXzqFcVpeXdONnee4pD7POvIu8GBJ7feH2suVTL58n5KYVm/Io7R8yf3LMp/79dTjL/epSkg5vO 3s2DlrRWxbhchDhjvTz4XIlf5LvtMcHfDb9Z1094Twc2JVLj+mPtigsS0yJeWUJ3eCz+spMSLzS 9r63V0OBhzJOL9Qr8R9W/rn10eaXnYVlrnu2xj1YAX3KiH+4/rTw6bG57R0np2Q6hQb2td7zfdr 9dR5oQ+v2Non20Vy95WrvKvQWTKRlevSXTU/wbmNDRMTAA==
 X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -59,37 +59,36 @@ callback to the void returning variant.
 
 Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 ---
- drivers/scsi/mac_esp.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/sgiwd93.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
-index 3f0061b00494..187ae0a65d40 100644
---- a/drivers/scsi/mac_esp.c
-+++ b/drivers/scsi/mac_esp.c
-@@ -407,7 +407,7 @@ static int esp_mac_probe(struct platform_device *dev)
+diff --git a/drivers/scsi/sgiwd93.c b/drivers/scsi/sgiwd93.c
+index 88e2b5eb9caa..b0bef83db7b6 100644
+--- a/drivers/scsi/sgiwd93.c
++++ b/drivers/scsi/sgiwd93.c
+@@ -291,7 +291,7 @@ static int sgiwd93_probe(struct platform_device *pdev)
  	return err;
  }
  
--static int esp_mac_remove(struct platform_device *dev)
-+static void esp_mac_remove(struct platform_device *dev)
+-static int sgiwd93_remove(struct platform_device *pdev)
++static void sgiwd93_remove(struct platform_device *pdev)
  {
- 	struct mac_esp_priv *mep = platform_get_drvdata(dev);
- 	struct esp *esp = mep->esp;
-@@ -428,13 +428,11 @@ static int esp_mac_remove(struct platform_device *dev)
- 	kfree(esp->command_block);
- 
- 	scsi_host_put(esp->host);
--
+ 	struct Scsi_Host *host = platform_get_drvdata(pdev);
+ 	struct ip22_hostdata *hdata = (struct ip22_hostdata *) host->hostdata;
+@@ -302,12 +302,11 @@ static int sgiwd93_remove(struct platform_device *pdev)
+ 	dma_free_noncoherent(&pdev->dev, HPC_DMA_SIZE, hdata->cpu, hdata->dma,
+ 			DMA_TO_DEVICE);
+ 	scsi_host_put(host);
 -	return 0;
  }
  
- static struct platform_driver esp_mac_driver = {
- 	.probe    = esp_mac_probe,
--	.remove   = esp_mac_remove,
-+	.remove_new = esp_mac_remove,
- 	.driver   = {
- 		.name	= DRV_MODULE_NAME,
- 	},
+ static struct platform_driver sgiwd93_driver = {
+ 	.probe  = sgiwd93_probe,
+-	.remove = sgiwd93_remove,
++	.remove_new = sgiwd93_remove,
+ 	.driver = {
+ 		.name   = "sgiwd93",
+ 	}
 -- 
 2.42.0
 
