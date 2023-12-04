@@ -1,228 +1,209 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Sbzk/cJa"
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 816DD129;
-	Mon,  4 Dec 2023 10:07:10 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6ce46470647so821732b3a.1;
-        Mon, 04 Dec 2023 10:07:10 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="IVMfsoX8"
+Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E760D125
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Dec 2023 10:41:14 -0800 (PST)
+Received: by mail-lj1-x22d.google.com with SMTP id 38308e7fff4ca-2c9f572c4c5so30164641fa.2
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Dec 2023 10:41:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701713230; x=1702318030; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=vnKGL9rVmaXJ0k7UQTGGb8qgGBw3yaFYXulmlj0ClVk=;
-        b=Sbzk/cJarJS+HKABhyq9ZXjIKHReZXRZD2BmG6K1tjWjkQP6qWn2M1Hej+A0irmaku
-         MiQQibihKqnyE5TVi9uvaP+TQXi4717965Cj5SWoxsFXT08rL/dq7gcQha9HMJ+iJ6E4
-         BVSsykoGX1GtN128YVvHFOLoVXyY9pSvbwxF1qFD/Yff8eCGgX7GFA1jKFa07niVVpY4
-         d9OCXuF3WhLpOcz+yEjCxARi6Zebpvmf8U8x8xjf+1Jj/H4bG5JnvtbOkN1l+9J9gmEl
-         oiEG7ELXzD08vZaeO7QyUcVFM2Rqj1v3KKn+P22m3559f6bBVfzqLvxbIyP1mZuhfgJK
-         shBw==
+        d=broadcom.com; s=google; t=1701715273; x=1702320073; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=MBOmen5BKJLJzpqKzypUh7LonInw+vuMHMvPU1qS3N4=;
+        b=IVMfsoX8cUgbP8MGHNl3C9ysuQs0HuWH1NprHMaWRmqT81Ze8iQSq3f7qk1/8Pn9cN
+         9+fo1WsOTGwqGcx4OAg4Spfyw7/EPqZqyFXN7Uw0Zj42CIORPNFFCQg+g3ZDZT1hgXB9
+         nel46bdL9fl8NFmIUeVT526/BJ2iLHIzBSNWQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701713230; x=1702318030;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=vnKGL9rVmaXJ0k7UQTGGb8qgGBw3yaFYXulmlj0ClVk=;
-        b=AYyMCAiofwW1w8/LKfRAUteUMOKs3IGWzjKZ81HOLm4Qog7YCel+I5tMBELYkYd3Ic
-         C4T4qpkFlGZeeXP+bncCihQfhjeGD3TsJFVqGBXi/XIjoPO4B2kA2Qlk2CwoPwhDujan
-         +NNUBj2hdZwzJF+J3y4w2hEVmDWduaQnATolFiBBR9nrKzAorPwLhVN5eBryUxtqzHrX
-         V+Fk7vGMXsTDRx7WiPSB9OD38PTNnbefsY008s69lgAXGCZSuKzQm1is49s8RxAW7uOj
-         fmc91cbZIRseHKFcBH1ZvFv+pbAs/b98BwWxq9xVaO3s3RAhfCBsGBSyGFZhNwjbcZOo
-         v/lw==
-X-Gm-Message-State: AOJu0YygE6uwIjeYYcpP+0PeLWzLwNjgGit6simtM/p2Q2tE1GHwtNrK
-	68fyZnN9/CqU4w30ZC6sDjE=
-X-Google-Smtp-Source: AGHT+IGDIGeeBa7UWPj4E4w2SIGHBjZgGz8oxGqwAWzNb+KD7mpnEvIno4bt3NIHORxil3wMtNwC4w==
-X-Received: by 2002:a05:6a20:1448:b0:18c:374c:6e64 with SMTP id a8-20020a056a20144800b0018c374c6e64mr27716780pzi.36.1701713229690;
-        Mon, 04 Dec 2023 10:07:09 -0800 (PST)
-Received: from localhost ([2620:10d:c090:400::4:27ef])
-        by smtp.gmail.com with ESMTPSA id u2-20020a056a00158200b006cdd507ca2esm7943470pfk.167.2023.12.04.10.07.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Dec 2023 10:07:09 -0800 (PST)
-Sender: Tejun Heo <htejun@gmail.com>
-Date: Mon, 4 Dec 2023 08:07:07 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Naohiro Aota <Naohiro.Aota@wdc.com>
-Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-	"ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
-	"coreteam@netfilter.org" <coreteam@netfilter.org>,
-	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-	"gfs2@lists.linux.dev" <gfs2@lists.linux.dev>,
-	"intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
-	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linux-bcachefs@vger.kernel.org" <linux-bcachefs@vger.kernel.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-cachefs@redhat.com" <linux-cachefs@redhat.com>,
-	"linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"linux-erofs@lists.ozlabs.org" <linux-erofs@lists.ozlabs.org>,
-	"linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>,
-	"linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-	"linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-remoteproc@vger.kernel.org" <linux-remoteproc@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-trace-kernel@vger.kernel.org" <linux-trace-kernel@vger.kernel.org>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"nbd@other.debian.org" <nbd@other.debian.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"ntb@lists.linux.dev" <ntb@lists.linux.dev>,
-	"open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-	"oss-drivers@corigine.com" <oss-drivers@corigine.com>,
-	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>,
-	"samba-technical@lists.samba.org" <samba-technical@lists.samba.org>,
-	"target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-	"virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
-	"wireguard@lists.zx2c4.com" <wireguard@lists.zx2c4.com>
-Subject: Re: Performance drop due to alloc_workqueue() misuse and recent
- change
-Message-ID: <ZW4VS3Z0auYCjg-W@slm.duckdns.org>
-References: <dbu6wiwu3sdhmhikb2w6lns7b27gbobfavhjj57kwi2quafgwl@htjcc5oikcr3>
+        d=1e100.net; s=20230601; t=1701715273; x=1702320073;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=MBOmen5BKJLJzpqKzypUh7LonInw+vuMHMvPU1qS3N4=;
+        b=Ba65lV65uE8urSFc2SeJkTiBZfQCWM61eb33cpMeu3k/3nM05SjV9zUyvt26fnkiKY
+         E/ntFj6O4hs2uQpSu5UdC2Ot3doqZCf2LYTr1BKbQ5I2ujuzdBufLKI4vwtG54XeXO1e
+         BYI/559Tgm6ox1/LpoJpBp+VVIJYRWK51eQcgvEAUESezx61H0ju3NaP5n4geGTDZM8h
+         Ugw2kDJF4JKr83jnV+J9gLNuecnuq2jGbKS3sM/L4K3hGd/kffQ/O3EXhTZWM8isGNWL
+         dDiwIYTmD+RYsSNY/ECIocShvbqxZzX8oapfrUrEExOUkdam/58bpXT/bnTuKgqb8npD
+         U96g==
+X-Gm-Message-State: AOJu0YwAHsiVMJ1M/TDAhFiAq6dddVwrUsN7acMkm9vkvfs7q8IJ9D7P
+	bYTxYXGsWSbJ21Td+yow2ZCgJOCJGx/abOi8mTc3br//xjXGCpU=
+X-Google-Smtp-Source: AGHT+IHnrO9mNiL2x6jEDY6qDMaw2DVBtfyrqJvDYf7t4UuwKhFmGPTtiH0Eh804UEj3ntdPe9Ee+5ahOSFqaKTmUDE=
+X-Received: by 2002:a2e:3019:0:b0:2c9:fc43:2b6c with SMTP id
+ w25-20020a2e3019000000b002c9fc432b6cmr1318632ljw.104.1701715273132; Mon, 04
+ Dec 2023 10:41:13 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <dbu6wiwu3sdhmhikb2w6lns7b27gbobfavhjj57kwi2quafgwl@htjcc5oikcr3>
+References: <20231129120626.4118089-1-arnd@kernel.org>
+In-Reply-To: <20231129120626.4118089-1-arnd@kernel.org>
+From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Date: Mon, 4 Dec 2023 11:40:55 -0700
+Message-ID: <CAFdVvOxH4UQjww4124E2ttuTgknzkHoPxVSFOQgLfoV_dkANwQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpi3mr: reduce stack usage in mpi3mr_refresh_sas_ports()
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Arnd Bergmann <arnd@arndb.de>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Ranjan Kumar <ranjan.kumar@broadcom.com>, Tomas Henzl <thenzl@redhat.com>, 
+	Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>, mpi3mr-linuxdrv.pdl@broadcom.com, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="0000000000006293c9060bb37611"
 
-Hello,
+--0000000000006293c9060bb37611
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Dec 04, 2023 at 04:03:47PM +0000, Naohiro Aota wrote:
-> Recently, commit 636b927eba5b ("workqueue: Make unbound workqueues to use
-> per-cpu pool_workqueues") changed WQ_UNBOUND workqueue's behavior. It
-> changed the meaning of alloc_workqueue()'s max_active from an upper limit
-> imposed per NUMA node to a limit per CPU. As a result, massive number of
-> workers can be running at the same time, especially if the workqueue user
-> thinks the max_active is a global limit.
-> 
-> Actually, it is already written it is per-CPU limit in the documentation
-> before the commit. However, several callers seem to misuse max_active,
-> maybe thinking it is a global limit. It is an unexpected behavior change
-> for them.
+On Wed, Nov 29, 2023 at 5:06=E2=80=AFAM Arnd Bergmann <arnd@kernel.org> wro=
+te:
+>
+> From: Arnd Bergmann <arnd@arndb.de>
+>
+> Toubling the number of PHYs also doubled the stack usage of this function=
+,
+> exceeding the 32-bit limit of 1024 bytes:
+>
+> drivers/scsi/mpi3mr/mpi3mr_transport.c: In function 'mpi3mr_refresh_sas_p=
+orts':
+> drivers/scsi/mpi3mr/mpi3mr_transport.c:1818:1: error: the frame size of 1=
+636 bytes is larger than 1024 bytes [-Werror=3Dframe-larger-than=3D]
+>
+> Since the sas_io_unit_pg0 structure is already allocated dynamically, use
+> the same method here. The size of the allocation can be smaller based on =
+the
+> actual number of phys now, so use this as an upper bound.
+>
+> Fixes: cb5b60894602 ("scsi: mpi3mr: Increase maximum number of PHYs to 64=
+ from 32")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/scsi/mpi3mr/mpi3mr_transport.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr=
+/mpi3mr_transport.c
+> index c0c8ab586957..ab04596dbdf5 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> @@ -1671,7 +1671,7 @@ mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc,=
+ struct host_port *h_port,
+>  void
+>  mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
+>  {
+> -       struct host_port h_port[64];
+> +       struct host_port *h_port =3D NULL;
+>         int i, j, found, host_port_count =3D 0, port_idx;
+>         u16 sz, attached_handle, ioc_status;
+>         struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0 =3D NULL;
+> @@ -1685,6 +1685,11 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
+>         sas_io_unit_pg0 =3D kzalloc(sz, GFP_KERNEL);
+>         if (!sas_io_unit_pg0)
+>                 return;
+> +       h_port =3D kcalloc(mrioc->sas_hba.num_phys, sizeof(struct host_po=
+rt),
+> +                        GFP_KERNEL);
+>> We need more than sas_hba.num_phys, so can you please use 64 instead of =
+sas_hba.num_phys. Otherwise looks good.
+> +       if (!h_port)
+> +               goto out;
+> +
+>         if (mpi3mr_cfg_get_sas_io_unit_pg0(mrioc, sas_io_unit_pg0, sz)) {
+>                 ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+>                     __FILE__, __LINE__, __func__);
+> @@ -1814,6 +1819,7 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
+>                 }
+>         }
+>  out:
+> +       kfree(h_port);
+>         kfree(sas_io_unit_pg0);
+>  }
+>
+> --
+> 2.39.2
+>
 
-Right, and the behavior has been like that for a very long time and there
-was no other way to achieve reasonable level of concurrency, so the current
-situation is expected.
+--0000000000006293c9060bb37611
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-> For example, these callers set max_active = num_online_cpus(), which is a
-> suspicious limit applying to per-CPU. This config means we can have nr_cpu
-> * nr_cpu active tasks working at the same time.
-
-Yeah, that sounds like a good indicator.
-
-> fs/f2fs/data.c: sbi->post_read_wq = alloc_workqueue("f2fs_post_read_wq",
-> fs/f2fs/data.c-                                          WQ_UNBOUND | WQ_HIGHPRI,
-> fs/f2fs/data.c-                                          num_online_cpus());
-> 
-> fs/crypto/crypto.c:     fscrypt_read_workqueue = alloc_workqueue("fscrypt_read_queue",
-> fs/crypto/crypto.c-                                              WQ_UNBOUND | WQ_HIGHPRI,
-> fs/crypto/crypto.c-                                              num_online_cpus());
-> 
-> fs/verity/verify.c:     fsverity_read_workqueue = alloc_workqueue("fsverity_read_queue",
-> fs/verity/verify.c-                                               WQ_HIGHPRI,
-> fs/verity/verify.c-                                               num_online_cpus());
-> 
-> drivers/crypto/hisilicon/qm.c:  qm->wq = alloc_workqueue("%s", WQ_HIGHPRI | WQ_MEM_RECLAIM |
-> drivers/crypto/hisilicon/qm.c-                           WQ_UNBOUND, num_online_cpus(),
-> drivers/crypto/hisilicon/qm.c-                           pci_name(qm->pdev));
-> 
-> block/blk-crypto-fallback.c:    blk_crypto_wq = alloc_workqueue("blk_crypto_wq",
-> block/blk-crypto-fallback.c-                                    WQ_UNBOUND | WQ_HIGHPRI |
-> block/blk-crypto-fallback.c-                                    WQ_MEM_RECLAIM, num_online_cpus());
-> 
-> drivers/md/dm-crypt.c:          cc->crypt_queue = alloc_workqueue("kcryptd/%s",
-> drivers/md/dm-crypt.c-                                            WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND,
-> drivers/md/dm-crypt.c-                                            num_online_cpus(), devname);
-
-Most of these work items are CPU bound but not completley so. e.g.
-kcrypt_crypt_write_continue() does wait_for_completion(), so setting
-max_active to 1 likely isn't what they want either. They mostly want some
-reasonable system-wide concurrency limit w.r.t. the CPU count while keeping
-some level of flexibility in terms of task placement.
-
-The previous max_active wasn't great for this because its meaning changed
-depending on the number of nodes. Now, the meaning doesn't change but it's
-not really useful for the above purpose. It's only useful for avoiding
-melting the system completely.
-
-One way to go about it is to declare that concurrency level management for
-unbound workqueue is on users but that seems not ideal given many use cases
-would want it anyway.
-
-Let me think it over but I think the right way to go about it is going the
-other direction - ie. making max_active apply to the whole system regardless
-of the number of nodes / ccx's / whatever.
-
-> Furthermore, the change affects performance in a certain case.
-> 
-> Btrfs creates several WQ_UNBOUND workqueues with a default max_active =
-> min(NRCPUS + 2, 8). As my machine has 96 CPUs with NUMA disabled, this
-> max_active config allows running over 700 active works. Before the commit,
-> it is limited to 8 if NUMA is disabled or limited to 16 if NUMA nodes is 2.
-> 
-> I reverted the workqueue code back to before the commit, and I ran the
-> following fio command on RAID0 btrfs on 6 SSDs.
-> 
-> fio --group_reporting --eta=always --eta-interval=30s --eta-newline=30s \
->     --rw=write --fallocate=none \
->     --direct=1 --ioengine=libaio --iodepth=32 \
->     --filesize=100G \
->     --blocksize=64k \
->     --time_based --runtime=300s \
->     --end_fsync=1 \
->     --directory=${MNT} \
->     --name=writer --numjobs=32
-> 
-> By changing workqueue's max_active, the result varies.
-> 
-> - wq max_active=8   (intended limit by btrfs?)
->   WRITE: bw=2495MiB/s (2616MB/s), 2495MiB/s-2495MiB/s (2616MB/s-2616MB/s), io=753GiB (808GB), run=308953-308953msec
-> - wq max_active=16  (actual limit on 2 NUMA nodes setup)
->   WRITE: bw=1736MiB/s (1820MB/s), 1736MiB/s-1736MiB/s (1820MB/s-1820MB/s), io=670GiB (720GB), run=395532-395532msec
-> - wq max_active=768 (simulating current limit)
->   WRITE: bw=1276MiB/s (1338MB/s), 1276MiB/s-1276MiB/s (1338MB/s-1338MB/s), io=375GiB (403GB), run=300984-300984msec
-> 
-> The current performance is slower than the previous limit (max_active=16)
-> by 27%, or it is 50% slower than the intended limit.  The performance drop
-> might be due to contention of the btrfs-endio-write works. There are over
-> 700 kworker instances were created and 100 works are on the 'D' state
-> competing for a lock.
-> 
-> More specifically, I tested the same workload on the commit.
-> 
-> - At commit 636b927eba5b ("workqueue: Make unbound workqueues to use per-cpu pool_workqueues")
->   WRITE: bw=1191MiB/s (1249MB/s), 1191MiB/s-1191MiB/s (1249MB/s-1249MB/s), io=350GiB (376GB), run=300714-300714msec
-> - At the previous commit = 4cbfd3de73 ("workqueue: Call wq_update_unbound_numa() on all CPUs in NUMA node on CPU hotplug")
->   WRITE: bw=1747MiB/s (1832MB/s), 1747MiB/s-1747MiB/s (1832MB/s-1832MB/s), io=748GiB (803GB), run=438134-438134msec
-> 
-> So, it is -31.8% performance down with the commit.
-> 
-> In summary, we misuse max_active, considering it is a global limit. And,
-> the recent commit introduced a huge performance drop in some cases.  We
-> need to review alloc_workqueue() usage to check if its max_active setting
-> is proper or not.
-
-Thanks a lot for the report. I think it's a lot more reasonable to assume
-that max_active is global for unbound workqueues. The current workqueue
-behavior is not very intuitive or useful. I'll try to find something more
-reasonable. Thanks for the report and analysis. Much appreciated.
-
-Thanks.
-
--- 
-tejun
+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
+v82E+npLwqC8bSHh1m6BJewfpawx72uKM9aFs6SVpLPtN6a5369OCwVeEwkk2FeFU9tZXWBnI4Wu
+d1Q4a3vhOColD6PdTWv74Ez2I3ahCkmpeEQ1YMt61TUH3W8NUJJeYN2xkR6OGsA1AgMBAAGjggHc
+MIIB2DAOBgNVHQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRw
+Oi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MC5jcnQwQQYIKwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJz
+b25hbHNpZ24yY2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZo
+dHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRC
+MEAwPqA8oDqGOGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAuY3JsMCYGA1UdEQQfMB2BG3NhdGh5YS5wcmFrYXNoQGJyb2FkY29tLmNvbTATBgNVHSUE
+DDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU
+VyBc/F5XGkYNCP9Rb96mru8lU4AwDQYJKoZIhvcNAQELBQADggEBACiysbqj0ggjcc9uzOpBkt1Q
+nGtvHhd9pbNmshJRUoNL11pQEzupSsUkDoAa6hPrOaJVobIO+yC84D4GXQc13Jk0QZQhRJJRYLwk
+vdq704JPh4ULIwofTWqwsiZ1OvINzX9h9KEw/+h+Mc3YUCO7tvKBGLJTUaUhrjxyjLQdEK1Xp/8B
+kYd5quZssxYPJ3nl37Moy/U9ZM2F0Ivv4U3wyP5y5cdmBUBAGOd94rH60fVDVogEo5F9gXrZhT/4
+jKzCG3LclOOzLinCkK2J5GYngIUHSmnqk909QPG6jkx5RJWwkpTzm+AAVbJ9a+1F/8iR3FiDddEK
+8wQJuWG84jqd/9wxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
+aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
+MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEDQYueU
+XSFoQc+W0+YDVXbfI9npusQNWblKaIUkaxdrMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMTIwNDE4NDExM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAK0DfeZCQ5V7Z6ro8X9Cwf3SKw
+jv/UMsmwkTCcC0ce7dceqZlUFqVpRRHrn02POVxtfD3ID+smPgs/TFVa5YFnn3L6r2UO8/8IhSa7
+BGawOfW6jZLpDc8UDMEof0AcwMfbPWEjCUO9c6zbcuMP4Uuymws5TwRWAAie8v3iuwxyosjyVswI
+ybwzDXXRu43V+XktuQf4wovxZoDkPJGf+7Q/Nkzq85/JPuH3e10ZFeDZJWjidH1CU3H/e9cw2tI2
+En9wr86MQupHgL4YCyCIUEdFgfOZf+VEgbCbduze43HH+Kg8UMOqmI2v/Vhmj/fInn5Czk+xZS5t
+5k/dD7z7XbXp
+--0000000000006293c9060bb37611--
