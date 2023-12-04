@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="j2ujXazv"
-Received: from mail-lj1-x22b.google.com (mail-lj1-x22b.google.com [IPv6:2a00:1450:4864:20::22b])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16CEA191
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Dec 2023 02:24:18 -0800 (PST)
-Received: by mail-lj1-x22b.google.com with SMTP id 38308e7fff4ca-2c9eca5bbaeso22064581fa.3
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Dec 2023 02:24:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="MkNs4cle"
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E023BD4F
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Dec 2023 02:24:16 -0800 (PST)
+Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-50be8ced3ddso1854128e87.1
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Dec 2023 02:24:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1701685456; x=1702290256; darn=vger.kernel.org;
+        d=fairphone.com; s=fair; t=1701685455; x=1702290255; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=F+ofOOqwlUZnjaPwU1R/ES77wt7OX5hZOTqDiest6VM=;
-        b=j2ujXazv/wUQHlX6L8k6yZjFkX7b+JLx6E7rsmF0HvSXzJVk/vgAgyUv8P/uHNfpQP
-         LCWWv1SC/SJCFOA/JqPwDd8DEA8rFl9incD11jouhTn4TSilgqoF1cXhWuYDEaYRMCCX
-         aVl7qIwlksXK12AuKAzpfMLvWvmaT0z5irvGkqr+UMF8Dh77GzZrkjd/JnSVHVwID1ri
-         cRP6dTJ7lNRsZlamwAUoOmkh0fx6DFh1Q+ywHNA8NTbhiEpN42QcN7UvQ9IUitNIXbVw
-         W+z8K7aercDlu3VQ2BGnbl/SMyVOmlF61BZ+j+4T7wwm+NZxixK1V6LYGsgwIZvIPOt6
-         T1SA==
+        bh=jUS+V8KAxZ6BxQ88IkSxr3UDkU13WU3CqcznDtGJw7I=;
+        b=MkNs4cle6gXhSfG+FRMynq5IYnHml8rmtTiTjcioQZjp1h0+jh8yuXdZCS95VKyrEg
+         CeZhe0P3ZyBPzTCLY3pUMjHCUFvZUI3vCCosVolBStjvoqFTfz7QX8BKPRDr51MOqF3T
+         aBUtq8NxY8LiH5JWOFiQw5xsFo+UMYd3on0vgSRQ5bj7eum5rHzaePDF5PdfeSgFt9l+
+         o39+phCdJjEdDqMHufZ3sNlWZmeawRA467q9H2Lc2RU92iyMT5p0BvyQviQE3jU4Jkq7
+         7KJtCwcSbmaTWZ9SFTV61G3vz/QmMRt2HLviY3gt1To8eTyhnovFirqbQrJTKMr3L7pg
+         h4Ww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701685456; x=1702290256;
+        d=1e100.net; s=20230601; t=1701685455; x=1702290255;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=F+ofOOqwlUZnjaPwU1R/ES77wt7OX5hZOTqDiest6VM=;
-        b=aLi8klB447RhyaC/45yXUGiGRXIAUuyJkXBcsaeAmRlTAJpPUkg3Hc9xi5+KsxCZ9H
-         ugRs0sV5JJAqqsdd8u1S/8YJm3cg7WpPTFy5oXNcAfw0w5kTQRGGzQfB2HUIqDIrXg+/
-         Abgi5vg351kKcMxsjbbzcSzaQR4h88bxEd9MaD1QwmwBHvIB0T5rvmtBdmvGyO7G22lZ
-         msQScLQ1YKpALTI7rLR1fRY7QPyRWTsZ8Jchu08rLH9lRLnAefZA6ZG94ejs20IkyRWg
-         heacvtQoq8hYUUJcVJQTMpNQphQQf+HjjL7KVXn2dQEHO4QwHnki5DSFMRqX7YPTvSfV
-         j1mg==
-X-Gm-Message-State: AOJu0YyfgN/XIAUIMXBzMr07VnMMew9HCkdAEf+vTn7LMCcx9D5BXFTi
-	qJhtUB9anXizk2V3QfdN2+yvfw==
-X-Google-Smtp-Source: AGHT+IGfZyiNNc0jMr4snd1gdmvFtqMZ3JH/kWXhhcJq6QF1u/8bMbIuMuKp40e7ciUb3tmmWiMGlQ==
-X-Received: by 2002:a2e:2c01:0:b0:2c9:f776:e28f with SMTP id s1-20020a2e2c01000000b002c9f776e28fmr396256ljs.120.1701685456383;
-        Mon, 04 Dec 2023 02:24:16 -0800 (PST)
-Received: from otso.luca.vpn.lucaweiss.eu (144-178-202-138.static.ef-service.nl. [144.178.202.138])
-        by smtp.gmail.com with ESMTPSA id t15-20020a1709066bcf00b00a0bdfab0f02sm5121551ejs.77.2023.12.04.02.24.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=jUS+V8KAxZ6BxQ88IkSxr3UDkU13WU3CqcznDtGJw7I=;
+        b=TJE5YilXPaRf0BaIRxoj8UlUVoO/PejUiyyNzgk+Rc/U6FtssH5q9LGpuQvfgc1Wnh
+         Y05nYNTk7cz7wuOSy5IgzZMQdINtcdFq5/2f5xUEc/UhUYoMg13lANkWRy4nn17oFFAD
+         cCsMD++GhYhFVPSfmJIE34kCqwLnOIDChumNZ3z5EOLObtZVnV6YRk4hZxSiu+K60zoE
+         GEbExskLH4HbT1FEmBXgdehDg5yW8jTLN8KcHaoBLUkLQ8afIFtmwE/TZeVprc/bVWJu
+         uFuM8QWip3ax373lfUi6Iqoy9twB3uI5EKn1HusHPY3KtOyMgsJV3n+PEmLh2CwwbGpK
+         Xcvg==
+X-Gm-Message-State: AOJu0YzqDz1ySJ+fLXSElNkjdOdyU8e5k2TGvmozvqkwv3SrFe8yU23B
+	ayTm9ehijTDGRYS7ADiW2SRtJw==
+X-Google-Smtp-Source: AGHT+IHMCjMG4PLctoa3RGXyttvOBiWl+bWWGH2Rt1xUTUVEXDamVU0+GRf5sHB2eSdunvo15mYrmQ==
+X-Received: by 2002:a05:6512:15a1:b0:50b:fd4a:f788 with SMTP id bp33-20020a05651215a100b0050bfd4af788mr380734lfb.33.1701685455058;
         Mon, 04 Dec 2023 02:24:15 -0800 (PST)
+Received: from otso.luca.vpn.lucaweiss.eu (144-178-202-138.static.ef-service.nl. [144.178.202.138])
+        by smtp.gmail.com with ESMTPSA id t15-20020a1709066bcf00b00a0bdfab0f02sm5121551ejs.77.2023.12.04.02.24.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Dec 2023 02:24:14 -0800 (PST)
 From: Luca Weiss <luca.weiss@fairphone.com>
-Date: Mon, 04 Dec 2023 11:24:06 +0100
-Subject: [PATCH v5 3/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- IDP board
+Date: Mon, 04 Dec 2023 11:24:05 +0100
+Subject: [PATCH v5 2/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
+ soc
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,7 +50,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231204-sc7280-ufs-v5-3-926ceed550da@fairphone.com>
+Message-Id: <20231204-sc7280-ufs-v5-2-926ceed550da@fairphone.com>
 References: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
 In-Reply-To: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
 To: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
@@ -64,51 +64,121 @@ Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Nitin Rawat <quic_nitirawa@quicinc.com>, 
- Luca Weiss <luca.weiss@fairphone.com>, 
- Manivannan Sadhasivam <mani@kernel.org>
+ Luca Weiss <luca.weiss@fairphone.com>
 X-Mailer: b4 0.12.4
 
 From: Nitin Rawat <quic_nitirawa@quicinc.com>
 
-Add UFS host controller and PHY nodes for sc7280 IDP board.
+Add UFS host controller and PHY nodes for sc7280 soc.
 
 Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Tested-by: Konrad Dybcio <konrad.dybcio@linaro.org> # QCM6490 FP5
+[luca: various cleanups and additions as written in the cover letter]
 Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
 ---
- arch/arm64/boot/dts/qcom/sc7280-idp.dtsi | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ arch/arm64/boot/dts/qcom/sc7280.dtsi | 74 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 73 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-index 2ff549f4dc7a..a0059527d9e4 100644
---- a/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc7280-idp.dtsi
-@@ -499,6 +499,25 @@ &uart5 {
- 	status = "okay";
- };
+diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+index 04bf85b0399a..8b08569f2191 100644
+--- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+@@ -15,6 +15,7 @@
+ #include <dt-bindings/dma/qcom-gpi.h>
+ #include <dt-bindings/firmware/qcom,scm.h>
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/interconnect/qcom,icc.h>
+ #include <dt-bindings/interconnect/qcom,osm-l3.h>
+ #include <dt-bindings/interconnect/qcom,sc7280.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+@@ -906,7 +907,7 @@ gcc: clock-controller@100000 {
+ 			clocks = <&rpmhcc RPMH_CXO_CLK>,
+ 				 <&rpmhcc RPMH_CXO_CLK_A>, <&sleep_clk>,
+ 				 <0>, <&pcie1_phy>,
+-				 <0>, <0>, <0>,
++				 <&ufs_mem_phy 0>, <&ufs_mem_phy 1>, <&ufs_mem_phy 2>,
+ 				 <&usb_1_qmpphy QMP_USB43DP_USB3_PIPE_CLK>;
+ 			clock-names = "bi_tcxo", "bi_tcxo_ao", "sleep_clk",
+ 				      "pcie_0_pipe_clk", "pcie_1_pipe_clk",
+@@ -2238,6 +2239,77 @@ pcie1_phy: phy@1c0e000 {
+ 			status = "disabled";
+ 		};
  
-+&ufs_mem_hc {
-+	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
-+	vcc-supply = <&vreg_l7b_2p9>;
-+	vcc-max-microamp = <800000>;
-+	vccq-supply = <&vreg_l9b_1p2>;
-+	vccq-max-microamp = <900000>;
-+	vccq2-supply = <&vreg_l9b_1p2>;
-+	vccq2-max-microamp = <900000>;
++		ufs_mem_hc: ufs@1d84000 {
++			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
++				     "jedec,ufs-2.0";
++			reg = <0x0 0x01d84000 0x0 0x3000>;
++			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
++			phys = <&ufs_mem_phy>;
++			phy-names = "ufsphy";
++			lanes-per-direction = <2>;
++			#reset-cells = <1>;
++			resets = <&gcc GCC_UFS_PHY_BCR>;
++			reset-names = "rst";
 +
-+	status = "okay";
-+};
++			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
 +
-+&ufs_mem_phy {
-+	vdda-phy-supply = <&vreg_l10c_0p8>;
-+	vdda-pll-supply = <&vreg_l6b_1p2>;
++			iommus = <&apps_smmu 0x80 0x0>;
++			dma-coherent;
 +
-+	status = "okay";
-+};
++			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
++					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
++					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
++					 &cnoc2 SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
++			interconnect-names = "ufs-ddr", "cpu-ufs";
 +
- &usb_1 {
- 	status = "okay";
- };
++			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
++				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
++				 <&gcc GCC_UFS_PHY_AHB_CLK>,
++				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
++				 <&rpmhcc RPMH_CXO_CLK>,
++				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
++				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
++				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
++			clock-names = "core_clk",
++				      "bus_aggr_clk",
++				      "iface_clk",
++				      "core_clk_unipro",
++				      "ref_clk",
++				      "tx_lane0_sync_clk",
++				      "rx_lane0_sync_clk",
++				      "rx_lane1_sync_clk";
++			freq-table-hz =
++				<75000000 300000000>,
++				<0 0>,
++				<0 0>,
++				<75000000 300000000>,
++				<0 0>,
++				<0 0>,
++				<0 0>,
++				<0 0>;
++			status = "disabled";
++		};
++
++		ufs_mem_phy: phy@1d87000 {
++			compatible = "qcom,sc7280-qmp-ufs-phy";
++			reg = <0x0 0x01d87000 0x0 0xe00>;
++			clocks = <&rpmhcc RPMH_CXO_CLK>,
++				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
++				 <&gcc GCC_UFS_1_CLKREF_EN>;
++			clock-names = "ref", "ref_aux", "qref";
++
++			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
++
++			resets = <&ufs_mem_hc 0>;
++			reset-names = "ufsphy";
++
++			#clock-cells = <1>;
++			#phy-cells = <0>;
++
++			status = "disabled";
++		};
++
+ 		ipa: ipa@1e40000 {
+ 			compatible = "qcom,sc7280-ipa";
+ 
 
 -- 
 2.43.0
