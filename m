@@ -1,153 +1,236 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Y77okf/t"
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E866383;
-	Mon,  4 Dec 2023 09:22:26 -0800 (PST)
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B4HCIHI028303;
-	Mon, 4 Dec 2023 17:22:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=NxIy4VEpMCawUCxTglyUaxp9xTHr90CdtW3JJB/GfzE=;
- b=Y77okf/tKDf5sPcasv0lCc7iELDhoQrdfJPwCzGhygCudVz+dbRVhNmjmfGNsFz0Hfex
- bmjYBLvp1r7dnCfWrOcHORHKHS9j9VXJTHNH4JGAyYtdQ9By1egu4vN4aPB0Fv48nHrq
- 0LpqIF3gmq7L/NipaO8+pRLLenbF/MBunknZX5qOPsDv7hsrlPo1FYiTQsHY23DnTw8C
- gTQkXUjzDZpaEh+NYMBn0Ml+h8Zq0XlMe9FJ505wj7bkeG8jv7jKAiDpwY3s+nYCbaG0
- vTAIrk6fCQoJj2kwszjNpBmLk2nGeDLB2v2UPc5pLkITLvZfGe1K5zo0c2Ets1cQwJrI iQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3usjy5gdb2-1
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="W2T82SdS"
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD0EDA1;
+	Mon,  4 Dec 2023 09:28:06 -0800 (PST)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B4GpuMU000330;
+	Mon, 4 Dec 2023 17:27:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=O/w7GgStHBiYsuRqEUagQ6Lk0QgWtx1hIjwEQICjYDI=;
+ b=W2T82SdSr+YG7fUQz6sBvLVxXTDrulmbLYhB/MGvElTEHyrkZiNvngrMxvNeLmOUn28F
+ vGf8seq6p9gu4zEWYUArgcOnsWPegW+af4bPZ06wJ3URPTuGzYW3nA5HueW0rYwyLpPg
+ RaTiKSZHeON4FYhmA+AhJVw1yFzhkFLjlMc/7Z+aFPnEO2jAfIqbdGkUk6Eeh04ncqr/
+ jZuIdMX8/sW6lTTT4ezMd/n0G4xnru+rRIiCDFZe4pHkMtGsdGJnDmOWrTDsCLmMQxXx
+ yhdaTzxyQr1DY4WzXJCmIyOzyYfjrmZuUM52GlAIGcMQuK93afO/kUGDQHdQM7jtCvaW dg== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3usjnqg33p-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 04 Dec 2023 17:22:22 +0000
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B4HDb6Q032342;
-	Mon, 4 Dec 2023 17:22:16 GMT
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3usjy5gd7e-1
+	Mon, 04 Dec 2023 17:27:48 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B4HRlsS017881
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 04 Dec 2023 17:22:16 +0000
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3B4H1crv031932;
-	Mon, 4 Dec 2023 17:17:34 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3urh4k95wx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 04 Dec 2023 17:17:34 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3B4HHVs819202716
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 4 Dec 2023 17:17:31 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9E2FA20043;
-	Mon,  4 Dec 2023 17:17:31 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 84E3F20040;
-	Mon,  4 Dec 2023 17:17:31 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.171.89.46])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon,  4 Dec 2023 17:17:31 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.96.2)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1rACZX-000HVZ-04;
-	Mon, 04 Dec 2023 18:17:31 +0100
-Date: Mon, 4 Dec 2023 18:17:31 +0100
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Kees Cook <keescook@chromium.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: Steffen Maier <maier@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        Azeem Shaikh <azeemshaikh38@gmail.com>, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: zfcp: Replace strlcpy() with strscpy()
-Message-ID: <20231204171731.GA62399@p1gen4-pw042f0m.fritz.box>
-References: <20231130204056.it.978-kees@kernel.org>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20231130204056.it.978-kees@kernel.org>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: 00mXfE6W_NeckrXu1gZw5l6qKRxrB-Jn
-X-Proofpoint-GUID: 4rodcN7COY9Dr5pZ2wBHwlKUIUiEnPBI
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+	Mon, 4 Dec 2023 17:27:47 GMT
+Received: from [10.50.1.19] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 4 Dec
+ 2023 09:27:42 -0800
+Message-ID: <e16ac596-353c-385b-a331-78c9261474a3@quicinc.com>
+Date: Mon, 4 Dec 2023 22:57:38 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: [PATCH v5 2/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
+ soc
+Content-Language: en-US
+To: Luca Weiss <luca.weiss@fairphone.com>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio
+	<konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim
+ Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van
+ Assche <bvanassche@acm.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof
+ Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley
+	<conor+dt@kernel.org>,
+        <cros-qcom-dts-watchers@chromium.org>
+CC: <~postmarketos/upstreaming@lists.sr.ht>, <phone-devel@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
+ <20231204-sc7280-ufs-v5-2-926ceed550da@fairphone.com>
+ <621388b9-dcee-4af2-9763-e5d623d722b7@quicinc.com>
+ <CXFJNBNKTRHH.2CS6TO2MEGJWL@fairphone.com>
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <CXFJNBNKTRHH.2CS6TO2MEGJWL@fairphone.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: oYCufc3jdikH9TciXY79BHDKGbAsylrl
+X-Proofpoint-GUID: oYCufc3jdikH9TciXY79BHDKGbAsylrl
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-04_16,2023-12-04_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 priorityscore=1501
- mlxlogscore=999 malwarescore=0 phishscore=0 bulkscore=0 adultscore=0
- clxscore=1015 impostorscore=0 spamscore=0 suspectscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2312040133
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 adultscore=0
+ lowpriorityscore=0 clxscore=1015 mlxscore=0 suspectscore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 mlxlogscore=999
+ phishscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2311060000 definitions=main-2312040133
 
-Hello Kees, Martin, James,
 
-On Thu, Nov 30, 2023 at 12:41:00PM -0800, Kees Cook wrote:
-> strlcpy() reads the entire source buffer first. This read may exceed
-> the destination size limit. This is both inefficient and can lead
-> to linear read overflows if a source string is not NUL-terminated[1].
-> Additionally, it returns the size of the source string, not the
-> resulting size of the destination string. In an effort to remove strlcpy()
-> completely[2], replace strlcpy() here with strscpy().
+
+On 12/4/2023 5:51 PM, Luca Weiss wrote:
+> On Mon Dec 4, 2023 at 1:15 PM CET, Nitin Rawat wrote:
+>>
+>>
+>> On 12/4/2023 3:54 PM, Luca Weiss wrote:
+>>> From: Nitin Rawat <quic_nitirawa@quicinc.com>
+>>>
+>>> Add UFS host controller and PHY nodes for sc7280 soc.
+>>>
+>>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>>> Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+>>> Tested-by: Konrad Dybcio <konrad.dybcio@linaro.org> # QCM6490 FP5
+>>> [luca: various cleanups and additions as written in the cover letter]
+>>> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+>>> ---
+>>>    arch/arm64/boot/dts/qcom/sc7280.dtsi | 74 +++++++++++++++++++++++++++++++++++-
+>>>    1 file changed, 73 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+>>> index 04bf85b0399a..8b08569f2191 100644
+>>> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
+>>> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+>>> @@ -15,6 +15,7 @@
+>>>    #include <dt-bindings/dma/qcom-gpi.h>
+>>>    #include <dt-bindings/firmware/qcom,scm.h>
+>>>    #include <dt-bindings/gpio/gpio.h>
+>>> +#include <dt-bindings/interconnect/qcom,icc.h>
+>>>    #include <dt-bindings/interconnect/qcom,osm-l3.h>
+>>>    #include <dt-bindings/interconnect/qcom,sc7280.h>
+>>>    #include <dt-bindings/interrupt-controller/arm-gic.h>
+>>> @@ -906,7 +907,7 @@ gcc: clock-controller@100000 {
+>>>    			clocks = <&rpmhcc RPMH_CXO_CLK>,
+>>>    				 <&rpmhcc RPMH_CXO_CLK_A>, <&sleep_clk>,
+>>>    				 <0>, <&pcie1_phy>,
+>>> -				 <0>, <0>, <0>,
+>>> +				 <&ufs_mem_phy 0>, <&ufs_mem_phy 1>, <&ufs_mem_phy 2>,
+>>>    				 <&usb_1_qmpphy QMP_USB43DP_USB3_PIPE_CLK>;
+>>>    			clock-names = "bi_tcxo", "bi_tcxo_ao", "sleep_clk",
+>>>    				      "pcie_0_pipe_clk", "pcie_1_pipe_clk",
+>>> @@ -2238,6 +2239,77 @@ pcie1_phy: phy@1c0e000 {
+>>>    			status = "disabled";
+>>>    		};
+>>>    
+>>> +		ufs_mem_hc: ufs@1d84000 {
+>>> +			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
+>>> +				     "jedec,ufs-2.0";
+>>> +			reg = <0x0 0x01d84000 0x0 0x3000>;
+>>> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+>>> +			phys = <&ufs_mem_phy>;
+>>> +			phy-names = "ufsphy";
+>>> +			lanes-per-direction = <2>;
+>>> +			#reset-cells = <1>;
+>>> +			resets = <&gcc GCC_UFS_PHY_BCR>;
+>>> +			reset-names = "rst";
+>>> +
+>>> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
+>>> +			required-opps = <&rpmhpd_opp_nom>;
+>>> +
+>>> +			iommus = <&apps_smmu 0x80 0x0>;
+>>> +			dma-coherent;
+>>> +
+>>> +			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
+>>> +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+>>> +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
+>>> +					 &cnoc2 SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
+>>> +			interconnect-names = "ufs-ddr", "cpu-ufs";
+>>> +
+>>> +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
+>>> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+>>> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
+>>> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
+>>> +				 <&rpmhcc RPMH_CXO_CLK>,
+>>> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+>>> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+>>> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
+>>> +			clock-names = "core_clk",
+>>> +				      "bus_aggr_clk",
+>>> +				      "iface_clk",
+>>> +				      "core_clk_unipro",
+>>> +				      "ref_clk",
+>>> +				      "tx_lane0_sync_clk",
+>>> +				      "rx_lane0_sync_clk",
+>>> +				      "rx_lane1_sync_clk";
+>>> +			freq-table-hz =
+>>> +				<75000000 300000000>,
+>>> +				<0 0>,
+>>> +				<0 0>,
+>>> +				<75000000 300000000>,
+>>> +				<0 0>,
+>>> +				<0 0>,
+>>> +				<0 0>,
+>>> +				<0 0>;
+>>> +			status = "disabled";
+>>> +		};
+>>> +
+>>> +		ufs_mem_phy: phy@1d87000 {
+>>> +			compatible = "qcom,sc7280-qmp-ufs-phy";
+>>> +			reg = <0x0 0x01d87000 0x0 0xe00>;
+>>> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
+>>> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
+>>> +				 <&gcc GCC_UFS_1_CLKREF_EN>;
+>>> +			clock-names = "ref", "ref_aux", "qref";
+>>> +
+>>> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
 > 
-> Overflow should be impossible here, but actually check for buffer sizes
-> being identical with BUILD_BUG_ON(), and include a run-time check as
-> well.
+> Hi Nitin,
 > 
-> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy [1]
-> Link: https://github.com/KSPP/linux/issues/89 [2]
-
-> ---
->  drivers/s390/scsi/zfcp_fc.c | 15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
+>>
+>> GCC_UFS_PHY_GDSC is UFS controller GDSC. For sc7280 Phy we don't need this.
 > 
-> diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
-> index 4f0d0e55f0d4..d6516ab00437 100644
-> --- a/drivers/s390/scsi/zfcp_fc.c
-> +++ b/drivers/s390/scsi/zfcp_fc.c
-> @@ -900,8 +900,19 @@ static void zfcp_fc_rspn(struct zfcp_adapter *adapter,
->  	zfcp_fc_ct_ns_init(&rspn_req->ct_hdr, FC_NS_RSPN_ID,
->  			   FC_SYMBOLIC_NAME_SIZE);
->  	hton24(rspn_req->rspn.fr_fid.fp_fid, fc_host_port_id(shost));
-> -	len = strlcpy(rspn_req->rspn.fr_name, fc_host_symbolic_name(shost),
-> -		      FC_SYMBOLIC_NAME_SIZE);
-> +
-> +	BUILD_BUG_ON(sizeof(rspn_req->name) !=
-> +			sizeof(fc_host_symbolic_name(shost)));
-> +	BUILD_BUG_ON(sizeof(rspn_req->name) !=
-> +			type_max(typeof(rspn_req->rspn.fr_name_len)) + 1);
-> +	len = strscpy(rspn_req->name, fc_host_symbolic_name(shost),
-> +		      sizeof(rspn_req->name));
-> +	/*
-> +	 * It should be impossible for this to truncate (see BUILD_BUG_ON()
-> +	 * above), but be robust anyway.
-> +	 */
-> +	if (WARN_ON(len < 0))
-> +		len = sizeof(rspn_req->name) - 1;
+> In the current dt-bindings the power-domains property is required.
+> 
+> Is there another power-domain for the PHY to use, or do we need to
+> adjust the bindings to not require power-domains property for ufs phy on
+> sc7280?
+> 
+> Also, with "PHY" in the name, it's interesting that this is not for the
+> phy ;)
+> 
+> Regards
+> Luca
+> 
 
-Looks good to me.
+Hi Luca,
+
+For sc7280 there is no PHY GDSC and only controller GDSC is there.
+Hence, I would suggest to update the binding to reflect that 
+power-domains is not a required field.
+
+Regards,
+Nitin
 
 
-Acked-by: Benjamin Block <bblock@linux.ibm.com>
 
-
->  	rspn_req->rspn.fr_name_len = len;
-
-Martin, James, can you please pick this up for the v6.8 queue?
-
-
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+>>
+>>> +
+>>> +			resets = <&ufs_mem_hc 0>;
+>>> +			reset-names = "ufsphy";
+>>> +
+>>> +			#clock-cells = <1>;
+>>> +			#phy-cells = <0>;
+>>> +
+>>> +			status = "disabled";
+>>> +		};
+>>> +
+>>>    		ipa: ipa@1e40000 {
+>>>    			compatible = "qcom,sc7280-ipa";
+>>>    
+>>>
+> 
