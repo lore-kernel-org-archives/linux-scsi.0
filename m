@@ -1,210 +1,312 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="zTrCvs2e"
-Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3611ADF
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Dec 2023 04:21:45 -0800 (PST)
-Received: by mail-ed1-x52a.google.com with SMTP id 4fb4d7f45d1cf-54bfa9b3ffaso5636516a12.1
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Dec 2023 04:21:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="SlmwcAKM";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="HJ0YBtDB"
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A22C106;
+	Mon,  4 Dec 2023 04:23:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1701692626; x=1733228626;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=Woo1xumnxO+7YpjDOnRnFAEwTFTTRvB6L2xV9NI9wYw=;
+  b=SlmwcAKM4eqrShQ1i1doiv8eq7SCc29k0Put8rmThgKYwE++l5WK2+Bb
+   V0ZR8zcHib1f94ICEKNHL3QDRDvsK6NU6fsyZDilyc3MtmZdeUYULUNyZ
+   eGxPVLFQdlczrZyLJ8P/W/AfFPymGgBwpxt9aAa0u9DTjNRg49XPCQdWU
+   VHV2z0Q2s+dPItcXcwYh+XGiOuZ8sS5rES+Rt7BNPC8aQ4NXIXXBWPtuK
+   cxvl9osvfajvMGbLH3oXu1vit2i9iE0nRCbsKrl8Tu+GwWhkE0ClIqRuy
+   37a7g/+5r8Nx7w/fpQedmoyx658Gk8Zj0rhTsYt1zPH0Fla7piDBtoMF8
+   g==;
+X-CSE-ConnectionGUID: Cd8uu0jfRIerWGaTL8MhNA==
+X-CSE-MsgGUID: txfIE0E4S4ivtVXMzOJ+ZQ==
+X-IronPort-AV: E=Sophos;i="6.04,249,1695657600"; 
+   d="scan'208";a="4082535"
+Received: from mail-dm3nam02lp2041.outbound.protection.outlook.com (HELO NAM02-DM3-obe.outbound.protection.outlook.com) ([104.47.56.41])
+  by ob1.hgst.iphmx.com with ESMTP; 04 Dec 2023 20:23:44 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=b+j4ykgfbtMBiPeUUg86pyJAFMQn/srD30+63sqKpFt7rHszX7PPCSXmI4WKSMySLCbguuG+BjVm/C5ZsDRHxOmEYgRv1xeLpCalL27uaQSKKbYzz/DqFTCRGd0XJxpXwFVCXb76p9i7I/uylZ8THb7jJ9ZJSMwl9OM34us+Tzn6YCRHPCQbnsK+Kc8GsAeShRfHTceKk4/eqGkqIZah4kdGurORfCVnxJjpW0Aaz2NwRAXztVLtF7xNBNn5T2DalL3YncS+KZYYW2n54EW4LkTzirJTGYHY42eUdLtFRtPPMcXoId+3JIyJ8zNssrdy/t6s8zQx7hV8kz7xIBAJew==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AZq/f0mFhGhfiydDKJb0E57m5cgOE4kMG5bkyjLG7fY=;
+ b=g1ytoW5QOTFwCTU58b9Hn9uC/K1n4v3RfLAeeVM7J5eQvOUU2zk/k1KkzUyWm8/4OfzBenG05Kuutu4YOWJ/o/fADij3pauJqLywvanGC95ZxiwgRfPmBGodeBAUjwv2XRC7XMtXpek/KZ4x82EzlLF6wFLCEEJoOsK/AC2V2o27FjUwsEb0G2J1OlNh0Mzyd6geQxi+xHC/ZAHmTZg5W6yu2qy5WvJQoOUGh9Jyp27K4voukQni/tqZtM74CJerYYZSeSnIsSu9RWQjb+Xdv2Kx0XRNulyh5Xm21VSlLZnw4s5fOch+D6CkthFwGP2qLcfyy0BCOWqIqytMRFWZ0g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1701692503; x=1702297303; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=q8RFfNckjuKt1jz+rzrb9C96eRyO85w6LaaTlbGWMzo=;
-        b=zTrCvs2eCip52po00dOtx2DzzrpJtMPOcRbQDM41h23Lx7hyqZxquQ69VS47qcYEMu
-         yG2brI5VZgUBHkfUJXTbD0K+qWqlZ/1GC/ZOHB8LD9LLFHTcfaDmXObrOoxtFjl2R3Gj
-         mQtUppBX715VHQdSeTPR4z8hQovq8amq899U2XrnbiFWqxXwwAM5gqJgnMBwOwf19Ngs
-         Kx5hWG5VOXcISr2x1YXfknjL/hHYkMMmOd3P2Gb09YWolz2PnH34nWfNQUDW0hRTRcVf
-         /njPrbJORv8hDzE0T6SPXaXnAKEs3AZatCrws3M3WGs9Ln5eF7zRQAZhGaZnDGbWSJFw
-         BoXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701692503; x=1702297303;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=q8RFfNckjuKt1jz+rzrb9C96eRyO85w6LaaTlbGWMzo=;
-        b=ZCsCq6QAzK+T2QURJpU99nlxnxLDG7Eb3XO5vxi/qa4FwNffNrUy5yfT/ZXhZsrHWp
-         9xHfb1BaA1RfMJFXiOMTtF1MwgbfiflgUZ4zclZffTT6neldgkt6skrw0LNuk/+slGlN
-         vr56DeFqVtVYsL04RAO3ZImUxmM2clzkwdqlnVTUX8fV4FKggDGDKsWnySr/x7x5dW1T
-         L0VwzG8N50Lj2NPwpkF61YQ0Sk4q5QvS69QWXpL0/dT5lQIhRsQnLb7yVMSeUYLnOETq
-         gih4NjFsKD2sZtvTzAusxbw3fR04LuVe8rd6SajxV/2QtOt9oxYahHNCfdD5nwWglkQY
-         RINw==
-X-Gm-Message-State: AOJu0Yzs4W/MwUvelsuL4KvxIbFVCHe3zC0FXPOtOL20fG0rhhdmAaer
-	+Gt3GRoo5h0hFBD0LDBQ2RPTow==
-X-Google-Smtp-Source: AGHT+IHKWbMqC/XghMiDqUXODnV4kB7sqmvxFiPQqj9C/x1YwTXvnOVPdhytEdl0d5XSJ62zUJ7Hsw==
-X-Received: by 2002:a50:9b50:0:b0:54c:4837:9a9b with SMTP id a16-20020a509b50000000b0054c48379a9bmr2873330edj.66.1701692503652;
-        Mon, 04 Dec 2023 04:21:43 -0800 (PST)
-Received: from localhost (144-178-202-138.static.ef-service.nl. [144.178.202.138])
-        by smtp.gmail.com with ESMTPSA id dg28-20020a0564021d1c00b0054c9177d18esm2522554edb.2.2023.12.04.04.21.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 04 Dec 2023 04:21:43 -0800 (PST)
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AZq/f0mFhGhfiydDKJb0E57m5cgOE4kMG5bkyjLG7fY=;
+ b=HJ0YBtDBLG1Gj1R+E7+6PJSxx+Fztoukv7VVb5JUod4ORpnXBhK4qrySrGibgA9BF93jkw48kW+Go8WjrG7UcZCGRdKdCw9LxO0F5awul9XSBP6Fw6l/8GCeU3PGD02cLNCF0IgLrYIziSJaM9MHFd5jMLUSUsKj6X7k1xNivBE=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ MN2PR04MB7102.namprd04.prod.outlook.com (2603:10b6:208:1eb::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7046.33; Mon, 4 Dec
+ 2023 12:23:42 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::7d7a:2cd1:54e5:ebc4]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::7d7a:2cd1:54e5:ebc4%6]) with mapi id 15.20.7046.033; Mon, 4 Dec 2023
+ 12:23:42 +0000
+From: Avri Altman <Avri.Altman@wdc.com>
+To: Bean Huo <beanhuo@iokpp.de>, "bvanassche@acm.org" <bvanassche@acm.org>,
+	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "jejb@linux.ibm.com"
+	<jejb@linux.ibm.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "mani@kernel.org" <mani@kernel.org>,
+	"quic_cang@quicinc.com" <quic_cang@quicinc.com>, "quic_asutoshd@quicinc.com"
+	<quic_asutoshd@quicinc.com>, "beanhuo@micron.com" <beanhuo@micron.com>,
+	"thomas@t-8ch.de" <thomas@t-8ch.de>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"mikebi@micron.com" <mikebi@micron.com>, "lporzio@micron.com"
+	<lporzio@micron.com>
+Subject: RE: [PATCH v3 2/3] scsi: ufs: core: Add UFS RTC support
+Thread-Topic: [PATCH v3 2/3] scsi: ufs: core: Add UFS RTC support
+Thread-Index: AQHaJTkKGJCMMiwoCEWzpUFDJD5+pLCZCRfggAAFs7A=
+Date: Mon, 4 Dec 2023 12:23:42 +0000
+Message-ID:
+ <DM6PR04MB657587A7051D5B70F8B39D72FC86A@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20231202160227.766529-1-beanhuo@iokpp.de>
+ <20231202160227.766529-3-beanhuo@iokpp.de>
+ <DM6PR04MB657594BADE76428806210D3AFC86A@DM6PR04MB6575.namprd04.prod.outlook.com>
+In-Reply-To:
+ <DM6PR04MB657594BADE76428806210D3AFC86A@DM6PR04MB6575.namprd04.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|MN2PR04MB7102:EE_
+x-ms-office365-filtering-correlation-id: 3bf487f5-1650-4148-54a8-08dbf4c3daa4
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info:
+ hU9dFtarQCLkUbZpaWrVZNs0/9SILZwPLr+gEuv2pa2mxceeOUYGa0pbbmWfOAWrjLH4hsDKEGDTOGNLLO6mYQ6GosnY/WwWV8dPakXlgmFEDdXqeo5FWOYTmKDMq8sAm5IK+2M4h7NmruSwZDaIMh4o0edKBCrzMy2iJ5ihYnWqgMoD8dMVW+E+Sero5f3PCedYBZdChfncLdnkAQlHgMMd2K6lREf+lfB1XouswrnPILH2nBVnRdna63QuPVePWHCcDrNexCg4HkMN6bkdKo0y26LvX16AbdfoPg1z5tm9acGVLr42voJ02n1MlCszfS11oTM9a3J8sfSX4SFh6nutufzLxNTBp6piCWD02KWbsWyoQbb8kECodIojmDcAgIk4m7foh9CA5hDCVPjN+xEgiGLVd25k0xt47WKer5onJx7eqYSJGA7tAzo7SZ5j8lZfqCjGzqdEvozxcfm6/2E9tDuMACvPGWCJL+IqMS1ml7U+moBl4z6Qljv74vxCfv+4DVNXGpTOHZoaclNRYlw7K6k6VqyXCfjV/ix0AvA/Xtgb4ESr/73pzCXHcFPMTSyenOjRWtX8MYZkIVpAU4K0DvZLfxMXcAQTr6+SyLC5GIoRh9u0HGeUXikSeZhnKhFgIkFFYja15nKy0J3FUg==
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(396003)(346002)(376002)(366004)(39860400002)(230922051799003)(451199024)(1800799012)(186009)(64100799003)(7416002)(9686003)(921008)(6506007)(26005)(2940100002)(33656002)(38070700009)(7696005)(82960400001)(41300700001)(38100700002)(86362001)(83380400001)(122000001)(71200400001)(478600001)(2906002)(55016003)(316002)(66946007)(76116006)(110136005)(54906003)(66476007)(66556008)(64756008)(66446008)(8676002)(52536014)(4326008)(8936002)(5660300002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?cWwKGzzazTooFUVmetsdYs6vYFNnpKoTds4Gcsiq18NJtWG6Uxf+HFlYBdCg?=
+ =?us-ascii?Q?VdNs33egpG3J2mfGFec5WbHCUE+yIz0OLJD71g+sfEPSev3GVcrRMuiASCCE?=
+ =?us-ascii?Q?G8rWnJaqqblh0oAh848uEAKzg2qZFwm+c3EgV6u7fPiZs5Qi71MhF/Ci71RO?=
+ =?us-ascii?Q?UZ1+p7VoRlployASn6nieEeyvnKVfbi94fTuA3NYaDQGvQIu0fGp1Rc33Lri?=
+ =?us-ascii?Q?BqunlWQ9FX2tIwF5CDjvCD17EDyDJ8Wu0WC7bIhtJEksBf6xIKxJKB2s9dL2?=
+ =?us-ascii?Q?mHIYi6yCi/Oe/bm4za6lVtKwux0L6tek5fcaorh/zVeVQ8Ych9DuIw1hfjLB?=
+ =?us-ascii?Q?wB2G1McEKwa0cL1IjaLASt9qJWXujEza8rfVtaFTY9hBu+lBV1HbtBBiCwgC?=
+ =?us-ascii?Q?g4zRlY5Nxrb1g5/dBHWuUpg+axePv6i+eYiBLSgJJbuqcUW0A3oNJOqN8Awv?=
+ =?us-ascii?Q?0/GzPasY92S/dK54fXb+zFyi5SoEeZ/0LruuRnea3V7bjR6lXwaIUoSLrTMn?=
+ =?us-ascii?Q?TXSRJpcz05ivyYI0xD2W9oQujXECdlgxI42wZt0gfJ2OBXnvovFv0pgzrXVp?=
+ =?us-ascii?Q?+PzOV+6ghIgi5lvui6P0yEKZ2E8civCK/bXnA9kjHKfMds2iQmRGbD9xcpHu?=
+ =?us-ascii?Q?WhtZlpwFU15LvD3HRZwk62r7r1eQ1Tb0sAuV/CCNPg9BsGpOc8eaDPoSXztS?=
+ =?us-ascii?Q?pqJZJOfYUJkld0wm0GAv/NflkHdVEbYMlRtQnnlrydoBbF7JJ7un7T+ZIB98?=
+ =?us-ascii?Q?sCeOzNm6gglwhnL+V8dLvCs9qnJjhvISxubplZQKws9SbONoCCxVo5IKxWpQ?=
+ =?us-ascii?Q?DO+/EWf4s5b13NOEo5zxVXnChfujJ7TIMH6ocAxoaRoMC352Xg42OhmNu7ym?=
+ =?us-ascii?Q?5ZTDlxiZOdagTPDlhlkv4qLQVzOf4YPf28eeebBrV5GZSM6pIQWMn/5kJNbo?=
+ =?us-ascii?Q?/bjYJVr7yIJQFhByVsCCSc8D5p7xwtQxzZ0YD6Y2xWkB1cET+kib26nzgKtx?=
+ =?us-ascii?Q?mjhzCCHYT8+mvKOdytrs8U10N6RYRL83W2A9wFfjebbt7bWqtmQG5FbpabEF?=
+ =?us-ascii?Q?ivB6804kpuBNIBSh+4Fy7MeBlcTVtlQpoefBV8NYHHvqpGWBP2qGSDn7e1XK?=
+ =?us-ascii?Q?T5oIhqLdQWyvup8VnkGeaDoLWgZzlFVGdyJUgp/6gw0bggnEBzZVGA/tkad6?=
+ =?us-ascii?Q?3bKkJMNVJmZptd6yb+bbh3qmoTuVW7WtVcSYu8vGsaSWO0Cesrjx94vMsBzn?=
+ =?us-ascii?Q?wh72956RT0yLs8UrKFr73uczcw1kAL0IIK5kVpUzlNLBP+0RbOLwVZ4z+WmD?=
+ =?us-ascii?Q?cIbrExYsqagcx4s5fzSl1XfYANVYF9EBRIJ+8XCFua2oyFPDh3p/pqwe/w88?=
+ =?us-ascii?Q?WyFCQE4hbJFlzS0DtNrYd2dJ/45/lDL2nzffxsPK300NDIC0ijN1hxJuqgJ4?=
+ =?us-ascii?Q?gsW8ThjwI7x0RPntRWLTsw3FzS3Xtt8NmrgUJnUEOs2YiRlhK1t/4O2m0ApB?=
+ =?us-ascii?Q?A1CuZ3VFZZlNSbusaGw+kWGtjr9eUwrywI7NnxVd3cG3L7SKBIQYipvUmHBy?=
+ =?us-ascii?Q?fz5vA2zkLUrOf3LMetKFvC2qWmKd3tWrW4/QGrOY?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 04 Dec 2023 13:21:42 +0100
-Message-Id: <CXFJNBNKTRHH.2CS6TO2MEGJWL@fairphone.com>
-Cc: <~postmarketos/upstreaming@lists.sr.ht>, <phone-devel@vger.kernel.org>,
- <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5 2/3] arm64: dts: qcom: sc7280: Add UFS nodes for
- sc7280 soc
-From: "Luca Weiss" <luca.weiss@fairphone.com>
-To: "Nitin Rawat" <quic_nitirawa@quicinc.com>, "Andy Gross"
- <agross@kernel.org>, "Bjorn Andersson" <andersson@kernel.org>, "Konrad
- Dybcio" <konrad.dybcio@linaro.org>, "Manivannan Sadhasivam"
- <mani@kernel.org>, "Alim Akhtar" <alim.akhtar@samsung.com>, "Avri Altman"
- <avri.altman@wdc.com>, "Bart Van Assche" <bvanassche@acm.org>, "Rob
- Herring" <robh+dt@kernel.org>, "Krzysztof Kozlowski"
- <krzysztof.kozlowski+dt@linaro.org>, "Conor Dooley" <conor+dt@kernel.org>,
- <cros-qcom-dts-watchers@chromium.org>
-X-Mailer: aerc 0.15.2
-References: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
- <20231204-sc7280-ufs-v5-2-926ceed550da@fairphone.com>
- <621388b9-dcee-4af2-9763-e5d623d722b7@quicinc.com>
-In-Reply-To: <621388b9-dcee-4af2-9763-e5d623d722b7@quicinc.com>
+MIME-Version: 1.0
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	=?us-ascii?Q?jdRywnAYsk3aE19VKKyJK7Nn0sT6u+2zpVDyIECz/Pw4ZQJ7WPbtnlsO/Ys+?=
+ =?us-ascii?Q?sb4oaFHIR3FZelLkrqtVMH/MFaMbqXdGIqtaEQcJ316F9mJWAuhcl2x5hK1x?=
+ =?us-ascii?Q?q7dhZ27iNlYdoCo1K7+mHPM1mToY6H7tvSO98434wLvut1HvwIy0+gR3xXnr?=
+ =?us-ascii?Q?Sd+yxrjbj2kPsa6rPrYlKTVmsh7wkZ2fTK3zmj4GHDbSbp3y14bjkGAnQVQ+?=
+ =?us-ascii?Q?03zCQyS6esImePs3Ze14UUhfkdtZJPbj8Zgb4IE3e7hhq16JeJnssb39gjvL?=
+ =?us-ascii?Q?PYYHkTyfTdGT6MfwGAPvGWE9jpmXbvrQ4Y78ix0NyUcMKslnXo82UkmOkQIY?=
+ =?us-ascii?Q?zSgqO6A4E1rHINU6onm3DHZjKP92uO152f+pTihKnttJaw33O68Nv78V+0YC?=
+ =?us-ascii?Q?iy1URQ9nYe/OwYv9bqzAqSiDpTAz+VFY7Yj11vw9FgUm1ActdyYlOM+kH7n9?=
+ =?us-ascii?Q?GGpj/IbQNN8HtibTnrofeIdNGy90WQD0HtMdqWCMYPYMqjWnDMLTe/sLvDvA?=
+ =?us-ascii?Q?vVBfR+cBZa6VTmWdsVnp6rWBQKLcpMt31Ogd7sa/mrgm/VGMUufhfYMlfYtK?=
+ =?us-ascii?Q?v1gMlXw+PBzQpAaglxGoPPdRWwX68TXJN6VfvR42xDUQZAtSrmtWoVpIx+au?=
+ =?us-ascii?Q?qlTNf7anfEZyo7T1jVXHJ1tywcS5LTP6Ai5cXMPG3IS7qF4UUuTLNHB+2pYW?=
+ =?us-ascii?Q?1UIUU6Ty1mBZ9S/mB1SlZVeCTzFASdf8XBTLSrXeQNxJdaRnTTyo57oTJpfh?=
+ =?us-ascii?Q?pq2nn+XgQ52kEI4L82j5cc74Y52On5IBTbZWZqEyCo8GQOEO/qY1PTaSCHL1?=
+ =?us-ascii?Q?aHeKSF5ZyFk0ZM2NjezQIZIqOWTCstJ+3Nz15kaeSBoiTw/ySjSher5gcj/c?=
+ =?us-ascii?Q?PpM9r7Cm+Nc+Pi3by/QhPHYaIK2n0elBlQScUjuskC4Aipw+5BUgRay/kJS3?=
+ =?us-ascii?Q?02pphNC8pQE6ihUVgkfhOEGHx6xcAeb+45QRVjt5VAOoCMEsKzYHqujyFsXV?=
+ =?us-ascii?Q?YnkyVvbQBb+BIpvmDj45MEjEy9MzHjfI3Bm8Fx282yS21x4=3D?=
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3bf487f5-1650-4148-54a8-08dbf4c3daa4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Dec 2023 12:23:42.6751
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3v++FQgBiwqxxpYbe64CTV7/POMOumJvczIUCSfZn+a9UB3fAziKkwa8hkofvdvutUkUNP2VjH4Tuo3vxXV2Ow==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB7102
 
-On Mon Dec 4, 2023 at 1:15 PM CET, Nitin Rawat wrote:
->
->
-> On 12/4/2023 3:54 PM, Luca Weiss wrote:
-> > From: Nitin Rawat <quic_nitirawa@quicinc.com>
-> >=20
-> > Add UFS host controller and PHY nodes for sc7280 soc.
-> >=20
-> > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> > Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
-> > Tested-by: Konrad Dybcio <konrad.dybcio@linaro.org> # QCM6490 FP5
-> > [luca: various cleanups and additions as written in the cover letter]
-> > Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
-> > ---
-> >   arch/arm64/boot/dts/qcom/sc7280.dtsi | 74 +++++++++++++++++++++++++++=
-++++++++-
-> >   1 file changed, 73 insertions(+), 1 deletion(-)
-> >=20
-> > diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts=
-/qcom/sc7280.dtsi
-> > index 04bf85b0399a..8b08569f2191 100644
-> > --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> > +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> > @@ -15,6 +15,7 @@
-> >   #include <dt-bindings/dma/qcom-gpi.h>
-> >   #include <dt-bindings/firmware/qcom,scm.h>
-> >   #include <dt-bindings/gpio/gpio.h>
-> > +#include <dt-bindings/interconnect/qcom,icc.h>
-> >   #include <dt-bindings/interconnect/qcom,osm-l3.h>
-> >   #include <dt-bindings/interconnect/qcom,sc7280.h>
-> >   #include <dt-bindings/interrupt-controller/arm-gic.h>
-> > @@ -906,7 +907,7 @@ gcc: clock-controller@100000 {
-> >   			clocks =3D <&rpmhcc RPMH_CXO_CLK>,
-> >   				 <&rpmhcc RPMH_CXO_CLK_A>, <&sleep_clk>,
-> >   				 <0>, <&pcie1_phy>,
-> > -				 <0>, <0>, <0>,
-> > +				 <&ufs_mem_phy 0>, <&ufs_mem_phy 1>, <&ufs_mem_phy 2>,
-> >   				 <&usb_1_qmpphy QMP_USB43DP_USB3_PIPE_CLK>;
-> >   			clock-names =3D "bi_tcxo", "bi_tcxo_ao", "sleep_clk",
-> >   				      "pcie_0_pipe_clk", "pcie_1_pipe_clk",
-> > @@ -2238,6 +2239,77 @@ pcie1_phy: phy@1c0e000 {
-> >   			status =3D "disabled";
-> >   		};
-> >  =20
-> > +		ufs_mem_hc: ufs@1d84000 {
-> > +			compatible =3D "qcom,sc7280-ufshc", "qcom,ufshc",
-> > +				     "jedec,ufs-2.0";
-> > +			reg =3D <0x0 0x01d84000 0x0 0x3000>;
-> > +			interrupts =3D <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-> > +			phys =3D <&ufs_mem_phy>;
-> > +			phy-names =3D "ufsphy";
-> > +			lanes-per-direction =3D <2>;
-> > +			#reset-cells =3D <1>;
-> > +			resets =3D <&gcc GCC_UFS_PHY_BCR>;
-> > +			reset-names =3D "rst";
+>=20
+> > +static void  ufs_init_rtc(struct ufs_hba *hba, u8 *desc_buf) {
+> > +       struct ufs_dev_info *dev_info =3D &hba->dev_info;
+> > +       u16 periodic_rtc_update =3D
+> > +get_unaligned_be16(&desc_buf[DEVICE_DESC_PARAM_FRQ_RTC]);
 > > +
-> > +			power-domains =3D <&gcc GCC_UFS_PHY_GDSC>;
-> > +			required-opps =3D <&rpmhpd_opp_nom>;
-> > +
-> > +			iommus =3D <&apps_smmu 0x80 0x0>;
-> > +			dma-coherent;
-> > +
-> > +			interconnects =3D <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-> > +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-> > +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-> > +					 &cnoc2 SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
-> > +			interconnect-names =3D "ufs-ddr", "cpu-ufs";
-> > +
-> > +			clocks =3D <&gcc GCC_UFS_PHY_AXI_CLK>,
-> > +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-> > +				 <&rpmhcc RPMH_CXO_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> > +			clock-names =3D "core_clk",
-> > +				      "bus_aggr_clk",
-> > +				      "iface_clk",
-> > +				      "core_clk_unipro",
-> > +				      "ref_clk",
-> > +				      "tx_lane0_sync_clk",
-> > +				      "rx_lane0_sync_clk",
-> > +				      "rx_lane1_sync_clk";
-> > +			freq-table-hz =3D
-> > +				<75000000 300000000>,
-> > +				<0 0>,
-> > +				<0 0>,
-> > +				<75000000 300000000>,
-> > +				<0 0>,
-> > +				<0 0>,
-> > +				<0 0>,
-> > +				<0 0>;
-> > +			status =3D "disabled";
-> > +		};
-> > +
-> > +		ufs_mem_phy: phy@1d87000 {
-> > +			compatible =3D "qcom,sc7280-qmp-ufs-phy";
-> > +			reg =3D <0x0 0x01d87000 0x0 0xe00>;
-> > +			clocks =3D <&rpmhcc RPMH_CXO_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
-> > +				 <&gcc GCC_UFS_1_CLKREF_EN>;
-> > +			clock-names =3D "ref", "ref_aux", "qref";
-> > +
-> > +			power-domains =3D <&gcc GCC_UFS_PHY_GDSC>;
+> > +       if (periodic_rtc_update & UFS_RTC_TIME_BASELINE) {
+> Is it allowed to ignore the update period as depicted by
+> wPeriodicRTCUpdate?
+> And choose a different update period, e.g. 10 seconds instead?
+> If yes - then It deserve a comment IMO.
+Oh - the comment is in the 3rd patch.
+Sorry - please ignore.
 
-Hi Nitin,
+Thanks,
+Avri
 
->
-> GCC_UFS_PHY_GDSC is UFS controller GDSC. For sc7280 Phy we don't need thi=
-s.
-
-In the current dt-bindings the power-domains property is required.
-
-Is there another power-domain for the PHY to use, or do we need to
-adjust the bindings to not require power-domains property for ufs phy on
-sc7280?
-
-Also, with "PHY" in the name, it's interesting that this is not for the
-phy ;)
-
-Regards
-Luca
-
->
+>=20
+> Thanks,
+> Avri
+>=20
+> > +               dev_info->rtc_type =3D UFS_RTC_ABSOLUTE;
+> > +               /*
+> > +                * The concept of measuring time in Linux as the
+> > + number of seconds
+> > elapsed since
+> > +                * 00:00:00 UTC on January 1, 1970, and UFS ABS RTC is
+> > + elapsed
+> > from January 1st
+> > +                * 2010 00:00, here we need to adjust ABS baseline.
+> > +                */
+> > +               dev_info->rtc_time_baseline =3D mktime64(2010, 1, 1, 0,=
+ 0, 0) -
+> > +                                                       mktime64(1970, =
+1, 1, 0, 0, 0);
+> > +       } else {
+> > +               dev_info->rtc_type =3D UFS_RTC_RELATIVE;
+> > +               dev_info->rtc_time_baseline =3D 0;
+> > +       }
 > > +
-> > +			resets =3D <&ufs_mem_hc 0>;
-> > +			reset-names =3D "ufsphy";
+> > +       INIT_DELAYED_WORK(&hba->ufs_rtc_update_work,
+> ufshcd_rtc_work);
+> > }
 > > +
-> > +			#clock-cells =3D <1>;
-> > +			#phy-cells =3D <0>;
+> >  static int ufs_get_device_desc(struct ufs_hba *hba)  {
+> >         int err;
+> > @@ -8241,6 +8310,8 @@ static int ufs_get_device_desc(struct ufs_hba
+> > *hba)
+> >
+> >         ufshcd_temp_notif_probe(hba, desc_buf);
+> >
+> > +       ufs_init_rtc(hba, desc_buf);
 > > +
-> > +			status =3D "disabled";
-> > +		};
+> >         if (hba->ext_iid_sup)
+> >                 ufshcd_ext_iid_probe(hba, desc_buf);
+> >
+> > @@ -8794,6 +8865,8 @@ static int ufshcd_device_init(struct ufs_hba
+> > *hba, bool init_dev_params)
+> >         ufshcd_force_reset_auto_bkops(hba);
+> >
+> >         ufshcd_set_timestamp_attr(hba);
+> > +       schedule_delayed_work(&hba->ufs_rtc_update_work,
 > > +
-> >   		ipa: ipa@1e40000 {
-> >   			compatible =3D "qcom,sc7280-ipa";
-> >  =20
-> >=20
+> > + msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+> >
+> >         /* Gear up to HS gear if supported */
+> >         if (hba->max_pwr_info.is_valid) { @@ -9750,6 +9823,8 @@ static
+> > int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+> >         ret =3D ufshcd_vops_suspend(hba, pm_op, POST_CHANGE);
+> >         if (ret)
+> >                 goto set_link_active;
+> > +
+> > +       cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
+> >         goto out;
+> >
+> >  set_link_active:
+> > @@ -9844,6 +9919,8 @@ static int __ufshcd_wl_resume(struct ufs_hba
+> > *hba, enum ufs_pm_op pm_op)
+> >                 if (ret)
+> >                         goto set_old_link_state;
+> >                 ufshcd_set_timestamp_attr(hba);
+> > +               schedule_delayed_work(&hba->ufs_rtc_update_work,
+> > +
+> > + msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+> >         }
+> >
+> >         if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
+> > diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h index
+> > e77ab1786856..8022d267fe8a 100644
+> > --- a/include/ufs/ufs.h
+> > +++ b/include/ufs/ufs.h
+> > @@ -14,6 +14,7 @@
+> >  #include <linux/bitops.h>
+> >  #include <linux/types.h>
+> >  #include <uapi/scsi/scsi_bsg_ufs.h>
+> > +#include <linux/time64.h>
+> >
+> >  /*
+> >   * Using static_assert() is not allowed in UAPI header files. Hence
+> > the check @@ -551,6 +552,15 @@ struct ufs_vreg_info {
+> >         struct ufs_vreg *vdd_hba;
+> >  };
+> >
+> > +/*
+> > + * UFS device descriptor wPeriodicRTCUpdate bit9 defines RTC time
+> > baseline.
+> > + */
+> > +#define UFS_RTC_TIME_BASELINE BIT(9)
+> > +enum ufs_rtc_time {
+> > +       UFS_RTC_RELATIVE,
+> > +       UFS_RTC_ABSOLUTE
+> > +};
+> > +
+> >  struct ufs_dev_info {
+> >         bool    f_power_on_wp_en;
+> >         /* Keeps information if any of the LU is power on write
+> > protected */ @@
+> > -578,6 +588,10 @@ struct ufs_dev_info {
+> >
+> >         /* UFS EXT_IID Enable */
+> >         bool    b_ext_iid_en;
+> > +
+> > +       /* UFS RTC */
+> > +       enum ufs_rtc_time rtc_type;
+> > +       time64_t rtc_time_baseline;
+> >  };
+> >
+> >  /*
+> > diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h index
+> > 7f0b2c5599cd..7bdda92fcb1c 100644
+> > --- a/include/ufs/ufshcd.h
+> > +++ b/include/ufs/ufshcd.h
+> > @@ -911,6 +911,8 @@ enum ufshcd_mcq_opr {
+> >   * @mcq_base: Multi circular queue registers base address
+> >   * @uhq: array of supported hardware queues
+> >   * @dev_cmd_queue: Queue for issuing device management commands
+> > + * @mcq_opr: MCQ operation and runtime registers
+> > + * @ufs_rtc_update_work: A work for UFS RTC periodic update
+> >   */
+> >  struct ufs_hba {
+> >         void __iomem *mmio_base;
+> > @@ -1071,6 +1073,8 @@ struct ufs_hba {
+> >         struct ufs_hw_queue *uhq;
+> >         struct ufs_hw_queue *dev_cmd_queue;
+> >         struct ufshcd_mcq_opr_info_t mcq_opr[OPR_MAX];
+> > +
+> > +       struct delayed_work ufs_rtc_update_work;
+> >  };
+> >
+> >  /**
+> > --
+> > 2.34.1
+> >
 
