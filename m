@@ -1,47 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="PHkKXXB/"
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 685B31A6
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Dec 2023 02:24:15 -0800 (PST)
-Received: by mail-ed1-x531.google.com with SMTP id 4fb4d7f45d1cf-54bf9a54fe3so5474768a12.3
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Dec 2023 02:24:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="25+2DmbH"
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 085901B8
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Dec 2023 02:24:14 -0800 (PST)
+Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-a0029289b1bso551332166b.1
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Dec 2023 02:24:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1701685454; x=1702290254; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=k136HpPBxB75fbT2utHLBa5irmSPTM0KT5lmOjawCwk=;
-        b=PHkKXXB/Cjl7s7uuNf8mhum+qVOUjIs/PUMyma3JTrq82yn3y8JYxo9Kn0MBxcBEqZ
-         ggZR1A1A0D9/uRAgKIp9cVrrAtZyNdAbkUtq2TtJerp4RycjwRnzEEChrBowhZA/tO/J
-         iC+VN/vSnsQ16SPjKzSUB/CqOGlZIGyF15zR/0g4SiU5UNN4GOPFbHxxPL8fC9nTjLcV
-         IslMY1tFkMX1m8EYr1X521mx7cCTrDwy5saxN9FV9IDhcN9B7SR3wGdbNWjUnndNNzBi
-         nfGhu2zs8jflge/DrNRNJBzUWHnvtwkZZAVL8eKWc3NzkMQd3lEClzHbl61ilGDJLVX2
-         aGFA==
+        d=fairphone.com; s=fair; t=1701685452; x=1702290252; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=d+/UUK0tjiTbrYrWq+ZnEpTiWe5a1pluZVFLk6AmF9c=;
+        b=25+2DmbHuqMHRgfnJnrtDiwtqhqI7co39OL04t86nWhS9eW5Tzp6RsffFux3oF6gM5
+         Q0yigNgvCuMGYnZX8YiSRTbKvPgp1LJoJNZAByozfWR1eL1x6Lq2X6x/wa/tBMbw8PTG
+         yxMJs/yN4tQ9ESI7/jivditAn3sUqCOk2m/mPQUam5e/+2up6O5GjfPWZ54KXFBxENgQ
+         WnBBWdBC1z1z1hdPMQ+2bWgYukBWFMa553K6r5/6Ijj7BOmG/bp7vMFIewGDejkCSU53
+         XAwdrYrNSGfJsxHktKoaylnS6V4kPbYb0ad0thgbCsJ5fzqSHqMCC2DER0m8ueevFsj1
+         vRvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701685454; x=1702290254;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=k136HpPBxB75fbT2utHLBa5irmSPTM0KT5lmOjawCwk=;
-        b=C26nwGh/VQdFG79UhIGG8XGE3wtec0RN8J8hk4JlSK+BRefuehHyYWg15C+6PKx/oT
-         TfwoJGjPCMo9k/+Qz3SpJI7qossogNvslT+kdvBGqdtOix53q4TwqDUckmlRg2eQrdu0
-         Dc6+62IMgpfvHphFAb/gYCARrtguGeggQ+WNjXVRL1v47RCpOlr3EuA7mQiXvjZoFwrW
-         HQqiKHY6wTcvgcQcD0lZQDD+AlJw7fGIU4B7dXDf2OeA+tmEalZd6hmJeyGLLoadvEDe
-         POT4QpyxA/6XoJQnlkOX8wVb+Gl84cfRSArjHRkCliozj/8GlXlY/ukg5i2ZqOKck0Zm
-         Sx2g==
-X-Gm-Message-State: AOJu0YyGeOyZaqSeqW6mqvJ24znCEjUPaPcaejvJqXmlTjlainyPW2Op
-	+Cq6COV++oRQo1pEveXdA7/jvg==
-X-Google-Smtp-Source: AGHT+IEtBdauiFo6/m4vFmjOtJmPLwVCJAjhwy5Vn7o4sKAbfmoX/inEUuC/g5QqQdMeJ7XxRTEVqA==
-X-Received: by 2002:a17:906:8b:b0:a19:a1ba:8cf5 with SMTP id 11-20020a170906008b00b00a19a1ba8cf5mr3325610ejc.147.1701685453779;
-        Mon, 04 Dec 2023 02:24:13 -0800 (PST)
-Received: from otso.luca.vpn.lucaweiss.eu (144-178-202-138.static.ef-service.nl. [144.178.202.138])
-        by smtp.gmail.com with ESMTPSA id t15-20020a1709066bcf00b00a0bdfab0f02sm5121551ejs.77.2023.12.04.02.24.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        d=1e100.net; s=20230601; t=1701685452; x=1702290252;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=d+/UUK0tjiTbrYrWq+ZnEpTiWe5a1pluZVFLk6AmF9c=;
+        b=TDUC4hgT16QGJr4ZdYEGsnVulnJ6iTpJyCgDkpGXZR9pINsSQBa89UDGkbJTL6rarm
+         8bsrsKMQEWjV9BmsQjytE+PN+Vr90YOHNOEa6Uuc8XfXryIZCTNOo0nOelsBiUqexkV/
+         aI0eEy+OaCGB1cGkS5LsaIbLuoiqIVsG2n8XNPbILfukGHXRtg4RQ1NXVLnxombbsYNS
+         uE6N3yYmxV2LxU81xV8oiWL8xjel1CabV/0AD6IdY1o8u2/lUp27IYxy6VSsLqPMT/aX
+         T2tstuG23CK0HWlfvh2i0ZSslkOtN6x7e7aAiGl2xjaJzqCvbC+jIJs6RaR86QLdgO49
+         lNfg==
+X-Gm-Message-State: AOJu0YzOXqmdGEobE55EixcEETF+kXWuRh9ZG70/TaGkjvUXRlsYfjsV
+	G7RvIQHSGYZQIO8G7VBMaoeUSw==
+X-Google-Smtp-Source: AGHT+IHqro09Ko7X2V1DD4rgCax4G8WDgquQW3myh5xd0r5oyG9Hr2vgMNE9sZB0D3NOqxQZv3Bx/A==
+X-Received: by 2002:a17:906:103:b0:a0f:42da:1715 with SMTP id 3-20020a170906010300b00a0f42da1715mr3012340eje.50.1701685452409;
         Mon, 04 Dec 2023 02:24:12 -0800 (PST)
+Received: from otso.luca.vpn.lucaweiss.eu (144-178-202-138.static.ef-service.nl. [144.178.202.138])
+        by smtp.gmail.com with ESMTPSA id t15-20020a1709066bcf00b00a0bdfab0f02sm5121551ejs.77.2023.12.04.02.24.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Dec 2023 02:24:11 -0800 (PST)
 From: Luca Weiss <luca.weiss@fairphone.com>
-Date: Mon, 04 Dec 2023 11:24:04 +0100
-Subject: [PATCH v5 1/3] scsi: ufs: qcom: dt-bindings: Add SC7280 compatible
- string
+Subject: [PATCH v5 0/3] Add UFS host controller and Phy nodes for sc7280
+Date: Mon, 04 Dec 2023 11:24:03 +0100
+Message-Id: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,9 +49,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231204-sc7280-ufs-v5-1-926ceed550da@fairphone.com>
-References: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
-In-Reply-To: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
+X-B4-Tracking: v=1; b=H4sIAMOobWUC/z3MQQ6CMBBA0auQWTukHSpYV97DGFPLILOgYAtqQ
+ ri71YXLt/h/hcRROMGxWCHyU5KMIWO/K8D3LtwZpc0GUlRpUgaTb+igcOkS3jQ3pmZXK24hB1P
+ kTt6/2fmS3cVxwLmP7P4LZcnqStuqLska0qjxsYi/Bpklupc7fSXBl34cYNs+K/ULnZ8AAAA=
 To: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
  Konrad Dybcio <konrad.dybcio@linaro.org>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
@@ -66,43 +65,42 @@ Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
  Nitin Rawat <quic_nitirawa@quicinc.com>, 
  Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
  "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
- Luca Weiss <luca.weiss@fairphone.com>
+ Luca Weiss <luca.weiss@fairphone.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>
 X-Mailer: b4 0.12.4
 
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
+This patch adds UFS host controller and Phy nodes for Qualcomm sc7280
+SoC and enable it on some sc7280-based boards.
 
-Document the compatible string for the UFS found on SC7280.
+Pick up the patchset from Nitin since the last revision (v4) has been
+sent end of September and is blocking qcm6490-fairphone-fp5 UFS.
 
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
 ---
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+Changes in v5:
+- Try to get patch tags in order
+- Drop patch reordering clocks/clock-names in dt-bindings example (Rob)
+- Use QCOM_ICC_TAG_ALWAYS for interconnect (Konrad)
+- Add missing interconnect-names (Luca)
+- Fix sorting of ufs nodes, place at correct location (Luca)
+- Provide ufs_mem_phy clock to gcc node (Luca)
+- Add missing power-domain to ufs_mem_phy (Luca)
+- Link to v4: https://lore.kernel.org/linux-arm-msm/20230929131936.29421-1-quic_nitirawa@quicinc.com/
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index 2cf3d016db42..10c146424baa 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -27,6 +27,7 @@ properties:
-           - qcom,msm8996-ufshc
-           - qcom,msm8998-ufshc
-           - qcom,sa8775p-ufshc
-+          - qcom,sc7280-ufshc
-           - qcom,sc8280xp-ufshc
-           - qcom,sdm845-ufshc
-           - qcom,sm6115-ufshc
-@@ -118,6 +119,7 @@ allOf:
-             enum:
-               - qcom,msm8998-ufshc
-               - qcom,sa8775p-ufshc
-+              - qcom,sc7280-ufshc
-               - qcom,sc8280xp-ufshc
-               - qcom,sm8250-ufshc
-               - qcom,sm8350-ufshc
+---
+Nitin Rawat (3):
+      scsi: ufs: qcom: dt-bindings: Add SC7280 compatible string
+      arm64: dts: qcom: sc7280: Add UFS nodes for sc7280 soc
+      arm64: dts: qcom: sc7280: Add UFS nodes for sc7280 IDP board
 
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          |  2 +
+ arch/arm64/boot/dts/qcom/sc7280-idp.dtsi           | 19 ++++++
+ arch/arm64/boot/dts/qcom/sc7280.dtsi               | 74 +++++++++++++++++++++-
+ 3 files changed, 94 insertions(+), 1 deletion(-)
+---
+base-commit: ce733604ab13d907655fd76ef5be55d16bbd0f8c
+change-id: 20231204-sc7280-ufs-b1e746ea60ed
+
+Best regards,
 -- 
-2.43.0
+Luca Weiss <luca.weiss@fairphone.com>
 
