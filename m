@@ -1,185 +1,172 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="MkNs4cle"
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E023BD4F
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Dec 2023 02:24:16 -0800 (PST)
-Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-50be8ced3ddso1854128e87.1
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Dec 2023 02:24:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1701685455; x=1702290255; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=jUS+V8KAxZ6BxQ88IkSxr3UDkU13WU3CqcznDtGJw7I=;
-        b=MkNs4cle6gXhSfG+FRMynq5IYnHml8rmtTiTjcioQZjp1h0+jh8yuXdZCS95VKyrEg
-         CeZhe0P3ZyBPzTCLY3pUMjHCUFvZUI3vCCosVolBStjvoqFTfz7QX8BKPRDr51MOqF3T
-         aBUtq8NxY8LiH5JWOFiQw5xsFo+UMYd3on0vgSRQ5bj7eum5rHzaePDF5PdfeSgFt9l+
-         o39+phCdJjEdDqMHufZ3sNlWZmeawRA467q9H2Lc2RU92iyMT5p0BvyQviQE3jU4Jkq7
-         7KJtCwcSbmaTWZ9SFTV61G3vz/QmMRt2HLviY3gt1To8eTyhnovFirqbQrJTKMr3L7pg
-         h4Ww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701685455; x=1702290255;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jUS+V8KAxZ6BxQ88IkSxr3UDkU13WU3CqcznDtGJw7I=;
-        b=TJE5YilXPaRf0BaIRxoj8UlUVoO/PejUiyyNzgk+Rc/U6FtssH5q9LGpuQvfgc1Wnh
-         Y05nYNTk7cz7wuOSy5IgzZMQdINtcdFq5/2f5xUEc/UhUYoMg13lANkWRy4nn17oFFAD
-         cCsMD++GhYhFVPSfmJIE34kCqwLnOIDChumNZ3z5EOLObtZVnV6YRk4hZxSiu+K60zoE
-         GEbExskLH4HbT1FEmBXgdehDg5yW8jTLN8KcHaoBLUkLQ8afIFtmwE/TZeVprc/bVWJu
-         uFuM8QWip3ax373lfUi6Iqoy9twB3uI5EKn1HusHPY3KtOyMgsJV3n+PEmLh2CwwbGpK
-         Xcvg==
-X-Gm-Message-State: AOJu0YzqDz1ySJ+fLXSElNkjdOdyU8e5k2TGvmozvqkwv3SrFe8yU23B
-	ayTm9ehijTDGRYS7ADiW2SRtJw==
-X-Google-Smtp-Source: AGHT+IHMCjMG4PLctoa3RGXyttvOBiWl+bWWGH2Rt1xUTUVEXDamVU0+GRf5sHB2eSdunvo15mYrmQ==
-X-Received: by 2002:a05:6512:15a1:b0:50b:fd4a:f788 with SMTP id bp33-20020a05651215a100b0050bfd4af788mr380734lfb.33.1701685455058;
-        Mon, 04 Dec 2023 02:24:15 -0800 (PST)
-Received: from otso.luca.vpn.lucaweiss.eu (144-178-202-138.static.ef-service.nl. [144.178.202.138])
-        by smtp.gmail.com with ESMTPSA id t15-20020a1709066bcf00b00a0bdfab0f02sm5121551ejs.77.2023.12.04.02.24.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Dec 2023 02:24:14 -0800 (PST)
-From: Luca Weiss <luca.weiss@fairphone.com>
-Date: Mon, 04 Dec 2023 11:24:05 +0100
-Subject: [PATCH v5 2/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- soc
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2355AAC;
+	Mon,  4 Dec 2023 03:49:09 -0800 (PST)
+Received: from dggpemd100001.china.huawei.com (unknown [172.30.72.55])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4SkMPC4NG4zWjG1;
+	Mon,  4 Dec 2023 19:48:15 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.1258.28; Mon, 4 Dec 2023 19:49:07 +0800
+Message-ID: <635ad8e8-c123-5cd9-9b80-7f0bce46ee8e@huawei.com>
+Date: Mon, 4 Dec 2023 19:49:06 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20231204-sc7280-ufs-v5-2-926ceed550da@fairphone.com>
-References: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
-In-Reply-To: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
-To: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konrad.dybcio@linaro.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh+dt@kernel.org>, 
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
- Conor Dooley <conor+dt@kernel.org>, cros-qcom-dts-watchers@chromium.org
-Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Nitin Rawat <quic_nitirawa@quicinc.com>, 
- Luca Weiss <luca.weiss@fairphone.com>
-X-Mailer: b4 0.12.4
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v4] scsi: libsas: Fix the failure of adding phy with
+ zero-address to port
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
+	<chenxiang66@hisilicon.com>
+References: <20231117090001.35840-1-yangxingui@huawei.com>
+ <32c42e1e-0399-4af4-a5ed-6a257e300fe8@oracle.com>
+ <307d251f-ff49-5d8f-1f8e-aed314256732@huawei.com>
+ <a13f0419-c4ef-4b8b-9757-7cf7cea32458@oracle.com>
+ <baacad33-f568-6151-75a2-dfc09caf2a81@huawei.com>
+ <cf98eb9f-ac42-4d9b-9cf3-3085f6fc0cda@oracle.com>
+ <d6b20d8f-7653-6806-d7c8-0adc54f1333b@huawei.com>
+ <25b6b575-3108-41cc-96d4-70279ce61a48@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <25b6b575-3108-41cc-96d4-70279ce61a48@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggpemm500022.china.huawei.com (7.185.36.162) To
+ dggpemd100001.china.huawei.com (7.185.36.94)
+X-CFilter-Loop: Reflected
 
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
+Hi, John
 
-Add UFS host controller and PHY nodes for sc7280 soc.
+On 2023/12/1 17:22, John Garry wrote:
+> On 30/11/2023 03:53, yangxingui wrote:
+>>>>
+>>>> For phy19, when the phy is attached and added to the parent wide 
+>>>> port, the path is:
+>>>> sas_rediscover()
+>>>>      ->sas_discover_new()
+>>>>          ->sas_ex_discover_devices()
+>>>>              ->sas_ex_discover_dev()
+>>>>                  -> sas_add_parent_port().
+>>>
+>>> ok, so then the change to set ex_phy->port = ex->parent_port looks 
+>>> ok. Maybe we can put this in a helper with the sas_port_add_phy() 
+>>> call, as it is duplicated in sas_ex_join_wide_port()
+>>>
+>>> Do we also need to set ex_phy->phy_state (like sas_ex_join_wide_port())?
+>>
+>> Well, okay, as follows?
+>> +++ b/drivers/scsi/libsas/sas_expander.c
+>> @@ -856,9 +856,7 @@ static bool sas_ex_join_wide_port(struct 
+>> domain_device *parent, int phy_id)
+>>
+>>                  if (!memcmp(phy->attached_sas_addr, 
+>> ephy->attached_sas_addr,
+>>                              SAS_ADDR_SIZE) && ephy->port) {
+>> -                       sas_port_add_phy(ephy->port, phy->phy);
+>> -                       phy->port = ephy->port;
+>> -                       phy->phy_state = PHY_DEVICE_DISCOVERED;
+>> +                       sas_port_add_ex_phy(ephy->port, phy);
+>>                          return true;
+> 
+> this looks ok. How about adding this helper and using it in a separate 
+> change?
+Okay, then I will update the version.
+> 
+>>                  }
+>>          }
+>> diff --git a/drivers/scsi/libsas/sas_internal.h 
+>> b/drivers/scsi/libsas/sas_internal.h
+>> index e860d5b19880..39ffa60a9a01 100644
+>> --- a/drivers/scsi/libsas/sas_internal.h
+>> +++ b/drivers/scsi/libsas/sas_internal.h
+>> @@ -189,6 +189,13 @@ static inline void sas_phy_set_target(struct 
+>> asd_sas_phy *p, struct domain_devic
+>>          }
+>>   }
+>>
+>> +static inline void sas_port_add_ex_phy(struct sas_port *port, struct 
+>> ex_phy *ex_phy)
+>> +{
+>> +       sas_port_add_phy(port, ex_phy->phy);
+>> +       ex_phy->port = port;
+>> +       ex_phy->phy_state = PHY_DEVICE_DISCOVERED;
+>> +}
+> 
+> I'd prefer sas_expander.c, but sas_add_parent_port() is here... having 
+> said that, sas_add_parent_port() is only used in sas_expander.c
+Okay, then I will update the version and move it to sas_expander.c .
 
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
-Tested-by: Konrad Dybcio <konrad.dybcio@linaro.org> # QCM6490 FP5
-[luca: various cleanups and additions as written in the cover letter]
-Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
----
- arch/arm64/boot/dts/qcom/sc7280.dtsi | 74 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 73 insertions(+), 1 deletion(-)
+> 
+>> +
+>>   static inline void sas_add_parent_port(struct domain_device *dev, 
+>> int phy_id)
+>>   {
+>>          struct expander_device *ex = &dev->ex_dev;
+>> @@ -201,8 +208,7 @@ static inline void sas_add_parent_port(struct 
+>> domain_device *dev, int phy_id)
+>>                  BUG_ON(sas_port_add(ex->parent_port));
+>>                  sas_port_mark_backlink(ex->parent_port);
+>>          }
+>> -       sas_port_add_phy(ex->parent_port, ex_phy->phy);
+>> +       sas_port_add_ex_phy(ex->parent_port, ex_phy);
+>>   }
+>>
+>>>
+>>>> And the path called when it is removed from parent wide port is:
+>>>> sas_rediscover()
+>>>>      ->sas_unregister_devs_sas_addr() // The sas address of phy19 
+>>>> becomes 0. Since ex_phy->port is NULL, phy19 is not removed from the 
+>>>> parent wide port's phy_list.
+>>>>
+>>>> For phy0, it is connected to a new sata device.
+>>>> sas_rediscover()
+>>>>      ->sas_discover_new()->sas_ex_phy_discover()
+>>>>                              ->sas_ex_phy_discover_helper()
+>>>>                                  ->sas_set_ex_phy() // The device 
+>>>> type is stp. Since the linkrate is 5 and less than 1.5G, sas_address 
+>>>> is set to 0.
+>>>
+>>> Then when we get the proper linkrate later, will we then rediscover 
+>>> and set the proper SAS address? I am just wondering if this change is 
+>>> really required?
+>> Yes, but in fact it has not reached that stage yet. After setting the 
+>> address to 0, it will continue to create a new port and try to add 
+>> other phys with the same address as it to this new port.
+> 
+> creating a port for SAS address == 0 and adding phys seems incorrect, 
+> right?
+Yes. There are three possible ways to solve the problem of creating a 
+port with a zero address:
+1. Use the sas address obtained by querying the expander instead of the 
+zero address.
+2. Forbid the phy with an address of 0 to create a port.
+3. When the rate is less than 1.5G, do not let it enter 
+sas_ex_discover_end_dev().
 
-diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-index 04bf85b0399a..8b08569f2191 100644
---- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-@@ -15,6 +15,7 @@
- #include <dt-bindings/dma/qcom-gpi.h>
- #include <dt-bindings/firmware/qcom,scm.h>
- #include <dt-bindings/gpio/gpio.h>
-+#include <dt-bindings/interconnect/qcom,icc.h>
- #include <dt-bindings/interconnect/qcom,osm-l3.h>
- #include <dt-bindings/interconnect/qcom,sc7280.h>
- #include <dt-bindings/interrupt-controller/arm-gic.h>
-@@ -906,7 +907,7 @@ gcc: clock-controller@100000 {
- 			clocks = <&rpmhcc RPMH_CXO_CLK>,
- 				 <&rpmhcc RPMH_CXO_CLK_A>, <&sleep_clk>,
- 				 <0>, <&pcie1_phy>,
--				 <0>, <0>, <0>,
-+				 <&ufs_mem_phy 0>, <&ufs_mem_phy 1>, <&ufs_mem_phy 2>,
- 				 <&usb_1_qmpphy QMP_USB43DP_USB3_PIPE_CLK>;
- 			clock-names = "bi_tcxo", "bi_tcxo_ao", "sleep_clk",
- 				      "pcie_0_pipe_clk", "pcie_1_pipe_clk",
-@@ -2238,6 +2239,77 @@ pcie1_phy: phy@1c0e000 {
- 			status = "disabled";
- 		};
- 
-+		ufs_mem_hc: ufs@1d84000 {
-+			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
-+				     "jedec,ufs-2.0";
-+			reg = <0x0 0x01d84000 0x0 0x3000>;
-+			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-+			phys = <&ufs_mem_phy>;
-+			phy-names = "ufsphy";
-+			lanes-per-direction = <2>;
-+			#reset-cells = <1>;
-+			resets = <&gcc GCC_UFS_PHY_BCR>;
-+			reset-names = "rst";
-+
-+			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
-+
-+			iommus = <&apps_smmu 0x80 0x0>;
-+			dma-coherent;
-+
-+			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-+					 &cnoc2 SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
-+			interconnect-names = "ufs-ddr", "cpu-ufs";
-+
-+			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-+				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-+				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-+				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-+				 <&rpmhcc RPMH_CXO_CLK>,
-+				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-+			clock-names = "core_clk",
-+				      "bus_aggr_clk",
-+				      "iface_clk",
-+				      "core_clk_unipro",
-+				      "ref_clk",
-+				      "tx_lane0_sync_clk",
-+				      "rx_lane0_sync_clk",
-+				      "rx_lane1_sync_clk";
-+			freq-table-hz =
-+				<75000000 300000000>,
-+				<0 0>,
-+				<0 0>,
-+				<75000000 300000000>,
-+				<0 0>,
-+				<0 0>,
-+				<0 0>,
-+				<0 0>;
-+			status = "disabled";
-+		};
-+
-+		ufs_mem_phy: phy@1d87000 {
-+			compatible = "qcom,sc7280-qmp-ufs-phy";
-+			reg = <0x0 0x01d87000 0x0 0xe00>;
-+			clocks = <&rpmhcc RPMH_CXO_CLK>,
-+				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
-+				 <&gcc GCC_UFS_1_CLKREF_EN>;
-+			clock-names = "ref", "ref_aux", "qref";
-+
-+			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
-+
-+			resets = <&ufs_mem_hc 0>;
-+			reset-names = "ufsphy";
-+
-+			#clock-cells = <1>;
-+			#phy-cells = <0>;
-+
-+			status = "disabled";
-+		};
-+
- 		ipa: ipa@1e40000 {
- 			compatible = "qcom,sc7280-ipa";
- 
+Because when the device type is not empty, its SAS address is legal, and 
+we are currently using the first one.
+> 
+>>
+>>>
+>>> BTW, Even with the change to set ex_phy->port = ex->parent_port, are 
+>>> we still joining the host-attached expander phy (19) to a port with 
+>>> SAS address == 0?
+>> Yes, in order to avoid this situation, in the current patch, we will 
+>> not force the SAS address to be set to 0 when the device type is not 
+>> NULL, but will still use the address obtained after requesting the 
+>> expander.
+> 
+> ok, let me check that again later today.
+OK.
 
--- 
-2.43.0
+Thanks
+Xingui
 
