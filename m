@@ -1,40 +1,40 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Wc7Wz6G/"
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15541B0
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Dec 2023 11:15:29 -0800 (PST)
-Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1d0a7b72203so22405445ad.2
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Dec 2023 11:15:29 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KcsHSEuO"
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D527D1B9
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Dec 2023 11:15:39 -0800 (PST)
+Received: by mail-pj1-x102f.google.com with SMTP id 98e67ed59e1d1-286f22c52c7so613294a91.2
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Dec 2023 11:15:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1701803728; x=1702408528; darn=vger.kernel.org;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=0ZsEzJj2wUmp16wh0jcpwRJaHj5g7AKBO7P+ZmX/iM0=;
-        b=Wc7Wz6G/AT1m/8AlnbH9irTRKR58PWVQXH9jqN3za4bAHYFl77+rfh5JOOwGyg+jep
-         M8yCNLD0lQkbNadeqBNa8xyKmo2dXR/hnbG3JSgzS/mUxgX05z5AG82YNQpD/vBXKVw5
-         7sR0x0fS05taNqZipMV7e6cud904/lHu1zoFE=
+        d=broadcom.com; s=google; t=1701803739; x=1702408539; darn=vger.kernel.org;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=uMcbvYIS9+GDt3PATCfxtB2XQDsWuLKQuSDGJchgZ6E=;
+        b=KcsHSEuOksckiWUsq7LNpmwvO0lz7vJFjK32f8VUA79TyD1WkKNZNxP0+TQfFSbEhT
+         OqBQt6ByzyjS6hYw2E4kBsak/2JltcTgR8cy7U+wCgjSvr4RnDiArxVguz1a+f1DW0PH
+         jHReaBIJ8E9AIqSfqfL7PYFWr426WUWgAtFVs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701803728; x=1702408528;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0ZsEzJj2wUmp16wh0jcpwRJaHj5g7AKBO7P+ZmX/iM0=;
-        b=d6VxG0yUxkW21Bra0NUPa/jeYHElgiaB/9aSxeTQLbUpTPlflW0vaq08MIcThDRvi/
-         a2cN3f/x5Sryo1GAjcnwe3J9QNGWhA71c4zQ8YXiTOjLbiA/zaBJVHfg/pd0NrP+xwAm
-         Wx+fsLzm5BhsPl6jsW/DIUrmUmmzQgSkJeu7kAPjl8N7wYtjvG+y3OBU8pT/bTaZvkSW
-         Du20Vw3KbFT2VERkQfVO0ZDmHASeb2waNj7jbVg4pjEQQdH90QaN0kQ7ybIIJyeP4RG7
-         EtQTAD43Y/kPglYCpvsGArRlUMlISaJNdO1xSCoh26cJlyoPaEjs7fF/rZ0kKp6jU3oL
-         9YbA==
-X-Gm-Message-State: AOJu0YyU1qXSLLigcCHbGz9tzDAZcDCTVlY+/p9C7HLgNfIb6ubl5vyl
-	igjxD9pA/wAm+BrAk83Jwlrql9QofsZSfUxy1jXnudKDSQteehjChlVTaU92r6bnuK0XxzEo+cS
-	NQc2ng6se/KpjVzwqR7ZUgNTcUv72AgGPyVmLXgxiodzZZHETvZq7AYI4Gi8byggFaiLb1AHtxH
-	uNwcHTycWlSxBQb0VpZw==
-X-Google-Smtp-Source: AGHT+IGdw9v5o5hdJsHbAoPDe/wi0YigAx6Rh1anvP340AO2ylYjYwGSbxi4zBc6FCrLWl7BG8YKxA==
-X-Received: by 2002:a17:90b:4d88:b0:27c:f48e:e245 with SMTP id oj8-20020a17090b4d8800b0027cf48ee245mr1800873pjb.24.1701803728028;
-        Tue, 05 Dec 2023 11:15:28 -0800 (PST)
+        d=1e100.net; s=20230601; t=1701803739; x=1702408539;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=uMcbvYIS9+GDt3PATCfxtB2XQDsWuLKQuSDGJchgZ6E=;
+        b=J4KiM9dijEoM3PoFh2ReJSpe/+sF756h0lsBkT16/ceqYJ6q1JZmpJrcEmzG4hzTOJ
+         7lOhwq59FmSnJPZEFzKEvNt9r5MfjjWsXkXOMp+xd0N8mq96HjY5Xrrb6VDq1gKUf5KD
+         BnxeuKvREtcTOl9ZvETy7j0m3vG4w1o50xXrYEctqq1KwWUBqTUQkXK+F/N2jbK1vln7
+         0q3aaorcENDUZaWCpINhvFdYakx/y86itUmZ+a23XHoNa7h7taExMp3SNwxj3fNGpAV3
+         /7wrDt33wxTxXGC/6CAffT/pzVDXr7IoRZ8mWZA4BCAzvjWnUM4dk3ApoILI7cRiLdip
+         lgpQ==
+X-Gm-Message-State: AOJu0YyDtSVzbbr8RrHKb6QIYmTDnSgpkNuHacQs+62h1ZMT2bNsIQ/x
+	xPNR1SUz6EeOd0vJ/0P62AS0k4fTzYUv6jneRiQOVO0S1j3PywXEEyjtxqsx4Q1pAHB8IntqnfT
+	t9hLp/ZrRSSv/KrpRgeDke0m/LG/X1st7NkEXjYE9LtmrJuJQkJTozvh5JXZFeB6XOxAp9kIN8/
+	oJRHmWUCz/CW1npOKY1w==
+X-Google-Smtp-Source: AGHT+IG40Zj/dNTvBy/BitoETz6LCCc694X03YZad9XjyDanWUgwIPXmcvz9cnge/65mXR/PJLMJJw==
+X-Received: by 2002:a17:90b:4f41:b0:285:dbc9:dc18 with SMTP id pj1-20020a17090b4f4100b00285dbc9dc18mr1476569pjb.38.1701803738808;
+        Tue, 05 Dec 2023 11:15:38 -0800 (PST)
 Received: from dhcp-10-123-20-35.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 16-20020a17090a199000b0028017a2a8fasm10801896pji.3.2023.12.05.11.15.24
+        by smtp.gmail.com with ESMTPSA id 16-20020a17090a199000b0028017a2a8fasm10801896pji.3.2023.12.05.11.15.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Dec 2023 11:15:26 -0800 (PST)
+        Tue, 05 Dec 2023 11:15:38 -0800 (PST)
 From: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	sumit.saxena@broadcom.com,
@@ -42,10 +42,12 @@ To: linux-scsi@vger.kernel.org,
 	ranjan.kumar@broadcom.com,
 	prayas.patel@broadcom.com
 Cc: Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 0/4] Support for preallocation of SGL BSG data buffers
-Date: Wed,  6 Dec 2023 00:46:26 +0530
-Message-Id: <20231205191630.12201-1-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 1/4] mpi3mr: Support for preallocation of SGL BSG data buffers part-1
+Date: Wed,  6 Dec 2023 00:46:27 +0530
+Message-Id: <20231205191630.12201-2-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.39.3
+In-Reply-To: <20231205191630.12201-1-chandrakanth.patil@broadcom.com>
+References: <20231205191630.12201-1-chandrakanth.patil@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,34 +55,205 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000b72ca9060bc80ebc"
+	boundary="0000000000005b783c060bc80f8d"
 
---000000000000b72ca9060bc80ebc
+--0000000000005b783c060bc80f8d
 Content-Transfer-Encoding: 8bit
 
-This set of patches includes a new feature and version update.
+The driver now supports SGLs for BSG data transfer. Upon loading,
+the driver pre-allocates SGLs in chunks of 8k, results in a total
+of 256 * 8k, equal to 2MB. These pre-allocated SGLs are reserved
+for handling BSG commands and are deallocated during driver unload.
 
-The initial three patches are related to "Support for preallocation of SGL
-BSG data buffers" and patches are interdependent. The fourth patch updates
-the driver version.
+Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
+Signed-off-by: Chandrakanth patil <chandrakanth.patil@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr.h    |  15 +++++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 112 ++++++++++++++++++++++++++++++++
+ 2 files changed, 127 insertions(+)
 
-Chandrakanth patil (4):
-  mpi3mr: Support for preallocation of SGL BSG data buffers part-1
-  mpi3mr: Support for preallocation of SGL BSG data buffers part-2
-  mpi3mr: Support for preallocation of SGL BSG data buffers part-3
-  mpi3mr: Update driver version to 8.5.1.0.0
-
- drivers/scsi/mpi3mr/mpi3mr.h        |  31 +-
- drivers/scsi/mpi3mr/mpi3mr_app.c    | 520 ++++++++++++++++++++++------
- drivers/scsi/mpi3mr/mpi3mr_fw.c     | 112 ++++++
- include/uapi/scsi/scsi_bsg_mpi3mr.h |   2 +
- 4 files changed, 551 insertions(+), 114 deletions(-)
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 4f49f8396309..8fce57894f8f 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -477,6 +477,10 @@ struct mpi3mr_throttle_group_info {
+ /* HBA port flags */
+ #define MPI3MR_HBA_PORT_FLAG_DIRTY	0x01
+ 
++/* IOCTL data transfer sge*/
++#define MPI3MR_NUM_IOCTL_SGE		256
++#define MPI3MR_IOCTL_SGE_SIZE		(8 * 1024)
++
+ /**
+  * struct mpi3mr_hba_port - HBA's port information
+  * @port_id: Port number
+@@ -1042,6 +1046,11 @@ struct scmd_priv {
+  * @sas_node_lock: Lock to protect SAS node list
+  * @hba_port_table_list: List of HBA Ports
+  * @enclosure_list: List of Enclosure objects
++ * @ioctl_dma_pool: DMA pool for IOCTL data buffers
++ * @ioctl_sge: DMA buffer descriptors for IOCTL data
++ * @ioctl_chain_sge: DMA buffer descriptor for IOCTL chain
++ * @ioctl_resp_sge: DMA buffer descriptor for Mgmt cmd response
++ * @ioctl_sges_allocated: Flag for IOCTL SGEs allocated or not
+  */
+ struct mpi3mr_ioc {
+ 	struct list_head list;
+@@ -1227,6 +1236,12 @@ struct mpi3mr_ioc {
+ 	spinlock_t sas_node_lock;
+ 	struct list_head hba_port_table_list;
+ 	struct list_head enclosure_list;
++
++	struct dma_pool *ioctl_dma_pool;
++	struct dma_memory_desc ioctl_sge[MPI3MR_NUM_IOCTL_SGE];
++	struct dma_memory_desc ioctl_chain_sge;
++	struct dma_memory_desc ioctl_resp_sge;
++	bool ioctl_sges_allocated;
+ };
+ 
+ /**
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 1ad2f88e0528..d8c57a0a518f 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1058,6 +1058,114 @@ enum mpi3mr_iocstate mpi3mr_get_iocstate(struct mpi3mr_ioc *mrioc)
+ 	return MRIOC_STATE_RESET_REQUESTED;
+ }
+ 
++/**
++ * mpi3mr_free_ioctl_dma_memory - free memory for ioctl dma
++ * @mrioc: Adapter instance reference
++ *
++ * Free the DMA memory allocated for IOCTL handling purpose.
++
++ *
++ * Return: None
++ */
++static void mpi3mr_free_ioctl_dma_memory(struct mpi3mr_ioc *mrioc)
++{
++	struct dma_memory_desc *mem_desc;
++	u16 i;
++
++	if (!mrioc->ioctl_dma_pool)
++		return;
++
++	for (i = 0; i < MPI3MR_NUM_IOCTL_SGE; i++) {
++		mem_desc = &mrioc->ioctl_sge[i];
++		if (mem_desc->addr) {
++			dma_pool_free(mrioc->ioctl_dma_pool,
++				      mem_desc->addr,
++				      mem_desc->dma_addr);
++			mem_desc->addr = NULL;
++		}
++	}
++	dma_pool_destroy(mrioc->ioctl_dma_pool);
++	mrioc->ioctl_dma_pool = NULL;
++	mem_desc = &mrioc->ioctl_chain_sge;
++
++	if (mem_desc->addr) {
++		dma_free_coherent(&mrioc->pdev->dev, mem_desc->size,
++				  mem_desc->addr, mem_desc->dma_addr);
++		mem_desc->addr = NULL;
++	}
++	mem_desc = &mrioc->ioctl_resp_sge;
++	if (mem_desc->addr) {
++		dma_free_coherent(&mrioc->pdev->dev, mem_desc->size,
++				  mem_desc->addr, mem_desc->dma_addr);
++		mem_desc->addr = NULL;
++	}
++
++	mrioc->ioctl_sges_allocated = false;
++}
++
++/**
++ * mpi3mr_alloc_ioctl_dma_memory - Alloc memory for ioctl dma
++ * @mrioc: Adapter instance reference
++
++ *
++ * This function allocates dmaable memory required to handle the
++ * application issued MPI3 IOCTL requests.
++ *
++ * Return: None
++ */
++static void mpi3mr_alloc_ioctl_dma_memory(struct mpi3mr_ioc *mrioc)
++
++{
++	struct dma_memory_desc *mem_desc;
++	u16 i;
++
++	mrioc->ioctl_dma_pool = dma_pool_create("ioctl dma pool",
++						&mrioc->pdev->dev,
++						MPI3MR_IOCTL_SGE_SIZE,
++						MPI3MR_PAGE_SIZE_4K, 0);
++
++	if (!mrioc->ioctl_dma_pool) {
++		ioc_err(mrioc, "ioctl_dma_pool: dma_pool_create failed\n");
++		goto out_failed;
++	}
++
++	for (i = 0; i < MPI3MR_NUM_IOCTL_SGE; i++) {
++		mem_desc = &mrioc->ioctl_sge[i];
++		mem_desc->size = MPI3MR_IOCTL_SGE_SIZE;
++		mem_desc->addr = dma_pool_zalloc(mrioc->ioctl_dma_pool,
++						 GFP_KERNEL,
++						 &mem_desc->dma_addr);
++		if (!mem_desc->addr)
++			goto out_failed;
++	}
++
++	mem_desc = &mrioc->ioctl_chain_sge;
++	mem_desc->size = MPI3MR_PAGE_SIZE_4K;
++	mem_desc->addr = dma_alloc_coherent(&mrioc->pdev->dev,
++					    mem_desc->size,
++					    &mem_desc->dma_addr,
++					    GFP_KERNEL);
++	if (!mem_desc->addr)
++		goto out_failed;
++
++	mem_desc = &mrioc->ioctl_resp_sge;
++	mem_desc->size = MPI3MR_PAGE_SIZE_4K;
++	mem_desc->addr = dma_alloc_coherent(&mrioc->pdev->dev,
++					    mem_desc->size,
++					    &mem_desc->dma_addr,
++					    GFP_KERNEL);
++	if (!mem_desc->addr)
++		goto out_failed;
++
++	mrioc->ioctl_sges_allocated = true;
++
++	return;
++out_failed:
++	ioc_warn(mrioc, "cannot allocate DMA memory for the mpt commands\n"
++		 "from the applications, application interface for MPT command is disabled\n");
++	mpi3mr_free_ioctl_dma_memory(mrioc);
++}
++
+ /**
+  * mpi3mr_clear_reset_history - clear reset history
+  * @mrioc: Adapter instance reference
+@@ -3874,6 +3982,9 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		}
+ 	}
+ 
++	dprint_init(mrioc, "allocating ioctl dma buffers\n");
++	mpi3mr_alloc_ioctl_dma_memory(mrioc);
++
+ 	if (!mrioc->init_cmds.reply) {
+ 		retval = mpi3mr_alloc_reply_sense_bufs(mrioc);
+ 		if (retval) {
+@@ -4293,6 +4404,7 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ 	struct mpi3mr_intr_info *intr_info;
+ 
+ 	mpi3mr_free_enclosure_list(mrioc);
++	mpi3mr_free_ioctl_dma_memory(mrioc);
+ 
+ 	if (mrioc->sense_buf_pool) {
+ 		if (mrioc->sense_buf)
 -- 
 2.39.3
 
 
---000000000000b72ca9060bc80ebc
+--0000000000005b783c060bc80f8d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -151,14 +324,14 @@ W2v5XKnfV6+4iODhAb65bwLbcNq6dxzr1Yy/fGnIBfoR2qrX9UBDDxjZRpxJGdt7i0CcvsX7p2ia
 SgP+hUBq9GTgLiFqCGyh/gCm2DTB/TyYel0QsIP29qWC1F5mG+GOoSjagi/2SxnNI6LzK+4xfgvc
 80IlL0UapzuyZFExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKTK2Qab
-Oab94OxvZLhZajZl2hq5jEf3FRaKbS+u5PkbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIzMTIwNTE5MTUyOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHKj+AbR
+4ypflvMZm7UnxA9KpcH7taNnJu1Wtr9Kovv8MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIzMTIwNTE5MTUzOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDWvRTnVgxmcyHpJjeUVz1pq40K
-DIHmwKkqpRBykLXqi41n/0onDX3gZ05i1am2SYSw5Nt9SqUnwdQqCwX2J0ZAPzB+LpER10QNuXYX
-7eOm9DmQUOIHYSCjXe2PxTbaIq3c6y98RO4y+I0JYKsUFBwRZw5CtMeiqhe+S+viPeuJJdqoGujk
-k4NLZ5rUEad+3nn/hgV2iSPkXwMakukWq6RP85BNTXfwK7E0prgT7H536wkcDqY+AE+d5IeISRQo
-u6A5Pdf2Do7g3RWReL/h+KnfloFabM5KwsA+4t7v3HA/A2qnTIIe1V06vrGhxC1DkAL8I7X2gtQP
-5e8lIddPDekq
---000000000000b72ca9060bc80ebc--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAz+fel2bPR9PMbHcGlpDx+Nl0g
+B8E24rwtFh63wxruH0ATxAfG67sVvF+RQwZBoVdv/IVD2gOMtQRdIEvyux9f/sHvZOqqF1Zh7918
+AMpABxdM9oe6UeZmT3kWTcdBLPl4SAkKMiAQeku93oTzl92Lrf14I0YPU6zR57CDKgi5WuwGrNC7
+Q+sFBUQdL7ora8U/66SL4uGP0ctvkWc322rKSDDiu/Xr9LlCrk3IQQLSkIl1nogXZvVJV6AOioem
+h/q+aItfxyZk/FwGBQPGEREcwP9KGOZRMNZyHQ8cQU75tIFm2alA8VR4v9djF2xrLYTfEO9z96Bu
+xe2UdbQkZTLq
+--0000000000005b783c060bc80f8d--
