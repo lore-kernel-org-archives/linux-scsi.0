@@ -1,267 +1,142 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EoY6ssu3"
-Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1BA818B
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Dec 2023 03:00:36 -0800 (PST)
-Received: by mail-lj1-x230.google.com with SMTP id 38308e7fff4ca-2ca0c36f5beso20462111fa.1
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Dec 2023 03:00:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701774035; x=1702378835; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=AP9Qop94IEBXngKyOrylUsXliVAP98wJ33rfRTNKdcA=;
-        b=EoY6ssu319TMcjn0cN+/TANrr6CLEIztMWWMI5OwKkZhXBUGiUC0E8rzrOrt/1Y2VJ
-         9E+UrneaQBeLAa7IDqBWL9PpjT0I4yPtZGrNY+qB8qEO+UIR/0jX+yp/rFDpRQ5sohJi
-         dajICf+kNrJmt2K1KxiGKA0m758CJeOxXMIg8/VSFxPZNfDnYQK0RysOZzS5F0lGFH4z
-         sWN5qREg5tK1GGcjkeX5I8KlWsqMbhd1T3MCaKWPaCOyQXfvTHb6hHii3WAd2xX5rrbd
-         WxN/vqg0Onm5o3HlmPBkU13XTUXq3J/Hf144Sidjna1geFOMOm+/j8wyYtHC4el7dddB
-         iFBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701774035; x=1702378835;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AP9Qop94IEBXngKyOrylUsXliVAP98wJ33rfRTNKdcA=;
-        b=AhmLK4F23iQ96aS+gicqLxOpgPcO/srW6gpCA0iCBGiZsiBZKsxQEU85YTjnWD4eA6
-         Cb49InFuUHEABqiXLVy4Ff9/zJ72TLFpnzStrSWd3l86Ry8nSyhWZyrEb3Yk/rFQpyDN
-         Wv4VNAQ33OcDhLBnlwOA43xpSqKNQ9mZi/OQTBWrDN/9fGX2SfTcdAmy7Ss/dM94pBPm
-         BxemEDlRRJ3z49VBzQJpwVeE18btYPQa8kF2txAV6SNyLNX0wHJUkeycEU4Bf5QGdDzP
-         7g/zUR/UlFKjw+ZX1kxZDFxbw8Xf8fgJDpwpHJupfLe8sHBK/ruNnNBZUHGuoAzAs/sP
-         c0Yw==
-X-Gm-Message-State: AOJu0YxLR2svY8+wCA3Nh/ocIQKP9BugAJ1HvbEa8T2nFaHE2RKR0O5E
-	6qzjsrycHaaGVE2jmiH66vIlBw==
-X-Google-Smtp-Source: AGHT+IEoHbfIdcV3tOJvmf6eVve6ZGwhFttsf/R9u1u+bVnAJZENXKOtM3fDLCrUqp36RNptgIqSow==
-X-Received: by 2002:a2e:a26b:0:b0:2ca:19e5:cf2f with SMTP id k11-20020a2ea26b000000b002ca19e5cf2fmr248964ljm.0.1701774034909;
-        Tue, 05 Dec 2023 03:00:34 -0800 (PST)
-Received: from ?IPV6:2001:14ba:a0db:1f00::227? (dzdqv0yyyyyyyyyyyykxt-3.rev.dnainternet.fi. [2001:14ba:a0db:1f00::227])
-        by smtp.gmail.com with ESMTPSA id h1-20020a2ebc81000000b002ca0f151917sm312010ljf.108.2023.12.05.03.00.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Dec 2023 03:00:34 -0800 (PST)
-Message-ID: <2d791b1c-283c-4f24-80e0-efaf3756955f@linaro.org>
-Date: Tue, 5 Dec 2023 13:00:33 +0200
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35002C6;
+	Tue,  5 Dec 2023 04:38:37 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Sl0Sk6Q5Lz4f3jrm;
+	Tue,  5 Dec 2023 20:38:30 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 0FC731A0902;
+	Tue,  5 Dec 2023 20:38:33 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDnNw7GGW9lr8E8Cw--.35507S4;
+	Tue, 05 Dec 2023 20:38:32 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: axboe@kernel.dk,
+	roger.pau@citrix.com,
+	colyli@suse.de,
+	kent.overstreet@gmail.com,
+	joern@lazybastard.org,
+	miquel.raynal@bootlin.com,
+	richard@nod.at,
+	vigneshr@ti.com,
+	sth@linux.ibm.com,
+	hoeppner@linux.ibm.com,
+	hca@linux.ibm.com,
+	gor@linux.ibm.com,
+	agordeev@linux.ibm.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	clm@fb.com,
+	josef@toxicpanda.com,
+	dsterba@suse.com,
+	nico@fluxnic.net,
+	xiang@kernel.org,
+	chao@kernel.org,
+	tytso@mit.edu,
+	adilger.kernel@dilger.ca,
+	agruenba@redhat.com,
+	jack@suse.com,
+	konishi.ryusuke@gmail.com,
+	willy@infradead.org,
+	akpm@linux-foundation.org,
+	hare@suse.de,
+	p.raghav@samsung.com
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org,
+	linux-mtd@lists.infradead.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-erofs@lists.ozlabs.org,
+	linux-ext4@vger.kernel.org,
+	gfs2@lists.linux.dev,
+	linux-nilfs@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH -next RFC 00/14] block: don't access bd_inode directly from other modules
+Date: Tue,  5 Dec 2023 20:37:14 +0800
+Message-Id: <20231205123728.1866699-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280
- soc
-Content-Language: en-GB
-To: Nitin Rawat <quic_nitirawa@quicinc.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Luca Weiss <luca.weiss@fairphone.com>
-Cc: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konrad.dybcio@linaro.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh+dt@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, cros-qcom-dts-watchers@chromium.org,
- ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20231204-sc7280-ufs-v5-0-926ceed550da@fairphone.com>
- <20231204-sc7280-ufs-v5-2-926ceed550da@fairphone.com>
- <621388b9-dcee-4af2-9763-e5d623d722b7@quicinc.com>
- <CXFJNBNKTRHH.2CS6TO2MEGJWL@fairphone.com> <20231204172829.GA69580@thinkpad>
- <2c996304-f82f-5311-3d88-d459c07ef741@quicinc.com>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-In-Reply-To: <2c996304-f82f-5311-3d88-d459c07ef741@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDnNw7GGW9lr8E8Cw--.35507S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kw4Utry8XFW7Zr18Jr43Wrg_yoW8WF1kpr
+	y3KF1fGr1Uu347Zaya9an7tryrJw4kGay7GF17t34rZr13JryfAr4ktrW8Ja48Jr9rXr4k
+	Xw1DtryFgr10gaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26rWY6r4U
+	JwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AK
+	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
+	fUoL0eDUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 05/12/2023 10:45, Nitin Rawat wrote:
-> 
-> 
-> On 12/4/2023 10:58 PM, Manivannan Sadhasivam wrote:
->> On Mon, Dec 04, 2023 at 01:21:42PM +0100, Luca Weiss wrote:
->>> On Mon Dec 4, 2023 at 1:15 PM CET, Nitin Rawat wrote:
->>>>
->>>>
->>>> On 12/4/2023 3:54 PM, Luca Weiss wrote:
->>>>> From: Nitin Rawat <quic_nitirawa@quicinc.com>
->>>>>
->>>>> Add UFS host controller and PHY nodes for sc7280 soc.
->>>>>
->>>>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->>>>> Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
->>>>> Tested-by: Konrad Dybcio <konrad.dybcio@linaro.org> # QCM6490 FP5
->>>>> [luca: various cleanups and additions as written in the cover letter]
->>>>> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
->>>>> ---
->>>>>    arch/arm64/boot/dts/qcom/sc7280.dtsi | 74 
->>>>> +++++++++++++++++++++++++++++++++++-
->>>>>    1 file changed, 73 insertions(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi 
->>>>> b/arch/arm64/boot/dts/qcom/sc7280.dtsi
->>>>> index 04bf85b0399a..8b08569f2191 100644
->>>>> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
->>>>> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
->>>>> @@ -15,6 +15,7 @@
->>>>>    #include <dt-bindings/dma/qcom-gpi.h>
->>>>>    #include <dt-bindings/firmware/qcom,scm.h>
->>>>>    #include <dt-bindings/gpio/gpio.h>
->>>>> +#include <dt-bindings/interconnect/qcom,icc.h>
->>>>>    #include <dt-bindings/interconnect/qcom,osm-l3.h>
->>>>>    #include <dt-bindings/interconnect/qcom,sc7280.h>
->>>>>    #include <dt-bindings/interrupt-controller/arm-gic.h>
->>>>> @@ -906,7 +907,7 @@ gcc: clock-controller@100000 {
->>>>>                clocks = <&rpmhcc RPMH_CXO_CLK>,
->>>>>                     <&rpmhcc RPMH_CXO_CLK_A>, <&sleep_clk>,
->>>>>                     <0>, <&pcie1_phy>,
->>>>> -                 <0>, <0>, <0>,
->>>>> +                 <&ufs_mem_phy 0>, <&ufs_mem_phy 1>, <&ufs_mem_phy 
->>>>> 2>,
->>>>>                     <&usb_1_qmpphy QMP_USB43DP_USB3_PIPE_CLK>;
->>>>>                clock-names = "bi_tcxo", "bi_tcxo_ao", "sleep_clk",
->>>>>                          "pcie_0_pipe_clk", "pcie_1_pipe_clk",
->>>>> @@ -2238,6 +2239,77 @@ pcie1_phy: phy@1c0e000 {
->>>>>                status = "disabled";
->>>>>            };
->>>>> +        ufs_mem_hc: ufs@1d84000 {
->>>>> +            compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
->>>>> +                     "jedec,ufs-2.0";
->>>>> +            reg = <0x0 0x01d84000 0x0 0x3000>;
->>>>> +            interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
->>>>> +            phys = <&ufs_mem_phy>;
->>>>> +            phy-names = "ufsphy";
->>>>> +            lanes-per-direction = <2>;
->>>>> +            #reset-cells = <1>;
->>>>> +            resets = <&gcc GCC_UFS_PHY_BCR>;
->>>>> +            reset-names = "rst";
->>>>> +
->>>>> +            power-domains = <&gcc GCC_UFS_PHY_GDSC>;
->>>>> +            required-opps = <&rpmhpd_opp_nom>;
->>>>> +
->>>>> +            iommus = <&apps_smmu 0x80 0x0>;
->>>>> +            dma-coherent;
->>>>> +
->>>>> +            interconnects = <&aggre1_noc MASTER_UFS_MEM 
->>>>> QCOM_ICC_TAG_ALWAYS
->>>>> +                     &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
->>>>> +                    <&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
->>>>> +                     &cnoc2 SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
->>>>> +            interconnect-names = "ufs-ddr", "cpu-ufs";
->>>>> +
->>>>> +            clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
->>>>> +                 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
->>>>> +                 <&gcc GCC_UFS_PHY_AHB_CLK>,
->>>>> +                 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
->>>>> +                 <&rpmhcc RPMH_CXO_CLK>,
->>>>> +                 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
->>>>> +                 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
->>>>> +                 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
->>>>> +            clock-names = "core_clk",
->>>>> +                      "bus_aggr_clk",
->>>>> +                      "iface_clk",
->>>>> +                      "core_clk_unipro",
->>>>> +                      "ref_clk",
->>>>> +                      "tx_lane0_sync_clk",
->>>>> +                      "rx_lane0_sync_clk",
->>>>> +                      "rx_lane1_sync_clk";
->>>>> +            freq-table-hz =
->>>>> +                <75000000 300000000>,
->>>>> +                <0 0>,
->>>>> +                <0 0>,
->>>>> +                <75000000 300000000>,
->>>>> +                <0 0>,
->>>>> +                <0 0>,
->>>>> +                <0 0>,
->>>>> +                <0 0>;
->>>>> +            status = "disabled";
->>>>> +        };
->>>>> +
->>>>> +        ufs_mem_phy: phy@1d87000 {
->>>>> +            compatible = "qcom,sc7280-qmp-ufs-phy";
->>>>> +            reg = <0x0 0x01d87000 0x0 0xe00>;
->>>>> +            clocks = <&rpmhcc RPMH_CXO_CLK>,
->>>>> +                 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
->>>>> +                 <&gcc GCC_UFS_1_CLKREF_EN>;
->>>>> +            clock-names = "ref", "ref_aux", "qref";
->>>>> +
->>>>> +            power-domains = <&gcc GCC_UFS_PHY_GDSC>;
->>>
->>> Hi Nitin,
->>>
->>>>
->>>> GCC_UFS_PHY_GDSC is UFS controller GDSC. For sc7280 Phy we don't 
->>>> need this.
->>>
->>> In the current dt-bindings the power-domains property is required.
->>>
->>> Is there another power-domain for the PHY to use, or do we need to
->>> adjust the bindings to not require power-domains property for ufs phy on
->>> sc7280?
->>>
->>
->> PHYs are backed by MX power domain. So you should use that.
->>
->>> Also, with "PHY" in the name, it's interesting that this is not for the
->>> phy ;)
->>>
->>
->> Yes, confusing indeed. But the controllers (PCIe, UFS, USB etc...) are 
->> backed by
->> GDSCs and all the analog components (PHYs) belong to MX domain since 
->> it is kind
->> of always ON.
->>
->> I'll submit a series to fix this for the rest of the SoCs.
->>
->> - Mani
->>
-> 
-> Hi Mani,
-> 
-> UFS Phy is a passive driver and its resource enable/disable is 
-> controlled by UFS controller driver.
-> 
-> Since PHY belongs to MX domain which is always on. IMO, there is no need 
-> for explicitly voting for MX domain for sc7280 and older targets.
-> 
-> Only starting SM8550, we have a separate UFS PHY GDSC which needs to be 
-> voted for enabling or disabling and hence we need to have power-domain 
-> property for SM8550.
-> 
-> Hence, I feel updating the binding to reflect that power-domains is not 
-> a required field would be more correct.
+From: Yu Kuai <yukuai3@huawei.com>
 
-The bindings should describe the hardware. We model the MX domain, so 
-the MX domain should be used in cases where the device is powered by 
-that domain.
+Patch 1 add some bdev apis, then follow up patches will use these apis
+to avoid access bd_inode directly, and hopefully the field bd_inode can
+be removed eventually(after figure out a way for fs/buffer.c).
 
-> 
-> 
-> Regards,
-> Nitin
-> 
-> 
-> 
->>> Regards
->>> Luca
->>>
->>>>
->>>>> +
->>>>> +            resets = <&ufs_mem_hc 0>;
->>>>> +            reset-names = "ufsphy";
->>>>> +
->>>>> +            #clock-cells = <1>;
->>>>> +            #phy-cells = <0>;
->>>>> +
->>>>> +            status = "disabled";
->>>>> +        };
->>>>> +
->>>>>            ipa: ipa@1e40000 {
->>>>>                compatible = "qcom,sc7280-ipa";
->>>>>
->>>
->>
-> 
+Yu Kuai (14):
+  block: add some bdev apis
+  xen/blkback: use bdev api in xen_update_blkif_status()
+  bcache: use bdev api in read_super()
+  mtd: block2mtd: use bdev apis
+  s390/dasd: use bdev api in dasd_format()
+  scsicam: use bdev api in scsi_bios_ptable()
+  bcachefs: remove dead function bdev_sectors()
+  btrfs: use bdev apis
+  cramfs: use bdev apis in cramfs_blkdev_read()
+  erofs: use bdev api
+  ext4: use bdev apis
+  jbd2: use bdev apis
+  gfs2: use bdev api
+  nilfs2: use bdev api in nilfs_attach_log_writer()
+
+ block/bdev.c                       | 116 +++++++++++++++++++++++++++++
+ block/bio.c                        |   1 +
+ block/blk.h                        |   2 -
+ drivers/block/xen-blkback/xenbus.c |   3 +-
+ drivers/md/bcache/super.c          |  11 ++-
+ drivers/mtd/devices/block2mtd.c    |  80 +++++++++-----------
+ drivers/s390/block/dasd_ioctl.c    |   5 +-
+ drivers/scsi/scsicam.c             |   3 +-
+ fs/bcachefs/util.h                 |   5 --
+ fs/btrfs/disk-io.c                 |  68 ++++++++---------
+ fs/btrfs/volumes.c                 |  17 ++---
+ fs/btrfs/zoned.c                   |  12 ++-
+ fs/cramfs/inode.c                  |  35 +++------
+ fs/erofs/data.c                    |  17 +++--
+ fs/erofs/internal.h                |   1 +
+ fs/ext4/dir.c                      |   6 +-
+ fs/ext4/ext4_jbd2.c                |   6 +-
+ fs/ext4/super.c                    |  27 +------
+ fs/gfs2/glock.c                    |   2 +-
+ fs/gfs2/ops_fstype.c               |   2 +-
+ fs/jbd2/journal.c                  |   3 +-
+ fs/jbd2/recovery.c                 |   6 +-
+ fs/nilfs2/segment.c                |   2 +-
+ include/linux/blkdev.h             |  27 +++++++
+ include/linux/buffer_head.h        |   5 +-
+ 25 files changed, 273 insertions(+), 189 deletions(-)
 
 -- 
-With best wishes
-Dmitry
+2.39.2
 
