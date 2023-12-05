@@ -1,31 +1,31 @@
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CBD9A1;
-	Tue,  5 Dec 2023 09:03:55 -0800 (PST)
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-58ceab7daddso2484286eaf.3;
-        Tue, 05 Dec 2023 09:03:55 -0800 (PST)
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35DAC1B6;
+	Tue,  5 Dec 2023 09:12:01 -0800 (PST)
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6ce2ff70619so1828772b3a.2;
+        Tue, 05 Dec 2023 09:12:01 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701795835; x=1702400635;
+        d=1e100.net; s=20230601; t=1701796320; x=1702401120;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5Kxt6CKccKyM2aD5KqaYbJ+5NRAtsSu20TdTe87tfro=;
-        b=gC36X4NARMJFnoLUNZ6eIGcjEc1l5871SjthUiIspKmoaHf1kKjnlSO/V046uFgT2E
-         ANpe+rE5YEEqD2ycQzEEJ2mRgqdkimd665BviZzZGLt00siu1fKb6fMq6SofmFtGR9Px
-         /zZsUIDflXJhqBv7j8JhsaId5oPThrEeECQf5cm+TU/s04ZWVnfKzi3t9ivWG7FV5IV7
-         HAKl0s0DEmaS9cO/6BzT6PWwXhne8jh6A1fDwzLnkdgkZjOzP56x2wDgqZCl+pc1x+lZ
-         w4m5sa7rw0F01s7QLkdN9wIPpD6NKIHh+cJB34LW3DHrhW2juZF4rQu33NAJsvjscxVW
-         LC8Q==
-X-Gm-Message-State: AOJu0YyRYu6XQo6MkLfAFga6iBIY3nm9gjjsFU1upk6OFnZLq5EGsGF2
-	MNkzx2aSUSOJ7Mqx2nFdsWg=
-X-Google-Smtp-Source: AGHT+IHREsBDTR/fguPuUAOPGrQJFqdX7+L934/9nqEfo9v3T6jgbM8x1qOuTAd7fOfx1S8tYfwMzA==
-X-Received: by 2002:a05:6358:6f95:b0:16e:43a1:6881 with SMTP id s21-20020a0563586f9500b0016e43a16881mr2252180rwn.26.1701795834695;
-        Tue, 05 Dec 2023 09:03:54 -0800 (PST)
+        bh=LIgtlDTFB4ifEMLDlLmo9Odq54+Ds0nrV8Ow5EkAIJU=;
+        b=RrHlwgWYD+BzQORJacpjZ/JZKcWlId6KwX/N/mrbENPKCLcsPLDtxlEVzd2vvc+Ysj
+         7CB6r5LW0+Kcg0LMHwIK9e6XoA7GNfnproYdUIax5V2v3kHpEZj3hgQbMpUJCMQ5Zqcu
+         fekv6Fx3YrMhhc+Dgvb0ObIKhi4ONMWsd0D0e4BuUxjVV0i1zwSLehI+b/Y8wRb+1JqS
+         NquELOsXZDiLw+Sf4LmSyBK71akY0TBYJGybficzl4dGlzU2LjK3jcxsj9ZrFCNopT28
+         r0DRfoM0rLOUGD1X60A0qnKGsFA9dKyBakrufMUNp5o4CvCia9VWYT7Azmj8DkVZjPsD
+         Q6Pw==
+X-Gm-Message-State: AOJu0YyTaUHd40WTqoNLBuAlY0lUF25Gonmh1io+TnMuBE98zGrouuDL
+	+LDwj0Cceu/Bm8u0HG12x+Y=
+X-Google-Smtp-Source: AGHT+IF7E5x8UjIWIzapLtbdXMzc56ip0B+yOdQGhzLNbJWo3FqUwECSSsaBg30dT08e4RQCQaiGiA==
+X-Received: by 2002:a05:6a20:9384:b0:18b:94c5:24c2 with SMTP id x4-20020a056a20938400b0018b94c524c2mr3656735pzh.60.1701796320419;
+        Tue, 05 Dec 2023 09:12:00 -0800 (PST)
 Received: from [172.20.2.177] (rrcs-173-197-90-226.west.biz.rr.com. [173.197.90.226])
-        by smtp.gmail.com with ESMTPSA id s25-20020a639259000000b00578afd8e012sm5146562pgn.92.2023.12.05.09.03.49
+        by smtp.gmail.com with ESMTPSA id bf8-20020a170902b90800b001cfd077fab4sm10409920plb.282.2023.12.05.09.11.58
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Dec 2023 09:03:54 -0800 (PST)
-Message-ID: <189fa9b2-bcc8-4839-ac04-33a29bba9aaa@acm.org>
-Date: Tue, 5 Dec 2023 09:03:48 -0800
+        Tue, 05 Dec 2023 09:12:00 -0800 (PST)
+Message-ID: <5e7c5c75-cb5f-4afe-9d57-b0cab01a6f26@acm.org>
+Date: Tue, 5 Dec 2023 07:11:56 -1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -33,41 +33,66 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH -next RFC 01/14] block: add some bdev apis
+Subject: Re: [PATCH V2 1/3] ufs: core: Add CPU latency QoS support for ufs
+ driver
 Content-Language: en-US
-To: Yu Kuai <yukuai1@huaweicloud.com>, axboe@kernel.dk, roger.pau@citrix.com,
- colyli@suse.de, kent.overstreet@gmail.com, joern@lazybastard.org,
- miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
- sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
- gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
- martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
- dsterba@suse.com, nico@fluxnic.net, xiang@kernel.org, chao@kernel.org,
- tytso@mit.edu, adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
- konishi.ryusuke@gmail.com, willy@infradead.org, akpm@linux-foundation.org,
- hare@suse.de, p.raghav@samsung.com
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
- linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
- linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
- linux-nilfs@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
- yangerkun@huawei.com
-References: <20231205123728.1866699-1-yukuai1@huaweicloud.com>
- <20231205123728.1866699-2-yukuai1@huaweicloud.com>
+To: Naresh Maramaina <quic_mnaresh@quicinc.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Peter Wang <peter.wang@mediatek.com>, Manivannan Sadhasivam
+ <mani@kernel.org>, Andy Gross <agross@kernel.org>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konrad.dybcio@linaro.org>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ chu.stanley@gmail.com
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, quic_cang@quicinc.com,
+ quic_nguyenb@quicinc.com, Nitin Rawat <quic_nitirawa@quicinc.com>
+References: <20231204143101.64163-1-quic_mnaresh@quicinc.com>
+ <20231204143101.64163-2-quic_mnaresh@quicinc.com>
+ <590ade27-b4da-49be-933b-e9959aa0cd4c@acm.org>
+ <692cd503-5b14-4be6-831d-d8e9c282a95e@quicinc.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231205123728.1866699-2-yukuai1@huaweicloud.com>
+In-Reply-To: <692cd503-5b14-4be6-831d-d8e9c282a95e@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 12/5/23 04:37, Yu Kuai wrote:
-> +static inline u8 block_bits(struct block_device *bdev)
-> +{
-> +	return bdev->bd_inode->i_blkbits;
-> +}
+On 12/4/23 21:58, Naresh Maramaina wrote:
+> On 12/5/2023 12:30 AM, Bart Van Assche wrote:
+>> On 12/4/23 06:30, Maramaina Naresh wrote:
+>>> +    /* This capability allows the host controller driver to use the 
+>>> PM QoS
+>>> +     * feature.
+>>> +     */
+>>> +    UFSHCD_CAP_PM_QOS                = 1 << 13,
+>>>   };
+>>
+>> Why does it depend on the host driver whether or not PM QoS is
+>> enabled? Why isn't it enabled unconditionally?
+> 
+> For some platform vendors power KPI might be more important than random 
+> io KPI. Hence this flag is disabled by default and can be enabled based 
+> on platform requirement.
 
-This function needs a name that's more descriptive.
+How about leaving this flag out unless if a host vendor asks explicitly
+for this flag?
+>>
+>>> + * @pm_qos_req: PM QoS request handle
+>>> + * @pm_qos_init: flag to check if pm qos init completed
+>>>    */
+>>
+>> Documentation for pm_qos_init is missing.
+>>
+> Sorry, i didn't get your comment, i have already added documentation for 
+> @pm_qos_init, @pm_qos_req variable as above. Do you want me to add this 
+> information some where else as well?
+
+Oops, I meant 'qos_vote'.
 
 Thanks,
 
 Bart.
+
