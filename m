@@ -1,165 +1,186 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="VtEQs+qS";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="BYcAxwkb"
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7AC590;
-	Wed,  6 Dec 2023 11:39:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1701891560; x=1733427560;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=GggbmtoLEqMkUjfaGdVLANg/yuDXt26GUayQbwRKTvo=;
-  b=VtEQs+qSmZWEHcge3SY0Bv3Q6e6qCfmc4HmBrKNFA8KWyRV7e9ACkEXc
-   /xeDurzF/KArhWxGpxdiQAV9/AJAOVX8jIFTubElUjzi65maGBTi6ohVS
-   dxdyd7Sqa4sX86VkJByZHXXcQemYIvOCoHgtoZxnFHWA4WtipxsT+C7bc
-   Q9v9fByDLoikvZJcKkLDI2NZdjoTG7kDz3J0Mv8ij9fK4vJALRWWYKB6t
-   Rg0tg99degUQW3moxQhva8Wri5ykvfG/FUcn7ZHhAErLTAVQLfixcBfZL
-   xBKqNP1qZHtDCWzaDon/70Ttnwnrj48LolCL4MMmXAAr4Sq7rbn102IH9
-   A==;
-X-CSE-ConnectionGUID: KVP9vlNuSLyowSRmxwqRVQ==
-X-CSE-MsgGUID: BhkHt8JOTce/4zzlfz8ZlA==
-X-IronPort-AV: E=Sophos;i="6.04,256,1695657600"; 
-   d="scan'208";a="4156035"
-Received: from mail-bn8nam12lp2168.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.168])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Dec 2023 03:39:18 +0800
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="pqWFu2ks"
+Received: from EUR05-VI1-obe.outbound.protection.outlook.com (mail-vi1eur05on2061.outbound.protection.outlook.com [40.107.21.61])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE5F1D5B;
+	Wed,  6 Dec 2023 14:50:56 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WJ0IEj4ZHBtp3ik8I9wkzgdFj1z7TuPFCZYfeenOL7FMbHbySoPKgihbtNfOajkfFTLWyanhmoBrOYB8S/xf3AeBHIQPyRh8F4yQdGO0suBno/qsUXigfDes7vOtzuypet/zSOUT8tXQVunv7G+iIQ60xKcvMyrLfX+GOvahYUR3X2kshwJ5KM7MFCXKFjLe8AZw1II89Uz+WqpDQc0euBueHb6W0rfxR5zCdPnzqAlj98Te8X6JHcKU+du4feQXOltXHa0ReSTiOBgJCZ4BmYwtjscfwSdkjgiuYDj7ynE214c5eQFBOqhe/GoXBzgViadNZh+mLadQxZudDylQNQ==
+ b=HWnDgfYeFtg9hTsfU4cVwj5HrNbfzhTQv/kVjnZZl4ipl7h5JJBfsDMSgZp6P6GP8pF7+idowHwuD72vgs2aNUsWb3OzUJ0kJAQO/7kR5JsI6sVzKVIwFxiguISNtJiD7uwE8CbPEgwJca26rzYdZeR+c3nyljokSL3542CizYObNoUDpOQg0ptQuuz6X8YZHqv1t5TtkbLDl4kQISm/hwks7tDySK3aJFUz8WFiIf414HKmjH5UPt/lhylh1yQgXD7bLem9vy+EHKQNbSz8ed314hRDfv4e3M7WSuFRfujab2f9lpd/NFhlu7smFq/O0S45Z/YNND2tV2Qzv0yScw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GggbmtoLEqMkUjfaGdVLANg/yuDXt26GUayQbwRKTvo=;
- b=Qv+9uiSuWNMgtJ2NLNx0DINYf/5orJhSTad3+LnY4F1vnEaun93RqHyTCV3ZhcoB/OEPGYjzuqkN9HDRlvbCdv9dxZrjxktlM5GJr8SJ94VBkEzmfsl+KpSzI516Az6quZuya9VT5Uf6H/bl8452CWeL+w8j2vdxeqlrz4IXfk7tv7ox+b4/GO/WlFRIEIQzNbFF1tdRb/eqFWM4EDPpHLtQjcspB+jKE5n/13+4CucU1r6tqqRS/IgifFxIEJdvQ+oytwYj9woq/sn4nL1f6aeUOk+tjHWHlZnb+UFpMnJFCo3+u+uGjptUbTe9ffkU5jHNGDxl0zXqcFs2jrVZUA==
+ bh=vazqsV1LOXRcC7lfqRXb15yXMraHRtjG8hLYNxzDa0A=;
+ b=hSddk/kM0O2waT8Bj9Gm8tBb1+cYCptTGw/oirsy4/pp1xBzXIdtjAahb2P8Vbazp2dMLwUC1eqH88rsvNwxx0obe/TcwuLu+oFupXPL/+f8zYmmqtbe752KJuabCX6cC+Z1Qt/Doq4Sc2qx/WT972yLTtmcXSPz19IDqbbCWmP26RwKRB+yxC7kTbOEFgFnFxpjs+ZmLZM7xUVoml4A0I8iBYwN12csYX+9jnGEiDU7IDZxj2CW/em9v7sxXv8uKjid2nkEuX8W9ebJLpbZTH23DeBWoAPBkxxIMIY9PXKYbc+Xv2LsaNIJfboChuEEzEjiFogDPbinIxGHYsLKdQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GggbmtoLEqMkUjfaGdVLANg/yuDXt26GUayQbwRKTvo=;
- b=BYcAxwkb9BOOmnJA1mHsQKpUgrJvClOpyGd7p7HRpLX9el/lKWP/QSGTMbdgcthgxFrxL+esThMxZHqjlq4VGryF9/wNfIhKYQeKisWDU0mVoQQbP25WYkzfSwDZ6ms7CxLiWVSr3WAqhXRaPvHQ8iWnf5Te4lXtluVcaNZyv0Y=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- MW4PR04MB7140.namprd04.prod.outlook.com (2603:10b6:303:7e::20) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7046.34; Wed, 6 Dec 2023 19:39:15 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::7d7a:2cd1:54e5:ebc4]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::7d7a:2cd1:54e5:ebc4%6]) with mapi id 15.20.7046.034; Wed, 6 Dec 2023
- 19:39:15 +0000
-From: Avri Altman <Avri.Altman@wdc.com>
-To: Bean Huo <beanhuo@iokpp.de>, "bvanassche@acm.org" <bvanassche@acm.org>,
-	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "jejb@linux.ibm.com"
-	<jejb@linux.ibm.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "mani@kernel.org" <mani@kernel.org>,
-	"quic_cang@quicinc.com" <quic_cang@quicinc.com>, "quic_asutoshd@quicinc.com"
-	<quic_asutoshd@quicinc.com>, "beanhuo@micron.com" <beanhuo@micron.com>,
-	"thomas@t-8ch.de" <thomas@t-8ch.de>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"mikebi@micron.com" <mikebi@micron.com>, "lporzio@micron.com"
-	<lporzio@micron.com>
-Subject: RE: [PATCH v3 3/3] scsi: ufs: core: Add sysfs node for UFS RTC update
-Thread-Topic: [PATCH v3 3/3] scsi: ufs: core: Add sysfs node for UFS RTC
- update
-Thread-Index: AQHaJTkJH+jmmEeQa0a4vN35DJxiy7CcrSjQ
-Date: Wed, 6 Dec 2023 19:39:15 +0000
-Message-ID:
- <DM6PR04MB6575C19C0AA40BE1AD3B8F29FC84A@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20231202160227.766529-1-beanhuo@iokpp.de>
- <20231202160227.766529-4-beanhuo@iokpp.de>
-In-Reply-To: <20231202160227.766529-4-beanhuo@iokpp.de>
-Accept-Language: en-US
+ bh=vazqsV1LOXRcC7lfqRXb15yXMraHRtjG8hLYNxzDa0A=;
+ b=pqWFu2ks5hdW/YBb1Fr6eLa5dYkuuIiCIKD0VGuw6ybNricFDoWKMX2fICeM0CD4rg/0BULspwH88UHOvS5DZiWp8nd+Uz7jfsppCCS5GC4qf7DUAIexCg+C5wqmtF7cASLeRW41p8bTOsCv3kRSKahc5EG+Oa0i1c1mt4/R+6sXI3Bbrlw5m1ELBpk072rpojSbJIsGyxvSoBkj3C1Ut7jkj1crXQGtXGfJThjJsAzb5qveXByzqTEDaRtooG8f7y8fjyPJnQs8I3OsRxwWW8GwUDX8mwXfdvK68AQ7gvSycqeGreCHIqbOyMAghLfdcOZt9GYFKvzVOxvo5GeM4g==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by PA4PR04MB7839.eurprd04.prod.outlook.com (2603:10a6:102:c9::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7068.26; Wed, 6 Dec
+ 2023 22:50:54 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::3378:bd8c:6ef3:8ee]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::3378:bd8c:6ef3:8ee%4]) with mapi id 15.20.7068.026; Wed, 6 Dec 2023
+ 22:50:52 +0000
+Message-ID: <8cb48bd6-14b9-44f0-a6e0-4e4970ce57db@suse.com>
+Date: Wed, 6 Dec 2023 14:50:46 -0800
+User-Agent: Mozilla Thunderbird
+Subject: Re: Possible Bug? LIO does not support SCSI commands with Immediate
+ Bit Set?
 Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|MW4PR04MB7140:EE_
-x-ms-office365-filtering-correlation-id: a1973f21-cd92-4e3c-517e-08dbf69307cd
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info:
- Wv5wJREF4XEtLTzPrqx2CGdF7TodwiDmHae4l/mNrIwuAvtKQ0PhVgXc7klET3ry8O1QokwYIjnuCbqtjhgKFx1v1q66T1BhUtYZ8c2aVOjoI++ldKV4AqHywoLVLKkLT/Rn+MIlv/e1O+Zeo8oxxw+alRLoN4EXP4l5oIXZ+iV7W4HNI/kLykiS1Igp6p9wMd3EOso92t7NeTIXjmD7rl15EQEPHdM6CfUnmnjv7KK3J6/Hl+VyaiTeVGgQqM5GQQNGgoI1Dkl3amqvXjwsukMNyq9Ca99dZORI9Jw0HpjeHJTgnCNfRA4Zg2gejulg7nA7XMjgJ2AtitpZ+U8PIKmoz4FhFwD17aqlGykhNdjeoMStFgUG22C60/1B9vP6WxXTpTrDmny5afkBPfYkSq0zOX2J3k7KIKHhdDpVauI+sVG6Af9vLPrF8iOqUQmtca47Y0yynp05dP4neGd+0DNrXrK1K/a7y1RmCPcJxNWx9RUIOag+ftU9bQDhhLkgh63BpDCkosao2rY4RnNPgD5/N6AWZUCEm+W8nLCL2EcJx3uDVkNHBaUDLuuKt3xkKh/87BZnVoS6XO17Wt86FG+orOdAQ7me0OEOWJcje1p0BMmWwZJHcMxiULv05/3r
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(39860400002)(376002)(346002)(136003)(366004)(396003)(230922051799003)(64100799003)(451199024)(186009)(1800799012)(9686003)(82960400001)(26005)(38100700002)(83380400001)(6506007)(7696005)(122000001)(55016003)(478600001)(71200400001)(76116006)(66946007)(66476007)(66556008)(66446008)(64756008)(54906003)(110136005)(316002)(8676002)(8936002)(4326008)(33656002)(2906002)(921008)(41300700001)(38070700009)(52536014)(86362001)(7416002)(5660300002)(15650500001)(4744005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?wizpgqWQVCrdZd4gZxGjl7DbRFs12Jya+om+vSTEwkXAL7KHjjPbWqtIky2R?=
- =?us-ascii?Q?D9zGWF63I0ja926JOAMpefGckuPnm5+96Dl13HQ+YLA9GLJwgcRG3JobOL+2?=
- =?us-ascii?Q?WyhYP/icW0iOSJt3CnbiFf5Q3ByKxl1u9Y2DtqSFiu7VnLa9c5OhKiz+yekN?=
- =?us-ascii?Q?Y8Lc4fwStFTSw8hefyceHn9tm6251JndLM8GFUQTlv4/poyyDuHvJcaYirOI?=
- =?us-ascii?Q?Tzdr7/8CX8+l+KFQIpmJWNjtgFikD59MDb7PIiLJAI2t76fo2OBtZ2Sarwa0?=
- =?us-ascii?Q?5IBxAiyjLvsOJzvqxcAU81iz7akQP1e3+CklxeCOqFgTxPvl8coIEs44RJPS?=
- =?us-ascii?Q?q35J+YRoO+xx3m7EuxgYkWPgMPeSlZM0+5rJL/gjxQg24Pq5fteN/vApD2df?=
- =?us-ascii?Q?SZpj1GzDr/nk0bk42O7IR2wmx2xFIkQhvBzjv0YJ25fLos1psczr/XuVcBxd?=
- =?us-ascii?Q?jpL+40A7vaEGO3rrNM07GX+QL01l3RaRzwji6ScTpP5U+dA9CsLAdy95wUcq?=
- =?us-ascii?Q?X/RADprD6q1U3IBf0pm2UuJ8cyMty3KbT46hm5al/3ZuQISBtBc86zTpLgji?=
- =?us-ascii?Q?XAykgBvWFNOGn1z5uoMroC/Vs5jrYB+eTBEqkfm1aTfPf3CoYe68tZjBOYTJ?=
- =?us-ascii?Q?wl6GpZQ2GIg62BfsN/TbKWTPvQpddz4f1VOASu5vyApvszHUkVqZ1sHtDVbb?=
- =?us-ascii?Q?ca/RPg5E38gS9HsoGkv4rRZ+sEokuu/Th8QFVp40ojBVydwwN7naax/b2pAf?=
- =?us-ascii?Q?XyrR8SNL0tKr1NLmFSDw8RUoDZ3y2lAmB3aHFYYRpbCa9iXwBQXWtVP+NBbj?=
- =?us-ascii?Q?UKkoSp5TG+9Ajy+v9AIVDILfAsSmd6jMjH8/SwT9nejtfJsqlFzg6eWBz3FT?=
- =?us-ascii?Q?NSk0CcOjP0tYRcZMVNVUefz+vSKlg8pDJvK3whNXAcHWwvEl3DpRdp0q63Ht?=
- =?us-ascii?Q?shI36iksOzQBkwawfS1JYQiYs9OWLEkba45fwICZJ5ph0wxXyLIIVPlI8W+b?=
- =?us-ascii?Q?LgYvEhEvsr+U2G0l1v/935iQ80NFEMQN8e30LDLhpMUp+CF7LbSz/taCejpp?=
- =?us-ascii?Q?v2LQ7iPyNlDXlhrg3TTC32jhIxE2vj89B3T2/j71ml72iPH026KUgU4I4n7A?=
- =?us-ascii?Q?WoUaS3tud92NS/ivAmLU76tkzPXvkqOMAh9fbH6Eu2lo4ilZBpQBo5P1ehAp?=
- =?us-ascii?Q?MuBClJUD0aZfhGGObfVvjRGh9nLyFS8cGLG3bqzJn8paviJeF1syZ/ztu5Cr?=
- =?us-ascii?Q?vCGe0HgA60txcAsU+MBTfHRvapWYWEV0wyD3iLSJ41Ju6Gm8Af4COVwn0MmC?=
- =?us-ascii?Q?Cm5XB6DziHcIRarZr6AW+Lw073Q9ndUPJYg3exK+Nv8kfyWvURCx8/6ze/0a?=
- =?us-ascii?Q?G0hOlyw7+96Oqfhpx3R033m8I3go3yeOVc61mxD2hru1O6l18IfQnVRZJ0D9?=
- =?us-ascii?Q?HrG625942NtExOXcCu8WA3jqvt3OTRzYMxciacJpIRIh9S4fD7D00dGlMS5G?=
- =?us-ascii?Q?XlswSrEJRg+VcJUOUryHMo8iB8bu2XxBKbShx3oxTANCQ9MNEu1rM8GkknY/?=
- =?us-ascii?Q?BScZBSV3mCK5id9ltAfFgJAMMEl2y5etwrmCm8oI?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: Lee Duncan <lduncan@suse.com>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi <linux-scsi@vger.kernel.org>, Chris Leech <cleech@redhat.com>,
+ Mike Christie <michael.christie@oracle.com>
+References: <31851279-0884-48ba-8c4b-7d6147e59508@suse.com>
+In-Reply-To: <31851279-0884-48ba-8c4b-7d6147e59508@suse.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: FR0P281CA0226.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:b2::19) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	=?us-ascii?Q?aOkZ9Czv1u6rhDwrG2gmLWHWbd0xRaJgbrk6/F75xSgsQBXGJr8EvCmG62Yg?=
- =?us-ascii?Q?H4CQOs422nRFw2mizON8RHO0yGHrb9kkQwgiZEZwJd8rgNcA2xfBRVnOdThb?=
- =?us-ascii?Q?EJQZfQI55IDh4JoJ92aAaJOhrdnlRLtbzuJ2UDa0/qaJKZNxPOH05MFq7Eqf?=
- =?us-ascii?Q?U5qqofUCPMOEnrPsirM9K4AQeR9mALFaD0LRMSLJI/WxCZOyGnBOfNLJsn9T?=
- =?us-ascii?Q?SMxTK2XkfdRp1uBAiTBpt19wb/E1xjPpC11CQJggU8Lw2KuhJtbcukzo7E7U?=
- =?us-ascii?Q?GQN8CypgnJGdTSyXizBiie0aSrrLmJeb9XkR/nCVRubf7SbYROP9ojamY4fd?=
- =?us-ascii?Q?y0Wqe7Rg0gC8CGMvplIB68LcDWDRFCbEn2ClLnlPLIqVAoCvWQ716lZqVqoL?=
- =?us-ascii?Q?Bn7Ro+K8OPa3jm2hTLEwS+mdNfYeY1OQH+dRKfY8li8KTqs2hMtLDvZRuk71?=
- =?us-ascii?Q?G+cgTGP+Zs+dbw386w/sWaG1MM7lIsfftVhX7HPVBZApUQdrva90DsNxp+pg?=
- =?us-ascii?Q?KtPcR/HJ/ZlO7wLAu6wA4Q0BdEXV9ECCmzuPuuP//eoa3YWN17J1vOlPx70i?=
- =?us-ascii?Q?LCONiXSpqPtAoiKUd0tr59V8GOzwSGSkE3pkQt8daSDB7PSTZsb3f2/PhHos?=
- =?us-ascii?Q?mpRPFiWO21+OciX5AweCXEN5s6z25pI+ENfIfnu86Kb1Q+yq0mpWp9t+8sgz?=
- =?us-ascii?Q?6tncJHy23Te4a9vUK+PooCdsV13wbDFLWcO/PXqyMy6D6VyVx67dkLN8hH/Y?=
- =?us-ascii?Q?7/HixM5g+Q2Hxx8wpFZ1GKiV0CPkbQupKLEbvydA5tdh94me6Jb1AX+He2JM?=
- =?us-ascii?Q?dGfV8Y2phwVQTUhvv4GU8hzMmXds41AQDt6b002WmVBKNDEFHxmsJ7B/MMw3?=
- =?us-ascii?Q?IomP7BQf06WiBHRqtT0q9L+cHoCAJG8w2FIS+rPT0v1LigwRltiw/SP/zWXn?=
- =?us-ascii?Q?NklJv2ndCBHFfjBbevJ+8OjkcPMJAmyjErhmHWU/ARpOeyLv1ppjmjMXJd6I?=
- =?us-ascii?Q?AAA6nRrEQTB8623fQgzZ9WTeZd3mfznvETxt6S6AN2Xn2Kw=3D?=
-X-OriginatorOrg: wdc.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM5PR04MB3089:EE_|PA4PR04MB7839:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6dd7eb80-0190-4b03-a5b3-08dbf6adcc7e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	d/FOt5LespXumU+oEjq31W61dVnnevVCNlQSy44t8HhXyElnfEkED6nR+S9mOEfcg5Gfo4qzXsXPywpW58uD1VJHBxSZYOM3xoPk700TVB8zRgMPTc12n/TLfTERhxmXUSvjRGsLWxpugY30y4pBQR+R6iOH2GCWsLWUWHyCOo2jEC/vjqBUZnI/412QCoKoq444o6pzwNfzzSiMFgO6ornSB0wY0K6riW1ZWlZ17/oND0JwoTxll6hB5Ch4taBCGPv2oePooeJJLnOsKxL7VNKLaoJM3LXPx5mHLogXgyaB6WBLQVFDVaRMl4NdyhLWiLL+Fc8PFC4wY0F8VVVbbvgI5CavVwbRHAJYpHzQGQ7dQq2XHVGTJHEyGsu/1WMrp3vDrrEJaJ8rvOk2UcRCHxnbg31sssQhR4V+AfddRH5PZLVBI8RTbhCsyDhsgahI16CtD3cm9NRp2D5ZFpw9vg3/c+X1MWNUm/QAwUTUFwo+gqKjn8VUXb+hxjk5JDXN25ebQxyzc743vtuj0pg6bKB9aRp1QUzjEF4GB1CB/bKbTW1Agf5kcjxXGSJVooDFgVSkyYblOsRXmHulr+41AT9Km2pq1JRElsxHxc8+14Wz2Pki1J8og5yxoe6OAXG1A8RiecsP5ObAlDPwvAWhGMfNeD3V/P9R3OH1OJOJaqQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(39860400002)(376002)(136003)(396003)(366004)(230922051799003)(1800799012)(186009)(451199024)(64100799003)(41300700001)(36756003)(26005)(14773004)(6486002)(8676002)(6666004)(316002)(8936002)(31696002)(4326008)(86362001)(6916009)(66946007)(66556008)(66476007)(54906003)(508600001)(2616005)(6512007)(2906002)(53546011)(6506007)(5660300002)(31686004)(38100700002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WnBnY3FGbysvY2dlWXBuZHVuREtXb0VXQ1ZFL3VZU0gvM0ZoQjQ2cG5VMUJN?=
+ =?utf-8?B?MHgyUE5JdkMzSGV4blVpR3JaM3dQSHpWNGtRNVhnclhzK2pjTTRia0dmbldJ?=
+ =?utf-8?B?QXczdWtJSnNVVkZzWjRvbkQ4d0RwWXRkVHFxSXFsekhvNkhDdTJqZ3UrSlRG?=
+ =?utf-8?B?UjFoQzR2OWwvU2xGclNvSlZHNnFhSWc3dlZwc3lObWlzdG9IVUFpREFLZzBw?=
+ =?utf-8?B?NzBHUFB3SnliQi8vYlNwRGNpOGptcmw5dURPSnV2U1BLOEllZ1ZOaTN6S0ds?=
+ =?utf-8?B?ZjUwSkhINmxZNFR6NzRFMFhHYTNMZVc2aThBK1FQYW9UbzVoY2tCYjYwcGtu?=
+ =?utf-8?B?dFc0VzJIa01CTzVQeVZSajFRblBBVk8rcWdSVnJhekxiRE0rVG40VU1tTnQv?=
+ =?utf-8?B?VGZPOGxvVE03bTJMQWg3ZkxGbzh1d1ZSVHZWZ3VBUUZmNGJGcnB5QnUyTFFj?=
+ =?utf-8?B?V2NOOXFDcnhUMHZCVW1vNFBGczhXUDBmbVFuRndNMEV2bmtSSm5XbVMxNGNP?=
+ =?utf-8?B?NjhoaW13NFR6VnFpckMzdVpyOFU2ZDNlWDNkSk54VmxMNlIzam5oZTRYZGRv?=
+ =?utf-8?B?SDBiQmUvRXk3bkZuMjBNU3Mya3g2T1NOTXlKYnlmUXUrRlExY0x4NXdtZ1RX?=
+ =?utf-8?B?SzNCRGpCSHE1c3ZXODgrelAzMFhMeUNHYlExY1R2U0l1bkpDUXczZWtqdEtP?=
+ =?utf-8?B?eUNFMWQ1c3BRQnEvanFuU1hZOVNTeGNhZ0lDN2l2Nm5MK0taMTQwS08xVWZ6?=
+ =?utf-8?B?SXZXU2NtMWNTbks0eFNFUjFDbXVuaWtIajZCQWhmMWRLaThmK1AxQXJvcnRH?=
+ =?utf-8?B?YzNoZ3NndlVXRkxuYkVmMGgyd2NvTVNBTTVtQ3B0WHQ3NlI1d0duakRydVQ5?=
+ =?utf-8?B?cjBEdzV0NXNoZHV4MGhtQ3g1TnE5Qm5iTjExVjcyeEN4aS9IL1ZJVUxEYmcz?=
+ =?utf-8?B?Y0VzbUlvOGJieCs3TWhseTliN1hJWXlWcS8zVGxpMW1vekhFQjZHOVA4aEpt?=
+ =?utf-8?B?b2dNQmFEak0yQnQ4RzhwZ3Z5S2h2ZzRZdFduamRzMGtyUHdmWmkvbnNnWnAy?=
+ =?utf-8?B?S1BhL2w1V2NTM3FUQzJUQ1REOTQ0UE5mY25JTFdlZVBXcG83L29ScWxIUktU?=
+ =?utf-8?B?Mm8yK1Y2UWlOVGY2TTMrYW5HZm8ySUVSOUVsa0hDL2JXTDNFbzBUVldlaUlQ?=
+ =?utf-8?B?L2hLVUVGNktTNzlSVXJYaW4rQmk2UEtQdGtNVnVFL0R2dTZqTm9BSUpyTDN1?=
+ =?utf-8?B?bS9GR1FaVWpKY1JqVjl5T1c1SHQxaUtFRStFd05XamNDZmljZ0hEMENEcTRT?=
+ =?utf-8?B?dmJERVNyQSs1TXVMd2QvMG50NTErOW9qYUUyTWpuWFJIR3hYNVNjZnVBYW1Q?=
+ =?utf-8?B?VWFGWUl1TFMxNDlyam5WMVNQL1BtR3hDNUR6MEhUNURydFllUGN2TldWenAz?=
+ =?utf-8?B?eU1xRmY5ZTlQWkcxNmI5bUhVblVFN084UnF1MFRCMDNZdDJxK0I1U0N3a0U5?=
+ =?utf-8?B?b0JOTnIrczdOUkMyRDJhVUlyMGdFL04rSjM1a3Z1N3pCMDhNWS9WYnpxSGt4?=
+ =?utf-8?B?MXp3Y2JlZlNLVXJaVjZHeFZIaEZjKzhBVWhmdlVVNTNIOFBidjhUU3NOYU13?=
+ =?utf-8?B?azR1TER3bko3dDMyQ1lSankxeGN3SmxnTlU4MzRhZ2ZnSkQzMHpBVkFsTzBm?=
+ =?utf-8?B?MlhScVNUMXlHRTVCRWxYY0VoL0QyS29NZS9xSTdDTlY3MUMwdXhFU2JiRTR6?=
+ =?utf-8?B?U3hhTy9wUTROYzRoZTR5bkk0ZDlJcDFRdHNWNDFmcGJLM1lWTTQwb2JuK2JB?=
+ =?utf-8?B?OURXYnBoMS9mK29JaGs5clNlc0RvcEFDL1JULzNVdzE2VmVIbmM4Si84TVl6?=
+ =?utf-8?B?OXZlaFpvS004OWlzZHUvSWhrQUJXNnJSWGIrcGMzUlFWQnoxa1BTVFlialBs?=
+ =?utf-8?B?TExtRjhVTFIwWnBSeTl4TW8vMFpBSmV5bzdTMlJIMkU0azJBWE8rTXNCWnVx?=
+ =?utf-8?B?blJaVTM0V1NDMnFRZUN0d3ZZVTR3Tm5uT1RVVlJaN2FCYjlhekFzNy8rYVhH?=
+ =?utf-8?B?eHVvaHlXUGdNeE9icGgvVEhxVnh0RXZXQXZicFFVYng0RHFqeFBTUHk1S04w?=
+ =?utf-8?Q?3//O0S+l0gel7NXHbMY/Q5VB8?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6dd7eb80-0190-4b03-a5b3-08dbf6adcc7e
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a1973f21-cd92-4e3c-517e-08dbf69307cd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Dec 2023 19:39:15.4436
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Dec 2023 22:50:52.6153
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 0/wGX7c2675+oQ5G1BR85nsdeWNaFfVC2IG/vpclh+m+tbxoC2VTuGjorQtzIUtvYftmMQ6v/oBPQk13mN4c6w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR04MB7140
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: iGwbWvyE1AFERUwS86XRHLWbdhNKzsXRuWdVHLDBFqRsDZfiONdcMyNmcf6ECCEnmC/0qSd25gKX4NUjOkvDtA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB7839
 
-> From: Bean Huo <beanhuo@micron.com>
->=20
-> Introduce a sysfs node named 'rtc_update_ms' within the kernel, enabling
-> user to adjust the RTC periodic update frequency to suit the specific
-> requirements of the system and UFS. Also, this patch allows the user to
-> disable/enable periodic update RTC in the UFS idle time.
->=20
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-Acked-by: Avri Altman <avri.altman@wdc.com>
+On 11/25/23 10:28, Lee Duncan wrote:
+> Hi Martin/list:
+> 
+> I am trying to track down an issue I am seeing when trying to boot using 
+> iSCSI root using the fastlinq qedi converged network adapter initiator 
+> and an LIO target.
+> 
+> In this configuration, but using a non-LIO (hardware) iSCSI target, 
+> everything "just works". But when I switch to using an LIO software 
+> target, I get this error when booting:
+> 
+>> 2023-09-20T14:10:32.835358-0500 worker5 kernel: Illegally set 
+>> Immediate Bit in iSCSI Initiator Scsi Command PDU.
+>> ... > 2023-09-20T14:10:32.835422-0500 worker5 kernel: Got unknown iSCSI 
+> OpCode: 0x52
+> 
+> It looks like the fastlinq adapter is sending a SCSI write (0x12) with 
+> the Immediate bit set (0x40).
+> 
+> The code in iscsi_target.c:iscsit_setup_scsi_cmd(): looks like this:
+> 
+>>     if (hdr->opcode & ISCSI_OP_IMMEDIATE) {
+>>         pr_err("Illegally set Immediate Bit in iSCSI Initiator"
+>>                 " Scsi Command PDU.\n");
+>>         return iscsit_add_reject_cmd(cmd,
+>>                          ISCSI_REASON_BOOKMARK_INVALID, buf);
+>>     }
+>>
+> 
+> But I looked at rfc3720, and it looks like SCSI PDUs can have the 
+> Immediate Bit set:
+> 
+>> 10.3.  SCSI Command
+>>    The format of the SCSI Command PDU is:
+>>    Byte/     0       |       1       |       2       |       3       |
+>>       /              |               |               |               |
+>>      |0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|0 1 2 3 4 5 6 7|
+>>      +---------------+---------------+---------------+---------------+
+>>     0|.|I| 0x01      |F|R|W|. .|ATTR | Reserved                      |
+>>      +---------------+---------------+---------------+---------------+
+>>     4|TotalAHSLength | DataSegmentLength                             |
+>>      +---------------+---------------+---------------+---------------+
+>>     8| Logical Unit Number (LUN)                                     |
+>>      +                                                               +
+>>    12|                                                               |
+>>      +---------------+---------------+---------------+---------------+
+>> ...
+> 
+> Where "I" is the immediate bit.
+> 
+> Frankly, I'm never sure I read the SPEC correctly, so I'm not sure if 
+> I'm mistaken here, but it looks like LIO does not allow the Immediate 
+> bit (and hence Immediate data), even though the SPEC does allow it. But 
+> it also looks like, during negotiation phase, LIO negotiates 
+> ImmediateData like any other parameter, allowing "YES".
+> 
+> In our testing, if we set ImmediateData=No in the target, then our 
+> problem goes away, i.e. we can now boot from an LIO target. This is 
+> because Immediate Data is negotiated off, of course.
+> 
+> Is this a bug, or is this adapter doing something wrong? I would 
+> appreciate other viewpoints.
+> 
+> Thank you.
+
+
+Note: I have sent a set of two patches for this, but evidently my mailer 
+is considered SPAM now? I'm working on getting it figured out.
+
+-- 
+Lee Duncan
+
