@@ -1,168 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2726F37152
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 13:47:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E193321AE
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 13:52:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jYFh1nYi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98621C433C7;
-	Wed,  6 Dec 2023 13:47:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+bv6Oax"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2E604C433B9
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 13:52:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701870430;
-	bh=ib/KhT6CRE/Dl/IG1bo0ffAo1R+XUpJpRoCSE1xk+GM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jYFh1nYid3rxZZz5/+kjM3nXYMw6bVGEewjinV2oOagGeDF0CzRQHqrbjcB+Tv9Cg
-	 4reI89we9LR67SvVk4r8A0jqZUTVPa5/NPpOS6u521MejXp/8Q/2D7+jNOFMuKitvG
-	 BZts2e9VsTtT+j75DCksBDU5DpmXZX6i4W3KL3xlRv5SALMCTS7FIxmULkK+tom16x
-	 33e1sGkqQWmki0Ple1VBECEUfsXPXn5I7DlEf6fMtTnMlu5/Eey7HfUMejhRcIZr2p
-	 kvN7uNAfe3MENuNjSdJH7PLgNPJMCxNqH252Styiky0g0fgWon3Bns4ko2+OkaSyKM
-	 4G5JvBDTwyoNQ==
-Date: Wed, 6 Dec 2023 19:17:03 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Nitin Rawat <quic_nitirawa@quicinc.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	quic_cang@quicinc.com, Manish Pandey <quic_mapa@quicinc.com>
-Subject: Re: [PATCH V4] scsi: ufs: core: store min and max clk freq from OPP
- table
-Message-ID: <20231206134703.GF12802@thinkpad>
-References: <20231206133812.21488-1-quic_nitirawa@quicinc.com>
+	s=k20201202; t=1701870737;
+	bh=MoEgowtYb4oLydX83qUc/0T+ebvbT3s3J7Q4eY7gytc=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=b+bv6OaxMxt/Rn6KMSi6iXmqw3ewF3LSQRA+h7GzZbCv/Eo8iwW6X6QaFNkM0ZLSp
+	 nhDwAJFwMWJYneW9Xjevigx38TXINP8qVXyxefFBGtSIxxRteqLfgaVMWyepi59+8d
+	 XncXnLVXe1Z+0IEj7KakUV4SveAR1ONNIYBDZB3vnM2BEInsqt4FdbtC4W1gW5wew8
+	 YpRozpwOnxQhwgXafz6QOyAAJ6x4mQfvqHUTUUgBqffZD2eLXIdcuQBMr+1fBB8xUN
+	 LqMIijHaTzf/RzfNhAU6kvoFWB/4cSS7CjrFd0pKpQuRzUnFv/GiOrih/+n8pM3/bP
+	 emn6c63XyOomw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 1F83BC53BD4; Wed,  6 Dec 2023 13:52:17 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date: Wed, 06 Dec 2023 13:52:16 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: regressions@leemhuis.info
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-mRUtjdlFXT@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231206133812.21488-1-quic_nitirawa@quicinc.com>
 
-On Wed, Dec 06, 2023 at 07:08:12PM +0530, Nitin Rawat wrote:
-> OPP support added by commit 72208ebe181e ("scsi: ufs: core: Add support
-> for parsing OPP") doesn't update the min_freq and max_freq of each clocks
-> in 'struct ufs_clk_info'.
-> 
-> But these values are used by the host drivers internally for controller
-> configuration. When the OPP support is enabled in devicetree, these
-> values will be 0, causing boot issues on the respective platforms.
-> 
-> So add support to parse the min_freq and max_freq of all clocks while
-> parsing the OPP table.
-> 
-> Fixes: 72208ebe181e ("scsi: ufs: core: Add support for parsing OPP")
-> Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
-> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+--- Comment #43 from The Linux kernel's regression tracker (Thorsten Leemhu=
+is) (regressions@leemhuis.info) ---
+So it looks like Hannes' patch didn't help (thx for trying!) and things sta=
+lled
+again since about a week. Anyone still working on it? Or is a revert of the
+culprit slowly becoming the least worst option?
 
-Martin, please queue this patch for 6.7-rcS.
+--=20
+You may reply to this email to add a comment.
 
-- Mani
-
-> ---
-> Changes from v3:
-> - updated commit description and comment to address christoph's comment
-> 
-> Changes from v2:
-> - increment idx in dev_pm_opp_get_freq_indexed
-> 
-> Changes from v1:
-> As per Manivannan's comment:
-> - Updated commmit description
-> - Sort include file alphabetically
-> - Added missing dev_pm_opp_put
-> - updated function name and documention
-> - removed ret variable
-> ---
->  drivers/ufs/host/ufshcd-pltfrm.c | 53 ++++++++++++++++++++++++++++++++
->  1 file changed, 53 insertions(+)
-> 
-> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-> index da2558e274b4..0983cee6355e 100644
-> --- a/drivers/ufs/host/ufshcd-pltfrm.c
-> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
-> @@ -8,6 +8,7 @@
->   *	Vinayak Holikatti <h.vinayak@samsung.com>
->   */
-> 
-> +#include <linux/clk.h>
->  #include <linux/module.h>
->  #include <linux/platform_device.h>
->  #include <linux/pm_opp.h>
-> @@ -213,6 +214,54 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
->  	}
->  }
-> 
-> +/**
-> + * ufshcd_parse_clock_min_max_freq  - Parse MIN and MAX clocks freq
-> + * @hba: per adapter instance
-> + *
-> + * This function parses MIN and MAX frequencies of all clocks required
-> + * by the host drivers.
-> + *
-> + * Returns 0 for success and non-zero for failure
-> + */
-> +static int ufshcd_parse_clock_min_max_freq(struct ufs_hba *hba)
-> +{
-> +	struct list_head *head = &hba->clk_list_head;
-> +	struct ufs_clk_info *clki;
-> +	struct dev_pm_opp *opp;
-> +	unsigned long freq;
-> +	u8 idx = 0;
-> +
-> +	list_for_each_entry(clki, head, list) {
-> +		if (!clki->name)
-> +			continue;
-> +
-> +		clki->clk = devm_clk_get(hba->dev, clki->name);
-> +		if (!IS_ERR(clki->clk)) {
-> +			/* Find Max Freq */
-> +			freq = ULONG_MAX;
-> +			opp = dev_pm_opp_find_freq_floor_indexed(hba->dev, &freq, idx);
-> +			if (IS_ERR(opp)) {
-> +				dev_err(hba->dev, "Failed to find OPP for MAX frequency\n");
-> +				return PTR_ERR(opp);
-> +			}
-> +			clki->max_freq = dev_pm_opp_get_freq_indexed(opp, idx);
-> +			dev_pm_opp_put(opp);
-> +
-> +			/* Find Min Freq */
-> +			freq = 0;
-> +			opp = dev_pm_opp_find_freq_ceil_indexed(hba->dev, &freq, idx);
-> +			if (IS_ERR(opp)) {
-> +				dev_err(hba->dev, "Failed to find OPP for MIN frequency\n");
-> +				return PTR_ERR(opp);
-> +			}
-> +			clki->min_freq = dev_pm_opp_get_freq_indexed(opp, idx++);
-> +			dev_pm_opp_put(opp);
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int ufshcd_parse_operating_points(struct ufs_hba *hba)
->  {
->  	struct device *dev = hba->dev;
-> @@ -279,6 +328,10 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
->  		return ret;
->  	}
-> 
-> +	ret = ufshcd_parse_clock_min_max_freq(hba);
-> +	if (ret)
-> +		return ret;
-> +
->  	hba->use_pm_opp = true;
-> 
->  	return 0;
-> --
-> 2.17.1
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
+You are receiving this mail because:
+You are watching the assignee of the bug.=
