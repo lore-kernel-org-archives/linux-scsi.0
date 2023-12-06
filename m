@@ -1,175 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="HUTmrx+n"
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81522D3;
-	Tue,  5 Dec 2023 21:41:04 -0800 (PST)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B64lO5A014334;
-	Wed, 6 Dec 2023 05:36:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=DSEsi6ha8d2Dap2LNtqekCrbHlg2RMsuNLxo/jOQbS4=;
- b=HUTmrx+ngT2R2pX+clnkwa8QshV9gvXuYR3aNBQeXdQF8XbjgpbyMIVpXZSYciofkhu/
- tbjpvN8TycYCUtxIMRF8sw+ZFz/JroVzsHq+dVRecwhknQez72X50IU3o+xDOic7eU8K
- e1eeKnf9Awujf1tH1C8q3RNlB3ZmqSGkX/+14qhWue7N2T/ST7zCD5DAH6xSJ/uHykEp
- acyik2seAgNu/w74BVxkeDDWqnSr7GTBgbPQDSeCNz+iPSkF7hE34DD1KmrLRn/70v1Y
- ec+XmyLWb6GVfHDnWJhz2eJwPDkr4hZBRyIWT6A8UtynTmXds2A6ujn7sBUi8yesNfz/ Ng== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3utd1n0p7h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 06 Dec 2023 05:36:40 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3B65ablv009558;
-	Wed, 6 Dec 2023 05:36:37 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3uqwnkryxu-1;
-	Wed, 06 Dec 2023 05:36:37 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B65abDk009553;
-	Wed, 6 Dec 2023 05:36:37 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3B65aaCt009552;
-	Wed, 06 Dec 2023 05:36:37 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id C868D5000B1; Wed,  6 Dec 2023 11:06:35 +0530 (+0530)
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, quic_cang@quicinc.com,
-        Nitin Rawat <quic_nitirawa@quicinc.com>,
-        Manish Pandey <quic_mapa@quicinc.com>
-Subject: [PATCH V1] scsi: ufs: core: store min and max clk freq from OPP table
-Date: Wed,  6 Dec 2023 11:06:28 +0530
-Message-Id: <20231206053628.32169-1-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: JcWSzxgYC0qjNSj5G2k8Q-T0vKclwx2B
-X-Proofpoint-GUID: JcWSzxgYC0qjNSj5G2k8Q-T0vKclwx2B
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-06_04,2023-12-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
- lowpriorityscore=0 suspectscore=0 clxscore=1015 impostorscore=0
- priorityscore=1501 adultscore=0 bulkscore=0 mlxscore=0 mlxlogscore=999
- phishscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2311290000 definitions=main-2312060045
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AH1r7Or5"
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB78AD46;
+	Tue,  5 Dec 2023 21:54:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Epg/iXYkY+1k3eZKM14iUxoA+UE8xascWdRNU509WEI=; b=AH1r7Or5zoUct39UOS7X8uhjM/
+	ZiUNF74wEtopkSsYjRN4ZiT+Q5RDAfrGjr2SdG2lYRso2gu9KpXtKwk60gz8irSWJAAQdmmFCaTEL
+	SzY/rogxAQvA7E28MbalnxTm3ENVynpcioekCUIHWOMylS+mP3+gVaUE9mTXoi268lvfIjLdzx8gy
+	KJ4Ze8tYIRqVan/Kdng7awTtiEGY+yfEO2mGuyBJruCAYOU4SPpu5BrZ55s3w5ET/sudLHNfZi9Fm
+	RGHdjWS7by3ADPe4JZlkDzpRcg6HmO7sizVltW2W1zG8KT62VV/j/an1o/4xPCND1GnBbvrQyIKqD
+	pYwXk3tQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rAkrP-0098Oa-0t;
+	Wed, 06 Dec 2023 05:54:15 +0000
+Date: Tue, 5 Dec 2023 21:54:15 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
+	kent.overstreet@gmail.com, joern@lazybastard.org,
+	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
+	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
+	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
+	dsterba@suse.com, nico@fluxnic.net, xiang@kernel.org,
+	chao@kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca,
+	agruenba@redhat.com, jack@suse.com, konishi.ryusuke@gmail.com,
+	willy@infradead.org, akpm@linux-foundation.org, hare@suse.de,
+	p.raghav@samsung.com, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+	gfs2@lists.linux.dev, linux-nilfs@vger.kernel.org,
+	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH -next RFC 00/14] block: don't access bd_inode directly
+ from other modules
+Message-ID: <ZXAMh02h4FAwt2FY@infradead.org>
+References: <20231205123728.1866699-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231205123728.1866699-1-yukuai1@huaweicloud.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-OPP support will make use of OPP table in device tree and removes
-freq-table-hz property from device tree.
+On Tue, Dec 05, 2023 at 08:37:14PM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Patch 1 add some bdev apis, then follow up patches will use these apis
+> to avoid access bd_inode directly, and hopefully the field bd_inode can
+> be removed eventually(after figure out a way for fs/buffer.c).
 
-With OPP enabled in devicetree, clki->min_freq and clki->maxfreq
-currently is not getting updated and the value is set to 0.
-
-Soc vendors like qcom, mediatek uses clki->minfreq and clki->maxfreq
-in vendor specific file. These frequencies values are used to update
-vendor specific configurations. Since the value is 0, it is causing
-functional issue.
-
-Add code to store the min and max ufs clk frequency from OPP table.
-
-Fixes: 72208ebe181e ("scsi: ufs: core: Add support for parsing OPP")
-Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
-Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
----
- drivers/ufs/host/ufshcd-pltfrm.c | 56 ++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
-
-diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-index da2558e274b4..12fa6f7d6a97 100644
---- a/drivers/ufs/host/ufshcd-pltfrm.c
-+++ b/drivers/ufs/host/ufshcd-pltfrm.c
-@@ -13,6 +13,7 @@
- #include <linux/pm_opp.h>
- #include <linux/pm_runtime.h>
- #include <linux/of.h>
-+#include <linux/clk.h>
-
- #include <ufs/ufshcd.h>
- #include "ufshcd-pltfrm.h"
-@@ -213,6 +214,55 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
- 	}
- }
-
-+/**
-+ * ufshcd_config_min_max_clk_freq - update min and max freq
-+ * @hba: per adapter instance
-+ *
-+ * This function store min and max freq for all the clocks.
-+ *
-+ * Returns 0 for success and non-zero for failure
-+ */
-+static int ufshcd_config_min_max_clk_freq(struct ufs_hba *hba)
-+{
-+	struct list_head *head = &hba->clk_list_head;
-+	struct dev_pm_opp *opp;
-+	struct ufs_clk_info *clki;
-+	unsigned long freq;
-+	u8 idx = 0;
-+	int ret;
-+
-+	list_for_each_entry(clki, head, list) {
-+		if (!clki->name)
-+			continue;
-+
-+		clki->clk = devm_clk_get(hba->dev, clki->name);
-+		if (!IS_ERR_OR_NULL(clki->clk)) {
-+			/* Find Max Freq */
-+			freq = ULONG_MAX;
-+			opp = dev_pm_opp_find_freq_floor_indexed(hba->dev, &freq, idx);
-+			if (IS_ERR(opp)) {
-+				dev_err(hba->dev, "failed to find dev_pm_opp\n");
-+				ret = PTR_ERR(opp);
-+				return ret;
-+			}
-+			clki->max_freq = dev_pm_opp_get_freq_indexed(opp, idx);
-+
-+			/* Find Min Freq */
-+			freq = 0;
-+			opp = dev_pm_opp_find_freq_ceil_indexed(hba->dev, &freq, idx);
-+			if (IS_ERR(opp)) {
-+				dev_err(hba->dev, "failed to find dev_pm_opp\n");
-+				ret = PTR_ERR(opp);
-+				return ret;
-+			}
-+			clki->min_freq = dev_pm_opp_get_freq_indexed(opp, idx);
-+			idx++;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int ufshcd_parse_operating_points(struct ufs_hba *hba)
- {
- 	struct device *dev = hba->dev;
-@@ -279,6 +329,12 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
- 		return ret;
- 	}
-
-+	ret = ufshcd_config_min_max_clk_freq(hba);
-+	if (ret) {
-+		dev_err(dev, "Failed to get min max freq: %d\n", ret);
-+		return ret;
-+	}
-+
- 	hba->use_pm_opp = true;
-
- 	return 0;
---
-2.17.1
+What tree is this against?  It fails to apply to either Jens'
+for-6.8/block or Linus tree in the very first patch.
 
