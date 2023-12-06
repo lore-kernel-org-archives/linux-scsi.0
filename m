@@ -1,231 +1,175 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QGidZ4iR"
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06F7618F;
-	Tue,  5 Dec 2023 21:25:16 -0800 (PST)
-Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-6ce6dd83945so1359304b3a.3;
-        Tue, 05 Dec 2023 21:25:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701840315; x=1702445115; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=6huBbZbAII0X6eZV6S+b7knvK6KuHJo8Bh0bkLgUxxE=;
-        b=QGidZ4iRu5/YncLQwNVlWgTHz7jez7T2YHYyySJDAUl1LybKELv67VrH6KN+e8TxRh
-         /s5VSFFVvQRiwkXNmKLJi/wEnIBiOGQwnngb6oYZMoG6eQc0QbJ/T0Ec0db6vzr1k+Dx
-         srQWLLbmQFs5EhWEp5zC/IaHKoTJiY8bXU5IS602EgbG9LYXq+G5ffcY+0jnsGCyRyAk
-         7+ZWoAymYRZSRJgPK/kil/e23SdlpEsI7jueZ//dM4yB7IHleHRJ+/PQQLHSiUNJ84tI
-         tOtIp+BHegPALNw4/RtwVHj2rBou199ZGUBCDO3mLTFwdzB+80PTnm4Fc0QdTZHYALAf
-         NEJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701840315; x=1702445115;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6huBbZbAII0X6eZV6S+b7knvK6KuHJo8Bh0bkLgUxxE=;
-        b=J2b0FKDZyCK+e5YG3hPYVqsm96iXFc1DuCjGft3nU29htWngmgXURBAKy6LSskvXsc
-         OlwaUaL+5EN/6u7FgAONCyt94/N94DvXh3D4HeMkqLpjiugMkbh9I8T/h8ecFBGT6oo+
-         bBF7PUATUXLdMVYFO7IvwjBNP0iu5NE6arIG4eYzZ8D+aFktqrYfj6JhEcs9DQMBWBDf
-         kbBFrkua9jujvMMFVH6lL8lpzV+nmnybr/z6ilzjRywIN/dJlnLy2pCqZ+YCTKLfpKDl
-         b87csaO4/TXV8CcKaJT3HFSgWjWds5g9kbrD67w6oNhQhjh5fZK0GbncA1Te8IJg3p16
-         SAoQ==
-X-Gm-Message-State: AOJu0YyH7TAIz+i+HfbrAQNnJb8M6GbmVheSEHS7vLvZsf7l4/8SFM7S
-	B7EPEUC20m7UnlvO5u56YqE=
-X-Google-Smtp-Source: AGHT+IFMxfqg8FxPkhbWeYw87iiXO3hRoVhFhH1xtCbWG3FZaVDEj9UfTpo1oYq4IqfLZ3ft2t7YHQ==
-X-Received: by 2002:a05:6a00:98e:b0:6ce:6420:e174 with SMTP id u14-20020a056a00098e00b006ce6420e174mr407397pfg.36.1701840315262;
-        Tue, 05 Dec 2023 21:25:15 -0800 (PST)
-Received: from localhost ([216.228.127.130])
-        by smtp.gmail.com with ESMTPSA id ka32-20020a056a0093a000b006ce455a7faasm5350125pfb.150.2023.12.05.21.25.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Dec 2023 21:25:14 -0800 (PST)
-Date: Tue, 5 Dec 2023 21:22:59 -0800
-From: Yury Norov <yury.norov@gmail.com>
-To: Jan Kara <jack@suse.cz>
-Cc: linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Chaitanya Kulkarni <kch@nvidia.com>,
-	Christian Brauner <brauner@kernel.org>,
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	David Disseldorp <ddiss@suse.de>,
-	Edward Cree <ecree.xilinx@gmail.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Hans Verkuil <hverkuil@xs4all.nl>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Hugh Dickins <hughd@google.com>, Ingo Molnar <mingo@redhat.com>,
-	Jakub Kicinski <kuba@kernel.org>, Jaroslav Kysela <perex@perex.cz>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
-	Jiri Pirko <jiri@resnulli.us>, Jiri Slaby <jirislaby@kernel.org>,
-	Kalle Valo <kvalo@kernel.org>, Karsten Graul <kgraul@linux.ibm.com>,
-	Karsten Keil <isdn@linux-pingi.de>,
-	Kees Cook <keescook@chromium.org>,
-	Leon Romanovsky <leon@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Martin Habets <habetsm.xilinx@gmail.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Michal Simek <monstr@monstr.eu>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Oliver Neukum <oneukum@suse.com>, Paolo Abeni <pabeni@redhat.com>,
-	Paolo Bonzini <pbonzini@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ping-Ke Shih <pkshih@realtek.com>, Rich Felker <dalias@libc.org>,
-	Rob Herring <robh@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Sean Christopherson <seanjc@google.com>,
-	Shuai Xue <xueshuai@linux.alibaba.com>,
-	Stanislaw Gruszka <stf_xl@wp.pl>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	Vitaly Kuznetsov <vkuznets@redhat.com>,
-	Wenjia Zhang <wenjia@linux.ibm.com>, Will Deacon <will@kernel.org>,
-	Yoshinori Sato <ysato@users.sourceforge.jp>,
-	GR-QLogic-Storage-Upstream@marvell.com, alsa-devel@alsa-project.org,
-	ath10k@lists.infradead.org, dmaengine@vger.kernel.org,
-	iommu@lists.linux.dev, kvm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-hyperv@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-media@vger.kernel.org, linux-mips@vger.kernel.org,
-	linux-net-drivers@amd.com, linux-pci@vger.kernel.org,
-	linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-sound@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, mpi3mr-linuxdrv.pdl@broadcom.com,
-	netdev@vger.kernel.org, sparclinux@vger.kernel.org, x86@kernel.org,
-	Mirsad Todorovac <mirsad.todorovac@alu.unizg.hr>,
-	Matthew Wilcox <willy@infradead.org>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Maxim Kuvyrkov <maxim.kuvyrkov@linaro.org>,
-	Alexey Klimov <klimov.linux@gmail.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH v2 00/35] bitops: add atomic find_bit() operations
-Message-ID: <ZXAFM2VZugdhM3oE@yury-ThinkPad>
-References: <20231203192422.539300-1-yury.norov@gmail.com>
- <20231204185101.ddmkvsr2xxsmoh2u@quack3>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="HUTmrx+n"
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81522D3;
+	Tue,  5 Dec 2023 21:41:04 -0800 (PST)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B64lO5A014334;
+	Wed, 6 Dec 2023 05:36:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=DSEsi6ha8d2Dap2LNtqekCrbHlg2RMsuNLxo/jOQbS4=;
+ b=HUTmrx+ngT2R2pX+clnkwa8QshV9gvXuYR3aNBQeXdQF8XbjgpbyMIVpXZSYciofkhu/
+ tbjpvN8TycYCUtxIMRF8sw+ZFz/JroVzsHq+dVRecwhknQez72X50IU3o+xDOic7eU8K
+ e1eeKnf9Awujf1tH1C8q3RNlB3ZmqSGkX/+14qhWue7N2T/ST7zCD5DAH6xSJ/uHykEp
+ acyik2seAgNu/w74BVxkeDDWqnSr7GTBgbPQDSeCNz+iPSkF7hE34DD1KmrLRn/70v1Y
+ ec+XmyLWb6GVfHDnWJhz2eJwPDkr4hZBRyIWT6A8UtynTmXds2A6ujn7sBUi8yesNfz/ Ng== 
+Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3utd1n0p7h-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 06 Dec 2023 05:36:40 +0000
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3B65ablv009558;
+	Wed, 6 Dec 2023 05:36:37 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3uqwnkryxu-1;
+	Wed, 06 Dec 2023 05:36:37 +0000
+Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B65abDk009553;
+	Wed, 6 Dec 2023 05:36:37 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3B65aaCt009552;
+	Wed, 06 Dec 2023 05:36:37 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+	id C868D5000B1; Wed,  6 Dec 2023 11:06:35 +0530 (+0530)
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, quic_cang@quicinc.com,
+        Nitin Rawat <quic_nitirawa@quicinc.com>,
+        Manish Pandey <quic_mapa@quicinc.com>
+Subject: [PATCH V1] scsi: ufs: core: store min and max clk freq from OPP table
+Date: Wed,  6 Dec 2023 11:06:28 +0530
+Message-Id: <20231206053628.32169-1-quic_nitirawa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: JcWSzxgYC0qjNSj5G2k8Q-T0vKclwx2B
+X-Proofpoint-GUID: JcWSzxgYC0qjNSj5G2k8Q-T0vKclwx2B
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-06_04,2023-12-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ lowpriorityscore=0 suspectscore=0 clxscore=1015 impostorscore=0
+ priorityscore=1501 adultscore=0 bulkscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2311290000 definitions=main-2312060045
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231204185101.ddmkvsr2xxsmoh2u@quack3>
 
-On Mon, Dec 04, 2023 at 07:51:01PM +0100, Jan Kara wrote:
-> Hello Yury!
-> 
-> On Sun 03-12-23 11:23:47, Yury Norov wrote:
-> > Add helpers around test_and_{set,clear}_bit() that allow to search for
-> > clear or set bits and flip them atomically.
-> > 
-> > The target patterns may look like this:
-> > 
-> > 	for (idx = 0; idx < nbits; idx++)
-> > 		if (test_and_clear_bit(idx, bitmap))
-> > 			do_something(idx);
-> > 
-> > Or like this:
-> > 
-> > 	do {
-> > 		bit = find_first_bit(bitmap, nbits);
-> > 		if (bit >= nbits)
-> > 			return nbits;
-> > 	} while (!test_and_clear_bit(bit, bitmap));
-> > 	return bit;
-> > 
-> > In both cases, the opencoded loop may be converted to a single function
-> > or iterator call. Correspondingly:
-> > 
-> > 	for_each_test_and_clear_bit(idx, bitmap, nbits)
-> > 		do_something(idx);
-> > 
-> > Or:
-> > 	return find_and_clear_bit(bitmap, nbits);
-> 
-> These are fine cleanups but they actually don't address the case that has
-> triggered all these changes - namely the xarray use of find_next_bit() in
-> xas_find_chunk().
-> 
-> ...
-> > This series is a result of discussion [1]. All find_bit() functions imply
-> > exclusive access to the bitmaps. However, KCSAN reports quite a number
-> > of warnings related to find_bit() API. Some of them are not pointing
-> > to real bugs because in many situations people intentionally allow
-> > concurrent bitmap operations.
-> > 
-> > If so, find_bit() can be annotated such that KCSAN will ignore it:
-> > 
-> >         bit = data_race(find_first_bit(bitmap, nbits));
-> 
-> No, this is not a correct thing to do. If concurrent bitmap changes can
-> happen, find_first_bit() as it is currently implemented isn't ever a safe
-> choice because it can call __ffs(0) which is dangerous as you properly note
-> above. I proposed adding READ_ONCE() into find_first_bit() / find_next_bit()
-> implementation to fix this issue but you disliked that. So other option we
-> have is adding find_first_bit() and find_next_bit() variants that take
-> volatile 'addr' and we have to use these in code like xas_find_chunk()
-> which cannot be converted to your new helpers.
+OPP support will make use of OPP table in device tree and removes
+freq-table-hz property from device tree.
 
-Here is some examples when concurrent operations with plain find_bit()
-are acceptable:
+With OPP enabled in devicetree, clki->min_freq and clki->maxfreq
+currently is not getting updated and the value is set to 0.
 
- - two threads running find_*_bit(): safe wrt ffs(0) and returns correct
-   value, because underlying bitmap is unchanged;
- - find_next_bit() in parallel with set or clear_bit(), when modifying
-   a bit prior to the start bit to search: safe and correct;
- - find_first_bit() in parallel with set_bit(): safe, but may return wrong
-   bit number;
- - find_first_zero_bit() in parallel with clear_bit(): same as above.
+Soc vendors like qcom, mediatek uses clki->minfreq and clki->maxfreq
+in vendor specific file. These frequencies values are used to update
+vendor specific configurations. Since the value is 0, it is causing
+functional issue.
 
-In last 2 cases find_bit() may not return a correct bit number, but
-it may be OK if caller requires any (not exactly first) set or clear
-bit, correspondingly.
+Add code to store the min and max ufs clk frequency from OPP table.
 
-In such cases, KCSAN may be safely silenced.
- 
-> > This series addresses the other important case where people really need
-> > atomic find ops. As the following patches show, the resulting code
-> > looks safer and more verbose comparing to opencoded loops followed by
-> > atomic bit flips.
-> > 
-> > In [1] Mirsad reported 2% slowdown in a single-thread search test when
-> > switching find_bit() function to treat bitmaps as volatile arrays. On
-> > the other hand, kernel robot in the same thread reported +3.7% to the
-> > performance of will-it-scale.per_thread_ops test.
-> 
-> It was actually me who reported the regression here [2] but whatever :)
-> 
-> [2] https://lore.kernel.org/all/20231011150252.32737-1-jack@suse.cz
+Fixes: 72208ebe181e ("scsi: ufs: core: Add support for parsing OPP")
+Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
+Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+---
+ drivers/ufs/host/ufshcd-pltfrm.c | 56 ++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
-My apologize.
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index da2558e274b4..12fa6f7d6a97 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -13,6 +13,7 @@
+ #include <linux/pm_opp.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/of.h>
++#include <linux/clk.h>
 
-> > Assuming that our compilers are sane and generate better code against
-> > properly annotated data, the above discrepancy doesn't look weird. When
-> > running on non-volatile bitmaps, plain find_bit() outperforms atomic
-> > find_and_bit(), and vice-versa.
-> > 
-> > So, all users of find_bit() API, where heavy concurrency is expected,
-> > are encouraged to switch to atomic find_and_bit() as appropriate.
-> 
-> Well, all users where any concurrency can happen should switch. Otherwise
-> they are prone to the (admittedly mostly theoretical) data race issue.
-> 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+ #include <ufs/ufshcd.h>
+ #include "ufshcd-pltfrm.h"
+@@ -213,6 +214,55 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
+ 	}
+ }
+
++/**
++ * ufshcd_config_min_max_clk_freq - update min and max freq
++ * @hba: per adapter instance
++ *
++ * This function store min and max freq for all the clocks.
++ *
++ * Returns 0 for success and non-zero for failure
++ */
++static int ufshcd_config_min_max_clk_freq(struct ufs_hba *hba)
++{
++	struct list_head *head = &hba->clk_list_head;
++	struct dev_pm_opp *opp;
++	struct ufs_clk_info *clki;
++	unsigned long freq;
++	u8 idx = 0;
++	int ret;
++
++	list_for_each_entry(clki, head, list) {
++		if (!clki->name)
++			continue;
++
++		clki->clk = devm_clk_get(hba->dev, clki->name);
++		if (!IS_ERR_OR_NULL(clki->clk)) {
++			/* Find Max Freq */
++			freq = ULONG_MAX;
++			opp = dev_pm_opp_find_freq_floor_indexed(hba->dev, &freq, idx);
++			if (IS_ERR(opp)) {
++				dev_err(hba->dev, "failed to find dev_pm_opp\n");
++				ret = PTR_ERR(opp);
++				return ret;
++			}
++			clki->max_freq = dev_pm_opp_get_freq_indexed(opp, idx);
++
++			/* Find Min Freq */
++			freq = 0;
++			opp = dev_pm_opp_find_freq_ceil_indexed(hba->dev, &freq, idx);
++			if (IS_ERR(opp)) {
++				dev_err(hba->dev, "failed to find dev_pm_opp\n");
++				ret = PTR_ERR(opp);
++				return ret;
++			}
++			clki->min_freq = dev_pm_opp_get_freq_indexed(opp, idx);
++			idx++;
++		}
++	}
++
++	return 0;
++}
++
+ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
+ {
+ 	struct device *dev = hba->dev;
+@@ -279,6 +329,12 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
+ 		return ret;
+ 	}
+
++	ret = ufshcd_config_min_max_clk_freq(hba);
++	if (ret) {
++		dev_err(dev, "Failed to get min max freq: %d\n", ret);
++		return ret;
++	}
++
+ 	hba->use_pm_opp = true;
+
+ 	return 0;
+--
+2.17.1
+
