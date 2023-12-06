@@ -1,98 +1,218 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E39E11717
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 06:51:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="USpUEEwb"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F0CD1C433C8
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 06:51:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701845467;
-	bh=UR7p/EAxQ+TDrXPl80i00N2pbtQNdBmGN2vE/4tSVIQ=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=USpUEEwbH8l+8Mvs65BH4L9XVRa6IusTXKfTJqTOuTPezH/XrXRcnBplfYXOk2ddR
-	 YfOWyPW93y6StaHDcGyS8vvi4PJoh+tIiS7M1mq1clfwFKv8v1+R99HMg276/mQAuS
-	 13/VGSBB+n624OwREupsyi9UiIpZuJ9xK3sXxSrgR3yNM2m+U9w6/EivfJh8wydbLB
-	 qqNCYcvm6icSB8NLlaaIbuHaNxGa265s8OukWIsLzYROHmjLtmOl25/e3KZUqDrcEw
-	 C4CdXuo4er2eYFkNYQ28JYpe0bTtx7VGs1qnlyUVI8QX7eNN+0oJ48QfVQgYaw8rAq
-	 t6KT90sTMkgeQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id D5BDBC53BD0; Wed,  6 Dec 2023 06:51:06 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 218198] Suspend/Resume Regression with attached ATA devices
-Date: Wed, 06 Dec 2023 06:51:06 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: dmummenschanz@web.de
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-218198-11613-PhU47dJ3D8@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218198-11613@https.bugzilla.kernel.org/>
-References: <bug-218198-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6D7C1B5;
+	Tue,  5 Dec 2023 22:51:03 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4SlSjG1jDFz4f3jRC;
+	Wed,  6 Dec 2023 14:50:58 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 64F101A09DB;
+	Wed,  6 Dec 2023 14:51:00 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgA3iA7QGXBlJV2DCw--.10265S3;
+	Wed, 06 Dec 2023 14:50:59 +0800 (CST)
+Subject: Re: [PATCH -next RFC 01/14] block: add some bdev apis
+To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
+ kent.overstreet@gmail.com, joern@lazybastard.org, miquel.raynal@bootlin.com,
+ richard@nod.at, vigneshr@ti.com, sth@linux.ibm.com, hoeppner@linux.ibm.com,
+ hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com,
+ jejb@linux.ibm.com, martin.petersen@oracle.com, clm@fb.com,
+ josef@toxicpanda.com, dsterba@suse.com, nico@fluxnic.net, xiang@kernel.org,
+ chao@kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca,
+ agruenba@redhat.com, jack@suse.com, konishi.ryusuke@gmail.com,
+ willy@infradead.org, akpm@linux-foundation.org, hare@suse.de,
+ p.raghav@samsung.com, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+ linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+ gfs2@lists.linux.dev, linux-nilfs@vger.kernel.org, yi.zhang@huawei.com,
+ yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20231205123728.1866699-1-yukuai1@huaweicloud.com>
+ <20231205123728.1866699-2-yukuai1@huaweicloud.com>
+ <ZXARKD0OmjLrvHmU@infradead.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <aafabc6e-fd98-f927-44d7-3ef76e2acaf8@huaweicloud.com>
+Date: Wed, 6 Dec 2023 14:50:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <ZXARKD0OmjLrvHmU@infradead.org>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgA3iA7QGXBlJV2DCw--.10265S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCw4kZFWUAFyktr1fCw45KFg_yoW7Gr47pr
+	yUKFy5trWDJryI9rs2qw4UAw1Iqw1ftF4xZr93A3sxA390krn2kF48Kay5Cayxtw4vkF4q
+	vF4jvrW3Zr1j9rJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9I14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Wrv_Gr1UMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_
+	WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
+	IYCTnIWIevJa73UjIFyTuYvjfUojjgUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218198
+Hi,
 
---- Comment #15 from Dieter Mummenschanz (dmummenschanz@web.de) ---
-(In reply to Phillip Susi from comment #14)
-> bugzilla-daemon@kernel.org writes:
->=20
->=20
-> 2)  A mounted filesystem periodically issues a FLUSH CACHE command, even
-> if nothing has been written.  A drive in STANDBY just ignores it but in
-> SLEEP, it wakes up.
->=20
-> I would imagine at once you access the disk in some way and so it wakes
-> up, you won't get back to pc8 again without another hdparm -Y?  Is that
-> correct?
+ÔÚ 2023/12/06 14:14, Christoph Hellwig Ð´µÀ:
+>> +void invalidate_bdev_range(struct block_device *bdev, pgoff_t start,
+>> +			   pgoff_t end)
+>> +{
+>> +	invalidate_mapping_pages(bdev->bd_inode->i_mapping, start, end);
+>> +}
+>> +EXPORT_SYMBOL_GPL(invalidate_bdev_range);
+> 
+> All these could probably use kerneldoc comments.
 
-No or at least I don't see this behaviour. However the drives occasional se=
-em
-to have some trouble waking up after resume and hdparm -Y:
+Ok, and thanks for reviewing the patchset!
+> 
+> For this one I really don't like it existing at all, but we'll have to
+> discuss that in the btrfs patch.
+> 
+>> +loff_t bdev_size(struct block_device *bdev)
+>> +{
+>> +	loff_t size;
+>> +
+>> +	spin_lock(&bdev->bd_size_lock);
+>> +	size = i_size_read(bdev->bd_inode);
+>> +	spin_unlock(&bdev->bd_size_lock);
+>> +
+>> +	return size;
+>> +}
+>> +EXPORT_SYMBOL_GPL(bdev_size);
+> 
+> No need for this one.  The callers can simply use bdev_nr_bytes.
 
-[59984.831894] ata5.00: exception Emask 0x0 SAct 0x2000000 SErr 0x10000 act=
-ion
-0x6
-[59984.831907] ata5.00: waking up from sleep
-[59984.831914] ata5: hard resetting link
-[59985.145261] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-[59985.148840] ata5.00: supports DRM functions and may not be fully accessi=
-ble
-[59985.153322] ata5.00: supports DRM functions and may not be fully accessi=
-ble
-[59985.156822] ata5.00: configured for UDMA/133
-[59985.166903] ahci 0000:00:17.0: port does not support device sleep
-[59985.167045] ata5: EH complete
-[59985.167268] ata5.00: Enabling discard_zeroes_data
+Ok, I'll replace it with bdev_nr_bytes.
+> 
+>> +struct folio *bdev_read_folio(struct block_device *bdev, pgoff_t index)
+>> +{
+>> +	return read_mapping_folio(bdev->bd_inode->i_mapping, index, NULL);
+>> +}
+>> +EXPORT_SYMBOL_GPL(bdev_read_folio);
+>> +
+>> +struct folio *bdev_read_folio_gfp(struct block_device *bdev, pgoff_t index,
+>> +				  gfp_t gfp)
+>> +{
+>> +	return mapping_read_folio_gfp(bdev->bd_inode->i_mapping, index, gfp);
+>> +}
+>> +EXPORT_SYMBOL_GPL(bdev_read_folio_gfp);
+> 
+> I think we can just drop bdev_read_folio_gfp. Half of the callers simply
+> pass GPK_KERNEL, and the other half passes GFP_NOFS and could just use
+> memalloc_nofs_save().
 
-When that happens the system is stuck in pc2/pc3 for a couple of minutes but
-then transitions back in partial to pc8.
+I'm a litter confused, so there are 3 use cases:
+1) use GFP_USER, default gfp from bdev_alloc.
+2) use GFP_KERNEL
+3) use GFP_NOFS
 
-Regarding your patches: Anything I can test for you? :)
+I understand that you're suggesting memalloc_nofs_save() to distinguish
+2 and 3, but how can I distinguish 1?
+> 
+>> +void bdev_balance_dirty_pages_ratelimited(struct block_device *bdev)
+>> +{
+>> +	return balance_dirty_pages_ratelimited(bdev->bd_inode->i_mapping);
+>> +}
+>> +EXPORT_SYMBOL_GPL(bdev_balance_dirty_pages_ratelimited);
+> 
+> Hmm, this is just used for block2mtd, and feels a little too low-level
+> to me, as block2mtd really should be using the normal fileread/write
+> APIs.  I guess we'll have to live with it for now if we want to expedite
+> killing off bd_inode.
+> 
+>> +void bdev_correlate_mapping(struct block_device *bdev,
+>> +			    struct address_space *mapping)
+>> +{
+>> +	mapping->host = bdev->bd_inode;
+>> +}
+>> +EXPORT_SYMBOL_GPL(bdev_correlate_mapping);
+> 
+> Maybe associated insted of correlate?  Either way this basically
+> fully exposes the bdev inode again :(
+> 
+>> +gfp_t bdev_gfp_constraint(struct block_device *bdev, gfp_t gfp)
+>> +{
+>> +	return mapping_gfp_constraint(bdev->bd_inode->i_mapping, gfp);
+>> +}
+>> +EXPORT_SYMBOL_GPL(bdev_gfp_constraint);
+> 
+> The right fix here is to:
+> 
+>   - use memalloc_nofs_save in extet instead of using
+>     mapping_gfp_constraint to clear it from the mapping flags
+>   - remove __ext4_sb_bread_gfp and just have buffer.c helper that does
+>     the right thing (either by changing the calling conventions of an
+>     existing one, or adding a new one).
 
---=20
-You may reply to this email to add a comment.
+Thanks for the suggestions, but I'm not sure how to do this yet, I must
+read more ext4 code.
+> 
+>> +/*
+>> + * The del_gendisk() function uninitializes the disk-specific data
+>> + * structures, including the bdi structure, without telling anyone
+>> + * else.  Once this happens, any attempt to call mark_buffer_dirty()
+>> + * (for example, by ext4_commit_super), will cause a kernel OOPS.
+>> + * This is a kludge to prevent these oops until we can put in a proper
+>> + * hook in del_gendisk() to inform the VFS and file system layers.
+>> + */
+>> +int bdev_ejected(struct block_device *bdev)
+>> +{
+>> +	struct backing_dev_info *bdi = inode_to_bdi(bdev->bd_inode);
+>> +
+>> +	return bdi->dev == NULL;
+>> +}
+>> +EXPORT_SYMBOL_GPL(bdev_ejected);
+> 
+> And this code in ext4 should just go away entirely.  The bdi should
+> always be valid for a live bdev for years.
+Sounds good, I was confused about this code as well.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> 
+>> --- a/block/bio.c
+>> +++ b/block/bio.c
+>> @@ -1119,6 +1119,7 @@ void bio_add_folio_nofail(struct bio *bio, struct folio *folio, size_t len,
+>>   	WARN_ON_ONCE(off > UINT_MAX);
+>>   	__bio_add_page(bio, &folio->page, len, off);
+>>   }
+>> +EXPORT_SYMBOL_GPL(bio_add_folio_nofail);
+> 
+> How is this realted?  The export is fine, but really should be a
+> separate, well-documented commit.
+
+This is used to replace __bio_add_page() in btrfs while converting page
+to folio, please let me know if I should keep this, if so, I'll split
+this into a new commit.
+> 
+>>   
+>> +static inline u8 block_bits(struct block_device *bdev)
+>> +{
+>> +	return bdev->bd_inode->i_blkbits;
+>> +}
+> 
+> Not sure we should need this.  i_blkbits comes from the blocksize
+> the fs set, so it should have other ways to get at it.
+
+Yes, this is now only used for erofs, and erofs do call
+sb_set_blocksize() while initializing, hence it's right there is other
+way to get blkbits and this helper is not needed.
+
+Thanks,
+Kuai
+
+> .
+> 
+
