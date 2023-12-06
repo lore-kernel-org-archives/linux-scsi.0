@@ -1,170 +1,98 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E39E11717
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 06:51:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZSLgTwnr"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD9D311F;
-	Tue,  5 Dec 2023 22:14:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=4/ZwiAtDqcKncE9Sxs1fDYOC2BzoaQU34ADFgY4TSSs=; b=ZSLgTwnreLOPqcun4IeSE9ItZu
-	PnTWx9UHdSzDOMw03zhM4iJWbD050LQsUFBy4f4oO/I2CEfLxgu6VKI/48QpINdzGnuBN/4jhcnWn
-	T6OU37rwGxHJqPa/Z53FU9Yr3Z/lHh82wcz4yXLaNizP/+ST3MBO3FUnRt49dArLwuH65rXSylY7S
-	NM9uVZ0jYQFEdnnGM7iibI2Uo0n82j5ujsUAs74TacZS+egwtqhpWfEnDXYYMvxse9S8X7lLVbUAE
-	/Uc2UOgBsAQP0Wf1EQ01B4RrecJ+UvN+DuxFci/PVUUXzcCfKe+xsAO/GPTkS0EmtvxKJn5csRJAc
-	38PBAwUg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rAlAW-009B0t-1J;
-	Wed, 06 Dec 2023 06:14:00 +0000
-Date: Tue, 5 Dec 2023 22:14:00 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
-	kent.overstreet@gmail.com, joern@lazybastard.org,
-	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
-	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
-	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
-	dsterba@suse.com, nico@fluxnic.net, xiang@kernel.org,
-	chao@kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca,
-	agruenba@redhat.com, jack@suse.com, konishi.ryusuke@gmail.com,
-	willy@infradead.org, akpm@linux-foundation.org, hare@suse.de,
-	p.raghav@samsung.com, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-nilfs@vger.kernel.org,
-	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH -next RFC 01/14] block: add some bdev apis
-Message-ID: <ZXARKD0OmjLrvHmU@infradead.org>
-References: <20231205123728.1866699-1-yukuai1@huaweicloud.com>
- <20231205123728.1866699-2-yukuai1@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="USpUEEwb"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id F0CD1C433C8
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 06:51:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701845467;
+	bh=UR7p/EAxQ+TDrXPl80i00N2pbtQNdBmGN2vE/4tSVIQ=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=USpUEEwbH8l+8Mvs65BH4L9XVRa6IusTXKfTJqTOuTPezH/XrXRcnBplfYXOk2ddR
+	 YfOWyPW93y6StaHDcGyS8vvi4PJoh+tIiS7M1mq1clfwFKv8v1+R99HMg276/mQAuS
+	 13/VGSBB+n624OwREupsyi9UiIpZuJ9xK3sXxSrgR3yNM2m+U9w6/EivfJh8wydbLB
+	 qqNCYcvm6icSB8NLlaaIbuHaNxGa265s8OukWIsLzYROHmjLtmOl25/e3KZUqDrcEw
+	 C4CdXuo4er2eYFkNYQ28JYpe0bTtx7VGs1qnlyUVI8QX7eNN+0oJ48QfVQgYaw8rAq
+	 t6KT90sTMkgeQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id D5BDBC53BD0; Wed,  6 Dec 2023 06:51:06 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 218198] Suspend/Resume Regression with attached ATA devices
+Date: Wed, 06 Dec 2023 06:51:06 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: dmummenschanz@web.de
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-218198-11613-PhU47dJ3D8@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-218198-11613@https.bugzilla.kernel.org/>
+References: <bug-218198-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231205123728.1866699-2-yukuai1@huaweicloud.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-> +void invalidate_bdev_range(struct block_device *bdev, pgoff_t start,
-> +			   pgoff_t end)
-> +{
-> +	invalidate_mapping_pages(bdev->bd_inode->i_mapping, start, end);
-> +}
-> +EXPORT_SYMBOL_GPL(invalidate_bdev_range);
+https://bugzilla.kernel.org/show_bug.cgi?id=3D218198
 
-All these could probably use kerneldoc comments.
+--- Comment #15 from Dieter Mummenschanz (dmummenschanz@web.de) ---
+(In reply to Phillip Susi from comment #14)
+> bugzilla-daemon@kernel.org writes:
+>=20
+>=20
+> 2)  A mounted filesystem periodically issues a FLUSH CACHE command, even
+> if nothing has been written.  A drive in STANDBY just ignores it but in
+> SLEEP, it wakes up.
+>=20
+> I would imagine at once you access the disk in some way and so it wakes
+> up, you won't get back to pc8 again without another hdparm -Y?  Is that
+> correct?
 
-For this one I really don't like it existing at all, but we'll have to
-discuss that in the btrfs patch.
+No or at least I don't see this behaviour. However the drives occasional se=
+em
+to have some trouble waking up after resume and hdparm -Y:
 
-> +loff_t bdev_size(struct block_device *bdev)
-> +{
-> +	loff_t size;
-> +
-> +	spin_lock(&bdev->bd_size_lock);
-> +	size = i_size_read(bdev->bd_inode);
-> +	spin_unlock(&bdev->bd_size_lock);
-> +
-> +	return size;
-> +}
-> +EXPORT_SYMBOL_GPL(bdev_size);
+[59984.831894] ata5.00: exception Emask 0x0 SAct 0x2000000 SErr 0x10000 act=
+ion
+0x6
+[59984.831907] ata5.00: waking up from sleep
+[59984.831914] ata5: hard resetting link
+[59985.145261] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+[59985.148840] ata5.00: supports DRM functions and may not be fully accessi=
+ble
+[59985.153322] ata5.00: supports DRM functions and may not be fully accessi=
+ble
+[59985.156822] ata5.00: configured for UDMA/133
+[59985.166903] ahci 0000:00:17.0: port does not support device sleep
+[59985.167045] ata5: EH complete
+[59985.167268] ata5.00: Enabling discard_zeroes_data
 
-No need for this one.  The callers can simply use bdev_nr_bytes.
+When that happens the system is stuck in pc2/pc3 for a couple of minutes but
+then transitions back in partial to pc8.
 
-> +struct folio *bdev_read_folio(struct block_device *bdev, pgoff_t index)
-> +{
-> +	return read_mapping_folio(bdev->bd_inode->i_mapping, index, NULL);
-> +}
-> +EXPORT_SYMBOL_GPL(bdev_read_folio);
-> +
-> +struct folio *bdev_read_folio_gfp(struct block_device *bdev, pgoff_t index,
-> +				  gfp_t gfp)
-> +{
-> +	return mapping_read_folio_gfp(bdev->bd_inode->i_mapping, index, gfp);
-> +}
-> +EXPORT_SYMBOL_GPL(bdev_read_folio_gfp);
+Regarding your patches: Anything I can test for you? :)
 
-I think we can just drop bdev_read_folio_gfp. Half of the callers simply
-pass GPK_KERNEL, and the other half passes GFP_NOFS and could just use
-memalloc_nofs_save().
+--=20
+You may reply to this email to add a comment.
 
-> +void bdev_balance_dirty_pages_ratelimited(struct block_device *bdev)
-> +{
-> +	return balance_dirty_pages_ratelimited(bdev->bd_inode->i_mapping);
-> +}
-> +EXPORT_SYMBOL_GPL(bdev_balance_dirty_pages_ratelimited);
-
-Hmm, this is just used for block2mtd, and feels a little too low-level
-to me, as block2mtd really should be using the normal fileread/write
-APIs.  I guess we'll have to live with it for now if we want to expedite
-killing off bd_inode.
-
-> +void bdev_correlate_mapping(struct block_device *bdev,
-> +			    struct address_space *mapping)
-> +{
-> +	mapping->host = bdev->bd_inode;
-> +}
-> +EXPORT_SYMBOL_GPL(bdev_correlate_mapping);
-
-Maybe associated insted of correlate?  Either way this basically
-fully exposes the bdev inode again :(
-
-> +gfp_t bdev_gfp_constraint(struct block_device *bdev, gfp_t gfp)
-> +{
-> +	return mapping_gfp_constraint(bdev->bd_inode->i_mapping, gfp);
-> +}
-> +EXPORT_SYMBOL_GPL(bdev_gfp_constraint);
-
-The right fix here is to:
-
- - use memalloc_nofs_save in extet instead of using
-   mapping_gfp_constraint to clear it from the mapping flags
- - remove __ext4_sb_bread_gfp and just have buffer.c helper that does
-   the right thing (either by changing the calling conventions of an
-   existing one, or adding a new one).
-
-> +/*
-> + * The del_gendisk() function uninitializes the disk-specific data
-> + * structures, including the bdi structure, without telling anyone
-> + * else.  Once this happens, any attempt to call mark_buffer_dirty()
-> + * (for example, by ext4_commit_super), will cause a kernel OOPS.
-> + * This is a kludge to prevent these oops until we can put in a proper
-> + * hook in del_gendisk() to inform the VFS and file system layers.
-> + */
-> +int bdev_ejected(struct block_device *bdev)
-> +{
-> +	struct backing_dev_info *bdi = inode_to_bdi(bdev->bd_inode);
-> +
-> +	return bdi->dev == NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(bdev_ejected);
-
-And this code in ext4 should just go away entirely.  The bdi should
-always be valid for a live bdev for years.
-
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -1119,6 +1119,7 @@ void bio_add_folio_nofail(struct bio *bio, struct folio *folio, size_t len,
->  	WARN_ON_ONCE(off > UINT_MAX);
->  	__bio_add_page(bio, &folio->page, len, off);
->  }
-> +EXPORT_SYMBOL_GPL(bio_add_folio_nofail);
-
-How is this realted?  The export is fine, but really should be a
-separate, well-documented commit.
-
->  
-> +static inline u8 block_bits(struct block_device *bdev)
-> +{
-> +	return bdev->bd_inode->i_blkbits;
-> +}
-
-Not sure we should need this.  i_blkbits comes from the blocksize
-the fs set, so it should have other ways to get at it.
+You are receiving this mail because:
+You are watching the assignee of the bug.=
