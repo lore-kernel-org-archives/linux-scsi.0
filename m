@@ -1,121 +1,101 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2583D98C;
-	Wed,  6 Dec 2023 15:32:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD9881D682
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 16:56:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rGASEMZu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B75DC433C7;
-	Wed,  6 Dec 2023 15:32:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FL2QO/t3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B6EDC433C8;
+	Wed,  6 Dec 2023 16:56:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701876772;
-	bh=w1otnxj6ZQubR19XyLc2pJyxuUrOYv5s6Wn1rb3d1zM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rGASEMZu2w8Un5785u0aGDVqoWrEGsXz1MReexBAxddidRe4ZZe5zAr1Sm0k93D+u
-	 Ui2+j1KIQLPLlEMwubHnwKWoqH9i2LMROw+PNo+os8rAPeQ4hST37N62nDpHBIkPO4
-	 uHH8Emz7IPGW/hZ6oLAl6gSzocpcZnFhp6YtRXrD5oszVH52J7j9aOgXwG0nWmcR3T
-	 k6K524JwL7SyQMLDxr20AN1PKLPXkVriRV40ck2DScbYe+1PPJuMSCQUvXO70HkFBw
-	 uGJnKtfwIFtCkPIEyrUnhg4Hi3AGxm9XoGnIVmFItvXFPxt/PpS5LdtUW6oEHHL6xL
-	 hEgUg9hmtXlZg==
-Date: Wed, 6 Dec 2023 21:02:42 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Naresh Maramaina <quic_mnaresh@quicinc.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Andy Gross <agross@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	chu.stanley@gmail.com, Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
-	Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: Re: [PATCH V2 1/3] ufs: core: Add CPU latency QoS support for ufs
- driver
-Message-ID: <20231206153242.GI12802@thinkpad>
-References: <20231204143101.64163-1-quic_mnaresh@quicinc.com>
- <20231204143101.64163-2-quic_mnaresh@quicinc.com>
- <590ade27-b4da-49be-933b-e9959aa0cd4c@acm.org>
- <692cd503-5b14-4be6-831d-d8e9c282a95e@quicinc.com>
- <5e7c5c75-cb5f-4afe-9d57-b0cab01a6f26@acm.org>
- <b9373252-710c-4a54-95cc-046314796960@quicinc.com>
+	s=k20201202; t=1701881799;
+	bh=H7GvUItE9bkpRX6PKJbIM6QvCOjJD4z5/lc3+4b4Xsg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=FL2QO/t3VmbE7QefE+2ODxdzs0DNRX6Jmwr15X1hOcmTt55ioK3q97RG3NI487FdV
+	 q+gWSDREEPuudROS6SsFz6APJYxx7QJVda73ioQdlvnqb4SHjweIrdFQYpPXDiuuGR
+	 EiG5d9d4iXATomR+CzxJqE0OzLt3DI3KeMaI/RYMdUF54AHLrn3w6x7puheucvXDoy
+	 ZVza9Oo1fF6MCFXzy+Ny6/G8dbkRBb9iOKiW74JE3KGYeJdhyv486wbEA3FxSjBsgP
+	 PU5+IK7QIZlYQnV9aPR0LyOVujqZYYwTLB2Zw8QsqMLK1IG8ZxTySHRP+CRSh0qMZf
+	 01n/I1XMO5s/Q==
+Date: Wed, 6 Dec 2023 10:56:37 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+	rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com
+Subject: Re: [PATCH v1 2/4] mpi3mr: Support PCIe Error Recovery callback
+ handlers
+Message-ID: <20231206165637.GA717462@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <b9373252-710c-4a54-95cc-046314796960@quicinc.com>
+In-Reply-To: <20231206152513.71253-3-ranjan.kumar@broadcom.com>
 
-On Wed, Dec 06, 2023 at 07:32:54PM +0530, Naresh Maramaina wrote:
+On Wed, Dec 06, 2023 at 08:55:11PM +0530, Ranjan Kumar wrote:
+> The driver has been upgraded to include support for the
+> PCIe error recovery callback handler which is crucial for
+> the recovery of the controllers. This feature is
+> necessary for addressing the errors reported by
+> the PCIe AER (Advanced Error Reporting) mechanism.
 > 
-> 
-> On 12/5/2023 10:41 PM, Bart Van Assche wrote:
-> > On 12/4/23 21:58, Naresh Maramaina wrote:
-> > > On 12/5/2023 12:30 AM, Bart Van Assche wrote:
-> > > > On 12/4/23 06:30, Maramaina Naresh wrote:
-> > > > > +    /* This capability allows the host controller driver to
-> > > > > use the PM QoS
-> > > > > +     * feature.
-> > > > > +     */
-> > > > > +    UFSHCD_CAP_PM_QOS                = 1 << 13,
-> > > > >   };
-> > > > 
-> > > > Why does it depend on the host driver whether or not PM QoS is
-> > > > enabled? Why isn't it enabled unconditionally?
-> > > 
-> > > For some platform vendors power KPI might be more important than
-> > > random io KPI. Hence this flag is disabled by default and can be
-> > > enabled based on platform requirement.
-> > 
-> > How about leaving this flag out unless if a host vendor asks explicitly
-> > for this flag?
-> 
-> IMHO, instead of completely removing this flag, how about having
-> flag like "UFSHCD_CAP_DISABLE_PM_QOS" which will make PMQOS enable
-> by default and if some host vendor wants to disable it explicitly,
-> they can enable that flag.
-> Please let me know your opinion.
-> 
+> Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
+> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+> ...
 
-If a vendor wants to disable this feature, then the driver has to be modified.
-That won't be very convenient. So either this has to be configured through sysfs
-or Kconfig if flexibility matters.
+> +static int
+> +mpi3mr_get_shost_and_mrioc(struct pci_dev *pdev,
+> +	struct Scsi_Host **shost, struct mpi3mr_ioc **mrioc)
+> +{
+> +	*shost = pci_get_drvdata(pdev);
+> +	if (*shost == NULL) {
+> +		dev_err(&pdev->dev, "pdev's driver data is null\n");
+> +		return -1;
+> +	}
+> +
+> +	*mrioc = shost_priv(*shost);
+> +	if (*mrioc == NULL) {
+> +		dev_err(&pdev->dev, "shost's private data is null\n");
+> +		*shost = NULL;
+> +		return -1;
 
-- Mani
+I'm a little bit skeptical about these checks for NULL, although I do
+see that the existing code has similar "if (!shost)" checks.
 
-> > > > 
-> > > > > + * @pm_qos_req: PM QoS request handle
-> > > > > + * @pm_qos_init: flag to check if pm qos init completed
-> > > > >    */
-> > > > 
-> > > > Documentation for pm_qos_init is missing.
-> > > > 
-> > > Sorry, i didn't get your comment, i have already added documentation
-> > > for @pm_qos_init, @pm_qos_req variable as above. Do you want me to
-> > > add this information some where else as well?
-> > 
-> > Oops, I meant 'qos_vote'.
-> 
-> Sure. I'll take of this in next patchset.
-> 
-> > 
-> > Thanks,
-> > 
-> > Bart.
-> > 
-> 
-> Thanks,
-> Naresh
-> 
+Usually these checks will only find memory corruption or logic errors,
+and silently bailing out, as the previous "if (!shost)" checks do,
+just masks a serious problem.  Logging errors, as you do here, is a
+little better, but I think it's better to just take the exception when
+we dereference the NULL pointer later because that's impossible to
+ignore and usually gives more clues about what went wrong.
 
--- 
-மணிவண்ணன் சதாசிவம்
+> +}
+> +	return 0;
+> +}
+
+The addition and use of mpi3mr_get_shost_and_mrioc() looks like it
+could be a separate patch.  If so, it might be nice to split this into
+several smaller, simpler patches.
+
+>  static int __maybe_unused
+>  mpi3mr_suspend(struct device *dev)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> -	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+> +	struct Scsi_Host *shost;
+>  	struct mpi3mr_ioc *mrioc;
+>  
+> -	if (!shost)
+> -		return 0;
+> +	if (mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc))
+> +		return -1;
+
+Is -1 really the best return value here?  It seems like usually a
+negative errno is returned.
+
+Bjorn
