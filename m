@@ -1,245 +1,162 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26F503EA88;
-	Wed,  6 Dec 2023 15:26:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sQ9Iv/tG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C7BFC433C8;
-	Wed,  6 Dec 2023 15:26:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701876417;
-	bh=ErOUL0OR4b4hUkNAU5v24U4RXrnfJw3pOrdPFiz7eOk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sQ9Iv/tGorGk7fvwR9E+4Z8h5RM1dV3/5S7kwpiBtNtvuNiTNNg36Df+XdZZavqwI
-	 mdvSKnon4grfYi5DaWWIyRZ8y61twyzALmuuMxZ9aQodeMBizWht8+vVH8SN1SbyfV
-	 4l8QqzRBrdIw7snA1S/c6e6qr00V4vUxruBRTnV+gbNzeb/PAj3Ej2CfYm/aKwK45n
-	 5vtBcYj5Q+ySjP2GkAVBz264JqHGfUbW4ZALgj+Sl85bten71VVVPeRtHFf8WdGjPY
-	 oq2mFIRf9xRm3WdijVp2xkwnJnCjZYcE8G2x7YLzgAFj7Xs7poDQfEfON0Zc9buXnQ
-	 0nR7p0iSSPNJg==
-Date: Wed, 6 Dec 2023 20:56:46 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Maramaina Naresh <quic_mnaresh@quicinc.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Andy Gross <agross@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	chu.stanley@gmail.com, Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
-	Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: Re: [PATCH V2 1/3] ufs: core: Add CPU latency QoS support for ufs
- driver
-Message-ID: <20231206152646.GH12802@thinkpad>
-References: <20231204143101.64163-1-quic_mnaresh@quicinc.com>
- <20231204143101.64163-2-quic_mnaresh@quicinc.com>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Xtqg4kfY"
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89366DE
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 07:27:07 -0800 (PST)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1d0b0334ffcso27380555ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Dec 2023 07:27:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1701876426; x=1702481226; darn=vger.kernel.org;
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=rbKtFoUbBQcjF/yuEi7fiL3kcHTVhi8ZYEeN9EUkDd0=;
+        b=Xtqg4kfYUaLjZsag8QjJ31X501Bd/9XcbQfxUBzOons1BvT8zEFSOKCC5HVTIHQVsZ
+         AtV009NxzrE5r1LV0iHWuAAsB74A4xeYzr5xqma7SwpDb2tZc5f4eaZ3FxMOVAp7r6aD
+         7pkrTd6ztNLyWQMrdmknLAsSKr+lY1dNFr65o=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701876426; x=1702481226;
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rbKtFoUbBQcjF/yuEi7fiL3kcHTVhi8ZYEeN9EUkDd0=;
+        b=pvuL8pM8vS/Ba96pI+DKdvbNHNpM0Pms17U0ftYcPS9a0FF9xBs9ozv3zx/4yg6TV7
+         Vsso0zgZjvzzK/qKEJ8B5Bab7Kmnh37hKWiunI17oqEfdoUzgvzqm5KKNH36/OjLMH+F
+         AUrAuVsCoIa0tvS37kBNokE2JjsjYSreQQGaGA3HCc2I3V6RjNRebHRc0uwAVhpML9Cj
+         pu9TScen9rPGIxVr9FUFPm1KkMJ2po4NxGancshDiazw9kEsBnS3MyaOqLXJAfPZKFhO
+         cEsW05UdVOawztF1A3IFTF7+iatF54xXykk6rcT+Yt8HRvJEifTGD/SFFOw3NEntLrAS
+         +65w==
+X-Gm-Message-State: AOJu0Yxt08GPloI28OTSjovynbtht8SfwdE4xIf+Pr2lwseM7lsxfTIR
+	EWdODy28IgUVfFHAl209gBL+Ps1ob6yI09Dv6hGBSURTIOfE3jxSV3Iw0VmwE/b9vnUblblRZ3r
+	XMuHwivIavASs9vU3qr7tmljRG9D4kInM/wFsK/IFSFStTk1kLqxc6oC6uVdIpHdtFrNU0KT8AS
+	oaa9D8fIz9Jg==
+X-Google-Smtp-Source: AGHT+IGn6fd7l08FkyonZhBCFI00+nWS+OwPZ6pRBEckudOAnOWh0RnwzkC1jx/b9MSb4dTYj/1+Dg==
+X-Received: by 2002:a17:903:2785:b0:1d0:5532:8e1b with SMTP id jw5-20020a170903278500b001d055328e1bmr1032844plb.48.1701876426498;
+        Wed, 06 Dec 2023 07:27:06 -0800 (PST)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id w17-20020a170902e89100b001cfc2e0a82fsm12182553plg.26.2023.12.06.07.27.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Dec 2023 07:27:05 -0800 (PST)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 0/4] mpi3mr: Few Enhancements and minor fix
+Date: Wed,  6 Dec 2023 20:55:09 +0530
+Message-Id: <20231206152513.71253-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="000000000000e186ea060bd8fb39"
+
+--000000000000e186ea060bd8fb39
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231204143101.64163-2-quic_mnaresh@quicinc.com>
 
-On Mon, Dec 04, 2023 at 08:00:59PM +0530, Maramaina Naresh wrote:
-> Register ufs driver to CPU latency PM QoS framework can improves
-> ufs device random io performance.
-> 
-> PM QoS initialization will insert new QoS request into the CPU
-> latency QoS list with the maximum latency PM_QOS_DEFAULT_VALUE
-> value.
-> 
-> UFS driver will vote for performance mode on scale up and power
-> save mode for scale down.
-> 
-> If clock scaling feature is not enabled then voting will be based
-> on clock on or off condition.
-> 
-> tiotest benchmark tool io performance results on sm8550 platform:
-> 
-> 1. Without PM QoS support
-> 	Type (Speed in)    | Average of 18 iterations
-> 	Random Write(IPOS) | 41065.13
-> 	Random Read(IPOS)  | 37101.3
-> 
-> 2. With PM QoS support
-> 	Type (Speed in)    | Average of 18 iterations
-> 	Random Write(IPOS) | 46784.9
-> 	Random Read(IPOS)  | 42943.4
-> (Improvement % with PM QoS = ~15%).
-> 
-> Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Maramaina Naresh <quic_mnaresh@quicinc.com>
-> ---
->  drivers/ufs/core/ufshcd-priv.h |  8 +++++
->  drivers/ufs/core/ufshcd.c      | 62 ++++++++++++++++++++++++++++++++++
->  include/ufs/ufshcd.h           | 16 +++++++++
->  3 files changed, 86 insertions(+)
-> 
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-> index f42d99ce5bf1..536805f6c4e1 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -241,6 +241,14 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
->  		hba->vops->config_scaling_param(hba, p, data);
->  }
->  
-> +static inline u32 ufshcd_vops_config_qos_vote(struct ufs_hba *hba)
-> +{
-> +	if (hba->vops && hba->vops->config_qos_vote)
-> +		return hba->vops->config_qos_vote(hba);
+Few Enhancements and minor fix of mpi3mr driver.
 
-Please remove this callback as Bart noted.
+Ranjan Kumar (4):
+  mpi3mr: Improve Shutdown times when firmware has faulted
+  mpi3mr: Support PCIe Error Recovery callback handlers
+  mpi3mr: Reset stop_bsgs flag post controller reset failure
+  mpi3mr: Update driver version to 8.6.1.0.0
 
-> +
-> +	return UFSHCD_QOS_DEFAULT_VOTE;
-> +}
-> +
->  static inline void ufshcd_vops_reinit_notify(struct ufs_hba *hba)
->  {
->  	if (hba->vops && hba->vops->reinit_notify)
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index ae9936fc6ffb..13370febd2b5 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -1001,6 +1001,20 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
->  	return ufshcd_get_local_unipro_ver(hba) < UFS_UNIPRO_VER_1_6;
->  }
->  
-> +/**
-> + * ufshcd_pm_qos_perf - vote for PM QoS performance or power save mode
-
-ufshcd_pm_qos_update() - Update PM QoS request
-
-> + * @hba: per adapter instance
-> + * @on: If True, vote for perf PM QoS mode otherwise power save mode
-> + */
-> +static void ufshcd_pm_qos_perf(struct ufs_hba *hba, bool on)
-> +{
-> +	if (!hba->pm_qos_init)
-> +		return;
-> +
-> +	cpu_latency_qos_update_request(&hba->pm_qos_req, on ? hba->qos_vote
-> +							: PM_QOS_DEFAULT_VALUE);
-> +}
-> +
->  /**
->   * ufshcd_set_clk_freq - set UFS controller clock frequencies
->   * @hba: per adapter instance
-> @@ -1153,6 +1167,10 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
->  	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
->  			(scale_up ? "up" : "down"),
->  			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
-> +
-> +	if (!ret)
-> +		ufshcd_pm_qos_perf(hba, scale_up);
-
-Can't you just move this before trace_ufshcd_profile_clk_scaling()? This also
-avoids checking for !ret.
-
-> +
->  	return ret;
->  }
->  
-> @@ -9204,6 +9222,8 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
->  	if (ret)
->  		return ret;
->  
-> +	if (!ufshcd_is_clkscaling_supported(hba))
-> +		ufshcd_pm_qos_perf(hba, on);
->  out:
->  	if (ret) {
->  		list_for_each_entry(clki, head, list) {
-> @@ -9296,6 +9316,45 @@ static int ufshcd_init_clocks(struct ufs_hba *hba)
->  	return ret;
->  }
->  
-> +/**
-> + * ufshcd_pm_qos_init - initialize PM QoS instance
-
-"Initialize PM QoS request"
-
-> + * @hba: per adapter instance
-> + */
-> +static void ufshcd_pm_qos_init(struct ufs_hba *hba)
-> +{
-> +	if (!(hba->caps & UFSHCD_CAP_PM_QOS))
-> +		return;
-> +
-> +	/*
-> +	 * called to configure PM QoS vote value for UFS host,
-> +	 * expecting qos vote return value from caller else
-> +	 * default vote value will be return.
-> +	 */
-> +	hba->qos_vote = ufshcd_vops_config_qos_vote(hba);
-
-No need of this variable too if you get rid of the callback.
-
-> +	cpu_latency_qos_add_request(&hba->pm_qos_req,
-> +					PM_QOS_DEFAULT_VALUE);
-> +
-> +	if (cpu_latency_qos_request_active(&hba->pm_qos_req))
-> +		hba->pm_qos_init = true;
-
-Why do you need this flag?
-
-> +
-> +	dev_dbg(hba->dev, "%s: QoS %s, qos_vote: %u\n", __func__,
-> +		hba->pm_qos_init ? "initialized" : "uninitialized",
-> +		hba->qos_vote);
-> +}
-> +
-> +/**
-> + * ufshcd_pm_qos_exit - remove instance from PM QoS
-> + * @hba: per adapter instance
-> + */
-> +static void ufshcd_pm_qos_exit(struct ufs_hba *hba)
-> +{
-> +	if (!hba->pm_qos_init)
-> +		return;
-> +
-> +	cpu_latency_qos_remove_request(&hba->pm_qos_req);
-> +	hba->pm_qos_init = false;
-> +}
-> +
-
-[...]
-
->  /**
->   * struct ufs_hba - per adapter private structure
->   * @mmio_base: UFSHCI base register address
-> @@ -912,6 +923,8 @@ enum ufshcd_mcq_opr {
->   * @mcq_base: Multi circular queue registers base address
->   * @uhq: array of supported hardware queues
->   * @dev_cmd_queue: Queue for issuing device management commands
-> + * @pm_qos_req: PM QoS request handle
-> + * @pm_qos_init: flag to check if pm qos init completed
->   */
->  struct ufs_hba {
->  	void __iomem *mmio_base;
-> @@ -1076,6 +1089,9 @@ struct ufs_hba {
->  	struct ufs_hw_queue *uhq;
->  	struct ufs_hw_queue *dev_cmd_queue;
->  	struct ufshcd_mcq_opr_info_t mcq_opr[OPR_MAX];
-> +	struct pm_qos_request pm_qos_req;
-> +	bool pm_qos_init;
-> +	u32 qos_vote;
-
-Order doesn't match Kdoc.
-
-- Mani
+ drivers/scsi/mpi3mr/mpi3mr.h           |  36 ++-
+ drivers/scsi/mpi3mr/mpi3mr_app.c       |  64 +++--
+ drivers/scsi/mpi3mr/mpi3mr_fw.c        |  67 +++--
+ drivers/scsi/mpi3mr/mpi3mr_os.c        | 330 +++++++++++++++++++++----
+ drivers/scsi/mpi3mr/mpi3mr_transport.c |  39 ++-
+ 5 files changed, 440 insertions(+), 96 deletions(-)
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.31.1
+
+
+--000000000000e186ea060bd8fb39
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+GK2Ee6ez7fr/FL1RWbOPVHJR+deNIorOjW7U5HVwnRYhM1OR4mAkrkqcN+3kwae0KmVO3SDKFd7h
+Ok4L2e1ixyaRTo379Ur3iVTnagglDOliayMGRITBPe0CAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU8WuEiYXvpeCaubgLCCFoyRBc
+8QwwDQYJKoZIhvcNAQELBQADggEBAA5th3yz1fvJCBmK21x68IdDNFC0gmynT76I3fOgslLHc7ey
+lC9VXLb+vJ863blS/WxEOwf0fvc0ks7qYWl8xisInHu5AX9glaooGhLImlzE0l9rDf0tcq2kkgc4
+CXL9UGDEoqdxfRj3j9xn9fm9gpTBWSck6ufc/8RV1TLVjcZvrYkMqQwoVulGkr+HCnzaEFxBRmO/
+nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
+0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGaC2enhxRI+qnk0cXYIR6yotgSy8+MJ
+B+odEjgSquFvMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIw
+NjE1MjcwNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQAxRxdZ1V5qkcDV38XNNc3jraPepf8m5ONDNl5gT00htVw19p0i
+UoGSp5G3tHVQh5Fr/NFGPaBe2UJHkYpX2lqNmNS+qBYxqTrQYq1ueJlzcHsTDzaM0DNsx6+LxSY2
+YgyP2b6n/ImimljUzfqI10WJIGaq5hV+Qca6CS51JJwGPUHHah2aUduD7dscxPAI7vkU74T+Bi7t
+honusTQZq9MBQnzqnAP5Hy3z7Cgr42fP9smHYDBeslhMMKVqNe9Cjfu52QRUsv6/aC2puaR2eE3C
+08uqXFml7RRxTwfFCHuXmOWLMV2e8/yN5XFiSI517Hwr598UneLnXEdepNjousH0
+--000000000000e186ea060bd8fb39--
