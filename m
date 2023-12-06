@@ -1,100 +1,214 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J7kxsOcJ"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75E58139
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 10:36:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1701887806;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KvnpSQri5arb6xwcBFDZQI0HnLnuARbU/naBERSZQac=;
-	b=J7kxsOcJmbw8hvlEOmPPESWUvXkIl0cnei4GDFfz449w4msCzJREp+IAYyYNKZKkN1DF6R
-	wOZwQcQyNr6T+e7UJ0t4nEZJPyyaJJ9+oxK7UVYpDijGJCeVI19LkWFeL2k9bm6iAIuIy5
-	vqwpNcwss0iXszEBD19i+nhczW9MM0g=
-Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com
- [209.85.161.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-389-Nnl6CuEJPPyEIRK-6uIxdg-1; Wed, 06 Dec 2023 13:36:45 -0500
-X-MC-Unique: Nnl6CuEJPPyEIRK-6uIxdg-1
-Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-58dad14ab40so55601eaf.1
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Dec 2023 10:36:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701887804; x=1702492604;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KvnpSQri5arb6xwcBFDZQI0HnLnuARbU/naBERSZQac=;
-        b=wfQPXPqjn3YxQJeFugmTH4mtYNw4IytZIsDxR+f0wfYEQH7gVsR4KdN+DSPvOEe+PZ
-         7aK2QxP2iOOWp7NxShQ8AHghw09Oie5esZOOtQLuXeNkRzmZpMHY2jGeZxzpywig43QG
-         2SEqMvWlJeKPhYy+JjMBUD6xQX50Vk4mZQ+F+9551V76KHcvHQfWxNHR6q7Lbmhmyzyy
-         R1dWtHHfXNg7Fy/T//X7XjoRwAsmwpQ8R5EMyoP1CQunI51bRqWT51ZC8d8x0qNTf+y0
-         LiHZKF1U/RATEHZ9EIsPYpoEyTKq/hwfJx9PihMVnavSgTDxlgxcBVkBjpRPKGHcbuK9
-         zd9g==
-X-Gm-Message-State: AOJu0Yw2nTVWweMa7p7Ym0zp54bdybpUc6Y9WbvjdRa1hG0083l8P+Oc
-	1rkmNeOG7mByisw35eoazC8Ebt2EpJkU5QzhsGdV2CX3qAWeqEPK9HiDAJQp10lSgwNiNhgSmqo
-	8/GjkyrAnP289m9KrFpCfmA==
-X-Received: by 2002:a05:6358:7206:b0:16d:fe33:4c63 with SMTP id h6-20020a056358720600b0016dfe334c63mr1635755rwa.24.1701887804315;
-        Wed, 06 Dec 2023 10:36:44 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEVXVpDI2N4zq6TmLP+46EyCJXTztwSBXqvdJFhrfnSKXRuRptwKjhGCPJ0XHZcWj52RCTA0Q==
-X-Received: by 2002:a05:6358:7206:b0:16d:fe33:4c63 with SMTP id h6-20020a056358720600b0016dfe334c63mr1635747rwa.24.1701887803917;
-        Wed, 06 Dec 2023 10:36:43 -0800 (PST)
-Received: from fedora ([2600:1700:1ff0:d0e0::47])
-        by smtp.gmail.com with ESMTPSA id g7-20020ac84807000000b004258264d166sm149989qtq.60.2023.12.06.10.36.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Dec 2023 10:36:43 -0800 (PST)
-Date: Wed, 6 Dec 2023 12:36:41 -0600
-From: Andrew Halaney <ahalaney@redhat.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: martin.petersen@oracle.com, jejb@linux.ibm.com, andersson@kernel.org, 
-	konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, quic_cang@quicinc.com
-Subject: Re: [PATCH 05/13] scsi: ufs: qcom: Remove the warning message when
- core_reset is not available
-Message-ID: <ru2zdpls5tx2wjt3oknqndikuc4we7d3haeawzrdyl7cbsycti@clx55b27nzvn>
-References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
- <20231201151417.65500-6-manivannan.sadhasivam@linaro.org>
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="hkghBGrE"
+Received: from rcdn-iport-2.cisco.com (rcdn-iport-2.cisco.com [173.37.86.73])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D929384;
+	Wed,  6 Dec 2023 10:46:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=cisco.com; i=@cisco.com; l=7392; q=dns/txt; s=iport;
+  t=1701888387; x=1703097987;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=eDCCkvHZ8LVeAsnMmsBFPJKUnDUG+4vSqVBF8RB2XqQ=;
+  b=hkghBGrExYHzUbYYIx+M5stwDed0q7tWqyAtsysDEwK3Tzm7CVloHCzZ
+   ITe69FGnUCai6nyDNhsj+bFiVb7qopXoc583UGUHmO1ye7+SJUlB8wuNA
+   GCWCW2ArC0GEa05/1ZCy7QLu4T+3MWChuk/93V36QrCQueQLbNGP+1mwl
+   8=;
+X-CSE-ConnectionGUID: l31+GwCOS3GHpCxeNOcfnw==
+X-CSE-MsgGUID: FthEu0MRTR6pFYEq9Cee9Q==
+X-IronPort-AV: E=Sophos;i="6.04,256,1695686400"; 
+   d="scan'208";a="155948255"
+Received: from alln-core-4.cisco.com ([173.36.13.137])
+  by rcdn-iport-2.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2023 18:46:26 +0000
+Received: from localhost.cisco.com ([10.193.101.253])
+	(authenticated bits=0)
+	by alln-core-4.cisco.com (8.15.2/8.15.2) with ESMTPSA id 3B6IkHCu010013
+	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+	Wed, 6 Dec 2023 18:46:25 GMT
+From: Karan Tilak Kumar <kartilak@cisco.com>
+To: sebaddel@cisco.com
+Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
+        satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH v5 00/13] Introduce support for multiqueue (MQ) in fnic 
+Date: Wed,  6 Dec 2023 10:46:02 -0800
+Message-Id: <20231206184615.878755-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231201151417.65500-6-manivannan.sadhasivam@linaro.org>
+Content-Transfer-Encoding: 8bit
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
+X-Outbound-Node: alln-core-4.cisco.com
 
-On Fri, Dec 01, 2023 at 08:44:09PM +0530, Manivannan Sadhasivam wrote:
-> core_reset is optional, so there is no need to warn the user if it is not
-> available (that too not while doing host reset each time).
+Hi Martin, reviewers,
 
-What's the bit in the parenthesis mean here? I'm having a hard time
-following. Otherwise, this looks good to me.
+This cover letter describes the feature: add support for multiqueue (MQ)
+to fnic driver.
 
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index dc93b1c5ca74..d474de0739e4 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -296,10 +296,8 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->  	bool reenable_intr;
->  
-> -	if (!host->core_reset) {
-> -		dev_warn(hba->dev, "%s: reset control not set\n", __func__);
-> +	if (!host->core_reset)
->  		return 0;
-> -	}
->  
->  	reenable_intr = hba->is_irq_enabled;
->  	disable_irq(hba->irq);
-> -- 
-> 2.25.1
-> 
-> 
+Background: The Virtual Interface Card (VIC) firmware exposes several
+queues that can be configured for sending IOs and receiving IO
+responses. Unified Computing System Manager (UCSM) and Intersight
+Manager (IMM) allows users to configure the number of queues to be
+used for IOs.
+
+The number of IO queues to be used is stored in a configuration file
+by the VIC firmware. The fNIC driver reads the configuration file and sets
+the number of queues to be used. Previously, the driver was hard-coded
+to use only one queue. With this set of changes, the fNIC driver will
+configure itself to use multiple queues. This feature takes advantage of
+the block multiqueue layer to parallelize IOs being sent out of the VIC
+card.
+
+Here's a brief description of some of the salient patches:
+
+- vnic_scsi.h needs to be in sync with VIC firmware to be able to read
+the number of queues from the firmware config file. A patch has been
+created for this.
+- In an environment with many fnics (like we see in our customer
+environments), it is hard to distinguish which fnic is printing logs.
+Therefore, an fnic number has been included in the logs.
+- read the number of queues from the firmware config file.
+- include definitions in fnic.h to support multiqueue.
+- modify the interrupt service routines (ISRs) to read from the
+correct registers. The numbers that are used here come from discussions
+with the VIC firmware team.
+- track IO statistics for different queues.
+- remove usage of host_lock, and only use fnic_lock in the fnic driver.
+- use a hardware queue based spinlock to protect io_req.
+- replace the hard-coded zeroth queue with a hardware queue number.
+This presents a bulk of the changes.
+- modify the definition of fnic_queuecommand to accept multiqueue tags.
+- improve log messages, and indicate fnic number and multiqueue tags for
+effective debugging.
+
+Even though the patches have been made into a series, some patches are
+heavier than others.
+But, every effort has been made to keep the purpose of each patch as
+a single-purpose, and to compile cleanly.
+
+This patchset has been tested as a whole. Therefore, the tested-by fields
+have been added only to two patches
+in the set. All the individual patches compile cleanly. However,
+I've refrained from adding tested-by to
+most of the patches, so as to not mislead the reviewer/reader.
+
+A brief note on the unit tests:
+
+1. Increase number of queues to 64. Load driver. Run IOs via Medusa.
+12+ hour run successful.
+2. Configure multipathing, and run link flaps on single link.
+IOs drop briefly, but pick up as expected.
+3. Configure multipathing, and run link flaps on two links, with a
+30 second delay in between. IOs drop briefly, but pick up as expected.
+
+Repeat the above tests with 1 queue and 32 queues.
+All tests were successful.
+
+Please consider this patch series for the next merge window.
+
+Changes between v1 and v2:
+        Suppress a warning raised by a kernel test bot,
+        Incorporate the following review comments from Bart:
+        Remove outdated comment,
+        Remove unnecessary out of range tag checks,
+        Remove unnecessary local variable,
+        Modify function name.
+
+Changes between v2 and v3:
+    Incorporate review comment from Hannes:
+        Modify FNIC_MAIN_DBG to prepend fnic number.
+    Modify FNIC_MAIN_DBG definition to prepend function name
+    and line number.
+    Modify FNIC_FCS_DBG definition to prepend function name
+    and line number.
+    Replace FNIC_MAIN_DBG with FNIC_FCS_DBG in fnic_fcs.c
+    Use fnic_num as an argument to FNIC_MAIN_DBG and FNIC_FCS_DBG.
+        Host number is still used as an argument to
+        FNIC_MAIN_DBG and FNIC_FCS_DBG since it in turn
+        uses shost_printk.
+    Replace cpy_wq_base with copy_wq_base.
+    Incorporate the following review comments from Hannes:
+        Replace cpy_wq_base with copy_wq_base.
+        Remove C99 style comment.
+        Extend review comments of FNIC_MAIN_DBG and FNIC_SCSI_DBG
+        to FNIC_ISR_DBG:
+                Use fnic_num as an argument to FNIC_ISR_DBG.
+                Modify definition of FNIC_ISR_DBG.
+                Host number is still used as an argument to
+                FNIC_ISR_DBG since it in turn uses
+                shost_printk.
+                Removed reviewed by tag from Hannes due to
+                additional modifications.
+    Squash the following commits into one:
+    scsi: fnic: Remove usage of host_lock
+    scsi: fnic: Use fnic_lock to protect fnic structures
+    in queuecommand
+    Incorporate review comment from Hannes:
+        Replace cpy_wq_base with copy_wq_base.
+    Incorporate review comment from John Garry:
+         Replace code in fnic_mq_map_queues_cpus
+         with blk_mq_pci_map_queues.
+    Replace shost_printk logs with FNIC_MAIN_DBG.
+    Incorporate the following review comments from Hannes:
+        Replace cpy_wq_base with copy_wq_base.
+        Remove hwq as an argument to fnic_queuecommand_int.
+    Suppress warning from kernel test robot.
+    Replace new shost_printk comments with FNIC_SCSI_DBG.
+    Replace fnic_queuecommand_int with fnic_queuecommand.
+    Incorporate the following review comment from Hannes:
+        Use fnic_num as an argument to FNIC_SCSI_DBG.
+        Modify definition of FNIC_SCSI_DBG.
+                Host number is still an argument since
+        FNIC_SCSI_DBG in turn uses shost_printk.
+        Create a separate patch to increment driver version.
+        Increment driver version number to 1.7.0.0.
+
+Changes between v3 and v4:
+	Incorporate review comments from Martin and Hannes:
+		Undo the change to replace host number with fnic
+		number in debugfs since kernel stack uses host number.
+		Use ida_alloc to allocate ID for fnic number.
+
+Changes between v4 and v5:
+	Incorporate review comments from Martin:
+		Modify patch commits to include a "---" separator.
+
+Thanks and regards,
+Karan
+
+Karan Tilak Kumar (13):
+  scsi: fnic: Modify definitions to sync with VIC firmware
+  scsi: fnic: Add and use fnic number
+  scsi: fnic: Add and improve log messages
+  scsi: fnic: Rename wq_copy to hw_copy_wq
+  scsi: fnic: Get copy workqueue count and interrupt mode from config
+  scsi: fnic: Refactor and redefine fnic.h for multiqueue
+  scsi: fnic: Modify ISRs to support multiqueue(MQ)
+  scsi: fnic: Define stats to track multiqueue (MQ) IOs
+  scsi: fnic: Remove usage of host_lock
+  scsi: fnic: Add support for multiqueue (MQ) in fnic_main.c
+  scsi: fnic: Add support for multiqueue (MQ) in fnic driver
+  scsi: fnic: Improve logs and add support for multiqueue (MQ)
+  scsi: fnic: Increment driver version
+
+ drivers/scsi/fnic/fnic.h       |  68 ++-
+ drivers/scsi/fnic/fnic_fcs.c   |  63 +--
+ drivers/scsi/fnic/fnic_io.h    |   2 +
+ drivers/scsi/fnic/fnic_isr.c   | 168 +++++--
+ drivers/scsi/fnic/fnic_main.c  | 142 ++++--
+ drivers/scsi/fnic/fnic_res.c   |  48 +-
+ drivers/scsi/fnic/fnic_scsi.c  | 862 +++++++++++++++++++--------------
+ drivers/scsi/fnic/fnic_stats.h |   3 +
+ drivers/scsi/fnic/fnic_trace.c |  11 +
+ drivers/scsi/fnic/vnic_dev.c   |   4 +
+ drivers/scsi/fnic/vnic_scsi.h  |  13 +-
+ 11 files changed, 860 insertions(+), 524 deletions(-)
+
+-- 
+2.31.1
 
