@@ -1,83 +1,91 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Yv96YNKZ";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="EGfzHvnh"
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.52])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F06AD5B;
-	Wed,  6 Dec 2023 09:08:19 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1701882490; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=ka3UDjPl2c7leKA6Ek0Azb5CTKqmCAuMBQgi1Ex9/1N/5JNDFidava6p59HdaxlmHU
-    bQH+RyjhXiWGU+L9nb05rEQtSxROhHn5mRuel7kDF79elLlplksswlrDe/qns2MZxYp2
-    lv8OtPekwcoaM419Y8HF8GWlw/F6E/S4ugsF+OZDvtEj8yTp+uHrudoDGcRC7oW7N5Mg
-    2iHVDsOfmQ8QQvYy339gyadvWRSqk3d30+CA9lqm+4mPX4qHZsgo50mqZEeIXxokS7UT
-    zJbaa8lOVgSgPqiaFwebHJ5rSmUDYkJN6LZPGrDxofWIPQzd7if4Dnl7qzzOGDg/JZMT
-    27+Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1701882490;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=MpCfGsUuHynGtqPq0PTKTyAWmIN/QIMrIH+zuOletHM=;
-    b=fCvsVGQLYbTK5n7Rdnr4gNSVfkeTPjlzU+avZcF9h52iGsPeRjV31HFCa3WUHLRV2O
-    zr4PBE5xCHCR2ueMkfJUj0I3/+FKiCs4ZyiAz6FkWSKN9nGFl8fdH1oNXBL3oDXYbXWR
-    GIP3bLXvGslJCK9w1zACeh37Zh+0ZkwS0XEzy+jtbbQXS1k4hUBvUvaviWjOZky4mWVw
-    JmzS4njW2uh0gpxCzezUBqC12oUPEPBF5kbSBAGosgFYzpCuaNykFI7lJRd3VgL+ybfr
-    BUkBPxxVQ3ScUhtsKdU+Ab3747d/ZlhYeVf+iTZLpObScKPpA4UaeZNHuaAGTdKS0EXB
-    qTDg==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1701882490;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=MpCfGsUuHynGtqPq0PTKTyAWmIN/QIMrIH+zuOletHM=;
-    b=Yv96YNKZYpT5kf/OqXPNnhAzz8CpJgqSGrQ34Uu3zYgzNDsDiXS+ow+jTSEFqUPLkP
-    KZFByeyMugWPTCBpUbOOmL1DmhTm6V/XPaND6OTkaFH+saZiEemrfy4P5FymTbKS+rGv
-    Q7lk0xCsoomNbqbLZosDRKeGNs/EPlXEYXMoSCLT6oAyfet6i379XFce4ClVje3URmTE
-    /QTk6L6kwvjc3CJRd55oAWEuuqaZSF53MWJ/gHqjvhnbRyJIdpvM8UTvEUkUY6LBmiCn
-    Sh3SLlAm86LLqfFwfbpuBMfcHXJcjCiQwtw8MFNdr4Ho32wRT/bkcJtLomdc5kS/OgOA
-    iqQA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1701882490;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=MpCfGsUuHynGtqPq0PTKTyAWmIN/QIMrIH+zuOletHM=;
-    b=EGfzHvnhuU6Vi+rHgr0aFckImFsbSVeLMDCVrcbcN4NDC7k8/TkxeP6mg0L02Ng8/r
-    wA5jjEJj06QIne6kEgCw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
-Received: from [10.176.235.119]
-    by smtp.strato.de (RZmta 49.10.0 AUTH)
-    with ESMTPSA id z4c2a6zB6H895t8
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Wed, 6 Dec 2023 18:08:09 +0100 (CET)
-Message-ID: <15dd7daad07eb465f9fcd39ad44bcc40b4e19b77.camel@iokpp.de>
-Subject: Re: [PATCH v3 0/3] Add UFS RTC support
-From: Bean Huo <beanhuo@iokpp.de>
-To: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com, 
-	jejb@linux.ibm.com, martin.petersen@oracle.com, mani@kernel.org, 
-	quic_cang@quicinc.com, quic_asutoshd@quicinc.com, beanhuo@micron.com, 
-	thomas@t-8ch.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- mikebi@micron.com,  lporzio@micron.com
-Date: Wed, 06 Dec 2023 18:08:08 +0100
-In-Reply-To: <20231202160227.766529-1-beanhuo@iokpp.de>
-References: <20231202160227.766529-1-beanhuo@iokpp.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="BH8TRkxS"
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84481D46
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 09:53:21 -0800 (PST)
+Received: from cwcc.thunk.org (pool-173-48-122-214.bstnma.fios.verizon.net [173.48.122.214])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 3B6Hodj2022646
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 6 Dec 2023 12:50:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+	t=1701885052; bh=VZDVHdtsTza1iBjsN4e9taxM8QQIzumJOYNTH51fhro=;
+	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+	b=BH8TRkxS2KVaitLmv0fUh5MfTnRi8kxhm2QxRnobVHqRnCkm5tdQJ4YU7KzmgN2o9
+	 OrT5ijrdbqD+8Tpl+UWv5WlzoZ4FfBRwcoZtXGHipfp3BKDuVw8Wb3OV8JHdDL++WR
+	 fchowN0SphtUdvT2S+alJWDJDljYoM4HhCP8Oe9wGQPXflEuR9UupnRUlKWI1Qe2kg
+	 kWiBMGCDi9IQPUcNW0bRqxHb1k7h5ks+vYGOrOHkVBn6CgZz1YTgrm04q9GDpzs5AE
+	 AW77xm7xSTCpwyFB4QBf7egNa0Hpu3J4Iea+sXKNE2nV9yZ8sAlE3vS7vnXmXBUfDj
+	 Vli7wjfFyI1og==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+	id F04EC15C057B; Wed,  6 Dec 2023 12:50:38 -0500 (EST)
+Date: Wed, 6 Dec 2023 12:50:38 -0500
+From: "Theodore Ts'o" <tytso@mit.edu>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, axboe@kernel.dk, roger.pau@citrix.com,
+        colyli@suse.de, kent.overstreet@gmail.com, joern@lazybastard.org,
+        miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
+        sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
+        gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
+        dsterba@suse.com, nico@fluxnic.net, xiang@kernel.org, chao@kernel.org,
+        adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
+        konishi.ryusuke@gmail.com, willy@infradead.org,
+        akpm@linux-foundation.org, hare@suse.de, p.raghav@samsung.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
+        linux-nilfs@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
+        yangerkun@huawei.com
+Subject: Re: [PATCH -next RFC 01/14] block: add some bdev apis
+Message-ID: <20231206175038.GJ509422@mit.edu>
+References: <20231205123728.1866699-1-yukuai1@huaweicloud.com>
+ <20231205123728.1866699-2-yukuai1@huaweicloud.com>
+ <ZXARKD0OmjLrvHmU@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZXARKD0OmjLrvHmU@infradead.org>
 
-Hi Bart, Avri and all UFS developers,=20
+On Tue, Dec 05, 2023 at 10:14:00PM -0800, Christoph Hellwig wrote:
+> > +/*
+> > + * The del_gendisk() function uninitializes the disk-specific data
+> > + * structures, including the bdi structure, without telling anyone
+> > + * else.  Once this happens, any attempt to call mark_buffer_dirty()
+> > + * (for example, by ext4_commit_super), will cause a kernel OOPS.
+> > + * This is a kludge to prevent these oops until we can put in a proper
+> > + * hook in del_gendisk() to inform the VFS and file system layers.
+> > + */
+> > +int bdev_ejected(struct block_device *bdev)
+> > +{
+> > +	struct backing_dev_info *bdi = inode_to_bdi(bdev->bd_inode);
+> > +
+> > +	return bdi->dev == NULL;
+> > +}
+> > +EXPORT_SYMBOL_GPL(bdev_ejected);
+> 
+> And this code in ext4 should just go away entirely.  The bdi should
+> always be valid for a live bdev for years.
 
-do you have any new comments and change I should?
+This was added because pulling a mounted a USB thumb drive (or a HDD
+drops off the SATA bus) while the file system is mounted and actively
+in use, would result in a kernel OOPS.  If that's no longer true,
+that's great, but it would be good to test to make sure this is the
+case....
 
-Kind regards,
-Bean
+If we really want to remove it, I'd suggest doing this as a separate
+commit, so that after we see syzbot reports, or users complaining
+about kernel crashes, we can revert the removal if necessary.
 
+Cheers,
+
+					- Ted
