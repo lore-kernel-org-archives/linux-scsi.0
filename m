@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P2Ztz4Y2"
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A02751728
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2023 14:28:33 -0800 (PST)
-Received: by mail-pj1-x1032.google.com with SMTP id 98e67ed59e1d1-286bbaa517eso360098a91.0
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Dec 2023 14:28:33 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mHnmMq/e"
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47EAE172C
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2023 14:28:35 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id 98e67ed59e1d1-286e9ce9feaso369473a91.1
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Dec 2023 14:28:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701988113; x=1702592913; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1701988114; x=1702592914; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2dw/OzqGwZkjysrGeEhCwtSMfNOH+tyZrFZAsyHYBFQ=;
-        b=P2Ztz4Y2vKrueSjVfTwQMxbj70z1TVA4orsLCV8dA4/9RNJpqzOU0/Z5/fFjHmSB89
-         wpqBeLaRrfJJF2PAXo4rkALETnNefuMqG8rgJyNV8NYKqQTnrd2CPk+MCMZsPjfCvm2o
-         3nb9jBPlA9vi0yK8GxElvVXfhU+YsdUO9Z5/EDibeg3i1n+N+BqeHPhzuDFXSkG0JSme
-         zQ1viz08FatIQC7vcbiRVlFXg1WP0EjRYQb2jV3T4lO1Oaj66ZfP1wXfWM3nioxsQyF4
-         xp13IqO6EzpnMFrbmoUUQx3pCyUq2ePSivgAKqGNE19Vba5w4IcITC8p5GUBsEUMdxGT
-         7Puw==
+        bh=racli9HkpvZjyr/8X6g1Lv7V9dartdnruS6J/RJulU8=;
+        b=mHnmMq/eSjf98/GGmg7yeqRm+fUhbGzCoIQl8ZfIbJDBWQZRFCkLOGzEQNa+SacShX
+         +ejHxWoW33JOIZgNtfEaI060bpqVGV5O94+zTtlPvLGhZ1ulj12tOgFiXycwglMq2GO6
+         yPDBnSw/xLgZ1Ouv0a2xf0qygDkfL9rwjJ/Jp7IDuv9ln7q22KHxl5op/1fXnEWQAwTD
+         En4zPavXMMsxtzC//Du9yNeZTbfaoIeCPHkkebuLx8lX5ixc57acFqKxpqh7kzC80SXx
+         ZWMcuxe0jdwBX0V28Lj6CkEmbuqtYs/JhMbKjvlqutJSbswWAiqSdAcnXQgilaMJoAXx
+         quLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701988113; x=1702592913;
+        d=1e100.net; s=20230601; t=1701988114; x=1702592914;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2dw/OzqGwZkjysrGeEhCwtSMfNOH+tyZrFZAsyHYBFQ=;
-        b=AaOGi6uJ3azYVGirgarh210htJbMFLALQ7L0CuFE3uz5oQFJP5jywspWRBMfKPcyHO
-         wgc/YqOdUSmwOaPSMQycEmh7/HdTqpPAzy5bQGXRBMgnyIW5Z5PyjP44D6v8t0kgv9ZQ
-         B9q2PtMuOIRUsfUJyjBevoDv3xMQmvhR46+9O2rKmFovZ6BBmN5DJdQo2d0/Y68+kFAG
-         GxWZdwJETJrujQi1hbIkITuuH+dmnsHa+Z79/nvmGxcAo5lFuN4hUKRc4L0a6zmHQRHh
-         Sl74VIdo2vQAoh9BHyc4zej2sDxL86SUTbEIZeqhCqHhjIJk6Eo11FQirzZJSzv+ut7K
-         Vjbg==
-X-Gm-Message-State: AOJu0YwjnRF9q+BWcVmw456MpOWreEdwQdwePPAZEtgg1Ayw2Pww+Jy6
-	0C/4iVTtk7unNwzVCywDUJI5qtj9GZd/+A==
-X-Google-Smtp-Source: AGHT+IGnAym9tEcXYJ4RIitEnLMCwfd0N7tddx0qh3j7d1Jb/eOGypUhRdfS+pS+UYqxjYDWnFSxrg==
-X-Received: by 2002:a17:90b:1d8e:b0:286:5987:f74c with SMTP id pf14-20020a17090b1d8e00b002865987f74cmr6392278pjb.4.1701988112873;
-        Thu, 07 Dec 2023 14:28:32 -0800 (PST)
+        bh=racli9HkpvZjyr/8X6g1Lv7V9dartdnruS6J/RJulU8=;
+        b=ml8HT1mLWasEH4o0WJHmYxP+7E1cyRlFrrnQbCjrELD66aMj/3jhcJEmWP0sXux0D1
+         C00vp+QgNaSm2tYOKVFrsaM2N6dULPjVsRivGxLykJSuf+OPRASdSHe/3aXf5HjLaih/
+         vyttd5KQuR/qe6SXp+R52orEBDDuEUt1X9MXhqgCBbZWlfkSyncU/58Ivawe9L4DQDXO
+         AbVxLuvskGKNWtgCW3HlUPskHrxaf3crwNo+d7enz93U5EGtCn/eyGVMCj4laJUEZzjH
+         B22+1bREVCjyKyW9EAZCKP5ASq0HnetS6V9cI87q25vJWsbw9KXCXL1Q5p6rEGv9+8VF
+         GUmg==
+X-Gm-Message-State: AOJu0YyzaZmFIZGt+EdPCCZ5lmqHVVrLeO8gQIodKxJQPIujbaEYtqA9
+	0ebEVk0Tf6uhi8Vkuurwq3DOD9pBuhEyrA==
+X-Google-Smtp-Source: AGHT+IEFsshXm8kLOu8nljplDyfno0SzgrQ7GMogun1Xaumlm3yTDnKyOEKuVue1Ej6/RY+k2TFaUw==
+X-Received: by 2002:a17:90a:5908:b0:286:515e:b8e6 with SMTP id k8-20020a17090a590800b00286515eb8e6mr6402927pji.1.1701988114554;
+        Thu, 07 Dec 2023 14:28:34 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id j18-20020a170902c3d200b001cc3a6813f8sm312417plj.154.2023.12.07.14.28.31
+        by smtp.gmail.com with ESMTPSA id j18-20020a170902c3d200b001cc3a6813f8sm312417plj.154.2023.12.07.14.28.33
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 07 Dec 2023 14:28:32 -0800 (PST)
+        Thu, 07 Dec 2023 14:28:34 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 3/4] lpfc: Move determination of vmid_flag after VMID reinitialization completes
-Date: Thu,  7 Dec 2023 14:40:38 -0800
-Message-Id: <20231207224039.35466-4-justintee8345@gmail.com>
+Subject: [PATCH 4/4] lpfc: Update lpfc version to 14.2.0.17
+Date: Thu,  7 Dec 2023 14:40:39 -0800
+Message-Id: <20231207224039.35466-5-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20231207224039.35466-1-justintee8345@gmail.com>
 References: <20231207224039.35466-1-justintee8345@gmail.com>
@@ -57,52 +57,26 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-If priority tagging is set in the service parameters of a FLOGI cmpl, then
-we update the vmid_flag.  In the current logic, if a follow up FLOGI cmpl
-updates its service parameters such that priority tagging is no longer set,
-then the vmid_flag ends up keeping stale data.
-
-Fix by ensuring we clear the vmid_flag member during lpfc_reinit_vmid, and
-check the priority tagging service parameter after reinitialization of the
-vmid data structures.
+Update lpfc version to 14.2.0.17
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c  | 6 +++---
- drivers/scsi/lpfc/lpfc_vmid.c | 1 +
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_version.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 3b7ed8bca01a..4d723200690a 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1130,12 +1130,12 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			 vport->port_state, vport->fc_flag,
- 			 sp->cmn.priority_tagging, kref_read(&ndlp->kref));
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index b7d39e2f19fc..aba1c1cee8c4 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -20,7 +20,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
  
--	if (sp->cmn.priority_tagging)
--		vport->phba->pport->vmid_flag |= (LPFC_VMID_ISSUE_QFPA |
--						  LPFC_VMID_TYPE_PRIO);
- 	/* reinitialize the VMID datastructure before returning */
- 	if (lpfc_is_vmid_enabled(phba))
- 		lpfc_reinit_vmid(vport);
-+	if (sp->cmn.priority_tagging)
-+		vport->phba->pport->vmid_flag |= (LPFC_VMID_ISSUE_QFPA |
-+						  LPFC_VMID_TYPE_PRIO);
+-#define LPFC_DRIVER_VERSION "14.2.0.16"
++#define LPFC_DRIVER_VERSION "14.2.0.17"
+ #define LPFC_DRIVER_NAME		"lpfc"
  
- 	/*
- 	 * Address a timing race with dev_loss.  If dev_loss is active on
-diff --git a/drivers/scsi/lpfc/lpfc_vmid.c b/drivers/scsi/lpfc/lpfc_vmid.c
-index cf8ba840d0ea..773e02ae20c3 100644
---- a/drivers/scsi/lpfc/lpfc_vmid.c
-+++ b/drivers/scsi/lpfc/lpfc_vmid.c
-@@ -321,5 +321,6 @@ lpfc_reinit_vmid(struct lpfc_vport *vport)
- 	if (!hash_empty(vport->hash_table))
- 		hash_for_each_safe(vport->hash_table, bucket, tmp, cur, hnode)
- 			hash_del(&cur->hnode);
-+	vport->vmid_flag = 0;
- 	write_unlock(&vport->vmid_lock);
- }
+ /* Used for SLI 2/3 */
 -- 
 2.38.0
 
