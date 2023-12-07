@@ -1,157 +1,109 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79DF1D72;
-	Wed,  6 Dec 2023 18:45:20 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SlzCJ2k7mz4f3kKx;
-	Thu,  7 Dec 2023 10:45:16 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 697281A0E26;
-	Thu,  7 Dec 2023 10:45:17 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgCnqxG5MXFllH3QCw--.13955S3;
-	Thu, 07 Dec 2023 10:45:16 +0800 (CST)
-Subject: Re: [PATCH -next RFC 01/14] block: add some bdev apis
-To: Matthew Wilcox <willy@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
- kent.overstreet@gmail.com, joern@lazybastard.org, miquel.raynal@bootlin.com,
- richard@nod.at, vigneshr@ti.com, sth@linux.ibm.com, hoeppner@linux.ibm.com,
- hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com,
- jejb@linux.ibm.com, martin.petersen@oracle.com, clm@fb.com,
- josef@toxicpanda.com, dsterba@suse.com, nico@fluxnic.net, xiang@kernel.org,
- chao@kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca,
- agruenba@redhat.com, jack@suse.com, konishi.ryusuke@gmail.com,
- akpm@linux-foundation.org, hare@suse.de, p.raghav@samsung.com,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
- linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
- linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
- linux-nilfs@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20231205123728.1866699-1-yukuai1@huaweicloud.com>
- <20231205123728.1866699-2-yukuai1@huaweicloud.com>
- <ZXCMJ9skAAgPm4z3@casper.infradead.org>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <d195aba8-7b89-698f-b7a0-06b87ae01c21@huaweicloud.com>
-Date: Thu, 7 Dec 2023 10:45:13 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hlXRPPdy"
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D6F9D5C
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 21:18:42 -0800 (PST)
+Received: by mail-pj1-x1033.google.com with SMTP id 98e67ed59e1d1-286e57fde73so481086a91.1
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Dec 2023 21:18:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1701926321; x=1702531121; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=0i9fCVWdp8675S0rpZslXHDfs7IhFjRrMa9ntmatNFw=;
+        b=hlXRPPdyhTYYOaLEQlrtacYNVduZJoQLEWsWK1F6Lzlj5MTs31ReaC57eMKziuHYru
+         NQcCy6+TZh1WDThAVEqRNP77BHLnPtEmQgDxFegRDKSK/ct0oY7jr7IRMnfeAiHV/rqX
+         C/HPYZkij4SkqRtMi+evJeXHKyidY0q8s+YVDOuoXzFZaBFbK/hJ2bZLP7Ph74uhRMNn
+         vl5iuSsuNQE7ot8gXvYjWNwvABPbPYWgeOqODKKuk8hUVJGvXsZldwDQnB6UBRzx0gQu
+         H7mLh22yK23WCd0pgMjM8Y1KZGp2BYzfFwyU2o9E0PWYUeVunydJxZOQUKAfZyp60caf
+         gHSQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701926321; x=1702531121;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0i9fCVWdp8675S0rpZslXHDfs7IhFjRrMa9ntmatNFw=;
+        b=E2+SPlEL69mB7CXTwqrPGjsS8TADwFLShFeEDSPzMQhtG8tw1l1tqNhSInklRoXx/I
+         X2ZdbrJZ3zZtFCMWUG//wfqGGaBkekKOpiCdTpU4NTqrAST0FEMbAmId5zY4NNUlF7lz
+         o+6ccDC6MeBM31fpmtdyKV/d6nlUTTdzVjbXdjFkfEMlrobS0JZg6Z9Y40psYSLKdY0f
+         jVS04nl5ojiGxhznkGjB4uWQEL9QSIjwyPy7tx+RVUtOWEGT1iDhcXDOfBjIvxE2HOJG
+         y4PUv+bw3u+m+dvi1xRkq3bzIGeXbMWCuItDCMQ581KtLePSiKBd4GVyE2oUwFqrB60M
+         iSnw==
+X-Gm-Message-State: AOJu0Yz+g87PyqMYwW0XBjy5y7/ktM/LKGSlebDH/jmGePgk8XEe7WqQ
+	oFXiFiPjviHn0IvWJGZKCIovWHo5mw0EM2x2Og==
+X-Google-Smtp-Source: AGHT+IFDinIj0ePzDqdc1lVKsz5u851IMvfdtrGp+1wkUAw4kbBceg5pw5hiGidd8o9jy3RJCW8KMQ==
+X-Received: by 2002:a17:90b:1289:b0:286:b484:a5ce with SMTP id fw9-20020a17090b128900b00286b484a5cemr1692666pjb.58.1701926321408;
+        Wed, 06 Dec 2023 21:18:41 -0800 (PST)
+Received: from thinkpad ([117.248.6.133])
+        by smtp.gmail.com with ESMTPSA id gc4-20020a17090b310400b00288622137dfsm362540pjb.5.2023.12.06.21.18.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Dec 2023 21:18:40 -0800 (PST)
+Date: Thu, 7 Dec 2023 10:48:35 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Andrew Halaney <ahalaney@redhat.com>
+Cc: martin.petersen@oracle.com, jejb@linux.ibm.com, andersson@kernel.org,
+	konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	quic_cang@quicinc.com
+Subject: Re: [PATCH 05/13] scsi: ufs: qcom: Remove the warning message when
+ core_reset is not available
+Message-ID: <20231207051835.GA2932@thinkpad>
+References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
+ <20231201151417.65500-6-manivannan.sadhasivam@linaro.org>
+ <ru2zdpls5tx2wjt3oknqndikuc4we7d3haeawzrdyl7cbsycti@clx55b27nzvn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ZXCMJ9skAAgPm4z3@casper.infradead.org>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCnqxG5MXFllH3QCw--.13955S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuF4Dury5Kr13Aw47Gr4Uurg_yoW5Ar4DpF
-	W8KFZ8JrW8Gr18ursrJa15Z3WFg34UJFW5ZrWxG343C3s0yr9akFWYgws0kayIv3yUJFs7
-	ZFWjvrW8WF1j9FJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9I14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
-	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
-	67AF67kF1VAFwI0_Wrv_Gr1UMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_
-	WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJb
-	IYCTnIWIevJa73UjIFyTuYvjfUojjgUUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+In-Reply-To: <ru2zdpls5tx2wjt3oknqndikuc4we7d3haeawzrdyl7cbsycti@clx55b27nzvn>
 
-Hi,
-
-�� 2023/12/06 22:58, Matthew Wilcox д��:
-> On Tue, Dec 05, 2023 at 08:37:15PM +0800, Yu Kuai wrote:
->> +struct folio *bdev_read_folio(struct block_device *bdev, pgoff_t index)
->> +{
->> +	return read_mapping_folio(bdev->bd_inode->i_mapping, index, NULL);
->> +}
->> +EXPORT_SYMBOL_GPL(bdev_read_folio);
+On Wed, Dec 06, 2023 at 12:36:41PM -0600, Andrew Halaney wrote:
+> On Fri, Dec 01, 2023 at 08:44:09PM +0530, Manivannan Sadhasivam wrote:
+> > core_reset is optional, so there is no need to warn the user if it is not
+> > available (that too not while doing host reset each time).
 > 
-> I'm coming to the opinion that 'index' is the wrong parameter here.
-> Looking through all the callers of bdev_read_folio() in this patchset,
-> they all have a position in bytes, and they all convert it to
-> index for this call.  The API should probably be:
-> 
-> struct folio *bdev_read_folio(struct block_device *bdev, loff_t pos)
-> {
-> 	return read_mapping_folio(bdev->bd_inode->i_mapping,
-> 			pos / PAGE_SIZE, NULL);
-> }
-
-Thanks for reviewing this patchset! Okay, I'll convert to pass in "pos"
-in v2.
-> 
-> ... and at some point, we'll get round to converting read_mapping_folio()
-> to take its argument in loff_t.
-> 
-> Similiarly for these two APIs:
-> 
->> +struct folio *bdev_read_folio_gfp(struct block_device *bdev, pgoff_t index,
->> +				  gfp_t gfp)
->> +struct folio *bdev_get_folio(struct block_device *bdev, pgoff_t index)
-> 
->> +struct folio *bdev_find_or_create_folio(struct block_device *bdev,
->> +					pgoff_t index, gfp_t gfp)
->> +{
->> +	return __filemap_get_folio(bdev->bd_inode->i_mapping, index,
->> +				   FGP_LOCK | FGP_ACCESSED | FGP_CREAT, gfp);
->> +}
->> +EXPORT_SYMBOL_GPL(bdev_find_or_create_folio);
-> 
-> This one probably shouldn't exist.  I've been converting callers of
-> find_or_create_page() to call __filemap_get_folio; I suspect we
-> should expose a __bdev_get_folio and have the callers use the FGP
-> arguments directly, but I'm open to other opinions here.
-
-If nobody against this, I will expose single __bdev_get_folio() to use
-in v2.
-> 
->> +void bdev_sync_readahead(struct block_device *bdev, struct file_ra_state *ra,
->> +			 struct file *file, pgoff_t index,
->> +			 unsigned long req_count)
->> +{
->> +	struct file_ra_state tmp_ra = {};
->> +
->> +	if (!ra) {
->> +		ra = &tmp_ra;
->> +		file_ra_state_init(ra, bdev->bd_inode->i_mapping);
->> +	}
->> +	page_cache_sync_readahead(bdev->bd_inode->i_mapping, ra, file, index,
->> +				  req_count);
->> +}
-> 
-> I think the caller should always be passing in a valid file_ra_state.
-> It's only cramfs that doesn't have one, and it really should!
-> Not entirely sure about the arguments here; part of me says "bytes",
-> but this is weird enough to maybe take arguments in pages.
-
-In fact, bdev_sync_readahead() is only called for cramfs and ext4.
-
-For ext4 it's used in ext4_readdir() so there is valid file_ra_state.
-
-Hoever, for cramfs it's used in cramfs_read(), and cramfs_read() is used
-for:
-
-1) cramfs_read_folio
-2) cramfs_readdir
-3) cramfs_lookup
-4) cramfs_read_super
-
-Looks like it's easy to pass in valid file_ra_state() for 1) and 2),
-however, I don't see an easy way to do this for 3) and 4).
-
-Thanks,
-Kuai
-
-> 
-> .
+> What's the bit in the parenthesis mean here? I'm having a hard time
+> following. Otherwise, this looks good to me.
 > 
 
+I was just mentioning that the core reset can happen multiple times depending on
+the scenario, so it doesn't make sense to print a warning each time if the reset
+was not available.
+
+- Mani
+
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> >  drivers/ufs/host/ufs-qcom.c | 4 +---
+> >  1 file changed, 1 insertion(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > index dc93b1c5ca74..d474de0739e4 100644
+> > --- a/drivers/ufs/host/ufs-qcom.c
+> > +++ b/drivers/ufs/host/ufs-qcom.c
+> > @@ -296,10 +296,8 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
+> >  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> >  	bool reenable_intr;
+> >  
+> > -	if (!host->core_reset) {
+> > -		dev_warn(hba->dev, "%s: reset control not set\n", __func__);
+> > +	if (!host->core_reset)
+> >  		return 0;
+> > -	}
+> >  
+> >  	reenable_intr = hba->is_irq_enabled;
+> >  	disable_irq(hba->irq);
+> > -- 
+> > 2.25.1
+> > 
+> > 
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
