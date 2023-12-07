@@ -1,56 +1,40 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 715B91E4A2;
+	Thu,  7 Dec 2023 07:55:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JqWxNk/8"
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3BF6D44
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 21:32:05 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6ce4d4c5ea2so227836b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Dec 2023 21:32:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701927125; x=1702531925; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=NnvGGl844Mt88/eDFjnKsRhrcFq+x0ulAemxO2S+bfU=;
-        b=JqWxNk/8LBdyyfAMc3QDFfDiE6mnBtHIQ1ohAfisVnnZy4nO/iuUF49OJavBGd5887
-         oIyYKmVqZTexFEPlsdFRhkiQ70VJnqCDTUKHARv/KbP8S4ecAMQXd8WBTGEhh1Eg0WFL
-         ow6/qOFR9PT1TX7pRWjGwY1egeCAH5fPfKJDzMtOJAcjc8RL/SKpUClG6CLrcIZcHeb9
-         PEZf3TNONWu1sDy+qLFM98j7aZ1dJ6L+pif+E3+JGSENF8ll2/Etnh6tL8udKEgRc3uL
-         QxQDaW3+5olmdHxp3pZZeULzRuCQC5wr49CT+iWMHoiEwHiyIv8nECLw9nnkY7Cnld7c
-         MlWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701927125; x=1702531925;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=NnvGGl844Mt88/eDFjnKsRhrcFq+x0ulAemxO2S+bfU=;
-        b=TZ1jNIK3Dkh4SINumz5odSn7dNe8T5TD5Ina+0haYaOYZm4dayKppkAFi6K8zV6r3t
-         dGPqvphoeQIRfhLFt4gE76OL9v9oDRE5A8huDlx+gty1uS/G45pVxweQo8dev7Q7zyZ0
-         UlmK20Ae/+c4wLLCXFO6r6rx2C8paDP7+SmWnRZVFbWhFkzZLqPzc3QW+uaXQpeGPq/M
-         fmpHdP74hC1Cw4wZuxQ6UHBTDFgYf4895UgiyojYDfRfLNaQUZ5OkkS0qw9KgyvGT9Mp
-         XPfBf0nqpWpu/b2peVPYq93aRWcxG54/GC29nv1ATx8RPt54pBu1vxQMx1xrJUAU1U6b
-         3T4A==
-X-Gm-Message-State: AOJu0Yw1YyfCg2CPLtOcdbWCYmCW8vXNS0aEJQct/o5YJfkGR7hxb3KD
-	5mmkZKhI41hQWHLXxGj+/8En
-X-Google-Smtp-Source: AGHT+IH6OaEgUEGq8ikcE2Z92TNqQ+21Ktn5NHM/RrKbtopBSOAZZ3yFsq/Flh5tRCPQL4wEiSO+OQ==
-X-Received: by 2002:a05:6a20:3d8e:b0:18d:2748:ea22 with SMTP id s14-20020a056a203d8e00b0018d2748ea22mr1917241pzi.17.1701927125136;
-        Wed, 06 Dec 2023 21:32:05 -0800 (PST)
-Received: from thinkpad ([117.248.6.133])
-        by smtp.gmail.com with ESMTPSA id y16-20020a17090322d000b001d1c96a0c63sm378626plg.274.2023.12.06.21.32.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Dec 2023 21:32:04 -0800 (PST)
-Date: Thu, 7 Dec 2023 11:01:59 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Andrew Halaney <ahalaney@redhat.com>
-Cc: martin.petersen@oracle.com, jejb@linux.ibm.com, andersson@kernel.org,
-	konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	quic_cang@quicinc.com
-Subject: Re: [PATCH 11/13] scsi: ufs: qcom: Remove unused ufs_qcom_hosts
- struct array
-Message-ID: <20231207053159.GC2932@thinkpad>
-References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
- <20231201151417.65500-12-manivannan.sadhasivam@linaro.org>
- <sqdgnfedt5j3epypmsvb7lv6gvmjrymtuieji3yhqsfvniiodl@f3aj73mlshxy>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ENVZhDKs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F360C433C7;
+	Thu,  7 Dec 2023 07:55:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701935730;
+	bh=h2qXX+SDRSNTW3YzbKtkw81hP5ImdwnjfPNFY/0DW7Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ENVZhDKsDCJEWt2gqs/Itk/W+0OBm1YSOWMeUtZbDTk+La8+6ONji9ytbE5xtzLGm
+	 hDJIXrXUQkWer4CkV1ipNAMAtbzP/OL5Aza0NbY6nV13HVkd8kfn2h6EDEqRAEQX+5
+	 98oh/IsLPYu+UItkolSoxPsSX8TTHDNhforVEFonu75ZWM56GdtK7nGaz1F4NaRB6z
+	 /wTuPiNrMexMtLkwPFxBEFQpZP8tCnhgtnz3VWdYRraaz2yZKGszwwXmIHxT/RSQ70
+	 DUwXvzNxPTXZudre5Cp3iXAzBGJUqJ8NFtZrKDjiq65QZlXM6mRiZR1f/3xWXoaORK
+	 Rfn6B976M696w==
+Date: Thu, 7 Dec 2023 13:25:20 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Can Guo <quic_cang@quicinc.com>
+Cc: bvanassche@acm.org, mani@kernel.org, adrian.hunter@intel.com,
+	vkoul@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
+	junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	Andy Gross <agross@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v8 08/10] scsi: ufs: ufs-qcom: Add support for UFS device
+ version detection
+Message-ID: <20231207075520.GF2932@thinkpad>
+References: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
+ <1701520577-31163-9-git-send-email-quic_cang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,55 +44,113 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <sqdgnfedt5j3epypmsvb7lv6gvmjrymtuieji3yhqsfvniiodl@f3aj73mlshxy>
+In-Reply-To: <1701520577-31163-9-git-send-email-quic_cang@quicinc.com>
 
-On Wed, Dec 06, 2023 at 12:54:43PM -0600, Andrew Halaney wrote:
-> On Fri, Dec 01, 2023 at 08:44:15PM +0530, Manivannan Sadhasivam wrote:
-> > ufs_qcom_hosts array is assigned, but not used anywhere. So let's remove
-> > it.
-> > 
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > ---
-> >  drivers/ufs/host/ufs-qcom.c | 5 -----
-> >  1 file changed, 5 deletions(-)
-> > 
-> > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> > index a86f6620abc8..824c006be093 100644
-> > --- a/drivers/ufs/host/ufs-qcom.c
-> > +++ b/drivers/ufs/host/ufs-qcom.c
-> > @@ -90,8 +90,6 @@ static const struct __ufs_qcom_bw_table {
-> >  	[MODE_MAX][0][0]		    = { 7643136,	307200 },
-> >  };
-> >  
-> > -static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
-> > -
+On Sat, Dec 02, 2023 at 04:36:14AM -0800, Can Guo wrote:
+> From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 > 
-> I think we can get rid of MAX_UFS_QCOM_HOSTS as well with this change in
-> place?
+> Start from HW ver 5, a spare register in UFS host controller is added and
+> used to indicate the UFS device version. The spare register is populated by
+> bootloader for now, but in future it will be populated by HW automatically
+> during link startup with its best efforts in any boot stage prior to Linux.
 > 
+> During host driver init, read the spare register, if it is not populated
+> with a UFS device version, go ahead with the dual init mechanism. If a UFS
+> device version is in there, use the UFS device version together with host
+> controller's HW version to decide the proper PHY gear which should be used
+> to configure the UFS PHY without going through the second init.
+> 
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 
-Yes, thanks for spotting.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
 
-> >  static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
-> >  static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up);
-> >  
-> > @@ -1192,9 +1190,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
-> >  
-> >  	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
-> >  
-> > -	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
-> > -		ufs_qcom_hosts[hba->dev->id] = host;
-> > -
-> >  	ufs_qcom_get_default_testbus_cfg(host);
-> >  	err = ufs_qcom_testbus_config(host);
-> >  	if (err)
-> > -- 
-> > 2.25.1
-> > 
-> > 
+> ---
 > 
+> v7 -> v8:
+> Fixed a BUG introduced from v6 -> v7. The spare register is added since HW ver 5, hence exclude HW ver == 4.
+> 
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 35 ++++++++++++++++++++++++++++-------
+>  drivers/ufs/host/ufs-qcom.h |  4 ++++
+>  2 files changed, 32 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index ee3f07a..968a4c0 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1065,17 +1065,38 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+>  static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
+>  {
+>  	struct ufs_host_params *host_params = &host->host_params;
+> +	u32 val, dev_major;
+>  
+>  	host->phy_gear = host_params->hs_tx_gear;
+>  
+> -	/*
+> -	 * For controllers whose major HW version is < 4, power up the PHY using
+> -	 * minimum supported gear (UFS_HS_G2). Switching to max gear will be
+> -	 * performed during reinit if supported. For newer controllers, whose
+> -	 * major HW version is >= 4, power up the PHY using max supported gear.
+> -	 */
+> -	if (host->hw_ver.major < 0x4)
+> +	if (host->hw_ver.major < 0x4) {
+> +		/*
+> +		 * For controllers whose major HW version is < 4, power up the
+> +		 * PHY using minimum supported gear (UFS_HS_G2). Switching to
+> +		 * max gear will be performed during reinit if supported.
+> +		 * For newer controllers, whose major HW version is >= 4, power
+> +		 * up the PHY using max supported gear.
+> +		 */
+>  		host->phy_gear = UFS_HS_G2;
+> +	} else if (host->hw_ver.major >= 0x5) {
+> +		val = ufshcd_readl(host->hba, REG_UFS_DEBUG_SPARE_CFG);
+> +		dev_major = FIELD_GET(UFS_DEV_VER_MAJOR_MASK, val);
+> +
+> +		/*
+> +		 * Since the UFS device version is populated, let's remove the
+> +		 * REINIT quirk as the negotiated gear won't change during boot.
+> +		 * So there is no need to do reinit.
+> +		 */
+> +		if (dev_major != 0x0)
+> +			host->hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+> +
+> +		/*
+> +		 * For UFS 3.1 device and older, power up the PHY using HS-G4
+> +		 * PHY gear to save power.
+> +		 */
+> +		if (dev_major > 0x0 && dev_major < 0x4)
+> +			host->phy_gear = UFS_HS_G4;
+> +	}
+>  }
+>  
+>  static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> index 11419eb..32e51d9 100644
+> --- a/drivers/ufs/host/ufs-qcom.h
+> +++ b/drivers/ufs/host/ufs-qcom.h
+> @@ -23,6 +23,8 @@
+>  #define UFS_HW_VER_MINOR_MASK	GENMASK(27, 16)
+>  #define UFS_HW_VER_STEP_MASK	GENMASK(15, 0)
+>  
+> +#define UFS_DEV_VER_MAJOR_MASK	GENMASK(7, 4)
+> +
+>  /* vendor specific pre-defined parameters */
+>  #define SLOW 1
+>  #define FAST 2
+> @@ -54,6 +56,8 @@ enum {
+>  	UFS_AH8_CFG				= 0xFC,
+>  
+>  	REG_UFS_CFG3				= 0x271C,
+> +
+> +	REG_UFS_DEBUG_SPARE_CFG			= 0x284C,
+>  };
+>  
+>  /* QCOM UFS host controller vendor specific debug registers */
+> -- 
+> 2.7.4
 > 
 
 -- 
