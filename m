@@ -1,151 +1,129 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Cakf8bzM"
-Received: from mail-yb1-xb2a.google.com (mail-yb1-xb2a.google.com [IPv6:2607:f8b0:4864:20::b2a])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E814310C4;
-	Thu,  7 Dec 2023 04:37:33 -0800 (PST)
-Received: by mail-yb1-xb2a.google.com with SMTP id 3f1490d57ef6-db3fa47c2f7so1063563276.0;
-        Thu, 07 Dec 2023 04:37:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701952653; x=1702557453; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ql+oBPOXDNEG6plVxyM0Mzn/UJqHZjnpIyxQVr0Ix5M=;
-        b=Cakf8bzM2W5Mo8kSr9Dw7ZpOl+ykvIQPiqg44H7LCWwkrdocFFaYQrxiOhPH0IswpF
-         N9pezU+QLN1LLjGXgiqUwW8L0Lz1lVHFV6tYaLeWKTI61hM35BafiW5eqmYE4XolFRtD
-         JJxJFmdEllu3htDin/6OiEuZZJj44AWCsTzOqWXZR7GPXGbmIzbzxY/Zms7ijyWczNWG
-         xl7qV4ykNBjxwtmS8aGqNv2pHAyDTKHLqZdV7C531YMo1osbYcHY3iee83vWAVG8fc7J
-         NOU8waeAuqZq/SnyO4W18mC5jtM878iIDpz4hQVopBRz8flaqJVelQCYhID3K5jVfvH3
-         RhNg==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HnFVJREz"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1203110CB
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2023 05:46:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1701956782;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=MayE2jstjV8R9mQ7ezeMnZEaKl2NQz8vMG8UW7Z3nRs=;
+	b=HnFVJREzmV0+5B+WRfsa3Auj1wBsxEz2bPLl3/fI/LP7zdXHX50b86t3ZV+zkSbUBQ03vl
+	DKdbFJeXnMAktHe5bhIStoVzemF9lHkK3wGoM7R6+ZNCgjfnLi5UsuJPUMBRjMXH/DV7Q0
+	f+jsH8UUO0nW09h3oX/VKGSLdbC4+ZA=
+Received: from mail-oo1-f70.google.com (mail-oo1-f70.google.com
+ [209.85.161.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-622-LwDH6GSyPlObGqpFSVth0A-1; Thu, 07 Dec 2023 08:46:21 -0500
+X-MC-Unique: LwDH6GSyPlObGqpFSVth0A-1
+Received: by mail-oo1-f70.google.com with SMTP id 006d021491bc7-58d53348a03so771787eaf.2
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Dec 2023 05:46:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701952653; x=1702557453;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ql+oBPOXDNEG6plVxyM0Mzn/UJqHZjnpIyxQVr0Ix5M=;
-        b=LELgqz2NWBZvCR4QXJqRubGmY4g96iRbssV/XTNDYnGCDvdpX2blJgsRQjA2FxKpMW
-         wGJfCBORGlea3jyDM4mxOUgJb1NfB5wh8ajKDQR1C59GDPdMI8Nj9Xj6F86oyCRoW15j
-         FjhiQDqH5uv1lGZgDriA6fNkVUB/9gip96oZ5ZQU8/jUuAfESzUIV83asXDjhDh7r0DB
-         kuDsUfvg77ELertCtkN+la1ABWS+YLFesjw2XKeG8JQIrQi/FTl67/lfFS5SEmG4UOEs
-         z5cIKlv2WcYPTuzeZhm7lG0phmUbXQ2s2QWDeflOkzpoM3q0CppndBp1wbozxbFPBAfO
-         b/6A==
-X-Gm-Message-State: AOJu0Yz0qSVL5Mvm3RBva284cioiENzPyS71Gsg5v2ihosRO83zGuA7d
-	9X+7Z4b1ndSl7/NDL0zOX+5hTZH1SEPqM4x4QAc=
-X-Google-Smtp-Source: AGHT+IFN0upuXvlSPoheSAIXEN0hPT9OgHIEj2D9aFgtXp214WKQncHU+HlDo4f+gdo0CM4KLiuomX4mbAtQEEYnkAc=
-X-Received: by 2002:a25:db8f:0:b0:db7:dad0:60f2 with SMTP id
- g137-20020a25db8f000000b00db7dad060f2mr1923076ybf.127.1701952653034; Thu, 07
- Dec 2023 04:37:33 -0800 (PST)
+        d=1e100.net; s=20230601; t=1701956780; x=1702561580;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MayE2jstjV8R9mQ7ezeMnZEaKl2NQz8vMG8UW7Z3nRs=;
+        b=F+nBn3antBkWT2LLz/I1POps0x7sEc2VXkDpFL5Q1VgOU8ni1NjcG/ec5xO3qEzb7o
+         qpISqZCvgHuONznLfq6q3E286Cpt5BGrcikhAcX/V4qX22SxxLMO4YMoHcQzLaOWvBNj
+         cCokpoHVtJoBDvnJ/SBZ3AI6ubwngHvAd4doPm8qngeyza6no1eYtxFd7rInmdsZrnpf
+         169ANvZc5Yf5xMYFZHkcI2u0v3rR0H91Hw28FsgDhT5k26o6qT4vrkoqGfkeA4LtyMrk
+         oHfz3Q9qVX0IiEawbzK1wNhYaiGqDos9trazNxEQvMNmw/wSDZ9vLnE7OJ5Gm4oe74vb
+         OGjQ==
+X-Gm-Message-State: AOJu0YzovLmjYz5YJUsrJHWImtorvgrBP1xticqcv3gy5M/ZAiMdd2ne
+	C4WcEyk+1Hqyj6St/n7fpG0ugD4VKiWaNCw5vA8rZseF3qdgGDgvirPKvHa+xBhhLWjKBOwIA5O
+	qk8sybhsj1KTaYY1Lkxf3cg==
+X-Received: by 2002:a05:6358:7244:b0:170:2cff:b57e with SMTP id i4-20020a056358724400b001702cffb57emr3149553rwa.28.1701956780350;
+        Thu, 07 Dec 2023 05:46:20 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEkleS9nA9h1C/ufo8zCGD9PAxaOCQltjexOMuG5X9Zhtpyj8pooXqvLS0Uxwdd3bswk+SUxQ==
+X-Received: by 2002:a05:6358:7244:b0:170:2cff:b57e with SMTP id i4-20020a056358724400b001702cffb57emr3149542rwa.28.1701956780083;
+        Thu, 07 Dec 2023 05:46:20 -0800 (PST)
+Received: from fedora ([2600:1700:1ff0:d0e0::47])
+        by smtp.gmail.com with ESMTPSA id cx11-20020a056214188b00b0067ac01d39bdsm496309qvb.47.2023.12.07.05.46.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Dec 2023 05:46:19 -0800 (PST)
+Date: Thu, 7 Dec 2023 07:46:17 -0600
+From: Andrew Halaney <ahalaney@redhat.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: martin.petersen@oracle.com, jejb@linux.ibm.com, andersson@kernel.org, 
+	konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, quic_cang@quicinc.com
+Subject: Re: [PATCH 11/13] scsi: ufs: qcom: Remove unused ufs_qcom_hosts
+ struct array
+Message-ID: <ca4ag4xrnw3cegbfqjcjf4ejidi2oblabcrkxadpgv6yda26a4@2khffdooqvlj>
+References: <20231201151417.65500-1-manivannan.sadhasivam@linaro.org>
+ <20231201151417.65500-12-manivannan.sadhasivam@linaro.org>
+ <sqdgnfedt5j3epypmsvb7lv6gvmjrymtuieji3yhqsfvniiodl@f3aj73mlshxy>
+ <20231207053159.GC2932@thinkpad>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231206115355.4319-1-laoar.shao@gmail.com> <2023120644-pry-worried-22a2@gregkh>
- <CALOAHbDtFKDh7C0NYeZ0xBV1z3AsNBDdnL7qRtWOrGbaU7W9VQ@mail.gmail.com>
- <2023120724-overstep-gesture-75be@gregkh> <CALOAHbAbU8At_iPVCiz9M8=jiGQ_BYFupCbVwsm=d9te85pAyg@mail.gmail.com>
- <2023120704-conducive-junkman-2e3f@gregkh>
-In-Reply-To: <2023120704-conducive-junkman-2e3f@gregkh>
-From: Yafang Shao <laoar.shao@gmail.com>
-Date: Thu, 7 Dec 2023 20:36:56 +0800
-Message-ID: <CALOAHbBUu-oa_wb-PCBdn+vs1k1ZddGhVJg2UuVx912wGWoLkQ@mail.gmail.com>
-Subject: Re: [PATCH] drivers: base: Introduce a new kernel parameter driver_sync_probe=
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, rafael@kernel.org, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231207053159.GC2932@thinkpad>
 
-On Thu, Dec 7, 2023 at 8:12=E2=80=AFPM Greg KH <gregkh@linuxfoundation.org>=
- wrote:
->
-> On Thu, Dec 07, 2023 at 07:59:03PM +0800, Yafang Shao wrote:
-> > On Thu, Dec 7, 2023 at 6:19=E2=80=AFPM Greg KH <gregkh@linuxfoundation.=
-org> wrote:
-> > >
-> > > On Wed, Dec 06, 2023 at 10:08:40PM +0800, Yafang Shao wrote:
-> > > > On Wed, Dec 6, 2023 at 9:31=E2=80=AFPM Greg KH <gregkh@linuxfoundat=
-ion.org> wrote:
-> > > > >
-> > > > > On Wed, Dec 06, 2023 at 11:53:55AM +0000, Yafang Shao wrote:
-> > > > > > After upgrading our kernel from version 4.19 to 6.1, certain re=
-gressions
-> > > > > > occurred due to the driver's asynchronous probe behavior. Speci=
-fically,
-> > > > > > the SCSI driver transitioned to an asynchronous probe by defaul=
-t, resulting
-> > > > > > in a non-fixed root disk behavior. In the prior 4.19 kernel, th=
-e root disk
-> > > > > > was consistently identified as /dev/sda. However, with kernel 6=
-.1, the root
-> > > > > > disk can be any of /dev/sdX, leading to issues for applications=
- reliant on
-> > > > > > /dev/sda, notably impacting monitoring systems monitoring the r=
-oot disk.
-> > > > >
-> > > > > Device names are never guaranteed to be stable, ALWAYS use a pers=
-istant
-> > > > > names like a filesystem label or other ways.  Look at /dev/disk/ =
-for the
-> > > > > needed ways to do this properly.
-> > > >
-> > > > The root disk is typically identified as /dev/sda or /dev/vda, righ=
-t?
-> > >
-> > > Depends on your system.  It can also be identified, in the proper way=
-,
-> > > as /dev/disk/by-uuid/eef0abc1-4039-4c3f-a123-81fc99999993 if you want
-> > > (note, fake uuid, use your own disk uuid please.)
-> > >
-> > > Why not do that?  That's the most stable and recommended way of doing
-> > > things.
-> >
-> > Adapting to this change isn't straightforward, especially for a large
-> > fleet of servers. Our monitoring system needs to accommodate and
-> > adjust accordingly.
->
-> Agreed, that can be rough.  But as this is an issue that was caused by a
-> scsi core change, perhaps the scsi developers can describe why it's ok.
->
-> But really, device naming has ALWAYS been known to not be
-> deterministic, which is why Pat and I did all the driver core work 20+
-> years ago so that you have the ability to properly name your devices in
-> a way that is deterministic.  Using the kernel name like sda is NOT
-> using that functionality, so while it has been nice to see that it has
-> been stable for you for a while, you are playing with fire here and will
-> get burned one day when the firmware in your devices decide to change
-> response times.
+On Thu, Dec 07, 2023 at 11:01:59AM +0530, Manivannan Sadhasivam wrote:
+> On Wed, Dec 06, 2023 at 12:54:43PM -0600, Andrew Halaney wrote:
+> > On Fri, Dec 01, 2023 at 08:44:15PM +0530, Manivannan Sadhasivam wrote:
+> > > ufs_qcom_hosts array is assigned, but not used anywhere. So let's remove
+> > > it.
+> > > 
+> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > > ---
+> > >  drivers/ufs/host/ufs-qcom.c | 5 -----
+> > >  1 file changed, 5 deletions(-)
+> > > 
+> > > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > > index a86f6620abc8..824c006be093 100644
+> > > --- a/drivers/ufs/host/ufs-qcom.c
+> > > +++ b/drivers/ufs/host/ufs-qcom.c
+> > > @@ -90,8 +90,6 @@ static const struct __ufs_qcom_bw_table {
+> > >  	[MODE_MAX][0][0]		    = { 7643136,	307200 },
+> > >  };
+> > >  
+> > > -static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
+> > > -
+> > 
+> > I think we can get rid of MAX_UFS_QCOM_HOSTS as well with this change in
+> > place?
+> > 
+> 
+> Yes, thanks for spotting.
 
-I agree that using UUID is a better approach. However, it's worth
-noting that the widely used IO monitoring tool 'iostat' faces
-challenges when working with UUIDs. This indicates that there's a
-significant amount of work ahead of us in this aspect.
+With that in place please add:
 
+    Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
 
->
-> > > > While reverting to synchronous probing could ensure
-> > > > stability, it's worth noting that asynchronous probing can potentia=
-lly
-> > > > shorten the reboot duration under specific conditions. Thus, there
-> > > > might be some resistance to reverting this change as it offers
-> > > > performance benefits in certain scenarios. That's why I prefer to
-> > > > introduce a kernel parameter for it.
-> > >
-> > > I don't want to add a new parameter that we need to support for forev=
-er
-> > > and add to the complexity of the system unless it is REALLY needed.
-> >
-> > BTW, since there's already a 'driver_async_probe=3D', introducing
-> > another 'driver_sync_probe=3D' wouldn't significantly increase the
-> > maintenance overhead.
->
-> Any new code adds maintenance overhead and complexity, so you have to
-> justify it's existance especially when you are not going to be the one
-> maintaining it :)
+> 
+> - Mani
+> 
+> > >  static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+> > >  static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up);
+> > >  
+> > > @@ -1192,9 +1190,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+> > >  
+> > >  	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
+> > >  
+> > > -	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
+> > > -		ufs_qcom_hosts[hba->dev->id] = host;
+> > > -
+> > >  	ufs_qcom_get_default_testbus_cfg(host);
+> > >  	err = ufs_qcom_testbus_config(host);
+> > >  	if (err)
+> > > -- 
+> > > 2.25.1
+> > > 
+> > > 
+> > 
+> > 
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
+> 
 
-Understood.
-
-
---=20
-Regards
-Yafang
