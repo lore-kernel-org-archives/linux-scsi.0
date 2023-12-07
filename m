@@ -1,94 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A0FE41C8C
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2023 14:28:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lqVp5I63"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DA2BC433C8;
-	Thu,  7 Dec 2023 14:28:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701959300;
-	bh=ZVLzNRalk/EBQP7fBKQQUpiBjDCywhTS+ujhMZKHZag=;
-	h=From:To:Cc:Subject:Date:From;
-	b=lqVp5I63et5bljSNokYmdBSuMMJegNZ3fS+vyMoz7z6FGjpPZAEEgPPkhmnB+23dI
-	 iOITgbXqWJgtm9Z0cdHb2NGJ/EtdpNap3VBCdhLYx3RJuRZ0AnxvlI/mfskwMemqSM
-	 pTYiCXXYkXxs3yTIhw1jYJs3QX9dXhzOq0b66YTljTKWTYD6qEVPVEVSQYVU3Ph0NS
-	 6eWHkJKjI2TJGJ1pXXU/dAaXl2ZU8ErUkr1lDIF0/YD36eW0bsxhXd9wYXMVvlAABk
-	 19jm6WRybPuP7n92iRjdcyy89tKKguVcD1IInxvJfR8XK/CO94Br5xRazz/Pj2D3sB
-	 fQEylljkmBa4g==
-From: Arnd Bergmann <arnd@kernel.org>
-To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	"Shin'ichiro Kawasaki" <shinichiro.kawasaki@wdc.com>,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] mpi3mr: fix printk() format strings
-Date: Thu,  7 Dec 2023 15:28:06 +0100
-Message-Id: <20231207142813.935717-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.2
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NUjuHNsC"
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05FDE10D1
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2023 07:07:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1701961677; x=1733497677;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=y8UPT+Z70Ay8XagVnVMa00TP4BbFOHOTSxDZdO7utXs=;
+  b=NUjuHNsC6EMHVYxq4U8eAeJ7FpMfX5v3JgclLFcqk/4nuvQJdCb5dyhV
+   nNmmx5r7NX8g2Jnqr9iDvvP+NkdmJxNyZIa8oJ2EDIK4Nh8NLr6FybOew
+   pNUhDa5wBF0jSnmDCO1WEgPBYEM9TZfE+0p4KHZaZqwFZaS/cPG4HAlqV
+   aOMGyu7ACZFBJDBKzn54p89QjkJzD1CTcZ2mlKDPW9svdt1p+gGrQ3lbZ
+   Bm4r9DeuYzRQvu75zbS72EgGwwoPq0jaJybrMpcAq8hDjX3yAUHPoKjbK
+   EXCR8cpj7j8ZVUY+FzZl2k520styUTpoSDekWVHomU517Fu4MEeP80kwj
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10917"; a="1350216"
+X-IronPort-AV: E=Sophos;i="6.04,256,1695711600"; 
+   d="scan'208";a="1350216"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2023 07:07:56 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10917"; a="945065976"
+X-IronPort-AV: E=Sophos;i="6.04,256,1695711600"; 
+   d="scan'208";a="945065976"
+Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
+  by orsmga005.jf.intel.com with ESMTP; 07 Dec 2023 07:07:53 -0800
+Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rBFyg-000COf-1Q;
+	Thu, 07 Dec 2023 15:07:50 +0000
+Date: Thu, 7 Dec 2023 23:07:40 +0800
+From: kernel test robot <lkp@intel.com>
+To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com, sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com, prayas.patel@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: Re: [PATCH v1 2/4] mpi3mr: Support PCIe Error Recovery callback
+ handlers
+Message-ID: <202312072213.uopHjdQV-lkp@intel.com>
+References: <20231206152513.71253-3-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231206152513.71253-3-ranjan.kumar@broadcom.com>
 
-From: Arnd Bergmann <arnd@arndb.de>
+Hi Ranjan,
 
-The newly introduced error messages get multiple format strings wrong: size_t must
-be printed using the %z modifier rather than %l and dma_addr_t must be printed
-by reference using the special %pad pointer type:
+kernel test robot noticed the following build warnings:
 
-drivers/scsi/mpi3mr/mpi3mr_app.c: In function 'mpi3mr_build_nvme_prp':
-include/linux/kern_levels.h:5:25: error: format '%llx' expects argument of type 'long long unsigned int', but argument 4 has type 'dma_addr_t' {aka 'unsigned int'} [-Werror=format=]
-drivers/scsi/mpi3mr/mpi3mr_app.c:949:25: note: in expansion of macro 'dprint_bsg_err'
-  949 |                         dprint_bsg_err(mrioc,
-      |                         ^~~~~~~~~~~~~~
-include/linux/kern_levels.h:5:25: error: format '%ld' expects argument of type 'long int', but argument 4 has type 'size_t' {aka 'unsigned int'} [-Werror=format=]
-drivers/scsi/mpi3mr/mpi3mr_app.c:1112:41: note: in expansion of macro 'dprint_bsg_err'
- 1112 |                                         dprint_bsg_err(mrioc,
-      |                                         ^~~~~~~~~~~~~~
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on next-20231207]
+[cannot apply to jejb-scsi/for-next linus/master v6.7-rc4]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Fixes: 9536af615dc9 ("scsi: mpi3mr: Support for preallocation of SGL BSG data buffers part-3")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/mpi3mr/mpi3mr_app.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+url:    https://github.com/intel-lab-lkp/linux/commits/Ranjan-Kumar/mpi3mr-Improve-Shutdown-times-when-firmware-has-faulted/20231207-004256
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20231206152513.71253-3-ranjan.kumar%40broadcom.com
+patch subject: [PATCH v1 2/4] mpi3mr: Support PCIe Error Recovery callback handlers
+config: arc-randconfig-001-20231207 (https://download.01.org/0day-ci/archive/20231207/202312072213.uopHjdQV-lkp@intel.com/config)
+compiler: arc-elf-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231207/202312072213.uopHjdQV-lkp@intel.com/reproduce)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 4b93b7440da6..0380996b5ad2 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -947,8 +947,8 @@ static int mpi3mr_build_nvme_prp(struct mpi3mr_ioc *mrioc,
- 		dma_addr = drv_buf_iter->dma_desc[count].dma_addr;
- 		if (dma_addr & page_mask) {
- 			dprint_bsg_err(mrioc,
--				       "%s:dma_addr 0x%llx is not aligned with page size 0x%x\n",
--				       __func__,  dma_addr, dev_pgsz);
-+				       "%s:dma_addr %pad is not aligned with page size 0x%x\n",
-+				       __func__,  &dma_addr, dev_pgsz);
- 			return -1;
- 		}
- 	}
-@@ -1110,7 +1110,7 @@ static int mpi3mr_build_nvme_prp(struct mpi3mr_ioc *mrioc,
- 				if ((++desc_count) >=
- 				   drv_buf_iter->num_dma_desc) {
- 					dprint_bsg_err(mrioc,
--						       "%s: Invalid len %ld while building PRP\n",
-+						       "%s: Invalid len %zd while building PRP\n",
- 						       __func__, length);
- 					goto err_out;
- 				}
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202312072213.uopHjdQV-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/mpi3mr/mpi3mr_os.c:5272: warning: Function parameter or member 'mrioc' not described in 'mpi3mr_get_shost_and_mrioc'
+>> drivers/scsi/mpi3mr/mpi3mr_os.c:5272: warning: Excess function parameter 'ioc' description in 'mpi3mr_get_shost_and_mrioc'
+
+
+vim +5272 drivers/scsi/mpi3mr/mpi3mr_os.c
+
+  5258	
+  5259	/**
+  5260	 * mpi3mr_get_shost_and_mrioc - get shost and ioc reference if
+  5261	 *			they are valid
+  5262	 * @pdev: PCI device struct
+  5263	 * @shost: address to store scsi host reference
+  5264	 * @ioc: address store HBA adapter reference
+  5265	 *
+  5266	 * Return: 0 if *shost and *ioc are not NULL otherwise -1.
+  5267	 */
+  5268	
+  5269	static int
+  5270	mpi3mr_get_shost_and_mrioc(struct pci_dev *pdev,
+  5271		struct Scsi_Host **shost, struct mpi3mr_ioc **mrioc)
+> 5272	{
+  5273		*shost = pci_get_drvdata(pdev);
+  5274		if (*shost == NULL) {
+  5275			dev_err(&pdev->dev, "pdev's driver data is null\n");
+  5276			return -1;
+  5277		}
+  5278	
+  5279		*mrioc = shost_priv(*shost);
+  5280		if (*mrioc == NULL) {
+  5281			dev_err(&pdev->dev, "shost's private data is null\n");
+  5282			*shost = NULL;
+  5283			return -1;
+  5284	}
+  5285		return 0;
+  5286	}
+  5287	
+
 -- 
-2.39.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
