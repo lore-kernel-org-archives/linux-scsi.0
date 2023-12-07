@@ -1,43 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 231121E4B1;
-	Thu,  7 Dec 2023 09:44:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qZ0oyfP6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78B62C433C7;
-	Thu,  7 Dec 2023 09:44:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701942251;
-	bh=z9LEnc9SGPP1cSw8n0MwiUc7iERA9aZU0X4XLc/JCus=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qZ0oyfP6rihYVRM820jd+i9VgQtmywGaPXq7igsGv32dxX/J3EeENhsGVzajAtiDQ
-	 S2yY1ariJG0saxlG3+i+48dvm5AOYb6yFJPZEDHFY+gGdd/jjbLrO98YUoU8qaRdvv
-	 3Be5rbRpPbKY+ucecdTPuNpO3eyvZIN8n/4Ip3ldpNjb3LJzdLdimrec2HA2++wehz
-	 z7IJBBG5+sWZX8HD0vjIgKfa1eyr3ZBzvDIGVWe9spjwxI0QOXs90zGv6n/Vm4czGu
-	 1wE9XA+hc1u2c4/7b0BWBth0NB76ZJFrIWRRSjdMemgW5OqUFurE6Y6fDJCy8B+Xar
-	 JOYxApp7CccNw==
-Date: Thu, 7 Dec 2023 15:13:57 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Naresh Maramaina <quic_mnaresh@quicinc.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Andy Gross <agross@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	chu.stanley@gmail.com, Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
-	Nitin Rawat <quic_nitirawa@quicinc.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="me+C4CHy"
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69E54128;
+	Thu,  7 Dec 2023 02:27:17 -0800 (PST)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B79XKj2011699;
+	Thu, 7 Dec 2023 10:26:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=RuICPUQra4CeTJPKT9XkYJ/b9ZFT1AHX1daHHwFg8KY=;
+ b=me+C4CHyioh3xO7xx7c9nqXvkzL+5bEER0WA0y7rPCG+yEunUh1LVCeEp1xBYpwRgbz8
+ ooeApKYNdo50OET8cjorU2xc+OY1fwBWydHQ0a1ZrYxwO+nPxGgXJl5Y7dKhuB+faejB
+ dbtcjmJxjoBLOSlsBNBUUcID1qO8LiqWSbGBgjJZEeLoBbM6e5GgEHTt7awQQOR80/GW
+ 1KxjbvHfaiVTg9iRCMtHeryEeedVSeuqGFk90n5CwxHXzpnXXjBs+lTbEOnvublRJgnk
+ 7uMObRwT2HW32Lui89pkuBqWwQPo+l5kByVNcdQklurGjOF3jU9NlkMI7WLCU5bZyfRG Rw== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uu928geh0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 07 Dec 2023 10:26:57 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B7AQton012717
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 7 Dec 2023 10:26:55 GMT
+Received: from [10.218.45.181] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Thu, 7 Dec
+ 2023 02:26:48 -0800
+Message-ID: <286b6f8a-c634-19ed-cf53-276cfe05d03f@quicinc.com>
+Date: Thu, 7 Dec 2023 15:56:43 +0530
+Precedence: bulk
+X-Mailing-List: linux-scsi@vger.kernel.org
+List-Id: <linux-scsi.vger.kernel.org>
+List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
 Subject: Re: [PATCH V2 1/3] ufs: core: Add CPU latency QoS support for ufs
  driver
-Message-ID: <20231207094357.GI2932@thinkpad>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Bart Van Assche
+	<bvanassche@acm.org>
+CC: Naresh Maramaina <quic_mnaresh@quicinc.com>,
+        "James E.J. Bottomley"
+	<jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Peter Wang <peter.wang@mediatek.com>, Andy Gross <agross@kernel.org>,
+        "Bjorn
+ Andersson" <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>,
+        <chu.stanley@gmail.com>, "Alim
+ Akhtar" <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-msm@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <quic_cang@quicinc.com>,
+        <quic_nguyenb@quicinc.com>
 References: <20231204143101.64163-1-quic_mnaresh@quicinc.com>
  <20231204143101.64163-2-quic_mnaresh@quicinc.com>
  <590ade27-b4da-49be-933b-e9959aa0cd4c@acm.org>
@@ -46,68 +68,89 @@ References: <20231204143101.64163-1-quic_mnaresh@quicinc.com>
  <b9373252-710c-4a54-95cc-046314796960@quicinc.com>
  <20231206153242.GI12802@thinkpad>
  <effb603e-ca7a-4f24-9783-4d62790165ae@acm.org>
-Precedence: bulk
-X-Mailing-List: linux-scsi@vger.kernel.org
-List-Id: <linux-scsi.vger.kernel.org>
-List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+ <20231207094357.GI2932@thinkpad>
+Content-Language: en-US
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20231207094357.GI2932@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <effb603e-ca7a-4f24-9783-4d62790165ae@acm.org>
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: xV9ZucUUu1VnH6KXAtu8Z4m5o650ce8x
+X-Proofpoint-GUID: xV9ZucUUu1VnH6KXAtu8Z4m5o650ce8x
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-07_08,2023-12-06_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 mlxscore=0
+ priorityscore=1501 suspectscore=0 malwarescore=0 lowpriorityscore=0
+ phishscore=0 impostorscore=0 clxscore=1011 bulkscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2312070084
 
-On Wed, Dec 06, 2023 at 03:02:04PM -1000, Bart Van Assche wrote:
-> On 12/6/23 05:32, Manivannan Sadhasivam wrote:
-> > On Wed, Dec 06, 2023 at 07:32:54PM +0530, Naresh Maramaina wrote:
-> > > On 12/5/2023 10:41 PM, Bart Van Assche wrote:
-> > > > On 12/4/23 21:58, Naresh Maramaina wrote:
-> > > > > On 12/5/2023 12:30 AM, Bart Van Assche wrote:
-> > > > > > On 12/4/23 06:30, Maramaina Naresh wrote:
-> > > > > > > +    /* This capability allows the host controller driver to
-> > > > > > > use the PM QoS
-> > > > > > > +     * feature.
-> > > > > > > +     */
-> > > > > > > +    UFSHCD_CAP_PM_QOS                = 1 << 13,
-> > > > > > >    };
-> > > > > > 
-> > > > > > Why does it depend on the host driver whether or not PM QoS is
-> > > > > > enabled? Why isn't it enabled unconditionally?
-> > > > > 
-> > > > > For some platform vendors power KPI might be more important than
-> > > > > random io KPI. Hence this flag is disabled by default and can be
-> > > > > enabled based on platform requirement.
-> > > > 
-> > > > How about leaving this flag out unless if a host vendor asks explicitly
-> > > > for this flag?
-> > > 
-> > > IMHO, instead of completely removing this flag, how about having
-> > > flag like "UFSHCD_CAP_DISABLE_PM_QOS" which will make PMQOS enable
-> > > by default and if some host vendor wants to disable it explicitly,
-> > > they can enable that flag.
-> > > Please let me know your opinion.
+
+
+On 12/7/2023 3:13 PM, Manivannan Sadhasivam wrote:
+> On Wed, Dec 06, 2023 at 03:02:04PM -1000, Bart Van Assche wrote:
+>> On 12/6/23 05:32, Manivannan Sadhasivam wrote:
+>>> On Wed, Dec 06, 2023 at 07:32:54PM +0530, Naresh Maramaina wrote:
+>>>> On 12/5/2023 10:41 PM, Bart Van Assche wrote:
+>>>>> On 12/4/23 21:58, Naresh Maramaina wrote:
+>>>>>> On 12/5/2023 12:30 AM, Bart Van Assche wrote:
+>>>>>>> On 12/4/23 06:30, Maramaina Naresh wrote:
+>>>>>>>> +    /* This capability allows the host controller driver to
+>>>>>>>> use the PM QoS
+>>>>>>>> +     * feature.
+>>>>>>>> +     */
+>>>>>>>> +    UFSHCD_CAP_PM_QOS                = 1 << 13,
+>>>>>>>>     };
+>>>>>>>
+>>>>>>> Why does it depend on the host driver whether or not PM QoS is
+>>>>>>> enabled? Why isn't it enabled unconditionally?
+>>>>>>
+>>>>>> For some platform vendors power KPI might be more important than
+>>>>>> random io KPI. Hence this flag is disabled by default and can be
+>>>>>> enabled based on platform requirement.
+>>>>>
+>>>>> How about leaving this flag out unless if a host vendor asks explicitly
+>>>>> for this flag?
+>>>>
+>>>> IMHO, instead of completely removing this flag, how about having
+>>>> flag like "UFSHCD_CAP_DISABLE_PM_QOS" which will make PMQOS enable
+>>>> by default and if some host vendor wants to disable it explicitly,
+>>>> they can enable that flag.
+>>>> Please let me know your opinion.
+>>
+>> That would result in a flag that is tested but that is never set by
+>> upstream code. I'm not sure that's acceptable.
+>>
 > 
-> That would result in a flag that is tested but that is never set by
-> upstream code. I'm not sure that's acceptable.
+> Agree. The flag shouldn't be introduced if there are no users.
+> 
+>>> If a vendor wants to disable this feature, then the driver has to be modified.
+>>> That won't be very convenient. So either this has to be configured through sysfs
+>>> or Kconfig if flexibility matters.
+>>
+>> Kconfig sounds worse to me because changing any Kconfig flag requires a
+>> modification of the Android GKI kernel.
+>>
+> 
+> Hmm, ok. Then I think we can have a sysfs hook to toggle the enable switch.
+
+Hi Bart, Mani
+
+How about keeping this feature enabled by default and having a module 
+parameter to disable pmqos feature if required ?
+
+Regards,
+Nitin
+
+> 
+> - Mani
+> 
+>> Thanks,
+>>
+>> Bart.
 > 
 
-Agree. The flag shouldn't be introduced if there are no users.
-
-> > If a vendor wants to disable this feature, then the driver has to be modified.
-> > That won't be very convenient. So either this has to be configured through sysfs
-> > or Kconfig if flexibility matters.
-> 
-> Kconfig sounds worse to me because changing any Kconfig flag requires a
-> modification of the Android GKI kernel.
-> 
-
-Hmm, ok. Then I think we can have a sysfs hook to toggle the enable switch.
-
-- Mani
-
-> Thanks,
-> 
-> Bart.
-
--- 
-மணிவண்ணன் சதாசிவம்
