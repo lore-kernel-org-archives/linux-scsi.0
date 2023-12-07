@@ -1,115 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Cmy9jwCG";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="v5unjEUo"
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.52])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F4141710;
-	Thu,  7 Dec 2023 15:02:46 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1701990155; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=PP4IttObG06Nbg9S4wT+xCyoX84/2iUUoUdjjS4ke+G6A+/ebrh8zhcniSIn79mQ5B
-    LSawalD7Zpn5OohQomh+HbfzAr4/dD6V10vlLDz0KYjBkQVeSPMh0e0XXnTHNaBjJkx8
-    T5GYxAoFnRO99cDQn5RXSRLh5sFQM3r+z5FNVHl8nZX/3OR4aa2cgPb0a03SGAIwupGc
-    VayRlPi5ktLj8YkS7yh2l7Twlk1Ex27Xute9eQBXBSDfGL1msB4HqBeyRJi8d26CE6bb
-    YJ62d7fKsLORm52gNjb7sR3E3yTYikLWkZiv8d0Z++6h9r0cJ2KWzl4RlmWqFrViSNtt
-    w8WA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1701990155;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=Inp95GW9nBAjNnHuUAANWe74go/YXaLvNxyxI6q8r/U=;
-    b=PgThVsVlyHZPOm+V/lj8B97jgZDDu5mLBjIT8hlv1l+mG6U5PiSRXvWMgNzZXeTiGY
-    eqtVNHBufQDALPAXG9hdJrTnEs7lWmNlvD5esbZG5Ze9jAGE9SKiqvS4CEDMu/hxubGc
-    6pA273bbodE1ORtCoPCcGK6/+7eMEvzU7TcSLemJBLufu7FKwhEpXLG9FCyBzqibsUvy
-    0+e7tIMOiPD+qgkHnAmv1S2FxgjVPjztG2WlhBn/DibIQtRMSt7nuykSDmt7/f4Qf1yE
-    TIcruRynbABSuplFFEEeF7GonUjnzjz0EQIAjdYaZoNSvf861VeIYUsoK4dwKCDiuwC+
-    g7Gg==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1701990155;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=Inp95GW9nBAjNnHuUAANWe74go/YXaLvNxyxI6q8r/U=;
-    b=Cmy9jwCGqVdOrPmpn4YzPMJKpPtDNHKinG3cev3QrjIZpvExG70HbKDYJlPQkjy6vy
-    3aDwyWceMxA/GfaewJOda2gH3Ue2k49peJgvp+pm08RxiZ1DvQUSRHcuw9PSBwp2GvDP
-    M3tX4I79SOXdXEA4AjAyDz6Q+7dIFT6vtyxvTIaLKK8nmYV4xp1QpgnrMxDZ43gjAgR+
-    9Qui8F92MSa6GUlWngWQ5o2bCo1rjGdKOBy5pdqxKlsxuel2pPgjaDqaxs7GHe/etxL+
-    nu8CPT79i/9qvW3usXQvDK0umhv+d7/IV2nKGCkPL6yLnLOIWrQqN1AXtCFuULmFfhMI
-    f8hg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1701990155;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=Inp95GW9nBAjNnHuUAANWe74go/YXaLvNxyxI6q8r/U=;
-    b=v5unjEUoDX3NyGzuXMi+K2Xs31IF5nT5nWyL06J+Q7LGlAzRuChUrbjaB9TI2iu01e
-    dR42hr8CfQtkPIlpySCw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JyMI1zXvWpofGAS3nPdhpsrjz9a9vtSST6HKPUHFmsUnlCzixmg="
-Received: from p200300c5872edce18348648ab5312731.dip0.t-ipconnect.de
-    by smtp.strato.de (RZmta 49.10.0 AUTH)
-    with ESMTPSA id z4c2a6zB7N2XACO
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Fri, 8 Dec 2023 00:02:33 +0100 (CET)
-Message-ID: <887dec18bdaec3cc048f0f4d5c0391dc338e3828.camel@iokpp.de>
-Subject: Re: [PATCH v3 2/3] scsi: ufs: core: Add UFS RTC support
-From: Bean Huo <beanhuo@iokpp.de>
-To: Bart Van Assche <bvanassche@acm.org>, avri.altman@wdc.com, 
-	alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com, 
-	mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com, 
-	beanhuo@micron.com, thomas@t-8ch.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- mikebi@micron.com,  lporzio@micron.com
-Date: Fri, 08 Dec 2023 00:02:33 +0100
-In-Reply-To: <b5819922-60e0-4701-84d4-05c76d2ea5ec@acm.org>
-References: <20231202160227.766529-1-beanhuo@iokpp.de>
-	 <20231202160227.766529-3-beanhuo@iokpp.de>
-	 <b5819922-60e0-4701-84d4-05c76d2ea5ec@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A56E8171A;
+	Thu,  7 Dec 2023 15:40:33 -0800 (PST)
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-5bcfc508d14so1282142a12.3;
+        Thu, 07 Dec 2023 15:40:33 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701992433; x=1702597233;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zKn1uN52FS2vEnu87exFjbGE3L6ww6nhW6mEF9xJpdY=;
+        b=j1W5HQ1c80Pxc9Th+TizmO5bggVGR0pT75QDA0ojDdFM60+wt0+nHUHC3SpO58zTKY
+         ZVYU2duGFJRE+glHbdKBvBnnCEAOc9Bg07h4naVF1IDol0Li+DU1Ylzkakl3xEdgg8xG
+         nKsiugV8xXmdGV5JvQnEm0SQMLbOzdPtabUZr7NW+LKMVbt1yGbJSm8TxOLL6ZlAixr1
+         xb7fRLXYL723NECXyARPgWgKYCxELZhMiOZWA5G7eSwT9Bg/jY7ejpN+Nu9jNzg4U0mh
+         P0QWGxgACm78yf/o9e+w/v91FWls6/BgpfASkkYVkadfPJcE3CFSsagVuh1vUfoBbJH/
+         waSg==
+X-Gm-Message-State: AOJu0YzDottJN6cWIarTD1WENCMhVvqHBJRwBLCJtnc//LSwnAmLVr20
+	etiVbpq5jwcUB67iiHZGwaw=
+X-Google-Smtp-Source: AGHT+IGpBzzBNpZQ7aLw12Lr3CLhxhN6qPoBqHO53fH5/5G3Jl/lE2mmAKCb7d+3+G+uU5xrduerRg==
+X-Received: by 2002:a05:6a20:a424:b0:18f:97c:977b with SMTP id z36-20020a056a20a42400b0018f097c977bmr2484338pzk.99.1701992432738;
+        Thu, 07 Dec 2023 15:40:32 -0800 (PST)
+Received: from [172.22.37.189] (076-081-102-005.biz.spectrum.com. [76.81.102.5])
+        by smtp.gmail.com with ESMTPSA id i4-20020a62c104000000b006ceba4953f6sm360063pfg.8.2023.12.07.15.40.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 07 Dec 2023 15:40:32 -0800 (PST)
+Message-ID: <1e71a6bf-ac2f-41bc-8931-8b4fb7371118@acm.org>
+Date: Thu, 7 Dec 2023 13:40:29 -1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 05/17] fs: Restore kiocb.ki_hint
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ Daejun Park <daejun7.park@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>
+References: <20231130013322.175290-1-bvanassche@acm.org>
+ <20231130013322.175290-6-bvanassche@acm.org> <20231207174633.GE31184@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231207174633.GE31184@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, 2023-12-06 at 14:59 -1000, Bart Van Assche wrote:
-> A 64-bit value is truncated to a 32-bit value. What should happen if
-> the
-> right hand side is larger than what fits into a 32-bit integer?
-> Should
-> a comment perhaps be added that uptimes of more than 136 years are
-> not
-> supported and also for absolute times that the above code fails after
-> the year 2010 + 136 =3D 2146?
->=20
-> Thanks,
->=20
-> Bart.
+On 12/7/23 07:46, Christoph Hellwig wrote:
+> On Wed, Nov 29, 2023 at 05:33:10PM -0800, Bart Van Assche wrote:
+>> Restore support for passing file and/or inode write hints to the code
+>> that processes struct kiocb. This patch reverts commit 41d36a9f3e53
+>> ("fs: remove kiocb.ki_hint").
+> 
+> Same comment as for the previous one.
+
+If kiocb.ki_hint is not restored, the kiocb users will have to use the
+kiocb ki_filp member to obtain the write hint information. In other
+words, iocb->ki_hint will have to be changed into
+file_inode(iocb->ki_filp)->i_write_hint. Is that what you want me to do?
+
+Thanks,
+
+Bart.
 
 
-Bart,
-
-you are taking into account a broader perspective. thanks for your
-review!
-
-I will add below code in the next version:
-
-
-+       if  (ts64.tv_sec < hba->dev_info.rtc_time_baseline) {
-+               dev_warn(hba->dev, "%s: Current time precedes previous
-setting!\n", __func__);
-+               return;
-+       }
-+       /*
-+        * Absolute RTC mode has 136-year limit as of 2010. Modify UFS
-Spec or choosing relative
-+        * RTC mode for longer (beyond year 2146) time spans.
-+        */
-
-
-Kind regards,
-Bean
