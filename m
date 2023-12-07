@@ -1,31 +1,31 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAA23EE;
-	Wed,  6 Dec 2023 17:02:10 -0800 (PST)
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6ce6dd83945so114584b3a.3;
-        Wed, 06 Dec 2023 17:02:10 -0800 (PST)
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACC6212F
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Dec 2023 17:03:35 -0800 (PST)
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6cea0fd9b53so111523b3a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Dec 2023 17:03:35 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701910930; x=1702515730;
+        d=1e100.net; s=20230601; t=1701911015; x=1702515815;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hsY9pw0TDst5fn7pyaJpwFYHQHsp2P8sIo6DgROWKDI=;
-        b=flfmmCKko9MjYEAXqz8N4rr30vWeSv0cPcBgzzjh2IsIZpx/uE2colbPUaQfPjOwtx
-         v8FCnfBFOk9NFcKRLHWY3eJSPd9ZHbVIxl1li3PlwjZNbABmH7CvCmZEXA2/cEjF+FBx
-         EzxeyDG0db64mhNweXW4DNxXRT5A/mnrrCDmNhwKsAMP839h6cAvN35EF9mQmf2jV7S0
-         i0iMK5kBhMkS8/41NCI0KKy9OW4EiYOoFWpR53lEYEYmM8gb/C77eYCVKBInDPy1MNHd
-         JVQWl3W2CDR9C4FWd7zI8pMuupimVS+iieFL6QLdrvtYNLsE104+OQb2eLOYLY0dMhHh
-         zFAg==
-X-Gm-Message-State: AOJu0Ywd892/Pq4IcvU/z6a0PAbJHL100pLT0tBDtoL5S+01RvPxqWbT
-	auePmjotkWlSlSl1jTkMsfM=
-X-Google-Smtp-Source: AGHT+IHMqy62pr33s+axRTNU9zRKI+eQxYUdPtYiMKmdFwxGEZ5YOdCxe0OaOGpyoMV2n57/gKS5ZA==
-X-Received: by 2002:a05:6a20:43a7:b0:18f:bf91:2938 with SMTP id i39-20020a056a2043a700b0018fbf912938mr2423155pzl.125.1701910930060;
-        Wed, 06 Dec 2023 17:02:10 -0800 (PST)
+        bh=U52vngLtiH5dfNxbwArqM84+bCaFar9/QyNxWIIqCuU=;
+        b=IAu6YVAv2TNf6E2P0wUUPfAiJJK3IHMfEaGNxdx5gP9TkxhLj5vMWEvBrzDNQwOWVZ
+         hZOszGO14lcjERl3sue8CFLS70f+f7+Hmnsr5+TWeQESZUXtb0Ayj1eWc5SlH13WGymG
+         ep8OZLgf1jdwYltlFTuk2Q1IKWdO+Dz6a7onv6Dx7MC7mdwgqXZcNgxUfUh4gu2BN3ww
+         vkSvQcyf3fV218WfNqI4Qvn1B0eLTx+F8lJ2OuUFhiz0XaWkOLtRW60rVO1IL5XR1/N3
+         6hedPPVa3vxMzY+8vJQC3zLaWcHDIjJ/mopyMZeTbS2Yka6UyeV4kaH4AHl4YfsRud0E
+         Z9nA==
+X-Gm-Message-State: AOJu0YxAWw8Ur42bRw4nIWn7c0F5hGBvcMF5XubXmirMcRlCHxFimk0c
+	iSBuOVhFcggz8CSKdLnGb5W8phy2fVw=
+X-Google-Smtp-Source: AGHT+IFiiqT2rVtUw9XwpgPgsBD1M9nPaAOX472eSgEKuT0pYu3RJdmjJkbnsx0NZhtzCnbuQyBvKQ==
+X-Received: by 2002:a05:6a00:1503:b0:6ce:2731:d5d4 with SMTP id q3-20020a056a00150300b006ce2731d5d4mr1763065pfu.69.1701911014884;
+        Wed, 06 Dec 2023 17:03:34 -0800 (PST)
 Received: from [172.20.2.177] (rrcs-173-197-90-226.west.biz.rr.com. [173.197.90.226])
-        by smtp.gmail.com with ESMTPSA id p2-20020aa78602000000b006889511ab14sm134543pfn.37.2023.12.06.17.02.06
+        by smtp.gmail.com with ESMTPSA id p2-20020aa78602000000b006889511ab14sm134543pfn.37.2023.12.06.17.03.33
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 06 Dec 2023 17:02:08 -0800 (PST)
-Message-ID: <effb603e-ca7a-4f24-9783-4d62790165ae@acm.org>
-Date: Wed, 6 Dec 2023 15:02:04 -1000
+        Wed, 06 Dec 2023 17:03:34 -0800 (PST)
+Message-ID: <6a9482bb-ead0-4ef1-b77f-0783e6cdd72d@acm.org>
+Date: Wed, 6 Dec 2023 15:03:32 -1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -33,74 +33,25 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 1/3] ufs: core: Add CPU latency QoS support for ufs
- driver
+Subject: Re: [BUG] lpfc: Kernel NULL pointer dereference in
+ lpfc_dev_loss_tmo_callbk
 Content-Language: en-US
-To: Manivannan Sadhasivam <mani@kernel.org>,
- Naresh Maramaina <quic_mnaresh@quicinc.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Peter Wang <peter.wang@mediatek.com>, Andy Gross <agross@kernel.org>,
- Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konrad.dybcio@linaro.org>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- chu.stanley@gmail.com, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
- Nitin Rawat <quic_nitirawa@quicinc.com>
-References: <20231204143101.64163-1-quic_mnaresh@quicinc.com>
- <20231204143101.64163-2-quic_mnaresh@quicinc.com>
- <590ade27-b4da-49be-933b-e9959aa0cd4c@acm.org>
- <692cd503-5b14-4be6-831d-d8e9c282a95e@quicinc.com>
- <5e7c5c75-cb5f-4afe-9d57-b0cab01a6f26@acm.org>
- <b9373252-710c-4a54-95cc-046314796960@quicinc.com>
- <20231206153242.GI12802@thinkpad>
+To: "Dietmar Hahn (Fujitsu)" <dietmar.hahn@fujitsu.com>,
+ James Smart <james.smart@broadcom.com>,
+ Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <FR0P281MB212385AC7DBA18F47AD793179484A@FR0P281MB2123.DEUP281.PROD.OUTLOOK.COM>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231206153242.GI12802@thinkpad>
+In-Reply-To: <FR0P281MB212385AC7DBA18F47AD793179484A@FR0P281MB2123.DEUP281.PROD.OUTLOOK.COM>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 12/6/23 05:32, Manivannan Sadhasivam wrote:
-> On Wed, Dec 06, 2023 at 07:32:54PM +0530, Naresh Maramaina wrote:
->> On 12/5/2023 10:41 PM, Bart Van Assche wrote:
->>> On 12/4/23 21:58, Naresh Maramaina wrote:
->>>> On 12/5/2023 12:30 AM, Bart Van Assche wrote:
->>>>> On 12/4/23 06:30, Maramaina Naresh wrote:
->>>>>> +    /* This capability allows the host controller driver to
->>>>>> use the PM QoS
->>>>>> +     * feature.
->>>>>> +     */
->>>>>> +    UFSHCD_CAP_PM_QOS                = 1 << 13,
->>>>>>    };
->>>>>
->>>>> Why does it depend on the host driver whether or not PM QoS is
->>>>> enabled? Why isn't it enabled unconditionally?
->>>>
->>>> For some platform vendors power KPI might be more important than
->>>> random io KPI. Hence this flag is disabled by default and can be
->>>> enabled based on platform requirement.
->>>
->>> How about leaving this flag out unless if a host vendor asks explicitly
->>> for this flag?
->>
->> IMHO, instead of completely removing this flag, how about having
->> flag like "UFSHCD_CAP_DISABLE_PM_QOS" which will make PMQOS enable
->> by default and if some host vendor wants to disable it explicitly,
->> they can enable that flag.
->> Please let me know your opinion.
+On 12/6/23 04:50, Dietmar Hahn (Fujitsu) wrote:
+> We use linux kernel version: 5.14.21-150400.24.92-default from SuSE SLES15SP4 containing
+> LPFC_DRIVER_VERSION: "14.2.0.14".
 
-That would result in a flag that is tested but that is never set by
-upstream code. I'm not sure that's acceptable.
-
-> If a vendor wants to disable this feature, then the driver has to be modified.
-> That won't be very convenient. So either this has to be configured through sysfs
-> or Kconfig if flexibility matters.
-
-Kconfig sounds worse to me because changing any Kconfig flag requires a
-modification of the Android GKI kernel.
+Please report bugs in SUSE kernels to SUSE. This mailing list is for
+discussion of upstream kernels.
 
 Thanks,
 
