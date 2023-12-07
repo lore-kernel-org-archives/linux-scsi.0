@@ -1,9 +1,9 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2524B193;
-	Thu,  7 Dec 2023 09:45:32 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 911BE10F7;
+	Thu,  7 Dec 2023 09:46:21 -0800 (PST)
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 92398227A87; Thu,  7 Dec 2023 18:45:29 +0100 (CET)
-Date: Thu, 7 Dec 2023 18:45:29 +0100
+	id 5A17B227A87; Thu,  7 Dec 2023 18:46:18 +0100 (CET)
+Date: Thu, 7 Dec 2023 18:46:17 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -12,10 +12,13 @@ Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Christoph Hellwig <hch@lst.de>,
 	Daejun Park <daejun7.park@samsung.com>,
 	Kanchan Joshi <joshi.k@samsung.com>,
-	Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
-Subject: Re: [PATCH v5 03/17] fs/f2fs: Restore the whint_mode mount option
-Message-ID: <20231207174529.GC31184@lst.de>
-References: <20231130013322.175290-1-bvanassche@acm.org> <20231130013322.175290-4-bvanassche@acm.org>
+	Jeff Layton <jlayton@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Dave Chinner <dchinner@redhat.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>
+Subject: Re: [PATCH v5 04/17] fs: Restore F_[GS]ET_FILE_RW_HINT support
+Message-ID: <20231207174617.GD31184@lst.de>
+References: <20231130013322.175290-1-bvanassche@acm.org> <20231130013322.175290-5-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -24,14 +27,13 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231130013322.175290-4-bvanassche@acm.org>
+In-Reply-To: <20231130013322.175290-5-bvanassche@acm.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Nov 29, 2023 at 05:33:08PM -0800, Bart Van Assche wrote:
-> Restore support for the whint_mode mount option by reverting commit
-> 930e2607638d ("f2fs: remove obsolete whint_mode").
+On Wed, Nov 29, 2023 at 05:33:09PM -0800, Bart Van Assche wrote:
+> Revert commit 7b12e49669c9 ("fs: remove fs.f_write_hint") to enable testing
+> write hint support with fio and direct I/O.
 
-I know that commit sets a precedence by having a horribly short and
-uninformative commit message, but please write a proper one for this
-commit and explain why you are restoring the option.  Also if anything
-changed since last year.
+To enable testing seems like a pretty bad argument for bloating struct
+file.  I'd much prefer to not restore it, but if you want to do so
+please write a convincing commit log.
