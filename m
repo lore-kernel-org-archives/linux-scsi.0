@@ -1,177 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="R4ozkcX7"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68811B5;
-	Fri,  8 Dec 2023 00:19:21 -0800 (PST)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B86uL4j032586;
-	Fri, 8 Dec 2023 08:19:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=C2hKHVuo5pBf5bnruKdO8cHrz+iaFEu6konihm1cVvI=;
- b=R4ozkcX7dRMO173or5/GV9MQ5BYUG7Qt5xZ4YXeylmLZDev2Ui4mlUZrniuAn6weCvY1
- K+ndE6S9DGr/u0fg8D9demj9/BHR7x1tMVE66YcU/91/tz/P4y3J3wNvpENHoQBNhu61
- 6Tmxl85qPa9vM4hrm9SMVIxfvkDHbojaKZDnf5vGONjhYBsIcJc4ZOHswkDmDlzu2nXz
- TJashaluo3e2BRpo7J0GUbFv7NIVT8gwOcM84HQiqD59KGa6IoSTigZeZVhTkUf0q8DJ
- avDxfsZLqZU/8WXw338hOyOodQUl3gHscCllgnBYyAGgRmWpSupFcST573R78xVh/6Lg Aw== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uubdm2xue-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 08 Dec 2023 08:19:18 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B88JIAW012238
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 8 Dec 2023 08:19:18 GMT
-Received: from [10.216.14.21] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 8 Dec
- 2023 00:19:10 -0800
-Message-ID: <e28ffc90-1c78-4ccb-8251-9a22243f7b20@quicinc.com>
-Date: Fri, 8 Dec 2023 13:47:40 +0530
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60AF61724;
+	Fri,  8 Dec 2023 00:24:53 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SmkhX66PQz4f3l1b;
+	Fri,  8 Dec 2023 16:24:44 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id A0D891A09BD;
+	Fri,  8 Dec 2023 16:24:49 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDHyhDP0nJlmB1EDA--.42879S4;
+	Fri, 08 Dec 2023 16:24:49 +0800 (CST)
+From: linan666@huaweicloud.com
+To: jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	mcgrof@kernel.org
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan122@huawei.com,
+	yukuai3@huawei.com,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH] scsi: sd: unregister device if device_add_disk() failed in sd_probe()
+Date: Fri,  8 Dec 2023 16:23:35 +0800
+Message-Id: <20231208082335.1754205-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 08/12] ufs: core: add support for generate, import and
- prepare keys
-Content-Language: en-US
-To: Gaurav Kashyap <quic_gaurkash@quicinc.com>, <linux-scsi@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <ebiggers@google.com>,
-        <neil.armstrong@linaro.org>, <srinivas.kandagatla@linaro.org>
-CC: <linux-mmc@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        <linux-fscrypt@vger.kernel.org>, <omprsing@qti.qualcomm.com>,
-        <quic_psodagud@quicinc.com>, <abel.vesa@linaro.org>,
-        <quic_spuppala@quicinc.com>, <kernel@quicinc.com>
-References: <20231122053817.3401748-1-quic_gaurkash@quicinc.com>
- <20231122053817.3401748-9-quic_gaurkash@quicinc.com>
-From: Om Prakash Singh <quic_omprsing@quicinc.com>
-In-Reply-To: <20231122053817.3401748-9-quic_gaurkash@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: V8MRZrhASFdP1vKjgUZCPkMZPMEi-77R
-X-Proofpoint-GUID: V8MRZrhASFdP1vKjgUZCPkMZPMEi-77R
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-08_04,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 mlxlogscore=999
- adultscore=0 impostorscore=0 lowpriorityscore=0 priorityscore=1501
- suspectscore=0 bulkscore=0 clxscore=1015 phishscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2312080067
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDHyhDP0nJlmB1EDA--.42879S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7JFWxXr13GryDXw1DZry7ZFb_yoWfArg_Ca
+	12v39rXr1rCr1xtw1fAr1avrW0vF42qrW5Cr4jqF9ava15WryvgF909r1Fvr4UGF17uw1U
+	tr1jqr4Fyr4kKjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUba8YFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l
+	5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67
+	AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7Cj
+	xVA2Y2ka0xkIwI1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3
+	Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+	sGvfC2KfnxnUUI43ZEXa7IUbEAp5UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
+From: Li Nan <linan122@huawei.com>
 
+"if device_add() succeeds, you should call device_del() when you want to
+get rid of it."
 
-On 11/22/2023 11:08 AM, Gaurav Kashyap wrote:
-> This patch contains two changes in UFS for wrapped keys.
-> 1. Implements the blk_crypto_profile ops for generate, import
->     and prepare key apis.
-> 2. Defines UFS vops for generate, import and prepare keys so
->     that vendors can hook into them.
+In sd_probe(), device_add_disk() fails when device_add() has already
+succeeded, so change put_device() to device_unregister() to ensure device
+resources are released.
 
-re-write commit message as it is single change.
-using numbering in commit message is indication of making multiple 
-independent changes in single patch, which should be avoided.
+Fixes: 2a7a891f4c40 ("scsi: sd: Add error handling support for add_disk()")
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+ drivers/scsi/sd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> ---
->   drivers/ufs/core/ufshcd-crypto.c | 41 ++++++++++++++++++++++++++++++++
->   include/ufs/ufshcd.h             | 11 +++++++++
->   2 files changed, 52 insertions(+)
-> 
-> diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
-> index 3edbca87c322..cf34f4a9cda8 100644
-> --- a/drivers/ufs/core/ufshcd-crypto.c
-> +++ b/drivers/ufs/core/ufshcd-crypto.c
-> @@ -143,10 +143,51 @@ static int ufshcd_crypto_derive_sw_secret(struct blk_crypto_profile *profile,
->   	return -EOPNOTSUPP;
->   }
->   
-> +static int ufshcd_crypto_generate_key(struct blk_crypto_profile *profile,
-> +				      u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-> +{
-> +	struct ufs_hba *hba =
-> +		container_of(profile, struct ufs_hba, crypto_profile);
-> +
-> +	if (hba->vops && hba->vops->generate_key)
-> +		return  hba->vops->generate_key(hba, lt_key);
-Please fix double space.
-> +
-> +	return -EOPNOTSUPP;
-> +}
-> +
-> +static int ufshcd_crypto_prepare_key(struct blk_crypto_profile *profile,
-> +				     const u8 *lt_key, size_t lt_key_size,
-> +				     u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-> +{
-> +	struct ufs_hba *hba =
-> +		container_of(profile, struct ufs_hba, crypto_profile);
-> +
-> +	if (hba->vops && hba->vops->prepare_key)
-> +		return  hba->vops->prepare_key(hba, lt_key, lt_key_size, eph_key);
-Please fix double space.
-> +
-> +	return -EOPNOTSUPP;
-> +}
-> +
-> +static int ufshcd_crypto_import_key(struct blk_crypto_profile *profile,
-> +				    const u8 *imp_key, size_t imp_key_size,
-> +				    u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-> +{
-> +	struct ufs_hba *hba =
-> +		container_of(profile, struct ufs_hba, crypto_profile);
-> +
-> +	if (hba->vops && hba->vops->import_key)
-> +		return  hba->vops->import_key(hba, imp_key, imp_key_size, lt_key);
-Please fix double space.
-> +
-> +	return -EOPNOTSUPP;
-> +}
-> +
->   static const struct blk_crypto_ll_ops ufshcd_crypto_ops = {
->   	.keyslot_program	= ufshcd_crypto_keyslot_program,
->   	.keyslot_evict		= ufshcd_crypto_keyslot_evict,
->   	.derive_sw_secret	= ufshcd_crypto_derive_sw_secret,
-> +	.generate_key		= ufshcd_crypto_generate_key,
-> +	.prepare_key		= ufshcd_crypto_prepare_key,
-> +	.import_key		= ufshcd_crypto_import_key,
->   };
->   
->   static enum blk_crypto_mode_num
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 86677788b5bd..49657a5d1e34 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -321,6 +321,9 @@ struct ufs_pwr_mode_info {
->    * @config_scaling_param: called to configure clock scaling parameters
->    * @program_key: program or evict an inline encryption key
->    * @derive_sw_secret: derive sw secret from a wrapped key
-> + * @generate_key: generate a storage key and return longterm wrapped key
-> + * @prepare_key: unwrap longterm key and return ephemeral wrapped key
-> + * @import_key: import sw storage key and return longterm wrapped key
->    * @event_notify: called to notify important events
->    * @reinit_notify: called to notify reinit of UFSHCD during max gear switch
->    * @mcq_config_resource: called to configure MCQ platform resources
-> @@ -368,6 +371,14 @@ struct ufs_hba_variant_ops {
->   	int	(*derive_sw_secret)(struct ufs_hba *hba, const u8 wkey[],
->   				    unsigned int wkey_size,
->   				    u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE]);
-> +	int	(*generate_key)(struct ufs_hba *hba,
-> +				u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-> +	int	(*prepare_key)(struct ufs_hba *hba,
-> +			       const u8 *lt_key, size_t lt_key_size,
-> +			       u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-> +	int	(*import_key)(struct ufs_hba *hba,
-> +			      const u8 *imp_key, size_t imp_key_size,
-> +			      u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
->   	void	(*event_notify)(struct ufs_hba *hba,
->   				enum ufs_event_type evt, void *data);
->   	void	(*reinit_notify)(struct ufs_hba *);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 542a4bbb21bc..d81cbeee06eb 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3736,7 +3736,7 @@ static int sd_probe(struct device *dev)
+ 
+ 	error = device_add_disk(dev, gd, NULL);
+ 	if (error) {
+-		put_device(&sdkp->disk_dev);
++		device_unregister(&sdkp->disk_dev);
+ 		put_disk(gd);
+ 		goto out;
+ 	}
+-- 
+2.39.2
+
