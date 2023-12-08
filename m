@@ -1,84 +1,76 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60AF61724;
-	Fri,  8 Dec 2023 00:24:53 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SmkhX66PQz4f3l1b;
-	Fri,  8 Dec 2023 16:24:44 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id A0D891A09BD;
-	Fri,  8 Dec 2023 16:24:49 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDHyhDP0nJlmB1EDA--.42879S4;
-	Fri, 08 Dec 2023 16:24:49 +0800 (CST)
-From: linan666@huaweicloud.com
-To: jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	mcgrof@kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linan122@huawei.com,
-	yukuai3@huawei.com,
-	yi.zhang@huawei.com,
-	houtao1@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH] scsi: sd: unregister device if device_add_disk() failed in sd_probe()
-Date: Fri,  8 Dec 2023 16:23:35 +0800
-Message-Id: <20231208082335.1754205-1-linan666@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Dmrvpn6X"
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9632E171C;
+	Fri,  8 Dec 2023 00:33:18 -0800 (PST)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B88CCdm017745;
+	Fri, 8 Dec 2023 08:33:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=s9YJ0/5J+OYeH8kQUcQ78n8ox5YkNEpfvV4LxpEjAWM=;
+ b=Dmrvpn6XIOApSXNoDwjHP3beKb36wOXSv8w4gl4o2v7yLNElWfh64fo9SBCiutpmNt5Q
+ rHxw0dit6ON18gpMaLrz1yj4O9L78gYjj0Xoq9J7jJMFUE6Da0m0zVaD6iLOoUcUimDX
+ ALug8MUzBZt29U3mC8uG3o1z9yZJyE/9YRKtppd9iLXmulPYdP7zqZt71TyppQ+dBLOZ
+ LvdXuOO1J8NBSNmwOejrLrnSAlDaGRuBxFVLuhuTx2zQLfeFUZH9m19SXAC36jmGyYM3
+ tak9yIjnhA1XL8gX4NtS2ZVYwUAVZaAKSlK0nKkPUlXleTUYJKkNIgnFYvmbxzjgwZfX Lw== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3utynu4c6c-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 08 Dec 2023 08:33:15 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B88XEH7002134
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 8 Dec 2023 08:33:14 GMT
+Received: from [10.216.14.21] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 8 Dec
+ 2023 00:29:23 -0800
+Message-ID: <3973b4f2-2173-427a-8ad5-8b954e3b43cd@quicinc.com>
+Date: Fri, 8 Dec 2023 13:59:19 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHyhDP0nJlmB1EDA--.42879S4
-X-Coremail-Antispam: 1UD129KBjvdXoW7JFWxXr13GryDXw1DZry7ZFb_yoWfArg_Ca
-	12v39rXr1rCr1xtw1fAr1avrW0vF42qrW5Cr4jqF9ava15WryvgF909r1Fvr4UGF17uw1U
-	tr1jqr4Fyr4kKjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUba8YFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l
-	5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67
-	AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7Cj
-	xVA2Y2ka0xkIwI1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
-	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3
-	Jr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-	sGvfC2KfnxnUUI43ZEXa7IUbEAp5UUUUU==
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 10/12] ufs: host: support for generate, import and
+ prepare key
+Content-Language: en-US
+To: Gaurav Kashyap <quic_gaurkash@quicinc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, <ebiggers@google.com>,
+        <neil.armstrong@linaro.org>, <srinivas.kandagatla@linaro.org>
+CC: <linux-mmc@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <linux-fscrypt@vger.kernel.org>, <omprsing@qti.qualcomm.com>,
+        <quic_psodagud@quicinc.com>, <abel.vesa@linaro.org>,
+        <quic_spuppala@quicinc.com>, <kernel@quicinc.com>
+References: <20231122053817.3401748-1-quic_gaurkash@quicinc.com>
+ <20231122053817.3401748-11-quic_gaurkash@quicinc.com>
+From: Om Prakash Singh <quic_omprsing@quicinc.com>
+In-Reply-To: <20231122053817.3401748-11-quic_gaurkash@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ldAH3tmugLUrumfkWT8_TTgqC7Np9Rd5
+X-Proofpoint-ORIG-GUID: ldAH3tmugLUrumfkWT8_TTgqC7Np9Rd5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-08_04,2023-12-07_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxlogscore=628
+ clxscore=1015 priorityscore=1501 lowpriorityscore=0 bulkscore=0
+ phishscore=0 malwarescore=0 spamscore=0 impostorscore=0 suspectscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2312080069
 
-From: Li Nan <linan122@huawei.com>
 
-"if device_add() succeeds, you should call device_del() when you want to
-get rid of it."
 
-In sd_probe(), device_add_disk() fails when device_add() has already
-succeeded, so change put_device() to device_unregister() to ensure device
-resources are released.
-
-Fixes: 2a7a891f4c40 ("scsi: sd: Add error handling support for add_disk()")
-Signed-off-by: Li Nan <linan122@huawei.com>
----
- drivers/scsi/sd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 542a4bbb21bc..d81cbeee06eb 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3736,7 +3736,7 @@ static int sd_probe(struct device *dev)
- 
- 	error = device_add_disk(dev, gd, NULL);
- 	if (error) {
--		put_device(&sdkp->disk_dev);
-+		device_unregister(&sdkp->disk_dev);
- 		put_disk(gd);
- 		goto out;
- 	}
--- 
-2.39.2
-
+On 11/22/2023 11:08 AM, Gaurav Kashyap wrote:
+> Implements the vops for generate, prepare and import key apis in ufs 
+> qcom and call the respective ICE module apis for them. Signed-off-by: 
+> Gaurav Kashyap <quic_gaurkash@quicinc.com> ---
+Reviewed-by: Om Prakash Singh <quic_omprsing@quicinc.com>
