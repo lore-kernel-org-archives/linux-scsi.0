@@ -1,119 +1,116 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="TqUnNlwp"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="fsJ6a5J4"
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 075BA171C;
-	Fri,  8 Dec 2023 00:47:54 -0800 (PST)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B88haBG031366;
-	Fri, 8 Dec 2023 08:47:47 GMT
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7141F171C;
+	Fri,  8 Dec 2023 01:25:39 -0800 (PST)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B89GRZG012002;
+	Fri, 8 Dec 2023 09:25:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
  mime-version : subject : to : cc : references : from : in-reply-to :
  content-type : content-transfer-encoding; s=qcppdkim1;
- bh=sJFSWpBix3ucYjDy7sX1k4wYmjCFS/pCIXxw8fhDtOs=;
- b=TqUnNlwpjnKpeH/rMRGMV0Nuw2EsvaCC4S322rEDPn+EwqdU1zjXLzJhSzEFLEoq44He
- DdSer7SE2FrF4+bC4AZPoNhfQKya0XLvGsADmO4oG9Iw+5KAOoPAjsRWHsTIxosCXJiD
- 3GLnGqKVPzVBsoCAIhmMv8JB64RYqhb+7Gnz8l+6v/vguRPgCc85YdD60kDSEvUwbTpc
- J9Jd/oTL2BdySy6Cjqm4HJr+yDgYEcfJ0B3NPHluxn9FmAXPpP1Q2D7BzWAKJ5+q4lxp
- IXlZ5bMDw1Nw31ZVVJRa8UuPd9zRcQ8GpLJqKeI/QFBbByQIr4Dosmf8I0jfoIIqvGtw QA== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uuphg9154-1
+ bh=4PjOLiFFmML10b2IGM2FgxHX2eg4l+9eS6oUXWvGhkQ=;
+ b=fsJ6a5J4L/bJYuGMTuGh7/fcdP3xKAOmgjrL+rV8eKADzVltMuwvyG8gTDe4yMe0U7V1
+ M1dWCcTeCxo3F52XEoRnp8r+1Q5JnPiXbMtBdelXTD20sO8CgqxVDPHKLMsblmipQjIb
+ oh0oKEWrbIUdesKr2j5CWfWeVnWoOwUT/oAlryaB3J/mvcnTO8grL9mNXfh6fF5fA2SY
+ buHSYuMBNIfLbO1voydakHfGHkSgogkoAwAW2stdlj08oR5l6GDVVL9Gs3P73kjotMX9
+ QELGr5cbeiIqGUG9tcxQ3lR1Idytzy6sKl5nYUlQtU1seLXX9B5Xa2lwFwrDFxz9jLVf Lw== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uu928kcfk-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 08 Dec 2023 08:47:47 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B88lkGD008964
+	Fri, 08 Dec 2023 09:25:31 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B89PTd9027477
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 8 Dec 2023 08:47:46 GMT
-Received: from [10.216.14.21] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+	Fri, 8 Dec 2023 09:25:29 GMT
+Received: from [10.50.44.194] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 8 Dec
- 2023 00:45:59 -0800
-Message-ID: <c8885f86-1bb5-4322-9a0a-1a6227e34fa3@quicinc.com>
-Date: Fri, 8 Dec 2023 14:15:55 +0530
+ 2023 01:25:26 -0800
+Message-ID: <7472fe73-e7a0-5c8c-6e85-655db028a5c3@quicinc.com>
+Date: Fri, 8 Dec 2023 14:55:21 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 11/12] arm64: dts: qcom: sm8650: add hwkm support to
- ufs ice
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: [PATCH v2 05/17] scsi: ufs: qcom: Remove the warning message when
+ core_reset is not available
 Content-Language: en-US
-To: Bjorn Andersson <andersson@kernel.org>,
-        Gaurav Kashyap
-	<quic_gaurkash@quicinc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        <ebiggers@google.com>, <neil.armstrong@linaro.org>,
-        <srinivas.kandagatla@linaro.org>, <linux-mmc@vger.kernel.org>,
-        <linux-block@vger.kernel.org>, <linux-fscrypt@vger.kernel.org>,
-        <omprsing@qti.qualcomm.com>, <quic_psodagud@quicinc.com>,
-        <abel.vesa@linaro.org>, <quic_spuppala@quicinc.com>,
-        <kernel@quicinc.com>
-References: <20231122053817.3401748-1-quic_gaurkash@quicinc.com>
- <20231122053817.3401748-12-quic_gaurkash@quicinc.com>
- <blzia6asujby2xsfg2na6piwcgfkorodugebvflstjfexeyfvj@t5ifq3kxquhw>
-From: Om Prakash Singh <quic_omprsing@quicinc.com>
-In-Reply-To: <blzia6asujby2xsfg2na6piwcgfkorodugebvflstjfexeyfvj@t5ifq3kxquhw>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
+CC: <andersson@kernel.org>, <konrad.dybcio@linaro.org>,
+        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_cang@quicinc.com>,
+        <ahalaney@redhat.com>
+References: <20231208065902.11006-1-manivannan.sadhasivam@linaro.org>
+ <20231208065902.11006-6-manivannan.sadhasivam@linaro.org>
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20231208065902.11006-6-manivannan.sadhasivam@linaro.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: YFtx0sXkLhCp189oQP_LKcLjktbtQuCB
-X-Proofpoint-GUID: YFtx0sXkLhCp189oQP_LKcLjktbtQuCB
+X-Proofpoint-ORIG-GUID: pFoOcZVQRYLqNQkkvC_Kghosb4o2VXoc
+X-Proofpoint-GUID: pFoOcZVQRYLqNQkkvC_Kghosb4o2VXoc
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-08_04,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- spamscore=0 impostorscore=0 clxscore=1011 lowpriorityscore=0 phishscore=0
- adultscore=0 malwarescore=0 mlxlogscore=920 suspectscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2312080071
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 mlxscore=0
+ priorityscore=1501 suspectscore=0 malwarescore=0 lowpriorityscore=0
+ phishscore=0 impostorscore=0 clxscore=1015 bulkscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2312080076
 
 
 
-On 12/8/2023 9:21 AM, Bjorn Andersson wrote:
-> On Tue, Nov 21, 2023 at 09:38:16PM -0800, Gaurav Kashyap wrote:
->> The Inline Crypto Engine (ICE) for UFS supports the
->> Hardware Key Manager (hwkm) to securely manage storage
->> keys. Enable using this hardware on sm8650.
+On 12/8/2023 12:28 PM, Manivannan Sadhasivam wrote:
+> core_reset is optional, so there is no need to warn the user if it is not
+> available.
 > 
-> I'm unable to understand why the size of the reg changes based on this
-> motivation.
+> Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>   drivers/ufs/host/ufs-qcom.c | 4 +---
+>   1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> Regards,
-> Bjorn
->
-Actual size of register space size is 0x18000 (as per IPCAT). But all 
-registers space are not used.
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index dc93b1c5ca74..d474de0739e4 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -296,10 +296,8 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
+>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>   	bool reenable_intr;
+>   
+> -	if (!host->core_reset) {
+> -		dev_warn(hba->dev, "%s: reset control not set\n", __func__);
+> +	if (!host->core_reset)
+>   		return 0;
+> -	}
+>   
+>   	reenable_intr = hba->is_irq_enabled;
+>   	disable_irq(hba->irq);
 
-HWKM register offset is start at 0x8000. Hence needed to expand reg map 
-size.
+
+Hi Mani,
+
+I think core reset is not frequent. It happen during only probe ,error 
+handler.
+
+core reset is needed in kernel to cleanup UFS phy and controller 
+configuration before UFS HLOS operation starts as per HPG.
+
+Having existing warn print can be used to to debug or atleast know 
+core_reset is missed in device tree to give indication complete reset 
+hasn't been done and we could still be operating in bootloader 
+configuration.
 
 
->>
->> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
->> ---
->>   arch/arm64/boot/dts/qcom/sm8650.dtsi | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/arch/arm64/boot/dts/qcom/sm8650.dtsi b/arch/arm64/boot/dts/qcom/sm8650.dtsi
->> index bbebe15437aa..b61066210e09 100644
->> --- a/arch/arm64/boot/dts/qcom/sm8650.dtsi
->> +++ b/arch/arm64/boot/dts/qcom/sm8650.dtsi
->> @@ -763,7 +763,8 @@ rng: rng@10c3000 {
->>   		ice: crypto@1d88000 {
->>   			compatible = "qcom,sm8650-inline-crypto-engine",
->>   				     "qcom,inline-crypto-engine";
->> -			reg = <0 0x01d88000 0 0x8000>;
->> +			reg = <0 0x01d88000 0 0x10000>;
->> +			qcom,ice-use-hwkm;
->>   
->>   			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
->>   		};
->> -- 
->> 2.25.1
->>
->>
-> 
+Regards,
+Nitin
+
