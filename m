@@ -1,43 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="TcHOM3b8"
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 227091730
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2023 23:00:17 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-6ceda123d4fso252624b3a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Dec 2023 23:00:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YeyAgzSG"
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02CE3173E
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2023 23:00:22 -0800 (PST)
+Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1d06fffdb65so13715745ad.2
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Dec 2023 23:00:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1702018816; x=1702623616; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1702018821; x=1702623621; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=K6ZqhhOHk2iNfWUUPqiv/O7Z6HQrUwIXBT8R8ig4LQ0=;
-        b=TcHOM3b8w6bUNscJUzlIR2LKRSMxUkzNx+FmyjKZRgrwr0+tmAMBrnKTamikcxoaIQ
-         oBBelnXaUJQC1JDVRBQmkTej2FaMoE5srNZ+6PVdPVYdozpMqYvS8D1qux6xRtsxChVA
-         sGxFZmR8MnqW7ogOcf6365wzn+9mBQ0S0nhCRuBk7NMrdY+WeZlGdSLEiuqNajiMU7MB
-         OKz6l/HmoHy14HAZXokfk7R2vmGRe7KlDJ20JwHpfc5vUTSWJ3F4BvYDIRRgJ4/kEZa1
-         8NZEHdP6J/HqDdchbgZ9qN+ZieTKGHDTFYr5o9jrwpd4Io2tzKoGpm7iFAACwLERmDVQ
-         6a4Q==
+        bh=LGLbsXXGOS5hXbJdfbXpRGohhCcqKUKVxgEMXEAy08s=;
+        b=YeyAgzSGcDH+2e7mqUPgeHxqYUjbbNguQ3NgSgLy8KXb37NZm2krkB/+f9OXYjUqMK
+         sEXsPwQzfm+uGCGugVgye7qgyHpoIzFi30oGTubgjjR0Zb8aaZ0KMwJR9dGmm56SqqUu
+         /PAijbv9nP/ZhIk4Lz2utUCTppKLSyXOX3Vnk/nIBpa1NGVPbMrBA04ecUlpVuXFjhHu
+         JP2mo+qGTG4ljzQyXS279N6RjvkcSP+2IErsnn6ErgYnFc0H6HHYA/3SWJpTgMVMB9qP
+         8o0frzK1OfXLKkrwI4GsYdojndt1+IH2U3HGknpFhmBlzlG6oo39RQvQXbx2z2mqXxsT
+         73cg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702018816; x=1702623616;
+        d=1e100.net; s=20230601; t=1702018821; x=1702623621;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=K6ZqhhOHk2iNfWUUPqiv/O7Z6HQrUwIXBT8R8ig4LQ0=;
-        b=kRNH6BzKV/qLV0PmdEJbmzqNaz9w0bRKJHsLt5ENZJOdItiqRKoAzSTlrj7U58u5mr
-         D7aZTZlH+NR0oesDLNt3yDjBbcuA842pZmwwG8rwEK+KDSM5WamRS79at2qsKgrHiBBX
-         XNbaa5chtGnluCoVmIkWDkOFOo2taQnWuQc9CrJDaSlXX2Oi7FY6Dw4KmaJ33qB/xTKj
-         DDOFfMHgUrMzo+KkC/pb5cJpJR4WKULNffgyU1lj50kCxnwaSPt4OIp8ZUkhlbBr2/FV
-         DCaFYejPD2yEPn6xs4I2dbT6Pp8Yi6uFqAlKv3+Ev2QIDOCJ2L+SILODFvt0fdWvPQ1x
-         mdNg==
-X-Gm-Message-State: AOJu0YzKAA0N88je9TUl5hjGwAYIET2KSWt/hbrld97OGAtnHtxsCfnN
-	Rx943PSAu6GZKlZSBQveAgKg
-X-Google-Smtp-Source: AGHT+IHGJSyyR4qnCzZSWOR7Wvf2gGJRyDqvdyimicieitTIKsqODVDkpz0nWgn3k5ddWRH7obqebA==
-X-Received: by 2002:a05:6a20:8f05:b0:190:20d:5b94 with SMTP id b5-20020a056a208f0500b00190020d5b94mr2195421pzk.27.1702018816569;
-        Thu, 07 Dec 2023 23:00:16 -0800 (PST)
+        bh=LGLbsXXGOS5hXbJdfbXpRGohhCcqKUKVxgEMXEAy08s=;
+        b=C29YJu6AYM/AQyAkKoctOjOLIemHyggatIPVtDqPv6v9md6xTBWAKFnuvZntTDhFer
+         MF6uO8rWeNFfQQF9s9/wkxOkNfCjYPhRSgY9ot/oprLLkZD9kP6sy5GLN5eIltWKz7Bv
+         1VHrU6waZ3hFRGvH0FvDd21Pd9AxBS8xb39/ZHEM0jQzMxFAF+fCH6b3BTdcxPI7wnom
+         P6v20yiiYzgfZy2QUMGnIx5chbEy8H3zdSSmW7/P3YiG3lNH9JT/vfmLO08s2nHjzFDi
+         Wz4T7mTloV/fqBekqMS0/cc6S43ly1W1GDZ41Igh1pkHpCEouRcg7JV9rVPBTnYr4ReL
+         nDLQ==
+X-Gm-Message-State: AOJu0YxqJeG23qC01QRHv6Zgo7hYYJ9VXCV+N6GO3JroakuKCvGmsbAs
+	hApDECi3Q0hAEbHzsTnLuV2O
+X-Google-Smtp-Source: AGHT+IFVUyG4dUS2LcbHQXN+dYuFi0KCByDG/dbfAzTMOhqxdP9LZSqbkTlmoGdGcQDFMbhwvqbFcw==
+X-Received: by 2002:a17:902:b70d:b0:1d0:8c3c:a123 with SMTP id d13-20020a170902b70d00b001d08c3ca123mr3278106pls.38.1702018821392;
+        Thu, 07 Dec 2023 23:00:21 -0800 (PST)
 Received: from localhost.localdomain ([117.216.123.142])
-        by smtp.gmail.com with ESMTPSA id n8-20020a170902e54800b001b03f208323sm934263plf.64.2023.12.07.23.00.12
+        by smtp.gmail.com with ESMTPSA id n8-20020a170902e54800b001b03f208323sm934263plf.64.2023.12.07.23.00.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Dec 2023 23:00:16 -0800 (PST)
+        Thu, 07 Dec 2023 23:00:20 -0800 (PST)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: martin.petersen@oracle.com,
 	jejb@linux.ibm.com
@@ -50,9 +50,9 @@ Cc: andersson@kernel.org,
 	ahalaney@redhat.com,
 	quic_nitirawa@quicinc.com,
 	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 12/17] scsi: ufs: qcom: Sort includes alphabetically
-Date: Fri,  8 Dec 2023 12:28:57 +0530
-Message-Id: <20231208065902.11006-13-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 13/17] scsi: ufs: qcom: Initialize cycles_in_1us variable in ufs_qcom_set_core_clk_ctrl()
+Date: Fri,  8 Dec 2023 12:28:58 +0530
+Message-Id: <20231208065902.11006-14-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231208065902.11006-1-manivannan.sadhasivam@linaro.org>
 References: <20231208065902.11006-1-manivannan.sadhasivam@linaro.org>
@@ -64,52 +64,33 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Sort includes alphabetically.
+In case the "core_clk_unipro" clock is not provided, "cycles_in_1us"
+variable will be used as uninitialized. So initialize it with 0.
+
+Issue reported by Smatch tool:
+
+drivers/ufs/host/ufs-qcom.c:1336 ufs_qcom_set_core_clk_ctrl() error: uninitialized symbol 'cycles_in_1us'.
+drivers/ufs/host/ufs-qcom.c:1341 ufs_qcom_set_core_clk_ctrl() error: uninitialized symbol 'cycles_in_1us'.
 
 Reviewed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 18ea41f5bae9..7fbd35a3eb81 100644
+index 7fbd35a3eb81..9b3d6d3609c9 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -4,26 +4,26 @@
-  */
+@@ -1298,7 +1298,7 @@ static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up)
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct list_head *head = &hba->clk_list_head;
+ 	struct ufs_clk_info *clki;
+-	u32 cycles_in_1us;
++	u32 cycles_in_1us = 0;
+ 	u32 core_clk_ctrl_reg;
+ 	int err;
  
- #include <linux/acpi.h>
--#include <linux/time.h>
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/devfreq.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/interconnect.h>
- #include <linux/module.h>
- #include <linux/of.h>
--#include <linux/platform_device.h>
- #include <linux/phy/phy.h>
--#include <linux/gpio/consumer.h>
-+#include <linux/platform_device.h>
- #include <linux/reset-controller.h>
--#include <linux/devfreq.h>
-+#include <linux/time.h>
- 
- #include <soc/qcom/ice.h>
- 
- #include <ufs/ufshcd.h>
--#include "ufshcd-pltfrm.h"
--#include <ufs/unipro.h>
--#include "ufs-qcom.h"
- #include <ufs/ufshci.h>
- #include <ufs/ufs_quirks.h>
-+#include <ufs/unipro.h>
-+#include "ufshcd-pltfrm.h"
-+#include "ufs-qcom.h"
- 
- #define MCQ_QCFGPTR_MASK	GENMASK(7, 0)
- #define MCQ_QCFGPTR_UNIT	0x200
 -- 
 2.25.1
 
