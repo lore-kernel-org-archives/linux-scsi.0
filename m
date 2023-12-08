@@ -1,186 +1,142 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="MX3zl17y"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="KNXJ9Y6M"
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E4DBE9;
-	Fri,  8 Dec 2023 05:13:50 -0800 (PST)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B8CaXkm016357;
-	Fri, 8 Dec 2023 13:13:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=ZTxNfR2A8QHWVwL5Rht1ivTbcC1bCutQJUKwUvWSP30=;
- b=MX3zl17y/OZH3uBXN9GqMBAeQqfRMgmFIdh7unJ3nZ8TCM2Sh5DkgrQyKXAIE9GFwO/g
- fYTFKaYa+9Z3DR9Wil+epleFHQ0106Xfh4jUMfV51OWhfwTMNrrHMILkxtXW1ziYjlUV
- 2S4QrjsaamPwgfWmBnUXXMRqYrzuxsUtU+Xsqt4OCX+F47sc/LeFEvBjiEUNgiGk31hD
- XWxIWDC/wS19GXh8FgA5yqWpUPVof07SDfkMDGG+q9cpyTiSNeVQJh5IFbUwWe8rUjXH
- moqjQJCzO+ZyXgf57h1iegyak5EzLkG4y2dU45EfYDd/hiyZZ9f2ElQrH3oHl2q2Miau mw== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uv1x5876v-1
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D62D41995;
+	Fri,  8 Dec 2023 05:29:59 -0800 (PST)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B8DJNuk010647;
+	Fri, 8 Dec 2023 13:29:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=rFJI3qF/NgEhvJfkmzJzmrVHiqFmZ136XnEiunUsD4I=;
+ b=KNXJ9Y6MDYyF0Mfxq3ms+DOj7AGYmD0ktkVrb9lWDPi54vW+IDy54XR4sJr1OapmhVzH
+ LMnif64d6g7cBQ5OT/139EHXaRmDzf7PpilATEjJMnBW28a0k86RdWI4lfMtYCto5MJV
+ pvyASmxgSIYyc8fIGEtEFRyXK/Iw38/prs0QfWgNCUg0weVo9DX5V3fyMFxqO5UCvSOm
+ 23plicWpgN4cOw/0bGpS84ae86RVFcAHwxRjMzg/4aYJLJ5j6xqkVQbq+YZkF2Y2S2/c
+ 3unzy/hqW6/GUI4dWvrjz/Y1pOC1gLNQhmKvNeAv/v5jN2UWnKg44fGUbOcCgoIipW1t fg== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uux198nma-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 08 Dec 2023 13:13:38 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3B8DDYfR023256;
-	Fri, 8 Dec 2023 13:13:34 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3uqwnmkyt5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Fri, 08 Dec 2023 13:13:34 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3B8DDYKn023250;
-	Fri, 8 Dec 2023 13:13:34 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3B8DDYli023248;
-	Fri, 08 Dec 2023 13:13:34 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id 485425000A9; Fri,  8 Dec 2023 18:43:33 +0530 (+0530)
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        quic_cang@quicinc.com, Nitin Rawat <quic_nitirawa@quicinc.com>,
-        Manish Pandey <quic_mapa@quicinc.com>
-Subject: [PATCH V5] scsi: ufs: core: store min and max clk freq from OPP table
-Date: Fri,  8 Dec 2023 18:43:31 +0530
-Message-Id: <20231208131331.12596-1-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: pr8Tl0DmxjZzUn2mAslRDGzq0acFUOeA
-X-Proofpoint-ORIG-GUID: pr8Tl0DmxjZzUn2mAslRDGzq0acFUOeA
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-08_08,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 clxscore=1015
- suspectscore=0 priorityscore=1501 mlxscore=0 adultscore=0 malwarescore=0
- spamscore=0 phishscore=0 impostorscore=0 lowpriorityscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2312080109
+	Fri, 08 Dec 2023 13:29:51 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B8DTorx026027
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 8 Dec 2023 13:29:50 GMT
+Received: from [10.50.44.194] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 8 Dec
+ 2023 05:29:46 -0800
+Message-ID: <190651ad-6aeb-69eb-89c5-ed18221b5a7a@quicinc.com>
+Date: Fri, 8 Dec 2023 18:59:42 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: [PATCH v2 05/17] scsi: ufs: qcom: Remove the warning message when
+ core_reset is not available
+Content-Language: en-US
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+CC: <martin.petersen@oracle.com>, <jejb@linux.ibm.com>, <andersson@kernel.org>,
+        <konrad.dybcio@linaro.org>, <linux-arm-msm@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <quic_cang@quicinc.com>, <ahalaney@redhat.com>
+References: <20231208065902.11006-1-manivannan.sadhasivam@linaro.org>
+ <20231208065902.11006-6-manivannan.sadhasivam@linaro.org>
+ <7472fe73-e7a0-5c8c-6e85-655db028a5c3@quicinc.com>
+ <20231208102832.GA3008@thinkpad>
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20231208102832.GA3008@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: lf0VLyR-i4eM3lHs9nlh1Q6enrc3WsVw
+X-Proofpoint-ORIG-GUID: lf0VLyR-i4eM3lHs9nlh1Q6enrc3WsVw
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-08_07,2023-12-07_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
+ clxscore=1015 lowpriorityscore=0 suspectscore=0 bulkscore=0 phishscore=0
+ impostorscore=0 spamscore=0 priorityscore=1501 adultscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2312080112
 
-OPP support added by commit 72208ebe181e ("scsi: ufs: core: Add support
-for parsing OPP") doesn't update the min_freq and max_freq of each clocks
-in 'struct ufs_clk_info'.
 
-But these values are used by the host drivers internally for controller
-configuration. When the OPP support is enabled in devicetree, these
-values will be 0, causing boot issues on the respective platforms.
 
-So add support to parse the min_freq and max_freq of all clocks while
-parsing the OPP table.
+On 12/8/2023 3:58 PM, Manivannan Sadhasivam wrote:
+> On Fri, Dec 08, 2023 at 02:55:21PM +0530, Nitin Rawat wrote:
+>>
+>>
+>> On 12/8/2023 12:28 PM, Manivannan Sadhasivam wrote:
+>>> core_reset is optional, so there is no need to warn the user if it is not
+>>> available.
+>>>
+>>> Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
+>>> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+>>> ---
+>>>    drivers/ufs/host/ufs-qcom.c | 4 +---
+>>>    1 file changed, 1 insertion(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>>> index dc93b1c5ca74..d474de0739e4 100644
+>>> --- a/drivers/ufs/host/ufs-qcom.c
+>>> +++ b/drivers/ufs/host/ufs-qcom.c
+>>> @@ -296,10 +296,8 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
+>>>    	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>>>    	bool reenable_intr;
+>>> -	if (!host->core_reset) {
+>>> -		dev_warn(hba->dev, "%s: reset control not set\n", __func__);
+>>> +	if (!host->core_reset)
+>>>    		return 0;
+>>> -	}
+>>>    	reenable_intr = hba->is_irq_enabled;
+>>>    	disable_irq(hba->irq);
+>>
+>>
+>> Hi Mani,
+>>
+>> I think core reset is not frequent. It happen during only probe ,error
+>> handler.
+>>
+>> core reset is needed in kernel to cleanup UFS phy and controller
+>> configuration before UFS HLOS operation starts as per HPG.
+>>
+> 
+> This sounds like core reset is not an optional property but a required one. I
+> just checked the upstream DT files for all SoCs, and looks like pretty much all
+> of them support core reset.
+> 
+> Only MSM8996 doesn't have the reset property, but the reset is available in GCC.
+> So we should be able to use it in dtsi.
+> 
+> I also skimmed through the HPG and looks like core reset is not optional. Please
+> confirm.
+> 
+> - Mani
 
-Fixes: 72208ebe181e ("scsi: ufs: core: Add support for parsing OPP")
-Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
-Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
-Change from v4:
-- Addressed bart's comment to simplify the code
 
-Changes from v3:
-- updated commit description and comment to address christoph's comment
+Hi Mani,
 
-Changes from v2:
-- increment idx in dev_pm_opp_get_freq_indexed
+Yes Core_reset is part of HPG sequence and is needed.
 
-Changes from v1:
-As per Manivannan's comment:
-- Updated commmit description
-- Sort include file alphabetically
-- Added missing dev_pm_opp_put
-- updated function name and documention
-- removed ret variable
----
- drivers/ufs/host/ufshcd-pltfrm.c | 54 ++++++++++++++++++++++++++++++++
- 1 file changed, 54 insertions(+)
+Regards,
+Nitin
 
-diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-index da2558e274b4..db9d9365ff55 100644
---- a/drivers/ufs/host/ufshcd-pltfrm.c
-+++ b/drivers/ufs/host/ufshcd-pltfrm.c
-@@ -8,6 +8,7 @@
-  *	Vinayak Holikatti <h.vinayak@samsung.com>
-  */
 
-+#include <linux/clk.h>
- #include <linux/module.h>
- #include <linux/platform_device.h>
- #include <linux/pm_opp.h>
-@@ -213,6 +214,55 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
- 	}
- }
-
-+/**
-+ * ufshcd_parse_clock_min_max_freq  - Parse MIN and MAX clocks freq
-+ * @hba: per adapter instance
-+ *
-+ * This function parses MIN and MAX frequencies of all clocks required
-+ * by the host drivers.
-+ *
-+ * Returns 0 for success and non-zero for failure
-+ */
-+static int ufshcd_parse_clock_min_max_freq(struct ufs_hba *hba)
-+{
-+	struct list_head *head = &hba->clk_list_head;
-+	struct ufs_clk_info *clki;
-+	struct dev_pm_opp *opp;
-+	unsigned long freq;
-+	u8 idx = 0;
-+
-+	list_for_each_entry(clki, head, list) {
-+		if (!clki->name)
-+			continue;
-+
-+		clki->clk = devm_clk_get(hba->dev, clki->name);
-+		if (IS_ERR(clki->clk))
-+			continue;
-+
-+		/* Find Max Freq */
-+		freq = ULONG_MAX;
-+		opp = dev_pm_opp_find_freq_floor_indexed(hba->dev, &freq, idx);
-+		if (IS_ERR(opp)) {
-+			dev_err(hba->dev, "Failed to find OPP for MAX frequency\n");
-+			return PTR_ERR(opp);
-+		}
-+		clki->max_freq = dev_pm_opp_get_freq_indexed(opp, idx);
-+		dev_pm_opp_put(opp);
-+
-+		/* Find Min Freq */
-+		freq = 0;
-+		opp = dev_pm_opp_find_freq_ceil_indexed(hba->dev, &freq, idx);
-+		if (IS_ERR(opp)) {
-+			dev_err(hba->dev, "Failed to find OPP for MIN frequency\n");
-+			return PTR_ERR(opp);
-+		}
-+		clki->min_freq = dev_pm_opp_get_freq_indexed(opp, idx++);
-+		dev_pm_opp_put(opp);
-+	}
-+
-+	return 0;
-+}
-+
- static int ufshcd_parse_operating_points(struct ufs_hba *hba)
- {
- 	struct device *dev = hba->dev;
-@@ -279,6 +329,10 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
- 		return ret;
- 	}
-
-+	ret = ufshcd_parse_clock_min_max_freq(hba);
-+	if (ret)
-+		return ret;
-+
- 	hba->use_pm_opp = true;
-
- 	return 0;
---
-2.17.1
-
+> 
+>> Having existing warn print can be used to to debug or atleast know
+>> core_reset is missed in device tree to give indication complete reset hasn't
+>> been done and we could still be operating in bootloader configuration.
+>>
+>>
+>> Regards,
+>> Nitin
+>>
+> 
