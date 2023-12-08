@@ -1,148 +1,116 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X2aBX8Bx"
-Received: from mail-qt1-x829.google.com (mail-qt1-x829.google.com [IPv6:2607:f8b0:4864:20::829])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE4571718;
-	Thu,  7 Dec 2023 22:50:17 -0800 (PST)
-Received: by mail-qt1-x829.google.com with SMTP id d75a77b69052e-4258b8632f4so11814061cf.2;
-        Thu, 07 Dec 2023 22:50:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="u3E7tP5s"
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F9AA1728
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Dec 2023 22:59:15 -0800 (PST)
+Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1d048d38881so13397485ad.2
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Dec 2023 22:59:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1702018217; x=1702623017; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3W/C51mLK1kgvI/bws60M7cH6+CKLSsVJCZbbwKDgSE=;
-        b=X2aBX8BxvGKk7hjp6mysTsJkn3ufPyNNHG5kQFe4QuQWNQeUcno11x10LsEOxvyyOH
-         KsoijIdpm92vGYcBqzNYTrzKRsRL0MxptrfhmL5KKWRc4HrgkOcSk+RrwMTuCdgs7rbw
-         2x7OIy6pSo7eaZdDOD7mQfr6uKiKMeUrnixRlr/gWhxCPCFMA6IcSEKjOgRIjg06sBIZ
-         baRDd5fnBKsYZ00U9uLYQRe8cKs8v+kf0Vsw6i5kqLbl2yKAMHZBhOTmIImKZEWYyKTM
-         YUducFeZYM2wk6VhWCG7ChgnrLIZ3UbHoKzwz/g4B32HrHELlHA8KpcgRwO6a76V2OKR
-         G5cQ==
+        d=linaro.org; s=google; t=1702018755; x=1702623555; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=CQ/+btG3R4BylCT3sRnAP96/2um/WTuuUn1kNLXJGP8=;
+        b=u3E7tP5sJooWyyGLKqgrfdmhGSU1qzqu17kBjFp70pFSXTTE/ZVJLGjaynCx0i0piU
+         0ywuDpc86uuPFsxfeE98f2s9UGLHQkghauq/rUzn5UTTpNZi2D13w/wBIxU8b+EW0sQB
+         bR6LWm02o9Jz55dKBegLjhttLtMU6kajytterlPVAtaj6br/SekiCE55oXwEBO3GEkUs
+         vSzaOlF1IIM8m0HeT3y5bHdf5t1h+LnTz8SP1qi/EFmW4LTGwd1/X7wekLomJN39mfGX
+         kzATlYfMJ5gUyp8skuLqxBg4IrUv/FYsreE6EfPQH1Kp0lpB2USKrRvj5scWqmrt4v4z
+         veyw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702018217; x=1702623017;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3W/C51mLK1kgvI/bws60M7cH6+CKLSsVJCZbbwKDgSE=;
-        b=ng3+kai8hlrhQkzRazJuxJIejm1Mpogxw5OENlw865JEZMiVTqnSlrGZB8FgoWV8Zb
-         Y/KDsHDtMgk1I/3ZOCRDXdYrBJjBvNFwUMmE4obJ71aDFzeZ/TDZKz+RgAjmICES6O6g
-         GnwBsdAkYXCMMHBtir3/7GDdHWx292zf0tiUG0/xd1ntYoeteYfyU8wVi0bbmAz5gKgx
-         8H+rCrxlrunmchNIW45Eqi7YV21tt8XvzWDOciu8wkEzZxVlEtQdlPYcon7pH1i1IdbP
-         bO64+Uv+Zo+J/jdmb+L115+B0bJv2OLaXRX5kxG9fmxTuxODG4Uu2WH/mRbfpQC8jq9x
-         KLpg==
-X-Gm-Message-State: AOJu0YwLhl6pReNkFmpnIzO6hC8BqIIuV2EC79XSIZ/FPxcz6RpcZnwQ
-	l15b338HQX2KvoQpE70s8zzDQH3GtnKxAxXKuTNxZHfuz4JqZ+qb
-X-Google-Smtp-Source: AGHT+IGIltqtAcNShcCo6eT4DniFUNHIqfU9CIGVMyLJAXwOjKANnX6SnI5O10qDyRrzUrgijxF3zZDqHweOHoY/Els=
-X-Received: by 2002:a05:6214:164e:b0:67a:a721:d78e with SMTP id
- f14-20020a056214164e00b0067aa721d78emr3621241qvw.116.1702018216892; Thu, 07
- Dec 2023 22:50:16 -0800 (PST)
+        d=1e100.net; s=20230601; t=1702018755; x=1702623555;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CQ/+btG3R4BylCT3sRnAP96/2um/WTuuUn1kNLXJGP8=;
+        b=p/KvmBL2J2IDio0vQsLKmCCGPHaoHgkcN0av54lo09JY+Oi49hVGI4PgbLoil3bxGV
+         o41W9GrPUqCrro0RotbISlB1e/E7nbHd2wSQc2mFtGVEwvWB4p7P+bbvjpgiWVBx/wtt
+         ebuubbeYVAWSHITi/B9zatIkyzKTuSZPCaQXKgMUZixsviG5P7ZcgX5z2HEj8ebZ6Qj8
+         Pj/RiIlTdnz9lQziF5uBsZqP2px88ZBI3h28vxJJcmWtTGuQplom6dU793KtlUScbb19
+         BhvL2m2FwC6V1vag27bCru9TfCzgz18O3TRxjFh+pn0wzSFsZVDyTX2kwR8DnmtZX6xF
+         Yegw==
+X-Gm-Message-State: AOJu0YzaOtYDFJzfYYSBSMHqHooDXHwy+H9+d2EsZTAW7iVvc/jl99TG
+	zTxiWY3sDWW9hvohkFHXZdeH
+X-Google-Smtp-Source: AGHT+IEWVNS4FBRgNsLlZoUKRQekH/RYMZkGGwR1xlrSIV8+OcGCofWlOOzi7raJq0QNnZm1H9O5xw==
+X-Received: by 2002:a17:902:ecca:b0:1d0:7b65:9f8a with SMTP id a10-20020a170902ecca00b001d07b659f8amr3282715plh.51.1702018754908;
+        Thu, 07 Dec 2023 22:59:14 -0800 (PST)
+Received: from localhost.localdomain ([117.216.123.142])
+        by smtp.gmail.com with ESMTPSA id n8-20020a170902e54800b001b03f208323sm934263plf.64.2023.12.07.22.59.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Dec 2023 22:59:14 -0800 (PST)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: martin.petersen@oracle.com,
+	jejb@linux.ibm.com
+Cc: andersson@kernel.org,
+	konrad.dybcio@linaro.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	quic_cang@quicinc.com,
+	ahalaney@redhat.com,
+	quic_nitirawa@quicinc.com,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 00/17] scsi: ufs: qcom: Code cleanups
+Date: Fri,  8 Dec 2023 12:28:45 +0530
+Message-Id: <20231208065902.11006-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231206115355.4319-1-laoar.shao@gmail.com> <2023120644-pry-worried-22a2@gregkh>
- <CALOAHbDtFKDh7C0NYeZ0xBV1z3AsNBDdnL7qRtWOrGbaU7W9VQ@mail.gmail.com>
- <2023120724-overstep-gesture-75be@gregkh> <CALOAHbAbU8At_iPVCiz9M8=jiGQ_BYFupCbVwsm=d9te85pAyg@mail.gmail.com>
- <2023120704-conducive-junkman-2e3f@gregkh> <CALOAHbBUu-oa_wb-PCBdn+vs1k1ZddGhVJg2UuVx912wGWoLkQ@mail.gmail.com>
- <2023120856-empathy-debtless-06b2@gregkh>
-In-Reply-To: <2023120856-empathy-debtless-06b2@gregkh>
-From: Yafang Shao <laoar.shao@gmail.com>
-Date: Fri, 8 Dec 2023 14:49:39 +0800
-Message-ID: <CALOAHbBKSrAKvYMTthkUfe7cL_yQ7cm6xtqbtS99_R5asXTKJw@mail.gmail.com>
-Subject: Re: [PATCH] drivers: base: Introduce a new kernel parameter driver_sync_probe=
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, rafael@kernel.org, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Dec 8, 2023 at 1:36=E2=80=AFPM Greg KH <gregkh@linuxfoundation.org>=
- wrote:
->
-> On Thu, Dec 07, 2023 at 08:36:56PM +0800, Yafang Shao wrote:
-> > On Thu, Dec 7, 2023 at 8:12=E2=80=AFPM Greg KH <gregkh@linuxfoundation.=
-org> wrote:
-> > >
-> > > On Thu, Dec 07, 2023 at 07:59:03PM +0800, Yafang Shao wrote:
-> > > > On Thu, Dec 7, 2023 at 6:19=E2=80=AFPM Greg KH <gregkh@linuxfoundat=
-ion.org> wrote:
-> > > > >
-> > > > > On Wed, Dec 06, 2023 at 10:08:40PM +0800, Yafang Shao wrote:
-> > > > > > On Wed, Dec 6, 2023 at 9:31=E2=80=AFPM Greg KH <gregkh@linuxfou=
-ndation.org> wrote:
-> > > > > > >
-> > > > > > > On Wed, Dec 06, 2023 at 11:53:55AM +0000, Yafang Shao wrote:
-> > > > > > > > After upgrading our kernel from version 4.19 to 6.1, certai=
-n regressions
-> > > > > > > > occurred due to the driver's asynchronous probe behavior. S=
-pecifically,
-> > > > > > > > the SCSI driver transitioned to an asynchronous probe by de=
-fault, resulting
-> > > > > > > > in a non-fixed root disk behavior. In the prior 4.19 kernel=
-, the root disk
-> > > > > > > > was consistently identified as /dev/sda. However, with kern=
-el 6.1, the root
-> > > > > > > > disk can be any of /dev/sdX, leading to issues for applicat=
-ions reliant on
-> > > > > > > > /dev/sda, notably impacting monitoring systems monitoring t=
-he root disk.
-> > > > > > >
-> > > > > > > Device names are never guaranteed to be stable, ALWAYS use a =
-persistant
-> > > > > > > names like a filesystem label or other ways.  Look at /dev/di=
-sk/ for the
-> > > > > > > needed ways to do this properly.
-> > > > > >
-> > > > > > The root disk is typically identified as /dev/sda or /dev/vda, =
-right?
-> > > > >
-> > > > > Depends on your system.  It can also be identified, in the proper=
- way,
-> > > > > as /dev/disk/by-uuid/eef0abc1-4039-4c3f-a123-81fc99999993 if you =
-want
-> > > > > (note, fake uuid, use your own disk uuid please.)
-> > > > >
-> > > > > Why not do that?  That's the most stable and recommended way of d=
-oing
-> > > > > things.
-> > > >
-> > > > Adapting to this change isn't straightforward, especially for a lar=
-ge
-> > > > fleet of servers. Our monitoring system needs to accommodate and
-> > > > adjust accordingly.
-> > >
-> > > Agreed, that can be rough.  But as this is an issue that was caused b=
-y a
-> > > scsi core change, perhaps the scsi developers can describe why it's o=
-k.
-> > >
-> > > But really, device naming has ALWAYS been known to not be
-> > > deterministic, which is why Pat and I did all the driver core work 20=
-+
-> > > years ago so that you have the ability to properly name your devices =
-in
-> > > a way that is deterministic.  Using the kernel name like sda is NOT
-> > > using that functionality, so while it has been nice to see that it ha=
-s
-> > > been stable for you for a while, you are playing with fire here and w=
-ill
-> > > get burned one day when the firmware in your devices decide to change
-> > > response times.
-> >
-> > I agree that using UUID is a better approach. However, it's worth
-> > noting that the widely used IO monitoring tool 'iostat' faces
-> > challenges when working with UUIDs. This indicates that there's a
-> > significant amount of work ahead of us in this aspect.
->
-> That indicates that iostat needs to be fixed as this has been an option
-> that people rely on for 20+ years now.  Or use a better tool :)
+Hello,
 
-The issue arises when a disk contains multiple partitions, such as
-/dev/sda1 and /dev/sda2. In this case, using 'iostat -j UUID' can only
-display 'sda' since only its partitions possess UUIDs. Uncertain how
-to address it yet.
+This series has code some cleanups to the Qcom UFS driver. No functional
+change. In this version, I've removed code supporting legacy controllers
+ver < 2.0, as the respective platforms were never supported in upstream.
 
---=20
-Regards
-Yafang
+Tested on: RB5 development board based on Qcom SM8250 SoC.
+
+- Mani
+
+Changes in v2:
+
+* Collected review tags
+* Fixed the comments from Andrew
+* Added a few more patches, most notably one removing the code for old
+  controllers (ver < v2.0)
+
+Manivannan Sadhasivam (17):
+  scsi: ufs: qcom: Use clk_bulk APIs for managing lane clocks
+  scsi: ufs: qcom: Fix the return value of ufs_qcom_ice_program_key()
+  scsi: ufs: qcom: Fix the return value when
+    platform_get_resource_byname() fails
+  scsi: ufs: qcom: Remove superfluous variable assignments
+  scsi: ufs: qcom: Remove the warning message when core_reset is not
+    available
+  scsi: ufs: qcom: Export ufshcd_{enable/disable}_irq helpers and make
+    use of them
+  scsi: ufs: qcom: Fail ufs_qcom_power_up_sequence() when core_reset
+    fails
+  scsi: ufs: qcom: Check the return value of
+    ufs_qcom_power_up_sequence()
+  scsi: ufs: qcom: Remove redundant error print for devm_kzalloc()
+    failure
+  scsi: ufs: qcom: Use dev_err_probe() to simplify error handling of
+    devm_gpiod_get_optional()
+  scsi: ufs: qcom: Remove unused ufs_qcom_hosts struct array
+  scsi: ufs: qcom: Sort includes alphabetically
+  scsi: ufs: qcom: Initialize cycles_in_1us variable in
+    ufs_qcom_set_core_clk_ctrl()
+  scsi: ufs: qcom: Simplify ufs_qcom_{assert/deassert}_reset
+  scsi: ufs: qcom: Remove support for host controllers older than v2.0
+  scsi: ufs: qcom: Use ufshcd_rmwl() where applicable
+  scsi: ufs: qcom: Remove unused definitions
+
+ drivers/ufs/core/ufshcd.c   |   6 +-
+ drivers/ufs/host/ufs-qcom.c | 377 +++++-------------------------------
+ drivers/ufs/host/ufs-qcom.h |  52 +----
+ include/ufs/ufshcd.h        |   2 +
+ 4 files changed, 66 insertions(+), 371 deletions(-)
+
+-- 
+2.25.1
+
