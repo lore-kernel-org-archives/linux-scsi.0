@@ -1,142 +1,323 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FF831DFF7
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Dec 2023 14:50:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="KNXJ9Y6M"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D62D41995;
-	Fri,  8 Dec 2023 05:29:59 -0800 (PST)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B8DJNuk010647;
-	Fri, 8 Dec 2023 13:29:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=rFJI3qF/NgEhvJfkmzJzmrVHiqFmZ136XnEiunUsD4I=;
- b=KNXJ9Y6MDYyF0Mfxq3ms+DOj7AGYmD0ktkVrb9lWDPi54vW+IDy54XR4sJr1OapmhVzH
- LMnif64d6g7cBQ5OT/139EHXaRmDzf7PpilATEjJMnBW28a0k86RdWI4lfMtYCto5MJV
- pvyASmxgSIYyc8fIGEtEFRyXK/Iw38/prs0QfWgNCUg0weVo9DX5V3fyMFxqO5UCvSOm
- 23plicWpgN4cOw/0bGpS84ae86RVFcAHwxRjMzg/4aYJLJ5j6xqkVQbq+YZkF2Y2S2/c
- 3unzy/hqW6/GUI4dWvrjz/Y1pOC1gLNQhmKvNeAv/v5jN2UWnKg44fGUbOcCgoIipW1t fg== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uux198nma-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 08 Dec 2023 13:29:51 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B8DTorx026027
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 8 Dec 2023 13:29:50 GMT
-Received: from [10.50.44.194] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 8 Dec
- 2023 05:29:46 -0800
-Message-ID: <190651ad-6aeb-69eb-89c5-ed18221b5a7a@quicinc.com>
-Date: Fri, 8 Dec 2023 18:59:42 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W4f+1QP/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3060C433CB;
+	Fri,  8 Dec 2023 14:50:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702047037;
+	bh=1pmf9sTr8+ZoZw2j7lZ6NJcKXhcHQQe1G5vRiL8Tqcc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=W4f+1QP/8Uw2eLGJP/xiIl9Yw5M4uOBD5/HvkdYzrGm32Nl2Tc7WoVBZ1B0FZNS81
+	 S8LUGGoh6Lut3e/I5YdVDPrt/5MoipO1pM92hek30BpArqtbDIqruBHgUy8Qye45yG
+	 5TU5gogmqORQE0gyFmCFNZldo4qpOcIwABYtvRErqE3Xq4txdAQQgsmQVD+Vu5qNJd
+	 0e4J4RqvDP3yRezKX1DDdfkk9ppQhAhd9CaxsJZi+Lk5U4Xw+KqededBLOjA/gtdu9
+	 1JgbBb8Ds7NDMjEUf82WwtjbFqbJ+AeYWGgUvm8NifqXoQ1XWuUejK+JS3CohRMKRP
+	 p4mvDH1xRQQKA==
+Date: Fri, 8 Dec 2023 20:20:21 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bean Huo <beanhuo@iokpp.de>
+Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+	beanhuo@micron.com, thomas@t-8ch.de, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mikebi@micron.com, lporzio@micron.com
+Subject: Re: [PATCH v4 2/3] scsi: ufs: core: Add UFS RTC support
+Message-ID: <20231208145021.GC15552@thinkpad>
+References: <20231208103940.153734-1-beanhuo@iokpp.de>
+ <20231208103940.153734-3-beanhuo@iokpp.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.2
-Subject: Re: [PATCH v2 05/17] scsi: ufs: qcom: Remove the warning message when
- core_reset is not available
-Content-Language: en-US
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-CC: <martin.petersen@oracle.com>, <jejb@linux.ibm.com>, <andersson@kernel.org>,
-        <konrad.dybcio@linaro.org>, <linux-arm-msm@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <quic_cang@quicinc.com>, <ahalaney@redhat.com>
-References: <20231208065902.11006-1-manivannan.sadhasivam@linaro.org>
- <20231208065902.11006-6-manivannan.sadhasivam@linaro.org>
- <7472fe73-e7a0-5c8c-6e85-655db028a5c3@quicinc.com>
- <20231208102832.GA3008@thinkpad>
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <20231208102832.GA3008@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: lf0VLyR-i4eM3lHs9nlh1Q6enrc3WsVw
-X-Proofpoint-ORIG-GUID: lf0VLyR-i4eM3lHs9nlh1Q6enrc3WsVw
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-08_07,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
- clxscore=1015 lowpriorityscore=0 suspectscore=0 bulkscore=0 phishscore=0
- impostorscore=0 spamscore=0 priorityscore=1501 adultscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2312080112
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231208103940.153734-3-beanhuo@iokpp.de>
 
-
-
-On 12/8/2023 3:58 PM, Manivannan Sadhasivam wrote:
-> On Fri, Dec 08, 2023 at 02:55:21PM +0530, Nitin Rawat wrote:
->>
->>
->> On 12/8/2023 12:28 PM, Manivannan Sadhasivam wrote:
->>> core_reset is optional, so there is no need to warn the user if it is not
->>> available.
->>>
->>> Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
->>> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
->>> ---
->>>    drivers/ufs/host/ufs-qcom.c | 4 +---
->>>    1 file changed, 1 insertion(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>> index dc93b1c5ca74..d474de0739e4 100644
->>> --- a/drivers/ufs/host/ufs-qcom.c
->>> +++ b/drivers/ufs/host/ufs-qcom.c
->>> @@ -296,10 +296,8 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
->>>    	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->>>    	bool reenable_intr;
->>> -	if (!host->core_reset) {
->>> -		dev_warn(hba->dev, "%s: reset control not set\n", __func__);
->>> +	if (!host->core_reset)
->>>    		return 0;
->>> -	}
->>>    	reenable_intr = hba->is_irq_enabled;
->>>    	disable_irq(hba->irq);
->>
->>
->> Hi Mani,
->>
->> I think core reset is not frequent. It happen during only probe ,error
->> handler.
->>
->> core reset is needed in kernel to cleanup UFS phy and controller
->> configuration before UFS HLOS operation starts as per HPG.
->>
+On Fri, Dec 08, 2023 at 11:39:39AM +0100, Bean Huo wrote:
+> From: Bean Huo <beanhuo@micron.com>
 > 
-> This sounds like core reset is not an optional property but a required one. I
-> just checked the upstream DT files for all SoCs, and looks like pretty much all
-> of them support core reset.
+> Add Real Time Clock (RTC) support for UFS device. This enhancement is crucial
+> for the internal maintenance operations of the UFS device. The patch enables
+> the device to handle both absolute and relative time information. Furthermore,
+> it includes periodic task to update the RTC in accordance with the UFS Spec,
+> ensuring the accuracy of RTC information for the device's internal processes.
 > 
-> Only MSM8996 doesn't have the reset property, but the reset is available in GCC.
-> So we should be able to use it in dtsi.
+> RTC and qTimestamp serve distinct purposes. The RTC provides a coarse level
+> of granularity with, at best, approximate single-second resolution. This makes
+> the RTC well-suited for the device to determine the approximate age of programmed
+> blocks after being updated by the host. On the other hand, qTimestamp offers
+> nanosecond granularity and is specifically designed for synchronizing Device
+> Error Log entries with corresponding host-side logs.
 > 
-> I also skimmed through the HPG and looks like core reset is not optional. Please
-> confirm.
+> Given that the RTC has been a standard feature since UFS Spec 2.0, and qTimestamp
+> was introduced in UFS Spec 4.0, the majority of UFS devices currently on the
+> market rely on RTC. Therefore, it is advisable to continue supporting RTC in
+> the Linux kernel. This ensures compatibility with the prevailing UFS device
+> implementations and facilitates seamless integration with existing hardware.
+> By maintaining support for RTC, we ensure broad compatibility and avoid potential
+> issues arising from deviations in device specifications across different UFS
+> versions.
 > 
-> - Mani
-
-
-Hi Mani,
-
-Yes Core_reset is part of HPG sequence and is needed.
-
-Regards,
-Nitin
-
-
+> Signed-off-by: Bean Huo <beanhuo@micron.com>
+> Signed-off-by: Mike Bi <mikebi@micron.com>
+> Signed-off-by: Luca Porzio <lporzio@micron.com>
+> Acked-by: Avri Altman <avri.altman@wdc.com>
+> ---
+>  drivers/ufs/core/ufshcd.c | 84 +++++++++++++++++++++++++++++++++++++++
+>  include/ufs/ufs.h         | 14 +++++++
+>  include/ufs/ufshcd.h      |  4 ++
+>  3 files changed, 102 insertions(+)
 > 
->> Having existing warn print can be used to to debug or atleast know
->> core_reset is missed in device tree to give indication complete reset hasn't
->> been done and we could still be operating in bootloader configuration.
->>
->>
->> Regards,
->> Nitin
->>
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 32cfcba66d60..dedb0c08363b 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -99,6 +99,9 @@
+>  /* Polling time to wait for fDeviceInit */
+>  #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+>  
+> +/* Default RTC update every 10 seconds */
+> +#define UFS_RTC_UPDATE_INTERVAL_MS (10 * MSEC_PER_SEC)
+> +
+>  /* UFSHC 4.0 compliant HC support this mode. */
+>  static bool use_mcq_mode = true;
+>  
+> @@ -684,6 +687,8 @@ static void ufshcd_device_reset(struct ufs_hba *hba)
+>  			hba->dev_info.wb_enabled = false;
+>  			hba->dev_info.wb_buf_flush_enabled = false;
+>  		}
+> +		if (hba->dev_info.rtc_type == UFS_RTC_RELATIVE)
+> +			hba->dev_info.rtc_time_baseline = 0;
+>  	}
+>  	if (err != -EOPNOTSUPP)
+>  		ufshcd_update_evt_hist(hba, UFS_EVT_DEV_RESET, err);
+> @@ -8191,6 +8196,77 @@ static void ufs_fixup_device_setup(struct ufs_hba *hba)
+>  	ufshcd_vops_fixup_dev_quirks(hba);
+>  }
+>  
+> +static void ufshcd_update_rtc(struct ufs_hba *hba)
+> +{
+> +	int err;
+> +	u32 val;
+> +	struct timespec64 ts64;
+
+Reverse Xmas order please. Here and in other functions.
+
+> +
+> +	ktime_get_real_ts64(&ts64);
+> +
+> +	if  (ts64.tv_sec < hba->dev_info.rtc_time_baseline) {
+
+Double space after 'if'
+
+> +		dev_warn(hba->dev, "%s: Current time precedes previous setting!\n", __func__);
+
+If there is no RTC on the host, this warning will be printed for 40 years. More below...
+
+> +		return;
+> +	}
+
+Newline
+
+> +	/*
+> +	 * Absolute RTC mode has 136-year limit as of 2010. Modify UFS Spec or choosing relative
+> +	 * RTC mode for longer (beyond year 2146) time spans.
+
+I feel like this comment is not clear enough.
+
+Maybe something like,
+
+"The code is bound to work for 136 years with relative mode and till year 2146
+with absolute mode."
+
+> +	 */
+> +	val = ts64.tv_sec - hba->dev_info.rtc_time_baseline;
+> +
+
+This logic will work if the host has RTC. But if there is no RTC, then tv_sec
+will return time elapsed since boot. The spec clearly states that host should
+use absolute mode if it has RTC and relative otherwise.
+
+Maybe you should add a logic to detect whether RTC is present or not and
+override the mode in device?
+
+> +	ufshcd_rpm_get_sync(hba);
+> +	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR, QUERY_ATTR_IDN_SECONDS_PASSED,
+> +				0, 0, &val);
+> +	ufshcd_rpm_put_sync(hba);
+> +
+> +	if (err)
+> +		dev_err(hba->dev, "%s: Failed to update rtc %d\n", __func__, err);
+> +	else if (hba->dev_info.rtc_type == UFS_RTC_RELATIVE)
+> +		hba->dev_info.rtc_time_baseline = ts64.tv_sec;
+> +}
+> +
+> +static void ufshcd_rtc_work(struct work_struct *work)
+> +{
+> +	struct ufs_hba *hba;
+> +	bool is_busy;
+> +
+> +	hba = container_of(to_delayed_work(work), struct ufs_hba, ufs_rtc_update_work);
+> +
+> +	is_busy = ufshcd_is_ufs_dev_busy(hba);
+
+Newline
+
+> +	/*
+> +	 * RTC updates should not interfere with normal IO requests; we should only update the RTC
+
+No semicolon within comments please. Use full stop for sentence breaks.
+
+> +	 * when there are no ongoing requests.
+> +	 */
+> +	if (!is_busy)
+> +		ufshcd_update_rtc(hba);
+> +
+> +	if (ufshcd_is_ufs_dev_active(hba))
+> +		schedule_delayed_work(&hba->ufs_rtc_update_work,
+> +			msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+> +}
+> +
+> +static void  ufs_init_rtc(struct ufs_hba *hba, u8 *desc_buf)
+
+Double space after void.
+
+> +{
+> +	struct ufs_dev_info *dev_info = &hba->dev_info;
+> +	u16 periodic_rtc_update = get_unaligned_be16(&desc_buf[DEVICE_DESC_PARAM_FRQ_RTC]);
+> +
+> +	if (periodic_rtc_update & UFS_RTC_TIME_BASELINE) {
+> +		dev_info->rtc_type = UFS_RTC_ABSOLUTE;
+
+Newline
+
+- Mani
+
+> +		/*
+> +		 * The concept of measuring time in Linux as the number of seconds elapsed since
+> +		 * 00:00:00 UTC on January 1, 1970, and UFS ABS RTC is elapsed from January 1st
+> +		 * 2010 00:00, here we need to adjust ABS baseline.
+> +		 */
+> +		dev_info->rtc_time_baseline = mktime64(2010, 1, 1, 0, 0, 0) -
+> +							mktime64(1970, 1, 1, 0, 0, 0);
+> +	} else {
+> +		dev_info->rtc_type = UFS_RTC_RELATIVE;
+> +		dev_info->rtc_time_baseline = 0;
+> +	}
+> +
+> +	INIT_DELAYED_WORK(&hba->ufs_rtc_update_work, ufshcd_rtc_work);
+> +}
+> +
+>  static int ufs_get_device_desc(struct ufs_hba *hba)
+>  {
+>  	int err;
+> @@ -8243,6 +8319,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+>  
+>  	ufshcd_temp_notif_probe(hba, desc_buf);
+>  
+> +	ufs_init_rtc(hba, desc_buf);
+> +
+>  	if (hba->ext_iid_sup)
+>  		ufshcd_ext_iid_probe(hba, desc_buf);
+>  
+> @@ -8796,6 +8874,8 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
+>  	ufshcd_force_reset_auto_bkops(hba);
+>  
+>  	ufshcd_set_timestamp_attr(hba);
+> +	schedule_delayed_work(&hba->ufs_rtc_update_work,
+> +				msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+>  
+>  	/* Gear up to HS gear if supported */
+>  	if (hba->max_pwr_info.is_valid) {
+> @@ -9753,6 +9833,8 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  	ret = ufshcd_vops_suspend(hba, pm_op, POST_CHANGE);
+>  	if (ret)
+>  		goto set_link_active;
+> +
+> +	cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
+>  	goto out;
+>  
+>  set_link_active:
+> @@ -9847,6 +9929,8 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  		if (ret)
+>  			goto set_old_link_state;
+>  		ufshcd_set_timestamp_attr(hba);
+> +		schedule_delayed_work(&hba->ufs_rtc_update_work,
+> +					msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+>  	}
+>  
+>  	if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
+> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+> index e77ab1786856..8022d267fe8a 100644
+> --- a/include/ufs/ufs.h
+> +++ b/include/ufs/ufs.h
+> @@ -14,6 +14,7 @@
+>  #include <linux/bitops.h>
+>  #include <linux/types.h>
+>  #include <uapi/scsi/scsi_bsg_ufs.h>
+> +#include <linux/time64.h>
+>  
+>  /*
+>   * Using static_assert() is not allowed in UAPI header files. Hence the check
+> @@ -551,6 +552,15 @@ struct ufs_vreg_info {
+>  	struct ufs_vreg *vdd_hba;
+>  };
+>  
+> +/*
+> + * UFS device descriptor wPeriodicRTCUpdate bit9 defines RTC time baseline.
+> + */
+> +#define UFS_RTC_TIME_BASELINE BIT(9)
+> +enum ufs_rtc_time {
+> +	UFS_RTC_RELATIVE,
+> +	UFS_RTC_ABSOLUTE
+> +};
+> +
+>  struct ufs_dev_info {
+>  	bool	f_power_on_wp_en;
+>  	/* Keeps information if any of the LU is power on write protected */
+> @@ -578,6 +588,10 @@ struct ufs_dev_info {
+>  
+>  	/* UFS EXT_IID Enable */
+>  	bool	b_ext_iid_en;
+> +
+> +	/* UFS RTC */
+> +	enum ufs_rtc_time rtc_type;
+> +	time64_t rtc_time_baseline;
+>  };
+>  
+>  /*
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index d862c8ddce03..727bdf296b34 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -912,6 +912,8 @@ enum ufshcd_mcq_opr {
+>   * @mcq_base: Multi circular queue registers base address
+>   * @uhq: array of supported hardware queues
+>   * @dev_cmd_queue: Queue for issuing device management commands
+> + * @mcq_opr: MCQ operation and runtime registers
+> + * @ufs_rtc_update_work: A work for UFS RTC periodic update
+>   */
+>  struct ufs_hba {
+>  	void __iomem *mmio_base;
+> @@ -1076,6 +1078,8 @@ struct ufs_hba {
+>  	struct ufs_hw_queue *uhq;
+>  	struct ufs_hw_queue *dev_cmd_queue;
+>  	struct ufshcd_mcq_opr_info_t mcq_opr[OPR_MAX];
+> +
+> +	struct delayed_work ufs_rtc_update_work;
+>  };
+>  
+>  /**
+> -- 
+> 2.34.1
 > 
+
+-- 
+மணிவண்ணன் சதாசிவம்
