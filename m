@@ -1,163 +1,82 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E40739ADC
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2023 12:07:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="T9SQqgKT"
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2FC4FF;
-	Mon, 11 Dec 2023 02:01:18 -0800 (PST)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 3BB9HGKE006096;
-	Mon, 11 Dec 2023 10:00:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-transfer-encoding:in-reply-to; s=
-	qcppdkim1; bh=HrbNGKc9c8Hdepur86brTCu3qTE1i5488eCvql/PcFM=; b=T9
-	SQqgKTLxQOv/Ord+RYhfESXfSqgbkZwMQk2sThgpMBtdTs1apqJfqLcIf36eMDYS
-	dx+HWjcCSq7WZsYS263zPPOu37en99xe0nghWoTAi9VUmi6LkrZ6qWaAu7GG4SBP
-	jPVHsyVK287t9qR5fg/kM1ZCFUZRMvXeeGMLd26zygrgI6ledDRmonh5ExdzIUXX
-	tbWURVa1lHTtxSG/CmPaIotJ7XtXPC6kyr+fN/7NaaaS9gsWZkQLFmPrVEVhAETR
-	eGkw5kUsb8AhFVvt8Gc+5cOtbnQhQd/YGaYgPGiMR9f22jFBSCIrwwQVfZ3QjJvr
-	Ldc2ydFzFFTM8BNxEE4g==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uvnnstvfd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 11 Dec 2023 10:00:12 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3BBA0BbB026343
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 11 Dec 2023 10:00:11 GMT
-Received: from hu-pkondeti-hyd.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Mon, 11 Dec 2023 02:00:04 -0800
-Date: Mon, 11 Dec 2023 15:30:02 +0530
-From: Pavan Kondeti <quic_pkondeti@quicinc.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: Nitin Rawat <quic_nitirawa@quicinc.com>,
-        Bart Van Assche
-	<bvanassche@acm.org>,
-        Naresh Maramaina <quic_mnaresh@quicinc.com>,
-        "James
- E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        "Andy
- Gross" <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        "Konrad
- Dybcio" <konrad.dybcio@linaro.org>,
-        Matthias Brugger
-	<matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>,
-        <chu.stanley@gmail.com>, Alim
- Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-msm@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <quic_cang@quicinc.com>,
-        <quic_nguyenb@quicinc.com>
-Subject: Re: [PATCH V2 1/3] ufs: core: Add CPU latency QoS support for ufs
- driver
-Message-ID: <eb0b15c5-a7e0-4144-b5f8-a8e1818b1d9f@quicinc.com>
-References: <20231204143101.64163-2-quic_mnaresh@quicinc.com>
- <590ade27-b4da-49be-933b-e9959aa0cd4c@acm.org>
- <692cd503-5b14-4be6-831d-d8e9c282a95e@quicinc.com>
- <5e7c5c75-cb5f-4afe-9d57-b0cab01a6f26@acm.org>
- <b9373252-710c-4a54-95cc-046314796960@quicinc.com>
- <20231206153242.GI12802@thinkpad>
- <effb603e-ca7a-4f24-9783-4d62790165ae@acm.org>
- <20231207094357.GI2932@thinkpad>
- <286b6f8a-c634-19ed-cf53-276cfe05d03f@quicinc.com>
- <20231207112101.GK2932@thinkpad>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I7z0jLw0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4579C43395;
+	Mon, 11 Dec 2023 12:07:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702296449;
+	bh=X0lineiGbEOw+if71lLAZ8HUqLj0hNmSIZ78hSwpTDQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=I7z0jLw0YmiptUk44fTXoCKiT3QeNZ/aTegnhhyJayO6W6a+z+pGxbs8BNYCuNfFv
+	 GTSvfE5k97FrQjffo17yf07uV6oECh8mMxPRQzNfDblqx9CtsTMQ82zrx6OCkLMKXX
+	 hB8kyfG+baevsO7LVK11BB++H3hLXcQAksXkOJcsPYp+08qaOA0KZgbcbU/Qs3I4+P
+	 YPLMRiXbxT0hjcjRZd8EODUpyH5uS3HNL7uFVayjlLiAE6+ZhNpMGOmLl/ZYusUf44
+	 cn9Q7s/8z4K/L9Ooyj0tGMDC1J4Z/n98PNT9bnXtSZp/PoNu1UzHwpP1YIObje5FI2
+	 yrWHHK9i9xXcQ==
+Date: Mon, 11 Dec 2023 17:37:14 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bean Huo <beanhuo@iokpp.de>
+Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+	beanhuo@micron.com, thomas@t-8ch.de, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mikebi@micron.com, lporzio@micron.com
+Subject: Re: [PATCH v4 2/3] scsi: ufs: core: Add UFS RTC support
+Message-ID: <20231211120714.GB2894@thinkpad>
+References: <20231208103940.153734-1-beanhuo@iokpp.de>
+ <20231208103940.153734-3-beanhuo@iokpp.de>
+ <20231208145021.GC15552@thinkpad>
+ <89c02f8b999a90329f2125380ad2d984767d25ae.camel@iokpp.de>
+ <20231208170609.GD15552@thinkpad>
+ <fe5eacf2016622f4f3335a1d39063ec523999184.camel@iokpp.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231207112101.GK2932@thinkpad>
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: RQ-aGuO_TVH_PzmVmaVzxjtGAjG6-LM_
-X-Proofpoint-GUID: RQ-aGuO_TVH_PzmVmaVzxjtGAjG6-LM_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-09_02,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
- spamscore=0 priorityscore=1501 adultscore=0 malwarescore=0 mlxlogscore=999
- clxscore=1011 mlxscore=0 bulkscore=0 lowpriorityscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2311290000
- definitions=main-2312110081
+In-Reply-To: <fe5eacf2016622f4f3335a1d39063ec523999184.camel@iokpp.de>
 
-On Thu, Dec 07, 2023 at 04:51:01PM +0530, Manivannan Sadhasivam wrote:
-> On Thu, Dec 07, 2023 at 03:56:43PM +0530, Nitin Rawat wrote:
-> > 
-> > 
-> > On 12/7/2023 3:13 PM, Manivannan Sadhasivam wrote:
-> > > On Wed, Dec 06, 2023 at 03:02:04PM -1000, Bart Van Assche wrote:
-> > > > On 12/6/23 05:32, Manivannan Sadhasivam wrote:
-> > > > > On Wed, Dec 06, 2023 at 07:32:54PM +0530, Naresh Maramaina wrote:
-> > > > > > On 12/5/2023 10:41 PM, Bart Van Assche wrote:
-> > > > > > > On 12/4/23 21:58, Naresh Maramaina wrote:
-> > > > > > > > On 12/5/2023 12:30 AM, Bart Van Assche wrote:
-> > > > > > > > > On 12/4/23 06:30, Maramaina Naresh wrote:
-> > > > > > > > > > +††† /* This capability allows the host controller driver to
-> > > > > > > > > > use the PM QoS
-> > > > > > > > > > +†††† * feature.
-> > > > > > > > > > +†††† */
-> > > > > > > > > > +††† UFSHCD_CAP_PM_QOS††††††††††††††† = 1 << 13,
-> > > > > > > > > >   † };
-> > > > > > > > > 
-> > > > > > > > > Why does it depend on the host driver whether or not PM QoS is
-> > > > > > > > > enabled? Why isn't it enabled unconditionally?
-> > > > > > > > 
-> > > > > > > > For some platform vendors power KPI might be more important than
-> > > > > > > > random io KPI. Hence this flag is disabled by default and can be
-> > > > > > > > enabled based on platform requirement.
-> > > > > > > 
-> > > > > > > How about leaving this flag out unless if a host vendor asks explicitly
-> > > > > > > for this flag?
-> > > > > > 
-> > > > > > IMHO, instead of completely removing this flag, how about having
-> > > > > > flag like "UFSHCD_CAP_DISABLE_PM_QOS" which will make PMQOS enable
-> > > > > > by default and if some host vendor wants to disable it explicitly,
-> > > > > > they can enable that flag.
-> > > > > > Please let me know your opinion.
-> > > > 
-> > > > That would result in a flag that is tested but that is never set by
-> > > > upstream code. I'm not sure that's acceptable.
-> > > > 
-> > > 
-> > > Agree. The flag shouldn't be introduced if there are no users.
-> > > 
-> > > > > If a vendor wants to disable this feature, then the driver has to be modified.
-> > > > > That won't be very convenient. So either this has to be configured through sysfs
-> > > > > or Kconfig if flexibility matters.
-> > > > 
-> > > > Kconfig sounds worse to me because changing any Kconfig flag requires a
-> > > > modification of the Android GKI kernel.
-> > > > 
-> > > 
-> > > Hmm, ok. Then I think we can have a sysfs hook to toggle the enable switch.
-> > 
-> > Hi Bart, Mani
-> > 
-> > How about keeping this feature enabled by default and having a module
-> > parameter to disable pmqos feature if required ?
-> > 
+On Sun, Dec 10, 2023 at 08:28:21PM +0100, Bean Huo wrote:
+> On Fri, 2023-12-08 at 22:36 +0530, Manivannan Sadhasivam wrote:
+> > Except that the warning will be issued to users after each 10s for 40
+> > years.
+> > Atleast get rid of that.
 > 
-> Module params not encouraged these days unless there are no other feasible
-> options available.
+> how about using dev_warn_once(), instead of dev_warn, using
+> dev_warn_once() ensures the warning is issued only once.
+> 
 
-Yeah, one of the problem with module param is that we can't have
-different settings for two two UFS controllers. Anyways, this setting
-need not be a module param, there is nothing special about this setting
-that is tied to module loading (driver probe) time, AFAICT.
+Sounds good to me.
 
-Thanks,
-Pavan
+- Mani
+
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 953d50cc4256..b2287d2f9bf3 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8205,7 +8205,7 @@ static void ufshcd_update_rtc(struct ufs_hba
+> *hba)
+>         ktime_get_real_ts64(&ts64);
+>  
+>         if  (ts64.tv_sec < hba->dev_info.rtc_time_baseline) {
+> -               dev_warn(hba->dev, "%s: Current time precedes previous
+> setting!\n", __func__);
+> +               dev_warn_once(hba->dev, "%s: Current time precedes
+> previous setting!\n", __func__);
+> 
+> 
+> 
+> Kind regards,
+> Bean
+
+-- 
+‡ÆÆ‡Æ£‡Æø‡Æµ‡Æ£‡Øç‡Æ£‡Æ©‡Øç ‡Æö‡Æ§‡Ææ‡Æö‡Æø‡Æµ‡ÆÆ‡Øç
