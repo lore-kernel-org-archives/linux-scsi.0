@@ -1,88 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="ZgvjtRLQ"
-Received: from rcdn-iport-8.cisco.com (rcdn-iport-8.cisco.com [173.37.86.79])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ADC1F7;
-	Mon, 11 Dec 2023 09:43:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=1150; q=dns/txt; s=iport;
-  t=1702316603; x=1703526203;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=G9QiCkWX0CDZzcn8b0FGIm9Ug5LwglrT540l2fD/J3M=;
-  b=ZgvjtRLQPgE9+A/iRGC+wN7IyAlnXpGbmVK/A3zfyDQYpM9VxGIUkN7K
-   s0i324SPk/vWFdQcd7nce9YgO/OCmlstleTPlkcAEeAdoMVtiwgZI6VjZ
-   RaygWG09NqkMmAYx41Z1eC6AqRp9KQaXfZrflyBQWoqXXKkMezPMPOTiw
-   E=;
-X-CSE-ConnectionGUID: F6gKke7gRUWvgSJdVg1jMQ==
-X-CSE-MsgGUID: WNjcuzb0TbuFtvpx8deFHw==
-X-IronPort-AV: E=Sophos;i="6.04,268,1695686400"; 
-   d="scan'208";a="151011038"
-Received: from rcdn-core-1.cisco.com ([173.37.93.152])
-  by rcdn-iport-8.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Dec 2023 17:43:22 +0000
-Received: from localhost.cisco.com ([10.193.101.253])
-	(authenticated bits=0)
-	by rcdn-core-1.cisco.com (8.15.2/8.15.2) with ESMTPSA id 3BBHaKr7009547
-	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Mon, 11 Dec 2023 17:43:20 GMT
-From: Karan Tilak Kumar <kartilak@cisco.com>
-To: sebaddel@cisco.com
-Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
-        satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v6 13/13] scsi: fnic: Increment driver version
-Date: Mon, 11 Dec 2023 09:36:17 -0800
-Message-Id: <20231211173617.932990-14-kartilak@cisco.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20231211173617.932990-1-kartilak@cisco.com>
-References: <20231211173617.932990-1-kartilak@cisco.com>
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A38C9C3;
+	Mon, 11 Dec 2023 09:59:29 -0800 (PST)
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1d2e6e14865so21498905ad.0;
+        Mon, 11 Dec 2023 09:59:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702317569; x=1702922369;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8TG12YyuQcIlIUIhJpok1Z9XhgvnLDNR3xx7iZohyHA=;
+        b=F67ZyNzD63Qx4pluM/am8tEL13aLrpl+Qph7Hf8agm7nqr79KZE8QOUY0CM3gRro2V
+         Q+yHzKs+wyaj4Fsl4wDFi49FvhF77MSVOZ/u8mQMhDwBaLj65fjDweSfxV4NOpl4AX7B
+         SQK7W1aBTfcPYaU5/ORr4Q+3+sdJrqZeRKwhW0eC49PDKnNCTAmnqLlS26JxpwQLcXkl
+         71/ksIzPyspdYcqtIN78Pj0wPrjb2YXKxarCC2OFSqLBKTy7iHXpU7ewCHAEQpYpjnuI
+         5ZenvxsCKEZ5WWCPODa9F4yL+Vj6XDyHKCNcXXaooytPxwOQxh/uPRVz5uLLq5YROz0U
+         7oiQ==
+X-Gm-Message-State: AOJu0Yz2X+2fbjtc3oeycDDG35AIH2n+eEtxGsuYsMaPY49sHr/FxJJU
+	/hcv1gdx4Fe4ue3poh43R18=
+X-Google-Smtp-Source: AGHT+IE5lNotrSQSHXP57Xi5usYbH8Ac+LXzWL6rFd610YIZtYdxRXvrh/HMoTpbtPoScBauDbOVKA==
+X-Received: by 2002:a17:902:e810:b0:1d0:6ffd:6e60 with SMTP id u16-20020a170902e81000b001d06ffd6e60mr2382910plg.88.1702317568985;
+        Mon, 11 Dec 2023 09:59:28 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:3431:681a:6403:d100? ([2620:0:1000:8411:3431:681a:6403:d100])
+        by smtp.gmail.com with ESMTPSA id w18-20020a170902e89200b001d0855ce7c8sm6979575plg.252.2023.12.11.09.59.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 11 Dec 2023 09:59:28 -0800 (PST)
+Message-ID: <0d59681d-2d7d-4459-b79c-c5f41f20b7a5@acm.org>
+Date: Mon, 11 Dec 2023 09:59:25 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
-X-Outbound-Node: rcdn-core-1.cisco.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: qcom: Perform read back after writing reset
+ bit
+Content-Language: en-US
+To: Andrew Halaney <ahalaney@redhat.com>, Andy Gross <agross@kernel.org>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konrad.dybcio@linaro.org>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Yaniv Gardi <ygardi@codeaurora.org>, Dov Levenglick <dovl@codeaurora.org>
+Cc: Will Deacon <will@kernel.org>, linux-arm-msm@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20231208-ufs-reset-ensure-effect-before-delay-v1-1-8a0f82d7a09e@redhat.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231208-ufs-reset-ensure-effect-before-delay-v1-1-8a0f82d7a09e@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Increment driver version for multiqueue(MQ)
 
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
----
-Changes between v5 and v6:
-    Incorporate comments from Martin:
-		Rebase changes to 6.8/scsi-queue,
-		Resolve merge conflicts.
+On 12/8/23 12:19, Andrew Halaney wrote:
+> The recommendation for ensuring this bit has taken effect on the
+> device is to perform a read back to force it to make it all the way
+> to the device. This is documented in device-io.rst  [... ]
+There are more mb()'s that need to be replaced, namely the mb() calls in
+ufshcd_system_restore() and ufshcd_init().
 
-Changes between v4 and v5:
-    Incorporate review comments from Martin:
-	Modify patch commits to include a "---" separator.
+Thanks,
 
-Changes between v2 and v3:
-    Incorporate the following review comments from Hannes:
-	Create a separate patch to increment driver version.
-	Increment driver version number to 1.7.0.0.
----
- drivers/scsi/fnic/fnic.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 28f402932b3c..2074937c05bc 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -27,7 +27,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.57"
-+#define DRV_VERSION		"1.7.0.0"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
--- 
-2.31.1
-
+Bart.
