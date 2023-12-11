@@ -1,155 +1,170 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1FE238F95
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2023 12:09:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oy9iMmt0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E32DBC433C8;
-	Mon, 11 Dec 2023 12:09:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702296564;
-	bh=oXGVbWxA+RKsDk61lpmfn/EL74ws8mWFBZg2YiERZeA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oy9iMmt04/8YlHXAxP5bposxknJjP9Ec9FeVST5odYQcm/um+aTXs8W1AatLB/M6d
-	 M7W8Dxjq0Ub2OV7hr7bpCyp/wyroXpJJvuS5kXY15X//Frw62DtdyNJ1OohdtD80n1
-	 YqSZ4u9/ymEVr8qh3371o8yqUBOxnV/FmIyZCpJIRvMAbzOJNlv/MOehU82UnOkati
-	 9MdvFxeAehePjWW5YMemlV5ysLuOCJ6zlrFajB5xpE13sojb2DExCFeijp6kACVHoY
-	 W5BahICi1SrYQH3lL+fkHnK13Frl9etjxVHsFH5eDX8WFs8LAGV9iakzr817GPxdPb
-	 LYRpseJVDPxNQ==
-Date: Mon, 11 Dec 2023 17:39:08 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bean Huo <beanhuo@iokpp.de>
-Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
-	beanhuo@micron.com, thomas@t-8ch.de, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mikebi@micron.com, lporzio@micron.com
-Subject: Re: [PATCH v4 2/3] scsi: ufs: core: Add UFS RTC support
-Message-ID: <20231211120908.GC2894@thinkpad>
-References: <20231208103940.153734-1-beanhuo@iokpp.de>
- <20231208103940.153734-3-beanhuo@iokpp.de>
- <20231208145021.GC15552@thinkpad>
- <89c02f8b999a90329f2125380ad2d984767d25ae.camel@iokpp.de>
- <20231208170609.GD15552@thinkpad>
- <20231208173118.GE15552@thinkpad>
- <31f011c3d25bf63ed2b8a17ecf89f5bf70d8548c.camel@iokpp.de>
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9D714C3F;
+	Mon, 11 Dec 2023 06:07:22 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Spk8N3TFDz4f3kG7;
+	Mon, 11 Dec 2023 22:07:16 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id D84331A060E;
+	Mon, 11 Dec 2023 22:07:18 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDn6xGTF3dlDYFxDQ--.28013S4;
+	Mon, 11 Dec 2023 22:07:17 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: axboe@kernel.dk,
+	roger.pau@citrix.com,
+	colyli@suse.de,
+	kent.overstreet@gmail.com,
+	joern@lazybastard.org,
+	miquel.raynal@bootlin.com,
+	richard@nod.at,
+	vigneshr@ti.com,
+	sth@linux.ibm.com,
+	hoeppner@linux.ibm.com,
+	hca@linux.ibm.com,
+	gor@linux.ibm.com,
+	agordeev@linux.ibm.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	clm@fb.com,
+	josef@toxicpanda.com,
+	dsterba@suse.com,
+	viro@zeniv.linux.org.uk,
+	brauner@kernel.org,
+	nico@fluxnic.net,
+	xiang@kernel.org,
+	chao@kernel.org,
+	tytso@mit.edu,
+	adilger.kernel@dilger.ca,
+	agruenba@redhat.com,
+	jack@suse.com,
+	konishi.ryusuke@gmail.com,
+	willy@infradead.org,
+	akpm@linux-foundation.org,
+	p.raghav@samsung.com,
+	hare@suse.de
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org,
+	linux-mtd@lists.infradead.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-erofs@lists.ozlabs.org,
+	linux-ext4@vger.kernel.org,
+	gfs2@lists.linux.dev,
+	linux-nilfs@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH RFC v2 for-6.8/block 00/18] block: don't access bd_inode directly from other modules
+Date: Mon, 11 Dec 2023 22:05:34 +0800
+Message-Id: <20231211140552.973290-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <31f011c3d25bf63ed2b8a17ecf89f5bf70d8548c.camel@iokpp.de>
+X-CM-TRANSID:cCh0CgDn6xGTF3dlDYFxDQ--.28013S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxXr48Ww4Utw47JFWDWFW7Arb_yoW5XFWfpr
+	13KF4fGr1UWryxZaya9a17tw1rG3WkGayUWFnIy34rZFW5AryfZrWktF1rJa4kXryxXr4k
+	Xw17JryrKr1jgaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26rWY6r4U
+	JwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AK
+	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
+	fUojjgUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Sun, Dec 10, 2023 at 08:15:15PM +0100, Bean Huo wrote:
-> On Fri, 2023-12-08 at 23:01 +0530, Manivannan Sadhasivam wrote:
-> > > > 
-> > > > Thank you for your reviews. I will incorporate the suggested
-> > > > changes
-> > > > into the patch, addressing all comments except for the RTC mode
-> > > > switch.
-> > > > The proposal is to perform the RTC mode switch during UFS
-> > > > provisioning,
-> > > > not at runtime in the UFS online phase. This approach ensures
-> > > > that the
-> > > > UFS configuration is populated based on the RTC configuration
-> > > > established during provisioning. It is advisable not to change
-> > > > the RTC
-> > > > mode after provisioning is complete. Additionally, the usage of
-> > > > tv_sec,
-> > > > which returns time elapsed since boot, suggests that there is no
-> > > > issue
-> > > > with utilizing the RTC in this context.
-> > > 
-> > > Except that the warning will be issued to users after each 10s for
-> > > 40 years.
-> > > Atleast get rid of that.
-> > > 
-> > 
-> > I tried this series on Qcom RB5 board and found the issue due to the
-> > usage of
-> > UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH flag. When this flag is
-> > set,
-> > ufshcd_device_init() will be called twice due to reinit of the
-> > controller and
-> > PHY.
-> > 
-> > Since RTC work is initialized and scheduled from
-> > ufshcd_device_init(), panic
-> > happens during second time. Is it possible to move RTC init outside
-> > of
-> > ufshcd_device_init(). Maybe you can parse RTC params in
-> > ufshcd_device_init()
-> > and initialize the work elsewhere. Or you can cancel the work before
-> > calling
-> > ufshcd_device_init() second time.
-> > 
-> > - Mani
-> 
-> 
-> Thank you for your review. I have moved the INIT_DELAYED_WORK(&hba-
-> >ufs_rtc_update_work, ufshcd_rtc_work) to ufshcd_init() from
-> ufs_init_rtc(). This modification has been tested on the Qcom platform.
+From: Yu Kuai <yukuai3@huawei.com>
 
-This works, thanks!
+Changes in v2:
+ - remove some bdev apis that is not necessary;
+ - pass in offset for bdev_read_folio() and __bdev_get_folio();
+ - remove bdev_gfp_constraint() and add a new helper in fs/buffer.c to
+ prevent access bd_indoe() directly from mapping_gfp_constraint() in
+ ext4.(patch 15, 16);
+ - remove block_device_ejected() from ext4.
 
-- Mani
+Noted that following is not changed yet since v1:
+- Chirstoph suggested to remove invalidate_inode_pages2() from
+xen_update_blkif_status(), however, this sync_bdev() + invalidate_bdev()
+is used from many modules, and I'll leave this for later if we want to
+kill all of them.
+- Matthew suggested that pass in valid file_ra_state for cramfs,
+however, I don't see an easy way to do this for cramfs_lookup() and
+cramfs_read_super().
 
-> Regarding the warning, instead of removing it entirely, I have switched
-> it to dev_dbg. This adjustment is made with the consideration that some
-> form of customer notification is still necessary.
-> 
-> changes as below:
-> 
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 953d50cc4256..cb6b0c286367 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8205,7 +8205,7 @@ static void ufshcd_update_rtc(struct ufs_hba
-> *hba)
->         ktime_get_real_ts64(&ts64);
->  
->         if  (ts64.tv_sec < hba->dev_info.rtc_time_baseline) {
-> -               dev_warn(hba->dev, "%s: Current time precedes previous
-> setting!\n", __func__);
-> +               dev_dbg(hba->dev, "%s: Current time precedes previous
-> setting!\n", __func__);
->                 return;
->         }
->         /*
-> @@ -8270,8 +8270,6 @@ static void  ufs_init_rtc(struct ufs_hba *hba, u8
-> *desc_buf)
->          * update work, and let user configure by sysfs node according
-> to specific circumstance.
->          */
->         hba->dev_info.rtc_update_period = 0;
-> -
-> -       INIT_DELAYED_WORK(&hba->ufs_rtc_update_work, ufshcd_rtc_work);
->  }
->  
->  static int ufs_get_device_desc(struct ufs_hba *hba)
-> @@ -10634,8 +10632,8 @@ int ufshcd_init(struct ufs_hba *hba, void
-> __iomem *mmio_base, unsigned int irq)
->                                                 UFS_SLEEP_PWR_MODE,
->                                                
-> UIC_LINK_HIBERN8_STATE);
->  
-> -       INIT_DELAYED_WORK(&hba->rpm_dev_flush_recheck_work,
-> -                         ufshcd_rpm_dev_flush_recheck_work);
-> +       INIT_DELAYED_WORK(&hba->rpm_dev_flush_recheck_work,
-> ufshcd_rpm_dev_flush_recheck_work);
-> +       INIT_DELAYED_WORK(&hba->ufs_rtc_update_work, ufshcd_rtc_work);
->  
->         /* Set the default auto-hiberate idle timer value to 150 ms */
->         if (ufshcd_is_auto_hibern8_supported(hba) && !hba->ahit) {
-> 
-> Kind regards,
-> Bean
+Patch 1 add some bdev apis, then follow up patches will use these apis
+to avoid access bd_inode directly, and hopefully the field bd_inode can
+be removed eventually(after figure out a way for fs/buffer.c).
+
+Yu Kuai (18):
+  block: add some bdev apis
+  xen/blkback: use bdev api in xen_update_blkif_status()
+  bcache: use bdev api in read_super()
+  mtd: block2mtd: use bdev apis
+  s390/dasd: use bdev api in dasd_format()
+  scsicam: use bdev api in scsi_bios_ptable()
+  bcachefs: remove dead function bdev_sectors()
+  bio: export bio_add_folio_nofail()
+  btrfs: use bdev apis
+  cramfs: use bdev apis in cramfs_blkdev_read()
+  erofs: use bdev api
+  gfs2: use bdev api
+  nilfs2: use bdev api in nilfs_attach_log_writer()
+  jbd2: use bdev apis
+  buffer: add a new helper to read sb block
+  ext4: use new helper to read sb block
+  ext4: remove block_device_ejected()
+  ext4: use bdev apis
+
+ block/bdev.c                       | 70 ++++++++++++++++++++++++++
+ block/bio.c                        |  1 +
+ block/blk.h                        |  2 -
+ drivers/block/xen-blkback/xenbus.c |  3 +-
+ drivers/md/bcache/super.c          | 11 ++--
+ drivers/mtd/devices/block2mtd.c    | 81 +++++++++++++-----------------
+ drivers/s390/block/dasd_ioctl.c    |  5 +-
+ drivers/scsi/scsicam.c             |  4 +-
+ fs/bcachefs/util.h                 |  5 --
+ fs/btrfs/disk-io.c                 | 71 ++++++++++++--------------
+ fs/btrfs/volumes.c                 | 17 +++----
+ fs/btrfs/zoned.c                   | 15 +++---
+ fs/buffer.c                        | 68 +++++++++++++++++--------
+ fs/cramfs/inode.c                  | 36 +++++--------
+ fs/erofs/data.c                    | 18 ++++---
+ fs/erofs/internal.h                |  2 +
+ fs/ext4/dir.c                      |  6 +--
+ fs/ext4/ext4.h                     | 13 -----
+ fs/ext4/ext4_jbd2.c                |  6 +--
+ fs/ext4/inode.c                    |  8 +--
+ fs/ext4/super.c                    | 66 ++++--------------------
+ fs/ext4/symlink.c                  |  2 +-
+ fs/gfs2/glock.c                    |  2 +-
+ fs/gfs2/ops_fstype.c               |  2 +-
+ fs/jbd2/journal.c                  |  3 +-
+ fs/jbd2/recovery.c                 |  6 +--
+ fs/nilfs2/segment.c                |  2 +-
+ include/linux/blkdev.h             | 17 +++++++
+ include/linux/buffer_head.h        | 18 ++++++-
+ 29 files changed, 301 insertions(+), 259 deletions(-)
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.39.2
+
