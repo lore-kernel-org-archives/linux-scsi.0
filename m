@@ -1,175 +1,219 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="KJ4efM9E";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="TO6pszgb";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="wzXbksvR";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="k3338zTO"
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E62B5C3;
-	Mon, 11 Dec 2023 09:27:11 -0800 (PST)
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id B84E5223DB;
-	Mon, 11 Dec 2023 17:27:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1702315630; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uuXeYcPGrieZET/Hl977sPLVwbUrIJA1zejD9mT3ogI=;
-	b=KJ4efM9E+sa33aFAd8jwg5VXmnjMxleP6CmyD1Z0i97ow/IMJQBSqYXPh1ej+xavVwSRP4
-	Yg1lz/fUikUZbf1u2+vXr2RJE2evTJgLdRHZp8PKCuknSrpV2KnjDsWgIdBkLdxCyxxQjh
-	RNp4pJOJa1FNsc52gTMd8s7goQjnjEc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1702315630;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uuXeYcPGrieZET/Hl977sPLVwbUrIJA1zejD9mT3ogI=;
-	b=TO6pszgbMWjR3gBZnaW4MEVQ+gbRax/0poyUFFXjotFHInDoOr+qN7/2TD3A7ZbLly3/IT
-	YRHLNJGFEpFf+TBw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1702315629; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uuXeYcPGrieZET/Hl977sPLVwbUrIJA1zejD9mT3ogI=;
-	b=wzXbksvRNiCb4BbXMMBxbEnY6iRN/20VAk4MCpHS3Rljj8T26a7bGIb5ufMVkyXIF6ZR91
-	EvfGBjSwf9A5O7MLBegJl4BM0+huE5fNoBm4jZzLIFLmDT7FuH6vs9QkRAvxTJx13mPPRM
-	NuBUsypYbVCpDejdowVksfEijuMTCJg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1702315629;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uuXeYcPGrieZET/Hl977sPLVwbUrIJA1zejD9mT3ogI=;
-	b=k3338zTO3EpETkE8li6Dp/0dY97GEZjygMS4ZhvDNl1b1VwUfwBL4jBi4Swo7FgrfAdnP+
-	7OISWgzg4D5XlXAQ==
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 9A588134B0;
-	Mon, 11 Dec 2023 17:27:09 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id DhppJW1Gd2WxHQAAn2gu4w
-	(envelope-from <jack@suse.cz>); Mon, 11 Dec 2023 17:27:09 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 0511CA07E3; Mon, 11 Dec 2023 18:27:08 +0100 (CET)
-Date: Mon, 11 Dec 2023 18:27:08 +0100
-From: Jan Kara <jack@suse.cz>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
-	kent.overstreet@gmail.com, joern@lazybastard.org,
-	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
-	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
-	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
-	dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
-	adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
-	konishi.ryusuke@gmail.com, willy@infradead.org,
-	akpm@linux-foundation.org, p.raghav@samsung.com, hare@suse.de,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-nilfs@vger.kernel.org,
-	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH RFC v2 for-6.8/block 15/18] buffer: add a new helper to
- read sb block
-Message-ID: <20231211172708.qpuk4rkwq4u2zbmj@quack3>
-References: <20231211140552.973290-1-yukuai1@huaweicloud.com>
- <20231211140753.975297-1-yukuai1@huaweicloud.com>
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="JpTqsB3Y"
+Received: from alln-iport-3.cisco.com (alln-iport-3.cisco.com [173.37.142.90])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1687BD5;
+	Mon, 11 Dec 2023 09:36:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=cisco.com; i=@cisco.com; l=7085; q=dns/txt; s=iport;
+  t=1702316189; x=1703525789;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=qwwY/uFA8S6JXaGXNqn1SvKTk5spXoxgr24xxgmRk2I=;
+  b=JpTqsB3YCwVdInk5W2jlKz5Ct9Vg7SZVYEh2GAw42Yg2URo/hIiqgG/K
+   gliLnfKWMqBa9UHKPaaaWsyqoHuQxaWFdLEyJT36kAUnwQV+V/0XewNn8
+   MfJFUwn93xVivYcHR5AlbFO0upIGdDP+8k5LtS8o+cmjaWj1E4j9UK7vk
+   A=;
+X-CSE-ConnectionGUID: 7Be1vfFcQZOfNb5CKDhjcQ==
+X-CSE-MsgGUID: vrpfkwZPR0uoFx34DuORyw==
+X-IronPort-AV: E=Sophos;i="6.04,268,1695686400"; 
+   d="scan'208";a="186631691"
+Received: from rcdn-core-1.cisco.com ([173.37.93.152])
+  by alln-iport-3.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Dec 2023 17:36:28 +0000
+Received: from localhost.cisco.com ([10.193.101.253])
+	(authenticated bits=0)
+	by rcdn-core-1.cisco.com (8.15.2/8.15.2) with ESMTPSA id 3BBHaKqs009547
+	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+	Mon, 11 Dec 2023 17:36:27 GMT
+From: Karan Tilak Kumar <kartilak@cisco.com>
+To: sebaddel@cisco.com
+Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
+        satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH v6 00/13] Introduce support for multiqueue (MQ) in fnic 
+Date: Mon, 11 Dec 2023 09:36:04 -0800
+Message-Id: <20231211173617.932990-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231211140753.975297-1-yukuai1@huaweicloud.com>
-X-Spam-Score: 16.16
-X-Spamd-Bar: +++++++++
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=wzXbksvR;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=k3338zTO;
-	dmarc=none;
-	spf=softfail (smtp-out1.suse.de: 2a07:de40:b281:104:10:150:64:98 is neither permitted nor denied by domain of jack@suse.cz) smtp.mailfrom=jack@suse.cz
-X-Rspamd-Server: rspamd2
-X-Spamd-Result: default: False [9.46 / 50.00];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 R_SPF_SOFTFAIL(4.60)[~all];
-	 R_RATELIMIT(0.00)[to_ip_from(RLa8hd5fybgmzcyr9mhbq8ey7y)];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_TRACE(0.00)[suse.cz:+];
-	 MX_GOOD(-0.01)[];
-	 RCPT_COUNT_GT_50(0.00)[50];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 ARC_NA(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 FROM_HAS_DN(0.00)[];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 TAGGED_RCPT(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 DMARC_NA(1.20)[suse.cz];
-	 NEURAL_SPAM_SHORT(2.97)[0.991];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email,huawei.com:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 FREEMAIL_CC(0.00)[kernel.dk,citrix.com,suse.de,gmail.com,lazybastard.org,bootlin.com,nod.at,ti.com,linux.ibm.com,oracle.com,fb.com,toxicpanda.com,suse.com,zeniv.linux.org.uk,kernel.org,fluxnic.net,mit.edu,dilger.ca,redhat.com,infradead.org,linux-foundation.org,samsung.com,vger.kernel.org,lists.xenproject.org,lists.infradead.org,lists.ozlabs.org,lists.linux.dev,huawei.com];
-	 RCVD_TLS_ALL(0.00)[];
-	 SUSPICIOUS_RECIPS(1.50)[]
-X-Spam-Score: 9.46
-X-Rspamd-Queue-Id: B84E5223DB
-X-Spam-Flag: NO
+Content-Transfer-Encoding: 8bit
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
+X-Outbound-Node: rcdn-core-1.cisco.com
 
-On Mon 11-12-23 22:07:53, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> Unlike __bread_gfp(), ext4 has special handing while reading sb block:
-> 
-> 1) __GFP_NOFAIL is not set, and memory allocation can fail;
-> 2) If buffer write failed before, set buffer uptodate and don't read
->    block from disk;
-> 3) REQ_META is set for all IO, and REQ_PRIO is set for reading xattr;
-> 4) If failed, return error ptr instead of NULL;
-> 
-> This patch add a new helper __bread_gfp2() that will match above 2 and 3(
-> 1 will be used, and 4 will still be encapsulated by ext4), and prepare to
-> prevent calling mapping_gfp_constraint() directly on bd_inode->i_mapping
-> in ext4.
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-...
-> +/*
-> + * This works like __bread_gfp() except:
-> + * 1) If buffer write failed before, set buffer uptodate and don't read
-> + * block from disk;
-> + * 2) Caller can pass in additional op_flags like REQ_META;
-> + */
-> +struct buffer_head *
-> +__bread_gfp2(struct block_device *bdev, sector_t block, unsigned int size,
-> +	     blk_opf_t op_flags, gfp_t gfp)
-> +{
-> +	return bread_gfp(bdev, block, size, op_flags, gfp, true);
-> +}
-> +EXPORT_SYMBOL(__bread_gfp2);
+Hi Martin, reviewers,
 
-__bread_gfp2() is not a great name, why not just using bread_gfp()
-directly? I'm not a huge fan of boolean arguments but three different flags
-arguments would be too much for my taste ;) so I guess I can live with
-that.
+This cover letter describes the feature: add support for multiqueue (MQ)
+to fnic driver.
 
-								Honza
+Background: The Virtual Interface Card (VIC) firmware exposes several
+queues that can be configured for sending IOs and receiving IO
+responses. Unified Computing System Manager (UCSM) and Intersight
+Manager (IMM) allows users to configure the number of queues to be
+used for IOs.
+
+The number of IO queues to be used is stored in a configuration file
+by the VIC firmware. The fNIC driver reads the configuration file and sets
+the number of queues to be used. Previously, the driver was hard-coded
+to use only one queue. With this set of changes, the fNIC driver will
+configure itself to use multiple queues. This feature takes advantage of
+the block multiqueue layer to parallelize IOs being sent out of the VIC
+card.
+
+Here's a brief description of some of the salient patches:
+
+- vnic_scsi.h needs to be in sync with VIC firmware to be able to read
+the number of queues from the firmware config file. A patch has been
+created for this.
+- In an environment with many fnics (like we see in our customer
+environments), it is hard to distinguish which fnic is printing logs.
+Therefore, an fnic number has been included in the logs.
+- read the number of queues from the firmware config file.
+- include definitions in fnic.h to support multiqueue.
+- modify the interrupt service routines (ISRs) to read from the
+correct registers. The numbers that are used here come from discussions
+with the VIC firmware team.
+- track IO statistics for different queues.
+- remove usage of host_lock, and only use fnic_lock in the fnic driver.
+- use a hardware queue based spinlock to protect io_req.
+- replace the hard-coded zeroth queue with a hardware queue number.
+This presents a bulk of the changes.
+- modify the definition of fnic_queuecommand to accept multiqueue tags.
+- improve log messages, and indicate fnic number and multiqueue tags for
+effective debugging.
+
+Even though the patches have been made into a series, some patches are
+heavier than others.
+But, every effort has been made to keep the purpose of each patch as
+a single-purpose, and to compile cleanly.
+
+This patchset has been tested as a whole. Therefore, the tested-by fields
+have been added only to two patches
+in the set. All the individual patches compile cleanly. However,
+I've refrained from adding tested-by to
+most of the patches, so as to not mislead the reviewer/reader.
+
+A brief note on the unit tests:
+
+1. Increase number of queues to 64. Load driver. Run IOs via Medusa.
+12+ hour run successful.
+2. Configure multipathing, and run link flaps on single link.
+IOs drop briefly, but pick up as expected.
+3. Configure multipathing, and run link flaps on two links, with a
+30 second delay in between. IOs drop briefly, but pick up as expected.
+
+Repeat the above tests with 1 queue and 32 queues.
+All tests were successful.
+
+Please consider this patch series for the next merge window.
+
+Changes between v1 and v2:
+        Suppress a warning raised by a kernel test bot,
+        Incorporate the following review comments from Bart:
+        Remove outdated comment,
+        Remove unnecessary out of range tag checks,
+        Remove unnecessary local variable,
+        Modify function name.
+
+Changes between v2 and v3:
+    Incorporate review comment from Hannes:
+        Modify FNIC_MAIN_DBG to prepend fnic number.
+    Modify FNIC_MAIN_DBG definition to prepend function name
+    and line number.
+    Modify FNIC_FCS_DBG definition to prepend function name
+    and line number.
+    Replace FNIC_MAIN_DBG with FNIC_FCS_DBG in fnic_fcs.c
+    Use fnic_num as an argument to FNIC_MAIN_DBG and FNIC_FCS_DBG.
+        Host number is still used as an argument to
+        FNIC_MAIN_DBG and FNIC_FCS_DBG since it in turn
+        uses shost_printk.
+    Replace cpy_wq_base with copy_wq_base.
+    Incorporate the following review comments from Hannes:
+        Replace cpy_wq_base with copy_wq_base.
+        Remove C99 style comment.
+        Extend review comments of FNIC_MAIN_DBG and FNIC_SCSI_DBG
+        to FNIC_ISR_DBG:
+                Use fnic_num as an argument to FNIC_ISR_DBG.
+                Modify definition of FNIC_ISR_DBG.
+                Host number is still used as an argument to
+                FNIC_ISR_DBG since it in turn uses
+                shost_printk.
+                Removed reviewed by tag from Hannes due to
+                additional modifications.
+    Squash the following commits into one:
+    scsi: fnic: Remove usage of host_lock
+    scsi: fnic: Use fnic_lock to protect fnic structures
+    in queuecommand
+    Incorporate review comment from Hannes:
+        Replace cpy_wq_base with copy_wq_base.
+    Incorporate review comment from John Garry:
+         Replace code in fnic_mq_map_queues_cpus
+         with blk_mq_pci_map_queues.
+    Replace shost_printk logs with FNIC_MAIN_DBG.
+    Incorporate the following review comments from Hannes:
+        Replace cpy_wq_base with copy_wq_base.
+        Remove hwq as an argument to fnic_queuecommand_int.
+    Suppress warning from kernel test robot.
+    Replace new shost_printk comments with FNIC_SCSI_DBG.
+    Replace fnic_queuecommand_int with fnic_queuecommand.
+    Incorporate the following review comment from Hannes:
+        Use fnic_num as an argument to FNIC_SCSI_DBG.
+        Modify definition of FNIC_SCSI_DBG.
+                Host number is still an argument since
+        FNIC_SCSI_DBG in turn uses shost_printk.
+        Create a separate patch to increment driver version.
+        Increment driver version number to 1.7.0.0.
+
+Changes between v3 and v4:
+	Incorporate review comments from Martin and Hannes:
+		Undo the change to replace host number with fnic
+		number in debugfs since kernel stack uses host number.
+		Use ida_alloc to allocate ID for fnic number.
+
+Changes between v4 and v5:
+	Incorporate review comments from Martin:
+		Modify patch commits to include a "---" separator.
+
+Changes between v5 and v6:
+    Incorporate comments from Martin:
+		Rebase changes to 6.8/scsi-queue,
+		Resolve merge conflicts.
+
+Thanks and regards,
+Karan
+
+
+Karan Tilak Kumar (13):
+  scsi: fnic: Modify definitions to sync with VIC firmware
+  scsi: fnic: Add and use fnic number
+  scsi: fnic: Add and improve log messages
+  scsi: fnic: Rename wq_copy to hw_copy_wq
+  scsi: fnic: Get copy workqueue count and interrupt mode from config
+  scsi: fnic: Refactor and redefine fnic.h for multiqueue
+  scsi: fnic: Modify ISRs to support multiqueue(MQ)
+  scsi: fnic: Define stats to track multiqueue (MQ) IOs
+  scsi: fnic: Remove usage of host_lock
+  scsi: fnic: Add support for multiqueue (MQ) in fnic_main.c
+  scsi: fnic: Add support for multiqueue (MQ) in fnic driver
+  scsi: fnic: Improve logs and add support for multiqueue (MQ)
+  scsi: fnic: Increment driver version
+
+ drivers/scsi/fnic/fnic.h       |  68 ++-
+ drivers/scsi/fnic/fnic_fcs.c   |  63 +--
+ drivers/scsi/fnic/fnic_isr.c   | 168 +++++--
+ drivers/scsi/fnic/fnic_main.c  | 144 ++++--
+ drivers/scsi/fnic/fnic_res.c   |  48 +-
+ drivers/scsi/fnic/fnic_scsi.c  | 868 ++++++++++++++++++---------------
+ drivers/scsi/fnic/fnic_stats.h |   3 +
+ drivers/scsi/fnic/fnic_trace.c |  11 +
+ drivers/scsi/fnic/vnic_dev.c   |   4 +
+ drivers/scsi/fnic/vnic_scsi.h  |  13 +-
+ 10 files changed, 847 insertions(+), 543 deletions(-)
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.31.1
+
