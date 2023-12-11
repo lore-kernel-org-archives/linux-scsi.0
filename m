@@ -1,84 +1,179 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W9lTIU0x"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B12AD2
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2023 11:52:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1702324322;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qq03Jo5f/IYnaWG7QuyK0Yjjv5PibXRKmzmjiucs3YU=;
-	b=W9lTIU0xtiYiPm/ir8UqKCfin6le872ziEIPOrT5hTxn1fdrKBZ8lmLjzT1PX8Z96Ack8X
-	l+K4uocN9bxSEhpTqcOOEHQW7P6WFk7bGWRdfTuuiwo8bWaxon/MsBV24rgUu5ZegQMzWH
-	+6jEFeUV23Cvq9MRIgTrTVz/tyBz5wA=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-333-Zur8GxOCP02hHLyDT8JtDA-1; Mon, 11 Dec 2023 14:51:59 -0500
-X-MC-Unique: Zur8GxOCP02hHLyDT8JtDA-1
-Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-67ab0fa577fso67589026d6.1
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2023 11:51:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Jo1gSyWK"
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 535C3C4
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2023 12:06:53 -0800 (PST)
+Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-dbc507311d7so3612560276.1
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2023 12:06:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1702325212; x=1702930012; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=H/z0Ss5XFyvJoTs661LIBp6cShTF2gRz4qVPuHESwH4=;
+        b=Jo1gSyWKpASbLjCcWOztaHALyapm3/+VnyckApDHpgz7xb7A/XrcStCgRaAreOnf3P
+         pZDDQPIi2OeVWK7E3TAkFqY/7bgMl6OUx0B14Kh87YF/tMEoIwwE+GiqPvDarjLGeKjU
+         +z+eW2EybjrRSE/NBS9BlVuE2dLjII3J/l8e3Z4qnvdIpCYXZZdn65s4hyQTod4oBPIN
+         3j9vN+WCM9k/pUZhiV6ZT3XFzJRBGXlnKEZnJ20KcTOa6K7D83HfcfSk8ygUTnijak/a
+         5/arALioS+gfgwo6K4zl2cY/p4Qw/RUchGhpz5PIcVOxYeF9w2Jv52wiaxbgeEMhmTho
+         LBFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702324319; x=1702929119;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qq03Jo5f/IYnaWG7QuyK0Yjjv5PibXRKmzmjiucs3YU=;
-        b=pTHkoZ4USdwyTFuFStNtFIeWW/r+VxYYVLO5xmvJaPrx+xo7eX+Lw7vCWRzw+Nz5QZ
-         JBkaZKj5sVKjxapdUz0Wry20M+KZb7W3rNjutef32ON05Jw7lkdhMN+RUjd4JGXe4hae
-         CDUCwuM4y7fD1Z32ffZLDmbkv4G+db+L1yD3MEkIxoscQ4ZLRFY1i4nCqafA+DuTeezK
-         m2Z1TKe9Dz12mfZDZuRor6kmbxXNdRumTx6J5yfLecesoqzqthD7pyz1PMYDVs0NUb4+
-         QZOFiKe5QjMMxL/eT3DgNnE24Qoitjl4xl9jjCa7SSHLOAU1ZXZJYgxLXwAurW6jf2lr
-         oAxQ==
-X-Gm-Message-State: AOJu0YyjQlF/8lZtEcxLxdpspctpCBuFPncqGVCorY2MEWBBR+XqQciN
-	gsEiq2+6nyltuJpRjFTnPlh5cEpw/p8zABRcuHHm+hIzbtSG7Pdq3LpaRnPLa9gewi9ToO7rUoa
-	2BaU+YrHdTkwjbeilIbaW7g==
-X-Received: by 2002:ad4:59d0:0:b0:67a:a721:82e8 with SMTP id el16-20020ad459d0000000b0067aa72182e8mr5502185qvb.66.1702324318984;
-        Mon, 11 Dec 2023 11:51:58 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IH4+eOMOzP47aZt+EFlhHkf0eUx1qMFM1Dbo85dg2KxXg+o2VYJKcQRK6XmQpPp0Imc+Fr/KA==
-X-Received: by 2002:ad4:59d0:0:b0:67a:a721:82e8 with SMTP id el16-20020ad459d0000000b0067aa72182e8mr5502181qvb.66.1702324318771;
-        Mon, 11 Dec 2023 11:51:58 -0800 (PST)
-Received: from fedora ([2600:1700:1ff0:d0e0::37])
-        by smtp.gmail.com with ESMTPSA id bo14-20020a05621414ae00b0067aaa7483efsm3533358qvb.6.2023.12.11.11.51.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Dec 2023 11:51:58 -0800 (PST)
-Date: Mon, 11 Dec 2023 13:51:56 -0600
-From: Andrew Halaney <ahalaney@redhat.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konrad.dybcio@linaro.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Yaniv Gardi <ygardi@codeaurora.org>, Dov Levenglick <dovl@codeaurora.org>, 
-	Will Deacon <will@kernel.org>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: qcom: Perform read back after writing reset
- bit
-Message-ID: <oyjzluv5ldvurqzsqiwxnjtmpvvjavkdxvbetwctq7qentdjbh@r27gvlj62scq>
-References: <20231208-ufs-reset-ensure-effect-before-delay-v1-1-8a0f82d7a09e@redhat.com>
- <0d59681d-2d7d-4459-b79c-c5f41f20b7a5@acm.org>
+        d=1e100.net; s=20230601; t=1702325212; x=1702930012;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=H/z0Ss5XFyvJoTs661LIBp6cShTF2gRz4qVPuHESwH4=;
+        b=jTYcGxFi3MuDP0ZNudvXRYQczK54U34J5mTSRNWLMjggZY7yuvRncRLQnyNZXucPu7
+         YklPzHYmkgMg/BROgPO1CW7JEYQisnZ3VvcNs2THh/eb84TzYjJsFOkK6clT4pz7C2DO
+         S8q3od7YMxd/zRNfByIZJSnvu/KJ6xIRW+/g/ypPr4MWtUC5BlT+yogjTIodfCERxWdz
+         xBGL4AlzRRvmho1ckAY+fF1WFjpXmSi4NqD2ZUndMz4erDRWJLWPxbmQu87TAW6G+s1k
+         JQ5Pjy6ZD94yqm049cGYIsLrUVgNydlJWfPxD5burb+02DTKaEl83vkiZpoOTDUaZVaL
+         wXxA==
+X-Gm-Message-State: AOJu0Yyn44WSBykyokoOTABmu9YsL5+qFpu8EDVeWSGWuCRKqx5QFtOU
+	Cr9oecpRC2CUkKZ0mErwle4BWsGZ1GwLveoA5w==
+X-Google-Smtp-Source: AGHT+IHi7DG+3EuXdHK5kIVsRK1zQwJY0+cr+9QAn+IL/5jWC8TAFEd1H552VSUKLgOSUkaLfOFRXQZzJtR7rQmH7g==
+X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
+ (user=justinstitt job=sendgmr) by 2002:a25:f803:0:b0:db4:868a:7fdd with SMTP
+ id u3-20020a25f803000000b00db4868a7fddmr34903ybd.7.1702325212490; Mon, 11 Dec
+ 2023 12:06:52 -0800 (PST)
+Date: Mon, 11 Dec 2023 20:06:28 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0d59681d-2d7d-4459-b79c-c5f41f20b7a5@acm.org>
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAMNrd2UC/5WNUQqDMBBEryL73S1JrEX61XuIlJJsdKE1siuhI
+ t69qTcoAwNvPuZtoCRMCrdqA6HMymkqYE8V+PE5DYQcCoMzrrbGXVAXmfy8YhDOJIrqlTH6REc
+ 9dNWo6NGQDTFS69qmgXI2C0X+HKKuLzyyLknWw5vtb/1bkS2WkDHuSmRqF+5DSsOLzj69od/3/ Qv/yJDj3QAAAA==
+X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1702325211; l=3841;
+ i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
+ bh=rZMZkomkudUsfqwyDRixYeQW5ARfhWOfNshuF+j5KFg=; b=Khn6RMul5mGMMQgX2HtgBJxmEdbICK7Jkloq1RCDq5aClSb8YlhOXhAz7X788sUUloB6KKHOb
+ M7IWjerhyGaAgjLX9/wWgqCslM9+SytVUD3iI6vuPVwT1wgAbEIEk0V
+X-Mailer: b4 0.12.3
+Message-ID: <20231211-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-73b942238396@google.com>
+Subject: [PATCH] scsi: fcoe: use sysfs_match_string over fcoe_parse_mode
+From: Justin Stitt <justinstitt@google.com>
+To: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, Justin Stitt <justinstitt@google.com>
+Content-Type: text/plain; charset="utf-8"
 
-On Mon, Dec 11, 2023 at 09:59:25AM -0800, Bart Van Assche wrote:
-> 
-> On 12/8/23 12:19, Andrew Halaney wrote:
-> > The recommendation for ensuring this bit has taken effect on the
-> > device is to perform a read back to force it to make it all the way
-> > to the device. This is documented in device-io.rst  [... ]
-> There are more mb()'s that need to be replaced, namely the mb() calls in
-> ufshcd_system_restore() and ufshcd_init().
+Instead of copying @buf into a new buffer and carefully managing its
+newline/null-terminating status, we can just use sysfs_match_string()
+as it uses sysfs_streq() internally which handles newline/null-term:
 
-I'll poke at those in v2 (or in a separate series if this is scooped up
-prior).
+|  /**
+|   * sysfs_streq - return true if strings are equal, modulo trailing newline
+|   * @s1: one string
+|   * @s2: another string
+|   *
+|   * This routine returns true iff two strings are equal, treating both
+|   * NUL and newline-then-NUL as equivalent string terminations.  It's
+|   * geared for use with sysfs input strings, which generally terminate
+|   * with newlines but are compared against values without newlines.
+|   */
+|  bool sysfs_streq(const char *s1, const char *s2)
+|  ...
 
-Thanks,
-Andrew
+Then entirely drop the now unused fcoe_parse_mode, being careful to
+change if condition from checking for FIP_CONN_TYPE_UNKNOWN to < 0 as
+sysfs_match_string can return -EINVAL.
+
+To get the compiler not to complain, make fip_conn_type_names
+const char * const. Perhaps, this should also be done for
+fcf_state_names.
+
+This also removes an instance of strncpy() which helps [1].
+
+Link: https://github.com/KSPP/linux/issues/90 [1]
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Justin Stitt <justinstitt@google.com>
+---
+Builds upon patch and feedback from [2]:
+
+However, this is different enough to warrant its own patch and not be a
+continuation.
+
+[2]: https://lore.kernel.org/all/9f38f4aa-c6b5-4786-a641-d02d8bd92f7f@acm.org/
+---
+ drivers/scsi/fcoe/fcoe_sysfs.c | 26 ++++----------------------
+ 1 file changed, 4 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index e17957f8085c..f9c5d00f658a 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -10,6 +10,7 @@
+ #include <linux/kernel.h>
+ #include <linux/etherdevice.h>
+ #include <linux/ctype.h>
++#include <linux/string.h>
+ 
+ #include <scsi/fcoe_sysfs.h>
+ #include <scsi/libfcoe.h>
+@@ -214,25 +215,13 @@ static const char *get_fcoe_##title##_name(enum table_type table_key)	\
+ 	return table[table_key];					\
+ }
+ 
+-static char *fip_conn_type_names[] = {
++static const char * const fip_conn_type_names[] = {
+ 	[ FIP_CONN_TYPE_UNKNOWN ] = "Unknown",
+ 	[ FIP_CONN_TYPE_FABRIC ]  = "Fabric",
+ 	[ FIP_CONN_TYPE_VN2VN ]   = "VN2VN",
+ };
+ fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
+ 
+-static enum fip_conn_type fcoe_parse_mode(const char *buf)
+-{
+-	int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(fip_conn_type_names); i++) {
+-		if (strcasecmp(buf, fip_conn_type_names[i]) == 0)
+-			return i;
+-	}
+-
+-	return FIP_CONN_TYPE_UNKNOWN;
+-}
+-
+ static char *fcf_state_names[] = {
+ 	[ FCOE_FCF_STATE_UNKNOWN ]      = "Unknown",
+ 	[ FCOE_FCF_STATE_DISCONNECTED ] = "Disconnected",
+@@ -274,17 +263,10 @@ static ssize_t store_ctlr_mode(struct device *dev,
+ 			       const char *buf, size_t count)
+ {
+ 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
+-	char mode[FCOE_MAX_MODENAME_LEN + 1];
+ 
+ 	if (count > FCOE_MAX_MODENAME_LEN)
+ 		return -EINVAL;
+ 
+-	strncpy(mode, buf, count);
+-
+-	if (mode[count - 1] == '\n')
+-		mode[count - 1] = '\0';
+-	else
+-		mode[count] = '\0';
+ 
+ 	switch (ctlr->enabled) {
+ 	case FCOE_CTLR_ENABLED:
+@@ -297,8 +279,8 @@ static ssize_t store_ctlr_mode(struct device *dev,
+ 			return -ENOTSUPP;
+ 		}
+ 
+-		ctlr->mode = fcoe_parse_mode(mode);
+-		if (ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
++		ctlr->mode = sysfs_match_string(fip_conn_type_names, buf);
++		if (ctlr->mode < 0) {
+ 			LIBFCOE_SYSFS_DBG(ctlr, "Unknown mode %s provided.\n",
+ 					  buf);
+ 			return -EINVAL;
+
+---
+base-commit: bee0e7762ad2c6025b9f5245c040fcc36ef2bde8
+change-id: 20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-0e1dffe82855
+
+Best regards,
+--
+Justin Stitt <justinstitt@google.com>
 
