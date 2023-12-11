@@ -1,15 +1,15 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9D714C3F;
-	Mon, 11 Dec 2023 06:07:22 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Spk8N3TFDz4f3kG7;
-	Mon, 11 Dec 2023 22:07:16 +0800 (CST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05C1A4ED0;
+	Mon, 11 Dec 2023 06:07:24 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Spk8R39f0z4f3knq;
+	Mon, 11 Dec 2023 22:07:19 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D84331A060E;
-	Mon, 11 Dec 2023 22:07:18 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id CFCDE1A09CA;
+	Mon, 11 Dec 2023 22:07:21 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP1 (Coremail) with SMTP id cCh0CgDn6xGTF3dlDYFxDQ--.28013S4;
-	Mon, 11 Dec 2023 22:07:17 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgDn6xGTF3dlDYFxDQ--.28013S6;
+	Mon, 11 Dec 2023 22:07:21 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: axboe@kernel.dk,
 	roger.pau@citrix.com,
@@ -61,10 +61,12 @@ Cc: linux-block@vger.kernel.org,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH RFC v2 for-6.8/block 00/18] block: don't access bd_inode directly from other modules
-Date: Mon, 11 Dec 2023 22:05:34 +0800
-Message-Id: <20231211140552.973290-1-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC v2 for-6.8/block 02/18] xen/blkback: use bdev api in xen_update_blkif_status()
+Date: Mon, 11 Dec 2023 22:05:36 +0800
+Message-Id: <20231211140552.973290-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231211140552.973290-1-yukuai1@huaweicloud.com>
+References: <20231211140552.973290-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,99 +74,50 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDn6xGTF3dlDYFxDQ--.28013S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxXr48Ww4Utw47JFWDWFW7Arb_yoW5XFWfpr
-	13KF4fGr1UWryxZaya9a17tw1rG3WkGayUWFnIy34rZFW5AryfZrWktF1rJa4kXryxXr4k
-	Xw17JryrKr1jgaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26rWY6r4U
-	JwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AK
-	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
-	fUojjgUUUUU
+X-CM-TRANSID:cCh0CgDn6xGTF3dlDYFxDQ--.28013S6
+X-Coremail-Antispam: 1UD129KBjvdXoW7XFW7tFW3Wr4xCFyrtrWfAFb_yoWfWFb_ZF
+	18urWxXrn7Crs0kayUuFs3Z3yv93WrurWF9ay2qFySqw1UXFWSq39FvFn5Gr47ZayUGws0
+	yF17uFW7tr4xXjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbDAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXwA2048vs2IY02
+	0Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+	wVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+	vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWrXVW8Jr1lIxkGc2
+	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+	Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr
+	1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUHbyAU
+	UUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v2:
- - remove some bdev apis that is not necessary;
- - pass in offset for bdev_read_folio() and __bdev_get_folio();
- - remove bdev_gfp_constraint() and add a new helper in fs/buffer.c to
- prevent access bd_indoe() directly from mapping_gfp_constraint() in
- ext4.(patch 15, 16);
- - remove block_device_ejected() from ext4.
+Avoid to access bd_inode directly, prepare to remove bd_inode from
+block_devcie.
 
-Noted that following is not changed yet since v1:
-- Chirstoph suggested to remove invalidate_inode_pages2() from
-xen_update_blkif_status(), however, this sync_bdev() + invalidate_bdev()
-is used from many modules, and I'll leave this for later if we want to
-kill all of them.
-- Matthew suggested that pass in valid file_ra_state for cramfs,
-however, I don't see an easy way to do this for cramfs_lookup() and
-cramfs_read_super().
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/block/xen-blkback/xenbus.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Patch 1 add some bdev apis, then follow up patches will use these apis
-to avoid access bd_inode directly, and hopefully the field bd_inode can
-be removed eventually(after figure out a way for fs/buffer.c).
-
-Yu Kuai (18):
-  block: add some bdev apis
-  xen/blkback: use bdev api in xen_update_blkif_status()
-  bcache: use bdev api in read_super()
-  mtd: block2mtd: use bdev apis
-  s390/dasd: use bdev api in dasd_format()
-  scsicam: use bdev api in scsi_bios_ptable()
-  bcachefs: remove dead function bdev_sectors()
-  bio: export bio_add_folio_nofail()
-  btrfs: use bdev apis
-  cramfs: use bdev apis in cramfs_blkdev_read()
-  erofs: use bdev api
-  gfs2: use bdev api
-  nilfs2: use bdev api in nilfs_attach_log_writer()
-  jbd2: use bdev apis
-  buffer: add a new helper to read sb block
-  ext4: use new helper to read sb block
-  ext4: remove block_device_ejected()
-  ext4: use bdev apis
-
- block/bdev.c                       | 70 ++++++++++++++++++++++++++
- block/bio.c                        |  1 +
- block/blk.h                        |  2 -
- drivers/block/xen-blkback/xenbus.c |  3 +-
- drivers/md/bcache/super.c          | 11 ++--
- drivers/mtd/devices/block2mtd.c    | 81 +++++++++++++-----------------
- drivers/s390/block/dasd_ioctl.c    |  5 +-
- drivers/scsi/scsicam.c             |  4 +-
- fs/bcachefs/util.h                 |  5 --
- fs/btrfs/disk-io.c                 | 71 ++++++++++++--------------
- fs/btrfs/volumes.c                 | 17 +++----
- fs/btrfs/zoned.c                   | 15 +++---
- fs/buffer.c                        | 68 +++++++++++++++++--------
- fs/cramfs/inode.c                  | 36 +++++--------
- fs/erofs/data.c                    | 18 ++++---
- fs/erofs/internal.h                |  2 +
- fs/ext4/dir.c                      |  6 +--
- fs/ext4/ext4.h                     | 13 -----
- fs/ext4/ext4_jbd2.c                |  6 +--
- fs/ext4/inode.c                    |  8 +--
- fs/ext4/super.c                    | 66 ++++--------------------
- fs/ext4/symlink.c                  |  2 +-
- fs/gfs2/glock.c                    |  2 +-
- fs/gfs2/ops_fstype.c               |  2 +-
- fs/jbd2/journal.c                  |  3 +-
- fs/jbd2/recovery.c                 |  6 +--
- fs/nilfs2/segment.c                |  2 +-
- include/linux/blkdev.h             | 17 +++++++
- include/linux/buffer_head.h        | 18 ++++++-
- 29 files changed, 301 insertions(+), 259 deletions(-)
-
+diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
+index e34219ea2b05..e645afa4af57 100644
+--- a/drivers/block/xen-blkback/xenbus.c
++++ b/drivers/block/xen-blkback/xenbus.c
+@@ -104,8 +104,7 @@ static void xen_update_blkif_status(struct xen_blkif *blkif)
+ 		xenbus_dev_error(blkif->be->dev, err, "block flush");
+ 		return;
+ 	}
+-	invalidate_inode_pages2(
+-			blkif->vbd.bdev_handle->bdev->bd_inode->i_mapping);
++	invalidate_bdev(blkif->vbd.bdev_handle->bdev);
+ 
+ 	for (i = 0; i < blkif->nr_rings; i++) {
+ 		ring = &blkif->rings[i];
 -- 
 2.39.2
 
