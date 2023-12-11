@@ -1,74 +1,147 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CB341CA9B;
-	Sun, 10 Dec 2023 23:21:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97F3A1E536;
+	Mon, 11 Dec 2023 09:36:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HWKXD/+6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C58EAC433CD;
-	Sun, 10 Dec 2023 23:21:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qOC5z0ZN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81A86C433C7;
+	Mon, 11 Dec 2023 09:36:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702250476;
-	bh=VJVGmOcmvxDg+2Q6DzzktB9ab6LfUMqLIbFh2jLy2Gw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=HWKXD/+63HmoiF1/vPwh/6eVOq9q1+VfZ9+64SvtCHaYNa7KXDhcHJw2WljqDIr5N
-	 /1hsozP/JYUXfiXS2Mu1L1JfgeJvHHM6p1zSZGk44IaQhNaTfpQu4/fseAXd3b1GOI
-	 0hmiADOzdii2/akWE5wt0X2YzdVq3D31zHLvMy7ZsjokEPfV3EuAj42eXWnv+0q36T
-	 GIR7S0lPNxtO5LY2mcP9e5rG48h3fmZ/XDdnGQuuy+BKvlvio3mxj1pFYSKIpBpx4K
-	 UMA/6UgLstM/GJRhbVHxJRRDxNtlxjGIL785B0iIpj3U6q72Y1VwWapOmDSJ82d6yj
-	 6bzmakW6Vl7sw==
-From: Bjorn Andersson <andersson@kernel.org>
-To: Andy Gross <agross@kernel.org>,
+	s=k20201202; t=1702287406;
+	bh=PKwxxJaQ8XbMiumsFpz0ev2d9al4VPTBHyScl5V41AE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qOC5z0ZNq4fxQKIPsHGxX0cSM5q9bqqrcDfxrM/B9lO8dp2LAHHF+oW81I6+x4aBL
+	 gzs9V47UnzJj7GxwM7y4Jr+BIyMDk3HPiXeVJz//NZOx/kOn/e27kka5o5dLPZ1l96
+	 I7rYpnmxLmRbi+0y1z/kYkGEMrBf30/pTIHmPnWuz+LEkGjFCxpoOcJSqVujQibD/l
+	 a5F8ZORDmEdv5v6P2ktPH2+SB45owIBe4F92tiVWNzqtvYqsi4mWoxEp0EiPh8nD9s
+	 hjgJqVBAgdLr2iXsrbYXIRHArq1piCP/MZoTBhQtuTPOao7h56nmHEDqGo4XPGZrQl
+	 ASgCQG4qoPIww==
+Date: Mon, 11 Dec 2023 15:06:30 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Andrew Halaney <ahalaney@redhat.com>
+Cc: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
 	Konrad Dybcio <konrad.dybcio@linaro.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	cros-qcom-dts-watchers@chromium.org,
-	Luca Weiss <luca.weiss@fairphone.com>
-Cc: ~postmarketos/upstreaming@lists.sr.ht,
-	phone-devel@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Subject: Re: (subset) [PATCH v6 0/3] Add UFS host controller and Phy nodes for sc7280
-Date: Sun, 10 Dec 2023 15:25:38 -0800
-Message-ID: <170225073874.1947106.18057937177931917498.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231205-sc7280-ufs-v6-0-ad6ca7796de7@fairphone.com>
-References: <20231205-sc7280-ufs-v6-0-ad6ca7796de7@fairphone.com>
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Yaniv Gardi <ygardi@codeaurora.org>,
+	Dov Levenglick <dovl@codeaurora.org>, Will Deacon <will@kernel.org>,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: qcom: Perform read back after writing reset
+ bit
+Message-ID: <20231211093630.GA2894@thinkpad>
+References: <20231208-ufs-reset-ensure-effect-before-delay-v1-1-8a0f82d7a09e@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231208-ufs-reset-ensure-effect-before-delay-v1-1-8a0f82d7a09e@redhat.com>
 
-
-On Tue, 05 Dec 2023 15:38:53 +0100, Luca Weiss wrote:
-> This patch adds UFS host controller and Phy nodes for Qualcomm sc7280
-> SoC and enable it on some sc7280-based boards.
+On Fri, Dec 08, 2023 at 02:19:44PM -0600, Andrew Halaney wrote:
+> Currently, the reset bit for the UFS provided reset controller (used by
+> its phy) is written to, and then a mb() happens to try and ensure that
+> hit the device. Immediately afterwards a usleep_range() occurs.
 > 
-> Pick up the patchset from Nitin since the last revision (v4) has been
-> sent end of September and is blocking qcm6490-fairphone-fp5 UFS.
+> mb() ensure that the write completes, but completion doesn't mean that
+> it isn't stored in a buffer somewhere. The recommendation for
+> ensuring this bit has taken effect on the device is to perform a read
+> back to force it to make it all the way to the device. This is
+> documented in device-io.rst and a talk by Will Deacon on this can
+> be seen over here:
+> 
+>     https://youtu.be/i6DayghhA8Q?si=MiyxB5cKJXSaoc01&t=1678
+> 
+> Let's do that to ensure the bit hits the device. By doing so and
+> guaranteeing the ordering against the immediately following
+> usleep_range(), the mb() can safely be removed.
+> 
+> Fixes: 81c0fc51b7a7 ("ufs-qcom: add support for Qualcomm Technologies Inc platforms")
+> Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+> ---
+> This is based on top of:
+> 
+>     https://lore.kernel.org/linux-arm-msm/20231208065902.11006-1-manivannan.sadhasivam@linaro.org/T/#ma6bf749cc3d08ab8ce05be98401ebce099fa92ba
+> 
+> Since it mucks with the reset as well, and looks like it will go in
+> soon.
+> 
+> I'm unsure if this is totally correct. The goal of this
+> seems to be "ensure the device reset bit has taken effect before
+> delaying afterwards". As I describe in the commit message, mb()
+> doesn't guarantee that, the read back does... if it's against a udelay().
+> I can't quite totally 100% convince myself that applies to usleep_range(),
+> but I think it should be.
 > 
 
-Applied, thanks!
+This patch is perfectly fine. I did similar cleanups earlier, but missed this
+one. Thanks!
 
-[2/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280 soc
-      commit: c8a074789d71c1e26920f9333125590fac84f8c7
-[3/3] arm64: dts: qcom: sc7280: Add UFS nodes for sc7280 IDP board
-      commit: 9b07340c55a8e918f2667fb911e9b2edc428793c
+> In either case, I think the read back makes sense, the question is "is
+> it safe to remove the mb()?".
+> 
+> Sorry, Will's talk over has inspired me to poke the bear whenever I see
+> a memory barrier in a driver I play with :)
+> 
+>     https://youtu.be/i6DayghhA8Q?si=12B0wCqImx1lz8QX&t=1677
 
-Best regards,
+Yeah, this inspired me too :)
+
+- Mani
+
+> --->  drivers/ufs/host/ufs-qcom.h | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> index cdceeb795e70..c8cd59b1b8a8 100644
+> --- a/drivers/ufs/host/ufs-qcom.h
+> +++ b/drivers/ufs/host/ufs-qcom.h
+> @@ -147,10 +147,10 @@ static inline void ufs_qcom_assert_reset(struct ufs_hba *hba)
+>  	ufshcd_rmwl(hba, UFS_PHY_SOFT_RESET, UFS_PHY_SOFT_RESET, REG_UFS_CFG1);
+>  
+>  	/*
+> -	 * Make sure assertion of ufs phy reset is written to
+> -	 * register before returning
+> +	 * Dummy read to ensure the write takes effect before doing any sort
+> +	 * of delay
+>  	 */
+> -	mb();
+> +	ufshcd_readl(hba, REG_UFS_CFG1);
+>  }
+>  
+>  static inline void ufs_qcom_deassert_reset(struct ufs_hba *hba)
+> @@ -158,10 +158,10 @@ static inline void ufs_qcom_deassert_reset(struct ufs_hba *hba)
+>  	ufshcd_rmwl(hba, UFS_PHY_SOFT_RESET, 0, REG_UFS_CFG1);
+>  
+>  	/*
+> -	 * Make sure de-assertion of ufs phy reset is written to
+> -	 * register before returning
+> +	 * Dummy read to ensure the write takes effect before doing any sort
+> +	 * of delay
+>  	 */
+> -	mb();
+> +	ufshcd_readl(hba, REG_UFS_CFG1);
+>  }
+>  
+>  /* Host controller hardware version: major.minor.step */
+> 
+> ---
+> base-commit: 8fdfb333a099b142b49510f2e55778d654a5b224
+> change-id: 20231208-ufs-reset-ensure-effect-before-delay-6e06899d5419
+> 
+> Best regards,
+> -- 
+> Andrew Halaney <ahalaney@redhat.com>
+> 
+
 -- 
-Bjorn Andersson <andersson@kernel.org>
+மணிவண்ணன் சதாசிவம்
