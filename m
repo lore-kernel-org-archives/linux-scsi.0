@@ -1,9 +1,9 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BDADD2;
-	Mon, 11 Dec 2023 08:44:47 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC36E8E;
+	Mon, 11 Dec 2023 08:45:59 -0800 (PST)
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id D47DA68B05; Mon, 11 Dec 2023 17:44:43 +0100 (CET)
-Date: Mon, 11 Dec 2023 17:44:43 +0100
+	id 6AD7968BFE; Mon, 11 Dec 2023 17:45:56 +0100 (CET)
+Date: Mon, 11 Dec 2023 17:45:55 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: Christoph Hellwig <hch@lst.de>,
@@ -12,10 +12,13 @@ Cc: Christoph Hellwig <hch@lst.de>,
 	linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
 	Daejun Park <daejun7.park@samsung.com>,
 	Kanchan Joshi <joshi.k@samsung.com>,
-	Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
-Subject: Re: [PATCH v5 03/17] fs/f2fs: Restore the whint_mode mount option
-Message-ID: <20231211164443.GA25306@lst.de>
-References: <20231130013322.175290-1-bvanassche@acm.org> <20231130013322.175290-4-bvanassche@acm.org> <20231207174529.GC31184@lst.de> <fd6d207d-fe03-4fdf-bd74-3463860135ef@acm.org>
+	Jeff Layton <jlayton@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Dave Chinner <dchinner@redhat.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>
+Subject: Re: [PATCH v5 04/17] fs: Restore F_[GS]ET_FILE_RW_HINT support
+Message-ID: <20231211164555.GB25306@lst.de>
+References: <20231130013322.175290-1-bvanassche@acm.org> <20231130013322.175290-5-bvanassche@acm.org> <20231207174617.GD31184@lst.de> <3c08f127-45ff-458c-9ae7-75a1870781d8@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -24,24 +27,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fd6d207d-fe03-4fdf-bd74-3463860135ef@acm.org>
+In-Reply-To: <3c08f127-45ff-458c-9ae7-75a1870781d8@acm.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Dec 07, 2023 at 09:39:06AM -1000, Bart Van Assche wrote:
-> On 12/7/23 07:45, Christoph Hellwig wrote:
->> On Wed, Nov 29, 2023 at 05:33:08PM -0800, Bart Van Assche wrote:
->>> Restore support for the whint_mode mount option by reverting commit
->>> 930e2607638d ("f2fs: remove obsolete whint_mode").
->>
->> I know that commit sets a precedence by having a horribly short and
->> uninformative commit message, but please write a proper one for this
->> commit and explain why you are restoring the option.  Also if anything
->> changed since last year.
+On Thu, Dec 07, 2023 at 09:37:44AM -1000, Bart Van Assche wrote:
+> I have submitted a pull request for fio such that my tests can be run
+> even if F_SET_FILE_RW_HINT is not supported (see also
+> https://github.com/axboe/fio/pull/1682).
 >
-> Hi Christoph,
->
-> A possible approach is that I drop this patch from this patch series and
-> that I let the F2FS maintainers restore write hint support in F2FS.
+> The only other application that I found that uses F_SET_FILE_RW_HINT is
+> Ceph. Do we want to make the Ceph code work again that uses
+> F_SET_FILE_RW_HINT? I think this code cannot be converted to
+> F_SET_RW_HINT.
 
-I'm not saying you should drop it.  Just that it should have a useful
-commit message.
+Well, let's pull a few folks in.  I'd personally prefer not carrying
+this around in the file and supporting different write hints in the
+same inode, which also makes things a mess for file systems.
+
