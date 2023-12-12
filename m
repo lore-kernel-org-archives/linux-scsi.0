@@ -1,89 +1,60 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3174DE5;
-	Mon, 11 Dec 2023 12:37:31 -0800 (PST)
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6cea5548eb2so4220663b3a.0;
-        Mon, 11 Dec 2023 12:37:31 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702327050; x=1702931850;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=U+9l+SpFLDPAFs+h4yF9rq05J7khf5DbMgJkI+fNBbk=;
-        b=eAAPCS7ipSRjCO9dM6RcOb7ubwmWCQc7PbG4pqgyShXRMBa2v55zyBgVZZsQzfO1fs
-         izROhDvvXxWtEfvShkADTGtnG2jLbMdZPDpnXMqt90scqqChpdl++cg9W6q57D314wsz
-         7KxesxEubBM3kqcYyLEvvkMbMjzrHm87n8DW/4303EChY6kmplZgE8ZR+r15r0GIqPYv
-         JbCGmQAw1E6MPDASwVV7DeRUv+rHU2FlvO82109/MAt84x0n+3xOSnrRxlvklwiYwJTB
-         kRD68gTcwQUM5gCV6AIm1PnXWunWLVCYg1w/HrTNT5MjEUeJl29wodJEUOhwdZeuB7xL
-         y8qQ==
-X-Gm-Message-State: AOJu0Yz8LUWjwEebBy+dGZ6Bub0s5sXoMayXlbcqXggublfQtEHPC3bC
-	EimH1uva1k30bx/CL932OW4=
-X-Google-Smtp-Source: AGHT+IGqn+AlZGFr8LP8XVA4q8H6VhQDRCLkIp9M96YCQjtt81s4MMcYD0nE7RIFoHXfWtmV1uRc9w==
-X-Received: by 2002:a05:6a00:218f:b0:6cb:d2cb:5234 with SMTP id h15-20020a056a00218f00b006cbd2cb5234mr6173755pfi.32.1702327050472;
-        Mon, 11 Dec 2023 12:37:30 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:3431:681a:6403:d100? ([2620:0:1000:8411:3431:681a:6403:d100])
-        by smtp.gmail.com with ESMTPSA id c12-20020aa7880c000000b006ce7ff254b9sm6718639pfo.68.2023.12.11.12.37.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Dec 2023 12:37:30 -0800 (PST)
-Message-ID: <3ce6068e-c08b-419c-b78c-3897332f8669@acm.org>
-Date: Mon, 11 Dec 2023 12:37:28 -0800
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1042BAB
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2023 17:14:26 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Sq0xG3xwwzvPrt;
+	Tue, 12 Dec 2023 09:13:38 +0800 (CST)
+Received: from kwepemi500025.china.huawei.com (unknown [7.221.188.170])
+	by mail.maildlp.com (Postfix) with ESMTPS id DFC62140133;
+	Tue, 12 Dec 2023 09:14:23 +0800 (CST)
+Received: from [10.40.193.166] (10.40.193.166) by
+ kwepemi500025.china.huawei.com (7.221.188.170) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Tue, 12 Dec 2023 09:14:23 +0800
+Subject: Re: [PATCH 0/5] scsi: hisi_sas: Minor fixes and cleanups
+To: <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
+References: <1699932486-206596-1-git-send-email-chenxiang66@hisilicon.com>
+CC: <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>
+From: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Message-ID: <c45761ab-beba-ec17-ddd9-005678a3abf5@hisilicon.com>
+Date: Tue, 12 Dec 2023 09:14:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: fcoe: replace deprecated strncpy with strscpy
-Content-Language: en-US
-To: Justin Stitt <justinstitt@google.com>
-Cc: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley"
- <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-hardening@vger.kernel.org
-References: <20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-1e0026ee032d@google.com>
- <9f38f4aa-c6b5-4786-a641-d02d8bd92f7f@acm.org>
- <CAFhGd8oQ-Z8e65-TOZPmNHR-rsPVRXNY8UZMDFcUScKZ6bbtJQ@mail.gmail.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAFhGd8oQ-Z8e65-TOZPmNHR-rsPVRXNY8UZMDFcUScKZ6bbtJQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1699932486-206596-1-git-send-email-chenxiang66@hisilicon.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500025.china.huawei.com (7.221.188.170)
 
-On 12/11/23 12:08, Justin Stitt wrote:
-> Hi,
-> 
-> On Tue, Oct 24, 2023 at 1:01鈥疨M Bart Van Assche <bvanassche@acm.org> wrote:
->>
->> On 10/24/23 12:52, Justin Stitt wrote:
->>> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
->>> index e17957f8085c..7a3ca6cd3030 100644
->>> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
->>> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
->>> @@ -279,12 +279,10 @@ static ssize_t store_ctlr_mode(struct device *dev,
->>>        if (count > FCOE_MAX_MODENAME_LEN)
->>>                return -EINVAL;
->>>
->>> -     strncpy(mode, buf, count);
->>> +     strscpy(mode, buf, count);
->>>
->>>        if (mode[count - 1] == '\n')
->>>                mode[count - 1] = '\0';
->>> -     else
->>> -             mode[count] = '\0';
->>>
->>>        switch (ctlr->enabled) {
->>>        case FCOE_CTLR_ENABLED:
->>
->> Please consider to remove the code for copying the sysfs string and to
->> use sysfs_match_string() instead.
->>
-> 
-> Sorry, I'm not too familiar with sysfs strings here.
-> 
-> Let me know what you think of this patch [1].
+Gentle ping...
 
-I don't use FCoE so I will leave it to an FCoE user to review that patch.
 
-Thanks,
-
-Bart.
+在 2023/11/14 星期二 11:28, chenxiang 写道:
+> From: Xiang Chen <chenxiang66@hisilicon.com>
+>
+> This series contain some fixes and cleanups including:
+> - Set .phy_attached before notifying phyup event HISI_PHYEE_PHY_UP_PM;
+> - Use standard error code instead of hardcode;
+> - Check before using pointer variable;
+> - Rollback some operations if FLR failed;
+> - Correct the number of global debugfs registers;
+>
+> Yihang Li (5):
+>    scsi: hisi_sas: Set .phy_attached before notifing phyup event
+>      HISI_PHYE_PHY_UP_PM
+>    scsi: hisi_sas: Replace with standard error code return value
+>    scsi: hisi_sas: Check before using pointer variables
+>    scsi: hisi_sas: Rollback some operations if FLR failed
+>    scsi: hisi_sas: Correct the number of global debugfs registers
+>
+>   drivers/scsi/hisi_sas/hisi_sas_main.c  | 11 +++++++----
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 19 ++++++++++++-------
+>   2 files changed, 19 insertions(+), 11 deletions(-)
+>
 
