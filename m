@@ -1,187 +1,192 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="dOlEDMCf"
-Received: from smtp.smtpout.orange.fr (smtp-21.smtpout.orange.fr [80.12.242.21])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA6F0CD
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 13:25:23 -0800 (PST)
-Received: from pop-os.home ([92.140.202.140])
-	by smtp.orange.fr with ESMTPA
-	id DAFkr5m2Q8sqPDAFkrjhwF; Tue, 12 Dec 2023 22:25:21 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1702416321;
-	bh=xpWYbHV+Zc60bOBgrL8BoxkuvgOfsZpbRV1LTv1K99o=;
-	h=From:To:Cc:Subject:Date;
-	b=dOlEDMCfGy6oyhcN71SyY0UC1uniOSPcCj8dGJ3xvnA0SNrc23NXBqau4z3ZwJ1n+
-	 NotE7DtXrPePRBNAKY+PCmSfSNX5yrMG9Y4rPERkwkKHJMeh3xUWXfxkmpXqknNwVQ
-	 x4BBduVuQGFZPk90tdSEhuhEEshkPO6rFNn1IflOfHHu9IPTjB/Z5qmv+aOr/oXvri
-	 9Paxfew/tW9h6zxZP2MnD+3aTCgqd8dXvHHhCbISNY1y5tYB/3ibjodhl5GHZggrXi
-	 RTpLXvOgFV1RCjaqhmJhg0V01gfCZ08ZZsUOxsSfRobqf8WCSPqKZCGkLIKQ60xvNL
-	 AwZX3yrbUgTDQ==
-X-ME-Helo: pop-os.home
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Tue, 12 Dec 2023 22:25:21 +0100
-X-ME-IP: 92.140.202.140
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: Hannes Reinecke <hare@kernel.org>,
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ixmc1hdX"
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADB74AF
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 13:34:11 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6ce939ecfc2so5588465b3a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 13:34:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1702416851; x=1703021651; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=BUBXCMgW8IRc4vkm7/izJLiVwvVVMNu8qOIh1J5boU8=;
+        b=ixmc1hdXiCVXM3eKXWlbOid0djUpVNi7m3rTzzqaS2gqAibgXUqZmJ6x9vSXiezYPd
+         k0J49kCxVo9svRTDafWND7Nh6BNt2FS6OEnGjrERvIdarplUylodWhf3Fkwozxmcr47S
+         phJTsXk0VVCrq/Hi+V5RpiHlZozV7m8Z9qyMA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702416851; x=1703021651;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BUBXCMgW8IRc4vkm7/izJLiVwvVVMNu8qOIh1J5boU8=;
+        b=fiBkEQ9qE0OSi73ROuqVdsGtNc83qmlIDqnIjdcNZiACzBpnSlrfEA2FUYDkJ1hDQA
+         +Fpoqns5CIYXUdwiXXlIjyauUjnERDPTeZL1qMKJFXaBqM4735MvpPmStXPpuAaNgJ+i
+         LvONYqq13TiDaZ5zmMKsApuqfvjlnuE2XbGx+cDZnNpZdvWBnK8TlI5SsvMm8MlfTijL
+         CEKa524fbIsczrmbQjI9sHuQ7YyvZoXfnevUq0NIhVT2zfeFjcGAaj4Ict89REWP+kuF
+         ORQzFzRawMIOtVVTjXMEy0IH+K9s1IkjIkwNfQ6ZYfkKSEBfRufejA6PF7PknSc8cx6L
+         8BBw==
+X-Gm-Message-State: AOJu0YxR7xEudSy2q7uCXbEpvMAhof3LHIrHq94b8DHuhGalCQ63PbRU
+	D/LQnEypxE9LLlcIDyiVC0Qz9Q==
+X-Google-Smtp-Source: AGHT+IFjOA5OyEhfv3ZEaJ2ntXMaFYPXBjpMdJB7JxNYpSO1j7kBSU8jL07cqpqSKP1PenK7ylyWxA==
+X-Received: by 2002:a05:6a00:8cb:b0:6ce:2e7b:55fa with SMTP id s11-20020a056a0008cb00b006ce2e7b55famr7820685pfu.39.1702416851123;
+        Tue, 12 Dec 2023 13:34:11 -0800 (PST)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id x3-20020a056a000bc300b006cea17d08ebsm8594307pfu.120.2023.12.12.13.34.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Dec 2023 13:34:10 -0800 (PST)
+Date: Tue, 12 Dec 2023 13:34:10 -0800
+From: Kees Cook <keescook@chromium.org>
+To: Justin Stitt <justinstitt@google.com>
+Cc: Hannes Reinecke <hare@suse.de>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v2] scsi: myrb: Fix a potential string truncation in rebuild_show() and use sysfs_emit()
-Date: Tue, 12 Dec 2023 22:25:09 +0100
-Message-Id: <d2b2a961aa599f509b0903f8dcd331f659a1b562.1702411083.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.34.1
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: fcoe: use sysfs_match_string over fcoe_parse_mode
+Message-ID: <202312121330.2210A26@keescook>
+References: <20231211-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-73b942238396@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231211-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-73b942238396@google.com>
 
-"physical device - not rebuilding\n" is 34 bytes long. When written in
-'buf' with a limit of 32 bytes, it is truncated.
+On Mon, Dec 11, 2023 at 08:06:28PM +0000, Justin Stitt wrote:
+> Instead of copying @buf into a new buffer and carefully managing its
+> newline/null-terminating status, we can just use sysfs_match_string()
+> as it uses sysfs_streq() internally which handles newline/null-term:
+> 
+> |  /**
+> |   * sysfs_streq - return true if strings are equal, modulo trailing newline
+> |   * @s1: one string
+> |   * @s2: another string
+> |   *
+> |   * This routine returns true iff two strings are equal, treating both
+> |   * NUL and newline-then-NUL as equivalent string terminations.  It's
+> |   * geared for use with sysfs input strings, which generally terminate
+> |   * with newlines but are compared against values without newlines.
+> |   */
+> |  bool sysfs_streq(const char *s1, const char *s2)
+> |  ...
+> 
+> Then entirely drop the now unused fcoe_parse_mode, being careful to
+> change if condition from checking for FIP_CONN_TYPE_UNKNOWN to < 0 as
+> sysfs_match_string can return -EINVAL.
+> 
+> To get the compiler not to complain, make fip_conn_type_names
+> const char * const. Perhaps, this should also be done for
+> fcf_state_names.
+> 
+> This also removes an instance of strncpy() which helps [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/90 [1]
+> Cc: linux-hardening@vger.kernel.org
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
+> ---
+> Builds upon patch and feedback from [2]:
+> 
+> However, this is different enough to warrant its own patch and not be a
+> continuation.
+> 
+> [2]: https://lore.kernel.org/all/9f38f4aa-c6b5-4786-a641-d02d8bd92f7f@acm.org/
+> ---
+>  drivers/scsi/fcoe/fcoe_sysfs.c | 26 ++++----------------------
+>  1 file changed, 4 insertions(+), 22 deletions(-)
 
-When building with W=1, it leads to:
-   drivers/scsi/myrb.c: In function 'rebuild_show':
-   drivers/scsi/myrb.c:1906:24: error: 'physical device - not rebuil...' directive output truncated writing 33 bytes into a region of size 32 [-Werror=format-truncation=]
-    1906 |                 return snprintf(buf, 32, "physical device - not rebuilding\n");
-         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/myrb.c:1906:24: note: 'snprintf' output 34 bytes into a destination of size 32
+My favorite kind of insert/delete ratio! :)
 
+> 
+> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+> index e17957f8085c..f9c5d00f658a 100644
+> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
+> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+> @@ -10,6 +10,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/etherdevice.h>
+>  #include <linux/ctype.h>
+> +#include <linux/string.h>
+>  
+>  #include <scsi/fcoe_sysfs.h>
+>  #include <scsi/libfcoe.h>
+> @@ -214,25 +215,13 @@ static const char *get_fcoe_##title##_name(enum table_type table_key)	\
+>  	return table[table_key];					\
+>  }
+>  
+> -static char *fip_conn_type_names[] = {
+> +static const char * const fip_conn_type_names[] = {
+>  	[ FIP_CONN_TYPE_UNKNOWN ] = "Unknown",
+>  	[ FIP_CONN_TYPE_FABRIC ]  = "Fabric",
+>  	[ FIP_CONN_TYPE_VN2VN ]   = "VN2VN",
+>  };
+>  fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
+>  
+> -static enum fip_conn_type fcoe_parse_mode(const char *buf)
+> -{
+> -	int i;
+> -
+> -	for (i = 0; i < ARRAY_SIZE(fip_conn_type_names); i++) {
+> -		if (strcasecmp(buf, fip_conn_type_names[i]) == 0)
+> -			return i;
+> -	}
+> -
+> -	return FIP_CONN_TYPE_UNKNOWN;
+> -}
+> -
+>  static char *fcf_state_names[] = {
+>  	[ FCOE_FCF_STATE_UNKNOWN ]      = "Unknown",
+>  	[ FCOE_FCF_STATE_DISCONNECTED ] = "Disconnected",
+> @@ -274,17 +263,10 @@ static ssize_t store_ctlr_mode(struct device *dev,
+>  			       const char *buf, size_t count)
+>  {
+>  	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
+> -	char mode[FCOE_MAX_MODENAME_LEN + 1];
+>  
+>  	if (count > FCOE_MAX_MODENAME_LEN)
+>  		return -EINVAL;
+>  
+> -	strncpy(mode, buf, count);
+> -
+> -	if (mode[count - 1] == '\n')
+> -		mode[count - 1] = '\0';
+> -	else
+> -		mode[count] = '\0';
+>  
+>  	switch (ctlr->enabled) {
+>  	case FCOE_CTLR_ENABLED:
+> @@ -297,8 +279,8 @@ static ssize_t store_ctlr_mode(struct device *dev,
+>  			return -ENOTSUPP;
+>  		}
+>  
+> -		ctlr->mode = fcoe_parse_mode(mode);
+> -		if (ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
+> +		ctlr->mode = sysfs_match_string(fip_conn_type_names, buf);
+> +		if (ctlr->mode < 0) {
 
-In order to fix it and to avoid hard-coded limits in all _show() functions, use
-the preferred sysfs_emit() that knows better about it.
+I think this needs to include FIP_CONN_TYPE_UNKNOWN to keep the logic
+the same? (i.e. it could match the string "Unknown", so it would return
+the enum value for that, 0 in this case.)
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-Changes in v2:
-  - Merge patch 1/2 and 2/2
+Otherwise, yeah, this looks good.
 
-v1:
-  https://lore.kernel.org/all/cover.1702411083.git.christophe.jaillet@wanadoo.fr/
+-Kees
 
+>  			LIBFCOE_SYSFS_DBG(ctlr, "Unknown mode %s provided.\n",
+>  					  buf);
+>  			return -EINVAL;
+> 
+> ---
+> base-commit: bee0e7762ad2c6025b9f5245c040fcc36ef2bde8
+> change-id: 20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-0e1dffe82855
+> 
+> Best regards,
+> --
+> Justin Stitt <justinstitt@google.com>
+> 
+> 
 
-Note that there is another warning when building with W=1:
-    1051 |                 "%u.%02u-%c-%02u",
-         |                 ^~~~~~~~~~~~~~~~~
-   drivers/scsi/myrb.c:1050:9: note: 'snprintf' output between 10 and 14 bytes into a destination of size 12
-
-but I think that it is a false positive because snprintf() in Linux does not
-strickly folows the standard C behavior of sn
-
----
- drivers/scsi/myrb.c | 38 +++++++++++++++++++-------------------
- 1 file changed, 19 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index ca2380d2d6d3..06a5e6fb9f99 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -1767,7 +1767,7 @@ static ssize_t raid_state_show(struct device *dev,
- 	int ret;
- 
- 	if (!sdev->hostdata)
--		return snprintf(buf, 16, "Unknown\n");
-+		return sysfs_emit(buf, "Unknown\n");
- 
- 	if (sdev->channel == myrb_logical_channel(sdev->host)) {
- 		struct myrb_ldev_info *ldev_info = sdev->hostdata;
-@@ -1775,10 +1775,10 @@ static ssize_t raid_state_show(struct device *dev,
- 
- 		name = myrb_devstate_name(ldev_info->state);
- 		if (name)
--			ret = snprintf(buf, 32, "%s\n", name);
-+			ret = sysfs_emit(buf, "%s\n", name);
- 		else
--			ret = snprintf(buf, 32, "Invalid (%02X)\n",
--				       ldev_info->state);
-+			ret = sysfs_emit(buf, "Invalid (%02X)\n",
-+					 ldev_info->state);
- 	} else {
- 		struct myrb_pdev_state *pdev_info = sdev->hostdata;
- 		unsigned short status;
-@@ -1796,10 +1796,10 @@ static ssize_t raid_state_show(struct device *dev,
- 		else
- 			name = myrb_devstate_name(pdev_info->state);
- 		if (name)
--			ret = snprintf(buf, 32, "%s\n", name);
-+			ret = sysfs_emit(buf, "%s\n", name);
- 		else
--			ret = snprintf(buf, 32, "Invalid (%02X)\n",
--				       pdev_info->state);
-+			ret = sysfs_emit(buf, "Invalid (%02X)\n",
-+					 pdev_info->state);
- 	}
- 	return ret;
- }
-@@ -1886,11 +1886,11 @@ static ssize_t raid_level_show(struct device *dev,
- 
- 		name = myrb_raidlevel_name(ldev_info->raid_level);
- 		if (!name)
--			return snprintf(buf, 32, "Invalid (%02X)\n",
--					ldev_info->state);
--		return snprintf(buf, 32, "%s\n", name);
-+			return sysfs_emit(buf, "Invalid (%02X)\n",
-+					  ldev_info->state);
-+		return sysfs_emit(buf, "%s\n", name);
- 	}
--	return snprintf(buf, 32, "Physical Drive\n");
-+	return sysfs_emit(buf, "Physical Drive\n");
- }
- static DEVICE_ATTR_RO(raid_level);
- 
-@@ -1903,17 +1903,17 @@ static ssize_t rebuild_show(struct device *dev,
- 	unsigned char status;
- 
- 	if (sdev->channel < myrb_logical_channel(sdev->host))
--		return snprintf(buf, 32, "physical device - not rebuilding\n");
-+		return sysfs_emit(buf, "physical device - not rebuilding\n");
- 
- 	status = myrb_get_rbld_progress(cb, &rbld_buf);
- 
- 	if (rbld_buf.ldev_num != sdev->id ||
- 	    status != MYRB_STATUS_SUCCESS)
--		return snprintf(buf, 32, "not rebuilding\n");
-+		return sysfs_emit(buf, "not rebuilding\n");
- 
--	return snprintf(buf, 32, "rebuilding block %u of %u\n",
--			rbld_buf.ldev_size - rbld_buf.blocks_left,
--			rbld_buf.ldev_size);
-+	return sysfs_emit(buf, "rebuilding block %u of %u\n",
-+			  rbld_buf.ldev_size - rbld_buf.blocks_left,
-+			  rbld_buf.ldev_size);
- }
- 
- static ssize_t rebuild_store(struct device *dev,
-@@ -2140,7 +2140,7 @@ static ssize_t ctlr_num_show(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct myrb_hba *cb = shost_priv(shost);
- 
--	return snprintf(buf, 20, "%u\n", cb->ctlr_num);
-+	return sysfs_emit(buf, "%u\n", cb->ctlr_num);
- }
- static DEVICE_ATTR_RO(ctlr_num);
- 
-@@ -2150,7 +2150,7 @@ static ssize_t firmware_show(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct myrb_hba *cb = shost_priv(shost);
- 
--	return snprintf(buf, 16, "%s\n", cb->fw_version);
-+	return sysfs_emit(buf, "%s\n", cb->fw_version);
- }
- static DEVICE_ATTR_RO(firmware);
- 
-@@ -2160,7 +2160,7 @@ static ssize_t model_show(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct myrb_hba *cb = shost_priv(shost);
- 
--	return snprintf(buf, 16, "%s\n", cb->model_name);
-+	return sysfs_emit(buf, "%s\n", cb->model_name);
- }
- static DEVICE_ATTR_RO(model);
- 
 -- 
-2.34.1
-
+Kees Cook
