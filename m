@@ -1,192 +1,143 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ixmc1hdX"
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADB74AF
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 13:34:11 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6ce939ecfc2so5588465b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 13:34:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1702416851; x=1703021651; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=BUBXCMgW8IRc4vkm7/izJLiVwvVVMNu8qOIh1J5boU8=;
-        b=ixmc1hdXiCVXM3eKXWlbOid0djUpVNi7m3rTzzqaS2gqAibgXUqZmJ6x9vSXiezYPd
-         k0J49kCxVo9svRTDafWND7Nh6BNt2FS6OEnGjrERvIdarplUylodWhf3Fkwozxmcr47S
-         phJTsXk0VVCrq/Hi+V5RpiHlZozV7m8Z9qyMA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702416851; x=1703021651;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BUBXCMgW8IRc4vkm7/izJLiVwvVVMNu8qOIh1J5boU8=;
-        b=fiBkEQ9qE0OSi73ROuqVdsGtNc83qmlIDqnIjdcNZiACzBpnSlrfEA2FUYDkJ1hDQA
-         +Fpoqns5CIYXUdwiXXlIjyauUjnERDPTeZL1qMKJFXaBqM4735MvpPmStXPpuAaNgJ+i
-         LvONYqq13TiDaZ5zmMKsApuqfvjlnuE2XbGx+cDZnNpZdvWBnK8TlI5SsvMm8MlfTijL
-         CEKa524fbIsczrmbQjI9sHuQ7YyvZoXfnevUq0NIhVT2zfeFjcGAaj4Ict89REWP+kuF
-         ORQzFzRawMIOtVVTjXMEy0IH+K9s1IkjIkwNfQ6ZYfkKSEBfRufejA6PF7PknSc8cx6L
-         8BBw==
-X-Gm-Message-State: AOJu0YxR7xEudSy2q7uCXbEpvMAhof3LHIrHq94b8DHuhGalCQ63PbRU
-	D/LQnEypxE9LLlcIDyiVC0Qz9Q==
-X-Google-Smtp-Source: AGHT+IFjOA5OyEhfv3ZEaJ2ntXMaFYPXBjpMdJB7JxNYpSO1j7kBSU8jL07cqpqSKP1PenK7ylyWxA==
-X-Received: by 2002:a05:6a00:8cb:b0:6ce:2e7b:55fa with SMTP id s11-20020a056a0008cb00b006ce2e7b55famr7820685pfu.39.1702416851123;
-        Tue, 12 Dec 2023 13:34:11 -0800 (PST)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id x3-20020a056a000bc300b006cea17d08ebsm8594307pfu.120.2023.12.12.13.34.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Dec 2023 13:34:10 -0800 (PST)
-Date: Tue, 12 Dec 2023 13:34:10 -0800
-From: Kees Cook <keescook@chromium.org>
-To: Justin Stitt <justinstitt@google.com>
-Cc: Hannes Reinecke <hare@suse.de>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] scsi: fcoe: use sysfs_match_string over fcoe_parse_mode
-Message-ID: <202312121330.2210A26@keescook>
-References: <20231211-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-73b942238396@google.com>
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="pqnSL8Fj";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="KjzdvV6s"
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.54])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B1A8B3;
+	Tue, 12 Dec 2023 14:08:46 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1702418917; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=IaL+LtM/3sr6O7C1Kk7kUq5UUfMeWCAeOz5bfzNSfCDsRSpInihXPzis28eRbPjM8P
+    9JrqzST3sg8YO9t1qIT6khqoPFxqIENVDj/hv741nRYUnwWMWYinxc0ItWFpa1FL1aIm
+    xCCZU/qMpjxfv/qS3v2Sr1FSihqyMQQSZaXxsEjpP/k51H0iACsMFA58nsFkQfl1zvup
+    PYN34+523OZCzmNWo+56ccj6KSUFqowZV5gtA6akO2rERDMk3c58yo7rNhlBAC45xloQ
+    yIpzFMxfkIaDI1WuOACxNuo6h/khQwCSbG1sY0taiVAcpwi6ssxOJ7y1eiJN6GQc9w1l
+    DoNQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1702418917;
+    s=strato-dkim-0002; d=strato.com;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=7Ti5UcywgqFS+9CZzfTbKXKYv/LJc+sEGxe+xBAGoFo=;
+    b=qfLzIDH3oMZhRbuvUDQYzmhq9OU/1l2aBqXjBiZRdXBRfNlKc7KHYcShl99xf6tisT
+    JHepcRlFjgYn+/nAql3zTBd305542Ljhv5NQoa45Q+xOcrJ9wt2GR7wwIZYmR65dpiwK
+    Zi+wZb50f5RTl+N+qncbp6oFYRjpHZlQLq54N59vgOFt2j3IzvZB1h1Us6a1Frt8Wowt
+    dljGHTKk5pFuR307YOiTj8lqWth/oFbGEFqBxrRXCwT3gW1mozfSiRq1+hNqP4hWs0l4
+    RMVPNqWaBPuZFCN3TY0Jjf1TF5GBZI8IDkpHx39Qk/He1liUJWQFMjXFtDr7KFxp6G7J
+    IQPA==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1702418917;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=7Ti5UcywgqFS+9CZzfTbKXKYv/LJc+sEGxe+xBAGoFo=;
+    b=pqnSL8Fj5n3A/v8BqnxaxxW57LiBqBI3IddBFTg+rui2xw9kx9UlEl7bvbbl65jdTb
+    /pfKBBqb3FVMP9t6/bwxlQsVqlRVV33uPHjyroPhy86UqjmzndPZm8Ax3vUdP7srVZbI
+    OcILIAh+VWbR5CDwAmVF63rdIRvdhzNJJfQ3+4SOkSB6n61pflY8HgWqc7Qnj9YEE55S
+    STJBs7xptY9QDJxZk3BW4gQDrLPYiv5YOmqlPCl63bCHTDQhDO45JBBOPCcgOtoQ22eP
+    rvjibwQBik77AgtNmICXK3JJ71LCoHfW8nZwnkdQGC5d5yh4s+8y0WU1bekeDPCo/W17
+    bbYQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1702418917;
+    s=strato-dkim-0003; d=iokpp.de;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=7Ti5UcywgqFS+9CZzfTbKXKYv/LJc+sEGxe+xBAGoFo=;
+    b=KjzdvV6smK54+DJV1mtGbUIEWgex8tEvdXBsPmoYP9LS4crwXfCv5g9csJuTqVrYVW
+    QEeTRR9UGIo11QtXH4CQ==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1krW49WPrbTU8waUHk0CK6S5K43N4UTp8lPg"
+Received: from Munilab01-lab.speedport.ip
+    by smtp.strato.de (RZmta 49.10.0 AUTH)
+    with ESMTPSA id z4c2a6zBCM8aNVy
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Tue, 12 Dec 2023 23:08:36 +0100 (CET)
+From: Bean Huo <beanhuo@iokpp.de>
+To: avri.altman@wdc.com,
+	bvanassche@acm.org,
+	alim.akhtar@samsung.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	mani@kernel.org,
+	quic_cang@quicinc.com,
+	quic_asutoshd@quicinc.com,
+	beanhuo@micron.com,
+	thomas@t-8ch.de
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mikebi@micron.com,
+	lporzio@micron.com,
+	Bean Huo <beanhuo@iokpp.de>
+Subject: [PATCH v5 0/3] Add UFS RTC support
+Date: Tue, 12 Dec 2023 23:08:22 +0100
+Message-Id: <20231212220825.85255-1-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231211-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-73b942238396@google.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 
-On Mon, Dec 11, 2023 at 08:06:28PM +0000, Justin Stitt wrote:
-> Instead of copying @buf into a new buffer and carefully managing its
-> newline/null-terminating status, we can just use sysfs_match_string()
-> as it uses sysfs_streq() internally which handles newline/null-term:
-> 
-> |  /**
-> |   * sysfs_streq - return true if strings are equal, modulo trailing newline
-> |   * @s1: one string
-> |   * @s2: another string
-> |   *
-> |   * This routine returns true iff two strings are equal, treating both
-> |   * NUL and newline-then-NUL as equivalent string terminations.  It's
-> |   * geared for use with sysfs input strings, which generally terminate
-> |   * with newlines but are compared against values without newlines.
-> |   */
-> |  bool sysfs_streq(const char *s1, const char *s2)
-> |  ...
-> 
-> Then entirely drop the now unused fcoe_parse_mode, being careful to
-> change if condition from checking for FIP_CONN_TYPE_UNKNOWN to < 0 as
-> sysfs_match_string can return -EINVAL.
-> 
-> To get the compiler not to complain, make fip_conn_type_names
-> const char * const. Perhaps, this should also be done for
-> fcf_state_names.
-> 
-> This also removes an instance of strncpy() which helps [1].
-> 
-> Link: https://github.com/KSPP/linux/issues/90 [1]
-> Cc: linux-hardening@vger.kernel.org
-> Signed-off-by: Justin Stitt <justinstitt@google.com>
-> ---
-> Builds upon patch and feedback from [2]:
-> 
-> However, this is different enough to warrant its own patch and not be a
-> continuation.
-> 
-> [2]: https://lore.kernel.org/all/9f38f4aa-c6b5-4786-a641-d02d8bd92f7f@acm.org/
-> ---
->  drivers/scsi/fcoe/fcoe_sysfs.c | 26 ++++----------------------
->  1 file changed, 4 insertions(+), 22 deletions(-)
+Adding RTC support for embedded storage device UFS in its driver, it is
+important for a few key reasons:
 
-My favorite kind of insert/delete ratio! :)
+1. Helps with Regular Maintenance:
+The RTC provides a basic way to keep track of time, making it useful for
+scheduling routine maintenance tasks in the storage device. This includes
+things like making sure data is spread
+evenly across the storage to extend its life.
 
-> 
-> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-> index e17957f8085c..f9c5d00f658a 100644
-> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
-> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-> @@ -10,6 +10,7 @@
->  #include <linux/kernel.h>
->  #include <linux/etherdevice.h>
->  #include <linux/ctype.h>
-> +#include <linux/string.h>
->  
->  #include <scsi/fcoe_sysfs.h>
->  #include <scsi/libfcoe.h>
-> @@ -214,25 +215,13 @@ static const char *get_fcoe_##title##_name(enum table_type table_key)	\
->  	return table[table_key];					\
->  }
->  
-> -static char *fip_conn_type_names[] = {
-> +static const char * const fip_conn_type_names[] = {
->  	[ FIP_CONN_TYPE_UNKNOWN ] = "Unknown",
->  	[ FIP_CONN_TYPE_FABRIC ]  = "Fabric",
->  	[ FIP_CONN_TYPE_VN2VN ]   = "VN2VN",
->  };
->  fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
->  
-> -static enum fip_conn_type fcoe_parse_mode(const char *buf)
-> -{
-> -	int i;
-> -
-> -	for (i = 0; i < ARRAY_SIZE(fip_conn_type_names); i++) {
-> -		if (strcasecmp(buf, fip_conn_type_names[i]) == 0)
-> -			return i;
-> -	}
-> -
-> -	return FIP_CONN_TYPE_UNKNOWN;
-> -}
-> -
->  static char *fcf_state_names[] = {
->  	[ FCOE_FCF_STATE_UNKNOWN ]      = "Unknown",
->  	[ FCOE_FCF_STATE_DISCONNECTED ] = "Disconnected",
-> @@ -274,17 +263,10 @@ static ssize_t store_ctlr_mode(struct device *dev,
->  			       const char *buf, size_t count)
->  {
->  	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-> -	char mode[FCOE_MAX_MODENAME_LEN + 1];
->  
->  	if (count > FCOE_MAX_MODENAME_LEN)
->  		return -EINVAL;
->  
-> -	strncpy(mode, buf, count);
-> -
-> -	if (mode[count - 1] == '\n')
-> -		mode[count - 1] = '\0';
-> -	else
-> -		mode[count] = '\0';
->  
->  	switch (ctlr->enabled) {
->  	case FCOE_CTLR_ENABLED:
-> @@ -297,8 +279,8 @@ static ssize_t store_ctlr_mode(struct device *dev,
->  			return -ENOTSUPP;
->  		}
->  
-> -		ctlr->mode = fcoe_parse_mode(mode);
-> -		if (ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
-> +		ctlr->mode = sysfs_match_string(fip_conn_type_names, buf);
-> +		if (ctlr->mode < 0) {
+2. Figuring Out How Old Data Is:
+The RTC helps the device estimate how long ago certain parts of the storage
+were last used. This is handy for deciding when to do maintenance tasks to
+keep the storage working well over time.
 
-I think this needs to include FIP_CONN_TYPE_UNKNOWN to keep the logic
-the same? (i.e. it could match the string "Unknown", so it would return
-the enum value for that, 0 in this case.)
+3. Making Devices Last Longer:
+By using the RTC for regular upkeep, we can make sure the storage device lasts
+longer and stays reliable. This is especially important for devices that need
+to work well for a long time.
 
-Otherwise, yeah, this looks good.
+4.Fitting In with Other Devices:
+The inclusion of RTC support aligns with existing UFS specifications (starting
+from UFS Spec 2.0) and is consistent with the prevalent industry practice. Many
+UFS devices currently on the market utilize RTC for internal timekeeping. By
+ensuring compatibility with this widely adopted standard, the embedded storage
+device becomes seamlessly integrable with existing hardware and software
+ecosystems, reducing the risk of compatibility issues.
 
--Kees
+In short, adding RTC support to embedded storage device UFS helps with regular
+upkeep, extends the device's life, ensures compatibility, and keeps everything
+running smoothly with the rest of the system.
 
->  			LIBFCOE_SYSFS_DBG(ctlr, "Unknown mode %s provided.\n",
->  					  buf);
->  			return -EINVAL;
-> 
-> ---
-> base-commit: bee0e7762ad2c6025b9f5245c040fcc36ef2bde8
-> change-id: 20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-0e1dffe82855
-> 
-> Best regards,
-> --
-> Justin Stitt <justinstitt@google.com>
-> 
-> 
+Changelog:
+	v4--v5:
+		1. Fix coding type issues in patch 2/3
+		2. Move ufs_rtc_update_work init to ufshcd_init()
+		3. Move ufshcd_state != UFSHCD_STATE_OPERATIONAL checkup out of ufshcd_is_ufs_dev_busy()
+		4. Remove inline keyword
+	v3--v4:
+		1. Incorporate a check for "Current time precedes previous setting" in ufshcd_update_rtc()
+		2. Eliminate redundant return value code in ufshcd_update_rtc().
+        v2--v3:
+                1. Move ufshcd_is_ufs_dev_busy() to the source file ufshcd.c in patch 1/3.
+                2. Format commit statement in patch 2/3.
+        v1--v2:
+                1. Add a new patch "scsi: ufs: core: Add ufshcd_is_ufs_dev_busy()"
+                2. RTC periodic update work is disabled by default
+                3. Address several issues raised by Avri, Bart, and Thomas.
+
+Bean Huo (3):
+  scsi: ufs: core: Add ufshcd_is_ufs_dev_busy()
+  scsi: ufs: core: Add UFS RTC support
+  scsi: ufs: core: Add sysfs node for UFS RTC update
+
+ Documentation/ABI/testing/sysfs-driver-ufs |   7 ++
+ drivers/ufs/core/ufs-sysfs.c               |  31 +++++++
+ drivers/ufs/core/ufshcd.c                  | 101 +++++++++++++++++++--
+ include/ufs/ufs.h                          |  14 +++
+ include/ufs/ufshcd.h                       |   4 +
+ 5 files changed, 151 insertions(+), 6 deletions(-)
 
 -- 
-Kees Cook
+2.34.1
+
