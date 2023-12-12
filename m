@@ -1,103 +1,187 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="mxWuZrxJ"
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBE60BD
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 13:23:02 -0800 (PST)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-6cea5548eb2so5477361b3a.0
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 13:23:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1702416182; x=1703020982; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wxuP6rH0bpJQdehhJhYTsKOeIoxa8S/XV7TnZO98Xd8=;
-        b=mxWuZrxJdj5bxzeN0YMXVqGpbHbz1nYi4FUG1QpdzI4N9XYOcPH5rnNxNxdtm+ZNLp
-         kXqAL6axnAXTby/KaAJBMQcsQ1uvrrBoWNQwTwvMrU9F7k51SMf00lMl2+us5tV0Rhyd
-         Hl8fW5++UU5chmaZ2SuFlgp+dwjPkj/9od8c8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702416182; x=1703020982;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wxuP6rH0bpJQdehhJhYTsKOeIoxa8S/XV7TnZO98Xd8=;
-        b=A4xZFaiDJpFksM0KOYZuODJCybx+3J6tEk1L68M1U4ik/YwuFMGhc8POZy5LGlDhC2
-         NVGxH75iPXUQQQRevclc5i8LsNUSppDVf3QDPH/s83zGgYv2mP3sBor202FKDJzu3S97
-         Ln824QK1OGG3yyZZMgR0T6fLh/px8imt1QBVTYngZrEYjxXcfV0TcmrQYTa8k1+D1Aof
-         Vc4rh3wNaXmsUyRpAghsglZDbUHltT74hxfp51OZKQwcPiQAh8UoJ9gvgJhzP61SHuD3
-         tWGoFWyffdibgDc5qbgsR5/iLUzHAeFzVEC9oyuwsO14dpw/JHqB77G3MaQ7UgRVbVad
-         EJKg==
-X-Gm-Message-State: AOJu0YwIlLmnxs0Kin0TS2bOO2Oc9OYjVFS0lSpU8YnUutfJixMLBH+W
-	bUiu6UWPx9oHv5pV+gYYyGaHIQ==
-X-Google-Smtp-Source: AGHT+IGIhzGATDu3oBFvEwndykUJEdWlX+8RRQcdHx5e6X9Trh/t8PqWSN3lz74zp+LOsTuYbP5pCA==
-X-Received: by 2002:a05:6a00:b53:b0:6ce:6c54:24a7 with SMTP id p19-20020a056a000b5300b006ce6c5424a7mr7792476pfo.1.1702416182255;
-        Tue, 12 Dec 2023 13:23:02 -0800 (PST)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id x20-20020aa793b4000000b006ce4c7ba448sm8592223pff.25.2023.12.12.13.23.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Dec 2023 13:23:01 -0800 (PST)
-Date: Tue, 12 Dec 2023 13:23:01 -0800
-From: Kees Cook <keescook@chromium.org>
-To: Justin Stitt <justinstitt@google.com>
-Cc: Michael Cyr <mikecyr@linux.ibm.com>,
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="dOlEDMCf"
+Received: from smtp.smtpout.orange.fr (smtp-21.smtpout.orange.fr [80.12.242.21])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA6F0CD
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 13:25:23 -0800 (PST)
+Received: from pop-os.home ([92.140.202.140])
+	by smtp.orange.fr with ESMTPA
+	id DAFkr5m2Q8sqPDAFkrjhwF; Tue, 12 Dec 2023 22:25:21 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1702416321;
+	bh=xpWYbHV+Zc60bOBgrL8BoxkuvgOfsZpbRV1LTv1K99o=;
+	h=From:To:Cc:Subject:Date;
+	b=dOlEDMCfGy6oyhcN71SyY0UC1uniOSPcCj8dGJ3xvnA0SNrc23NXBqau4z3ZwJ1n+
+	 NotE7DtXrPePRBNAKY+PCmSfSNX5yrMG9Y4rPERkwkKHJMeh3xUWXfxkmpXqknNwVQ
+	 x4BBduVuQGFZPk90tdSEhuhEEshkPO6rFNn1IflOfHHu9IPTjB/Z5qmv+aOr/oXvri
+	 9Paxfew/tW9h6zxZP2MnD+3aTCgqd8dXvHHhCbISNY1y5tYB/3ibjodhl5GHZggrXi
+	 RTpLXvOgFV1RCjaqhmJhg0V01gfCZ08ZZsUOxsSfRobqf8WCSPqKZCGkLIKQ60xvNL
+	 AwZX3yrbUgTDQ==
+X-ME-Helo: pop-os.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Tue, 12 Dec 2023 22:25:21 +0100
+X-ME-IP: 92.140.202.140
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: Hannes Reinecke <hare@kernel.org>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: ibmvscsi_tgt: replace deprecated strncpy with
- strscpy
-Message-ID: <202312121321.E15E09BF@keescook>
-References: <20231212-strncpy-drivers-scsi-ibmvscsi_tgt-ibmvscsi_tgt-c-v2-1-bdb9a7cd96c8@google.com>
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH v2] scsi: myrb: Fix a potential string truncation in rebuild_show() and use sysfs_emit()
+Date: Tue, 12 Dec 2023 22:25:09 +0100
+Message-Id: <d2b2a961aa599f509b0903f8dcd331f659a1b562.1702411083.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231212-strncpy-drivers-scsi-ibmvscsi_tgt-ibmvscsi_tgt-c-v2-1-bdb9a7cd96c8@google.com>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Dec 12, 2023 at 01:20:20AM +0000, Justin Stitt wrote:
-> strncpy() is deprecated for use on NUL-terminated destination strings
-> [1] and as such we should prefer more robust and less ambiguous string
-> interfaces.
-> 
-> We don't need the NUL-padding behavior that strncpy() provides as vscsi
-> is NUL-allocated in ibmvscsis_probe() which proceeds to call
-> ibmvscsis_adapter_info():
-> |       vscsi = kzalloc(sizeof(*vscsi), GFP_KERNEL);
-> 
-> ibmvscsis_probe() -> ibmvscsis_handle_crq() -> ibmvscsis_parse_command()
-> -> ibmvscsis_mad() -> ibmvscsis_process_mad() -> ibmvscsis_adapter_info()
-> 
-> Following the same idea, `partition_name` is defiend as:
-> |       static char partition_name[PARTITION_NAMELEN] = "UNKNOWN";
-> ... which is NUL-padded already, meaning strscpy() is the best option.
-> 
-> Considering the above, a suitable replacement is `strscpy` [2] due to
-> the fact that it guarantees NUL-termination on the destination buffer
-> without unnecessarily NUL-padding.
-> 
-> However, for cap->name and info let's use strscpy_pad as they are
-> allocated via dma_alloc_coherent():
-> |       cap = dma_alloc_coherent(&vscsi->dma_dev->dev, olen, &token,
-> |                                GFP_ATOMIC);
-> &
-> |       info = dma_alloc_coherent(&vscsi->dma_dev->dev, sizeof(*info), &token,
-> |                                 GFP_ATOMIC);
-> 
-> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
-> Signed-off-by: Justin Stitt <justinstitt@google.com>
+"physical device - not rebuilding\n" is 34 bytes long. When written in
+'buf' with a limit of 32 bytes, it is truncated.
 
-This looks good to me. The only question that I haven't seen an answer
-to from the maintainers is whether this is a __nonstring or not. It
-really looks like it should be a C String, so with that assumption:
+When building with W=1, it leads to:
+   drivers/scsi/myrb.c: In function 'rebuild_show':
+   drivers/scsi/myrb.c:1906:24: error: 'physical device - not rebuil...' directive output truncated writing 33 bytes into a region of size 32 [-Werror=format-truncation=]
+    1906 |                 return snprintf(buf, 32, "physical device - not rebuilding\n");
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/myrb.c:1906:24: note: 'snprintf' output 34 bytes into a destination of size 32
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
 
--Kees
+In order to fix it and to avoid hard-coded limits in all _show() functions, use
+the preferred sysfs_emit() that knows better about it.
 
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+Changes in v2:
+  - Merge patch 1/2 and 2/2
+
+v1:
+  https://lore.kernel.org/all/cover.1702411083.git.christophe.jaillet@wanadoo.fr/
+
+
+Note that there is another warning when building with W=1:
+    1051 |                 "%u.%02u-%c-%02u",
+         |                 ^~~~~~~~~~~~~~~~~
+   drivers/scsi/myrb.c:1050:9: note: 'snprintf' output between 10 and 14 bytes into a destination of size 12
+
+but I think that it is a false positive because snprintf() in Linux does not
+strickly folows the standard C behavior of sn
+
+---
+ drivers/scsi/myrb.c | 38 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index ca2380d2d6d3..06a5e6fb9f99 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1767,7 +1767,7 @@ static ssize_t raid_state_show(struct device *dev,
+ 	int ret;
+ 
+ 	if (!sdev->hostdata)
+-		return snprintf(buf, 16, "Unknown\n");
++		return sysfs_emit(buf, "Unknown\n");
+ 
+ 	if (sdev->channel == myrb_logical_channel(sdev->host)) {
+ 		struct myrb_ldev_info *ldev_info = sdev->hostdata;
+@@ -1775,10 +1775,10 @@ static ssize_t raid_state_show(struct device *dev,
+ 
+ 		name = myrb_devstate_name(ldev_info->state);
+ 		if (name)
+-			ret = snprintf(buf, 32, "%s\n", name);
++			ret = sysfs_emit(buf, "%s\n", name);
+ 		else
+-			ret = snprintf(buf, 32, "Invalid (%02X)\n",
+-				       ldev_info->state);
++			ret = sysfs_emit(buf, "Invalid (%02X)\n",
++					 ldev_info->state);
+ 	} else {
+ 		struct myrb_pdev_state *pdev_info = sdev->hostdata;
+ 		unsigned short status;
+@@ -1796,10 +1796,10 @@ static ssize_t raid_state_show(struct device *dev,
+ 		else
+ 			name = myrb_devstate_name(pdev_info->state);
+ 		if (name)
+-			ret = snprintf(buf, 32, "%s\n", name);
++			ret = sysfs_emit(buf, "%s\n", name);
+ 		else
+-			ret = snprintf(buf, 32, "Invalid (%02X)\n",
+-				       pdev_info->state);
++			ret = sysfs_emit(buf, "Invalid (%02X)\n",
++					 pdev_info->state);
+ 	}
+ 	return ret;
+ }
+@@ -1886,11 +1886,11 @@ static ssize_t raid_level_show(struct device *dev,
+ 
+ 		name = myrb_raidlevel_name(ldev_info->raid_level);
+ 		if (!name)
+-			return snprintf(buf, 32, "Invalid (%02X)\n",
+-					ldev_info->state);
+-		return snprintf(buf, 32, "%s\n", name);
++			return sysfs_emit(buf, "Invalid (%02X)\n",
++					  ldev_info->state);
++		return sysfs_emit(buf, "%s\n", name);
+ 	}
+-	return snprintf(buf, 32, "Physical Drive\n");
++	return sysfs_emit(buf, "Physical Drive\n");
+ }
+ static DEVICE_ATTR_RO(raid_level);
+ 
+@@ -1903,17 +1903,17 @@ static ssize_t rebuild_show(struct device *dev,
+ 	unsigned char status;
+ 
+ 	if (sdev->channel < myrb_logical_channel(sdev->host))
+-		return snprintf(buf, 32, "physical device - not rebuilding\n");
++		return sysfs_emit(buf, "physical device - not rebuilding\n");
+ 
+ 	status = myrb_get_rbld_progress(cb, &rbld_buf);
+ 
+ 	if (rbld_buf.ldev_num != sdev->id ||
+ 	    status != MYRB_STATUS_SUCCESS)
+-		return snprintf(buf, 32, "not rebuilding\n");
++		return sysfs_emit(buf, "not rebuilding\n");
+ 
+-	return snprintf(buf, 32, "rebuilding block %u of %u\n",
+-			rbld_buf.ldev_size - rbld_buf.blocks_left,
+-			rbld_buf.ldev_size);
++	return sysfs_emit(buf, "rebuilding block %u of %u\n",
++			  rbld_buf.ldev_size - rbld_buf.blocks_left,
++			  rbld_buf.ldev_size);
+ }
+ 
+ static ssize_t rebuild_store(struct device *dev,
+@@ -2140,7 +2140,7 @@ static ssize_t ctlr_num_show(struct device *dev,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct myrb_hba *cb = shost_priv(shost);
+ 
+-	return snprintf(buf, 20, "%u\n", cb->ctlr_num);
++	return sysfs_emit(buf, "%u\n", cb->ctlr_num);
+ }
+ static DEVICE_ATTR_RO(ctlr_num);
+ 
+@@ -2150,7 +2150,7 @@ static ssize_t firmware_show(struct device *dev,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct myrb_hba *cb = shost_priv(shost);
+ 
+-	return snprintf(buf, 16, "%s\n", cb->fw_version);
++	return sysfs_emit(buf, "%s\n", cb->fw_version);
+ }
+ static DEVICE_ATTR_RO(firmware);
+ 
+@@ -2160,7 +2160,7 @@ static ssize_t model_show(struct device *dev,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct myrb_hba *cb = shost_priv(shost);
+ 
+-	return snprintf(buf, 16, "%s\n", cb->model_name);
++	return sysfs_emit(buf, "%s\n", cb->model_name);
+ }
+ static DEVICE_ATTR_RO(model);
+ 
 -- 
-Kees Cook
+2.34.1
+
