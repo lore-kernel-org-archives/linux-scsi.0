@@ -1,54 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="pqnSL8Fj";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="KjzdvV6s"
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.54])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B1A8B3;
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="lg9Ow90A";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="tfM9X+Cv"
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.84])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 260DEBC;
 	Tue, 12 Dec 2023 14:08:46 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1702418917; cv=none;
+ARC-Seal: i=1; a=rsa-sha256; t=1702418918; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=IaL+LtM/3sr6O7C1Kk7kUq5UUfMeWCAeOz5bfzNSfCDsRSpInihXPzis28eRbPjM8P
-    9JrqzST3sg8YO9t1qIT6khqoPFxqIENVDj/hv741nRYUnwWMWYinxc0ItWFpa1FL1aIm
-    xCCZU/qMpjxfv/qS3v2Sr1FSihqyMQQSZaXxsEjpP/k51H0iACsMFA58nsFkQfl1zvup
-    PYN34+523OZCzmNWo+56ccj6KSUFqowZV5gtA6akO2rERDMk3c58yo7rNhlBAC45xloQ
-    yIpzFMxfkIaDI1WuOACxNuo6h/khQwCSbG1sY0taiVAcpwi6ssxOJ7y1eiJN6GQc9w1l
-    DoNQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1702418917;
+    b=qnC7nnzpbvNgU8zh8JtzhugnbaXcgeDuSE286EHpQu9KmOq7TnwlZydgcpIr5fK5Cl
+    M7r+kTZeoXCOT8smlrvkx1q7N9wdwyCms5fnIce4JIx7XMM6h7efaz1ScdsY1gOIYsIF
+    DSxree929bmgpgmICtIM88J+KXw+4O2RBZkZunil0QQsbJnS4kgEDLzICiJWBKtqPrRY
+    uqKNFq+bF7gsjy2Fh2VX1yoRxqnmpz2TImlAd+ZD2bQHffUrTJanbOEolspq+zd5Rsvs
+    lwoMJUlZ6Pj8fSLwcUXWji5isnVWTAX/ynnJous2sZXeJvzyeE8LKWagb2/3WjMwkTWP
+    t4vA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1702418918;
     s=strato-dkim-0002; d=strato.com;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=7Ti5UcywgqFS+9CZzfTbKXKYv/LJc+sEGxe+xBAGoFo=;
-    b=qfLzIDH3oMZhRbuvUDQYzmhq9OU/1l2aBqXjBiZRdXBRfNlKc7KHYcShl99xf6tisT
-    JHepcRlFjgYn+/nAql3zTBd305542Ljhv5NQoa45Q+xOcrJ9wt2GR7wwIZYmR65dpiwK
-    Zi+wZb50f5RTl+N+qncbp6oFYRjpHZlQLq54N59vgOFt2j3IzvZB1h1Us6a1Frt8Wowt
-    dljGHTKk5pFuR307YOiTj8lqWth/oFbGEFqBxrRXCwT3gW1mozfSiRq1+hNqP4hWs0l4
-    RMVPNqWaBPuZFCN3TY0Jjf1TF5GBZI8IDkpHx39Qk/He1liUJWQFMjXFtDr7KFxp6G7J
-    IQPA==
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=Os9UsUUURWypEi8Tdr5n+BK78P8cj8KZaYdYD1dJztc=;
+    b=rQ1d0lYxI/GnIsXAQGtL63gQHQQ9hjCkPNA3UyT4Ygsals1x+BUVyDAmLlXF+Cb+16
+    2YbSb5t3oxCOrsdeQmRBC+Pa9bEYU3jNVsWZDwwKzf6A2cMTVZqxFazbRBB59gAQKUqC
+    CYUe7uwXzVF0bS3jS0TNWqo6Txs/tV1mo/0ku0G5zToijZnaoM/SN+wkbwx82r4q80d0
+    Eej+gtafuP+1MC/GtvmM4EUM0P/qjQDm/Nwyd8EqhRQingoXVuUkMn7ZGZIL0r5nfEap
+    PJFu4XjP94SZQAGDATZr1pCYdRPcQD/Ej4H4vbFGvqSfXOr8p8i2MonWXiutgez2RjsG
+    S8Aw==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1702418917;
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1702418918;
     s=strato-dkim-0002; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=7Ti5UcywgqFS+9CZzfTbKXKYv/LJc+sEGxe+xBAGoFo=;
-    b=pqnSL8Fj5n3A/v8BqnxaxxW57LiBqBI3IddBFTg+rui2xw9kx9UlEl7bvbbl65jdTb
-    /pfKBBqb3FVMP9t6/bwxlQsVqlRVV33uPHjyroPhy86UqjmzndPZm8Ax3vUdP7srVZbI
-    OcILIAh+VWbR5CDwAmVF63rdIRvdhzNJJfQ3+4SOkSB6n61pflY8HgWqc7Qnj9YEE55S
-    STJBs7xptY9QDJxZk3BW4gQDrLPYiv5YOmqlPCl63bCHTDQhDO45JBBOPCcgOtoQ22eP
-    rvjibwQBik77AgtNmICXK3JJ71LCoHfW8nZwnkdQGC5d5yh4s+8y0WU1bekeDPCo/W17
-    bbYQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1702418917;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=Os9UsUUURWypEi8Tdr5n+BK78P8cj8KZaYdYD1dJztc=;
+    b=lg9Ow90ArEq4RbqZOLkpTKN0SO9mkzlazuBZWb2tAQvmizJ4XJXGpIL6cpzaRuFJp8
+    +QkpCDEvHVvfuErFBenRLMTWt+2p3PXb9wewAFDr0zAeivlLCKMNTbYvYmJ12obH4Crc
+    Nqz9gEcpU6xDkbJYYQOXc2cNR2iUagSWAISHct3c1wGRymFlc/+3dyQZLWRZe5qqMTkT
+    VHDRPObfjOpcvEVscWWn6hD5t/fm0PQC2BoRScp09r+hfTmgYvzd4tiUjQ1MEvgGk3Iv
+    CNLyjLBQ8DuhX8YvZgGSAi1Ww/8BA75gCURAFIS9XL9aDFmFJa4/2/tNnnn+HQQ5UrYT
+    aWbg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1702418918;
     s=strato-dkim-0003; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=7Ti5UcywgqFS+9CZzfTbKXKYv/LJc+sEGxe+xBAGoFo=;
-    b=KjzdvV6smK54+DJV1mtGbUIEWgex8tEvdXBsPmoYP9LS4crwXfCv5g9csJuTqVrYVW
-    QEeTRR9UGIo11QtXH4CQ==
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=Os9UsUUURWypEi8Tdr5n+BK78P8cj8KZaYdYD1dJztc=;
+    b=tfM9X+CvmRyxXAmQ2ElG5vwXGm3TxKvS3zj3vFiXHVENdXt6kW/GAJgyyWmwVcxdDD
+    Wiic+FZw/tjByZDG3+Cg==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1krW49WPrbTU8waUHk0CK6S5K43N4UTp8lPg"
 Received: from Munilab01-lab.speedport.ip
     by smtp.strato.de (RZmta 49.10.0 AUTH)
-    with ESMTPSA id z4c2a6zBCM8aNVy
+    with ESMTPSA id z4c2a6zBCM8cNW1
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Tue, 12 Dec 2023 23:08:36 +0100 (CET)
+    Tue, 12 Dec 2023 23:08:38 +0100 (CET)
 From: Bean Huo <beanhuo@iokpp.de>
 To: avri.altman@wdc.com,
 	bvanassche@acm.org,
@@ -64,80 +67,152 @@ Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	mikebi@micron.com,
 	lporzio@micron.com,
-	Bean Huo <beanhuo@iokpp.de>
-Subject: [PATCH v5 0/3] Add UFS RTC support
-Date: Tue, 12 Dec 2023 23:08:22 +0100
-Message-Id: <20231212220825.85255-1-beanhuo@iokpp.de>
+	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>
+Subject: [PATCH v5 3/3] scsi: ufs: core: Add sysfs node for UFS RTC update
+Date: Tue, 12 Dec 2023 23:08:25 +0100
+Message-Id: <20231212220825.85255-4-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231212220825.85255-1-beanhuo@iokpp.de>
+References: <20231212220825.85255-1-beanhuo@iokpp.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="us-ascii"
 
-Adding RTC support for embedded storage device UFS in its driver, it is
-important for a few key reasons:
+From: Bean Huo <beanhuo@micron.com>
 
-1. Helps with Regular Maintenance:
-The RTC provides a basic way to keep track of time, making it useful for
-scheduling routine maintenance tasks in the storage device. This includes
-things like making sure data is spread
-evenly across the storage to extend its life.
+Introduce a sysfs node named 'rtc_update_ms' within the kernel, enabling
+user to adjust the RTC periodic update frequency to suit the specific
+requirements of the system and UFS. Also, this patch allows the user to
+disable/enable periodic update RTC in the UFS idle time.
 
-2. Figuring Out How Old Data Is:
-The RTC helps the device estimate how long ago certain parts of the storage
-were last used. This is handy for deciding when to do maintenance tasks to
-keep the storage working well over time.
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+Acked-by: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Thomas Weißschuh <linux@weissschuh.net>
+---
+ Documentation/ABI/testing/sysfs-driver-ufs |  7 +++++
+ drivers/ufs/core/ufs-sysfs.c               | 31 ++++++++++++++++++++++
+ drivers/ufs/core/ufshcd.c                  | 11 ++++++--
+ include/ufs/ufs.h                          |  1 +
+ 4 files changed, 48 insertions(+), 2 deletions(-)
 
-3. Making Devices Last Longer:
-By using the RTC for regular upkeep, we can make sure the storage device lasts
-longer and stays reliable. This is especially important for devices that need
-to work well for a long time.
-
-4.Fitting In with Other Devices:
-The inclusion of RTC support aligns with existing UFS specifications (starting
-from UFS Spec 2.0) and is consistent with the prevalent industry practice. Many
-UFS devices currently on the market utilize RTC for internal timekeeping. By
-ensuring compatibility with this widely adopted standard, the embedded storage
-device becomes seamlessly integrable with existing hardware and software
-ecosystems, reducing the risk of compatibility issues.
-
-In short, adding RTC support to embedded storage device UFS helps with regular
-upkeep, extends the device's life, ensures compatibility, and keeps everything
-running smoothly with the rest of the system.
-
-Changelog:
-	v4--v5:
-		1. Fix coding type issues in patch 2/3
-		2. Move ufs_rtc_update_work init to ufshcd_init()
-		3. Move ufshcd_state != UFSHCD_STATE_OPERATIONAL checkup out of ufshcd_is_ufs_dev_busy()
-		4. Remove inline keyword
-	v3--v4:
-		1. Incorporate a check for "Current time precedes previous setting" in ufshcd_update_rtc()
-		2. Eliminate redundant return value code in ufshcd_update_rtc().
-        v2--v3:
-                1. Move ufshcd_is_ufs_dev_busy() to the source file ufshcd.c in patch 1/3.
-                2. Format commit statement in patch 2/3.
-        v1--v2:
-                1. Add a new patch "scsi: ufs: core: Add ufshcd_is_ufs_dev_busy()"
-                2. RTC periodic update work is disabled by default
-                3. Address several issues raised by Avri, Bart, and Thomas.
-
-Bean Huo (3):
-  scsi: ufs: core: Add ufshcd_is_ufs_dev_busy()
-  scsi: ufs: core: Add UFS RTC support
-  scsi: ufs: core: Add sysfs node for UFS RTC update
-
- Documentation/ABI/testing/sysfs-driver-ufs |   7 ++
- drivers/ufs/core/ufs-sysfs.c               |  31 +++++++
- drivers/ufs/core/ufshcd.c                  | 101 +++++++++++++++++++--
- include/ufs/ufs.h                          |  14 +++
- include/ufs/ufshcd.h                       |   4 +
- 5 files changed, 151 insertions(+), 6 deletions(-)
-
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index b73067bb5ea2..5bf7073b4f75 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -1523,3 +1523,10 @@ Description:	Indicates status of Write Booster.
+ 
+ 		The file is read only.
+ 
++What:		/sys/bus/platform/drivers/ufshcd/*/rtc_update_ms
++What:		/sys/bus/platform/devices/*.ufs/rtc_update_ms
++Date:		November 2023
++Contact:	Bean Huo <beanhuo@micron.com>
++Description:
++		rtc_update_ms indicates how often the host should synchronize or update the
++		UFS RTC. If set to 0, this will disable UFS RTC periodic update.
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index 05b10ca90b50..e6d12289e017 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -302,6 +302,35 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+ 	return res < 0 ? res : count;
+ }
+ 
++static ssize_t rtc_update_ms_show(struct device *dev, struct device_attribute *attr,
++				  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", hba->dev_info.rtc_update_period);
++}
++
++static ssize_t rtc_update_ms_store(struct device *dev, struct device_attribute *attr,
++				   const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned int ms;
++	bool resume_period_update = false;
++
++	if (kstrtouint(buf, 0, &ms))
++		return -EINVAL;
++
++	if (!hba->dev_info.rtc_update_period && ms > 0)
++		resume_period_update =  true;
++	/* Minimum and maximum update frequency should be synchronized with all UFS vendors */
++	hba->dev_info.rtc_update_period = ms;
++
++	if (resume_period_update)
++		schedule_delayed_work(&hba->ufs_rtc_update_work,
++				      msecs_to_jiffies(hba->dev_info.rtc_update_period));
++	return count;
++}
++
+ static ssize_t enable_wb_buf_flush_show(struct device *dev,
+ 				    struct device_attribute *attr,
+ 				    char *buf)
+@@ -386,6 +415,7 @@ static DEVICE_ATTR_RW(auto_hibern8);
+ static DEVICE_ATTR_RW(wb_on);
+ static DEVICE_ATTR_RW(enable_wb_buf_flush);
+ static DEVICE_ATTR_RW(wb_flush_threshold);
++static DEVICE_ATTR_RW(rtc_update_ms);
+ 
+ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_rpm_lvl.attr,
+@@ -398,6 +428,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_wb_on.attr,
+ 	&dev_attr_enable_wb_buf_flush.attr,
+ 	&dev_attr_wb_flush_threshold.attr,
++	&dev_attr_rtc_update_ms.attr,
+ 	NULL
+ };
+ 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index cda1e1080446..5ebc9c957236 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8235,9 +8235,9 @@ static void ufshcd_rtc_work(struct work_struct *work)
+ 	if (!ufshcd_is_ufs_dev_busy(hba) && hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL)
+ 		ufshcd_update_rtc(hba);
+ 
+-	if (ufshcd_is_ufs_dev_active(hba))
++	if (ufshcd_is_ufs_dev_active(hba) && hba->dev_info.rtc_update_period)
+ 		schedule_delayed_work(&hba->ufs_rtc_update_work,
+-				      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
++				      msecs_to_jiffies(hba->dev_info.rtc_update_period));
+ }
+ 
+ static void ufs_init_rtc(struct ufs_hba *hba, u8 *desc_buf)
+@@ -8259,6 +8259,13 @@ static void ufs_init_rtc(struct ufs_hba *hba, u8 *desc_buf)
+ 		dev_info->rtc_type = UFS_RTC_RELATIVE;
+ 		dev_info->rtc_time_baseline = 0;
+ 	}
++
++	/*
++	 * We ignore TIME_PERIOD defined in wPeriodicRTCUpdate because Spec does not clearly state
++	 * how to calculate the specific update period for each time unit. And we disable periodic
++	 * RTC update work, let user configure by sysfs node according to specific circumstance.
++	 */
++	dev_info->rtc_update_period = 0;
+ }
+ 
+ static int ufs_get_device_desc(struct ufs_hba *hba)
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index 7e7169d94596..b6003749bc83 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -591,6 +591,7 @@ struct ufs_dev_info {
+ 	/* UFS RTC */
+ 	enum ufs_rtc_time rtc_type;
+ 	time64_t rtc_time_baseline;
++	u32 rtc_update_period;
+ };
+ 
+ /*
 -- 
 2.34.1
 
