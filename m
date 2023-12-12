@@ -1,91 +1,90 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 723FBA8;
-	Tue, 12 Dec 2023 08:32:54 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C6ACA68C4E; Tue, 12 Dec 2023 17:32:46 +0100 (CET)
-Date: Tue, 12 Dec 2023 17:32:46 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
-Subject: Re: [PATCH v2 00/16] block atomic writes
-Message-ID: <20231212163246.GA24594@lst.de>
-References: <20231212110844.19698-1-john.g.garry@oracle.com>
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="RGxW9X+6"
+Received: from smtp.smtpout.orange.fr (smtp-16.smtpout.orange.fr [80.12.242.16])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4C4C107
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 12:09:37 -0800 (PST)
+Received: from pop-os.home ([92.140.202.140])
+	by smtp.orange.fr with ESMTPA
+	id D94JrCWy533VXD94SrOSjJ; Tue, 12 Dec 2023 21:09:37 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1702411777;
+	bh=rzREpo573xITBwLatd+AesvCg1dKu2ILxitSwm0Do8U=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=RGxW9X+6QDlJlLBQUcA0lWPDbyVrN+Ae0d6pwDAbQdujnkefi4YWvtQbTzqxFptlB
+	 FKOmfm705tYk4vrD31LDkEgjlMBPgwlE6UTx7d8+vgYO1dEw/eq7bDtk1i0rJSJN+B
+	 8+LRn+HcTE2JeRN3Q2AMeZJOzLejifNqiBHw/MWY+Ue0EN0An9XxI1IUca3HK0Vu/O
+	 hTj7Oh+4SAeo2VeUragI2IzNfRbc82l8/yTrEzzM8MtUJ8RyXxapru+nZ+PvWtlxAN
+	 n0OZzi5Jn4CbcBdpMh4yjQXIvw223y4YIJ3jGi+IkO4ZwWgJz8Qu3m0cy7XAc8DRsz
+	 KFi9s/7B3Kvbg==
+X-ME-Helo: pop-os.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Tue, 12 Dec 2023 21:09:37 +0100
+X-ME-IP: 92.140.202.140
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: hare@kernel.org,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com
+Cc: hare@suse.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH 1/2] scsi: myrb: Fix a potential string truncation in rebuild_show()
+Date: Tue, 12 Dec 2023 21:09:10 +0100
+Message-Id: <2d3096dd4b1b6e758287e4062e3147c57c007eaa.1702411083.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <cover.1702411083.git.christophe.jaillet@wanadoo.fr>
+References: <cover.1702411083.git.christophe.jaillet@wanadoo.fr>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231212110844.19698-1-john.g.garry@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, Dec 12, 2023 at 11:08:28AM +0000, John Garry wrote:
-> Two new fields are added to struct statx - atomic_write_unit_min and
-> atomic_write_unit_max. For each atomic individual write, the total length
-> of a write must be a between atomic_write_unit_min and
-> atomic_write_unit_max, inclusive, and a power-of-2. The write must also be
-> at a natural offset in the file wrt the write length.
-> 
-> SCSI sd.c and scsi_debug and NVMe kernel support is added.
-> 
-> Some open questions:
-> - How to make API extensible for when we have no HW support? In that case,
->   we would prob not have to follow rule of power-of-2 length et al.
->   As a possible solution, maybe we can say that atomic writes are
->   supported for the file via statx, but not set unit_min and max values,
->   and this means that writes need to be just FS block aligned there.
+"physical device - not rebuilding\n" is 34 bytes long. When written in
+'buf' with a limit of 32 bytes, it is truncated.
 
-I don't think the power of two length is much of a problem to be
-honest, and if we every want to lift it we can still do that easily
-by adding a new flag or limit.
+When building with W=1, it leads to:
+   drivers/scsi/myrb.c: In function ‘rebuild_show’:
+   drivers/scsi/myrb.c:1906:24: error: ‘physical device - not rebuil...’ directive output truncated writing 33 bytes into a region of size 32 [-Werror=format-truncation=]
+    1906 |                 return snprintf(buf, 32, "physical device - not rebuilding\n");
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/myrb.c:1906:24: note: ‘snprintf’ output 34 bytes into a destination of size 32
 
-What I'm a lot more worried about is how to tell the file system that
-allocations are done right for these requirement.  There is no way
-a user can know that allocations in an existing file are properly
-aligned, so atomic writes will just fail on existing files.
+Change the allowed size to 64 to fix the issue.
 
-I suspect we need an on-disk flag that forces allocations to be
-aligned to the atomic write limit, in some ways similar how the
-XFS rt flag works.  You'd need to set it on an empty file, and all
-allocations after that are guaranteed to be properly aligned.
+Fixes: 081ff398c56c ("scsi: myrb: Add Mylex RAID controller (block interface)")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/myrb.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> - For block layer, should atomic_write_unit_max be limited by
->   max_sectors_kb? Currently it is not.
-
-Well.  It must be limited to max_hw_sectors to actually work.
-max_sectors is a software limit below that, which with modern hardware
-is actually pretty silly and a real performance issue with todays
-workloads when people don't tweak it..
-
-> - How to improve requirement that iovecs are PAGE-aligned.
->   There are 2x issues:
->   a. We impose this rule to not split BIOs due to virt boundary for
->      NVMe, but there virt boundary is 4K (and not PAGE size, so broken for
->      16K/64K pages). Easy solution is to impose requirement that iovecs
->      are 4K-aligned.
->   b. We don't enforce this rule for virt boundary == 0, i.e. SCSI
-
-.. we require any device that wants to support atomic writes to not
-have that silly limit.  For NVMe that would require SGL support
-(and some driver changes I've been wanting to make for long where
-we always use SGLs for transfers larger than a single PRP if supported)
-
-
-> - Since debugging torn-writes due to unwanted kernel BIO splitting/merging
->   would be horrible, should we add some kernel storage stack software
->   integrity checks?
-
-Yes, I think we'll need asserts in the drivers.  At least for NVMe I
-will insist on them.  For SCSI I think the device actually checks
-because the atomic writes are a different command anyway, or am I
-misunderstanding how SCSI works here?
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index ca2e932dd9b7..ca2380d2d6d3 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1903,15 +1903,15 @@ static ssize_t rebuild_show(struct device *dev,
+ 	unsigned char status;
+ 
+ 	if (sdev->channel < myrb_logical_channel(sdev->host))
+-		return snprintf(buf, 32, "physical device - not rebuilding\n");
++		return snprintf(buf, 64, "physical device - not rebuilding\n");
+ 
+ 	status = myrb_get_rbld_progress(cb, &rbld_buf);
+ 
+ 	if (rbld_buf.ldev_num != sdev->id ||
+ 	    status != MYRB_STATUS_SUCCESS)
+-		return snprintf(buf, 32, "not rebuilding\n");
++		return snprintf(buf, 64, "not rebuilding\n");
+ 
+-	return snprintf(buf, 32, "rebuilding block %u of %u\n",
++	return snprintf(buf, 64, "rebuilding block %u of %u\n",
+ 			rbld_buf.ldev_size - rbld_buf.blocks_left,
+ 			rbld_buf.ldev_size);
+ }
+-- 
+2.34.1
 
