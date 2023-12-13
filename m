@@ -1,186 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="T0IgtaJB"
-Received: from mail-yw1-x114a.google.com (mail-yw1-x114a.google.com [IPv6:2607:f8b0:4864:20::114a])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D1BDEA
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 15:19:08 -0800 (PST)
-Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-5e16d7537bcso24933257b3.3
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 15:19:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1702423147; x=1703027947; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=/YmSdHW0YnrgQyxCZCfpHUpcVYgfb1QxvP3xvZamGAg=;
-        b=T0IgtaJB2ly20lZB2MHikNj+HcKJKO2+Y6NXtlLuNyFF92RdVOXjPx9PkOldabIBAK
-         herFA6ZFzq6TMmaMoD9o1UlnuqdefWd8dSE5qdgswnzGNrIpMpOyY+bWMXl3+lJ8oM39
-         3ZE8UA6zhINly1tf364Ju+LLyMXdRBfJwyRiOpq3Su67n3rr1PZiwM5bk5tYdB5AfBFN
-         z/2slIL/OcmfcHIvcW3BGU3HyVrWx9S+Fnc+PHbbs/zdFYqaMUdqkoULagpXmKz6O9Vx
-         gzBjacsWZsoJz98N7xd0qLeluBvd/58qLCXYD7YOOcKnZVY+g0QajHnDGzPslWJ14T+h
-         pn3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702423147; x=1703027947;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/YmSdHW0YnrgQyxCZCfpHUpcVYgfb1QxvP3xvZamGAg=;
-        b=mcQKXKrIa6DSQAAAdCIsoJko4LaHkwXHc2OSUcsq3UgA+qgccoafYtNI8Vpk4yL386
-         unh9VZEUt2YOck8/kx0zQutn1AZZF8fGdwDrek5+IcSjb312WKZv4+cpn79V8l+x+0+i
-         89H4yatOCx3LqZ1UDuGJlxZcL6MTJ5IS/Uc1MtAmG6117CN0CAfzA1tBmwT4XQ6KfXDh
-         I3Q5s8lW8Bx2jutee3eTgO9Iy+CDptcgTBaM5gUABm2nFFDMrcammJIOhrfKmBSQU6GG
-         Z7nbavTewtbiQQMwElAfERGuPWaPXFojIIwecM6bANk0y5wYZTdoz2rIxmzfxqiGk4g4
-         DkeQ==
-X-Gm-Message-State: AOJu0YyuPwavCISYEusE4EWzbdE0OGrCp6FYKETtxf3uEvPYm6AiMvO9
-	JFSV6zFPjDPGHkGYmQbOBS82z3B7HwekydokQA==
-X-Google-Smtp-Source: AGHT+IEpLi0Rm/0x6D0ko9SJaw0nsb4I84pLyrEFP8w1pM+ISdP1wxAh6qDWor2wI6KeyuvP6T8XV9dzFXyb/rXUVQ==
-X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a05:690c:b8d:b0:5d4:2ff3:d280 with
- SMTP id ck13-20020a05690c0b8d00b005d42ff3d280mr63466ywb.7.1702423147099; Tue,
- 12 Dec 2023 15:19:07 -0800 (PST)
-Date: Tue, 12 Dec 2023 23:19:06 +0000
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F07FD91;
+	Tue, 12 Dec 2023 17:09:20 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Sqcnm2cdhz4f3jZH;
+	Wed, 13 Dec 2023 09:09:16 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 86FC11A098C;
+	Wed, 13 Dec 2023 09:09:17 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgBntQs5BHllRkz5DQ--.6696S3;
+	Wed, 13 Dec 2023 09:09:16 +0800 (CST)
+Subject: Re: [PATCH RFC v2 for-6.8/block 01/18] block: add some bdev apis
+To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
+ kent.overstreet@gmail.com, joern@lazybastard.org, miquel.raynal@bootlin.com,
+ richard@nod.at, vigneshr@ti.com, sth@linux.ibm.com, hoeppner@linux.ibm.com,
+ hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com,
+ jejb@linux.ibm.com, martin.petersen@oracle.com, clm@fb.com,
+ josef@toxicpanda.com, dsterba@suse.com, viro@zeniv.linux.org.uk,
+ brauner@kernel.org, nico@fluxnic.net, xiang@kernel.org, chao@kernel.org,
+ tytso@mit.edu, adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
+ konishi.ryusuke@gmail.com, willy@infradead.org, akpm@linux-foundation.org,
+ p.raghav@samsung.com, hare@suse.de, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+ linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+ linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
+ linux-nilfs@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231211140552.973290-1-yukuai1@huaweicloud.com>
+ <20231211140552.973290-2-yukuai1@huaweicloud.com>
+ <ZXhdRhfr+JoWdhyj@infradead.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <893e2764-65a6-ef73-5ddf-95cd9f97cb19@huaweicloud.com>
+Date: Wed, 13 Dec 2023 09:09:13 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIAGnqeGUC/5WNQQqDMBBFryJZNyWZqNWueo8ipU0mGmiNZCRUx
- Ls3ZtWtDAy8v3hvZYTBIbFrsbKA0ZHzYwI4FUwPz7FH7kxiBgKUFFBymsOop4Wb4CIG4qTJcas
- 95veghSxxzQVKYy020FQVS7IpoHXfHLp3iQdHsw9L7ka5r4cTUfJ0KATUiEKBufXe9288a//Zk 9kHUh7yXdSrLQFUo9r639dt2/YDe0N+py0BAAA=
-X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1702423146; l=4253;
- i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=YiBU+J66ZaYx7q1aD7BISZtA4pcTkaCKnD8Tq9532Dc=; b=qaycx8xPm6Y1bhVtOlCyfrYYpwIzDp8dE+H1QlGhA1uuN5u5JDihjUla+CzhLRbk00RO80gRk
- yTiIV4l3Z3HCtuOp0xW65fVh9g+EjUXg1EuEn2oht/+IoHbtLzb70wk
-X-Mailer: b4 0.12.3
-Message-ID: <20231212-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v2-1-1f2d6b2fc409@google.com>
-Subject: [PATCH v2] scsi: fcoe: use sysfs_match_string over fcoe_parse_mode
-From: Justin Stitt <justinstitt@google.com>
-To: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-hardening@vger.kernel.org, Justin Stitt <justinstitt@google.com>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+In-Reply-To: <ZXhdRhfr+JoWdhyj@infradead.org>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBntQs5BHllRkz5DQ--.6696S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gw4fJw1rAF1UKF4fJrWDJwb_yoWfurcEqr
+	n7Cryv9w1jvws5Wr4UKFy5JrWrJFWYyr43Xay8ta4Iq3s8Xa18Ar92ka48uas8Ww47Z3ZI
+	9FsxuFy8uF4fujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbaxFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+	17CEb7AF67AKxVWrXVW8Jr1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j
+	6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x0JUd8n5UUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Instead of copying @buf into a new buffer and carefully managing its
-newline/null-terminating status, we can just use sysfs_match_string()
-as it uses sysfs_streq() internally which handles newline/null-term:
+Hi,
 
-|  /**
-|   * sysfs_streq - return true if strings are equal, modulo trailing newline
-|   * @s1: one string
-|   * @s2: another string
-|   *
-|   * This routine returns true iff two strings are equal, treating both
-|   * NUL and newline-then-NUL as equivalent string terminations.  It's
-|   * geared for use with sysfs input strings, which generally terminate
-|   * with newlines but are compared against values without newlines.
-|   */
-|  bool sysfs_streq(const char *s1, const char *s2)
-|  ...
+ÔÚ 2023/12/12 21:16, Christoph Hellwig Ð´µÀ:
+>> +void invalidate_bdev_range(struct block_device *bdev, pgoff_t start,
+>> +			   pgoff_t end)
+>> +{
+>> +	invalidate_mapping_pages(bdev->bd_inode->i_mapping, start, end);
+>> +}
+>> +EXPORT_SYMBOL_GPL(invalidate_bdev_range);
+> 
+> Can we have kerneldoc comments for the new helpers please?
 
-Then entirely drop the now unused fcoe_parse_mode, being careful to
-change if condition from checking for FIP_CONN_TYPE_UNKNOWN to < 0 as
-sysfs_match_string can return -EINVAL. Also check explicitly if
-ctlr->mode is equal to FIP_CONN_TYPE_UNKNOWN -- this is probably
-preferred to "<=" as the behavior is more obvious while maintaining
-functionality.
+Of course, will definitely do this in v3.
+> 
+>> +struct folio *__bdev_get_folio(struct block_device *bdev, loff_t pos,
+>> +			       fgf_t fgp_flags, gfp_t gfp)
+>> +{
+>> +	return __filemap_get_folio(bdev->bd_inode->i_mapping, pos >> PAGE_SHIFT,
+>> +				   fgp_flags, gfp);
+>> +}
+>> +EXPORT_SYMBOL_GPL(__bdev_get_folio);
+> 
+> It's a bit silly to have a __-prefixed API without a version that
+> doesn't have the prefix, so I'd prefer to drop it.  Unless willy has
+> a good argument for keeping it the same as the filemap API.
 
-To get the compiler not to complain, make fip_conn_type_names
-const char * const. Perhaps, this should also be done for
-fcf_state_names.
+Ok, I'll drop it if willy doesn't against this.
 
-This also removes an instance of strncpy() which helps [1].
-
-Link: https://github.com/KSPP/linux/issues/90 [1]
-Cc: linux-hardening@vger.kernel.org
-Signed-off-by: Justin Stitt <justinstitt@google.com>
----
-Changes in v2:
-- update if-cond to check for unknown type (thanks Kees)
-- Link to v1: https://lore.kernel.org/r/20231211-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v1-1-73b942238396@google.com
----
-Builds upon patch and feedback from [2]:
-
-However, this is different enough to warrant its own patch and not be a
-continuation.
-
-[2]: https://lore.kernel.org/all/9f38f4aa-c6b5-4786-a641-d02d8bd92f7f@acm.org/
----
- drivers/scsi/fcoe/fcoe_sysfs.c | 26 ++++----------------------
- 1 file changed, 4 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index e17957f8085c..408a806bf4c2 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -10,6 +10,7 @@
- #include <linux/kernel.h>
- #include <linux/etherdevice.h>
- #include <linux/ctype.h>
-+#include <linux/string.h>
- 
- #include <scsi/fcoe_sysfs.h>
- #include <scsi/libfcoe.h>
-@@ -214,25 +215,13 @@ static const char *get_fcoe_##title##_name(enum table_type table_key)	\
- 	return table[table_key];					\
- }
- 
--static char *fip_conn_type_names[] = {
-+static const char * const fip_conn_type_names[] = {
- 	[ FIP_CONN_TYPE_UNKNOWN ] = "Unknown",
- 	[ FIP_CONN_TYPE_FABRIC ]  = "Fabric",
- 	[ FIP_CONN_TYPE_VN2VN ]   = "VN2VN",
- };
- fcoe_enum_name_search(ctlr_mode, fip_conn_type, fip_conn_type_names)
- 
--static enum fip_conn_type fcoe_parse_mode(const char *buf)
--{
--	int i;
--
--	for (i = 0; i < ARRAY_SIZE(fip_conn_type_names); i++) {
--		if (strcasecmp(buf, fip_conn_type_names[i]) == 0)
--			return i;
--	}
--
--	return FIP_CONN_TYPE_UNKNOWN;
--}
--
- static char *fcf_state_names[] = {
- 	[ FCOE_FCF_STATE_UNKNOWN ]      = "Unknown",
- 	[ FCOE_FCF_STATE_DISCONNECTED ] = "Disconnected",
-@@ -274,17 +263,10 @@ static ssize_t store_ctlr_mode(struct device *dev,
- 			       const char *buf, size_t count)
- {
- 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
--	char mode[FCOE_MAX_MODENAME_LEN + 1];
- 
- 	if (count > FCOE_MAX_MODENAME_LEN)
- 		return -EINVAL;
- 
--	strncpy(mode, buf, count);
--
--	if (mode[count - 1] == '\n')
--		mode[count - 1] = '\0';
--	else
--		mode[count] = '\0';
- 
- 	switch (ctlr->enabled) {
- 	case FCOE_CTLR_ENABLED:
-@@ -297,8 +279,8 @@ static ssize_t store_ctlr_mode(struct device *dev,
- 			return -ENOTSUPP;
- 		}
- 
--		ctlr->mode = fcoe_parse_mode(mode);
--		if (ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
-+		ctlr->mode = sysfs_match_string(fip_conn_type_names, buf);
-+		if (ctlr->mode < 0 || ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
- 			LIBFCOE_SYSFS_DBG(ctlr, "Unknown mode %s provided.\n",
- 					  buf);
- 			return -EINVAL;
-
----
-base-commit: bee0e7762ad2c6025b9f5245c040fcc36ef2bde8
-change-id: 20231024-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-0e1dffe82855
-
-Best regards,
---
-Justin Stitt <justinstitt@google.com>
+Thanks,
+Kuai
+> 
+> .
+> 
 
