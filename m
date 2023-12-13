@@ -1,317 +1,86 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B261A26AFD;
+	Wed, 13 Dec 2023 13:02:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="hDBgL6XW"
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1A47107;
-	Wed, 13 Dec 2023 04:44:50 -0800 (PST)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 3BD6erEe007751;
-	Wed, 13 Dec 2023 12:44:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-type; s=qcppdkim1; bh=7Ilmg67qxDXz3Ino96KI
-	WdEF9TYRokRz5Zy63Tsu+xw=; b=hDBgL6XWXkw6DI4oEt+VmDl1M2sqhwpBXZCr
-	HL2v4qnH3wcCE9PgGvAoVtauoy9l9qLiVmPuFncbO5FU0T0lH4hLkojLItvlYgBO
-	aWlKMkTtsCCfeDcOglk7N/g/FGtO7Ieu36yGlY/4NteyN9pHJePBvVzoTKfDAn1s
-	tCbP9Sp4ClWibSTTgaqzxJNpvxwqY5XEiAK6FapvVt47hgxFsIidvazisqiqpZko
-	3SqoiOzzRbShd1HARCuSMzg3czV8VaiHAOxjuJr3r36AQJQPBbP6K2KM4cGI06Gr
-	i81WZxE5GOBakyAJtD7XiunupjsTMTfD/+z6VOttsVIVKBzOBg==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uy7j7rtnq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Dec 2023 12:44:20 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3BDCiJE6001100
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Dec 2023 12:44:19 GMT
-Received: from hu-mnaresh-hyd.qualcomm.com (10.80.80.8) by
- nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Wed, 13 Dec 2023 04:44:14 -0800
-From: Maramaina Naresh <quic_mnaresh@quicinc.com>
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        "Matthias
- Brugger" <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>
-CC: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Stanley Jhu <chu.stanley@gmail.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>, <quic_cang@quicinc.com>,
-        <quic_nguyenb@quicinc.com>
-Subject: [PATCH V5 1/2] ufs: core: Add CPU latency QoS support for ufs driver
-Date: Wed, 13 Dec 2023 18:13:52 +0530
-Message-ID: <20231213124353.16407-2-quic_mnaresh@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20231213124353.16407-1-quic_mnaresh@quicinc.com>
-References: <20231213124353.16407-1-quic_mnaresh@quicinc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qMGDveku"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57CCFC433C8;
+	Wed, 13 Dec 2023 13:02:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702472559;
+	bh=oucTferbO8z09uzRC+QN/9ilQDasa9VaUoOZvOLBlL4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qMGDvekulMiLgPyCQAmQWR/eYvFAOux9M1LrBgXpjuHKi5GdnupdLCcjMmHeANAZw
+	 NDWN1eQkHCW2Sw+pfLuqq2pfj/JcgsDdVtA22OmSnHNJxYpw+yR1FExTe1nE8Z/wZs
+	 akM7+FPs9zpIm5sPjIcHPvfZPn+4KlneeGqG3rOB6Je1SWsz2emIBCRZySFkAzIPeA
+	 xA8qRf8Vl62kxL6qdWQBsLnN2r/BrbU0YpgQxCdD/1rH6ftoAJoKvEHvCU6oG3Umxf
+	 wyUryDjEKQZG4E1FVlzWMllV3UPLfXuBS3NdhfbgQtbEkbPuCgd+tR20WHysGMMqwt
+	 MUW7KhdPyiXlw==
+Date: Wed, 13 Dec 2023 14:02:31 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+	viro@zeniv.linux.org.uk, dchinner@redhat.com, jack@suse.cz,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ming.lei@redhat.com,
+	jaswin@linux.ibm.com, bvanassche@acm.org
+Subject: Re: [PATCH v2 04/16] fs: Increase fmode_t size
+Message-ID: <20231213-gurte-beeren-e71ff21c3c03@brauner>
+References: <20231212110844.19698-1-john.g.garry@oracle.com>
+ <20231212110844.19698-5-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: efb1q8Vzoy6vZxl7vD8ySjFo-DmkIYD-
-X-Proofpoint-ORIG-GUID: efb1q8Vzoy6vZxl7vD8ySjFo-DmkIYD-
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-09_02,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- impostorscore=0 priorityscore=1501 bulkscore=0 adultscore=0 spamscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2311290000 definitions=main-2312130093
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20231212110844.19698-5-john.g.garry@oracle.com>
 
-Register ufs driver to CPU latency PM QoS framework to improve
-ufs device random io performance.
+On Tue, Dec 12, 2023 at 11:08:32AM +0000, John Garry wrote:
+> Currently all bits are being used in fmode_t.
+> 
+> To allow for further expansion, increase from unsigned int to unsigned
+> long.
+> 
+> Since the dma-buf driver prints the file->f_mode member, change the print
+> as necessary to deal with the larger size.
+> 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  drivers/dma-buf/dma-buf.c | 2 +-
+>  include/linux/types.h     | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+> index 21916bba77d5..a5227ae3d637 100644
+> --- a/drivers/dma-buf/dma-buf.c
+> +++ b/drivers/dma-buf/dma-buf.c
+> @@ -1628,7 +1628,7 @@ static int dma_buf_debug_show(struct seq_file *s, void *unused)
+>  
+>  
+>  		spin_lock(&buf_obj->name_lock);
+> -		seq_printf(s, "%08zu\t%08x\t%08x\t%08ld\t%s\t%08lu\t%s\n",
+> +		seq_printf(s, "%08zu\t%08x\t%08lx\t%08ld\t%s\t%08lu\t%s\n",
+>  				buf_obj->size,
+>  				buf_obj->file->f_flags, buf_obj->file->f_mode,
+>  				file_count(buf_obj->file),
+> diff --git a/include/linux/types.h b/include/linux/types.h
+> index 253168bb3fe1..49c754fde1d6 100644
+> --- a/include/linux/types.h
+> +++ b/include/linux/types.h
+> @@ -153,7 +153,7 @@ typedef u32 dma_addr_t;
+>  
+>  typedef unsigned int __bitwise gfp_t;
+>  typedef unsigned int __bitwise slab_flags_t;
+> -typedef unsigned int __bitwise fmode_t;
+> +typedef unsigned long __bitwise fmode_t;
 
-PM QoS initialization will insert new QoS request into the CPU
-latency QoS list with the maximum latency PM_QOS_DEFAULT_VALUE
-value.
-
-UFS driver will vote for performance mode on scale up and power
-save mode for scale down.
-
-If clock scaling feature is not enabled then voting will be based
-on clock on or off condition.
-
-Provided sysfs interface to enable/disable PM QoS feature.
-
-tiotest benchmark tool io performance results on sm8550 platform:
-
-1. Without PM QoS support
-	Type (Speed in)    | Average of 18 iterations
-	Random Write(IPOS) | 41065.13
-	Random Read(IPOS)  | 37101.3
-
-2. With PM QoS support
-	Type (Speed in)    | Average of 18 iterations
-	Random Write(IPOS) | 46784.9
-	Random Read(IPOS)  | 42943.4
-(Improvement with PM QoS = ~15%).
-
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Signed-off-by: Maramaina Naresh <quic_mnaresh@quicinc.com>
----
- drivers/ufs/core/ufshcd.c | 125 ++++++++++++++++++++++++++++++++++++++
- include/ufs/ufshcd.h      |   6 ++
- 2 files changed, 131 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index ae9936fc6ffb..a8ee6e02e83e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1001,6 +1001,19 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
- 	return ufshcd_get_local_unipro_ver(hba) < UFS_UNIPRO_VER_1_6;
- }
- 
-+/**
-+ * ufshcd_pm_qos_update - update PM QoS request
-+ * @hba: per adapter instance
-+ * @on: If True, vote for perf PM QoS mode otherwise power save mode
-+ */
-+static void ufshcd_pm_qos_update(struct ufs_hba *hba, bool on)
-+{
-+	if (!hba->pm_qos_enabled)
-+		return;
-+
-+	cpu_latency_qos_update_request(&hba->pm_qos_req, on ? 0 : PM_QOS_DEFAULT_VALUE);
-+}
-+
- /**
-  * ufshcd_set_clk_freq - set UFS controller clock frequencies
-  * @hba: per adapter instance
-@@ -1147,8 +1160,11 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
- 					    hba->devfreq->previous_freq);
- 		else
- 			ufshcd_set_clk_freq(hba, !scale_up);
-+		goto out;
- 	}
- 
-+	ufshcd_pm_qos_update(hba, scale_up);
-+
- out:
- 	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
- 			(scale_up ? "up" : "down"),
-@@ -8615,6 +8631,108 @@ static void ufshcd_set_timestamp_attr(struct ufs_hba *hba)
- 	ufshcd_release(hba);
- }
- 
-+/**
-+ * ufshcd_pm_qos_init - initialize PM QoS request
-+ * @hba: per adapter instance
-+ */
-+static void ufshcd_pm_qos_init(struct ufs_hba *hba)
-+{
-+
-+	if (hba->pm_qos_enabled)
-+		return;
-+
-+	cpu_latency_qos_add_request(&hba->pm_qos_req, PM_QOS_DEFAULT_VALUE);
-+
-+	if (cpu_latency_qos_request_active(&hba->pm_qos_req))
-+		hba->pm_qos_enabled = true;
-+}
-+
-+/**
-+ * ufshcd_pm_qos_exit - remove request from PM QoS
-+ * @hba: per adapter instance
-+ */
-+static void ufshcd_pm_qos_exit(struct ufs_hba *hba)
-+{
-+	if (!hba->pm_qos_enabled)
-+		return;
-+
-+	cpu_latency_qos_remove_request(&hba->pm_qos_req);
-+	hba->pm_qos_enabled = false;
-+}
-+
-+/**
-+ * ufshcd_pm_qos_enable_show - sysfs handler to show pm qos enable value
-+ * @dev: device associated with the UFS controller
-+ * @attr: sysfs attribute handle
-+ * @buf: buffer for sysfs file
-+ *
-+ * Print 1 if PM QoS feature is enabled, 0 if disabled.
-+ *
-+ * Returns number of characters written to @buf.
-+ */
-+static ssize_t ufshcd_pm_qos_enable_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", hba->pm_qos_enabled);
-+}
-+
-+/**
-+ * ufshcd_pm_qos_enable_store - sysfs handler to store value
-+ * @dev: device associated with the UFS controller
-+ * @attr: sysfs attribute handle
-+ * @buf: buffer for sysfs file
-+ * @count: stores buffer characters count
-+ *
-+ * Input 0 to disable PM QoS and any non-zero positive value to enable.
-+ * Default state: 1
-+ *
-+ * Return: number of characters written to @buf on success, < 0 upon failure.
-+ */
-+static ssize_t ufshcd_pm_qos_enable_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 value;
-+
-+	if (kstrtou32(buf, 0, &value))
-+		return -EINVAL;
-+
-+	value = !!value;
-+	if (value)
-+		ufshcd_pm_qos_init(hba);
-+	else
-+		ufshcd_pm_qos_exit(hba);
-+
-+	return count;
-+}
-+
-+/**
-+ * ufshcd_init_pm_qos_sysfs - initialize PM QoS sysfs entry
-+ * @hba: per adapter instance
-+ */
-+static void ufshcd_init_pm_qos_sysfs(struct ufs_hba *hba)
-+{
-+	hba->pm_qos_enable_attr.show = ufshcd_pm_qos_enable_show;
-+	hba->pm_qos_enable_attr.store = ufshcd_pm_qos_enable_store;
-+	sysfs_attr_init(&hba->pm_qos_enable_attr.attr);
-+	hba->pm_qos_enable_attr.attr.name = "pm_qos_enable";
-+	hba->pm_qos_enable_attr.attr.mode = 0644;
-+	if (device_create_file(hba->dev, &hba->pm_qos_enable_attr))
-+		dev_err(hba->dev, "Failed to create sysfs for pm_qos_enable\n");
-+}
-+
-+/**
-+ * ufshcd_remove_pm_qos_sysfs - remove PM QoS sysfs entry
-+ * @hba: per adapter instance
-+ */
-+static void ufshcd_remove_pm_qos_sysfs(struct ufs_hba *hba)
-+{
-+	if (hba->pm_qos_enable_attr.attr.name)
-+		device_remove_file(hba->dev, &hba->pm_qos_enable_attr);
-+}
-+
- /**
-  * ufshcd_add_lus - probe and add UFS logical units
-  * @hba: per-adapter instance
-@@ -9204,6 +9322,8 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
- 	if (ret)
- 		return ret;
- 
-+	if (!ufshcd_is_clkscaling_supported(hba))
-+		ufshcd_pm_qos_update(hba, on);
- out:
- 	if (ret) {
- 		list_for_each_entry(clki, head, list) {
-@@ -9381,6 +9501,8 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
- static void ufshcd_hba_exit(struct ufs_hba *hba)
- {
- 	if (hba->is_powered) {
-+		ufshcd_remove_pm_qos_sysfs(hba);
-+		ufshcd_pm_qos_exit(hba);
- 		ufshcd_exit_clk_scaling(hba);
- 		ufshcd_exit_clk_gating(hba);
- 		if (hba->eh_wq)
-@@ -10030,6 +10152,7 @@ static int ufshcd_suspend(struct ufs_hba *hba)
- 	ufshcd_vreg_set_lpm(hba);
- 	/* Put the host controller in low power mode if possible */
- 	ufshcd_hba_vreg_set_lpm(hba);
-+	ufshcd_pm_qos_update(hba, false);
- 	return ret;
- }
- 
-@@ -10576,6 +10699,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	ufs_sysfs_add_nodes(hba->dev);
- 
- 	device_enable_async_suspend(dev);
-+	ufshcd_pm_qos_init(hba);
-+	ufshcd_init_pm_qos_sysfs(hba);
- 	return 0;
- 
- free_tmf_queue:
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index d862c8ddce03..fa7434a9073d 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -912,6 +912,9 @@ enum ufshcd_mcq_opr {
-  * @mcq_base: Multi circular queue registers base address
-  * @uhq: array of supported hardware queues
-  * @dev_cmd_queue: Queue for issuing device management commands
-+ * @pm_qos_enable_attr: sysfs attribute to enable/disable  pm qos
-+ * @pm_qos_req: PM QoS request handle
-+ * @pm_qos_enabled: flag to check if pm qos is enabled
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -1076,6 +1079,9 @@ struct ufs_hba {
- 	struct ufs_hw_queue *uhq;
- 	struct ufs_hw_queue *dev_cmd_queue;
- 	struct ufshcd_mcq_opr_info_t mcq_opr[OPR_MAX];
-+	struct device_attribute pm_qos_enable_attr;
-+	struct pm_qos_request pm_qos_req;
-+	bool pm_qos_enabled;
- };
- 
- /**
--- 
-2.17.1
-
+As Jan said, that's likely a bad idea. There's a bunch of places that
+assume fmode_t is 32bit. So not really a change we want to make if we
+can avoid it.
