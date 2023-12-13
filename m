@@ -1,97 +1,235 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92935CD;
-	Tue, 12 Dec 2023 17:10:11 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Sqcpl4009z4f3jps;
-	Wed, 13 Dec 2023 09:10:07 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id B49591A0952;
-	Wed, 13 Dec 2023 09:10:08 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP1 (Coremail) with SMTP id cCh0CgDX2xFuBHlllVr5DQ--.61515S3;
-	Wed, 13 Dec 2023 09:10:07 +0800 (CST)
-Subject: Re: [PATCH RFC v2 for-6.8/block 01/18] block: add some bdev apis
-To: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, axboe@kernel.dk, roger.pau@citrix.com,
- colyli@suse.de, kent.overstreet@gmail.com, joern@lazybastard.org,
- miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
- sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
- gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
- martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
- dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
- nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
- adilger.kernel@dilger.ca, agruenba@redhat.com, jack@suse.com,
- konishi.ryusuke@gmail.com, willy@infradead.org, akpm@linux-foundation.org,
- p.raghav@samsung.com, hare@suse.de, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
- linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
- linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
- linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
- linux-nilfs@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20231211140552.973290-1-yukuai1@huaweicloud.com>
- <20231211140552.973290-2-yukuai1@huaweicloud.com>
- <20231211165217.fil437byq7w2vcp7@quack3> <ZXhcsNbvzbArtBUj@infradead.org>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <718c424e-2514-8a14-b461-7e20b6355d16@huaweicloud.com>
-Date: Wed, 13 Dec 2023 09:10:05 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="acAExbEn"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 045EAA7
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 17:26:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1702430760;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7+Fi662eTBH61l7dziQI31ojIowi0xTylG+eKXF8CnY=;
+	b=acAExbEnhZz/hKyNqoG39yA1eEH1hN+z+BVB5OtF0nQE4a0acvSFEPUKYOYDEVclb2z3eE
+	MUoRiDheo79F+QgG30Reh+foC5xVONuUi3BHX0vqBcv2qUuCH61kC47dfwbeqKJB9svRwg
+	7+e2iSaKSXpina4HO1DHn3BHrUwIa/8=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-664-C7-uyY69MkKS7aFFTyZZzQ-1; Tue, 12 Dec 2023 20:25:52 -0500
+X-MC-Unique: C7-uyY69MkKS7aFFTyZZzQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D1ED9833B41;
+	Wed, 13 Dec 2023 01:25:51 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.39])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 5B04C3C25;
+	Wed, 13 Dec 2023 01:25:42 +0000 (UTC)
+Date: Wed, 13 Dec 2023 09:25:38 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	jaswin@linux.ibm.com, bvanassche@acm.org,
+	Himanshu Madhani <himanshu.madhani@oracle.com>
+Subject: Re: [PATCH v2 01/16] block: Add atomic write operations to
+ request_queue limits
+Message-ID: <ZXkIEnQld577uHqu@fedora>
+References: <20231212110844.19698-1-john.g.garry@oracle.com>
+ <20231212110844.19698-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ZXhcsNbvzbArtBUj@infradead.org>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDX2xFuBHlllVr5DQ--.61515S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7XF1DtryfCryDXw4DAry7Wrg_yoW3GFg_Xr
-	909FW8K3W8A3ykJr43trs8Kr9YyFs2gr1UZrWrJ3W7X34kXFs8GFWvyr98WryfGw48CrnI
-	kF9F934fJr92qjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbaxFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
-	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
-	17CEb7AF67AKxVWrXVW8Jr1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
-	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Gr0_
-	Zr1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x0JUCXdbUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231212110844.19698-2-john.g.garry@oracle.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.1
 
-Hi,
-
-ÔÚ 2023/12/12 21:14, Christoph Hellwig Ð´µÀ:
-> On Mon, Dec 11, 2023 at 05:52:17PM +0100, Jan Kara wrote:
->>> +void bdev_associated_mapping(struct block_device *bdev,
->>> +			     struct address_space *mapping)
->>> +{
->>> +	mapping->host = bdev->bd_inode;
->>> +}
->>
->> Here I'm not sure - is the helper really a win? It seems a bit obscure to
->> me. This initialization of another mapping for a bdev looks really special.
+On Tue, Dec 12, 2023 at 11:08:29AM +0000, John Garry wrote:
+> From: Himanshu Madhani <himanshu.madhani@oracle.com>
 > 
-> If we want to hide bd_inode we'll something like this helper even if
-> I don't particularly like it either.
+> Add the following limits:
+> - atomic_write_boundary_bytes
+> - atomic_write_max_bytes
+> - atomic_write_unit_max_bytes
+> - atomic_write_unit_min_bytes
 > 
-> But it might be a good idea to move out of this series and into the
-> follow on removing bd_inode, as it's rather pointless without that
-> context.
-
-Yes, this sounds good, I'll remove this from v3.
-
-Thanks,
-Kuai
-
-> .
+> All atomic writes limits are initialised to 0 to indicate no atomic write
+> support. Stacked devices are just not supported either for now.
 > 
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+> #jpg: Heavy rewrite
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  Documentation/ABI/stable/sysfs-block | 47 ++++++++++++++++++++++
+>  block/blk-settings.c                 | 60 ++++++++++++++++++++++++++++
+>  block/blk-sysfs.c                    | 33 +++++++++++++++
+>  include/linux/blkdev.h               | 37 +++++++++++++++++
+>  4 files changed, 177 insertions(+)
+> 
+> diff --git a/Documentation/ABI/stable/sysfs-block b/Documentation/ABI/stable/sysfs-block
+> index 1fe9a553c37b..ba81a081522f 100644
+> --- a/Documentation/ABI/stable/sysfs-block
+> +++ b/Documentation/ABI/stable/sysfs-block
+> @@ -21,6 +21,53 @@ Description:
+>  		device is offset from the internal allocation unit's
+>  		natural alignment.
+>  
+> +What:		/sys/block/<disk>/atomic_write_max_bytes
+> +Date:		May 2023
+> +Contact:	Himanshu Madhani <himanshu.madhani@oracle.com>
+> +Description:
+> +		[RO] This parameter specifies the maximum atomic write
+> +		size reported by the device. This parameter is relevant
+> +		for merging of writes, where a merged atomic write
+> +		operation must not exceed this number of bytes.
+> +		The atomic_write_max_bytes may exceed the value in
+> +		atomic_write_unit_max_bytes if atomic_write_max_bytes
+> +		is not a power-of-two or atomic_write_unit_max_bytes is
+> +		limited by some queue limits, such as max_segments.
+> +
+> +
+> +What:		/sys/block/<disk>/atomic_write_unit_min_bytes
+> +Date:		May 2023
+> +Contact:	Himanshu Madhani <himanshu.madhani@oracle.com>
+> +Description:
+> +		[RO] This parameter specifies the smallest block which can
+> +		be written atomically with an atomic write operation. All
+> +		atomic write operations must begin at a
+> +		atomic_write_unit_min boundary and must be multiples of
+> +		atomic_write_unit_min. This value must be a power-of-two.
+> +
+> +
+> +What:		/sys/block/<disk>/atomic_write_unit_max_bytes
+> +Date:		January 2023
+> +Contact:	Himanshu Madhani <himanshu.madhani@oracle.com>
+> +Description:
+> +		[RO] This parameter defines the largest block which can be
+> +		written atomically with an atomic write operation. This
+> +		value must be a multiple of atomic_write_unit_min and must
+> +		be a power-of-two.
+> +
+> +
+> +What:		/sys/block/<disk>/atomic_write_boundary_bytes
+> +Date:		May 2023
+> +Contact:	Himanshu Madhani <himanshu.madhani@oracle.com>
+> +Description:
+> +		[RO] A device may need to internally split I/Os which
+> +		straddle a given logical block address boundary. In that
+> +		case a single atomic write operation will be processed as
+> +		one of more sub-operations which each complete atomically.
+> +		This parameter specifies the size in bytes of the atomic
+> +		boundary if one is reported by the device. This value must
+> +		be a power-of-two.
+> +
+>  
+>  What:		/sys/block/<disk>/diskseq
+>  Date:		February 2021
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 0046b447268f..d151be394c98 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -59,6 +59,10 @@ void blk_set_default_limits(struct queue_limits *lim)
+>  	lim->zoned = BLK_ZONED_NONE;
+>  	lim->zone_write_granularity = 0;
+>  	lim->dma_alignment = 511;
+> +	lim->atomic_write_unit_min_sectors = 0;
+> +	lim->atomic_write_unit_max_sectors = 0;
+> +	lim->atomic_write_max_sectors = 0;
+> +	lim->atomic_write_boundary_sectors = 0;
+
+Can we move the four into single structure and setup them in single
+API? Then cross-validation can be done in this API.
+
+>  }
+>  
+>  /**
+> @@ -183,6 +187,62 @@ void blk_queue_max_discard_sectors(struct request_queue *q,
+>  }
+>  EXPORT_SYMBOL(blk_queue_max_discard_sectors);
+>  
+> +/**
+> + * blk_queue_atomic_write_max_bytes - set max bytes supported by
+> + * the device for atomic write operations.
+> + * @q:  the request queue for the device
+> + * @size: maximum bytes supported
+> + */
+> +void blk_queue_atomic_write_max_bytes(struct request_queue *q,
+> +				      unsigned int bytes)
+> +{
+> +	q->limits.atomic_write_max_sectors = bytes >> SECTOR_SHIFT;
+> +}
+> +EXPORT_SYMBOL(blk_queue_atomic_write_max_bytes);
+
+What if driver doesn't call it but driver supports atomic write?
+
+I guess the default max sectors should be atomic_write_unit_max_sectors
+if the feature is enabled.
+
+> +
+> +/**
+> + * blk_queue_atomic_write_boundary_bytes - Device's logical block address space
+> + * which an atomic write should not cross.
+> + * @q:  the request queue for the device
+> + * @bytes: must be a power-of-two.
+> + */
+> +void blk_queue_atomic_write_boundary_bytes(struct request_queue *q,
+> +					   unsigned int bytes)
+> +{
+> +	q->limits.atomic_write_boundary_sectors = bytes >> SECTOR_SHIFT;
+> +}
+> +EXPORT_SYMBOL(blk_queue_atomic_write_boundary_bytes);
+
+Default atomic_write_boundary_sectors should be
+atomic_write_unit_max_sectors in case of atomic write?
+
+> +
+> +/**
+> + * blk_queue_atomic_write_unit_min_sectors - smallest unit that can be written
+> + * atomically to the device.
+> + * @q:  the request queue for the device
+> + * @sectors: must be a power-of-two.
+> + */
+> +void blk_queue_atomic_write_unit_min_sectors(struct request_queue *q,
+> +					     unsigned int sectors)
+> +{
+> +	struct queue_limits *limits = &q->limits;
+> +
+> +	limits->atomic_write_unit_min_sectors = sectors;
+> +}
+> +EXPORT_SYMBOL(blk_queue_atomic_write_unit_min_sectors);
+
+atomic_write_unit_min_sectors should be >= (physical block size >> 9)
+given the minimized atomic write unit is physical sector for all disk.
+
+> +
+> +/*
+> + * blk_queue_atomic_write_unit_max_sectors - largest unit that can be written
+> + * atomically to the device.
+> + * @q: the request queue for the device
+> + * @sectors: must be a power-of-two.
+> + */
+> +void blk_queue_atomic_write_unit_max_sectors(struct request_queue *q,
+> +					     unsigned int sectors)
+> +{
+> +	struct queue_limits *limits = &q->limits;
+> +
+> +	limits->atomic_write_unit_max_sectors = sectors;
+> +}
+> +EXPORT_SYMBOL(blk_queue_atomic_write_unit_max_sectors);
+
+atomic_write_unit_max_sectors should be >= atomic_write_unit_min_sectors.
+
+
+Thanks, 
+Ming
 
