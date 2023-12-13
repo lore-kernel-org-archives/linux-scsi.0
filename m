@@ -1,170 +1,99 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="MREF7QEX"
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10EB8AF
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 18:25:32 -0800 (PST)
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20231213022527epoutp04eca50866b28c815ee518fafc2687fe19~gQwA8MY2-2192321923epoutp04K
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Dec 2023 02:25:27 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20231213022527epoutp04eca50866b28c815ee518fafc2687fe19~gQwA8MY2-2192321923epoutp04K
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1702434327;
-	bh=llvFRz0oCIQGbziuHlF3lamYUb4g/Mx7VDSl7Hr2w70=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=MREF7QEXKe+dQZ+lY1apYWdgC1csNidjjpTUwXMhX0irDESLtcqQrYmeHkRW8gJU4
-	 yTSSXcfmrnAIX0xsH8g9ctcoYP5ZRBHnvcKAuUrMegg141wB3MUaZmxaxWGOFVbvb9
-	 UYKfruGoJpFrwqVC0Z+jstWRx/1+2UGkcW4gfQWU=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTP id
-	20231213022526epcas1p2768b522dbed430c04325c5b3cbf83748~gQwAMzc1f2140721407epcas1p2U;
-	Wed, 13 Dec 2023 02:25:26 +0000 (GMT)
-Received: from epsmges1p1.samsung.com (unknown [182.195.36.222]) by
-	epsnrtp3.localdomain (Postfix) with ESMTP id 4SqfTf1kQzz4x9Px; Wed, 13 Dec
-	2023 02:25:26 +0000 (GMT)
-Received: from epcas1p1.samsung.com ( [182.195.41.45]) by
-	epsmges1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	C0.46.09744.61619756; Wed, 13 Dec 2023 11:25:26 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20231213022525epcas1p219483a7572a12394c5852cd53a367da4~gQv-VaPJX2004720047epcas1p2x;
-	Wed, 13 Dec 2023 02:25:25 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20231213022525epsmtrp16b95d43d02cf2ec71c1652b30a3c6ee1~gQv-UfYN22117621176epsmtrp1m;
-	Wed, 13 Dec 2023 02:25:25 +0000 (GMT)
-X-AuditID: b6c32a35-107fa70000002610-2a-657916166080
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	FD.34.08755.51619756; Wed, 13 Dec 2023 11:25:25 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.253.100.232]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20231213022525epsmtip24ac15f90dc60a39a5845e2e7522a8a28~gQv-E9HGZ0163101631epsmtip27;
-	Wed, 13 Dec 2023 02:25:25 +0000 (GMT)
-From: Chanwoo Lee <cw9316.lee@samsung.com>
-To: mani@kernel.org, agross@kernel.org, andersson@kernel.org,
-	konrad.dybcio@linaro.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	p.zabel@pengutronix.de, linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: grant.jung@samsung.com, jt77.jang@samsung.com, dh0421.hwang@samsung.com,
-	sh043.lee@samsung.com, ChanWoo Lee <cw9316.lee@samsung.com>
-Subject: [PATCH] scsi: ufs: qcom: Re-fix for error handling
-Date: Wed, 13 Dec 2023 11:25:00 +0900
-Message-Id: <20231213022500.9011-1-cw9316.lee@samsung.com>
-X-Mailer: git-send-email 2.29.0
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="L63DWHSy"
+Received: from mail-oa1-x2e.google.com (mail-oa1-x2e.google.com [IPv6:2001:4860:4864:20::2e])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E26E4A1
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 18:33:19 -0800 (PST)
+Received: by mail-oa1-x2e.google.com with SMTP id 586e51a60fabf-1fab887fab8so4775752fac.0
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Dec 2023 18:33:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1702434799; x=1703039599; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=E3Z9JoyfzsY5Msgpk7J3xKwjEP4qsoLvyMDzNBboZxQ=;
+        b=L63DWHSyw764lh5KFe1pB7SH3T/tPvsOkWuRvhOUWXJUbmDh54hBIgUaV6pF9O5zjJ
+         7ApfXQlI2R/60ll3Uu9I9kYwxKmAD+Tlix5N3DsSk3plaLycVl5hjFECLDJAgSS75ztE
+         qwo/IFy+vsv/dgM3qO8vSUi5S9ABmQizUkQSM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702434799; x=1703039599;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=E3Z9JoyfzsY5Msgpk7J3xKwjEP4qsoLvyMDzNBboZxQ=;
+        b=p27w/G5vBWecczzSea2X0n3NDh+qcsIPrUGe2R+cUd0ICBCvRhj/mt3MYPZEJyXyEF
+         732oLYUYUSrn/IEhv2PVMpW8YurLDaJpHAPxi83tSkkfDS5xOXrsG7I69P6aFoW/6kxc
+         Q5fXXYRFoFBWWpObY+byzU2/GAA8gxVPdSPTW3r2J+Ln4BtN30/ymb+PMl9x64Yzb/k2
+         CH1NafUIEYcxxPaNn5x92aNwS+iJ1hUx7QgmOSojEgLDh0sXQaloFORuI7rUacI39Z9D
+         s3kd3xUxZKO/T1K4dOvuvj8ac+0uRxxszsYftvwDGOrnWUGd2kRgE9WcgLgW4X0Gj9R2
+         56ag==
+X-Gm-Message-State: AOJu0Yx1zXs2Nj5hp5IGIBLAd90PoMh5mUBguKfGr6NB0M0ZQeWu6KZj
+	MzYH1VL0WVskI1kjj9Kbl14GkA==
+X-Google-Smtp-Source: AGHT+IE3whrRDNDQUcDGajjH0b22bNpJJTgCXoMQv6lkdzkXPDL1WhDozwCrzDj3USG8zDbkzGRDYQ==
+X-Received: by 2002:a05:6870:d0c:b0:1fb:32a0:41ce with SMTP id mk12-20020a0568700d0c00b001fb32a041cemr9848854oab.0.1702434799232;
+        Tue, 12 Dec 2023 18:33:19 -0800 (PST)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id o17-20020a656151000000b005c2420fb198sm7667429pgv.37.2023.12.12.18.33.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Dec 2023 18:33:18 -0800 (PST)
+Date: Tue, 12 Dec 2023 18:33:17 -0800
+From: Kees Cook <keescook@chromium.org>
+To: Justin Stitt <justinstitt@google.com>
+Cc: Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: fcoe: use sysfs_match_string over
+ fcoe_parse_mode
+Message-ID: <202312121833.E5062A3126@keescook>
+References: <20231212-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v2-1-1f2d6b2fc409@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrEJsWRmVeSWpSXmKPExsWy7bCmrq6YWGWqQccmbotzj3+zWGzrsLGY
-	caqN1WLftZPsFr/+rme3WHRjG5PFjudn2C06Jm9nsZi4/yy7xeVdc9gsuq/vYLM48GEVo8Xy
-	4/+YLO7eO8Fi0fRnH4sDv8emVZ1sHneu7WHzmLDoAKPHx6e3WDz6/xp49G1ZxejxeZNcAHtU
-	tk1GamJKapFCal5yfkpmXrqtkndwvHO8qZmBoa6hpYW5kkJeYm6qrZKLT4CuW2YO0NlKCmWJ
-	OaVAoYDE4mIlfTubovzSklSFjPziElul1IKUnAKzAr3ixNzi0rx0vbzUEitDAwMjU6DChOyM
-	tgXnWAue8lcsbJzB1MD4naeLkZNDQsBE4vShq8wgtpDADkaJ/y8luxi5gOxPjBL717UyQzjf
-	GCWe/drHDNPxc1cnG0RiL6PE5nMLoZwvjBIrP58Hcjg42AS0JG4f8waJiwj8ZZRYfKaLEcRh
-	FuhilPh1sIsFZJSwgLXEjLdr2UBsFgFViZYPjxlBbF4BK4l53x9CrZOX+HO/hxkiLihxcuYT
-	sF5moHjz1tlg90kIzOSQ2N90mR2iwUXi3qMnbBC2sMSr41ug4lISL/vb2CEamhklFr45DtU9
-	gVHiy8fbUB32Es2tzWA/MAtoSqzfpQ8RVpTY+XsuI8RmPol3X3tYQUokBHglOtqEIEpUJOZ0
-	nWOD2fXxxmNWCNtD4s7vKeyQEI6V+Pi+l20Co/wsJP/MQvLPLITFCxiZVzGKpRYU56anFhsW
-	GMLjNTk/dxMjOPFqme5gnPj2g94hRiYOxkOMEhzMSiK8J3eUpwrxpiRWVqUW5ccXleakFh9i
-	NAWG8ERmKdHkfGDqzyuJNzSxNDAxMzKxMLY0NlMS5z1zpSxVSCA9sSQ1OzW1ILUIpo+Jg1Oq
-	genEjS7nw9VHT1rcXReypvIqv0H0tdDNRWYGf+cc+l364sIu+WtvQxWtdtmsqXZ963dE3KvJ
-	srGhXuPjh6Lbs57Vtk562fh636ejvr/C2v1VHl5Ju/wwwHT5tUa5c88qBYUshPUjinYZPf99
-	yHv9P6XWmVaxD9zb5zooxiYmrDfquMqxZ+HptGURzPP8jmSeTb9QXV/sNveRQvt2ay7rrR11
-	e7Tzt91NXB6Sdjma9b9f1EPdnn9V6d+Py96+9qTA4pb+6s0sU9fYK92ysOVcwLKg/ZC5lttM
-	6b2qD5wPryn1D2edO8l2Gcf1K6v+mG9iunG8e1vcls/lty3y7VcWvCpiP37Od+H9z+c27rqQ
-	OnmNEktxRqKhFnNRcSIA88H7vUUEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrPLMWRmVeSWpSXmKPExsWy7bCSvK6oWGWqwZOpyhbnHv9msdjWYWMx
-	41Qbq8W+ayfZLX79Xc9usejGNiaLHc/PsFt0TN7OYjFx/1l2i8u75rBZdF/fwWZx4MMqRovl
-	x/8xWdy9d4LFounPPhYHfo9NqzrZPO5c28PmMWHRAUaPj09vsXj0/zXw6NuyitHj8ya5APYo
-	LpuU1JzMstQifbsEroy2BedYC57yVyxsnMHUwPidp4uRk0NCwETi565Oti5GLg4hgd2MEhMe
-	7GWESEhJ7N5/HijBAWQLSxw+XAxR84lRYtP5O4wgcTYBLYnbx7xB4iICnUwSq6Z+YAVxmAUm
-	MEosvvKWGWSQsIC1xIy3a9lAbBYBVYmWD4/BFvAKWEnM+/6QGWKZvMSf+z3MEHFBiZMzn7CA
-	2MxA8eats5knMPLNQpKahSS1gJFpFaNkakFxbnpusWGBYV5quV5xYm5xaV66XnJ+7iZGcBxo
-	ae5g3L7qg94hRiYOxkOMEhzMSiK8J3eUpwrxpiRWVqUW5ccXleakFh9ilOZgURLnFX/RmyIk
-	kJ5YkpqdmlqQWgSTZeLglGpg2mBQ7uCgV5VwPSxCq+hkonPy4w230vdf/bbvx2Ptg5NmXLaX
-	9jkkt5J7w8TXOYace4v49saphzApPpqsqyJw8FVwRe4h8dS/rok96QFveiJM/3o8/XuVb3vH
-	x44NdW/XOcy2C1T7lX390O5FTEnJ6m32DJwn/Xsc0mqfzFtqwxBaIvT+f67Kqu7FhXOufred
-	9iPz/VkL7/9eHmdyrqwz+bnqtIyZjvvdG3t8Nde4uVfOTvh//15zB49IeF7mI41j7D7Hvk5Y
-	/ro4VVT7/U/m2qLADUtmnD0kaeYz88KCE0nnXCskHy1dwuIn3LvPOue/wcbpWZ2397zyLAwx
-	j0sqOmu2MWVb2h+x1a/2n2Pcr8RSnJFoqMVcVJwIAD9GZU/yAgAA
-X-CMS-MailID: 20231213022525epcas1p219483a7572a12394c5852cd53a367da4
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: SVC_REQ_APPROVE
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20231213022525epcas1p219483a7572a12394c5852cd53a367da4
-References: <CGME20231213022525epcas1p219483a7572a12394c5852cd53a367da4@epcas1p2.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231212-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v2-1-1f2d6b2fc409@google.com>
 
-From: ChanWoo Lee <cw9316.lee@samsung.com>
+On Tue, Dec 12, 2023 at 11:19:06PM +0000, Justin Stitt wrote:
+> Instead of copying @buf into a new buffer and carefully managing its
+> newline/null-terminating status, we can just use sysfs_match_string()
+> as it uses sysfs_streq() internally which handles newline/null-term:
+> 
+> |  /**
+> |   * sysfs_streq - return true if strings are equal, modulo trailing newline
+> |   * @s1: one string
+> |   * @s2: another string
+> |   *
+> |   * This routine returns true iff two strings are equal, treating both
+> |   * NUL and newline-then-NUL as equivalent string terminations.  It's
+> |   * geared for use with sysfs input strings, which generally terminate
+> |   * with newlines but are compared against values without newlines.
+> |   */
+> |  bool sysfs_streq(const char *s1, const char *s2)
+> |  ...
+> 
+> Then entirely drop the now unused fcoe_parse_mode, being careful to
+> change if condition from checking for FIP_CONN_TYPE_UNKNOWN to < 0 as
+> sysfs_match_string can return -EINVAL. Also check explicitly if
+> ctlr->mode is equal to FIP_CONN_TYPE_UNKNOWN -- this is probably
+> preferred to "<=" as the behavior is more obvious while maintaining
+> functionality.
+> 
+> To get the compiler not to complain, make fip_conn_type_names
+> const char * const. Perhaps, this should also be done for
+> fcf_state_names.
+> 
+> This also removes an instance of strncpy() which helps [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/90 [1]
+> Cc: linux-hardening@vger.kernel.org
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
 
-I modified the code to handle errors.
+Looks great; thanks!
 
-The error handling code has been changed from the patch below.
--'commit 031312dbc695 ("scsi: ufs: ufs-qcom: Remove unnecessary goto statements")'
+Reviewed-by: Kees Cook <keescook@chromium.org>
 
-What I have confirmed are three cases.
-1) ufs_qcom_host_reset -> 'reset_control_deassert' error -> return 0;
-2) ufs_qcom_clk_scale_notify -> 'ufs_qcom_clk_scale_up_/down_pre_change' error -> return 0;
-3) ufs_qcom_init_lane_clks -> 'ufs_qcom_host_clk_get(tx_lane1_sync_clk)' error -> return 0;
-
-It is unknown whether the above commit was intended to change error handling.
-However, if it is not an intended fix, a patch may be needed.
-
-Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
----
- drivers/ufs/host/ufs-qcom.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 96cb8b5b4e66..8a93d93ab08f 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -313,6 +313,8 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
- 
- 		err = ufs_qcom_host_clk_get(dev, "tx_lane1_sync_clk",
- 			&host->tx_l1_sync_clk, true);
-+		if (err)
-+			return err;
- 	}
- 
- 	return 0;
-@@ -404,9 +406,11 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
- 	usleep_range(200, 210);
- 
- 	ret = reset_control_deassert(host->core_reset);
--	if (ret)
-+	if (ret) {
- 		dev_err(hba->dev, "%s: core_reset deassert failed, err = %d\n",
- 				 __func__, ret);
-+		return ret;
-+	}
- 
- 	usleep_range(1000, 1100);
- 
-@@ -415,7 +419,7 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
- 		hba->is_irq_enabled = true;
- 	}
- 
--	return 0;
-+	return ret;
- }
- 
- static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba)
-@@ -1535,7 +1539,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
- 		ufshcd_uic_hibern8_exit(hba);
- 	}
- 
--	return 0;
-+	return err;
- }
- 
- static void ufs_qcom_enable_test_bus(struct ufs_qcom_host *host)
 -- 
-2.29.0
-
+Kees Cook
