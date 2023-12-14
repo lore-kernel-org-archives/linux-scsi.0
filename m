@@ -1,44 +1,44 @@
-Received: from mail-io1-f54.google.com (mail-io1-f54.google.com [209.85.166.54])
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B947D7494
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 21:01:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C23C54277
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 21:01:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="avRPuL/E"
-Received: by mail-io1-f54.google.com with SMTP id ca18e2360f4ac-7b6fa79b547so508971039f.1
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 13:01:17 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="D36naECr"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6ce972ac39dso5754838b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 13:01:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1702587676; x=1703192476; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1702587679; x=1703192479; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=eoCwyQdBQNplETbcUkUFUES+7wPPhF9uGlbIiVxkCcI=;
-        b=avRPuL/ENobub2Rd+y1QJ/n758hJ4ttZFzr3Mx1CYMIvk7K1A+A9r7Cn+lxuF3wLU0
-         Rk1IaXThxjZV2U28fBw1dO1pITxyi9ZOGw0xXgyHBR8Zd0Ea0z6QbWW1ZwbQFWDUrHVV
-         3NAnZMMv9NYgoslBFZN8ozEYkRQ1X26w0cV7g=
+        bh=IQ7v9oV72bW1L7iF+/ICZi/S2pBtwO+QoQzkegQ7R6c=;
+        b=D36naECrUITkqMbdznHMRUVsTQXFR59mQ0PacDG7iSsO3elHiJkBBhmq6dE2zF/1dd
+         0yf8D8bVTlFsWh7r2OQv6aKlr+WQ8nq0Rdb6JLo6dYleYbmvAxbKjDaGujov3BL/jgc0
+         Wp4tJ9eaN7ihibwj2vIotySFlP5e1tl1Cg7q0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702587676; x=1703192476;
+        d=1e100.net; s=20230601; t=1702587679; x=1703192479;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eoCwyQdBQNplETbcUkUFUES+7wPPhF9uGlbIiVxkCcI=;
-        b=p1L47AFsQFRcfjE8blrY7NheEV2T4yfQq3G8x7MNFJMcQ6nUsgEuhl5Hsks27MwLeC
-         eFB1XlcYAtxelTevFEwzvocbLMR9IRMxGQbPskC6neyMeXEgrincCjTOsKBuIAAjtyTn
-         U+2+9NYMk2B7kNomVrlaky9/TvFOFbCt97YoNG3dskRnkHF61THIduApvSSjHcI8F8Kh
-         cyy67Lbs4j37RFf3jyl9u/zi78Iut7TUWFN/7pT+Fwvj8lL2GkwnPwP6xaubT1CGVZPS
-         HbmtgPUU3CSQvkK9bo2BcQ+A9/G7gRKAKC7PJHNIM0K4PLPah1aWdJmMFj3Tz3HrWWrM
-         GdHA==
-X-Gm-Message-State: AOJu0YywoUkhQZm1J4dX6MHcW165ZQMKukCPyOzaAiWPsL/LNJtpkeX2
-	a0D4jZxyxYvI2Ilw3QGUwEGIBfv8lD/07dNgtiIcH2jma/RlMuuTKoL7Pg9GK/FRpJa0VqpBiv5
-	y1yyhFxRk2n6OBBz7wgtIzUak9Dt82bbqx1grpch2PpV9dkUHJbLPreJUpEH/yH1ZWMz5+H813S
-	nfhsBs2oG10A==
-X-Google-Smtp-Source: AGHT+IFfvULEMtEpnnMCw1qRcCc/iJ4mFRP+Lzm3MLfh3ZxqSnrh+VkjwXmKKFt0fCpIPU9vDxcg2w==
-X-Received: by 2002:a92:c269:0:b0:35f:7715:6cdd with SMTP id h9-20020a92c269000000b0035f77156cddmr3785669ild.33.1702587676066;
-        Thu, 14 Dec 2023 13:01:16 -0800 (PST)
+        bh=IQ7v9oV72bW1L7iF+/ICZi/S2pBtwO+QoQzkegQ7R6c=;
+        b=azQImByVkP1w6+TODcWYf/LyIcW5uo7nOcZdpzkgy5oILzmccz1SZLwD22HKHtJBWb
+         rb8CIgvdiGSl1B/nZtl1SOrcqwijprXFZoZrHJhoGCPDK77QTV6wSVWossZu8QFlSbI2
+         6uZHh5nZG/lyvbCePrugHGm+D4OTeQtaIG4a9h0n9tsHz+G33Sf2PpA/OzwhxPVgMi6C
+         K9c/D1pWNmU+KMUMVFiE2eVIhueJsVjz15QgRiWAc0/pt5y7jVGZJzKMPh1fdJNhP8sM
+         OnsbPuBkvF16KN5N/G0eGb+FHyhPFUt1DZir3+n6t/IIhuyp+/tkT2hTsa81TOSdHSzh
+         Q87Q==
+X-Gm-Message-State: AOJu0YwHq6xpI+pIESUMTYIDzjxy28vBXveb3YQ94/1xCXmDEMp2ddHP
+	kf04QQwOSWrX1dNOr2QozahKq+YkZYN6VOv0hHmwr1gIAIp1uddP6CcTxeaWuJoSjiQJjgQuRnl
+	1nj17mLMUgMLfVbdJ28/Vk+JI0YAb3FibAOir0iHJH+HcFzGo6lVrgXLopJolxHkh9+vVICTLc6
+	FYOk6Yr8ZIVw==
+X-Google-Smtp-Source: AGHT+IF1TbHivlqpzLJn01DrawkLOsK05IVdj+cnPMJMlB/lJrMcLDFhldt9ywiD5xI/jP/nO8SJTA==
+X-Received: by 2002:a05:6a20:3d28:b0:190:7f2a:6b29 with SMTP id y40-20020a056a203d2800b001907f2a6b29mr6642540pzi.82.1702587679390;
+        Thu, 14 Dec 2023 13:01:19 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm11904303pgb.30.2023.12.14.13.01.13
+        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm11904303pgb.30.2023.12.14.13.01.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 13:01:15 -0800 (PST)
+        Thu, 14 Dec 2023 13:01:18 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -48,9 +48,9 @@ Cc: rajsekhar.chundru@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v2 5/6] mpi3mr: Reset stop_bsgs flag post controller reset failure
-Date: Fri, 15 Dec 2023 02:28:59 +0530
-Message-Id: <20231214205900.270488-6-ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 6/6] mpi3mr: Update driver version to 8.6.1.0.50
+Date: Fri, 15 Dec 2023 02:29:00 +0530
+Message-Id: <20231214205900.270488-7-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20231214205900.270488-1-ranjan.kumar@broadcom.com>
 References: <20231214205900.270488-1-ranjan.kumar@broadcom.com>
@@ -61,38 +61,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000a6e419060c7e9522"
+	boundary="000000000000dd5ac6060c7e950c"
 
---000000000000a6e419060c7e9522
+--000000000000dd5ac6060c7e950c
 Content-Transfer-Encoding: 8bit
 
-stop_bsgs flag blocks the ioctls during controller reset.
-currently, it remains set after a controller failure, so
-resetting it.
+Update driver version to 8.6.1.0.50
 
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 491ef854fdba..209920cd5ec2 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -5136,6 +5136,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 		mrioc->device_refresh_on = 0;
- 		mrioc->unrecoverable = 1;
- 		mrioc->reset_in_progress = 0;
-+		mrioc->stop_bsgs = 0;
- 		retval = -1;
- 		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
- 	}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index de953eb055d0..d6e43862221f 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -56,8 +56,8 @@ extern struct list_head mrioc_list;
+ extern int prot_mask;
+ extern atomic64_t event_counter;
+ 
+-#define MPI3MR_DRIVER_VERSION	"8.5.1.0.0"
+-#define MPI3MR_DRIVER_RELDATE	"5-December-2023"
++#define MPI3MR_DRIVER_VERSION	"8.6.1.0.50"
++#define MPI3MR_DRIVER_RELDATE	"6-December-2023"
+ 
+ #define MPI3MR_DRIVER_NAME	"mpi3mr"
+ #define MPI3MR_DRIVER_LICENSE	"GPL"
 -- 
 2.31.1
 
 
---000000000000a6e419060c7e9522
+--000000000000dd5ac6060c7e950c
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -163,13 +163,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICTErvY9nhbhRQ0gGKxLxrlmi3nqZE/D
-pKb0ZPq2wq4wMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIx
-NDIxMDExNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEdpJq4nuM+3KFmRTan/I+b/gxlTwaHI
+JlEEELNM9BkkMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIx
+NDIxMDExOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCa3u1tab8kutDCrAiUhdhmrVQSfTO/+JKOVRRKTzLAOYcPzcLD
-gTsx0/KlNVYeM+ShmIxD+53MYTrco6eoWa9/BtSmsM+GtNNboll7EaHnpxjpcf4bIV9Xlck1fM1x
-vkUOisTZN5hiDMhoJufNhsLUFPPZtNDnwuNAI/ZRIN+Y8vWNXiuTQWm/UdbkvMuyoSrBBnzblCbJ
-0TeGndRxG+40EKPoubmETRK7GzcdIw9Bpeiyd18RosTmkzL7z/4QZ8SVT6KhOvjqt6dQhKs5n+tr
-R9J8mQgYpHkJp0qvoqg8j7fJhev9aVlJJ6830yNM2EhMAwtVqI/QfoC/qHDgg67W
---000000000000a6e419060c7e9522--
+ATANBgkqhkiG9w0BAQEFAASCAQAgApfpsdk2GRz+Fw3R7H1qcSzkKUQxwmYWYYcBKeYJlWgXuWqU
+KEx9bsQ9hDoPWqY6Dnz5hEwjFeYWWtXWTPFr2Xd4LjoRLClGLGitFHlFuSlw3P0wjxlQMH7eZzE0
+g91KJ28QQPn9IB1TK9Jq5JXGx/nmEzV6cEUszV/TeeafNAfh62FqFPFbzq8Nu1/uv3pS1EMcs7wP
+SmDK/nuK1hNzYj/wZQjT5TRChBAnnpL+JbtQTeYTRfKZ4EJ5bRecs2q1VHABJB5AhtsIkYIggEbv
+7ien6z+IRcBw251iq6eq7DexVKOz2w5NE5M9rtFHW/MLWNK8XZMXn/EA0QDnPxpg
+--000000000000dd5ac6060c7e950c--
