@@ -1,238 +1,173 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBEDF2112;
-	Thu, 14 Dec 2023 20:42:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1d359f04514so12193465ad.2;
-        Thu, 14 Dec 2023 12:42:44 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 317291110
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 21:00:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HEuxWV1s"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6cebcf8a48aso7366128b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 13:00:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1702587659; x=1703192459; darn=vger.kernel.org;
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=WMvmr17AS1d3oqU7eLfifrh7kOOTHbToiHUspPgycsQ=;
+        b=HEuxWV1sOgf1iDmE0J4NY7O/CgI2TOWHSESHRDnvXgZr2vE0Ig9pT2djSYS51pBlmk
+         esW3hg4lC6yOqJ+j8ZJ6w0lmSu/Ht0aOF4iundnLXYvKqe3AT1DeW3n29/lihg8YDUoE
+         kyzWiA2yaPJbioeE47Mb8ud09KjL/eq6df8jw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702586564; x=1703191364;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YLsLuA802ICDkiiKqvmIVU+HnLeNABPNuQNL8fYHwzQ=;
-        b=h4UVLbDeTXbFw0HQU8ArMefOYwDwZ+fimyiBqYAX0IMuWVub2GNHybYoOw3TVDONXw
-         6S4ANi3SZpzC6mtMKu1PHmexUnsOYRl4Wmg48m3Dm7XvMJebJMAS7ZkpSsJimLeBQKMp
-         G6IcrN6vyfAlGWwtzAdYq3eRCUcmqIxmG4Xddno7DcM/ALacgwLlwKBoTkVx2SXgoM2X
-         SS5e4mLA3qHJ6V+f2T6wgim2d04vUqh7pNZEoT86kqd3zRt2xdbafxErfFRFAWvuDMms
-         FiIm8P9rMsGL1ykU/Ey6zDyD2FDbp7XBNrQxaBf2d2CWppYQnR/GC0RfHAVHi+5MgIZv
-         4tfA==
-X-Gm-Message-State: AOJu0Yw25FDO73FNzNrId9+oSHSs5KnUqr5NMW/CfLv6rH4fGUAM0WH4
-	ECuaYQTl2gNdkWvgdsmtMS4=
-X-Google-Smtp-Source: AGHT+IHdc2j2RFP9lilIUuH8wdBrHCF3dZdk2pReeiX8RPJ7SuWL7ac+I1Cp62AwE2YCnLtW+IW5cg==
-X-Received: by 2002:a17:902:a5c7:b0:1d0:6ffd:6e61 with SMTP id t7-20020a170902a5c700b001d06ffd6e61mr4912900plq.89.1702586564131;
-        Thu, 14 Dec 2023 12:42:44 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:bae8:452d:2e24:5984])
-        by smtp.gmail.com with ESMTPSA id z21-20020a170902ee1500b001d340c71ccasm5091640plb.275.2023.12.14.12.42.43
+        d=1e100.net; s=20230601; t=1702587659; x=1703192459;
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=WMvmr17AS1d3oqU7eLfifrh7kOOTHbToiHUspPgycsQ=;
+        b=Uk7jBVG3ULMp5z/xjQ939Gl9Nckx0JyYSEYDAMPMpTO5shPTyz3xndvD+oxFnW3rqn
+         3U+vz6/NTJpDaaO4shRom1deVKVezMuA0yrCM8XWnO+8HmkkZv6Hzi8Fw2WauYBVSRJN
+         q4Uqu+mclQ+5178sRUWaUm9ns9rBelD2ADlaWIRk+JNuqrFLlk9/ivc3U6ztv0fAz78C
+         3ApEWKH53VqC+92lYzGiN6iQWeJGuKOfLK4TiUACNeevdjCj3dxAu6KClDHoR78IdGVQ
+         sWe0aRyB+1tDibIGGov51QXkHnPCz56K/BZNZcwurZ2kVQSVuxlVwW0wpBFm37zN194T
+         dMXg==
+X-Gm-Message-State: AOJu0YzCIQsPUaGquuvILmpjKcW3DKLfqMKoXt/e5419e1LZQGE2zraL
+	S34c243IP8mFh6SyIKi7KQEHXTX8/DXM450xyhH+lvQ3AyKASBUX8MX54/aE6Erdq95pJpiv1Bk
+	VFnxwIkvRFXTFl6ZtG4KI7D0hW8aR4Ugb6CA2BLfzobd373l7JNEDAXZSfHzlctqg4TQmrNtV1P
+	2VSCOL4ibXBA==
+X-Google-Smtp-Source: AGHT+IG0ywRzCE6ftZEpJy8/WhY/ByjgTVhbCOOPeDrCD1Lctprt0OFrDKBuueQxISuyLYoHk+cLSw==
+X-Received: by 2002:a62:d44e:0:b0:6ce:2732:58f with SMTP id u14-20020a62d44e000000b006ce2732058fmr8902460pfl.64.1702587658541;
+        Thu, 14 Dec 2023 13:00:58 -0800 (PST)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm11904303pgb.30.2023.12.14.13.00.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 12:42:43 -0800 (PST)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@lst.de>,
-	Daejun Park <daejun7.park@samsung.com>,
-	Kanchan Joshi <joshi.k@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Douglas Gilbert <dgilbert@interlog.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v6 20/20] scsi: scsi_debug: Maintain write statistics per group number
-Date: Thu, 14 Dec 2023 12:40:53 -0800
-Message-ID: <20231214204119.3670625-21-bvanassche@acm.org>
-X-Mailer: git-send-email 2.43.0.472.g3155946c3a-goog
-In-Reply-To: <20231214204119.3670625-1-bvanassche@acm.org>
-References: <20231214204119.3670625-1-bvanassche@acm.org>
+        Thu, 14 Dec 2023 13:00:56 -0800 (PST)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 0/6] mpi3mr:  Support PCIe Error Recovery
+Date: Fri, 15 Dec 2023 02:28:54 +0530
+Message-Id: <20231214205900.270488-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="0000000000009d9b62060c7e9451"
+
+--0000000000009d9b62060c7e9451
 Content-Transfer-Encoding: 8bit
 
-Track per GROUP NUMBER how many write commands have been processed. Make
-this information available in sysfs. Reset these statistics if any data
-is written into the sysfs attribute.
+Patches are related to "Advance Error Recovery"
+and are tightly coupled and the remaining two patches are defect fix.
 
-Note: SCSI devices should only interpret the information in the GROUP
-NUMBER field as a stream identifier if the ST_ENBLE bit has been set to
-one. This patch follows a simpler approach: count the number of writes
-per GROUP NUMBER whether or not the group number represents a stream
-identifier.
+v1->v2:
+- AER patch split as suggested by Bjorn Helgaas
+- Updated driver version to a new value
 
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Tested-by: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_debug.c | 49 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 45 insertions(+), 4 deletions(-)
+Ranjan Kumar (6):
+  mpi3mr: Creation of helper function
+  mpi3mr: Support PCIe Error Recovery callback handlers
+  mpi3mr: Prevent PCI writes from driver during PCI error recovery
+  mpi3mr: Improve Shutdown times when firmware has faulted
+  mpi3mr: Reset stop_bsgs flag post controller reset failure
+  mpi3mr: Update driver version to 8.6.1.0.50
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index b2146f24f396..8eeed19adcce 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -899,6 +899,8 @@ static int sdeb_zbc_nr_conv = DEF_ZBC_NR_CONV_ZONES;
- static int submit_queues = DEF_SUBMIT_QUEUES;  /* > 1 for multi-queue (mq) */
- static int poll_queues; /* iouring iopoll interface.*/
- 
-+static atomic_long_t writes_by_group_number[64];
-+
- static char sdebug_proc_name[] = MY_NAME;
- static const char *my_name = MY_NAME;
- 
-@@ -3385,7 +3387,8 @@ static inline struct sdeb_store_info *devip2sip(struct sdebug_dev_info *devip,
- 
- /* Returns number of bytes copied or -1 if error. */
- static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
--			    u32 sg_skip, u64 lba, u32 num, bool do_write)
-+			    u32 sg_skip, u64 lba, u32 num, bool do_write,
-+			    u8 group_number)
- {
- 	int ret;
- 	u64 block, rest = 0;
-@@ -3404,6 +3407,10 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
- 		return 0;
- 	if (scp->sc_data_direction != dir)
- 		return -1;
-+
-+	if (do_write && group_number < ARRAY_SIZE(writes_by_group_number))
-+		atomic_long_inc(&writes_by_group_number[group_number]);
-+
- 	fsp = sip->storep;
- 
- 	block = do_div(lba, sdebug_store_sectors);
-@@ -3777,7 +3784,7 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		}
- 	}
- 
--	ret = do_device_access(sip, scp, 0, lba, num, false);
-+	ret = do_device_access(sip, scp, 0, lba, num, false, 0);
- 	sdeb_read_unlock(sip);
- 	if (unlikely(ret == -1))
- 		return DID_ERROR << 16;
-@@ -3962,6 +3969,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- {
- 	bool check_prot;
- 	u32 num;
-+	u8 group = 0;
- 	u32 ei_lba;
- 	int ret;
- 	u64 lba;
-@@ -3973,11 +3981,13 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		ei_lba = 0;
- 		lba = get_unaligned_be64(cmd + 2);
- 		num = get_unaligned_be32(cmd + 10);
-+		group = cmd[14] & 0x3f;
- 		check_prot = true;
- 		break;
- 	case WRITE_10:
- 		ei_lba = 0;
- 		lba = get_unaligned_be32(cmd + 2);
-+		group = cmd[6] & 0x3f;
- 		num = get_unaligned_be16(cmd + 7);
- 		check_prot = true;
- 		break;
-@@ -3992,15 +4002,18 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		ei_lba = 0;
- 		lba = get_unaligned_be32(cmd + 2);
- 		num = get_unaligned_be32(cmd + 6);
-+		group = cmd[6] & 0x3f;
- 		check_prot = true;
- 		break;
- 	case 0x53:	/* XDWRITEREAD(10) */
- 		ei_lba = 0;
- 		lba = get_unaligned_be32(cmd + 2);
-+		group = cmd[6] & 0x1f;
- 		num = get_unaligned_be16(cmd + 7);
- 		check_prot = false;
- 		break;
- 	default:	/* assume WRITE(32) */
-+		group = cmd[6] & 0x3f;
- 		lba = get_unaligned_be64(cmd + 12);
- 		ei_lba = get_unaligned_be32(cmd + 20);
- 		num = get_unaligned_be32(cmd + 28);
-@@ -4055,7 +4068,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		}
- 	}
- 
--	ret = do_device_access(sip, scp, 0, lba, num, true);
-+	ret = do_device_access(sip, scp, 0, lba, num, true, group);
- 	if (unlikely(scsi_debug_lbp()))
- 		map_region(sip, lba, num);
- 	/* If ZBC zone then bump its write pointer */
-@@ -4107,12 +4120,14 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 	u32 lb_size = sdebug_sector_size;
- 	u32 ei_lba;
- 	u64 lba;
-+	u8 group;
- 	int ret, res;
- 	bool is_16;
- 	static const u32 lrd_size = 32; /* + parameter list header size */
- 
- 	if (cmd[0] == VARIABLE_LENGTH_CMD) {
- 		is_16 = false;
-+		group = cmd[6] & 0x3f;
- 		wrprotect = (cmd[10] >> 5) & 0x7;
- 		lbdof = get_unaligned_be16(cmd + 12);
- 		num_lrd = get_unaligned_be16(cmd + 16);
-@@ -4123,6 +4138,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		lbdof = get_unaligned_be16(cmd + 4);
- 		num_lrd = get_unaligned_be16(cmd + 8);
- 		bt_len = get_unaligned_be32(cmd + 10);
-+		group = cmd[14] & 0x3f;
- 		if (unlikely(have_dif_prot)) {
- 			if (sdebug_dif == T10_PI_TYPE2_PROTECTION &&
- 			    wrprotect) {
-@@ -4211,7 +4227,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 			}
- 		}
- 
--		ret = do_device_access(sip, scp, sg_off, lba, num, true);
-+		ret = do_device_access(sip, scp, sg_off, lba, num, true, group);
- 		/* If ZBC zone then bump its write pointer */
- 		if (sdebug_dev_is_zoned(devip))
- 			zbc_inc_wp(devip, lba, num);
-@@ -7306,6 +7322,30 @@ static ssize_t tur_ms_to_ready_show(struct device_driver *ddp, char *buf)
- }
- static DRIVER_ATTR_RO(tur_ms_to_ready);
- 
-+static ssize_t group_number_stats_show(struct device_driver *ddp, char *buf)
-+{
-+	char *p = buf, *end = buf + PAGE_SIZE;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(writes_by_group_number); i++)
-+		p += scnprintf(p, end - p, "%d %ld\n", i,
-+			       atomic_long_read(&writes_by_group_number[i]));
-+
-+	return p - buf;
-+}
-+
-+static ssize_t group_number_stats_store(struct device_driver *ddp,
-+					const char *buf, size_t count)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(writes_by_group_number); i++)
-+		atomic_long_set(&writes_by_group_number[i], 0);
-+
-+	return count;
-+}
-+static DRIVER_ATTR_RW(group_number_stats);
-+
- /* Note: The following array creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-    files (over those found in the /sys/module/scsi_debug/parameters
-@@ -7352,6 +7392,7 @@ static struct attribute *sdebug_drv_attrs[] = {
- 	&driver_attr_cdb_len.attr,
- 	&driver_attr_tur_ms_to_ready.attr,
- 	&driver_attr_zbc.attr,
-+	&driver_attr_group_number_stats.attr,
- 	NULL,
- };
- ATTRIBUTE_GROUPS(sdebug_drv);
+ drivers/scsi/mpi3mr/mpi3mr.h           |  36 ++-
+ drivers/scsi/mpi3mr/mpi3mr_app.c       |  64 ++---
+ drivers/scsi/mpi3mr/mpi3mr_fw.c        |  65 +++--
+ drivers/scsi/mpi3mr/mpi3mr_os.c        | 322 +++++++++++++++++++++----
+ drivers/scsi/mpi3mr/mpi3mr_transport.c |  39 ++-
+ 5 files changed, 435 insertions(+), 91 deletions(-)
+
+-- 
+2.31.1
+
+
+--0000000000009d9b62060c7e9451
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+GK2Ee6ez7fr/FL1RWbOPVHJR+deNIorOjW7U5HVwnRYhM1OR4mAkrkqcN+3kwae0KmVO3SDKFd7h
+Ok4L2e1ixyaRTo379Ur3iVTnagglDOliayMGRITBPe0CAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU8WuEiYXvpeCaubgLCCFoyRBc
+8QwwDQYJKoZIhvcNAQELBQADggEBAA5th3yz1fvJCBmK21x68IdDNFC0gmynT76I3fOgslLHc7ey
+lC9VXLb+vJ863blS/WxEOwf0fvc0ks7qYWl8xisInHu5AX9glaooGhLImlzE0l9rDf0tcq2kkgc4
+CXL9UGDEoqdxfRj3j9xn9fm9gpTBWSck6ufc/8RV1TLVjcZvrYkMqQwoVulGkr+HCnzaEFxBRmO/
+nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
+0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGuIyPm4haSaFTVK9fdNAoEN1gkW/iC7
+Gah2qnl4cUquMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIx
+NDIxMDA1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQCApcnq6WPSQACgdibSCKHbp35ZyCWp62gAD15/M++7KB5/uxpR
+4cdBBpCus6NbTFt7nYugMZ8z0t18EmVhS58H5+E4iT8aNsZ1vQX/t0hSV0yzx6OSfPVp4+B+5XNM
+SEZpAgD+Ro8t51IrfCRnx9zQfuPxyYvPnVfwiIknhqhAYimKC6IXiThn/uR9B95Qanfxpi/2z/Vk
+R66XeU5wmYduExEasZRMAbletY0NAMCZ1kdPcwGTO+pf3J8tPXI7TEIcgau2R7shf+2nc2V6iVi3
+o6INNN5NXwvUJC9UFU7O//dIY6AekkOYK20xy8JvX0qtFlIglcthE/CHeOCZzSbK
+--0000000000009d9b62060c7e9451--
