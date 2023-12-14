@@ -1,44 +1,44 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 317291110
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 21:00:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9BB72DF66
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 21:01:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HEuxWV1s"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6cebcf8a48aso7366128b3a.3
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 13:00:59 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="W3uvO2FP"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6d267461249so584228b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 13:01:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1702587659; x=1703192459; darn=vger.kernel.org;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=WMvmr17AS1d3oqU7eLfifrh7kOOTHbToiHUspPgycsQ=;
-        b=HEuxWV1sOgf1iDmE0J4NY7O/CgI2TOWHSESHRDnvXgZr2vE0Ig9pT2djSYS51pBlmk
-         esW3hg4lC6yOqJ+j8ZJ6w0lmSu/Ht0aOF4iundnLXYvKqe3AT1DeW3n29/lihg8YDUoE
-         kyzWiA2yaPJbioeE47Mb8ud09KjL/eq6df8jw=
+        d=broadcom.com; s=google; t=1702587662; x=1703192462; darn=vger.kernel.org;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=MdLtQ6r57qyKuA0ogKBq5zfOsRV+jdFJgmY9lNl5pGk=;
+        b=W3uvO2FP410N/DqoU/lUQCVwficRFnDD28lkfXtmqgDJ0YAbCSb+v8mutUdeanZcVc
+         fA7h8cJ4d7Wg+KgedMxxza7eXe3oQMDfhHJKOZ9wYDWAt6kW712/W0ok3IAZib1PlvoV
+         AjE5cebxmqvCz1EZfEMEEiuBYxSrBx2qfccrY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702587659; x=1703192459;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=WMvmr17AS1d3oqU7eLfifrh7kOOTHbToiHUspPgycsQ=;
-        b=Uk7jBVG3ULMp5z/xjQ939Gl9Nckx0JyYSEYDAMPMpTO5shPTyz3xndvD+oxFnW3rqn
-         3U+vz6/NTJpDaaO4shRom1deVKVezMuA0yrCM8XWnO+8HmkkZv6Hzi8Fw2WauYBVSRJN
-         q4Uqu+mclQ+5178sRUWaUm9ns9rBelD2ADlaWIRk+JNuqrFLlk9/ivc3U6ztv0fAz78C
-         3ApEWKH53VqC+92lYzGiN6iQWeJGuKOfLK4TiUACNeevdjCj3dxAu6KClDHoR78IdGVQ
-         sWe0aRyB+1tDibIGGov51QXkHnPCz56K/BZNZcwurZ2kVQSVuxlVwW0wpBFm37zN194T
-         dMXg==
-X-Gm-Message-State: AOJu0YzCIQsPUaGquuvILmpjKcW3DKLfqMKoXt/e5419e1LZQGE2zraL
-	S34c243IP8mFh6SyIKi7KQEHXTX8/DXM450xyhH+lvQ3AyKASBUX8MX54/aE6Erdq95pJpiv1Bk
-	VFnxwIkvRFXTFl6ZtG4KI7D0hW8aR4Ugb6CA2BLfzobd373l7JNEDAXZSfHzlctqg4TQmrNtV1P
-	2VSCOL4ibXBA==
-X-Google-Smtp-Source: AGHT+IG0ywRzCE6ftZEpJy8/WhY/ByjgTVhbCOOPeDrCD1Lctprt0OFrDKBuueQxISuyLYoHk+cLSw==
-X-Received: by 2002:a62:d44e:0:b0:6ce:2732:58f with SMTP id u14-20020a62d44e000000b006ce2732058fmr8902460pfl.64.1702587658541;
-        Thu, 14 Dec 2023 13:00:58 -0800 (PST)
+        d=1e100.net; s=20230601; t=1702587662; x=1703192462;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MdLtQ6r57qyKuA0ogKBq5zfOsRV+jdFJgmY9lNl5pGk=;
+        b=BSIatwr0RzvHQyU/G/iVRvICRz7DEq5jz01iBwNLh3dnFeyq1W2B0V6jDh62oaYmYE
+         9AcfykYXRPwpfpv3oNvEdTguv1Td4WJ2tGtuIlx9+ujUNP9bKfqBSltEYqsBQX90QDab
+         9sAZgpTeHvIDg8O0twPyFmTvj/kFUW3TQ33RVSttB8KzLa2+joJ7vzg6+jOrKsxkTOzR
+         4vnJC2YZEIJ7AgtGX94Ogbrqlw0NyysBUdzotgpETBLmC5jDTWXehH++n3E3z1/VHuxD
+         HR/bcmLsCJib7Lm9nU1x+DB7leZzG+MtSi4yXdy2rKvZm8AcYSPgbRmxY1rENSH9JCPT
+         s48Q==
+X-Gm-Message-State: AOJu0Yx/N4WnfnkkLIad4LL825apkCCsj2uhA3xxOHAcNyPjOUyN/Aom
+	b760EDskAJkCmXK/MKunRmMO8O+I6kYHfqZi2X131Cs724QBt6fRauGPKJ7EJmTdvkJSM6QyU/n
+	l35ie3j4GAd1ngSCH0EB3ZT1f8zWHgDgA1xij2WV8qhProkzP8FSqWpvPh90AJGSGXB3UwD/ew6
+	JMzMd6PAOvOw==
+X-Google-Smtp-Source: AGHT+IE518HiBlXymt/MejxnVwizYC5xhHPpCrq5UH9/vVHGO01H7bTJu+IivEcNHPhZSKeoSNy4EA==
+X-Received: by 2002:a05:6a00:4601:b0:6cb:6a27:ab57 with SMTP id ko1-20020a056a00460100b006cb6a27ab57mr5686252pfb.14.1702587662002;
+        Thu, 14 Dec 2023 13:01:02 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm11904303pgb.30.2023.12.14.13.00.54
+        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm11904303pgb.30.2023.12.14.13.00.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 13:00:56 -0800 (PST)
+        Thu, 14 Dec 2023 13:01:01 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -48,10 +48,12 @@ Cc: rajsekhar.chundru@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v2 0/6] mpi3mr:  Support PCIe Error Recovery
-Date: Fri, 15 Dec 2023 02:28:54 +0530
-Message-Id: <20231214205900.270488-1-ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 1/6] mpi3mr: Creation of helper function
+Date: Fri, 15 Dec 2023 02:28:55 +0530
+Message-Id: <20231214205900.270488-2-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20231214205900.270488-1-ranjan.kumar@broadcom.com>
+References: <20231214205900.270488-1-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -59,38 +61,139 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000009d9b62060c7e9451"
+	boundary="000000000000d53335060c7e940b"
 
---0000000000009d9b62060c7e9451
+--000000000000d53335060c7e940b
 Content-Transfer-Encoding: 8bit
 
-Patches are related to "Advance Error Recovery"
-and are tightly coupled and the remaining two patches are defect fix.
+Use of helper function to get controller and shost details.
 
-v1->v2:
-- AER patch split as suggested by Bjorn Helgaas
-- Updated driver version to a new value
+Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 54 ++++++++++++++++++++++++++-------
+ 1 file changed, 43 insertions(+), 11 deletions(-)
 
-Ranjan Kumar (6):
-  mpi3mr: Creation of helper function
-  mpi3mr: Support PCIe Error Recovery callback handlers
-  mpi3mr: Prevent PCI writes from driver during PCI error recovery
-  mpi3mr: Improve Shutdown times when firmware has faulted
-  mpi3mr: Reset stop_bsgs flag post controller reset failure
-  mpi3mr: Update driver version to 8.6.1.0.50
-
- drivers/scsi/mpi3mr/mpi3mr.h           |  36 ++-
- drivers/scsi/mpi3mr/mpi3mr_app.c       |  64 ++---
- drivers/scsi/mpi3mr/mpi3mr_fw.c        |  65 +++--
- drivers/scsi/mpi3mr/mpi3mr_os.c        | 322 +++++++++++++++++++++----
- drivers/scsi/mpi3mr/mpi3mr_transport.c |  39 ++-
- 5 files changed, 435 insertions(+), 91 deletions(-)
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 1bffd629c124..76ba31a9517d 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5230,6 +5230,35 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return retval;
+ }
+ 
++/**
++ * mpi3mr_get_shost_and_mrioc - get shost and ioc reference if
++ *                     they are valid
++ * @pdev: PCI device struct
++ * @shost: address to store scsi host reference
++ * @mrioc: address store HBA adapter reference
++ *
++ * Return: 0 if *shost and *ioc are not NULL otherwise -1.
++ */
++
++static int
++mpi3mr_get_shost_and_mrioc(struct pci_dev *pdev,
++	struct Scsi_Host **shost, struct mpi3mr_ioc **mrioc)
++{
++	*shost = pci_get_drvdata(pdev);
++	if (*shost == NULL) {
++		dev_err(&pdev->dev, "pdev's driver data is null\n");
++		return -ENXIO;
++	}
++
++	*mrioc = shost_priv(*shost);
++	if (*mrioc == NULL) {
++		dev_err(&pdev->dev, "shost's private data is null\n");
++		*shost = NULL;
++		return -ENXIO;
++		}
++	return 0;
++}
++
+ /**
+  * mpi3mr_remove - PCI remove callback
+  * @pdev: PCI device instance
+@@ -5242,7 +5271,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+  */
+ static void mpi3mr_remove(struct pci_dev *pdev)
+ {
+-	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct Scsi_Host *shost;
+ 	struct mpi3mr_ioc *mrioc;
+ 	struct workqueue_struct	*wq;
+ 	unsigned long flags;
+@@ -5250,7 +5279,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+ 	struct mpi3mr_hba_port *port, *hba_port_next;
+ 	struct mpi3mr_sas_node *sas_expander, *sas_expander_next;
+ 
+-	if (!shost)
++	if (mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc))
+ 		return;
+ 
+ 	mrioc = shost_priv(shost);
+@@ -5328,12 +5357,12 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+  */
+ static void mpi3mr_shutdown(struct pci_dev *pdev)
+ {
+-	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct Scsi_Host *shost;
+ 	struct mpi3mr_ioc *mrioc;
+ 	struct workqueue_struct	*wq;
+ 	unsigned long flags;
+ 
+-	if (!shost)
++	if (mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc))
+ 		return;
+ 
+ 	mrioc = shost_priv(shost);
+@@ -5361,17 +5390,19 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
+  * Change the power state to the given value and cleanup the IOC
+  * by issuing MUR and shutdown notification
+  *
+- * Return: 0 always.
++ * Return: 0 on success, non-zero on failure
+  */
+ static int __maybe_unused
+ mpi3mr_suspend(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct Scsi_Host *shost;
+ 	struct mpi3mr_ioc *mrioc;
++	int rc;
+ 
+-	if (!shost)
+-		return 0;
++	rc = mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc);
++	if (rc)
++		return rc;
+ 
+ 	mrioc = shost_priv(shost);
+ 	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
+@@ -5402,13 +5433,14 @@ static int __maybe_unused
+ mpi3mr_resume(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct Scsi_Host *shost;
+ 	struct mpi3mr_ioc *mrioc;
+ 	pci_power_t device_state = pdev->current_state;
+ 	int r;
+ 
+-	if (!shost)
+-		return 0;
++	r = mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc);
++	if (r)
++		return r;
+ 
+ 	mrioc = shost_priv(shost);
+ 
 -- 
 2.31.1
 
 
---0000000000009d9b62060c7e9451
+--000000000000d53335060c7e940b
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -161,13 +264,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGuIyPm4haSaFTVK9fdNAoEN1gkW/iC7
-Gah2qnl4cUquMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIx
-NDIxMDA1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIF12UP572Nm7uXa+qUJKJ37ekMBV2us9
+0uzwRrQUYW0IMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIx
+NDIxMDEwMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCApcnq6WPSQACgdibSCKHbp35ZyCWp62gAD15/M++7KB5/uxpR
-4cdBBpCus6NbTFt7nYugMZ8z0t18EmVhS58H5+E4iT8aNsZ1vQX/t0hSV0yzx6OSfPVp4+B+5XNM
-SEZpAgD+Ro8t51IrfCRnx9zQfuPxyYvPnVfwiIknhqhAYimKC6IXiThn/uR9B95Qanfxpi/2z/Vk
-R66XeU5wmYduExEasZRMAbletY0NAMCZ1kdPcwGTO+pf3J8tPXI7TEIcgau2R7shf+2nc2V6iVi3
-o6INNN5NXwvUJC9UFU7O//dIY6AekkOYK20xy8JvX0qtFlIglcthE/CHeOCZzSbK
---0000000000009d9b62060c7e9451--
+ATANBgkqhkiG9w0BAQEFAASCAQDImH03UfWgF5P+8Z4H+ZFm+MalxhdPfs33LvlAG+emTuRCJlQR
+jiMjzdy0TFYa7s6AWXq6CURpqWu1pK75XM3mJQfrIk24ugaZNAzV2UH13Awq8T1GsznvvBE94Aas
+tnU4HZNVaafLpAUymm49kmNKfcuMnVw6YjabzqO47F9AnKBloZzcXRI84eygp4UxYkbXGIMki8K7
+Za/pipN8ZKOj6Q6mxRdKOnv0/adK8vd4fzswbrmgjcNSxNW6B2mv8NHgsyD2BWpl1Pwa1QXVTeHQ
+WeeRiRpy5kjJFhXASvY+4XNbss2z7j7R7zMjCgfNB4FZ4IRcy+lpDJS8ViMF+v/2
+--000000000000d53335060c7e940b--
