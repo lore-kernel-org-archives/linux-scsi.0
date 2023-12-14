@@ -1,118 +1,107 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53D2C3F8ED;
+	Thu, 14 Dec 2023 12:05:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VyAvHfJh"
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83E3DBD
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 02:46:14 -0800 (PST)
-Received: by mail-wr1-x433.google.com with SMTP id ffacd0b85a97d-3364ab04eb8so179321f8f.2
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 02:46:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1702550773; x=1703155573; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=CvWOWuJlXBUzyg9eDna4F2YgGHQHVoXVeHQtMyBjyWQ=;
-        b=VyAvHfJhSkLo1DyJsTQF2U6W0yK+OJ+u79FSInBJ7xGrV9kjjoyOwqOTCI5rlLYYRc
-         j5b/ZEWqXzrZDlkK10Kvr9O6WpZjtPR+oWvW/5seQHwue7tYD1ru2GNskwalLezxvo9A
-         Wq9LCo+w0tgoYkAL2/PbWqQy64JPC3kM5RtOOSaSBxq9ykslvA+neBPaJFh6dPv0lPz6
-         TCxJLu0+zuFCwHd94UQ1IjfIucOK8JqXfq8uS8nKi8ZjekstvR8AFxJ0fC5ESj2vzXv0
-         q+9ak7Eie0cGbPWAyue0pclv8xkGNdTFbmAp+OxN/yqc9so1p7RoTO9da8Ap83cDd/cF
-         iNRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702550773; x=1703155573;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CvWOWuJlXBUzyg9eDna4F2YgGHQHVoXVeHQtMyBjyWQ=;
-        b=FqZuxVcNLKFHGIprL04m8Shu/5cMtI+KAJIaPkh+l/3l3oUcCI6hXKC7YBlVSXd5Yq
-         yz8aY2wu9XKNomKkgceXd7/hbeYcjbN193Po1g+3Usu+2Hh1/BGsyjzscBIlRlUTTBCo
-         AONceZfqiicB/bEz8iF7fqZIMvFqnETmHvzj+fJ0tl+XejIOcSw9L76d39XK+DGpy2G+
-         GgmWm/BLruVS+cdvPA2ctNfc7wDQAbP96UguMdeLEF/nyEbr4Y7Jx5EOm99Vk4l2SeJ3
-         537VDaAUckc8s44soOHVgpWhSYHGWIIAALZH6/W5iJK1BAnh4oW0mIE1pEPLxn1uiEro
-         wirg==
-X-Gm-Message-State: AOJu0YykQTSuP32zJYOZ93gYE0iCBs40wBzzkvkXERSPSPf+7YRheiJA
-	qOVn45yG1IbreGORZaPkJNb2XA==
-X-Google-Smtp-Source: AGHT+IHypTimBY53/CeLVDHgOHr3fM/puN7zaUg9dYpsNFyw1F4zgUtmxfbfIc65ZvAkSoUTqTiwHQ==
-X-Received: by 2002:a5d:5192:0:b0:332:ffdb:e9ad with SMTP id k18-20020a5d5192000000b00332ffdbe9admr3336509wrv.46.1702550772982;
-        Thu, 14 Dec 2023 02:46:12 -0800 (PST)
-Received: from localhost ([102.140.209.237])
-        by smtp.gmail.com with ESMTPSA id o12-20020a5d474c000000b003333dd777a4sm15781290wrs.46.2023.12.14.02.46.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 02:46:12 -0800 (PST)
-Date: Thu, 14 Dec 2023 13:46:09 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Wei Yongjun <weiyongjun@huaweicloud.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>,
-	Chad Dupuis <chad.dupuis@qlogic.com>,
-	Saurav Kashyap <skashyap@marvell.com>,
-	Javed Hasan <jhasan@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: bnx2fc: Fix skb double free in bnx2fc_rcv()
-Message-ID: <0d50162c-b531-4cf9-a2e7-c2933791c0e5@moroto.mountain>
-References: <20221114110626.526643-1-weiyongjun@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MK7PEfFl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FAD3C433C8;
+	Thu, 14 Dec 2023 12:05:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702555514;
+	bh=PoZg7dwthRu54cxelOx2fInbC9KQc4SVNLq1rSG4o6M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=MK7PEfFlMM0ZUC6BHHY/7ZKtMjLkVdjBB0rIoWzcS960SBIFx1aio99zaaXMow0CW
+	 wFS11QMbL5aie76SfTiI4hF/lzG4s3XaBDskL8VTDbPz7UZN3pbsskt5VDufjW0csG
+	 QLRWUMAOu0ZgjOz52xiBXi9cLIMVCKTey3Eb51KG+cmgPE65Yn8c6xWpXJNFMTs7s2
+	 6UU+aADoti+YI0Y5nSw8JOvfVcLtU27DPxaN+lZXUqK6K2owF3F5vRSPfThPE5DCMp
+	 y1aKFI7Q0i6GcbkdptK+qHOHTenDerzKRVUrciC2zg1kLvJ/rCluQ2qkoN9PG23Ajg
+	 b5M6OQT/8SYRA==
+Date: Thu, 14 Dec 2023 17:34:59 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Chanwoo Lee <cw9316.lee@samsung.com>
+Cc: agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	p.zabel@pengutronix.de, linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	grant.jung@samsung.com, jt77.jang@samsung.com,
+	dh0421.hwang@samsung.com, sh043.lee@samsung.com,
+	Andrew Halaney <ahalaney@redhat.com>
+Subject: Re: [PATCH v2] scsi: ufs: qcom: Re-fix for error handling
+Message-ID: <20231214120459.GD48078@thinkpad>
+References: <CGME20231214021405epcas1p3cef80b85df56b7bead7f2f2ebd52f4ac@epcas1p3.samsung.com>
+ <20231214021401.26474-1-cw9316.lee@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221114110626.526643-1-weiyongjun@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231214021401.26474-1-cw9316.lee@samsung.com>
 
-What ever happened to this patch?  I was reviewing old use after free
-static checker warnings (Smatch) and came across it.  The patch looks
-correct to me (I wrote the exact same patch myself before seeing this
-one on lore).
-
-regards,
-dan carpenter
-
-
-On Mon, Nov 14, 2022 at 11:06:26AM +0000, Wei Yongjun wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
+On Thu, Dec 14, 2023 at 11:14:01AM +0900, Chanwoo Lee wrote:
+> From: ChanWoo Lee <cw9316.lee@samsung.com>
 > 
-> skb_share_check() already drop the reference of skb when return
-> NULL, using kfree_skb() in the error handling path lead to skb
-> double free.
+> I modified the code to handle errors.
 > 
-> Fix it by remve the variable tmp_skb, and return directly when
-> skb_share_check() return NULL.
+> The error handling code has been changed from the patch below.
+> -'commit 031312dbc695 ("scsi: ufs: ufs-qcom: Remove unnecessary goto statements")'
 > 
-> Fixes: 01a4cc4d0cd6 ("bnx2fc: do not add shared skbs to the fcoe_rx_list")
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> This is the case I checked.
+> * ufs_qcom_clk_scale_notify -> 'ufs_qcom_clk_scale_up_/down_pre_change' error -> return 0;
+> 
+> It is unknown whether the above commit was intended to change error handling.
+> However, if it is not an intended fix, a patch may be needed.
+> 
+
+Fixes: 031312dbc695 ("scsi: ufs: ufs-qcom: Remove unnecessary goto statements")
+
+> Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+Thanks for spotting and fixing the issue! This is one of the reasons why the
+error path should directly return instead of slipping.
+
+- Mani
+
+> Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
 > ---
->  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 9 +++------
->  1 file changed, 3 insertions(+), 6 deletions(-)
+> v1->v2: Remove things already in progress
+>  1) ufs_qcom_host_reset -> 'reset_control_deassert' error -> return 0;
+>    -> https://lore.kernel.org/linux-arm-msm/20231208065902.11006-8-manivannan.sadhasivam@linaro.org/#t
+>  2) ufs_qcom_init_lane_clks -> 'ufs_qcom_host_clk_get(tx_lane1_sync_clk)' error -> return 0;
+>    -> https://lore.kernel.org/linux-arm-msm/20231208065902.11006-2-manivannan.sadhasivam@linaro.org/
+> ---
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index 05ddbb9bb7d8..451a58e0fd96 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -429,7 +429,6 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
->  	struct fcoe_ctlr *ctlr;
->  	struct fcoe_rcv_info *fr;
->  	struct fcoe_percpu_s *bg;
-> -	struct sk_buff *tmp_skb;
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 96cb8b5b4e66..17e24270477d 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1516,9 +1516,11 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+>  			err = ufs_qcom_clk_scale_up_pre_change(hba);
+>  		else
+>  			err = ufs_qcom_clk_scale_down_pre_change(hba);
+> -		if (err)
+> -			ufshcd_uic_hibern8_exit(hba);
 >  
->  	interface = container_of(ptype, struct bnx2fc_interface,
->  				 fcoe_packet_type);
-> @@ -441,11 +440,9 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
->  		goto err;
->  	}
->  
-> -	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
-> -	if (!tmp_skb)
-> -		goto err;
-> -
-> -	skb = tmp_skb;
-> +	skb = skb_share_check(skb, GFP_ATOMIC);
-> +	if (!skb)
-> +		return -1;
->  
->  	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
->  		printk(KERN_ERR PFX "bnx2fc_rcv: Wrong FC type frame\n");
+> +		if (err) {
+> +			ufshcd_uic_hibern8_exit(hba);
+> +			return err;
+> +		}
+>  	} else {
+>  		if (scale_up)
+>  			err = ufs_qcom_clk_scale_up_post_change(hba);
 > -- 
-> 2.34.1
+> 2.29.0
 > 
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
