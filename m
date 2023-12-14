@@ -1,172 +1,151 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="CLQMHNkg"
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A248BE8
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Dec 2023 17:25:06 -0800 (PST)
-Received: by mail-ej1-x62d.google.com with SMTP id a640c23a62f3a-a1c7d8f89a5so1003048166b.2
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Dec 2023 17:25:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1702517105; x=1703121905; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JHMtuMnMAbDQ3tdue8zOZbOg6oc/EvH9admOYuIg/XM=;
-        b=CLQMHNkgx49CAyQjPOw+Cxufa1zazaZ2py7fEQ25e979Mvf9HqcedQYJgTo6qAzkz0
-         dgFR98pe5bS+EuAKtL9kw9IK9sjnamnR8WbRqCHDeI2zfww/eMIy+aearqlEv1LNAEo2
-         EMiS28vMv1yO+k0AcH0X+/T9ccGguwPL+ylQah/Ft3OYMmWFxmGTpeqRG1uzY3FEFy+I
-         xcOlIYNMjAymiBEKWocjV9TPr9njW41ptuzkSBEF4wupU3uAUlmt9Z2HmIXHYSJnjDD7
-         mTNhnisKrCsJMyABLVyj3/ZY++XQP1HubbAc/S71gXb4JlWIEuhc7BJOjYSxWkOT1Ux0
-         1r4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702517105; x=1703121905;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JHMtuMnMAbDQ3tdue8zOZbOg6oc/EvH9admOYuIg/XM=;
-        b=tZzKsHiFUrVJ5hHPgxxogbYd1vD9p4hW6jiW/rojr2in8GptoL/rWArxY2iPeQR+1b
-         Lh5VK665rASvtuTPtiMEnSJBRXhN+QQeuEZPp/KUj/qYyYM6mAlRD8lv1W7CCuYE9OxH
-         O3aITvaLi6STuV7GBcVCqn98O8o6NYlmXbzUuzAYe0yxveKUMopgbiMou7QES1WH811j
-         Xl3p6wa16q4yYPXC8nAAqLKDYzJ7DcOWes6tTKWZems73e2p2rq9jjKAWU4XrCTwaSYN
-         ZHx5ffgMJpQ4kKWeHDTpU7VPRYDg0djK6xSfj7810BSks6vgF3N9RfsnTNbkSe2ujUq4
-         ZUpQ==
-X-Gm-Message-State: AOJu0YyTmexqikqMP/RIe6Jd/2HBXRfjtXeOizfvd37SQEBaTIqGuug2
-	9VWlX3z5qPzZz4p8GyWHg4dF+9z+AK5U3pRikndnSg==
-X-Google-Smtp-Source: AGHT+IFWUSOgvKQH/lpoBb9AWGFJExhyJXNjlM/yqrWkKEXGrBGgzCmXIMqd8P1tH8OOMIxFiqgvteFOgFnaALUsdoA=
-X-Received: by 2002:a17:906:739b:b0:a22:f37a:b425 with SMTP id
- f27-20020a170906739b00b00a22f37ab425mr1292007ejl.61.1702517105116; Wed, 13
- Dec 2023 17:25:05 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="d4gQcron"
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5892FBD
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Dec 2023 18:14:11 -0800 (PST)
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20231214021407epoutp02ce2033f9309cbf89cc60e8f50e68d5bb~gkPZiaTtf1965619656epoutp02g
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 02:14:07 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20231214021407epoutp02ce2033f9309cbf89cc60e8f50e68d5bb~gkPZiaTtf1965619656epoutp02g
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1702520047;
+	bh=b5/GFqSR2OKWfDwUZwg7iNYOv07a+Rk2uyiw5sDY0+M=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=d4gQcronWbN8/7aqED+PRixLmI09AR9Zv4LTeIsAQFuJXKxUghhC8WW1eTLXqqr9b
+	 9Zmh+CqyT8PeLSPdAG4cC3qMq1+vU4gNJaDEOpWn0a7FLlPs3H/ExuzsI5ZTr6W2wd
+	 OiFv+FDRJcX0kFxqQrmFzPAWhYRfJGz8VJvZd+yw=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTP id
+	20231214021406epcas1p4ea5a807d4b6edc0fe361344a50ff6c4d~gkPY1dQSG0793307933epcas1p4Q;
+	Thu, 14 Dec 2023 02:14:06 +0000 (GMT)
+Received: from epsmgec1p1.samsung.com (unknown [182.195.38.242]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4SrGB56ShFz4x9Q2; Thu, 14 Dec
+	2023 02:14:05 +0000 (GMT)
+Received: from epcas1p3.samsung.com ( [182.195.41.47]) by
+	epsmgec1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	F2.5E.09731.DE46A756; Thu, 14 Dec 2023 11:14:05 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
+	20231214021405epcas1p3cef80b85df56b7bead7f2f2ebd52f4ac~gkPYDUQ9o1539715397epcas1p3t;
+	Thu, 14 Dec 2023 02:14:05 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20231214021405epsmtrp12e3823d82bec7125fe1f9a4df51f9f69~gkPYCGKgn1831318313epsmtrp1d;
+	Thu, 14 Dec 2023 02:14:05 +0000 (GMT)
+X-AuditID: b6c32a36-2ef8ea8000002603-3b-657a64edf331
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	C1.86.08817.DE46A756; Thu, 14 Dec 2023 11:14:05 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.253.100.232]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20231214021405epsmtip144edfc6369f29825e45063e1b1e10619~gkPXx8rdv3127431274epsmtip1Z;
+	Thu, 14 Dec 2023 02:14:05 +0000 (GMT)
+From: Chanwoo Lee <cw9316.lee@samsung.com>
+To: agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+	mani@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	p.zabel@pengutronix.de, linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, dh0421.hwang@samsung.com,
+	sh043.lee@samsung.com, ChanWoo Lee <cw9316.lee@samsung.com>, Andrew Halaney
+	<ahalaney@redhat.com>
+Subject: [PATCH v2] scsi: ufs: qcom: Re-fix for error handling
+Date: Thu, 14 Dec 2023 11:14:01 +0900
+Message-Id: <20231214021401.26474-1-cw9316.lee@samsung.com>
+X-Mailer: git-send-email 2.29.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1701540918.git.lduncan@suse.com> <dc0006176e90cf3fb90e5b1c1917b54fe07c91cd.1701540918.git.lduncan@suse.com>
- <ZXoOtgVZW_QpkU11@rhel-developer-toolbox-latest>
-In-Reply-To: <ZXoOtgVZW_QpkU11@rhel-developer-toolbox-latest>
-From: Lee Duncan <lduncan@suse.com>
-Date: Wed, 13 Dec 2023 17:24:54 -0800
-Message-ID: <CAPj3X_W5kOEOapG3F8NETBRzBmrQ1Lfudy7QGmCLXPT3UwUrkw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] scsi: target: iscsi: handle SCSI immediate commands
-To: Chris Leech <cleech@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, dbond@suse.com, hare@suse.de, 
-	michael.christie@oracle.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xbVRzHOb2Xey/DkkvH8KQkGzYjZhig5VFuFTaT4dIEWFAzSZaYckPP
+	oFLa2tsyB9HMIYUBsYwmbrw2JbBlzIWsMl7bKBalMBGdICBPyViIpMhAng6cpS26/36/3/l+
+	zvf3Ow8KE9wnhJRKY0B6DasWEfvw1p4jURGLynwkrl0RM4OPn+HM0he9gGktSWCuPDT5Ml0j
+	/STz904zydSPtfKY9vkBkimxtOHMJduPJDPUWUswZaPtBNP9tAkwNxz/8Jip6T6cubDdhb9J
+	y61NFwn55Mh9Ql5R3w3ky0/Gcbl5Ryxf6vqVkH/e0gTkf1kPplGncxKyEatE+lCkydQqVZqs
+	RFHyu4rjijipWBIhkTHxolANm4sSRUkpaREnVGrXAKLQPFZtdJXSWI4TRR1N0GuNBhSareUM
+	iSKkU6p1Ul0kx+ZyRk1WpAYZXpeIxdFxLmFGTvbd6UJSZ+N/tDKzBc6Db/xLgR8F6Vh4caEN
+	KwX7KAHdDuAFRx/uSVYALC1zkp5kHUCnZdx3D7n9QxnPs/AAwK3y3738KoA9G/NEKaAogg6H
+	E73Ju0AQvQOgeSpgV4PRVgDrawfcO+2nj8LNh5vYbozTYdDeuIbvxnz6Dbi62Ep63A7B7Zly
+	zFMPhP1Vc24N5qoX3q1xG0O6kYLXHRuEB0iCFmuNt9X9cMHR4t1ICP8wm0gPUAjgV06Hl64A
+	cHV5wksfg4VFhe4RMPoIbO6M8pRfgR3P6oDHOQD+uVbuuyuBNB+WmAQeyWFYWzpI7Hktjz32
+	9iCHpvVv3aiAfh+O3anCK8Ch6hfmqX5hnur/jb8EWBMIRjouNwtxEl30f/eaqc21AvczDpe2
+	g8rFp5F2wKOAHUAKEwXx+9vPIgFfyZ7LR3qtQm9UI84O4lwnfAkTHsjUuv6BxqCQxMrEsdLo
+	WCZGFiMVvcwfGM5DAjqLNaAchHRIv8fxKD/heV7I0q1rc4KbPh3rzZOXLa+qz8z3HVMG2IsC
+	Z4wPQMFo3Fv1OY9Sv+f6rDcantS9pO1dSlcqUjfCnD224cCQ9GR/bG52M4RcS0+pzIhv+FQS
+	4Oy/2kUiM1kdM/lxQYXq9GFN3Wxb6LTPvYbir98elL13Uliw2fFOcWc1fyin5NpikO7ezxuz
+	eOAJ/5+Kun/J+HBgftK4YLCcKmNem2r0q8k6aLpz9gNF/3Stfsunap0zP7/iP7z0SJyf/8ko
+	/8COI0+hih+qHG9xrh5v87v1fPs7YVjX9RFTm+m3k0IoOZc0bjvz2eWh4LibRewpbWrwbURN
+	2FJ0ydsyY7FtR6pLtk+LcC6blYRjeo79F2KkgRNPBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrBLMWRmVeSWpSXmKPExsWy7bCSnO7blKpUg4OzhSzOPf7NYvF+2jFG
+	i20dNhYzTrWxWuy7dpLd4tff9ewWi25sY7LY8fwMu0XH5O0sFhP3n2W3uLxrDptF9/UdbBYH
+	PqxitFh+/B+Txd17J1gsmv7sY3EQ8Ni0qpPN4861PWweExYdYPT4+PQWi0f/XwOP9/uusnn0
+	bVnF6PF5k1wARxSXTUpqTmZZapG+XQJXxtZ7zewF+3krPt3/ydjAuJm7i5GTQ0LARGLt6W6m
+	LkYuDiGB3YwSbSvbWCASUhK7959n62LkALKFJQ4fLoao+cQosfXVDLA4m4CWxO1j3iBxEYFO
+	Jom7B2aB9TIL7GCUuNLECGILC9hJ/Dj1gxnEZhFQlTi09CtYDa+AtcSXt9vYIXbJS/y538MM
+	EReUODnzCdQceYnmrbOZJzDyzUKSmoUktYCRaRWjZGpBcW56brFhgVFearlecWJucWleul5y
+	fu4mRnBkaGntYNyz6oPeIUYmDsZDjBIczEoivCd3lKcK8aYkVlalFuXHF5XmpBYfYpTmYFES
+	5/32ujdFSCA9sSQ1OzW1ILUIJsvEwSnVwCR46Upy+6/HldfzbHcwTJJgPjepQurNK8/5vX4P
+	zgosvt0y97ToqeVXN7hXnlhk6tZpqiMzqS6rcNr53LnTvHrWNqyWfv/i+KEmu0nbU4quycz8
+	c+6FtNmL9QX3JEINz9rdStqZnGVX1vzqkper2HnOxSp2ai8unQt/ufSq81ouo0m9Ieb7J+6K
+	ensp8a2tla+1bs76mddeX8jepGg/r6Kq87buCv0nsU1f11y9+KhZNOxtzVVd+7A/scXx/v4N
+	xnmHVJ9tnrOSTfRu5flt+VMW5O++O7dvQ/Rt45VdC+uqZ2QsTv1nZ3RFMDGJ+fKWHSxG2Tmm
+	T7XZkudWPLCQXaT2pfnCwUSLuqh5XUbXRU4osRRnJBpqMRcVJwIAGRtIxvsCAAA=
+X-CMS-MailID: 20231214021405epcas1p3cef80b85df56b7bead7f2f2ebd52f4ac
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: SVC_REQ_APPROVE
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20231214021405epcas1p3cef80b85df56b7bead7f2f2ebd52f4ac
+References: <CGME20231214021405epcas1p3cef80b85df56b7bead7f2f2ebd52f4ac@epcas1p3.samsung.com>
 
-Apologies on my first reply having HTML. I'm learning a new MUA.
+From: ChanWoo Lee <cw9316.lee@samsung.com>
 
-On Wed, Dec 13, 2023 at 12:06=E2=80=AFPM Chris Leech <cleech@redhat.com> wr=
-ote:
->
-> On Thu, Dec 07, 2023 at 09:42:34AM -0800, lduncan@suse.com wrote:
-> > From: Lee Duncan <lduncan@suse.com>
-> >
-> > Some iSCSI initiators send SCSI PDUs with the "immediate" bit
-> > set, and this is allowed according to RFC 3720. Commands with
-> > the "Immediate" bit set are called "immediate commands". From
-> > section 3.2.2.1. "Command Numbering and Acknowledging":
-> >
-> >    The target MUST NOT transmit a MaxCmdSN that is less than
-> >    ExpCmdSN-1.  For non-immediate commands, the CmdSN field can take an=
-y
-> >    value from ExpCmdSN to MaxCmdSN inclusive.  The target MUST silently
-> >    ignore any non-immediate command outside of this range or non-
-> >    immediate duplicates within the range.  The CmdSN carried by
-> >    immediate commands may lie outside the ExpCmdSN to MaxCmdSN range.
-> >    For example, if the initiator has previously sent a non-immediate
-> >    command carrying the CmdSN equal to MaxCmdSN, the target window is
-> >    closed.  For group task management commands issued as immediate
-> >    commands, CmdSN indicates the scope of the group action (e.g., on
-> >    ABORT TASK SET indicates which commands are aborted).
-> >
-> > This fixed an issue with fastlinq qedi Converged Network Adapter
-> > initiator firmware, trying to use an LIO target for booting. These
-> > changes made booting possible, with or without ImmediateData enabled.
-> >
-> > Signed-off-by: Lee Duncan <lduncan@suse.com>
-> > Reviewed-by: David Bond <dbond@suse.com>
-> > ---
-> >  drivers/target/iscsi/iscsi_target.c      | 12 +++---------
-> >  drivers/target/iscsi/iscsi_target_util.c | 10 ++++++++--
-> >  2 files changed, 11 insertions(+), 11 deletions(-)
-> >
-> > diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi=
-/iscsi_target.c
-> > index 1d25e64b068a..f246e5015868 100644
-> > --- a/drivers/target/iscsi/iscsi_target.c
-> > +++ b/drivers/target/iscsi/iscsi_target.c
-> > @@ -1060,13 +1060,6 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *co=
-nn, struct iscsit_cmd *cmd,
-> >                                            ISCSI_REASON_BOOKMARK_INVALI=
-D, buf);
-> >       }
-> >
-> > -     if (hdr->opcode & ISCSI_OP_IMMEDIATE) {
-> > -             pr_err("Illegally set Immediate Bit in iSCSI Initiator"
-> > -                             " Scsi Command PDU.\n");
-> > -             return iscsit_add_reject_cmd(cmd,
-> > -                                          ISCSI_REASON_BOOKMARK_INVALI=
-D, buf);
-> > -     }
-> > -
-> >       if (payload_length && !conn->sess->sess_ops->ImmediateData) {
-> >               pr_err("ImmediateData=3DNo but DataSegmentLength=3D%u,"
-> >                       " protocol error.\n", payload_length);
->
-> This seems right, as the flag is checked again later in the same
-> function.
->
-> > @@ -1255,14 +1248,15 @@ int iscsit_process_scsi_cmd(struct iscsit_conn =
-*conn, struct iscsit_cmd *cmd,
-> >       /*
-> >        * Check the CmdSN against ExpCmdSN/MaxCmdSN here if
-> >        * the Immediate Bit is not set, and no Immediate
-> > -      * Data is attached.
-> > +      * Data is attached. Also skip the check if this is
-> > +      * an immediate command.
->
-> This comment addition seems redundant, isn't that what the "Immediate
-> Bit is not set" already means?
+I modified the code to handle errors.
 
-The spec is confusing with respect to this. The "Immediate Bit"
-means an immediate command. These commands are done "now",
-not queued, and they do not increment the expected sequence number.
+The error handling code has been changed from the patch below.
+-'commit 031312dbc695 ("scsi: ufs: ufs-qcom: Remove unnecessary goto statements")'
 
-Immediate data is different, and unfortunately named IMHO. It's when a
-PDU supplies the data for the SCSI command in the current PDU instead
-of the next PDU.
+This is the case I checked.
+* ufs_qcom_clk_scale_notify -> 'ufs_qcom_clk_scale_up_/down_pre_change' error -> return 0;
 
->
-> >        *
-> >        * A PDU/CmdSN carrying Immediate Data can only
-> >        * be processed after the DataCRC has passed.
-> >        * If the DataCRC fails, the CmdSN MUST NOT
-> >        * be acknowledged. (See below)
-> >        */
-> > -     if (!cmd->immediate_data) {
-> > +     if (!cmd->immediate_data && !cmd->immediate_cmd) {
-> >               cmdsn_ret =3D iscsit_sequence_cmd(conn, cmd,
-> >                                       (unsigned char *)hdr, hdr->cmdsn)=
-;
-> >               if (cmdsn_ret =3D=3D CMDSN_ERROR_CANNOT_RECOVER)
->
-> Are you sure this needs to be checking both conditions here?  I'm
-> struggling to understand why CmdSN checking would be bypassed for
-> immediate data.  Is this a longstanding bug where the condition should
-> have been on immediate_cmd (and only immediate_cmd) instead?
+It is unknown whether the above commit was intended to change error handling.
+However, if it is not an intended fix, a patch may be needed.
 
-The immediate data check was there already, and there haven't been any
-bugs I know of, so I assumed that part of the code was ok.
+Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
+Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
+---
+v1->v2: Remove things already in progress
+ 1) ufs_qcom_host_reset -> 'reset_control_deassert' error -> return 0;
+   -> https://lore.kernel.org/linux-arm-msm/20231208065902.11006-8-manivannan.sadhasivam@linaro.org/#t
+ 2) ufs_qcom_init_lane_clks -> 'ufs_qcom_host_clk_get(tx_lane1_sync_clk)' error -> return 0;
+   -> https://lore.kernel.org/linux-arm-msm/20231208065902.11006-2-manivannan.sadhasivam@linaro.org/
+---
+---
+ drivers/ufs/host/ufs-qcom.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
->
-> Or is this because of the handling the immediate data with DataCRC case
-> mentioned?  I do see iscsit_sequence_cmd also being called in
-> iscsit_get_immediate_data.
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 96cb8b5b4e66..17e24270477d 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1516,9 +1516,11 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 			err = ufs_qcom_clk_scale_up_pre_change(hba);
+ 		else
+ 			err = ufs_qcom_clk_scale_down_pre_change(hba);
+-		if (err)
+-			ufshcd_uic_hibern8_exit(hba);
+ 
++		if (err) {
++			ufshcd_uic_hibern8_exit(hba);
++			return err;
++		}
+ 	} else {
+ 		if (scale_up)
+ 			err = ufs_qcom_clk_scale_up_post_change(hba);
+-- 
+2.29.0
 
-I will check that but I suspect you are correct.
-
->
-> - Chris Leech
->
