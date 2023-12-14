@@ -1,100 +1,128 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC0E69787
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 19:24:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1d05199f34dso49614975ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 11:24:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702581885; x=1703186685;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=X/TAYzD0j0yGLZNLwU3IXglAxyastSRbKLClHFqaqh0=;
-        b=hKKcyHAgOnsMRP0sX73jz0r0OZuSVSRjdBBobEOJ74lQVaZ3/YW+YThnuL8rT2V/1X
-         udHLMim22hjM+9VC+OUdpoKsQO0p/b37zdeLvjQ5SS+TjND2ThuIaalOqmQcpmzFQbMZ
-         xHLM3X+fDnU6kSE68lCKhPvOLQ8Mq0Llzus1H+1yyn2Eht0DK3w7ZpoaxYyGO7hQxI4m
-         B6oVKIzx3UOZoNiVrQA9mfzAQL0YA83sBguKxkaxz9omfRGI2ELz8qfNy8oF7u4sLkDK
-         kDCLDOVwFmHBrWYY9KugbYQaoqz+k+/i8awYi//mvNiMJROCBsTXQOXn0PEetDCppyzx
-         28kA==
-X-Gm-Message-State: AOJu0YzJc11zNCVWZEkqUwCtkMyo/6jg0Tx6yctIjNXY4NcxCev8fjKl
-	WfPV2e8RG2lm5JrST/tWl7k=
-X-Google-Smtp-Source: AGHT+IHlzfompgPR5hDs9iiwLhdKwTVTq9dp1qAGzvx1FaDZdk9MBw2oSAfc3sUNNi/zOEkA+Rut9A==
-X-Received: by 2002:a05:6a20:8b03:b0:190:169a:a571 with SMTP id l3-20020a056a208b0300b00190169aa571mr4920649pzh.12.1702581885367;
-        Thu, 14 Dec 2023 11:24:45 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:bae8:452d:2e24:5984])
-        by smtp.gmail.com with ESMTPSA id 61-20020a17090a09c300b0028b0d8b3cdfsm1718495pjo.57.2023.12.14.11.24.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 11:24:45 -0800 (PST)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	Asutosh Das <quic_asutoshd@quicinc.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH 2/2] scsi: ufs: Simplify ufshcd_auto_hibern8_update()
-Date: Thu, 14 Dec 2023 11:23:58 -0800
-Message-ID: <20231214192416.3638077-3-bvanassche@acm.org>
-X-Mailer: git-send-email 2.43.0.472.g3155946c3a-goog
-In-Reply-To: <20231214192416.3638077-1-bvanassche@acm.org>
-References: <20231214192416.3638077-1-bvanassche@acm.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 795E16A35D
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 20:30:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vy82tJqn"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1702585809;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QXuga73/c/MA5mQD7NNrVlnCLK003+KYeVkn9fwBS0Q=;
+	b=Vy82tJqnJMvZotN02R/6e+CkweCOgboWZxVYhtWilmwd7/4wxTDGkplowIbOI8gkqAN/I3
+	6ONh8SNDU18ZpxLdcFe4BtSGE4jslnNun+kEslRE/IoBCFY2BfA5F6He1zNgE88SwOOb7c
+	cSTfyvoK6nwiww1kX9buG8Bmsm0sb48=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-26-5RDRj6REPkG2aO5zjCKD4Q-1; Thu, 14 Dec 2023 15:30:02 -0500
+X-MC-Unique: 5RDRj6REPkG2aO5zjCKD4Q-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0A11888FBA3;
+	Thu, 14 Dec 2023 20:30:02 +0000 (UTC)
+Received: from rhel-developer-toolbox-latest (unknown [10.2.17.21])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 3CD052166B31;
+	Thu, 14 Dec 2023 20:30:01 +0000 (UTC)
+Date: Thu, 14 Dec 2023 12:29:59 -0800
+From: Chris Leech <cleech@redhat.com>
+To: Lee Duncan <lduncan@suse.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dbond@suse.com, hare@suse.de,
+	michael.christie@oracle.com
+Subject: Re: [PATCH 1/2] scsi: target: iscsi: handle SCSI immediate commands
+Message-ID: <ZXtlxzVtY3M_WrQ2@rhel-developer-toolbox-latest>
+References: <cover.1701540918.git.lduncan@suse.com>
+ <dc0006176e90cf3fb90e5b1c1917b54fe07c91cd.1701540918.git.lduncan@suse.com>
+ <ZXoOtgVZW_QpkU11@rhel-developer-toolbox-latest>
+ <CAPj3X_W5kOEOapG3F8NETBRzBmrQ1Lfudy7QGmCLXPT3UwUrkw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPj3X_W5kOEOapG3F8NETBRzBmrQ1Lfudy7QGmCLXPT3UwUrkw@mail.gmail.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.6
 
-Calls to ufshcd_auto_hibern8_update() are already serialized: this
-function is either called if user space software is not running
-(preparing to suspend) or from a single sysfs store callback function.
-Kernfs serializes sysfs .store() callbacks. No functionality is changed.
+On Wed, Dec 13, 2023 at 05:24:54PM -0800, Lee Duncan wrote:
+> >
+> > > @@ -1255,14 +1248,15 @@ int iscsit_process_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+> > >       /*
+> > >        * Check the CmdSN against ExpCmdSN/MaxCmdSN here if
+> > >        * the Immediate Bit is not set, and no Immediate
+> > > -      * Data is attached.
+> > > +      * Data is attached. Also skip the check if this is
+> > > +      * an immediate command.
+> >
+> > This comment addition seems redundant, isn't that what the
+> > "Immediate Bit is not set" already means?
+> 
+> The spec is confusing with respect to this. The "Immediate Bit" means
+> an immediate command. These commands are done "now", not queued, and
+> they do not increment the expected sequence number.
+> 
+> Immediate data is different, and unfortunately named IMHO. It's when a
+> PDU supplies the data for the SCSI command in the current PDU instead
+> of the next PDU.
 
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
-Cc: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 16 ++++------------
- 1 file changed, 4 insertions(+), 12 deletions(-)
+I understand the protocol, just trying to make sense of the
+implementation and what the existing comment meant. And the existing
+comment already has two conditions in it, even if the code doesn't.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 608dba595beb..d6ae5d17892c 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4423,21 +4423,13 @@ static void ufshcd_configure_auto_hibern8(struct ufs_hba *hba)
- 
- void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
- {
--	unsigned long flags;
--	bool update = false;
-+	const u32 cur_ahit = READ_ONCE(hba->ahit);
- 
--	if (!ufshcd_is_auto_hibern8_supported(hba))
-+	if (!ufshcd_is_auto_hibern8_supported(hba) || cur_ahit == ahit)
- 		return;
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (hba->ahit != ahit) {
--		hba->ahit = ahit;
--		update = true;
--	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--
--	if (update &&
--	    !pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
-+	WRITE_ONCE(hba->ahit, ahit);
-+	if (!pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
- 		ufshcd_rpm_get_sync(hba);
- 		ufshcd_hold(hba);
- 		ufshcd_configure_auto_hibern8(hba);
+I think I understand now why this is delaying CmdSN validation when
+there is immediate data, until after the DataCRC can be checked.
+
+This comment in iscsit_get_immediate_data, where the delayed processing
+occurs, also seems to read that "Immediate Bit" is in reference to an
+immediate command.
+
+  * A PDU/CmdSN carrying Immediate Data passed
+  * DataCRC, check against ExpCmdSN/MaxCmdSN if
+  * Immediate Bit is not set.
+
+but neither of these locations (before these changes) that mention the
+"Immediate Bit" in the comments actually check for cmd->immediate_cmd.
+
+> > >        *
+> > >        * A PDU/CmdSN carrying Immediate Data can only
+> > >        * be processed after the DataCRC has passed.
+> > >        * If the DataCRC fails, the CmdSN MUST NOT
+> > >        * be acknowledged. (See below)
+> > >        */
+> > > -     if (!cmd->immediate_data) {
+> > > +     if (!cmd->immediate_data && !cmd->immediate_cmd) {
+> > >               cmdsn_ret = iscsit_sequence_cmd(conn, cmd,
+> > >                                       (unsigned char *)hdr, hdr->cmdsn);
+> > >               if (cmdsn_ret == CMDSN_ERROR_CANNOT_RECOVER)
+> >
+> > Are you sure this needs to be checking both conditions here?  I'm
+> > struggling to understand why CmdSN checking would be bypassed for
+> > immediate data.  Is this a longstanding bug where the condition should
+> > have been on immediate_cmd (and only immediate_cmd) instead?
+> 
+> The immediate data check was there already, and there haven't been any
+> bugs I know of, so I assumed that part of the code was ok.
+> 
+> >
+> > Or is this because of the handling the immediate data with DataCRC case
+> > mentioned?  I do see iscsit_sequence_cmd also being called in
+> > iscsit_get_immediate_data.
+> 
+> I will check that but I suspect you are correct.
+
+Is it correct to skip all of iscsit_sequence_cmd for an immediate
+command here? You are already skipping iscsit_check_received_cmdsn
+inside iscsit_sequence_cmd in this patch. If cmd->immediate_cmd is set,
+where does iscsit_execute_cmd now get called from?
+
+- Chris Leech
+
