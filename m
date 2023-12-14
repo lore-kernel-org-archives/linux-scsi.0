@@ -1,51 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bfVV1zXr"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BDXX+TpD"
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 626F9B9;
-	Wed, 13 Dec 2023 20:29:36 -0800 (PST)
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BE0S5Bn004524;
-	Thu, 14 Dec 2023 04:29:27 GMT
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09B5210E;
+	Wed, 13 Dec 2023 20:29:39 -0800 (PST)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BE0S68Q015237;
+	Thu, 14 Dec 2023 04:29:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=0X3+fdRFzvEhD957wPV3grzj5bB7Y6RcxFvRN/wYaRQ=;
- b=bfVV1zXrAZKMKizAxVCWzMh8k4ruUmpQovhN8b7OQVLO67SbVNvPWqyeGyFjsy21AnbJ
- jEwamSjFyPqYi4oegjmUM+WdV2OUHetLTulVjzbvs2/dI8AdHuY45fhTw7cwVNQnEDvJ
- LzK6v3JGkwTFBoPnxJ6p/bnqAV6Bvw/iZ/oil2LHR6ZzSuXdWOoFnN0fWOGrnC4kstNo
- pZmz95TUrvI1Qm2e+6kscVroDhZE9DxY7lJsXQYkrNyT+qrKWusb7a6uAQaKxREkiqWo
- yelG0vBB1goJD9hserSYIZNvpp8koegpPN5Q9DieiaF3G6h/fzpPR6SjPr1H4xpn8sgG gg== 
+ bh=RvdU+eGC4ngETt79/crTUc+wC58vE7cGMOLzTyZkW18=;
+ b=BDXX+TpDBHFB13pjycojtoL1mHwt05O6N00njSUbe2NTlUAhgg01xRt8YXKfyOM2JDFh
+ hCEyb3rOkq7AEHKcMjXsYhwSIooYafHAw9ZDYm2ivItTVX+CyvQxpEH0r8enSC7Jug/1
+ 5O9is5/D+dYxiDWRjCIKrqdyn3MEWn3pxMtVENDVXCBMCJBOYLbd6FAT2gi8QEEWIZzy
+ OaRUB4RZZNwOkFUgfSn6X9lU5H0eGjge/KM/jzenQQKKkYfvxLa8PTsFC9iJUiqgTYB/
+ YMQkmDwK4+Xua+r4lCDIKEAOE5tZOOYKfZZ8X/jmq4KMDTTI+dNBox5uBEJk6HALeDnf Qw== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uvg9d9x66-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uwgn3r25h-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Dec 2023 04:29:27 +0000
+	Thu, 14 Dec 2023 04:29:32 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BE38M5m009842;
-	Thu, 14 Dec 2023 04:29:26 GMT
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BE3VDsg009880;
+	Thu, 14 Dec 2023 04:29:32 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3uvep9ev0y-1
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3uvep9ev51-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Dec 2023 04:29:26 +0000
+	Thu, 14 Dec 2023 04:29:31 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BE4TQM4035965;
-	Thu, 14 Dec 2023 04:29:26 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BE4TQMQ035965;
+	Thu, 14 Dec 2023 04:29:31 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3uvep9ev0g-1;
-	Thu, 14 Dec 2023 04:29:26 +0000
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3uvep9ev0g-12;
+	Thu, 14 Dec 2023 04:29:31 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>,
-        Artem Chernyshev <artem.chernyshev@red-soft.ru>
+To: dan.carpenter@linaro.org, hare@suse.com, jejb@linux.ibm.com,
+        Su Hui <suhui@nfschina.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org
-Subject: Re: [PATCH] scsi: fnic: return error if vmalloc failed
-Date: Wed, 13 Dec 2023 23:29:06 -0500
-Message-ID: <170205513086.1790765.12387126447114972285.b4-ty@oracle.com>
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] scsi: aic7xxx: fix some problem of return value
+Date: Wed, 13 Dec 2023 23:29:17 -0500
+Message-ID: <170205513103.1790765.4968317086023951869.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.42.1
-In-Reply-To: <20231128111008.2280507-1-artem.chernyshev@red-soft.ru>
-References: <20231128111008.2280507-1-artem.chernyshev@red-soft.ru>
+In-Reply-To: <20231201025955.1584260-1-suhui@nfschina.com>
+References: <20231201025955.1584260-1-suhui@nfschina.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -58,27 +56,31 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-14_01,2023-12-13_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
- phishscore=0 malwarescore=0 spamscore=0 mlxlogscore=688 bulkscore=0
+ phishscore=0 malwarescore=0 spamscore=0 mlxlogscore=699 bulkscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2311290000 definitions=main-2312140024
-X-Proofpoint-GUID: wXUn-rRvv0VGWEDUitwVoxsxs_3NAc99
-X-Proofpoint-ORIG-GUID: wXUn-rRvv0VGWEDUitwVoxsxs_3NAc99
+X-Proofpoint-ORIG-GUID: 7M0uoYfCZcKvOF2q8Jvt-IvYvDZtf8zu
+X-Proofpoint-GUID: 7M0uoYfCZcKvOF2q8Jvt-IvYvDZtf8zu
 
-On Tue, 28 Nov 2023 14:10:08 +0300, Artem Chernyshev wrote:
+On Fri, 01 Dec 2023 10:59:53 +0800, Su Hui wrote:
 
-> In fnic_init_module() exists redundant check for return value
-> from fnic_debugfs_init(), because at moment it only can
-> return zero. It make sense to process theoretical vmalloc failure.
+> v2:
+>  - fix some problems and split v1 patch into this patch set.(Thanks to
+>    Dan)
 > 
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
-> 
+> v1:
+>  - https://lore.kernel.org/all/20231130024122.1193324-1-suhui@nfschina.com/
 > 
 > [...]
 
 Applied to 6.8/scsi-queue, thanks!
 
-[1/1] scsi: fnic: return error if vmalloc failed
-      https://git.kernel.org/mkp/scsi/c/f5f27a332a14
+[1/3] scsi: aic7xxx: return negative error codes in ahc_linux_register_host()
+      https://git.kernel.org/mkp/scsi/c/573eb4a3410a
+[2/3] scsi: aic7xxx: return ahc_linux_register_host()'s value rather than zero
+      https://git.kernel.org/mkp/scsi/c/70dfaf84ec77
+[3/3] scsi: aic7xxx: return negative error codes in aic7770_probe()
+      https://git.kernel.org/mkp/scsi/c/aef6ac123609
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
