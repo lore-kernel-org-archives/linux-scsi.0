@@ -1,78 +1,127 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="c/cZNQ2Z"
-Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DDDF18E
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 05:01:36 -0800 (PST)
-Received: by mail-lf1-x12c.google.com with SMTP id 2adb3069b0e04-50be10acaf9so593033e87.1
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 05:01:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1702558894; x=1703163694; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=hEBNj87fP9250zui4T/Hvg1xpkDfzNZnKnVDxt1bMUY=;
-        b=c/cZNQ2Z0vfSqTkKgxr6lG0OXRJajUMTqpoy7zJ3VvQkPKHDIDqROQqUXD/DNNhz3w
-         soLa1tsM9s7HUvfzVaXAKPrbejdY68Kkvu5UCN4q6raPbwHXHAoNswcy6qnI+gHixg2k
-         egNpuOllT5hdaPCMfhC1KHhi+cISA249t8amqu8M7/IIr+725/WJIfq6GkQXM7YLU0aR
-         sgtp2msCe9hTpuKtrJIZCSbb0mHtqPcqIu5Vb3WxOM7hZzPKJCAFe50eYvXDkuXRx+u5
-         Ma8Kk6H811winPIQ2eRrn3d7ZBV3J8eR/x9JzfJyTCHP3hv0W37GJ2uDQMu6pehIGeX+
-         B8Kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702558894; x=1703163694;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hEBNj87fP9250zui4T/Hvg1xpkDfzNZnKnVDxt1bMUY=;
-        b=Ct5cR8cUzEcCBVVXa1dzP0TtiOcHh0dR8FMsUUUFpb4Kgpzu+nF7Rgd+V8YrnBiS2H
-         iUJA29f9yUJsNME+lN3CiFd6m/YW/ouNzajBCO+RtHBQSZq/E01EMrHLLhv1ZGVGRo7t
-         qG8YNrfM8DIY5IeIny/u7rMlEDw7QZCnJEgDRevc2oMXB35eAQ86pI5wRvviOR6oR7oS
-         jzqYl8d57l1JvDGriSp+614oeK/lPZOaXvtcPxwusdS7FczLgZ1p+lGUZoEYwjBR1B/S
-         kLThroDUuZYUopXhwwKO+RHmMD5J/u41TiwvfwQReZbo7qON5lg1GxDzlEKmx2mLilYn
-         PeVg==
-X-Gm-Message-State: AOJu0YxsJ2XtxJopwZxhLWv168VByyafgQ3a1/lmnCyeUfMYt71yvuN9
-	XihJ6TVVNfa+VeIXsISTI5omIA==
-X-Google-Smtp-Source: AGHT+IHDwfUDUX4A8h+6BpYMmsxXIr+8mmt9c12FvptD9zihDInwN3uM8coAVGJ5D7hEzSztlmtQhw==
-X-Received: by 2002:a05:6512:3ba6:b0:50b:e472:d825 with SMTP id g38-20020a0565123ba600b0050be472d825mr7069181lfv.20.1702558893836;
-        Thu, 14 Dec 2023 05:01:33 -0800 (PST)
-Received: from [172.30.204.158] (UNUSED.212-182-62-129.lubman.net.pl. [212.182.62.129])
-        by smtp.gmail.com with ESMTPSA id m16-20020a056512115000b0050e1b9c6ff5sm34796lfg.265.2023.12.14.05.01.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Dec 2023 05:01:33 -0800 (PST)
-Message-ID: <32a47aa9-4b4a-493d-879a-0cf3f7fe9c00@linaro.org>
-Date: Thu, 14 Dec 2023 14:01:32 +0100
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N8ubPiEJ"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86235131
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 05:46:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1702561584;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QMlqSzMLtoLhUA6/pSOLSiY6ne++uxerHVPAdydtEYo=;
+	b=N8ubPiEJzQV/ckmuxCSbDN+JYdEXaAne69we0MGQVJN1aV8RmF2JFnyApELDayvulJwcmr
+	TbQUbAor3ZilgNht4OlFYZXTFzx0PY0ZejCH7+2w+RTaVqKiKRQyDb4acpmAFOpu5s4pU+
+	+Bj2Pqr0yd4y57LzMDdAZIV2i2graV8=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-457-Yr6iln9QPreJK0NkIMKRvw-1; Thu,
+ 14 Dec 2023 08:46:21 -0500
+X-MC-Unique: Yr6iln9QPreJK0NkIMKRvw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 514D328040B2;
+	Thu, 14 Dec 2023 13:46:19 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.126])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 006DAC15968;
+	Thu, 14 Dec 2023 13:46:08 +0000 (UTC)
+Date: Thu, 14 Dec 2023 21:46:04 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+	kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com,
+	djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	dchinner@redhat.com, jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	jaswin@linux.ibm.com, bvanassche@acm.org,
+	Himanshu Madhani <himanshu.madhani@oracle.com>, ming.lei@redhat.com
+Subject: Re: [PATCH v2 01/16] block: Add atomic write operations to
+ request_queue limits
+Message-ID: <ZXsHHA/GeO8PUeaA@fedora>
+References: <20231212110844.19698-1-john.g.garry@oracle.com>
+ <20231212110844.19698-2-john.g.garry@oracle.com>
+ <ZXkIEnQld577uHqu@fedora>
+ <36ee54b4-b8d5-4b3c-81a0-cc824b6ef68e@oracle.com>
+ <ZXmjdnIqGHILTfQN@fedora>
+ <yq1cyv9flkw.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: qcom: Fix ESI vector mask
-Content-Language: en-US
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- andersson@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, Andrew Halaney <ahalaney@redhat.com>
-References: <20231214125532.55109-1-manivannan.sadhasivam@linaro.org>
-From: Konrad Dybcio <konrad.dybcio@linaro.org>
-In-Reply-To: <20231214125532.55109-1-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Spam-Level: *
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <yq1cyv9flkw.fsf@ca-mkp.ca.oracle.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
+Hi Martin,
 
-
-On 12/14/23 13:55, Manivannan Sadhasivam wrote:
-> While cleaning up the code to use ufshcd_rmwl() helper, the ESI vector mask
-> was changed incorrectly. Fix it and also define a proper macro for the
-> value together with FIELD_PREP().
+On Wed, Dec 13, 2023 at 11:38:10PM -0500, Martin K. Petersen wrote:
 > 
-> Reported-by: Andrew Halaney <ahalaney@redhat.com>
-> Fixes: 0e9f4375db1c ("scsi: ufs: qcom: Use ufshcd_rmwl() where applicable")
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
-Looks sound
+> Ming,
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+On Thu, Dec 14, 2023 at 12:35 PM Martin K. Petersen <martin.petersen@oracle.com> wrote:
+>
+>
+> Hi Ming!
+>
+> >> +    lim->atomic_write_unit_min_sectors = 0;
+> >> +    lim->atomic_write_unit_max_sectors = 0;
+> >> +    lim->atomic_write_max_sectors = 0;
+> >> +    lim->atomic_write_boundary_sectors = 0;
+> >
+> > Can we move the four into single structure and setup them in single
+> > API? Then cross-validation can be done in this API.
+>
+> Why would we put them in a separate struct? We don't do that for any of
+> the other queue_limits.
 
-Konrad
+All the four limits are for same purpose of supporting atomic-write, and
+there can many benefits to define single API to setup atomic parameters:
+
+1) common logic can be put into single place, such as running
+cross-validation among them and setting up default value, and it is impossible
+to do that by the way in this patch
+
+2) all limits are supposed to setup once by driver in same place, so
+doing them in single API actually simplifies driver and block layer, and
+API itself becomes less fragile
+
+3) it is easier for trace or troubleshoot
+
+> 
+> > Relying on driver to provide sound value is absolutely bad design from
+> > API viewpoint.
+> 
+> All the other queue_limits are validated by the LLDs. It's challenging
+> to lift that validation to the block layer since the values reported are
+> heavily protocol-dependent and
+
+After atomic limits are put into block layer, it becomes not driver
+specific any more, scsi and nvme are going to support it first, sooner
+or later, other drivers(dm & md, loop or ublk, ...) may try to support it.
+
+Also in theory, they are not protocol-dependent, usually physical block size is
+the minimized atomic-write unit, now John's patches are trying to support
+bigger atomic-write unit as scsi/nvme's protocol supports it, and the concept
+is actually common in disk. Similar in implementation level too, such as,
+for NAND flash based storage, I guess atomic-write should be supported by atomic
+update of FTL's LBA/PBA mapping.
+
+> thus information is lost if we do it somewhere else.
+
+Block layer is only focusing on common logic, such as the four limits
+added in request queue, which are consumed by block layer and related with
+other generic limits(physical block size, max IO size), and it won't be
+same with driver's internal validation.
+
+
+Thanks,
+Ming
+
