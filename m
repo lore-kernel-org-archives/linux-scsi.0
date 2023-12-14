@@ -1,44 +1,44 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+Received: from mail-io1-f54.google.com (mail-io1-f54.google.com [209.85.166.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8821D7494
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 21:01:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B947D7494
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 21:01:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="J/EqLPwu"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-5c210e34088so7285a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 13:01:14 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="avRPuL/E"
+Received: by mail-io1-f54.google.com with SMTP id ca18e2360f4ac-7b6fa79b547so508971039f.1
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 13:01:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1702587673; x=1703192473; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1702587676; x=1703192476; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wpUkK6ITIMil2yG9knOEkvfpxottBbwtLLuhrQinNns=;
-        b=J/EqLPwuPGTugutiFlp+hqAyP/vh6RXrMCIZNx8e5c/R9yx0Zj3HIPQLMbk09xxfMI
-         B+gMAlxoA49stENjckvtaIugiKP4TecKR+ZUE+DoZs2DqQaXKI+UnNio150wPDGiDRXU
-         3L9HMaG2LlG6eV4dSomnnwjDuVTzfhaTidIY8=
+        bh=eoCwyQdBQNplETbcUkUFUES+7wPPhF9uGlbIiVxkCcI=;
+        b=avRPuL/ENobub2Rd+y1QJ/n758hJ4ttZFzr3Mx1CYMIvk7K1A+A9r7Cn+lxuF3wLU0
+         Rk1IaXThxjZV2U28fBw1dO1pITxyi9ZOGw0xXgyHBR8Zd0Ea0z6QbWW1ZwbQFWDUrHVV
+         3NAnZMMv9NYgoslBFZN8ozEYkRQ1X26w0cV7g=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702587673; x=1703192473;
+        d=1e100.net; s=20230601; t=1702587676; x=1703192476;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wpUkK6ITIMil2yG9knOEkvfpxottBbwtLLuhrQinNns=;
-        b=T563UyPmYVw/bcBZCj9x3PahYdIBUp4Vh/0O8qI4Oz3XoSLjOi9pvtZVpMD1EMZ7A8
-         Ut/wvQLH6ghE1mZFPb6QT6eIAAlnek6dISACp4ETv8mhDd0zLlnbq0013gZqOZ994OeY
-         bwq3ZuyPLxgfov4n8UYWh/5bN5b2Hwij5lTkooGQNLQAGsnAaXR7V6stUAlB36+1C/Wz
-         OUP4uObQ/GxmJPelQInPxkwwjPTul6J7/5NOpJggSYf5Ci2SJX0Hf3QCLQ1+Vt2MNE3H
-         4y/OTqtwpAnQXs7TDMIKptmsTprsIAy4+Nf5gOYC5vNFf0rhT0dx6Z0Wy32RCk6Zdv/S
-         g4kA==
-X-Gm-Message-State: AOJu0YxGV80xCuwcdg6RGrxbKwJROvaBT5iXyI6XjQXLGt2WCnjFBMbC
-	mpD/a2kqcVkdjDW64LO5XOHcL5B7t+S3WkUwezAvhx+lf8s+O/duGlQgpDcJzGyXxIe2CnhbPB7
-	+CoNMyCuC+HOz8tyD2XcuAHxNq3JoEOtP7kR9aaKdjrIp8n9WQxz3NclHKubFgMwfE0Wf4LH3OG
-	OnTfSXAYp+6w==
-X-Google-Smtp-Source: AGHT+IGukzCheuPz33VN+IQ7Us8vPqCqiZ4590d4yynT0ZGqFYsB7wwM9VojxitKsVmjC729+xpFew==
-X-Received: by 2002:a05:6a20:b3aa:b0:18f:e1f:32ce with SMTP id eg42-20020a056a20b3aa00b0018f0e1f32cemr10600679pzb.115.1702587672769;
-        Thu, 14 Dec 2023 13:01:12 -0800 (PST)
+        bh=eoCwyQdBQNplETbcUkUFUES+7wPPhF9uGlbIiVxkCcI=;
+        b=p1L47AFsQFRcfjE8blrY7NheEV2T4yfQq3G8x7MNFJMcQ6nUsgEuhl5Hsks27MwLeC
+         eFB1XlcYAtxelTevFEwzvocbLMR9IRMxGQbPskC6neyMeXEgrincCjTOsKBuIAAjtyTn
+         U+2+9NYMk2B7kNomVrlaky9/TvFOFbCt97YoNG3dskRnkHF61THIduApvSSjHcI8F8Kh
+         cyy67Lbs4j37RFf3jyl9u/zi78Iut7TUWFN/7pT+Fwvj8lL2GkwnPwP6xaubT1CGVZPS
+         HbmtgPUU3CSQvkK9bo2BcQ+A9/G7gRKAKC7PJHNIM0K4PLPah1aWdJmMFj3Tz3HrWWrM
+         GdHA==
+X-Gm-Message-State: AOJu0YywoUkhQZm1J4dX6MHcW165ZQMKukCPyOzaAiWPsL/LNJtpkeX2
+	a0D4jZxyxYvI2Ilw3QGUwEGIBfv8lD/07dNgtiIcH2jma/RlMuuTKoL7Pg9GK/FRpJa0VqpBiv5
+	y1yyhFxRk2n6OBBz7wgtIzUak9Dt82bbqx1grpch2PpV9dkUHJbLPreJUpEH/yH1ZWMz5+H813S
+	nfhsBs2oG10A==
+X-Google-Smtp-Source: AGHT+IFfvULEMtEpnnMCw1qRcCc/iJ4mFRP+Lzm3MLfh3ZxqSnrh+VkjwXmKKFt0fCpIPU9vDxcg2w==
+X-Received: by 2002:a92:c269:0:b0:35f:7715:6cdd with SMTP id h9-20020a92c269000000b0035f77156cddmr3785669ild.33.1702587676066;
+        Thu, 14 Dec 2023 13:01:16 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm11904303pgb.30.2023.12.14.13.01.09
+        by smtp.gmail.com with ESMTPSA id bv190-20020a632ec7000000b005c2967852c5sm11904303pgb.30.2023.12.14.13.01.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 13:01:11 -0800 (PST)
+        Thu, 14 Dec 2023 13:01:15 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -48,9 +48,9 @@ Cc: rajsekhar.chundru@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v2 4/6] mpi3mr: Improve Shutdown times when firmware has faulted
-Date: Fri, 15 Dec 2023 02:28:58 +0530
-Message-Id: <20231214205900.270488-5-ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 5/6] mpi3mr: Reset stop_bsgs flag post controller reset failure
+Date: Fri, 15 Dec 2023 02:28:59 +0530
+Message-Id: <20231214205900.270488-6-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20231214205900.270488-1-ranjan.kumar@broadcom.com>
 References: <20231214205900.270488-1-ranjan.kumar@broadcom.com>
@@ -61,121 +61,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="00000000000078a879060c7e95fd"
+	boundary="000000000000a6e419060c7e9522"
 
---00000000000078a879060c7e95fd
+--000000000000a6e419060c7e9522
 Content-Transfer-Encoding: 8bit
 
-The driver monitors the controller state periodically while
-waiting for the shutdown notification MPI request to complete.
-If the firmware is faulty, the driver resets the controller and
-re-issues the shutdown notification. The driver will make three
-attempts to complete the shutdown process and will not retry the
-notification request if the controller reset is unsuccessful.
+stop_bsgs flag blocks the ioctls during controller reset.
+currently, it remains set after a controller failure, so
+resetting it.
 
-Signed-off-by: Prayas Patel <prayas.patel@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  1 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 36 +++++++++++++++++++++++++--------
- 2 files changed, 29 insertions(+), 8 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 1ac7f88dc1cd..de953eb055d0 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -159,6 +159,7 @@ extern atomic64_t event_counter;
- /* Controller Reset related definitions */
- #define MPI3MR_HOSTDIAG_UNLOCK_RETRY_COUNT	5
- #define MPI3MR_MAX_RESET_RETRY_COUNT		3
-+#define MPI3MR_MAX_SHUTDOWN_RETRY_COUNT		2
- 
- /* ResponseCode definitions */
- #define MPI3MR_RI_MASK_RESPCODE		(0x000000FF)
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index c50fc27231cd..491ef854fdba 100644
+index 491ef854fdba..209920cd5ec2 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -4566,9 +4566,10 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
-  */
- static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
- {
--	u32 ioc_config, ioc_status;
--	u8 retval = 1;
-+	u32 ioc_config, ioc_status, shutdown_action;
-+	u8 retval = 1, retry = 0;
- 	u32 timeout = MPI3MR_DEFAULT_SHUTDOWN_TIME * 10;
-+	u32 timeout_remaining = 0;
- 
- 	ioc_info(mrioc, "Issuing shutdown Notification\n");
- 	if (mrioc->unrecoverable) {
-@@ -4583,15 +4584,16 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
- 		return;
+@@ -5136,6 +5136,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 		mrioc->device_refresh_on = 0;
+ 		mrioc->unrecoverable = 1;
+ 		mrioc->reset_in_progress = 0;
++		mrioc->stop_bsgs = 0;
+ 		retval = -1;
+ 		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
  	}
- 
-+	shutdown_action = MPI3_SYSIF_IOC_CONFIG_SHUTDOWN_NORMAL |
-+	    MPI3_SYSIF_IOC_CONFIG_DEVICE_SHUTDOWN_SEND_REQ;
- 	ioc_config = readl(&mrioc->sysif_regs->ioc_configuration);
--	ioc_config |= MPI3_SYSIF_IOC_CONFIG_SHUTDOWN_NORMAL;
--	ioc_config |= MPI3_SYSIF_IOC_CONFIG_DEVICE_SHUTDOWN_SEND_REQ;
-+	ioc_config |= shutdown_action;
- 
- 	writel(ioc_config, &mrioc->sysif_regs->ioc_configuration);
- 
- 	if (mrioc->facts.shutdown_timeout)
- 		timeout = mrioc->facts.shutdown_timeout * 10;
--
-+	timeout_remaining = timeout;
- 	do {
- 		ioc_status = readl(&mrioc->sysif_regs->ioc_status);
- 		if ((ioc_status & MPI3_SYSIF_IOC_STATUS_SHUTDOWN_MASK)
-@@ -4599,8 +4601,26 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
- 			retval = 0;
- 			break;
- 		}
-+		if (mrioc->unrecoverable)
-+			break;
-+		if (ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT) {
-+			mpi3mr_print_fault_info(mrioc);
-+			if (retry >= MPI3MR_MAX_SHUTDOWN_RETRY_COUNT)
-+				break;
-+			if (mpi3mr_issue_reset(mrioc,
-+			    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET,
-+			    MPI3MR_RESET_FROM_CTLR_CLEANUP))
-+				break;
-+			ioc_config =
-+			    readl(&mrioc->sysif_regs->ioc_configuration);
-+			ioc_config |= shutdown_action;
-+			writel(ioc_config,
-+			    &mrioc->sysif_regs->ioc_configuration);
-+			timeout_remaining = timeout;
-+			retry++;
-+		}
- 		msleep(100);
--	} while (--timeout);
-+	} while (--timeout_remaining);
- 
- 	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
- 	ioc_config = readl(&mrioc->sysif_regs->ioc_configuration);
-@@ -4609,11 +4629,11 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
- 		if ((ioc_status & MPI3_SYSIF_IOC_STATUS_SHUTDOWN_MASK)
- 		    == MPI3_SYSIF_IOC_STATUS_SHUTDOWN_IN_PROGRESS)
- 			ioc_warn(mrioc,
--			    "shutdown still in progress after timeout\n");
-+			    "shutdown still in progress\n");
- 	}
- 
- 	ioc_info(mrioc,
--	    "Base IOC Sts/Config after %s shutdown is (0x%x)/(0x%x)\n",
-+	    "ioc_status/ioc_config after %s shutdown is (0x%x)/(0x%x)\n",
- 	    (!retval) ? "successful" : "failed", ioc_status,
- 	    ioc_config);
- }
 -- 
 2.31.1
 
 
---00000000000078a879060c7e95fd
+--000000000000a6e419060c7e9522
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -246,13 +163,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGRbhSTYuaSKtw/48AUzJQt5/cENlzfv
-PWFU1VdotbeQMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIx
-NDIxMDExM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICTErvY9nhbhRQ0gGKxLxrlmi3nqZE/D
+pKb0ZPq2wq4wMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIx
+NDIxMDExNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBC19rP/Rn+P2aldTeEN1UBNt358H96EgF9ZtnzsebZmz5jrgCi
-awndUyohU1ukpLxhbQke/elycgO5gFAm3z7QO/HdyQZW1SfXCwuWq3dmNOjxgM6ou6vzWLwinbH5
-nHVcUiZ4Dc4893qI0fgzAHQU8Mc8TFp/RorJqOxY7iVPJ4wlkBJqI702uNtK71ZPwmYjuWWYdUh5
-ZEUdBjqbKAiFEyeW032WsfYZ3vkCHqST87S3Ahs4nx313Ml4kuGv8lbPh7taWQr9vZ42s63It8Qa
-LFH8f3ndkEW8aEn6Lr/qgZWm0rTrWTA7aNfZ4byiyK8YN9kpvWTuj2zrjWqxLYy0
---00000000000078a879060c7e95fd--
+ATANBgkqhkiG9w0BAQEFAASCAQCa3u1tab8kutDCrAiUhdhmrVQSfTO/+JKOVRRKTzLAOYcPzcLD
+gTsx0/KlNVYeM+ShmIxD+53MYTrco6eoWa9/BtSmsM+GtNNboll7EaHnpxjpcf4bIV9Xlck1fM1x
+vkUOisTZN5hiDMhoJufNhsLUFPPZtNDnwuNAI/ZRIN+Y8vWNXiuTQWm/UdbkvMuyoSrBBnzblCbJ
+0TeGndRxG+40EKPoubmETRK7GzcdIw9Bpeiyd18RosTmkzL7z/4QZ8SVT6KhOvjqt6dQhKs5n+tr
+R9J8mQgYpHkJp0qvoqg8j7fJhev9aVlJJ6830yNM2EhMAwtVqI/QfoC/qHDgg67W
+--000000000000a6e419060c7e9522--
