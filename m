@@ -1,33 +1,33 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6FCE68EBF
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 19:24:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC0E69787
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 19:24:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6cea5548eb2so7828016b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 11:24:37 -0800 (PST)
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1d05199f34dso49614975ad.3
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Dec 2023 11:24:45 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702581877; x=1703186677;
+        d=1e100.net; s=20230601; t=1702581885; x=1703186685;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=cRAo0JsaI8IeBlSgVhSvwKdNTUwtVmFosrM030EYfzM=;
-        b=lLzvMlCUCx0e+Db/DYXW6qUDYCozTWM1rg1PvVQD+C1cpBbb3CLkKxjqUUr7SoyOqQ
-         UBWArotj5ktgwcbM8TTnOAHuQjCo+uTj64wnCQca3II/GY0bwhvqJ+Fo0/LVeZZmCvvP
-         IT2zvQokvCSuChjxbghByZwsdmF7x4wJsTkV/06V1vN6T+DFP9mqYjGpivZZIgamdHdF
-         YRCceE25D0qiNde54MT52YBoIv6g5Z8m/Evg3h3Ox+qgOoqIVsXiULiJBaAcbf191QIn
-         e6LGmkfVgGEoDkMiA/ryWl9824r8ljD8Q4EC29kpVCdl1aIQLC+K+nNze6zl5xPuhUci
-         FtvA==
-X-Gm-Message-State: AOJu0YyoqprY6HgVxbIK+xby/bVmCtdVMSsXnNkS7rdn8gnR3yrsjdTu
-	ypdTqG1x+vCYFrIfjHiH8k4=
-X-Google-Smtp-Source: AGHT+IHNSFcx1O+ukmLYYY/4tK3rqxFtZNKr/4XBG4Fs260+Kxiw5YaRpkYbdBW3WU39IH91NHn2UA==
-X-Received: by 2002:a05:6a20:bf10:b0:18f:97c:8a45 with SMTP id gc16-20020a056a20bf1000b0018f097c8a45mr11947784pzb.112.1702581876920;
-        Thu, 14 Dec 2023 11:24:36 -0800 (PST)
+        bh=X/TAYzD0j0yGLZNLwU3IXglAxyastSRbKLClHFqaqh0=;
+        b=hKKcyHAgOnsMRP0sX73jz0r0OZuSVSRjdBBobEOJ74lQVaZ3/YW+YThnuL8rT2V/1X
+         udHLMim22hjM+9VC+OUdpoKsQO0p/b37zdeLvjQ5SS+TjND2ThuIaalOqmQcpmzFQbMZ
+         xHLM3X+fDnU6kSE68lCKhPvOLQ8Mq0Llzus1H+1yyn2Eht0DK3w7ZpoaxYyGO7hQxI4m
+         B6oVKIzx3UOZoNiVrQA9mfzAQL0YA83sBguKxkaxz9omfRGI2ELz8qfNy8oF7u4sLkDK
+         kDCLDOVwFmHBrWYY9KugbYQaoqz+k+/i8awYi//mvNiMJROCBsTXQOXn0PEetDCppyzx
+         28kA==
+X-Gm-Message-State: AOJu0YzJc11zNCVWZEkqUwCtkMyo/6jg0Tx6yctIjNXY4NcxCev8fjKl
+	WfPV2e8RG2lm5JrST/tWl7k=
+X-Google-Smtp-Source: AGHT+IHlzfompgPR5hDs9iiwLhdKwTVTq9dp1qAGzvx1FaDZdk9MBw2oSAfc3sUNNi/zOEkA+Rut9A==
+X-Received: by 2002:a05:6a20:8b03:b0:190:169a:a571 with SMTP id l3-20020a056a208b0300b00190169aa571mr4920649pzh.12.1702581885367;
+        Thu, 14 Dec 2023 11:24:45 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:bae8:452d:2e24:5984])
-        by smtp.gmail.com with ESMTPSA id 61-20020a17090a09c300b0028b0d8b3cdfsm1718495pjo.57.2023.12.14.11.24.35
+        by smtp.gmail.com with ESMTPSA id 61-20020a17090a09c300b0028b0d8b3cdfsm1718495pjo.57.2023.12.14.11.24.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 11:24:36 -0800 (PST)
+        Thu, 14 Dec 2023 11:24:45 -0800 (PST)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -37,16 +37,13 @@ Cc: linux-scsi@vger.kernel.org,
 	Avri Altman <avri.altman@wdc.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	Stanley Jhu <chu.stanley@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
 	Asutosh Das <quic_asutoshd@quicinc.com>,
 	Bean Huo <beanhuo@micron.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-	Po-Wen Kao <powen.kao@mediatek.com>,
-	Eric Biggers <ebiggers@google.com>
-Subject: [PATCH 1/2] scsi: ufs: Rename ufshcd_auto_hibern8_enable() and make it static
-Date: Thu, 14 Dec 2023 11:23:57 -0800
-Message-ID: <20231214192416.3638077-2-bvanassche@acm.org>
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH 2/2] scsi: ufs: Simplify ufshcd_auto_hibern8_update()
+Date: Thu, 14 Dec 2023 11:23:58 -0800
+Message-ID: <20231214192416.3638077-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.43.0.472.g3155946c3a-goog
 In-Reply-To: <20231214192416.3638077-1-bvanassche@acm.org>
 References: <20231214192416.3638077-1-bvanassche@acm.org>
@@ -58,93 +55,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Rename ufshcd_auto_hibern8_enable() into ufshcd_configure_auto_hibern8()
-since this function can enable or disable auto-hibernation. Since
-ufshcd_auto_hibern8_enable() is only used inside the UFSHCI driver core,
-declare it static. Additionally, move the definition of this function to
-just before its first caller.
+Calls to ufshcd_auto_hibern8_update() are already serialized: this
+function is either called if user space software is not running
+(preparing to suspend) or from a single sysfs store callback function.
+Kernfs serializes sysfs .store() callbacks. No functionality is changed.
 
-Suggested-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 Reviewed-by: Can Guo <quic_cang@quicinc.com>
 Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 24 +++++++++++-------------
- include/ufs/ufshcd.h      |  1 -
- 2 files changed, 11 insertions(+), 14 deletions(-)
+ drivers/ufs/core/ufshcd.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 219ba7b0501b..608dba595beb 100644
+index 608dba595beb..d6ae5d17892c 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -4413,6 +4413,14 @@ int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- }
- EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_exit);
+@@ -4423,21 +4423,13 @@ static void ufshcd_configure_auto_hibern8(struct ufs_hba *hba)
  
-+static void ufshcd_configure_auto_hibern8(struct ufs_hba *hba)
-+{
-+	if (!ufshcd_is_auto_hibern8_supported(hba))
-+		return;
-+
-+	ufshcd_writel(hba, hba->ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
-+}
-+
  void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
  {
- 	unsigned long flags;
-@@ -4432,21 +4440,13 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
- 	    !pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
+-	unsigned long flags;
+-	bool update = false;
++	const u32 cur_ahit = READ_ONCE(hba->ahit);
+ 
+-	if (!ufshcd_is_auto_hibern8_supported(hba))
++	if (!ufshcd_is_auto_hibern8_supported(hba) || cur_ahit == ahit)
+ 		return;
+ 
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	if (hba->ahit != ahit) {
+-		hba->ahit = ahit;
+-		update = true;
+-	}
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-
+-	if (update &&
+-	    !pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
++	WRITE_ONCE(hba->ahit, ahit);
++	if (!pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
  		ufshcd_rpm_get_sync(hba);
  		ufshcd_hold(hba);
--		ufshcd_auto_hibern8_enable(hba);
-+		ufshcd_configure_auto_hibern8(hba);
- 		ufshcd_release(hba);
- 		ufshcd_rpm_put_sync(hba);
- 	}
- }
- EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
- 
--void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
--{
--	if (!ufshcd_is_auto_hibern8_supported(hba))
--		return;
--
--	ufshcd_writel(hba, hba->ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
--}
--
-  /**
-  * ufshcd_init_pwr_info - setting the POR (power on reset)
-  * values in hba power info
-@@ -8953,8 +8953,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
- 
- 	if (hba->ee_usr_mask)
- 		ufshcd_write_ee_control(hba);
--	/* Enable Auto-Hibernate if configured */
--	ufshcd_auto_hibern8_enable(hba);
-+	ufshcd_configure_auto_hibern8(hba);
- 
- out:
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-@@ -9956,8 +9955,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
- 	}
- 
--	/* Enable Auto-Hibernate if configured */
--	ufshcd_auto_hibern8_enable(hba);
-+	ufshcd_configure_auto_hibern8(hba);
- 
- 	goto out;
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 38637bea9a52..8e2bce9a4f21 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1371,7 +1371,6 @@ static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
- 	return ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
- }
- 
--void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
- void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
- void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
- 			     const struct ufs_dev_quirk *fixups);
+ 		ufshcd_configure_auto_hibern8(hba);
