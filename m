@@ -1,319 +1,591 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="h2Wp+wj0";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="jCPAzYTF"
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3832ABD
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Dec 2023 21:26:59 -0800 (PST)
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BE0SC1a012939;
-	Thu, 14 Dec 2023 05:26:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2023-11-20;
- bh=zORhsPcXtV2jlio+bhW8L0m0rnNNqoSrBL+dlXLpGzY=;
- b=h2Wp+wj0rUSLoguHjunbeS0bLqdONhh8Tz8pbIHAwfX4uozw5AR9I6gmbGQQhkP0AraV
- tENNYj4fSMbZrzoSxZjoFIsyyKe50/R0l9eqCsD8/O1vRUaTHf8gdqu0rJmwLZWpcU42
- QsujwHle0jNlVN9DEbTBBO13aRxcJhhM4KATEKRi7dHeOSoDn3pa6e0sOJAjGg7aYghD
- JQsVoOeJDpArcNNeoUiaYG+XCLr9eHDZptybeKoAps0T57NIkMrmsyw7y6kXxDLDJ0uL
- hSSlznqIJzwfTpzOVosbF7gHLP8mKoEG663cNAFRlWbst3Qx2wK5F806b1JP7yI/xB8g EA== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uvf5c9xgn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Dec 2023 05:26:55 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BE3e0GF008286;
-	Thu, 14 Dec 2023 05:26:54 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2101.outbound.protection.outlook.com [104.47.58.101])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3uvep9gkge-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Dec 2023 05:26:54 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oayQPp/MMUeIBBPXx9tMXkZfkJAFRF2OV1ukK7qiqdWZBBoqXoCNtw+sqx1/7bk8go/5KxRYKBpdcAYxkWeqRT522/n/wttZYL2KQ7KLQaSuG67jSzv9Gseo8u2drk8688OQb0Z7+qMVovEKRg3JDZZXUXyq2+VkeZ1YRpuOONDOXfMdKv3IZEtBio/2p/+PHrEUF1oDPaLy/9pV3UZVHleqO5rN2VcdHtlaK2uAxJDOo3ne8/aQXow6QnZxJ0nOLi8vQupvZEcYS6V6Td4BvWFTIhXvFNQrg2zmGLyWWVk5KzKJRhduX7ekv5Vo7IvM8Oq/rlssi0SeCr1s9/LE2Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zORhsPcXtV2jlio+bhW8L0m0rnNNqoSrBL+dlXLpGzY=;
- b=caSb+3Q6O8HoiinqAxbieJqSvfoCy6896VxCl/eiM335ptVqhJSekAfm7hoSGoUpulPGzlVe/AJa1zyvnKrqrKlSIF9CLv8vO7E2owa3GIRrsMlfXWunvM2cmRTXCDfgME1mdcWmlzZCaYJJh1Vt6+wtVd2fbH0uAItoUopIPDyFfgYQL6/lwWakRPczAq+RLY1RGy2PM3qMwOxA1txWTFp10qLuahM4OHUcfZB7FY8Q3zVadEFcF5laRLZsMXxWAZh5KxLRUzuDv8YmVjeBbon/dWrwOk6wE6gBHO3PSWBtmE9r7fIZ46348AETKGj1W5Mp7feelbx67aJufaxTnw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zORhsPcXtV2jlio+bhW8L0m0rnNNqoSrBL+dlXLpGzY=;
- b=jCPAzYTFAfyZS15EmVgLGC+mHC27aGbkntSYIuNmnrKyrClkwL93z+X5K3upatTsHz036joL4VNDBjB/AbawhGKGbnrVl0KM7CyHEI6/teDxukBm0CLK+SVcntcpZORunHQbZL/58gj1KrGPbMKZJmKznJmTQniV/zD1pTfoasI=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by BLAPR10MB5044.namprd10.prod.outlook.com (2603:10b6:208:326::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7091.29; Thu, 14 Dec
- 2023 05:26:51 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::449f:4fd9:2d3e]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::449f:4fd9:2d3e%4]) with mapi id 15.20.7091.028; Thu, 14 Dec 2023
- 05:26:51 +0000
-From: Mike Christie <michael.christie@oracle.com>
-To: stefanha@redhat.com, jasowang@redhat.com, mst@redhat.com,
-        sgarzare@redhat.com, pbonzini@redhat.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org
-Cc: Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 1/1] scsi: virtio_scsi: Add mq_poll support
-Date: Wed, 13 Dec 2023 23:26:49 -0600
-Message-Id: <20231214052649.57743-1-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.34.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: DS7PR03CA0005.namprd03.prod.outlook.com
- (2603:10b6:5:3b8::10) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LmQyDSUg"
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CCCFA3;
+	Wed, 13 Dec 2023 21:49:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1702532999; x=1734068999;
+  h=date:from:to:cc:subject:message-id;
+  bh=/tvvCXJbjyaaTjRnMR0lHnsl03e4/xREQfN7AaDv2R8=;
+  b=LmQyDSUgVAAAnNhAzrS5PzWf8wrkfI6o6T6QcNJlAgibklrKa1iGcTr9
+   R88WpBJSlGKLn5U9ndbPfp98ux6MHvRxeYosSVQ0Ix89l8lCuSuUv/8+4
+   K8q5aVBYrJPDQUwBTIIFu7BmdgdbMJFfczrqekJjJYhB0sjqZgPRB54OB
+   s7lDnOnNbpKdvBQVzPnNZW2cHZGkjt/sRuOZK8P2izINNeB9mXzCWSpD5
+   W5xEhVO5LEls14qA0MTkNfzlzSivQssBtk1buj6efJOTwGSXEyDHF68VH
+   OUOgf7cqJq/F7FFAj6UvLl8XjRULynplK9PH7TaKSmynGZhEBxTcSCFW9
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="2226163"
+X-IronPort-AV: E=Sophos;i="6.04,274,1695711600"; 
+   d="scan'208";a="2226163"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 21:49:58 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="723942102"
+X-IronPort-AV: E=Sophos;i="6.04,274,1695711600"; 
+   d="scan'208";a="723942102"
+Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
+  by orsmga003.jf.intel.com with ESMTP; 13 Dec 2023 21:49:53 -0800
+Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rDebX-000Le1-14;
+	Thu, 14 Dec 2023 05:49:51 +0000
+Date: Thu, 14 Dec 2023 13:49:37 +0800
+From: kernel test robot <lkp@intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Memory Management List <linux-mm@kvack.org>,
+ amd-gfx@lists.freedesktop.org, linux-afs@lists.infradead.org,
+ linux-arch@vger.kernel.org, linux-bcachefs@vger.kernel.org,
+ linux-csky@vger.kernel.org, linux-hwmon@vger.kernel.org,
+ linux-input@vger.kernel.org, linux-leds@vger.kernel.org,
+ linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
+ ntfs3@lists.linux.dev, rcu@vger.kernel.org, sparclinux@vger.kernel.org
+Subject: [linux-next:master] BUILD REGRESSION
+ 48e8992e33abf054bcc0bb2e77b2d43bb899212e
+Message-ID: <202312141328.x0H6s9CL-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|BLAPR10MB5044:EE_
-X-MS-Office365-Filtering-Correlation-Id: f66d9bcd-69bc-4ec2-a422-08dbfc65465b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	4JSNJrzxnPPXEqxAVlPmJHhC2r8PcRffC2imzoONA6ZLKJK35xG0cYLOX1Qnl553HLOxae55pQjQuEEWOttkvTKTRnLA4TW3U7LHMt8RYtjgnLlL8JPFIThqvVaZG8FqYILouJdeZi53RCJaL4aZhHQ0OeVuGaCHVea6fIAfEXmSBqS4qDo9ZsqqlB8evlkLOmUUAOwOVxE2ux0CeBHNeOm4rot/AH6ovmHFysRGmn3+fjJ5RnCbT3S35JC2yXFkJALX64NfGo9Nf2blnYCIw7M9KIiI8LFWeeci7PxTK0daBwK2iHZXIDG7wUYeBp8HtAtkiayUpffMyn458tTQ0DpY79VW4P7EqMS73Oq2Mje0xbODHtrU+PBWgHKOGCpm4x1Bk/d6VU/powMSzOFpVUkr+293NHFJ9kSaxap9FztzHsb7lY08t3ZsyhwvkxI68NQOXREiXVzI/QSqA8saTRvr2hm9iu6dOcQpclIaomk6+C58I4UMDhKFALeb96uXh5vEEsoHfhbbgmJgMb9q6kahYsTnudtpaRCA5pOzES7/M3gwTYjUlsioRIfKcKY1
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(346002)(366004)(396003)(39860400002)(376002)(230922051799003)(186009)(64100799003)(451199024)(1800799012)(83380400001)(2616005)(6512007)(107886003)(1076003)(26005)(38100700002)(8676002)(8936002)(4326008)(316002)(2906002)(5660300002)(6486002)(478600001)(41300700001)(6506007)(66476007)(66946007)(66556008)(36756003)(86362001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?uYt+wj8uMhKSEk41c7oHYRlde2jbqk44c233Gf8Z9/qRMkeHwEYAN6ve6nos?=
- =?us-ascii?Q?8B25dd886ySrHGbbBBz+ZfyMi+4kJTyY6Qua9QS6NkNCTrETQbHZ0wkeqRRT?=
- =?us-ascii?Q?Rkf9JXW2AX4A5j9QZw7Yg6a+eOeh8/zGqYG3b+0zK/T9yp0O4lc9wYCW0AWn?=
- =?us-ascii?Q?Kermon8I4CjyYY3TxgQf0eY6YKkJccz80r0Tbnj8I0cW+rmiJub5KjPHUh9k?=
- =?us-ascii?Q?5u/9z0uIfYM5+L+VDcz/O5Kc49QOUhz8eZqlxiX2HGINgjqfuugBL6WSjWHD?=
- =?us-ascii?Q?/8OVpw5w0T6DiPR7qN3x5p0t1yQAeAchCj1RfVSAvCnfu0171Gc1+3MKovIB?=
- =?us-ascii?Q?RTGxbsAI8Xy0B9ITczBYXkryr4OdZXkh1oJYpjr7WTT2X9I9DDbOHje1uljd?=
- =?us-ascii?Q?jffcvbX3RM2BQCiSJYbWr3YSpMTA68n7QdswTNOgDH54Dtx30QWyLF9+3J4h?=
- =?us-ascii?Q?r5k8DnK9gjpGVDyV2L6DHlJ4A1zRAarmSTEcrFZC8EO7XDJUSmAzhoXLJ1r8?=
- =?us-ascii?Q?uSPUG/DG9Z9BFzk+iPmO3ZhA/ZNNPLNJ+6R0OUwW4KQ/PYcYyUugwefzrwK2?=
- =?us-ascii?Q?zR9bRrqAaGJw2oR0eQSi92N2S02Dk9uvcMifZsov8lplsRNPPK5QYvEDeDbe?=
- =?us-ascii?Q?52NUN5TZHKWAW4xAKrymF20ii/CSVx33DD4TIEnuSYHLNClc3MXHDv4lbfEP?=
- =?us-ascii?Q?K74jj4nC41Mu+PwvPEBL3UlKi/6oGw3Xsv91mMVGc+pPQzTA1Mlkf8XRJtF8?=
- =?us-ascii?Q?jUXStiWhou7vAZKMh4TinXyN3maHxTfXgNHpY+3+0Gfv9WGnkWurso6qWYc2?=
- =?us-ascii?Q?e10HJoyAeC6vULs07QYP0vcb9qORmJgx0fVhL4VI/2eTDbKZ7wDo/Uw8mdvF?=
- =?us-ascii?Q?060oP3yZVpq4PnSxXpw4rmQrb5m4ysxi3Tpu3rfH4/VKoWdvNxmTDCd9lhFo?=
- =?us-ascii?Q?2Q12ogT8GoWpVXHgYG0uOkjgAFvIPF52Xls559mwy9zuF9N7LGue7NOVL7Fo?=
- =?us-ascii?Q?ZuqcEexUYxhmHcmtsZ/QdPxKeps7F6wDPbCQ1mWphLbLhvw7iQYJu6p0/gDQ?=
- =?us-ascii?Q?VYmL0KlhShGd1OUQcj5DVAhTH1EpFI2tfotL+4WS+bYPEunJLtURUCu1hjr1?=
- =?us-ascii?Q?Z90xFY5sfTa8hmbfufURb04Q2izmqHpstqLMYRv+LI+Bas0Ds0AcLcOATDbL?=
- =?us-ascii?Q?8U54VIlaAcFmStN/0UIUwPW39GtMN07NlLFobIjWGXDTgnhZp77lC6HbMTa4?=
- =?us-ascii?Q?e+aqH2kJz1PnIx7kaC4NkEqXzdWEOUGX3Zc4mzW0G2z/5qByejk70rH5gt1h?=
- =?us-ascii?Q?otW/aucNfMvB92vIwn+Fj45Yd7Fi0mfEeBrjXmjNSLMW3H5pGNmeV4yNtrH5?=
- =?us-ascii?Q?5d2RHBE8H8xMvqsHFa43oxsJEV5zgmheaKumMBmVoXC9F5iOAfALJ3q8c1US?=
- =?us-ascii?Q?/4fo2bBtWX1MOcIcaDREH+UCCIdp0TCgPAaFzneqK8n9QGJ58AXCKEIftj17?=
- =?us-ascii?Q?e1z3N2D+PaO6VDQbc/Rz5CdUQ4qpHSEuXCNPAWzkeZEX9pHQFC7V727iW6U4?=
- =?us-ascii?Q?3FWWaoo74UomW1w/VPfCOxdRc3CuHmCgOBcBVwGm3KQXgCGEEYhNFc4h+Js3?=
- =?us-ascii?Q?BQ=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	XsbSYWfXtvBTn1mrDZp+nLrIqHrdlsv9FgcCuwyh/DUVFgHIbKV/hd3VL3KFmBm34CgUiVdNaOFnwjLsN9FjsE5XdADHg7fIR1Rrhm4bG+YqW1zHbaSFOSeLQG9i/aOhRU3lQDhlPgsz0dLQ7OQxWzcTGUIrR2DxaNjGu5xgATVcFmAotiw+0MdVrxr/BU2O00dEsvct1pKKcBgRmWXKVHQfq2gbN1l+bi/x9trkfSgwhVLH4Y6hieQKK2l+hgLyqYCqPWRPUIjdAefrY+KnCdtghDPw/cPBrzSt1pCMzZwzjnPVddMsShaldxEMbSzvvQOsrpf4mP637I6ZfRykSs4UbK2t+hPf6NVP31JBt76aP+LKW5edQAxCnuUGeccc3H07IpHF4X15yTYW8WeFuTTSQyAQTV26llud0D7di3Be3LvUmPQ+MNJazn603ETtSMNRox0WRitAR6ZaaJOwmYB9fzc9wr4nCjBH4HSmWGdkiTo6PxhjWsTrzy3OCGLXnzJXEhYwjjIkggkWKGMcizTRCgb0cPK1VzDHQ0bB/N80d9ahukeaNGcrf7b85Y7CzYHDjtsJ5drNS3Gn4kh5ra3MiIaDfs09DSYz6B7VyTU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f66d9bcd-69bc-4ec2-a422-08dbfc65465b
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Dec 2023 05:26:50.6908
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Nx3C5xe1s9KjdBM9+oG/ZFN5ekHH+vFKK+JbuAr1+CPXP9v9O0qVTMyLCtdIsC+K25n4OF4fWp9lHkAb2Wy/hM6IPK8edUBo37/FQrJQ2Z4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB5044
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-14_02,2023-12-13_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- mlxlogscore=999 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2312140031
-X-Proofpoint-ORIG-GUID: MLHbxdVv_fzYuxVVqBFm0f-DNDnN5x1r
-X-Proofpoint-GUID: MLHbxdVv_fzYuxVVqBFm0f-DNDnN5x1r
 
-This adds polling support to virtio-scsi. It's based on and works similar
-to virtblk support where we add a module param to specify the number of
-poll queues then subtract to calculate the IO queues.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: 48e8992e33abf054bcc0bb2e77b2d43bb899212e  Add linux-next specific files for 20231213
 
-When using 8 poll queues and a vhost worker per queue we see 4K IOPs
-with fio:
+Error/Warning reports:
 
-fio --filename=/dev/sda --direct=1 --rw=randread --bs=4k \
---ioengine=io_uring --hipri --iodepth=128  --numjobs=$NUM_JOBS
+https://lore.kernel.org/oe-kbuild-all/202312131758.NED6TvQK-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202312131823.hO2NP34f-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202312131907.mnyTUNnO-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202312140633.nmHowPIh-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202312140939.zA3tdSi2-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202312141227.C2h1IzfI-lkp@intel.com
 
-increase like:
+Error/Warning: (recently discovered and may have been fixed)
 
-jobs	base	poll
-1	207K	296K
-2	392K	552K
-3	581K	860K
-4	765K	1235K
-5	936K	1598K
-6	1104K	1880K
-7	1253K	2095K
-8	1311k	2187K
+drivers/hid/hid-nintendo.c:371:13: error: initializer element is not constant
+fs/afs/callback.c:106:(.text+0x308): undefined reference to `__generic_xchg_called_with_bad_pointer'
+fs/afs/rotate.c:69:(.text+0x26c): undefined reference to `__generic_xchg_called_with_bad_pointer'
+fs/bcachefs/btree_iter.c:1442:28: warning: variable 'path' set but not used [-Wunused-but-set-variable]
+include/asm-generic/cmpxchg.h:76:(.text+0x1f6): undefined reference to `__generic_xchg_called_with_bad_pointer'
+include/linux/rcupdate.h:301:(.text+0x5cb2): relocation truncated to fit: R_CKCORE_PCREL_IMM16BY4 against `__jump_table'
+kernel/rcu/tree.c:2965:(.text+0x5b44): relocation truncated to fit: R_CKCORE_PCREL_IMM16BY4 against `__jump_table'
+ld.lld: error: undefined symbol: __bad_xchg
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
----
- drivers/scsi/virtio_scsi.c | 78 +++++++++++++++++++++++++++++++++++---
- 1 file changed, 73 insertions(+), 5 deletions(-)
+Unverified Error/Warning (likely false positive, please contact us if interested):
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 9d1bdcdc1331..4cf20be668a6 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -37,6 +37,11 @@
- #define VIRTIO_SCSI_EVENT_LEN 8
- #define VIRTIO_SCSI_VQ_BASE 2
- 
-+static unsigned int virtscsi_poll_queues;
-+module_param(virtscsi_poll_queues, uint, 0644);
-+MODULE_PARM_DESC(virtscsi_poll_queues,
-+		 "The number of dedicated virtqueues for polling I/O");
-+
- /* Command queue element */
- struct virtio_scsi_cmd {
- 	struct scsi_cmnd *sc;
-@@ -76,6 +81,7 @@ struct virtio_scsi {
- 	struct virtio_scsi_event_node event_list[VIRTIO_SCSI_EVENT_LEN];
- 
- 	u32 num_queues;
-+	int io_queues[HCTX_MAX_TYPES];
- 
- 	struct hlist_node node;
- 
-@@ -722,9 +728,49 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
- static void virtscsi_map_queues(struct Scsi_Host *shost)
- {
- 	struct virtio_scsi *vscsi = shost_priv(shost);
--	struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
-+	int i, qoff;
-+
-+	for (i = 0, qoff = 0; i < shost->nr_maps; i++) {
-+		struct blk_mq_queue_map *map = &shost->tag_set.map[i];
-+
-+		map->nr_queues = vscsi->io_queues[i];
-+		map->queue_offset = qoff;
-+		qoff += map->nr_queues;
-+
-+		if (map->nr_queues == 0)
-+			continue;
-+
-+		/*
-+		 * Regular queues have interrupts and hence CPU affinity is
-+		 * defined by the core virtio code, but polling queues have
-+		 * no interrupts so we let the block layer assign CPU affinity.
-+		 */
-+		if (i == HCTX_TYPE_POLL)
-+			blk_mq_map_queues(map);
-+		else
-+			blk_mq_virtio_map_queues(map, vscsi->vdev, 2);
-+	}
-+}
-+
-+static int virtscsi_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
-+{
-+	struct virtio_scsi *vscsi = shost_priv(shost);
-+	struct virtio_scsi_vq *virtscsi_vq = &vscsi->req_vqs[queue_num];
-+	unsigned long flags;
-+	unsigned int len;
-+	int found = 0;
-+	void *buf;
-+
-+	spin_lock_irqsave(&virtscsi_vq->vq_lock, flags);
-+
-+	while ((buf = virtqueue_get_buf(virtscsi_vq->vq, &len)) != NULL) {
-+		virtscsi_complete_cmd(vscsi, buf);
-+		found++;
-+	}
-+
-+	spin_unlock_irqrestore(&virtscsi_vq->vq_lock, flags);
- 
--	blk_mq_virtio_map_queues(qmap, vscsi->vdev, 2);
-+	return found;
- }
- 
- static void virtscsi_commit_rqs(struct Scsi_Host *shost, u16 hwq)
-@@ -751,6 +797,7 @@ static const struct scsi_host_template virtscsi_host_template = {
- 	.this_id = -1,
- 	.cmd_size = sizeof(struct virtio_scsi_cmd),
- 	.queuecommand = virtscsi_queuecommand,
-+	.mq_poll = virtscsi_mq_poll,
- 	.commit_rqs = virtscsi_commit_rqs,
- 	.change_queue_depth = virtscsi_change_queue_depth,
- 	.eh_abort_handler = virtscsi_abort,
-@@ -795,13 +842,14 @@ static int virtscsi_init(struct virtio_device *vdev,
- {
- 	int err;
- 	u32 i;
--	u32 num_vqs;
-+	u32 num_vqs, num_poll_vqs, num_req_vqs;
- 	vq_callback_t **callbacks;
- 	const char **names;
- 	struct virtqueue **vqs;
- 	struct irq_affinity desc = { .pre_vectors = 2 };
- 
--	num_vqs = vscsi->num_queues + VIRTIO_SCSI_VQ_BASE;
-+	num_req_vqs = vscsi->num_queues;
-+	num_vqs = num_req_vqs + VIRTIO_SCSI_VQ_BASE;
- 	vqs = kmalloc_array(num_vqs, sizeof(struct virtqueue *), GFP_KERNEL);
- 	callbacks = kmalloc_array(num_vqs, sizeof(vq_callback_t *),
- 				  GFP_KERNEL);
-@@ -812,15 +860,31 @@ static int virtscsi_init(struct virtio_device *vdev,
- 		goto out;
- 	}
- 
-+	num_poll_vqs = min_t(unsigned int, virtscsi_poll_queues,
-+			     num_req_vqs - 1);
-+	vscsi->io_queues[HCTX_TYPE_DEFAULT] = num_req_vqs - num_poll_vqs;
-+	vscsi->io_queues[HCTX_TYPE_READ] = 0;
-+	vscsi->io_queues[HCTX_TYPE_POLL] = num_poll_vqs;
-+
-+	dev_info(&vdev->dev, "%d/%d/%d default/read/poll queues\n",
-+		 vscsi->io_queues[HCTX_TYPE_DEFAULT],
-+		 vscsi->io_queues[HCTX_TYPE_READ],
-+		 vscsi->io_queues[HCTX_TYPE_POLL]);
-+
- 	callbacks[0] = virtscsi_ctrl_done;
- 	callbacks[1] = virtscsi_event_done;
- 	names[0] = "control";
- 	names[1] = "event";
--	for (i = VIRTIO_SCSI_VQ_BASE; i < num_vqs; i++) {
-+	for (i = VIRTIO_SCSI_VQ_BASE; i < num_vqs - num_poll_vqs; i++) {
- 		callbacks[i] = virtscsi_req_done;
- 		names[i] = "request";
- 	}
- 
-+	for (; i < num_vqs; i++) {
-+		callbacks[i] = NULL;
-+		names[i] = "request_poll";
-+	}
-+
- 	/* Discover virtqueues and write information to configuration.  */
- 	err = virtio_find_vqs(vdev, num_vqs, vqs, callbacks, names, &desc);
- 	if (err)
-@@ -874,6 +938,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 
- 	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
- 	shost->sg_tablesize = sg_elems;
-+	shost->nr_maps = 1;
- 	vscsi = shost_priv(shost);
- 	vscsi->vdev = vdev;
- 	vscsi->num_queues = num_queues;
-@@ -883,6 +948,9 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 	if (err)
- 		goto virtscsi_init_failed;
- 
-+	if (vscsi->io_queues[HCTX_TYPE_POLL])
-+		shost->nr_maps = HCTX_TYPE_POLL + 1;
-+
- 	shost->can_queue = virtqueue_get_vring_size(vscsi->req_vqs[0].vq);
- 
- 	cmd_per_lun = virtscsi_config_get(vdev, cmd_per_lun) ?: 1;
+callback.c:(.text+0x214): relocation truncated to fit: R_NIOS2_CALL26 against `__generic_xchg_called_with_bad_pointer'
+drivers/gpu/drm/amd/amdgpu/../display/dc/hwss/dcn35/dcn35_hwseq.c:1127: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+drivers/scsi/mpi3mr/mpi3mr_app.c:1091 mpi3mr_map_data_buffer_dma() warn: returning -1 instead of -ENOMEM is sloppy
+drivers/scsi/mpi3mr/mpi3mr_app.c:712 mpi3mr_bsg_build_sgl() warn: missing unwind goto?
+fs/bcachefs/inode.c:1171 bch2_delete_dead_inodes() error: potentially using uninitialized 'ret'.
+rotate.c:(.text+0x20c): relocation truncated to fit: R_NIOS2_CALL26 against `__generic_xchg_called_with_bad_pointer'
+
+Error/Warning ids grouped by kconfigs:
+
+gcc_recent_errors
+|-- alpha-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- arc-allmodconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- arc-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- arc-randconfig-r112-20231213
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- arc-randconfig-r131-20231212
+|   `-- drivers-hwmon-max31827.c:sparse:sparse:dubious:x-y
+|-- arm-allmodconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- arm-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- csky-allmodconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- csky-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- csky-buildonly-randconfig-r005-20221115
+|   |-- fs-afs-callback.c:(.text):undefined-reference-to-__generic_xchg_called_with_bad_pointer
+|   |-- fs-afs-rotate.c:(.text):undefined-reference-to-__generic_xchg_called_with_bad_pointer
+|   `-- include-asm-generic-cmpxchg.h:(.text):undefined-reference-to-__generic_xchg_called_with_bad_pointer
+|-- csky-randconfig-002-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- csky-randconfig-r013-20230826
+|   |-- include-linux-rcupdate.h:(.text):relocation-truncated-to-fit:R_CKCORE_PCREL_IMM16BY4-against-__jump_table
+|   `-- kernel-rcu-tree.c:(.text):relocation-truncated-to-fit:R_CKCORE_PCREL_IMM16BY4-against-__jump_table
+|-- csky-randconfig-r111-20231213
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-zlib_inflate-zlib_inflate.o
+|   |-- arch-csky-kernel-vdso-vgettimeofday.c:sparse:sparse:function-__vdso_clock_gettime-with-external-linkage-has-definition
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- csky-randconfig-r113-20231213
+|   |-- arch-csky-kernel-vdso-vgettimeofday.c:sparse:sparse:function-__vdso_clock_gettime-with-external-linkage-has-definition
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- csky-randconfig-r121-20231213
+|   |-- arch-csky-kernel-vdso-vgettimeofday.c:sparse:sparse:function-__vdso_clock_gettime-with-external-linkage-has-definition
+|   |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   |-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- i386-randconfig-014-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- i386-randconfig-015-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- i386-randconfig-016-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- loongarch-allmodconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- loongarch-defconfig
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-hwss-dcn35-dcn35_hwseq.c:warning:This-comment-starts-with-but-isn-t-a-kernel-doc-comment.-Refer-Documentation-doc-guide-kernel-doc.rst
+|-- loongarch-randconfig-001-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- m68k-allmodconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- m68k-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- microblaze-allmodconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- microblaze-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- mips-allyesconfig
+|   |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- mips-decstation_r4k_defconfig
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-zlib_inflate-zlib_inflate.o
+|-- nios2-allmodconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- nios2-allyesconfig
+|   |-- callback.c:(.text):relocation-truncated-to-fit:R_NIOS2_CALL26-against-__generic_xchg_called_with_bad_pointer
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   |-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- rotate.c:(.text):relocation-truncated-to-fit:R_NIOS2_CALL26-against-__generic_xchg_called_with_bad_pointer
+|-- nios2-randconfig-001-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- nios2-randconfig-r112-20231213
+|   |-- fs-afs-main.c:sparse:sparse:cast-removes-address-space-__rcu-of-expression
+|   `-- fs-afs-main.c:sparse:sparse:incorrect-type-in-argument-(different-address-spaces)-expected-struct-callback_head-head-got-struct-callback_head-noderef-__rcu
+|-- openrisc-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- openrisc-randconfig-r122-20231213
+|   |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   |-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- openrisc-randconfig-r131-20231213
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- parisc-allmodconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-tty-serial-8250_parisc.o
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- parisc-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- parisc-randconfig-002-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- powerpc64-randconfig-r132-20231213
+|   |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   |-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|   |-- lib-raid6-altivec4.c:sparse:incomplete-type-static-toplevel-unative_t
+|   |-- lib-raid6-altivec4.c:sparse:int-static-signed-toplevel-__preempt_count_sub(-...-)
+|   |-- lib-raid6-altivec4.c:sparse:int-static-signed-toplevel-disable_kernel_altivec(-...-)
+|   |-- lib-raid6-altivec4.c:sparse:int-static-toplevel-unative_t
+|   |-- lib-raid6-altivec8.c:sparse:incomplete-type-static-toplevel-unative_t
+|   |-- lib-raid6-altivec8.c:sparse:int-static-signed-toplevel-__preempt_count_sub(-...-)
+|   |-- lib-raid6-altivec8.c:sparse:int-static-signed-toplevel-disable_kernel_altivec(-...-)
+|   |-- lib-raid6-altivec8.c:sparse:int-static-toplevel-unative_t
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- powerpc64-randconfig-r133-20231213
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- riscv-allmodconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- riscv-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- s390-allmodconfig
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-s390-block-dasd_diag_mod.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-s390-block-dasd_eckd_mod.o
+|   |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-drivers-s390-block-dasd_fba_mod.o
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- s390-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- s390-defconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- s390-randconfig-001-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- sh-allmodconfig
+|   |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- sh-allyesconfig
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- sparc-allmodconfig
+|   |-- arch-sparc-kernel-module.c:warning:variable-strtab-set-but-not-used
+|   |-- arch-sparc-mm-init_64.c:warning:variable-hv_pgsz_idx-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- sparc-allnoconfig
+|   |-- arch-sparc-mm-leon_mm.c:warning:variable-paddrbase-set-but-not-used
+|   `-- arch-sparc-mm-srmmu.c:warning:variable-clear-set-but-not-used
+|-- sparc-defconfig
+|   |-- arch-sparc-kernel-module.c:warning:variable-strtab-set-but-not-used
+|   |-- arch-sparc-mm-leon_mm.c:warning:variable-paddrbase-set-but-not-used
+|   `-- arch-sparc-mm-srmmu.c:warning:variable-clear-set-but-not-used
+|-- sparc-randconfig-001-20231213
+|   |-- (.head.text):relocation-truncated-to-fit:R_SPARC_WDISP22-against-init.text
+|   |-- (.init.text):relocation-truncated-to-fit:R_SPARC_WDISP22-against-symbol-leon_smp_cpu_startup-defined-in-.text-section-in-arch-sparc-kernel-trampoline_32.o
+|   |-- arch-sparc-mm-leon_mm.c:warning:variable-paddrbase-set-but-not-used
+|   `-- arch-sparc-mm-srmmu.c:warning:variable-clear-set-but-not-used
+|-- sparc-randconfig-002-20231213
+|   |-- (.head.text):relocation-truncated-to-fit:R_SPARC_WDISP22-against-init.text
+|   |-- (.init.text):relocation-truncated-to-fit:R_SPARC_WDISP22-against-symbol-leon_smp_cpu_startup-defined-in-.text-section-in-arch-sparc-kernel-trampoline_32.o
+|   |-- arch-sparc-mm-leon_mm.c:warning:variable-paddrbase-set-but-not-used
+|   |-- arch-sparc-mm-srmmu.c:warning:variable-clear-set-but-not-used
+|   |-- parport_pc.c:(.text):undefined-reference-to-ebus_dma_irq_enable
+|   |-- parport_pc.c:(.text):undefined-reference-to-ebus_dma_register
+|   |-- sparc-linux-ld:parport_pc.c:(.text):undefined-reference-to-ebus_dma_irq_enable
+|   |-- sparc-linux-ld:parport_pc.c:(.text):undefined-reference-to-ebus_dma_unregister
+|   `-- sparc-linux-ld:parport_pc.c:(.text):undefined-reference-to-ns87303_lock
+|-- sparc-randconfig-r123-20231213
+|   |-- (.head.text):relocation-truncated-to-fit:R_SPARC_WDISP22-against-init.text
+|   |-- arch-sparc-kernel-module.c:warning:variable-strtab-set-but-not-used
+|   |-- arch-sparc-mm-leon_mm.c:warning:variable-paddrbase-set-but-not-used
+|   |-- arch-sparc-mm-srmmu.c:warning:variable-clear-set-but-not-used
+|   |-- fs-ntfs3-ntfs.h:sparse:sparse:static-assertion-failed:sizeof(struct-ATTR_LIST_ENTRY)
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- sparc-sparc32_defconfig
+|   |-- arch-sparc-kernel-module.c:warning:variable-strtab-set-but-not-used
+|   |-- arch-sparc-mm-leon_mm.c:warning:variable-paddrbase-set-but-not-used
+|   `-- arch-sparc-mm-srmmu.c:warning:variable-clear-set-but-not-used
+|-- sparc-sparc64_defconfig
+|   |-- arch-sparc-kernel-module.c:warning:variable-strtab-set-but-not-used
+|   `-- arch-sparc-mm-init_64.c:warning:variable-hv_pgsz_idx-set-but-not-used
+|-- sparc64-allmodconfig
+|   |-- arch-sparc-kernel-module.c:warning:variable-strtab-set-but-not-used
+|   |-- arch-sparc-mm-init_64.c:warning:variable-hv_pgsz_idx-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- sparc64-allyesconfig
+|   |-- arch-sparc-kernel-module.c:warning:variable-strtab-set-but-not-used
+|   |-- arch-sparc-mm-init_64.c:warning:variable-hv_pgsz_idx-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- sparc64-defconfig
+|   |-- arch-sparc-kernel-module.c:warning:variable-strtab-set-but-not-used
+|   `-- arch-sparc-mm-init_64.c:warning:variable-hv_pgsz_idx-set-but-not-used
+|-- sparc64-randconfig-001-20231213
+|   |-- arch-sparc-mm-init_64.c:warning:variable-hv_pgsz_idx-set-but-not-used
+|   |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- sparc64-randconfig-002-20231213
+|   |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|-- x86_64-allnoconfig
+|   `-- Warning:MAINTAINERS-references-a-file-that-doesn-t-exist:Documentation-devicetree-bindings-display-panel-synaptics-r63353.yaml
+|-- x86_64-randconfig-016-20231214
+|   `-- drivers-hid-hid-nintendo.c:error:initializer-element-is-not-constant
+|-- x86_64-randconfig-122-20231213
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- x86_64-randconfig-123-20231213
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   |-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- x86_64-randconfig-161-20231214
+|   |-- drivers-scsi-mpi3mr-mpi3mr_app.c-mpi3mr_bsg_build_sgl()-warn:missing-unwind-goto
+|   `-- drivers-scsi-mpi3mr-mpi3mr_app.c-mpi3mr_map_data_buffer_dma()-warn:returning-instead-of-ENOMEM-is-sloppy
+|-- xtensa-randconfig-001-20231213
+|   |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+|   |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+|   `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+`-- xtensa-randconfig-002-20231213
+    |-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-zlib_inflate-zlib_inflate.o
+    |-- fs-bcachefs-btree_iter.c:warning:variable-path-set-but-not-used
+    |-- fs-bcachefs-chardev.c:warning:function-run_thread_with_file-might-be-a-candidate-for-gnu_printf-format-attribute
+    `-- fs-bcachefs-super.c:warning:function-__bch2_print-might-be-a-candidate-for-gnu_printf-format-attribute
+clang_recent_errors
+|-- arm-defconfig
+|   |-- WARNING:modpost:vmlinux:section-mismatch-in-reference:at91_poweroff_probe-(section:.text)-at91_wakeup_status-(section:.init.text)
+|   `-- WARNING:modpost:vmlinux:section-mismatch-in-reference:at91_shdwc_probe-(section:.text)-at91_wakeup_status-(section:.init.text)
+|-- arm-randconfig-003-20231213
+|   `-- ld.lld:error:undefined-symbol:__bad_xchg
+|-- arm64-allmodconfig
+|   `-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|-- arm64-allyesconfig
+|   `-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|-- hexagon-allmodconfig
+|   `-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|-- hexagon-allyesconfig
+|   `-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|-- i386-allmodconfig
+|   |-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-allyesconfig
+|   |-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-buildonly-randconfig-001-20231213
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-buildonly-randconfig-002-20231213
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-randconfig-001-20231213
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-randconfig-002-20231213
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-randconfig-003-20231213
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-randconfig-004-20231213
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-randconfig-006-20231213
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-randconfig-054-20231213
+|   `-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|-- i386-randconfig-062-20231213
+|   |-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- i386-randconfig-063-20231213
+|   |-- fs-ntfs3-ntfs.h:error:static-assertion-failed-due-to-requirement-sizeof(struct-ATTR_LIST_ENTRY):sizeof(struct-ATTR_LIST_ENTRY)
+|   `-- lib-zstd-compress-zstd_fast.c:sparse:sparse:Using-plain-integer-as-NULL-pointer
+|-- i386-randconfig-141-20231213
+|   |-- lib-zstd-common-bits.h-ZSTD_countLeadingZeros32()-warn:inconsistent-indenting
+|   |-- lib-zstd-common-bits.h-ZSTD_countTrailingZeros32()-warn:inconsistent-indenting
+|   |-- lib-zstd-decompress-..-common-bits.h-ZSTD_countLeadingZeros32()-warn:inconsistent-indenting
+|   |-- lib-zstd-decompress-..-common-bits.h-ZSTD_countTrailingZeros32()-warn:inconsistent-indenting
+|   `-- lib-zstd-decompress-..-common-bits.h-ZSTD_countTrailingZeros64()-warn:inconsistent-indenting
+|-- powerpc-allmodconfig
+|   `-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|-- powerpc-allyesconfig
+|   `-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|-- powerpc-randconfig-003-20231213
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-zlib_inflate-zlib_inflate.o
+|-- x86_64-allmodconfig
+|   `-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|-- x86_64-allyesconfig
+|   `-- drivers-leds-leds-max5970.c:warning:variable-num_leds-set-but-not-used
+|-- x86_64-buildonly-randconfig-002-20231213
+|   `-- WARNING:modpost:missing-MODULE_DESCRIPTION()-in-lib-zlib_inflate-zlib_inflate.o
+`-- x86_64-randconfig-161-20231213
+    |-- fs-bcachefs-inode.c-bch2_delete_dead_inodes()-error:potentially-using-uninitialized-ret-.
+    |-- lib-zstd-common-bits.h-ZSTD_countLeadingZeros32()-warn:inconsistent-indenting
+    |-- lib-zstd-common-bits.h-ZSTD_countTrailingZeros32()-warn:inconsistent-indenting
+    |-- lib-zstd-compress-..-common-bits.h-ZSTD_countLeadingZeros32()-warn:inconsistent-indenting
+    |-- lib-zstd-compress-..-common-bits.h-ZSTD_countLeadingZeros64()-warn:inconsistent-indenting
+    |-- lib-zstd-compress-..-common-bits.h-ZSTD_countTrailingZeros32()-warn:inconsistent-indenting
+    |-- lib-zstd-compress-..-common-bits.h-ZSTD_countTrailingZeros64()-warn:inconsistent-indenting
+    |-- lib-zstd-decompress-..-common-bits.h-ZSTD_countLeadingZeros32()-warn:inconsistent-indenting
+    `-- lib-zstd-decompress-..-common-bits.h-ZSTD_countTrailingZeros64()-warn:inconsistent-indenting
+
+elapsed time: 1477m
+
+configs tested: 178
+configs skipped: 2
+
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                   randconfig-001-20231213   gcc  
+arc                   randconfig-002-20231213   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                         axm55xx_defconfig   gcc  
+arm                                 defconfig   clang
+arm                            hisi_defconfig   gcc  
+arm                       imx_v4_v5_defconfig   clang
+arm                         lpc18xx_defconfig   gcc  
+arm                   randconfig-001-20231213   clang
+arm                   randconfig-002-20231213   clang
+arm                   randconfig-003-20231213   clang
+arm                   randconfig-004-20231213   clang
+arm                        spear3xx_defconfig   clang
+arm64                            allmodconfig   clang
+arm64                             allnoconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                 randconfig-001-20231213   clang
+arm64                 randconfig-002-20231213   clang
+arm64                 randconfig-003-20231213   clang
+arm64                 randconfig-004-20231213   clang
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+csky                  randconfig-001-20231213   gcc  
+csky                  randconfig-002-20231213   gcc  
+hexagon                          allmodconfig   clang
+hexagon                           allnoconfig   clang
+hexagon                          allyesconfig   clang
+hexagon                             defconfig   clang
+hexagon               randconfig-001-20231213   clang
+hexagon               randconfig-002-20231213   clang
+i386                             allmodconfig   clang
+i386                              allnoconfig   clang
+i386                             allyesconfig   clang
+i386         buildonly-randconfig-001-20231213   clang
+i386         buildonly-randconfig-002-20231213   clang
+i386         buildonly-randconfig-003-20231213   clang
+i386         buildonly-randconfig-004-20231213   clang
+i386         buildonly-randconfig-005-20231213   clang
+i386         buildonly-randconfig-006-20231213   clang
+i386                                defconfig   gcc  
+i386                  randconfig-001-20231213   clang
+i386                  randconfig-002-20231213   clang
+i386                  randconfig-003-20231213   clang
+i386                  randconfig-004-20231213   clang
+i386                  randconfig-005-20231213   clang
+i386                  randconfig-006-20231213   clang
+i386                  randconfig-011-20231213   gcc  
+i386                  randconfig-012-20231213   gcc  
+i386                  randconfig-013-20231213   gcc  
+i386                  randconfig-014-20231213   gcc  
+i386                  randconfig-015-20231213   gcc  
+i386                  randconfig-016-20231213   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20231213   gcc  
+loongarch             randconfig-002-20231213   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                              allnoconfig   clang
+mips                             allyesconfig   gcc  
+mips                 decstation_r4k_defconfig   gcc  
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                 randconfig-001-20231213   gcc  
+nios2                 randconfig-002-20231213   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc                randconfig-001-20231213   gcc  
+parisc                randconfig-002-20231213   gcc  
+parisc64                            defconfig   gcc  
+powerpc                      acadia_defconfig   clang
+powerpc                          allmodconfig   clang
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   clang
+powerpc               randconfig-001-20231213   clang
+powerpc               randconfig-002-20231213   clang
+powerpc               randconfig-003-20231213   clang
+powerpc                     tqm8541_defconfig   gcc  
+powerpc                      tqm8xx_defconfig   gcc  
+powerpc64             randconfig-001-20231213   clang
+powerpc64             randconfig-002-20231213   clang
+powerpc64             randconfig-003-20231213   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   clang
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                    nommu_k210_defconfig   gcc  
+riscv                 randconfig-001-20231213   clang
+riscv                 randconfig-002-20231213   clang
+riscv                          rv32_defconfig   clang
+s390                             alldefconfig   clang
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                  randconfig-001-20231213   gcc  
+s390                  randconfig-002-20231213   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sh                    randconfig-001-20231213   gcc  
+sh                    randconfig-002-20231213   gcc  
+sh                          rsk7264_defconfig   gcc  
+sh                          sdk7786_defconfig   gcc  
+sh                           se7619_defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                       sparc32_defconfig   gcc  
+sparc                       sparc64_defconfig   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+sparc64               randconfig-001-20231213   gcc  
+sparc64               randconfig-002-20231213   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                    randconfig-001-20231213   clang
+um                    randconfig-002-20231213   clang
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   clang
+x86_64       buildonly-randconfig-001-20231213   clang
+x86_64       buildonly-randconfig-002-20231213   clang
+x86_64       buildonly-randconfig-003-20231213   clang
+x86_64       buildonly-randconfig-004-20231213   clang
+x86_64       buildonly-randconfig-005-20231213   clang
+x86_64       buildonly-randconfig-006-20231213   clang
+x86_64                              defconfig   gcc  
+x86_64                randconfig-001-20231213   gcc  
+x86_64                randconfig-002-20231213   gcc  
+x86_64                randconfig-003-20231213   gcc  
+x86_64                randconfig-004-20231213   gcc  
+x86_64                randconfig-005-20231213   gcc  
+x86_64                randconfig-006-20231213   gcc  
+x86_64                randconfig-011-20231213   clang
+x86_64                randconfig-012-20231213   clang
+x86_64                randconfig-013-20231213   clang
+x86_64                randconfig-014-20231213   clang
+x86_64                randconfig-015-20231213   clang
+x86_64                randconfig-016-20231213   clang
+x86_64                randconfig-071-20231213   clang
+x86_64                randconfig-072-20231213   clang
+x86_64                randconfig-073-20231213   clang
+x86_64                randconfig-074-20231213   clang
+x86_64                randconfig-075-20231213   clang
+x86_64                randconfig-076-20231213   clang
+x86_64                          rhel-8.3-rust   clang
+xtensa                            allnoconfig   gcc  
+xtensa                randconfig-001-20231213   gcc  
+xtensa                randconfig-002-20231213   gcc  
+
 -- 
-2.34.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
