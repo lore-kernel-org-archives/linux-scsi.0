@@ -1,258 +1,260 @@
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E50636AFF;
-	Fri, 15 Dec 2023 15:28:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09F336AEA
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Dec 2023 15:28:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="mUQUjY8z";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="rGQ3PqSj"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1702654107; x=1734190107;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=KYbJ7SlUw/1hisQErTxzaFTHrI+kpZUGQWn9XlntFb0=;
-  b=mUQUjY8zU3X/xIdOeyWK7JHVtcn4eGy0o+PMiB2QPLg6lJpgNXZGGYF8
-   A+ZfLlio8uY4t4245Y+djGCvCcyoj8cucOJER5DArsCkt5nxIQSHIqKMK
-   npud7iJ9zFcc+K7jmbCySMwHjlCWYQExteEPmx8TDkqUxmJGZbEpEkxx3
-   fxWWAKgsBmSAjCNY9sscMkJVoeh6nJ7j70IuMtxkyXdgu3rsQi8wfSXnE
-   GYJq7CAT+TCPyiAo1FbLCN27luBjsP7KkAW/utRPoJsUuoyvifu4s8WI8
-   TryuB56xYvIGY5w4zw+ZAwVbxPBtie2eTmsXn613bj0/LVpHgCYzxrWs2
-   w==;
-X-CSE-ConnectionGUID: L2c0+o6oQnWA9Kmg/rTBrw==
-X-CSE-MsgGUID: 9T2Hl5ZtTMKWNUTIoIXSgw==
-X-IronPort-AV: E=Sophos;i="6.04,279,1695657600"; 
-   d="scan'208";a="5245143"
-Received: from mail-bn7nam10lp2101.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.101])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Dec 2023 23:28:25 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=S/6N9gs5bYm1kH16oswY86ClWgh/IBMWB3P7fe0fscnuDkkZSWhW3VoCY09R7lzbcklGrUb7JGgFQ7qv0eNES8oo7TiOv1GsppAze9alJKA1i1C6HECPwI676v0UyB8Qi0fM0SBYp8TGctZ5XJv+/WatYbMPQhaiAq0pQJrZvVXeFgtWSO1fWjE80PzUSlbL+e7ToRHw1H8sR9H5VblFLan5yqXHPIZ2YYWd1Dszcvq1JaCpFRsM27GVTEccFvKtZo2bHRBp8a6Ijl0n7IWlmZTUS3s0hhGq+gLJKI1lk9nIpJ3K9t5QWc+owbkmK44UCqV5QwK87cwX7HQ14iT+ig==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KYbJ7SlUw/1hisQErTxzaFTHrI+kpZUGQWn9XlntFb0=;
- b=YkjJEwPwP7BVC69Ep59g+WO8JKWR8dnDKW95ynb8llJmZoEBqeRdQEAWfsfcWGASot2LrXQ59RDsPhnqSNGPs9VohmaOML6NmaP8ynnn8O3rZw+yzyiYdqyDymJFIYVdEzEi4zQIcDh4NlwR9M5xA/cZLZ5bsSnUEntiC57PgzC18uTnxsW1MEXgdAw/BgOy746FbLmWgfWMv5iSMZgMGDPF7q5nOTlI2/sZrXk1HkIE6mLzw+cXzdtbXQqcgxhW84pygtI8340wlcjJzQMTwe0aOjNEWTL20DDKtVySnByndjIdWEm737hEVwsh0cJfxyipFmxCiNLlLbXH4aBY7A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KYbJ7SlUw/1hisQErTxzaFTHrI+kpZUGQWn9XlntFb0=;
- b=rGQ3PqSjf8eFVLs40AQIbcZ/MgLuhQwcwZzjmD+dH98tRChA1iBsczs9Gw37k4TkznEuNP1JGb3xm4GhqL2CUneMVXH5tgPeWjhmq9bXN57PVrTT4vLdwdPTbpA73PRwZ/Z5GypjPhgGgjOfV3swg+RQTQK2aKkTTJPYn8sHSzU=
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
- by SJ0PR04MB7869.namprd04.prod.outlook.com (2603:10b6:a03:305::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7091.31; Fri, 15 Dec
- 2023 15:28:20 +0000
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::ffca:609a:2e2:8fa0]) by MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::ffca:609a:2e2:8fa0%4]) with mapi id 15.20.7091.030; Fri, 15 Dec 2023
- 15:28:19 +0000
-From: Niklas Cassel <Niklas.Cassel@wdc.com>
-To: "bugzilla-daemon@kernel.org" <bugzilla-daemon@kernel.org>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: Re: [Bug 218198] Suspend/Resume Regression with attached ATA devices
-Thread-Topic: [Bug 218198] Suspend/Resume Regression with attached ATA devices
-Thread-Index: AQHaL2tLZkHxUhWAhUCHwuvRR1mIAw==
-Date: Fri, 15 Dec 2023 15:28:18 +0000
-Message-ID: <ZXxwg5H/DrfvIe3e@x1-carbon>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qHr3CdgX"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4C4E1C433C9
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Dec 2023 15:28:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702654117;
+	bh=xmUdAt+j2fBqEhjFRWkHQ9RDTZ2MHpRKrWRWBLiCcVo=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=qHr3CdgX/BYfc2tkggMJSpqgmbLqhJ71jpUdZAkax+hGe/c49moeJD8suBTiq3a8O
+	 i2igH+deQeA5D7Cc3p+o5ElugSF0ty/B9gfWd73lgY1P7MAAzDmqY7O7vxc70QOtfN
+	 3Z8/V7OBaEgTKjUGgUPFImPRR8YtsLngKBmf+a8UJBEYCVKeXCWJr6HlLg+vCxnJpU
+	 hAvvGWypof0I3v05c4Tswyf0UTW1gtKbtOabdDfW7LeJtODudQs1bpDFmWhopttO/6
+	 VDWASpqiQpp6aSANJPBCCbK8qQbHHbGQ+/BSr8QAw3FqMAF04pBne4jr6IUsf3tK8R
+	 scIlEwVWMKNLw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 3408BC53BD2; Fri, 15 Dec 2023 15:28:37 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 218198] Suspend/Resume Regression with attached ATA devices
+Date: Fri, 15 Dec 2023 15:28:36 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: Niklas.Cassel@wdc.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-218198-11613-wKz0pVrrj9@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-218198-11613@https.bugzilla.kernel.org/>
 References: <bug-218198-11613@https.bugzilla.kernel.org/>
- <bug-218198-11613-r2O2qSYOjG@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218198-11613-r2O2qSYOjG@https.bugzilla.kernel.org/>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|SJ0PR04MB7869:EE_
-x-ms-office365-filtering-correlation-id: d067c5a8-7c6b-4769-201b-08dbfd827743
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info:
- 4s2dFlVHE0MH/qoRUdAiXJn/teAdIO5cbvryzENPv8yh5WN6APHbT7p8RbUyZtEc6EYOXly8JxnGayycUNu0HstFKXVsHaqxUOQAzZ1LzbCeaDmiAc7mgz5KsN9L96Lc+IsM2bXjvdGOvENMAlFOecSa7CSJaa8nOKOI8yXlYrpC5C+q0VcQdHT+VWfk45E65M83jGnUresbi4cVc95Z8qCkh9foG0NBEwG/Y0599izo+++DTlq+Cfgl0vmp4NiCASIoiZ487rVjutiN9369/Y3SmnDTmlQNC5+tJWz66jZbIPWSFcC2Z1svrHBbRJ0SNdNA5tKooq1sYW6+47bu/zu6E5/GlY/k2TlIhzU64pA2luxzvyGnEU+yftoVODAZ67hXyO+F3FTpQvyyaWOpB7/kVlM2X1HBQ5O4gS96CqX8/mlNrzXAYggyQ2/Txf7CBC2WJK8QwQ7sEBpvBtG18029rWHaGN3g9b3OTWGapDLdvj4ZW9KQGk2Dvr7bMJLQfN5TH1WpjqW7rclDskYenIhn1E0bRdxMTqLcYDOf+Gj4YDb+wp9bZ0IL45uaWeOxDRMbsuwCScu+9xk2/R0fVkQYxq2G86wn5f33aTTRdyI=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(39860400002)(376002)(396003)(366004)(136003)(346002)(230922051799003)(186009)(64100799003)(451199024)(1800799012)(26005)(6506007)(82960400001)(38070700009)(86362001)(38100700002)(122000001)(83380400001)(4326008)(5660300002)(15650500001)(6512007)(9686003)(71200400001)(76116006)(6916009)(316002)(66946007)(91956017)(8676002)(6486002)(8936002)(54906003)(66556008)(66476007)(66446008)(64756008)(2906002)(41300700001)(33716001)(478600001)(966005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?V0lRenhMQ3pxRmhicDQvT1Z1UjRBenlSOThyT29ac2tVSTdGcExDVUNsYUtZ?=
- =?utf-8?B?NW1MczVYazRFWDFtQ0RVbEp6OXpSVUtvNVZqWmUyanFDMjVObjc3RTlBYUR1?=
- =?utf-8?B?YS85bEhweWJiWGpOVDRuSURXV3VpZytwcHhvdHRZYnRPOExaYnBBdGhqb1lQ?=
- =?utf-8?B?aStUQ0lRWmI0WHROMld5dE4rMDJDQ0ZNemwraCtZUnQ1S1lOYW5iVVdWWGVw?=
- =?utf-8?B?eVBLdXhSMVltVkdFQmFFOGtBV0hmVzNKeHo3bXZUM0VKc1FkaHZYNHF3dDJZ?=
- =?utf-8?B?ZDJveTN4N3FQdm5KVzNidXE1cVh0bkN4ZHo3VXhzMkY0Z0hCL2liT1ZJeHZ5?=
- =?utf-8?B?bnVlWUlJUjFyUDdIbzNibWRKL09iOU9OYXl5dVN0VnIwZkRhR1BaZGVESmgv?=
- =?utf-8?B?ZVhOY0FhV0NYOHpNSzVzdnBjUzFCaUhvQmZLbm4valBWVEFlRG5iOTFpaklw?=
- =?utf-8?B?RWUvYzZmdXF5YW1SczVNaTZ5dHhkWFFEMTJkUkVIMmlSeUE5N1NEUjMvTzVK?=
- =?utf-8?B?Um1CNjlnZy9zNDZiNm85dmUwTDNDS01vak5VamVMR29uakxjbXhQQmlLZ3lJ?=
- =?utf-8?B?Z2U1eUV6UlEvVlNRaWRuQzE5WHZyMGNiRjVNV0dZRHNPU2JteVF1a2lycHE5?=
- =?utf-8?B?b3VZb1poUmJQM002TGRBeC84RHBNN1RpYU1pVUVWRkVFL2lBMmo4NFlLeEZX?=
- =?utf-8?B?ck9YSXkrVEhlTUEyTzVXNXRqYVFUbVIzdzFKVzFBa1c3NDBIbVJNOWdIbmY5?=
- =?utf-8?B?aE9RVUNWWEgyN2hwQWFreGMvVkpkc01qN3pucCtKT2FQcGlkaHRRVVhEOWsw?=
- =?utf-8?B?SVRJM2g0bURyU1E1VjAyWjJleEU0eTdNL240RlBUUnRQRE9qQkFLcDg3RXpO?=
- =?utf-8?B?QUt5R01PZEZPcEc2UzFPdDJHczFKZXB1Ull5Ymd6bEZWb2dKYW1SbmQ5UWpo?=
- =?utf-8?B?K0J3VERqaVlEd05VNS9SbVJrLzY0allwYWFPa1EyVCtsNVFpY3Z3dlFwdG96?=
- =?utf-8?B?NjFtY2liUlBkdEFkMDlZQ0cxbXpKTlpDc2hndjYyZmhMRmJoZFpDRmp0dFl6?=
- =?utf-8?B?UWNHODB1eXhaZUpUVHNEQm1GUG5pd3FRTGFXc0tMZCtRNnBkNmFKQ1BCdkx0?=
- =?utf-8?B?OGpaZEV2bDdTWURxaW1ub1c3VWY5ZjhYWDVmc1ROczJiYVZkSVdkS1UvOUdh?=
- =?utf-8?B?cGYrODdnT0VyUDd1OU15emtGYkZ1L0pCRENFaUR1SFoyM1hCbzJWUCsvQkNP?=
- =?utf-8?B?TU1nQmZTVG12bHdqZU4rTEZlZ2FjT2dONC81MVp1U1FubUtrWmc0Y3FTOXU2?=
- =?utf-8?B?SFZab2pweHpUbWUwaUNUbG1jek5ONDd5bnFscTVvMURadjhZaURYWmdqQng5?=
- =?utf-8?B?YWhHZlhoOGhrYURpYys0K2ozMU82Y3pEUmdvYzNIOFFnNEY0R1hOMXJWR2FH?=
- =?utf-8?B?dzluM3dqSzRld0N3TDRnVVRUa2N1dHJYVWtwSFEreGtMQ2dxckQ1cXBBSUdj?=
- =?utf-8?B?c20zWFB5a29nQjZWUVpnM2pBY29rZGxOb0VYMTFDQmVMSWVaYW80dnpqMHhN?=
- =?utf-8?B?REwzbmEzV1VHcC9kalQ0M09pQlg5dks2RmRPNmZKY0ZpZVVmYWlvUHZVcHlz?=
- =?utf-8?B?aFFFYVJEOWdPWEJCcHFweEp2MFp4ZmxaZ3lDK2crVXZVbjhhWERISFN1dzZ6?=
- =?utf-8?B?aFFNeGJZY2JLVkF2TU9hbXVoRXZGanppMWppcGROdXpCSXcwbjFYWGJ0TTBC?=
- =?utf-8?B?bnIvZk1EK0Voc3BFMld2VGNKL1B1RGZGNkpjelFWKzFySUxLNWpzL2hFY1Bv?=
- =?utf-8?B?bjBvWHFkcGpTU0toTGsybkRUVFJ1Rk5GNG0wN3gyQ3dRWE9VdzhFSlJLU1p5?=
- =?utf-8?B?QysxYmpUeHBURnVHMHNqcTF0emFRVFh4bXpNeUk4NmNDQUUrWFdueFVpYVdZ?=
- =?utf-8?B?aXIxZmhxY3dvZzZSS0tvN0VDWXpVU0hyeFlrYXlIYzVOZVNBQTFoU1dvRFFV?=
- =?utf-8?B?VVMvQjdCNVFMdXk5Vi9saUkzaEpyNFZraVkwNVFoeS9nejhxazhSVCtKUmJP?=
- =?utf-8?B?TmMyMzZQeHMzTjNRR3RNQzEwSlE2cGhUS2s3ZjFXN3lHdmN5OFRrdUhOc3pW?=
- =?utf-8?B?ZmRMdE1LZm9xcm8zNlNMM0Z1ZXBUcHdSMmVrMjZvTjhBYUhoaGtyYkl3ekhD?=
- =?utf-8?B?a1E9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <F0331D18CC091C4FBAD2A4FEBDCD8657@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	AnIR84Lizbrw+lINZM3MWPB2zI/IPudeOFsOjxXMtN0UJK2XXP81woMwe82q70sPXJdpBAuU9co9gBicJZ0+AN4QJMAqFinBDbBb/xBepvIaEE8oE+7GwSYZkpS+8zBZozdOGH7Un1xDF2U6jcGWsgfV3QxeWGKsJa5d8z/PwhW1v4FQsBnbY8EPEIm5wodSeBIZ7wFEbI2kSGQlkTXH8yFXexgcEYI5rUK9JHCQPd/J3aqaXtiWYq6JsJ1XXLRxsd5eMt9ICj17fF1XT/uQTiCmwqHkWk/HngKzQxy35yTrQ0xEShV5AtIpYuSw37rulgjVfOvwJ3lhBpMH6Dh3qs5IeTCDEIB+RX8siF8PIWk39EmjrToY9g6mpi48pHIneuBbuIuQVn36RgAzJnJxR43vG7oNu+HkEQD7lUpl9BU+gcZx/tLDKBwcgFFUSPmQpwI4mLNTK22OxYe3hx02+nLbbfmLQRghOCy7xoJ0/OqonelqpHN/VlxRgEYgyGl85WqCwXcG7liTRX/JOFpGxuGaExlEfaf51QpwpgvkcEC1BDSbcOItegsNzd9xe9rTppD6w80BDYKoIO75jMOFsOSRCf3p8XO5FKFV4FeCtweP4uBDq4jlxlXW0e4CO62X
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d067c5a8-7c6b-4769-201b-08dbfd827743
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Dec 2023 15:28:19.1224
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ZAOEP3+SMqX7+xsoFkxVMtwFA1eccRPRGP3E4sltX/l4lCqbRLOTWYO09+59Wds9qJ0oBB/dBvqIgDYQ8lUGUA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR04MB7869
 
-SGVsbG8gRGlldGVyLA0KDQoNCkknbSByZWFsbHkgc29ycnkgZm9yIG1pc3NpbmcgeW91ciByZXBs
-eS4NClRoZSB1cGRhdGVzIGZyb20gYnVnemlsbGEgd2VyZSBub3Qgc2V0IHRvIHRoZSBsaWJhdGEg
-bWFpbGluZyBsaXN0DQoob25seSB0byB0aGUgc2NzaSBtYWlsaW5nIGxpc3QpLg0KDQpQbGVhc2Ug
-Y29uc2lkZXIgd3JpdGluZyB0byB0aGUgbGliYXRhIG1haWxpbmcgbGlzdCBpbnN0ZWFkIG9mIHVz
-aW5nDQpidWd6aWxsYSwgSSdtIHF1aXRlIHN1cmUgdGhhdCB5b3Ugd2lsbCBnZXQgbW9yZSBleWVz
-IG9uIHlvdXIgcHJvYmxlbQ0KdGhhdCB3YXkuDQoNCk9uIFdlZCwgTm92IDI5LCAyMDIzIGF0IDA2
-OjEwOjIwUE0gKzAwMDAsIGJ1Z3ppbGxhLWRhZW1vbkBrZXJuZWwub3JnIHdyb3RlOg0KPiBodHRw
-czovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTIxODE5OA0KPiANCj4gLS0t
-IENvbW1lbnQgIzcgZnJvbSBEaWV0ZXIgTXVtbWVuc2NoYW56IChkbXVtbWVuc2NoYW56QHdlYi5k
-ZSkgLS0tDQo+ICAoSW4gcmVwbHkgdG8gTmlrbGFzLkNhc3NlbCBmcm9tIGNvbW1lbnQgIzYpDQo+
-IA0KPiBIZWxsbyBOaWtsYXMsDQo+IA0KPiB0aGFua3MgZm9yIGxvb2tpbmcgaW50byB0aGlzLg0K
-PiANCj4gPiBJdCB3b3VsZCBiZSBuaWNlIGlmIHlvdSBjb3VsZCB0ZXN0IHdpdGggbGF0ZXN0IHY2
-LjctcmNYLg0KPiANCj4gT2theSBJIHRvb2sgdGhlIGxhdGVzdCA2LjctcmMzIGZyb20gTGludXgn
-cyBnaXQgYW5kIGluY2x1ZGVkIHlvdXIgcGF0Y2guIEJvb3RlZA0KPiB1cCBteSBMYXB0b3AsIHB1
-dCBpdCBiYWNrIHRvIHNsZWVwIGFuZCBicm91Z2h0IGl0IHVwIGFnYWluLiBTZWUgYXR0YWNoZWQg
-bG9nLg0KPiANCj4gSSd2ZSBkaXNhYmVkIG15IGxpbmtfcG93ZXJfbWFuYWdlbWVudF9wb2xpY3kg
-b3ZlcnJpZGUgc28gYWxsIHRoZSB0aW1lIG15IHN5c3RlbQ0KPiB3YXMgc3R1Y2sgYXQgcGMyIHBh
-Y2thZ2Ugc3RhdGUgYWNjb3JkaW5nIHRvIHBvd2VydG9wLg0KPiANCj4gPiBGb3IgZGV2c2xlZXAg
-dG8gZ2V0IGVuYWJsZWQsIHlvdSBuZWVkICJzYWRtIHNkcyIgaW4gdGhlIFNBVEEgY29udHJvbGxl
-cg0KPiANCj4gWWVwIEkgY2FuIHNlZSB0aGF0Og0KPiBbICAgIDAuMzc5NTMxXSBhaGNpIDAwMDA6
-MDA6MTcuMDogZmxhZ3M6IDY0Yml0IG5jcSBzbnRmIHN0YWcgcG0gY2xvIG9ubHkgcGlvDQo+IHNs
-dW0gcGFydCBlbXMgc3hzIGRlc28gc2FkbSBzZHMgYXBzdA0KDQpPaywgZ29vZCAxLzQuDQoNCj4g
-DQo+ID4gYW5kICJEZXYtU2xlZXAiIGluIHRoZSBTQVRBIGRldmljZSBwcmludC4NCj4gDQo+IEkg
-Z3Vlc3MgdGhpcyBpcyBpdD8NCj4gWyAgICAxLjAzMTE2OV0gYXRhNS4wMDogRmVhdHVyZXM6IFRy
-dXN0IERldi1TbGVlcCBOQ1Etc25kcmN2DQoNClllcywgZ29vZCwgMi80Lg0KDQo+IA0KPiA+IEFk
-ZGl0aW9uYWxseSwgeW91ciBscG0tcG9saWN5IChscG0tcG9sKSBoYXMgdG8gYmUgZWl0aGVyIEFU
-QV9MUE1fTUlOX1BPV0VSIG9yDQo+ID4gQVRBX0xQTV9NSU5fUE9XRVJfV0lUSF9QQVJUSUFMIChp
-LmUuIGxwbS1wb2wgaGFzIHRvIHByaW50IGVpdGhlciA0IG9yIDUpLg0KPiANCj4gSSdtIGFmcmFp
-ZCB0aGlzIGlzIG5vdCB0aGUgY2FzZSBoZXJlOg0KPiBbICAgIDAuMzk5MDA1XSBhdGExOiBTQVRB
-IG1heCBVRE1BLzEzMyBhYmFyIG0yMDQ4QDB4NDIyMzMwMDAgcG9ydCAweDQyMjMzMTAwDQo+IGly
-cSAxMjUgbHBtLXBvbCAwDQoNCkl0IGFwcGVhcnMgdGhhdCB5b3UgaGF2ZSBidWlsdCB5b3VyIGtl
-cm5lbCB3aXRoOg0KQ09ORklHX1NBVEFfTU9CSUxFX0xQTV9QT0xJQ1k9MA0KDQpBbGwgbWFqb3Ig
-ZGlzdHJvcyB1c2U6DQpDT05GSUdfU0FUQV9NT0JJTEVfTFBNX1BPTElDWT0zDQoNCkNvdWxkIHlv
-dSBwbGVhc2UgdHJ5IHdpdGggQ09ORklHX1NBVEFfTU9CSUxFX0xQTV9QT0xJQ1k9MyA/DQoNCklm
-IHlvdSBidWlsZCB3aXRoIENPTkZJR19TQVRBX01PQklMRV9MUE1fUE9MSUNZPTAsIHRoZW4gc2V0
-X2xwbSgpIGluIGxpYmF0YQ0Kd2lsbCBuZXZlciBiZSBjYWxsZWQsIHdoaWNoIG1lYW5zIHRoYXQg
-d2Ugd2lsbCBuZXZlciBlbmFibGUgKG9yIGRpc2FibGUNCmRldnNsZWVwKSwgc28geW91IHdpbGwg
-dXNlIHdoYXRldmVyIHlvdXIgYm9vdCBmaXJtd2FyZSBoYXMgY29uZmlndXJlZC4NCihBbmQgYm9v
-dCBmaXJtd2FyZSBtaWdodCBoYXZlIGVuYWJsZWQgZGV2c2xlZXAgaW4gdGhlIGRldmljZS4pDQoN
-Cg0KDQpJbiB5b3VyIHY2LjctcmNYIGRtZXNnLCB3ZSBkb24ndCBzZWUgYW55Og0KInBvcnQgZG9l
-cyBub3Qgc3VwcG9ydCBkZXZpY2Ugc2xlZXAiIG9yDQoic2V0dGluZyBkZXZzbGVlcCB0byAlZCIg
-KGZyb20gbXkgZGVidWcgcGF0Y2gpDQpwcmludHMgaW4geW91ciBkbWVzZyBmcm9tIHY2LjctcmNY
-LCBzbyBzZXRfbHBtKCkgaXMgbmV2ZXIgY2FsbGVkIGF0IGFsbCwNCm1vc3QgbGlrZWx5IGJlY2F1
-c2UgeW91IGhhdmUgYnVpbHQgd2l0aCBDT05GSUdfU0FUQV9NT0JJTEVfTFBNX1BPTElDWT0wLA0K
-c28gRGV2U2xlZXAgY291bGQgYmUgZW5hYmxlZCBpZiBwbGF0Zm9ybSBmaXJtd2FyZSBlbmFibGVk
-IGl0Lg0KDQoNCg0KSW4geW91ciB2Ni42IGRtZXNnLCB3ZSBzZWU6DQoicG9ydCBkb2VzIG5vdCBz
-dXBwb3J0IGRldmljZSBzbGVlcCINCihidXQgbm90ICJzZXR0aW5nIGRldnNsZWVwIHRvICVkIiBm
-cm9tIG15IGRlYnVnIHBhdGNoLCBzbyB5b3UNCnByb2JhYmx5IGZvcmdvdCB0byBhcHBseSBpdCB0
-byB5b3VyIHY2LjYga2VybmVsKS4NCg0KSG93ZXZlciwgdGhlIGZhY3QgdGhhdCB5b3Ugc2VlICJw
-b3J0IGRvZXMgbm90IHN1cHBvcnQgZGV2aWNlIHNsZWVwIg0Kc3VnZ2VzdHMgdGhhdCB5b3UgZWl0
-aGVyIGJ1aWx0IHlvdXIga2VybmVsIHdpdGgNCkNPTkZJR19TQVRBX01PQklMRV9MUE1fUE9MSUNZ
-IHNldCB0byBzb21ldGhpbmcgb3RoZXIgdGhhbiAwLA0Kb3IgeW91IGhhdmUgbWFudWFsbHkgb3Zl
-cnJpZGVuIHRoZSBwb2xpY3kgdmlhIHN5c2ZzLg0KDQpOb3RlIHRoYXQgc2luY2UgeW91ciBwbGF0
-Zm9ybSBmaXJtd2FyZSBjbGFpbXMgdGhhdCB0aGUgcG9ydCBkb2VzDQpub3Qgc3VwcG9ydCBEZXZT
-bGVlcCAoUHhERVZTTFAuRFNQIGlzIHNldCB0byAwKSwgdGhpcyBtZWFucyB0aGF0DQphaGNpX3Nl
-dF9hZ2dyZXNzaXZlX2RldnNscCgpIHdpbGwgcmV0dXJuIGVhcmx5Og0KaHR0cHM6Ly9naXRodWIu
-Y29tL3RvcnZhbGRzL2xpbnV4L2Jsb2IvdjYuNi9kcml2ZXJzL2F0YS9saWJhaGNpLmMjTDIyNTgt
-TDIyNjINClNvIGl0IHdpbGwgbmVpdGhlciBlbmFibGUgbm9yIGRpc2FibGUgRGV2U2xlZXAgaW4g
-dGhlIGRldmljZSwNCnNvIERldlNsZWVwIGNvdWxkIGJlIGVuYWJsZWQgaWYgcGxhdGZvcm0gZmly
-bXdhcmUgZW5hYmxlZCBpdC4NCg0KDQpJbiBib3RoIG9mIHlvdXIgY2FzZXMsIGl0IGxvb2tzIGxp
-a2UgeW91IHNob3VsZCBoYXZlIERldlNsZWVwIHNldA0KdG8gd2hhdGV2ZXIgcGxhdGZvcm0gZmly
-bXdhcmUgaGFzIHNldCBpdCB0by4NCkJ1dCB5b3Ugc2F5IHRoYXQsIGZvciB0aGVzZSBsb2dzLCB2
-Ni42IGNhbiBlbnRlciBsb3cgQ1BVIHBvd2VyIHN0YXRlcywNCmJ1dCB2Ni43LXJjWCBjYW4gbm90
-Pw0KDQoNCllvdSBjYW4gcnVuOg0KaGRwYXJtIC1JIC9kZXYvPHlvdXJfZGV2aWNlPg0KdG8gc2Vl
-IGlmIERFVlNMUCBpcyBlbmFibGVkIGluIHlvdXIgZGV2aWNlIChoZHBhcm0gcHJpbnRzIGEgKiBp
-biBmcm9udA0Kb2YgdGhlIGZlYXR1cmUgaWYgdGhlIGZlYXR1cmUgaXMgZW5hYmxlZCkuDQoNCkl0
-IGNvdWxkIGFsc28gYmUgd29ydGggY2hlY2tpbmcgeW91ciBCSU9TLCBJJ3ZlIHNlZW4gc29tZSBj
-YXNlcyB3aGVyZSB5b3UgaGFkDQp0byBlbmFibGUgYWdncmVzc2l2ZSBkZXZzbGVlcCBpbiBCSU9T
-IGZvciBpdCB0byBnZXQgZW5hYmxlZCBmb3IgdGhlIHBvcnQuDQoNCg0KPiANCj4gPiBOb3RlIHRo
-YXQgZXZlbiBpZiB5b3UgaGF2ZSBMUE1fUE9MSUNZPTMgKEFUQV9MUE1fTUVEX1BPV0VSX1dJVEhf
-RElQTSkgaW4geW91cg0KPiA+IEtjb25maWcsIGFoY2lfdXBkYXRlX2luaXRpYWxfbHBtX3BvbGlj
-eSgpIHdpbGwgcG9zc2libHkgb3ZlcnJpZGUgdGhpcyBieQ0KPiA+IGRlZmF1bHQNCj4gDQo+IFRo
-YXQgd291bGQgZXhwbGFpbiB3aHkgSSdtIHNlZWluZyAibWF4X3BlcmZvcm1hbmNlIiBpbg0KPiBs
-aW5rX3Bvd2VyX21hbmFnZW1lbnRfcG9saWN5IHdpdGhvdXQgb3ZlcnJpZGluZyBpdC4NCg0KVGhl
-IHN5c2ZzIHJlcG9ydGluZyBmb3IgTFBNIGlzIHJlYWxseSBicm9rZW4gaW4gbGliYXRhLi4uDQoN
-CiQgZ2l0IGdyZXAgbWF4X3BlcmZvcm1hbmNlIGRyaXZlcnMvYXRhL2xpYmF0YS1zYXRhLmMNCmRy
-aXZlcnMvYXRhL2xpYmF0YS1zYXRhLmM6ICAgICAgW0FUQV9MUE1fVU5LTk9XTl0gICAgICAgICAg
-ICAgICA9ICJtYXhfcGVyZm9ybWFuY2UiLA0KZHJpdmVycy9hdGEvbGliYXRhLXNhdGEuYzogICAg
-ICBbQVRBX0xQTV9NQVhfUE9XRVJdICAgICAgICAgICAgID0gIm1heF9wZXJmb3JtYW5jZSIsDQoN
-ClNvIGl0IHJlcG9ydHMgIm1heF9wZXJmb3JtYW5jZSIgYm90aCBmb3IgTFBNX1BPTElDWSA9PSAw
-IChBVEFfTFBNX1VOS05PV04pDQphbmQgTFBNX1BPTElDWSA9PSAxIChBVEFfTFBNX01BWF9QT1dF
-UikuDQoNCkluIHlvdXIgY2FzZSwgaXQgaXMgYmVjYXVzZSBvZiBBVEFfTFBNX1VOS05PV04sIHdo
-aWNoIG1lYW5zIHVzZSB3aGF0ZXZlcg0KcGxhdGZvcm0gZmlybXdhcmUgaGFzIGNvbmZpZ3VyZWQu
-DQoNCmFoY2lfdXBkYXRlX2luaXRpYWxfbHBtX3BvbGljeSgpIHdpbGwgb25seSBvdmVycmlkZSB5
-b3VyIHBvbGljeSBpZiB5b3VyDQpMUE1fUE9MSUNZID49IDMsIHNvIGl0IHdpbGwgbm90IG92ZXJy
-aWRlIGl0IGZvciB5b3VyIGNhc2UuDQoNCg0KPiA+IEkgd291bGQgcmVhbGx5IG5vdCByZWNvbW1l
-bmQgeW91IGRvaW5nIHRoaXMsIGJlY2F1c2Ugd2hlbiB5b3UgZm9yY2Ugc2V0DQo+ID4gbHBtIHBv
-bGljeSB2aWEgc3lzZnMsIGFoY2lfdXBkYXRlX2luaXRpYWxfbHBtX3BvbGljeSgpIGlzIG5vdCBj
-YWxsZWQsDQo+ID4gc28gaWYgeW91ciBwbGF0Zm9ybSByZXF1aXJlcyBBVEFfTFBNX01JTl8qIHRv
-IGVudGVyIGxvd2VyIHBvd2VyIHN0YXRlcywNCj4gPiB5b3UgZm9yY2luZyBscG0tcG9saWN5IHRv
-IEFUQV9MUE1fTUVEX1BPV0VSX1dJVEhfRElQTSB3aWxsIGVuc3VyZSB0aGF0DQo+ID4geW91IG5l
-dmVyIGVudGVyIGxvd2VyIHBvd2VyIHN0YXRlcy4NCj4gDQo+IEkgdW5kZXJzdGFuZCBob3dldmVy
-IEkgZG8gbm90IGtub3cgb2YgYW55IG90aGVyIHdheSB0byBlbmFibGUgbG93ZXIgcGFja2FnZQ0K
-PiBzdGF0ZXMgb24gbXkgbWFjaGluZS4NCg0KSSBkbyBub3QgdW5kZXJzdGFuZCB3aHkgdGhhdCBo
-ZWxwcyB5b3UuDQoNCklmIHlvdSBzZXQ6DQpBVEFfTFBNX01FRF9QT1dFUl9XSVRIX0RJUE0gKExQ
-TV9QT0xJQ1k9Mykgb24gdjYuNiBpbiBzeXNmcywNCnlvdSBjYW4gZW50ZXIgbG93IENQVSBwb3dl
-ciBzdGF0ZXM/DQoNCklmIHlvdSBzZXQgDQpDT05GSUdfU0FUQV9NT0JJTEVfTFBNX1BPTElDWT0z
-IG9uIHY2LjYsDQpjYW4geW91IGVudGVyIGxvdyBDUFUgcG93ZXIgc3RhdGVzPw0KDQpMb29raW5n
-IGF0IEFIQ0kgMS4zLjENClBNOkFnZ3I6DQoNClN0YXRlIFBNOkRldlNsZWVwIGlzIGdhdGVkIHdp
-dGg6DQoNClB4REVWU0xQLkFEU0UgPSDigJgx4oCZIGFuZCBDQVAyLlNEUyA9IOKAmDHigJkgYW5k
-IENBUDIuU0FETQ0KPSDigJgx4oCZIGFuZCBQeERFVlNMUC5EU1AgPSAx4oCZIGFuZCBQeFNDVEwu
-SVBNICE9IOKAmDRo4oCZIGFuZA0KUHhTQ1RMLklQTSAhPSDigJg1aOKAmSBhbmQgUHhTQ1RMLklQ
-TSAhPSDigJg2aOKAmSBhbmQgUHhTQ1RMLklQTQ0KIT0g4oCYN2jigJkgYW5kIENBUDIuREVTTyA9
-IOKAmDDigJkgYW5kIHBEaXRvVGltZW91dCA9IOKAmDHigJkNCg0KU28gQUZBSUNULCBBTFBNIGJ5
-IHRoZSBIQkEgc2hvdWxkIG5ldmVyIGJlIGFibGUgdG8gdHJhbnNpdGlvbg0KdG8gRGV2U2xlZXAg
-aWYgUHhEU1AuRFNQID09IDAuDQoNClBlcmhhcHMgeW91ciBwbGF0Zm9ybSBhY3R1YWxseSBkb2Vz
-IE5PVCBzdXBwb3J0IGRldnNsZWVwIGFuZA0Kc2ltcGx5IHJlcXVpcmVzIHRoZSBkZXZpY2UgdG8g
-ZW50ZXIgc2x1bWJlciBvciBwYXJ0aWFsIGluIG9yZGVyDQp0byBlbnRlciB0aGUgbG93ZXIgQ1BV
-IHBvd2VyIHN0YXRlcz8NCg0KV2UgY291bGQgdGVzdCB0aGlzIGJ5IHlvdSBkaXNhYmxpbmcgZGV2
-c2xwIG9uIHRoZSBkZXZpY2UgdmlhIGhkcGFybSwNCmFuZCBzZWUgaWYgeW91IGNhbiBzdGlsbCBl
-bnRlciB0aGUgbG93ZXIgQ1BVIHBvd2VyIHN0YXRlcy4NCg0KDQpLaW5kIHJlZ2FyZHMsDQpOaWts
-YXM=
+https://bugzilla.kernel.org/show_bug.cgi?id=3D218198
+
+--- Comment #18 from Niklas.Cassel@wdc.com ---
+Hello Dieter,
+
+
+I'm really sorry for missing your reply.
+The updates from bugzilla were not set to the libata mailing list
+(only to the scsi mailing list).
+
+Please consider writing to the libata mailing list instead of using
+bugzilla, I'm quite sure that you will get more eyes on your problem
+that way.
+
+On Wed, Nov 29, 2023 at 06:10:20PM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D218198
+>=20
+> --- Comment #7 from Dieter Mummenschanz (dmummenschanz@web.de) ---
+>  (In reply to Niklas.Cassel from comment #6)
+>=20
+> Hello Niklas,
+>=20
+> thanks for looking into this.
+>=20
+> > It would be nice if you could test with latest v6.7-rcX.
+>=20
+> Okay I took the latest 6.7-rc3 from Linux's git and included your patch.
+> Booted
+> up my Laptop, put it back to sleep and brought it up again. See attached =
+log.
+>=20
+> I've disabed my link_power_management_policy override so all the time my
+> system
+> was stuck at pc2 package state according to powertop.
+>=20
+> > For devsleep to get enabled, you need "sadm sds" in the SATA controller
+>=20
+> Yep I can see that:
+> [    0.379531] ahci 0000:00:17.0: flags: 64bit ncq sntf stag pm clo only =
+pio
+> slum part ems sxs deso sadm sds apst
+
+Ok, good 1/4.
+
+>=20
+> > and "Dev-Sleep" in the SATA device print.
+>=20
+> I guess this is it?
+> [    1.031169] ata5.00: Features: Trust Dev-Sleep NCQ-sndrcv
+
+Yes, good, 2/4.
+
+>=20
+> > Additionally, your lpm-policy (lpm-pol) has to be either ATA_LPM_MIN_PO=
+WER
+> or
+> > ATA_LPM_MIN_POWER_WITH_PARTIAL (i.e. lpm-pol has to print either 4 or 5=
+).
+>=20
+> I'm afraid this is not the case here:
+> [    0.399005] ata1: SATA max UDMA/133 abar m2048@0x42233000 port 0x42233=
+100
+> irq 125 lpm-pol 0
+
+It appears that you have built your kernel with:
+CONFIG_SATA_MOBILE_LPM_POLICY=3D0
+
+All major distros use:
+CONFIG_SATA_MOBILE_LPM_POLICY=3D3
+
+Could you please try with CONFIG_SATA_MOBILE_LPM_POLICY=3D3 ?
+
+If you build with CONFIG_SATA_MOBILE_LPM_POLICY=3D0, then set_lpm() in liba=
+ta
+will never be called, which means that we will never enable (or disable
+devsleep), so you will use whatever your boot firmware has configured.
+(And boot firmware might have enabled devsleep in the device.)
+
+
+
+In your v6.7-rcX dmesg, we don't see any:
+"port does not support device sleep" or
+"setting devsleep to %d" (from my debug patch)
+prints in your dmesg from v6.7-rcX, so set_lpm() is never called at all,
+most likely because you have built with CONFIG_SATA_MOBILE_LPM_POLICY=3D0,
+so DevSleep could be enabled if platform firmware enabled it.
+
+
+
+In your v6.6 dmesg, we see:
+"port does not support device sleep"
+(but not "setting devsleep to %d" from my debug patch, so you
+probably forgot to apply it to your v6.6 kernel).
+
+However, the fact that you see "port does not support device sleep"
+suggests that you either built your kernel with
+CONFIG_SATA_MOBILE_LPM_POLICY set to something other than 0,
+or you have manually overriden the policy via sysfs.
+
+Note that since your platform firmware claims that the port does
+not support DevSleep (PxDEVSLP.DSP is set to 0), this means that
+ahci_set_aggressive_devslp() will return early:
+https://github.com/torvalds/linux/blob/v6.6/drivers/ata/libahci.c#L2258-L22=
+62
+So it will neither enable nor disable DevSleep in the device,
+so DevSleep could be enabled if platform firmware enabled it.
+
+
+In both of your cases, it looks like you should have DevSleep set
+to whatever platform firmware has set it to.
+But you say that, for these logs, v6.6 can enter low CPU power states,
+but v6.7-rcX can not?
+
+
+You can run:
+hdparm -I /dev/<your_device>
+to see if DEVSLP is enabled in your device (hdparm prints a * in front
+of the feature if the feature is enabled).
+
+It could also be worth checking your BIOS, I've seen some cases where you h=
+ad
+to enable aggressive devsleep in BIOS for it to get enabled for the port.
+
+
+>=20
+> > Note that even if you have LPM_POLICY=3D3 (ATA_LPM_MED_POWER_WITH_DIPM)=
+ in
+> your
+> > Kconfig, ahci_update_initial_lpm_policy() will possibly override this by
+> > default
+>=20
+> That would explain why I'm seeing "max_performance" in
+> link_power_management_policy without overriding it.
+
+The sysfs reporting for LPM is really broken in libata...
+
+$ git grep max_performance drivers/ata/libata-sata.c
+drivers/ata/libata-sata.c:      [ATA_LPM_UNKNOWN]               =3D
+"max_performance",
+drivers/ata/libata-sata.c:      [ATA_LPM_MAX_POWER]             =3D
+"max_performance",
+
+So it reports "max_performance" both for LPM_POLICY =3D=3D 0 (ATA_LPM_UNKNO=
+WN)
+and LPM_POLICY =3D=3D 1 (ATA_LPM_MAX_POWER).
+
+In your case, it is because of ATA_LPM_UNKNOWN, which means use whatever
+platform firmware has configured.
+
+ahci_update_initial_lpm_policy() will only override your policy if your
+LPM_POLICY >=3D 3, so it will not override it for your case.
+
+
+> > I would really not recommend you doing this, because when you force set
+> > lpm policy via sysfs, ahci_update_initial_lpm_policy() is not called,
+> > so if your platform requires ATA_LPM_MIN_* to enter lower power states,
+> > you forcing lpm-policy to ATA_LPM_MED_POWER_WITH_DIPM will ensure that
+> > you never enter lower power states.
+>=20
+> I understand however I do not know of any other way to enable lower packa=
+ge
+> states on my machine.
+
+I do not understand why that helps you.
+
+If you set:
+ATA_LPM_MED_POWER_WITH_DIPM (LPM_POLICY=3D3) on v6.6 in sysfs,
+you can enter low CPU power states?
+
+If you set=20
+CONFIG_SATA_MOBILE_LPM_POLICY=3D3 on v6.6,
+can you enter low CPU power states?
+
+Looking at AHCI 1.3.1
+PM:Aggr:
+
+State PM:DevSleep is gated with:
+
+PxDEVSLP.ADSE =3D =E2=80=981=E2=80=99 and CAP2.SDS =3D =E2=80=981=E2=80=99 =
+and CAP2.SADM
+=3D =E2=80=981=E2=80=99 and PxDEVSLP.DSP =3D 1=E2=80=99 and PxSCTL.IPM !=3D=
+ =E2=80=984h=E2=80=99 and
+PxSCTL.IPM !=3D =E2=80=985h=E2=80=99 and PxSCTL.IPM !=3D =E2=80=986h=E2=80=
+=99 and PxSCTL.IPM
+!=3D =E2=80=987h=E2=80=99 and CAP2.DESO =3D =E2=80=980=E2=80=99 and pDitoTi=
+meout =3D =E2=80=981=E2=80=99
+
+So AFAICT, ALPM by the HBA should never be able to transition
+to DevSleep if PxDSP.DSP =3D=3D 0.
+
+Perhaps your platform actually does NOT support devsleep and
+simply requires the device to enter slumber or partial in order
+to enter the lower CPU power states?
+
+We could test this by you disabling devslp on the device via hdparm,
+and see if you can still enter the lower CPU power states.
+
+
+Kind regards,
+Niklas
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
