@@ -1,115 +1,97 @@
-Received: from mail-yb1-f181.google.com (mail-yb1-f181.google.com [209.85.219.181])
+Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com [209.85.167.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D094E3172E;
-	Sat, 16 Dec 2023 18:17:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EFBD1E4B3;
+	Sat, 16 Dec 2023 18:51:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i9jmdFDq"
-Received: by mail-yb1-f181.google.com with SMTP id 3f1490d57ef6-db99bad7745so1435840276.0;
-        Sat, 16 Dec 2023 10:17:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A+xhS1H/"
+Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-50be24167efso1896508e87.3;
+        Sat, 16 Dec 2023 10:51:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1702750627; x=1703355427; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VvRVmZz0fw4sy81ISwg0UmUCzFZE4mCNoPdzHScTDrI=;
-        b=i9jmdFDq3mTzHWblmX+MWiK35gxF0zci04EM4L8xa0yrvNP4n36bb7oC9vQ6EVYtD/
-         m32x9SvC/IbYgPChVnogpk8NURIwV7pP5pY64VpfC50sii0w5ol5Q4rKoBHmHVJ+uBmS
-         VJa8rg3di5KMchkhfrsJ1+O65TJgt899jT7bgn92j5QSEST3CYRDlG3uhBqiOT9esv8F
-         IoQRFvtMYKf+HQQOu/08H1sHjzfB+lMIVrEvj+THEvMwlIWkx37yFhhrcsOcX+OxZt3z
-         OkmddB26/t5PvN8hIDmlMtozDIftEyn8ch09SioLduoPrhfDJhIX4j7f3emBc3Mb1oAr
-         73OA==
+        d=gmail.com; s=20230601; t=1702752670; x=1703357470; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Lyyk7PYn5UsLoIP5w0Df/PxhFykyWSZXEGZH2I4+NT4=;
+        b=A+xhS1H//GsPHa2H8xWFtam+0QoDACp5NDFtD0kf+LpmnZiYNs+pr5maGSL43ApkXs
+         NyeDFBEffbo6uhzgeeoor0+A0SxbR049v13quQbDrfnzPCKwoU14bz8CtXg60hQ8aWUR
+         A6+ssMi0d+k5zTseNGYC4Yet2qHTQN8Ve10Dv+bifqCMUK06GBYryvmkqJfFDQz0iUW2
+         cLi3tH87BilsCYJb+RWFP10m3czbjgHSyizc4kQ6KxX1AOzUOrhtGBxyfKEakh4lDA8B
+         JjYyzRyIZv4cTp3wUqlxINVLkr0/pv4S6BcAvTQk957gIl9vIx8III0B3g6FM32qAiat
+         fjHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702750627; x=1703355427;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VvRVmZz0fw4sy81ISwg0UmUCzFZE4mCNoPdzHScTDrI=;
-        b=tQ8m3/KXSgyZ96WxmFlTOHPKuJipYNkZ4VbmQlvQXlKMjRmshH8K70pRgThkm4ChkJ
-         w/d2QsSdqMqz/DnXhXvCzC8aAkrkn478vDuAzvYlqz1QxGd8aIpI8hfebU+rMnWEF2q7
-         d/ICGw+1/4/IqGo9fbjJphEP9U2CCfWt5epA3tit3/+ubb+cb+K8mYFWlRtUGEOaq1st
-         HRzKA5MqM7U6tTpkw4aog16xgTSl4jthhdyuQOkOk6EJ01eODEMCwH7fvKArVJU72V/2
-         sLdCAKb2G0moakYObLHMFmRiepF+JMEiIXnfWwSNAEocMGhMGTQy/pY/693rMOOKONqE
-         Sugw==
-X-Gm-Message-State: AOJu0YwIS81zT16VfbSm8rJvs2v4c2jw3IjJHRZH29HI6S5cTP7YVlYw
-	px147zSP69NAWf2RyFpdGRTQTmfFvBYCRH14+qw=
-X-Google-Smtp-Source: AGHT+IFn9alYrc6pyynJlC3AzJi9+jW7Hyc4Xh9rzrTv9HUyVpLWeYI0lwWtoeqlkhu4lV+c1wb6aazE7dSYi/iN6fw=
-X-Received: by 2002:a25:5f03:0:b0:dbc:1b67:e358 with SMTP id
- t3-20020a255f03000000b00dbc1b67e358mr8995770ybb.95.1702750626697; Sat, 16 Dec
- 2023 10:17:06 -0800 (PST)
+        d=1e100.net; s=20230601; t=1702752670; x=1703357470;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Lyyk7PYn5UsLoIP5w0Df/PxhFykyWSZXEGZH2I4+NT4=;
+        b=tXkFqcr+88fZTASuYFkQ6m6gIems3mcHsYAly16jiY+RMsTWkAh1K4hbp+DKvk8E7i
+         xk2Nz0IKcBvxRAF1mdRjPx1oAO4OCSwHPwKfNThhkgDg6iFQcgNgYgThpHYlPfKh2+is
+         0eSrx5ZnlHusAO2Saz90zecyMulAeInKvrYVrVHb6fDqhua0vTwFj3O57DtZOV/Ek5h6
+         +rqImKZiGXdg0cCZFdzHQyhNsDWNibPgi9VJY+rvlinh9xwec80rhc4Pg3xSqvSK8dLC
+         AM36BRY8tVipxu8VOcX6zVsGfOOO14qY8TUULiz8EZWWPFFQ1zIV5UXfT+1Aciyytpw4
+         g70Q==
+X-Gm-Message-State: AOJu0YxJ0mHXm9BK+c0itxKrDW99MjK3F7EzKGiXsjbW1axDFB8jd7+4
+	VXZ+EHzoiDl6IW2+im8Ka2k=
+X-Google-Smtp-Source: AGHT+IFBrxIEcx3sGb1otg83XeIUGtYMN52U/6Tdch9rV8eObLZNgz2naAx+nw7gw53JmqbimrgnzA==
+X-Received: by 2002:a19:8c14:0:b0:50e:20af:2297 with SMTP id o20-20020a198c14000000b0050e20af2297mr503110lfd.255.1702752670176;
+        Sat, 16 Dec 2023 10:51:10 -0800 (PST)
+Received: from rand-ubuntu-development.dl.local (mail.confident.ru. [85.114.29.218])
+        by smtp.gmail.com with ESMTPSA id y21-20020a196415000000b0050e150ccee2sm838303lfb.267.2023.12.16.10.51.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 16 Dec 2023 10:51:09 -0800 (PST)
+From: Rand Deeb <rand.sec96@gmail.com>
+To: "James E . J . Bottomley" <jejb@linux.ibm.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: deeb.rand@confident.ru,
+	lvc-project@linuxtesting.org,
+	voskresenski.stanislav@confident.ru,
+	Rand Deeb <rand.sec96@gmail.com>
+Subject: [PATCH] scsi: fix calculation of phy_addr in mvumi_delete_internal_cmd
+Date: Sat, 16 Dec 2023 21:50:06 +0300
+Message-Id: <20231216185006.19200-1-rand.sec96@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231206100253.13100-1-joshi.k@samsung.com> <CGME20231206101050epcas5p2c8233030bbf74cef0166c7dfc0f41be7@epcas5p2.samsung.com>
- <20231206100253.13100-3-joshi.k@samsung.com> <ZXpWOaxCRoF7dFis@kbusch-mbp>
-In-Reply-To: <ZXpWOaxCRoF7dFis@kbusch-mbp>
-From: Nitesh Shetty <nitheshshetty@gmail.com>
-Date: Sat, 16 Dec 2023 23:46:55 +0530
-Message-ID: <CAOSviJ2U_yTgvx5SBPvkOg0nZ8wNxRCJyLWZ_zBnN74HcDFA1A@mail.gmail.com>
-Subject: Re: [PATCH v18 02/12] Add infrastructure for copy offload in block
- and request layer.
-To: Keith Busch <kbusch@kernel.org>
-Cc: Kanchan Joshi <joshi.k@samsung.com>, Jens Axboe <axboe@kernel.dk>, 
-	Jonathan Corbet <corbet@lwn.net>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
-	Mikulas Patocka <mpatocka@redhat.com>, dm-devel@lists.linux.dev, 
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, martin.petersen@oracle.com, 
-	linux-scsi@vger.kernel.org, anuj1072538@gmail.com, gost.dev@samsung.com, 
-	mcgrof@kernel.org, Nitesh Shetty <nj.shetty@samsung.com>, 
-	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
->>On Thu, Dec 14, 2023 at 6:41=E2=80=AFAM Keith Busch <kbusch@kernel.org> w=
-rote:
->>>
->>> On Wed, Dec 06, 2023 at 03:32:34PM +0530, Kanchan Joshi wrote:
->>> >  static inline bool bio_has_data(struct bio *bio)
->>> >  {
->>> > -     if (bio &&
->>> > -         bio->bi_iter.bi_size &&
->>> > -         bio_op(bio) !=3D REQ_OP_DISCARD &&
->>> > -         bio_op(bio) !=3D REQ_OP_SECURE_ERASE &&
->>> > -         bio_op(bio) !=3D REQ_OP_WRITE_ZEROES)
->>> > +     if (bio && (bio_op(bio) =3D=3D REQ_OP_READ || bio_op(bio) =3D=
-=3D REQ_OP_WRITE))
->>> >               return true;
->>>
->>> There are other ops besides READ and WRITE that have data, but this is
->>> might be fine by the fact that other ops with data currently don't call
->>> this function.
->>>
->>> > diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
->>> > index 7c2316c91cbd..bd821eaa7a02 100644
->>> > --- a/include/linux/blk_types.h
->>> > +++ b/include/linux/blk_types.h
->>> > @@ -393,6 +393,10 @@ enum req_op {
->>> >       /* reset all the zone present on the device */
->>> >       REQ_OP_ZONE_RESET_ALL   =3D (__force blk_opf_t)17,
->>> >
->>> > +     /* copy offload dst and src operation */
->>> > +     REQ_OP_COPY_SRC         =3D (__force blk_opf_t)19,
->>>
->>> Should this be an even numbered OP? The odd ones are for data
->>> WRITEs.
+The calculation of phy_addr in mvumi_delete_internal_cmd contained an issue
+where the expression '(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16)' was used.
+This expression was found to be incorrect and useless because it always evaluates
+to zero, regardless of the actual value of m_sg->baseaddr_h since it's u32.
 
-Our request opcode needs to be write based(even) so that while forming nvme=
--tcp
-packets we send this as part of the nvme capsule.
+This commit resolves the issue by placing the casting inside the brackets, making it
+more meaningful: (((dma_addr_t) m_sg->baseaddr_h << 16) << 16)
 
-But now I think this design can be simplified as you suggested, if we align
-COPY_SRC to even and COPY_DST to odd. This requires us to change the design=
- by
-sending dst bio first hence forming a write based request, followed by
-src bio's.
-Will send a follow up series next week fixing this.
+The corrected expression ensures that phy_addr is calculated correctly and
+addresses the previous issue, preventing the unnecessary use of a zero value.
 
-Thank you,
-Nitesh Shetty
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
+---
+ drivers/scsi/mvumi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 0354898d7cac..675ea5dcaa21 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -296,7 +296,7 @@ static void mvumi_delete_internal_cmd(struct mvumi_hba *mhba,
+ 			sgd_getsz(mhba, m_sg, size);
+ 
+ 			phy_addr = (dma_addr_t) m_sg->baseaddr_l |
+-				(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
++				(((dma_addr_t) m_sg->baseaddr_h << 16) << 16);
+ 
+ 			dma_free_coherent(&mhba->pdev->dev, size, cmd->data_buf,
+ 								phy_addr);
+-- 
+2.34.1
+
