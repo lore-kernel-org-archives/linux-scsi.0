@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D12017729
-	for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2023 04:07:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0641212B85
+	for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2023 05:35:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IBJ1OglH"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2D1C8C433CA
-	for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2023 04:07:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oxOxuBj3"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6CCFCC4339A
+	for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2023 05:35:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702699679;
-	bh=ha+L+ht1t24VDcgTirqqDExmS/8OqUjpSbqahaKLP2g=;
+	s=k20201202; t=1702704927;
+	bh=5iKtdCFjgq5745qvGECjqmqRowxZfQrHrHVhpKxRhCo=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=IBJ1OglHGO3KHYX4SokjqvdB3OtvkR7CC8G2le75y+EC4q4I42xFPnNpaPgHik4mI
-	 9KSGi62iifOk1WTPX5NEjuLUx5zyzymW22wiBd2g1Ntyp7gmD8jV921vqbfQHmqcKK
-	 VKP9OUUXOYfonIz5UsjNw5buIzxj0i5o+4+0b6Y8trorHAI2p/iiiAO5HcxDt5ahiY
-	 7bdXgzMLXSLWsROSK0zVLUReaoOJgvhs+/3D90nRttlyYHAgNgeXc5YpMNulSKXlxw
-	 2IkelYfUU1C7jJpCObqHYxGGRKkuM8M8XKfk3FyV8jUjhWmyU6tp92VmlgT59P+xP1
-	 Y3ROvzoBaBz5g==
+	b=oxOxuBj30UyZU9MV7qG5JnTpufMcMAqiEQEWgyRjs3T+9sR7dBY2/ED9ES/Lzhlk4
+	 Qqc2z+Oy3+s0W8dBDY8acQ20J+AebapzZaJVoXQDLLub12CllN/P0IQZPq5HUn9YdV
+	 sFExovrDKOfOPRC62X4v0N11VWewu65ipcn+R0gVv0ScsMgSY8dlaF2FZN5wFvC6bT
+	 CvdD15b3xuUbWrGMtZx4XjDPZAE9hiuYpKWcTDgd77LG6/bV21UQ7GUSczfQWnF154
+	 150pvy1laHLRZvbldLCR+8nNJgkD5CWSb6TPcfnobYxdvEEeBcTzKUvtiKUZapXnDb
+	 GCoH6aBYNNHsw==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 1BC57C53BCD; Sat, 16 Dec 2023 04:07:59 +0000 (UTC)
+	id 5C77FC53BD1; Sat, 16 Dec 2023 05:35:27 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
  request after update to linux 6.4.0
-Date: Sat, 16 Dec 2023 04:07:58 +0000
+Date: Sat, 16 Dec 2023 05:35:26 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
@@ -32,14 +32,14 @@ X-Bugzilla-Component: AACRAID
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: high
-X-Bugzilla-Who: sagar.biradar@microchip.com
+X-Bugzilla-Who: encore2097@hotmail.com
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-zAmoaiVt9I@https.bugzilla.kernel.org/>
+Message-ID: <bug-217599-11613-eRvgA89PTH@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
 References: <bug-217599-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -55,202 +55,61 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
---- Comment #47 from Sagar (sagar.biradar@microchip.com) ---
-Hi Joop, Maxim et all,
-I have been trying to duplicate this issue on two different machines with 2
-CPUs and little luck. I was curious to know the magic ingredient that is
-missing in the setup.
+--- Comment #48 from encore2097@hotmail.com ---
+Hi Sagar,
 
-I have series-7 controllers on both machines, 3 drives attached to both the
-controllers, with four Raid-5 arrays created on these drives.
-I am running fio on all the arrays (/dev/sdb to /dev/sde).
+I'm using a setup with 10 SATA disks in HBA mode and running a zfs raidz2
+filesystem (akin to raid-6). This is a single CPU system so I don't believe=
+ the
+CPU count is the main issue here =E2=80=94- although its likely related.
 
-Could you share the details of tool (or any script?) that is being run on t=
-he
-system when you see the issue?
+From examining the logs, doing some research, and drawing from my experienc=
+e,
+it seems that timeouts and queues are the primary culprits. My suspicion is
+that during heavy loads, there's an overflow somewhere in the stack (could =
+be
+in the kernel driver, firmware, or hardware), causing I/O requests to get l=
+ost
+and timeout. After a series of these timeouts, the driver triggers an error=
+ and
+resets the adapter.
 
-I am mentioning both the configs here, for your reference, and please let me
-know if something seems conspicuous to you. Also it would really help me if=
- you
-give similar details other than what has already been mentioned.
+I stumbled upon threads dating back to around 2017 where users faced similar
+issues (check this one:
+https://forum.proxmox.com/threads/pve-5-1-aacraid-scsi-hang.38259/). One
+suggestion for a fix was to extend the disk timeout window for waiting on I=
+/O.
+However, the current kernel (set at 60s) has already doubled the previous v=
+alue
+of 30s, which makes me think it might not be the root cause but is also
+related.
 
-Thanks
-Sagar
+I'm not sure of the physical disk setup of other users connecting to their
+controllers, but I reliably see this issue with my 10 disk setup so my
+recommendation would be to increase the number of disks attached to the
+controller and stress test it with simultaneous sequential and random I/O u=
+sing
+tools like dd and fio at the same time.=20
 
+My specific use case involves a file server and database with multiple user=
+s. I
+consistently observe the adapter aborting requests and resetting a few minu=
+tes
+after boot, when the file server and database applications start and warm up
+their caches (cache size is approximately 120GB in RAM).
 
+Upon further investigation, I found that anyone experiencing this issue cou=
+ld
+gather more information by modifying aacraid with dump_stack() added around
+line 713 of linux/latest/source/drivers/scsi/aacraid/linit.c within
+aac_eh_abort (refer to this:
+https://stackoverflow.com/questions/32557040/how-to-get-stack-trace-at-vari=
+ous-points-in-kernel-device-driver-code).
 
-Config-1 Details
-System Information
-        Manufacturer: Supermicro
-        Product Name: SYS-220U-TNR
-        Version: 0123456789
-        Serial Number: S411795X2826083
+Unfortunately, due to unacceptable downtime I had to revert my system to a
+different HBA and lack spare systems to test with.
 
-BIOS Information
-        Vendor: American Megatrends International, LLC.
-        Version: 1.4
-        BIOS Revision: 5.22
-
-System Slot Information
-        Designation: RSC-W2-8888G4 SLOT3 PCI-E 4.0 X8
-        Type: x8 PCI Express 4 x8
-        Current Usage: In Use
-        Length: Short
-        ID: 3
-        Characteristics:
-                3.3 V is provided
-                PME signal is supported
-        Bus Address: 0000:4b:00.0
-
-Processor Information
-        Socket Designation: CPU1
-        Type: Central Processor
-        Family: Xeon
-        Manufacturer: Intel(R) Corporation
-        ID: A6 06 06 00 FF FB EB BF
-        Signature: Type 0, Family 6, Model 106, Stepping 6
-        Version: Intel(R) Xeon(R) Silver 4310 CPU @ 2.10GHz
-        Core Count: 12
-        Core Enabled: 12
-        Thread Count: 24
-
-        Socket Designation: CPU2
-        Type: Central Processor
-        Family: Xeon
-        Manufacturer: Intel(R) Corporation
-        ID: A6 06 06 00 FF FB EB BF
-        Signature: Type 0, Family 6, Model 106, Stepping 6
-        Version: Intel(R) Xeon(R) Silver 4310 CPU @ 2.10GHz
-        Core Count: 12
-        Core Enabled: 12
-        Thread Count: 24
-
-
-Controller Details
-Controller                      : ASR71605
-BIOS                            : 7.6-0 (32136)
-Firmware                        : 7.6-0 (32136)
-Driver                          : 1.2-1 (50983)
-Boot Flash                      : 2.57-0 (432)
-CPLD (Load version/ Flash version)      : 8/ 8
-SEEPROM (Load version/ Flash version)   : 1/ 1
-
-
-uname -r
-6.4.0
-
-
-lscpu
-
-Architecture:           x86_64
-CPU op-mode(s): 32-bit, 64-bit
-Address sizes:          46 bits physical, 57 bits virtual
-Byte Order:             Little Endian
-CPU(s):                 48
-On-line CPU(s) list:    0-47
-Vendor ID:              GenuineIntel
-BIOS Vendor ID:         Intel(R) Corporation
-Model name:             Intel(R) Xeon(R) Silver 4310 CPU @ 2.10GHz
-BIOS Model name:        Intel(R) Xeon(R) Silver 4310 CPU @ 2.10GHz
-CPU family:             6
-Model:                  106
-Thread(s) per core:     2
-Core(s) per socket:     12
-Socket(s):              2
-Stepping:               6
-NUMA node(s):           2
-NUMA node0 CPU(s):      0-11,24-35
-NUMA node1 CPU(s):      12-23,36-47
-
-
-lspci -s 4b:00.0 -k
-4b:00.0 RAID bus controller: Adaptec Series 7 6G SAS/PCIe 3 (rev 01)
-        Subsystem: Adaptec Series 7 - ASR-71605 - 16 internal 6G SAS Port/P=
-CIe
-3.0
-        Kernel driver in use: aacraid
-        Kernel modules: aacraid
-
-
-
-Config-2 Details
-System Information
-        Manufacturer: HPE
-        Product Name: ProLiant DL380 Gen11
-        Version: Not Specified
-        Serial Number: CNX2070BND
-
-BIOS Information
-        Vendor: HPE
-        Version: 1.40
-        Release Date: 06/01/2023
-
-
-CPU Information
-Processor Information
-        Socket Designation: Proc 1
-        Type: Central Processor
-        Family: Xeon
-        Manufacturer: Intel(R) Corporation
-        Signature: Type 0, Family 6, Model 143, Stepping 6
-        Version: Intel(R) Xeon(R) Platinum 8454H
-        Core Count: 32
-        Core Enabled: 32
-        Thread Count: 64
-
-
-        Socket Designation: Proc 2
-        Type: Central Processor
-        Family: Xeon
-        Manufacturer: Intel(R) Corporation
-        ID: F6 06 08 00 FF FB EB BF
-        Signature: Type 0, Family 6, Model 143, Stepping 6
-        Version: Intel(R) Xeon(R) Platinum 8454H
-        Core Count: 32
-        Core Enabled: 32
-        Thread Count: 64
-
-
-Controller Information
-Controller                              : ASR7805
-BIOS                                    : 7.5-0 (32118)
-Firmware                                : 7.5-0 (32118)
-Driver                                  : 1.2-1 (50983)
-Boot Flash                              : 7.5-0 (32118)
-CPLD (Load version/ Flash version)      : 7/ 10
-SEEPROM (Load version/ Flash version)   : 0/ 1
-
-uname -r
-6.4.0
-
-
-Architecture:            x86_64
-  CPU op-mode(s):        32-bit, 64-bit
-  Address sizes:         46 bits physical, 57 bits virtual
-  Byte Order:            Little Endian
-CPU(s):                  128
-  On-line CPU(s) list:   0-127
-Vendor ID:               GenuineIntel
-  BIOS Vendor ID:        Intel(R) Corporation
-  Model name:            Intel(R) Xeon(R) Platinum 8454H
-    BIOS Model name:     Intel(R) Xeon(R) Platinum 8454H
-    CPU family:          6
-    Model:               143
-    Thread(s) per core:  2
-    Core(s) per socket:  32
-    Socket(s):           2
-NUMA:
-  NUMA node(s):          2
-  NUMA node0 CPU(s):     0-31,64-95
-  NUMA node1 CPU(s):     32-63,96-127
-
-
-lspci -s 23:00.0 -k
-23:00.0 RAID bus controller: Adaptec Series 7 6G SAS/PCIe 3 (rev 01)
-        Subsystem: Adaptec Series 7 - ASR-7805 - 8 internal 6G SAS Port/PCIe
-3.0
-        Kernel driver in use: aacraid
-        Kernel modules: aacraid
+Best regards.
 
 --=20
 You may reply to this email to add a comment.
