@@ -1,79 +1,107 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B961648CE8;
-	Sun, 17 Dec 2023 16:54:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46E0B46420;
+	Sun, 17 Dec 2023 17:03:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DXYqZVLT"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=ctU7eNWyO5uU8k+K1R2TcQkMR0gAuYk2v8Yjsja/Y1c=; b=DXYqZVLTY3AXEoBxl64SMyaX8s
-	iocWPDWI6wSF+Py9Nzd53oAjEW8s1qbVJSoFuHgjMO7ReyYzIlvWagT4aJ/QmwFjj50jACktmkLZZ
-	71o5L28Kq7RX+chawOPRKpL2T53erXPKzIXI2nvXIoChjJLg+xemJqSISQODlbdXJhjhX3utH0SCb
-	szSXCMLib0iNpU+rrWEUHdVpkSQBb6SomuF0Kui47LLE3g4uh80BP5X4zJwwPeRq3X5kFrKbtgrF7
-	l9Bbdlk6oGly95fNPZZVTL8laT37R0kjKKAPdOWDe6Ywyiy/a+PBeQwlF7aweLD4aibb3mJ7/+CUa
-	zv8VYmog==;
-Received: from [88.128.92.84] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rEuPB-0088Od-1n;
-	Sun, 17 Dec 2023 16:54:17 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Paolo Bonzini <pbonzini@redhat.com>,
-	Stefan Hajnoczi <stefanha@redhat.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	virtualization@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net
-Subject: [PATCH 5/5] sd: only call disk_clear_zoned when needed
-Date: Sun, 17 Dec 2023 17:53:59 +0100
-Message-Id: <20231217165359.604246-6-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231217165359.604246-1-hch@lst.de>
-References: <20231217165359.604246-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="LvqGtz/K"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 3BHGovfq007703;
+	Sun, 17 Dec 2023 17:03:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=5xfkxt1tTtX55og26Me4Y1UbjKI2CLMX4oDvwX0MEjc=; b=Lv
+	qGtz/K5MopP7VH2jP3SF1BSKh2vLLtBfUDXlKJvoFuz9xnhLU7S3wZOnN5UFgD1o
+	ciVZrKL/x0V7+u7+QrJMMfzQIdSzXlKcBOyPLnGWxxxtgmiC2JIbHl0oOx/oxbLw
+	ybsqpd1QAB9Fe4GyG6i4xHG431oSOUsAv8/X9qvNAeWxIo0aahjTQBkvzoipP7NG
+	jaXums8Zs1z0yaU4wG3WAsnmfGwxfrMBowja+EZ4tPCChJ1YqrFixJO8Ynz6EVjL
+	kND/CydxDigKmIHPgvRFGjRF92Q1wEIq/HGgsOpj28qCY8RdHcX79zGcuNZnTxmt
+	bykOjZZVEGyiKLon3t/A==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3v14yg2gu5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 17 Dec 2023 17:03:29 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3BHH3Sil002967
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 17 Dec 2023 17:03:28 GMT
+Received: from [10.216.17.18] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Sun, 17 Dec
+ 2023 09:03:23 -0800
+Message-ID: <0debdc71-2ee2-4a0d-9789-5aea4191a305@quicinc.com>
+Date: Sun, 17 Dec 2023 22:33:20 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V5 0/2] Add CPU latency QoS support for ufs driver
+To: Avri Altman <Avri.Altman@wdc.com>,
+        "James E.J. Bottomley"
+	<jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Matthias Brugger
+	<matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>
+CC: Alim Akhtar <alim.akhtar@samsung.com>,
+        Bart Van Assche
+	<bvanassche@acm.org>,
+        Stanley Jhu <chu.stanley@gmail.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        "quic_cang@quicinc.com"
+	<quic_cang@quicinc.com>,
+        "quic_nguyenb@quicinc.com"
+	<quic_nguyenb@quicinc.com>
+References: <20231213124353.16407-1-quic_mnaresh@quicinc.com>
+ <DM6PR04MB657594F8BFE75A8F68855A2EFC93A@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Language: en-US
+From: Naresh Maramaina <quic_mnaresh@quicinc.com>
+In-Reply-To: <DM6PR04MB657594F8BFE75A8F68855A2EFC93A@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: chd14hn0oHDl8Z55uw2-yAAsp83Sp7Pe
+X-Proofpoint-GUID: chd14hn0oHDl8Z55uw2-yAAsp83Sp7Pe
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-09_02,2023-12-07_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ impostorscore=0 malwarescore=0 mlxlogscore=709 suspectscore=0 adultscore=0
+ clxscore=1015 spamscore=0 priorityscore=1501 bulkscore=0 phishscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2311290000 definitions=main-2312170127
 
-disk_clear_zoned only needs to be called when a device reported zone
-managed mode first and we clear it.  Add a check so that disk_clear_zoned
-isn't called on devices that were never zoned.
+On 12/15/2023 2:35 PM, Avri Altman wrote:
+>> Add CPU latency QoS support for ufs driver. This improves random io
+>> performance by 15% for ufs.
+>>
+>> tiotest benchmark tool io performance results on sm8550 platform:
+> Will it possible to provide test results for non-ufs4.0 platforms?
+> e.g. for SM8250, just to know if it would make sense to backport this to earlier releases.
+> 
 
-This avoids a fairly expensive queue freezing when revalidating
-conventional devices.
+Hi Avri,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/sd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Performed tiotest benchmark tool io performance test on SM8450 platform 
+and see good improvement there as well.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index dbed075cdb981a..8c8ac5cd1833b4 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3149,7 +3149,7 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- 		 * the device physical block size.
- 		 */
- 		blk_queue_zone_write_granularity(q, sdkp->physical_block_size);
--	} else {
-+	} else if (blk_queue_is_zoned(q)) {
- 		/*
- 		 * Anything else.  This includes host-aware device that we treat
- 		 * as conventional.
--- 
-2.39.2
+> Thanks,
+> Avri
 
+Thanks,
+Naresh.
