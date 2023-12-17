@@ -1,101 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E25C9328D6
-	for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2023 22:00:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 608DA44C99;
+	Sun, 17 Dec 2023 16:54:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZmkIGWn"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 72D52C433AB
-	for <linux-scsi@vger.kernel.org>; Sat, 16 Dec 2023 22:00:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702764016;
-	bh=APMpUVI0ahOULtdPj4lUo/mJshs2RCkoaK9bWDjtv8E=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=AZmkIGWnhok2/C7CpMnsnwHtKhPdPBEkDkCVUsDDzM+YxSZUz+RRnoRaaFU5tK6qv
-	 bPV9kYQ7+Ag0uIf/T2OdexcS5NGeSkLbisNrSoomb6dS6gwL2McI/2+ezjuTPh/pSd
-	 2dTAnBw5gQBb0Pc9NEHAdxxFCzqz6NJS62OvRilg46A3n3MOP26djZ3K1LZ3AyeLLO
-	 YGSUWSpzuagzUHpUcPCHmBWouFKytiD5x5hOGbsc8CNOgFfHN1/uJI6stHqyrJgNQe
-	 9k/jPo/kKeMTKZB/JsnNXH7V0R/QulpaaOYjYyuolsirkN7vVoS39PIptKrdkmAxoL
-	 TtRg5MRaf/zlQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 63B85C4332E; Sat, 16 Dec 2023 22:00:16 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Sat, 16 Dec 2023 22:00:15 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: leyyyyy@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-60h01BnW2q@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WLAw68Jl"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=zthoML/uhpAs1hPvD/fh13swKppKnu7l7FTtACwvAxE=; b=WLAw68JlEwbNFdIQ2xyIscfsps
+	CWgTZVnaIvQlWzz06TQgw+PjcgppWNTQHeaP9heFZI/N1X6bRYNdiDnf2HKguxboWjjhX0XmDtIjK
+	Cfq3ixlcQVdCDmt8I6cHcZgfNphEKcI3/sVh25Wwnsz+IwF9FU+0k1hDj6q3C9Vdeme9/K9trDDqA
+	V71hDtLh1lZVVWiDsNBiBlb8sihMmf06SvtbxGjuggJOMDbBBTxgpx44hH1dWWFQwYuZk0pKkO4pD
+	z9I6Ggwwd4Bgt8+xX5UuHNQ6CBWHRRa61Hf3XU+/hpP1RR7WYzVz20j0J0IOo1IjoDdlSGlIKer06
+	t4lIRgSQ==;
+Received: from [88.128.92.84] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+	id 1rEuOw-0088L9-1x;
+	Sun, 17 Dec 2023 16:54:03 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Paolo Bonzini <pbonzini@redhat.com>,
+	Stefan Hajnoczi <stefanha@redhat.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	virtualization@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net
+Subject: remove support for the host aware zoned model
+Date: Sun, 17 Dec 2023 17:53:54 +0100
+Message-Id: <20231217165359.604246-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+Hi all,
 
---- Comment #49 from Maxim (leyyyyy@gmail.com) ---
-I used 2 raid arrays:
+hen zones were first added the SCSI and ATA specs, two different
+models were supported (in addition to the drive managed one that
+is invisible to the host):
 
-- RAID0 with 8 SATA drives (8x4TB)
-- RAID0 with 2 SATA drives (2x16TB)
+ - host managed where non-conventional zones there is strict requirement
+   to write at the write pointer, or else an error is returned
+ - host aware where a write point is maintained if writes always happen
+   at it, otherwise it is left in an under-defined state and the
+   sequential write preferred zones behave like conventional zones
+   (probably very badly performing ones, though)
 
-Both was with LUKS and Ext4/BTRFS (tried both) on that moment.
+Not surprisingly this lukewarm model didn't prove to be very useful and
+was finally removed from the ZBC and SBC specs (NVMe never implemented
+it).  Due to to the easily disappearing write pointer host software
+could never rely on the write pointer to actually be useful for say
+recovery.
 
-To reproduce it I just started copying files from one array (2nd one) to
-another using some file manager like Midnight Commander.
+Fortunately only a few HDD prototypes shipped using this model which
+never made it to mass production.  Drop the support before it is too
+late.  Note that any such host aware prototype HDD can still be used
+with Linux as we'll now treat it as a conventional HDD.
 
-During copying it can process some amount of data before problem happens and
-message appears in dmesg output. When it happens copying becomes slow, all
-hangs, and finally the copying is rejected.
-
-btrfs scrub gives similar result, it says that data is corrupt after starti=
-ng
-scanning (maybe 200-300 GB is scanned OK before it happens).
-
-It is single CPU system, I never used multi-socket MB in in such scenarios.
-
-I do not think you need fio, I think you need to move a lot of data to array
-(for example big media files, VM images, backup files and so on).
-
-2nd time when I got the same issue was different system, and it is also cop=
-ying
-of data from RAID0 10x1TB SSD to RAID0 6x8TB HDD (LUKS and BTRFS).
-
---
-
-I do not think it is hardware issue because on old kernels it works fine wi=
-th
-the same settings of the array. If FS is not damaged I can just boot in old=
-er
-kernel and all will work fine on the same file system. Usually FS will not =
-be
-damaged if you not try to repair it by fsck.ext2 using problematic aacraid
-driver.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Diffstat:
+ block/blk-settings.c           |   83 +++++------------------------------------
+ block/blk-sysfs.c              |    9 ----
+ block/blk-zoned.c              |    3 -
+ block/blk.h                    |    2 
+ block/partitions/core.c        |   12 -----
+ drivers/block/null_blk/zoned.c |    2 
+ drivers/block/ublk_drv.c       |    2 
+ drivers/block/virtio_blk.c     |   78 +++++++++++---------------------------
+ drivers/md/dm-kcopyd.c         |    2 
+ drivers/md/dm-table.c          |   45 +++++++++-------------
+ drivers/md/dm-zoned-metadata.c |    7 +--
+ drivers/md/dm-zoned-target.c   |    4 -
+ drivers/nvme/host/zns.c        |    2 
+ drivers/scsi/scsi_debug.c      |   27 ++++++-------
+ drivers/scsi/sd.c              |   50 +++++++++++-------------
+ drivers/scsi/sd_zbc.c          |   16 -------
+ fs/btrfs/zoned.c               |   23 +----------
+ fs/btrfs/zoned.h               |    2 
+ fs/f2fs/data.c                 |    2 
+ fs/f2fs/super.c                |   17 +++-----
+ include/linux/blkdev.h         |   38 +-----------------
+ 21 files changed, 124 insertions(+), 302 deletions(-)
