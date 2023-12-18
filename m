@@ -1,105 +1,87 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+Received: from mail-oo1-f51.google.com (mail-oo1-f51.google.com [209.85.161.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FF8A7346D
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 20:50:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="nY+BpKP5"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-28baeccddb4so423211a91.2
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 12:50:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702932620; x=1703537420; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=3VYuhGNACrh4RxyK7vwhYZLcFzB1f10C6T9YQ9W4h0I=;
-        b=nY+BpKP5a7NV8lBnYEvh6u9ZeBnp/zbTuylqEjJNVDUQB0d1I4HvQmFJBIoeqXik18
-         H/bYy1bZGe85sLtmQ4JYggNYHT9ZzHGf+AfAFA2Qr+9nF4Q6pbMSeu9xekx9sbQ/gKag
-         hCco2a5m62y6x8EGd4Zs25pcpKIxBiwlUQwMiuGzcwXOOLuSBx8as+OEtQ2f2BP6H1GW
-         uKjoaD5KZTmuqJEYzKelEdy9WoWmgJdA/qCU5I6SVxCijtYbZ391gZrKfSoEdaiiI3ZU
-         BS5CZG/rHB6PTaxldUyy0OJiWZrU0IX9I5uQ33l3lkYUqxS7hOtf/8/0atu7ITVKVcAY
-         6ayQ==
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A8C51DA3A;
+	Mon, 18 Dec 2023 21:41:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-oo1-f51.google.com with SMTP id 006d021491bc7-58e256505f7so2537406eaf.3;
+        Mon, 18 Dec 2023 13:41:40 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702932620; x=1703537420;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3VYuhGNACrh4RxyK7vwhYZLcFzB1f10C6T9YQ9W4h0I=;
-        b=pk5laOBgdQQkx6EluEM4h+i7TL128o0+iVQa/FXv/XyyFMOi8gh6VSYsjzTb3z8/YC
-         xNZwz0zYtMC9VF9aCaDuwD/LmuRTKr9FjykKLjs5kWEC760riR0xUnKnwdj7gUNcOZI1
-         OE3ZU3ASyeK1NVMPrRaTqXN2KgqNqlkRl8syIOimykT5JOwPA16uetWa78v6R/5IfODx
-         qPBe2ToXg6HVC7kU55imO4wxxRsCi1035xO+ye/55aGrqmajxt0irsdMB2rCkZapV2bN
-         KeiBPJRIPCuKEZ0kdRZS01/fJW/4wyCOz5hRlq6O4Zb/09umN4OPJwVv9fXjwCzBAV4X
-         h/ug==
-X-Gm-Message-State: AOJu0YxcBhPIN4OyQc2o993bSENmMOuIpGg9w+7MWMWxnEBA200eA3ht
-	U8e9pfuFM/Z0HZEUTFqe70iJ2w==
-X-Google-Smtp-Source: AGHT+IEcehJB+ZsazS59hM/1fa/WGZjE8Vnyh7uwh2p3+WD/I5U+59Kjmr50pBpBUNXzLwVtu1jPKg==
-X-Received: by 2002:a17:90b:3b87:b0:28b:7643:e65c with SMTP id pc7-20020a17090b3b8700b0028b7643e65cmr1027749pjb.56.1702932620479;
-        Mon, 18 Dec 2023 12:50:20 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id jv14-20020a17090b31ce00b0028aecd6b29fsm10415331pjb.3.2023.12.18.12.50.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Dec 2023 12:50:19 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rFKZ5-00A8Va-2x;
-	Tue, 19 Dec 2023 07:50:15 +1100
-Date: Tue, 19 Dec 2023 07:50:15 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@lst.de>,
-	Daejun Park <daejun7.park@samsung.com>,
-	Kanchan Joshi <joshi.k@samsung.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v7 05/19] block, fs: Restore the per-bio/request data
- lifetime fields
-Message-ID: <ZYCwh7RJ4EpXD+7X@dread.disaster.area>
-References: <20231218185705.2002516-1-bvanassche@acm.org>
- <20231218185705.2002516-6-bvanassche@acm.org>
+        d=1e100.net; s=20230601; t=1702935700; x=1703540500;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0Lf6x/s/QNuvXO3/maFmMWf//6tmMOSX9Okk2scVa1c=;
+        b=LcewoDHFMKU2Y0ff8fEFmnakzg9oFuextUFVB/e4hwggKflD6cQLzU40kcgzLPpDzP
+         Mo+I7S6JUBCaE2sB6CGxRo0WIf3bkrMZKBciC3IclRbiQLry1rVXMlvMK5BLXs7rM9ca
+         l2/S59ZnfDkM9vWUz5TmDcWDSpuYN9toqEHq7oe1yIsXp5ehk4Ysr8ch6yTMibRP+SQR
+         vQhx5nS/6AtfiXQyt/7jtwkzh5E8TOgncZGo6zERFv9jgpoYNGtYhA9Zkfwaszl5j/w6
+         OeXWH8qv5Jtx2s7qDKeMzt98LDOLu24VyIGswoxau+TV+vNvIK+n5zP8agskr7t67pvp
+         L3Tg==
+X-Gm-Message-State: AOJu0YyMY1BUOwA1a3uPi3FpouOjjGsV8vjbUydmA2KvDwtpOHbQPO41
+	5pCyvdcDVwKQpHvt1J/AyBI=
+X-Google-Smtp-Source: AGHT+IHRHJGjIg8FP0kWYFL8Nk9kN/wFY5Y7MonQIYe8IKswbaMMMSgMs9IHvnKqpDP+LztsZih95g==
+X-Received: by 2002:a05:6358:e4a1:b0:172:d67c:61f1 with SMTP id by33-20020a056358e4a100b00172d67c61f1mr1664629rwb.14.1702935699775;
+        Mon, 18 Dec 2023 13:41:39 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:e67:7ba6:36a9:8cd5? ([2620:0:1000:8411:e67:7ba6:36a9:8cd5])
+        by smtp.gmail.com with ESMTPSA id a21-20020a62e215000000b006d63ace8508sm3075061pfi.70.2023.12.18.13.41.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 18 Dec 2023 13:41:39 -0800 (PST)
+Message-ID: <7cdfa93b-70f7-4912-bda7-a6b50b93c665@acm.org>
+Date: Mon, 18 Dec 2023 13:41:35 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231218185705.2002516-6-bvanassche@acm.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: core: Let the sq_lock protect sq_tail_slot
+ access
+Content-Language: en-US
+To: Can Guo <quic_cang@quicinc.com>, mani@kernel.org,
+ adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+ junwoo80.lee@samsung.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ Alim Akhtar <alim.akhtar@samsung.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Stanley Chu <stanley.chu@mediatek.com>,
+ Asutosh Das <quic_asutoshd@quicinc.com>, Peter Wang
+ <peter.wang@mediatek.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+ open list <linux-kernel@vger.kernel.org>
+References: <1702913550-20631-1-git-send-email-quic_cang@quicinc.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1702913550-20631-1-git-send-email-quic_cang@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Dec 18, 2023 at 10:56:28AM -0800, Bart Van Assche wrote:
-> Restore support for passing data lifetime information from filesystems to
-> block drivers. This patch reverts commit b179c98f7697 ("block: Remove
-> request.write_hint") and commit c75e707fe1aa ("block: remove the
-> per-bio/request write hint").
+On 12/18/23 07:32, Can Guo wrote:
+> If access sq_tail_slot without the protection from the sq_lock, race
+> condition can have multiple SQEs copied to duplicate SQE slot(s), which can
+> lead to multiple incredible stability issues. Fix it by moving the *dest
+> initialization, in ufshcd_send_command(), back under protection from the
+> sq_lock.
 > 
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Fixes: 3c85f087faec ("scsi: ufs: mcq: Use pointer arithmetic in ufshcd_send_command()")
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index ae9936f..2994aac 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2274,9 +2274,10 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
+>   	if (is_mcq_enabled(hba)) {
+>   		int utrd_size = sizeof(struct utp_transfer_req_desc);
+>   		struct utp_transfer_req_desc *src = lrbp->utr_descriptor_ptr;
+> -		struct utp_transfer_req_desc *dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
+> +		struct utp_transfer_req_desc *dest;
+>   
+>   		spin_lock(&hwq->sq_lock);
+> +		dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
+>   		memcpy(dest, src, utrd_size);
+>   		ufshcd_inc_sq_tail(hwq);
+>   		spin_unlock(&hwq->sq_lock);
 
-...
-
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index bcd3f8cf5ea4..97e20911b45f 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -380,6 +380,8 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  		fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
->  					  GFP_KERNEL);
->  		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
-> +		bio->bi_write_hint =
-> +			file_inode(dio->iocb->ki_filp)->i_write_hint;
-
-We already have an inode pointer in this function (from
-iter->inode), so:
-
-		bio->bi_write_hint = inode->i_write_hint;
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
