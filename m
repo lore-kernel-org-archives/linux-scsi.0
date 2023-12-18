@@ -1,179 +1,63 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 994B476080;
-	Mon, 18 Dec 2023 22:50:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JMFtsEZL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F368FC433C7;
-	Mon, 18 Dec 2023 22:50:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702939820;
-	bh=XQ3Y2xlODgItuHUfk9LQWvZkE68Or3E774k7hEqz9uo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JMFtsEZLP9TInD4z1KBYZJn+HhHyQPZeKZ/uxCjFDfRQ4R41d0jWZCypmnLeNuUjl
-	 rpQWOCq+O7G6xURivgtJYluZ77NwNHUwxaqR7HEzI+vR2LeMn2fRcU0UViecTGXyfb
-	 90MQZqkN8OwSOOqlHvNg8anjBpO9H3nRknTsFTJe3xywUlve3pijecR5LQLKNdHQn4
-	 iWg0atuu68HLn+lXqA6M3kkpkGdT9YvDwGKExYdJqaUqoBS2WD0ajIzMcRih+uLXOB
-	 pnsYDAzMfJFStLjI5N0rkI2O9fd+rt1no7PzyMUtiO5tnG8C9cwoy9RJqin+9rAjvv
-	 nYGbbLi7tZJ3w==
-Date: Mon, 18 Dec 2023 15:50:16 -0700
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
-Subject: Re: [PATCH v2 00/16] block atomic writes
-Message-ID: <ZYDMqCYedHUb3e6O@kbusch-mbp.dhcp.thefacebook.com>
-References: <20231212110844.19698-1-john.g.garry@oracle.com>
- <20231212163246.GA24594@lst.de>
- <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com>
- <20231213154409.GA7724@lst.de>
- <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
- <20231214143708.GA5331@lst.de>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1752774E0F
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 22:52:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-5bcfc508d14so3028065a12.3
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 14:52:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702939959; x=1703544759;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=izqRM2fIGr+MoNASx+wzsiMDBz3fSD5uGBcRBnpnCkU=;
+        b=pVL7eGL1i7EqfIjn2gOAbxjbWBZFkf0HMLfh6XSIJsAp89H3mS3KvDfclkiOm9dQRT
+         hRXMDVjmPkPpn9xoBSRrDoQCX94C2b6mUpMixgIe1UEgYUuIC1FMtgF00aeE+skygKcE
+         pFBbNjPsYHPb62ndzYAZcyvzPlbJeLsNljA/Z1uFKUZ37J+b4Mq1r9thRHLJkjGKDQ8Y
+         tlkpsPzTLMzflDbJtfUmFvdTZU3xaDzcUpqwilrvfRhAGKZG5Br3BB2szfdBmsgwALrP
+         WZUk0rbmKE0KHbZUwKtZiovFnZkBDLQ+VecsuPGyVsKjB2sgbDh4mLyfxaoam5O8IZi4
+         X5UA==
+X-Gm-Message-State: AOJu0YwBgl4AqTC4/75pl7uRQLolv7P/cCzohATVrZ1wI+HAr20pggm+
+	wNe9eFEdJB2lc3i0OpH8JOY=
+X-Google-Smtp-Source: AGHT+IFY0Gc5UemXt0S3WN6mHRMFj+EjoAKCkS72bIv+ptxGJAmjIpUNMSiDAToQ+qMECZuvZ5kwiA==
+X-Received: by 2002:a05:6a20:244f:b0:18f:f040:86df with SMTP id t15-20020a056a20244f00b0018ff04086dfmr18091592pzc.82.1702939959249;
+        Mon, 18 Dec 2023 14:52:39 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:e67:7ba6:36a9:8cd5])
+        by smtp.gmail.com with ESMTPSA id h18-20020a056a00171200b006d45b47612csm4078329pfc.89.2023.12.18.14.52.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Dec 2023 14:52:38 -0800 (PST)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/2] Fix the error path in ufshcd_async_scan()
+Date: Mon, 18 Dec 2023 14:52:13 -0800
+Message-ID: <20231218225229.2542156-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.43.0.472.g3155946c3a-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231214143708.GA5331@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Dec 14, 2023 at 03:37:09PM +0100, Christoph Hellwig wrote:
-> On Wed, Dec 13, 2023 at 04:27:35PM +0000, John Garry wrote:
-> >>> Are there any patches yet for the change to always use SGLs for transfers
-> >>> larger than a single PRP?
-> >> No.
-> 
-> Here is the WIP version.  With that you'd need to make atomic writes
-> conditional on !ctrl->need_virt_boundary.
+Hi Martin,
 
-This looks pretty good as-is!
- 
-> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-> index 8ebdfd623e0f78..e04faffd6551fe 100644
-> --- a/drivers/nvme/host/core.c
-> +++ b/drivers/nvme/host/core.c
-> @@ -1889,7 +1889,8 @@ static void nvme_set_queue_limits(struct nvme_ctrl *ctrl,
->  		blk_queue_max_hw_sectors(q, ctrl->max_hw_sectors);
->  		blk_queue_max_segments(q, min_t(u32, max_segments, USHRT_MAX));
->  	}
-> -	blk_queue_virt_boundary(q, NVME_CTRL_PAGE_SIZE - 1);
-> +	if (q == ctrl->admin_q || ctrl->need_virt_boundary)
-> +		blk_queue_virt_boundary(q, NVME_CTRL_PAGE_SIZE - 1);
->  	blk_queue_dma_alignment(q, 3);
->  	blk_queue_write_cache(q, vwc, vwc);
->  }
-> diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-> index e7411dac00f725..aa98794a3ec53d 100644
-> --- a/drivers/nvme/host/nvme.h
-> +++ b/drivers/nvme/host/nvme.h
-> @@ -262,6 +262,7 @@ enum nvme_ctrl_flags {
->  struct nvme_ctrl {
->  	bool comp_seen;
->  	bool identified;
-> +	bool need_virt_boundary;
->  	enum nvme_ctrl_state state;
->  	spinlock_t lock;
->  	struct mutex scan_lock;
-> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> index 61af7ff1a9d6ba..a8d273b475cb40 100644
-> --- a/drivers/nvme/host/pci.c
-> +++ b/drivers/nvme/host/pci.c
-> @@ -60,8 +60,7 @@ MODULE_PARM_DESC(max_host_mem_size_mb,
->  static unsigned int sgl_threshold = SZ_32K;
->  module_param(sgl_threshold, uint, 0644);
->  MODULE_PARM_DESC(sgl_threshold,
-> -		"Use SGLs when average request segment size is larger or equal to "
-> -		"this size. Use 0 to disable SGLs.");
-> +		"Use SGLs when > 0. Use 0 to disable SGLs.");
->  
->  #define NVME_PCI_MIN_QUEUE_SIZE 2
->  #define NVME_PCI_MAX_QUEUE_SIZE 4095
-> @@ -504,23 +503,6 @@ static void nvme_commit_rqs(struct blk_mq_hw_ctx *hctx)
->  	spin_unlock(&nvmeq->sq_lock);
->  }
->  
-> -static inline bool nvme_pci_use_sgls(struct nvme_dev *dev, struct request *req,
-> -				     int nseg)
-> -{
-> -	struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
-> -	unsigned int avg_seg_size;
-> -
-> -	avg_seg_size = DIV_ROUND_UP(blk_rq_payload_bytes(req), nseg);
-> -
-> -	if (!nvme_ctrl_sgl_supported(&dev->ctrl))
-> -		return false;
-> -	if (!nvmeq->qid)
-> -		return false;
-> -	if (!sgl_threshold || avg_seg_size < sgl_threshold)
-> -		return false;
-> -	return true;
-> -}
-> -
->  static void nvme_free_prps(struct nvme_dev *dev, struct request *req)
->  {
->  	const int last_prp = NVME_CTRL_PAGE_SIZE / sizeof(__le64) - 1;
-> @@ -769,12 +751,14 @@ static blk_status_t nvme_setup_sgl_simple(struct nvme_dev *dev,
->  static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
->  		struct nvme_command *cmnd)
->  {
-> +	struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
->  	struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
-> +	bool sgl_supported = nvme_ctrl_sgl_supported(&dev->ctrl) &&
-> +			nvmeq->qid && sgl_threshold;
->  	blk_status_t ret = BLK_STS_RESOURCE;
->  	int rc;
->  
->  	if (blk_rq_nr_phys_segments(req) == 1) {
-> -		struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
->  		struct bio_vec bv = req_bvec(req);
->  
->  		if (!is_pci_p2pdma_page(bv.bv_page)) {
-> @@ -782,8 +766,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
->  				return nvme_setup_prp_simple(dev, req,
->  							     &cmnd->rw, &bv);
->  
-> -			if (nvmeq->qid && sgl_threshold &&
-> -			    nvme_ctrl_sgl_supported(&dev->ctrl))
-> +			if (sgl_supported)
->  				return nvme_setup_sgl_simple(dev, req,
->  							     &cmnd->rw, &bv);
->  		}
-> @@ -806,7 +789,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
->  		goto out_free_sg;
->  	}
->  
-> -	if (nvme_pci_use_sgls(dev, req, iod->sgt.nents))
-> +	if (sgl_supported)
->  		ret = nvme_pci_setup_sgls(dev, req, &cmnd->rw);
->  	else
->  		ret = nvme_pci_setup_prps(dev, req, &cmnd->rw);
-> @@ -3036,6 +3019,8 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  	result = nvme_init_ctrl_finish(&dev->ctrl, false);
->  	if (result)
->  		goto out_disable;
-> +	if (!nvme_ctrl_sgl_supported(&dev->ctrl))
-> +		dev->ctrl.need_virt_boundary = true;
->  
->  	nvme_dbbuf_dma_alloc(dev);
->  
-> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
-> index 81e2621169e5d3..416a9fbcccfc74 100644
-> --- a/drivers/nvme/host/rdma.c
-> +++ b/drivers/nvme/host/rdma.c
-> @@ -838,6 +838,7 @@ static int nvme_rdma_configure_admin_queue(struct nvme_rdma_ctrl *ctrl,
->  	error = nvme_init_ctrl_finish(&ctrl->ctrl, false);
->  	if (error)
->  		goto out_quiesce_queue;
-> +	ctrl->ctrl.need_virt_boundary = true;
->  
->  	return 0;
->  
+This patch series fixes a kernel crash triggered by the error path of
+ufshcd_async_scan(). Please consider this patch series for the next merge
+window.
+
+Thanks,
+
+Bart.
+
+Bart Van Assche (2):
+  scsi: ufs: Simplify power management during async scan
+  scsi: ufs: Remove the ufshcd_hba_exit() call from ufshcd_async_scan()
+
+ drivers/ufs/core/ufshcd.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
+
