@@ -1,93 +1,97 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6462C101DB
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 14:41:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3F73D541
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 15:13:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XXHRQPHz"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Uq54uice"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1702910483;
+	s=mimecast20190719; t=1702912415;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=FM/rOjSoBQXvaGR5kOAQHBZhXTmgI+di7aDdBeNVtbc=;
-	b=XXHRQPHzj83MoGhoFcI5cwi39pNPNu1MW5w2vvEcF8PaZbeZBfuYAeIvRbZEpqwZ+Ljt0c
-	Z0ezGqx6wEAq2h1DdqPWwxQwCf7yfiwNtLOsZQrmQu1b/OLtHFYYOvZulO9WKEeifT+4dd
-	r9SRnWcbNCYmquMMdVRGTde6wnziZyg=
-Received: from mail-ot1-f69.google.com (mail-ot1-f69.google.com
- [209.85.210.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-616-UmVIP2RgN9qM7CR0lSsBcg-1; Mon, 18 Dec 2023 09:41:21 -0500
-X-MC-Unique: UmVIP2RgN9qM7CR0lSsBcg-1
-Received: by mail-ot1-f69.google.com with SMTP id 46e09a7af769-6da4fbb91acso523542a34.1
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 06:41:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702910480; x=1703515280;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FM/rOjSoBQXvaGR5kOAQHBZhXTmgI+di7aDdBeNVtbc=;
-        b=YvzsochmXgecJ+e8LdDiaF35bU+vgRiIyXoyk/lLgPbDZqnrO6DNa5EJu2PE4y/My/
-         pYsySTYK6Ta7R5LP8sY09wBE31U8Xhx4Yc5Pk+Gzh+l2oNvDjC0EbrnI9cjr3XF5WqiT
-         xha4UGHHX1kiYM5mldVhlmThD74ZxW4CDZaMLiIeY5SVEQOAszRyfQ08GHdWTnf5UJmZ
-         Kg2FZS7TmDFRAqsJUs3+xjclPxkOLVRt4sLGCZ+nnYYcpLwwMbDUPZEACN7k+K/NTXRM
-         kUMw53CX8Zr2OUrrDX6Rd1fHZGcGx+5HCxS4lST+zo7M718jsvoBjjkiQtFL/tYayb9j
-         zokA==
-X-Gm-Message-State: AOJu0Yxnth7eOk85nK+BNoL0D5K/70vsGXt7OoQ+bxZZgK8pSDBEn9Qa
-	25ZNru1VlNzhaggmI7L47tg1bs63c4uDxjDBPrisu/ZOeU1337dngPUKWHhII5osMERPq+s8wq8
-	VcBw8HeabOsR43x9kSdeAK/T28OvpWcGD4KCO4w==
-X-Received: by 2002:a05:6830:43a5:b0:6d9:d4d0:4927 with SMTP id s37-20020a05683043a500b006d9d4d04927mr31607504otv.1.1702910480720;
-        Mon, 18 Dec 2023 06:41:20 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHuZO6ohAOjpUpKXxhOi0nXALIR8OosUBFd5MFseInS+5HlyZZVrhOElPO3kQh+gk1aSUrIQ48ogXFk+YTf/PY=
-X-Received: by 2002:a05:6830:43a5:b0:6d9:d4d0:4927 with SMTP id
- s37-20020a05683043a500b006d9d4d04927mr31607481otv.1.1702910480442; Mon, 18
- Dec 2023 06:41:20 -0800 (PST)
+	bh=VIMwQayTocIbXXFB3cUqn/KkHxtVXnjHRr7rf/O91JQ=;
+	b=Uq54uiceodVrFVY2U+JohCVCKyF3o70NPFmbM/h2P3KKmAheg0tMTLhpdx6UPbF7AxphDi
+	beEMLonhQ8aJUUXCz52A6rFzhfESm3kIborEXtIWliWSz0rMBpODMGJyyH93BKztT2ahhB
+	Dt6fqw/kZgYVAV/w9r77SO7rCQAFXo4=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-411-AAzmrDX_PsqPvqe0YWxGDA-1; Mon,
+ 18 Dec 2023 10:13:33 -0500
+X-MC-Unique: AAzmrDX_PsqPvqe0YWxGDA-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4E2DF1C3B648;
+	Mon, 18 Dec 2023 15:13:32 +0000 (UTC)
+Received: from localhost (unknown [10.39.195.94])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id B3531492BC8;
+	Mon, 18 Dec 2023 15:13:31 +0000 (UTC)
+Date: Mon, 18 Dec 2023 10:13:30 -0500
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Paolo Bonzini <pbonzini@redhat.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net
+Subject: Re: [PATCH 1/5] virtio_blk: cleanup zoned device probing
+Message-ID: <20231218151330.GD12768@fedora>
+References: <20231217165359.604246-1-hch@lst.de>
+ <20231217165359.604246-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231215121008.2881653-1-alexander.atanasov@virtuozzo.com>
-In-Reply-To: <20231215121008.2881653-1-alexander.atanasov@virtuozzo.com>
-From: Ming Lei <ming.lei@redhat.com>
-Date: Mon, 18 Dec 2023 22:41:08 +0800
-Message-ID: <CAFj5m9+KV-96tJ_7LScuSftB4SSjxD1PK_M-QBzkxzG6vXeX+A@mail.gmail.com>
-Subject: Re: [PATCH v2 RESEND] scsi: code: always send batch on reset or error
- handling command
-To: Alexander Atanasov <alexander.atanasov@virtuozzo.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Paolo Bonzini <pbonzini@redhat.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Hannes Reinecke <hare@suse.com>, kernel@openvz.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="On1+GVONns+1Tsy+"
+Content-Disposition: inline
+In-Reply-To: <20231217165359.604246-2-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
+
+
+--On1+GVONns+1Tsy+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Dec 15, 2023 at 8:10=E2=80=AFPM Alexander Atanasov
-<alexander.atanasov@virtuozzo.com> wrote:
->
-> In commit 8930a6c20791 ("scsi: core: add support for request batching")
-> blk-mq last flags was mapped to SCMD_LAST and used as an indicator to
-> send the batch for the drivers that implement it but the error handling
-> code was not updated.
->
-> scsi_send_eh_cmnd(...) is used to send error handling commands and
-> request sense. The problem is that request sense comes as a single
-> command that gets into the batch queue and times out.  As result
-> device goes offline after several failed resets. This was observed
-> on virtio_scsi device resize operation.
->
-> [  496.316946] sd 0:0:4:0: [sdd] tag#117 scsi_eh_0: requesting sense
-> [  506.786356] sd 0:0:4:0: [sdd] tag#117 scsi_send_eh_cmnd timeleft: 0
-> [  506.787981] sd 0:0:4:0: [sdd] tag#117 abort
->
-> To fix this always set SCMD_LAST flag in scsi_send_eh_cmnd and
-> scsi_reset_ioctl(...).
->
-> Fixes: 8930a6c20791 ("scsi: core: add support for request batching")
-> Signed-off-by: Alexander Atanasov <alexander.atanasov@virtuozzo.com>
+On Sun, Dec 17, 2023 at 05:53:55PM +0100, Christoph Hellwig wrote:
+> Move reading and checking the zoned model from virtblk_probe_zoned_device
+> into the caller, leaving only the code to perform the actual setup for
+> host managed zoned devices in virtblk_probe_zoned_device.
+>=20
+> This allows to share the model reading and sharing between builds with
+> and without CONFIG_BLK_DEV_ZONED, and improve it for the
+> !CONFIG_BLK_DEV_ZONED case.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/block/virtio_blk.c | 50 +++++++++++++++++---------------------
+>  1 file changed, 22 insertions(+), 28 deletions(-)
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
+
+--On1+GVONns+1Tsy+
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmWAYZoACgkQnKSrs4Gr
+c8ghLggAkEix1k19H0+c3tEJu1E4EkpJgKqmkCFOamfXYjdMpZVQ2JUrrJra8skh
++jn6R4S856v7Gq+lQBNU9/9y8U20DnbyRMRWTj6+PUM/4Gl1jeEoqBMsa4Nnp0eO
+5DU3brD2tHdYNth+52xs7kEUw4NK1nYMhiZll1jDXtUTPJFkUKlc7hKxH8pmkFbK
+hJRXzMDWQjo68HqPajZN2QcHndBeUxQbbc2RnlgglFRb8coXAy5R9A4thpi98CQl
+or40ftC6n7KNJxSCPDTOlUTQyh+ILbMVSrde4ApNmhmKlHSJiQHa4N/whdBVzdHc
+CGaO9fv06GfH0SrPsfvGTTLlVCj2og==
+=1h9j
+-----END PGP SIGNATURE-----
+
+--On1+GVONns+1Tsy+--
 
