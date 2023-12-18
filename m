@@ -1,88 +1,90 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73EED74E3E
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 22:52:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6d9338bc11fso40796b3a.1
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 14:52:55 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702939975; x=1703544775;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=oTF+J14j0yYky+MpiBvWqSC7e/OIFKPAN10FwsmrckY=;
-        b=BXO1XhlRuSN9T3XQxYLMUJWzW2QjuRnrozLs7kAcblIqwCeZl96LDTBimd5a6KhgZG
-         KhBWlpJ6ms1PtJSZ3G0pjlsBARtF1mH2trF++o+ln2Lr2Dlntmc7gvtygpdir9s5nsXG
-         kyXVjj9Inz4PZBGrwPwMxnQHTtlWh3aAqtGHxjwnk3eko/fwCbLWea8sUgrxCuLrL3vd
-         0qluDTwt4Ksx0dC5xjMzlrPHC4KZIah4nKGjO8WR0IWf+iN1pdB0KSz/fZqBpaogucrh
-         Vh1GleFG9Z2gaWyvzZinPXgCbZtqAghNtJYrmtdiAtFBK4/Wp7IBzth+fFXWdBNygZU4
-         mWZg==
-X-Gm-Message-State: AOJu0Yx5XGu4tC5uqZk+CEobSxizCt/xtsXfa2Df5AufRvNGcwXlnK7+
-	e733MznEc0gVsnMqc6XWNhM=
-X-Google-Smtp-Source: AGHT+IEhNeTH79OFfpl+8yfDkq7aVc6qu7mskTms0I5p/BFs3c0PxVrGkG9SiK0S3yDezIQ8dYe+gw==
-X-Received: by 2002:a05:6a00:17a1:b0:6ce:6d8b:275d with SMTP id s33-20020a056a0017a100b006ce6d8b275dmr21402206pfg.20.1702939974595;
-        Mon, 18 Dec 2023 14:52:54 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:e67:7ba6:36a9:8cd5])
-        by smtp.gmail.com with ESMTPSA id h18-20020a056a00171200b006d45b47612csm4078329pfc.89.2023.12.18.14.52.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Dec 2023 14:52:54 -0800 (PST)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Daniel Mentz <danielmentz@google.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	Asutosh Das <quic_asutoshd@quicinc.com>,
-	Bean Huo <beanhuo@micron.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH 2/2] scsi: ufs: Remove the ufshcd_hba_exit() call from ufshcd_async_scan()
-Date: Mon, 18 Dec 2023 14:52:15 -0800
-Message-ID: <20231218225229.2542156-3-bvanassche@acm.org>
-X-Mailer: git-send-email 2.43.0.472.g3155946c3a-goog
-In-Reply-To: <20231218225229.2542156-1-bvanassche@acm.org>
-References: <20231218225229.2542156-1-bvanassche@acm.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BDA476096;
+	Mon, 18 Dec 2023 23:09:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=interlog.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=interlog.com
+Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 5EBFD77124;
+	Mon, 18 Dec 2023 23:09:05 +0000 (UTC)
+Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
+	by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id 52B4F244AC;
+	Mon, 18 Dec 2023 23:09:05 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+X-Spam-Flag: NO
+X-Spam-Score: -0.2
+X-Spam-Level:
+Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
+	by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
+	with ESMTP id a7M5-P5R72sS; Mon, 18 Dec 2023 23:09:05 +0000 (UTC)
+Received: from [192.168.48.17] (host-104-157-209-188.dyn.295.ca [104.157.209.188])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: dgilbert@interlog.com)
+	by mail.ca.inter.net (Postfix) with ESMTPSA id 4C1CA244A9;
+	Mon, 18 Dec 2023 23:09:04 +0000 (UTC)
+Message-ID: <dbfe9ac0-d432-4911-8a47-23d3d6f3811a@interlog.com>
+Date: Mon, 18 Dec 2023 18:08:58 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v7 00/19] Pass data lifetime information to SCSI disk
+ devices
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ Christoph Hellwig <hch@lst.de>, Daejun Park <daejun7.park@samsung.com>,
+ Kanchan Joshi <joshi.k@samsung.com>
+References: <20231218185705.2002516-1-bvanassche@acm.org>
+Content-Language: en-CA
+From: Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <20231218185705.2002516-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Calling ufshcd_hba_exit() from a function that is called asynchronously
-from ufshcd_init() is wrong because this triggers multiple race
-conditions. Instead of calling ufshcd_hba_exit(), log an error message.
+On 12/18/23 13:56, Bart Van Assche wrote:
+> Hi Martin,
+> 
+> UFS vendors need the data lifetime information to achieve good performance.
+> Providing data lifetime information to UFS devices can result in up to 40%
+> lower write amplification. Hence this patch series that adds support in F2FS
+> and also in the block layer for data lifetime information. The SCSI disk (sd)
+> driver is modified such that it passes write hint information to SCSI devices
+> via the GROUP NUMBER field.
+> 
+> Please consider this patch series for the next merge window.
+> 
+> Thank you,
+> 
+> Bart.
+> 
+> Changes compared to v6:
+>   - Dropped patch "fs: Restore F_[GS]ET_FILE_RW_HINT support".
 
-Reported-by: Daniel Mentz <danielmentz@google.com>
-Fixes: 1d337ec2f35e ("ufs: improve init sequence")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+That leaves us with F_SET_RW_HINT and F_GET_RW_HINT ioctls. Could you please
+explain, perhaps with an example, what functionality is lost and what we still
+have?
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0ad8bde39cd1..7c59d7a02243 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8982,12 +8982,9 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 
- out:
- 	pm_runtime_put_sync(hba->dev);
--	/*
--	 * If we failed to initialize the device or the device is not
--	 * present, turn off the power/clocks etc.
--	 */
-+
- 	if (ret)
--		ufshcd_hba_exit(hba);
-+		dev_err(hba->dev, "%s failed: %d\n", __func__, ret);
- }
- 
- static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
+
+I built the v6 patchset atop Martin's 6.8/scsi-queue branch and it built clean.
+My experience with "rc1" branches on my working laptop has been a bit less than
+ideal. So also built the v6 patchset atop linux_stable around last Monday and
+have been running that without issues on my laptop for a week. Haven't updated
+my  linux-stable to lk 6.7.0-rc6 yet but don't expect issues with the v7
+patchset.
+
+Doug Gilbert
+
+
+<snip>
