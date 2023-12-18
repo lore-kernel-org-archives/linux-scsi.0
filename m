@@ -1,113 +1,103 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B3943D541
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Dec 2023 15:15:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75D293D54D;
+	Mon, 18 Dec 2023 15:34:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XKgjjNi8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1702912528;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=izS/IC0DmM7mAVkkRJhi5lj7qvWeAq5t5HTYJWiY8a8=;
-	b=XKgjjNi8xMn2Z1uCoStHFsvaJerrFJjrWONvbbZloFiOKEHCKYvoAqNwPdaU5YYfx3xV8n
-	mVZCnjGYv4Zdco7B/vRPg19UTojjnIIKRDUyQXopMr425FmHAqHPNikwAuLOghX7MZLN5U
-	81DNUCXy8P/yu5UqGTMppPhWkrqDhPI=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-390-7vC1SDkKNxiRJCk_pwFISA-1; Mon, 18 Dec 2023 10:15:24 -0500
-X-MC-Unique: 7vC1SDkKNxiRJCk_pwFISA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 07FE487A380;
-	Mon, 18 Dec 2023 15:15:24 +0000 (UTC)
-Received: from localhost (unknown [10.39.195.94])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 7CED3C15968;
-	Mon, 18 Dec 2023 15:15:23 +0000 (UTC)
-Date: Mon, 18 Dec 2023 10:15:22 -0500
-From: Stefan Hajnoczi <stefanha@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Paolo Bonzini <pbonzini@redhat.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net
-Subject: Re: [PATCH 2/5] virtio_blk: remove the broken zone revalidation
- support
-Message-ID: <20231218151522.GE12768@fedora>
-References: <20231217165359.604246-1-hch@lst.de>
- <20231217165359.604246-3-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="iQ24PMGu"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 3BIAsWg9018798;
+	Mon, 18 Dec 2023 15:33:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id; s=qcppdkim1; bh=Ow5SPTTNB88V
+	cAirt4L0hAseb2z31VaLkP7mDGOMQDA=; b=iQ24PMGu8XqJCIvZjt2R/W/gBFtI
+	wsvbFvOzqZvsRYEaqykLSNPv17pH72X1hRHJjbv2zAIvMwtNHqMc0TWcbjBJZzix
+	4AiFwvbfRC9Mc8tpVsTJCcpMD1pDLXbfay7hUK3uKCiBY5AX/y0FVc6SGtQ2aiYz
+	pd0qtHJmfvc27Uwz5ZVh1/w3m2ZpQIEMs0LXlXU99SLonXxlVufA8bbTS9K/dqOP
+	xaWP/BsVWRKYsQYkz928wfO9ftfNOg8jsv+b37tPMiFyYlH9z6CaQ5LMWvYOC7EV
+	BG9Ufw+PhTMarXdqfy5lJQ3DEMJ9Gv3uqH2hkKQT0Gqhqvj+e8vQRCWrUQ==
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3v2mfe0n99-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 Dec 2023 15:33:53 +0000 (GMT)
+Received: from pps.filterd (NASANPPMTA04.qualcomm.com [127.0.0.1])
+	by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3BIFWXT3029489;
+	Mon, 18 Dec 2023 15:33:52 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3v14ykw605-1;
+	Mon, 18 Dec 2023 15:33:52 +0000
+Received: from NASANPPMTA04.qualcomm.com (NASANPPMTA04.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BIFXqos031583;
+	Mon, 18 Dec 2023 15:33:52 GMT
+Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
+	by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3BIFXpFx031579;
+	Mon, 18 Dec 2023 15:33:52 +0000
+Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
+	id AE92E20A6B; Mon, 18 Dec 2023 07:33:51 -0800 (PST)
+From: Can Guo <quic_cang@quicinc.com>
+To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
+        junwoo80.lee@samsung.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] scsi: ufs: core: Let the sq_lock protect sq_tail_slot access
+Date: Mon, 18 Dec 2023 07:32:17 -0800
+Message-Id: <1702913550-20631-1-git-send-email-quic_cang@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 2x7iaMGGHfK-tl-wx8Yqxco24rlFPNO4
+X-Proofpoint-GUID: 2x7iaMGGHfK-tl-wx8Yqxco24rlFPNO4
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-09_01,2023-12-07_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ clxscore=1011 suspectscore=0 malwarescore=0 lowpriorityscore=0 mlxscore=0
+ mlxlogscore=999 phishscore=0 adultscore=0 impostorscore=0 spamscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2311290000 definitions=main-2312180114
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="4eVxO+z2jfATvVXq"
-Content-Disposition: inline
-In-Reply-To: <20231217165359.604246-3-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
+If access sq_tail_slot without the protection from the sq_lock, race
+condition can have multiple SQEs copied to duplicate SQE slot(s), which can
+lead to multiple incredible stability issues. Fix it by moving the *dest
+initialization, in ufshcd_send_command(), back under protection from the
+sq_lock.
 
---4eVxO+z2jfATvVXq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Fixes: 3c85f087faec ("scsi: ufs: mcq: Use pointer arithmetic in ufshcd_send_command()")
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
 
-On Sun, Dec 17, 2023 at 05:53:56PM +0100, Christoph Hellwig wrote:
-> virtblk_revalidate_zones is called unconditionally from
-> virtblk_config_changed_work from the virtio config_changed callback.
->=20
-> virtblk_revalidate_zones is a bit odd in that it re-clears the zoned
-> state for host aware or non-zoned devices, which isn't needed unless the
-> zoned mode changed - but a zone mode change to a host managed model isn't
-> handled at all, and virtio_blk also doesn't handle any other config
-> change except for a capacity change is handled (and even if it was
-> the upper layers above virtio_blk wouldn't handle it very well).
->=20
-> But even the useful case of a size change that would add or remove
-> zones isn't handled properly as blk_revalidate_disk_zones expects the
-> device capacity to cover all zones, but the capacity is only updated
-> after virtblk_revalidate_zones.
->=20
-> As this code appears to be entirely untested and is getting in the way
-> remove it for now, but it can be readded in a fixed version with
-> proper test coverage if needed.
->=20
-> Fixes: 95bfec41bd3d ("virtio-blk: add support for zoned block devices")
-> Fixes: f1ba4e674feb ("virtio-blk: fix to match virtio spec")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/block/virtio_blk.c | 26 --------------------------
->  1 file changed, 26 deletions(-)
-
-Fair enough.
-
-Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
-
---4eVxO+z2jfATvVXq
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmWAYgoACgkQnKSrs4Gr
-c8j5vwf6AvyDGx3q65J+QlDbrJwPqdAlJ2qDdjwPYSEIgUmM+viNseFP/3psEz2K
-7bz3oZ0XXwQatvou0SAiQE8KeXitxdlYFTgJGCtnkyxzaBPZzdfSerjifJNpZhYY
-5XC8qXs4ZnecdqeGnEkUS+E4DOlZWL/n4VXz3V0fJAgezdOWZe8u8kkQjy4rcFXl
-+UqpzgXjuXfTykIPkc0Ij4JFG8uuPCkkQdzTG4o4FcTQbtgS8i41Mp/4Ty1ft3B8
-PZTUAwJ8uEnRTwyLvTujtBinZOKg7EuosEoRjZJLIT0QwZFJGHJ4DxUyWwpy+Jso
-E9s7jtYaaslUg+4xTvCIUaaGuRBVkg==
-=W7fu
------END PGP SIGNATURE-----
-
---4eVxO+z2jfATvVXq--
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index ae9936f..2994aac 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2274,9 +2274,10 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
+ 	if (is_mcq_enabled(hba)) {
+ 		int utrd_size = sizeof(struct utp_transfer_req_desc);
+ 		struct utp_transfer_req_desc *src = lrbp->utr_descriptor_ptr;
+-		struct utp_transfer_req_desc *dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
++		struct utp_transfer_req_desc *dest;
+ 
+ 		spin_lock(&hwq->sq_lock);
++		dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
+ 		memcpy(dest, src, utrd_size);
+ 		ufshcd_inc_sq_tail(hwq);
+ 		spin_unlock(&hwq->sq_lock);
+-- 
+2.7.4
 
