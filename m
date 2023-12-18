@@ -1,103 +1,293 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75D293D54D;
-	Mon, 18 Dec 2023 15:34:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1935D8470;
+	Mon, 18 Dec 2023 18:43:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="iQ24PMGu"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 3BIAsWg9018798;
-	Mon, 18 Dec 2023 15:33:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id; s=qcppdkim1; bh=Ow5SPTTNB88V
-	cAirt4L0hAseb2z31VaLkP7mDGOMQDA=; b=iQ24PMGu8XqJCIvZjt2R/W/gBFtI
-	wsvbFvOzqZvsRYEaqykLSNPv17pH72X1hRHJjbv2zAIvMwtNHqMc0TWcbjBJZzix
-	4AiFwvbfRC9Mc8tpVsTJCcpMD1pDLXbfay7hUK3uKCiBY5AX/y0FVc6SGtQ2aiYz
-	pd0qtHJmfvc27Uwz5ZVh1/w3m2ZpQIEMs0LXlXU99SLonXxlVufA8bbTS9K/dqOP
-	xaWP/BsVWRKYsQYkz928wfO9ftfNOg8jsv+b37tPMiFyYlH9z6CaQ5LMWvYOC7EV
-	BG9Ufw+PhTMarXdqfy5lJQ3DEMJ9Gv3uqH2hkKQT0Gqhqvj+e8vQRCWrUQ==
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3v2mfe0n99-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 18 Dec 2023 15:33:53 +0000 (GMT)
-Received: from pps.filterd (NASANPPMTA04.qualcomm.com [127.0.0.1])
-	by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3BIFWXT3029489;
-	Mon, 18 Dec 2023 15:33:52 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3v14ykw605-1;
-	Mon, 18 Dec 2023 15:33:52 +0000
-Received: from NASANPPMTA04.qualcomm.com (NASANPPMTA04.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BIFXqos031583;
-	Mon, 18 Dec 2023 15:33:52 GMT
-Received: from stor-dylan.qualcomm.com (stor-dylan.qualcomm.com [192.168.140.207])
-	by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3BIFXpFx031579;
-	Mon, 18 Dec 2023 15:33:52 +0000
-Received: by stor-dylan.qualcomm.com (Postfix, from userid 359480)
-	id AE92E20A6B; Mon, 18 Dec 2023 07:33:51 -0800 (PST)
-From: Can Guo <quic_cang@quicinc.com>
-To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] scsi: ufs: core: Let the sq_lock protect sq_tail_slot access
-Date: Mon, 18 Dec 2023 07:32:17 -0800
-Message-Id: <1702913550-20631-1-git-send-email-quic_cang@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 2x7iaMGGHfK-tl-wx8Yqxco24rlFPNO4
-X-Proofpoint-GUID: 2x7iaMGGHfK-tl-wx8Yqxco24rlFPNO4
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-09_01,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- clxscore=1011 suspectscore=0 malwarescore=0 lowpriorityscore=0 mlxscore=0
- mlxlogscore=999 phishscore=0 adultscore=0 impostorscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2311290000 definitions=main-2312180114
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="r+ctA05I";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="hWa+gcKQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1702925037;
+	bh=arHniq/TP/FYi3pR5hTUhKg3jdumjz26l2eJ5S8yDwc=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=r+ctA05INxpMxAToOnyQPIiqXYsMA9bOK/dtsQUKrOC73ANqFbSUcMv3Av0vLmxZV
+	 wcY+2V/qSNTfdGmcSrJZrtRsv5EOEQgrOm/lzD0LrXAbii75eHlnv3gyZ2RHsBhq/y
+	 r3lZTNuUxRxLOzfcIUlPq44RymLCzm1lxka5OMQ8=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 10F5F1280440;
+	Mon, 18 Dec 2023 13:43:57 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id Kuvza7Xtm_zD; Mon, 18 Dec 2023 13:43:56 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1702925036;
+	bh=arHniq/TP/FYi3pR5hTUhKg3jdumjz26l2eJ5S8yDwc=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=hWa+gcKQvRhtFQ1tdavdIVorcZykXjH2yXw2QL+IaSXo2vOFhAm+lEVr7OcklfeiN
+	 aklswWQiMgH7mVToj+/IqdxQ83S8XdGO9VTYNPJQiATKUrfal2F6yadYKhNp29oXL4
+	 nB+IQSssx1AeyZN7qjFDXUBKzqAFY8mra4dlZrKY=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 634E7128023A;
+	Mon, 18 Dec 2023 13:43:56 -0500 (EST)
+Message-ID: <6edb005530947b752d1a84c9ea69df0da6c85cf5.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.7-rc6
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Mon, 18 Dec 2023 13:43:54 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-If access sq_tail_slot without the protection from the sq_lock, race
-condition can have multiple SQEs copied to duplicate SQE slot(s), which can
-lead to multiple incredible stability issues. Fix it by moving the *dest
-initialization, in ufshcd_send_command(), back under protection from the
-sq_lock.
+Two medium sized fixes, both in drivers.  The UFS one adds parsing of
+clock info structures, which is required by some host drivers and the
+aacraid one reverts the IRQ affinity mapping patch which has been
+causing regressions noted in kernel bugzilla 217599.
 
-Fixes: 3c85f087faec ("scsi: ufs: mcq: Use pointer arithmetic in ufshcd_send_command()")
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
+The patch is available here:
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index ae9936f..2994aac 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2274,9 +2274,10 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
- 	if (is_mcq_enabled(hba)) {
- 		int utrd_size = sizeof(struct utp_transfer_req_desc);
- 		struct utp_transfer_req_desc *src = lrbp->utr_descriptor_ptr;
--		struct utp_transfer_req_desc *dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
-+		struct utp_transfer_req_desc *dest;
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Martin K. Petersen (1):
+      Revert "scsi: aacraid: Reply queue mapping to CPUs based on IRQ affinity"
+
+Nitin Rawat (1):
+      scsi: ufs: core: Store min and max clk freq from OPP table
+
+
+And the diffstat:
+
+ drivers/scsi/aacraid/aacraid.h   |  1 -
+ drivers/scsi/aacraid/commsup.c   |  6 +----
+ drivers/scsi/aacraid/linit.c     | 14 -----------
+ drivers/scsi/aacraid/src.c       | 25 ++-----------------
+ drivers/ufs/host/ufshcd-pltfrm.c | 54 ++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 57 insertions(+), 43 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 73b6ac0c01f5..7d5a155073c6 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1678,7 +1678,6 @@ struct aac_dev
+ 	u32			handle_pci_error;
+ 	bool			init_reset;
+ 	u8			soft_reset_support;
+-	u8			use_map_queue;
+ };
  
- 		spin_lock(&hwq->sq_lock);
-+		dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
- 		memcpy(dest, src, utrd_size);
- 		ufshcd_inc_sq_tail(hwq);
- 		spin_unlock(&hwq->sq_lock);
--- 
-2.7.4
+ #define aac_adapter_interrupt(dev) \
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 013a9a334972..25cee03d7f97 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -223,12 +223,8 @@ int aac_fib_setup(struct aac_dev * dev)
+ struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
+ {
+ 	struct fib *fibptr;
+-	u32 blk_tag;
+-	int i;
+ 
+-	blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
+-	i = blk_mq_unique_tag_to_tag(blk_tag);
+-	fibptr = &dev->fibs[i];
++	fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
+ 	/*
+ 	 *	Null out fields that depend on being zero at the start of
+ 	 *	each I/O
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index c4a36c0be527..68f4dbcfff49 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -19,7 +19,6 @@
+ 
+ #include <linux/compat.h>
+ #include <linux/blkdev.h>
+-#include <linux/blk-mq-pci.h>
+ #include <linux/completion.h>
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+@@ -505,15 +504,6 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 	return 0;
+ }
+ 
+-static void aac_map_queues(struct Scsi_Host *shost)
+-{
+-	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+-
+-	blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+-			      aac->pdev, 0);
+-	aac->use_map_queue = true;
+-}
+-
+ /**
+  *	aac_change_queue_depth		-	alter queue depths
+  *	@sdev:	SCSI device we are considering
+@@ -1498,7 +1488,6 @@ static const struct scsi_host_template aac_driver_template = {
+ 	.bios_param			= aac_biosparm,
+ 	.shost_groups			= aac_host_groups,
+ 	.slave_configure		= aac_slave_configure,
+-	.map_queues			= aac_map_queues,
+ 	.change_queue_depth		= aac_change_queue_depth,
+ 	.sdev_groups			= aac_dev_groups,
+ 	.eh_abort_handler		= aac_eh_abort,
+@@ -1786,8 +1775,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->max_lun = AAC_MAX_LUN;
+ 
+ 	pci_set_drvdata(pdev, shost);
+-	shost->nr_hw_queues = aac->max_msix;
+-	shost->host_tagset = 1;
+ 
+ 	error = scsi_add_host(shost, &pdev->dev);
+ 	if (error)
+@@ -1919,7 +1906,6 @@ static void aac_remove_one(struct pci_dev *pdev)
+ 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+ 
+ 	aac_cancel_rescan_worker(aac);
+-	aac->use_map_queue = false;
+ 	scsi_remove_host(shost);
+ 
+ 	__aac_shutdown(aac);
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 61949f374188..11ef58204e96 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -493,10 +493,6 @@ static int aac_src_deliver_message(struct fib *fib)
+ #endif
+ 
+ 	u16 vector_no;
+-	struct scsi_cmnd *scmd;
+-	u32 blk_tag;
+-	struct Scsi_Host *shost = dev->scsi_host_ptr;
+-	struct blk_mq_queue_map *qmap;
+ 
+ 	atomic_inc(&q->numpending);
+ 
+@@ -509,25 +505,8 @@ static int aac_src_deliver_message(struct fib *fib)
+ 		if ((dev->comm_interface == AAC_COMM_MESSAGE_TYPE3)
+ 			&& dev->sa_firmware)
+ 			vector_no = aac_get_vector(dev);
+-		else {
+-			if (!fib->vector_no || !fib->callback_data) {
+-				if (shost && dev->use_map_queue) {
+-					qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
+-					vector_no = qmap->mq_map[raw_smp_processor_id()];
+-				}
+-				/*
+-				 *	We hardcode the vector_no for
+-				 *	reserved commands as a valid shost is
+-				 *	absent during the init
+-				 */
+-				else
+-					vector_no = 0;
+-			} else {
+-				scmd = (struct scsi_cmnd *)fib->callback_data;
+-				blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
+-				vector_no = blk_mq_unique_tag_to_hwq(blk_tag);
+-			}
+-		}
++		else
++			vector_no = fib->vector_no;
+ 
+ 		if (native_hba) {
+ 			if (fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF) {
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index da2558e274b4..db9d9365ff55 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -8,6 +8,7 @@
+  *	Vinayak Holikatti <h.vinayak@samsung.com>
+  */
+ 
++#include <linux/clk.h>
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_opp.h>
+@@ -213,6 +214,55 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
+ 	}
+ }
+ 
++/**
++ * ufshcd_parse_clock_min_max_freq  - Parse MIN and MAX clocks freq
++ * @hba: per adapter instance
++ *
++ * This function parses MIN and MAX frequencies of all clocks required
++ * by the host drivers.
++ *
++ * Returns 0 for success and non-zero for failure
++ */
++static int ufshcd_parse_clock_min_max_freq(struct ufs_hba *hba)
++{
++	struct list_head *head = &hba->clk_list_head;
++	struct ufs_clk_info *clki;
++	struct dev_pm_opp *opp;
++	unsigned long freq;
++	u8 idx = 0;
++
++	list_for_each_entry(clki, head, list) {
++		if (!clki->name)
++			continue;
++
++		clki->clk = devm_clk_get(hba->dev, clki->name);
++		if (IS_ERR(clki->clk))
++			continue;
++
++		/* Find Max Freq */
++		freq = ULONG_MAX;
++		opp = dev_pm_opp_find_freq_floor_indexed(hba->dev, &freq, idx);
++		if (IS_ERR(opp)) {
++			dev_err(hba->dev, "Failed to find OPP for MAX frequency\n");
++			return PTR_ERR(opp);
++		}
++		clki->max_freq = dev_pm_opp_get_freq_indexed(opp, idx);
++		dev_pm_opp_put(opp);
++
++		/* Find Min Freq */
++		freq = 0;
++		opp = dev_pm_opp_find_freq_ceil_indexed(hba->dev, &freq, idx);
++		if (IS_ERR(opp)) {
++			dev_err(hba->dev, "Failed to find OPP for MIN frequency\n");
++			return PTR_ERR(opp);
++		}
++		clki->min_freq = dev_pm_opp_get_freq_indexed(opp, idx++);
++		dev_pm_opp_put(opp);
++	}
++
++	return 0;
++}
++
+ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
+ {
+ 	struct device *dev = hba->dev;
+@@ -279,6 +329,10 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
+ 		return ret;
+ 	}
+ 
++	ret = ufshcd_parse_clock_min_max_freq(hba);
++	if (ret)
++		return ret;
++
+ 	hba->use_pm_opp = true;
+ 
+ 	return 0;
 
