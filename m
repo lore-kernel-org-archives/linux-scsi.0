@@ -1,35 +1,35 @@
-Received: from mail-oo1-f51.google.com (mail-oo1-f51.google.com [209.85.161.51])
+Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A8C51DA3A;
-	Mon, 18 Dec 2023 21:41:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55D92740BD;
+	Mon, 18 Dec 2023 21:55:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-oo1-f51.google.com with SMTP id 006d021491bc7-58e256505f7so2537406eaf.3;
-        Mon, 18 Dec 2023 13:41:40 -0800 (PST)
+Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-7b3708b3eacso147561739f.2;
+        Mon, 18 Dec 2023 13:55:57 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702935700; x=1703540500;
+        d=1e100.net; s=20230601; t=1702936556; x=1703541356;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0Lf6x/s/QNuvXO3/maFmMWf//6tmMOSX9Okk2scVa1c=;
-        b=LcewoDHFMKU2Y0ff8fEFmnakzg9oFuextUFVB/e4hwggKflD6cQLzU40kcgzLPpDzP
-         Mo+I7S6JUBCaE2sB6CGxRo0WIf3bkrMZKBciC3IclRbiQLry1rVXMlvMK5BLXs7rM9ca
-         l2/S59ZnfDkM9vWUz5TmDcWDSpuYN9toqEHq7oe1yIsXp5ehk4Ysr8ch6yTMibRP+SQR
-         vQhx5nS/6AtfiXQyt/7jtwkzh5E8TOgncZGo6zERFv9jgpoYNGtYhA9Zkfwaszl5j/w6
-         OeXWH8qv5Jtx2s7qDKeMzt98LDOLu24VyIGswoxau+TV+vNvIK+n5zP8agskr7t67pvp
-         L3Tg==
-X-Gm-Message-State: AOJu0YyMY1BUOwA1a3uPi3FpouOjjGsV8vjbUydmA2KvDwtpOHbQPO41
-	5pCyvdcDVwKQpHvt1J/AyBI=
-X-Google-Smtp-Source: AGHT+IHRHJGjIg8FP0kWYFL8Nk9kN/wFY5Y7MonQIYe8IKswbaMMMSgMs9IHvnKqpDP+LztsZih95g==
-X-Received: by 2002:a05:6358:e4a1:b0:172:d67c:61f1 with SMTP id by33-20020a056358e4a100b00172d67c61f1mr1664629rwb.14.1702935699775;
-        Mon, 18 Dec 2023 13:41:39 -0800 (PST)
+        bh=eIl3+miZ0G9Vwo7dKjzcYHAwvEgr2VOComYZIqzlsP0=;
+        b=FcPAqZOaNCnnCBAUcysikjoU5cjRUJSnDfpt4rZaFHlXMMIJo061q2ry4pbQ8Cxq2z
+         btyHMfX7+GbHv6VusdGDVIlRjipHXMOOByLmNx87TUv5aw6NgGpLV0mi8HVZTcGOinaT
+         VIfcnZnFkbcuB+uiE20BgDTEBmvL6VEObBVdNvSY6/OszDpihxn93X9yZync63BmdG1E
+         i6CPS8TMPXSj2DheACWdr7YoG8lmyCtgqSfXtSVGb9mCoQ+w9LFjfVFZelu2aqYNQ+//
+         Pr0SV8nLg2oeT8rhWLi3t/6/teoZOrZf9i9C8fWvxA1biriqNrq+eSYDoeRp6TbxJbMz
+         VDSQ==
+X-Gm-Message-State: AOJu0YxUmP9rUWC+sFficL9z8CltGaSyNu85bm9eOjsUghJTba/1ijHX
+	xxzcLFb99L5Upfz2+2WK45Q=
+X-Google-Smtp-Source: AGHT+IHEewjCipB4PIrKNw9vqIIP/VSnGW9Uiv52Wv48DEo+dTLjJlbTKJ/7N8EqP5QpL2LNEbx/jA==
+X-Received: by 2002:a92:c90b:0:b0:35d:59a2:92a6 with SMTP id t11-20020a92c90b000000b0035d59a292a6mr15410019ilp.58.1702936556465;
+        Mon, 18 Dec 2023 13:55:56 -0800 (PST)
 Received: from ?IPV6:2620:0:1000:8411:e67:7ba6:36a9:8cd5? ([2620:0:1000:8411:e67:7ba6:36a9:8cd5])
-        by smtp.gmail.com with ESMTPSA id a21-20020a62e215000000b006d63ace8508sm3075061pfi.70.2023.12.18.13.41.36
+        by smtp.gmail.com with ESMTPSA id s7-20020a634507000000b005cd8bf50c13sm3114268pga.58.2023.12.18.13.55.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Dec 2023 13:41:39 -0800 (PST)
-Message-ID: <7cdfa93b-70f7-4912-bda7-a6b50b93c665@acm.org>
-Date: Mon, 18 Dec 2023 13:41:35 -0800
+        Mon, 18 Dec 2023 13:55:55 -0800 (PST)
+Message-ID: <9861ce52-8163-40aa-b156-dd656143a73d@acm.org>
+Date: Mon, 18 Dec 2023 13:55:51 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,51 +37,64 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: Let the sq_lock protect sq_tail_slot
- access
+Subject: Re: [PATCH V5 1/2] ufs: core: Add CPU latency QoS support for ufs
+ driver
 Content-Language: en-US
-To: Can Guo <quic_cang@quicinc.com>, mani@kernel.org,
- adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
- junwoo80.lee@samsung.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- Alim Akhtar <alim.akhtar@samsung.com>,
+To: Maramaina Naresh <quic_mnaresh@quicinc.com>,
  "James E.J. Bottomley" <jejb@linux.ibm.com>,
- Stanley Chu <stanley.chu@mediatek.com>,
- Asutosh Das <quic_asutoshd@quicinc.com>, Peter Wang
- <peter.wang@mediatek.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
- Arthur Simchaev <Arthur.Simchaev@wdc.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <1702913550-20631-1-git-send-email-quic_cang@quicinc.com>
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Peter Wang <peter.wang@mediatek.com>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Stanley Jhu <chu.stanley@gmail.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org, quic_cang@quicinc.com,
+ quic_nguyenb@quicinc.com
+References: <20231213124353.16407-1-quic_mnaresh@quicinc.com>
+ <20231213124353.16407-2-quic_mnaresh@quicinc.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1702913550-20631-1-git-send-email-quic_cang@quicinc.com>
+In-Reply-To: <20231213124353.16407-2-quic_mnaresh@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 12/18/23 07:32, Can Guo wrote:
-> If access sq_tail_slot without the protection from the sq_lock, race
-> condition can have multiple SQEs copied to duplicate SQE slot(s), which can
-> lead to multiple incredible stability issues. Fix it by moving the *dest
-> initialization, in ufshcd_send_command(), back under protection from the
-> sq_lock.
-> 
-> Fixes: 3c85f087faec ("scsi: ufs: mcq: Use pointer arithmetic in ufshcd_send_command()")
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index ae9936f..2994aac 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2274,9 +2274,10 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
->   	if (is_mcq_enabled(hba)) {
->   		int utrd_size = sizeof(struct utp_transfer_req_desc);
->   		struct utp_transfer_req_desc *src = lrbp->utr_descriptor_ptr;
-> -		struct utp_transfer_req_desc *dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
-> +		struct utp_transfer_req_desc *dest;
->   
->   		spin_lock(&hwq->sq_lock);
-> +		dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
->   		memcpy(dest, src, utrd_size);
->   		ufshcd_inc_sq_tail(hwq);
->   		spin_unlock(&hwq->sq_lock);
+On 12/13/23 04:43, Maramaina Naresh wrote:
+> +static ssize_t ufshcd_pm_qos_enable_store(struct device *dev,
+> +		struct device_attribute *attr, const char *buf, size_t count)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	u32 value;
+> +
+> +	if (kstrtou32(buf, 0, &value))
+> +		return -EINVAL;
+> +
+> +	value = !!value;
+> +	if (value)
+> +		ufshcd_pm_qos_init(hba);
+> +	else
+> +		ufshcd_pm_qos_exit(hba);
+> +
+> +	return count;
+> +}
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Please use kstrtobool() instead of kstrtou32().
+
+> +static void ufshcd_init_pm_qos_sysfs(struct ufs_hba *hba)
+> +{
+> +	hba->pm_qos_enable_attr.show = ufshcd_pm_qos_enable_show;
+> +	hba->pm_qos_enable_attr.store = ufshcd_pm_qos_enable_store;
+> +	sysfs_attr_init(&hba->pm_qos_enable_attr.attr);
+> +	hba->pm_qos_enable_attr.attr.name = "pm_qos_enable";
+> +	hba->pm_qos_enable_attr.attr.mode = 0644;
+> +	if (device_create_file(hba->dev, &hba->pm_qos_enable_attr))
+> +		dev_err(hba->dev, "Failed to create sysfs for pm_qos_enable\n");
+> +}
+
+Calling device_create_file() and device_remove_file() is not acceptable because of
+the race conditions these calls introduce for udev rules. Please add this attribute
+into an existing group and update the is_visible callback function of that group.
+See also ufs_sysfs_groups[].
+
+Thanks,
+
+Bart.
